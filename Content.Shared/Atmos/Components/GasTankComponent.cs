@@ -7,7 +7,8 @@ namespace Content.Shared.Atmos.Components;
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true)]
 public sealed partial class GasTankComponent : Component, IGasMixtureHolder
 {
-    public const float MaxExplosionRange = 26f;
+    [DataField]
+    public float? MaxExplosionRange; // KS14 port of Goobstation - If null, use the atmos explosion range cvar, otherwise, use this value
     private const float DefaultLowPressure = 0f;
     private const float DefaultOutputPressure = Atmospherics.OneAtmosphere;
 
