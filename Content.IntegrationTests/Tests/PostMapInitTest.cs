@@ -131,7 +131,7 @@ namespace Content.IntegrationTests.Tests
         {
             "Spire", // KS14: ported from Harmony, Developed by Dogbone10, PenguinCodest, Jack_the_Dragon
             "Jellyfish", // KS14: ported from Harmony, Developed by whythelettuce
-            //"Mira", // KS14: ported from Harmony, developed by tanuko
+            "Mira", // KS14: ported from Harmony, developed by tanuko
             "Dev",
             "TestTeg",
             "Fland",
