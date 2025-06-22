@@ -111,6 +111,9 @@
   - type: EmitSoundOnDrop # KS14: pickup/drop sounds
     sound:
       path: /Audio/_KS14/Handling/tools/weldingtool_drop.ogg
+  - type: Tag
+    tags:
+    - WeldingTool # Einstein Engines
 
 - type: entity
   name: industrial welding tool

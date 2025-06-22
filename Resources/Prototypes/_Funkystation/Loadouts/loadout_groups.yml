@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: AGPL-3.0
-
 - type: loadoutGroup
   id: ClownMask
   name: loadout-group-clown-mask

@@ -6,7 +6,6 @@
   - Fland
   - Marathon
   - Packed
-  - Reach
   - Snowball
   # KS14 restored maps
   - Saltern
@@ -15,12 +14,13 @@
   # - Oasis
   # - Plasma
   # - Exo
+  # - Reach
   # KS14 ported Harmony maps
   - Mira
   - Omega
   - Jellyfish
   # KS14 ported Umbra maps
-  - Wonderland
+  #- Wonderland KS14, removed for being bad
   # KS14 ported Moff maps
-  - Frezon
+  #- Frezon KS14, removed for being bad
   #- Serpentcrest # KS14: FUCK NO

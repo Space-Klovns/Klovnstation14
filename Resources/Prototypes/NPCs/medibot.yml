@@ -1,6 +1,9 @@
 - type: htnCompound
   id: MedibotCompound
   branches:
+  - tasks:
+      - !type:HTNCompoundTask
+        task: MoveToCoordinatesCompound
   # Observe for targets
   - tasks:
     - !type:HTNPrimitiveTask

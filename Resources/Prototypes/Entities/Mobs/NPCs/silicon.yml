@@ -26,6 +26,7 @@
     - DoorBumpOpener
     - SiliconEmotes
     - Unimplantable
+    - SiliconMob
   - type: MobState
     allowedStates:
       - Alive
@@ -69,6 +70,7 @@
   - type: ActiveRadio
     channels:
     - Common
+  - type: ComplexInteraction #KS14
   - type: HealthExaminable
     examinableTypes:
     - Blunt
@@ -562,7 +564,7 @@
         Blunt: 2
   - type: Anchorable
   - type: Hands # This probably REALLY needs hand whitelisting, but we NEED hands for hugs, so...
-  - type: ComplexInteraction # Hugging is a complex interaction, apparently.
+  #- type: ComplexInteraction # Hugging is a complex interaction, apparently. KS14 - redundant
   - type: HugBot
   - type: HTN
     rootTask:

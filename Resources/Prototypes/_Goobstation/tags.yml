@@ -1,0 +1,14 @@
+- type: Tag
+  id: HardHat # ConstructionGraph: MineBot
+
+- type: Tag
+  id: HydroponicsToolClippers # ConstructionGraph: PlantBot
+
+- type: Tag
+  id: ItemPickaxe # ConstructionGraph: MineBot
+
+- type: Tag
+  id: SiliconMob #weldbot shit
+
+- type: Tag
+  id: WeldingTool

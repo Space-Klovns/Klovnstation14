@@ -3,6 +3,7 @@ namespace Content.Shared.DeviceLinking.Events
     public sealed class PortDisconnectedEvent : EntityEventArgs
     {
         public readonly string Port;
+        public readonly EntityUid RemovedPortUid; // Einstein Engines
 
         public readonly EntityUid Source;
 

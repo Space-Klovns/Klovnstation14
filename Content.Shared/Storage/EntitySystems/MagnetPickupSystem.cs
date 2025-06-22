@@ -8,6 +8,7 @@ using Robust.Shared.Network;
 using Content.Shared.Item;
 using Content.Shared.Item.ItemToggle;
 using Content.Shared.Item.ItemToggle.Components;
+using Content.Shared.Examine;
 //wd toggle shit end
 
 namespace Content.Shared.Storage.EntitySystems;
@@ -23,6 +24,7 @@ public sealed class MagnetPickupSystem : EntitySystem
     [Dependency] private readonly InventorySystem _inventory = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly SharedItemSystem _item = default!; //WD ks14 port
+    [Dependency] private readonly ItemToggleSystem _itemToggle = default!; //WD ks14 port
     [Dependency] private readonly SharedStorageSystem _storage = default!;
     [Dependency] private readonly EntityWhitelistSystem _whitelistSystem = default!;
 

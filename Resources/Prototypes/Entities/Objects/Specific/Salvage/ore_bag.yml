@@ -40,10 +40,10 @@
   - type: Appearance
   - type: GenericVisualizer
     visuals:
-      enum.ToggleVisuals.Toggled:
-        enum.ToggleVisuals.Layer:
-          True: { state: orebag_on }
-          False: { state: orebag_off }
+      enum.ToggleableVisuals.Enabled:
+        enum.ToggleableVisuals.Layer:
+          True: {state: orebag_on}
+          False: {state: orebag_off}
   # WHITE DREAM EDIT END
 
 - type: entity

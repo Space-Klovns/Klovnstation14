@@ -345,6 +345,20 @@ public abstract class SharedDeviceLinkSystem : EntitySystem
     }
 
     /// <summary>
+    /// Einstein Engines: Removes every link from the given sink
+    /// </summary>
+    public void RemoveAllFromSource(EntityUid sourceUid, DeviceLinkSourceComponent? sourceComponent = null, Predicate<EntityUid>? filter = null)
+    {
+        if (!Resolve(sourceUid, ref sourceComponent))
+            return;
+
+        foreach (var sinkUid in sourceComponent.LinkedPorts.Where(sinkUid => filter == null || filter.Invoke(sinkUid.Key)))
+        {
+            RemoveSinkFromSource(sourceUid, sinkUid.Key, sourceComponent);
+        }
+    }
+
+    /// <summary>
     /// Removes all links between a source and a sink
     /// </summary>
     public void RemoveSinkFromSource(

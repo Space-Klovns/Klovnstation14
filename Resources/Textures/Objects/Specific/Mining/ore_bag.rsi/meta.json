@@ -8,6 +8,9 @@
   },
   "states": [
     {
+      "name": "orebag_off"
+    },
+    {
       "name": "icon"
     },
     {
@@ -21,6 +24,19 @@
     {
       "name": "inhand-right",
       "directions": 4
+    },
+    {
+      "name": "orebag_on",
+      "delays": [
+        [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      ]
     }
   ]
 }

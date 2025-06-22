@@ -61,3 +61,6 @@
   - type: WiresPanel
   - type: StaticPrice
     price: 1500
+  - type: DeviceLinkSink
+    ports:
+      - FillbotAnyItem
