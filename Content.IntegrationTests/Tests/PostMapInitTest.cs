@@ -117,7 +117,7 @@ namespace Content.IntegrationTests.Tests
         private static readonly string[] DoNotMapWhitelist =
         {
             "/Maps/centcomm.yml",
-            "/Maps/Shuttles/AdminSpawn/**" // admin gaming
+            "/Maps/_Moffstation/frezon.yml", // Contains handheld crew monitor & other head of staff items
         };
 
         /// <summary>
@@ -152,7 +152,8 @@ namespace Content.IntegrationTests.Tests
             "Meta", // KS14: Added back
             "Omega", // KS14: Added back and replaced with new harmony version updated from Spanky's version by OrnamentalFreak and CrimsonJupiter
             "Wonderland", // KS14: ported from Umbra
-            "Snowball"
+            "Snowball",
+            "Frezon" //KS14: ported from Moff
         };
 
         private static readonly ProtoId<EntityCategoryPrototype> DoNotMapCategory = "DoNotMap";
