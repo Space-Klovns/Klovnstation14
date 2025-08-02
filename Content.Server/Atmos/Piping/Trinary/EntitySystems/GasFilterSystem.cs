@@ -40,7 +40,9 @@ namespace Content.Server.Atmos.Piping.Trinary.EntitySystems
             SubscribeLocalEvent<GasFilterComponent, GasAnalyzerScanEvent>(OnFilterAnalyzed);
             // Bound UI subscriptions
             SubscribeLocalEvent<GasFilterComponent, GasFilterChangeRateMessage>(OnTransferRateChangeMessage);
-            SubscribeLocalEvent<GasFilterComponent, GasFilterSelectGasMessage>(OnSelectGasMessage);
+            // Funky - removed for filtering of multiple gases
+            // SubscribeLocalEvent<GasFilterComponent, GasFilterSelectGasMessage>(OnSelectGasMessage);
+            SubscribeLocalEvent<GasFilterComponent, GasFilterChangeGasesMessage>(OnChangeGasesMessage);
             SubscribeLocalEvent<GasFilterComponent, GasFilterToggleStatusMessage>(OnToggleStatusMessage);
 
         }
@@ -71,22 +73,35 @@ namespace Content.Server.Atmos.Piping.Trinary.EntitySystems
 
             var removed = inletNode.Air.RemoveVolume(transferVol);
 
-            if (filter.FilteredGas.HasValue)
+            // Funky - removed for filtering of multiple gases
+            // if (filter.FilteredGas.HasValue)
+            // {
+            //     filteredOut.SetMoles(filter.FilteredGas.Value, removed.GetMoles(filter.FilteredGas.Value));
+            //     removed.SetMoles(filter.FilteredGas.Value, 0f);
+            //     var target = filterNode.Air.Pressure < Atmospherics.MaxOutputPressure ? filterNode : inletNode;
+            //     _atmosphereSystem.Merge(target.Air, filteredOut);
+            //     _ambientSoundSystem.SetAmbience(uid, filteredOut.TotalMoles > 0f);
+            // }
+
+            if (filter.FilterGases != null && filter.FilterGases.Count > 0)
             {
-                // Make sure we don't pump over the pressure limit.
-                var limitMolesFilter =
-                    AtmosphereSystem.MolesToMaxPressure(removed, filterNode.Air, Atmospherics.MaxOutputPressure);
+                var filteredOut = new GasMixture() { Temperature = removed.Temperature };
+                bool hasFilteredMoles = false;
 
-                var availableMoles = removed.GetMoles(filter.FilteredGas.Value);
-                var filteredMoles = Math.Max(Math.Min(limitMolesFilter, availableMoles), 0);
-                var filteredGasMixture = new GasMixture { Temperature = removed.Temperature };
+                foreach (var gas in filter.FilterGases)
+                {
+                    var moles = removed.GetMoles(gas);
+                    if (moles > 0f)
+                    {
+                        filteredOut.SetMoles(gas, moles);
+                        removed.SetMoles(gas, 0f);
+                        hasFilteredMoles = true;
+                    }
+                }
 
-                filteredGasMixture.SetMoles(filter.FilteredGas.Value, filteredMoles);
-                removed.AdjustMoles(filter.FilteredGas.Value, -filteredMoles);
-
-                _atmosphereSystem.Merge(filterNode.Air, filteredGasMixture);
-
-                _ambientSoundSystem.SetAmbience(uid, filteredMoles > 0f);
+                var target = filterNode.Air.Pressure < Atmospherics.MaxOutputPressure ? filterNode : inletNode;
+                _atmosphereSystem.Merge(target.Air, filteredOut);
+                _ambientSoundSystem.SetAmbience(uid, hasFilteredMoles);
             }
 
             // Fraction of `removed` that can be sent to outlet without exceeding max pressure.
@@ -138,7 +153,9 @@ namespace Content.Server.Atmos.Piping.Trinary.EntitySystems
                 return;
 
             _userInterfaceSystem.SetUiState(uid, GasFilterUiKey.Key,
-                new GasFilterBoundUserInterfaceState(MetaData(uid).EntityName, filter.TransferRate, filter.Enabled, filter.FilteredGas));
+                // Funky - removed for filtering of multiple gases
+                // new GasFilterBoundUserInterfaceState(MetaData(uid).EntityName, filter.TransferRate, filter.Enabled, filter.FilteredGas));
+                new GasFilterBoundUserInterfaceState(MetaData(uid).EntityName, filter.TransferRate, filter.Enabled, filter.FilterGases)); // Funky - for filtering of multiple gases
         }
 
         private void UpdateAppearance(EntityUid uid, GasFilterComponent? filter = null)
@@ -167,29 +184,38 @@ namespace Content.Server.Atmos.Piping.Trinary.EntitySystems
 
         }
 
-        private void OnSelectGasMessage(EntityUid uid, GasFilterComponent filter, GasFilterSelectGasMessage args)
+        // Funky - removed for filtering of multiple gases
+        // private void OnSelectGasMessage(EntityUid uid, GasFilterComponent filter, GasFilterSelectGasMessage args)
+        // {
+        //     if (args.ID.HasValue)
+        //     {
+        //         if (Enum.TryParse<Gas>(args.ID.ToString(), true, out var parsedGas))
+        //         {
+        //             filter.FilteredGas = parsedGas;
+        //             _adminLogger.Add(LogType.AtmosFilterChanged, LogImpact.Medium,
+        //                 $"{ToPrettyString(args.Actor):player} set the filter on {ToPrettyString(uid):device} to {parsedGas.ToString()}");
+        //             DirtyUI(uid, filter);
+        //         }
+        //         else
+        //         {
+        //             Log.Warning($"{ToPrettyString(uid)} received GasFilterSelectGasMessage with an invalid ID: {args.ID}");
+        //         }
+        //     }
+        //     else
+        //     {
+        //         filter.FilteredGas = null;
+        //         _adminLogger.Add(LogType.AtmosFilterChanged, LogImpact.Medium,
+        //             $"{ToPrettyString(args.Actor):player} set the filter on {ToPrettyString(uid):device} to none");
+        //         DirtyUI(uid, filter);
+        //     }
+        // }
+
+        private void OnChangeGasesMessage(EntityUid uid, GasFilterComponent filter, GasFilterChangeGasesMessage args)
         {
-            if (args.Gas.HasValue)
-            {
-                if (Enum.IsDefined(typeof(Gas), args.Gas))
-                {
-                    filter.FilteredGas = args.Gas;
-                    _adminLogger.Add(LogType.AtmosFilterChanged, LogImpact.Medium,
-                        $"{ToPrettyString(args.Actor):player} set the filter on {ToPrettyString(uid):device} to {args.Gas.ToString()}");
-                    DirtyUI(uid, filter);
-                }
-                else
-                {
-                    Log.Warning($"{ToPrettyString(uid)} received GasFilterSelectGasMessage with an invalid ID: {args.Gas}");
-                }
-            }
-            else
-            {
-                filter.FilteredGas = null;
-                _adminLogger.Add(LogType.AtmosFilterChanged, LogImpact.Medium,
-                    $"{ToPrettyString(args.Actor):player} set the filter on {ToPrettyString(uid):device} to none");
-                DirtyUI(uid, filter);
-            }
+            filter.FilterGases = new HashSet<Gas>(args.Gases);
+            _adminLogger.Add(LogType.AtmosFilterChanged, LogImpact.Medium,
+                $"{ToPrettyString(args.Actor):player} set the filter gases on {ToPrettyString(uid):device} to {string.Join(", ", args.Gases)}");
+            DirtyUI(uid, filter);
         }
 
         /// <summary>
