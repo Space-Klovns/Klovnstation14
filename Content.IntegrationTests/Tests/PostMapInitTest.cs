@@ -129,9 +129,9 @@ namespace Content.IntegrationTests.Tests
 
         public static readonly string[] GameMaps =
         {
-            //"Spire", // Harmony, Developed by Dogbone10, PenguinCodest, Jack_the_Dragon
-            "Jellyfish", // Harmony, Developed by whythelettuce
-            //"Mira", // Harmony, developed by tanuko
+            //"Spire", // KS14: ported from Harmony, Developed by Dogbone10, PenguinCodest, Jack_the_Dragon
+            "Jellyfish", // KS14: ported from Harmony, Developed by whythelettuce
+            //"Mira", // KS14: ported from Harmony, developed by tanuko
             "Dev",
             "TestTeg",
             "Fland",
@@ -151,6 +151,7 @@ namespace Content.IntegrationTests.Tests
             // "Exo", // KS14: Commented out
             "Meta", // KS14: Added back
             "Omega", // KS14: Added back and replaced with new harmony version updated from Spanky's version by OrnamentalFreak and CrimsonJupiter
+            "Wonderland", // KS14: ported from Umbra
             "Snowball"
         };
 

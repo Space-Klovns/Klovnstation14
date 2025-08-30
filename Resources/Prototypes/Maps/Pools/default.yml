@@ -34,17 +34,20 @@
   - Box
   - Fland
   - Marathon
-  # - Oasis # KS14: remove map
   - Packed
-  # - Plasma # KS14: remove map
   - Reach
-  # - Exo # KS14: remove map
-  - Saltern # KS14: bring saltern back
   - Snowball
-  - Meta # KS14: bring meta back
-  # Harmony maps start
+  # KS14 restored maps
+  - Saltern
+  - Meta
+  # KS14 removed maps
+  # - Oasis
+  # - Plasma
+  # - Exo
+  # KS14 ported Harmony maps
   - Mira
   - Omega
   - Spire
   - Jellyfish
-  # Harmony maps end
+  # KS14 ported Umbra maps
+  - Wonderland
