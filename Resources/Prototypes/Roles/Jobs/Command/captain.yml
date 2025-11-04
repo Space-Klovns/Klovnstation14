@@ -6,13 +6,13 @@
   requirements:
     - !type:DepartmentTimeRequirement
       department: Engineering
-      time: 14400 # 4 hours
+      time: 7200 # 2 hours, klovn
     - !type:DepartmentTimeRequirement
       department: Medical
-      time: 14400 # 4 hours
-    - !type:DepartmentTimeRequirement
-      department: Science
-      time: 14400 # 4 hours
+      time: 7200 # 2 hours, klovn
+#    - !type:DepartmentTimeRequirement, klovn, redundant
+#      department: Science
+#      time: 14400 # 4 hours
     - !type:DepartmentTimeRequirement
       department: Security
       time: 14400 # 4 hours

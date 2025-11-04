@@ -3,6 +3,10 @@
   name: job-name-deathsquad
   description: job-description-deathsquad
   playTimeTracker: JobDeathSquad
+  requirements:
+  - !type:DepartmentTimeRequirement
+    department: Security
+    time: 7200 #2 hrs, klovn
   setPreference: false
   startingGear: DeathSquadGear
   icon: "JobIconNanotrasen"

@@ -4,6 +4,10 @@
   name: job-name-ertleader
   description: job-description-ertleader
   playTimeTracker: JobERTLeader
+  requirements:
+  - !type:DepartmentTimeRequirement #klovn
+    department: Security
+    time: 18000 #5 hrs, klovn
   setPreference: false
   startingGear: ERTLeaderGearEVA
   icon: "JobIconNanotrasen"
@@ -199,6 +203,10 @@
   name: job-name-ertengineer
   description: job-description-ertengineer
   playTimeTracker: JobERTEngineer
+  requirements:
+  - !type:DepartmentTimeRequirement #klovn
+    department: Engineering
+    time: 9000 #2.5 hrs
   setPreference: false
   startingGear: ERTEngineerGearEVA
   icon: "JobIconNanotrasen"
@@ -282,6 +290,10 @@
   name: job-name-ertsecurity
   description: job-description-ertsecurity
   playTimeTracker: JobERTSecurity
+  requirements:
+  - !type:DepartmentTimeRequirement #klovn
+    department: Security
+    time: 3600
   setPreference: false
   startingGear: ERTSecurityGearEVA
   icon: "JobIconNanotrasen"
@@ -383,6 +395,10 @@
   name: job-name-ertmedic
   description: job-description-ertmedic
   playTimeTracker: JobERTMedical
+  requirements:
+  - !type:DepartmentTimeRequirement #klovn
+    department: Medical
+    time: 7200
   setPreference: false
   startingGear: ERTMedicalGearEVA
   icon: "JobIconNanotrasen"

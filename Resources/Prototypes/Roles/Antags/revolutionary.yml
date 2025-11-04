@@ -6,8 +6,9 @@
   objective: roles-antag-rev-head-objective
   guides: [ Revolutionaries ]
   requirements:
-  - !type:OverallPlaytimeRequirement
-    time: 3600 # 1h
+  - !type:DepartmentTimeRequirement
+    department: Security
+    time: 3600 #1 hrs, klovn
 
 - type: antag
   id: Rev

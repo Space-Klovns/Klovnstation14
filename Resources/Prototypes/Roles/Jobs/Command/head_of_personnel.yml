@@ -4,15 +4,15 @@
   description: job-description-hop
   playTimeTracker: JobHeadOfPersonnel
   requirements:
-    - !type:DepartmentTimeRequirement
-      department: Engineering
-      time: 9000 # 2.5 hours
-    - !type:DepartmentTimeRequirement
-      department: Medical
-      time: 9000 # 2.5 hours
-    - !type:DepartmentTimeRequirement
-      department: Science
-      time: 9000 # 2.5 hrs
+#    - !type:DepartmentTimeRequirement, klovn, redundant
+#      department: Engineering
+#      time: 9000 # 2.5 hours
+#    - !type:DepartmentTimeRequirement
+#      department: Medical
+#      time: 9000 # 2.5 hours
+#    - !type:DepartmentTimeRequirement
+#      department: Science
+#      time: 9000 # 2.5 hrs
     - !type:DepartmentTimeRequirement
       department: Security
       time: 9000 # 2.5 hrs
