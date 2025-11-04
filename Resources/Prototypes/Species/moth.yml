@@ -1,3 +1,12 @@
+# SPDX-FileCopyrightText: 2023 LankLTE
+# SPDX-FileCopyrightText: 2023 lzk
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+# SPDX-FileCopyrightText: 2025 MilenVolf
+# SPDX-FileCopyrightText: 2025 SlamBamActionman
+# SPDX-FileCopyrightText: 2025 Zalycon
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: species
   id: Moth
   name: species-name-moth
