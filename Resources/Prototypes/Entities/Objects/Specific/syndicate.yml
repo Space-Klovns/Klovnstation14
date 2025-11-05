@@ -120,7 +120,7 @@
 
 - type: entity
   parent: BaseUplinkRadio
-  id: BaseUplinkRadio60TC
+  id: BaseUplinkRadio300TC
   suffix: 300 TC, LoneOps
   components:
   - type: Store
