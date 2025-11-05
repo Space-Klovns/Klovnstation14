@@ -2093,7 +2093,7 @@
   description: uplink-boombox-desc
   productEntity: Boombox
   cost:
-    Telecrystal: 1 # KS14 - epic for gunning down tiders with an L6 therefore its got to be cheap
+    Telecrystal: 5 # KS14 - epic for gunning down tiders with an L6 therefore its got to be cheap
   categories:
     - UplinkPointless
 
