@@ -20,6 +20,7 @@
 // SPDX-FileCopyrightText: 2024 deltanedas
 // SPDX-FileCopyrightText: 2024 lzk
 // SPDX-FileCopyrightText: 2025 DeusMaldPr
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 //
 // SPDX-License-Identifier: MPL-2.0
 
