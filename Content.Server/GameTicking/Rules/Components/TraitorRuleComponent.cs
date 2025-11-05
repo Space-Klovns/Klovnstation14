@@ -11,6 +11,7 @@
 // SPDX-FileCopyrightText: 2025 DeusMaldPr
 // SPDX-FileCopyrightText: 2025 MilenVolf
 // SPDX-FileCopyrightText: 2025 Simon
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 //
 // SPDX-License-Identifier: MPL-2.0
 
