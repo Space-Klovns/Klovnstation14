@@ -6,7 +6,7 @@
     - Debug
   cost:
     DebugDollar: 10
-    Telecrystal: 10
+    Telecrystal: 50 #klovn
 
 - type: listing
   id: DebugListing3
