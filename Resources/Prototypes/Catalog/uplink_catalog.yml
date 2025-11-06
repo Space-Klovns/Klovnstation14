@@ -738,19 +738,19 @@
 
 #Chemicals
 
-#- type: listing, klovn, USE A LESS LAME STRATEGY
-#  id: UplinkHypopen
-#  name: uplink-hypopen-name
-#  description: uplink-hypopen-desc
-#  icon: { sprite: /Textures/Objects/Misc/pens.rsi, state: pen }
-#  productEntity: HypopenBox
-#  discountCategory: rareDiscounts
-#  discountDownTo:
-#    Telecrystal: 20
-#  cost:
-#    Telecrystal: 30
-#  categories:
-#  - UplinkChemicals
+- type: listing
+  id: UplinkHypopen
+  name: uplink-hypopen-name
+  description: uplink-hypopen-desc
+  icon: { sprite: /Textures/Objects/Misc/pens.rsi, state: pen }
+  productEntity: HypopenBox
+  discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 20
+  cost:
+    Telecrystal: 30
+  categories:
+  - UplinkChemicals
 
 - type: listing
   id: UplinkHypoDart
@@ -816,18 +816,19 @@
       tags:
       - NukeOpsUplink
 
-- type: listing
-  id: UplinkNocturineChemistryBottle
-  name: uplink-nocturine-chemistry-bottle-name
-  description: uplink-nocturine-chemistry-bottle-desc
-  productEntity: ChemistryBottleNocturine
-  discountCategory: usualDiscounts
-  discountDownTo:
-    Telecrystal: 15
-  cost:
-    Telecrystal: 30
-  categories:
-  - UplinkChemicals
+#klovn, USE A LESS LAME STRATEGY
+#- type: listing
+#  id: UplinkNocturineChemistryBottle
+#  name: uplink-nocturine-chemistry-bottle-name
+#  description: uplink-nocturine-chemistry-bottle-desc
+#  productEntity: ChemistryBottleNocturine
+#  discountCategory: usualDiscounts
+#  discountDownTo:
+#    Telecrystal: 15
+#  cost:
+##    Telecrystal: 30
+#  categories:
+#  - UplinkChemicals
 
 - type: listing
   id: UplinkCombatMedkit
