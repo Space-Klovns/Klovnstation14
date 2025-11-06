@@ -1,3 +1,33 @@
+# SPDX-FileCopyrightText: 2019 DamianX
+# SPDX-FileCopyrightText: 2020 AJCM-git
+# SPDX-FileCopyrightText: 2020 Hugo Laloge
+# SPDX-FileCopyrightText: 2021 DrSmugleaf
+# SPDX-FileCopyrightText: 2021 Mith-randalf
+# SPDX-FileCopyrightText: 2021 Peptide90
+# SPDX-FileCopyrightText: 2021 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2021 Swept
+# SPDX-FileCopyrightText: 2021 Visne
+# SPDX-FileCopyrightText: 2022 Andreas Kämper
+# SPDX-FileCopyrightText: 2022 Flipp Syder
+# SPDX-FileCopyrightText: 2022 Nairod
+# SPDX-FileCopyrightText: 2022 keronshb
+# SPDX-FileCopyrightText: 2022 metalgearsloth
+# SPDX-FileCopyrightText: 2023 Arendian
+# SPDX-FileCopyrightText: 2023 Whisper
+# SPDX-FileCopyrightText: 2023 deltanedas
+# SPDX-FileCopyrightText: 2024 Alekshhh
+# SPDX-FileCopyrightText: 2024 Fahasor
+# SPDX-FileCopyrightText: 2024 Ghagliiarghii
+# SPDX-FileCopyrightText: 2024 Hanz
+# SPDX-FileCopyrightText: 2024 PoorMansDreams
+# SPDX-FileCopyrightText: 2024 Ramlik
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+# SPDX-FileCopyrightText: 2025 ScarKy0
+# SPDX-FileCopyrightText: 2025 Smith
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MIT
+
 - type: vendingMachineInventory
   id: SecTechInventory
   startingInventory:
@@ -27,3 +57,8 @@
     FoodDonutHomer: 12
     FoodBoxDonut: 2
     #box evidence
+  emaggedInventory: #Klovn
+    ExGrenade: 1
+    EmpGrenade: 1
+    SmokeGrenade: 3 #more for sec
+    WeaponPistolViper: 1 #if you let a tot steal a secvend this is your fault
