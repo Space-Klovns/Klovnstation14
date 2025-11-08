@@ -1,0 +1,10 @@
+﻿- type: entity
+  parent: BaseFlag
+  id: SerbiaFlag
+  name: Serbian flag
+  description: SERBIAAAAAAAAAAAAAAAAAAAAAAA!!!! SERBIAAAAAAAAAAAAAAAAAAAAAAA!!!!
+  components:
+  - type: Sprite
+    components:
+    sprite: _KS14/Structures/Wallmounts/flags.rsi
+    state: serbia_flag
