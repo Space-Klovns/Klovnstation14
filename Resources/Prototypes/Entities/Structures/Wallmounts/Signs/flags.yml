@@ -50,3 +50,12 @@
   components:
   - type: Sprite
     state: pirate_flag
+
+- type: entity
+  parent: BaseFlag
+  id: SerbiaFlag #Klovn
+  name: Serbian flag
+  description: SERBIAAAAAAAAAAAAAAAAAAAAAAA!!!! SERBIAAAAAAAAAAAAAAAAAAAAAAA!!!!
+  components:
+  - type: Sprite
+    state: serbia_flag
