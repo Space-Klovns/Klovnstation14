@@ -15,21 +15,18 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 <!-- Guidelines: https://docs.spacestation14.io/en/getting-started/pr-guideline -->
 
 <!-- READ THIS BEFORE CONTRIBUTING TO KS14!!!
-NOTE: You must not port AGPL content that is utilised by any other MIT/MPL/otherwise non-AGPL licensed content. This is due to the viral nature
-of AGPL, where any code that uses AGPL must itself be licensed under AGPL. You are heavily discouraged from having code licensed under the AGPL in your PR.
-
 The REUSE Specification headers or separate .license files indicate a secondary license (e.g., AGPL or MIT), solely to facilitate
 integration for projects that do not fall under a single license.
 
 REUSE headers will be automatically added via github workflow. You can edit the SPDX-License-Identifier to change the license that the file is specified as having.
 SPDX license identifiers already included in files relevant to the PR, or identifiers that were manually changed after being automatically added, will not be modified by the bot.
 
-For clarity: You are recommended to have PR-relevant upstream-original (wizard's den) files be licensed as MIT. KS14 uses the MPL license for content original to KS14.
+For clarity: You are recommended to have PR-relevant upstream-original (wizard's den) files be licensed as MIT. KS14 uses the AGPL license for content original to KS14.
 This individual comment block can be safely removed, but you must preserve the below comment block specifying the default license of this PR.
 
 Uncomment and modify the following line if you wish to change the auto-added license from the default of MPL. Set to `AGPL` for AGPL-3.0-or-later, `MPL` for MPL-2.0, and `MIT` for MIT.
 -->
-<!--- LICENSE: MPL -->
+<!--- LICENSE: AGPL -->
 ## About the PR
 <!-- What did you change? -->
 
@@ -43,7 +40,6 @@ Uncomment and modify the following line if you wish to change the auto-added lic
 <!-- Confirm the following by placing an X in the brackets [X]: -->
 - [ ] Tested, works.
 - [ ] I have added media to this PR or it does not require an ingame showcase.
-- [ ] Any AGPL code (if present) included in this PR is *not* used by other non-AGPL code.
 <!-- You should understand that not following the above may get your PR closed at maintainer’s discretion -->
 
 ## Breaking changes
