@@ -3,12 +3,14 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Content.Server.Atmos;
 using Content.Server.Atmos.EntitySystems;
+using Content.Shared._KS14.Atmos;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Reactions;
 using JetBrains.Annotations;
 
-namespace Content.Server.Atmos.Reactions;
+namespace Content.Server._KS14.Atmos.Reactions;
 
 /// <summary>
 ///     Creates zipion, the atmos baby learning encouragement gas.
@@ -21,11 +23,11 @@ public sealed partial class ZipionFormationReaction : IGasReactionEffect
         var initialVapor = mixture.GetMoles(Gas.WaterVapor);
         var initialPlasma = mixture.GetMoles(Gas.Plasma);
 
-        if (initialPlasma < 1 || initialVapor < 9 || mixture.Temperature > Atmospherics.ZipionProductionThresholdTemperature) // super low reaction threshold = you can use expansion chambers for reacting (very useful for internalising pv=nrt)
+        if (initialPlasma < 1 || initialVapor < 9 || mixture.Temperature > KsAtmospherics.ZipionProductionThresholdTemperature) // super low reaction threshold = you can use expansion chambers for reacting (very useful for internalising pv=nrt)
             return ReactionResult.NoReaction;
 
         // are we being limited by the production rate or by the vapor available?
-        var consumedPlasma = Math.Min(initialPlasma / Atmospherics.ZipionProductionConversionRate, (initialVapor - (initialVapor % 9)) / 9); //i dont want to fuck with this fucking programming languages integer division + compilers gonna make it all the same anyway
+        var consumedPlasma = Math.Min(initialPlasma / KsAtmospherics.ZipionProductionConversionRate, (initialVapor - (initialVapor % 9)) / 9); //i dont want to fuck with this fucking programming languages integer division + compilers gonna make it all the same anyway
         var consumedVapor = consumedPlasma * 9;
         var producedZipion = consumedPlasma + consumedVapor;
 
