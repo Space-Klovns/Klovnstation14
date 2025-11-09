@@ -7,4 +7,5 @@ gas-oxygen-abbreviation = O₂
 gas-plasma-abbreviation = P
 gas-tritium-abbreviation = T
 gas-water-vapor-abbreviation = H₂O
+gas-zipion-abbreviation = Zi
 gas-unknown-abbreviation = X

@@ -7,7 +7,7 @@
   - type: Mech
   - type: MechAir
   - type: AirFilter
-    # everything except oxygen and nitrogen
+    # everything except oxygen and nitrogen and zipion
     gases:
     - CarbonDioxide
     - Plasma
@@ -27,6 +27,7 @@
     - Ammonia
     - NitrousOxide
     - Frezon
+    - Zipion
     #- Helium3 TODO: fusion
   - type: AirIntake
   # for intake and filter to work

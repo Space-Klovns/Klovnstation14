@@ -1,0 +1,26 @@
+- type: reagent
+  id: Zipion
+  name: reagent-name-zipion
+  desc: reagent-desc-zipion
+  physicalDesc: reagent-physical-desc-gaseous
+  flavor: minty
+  color: "#b924bf"
+  metabolisms:
+    Gas:
+      effects:
+      - !type:AddReagentToBlood
+        conditions:
+        - !type:ReagentThreshold
+          reagent: Zipion
+          min: 1
+        reagent: Zipium
+        amount: 2.5
+    Narcotic:
+      effects:
+      - !type:AddReagentToBlood
+        conditions:
+        - !type:ReagentThreshold
+          reagent: Zipion
+          min: 1
+        reagent: Zipium
+        amount: 2.5

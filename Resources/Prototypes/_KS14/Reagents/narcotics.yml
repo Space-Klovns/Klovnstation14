@@ -1,0 +1,14 @@
+- type: reagent
+  id: Zipium
+  name: reagent-name-zipium
+  group: Narcotics
+  desc: reagent-desc-zipium
+  physicalDesc: reagent-physical-desc-cold
+  flavor: minty
+  color: "#b924bf"
+  metabolisms:
+    Narcotic:
+      effects:
+      - !type:MovespeedModifier
+        walkSpeedModifier: 2.00
+        sprintSpeedModifier: 2.00

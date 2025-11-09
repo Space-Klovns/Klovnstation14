@@ -9,7 +9,7 @@ namespace Content.Server.Atmos.Reactions;
 ///     Creates zipion, the atmos baby learning encouragement gas.
 /// </summary>
 [UsedImplicitly]
-public sealed partial class N2ODecompositionReaction : IGasReactionEffect
+public sealed partial class ZipionFormationReaction : IGasReactionEffect
 {
     public ReactionResult React(GasMixture mixture, IGasMixtureHolder? holder, AtmosphereSystem atmosphereSystem, float heatScale)
     {

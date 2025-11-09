@@ -25,6 +25,7 @@
       Ammonia: stationAmmonia
       NitrousOxide: stationNO
       Frezon: danger
+      Zipion: stationZipion
   - type: Tag
     tags:
       - AirSensor

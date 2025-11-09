@@ -74,6 +74,14 @@
 
   Plasma gas also has a good specific heat capacity, making it useful for moving heat around.
 
+  ## Zipion
+  <Box>
+    <GuideEntityEmbed Entity="ZipionCanister" Caption=""/>
+  </Box>
+  A stimulant that speeds whoever is breathing it up at the cost of hunger. Don't forget to mix with oxygen!
+
+  Zipion is produced by mixing 9 parts water vapor with 1 part plasma at temperatures of 200 kelvin or lower.
+
   ## Tritium
   <Box>
     <GuideEntityEmbed Entity="TritiumCanister" Caption=""/>
