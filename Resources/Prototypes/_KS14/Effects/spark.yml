@@ -1,0 +1,17 @@
+- type: entity
+  id: EffectSpark
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Effects/sparks.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: sparks
+  - type: Tag
+    tags:
+    - HideContextMenu
+  - type: TimedDespawn
+    lifetime: 1.35
+  - type: EffectVisuals
+  - type: AnimationPlayer
