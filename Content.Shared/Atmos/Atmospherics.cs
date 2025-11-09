@@ -257,8 +257,8 @@ namespace Content.Shared.Atmos
         public const float SuperSaturationEnds = SuperSaturationThreshold / 3;
 
         public const float OxygenBurnRateBase = 1.4f;
-        public const float PlasmaMinimumBurnTemperature = (100f+T0C);
-        public const float PlasmaUpperTemperature = (1370f+T0C);
+        public const float PlasmaMinimumBurnTemperature = (100f + T0C);
+        public const float PlasmaUpperTemperature = (1370f + T0C);
         public const float PlasmaOxygenFullburn = 10f;
         public const float PlasmaBurnRateDelta = 9f;
 
@@ -312,14 +312,6 @@ namespace Content.Shared.Atmos
         ///     Divisor for Ammonia Oxygen reaction so that it doesn't happen instantaneously.
         /// </summary>
         public const float AmmoniaOxygenReactionRate = 10f;
-        /// <summary>
-        /// Zipion reaction begins when you reach this temperature or lower
-        /// </summary>
-        public const float ZipionProductionThresholdTemperature = 200f;
-        /// <summary>
-        /// Zipion reaction rate - 1/x of the plasma is converted into Zipion each tick
-        /// </summary>
-        public const float ZipionProductionConversionRate = 40f;
 
         /// <summary>
         ///     Determines at what pressure the ultra-high pressure red icon is displayed.
