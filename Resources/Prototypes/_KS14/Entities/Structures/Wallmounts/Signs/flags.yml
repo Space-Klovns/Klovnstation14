@@ -5,6 +5,5 @@
   description: SERBIAAAAAAAAAAAAAAAAAAAAAAA!!!! SERBIAAAAAAAAAAAAAAAAAAAAAAA!!!!
   components:
   - type: Sprite
-    components:
     sprite: _KS14/Structures/Wallmounts/flags.rsi
     state: serbia_flag
