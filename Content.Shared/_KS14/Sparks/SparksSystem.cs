@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using Content.Shared.Random.Helpers;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
@@ -12,6 +13,7 @@ using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
+using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Content.Shared._KS14.Sparks;
 
@@ -23,7 +25,8 @@ public abstract class SharedSparksSystem : EntitySystem
     [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
 
-    public static readonly EntProtoId DefaultSparkPrototype = "EffectSparks";
+    public static readonly EntProtoId DefaultSparkPrototype = "EffectSparkMoving";
+    public static readonly SoundSpecifier DefaultSoundSpecifier = new SoundCollectionSpecifier("sparks");
 
     /// <summary>
     ///     Hotspot-exposes a tile (if any exists) at the given coordinates.
@@ -37,14 +40,14 @@ public abstract class SharedSparksSystem : EntitySystem
     ///         Optionally also plays a sound at the given position.
     /// </summary>
     public void DoSparks(
-        EntityCoordinates coordinates,
-        EntProtoId sparkPrototype,
+        in EntityCoordinates coordinates,
+        in EntProtoId sparkPrototype,
         SoundSpecifier? soundSpecifier = null,
-        int minimumSparks = 1,
-        int maximumSparks = 3,
-        float minimumSparkVelocity = 2.5f,
-        float maximumSparkVelocity = 5f,
-        Entity<MetaDataComponent?>? user = null)
+        int minimumSparks = 2,
+        int maximumSparks = 5,
+        float minimumSparkVelocity = 1.25f,
+        float maximumSparkVelocity = 3f,
+        in Entity<MetaDataComponent?>? user = null)
     {
         var seed = SharedRandomExtensions.HashCodeCombine(new() { (int)_gameTiming.CurTick.Value, (int)coordinates.Position.LengthSquared() });
         var random = new System.Random(seed);
@@ -61,18 +64,33 @@ public abstract class SharedSparksSystem : EntitySystem
     }
 
     /// <summary>
+    ///     Spawns a random number of sparks attached to a position, each launched in a random direction at a random velocity.
+    ///         Plays a soundcollection (<see cref="DefaultSoundSpecifier"/>) and spawns the default entity prototype, being <see cref="DefaultSparkPrototype"/>. 
+    /// </summary>
+    public void DoSparks(
+        in EntityCoordinates coordinates,
+        int minimumSparks = 2,
+        int maximumSparks = 5,
+        float minimumSparkVelocity = 1.25f,
+        float maximumSparkVelocity = 3f,
+        in Entity<MetaDataComponent?>? user = null)
+    {
+        DoSparks(coordinates, DefaultSparkPrototype, DefaultSoundSpecifier, minimumSparks, maximumSparks, minimumSparkVelocity, maximumSparkVelocity, user);
+    }
+
+    /// <summary>
     ///     Spawns a single spark attached to a position, and launches it in a random direction at a random velocity.
     ///         Optionally also plays a sound at the given position.
     /// </summary>
-    /// <param name="random">Random used to get velocity and direction of the spark. Should be predicted if this method is being used in prediction.</param>
+    /// <param name="random">Random used to get velocity and direction of the spark. Should have a predicted seed if this method is being used in prediction.</param>
     /// <returns>The spawned entity.</returns>
     public EntityUid DoSpark(
-        EntityCoordinates coordinates,
-        EntProtoId sparkPrototype,
+        in EntityCoordinates coordinates,
+        in EntProtoId sparkPrototype,
         SoundSpecifier? soundSpecifier = null,
         float minimumVelocity = 2.5f,
         float maximumVelocity = 5f,
-        Entity<MetaDataComponent?>? user = null,
+        in Entity<MetaDataComponent?>? user = null,
         System.Random? random = null
     )
     {
@@ -98,7 +116,8 @@ public abstract class SharedSparksSystem : EntitySystem
     ///     Spawns a single spark at a position, and launches it in a given direction at a given velocity.
     /// </summary>
     /// <returns>The spawned entity.</returns>
-    public EntityUid SpawnSpark(MapCoordinates coordinates, Vector2 velocityVector, EntProtoId sparkPrototype)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public EntityUid SpawnSpark(in MapCoordinates coordinates, in Vector2 velocityVector, in EntProtoId sparkPrototype)
     {
         var spark = EntityManager.PredictedSpawn(sparkPrototype, coordinates);
         _physicsSystem.SetLinearVelocity(spark, velocityVector);
@@ -107,14 +126,16 @@ public abstract class SharedSparksSystem : EntitySystem
     }
 
     /// <inheritdoc cref="SpawnSpark(MapCoordinates, Vector2, EntProtoId)"/>
-    public EntityUid SpawnSpark(MapCoordinates coordinates, Angle direction, float velocityScalar, EntProtoId sparkPrototype)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public EntityUid SpawnSpark(in MapCoordinates coordinates, in Angle direction, float velocityScalar, in EntProtoId sparkPrototype)
         => SpawnSpark(coordinates, direction.ToWorldVec() * velocityScalar, sparkPrototype);
 
     /// <summary>
     ///     Spawns a single spark attached to a position, and launches it in a given direction at a given velocity.
     /// </summary>
     /// <returns>The spawned entity.</returns>
-    public EntityUid SpawnSparkAttached(EntityCoordinates coordinates, Vector2 velocityVector, EntProtoId sparkPrototype)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public EntityUid SpawnSparkAttached(in EntityCoordinates coordinates, in Vector2 velocityVector, in EntProtoId sparkPrototype)
     {
         var spark = EntityManager.PredictedSpawnAttachedTo(sparkPrototype, coordinates);
         _physicsSystem.SetLinearVelocity(spark, velocityVector);
@@ -123,6 +144,7 @@ public abstract class SharedSparksSystem : EntitySystem
     }
 
     /// <inheritdoc cref="SpawnSparkAttached(EntityCoordinates, Vector2, EntProtoId)"/>
-    public EntityUid SpawnSparkAttached(EntityCoordinates coordinates, Angle direction, float velocityScalar, EntProtoId sparkPrototype)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public EntityUid SpawnSparkAttached(in EntityCoordinates coordinates, in Angle direction, float velocityScalar, in EntProtoId sparkPrototype)
         => SpawnSparkAttached(coordinates, direction.ToWorldVec() * velocityScalar, sparkPrototype);
 }
