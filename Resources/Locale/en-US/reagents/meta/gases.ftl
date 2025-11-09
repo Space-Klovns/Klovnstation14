@@ -18,6 +18,3 @@ reagent-desc-nitrous-oxide = You know how everything seems funnier when you're t
 
 reagent-name-frezon = frezon
 reagent-desc-frezon = A highly effective coolant.. and hallucinogenic.
-
-reagent-name-zipion = zipion
-reagent-desc-zipion = An easy to synthesise performance enhancer. Beloved by the law and those who break it alike.

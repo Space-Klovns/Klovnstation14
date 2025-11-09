@@ -7,7 +7,6 @@ using Content.Shared.Chemistry.Reagent;
 using Content.Shared.EntityEffects;
 using Content.Shared.FixedPoint;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Content.Shared.Chemistry.EntitySystems;
 
 namespace Content.Shared._KS14.EntityEffects.EffectConditions;
@@ -20,36 +19,34 @@ public sealed partial class BloodReagentThreshold : EntityEffectCondition
     [DataField]
     public FixedPoint2 Max = FixedPoint2.MaxValue;
 
-    [DataField(customTypeSerializer: typeof(PrototypeIdSerializer<ReagentPrototype>))]
-    public string? Reagent = null;
+    [DataField(required: true)]
+    public ProtoId<ReagentPrototype> Reagent;
+
+    [Dependency] private SharedSolutionContainerSystem? _solutionContainerSystem = null;
+
     public override bool Condition(EntityEffectBaseArgs args)
     {
-        if (Reagent is null) return true;
-        if (args.EntityManager.TryGetComponent<BloodstreamComponent>(args.TargetEntity, out var blood))
-        {
-            if (args.EntityManager.System<SharedSolutionContainerSystem>().ResolveSolution(args.TargetEntity, blood.ChemicalSolutionName, ref blood.ChemicalSolution, out var chemSolution))
-            {
-                var reagentID = new ReagentId(Reagent, null);
-                if (chemSolution.TryGetReagentQuantity(reagentID, out var quant))
-                {
-                    return quant > Min && quant < Max;
-                }
-            }
-            return true;
-        }
+        // yeah wtf is this #2
+        _solutionContainerSystem ??= args.EntityManager.System<SharedSolutionContainerSystem>();
 
-        throw new NotImplementedException();
+        if (!args.EntityManager.TryGetComponent<BloodstreamComponent>(args.TargetEntity, out var blood) ||
+            !_solutionContainerSystem.ResolveSolution(args.TargetEntity, blood.ChemicalSolutionName, ref blood.ChemicalSolution, out var chemSolution))
+            throw new NotImplementedException();
+
+        var reagentID = new ReagentId(Reagent, null);
+        if (chemSolution.TryGetReagentQuantity(reagentID, out var quant))
+            return quant > Min && quant < Max;
+
+        return true;
     }
 
     public override string GuidebookExplanation(IPrototypeManager prototype)
     {
-        ReagentPrototype? reagentProto = null;
-        if (Reagent is not null)
-            prototype.TryIndex(Reagent, out reagentProto);
+        prototype.TryIndex(Reagent, out var reagentProto);
 
         return Loc.GetString("reagent-effect-condition-guidebook-blood-reagent-threshold",
             ("reagent", reagentProto?.LocalizedName ?? Loc.GetString("reagent-effect-condition-guidebook-this-reagent")),
-            ("max", Max == FixedPoint2.MaxValue ? (float) int.MaxValue : Max.Float()),
+            ("max", Max == FixedPoint2.MaxValue ? float.MaxValue : Max.Float()),
             ("min", Min.Float()));
     }
 }

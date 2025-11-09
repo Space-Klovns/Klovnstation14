@@ -8,43 +8,36 @@ using Content.Shared.Chemistry.Reagent;
 using Content.Shared.EntityEffects;
 using Content.Shared.FixedPoint;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Content.Shared.Chemistry.Components;
-using Content.Shared.Chemistry.EntitySystems;
 
 namespace Content.Shared._KS14.EntityEffects.Effects;
 
 public sealed partial class AddReagentToBlood : EntityEffect
 {
-    private readonly SharedSolutionContainerSystem _solutionContainers;
-
-    [DataField(customTypeSerializer: typeof(PrototypeIdSerializer<ReagentPrototype>))]
-    public string? Reagent = null;
+    [DataField(required: true)]
+    public ProtoId<ReagentPrototype> Reagent;
 
     [DataField]
-    public FixedPoint2 Amount = default!;
-    [Dependency] private readonly SharedBloodstreamSystem _bloodstreamSystem = default!;
+    public FixedPoint2 Amount = default;
+
+    [DataField]
+    public List<ReagentData>? Data = null;
+
+    [Dependency] private SharedBloodstreamSystem? _bloodstreamSystem = null;
 
     public override void Effect(EntityEffectBaseArgs args)
     {
-        if (args.EntityManager.TryGetComponent<BloodstreamComponent>(args.TargetEntity, out BloodstreamComponent? blood))
-        {
-            if (args is EntityEffectReagentArgs reagentArgs)
-            {
-                if (Reagent is null) return;
-                var amt = Amount;
-                var solution = new Solution();
-                solution.AddReagent(Reagent, amt);
-                Logger.Error($"{args.TargetEntity}, {blood}");
-                _bloodstreamSystem.TryAddToChemicals((args.TargetEntity, blood), solution);
-            }
+        if (!args.EntityManager.TryGetComponent<BloodstreamComponent>(args.TargetEntity, out var blood))
             return;
-        }
+
+        // yeah wtf is this
+        _bloodstreamSystem ??= args.EntityManager.System<SharedBloodstreamSystem>();
+        _bloodstreamSystem.TryAddToChemicals((args.TargetEntity, blood), new Solution(Reagent, Amount, Data));
     }
 
     protected override string? ReagentEffectGuidebookText(IPrototypeManager prototype, IEntitySystemManager entSys)
     {
-        if (Reagent is not null && prototype.TryIndex(Reagent, out ReagentPrototype? reagentProto))
+        if (prototype.TryIndex(Reagent, out var reagentProto))
         {
             return Loc.GetString("reagent-effect-guidebook-add-to-chemicals",
                 ("chance", Probability),
