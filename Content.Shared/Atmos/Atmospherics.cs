@@ -206,7 +206,7 @@ namespace Content.Shared.Atmos
         /// <summary>
         ///     Total number of gases. Increase this if you want to add more!
         /// </summary>
-        public const int TotalNumberOfGases = 9;
+        public const int TotalNumberOfGases = 10; // KS14 new gases: zipion
 
         /// <summary>
         ///     This is the actual length of the gases arrays in mixtures.
@@ -283,6 +283,14 @@ namespace Content.Shared.Atmos
         ///     Divisor for Ammonia Oxygen reaction so that it doesn't happen instantaneously.
         /// </summary>
         public const float AmmoniaOxygenReactionRate = 10f;
+        /// <summary>
+        /// Zipion reaction begins when you reach this temperature or lower
+        /// </summary>
+        public const float ZipionProductionThresholdTemperature = 200f;
+        /// <summary>
+        /// Zipion reaction rate - 1/x of the plasma is converted into Zipion each tick
+        /// </summary>
+        public const float ZipionProductionConversionRate = 40f;
 
         /// <summary>
         ///     Determines at what pressure the ultra-high pressure red icon is displayed.
@@ -369,6 +377,7 @@ namespace Content.Shared.Atmos
         WaterVapor = 5,
         Ammonia = 6,
         NitrousOxide = 7,
-        Frezon = 8
+        Frezon = 8,
+        Zipion = 9 //KS14
     }
 }
