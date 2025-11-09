@@ -23,11 +23,12 @@ public abstract class SharedSparksSystem : EntitySystem
     [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
 
-    public static readonly EntProtoId DefaultSparkPrototype = "EffectSpark";
+    public static readonly EntProtoId DefaultSparkPrototype = "EffectSparks";
 
     /// <summary>
     ///     Hotspot-exposes a tile (if any exists) at the given coordinates.
-    ///         Does nothing on client.
+    ///         Does nothing if either on client, or the given <paramref name="coordinates"/>
+    ///         are inside an enclosed container.
     /// </summary>
     public abstract void ExposeSpark(EntityCoordinates coordinates, float exposedTemperature, float exposedVolume);
 
