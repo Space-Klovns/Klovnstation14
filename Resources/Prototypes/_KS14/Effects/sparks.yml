@@ -1,5 +1,5 @@
 - type: entity
-  id: EffectSpark
+  id: EffectSparks
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
