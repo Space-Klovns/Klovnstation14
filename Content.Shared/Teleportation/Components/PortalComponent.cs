@@ -53,4 +53,18 @@ public sealed partial class PortalComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField, ViewVariables(VVAccess.ReadWrite)]
     public bool RandomTeleport = true;
+
+    // KS14 Addition
+    /// <summary>
+    /// Can this portal teleport onto occupied tiles?
+    /// </summary>
+    [DataField, AutoNetworkedField, ViewVariables(VVAccess.ReadWrite)]
+    public bool CanTeleportOnOccupiedTiles = false;
+
+    // KS14 Addition
+    /// <summary>
+    /// Does this portal gib anything that goes through it, if the target tile is full?
+    /// </summary>
+    [DataField, AutoNetworkedField, ViewVariables(VVAccess.ReadWrite)]
+    public bool GibOnTargetTileOccupied = true;
 }
