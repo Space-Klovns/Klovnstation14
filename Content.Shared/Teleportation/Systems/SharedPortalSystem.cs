@@ -1,8 +1,10 @@
 ﻿using System.Linq;
 using Content.Shared._KS14.Random.Helpers; // KS14 Addition
 using Content.Shared._KS14.Sparks; // KS14 Addition
+using Content.Shared.Body.Components; // KS14 Addition
 using Content.Shared.Body.Systems; // KS14 Addition
 using Content.Shared.Ghost;
+using Content.Shared.IdentityManagement; // KS14 Addition
 using Content.Shared.Movement.Pulling.Components;
 using Content.Shared.Movement.Pulling.Systems;
 using Content.Shared.Popups;
@@ -37,8 +39,9 @@ public abstract class SharedPortalSystem : EntitySystem
     [Dependency] private readonly PullingSystem _pulling = default!;
     [Dependency] private readonly SharedPopupSystem _popup = default!;
     [Dependency] private readonly SharedSparksSystem _sparksSystem = default!; // KS14 Addition
-    [Dependency] private readonly SharedBodySystem _bodySystem = default!; // KS14 Addition
     [Dependency] private readonly IGameTiming _curTiming = default!; // KS14 Addition
+    [Dependency] private readonly SharedBodySystem _bodySystem = default!; // KS14 Addition
+    [Dependency] private readonly ISharedPlayerManager _playerManager = default!; // KS14 Addition
 
     private const string PortalFixture = "portalFixture";
     private const string ProjectileFixture = "projectile";
@@ -199,6 +202,23 @@ public abstract class SharedPortalSystem : EntitySystem
         return true;
     }
 
+    // KS14 Addition
+    /// <summary>
+    /// Called on an entity being telefragged.
+    /// </summary>
+    /// <returns>False if the hit was already handled.</returns>
+    public virtual bool OnTelefrag(Entity<BodyComponent?> hitEntity, in Entity<PortalComponent> portalEntity)
+    {
+        if (Resolve(hitEntity, ref hitEntity.Comp, logMissing: false))
+        {
+            _popup.PopupEntity(Loc.GetString("portal-component-telefrag", ("name", Identity.Name(hitEntity, EntityManager, _playerManager.LocalEntity))), hitEntity, type: PopupType.LargeCaution);
+            _bodySystem.GibBody(hitEntity, gibOrgans: true, body: hitEntity.Comp, splatModifier: 9f);
+            return false;
+        }
+
+        return true;
+    }
+
     /// <summary>
     /// Handles teleporting a subject from the portal entity to a coordinate.
     /// Also deletes invalid portals.
@@ -250,13 +270,27 @@ public abstract class SharedPortalSystem : EntitySystem
 
         _transform.SetCoordinates(subject, target);
 
-        // KS14: Do sparks
-        _sparksSystem.DoSparks(target, user: subject);
-
         // KS14: Gib if tile isn't free (trollface emoji)
+        var sparkMultiplier = 1f;
         if (ent.Comp.GibOnTargetTileOccupied &&
-            _lookup.AnyEntitiesIntersecting(_transform.ToMapCoordinates(target), LookupFlags.Static))
-            _bodySystem.GibBody(subject, splatModifier: 9f);
+            TryComp<BodyComponent>(subject, out var subjectBodyComponent))
+        {
+            var intersected = false;
+            foreach (var hitUid in _lookup.GetEntitiesIntersecting(_transform.ToMapCoordinates(target), LookupFlags.Static))
+            {
+                intersected = true;
+                OnTelefrag(hitUid, ent);
+
+                sparkMultiplier += 2f;
+            }
+
+            // where's yo head at
+            if (intersected)
+                OnTelefrag((subject, subjectBodyComponent), ent);
+        }
+
+        // KS14: Do sparks
+        _sparksSystem.DoSparks(target, minimumSparks: (int)(2f * sparkMultiplier), maximumSparks: (int)(5f * sparkMultiplier), user: subject);
 
         if (!playSound)
             return;
@@ -283,15 +317,17 @@ public abstract class SharedPortalSystem : EntitySystem
         {
             newCoords = coords.Offset(random.NextVector2(ent.Comp.MaxRandomRadius));
             if (!ent.Comp.CanTeleportOnOccupiedTiles && // KS14: Added CanTeleportOnOccupiedTiles
-                !_lookup.AnyEntitiesIntersecting(_transform.ToMapCoordinates(newCoords), LookupFlags.Static))
+                _lookup.AnyEntitiesIntersecting(_transform.ToMapCoordinates(newCoords), LookupFlags.Static))
             {
-                // newCoords is not a wall
-                break;
+                // after "MaxRandomTeleportAttempts" attempts, end up in the walls
+                continue;
             }
-            // after "MaxRandomTeleportAttempts" attempts, end up in the walls
+
+            // newCoords is not a wall
+            break;
         }
 
-        // KS14: Align to tile if on a grid (whateverburger)
+        // KS14: Align to tile if on a grid (whateverburger). wtf is this
         if (TryComp<MapGridComponent>(newCoords.EntityId, out var gridComponent))
             newCoords = new EntityCoordinates(newCoords.EntityId, MathF.Floor(newCoords.X / gridComponent.TileSize), MathF.Floor(newCoords.Y / gridComponent.TileSize));
 

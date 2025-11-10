@@ -56,10 +56,10 @@ public sealed partial class PortalComponent : Component
 
     // KS14 Addition
     /// <summary>
-    /// Can this portal teleport onto occupied tiles?
+    /// Can this portal randomly teleport onto occupied tiles?
     /// </summary>
     [DataField, AutoNetworkedField, ViewVariables(VVAccess.ReadWrite)]
-    public bool CanTeleportOnOccupiedTiles = false;
+    public bool CanTeleportOnOccupiedTiles = true;
 
     // KS14 Addition
     /// <summary>

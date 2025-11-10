@@ -6,7 +6,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Content.Shared._KS14.Random.Helpers;
-using Content.Shared.Random.Helpers;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
@@ -102,9 +101,9 @@ public abstract class SharedSparksSystem : EntitySystem
         );
 
         // now, spawn in random direction at random velocity between given minimum/maximum velocity
+        _transformSystem.SetCoordinates(spark, coordinates);
         var sparkDirectionVector = new Angle(random.NextFloat() * MathF.Tau).ToWorldVec();
         _physicsSystem.SetLinearVelocity(spark, sparkDirectionVector * random.NextFloat(minimumVelocity, maximumVelocity));
-        _transformSystem.SetCoordinates(spark, coordinates);
 
         if (soundSpecifier is { })
             _audioSystem.PlayPredicted(soundSpecifier, coordinates, user);
