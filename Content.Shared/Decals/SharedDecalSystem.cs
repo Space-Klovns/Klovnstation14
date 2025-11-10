@@ -19,7 +19,7 @@ namespace Content.Shared.Decals
         // Note that this constant is effectively baked into all map files, because of how they save the grid decal component.
         // So if this ever needs changing, the maps need converting.
         public const int ChunkSize = 32;
-        public static Vector2i GetChunkIndices(Vector2 coordinates) => new ((int) Math.Floor(coordinates.X / ChunkSize), (int) Math.Floor(coordinates.Y / ChunkSize));
+        public static Vector2i GetChunkIndices(Vector2 coordinates) => new((int)Math.Floor(coordinates.X / ChunkSize), (int)Math.Floor(coordinates.Y / ChunkSize));
 
         public override void Initialize()
         {
@@ -80,7 +80,7 @@ namespace Content.Shared.Decals
             return comp.ChunkCollection.ChunkCollection;
         }
 
-        protected virtual void DirtyChunk(EntityUid id, Vector2i chunkIndices, DecalChunk chunk) {}
+        protected virtual void DirtyChunk(EntityUid id, Vector2i chunkIndices, DecalChunk chunk) { }
 
         // internal, so that client/predicted code doesn't accidentally remove decals. There is a public server-side function.
         protected bool RemoveDecalInternal(EntityUid gridId, uint decalId, [NotNullWhen(true)] out Decal? removed, DecalGridComponent? component = null)
@@ -118,6 +118,28 @@ namespace Content.Shared.Decals
         public virtual bool RemoveDecal(EntityUid gridId, uint decalId, DecalGridComponent? component = null)
         {
             // NOOP on client atm.
+            return true;
+        }
+
+        // KS14: Added TryAddDecal on shared
+        /// <summary>
+        ///     Does nothing on client. <paramref name="decalId"/> is always 0 on client.
+        /// </summary>
+        public virtual bool TryAddDecal(string id, EntityCoordinates coordinates, out uint decalId, Color? color = null, Angle? rotation = null, int zIndex = 0, bool cleanable = false)
+        {
+            // NOOP on client atm.
+            decalId = 0;
+            return true;
+        }
+
+        // KS14: Added TryAddDecal on shared
+        /// <summary>
+        ///     Does nothing on client. <paramref name="decalId"/> is always 0 on client.
+        /// </summary>
+        public virtual bool TryAddDecal(Decal decal, EntityCoordinates coordinates, out uint decalId)
+        {
+            // NOOP on client atm.
+            decalId = 0;
             return true;
         }
     }
