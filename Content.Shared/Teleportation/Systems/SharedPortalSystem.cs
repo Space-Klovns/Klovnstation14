@@ -288,16 +288,19 @@ public abstract class SharedPortalSystem : EntitySystem
 
         // KS14: Gib if tile isn't free (trollface emoji)
         var sparkMultiplier = 1f;
-        if (ent.Comp.GibOnTargetTileOccupied &&
+        if (ent.Comp.FragOnTargetTileOccupied &&
             TryComp<BodyComponent>(subject, out var subjectBodyComponent))
         {
             var intersected = false;
             foreach (var hitUid in _lookup.GetEntitiesIntersecting(_transform.ToMapCoordinates(target), LookupFlags.Static))
             {
                 intersected = true;
-                OnTelefrag(hitUid, ent);
 
-                sparkMultiplier += 2f;
+                if (ent.Comp.FragIntersectingEntities)
+                {
+                    OnTelefrag(hitUid, ent);
+                    sparkMultiplier += 2f;
+                }
             }
 
             // where's yo head at
