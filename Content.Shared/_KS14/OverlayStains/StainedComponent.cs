@@ -8,7 +8,7 @@ namespace Content.Shared._KS14.StainOverlays;
 ///     Component to visualise blood-stains on things.
 /// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
-public sealed partial class StainedOverlayComponent : Component
+public sealed partial class StainedComponent : Component
 {
     /// <summary>
     ///     Stains that are on this entity, with their color

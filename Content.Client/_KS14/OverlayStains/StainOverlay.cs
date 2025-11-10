@@ -110,7 +110,7 @@ public sealed class StainOverlay : Overlay
 
         var rotationMatrix = Matrix3Helpers.CreateRotation(-args.Viewport.Eye?.Rotation ?? default);
 
-        var stainedEnumerator = _entManager.EntityQueryEnumerator<StainedOverlayComponent, TransformComponent>();
+        var stainedEnumerator = _entManager.EntityQueryEnumerator<StainedComponent, TransformComponent>();
         while (stainedEnumerator.MoveNext(out var uid, out var stainedComponent, out var transformComponent))
         {
             var worldPosition = _transformSystem.GetWorldPosition(transformComponent, _transformQuery);

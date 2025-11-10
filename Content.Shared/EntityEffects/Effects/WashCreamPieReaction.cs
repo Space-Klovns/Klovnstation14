@@ -17,6 +17,6 @@ public sealed partial class WashCreamPieReaction : EntityEffect
         args.EntityManager.System<SharedCreamPieSystem>().SetCreamPied(args.TargetEntity, creamPied, false);
 
         // KS14: Trollface Emoji ; clean wall-stain-overlays
-        args.EntityManager.System<_KS14.StainOverlays.StainOverlaySystem>().CleanEntity(args.TargetEntity);
+        args.EntityManager.System<_KS14.StainOverlays.StainSystem>().CleanEntity(args.TargetEntity);
     }
 }

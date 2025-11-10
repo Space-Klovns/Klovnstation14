@@ -44,7 +44,7 @@ public abstract class SharedBloodstreamSystem : EntitySystem
     [Dependency] private readonly SharedDecalSystem _decalSystem = default!; // KS14 Addition
     [Dependency] private readonly SharedTransformSystem _transformSystem = default!; // KS14 Addition
     [Dependency] private readonly IRobustRandom _random = default!; // KS14 Addition
-    [Dependency] private readonly StainOverlaySystem _StainOverlaySystem = default!; // KS14 Addition
+    [Dependency] private readonly StainSystem _StainSystem = default!; // KS14 Addition
     [Dependency] private readonly EntityLookupSystem _lookupSystem = default!; // KS14 Addition
 
     public override void Initialize()
@@ -280,7 +280,7 @@ public abstract class SharedBloodstreamSystem : EntitySystem
         }
 
         foreach (var intersectingUid in _lookupSystem.GetEntitiesIntersecting(new EntityCoordinates(targetTransform.Coordinates.EntityId, targetTransform.Coordinates.Position + deltaUnit), LookupFlags.Static))
-            _StainOverlaySystem.ApplyDirectionalStain(intersectingUid, deltaUnit, bloodColor);
+            _StainSystem.ApplyDirectionalStain(intersectingUid, deltaUnit, bloodColor);
 
         Log.Debug($"Delta: {deltaUnit}");
     }
