@@ -1,3 +1,4 @@
+using Content.Shared._KS14.StainOverlays;
 using Content.Shared.Alert;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Events;
@@ -6,6 +7,7 @@ using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Chemistry.Reaction;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.Damage;
+using Content.Shared.Decals; // KS14 Addition
 using Content.Shared.EntityEffects.Effects;
 using Content.Shared.FixedPoint;
 using Content.Shared.Fluids;
@@ -18,6 +20,7 @@ using Content.Shared.Rejuvenate;
 using Content.Shared.StatusEffectNew;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Containers;
+using Robust.Shared.Map; // KS14 Addition
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
@@ -38,6 +41,11 @@ public abstract class SharedBloodstreamSystem : EntitySystem
     [Dependency] private readonly AlertsSystem _alertsSystem = default!;
     [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
     [Dependency] private readonly DamageableSystem _damageableSystem = default!;
+    [Dependency] private readonly SharedDecalSystem _decalSystem = default!; // KS14 Addition
+    [Dependency] private readonly SharedTransformSystem _transformSystem = default!; // KS14 Addition
+    [Dependency] private readonly IRobustRandom _random = default!; // KS14 Addition
+    [Dependency] private readonly StainOverlaySystem _StainOverlaySystem = default!; // KS14 Addition
+    [Dependency] private readonly EntityLookupSystem _lookupSystem = default!; // KS14 Addition
 
     public override void Initialize()
     {
@@ -208,6 +216,9 @@ public abstract class SharedBloodstreamSystem : EntitySystem
         var totalFloat = total.Float();
         TryModifyBleedAmount(ent.AsNullable(), totalFloat);
 
+        // KS14 Addition: effects
+        HandleBleedEffects(ent, args, bloodloss);
+
         /// Critical hit. Causes target to lose blood, using the bleed rate modifier of the weapon, currently divided by 5
         /// The crit chance is currently the bleed rate modifier divided by 25.
         /// Higher damage weapons have a higher chance to crit!
@@ -234,6 +245,44 @@ public abstract class SharedBloodstreamSystem : EntitySystem
                     ent, PopupType.Medium); // only the burned entity can see this
             _audio.PlayPredicted(ent.Comp.BloodHealedSound, ent, args.Origin);
         }
+    }
+
+    // KS14 Addition
+    private void HandleBleedEffects(in Entity<BloodstreamComponent> entity, in DamageChangedEvent args, DamageSpecifier bloodlossSpecifier)
+    {
+        if (args.Origin is not { } originUid ||
+            !SolutionContainer.ResolveSolution(entity.Owner, entity.Comp.BloodSolutionName, ref entity.Comp.BloodSolution, out var bloodSolution))
+            return;
+
+        var targetTransform = Transform(entity);
+        var originTransform = Transform(originUid);
+
+        // TODO: Something better than this
+        var deltaUnit = targetTransform.Coordinates.EntityId == originTransform.Coordinates.EntityId ?
+        // if both relative to the same body, do cheaper calculation
+            targetTransform.Coordinates.Position - originTransform.Coordinates.Position :
+        // otherwise calculate by worldpos
+            _transformSystem.GetWorldPosition(targetTransform) - _transformSystem.GetWorldPosition(originTransform);
+
+        deltaUnit = deltaUnit.Normalized();
+        var bloodloss = (float)bloodlossSpecifier.GetTotal();
+
+        var bloodColor = bloodSolution.GetColor(_prototypeManager);
+        bloodColor = bloodColor.WithAlpha(bloodColor.A * _random.NextFloat(0.45f));
+
+        const float maxCount = 7f;
+        var count = (int)(maxCount * (1f - MathF.Exp(-bloodloss / 7.0f)));
+        for (var i = 0; i < count; i++)
+        {
+            var decalPosition = targetTransform.Coordinates.Position + deltaUnit + _random.NextVector2(0.35f);
+            var decalCoordinates = new EntityCoordinates(targetTransform.Coordinates.EntityId, decalPosition);
+            _decalSystem.TryAddDecal("splatter", decalCoordinates, out _, color: bloodColor, rotation: _random.NextAngle(), cleanable: true);
+        }
+
+        foreach (var intersectingUid in _lookupSystem.GetEntitiesIntersecting(new EntityCoordinates(targetTransform.Coordinates.EntityId, targetTransform.Coordinates.Position + deltaUnit), LookupFlags.Static))
+            _StainOverlaySystem.ApplyDirectionalStain(intersectingUid, deltaUnit, bloodColor);
+
+        Log.Debug($"Delta: {deltaUnit}");
     }
 
     /// <summary>
