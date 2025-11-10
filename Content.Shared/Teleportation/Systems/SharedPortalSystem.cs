@@ -10,6 +10,7 @@
 // SPDX-FileCopyrightText: 2025 J
 // SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 āda
 //
 // SPDX-License-Identifier: MPL-2.0

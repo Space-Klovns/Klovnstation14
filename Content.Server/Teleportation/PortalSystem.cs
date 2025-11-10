@@ -1,4 +1,14 @@
-﻿using Content.Server.Destructible; // KS14 Addition
+// SPDX-FileCopyrightText: 2023 Chief-Engineer
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Kara
+// SPDX-FileCopyrightText: 2023 Leon Friedrich
+// SPDX-FileCopyrightText: 2023 ShadowCommander
+// SPDX-FileCopyrightText: 2023 metalgearsloth
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MPL-2.0
+
+using Content.Server.Destructible; // KS14 Addition
 using Content.Shared.Administration.Logs;
 using Content.Shared.Body.Components; // KS14 Addition
 using Content.Shared.Database;
