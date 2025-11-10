@@ -1,5 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using Content.Shared.Chemistry;
+using Content.Shared.Chemistry.Reaction;
 
 namespace Content.Shared._KS14.StainOverlays;
 
@@ -16,6 +18,18 @@ public sealed class StainOverlaySystem : EntitySystem
     {
         base.Initialize();
         StainedQuery = GetEntityQuery<StainedOverlayComponent>();
+    }
+
+    /// <summary>
+    ///     Removes <see cref="StainedOverlayComponent"/> from the specified uid.
+    /// </summary>
+    public void CleanEntity(EntityUid uid)
+    {
+        if (StainedQuery.TryGetComponent(uid, out var stainedComponent))
+        {
+            RemComp(uid, stainedComponent);
+            RemComp<ReactiveComponent>(uid);
+        }
     }
 
     /// <summary>
@@ -39,8 +53,7 @@ public sealed class StainOverlaySystem : EntitySystem
         entity.Comp.Stains.Add((offset, color));
         Dirty(entity);
 
-        EnsureComp<AppearanceComponent>(entity);
-        _appearanceSystem.SetData(entity.Owner, StainOverlayVisuals.Count, entity.Comp.Stains.Count);
+        EnsureComp<ReactiveComponent>(entity);
     }
 
     /// <summary>

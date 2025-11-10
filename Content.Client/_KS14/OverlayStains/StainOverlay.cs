@@ -23,12 +23,9 @@ public sealed class StainOverlay : Overlay
 
     [Dependency] private readonly IClyde _clyde = default!;
     [Dependency] private readonly IEntityManager _entManager = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly IGameTiming _gameTiming = default!;
 
-    private readonly MapSystem _mapSystem = default!;
-    private readonly EntityLookupSystem _lookupSystem = default!;
     private readonly OccluderSystem _occluderSystem = default!;
     private readonly TransformSystem _transformSystem = default!;
     private readonly SpriteSystem _spriteSystem = default!;
@@ -40,16 +37,15 @@ public sealed class StainOverlay : Overlay
     public List<(Vector2, Color)> RenderedStains = new();
     public SpriteSpecifier? StainSpriteSpecifier;
 
-    private List<Entity<MapGridComponent>> _grids = new();
     private readonly OverlayResourceCache<CachedResources> _resources = new();
 
     private static readonly Vector2 Vector2Half = Vector2.One / 2;
+    private static readonly Matrix3x2 ScaleMatrix = Matrix3Helpers.CreateScale(new Vector2(1, 1));
 
     public StainOverlay()
     {
         IoCManager.InjectDependencies(this);
-        _mapSystem = _entManager.System<MapSystem>();
-        _lookupSystem = _entManager.System<EntityLookupSystem>();
+
         _occluderSystem = _entManager.System<OccluderSystem>();
         _transformSystem = _entManager.System<TransformSystem>();
         _spriteSystem = _entManager.System<SpriteSystem>();
@@ -112,7 +108,6 @@ public sealed class StainOverlay : Overlay
 
         worldHandle.UseShader(_prototypeManager.Index(StencilEqualDrawShader).Instance());
 
-        var scaleMatrix = Matrix3Helpers.CreateScale(new Vector2(1, 1));
         var rotationMatrix = Matrix3Helpers.CreateRotation(-args.Viewport.Eye?.Rotation ?? default);
 
         var stainedEnumerator = _entManager.EntityQueryEnumerator<StainedOverlayComponent, TransformComponent>();
@@ -121,12 +116,12 @@ public sealed class StainOverlay : Overlay
             var worldPosition = _transformSystem.GetWorldPosition(transformComponent, _transformQuery);
 
             var worldMatrix = Matrix3Helpers.CreateTranslation(worldPosition);
-            var scaledWorld = Matrix3x2.Multiply(scaleMatrix, worldMatrix);
+            var scaledWorld = Matrix3x2.Multiply(ScaleMatrix, worldMatrix);
             var matty = Matrix3x2.Multiply(rotationMatrix, scaledWorld);
             worldHandle.SetTransform(matty);
 
             foreach (var (stainOffset, color) in stainedComponent.Stains)
-                worldHandle.DrawTexture(texture, stainOffset);
+                worldHandle.DrawTexture(texture, stainOffset + Vector2Half);
         }
 
         worldHandle.SetTransform(Matrix3x2.Identity);
