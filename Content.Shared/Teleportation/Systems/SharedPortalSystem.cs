@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using System.Numerics;
 using Content.Shared._KS14.Random.Helpers; // KS14 Addition
 using Content.Shared._KS14.Sparks; // KS14 Addition
 using Content.Shared.Body.Systems; // KS14 Addition
@@ -39,7 +38,6 @@ public abstract class SharedPortalSystem : EntitySystem
     [Dependency] private readonly SharedPopupSystem _popup = default!;
     [Dependency] private readonly SharedSparksSystem _sparksSystem = default!; // KS14 Addition
     [Dependency] private readonly SharedBodySystem _bodySystem = default!; // KS14 Addition
-    [Dependency] private readonly SharedMapSystem _mapSystem = default!; // KS14 Addition
     [Dependency] private readonly IGameTiming _curTiming = default!; // KS14 Addition
 
     private const string PortalFixture = "portalFixture";
@@ -126,9 +124,13 @@ public abstract class SharedPortalSystem : EntitySystem
             if (link.LinkedEntities.Count == 0)
                 return;
 
+            // check prediction
+            if (_netMan.IsClient && !CanPredictTeleport((ent, link)))
+                return;
+
             // pick a target and teleport there
             // KS14: predicted random
-            var target = KsSharedRandomExtensions.RandomWithHashCodeCombine((int)_curTiming.CurTick.Value, KsSharedRandomExtensions.GetNetId(ent.Owner, EntityManager)).Pick(link.LinkedEntities);
+            var target = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed((int)_curTiming.CurTick.Value, KsSharedRandomExtensions.GetNetId(ent.Owner, EntityManager)).Pick(link.LinkedEntities);
 
             if (HasComp<PortalComponent>(target))
             {
@@ -253,7 +255,7 @@ public abstract class SharedPortalSystem : EntitySystem
 
         // KS14: Gib if tile isn't free (trollface emoji)
         if (ent.Comp.GibOnTargetTileOccupied &&
-            !_lookup.AnyEntitiesIntersecting(_transform.ToMapCoordinates(target), LookupFlags.Static))
+            _lookup.AnyEntitiesIntersecting(_transform.ToMapCoordinates(target), LookupFlags.Static))
             _bodySystem.GibBody(subject, splatModifier: 9f);
 
         if (!playSound)
@@ -274,13 +276,13 @@ public abstract class SharedPortalSystem : EntitySystem
         var xform = Transform(ent);
         var coords = xform.Coordinates;
 
-        var random = KsSharedRandomExtensions.RandomWithHashCodeCombine((int)_curTiming.CurTick.Value, KsSharedRandomExtensions.GetNetId(ent.Owner, EntityManager));
+        var random = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed((int)_curTiming.CurTick.Value, KsSharedRandomExtensions.GetNetId(ent.Owner, EntityManager));
         var newCoords = coords;
 
         for (var i = 0; i <= MaxRandomTeleportAttempts; i++)
         {
             newCoords = coords.Offset(random.NextVector2(ent.Comp.MaxRandomRadius));
-            if (ent.Comp.CanTeleportOnOccupiedTiles && // KS14: Added TryTeleportOnOccupiedTiles
+            if (!ent.Comp.CanTeleportOnOccupiedTiles && // KS14: Added CanTeleportOnOccupiedTiles
                 !_lookup.AnyEntitiesIntersecting(_transform.ToMapCoordinates(newCoords), LookupFlags.Static))
             {
                 // newCoords is not a wall

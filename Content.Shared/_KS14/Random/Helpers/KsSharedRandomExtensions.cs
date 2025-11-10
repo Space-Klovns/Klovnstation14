@@ -42,7 +42,7 @@ public static class KsSharedRandomExtensions
     ///         that returns a new <see cref="System.Random"/> whose seed is the hashcode combined from the given values.  
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static System.Random RandomWithHashCodeCombine(params int[] values)
+    public static System.Random RandomWithHashCodeCombinedSeed(params int[] values)
         => new(HashCodeCombine(values));
 
     /// <returns>The <see cref="NetEntity.Id"/> of the given Entity.</returns>

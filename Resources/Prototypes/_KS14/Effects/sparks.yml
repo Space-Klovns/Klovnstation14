@@ -21,6 +21,7 @@
     noRot: true
     layers:
     - state: sparks # i do wonder why the last, invisible frame is set to last for 50 seconds
+      shader: unshaded
   - type: Tag
     tags:
     - HideContextMenu

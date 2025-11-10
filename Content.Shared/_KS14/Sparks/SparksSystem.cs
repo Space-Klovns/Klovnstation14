@@ -5,6 +5,7 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using Content.Shared._KS14.Random.Helpers;
 using Content.Shared.Random.Helpers;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
@@ -49,8 +50,7 @@ public abstract class SharedSparksSystem : EntitySystem
         float maximumSparkVelocity = 3f,
         in Entity<MetaDataComponent?>? user = null)
     {
-        var seed = SharedRandomExtensions.HashCodeCombine(new() { (int)_gameTiming.CurTick.Value, (int)coordinates.Position.LengthSquared() });
-        var random = new System.Random(seed);
+        var random = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed((int)_gameTiming.CurTick.Value, (int)coordinates.Position.LengthSquared());
 
         var sparks = random.Next(minimumSparks, maximumSparks);
         if (sparks <= 0)
@@ -95,11 +95,11 @@ public abstract class SharedSparksSystem : EntitySystem
     )
     {
         var spark = EntityManager.PredictedSpawn(sparkPrototype);
-        if (random == null)
-        {
-            var seed = SharedRandomExtensions.HashCodeCombine(new() { (int)_gameTiming.CurTick.Value, GetNetEntity(spark).Id, user != null ? GetNetEntity(user.Value, user).Id : 0 });
-            random ??= new System.Random(seed);
-        }
+        random ??= KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
+            (int)_gameTiming.CurTick.Value,
+            KsSharedRandomExtensions.GetNetId(spark, EntityManager),
+            user != null ? KsSharedRandomExtensions.GetNetId(user.Value, EntityManager) : 0
+        );
 
         // now, spawn in random direction at random velocity between given minimum/maximum velocity
         var sparkDirectionVector = new Angle(random.NextFloat() * MathF.Tau).ToWorldVec();
