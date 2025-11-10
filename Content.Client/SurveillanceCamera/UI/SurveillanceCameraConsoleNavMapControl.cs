@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 John Willis
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // Goobstation Start
 // I really want to put this in the goobstation namespace
 // but it breaks references in the xaml and as a result the the xaml.cs

@@ -1,3 +1,11 @@
+// SPDX-FileCopyrightText: 2022 Flipp Syder
+// SPDX-FileCopyrightText: 2022 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2022 Vera Aguilera Puerto
+// SPDX-FileCopyrightText: 2025 DrSmugleaf
+// SPDX-FileCopyrightText: 2025 Hagvan
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 using Content.Shared.DeviceNetwork;
 using Robust.Shared.Prototypes;
 

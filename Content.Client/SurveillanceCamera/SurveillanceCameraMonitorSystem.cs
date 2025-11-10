@@ -1,3 +1,9 @@
+// SPDX-FileCopyrightText: 2022 Flipp Syder
+// SPDX-FileCopyrightText: 2023 metalgearsloth
+// SPDX-FileCopyrightText: 2025 Hagvan
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 using Robust.Shared.Utility;
 
 using Robust.Client.Timing; // Goobstation
