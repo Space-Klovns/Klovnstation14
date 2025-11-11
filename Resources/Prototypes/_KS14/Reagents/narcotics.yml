@@ -13,7 +13,10 @@
   color: "#b924bf"
   metabolisms:
     Narcotic:
+      metabolismRate: 1.0
       effects:
       - !type:MovespeedModifier
-        walkSpeedModifier: 2.00
-        sprintSpeedModifier: 2.00
+        walkSpeedModifier: 1.15
+        sprintSpeedModifier: 1.15
+      - !type:SatiateHunger
+        factor: -3
