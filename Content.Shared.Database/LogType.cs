@@ -478,4 +478,9 @@ public enum LogType
     /// Events relating to midi playback.
     /// </summary>
     Instrument = 103,
+
+    /// <summary>
+    /// KS14 - keeping within one file to keep better track of everything
+    /// </summary>
+    AtmosMolarFlowChanged = 104,
 }

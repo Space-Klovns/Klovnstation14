@@ -1,0 +1,94 @@
+- type: entity
+  parent: GasTrinaryBase
+  id: MolarMixer
+  name: molar mixer
+  description: A modified gas mixer that always mixes a precise amount of moles.
+  placement:
+    mode: SnapgridCenter
+  components:
+    - type: SubFloorHide
+      visibleLayers:
+      - enum.SubfloorLayers.FirstLayer
+    - type: Sprite
+      sprite: Structures/Piping/Atmospherics/gasmixer.rsi
+      layers:
+        - sprite: Structures/Piping/Atmospherics/pipe.rsi
+          state: pipeTrinaryConnectors
+          map: [ "enum.PipeVisualLayers.Pipe" ]
+        - state: gasMixer
+          map: [ "enum.SubfloorLayers.FirstLayer", "enabled" ]
+    - type: Appearance
+    - type: GenericVisualizer
+      visuals:
+        enum.FilterVisuals.Enabled:
+          enabled:
+            True: { state: gasMixerOn }
+            False: { state: gasMixer }
+    - type: PipeColorVisuals
+    - type: UserInterface
+      interfaces:
+        enum.MolarMixerUiKey.Key:
+          type: MolarMixerBoundUserInterface
+    - type: MolarMixer
+      enabled: false
+      inletOne: inlet
+      inletTwo: filter
+    - type: Flippable
+      mirrorEntity: MolarMixerFlipped
+    - type: Construction
+      graph: GasTrinary
+      node: mixer
+    - type: AmbientSound
+      enabled: false
+      volume: -9
+      range: 5
+      sound:
+        path: /Audio/Ambience/Objects/gas_hiss.ogg
+    - type: AtmosMonitoringConsoleDevice
+      navMapBlip: GasFlowRegulator
+    - type: GuideHelp
+      guides:
+      - MixingAndFiltering
+
+- type: entity
+  parent: MolarMixer
+  id: MolarMixerFlipped
+  name: molar mixer
+  suffix: Flipped
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Sprite
+    sprite: Structures/Piping/Atmospherics/gasmixer.rsi
+    layers:
+    - sprite: Structures/Piping/Atmospherics/pipe.rsi
+      state: pipeTrinaryConnectors
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+    - state: gasMixerF
+      map: [ "enum.SubfloorLayers.FirstLayer", "enabled" ]
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.FilterVisuals.Enabled:
+        enabled:
+          True: { state: gasMixerFOn }
+          False: { state: gasMixerF }
+  - type: PipeColorVisuals
+  - type: Flippable
+    mirrorEntity: MolarMixer
+  - type: NodeContainer
+    nodes:
+      inlet:
+        !type:PipeNode
+        nodeGroupID: Pipe
+        pipeDirection: South
+      filter:
+        !type:PipeNode
+        nodeGroupID: Pipe
+        pipeDirection: West
+      outlet:
+        !type:PipeNode
+        nodeGroupID: Pipe
+        pipeDirection: North
+  - type: Construction
+    node: mixerflipped

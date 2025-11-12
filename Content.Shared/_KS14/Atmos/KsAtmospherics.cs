@@ -18,4 +18,8 @@ public static class KsAtmospherics
     ///     Zipion reaction rate - 1/x of the plasma is converted into Zipion each tick
     /// </summary>
     public const float ZipionProductionConversionRate = 40f;
+    /// <summary>
+    ///     The default molar flow at which molar equipment maxes out at, in mol/s.
+    /// </summary>
+    public const float MaxMolarFlow = 400;
 }
