@@ -1,4 +1,8 @@
-﻿- type: constructionGraph
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: constructionGraph
   id: mk1
   start: start
   graph:
