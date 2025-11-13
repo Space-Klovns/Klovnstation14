@@ -1,0 +1,6 @@
+﻿- type: latheRecipe
+  id: PistolBarrel
+  parent: BaseWeaponRecipeSidearm
+  result: PistolBarrel
+  materials:
+    Plasteel: 500

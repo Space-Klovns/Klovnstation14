@@ -136,6 +136,7 @@
   - type: EmagLatheRecipes
     emagStaticPacks:
     - SecurityAmmoStatic
+    - KlovnEmagStatic
   - type: BlueprintReceiver
     whitelist:
       tags:
@@ -397,6 +398,7 @@
     - SecurityPracticeStatic
     - SecurityAmmoStatic
     - SecurityWeaponsStatic
+    - KlovnSecurityStatic #klovn
     dynamicPacks:
     - SalvageSecurityBoards
     - SalvageSecurityWeapons

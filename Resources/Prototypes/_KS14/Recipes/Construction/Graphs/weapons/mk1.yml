@@ -1,0 +1,56 @@
+﻿- type: constructionGraph
+  id: mk1
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: mk1unfinishednohandle
+      steps:
+      - tag: PistolBarrel
+        icon:
+          sprite: Objects/Misc/modular_receiver.rsi #TEMPPPPP, grrr
+          state: icon
+        name: construction-graph-tag-pistol-barrel
+      - tag: ModularReceiver
+        icon:
+          sprite: Objects/Misc/modular_receiver.rsi
+          state: icon
+        name: construction-graph-tag-modular-receiver
+      - material: Steel
+        amount: 4
+      - material: MetalRod #gun spring replacement, who cares
+        amount: 2
+        doAfter: 5
+
+  - node: mk1unfinishednohandle
+    entity: mk1unfinishednohandle
+    edges:
+    - to: mk1unfinishedhandle
+      steps:
+      - tool: Welding #welding the barrel to the frame
+        fuel: 10
+        doAfter: 4
+      - tool: Screwing #screwing in the modular reciever
+        doAfter: 2
+      - material: Steel #the handle
+        amount: 4
+        doAfter: 1
+      - tool: Welding
+        fuel: 5
+        doAfter: 2
+
+  - node: mk1unfinishedhandle
+    entity: mk1unfinishedhandle
+    edges:
+    - to: mk1
+      steps:
+      - material: Steel #slide cover
+        amount: 1
+      - tool: Welding
+        fuel: 5
+        doAfter: 2
+      - tool: Anchoring #final wrenching, putting on slide cover
+        doAfter: 5
+
+  - node: mk1
+    entity: WeaponPistolMk1
