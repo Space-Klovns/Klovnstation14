@@ -5,7 +5,7 @@
   description: Without this, you're basically just popping firecrackers next to rocks.
   components:
   - type: Sprite
-    sprite: Objects/Misc/modular_receiver.rsi #temp
+    sprite: _KS/Objects/Misc/pistol_barrel.rsi #doesnt fucking work now (???????)
     state: icon
   - type: Tag
     tags:

@@ -136,7 +136,7 @@
   - type: EmagLatheRecipes
     emagStaticPacks:
     - SecurityAmmoStatic
-    - KlovnEmagStatic
+    - KlovnEmagStatic #klovn
   - type: BlueprintReceiver
     whitelist:
       tags:
