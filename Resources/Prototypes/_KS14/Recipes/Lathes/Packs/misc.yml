@@ -1,4 +1,8 @@
-﻿- type: latheRecipePack
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: latheRecipePack
   id: KlovnEmagStatic
   recipes:
   - PistolBarrel
