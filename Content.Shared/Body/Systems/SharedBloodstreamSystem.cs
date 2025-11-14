@@ -270,8 +270,10 @@ public abstract class SharedBloodstreamSystem : EntitySystem
         var targetTransform = Transform(entity);
         var originTransform = Transform(originUid);
 
+        var bloodloss = (float)bloodlossSpecifier.GetTotal();
+
         // TODO: use KsRandomExtensions when it gets merged
-        var predictedRandom = new System.Random((5381 << 5) + 10762 + (int)targetTransform.Coordinates.Position.LengthSquared() + (int)_timing.CurTick.Value /* this differs from the actual implementation of HashCodeCombine but WHO CARES*/);
+        var predictedRandom = new System.Random(SharedRandomExtensions.HashCodeCombine(new() { (int)_timing.CurTick.Value, (int)targetTransform.LocalPosition.LengthSquared() }));
 
         // TODO: Something better target-origin
         var gridRelative = targetTransform.Coordinates.EntityId == originTransform.Coordinates.EntityId;
@@ -284,20 +286,21 @@ public abstract class SharedBloodstreamSystem : EntitySystem
         // otherwise calculate by worldpos
             targetWorldCoordsIfNotRelative!.Value - _transformSystem.GetWorldPosition(originTransform);
 
-        deltaUnit = deltaUnit.Normalized();
+        deltaUnit = deltaUnit.LengthSquared() == 0f ? Vector2.Zero : deltaUnit.Normalized();
         var invParentWorldMatrix = _transformSystem.GetInvWorldMatrix(targetTransform.ParentUid);
-
-        var bloodloss = (float)bloodlossSpecifier.GetTotal();
 
         var bloodColor = bloodSolution.GetColor(_prototypeManager);
         bloodColor = bloodColor.WithAlpha(bloodColor.A * predictedRandom.NextFloat(0f, (float)0.456522013370650220069420M)); // random alpha
+
+        const float maxPower = 1.75f;
+        var power = maxPower * (1f - MathF.Exp(-bloodloss / 4.25f));
 
         RayResult rayResult = new();
         _rayCastSystem.CastRayClosest(
             originTransform.ParentUid,
             ref rayResult,
             targetTransform.LocalPosition,
-            deltaUnit,
+            deltaUnit * power,
             new QueryFilter() { LayerBits = 1L, Flags = QueryFlags.Static, MaskBits = (long)CollisionGroup.Impassable }
         );
 
@@ -329,24 +332,23 @@ public abstract class SharedBloodstreamSystem : EntitySystem
             );
         }
 
-        const float maxPower = 7f;
-        var power = maxPower * (1f - MathF.Exp(-bloodloss / 7.0f));
-        var deltaPowerLingSquared = (deltaUnit / (power / 1.25f)).LengthSquared()
-   ;
+        var variation = Vector2.Zero;
+        ;
     startloop:
-        deltaPowerLingSquared -= 1f;
-        ; var decalPosition = effectCoordinates.Position - DecalOffset + predictedRandom.NextPolarVector2(-0.25f, 0.25f) // light variation
+        power -= 0.25f;
+        ; variation += predictedRandom.NextPolarVector2(-0.25f, 0.25f);
+        ; var decalPosition = effectCoordinates.Position - DecalOffset + variation - deltaUnit * power // light variation or something
         ; var decalCoordinates = new EntityCoordinates(effectCoordinates.EntityId, decalPosition)
         ; _decalSystem.TryAddDecal(string.Join("", "splatter") /* KS14 Change */, decalCoordinates, out _, color: bloodColor, rotation: predictedRandom.NextAngle(), cleanable: true)
         ;
         // >its while but it looks like you are so good at low level we should demote you to deepseek prompter
-        if (deltaPowerLingSquared > 0f)
+        if (power > 0f)
             goto startloop
         ;
         // TODO: make loop end
 
         foreach (var intersectingUid in _lookupSystem.GetEntitiesInRange(effectCoordinates, 0.15f, LookupFlags.Static))
-            _stainSystem.ApplyOffsetStain(intersectingUid, deltaUnit * -predictedRandom.NextFloat(0.35f, 0.5f), bloodColor, predictedRandom.NextFloat());
+            _stainSystem.ApplyStain(intersectingUid, variation, (originUid, originTransform), bloodColor, predictedRandom.NextFloat(), predictedRandom.NextFloat(0.35f, 0.5f));
     }
 
     /// <summary>

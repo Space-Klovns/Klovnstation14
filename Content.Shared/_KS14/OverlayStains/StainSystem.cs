@@ -10,6 +10,8 @@ namespace Content.Shared._KS14.OverlayStains;
 /// </summary>
 public sealed class StainSystem : EntitySystem
 {
+    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
+
     public EntityQuery<StainedComponent> StainedQuery;
 
     /// <summary>
@@ -38,8 +40,6 @@ public sealed class StainSystem : EntitySystem
     {
         if (StainedQuery.TryGetComponent(uid, out var stainedComponent))
         {
-            RemComp(uid, stainedComponent);
-
             if (TryComp<ReactiveComponent>(uid, out var reactiveComponent))
             {
                 reactiveComponent.Reactions?.Remove(StainCleanEffectEntry);
@@ -51,6 +51,8 @@ public sealed class StainSystem : EntitySystem
                     RemComp(uid, reactiveComponent);
                 }
             }
+
+            RemComp(uid, stainedComponent);
         }
     }
 
@@ -69,10 +71,10 @@ public sealed class StainSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Adds a stain to an entity with <see cref="StainedComponent"/> and
+    ///     Adds a stain to an entity with an existing <see cref="StainedComponent"/> and
     ///         does necessary logic to handle doing so.
     /// </summary>
-    private void AddOffsetStain(in Entity<StainedComponent> entity, in Vector2 offset, in Color color, float rotationScale = 0f)
+    public void AddOffsetStain(in Entity<StainedComponent> entity, in Vector2 offset, in Color color, float rotationScale = 0f)
     {
         entity.Comp.Stains.Add((new Vector3(offset.X, offset.Y, rotationScale), color));
 
@@ -97,5 +99,30 @@ public sealed class StainSystem : EntitySystem
     {
         EnsureStainedComponent(entity.Owner, ref entity.Comp);
         AddOffsetStain(entity!, offset, color, rotationScale);
+    }
+
+    /// <summary>
+    ///     Applies a stain to an entity, coming from some entity.
+    /// </summary>
+    /// <param name="offset">Offset to apply to final position.</param>
+    public void ApplyStain(Entity<TransformComponent?, StainedComponent?> entity, Vector2 offset, Entity<TransformComponent?> sourceEntity, in Color color, float rotationScale = 0f, float coefficient = 1f)
+    {
+        EntityManager.TransformQuery.Resolve(entity, ref entity.Comp1);
+        EntityManager.TransformQuery.Resolve(sourceEntity, ref sourceEntity.Comp);
+        EnsureStainedComponent(entity.Owner, ref entity.Comp2);
+
+        Vector2 sourceRelativeToEntityPosition;
+
+        // just do relative if we can save a bit of calculation with it
+        if (entity.Comp1!.ParentUid == sourceEntity.Comp!.ParentUid)
+            sourceRelativeToEntityPosition = entity.Comp1.LocalPosition - sourceEntity.Comp.LocalPosition;
+        else
+        {
+            var sourceWorldPosition = Vector2.Transform(sourceEntity.Comp!.LocalPosition, _transformSystem.GetWorldMatrix(sourceEntity.Comp.ParentUid));
+            sourceRelativeToEntityPosition = Vector2.Transform(sourceWorldPosition, _transformSystem.GetInvWorldMatrix(entity.Comp1!.ParentUid));
+        }
+
+        AddOffsetStain((entity, entity.Comp2), (entity.Comp1.LocalPosition - sourceRelativeToEntityPosition).Normalized() * -coefficient + offset, color, rotationScale);
+        Log.Debug($"Applying stain at offset: {(entity.Comp1.LocalPosition - sourceRelativeToEntityPosition).Normalized()}");
     }
 }
