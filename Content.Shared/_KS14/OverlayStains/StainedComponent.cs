@@ -25,9 +25,3 @@ public sealed partial class StainedComponent : Component
     [AutoNetworkedField]
     public bool OwnsBoundReactiveComponent = false;
 }
-
-[Serializable, NetSerializable]
-public enum StainOverlayVisuals : byte
-{
-    Count
-}
