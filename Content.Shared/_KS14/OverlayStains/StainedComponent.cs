@@ -11,11 +11,12 @@ namespace Content.Shared._KS14.StainOverlays;
 public sealed partial class StainedComponent : Component
 {
     /// <summary>
-    ///     Stains that are on this entity, with their color
-    ///         and offset from the center of the entity.
+    ///     Stains that are on this entity, with their color,
+    ///         with the vector's 2 first elements being its X and Y offset,
+    ///         and 3rd element being from 0 to 1 specifying its rotation.
     /// </summary>
     [AutoNetworkedField]
-    public List<(Vector2, Color)> Stains = new();
+    public List<(Vector3, Color)> Stains = new();
 }
 
 [Serializable, NetSerializable]

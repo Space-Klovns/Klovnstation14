@@ -124,6 +124,8 @@ namespace Content.Shared.Decals
         // KS14: Added TryAddDecal on shared
         /// <summary>
         ///     Does nothing on client. <paramref name="decalId"/> is always 0 on client.
+        ///         Decal positions are aligned to the bottom-left corner of the texture/tile (who knows),
+        ///         not center.
         /// </summary>
         public virtual bool TryAddDecal(string id, EntityCoordinates coordinates, out uint decalId, Color? color = null, Angle? rotation = null, int zIndex = 0, bool cleanable = false)
         {
@@ -133,8 +135,11 @@ namespace Content.Shared.Decals
         }
 
         // KS14: Added TryAddDecal on shared
+        // KS14: Added TryAddDecal on shared
         /// <summary>
         ///     Does nothing on client. <paramref name="decalId"/> is always 0 on client.
+        ///         Decal positions are aligned to the bottom-left corner of the texture/tile (who knows),
+        ///         not center.
         /// </summary>
         public virtual bool TryAddDecal(Decal decal, EntityCoordinates coordinates, out uint decalId)
         {

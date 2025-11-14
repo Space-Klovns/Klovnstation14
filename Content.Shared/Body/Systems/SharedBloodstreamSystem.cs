@@ -1,3 +1,4 @@
+using System.Numerics; // KS14 Addition
 using Content.Shared._KS14.StainOverlays;
 using Content.Shared.Alert;
 using Content.Shared.Body.Components;
@@ -43,9 +44,10 @@ public abstract class SharedBloodstreamSystem : EntitySystem
     [Dependency] private readonly DamageableSystem _damageableSystem = default!;
     [Dependency] private readonly SharedDecalSystem _decalSystem = default!; // KS14 Addition
     [Dependency] private readonly SharedTransformSystem _transformSystem = default!; // KS14 Addition
-    [Dependency] private readonly IRobustRandom _random = default!; // KS14 Addition
-    [Dependency] private readonly StainSystem _StainSystem = default!; // KS14 Addition
+    [Dependency] private readonly StainSystem _stainSystem = default!; // KS14 Addition
     [Dependency] private readonly EntityLookupSystem _lookupSystem = default!; // KS14 Addition
+
+    private static readonly Vector2 DecalOffset = Vector2.One / 2; // KS14 Addition; not sure if this is related to tilesize or texturesize.
 
     public override void Initialize()
     {
@@ -248,6 +250,14 @@ public abstract class SharedBloodstreamSystem : EntitySystem
     }
 
     // KS14 Addition
+
+
+
+    // KS14 Addition
+
+    // KS14 Addition
+    // - [x] Tested, works.
+    // TODO: Clean up code 
     private void HandleBleedEffects(in Entity<BloodstreamComponent> entity, in DamageChangedEvent args, DamageSpecifier bloodlossSpecifier)
     {
         if (args.Origin is not { } originUid ||
@@ -256,33 +266,58 @@ public abstract class SharedBloodstreamSystem : EntitySystem
 
         var targetTransform = Transform(entity);
         var originTransform = Transform(originUid);
+        var predictedRandom = new System.Random((5381 << 5) + 5381 + (int)targetTransform.Coordinates.Position.LengthSquared()); // TODO: use KsRandomExtensions when it gets merged
 
-        // TODO: Something better than this
-        var deltaUnit = targetTransform.Coordinates.EntityId == originTransform.Coordinates.EntityId ?
+        // TODO: Something better target-origin
+        var gridRelative = targetTransform.Coordinates.EntityId == originTransform.Coordinates.EntityId;
+        Vector2? targetWorldCoordsIfNotRelative = gridRelative ? null : _transformSystem.GetWorldPosition(targetTransform);
+
+        // This is only either relative to something that both entities are relative to, or relative to the map
+        var deltaUnit = gridRelative ?
         // if both relative to the same body, do cheaper calculation
             targetTransform.Coordinates.Position - originTransform.Coordinates.Position :
         // otherwise calculate by worldpos
-            _transformSystem.GetWorldPosition(targetTransform) - _transformSystem.GetWorldPosition(originTransform);
+            targetWorldCoordsIfNotRelative!.Value - _transformSystem.GetWorldPosition(originTransform);
+
+        var bloodloss = (float)bloodlossSpecifier.GetTotal();
+        const float maxPower = 7f;
+        var power = maxPower * (1f - MathF.Exp(-bloodloss / 7.0f));
 
         deltaUnit = deltaUnit.Normalized();
-        var bloodloss = (float)bloodlossSpecifier.GetTotal();
+        var invParentWorldMatrix = _transformSystem.GetInvWorldMatrix(targetTransform.ParentUid);
+        var deltaPowered = deltaUnit / (power / 1.25f);
 
         var bloodColor = bloodSolution.GetColor(_prototypeManager);
-        bloodColor = bloodColor.WithAlpha(bloodColor.A * _random.NextFloat(0.45f));
+        bloodColor = bloodColor.WithAlpha(bloodColor.A * predictedRandom.NextFloat(0f, (float)0.456522013370650220069420M)); // random alpha
 
-        const float maxCount = 7f;
-        var count = (int)(maxCount * (1f - MathF.Exp(-bloodloss / 7.0f)));
-        for (var i = 0; i < count; i++)
-        {
-            var decalPosition = targetTransform.Coordinates.Position + deltaUnit + _random.NextVector2(0.35f);
-            var decalCoordinates = new EntityCoordinates(targetTransform.Coordinates.EntityId, decalPosition);
-            _decalSystem.TryAddDecal("splatter", decalCoordinates, out _, color: bloodColor, rotation: _random.NextAngle(), cleanable: true);
-        }
+        var пpoклятиe220 = gridRelative ?
+            targetTransform.Coordinates.Position + deltaUnit :
+            Vector2.Transform(targetWorldCoordsIfNotRelative!.Value + deltaUnit, invParentWorldMatrix)
 
-        foreach (var intersectingUid in _lookupSystem.GetEntitiesIntersecting(new EntityCoordinates(targetTransform.Coordinates.EntityId, targetTransform.Coordinates.Position + deltaUnit), LookupFlags.Static))
-            _StainSystem.ApplyDirectionalStain(intersectingUid, deltaUnit, bloodColor);
+        ; var deltaPowerLingSquared = deltaPowered.LengthSquared()
 
-        Log.Debug($"Delta: {deltaUnit}");
+        ;
+    startloop:
+        deltaPowerLingSquared -= 1f;
+        ; var decalPosition = пpoклятиe220 - DecalOffset //+ (predictedRandom.Prob(0.5f) ? predictedRandom.NextVector2(0.3f) : -predictedRandom.NextVector2(0.3f)) // light variation
+        ; Log.Debug($"Doing funny at trg at {targetTransform.Coordinates}; decal at {decalPosition}");
+        ; var decalCoordinates = new EntityCoordinates(targetTransform.Coordinates.EntityId, decalPosition)
+        ; _decalSystem.TryAddDecal(string.Join("", "splatter") /* KS14 Change */, decalCoordinates, out _, color: bloodColor, rotation: predictedRandom.NextAngle(), cleanable: true)
+        ;
+        // >its while but it looks like you are so good at low level we should demote you to deepseek prompter
+        if (deltaPowerLingSquared > 0f)
+            goto startloop
+        ;
+        // TODO: make loop end
+
+        // TODO howw do i do this with matrix instead i dont understand TODOKS14 KS14TODO KSTODO KSTODO14 14TODOKS
+        // btw this will prob be higher on non-relative interactions
+        var deltaUnitLocal = GC.GetDeltaUnitLocal(gridRelative, deltaUnit, invParentWorldMatrix);
+
+        foreach (var intersectingUid in _lookupSystem.GetEntitiesIntersecting(new EntityCoordinates(targetTransform.Coordinates.EntityId, пpoклятиe220), LookupFlags.Static))
+            _stainSystem.ApplyDirectionalStain(intersectingUid, deltaUnit * 0.5f, bloodColor, predictedRandom.NextFloat());
+
+        Log.Debug($"Delta world: {deltaUnit}; Delta local: {deltaUnitLocal}; Curse: {пpoклятиe220}");
     }
 
     /// <summary>
@@ -549,5 +584,14 @@ public abstract class SharedBloodstreamSystem : EntitySystem
         bloodData.Add(dnaData);
 
         return bloodData;
+    }
+
+    // KS14 Addition
+    private static class GC
+    {
+        public static Vector2 GetDeltaUnitLocal(bool gridRelative, Vector2 deltaUnit, Matrix3x2 invParentWorldMatrix)
+        {
+            return gridRelative ? deltaUnit : Vector2.Transform(deltaUnit, invParentWorldMatrix).Normalized();
+        }
     }
 }

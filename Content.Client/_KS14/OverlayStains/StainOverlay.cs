@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Numerics;
 using Content.Client.Graphics;
 using Content.Shared._KS14.StainOverlays;
@@ -22,43 +23,51 @@ public sealed class StainOverlay : Overlay
     private static readonly ProtoId<ShaderPrototype> StencilEqualDrawShader = "StencilEqualDraw";
 
     [Dependency] private readonly IClyde _clyde = default!;
-    [Dependency] private readonly IEntityManager _entManager = default!;
+    [Dependency] private readonly IEntityManager _entityManager = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private readonly IMapManager _mapManager = default!;
 
-    private readonly OccluderSystem _occluderSystem = default!;
     private readonly TransformSystem _transformSystem = default!;
     private readonly SpriteSystem _spriteSystem = default!;
+    private readonly EntityLookupSystem _entityLookupSystem = default!;
 
     private EntityQuery<TransformComponent> _transformQuery;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowFOV;
 
-    public List<(Vector2, Color)> RenderedStains = new();
     public SpriteSpecifier? StainSpriteSpecifier;
+
+    private List<Entity<MapGridComponent>> _grids = new();
+    private HashSet<EntityUid> _intersectingEntities = new();
 
     private readonly OverlayResourceCache<CachedResources> _resources = new();
 
-    private static readonly Vector2 Vector2Half = Vector2.One / 2;
-    private static readonly Matrix3x2 ScaleMatrix = Matrix3Helpers.CreateScale(new Vector2(1, 1));
+    // see: DoAfterOverlay.cs
+    private const float Scale = 1f;
+    private const float DblPixelsPerMeter = 2f * EyeManager.PixelsPerMeter;
+    private static readonly Matrix3x2 ScaleMatrix = Matrix3Helpers.CreateScale(new Vector2(Scale, Scale));
 
     public StainOverlay()
     {
         IoCManager.InjectDependencies(this);
 
-        _occluderSystem = _entManager.System<OccluderSystem>();
-        _transformSystem = _entManager.System<TransformSystem>();
-        _spriteSystem = _entManager.System<SpriteSystem>();
+        _transformSystem = _entityManager.System<TransformSystem>();
+        _spriteSystem = _entityManager.System<SpriteSystem>();
+        _entityLookupSystem = _entityManager.System<EntityLookupSystem>();
 
-        _transformQuery = _entManager.GetEntityQuery<TransformComponent>();
+        _transformQuery = _entityManager.GetEntityQuery<TransformComponent>();
 
         ZIndex = AfterLightTargetOverlay.ContentZIndex + 1;
     }
 
     protected override void Draw(in OverlayDrawArgs args)
     {
-        if (StainSpriteSpecifier == null ||
-            RenderedStains.Count == 0)
+        if (StainSpriteSpecifier == null)
+            return;
+
+        var stainedQuery = _entityManager.EntityQuery<StainedComponent>();
+        if (!stainedQuery.Any())
             return;
 
         var viewport = args.Viewport;
@@ -69,9 +78,9 @@ public sealed class StainOverlay : Overlay
         var target = viewport.RenderTarget;
         var lightScale = target.Size / (Vector2)viewport.Size;
         var scale = viewport.RenderScale / (Vector2.One / lightScale);
-        var invMatrix = args.Viewport.GetWorldToLocalMatrix();
+        var invMatrix = viewport.GetWorldToLocalMatrix();
 
-        var res = _resources.GetForViewport(args.Viewport, static _ => new CachedResources());
+        var res = _resources.GetForViewport(viewport, static _ => new CachedResources());
 
         if (res.StainTarget?.Texture.Size != target.Size)
         {
@@ -84,18 +93,26 @@ public sealed class StainOverlay : Overlay
         args.WorldHandle.RenderInRenderTarget(res.StainTarget,
             () =>
             {
+                _grids.Clear();
+                _mapManager.FindGridsIntersecting(mapId, worldBounds, ref _grids);
+
                 worldHandle.UseShader(_prototypeManager.Index(UnshadedShader).Instance());
-                var invMatrix = res.StainTarget.GetWorldToLocalMatrix(viewport.Eye!, scale);
-
-                foreach (var entry in _occluderSystem.QueryAabb(mapId, worldBounds))
+                foreach (var grid in _grids)
                 {
-                    DebugTools.Assert(entry.Component.Enabled);
-                    var matrix = _transformSystem.GetWorldMatrix(entry.Transform);
-                    var localMatrix = Matrix3x2.Multiply(matrix, invMatrix);
-
+                    var localMatrix = Matrix3x2.Multiply(_transformSystem.GetWorldMatrix(grid, _transformQuery), invMatrix);
                     worldHandle.SetTransform(localMatrix);
-                    worldHandle.DrawRect(Box2.UnitCentered, Color.White);
+
+                    _intersectingEntities.Clear();
+                    _entityLookupSystem.GetEntitiesIntersecting(mapId, worldBounds.CalcBoundingBox(), _intersectingEntities, LookupFlags.Static);
+                    foreach (var uid in _intersectingEntities)
+                    {
+                        if (!_entityManager.TryGetComponent(uid, out TransformComponent? transformComponent))
+                            continue;
+
+                        worldHandle.DrawRect(_entityLookupSystem.GetAABBNoContainer(uid, transformComponent.Coordinates.Position, transformComponent.LocalRotation), Color.White);
+                    }
                 }
+
             }, Color.Transparent);
 
         worldHandle.SetTransform(Matrix3x2.Identity);
@@ -108,20 +125,20 @@ public sealed class StainOverlay : Overlay
 
         worldHandle.UseShader(_prototypeManager.Index(StencilEqualDrawShader).Instance());
 
-        var rotationMatrix = Matrix3Helpers.CreateRotation(-args.Viewport.Eye?.Rotation ?? default);
+        var rotationMatrix = Matrix3Helpers.CreateRotation(-viewport.Eye?.Rotation ?? Angle.Zero);
 
-        var stainedEnumerator = _entManager.EntityQueryEnumerator<StainedComponent, TransformComponent>();
-        while (stainedEnumerator.MoveNext(out var uid, out var stainedComponent, out var transformComponent))
+        var stainedEnumerator = _entityManager.EntityQueryEnumerator<StainedComponent, SpriteComponent, TransformComponent>();
+        while (stainedEnumerator.MoveNext(out var uid, out var stainedComponent, out var spriteComponent, out var transformComponent))
         {
+            var bounds = _spriteSystem.GetLocalBounds((uid, spriteComponent));
             var worldPosition = _transformSystem.GetWorldPosition(transformComponent, _transformQuery);
 
             var worldMatrix = Matrix3Helpers.CreateTranslation(worldPosition);
             var scaledWorld = Matrix3x2.Multiply(ScaleMatrix, worldMatrix);
-            var matty = Matrix3x2.Multiply(rotationMatrix, scaledWorld);
-            worldHandle.SetTransform(matty);
+            worldHandle.SetTransform(Matrix3x2.Multiply(rotationMatrix, scaledWorld));
 
-            foreach (var (stainOffset, color) in stainedComponent.Stains)
-                worldHandle.DrawTexture(texture, stainOffset + Vector2Half);
+            foreach (var (stainData, color) in stainedComponent.Stains)
+                worldHandle.DrawTexture(texture, new Vector2(stainData.X - texture.Width / DblPixelsPerMeter, stainData.Y - texture.Height / DblPixelsPerMeter), angle: new(stainData.Z * MathF.Tau), modulate: color);
         }
 
         worldHandle.SetTransform(Matrix3x2.Identity);
