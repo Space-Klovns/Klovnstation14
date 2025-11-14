@@ -138,7 +138,7 @@ public sealed class StainOverlay : Overlay
             worldHandle.SetTransform(Matrix3x2.Multiply(rotationMatrix, scaledWorld));
 
             foreach (var (stainData, color) in stainedComponent.Stains)
-                worldHandle.DrawTexture(texture, new Vector2(stainData.X - texture.Width / DblPixelsPerMeter, stainData.Y - texture.Height / DblPixelsPerMeter), angle: new(stainData.Z * MathF.Tau), modulate: color);
+                worldHandle.DrawTexture(texture, new Vector2(stainData.X - texture.Width / DblPixelsPerMeter, stainData.Y - texture.Height / DblPixelsPerMeter), angle: new(stainData.Z * MathF.Tau + viewport.Eye!.Rotation.Theta), modulate: color);
         }
 
         worldHandle.SetTransform(Matrix3x2.Identity);

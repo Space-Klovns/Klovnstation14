@@ -15,6 +15,7 @@ using Content.Shared.Fluids;
 using Content.Shared.Forensics.Components;
 using Content.Shared.HealthExaminable;
 using Content.Shared.Mobs.Systems;
+using Content.Shared.Physics; // KS14 Addition
 using Content.Shared.Popups;
 using Content.Shared.Random.Helpers;
 using Content.Shared.Rejuvenate;
@@ -22,6 +23,7 @@ using Content.Shared.StatusEffectNew;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Containers;
 using Robust.Shared.Map; // KS14 Addition
+using Robust.Shared.Physics.Systems; // KS14 Addition
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
@@ -46,6 +48,7 @@ public abstract class SharedBloodstreamSystem : EntitySystem
     [Dependency] private readonly SharedTransformSystem _transformSystem = default!; // KS14 Addition
     [Dependency] private readonly StainSystem _stainSystem = default!; // KS14 Addition
     [Dependency] private readonly EntityLookupSystem _lookupSystem = default!; // KS14 Addition
+    [Dependency] private readonly RayCastSystem _rayCastSystem = default!; // KS14 Addition
 
     private static readonly Vector2 DecalOffset = Vector2.One / 2; // KS14 Addition; not sure if this is related to tilesize or texturesize.
 
@@ -266,7 +269,9 @@ public abstract class SharedBloodstreamSystem : EntitySystem
 
         var targetTransform = Transform(entity);
         var originTransform = Transform(originUid);
-        var predictedRandom = new System.Random((5381 << 5) + 5381 + (int)targetTransform.Coordinates.Position.LengthSquared()); // TODO: use KsRandomExtensions when it gets merged
+
+        // TODO: use KsRandomExtensions when it gets merged
+        var predictedRandom = new System.Random((5381 << 5) + 10762 + (int)targetTransform.Coordinates.Position.LengthSquared() + (int)_timing.CurTick.Value /* this differs from the actual implementation of HashCodeCombine but WHO CARES*/);
 
         // TODO: Something better target-origin
         var gridRelative = targetTransform.Coordinates.EntityId == originTransform.Coordinates.EntityId;
@@ -279,29 +284,59 @@ public abstract class SharedBloodstreamSystem : EntitySystem
         // otherwise calculate by worldpos
             targetWorldCoordsIfNotRelative!.Value - _transformSystem.GetWorldPosition(originTransform);
 
-        var bloodloss = (float)bloodlossSpecifier.GetTotal();
-        const float maxPower = 7f;
-        var power = maxPower * (1f - MathF.Exp(-bloodloss / 7.0f));
-
         deltaUnit = deltaUnit.Normalized();
         var invParentWorldMatrix = _transformSystem.GetInvWorldMatrix(targetTransform.ParentUid);
-        var deltaPowered = deltaUnit / (power / 1.25f);
+
+        var bloodloss = (float)bloodlossSpecifier.GetTotal();
 
         var bloodColor = bloodSolution.GetColor(_prototypeManager);
         bloodColor = bloodColor.WithAlpha(bloodColor.A * predictedRandom.NextFloat(0f, (float)0.456522013370650220069420M)); // random alpha
 
-        var пpoклятиe220 = gridRelative ?
-            targetTransform.Coordinates.Position + deltaUnit :
-            Vector2.Transform(targetWorldCoordsIfNotRelative!.Value + deltaUnit, invParentWorldMatrix)
+        RayResult rayResult = new();
+        _rayCastSystem.CastRayClosest(
+            originTransform.ParentUid,
+            ref rayResult,
+            targetTransform.LocalPosition,
+            deltaUnit,
+            new QueryFilter() { LayerBits = 1L, Flags = QueryFlags.Static, MaskBits = (long)CollisionGroup.Impassable }
+        );
 
-        ; var deltaPowerLingSquared = deltaPowered.LengthSquared()
+        EntityCoordinates effectCoordinates;
+        if (rayResult.Hit)
+        {
+            Log.Debug($"Hit something! {ToPrettyString(rayResult.Results[0].Entity)}");
+            var hitData = rayResult.Results[0];
+            EntityUid hitParentUid;
 
-        ;
+            // handle cross-grid
+            if (hitData.Entity == entity.Owner)
+                hitParentUid = targetTransform.ParentUid;
+            else if (hitData.Entity == originUid)
+                hitParentUid = originTransform.ParentUid;
+            else
+                hitParentUid = Transform(hitData.Entity).ParentUid;
+
+            // docs for RayHit lie because RayHit.Point isnt the *caller* changing it to local terms, but instead the code constructing it; it is also local to the hit entity's parent(? TODO: confirm that assumption)
+            effectCoordinates = new(hitParentUid, hitData.Point);
+        }
+        else
+        {
+            effectCoordinates = new(
+                targetTransform.ParentUid, // we guess lol
+                gridRelative ?
+                    targetTransform.Coordinates.Position + deltaUnit :
+                    Vector2.Transform(targetWorldCoordsIfNotRelative!.Value + deltaUnit, invParentWorldMatrix)
+            );
+        }
+
+        const float maxPower = 7f;
+        var power = maxPower * (1f - MathF.Exp(-bloodloss / 7.0f));
+        var deltaPowerLingSquared = (deltaUnit / (power / 1.25f)).LengthSquared()
+   ;
     startloop:
         deltaPowerLingSquared -= 1f;
-        ; var decalPosition = пpoклятиe220 - DecalOffset //+ (predictedRandom.Prob(0.5f) ? predictedRandom.NextVector2(0.3f) : -predictedRandom.NextVector2(0.3f)) // light variation
-        ; Log.Debug($"Doing funny at trg at {targetTransform.Coordinates}; decal at {decalPosition}");
-        ; var decalCoordinates = new EntityCoordinates(targetTransform.Coordinates.EntityId, decalPosition)
+        ; var decalPosition = effectCoordinates.Position - DecalOffset + predictedRandom.NextPolarVector2(-0.25f, 0.25f) // light variation
+        ; var decalCoordinates = new EntityCoordinates(effectCoordinates.EntityId, decalPosition)
         ; _decalSystem.TryAddDecal(string.Join("", "splatter") /* KS14 Change */, decalCoordinates, out _, color: bloodColor, rotation: predictedRandom.NextAngle(), cleanable: true)
         ;
         // >its while but it looks like you are so good at low level we should demote you to deepseek prompter
@@ -310,14 +345,8 @@ public abstract class SharedBloodstreamSystem : EntitySystem
         ;
         // TODO: make loop end
 
-        // TODO howw do i do this with matrix instead i dont understand TODOKS14 KS14TODO KSTODO KSTODO14 14TODOKS
-        // btw this will prob be higher on non-relative interactions
-        var deltaUnitLocal = GC.GetDeltaUnitLocal(gridRelative, deltaUnit, invParentWorldMatrix);
-
-        foreach (var intersectingUid in _lookupSystem.GetEntitiesIntersecting(new EntityCoordinates(targetTransform.Coordinates.EntityId, пpoклятиe220), LookupFlags.Static))
-            _stainSystem.ApplyDirectionalStain(intersectingUid, deltaUnit * 0.5f, bloodColor, predictedRandom.NextFloat());
-
-        Log.Debug($"Delta world: {deltaUnit}; Delta local: {deltaUnitLocal}; Curse: {пpoклятиe220}");
+        foreach (var intersectingUid in _lookupSystem.GetEntitiesInRange(effectCoordinates, 0.15f, LookupFlags.Static))
+            _stainSystem.ApplyOffsetStain(intersectingUid, deltaUnit * -predictedRandom.NextFloat(0.35f, 0.5f), bloodColor, predictedRandom.NextFloat());
     }
 
     /// <summary>
@@ -584,14 +613,5 @@ public abstract class SharedBloodstreamSystem : EntitySystem
         bloodData.Add(dnaData);
 
         return bloodData;
-    }
-
-    // KS14 Addition
-    private static class GC
-    {
-        public static Vector2 GetDeltaUnitLocal(bool gridRelative, Vector2 deltaUnit, Matrix3x2 invParentWorldMatrix)
-        {
-            return gridRelative ? deltaUnit : Vector2.Transform(deltaUnit, invParentWorldMatrix).Normalized();
-        }
     }
 }

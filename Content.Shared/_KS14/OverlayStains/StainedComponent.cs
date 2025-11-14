@@ -17,6 +17,13 @@ public sealed partial class StainedComponent : Component
     /// </summary>
     [AutoNetworkedField]
     public List<(Vector3, Color)> Stains = new();
+
+    /// <summary>
+    ///     Did a <see cref="ReactiveComponent"/> already exist
+    ///         on this entity when it was stained?
+    /// </summary>
+    [AutoNetworkedField]
+    public bool BoundReactiveComponent = false;
 }
 
 [Serializable, NetSerializable]

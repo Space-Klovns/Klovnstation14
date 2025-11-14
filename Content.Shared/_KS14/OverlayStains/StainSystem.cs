@@ -52,7 +52,10 @@ public sealed class StainSystem : EntitySystem
         entity.Comp.Stains.Add((new Vector3(offset.X, offset.Y, rotationScale), color));
         Dirty(entity);
 
-        EnsureComp<ReactiveComponent>(entity);
+        if (!EnsureComp<ReactiveComponent>(entity, out var reactiveComponent))
+        {
+            reactiveComponent.Reactions =
+        }
     }
 
     /// <summary>
@@ -63,15 +66,5 @@ public sealed class StainSystem : EntitySystem
     {
         EnsureStainedComponent(entity.Owner, ref entity.Comp);
         AddOffsetStain(entity!, offset, color, rotationScale);
-    }
-
-    /// <summary>
-    ///     Applies a stain to an entity, coming from a given normalised direction towards the entity.
-    /// </summary>
-    public void ApplyDirectionalStain(Entity<StainedComponent?> entity, in Vector2 direction, in Color color, float rotationScale = 0f)
-    {
-        EnsureStainedComponent(entity.Owner, ref entity.Comp);
-        AddOffsetStain(entity!, -direction, color, rotationScale);
-        Log.Debug($"The Direction: {direction}, The Normal: {-direction}");
     }
 }
