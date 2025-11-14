@@ -13,9 +13,6 @@ using Robust.Shared.Utility;
 
 namespace Content.Client.Light;
 
-/// <summary>
-/// Applies ambient-occlusion to the viewport.
-/// </summary>
 public sealed class StainOverlay : Overlay
 {
     private static readonly ProtoId<ShaderPrototype> UnshadedShader = "unshaded";
@@ -148,13 +145,11 @@ public sealed class StainOverlay : Overlay
     protected override void DisposeBehavior()
     {
         _resources.Dispose();
-
         base.DisposeBehavior();
     }
 
     private sealed class CachedResources : IDisposable
     {
-        // Couldn't figure out a way to avoid this so if you can then please do.
         public IRenderTexture? StainTarget;
 
         public void Dispose()
