@@ -1,10 +1,18 @@
+using Content.Shared.EntityEffects;
+using Robust.Shared.Prototypes;
+
 namespace Content.Shared._KS14.OverlayStains;
 
 public sealed partial class StainCleanReaction : EntityEffect
 {
+    private StainSystem _stainSystem = default!;
+
+    protected override string? ReagentEffectGuidebookText(IPrototypeManager prototype, IEntitySystemManager entSys)
+        => Loc.GetString("reagent-effect-guidebook-wash-cream-pie-reaction", ("chance", Probability));
+
     public override void Effect(EntityEffectBaseArgs args)
     {
-        // KS14: Trollface Emoji ; clean wall-stain-overlays
-        args.EntityManager.System<_KS14.OverlayStains.StainSystem>().CleanEntity(args.TargetEntity);
+        _stainSystem ??= args.EntityManager.System<StainSystem>();
+        _stainSystem.CleanEntity(args.TargetEntity);
     }
 }

@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using Content.Shared.Chemistry;
 using Content.Shared.Chemistry.Reaction;
 
 namespace Content.Shared._KS14.OverlayStains;
@@ -9,14 +10,25 @@ namespace Content.Shared._KS14.OverlayStains;
 /// </summary>
 public sealed class StainSystem : EntitySystem
 {
-    [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
-
     public EntityQuery<StainedComponent> StainedQuery;
+
+    /// <summary>
+    ///     Wrapper for a reaction triggered by water, space-cleaner
+    ///         and bleach, that effects <see cref="StainCleanReaction"/>. 
+    /// </summary>
+    public ReactiveReagentEffectEntry StainCleanEffectEntry = default!;
 
     public override void Initialize()
     {
         base.Initialize();
+
         StainedQuery = GetEntityQuery<StainedComponent>();
+        StainCleanEffectEntry = new()
+        {
+            Methods = new() { ReactionMethod.Touch },
+            Reagents = new() { "Water", "SpaceCleaner", "Bleach" }, // TODO: Un-hardcode
+            Effects = new() { new StainCleanReaction() }
+        };
     }
 
     /// <summary>
@@ -27,7 +39,18 @@ public sealed class StainSystem : EntitySystem
         if (StainedQuery.TryGetComponent(uid, out var stainedComponent))
         {
             RemComp(uid, stainedComponent);
-            RemComp<ReactiveComponent>(uid);
+
+            if (TryComp<ReactiveComponent>(uid, out var reactiveComponent))
+            {
+                reactiveComponent.Reactions?.Remove(StainCleanEffectEntry);
+
+                // clean up
+                if (stainedComponent.OwnsBoundReactiveComponent)
+                {
+                    stainedComponent.OwnsBoundReactiveComponent = false;
+                    RemComp(uid, reactiveComponent);
+                }
+            }
         }
     }
 
@@ -42,20 +65,28 @@ public sealed class StainSystem : EntitySystem
             return;
 
         component = AddComp<StainedComponent>(uid);
+        Dirty(uid, component);
     }
 
     /// <summary>
-    ///     Adds a stain to an entity with <see cref="StainedComponent"/>.
+    ///     Adds a stain to an entity with <see cref="StainedComponent"/> and
+    ///         does necessary logic to handle doing so.
     /// </summary>
     private void AddOffsetStain(in Entity<StainedComponent> entity, in Vector2 offset, in Color color, float rotationScale = 0f)
     {
         entity.Comp.Stains.Add((new Vector3(offset.X, offset.Y, rotationScale), color));
-        Dirty(entity);
 
-        if (!EnsureComp<ReactiveComponent>(entity, out var reactiveComponent))
+        var ownsBoundReactiveComponent = !EnsureComp<ReactiveComponent>(entity, out var reactiveComponent);
+        if (ownsBoundReactiveComponent || (!reactiveComponent.Reactions?.Contains(StainCleanEffectEntry) ?? false))
         {
-            reactiveComponent.Reactions =
+            // only set to true if we made a reactivecomponent on the entity, otherwise don't
+            entity.Comp.OwnsBoundReactiveComponent |= ownsBoundReactiveComponent;
+
+            reactiveComponent.Reactions ??= new();
+            reactiveComponent.Reactions.Add(StainCleanEffectEntry);
         }
+
+        Dirty(entity);
     }
 
     /// <summary>
