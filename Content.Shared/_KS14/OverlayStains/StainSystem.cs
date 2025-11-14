@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Content.Shared.Chemistry.Reaction;
 
-namespace Content.Shared._KS14.StainOverlays;
+namespace Content.Shared._KS14.OverlayStains;
 
 /// <summary>
 ///     Used for applying stains, visualised via overlays, onto things.

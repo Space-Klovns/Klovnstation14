@@ -2,7 +2,7 @@ using System.Numerics;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
 
-namespace Content.Shared._KS14.StainOverlays;
+namespace Content.Shared._KS14.OverlayStains;
 
 /// <summary>
 ///     Component to visualise blood-stains on things.

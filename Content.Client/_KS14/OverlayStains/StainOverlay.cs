@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Numerics;
 using Content.Client.Graphics;
-using Content.Shared._KS14.StainOverlays;
+using Content.Shared._KS14.OverlayStains;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;

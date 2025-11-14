@@ -1,5 +1,5 @@
 using System.Numerics; // KS14 Addition
-using Content.Shared._KS14.StainOverlays;
+using Content.Shared._KS14.OverlayStains;
 using Content.Shared.Alert;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Events;

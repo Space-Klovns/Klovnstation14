@@ -2,7 +2,7 @@ using Content.Client.Light;
 using Robust.Client.Graphics;
 using Robust.Shared.Utility;
 
-namespace Content.Client._KS14.StainOverlays;
+namespace Content.Client._KS14.OverlayStains;
 
 public sealed class StainOverlayVisualizerSystem : EntitySystem
 {
