@@ -1,4 +1,6 @@
+using System.Runtime.CompilerServices;
 using Robust.Shared.Timing;
+using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Content.Shared._KS14.Deferral;
 
@@ -6,8 +8,8 @@ namespace Content.Shared._KS14.Deferral;
 ///     Used for <i>synchronously</i> deferring <see cref="Action"/>s onto running at a later gametick.
 /// </summary>
 /// <remarks>
-///     This, as by default, updates in-prediction. The methods on this system can be safely called
-///         statically; even when the system is not properly initialised or for not updating for any reason,
+///     This, as by default, updates in-prediction. The static methods on this system can be safely called,
+///         even when the system is not properly initialised or not updating for any reason;
 ///         deferred operations will still resume on the first tick that they are allowed. Amazing right?
 /// </remarks>
 // maybe TODO: some support for removing actions that are already queued?
@@ -49,7 +51,8 @@ public sealed class SynchronousDeferralSystem : EntitySystem
     /// <summary>
     ///     Queues something to run on the start of the next tick.
     /// </summary>
-    public static void Add(Action action)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Defer(Action action)
     {
         _deferredActions.Push(action);
     }
@@ -58,8 +61,38 @@ public sealed class SynchronousDeferralSystem : EntitySystem
     ///     Queues something to run on the start of the first tick
     ///         after a given simulation-time.
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Schedule(Action action, TimeSpan runBy)
     {
         _scheduledActions.Push((runBy, action));
+    }
+
+
+    /// <summary>
+    ///     Queues something to run on the start of the first tick
+    ///         after a given delay starting from when the method
+    ///         is called.
+    /// </summary>
+    /// <remarks>
+    ///     Analogous to <see cref="Schedule(Action, TimeSpan)"/>,
+    ///         with `runBy` specified as `<see cref="IGameTiming.CurTime"/>
+    ///         + <paramref name="delay"/>`. However, this isn't static.
+    /// </remarks>
+    public void ScheduleForward(Action action, TimeSpan delay)
+    {
+        Schedule(action, _gameTiming.CurTime + delay);
+    }
+
+    /// <summary>
+    ///     Constructs a <see cref="Action"/> that raises a local by-value event
+    ///         on an entity. This does not actually defer it.
+    /// </summary>
+    /// <remarks>
+    ///     Uses RaiseLocalEvent.
+    /// </remarks>
+    public Action ConstructValueEventDispatcher<TEvent>(EntityUid uid, TEvent args, bool broadcast = false)
+        where TEvent : notnull
+    {
+        return () => EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
     }
 }
