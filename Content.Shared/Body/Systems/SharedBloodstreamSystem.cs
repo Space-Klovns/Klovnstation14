@@ -292,14 +292,14 @@ public abstract class SharedBloodstreamSystem : EntitySystem
         var invParentWorldMatrix = _transformSystem.GetInvWorldMatrix(targetTransform.ParentUid);
 
         var bloodColor = bloodSolution.GetColor(_prototypeManager);
-        bloodColor = bloodColor.WithAlpha(bloodColor.A * predictedRandom.NextFloat(0f, (float)0.456522013370650220069420M)); // random alpha
+        bloodColor = bloodColor.WithAlpha(bloodColor.A * predictedRandom.NextFloat(0.28f, (float)0.456522013370650220069420M)); // random alpha
 
         const float maxPower = 1.75f;
-        var power = maxPower * (1f - MathF.Exp(-bloodloss / 5.8f));
+        var power = maxPower * (1f - MathF.Exp(-bloodloss / 6f));
 
         const float iterationDelta = 0.25f;
         var iteratedPower = (int)(power / iterationDelta);
-        var cachedVariations = new Vector2[iteratedPower];
+        var cachedVariations = new Vector2[iteratedPower + 1];
         var totalVariation = Vector2.Zero;
 
         iteratedPower -= 1;
@@ -347,29 +347,33 @@ public abstract class SharedBloodstreamSystem : EntitySystem
             );
         }
 
+        var accumulatedVariation = Vector2.Zero;
         while (power > 0f)
         {
-            power -= iterationDelta;
-            var variationIndexed = cachedVariations[(int)(power / iterationDelta)];
+            var intpower = (int)(power / iterationDelta);
+            if (intpower <= 0)
+                break;
 
+            accumulatedVariation += cachedVariations[intpower];
             _decalSystem.TryAddDecal(
                 "splatter",
-                effectCoordinates.WithPosition(effectCoordinates.Position + variationIndexed - DecalOffset - deltaUnit * power),
+                effectCoordinates.WithPosition(effectCoordinates.Position + accumulatedVariation - DecalOffset - deltaUnit * power),
                 out _,
                 color: bloodColor,
                 rotation: predictedRandom.NextAngle(),
                 cleanable: true
             );
 
-            Log.Debug($"var: {variationIndexed}");
+            Log.Debug($"var: {accumulatedVariation}, at: {intpower}");
+            power -= iterationDelta;
         }
 
         // >its while but it looks like you are so good at low level we should demote you to deepseek prompter
         // TODO: make loop end
         // TODO: delete todo because i fixed it
 
-        foreach (var intersectingUid in _lookupSystem.GetEntitiesInRange(effectCoordinates, 0.15f, LookupFlags.Static))
-            _stainSystem.ApplyStain(intersectingUid, effectCoordinates.Position, (originUid, originTransform), bloodColor, predictedRandom.NextFloat(), predictedRandom.NextFloat(0.35f, 0.5f));
+        foreach (var intersectingUid in _lookupSystem.GetEntitiesInRange(effectCoordinates, 0.1f, LookupFlags.Static))
+            _stainSystem.ApplyStain(intersectingUid, effectCoordinates.Position, (originUid, originTransform), bloodColor, predictedRandom.NextFloat(), predictedRandom.NextFloat(0.5f, 0.5f));
     }
 
     /// <summary>

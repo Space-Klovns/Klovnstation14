@@ -137,7 +137,7 @@ public sealed class StainOverlay : Overlay
             foreach (var (stainData, color) in stainedComponent.Stains)
                 worldHandle.DrawTexture(
                     texture,
-                    new Vector2(stainData.X - convertedTextureWidth, stainData.Y - convertedTextureHeight),
+                    Vector2.Zero,
                     angle: new(stainData.Z * MathF.Tau), modulate: color
                 );
         }

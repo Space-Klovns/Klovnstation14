@@ -10,7 +10,9 @@ namespace Content.Shared._KS14.Deferral;
 /// <remarks>
 ///     This, as by default, updates in-prediction. The static methods on this system can be safely called,
 ///         even when the system is not properly initialised or not updating for any reason;
-///         deferred operations will still resume on the first tick that they are allowed. Amazing right?
+///         deferred operations will still resume on the first tick that they are allowed.
+/// 
+///     All cached actions are cleared when the system is shut-down.
 /// </remarks>
 // maybe TODO: some support for removing actions that are already queued?
 public sealed class SynchronousDeferralSystem : EntitySystem
@@ -48,6 +50,14 @@ public sealed class SynchronousDeferralSystem : EntitySystem
         }
     }
 
+    public override void Shutdown()
+    {
+        base.Shutdown();
+
+        _deferredActions.Clear();
+        _scheduledActions.Clear();
+    }
+
     /// <summary>
     ///     Queues something to run on the start of the next tick.
     /// </summary>
@@ -71,7 +81,7 @@ public sealed class SynchronousDeferralSystem : EntitySystem
     /// <summary>
     ///     Queues something to run on the start of the first tick
     ///         after a given delay starting from when the method
-    ///         is called.
+    ///         is called, in simulation-time.
     /// </summary>
     /// <remarks>
     ///     Analogous to <see cref="Schedule(Action, TimeSpan)"/>,

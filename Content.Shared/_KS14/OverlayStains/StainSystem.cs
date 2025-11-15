@@ -50,7 +50,7 @@ public sealed class StainSystem : EntitySystem
         {
             if (TryComp<ReactiveComponent>(uid, out var reactiveComponent))
             {
-                SynchronousDeferralSystem.Add(() => reactiveComponent.Reactions?.Remove(StainCleanEffectEntry));
+                SynchronousDeferralSystem.Defer(() => reactiveComponent.Reactions?.Remove(StainCleanEffectEntry));
 
                 // clean up
                 if (stainedComponent.OwnsBoundReactiveComponent)
@@ -134,7 +134,7 @@ public sealed class StainSystem : EntitySystem
             sourceRelativeToEntityPosition = entity.Comp1.LocalPosition - Vector2.Transform(sourceWorldPosition, _transformSystem.GetInvWorldMatrix(entity.Comp1!.ParentUid));
         }
 
-        AddOffsetStain((entity, entity.Comp2), sourceRelativeToEntityPosition.Normalized() * -1/* * -coefficient*/, color, rotationScale);
+        AddOffsetStain((entity, entity.Comp2), sourceRelativeToEntityPosition.Normalized() * -coefficient, color, rotationScale);
         Log.Debug($"At source: {sourcePosition}");
     }
 }
