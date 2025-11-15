@@ -14,20 +14,20 @@
       visibleLayers:
       - enum.SubfloorLayers.FirstLayer
     - type: Sprite
-      sprite: Structures/Piping/Atmospherics/gasmixer.rsi
+      sprite: _KS14/Structures/Piping/Atmospherics/molarmixer.rsi
       layers:
         - sprite: Structures/Piping/Atmospherics/pipe.rsi
           state: pipeTrinaryConnectors
           map: [ "enum.PipeVisualLayers.Pipe" ]
-        - state: gasMixer
+        - state: molarMixer
           map: [ "enum.SubfloorLayers.FirstLayer", "enabled" ]
     - type: Appearance
     - type: GenericVisualizer
       visuals:
         enum.FilterVisuals.Enabled:
           enabled:
-            True: { state: gasMixerOn }
-            False: { state: gasMixer }
+            True: { state: molarMixerOn }
+            False: { state: molarMixer }
     - type: PipeColorVisuals
     - type: UserInterface
       interfaces:
@@ -63,20 +63,20 @@
     mode: SnapgridCenter
   components:
   - type: Sprite
-    sprite: Structures/Piping/Atmospherics/gasmixer.rsi
+    sprite: _KS14/Structures/Piping/Atmospherics/molarmixer.rsi
     layers:
     - sprite: Structures/Piping/Atmospherics/pipe.rsi
       state: pipeTrinaryConnectors
       map: [ "enum.PipeVisualLayers.Pipe" ]
-    - state: gasMixerF
+    - state: molarMixerF
       map: [ "enum.SubfloorLayers.FirstLayer", "enabled" ]
   - type: Appearance
   - type: GenericVisualizer
     visuals:
       enum.FilterVisuals.Enabled:
         enabled:
-          True: { state: gasMixerFOn }
-          False: { state: gasMixerF }
+          True: { state: molarMixerFOn }
+          False: { state: molarMixerF }
   - type: PipeColorVisuals
   - type: Flippable
     mirrorEntity: MolarMixer
