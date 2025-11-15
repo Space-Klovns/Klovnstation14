@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using Content.Shared._KS14.Deferral;
 using Content.Shared.Chemistry;
 using Content.Shared.Chemistry.Reaction;
 
@@ -19,6 +20,13 @@ public sealed class StainSystem : EntitySystem
     ///         and bleach, that effects <see cref="StainCleanReaction"/>. 
     /// </summary>
     public ReactiveReagentEffectEntry StainCleanEffectEntry = default!;
+
+    /// <summary>
+    ///     Maximum number of stains on one entity. When trying to create
+    ///         a stain on an entity that is at the maximum number of stains,
+    ///         the oldest stain will be truncated first.
+    /// </summary>
+    public const int MaxStains = 25;
 
     public override void Initialize()
     {
@@ -42,13 +50,13 @@ public sealed class StainSystem : EntitySystem
         {
             if (TryComp<ReactiveComponent>(uid, out var reactiveComponent))
             {
-                reactiveComponent.Reactions?.Remove(StainCleanEffectEntry);
+                SynchronousDeferralSystem.Add(() => reactiveComponent.Reactions?.Remove(StainCleanEffectEntry));
 
                 // clean up
                 if (stainedComponent.OwnsBoundReactiveComponent)
                 {
                     stainedComponent.OwnsBoundReactiveComponent = false;
-                    RemComp(uid, reactiveComponent);
+                    RemCompDeferred(uid, reactiveComponent);
                 }
             }
 
@@ -76,6 +84,9 @@ public sealed class StainSystem : EntitySystem
     /// </summary>
     public void AddOffsetStain(in Entity<StainedComponent> entity, in Vector2 offset, in Color color, float rotationScale = 0f)
     {
+        if (entity.Comp.Stains.Count >= MaxStains)
+            entity.Comp.Stains.RemoveAt(0); // remove oldest
+
         entity.Comp.Stains.Add((new Vector3(offset.X, offset.Y, rotationScale), color));
 
         var ownsBoundReactiveComponent = !EnsureComp<ReactiveComponent>(entity, out var reactiveComponent);
@@ -89,6 +100,7 @@ public sealed class StainSystem : EntitySystem
         }
 
         Dirty(entity);
+        Log.Debug($"Applying stain at offset: {offset}, for entity: {ToPrettyString(entity.Owner)}");
     }
 
     /// <summary>
@@ -104,8 +116,8 @@ public sealed class StainSystem : EntitySystem
     /// <summary>
     ///     Applies a stain to an entity, coming from some entity.
     /// </summary>
-    /// <param name="offset">Offset to apply to final position.</param>
-    public void ApplyStain(Entity<TransformComponent?, StainedComponent?> entity, Vector2 offset, Entity<TransformComponent?> sourceEntity, in Color color, float rotationScale = 0f, float coefficient = 1f)
+    /// <param name="offset">Offset to apply to source position.</param>
+    public void ApplyStain(Entity<TransformComponent?, StainedComponent?> entity, in Vector2 sourcePosition, Entity<TransformComponent?> sourceEntity, in Color color, float rotationScale = 0f, float coefficient = 1f)
     {
         EntityManager.TransformQuery.Resolve(entity, ref entity.Comp1);
         EntityManager.TransformQuery.Resolve(sourceEntity, ref sourceEntity.Comp);
@@ -115,14 +127,14 @@ public sealed class StainSystem : EntitySystem
 
         // just do relative if we can save a bit of calculation with it
         if (entity.Comp1!.ParentUid == sourceEntity.Comp!.ParentUid)
-            sourceRelativeToEntityPosition = entity.Comp1.LocalPosition - sourceEntity.Comp.LocalPosition;
+            sourceRelativeToEntityPosition = entity.Comp1.LocalPosition - sourcePosition;
         else
         {
-            var sourceWorldPosition = Vector2.Transform(sourceEntity.Comp!.LocalPosition, _transformSystem.GetWorldMatrix(sourceEntity.Comp.ParentUid));
-            sourceRelativeToEntityPosition = Vector2.Transform(sourceWorldPosition, _transformSystem.GetInvWorldMatrix(entity.Comp1!.ParentUid));
+            var sourceWorldPosition = Vector2.Transform(sourcePosition, _transformSystem.GetWorldMatrix(sourceEntity.Comp.ParentUid));
+            sourceRelativeToEntityPosition = entity.Comp1.LocalPosition - Vector2.Transform(sourceWorldPosition, _transformSystem.GetInvWorldMatrix(entity.Comp1!.ParentUid));
         }
 
-        AddOffsetStain((entity, entity.Comp2), (entity.Comp1.LocalPosition - sourceRelativeToEntityPosition).Normalized() * -coefficient + offset, color, rotationScale);
-        Log.Debug($"Applying stain at offset: {(entity.Comp1.LocalPosition - sourceRelativeToEntityPosition).Normalized()}");
+        AddOffsetStain((entity, entity.Comp2), sourceRelativeToEntityPosition.Normalized() * -1/* * -coefficient*/, color, rotationScale);
+        Log.Debug($"At source: {sourcePosition}");
     }
 }

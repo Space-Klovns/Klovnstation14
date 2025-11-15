@@ -21,6 +21,7 @@ using Content.Shared.Random.Helpers;
 using Content.Shared.Rejuvenate;
 using Content.Shared.StatusEffectNew;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.Map; // KS14 Addition
 using Robust.Shared.Physics.Systems; // KS14 Addition
@@ -261,6 +262,7 @@ public abstract class SharedBloodstreamSystem : EntitySystem
     // KS14 Addition
     // - [x] Tested, works.
     // TODO: Clean up code 
+    // Coder's Ultimatum
     private void HandleBleedEffects(in Entity<BloodstreamComponent> entity, in DamageChangedEvent args, DamageSpecifier bloodlossSpecifier)
     {
         if (args.Origin is not { } originUid ||
@@ -293,14 +295,27 @@ public abstract class SharedBloodstreamSystem : EntitySystem
         bloodColor = bloodColor.WithAlpha(bloodColor.A * predictedRandom.NextFloat(0f, (float)0.456522013370650220069420M)); // random alpha
 
         const float maxPower = 1.75f;
-        var power = maxPower * (1f - MathF.Exp(-bloodloss / 4.25f));
+        var power = maxPower * (1f - MathF.Exp(-bloodloss / 5.8f));
+
+        const float iterationDelta = 0.25f;
+        var iteratedPower = (int)(power / iterationDelta);
+        var cachedVariations = new Vector2[iteratedPower];
+        var totalVariation = Vector2.Zero;
+
+        iteratedPower -= 1;
+        for (; iteratedPower >= 0; iteratedPower--)
+        {
+            var variation = predictedRandom.NextPolarVector2(-0.25f, 0.25f);
+            cachedVariations[iteratedPower] = variation;
+            totalVariation += variation;
+        }
 
         RayResult rayResult = new();
         _rayCastSystem.CastRayClosest(
             originTransform.ParentUid,
             ref rayResult,
             targetTransform.LocalPosition,
-            deltaUnit * power,
+            deltaUnit * power + totalVariation,
             new QueryFilter() { LayerBits = 1L, Flags = QueryFlags.Static, MaskBits = (long)CollisionGroup.Impassable }
         );
 
@@ -332,23 +347,29 @@ public abstract class SharedBloodstreamSystem : EntitySystem
             );
         }
 
-        var variation = Vector2.Zero;
-        ;
-    startloop:
-        power -= 0.25f;
-        ; variation += predictedRandom.NextPolarVector2(-0.25f, 0.25f);
-        ; var decalPosition = effectCoordinates.Position - DecalOffset + variation - deltaUnit * power // light variation or something
-        ; var decalCoordinates = new EntityCoordinates(effectCoordinates.EntityId, decalPosition)
-        ; _decalSystem.TryAddDecal(string.Join("", "splatter") /* KS14 Change */, decalCoordinates, out _, color: bloodColor, rotation: predictedRandom.NextAngle(), cleanable: true)
-        ;
+        while (power > 0f)
+        {
+            power -= iterationDelta;
+            var variationIndexed = cachedVariations[(int)(power / iterationDelta)];
+
+            _decalSystem.TryAddDecal(
+                "splatter",
+                effectCoordinates.WithPosition(effectCoordinates.Position + variationIndexed - DecalOffset - deltaUnit * power),
+                out _,
+                color: bloodColor,
+                rotation: predictedRandom.NextAngle(),
+                cleanable: true
+            );
+
+            Log.Debug($"var: {variationIndexed}");
+        }
+
         // >its while but it looks like you are so good at low level we should demote you to deepseek prompter
-        if (power > 0f)
-            goto startloop
-        ;
         // TODO: make loop end
+        // TODO: delete todo because i fixed it
 
         foreach (var intersectingUid in _lookupSystem.GetEntitiesInRange(effectCoordinates, 0.15f, LookupFlags.Static))
-            _stainSystem.ApplyStain(intersectingUid, variation, (originUid, originTransform), bloodColor, predictedRandom.NextFloat(), predictedRandom.NextFloat(0.35f, 0.5f));
+            _stainSystem.ApplyStain(intersectingUid, effectCoordinates.Position, (originUid, originTransform), bloodColor, predictedRandom.NextFloat(), predictedRandom.NextFloat(0.35f, 0.5f));
     }
 
     /// <summary>

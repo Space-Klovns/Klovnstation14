@@ -43,6 +43,7 @@ public sealed class StainOverlay : Overlay
     // see: DoAfterOverlay.cs
     private const float Scale = 1f;
     private const float DblPixelsPerMeter = 2f * EyeManager.PixelsPerMeter;
+
     private static readonly Matrix3x2 ScaleMatrix = Matrix3Helpers.CreateScale(new Vector2(Scale, Scale));
 
     public StainOverlay()
@@ -119,23 +120,26 @@ public sealed class StainOverlay : Overlay
         worldHandle.DrawTextureRect(res.StainTarget.Texture, worldBounds);
 
         var texture = _spriteSystem.GetFrame(StainSpriteSpecifier, _gameTiming.RealTime);
+        var convertedTextureWidth = texture.Width / DblPixelsPerMeter;
+        var convertedTextureHeight = texture.Height / DblPixelsPerMeter;
 
         worldHandle.UseShader(_prototypeManager.Index(StencilEqualDrawShader).Instance());
-
-        var rotationMatrix = Matrix3Helpers.CreateRotation(-viewport.Eye?.Rotation ?? Angle.Zero);
 
         var stainedEnumerator = _entityManager.EntityQueryEnumerator<StainedComponent, SpriteComponent, TransformComponent>();
         while (stainedEnumerator.MoveNext(out var uid, out var stainedComponent, out var spriteComponent, out var transformComponent))
         {
-            var bounds = _spriteSystem.GetLocalBounds((uid, spriteComponent));
             var worldPosition = _transformSystem.GetWorldPosition(transformComponent, _transformQuery);
 
             var worldMatrix = Matrix3Helpers.CreateTranslation(worldPosition);
             var scaledWorld = Matrix3x2.Multiply(ScaleMatrix, worldMatrix);
-            worldHandle.SetTransform(Matrix3x2.Multiply(rotationMatrix, scaledWorld));
+            worldHandle.SetTransform(scaledWorld);
 
             foreach (var (stainData, color) in stainedComponent.Stains)
-                worldHandle.DrawTexture(texture, new Vector2(stainData.X - texture.Width / DblPixelsPerMeter, stainData.Y - texture.Height / DblPixelsPerMeter), angle: new(stainData.Z * MathF.Tau + viewport.Eye!.Rotation.Theta), modulate: color);
+                worldHandle.DrawTexture(
+                    texture,
+                    new Vector2(stainData.X - convertedTextureWidth, stainData.Y - convertedTextureHeight),
+                    angle: new(stainData.Z * MathF.Tau), modulate: color
+                );
         }
 
         worldHandle.SetTransform(Matrix3x2.Identity);
