@@ -77,7 +77,6 @@ public sealed class SynchronousDeferralSystem : EntitySystem
         _scheduledActions.Push((runBy, action));
     }
 
-
     /// <summary>
     ///     Queues something to run on the start of the first tick
     ///         after a given delay starting from when the method
@@ -100,6 +99,7 @@ public sealed class SynchronousDeferralSystem : EntitySystem
     /// <remarks>
     ///     Uses RaiseLocalEvent.
     /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Action ConstructValueEventDispatcher<TEvent>(EntityUid uid, TEvent args, bool broadcast = false)
         where TEvent : notnull
     {
