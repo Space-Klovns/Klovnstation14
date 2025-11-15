@@ -51,7 +51,7 @@ public abstract class SharedBloodstreamSystem : EntitySystem
     [Dependency] private readonly EntityLookupSystem _lookupSystem = default!; // KS14 Addition
     [Dependency] private readonly RayCastSystem _rayCastSystem = default!; // KS14 Addition
 
-    private static readonly Vector2 DecalOffset = Vector2.One / 2; // KS14 Addition; not sure if this is related to tilesize or texturesize.
+    private static readonly Vector2 DecalOffset = Vector2.One / 2; // KS14 Addition; this is related to texture size of the blood splatter.
 
     public override void Initialize()
     {
@@ -373,7 +373,7 @@ public abstract class SharedBloodstreamSystem : EntitySystem
         // TODO: delete todo because i fixed it
 
         foreach (var intersectingUid in _lookupSystem.GetEntitiesInRange(effectCoordinates, 0.1f, LookupFlags.Static))
-            _stainSystem.ApplyStain(intersectingUid, effectCoordinates.Position, (originUid, originTransform), bloodColor, predictedRandom.NextFloat(), predictedRandom.NextFloat(0.5f, 0.5f));
+            _stainSystem.ApplyStain(intersectingUid, effectCoordinates, bloodColor, predictedRandom.NextFloat(), predictedRandom.NextFloat(0.5f, 0.5f));
     }
 
     /// <summary>

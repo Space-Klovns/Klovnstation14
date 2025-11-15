@@ -3,6 +3,7 @@ using System.Numerics;
 using Content.Shared._KS14.Deferral;
 using Content.Shared.Chemistry;
 using Content.Shared.Chemistry.Reaction;
+using Robust.Shared.Map;
 
 namespace Content.Shared._KS14.OverlayStains;
 
@@ -114,27 +115,26 @@ public sealed class StainSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Applies a stain to an entity, coming from some entity.
+    ///     Applies a stain to an entity, coming from some <see cref="EntityCoordinates"/>.
     /// </summary>
     /// <param name="offset">Offset to apply to source position.</param>
-    public void ApplyStain(Entity<TransformComponent?, StainedComponent?> entity, in Vector2 sourcePosition, Entity<TransformComponent?> sourceEntity, in Color color, float rotationScale = 0f, float coefficient = 1f)
+    public void ApplyStain(Entity<TransformComponent?, StainedComponent?> entity, in EntityCoordinates sourceCoordinates, in Color color, float rotationScale = 0f, float coefficient = 1f)
     {
         EntityManager.TransformQuery.Resolve(entity, ref entity.Comp1);
-        EntityManager.TransformQuery.Resolve(sourceEntity, ref sourceEntity.Comp);
         EnsureStainedComponent(entity.Owner, ref entity.Comp2);
 
         Vector2 sourceRelativeToEntityPosition;
 
         // just do relative if we can save a bit of calculation with it
-        if (entity.Comp1!.ParentUid == sourceEntity.Comp!.ParentUid)
-            sourceRelativeToEntityPosition = entity.Comp1.LocalPosition - sourcePosition;
+        if (entity.Comp1!.ParentUid == sourceCoordinates.EntityId)
+            sourceRelativeToEntityPosition = entity.Comp1.LocalPosition - sourceCoordinates.Position;
         else
         {
-            var sourceWorldPosition = Vector2.Transform(sourcePosition, _transformSystem.GetWorldMatrix(sourceEntity.Comp.ParentUid));
+            var sourceWorldPosition = Vector2.Transform(sourceCoordinates.Position, _transformSystem.GetWorldMatrix(sourceCoordinates.EntityId));
             sourceRelativeToEntityPosition = entity.Comp1.LocalPosition - Vector2.Transform(sourceWorldPosition, _transformSystem.GetInvWorldMatrix(entity.Comp1!.ParentUid));
         }
 
         AddOffsetStain((entity, entity.Comp2), sourceRelativeToEntityPosition.Normalized() * -coefficient, color, rotationScale);
-        Log.Debug($"At source: {sourcePosition}");
+        Log.Debug($"At source: (local) {sourceCoordinates.Position}");
     }
 }
