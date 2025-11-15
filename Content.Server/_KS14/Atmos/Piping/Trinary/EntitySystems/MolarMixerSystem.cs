@@ -15,6 +15,7 @@
 // SPDX-FileCopyrightText: 2024 slarticodefast
 // SPDX-FileCopyrightText: 2024 themias
 // SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 nabegator220
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later

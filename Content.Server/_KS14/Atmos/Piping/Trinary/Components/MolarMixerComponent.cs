@@ -5,6 +5,7 @@
 // SPDX-FileCopyrightText: 2022 Vera Aguilera Puerto
 // SPDX-FileCopyrightText: 2022 wrexbe
 // SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 nabegator220
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later

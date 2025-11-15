@@ -27,6 +27,7 @@
 // SPDX-FileCopyrightText: 2025 Simon
 // SPDX-FileCopyrightText: 2025 SlamBamActionman
 // SPDX-FileCopyrightText: 2025 beck-thompson
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 nabegator220
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
