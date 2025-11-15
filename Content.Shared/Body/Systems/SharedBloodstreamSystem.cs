@@ -265,14 +265,17 @@ public abstract class SharedBloodstreamSystem : EntitySystem
     // Coder's Ultimatum
     private void HandleBleedEffects(in Entity<BloodstreamComponent> entity, in DamageChangedEvent args, DamageSpecifier bloodlossSpecifier)
     {
+        // it shouldnt be 0 ever anyway
+        var bloodloss = (float)bloodlossSpecifier.GetTotal();
+        if (bloodloss <= 0.5f)
+            return;
+
         if (args.Origin is not { } originUid ||
             !SolutionContainer.ResolveSolution(entity.Owner, entity.Comp.BloodSolutionName, ref entity.Comp.BloodSolution, out var bloodSolution))
             return;
 
         var targetTransform = Transform(entity);
         var originTransform = Transform(originUid);
-
-        var bloodloss = (float)bloodlossSpecifier.GetTotal();
 
         // TODO: use KsRandomExtensions when it gets merged
         var predictedRandom = new System.Random(SharedRandomExtensions.HashCodeCombine(new() { (int)_timing.CurTick.Value, (int)targetTransform.LocalPosition.LengthSquared() }));
@@ -295,7 +298,7 @@ public abstract class SharedBloodstreamSystem : EntitySystem
         bloodColor = bloodColor.WithAlpha(bloodColor.A * predictedRandom.NextFloat(0.28f, (float)0.456522013370650220069420M)); // random alpha
 
         const float maxPower = 1.75f;
-        var power = maxPower * (1f - MathF.Exp(-bloodloss / 6f));
+        var power = MathF.Max(maxPower * (1f - MathF.Exp(-bloodloss / 6f)), 0f);
 
         const float iterationDelta = 0.25f;
         var iteratedPower = (int)(power / iterationDelta);
