@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 jhrushbe
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Server.NodeContainer.Nodes;
 using Content.Shared.Atmos;
 using Content.Shared.NodeContainer;

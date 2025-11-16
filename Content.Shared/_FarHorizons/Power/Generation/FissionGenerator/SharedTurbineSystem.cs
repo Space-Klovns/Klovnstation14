@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 jhrushbe
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Shared.Administration.Logs;
 using Content.Shared.Database;
 using Content.Shared.Examine;

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 jhrushbe
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Client.Popups;
 using Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
 using Content.Shared.Repairable;

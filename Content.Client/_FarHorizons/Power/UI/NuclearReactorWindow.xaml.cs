@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 jhrushbe
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using System.Diagnostics.CodeAnalysis;
 using Content.Client.UserInterface.Controls;
 using Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
