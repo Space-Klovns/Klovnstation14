@@ -38,9 +38,6 @@ public sealed class StainOverlay : Overlay
     private List<Entity<MapGridComponent>> _grids = new();
     private HashSet<EntityUid> _intersectingEntities = new();
 
-    // This ulong is 2 floats bitpacked together.
-    private Dictionary<RSI, ulong> _cachedSpriteBounds = new();
-
     private readonly OverlayResourceCache<CachedResources> _resources = new();
 
     // see: DoAfterOverlay.cs
@@ -90,8 +87,6 @@ public sealed class StainOverlay : Overlay
             res.StainTarget = _clyde.CreateRenderTarget(target.Size, new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb), name: "stain-stencil-target");
         }
 
-        _cachedSpriteBounds.Clear();
-
         // Need to do stencilling after blur as it will nuke it.
         // Draw stencil for the grid so we don't draw in space.
         args.WorldHandle.RenderInRenderTarget(res.StainTarget,
@@ -109,6 +104,8 @@ public sealed class StainOverlay : Overlay
 
                     _intersectingEntities.Clear();
                     _entityLookupSystem.GetEntitiesIntersecting(mapId, worldBoundBox, _intersectingEntities, LookupFlags.Static);
+
+                    // TODO: Draw actual sprite texture to stencil?
                     foreach (var uid in _intersectingEntities)
                     {
                         if (!_entityManager.TryGetComponent(uid, out TransformComponent? transformComponent) ||
