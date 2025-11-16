@@ -278,6 +278,7 @@ public abstract class SharedBloodstreamSystem : EntitySystem
         var originTransform = Transform(originUid);
 
         // TODO: use KsRandomExtensions when it gets merged
+        // TODO: fix occasional mispredict here
         var predictedRandom = new System.Random(SharedRandomExtensions.HashCodeCombine(new() { (int)_timing.CurTick.Value, (int)targetTransform.LocalPosition.LengthSquared() }));
 
         // TODO: Something better target-origin
