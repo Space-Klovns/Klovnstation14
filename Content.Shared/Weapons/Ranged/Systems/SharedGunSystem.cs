@@ -129,11 +129,9 @@ public abstract partial class SharedGunSystem : EntitySystem
         if (!TryComp<MeleeWeaponComponent>(uid, out var melee))
             return;
 
+        // KS14 Prediction: removed dirty
         if (melee.NextAttack > component.NextFire)
-        {
             component.NextFire = melee.NextAttack;
-            DirtyField(uid, component, nameof(GunComponent.NextFire));
-        }
     }
 
     private void OnShootRequest(RequestShootEvent msg, EntitySessionEventArgs args)
@@ -218,12 +216,14 @@ public abstract partial class SharedGunSystem : EntitySystem
         gun.ShootCoordinates = null;
         gun.Target = null;
         gun.LastShotWasEmpty = false; // MNET
-        DirtyFields(uid, gun, null, nameof(GunComponent.ShotCounter), nameof(GunComponent.LastShotWasEmpty));
+        // KS14 Prediction: removed dirty
     }
 
     private EntityUid PredictedSpawnAtPositionAndPredictPhysics(string? prototype, EntityCoordinates entityCoordinates)
     {
         var uid = PredictedSpawnAtPosition(prototype, entityCoordinates);
+
+        TryComp<PredictedSpawnComponent>(uid, out var a);
         Physics.UpdateIsPredicted(uid);
 
         return uid;
@@ -238,7 +238,8 @@ public abstract partial class SharedGunSystem : EntitySystem
         gun.Target = target;
         var result = AttemptShoot(user, gunUid, gun);
         gun.ShotCounter = 0;
-        DirtyField(gunUid, gun, nameof(GunComponent.ShotCounter));
+        // KS14 Prediction: removed dirty
+
         return result;
     }
 
@@ -496,7 +497,7 @@ public abstract partial class SharedGunSystem : EntitySystem
         {
             var targeted = EnsureComp<TargetedProjectileComponent>(uid);
             targeted.Target = target;
-            Dirty(uid, targeted);
+            // KS14 Prediction: removed dirty
         }
 
         // Do a throw
@@ -533,7 +534,7 @@ public abstract partial class SharedGunSystem : EntitySystem
     }
 
     // KS14: Predicted; fully moved to shared.
-    private void FireEffects(EntityCoordinates fromCoordinates, float distance, Angle angle, HitscanPrototype hitscan, EntityUid? hitEntity = null)
+    private void FireEffects(EntityCoordinates fromCoordinates, float distance, Angle angle, HitscanPrototype hitscan, EntityUid? hitEntity = null, Entity<MetaDataComponent?>? user = null)
     {
         // Lord
         // Forgive me for the shitcode I am about to do
@@ -586,10 +587,10 @@ public abstract partial class SharedGunSystem : EntitySystem
 
         if (sprites.Count > 0)
         {
-            RaiseNetworkEvent(new HitscanEvent
-            {
-                Sprites = sprites,
-            }, Filter.Pvs(fromCoordinates, entityMan: EntityManager));
+            if (_netManager.IsServer)
+                RaiseNetworkEvent(new HitscanEvent { Sprites = sprites, User = GetNetEntity(user) }, Filter.Pvs(fromCoordinates, entityMan: EntityManager));
+
+            RaiseLocalEvent(new HitscanEvent { Sprites = sprites });
         }
     }
 
@@ -720,7 +721,7 @@ public abstract partial class SharedGunSystem : EntitySystem
                     if (!cartridge.DeleteOnSpawn && !Containers.IsEntityInContainer(ent!.Value))
                         EjectCartridge(ent.Value, angle, user: user);
 
-                    Dirty(ent!.Value, cartridge);
+                    // KS14 Prediction: removed dirty
                     break;
                 // Ammo shoots itself
                 case AmmoComponent newAmmo:
@@ -773,7 +774,7 @@ public abstract partial class SharedGunSystem : EntitySystem
                             var hit = result.HitEntity;
                             lastHit = hit;
 
-                            FireEffects(fromEffect, result.Distance, dir.Normalized().ToAngle(), hitscan, hit);
+                            FireEffects(fromEffect, result.Distance, dir.Normalized().ToAngle(), hitscan, hit, user: user);
 
                             var ev = new HitScanReflectAttemptEvent(user, gunUid, hitscan.Reflective, dir, false);
                             RaiseLocalEvent(hit, ref ev);
@@ -828,7 +829,7 @@ public abstract partial class SharedGunSystem : EntitySystem
                     }
                     else
                     {
-                        FireEffects(fromEffect, hitscan.MaxLength, dir.ToAngle(), hitscan);
+                        FireEffects(fromEffect, hitscan.MaxLength, dir.ToAngle(), hitscan, user: user);
                     }
 
                     Audio.PlayPredicted(gun.SoundGunshotModified, gunUid, user);
@@ -883,7 +884,7 @@ public abstract partial class SharedGunSystem : EntitySystem
         var targetMapVelocity = gunVelocity + direction.Normalized() * speed;
         var currentMapVelocity = Physics.GetMapLinearVelocity(uid, physics);
         var finalLinear = physics.LinearVelocity + targetMapVelocity - currentMapVelocity;
-        Physics.SetLinearVelocity(uid, finalLinear, dirty: false, body: physics);
+        Physics.SetLinearVelocity(uid, finalLinear, dirty: true, body: physics);
 
         var projectile = EnsureComp<ProjectileComponent>(uid);
         projectile.Weapon = gunUid;
@@ -943,10 +944,10 @@ public abstract partial class SharedGunSystem : EntitySystem
             Log.Debug($"Logging EjectCartridge: user: {ToPrettyString(user)}");
             ThrowingSystem.TryThrow(entity, ejectAngle.ToVec().Normalized() / 100, 5f, user: user, recoil: false);
         }
+
+        // KS14: Predicted audio
         if (playSound && TryComp<CartridgeAmmoComponent>(entity, out var cartridge))
-        {
-            Audio.PlayPvs(cartridge.EjectSound, entity, AudioParams.Default.WithVariation(SharedContentAudioSystem.DefaultVariation).WithVolume(-1f));
-        }
+            Audio.PlayPredicted(cartridge.EjectSound, entity, user, audioParams: AudioParams.Default.WithVariation(SharedContentAudioSystem.DefaultVariation).WithVolume(-1f));
     }
 
     protected IShootable EnsureShootable(EntityUid uid)
@@ -1075,6 +1076,9 @@ public abstract partial class SharedGunSystem : EntitySystem
     public sealed class HitscanEvent : EntityEventArgs
     {
         public List<(NetCoordinates coordinates, Angle angle, SpriteSpecifier Sprite, float Distance)> Sprites = new();
+
+        // KS14: Added user
+        public NetEntity? User;
     }
 }
 

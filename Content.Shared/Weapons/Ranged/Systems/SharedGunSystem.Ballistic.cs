@@ -149,9 +149,6 @@ public abstract partial class SharedGunSystem
                 Audio.PlayPredicted(component.SoundInsert, uid, args.User);
                 SimulateInsertAmmo(ent.Value, args.Target.Value, Transform(args.Target.Value).Coordinates);
             }
-
-            if (IsClientSide(ent.Value))
-                Del(ent.Value);
         }
 
         UpdateBallisticAppearance(args.Target.Value, component);
