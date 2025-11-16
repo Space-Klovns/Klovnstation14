@@ -21,7 +21,7 @@
     price: 200
   - type: Currency
     price:
-      Telecrystal: 1
+      Telecrystal: 3
 
 - type: entity
   parent: Telecrystal
@@ -79,7 +79,7 @@
   components:
   - type: Store
     balance:
-      Telecrystal: 20
+      Telecrystal: 60
 
 - type: entity
   parent: BaseUplinkRadio
@@ -88,7 +88,7 @@
   components:
   - type: Store
     balance:
-      Telecrystal: 25
+      Telecrystal: 75
 
 #this uplink MUST be used for nukeops, as it has the tag for filtering the listing.
 - type: entity
@@ -98,7 +98,7 @@
   components:
   - type: Store
     balance:
-      Telecrystal: 40
+      Telecrystal: 120
   - type: Tag
     tags:
     - NukeOpsUplink
@@ -110,7 +110,7 @@
   components:
   - type: Store
     balance:
-      Telecrystal: 60
+      Telecrystal: 180
   - type: Tag
     tags:
     - NukeOpsUplink
@@ -122,4 +122,4 @@
   components:
   - type: Store
     balance:
-      Telecrystal: 99999
+      Telecrystal: 299997
