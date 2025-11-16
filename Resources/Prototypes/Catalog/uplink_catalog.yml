@@ -1,4 +1,125 @@
-# SPDX-FileCopyrightText: Contributors to the GoobStation14 project
+# SPDX-FileCopyrightText: 2020 AJCM-git
+# SPDX-FileCopyrightText: 2020 FL-OZ
+# SPDX-FileCopyrightText: 2021 Swept
+# SPDX-FileCopyrightText: 2022 Ablankmann
+# SPDX-FileCopyrightText: 2022 Alex Evgrashin
+# SPDX-FileCopyrightText: 2022 CrudeWax
+# SPDX-FileCopyrightText: 2022 EmoGarbage404
+# SPDX-FileCopyrightText: 2022 Fishfish458
+# SPDX-FileCopyrightText: 2022 Flipp Syder
+# SPDX-FileCopyrightText: 2022 Júlio César Ueti
+# SPDX-FileCopyrightText: 2022 Mervill
+# SPDX-FileCopyrightText: 2022 Mith-randalf
+# SPDX-FileCopyrightText: 2022 Peptide90
+# SPDX-FileCopyrightText: 2022 Rane
+# SPDX-FileCopyrightText: 2022 TaralGit
+# SPDX-FileCopyrightText: 2022 Veritius
+# SPDX-FileCopyrightText: 2022 ZeroDayDaemon
+# SPDX-FileCopyrightText: 2022 Zymem
+# SPDX-FileCopyrightText: 2022 and_a
+# SPDX-FileCopyrightText: 2022 areit
+# SPDX-FileCopyrightText: 2022 fishfish458
+# SPDX-FileCopyrightText: 2022 mirrorcult
+# SPDX-FileCopyrightText: 2023 AJCM
+# SPDX-FileCopyrightText: 2023 Alex
+# SPDX-FileCopyrightText: 2023 AlexMorgan3817
+# SPDX-FileCopyrightText: 2023 AndrewEyeke
+# SPDX-FileCopyrightText: 2023 Arendian
+# SPDX-FileCopyrightText: 2023 Brayden H
+# SPDX-FileCopyrightText: 2023 Chief-Engineer
+# SPDX-FileCopyrightText: 2023 Dawid Bla
+# SPDX-FileCopyrightText: 2023 EEASAS
+# SPDX-FileCopyrightText: 2023 FacePluslll
+# SPDX-FileCopyrightText: 2023 Flareguy
+# SPDX-FileCopyrightText: 2023 Geekyhobo
+# SPDX-FileCopyrightText: 2023 GoodWheatley
+# SPDX-FileCopyrightText: 2023 HerCoyote23
+# SPDX-FileCopyrightText: 2023 Interrobang01
+# SPDX-FileCopyrightText: 2023 Jackal298
+# SPDX-FileCopyrightText: 2023 JoeHammad1844
+# SPDX-FileCopyrightText: 2023 Kara
+# SPDX-FileCopyrightText: 2023 Kistras
+# SPDX-FileCopyrightText: 2023 LankLTE
+# SPDX-FileCopyrightText: 2023 Moomoobeef
+# SPDX-FileCopyrightText: 2023 Moony
+# SPDX-FileCopyrightText: 2023 Nim
+# SPDX-FileCopyrightText: 2023 OctoRocket
+# SPDX-FileCopyrightText: 2023 Panzer
+# SPDX-FileCopyrightText: 2023 Raitononai
+# SPDX-FileCopyrightText: 2023 Repo
+# SPDX-FileCopyrightText: 2023 Sailor
+# SPDX-FileCopyrightText: 2023 Slava0135
+# SPDX-FileCopyrightText: 2023 Tryded
+# SPDX-FileCopyrightText: 2023 Vordenburg
+# SPDX-FileCopyrightText: 2023 Whisper
+# SPDX-FileCopyrightText: 2023 Zoldorf
+# SPDX-FileCopyrightText: 2023 brainfood1183
+# SPDX-FileCopyrightText: 2023 chromiumboy
+# SPDX-FileCopyrightText: 2023 crazybrain23
+# SPDX-FileCopyrightText: 2023 dontbetank
+# SPDX-FileCopyrightText: 2023 eclips_e
+# SPDX-FileCopyrightText: 2023 lapatison
+# SPDX-FileCopyrightText: 2023 liltenhead
+# SPDX-FileCopyrightText: 2023 lzk228
+# SPDX-FileCopyrightText: 2023 magmodius
+# SPDX-FileCopyrightText: 2023 moonheart08
+# SPDX-FileCopyrightText: 2023 router
+# SPDX-FileCopyrightText: 2023 vanx
+# SPDX-FileCopyrightText: 2024 21Melkuu
+# SPDX-FileCopyrightText: 2024 AlexUm & XGabriel08X
+# SPDX-FileCopyrightText: 2024 Alzore
+# SPDX-FileCopyrightText: 2024 Boaz1111
+# SPDX-FileCopyrightText: 2024 ERROR404
+# SPDX-FileCopyrightText: 2024 Ed
+# SPDX-FileCopyrightText: 2024 EdenTheLiznerd
+# SPDX-FileCopyrightText: 2024 Emisse
+# SPDX-FileCopyrightText: 2024 Fildrance
+# SPDX-FileCopyrightText: 2024 Firewatch
+# SPDX-FileCopyrightText: 2024 FungiFellow
+# SPDX-FileCopyrightText: 2024 Ghagliiarghii
+# SPDX-FileCopyrightText: 2024 Ilya246
+# SPDX-FileCopyrightText: 2024 K-Dynamic
+# SPDX-FileCopyrightText: 2024 LordEclipse
+# SPDX-FileCopyrightText: 2024 Mangohydra
+# SPDX-FileCopyrightText: 2024 Mr. 27
+# SPDX-FileCopyrightText: 2024 Naive817
+# SPDX-FileCopyrightText: 2024 Nemanja
+# SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2024 Plykiya
+# SPDX-FileCopyrightText: 2024 Ps3Moira
+# SPDX-FileCopyrightText: 2024 TruePaInt
+# SPDX-FileCopyrightText: 2024 Ubaser
+# SPDX-FileCopyrightText: 2024 Verm
+# SPDX-FileCopyrightText: 2024 beck-thompson
+# SPDX-FileCopyrightText: 2024 deltanedas
+# SPDX-FileCopyrightText: 2024 lzk
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2024 nikthechampiongr
+# SPDX-FileCopyrightText: 2024 ninruB
+# SPDX-FileCopyrightText: 2024 pofitlo
+# SPDX-FileCopyrightText: 2024 takemysoult
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 August Sun
+# SPDX-FileCopyrightText: 2025 FrauZj
+# SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 Minemoder5000
+# SPDX-FileCopyrightText: 2025 Nox
+# SPDX-FileCopyrightText: 2025 Preston Smith
+# SPDX-FileCopyrightText: 2025 RedBookcase
+# SPDX-FileCopyrightText: 2025 ScarKy0
+# SPDX-FileCopyrightText: 2025 SlamBamActionman
+# SPDX-FileCopyrightText: 2025 Smugman
+# SPDX-FileCopyrightText: 2025 Theodore Lukin
+# SPDX-FileCopyrightText: 2025 Unkn0wn_Gh0st
+# SPDX-FileCopyrightText: 2025 Vasilis The Pikachu
+# SPDX-FileCopyrightText: 2025 Velcroboy
+# SPDX-FileCopyrightText: 2025 Zachary Higgs
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 hyperDelegate
+# SPDX-FileCopyrightText: 2025 keronshb
+# SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2025 robinthedragon
+# SPDX-FileCopyrightText: 2025 themias
 #
 # SPDX-License-Identifier: MPL-2.0
 
@@ -66,7 +187,21 @@
     Telecrystal: 4
   productEntity: EnergySword
   cost:
-    Telecrystal: 8
+    Telecrystal: 8 #KS14 change
+  categories:
+  - UplinkWeaponry
+
+- type: listing #KS14 change - readded double esword
+  id: UplinkDoubleEsword
+  name: uplink-esword-double-name
+  description: uplink-esword-double-desc
+  icon: { sprite: /Textures/Objects/Weapons/Melee/e_sword_double.rsi, state: icon }
+  discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 15
+  productEntity: EnergySwordDouble
+  cost:
+    Telecrystal: 18
   categories:
   - UplinkWeaponry
 
@@ -92,9 +227,9 @@
   productEntity: ThrowingKnivesKit
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 2
   cost:
-    Telecrystal: 6
+    Telecrystal: 4  #KS14 change
   categories:
     - UplinkWeaponry
 
@@ -107,21 +242,7 @@
   discountDownTo:
     Telecrystal: 4
   cost:
-    Telecrystal: 8
-  categories:
-  - UplinkWeaponry
-
-- type: listing
-  id: UplinkGlovesKnuckleDusters
-  name: uplink-gloves-knuckleduster-name
-  description: uplink-gloves-knuckleduster-desc
-  icon: { sprite: Clothing/Hands/Gloves/KnuckleDusters/syndicateknuckleduster.rsi, state: syndicateknuckleduster }
-  productEntity: ClothingHandsKnuckleDustersSyndicate
-  discountCategory: rareDiscounts
-  discountDownTo:
-    Telecrystal: 3
-  cost:
-    Telecrystal: 6
+    Telecrystal: 6  #KS14 change
   categories:
   - UplinkWeaponry
 
@@ -134,7 +255,7 @@
   discountDownTo:
     Telecrystal: 3
   cost:
-    Telecrystal: 6
+    Telecrystal: 5 #KS14 change
   categories:
   - UplinkWeaponry
   conditions:
@@ -149,18 +270,13 @@
   description: uplink-eshield-desc
   icon: { sprite: /Textures/Objects/Weapons/Melee/e_shield.rsi, state: eshield-on }
   productEntity: EnergyShield
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 4
+    Telecrystal: 3
   cost:
-    Telecrystal: 8
+    Telecrystal: 6
   categories:
-  - UplinkWeaponry
-  conditions:
-  - !type:StoreWhitelistCondition
-    whitelist:
-      tags:
-      - NukeOpsUplink
+  - UplinkWeaponry #KS14 change added to syndie uplink
 
 - type: listing
   id: UplinkSniperBundle
@@ -182,7 +298,7 @@
   description: uplink-c20r-bundle-desc
   icon: { sprite: /Textures/Objects/Weapons/Guns/SMGs/c20r.rsi, state: icon }
   productEntity: ClothingBackpackDuffelSyndicateFilledSMG
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 10
   cost:
@@ -196,7 +312,7 @@
   description: uplink-estoc-bundle-desc
   icon: { sprite: /Textures/Objects/Weapons/Guns/Rifles/estoc.rsi, state: icon }
   productEntity: ClothingBackpackDuffelSyndicateFilledRifle
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 11
   cost:
@@ -210,7 +326,7 @@
   description: uplink-buldog-bundle-desc
   icon: { sprite: /Textures/Objects/Weapons/Guns/Shotguns/bulldog.rsi, state: icon }
   productEntity: ClothingBackpackDuffelSyndicateFilledShotgun
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 12
   cost:
@@ -224,7 +340,7 @@
   description: uplink-grenade-launcher-bundle-desc
   icon: { sprite: /Textures/Objects/Weapons/Guns/Launchers/china_lake.rsi, state: icon }
   productEntity: ClothingBackpackDuffelSyndicateFilledGrenadeLauncher
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 20
   cost:
@@ -238,7 +354,7 @@
   description: uplink-l6-saw-bundle-desc
   icon: { sprite: /Textures/Objects/Weapons/Guns/LMGs/l6.rsi, state: icon }
   productEntity: ClothingBackpackDuffelSyndicateFilledLMG
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 24
   cost:
@@ -286,7 +402,7 @@
   name: uplink-mini-bomb-name
   description: uplink-mini-bomb-desc
   productEntity: SyndieMiniBomb
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 3
   cost:
@@ -343,7 +459,7 @@
   name: uplink-c4-name
   description: uplink-c4-desc
   productEntity: C4
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 1
   cost:
@@ -356,7 +472,7 @@
   name: uplink-grenadier-rig-name
   description: uplink-grenadier-rig-desc
   productEntity: ClothingBeltMilitaryWebbingGrenadeFilled
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 6
   cost:
@@ -374,7 +490,7 @@
   name: uplink-c4-bundle-name
   description: uplink-c4-bundle-desc
   productEntity: ClothingBackpackDuffelSyndicateC4tBundle
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 8
   cost:
@@ -484,7 +600,7 @@
   name: uplink-emp-kit-name
   description: uplink-emp-kit-desc
   productEntity: ElectricalDisruptionKit
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 4
   cost:
@@ -638,7 +754,7 @@
   description: uplink-hypodart-desc
   icon: { sprite: /Textures/Objects/Fun/Darts/dart_red.rsi, state: icon }
   productEntity: HypoDartBox
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 1
   cost:
@@ -681,6 +797,22 @@
       - SurplusBundle
 
 - type: listing
+  id: UplinkZombieBundleSyndicate
+  name: uplink-zombie-bundle-name
+  description: uplink-zombie-bundle-syndicate-desc
+  icon: { sprite: /Textures/Structures/Wallmounts/signs.rsi, state: bio }
+  productEntity: ClothingBackpackDuffelZombieBundleSyndicate #KS14 addition for syndies
+  cost:
+    Telecrystal: 25
+  categories:
+  - UplinkChemicals
+  conditions:
+  - !type:StoreWhitelistCondition
+    blacklist:
+      tags:
+      - NukeOpsUplink
+
+- type: listing
   id: UplinkNocturineChemistryBottle
   name: uplink-nocturine-chemistry-bottle-name
   description: uplink-nocturine-chemistry-bottle-desc
@@ -702,7 +834,7 @@
   discountDownTo:
     Telecrystal: 2
   cost:
-    Telecrystal: 5
+    Telecrystal: 4 #KS14 change
   categories:
   - UplinkChemicals
 
@@ -728,7 +860,7 @@
   discountDownTo:
     Telecrystal: 2
   cost:
-    Telecrystal: 4
+    Telecrystal: 3 #KS14 change
   categories:
   - UplinkChemicals
 
@@ -739,9 +871,9 @@
   productEntity: StimkitFilled
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 8
+    Telecrystal: 6
   cost:
-    Telecrystal: 12
+    Telecrystal: 8 #KS14 change
   categories:
   - UplinkChemicals
 
@@ -759,7 +891,7 @@
   id: UplinkMedsBundle
   name: uplink-meds-bundle-name
   description: uplink-meds-bundle-desc
-  productEntity: ClothingBackpackDuffelSyndicateMedicalBundleFilled
+  productEntity: ClothingBackpackDuffelNukieMedicalBundleFilled #KS14 change, renamed it cause i added syndicate version
   discountCategory: rareDiscounts
   discountDownTo:
     Telecrystal: 16
@@ -784,7 +916,7 @@
   name: uplink-agent-id-card-name
   description: uplink-agent-id-card-desc
   productEntity: AgentIDCard
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 1
   cost:
@@ -946,7 +1078,7 @@
   name: uplink-emag-name
   description: uplink-emag-desc
   productEntity: Emag
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 3
   cost:
@@ -986,7 +1118,7 @@
   description: uplink-syndicate-martyr-module-desc
   productEntity: BorgModuleMartyr
   icon: { sprite: /Textures/Objects/Specific/Robotics/borgmodule.rsi, state: syndicateborgbomb }
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 2
   cost:
@@ -1375,7 +1507,7 @@
   description: uplink-freedom-implanter-desc
   icon: { sprite: /Textures/Actions/Implants/implants.rsi, state: freedom }
   productEntity: FreedomImplanter
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 3
   cost:
@@ -1389,7 +1521,7 @@
   description: uplink-scram-implanter-desc
   icon: { sprite: /Textures/Structures/Specific/anomaly.rsi, state: anom4 }
   productEntity: ScramImplanter
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 4
   cost:
@@ -1417,7 +1549,7 @@
   description: uplink-emp-implanter-desc
   icon: { sprite: /Textures/Objects/Magic/magicactions.rsi, state: shield }
   productEntity: EmpImplanter
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 1
   cost:
@@ -1554,7 +1686,7 @@
   name: uplink-black-jetpack-name
   description: uplink-black-jetpack-desc
   productEntity: JetpackBlackFilled
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 1
   cost:
@@ -1614,7 +1746,7 @@
   name: uplink-clothing-no-slips-shoes-name
   description: uplink-clothing-no-slips-shoes-desc
   productEntity: ClothingShoesChameleonNoSlips
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 1
   cost:
@@ -1695,7 +1827,7 @@
   description: uplink-hardsuit-syndie-desc
   icon: { sprite: /Textures/Clothing/OuterClothing/Hardsuits/syndicate.rsi, state: icon }
   productEntity: ClothingBackpackDuffelSyndicateHardsuitBundle
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 4
   cost:
@@ -1725,9 +1857,9 @@
   description: uplink-hardsuit-syndieelite-desc
   icon: { sprite: /Textures/Clothing/OuterClothing/Hardsuits/syndieelite.rsi, state: icon }
   productEntity: ClothingBackpackDuffelSyndicateEliteHardsuitBundle
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 7
   cost:
     Telecrystal: 10
   categories:
@@ -1739,7 +1871,7 @@
   description: uplink-clothing-outer-hardsuit-juggernaut-desc
   icon: { sprite: /Textures/Structures/Storage/Crates/syndicate.rsi, state: icon }
   productEntity: CrateCybersunJuggernautBundle
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 8
   cost:
@@ -1951,6 +2083,17 @@
   - !type:ListingLimitedStockCondition
     stock: 3
 
+#KS14
+- type: listing
+  id: UplinkBoombox
+  name: uplink-boombox-name
+  description: uplink-boombox-desc
+  productEntity: Boombox
+  cost:
+    Telecrystal: 1 # KS14 - epic for gunning down tiders with an L6 therefore its got to be cheap
+  categories:
+    - UplinkPointless
+
 # Job Specific
 
 - type: listing
@@ -2019,7 +2162,7 @@
   conditions:
   - !type:BuyerJobCondition
     whitelist:
-    - Chaplain
+    - Chaplain #KS14 change, added to surplus
 
 - type: listing
   id: uplinkHolyHandGrenade
@@ -2157,7 +2300,7 @@
   discountDownTo:
     Telecrystal: 2
   cost:
-    Telecrystal: 4
+    Telecrystal: 4 # was 4, with my buff made it 5 to be closer to minibomb -panzer; KS14 - back to 4 cause noone buys this geeg
   categories:
   - UplinkJob
   conditions:
@@ -2172,7 +2315,7 @@
   icon: { sprite:  Objects/Misc/monkeycube.rsi, state: box}
   productEntity: SyndicateSpongeBox
   cost:
-    Telecrystal: 3
+    Telecrystal: 5 # KS14 change, noone buys ts so let it be cheaper
   categories:
   - UplinkJob
   conditions:
@@ -2251,7 +2394,7 @@
   description: uplink-acolyte-armor-desc
   icon: { sprite: Clothing/OuterClothing/Armor/cult_armour.rsi, state: icon}
   productEntity: ClothingBackpackDuffelAcolyteBundle
-  discountCategory: rareDiscounts
+  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
     Telecrystal: 3
   cost:
@@ -2281,13 +2424,22 @@
     whitelist:
     - MedicalDoctor
 
-#KS14
+
 - type: listing
-  id: UplinkBoombox
-  name: uplink-boombox-name
-  description: uplink-boombox-desc
-  productEntity: Boombox
+  id: UplinkSyndieMedsBundle
+  name: uplink-meds-bundle-name
+  description: uplink-meds-bundle-desc
+  productEntity: ClothingBackpackDuffelSyndicateMedicalBundleFilled
+  discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 12
   cost:
-    Telecrystal: 1 # KS14 - epic for gunning down tiders with an L6 therefore its got to be cheap
+    Telecrystal: 18
   categories:
-  - UplinkPointless
+  - UplinkJob # KS14 - added simplified version of nukie med bundle, lets see how it will play out
+  conditions:
+  - !type:BuyerJobCondition
+    whitelist:
+    - MedicalDoctor
+    - Chemist
+    - Paramedic

@@ -1,8 +1,20 @@
+# SPDX-FileCopyrightText: 2024 Winkarst
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+# SPDX-FileCopyrightText: 2025 Nox
+# SPDX-FileCopyrightText: 2025 UpAndLeaves
+# SPDX-FileCopyrightText: 2025 beck-thompson
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: job
   id: DeathSquad
   name: job-name-deathsquad
   description: job-description-deathsquad
   playTimeTracker: JobDeathSquad
+  requirements:
+  - !type:DepartmentTimeRequirement
+    department: Security
+    time: 7200 #2 hrs, klovn
   setPreference: false
   startingGear: DeathSquadGear
   icon: "JobIconNanotrasen"

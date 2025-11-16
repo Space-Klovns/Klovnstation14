@@ -1,7 +1,17 @@
+# SPDX-FileCopyrightText: 2023 Morb
+# SPDX-FileCopyrightText: 2023 Nemanja
+# SPDX-FileCopyrightText: 2024 Adrian16199
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+# SPDX-FileCopyrightText: 2025 MilenVolf
+# SPDX-FileCopyrightText: 2025 SlamBamActionman
+# SPDX-FileCopyrightText: 2025 Zalycon
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: species
   id: Diona
   name: species-name-diona
-  roundStart: true
+  roundStart: false #klovn
   prototype: MobDiona
   sprites: MobDionaSprites
   defaultSkinTone: "#cdb369"

@@ -1,3 +1,46 @@
+// SPDX-FileCopyrightText: 2022 EmoGarbage404
+// SPDX-FileCopyrightText: 2022 Moony
+// SPDX-FileCopyrightText: 2022 Rane
+// SPDX-FileCopyrightText: 2022 Will Robson
+// SPDX-FileCopyrightText: 2022 keronshb
+// SPDX-FileCopyrightText: 2022 mirrorcult
+// SPDX-FileCopyrightText: 2022 wrexbe
+// SPDX-FileCopyrightText: 2023 Emisse
+// SPDX-FileCopyrightText: 2023 Ilushkins33
+// SPDX-FileCopyrightText: 2023 Jezithyr
+// SPDX-FileCopyrightText: 2023 Kara
+// SPDX-FileCopyrightText: 2023 LankLTE
+// SPDX-FileCopyrightText: 2023 Phill101
+// SPDX-FileCopyrightText: 2023 TemporalOroboros
+// SPDX-FileCopyrightText: 2023 Visne
+// SPDX-FileCopyrightText: 2023 Vordenburg
+// SPDX-FileCopyrightText: 2023 Whisper
+// SPDX-FileCopyrightText: 2023 faint
+// SPDX-FileCopyrightText: 2023 metalgearsloth
+// SPDX-FileCopyrightText: 2024 0x6273
+// SPDX-FileCopyrightText: 2024 Cojoke
+// SPDX-FileCopyrightText: 2024 Leon Friedrich
+// SPDX-FileCopyrightText: 2024 LordCarve
+// SPDX-FileCopyrightText: 2024 SlamBamActionman
+// SPDX-FileCopyrightText: 2024 beck-thompson
+// SPDX-FileCopyrightText: 2024 themias
+// SPDX-FileCopyrightText: 2024 Łukasz Lindert
+// SPDX-FileCopyrightText: 2025 DrSmugleaf
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Nemanja
+// SPDX-FileCopyrightText: 2025 Orsoniks
+// SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2025 Princess Cheeseballs
+// SPDX-FileCopyrightText: 2025 ScarKy0
+// SPDX-FileCopyrightText: 2025 TheFlyingSentry
+// SPDX-FileCopyrightText: 2025 Zachary Higgs
+// SPDX-FileCopyrightText: 2025 pathetic meowmeow
+// SPDX-FileCopyrightText: 2025 slarticodefast
+//
+// SPDX-License-Identifier: MIT
+
+using System.Numerics; // KS14 Addition
+using Content.Shared._KS14.OverlayStains;
 using Content.Shared.Alert;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Events;
@@ -6,18 +49,22 @@ using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Chemistry.Reaction;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.Damage;
+using Content.Shared.Decals; // KS14 Addition
 using Content.Shared.EntityEffects.Effects;
 using Content.Shared.FixedPoint;
 using Content.Shared.Fluids;
 using Content.Shared.Forensics.Components;
 using Content.Shared.HealthExaminable;
 using Content.Shared.Mobs.Systems;
+using Content.Shared.Physics; // KS14 Addition
 using Content.Shared.Popups;
 using Content.Shared.Random.Helpers;
 using Content.Shared.Rejuvenate;
 using Content.Shared.StatusEffectNew;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Containers;
+using Robust.Shared.Map; // KS14 Addition
+using Robust.Shared.Physics.Systems; // KS14 Addition
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
@@ -38,6 +85,13 @@ public abstract class SharedBloodstreamSystem : EntitySystem
     [Dependency] private readonly AlertsSystem _alertsSystem = default!;
     [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
     [Dependency] private readonly DamageableSystem _damageableSystem = default!;
+    [Dependency] private readonly SharedDecalSystem _decalSystem = default!; // KS14 Addition
+    [Dependency] private readonly SharedTransformSystem _transformSystem = default!; // KS14 Addition
+    [Dependency] private readonly StainSystem _stainSystem = default!; // KS14 Addition
+    [Dependency] private readonly EntityLookupSystem _lookupSystem = default!; // KS14 Addition
+    [Dependency] private readonly RayCastSystem _rayCastSystem = default!; // KS14 Addition
+
+    private static readonly Vector2 DecalOffset = Vector2.One / 2; // KS14 Addition; this is related to texture size of the blood splatter.
 
     public override void Initialize()
     {
@@ -208,6 +262,9 @@ public abstract class SharedBloodstreamSystem : EntitySystem
         var totalFloat = total.Float();
         TryModifyBleedAmount(ent.AsNullable(), totalFloat);
 
+        // KS14 Addition: effects
+        HandleBleedEffects(ent, args, bloodloss);
+
         /// Critical hit. Causes target to lose blood, using the bleed rate modifier of the weapon, currently divided by 5
         /// The crit chance is currently the bleed rate modifier divided by 25.
         /// Higher damage weapons have a higher chance to crit!
@@ -234,6 +291,133 @@ public abstract class SharedBloodstreamSystem : EntitySystem
                     ent, PopupType.Medium); // only the burned entity can see this
             _audio.PlayPredicted(ent.Comp.BloodHealedSound, ent, args.Origin);
         }
+    }
+
+    // KS14 Addition
+
+
+
+    // KS14 Addition
+
+    // KS14 Addition
+    // - [x] Tested, works.
+    // TODO: Clean up code 
+    // Coder's Ultimatum
+    private void HandleBleedEffects(in Entity<BloodstreamComponent> entity, in DamageChangedEvent args, DamageSpecifier bloodlossSpecifier)
+    {
+        // it shouldnt be 0 ever anyway
+        var bloodloss = (float)bloodlossSpecifier.GetTotal();
+        if (bloodloss <= 0.5f)
+            return;
+
+        if (args.Origin is not { } originUid ||
+            !SolutionContainer.ResolveSolution(entity.Owner, entity.Comp.BloodSolutionName, ref entity.Comp.BloodSolution, out var bloodSolution))
+            return;
+
+        var targetTransform = Transform(entity);
+        var originTransform = Transform(originUid);
+
+        // TODO: use KsRandomExtensions when it gets merged
+        // TODO: fix occasional mispredict here
+        var predictedRandom = new System.Random(SharedRandomExtensions.HashCodeCombine(new() { (int)_timing.CurTick.Value, (int)targetTransform.LocalPosition.LengthSquared() }));
+
+        // TODO: Something better target-origin
+        var gridRelative = targetTransform.Coordinates.EntityId == originTransform.Coordinates.EntityId;
+        Vector2? targetWorldCoordsIfNotRelative = gridRelative ? null : _transformSystem.GetWorldPosition(targetTransform);
+
+        // This is only either relative to something that both entities are relative to, or relative to the map
+        var deltaUnit = gridRelative ?
+        // if both relative to the same body, do cheaper calculation
+            targetTransform.Coordinates.Position - originTransform.Coordinates.Position :
+        // otherwise calculate by worldpos
+            targetWorldCoordsIfNotRelative!.Value - _transformSystem.GetWorldPosition(originTransform);
+
+        deltaUnit = deltaUnit.LengthSquared() == 0f ? Vector2.Zero : deltaUnit.Normalized();
+        var invParentWorldMatrix = _transformSystem.GetInvWorldMatrix(targetTransform.ParentUid);
+
+        var bloodColor = bloodSolution.GetColor(_prototypeManager);
+        bloodColor = bloodColor.WithAlpha(bloodColor.A * predictedRandom.NextFloat(0.28f, (float)0.456522013370650220069420M)); // random alpha
+
+        const float maxPower = 1.75f;
+        var power = MathF.Max(maxPower * (1f - MathF.Exp(-bloodloss / 6f)), 0f);
+
+        const float iterationDelta = 0.25f;
+        var iteratedPower = (int)(power / iterationDelta);
+        var cachedVariations = new Vector2[iteratedPower + 1];
+        var totalVariation = Vector2.Zero;
+
+        iteratedPower -= 1;
+        for (; iteratedPower >= 0; iteratedPower--)
+        {
+            var variation = predictedRandom.NextPolarVector2(-0.25f, 0.25f);
+            cachedVariations[iteratedPower] = variation;
+            totalVariation += variation;
+        }
+
+        RayResult rayResult = new();
+        _rayCastSystem.CastRayClosest(
+            originTransform.ParentUid,
+            ref rayResult,
+            targetTransform.LocalPosition,
+            deltaUnit * power + totalVariation,
+            new QueryFilter() { LayerBits = 1L, Flags = QueryFlags.Static, MaskBits = (long)CollisionGroup.Impassable }
+        );
+
+        EntityCoordinates effectCoordinates;
+        if (rayResult.Hit)
+        {
+            Log.Debug($"Hit something! {ToPrettyString(rayResult.Results[0].Entity)}");
+            var hitData = rayResult.Results[0];
+            EntityUid hitParentUid;
+
+            // handle cross-grid
+            if (hitData.Entity == entity.Owner)
+                hitParentUid = targetTransform.ParentUid;
+            else if (hitData.Entity == originUid)
+                hitParentUid = originTransform.ParentUid;
+            else
+                hitParentUid = Transform(hitData.Entity).ParentUid;
+
+            // docs for RayHit lie because RayHit.Point isnt the *caller* changing it to local terms, but instead the code constructing it; it is also local to the hit entity's parent(? TODO: confirm that assumption)
+            effectCoordinates = new(hitParentUid, hitData.Point);
+        }
+        else
+        {
+            effectCoordinates = new(
+                targetTransform.ParentUid, // we guess lol
+                gridRelative ?
+                    targetTransform.Coordinates.Position + deltaUnit :
+                    Vector2.Transform(targetWorldCoordsIfNotRelative!.Value + deltaUnit, invParentWorldMatrix)
+            );
+        }
+
+        var accumulatedVariation = Vector2.Zero;
+        while (power > 0f)
+        {
+            var intpower = (int)(power / iterationDelta);
+            if (intpower <= 0)
+                break;
+
+            accumulatedVariation += cachedVariations[intpower];
+            _decalSystem.TryAddDecal(
+                "splatter",
+                effectCoordinates.WithPosition(effectCoordinates.Position + accumulatedVariation - DecalOffset - deltaUnit * power),
+                out _,
+                color: bloodColor,
+                rotation: predictedRandom.NextAngle(),
+                cleanable: true
+            );
+
+            Log.Debug($"var: {accumulatedVariation}, at: {intpower}");
+            power -= iterationDelta;
+        }
+
+        // >its while but it looks like you are so good at low level we should demote you to deepseek prompter
+        // TODO: make loop end
+        // TODO: delete todo because i fixed it
+
+        foreach (var intersectingUid in _lookupSystem.GetEntitiesInRange(effectCoordinates, 0.1f, LookupFlags.Static))
+            _stainSystem.ApplyStain(intersectingUid, effectCoordinates, bloodColor, predictedRandom.NextFloat(), predictedRandom.NextFloat(0.35f, 0.5f));
     }
 
     /// <summary>

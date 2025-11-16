@@ -1,3 +1,42 @@
+# SPDX-FileCopyrightText: 2020 Peter Wedder
+# SPDX-FileCopyrightText: 2020 Ygg01
+# SPDX-FileCopyrightText: 2020 chairbender
+# SPDX-FileCopyrightText: 2021 Galactic Chimp
+# SPDX-FileCopyrightText: 2021 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2021 Swept
+# SPDX-FileCopyrightText: 2021 Vera Aguilera Puerto
+# SPDX-FileCopyrightText: 2021 Visne
+# SPDX-FileCopyrightText: 2021 mirrorcult
+# SPDX-FileCopyrightText: 2022 DrSmugleaf
+# SPDX-FileCopyrightText: 2022 Francesco
+# SPDX-FileCopyrightText: 2022 Jacob Tong
+# SPDX-FileCopyrightText: 2022 Mervill
+# SPDX-FileCopyrightText: 2022 Nairod
+# SPDX-FileCopyrightText: 2022 Peptide90
+# SPDX-FileCopyrightText: 2022 ShadowCommander
+# SPDX-FileCopyrightText: 2023 Cody ~ Aexxie
+# SPDX-FileCopyrightText: 2023 Ed
+# SPDX-FileCopyrightText: 2023 Maxim T
+# SPDX-FileCopyrightText: 2023 Nemanja
+# SPDX-FileCopyrightText: 2024 Alzore
+# SPDX-FileCopyrightText: 2024 I.K
+# SPDX-FileCopyrightText: 2024 Ilya246
+# SPDX-FileCopyrightText: 2024 Justin Pfeifler
+# SPDX-FileCopyrightText: 2024 Kara
+# SPDX-FileCopyrightText: 2024 lzk
+# SPDX-FileCopyrightText: 2025 BramvanZijp
+# SPDX-FileCopyrightText: 2025 Centronias
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+# SPDX-FileCopyrightText: 2025 Leon Friedrich
+# SPDX-FileCopyrightText: 2025 RedBookcase
+# SPDX-FileCopyrightText: 2025 ScarKy0
+# SPDX-FileCopyrightText: 2025 Theodore Lukin
+# SPDX-FileCopyrightText: 2025 metalgearsloth
+# SPDX-FileCopyrightText: 2025 onesch
+# SPDX-FileCopyrightText: 2025 slarticodefast
+#
+# SPDX-License-Identifier: MIT
+
 - type: entity
   name: lantern
   parent: BaseItem
@@ -13,8 +52,8 @@
       - !type:FadeBehaviour
         id: radiating
         maxDuration: 2.0
-        startValue: 3.0
-        endValue: 2.0
+        startValue: 2.4 # was 3, klovn
+        endValue: 1.5 # was 2
         isLooped: true
         reverseWhenFinished: true
       - !type:PulseBehaviour
@@ -22,7 +61,7 @@
         interpolate: Nearest
         maxDuration: 1.0
         startValue: 0.1
-        endValue: 2.0
+        endValue: 1.5 #was 2
         isLooped: true
   - type: PowerCellSlot
     cellSlotId: cell_slot
@@ -42,8 +81,8 @@
     heldPrefix: off
   - type: PointLight
     enabled: false
-    radius: 3
-    energy: 2
+    radius: 2.5 #was 3
+    energy: 1.4 #klovn, was 2
     netsync: false
   - type: ToggleableVisuals
     spriteLayer: light
@@ -217,8 +256,8 @@
         - HighImpassable
   - type: PointLight
     enabled: false
-    radius: 8
-    energy: 5
+    radius: 7 #klovn, was 8
+    energy: 4 #klovn, was 5
   - type: ItemSlots
     slots:
       cell_slot:

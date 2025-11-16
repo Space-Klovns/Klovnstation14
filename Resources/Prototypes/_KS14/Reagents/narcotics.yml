@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: reagent
+  id: Zipium
+  name: reagent-name-zipium
+  group: Narcotics
+  desc: reagent-desc-zipium
+  physicalDesc: reagent-physical-desc-cold
+  flavor: minty
+  color: "#b924bf"
+  metabolisms:
+    Narcotic:
+      metabolismRate: 1.0
+      effects:
+      - !type:MovespeedModifier
+        walkSpeedModifier: 1.15
+        sprintSpeedModifier: 1.15
+      - !type:SatiateHunger
+        factor: -3

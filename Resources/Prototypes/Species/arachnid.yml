@@ -1,7 +1,17 @@
+# SPDX-FileCopyrightText: 2023 Nairod
+# SPDX-FileCopyrightText: 2023 PixelTK
+# SPDX-FileCopyrightText: 2024 Adrian16199
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+# SPDX-FileCopyrightText: 2025 MilenVolf
+# SPDX-FileCopyrightText: 2025 SlamBamActionman
+# SPDX-FileCopyrightText: 2025 Zalycon
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: species
   id: Arachnid
   name: species-name-arachnid
-  roundStart: true
+  roundStart: false #klovn
   prototype: MobArachnid
   sprites: MobArachnidSprites
   defaultSkinTone: "#385878"

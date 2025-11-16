@@ -21,3 +21,123 @@ Entries:
       message: You can now craft syringe shotgun, see crafting menu.
   id: 3
   time: '2025-10-29T10:09:44.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        You can now leap in the direction you are moving. This will do stamina
+        damage to  anything you hit.
+    - type: Tweak
+      message: Leaping now costs stamina.
+    - type: Fix
+      message: Slip combat is real again and soap/peels are no longer useless.
+  id: 4
+  time: '2025-10-29T16:04:11.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Remove
+      message: Removed species that weren't human and their guidebooks
+  id: 5
+  time: '2025-11-04T16:39:16.0000000+00:00'
+- author: FrauZj
+  changes:
+    - type: Add
+      message: Added double esword to uplink
+    - type: Add
+      message: Added eshield, jugsuit, elite hardsuit to syndie uplink
+    - type: Add
+      message: >-
+        Added cheaper versions of zed bundle and medical bundle to syndie
+        uplink. The latter only available to med.
+    - type: Tweak
+      message: Made most of super rare discounts happen much more often
+    - type: Tweak
+      message: 'More useful stuff now appears in the surplus. '
+    - type: Tweak
+      message: Estoc and Hristov no longer have slowdowns.
+    - type: Tweak
+      message: >-
+        Most of the rarely bought stuff by syndies is now cheaper, microbalance
+        o algo.
+  id: 6
+  time: '2025-11-04T17:50:31.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Tweak
+      message: >-
+        Zoom changes. Most rifles now let you see further when wielded, and the
+        default field of view has been made smaller.
+  id: 7
+  time: '2025-11-04T20:30:07.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Tweak
+      message: dimmed the lights
+  id: 8
+  time: '2025-11-04T20:39:35.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Tweak
+      message: KS14 balance changes are back!
+  id: 9
+  time: '2025-11-04T20:47:09.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Add
+      message: More vendors are now emaggable
+  id: 10
+  time: '2025-11-05T19:58:53.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Tweak
+      message: Tweaked guidebook
+  id: 11
+  time: '2025-11-05T20:00:40.0000000+00:00'
+- author: FrauZj
+  changes:
+    - type: Tweak
+      message: Crewsimov has been replaced with Asimov
+    - type: Tweak
+      message: Now borgs by default follow AI orders above others.
+  id: 12
+  time: '2025-11-08T18:12:37.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Add
+      message: SERBIAAAAAAAAAAAAAAAA
+  id: 13
+  time: '2025-11-09T17:13:05.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Tweak
+      message: Improves the camera monitor significantly.
+  id: 14
+  time: '2025-11-11T07:51:32.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: Added zipion, an easy to make atmos stimulant.
+  id: 15
+  time: '2025-11-11T20:17:41.0000000+00:00'
+- author: December
+  changes:
+    - type: Add
+      message: Scroll runes are now purchasable at wizard's spellbook!
+    - type: Tweak
+      message: G.O.R.I.L.L.A fist now stuns people for short time when its charged.
+  id: 16
+  time: '2025-11-15T17:04:48.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: >-
+        Added the molar gas mixer to allow precise mixing no matter the
+        temperature of either inlet.
+  id: 17
+  time: '2025-11-16T08:38:53.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Bloodstains have been added.
+  id: 18
+  time: '2025-11-16T08:40:57.0000000+00:00'

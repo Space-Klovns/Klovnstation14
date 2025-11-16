@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: gasReaction
+  id: zipionFormation
+  priority: 2
+  maximumTemperature: 200
+  minimumRequirements:
+  - 0     # oxygen
+  - 0     # nitrogen
+  - 0     # carbon dioxide
+  - 1     # plasma
+  - 0     # tritium
+  - 9     # vapor
+  - 0     # miasma
+  - 0     # n2o
+  - 0     # frezon
+  effects:
+  - !type:ZipionFormationReaction {}

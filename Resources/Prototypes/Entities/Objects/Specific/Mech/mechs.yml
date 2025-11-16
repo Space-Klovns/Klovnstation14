@@ -1,3 +1,27 @@
+# SPDX-FileCopyrightText: 2022 Nemanja
+# SPDX-FileCopyrightText: 2023 DrSmugleaf
+# SPDX-FileCopyrightText: 2023 Flareguy
+# SPDX-FileCopyrightText: 2023 Kara
+# SPDX-FileCopyrightText: 2023 Leon Friedrich
+# SPDX-FileCopyrightText: 2023 Morb
+# SPDX-FileCopyrightText: 2023 OttoMaticode
+# SPDX-FileCopyrightText: 2023 brainfood1183
+# SPDX-FileCopyrightText: 2023 crazybrain23
+# SPDX-FileCopyrightText: 2023 deltanedas
+# SPDX-FileCopyrightText: 2023 lzk
+# SPDX-FileCopyrightText: 2024 Jophire
+# SPDX-FileCopyrightText: 2024 LittleNyanCat
+# SPDX-FileCopyrightText: 2024 Mr. 27
+# SPDX-FileCopyrightText: 2024 Tayrtahn
+# SPDX-FileCopyrightText: 2024 Token
+# SPDX-FileCopyrightText: 2024 deepdarkdepths
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2025 Princess Cheeseballs
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 - type: entity
   id: BaseMech
   save: false
@@ -7,7 +31,7 @@
   - type: Mech
   - type: MechAir
   - type: AirFilter
-    # everything except oxygen and nitrogen
+    # everything except oxygen and nitrogen and zipion
     gases:
     - CarbonDioxide
     - Plasma
@@ -27,6 +51,7 @@
     - Ammonia
     - NitrousOxide
     - Frezon
+    - Zipion
     #- Helium3 TODO: fusion
   - type: AirIntake
   # for intake and filter to work

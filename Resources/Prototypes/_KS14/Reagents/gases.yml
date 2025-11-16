@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: reagent
+  id: Zipion
+  name: reagent-name-zipion
+  desc: reagent-desc-zipion
+  physicalDesc: reagent-physical-desc-gaseous
+  flavor: minty
+  color: "#b924bf"
+  metabolisms:
+    Gas:
+      effects:
+      - !type:AddReagentToBlood
+        conditions:
+        - !type:BloodReagentThreshold
+          reagent: Zipion
+          min: 1
+        reagent: Zipium
+        amount: 2.5
+    Narcotic:
+      effects:
+      - !type:AddReagentToBlood
+        conditions:
+        - !type:BloodReagentThreshold
+          reagent: Zipion
+          min: 1
+        reagent: Zipium
+        amount: 2.5

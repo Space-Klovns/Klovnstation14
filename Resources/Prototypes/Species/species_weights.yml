@@ -1,9 +1,19 @@
+# SPDX-FileCopyrightText: 2023 Nemanja
+# SPDX-FileCopyrightText: 2023 Vordenburg
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+# SPDX-FileCopyrightText: 2025 ScarKy0
+#
+# SPDX-License-Identifier: MPL-2.0
+
 #default species weights used for randomly selected species
 - type: weightedRandomSpecies
   id: SpeciesWeights
   weights:
-    Human: 5
-    Reptilian: 4
-    SlimePerson: 4
-    Diona: 2
-    Vulpkanin: 4
+    Human: 20
+    Skeleton: 1 #klovn, GOIDAAAAAAAAAAAAAAAAAAA
+
+ # KLOVN
+ #   Reptilian: 4
+ #   SlimePerson: 4
+ #   Diona: 2
+ #   Vulpkanin: 4

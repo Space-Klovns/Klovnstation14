@@ -1,3 +1,14 @@
+# SPDX-FileCopyrightText: 2024 Arendian
+# SPDX-FileCopyrightText: 2024 Plykiya
+# SPDX-FileCopyrightText: 2024 deltanedas
+# SPDX-FileCopyrightText: 2024 lzk
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: entity
   id: PelletClusterRubber
   name: pellet (ball, rubber)
@@ -11,7 +22,7 @@
     deleteOnCollide: false
     damage:
       types:
-        Blunt: 4
+        Blunt: 8
   - type: StaminaDamageOnCollide
     damage: 55
   - type: TimedDespawn
@@ -30,7 +41,7 @@
     deleteOnCollide: false
     damage:
       types:
-        Piercing: 45
+        Piercing: 60
   - type: TimedDespawn
     lifetime: 0.25
 
@@ -50,7 +61,7 @@
         Blunt: 1
         Heat: 2
   - type: IgniteOnCollide
-    fireStacks: 1
+    fireStacks: 2
     count: 10
   - type: TimedDespawn
     lifetime: 0.25
@@ -68,6 +79,6 @@
     deleteOnCollide: false
     damage:
       types:
-        Piercing: 5
+        Piercing: 10
   - type: TimedDespawn
     lifetime: 0.25

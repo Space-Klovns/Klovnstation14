@@ -1,3 +1,36 @@
+# SPDX-FileCopyrightText: 2021 Swept
+# SPDX-FileCopyrightText: 2021 TaralGit
+# SPDX-FileCopyrightText: 2021 Tarlan2
+# SPDX-FileCopyrightText: 2022 Alex Evgrashin
+# SPDX-FileCopyrightText: 2022 CommieFlowers
+# SPDX-FileCopyrightText: 2022 EmoGarbage404
+# SPDX-FileCopyrightText: 2022 Peptide90
+# SPDX-FileCopyrightText: 2022 mirrorcult
+# SPDX-FileCopyrightText: 2022 rolfero
+# SPDX-FileCopyrightText: 2023 Ed
+# SPDX-FileCopyrightText: 2023 Emisse
+# SPDX-FileCopyrightText: 2023 I.K
+# SPDX-FileCopyrightText: 2023 IProduceWidgets
+# SPDX-FileCopyrightText: 2023 Ilya246
+# SPDX-FileCopyrightText: 2023 Leon Friedrich
+# SPDX-FileCopyrightText: 2023 notquitehadouken
+# SPDX-FileCopyrightText: 2023 stopbreaking
+# SPDX-FileCopyrightText: 2024 Flareguy
+# SPDX-FileCopyrightText: 2024 Kara
+# SPDX-FileCopyrightText: 2024 Mr. 27
+# SPDX-FileCopyrightText: 2024 Nemanja
+# SPDX-FileCopyrightText: 2024 Scribbles0
+# SPDX-FileCopyrightText: 2024 Whisper
+# SPDX-FileCopyrightText: 2024 Winkarst
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2024 nikthechampiongr
+# SPDX-FileCopyrightText: 2025 Andrew Malcolm O'Neill
+# SPDX-FileCopyrightText: 2025 Coolsurf6
+# SPDX-FileCopyrightText: 2025 RedBookcase
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: entity
   name: fireaxe
   parent: [BaseItem, BaseEngineeringContraband]
@@ -20,8 +53,8 @@
     damage:
       types:
         # axes are kinda like sharp hammers, you know?
-        Blunt: 5
-        Slash: 10
+        Blunt: 7
+        Slash: 13
         Structural: 10
     soundHit:
       collection: MetalThud
@@ -58,6 +91,13 @@
   components:
   - type: MeleeWeapon
     wideAnimationRotation: 90
+    attackRate: 1
+    damage:
+      types:
+        # epic ks buffs
+        Blunt: 15
+        Slash: 15
+        Structural: 10
   - type: IgniteOnMeleeHit
     fireStacks: 1
   - type: Sprite
