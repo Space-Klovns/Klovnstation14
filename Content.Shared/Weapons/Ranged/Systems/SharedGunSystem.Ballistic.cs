@@ -37,7 +37,7 @@ public abstract partial class SharedGunSystem
         if (args.Handled)
             return;
 
-        ManualCycle(uid, component, TransformSystem.GetMapCoordinates(uid), args.User);
+        ManualCycle(uid, component, Transform(uid).Coordinates, args.User);
         args.Handled = true;
     }
 
@@ -169,11 +169,12 @@ public abstract partial class SharedGunSystem
 
         if (component.Cycleable)
         {
+            var uidTransform = Transform(uid);
             args.Verbs.Add(new Verb()
             {
                 Text = Loc.GetString("gun-ballistic-cycle"),
                 Disabled = GetBallisticShots(component) == 0,
-                Act = () => ManualCycle(uid, component, TransformSystem.GetMapCoordinates(uid), args.User),
+                Act = () => ManualCycle(uid, component, uidTransform.Coordinates, args.User),
             });
 
         }
@@ -187,7 +188,7 @@ public abstract partial class SharedGunSystem
         args.PushMarkup(Loc.GetString("gun-magazine-examine", ("color", AmmoExamineColor), ("count", GetBallisticShots(component))));
     }
 
-    private void ManualCycle(EntityUid uid, BallisticAmmoProviderComponent component, MapCoordinates coordinates, EntityUid? user = null, GunComponent? gunComp = null)
+    private void ManualCycle(EntityUid uid, BallisticAmmoProviderComponent component, EntityCoordinates coordinates, EntityUid? user = null, GunComponent? gunComp = null)
     {
         if (!component.Cycleable)
             return;
@@ -204,7 +205,7 @@ public abstract partial class SharedGunSystem
         Audio.PlayPredicted(component.SoundRack, uid, user);
 
         var shots = GetBallisticShots(component);
-        Cycle(uid, component, coordinates);
+        Cycle(uid, component, coordinates, user);
 
         var text = Loc.GetString(shots == 0 ? "gun-ballistic-cycled-empty" : "gun-ballistic-cycled");
 
@@ -213,8 +214,35 @@ public abstract partial class SharedGunSystem
         UpdateAmmoCount(uid);
     }
 
-    protected abstract void Cycle(EntityUid uid, BallisticAmmoProviderComponent component, MapCoordinates coordinates);
+    // KS14: Predicted; moved to shared
+    private void Cycle(EntityUid uid, BallisticAmmoProviderComponent component, EntityCoordinates coordinates, EntityUid? user = null)
+    {
+        EntityUid? ent = null;
 
+        // TODO: Combine with TakeAmmo
+        if (component.Entities.Count > 0)
+        {
+            var existing = component.Entities[^1];
+            component.Entities.RemoveAt(component.Entities.Count - 1);
+            DirtyField(uid, component, nameof(BallisticAmmoProviderComponent.Entities));
+
+            Containers.Remove(existing, component.Container);
+            EnsureShootable(existing);
+        }
+        else if (component.UnspawnedCount > 0)
+        {
+            component.UnspawnedCount--;
+            DirtyField(uid, component, nameof(BallisticAmmoProviderComponent.UnspawnedCount));
+            ent = PredictedSpawnAtPosition(component.Proto, coordinates);
+            EnsureShootable(ent.Value);
+        }
+
+        if (ent != null)
+            EjectCartridge(ent.Value, user: user);
+
+        var cycledEvent = new GunCycledEvent();
+        RaiseLocalEvent(uid, ref cycledEvent);
+    }
     private void OnBallisticInit(EntityUid uid, BallisticAmmoProviderComponent component, ComponentInit args)
     {
         component.Container = Containers.EnsureContainer<Container>(uid, "ballistic-ammo");
@@ -259,7 +287,7 @@ public abstract partial class SharedGunSystem
             {
                 component.UnspawnedCount--;
                 DirtyField(uid, component, nameof(BallisticAmmoProviderComponent.UnspawnedCount));
-                entity = Spawn(component.Proto, args.Coordinates);
+                entity = PredictedSpawnAtPosition(component.Proto, args.Coordinates); // KS14: Predict
                 args.Ammo.Add((entity, EnsureShootable(entity)));
             }
         }

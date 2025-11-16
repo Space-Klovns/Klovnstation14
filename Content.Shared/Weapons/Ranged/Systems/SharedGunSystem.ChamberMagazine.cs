@@ -42,7 +42,7 @@ public abstract partial class SharedGunSystem
         // Appearance data doesn't get serialized and want to make sure this is correct on spawn (regardless of MapInit) so.
         if (component.BoltClosed != null)
         {
-           Appearance.SetData(uid, AmmoVisuals.BoltClosed, component.BoltClosed.Value);
+            Appearance.SetData(uid, AmmoVisuals.BoltClosed, component.BoltClosed.Value);
         }
     }
 
@@ -104,15 +104,7 @@ public abstract partial class SharedGunSystem
 
         if (TryTakeChamberEntity(uid, out var chamberEnt))
         {
-            if (_netManager.IsServer)
-            {
-                EjectCartridge(chamberEnt.Value);
-            }
-            else
-            {
-                // Similar to below just due to prediction.
-                TransformSystem.DetachEntity(chamberEnt.Value, Transform(chamberEnt.Value));
-            }
+            EjectCartridge(chamberEnt.Value, user: user);
         }
 
         if (!CycleCartridge(uid, component, user))
@@ -174,18 +166,7 @@ public abstract partial class SharedGunSystem
         {
             if (TryTakeChamberEntity(uid, out var chambered))
             {
-                if (_netManager.IsServer)
-                {
-                    EjectCartridge(chambered.Value);
-                }
-                else
-                {
-                    // Prediction moment
-                    // The problem is client will dump the cartridge on the ground and the new server state
-                    // won't correspond due to randomness so looks weird
-                    // but we also need to always take it from the chamber or else ammocount won't be correct.
-                    TransformSystem.DetachEntity(chambered.Value, Transform(chambered.Value));
-                }
+                EjectCartridge(chambered.Value, user: user);
 
                 UpdateAmmoCount(uid);
             }
@@ -234,16 +215,11 @@ public abstract partial class SharedGunSystem
                 FinaliseMagazineTakeAmmo(uid, component, ammoEv.Count, ammoEv.Capacity, user, appearance);
                 UpdateAmmoCount(uid);
 
-                // Clientside reconciliation things
-                if (_netManager.IsClient)
+                // KS14: PredictedDel
+                foreach (var (ent, _) in relayedArgs.Ammo)
                 {
-                    foreach (var (ent, _) in relayedArgs.Ammo)
-                    {
-                        if (!IsClientSide(ent!.Value))
-                            continue;
-
-                        Del(ent.Value);
-                    }
+                    if (ent != null)
+                        PredictedDel(ent.Value);
                 }
             }
             else

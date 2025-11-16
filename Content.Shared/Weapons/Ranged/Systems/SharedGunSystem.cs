@@ -1,12 +1,19 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Numerics;
+using Content.Shared._KS14.Random.Helpers;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Actions;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Audio;
+using Content.Shared.Camera;
 using Content.Shared.CombatMode;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
+using Content.Shared.Damage.Systems;
+using Content.Shared.Database;
+using Content.Shared.Effects;
 using Content.Shared.Examine;
 using Content.Shared.Hands;
 using Content.Shared.Hands.EntitySystems;
@@ -20,14 +27,17 @@ using Content.Shared.Weapons.Melee;
 using Content.Shared.Weapons.Melee.Events;
 using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Weapons.Ranged.Events;
+using Content.Shared.Weapons.Reflect;
 using Content.Shared.Whitelist;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Serialization;
@@ -43,7 +53,6 @@ public abstract partial class SharedGunSystem : EntitySystem
     [Dependency] protected readonly IMapManager MapManager = default!;
     [Dependency] private readonly INetManager _netManager = default!;
     [Dependency] protected readonly IPrototypeManager ProtoManager = default!;
-    [Dependency] protected readonly IRobustRandom Random = default!;
     [Dependency] protected readonly ISharedAdminLogManager Logs = default!;
     [Dependency] protected readonly DamageableSystem Damageable = default!;
     [Dependency] protected readonly ExamineSystemShared Examine = default!;
@@ -64,6 +73,10 @@ public abstract partial class SharedGunSystem : EntitySystem
     [Dependency] protected readonly ThrowingSystem ThrowingSystem = default!;
     [Dependency] private readonly UseDelaySystem _useDelay = default!;
     [Dependency] private readonly EntityWhitelistSystem _whitelistSystem = default!;
+    [Dependency] private readonly SharedMapSystem _mapSystem = default!; // KS14: Prediction
+    [Dependency] private readonly SharedColorFlashEffectSystem _color = default!; // KS14: Prediction
+    [Dependency] private readonly SharedStaminaSystem _stamina = default!; // KS14: Prediction
+    [Dependency] private readonly SharedCameraRecoilSystem _recoil = default!; // KS14: Prediction
 
     private const float InteractNextFire = 0.3f;
     private const double SafetyNextFire = 0.5;
@@ -71,6 +84,7 @@ public abstract partial class SharedGunSystem : EntitySystem
     protected const string AmmoExamineColor = "yellow";
     protected const string FireRateExamineColor = "yellow";
     public const string ModeExamineColor = "cyan";
+    private const float DamagePitchVariation = 0.05f;
 
     public override void Initialize()
     {
@@ -125,6 +139,11 @@ public abstract partial class SharedGunSystem : EntitySystem
     private void OnShootRequest(RequestShootEvent msg, EntitySessionEventArgs args)
     {
         var user = args.SenderSession.AttachedEntity;
+
+        // KS14: De-predict. Whose GENIUS idea was RaisePredictiveEvent?
+        if (_netManager.IsClient &&
+            !Timing.IsFirstTimePredicted)
+            return;
 
         if (user == null ||
             !_combatMode.IsInCombatMode(user) ||
@@ -258,7 +277,7 @@ public abstract partial class SharedGunSystem : EntitySystem
 
         // Need to do this to play the clicking sound for empty automatic weapons
         // but not play anything for burst fire.
-        if (gun.NextFire > curTime)
+        if (!CanShoot(gun))
             return false;
 
         var fireRate = TimeSpan.FromSeconds(1f / gun.FireRateModified);
@@ -269,6 +288,7 @@ public abstract partial class SharedGunSystem : EntitySystem
         // First shot
         // Previously we checked shotcounter but in some cases all the bullets got dumped at once
         // curTime - fireRate is insufficient because if you time it just right you can get a 3rd shot out slightly quicker.
+        Log.Debug($"Our NextFire is: {gun.NextFire} and is now {curTime}");
         if (gun.NextFire < curTime - fireRate || gun.ShotCounter == 0 && gun.NextFire < curTime)
             gun.NextFire = curTime;
 
@@ -318,6 +338,8 @@ public abstract partial class SharedGunSystem : EntitySystem
             gun.BurstActivated = false;
             gun.BurstShotsCount = 0;
             gun.NextFire = TimeSpan.FromSeconds(Math.Max(lastFire.TotalSeconds + SafetyNextFire, gun.NextFire.TotalSeconds));
+            //KSDBGCMNT DirtyField(gunUid, gun, nameof(GunComponent.NextFire)); // KS14 Fix
+
             return false;
         }
 
@@ -336,7 +358,7 @@ public abstract partial class SharedGunSystem : EntitySystem
         // Even if we don't actually shoot update the ShotCounter. This is to avoid spamming empty sounds
         // where the gun may be SemiAuto or Burst.
         gun.ShotCounter += shots;
-        DirtyField(gunUid, gun, nameof(GunComponent.ShotCounter));
+        //KSDBGCMNT DirtyField(gunUid, gun, nameof(GunComponent.ShotCounter));
 
         if (ev.Ammo.Count <= 0)
         {
@@ -347,7 +369,7 @@ public abstract partial class SharedGunSystem : EntitySystem
             gun.LastShotWasEmpty = true;
             gun.NextFire = lastFire + gun.EmptyFireInterval;
 
-            DirtyFields(gunUid, gun, null, nameof(GunComponent.LastShotWasEmpty), nameof(GunComponent.NextFire));
+            //KSDBGCMNT DirtyFields(gunUid, gun, null, nameof(GunComponent.LastShotWasEmpty), nameof(GunComponent.NextFire));
             // MNET End
 
             // triggers effects on the gun if it's empty
@@ -392,8 +414,9 @@ public abstract partial class SharedGunSystem : EntitySystem
         if (ammoEv.Count > 0)
             gun.NextFire = newNextFire;
 
+        Log.Debug($"NextFire is now {newNextFire}");
         // NextFire has been touched regardless so need to dirty the gun.
-        DirtyFields(gunUid, gun, null, nameof(GunComponent.LastShotWasEmpty), nameof(GunComponent.NextFire));
+        //KSDBGCMNT DirtyFields(gunUid, gun, null, nameof(GunComponent.LastShotWasEmpty), nameof(GunComponent.NextFire));
         // MNET End
 
         // Handle burstfire
@@ -442,7 +465,170 @@ public abstract partial class SharedGunSystem : EntitySystem
         Shoot(gunUid, gun, new List<(EntityUid? Entity, IShootable Shootable)>(1) { (ammo, shootable) }, fromCoordinates, toCoordinates, out userImpulse, user, throwItems);
     }
 
-    public abstract void Shoot(
+    // KS14: Predicted; fully moved to shared.
+    private static Angle GetRecoilAngle(TimeSpan curTime, GunComponent component, Angle direction, System.Random predictedRandom)
+    {
+        var timeSinceLastFire = (curTime - component.LastFire).TotalSeconds;
+        var newTheta = MathHelper.Clamp(component.CurrentAngle.Theta + component.AngleIncreaseModified.Theta - component.AngleDecayModified.Theta * timeSinceLastFire, component.MinAngleModified.Theta, component.MaxAngleModified.Theta);
+        component.CurrentAngle = new Angle(newTheta);
+        component.LastFire = component.NextFire;
+
+        // Convert it so angle can go either side.
+        var random = predictedRandom.NextFloat(-0.5f, 0.5f);
+        var spread = component.CurrentAngle.Theta * random;
+        var angle = new Angle(direction.Theta + component.CurrentAngle.Theta * random);
+        DebugTools.Assert(spread <= component.MaxAngleModified.Theta);
+        return angle;
+    }
+
+    // KS14: Predicted; fully moved to shared.
+    private void ShootOrThrow(EntityUid uid, Vector2 mapDirection, Vector2 gunVelocity, GunComponent gun, EntityUid gunUid, EntityUid? user)
+    {
+        if (gun.Target is { } target && !TerminatingOrDeleted(target))
+        {
+            var targeted = EnsureComp<TargetedProjectileComponent>(uid);
+            targeted.Target = target;
+            Dirty(uid, targeted);
+        }
+
+        // Do a throw
+        if (!HasComp<ProjectileComponent>(uid))
+        {
+            RemoveShootable(uid);
+            // TODO: Someone can probably yeet this a billion miles so need to pre-validate input somewhere up the call stack.
+            // KS14 NOTE: this TODO probably still applies ^
+            ThrowingSystem.TryThrow(uid, mapDirection, gun.ProjectileSpeedModified, user);
+            return;
+        }
+
+        ShootProjectile(uid, mapDirection, gunVelocity, gunUid, user, gun.ProjectileSpeedModified);
+    }
+
+    // KS14: Predicted; fully moved to shared.
+    /// <summary>
+    /// Gets a linear spread of angles between start and end.
+    /// </summary>
+    /// <param name="start">Start angle in degrees</param>
+    /// <param name="end">End angle in degrees</param>
+    /// <param name="intervals">How many shots there are</param>
+    private static Angle[] LinearSpread(Angle start, Angle end, int intervals)
+    {
+        var angles = new Angle[intervals];
+        DebugTools.Assert(intervals > 1);
+
+        for (var i = 0; i <= intervals - 1; i++)
+        {
+            angles[i] = new Angle(start + (end - start) * i / (intervals - 1));
+        }
+
+        return angles;
+    }
+
+    // KS14: Predicted; fully moved to shared.
+    private void FireEffects(EntityCoordinates fromCoordinates, float distance, Angle angle, HitscanPrototype hitscan, EntityUid? hitEntity = null)
+    {
+        // Lord
+        // Forgive me for the shitcode I am about to do
+        // Effects tempt me not
+        var sprites = new List<(NetCoordinates coordinates, Angle angle, SpriteSpecifier sprite, float scale)>();
+        var fromXform = Transform(fromCoordinates.EntityId);
+
+        // We'll get the effects relative to the grid / map of the firer
+        // Look you could probably optimise this a bit with redundant transforms at this point.
+
+        var gridUid = fromXform.GridUid;
+        if (gridUid != fromCoordinates.EntityId && TryComp(gridUid, out TransformComponent? gridXform))
+        {
+            var (_, gridRot, gridInvMatrix) = TransformSystem.GetWorldPositionRotationInvMatrix(gridXform);
+            var map = TransformSystem.ToMapCoordinates(fromCoordinates);
+            fromCoordinates = new EntityCoordinates(gridUid.Value, Vector2.Transform(map.Position, gridInvMatrix));
+            angle -= gridRot;
+        }
+        else
+        {
+            angle -= TransformSystem.GetWorldRotation(fromXform);
+        }
+
+        if (distance >= 1f)
+        {
+            if (hitscan.MuzzleFlash != null)
+            {
+                var coords = fromCoordinates.Offset(angle.ToVec().Normalized() / 2);
+                var netCoords = GetNetCoordinates(coords);
+
+                sprites.Add((netCoords, angle, hitscan.MuzzleFlash, 1f));
+            }
+
+            if (hitscan.TravelFlash != null)
+            {
+                var coords = fromCoordinates.Offset(angle.ToVec() * (distance + 0.5f) / 2);
+                var netCoords = GetNetCoordinates(coords);
+
+                sprites.Add((netCoords, angle, hitscan.TravelFlash, distance - 1.5f));
+            }
+        }
+
+        if (hitscan.ImpactFlash != null)
+        {
+            var coords = fromCoordinates.Offset(angle.ToVec() * distance);
+            var netCoords = GetNetCoordinates(coords);
+
+            sprites.Add((netCoords, angle.FlipPositive(), hitscan.ImpactFlash, 1f));
+        }
+
+        if (sprites.Count > 0)
+        {
+            RaiseNetworkEvent(new HitscanEvent
+            {
+                Sprites = sprites,
+            }, Filter.Pvs(fromCoordinates, entityMan: EntityManager));
+        }
+    }
+
+    // KS14: Predicted; fully moved to shared.
+    public void PlayImpactSound(EntityUid otherEntity, DamageSpecifier? modifiedDamage, SoundSpecifier? weaponSound, bool forceWeaponSound)
+    {
+        DebugTools.Assert(!Deleted(otherEntity), "Impact sound entity was deleted");
+
+        // Like projectiles and melee,
+        // 1. Entity specific sound
+        // 2. Ammo's sound
+        // 3. Nothing
+        var playedSound = false;
+
+        if (!forceWeaponSound && modifiedDamage != null && modifiedDamage.GetTotal() > 0 && TryComp<RangedDamageSoundComponent>(otherEntity, out var rangedSound))
+        {
+            var type = SharedMeleeWeaponSystem.GetHighestDamageSound(modifiedDamage, ProtoManager);
+
+            if (type != null && rangedSound.SoundTypes?.TryGetValue(type, out var damageSoundType) == true)
+            {
+                Audio.PlayPvs(damageSoundType, otherEntity, AudioParams.Default.WithVariation(DamagePitchVariation));
+                playedSound = true;
+            }
+            else if (type != null && rangedSound.SoundGroups?.TryGetValue(type, out var damageSoundGroup) == true)
+            {
+                Audio.PlayPvs(damageSoundGroup, otherEntity, AudioParams.Default.WithVariation(DamagePitchVariation));
+                playedSound = true;
+            }
+        }
+
+        if (!playedSound && weaponSound != null)
+        {
+            Audio.PlayPvs(weaponSound, otherEntity);
+        }
+    }
+
+    // KS14: Predicted; now declared in shared.
+    private void Recoil(EntityUid? user, Vector2 recoil, float recoilScalar)
+    {
+        if (!Timing.IsFirstTimePredicted || user == null || recoil == Vector2.Zero || recoilScalar == 0)
+            return;
+
+        _recoil.KickCamera(user.Value, recoil.Normalized() * 0.5f * recoilScalar);
+    }
+
+    // KS14: Predicted; fully moved to shared.
+    public void Shoot(
         EntityUid gunUid,
         GunComponent gun,
         List<(EntityUid? Entity, IShootable Shootable)> ammo,
@@ -450,7 +636,236 @@ public abstract partial class SharedGunSystem : EntitySystem
         EntityCoordinates toCoordinates,
         out bool userImpulse,
         EntityUid? user = null,
-        bool throwItems = false);
+        bool throwItems = false)
+    {
+        userImpulse = true;
+
+        if (user != null)
+        {
+            var selfEvent = new SelfBeforeGunShotEvent(user.Value, (gunUid, gun), ammo);
+            RaiseLocalEvent(user.Value, selfEvent);
+            if (selfEvent.Cancelled)
+            {
+                userImpulse = false;
+                return;
+            }
+        }
+
+        var predictedRandom =
+            KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(KsSharedRandomExtensions.GetNetId(gunUid, EntityManager), (int)Timing.CurTick.Value);
+
+        var fromMap = TransformSystem.ToMapCoordinates(fromCoordinates);
+        var toMap = TransformSystem.ToMapCoordinates(toCoordinates).Position;
+        var mapDirection = toMap - fromMap.Position;
+        var mapAngle = mapDirection.ToAngle();
+        var angle = GetRecoilAngle(Timing.CurTime, gun, mapDirection.ToAngle(), predictedRandom);
+
+        // If applicable, this ensures the projectile is parented to grid on spawn, instead of the map.
+        var fromEnt = MapManager.TryFindGridAt(fromMap, out var gridUid, out _)
+            ? TransformSystem.WithEntityId(fromCoordinates, gridUid)
+            : new EntityCoordinates(_mapSystem.GetMapOrInvalid(fromMap.MapId), fromMap.Position);
+
+        // Update shot based on the recoil
+        toMap = fromMap.Position + angle.ToVec() * mapDirection.Length();
+        mapDirection = toMap - fromMap.Position;
+        var gunVelocity = Physics.GetMapLinearVelocity(fromEnt);
+
+        // I must be high because this was getting tripped even when true.
+        // DebugTools.Assert(direction != Vector2.Zero);
+        var shotProjectiles = new List<EntityUid>(ammo.Count);
+
+        foreach (var (ent, shootable) in ammo)
+        {
+            // pneumatic cannon doesn't shoot bullets it just throws them, ignore ammo handling
+            if (throwItems && ent != null)
+            {
+                ShootOrThrow(ent.Value, mapDirection, gunVelocity, gun, gunUid, user);
+                continue;
+            }
+
+            switch (shootable)
+            {
+                // Cartridge shoots something else
+                case CartridgeAmmoComponent cartridge:
+                    if (!cartridge.Spent)
+                    {
+                        var uid = PredictedSpawnAtPosition(cartridge.Prototype, fromEnt);
+                        CreateAndFireProjectiles(uid, cartridge);
+
+                        RaiseLocalEvent(ent!.Value, new AmmoShotEvent()
+                        {
+                            FiredProjectiles = shotProjectiles,
+                        });
+
+                        SetCartridgeSpent(ent!.Value, cartridge, true);
+
+                        if (cartridge.DeleteOnSpawn)
+                            PredictedDel(ent.Value);
+                    }
+                    else
+                    {
+                        userImpulse = false;
+                        Audio.PlayPredicted(gun.SoundEmpty, gunUid, user);
+                    }
+
+                    // Something like ballistic might want to leave it in the container still
+                    if (!cartridge.DeleteOnSpawn && !Containers.IsEntityInContainer(ent!.Value))
+                        EjectCartridge(ent.Value, angle, user: user);
+
+                    Dirty(ent!.Value, cartridge);
+                    break;
+                // Ammo shoots itself
+                case AmmoComponent newAmmo:
+                    if (ent == null)
+                        break;
+                    CreateAndFireProjectiles(ent.Value, newAmmo);
+
+                    break;
+                case HitscanPrototype hitscan:
+
+                    EntityUid? lastHit = null;
+
+                    var from = fromMap;
+                    // can't use map coords above because funny FireEffects
+                    var fromEffect = fromCoordinates;
+                    var dir = mapDirection.Normalized();
+
+                    //in the situation when user == null, means that the cannon fires on its own (via signals). And we need the gun to not fire by itself in this case
+                    var lastUser = user ?? gunUid;
+
+                    if (hitscan.Reflective != ReflectType.None)
+                    {
+                        for (var reflectAttempt = 0; reflectAttempt < 3; reflectAttempt++)
+                        {
+                            var ray = new CollisionRay(from.Position, dir, hitscan.CollisionMask);
+                            var rayCastResults =
+                                Physics.IntersectRay(from.MapId, ray, hitscan.MaxLength, lastUser, false).ToList();
+                            if (!rayCastResults.Any())
+                                break;
+
+                            var result = rayCastResults[0];
+
+                            // Check if laser is shot from in a container
+                            if (!Containers.IsEntityOrParentInContainer(lastUser))
+                            {
+                                // Checks if the laser should pass over unless targeted by its user
+                                foreach (var collide in rayCastResults)
+                                {
+                                    if (collide.HitEntity != gun.Target &&
+                                        CompOrNull<RequireProjectileTargetComponent>(collide.HitEntity)?.Active == true)
+                                    {
+                                        continue;
+                                    }
+
+                                    result = collide;
+                                    break;
+                                }
+                            }
+
+                            var hit = result.HitEntity;
+                            lastHit = hit;
+
+                            FireEffects(fromEffect, result.Distance, dir.Normalized().ToAngle(), hitscan, hit);
+
+                            var ev = new HitScanReflectAttemptEvent(user, gunUid, hitscan.Reflective, dir, false);
+                            RaiseLocalEvent(hit, ref ev);
+
+                            if (!ev.Reflected)
+                                break;
+
+                            fromEffect = Transform(hit).Coordinates;
+                            from = TransformSystem.ToMapCoordinates(fromEffect);
+                            dir = ev.Direction;
+                            lastUser = hit;
+                        }
+                    }
+
+                    if (lastHit != null)
+                    {
+                        var hitEntity = lastHit.Value;
+                        if (hitscan.StaminaDamage > 0f)
+                            _stamina.TakeStaminaDamage(hitEntity, hitscan.StaminaDamage, source: user);
+
+                        var dmg = hitscan.Damage;
+
+                        var hitName = ToPrettyString(hitEntity);
+                        if (dmg != null)
+                            dmg = Damageable.TryChangeDamage(hitEntity, dmg * Damageable.UniversalHitscanDamageModifier, origin: user);
+
+                        // check null again, as TryChangeDamage returns modified damage values
+                        if (dmg != null)
+                        {
+                            if (!Deleted(hitEntity))
+                            {
+                                if (dmg.AnyPositive())
+                                {
+                                    _color.RaiseEffect(Color.Red, new List<EntityUid>() { hitEntity }, Filter.Pvs(hitEntity, entityManager: EntityManager));
+                                }
+
+                                // TODO get fallback position for playing hit sound.
+                                PlayImpactSound(hitEntity, dmg, hitscan.Sound, hitscan.ForceSound);
+                            }
+
+                            if (user != null)
+                            {
+                                Logs.Add(LogType.HitScanHit,
+                                    $"{ToPrettyString(user.Value):user} hit {hitName:target} using hitscan and dealt {dmg.GetTotal():damage} damage");
+                            }
+                            else
+                            {
+                                Logs.Add(LogType.HitScanHit,
+                                    $"{hitName:target} hit by hitscan dealing {dmg.GetTotal():damage} damage");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        FireEffects(fromEffect, hitscan.MaxLength, dir.ToAngle(), hitscan);
+                    }
+
+                    Audio.PlayPredicted(gun.SoundGunshotModified, gunUid, user);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        RaiseLocalEvent(gunUid, new AmmoShotEvent()
+        {
+            FiredProjectiles = shotProjectiles,
+        });
+
+        void CreateAndFireProjectiles(EntityUid ammoEnt, AmmoComponent ammoComp)
+        {
+            if (TryComp<ProjectileSpreadComponent>(ammoEnt, out var ammoSpreadComp))
+            {
+                var spreadEvent = new GunGetAmmoSpreadEvent(ammoSpreadComp.Spread);
+                RaiseLocalEvent(gunUid, ref spreadEvent);
+
+                var angles = LinearSpread(mapAngle - spreadEvent.Spread / 2,
+                    mapAngle + spreadEvent.Spread / 2, ammoSpreadComp.Count);
+
+                ShootOrThrow(ammoEnt, angles[0].ToVec(), gunVelocity, gun, gunUid, user);
+                shotProjectiles.Add(ammoEnt);
+
+                for (var i = 1; i < ammoSpreadComp.Count; i++)
+                {
+                    var newuid = PredictedSpawnAtPosition(ammoSpreadComp.Proto, fromEnt); // KS14: predictedspawn
+                    ShootOrThrow(newuid, angles[i].ToVec(), gunVelocity, gun, gunUid, user);
+                    shotProjectiles.Add(newuid);
+                }
+            }
+            else
+            {
+                ShootOrThrow(ammoEnt, mapDirection, gunVelocity, gun, gunUid, user);
+                shotProjectiles.Add(ammoEnt);
+            }
+
+            MuzzleFlash(gunUid, ammoComp, mapDirection.ToAngle(), user);
+            Audio.PlayPredicted(gun.SoundGunshotModified, gunUid, user);
+            Recoil(user, mapDirection, gun.CameraRecoilScalarModified); // KS14: Recoil
+        }
+    }
 
     public void ShootProjectile(EntityUid uid, Vector2 direction, Vector2 gunVelocity, EntityUid? gunUid, EntityUid? user = null, float speed = 20f)
     {
@@ -460,7 +875,7 @@ public abstract partial class SharedGunSystem : EntitySystem
         var targetMapVelocity = gunVelocity + direction.Normalized() * speed;
         var currentMapVelocity = Physics.GetMapLinearVelocity(uid, physics);
         var finalLinear = physics.LinearVelocity + targetMapVelocity - currentMapVelocity;
-        Physics.SetLinearVelocity(uid, finalLinear, body: physics);
+        Physics.SetLinearVelocity(uid, finalLinear, dirty: false, body: physics);
 
         var projectile = EnsureComp<ProjectileComponent>(uid);
         projectile.Weapon = gunUid;
@@ -493,24 +908,32 @@ public abstract partial class SharedGunSystem : EntitySystem
     protected void EjectCartridge(
         EntityUid entity,
         Angle? angle = null,
-        bool playSound = true)
+        bool playSound = true,
+        System.Random? predictedRandom = null, // KS14: predictedrandom
+        EntityUid? user = null
+    )
     {
         // TODO: Sound limit version.
-        var offsetPos = Random.NextVector2(EjectOffset);
+
+        // KS14: Predicted random
+        predictedRandom ??= KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(KsSharedRandomExtensions.GetNetId(entity, EntityManager), (int)Timing.CurTick.Value, (int?)angle?.Theta ?? 0);
+
+        var offsetPos = predictedRandom.NextVector2(EjectOffset);
         var xform = Transform(entity);
 
         var coordinates = xform.Coordinates;
         coordinates = coordinates.Offset(offsetPos);
 
-        TransformSystem.SetLocalRotation(entity, Random.NextAngle(), xform);
+        TransformSystem.SetLocalRotation(entity, predictedRandom.NextAngle(), xform);
         TransformSystem.SetCoordinates(entity, xform, coordinates);
 
         // decides direction the casing ejects and only when not cycling
-        if (angle != null)
+        if (angle is { } ejectAngle)
         {
-            Angle ejectAngle = angle.Value;
             ejectAngle += 3.7f; // 212 degrees; casings should eject slightly to the right and behind of a gun
-            ThrowingSystem.TryThrow(entity, ejectAngle.ToVec().Normalized() / 100, 5f);
+
+            Log.Debug($"Logging EjectCartridge: user: {ToPrettyString(user)}");
+            ThrowingSystem.TryThrow(entity, ejectAngle.ToVec().Normalized() / 100, 5f, user: user, recoil: false);
         }
         if (playSound && TryComp<CartridgeAmmoComponent>(entity, out var cartridge))
         {

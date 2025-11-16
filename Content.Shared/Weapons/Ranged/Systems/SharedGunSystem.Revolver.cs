@@ -12,6 +12,8 @@ using Content.Shared.Interaction.Events;
 using Content.Shared.Wieldable;
 using Content.Shared.Wieldable.Components;
 using JetBrains.Annotations;
+using Robust.Shared.Map;
+using Content.Shared._KS14.Random.Helpers;
 
 namespace Content.Shared.Weapons.Ranged.Systems;
 
@@ -281,9 +283,10 @@ public partial class SharedGunSystem
         return count;
     }
 
+    // KS14: Predicted
     public void EmptyRevolver(EntityUid revolverUid, RevolverAmmoProviderComponent component, EntityUid? user = null)
     {
-        var mapCoordinates = TransformSystem.GetMapCoordinates(revolverUid);
+        var revolverTransformComponent = Transform(revolverUid);
         var anyEmpty = false;
 
         for (var i = 0; i < component.Capacity; i++)
@@ -296,16 +299,12 @@ public partial class SharedGunSystem
                 if (chamber == null)
                     continue;
 
-                // Too lazy to make a new method don't sue me.
-                if (!_netManager.IsClient)
-                {
-                    var uid = Spawn(component.FillPrototype, mapCoordinates);
+                var uid = PredictedSpawnAtPosition(component.FillPrototype, revolverTransformComponent.Coordinates);
 
-                    if (TryComp<CartridgeAmmoComponent>(uid, out var cartridge))
-                        SetCartridgeSpent(uid, cartridge, !(bool) chamber);
+                if (TryComp<CartridgeAmmoComponent>(uid, out var cartridge))
+                    SetCartridgeSpent(uid, cartridge, !(bool)chamber);
 
-                    EjectCartridge(uid);
-                }
+                EjectCartridge(uid, user: user);
 
                 component.Chambers[i] = null;
                 anyEmpty = true;
@@ -316,8 +315,7 @@ public partial class SharedGunSystem
                 Containers.Remove(slot.Value, component.AmmoContainer);
                 component.Chambers[i] = null;
 
-                if (!_netManager.IsClient)
-                    EjectCartridge(slot.Value);
+                EjectCartridge(slot.Value, user: user);
 
                 anyEmpty = true;
             }
@@ -343,10 +341,19 @@ public partial class SharedGunSystem
         Appearance.SetData(uid, AmmoVisuals.AmmoMax, component.Capacity, appearance);
     }
 
-    protected virtual void SpinRevolver(EntityUid revolverUid, RevolverAmmoProviderComponent component, EntityUid? user = null)
+    // KS14: Added predicted-random
+    protected virtual void SpinRevolver(EntityUid revolverUid, RevolverAmmoProviderComponent component, EntityUid? user = null, System.Random? predictedRandom = null)
     {
         Audio.PlayPredicted(component.SoundSpin, revolverUid, user);
         Popup(Loc.GetString("gun-revolver-spun"), revolverUid, user);
+
+        predictedRandom ??= KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(KsSharedRandomExtensions.GetNetId(revolverUid, EntityManager), (int)Timing.CurTick.Value);
+        var index = predictedRandom.Next(component.Capacity);
+        if (component.CurrentIndex == index)
+            return;
+
+        component.CurrentIndex = index;
+        Dirty(revolverUid, component);
     }
 
     private void OnRevolverTakeAmmo(EntityUid uid, RevolverAmmoProviderComponent component, TakeAmmoEvent args)
@@ -373,7 +380,7 @@ public partial class SharedGunSystem
                 if (chamber == true)
                 {
                     // Pretend it's always been there.
-                    ent = Spawn(component.FillPrototype, args.Coordinates);
+                    ent = PredictedSpawnAtPosition(component.FillPrototype, args.Coordinates); // KS14: Predict
 
                     if (!_netManager.IsClient)
                     {
@@ -396,7 +403,7 @@ public partial class SharedGunSystem
 
                 // Mark cartridge as spent and if it's caseless delete from the chamber slot.
                 SetCartridgeSpent(ent.Value, cartridge, true);
-                var spawned = Spawn(cartridge.Prototype, args.Coordinates);
+                var spawned = PredictedSpawnAtPosition(cartridge.Prototype, args.Coordinates); // KS14: Predict
                 args.Ammo.Add((spawned, EnsureComp<AmmoComponent>(spawned)));
 
                 if (cartridge.DeleteOnSpawn)
