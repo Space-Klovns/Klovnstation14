@@ -79,7 +79,7 @@ public sealed partial class GunSystem : SharedGunSystem
         SubscribeAllEvent<MuzzleFlashEvent>(OnMuzzleFlash);
 
         // Plays animated effects on the client.
-        SubscribeNetworkEvent<HitscanEvent>(OnHitscan);
+        SubscribeAllEvent<HitscanEvent>(OnHitscan);
 
         InitializeMagazineVisuals();
         InitializeSpentAmmo();
@@ -99,6 +99,9 @@ public sealed partial class GunSystem : SharedGunSystem
 
     private void OnHitscan(HitscanEvent ev)
     {
+        if (GetNetEntity(_player.LocalEntity) == ev.User)
+            return;
+
         // ALL I WANT IS AN ANIMATED EFFECT
 
         // TODO EFFECTS

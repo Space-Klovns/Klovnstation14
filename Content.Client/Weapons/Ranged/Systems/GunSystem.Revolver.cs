@@ -20,7 +20,7 @@ public sealed partial class GunSystem
             return;
 
         // See ChamberMagazineAmmoProvider
-        if (!IsClientSide(args.Entity))
+        if (!IsClientSide(args.Entity)) // KS14: This is left unchanged because changing it may debugthrow.
             return;
 
         QueueDel(args.Entity);
