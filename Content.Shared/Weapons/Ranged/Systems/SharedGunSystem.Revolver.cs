@@ -299,7 +299,7 @@ public partial class SharedGunSystem
                 if (chamber == null)
                     continue;
 
-                var uid = PredictedSpawnAtPosition(component.FillPrototype, revolverTransformComponent.Coordinates);
+                var uid = PredictedSpawnAtPositionAndPredictPhysics(component.FillPrototype, revolverTransformComponent.Coordinates);
 
                 if (TryComp<CartridgeAmmoComponent>(uid, out var cartridge))
                     SetCartridgeSpent(uid, cartridge, !(bool)chamber);
@@ -380,7 +380,7 @@ public partial class SharedGunSystem
                 if (chamber == true)
                 {
                     // Pretend it's always been there.
-                    ent = PredictedSpawnAtPosition(component.FillPrototype, args.Coordinates); // KS14: Predict
+                    ent = PredictedSpawnAtPositionAndPredictPhysics(component.FillPrototype, args.Coordinates); // KS14: Predict
 
                     if (!_netManager.IsClient)
                     {
@@ -403,7 +403,7 @@ public partial class SharedGunSystem
 
                 // Mark cartridge as spent and if it's caseless delete from the chamber slot.
                 SetCartridgeSpent(ent.Value, cartridge, true);
-                var spawned = PredictedSpawnAtPosition(cartridge.Prototype, args.Coordinates); // KS14: Predict
+                var spawned = PredictedSpawnAtPositionAndPredictPhysics(cartridge.Prototype, args.Coordinates); // KS14: Predict
                 args.Ammo.Add((spawned, EnsureComp<AmmoComponent>(spawned)));
 
                 if (cartridge.DeleteOnSpawn)

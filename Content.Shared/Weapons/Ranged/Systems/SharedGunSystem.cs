@@ -221,6 +221,14 @@ public abstract partial class SharedGunSystem : EntitySystem
         DirtyFields(uid, gun, null, nameof(GunComponent.ShotCounter), nameof(GunComponent.LastShotWasEmpty));
     }
 
+    private EntityUid PredictedSpawnAtPositionAndPredictPhysics(string? prototype, EntityCoordinates entityCoordinates)
+    {
+        var uid = PredictedSpawnAtPosition(prototype, entityCoordinates);
+        Physics.UpdateIsPredicted(uid);
+
+        return uid;
+    }
+
     /// <summary>
     /// Attempts to shoot at the target coordinates. Resets the shot counter after every shot.
     /// </summary>
@@ -689,7 +697,7 @@ public abstract partial class SharedGunSystem : EntitySystem
                 case CartridgeAmmoComponent cartridge:
                     if (!cartridge.Spent)
                     {
-                        var uid = PredictedSpawnAtPosition(cartridge.Prototype, fromEnt);
+                        var uid = PredictedSpawnAtPositionAndPredictPhysics(cartridge.Prototype, fromEnt);
                         CreateAndFireProjectiles(uid, cartridge);
 
                         RaiseLocalEvent(ent!.Value, new AmmoShotEvent()
@@ -850,7 +858,7 @@ public abstract partial class SharedGunSystem : EntitySystem
 
                 for (var i = 1; i < ammoSpreadComp.Count; i++)
                 {
-                    var newuid = PredictedSpawnAtPosition(ammoSpreadComp.Proto, fromEnt); // KS14: predictedspawn
+                    var newuid = PredictedSpawnAtPositionAndPredictPhysics(ammoSpreadComp.Proto, fromEnt); // KS14: predictedspawn
                     ShootOrThrow(newuid, angles[i].ToVec(), gunVelocity, gun, gunUid, user);
                     shotProjectiles.Add(newuid);
                 }

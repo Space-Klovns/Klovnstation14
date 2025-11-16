@@ -233,7 +233,7 @@ public abstract partial class SharedGunSystem
         {
             component.UnspawnedCount--;
             DirtyField(uid, component, nameof(BallisticAmmoProviderComponent.UnspawnedCount));
-            ent = PredictedSpawnAtPosition(component.Proto, coordinates);
+            ent = PredictedSpawnAtPositionAndPredictPhysics(component.Proto, coordinates);
             EnsureShootable(ent.Value);
         }
 
@@ -287,7 +287,7 @@ public abstract partial class SharedGunSystem
             {
                 component.UnspawnedCount--;
                 DirtyField(uid, component, nameof(BallisticAmmoProviderComponent.UnspawnedCount));
-                entity = PredictedSpawnAtPosition(component.Proto, args.Coordinates); // KS14: Predict
+                entity = PredictedSpawnAtPositionAndPredictPhysics(component.Proto, args.Coordinates); // KS14: Predict
                 args.Ammo.Add((entity, EnsureShootable(entity)));
             }
         }
