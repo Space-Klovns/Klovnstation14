@@ -30,6 +30,8 @@
 
 # MK1 CRAFTING ENTITIES
 #sprites still dont work *gulps
+#edit two, sprites still dont work
+#*gulps
 
 - type: entity
   name: Unfinished Mk 1
@@ -38,7 +40,7 @@
   description: The start of something beautiful.
   components:
   - type: Sprite
-    sprite: _KS14/Objects/Weapons/Guns/Pistols/mk1unfinished
+    sprite: _KS14/Objects/Weapons/Guns/Pistols/mk1unfinished.rsi
     state: iconunfinishedone
   - type: Item
     sprite: _KS14/Objects/Weapons/Guns/Pistols/mk1unfinished
@@ -54,11 +56,10 @@
   description: The start of something beautiful.
   components:
   - type: Sprite
-    sprite: _KS14/Objects/Weapons/Guns/Pistols/mk1unfinished
-    state: iconunfinishedtwo
+    sprite: _KS14/Objects/Weapons/Guns/Pistols/mk1unfinished.rsi
+    layers:
+    - state: iconunfinishedtwo
   - type: Item
-    sprite: _KS14/Objects/Weapons/Guns/Pistols/mk1unfinished
-    state: iconunfinishedtwo
   - type: Construction
     graph: mk1
     node: mk1unfinishedhandle
