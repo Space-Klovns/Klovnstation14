@@ -376,7 +376,7 @@ public abstract class SharedBloodstreamSystem : EntitySystem
         // TODO: delete todo because i fixed it
 
         foreach (var intersectingUid in _lookupSystem.GetEntitiesInRange(effectCoordinates, 0.1f, LookupFlags.Static))
-            _stainSystem.ApplyStain(intersectingUid, effectCoordinates, bloodColor, predictedRandom.NextFloat(), predictedRandom.NextFloat(0.5f, 0.5f));
+            _stainSystem.ApplyStain(intersectingUid, effectCoordinates, bloodColor, predictedRandom.NextFloat(), predictedRandom.NextFloat(0.35f, 0.5f));
     }
 
     /// <summary>
