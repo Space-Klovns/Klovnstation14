@@ -38,6 +38,9 @@ public sealed class StainOverlay : Overlay
     private List<Entity<MapGridComponent>> _grids = new();
     private HashSet<EntityUid> _intersectingEntities = new();
 
+    // This ulong is 2 floats bitpacked together.
+    private Dictionary<RSI, ulong> _cachedSpriteBounds = new();
+
     private readonly OverlayResourceCache<CachedResources> _resources = new();
 
     // see: DoAfterOverlay.cs
@@ -77,6 +80,7 @@ public sealed class StainOverlay : Overlay
         var lightScale = target.Size / (Vector2)viewport.Size;
         var scale = viewport.RenderScale / (Vector2.One / lightScale);
         var invMatrix = viewport.GetWorldToLocalMatrix();
+        var realTime = _gameTiming.RealTime;
 
         var res = _resources.GetForViewport(viewport, static _ => new CachedResources());
 
@@ -86,6 +90,8 @@ public sealed class StainOverlay : Overlay
             res.StainTarget = _clyde.CreateRenderTarget(target.Size, new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb), name: "stain-stencil-target");
         }
 
+        _cachedSpriteBounds.Clear();
+
         // Need to do stencilling after blur as it will nuke it.
         // Draw stencil for the grid so we don't draw in space.
         args.WorldHandle.RenderInRenderTarget(res.StainTarget,
@@ -93,6 +99,7 @@ public sealed class StainOverlay : Overlay
             {
                 _grids.Clear();
                 _mapManager.FindGridsIntersecting(mapId, worldBounds, ref _grids);
+                var worldBoundBox = worldBounds.CalcBoundingBox();
 
                 worldHandle.UseShader(_prototypeManager.Index(UnshadedShader).Instance());
                 foreach (var grid in _grids)
@@ -101,13 +108,15 @@ public sealed class StainOverlay : Overlay
                     worldHandle.SetTransform(localMatrix);
 
                     _intersectingEntities.Clear();
-                    _entityLookupSystem.GetEntitiesIntersecting(mapId, worldBounds.CalcBoundingBox(), _intersectingEntities, LookupFlags.Static);
+                    _entityLookupSystem.GetEntitiesIntersecting(mapId, worldBoundBox, _intersectingEntities, LookupFlags.Static);
                     foreach (var uid in _intersectingEntities)
                     {
-                        if (!_entityManager.TryGetComponent(uid, out TransformComponent? transformComponent))
+                        if (!_entityManager.TryGetComponent(uid, out TransformComponent? transformComponent) ||
+                            !_entityManager.TryGetComponent<SpriteComponent>(uid, out var spriteComponent))
                             continue;
 
-                        worldHandle.DrawRect(_entityLookupSystem.GetAABBNoContainer(uid, transformComponent.Coordinates.Position, transformComponent.LocalRotation), Color.White);
+                        var bounds = _spriteSystem.CalculateBounds((uid, spriteComponent), transformComponent.Coordinates.Position, transformComponent.LocalRotation, viewport.Eye?.Rotation ?? Angle.Zero);
+                        worldHandle.DrawRect(bounds, Color.White);
                     }
                 }
 
@@ -119,7 +128,7 @@ public sealed class StainOverlay : Overlay
         worldHandle.UseShader(_prototypeManager.Index(StencilMaskShader).Instance());
         worldHandle.DrawTextureRect(res.StainTarget.Texture, worldBounds);
 
-        var texture = _spriteSystem.GetFrame(StainSpriteSpecifier, _gameTiming.RealTime);
+        var texture = _spriteSystem.GetFrame(StainSpriteSpecifier, realTime);
         var convertedTextureWidth = texture.Width / DblPixelsPerMeter;
         var convertedTextureHeight = texture.Height / DblPixelsPerMeter;
 
