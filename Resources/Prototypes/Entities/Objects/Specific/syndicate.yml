@@ -21,7 +21,7 @@
     price: 200
   - type: Currency
     price:
-      Telecrystal: 3
+      Telecrystal: 1
 
 - type: entity
   parent: Telecrystal
@@ -72,29 +72,29 @@
     balance:
       Telecrystal: 0
 
-- type: entity
+- type: entity # KS14: x3'd tc price
   parent: BaseUplinkRadio
   id: BaseUplinkRadio20TC
-  suffix: 20 TC
+  suffix: 60 TC
   components:
   - type: Store
     balance:
       Telecrystal: 60
 
-- type: entity
+- type: entity # KS14: x3'd tc price
   parent: BaseUplinkRadio
   id: BaseUplinkRadio25TC
-  suffix: 25 TC
+  suffix: 75 TC
   components:
   - type: Store
     balance:
       Telecrystal: 75
 
 #this uplink MUST be used for nukeops, as it has the tag for filtering the listing.
-- type: entity
+- type: entity # KS14: x3'd tc price
   parent: BaseUplinkRadio
   id: BaseUplinkRadio40TC
-  suffix: 40 TC, NukeOps
+  suffix: 120 TC, NukeOps
   components:
   - type: Store
     balance:
@@ -103,10 +103,10 @@
     tags:
     - NukeOpsUplink
 
-- type: entity
+- type: entity # KS14: x3'd tc price
   parent: BaseUplinkRadio
   id: BaseUplinkRadio60TC
-  suffix: 60 TC, LoneOps
+  suffix: 180 TC, LoneOps
   components:
   - type: Store
     balance:
@@ -115,7 +115,7 @@
     tags:
     - NukeOpsUplink
 
-- type: entity
+- type: entity # KS14: x3'd tc price
   parent: BaseUplinkRadio
   id: BaseUplinkRadioDebug
   suffix: DEBUG
