@@ -91,7 +91,7 @@
 
 					<PanelContainer SetHeight="2" VerticalAlignment="Top" SetWidth="200" Margin="2 5" />
 
-                    <Button Name="SilenceAlarms" Background="#141975" Text="{Loc comp-nuclear-reactor-ui-silence-button}"/>
+                    <Button Name="SilenceAlarms" Modulate="#C21339" Text="{Loc comp-nuclear-reactor-ui-silence-button}"/>
 
 					<BoxContainer Name="ControlRodsText" Orientation="Horizontal">
 						<Label Name="ControlRodsLabel" Text="{Loc comp-nuclear-reactor-ui-reactor-control}" StyleClasses="StatusFieldTitle"  HorizontalExpand="True"/>

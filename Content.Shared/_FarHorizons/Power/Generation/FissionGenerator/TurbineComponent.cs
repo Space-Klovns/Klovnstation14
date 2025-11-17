@@ -3,13 +3,15 @@
 // SPDX-License-Identifier: MPL-2.0
 
 using Content.Shared.Atmos;
+using Content.Shared.Damage;
+using Content.Shared.FixedPoint;
 using Content.Shared.Tools;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 
 namespace Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
 
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true)]
 public sealed partial class TurbineComponent : Component
 {
     /// <summary>
@@ -63,16 +65,16 @@ public sealed partial class TurbineComponent : Component
     public float MinTemp = Atmospherics.T20C;
 
     /// <summary>
-    /// Health of the turbine
+    /// The damage this turbine takes ev
     /// </summary>
-    [DataField, AutoNetworkedField]
-    public int BladeHealth = 15;
+    [DataField("overspeedDamage"), AutoNetworkedField]
+    public DamageSpecifier BladeOverspeedDamage;
 
     /// <summary>
-    /// Maximum health of the turbine
+    /// Damage that the turbine can have before the blade is destroyed.
     /// </summary>
-    [DataField, AutoNetworkedField]
-    public int BladeHealthMax = 15;
+    [AutoNetworkedField]
+    public FixedPoint2 BladeBreakingPoint;
 
     /// <summary>
     /// If the turbine is functional or not
@@ -140,7 +142,7 @@ public sealed partial class TurbineComponent : Component
     public bool IsSparking = false;
     public bool IsSmoking = false;
 
-    
+
     //Debugging
     [ViewVariables(VVAccess.ReadOnly)]
     [DataField("HasPipes")]

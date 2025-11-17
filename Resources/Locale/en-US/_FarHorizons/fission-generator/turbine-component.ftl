@@ -7,12 +7,11 @@ turbine-spinning-2 = The blades are spinning.
 turbine-spinning-3 = The blades are spinning quickly.
 turbine-spinning-4 = [color=red]The blades are spinning out of control![/color]
 
-turbine-damaged-0 = It appears to be in good condition.[/color]
-turbine-damaged-1 = The turbine looks a bit scuffed.[/color]
-turbine-damaged-2 = [color=yellow]The turbine looks badly damaged.[/color]
-turbine-damaged-3 = [color=orange]It's critically damaged![/color]
-
-turbine-ruined = [color=red]It's completely broken![/color]
+turbine-damaged-1 = It appears to be in good condition.
+turbine-damaged-2 = The turbine looks a bit scuffed.
+turbine-damaged-3 = [color=yellow]The turbine looks badly damaged.[/color]
+turbine-damaged-4 = [color=orange]It's critically damaged![/color]
+turbine-damaged-5 = [color=red]It's completely broken![/color]
 
 ### Popups
 

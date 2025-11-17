@@ -7,6 +7,7 @@ using Content.Shared.Damage.Components;
 using Content.Shared.Examine;
 using Content.Shared.Radiation.Components;
 using Robust.Server.GameObjects;
+using Robust.Shared.Collections;
 using Robust.Shared.Random;
 
 namespace Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
@@ -20,7 +21,7 @@ public abstract class SharedReactorPartSystem : EntitySystem
     private readonly float _rate = 5;
     private readonly float _bias = 1.5f;
 
-    private readonly float _threshold  = 0.5f;
+    private readonly float _threshold = 0.5f;
     private float _accumulator = 0f;
 
     #region Item Methods
@@ -39,7 +40,7 @@ public abstract class SharedReactorPartSystem : EntitySystem
 
         using (args.PushGroup(nameof(ReactorPartComponent)))
         {
-            switch(comp.NRadioactive)
+            switch (comp.NRadioactive)
             {
                 case > 8:
                     args.PushMarkup(Loc.GetString("reactor-part-nrad-5"));
@@ -127,7 +128,7 @@ public abstract class SharedReactorPartSystem : EntitySystem
                 continue;
             }
 
-            if (Math.Abs(component.Temperature - Atmospherics.T20C)>0.1)
+            if (Math.Abs(component.Temperature - Atmospherics.T20C) > 0.1)
                 component.Temperature -= (component.Temperature - Atmospherics.T20C) * 0.01f;
             else
                 component.Temperature = Atmospherics.T20C;
@@ -158,11 +159,11 @@ public abstract class SharedReactorPartSystem : EntitySystem
         reactorPart.ThermalCrossSection = 20f;
         reactorPart.IsControlRod = false;
 
-        if(reactorPart.RodType == (byte)ReactorPartComponent.RodTypes.GasChannel)
+        if (reactorPart.RodType == (byte)ReactorPartComponent.RodTypes.GasChannel)
             reactorPart.GasThermalCrossSection = 0.1f;
     }
 
-    public void ProcessHeat(ReactorPartComponent reactorPart, Entity<NuclearReactorComponent> reactorEnt, List<ReactorPartComponent?> AdjacentComponents, SharedNuclearReactorSystem reactorSystem)
+    public void ProcessHeat(ReactorPartComponent reactorPart, Entity<NuclearReactorComponent> reactorEnt, ValueList<ReactorPartComponent?> AdjacentComponents, SharedNuclearReactorSystem reactorSystem)
     {
         // Intercomponent calculation
         foreach (var RC in AdjacentComponents)
@@ -216,7 +217,7 @@ public abstract class SharedReactorPartSystem : EntitySystem
     {
         thermalEnergy = 0;
         var flux = new List<ReactorNeutron>(neutrons);
-        foreach(var neutron in flux)
+        foreach (var neutron in flux)
         {
             if (Prob(reactorPart.PropertyDensity * _rate * reactorPart.NeutronCrossSection * _bias))
             {
@@ -304,7 +305,6 @@ public abstract class SharedReactorPartSystem : EntitySystem
         if (reactorPart.RodType == (byte)ReactorPartComponent.RodTypes.GasChannel)
             neutrons = ProcessNeutronsGas(reactorPart, neutrons);
 
-        neutrons ??= [];
         return neutrons;
     }
 

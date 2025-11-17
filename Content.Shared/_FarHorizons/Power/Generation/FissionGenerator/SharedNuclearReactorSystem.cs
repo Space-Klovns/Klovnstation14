@@ -3,23 +3,30 @@
 // SPDX-License-Identifier: MPL-2.0
 
 using Content.Shared.Containers.ItemSlots;
+using Content.Shared.Emag.Systems;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Popups;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Network;
 using Robust.Shared.Player;
+using Robust.Shared.Timing;
 
 namespace Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
 
 public abstract class SharedNuclearReactorSystem : EntitySystem
 {
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
+    [Dependency] protected readonly SharedAudioSystem AudioSystem = default!;
+    [Dependency] protected readonly SharedAppearanceSystem AppearanceSystem = default!;
+    [Dependency] protected readonly IGameTiming GameTiming = default!;
+    [Dependency] private readonly INetManager _netManager = default!;
     [Dependency] private readonly ItemSlotsSystem _slotsSystem = default!;
     [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
-    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
 
     public override void Initialize()
     {
         base.Initialize();
+
+        SubscribeLocalEvent<NuclearReactorComponent, GotEmaggedEvent>(OnEmagged);
 
         // Bound UI subscriptions
         SubscribeLocalEvent<NuclearReactorComponent, ReactorEjectItemMessage>(OnEjectItemMessage);
@@ -36,11 +43,11 @@ public abstract class SharedNuclearReactorSystem : EntitySystem
             {
                 if (comp!.ComponentGrid[x, y] == null)
                 {
-                    _appearance.SetData(GetEntity(comp.VisualGrid[x, y]), ReactorCapVisuals.Sprite, ReactorCaps.Base);
+                    AppearanceSystem.SetData(GetEntity(comp.VisualGrid[x, y]), ReactorCapVisuals.Sprite, ReactorCaps.Base);
                     continue;
                 }
                 else
-                    _appearance.SetData(GetEntity(comp.VisualGrid[x, y]), ReactorCapVisuals.Sprite, ChoseSprite(comp.ComponentGrid[x, y]!.IconStateCap));
+                    AppearanceSystem.SetData(GetEntity(comp.VisualGrid[x, y]), ReactorCapVisuals.Sprite, ChoseSprite(comp.ComponentGrid[x, y]!.IconStateCap));
             }
         }
     }
@@ -82,6 +89,14 @@ public abstract class SharedNuclearReactorSystem : EntitySystem
             return;
 
         _slotsSystem.TryEjectToHands(uid, component.PartSlot, args.Actor);
+    }
+
+    private void OnEmagged(Entity<NuclearReactorComponent> entity, ref GotEmaggedEvent args)
+    {
+        args.Handled = true;
+
+        entity.Comp.NextIndicatorUpdateBy = GameTiming.CurTime + entity.Comp.EmagSilencingDelay;
+        UpdateTempIndicators(entity, entity.Comp.isSmoking ? null : true, entity.Comp.isBurning ? null : true);
     }
 
     /// <summary>
@@ -133,55 +148,77 @@ public abstract class SharedNuclearReactorSystem : EntitySystem
             true,
             PopupType.SmallCaution
         );
+
+        AudioSystem.PlayPredicted(component.ManualSilenceSound, uid, args.Actor);
     }
 
-    protected void UpdateTempIndicators(Entity<NuclearReactorComponent> ent)
+    /// <summary>
+    ///     Gets the changes in whether the reactor is considered smoking/burning.
+    ///     Null values mean the bool stayed the same, with no change.
+    /// </summary>
+    protected static void GetOverallStateChange(NuclearReactorComponent component, out bool? isNowSmoking, out bool? isNowBurning)
+    {
+        if (component.Temperature >= component.ReactorOverheatTemp)
+        {
+            isNowSmoking = !component.isSmoking ? true : null;
+
+            if (component.Temperature >= component.ReactorFireTemp)
+                isNowBurning = !component.isBurning ? true : null;
+            else
+                isNowBurning = component.isBurning ? false : null;
+
+            return;
+        }
+
+        isNowSmoking = component.isSmoking ? false : null;
+        isNowBurning = component.isBurning ? false : null;
+    }
+
+    protected void UpdateTempIndicators(Entity<NuclearReactorComponent> ent, bool? isNowSmoking, bool? isNowBurning)
     {
         var comp = ent.Comp;
         var uid = ent.Owner;
 
-        if (comp.Temperature >= comp.ReactorOverheatTemp)
+        if (isNowSmoking == true)
         {
-            if (!comp.isSmoking)
-            {
-                comp.isSmoking = true;
-                _appearance.SetData(uid, ReactorVisuals.Smoke, true);
-                _popupSystem.PopupEntity(Loc.GetString("reactor-smoke-start", ("owner", uid)), uid, PopupType.MediumCaution);
-                SendEngiRadio(ent, Loc.GetString("reactor-smoke-start-message", ("owner", uid), ("temperature", Math.Round(comp.Temperature))));
+            comp.isSmoking = true;
+            _popupSystem.PopupEntity(Loc.GetString("reactor-smoke-start", ("owner", uid)), uid, PopupType.MediumCaution);
+            SendEngiRadio(ent, Loc.GetString("reactor-smoke-start-message", ("owner", uid), ("temperature", Math.Round(comp.Temperature))));
 
-                ent.Comp.WarningAlertSoundUid ??= _audioSystem.PlayPvs(ent.Comp.WarningAlertSound, ent.Owner)?.Entity;
-            }
-            if (comp.Temperature >= comp.ReactorFireTemp && !comp.isBurning)
-            {
-                comp.isBurning = true;
-                _appearance.SetData(uid, ReactorVisuals.Fire, true);
-                _popupSystem.PopupEntity(Loc.GetString("reactor-fire-start", ("owner", uid)), uid, PopupType.MediumCaution);
-                SendEngiRadio(ent, Loc.GetString("reactor-fire-start-message", ("owner", uid), ("temperature", Math.Round(comp.Temperature))));
-
-                ent.Comp.DangerAlertSoundUid ??= _audioSystem.PlayPvs(ent.Comp.DangerAlertSound, ent.Owner)?.Entity;
-            }
-            else if (comp.Temperature < comp.ReactorFireTemp && comp.isBurning)
-            {
-                comp.isBurning = false;
-                _appearance.SetData(uid, ReactorVisuals.Fire, false);
-                _popupSystem.PopupEntity(Loc.GetString("reactor-fire-stop", ("owner", uid)), uid, PopupType.Medium);
-                SendEngiRadio(ent, Loc.GetString("reactor-fire-stop-message", ("owner", uid)));
-
-                TryQueueDelRef(ref ent.Comp.DangerAlertSoundUid);
-            }
+            ent.Comp.WarningAlertSoundUid ??= AudioSystem.PlayPvs(ent.Comp.WarningAlertSound, ent.Owner)?.Entity;
         }
-        else
+        else if (isNowSmoking == false)
         {
-            if (comp.isSmoking)
-            {
-                comp.isSmoking = false;
-                _appearance.SetData(uid, ReactorVisuals.Smoke, false);
-                _popupSystem.PopupEntity(Loc.GetString("reactor-smoke-stop", ("owner", uid)), uid, PopupType.Medium);
-                SendEngiRadio(ent, Loc.GetString("reactor-smoke-stop-message", ("owner", uid)));
+            comp.isSmoking = false;
+            _popupSystem.PopupEntity(Loc.GetString("reactor-smoke-stop", ("owner", uid)), uid, PopupType.Medium);
+            SendEngiRadio(ent, Loc.GetString("reactor-smoke-stop-message", ("owner", uid)));
 
-                TryQueueDelRef(ref ent.Comp.WarningAlertSoundUid);
-            }
+            TryQueueDelRef(ref ent.Comp.WarningAlertSoundUid);
         }
+
+        if (_netManager.IsServer && isNowSmoking != null)
+            AppearanceSystem.SetData(uid, ReactorVisuals.Smoke, isNowSmoking);
+
+
+        if (isNowBurning == true)
+        {
+            comp.isBurning = true;
+            _popupSystem.PopupEntity(Loc.GetString("reactor-fire-start", ("owner", uid)), uid, PopupType.MediumCaution);
+            SendEngiRadio(ent, Loc.GetString("reactor-fire-start-message", ("owner", uid), ("temperature", Math.Round(comp.Temperature))));
+
+            ent.Comp.DangerAlertSoundUid ??= AudioSystem.PlayPvs(ent.Comp.DangerAlertSound, ent.Owner)?.Entity;
+        }
+        else if (isNowBurning == false)
+        {
+            comp.isBurning = false;
+            _popupSystem.PopupEntity(Loc.GetString("reactor-fire-stop", ("owner", uid)), uid, PopupType.Medium);
+            SendEngiRadio(ent, Loc.GetString("reactor-fire-stop-message", ("owner", uid)));
+
+            TryQueueDelRef(ref ent.Comp.DangerAlertSoundUid);
+        }
+
+        if (_netManager.IsServer && isNowBurning != null)
+            AppearanceSystem.SetData(uid, ReactorVisuals.Fire, isNowBurning);
     }
 
     protected virtual void SendEngiRadio(Entity<NuclearReactorComponent> ent, string message) { }

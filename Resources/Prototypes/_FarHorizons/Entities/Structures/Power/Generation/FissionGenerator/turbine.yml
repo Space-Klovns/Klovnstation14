@@ -45,7 +45,7 @@
         layer:
         - MachineLayer
   - type: Anchorable
-    flags: 
+    flags:
     - Anchorable
   - type: NodeContainer
     examinable: true
@@ -84,6 +84,9 @@
     maxIntensity: 70
     repeatable: true
   - type: Turbine
+    overspeedDamage:
+      types:
+        Blunt: 48
   - type: ActivatableUI
     key: enum.TurbineUiKey.Key
   - type: ActivatableUIRequiresAnchor
@@ -95,4 +98,24 @@
     access: [["Engineering"]]
   - type: Lock
     unlockOnClick: false
-  
+
+  # Damage
+  - type: Damageable
+    damageContainer: StructuralInorganic
+  - type: Repairable
+  - type: ExaminableDamage
+    messages: TurbineDamageMessages
+  - type: Destructible
+    thresholds:
+  - trigger:
+    - trigger:
+        !type:DamageTrigger
+        damage: 720
+      behaviors:
+      - !type:TurbineBladeDestructionBehaviour
+    - trigger:
+        !type:DamageTrigger
+        damage: 2200
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]

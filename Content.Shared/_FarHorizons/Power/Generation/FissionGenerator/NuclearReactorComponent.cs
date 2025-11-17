@@ -5,12 +5,12 @@
 using Content.Shared.Atmos;
 using Content.Shared.Containers.ItemSlots;
 using Robust.Shared.Audio;
-using Robust.Shared.Audio.Components;
 using Robust.Shared.GameStates;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
 namespace Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
 
-[RegisterComponent, NetworkedComponent]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true)]
 public sealed partial class NuclearReactorComponent : Component
 {
     public static int ReactorGridWidth = 7;
@@ -25,16 +25,22 @@ public sealed partial class NuclearReactorComponent : Component
     public float ReactorVesselGasVolume = 200;
     [DataField]
     public bool Melted = false;
-    [DataField]
+
+    // Temperature
+    [DataField, AutoNetworkedField]
     public float Temperature = Atmospherics.T20C;
+    [DataField(serverOnly: true)]
+    public float LastDirtiedTemperature = Atmospherics.T20C;
+
+
     [DataField]
     public float ThermalMass = 420 * 2000; // specific heat capacity of steel (420 J/KgK) * mass of reactor (Kg)
     [DataField]
     public float ControlRodInsertion = 2;
 
-    [DataField]
+    [DataField, AutoNetworkedField]
     public bool isSmoking = false;
-    [DataField]
+    [DataField, AutoNetworkedField]
     public bool isBurning = false;
     [DataField]
     public string AlertChannel = "Engineering";
@@ -102,7 +108,7 @@ public sealed partial class NuclearReactorComponent : Component
     /// <summary>
     ///     Sound to play when the reactor starts emitting smoke. Can loop.
     /// </summary>
-    [DataField]
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
     public SoundSpecifier? WarningAlertSound = null;
 
     [ViewVariables(VVAccess.ReadOnly)]
@@ -111,9 +117,34 @@ public sealed partial class NuclearReactorComponent : Component
     /// <summary>
     ///     Sound to play when the reactor starts being on fire. Can loop.
     /// </summary>
-    [DataField]
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
     public SoundSpecifier? DangerAlertSound = null;
 
     [ViewVariables(VVAccess.ReadOnly)]
     public EntityUid? DangerAlertSoundUid = null;
+
+    /// <summary>
+    ///     Trigger key to signal on this entity when doing meltdown.
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    public string? MeltdownKeyOut = null;
+
+    /// <summary>
+    ///     Sound to play when manually silencing reactor alarms.
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    public SoundSpecifier? ManualSilenceSound = null;
+
+    /// <summary>
+    ///     By when can this reactor's temp indicators, radio updates, etc
+    ///         update again?
+    /// </summary>
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), ViewVariables(VVAccess.ReadWrite)]
+    public TimeSpan NextIndicatorUpdateBy = TimeSpan.MinValue;
+
+    /// <summary>
+    ///     Offset on the current simulation-time to set <see cref="NextManuallySilenceableBy"/>, when emagged.
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    public TimeSpan EmagSilencingDelay = TimeSpan.FromSeconds(15);
 }
