@@ -1,0 +1,4 @@
+- files: ["marsfacility_glitchy.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Taken from https://github.com/goonstation/goonstation at commit 52ddc1831345684a7a8ef6af7c91123d43a1568f"
+  source: "https://github.com/goonstation/goonstation/blob/52ddc1831345684a7a8ef6af7c91123d43a1568f/sound/ambience/industrial/MarsFacility_Glitchy.ogg"
