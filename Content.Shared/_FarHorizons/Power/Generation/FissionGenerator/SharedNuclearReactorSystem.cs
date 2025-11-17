@@ -5,16 +5,17 @@
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Popups;
-using Robust.Shared.Containers;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Player;
 
 namespace Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
 
 public abstract class SharedNuclearReactorSystem : EntitySystem
 {
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly EntityManager _entityManager = default!;
     [Dependency] private readonly ItemSlotsSystem _slotsSystem = default!;
     [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
+    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
 
     public override void Initialize()
     {
@@ -22,6 +23,7 @@ public abstract class SharedNuclearReactorSystem : EntitySystem
 
         // Bound UI subscriptions
         SubscribeLocalEvent<NuclearReactorComponent, ReactorEjectItemMessage>(OnEjectItemMessage);
+        SubscribeLocalEvent<NuclearReactorComponent, ReactorSilenceAlarmsMessage>(OnSilenceAlarmsMessage);
     }
 
     protected bool ReactorTryGetSlot(EntityUid uid, string slotID, out ItemSlot? itemSlot) => _slotsSystem.TryGetSlot(uid, slotID, out itemSlot);
@@ -32,13 +34,13 @@ public abstract class SharedNuclearReactorSystem : EntitySystem
         {
             for (var y = 0; y < NuclearReactorComponent.ReactorGridHeight; y++)
             {
-                if(comp!.ComponentGrid[x, y] == null)
+                if (comp!.ComponentGrid[x, y] == null)
                 {
-                    _appearance.SetData(_entityManager.GetEntity(comp.VisualGrid[x, y]), ReactorCapVisuals.Sprite, ReactorCaps.Base);
+                    _appearance.SetData(GetEntity(comp.VisualGrid[x, y]), ReactorCapVisuals.Sprite, ReactorCaps.Base);
                     continue;
                 }
                 else
-                    _appearance.SetData(_entityManager.GetEntity(comp.VisualGrid[x, y]), ReactorCapVisuals.Sprite, ChoseSprite(comp.ComponentGrid[x,y]!.IconStateCap));
+                    _appearance.SetData(GetEntity(comp.VisualGrid[x, y]), ReactorCapVisuals.Sprite, ChoseSprite(comp.ComponentGrid[x, y]!.IconStateCap));
             }
         }
     }
@@ -82,6 +84,57 @@ public abstract class SharedNuclearReactorSystem : EntitySystem
         _slotsSystem.TryEjectToHands(uid, component.PartSlot, args.Actor);
     }
 
+    /// <summary>
+    ///     Tries to delete something and changes the ref to it
+    ///         accordingly. This was made to be used with properties
+    ///         of <see cref="NuclearReactorComponent"/>.
+    /// </summary>
+    /// <returns>True if the entity already existed.</returns>
+    protected bool TryQueueDelRef(ref EntityUid? uid)
+    {
+        if (Deleted(uid))
+        {
+            uid = null;
+            return false;
+        }
+
+        TryQueueDel(uid);
+        uid = null;
+
+        return true;
+    }
+
+    private void OnSilenceAlarmsMessage(EntityUid uid, NuclearReactorComponent component, ref ReactorSilenceAlarmsMessage args)
+    {
+        // did we silence anything?
+        var silencedAnything = false;
+
+        silencedAnything |= TryQueueDelRef(ref component.WarningAlertSoundUid);
+        silencedAnything |= TryQueueDelRef(ref component.DangerAlertSoundUid);
+        if (!silencedAnything)
+        {
+            _popupSystem.PopupClient(Loc.GetString("reactor-alarms-silence-failed"), args.Actor);
+            return;
+        }
+
+        // self message
+        _popupSystem.PopupClient(
+            Loc.GetString("reactor-alarms-silenced-message-self"),
+            args.Actor,
+            args.Actor,
+            PopupType.MediumCaution
+        );
+
+        // others message
+        _popupSystem.PopupEntity(
+            Loc.GetString("reactor-alarms-silenced-message-others", ("user", Identity.Entity(args.Actor, EntityManager))),
+            args.Actor,
+            Filter.PvsExcept(args.Actor),
+            true,
+            PopupType.SmallCaution
+        );
+    }
+
     protected void UpdateTempIndicators(Entity<NuclearReactorComponent> ent)
     {
         var comp = ent.Comp;
@@ -89,12 +142,14 @@ public abstract class SharedNuclearReactorSystem : EntitySystem
 
         if (comp.Temperature >= comp.ReactorOverheatTemp)
         {
-            if(!comp.isSmoking)
+            if (!comp.isSmoking)
             {
                 comp.isSmoking = true;
                 _appearance.SetData(uid, ReactorVisuals.Smoke, true);
                 _popupSystem.PopupEntity(Loc.GetString("reactor-smoke-start", ("owner", uid)), uid, PopupType.MediumCaution);
                 SendEngiRadio(ent, Loc.GetString("reactor-smoke-start-message", ("owner", uid), ("temperature", Math.Round(comp.Temperature))));
+
+                ent.Comp.WarningAlertSoundUid ??= _audioSystem.PlayPvs(ent.Comp.WarningAlertSound, ent.Owner)?.Entity;
             }
             if (comp.Temperature >= comp.ReactorFireTemp && !comp.isBurning)
             {
@@ -102,6 +157,8 @@ public abstract class SharedNuclearReactorSystem : EntitySystem
                 _appearance.SetData(uid, ReactorVisuals.Fire, true);
                 _popupSystem.PopupEntity(Loc.GetString("reactor-fire-start", ("owner", uid)), uid, PopupType.MediumCaution);
                 SendEngiRadio(ent, Loc.GetString("reactor-fire-start-message", ("owner", uid), ("temperature", Math.Round(comp.Temperature))));
+
+                ent.Comp.DangerAlertSoundUid ??= _audioSystem.PlayPvs(ent.Comp.DangerAlertSound, ent.Owner)?.Entity;
             }
             else if (comp.Temperature < comp.ReactorFireTemp && comp.isBurning)
             {
@@ -109,16 +166,20 @@ public abstract class SharedNuclearReactorSystem : EntitySystem
                 _appearance.SetData(uid, ReactorVisuals.Fire, false);
                 _popupSystem.PopupEntity(Loc.GetString("reactor-fire-stop", ("owner", uid)), uid, PopupType.Medium);
                 SendEngiRadio(ent, Loc.GetString("reactor-fire-stop-message", ("owner", uid)));
+
+                TryQueueDelRef(ref ent.Comp.DangerAlertSoundUid);
             }
         }
         else
         {
-            if(comp.isSmoking)
+            if (comp.isSmoking)
             {
                 comp.isSmoking = false;
                 _appearance.SetData(uid, ReactorVisuals.Smoke, false);
                 _popupSystem.PopupEntity(Loc.GetString("reactor-smoke-stop", ("owner", uid)), uid, PopupType.Medium);
                 SendEngiRadio(ent, Loc.GetString("reactor-smoke-stop-message", ("owner", uid)));
+
+                TryQueueDelRef(ref ent.Comp.WarningAlertSoundUid);
             }
         }
     }

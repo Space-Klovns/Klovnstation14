@@ -4,6 +4,8 @@
 
 using Content.Shared.Atmos;
 using Content.Shared.Containers.ItemSlots;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.Components;
 using Robust.Shared.GameStates;
 
 namespace Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
@@ -95,4 +97,23 @@ public sealed partial class NuclearReactorComponent : Component
     [DataField("spentFuel")]
     public float TotalSpent = 0;
     #endregion
+
+    // KS14: Sounds
+    /// <summary>
+    ///     Sound to play when the reactor starts emitting smoke. Can loop.
+    /// </summary>
+    [DataField]
+    public SoundSpecifier? WarningAlertSound = null;
+
+    [ViewVariables(VVAccess.ReadOnly)]
+    public EntityUid? WarningAlertSoundUid = null;
+
+    /// <summary>
+    ///     Sound to play when the reactor starts being on fire. Can loop.
+    /// </summary>
+    [DataField]
+    public SoundSpecifier? DangerAlertSound = null;
+
+    [ViewVariables(VVAccess.ReadOnly)]
+    public EntityUid? DangerAlertSoundUid = null;
 }

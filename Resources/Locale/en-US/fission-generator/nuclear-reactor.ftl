@@ -13,6 +13,11 @@ reactor-fire-stop-message = The {$owner} has cooled below critical temperature. 
 reactor-meltdown-announcement = A nuclear reactor aboard the station has catastrophically overloaded. Radioactive debris, nuclear fallout, and coolant fires are likely. Immediate evacuation of the surrounding area is strongly advised.
 reactor-meltdown-announcement-sender = Nuclear Meltdown
 
+#### Messages-KS14
+reactor-alarms-silenced-message-self = You manually silence the reactor alarms. Is this really a good idea?
+reactor-alarms-silenced-message-others = {$user} manually silences the reactor alarms.
+reactor-alarms-silence-failed = Nothing happens.
+
 ### UI
 comp-nuclear-reactor-ui-insert-button = Insert
 comp-nuclear-reactor-ui-eject-button = Eject
@@ -30,3 +35,6 @@ comp-nuclear-reactor-ui-therm-format = { POWERWATTS($power) }
 
 comp-nuclear-reactor-ui-footer-left = Danger: high temperatures.
 comp-nuclear-reactor-ui-footer-right = 0.5 REV 4
+
+#### UI-KS14
+comp-nuclear-reactor-ui-silence-button = Silence

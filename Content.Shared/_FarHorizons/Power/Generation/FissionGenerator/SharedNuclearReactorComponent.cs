@@ -15,8 +15,8 @@ public enum NuclearReactorUiKey : byte
 [Serializable, NetSerializable]
 public sealed class NuclearReactorBuiState : BoundUserInterfaceState
 {
-    public double[] TemperatureGrid = new double[NuclearReactorComponent.ReactorGridWidth*NuclearReactorComponent.ReactorGridHeight];
-    public int[] NeutronGrid = new int[NuclearReactorComponent.ReactorGridWidth*NuclearReactorComponent.ReactorGridHeight];
+    public double[] TemperatureGrid = new double[NuclearReactorComponent.ReactorGridWidth * NuclearReactorComponent.ReactorGridHeight];
+    public int[] NeutronGrid = new int[NuclearReactorComponent.ReactorGridWidth * NuclearReactorComponent.ReactorGridHeight];
     public string[] IconGrid = new string[NuclearReactorComponent.ReactorGridWidth * NuclearReactorComponent.ReactorGridHeight];
     public string[] PartName = new string[NuclearReactorComponent.ReactorGridWidth * NuclearReactorComponent.ReactorGridHeight];
     public double[] PartInfo = new double[NuclearReactorComponent.ReactorGridWidth * NuclearReactorComponent.ReactorGridHeight * 3];
@@ -38,6 +38,9 @@ public sealed class ReactorItemActionMessage(Vector2d position) : BoundUserInter
 
 [Serializable, NetSerializable]
 public sealed class ReactorEjectItemMessage() : BoundUserInterfaceMessage;
+
+[Serializable, NetSerializable]
+public sealed class ReactorSilenceAlarmsMessage() : BoundUserInterfaceMessage;
 
 [Serializable, NetSerializable]
 public sealed class ReactorControlRodModifyMessage(float change) : BoundUserInterfaceMessage

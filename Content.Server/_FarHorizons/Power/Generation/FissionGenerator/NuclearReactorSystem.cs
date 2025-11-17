@@ -20,6 +20,7 @@ using Robust.Shared.Prototypes;
 using Content.Shared.Radio;
 using Content.Server.Chat.Systems;
 using Content.Server.Station.Systems;
+using Robust.Shared.Utility;
 
 namespace Content.Server._FarHorizons.Power.Generation.FissionGenerator;
 
@@ -300,7 +301,7 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
             _atmosphereSystem.Merge(T, comp.AirContents);
 
         // TODO: shrapnel
-        _explosionSystem.QueueExplosion(ent.Owner, "Default", Math.Max(100, MeltdownBadness * 5), 1, 4, 0, canCreateVacuum: false);
+        _explosionSystem.QueueExplosion(ent.Owner, "HardBomb", Math.Max(100, MeltdownBadness * 5), 1, 4, 0, canCreateVacuum: false);
 
         // Reset grids
         Array.Clear(comp.ComponentGrid);
@@ -369,11 +370,10 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
                 ((_atmosphereSystem.GetThermalEnergy(reactor.AirContents) - ThermalEnergy) / reactor.ThermalMass), Coldest, Hottest);
 
             var COEVerify = _atmosphereSystem.GetThermalEnergy(reactor.AirContents) + reactor.Temperature * reactor.ThermalMass;
-            if (Math.Abs(COEVerify - COECheck) > 64)
-                //throw new Exception("COE violation, difference of " + Math.Abs(COEVerify - COECheck));
 
-                if (reactor.AirContents.Temperature < 0 || reactor.Temperature < 0)
-                    throw new Exception("Reactor casing temperature calculation resulted in sub-zero value.");
+            // not sure why the first debugthrow is commented out
+            //DebugTools.Assert(MathF.Abs(COEVerify - COECheck) <= 64, $"Reactor COE violation, difference of {MathF.Abs(COEVerify - COECheck)}");
+            DebugTools.Assert(reactor.AirContents.Temperature > 0 && reactor.Temperature > 0, "Reactor casing temperature calculation resulted in sub-zero value.");
 
             ProcessedGas = reactor.AirContents;
         }

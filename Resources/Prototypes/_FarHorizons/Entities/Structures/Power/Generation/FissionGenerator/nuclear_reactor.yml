@@ -152,7 +152,7 @@
 # KS14 - Debug variant
 - type: entity
   parent: BaseNuclearReactor
-  id: NuclearReactorMeltdown
+  id: NuclearReactorAlignment
   suffix: Debug, Alignment
   components:
   - type: NuclearReactor
