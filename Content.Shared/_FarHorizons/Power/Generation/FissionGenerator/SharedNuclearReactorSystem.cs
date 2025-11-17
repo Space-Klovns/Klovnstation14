@@ -95,8 +95,10 @@ public abstract class SharedNuclearReactorSystem : EntitySystem
     {
         args.Handled = true;
 
-        entity.Comp.NextIndicatorUpdateBy = GameTiming.CurTime + entity.Comp.EmagSilencingDelay;
-        UpdateTempIndicators(entity, entity.Comp.isSmoking ? null : true, entity.Comp.isBurning ? null : true);
+        entity.Comp.NextIndicatorUpdateBy = GameTiming.CurTime + entity.Comp.EmagSabotageDelay;
+
+        // if its smoking/burning, make it not smoking/burning.
+        UpdateTempIndicators(entity, entity.Comp.isSmoking ? false : null, entity.Comp.isBurning ? false : null);
     }
 
     /// <summary>
@@ -124,8 +126,12 @@ public abstract class SharedNuclearReactorSystem : EntitySystem
         // did we silence anything?
         var silencedAnything = false;
 
-        silencedAnything |= TryQueueDelRef(ref component.WarningAlertSoundUid);
-        silencedAnything |= TryQueueDelRef(ref component.DangerAlertSoundUid);
+        if (GameTiming.CurTime >= component.NextIndicatorUpdateBy)
+        {
+            silencedAnything |= TryQueueDelRef(ref component.WarningAlertSoundUid);
+            silencedAnything |= TryQueueDelRef(ref component.DangerAlertSoundUid);
+        }
+
         if (!silencedAnything)
         {
             _popupSystem.PopupClient(Loc.GetString("reactor-alarms-silence-failed"), args.Actor);

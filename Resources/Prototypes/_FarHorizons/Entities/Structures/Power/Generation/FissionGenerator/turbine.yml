@@ -85,8 +85,8 @@
     repeatable: true
   - type: Turbine
     overspeedDamage:
-      types:
-        Blunt: 48
+      types: # the total of this is intentionally 15x less of the damage that the blade gets destroyed at
+        Blunt: 80
   - type: ActivatableUI
     key: enum.TurbineUiKey.Key
   - type: ActivatableUIRequiresAnchor
@@ -103,19 +103,37 @@
   - type: Damageable
     damageContainer: StructuralInorganic
   - type: Repairable
-  - type: ExaminableDamage
-    messages: TurbineDamageMessages
   - type: Destructible
     thresholds:
-  - trigger:
     - trigger:
         !type:DamageTrigger
-        damage: 720
+        damage: 1200 # 4th, out of 5
       behaviors:
       - !type:TurbineBladeDestructionBehaviour
     - trigger:
         !type:DamageTrigger
-        damage: 2200
+        damage: 1500 # this is intentionally 1.25x (5th, out of 5) of the damage that the blade gets destroyed at, as there are only 6 total damage messages
       behaviors:
       - !type:DoActsBehavior
         acts: [ "Destruction" ]
+
+# Arrow to indicate flow
+- type: entity
+  id: TurbineFlowArrow
+  categories: [ HideSpawnMenu ]
+  components:
+    - type: Sprite
+      sprite: Markers/teg_arrow.rsi
+      color: "#FFFFFFBB"
+      layers:
+      - state: arrow
+        rotation: 90
+        offset: -1.95, -1
+      - state: arrow
+        rotation: 90
+        offset: 1.95, -1
+    - type: TimedDespawn
+      lifetime: 2
+    - type: Tag
+      tags:
+      - HideContextMenu

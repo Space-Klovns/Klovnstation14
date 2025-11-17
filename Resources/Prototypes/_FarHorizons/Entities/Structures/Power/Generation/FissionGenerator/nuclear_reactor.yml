@@ -120,14 +120,14 @@
         pipeDirection: West
         volume: 1000
         offsetEast: -3
-        offsetNorth: 0
+        offsetNorth: -1
       outlet:
         !type:OffsetPipeNode
         nodeGroupID: Pipe
         pipeDirection: East
         volume: 1000
         offsetEast: 3
-        offsetNorth: 0
+        offsetNorth: 1
   - type: AtmosDevice
   - type: RadiationSource
     intensity: 0
@@ -248,6 +248,49 @@
           HeatM3: { state: heat_cap_melted_3 }
           HeatM4: { state: heat_cap_melted_4 }
   - type: Appearance
+
+# Nuclear debris resultant from a meltdown
+- type: entity
+  id: NuclearDebrisChunk
+  parent: BaseItem
+  name: nuclear debris
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _FarHorizons/Structures/Power/Generation/FissionGenerator/nuclear_waste.rsi
+    layers:
+      - state: nuclear_waste
+        map: [ "base" ]
+  - type: Item
+    size: Huge
+  - type: MultiHandedItem
+  - type: RandomSprite
+    available:
+    - base:
+        nuclear_waste: "" # Allows for multiple debris sprites... even though there's just one
+  - type: RadiationSource
+    intensity: 1.6
+
+# Arrow to indicate flow
+- type: entity
+  id: ReactorFlowArrow
+  categories: [ HideSpawnMenu ]
+  components:
+    - type: Sprite
+      sprite: Markers/teg_arrow.rsi
+      color: "#FFFFFFBB"
+      layers:
+        - state: arrow
+          rotation: 90
+          offset: 2.75, 1
+        - state: arrow
+          rotation: 90
+          offset: -2.75, -1
+    - type: TimedDespawn
+      lifetime: 2
+    - type: Tag
+      tags:
+      - HideContextMenu
 
 # Mapping prefab
 - type: entity

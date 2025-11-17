@@ -2,4 +2,4 @@
   id: TurbineDamageMessages
   values:
     prefix: turbine-damaged-
-    count: 6
+    count: 5

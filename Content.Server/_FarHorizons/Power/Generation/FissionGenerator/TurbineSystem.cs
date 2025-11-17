@@ -22,6 +22,8 @@ using Content.Server._FarHorizons.NodeContainer.Nodes;
 using Robust.Shared.Utility;
 using Content.Shared.Damage;
 using Content.Server.Destructible;
+using Content.Shared.FixedPoint;
+using Content.Server.Destructible.Thresholds.Triggers;
 
 namespace Content.Server._FarHorizons.Power.Generation.FissionGenerator;
 
@@ -52,12 +54,32 @@ public sealed class TurbineSystem : SharedTurbineSystem
     public override void Initialize()
     {
         base.Initialize();
+
+        SubscribeLocalEvent<TurbineComponent, ComponentStartup>(OnStartup);
         SubscribeLocalEvent<TurbineComponent, AtmosDeviceUpdateEvent>(OnUpdate);
     }
 
-    private void OnStartup()
+    private void OnStartup(Entity<TurbineComponent> entity, ref ComponentStartup args)
     {
+        DestructibleComponent? destructibleComponent = null;
+        if (!Resolve(entity, ref destructibleComponent))
+            return;
 
+        var damageNeeded = FixedPoint2.MaxValue;
+        foreach (var threshold in destructibleComponent.Thresholds)
+        {
+            if (threshold.Trigger is not DamageTrigger trigger)
+                continue;
+
+            foreach (var behavior in threshold.Behaviors)
+            {
+                if (behavior is TurbineBladeDestructionBehaviour bladeDestructionBehaviour)
+                    damageNeeded = Math.Min(damageNeeded.Float(), trigger.Damage);
+            }
+        }
+
+        entity.Comp.BladeBreakingPoint = damageNeeded;
+        Dirty(entity);
     }
 
     private void OnUpdate(EntityUid uid, TurbineComponent comp, ref AtmosDeviceUpdateEvent args)

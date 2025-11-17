@@ -26,6 +26,9 @@ using Content.Shared.Station.Components;
 using Robust.Shared.Audio;
 using Robust.Shared.Collections;
 using Robust.Shared.Network;
+using Robust.Shared.Random;
+using Content.Shared.Database;
+using Content.Server.Administration.Logs;
 
 namespace Content.Server._FarHorizons.Power.Generation.FissionGenerator;
 
@@ -46,7 +49,8 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
     [Dependency] private readonly ChatSystem _chatSystem = default!;
     [Dependency] private readonly StationSystem _station = default!;
     [Dependency] private readonly TriggerSystem _triggerSystem = default!;
-    [Dependency] private readonly INetManager _netManager = default!;
+    [Dependency] private readonly IRobustRandom _random = default!;
+    [Dependency] private readonly IAdminLogManager _adminLog = default!;
 
     private static readonly int _gridWidth = NuclearReactorComponent.ReactorGridWidth;
     private static readonly int _gridHeight = NuclearReactorComponent.ReactorGridHeight;
@@ -353,6 +357,14 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
         var T = _atmosphereSystem.GetTileMixture(ent.Owner, excite: true);
         if (T != null)
             _atmosphereSystem.Merge(T, comp.AirContents);
+
+        _adminLog.Add(LogType.Explosion, LogImpact.High, $"{ToPrettyString(ent):reactor} catastrophically overloads, meltdown badness: {MeltdownBadness}");
+
+        // You did not see graphite on the roof. You're in shock. Report to medical.
+        for (var i = 0; i < _random.Next(10, 30); i++)
+            SpawnAtPosition("NuclearDebrisChunk", new(uid, _random.NextVector2(4)));
+
+        AudioSystem.PlayPvs(new SoundPathSpecifier("/Audio/Effects/metal_break5.ogg"), uid);
 
         // TODO: shrapnel
         _explosionSystem.TriggerExplosive(ent.Owner, explosive: null, delete: false, totalIntensity: Math.Max(100, MeltdownBadness * 5));

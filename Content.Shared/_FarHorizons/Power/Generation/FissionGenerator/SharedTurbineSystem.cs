@@ -6,12 +6,15 @@ using Content.Shared.Administration.Logs;
 using Content.Shared.Damage;
 using Content.Shared.Database;
 using Content.Shared.Examine;
+using Content.Shared.Rounding;
+using Robust.Shared.Prototypes;
 
 namespace Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
 
 public abstract class SharedTurbineSystem : EntitySystem
 {
     [Dependency] protected readonly DamageableSystem DamageableSystem = default!;
+    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
     [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
 
@@ -23,6 +26,26 @@ public abstract class SharedTurbineSystem : EntitySystem
 
         SubscribeLocalEvent<TurbineComponent, TurbineChangeFlowRateMessage>(OnTurbineFlowRateChanged);
         SubscribeLocalEvent<TurbineComponent, TurbineChangeStatorLoadMessage>(OnTurbineStatorLoadChanged);
+    }
+
+    /// <summary>
+    /// Returns a value between 0 and 1 representing how damaged the entity is,
+    /// where 0 is undamaged and 1 is fully damaged.
+    /// </summary>
+    /// <returns>How damaged the entity is from 0 to 1</returns>
+    private float GetDamagePercent(Entity<TurbineComponent> entity)
+    {
+        DamageableComponent? damageableComponent = null;
+        if (!Resolve(entity, ref damageableComponent, logMissing: false))
+            return 0;
+
+        var damage = damageableComponent.TotalDamage;
+        var damageThreshold = entity.Comp.BladeBreakingPoint;
+
+        if (damageThreshold == 0)
+            return 0;
+
+        return (damage / damageThreshold).Float();
     }
 
     private void OnExamined(Entity<TurbineComponent> ent, ref ExaminedEvent args)
@@ -38,23 +61,31 @@ public abstract class SharedTurbineSystem : EntitySystem
                 switch (comp.RPM)
                 {
                     case float n when n is >= 0 and <= 1:
-                        args.PushMarkup(Loc.GetString("turbine-spinning-0")); // " The blades are not spinning."
+                        args.PushMarkup(Loc.GetString("turbine-spinning-0"), priority: 6); // " The blades are not spinning."
                         break;
                     case float n when n is > 1 and <= 60:
-                        args.PushMarkup(Loc.GetString("turbine-spinning-1")); // " The blades are turning slowly."
+                        args.PushMarkup(Loc.GetString("turbine-spinning-1"), priority: 6); // " The blades are turning slowly."
                         break;
                     case float n when n > 60 && n <= comp.BestRPM * 0.5:
-                        args.PushMarkup(Loc.GetString("turbine-spinning-2")); // " The blades are spinning."
+                        args.PushMarkup(Loc.GetString("turbine-spinning-2"), priority: 6); // " The blades are spinning."
                         break;
                     case float n when n > comp.BestRPM * 0.5 && n <= comp.BestRPM * 1.2:
-                        args.PushMarkup(Loc.GetString("turbine-spinning-3")); // " The blades are spinning quickly."
+                        args.PushMarkup(Loc.GetString("turbine-spinning-3"), priority: 6); // " The blades are spinning quickly."
                         break;
                     case float n when n > comp.BestRPM * 1.2 && n <= float.PositiveInfinity:
-                        args.PushMarkup(Loc.GetString("turbine-spinning-4")); // " The blades are spinning out of control!"
+                        args.PushMarkup(Loc.GetString("turbine-spinning-4"), priority: 6); // " The blades are spinning out of control!"
                         break;
                     default:
                         break;
                 }
+            }
+
+            if (_prototypeManager.Resolve(ent.Comp.DamageMessages, out var proto) && proto.Values.Count > 0)
+            {
+                var percent = GetDamagePercent(ent);
+                var level = ContentHelpers.RoundToNearestLevels(GetDamagePercent(ent), 1, proto.Values.Count - 1);
+                var msg = Loc.GetString(proto.Values[level]);
+                args.PushMarkup(msg, priority: 7);
             }
         }
     }

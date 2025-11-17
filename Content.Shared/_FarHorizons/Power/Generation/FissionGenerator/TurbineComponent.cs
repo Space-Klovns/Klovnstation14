@@ -4,6 +4,7 @@
 
 using Content.Shared.Atmos;
 using Content.Shared.Damage;
+using Content.Shared.Dataset;
 using Content.Shared.FixedPoint;
 using Content.Shared.Tools;
 using Robust.Shared.GameStates;
@@ -65,16 +66,23 @@ public sealed partial class TurbineComponent : Component
     public float MinTemp = Atmospherics.T20C;
 
     /// <summary>
-    /// The damage this turbine takes ev
+    /// The damage this turbine takes every time its overspeed.
     /// </summary>
-    [DataField("overspeedDamage"), AutoNetworkedField]
+    [DataField("overspeedDamage", required: true), AutoNetworkedField]
     public DamageSpecifier BladeOverspeedDamage;
 
     /// <summary>
-    /// Damage that the turbine can have before the blade is destroyed.
+    /// Amount of damage this turbine can be at before its blade would be
+    /// ruined. Dynamically evaluated from the entity's DestructibleComponent.
     /// </summary>
     [AutoNetworkedField]
-    public FixedPoint2 BladeBreakingPoint;
+    public FixedPoint2 BladeBreakingPoint = new();
+
+    /// <summary>
+    /// Damage messages shown on examine.
+    /// </summary>
+    [DataField]
+    public ProtoId<LocalizedDatasetPrototype>? DamageMessages = "TurbineDamageMessages";
 
     /// <summary>
     /// If the turbine is functional or not
@@ -118,21 +126,6 @@ public sealed partial class TurbineComponent : Component
     [DataField]
     public EntityUid? AlarmAudioUnderspeed;
 
-    /// <summary>
-    /// Length of repair do-after, in seconds
-    /// </summary>
-    public float RepairDelay = 5;
-
-    /// <summary>
-    /// Amount of fuel consumed for repair
-    /// </summary>
-    public float RepairFuelCost = 15;
-
-    /// <summary>
-    /// Tool capability needed to repair
-    /// </summary>
-    public ProtoId<ToolQualityPrototype> RepairTool = "Welding";
-
     [DataField("inlet")]
     public string InletName { get; set; } = "inlet";
 
@@ -141,7 +134,6 @@ public sealed partial class TurbineComponent : Component
 
     public bool IsSparking = false;
     public bool IsSmoking = false;
-
 
     //Debugging
     [ViewVariables(VVAccess.ReadOnly)]

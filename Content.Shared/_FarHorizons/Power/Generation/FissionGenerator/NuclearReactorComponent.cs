@@ -143,8 +143,8 @@ public sealed partial class NuclearReactorComponent : Component
     public TimeSpan NextIndicatorUpdateBy = TimeSpan.MinValue;
 
     /// <summary>
-    ///     Offset on the current simulation-time to set <see cref="NextManuallySilenceableBy"/>, when emagged.
+    ///     Offset on the current simulation-time to set <see cref="NextIndicatorUpdateBy"/>, when emagged.
     /// </summary>
     [DataField, ViewVariables(VVAccess.ReadWrite)]
-    public TimeSpan EmagSilencingDelay = TimeSpan.FromSeconds(15);
+    public TimeSpan EmagSabotageDelay = TimeSpan.FromSeconds(15);
 }
