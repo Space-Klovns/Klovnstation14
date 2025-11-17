@@ -1,3 +1,12 @@
+# SPDX-FileCopyrightText: 2022 Nemanja
+# SPDX-FileCopyrightText: 2022 OctoRocket
+# SPDX-FileCopyrightText: 2022 Rane
+# SPDX-FileCopyrightText: 2024 Golinth
+# SPDX-FileCopyrightText: 2025 Ertanic
+# SPDX-FileCopyrightText: 2025 deltanedas
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: constructionGraph
   id: GoidaBot
   start: start
