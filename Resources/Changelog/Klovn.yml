@@ -141,3 +141,15 @@ Entries:
       message: Bloodstains have been added.
   id: 18
   time: '2025-11-16T08:40:57.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: All TC prices have been multiplied by 3.
+  id: 19
+  time: '2025-11-16T21:56:05.0000000+00:00'
+- author: rottenheadphones
+  changes:
+    - type: Add
+      message: Added nuclear bombs
+  id: 20
+  time: '2025-11-16T22:56:09.0000000+00:00'

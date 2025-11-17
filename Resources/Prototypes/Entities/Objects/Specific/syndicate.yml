@@ -1,3 +1,18 @@
+# SPDX-FileCopyrightText: 2021 Alex Evgrashin
+# SPDX-FileCopyrightText: 2022 Moony
+# SPDX-FileCopyrightText: 2022 ZeroDayDaemon
+# SPDX-FileCopyrightText: 2022 corentt
+# SPDX-FileCopyrightText: 2022 keronshb
+# SPDX-FileCopyrightText: 2023 Dvir
+# SPDX-FileCopyrightText: 2023 lzk
+# SPDX-FileCopyrightText: 2024 Kara
+# SPDX-FileCopyrightText: 2024 Nemanja
+# SPDX-FileCopyrightText: 2024 Plykiya
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+#
+# SPDX-License-Identifier: MPL-2.0
+
 
 - type: entity
   name: telecrystal
@@ -21,7 +36,7 @@
     price: 200
   - type: Currency
     price:
-      Telecrystal: 1
+      Telecrystal: 3
 
 - type: entity
   parent: Telecrystal
@@ -72,54 +87,54 @@
     balance:
       Telecrystal: 0
 
-- type: entity
+- type: entity # KS14: x3'd tc price
   parent: BaseUplinkRadio
   id: BaseUplinkRadio20TC
-  suffix: 20 TC
-  components:
-  - type: Store
-    balance:
-      Telecrystal: 20
-
-- type: entity
-  parent: BaseUplinkRadio
-  id: BaseUplinkRadio25TC
-  suffix: 25 TC
-  components:
-  - type: Store
-    balance:
-      Telecrystal: 25
-
-#this uplink MUST be used for nukeops, as it has the tag for filtering the listing.
-- type: entity
-  parent: BaseUplinkRadio
-  id: BaseUplinkRadio40TC
-  suffix: 40 TC, NukeOps
-  components:
-  - type: Store
-    balance:
-      Telecrystal: 40
-  - type: Tag
-    tags:
-    - NukeOpsUplink
-
-- type: entity
-  parent: BaseUplinkRadio
-  id: BaseUplinkRadio60TC
-  suffix: 60 TC, LoneOps
+  suffix: 60 TC
   components:
   - type: Store
     balance:
       Telecrystal: 60
+
+- type: entity # KS14: x3'd tc price
+  parent: BaseUplinkRadio
+  id: BaseUplinkRadio25TC
+  suffix: 75 TC
+  components:
+  - type: Store
+    balance:
+      Telecrystal: 75
+
+#this uplink MUST be used for nukeops, as it has the tag for filtering the listing.
+- type: entity # KS14: x3'd tc price
+  parent: BaseUplinkRadio
+  id: BaseUplinkRadio40TC
+  suffix: 120 TC, NukeOps
+  components:
+  - type: Store
+    balance:
+      Telecrystal: 120
   - type: Tag
     tags:
     - NukeOpsUplink
 
-- type: entity
+- type: entity # KS14: x3'd tc price
+  parent: BaseUplinkRadio
+  id: BaseUplinkRadio60TC
+  suffix: 180 TC, LoneOps
+  components:
+  - type: Store
+    balance:
+      Telecrystal: 180
+  - type: Tag
+    tags:
+    - NukeOpsUplink
+
+- type: entity # KS14: x3'd tc price
   parent: BaseUplinkRadio
   id: BaseUplinkRadioDebug
   suffix: DEBUG
   components:
   - type: Store
     balance:
-      Telecrystal: 99999
+      Telecrystal: 299997
