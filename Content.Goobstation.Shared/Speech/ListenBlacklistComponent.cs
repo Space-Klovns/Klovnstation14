@@ -1,3 +1,8 @@
+// SPDX-FileCopyrightText: 2025 DeusMaldPr
+// SPDX-FileCopyrightText: 2025 deltanedas
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Shared.Whitelist;
 using Robust.Shared.GameStates;
 
