@@ -25,10 +25,10 @@ using Content.Shared.Trigger.Systems;
 using Content.Shared.Station.Components;
 using Robust.Shared.Audio;
 using Robust.Shared.Collections;
-using Robust.Shared.Network;
 using Robust.Shared.Random;
 using Content.Shared.Database;
 using Content.Server.Administration.Logs;
+using Content.Server.Audio;
 
 namespace Content.Server._FarHorizons.Power.Generation.FissionGenerator;
 
@@ -51,6 +51,7 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
     [Dependency] private readonly TriggerSystem _triggerSystem = default!;
     [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly IAdminLogManager _adminLog = default!;
+    [Dependency] private readonly AmbientSoundSystem _ambientSoundSystem = default!;
 
     private static readonly int _gridWidth = NuclearReactorComponent.ReactorGridWidth;
     private static readonly int _gridHeight = NuclearReactorComponent.ReactorGridHeight;
@@ -366,6 +367,7 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
         Array.Clear(comp.FluxGrid);
 
         UpdateGridVisual(ent.Owner, comp);
+        UpdateVisuals(ent);
 
         TryQueueDelRef(ref comp.WarningAlertSoundUid);
         TryQueueDelRef(ref comp.DangerAlertSoundUid);
@@ -374,7 +376,6 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
             AudioSystem.PlayGlobal(MeltdownSoundSpecifier, _station.GetInStation(stationDataComponent), true, AudioParams.Default.WithVolume(-2f));
 
         _triggerSystem.Trigger(ent.Owner, user: null, key: ent.Comp.MeltdownKeyOut);
-        _appearance.SetData(uid, ReactorVisuals.Sprite, Reactors.Melted);
 
         // Cleanup, we need not do any further processing
         RemCompDeferred(ent, ent.Comp);
@@ -617,6 +618,8 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
                 _appearance.SetData(uid, ReactorVisuals.Lights, ReactorWarningLights.LightsWarning);
         else
             _appearance.SetData(uid, ReactorVisuals.Lights, ReactorWarningLights.LightsOff);
+
+        _ambientSoundSystem.SetAmbience(ent.Owner, comp.Temperature > Atmospherics.T20C);
 
         // Status screen / side lights
         switch (comp.Temperature)

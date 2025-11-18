@@ -173,6 +173,7 @@
 
   # Sound
   - type: AmbientSound
+    enabled: false
     volume: -6
     range: 12
     sound:
