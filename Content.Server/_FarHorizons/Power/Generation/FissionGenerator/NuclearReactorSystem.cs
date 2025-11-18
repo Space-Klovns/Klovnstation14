@@ -115,9 +115,7 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
     /// </summary>
     private void ProcessReactorMainNetUpdate(
         in Entity<NuclearReactorComponent> entity,
-        float newTemperature,
-        bool isSmoking,
-        bool isBurning
+        float newTemperature
     )
     {
         MetaDataComponent? metaDataComponent = null;
@@ -127,12 +125,6 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
             entity.Comp.LastDirtiedTemperature = newTemperature;
             DirtyField(entity, entity.Comp, nameof(entity.Comp.Temperature), metaDataComponent ??= MetaData(entity));
         }
-
-        if (!entity.Comp.isSmoking == isSmoking)
-            DirtyField(entity, entity.Comp, nameof(entity.Comp.isSmoking), metaDataComponent ??= MetaData(entity));
-
-        if (!entity.Comp.isBurning == isBurning)
-            DirtyField(entity, entity.Comp, nameof(entity.Comp.isBurning), metaDataComponent ?? MetaData(entity));
     }
 
     private void OnUpdate(Entity<NuclearReactorComponent> ent, ref AtmosDeviceUpdateEvent args)
@@ -277,9 +269,7 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
 
         ProcessReactorMainNetUpdate(
             ent,
-            ent.Comp.Temperature,
-            ent.Comp.isSmoking,
-            ent.Comp.isBurning
+            ent.Comp.Temperature
         );
 
         comp.RadiationLevel = Math.Clamp(comp.RadiationLevel + TempRads, 0, 50);

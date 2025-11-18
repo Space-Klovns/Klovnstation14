@@ -109,7 +109,8 @@
     manualSilenceSound:
       path: /Audio/_KS14/Effects/parking_button.ogg
       params:
-        volume: 1
+        volume: 2
+        range: 5
 
   - type: NodeContainer
     examinable: true

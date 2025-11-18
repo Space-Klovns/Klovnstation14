@@ -85,7 +85,7 @@
     repeatable: true
   - type: Turbine
     overspeedDamage:
-      types: # the total of this is intentionally 15x less of the damage that the blade gets destroyed at
+      types:
         Blunt: 80
   - type: ActivatableUI
     key: enum.TurbineUiKey.Key
@@ -107,12 +107,12 @@
     thresholds:
     - trigger:
         !type:DamageTrigger
-        damage: 1200 # 4th, out of 5
+        damage: 800
       behaviors:
       - !type:TurbineBladeDestructionBehaviour
     - trigger:
         !type:DamageTrigger
-        damage: 1500 # this is intentionally 1.25x (5th, out of 5) of the damage that the blade gets destroyed at, as there are only 6 total damage messages
+        damage: 1500
       behaviors:
       - !type:DoActsBehavior
         acts: [ "Destruction" ]

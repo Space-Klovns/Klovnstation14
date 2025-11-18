@@ -35,7 +35,7 @@ public abstract class SharedNuclearReactorSystem : EntitySystem
 
     protected bool ReactorTryGetSlot(EntityUid uid, string slotID, out ItemSlot? itemSlot) => _slotsSystem.TryGetSlot(uid, slotID, out itemSlot);
 
-    public virtual void UpdateGridVisual(EntityUid uid, NuclearReactorComponent? comp)
+    public virtual void UpdateGridVisual(EntityUid uid, NuclearReactorComponent comp)
     {
         for (var x = 0; x < NuclearReactorComponent.ReactorGridWidth; x++)
         {
@@ -107,16 +107,17 @@ public abstract class SharedNuclearReactorSystem : EntitySystem
     ///         of <see cref="NuclearReactorComponent"/>.
     /// </summary>
     /// <returns>True if the entity already existed.</returns>
-    protected bool TryQueueDelRef(ref EntityUid? uid)
+    protected bool TryQueueDelRef(ref NetEntity? netId)
     {
+        var uid = GetEntity(netId);
         if (Deleted(uid))
         {
-            uid = null;
+            netId = null;
             return false;
         }
 
-        TryQueueDel(uid);
-        uid = null;
+        PredictedDel(uid);
+        netId = null;
 
         return true;
     }
@@ -180,7 +181,8 @@ public abstract class SharedNuclearReactorSystem : EntitySystem
         isNowBurning = component.isBurning ? false : null;
     }
 
-    protected void UpdateTempIndicators(Entity<NuclearReactorComponent> ent, bool? isNowSmoking, bool? isNowBurning)
+    /// <param name="proper">Do radio messages?</param>
+    protected void UpdateTempIndicators(Entity<NuclearReactorComponent> ent, bool? isNowSmoking, bool? isNowBurning, bool proper = true)
     {
         var comp = ent.Comp;
         var uid = ent.Owner;
@@ -188,40 +190,51 @@ public abstract class SharedNuclearReactorSystem : EntitySystem
         if (isNowSmoking == true)
         {
             comp.isSmoking = true;
-            _popupSystem.PopupEntity(Loc.GetString("reactor-smoke-start", ("owner", uid)), uid, PopupType.MediumCaution);
-            SendEngiRadio(ent, Loc.GetString("reactor-smoke-start-message", ("owner", uid), ("temperature", Math.Round(comp.Temperature))));
+            _popupSystem.PopupEntity(Loc.GetString("reactor-smoke-start", ("owner", uid)), uid, Filter.Local(), true, PopupType.MediumCaution);
 
-            ent.Comp.WarningAlertSoundUid ??= AudioSystem.PlayPvs(ent.Comp.WarningAlertSound, ent.Owner)?.Entity;
+            if (proper)
+                SendEngiRadio(ent, Loc.GetString("reactor-smoke-start-message", ("owner", uid), ("temperature", Math.Round(comp.Temperature))));
+
+            if (_netManager.IsServer) // unfortunately im too lazy to properly predict this
+                ent.Comp.WarningAlertSoundUid ??= GetNetEntity(AudioSystem.PlayPvs(ent.Comp.WarningAlertSound, ent.Owner)?.Entity);
         }
         else if (isNowSmoking == false)
         {
             comp.isSmoking = false;
-            _popupSystem.PopupEntity(Loc.GetString("reactor-smoke-stop", ("owner", uid)), uid, PopupType.Medium);
-            SendEngiRadio(ent, Loc.GetString("reactor-smoke-stop-message", ("owner", uid)));
+            _popupSystem.PopupEntity(Loc.GetString("reactor-smoke-stop", ("owner", uid)), uid, Filter.Local(), true, PopupType.Medium);
+
+            if (proper)
+                SendEngiRadio(ent, Loc.GetString("reactor-smoke-stop-message", ("owner", uid)));
 
             TryQueueDelRef(ref ent.Comp.WarningAlertSoundUid);
         }
 
-        if (_netManager.IsServer && isNowSmoking != null)
-            AppearanceSystem.SetData(uid, ReactorVisuals.Smoke, isNowSmoking);
-
-
         if (isNowBurning == true)
         {
             comp.isBurning = true;
-            _popupSystem.PopupEntity(Loc.GetString("reactor-fire-start", ("owner", uid)), uid, PopupType.MediumCaution);
-            SendEngiRadio(ent, Loc.GetString("reactor-fire-start-message", ("owner", uid), ("temperature", Math.Round(comp.Temperature))));
+            _popupSystem.PopupEntity(Loc.GetString("reactor-fire-start", ("owner", uid)), uid, Filter.Local(), true, PopupType.MediumCaution);
 
-            ent.Comp.DangerAlertSoundUid ??= AudioSystem.PlayPvs(ent.Comp.DangerAlertSound, ent.Owner)?.Entity;
+            if (proper)
+                SendEngiRadio(ent, Loc.GetString("reactor-fire-start-message", ("owner", uid), ("temperature", Math.Round(comp.Temperature))));
+
+            if (_netManager.IsServer) // unfortunately im too lazy to properly predict this
+                ent.Comp.DangerAlertSoundUid ??= GetNetEntity(AudioSystem.PlayPvs(ent.Comp.DangerAlertSound, ent.Owner)?.Entity);
         }
         else if (isNowBurning == false)
         {
             comp.isBurning = false;
-            _popupSystem.PopupEntity(Loc.GetString("reactor-fire-stop", ("owner", uid)), uid, PopupType.Medium);
-            SendEngiRadio(ent, Loc.GetString("reactor-fire-stop-message", ("owner", uid)));
+            _popupSystem.PopupEntity(Loc.GetString("reactor-fire-stop", ("owner", uid)), uid, Filter.Local(), true, PopupType.Medium);
+
+            if (proper)
+                SendEngiRadio(ent, Loc.GetString("reactor-fire-stop-message", ("owner", uid)));
 
             TryQueueDelRef(ref ent.Comp.DangerAlertSoundUid);
         }
+
+        DirtyFields(ent, ent.Comp, null, nameof(ent.Comp.WarningAlertSoundUid), nameof(ent.Comp.DangerAlertSoundUid));
+
+        if (_netManager.IsServer && isNowSmoking != null)
+            AppearanceSystem.SetData(uid, ReactorVisuals.Smoke, isNowSmoking);
 
         if (_netManager.IsServer && isNowBurning != null)
             AppearanceSystem.SetData(uid, ReactorVisuals.Fire, isNowBurning);

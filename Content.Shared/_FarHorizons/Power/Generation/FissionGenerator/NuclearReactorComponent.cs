@@ -38,9 +38,9 @@ public sealed partial class NuclearReactorComponent : Component
     [DataField]
     public float ControlRodInsertion = 2;
 
-    [DataField, AutoNetworkedField]
+    [DataField]
     public bool isSmoking = false;
-    [DataField, AutoNetworkedField]
+    [DataField]
     public bool isBurning = false;
     [DataField]
     public string AlertChannel = "Engineering";
@@ -111,8 +111,8 @@ public sealed partial class NuclearReactorComponent : Component
     [DataField, ViewVariables(VVAccess.ReadWrite)]
     public SoundSpecifier? WarningAlertSound = null;
 
-    [ViewVariables(VVAccess.ReadOnly)]
-    public EntityUid? WarningAlertSoundUid = null;
+    [AutoNetworkedField, ViewVariables(VVAccess.ReadOnly)]
+    public NetEntity? WarningAlertSoundUid = null;
 
     /// <summary>
     ///     Sound to play when the reactor starts being on fire. Can loop.
@@ -120,8 +120,8 @@ public sealed partial class NuclearReactorComponent : Component
     [DataField, ViewVariables(VVAccess.ReadWrite)]
     public SoundSpecifier? DangerAlertSound = null;
 
-    [ViewVariables(VVAccess.ReadOnly)]
-    public EntityUid? DangerAlertSoundUid = null;
+    [AutoNetworkedField, ViewVariables(VVAccess.ReadOnly)]
+    public NetEntity? DangerAlertSoundUid = null;
 
     /// <summary>
     ///     Trigger key to signal on this entity when doing meltdown.

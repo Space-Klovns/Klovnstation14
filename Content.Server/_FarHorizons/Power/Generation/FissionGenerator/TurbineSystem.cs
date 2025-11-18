@@ -40,7 +40,6 @@ public sealed class TurbineSystem : SharedTurbineSystem
     [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly TransformSystem _transformSystem = default!;
     [Dependency] private readonly NodeGroupSystem _nodeGroupSystem = default!;
-    [Dependency] private readonly DestructibleSystem _destructibleSystem = default!;
 
 
     private readonly List<SoundSpecifier> _damageSoundList = [

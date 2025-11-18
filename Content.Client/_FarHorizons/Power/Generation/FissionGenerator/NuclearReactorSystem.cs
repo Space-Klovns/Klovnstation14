@@ -26,10 +26,20 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
 
     private void OnAppearanceChange(Entity<NuclearReactorComponent> entity, ref AppearanceChangeEvent args)
     {
-        if (!AppearanceSystem.TryGetData<bool>(entity.Owner, ReactorVisuals.Smoke, out var isNowSmoking, args.Component) ||
-            !AppearanceSystem.TryGetData<bool>(entity.Owner, ReactorVisuals.Fire, out var isNowBurning, args.Component))
-            return;
+        if (AppearanceSystem.TryGetData<bool>(entity.Owner, ReactorVisuals.Smoke, out var isSmoking, args.Component))
+        {
+            if (!entity.Comp.isSmoking && isSmoking)
+                UpdateTempIndicators(entity, true, null);
+            else if (entity.Comp.isSmoking && !isSmoking)
+                UpdateTempIndicators(entity, false, null);
+        }
 
-        UpdateTempIndicators(entity, isNowSmoking, isNowBurning);
+        if (AppearanceSystem.TryGetData<bool>(entity.Owner, ReactorVisuals.Fire, out var isBurning, args.Component))
+        {
+            if (!entity.Comp.isBurning && isBurning)
+                UpdateTempIndicators(entity, null, true);
+            else if (entity.Comp.isBurning && !isBurning)
+                UpdateTempIndicators(entity, null, false);
+        }
     }
 }
