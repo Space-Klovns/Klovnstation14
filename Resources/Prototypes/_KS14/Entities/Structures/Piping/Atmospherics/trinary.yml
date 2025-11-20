@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 
 - type: entity
   parent: GasTrinaryBase
@@ -63,37 +63,7 @@
   placement:
     mode: SnapgridCenter
   components:
-  - type: Sprite
-    sprite: _KS14/Structures/Piping/Atmospherics/molarmixer.rsi
-    layers:
-    - sprite: Structures/Piping/Atmospherics/pipe.rsi
-      state: pipeTrinaryConnectors
-      map: [ "enum.PipeVisualLayers.Pipe" ]
-    - state: molarMixerF
-      map: [ "enum.SubfloorLayers.FirstLayer", "enabled" ]
-  - type: Appearance
-  - type: GenericVisualizer
-    visuals:
-      enum.FilterVisuals.Enabled:
-        enabled:
-          True: { state: molarMixerFOn }
-          False: { state: molarMixerF }
-  - type: PipeColorVisuals
   - type: Flippable
     mirrorEntity: MolarMixer
-  - type: NodeContainer
-    nodes:
-      inlet:
-        !type:PipeNode
-        nodeGroupID: Pipe
-        pipeDirection: South
-      filter:
-        !type:PipeNode
-        nodeGroupID: Pipe
-        pipeDirection: West
-      outlet:
-        !type:PipeNode
-        nodeGroupID: Pipe
-        pipeDirection: North
   - type: Construction
     node: mixerflipped
