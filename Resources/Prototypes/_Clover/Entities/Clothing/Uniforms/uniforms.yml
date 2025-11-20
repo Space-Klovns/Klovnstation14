@@ -5,6 +5,6 @@
   description: Much motherfuckin' wicked clown love.
   components:
     - type: Sprite
-      sprite: /Textures/_Clover/Clothing/Uniforms/juggalo.rsi
+      sprite: /Textures/_Clover/Entities/Clothing/Uniforms/juggalo.rsi
     - type: Clothing
-      sprite: /Textures/_Clover/Clothing/Uniforms/juggalo.rsi
+      sprite: /Textures/_Clover/Clothing/Entities/Uniforms/juggalo.rsi
