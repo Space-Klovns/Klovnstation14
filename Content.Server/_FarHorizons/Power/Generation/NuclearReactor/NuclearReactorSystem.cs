@@ -85,6 +85,9 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
 
     private void OnMapInit(Entity<NuclearReactorComponent> entity, ref MapInitEvent _)
     {
+        if (entity.Comp.VisualGrid[0, 0].Id == 0)
+            InitGrid(entity);
+
         entity.Comp.ComponentGrid = new ReactorPartComponent[_gridWidth, _gridHeight];
         var prefab = SelectPrefab(entity.Comp.Prefab);
         for (var x = 0; x < _gridWidth; x++)
@@ -122,12 +125,10 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
         float newTemperature
     )
     {
-        MetaDataComponent? metaDataComponent = null;
-
         if (!MathHelper.CloseTo(newTemperature, entity.Comp.LastDirtiedTemperature, NetUpdateFloatTolerance))
         {
             entity.Comp.LastDirtiedTemperature = newTemperature;
-            DirtyField(entity, entity.Comp, nameof(entity.Comp.Temperature), metaDataComponent ??= MetaData(entity));
+            DirtyField(entity, entity.Comp, nameof(entity.Comp.Temperature), MetaData(entity));
         }
     }
 
@@ -140,9 +141,6 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
 
         if (comp.Melted)
             return;
-
-        if (comp.VisualGrid[0, 0].Id == 0)
-            InitGrid(ent);
 
         if (!_nodeContainer.TryGetNodes(uid, comp.InletName, comp.OutletName, out OffsetPipeNode? inlet, out OffsetPipeNode? outlet))
             return;
@@ -379,6 +377,8 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
         TryQueueDelRef(ref comp.WarningAlertSoundUid);
         TryQueueDelRef(ref comp.DangerAlertSoundUid);
 
+        _ambientSoundSystem.SetAmbience(ent.Owner, false);
+
         if (TryComp<StationDataComponent>(stationUid, out var stationDataComponent))
             AudioSystem.PlayGlobal(MeltdownSoundSpecifier, _station.GetInStation(stationDataComponent), true, AudioParams.Default.WithVolume(-2f));
 
@@ -386,6 +386,9 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
 
         // Cleanup, we need not do any further processing
         RemCompDeferred(ent, ent.Comp);
+
+        // Actually after we're done the player can still open the reactor UI because the UI component is still there
+        // I dont really care about that though
     }
 
     protected override void SendEngiRadio(Entity<NuclearReactorComponent> ent, string message)
