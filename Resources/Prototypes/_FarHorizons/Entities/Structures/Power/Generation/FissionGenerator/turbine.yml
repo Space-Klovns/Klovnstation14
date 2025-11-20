@@ -112,7 +112,7 @@
       - !type:TurbineBladeDestructionBehaviour
     - trigger:
         !type:DamageTrigger
-        damage: 1500
+        damage: 3220 # ПРОКЛЯТИЕ 220!
       behaviors:
       - !type:DoActsBehavior
         acts: [ "Destruction" ]

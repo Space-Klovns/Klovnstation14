@@ -255,23 +255,31 @@
 - type: entity
   id: NuclearDebrisChunk
   parent: BaseItem
-  name: nuclear debris
+  name: metal chunk
+  description: You did not see graphite on the roof. You're in shock. Report to medical.
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    sprite: _FarHorizons/Structures/Power/Generation/FissionGenerator/nuclear_waste.rsi
+    sprite: Objects/Materials/Scrap/generic.rsi
     layers:
-      - state: nuclear_waste
-        map: [ "base" ]
+    - state: metal-1
+      map: [ "base" ]
   - type: Item
+    sprite: Objects/Materials/Scrap/generic.rsi
     size: Huge
   - type: MultiHandedItem
   - type: RandomSprite
     available:
     - base:
-        nuclear_waste: "" # Allows for multiple debris sprites... even though there's just one
+        metal-1: ""
+        metal-2: ""
+        metal-3: ""
   - type: RadiationSource
-    intensity: 1.6
+    intensity: 4.6
+  - type: PointLight
+    color: "#42a1eb"
+    energy: 2
+    radius: 1.5
 
 # Arrow to indicate flow
 - type: entity

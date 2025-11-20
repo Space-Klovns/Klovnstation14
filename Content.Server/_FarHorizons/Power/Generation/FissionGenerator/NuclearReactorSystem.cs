@@ -29,6 +29,8 @@ using Robust.Shared.Random;
 using Content.Shared.Database;
 using Content.Server.Administration.Logs;
 using Content.Server.Audio;
+using Content.Shared.Throwing;
+using Content.Shared._KS14.Deferral;
 
 namespace Content.Server._FarHorizons.Power.Generation.FissionGenerator;
 
@@ -52,6 +54,7 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
     [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly IAdminLogManager _adminLog = default!;
     [Dependency] private readonly AmbientSoundSystem _ambientSoundSystem = default!;
+    [Dependency] private readonly ThrowingSystem _throwingSystem = default!;
 
     private static readonly int _gridWidth = NuclearReactorComponent.ReactorGridWidth;
     private static readonly int _gridHeight = NuclearReactorComponent.ReactorGridHeight;
@@ -353,7 +356,10 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
 
         // You did not see graphite on the roof. You're in shock. Report to medical.
         for (var i = 0; i < _random.Next(10, 30); i++)
-            SpawnAtPosition("NuclearDebrisChunk", new(uid, _random.NextVector2(4)));
+        {
+            var chunk = SpawnAtPosition("NuclearDebrisChunk", new(uid, _random.NextVector2(4)));
+            SynchronousDeferralSystem.Defer(() => _throwingSystem.TryThrow(chunk, _random.NextAngle().ToWorldVec(), baseThrowSpeed: 50, animated: false, playSound: false, doSpin: false));
+        }
 
         AudioSystem.PlayPvs(new SoundPathSpecifier("/Audio/Effects/metal_break5.ogg"), uid);
 
@@ -603,6 +609,7 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
         var comp = ent.Comp;
         var uid = ent.Owner;
 
+        _appearance.SetData(uid, ReactorVisuals.Sprite, comp.Melted ? Reactors.Melted : Reactors.Normal);
         if (comp.Melted)
         {
             _appearance.SetData(uid, ReactorVisuals.Lights, ReactorWarningLights.LightsOff);
