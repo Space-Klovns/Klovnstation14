@@ -98,6 +98,10 @@
     access: [["Engineering"]]
   - type: Lock
     unlockOnClick: false
+  - type: GuideHelp
+    guides:
+    - NuclearReactor
+    - Power
 
   # Damage
   - type: Damageable

@@ -313,6 +313,7 @@
   - PortableGenerator
   - AME
   - SingularityTeslaEngine
+  - NuclearReactor
   - TEG
   - RTG
   - SolarPanels
@@ -339,6 +340,11 @@
   id: TeslaEngine
   name: guide-entry-teslaengine
   text: "/ServerInfo/Guidebook/Engineering/TeslaEngine.xml"
+
+- type: guideEntry
+  id: NuclearReactor
+  name: guide-entry-nuclear-reactor
+  text: "/ServerInfo/_FarHorizons/Guidebook/Engineering/NuclearReactor.xml"
 
 - type: guideEntry
   id: TEG
