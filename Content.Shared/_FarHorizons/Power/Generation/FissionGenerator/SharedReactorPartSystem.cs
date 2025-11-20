@@ -106,18 +106,18 @@ public abstract class SharedReactorPartSystem : EntitySystem
         var query = EntityQueryEnumerator<ReactorPartComponent>();
         while (query.MoveNext(out var uid, out var component))
         {
-            if (!_entityManager.HasComponent<RadiationSourceComponent>(uid))
+            if (!HasComp<RadiationSourceComponent>(uid))
             {
                 var radcomp = EnsureComp<RadiationSourceComponent>(uid);
                 radcomp.Intensity = component.Radioactive * 0.1f + component.NRadioactive * 0.15f + component.SpentFuel * 0.125f;
             }
 
-            if (component.NRadioactive > 1 && !_entityManager.HasComponent<PointLightComponent>(uid))
+            if (component.NRadioactive > 1 && !_lightSystem.TryGetLight(uid, out var lightComponent))
             {
-                var lightcomp = _lightSystem.EnsureLight(uid);
-                _lightSystem.SetEnergy(uid, component.NRadioactive, lightcomp);
-                _lightSystem.SetColor(uid, Color.FromHex("#22bbff"), lightcomp);
-                _lightSystem.SetRadius(uid, 1.2f, lightcomp);
+                lightComponent ??= _lightSystem.EnsureLight(uid);
+                _lightSystem.SetEnergy(uid, component.NRadioactive, lightComponent);
+                _lightSystem.SetColor(uid, Color.FromHex("#22bbff"), lightComponent);
+                _lightSystem.SetRadius(uid, 1.2f, lightComponent);
             }
 
             var burncomp = EnsureComp<DamageOnInteractComponent>(uid);
