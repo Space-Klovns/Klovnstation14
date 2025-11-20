@@ -1,8 +1,3 @@
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-# SPDX-FileCopyrightText: 2025 ivo
-#
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
 - type: entity
   parent: ClothingUniformBase
   id: ClothingUniformJumpsuitJuggalo
@@ -12,4 +7,9 @@
     - type: Sprite
       sprite: /Textures/_Clover/Entities/Clothing/Uniforms/juggalo.rsi
     - type: Clothing
-      sprite: /Textures/_Clover/Clothing/Entities/Uniforms/juggalo.rsi
+      sprite: /Textures/_Clover/Entities/Clothing/Uniforms/juggalo.rsi
+
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 ivo
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
