@@ -99,18 +99,15 @@
       params:
         loop: true
         volume: 1.1
-        range: 10
     dangerAlertSound:
       path: /Audio/_KS14/Effects/warning_buzzer.ogg
       params:
         loop: true
         volume: 2
-        range: 10
     manualSilenceSound:
       path: /Audio/_KS14/Effects/parking_button.ogg
       params:
         volume: 2
-        range: 5
 
   - type: NodeContainer
     examinable: true

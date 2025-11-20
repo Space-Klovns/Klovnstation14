@@ -50,8 +50,6 @@
         - ReagentId: Radium
           Quantity: 200
         canReact: false
-  - type: StealTarget
-    stealGroup: ReactorFuelRodSteal
 
 - type: entity
   id: CerenkiteReactorFuelRod
