@@ -123,6 +123,15 @@
             "preLaunchTask": "build"
         },
         {
+            "name": "Server/2 Clients",
+            "configurations": [
+                "Server",
+                "Client",
+                "Client"
+            ],
+            "preLaunchTask": "build"
+        },
+        {
             "name": "Server/Client - Tools",
             "configurations": [
                 "Server - Tools",

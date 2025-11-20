@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+#
+# SPDX-License-Identifier: MPL-2.0
+
+
+# x3'd tc protos
+# `KS14` suffixes are done to prevent epic mapping fails
+
+- type: entity
+  parent: Telecrystal
+  id: Telecrystal3
+  suffix: KS14, 3 TC
+  components:
+  - type: Stack
+    count: 3
+
+- type: entity
+  parent: Telecrystal
+  id: Telecrystal15
+  suffix: KS14, 15 TC
+  components:
+  - type: Stack
+    count: 15
+
+- type: entity
+  parent: Telecrystal
+  id: Telecrystal30
+  suffix: KS14, 30 TC
+  components:
+  - type: Stack
+    count: 30
