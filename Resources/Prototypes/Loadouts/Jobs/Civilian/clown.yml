@@ -41,6 +41,11 @@
   equipment:
     jumpsuit: ClothingUniformJumpsuitJesterAlt
 
+- type: loadout # Clover
+  id: Juggaloshirt
+  equipment:
+    jumpsuit: ClothingUniformJumpsuitJuggalo
+
 # Back
 - type: loadout
   id: ClownBackpack
