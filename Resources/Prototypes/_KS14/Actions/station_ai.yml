@@ -1,0 +1,43 @@
+# Actions
+- type: entity
+  parent: BaseAction
+  id: ActionSelectControlledBot
+  name: Select controlled bot
+  description: Selects a bot for you to control
+  components:
+  - type: Action
+    checkCanInteract: false
+    priority: -9
+    itemIconStyle: BigAction
+    icon:
+      sprite: Interface/Actions/actions_ai.rsi
+      state: ai_core
+  - type: TargetAction
+  - type: EntityTargetAction
+    whitelist:
+      components:
+      - ControllableBot
+    event: !type:SelectControlledBotEvent
+
+- type: entity
+  parent: BaseAction
+  id: ActionMoveControlledBot
+  name: Move controlled bot
+  description: Moves the bot you are currently controlling to any location you select
+  components:
+  - type: Action
+    checkCanInteract: false
+    priority: -9
+    itemIconStyle: BigAction
+    icon:
+      sprite: Interface/Actions/actions_ai.rsi
+      state: camera_light
+  - type: TargetAction
+    range: -1
+    checkCanAccess: false
+  - type: WorldTargetAction
+    whitelist:
+      components:
+      - ControllableBot
+    event: !type:MoveControlledBotToPositionEvent
+

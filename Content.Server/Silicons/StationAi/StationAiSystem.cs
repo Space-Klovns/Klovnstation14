@@ -33,6 +33,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using static Content.Server.Chat.Systems.ChatSystem;
+using Robust.Shared.Map; //KS14
 
 namespace Content.Server.Silicons.StationAi;
 
@@ -456,5 +457,10 @@ public sealed class StationAiSystem : SharedStationAiSystem
         }
 
         return hashSet;
+    }
+
+    public override void TryMoveBot(EntityUid botUid, EntityCoordinates targetCoordinates)
+    {
+        Logger.Error($"serverside code working! received uid {botUid} and coords {targetCoordinates}");
     }
 }
