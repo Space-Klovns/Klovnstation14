@@ -10,7 +10,7 @@ using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
 namespace Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
 
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true)]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true), AutoGenerateComponentPause]
 public sealed partial class NuclearReactorComponent : Component
 {
     public static int ReactorGridWidth = 7;
@@ -139,8 +139,8 @@ public sealed partial class NuclearReactorComponent : Component
     ///     By when can this reactor's temp indicators, radio updates, etc
     ///         update again?
     /// </summary>
-    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), ViewVariables(VVAccess.ReadWrite)]
-    public TimeSpan NextIndicatorUpdateBy = TimeSpan.MinValue;
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField, ViewVariables(VVAccess.ReadWrite)]
+    public TimeSpan NextIndicatorUpdateBy = TimeSpan.Zero; // Rightfully this should be TimeSpan.MinValue but tests don't like that.
 
     /// <summary>
     ///     Offset on the current simulation-time to set <see cref="NextIndicatorUpdateBy"/>, when emagged.
