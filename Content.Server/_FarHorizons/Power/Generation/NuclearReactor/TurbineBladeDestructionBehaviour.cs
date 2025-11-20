@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MIT
+
 using Content.Server.Destructible;
 using Content.Server.Destructible.Thresholds.Behaviors;
 using JetBrains.Annotations;

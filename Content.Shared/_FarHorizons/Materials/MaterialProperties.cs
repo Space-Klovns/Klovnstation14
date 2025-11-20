@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MIT
+
 namespace Content.Shared._FarHorizons.Materials;
 
 /// <summary>

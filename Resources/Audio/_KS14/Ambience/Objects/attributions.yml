@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+#
+# SPDX-License-Identifier: MIT
+
 - files: ["wind_plant_hum.ogg"]
   license: "CC-BY-4.0"
   copyright: "Created by `TimoSchmied` on freesound.org, trimmed and converted to .ogg for Klovnstation 14"
