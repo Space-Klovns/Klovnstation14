@@ -201,11 +201,15 @@ public sealed class TurbineSystem : SharedTurbineSystem
                 }
 
                 comp.Stalling = true;
+                DirtyField(uid, comp, nameof(comp.Stalling));
+
                 UpdateRpm(uid, comp, 0f);
             }
             else
             {
                 comp.Stalling = false;
+                DirtyField(uid, comp, nameof(comp.Stalling));
+
                 UpdateRpm(uid, comp, NextRPM);
             }
 
@@ -230,7 +234,6 @@ public sealed class TurbineSystem : SharedTurbineSystem
             }
 
             comp.LastGen = powerGenerated;
-            comp.Overspeed = comp.RPM > comp.BestRPM * 1.2;
 
             // Damage the turbines during overspeed, linear increase from 18% to 45% then stays at 45%
             if (comp.Overspeed && _random.NextFloat() < 0.15 * Math.Min(comp.RPM / comp.BestRPM, 3))
@@ -261,8 +264,9 @@ public sealed class TurbineSystem : SharedTurbineSystem
 
         _adminLogger.Add(LogType.Explosion, LogImpact.High, $"{ToPrettyString(entity.Owner)}'s turbine blade was destroyed by {(cause == null ? "mechanical causes (possibly overspeeding for too long?)" : ToPrettyString(cause))}");
         entity.Comp.Ruined = true;
-        UpdateRpm(entity, entity!, 0f);
+        DirtyField(entity, nameof(entity.Comp.Ruined));
 
+        UpdateRpm(entity, entity!, 0f);
         UpdateAppearance(entity, entity);
     }
 

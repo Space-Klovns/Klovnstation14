@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
+using System.Linq;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Damage;
 using Content.Shared.Database;
@@ -29,10 +30,10 @@ public abstract class SharedTurbineSystem : EntitySystem
     }
 
     /// <summary>
-    /// Returns a value between 0 and 1 representing how damaged the entity is,
-    /// where 0 is undamaged and 1 is fully damaged.
+    /// Returns a value between 0 and 1 representing how damaged the turbine's blade is,
+    /// where 0 is undamaged and 1 is totally broken. The returned value may be higher than 1.
     /// </summary>
-    /// <returns>How damaged the entity is from 0 to 1</returns>
+    /// <returns>How damaged the entity is from 0.</returns>
     private float GetDamagePercent(Entity<TurbineComponent> entity)
     {
         DamageableComponent? damageableComponent = null;
@@ -82,10 +83,19 @@ public abstract class SharedTurbineSystem : EntitySystem
 
             if (_prototypeManager.Resolve(ent.Comp.DamageMessages, out var proto) && proto.Values.Count > 0)
             {
-                var percent = GetDamagePercent(ent);
-                var level = ContentHelpers.RoundToNearestLevels(GetDamagePercent(ent), 1, proto.Values.Count - 1);
-                var msg = Loc.GetString(proto.Values[level]);
-                args.PushMarkup(msg, priority: 7);
+                var damagePercentage = GetDamagePercent(ent);
+                string message;
+
+                // if the blade is totally broken, use the last message
+                if (damagePercentage >= 1f)
+                    message = Loc.GetString(proto.Values[^1]);
+                else
+                {
+                    var level = ContentHelpers.RoundToNearestLevels(damagePercentage, 1, proto.Values.Count - 2); // exclude the last message
+                    message = Loc.GetString(proto.Values[level]);
+                }
+
+                args.PushMarkup(message, priority: 7);
             }
         }
     }

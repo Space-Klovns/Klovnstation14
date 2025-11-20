@@ -6,7 +6,6 @@ using Content.Shared.Atmos;
 using Content.Shared.Damage;
 using Content.Shared.Dataset;
 using Content.Shared.FixedPoint;
-using Content.Shared.Tools;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 
@@ -93,14 +92,13 @@ public sealed partial class TurbineComponent : Component
     /// <summary>
     /// Flag for indicating that energy available is less than needed to turn the turbine
     /// </summary>
-    [DataField]
+    [DataField, AutoNetworkedField]
     public bool Stalling = false;
 
     /// <summary>
     /// Flag for RPM being > BestRPM*1.2
     /// </summary>
-    [DataField]
-    public bool Overspeed = false;
+    public bool Overspeed => RPM > BestRPM * 1.2;
 
     /// <summary>
     /// Flag for gas tempurature being > MaxTemp - 500
