@@ -34,6 +34,8 @@ using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using static Content.Server.Chat.Systems.ChatSystem;
 using Robust.Shared.Map; //KS14
+using Content.Server.NPC; //KS14
+using Content.Server.NPC.Systems; //KS14
 
 namespace Content.Server.Silicons.StationAi;
 
@@ -56,6 +58,7 @@ public sealed class StationAiSystem : SharedStationAiSystem
     [Dependency] private readonly IPrototypeManager _proto = default!;
     [Dependency] private readonly MobStateSystem _mobState = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
+    [Dependency] private readonly NPCSystem _npc = default!; //KS14
 
     private readonly HashSet<Entity<StationAiCoreComponent>> _stationAiCores = new();
 
@@ -458,9 +461,11 @@ public sealed class StationAiSystem : SharedStationAiSystem
 
         return hashSet;
     }
-
+    //KS14 start
     public override void TryMoveBot(EntityUid botUid, EntityCoordinates targetCoordinates)
     {
         Logger.Error($"serverside code working! received uid {botUid} and coords {targetCoordinates}");
+        _npc.SetBlackboard(botUid, NPCBlackboard.FollowTarget, targetCoordinates);
     }
+    //KS14 end
 }

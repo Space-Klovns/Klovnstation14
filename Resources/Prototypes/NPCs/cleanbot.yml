@@ -3,10 +3,25 @@
   branches:
     - tasks:
         - !type:HTNCompoundTask
+          task: BotMoveToCoordinatesCompound
+    - tasks:
+        - !type:HTNCompoundTask
           task: BufferNearbyPuddlesCompound
     - tasks:
         - !type:HTNCompoundTask
           task: IdleCompound
+
+- type: htnCompound
+  id: BotMoveToCoordinatesCompound
+  branches:
+    # Head to follow target
+    - tasks:
+        - !type:HTNPrimitiveTask
+          operator: !type:MoveToOperator
+            pathfindInPlanning: true
+            targetKey: FollowTarget
+            rangeKey: FollowCloseRange
+            removeKeyOnFinish: true
 
 # Picks a random puddle in range to move to and idle
 - type: htnCompound
