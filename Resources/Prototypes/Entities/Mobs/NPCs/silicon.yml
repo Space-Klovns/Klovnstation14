@@ -1,3 +1,53 @@
+# SPDX-FileCopyrightText: 2022 Alex Evgrashin
+# SPDX-FileCopyrightText: 2022 Anthemic
+# SPDX-FileCopyrightText: 2022 Justin Trotter
+# SPDX-FileCopyrightText: 2022 Morb
+# SPDX-FileCopyrightText: 2022 Rane
+# SPDX-FileCopyrightText: 2023 Arendian
+# SPDX-FileCopyrightText: 2023 DrSmugleaf
+# SPDX-FileCopyrightText: 2023 Emisse
+# SPDX-FileCopyrightText: 2023 Filler
+# SPDX-FileCopyrightText: 2023 Ilya246
+# SPDX-FileCopyrightText: 2023 Jezithyr
+# SPDX-FileCopyrightText: 2023 Kara
+# SPDX-FileCopyrightText: 2023 Leon Friedrich
+# SPDX-FileCopyrightText: 2023 Nairod
+# SPDX-FileCopyrightText: 2023 OttoMaticode
+# SPDX-FileCopyrightText: 2023 Thom
+# SPDX-FileCopyrightText: 2023 Whisper
+# SPDX-FileCopyrightText: 2023 brainfood1183
+# SPDX-FileCopyrightText: 2023 deltanedas
+# SPDX-FileCopyrightText: 2023 lzk228
+# SPDX-FileCopyrightText: 2023 themias
+# SPDX-FileCopyrightText: 2024 Cojoke
+# SPDX-FileCopyrightText: 2024 Golinth
+# SPDX-FileCopyrightText: 2024 LittleNyanCat
+# SPDX-FileCopyrightText: 2024 Moomoobeef
+# SPDX-FileCopyrightText: 2024 Plykiya
+# SPDX-FileCopyrightText: 2024 PrPleGoo
+# SPDX-FileCopyrightText: 2024 Psychpsyo
+# SPDX-FileCopyrightText: 2024 TsjipTsjip
+# SPDX-FileCopyrightText: 2024 Vasilis
+# SPDX-FileCopyrightText: 2024 Verm
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2024 no
+# SPDX-FileCopyrightText: 2024 superjj18
+# SPDX-FileCopyrightText: 2024 voidnull000
+# SPDX-FileCopyrightText: 2025 AsnDen
+# SPDX-FileCopyrightText: 2025 Errant
+# SPDX-FileCopyrightText: 2025 Flareguy
+# SPDX-FileCopyrightText: 2025 Nemanja
+# SPDX-FileCopyrightText: 2025 Princess Cheeseballs
+# SPDX-FileCopyrightText: 2025 Tayrtahn
+# SPDX-FileCopyrightText: 2025 chromiumboy
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 godisdeadLOL
+# SPDX-FileCopyrightText: 2025 lzk
+# SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2025 slarticodefast
+#
+# SPDX-License-Identifier: MPL-2.0
+
 # Used for generic robotic entities (like Hivelords)
 - type: entity
   save: false
@@ -158,6 +208,7 @@
   - type: Vocalizer
   - type: DatasetVocalizer
     dataset: FirebotAd
+  - type: ControllableBot #KS14
 
 - type: entity
   parent: MobSiliconBase
@@ -177,7 +228,7 @@
     state: honkbot
   - type: HTN
     rootTask:
-      task: HonkbotCompound
+      task: BasicBotCompound
   - type: Slippery
     slipData:
       launchForwardsMultiplier: 2
@@ -221,6 +272,7 @@
       path: /Audio/Items/bikehorn.ogg
       params:
         variation: 0.125
+  - type: ControllableBot #KS14
 
 - type: entity
   parent: MobHonkBot
@@ -307,6 +359,7 @@
     interactFailureString: petting-failure-cleanbot
     interactSuccessSound:
       path: /Audio/Ambience/Objects/periodic_beep.ogg
+  - type: ControllableBot #KS14
 
 - type: entity
   parent:
@@ -358,6 +411,7 @@
   - type: Inventory
     templateId: medibot
   - type: DoAfter
+  - type: ControllableBot #KS14
 
 - type: entity
   parent:
@@ -389,6 +443,10 @@
     interactFailureString: petting-failure-mimebot
   - type: Inventory
     templateId: head
+  - type: HTN
+    rootTask:
+      task: BasicBotCompound
+  - type: ControllableBot #KS14
 
 - type: entity
   parent: MobSiliconBase
@@ -460,3 +518,7 @@
     - Supply
   - type: Puller
     needsHands: false
+  - type: HTN
+    rootTask:
+      task: BasicBotCompound
+  - type: ControllableBot #KS14

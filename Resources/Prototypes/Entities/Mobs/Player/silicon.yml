@@ -97,6 +97,8 @@
     - ActionJumpToCore
     - ActionSurvCameraLights
     - ActionAIViewLaws
+    - ActionSelectControlledBot #KS14
+    - ActionMoveControlledBot #KS14
   - type: UserInterface
     interfaces:
       enum.RadarConsoleUiKey.Key:

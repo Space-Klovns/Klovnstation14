@@ -197,3 +197,9 @@ Entries:
         security lathes.
   id: 25
   time: '2025-11-21T02:32:43.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: The station AI can now move bots around.
+  id: 26
+  time: '2025-11-21T20:45:55.0000000+00:00'

@@ -1,13 +1,15 @@
 # SPDX-FileCopyrightText: 2023 metalgearsloth
-# SPDX-FileCopyrightText: 2024 superjj18
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
 # SPDX-License-Identifier: MPL-2.0
 
 - type: htnCompound
-  id: HonkbotCompound #KS14 - unused in favor of basicbotcompound because every single bot needs to be at least steerable.
+  id: BasicBotCompound
   branches:
+    - tasks:
+        - !type:HTNCompoundTask
+          task: MoveToCoordinatesCompound
     - tasks:
         - !type:HTNCompoundTask
           task: IdleCompound

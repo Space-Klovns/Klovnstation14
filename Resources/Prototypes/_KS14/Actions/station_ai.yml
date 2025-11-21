@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
+# Actions
+- type: entity
+  parent: BaseAction
+  id: ActionSelectControlledBot
+  name: Select controlled bot
+  description: Selects a bot for you to control
+  components:
+  - type: Action
+    checkCanInteract: false
+    priority: -11
+    itemIconStyle: BigAction
+    icon:
+      sprite: _KS14/Interface/Actions/actions_ai.rsi
+      state: select_bot
+  - type: TargetAction
+  - type: EntityTargetAction
+    whitelist:
+      components:
+      - ControllableBot
+    event: !type:SelectControlledBotEvent
+
+- type: entity
+  parent: BaseAction
+  id: ActionMoveControlledBot
+  name: Move controlled bot
+  description: Moves the bot you are currently controlling to any location you select
+  components:
+  - type: Action
+    checkCanInteract: false
+    priority: -10
+    itemIconStyle: BigAction
+    icon:
+      sprite: _KS14/Interface/Actions/actions_ai.rsi
+      state: move_bot
+  - type: TargetAction
+    range: -1
+    checkCanAccess: false
+  - type: WorldTargetAction
+    event: !type:MoveControlledBotToPositionEvent
+
