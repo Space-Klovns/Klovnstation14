@@ -1,0 +1,11 @@
+- type: htnCompound
+  id: MoveToCoordinatesCompound
+  branches:
+    # Head to coords, when in melee range delete the key and proceed as normal.
+    - tasks:
+        - !type:HTNPrimitiveTask
+          operator: !type:MoveToOperator
+            pathfindInPlanning: true
+            targetKey: FollowTarget
+            rangeKey: FollowCloseRange
+            removeKeyOnFinish: true

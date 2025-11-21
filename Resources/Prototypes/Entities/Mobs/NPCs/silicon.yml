@@ -158,6 +158,7 @@
   - type: Vocalizer
   - type: DatasetVocalizer
     dataset: FirebotAd
+  - type: ControllableBot #KS14
 
 - type: entity
   parent: MobSiliconBase
@@ -177,7 +178,7 @@
     state: honkbot
   - type: HTN
     rootTask:
-      task: HonkbotCompound
+      task: BasicBotCompound
   - type: Slippery
     slipData:
       launchForwardsMultiplier: 2
@@ -221,6 +222,7 @@
       path: /Audio/Items/bikehorn.ogg
       params:
         variation: 0.125
+  - type: ControllableBot #KS14
 
 - type: entity
   parent: MobHonkBot
@@ -359,6 +361,7 @@
   - type: Inventory
     templateId: medibot
   - type: DoAfter
+  - type: ControllableBot #KS14
 
 - type: entity
   parent:
@@ -390,6 +393,10 @@
     interactFailureString: petting-failure-mimebot
   - type: Inventory
     templateId: head
+  - type: HTN
+    rootTask:
+      task: BasicBotCompound
+  - type: ControllableBot #KS14
 
 - type: entity
   parent: MobSiliconBase
@@ -461,3 +468,7 @@
     - Supply
   - type: Puller
     needsHands: false
+  - type: HTN
+    rootTask:
+      task: BasicBotCompound
+  - type: ControllableBot #KS14

@@ -1,0 +1,9 @@
+- type: htnCompound
+  id: BasicBotCompound
+  branches:
+    - tasks:
+        - !type:HTNCompoundTask
+          task: MoveToCoordinatesCompound
+    - tasks:
+        - !type:HTNCompoundTask
+          task: IdleCompound

@@ -3,6 +3,9 @@
   branches:
     - tasks:
         - !type:HTNCompoundTask
+          task: MoveToCoordinatesCompound
+    - tasks:
+        - !type:HTNCompoundTask
           task: InjectNearbyCompound
     - tasks:
         - !type:HTNCompoundTask
