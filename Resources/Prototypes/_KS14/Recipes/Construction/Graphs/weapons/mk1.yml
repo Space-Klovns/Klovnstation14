@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 - type: constructionGraph
-  id: mk1
+  id: mk1Graph
   start: start
   graph:
   - node: start
@@ -21,8 +21,6 @@
           sprite: Objects/Misc/modular_receiver.rsi
           state: icon
         name: construction-graph-tag-modular-receiver
-      - material: Steel
-        amount: 1
       - material: MetalRod #gun spring replacement, who cares
         amount: 1
         doAfter: 5
@@ -34,28 +32,23 @@
       steps:
       - tool: Welding #welding the barrel to the frame
         fuel: 5
-        doAfter: 2
+        doAfter: 3
       - tool: Screwing #screwing in the modular reciever
-        doAfter: 1
+        doAfter: 2
       - material: Steel #the handle
         amount: 1
         doAfter: 1
       - tool: Welding
         fuel: 5
-        doAfter: 2
+        doAfter: 3
 
   - node: mk1unfinishedhandle
     entity: mk1unfinishedhandle
     edges:
     - to: mk1
       steps:
-      - material: Steel #slide cover
-        amount: 1
-      - tool: Welding
-        fuel: 5
-        doAfter: 1.5
       - tool: Anchoring #final wrenching, putting on slide cover
-        doAfter: 4.5
+        doAfter: 4
 
   - node: mk1
     entity: WeaponPistolMk1

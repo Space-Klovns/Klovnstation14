@@ -16,7 +16,7 @@
 
 - type: construction
   id: mk1
-  graph: mk1
+  graph: mk1Graph
   startNode: start
   targetNode: mk1
   category: construction-category-weapons

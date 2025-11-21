@@ -28,7 +28,34 @@
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/mk58.ogg
       params:
-        volume: +3
+        volume: 3
+  - type: Construction
+    graph: mk1Graph
+    node: mk1
+
+# TODO use this for mk1 construction when you can craft mags etc
+- type: entity
+  parent: WeaponPistolMk1
+  id: WeaponPistolMk1Empty
+  suffix: Empty
+  components:
+  - type: ItemSlots # taken from BaseWeaponPistol, but doesn't have starting-item
+    slots:
+      gun_magazine:
+        name: Magazine
+        insertSound: /Audio/Weapons/Guns/MagIn/pistol_magin.ogg
+        ejectSound: /Audio/Weapons/Guns/MagOut/pistol_magout.ogg
+        priority: 2
+        whitelist:
+          tags:
+            - MagazinePistol
+        whitelistFailPopup: gun-magazine-whitelist-fail
+      gun_chamber:
+        name: Chamber
+        priority: 1
+        whitelist:
+          tags:
+            - CartridgePistol
 
 # MK1 CRAFTING ENTITIES
 
@@ -46,7 +73,7 @@
     sprite: _KS14/Objects/Weapons/Guns/Pistols/mk1_unfinished.rsi
     state: iconunfinishedone
   - type: Construction
-    graph: mk1
+    graph: mk1Graph
     node: mk1unfinishednohandle
 
 - type: entity
@@ -60,5 +87,5 @@
     - state: icon_unfinished2
   - type: Item
   - type: Construction
-    graph: mk1
+    graph: mk1Graph
     node: mk1unfinishedhandle
