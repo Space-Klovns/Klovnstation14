@@ -39,7 +39,6 @@
 # SPDX-FileCopyrightText: 2025 SlamBamActionman
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 lzk
-# SPDX-FileCopyrightText: 2025 nabegator220
 #
 # SPDX-License-Identifier: MPL-2.0
 
@@ -120,10 +119,6 @@
     solutions:
       melee:
         maxVol: 2
-  - type: CursorOffsetRequiresWield
-  - type: EyeCursorOffset
-    maxOffset: 2
-    pvsIncrease: 0.2
   - type: MeleeChemicalInjector
     solution: melee
   - type: RefillableSolution
@@ -171,8 +166,8 @@
   #   sprintModifier: 0.25
   - type: CursorOffsetRequiresWield
   - type: EyeCursorOffset
-    maxOffset: 4
-    pvsIncrease: 0.4
+    maxOffset: 3
+    pvsIncrease: 0.3
   - type: StaticPrice
     price: 3500
   # KS14 change, removed speed debuff for wielding Hristov

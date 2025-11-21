@@ -1,9 +1,3 @@
-// SPDX-FileCopyrightText: 2023 metalgearsloth
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
-// SPDX-FileCopyrightText: 2025 nabegator220
-//
-// SPDX-License-Identifier: MPL-2.0
-
 using System.Numerics;
 using Content.Shared.Movement.Systems;
 using Robust.Shared.GameStates;
@@ -20,11 +14,11 @@ public sealed partial class ContentEyeComponent : Component
     /// Zoom we're lerping to.
     /// </summary>
     [DataField("targetZoom"), AutoNetworkedField]
-    public Vector2 TargetZoom = new Vector2(0.7f, 0.7f);
+    public Vector2 TargetZoom = Vector2.One;
 
     /// <summary>
     /// How far we're allowed to zoom out.
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite), DataField("maxZoom"), AutoNetworkedField]
-    public Vector2 MaxZoom = new Vector2(0.7f, 0.7f);
+    public Vector2 MaxZoom = Vector2.One;
 }
