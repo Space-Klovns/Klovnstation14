@@ -4,9 +4,9 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 - type: entity
-  name: mk 1
   parent: [BaseWeaponPistol, BaseMajorContraband]
   id: WeaponPistolMk1
+  name: mk 1
   description: The first prototype of the Mk58, the Mk1 is a rather outdated semi-automatic pistol with a simple recoil-operated action, lacking the major improvements in both accuracy and firing speed made by the later models. Its simple design makes it a favorite among more illicit manufacturers. Feeds from .35 pistol magazines.
   components:
   - type: Sprite
@@ -30,36 +30,33 @@
         volume: +3
 
 # MK1 CRAFTING ENTITIES
-#sprites still dont work *gulps
-#edit two, sprites still dont work
-#*gulps
 
 - type: entity
-  name: Unfinished Mk 1
   parent: BaseItem
   id: mk1unfinishednohandle
-  description: The start of something beautiful.
+  name: unfinished mk 1
+  description: An mk 1 that's still being constructed. The start of something beautiful.
   components:
   - type: Sprite
-    sprite: _KS14/Objects/Weapons/Guns/Pistols/mk1unfinished.rsi
-    state: iconunfinishedone
+    sprite: _KS14/Objects/Weapons/Guns/Pistols/mk1_unfinished.rsi
+    layers:
+    - state: icon_unfinished1
   - type: Item
-    sprite: _KS14/Objects/Weapons/Guns/Pistols/mk1unfinished
+    sprite: _KS14/Objects/Weapons/Guns/Pistols/mk1_unfinished.rsi
     state: iconunfinishedone
   - type: Construction
     graph: mk1
     node: mk1unfinishednohandle
 
 - type: entity
-  name: Unfinished Mk 1
-  parent: BaseItem
+  parent: mk1unfinishednohandle
   id: mk1unfinishedhandle
-  description: The start of something beautiful.
+  name: partially finished mk 1
+  description: An almost-finished mk 1.
   components:
   - type: Sprite
-    sprite: _KS14/Objects/Weapons/Guns/Pistols/mk1unfinished.rsi
     layers:
-    - state: iconunfinishedtwo
+    - state: icon_unfinished2
   - type: Item
   - type: Construction
     graph: mk1

@@ -9,10 +9,10 @@
     },
     "states": [
         {
-            "name": "iconunfinishedone"
+            "name": "icon_unfinished1"
         },
         {
-            "name": "iconunfinishedtwo"
+            "name": "icon_unfinished2"
         }
     ]
 }
