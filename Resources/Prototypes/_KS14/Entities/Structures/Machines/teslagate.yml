@@ -5,7 +5,7 @@
 
 
 - type: entity
-  parent: BaseMachinePowered
+  parent: [BaseMachinePowered, ConstructibleMachine]
   id: TeslaGate
   name: tesla gate
   suffix: "1x1, 3.2 sec"
