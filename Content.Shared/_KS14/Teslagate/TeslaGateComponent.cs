@@ -73,7 +73,7 @@ public sealed partial class TeslaGateComponent : Component
     ///         Must be lowercase.
     /// </summary>
     [DataField, ViewVariables(VVAccess.ReadWrite)]
-    public List<string> EnabledAlertLevels = new() { "red", "violet", "epsilon", "delta", "gamma", "omicron" };
+    public List<string> EnabledAlertLevels = new() { "red", "violet", "epsilon", "delta" };
 
 
     [DataField, ViewVariables(VVAccess.ReadWrite)]
