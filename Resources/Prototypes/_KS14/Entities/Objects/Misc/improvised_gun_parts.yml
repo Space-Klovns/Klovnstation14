@@ -11,6 +11,7 @@
   components:
   - type: Sprite
     sprite: _KS14/Objects/Misc/pistol_barrel.rsi
+    state: icon
   - type: Tag
     tags:
     - PistolBarrel

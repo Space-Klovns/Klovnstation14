@@ -13,7 +13,7 @@
       steps:
       - tag: PistolBarrel
         icon:
-          sprite: Objects/Misc/modular_receiver.rsi #TEMPPPPP, grrr
+          sprite: _KS14/Objects/Misc/pistol_barrel.rsi
           state: icon
         name: construction-graph-tag-pistol-barrel
       - tag: ModularReceiver
@@ -22,9 +22,9 @@
           state: icon
         name: construction-graph-tag-modular-receiver
       - material: Steel
-        amount: 4
+        amount: 1
       - material: MetalRod #gun spring replacement, who cares
-        amount: 2
+        amount: 1
         doAfter: 5
 
   - node: mk1unfinishednohandle
@@ -33,12 +33,12 @@
     - to: mk1unfinishedhandle
       steps:
       - tool: Welding #welding the barrel to the frame
-        fuel: 10
-        doAfter: 4
-      - tool: Screwing #screwing in the modular reciever
+        fuel: 5
         doAfter: 2
+      - tool: Screwing #screwing in the modular reciever
+        doAfter: 1
       - material: Steel #the handle
-        amount: 4
+        amount: 1
         doAfter: 1
       - tool: Welding
         fuel: 5
@@ -53,9 +53,9 @@
         amount: 1
       - tool: Welding
         fuel: 5
-        doAfter: 2
+        doAfter: 1.5
       - tool: Anchoring #final wrenching, putting on slide cover
-        doAfter: 5
+        doAfter: 4.5
 
   - node: mk1
     entity: WeaponPistolMk1
