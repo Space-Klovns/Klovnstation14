@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseItem
+  id: PistolBarrel
+  name: pistol barrel
+  description: Without this, you're basically just popping firecrackers next to rocks.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Misc/pistol_barrel.rsi
+    layers:
+    - state: icon
+  - type: Tag
+    tags:
+    - PistolBarrel
+    - Metal

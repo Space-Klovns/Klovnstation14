@@ -1,15 +1,12 @@
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 jhrushbe
+// SPDX-FileCopyrightText: 2025 rottenheadphones
 //
 // SPDX-License-Identifier: MPL-2.0
 
-using System.Numerics;
-using Content.Client.UserInterface;
 using Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
-using Content.Shared.Atmos.Piping.Binary.Components;
-using Content.Shared.Atmos.Piping.Unary.Components;
-using Content.Shared.IdentityManagement;
 using JetBrains.Annotations;
-using Robust.Client.Timing;
 using Robust.Client.UserInterface;
 
 namespace Content.Client._FarHorizons.Power.UI;
@@ -36,6 +33,7 @@ public sealed class NuclearReactorBoundUserInterface : BoundUserInterface
 
         _window.ItemActionButtonPressed += OnActionButtonPressed;
         _window.EjectButtonPressed += OnEjectButtonPressed;
+        _window.SilenceButtonPressed += OnSilenceButtonPressed;
         _window.ControlRodModify += OnControlRodModify;
 
         Update();
@@ -51,7 +49,7 @@ public sealed class NuclearReactorBoundUserInterface : BoundUserInterface
 
     private void OnActionButtonPressed(Vector2d vector)
     {
-        if (_window is null ) return;
+        if (_window is null) return;
 
         SendPredictedMessage(new ReactorItemActionMessage(vector));
     }
@@ -61,6 +59,13 @@ public sealed class NuclearReactorBoundUserInterface : BoundUserInterface
         if (_window is null) return;
 
         SendPredictedMessage(new ReactorEjectItemMessage());
+    }
+
+    private void OnSilenceButtonPressed()
+    {
+        if (_window is null) return;
+
+        SendPredictedMessage(new ReactorSilenceAlarmsMessage());
     }
 
     private void OnControlRodModify(float amount)

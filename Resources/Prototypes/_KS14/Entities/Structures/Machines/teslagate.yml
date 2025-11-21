@@ -1,0 +1,131 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+
+
+- type: entity
+  parent: [BaseMachinePowered, ConstructibleMachine]
+  id: TeslaGate
+  name: tesla gate
+  suffix: "1x1, 3.2 sec"
+  description: It keeps people like you from walking through
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    noRot: false
+  - type: Physics
+    bodyType: Static
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.TeslaGateVisuals.ShockingState:
+        electricity:
+          Inactive: { visible: false }
+          Active: { state: elec_anim, visible: true }
+        #sparks: # currently unused
+          #Inactive: { state: none }
+          #Ready: { state: none }
+          #Active: { state: coils_ready }
+  - type: Machine
+    board: TeslaGateCircuitboard
+  - type: Sprite
+    drawdepth: Overdoors
+    sprite: _KS14/Structures/Machines/teslagate.rsi
+    noRot: true
+    layers:
+    - state: base
+    - state: elec_anim
+      visible: false
+      shader: unshaded
+      map: ["electricity"]
+    #- state: none
+    #  shader: unshaded
+    #  map: ["sparks"]
+    - state: wires
+      map: ["enum.WiresVisualLayers.MaintenancePanel"]
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.3, -0.3, 0.3, 0.3"
+        hard: false
+        density: 2000
+        mask:
+        - DoorPassable
+        layer:
+        - AirlockLayer
+  - type: TeslaGate
+    pulseInterval: 3.2
+    shockDamage:
+      types:
+        Shock: 70
+    shockSound:
+      path: /Audio/Effects/Lightning/lightningshock.ogg
+      params:
+        maxDistance: 8.2
+        volume: -1.7
+    startingSound:
+      path: /Audio/Effects/poster_being_set.ogg
+      params:
+        maxDistance: 8
+        volume: -5
+  - type: WiresPanel
+  - type: WiresPanelSecurity
+  - type: WiresVisuals
+  - type: Wires
+    layoutId: TeslaGate
+    boardName: wires-board-name-teslagate
+  - type: UserInterface
+    interfaces:
+      enum.WiresUiKey.Key:
+        type: WiresBoundUserInterface
+  - type: PointLight
+    enabled: false
+    color: "#4080FF"
+    radius: 3.5
+    softness: 1
+    autoRot: true
+
+- type: entity
+  parent: TeslaGate
+  id: TeslaGateQuick
+  name: overcharged tesla gate
+  description: Oh no. Yeah, you're not getting through that.
+  suffix: "1x1, 1.5 sec"
+  components:
+  - type: TeslaGate
+    pulseInterval: 1.5
+
+- type: entity
+  parent: BaseMachineCircuitboard
+  id: TeslaGateCircuitboard
+  name: tesla gate machine board
+  description: An electronics board used in contraband detector.
+  components:
+  - type: Sprite
+    state: security
+  - type: MachineBoard
+    prototype: TeslaGate
+    stackRequirements:
+      Steel: 5
+      Manipulator: 3 # TODO: make this capacitor, ffs.
+  - type: StaticPrice
+    price: 1000
+
+- type: entity
+  parent: BaseFlatpack
+  id: TeslaGateFlatpack
+  name: tesla gate flatpack
+  description: A flatpack used for constructing a tesla gate.
+  components:
+  - type: Flatpack
+    entity: TeslaGate
+  - type: Sprite
+    layers:
+    - state: fax-machine
+  - type: StaticPrice
+    price: 1500

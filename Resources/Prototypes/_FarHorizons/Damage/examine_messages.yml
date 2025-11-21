@@ -1,0 +1,5 @@
+- type: localizedDataset
+  id: TurbineDamageMessages
+  values:
+    prefix: turbine-damaged-
+    count: 5

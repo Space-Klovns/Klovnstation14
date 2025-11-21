@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MIT
+
+- files: ["warning_buzzer.ogg"]
+  license: "CC0-1.0"
+  copyright: "Created by `qubodup` on freesound.org, edited and converted to Mono and .ogg for Klovnstation 14"
+  source: "https://freesound.org/people/qubodup/sounds/832414/"
+
+- files: ["parking_button.ogg"]
+  license: "CC0-1.0"
+  copyright: "Created by `Dooto` on freesound.org, edited and converted to .ogg for Klovnstation 14"
+  source: "https://freesound.org/people/Dooto/sounds/719086/"

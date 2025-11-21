@@ -1,3 +1,5 @@
+# KS14: Made alot of changes here to base reactor logic. Have fun finding out what.
+
 - type: entity
   id: BaseNuclearReactor
   parent: BaseStructure
@@ -88,6 +90,25 @@
   - type: Anchorable
     flags:
     - Anchorable
+
+  # Reactor comps
+  - type: NuclearReactor
+    prefab: normal
+    warningAlertSound:
+      path: /Audio/_FarHorizons/Machines/alarm_beep.ogg
+      params:
+        loop: true
+        volume: 1.1
+    dangerAlertSound:
+      path: /Audio/_KS14/Effects/warning_buzzer.ogg
+      params:
+        loop: true
+        volume: 2
+    manualSilenceSound:
+      path: /Audio/_KS14/Effects/parking_button.ogg
+      params:
+        volume: 2
+
   - type: NodeContainer
     examinable: true
     nodes:
@@ -97,14 +118,14 @@
         pipeDirection: West
         volume: 1000
         offsetEast: -3
-        offsetNorth: 0
+        offsetNorth: -1
       outlet:
         !type:OffsetPipeNode
         nodeGroupID: Pipe
         pipeDirection: East
         volume: 1000
         offsetEast: 3
-        offsetNorth: 0
+        offsetNorth: 1
   - type: AtmosDevice
   - type: RadiationSource
     intensity: 0
@@ -117,8 +138,28 @@
         whitelist:
           components:
             - ReactorPart
-  - type: NuclearReactor
-    prefab: normal
+
+  # Guidebook
+  - type: GuideHelp
+    guides:
+    - NuclearReactor
+    - Power
+
+  # Extra logic comps
+  - type: AlertLevelChangeOnTrigger
+    level: Yellow
+    announce: false
+    force: true
+
+  # Explosive
+  - type: Explosive
+    explosionType: HardBomb
+    intensitySlope: 1
+    maxIntensity: 6
+    tileBreakScale: 0.5
+    canCreateVacuum: true
+
+  # UI
   - type: ActivatableUI
     key: enum.NuclearReactorUiKey.Key
   - type: ActivatableUIRequiresAnchor
@@ -126,10 +167,21 @@
     interfaces:
       enum.NuclearReactorUiKey.Key:
         type: NuclearReactorBoundUserInterface
+
+  # Access
   - type: AccessReader # You got a permit for that meltdown?
     access: [["Engineering"]]
   - type: Lock
     unlockOnClick: false
+
+  # Sound
+  - type: AmbientSound
+    enabled: false
+    volume: -6
+    range: 12
+    sound:
+      path: /Audio/_KS14/Ambience/Objects/wind_plant_hum.ogg
+
 
 # KS14 - Debug variant
 - type: entity
@@ -152,7 +204,7 @@
 # KS14 - Debug variant
 - type: entity
   parent: BaseNuclearReactor
-  id: NuclearReactorMeltdown
+  id: NuclearReactorAlignment
   suffix: Debug, Alignment
   components:
   - type: NuclearReactor
@@ -164,6 +216,11 @@
   name: reactor component
   categories: [ HideSpawnMenu ]
   components:
+  - type: Transform
+    noRot: true
+  - type: Tag
+    tags:
+    - HideContextMenu
   - type: Sprite
     sprite: _FarHorizons/Structures/Power/Generation/FissionGenerator/reactor_component_cap.rsi
     drawdepth: 1
@@ -197,5 +254,86 @@
           HeatM3: { state: heat_cap_melted_3 }
           HeatM4: { state: heat_cap_melted_4 }
   - type: Appearance
+
+# Nuclear debris resultant from a meltdown
+- type: entity
+  id: NuclearDebrisChunk
+  parent: BaseItem
+  name: metal chunk
+  description: You did not see graphite on the roof. You're in shock. Report to medical.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Materials/Scrap/generic.rsi
+    layers:
+    - state: metal-1
+      map: [ "base" ]
+  - type: Item
+    sprite: Objects/Materials/Scrap/generic.rsi
+    size: Huge
+  - type: MultiHandedItem
+  - type: RandomSprite
+    available:
+    - base:
+        metal-1: ""
+        metal-2: ""
+        metal-3: ""
+  - type: RadiationSource
+    intensity: 4.6
+  - type: PointLight
+    color: "#42a1eb"
+    energy: 2
+    radius: 1.5
+
+# Arrow to indicate flow
+- type: entity
+  id: ReactorFlowArrow
+  categories: [ HideSpawnMenu ]
+  components:
+    - type: Sprite
+      sprite: Markers/teg_arrow.rsi
+      color: "#FFFFFFBB"
+      layers:
+        - state: arrow
+          rotation: 90
+          offset: 2.75, 1
+        - state: arrow
+          rotation: 90
+          offset: -2.75, -1
+    - type: TimedDespawn
+      lifetime: 2
+    - type: Tag
+      tags:
+      - HideContextMenu
+
+# Mapping prefab
+- type: entity
+  parent: BaseStructure
+  id: NuclearReactorDestroyed
+  name: destroyed nuclear reactor
+  description: What a crisis. You should really get away from this.
+  suffix: Mapping
+  components:
   - type: Transform
     noRot: true
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-2.5,-2.5,2.5,2.5"
+        density: 190
+        mask:
+        - MachineMask
+        layer:
+        - MachineLayer
+  - type: Sprite
+    sprite: _FarHorizons/Structures/Power/Generation/FissionGenerator/nuclear_reactor.rsi
+    layers:
+    - state: reactorbroken
+      map: [ "enum.ReactorVisualLayers.Sprite" ]
+  - type: InteractionOutline
+  - type: RadiationSource
+    intensity: 0
