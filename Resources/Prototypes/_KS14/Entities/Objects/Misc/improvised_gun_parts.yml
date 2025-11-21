@@ -10,7 +10,7 @@
   description: Without this, you're basically just popping firecrackers next to rocks.
   components:
   - type: Sprite
-    sprite: _KS/Objects/Misc/pistol_barrel.rsi #updatelog number 99, still doesnt work
+    sprite: _KS14/Objects/Misc/pistol_barrel.rsi
   - type: Tag
     tags:
     - PistolBarrel
