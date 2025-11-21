@@ -1,6 +1,5 @@
 using Content.Shared._KS14.TeslaGate;
 using Content.Shared.Damage;
-using Robust.Shared.Audio.Systems;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
@@ -121,7 +120,7 @@ public sealed class TeslaGateSystem : SharedTeslaGateSystem
 
     private void OnAlertLevelChanged(AlertLevelChangedEvent alertEvent)
     {
-        if (!TryComp<AlertLevelComponent>(alertEvent.Station, out var alertLevelComponent))
+        if (!TryComp<AlertLevelComponent>(alertEvent.Station, out var _))
             return;
 
         var alertLevel = alertEvent.AlertLevel;

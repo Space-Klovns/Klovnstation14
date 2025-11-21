@@ -50,12 +50,16 @@ public abstract class SharedTeslaGateSystem : EntitySystem
 
         ResetAccumulator(teslaGateComponent);
         teslaGateComponent.Enabled = true;
+
+        Dirty(teslaGate);
     }
 
     public void Disable(Entity<TeslaGateComponent> teslaGate)
     {
         teslaGate.Comp.Enabled = false;
         ResetAccumulator(teslaGate);
+
+        Dirty(teslaGate);
     }
 
     private void OnPowerChange(Entity<TeslaGateComponent> teslaGate, ref PowerChangedEvent args)
@@ -70,8 +74,8 @@ public abstract class SharedTeslaGateSystem : EntitySystem
         }
         else
         {
+            teslaGate.Comp.WasDisabledByPower |= teslaGate.Comp.Enabled;
             Disable(teslaGate);
-            teslaGate.Comp.WasDisabledByPower = true;
         }
     }
 

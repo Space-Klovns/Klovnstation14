@@ -10,7 +10,7 @@ namespace Content.Shared._KS14.TeslaGate;
 /// <summary>
 ///     This is used for tesla gate and storing the time it has to / from the next pulse
 /// </summary>
-[RegisterComponent, NetworkedComponent]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class TeslaGateComponent : Component
 {
     /// <summary>
@@ -37,7 +37,7 @@ public sealed partial class TeslaGateComponent : Component
     ///     If true, then this teslagate was disabled
     ///         because of a power change.
     /// </summary>
-    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    [DataField, AutoNetworkedField, ViewVariables(VVAccess.ReadWrite)]
     public bool WasDisabledByPower = false;
 
     [DataField, ViewVariables(VVAccess.ReadWrite)]
