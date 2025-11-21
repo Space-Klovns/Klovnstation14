@@ -1,26 +1,20 @@
 using Content.Shared._KS14.TeslaGate;
 using Content.Shared.Damage;
-using Content.Shared.Power.EntitySystems;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using System.Runtime.CompilerServices;
 using Content.Server.AlertLevel;
-using Content.Shared.Power;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Content.Server._KS14.TeslaGate;
 
 public sealed class TeslaGateSystem : SharedTeslaGateSystem
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
-    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
     [Dependency] private readonly DamageableSystem _damageableSystem = default!;
-    [Dependency] private readonly SharedPowerReceiverSystem _powerReceiverSystem = default!;
 
     public override void Initialize()
     {
@@ -62,15 +56,6 @@ public sealed class TeslaGateSystem : SharedTeslaGateSystem
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool CanStartWork(EntityUid uid)
-    {
-        if (!_powerReceiverSystem.IsPowered(uid))
-            return false;
-
-        return true;
-    }
-
     // HELP
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool CanWork(EntityUid uid, TeslaGateComponent teslaGateComponent, out bool canStart)
@@ -91,9 +76,9 @@ public sealed class TeslaGateSystem : SharedTeslaGateSystem
         teslaGateComponent.LastShockTime = _gameTiming.CurTime;
         teslaGateComponent.NextPulse = _gameTiming.CurTime + teslaGate.Comp.PulseInterval;
 
-        _audioSystem.PlayPvs(teslaGateComponent.ShockSound, uid);
+        AudioSystem.PlayPvs(teslaGateComponent.ShockSound, uid);
 
-        UpdateAppearance(teslaGate, true, TeslaGateVisualState.Active);
+        UpdateAppearance(teslaGate, true);
         Dirty(teslaGate);
 
         teslaGateComponent.CurrentlyShocking = true;
@@ -108,48 +93,16 @@ public sealed class TeslaGateSystem : SharedTeslaGateSystem
         teslaGateComponent.CurrentlyShocking = false;
         teslaGateComponent.ThingsBeingShocked.Clear();
 
-        UpdateAppearance(teslaGate, false, TeslaGateVisualState.Inactive);
+        UpdateAppearance(teslaGate, false);
         Dirty(teslaGate);
 
-        _audioSystem.PlayPvs(teslaGateComponent.StartingSound, uid);
-    }
-
-    private void ResetAccumulator(TeslaGateComponent teslaGateComponent)
-    {
-        teslaGateComponent.NextPulse = _gameTiming.CurTime + teslaGateComponent.PulseInterval;
-        teslaGateComponent.LastShockTime = TimeSpan.MinValue;
+        AudioSystem.PlayPvs(teslaGateComponent.StartingSound, uid);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void Zap(EntityUid uid, DamageSpecifier damage)
     {
         _damageableSystem.TryChangeDamage(uid, damage, ignoreResistances: true);
-    }
-
-    public void Enable(Entity<TeslaGateComponent> teslaGate)
-    {
-        var (uid, teslaGateComponent) = teslaGate;
-
-        if (CanStartWork(uid))
-            _audioSystem.PlayPvs(teslaGateComponent.StartingSound, uid);
-
-        ResetAccumulator(teslaGateComponent);
-        teslaGateComponent.Enabled = true;
-    }
-
-    public void Disable(Entity<TeslaGateComponent> teslaGate)
-    {
-        teslaGate.Comp.Enabled = false;
-        ResetAccumulator(teslaGate);
-    }
-
-    public override void OnPowerChange(Entity<TeslaGateComponent> teslaGate, ref PowerChangedEvent args)
-    {
-        // dont care if its already enabled
-        if (args.Powered)
-            Enable(teslaGate);
-        else
-            Disable(teslaGate);
     }
 
     private void CollideAct(TeslaGateComponent teslaGateComponent, EntityUid otherEntity)
@@ -162,10 +115,8 @@ public sealed class TeslaGateSystem : SharedTeslaGateSystem
 
     private void OnGateStartCollide(Entity<TeslaGateComponent> teslaGate, ref StartCollideEvent args)
     {
-        var (uid, teslaGateComponent) = teslaGate;
-
-        if (teslaGateComponent.CurrentlyShocking)
-            CollideAct(teslaGateComponent, args.OtherEntity);
+        if (teslaGate.Comp.CurrentlyShocking)
+            CollideAct(teslaGate, args.OtherEntity);
     }
 
     private void OnAlertLevelChanged(AlertLevelChangedEvent alertEvent)

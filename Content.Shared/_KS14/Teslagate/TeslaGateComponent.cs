@@ -33,6 +33,13 @@ public sealed partial class TeslaGateComponent : Component
     [DataField, ViewVariables(VVAccess.ReadWrite)]
     public HashSet<NetEntity> ThingsBeingShocked = new();
 
+    /// <summary>
+    ///     If true, then this teslagate was disabled
+    ///         because of a power change.
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    public bool WasDisabledByPower = false;
+
     [DataField, ViewVariables(VVAccess.ReadWrite)]
     public bool Enabled = false;
 
@@ -96,7 +103,6 @@ public enum TeslaGateVisuals : byte { ShockingState }
 public enum TeslaGateVisualState : byte
 {
     Inactive,
-    Ready,
     Active,
 }
 

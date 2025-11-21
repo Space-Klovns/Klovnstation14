@@ -9,3 +9,8 @@
   result: PistolBarrel
   materials:
     Plasteel: 500
+
+- type: latheRecipe
+  parent: BaseCircuitboardRecipe
+  id: TeslaGateCircuitboard
+  result: TeslaGateCircuitboard

@@ -18,12 +18,11 @@
     visuals:
       enum.TeslaGateVisuals.ShockingState:
         electricity:
-          Inactive: { state: none }
-          #Ready: { state: none }
-          Active: { state: elec_anim }
-        #sparks:
+          Inactive: { visible: false }
+          Active: { state: elec_anim, visible: true }
+        #sparks: # currently unused
           #Inactive: { state: none }
-          #Ready: { state: none } # we dont use this rn
+          #Ready: { state: none }
           #Active: { state: coils_ready }
   - type: Machine
     board: TeslaGateCircuitboard
@@ -33,7 +32,8 @@
     noRot: true
     layers:
     - state: base
-    - state: none
+    - state: elec_anim
+      visible: false
       shader: unshaded
       map: ["electricity"]
     #- state: none
@@ -46,7 +46,7 @@
       fix1:
         shape:
           !type:PhysShapeAabb
-          bounds: "-0.35, -0.35, 0.35, 0.35"
+          bounds: "-0.3, -0.3, 0.3, 0.3"
         hard: false
         density: 2000
         mask:
@@ -55,6 +55,9 @@
         - AirlockLayer
   - type: TeslaGate
     pulseInterval: 3.2
+    shockDamage:
+      types:
+        Shock: 70
     shockSound:
       path: /Audio/Effects/Lightning/lightningshock.ogg
       params:
@@ -104,7 +107,7 @@
     prototype: TeslaGate
     stackRequirements:
       Steel: 5
-      Capacitor: 3
+      Manipulator: 3 # TODO: make this capacitor, ffs.
   - type: StaticPrice
     price: 1000
 

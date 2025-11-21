@@ -7,3 +7,4 @@
   id: KlovnSecurityStatic
   recipes:
   - PistolBarrel
+  - TeslaGateCircuitboard
