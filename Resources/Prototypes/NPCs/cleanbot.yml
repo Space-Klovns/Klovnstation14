@@ -14,7 +14,7 @@
 - type: htnCompound
   id: BotMoveToCoordinatesCompound
   branches:
-    # Head to follow target
+    # Head to coords, when in melee range delete the key and proceed as normal.
     - tasks:
         - !type:HTNPrimitiveTask
           operator: !type:MoveToOperator

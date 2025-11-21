@@ -7,11 +7,11 @@
   components:
   - type: Action
     checkCanInteract: false
-    priority: -9
+    priority: -11
     itemIconStyle: BigAction
     icon:
-      sprite: Interface/Actions/actions_ai.rsi
-      state: ai_core
+      sprite: _KS14/Interface/Actions/actions_ai.rsi
+      state: select_bot
   - type: TargetAction
   - type: EntityTargetAction
     whitelist:
@@ -27,11 +27,11 @@
   components:
   - type: Action
     checkCanInteract: false
-    priority: -9
+    priority: -10
     itemIconStyle: BigAction
     icon:
-      sprite: Interface/Actions/actions_ai.rsi
-      state: camera_light
+      sprite: _KS14/Interface/Actions/actions_ai.rsi
+      state: move_bot
   - type: TargetAction
     range: -1
     checkCanAccess: false

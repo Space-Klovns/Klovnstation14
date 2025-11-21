@@ -12,10 +12,11 @@ public abstract partial class SharedStationAiSystem
 
     private void InitializeBot()
     {
+        //subscribe the 2 ai actions you need
         SubscribeLocalEvent<StationAiHeldComponent, SelectControlledBotEvent>(OnSelectBot);
         SubscribeLocalEvent<StationAiHeldComponent, MoveControlledBotToPositionEvent>(OnMoveBot);
     }
-
+    //when you want to select a bot to wrangle
     private void OnSelectBot(EntityUid ent, StationAiHeldComponent component, SelectControlledBotEvent args)
     {
         if (args.Handled)
@@ -25,24 +26,28 @@ public abstract partial class SharedStationAiSystem
 
         if (!HasComp<ControllableBotComponent>(target))
         {
-            _popup.PopupClient($"targeting failed. entity UID of your current target: {currentTargetedBot}", target, args.Performer, PopupType.Medium);
+            _popup.PopupClient(Loc.GetString("ai-entity-not-controllable"), args.Performer, PopupType.MediumCaution);
             return;
         }
 
         currentTargetedBot = target;
-        _popup.PopupClient($"targeting successful! entity UID of your target: {currentTargetedBot}", target, args.Performer, PopupType.Medium);
+        _popup.PopupClient(Loc.GetString("ai-bot-selection-successful"), args.Performer, PopupType.Medium);
     }
+    //when you want to move selected bot
     private void OnMoveBot(EntityUid ent, StationAiHeldComponent component, MoveControlledBotToPositionEvent args)
     {
         var target = args.Target;
+        //do we have an actual bot to move? did it not get deleted in between it being selected and moved?
         if (currentTargetedBot == null || (currentTargetedBot != null && !Exists(currentTargetedBot)))
         {
-            _popup.PopupClient("Targeting failed. either your entity does not exist anymore, or it hasn't been selected yet.", target, args.Performer, PopupType.Medium);
+            _popup.PopupClient(Loc.GetString("ai-controlled-bot-not-found"), args.Performer, PopupType.MediumCaution);
             return;
         }
-        _popup.PopupClient($"Targeting successful. Current bot uid: {currentTargetedBot}, target coordinates: {target}", target, args.Performer, PopupType.Medium);
+        //move to server, our job here is done
+        _popup.PopupClient(Loc.GetString("ai-bot-targeting-successful"), args.Performer, PopupType.Medium);
         TryMoveBot(currentTargetedBot, target);
     }
+    //server glue
     public virtual void TryMoveBot(
         EntityUid botUid,
         EntityCoordinates targetCoordinates)

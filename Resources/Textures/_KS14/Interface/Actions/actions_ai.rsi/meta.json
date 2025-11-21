@@ -1,0 +1,17 @@
+{
+	"version": 1,
+	"license": "CC-BY-SA-3.0",
+	"copyright": "Taken from tgstation at commit https://github.com/tgstation/tgstation/blob/c473a8bcc28fbd80827dfca5660d81ca6e833e2c/icons/hud/screen_ai.dmi then edited for the purposes of Klovnstation",
+	"size": {
+		"x": 32,
+		"y": 32
+	},
+	"states": [
+		{
+			"name": "move_bot"
+		},
+		{
+			"name": "select_bot"
+		}
+	]
+}

@@ -464,7 +464,7 @@ public sealed class StationAiSystem : SharedStationAiSystem
     //KS14 start
     public override void TryMoveBot(EntityUid botUid, EntityCoordinates targetCoordinates)
     {
-        Logger.Error($"serverside code working! received uid {botUid} and coords {targetCoordinates}");
+        // all validation is done in navsystem, we can just straight up pass it like this and our job here is done
         _npc.SetBlackboard(botUid, NPCBlackboard.FollowTarget, targetCoordinates);
     }
     //KS14 end
