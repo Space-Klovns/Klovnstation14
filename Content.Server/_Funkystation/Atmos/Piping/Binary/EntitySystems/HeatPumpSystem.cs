@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 Steve
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Server.Administration.Logs;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Atmos.Piping.Binary.Components;

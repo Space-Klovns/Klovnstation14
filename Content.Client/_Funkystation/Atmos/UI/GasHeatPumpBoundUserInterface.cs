@@ -1,4 +1,8 @@
-﻿using Content.Shared.Atmos;
+// SPDX-FileCopyrightText: 2025 Steve
+//
+// SPDX-License-Identifier: MPL-2.0
+
+using Content.Shared.Atmos;
 using Content.Shared.Atmos.Piping.Binary.Components;
 using Content.Shared.Localizations;
 using JetBrains.Annotations;
