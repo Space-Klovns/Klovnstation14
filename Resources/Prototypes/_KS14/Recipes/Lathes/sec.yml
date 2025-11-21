@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: latheRecipe
+  id: PistolBarrel
+  parent: BaseWeaponRecipeSidearm
+  result: PistolBarrel
+  materials:
+    Plasteel: 500

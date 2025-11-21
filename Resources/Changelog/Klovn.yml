@@ -183,3 +183,9 @@ Entries:
       message: Fixed textures for ammoboxes, etc
   id: 23
   time: '2025-11-20T22:21:57.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Add
+      message: Mk1 and related items
+  id: 24
+  time: '2025-11-21T00:56:33.0000000+00:00'

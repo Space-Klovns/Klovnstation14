@@ -1,14 +1,20 @@
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
 # SPDX-License-Identifier: MPL-2.0
 
+#TODO - split up this file when it gets big enough, try to keep the "categories" sperate
+
 - type: Tag # Ganimed -> KS14 fire sensor port
   id: FireSensor
 
 - type: Tag # For crafting syringe shotgun out of syringe gun
   id: SyringeGun
+
+- type: Tag #For mk1 pistol, weapons manufacturing will be real later
+  id: PistolBarrel
 
 - type: Tag # For eshield repair
   id: PowerCellHigh

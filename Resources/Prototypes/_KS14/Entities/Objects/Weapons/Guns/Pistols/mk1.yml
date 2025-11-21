@@ -1,0 +1,91 @@
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: [BaseWeaponPistol, BaseMajorContraband]
+  id: WeaponPistolMk1
+  name: mk 1
+  description: The first prototype of the Mk58, the Mk1 is a rather outdated semi-automatic pistol with a simple recoil-operated action, lacking the major improvements in both accuracy and firing speed made by the later models. Its simple design makes it a favorite among more illicit manufacturers. Feeds from .35 pistol magazines.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Guns/Pistols/mk1.rsi
+    layers:
+    - state: base
+      map: ["enum.GunVisualLayers.Base"]
+    - state: mag-0
+      map: ["enum.GunVisualLayers.Mag"]
+  - type: Clothing
+    sprite: _KS14/Objects/Weapons/Guns/Pistols/mk1.rsi
+  - type: Gun
+    fireRate: 3
+    minAngle: 6
+    maxAngle: 20
+    availableModes:
+    - SemiAuto
+    soundGunshot:
+      path: /Audio/Weapons/Guns/Gunshots/mk58.ogg
+      params:
+        volume: 3
+  - type: Construction
+    graph: mk1Graph
+    node: mk1
+
+# TODO use this for mk1 construction when you can craft mags etc
+- type: entity
+  parent: WeaponPistolMk1
+  id: WeaponPistolMk1Empty
+  suffix: Empty
+  components:
+  - type: ItemSlots # taken from BaseWeaponPistol, but doesn't have starting-item
+    slots:
+      gun_magazine:
+        name: Magazine
+        insertSound: /Audio/Weapons/Guns/MagIn/pistol_magin.ogg
+        ejectSound: /Audio/Weapons/Guns/MagOut/pistol_magout.ogg
+        priority: 2
+        whitelist:
+          tags:
+            - MagazinePistol
+        whitelistFailPopup: gun-magazine-whitelist-fail
+      gun_chamber:
+        name: Chamber
+        priority: 1
+        whitelist:
+          tags:
+            - CartridgePistol
+
+# MK1 CRAFTING ENTITIES
+
+- type: entity
+  parent: BaseItem
+  id: mk1unfinishednohandle
+  name: unfinished mk 1
+  description: An mk 1 that's still being constructed. The start of something beautiful.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Guns/Pistols/mk1_unfinished.rsi
+    layers:
+    - state: icon_unfinished1
+  - type: Item
+    sprite: _KS14/Objects/Weapons/Guns/Pistols/mk1_unfinished.rsi
+    state: iconunfinishedone
+  - type: Construction
+    graph: mk1Graph
+    node: mk1unfinishednohandle
+
+- type: entity
+  parent: mk1unfinishednohandle
+  id: mk1unfinishedhandle
+  name: partially finished mk 1
+  description: An almost-finished mk 1.
+  components:
+  - type: Sprite
+    layers:
+    - state: icon_unfinished2
+  - type: Item
+  - type: Construction
+    graph: mk1Graph
+    node: mk1unfinishedhandle
