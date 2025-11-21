@@ -8,6 +8,7 @@
 // SPDX-FileCopyrightText: 2025 ScarKy0
 // SPDX-FileCopyrightText: 2025 Tayrtahn
 // SPDX-FileCopyrightText: 2025 chromiumboy
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 nabegator220
 // SPDX-FileCopyrightText: 2025 slarticodefast
 //
