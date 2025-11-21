@@ -1,3 +1,12 @@
+// SPDX-FileCopyrightText: 2024 ScarKy0
+// SPDX-FileCopyrightText: 2024 metalgearsloth
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2025 chromiumboy
+// SPDX-FileCopyrightText: 2025 deltanedas
+// SPDX-FileCopyrightText: 2025 nabegator220
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Server.Chat.Systems;
 using Content.Server.Construction;
 using Content.Server.Destructible;

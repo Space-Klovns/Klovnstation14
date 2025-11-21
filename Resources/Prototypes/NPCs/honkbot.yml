@@ -1,3 +1,9 @@
+# SPDX-FileCopyrightText: 2023 metalgearsloth
+# SPDX-FileCopyrightText: 2024 superjj18
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: htnCompound
   id: HonkbotCompound #KS14 - unused in favor of basicbotcompound because every single bot needs to be at least steerable.
   branches:

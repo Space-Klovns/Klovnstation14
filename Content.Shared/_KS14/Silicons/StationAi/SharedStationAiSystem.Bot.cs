@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 nabegator220
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Shared.Actions;
 using Content.Shared._KS14.Silicons.Bots.Components;
 using Robust.Shared.Serialization;
