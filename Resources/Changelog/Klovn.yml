@@ -81,3 +81,105 @@ Entries:
       message: KS14 balance changes are back!
   id: 9
   time: '2025-11-04T20:47:09.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Add
+      message: More vendors are now emaggable
+  id: 10
+  time: '2025-11-05T19:58:53.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Tweak
+      message: Tweaked guidebook
+  id: 11
+  time: '2025-11-05T20:00:40.0000000+00:00'
+- author: FrauZj
+  changes:
+    - type: Tweak
+      message: Crewsimov has been replaced with Asimov
+    - type: Tweak
+      message: Now borgs by default follow AI orders above others.
+  id: 12
+  time: '2025-11-08T18:12:37.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Add
+      message: SERBIAAAAAAAAAAAAAAAA
+  id: 13
+  time: '2025-11-09T17:13:05.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Tweak
+      message: Improves the camera monitor significantly.
+  id: 14
+  time: '2025-11-11T07:51:32.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: Added zipion, an easy to make atmos stimulant.
+  id: 15
+  time: '2025-11-11T20:17:41.0000000+00:00'
+- author: December
+  changes:
+    - type: Add
+      message: Scroll runes are now purchasable at wizard's spellbook!
+    - type: Tweak
+      message: G.O.R.I.L.L.A fist now stuns people for short time when its charged.
+  id: 16
+  time: '2025-11-15T17:04:48.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: >-
+        Added the molar gas mixer to allow precise mixing no matter the
+        temperature of either inlet.
+  id: 17
+  time: '2025-11-16T08:38:53.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Bloodstains have been added.
+  id: 18
+  time: '2025-11-16T08:40:57.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: All TC prices have been multiplied by 3.
+  id: 19
+  time: '2025-11-16T21:56:05.0000000+00:00'
+- author: rottenheadphones
+  changes:
+    - type: Add
+      message: Added nuclear bombs
+  id: 20
+  time: '2025-11-16T22:56:09.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: '[1] More material varieties for nuclear reactor rods/etc'
+    - type: Add
+      message: '[1] You can now make reactor rods in protolathes(?), i didnt test it'
+    - type: Add
+      message: '[1] Guidebook entries for nuclear reactor (i didnt test it either)'
+    - type: Add
+      message: >-
+        [2] Nuclear reactor will now make alarms and noise upon overheating.
+        Also gave it new ambience. Its also emaggable now
+  id: 21
+  time: '2025-11-20T09:21:50.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Tweak
+      message: >-
+        Nutriment and vitamins now heal slight amounts of damage off, aswell as
+        healing bloodloss.
+    - type: Tweak
+      message: Protein heals more brute damage and more bloodloss.
+  id: 22
+  time: '2025-11-20T10:23:14.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed textures for ammoboxes, etc
+  id: 23
+  time: '2025-11-20T22:21:57.0000000+00:00'

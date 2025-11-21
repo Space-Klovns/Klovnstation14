@@ -95,7 +95,7 @@ public sealed partial class AdminVerbSystem
     [Dependency] private readonly SlipperySystem _slipperySystem = default!;
 
     private readonly EntProtoId _actionViewLawsProtoId = "ActionViewLaws";
-    private readonly ProtoId<SiliconLawsetPrototype> _crewsimovLawset = "Crewsimov";
+    private readonly ProtoId<SiliconLawsetPrototype> _asimovLawset = "Asimov";
 
     private readonly EntProtoId _siliconMindRole = "MindRoleSiliconBrain";
     private const string SiliconLawBoundUserInterface = "SiliconLawBoundUserInterface";
@@ -996,7 +996,7 @@ public sealed partial class AdminVerbSystem
                 }
 
                 EnsureComp<SiliconLawProviderComponent>(args.Target);
-                _siliconLawSystem.SetLaws(_siliconLawSystem.GetLawset(_crewsimovLawset).Laws, args.Target);
+                _siliconLawSystem.SetLaws(_siliconLawSystem.GetLawset(_asimovLawset).Laws, args.Target);
 
                 if (_mindSystem.TryGetMind(args.Target, out var mindId, out _))
                     _role.MindAddRole(mindId, _siliconMindRole);

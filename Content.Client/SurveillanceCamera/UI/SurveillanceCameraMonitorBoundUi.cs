@@ -1,3 +1,13 @@
+// SPDX-FileCopyrightText: 2022 Flipp Syder
+// SPDX-FileCopyrightText: 2022 Leon Friedrich
+// SPDX-FileCopyrightText: 2023 TemporalOroboros
+// SPDX-FileCopyrightText: 2024 Nemanja
+// SPDX-FileCopyrightText: 2024 metalgearsloth
+// SPDX-FileCopyrightText: 2025 Hagvan
+// SPDX-FileCopyrightText: 2025 John Willis
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 using Content.Client.Eye;
 using Content.Shared.SurveillanceCamera;
 using Robust.Client.GameObjects;
@@ -29,21 +39,17 @@ public sealed class SurveillanceCameraMonitorBoundUserInterface : BoundUserInter
         _window = this.CreateWindow<SurveillanceCameraMonitorWindow>();
 
         _window.CameraSelected += OnCameraSelected;
-        _window.SubnetOpened += OnSubnetRequest;
         _window.CameraRefresh += OnCameraRefresh;
         _window.SubnetRefresh += OnSubnetRefresh;
         _window.CameraSwitchTimer += OnCameraSwitchTimer;
         _window.CameraDisconnect += OnCameraDisconnect;
+
+        _window.SetEntity(Owner); // Goobstation
     }
 
     private void OnCameraSelected(string address)
     {
         SendMessage(new SurveillanceCameraMonitorSwitchMessage(address));
-    }
-
-    private void OnSubnetRequest(string subnet)
-    {
-        SendMessage(new SurveillanceCameraMonitorSubnetRequestMessage(subnet));
     }
 
     private void OnCameraSwitchTimer()
@@ -75,9 +81,13 @@ public sealed class SurveillanceCameraMonitorBoundUserInterface : BoundUserInter
 
         var active = EntMan.GetEntity(cast.ActiveCamera);
 
+        EntMan.TryGetComponent<TransformComponent>(Owner, out var xform); // Goobstation
+        var monitor = Owner; // Goobstation
+        var monitorCoords = xform?.Coordinates; // Goobstation
+
         if (active == null)
         {
-            _window.UpdateState(null, cast.Subnets, cast.ActiveAddress, cast.ActiveSubnet, cast.Cameras);
+            _window.UpdateState(null, cast.ActiveAddress, cast.Cameras, cast.MobileCameras, monitor, monitorCoords); // Goobstation
 
             if (_currentCamera != null)
             {
@@ -102,7 +112,7 @@ public sealed class SurveillanceCameraMonitorBoundUserInterface : BoundUserInter
 
             if (EntMan.TryGetComponent<EyeComponent>(active, out var eye))
             {
-                _window.UpdateState(eye.Eye, cast.Subnets, cast.ActiveAddress, cast.ActiveSubnet, cast.Cameras);
+                _window.UpdateState(eye.Eye, cast.ActiveAddress, cast.Cameras, cast.MobileCameras, monitor, monitorCoords); // Goobstation
             }
         }
     }

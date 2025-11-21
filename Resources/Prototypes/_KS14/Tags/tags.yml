@@ -6,19 +6,18 @@
 # SPDX-License-Identifier: MPL-2.0
 
 #TODO - split up this file when it gets big enough, try to keep the "categories" sperate
-#or sort it alphabetically, i dont care enough to do so rn
 
-- type: Tag # Ganimed - KS14 fire sensor port
+- type: Tag # Ganimed -> KS14 fire sensor port
   id: FireSensor
 
 - type: Tag # For crafting syringe shotgun out of syringe gun
   id: SyringeGun
 
-- type: Tag #For mk1, weapons manufacturing will be real later
+- type: Tag #For mk1 pistol, weapons manufacturing will be real later
   id: PistolBarrel
 
-- type: Tag
-  id: PowerCellHigh #For broken energy shield
+- type: Tag # For eshield repair
+  id: PowerCellHigh
 
-- type: Tag
+- type: Tag # For eshield repair
   id: BrokenEnergyShield

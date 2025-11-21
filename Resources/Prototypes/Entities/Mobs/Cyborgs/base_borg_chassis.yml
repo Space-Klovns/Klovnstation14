@@ -36,7 +36,9 @@
 # SPDX-FileCopyrightText: 2025 Callmore
 # SPDX-FileCopyrightText: 2025 Centronias
 # SPDX-FileCopyrightText: 2025 Errant
+# SPDX-FileCopyrightText: 2025 FrauZj
 # SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 Hagvan
 # SPDX-FileCopyrightText: 2025 Kittygyat
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Leon Friedrich
@@ -138,7 +140,7 @@
   - type: EmagSiliconLaw
     stunTime: 5
   - type: SiliconLawProvider
-    laws: Crewsimov
+    laws: Asimov
   - type: Inventory
     templateId: borg
   - type: Hands
@@ -353,6 +355,7 @@
   - type: SurveillanceCamera # they act like cameras for the mothership
     networkSet: true
     nameSet: True
+    mobile: True # Goobstation - mobile cameras fix, borg camera not really relevant since monitor doesn't see it anyways but eh
     id: Xenoborg
   - type: Explosive
     explosionType: Minibomb

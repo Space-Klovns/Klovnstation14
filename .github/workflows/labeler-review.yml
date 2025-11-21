@@ -16,8 +16,9 @@ jobs:
       with:
         username: ${{ github.actor }}
         team: "maintainers"
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.REVIEW_TOKEN }}
     - if: ${{ steps.checkUserMember.outputs.isTeamMember == 'true' }}
       uses: actions-ecosystem/action-add-labels@v1
       with:
         labels: "S: Approved"
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,11 @@
+// SPDX-FileCopyrightText: 2025 Hagvan
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+namespace Content.Shared._KS14.SurveillanceCamera;
+
+// Dummy component for surveillance monitors with known mobile cameras.
+[RegisterComponent]
+public sealed partial class HasMobileCamerasSurveillanceCameraMonitorComponent : Component
+{
+}

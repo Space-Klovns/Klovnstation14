@@ -1,3 +1,16 @@
+# SPDX-FileCopyrightText: 2019 DamianX
+# SPDX-FileCopyrightText: 2020 AJCM-git
+# SPDX-FileCopyrightText: 2021 Peptide90
+# SPDX-FileCopyrightText: 2021 Swept
+# SPDX-FileCopyrightText: 2021 Visne
+# SPDX-FileCopyrightText: 2022 Andreas Kämper
+# SPDX-FileCopyrightText: 2024 Jackal298
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+# SPDX-FileCopyrightText: 2025 Smith
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MIT
+
 - type: vendingMachineInventory
   id: BodaInventory
   startingInventory:
@@ -6,3 +19,7 @@
     DrinkSodaWaterBottleFull: 2
     DrinkColaCan: 10
     ClothingHeadHatUshanka: 2
+  emaggedInventory:
+    WeaponSniperMosin: 3
+    MagazineBoxLightRifle: 1
+    ClothingHeadHatUshanka: 3

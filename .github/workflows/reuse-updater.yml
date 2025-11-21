@@ -92,8 +92,8 @@ jobs:
             echo "PR_LICENSE=mpl" >> $GITHUB_ENV
             echo "License specified in PR: MPL"
           else
-            echo "PR_LICENSE=agpl" >> $GITHUB_ENV
-            echo "No license specified in PR, using default: AGPL"
+            echo "PR_LICENSE=none" >> $GITHUB_ENV
+            echo "No license specified in PR, using script default (specifying 'none' as license)"
           fi
 
       - name: Run REUSE Header Update Script

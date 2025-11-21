@@ -249,7 +249,7 @@ def process_git_log_output(output: str, author_timestamps):
         if not line.strip():
             continue
 
-        parts = line.split('|', 3)
+        parts = line.split('|', 4)
         if len(parts) < 4:
             print(f"Skipping malformed line: {line}")
             continue

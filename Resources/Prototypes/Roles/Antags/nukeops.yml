@@ -1,3 +1,20 @@
+# SPDX-FileCopyrightText: 2022 Morb
+# SPDX-FileCopyrightText: 2022 Veritius
+# SPDX-FileCopyrightText: 2023 Ray
+# SPDX-FileCopyrightText: 2023 deltanedas
+# SPDX-FileCopyrightText: 2023 lzk228
+# SPDX-FileCopyrightText: 2023 metalgearsloth
+# SPDX-FileCopyrightText: 2024 Errant
+# SPDX-FileCopyrightText: 2024 Ilya246
+# SPDX-FileCopyrightText: 2024 Leon Friedrich
+# SPDX-FileCopyrightText: 2024 Mr. 27
+# SPDX-FileCopyrightText: 2024 vorkathbruh
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+# SPDX-FileCopyrightText: 2025 PicklOH
+# SPDX-FileCopyrightText: 2025 beck-thompson
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: antag
   id: Nukeops
   name: roles-antag-nuclear-operative-name
@@ -5,8 +22,9 @@
   setPreference: true
   objective: roles-antag-nuclear-operative-objective
   requirements:
-  - !type:OverallPlaytimeRequirement
-    time: 18000 # 5h
+  - !type:DepartmentTimeRequirement
+    department: Security
+    time: 3600 #1 hrs, klovn
   guides: [ NuclearOperatives ]
 
 - type: antag
@@ -16,11 +34,12 @@
   setPreference: true
   objective: roles-antag-nuclear-operative-agent-objective
   requirements:
-  - !type:OverallPlaytimeRequirement
-    time: 18000 # 5h
+  - !type:DepartmentTimeRequirement
+    department: Security
+    time: 7200 #2 hrs, klovn
   - !type:RoleTimeRequirement
     role: JobChemist
-    time: 10800 # 3h
+    time: 3600 #1h, klovn
   guides: [ NuclearOperatives ]
 
 - type: antag
@@ -30,8 +49,8 @@
   setPreference: true
   objective: roles-antag-nuclear-operative-commander-objective
   requirements:
-  - !type:OverallPlaytimeRequirement
-    time: 18000 # 5h
+#  - !type:OverallPlaytimeRequirement, redundant, klovn
+#    time: 18000 # 5h
   - !type:DepartmentTimeRequirement
     department: Security
     time: 18000 # 5h

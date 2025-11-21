@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2025 ActiveMammmoth
+# SPDX-FileCopyrightText: 2025 FrauZj
 # SPDX-FileCopyrightText: 2025 FrauzJ
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 ScarKy0
@@ -217,6 +218,19 @@
   productEntity: WeaponWandPolymorphDoor
   cost:
     WizCoin: 1
+  categories:
+  - SpellbookEquipment
+  conditions:
+  - !type:ListingLimitedStockCondition
+    stock: 1
+
+- type: listing
+  id: SpellbookScrollRunes
+  name: scrollrunes-name
+  description: scrollrunes-description
+  productEntity: ScrollRunes
+  cost:
+    WizCoin: 2
   categories:
   - SpellbookEquipment
   conditions:

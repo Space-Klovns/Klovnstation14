@@ -1,3 +1,10 @@
+# SPDX-FileCopyrightText: 2023 Chronophylos
+# SPDX-FileCopyrightText: 2024 brainfood1183
+# SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 keronshb
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - files: [rumble.ogg]
   copyright: "Made by Uzbazur freesound.org, modified by brainfood1183 (github)"
   license: "CC-BY-4.0"
@@ -19,7 +26,8 @@
   - blink.ogg
   - ethereal_enter.ogg
   - ethereal_exit.ogg
-  copyright: '"forcewall.ogg", "knock.ogg", "blink.ogg", "ethereal_enter.ogg", and "ethereal_exit.ogg" by Citadel Station 13'
+  - ethereal_runeplaced.ogg
+  copyright: '"forcewall.ogg", "knock.ogg", "blink.ogg", "ethereal_enter.ogg", and "ethereal_exit.ogg" by Citadel Station 13. "ethereal_runeplaced.ogg" is a modified ""ethereal_exit.ogg""'
   license: CC-BY-SA-3.0
   source: https://github.com/Citadel-Station-13/Citadel-Station-13/commit/35a1723e98a60f375df590ca572cc90f1bb80bd5
 

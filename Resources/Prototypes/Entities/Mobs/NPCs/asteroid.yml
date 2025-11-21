@@ -1,3 +1,18 @@
+# SPDX-FileCopyrightText: 2024 Shaddap1
+# SPDX-FileCopyrightText: 2025 Alzore
+# SPDX-FileCopyrightText: 2025 August Sun
+# SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 Gamewar360
+# SPDX-FileCopyrightText: 2025 Nemanja
+# SPDX-FileCopyrightText: 2025 Princess Cheeseballs
+# SPDX-FileCopyrightText: 2025 Red
+# SPDX-FileCopyrightText: 2025 Victor Shen
+# SPDX-FileCopyrightText: 2025 deltanedas
+# SPDX-FileCopyrightText: 2025 metalgearsloth
+# SPDX-FileCopyrightText: 2025 osjarw
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: entity
   id: BaseMobAsteroid
   parent:
@@ -54,7 +69,7 @@
   - type: MobThresholds
     thresholds:
       0: Alive
-      150: Dead
+      250: Dead
   - type: MeleeWeapon
     soundHit:
       path: "/Audio/Weapons/smash.ogg"
@@ -375,7 +390,7 @@
   - type: MobThresholds
     thresholds:
       0: Alive
-      45: Dead
+      75: Dead
   - type: MeleeWeapon
     angle: 0
     animation: WeaponArcBite

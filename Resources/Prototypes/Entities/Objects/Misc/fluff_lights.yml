@@ -31,7 +31,9 @@
 # SPDX-FileCopyrightText: 2025 RedBookcase
 # SPDX-FileCopyrightText: 2025 ScarKy0
 # SPDX-FileCopyrightText: 2025 Theodore Lukin
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 metalgearsloth
+# SPDX-FileCopyrightText: 2025 nabegator220
 # SPDX-FileCopyrightText: 2025 onesch
 # SPDX-FileCopyrightText: 2025 slarticodefast
 #
@@ -172,7 +174,7 @@
 - type: entity
   name: interrogator lamp
   id: LampInterrogator
-  parent: [ BaseLamp, BaseSecurityContraband ]
+  parent: BaseLamp
   description: Ultra-bright lamp for the bad cop.
   components:
   - type: Sprite
