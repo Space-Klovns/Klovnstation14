@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Shared._KS14.TeslaGate;
 using Content.Shared.Damage;
 using Robust.Shared.Physics.Events;

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using System.Runtime.CompilerServices;
 using Content.Shared.Power;
 using Content.Shared.Power.EntitySystems;
