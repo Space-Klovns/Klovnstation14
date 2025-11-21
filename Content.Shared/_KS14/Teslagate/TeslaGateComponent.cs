@@ -17,13 +17,13 @@ public sealed partial class TeslaGateComponent : Component
     ///     When can the gate pulse again?
     /// </summary>
     [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), ViewVariables(VVAccess.ReadWrite)]
-    public TimeSpan NextPulse = TimeSpan.MinValue;
+    public TimeSpan NextPulse = TimeSpan.Zero;
 
     /// <summary>
     ///     Last time the gate turned on.
     /// </summary>
     [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), ViewVariables(VVAccess.ReadOnly)]
-    public TimeSpan LastShockTime = TimeSpan.MinValue;
+    public TimeSpan LastShockTime = TimeSpan.Zero;
 
     [DataField]
     public DamageSpecifier ShockDamage = new();

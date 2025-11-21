@@ -89,7 +89,7 @@
   parent: TeslaGate
   id: TeslaGateQuick
   name: overcharged tesla gate
-  desc: Oh no. Yeah, you're not getting through that.
+  description: Oh no. Yeah, you're not getting through that.
   suffix: "1x1, 1.5 sec"
   components:
   - type: TeslaGate
