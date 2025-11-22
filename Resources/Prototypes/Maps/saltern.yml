@@ -1,6 +1,6 @@
 - type: gameMap
-  id: Saltern
-  mapName: 'Saltern'
+  id: Ice-Box Saltern
+  mapName: 'Ice-Box Saltern'
   mapPath: /Maps/saltern.yml
   minPlayers: 0
   maxPlayers: 35
@@ -10,7 +10,7 @@
       stationProto: StandardNanotrasenStation
       components:
         - type: StationNameSetup
-          mapNameTemplate: '{0} Saltern {1}'
+          mapNameTemplate: '{0} Ice-Box Saltern {1}'
           nameGenerator:
             !type:NanotrasenNameGenerator
             prefixCreator: '14'
