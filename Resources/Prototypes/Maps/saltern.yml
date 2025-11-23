@@ -4,7 +4,7 @@
   mapPath: /Maps/saltern.yml
   minPlayers: 0
   maxPlayers: 35
-  # KS14: no longer fallback
+  # KS14: bring saltern back; no longer fallback
   stations:
     Saltern:
       stationProto: StandardNanotrasenStation
