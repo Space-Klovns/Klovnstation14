@@ -3,8 +3,9 @@
   parent: BaseGameRule
   components:
   - type: StationEvent
-    weight: 9
+    weight: 0.3
     duration: 40
     reoccurrenceDelay: 2
     minimumPlayers: 20
   - type: NukeCalibrationRule
+    autoDisarmChance: 0.220
