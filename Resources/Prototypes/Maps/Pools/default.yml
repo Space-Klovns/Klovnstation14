@@ -20,21 +20,24 @@
 # SPDX-FileCopyrightText: 2025 SlamBamActionman
 # SPDX-FileCopyrightText: 2025 Spessmann
 # SPDX-FileCopyrightText: 2025 compilatron
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 rottenheadphones
 #
 # SPDX-License-Identifier: MPL-2.0
 
 - type: gameMapPool
   id: DefaultMapPool
   maps:
-  - Amber
-  - Bagel
-  - Box
-  - Elkridge
-  - Fland
-  - Marathon
-  - Oasis
-  - Packed
-  - Plasma
-  - Reach
-  - Exo
-  - Saltern # KS14: bring saltern back
+- Amber
+- Bagel
+- Box
+- Elkridge
+- Fland
+- Marathon
+- Oasis
+- Packed
+- Plasma
+- Reach
+- Exo
+- Saltern # KS14: bring saltern back
+- Glacier

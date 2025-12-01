@@ -15,25 +15,24 @@
 # SPDX-FileCopyrightText: 2024 Pissachu
 # SPDX-FileCopyrightText: 2024 deltanedas
 # SPDX-FileCopyrightText: 2025 Damn Feds
-# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 rottenheadphones
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - type: gameMap
-  id: Saltern
-  mapName: 'Ice-Box Saltern'
-  mapPath: /Maps/saltern.yml
+  id: Glacier
+  mapName: 'Floating Outpost Of Glaciery Gelidus'
+  mapPath: /Maps/glacier.yml
   minPlayers: 0
   maxPlayers: 35
-  # KS14: bring saltern back; no longer fallback
+  fallback: true
   stations:
-    Saltern:
+    Glacier:
       stationProto: StandardNanotrasenStation
       components:
         - type: StationNameSetup
-          mapNameTemplate: '{0} Ice-Box Saltern {1}'
+          mapNameTemplate: '{0} Floating Outpost Of Glaciery Gelidus {1}'
           nameGenerator:
             !type:NanotrasenNameGenerator
             prefixCreator: '14'
@@ -57,7 +56,7 @@
             ServiceWorker: [ 2, 2 ]
             #engineering (6)
             AtmosphericTechnician: [ 2, 2 ]
-            StationEngineer: [ 4, 4 ]
+            StationEngineer: [ 3, 3 ]
             TechnicalAssistant: [ 4, 4 ] #intern, not counted
             #medical (6)
             Chemist: [ 2, 2 ]
