@@ -127,7 +127,7 @@ public sealed class ElectrocutionSystem : SharedElectrocutionSystem
         }
     }
 
-    private bool IsPowered(EntityUid uid, ElectrifiedComponent electrified, TransformComponent transform)
+    public bool IsPowered(EntityUid uid, ElectrifiedComponent electrified, TransformComponent transform) //KS14 - changed to public so it could be used
     {
         if (!electrified.Enabled)
             return false;
@@ -402,7 +402,7 @@ public sealed class ElectrocutionSystem : SharedElectrocutionSystem
                 ? _stun.TryUpdateParalyzeDuration(uid, time * ParalyzeTimeMultiplier)
                 : _stun.TryAddParalyzeDuration(uid, time * ParalyzeTimeMultiplier);
         }
-            
+
 
         // TODO: Sparks here.
 

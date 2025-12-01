@@ -5,6 +5,12 @@ using Content.Server.Stack;
 using Content.Shared.Database;
 using Content.Shared.DoAfter;
 using Content.Shared.Interaction;
+//KS14 start
+using Content.Server.Lightning;
+using Content.Shared.Power;
+using Content.Shared.Wires;
+using Content.Shared.Electrocution;
+//KS14 end
 using Robust.Shared.Map;
 using CableCuttingFinishedEvent = Content.Shared.Tools.Systems.CableCuttingFinishedEvent;
 using SharedToolSystem = Content.Shared.Tools.Systems.SharedToolSystem;
@@ -17,6 +23,9 @@ public sealed partial class CableSystem : EntitySystem
     [Dependency] private readonly SharedToolSystem _toolSystem = default!;
     [Dependency] private readonly StackSystem _stack = default!;
     [Dependency] private readonly ElectrocutionSystem _electrocutionSystem = default!;
+    //KS14 start
+    [Dependency] private readonly LightningSystem _lightning = default!;
+    //KS14 end
 
     public override void Initialize()
     {
@@ -52,6 +61,14 @@ public sealed partial class CableSystem : EntitySystem
 
         if (_electrocutionSystem.TryDoElectrifiedAct(uid, args.User))
             return;
+
+        // KS start
+        ElectrifiedComponent? electrified = null;
+        TransformComponent? transform = null;
+        if (Resolve(uid, ref electrified, ref transform, false))
+            if (cable.CableType == CableType.HighVoltage && _electrocutionSystem.IsPowered(uid, electrified, transform))
+                _lightning.ShootRandomLightnings(uid, 3, 3);
+        // KS end
 
         _adminLogger.Add(LogType.CableCut, LogImpact.High, $"The {ToPrettyString(uid)} at {xform.Coordinates} was cut by {ToPrettyString(args.User)}.");
 
