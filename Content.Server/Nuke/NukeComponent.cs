@@ -170,6 +170,22 @@ namespace Content.Server.Nuke
         [DataField]
         public NukeStatus Status = NukeStatus.AWAIT_DISK;
 
+        // wizden-april-fools-2025 nuke-calibration -> ks14 port:
+        /// <summary>
+        ///     Should we allow disarming/arming, even if there's no disk?
+        ///     Does not allow anchoring/unanchoring without the disk.
+        ///     Arming nuke still requires code to be entered.
+        /// </summary>
+        [ViewVariables]
+        public bool DiskBypassEnabled = false;
+
+        // wizden-april-fools-2025 nuke-calibration -> ks14 port:
+        /// <summary>
+        ///     Should we reset the disk bypass value, and the nuke timer, to their defaults when the nuke is disarmed?
+        /// </summary>
+        [ViewVariables]
+        public bool ShouldResetAfterDiskBypass = false;
+
         /// <summary>
         ///     Check if nuke has already played the nuke song so we don't do it again
         /// </summary>

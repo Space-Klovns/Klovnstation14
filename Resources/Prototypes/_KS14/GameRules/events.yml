@@ -1,0 +1,10 @@
+- type: entity
+  id: NukeCalibration
+  parent: BaseGameRule
+  components:
+  - type: StationEvent
+    weight: 9
+    duration: 40
+    reoccurrenceDelay: 2
+    minimumPlayers: 20
+  - type: NukeCalibrationRule

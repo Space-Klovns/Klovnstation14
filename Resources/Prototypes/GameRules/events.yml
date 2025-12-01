@@ -53,12 +53,13 @@
 # SPDX-FileCopyrightText: 2025 nabegator220
 # SPDX-FileCopyrightText: 2025 slarticodefast
 #
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 
 - type: entityTable
   id: BasicCalmEventsTable
   table: !type:AllSelector # we need to pass a list of rules, since rules have further restrictions to consider via StationEventComp
     children:
+    - id: NukeCalibration # KS14: wizden-april-fools-2025 nuke-calibration -> ks14 port
     - id: AnomalySpawn
     - id: BluespaceArtifact
     - id: BluespaceLocker
