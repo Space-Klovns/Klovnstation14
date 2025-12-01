@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MIT
+
 using Content.Server._KS14.StationEvents.Events;
 using Robust.Shared.Audio;
 
