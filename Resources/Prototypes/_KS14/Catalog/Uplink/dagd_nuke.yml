@@ -1,0 +1,27 @@
+- type: listing
+  id: UplinkNukeCodes
+  name: uplink-nuke-codes-name
+  description: uplink-nuke-codes-desc
+  productEntity: NukeCodePaperStation
+  categories:
+  - UplinkObjective
+  conditions:
+  - !type:ListingLimitedStockCondition
+    stock: 1
+  - !type:BuyerObjectiveWhitelistCondition
+    whitelist:
+      components:
+      - DieCondition
+
+- type: storeCategory
+  id: UplinkObjective
+  name: store-category-objective
+  priority: 11
+
+- type: storePreset
+  id: Traitor
+  categories:
+  - UplinkObjective
+  currencyWhitelist:
+  - Telecrystal
+  balance:
