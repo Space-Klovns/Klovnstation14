@@ -21,6 +21,7 @@
 // SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2025 Leon Friedrich
 // SPDX-FileCopyrightText: 2025 Southbridge
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 //
 // SPDX-License-Identifier: MIT
 
