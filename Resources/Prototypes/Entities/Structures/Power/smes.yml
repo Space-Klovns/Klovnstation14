@@ -92,6 +92,8 @@
       sendBroadcastAttemptEvent: true
       examinableAddress: true
     - type: WiredNetworkConnection
+    - type: ArcFlashAnchorable #KS14 - heads up for yaml warriors - this REQUIRES an electrifiedcomponent to be present also like it is here
+    - type: ArcFlashDeconstructable #KS14
     - type: GuideHelp
       guides:
       - PowerStorage

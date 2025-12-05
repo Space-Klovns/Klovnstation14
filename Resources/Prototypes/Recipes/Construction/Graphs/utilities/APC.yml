@@ -38,6 +38,9 @@
             - !type:GivePrototype
               prototype: APCElectronics
               amount: 1
+            - !type:RaiseEvent
+              event: !type:APCDeconstructedEvent
+              broadcast: false
           conditions:
             - !type:WirePanel
               open: true

@@ -150,6 +150,7 @@
     guides:
     - VoltageNetworks
     - Power
+  - type: ArcFlashDeconstructable #KS14
 
 # APC under construction
 - type: entity

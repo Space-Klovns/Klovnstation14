@@ -140,6 +140,8 @@
     requirePower: true
     highVoltageNode: input
     mediumVoltageNode: output
+  - type: ArcFlashAnchorable #KS14 - heads up for yaml warriors - this REQUIRES an electrifiedcomponent to be present also like it is here
+  - type: ArcFlashDeconstructable #KS14
 
 # Compact Wall Substation Base
 - type: entity

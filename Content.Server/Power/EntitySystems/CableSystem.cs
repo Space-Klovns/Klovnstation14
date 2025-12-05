@@ -67,7 +67,7 @@ public sealed partial class CableSystem : EntitySystem
         TransformComponent? transform = null;
         if (Resolve(uid, ref electrified, ref transform, false))
             if (cable.CableType == CableType.HighVoltage && _electrocutionSystem.IsPowered(uid, electrified, transform))
-                _lightning.ShootRandomLightnings(uid, 3, 3);
+                _lightning.ShootRandomLightnings(uid, 3, 3, lightningPrototype: "ArcFlashLightning"); //change all of this to cvar pl0x
         // KS end
 
         _adminLogger.Add(LogType.CableCut, LogImpact.High, $"The {ToPrettyString(uid)} at {xform.Coordinates} was cut by {ToPrettyString(args.User)}.");
