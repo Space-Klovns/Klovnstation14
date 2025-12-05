@@ -670,7 +670,11 @@ public sealed class NukeSystem : EntitySystem
         {
             Timer.Spawn(10000, () =>
             {
-                 _roundEndSystem.EndRound();
+                // SAFETY CHECK: Only end the round if it is actually running!
+                if (_roundEndSystem.ExpectedCountdownEnd == null) // Or check GameTicker status
+                {
+                    _roundEndSystem.EndRound();
+                }
             });
         }
         // KS14 END
