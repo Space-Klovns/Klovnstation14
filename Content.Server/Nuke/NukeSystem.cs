@@ -37,6 +37,7 @@
 // SPDX-FileCopyrightText: 2025 Leon Friedrich
 // SPDX-FileCopyrightText: 2025 Southbridge
 // SPDX-FileCopyrightText: 2025 TemporalOroboros
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 metalgearsloth
 // SPDX-FileCopyrightText: 2025 pathetic meowmeow
 //
