@@ -12,7 +12,7 @@
   components:
   - type: Sprite
     layers:
-    - sprite: _KS14/Structures/Storage/canister_zipion.rsi
+    - sprite: _KS14/Structures/Storage/canister.rsi
       state: zipion
   - type: GasCanister
     gasMixture:
@@ -52,5 +52,5 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    sprite: _KS14/Structures/Storage/canister_zipion.rsi
+    sprite: _KS14/Structures/Storage/canister.rsi
     state: zipion-1
