@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 Gerkada
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Shared.Mind;
 using Content.Shared.Store;
 using Content.Shared.Whitelist;

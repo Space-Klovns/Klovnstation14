@@ -17,6 +17,7 @@
 // SPDX-FileCopyrightText: 2023 metalgearsloth
 // SPDX-FileCopyrightText: 2023 pofitlo
 // SPDX-FileCopyrightText: 2025 Andrew Malcolm O'Neill
+// SPDX-FileCopyrightText: 2025 Gerkada
 // SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2025 Leon Friedrich
 // SPDX-FileCopyrightText: 2025 Southbridge
