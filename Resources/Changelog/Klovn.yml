@@ -217,3 +217,21 @@ Entries:
         calibrations of the station nuke timer.
   id: 28
   time: '2025-12-01T11:37:50.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: Ported Corvax canister sprites.
+    - type: Tweak
+      message: Resprited zipion and water vapor canisters sprites.
+  id: 29
+  time: '2025-12-08T16:29:33.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: >-
+        Ported nuke codes in uplink for traitors with the "Die a glorious death"
+        objective.
+    - type: Tweak
+      message: The nuke exploding ends the shift after 10-second countdown.
+  id: 30
+  time: '2025-12-08T16:56:39.0000000+00:00'
