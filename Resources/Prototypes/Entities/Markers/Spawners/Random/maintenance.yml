@@ -335,6 +335,7 @@
       - id: RifleStock
       - id: ModularReceiver
       - id: HydroponicsToolScythe
+      - id: PistolBarrel #KS14, odds may be too high, HOWEVER, i dont give a fuck!
     # Rare Group
     - !type:GroupSelector
       weight: 5
@@ -376,7 +377,7 @@
   - type: EntityTableSpawner
     table: !type:NestedSelector
       tableId: MaintWeaponTable
-      prob: 0.6
+      prob: 0.8 #ks14, was 0.6 #220 65
 
 - type: entity
   name: Maint Loot Spawner

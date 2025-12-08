@@ -1,0 +1,12 @@
+﻿- type: entity
+  id: PresentGibstick
+  parent: [PresentBase, BaseItem]
+  suffix: Filled God Fearing
+  components:
+  - type: SpawnItemsOnUse
+    items:
+    - id: PresentTrash
+    - id: MeleeDebugGib
+    sound:
+      path: /Audio/Effects/unwrap.ogg #todo: give it good music LMAO
+    # i refuse to make it available ingame until it has funny sounds
