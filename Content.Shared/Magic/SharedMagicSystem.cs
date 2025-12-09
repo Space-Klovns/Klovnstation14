@@ -8,6 +8,7 @@
 // SPDX-FileCopyrightText: 2025 Tayrtahn
 // SPDX-FileCopyrightText: 2025 TemporalOroboros
 // SPDX-FileCopyrightText: 2025 Winkarst-cpu
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 keronshb
 // SPDX-FileCopyrightText: 2025 metalgearsloth
 //
