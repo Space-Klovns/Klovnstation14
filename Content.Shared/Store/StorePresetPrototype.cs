@@ -17,8 +17,8 @@ public sealed partial class StorePresetPrototype : IPrototype
     /// <summary>
     /// The name displayed at the top of the store window
     /// </summary>
-    [DataField("storeName", required: true)]
-    public string StoreName { get; private set; } = string.Empty;
+    [DataField("storeName", required: false)]
+    public string StoreName { get; private set; } = "Store"; // Added default value
 
     /// <summary>
     /// The categories that this store can access
