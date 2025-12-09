@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Content.Shared._KS14.Mimery;
 using Content.Shared.Actions.Components;
 using Content.Shared.Ghost;
 using Content.Shared.Mind;
@@ -323,6 +324,8 @@ public sealed class ActionContainerSystem : EntitySystem
 
         var ev = new ActionAddedEvent(args.Entity, action);
         RaiseLocalEvent(uid, ref ev);
+        var ev2 = new ActionGotAddedEvent(uid);
+        RaiseLocalEvent(args.Entity, ref ev2);
     }
 
     private void OnEntityRemoved(EntityUid uid, ActionsContainerComponent component, EntRemovedFromContainerMessage args)
