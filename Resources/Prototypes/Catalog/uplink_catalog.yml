@@ -102,7 +102,6 @@
 # SPDX-FileCopyrightText: 2025 August Sun
 # SPDX-FileCopyrightText: 2025 FrauZj
 # SPDX-FileCopyrightText: 2025 FrauzJ
-# SPDX-FileCopyrightText: 2025 Gerkada
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Minemoder5000
 # SPDX-FileCopyrightText: 2025 Nox
@@ -2445,20 +2444,3 @@
     - MedicalDoctor
     - Chemist
     - Paramedic
-
-- type: listing
-  id: UplinkAdvMimery
-  name: uplink-adv-mimery-name
-  description: uplink-adv-mimery-desc
-  icon: { sprite: _KS14/Objects/Misc/bookmime.rsi, state: icon }
-  productEntity: BoxAdvMimery
-  cost:
-    Telecrystal: 25
-  categories:
-  - UplinkJob
-  conditions:
-  - !type:BuyerJobCondition
-    whitelist:
-    - Mime
-  - !type:ListingLimitedStockCondition
-    stock: 1

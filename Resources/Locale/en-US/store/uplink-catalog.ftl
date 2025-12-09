@@ -497,5 +497,6 @@ uplink-smuggler-satchel-desc = A handy, suspicious looking satchel. Just flat en
 uplink-acolyte-armor-name = Acolyte Armor
 uplink-acolyte-armor-desc = The must have of any self respecting cult leader. An evil looking piece of armor, made of bones, and surprisingly resistant to damage.
 
-uplink-adv-mimery-name = Guide to Advanced Mimery Series
-uplink-adv-mimery-desc = The classical two part series on how to further hone your mime skills. Upon studying the series, the user should be able to make 3x1 invisible walls, and shoot bullets out of their fingers.
+#Objective
+uplink-nuke-codes-name = Nuclear Authentication Codes
+uplink-nuke-codes-desc = Contains the codes to the station nuke. Good luck.
