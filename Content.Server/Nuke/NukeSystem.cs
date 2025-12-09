@@ -32,10 +32,12 @@
 // SPDX-FileCopyrightText: 2024 Winkarst
 // SPDX-FileCopyrightText: 2024 nikthechampiongr
 // SPDX-FileCopyrightText: 2025 Andrew Malcolm O'Neill
+// SPDX-FileCopyrightText: 2025 Gerkada
 // SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2025 Leon Friedrich
 // SPDX-FileCopyrightText: 2025 Southbridge
 // SPDX-FileCopyrightText: 2025 TemporalOroboros
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 metalgearsloth
 // SPDX-FileCopyrightText: 2025 pathetic meowmeow
 //
@@ -48,6 +50,7 @@ using Content.Server.Explosion.EntitySystems;
 using Content.Server.Kitchen.Components;
 using Content.Server.Pinpointer;
 using Content.Server.Popups;
+using Content.Server.RoundEnd;
 using Content.Server.Station.Systems;
 using Content.Shared.Audio;
 using Content.Shared.Containers.ItemSlots;
@@ -66,6 +69,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Player;
 using Robust.Shared.Random;
 using Robust.Shared.Utility;
+using Robust.Shared.Timing;
 
 namespace Content.Server.Nuke;
 
@@ -88,6 +92,7 @@ public sealed class NukeSystem : EntitySystem
     [Dependency] private readonly UserInterfaceSystem _ui = default!;
     [Dependency] private readonly AppearanceSystem _appearance = default!;
     [Dependency] private readonly TurfSystem _turf = default!;
+    [Dependency] private readonly RoundEndSystem _roundEndSystem = default!;
 
     /// <summary>
     ///     Used to calculate when the nuke song should start playing for maximum kino with the nuke sfx
@@ -636,7 +641,8 @@ public sealed class NukeSystem : EntitySystem
     /// <summary>
     ///     Force bomb to explode immediately
     /// </summary>
-    public void ActivateBomb(EntityUid uid, NukeComponent? component = null,
+    public void ActivateBomb(EntityUid uid,
+        NukeComponent? component = null,
         TransformComponent? transform = null)
     {
         if (!Resolve(uid, ref component, ref transform))
@@ -656,7 +662,23 @@ public sealed class NukeSystem : EntitySystem
         RaiseLocalEvent(new NukeExplodedEvent()
         {
             OwningStation = transform.GridUid,
+            EndRound = component.EndRound,
         });
+
+        // KS14 START - Manually end the round for this specific nuke type
+        // We delay by 10 seconds to allow the explosion to kill the player for the "Die a Glorious Death" greentext.
+        if (component.EndRound)
+        {
+            Timer.Spawn(10000, () =>
+            {
+                // SAFETY CHECK: Only end the round if it is actually running!
+                if (_roundEndSystem.ExpectedCountdownEnd == null) // Or check GameTicker status
+                {
+                    _roundEndSystem.EndRound();
+                }
+            });
+        }
+        // KS14 END
 
         _sound.StopStationEventMusic(uid, StationEventMusicType.Nuke);
         Del(uid);
@@ -743,6 +765,7 @@ public sealed class NukeSystem : EntitySystem
 public sealed class NukeExplodedEvent : EntityEventArgs
 {
     public EntityUid? OwningStation;
+    public bool EndRound;
 }
 
 // wizden-april-fools-2025 nuke-calibration -> ks14 port:

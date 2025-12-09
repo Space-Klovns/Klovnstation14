@@ -1,3 +1,4 @@
+# SPDX-FileCopyrightText: 2025 Gerkada
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
@@ -12,7 +13,7 @@
   components:
   - type: Sprite
     layers:
-    - sprite: _KS14/Structures/Storage/canister_zipion.rsi
+    - sprite: _KS14/Structures/Storage/canister.rsi
       state: zipion
   - type: GasCanister
     gasMixture:
@@ -52,5 +53,5 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    sprite: _KS14/Structures/Storage/canister_zipion.rsi
+    sprite: _KS14/Structures/Storage/canister.rsi
     state: zipion-1
