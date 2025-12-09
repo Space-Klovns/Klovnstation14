@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 Gerkada
+//
+// SPDX-License-Identifier: MIT
+
 using Content.Shared.Actions;
 using Content.Shared.Magic.Events;
 

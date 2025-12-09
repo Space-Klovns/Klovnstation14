@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 Gerkada
+//
+// SPDX-License-Identifier: MIT
+
 using Content.Shared.EntityEffects;
 
 namespace Content.Server._KS14.Mimery;
