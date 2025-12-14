@@ -20,7 +20,7 @@
             - !type:TargetInLOSPrecondition
               targetKey: Target
               rangeKey: RangedRange
-              UseOpaqueForLOSChecksKey: true
+              opaqueKey: true
           operator: !type:GunOperator
             targetKey: Target
             requireLOS: true
