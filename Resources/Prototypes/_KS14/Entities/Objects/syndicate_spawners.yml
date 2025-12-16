@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Gerkada
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: entity
   id: LootSpawnerSyndicateBase
   name: syndicate loot spawner
