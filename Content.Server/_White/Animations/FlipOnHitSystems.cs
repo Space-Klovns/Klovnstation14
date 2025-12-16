@@ -3,6 +3,7 @@
 // SPDX-FileCopyrightText: 2024 Spatison
 // SPDX-FileCopyrightText: 2025 Aiden
 // SPDX-FileCopyrightText: 2025 FrauzJ
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 

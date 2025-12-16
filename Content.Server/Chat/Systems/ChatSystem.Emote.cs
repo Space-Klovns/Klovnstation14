@@ -11,6 +11,7 @@
 // SPDX-FileCopyrightText: 2024 geraeumig
 // SPDX-FileCopyrightText: 2025 Centronias
 // SPDX-FileCopyrightText: 2025 FrauzJ
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 lzk
 // SPDX-FileCopyrightText: 2025 themias
 //

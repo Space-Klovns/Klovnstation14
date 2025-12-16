@@ -6,6 +6,7 @@
 // SPDX-FileCopyrightText: 2025 JohnOakman
 // SPDX-FileCopyrightText: 2025 Misandry
 // SPDX-FileCopyrightText: 2025 MoutardOMiel
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 gus
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
