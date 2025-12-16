@@ -1,3 +1,12 @@
+// SPDX-FileCopyrightText: 2023 Alex Evgrashin
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Visne
+// SPDX-FileCopyrightText: 2024 Morb
+// SPDX-FileCopyrightText: 2025 FrauzJ
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Shared.Whitelist;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
