@@ -240,7 +240,7 @@ public partial class ChatSystem
     private bool TryInvokeEmoteEvent(EntityUid uid, EmotePrototype proto)
     {
         var beforeEv = new BeforeEmoteEvent(uid, proto);
-        RaiseLocalEvent(uid, ref beforeEv);
+        RaiseLocalEvent(uid, ref beforeEv, true);
 
         if (beforeEv.Cancelled)
         {

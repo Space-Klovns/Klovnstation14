@@ -54,6 +54,8 @@
   - type: MobMover
   - type: MovementSpeedModifier
   - type: LagCompensation
+  - type: AnimatedEmotes
+
 
 - type: entity
   save: false
