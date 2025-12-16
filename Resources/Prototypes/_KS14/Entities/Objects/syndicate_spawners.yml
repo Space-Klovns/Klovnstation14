@@ -18,19 +18,19 @@
   components:
   - type: Sprite
     layers:
-      - state: red
-        color: "#ff0000"
-      - sprite: Objects/Weapons/Guns/SMGs/c20r.rsi
-        state: base
+    - state: red
+      color: "#ff0000"
+    - sprite: Objects/Weapons/Guns/SMGs/c20r.rsi
+      state: base
   - type: RandomSpawner
     prototypes:
-      - WeaponPistolViper
-      - WeaponPistolCobra
-      - WeaponSubMachineGunC20r
-      - WeaponShotgunBulldog
-      - WeaponSniperHristov
-      - EnergySword
-      - EnergySwordDouble
+    - WeaponPistolViper
+    - WeaponPistolCobra
+    - WeaponSubMachineGunC20r
+    - WeaponShotgunBulldog
+    - WeaponSniperHristov
+    - EnergySword
+    - EnergySwordDouble
     chance: 0.8
     offset: 0.0
 
@@ -42,17 +42,17 @@
   components:
   - type: Sprite
     layers:
-      - state: red
-        color: "#ff0000"
-      - sprite: Objects/Weapons/Guns/Ammunition/Magazine/Pistol/pistol_mag.rsi
-        state: base
+    - state: red
+      color: "#ff0000"
+    - sprite: Objects/Weapons/Guns/Ammunition/Magazine/Pistol/pistol_mag.rsi
+      state: base
   - type: RandomSpawner
     prototypes:
-      - MagazinePistol
-      - MagazinePistolSubMachineGun
-      - MagazineShotgun
-      - MagazineBoxAntiMateriel
-      - MagazineGrenadeFrag
+    - MagazinePistol
+    - MagazinePistolSubMachineGun
+    - MagazineShotgun
+    - MagazineBoxAntiMateriel
+    - MagazineGrenadeFrag
     chance: 0.8
     offset: 0.0
 
@@ -64,16 +64,17 @@
   components:
   - type: Sprite
     layers:
-      - state: red
-        color: "#ff0000"
-      - sprite: Structures/Machines/bomb.rsi
-        state: syndicate-bomb
+    - state: red
+      color: "#ff0000"
+    - sprite: Structures/Machines/bomb.rsi
+      state: syndicate-bomb
   - type: RandomSpawner
     prototypes:
-      - SyndieMiniBomb
-      - C4
-      - MobGrenadePenguin
-      - SyndicateBomb
+    - SyndieMiniBomb
+    - C4
+    - MobGrenadePenguin
+    - SyndicateBomb
+    - TrainingBomb
     chance: 0.8
     offset: 0.0
 
@@ -85,17 +86,17 @@
   components:
   - type: Sprite
     layers:
-      - state: red
-        color: "#ff0000"
-      - sprite: Clothing/OuterClothing/Hardsuits/syndicate.rsi
-        state: icon
+    - state: red
+      color: "#ff0000"
+    - sprite: Clothing/OuterClothing/Hardsuits/syndicate.rsi
+      state: icon
   - type: RandomSpawner
     prototypes:
-      - ClothingOuterHardsuitSyndie
-      - ClothingShoesBootsMagSyndie
-      - ClothingMaskGasSyndicate
-      - ClothingBackpackSyndicate
-      - ClothingBackpackDuffelSyndicate
+    - ClothingOuterHardsuitSyndie
+    - ClothingShoesBootsMagSyndie
+    - ClothingMaskGasSyndicate
+    - ClothingBackpackSyndicate
+    - ClothingBackpackDuffelSyndicate
     chance: 0.8
     offset: 0.0
 
@@ -107,15 +108,15 @@
   components:
   - type: Sprite
     layers:
-      - state: red
-        color: "#ff0000"
-      - sprite: Objects/Specific/Medical/syndihypo.rsi
-        state: hypo
+    - state: red
+      color: "#ff0000"
+    - sprite: Objects/Specific/Medical/syndihypo.rsi
+      state: hypo
   - type: RandomSpawner
     prototypes:
-      - SyringeEphedrine
-      - SyringeInaprovaline
-      - SyringeTranexamicAcid
+    - SyringeEphedrine
+    - SyringeInaprovaline
+    - SyringeTranexamicAcid
     chance: 0.8
     offset: 0.0
 
@@ -127,15 +128,15 @@
   components:
   - type: Sprite
     layers:
-      - state: red
-        color: "#ff0000"
-      - sprite: Objects/Devices/chameleon_projector.rsi
-        state: icon
+    - state: red
+      color: "#ff0000"
+    - sprite: Objects/Devices/chameleon_projector.rsi
+      state: icon
   - type: RandomSpawner
     prototypes:
-      - ChameleonProjector
-      - AgentIDCard
-      - ClothingMaskGasVoiceChameleon
+    - ChameleonProjector
+    - AgentIDCard
+    - ClothingMaskGasVoiceChameleon
     chance: 0.8
     offset: 0.0
 
@@ -147,15 +148,15 @@
   components:
   - type: Sprite
     layers:
-      - state: red
-        color: "#ff0000"
-      - sprite: Objects/Tools/emag.rsi
-        state: icon
+    - state: red
+      color: "#ff0000"
+    - sprite: Objects/Tools/emag.rsi
+      state: icon
   - type: RandomSpawner
     prototypes:
-      - Emag
-      - RadioImplanter
-      - RadioJammer
+    - Emag
+    - RadioImplanter
+    - RadioJammer
     chance: 0.8
     offset: 0.0
 
@@ -167,15 +168,15 @@
   components:
   - type: Sprite
     layers:
-      - state: red
-        color: "#ff0000"
-      - sprite: Objects/Specific/Medical/syndi_implanter.rsi
-        state: implanter0
+    - state: red
+      color: "#ff0000"
+    - sprite: Objects/Specific/Medical/syndi_implanter.rsi
+      state: implanter0
   - type: RandomSpawner
     prototypes:
-      - StorageImplant
-      - MicroBombImplant
-      - FreedomImplant
+    - StorageImplant
+    - MicroBombImplant
+    - FreedomImplant
     chance: 0.8
     offset: 0.0
 
@@ -187,14 +188,14 @@
   components:
   - type: Sprite
     layers:
-      - state: red
-        color: "#ff0000"
-      - sprite: Objects/Specific/Medical/hypospray.rsi
-        state: combat_hypo
+    - state: red
+      color: "#ff0000"
+    - sprite: Objects/Specific/Medical/hypospray.rsi
+      state: combat_hypo
   - type: RandomSpawner
     prototypes:
-      - HoloparasiteInjector
-      - MedkitCombat
+    - HoloparasiteInjector
+    - MedkitCombat
     chance: 0.8
     offset: 0.0
 
@@ -206,14 +207,14 @@
   components:
   - type: Sprite
     layers:
-      - state: red
-        color: "#ff0000"
-      - sprite: Objects/Fun/Balloons/syndicate.rsi
-        state: icon
+    - state: red
+      color: "#ff0000"
+    - sprite: Objects/Fun/Balloons/syndicate.rsi
+      state: icon
   - type: RandomSpawner
     prototypes:
-      - SoapSyndie
-      - FoodPizzaMeat
-      - BalloonSyn
+    - SoapSyndie
+    - FoodPizzaMeat
+    - BalloonSyn
     chance: 0.8
     offset: 0.0
