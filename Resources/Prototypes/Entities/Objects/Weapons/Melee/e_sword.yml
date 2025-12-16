@@ -391,7 +391,7 @@
   - type: Reflect
     reflectProb: .75
     spread: 75
- # - type: FlipOnHit # WD EDIT
+  - type: FlipOnHit # WD EDIT
 
 # Item will look weird in handslot. Will need to adjust handstorage visuals in a future PR
 - type: entity
