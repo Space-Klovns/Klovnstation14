@@ -23,10 +23,13 @@
       map: [ "enum.DisposalUnitVisualLayers.OverlayFlush" ]
     - state: dispover-charge
       map: [ "enum.DisposalUnitVisualLayers.OverlayCharging" ]
+      shader: unshaded
     - state: dispover-ready
       map: [ "enum.DisposalUnitVisualLayers.OverlayReady" ]
+      shader: unshaded
     - state: dispover-full
       map: [ "enum.DisposalUnitVisualLayers.OverlayFull" ]
+      shader: unshaded
     - state: dispover-handle
       map: [ "enum.DisposalUnitVisualLayers.OverlayEngaged" ]
   - type: Physics
@@ -122,10 +125,13 @@
         map: [ "enum.DisposalUnitVisualLayers.OverlayFlush" ]
       - state: dispover-charge
         map: [ "enum.DisposalUnitVisualLayers.OverlayCharging" ]
+        shader: unshaded
       - state: dispover-ready
         map: [ "enum.DisposalUnitVisualLayers.OverlayReady" ]
+        shader: unshaded
       - state: dispover-full
         map: [ "enum.DisposalUnitVisualLayers.OverlayFull" ]
+        shader: unshaded
       - state: mailover-handle
         map: [ "enum.DisposalUnitVisualLayers.OverlayEngaged" ]
   - type: Construction
