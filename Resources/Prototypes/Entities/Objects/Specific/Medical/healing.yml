@@ -48,7 +48,7 @@
         variation: 0.125
   - type: Stack
     stackType: Ointment
-    count: 15
+    count: 10
   - type: StackPrice
     price: 5
 
@@ -85,18 +85,18 @@
         Shock: -10
         Caustic: -10
     healingBeginSound:
-      path: "/Audio/_KS14/Items/Medical/regen_mesh_begin.ogg"
+      path: "/Audio/Items/Medical/ointment_begin.ogg"
       params:
         volume: 1.0
         variation: 0.125
     healingEndSound:
-      path: "/Audio/_KS14/Items/Medical/regen_mesh_end.ogg"
+      path: "/Audio/Items/Medical/ointment_end.ogg"
       params:
         volume: 1.0
         variation: 0.125
   - type: Stack
     stackType: RegenerativeMesh
-    count: 15
+    count: 10
   - type: StackPrice
     price: 20
 
@@ -141,7 +141,7 @@
         variation: 0.125
   - type: Stack
     stackType: Brutepack
-    count: 15
+    count: 10
   - type: StackPrice
     price: 5
 
@@ -177,18 +177,18 @@
         Brute: -30 # 10 for each type in the group
     bloodlossModifier: -10 # a suture should stop ongoing bleeding
     healingBeginSound:
-      path: "/Audio/_KS14/Items/Medical/suture_begin.ogg"
+      path: "/Audio/Items/Medical/brutepack_begin.ogg"
       params:
         volume: 1.0
         variation: 0.125
     healingEndSound:
-      path: "/Audio/_KS14/Items/Medical/suture_end.ogg"
+      path: "/Audio/Items/Medical/brutepack_end.ogg"
       params:
         volume: 1.0
         variation: 0.125
   - type: Stack
     stackType: MedicatedSuture
-    count: 15
+    count: 10
   - type: StackPrice
     price: 20
 
@@ -234,7 +234,7 @@
         variation: 0.125
   - type: Stack
     stackType: Bloodpack
-    count: 15
+    count: 10
   - type: StackPrice
     price: 10
 
@@ -318,7 +318,7 @@
         variation: 0.125
   - type: Stack
     stackType: Gauze
-    count: 15
+    count: 10
   - type: StackPrice
     price: 10
 
@@ -341,7 +341,7 @@
     state: cream
   - type: Stack
     stackType: AloeCream
-    count: 20
+    count: 10
 
 - type: entity
   parent: BaseHealingItem
