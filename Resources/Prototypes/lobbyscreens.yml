@@ -1,48 +1,20 @@
 - type: lobbyBackground
-  id: Warden
-  background: /Textures/LobbyScreens/warden.webp
+  id: 1984hnk
+  background: /Textures/LobbyScreens/1984hnk.png
 
 - type: lobbyBackground
-  id: Pharmacy
-  background: /Textures/LobbyScreens/pharmacy.webp
+  id: engiwherespower
+  background: /Textures/LobbyScreens/engiwherespower.png
 
 - type: lobbyBackground
-  id: SSXIV
-  background: /Textures/LobbyScreens/ssxiv.webp
+  id: fucktiders
+  background: /Textures/LobbyScreens/fucktiders.png
 
 - type: lobbyBackground
-  id: Susstation
-  background: /Textures/LobbyScreens/susstation.webp
+  id: middlestation
+  background: /Textures/LobbyScreens/middlestation.png
 
 - type: lobbyBackground
-  id: SkellyVsTheRev
-  background: /Textures/LobbyScreens/skellyvstherev.webp
+  id: smartguy
+  background: /Textures/LobbyScreens/smartguy.png
 
-- type: lobbyBackground
-  id: Doomed
-  background: /Textures/LobbyScreens/doomed.webp
-
-- type: lobbyBackground
-  id: Blueprint
-  background: /Textures/LobbyScreens/blueprint.webp
-
-- type: lobbyBackground
-  id: Behonker
-  background: /Textures/LobbyScreens/behonker.webp
-
-- type: lobbyBackground
-  id: TerminalStation
-  background: /Textures/LobbyScreens/terminalstation.webp
-
-- type: lobbyBackground
-  id: JustAWeekAway
-  background: /Textures/LobbyScreens/justaweekaway.webp
-
-- type: lobbyBackground
-  id: JaniShootout
-  background: /Textures/LobbyScreens/janishootout.webp
-
-- type: lobbyBackground
-  id: ReclaimerNuke
-  background: /Textures/LobbyScreens/reclaimer-nuke.webp
-  

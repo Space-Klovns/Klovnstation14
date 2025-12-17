@@ -1,7 +1,13 @@
+# SPDX-FileCopyrightText: 2022 Flipp Syder
+# SPDX-FileCopyrightText: 2023 Emisse
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: species
   id: Dwarf
   name: species-name-dwarf
-  roundStart: true
+  roundStart: false #klovn
   prototype: MobDwarf
   sprites: MobHumanSprites
   markingLimits: MobHumanMarkingLimits

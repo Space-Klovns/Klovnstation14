@@ -262,6 +262,7 @@ uplink-l6-saw-bundle-desc = More dakka: The iconic L6 light machine gun, bundled
 
 uplink-zombie-bundle-name = Syndicate Zombie Bundle
 uplink-zombie-bundle-desc = An all-in-one kit for unleashing the undead upon a station.
+uplink-zombie-bundle-syndicate-desc = An all-in-one kit for unleashing the undead upon a station. Safety not guaranteed.
 
 uplink-surplus-bundle-name = Surplus Crate
 uplink-surplus-bundle-desc = Contains 50 telecrystals worth of completely random Syndicate items. It can be useless junk or really good.
@@ -495,3 +496,7 @@ uplink-smuggler-satchel-desc = A handy, suspicious looking satchel. Just flat en
 
 uplink-acolyte-armor-name = Acolyte Armor
 uplink-acolyte-armor-desc = The must have of any self respecting cult leader. An evil looking piece of armor, made of bones, and surprisingly resistant to damage.
+
+#Objective
+uplink-nuke-codes-name = Nuclear Authentication Codes
+uplink-nuke-codes-desc = Contains the codes to the station nuke. Good luck.

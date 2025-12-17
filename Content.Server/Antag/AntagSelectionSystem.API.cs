@@ -1,3 +1,14 @@
+// SPDX-FileCopyrightText: 2024 Nemanja
+// SPDX-FileCopyrightText: 2024 deltanedas
+// SPDX-FileCopyrightText: 2025 Errant
+// SPDX-FileCopyrightText: 2025 Gerkada
+// SPDX-FileCopyrightText: 2025 Milon
+// SPDX-FileCopyrightText: 2025 SlamBamActionman
+// SPDX-FileCopyrightText: 2025 beck-thompson
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Server.Antag.Components;
@@ -186,7 +197,7 @@ public sealed partial class AntagSelectionSystem
 
             if (pref.AntagPreferences.Contains(role)
                 && !_ban.IsRoleBanned(session, list)
-                && _playTime.IsAllowed(session, list))
+                && _playTimeSystem.IsAllowed(session, list))
                 valid = true;
         }
 

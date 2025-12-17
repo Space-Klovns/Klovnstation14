@@ -1,0 +1,86 @@
+# SPDX-FileCopyrightText: 2024 router
+# SPDX-FileCopyrightText: 2024 username
+# SPDX-FileCopyrightText: 2024 whateverusername0 <whateveremail>
+# SPDX-FileCopyrightText: 2025 Aiden
+# SPDX-FileCopyrightText: 2025 Aviu00
+# SPDX-FileCopyrightText: 2025 BombasterDS
+# SPDX-FileCopyrightText: 2025 BombasterDS2
+# SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 GoobBot
+# SPDX-FileCopyrightText: 2025 Ilya246
+# SPDX-FileCopyrightText: 2025 MoutardOMiel
+# SPDX-FileCopyrightText: 2025 OnsenCapy
+# SPDX-FileCopyrightText: 2025 SX-7
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 pheenty
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: emote
+  id: Flip
+  name: chat-emote-name-flip
+  chatMessages: ["chat-emote-msg-flip"]
+  chatTriggers:
+  - flip
+  - flips
+  - flips.
+  - flips!
+  - does a flip
+  - does a flip.
+  - does a flip!
+  event: !type:AnimationFlipEmoteEvent
+
+# - type: emote
+#   id: Tweak
+#   name: chat-emote-name-tweak
+#   chatMessages: ["chat-emote-msg-tweak"]
+#   whitelist:
+#     tags:
+#     - Mouse
+#   chatTriggers:
+#   - tweak
+#   - tweaks
+#   - tweaks.
+#   - tweaks!
+#   event: !type:AnimationTweakEmoteEvent
+
+# - type: emote
+#   id: Flex
+#   name: chat-emote-name-flex
+#   chatMessages: ["chat-emote-msg-flex"]
+#   whitelist:
+#     tags:
+#     - Blobbernaut
+#   chatTriggers:
+#   - flex
+#   - flexes
+#   - flexes muscles
+#   - flexes its muscles
+#   - shows off
+#   - shows off muscles
+#   - shows off its muscles
+#   - intimidates
+#   event: !type:AnimationFlexEmoteEvent
+
+- type: emote
+  id: Spin
+  name: chat-emote-name-spin
+  category: Invalid # Don't show in the emote wheel
+  chatMessages: ["chat-emote-msg-spin"]
+  chatTriggers:
+  - spin
+  - spins
+  - spins.
+  - spins!
+  event: !type:AnimationSpinEmoteEvent
+
+- type: emote
+  id: Jump
+  name: chat-emote-name-jump
+  chatMessages: ["chat-emote-msg-jump"]
+  chatTriggers:
+  - jump
+  - jumps
+  - jumps.
+  - jumps!
+  event: !type:AnimationJumpEmoteEvent

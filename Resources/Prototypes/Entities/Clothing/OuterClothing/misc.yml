@@ -1,3 +1,37 @@
+# SPDX-FileCopyrightText: 2020 FrostMando
+# SPDX-FileCopyrightText: 2020 Paul Ritter
+# SPDX-FileCopyrightText: 2020 Swept
+# SPDX-FileCopyrightText: 2021 Mith-randalf
+# SPDX-FileCopyrightText: 2021 Peptide90
+# SPDX-FileCopyrightText: 2022 Kai Shiba
+# SPDX-FileCopyrightText: 2022 Veritius
+# SPDX-FileCopyrightText: 2022 metalgearsloth
+# SPDX-FileCopyrightText: 2022 mirrorcult
+# SPDX-FileCopyrightText: 2023 Chief-Engineer
+# SPDX-FileCopyrightText: 2023 Clon clover
+# SPDX-FileCopyrightText: 2023 Errant
+# SPDX-FileCopyrightText: 2023 FinnishPaladin
+# SPDX-FileCopyrightText: 2023 Floofi
+# SPDX-FileCopyrightText: 2023 brainfood1183
+# SPDX-FileCopyrightText: 2023 lapatison
+# SPDX-FileCopyrightText: 2023 lzk228
+# SPDX-FileCopyrightText: 2023 nmajask
+# SPDX-FileCopyrightText: 2023 peptron1
+# SPDX-FileCopyrightText: 2023 ravage
+# SPDX-FileCopyrightText: 2024 Nemanja
+# SPDX-FileCopyrightText: 2024 degradka
+# SPDX-FileCopyrightText: 2024 keronshb
+# SPDX-FileCopyrightText: 2024 lzk
+# SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 RedBookcase
+# SPDX-FileCopyrightText: 2025 ScarKy0
+# SPDX-FileCopyrightText: 2025 Sparlight
+# SPDX-FileCopyrightText: 2025 dandy
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: entity
   parent: ClothingOuterStorageBase
   id: ClothingOuterApron
@@ -188,6 +222,16 @@
   id: ClothingOuterWizardBase
   components:
   - type: WizardClothes
+  - type: Armor # KS14 - Add armor to base outer wiz armor
+    modifiers:
+      coefficients:
+        Blunt: 0.6
+        Slash: 0.6
+        Piercing: 0.6
+        Heat: 0.7
+        Caustic: 0.7
+  - type: ExplosionResistance # KS14 - Add armor to base outer wiz armor
+    damageCoefficient: 0.8
 
 # Is this wizard wearing a fanny pack???
 - type: entity

@@ -97,6 +97,7 @@
   - GrenadeEMP
   - GrenadeFlash
   - MagazineGrenadeEmpty
+  - ClusterBang
 
 # Shared between secfab and emagged protolathe
 - type: latheRecipePack

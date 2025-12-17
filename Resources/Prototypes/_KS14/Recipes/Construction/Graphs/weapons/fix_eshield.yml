@@ -1,0 +1,22 @@
+- type: constructionGraph
+  id: EnergyShieldRepair
+  start: start
+  graph:
+    - node: start
+      edges:
+        - to: fixedEshield
+          steps:
+            - tag: PowerCellHigh
+              name: construction-graph-tag-power-cell-high
+              icon:
+                sprite: Objects/Power/power_cells.rsi
+                state: high
+            - tag: BrokenEnergyShield
+              name: construction-graph-tag-energy-shield-broken
+              icon:
+                sprite: Objects/Weapons/Melee/e_shield.rsi
+                state: eshield-icon
+              doAfter: 2
+
+    - node: fixedEshield
+      entity: EnergyShield

@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: 2023 brainfood1183
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+# SPDX-FileCopyrightText: 2025 Ertanic
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: construction
+  id: syringeshotgun
+  graph: SyringeShotgunGraph
+  startNode: start
+  targetNode: shotgun
+  category: construction-category-weapons
+  objectType: Item
+
+- type: construction
+  id: mk1
+  graph: mk1Graph
+  startNode: start
+  targetNode: mk1
+  category: construction-category-weapons
+  objectType: Item

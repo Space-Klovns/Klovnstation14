@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity
+  parent: BaseFlag
+  id: SerbiaFlag
+  name: Serbian flag
+  description: SERBIAAAAAAAAAAAAAAAAAAAAAAA!!!! SERBIAAAAAAAAAAAAAAAAAAAAAAA!!!!
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/Wallmounts/flags.rsi
+    state: serbia_flag

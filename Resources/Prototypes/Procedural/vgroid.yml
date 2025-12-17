@@ -1,3 +1,13 @@
+# SPDX-FileCopyrightText: 2024 Ed
+# SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Nemanja
+# SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 metalgearsloth
+#
+# SPDX-License-Identifier: MPL-2.0
+
 # Okay so my general thought is this:
 # 1. Generate the large mass
 # 2. Generate smaller masses offset
@@ -163,15 +173,25 @@
     table: !type:NestedSelector
       tableId: SalvageScrapSpawnerValuable
   - !type:EntityTableDunGen
-    minCount: 30
-    maxCount: 45
+    minCount: 15
+    maxCount: 25
     table: !type:NestedSelector
       tableId: SalvageTreasureSpawnerCommon
   - !type:EntityTableDunGen
-    minCount: 30
-    maxCount: 45
+    minCount: 15
+    maxCount: 25
+    table: !type:NestedSelector
+      tableId: SalvageEquipmentSpawnerCommon
+  - !type:EntityTableDunGen
+    minCount: 15
+    maxCount: 20
     table: !type:NestedSelector
       tableId: SalvageTreasureSpawnerValuable
+  - !type:EntityTableDunGen
+    minCount: 15
+    maxCount: 20
+    table: !type:NestedSelector
+      tableId: SalvageEquipmentSpawnerValuable
   - !type:MobsDunGen
     minCount: 8
     maxCount: 15

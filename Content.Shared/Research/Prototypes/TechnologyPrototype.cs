@@ -1,4 +1,23 @@
-﻿using Robust.Shared.Prototypes;
+// SPDX-FileCopyrightText: 2019 Víctor Aguilera Puerto
+// SPDX-FileCopyrightText: 2020 py01
+// SPDX-FileCopyrightText: 2021 Leon Friedrich
+// SPDX-FileCopyrightText: 2021 Paul
+// SPDX-FileCopyrightText: 2022 Paul Ritter
+// SPDX-FileCopyrightText: 2022 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2022 Rinkashikachi
+// SPDX-FileCopyrightText: 2022 metalgearsloth
+// SPDX-FileCopyrightText: 2022 mirrorcult
+// SPDX-FileCopyrightText: 2022 wrexbe
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Nemanja
+// SPDX-FileCopyrightText: 2023 Visne
+// SPDX-FileCopyrightText: 2025 Gerkada
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+//
+// SPDX-License-Identifier: MPL-2.0
+
+using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
 namespace Content.Shared.Research.Prototypes;
@@ -22,9 +41,17 @@ public sealed partial class TechnologyPrototype : IPrototype
 
     /// <summary>
     /// An icon used to visually represent the technology in UI.
+    /// If not specified and EntityIcon is provided, will use the entity's sprite automatically.
     /// </summary>
-    [DataField(required: true)]
-    public SpriteSpecifier Icon = default!;
+    [DataField] // Not required
+    public SpriteSpecifier? Icon = null; // Not required
+
+    /// <summary>
+    /// An entity prototype whose sprite will be used as the technology icon.
+    /// If specified, this takes precedence over Icon when Icon is not provided.
+    /// </summary>
+    [DataField]
+    public EntProtoId? EntityIcon = null;
 
     /// <summary>
     /// What research discipline this technology belongs to.
@@ -69,6 +96,14 @@ public sealed partial class TechnologyPrototype : IPrototype
     /// </summary>
     [DataField]
     public IReadOnlyList<GenericUnlock> GenericUnlocks = new List<GenericUnlock>();
+
+    /// <summary>
+    /// Goobstation RnD console rework field
+    /// Position of this tech in console menu.
+    /// Optional: Defaults to 0,0 for vanilla techs.
+    /// </summary>
+    [DataField("position", required: false)]
+    public Vector2i Position { get; private set; } = Vector2i.Zero;
 }
 
 [DataDefinition]

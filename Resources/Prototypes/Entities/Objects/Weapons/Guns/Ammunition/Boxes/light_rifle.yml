@@ -1,3 +1,19 @@
+# SPDX-FileCopyrightText: 2022 Kara
+# SPDX-FileCopyrightText: 2023 Boaz1111
+# SPDX-FileCopyrightText: 2023 Vordenburg
+# SPDX-FileCopyrightText: 2023 lzk
+# SPDX-FileCopyrightText: 2023 metalgearsloth
+# SPDX-FileCopyrightText: 2024 IProduceWidgets
+# SPDX-FileCopyrightText: 2024 Moomoobeef
+# SPDX-FileCopyrightText: 2024 Nemanja
+# SPDX-FileCopyrightText: 2024 Plykiya
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Nox
+# SPDX-FileCopyrightText: 2025 Ps3Moira
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MIT
+
 - type: entity
   abstract: true
   parent: BaseItem
@@ -29,17 +45,21 @@
   parent: BaseMagazineBoxLightRifle
   id: MagazineBoxLightRifleBig
   name: ammunition box (.30 rifle)
-  suffix: Big
   components:
   - type: BallisticAmmoProvider
     capacity: 200
     proto: CartridgeLightRifle
   - type: Sprite
     layers:
-    - state: base
+    - state: base-b
       map: ["enum.GunVisualLayers.Base"]
-    - state: mag-1
+    - state: magb-1
       map: ["enum.GunVisualLayers.Mag"]
+  - type: MagazineVisuals
+    magState: magb
+    steps: 4
+    zeroVisible: false
+  - type: Appearance
 
 - type: entity
   parent: BaseMagazineBoxLightRifle

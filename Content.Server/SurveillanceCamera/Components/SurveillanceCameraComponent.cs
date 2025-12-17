@@ -1,3 +1,11 @@
+// SPDX-FileCopyrightText: 2022 Flipp Syder
+// SPDX-FileCopyrightText: 2022 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2022 Vera Aguilera Puerto
+// SPDX-FileCopyrightText: 2025 DrSmugleaf
+// SPDX-FileCopyrightText: 2025 Hagvan
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 using Content.Shared.DeviceNetwork;
 using Robust.Shared.Prototypes;
 
@@ -45,4 +53,7 @@ public sealed partial class SurveillanceCameraComponent : Component
     // This has to be device network frequency prototypes.
     [DataField("setupAvailableNetworks")]
     public List<ProtoId<DeviceFrequencyPrototype>> AvailableNetworks { get; private set; } = new();
+
+    [DataField]
+    public bool Mobile { get; set; } = false; // Goobstation - a value to differentiate stationary cameras from mobile like bodycams
 }

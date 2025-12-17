@@ -1,3 +1,5 @@
+# you need to make the branch before running the workflow or it gives a weird error
+
 name: Merge and PR upstream changes
 
 on:
@@ -17,6 +19,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
+        token: ${{ env.GH_TOKEN }}
         fetch-depth: 0
 
     - run: |
@@ -24,13 +27,13 @@ jobs:
         git config user.email ${{ vars.BOT_EMAIL }}
 
     - run: |
-        git remote add upstream $MERGED_REPO
+        git remote add upstream ${{ env.MERGED_REPO }}
         git fetch upstream
 
     - name: Merge
       id: merge
       run: |
-        git checkout -b $MERGE_BRANCH
+        git checkout -b ${{ env.MERGE_BRANCH }}
 
         BASE_COMMIT=$(git rev-parse HEAD)
 
@@ -51,29 +54,33 @@ jobs:
 
     - run: |
         git push --force https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git $MERGE_BRANCH
+      env:
+        GH_TOKEN: ${{ env.GH_TOKEN }}
+        MERGE_BRANCH: ${{ env.MERGE_BRANCH }}
 
     - id: findpr
       uses: juliangruber/find-pull-request-action@v1.9.0
       with:
-        branch: $MERGE_BRANCH
-        base: $BASE_BRANCH
+        branch: ${{ env.MERGE_BRANCH }}
+        base: ${{ env.BASE_BRANCH }}
         state: open
 
     - if: steps.findpr.outputs.pull_request_number != ''
       run: |
         echo "Merge PR already exists: #${{ steps.findpr.outputs.pull_request_number }}"
 
-    - uses: peter-evans/create-pull-request@v5
+    - uses: peter-evans/create-pull-request@v7
       if: steps.findpr.outputs.pull_request_number == ''
       with:
-        token: $GH_TOKEN
+        token: ${{ env.GH_TOKEN }}
         commit-message: 'Sync changes from upstream'
-        branch: $MERGE_BRANCH
-        base: $BASE_BRANCH
+        branch: ${{ env.MERGE_BRANCH }}
+        base: ${{ env.BASE_BRANCH }}
         title: 'Merge changes from upstream repository'
         body: |
           This is an automated PR to merge from upstream.
         labels: Automated
+        add-paths: .
 
     - if: steps.merge.outputs.conflicted == 'true'
       uses: actions-ecosystem/action-add-labels@v1

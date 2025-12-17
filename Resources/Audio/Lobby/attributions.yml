@@ -1,4 +1,18 @@
-﻿- files: ["thunderdome.ogg"]
+# SPDX-FileCopyrightText: 2022 Leon Friedrich
+# SPDX-FileCopyrightText: 2022 ike709
+# SPDX-FileCopyrightText: 2022 wrexbe
+# SPDX-FileCopyrightText: 2024 Doctor-Cpu
+# SPDX-FileCopyrightText: 2024 Emisse
+# SPDX-FileCopyrightText: 2024 Kara
+# SPDX-FileCopyrightText: 2025 Lusatia
+# SPDX-FileCopyrightText: 2025 Stefano Pigozzi
+# SPDX-FileCopyrightText: 2025 kait
+# SPDX-FileCopyrightText: 2025 keronshb
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- files: ["thunderdome.ogg"]
   license: "CC-BY-NC-SA-3.0"
   copyright: "-Sector11 by MashedByMachines. Converted from MP3 to OGG."
   source: "https://www.newgrounds.com/audio/listen/312622"
@@ -13,13 +27,6 @@
   copyright: "Space Asshole by Chris Remo is used with special permission from the author, under the condition that the project remains non-commercial and open source. The author also requested that a link to his bandcamp be included: https://chrisremo.bandcamp.com/"
   source: "https://idlethumbs.bandcamp.com/track/space-asshole"
   # The source is a direct link to the track, but not the "main" bandcamp of the author. Hence the link is also included separately in the copyright.
-
-- files: ["the_wizard.ogg"]
-  license: "Custom"
-  copyright: "The Wizard by Chris Remo is used with special permission from the author, under the condition that the project remains non-commercial and open source. The author also requested that a link to his bandcamp be included: https://chrisremo.bandcamp.com/"
-  source: "https://idlethumbs.bandcamp.com/track/the-wizard"
-  # The source is a direct link the the track, but not the "main" bandcamp of the author. Hence the link is also included separately in the copyright.
-  # Got permission from Chris for this song as well on 02/25/25, requires same attributions
 
 - files: ["absconditus.ogg"]
   license: "CC-BY-NC-SA-3.0"
@@ -38,7 +45,7 @@
 
 - files: ["title2.ogg"]
   license: "Custom"
-  copyright: "Originally composed by Jonathan Dunn for RoboCop (Game Boy) published by Ocean Software. Remixed by Eric Shumaker for his video Dilbert 3. As of October 9th, 2008 nobody owns the rights to this song and copyright action has never been taken against anyone using this song in their projects."
+  copyright: "Originally composed by Jonathan Dunn for Robocop 2 Gameboy published by Ocean Software. Remixed by Eric Shumaker for his video Dilbert 3. As of October 9th, 2008 nobody owns the rights to this song and copyright action has never been taken against anyone using this song in their projects."
   source: "https://www.youtube.com/watch?v=4o6_8Unj2mQ"
 
 - files: ["title3.ogg"]
@@ -54,7 +61,7 @@
 - files: ["mod.flip-flap.ogg"]
   license: "Custom"
   copyright: "Flip Flap by X-ceed is licensed under a short but clear license (see flip-flap.txt in this directory) and is free for non-commercial use. It was converted from MOD to WAV using Schism Tracker, in 16 Bit, Non-Interpolated mode, no output equalizer settings, Ramp volume at start of sample enabled. From there it was converted to OGG Vorbis with `ffmpeg -i flip-flap.wav -q 2.9 flip-flap-renc.ogg` (quality scale chosen to match size of the OGG file being replaced). Non-interpolated mode was chosen as the module has a high enough sample rate to balance it out, but seems muffled in other interpolation modes. If 'Ramp volume at start of sample' is not enabled, a clicking phenomenon results."
-  source: "http://aminet.net/package/mods/xceed/Flipflap"
+  source: "http://aminet.net/package/mods/xceed/Fextendlipflap"
 
 - files: ["Spac_Stac.ogg"]
   license: "CC-BY-NC-SA-3.0"
@@ -75,3 +82,218 @@
   license: "CC-BY-NC-SA-3.0"
   copyright: "every light is blinking at once by Sunbeamstress/Lauren Loveless."
   source: "https://soundcloud.com/sunbeamstress/every-light-is-blinking-at-once"
+
+- files: ["skubstep.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "skubstep by finket."
+  source: "https://soundcloud.com/finket/skubstep-extended"
+
+- files: ["sneedsfeedandseed.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Sneed's Feed and Seed by Burgerchild"
+  source: "https://soundcloud.com/burgerchild/sneeds-feed-and-seed-2022"
+
+- files: ["clownwmv.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Clown.wmv by Admiral Hippie"
+  source: "https://www.youtube.com/watch?v=9whQIbNmu9s"
+
+- files: ["clownalwayswins.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Clown Always Wins by NИTRODE"
+  source: "https://www.youtube.com/watch?v=UkN2DQYRooA"
+
+- files: ["horn.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Honk! by SlendyMawn, Remastered by Scruq"
+  source: "https://www.youtube.com/watch?v=ujY7djCJVwQ"
+
+- files: ["dawsonschristian.ogg"]
+  license: "Custom"
+  copyright: "Dawson's Christian by Vic Tyler"
+  source: "https://archive.org/details/filk_carmen_mirandas_ghost"
+
+- files: ["thewizard.ogg"]
+  license: "Custom"
+  copyright: "The Wizard by Chris Remo is used with special permission from the author, under the condition that the project remains non-commercial and open source. The author also requested that a link to his bandcamp be included: https://chrisremo.bandcamp.com/"
+  source: "https://idlethumbs.bandcamp.com/track/the-wizard"
+
+- files: ["skubstub.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "DJ B1G YAPPA"
+  source: "https://forums.goobstation.com"
+
+- files: ["space_radiation.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Space Radiation by Outer"
+  source: "https://soundcloud.com/user-957617053"
+
+- files: ["redsun.ogg"]
+  license: "CC-BY-NC-SA-4.0"
+  copyright: "Bluecometdude"
+  source: "https://soundcloud.com/bluecometdude/red-sun-in-the-sky-hq-and-extended"
+
+- files: ["chollima.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Pochonbo Electronic Ensemble"
+  source: "https://goobstation.com"
+
+- files: ["marhaba.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Marhaba by Ian Alex Mac. Converted from MP3 to OGG."
+  source: "https://freemusicarchive.org/music/Ian_Alex_Mac/Cues/Marhaba"
+
+- files: ["monument.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Monument by Six Umbrellas."
+  source: "https://sixumbrellas.bandcamp.com/album/the-psychedelic-and"
+
+- files: ["the_future_soon.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Singuloose by Janis Schiedková. Converted from MP3 to OGG."
+  source: "https://soundcloud.com/js_m/singuloose"
+
+- files: ["title2.ogg"]
+  license: "Custom"
+  copyright: "Originally composed by Jonathan Dunn for Robocop 2 Gameboy published by Ocean Software. Remixed by Eric Shumaker for his video Dilbert 3. As of October 9th, 2008 nobody owns the rights to this song and copyright action has never been taken against anyone using this song in their projects."
+  source: "https://www.youtube.com/watch?v=4o6_8Unj2mQ"
+
+- files: ["title3.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Title3 by Cuboos. It is a remix of the song 'Tintin on the Moon'. Converted from MP3 to OGG."
+  source: "https://www.youtube.com/watch?v=YKVmXn-Gv0M"
+
+- files: ["comet_haley.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Comet Haley by Stellardrone. Converted from MP3 to OGG."
+  source: "https://stellardrone.bandcamp.com/track/comet-halley"
+
+- files: ["mod.flip-flap.ogg"]
+  license: "Custom"
+  copyright: "Flip Flap by X-ceed is licensed under a short but clear license (see flip-flap.txt in this directory) and is free for non-commercial use. It was converted from MOD to WAV using Schism Tracker, in 16 Bit, Non-Interpolated mode, no output equalizer settings, Ramp volume at start of sample enabled. From there it was converted to OGG Vorbis with `ffmpeg -i flip-flap.wav -q 2.9 flip-flap-renc.ogg` (quality scale chosen to match size of the OGG file being replaced). Non-interpolated mode was chosen as the module has a high enough sample rate to balance it out, but seems muffled in other interpolation modes. If 'Ramp volume at start of sample' is not enabled, a clicking phenomenon results."
+  source: "http://aminet.net/package/mods/xceed/Fextendlipflap"
+
+- files: ["Spac_Stac.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Spac Stac by Hayabusa. Converted from MP3 to OGG."
+  source: "https://www.youtube.com/watch?v=grUBe-SZgr0"
+
+- files: ["pwmur.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "phoron will make us rich by Sunbeamstress/Lauren Loveless."
+  source: "https://soundcloud.com/sunbeamstress/phoron-will-make-us-rich"
+
+- files: ["lasers_rip_apart_the_bulkhead.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "lasers rip apart the bulkhead by Sunbeamstress/Lauren Loveless."
+  source: "https://soundcloud.com/sunbeamstress/lasers-rip-apart-the-bulkhead"
+
+- files: ["every_light_is_blinking_at_once.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "every light is blinking at once by Sunbeamstress/Lauren Loveless."
+  source: "https://soundcloud.com/sunbeamstress/every-light-is-blinking-at-once"
+
+- files: ["skubstep.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "skubstep by finket."
+  source: "https://soundcloud.com/finket/skubstep-extended"
+
+- files: ["sneedsfeedandseed.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Sneed's Feed and Seed by Burgerchild"
+  source: "https://soundcloud.com/burgerchild/sneeds-feed-and-seed-2022"
+
+- files: ["clownwmv.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Clown.wmv by Admiral Hippie"
+  source: "https://www.youtube.com/watch?v=9whQIbNmu9s"
+
+- files: ["clownalwayswins.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Clown Always Wins by NИTRODE"
+  source: "https://www.youtube.com/watch?v=UkN2DQYRooA"
+
+- files: ["horn.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Honk! by SlendyMawn, Remastered by Scruq"
+  source: "https://www.youtube.com/watch?v=ujY7djCJVwQ"
+
+- files: ["dawsonschristian.ogg"]
+  license: "Custom"
+  copyright: "Dawson's Christian by Vic Tyler"
+  source: "https://archive.org/details/filk_carmen_mirandas_ghost"
+
+- files: ["thewizard.ogg"]
+  license: "Custom"
+  copyright: "The Wizard by Chris Remo is used with special permission from the author, under the condition that the project remains non-commercial and open source. The author also requested that a link to his bandcamp be included: https://chrisremo.bandcamp.com/"
+  source: "https://idlethumbs.bandcamp.com/track/the-wizard"
+
+- files: ["skubstub.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "DJ B1G YAPPA"
+  source: "https://forums.goobstation.com"
+
+- files: ["space_radiation.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Space Radiation by Outer"
+  source: "https://soundcloud.com/user-957617053"
+
+- files: ["redsun.ogg"]
+  license: "CC-BY-NC-SA-4.0"
+  copyright: "Bluecometdude"
+  source: "https://soundcloud.com/bluecometdude/red-sun-in-the-sky-hq-and-extended"
+
+- files: ["chollima.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Pochonbo Electronic Ensemble"
+  source: "https://goobstation.com"
+
+- files: ["marhaba.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Marhaba by Ian Alex Mac. Converted from MP3 to OGG."
+  source: "https://freemusicarchive.org/music/Ian_Alex_Mac/Cues/Marhaba"
+
+- files: ["monument.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Monument by Six Umbrellas."
+  source: "https://sixumbrellas.bandcamp.com/album/the-psychedelic-and"
+
+- files: ["the_future_soon.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "The Future Soon by Jonathan Coulton"
+  source: "https://www.youtube.com/watch?v=l5PEz3kGbp4"
+
+- files: ["wepumpin.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "wepump.in by vap0r"
+  source: "https://www.youtube.com/watch?v=RniwXIzFvHs"
+
+- files: ["ddosking.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "DDOS King by shaggs & vap0r"
+  source: "https://www.youtube.com/watch?v=3TFdomgFjvg"
+
+- files: ["netsplit.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Netsplit by vap0r"
+  source: "https://www.youtube.com/watch?v=SXKAt1IGpFk"
+
+- files: ["heatwave0.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Heatwave0 by vap0r"
+  source: "https://www.youtube.com/watch?v=M6f0j2fFY2c"
+
+- files: ["merchant.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Merchant by 3log!"
+  source: "https://www.youtube.com/watch?v=EptFeKzXY8Y"
+
+- files: ["blindrage.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Blind Rage by Emarex"
+  source: "https://soundcloud.com/emarexofficial/blind-rage-3rd-edit-volume-fixed"
+
+- files: ["pumptillidie.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Pump Till I Die (remix) by vap0r"
+  source: "https://www.youtube.com/watch?v=cUPpdbW809Y"

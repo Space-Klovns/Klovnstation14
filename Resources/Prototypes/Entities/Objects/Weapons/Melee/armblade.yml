@@ -1,3 +1,20 @@
+# SPDX-FileCopyrightText: 2022 Emisse
+# SPDX-FileCopyrightText: 2022 Kara
+# SPDX-FileCopyrightText: 2022 mirrorcult
+# SPDX-FileCopyrightText: 2023 I.K
+# SPDX-FileCopyrightText: 2023 Nemanja
+# SPDX-FileCopyrightText: 2023 notquitehadouken
+# SPDX-FileCopyrightText: 2024 MilenVolf
+# SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2024 Scribbles0
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2024 nikthechampiongr
+# SPDX-FileCopyrightText: 2025 ScarKy0
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: entity
   name: arm blade
   parent: BaseItem
@@ -16,9 +33,9 @@
     wideAnimationRotation: 90
     attackRate: 1
     damage:
-      types: # Same as energy sword, but slash/pierce instead of slash/heat
-        Slash: 15
-        Piercing: 15
+      types: # ks14 buffs
+        Slash: 19
+        Piercing: 19
         Structural: 20
   - type: Item
     size: Normal

@@ -39904,9 +39904,6 @@ entities:
       parent: 2
     - type: Storage
       storedItems:
-        3096:
-          position: 0,0
-          _rotation: South
         3365:
           position: 1,0
           _rotation: South
@@ -39916,7 +39913,6 @@ entities:
           showEnts: False
           occludes: True
           ents:
-          - 3096
           - 3365
 - proto: BookSlothClownSSS
   entities:
@@ -39935,12 +39931,6 @@ entities:
       canCollide: False
 - proto: BookSpaceLaw
   entities:
-  - uid: 3096
-    components:
-    - type: Transform
-      parent: 28876
-    - type: Physics
-      canCollide: False
   - uid: 20460
     components:
     - type: Transform
@@ -154647,7 +154637,7 @@ entities:
       content: >-
         To:    Mom
 
-        From:  Elian Voss, 
+        From:  Elian Voss,
                      Power Systems Maintenance Tech – Oasis Station
         Subject: Before I Go Under
 

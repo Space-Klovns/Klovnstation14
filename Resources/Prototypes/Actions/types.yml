@@ -1,3 +1,52 @@
+# SPDX-FileCopyrightText: 2022 AJCM-git
+# SPDX-FileCopyrightText: 2022 EmoGarbage404
+# SPDX-FileCopyrightText: 2022 Flipp Syder
+# SPDX-FileCopyrightText: 2022 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2022 Rane
+# SPDX-FileCopyrightText: 2023 Alex Evgrashin
+# SPDX-FileCopyrightText: 2023 Arendian
+# SPDX-FileCopyrightText: 2023 DrSmugleaf
+# SPDX-FileCopyrightText: 2023 Gotimanga
+# SPDX-FileCopyrightText: 2023 LordCarve
+# SPDX-FileCopyrightText: 2023 Nemanja
+# SPDX-FileCopyrightText: 2023 Tony
+# SPDX-FileCopyrightText: 2023 Visne
+# SPDX-FileCopyrightText: 2023 mhamster
+# SPDX-FileCopyrightText: 2024 Brandon Hu
+# SPDX-FileCopyrightText: 2024 Ilya246
+# SPDX-FileCopyrightText: 2024 Jay
+# SPDX-FileCopyrightText: 2024 Just-a-Unity-Dev
+# SPDX-FileCopyrightText: 2024 Kara
+# SPDX-FileCopyrightText: 2024 Killerqu00
+# SPDX-FileCopyrightText: 2024 Leon Friedrich
+# SPDX-FileCopyrightText: 2024 Morb
+# SPDX-FileCopyrightText: 2024 Whisper
+# SPDX-FileCopyrightText: 2024 Wrexbe (Josh)
+# SPDX-FileCopyrightText: 2024 brainfood1183
+# SPDX-FileCopyrightText: 2024 deathride58
+# SPDX-FileCopyrightText: 2024 nikthechampiongr
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 Fildrance
+# SPDX-FileCopyrightText: 2025 Kyle Tyo
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 ScarKy0
+# SPDX-FileCopyrightText: 2025 SlamBamActionman
+# SPDX-FileCopyrightText: 2025 Velken
+# SPDX-FileCopyrightText: 2025 Zachary Higgs
+# SPDX-FileCopyrightText: 2025 beck-thompson
+# SPDX-FileCopyrightText: 2025 deltanedas
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 keronshb
+# SPDX-FileCopyrightText: 2025 lzk
+# SPDX-FileCopyrightText: 2025 metalgearsloth
+# SPDX-FileCopyrightText: 2025 psykana
+# SPDX-FileCopyrightText: 2025 qwerltaz
+# SPDX-FileCopyrightText: 2025 slarticodefast
+# SPDX-FileCopyrightText: 2025 themias
+# SPDX-FileCopyrightText: 2025 Голубь
+#
+# SPDX-License-Identifier: MPL-2.0
+
 # base actions
 
 # base prototype for all action entities
@@ -431,17 +480,18 @@
 
 - type: entity
   parent: BaseAction
-  id: ActionVulpkaninGravityJump
-  name: Leap
-  description: Use your agile legs to leap a short distance. Be careful not to bump into anything!
+  id: ActionGravityDive # KS14 - Made this into dive
+  name: Dive
+  description: Dive forwards.
   components:
   - type: Action
     useDelay: 12
     icon:
       sprite: Interface/Actions/jump.rsi
       state: icon
-  - type: InstantAction
-    event: !type:GravityJumpEvent {}
+  - type: InstantAction # KS14 - Added stamina cost
+    event: !type:GravityJumpEvent
+      staminaCost: 65.220
 
 - type: entity
   parent: BaseToggleAction

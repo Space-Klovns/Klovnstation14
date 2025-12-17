@@ -1,7 +1,13 @@
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+# SPDX-FileCopyrightText: 2025 Hannah Giovanna Dawson
+# SPDX-FileCopyrightText: 2025 ScarKy0
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: species
   id: Vulpkanin
   name: species-name-vulpkanin
-  roundStart: true
+  roundStart: false #klovn
   prototype: MobVulpkanin
   sprites: MobVulpkaninSprites
   defaultSkinTone: "#5a3f2d"

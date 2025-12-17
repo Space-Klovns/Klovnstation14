@@ -40,12 +40,12 @@
   parent: [ScatteringGrenadeBase, BaseSecurityContraband]
   id: ClusterBang
   name: clusterbang
-  description: Can be used only with flashbangs. Explodes several times.
+  description: Can be used with any grenades. Explodes several times. # ks14 change
   components:
   - type: ScatteringGrenade
     whitelist:
       tags:
-      - GrenadeFlashBang
+      - HandGrenade
     distance: 6
     velocity: 6
   - type: ClusterGrenadeVisuals

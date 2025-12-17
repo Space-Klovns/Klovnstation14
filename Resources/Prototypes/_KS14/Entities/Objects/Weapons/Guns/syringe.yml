@@ -1,0 +1,60 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: entity
+  parent: [BaseStorageItem, BaseGunWieldable, BaseMinorContraband]
+  id: WeaponSyringeShotgun
+  name: syringe shotgun
+  description: Made from a syringe gun, this unwieldy crime against humanity lets you shoot up to 5 syringes at a time. Takes mini-syringes.
+  components:
+  - type: Storage
+    maxItemSize: Normal
+    grid:
+    - 0,0,4,0
+    whitelist:
+      tags:
+      - SyringeGunAmmo
+  - type: Construction
+    graph: SyringeShotgunGraph
+    node: shotgun
+  - type: GunSpreadModifier
+    spread: 1.4
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Guns/syringe_shotgun.rsi #Resources/Textures/_KS14/Objects/Weapons/Guns/syringe_shotgun.rsi/equipped-BACKPACK.png
+    layers:
+    - state: icon
+  - type: Clothing
+    sprite: _KS14/Objects/Weapons/Guns/syringe_shotgun.rsi
+    quickEquip: false
+    slots:
+    - Back
+    - suitStorage
+  - type: Item
+    sprite: _KS14/Objects/Weapons/Guns/syringe_shotgun_inhands_64x.rsi
+    size: Large
+    shape:
+    - 0,0,4,1
+  - type: GunRequiresWield
+  - type: Gun
+    fireRate: 0.6
+    shotsPerBurst: 5
+    burstFireRate: 220
+    selectedMode: Burst
+    availableModes:
+    - Burst
+    minAngle: 8
+    maxAngle: 30
+    angleIncrease: 12
+    soundGunshot:
+      path: /Audio/Weapons/Guns/Gunshots/syringe_gun.ogg
+    soundEmpty:
+      path: /Audio/Weapons/Guns/Empty/empty.ogg
+    clumsyProof: true
+  - type: ContainerAmmoProvider
+    container: storagebase
+  - type: ContainerContainer
+    containers:
+      storagebase: !type:Container
+        ents: []

@@ -1,0 +1,283 @@
+Entries:
+- author: John Klovnstation Himself
+  changes:
+    - message: We won doe.
+      type: Fix
+  id: 1
+  time: '1984-04-04T04:26:00.0000000+00:00'
+- author: FrauZj
+  changes:
+    - type: Add
+      message: Wizard hardsuit is now in wizard grimore
+    - type: Tweak
+      message: Made Wizard robes be an actual armor.
+    - type: Tweak
+      message: Borgs can now self-repair.
+  id: 2
+  time: '2025-10-29T09:55:52.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: You can now craft syringe shotgun, see crafting menu.
+  id: 3
+  time: '2025-10-29T10:09:44.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        You can now leap in the direction you are moving. This will do stamina
+        damage to  anything you hit.
+    - type: Tweak
+      message: Leaping now costs stamina.
+    - type: Fix
+      message: Slip combat is real again and soap/peels are no longer useless.
+  id: 4
+  time: '2025-10-29T16:04:11.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Remove
+      message: Removed species that weren't human and their guidebooks
+  id: 5
+  time: '2025-11-04T16:39:16.0000000+00:00'
+- author: FrauZj
+  changes:
+    - type: Add
+      message: Added double esword to uplink
+    - type: Add
+      message: Added eshield, jugsuit, elite hardsuit to syndie uplink
+    - type: Add
+      message: >-
+        Added cheaper versions of zed bundle and medical bundle to syndie
+        uplink. The latter only available to med.
+    - type: Tweak
+      message: Made most of super rare discounts happen much more often
+    - type: Tweak
+      message: 'More useful stuff now appears in the surplus. '
+    - type: Tweak
+      message: Estoc and Hristov no longer have slowdowns.
+    - type: Tweak
+      message: >-
+        Most of the rarely bought stuff by syndies is now cheaper, microbalance
+        o algo.
+  id: 6
+  time: '2025-11-04T17:50:31.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Tweak
+      message: >-
+        Zoom changes. Most rifles now let you see further when wielded, and the
+        default field of view has been made smaller.
+  id: 7
+  time: '2025-11-04T20:30:07.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Tweak
+      message: dimmed the lights
+  id: 8
+  time: '2025-11-04T20:39:35.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Tweak
+      message: KS14 balance changes are back!
+  id: 9
+  time: '2025-11-04T20:47:09.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Add
+      message: More vendors are now emaggable
+  id: 10
+  time: '2025-11-05T19:58:53.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Tweak
+      message: Tweaked guidebook
+  id: 11
+  time: '2025-11-05T20:00:40.0000000+00:00'
+- author: FrauZj
+  changes:
+    - type: Tweak
+      message: Crewsimov has been replaced with Asimov
+    - type: Tweak
+      message: Now borgs by default follow AI orders above others.
+  id: 12
+  time: '2025-11-08T18:12:37.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Add
+      message: SERBIAAAAAAAAAAAAAAAA
+  id: 13
+  time: '2025-11-09T17:13:05.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Tweak
+      message: Improves the camera monitor significantly.
+  id: 14
+  time: '2025-11-11T07:51:32.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: Added zipion, an easy to make atmos stimulant.
+  id: 15
+  time: '2025-11-11T20:17:41.0000000+00:00'
+- author: December
+  changes:
+    - type: Add
+      message: Scroll runes are now purchasable at wizard's spellbook!
+    - type: Tweak
+      message: G.O.R.I.L.L.A fist now stuns people for short time when its charged.
+  id: 16
+  time: '2025-11-15T17:04:48.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: >-
+        Added the molar gas mixer to allow precise mixing no matter the
+        temperature of either inlet.
+  id: 17
+  time: '2025-11-16T08:38:53.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Bloodstains have been added.
+  id: 18
+  time: '2025-11-16T08:40:57.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: All TC prices have been multiplied by 3.
+  id: 19
+  time: '2025-11-16T21:56:05.0000000+00:00'
+- author: rottenheadphones
+  changes:
+    - type: Add
+      message: Added nuclear bombs
+  id: 20
+  time: '2025-11-16T22:56:09.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: '[1] More material varieties for nuclear reactor rods/etc'
+    - type: Add
+      message: '[1] You can now make reactor rods in protolathes(?), i didnt test it'
+    - type: Add
+      message: '[1] Guidebook entries for nuclear reactor (i didnt test it either)'
+    - type: Add
+      message: >-
+        [2] Nuclear reactor will now make alarms and noise upon overheating.
+        Also gave it new ambience. Its also emaggable now
+  id: 21
+  time: '2025-11-20T09:21:50.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Tweak
+      message: >-
+        Nutriment and vitamins now heal slight amounts of damage off, aswell as
+        healing bloodloss.
+    - type: Tweak
+      message: Protein heals more brute damage and more bloodloss.
+  id: 22
+  time: '2025-11-20T10:23:14.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed textures for ammoboxes, etc
+  id: 23
+  time: '2025-11-20T22:21:57.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Add
+      message: Mk1 and related items
+  id: 24
+  time: '2025-11-21T00:56:33.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Teslagates that activate on certain alert levels. Can be crafted in
+        security lathes.
+  id: 25
+  time: '2025-11-21T02:32:43.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: The station AI can now move bots around.
+  id: 26
+  time: '2025-11-21T20:45:55.0000000+00:00'
+- author: rottenheadphones
+  changes:
+    - type: Tweak
+      message: Saltern revamp, added nuclear reactor
+  id: 27
+  time: '2025-11-23T07:23:26.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Due to shortage of nuke inspectors, centcom will now perform routine
+        calibrations of the station nuke timer.
+  id: 28
+  time: '2025-12-01T11:37:50.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: Ported Corvax canister sprites.
+    - type: Tweak
+      message: Resprited zipion and water vapor canisters sprites.
+  id: 29
+  time: '2025-12-08T16:29:33.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: >-
+        Ported nuke codes in uplink for traitors with the "Die a glorious death"
+        objective.
+    - type: Tweak
+      message: The nuke exploding ends the shift after 10-second countdown.
+  id: 30
+  time: '2025-12-08T16:56:39.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Fix
+      message: Fixed non-critical issues with DADG nuke codes port.
+  id: 31
+  time: '2025-12-09T16:10:03.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: 'Ported the guide to advanced mimery. Long live Livrah! '
+  id: 32
+  time: '2025-12-09T16:11:02.0000000+00:00'
+- author: syndicate-engineer
+  changes:
+    - type: Add
+      message: >-
+        Added new gas Argon, two reactions of Argon formation and Argon
+        Absorption
+    - type: Fix
+      message: added Zipion to paintable canister group
+  id: 33
+  time: '2025-12-17T18:01:35.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: >-
+        Ported the visual Tech Tree from Goobstation. Research is no longer
+        random!
+    - type: Tweak
+      message: Updated various technology prerequisites to fit the new tree structure.
+  id: 34
+  time: '2025-12-17T18:02:33.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: Added syndicate contraband spawners for mappers.
+  id: 35
+  time: '2025-12-17T18:03:49.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: >-
+        Flashlights are now smooth and follow your cursor when you have combat
+        mode enabled.
+  id: 36
+  time: '2025-12-17T18:05:15.0000000+00:00'

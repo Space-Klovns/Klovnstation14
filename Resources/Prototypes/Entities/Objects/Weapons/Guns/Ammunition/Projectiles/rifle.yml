@@ -1,3 +1,24 @@
+# SPDX-FileCopyrightText: 2020 AJCM-git
+# SPDX-FileCopyrightText: 2020 DrSmugleaf
+# SPDX-FileCopyrightText: 2020 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2021 Leon Friedrich
+# SPDX-FileCopyrightText: 2021 Swept
+# SPDX-FileCopyrightText: 2022 Charlese2
+# SPDX-FileCopyrightText: 2022 Kara
+# SPDX-FileCopyrightText: 2022 Vera Aguilera Puerto
+# SPDX-FileCopyrightText: 2022 metalgearsloth
+# SPDX-FileCopyrightText: 2023 Boaz1111
+# SPDX-FileCopyrightText: 2023 Vordenburg
+# SPDX-FileCopyrightText: 2023 kerisargit
+# SPDX-FileCopyrightText: 2024 IProduceWidgets
+# SPDX-FileCopyrightText: 2024 Nemanja
+# SPDX-FileCopyrightText: 2024 Plykiya
+# SPDX-FileCopyrightText: 2025 SlamBamActionman
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: entity
   id: BulletRifle
   name: bullet (.20 rifle)
@@ -7,7 +28,7 @@
   - type: Projectile
     damage:
       types:
-        Piercing: 17
+        Piercing: 27
 
 - type: entity
   id: BulletRiflePractice
@@ -29,8 +50,8 @@
   - type: Projectile
     damage:
       types:
-        Blunt: 2
-        Heat: 15
+        Blunt: 10
+        Heat: 20
 
 - type: entity
   id: BulletRifleUranium
@@ -41,6 +62,6 @@
   - type: Projectile
     damage:
       types:
-        Radiation: 7
-        Piercing: 8
+        Radiation: 15
+        Piercing: 20
 

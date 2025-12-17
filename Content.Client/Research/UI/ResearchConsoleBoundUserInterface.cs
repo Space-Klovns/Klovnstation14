@@ -1,4 +1,22 @@
+// SPDX-FileCopyrightText: 2019 Víctor Aguilera Puerto
+// SPDX-FileCopyrightText: 2019 ZelteHonor
+// SPDX-FileCopyrightText: 2021 Acruid
+// SPDX-FileCopyrightText: 2021 DrSmugleaf
+// SPDX-FileCopyrightText: 2021 Vera Aguilera Puerto
+// SPDX-FileCopyrightText: 2022 Leon Friedrich
+// SPDX-FileCopyrightText: 2022 Paul Ritter
+// SPDX-FileCopyrightText: 2022 mirrorcult
+// SPDX-FileCopyrightText: 2023 TemporalOroboros
+// SPDX-FileCopyrightText: 2024 Nemanja
+// SPDX-FileCopyrightText: 2024 Simon
+// SPDX-FileCopyrightText: 2024 metalgearsloth
+// SPDX-FileCopyrightText: 2025 Gerkada
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Shared.Research.Components;
+using Content.Shared._KS14.Research.Components;
 using Content.Shared.Research.Prototypes;
 using JetBrains.Annotations;
 using Robust.Client.UserInterface;
@@ -43,7 +61,7 @@ public sealed class ResearchConsoleBoundUserInterface : BoundUserInterface
         if (!args.WasModified<TechnologyPrototype>())
             return;
 
-        if (State is not ResearchConsoleBoundInterfaceState rState)
+        if (State is not FancyResearchConsoleState rState)
             return;
 
         _consoleMenu?.UpdatePanels(rState);
@@ -54,7 +72,7 @@ public sealed class ResearchConsoleBoundUserInterface : BoundUserInterface
     {
         base.UpdateState(state);
 
-        if (state is not ResearchConsoleBoundInterfaceState castState)
+        if (state is not FancyResearchConsoleState castState)
             return;
         _consoleMenu?.UpdatePanels(castState);
         _consoleMenu?.UpdateInformationPanel(castState);

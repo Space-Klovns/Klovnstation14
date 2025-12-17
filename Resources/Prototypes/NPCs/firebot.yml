@@ -1,13 +1,23 @@
+# SPDX-FileCopyrightText: 2023 metalgearsloth
+# SPDX-FileCopyrightText: 2024 Golinth
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: htnCompound
   id: FirebotCompound
   branches:
     - tasks:
         - !type:HTNCompoundTask
+          task: MoveToCoordinatesCompound
+    - tasks:
+        - !type:HTNCompoundTask
           task: DouseFireTargetCompound
     - tasks:
         - !type:HTNCompoundTask
-          task: IdleCompound    
-          
+          task: IdleCompound
+
 - type: htnCompound
   id: DouseFireTargetCompound
   branches:
@@ -19,7 +29,7 @@
         - !type:HTNPrimitiveTask
           operator: !type:SpeakOperator
             speech: firebot-fire-detected
-            hidden: true  
+            hidden: true
 
         - !type:HTNPrimitiveTask
           operator: !type:MoveToOperator

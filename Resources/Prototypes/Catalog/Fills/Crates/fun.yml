@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: Contributors to the GoobStation14 project
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: entityTable
   id: AllPlushiesTable
   table: !type:GroupSelector
@@ -152,6 +156,7 @@
       - id: HarmonicaInstrument
       - id: RecorderInstrument
       - id: GlockenspielInstrument
+      - id: Boombox #ks14
 
 - type: entity
   id: CrateFunInstrumentsBrass

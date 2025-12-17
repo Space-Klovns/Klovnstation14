@@ -1,3 +1,12 @@
+# SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Nemanja
+# SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 metalgearsloth
+#
+# SPDX-License-Identifier: MPL-2.0
+
 # Asteroid
 - type: biomeTemplate
   id: SpaceDebris
@@ -96,7 +105,10 @@
     entities:
     - SalvageSpawnerTreasure
     - SalvageSpawnerTreasure
+    - SalvageSpawnerEquipment # KS14 - Readded this
+    - SalvageSpawnerEquipment # KS14 - Readded this
     - SalvageSpawnerTreasureValuable
+    - SalvageSpawnerEquipmentValuable # KS14 - Readded this
   - !type:BiomeEntityLayer
     allowedTiles:
     - FloorSteel

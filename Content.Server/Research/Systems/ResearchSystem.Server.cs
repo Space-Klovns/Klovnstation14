@@ -1,3 +1,13 @@
+// SPDX-FileCopyrightText: 2022 Paul Ritter
+// SPDX-FileCopyrightText: 2022 Rane
+// SPDX-FileCopyrightText: 2022 metalgearsloth
+// SPDX-FileCopyrightText: 2024 Tayrtahn
+// SPDX-FileCopyrightText: 2025 Gerkada
+// SPDX-FileCopyrightText: 2025 Nemanja
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using System.Linq;
 using Content.Server.Power.EntitySystems;
 using Content.Shared.Research.Components;
@@ -61,7 +71,7 @@ public sealed partial class ResearchSystem
     /// <param name="serverComponent"></param>
     /// <param name="dirtyServer">Whether or not to dirty the server component after registration</param>
     public void RegisterClient(EntityUid client, EntityUid server, ResearchClientComponent? clientComponent = null,
-        ResearchServerComponent? serverComponent = null,  bool dirtyServer = true)
+        ResearchServerComponent? serverComponent = null, bool dirtyServer = true)
     {
         if (!Resolve(client, ref clientComponent, false) || !Resolve(server, ref serverComponent, false))
             return;
@@ -71,7 +81,34 @@ public sealed partial class ResearchSystem
 
         serverComponent.Clients.Add(client);
         clientComponent.Server = server;
-        SyncClientWithServer(client, clientComponent: clientComponent);
+
+    // --- START DATABASE SYNC FIX ---
+    // 1. Copy all current unlocked technologies and recipes from the Server (master database)
+    //    to the new Client's local database (Lathe/TechFab).
+    if (TryComp<TechnologyDatabaseComponent>(server, out var serverDb) &&
+        TryComp<TechnologyDatabaseComponent>(client, out var clientDb))
+    {
+        // Sync Unlocked Technologies (Tech IDs)
+        // We use a simple loop/Contains check to avoid the UnionWith compiler error on List<T>.
+        foreach (var techId in serverDb.UnlockedTechnologies)
+        {
+            if (!clientDb.UnlockedTechnologies.Contains(techId))
+                clientDb.UnlockedTechnologies.Add(techId);
+        }
+
+        // Sync Unlocked Recipes (Goobstation/dynamic recipes)
+        foreach (var recipeId in serverDb.UnlockedRecipes)
+        {
+            if (!clientDb.UnlockedRecipes.Contains(recipeId))
+                clientDb.UnlockedRecipes.Add(recipeId);
+        }
+
+        // Mark the client's local database as dirty to sync the component state to the UI.
+        Dirty(client, clientDb);
+    }
+    // --- END DATABASE SYNC FIX ---
+
+        UpdateClientInterface(client, component: clientComponent); // This now sends the populated database state.
 
         if (dirtyServer && !TerminatingOrDeleted(server))
             Dirty(server, serverComponent);
@@ -113,7 +150,7 @@ public sealed partial class ResearchSystem
 
         serverComponent.Clients.Remove(client);
         clientComponent.Server = null;
-        SyncClientWithServer(client, clientComponent: clientComponent);
+        UpdateClientInterface(client, component: clientComponent);
 
         if (dirtyServer && !TerminatingOrDeleted(server))
         {

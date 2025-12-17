@@ -1,3 +1,30 @@
+// SPDX-FileCopyrightText: 2021 Alexander Evgrashin
+// SPDX-FileCopyrightText: 2022 Alex Evgrashin
+// SPDX-FileCopyrightText: 2022 Flipp Syder
+// SPDX-FileCopyrightText: 2022 Kara
+// SPDX-FileCopyrightText: 2022 Moony
+// SPDX-FileCopyrightText: 2022 T-Stalker
+// SPDX-FileCopyrightText: 2022 Vera Aguilera Puerto
+// SPDX-FileCopyrightText: 2022 ike709
+// SPDX-FileCopyrightText: 2022 mirrorcult
+// SPDX-FileCopyrightText: 2022 wrexbe
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Emisse
+// SPDX-FileCopyrightText: 2023 Jezithyr
+// SPDX-FileCopyrightText: 2023 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2023 Vordenburg
+// SPDX-FileCopyrightText: 2023 keronshb
+// SPDX-FileCopyrightText: 2023 metalgearsloth
+// SPDX-FileCopyrightText: 2023 pofitlo
+// SPDX-FileCopyrightText: 2025 Andrew Malcolm O'Neill
+// SPDX-FileCopyrightText: 2025 Gerkada
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Leon Friedrich
+// SPDX-FileCopyrightText: 2025 Southbridge
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+//
+// SPDX-License-Identifier: MIT
+
 using System.Threading;
 using Content.Server.Explosion.EntitySystems;
 using Content.Shared.Containers.ItemSlots;
@@ -60,6 +87,12 @@ namespace Content.Server.Nuke
 
         [DataField("alertLevelOnActivate")] public string AlertLevelOnActivate = default!;
         [DataField("alertLevelOnDeactivate")] public string AlertLevelOnDeactivate = default!;
+
+       /// <summary>
+       ///     If the detonation should end the current round if on the main grid.
+       /// </summary>
+       [DataField("endRound")]
+       public bool EndRound = true;
 
         /// <summary>
         ///     This is stored so we can do a funny by making 0 shift the last played note up by 12 semitones (octave)
@@ -169,6 +202,22 @@ namespace Content.Server.Nuke
         /// </summary>
         [DataField]
         public NukeStatus Status = NukeStatus.AWAIT_DISK;
+
+        // wizden-april-fools-2025 nuke-calibration -> ks14 port:
+        /// <summary>
+        ///     Should we allow disarming/arming, even if there's no disk?
+        ///     Does not allow anchoring/unanchoring without the disk.
+        ///     Arming nuke still requires code to be entered.
+        /// </summary>
+        [ViewVariables]
+        public bool DiskBypassEnabled = false;
+
+        // wizden-april-fools-2025 nuke-calibration -> ks14 port:
+        /// <summary>
+        ///     Should we reset the disk bypass value, and the nuke timer, to their defaults when the nuke is disarmed?
+        /// </summary>
+        [ViewVariables]
+        public bool ShouldResetAfterDiskBypass = false;
 
         /// <summary>
         ///     Check if nuke has already played the nuke song so we don't do it again

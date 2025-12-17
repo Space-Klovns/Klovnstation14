@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: Contributors to the GoobStation14 project
+#
+# SPDX-License-Identifier: MPL-2.0
+
 ## Static
 
 - type: latheRecipePack
@@ -54,6 +58,7 @@
   recipes:
   - SynthesizerInstrument
   - PushHorn
+  - Boombox #KS14
 
 - type: latheRecipePack
   id: ServiceBoards

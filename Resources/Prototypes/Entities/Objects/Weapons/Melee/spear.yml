@@ -39,7 +39,7 @@
     wideAnimationRotation: -135
     damage:
       types:
-        Piercing: 12
+        Piercing: 15
     angle: 0
     animation: WeaponArcThrust
     soundHit:
@@ -47,7 +47,7 @@
   - type: DamageOtherOnHit
     damage:
       types:
-        Piercing: 15
+        Piercing: 19
   - type: Item
     size: Ginormous
   - type: Clothing
@@ -77,7 +77,7 @@
   - type: IncreaseDamageOnWield
     damage:
       types:
-        Piercing: 4
+        Piercing: 5
   - type: Damageable
     damageContainer: Inorganic
   - type: Destructible
@@ -131,11 +131,11 @@
     wideAnimationRotation: -135
     damage:
       types:
-        Piercing: 15
+        Piercing: 19
   - type: DamageOtherOnHit
     damage:
       types:
-        Piercing: 18
+        Piercing: 23
   - type: Construction
     graph: SpearReinforced
 
@@ -151,11 +151,11 @@
     wideAnimationRotation: -135
     damage:
       types:
-        Piercing: 18
+        Piercing: 23
   - type: DamageOtherOnHit
     damage:
       types:
-        Piercing: 21
+        Piercing: 27
   - type: Construction
     graph: SpearPlasma
 
@@ -171,13 +171,13 @@
     wideAnimationRotation: -135
     damage:
       types:
-        Piercing: 10
-        Radiation: 8
+        Piercing: 14.5
+        Radiation: 12.5
   - type: DamageOtherOnHit
     damage:
       types:
-        Piercing: 12
-        Radiation: 9
+        Piercing: 16
+        Radiation: 15
   - type: Construction
     graph: SpearUranium
 
@@ -228,10 +228,10 @@
     wideAnimationRotation: -135
     damage:
       types:
-        Piercing: 18 #same as plasma spear
+        Piercing: 23 #same as plasma spear
   - type: DamageOtherOnHit
     damage:
       types:
-        Piercing: 25 #throw dmg enough to two-shot carp
+        Piercing: 27 #throw dmg enough to two-shot carp
   - type: Construction
     graph: SpearSharkMinnow

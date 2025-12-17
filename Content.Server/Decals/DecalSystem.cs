@@ -1,3 +1,24 @@
+// SPDX-FileCopyrightText: 2021 Paul
+// SPDX-FileCopyrightText: 2021 Paul Ritter
+// SPDX-FileCopyrightText: 2022 Acruid
+// SPDX-FileCopyrightText: 2022 Kara D
+// SPDX-FileCopyrightText: 2022 Moony
+// SPDX-FileCopyrightText: 2022 Vera Aguilera Puerto
+// SPDX-FileCopyrightText: 2022 mirrorcult
+// SPDX-FileCopyrightText: 2023 Chief-Engineer
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2024 Leon Friedrich
+// SPDX-FileCopyrightText: 2024 MilenVolf
+// SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2025 J
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 SlamBamActionman
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2025 TemporalOroboros
+// SPDX-FileCopyrightText: 2025 metalgearsloth
+//
+// SPDX-License-Identifier: MIT
+
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -114,7 +135,7 @@ namespace Content.Server.Decals
 
             while (enumerator.MoveNext(out var tile))
             {
-                var tilePos = (Vector2) tile.Value.GridIndices;
+                var tilePos = (Vector2)tile.Value.GridIndices;
                 var chunkIndices = GetChunkIndices(tilePos);
 
                 if (!oldChunkCollection.TryGetValue(chunkIndices, out var oldChunk))
@@ -284,12 +305,12 @@ namespace Content.Server.Decals
         {
             var id = GetNetEntity(uid);
             chunk.LastModified = _timing.CurTick;
-            if(!_dirtyChunks.ContainsKey(id))
+            if (!_dirtyChunks.ContainsKey(id))
                 _dirtyChunks[id] = new HashSet<Vector2i>();
             _dirtyChunks[id].Add(chunkIndices);
         }
 
-        public bool TryAddDecal(string id, EntityCoordinates coordinates, out uint decalId, Color? color = null, Angle? rotation = null, int zIndex = 0, bool cleanable = false)
+        public override bool TryAddDecal(string id, EntityCoordinates coordinates, out uint decalId, Color? color = null, Angle? rotation = null, int zIndex = 0, bool cleanable = false)
         {
             rotation ??= Angle.Zero;
             var decal = new Decal(coordinates.Position, id, color, rotation.Value, zIndex, cleanable);
@@ -297,7 +318,7 @@ namespace Content.Server.Decals
             return TryAddDecal(decal, coordinates, out decalId);
         }
 
-        public bool TryAddDecal(Decal decal, EntityCoordinates coordinates, out uint decalId)
+        public override bool TryAddDecal(Decal decal, EntityCoordinates coordinates, out uint decalId)
         {
             decalId = 0;
 
@@ -586,7 +607,7 @@ namespace Content.Server.Decals
             }
 
             if (updatedDecals.Count != 0 || staleChunks.Count != 0)
-                RaiseNetworkEvent(new DecalChunkUpdateEvent{Data = updatedDecals, RemovedChunks = staleChunks}, session);
+                RaiseNetworkEvent(new DecalChunkUpdateEvent { Data = updatedDecals, RemovedChunks = staleChunks }, session);
 
             ReturnToPool(updatedChunks);
             ReturnToPool(staleChunks);

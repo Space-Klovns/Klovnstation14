@@ -1,3 +1,14 @@
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 coolmankid12345
+// SPDX-FileCopyrightText: 2025 Errant
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 ScarKy0
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+// SPDX-FileCopyrightText: 2025 nabegator220
+// SPDX-FileCopyrightText: 2025 slarticodefast
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Server.Administration.Logs;
 using Content.Server.Mind;
 using Content.Server.Popups;
@@ -32,9 +43,6 @@ public sealed class MindShieldSystem : EntitySystem
 
     private void OnImplantImplanted(Entity<MindShieldImplantComponent> ent, ref ImplantImplantedEvent ev)
     {
-        if (ev.Implanted == null)
-            return;
-
         EnsureComp<MindShieldComponent>(ev.Implanted);
         MindShieldRemovalCheck(ev.Implanted, ev.Implant);
     }
@@ -51,10 +59,20 @@ public sealed class MindShieldSystem : EntitySystem
             return;
         }
 
-        if (_mindSystem.TryGetMind(implanted, out var mindId, out _) &&
-            _roleSystem.MindRemoveRole<RevolutionaryRoleComponent>(mindId))
+        if (_mindSystem.TryGetMind(implanted, out var mindId, out var mind))
         {
-            _adminLogManager.Add(LogType.Mind, LogImpact.Medium, $"{ToPrettyString(implanted)} was deconverted due to being implanted with a Mindshield.");
+            if (_roleSystem.MindRemoveRole<RevolutionaryRoleComponent>(mindId))
+                _adminLogManager.Add(LogType.Mind, LogImpact.Medium, $"{ToPrettyString(implanted)} was deconverted after being implanted with a Mindshield.");
+
+            if (_roleSystem.MindRemoveRole<TraitorRoleComponent>(mindId)) //removes traitor from traitors - KS14
+            {
+                // its a list so we keep it at ZZERO...!!
+                var objectivesLength = mind.Objectives != null ? mind.Objectives.Count : 0;
+                for (var i = 0; i < objectivesLength; i++)
+                    _mindSystem.TryRemoveObjective(mindId, mind, 0);
+
+                _adminLogManager.Add(LogType.Mind, LogImpact.Medium, $"{ToPrettyString(implanted)} was detraitored after being implanted with a Mindshield.");
+            }
         }
     }
 

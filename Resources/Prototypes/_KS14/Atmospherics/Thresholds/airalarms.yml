@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: alarmThreshold
+  id: stationZipion
+  upperBound: !type:AlarmThresholdSetting # KS14 TODO: how does this reflect on the game? what is okay??
+    threshold: 2
+  upperWarnAround: !type:AlarmThresholdSetting
+    threshold: 0.5

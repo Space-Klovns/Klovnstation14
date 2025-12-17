@@ -1,3 +1,17 @@
+// SPDX-FileCopyrightText: 2022 Paul Ritter
+// SPDX-FileCopyrightText: 2022 Vera Aguilera Puerto
+// SPDX-FileCopyrightText: 2023 Chief-Engineer
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2024 Jezithyr
+// SPDX-FileCopyrightText: 2024 Leon Friedrich
+// SPDX-FileCopyrightText: 2024 Mervill
+// SPDX-FileCopyrightText: 2024 drakewill-CRL
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 metalgearsloth
+// SPDX-FileCopyrightText: 2025 nabegator220
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Server.Atmos.Components;
 using Content.Server.Atmos.Reactions;
 using Content.Shared.Atmos;
@@ -245,6 +259,15 @@ public sealed partial class AtmosphereSystem
 
         tile.Hotspot = new Hotspot();
         args.Handled = true;
+
+        var fireEvent = new TileExtinguishEvent();
+        _entSet.Clear(); // sus
+        _lookup.GetLocalEntitiesIntersecting(tile.GridIndex, tile.GridIndices, _entSet, 0f);
+
+        foreach (var entity in _entSet)
+        {
+            RaiseLocalEvent(entity, fireEvent);
+        }
 
         //var ev = new InvalidateTileMethodEvent(uid, args.Tile);
         //GridInvalidateTile(uid, component, ref ev);

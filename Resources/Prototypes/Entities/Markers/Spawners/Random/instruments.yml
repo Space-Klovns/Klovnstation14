@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: Contributors to the GoobStation14 project
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: entityTable
   id: RandomInstrumentTable
   table: !type:GroupSelector
@@ -37,6 +41,7 @@
       - id: RockGuitarInstrument
       - id: MusicBoxInstrument
       - id: ViolaInstrument
+      - id: Boombox
 
 - type: entityTable
   id: VarietyInstrumentTable

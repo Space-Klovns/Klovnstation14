@@ -23,6 +23,16 @@
     Glass: 100
 
 - type: latheRecipe
+  id: ClusterBang
+  result: ClusterBang
+  categories:
+  - Weapons
+  completetime: 3
+  materials:
+    Steel: 500
+    Plastic: 500
+
+- type: latheRecipe
   parent: BaseWeaponRecipe
   id: ChemicalPayload
   result: ChemicalPayload
@@ -220,7 +230,7 @@
 - type: latheRecipe
   id: CableDetStack1
   result: CableDetStack1
-  categories: 
+  categories:
   - Weapons
   completetime: 2
   materials:
@@ -231,7 +241,7 @@
 - type: latheRecipe
   id: EmptyDetonator
   result: EmptyDetonator
-  categories: 
+  categories:
   - Weapons
   completetime: 3
   materials:

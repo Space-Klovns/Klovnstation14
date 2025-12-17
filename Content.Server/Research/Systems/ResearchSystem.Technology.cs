@@ -1,3 +1,15 @@
+// SPDX-FileCopyrightText: 2022 Paul Ritter
+// SPDX-FileCopyrightText: 2022 metalgearsloth
+// SPDX-FileCopyrightText: 2023 Nemanja
+// SPDX-FileCopyrightText: 2024 Tayrtahn
+// SPDX-FileCopyrightText: 2025 DrSmugleaf
+// SPDX-FileCopyrightText: 2025 Gerkada
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+// SPDX-FileCopyrightText: 2025 pathetic meowmeow
+// SPDX-FileCopyrightText: 2025 themias
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Shared.Database;
 using Content.Shared.Research.Components;
 using Content.Shared.Research.Prototypes;
@@ -81,7 +93,7 @@ public sealed partial class ResearchSystem
             return false;
 
         AddTechnology(serverEnt.Value, prototype);
-        TrySetMainDiscipline(prototype, serverEnt.Value);
+        //TrySetMainDiscipline(prototype, serverEnt.Value); //Goobstation commented
         ModifyServerPoints(serverEnt.Value, -prototype.Cost);
         UpdateTechnologyCards(serverEnt.Value);
 
@@ -160,15 +172,4 @@ public sealed partial class ResearchSystem
         return true;
     }
 
-    private void OnDatabaseRegistrationChanged(EntityUid uid, TechnologyDatabaseComponent component, ref ResearchRegistrationChangedEvent args)
-    {
-        if (args.Server != null)
-            return;
-        component.MainDiscipline = null;
-        component.CurrentTechnologyCards = new List<string>();
-        component.SupportedDisciplines = new List<ProtoId<TechDisciplinePrototype>>();
-        component.UnlockedTechnologies = new List<ProtoId<TechnologyPrototype>>();
-        component.UnlockedRecipes = new List<ProtoId<LatheRecipePrototype>>();
-        Dirty(uid, component);
-    }
 }

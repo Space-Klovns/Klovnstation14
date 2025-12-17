@@ -2,7 +2,3 @@
 	path = RobustToolbox
 	url = https://github.com/space-wizards/RobustToolbox.git
 	branch = master
-[submodule "Manifest"]
-	path = Manifest
-	url = https://github.com/forfeit-manifest/Manifest-Content-SM.git
-	branch = master

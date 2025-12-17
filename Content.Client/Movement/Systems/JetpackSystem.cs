@@ -1,8 +1,23 @@
+// SPDX-FileCopyrightText: 2022 Kara
+// SPDX-FileCopyrightText: 2022 Leon Friedrich
+// SPDX-FileCopyrightText: 2022 rolfero
+// SPDX-FileCopyrightText: 2023 Visne
+// SPDX-FileCopyrightText: 2024 Plykiya
+// SPDX-FileCopyrightText: 2024 slarticodefast
+// SPDX-FileCopyrightText: 2025 Funce
+// SPDX-FileCopyrightText: 2025 Gerkada
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+// SPDX-FileCopyrightText: 2025 metalgearsloth
+//
+// SPDX-License-Identifier: MIT
+
 using Content.Shared.Clothing.Components;
 using Content.Shared.Clothing.EntitySystems;
 using Content.Shared.Movement.Components;
 using Content.Shared.Movement.Systems;
 using Robust.Client.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Components;
@@ -23,14 +38,12 @@ public sealed class JetpackSystem : SharedJetpackSystem
         SubscribeLocalEvent<JetpackComponent, AppearanceChangeEvent>(OnJetpackAppearance);
     }
 
-    protected override bool CanEnable(EntityUid uid, JetpackComponent component)
-    {
-        // No predicted atmos so you'd have to do a lot of funny to get this working.
-        return false;
-    }
+    protected override bool CanEnable(Entity<JetpackComponent> jetpack)
+        => false;
 
-    private void OnJetpackAppearance(EntityUid uid, JetpackComponent component, ref AppearanceChangeEvent args)
+    private void OnJetpackAppearance(Entity<JetpackComponent> jetpack, ref AppearanceChangeEvent args)
     {
+        var uid = jetpack.Owner;
         Appearance.TryGetData<bool>(uid, JetpackVisuals.Enabled, out var enabled, args.Component);
 
         if (TryComp<ClothingComponent>(uid, out var clothing))
@@ -46,26 +59,30 @@ public sealed class JetpackSystem : SharedJetpackSystem
 
         // TODO: Please don't copy-paste this I beg
         // make a generic particle emitter system / actual particles instead.
-        var query = EntityQueryEnumerator<ActiveJetpackComponent, TransformComponent>();
-
-        while (query.MoveNext(out var uid, out var comp, out var xform))
+        var query = EntityQueryEnumerator<ActiveJetpackComponent>();
+        while (query.MoveNext(out var uid, out var comp))
         {
-            if (_transform.InRange(xform.Coordinates, comp.LastCoordinates, comp.MaxDistance))
+            var transform = Transform(uid);
+            var currentCoords = _transform.GetMoverCoordinates(transform.Coordinates);
+
+            if (comp.LastCoordinates is not { })
             {
-                if (_timing.CurTime < comp.TargetTime)
-                    continue;
+                comp.LastCoordinates = currentCoords;
+                continue;
             }
 
-            comp.LastCoordinates = _transform.GetMoverCoordinates(xform.Coordinates);
-            comp.TargetTime = _timing.CurTime + TimeSpan.FromSeconds(comp.EffectCooldown);
+            // Only spawn particles if we're far-enough from the last place at which we spawned particles, and a long-enough timespan has passed since then.
+            if (_transform.InRange(transform.Coordinates, comp.LastCoordinates.Value, comp.MaxDistance) && _timing.CurTime < comp.TargetTime)
+                continue;
 
-            CreateParticles(uid);
+            comp.LastCoordinates = currentCoords;
+            comp.TargetTime = _timing.CurTime + comp.EffectCooldown;
+            CreateParticles(uid, transform);
         }
     }
 
-    private void CreateParticles(EntityUid uid)
+    private void CreateParticles(EntityUid uid, TransformComponent uidXform)
     {
-        var uidXform = Transform(uid);
         // Don't show particles unless the user is moving.
         if (Container.TryGetContainingContainer((uid, uidXform, null), out var container) &&
             TryComp<PhysicsComponent>(container.Owner, out var body) &&

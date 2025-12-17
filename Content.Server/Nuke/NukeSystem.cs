@@ -1,3 +1,48 @@
+// SPDX-FileCopyrightText: 2021 20kdc
+// SPDX-FileCopyrightText: 2021 Alexander Evgrashin
+// SPDX-FileCopyrightText: 2022 Alex Evgrashin
+// SPDX-FileCopyrightText: 2022 Chris V
+// SPDX-FileCopyrightText: 2022 Flipp Syder
+// SPDX-FileCopyrightText: 2022 Moony
+// SPDX-FileCopyrightText: 2022 Morber
+// SPDX-FileCopyrightText: 2022 Morbo
+// SPDX-FileCopyrightText: 2022 Paul Ritter
+// SPDX-FileCopyrightText: 2022 Vera Aguilera Puerto
+// SPDX-FileCopyrightText: 2022 Veritius
+// SPDX-FileCopyrightText: 2022 ike709
+// SPDX-FileCopyrightText: 2022 mirrorcult
+// SPDX-FileCopyrightText: 2022 wrexbe
+// SPDX-FileCopyrightText: 2023 Alekshhh
+// SPDX-FileCopyrightText: 2023 Ben
+// SPDX-FileCopyrightText: 2023 BenOwnby
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Kevin Zheng
+// SPDX-FileCopyrightText: 2023 Vasilis
+// SPDX-FileCopyrightText: 2023 Vordenburg
+// SPDX-FileCopyrightText: 2023 deltanedas
+// SPDX-FileCopyrightText: 2023 keronshb
+// SPDX-FileCopyrightText: 2024 Cojoke
+// SPDX-FileCopyrightText: 2024 Errant
+// SPDX-FileCopyrightText: 2024 Kara
+// SPDX-FileCopyrightText: 2024 MilenVolf
+// SPDX-FileCopyrightText: 2024 Nemanja
+// SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2024 Plykiya
+// SPDX-FileCopyrightText: 2024 Tayrtahn
+// SPDX-FileCopyrightText: 2024 Winkarst
+// SPDX-FileCopyrightText: 2024 nikthechampiongr
+// SPDX-FileCopyrightText: 2025 Andrew Malcolm O'Neill
+// SPDX-FileCopyrightText: 2025 Gerkada
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Leon Friedrich
+// SPDX-FileCopyrightText: 2025 Southbridge
+// SPDX-FileCopyrightText: 2025 TemporalOroboros
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+// SPDX-FileCopyrightText: 2025 metalgearsloth
+// SPDX-FileCopyrightText: 2025 pathetic meowmeow
+//
+// SPDX-License-Identifier: MIT
+
 using Content.Server.AlertLevel;
 using Content.Server.Audio;
 using Content.Server.Chat.Systems;
@@ -5,6 +50,7 @@ using Content.Server.Explosion.EntitySystems;
 using Content.Server.Kitchen.Components;
 using Content.Server.Pinpointer;
 using Content.Server.Popups;
+using Content.Server.RoundEnd;
 using Content.Server.Station.Systems;
 using Content.Shared.Audio;
 using Content.Shared.Containers.ItemSlots;
@@ -23,6 +69,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Player;
 using Robust.Shared.Random;
 using Robust.Shared.Utility;
+using Robust.Shared.Timing;
 
 namespace Content.Server.Nuke;
 
@@ -45,6 +92,7 @@ public sealed class NukeSystem : EntitySystem
     [Dependency] private readonly UserInterfaceSystem _ui = default!;
     [Dependency] private readonly AppearanceSystem _appearance = default!;
     [Dependency] private readonly TurfSystem _turf = default!;
+    [Dependency] private readonly RoundEndSystem _roundEndSystem = default!;
 
     /// <summary>
     ///     Used to calculate when the nuke song should start playing for maximum kino with the nuke sfx
@@ -263,7 +311,7 @@ public sealed class NukeSystem : EntitySystem
 
     private void OnArmButtonPressed(EntityUid uid, NukeComponent component, NukeArmedMessage args)
     {
-        if (!component.DiskSlot.HasItem)
+        if (!component.DiskSlot.HasItem && !component.DiskBypassEnabled)
             return;
 
         if (component.Status == NukeStatus.AWAIT_ARM && Transform(uid).Anchored)
@@ -284,9 +332,10 @@ public sealed class NukeSystem : EntitySystem
         if (args.Handled || args.Cancelled)
             return;
 
+        var bypass = component.DiskBypassEnabled; // wizden-april-fools-2025 nuke-calibration -> ks14 port:
         DisarmBomb(uid, component);
 
-        var ev = new NukeDisarmSuccessEvent();
+        var ev = new NukeDisarmSuccessEvent(!bypass); // wizden-april-fools-2025 nuke-calibration -> ks14 port:
         RaiseLocalEvent(ev);
 
         args.Handled = true;
@@ -328,7 +377,7 @@ public sealed class NukeSystem : EntitySystem
         // play alert sound if time is running out
         if (nuke.RemainingTime <= nuke.AlertSoundTime && !nuke.PlayedAlertSound)
         {
-            _sound.PlayGlobalOnStation(uid, _audio.ResolveSound(nuke.AlertSound), new AudioParams{Volume = -5f});
+            _sound.PlayGlobalOnStation(uid, _audio.ResolveSound(nuke.AlertSound), new AudioParams { Volume = -5f });
             _sound.StopStationEventMusic(uid, StationEventMusicType.Nuke);
             nuke.PlayedAlertSound = true;
             UpdateAppearance(uid, nuke);
@@ -352,11 +401,11 @@ public sealed class NukeSystem : EntitySystem
         switch (component.Status)
         {
             case NukeStatus.AWAIT_DISK:
-                if (component.DiskSlot.HasItem)
+                if (component.DiskSlot.HasItem || component.DiskBypassEnabled) // wizden-april-fools-2025 nuke-calibration -> ks14 port:
                     component.Status = NukeStatus.AWAIT_CODE;
                 break;
             case NukeStatus.AWAIT_CODE:
-                if (!component.DiskSlot.HasItem)
+                if (!component.DiskSlot.HasItem && !component.DiskBypassEnabled) // wizden-april-fools-2025 nuke-calibration -> ks14 port:
                 {
                     component.Status = NukeStatus.AWAIT_DISK;
                     component.EnteredCode = "";
@@ -403,18 +452,19 @@ public sealed class NukeSystem : EntitySystem
 
         var allowArm = component.DiskSlot.HasItem &&
                        (component.Status == NukeStatus.AWAIT_ARM ||
-                        component.Status == NukeStatus.ARMED);
+                        component.Status == NukeStatus.ARMED) || // wizden-april-fools-2025 nuke-calibration -> ks14 port:
+                        component.DiskBypassEnabled; // wizden-april-fools-2025 nuke-calibration -> ks14 port:
 
         var state = new NukeUiState
         {
             Status = component.Status,
-            RemainingTime = (int) component.RemainingTime,
+            RemainingTime = (int)component.RemainingTime,
             DiskInserted = component.DiskSlot.HasItem,
             IsAnchored = anchored,
             AllowArm = allowArm,
             EnteredCodeLength = component.EnteredCode.Length,
             MaxCodeLength = component.CodeLength,
-            CooldownTime = (int) component.CooldownTime,
+            CooldownTime = (int)component.CooldownTime,
         };
 
         _ui.SetUiState(uid, NukeUiKey.Key, state);
@@ -457,7 +507,7 @@ public sealed class NukeSystem : EntitySystem
         var ret = "";
         for (var i = 0; i < length; i++)
         {
-            var c = (char) _random.Next('0', '9' + 1);
+            var c = (char)_random.Next('0', '9' + 1);
             ret += c;
         }
 
@@ -486,8 +536,8 @@ public sealed class NukeSystem : EntitySystem
             _alertLevel.SetLevel(stationUid.Value, component.AlertLevelOnActivate, true, true, true, true);
 
         var pos = _transform.GetMapCoordinates(uid, xform: nukeXform);
-        var x = (int) pos.X;
-        var y = (int) pos.Y;
+        var x = (int)pos.X;
+        var y = (int)pos.Y;
         var posText = $"({x}, {y})";
 
         // We are collapsing the randomness here, otherwise we would get separate random song picks for checking duration and when actually playing the song afterwards
@@ -495,13 +545,13 @@ public sealed class NukeSystem : EntitySystem
 
         // warn a crew
         var announcement = Loc.GetString("nuke-component-announcement-armed",
-            ("time", (int) component.RemainingTime),
+            ("time", (int)component.RemainingTime),
             ("location", FormattedMessage.RemoveMarkupOrThrow(_navMap.GetNearestBeaconString((uid, nukeXform)))));
         var sender = Loc.GetString("nuke-component-announcement-sender");
         _chatSystem.DispatchStationAnnouncement(stationUid ?? uid, announcement, sender, false, null, Color.Red);
 
         _sound.PlayGlobalOnStation(uid, _audio.ResolveSound(component.ArmSound));
-        _nukeSongLength = (float) _audio.GetAudioLength(_selectedNukeSong).TotalSeconds;
+        _nukeSongLength = (float)_audio.GetAudioLength(_selectedNukeSong).TotalSeconds;
 
         // turn on the spinny light
         _pointLight.SetEnabled(uid, true);
@@ -561,6 +611,15 @@ public sealed class NukeSystem : EntitySystem
         component.Status = NukeStatus.COOLDOWN;
         component.CooldownTime = component.Cooldown;
 
+        // wizden-april-fools-2025 nuke-calibration -> ks14 port:
+        if (component.ShouldResetAfterDiskBypass == true)
+        {
+            component.DiskBypassEnabled = false;
+            component.RemainingTime = component.Timer;
+        }
+
+        component.ShouldResetAfterDiskBypass = false;
+
         UpdateUserInterface(uid, component);
         UpdateAppearance(uid, component);
     }
@@ -582,7 +641,8 @@ public sealed class NukeSystem : EntitySystem
     /// <summary>
     ///     Force bomb to explode immediately
     /// </summary>
-    public void ActivateBomb(EntityUid uid, NukeComponent? component = null,
+    public void ActivateBomb(EntityUid uid,
+        NukeComponent? component = null,
         TransformComponent? transform = null)
     {
         if (!Resolve(uid, ref component, ref transform))
@@ -602,7 +662,23 @@ public sealed class NukeSystem : EntitySystem
         RaiseLocalEvent(new NukeExplodedEvent()
         {
             OwningStation = transform.GridUid,
+            EndRound = component.EndRound,
         });
+
+        // KS14 START - Manually end the round for this specific nuke type
+        // We delay by 10 seconds to allow the explosion to kill the player for the "Die a Glorious Death" greentext.
+        if (component.EndRound)
+        {
+            Timer.Spawn(10000, () =>
+            {
+                // SAFETY CHECK: Only end the round if it is actually running!
+                if (_roundEndSystem.ExpectedCountdownEnd == null) // Or check GameTicker status
+                {
+                    _roundEndSystem.EndRound();
+                }
+            });
+        }
+        // KS14 END
 
         _sound.StopStationEventMusic(uid, StationEventMusicType.Nuke);
         Del(uid);
@@ -617,6 +693,21 @@ public sealed class NukeSystem : EntitySystem
             return;
 
         component.RemainingTime = timer;
+        UpdateUserInterface(uid, component);
+    }
+
+    // wizden-april-fools-2025 nuke-calibration -> ks14 port:
+    /// <summary>
+    ///     Sets whether we can bypass the disk when arming/disarming, and if it should be reset later.
+    /// </summary>
+    /// <param name="shouldResetLater">Whether DiskBypassEnabled, and the nuke timer, should be reset to default after nuke is disarmed.</param>
+    public void SetDiskBypassEnabled(EntityUid uid, bool diskBypass, bool shouldResetLater = true, NukeComponent? component = null)
+    {
+        if (!Resolve(uid, ref component))
+            return;
+
+        component.DiskBypassEnabled = diskBypass;
+        component.ShouldResetAfterDiskBypass = shouldResetLater;
         UpdateUserInterface(uid, component);
     }
 
@@ -674,14 +765,23 @@ public sealed class NukeSystem : EntitySystem
 public sealed class NukeExplodedEvent : EntityEventArgs
 {
     public EntityUid? OwningStation;
+    public bool EndRound;
 }
 
+// wizden-april-fools-2025 nuke-calibration -> ks14 port:
 /// <summary>
 ///     Raised directed on the nuke when its disarm doafter is successful.
 ///     So the game knows not to end.
 /// </summary>
 public sealed class NukeDisarmSuccessEvent : EntityEventArgs
 {
+    /// <summary>
+    ///     Check for NukeOps round end conditions
+    /// </summary>
+    public bool CheckRoundShouldEnd;
 
+    public NukeDisarmSuccessEvent(bool checkRoundShouldEnd)
+    {
+        CheckRoundShouldEnd = checkRoundShouldEnd;
+    }
 }
-

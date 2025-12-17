@@ -1,0 +1,64 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Taken from https://github.com/DeltaV-Station/Delta-v/blob/6004b6d86d0857e7e04998f6b806e3c9ec028501/.github/workflows/changelog.yml
+
+name: PR Changelogs
+
+concurrency: commit_action
+on:
+  pull_request_target:
+    types:
+    - closed
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  CHANGELOG_DIR: ${{ vars.CHANGELOG_DIR }}
+  PR_NUMBER: ${{ github.event.number }}
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Master
+        uses: actions/checkout@v4
+        with:
+          token: ${{ env.GH_TOKEN }}
+          ref: "${{ vars.CHANGELOG_BRANCH }}"
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "${{ vars.BOT_USER }}"
+          git config --global user.email "${{ vars.BOT_EMAIL }}"
+        shell: bash
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Install Dependencies
+        run: |
+          cd "Tools/changelog_gen"
+          npm install
+        shell: bash
+        continue-on-error: true
+
+      - name: Generate Changelog
+        run: |
+          cd "Tools/changelog_gen"
+          node changelog.js
+        shell: bash
+        continue-on-error: true
+
+      - name: Commit Changelog
+        run: |
+          git add *.yml
+          git commit -m "${{ vars.CHANGELOG_MESSAGE }} (#${{ env.PR_NUMBER }})"
+          git push
+        shell: bash
+        continue-on-error: true

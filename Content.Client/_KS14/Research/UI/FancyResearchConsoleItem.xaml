@@ -1,0 +1,32 @@
+<LayoutContainer xmlns="https://spacestation14.io"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:gfx="clr-namespace:Robust.Client.Graphics;assembly=Robust.Client"
+                 xmlns:graphics="clr-namespace:Robust.Client.Graphics;assembly=Robust.Client"
+                 xmlns:ks14="clr-namespace:Content.Client._KS14.Research.UI"
+                 Margin="5"
+                 HorizontalExpand="False"
+                 x:Class="Content.Client._KS14.Research.UI.FancyResearchConsoleItem">
+    
+    <BoxContainer Orientation="Vertical" SetSize="80 80">
+        <PanelContainer VerticalExpand="True"
+                        HorizontalExpand="True"
+                        Name="Panel">
+            <PanelContainer.PanelOverride>
+                <graphics:StyleBoxFlat BackgroundColor="#162031"
+                                       BorderColor="#4972A1"
+                                       BorderThickness="2"/>
+            </PanelContainer.PanelOverride>
+            
+            <ks14:DrawButton Name="Button"
+                             Access="Public"
+                             ModulateSelfOverride="#00000000"
+                             HorizontalExpand="True"/>
+                             
+            <TextureRect
+                Name="ResearchDisplay"
+                TextureScale="2 2"
+                Stretch="KeepAspectCentered">
+            </TextureRect>
+        </PanelContainer>
+    </BoxContainer>
+</LayoutContainer>

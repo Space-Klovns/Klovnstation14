@@ -1,3 +1,17 @@
+// SPDX-FileCopyrightText: 2022 Flipp Syder
+// SPDX-FileCopyrightText: 2022 Paul Ritter
+// SPDX-FileCopyrightText: 2022 Vera Aguilera Puerto
+// SPDX-FileCopyrightText: 2022 mirrorcult
+// SPDX-FileCopyrightText: 2022 vulppine
+// SPDX-FileCopyrightText: 2022 wrexbe
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Leon Friedrich
+// SPDX-FileCopyrightText: 2024 chromiumboy
+// SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2025 nabegator220
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Monitor;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
@@ -82,4 +96,10 @@ public sealed partial class AtmosMonitorComponent : Component
     /// </summary>
     [DataField]
     public string NodeNameMonitoredPipe = "monitored";
+
+    /// <summary>
+    /// KS14 - fire sensor - this variable is self explanatory, checks if the host tile is on fire.
+    /// </summary>
+    [DataField]
+    public bool IsOnFire = false;
 }

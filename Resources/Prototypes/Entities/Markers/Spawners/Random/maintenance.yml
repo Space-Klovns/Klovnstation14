@@ -1,3 +1,55 @@
+# SPDX-FileCopyrightText: 2022 Chris V
+# SPDX-FileCopyrightText: 2022 Kara
+# SPDX-FileCopyrightText: 2022 Moony
+# SPDX-FileCopyrightText: 2022 Pancake
+# SPDX-FileCopyrightText: 2022 Peptide90
+# SPDX-FileCopyrightText: 2022 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2022 Rane
+# SPDX-FileCopyrightText: 2022 ZeroDayDaemon
+# SPDX-FileCopyrightText: 2023 Danger Revolution!
+# SPDX-FileCopyrightText: 2023 DangerRevoltion
+# SPDX-FileCopyrightText: 2023 Ed
+# SPDX-FileCopyrightText: 2023 Nairod
+# SPDX-FileCopyrightText: 2023 Nim
+# SPDX-FileCopyrightText: 2023 PixelTK
+# SPDX-FileCopyrightText: 2023 Puro
+# SPDX-FileCopyrightText: 2023 Topy
+# SPDX-FileCopyrightText: 2023 Vordenburg
+# SPDX-FileCopyrightText: 2023 c4llv07e
+# SPDX-FileCopyrightText: 2023 faint
+# SPDX-FileCopyrightText: 2023 forthbridge
+# SPDX-FileCopyrightText: 2023 ninruB
+# SPDX-FileCopyrightText: 2023 nmajask
+# SPDX-FileCopyrightText: 2024 2013HORSEMEATSCANDAL
+# SPDX-FileCopyrightText: 2024 ArtisticRoomba
+# SPDX-FileCopyrightText: 2024 Flareguy
+# SPDX-FileCopyrightText: 2024 Ilya246
+# SPDX-FileCopyrightText: 2024 MACMAN2003
+# SPDX-FileCopyrightText: 2024 Nemanja
+# SPDX-FileCopyrightText: 2024 TakoDragon
+# SPDX-FileCopyrightText: 2024 Terraspark4941
+# SPDX-FileCopyrightText: 2024 Ubaser
+# SPDX-FileCopyrightText: 2024 brainfood1183
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2024 themias
+# SPDX-FileCopyrightText: 2024 xprospero
+# SPDX-FileCopyrightText: 2025 AsnDen
+# SPDX-FileCopyrightText: 2025 Boaz1111
+# SPDX-FileCopyrightText: 2025 Cass
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+# SPDX-FileCopyrightText: 2025 IProduceWidgets
+# SPDX-FileCopyrightText: 2025 Julian Giebel
+# SPDX-FileCopyrightText: 2025 Momo
+# SPDX-FileCopyrightText: 2025 Smugman
+# SPDX-FileCopyrightText: 2025 Southbridge
+# SPDX-FileCopyrightText: 2025 T
+# SPDX-FileCopyrightText: 2025 Unkn0wn_Gh0st
+# SPDX-FileCopyrightText: 2025 centcomofficer24
+# SPDX-FileCopyrightText: 2025 lzk
+# SPDX-FileCopyrightText: 2025 slarticodefast
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: entityTable
   id: MaintFluffTable
   table: !type:GroupSelector
@@ -335,6 +387,7 @@
       - id: RifleStock
       - id: ModularReceiver
       - id: HydroponicsToolScythe
+      - id: PistolBarrel #KS14, odds may be too high, HOWEVER, i dont give a fuck!
     # Rare Group
     - !type:GroupSelector
       weight: 5
@@ -376,7 +429,7 @@
   - type: EntityTableSpawner
     table: !type:NestedSelector
       tableId: MaintWeaponTable
-      prob: 0.6
+      prob: 0.8 #ks14, was 0.6 #220 65
 
 - type: entity
   name: Maint Loot Spawner

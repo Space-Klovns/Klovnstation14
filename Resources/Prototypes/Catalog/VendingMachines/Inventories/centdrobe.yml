@@ -1,3 +1,14 @@
+# SPDX-FileCopyrightText: 2023 Emisse
+# SPDX-FileCopyrightText: 2023 MACMAN2003
+# SPDX-FileCopyrightText: 2023 potato1234_x
+# SPDX-FileCopyrightText: 2024 Aexxie
+# SPDX-FileCopyrightText: 2024 Tunguso4ka
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+# SPDX-FileCopyrightText: 2025 Smith
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MIT
+
 - type: vendingMachineInventory
   id: CentDrobeInventory
   startingInventory:
@@ -21,3 +32,5 @@
   contrabandInventory:
     ToyFigurineCaptain: 1
     ToyFigurineHeadOfPersonnel: 1
+  emaggedInventory:
+    MeleeDebugGib: 1 #klovn, those who know

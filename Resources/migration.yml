@@ -316,6 +316,7 @@ MagazineBoxLightRifleRubber: MagazineBoxLightRifle
 MagazineBoxRifleRubber: MagazineBoxRifle
 MagazineBoxRifleBigRubber: MagazineBoxRifleBig
 MagazineBoxCaselessRifleRubber: MagazineBoxCaselessRifle
+MagazineBoxCaselessRifleBigRubber: MagazineBoxCaselessRifle10x24
 BoxMagazinePistolRubber: BoxMagazinePistol
 BoxMagazinePistolHighCapacityRubber: BoxMagazinePistolHighCapacity
 BoxMagazinePistolSubMachineGunRubber: BoxMagazinePistolSubMachineGun
@@ -721,3 +722,6 @@ ClothingUniformJumpsuitParamedicNT: ClothingUniformJumpsuitParamedic
 
 # 2025-08-29
 PrefilledSyringe: Syringe
+
+#2025-10-29 // KS14 Change - Remove spacelaw
+BookSpaceLaw: null

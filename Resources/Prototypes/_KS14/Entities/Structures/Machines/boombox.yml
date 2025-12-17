@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: entity
+  parent: BaseItem
+  id: Boombox
+  name: boombox
+  description: A handheld machine capable of playing a wide variety of tunes. Enjoyment not guaranteed.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Fun/boombox.rsi
+    state: icon
+  - type: Jukebox
+    onState: on
+    offState: off
+    selectState: select
+  - type: Item
+    size: Normal
+    sprite: _KS14/Objects/Fun/boombox.rsi
+  - type: StaticPrice
+    price: 200
+  - type: ActivatableUI
+    key: enum.JukeboxUiKey.Key
+  - type: UserInterface
+    interfaces:
+        enum.JukeboxUiKey.Key:
+          type: JukeboxBoundUserInterface

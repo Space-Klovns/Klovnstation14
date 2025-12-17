@@ -1,3 +1,9 @@
+# SPDX-FileCopyrightText: 2022 Nemanja
+# SPDX-FileCopyrightText: 2023 DrSmugleaf
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: listing
   id: DebugListing
   name: debug name
@@ -6,7 +12,7 @@
     - Debug
   cost:
     DebugDollar: 10
-    Telecrystal: 10
+    Telecrystal: 30
 
 - type: listing
   id: DebugListing3

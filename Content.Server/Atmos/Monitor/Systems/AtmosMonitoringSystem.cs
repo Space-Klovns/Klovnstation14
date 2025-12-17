@@ -1,3 +1,24 @@
+// SPDX-FileCopyrightText: 2022 Flipp Syder
+// SPDX-FileCopyrightText: 2022 Paul Ritter
+// SPDX-FileCopyrightText: 2022 Vera Aguilera Puerto
+// SPDX-FileCopyrightText: 2022 keronshb
+// SPDX-FileCopyrightText: 2022 mirrorcult
+// SPDX-FileCopyrightText: 2022 vulppine
+// SPDX-FileCopyrightText: 2022 wrexbe
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Kara
+// SPDX-FileCopyrightText: 2023 Menshin
+// SPDX-FileCopyrightText: 2024 Leon Friedrich
+// SPDX-FileCopyrightText: 2024 chromiumboy
+// SPDX-FileCopyrightText: 2024 osjarw
+// SPDX-FileCopyrightText: 2025 Palladinium
+// SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2025 Southbridge
+// SPDX-FileCopyrightText: 2025 metalgearsloth
+// SPDX-FileCopyrightText: 2025 nabegator220
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Atmos.Monitor.Components;
 using Content.Server.Atmos.Piping.Components;
@@ -52,6 +73,7 @@ public sealed class AtmosMonitorSystem : EntitySystem
         SubscribeLocalEvent<AtmosMonitorComponent, MapInitEvent>(OnMapInit);
         SubscribeLocalEvent<AtmosMonitorComponent, AtmosDeviceUpdateEvent>(OnAtmosUpdate);
         SubscribeLocalEvent<AtmosMonitorComponent, TileFireEvent>(OnFireEvent);
+        SubscribeLocalEvent<AtmosMonitorComponent, TileExtinguishEvent>(OnExtinguishEvent);
         SubscribeLocalEvent<AtmosMonitorComponent, PowerChangedEvent>(OnPowerChangedEvent);
         SubscribeLocalEvent<AtmosMonitorComponent, BeforePacketSentEvent>(BeforePacketRecv);
         SubscribeLocalEvent<AtmosMonitorComponent, DeviceNetworkPacketEvent>(OnPacketRecv);
@@ -197,29 +219,24 @@ public sealed class AtmosMonitorSystem : EntitySystem
 
     private void OnFireEvent(EntityUid uid, AtmosMonitorComponent component, ref TileFireEvent args)
     {
+        // KS14 fire sensor code
         if (!this.IsPowered(uid, EntityManager))
             return;
 
-        // if we're monitoring for atmos fire, then we make it similar to a smoke detector
-        // and just outright trigger a danger event
-        //
-        // somebody else can reset it :sunglasses:
-        if (component.MonitorFire
-            && component.LastAlarmState != AtmosAlarmType.Danger)
+        if (component.MonitorFire)
         {
-            component.TrippedThresholds |= AtmosMonitorThresholdTypeFlags.Temperature;
-            Alert(uid, AtmosAlarmType.Danger, null, component); // technically???
+            component.IsOnFire = true;
         }
+    }
+    private void OnExtinguishEvent(EntityUid uid, AtmosMonitorComponent component, TileExtinguishEvent args)
+    {
+        // KS14 fire sensor code
+        if (!this.IsPowered(uid, EntityManager))
+            return;
 
-        // only monitor state elevation so that stuff gets alarmed quicker during a fire,
-        // let the atmos update loop handle when temperature starts to reach different
-        // thresholds and different states than normal -> warning -> danger
-        if (component.TemperatureThreshold != null
-            && component.TemperatureThreshold.CheckThreshold(args.Temperature, out var temperatureState)
-            && temperatureState > component.LastAlarmState)
+        if (component.MonitorFire)
         {
-            component.TrippedThresholds |= AtmosMonitorThresholdTypeFlags.Temperature;
-            Alert(uid, AtmosAlarmType.Danger, null, component);
+            component.IsOnFire = false;
         }
     }
 
@@ -312,6 +329,12 @@ public sealed class AtmosMonitorSystem : EntitySystem
             {
                 alarmTypes &= ~AtmosMonitorThresholdTypeFlags.Gas;
             }
+        }
+
+        // KS14 fire sensor
+        if (monitor.IsOnFire)
+        {
+            state = AtmosAlarmType.Danger;
         }
 
         // if the state of the current air doesn't match the last alarm state,

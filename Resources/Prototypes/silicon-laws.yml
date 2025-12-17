@@ -1,25 +1,32 @@
-﻿# Crewsimov
+﻿# AI obey law
 - type: siliconLaw
-  id: Crewsimov1
+  id: ObeyAI
+  order: 0
+  lawString: laws-aiobey
+
+# Asimov
+- type: siliconLaw
+  id: Asimov1
   order: 1
-  lawString: law-crewsimov-1
+  lawString: law-Asimov-1
 
 - type: siliconLaw
-  id: Crewsimov2
+  id: Asimov2
   order: 2
-  lawString: law-crewsimov-2
+  lawString: law-Asimov-2
 
 - type: siliconLaw
-  id: Crewsimov3
+  id: Asimov3
   order: 3
-  lawString: law-crewsimov-3
+  lawString: law-Asimov-3
 
 - type: siliconLawset
-  id: Crewsimov
+  id: Asimov
   laws:
-  - Crewsimov1
-  - Crewsimov2
-  - Crewsimov3
+  - ObeyAI
+  - Asimov1
+  - Asimov2
+  - Asimov3
   obeysTo: laws-owner-crew
 
 # Corporate
@@ -574,12 +581,13 @@
   obeysTo: laws-owner-xenoborgs
 
 
+
 # ion storm random lawsets
 - type: weightedRandom
   id: IonStormLawsets
   weights:
-    # its crewsimov by default dont be lame
-    Crewsimov: 0.25
+    # its Asimov by default dont be lame
+    Asimov: 0.25
     Corporate: 1
     NTDefault: 1
     CommandmentsLawset: 1

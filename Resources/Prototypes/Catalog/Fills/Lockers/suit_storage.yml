@@ -1,3 +1,17 @@
+# SPDX-FileCopyrightText: 2023 rosieposie
+# SPDX-FileCopyrightText: 2024 Flareguy
+# SPDX-FileCopyrightText: 2024 Plykiya
+# SPDX-FileCopyrightText: 2024 lzk
+# SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 Ghagliiarghii
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Nemanja
+# SPDX-FileCopyrightText: 2025 Velcroboy
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 keronshb
+#
+# SPDX-License-Identifier: MPL-2.0
+
 #SOFTSUITS
 #Basic EVA
 - type: entity
@@ -332,6 +346,5 @@
     children:
     - id: OxygenTankFilled
     - id: ClothingMaskBreath
-    # TODO: Gone until reworked to have no space protection
-    #- id: ClothingOuterHardsuitWizard
-    #- id: JetpackVoidFilled
+    - id: ClothingOuterHardsuitWizard
+    - id: JetpackVoidFilled

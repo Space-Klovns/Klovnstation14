@@ -1,0 +1,64 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: entity
+  parent: AirSensorBase
+  id: FireSensor
+  name: fire sensor
+  description: A special air sensor that trips when the tile it's on is on fire. Useful for automation!
+  placement:
+    mode: SnapgridCenter
+  components:
+    - type: AtmosMonitor
+      monitorFire: true
+    - type: Transform
+      anchored: true
+    - type: Damageable
+      damageContainer: Inorganic
+      damageModifierSet: Metallic
+    - type: Destructible
+      thresholds:
+      - trigger:
+          !type:DamageTrigger
+          damage: 100
+        behaviors:
+        - !type:DoActsBehavior
+          acts: ["Destruction"]
+    - type: Physics
+      canCollide: false
+    - type: Fixtures
+      fixtures:
+        fix1:
+          shape:
+            !type:PhysShapeAabb
+            bounds: "-0.25,-0.25,0.25,0.25"
+          density: 20
+          mask:
+          - ItemMask
+          restitution: 0.3
+          friction: 0.2
+    - type: Clickable
+    - type: InteractionOutline
+    - type: ApcPowerReceiver
+    - type: ExtensionCableReceiver
+    - type: AccessReader
+      access: [ [ "Atmospherics" ] ]
+    - type: Appearance
+    - type: Construction
+      graph: FireSensor
+      node: sensor
+    - type: Sprite
+      drawdepth: FloorObjects
+      sprite: Structures/Specific/Atmospherics/sensor.rsi
+      layers:
+      - state: gsensor1
+        map: [ "enum.PowerDeviceVisualLayers.Powered" ]
+    - type: GenericVisualizer
+      visuals:
+        enum.PowerDeviceVisuals.Powered:
+          enum.PowerDeviceVisualLayers.Powered:
+            True: { state: gsensor1 }
+            False: { state: gsensor0 }
