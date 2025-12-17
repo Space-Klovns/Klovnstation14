@@ -155,7 +155,7 @@
     stackType: RegenerativeMesh
     count: 15
   - type: StackPrice
-    price: 30
+    price: 10
 
 - type: entity
   id: OintmentAdvanced1
@@ -249,7 +249,7 @@
     stackType: MedicatedSuture
     count: 15
   - type: StackPrice
-    price: 30
+    price: 5
 
 - type: entity
   id: BrutepackAdvanced1
@@ -296,7 +296,7 @@
     stackType: Bloodpack
     count: 15
   - type: StackPrice
-    price: 15
+    price: 10
 
 - type: entity
   parent: Bloodpack
