@@ -55,3 +55,8 @@
   - type: HTN
     rootTask:
       task: LaserTurretCompound
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Guns/Turrets/turrets.rsi
+    drawdepth: Mobs
+    layers:
+    - state: laser_lethal
