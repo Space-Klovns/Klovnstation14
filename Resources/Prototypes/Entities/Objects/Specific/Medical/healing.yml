@@ -201,7 +201,7 @@
     stackType: Brutepack
     count: 15
   - type: StackPrice
-    price: 7.5
+    price: 2
 
 - type: entity
   id: Brutepack1
@@ -249,7 +249,7 @@
     stackType: MedicatedSuture
     count: 15
   - type: StackPrice
-    price: 5
+    price: 2
 
 - type: entity
   id: BrutepackAdvanced1
@@ -296,7 +296,7 @@
     stackType: Bloodpack
     count: 15
   - type: StackPrice
-    price: 10
+    price: 5
 
 - type: entity
   parent: Bloodpack
@@ -381,7 +381,7 @@
     stackType: Gauze
     count: 15
   - type: StackPrice
-    price: 15
+    price: 2
 
 - type: entity
   id: Gauze1
