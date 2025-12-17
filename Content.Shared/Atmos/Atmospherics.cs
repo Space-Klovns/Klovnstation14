@@ -24,7 +24,6 @@
 // SPDX-FileCopyrightText: 2025 ArtisticRoomba
 // SPDX-FileCopyrightText: 2025 K-Dynamic
 // SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2025 Syndicate Engineer
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 nabegator220
 //
@@ -210,7 +209,6 @@ namespace Content.Shared.Atmos
             [Gas.Tritium] = Loc.GetString("gas-tritium-abbreviation"),
             [Gas.WaterVapor] = Loc.GetString("gas-water-vapor-abbreviation"),
             [Gas.Zipion] = Loc.GetString("gas-zipion-abbreviation"),
-            [Gas.Argon] = Loc.GetString("gas-argon-abbreviation"),
         };
 
         #region Excited Groups
@@ -240,7 +238,7 @@ namespace Content.Shared.Atmos
         /// <summary>
         ///     Total number of gases. Increase this if you want to add more!
         /// </summary>
-        public const int TotalNumberOfGases = 11; // KS14 new gases: zipion, argon
+        public const int TotalNumberOfGases = 10; // KS14 new gases: zipion
 
         /// <summary>
         ///     This is the actual length of the gases arrays in mixtures.
@@ -404,7 +402,6 @@ namespace Content.Shared.Atmos
         Ammonia = 6,
         NitrousOxide = 7,
         Frezon = 8,
-        Zipion = 9, //KS14
-        Argon = 10, //KS14}
+        Zipion = 9 //KS14
     }
 }

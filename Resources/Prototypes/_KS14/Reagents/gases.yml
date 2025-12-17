@@ -1,5 +1,4 @@
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-# SPDX-FileCopyrightText: 2025 Syndicate Engineer
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
@@ -31,8 +30,3 @@
           min: 1
         reagent: Zipium
         amount: 2.5
-- type: reagent
-  id: Argon
-  name: reagents-argon
-  desc: reagent-desc-argon
-  physicalDesc: A bright violet noble gas with high thermal capacity.
