@@ -61,7 +61,8 @@
       sprite: _KS14/Structures/Storage/canister.rsi
       noRot: true
       layers:
-        - state: grey
+      - state: multi_shader
+      - state: outline
     - type: Appearance
     - type: GenericVisualizer
       visuals:
@@ -73,16 +74,16 @@
           tankInserted:
             False: { state: can-open, visible: false }
             True: { state: can-open, visible: true }
-        enum.LockVisuals.Locked:
-          locked:
-            False: { state: unlocked, shader: "unshaded" }
-            True: { state: locked, shader: "unshaded" }
+        # enum.LockVisuals.Locked:
+        #   locked:
+        #     False: { state: unlocked, shader: "unshaded" }
+        #     True: { state: locked, shader: "unshaded" }
         enum.GasCanisterVisuals.PressureState:
           pressureLight:
-            0: { state: can-o0, shader: "unshaded" }
-            1: { state: can-o1, shader: "unshaded" }
-            2: { state: can-o2, shader: "unshaded" }
-            3: { state: can-o3, shader: "unshaded" }
+            0: { state: can-0, shader: "unshaded" }
+            1: { state: can-1, shader: "unshaded" }
+            2: { state: can-2, shader: "unshaded" }
+            3: { state: can-3, shader: "unshaded" }
     - type: ActivatableUI
       key: enum.GasCanisterUiKey.Key
     - type: UIRequiresLock
@@ -172,7 +173,10 @@
   components:
     - type: Sprite
       layers:
-        - state: yellow
+      - state: multi_shader
+        color: "#787878"
+      - state: outline
+        color: "#787878"
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -211,7 +215,10 @@
   components:
   - type: Sprite
     layers:
-      - state: grey
+    - state: multi_shader
+      color: "#C6C0B5"
+    - state: outline
+      color: "#C6C0B5"
   - type: GasCanister
     gasMixture:
       volume: 1500
@@ -251,7 +258,12 @@
   components:
   - type: Sprite
     layers:
-      - state: blue
+    - state: multi_shader
+      color: "#2786E5"
+    - state: stripe
+      color: "#E8FEFE"
+    - state: outline
+      color: "#2786E5"
   - type: GasCanister
     gasMixture:
       volume: 1500
@@ -305,7 +317,12 @@
   components:
     - type: Sprite
       layers:
-        - state: red
+      - state: multi_shader
+        color: "#E9FF5C"
+      - state: double_stripe_shader
+        color: "#F4FCE8"
+      - state: outline
+        color: "#E9FF5C"
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -359,7 +376,12 @@
   components:
     - type: Sprite
       layers:
-        - state: black
+      - state: multi_shader
+        color: "#4E4C48"
+      - state: double_stripe_shader
+        color: "#EAEAEA"
+      - state: outline
+        color: "#4E4C48"
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -415,7 +437,12 @@
   components:
     - type: Sprite
       layers:
-        - state: orange
+      - state: multi_shader
+        color: "#F62800"
+      - state: hazard_stripes
+        color: "#000000"
+      - state: outline
+        color: "#F62800"
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -456,7 +483,12 @@
   components:
     - type: Sprite
       layers:
-        - state: green
+      - state: multi_shader
+        color: "#3FCD40"
+      - state: hazard_stripes
+        color: "#000000"
+      - state: outline
+        color: "#3FCD40"
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -497,7 +529,12 @@
   components:
     - type: Sprite
       layers:
-        - state: water_vapor
+      - state: multi_shader
+        color: "#4C4E4D"
+      - state: double_stripe_shader
+        color: "#F7D5D3"
+      - state: outline
+        color: "#4C4E4D"
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -536,7 +573,12 @@
   components:
     - type: Sprite
       layers:
-        - state: greenys
+      - state: multi_shader
+        color: "#009823"
+      - state: double_stripe_shader
+        color: "#F7D5D3"
+      - state: outline
+        color: "#009823"
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -577,7 +619,12 @@
   components:
     - type: Sprite
       layers:
-        - state: redws
+      - state: multi_shader
+        color: "#C63E3B"
+      - state: double_stripe_shader
+        color: "#F7D5D3"
+      - state: outline
+        color: "#C63E3B"
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -618,7 +665,12 @@
   components:
   - type: Sprite
     layers:
-    - state: frezon
+    - state: multi_shader
+      color: "#6696EE"
+    - state: double_stripe_shader
+      color: "#FEFB30"
+    - state: outline
+      color: "#6696EE"
   - type: GasCanister
     gasMixture:
       volume: 1500
