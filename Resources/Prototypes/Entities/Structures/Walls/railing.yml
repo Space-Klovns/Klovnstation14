@@ -35,7 +35,7 @@
   - type: Sprite
     layers:  # KS14: /tg/ sprite port
     - state: straight
-      offset: 0, -0.33333
+      #offset: 0, -0.33333
   - type: Icon
     state: side
   - type: Fixtures
@@ -83,7 +83,7 @@
   - type: Sprite
     layers:  # KS14: /tg/ sprite port
     - state: turn
-      offset: 0, -0.33333
+      #offset: 0, -0.33333
   - type: Icon
     state: turn
   - type: Fixtures
@@ -140,7 +140,7 @@
   - type: Sprite
     layers:  # KS14: /tg/ sprite port
     - state: corner
-      offset: 0, -0.33333
+      #offset: 0, -0.33333
   - type: Icon
     state: corner_small
   - type: Fixtures
@@ -188,7 +188,7 @@
   - type: Sprite
     layers:  # KS14: /tg/ sprite port
     - state: round
-      offset: 0, -0.33333
+      #offset: 0, -0.33333
   - type: Icon
     state: round
   - type: Fixtures

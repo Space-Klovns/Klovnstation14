@@ -9,7 +9,7 @@
     snapCardinals: true
     layers:
     - state: flatpacker # KS14: /tg/ sprite port
-    - state: flatpacker_c # KS14: /tg/ sprite port
+    - state: flatpacker_o # KS14: /tg/ sprite port
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
     - state: flatpacker_bar # KS14: /tg/ sprite port
       map: ["anim"]
