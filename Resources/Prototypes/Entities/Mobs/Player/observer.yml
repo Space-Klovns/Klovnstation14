@@ -44,7 +44,7 @@
     color: "#fff8"
     layers:
     - state: animated
-      shader: unshaded
+      shader: Emissive
   - type: ContentEye
     maxZoom: 1.44,1.44
   - type: Eye

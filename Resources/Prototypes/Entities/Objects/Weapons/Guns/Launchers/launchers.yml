@@ -226,17 +226,17 @@
         - state: base
         - state: base-unshaded
           map: [ "unshaded" ]
-          shader: unshaded
+          shader: Emissive
           visible: false
     - type: ToggleableVisuals
       spriteLayer: unshaded
       inhandVisuals:
         left:
           - state: inhand-left-unshaded
-            shader: unshaded
+            shader: Emissive
         right:
           - state: inhand-right-unshaded
-            shader: unshaded
+            shader: Emissive
     - type: Appearance
     - type: GenericVisualizer
       visuals:
@@ -274,17 +274,17 @@
         - state: base
         - state: base-unshaded
           map: [ "unshaded" ]
-          shader: unshaded
+          shader: Emissive
           visible: false
         - type: ToggleableVisuals
           spriteLayer: unshaded
           inhandVisuals:
             left:
               - state: inhand-left-unshaded
-                shader: unshaded
+                shader: Emissive
             right:
               - state: inhand-right-unshaded
-                shader: unshaded
+                shader: Emissive
         - type: Appearance
         - type: GenericVisualizer
           visuals:
@@ -354,17 +354,17 @@
         - state: base
         - state: base-unshaded
           map: [ "unshaded" ]
-          shader: unshaded
+          shader: Emissive
           visible: false
     - type: ToggleableVisuals
       spriteLayer: unshaded
       inhandVisuals:
         left:
           - state: inhand-left-unshaded
-            shader: unshaded
+            shader: Emissive
         right:
           - state: inhand-right-unshaded
-            shader: unshaded
+            shader: Emissive
     - type: Appearance
     - type: GenericVisualizer
       visuals:
@@ -398,17 +398,17 @@
         - state: base
         - state: base-unshaded
           map: [ "unshaded" ]
-          shader: unshaded
+          shader: Emissive
           visible: false
     - type: ToggleableVisuals
       spriteLayer: unshaded
       inhandVisuals:
         left:
           - state: inhand-left-unshaded
-            shader: unshaded
+            shader: Emissive
         right:
           - state: inhand-right-unshaded
-            shader: unshaded
+            shader: Emissive
     - type: Appearance
     - type: GenericVisualizer
       visuals:

@@ -39,10 +39,10 @@
           True: { state: ca-tank, visible: true }
       enum.RadiationCollectorVisuals.PressureState:
         pressureLight:
-          0: { state: ca-o0, shader: "unshaded" }
-          1: { state: ca-o1, shader: "unshaded" }
-          2: { state: ca-o2, shader: "unshaded" }
-          3: { state: ca-o3, shader: "unshaded" }
+          0: { state: ca-o0, shader: "Emissive" }
+          1: { state: ca-o1, shader: "Emissive" }
+          2: { state: ca-o2, shader: "Emissive" }
+          3: { state: ca-o3, shader: "Emissive" }
   - type: AnimationPlayer
   - type: NodeContainer
     examinable: true

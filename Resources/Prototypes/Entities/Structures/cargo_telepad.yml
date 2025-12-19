@@ -28,7 +28,7 @@
       map: [ "enum.CargoTelepadLayers.Base" ]
     - state: idle
       map: [ "enum.CargoTelepadLayers.Beam" ]
-      shader: unshaded
+      shader: Emissive
   - type: Damageable
     damageContainer: StructuralInorganic
     damageModifierSet: StructuralMetallicStrong

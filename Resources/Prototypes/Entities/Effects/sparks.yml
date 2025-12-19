@@ -8,7 +8,7 @@
     drawdepth: Effects
     noRot: true
     layers:
-    - shader: unshaded
+    - shader: Emissive
       map: ["enum.EffectLayers.Unshaded"]
       sprite: Effects/sparks.rsi
       state: sparks
@@ -28,7 +28,7 @@
     drawdepth: Effects
     noRot: true
     layers:
-    - shader: unshaded
+    - shader: Emissive
       map: ["enum.EffectLayers.Unshaded"]
       sprite: Effects/atmospherics.rsi
       state: frezon_old

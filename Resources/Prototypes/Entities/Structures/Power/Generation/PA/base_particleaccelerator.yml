@@ -41,7 +41,7 @@
       map: [ "enum.ParticleAcceleratorVisualLayers.Base" ]
     - state: unlitp
       map: [ "enum.ParticleAcceleratorVisualLayers.Unlit" ]
-      shader: unshaded
+      shader: Emissive
       visible: false
   - type: ParticleAcceleratorPartVisuals
     stateBase: unlit

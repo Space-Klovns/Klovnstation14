@@ -788,7 +788,7 @@
       state: rainbow_baby_slime
     - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
       state: aslime-_3
-      shader: unshaded
+      shader: Emissive
     - map: [ "head" ]
   - type: Inventory
     speciesId: slime

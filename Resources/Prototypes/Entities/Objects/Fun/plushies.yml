@@ -221,15 +221,15 @@
     inhandVisuals:
       left:
       - state: inhand-left
-        shader: unshaded
+        shader: Emissive
       right:
       - state: inhand-right
-        shader: unshaded
+        shader: Emissive
   - type: Clothing
     clothingVisuals:
       head:
       - state: equipped-HELMET
-        shader: unshaded
+        shader: Emissive
 
 - type: entity
   parent: BasePlushie
@@ -454,15 +454,15 @@
     clothingVisuals:
       head:
       - state: rainbowlizardplush-equipped-HELMET
-        shader: unshaded
+        shader: Emissive
   - type: Item
     inhandVisuals:
       left:
       - state: rainbowlizardplush-inhand-left
-        shader: unshaded
+        shader: Emissive
       right:
       - state: rainbowlizardplush-inhand-right
-        shader: unshaded
+        shader: Emissive
 
 - type: entity
   parent: PlushieLizard
@@ -852,10 +852,10 @@
     inhandVisuals:
       left:
       - state: rainbowcarpplush-inhand-left
-        shader: unshaded
+        shader: Emissive
       right:
       - state: rainbowcarpplush-inhand-right
-        shader: unshaded
+        shader: Emissive
 
 - type: entity
   parent: PlushieCarp

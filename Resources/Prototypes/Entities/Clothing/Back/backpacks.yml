@@ -311,7 +311,7 @@
     layers:
     - state: holding
     - state: holding-unlit
-      shader: unshaded
+      shader: Emissive
   - type: Clothing
     equippedPrefix: holding
   - type: Item

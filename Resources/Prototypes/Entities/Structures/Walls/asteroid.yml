@@ -72,7 +72,7 @@
         "gib":
           Primed:
             state: gibtonite_active
-            shader: unshaded
+            shader: Emissive
             visible: true
           Unprimed:
             state: gibtonite_inactive

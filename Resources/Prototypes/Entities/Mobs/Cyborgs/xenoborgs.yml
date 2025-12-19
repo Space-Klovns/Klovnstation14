@@ -15,10 +15,10 @@
     - state: xenoborg_engi
     - state: xenoborg_engi_e
       map: ["enum.BorgVisualLayers.Light"]
-      shader: unshaded
+      shader: Emissive
       visible: false
     - state: xenoborg_engi_l
-      shader: unshaded
+      shader: Emissive
       map: ["light"]
       visible: false
   - type: BorgChassis
@@ -70,10 +70,10 @@
     - state: xenoborg_heavy
     - state: xenoborg_heavy_e
       map: ["enum.BorgVisualLayers.Light"]
-      shader: unshaded
+      shader: Emissive
       visible: false
     - state: xenoborg_heavy_l
-      shader: unshaded
+      shader: Emissive
       map: ["light"]
       visible: false
   - type: BorgChassis
@@ -157,10 +157,10 @@
       - state: xenoborg_scout
       - state: xenoborg_scout_e
         map: ["enum.BorgVisualLayers.Light"]
-        shader: unshaded
+        shader: Emissive
         visible: false
       - state: xenoborg_scout_l
-        shader: unshaded
+        shader: Emissive
         map: ["light"]
         visible: false
   - type: FootstepModifier # it flies instead of walking
@@ -210,10 +210,10 @@
       - state: xenoborg_stealth
       - state: xenoborg_stealth_e
         map: ["enum.BorgVisualLayers.Light"]
-        shader: unshaded
+        shader: Emissive
         visible: false
       - state: xenoborg_stealth_l
-        shader: unshaded
+        shader: Emissive
         map: ["light"]
         visible: false
   - type: FootstepModifier # it flies instead of walking

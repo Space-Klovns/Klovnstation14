@@ -30,7 +30,7 @@
     drawdepth: BelowFloor
     layers:
     - state: plasma
-      shader: unshaded
+      shader: Emissive
   - type: Icon
     sprite: Tiles/Planet/liquid_plasma.rsi
     state: full

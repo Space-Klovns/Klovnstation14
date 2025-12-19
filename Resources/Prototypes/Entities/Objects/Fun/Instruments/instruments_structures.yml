@@ -157,7 +157,7 @@
     layers:
     - state: daw-base
     - state: daw-display
-      shader: unshaded
+      shader: Emissive
     - state: daw-panel
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
   - type: Appearance

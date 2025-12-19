@@ -114,7 +114,7 @@
       renderingStrategy: NoRotation
     - state: base
     - state: lethal
-      shader: unshaded
+      shader: Emissive
   - type: Gun
     projectileSpeed: 15
     fireRate: 1.5

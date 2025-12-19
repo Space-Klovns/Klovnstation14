@@ -64,7 +64,7 @@
       map: ["enum.GunVisualLayers.Base"]
     - state: mag-unshaded-3
       map: ["enum.GunVisualLayers.MagUnshaded"]
-      shader: unshaded
+      shader: Emissive
   - type: Gun
     fireRate: 2
   - type: RevolverAmmoProvider

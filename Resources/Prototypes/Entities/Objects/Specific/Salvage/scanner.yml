@@ -10,7 +10,7 @@
     layers:
     - state: icon
     - state: icon-o
-      shader: unshaded
+      shader: Emissive
       visible: false
       map: ["enum.ToggleableVisuals.Layer"]
   - type: Item
@@ -70,7 +70,7 @@
     layers:
     - state: adv
     - state: adv-o
-      shader: unshaded
+      shader: Emissive
       visible: false
       map: ["enum.ToggleableVisuals.Layer"]
   - type: Item

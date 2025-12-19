@@ -111,7 +111,7 @@
     layers:
     - state: panel
     - state: on
-      shader: unshaded
+      shader: Emissive
   - type: NodeContainer
     examinable: true
     nodes:

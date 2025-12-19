@@ -444,7 +444,7 @@
     layers:
     - state: dragon
     - state: dragon_veins
-      shader: unshaded
+      shader: Emissive
   - type: SolutionContainerManager
     solutions:
       food:
@@ -2029,7 +2029,7 @@
     layers:
     - state: dragoncutlet
     - state: dragoncutlet_veins
-      shader: unshaded
+      shader: Emissive
   - type: SolutionContainerManager
     solutions:
       food:

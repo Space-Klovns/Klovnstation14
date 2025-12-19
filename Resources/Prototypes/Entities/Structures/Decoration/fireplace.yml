@@ -12,9 +12,9 @@
         map: ["christmas"]
         visible: false
       - state: fireplace_fire4
-        shader: unshaded
+        shader: Emissive
       - state: fireplace_glow
-        shader: unshaded
+        shader: Emissive
   - type: Appearance
   - type: HolidayVisuals
     holidays:

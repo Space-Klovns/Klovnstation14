@@ -16,7 +16,7 @@
     layers:
     - state: nothing
     - state: nothing-unshaded
-      shader: unshaded
+      shader: Emissive
   - type: ActionOnInteract
     requiresCharge: true
     actions:
@@ -27,11 +27,11 @@
       left:
       - state: staff-inhand-left
       - state: staff-inhand-left-unshaded
-        shader: unshaded
+        shader: Emissive
       right:
       - state: staff-inhand-right
       - state: staff-inhand-right-unshaded
-        shader: unshaded
+        shader: Emissive
   - type: RgbLightController
   - type: PointLight
     enabled: true

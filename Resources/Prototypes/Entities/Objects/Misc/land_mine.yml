@@ -29,7 +29,7 @@
     layers:
     - state: landmine
     - state: landmine-unshaded
-      shader: unshaded
+      shader: Emissive
       map: [ "enum.ToggleableVisuals.Layer" ]
   - type: Appearance
   - type: GenericVisualizer

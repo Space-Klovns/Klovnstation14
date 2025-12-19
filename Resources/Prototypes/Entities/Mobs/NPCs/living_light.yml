@@ -33,7 +33,7 @@
       state: luminous_person
     - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
       state: glow
-      shader: unshaded
+      shader: Emissive
   - type: MobState
   - type: SlowOnDamage
     speedModifierThresholds:
@@ -128,7 +128,7 @@
       state: luminous_object
     - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
       state: glow
-      shader: unshaded
+      shader: Emissive
   - type: DamageStateVisuals
     states:
       Alive:
@@ -155,7 +155,7 @@
       state: luminous_entity
     - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
       state: glow
-      shader: unshaded
+      shader: Emissive
   - type: DamageStateVisuals
     states:
       Alive:

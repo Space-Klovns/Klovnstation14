@@ -31,7 +31,7 @@
     color: "#60f7eb"
     layers:
     - state: animated
-      shader: unshaded
+      shader: Emissive
     noRot: true
     overrideContainerOcclusion: true
     drawdepth: Ghosts

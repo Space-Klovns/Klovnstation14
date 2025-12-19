@@ -9,7 +9,7 @@
       layers:
       - sprite: Structures/Power/Generation/PA/particle.rsi
         state: particle0
-        shader: unshaded
+        shader: Emissive
         map: [ "unshaded" ]
     - type: Projectile
       deleteOnCollide: false
@@ -63,7 +63,7 @@
     - sprite: Structures/Power/Generation/PA/particle.rsi
       color: red
       state: particle0
-      shader: unshaded
+      shader: Emissive
       map: [ "unshaded" ]
   - type: Reflective
     reflective:

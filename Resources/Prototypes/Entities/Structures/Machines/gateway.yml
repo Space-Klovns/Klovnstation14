@@ -11,10 +11,10 @@
     layers:
     - state: frame
     - state: portal
-      shader: unshaded
+      shader: Emissive
       map: ["enum.GatewayVisualLayers.Portal"]
     - state: on
-      shader: unshaded
+      shader: Emissive
       map: ["enum.PowerDeviceVisualLayers.Powered"]
   - type: GenericVisualizer
     visuals:

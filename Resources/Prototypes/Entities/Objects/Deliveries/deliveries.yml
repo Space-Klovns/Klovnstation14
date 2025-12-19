@@ -17,7 +17,7 @@
       enum.DeliveryVisuals.PriorityState:
         enum.DeliveryVisualLayers.PriorityTape:
           Off: { visible: false }
-          Active: { visible: true, shader: unshaded, state: priority }
+          Active: { visible: true, shader: Emissive, state: priority }
           Inactive: { visible: true, shader: shaded, state: priority_inactive }
       enum.DeliveryVisuals.IsBroken:
         enum.DeliveryVisualLayers.Breakage:
@@ -71,7 +71,7 @@
     - state: priority
       map: [ "enum.DeliveryVisualLayers.PriorityTape" ]
       visible: false
-      shader: unshaded
+      shader: Emissive
     - state: fragile
       map: [ "enum.DeliveryVisualLayers.FragileStamp" ]
       visible: false
@@ -88,7 +88,7 @@
       visible: false
     - state: bomb_unshaded
       map: [ "enum.DeliveryVisualLayers.BombPrimed" ]
-      shader: unshaded
+      shader: Emissive
       visible: false
   - type: MultiHandedItem
   - type: Item
@@ -121,7 +121,7 @@
     - state: priority
       map: [ "enum.DeliveryVisualLayers.PriorityTape" ]
       visible: false
-      shader: unshaded
+      shader: Emissive
     - state: fragile
       map: [ "enum.DeliveryVisualLayers.FragileStamp" ]
       visible: false
@@ -138,7 +138,7 @@
       visible: false
     - state: bomb_unshaded
       map: [ "enum.DeliveryVisualLayers.BombPrimed" ]
-      shader: unshaded
+      shader: Emissive
       visible: false
   - type: Item
     storedRotation: 90

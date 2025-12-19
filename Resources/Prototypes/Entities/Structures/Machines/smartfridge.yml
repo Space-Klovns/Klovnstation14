@@ -20,7 +20,7 @@
       map: ["enum.StorageVisualLayers.Base"]
     - state: smartfridge_door
       map: ["enum.StorageVisualLayers.Door"]
-      shader: unshaded
+      shader: Emissive
     - state: panel
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
   - type: PointLight

@@ -12,7 +12,7 @@
       state: base
     - map: ["enum.PoweredLightLayers.Glow"]
       state: glow
-      shader: unshaded
+      shader: Emissive
     state: base
   - type: PointLight
     radius: 1.5

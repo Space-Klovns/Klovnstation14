@@ -11,7 +11,7 @@
     layers:
     - state: icon
     - state: unshaded
-      shader: unshaded
+      shader: Emissive
       map: ["enum.PowerDeviceVisualLayers.Powered"]
   - type: Physics
     bodyType: Static
@@ -110,7 +110,7 @@
     - state: glass
     - state: lights
       map: ["enum.PowerDeviceVisualLayers.Powered"]
-      shader: unshaded
+      shader: Emissive
   - type: Fixtures
     fixtures:
       fix1:

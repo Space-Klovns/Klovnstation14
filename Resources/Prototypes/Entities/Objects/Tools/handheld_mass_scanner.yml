@@ -12,7 +12,7 @@
     layers:
       - state: icon
       - state: scanner
-        shader: unshaded
+        shader: Emissive
         visible: false
         map: [ "enum.PowerDeviceVisualLayers.Powered" ]
   - type: RadarConsole

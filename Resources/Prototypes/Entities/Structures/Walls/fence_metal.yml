@@ -92,7 +92,7 @@
     - state: electrified
       sprite: Effects/electricity.rsi
       map: ["enum.ElectrifiedLayers.Sparks"]
-      shader: unshaded
+      shader: Emissive
       visible: false
   - type: Physics
     canCollide: false
@@ -152,7 +152,7 @@
     - state: electrified
       sprite: Effects/electricity.rsi
       map: ["enum.ElectrifiedLayers.Sparks"]
-      shader: unshaded
+      shader: Emissive
       visible: false
   - type: Fixtures
     fixtures:
@@ -210,7 +210,7 @@
     - state: electrified
       sprite: Effects/electricity.rsi
       map: ["enum.ElectrifiedLayers.Sparks"]
-      shader: unshaded
+      shader: Emissive
       visible: false
   - type: Fixtures
     fixtures:
@@ -257,7 +257,7 @@
     - state: electrified
       sprite: Effects/electricity.rsi
       map: ["enum.ElectrifiedLayers.Sparks"]
-      shader: unshaded
+      shader: Emissive
       visible: false
   - type: Fixtures
     fixtures:
@@ -293,7 +293,7 @@
     - state: electrified
       sprite: Effects/electricity.rsi
       map: [ "enum.ElectrifiedLayers.Sparks" ]
-      shader: unshaded
+      shader: Emissive
       visible: false
   - type: Fixtures
     fixtures:

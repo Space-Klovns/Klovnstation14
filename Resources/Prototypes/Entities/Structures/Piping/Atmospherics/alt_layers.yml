@@ -319,7 +319,7 @@
       state: base
     - map: [ "enum.PowerDeviceVisualLayers.Powered" ]
       state: lights
-      shader: unshaded
+      shader: Emissive
   - type: Construction
     node: sensorAlt1
 
@@ -338,7 +338,7 @@
       state: base
     - map: [ "enum.PowerDeviceVisualLayers.Powered" ]
       state: lights
-      shader: unshaded
+      shader: Emissive
   - type: Construction
     node: sensorAlt2
 
@@ -359,7 +359,7 @@
       state: base
     - map: [ "enum.PowerDeviceVisualLayers.Powered" ]
       state: lights
-      shader: unshaded
+      shader: Emissive
 
 - type: entity
   parent: [GasPipeLayerAlt2, GasPipeSensorDistribution]
@@ -376,7 +376,7 @@
       state: base
     - map: [ "enum.PowerDeviceVisualLayers.Powered" ]
       state: lights
-      shader: unshaded
+      shader: Emissive
 
 # GasPipeSensorWaste
 
@@ -395,7 +395,7 @@
       state: base
     - map: [ "enum.PowerDeviceVisualLayers.Powered" ]
       state: lights
-      shader: unshaded
+      shader: Emissive
 
 - type: entity
   parent: [GasPipeLayerAlt2, GasPipeSensorWaste]
@@ -412,7 +412,7 @@
       state: base
     - map: [ "enum.PowerDeviceVisualLayers.Powered" ]
       state: lights
-      shader: unshaded
+      shader: Emissive
 
 # GasPipeSensorMixedAir
 
@@ -431,7 +431,7 @@
       state: base
     - map: [ "enum.PowerDeviceVisualLayers.Powered" ]
       state: lights
-      shader: unshaded
+      shader: Emissive
 
 - type: entity
   parent: [GasPipeLayerAlt2, GasPipeSensorMixedAir]
@@ -448,7 +448,7 @@
       state: base
     - map: [ "enum.PowerDeviceVisualLayers.Powered" ]
       state: lights
-      shader: unshaded
+      shader: Emissive
 
 # GasPipeSensorTEGHot
 
@@ -467,7 +467,7 @@
       state: base
     - map: [ "enum.PowerDeviceVisualLayers.Powered" ]
       state: lights
-      shader: unshaded
+      shader: Emissive
 
 - type: entity
   parent: [GasPipeLayerAlt2, GasPipeSensorTEGHot]
@@ -484,7 +484,7 @@
       state: base
     - map: [ "enum.PowerDeviceVisualLayers.Powered" ]
       state: lights
-      shader: unshaded
+      shader: Emissive
 
 # GasPipeTEGCold
 
@@ -503,7 +503,7 @@
       state: base
     - map: [ "enum.PowerDeviceVisualLayers.Powered" ]
       state: lights
-      shader: unshaded
+      shader: Emissive
 
 - type: entity
   parent: [GasPipeLayerAlt2, GasPipeSensorTEGCold]
@@ -520,7 +520,7 @@
       state: base
     - map: [ "enum.PowerDeviceVisualLayers.Powered" ]
       state: lights
-      shader: unshaded
+      shader: Emissive
 
 # GasPressureRegulator
 

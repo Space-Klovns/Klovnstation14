@@ -7,7 +7,7 @@
   - type: Sprite
     drawdepth: Effects
     layers:
-    - shader: unshaded
+    - shader: Emissive
       map: ["enum.EffectLayers.Unshaded"]
       sprite: Objects/Weapons/Guns/Projectiles/projectiles_tg.rsi
       state: impact_bullet
@@ -25,7 +25,7 @@
     - type: Sprite
       drawdepth: Effects
       layers:
-        - shader: unshaded
+        - shader: Emissive
           map: ["enum.EffectLayers.Unshaded"]
           sprite: Objects/Weapons/Guns/Projectiles/projectiles_tg.rsi
           state: impact_laser_blue
@@ -43,7 +43,7 @@
   - type: Sprite
     drawdepth: Effects
     layers:
-    - shader: unshaded
+    - shader: Emissive
       map: ["enum.EffectLayers.Unshaded"]
       sprite: Objects/Weapons/Guns/Projectiles/projectiles_tg.rsi
       state: impact_laser_greyscale
@@ -62,7 +62,7 @@
   - type: Sprite
     drawdepth: Effects
     layers:
-    - shader: unshaded
+    - shader: Emissive
       map: ["enum.EffectLayers.Unshaded"]
       sprite: Effects/arcs.rsi
       state: punch

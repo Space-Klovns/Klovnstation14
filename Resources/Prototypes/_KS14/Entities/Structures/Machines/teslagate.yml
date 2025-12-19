@@ -39,10 +39,10 @@
     - state: base
     - state: elec_anim
       visible: false
-      shader: unshaded
+      shader: Emissive
       map: ["electricity"]
     #- state: none
-    #  shader: unshaded
+    #  shader: Emissive
     #  map: ["sparks"]
     - state: wires
       map: ["enum.WiresVisualLayers.MaintenancePanel"]

@@ -10,7 +10,7 @@
     layers:
       - state: icon
       - state: screen
-        shader: unshaded
+        shader: Emissive
         visible: false
         map: ["enum.ToggleableVisuals.Layer"]
   - type: Appearance

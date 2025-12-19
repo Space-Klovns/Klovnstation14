@@ -114,7 +114,7 @@
       map: ["enum.GunVisualLayers.Base"]
     - state: mag-unshaded-4
       map: ["enum.GunVisualLayers.MagUnshaded"]
-      shader: unshaded
+      shader: Emissive
   - type: MagazineVisuals
     magState: mag
     steps: 5
@@ -220,7 +220,7 @@
       map: ["enum.GunVisualLayers.Base"]
     - state: mag-unshaded-4
       map: ["enum.GunVisualLayers.MagUnshaded"]
-      shader: unshaded
+      shader: Emissive
   - type: Item
     shape:
     - 0,0,1,0
@@ -245,7 +245,7 @@
       map: ["enum.GunVisualLayers.Base"]
     - state: mag-unshaded-4
       map: ["enum.GunVisualLayers.MagUnshaded"]
-      shader: unshaded
+      shader: Emissive
   - type: Item
     storedOffset: 0,-5
   - type: HitscanBatteryAmmoProvider
@@ -270,7 +270,7 @@
       map: ["enum.GunVisualLayers.Base"]
     - state: mag-unshaded-4
       map: ["enum.GunVisualLayers.MagUnshaded"]
-      shader: unshaded
+      shader: Emissive
   - type: Item
     storedOffset: 0,-4
   - type: MagazineVisuals
@@ -304,7 +304,7 @@
         map: ["enum.GunVisualLayers.Base"]
       - state: mag-unshaded-4
         map: ["enum.GunVisualLayers.MagUnshaded"]
-        shader: unshaded
+        shader: Emissive
   - type: Gun
     projectileSpeed: 10
     soundGunshot:
@@ -352,7 +352,7 @@
       map: ["enum.GunVisualLayers.Base"]
     - state: mag-unshaded-4
       map: ["enum.GunVisualLayers.MagUnshaded"]
-      shader: unshaded
+      shader: Emissive
   - type: Item
     storedOffset: -2,-5
   - type: MagazineVisuals
@@ -390,7 +390,7 @@
       map: ["enum.GunVisualLayers.Base"]
     - state: mag-unshaded-4
       map: ["enum.GunVisualLayers.MagUnshaded"]
-      shader: unshaded
+      shader: Emissive
   - type: MagazineVisuals
     magState: mag
     steps: 5
@@ -430,7 +430,7 @@
       map: ["enum.GunVisualLayers.Base"]
     - state: mag-unshaded-4
       map: ["enum.GunVisualLayers.MagUnshaded"]
-      shader: unshaded
+      shader: Emissive
   - type: MagazineVisuals
     magState: mag
     steps: 5
@@ -466,7 +466,7 @@
       map: ["enum.GunVisualLayers.Base"]
     - state: mag-unshaded-4
       map: ["enum.GunVisualLayers.MagUnshaded"]
-      shader: unshaded
+      shader: Emissive
   - type: MagazineVisuals
     magState: mag
     steps: 5
@@ -533,7 +533,7 @@
       map: ["enum.GunVisualLayers.Base"]
     - state: mag-unshaded-0
       map: ["enum.GunVisualLayers.MagUnshaded"]
-      shader: unshaded
+      shader: Emissive
   - type: Clothing
     sprite: Objects/Weapons/Guns/Battery/xray.rsi
   - type: Gun
@@ -561,7 +561,7 @@
       map: ["enum.GunVisualLayers.Base"]
     - state: mag-unshaded-0
       map: ["enum.GunVisualLayers.MagUnshaded"]
-      shader: unshaded
+      shader: Emissive
   - type: Item
     storedOffset: -1,-5
   - type: Clothing
@@ -603,7 +603,7 @@
         map: ["enum.GunVisualLayers.Base"]
       - state: mag-unshaded-0
         map: ["enum.GunVisualLayers.MagUnshaded"]
-        shader: unshaded
+        shader: Emissive
   - type: Clothing
     sprite: Objects/Weapons/Guns/Battery/disabler.rsi
     quickEquip: false
@@ -639,7 +639,7 @@
         map: ["enum.GunVisualLayers.Base"]
       - state: mag-unshaded-0
         map: ["enum.GunVisualLayers.MagUnshaded"]
-        shader: unshaded
+        shader: Emissive
   - type: Gun
     selectedMode: FullAuto
     fireRate: 4
@@ -677,7 +677,7 @@
       map: ["enum.GunVisualLayers.Base"]
     - state: mag-unshaded-0
       map: ["enum.GunVisualLayers.MagUnshaded"]
-      shader: unshaded
+      shader: Emissive
   - type: Item
     heldPrefix: taser4
   - type: Clothing
@@ -728,7 +728,7 @@
       map: ["enum.GunVisualLayers.Base"]
     - state: mag-unshaded-4
       map: ["enum.GunVisualLayers.MagUnshaded"]
-      shader: unshaded
+      shader: Emissive
   - type: Clothing
     sprite: Objects/Weapons/Guns/Battery/antiquelasergun.rsi
   - type: Gun
@@ -776,7 +776,7 @@
       map: ["enum.GunVisualLayers.Base"]
     - state: mag-unshaded-4
       map: ["enum.GunVisualLayers.MagUnshaded"]
-      shader: unshaded
+      shader: Emissive
   - type: Clothing
     sprite: Objects/Weapons/Guns/Battery/advancedlasergun.rsi
   - type: Gun
@@ -810,7 +810,7 @@
     - state: mag-unshaded-1
       visible: false
       map: ["enum.GunVisualLayers.MagUnshaded"]
-      shader: unshaded
+      shader: Emissive
   - type: Item
     storedOffset: 0,-6
   - type: Appearance
@@ -900,7 +900,7 @@
         map: ["enum.GunVisualLayers.Base"]
       - state: mag-unshaded-4
         map: ["enum.GunVisualLayers.MagUnshaded"]
-        shader: unshaded
+        shader: Emissive
   - type: MagazineVisuals
     magState: mag
     steps: 5
@@ -955,7 +955,7 @@
       map: ["enum.GunVisualLayers.Base"]
     - state: mag-unshaded-1
       map: ["enum.GunVisualLayers.MagUnshaded"]
-      shader: unshaded
+      shader: Emissive
   - type: Appearance
   - type: Item
     size: Large

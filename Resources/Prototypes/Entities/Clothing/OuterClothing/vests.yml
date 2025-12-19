@@ -12,7 +12,7 @@
     layers:
     - state: icon
     - state: icon-unshaded
-      shader: unshaded
+      shader: Emissive
     - state: icon-unshaded
       shader: shaded
       #This is a neat trick I found to sort of "hack" an emissive map into ss14. Basically, the icon-unshaded texture has an alpha channel.
@@ -24,7 +24,7 @@
       outerClothing:
       - state: equipped-OUTERCLOTHING
       - state: equipped-OUTERCLOTHING-unshaded
-        shader: unshaded
+        shader: Emissive
       - state: equipped-OUTERCLOTHING-unshaded
         shader: shaded
         #same trick here

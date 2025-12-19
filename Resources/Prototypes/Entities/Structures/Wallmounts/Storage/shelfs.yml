@@ -54,13 +54,13 @@
     - state: rbase
       map: ["enum.StorageVisualLayers.Base"]
     - state: unlocked
-      shader: unshaded
+      shader: Emissive
       # used to keep the unlocked light visible while open.
     - state: closed
       map: ["enum.StorageVisualLayers.Door"]
     - state: locked
       map: ["enum.LockVisualLayers.Lock"]
-      shader: unshaded
+      shader: Emissive
   - type: Appearance
   - type: EntityStorageVisuals
     stateDoorOpen: open
@@ -206,7 +206,7 @@
       map: ["enum.StorageVisualLayers.Door"]
     - state: locked
       map: ["enum.LockVisualLayers.Lock"]
-      shader: unshaded
+      shader: Emissive
   - type: Destructible
     thresholds:
     - trigger: # Excess damage, don't spawn entities
@@ -441,14 +441,14 @@
     - state: base
       map: ["enum.StorageVisualLayers.Base"]
     - state: unlocked
-      shader: unshaded
+      shader: Emissive
     - state: chem-0
     - map: ["enum.StorageFillLayers.Fill"]
     - state: closed
       map: ["enum.StorageVisualLayers.Door"]
     - state: locked
       map: ["enum.LockVisualLayers.Lock"]
-      shader: unshaded
+      shader: Emissive
   - type: StorageFillVisualizer
     maxFillLevels: 7
     fillBaseName: chem

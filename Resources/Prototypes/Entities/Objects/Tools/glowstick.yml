@@ -23,7 +23,7 @@
       - map: [ enum.ExpendableLightVisualLayers.Glow ]
         state: glowstick_glow
         visible: false
-        shader: unshaded
+        shader: Emissive
       - map: [ enum.ExpendableLightVisualLayers.Overlay ]
         state: glowstick_unlit
     - type: Item
@@ -120,7 +120,7 @@
       layers:
         - state: glowstick_base
         - state: glowstick_unlit
-          shader: unshaded
+          shader: Emissive
           color: "#FF0000"
     - type: Item
       sprite: Objects/Misc/glowstick.rsi
@@ -151,7 +151,7 @@
       layers:
         - state: glowstick_base
         - state: glowstick_unlit
-          shader: unshaded
+          shader: Emissive
           color: "#FF0000"
     - type: Item
       sprite: Objects/Misc/glowstick.rsi
@@ -183,7 +183,7 @@
       layers:
         - state: glowstick_base
         - state: glowstick_unlit
-          shader: unshaded
+          shader: Emissive
           color: "#FF0000"
     - type: Item
       sprite: Objects/Misc/glowstick.rsi
@@ -223,7 +223,7 @@
       layers:
         - state: glowstick_base
         - state: glowstick_unlit
-          shader: unshaded
+          shader: Emissive
           color: "#FF0000"
     - type: Item
       sprite: Objects/Misc/glowstick.rsi
@@ -254,7 +254,7 @@
       layers:
         - state: glowstick_base
         - state: glowstick_unlit
-          shader: unshaded
+          shader: Emissive
           color: "#FF0000"
     - type: Item
       sprite: Objects/Misc/glowstick.rsi
@@ -285,7 +285,7 @@
       layers:
         - state: glowstick_base
         - state: glowstick_unlit
-          shader: unshaded
+          shader: Emissive
           color: "#FF0000"
     - type: Item
       sprite: Objects/Misc/glowstick.rsi

@@ -522,7 +522,7 @@
       map: [ "enum.PipeVisualLayers.Pipe" ]
     - state: running
     - state: unlit
-      shader: unshaded
+      shader: Emissive
   - type: AtmosPipeLayers
     spriteLayersRsiPaths:
       enum.PipeVisualLayers.Pipe:

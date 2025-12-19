@@ -10,11 +10,11 @@
     layers:
     - state: base
     - state: powered-1
-      shader: unshaded
+      shader: Emissive
       map: ["enum.PowerDeviceVisualLayers.Powered"]
     - state: anomaly-1
       visible: false
-      shader: unshaded
+      shader: Emissive
       map: ["enum.AnomalyVesselVisualLayers.Base"]
     - state: panel
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
@@ -126,16 +126,16 @@
     layers:
     - state: base
     - state: unshaded
-      shader: unshaded
+      shader: Emissive
       map: ["enum.PowerDeviceVisualLayers.Powered"]
     - state: panel
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
     - state: firing
-      shader: unshaded
+      shader: Emissive
       visible: false
       map: ["enum.EmitterVisualLayers.Lights"]
     - state: locked
-      shader: unshaded
+      shader: Emissive
       visible: false
       map: ["enum.LockVisualLayers.Lock"]
   - type: Transform
@@ -238,14 +238,14 @@
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
       visible: false
     - state: unshaded
-      shader: unshaded
+      shader: Emissive
       map: ["enum.PowerDeviceVisualLayers.Powered"]
     - state: inserting
       visible: false
       map: ["enum.MaterialStorageVisualLayers.Inserting"]
     - state: generating
       visible: false
-      shader: unshaded
+      shader: Emissive
       map: ["enum.AnomalyGeneratorVisualLayers.Base"]
   - type: Transform
     anchored: true

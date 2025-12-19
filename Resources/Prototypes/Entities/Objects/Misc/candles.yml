@@ -46,10 +46,10 @@
       inhandVisuals:
         left:
         - state: inhand-left-flame
-          shader: unshaded
+          shader: Emissive
         right:
         - state: inhand-right-flame
-          shader: unshaded
+          shader: Emissive
     - type: Damageable
       damageModifierSet: Wood
     - type: Destructible
@@ -283,7 +283,7 @@
       - state: candle-big
         color: "#decb8e"
       - state: fire-big
-        shader: unshaded
+        shader: Emissive
   - type: PointLight
     color: "#e39c40"
     radius: 2.5
@@ -299,7 +299,7 @@
       - state: candle-big
         color: "#a12349"
       - state: fire-big
-        shader: unshaded
+        shader: Emissive
   - type: Item
     inhandVisuals:
       left:
@@ -319,7 +319,7 @@
       - state: candle-big
         color: "#425d7d"
       - state: fire-big
-        shader: unshaded
+        shader: Emissive
   - type: Item
     inhandVisuals:
       left:
@@ -339,7 +339,7 @@
       - state: candle-big
         color: "#1b1724"
       - state: fire-big
-        shader: unshaded
+        shader: Emissive
   - type: Item
     inhandVisuals:
       left:
@@ -359,7 +359,7 @@
       - state: candle-big
         color: "#5d997e"
       - state: fire-big
-        shader: unshaded
+        shader: Emissive
   - type: Item
     inhandVisuals:
       left:
@@ -379,7 +379,7 @@
       - state: candle-big
         color: "#984aa1"
       - state: fire-big
-        shader: unshaded
+        shader: Emissive
   - type: Item
     inhandVisuals:
       left:
@@ -399,7 +399,7 @@
       - state: candle-small
         color: "#a12349"
       - state: fire-small
-        shader: unshaded
+        shader: Emissive
   - type: Item
     inhandVisuals:
       left:
@@ -419,7 +419,7 @@
       - state: candle-small
         color: "#425d7d"
       - state: fire-small
-        shader: unshaded
+        shader: Emissive
   - type: Item
     inhandVisuals:
       left:
@@ -439,7 +439,7 @@
       - state: candle-small
         color: "#1b1724"
       - state: fire-small
-        shader: unshaded
+        shader: Emissive
   - type: Item
     inhandVisuals:
       left:
@@ -459,7 +459,7 @@
       - state: candle-small
         color: "#5d997e"
       - state: fire-small
-        shader: unshaded
+        shader: Emissive
   - type: Item
     inhandVisuals:
       left:
@@ -479,7 +479,7 @@
       - state: candle-small
         color: "#984aa1"
       - state: fire-small
-        shader: unshaded
+        shader: Emissive
   - type: Item
     inhandVisuals:
       left:

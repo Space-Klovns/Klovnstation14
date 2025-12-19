@@ -19,10 +19,10 @@
     - state: fat_door_off
       map: ["enum.StorageVisualLayers.Door"]
     - state: fat_red
-      shader: unshaded
+      shader: Emissive
       map: ["enum.PowerDeviceVisualLayers.Powered"]
     - state: fat_green
-      shader: unshaded
+      shader: Emissive
       visible: false
       map: ["enum.FatExtractorVisualLayers.Light"]
     - state: fat_panel

@@ -277,7 +277,7 @@
     sprite: Objects/Weapons/Guns/Projectiles/projectiles2.rsi
     layers:
     - state: grapeshot
-      shader: unshaded
+      shader: Emissive
   - type: Projectile
     damage:
       types:
@@ -305,7 +305,7 @@
     sprite: Objects/Weapons/Guns/Projectiles/projectiles2.rsi
     layers:
     - state: shard
-      shader: unshaded
+      shader: Emissive
   - type: EmbeddableProjectile
     deleteOnRemove: true
   - type: Projectile

@@ -63,7 +63,7 @@
       visible: false
     - state: unshaded
       map: ["enum.PowerDeviceVisualLayers.Powered"]
-      shader: unshaded
+      shader: Emissive
   - type: GenericVisualizer
     visuals:
       enum.SolutionContainerMixerVisuals.Mixing:
@@ -104,7 +104,7 @@
       visible: false
     - state: unshaded
       map: ["enum.PowerDeviceVisualLayers.Powered"]
-      shader: unshaded
+      shader: Emissive
   - type: GenericVisualizer
     visuals:
       enum.SolutionContainerMixerVisuals.Mixing:

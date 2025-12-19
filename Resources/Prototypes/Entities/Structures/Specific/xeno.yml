@@ -24,7 +24,7 @@
     layers:
       - state: wardingtower
       - state: wardingtower-unshaded
-        shader: unshaded
+        shader: Emissive
   - type: Damageable
     damageContainer: StructuralInorganic
     damageModifierSet: Metallic
@@ -63,9 +63,9 @@
     - state: statue
     - state: eyes
     - state: eyes_unshaded
-      shader: unshaded
+      shader: Emissive
     - state: teeth_unshaded
-      shader: unshaded
+      shader: Emissive
   - type: Fixtures
     fixtures:
       fix1:
@@ -105,6 +105,6 @@
     - state: statue
     - state: eyes
     - state: eyes_unshaded
-      shader: unshaded
+      shader: Emissive
   - type: Construction
     node: eyes

@@ -499,9 +499,9 @@
       - state: uranium_generator
       - map: [ "extra" ]
       - state: rad_dripping
-        shader: unshaded
+        shader: Emissive
       - state: rad_outline
-        shader: unshaded
+        shader: Emissive
   - type: RandomSprite
     available:
     - extra:

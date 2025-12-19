@@ -28,11 +28,11 @@
     - state: icon
       map: ["enum.PortableScrubberVisualLayers.IsRunning"]
     - state: unlit
-      shader: unshaded
+      shader: Emissive
       map: ["enum.PowerDeviceVisualLayers.Powered"]
       visible: false
     - state: draining
-      shader: unshaded
+      shader: Emissive
       visible: false
       map: ["enum.PortableScrubberVisualLayers.IsDraining"]
   - type: PortableScrubber

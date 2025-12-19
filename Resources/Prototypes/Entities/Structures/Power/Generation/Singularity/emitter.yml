@@ -28,11 +28,11 @@
     layers:
     - state: emitter2
     - state: beam
-      shader: unshaded
+      shader: Emissive
       visible: false
       map: ["enum.EmitterVisualLayers.Lights"]
     - state: locked
-      shader: unshaded
+      shader: Emissive
       visible: false
       map: ["enum.LockVisualLayers.Lock"]
   - type: Emitter

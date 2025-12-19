@@ -23,7 +23,7 @@
         map: ["enum.WeldableLayers.BaseWelded"]
       - state: locked
         map: ["enum.LockVisualLayers.Lock"]
-        shader: unshaded
+        shader: Emissive
       - state: paper
         map: ["enum.PaperLabelVisuals.Layer"]
     - type: InteractionOutline
@@ -117,7 +117,7 @@
         map: [ base ]
       - state: locked
         map: ["enum.LockVisualLayers.Lock"]
-        shader: unshaded
+        shader: Emissive
   - type: Storage
     maxItemSize: Normal
     grid:

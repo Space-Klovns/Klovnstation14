@@ -24,7 +24,7 @@
           state: lit_overlay
           color: "#FFFFFF"
           visible: false
-          shader: unshaded
+          shader: Emissive
         - map: [ enum.ExpendableLightVisualLayers.Overlay ]
           state: torch_nocloth
     - type: Icon

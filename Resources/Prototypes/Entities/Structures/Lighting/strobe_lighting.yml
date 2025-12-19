@@ -28,7 +28,7 @@
       state: base
     - map: ["enum.PoweredLightLayers.Glow"]
       state: glow
-      shader: unshaded
+      shader: Emissive
     state: base
   - type: PointLight
     mask: /Textures/Effects/LightMasks/double_cone.png

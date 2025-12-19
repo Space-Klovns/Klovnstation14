@@ -10,7 +10,7 @@
     scale: 1.15,1.15
     layers:
     - state: ratvar
-      shader: unshaded
+      shader: Emissive
 
 - type: entity
   parent: MobRatvarBase
@@ -20,7 +20,7 @@
   - type: Sprite
     layers:
     - state: spawn
-      shader: unshaded
+      shader: Emissive
   - type: TimedDespawn
     lifetime: 3.5
   - type: SpawnOnDespawn

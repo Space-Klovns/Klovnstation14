@@ -10,7 +10,7 @@
         - state: jammer
         - state: jammer_high_charge
           map: ["enum.RadioJammerLayers.LED"]
-          shader: unshaded
+          shader: Emissive
           visible: false
   - type: RadioJammer
     settings:

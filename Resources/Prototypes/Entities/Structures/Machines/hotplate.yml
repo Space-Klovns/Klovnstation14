@@ -39,7 +39,7 @@
     - state: icon
     - state: on
       map: ["enum.SolutionHeaterVisuals.IsOn"]
-      shader: unshaded
+      shader: Emissive
   - type: SolutionHeater
     heatPerSecond: 160
   - type: ItemPlacer

@@ -38,10 +38,10 @@
     visuals:
       enum.ComputerVisuals.Powered:
         computerLayerScreen:
-          True: { visible: true, shader: unshaded }
+          True: { visible: true, shader: Emissive }
           False: { visible: false }
         computerLayerKeys:
-          True: { visible: true, shader: unshaded }
+          True: { visible: true, shader: Emissive }
           False: { visible: true, shader: shaded }
       enum.WiresVisuals.MaintenancePanelState:
         enum.WiresVisualLayers.MaintenancePanel:

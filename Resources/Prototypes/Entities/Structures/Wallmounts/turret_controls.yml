@@ -62,7 +62,7 @@
     - state: base
     - state: safe
       map: ["enum.PowerDeviceVisualLayers.Powered"]
-      shader: unshaded
+      shader: Emissive
     - state: wires
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
       visible: false

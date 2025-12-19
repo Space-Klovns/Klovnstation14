@@ -7,7 +7,7 @@
     layers:
     - state: icon
     - state: light-icon
-      shader: unshaded
+      shader: Emissive
       visible: false
       map: [ "light" ]
   - type: Clothing

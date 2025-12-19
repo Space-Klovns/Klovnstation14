@@ -8,9 +8,9 @@
       layers:
         - sprite: Markers/atmos.rsi # {
           state: base
-          shader: unshaded
+          shader: Emissive
         - sprite: Markers/atmos.rsi
-          shader: unshaded # }
+          shader: Emissive # }
           state: vacuum
     - type: AtmosFixMarker
       mode: 1
@@ -25,9 +25,9 @@
       layers:
         - sprite: Markers/atmos.rsi # {
           state: base
-          shader: unshaded
+          shader: Emissive
         - sprite: Markers/atmos.rsi
-          shader: unshaded # }
+          shader: Emissive # }
           state: oxygen
     - type: AtmosFixMarker
       mode: 2
@@ -42,9 +42,9 @@
       layers:
         - sprite: Markers/atmos.rsi # {
           state: base
-          shader: unshaded
+          shader: Emissive
         - sprite: Markers/atmos.rsi
-          shader: unshaded # }
+          shader: Emissive # }
           state: nitrogen
     - type: AtmosFixMarker
       mode: 3
@@ -59,9 +59,9 @@
       layers:
         - sprite: Markers/atmos.rsi # {
           state: base
-          shader: unshaded
+          shader: Emissive
         - sprite: Markers/atmos.rsi
-          shader: unshaded # }
+          shader: Emissive # }
           state: plasma
     - type: AtmosFixMarker
       mode: 4
@@ -76,9 +76,9 @@
       layers:
         - sprite: Markers/atmos.rsi # {
           state: base-hot
-          shader: unshaded
+          shader: Emissive
         - sprite: Markers/atmos.rsi
-          shader: unshaded # }
+          shader: Emissive # }
           state: fire
     - type: AtmosFixMarker
       mode: 5
@@ -93,9 +93,9 @@
       layers:
         - sprite: Markers/atmos.rsi # {
           state: base
-          shader: unshaded
+          shader: Emissive
         - sprite: Markers/atmos.rsi
-          shader: unshaded # }
+          shader: Emissive # }
           state: freeze
     - type: AtmosFixMarker
       mode: 6
@@ -119,9 +119,9 @@
     layers:
     - sprite: Markers/atmos.rsi # {
       state: base
-      shader: unshaded
+      shader: Emissive
     - sprite: Markers/atmos.rsi
-      shader: unshaded # }
+      shader: Emissive # }
       state: air
   - type: AtmosFixMarker
     mode: 8
