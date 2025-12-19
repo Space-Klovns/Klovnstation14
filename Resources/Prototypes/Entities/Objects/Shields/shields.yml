@@ -481,7 +481,7 @@
         - state: eshield-on
           color: "#FFFFFF"
           visible: false
-          shader: Emissive
+          shader: unshaded
           map: [ "shield" ]
     - type: Construction
       graph: EnergyShieldRepair
@@ -497,10 +497,10 @@
       inhandVisuals:
         left:
           - state: inhand-left-shield
-            shader: Emissive
+            shader: unshaded
         right:
           - state: inhand-right-shield
-            shader: Emissive
+            shader: unshaded
     - type: PointLight
       netsync: false
       enabled: false

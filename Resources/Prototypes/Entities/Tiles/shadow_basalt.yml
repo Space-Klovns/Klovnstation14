@@ -10,7 +10,7 @@
       sprite: /Textures/Tiles/Planet/shadowbasalt.rsi
       layers:
         - state: basalt1
-          shader: Emissive
+          shader: unshaded
       drawdepth: LowFloors
     - type: SyncSprite
     - type: RequiresTile
@@ -29,7 +29,7 @@
     - type: Sprite
       layers:
         - state: basalt2
-          shader: Emissive
+          shader: unshaded
 
 - type: entity
   id: ShadowBasaltThree
@@ -40,7 +40,7 @@
     - type: Sprite
       layers:
         - state: basalt3
-          shader: Emissive
+          shader: unshaded
 
 - type: entity
   id: ShadowBasaltFour
@@ -51,7 +51,7 @@
     - type: Sprite
       layers:
         - state: basalt4
-          shader: Emissive
+          shader: unshaded
 
 - type: entity
   id: ShadowBasaltFive
@@ -62,7 +62,7 @@
     - type: Sprite
       layers:
         - state: basalt5
-          shader: Emissive
+          shader: unshaded
 
 - type: entity
   id: ShadowBasaltRandom

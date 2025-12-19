@@ -603,10 +603,10 @@
     inhandVisuals:
       left:
       - state: singu-inhand-left
-        shader: Emissive
+        shader: unshaded
       right:
       - state: singu-inhand-right
-        shader: Emissive
+        shader: unshaded
 
 - type: entity
   parent: BaseItem
@@ -618,15 +618,15 @@
     sprite: Structures/Power/Generation/Tesla/energy_miniball.rsi
     layers:
     - state: tesla_projectile
-      shader: Emissive
+      shader: unshaded
   - type: Item
     inhandVisuals:
       left:
       - state: tesla-inhand-left
-        shader: Emissive
+        shader: unshaded
       right:
       - state: tesla-inhand-right
-        shader: Emissive
+        shader: unshaded
   - type: PointLight
     enabled: true
     radius: 5
@@ -652,7 +652,7 @@
     sprite: Objects/Fun/pondering_orb.rsi
     layers:
     - state: icon
-      shader: Emissive
+      shader: unshaded
   - type: PointLight
     radius: 2
     color: "#00CCFF"
@@ -697,7 +697,7 @@
     - state: e_sword_blade
       color: "#FFFFFF"
       visible: false
-      shader: Emissive
+      shader: unshaded
       map: [ "blade" ]
   - type: EnergySword
   - type: ItemToggle
@@ -725,10 +725,10 @@
     inhandVisuals:
       left:
       - state: inhand-left-blade
-        shader: Emissive
+        shader: unshaded
       right:
       - state: inhand-right-blade
-        shader: Emissive
+        shader: unshaded
   - type: ItemTogglePointLight
   - type: DisarmMalus
     malus: 0

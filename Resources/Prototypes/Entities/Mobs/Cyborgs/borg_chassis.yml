@@ -8,10 +8,10 @@
       map: ["enum.BorgVisualLayers.Body", "movement"]
     - state: robot_e_r
       map: ["enum.BorgVisualLayers.Light"]
-      shader: Emissive
+      shader: unshaded
       visible: false
     - state: robot_l
-      shader: Emissive
+      shader: unshaded
       map: ["light","enum.BorgVisualLayers.LightStatus"]
       visible: false
   - type: BorgChassis
@@ -92,10 +92,10 @@
         - state: synd_sec
         - state: synd_sec_e
           map: ["enum.BorgVisualLayers.Light"]
-          shader: Emissive
+          shader: unshaded
           visible: false
         - state: synd_sec_l
-          shader: Emissive
+          shader: unshaded
           map: ["light"]
           visible: false
     - type: BorgChassis
@@ -124,10 +124,10 @@
         - state: synd_medical
         - state: synd_medical_e
           map: ["enum.BorgVisualLayers.Light"]
-          shader: Emissive
+          shader: unshaded
           visible: false
         - state: synd_medical_l
-          shader: Emissive
+          shader: unshaded
           map: ["light"]
           visible: false
     - type: BorgChassis
@@ -163,10 +163,10 @@
         - state: synd_engi
         - state: synd_engi_e
           map: ["enum.BorgVisualLayers.Light"]
-          shader: Emissive
+          shader: unshaded
           visible: false
         - state: synd_engi_l
-          shader: Emissive
+          shader: unshaded
           map: ["light"]
           visible: false
     - type: BorgChassis
@@ -199,10 +199,10 @@
     - state: derelict
     - state: derelict_e_r
       map: ["enum.BorgVisualLayers.Light"]
-      shader: Emissive
+      shader: unshaded
       visible: false
     - state: derelict_l
-      shader: Emissive
+      shader: unshaded
       map: ["light"]
       visible: false
   - type: BorgChassis
@@ -231,14 +231,14 @@
     - state: engineer_derelict
     - state: engineer_e_r
       map: ["enum.BorgVisualLayers.Light"]
-      shader: Emissive
+      shader: unshaded
       visible: false
     - state: engineer_derelict_crystal #This layer and the layer below are duplicated in order to create a more mellow unshaded layer. See https://github.com/space-wizards/space-station-14/pull/37869 for more info on the method.
-      shader: Emissive
+      shader: unshaded
     - state: engineer_derelict_crystal
       shader: shaded
     - state: engineer_l
-      shader: Emissive
+      shader: unshaded
       map: ["light"]
       visible: false
   - type: BorgChassis
@@ -262,10 +262,10 @@
       map: ["movement"]
     - state: janitor_e_r
       map: ["enum.BorgVisualLayers.Light"]
-      shader: Emissive
+      shader: unshaded
       visible: false
     - state: janitor_l
-      shader: Emissive
+      shader: unshaded
       map: ["light"]
       visible: false
   - type: SpriteMovement
@@ -296,10 +296,10 @@
       map: ["movement"]
     - state: medical_e_r
       map: ["enum.BorgVisualLayers.Light"]
-      shader: Emissive
+      shader: unshaded
       visible: false
     - state: medical_l
-      shader: Emissive
+      shader: unshaded
       map: ["light"]
       visible: false
   - type: SpriteMovement
@@ -337,10 +337,10 @@
       map: ["movement"]
     - state: miner_e_r
       map: ["enum.BorgVisualLayers.Light"]
-      shader: Emissive
+      shader: unshaded
       visible: false
     - state: miner_l
-      shader: Emissive
+      shader: unshaded
       map: ["light"]
       visible: false
   - type: SpriteMovement
@@ -370,10 +370,10 @@
     - state: synd_sec_derelict
     - state: synd_sec_e
       map: ["enum.BorgVisualLayers.Light"]
-      shader: Emissive
+      shader: unshaded
       visible: false
     - state: synd_sec_l
-      shader: Emissive
+      shader: unshaded
       map: ["light"]
       visible: false
   - type: BorgChassis

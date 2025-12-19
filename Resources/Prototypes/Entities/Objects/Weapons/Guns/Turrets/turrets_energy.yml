@@ -41,14 +41,14 @@
       map: [ "base" ]
     - state: stun
       map: [ "enum.DeployableTurretVisuals.Weapon" ]
-      shader: "Emissive"
+      shader: "unshaded"
       visible: false
     - state: cover_closed
       map: [ "enum.DeployableTurretVisuals.Turret" ]
       renderingStrategy: NoRotation
     - state: cover_light_on
       map: [ "enum.PowerDeviceVisualLayers.Powered" ]
-      shader: "Emissive"
+      shader: "unshaded"
       renderingStrategy: NoRotation
       visible: false
     - state: panel

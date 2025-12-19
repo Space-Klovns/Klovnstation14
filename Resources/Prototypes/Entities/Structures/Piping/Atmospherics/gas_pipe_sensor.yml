@@ -17,7 +17,7 @@
       state: base
     - map: [ "enum.PowerDeviceVisualLayers.Powered" ]
       state: lights
-      shader: Emissive
+      shader: unshaded
   - type: AtmosPipeLayers
     spriteRsiPaths:
       Primary: Structures/Piping/Atmospherics/gas_pipe_sensor.rsi

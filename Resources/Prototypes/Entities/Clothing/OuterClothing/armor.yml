@@ -290,7 +290,7 @@
     - state: icon
     - state: light-overlay
       visible: false
-      shader: Emissive
+      shader: unshaded
   - type: Clothing
     sprite: Clothing/OuterClothing/Armor/syndie-raid.rsi
   - type: Armor
@@ -314,10 +314,10 @@
     clothingVisuals:
       outerClothing:
       - state: equipped-OUTERCLOTHING-light
-        shader: Emissive
+        shader: unshaded
       outerClothing-vox:
       - state: equipped-OUTERCLOTHING-light-vox
-        shader: Emissive
+        shader: unshaded
   - type: ItemTogglePointLight
   - type: Appearance
   - type: HandheldLight

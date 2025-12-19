@@ -87,7 +87,7 @@
     layers:
     - state: rndpointsource-off
     - state: rndpointsource
-      shader: Emissive
+      shader: unshaded
       map: ["enum.PowerDeviceVisualLayers.Powered"]
   - type: ResearchClient
   - type: ResearchPointSource

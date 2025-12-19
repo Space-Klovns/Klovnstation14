@@ -185,7 +185,7 @@
     - state: base
     - state: locked
       map: ["enum.LockVisualLayers.Lock"]
-      shader: Emissive
+      shader: unshaded
 
 - type: entity
   parent: LockableButton

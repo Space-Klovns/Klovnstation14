@@ -13,10 +13,10 @@
       layers:
         - state: teg
         - state: teg_mid
-          shader: Emissive
+          shader: unshaded
           map: [ "enum.PowerDeviceVisualLayers.Powered" ]
         - state: teg-op1
-          shader: Emissive
+          shader: unshaded
           visible: false
           map: [ "enum.TegVisualLayers.PowerOutput" ]
     - type: GenericVisualizer
@@ -122,7 +122,7 @@
         - state: circ-0
           map: [ "enum.TegVisualLayers.CirculatorBase" ]
         - state: circ-0-light
-          shader: Emissive
+          shader: unshaded
           map: [ "enum.TegVisualLayers.CirculatorLight" ]
 
     - type: GenericVisualizer

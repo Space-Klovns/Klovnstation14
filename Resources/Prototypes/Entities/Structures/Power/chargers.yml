@@ -48,7 +48,7 @@
       state: "empty"
     - map: ["enum.PowerChargerVisualLayers.Light"]
       state: "light-off"
-      shader: "Emissive"
+      shader: "unshaded"
   - type: Fixtures
     fixtures:
       fix1:
@@ -81,7 +81,7 @@
       state: "empty"
     - map: ["enum.PowerChargerVisualLayers.Light"]
       state: "light-off"
-      shader: "Emissive"
+      shader: "unshaded"
     - state: open
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
       visible: false
@@ -214,7 +214,7 @@
       state: "empty"
     - map: ["enum.PowerChargerVisualLayers.Light"]
       state: "light-off"
-      shader: "Emissive"
+      shader: "unshaded"
   - type: Charger
     chargeRate: 25
   - type: ItemSlots
@@ -243,10 +243,10 @@
         map: ["base"]
       - state: borgcharger0
         map: ["enum.PowerDeviceVisualLayers.Powered"]
-        shader: "Emissive"
+        shader: "unshaded"
       - state: borgcharger1
         map: ["charged"]
-        shader: "Emissive"
+        shader: "unshaded"
         visible: false
       - state: borgdecon1
         map: ["enum.WiresVisualLayers.MaintenancePanel"]

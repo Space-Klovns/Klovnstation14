@@ -19,7 +19,7 @@
     - state: morgue_nomob_light
       visible: false
       map: ["enum.MorgueVisualLayers.Light"]
-      shader: Emissive
+      shader: unshaded
   - type: Clickable
   - type: InteractionOutline
   - type: Physics
@@ -92,11 +92,11 @@
     - state: crema_contents_light
       visible: false
       map: ["enum.CrematoriumVisualLayers.LightContent"]
-      shader: Emissive
+      shader: unshaded
     - state: crema_active_light
       visible: false
       map: ["enum.CrematoriumVisualLayers.LightBurning"]
-      shader: Emissive
+      shader: unshaded
   - type: Clickable
   - type: InteractionOutline
   - type: Physics

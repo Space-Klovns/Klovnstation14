@@ -140,7 +140,7 @@
       state: alive
     - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
       state: mouth
-      shader: Emissive
+      shader: unshaded
   - type: RandomSprite
     available:
     - enum.DamageStateVisualLayers.Base:
@@ -251,7 +251,7 @@
         state: alive
       - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
         state: mouth
-        shader: Emissive
+        shader: unshaded
     - type: Fixtures
       fixtures:
         fix1:

@@ -87,7 +87,7 @@
       - state: decor_wingette_circle
         color: "#95ffff"
       - state: icon_magic_forcewall
-        shader: Emissive
+        shader: unshaded
       - state: detail_rivets
         color: gold
     - type: Spellbook
@@ -179,7 +179,7 @@
         color: "#e89b3c"
       - state: overlay_blood
       - state: icon_magic_fireball
-        shader: Emissive
+        shader: unshaded
     - type: Spellbook
       spellActions:
         ActionFireball: null

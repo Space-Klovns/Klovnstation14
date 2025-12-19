@@ -11,7 +11,7 @@
       layers:
         - state: tablet
         - state: generic
-          shader: Emissive
+          shader: unshaded
     - type: ActivatableUI
       inHandsOnly: true
       singleUser: true

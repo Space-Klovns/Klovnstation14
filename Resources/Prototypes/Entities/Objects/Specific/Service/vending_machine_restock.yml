@@ -11,7 +11,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
   - type: MeleeWeapon
     damage:
       types:
@@ -57,7 +57,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_booze
 
 - type: entity
@@ -73,7 +73,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_chinese
 
 - type: entity
@@ -89,7 +89,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_chef
 
 - type: entity
@@ -105,7 +105,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_condiment
 
 - type: entity
@@ -139,7 +139,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_clothes
 
 - type: entity
@@ -155,7 +155,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_costume
 
 - type: entity
@@ -171,7 +171,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_dinner
 
 - type: entity
@@ -187,7 +187,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_discount
 
 - type: entity
@@ -203,7 +203,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_donuts
 
 - type: entity
@@ -220,7 +220,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_engi
 
 - type: entity
@@ -236,7 +236,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_games
 
 - type: entity
@@ -252,7 +252,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_snack
 
 - type: entity
@@ -268,7 +268,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_joe
 
 - type: entity
@@ -287,7 +287,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_medical
 
 - type: entity
@@ -303,7 +303,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_plant
 
 - type: entity
@@ -319,7 +319,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_ptech
 
 - type: entity
@@ -343,7 +343,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_cola
 
 - type: entity
@@ -359,7 +359,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_sec
 
 - type: entity
@@ -375,7 +375,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_salvage
 
 - type: entity
@@ -391,7 +391,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_plant
 
 - type: entity
@@ -407,7 +407,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_smoke
 
 - type: entity
@@ -424,7 +424,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_tanks
 
 - type: entity
@@ -440,7 +440,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_parts
 
 - type: entity
@@ -456,7 +456,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_robotics
 
 - type: entity
@@ -472,7 +472,7 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_honk
 
 - type: entity
@@ -488,5 +488,5 @@
     layers:
     - state: base
     - state: green_bit
-      shader: Emissive
+      shader: unshaded
     - state: refill_medical

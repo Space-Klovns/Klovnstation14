@@ -14,27 +14,27 @@
       map: [ "enum.ReactorVisualLayers.Sprite" ]
     - state: reactor_status_active
       visible: false
-      shader: Emissive
+      shader: unshaded
       map: [ "enum.ReactorVisualLayers.Status" ]
     - state: reactor_gas_input_lights
       visible: false
-      shader: Emissive
+      shader: unshaded
       map: [ "enum.ReactorVisualLayers.Input" ]
     - state: reactor_gas_output_lights
       visible: false
-      shader: Emissive
+      shader: unshaded
       map: [ "enum.ReactorVisualLayers.Output" ]
     - state: reactor_lights_warning
       visible: false
-      shader: Emissive
+      shader: unshaded
       map: [ "enum.ReactorVisualLayers.Lights" ]
     # - state: reactor_fire
     #   visible: false
-    #   shader: Emissive
+    #   shader: unshaded
     #   map: [ "enum.ReactorVisualLayers.Smoke" ]
     # - state: reactor_smoke
     #   visible: false
-    #   shader: Emissive
+    #   shader: unshaded
     #   map: [ "enum.ReactorVisualLayers.Fire" ]
   - type: GenericVisualizer
     visuals:

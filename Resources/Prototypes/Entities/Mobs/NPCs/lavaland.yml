@@ -19,7 +19,7 @@
       state: base
     - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
       state: unshaded
-      shader: Emissive
+      shader: unshaded
   - type: Fixtures
     fixtures:
       fix1:
@@ -84,7 +84,7 @@
       state: base
     - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
       state: unshaded
-      shader: Emissive
+      shader: unshaded
       color: red
   - type: PointLight
     radius: 1.5
@@ -102,7 +102,7 @@
       state: base
     - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
       state: unshaded
-      shader: Emissive
+      shader: unshaded
       color: deepskyblue
   - type: PointLight
     radius: 1.5
@@ -120,7 +120,7 @@
       state: base
     - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
       state: unshaded
-      shader: Emissive
+      shader: unshaded
       color: orangered
   - type: PointLight
     radius: 1.5
@@ -143,7 +143,7 @@
       state: base
     - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
       state: unshaded
-      shader: Emissive
+      shader: unshaded
   - type: PointLight
     radius: 1.5
     energy: 1

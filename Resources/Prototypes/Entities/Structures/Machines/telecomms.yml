@@ -11,7 +11,7 @@
     - state: telecom-nopower
     - state: telecom-stripe
     - state: telecom-on
-      shader: Emissive
+      shader: unshaded
       visible: false
       map: ["telecom-on"]
     - state: variant-nokey
@@ -102,37 +102,37 @@
           True: { visible: true }
           False: { visible: false }
         variant-common:
-          True: { shader: Emissive }
+          True: { shader: unshaded }
           False: { shader: shaded }
         variant-cargo:
-          True: { shader: Emissive }
+          True: { shader: unshaded }
           False: { shader: shaded }
         variant-engineering:
-          True: { shader: Emissive }
+          True: { shader: unshaded }
           False: { shader: shaded }
         variant-medical:
-          True: { shader: Emissive }
+          True: { shader: unshaded }
           False: { shader: shaded }
         variant-science:
-          True: { shader: Emissive }
+          True: { shader: unshaded }
           False: { shader: shaded }
         variant-sec:
-          True: { shader: Emissive }
+          True: { shader: unshaded }
           False: { shader: shaded }
         variant-service:
-          True: { shader: Emissive }
+          True: { shader: unshaded }
           False: { shader: shaded }
         variant-command:
-          True: { shader: Emissive }
+          True: { shader: unshaded }
           False: { shader: shaded }
         variant-default:
-          True: { shader: Emissive }
+          True: { shader: unshaded }
           False: { shader: shaded }
         variant-multiple:
-          True: { shader: Emissive }
+          True: { shader: unshaded }
           False: { shader: shaded }
         variant-nokey:
-          True: { shader: Emissive }
+          True: { shader: unshaded }
           False: { shader: shaded }
   - type: Appearance
   - type: AmbientOnPowered

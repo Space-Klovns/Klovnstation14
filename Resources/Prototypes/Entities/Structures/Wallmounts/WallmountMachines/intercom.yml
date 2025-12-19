@@ -44,14 +44,14 @@
     - state: base
     - state: unshaded
       map: ["enum.PowerDeviceVisualLayers.Powered"]
-      shader: Emissive
+      shader: unshaded
     - state: broadcasting
       map: ["enum.RadioDeviceVisualLayers.Broadcasting"]
-      shader: Emissive
+      shader: unshaded
       visible: false
     - state: speaker
       map: ["enum.RadioDeviceVisualLayers.Speaker"]
-      shader: Emissive
+      shader: unshaded
       visible: false
     - state: panel
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
@@ -149,14 +149,14 @@
     - state: base
     - state: unshaded
       map: ["enum.PowerDeviceVisualLayers.Powered"]
-      shader: Emissive
+      shader: unshaded
     - state: broadcasting
       map: ["enum.RadioDeviceVisualLayers.Broadcasting"]
-      shader: Emissive
+      shader: unshaded
       visible: false
     - state: speaker
       map: ["enum.RadioDeviceVisualLayers.Speaker"]
-      shader: Emissive
+      shader: unshaded
       visible: false
     - state: panel
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
@@ -174,14 +174,14 @@
     - state: base
     - state: unshaded
       map: ["enum.PowerDeviceVisualLayers.Powered"]
-      shader: Emissive
+      shader: unshaded
     - state: broadcasting
       map: ["enum.RadioDeviceVisualLayers.Broadcasting"]
-      shader: Emissive
+      shader: unshaded
       visible: false
     - state: speaker
       map: ["enum.RadioDeviceVisualLayers.Speaker"]
-      shader: Emissive
+      shader: unshaded
       visible: false
     - state: panel
       map: ["enum.WiresVisualLayers.MaintenancePanel"]

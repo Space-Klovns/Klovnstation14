@@ -24,7 +24,7 @@
       map: [ "enum.DeliverySpawnerVisualLayers.Contents" ]
       visible: false
     - state: unlit
-      shader: Emissive
+      shader: unshaded
       visible: false
       map: [ "enum.PowerDeviceVisualLayers.Powered" ]
   - type: Damageable

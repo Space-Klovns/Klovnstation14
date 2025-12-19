@@ -22,7 +22,7 @@
       map: [ "unreadyBlinking" ]
     - state: salvage-magnet-o4
       map: ["chargeState"]
-      shader: Emissive
+      shader: unshaded
   - type: ActivatableUI
     key: enum.SalvageMagnetUiKey.Key
   - type: ActivatableUIRequiresPower

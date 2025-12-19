@@ -12,7 +12,7 @@
     - state: icon
       map: ["enum.DiseaseMachineVisualLayers.IsRunning"]
     - state: unlit
-      shader: Emissive
+      shader: unshaded
       map: ["enum.DiseaseMachineVisualLayers.IsOn"]
   - type: Appearance
   - type: Machine

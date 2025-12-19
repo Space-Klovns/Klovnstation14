@@ -11,7 +11,7 @@
     layers:
       - state: icon
       - state: analyzer
-        shader: Emissive
+        shader: unshaded
         visible: true
         map: [ "enum.PowerDeviceVisualLayers.Powered" ]
   - type: Item

@@ -8,7 +8,7 @@
     drawdepth: SmallMobs
     noRot: true
     layers:
-    - shader: Emissive
+    - shader: unshaded
       map: ["enum.EffectLayers.Unshaded"]
       sprite: Effects/atmospherics.rsi
       state: frezon_old

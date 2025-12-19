@@ -1066,7 +1066,7 @@
     - state: bg_powered
       map: ["enum.AnomalyVisualLayers.Animated"]
       visible: false
-      shader: Emissive
+      shader: unshaded
     - state: part1
     - state: part2
     - state: part3
@@ -1097,7 +1097,7 @@
     drawdepth: Effects
     layers:
     - state: beam
-      shader: Emissive
+      shader: unshaded
       color: "#21c4ff"
   - type: Physics
     canCollide: false

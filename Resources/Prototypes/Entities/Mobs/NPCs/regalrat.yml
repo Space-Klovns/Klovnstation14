@@ -28,7 +28,7 @@
       state: regalrat
     - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
       state: eyes
-      shader: Emissive
+      shader: unshaded
   - type: TypingIndicator
     proto: regal
   - type: Physics
@@ -141,7 +141,7 @@
       state: regalrat
     - map: [ "enum.DamageStateVisualLayers.BaseUnshaded"]
       state: eyes
-      shader: Emissive
+      shader: unshaded
   - type: MobState
   - type: MobThresholds
     thresholds:
@@ -203,7 +203,7 @@
       state: rat
     - map: [ "enum.DamageStateVisualLayers.BaseUnshaded"]
       state: eyes
-      shader: Emissive
+      shader: unshaded
 
   - type: SpriteMovement
     movementLayers:

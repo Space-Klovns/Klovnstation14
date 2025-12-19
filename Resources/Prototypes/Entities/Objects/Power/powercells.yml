@@ -116,7 +116,7 @@
       state: small
     - map: [ "enum.PowerCellVisualLayers.Unshaded" ]
       state: o2
-      shader: Emissive
+      shader: unshaded
   - type: Battery
     maxCharge: 360
     startingCharge: 360
@@ -135,7 +135,7 @@
         state: small
       - map: [ "enum.PowerCellVisualLayers.Unshaded" ]
         state: o2
-        shader: Emissive
+        shader: unshaded
         visible: false
   - type: Battery
     maxCharge: 360
@@ -166,7 +166,7 @@
       state: medium
     - map: [ "enum.PowerCellVisualLayers.Unshaded" ]
       state: o2
-      shader: Emissive
+      shader: unshaded
   - type: Battery
     maxCharge: 720
     startingCharge: 720
@@ -182,7 +182,7 @@
         state: medium
       - map: [ "enum.PowerCellVisualLayers.Unshaded" ]
         state: o2
-        shader: Emissive
+        shader: unshaded
         visible: false
   - type: Battery
     maxCharge: 720
@@ -201,7 +201,7 @@
       state: high
     - map: [ "enum.PowerCellVisualLayers.Unshaded" ]
       state: o2
-      shader: Emissive
+      shader: unshaded
   - type: Battery
     maxCharge: 1080
     startingCharge: 1080
@@ -220,7 +220,7 @@
         state: high
       - map: [ "enum.PowerCellVisualLayers.Unshaded" ]
         state: o2
-        shader: Emissive
+        shader: unshaded
         visible: false
   - type: Battery
     maxCharge: 1080
@@ -239,7 +239,7 @@
       state: hyper
     - map: [ "enum.PowerCellVisualLayers.Unshaded" ]
       state: o2
-      shader: Emissive
+      shader: unshaded
   - type: Battery
     maxCharge: 1800
     startingCharge: 1800
@@ -255,7 +255,7 @@
         state: hyper
       - map: [ "enum.PowerCellVisualLayers.Unshaded" ]
         state: o2
-        shader: Emissive
+        shader: unshaded
         visible: false
   - type: Battery
     maxCharge: 1800
@@ -274,7 +274,7 @@
       state: microreactor
     - map: [ "enum.PowerCellVisualLayers.Unshaded" ]
       state: o2
-      shader: Emissive
+      shader: unshaded
   - type: Battery
     maxCharge: 720
     startingCharge: 720
@@ -293,7 +293,7 @@
       state: microreactor
     - map: [ "enum.PowerCellVisualLayers.Unshaded" ]
       state: o2
-      shader: Emissive
+      shader: unshaded
       visible: false
   - type: Battery
     startingCharge: 0
@@ -310,7 +310,7 @@
         state: antique
       - map: [ "enum.PowerCellVisualLayers.Unshaded" ]
         state: o2
-        shader: Emissive
+        shader: unshaded
     - type: Battery
       maxCharge: 1200
       startingCharge: 1200
@@ -358,7 +358,7 @@
       state: small
     - map: [ "enum.PowerCellVisualLayers.Unshaded" ]
       state: o2
-      shader: Emissive
+      shader: unshaded
   - type: Battery
     maxCharge: 1400
     startingCharge: 1400
@@ -376,7 +376,7 @@
       state: medium
     - map: [ "enum.PowerCellVisualLayers.Unshaded" ]
       state: o2
-      shader: Emissive
+      shader: unshaded
   - type: Battery
     maxCharge: 2700
     startingCharge: 2700
@@ -394,7 +394,7 @@
       state: high
     - map: [ "enum.PowerCellVisualLayers.Unshaded" ]
       state: o2
-      shader: Emissive
+      shader: unshaded
   - type: Battery
     maxCharge: 6200
     startingCharge: 6200
@@ -411,7 +411,7 @@
       state: small
     - map: [ "enum.PowerCellVisualLayers.Unshaded" ]
       state: o2
-      shader: Emissive
+      shader: unshaded
       visible: false
   - type: Battery
     maxCharge: 1400
@@ -429,7 +429,7 @@
       state: small
     - map: [ "enum.PowerCellVisualLayers.Unshaded" ]
       state: o2
-      shader: Emissive
+      shader: unshaded
       visible: false
   - type: Battery
     startingCharge: 0
@@ -446,7 +446,7 @@
       state: small
     - map: [ "enum.PowerCellVisualLayers.Unshaded" ]
       state: o2
-      shader: Emissive
+      shader: unshaded
       visible: false
   - type: Battery
     startingCharge: 0

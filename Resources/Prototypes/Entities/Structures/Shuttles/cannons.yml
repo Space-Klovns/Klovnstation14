@@ -51,7 +51,7 @@
     - state: lse-400c
     - state: mag-unshaded-9
       map: ["enum.GunVisualLayers.MagUnshaded"]
-      shader: Emissive
+      shader: unshaded
   - type: ContainerContainer
     containers:
       machine_board: !type:Container
@@ -109,7 +109,7 @@
     - state: lse-1200c
     - state: mag-unshaded-9
       map: ["enum.GunVisualLayers.MagUnshaded"]
-      shader: Emissive
+      shader: unshaded
   - type: ContainerContainer
     containers:
       machine_board: !type:Container

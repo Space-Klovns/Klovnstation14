@@ -114,10 +114,10 @@
     inhandVisuals:
       left:
       - state: inhand-left-blade
-        shader: Emissive
+        shader: unshaded
       right:
       - state: inhand-right-blade
-        shader: Emissive
+        shader: unshaded
   - type: Reflect
   - type: IgnitionSource
     temperature: 700
@@ -135,7 +135,7 @@
     - state: e_sword_blade
       color: "#FFFFFF"
       visible: false
-      shader: Emissive
+      shader: unshaded
       map: [ "blade" ]
   - type: Item
     sprite: Objects/Weapons/Melee/e_sword-inhands.rsi
@@ -187,7 +187,7 @@
       - state: e_sword_blade
         color: "#FFFFFF"
         visible: false
-        shader: Emissive
+        shader: unshaded
         map: [ "blade" ]
   - type: MeleeWeapon
     wideAnimationRotation: 145
@@ -253,7 +253,7 @@
       - state: e_sword_blade
         color: "#FFFFFF"
         visible: false
-        shader: Emissive
+        shader: unshaded
         map: [ "blade" ]
   - type: Item
     size: Tiny
@@ -322,7 +322,7 @@
       - state: e_cutlass_blade
         color: "#e95151"
         visible: false
-        shader: Emissive
+        shader: unshaded
         map: [ "blade" ]
   - type: Item
     sprite: Objects/Weapons/Melee/e_cutlass.rsi
@@ -383,7 +383,7 @@
       - state: e_sword_double_blade
         color: "#FFFFFF"
         visible: false
-        shader: Emissive
+        shader: unshaded
         map: [ "blade" ]
   - type: Item
     size: Small
@@ -432,12 +432,12 @@
     - state: hypereutactic_blade
       color: "#FFFFFF"
       visible: false
-      shader: Emissive
+      shader: unshaded
       map: [ "blade" ]
     - state: hypereutactic_gem
       color: "#FFFFFF"
       visible: false
-      shader: Emissive
+      shader: unshaded
       map: [ "gem" ]
   - type: Item
     size: Small

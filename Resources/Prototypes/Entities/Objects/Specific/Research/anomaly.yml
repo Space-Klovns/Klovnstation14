@@ -33,20 +33,20 @@
         map: ["enum.AnomalyScannerVisualLayers.Base"]
       - map: ["enum.AnomalyScannerVisualLayers.Screen"]
         visible: false
-        shader: Emissive
+        shader: unshaded
       - state: severity_mask
         map: ["enum.AnomalyScannerVisualLayers.SeverityMask"]
         visible: false
-        shader: Emissive
+        shader: unshaded
       - map: ["enum.AnomalyScannerVisualLayers.Stability"]
         visible: false
-        shader: Emissive
+        shader: unshaded
       - visible: false
         map: ["enum.AnomalyScannerVisualLayers.Pulse"]
-        shader: Emissive
+        shader: unshaded
       - state: supercritical
         map: ["enum.AnomalyScannerVisualLayers.Supercritical"]
-        shader: Emissive
+        shader: unshaded
         visible: false
   - type: ActivatableUI
     key: enum.AnomalyScannerUiKey.Key
@@ -103,7 +103,7 @@
     layers:
       - state: icon
       - state: screen
-        shader: Emissive
+        shader: unshaded
         visible: false
         map: ["enum.ToggleableVisuals.Layer"]
   - type: Appearance

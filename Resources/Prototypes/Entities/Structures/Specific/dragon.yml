@@ -17,7 +17,7 @@
     - sprite: Structures/Specific/carp_rift.rsi
       state: icon
       color: "#569fff"
-      shader: Emissive
+      shader: unshaded
   - type: InteractionOutline
   - type: Clickable
   - type: PointLight

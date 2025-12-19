@@ -54,7 +54,7 @@
       state: alive
     - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
       state: alive-unshaded
-      shader: Emissive
+      shader: unshaded
   - type: Appearance
   - type: DamageStateVisuals
     states:

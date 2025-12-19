@@ -6,7 +6,7 @@
     drawdepth: Effects
     noRot: true
     layers:
-    - shader: Emissive
+    - shader: unshaded
       map: ["enum.EffectLayers.Unshaded"]
       sprite: Effects/chronofield.rsi
       state: chronofield

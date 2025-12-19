@@ -483,7 +483,7 @@
       - state: icon
       - state: icon-light
         visible: false
-        shader: Emissive
+        shader: unshaded
         map: [ "light" ]
   - type: Appearance
   - type: Clothing
@@ -514,7 +514,7 @@
     clothingVisuals:
       head:
       - state: on-equipped-HELMET
-        shader: Emissive
+        shader: unshaded
   - type: PointLight
     enabled: false
     radius: 1.4

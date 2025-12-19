@@ -8,4 +8,4 @@
     - HideContextMenu
   - type: Sprite
     layers:
-    - shader: Emissive
+    - shader: unshaded

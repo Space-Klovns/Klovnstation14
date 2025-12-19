@@ -10,7 +10,7 @@
       - state: geiger_base
       - state: geiger_on_idle
         map: ["enum.GeigerLayers.Screen"]
-        shader: Emissive
+        shader: unshaded
         visible: false
   - type: Item
     sprite: Objects/Tools/geiger.rsi

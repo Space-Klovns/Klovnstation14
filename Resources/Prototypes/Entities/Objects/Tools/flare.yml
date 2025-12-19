@@ -33,7 +33,7 @@
         state: flare_burn
         color: "#FFFFFF"
         visible: false
-        shader: Emissive
+        shader: unshaded
       - map: [ enum.ExpendableLightVisualLayers.Overlay ]
         state: flare_unlit
         color: "#FF0000"

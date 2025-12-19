@@ -236,12 +236,12 @@
         map: ["enum.GunVisualLayers.Base"]
       - state: base-unshaded
         map: ["enum.GunVisualLayers.BaseUnshaded"]
-        shader: Emissive
+        shader: unshaded
       - state: mag-0
         map: ["enum.GunVisualLayers.Mag"]
       - state: mag-unshaded-0
         map: ["enum.GunVisualLayers.MagUnshaded"]
-        shader: Emissive
+        shader: unshaded
   - type: Clothing
     sprite: Objects/Weapons/Guns/SMGs/wt550.rsi
   - type: ChamberMagazineAmmoProvider

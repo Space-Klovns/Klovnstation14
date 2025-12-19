@@ -10,7 +10,7 @@
     layers:
     - sprite: Mobs/Aliens/paradox_clone.rsi
       state: paradox
-      shader: Emissive
+      shader: unshaded
   - type: RotationVisuals
     horizontalRotation: 90
   - type: Pullable

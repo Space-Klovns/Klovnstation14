@@ -85,7 +85,7 @@
     layers:
     - state: peel
     - state: primed
-      shader: Emissive
+      shader: unshaded
   - type: TriggerOnSlip
   - type: ExplodeOnTrigger
   - type: Explosive

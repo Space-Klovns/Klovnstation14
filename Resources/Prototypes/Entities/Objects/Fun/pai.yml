@@ -31,7 +31,7 @@
     layers:
     - state: pai-base
     - state: pai-off-overlay
-      shader: Emissive
+      shader: unshaded
       map: ["screen"]
   - type: Input
     context: "human"
@@ -111,7 +111,7 @@
     layers:
     - state: pai-base
     - state: syndicate-pai-off-overlay
-      shader: Emissive
+      shader: unshaded
       map: ["screen"]
   - type: ToggleableGhostRole
     roleName: pai-system-role-name-syndicate
@@ -150,7 +150,7 @@
     layers:
     - state: golden-pai-base
     - state: pai-off-overlay
-      shader: Emissive
+      shader: unshaded
       map: ["screen"]
   - type: Appearance
   - type: StaticPrice
@@ -167,7 +167,7 @@
     layers:
     - state: potato-base
     - state: potato-off-overlay
-      shader: Emissive
+      shader: unshaded
       map: ["screen"]
   - type: ToggleableGhostRole
     roleName: pai-system-role-name-potato

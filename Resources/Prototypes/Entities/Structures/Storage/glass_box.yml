@@ -41,7 +41,7 @@
     - state: glass
       map: ["enum.OpenableVisuals.Layer"]
     - state: locked
-      shader: Emissive
+      shader: unshaded
       map: ["enum.LockVisualLayers.Lock"]
   - type: Fixtures
     fixtures:

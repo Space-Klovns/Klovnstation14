@@ -119,7 +119,7 @@
         map: ["enum.GunVisualLayers.Base"]
       - state: mag-unshaded-1
         map: ["enum.GunVisualLayers.MagUnshaded"]
-        shader: Emissive
+        shader: unshaded
   - type: MagazineVisuals
     magState: mag
     steps: 6

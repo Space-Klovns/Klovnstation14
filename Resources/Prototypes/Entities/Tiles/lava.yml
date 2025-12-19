@@ -30,7 +30,7 @@
     drawdepth: BelowFloor
     layers:
       - state: lava
-        shader: Emissive
+        shader: unshaded
   - type: Icon
     sprite: Tiles/Planet/lava.rsi
     state: full

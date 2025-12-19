@@ -113,7 +113,7 @@
     layers:
     - state: space-christian
     - state: space-christian_lightning
-      shader: Emissive
+      shader: unshaded
   - type: Icon
     sprite: Structures/Furniture/Altars/Gods/nanotrasen.rsi
     state: space-christian
@@ -132,7 +132,7 @@
     layers:
     - state: satana
     - state: satana_lightning
-      shader: Emissive
+      shader: unshaded
   - type: Icon
     sprite: Structures/Furniture/Altars/Gods/nanotrasen.rsi
     state: satana
@@ -151,7 +151,7 @@
     layers:
     - state: technology
     - state: technology_lightning
-      shader: Emissive
+      shader: unshaded
   - type: Icon
     sprite: Structures/Furniture/Altars/Gods/nanotrasen.rsi
     state: technology
@@ -212,7 +212,7 @@
     layers:
     - state: maint
     - state: lightning
-      shader: Emissive
+      shader: unshaded
   - type: Icon
     sprite: Structures/Furniture/Altars/Gods/convertaltar.rsi
     state: maint
@@ -231,7 +231,7 @@
     layers:
     - state: blue
     - state: lightning
-      shader: Emissive
+      shader: unshaded
   - type: Icon
     sprite: Structures/Furniture/Altars/Gods/convertaltar.rsi
     state: blue
@@ -250,7 +250,7 @@
     layers:
     - state: convertaltar
     - state: lightning
-      shader: Emissive
+      shader: unshaded
   - type: Icon
     sprite: Structures/Furniture/Altars/Gods/convertaltar.rsi
     state: convertaltar
@@ -269,7 +269,7 @@
     layers:
     - state: convertaltar
     - state: lightning
-      shader: Emissive
+      shader: unshaded
   - type: Icon
     sprite: Structures/Furniture/Altars/Gods/convertaltar.rsi
     state: convertaltar
@@ -288,7 +288,7 @@
     layers:
     - state: orange
     - state: lightning
-      shader: Emissive
+      shader: unshaded
   - type: Icon
     sprite: Structures/Furniture/Altars/Gods/convertaltar.rsi
     state: orange
@@ -307,7 +307,7 @@
     layers:
     - state: red
     - state: lightning
-      shader: Emissive
+      shader: unshaded
   - type: Icon
     sprite: Structures/Furniture/Altars/Gods/convertaltar.rsi
     state: red
@@ -326,7 +326,7 @@
     layers:
     - state: white
     - state: lightning
-      shader: Emissive
+      shader: unshaded
   - type: Icon
     sprite: Structures/Furniture/Altars/Gods/convertaltar.rsi
     state: white
@@ -345,7 +345,7 @@
     layers:
     - state: yellow
     - state: lightning
-      shader: Emissive
+      shader: unshaded
   - type: Icon
     sprite: Structures/Furniture/Altars/Gods/convertaltar.rsi
     state: yellow
@@ -364,7 +364,7 @@
     layers:
     - state: full
     - state: blood
-      shader: Emissive
+      shader: unshaded
   - type: Icon
     sprite: Structures/Furniture/Altars/Cults/heaven.rsi
     state: full

@@ -60,7 +60,7 @@
       state: bear
     - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
       state: glow
-      shader: Emissive
+      shader: unshaded
   - type: Fixtures
     fixtures:
       fix1:
@@ -123,7 +123,7 @@
       state: bear
     - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
       state: glow
-      shader: Emissive
+      shader: unshaded
   - type: DamageStateVisuals
     states:
       Alive:
@@ -173,7 +173,7 @@
       state: kangaroo-space
     - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
       state: glow
-      shader: Emissive
+      shader: unshaded
   - type: MeleeWeapon
     soundHit:
         path: /Audio/Weapons/Xeno/alien_claw_flesh3.ogg
@@ -231,7 +231,7 @@
       state: spacespider
     - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
       state: glow
-      shader: Emissive
+      shader: unshaded
   - type: MobThresholds
     thresholds:
       0: Alive
@@ -329,7 +329,7 @@
           state: spacecobra
         - map: [ "enum.DamageStateVisualLayers.BaseUnshaded" ]
           state: glow
-          shader: Emissive
+          shader: unshaded
     - type: FootstepModifier
       footstepSoundCollection:
         collection: FootstepSnake

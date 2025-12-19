@@ -146,7 +146,7 @@
       visible: false
     - state: core_weak
       map: ["core_glow"]
-      shader: Emissive
+      shader: unshaded
       visible: false
   - type: Physics
   - type: Fixtures

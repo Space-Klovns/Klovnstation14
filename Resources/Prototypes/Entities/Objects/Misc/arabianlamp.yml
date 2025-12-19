@@ -69,7 +69,7 @@
       map: ["enum.StorageVisualLayers.Door"]
     - state: flame
       visible: false
-      shader: Emissive
+      shader: unshaded
       map: ["enum.ToggleableVisuals.Layer"]
   - type: GenericVisualizer
     visuals:
@@ -86,10 +86,10 @@
     inhandVisuals:
       left:
       - state: inhand-left-flame
-        shader: Emissive
+        shader: unshaded
       right:
       - state: inhand-right-flame
-        shader: Emissive
+        shader: unshaded
   - type: SolutionContainerManager
     solutions:
       Welder:

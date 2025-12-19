@@ -10,7 +10,7 @@
     layers:
     - state: seedextractor-off
     - state: seedextractor-unlit
-      shader: Emissive
+      shader: unshaded
       map: ["enum.PowerDeviceVisualLayers.Powered"]
   - type: Physics
     bodyType: Static

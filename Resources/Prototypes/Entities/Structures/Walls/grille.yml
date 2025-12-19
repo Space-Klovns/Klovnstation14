@@ -22,7 +22,7 @@
         - state: electrified
           sprite: Effects/electricity.rsi
           map: ["enum.ElectrifiedLayers.Sparks"]
-          shader: Emissive
+          shader: unshaded
           visible: false
     - type: Icon
       sprite: Structures/Walls/grille.rsi
@@ -178,7 +178,7 @@
     - state: electrified_diagonal
       sprite: Effects/electricity.rsi
       map: ["enum.ElectrifiedLayers.Sparks"]
-      shader: Emissive
+      shader: unshaded
       visible: false
   - type: Icon
     sprite: Structures/Walls/grille.rsi
@@ -216,7 +216,7 @@
     - state: electrified_diagonal
       sprite: Effects/electricity.rsi
       map: ["enum.ElectrifiedLayers.Sparks"]
-      shader: Emissive
+      shader: unshaded
       visible: false
   - type: Icon
     sprite: Structures/Walls/clockwork_grille.rsi

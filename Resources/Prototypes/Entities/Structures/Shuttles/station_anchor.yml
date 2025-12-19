@@ -25,7 +25,7 @@
     - state: station_anchor
       map: ["base"]
     - state: station_anchor_unlit
-      shader: Emissive
+      shader: unshaded
       map: ["unlit"]
   - type: GenericVisualizer
     visuals:

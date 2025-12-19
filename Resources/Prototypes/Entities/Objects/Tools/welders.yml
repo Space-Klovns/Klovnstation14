@@ -52,7 +52,7 @@
     - state: icon
     - state: welder_flame
       visible: false
-      shader: Emissive
+      shader: unshaded
       map: ["enum.ToggleableVisuals.Layer"]
   - type: GenericVisualizer
     visuals:
@@ -103,10 +103,10 @@
     inhandVisuals:
       left:
       - state: inhand-left-flame
-        shader: Emissive
+        shader: unshaded
       right:
       - state: inhand-right-flame
-        shader: Emissive
+        shader: unshaded
   - type: UseDelay
   - type: MeleeWeapon
     wideAnimationRotation: -90

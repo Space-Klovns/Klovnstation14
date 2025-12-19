@@ -10,7 +10,7 @@
     scale: 2.0,2.0
     layers:
     - state: narsie
-      shader: Emissive
+      shader: unshaded
 
 # spawn animation, spawns actual narsie when it ends
 - type: entity
@@ -21,7 +21,7 @@
   - type: Sprite
     layers:
     - state: spawn
-      shader: Emissive
+      shader: unshaded
   # spawn animation lasts 3.5 seconds
   - type: TimedDespawn
     lifetime: 3.5

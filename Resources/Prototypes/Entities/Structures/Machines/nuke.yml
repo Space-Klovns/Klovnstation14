@@ -14,7 +14,7 @@
       map: ["enum.NukeVisualLayers.Base"]
     - state: nuclearbomb_deployed_unlit
       map: ["enum.NukeVisualLayers.Unlit"]
-      shader: Emissive
+      shader: unshaded
       visible: false
     - state: nuclearbomb_gay
       map: ["pride"]

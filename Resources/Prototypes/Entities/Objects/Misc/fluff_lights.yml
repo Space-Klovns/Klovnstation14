@@ -107,7 +107,7 @@
       - state: lamp
         map: [ "base" ]
       - state: lamp-on
-        shader: Emissive
+        shader: unshaded
         visible: false
         map: [ "light" ]
   - type: Item
@@ -134,7 +134,7 @@
     layers:
       - state: bananalamp
       - state: bananalamp_on
-        shader: Emissive
+        shader: unshaded
         visible: false
         map: [ "light" ]
 
@@ -150,7 +150,7 @@
       - state: lampgreen
         map: [ "base" ]
       - state: lampgreen-on
-        shader: Emissive
+        shader: unshaded
         visible: false
         map: [ "light" ]
   - type: Item
@@ -183,7 +183,7 @@
       - state: lamp-int
         map: [ "enum.FlashVisualLayers.BaseLayer" ]
       - state: lamp-int-on
-        shader: Emissive
+        shader: unshaded
         visible: false
         map: [ "light" ]
       - state: flashing
@@ -242,7 +242,7 @@
       - state: floodlight
         map: [ "base" ]
       - state: floodlight-on
-        shader: Emissive
+        shader: unshaded
         visible: false
         map: [ "light" ]
   - type: Physics

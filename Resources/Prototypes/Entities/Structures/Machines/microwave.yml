@@ -66,13 +66,13 @@
     - state: mw0
       map: ["enum.MicrowaveVisualizerLayers.Base"]
     - state: mw_unlit
-      shader: Emissive
+      shader: unshaded
       map: ["enum.MicrowaveVisualizerLayers.BaseUnlit"]
     - state: mwbloody0
       map: ["bloody"]
       visible: false
     - state: mwbloody1
-      shader: Emissive
+      shader: unshaded
       map: ["bloodyunshaded"]
       visible: false
   - type: Destructible

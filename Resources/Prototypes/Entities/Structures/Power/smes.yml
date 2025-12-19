@@ -20,14 +20,14 @@
         - state: smes
         - map: ["enum.SmesVisualLayers.Charge"]
           state: "smes-og1" # -og0 does not exist
-          shader: Emissive
+          shader: unshaded
           visible: false
         - map: ["enum.SmesVisualLayers.Input"]
           state: "smes-oc0"
-          shader: Emissive
+          shader: unshaded
         - map: ["enum.SmesVisualLayers.Output"]
           state: "smes-op1"
-          shader: Emissive
+          shader: unshaded
         - map: [ "enum.WiresVisualLayers.MaintenancePanel" ]
           state: smes-open
     - type: Smes
@@ -144,14 +144,14 @@
     - state: advancedsmes
     - map: [ "enum.SmesVisualLayers.Charge" ]
       state: "smes-og1" # -og0 does not exist
-      shader: Emissive
+      shader: unshaded
       visible: false
     - map: [ "enum.SmesVisualLayers.Input" ]
       state: "smes-oc0"
-      shader: Emissive
+      shader: unshaded
     - map: [ "enum.SmesVisualLayers.Output" ]
       state: "smes-op1"
-      shader: Emissive
+      shader: unshaded
     - map: ["enum.WiresVisualLayers.MaintenancePanel"]
       state: advancedsmes-open
   - type: Machine

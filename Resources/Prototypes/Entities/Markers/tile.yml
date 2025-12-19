@@ -9,7 +9,7 @@
   - type: Sprite
     layers:
     - state: green
-      shader: Emissive
+      shader: unshaded
 
 - type: entity
   id: NoRoofMarker
@@ -22,4 +22,4 @@
   - type: Sprite
     layers:
     - state: red
-      shader: Emissive
+      shader: unshaded

@@ -186,7 +186,7 @@
         - state: injector
           map: [ "enum.SubfloorLayers.FirstLayer" ]
         - state: injector-unshaded
-          shader: Emissive
+          shader: unshaded
           map: [ "enum.LightLayers.Unshaded" ]
           color: "#990000"
     - type: Appearance

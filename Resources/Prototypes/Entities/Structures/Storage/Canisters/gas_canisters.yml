@@ -76,8 +76,8 @@
             True: { state: can-open, visible: true }
         # enum.LockVisuals.Locked:
         #   locked:
-        #     False: { state: unlocked, shader: "Emissive" }
-        #     True: { state: locked, shader: "Emissive" }
+        #     False: { state: unlocked, shader: "unshaded" }
+        #     True: { state: locked, shader: "unshaded" }
         enum.GasCanisterVisuals.PressureState:
           pressureLight:
             0: { state: can-0, shader: "Emissive" }

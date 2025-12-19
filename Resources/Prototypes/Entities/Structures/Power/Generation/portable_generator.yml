@@ -142,7 +142,7 @@
           map: [ "enum.GeneratorVisualLayers.Body" ]
         - state: portgen_on_unlit
           map: [ "enum.GeneratorVisualLayers.Unlit" ]
-          shader: Emissive
+          shader: unshaded
           visible: false
     - type: GenericVisualizer
       visuals:
@@ -203,7 +203,7 @@
           map: [ "enum.GeneratorVisualLayers.Body" ]
         - state: portgen_on_unlit
           map: [ "enum.GeneratorVisualLayers.Unlit" ]
-          shader: Emissive
+          shader: unshaded
           visible: false
     - type: GenericVisualizer
       visuals:
@@ -276,7 +276,7 @@
           map: [ "enum.GeneratorVisualLayers.Body" ]
         - state: portgen3on_unlit
           map: [ "enum.GeneratorVisualLayers.Unlit" ]
-          shader: Emissive
+          shader: unshaded
           visible: false
     - type: GenericVisualizer
       visuals:

@@ -180,7 +180,7 @@
     layers:
     - state: icon
     - state: icon-unlit
-      shader: Emissive
+      shader: unshaded
   - type: Item
     size: Ginormous
   - type: Storage

@@ -32,10 +32,10 @@
     inhandVisuals:
       left:
       - state: inhand-left-light
-        shader: Emissive
+        shader: unshaded
       right:
       - state: inhand-right-light
-        shader: Emissive
+        shader: unshaded
   - type: ItemTogglePointLight
   - type: PowerCellSlot
     cellSlotId: cell_slot
@@ -52,7 +52,7 @@
     layers:
       - state: flashlight
       - state: flashlight-overlay
-        shader: Emissive
+        shader: unshaded
         visible: false
         map: [ "light" ]
   - type: Item
@@ -96,16 +96,16 @@
     inhandVisuals:
       left:
       - state: inhand-left-light
-        shader: Emissive
+        shader: unshaded
       right:
       - state: inhand-right-light
-        shader: Emissive
+        shader: unshaded
   - type: Sprite
     sprite: Objects/Tools/seclite.rsi
     layers:
       - state: seclite
       - state: seclite-overlay
-        shader: Emissive
+        shader: unshaded
         visible: false
         map: [ "light" ]
   - type: MeleeWeapon

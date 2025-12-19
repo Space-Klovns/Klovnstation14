@@ -29,7 +29,7 @@
       layers:
       - state: lantern
       - state: lantern-on
-        shader: Emissive
+        shader: unshaded
         visible: false
         map: [ "light" ]
     - type: Item
@@ -80,7 +80,7 @@
       - state: lantern
         map: [ "enum.FlashVisualLayers.BaseLayer" ]
       - state: lantern-on
-        shader: Emissive
+        shader: unshaded
         visible: false
         map: [ "light" ]
       - state: flashing

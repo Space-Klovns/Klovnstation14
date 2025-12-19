@@ -34,7 +34,7 @@
         - state: screen
           map: [ "enum.ToggleableVisuals.Layer" ]
           visible: false
-          shader: Emissive
+          shader: unshaded
     - type: Appearance
     - type: GenericVisualizer
       visuals:
@@ -100,10 +100,10 @@
       - state: screen
         map: [ "enum.ToggleableVisuals.Layer" ]
         visible: false
-        shader: Emissive
+        shader: unshaded
       - state: ready
         map: ["enum.PowerDeviceVisualLayers.Powered"]
-        shader: Emissive
+        shader: unshaded
   - type: Item
     size: Normal
   - type: ToggleCellDraw
@@ -130,10 +130,10 @@
       - state: screen
         map: [ "enum.ToggleableVisuals.Layer" ]
         visible: false
-        shader: Emissive
+        shader: unshaded
       - state: ready
         map: ["enum.PowerDeviceVisualLayers.Powered"]
-        shader: Emissive
+        shader: unshaded
   - type: MeleeWeapon
     damage:
       types:
