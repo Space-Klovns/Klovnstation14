@@ -5,18 +5,18 @@
   description: An industrial machine used for expediting machine construction across the station.
   components:
   - type: Sprite
-    sprite: Structures/Machines/flatpacker.rsi
+    sprite: _KS14/Structures/Machines/flatpacker.rsi # KS14: /tg/ sprite port
     snapCardinals: true
     layers:
-    - state: flatpacker
-    - state: flatpacker_c
+    - state: flatpacker # KS14: /tg/ sprite port
+    - state: flatpacker_c # KS14: /tg/ sprite port
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
-    - state: flatpacker_bar
+    - state: flatpacker_bar # KS14: /tg/ sprite port
       map: ["anim"]
       visible: false
-      shader: unshaded
-    - sprite: Structures/Machines/autolathe.rsi # it works because............. IT JUST IS, OKAY?
-      state: inserting
+      shader: unshaded # KS14
+    - sprite: Structures/Machines/autolathe.rsi # KS14: /tg/ sprite port # it works because............. IT JUST IS, OKAY?
+      state: inserting # KS14: /tg/ sprite port
       visible: false
       map: ["enum.MaterialStorageVisualLayers.Inserting"]
   - type: GenericVisualizer

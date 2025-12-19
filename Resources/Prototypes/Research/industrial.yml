@@ -152,9 +152,9 @@
 - type: technology
   id: MechanicalCompression
   name: research-technology-mechanical-compression
-  icon:
-    sprite: Structures/Machines/flatpacker.rsi
-    state: base
+  icon: # KS14: /tg/ sprite port
+    sprite: _KS14/Structures/Machines/flatpacker.rsi
+    state: flatpacker
   discipline: Industrial
   tier: 1
   cost: 10000
