@@ -319,7 +319,7 @@
       layers:
       - state: multi_shader
         color: "#E9FF5C"
-      - state: double_stripe_shader
+      - state: double_stripe
         color: "#F4FCE8"
       - state: outline
         color: "#E9FF5C"
@@ -378,7 +378,7 @@
       layers:
       - state: multi_shader
         color: "#4E4C48"
-      - state: double_stripe_shader
+      - state: double_stripe
         color: "#EAEAEA"
       - state: outline
         color: "#4E4C48"
@@ -531,7 +531,7 @@
       layers:
       - state: multi_shader
         color: "#4C4E4D"
-      - state: double_stripe_shader
+      - state: double_stripe
         color: "#F7D5D3"
       - state: outline
         color: "#4C4E4D"
@@ -575,7 +575,7 @@
       layers:
       - state: multi_shader
         color: "#009823"
-      - state: double_stripe_shader
+      - state: double_stripe
         color: "#F7D5D3"
       - state: outline
         color: "#009823"
@@ -621,7 +621,7 @@
       layers:
       - state: multi_shader
         color: "#C63E3B"
-      - state: double_stripe_shader
+      - state: double_stripe
         color: "#F7D5D3"
       - state: outline
         color: "#C63E3B"
@@ -667,7 +667,7 @@
     layers:
     - state: multi_shader
       color: "#6696EE"
-    - state: double_stripe_shader
+    - state: double_stripe
       color: "#FEFB30"
     - state: outline
       color: "#6696EE"
