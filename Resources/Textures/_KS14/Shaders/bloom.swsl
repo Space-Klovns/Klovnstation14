@@ -1,6 +1,6 @@
 light_mode unshaded;
 
-uniform highp float bloom_intensity : 0.6;
+uniform highp float bloom_intensity = 0.6;
 
 // Hardcoded 7-tap Gaussian kernel (σ = 1.0)
 const lowp float gauss_weights[7] = float[7](
