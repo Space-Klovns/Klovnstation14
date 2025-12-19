@@ -1,41 +1,30 @@
-// Simple 4-sample (in the 4 cardinal directions) bloom effect for textures
-
 light_mode unshaded;
 
-uniform highp float bloom_power = 3.5;
-uniform highp float bloom_radius = 3;
+uniform highp float bloom_intensity = 1;
+uniform highp float bloom_radius = 2.0;
 
 void fragment() {
-    highp vec4 color = zTexture(UV);
+    vec4 color = zTexture(UV);
     
-    highp vec4 bloom = vec4(0.0);
-    highp float bloomWeight = 0.0;
+    // Optimized 9-tap Gaussian blur (circular pattern)
+    vec4 blur = vec4(0.0);
     
-    highp vec2 offsets[4] = vec2[4](
-        vec2(1.0 * TEXTURE_PIXEL_SIZE.x, 0.0),
-        vec2(-1.0 * TEXTURE_PIXEL_SIZE.x, 0.0),
-        vec2(0.0, 1.0 * TEXTURE_PIXEL_SIZE.y),
-        vec2(0.0, -1.0 * TEXTURE_PIXEL_SIZE.y)
-    );
+    // Center weight (heaviest)
+    blur += color * 0.16;
     
-    for (highp float current_radius = 1.0; current_radius <= bloom_radius; current_radius++) {
-        for (int i = 0; i < 4; i++) {
-            highp vec2 sampleUV = UV + offsets[i] * current_radius;
-            
-            // Clamp to avoid edge artifacts; this is kinda evil
-            sampleUV = clamp(sampleUV, vec2(0.005), vec2(0.995));
-            
-            vec4 sampleColor = zTexture(sampleUV);
-
-            bloom += sampleColor / current_radius;
-            bloomWeight += 1.0;
-        }
-    }
+    // Cross pattern (4 samples)
+    blur += zTexture(UV + vec2(1.0, 0.0) * TEXTURE_PIXEL_SIZE * bloom_radius) * 0.13;
+    blur += zTexture(UV + vec2(-1.0, 0.0) * TEXTURE_PIXEL_SIZE * bloom_radius) * 0.13;
+    blur += zTexture(UV + vec2(0.0, 1.0) * TEXTURE_PIXEL_SIZE * bloom_radius) * 0.13;
+    blur += zTexture(UV + vec2(0.0, -1.0) * TEXTURE_PIXEL_SIZE * bloom_radius) * 0.13;
     
-    if (bloomWeight > 0.0) {
-        bloom /= bloomWeight;
-        COLOR = color + bloom * bloom_power;
-    } else {
-        COLOR = color;
-    }
+    // Diagonal pattern (4 samples)
+    vec2 diag = vec2(0.707, 0.707); // sqrt(0.5)
+    blur += zTexture(UV + diag * TEXTURE_PIXEL_SIZE * bloom_radius) * 0.11;
+    blur += zTexture(UV + vec2(-diag.x, diag.y) * TEXTURE_PIXEL_SIZE * bloom_radius) * 0.11;
+    blur += zTexture(UV + vec2(diag.x, -diag.y) * TEXTURE_PIXEL_SIZE * bloom_radius) * 0.11;
+    blur += zTexture(UV + -diag * TEXTURE_PIXEL_SIZE * bloom_radius) * 0.11;
+    
+    // Add bloom to original
+    COLOR = color + blur * bloom_intensity;
 }
