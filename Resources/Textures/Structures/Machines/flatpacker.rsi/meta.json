@@ -1,42 +1,36 @@
 {
   "version": 1,
-  "license": "CC0-1.0",
-  "copyright": "Based on flatpacker sprites from vgstation, adapted by EmoGarbage404 (github)",
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from https://github.com/tgstation/tgstation at commit 594cac30b54ff909c453f0b736ea8ab2eca7f922",
   "size": {
     "x": 32,
     "y": 32
   },
   "states": [
-    {
-      "name": "base"
+  {
+      "name": "flatpacker"
     },
     {
-      "name": "panel"
+      "name": "flatpacker_o"
     },
     {
-      "name": "screen"
-    },
-    {
-      "name": "packing",
+      "name": "flatpacker_bar",
       "delays": [
         [
-          0.1,
-          0.1,
-          0.1,
-          0.1
+          0.088,
+          0.088,
+          0.088,
+          0.088,
+          0.088,
+          0.088,
+          0.088,
+          0.088,
+          0.088
         ]
       ]
     },
     {
-      "name": "inserting",
-      "delays": [
-        [
-          0.2,
-          0.2,
-          0.2,
-          0.2
-        ]
-      ]
+      "name": "flatpacker_c"
     }
   ]
 }
