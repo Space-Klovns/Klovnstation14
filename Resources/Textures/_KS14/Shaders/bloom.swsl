@@ -1,0 +1,41 @@
+// Simple 4-sample (in the 4 cardinal directions) bloom effect for textures
+
+light_mode unshaded;
+
+uniform highp float bloom_power = 3.5;
+uniform highp float bloom_radius = 3;
+
+void fragment() {
+    highp vec4 color = zTexture(UV);
+    
+    highp vec4 bloom = vec4(0.0);
+    highp float bloomWeight = 0.0;
+    
+    highp vec2 offsets[4] = vec2[4](
+        vec2(1.0 * TEXTURE_PIXEL_SIZE.x, 0.0),
+        vec2(-1.0 * TEXTURE_PIXEL_SIZE.x, 0.0),
+        vec2(0.0, 1.0 * TEXTURE_PIXEL_SIZE.y),
+        vec2(0.0, -1.0 * TEXTURE_PIXEL_SIZE.y)
+    );
+    
+    for (highp float current_radius = 1.0; current_radius <= bloom_radius; current_radius++) {
+        for (int i = 0; i < 4; i++) {
+            highp vec2 sampleUV = UV + offsets[i] * current_radius;
+            
+            // Clamp to avoid edge artifacts; this is kinda evil
+            sampleUV = clamp(sampleUV, vec2(0.005), vec2(0.995));
+            
+            vec4 sampleColor = zTexture(sampleUV);
+
+            bloom += sampleColor / current_radius;
+            bloomWeight += 1.0;
+        }
+    }
+    
+    if (bloomWeight > 0.0) {
+        bloom /= bloomWeight;
+        COLOR = color + bloom * bloom_power;
+    } else {
+        COLOR = color;
+    }
+}
