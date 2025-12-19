@@ -80,10 +80,10 @@
         #     True: { state: locked, shader: "unshaded" }
         enum.GasCanisterVisuals.PressureState:
           pressureLight:
-            0: { state: can-0, shader: "unshaded" }
-            1: { state: can-1, shader: "unshaded" }
-            2: { state: can-2, shader: "unshaded" }
-            3: { state: can-3, shader: "unshaded" }
+            0: { state: can-0, shader: "Emissive" }
+            1: { state: can-1, shader: "Emissive" }
+            2: { state: can-2, shader: "Emissive" }
+            3: { state: can-3, shader: "Emissive" }
     - type: ActivatableUI
       key: enum.GasCanisterUiKey.Key
     - type: UIRequiresLock
