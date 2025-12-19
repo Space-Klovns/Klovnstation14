@@ -1,3 +1,6 @@
+
+# TODO KS14: Add 'end' railings
+
 - type: entity
   parent: BaseStructure
   id: BaseRailing
@@ -7,9 +10,9 @@
   components:
   - type: Sprite
     drawdepth: SmallObjects
-    sprite: Structures/Walls/railing.rsi
+    sprite: _KS14/Structures/railings.rsi # KS14: /tg/ sprite port
   - type: Icon
-    sprite: Structures/Walls/railing.rsi
+    sprite: _KS14/Structures/railings.rsi # KS14: /tg/ sprite port
   - type: Physics
     bodyType: Static
   - type: InteractionOutline
@@ -30,7 +33,9 @@
   id: Railing
   components:
   - type: Sprite
-    state: side
+    layers:  # KS14: /tg/ sprite port
+    - state: straight
+      offset: 0, -0.33333
   - type: Icon
     state: side
   - type: Fixtures
@@ -76,9 +81,11 @@
   id: RailingCorner
   components:
   - type: Sprite
-    state: corner
+    layers:  # KS14: /tg/ sprite port
+    - state: turn
+      offset: 0, -0.33333
   - type: Icon
-    state: corner
+    state: turn
   - type: Fixtures
     fixtures:
       fix1:
@@ -131,7 +138,9 @@
   id: RailingCornerSmall
   components:
   - type: Sprite
-    state: corner_small
+    layers:  # KS14: /tg/ sprite port
+    - state: corner
+      offset: 0, -0.33333
   - type: Icon
     state: corner_small
   - type: Fixtures
@@ -177,7 +186,9 @@
   id: RailingRound
   components:
   - type: Sprite
-    state: round
+    layers:  # KS14: /tg/ sprite port
+    - state: round
+      offset: 0, -0.33333
   - type: Icon
     state: round
   - type: Fixtures
