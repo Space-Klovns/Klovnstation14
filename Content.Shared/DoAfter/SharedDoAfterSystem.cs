@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
+using Content.Shared._KS14.DoAfter; // Goobstation
 using Content.Shared.ActionBlocker;
 using Content.Shared.Damage;
 using Content.Shared.Hands.Components;
@@ -85,6 +86,15 @@ public abstract partial class SharedDoAfterSystem : EntitySystem
             RaiseLocalEvent(doAfter.Args.EventTarget.Value, (object)ev, doAfter.Args.Broadcast);
         else if (doAfter.Args.Broadcast)
             RaiseLocalEvent((object)ev);
+
+        // <Goobstation>
+        if (component.RaiseEndedEvent
+            && Exists(doAfter.Args.User))
+        {
+            var ended = new DoAfterEndedEvent(doAfter.Args.Target, doAfter.Cancelled);
+            RaiseLocalEvent(doAfter.Args.User, ref ended);
+        }
+        // </Goobstation>
 
         if (component.AwaitedDoAfters.Remove(doAfter.Index, out var tcs))
             tcs.SetResult(doAfter.Cancelled ? DoAfterStatus.Cancelled : DoAfterStatus.Finished);
