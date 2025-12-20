@@ -6,8 +6,5 @@
   components:
   - type: Sprite
     state: engineering
-  - type: MachineBoard 
-    prototype: Autolathe 
-  - type: Tag
-    tags:
-    - EngineeringTechFabCircuitboard
+  - type: MachineBoard
+    prototype: Autolathe
