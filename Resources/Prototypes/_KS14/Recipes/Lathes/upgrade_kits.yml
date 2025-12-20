@@ -18,3 +18,8 @@
   parent: BaseUpgradeKit
   id: LatheUpgradeKitCryo
   result: LatheUpgradeKitCryo
+
+- type: latheRecipe
+  parent: BaseUpgradeKit
+  id: UpgradeKitAutomation
+  result: UpgradeKitAutomation

@@ -24,6 +24,9 @@
   - DeviceQuantumSpinInverter
   - DeviceDesynchronizer
   - ClothingBackpackHarmpack
+  - LatheUpgradeKitHyper
+  - LatheUpgradeKitCryo
+  - UpgradeKitAutomation
 
 - type: latheRecipePack
   id: ScienceClothing
