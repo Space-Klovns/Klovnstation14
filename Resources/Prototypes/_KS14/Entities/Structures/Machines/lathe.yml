@@ -8,6 +8,6 @@
     state: engineering
   - type: Machine
     board: EngineeringTechFabCircuitboard
-  - type: StealTarget
+  # - type: StealTarget // comment out since no engie techfab present
     stealGroup: EngineeringTechFabCircuitboard
   - type: UpgradeKit

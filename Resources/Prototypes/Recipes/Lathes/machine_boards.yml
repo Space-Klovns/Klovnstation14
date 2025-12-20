@@ -255,7 +255,7 @@
   parent: [BaseCircuitboardRecipe]
   id: SmartFridgeCircuitboard
   result: SmartFridgeCircuitboard
-  
+
 # Bar
 - type: latheRecipe
   parent: [ BaseCircuitboardRecipe, BaseServiceMachineRecipeCategory ]
@@ -362,19 +362,9 @@
   result: ProtolatheMachineCircuitboard
 
 - type: latheRecipe
-  parent: [ BaseGoldCircuitboardRecipe, BaseResearchMachineRecipeCategory ]
-  id: ProtolatheHyperConvectionMachineCircuitboard
-  result: ProtolatheHyperConvectionMachineCircuitboard
-
-- type: latheRecipe
   parent: [ BaseCircuitboardRecipe, BaseResearchMachineRecipeCategory ]
   id: CircuitImprinterMachineCircuitboard
   result: CircuitImprinterMachineCircuitboard
-
-- type: latheRecipe
-  parent: [ BaseGoldCircuitboardRecipe, BaseResearchMachineRecipeCategory ]
-  id: CircuitImprinterHyperConvectionMachineCircuitboard
-  result: CircuitImprinterHyperConvectionMachineCircuitboard
 
 - type: latheRecipe
   parent: [ BaseCircuitboardRecipe, BaseResearchMachineRecipeCategory ]
@@ -405,11 +395,6 @@
   parent: [ BaseCircuitboardRecipe, BaseGeneralMachineRecipeCategory ]
   id: AutolatheMachineCircuitboard
   result: AutolatheMachineCircuitboard
-
-- type: latheRecipe
-  parent: [ BaseGoldCircuitboardRecipe, BaseGeneralMachineRecipeCategory ]
-  id: AutolatheHyperConvectionMachineCircuitboard
-  result: AutolatheHyperConvectionMachineCircuitboard
 
 - type: latheRecipe
   parent: [ BaseCircuitboardRecipe, BaseGeneralMachineRecipeCategory ]
