@@ -1,23 +1,20 @@
 using System.Numerics;
-using Robust.Shared.GameStates;
-using Robust.Shared.Serialization;
+using Robust.Shared.Graphics.RSI;
 
-namespace Content.Client._KS14.DirectionalSpriteOffsetSystem;
+namespace Content.Client._KS14.DirectionalSpriteOffset;
 
 /// <summary>
-///     This is used, along with a <see cref="SpriteComponent"/>, to
+///     This is used, along with a <see cref="Robust.Client.GameObjects.SpriteComponent"/>, to
 ///         make certain layers of a sprite have different pixel offsets
 ///         when the entity is facing different directions. Absolutely
 ///         amazing.
 /// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+[RegisterComponent]
 public sealed partial class DirectionalSpriteOffsetComponent : Component
 {
     /// <summary>
-    ///     Stains that are on this entity, with their color,
-    ///         with the vector's 2 first elements being its X and Y offset,
-    ///         and 3rd element being from 0 to 1 specifying its rotation.
+    ///     Dictionary of layers, and their offsets per <see cref="RsiDirection"/>. 
     /// </summary>
     [DataField]
-    public List<(Vector3, Color)> Stains = new();
+    public Dictionary<object, Dictionary<RsiDirection, Vector2>> LayerOffsetData = new();
 }
