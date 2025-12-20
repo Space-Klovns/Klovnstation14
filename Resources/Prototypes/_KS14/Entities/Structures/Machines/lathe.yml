@@ -1,13 +1,13 @@
-- type: entity
-  parent: BaseMachineCircuitboard
-  id: EngineeringTechFabCircuitboard
-  name: engineering techfab machine board
-  description: A machine printed circuit board for an engineering techfab.
-  components:
-  - type: Sprite
-    state: engineering
-  - type: Machine
-    board: EngineeringTechFabCircuitboard
-  # - type: StealTarget // comment out since no engie techfab present
+# - type: entity // commented out, maybe will add in the future
+#  parent: BaseMachineCircuitboard
+#  id: EngineeringTechFabCircuitboard
+#  name: engineering techfab machine board
+#  description: A machine printed circuit board for an engineering techfab.
+#  components:
+#  - type: Sprite
+#    state: engineering
+#  - type: Machine
+#    board: EngineeringTechFabCircuitboard
+  # - type: StealTarget
   #  stealGroup: EngineeringTechFabCircuitboard
-  - type: UpgradeKit
+#  - type: UpgradeKit
