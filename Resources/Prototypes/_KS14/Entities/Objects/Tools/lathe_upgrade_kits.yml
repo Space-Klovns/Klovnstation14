@@ -7,7 +7,6 @@
     sprite: _KS14/Objects/Tools/lathe_upgrade_kit.rsi
     state: icon
   - type: UpgradeKit
-    id: whitelist
     whitelist:
       components:
       - Lathe
