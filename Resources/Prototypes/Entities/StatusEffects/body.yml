@@ -1,18 +1,26 @@
-﻿- type: entity
+﻿# TODO LCDC: destroy this abstract when we upstream marge
+- type: entity
   parent: MobStatusEffectBase
   id: BloodstreamStatusEffectBase
   abstract: true
   components:
-    - type: StatusEffect
-      whitelist:
-        components:
-          - Bloodstream
+  - type: StatusEffect
+    whitelist:
+      components:
+        - Bloodstream
 
 - type: entity
-  parent: [ BloodstreamStatusEffectBase ]
-  id: StatusEffectBloodloss
-  name: bloodloss
+  parent: BloodstreamStatusEffectBase
+  id: StatusEffectSafeCritHumanoid
+  name: safe crit
   components:
-    - type: StutteringAccent
-    - type: DrunkStatusEffect
-    - type: RejuvenateRemovedStatusEffect
+  - type: StatusEffect
+    whitelist:
+      components:
+      - MobState
+      - MobThresholds
+  - type: ModifiedMobThresholdsStatusEffect
+    newThresholds:
+      0: Alive
+      200: Critical
+      300: Dead

@@ -412,13 +412,11 @@
   - type: Extractable
     grindableSolutionName: saltore
   - type: SolutionContainerManager
-    solutions:
+    solutions: # KS14: Ports upstream https://github.com/space-wizards/space-station-14/pull/41930
       saltore:
         reagents:
-        - ReagentId: TableSalt
+        - ReagentId: SpaceSalt
           Quantity: 10
-        - ReagentId: Iodine
-          Quantity: 5
   - type: Item
     heldPrefix: salt
 

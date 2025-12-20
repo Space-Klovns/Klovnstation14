@@ -229,6 +229,7 @@
     - Flashed
     - RadiationProtection
     - Adrenaline
+    - StatusEffectSafeCritHumanoid # KS14: Ports upstream https://github.com/space-wizards/space-station-14/pull/41930
   - type: Body
     prototype: Human
     requiredLegs: 2

@@ -1,10 +1,12 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Content.Shared._KS14.Mobs.Components; // KS14: Ports upstream https://github.com/space-wizards/space-station-14/pull/41930
 using Content.Shared.Alert;
 using Content.Shared.Damage;
 using Content.Shared.FixedPoint;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Events;
+using Content.Shared.StatusEffectNew; // KS14: Ports upstream https://github.com/space-wizards/space-station-14/pull/41930
 using Robust.Shared.GameStates;
 
 namespace Content.Shared.Mobs.Systems;
@@ -24,6 +26,9 @@ public sealed class MobThresholdSystem : EntitySystem
         SubscribeLocalEvent<MobThresholdsComponent, DamageChangedEvent>(OnDamaged);
         SubscribeLocalEvent<MobThresholdsComponent, UpdateMobStateEvent>(OnUpdateMobState);
         SubscribeLocalEvent<MobThresholdsComponent, MobStateChangedEvent>(OnThresholdsMobState);
+
+        SubscribeLocalEvent<ModifiedMobThresholdsStatusEffectComponent, StatusEffectAppliedEvent>(OnThresholdModified); // KS14: Ports upstream https://github.com/space-wizards/space-station-14/pull/41930
+        SubscribeLocalEvent<ModifiedMobThresholdsStatusEffectComponent, StatusEffectRemovedEvent>(OnThresholdModifiedRemoved); // KS14: Ports upstream https://github.com/space-wizards/space-station-14/pull/41930
     }
 
     private void OnGetState(EntityUid uid, MobThresholdsComponent component, ref ComponentGetState args)
@@ -407,7 +412,7 @@ public sealed class MobThresholdSystem : EntitySystem
             {
                 percentage = FixedPoint2.Clamp(percentage.Value, 0, 1);
 
-                severity = (short) MathF.Round(
+                severity = (short)MathF.Round( // KS14: Ports upstream https://github.com/space-wizards/space-station-14/pull/41930
                     MathHelper.Lerp(
                         _alerts.GetMinSeverity(currentAlert),
                         _alerts.GetMaxSeverity(currentAlert),
@@ -473,6 +478,29 @@ public sealed class MobThresholdSystem : EntitySystem
     {
         UpdateAllEffects((ent, ent, null, null), args.NewMobState);
     }
+
+    // KS14: Starting port from upstream https://github.com/space-wizards/space-station-14/pull/41930
+    #endregion
+    #region Modified Thresholds
+    private void OnThresholdModified(Entity<ModifiedMobThresholdsStatusEffectComponent> ent, ref StatusEffectAppliedEvent args)
+    {
+        if (!TryComp<MobThresholdsComponent>(args.Target, out var thresholdsComponent))
+            return;
+
+        ent.Comp.OldThresholds = thresholdsComponent.Thresholds;
+        thresholdsComponent.Thresholds = ent.Comp.NewThresholds;
+        VerifyThresholds(args.Target);
+    }
+
+    private void OnThresholdModifiedRemoved(Entity<ModifiedMobThresholdsStatusEffectComponent> ent, ref StatusEffectRemovedEvent args)
+    {
+        if (!TryComp<MobThresholdsComponent>(args.Target, out var thresholdsComponent))
+            return;
+
+        thresholdsComponent.Thresholds = ent.Comp.OldThresholds;
+        VerifyThresholds(args.Target);
+    }
+    // KS14: Ending port from upstream https://github.com/space-wizards/space-station-14/pull/41930
 
     #endregion
 }
