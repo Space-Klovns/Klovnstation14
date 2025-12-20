@@ -54,6 +54,13 @@ public abstract class SharedInteractorSystem : EntitySystem
 
     private void OnInit(Entity<InteractorComponent> ent, ref ComponentInit args)
     {
+        // 1. Get/Create the component
+        var hands = EnsureComp<HandsComponent>(ent);
+
+        // 2. Pass the tuple (ent, hands)
+        // This implicitly converts to Entity<HandsComponent>
+        _hands.AddHand((ent, hands), ent.Comp.ToolContainerId, HandLocation.Middle);
+
         UpdateAppearance(ent);
     }
 
