@@ -358,8 +358,9 @@ namespace Content.Server.Construction
             if (!_actionBlocker.CanInteract(user, null))
                 return false;
 
-            if (HasComp<MindContainerComponent>(user)
-                && !HasComp<HandsComponent>(user)) // goobstation - don't require hands for constructor
+            if (HasComp<MindContainerComponent>(user) 
+                && !HasComp<HandsComponent>(user) 
+                && !HasComp<ConstructionComponent>(user)) // Allow if it is a Constructor Machine
                 return false;
 
             foreach (var condition in constructionPrototype.Conditions)
