@@ -1,20 +1,23 @@
 {
   "version": 1,
   "license": "CC-BY-SA-3.0",
-  "copyright": "Taken from https://github.com/tgstation/tgstation at commit 594cac30b54ff909c453f0b736ea8ab2eca7f922",
+  "copyright": "Taken from https://github.com/tgstation/tgstation at commit 594cac30b54ff909c453f0b736ea8ab2eca7f922; Modified by LaCumbiaDelCoronavirus",
   "size": {
     "x": 32,
     "y": 32
   },
   "states": [
-  {
-      "name": "flatpacker"
+    {
+      "name": "base"
     },
     {
-      "name": "flatpacker_o"
+      "name": "open"
     },
     {
-      "name": "flatpacker_bar",
+      "name": "wtfisthis"
+    },
+    {
+      "name": "working_unlit",
       "delays": [
         [
           0.088,
@@ -30,7 +33,7 @@
       ]
     },
     {
-      "name": "flatpacker_c"
+      "name": "unlit"
     }
   ]
 }

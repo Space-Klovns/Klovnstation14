@@ -7,18 +7,21 @@
   - type: Sprite
     sprite: _KS14/Structures/Machines/flatpacker.rsi # KS14: /tg/ sprite port
     snapCardinals: true
-    layers:
-    - state: flatpacker # KS14: /tg/ sprite port
-    - state: flatpacker_o # KS14: /tg/ sprite port
-      map: ["enum.WiresVisualLayers.MaintenancePanel"]
-    - state: flatpacker_bar # KS14: /tg/ sprite port
-      map: ["anim"]
-      visible: false
+    layers: # KS14: /tg/ sprite port
+    - state: base
+    - map: ["enum.WiresVisualLayers.MaintenancePanel"]
+      state: open
+    - map: ["enum.PowerDeviceVisualLayers.Powered"]
+      state: unlit
+      shader: unshaded
+    - map: ["anim"]
+      state: working_unlit
       shader: unshaded # KS14
-    - sprite: Structures/Machines/autolathe.rsi # KS14: /tg/ sprite port # it works because............. IT JUST IS, OKAY?
-      state: inserting # KS14: /tg/ sprite port
       visible: false
-      map: ["enum.MaterialStorageVisualLayers.Inserting"]
+    - map: ["enum.MaterialStorageVisualLayers.Inserting"]
+      sprite: Structures/Machines/autolathe.rsi # KS14: /tg/ sprite port # it works because............. IT JUST IS, OKAY?
+      state: inserting
+      visible: false
   - type: GenericVisualizer
     visuals:
       enum.PowerDeviceVisuals.Powered:
