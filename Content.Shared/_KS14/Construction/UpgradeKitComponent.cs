@@ -10,7 +10,7 @@ namespace Content.Shared._KS14.Construction;
 /// <summary>
 /// Component for an upgrade kit that upgrades allowed machines then deletes itself.
 /// </summary>
-[RegisterComponent, NetworkedComponent, Access(typeof(UpgradeKitSystem))]
+[RegisterComponent, NetworkedComponent]
 public sealed partial class UpgradeKitComponent : Component
 {
     /// <summary>
