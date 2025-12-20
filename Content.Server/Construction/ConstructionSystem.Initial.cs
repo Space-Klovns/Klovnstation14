@@ -40,6 +40,7 @@
 // SPDX-FileCopyrightText: 2025 J
 // SPDX-FileCopyrightText: 2025 Nemanja
 // SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 metalgearsloth
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
