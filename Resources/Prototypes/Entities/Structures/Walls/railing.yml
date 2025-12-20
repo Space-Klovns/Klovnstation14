@@ -13,6 +13,13 @@
     sprite: _KS14/Structures/railings.rsi # KS14: /tg/ sprite port
   - type: Icon
     sprite: _KS14/Structures/railings.rsi # KS14: /tg/ sprite port
+  - type: DirectionalSpriteOffset # KS14: /tg/ sprite port
+    layerOffsetData:
+      railing: # don't change this key; everything inheriting BaseRailing must define a layer mapped to "railing"
+        South: 0, 0.3333
+        North: 0, -0.3333
+        West: 0, 0
+        East: 0, 0
   - type: Physics
     bodyType: Static
   - type: InteractionOutline
@@ -33,11 +40,11 @@
   id: Railing
   components:
   - type: Sprite
-    layers:  # KS14: /tg/ sprite port
+    layers: # KS14: /tg/ sprite port
     - state: straight
-      #offset: 0, -0.33333
+      map: ["railing"] # don't change this; see DirectionalSpriteOffsetComponent on BaseRailing
   - type: Icon
-    state: side
+    state: straight # KS14: /tg/ sprite port
   - type: Fixtures
     fixtures:
       fix1:
@@ -83,9 +90,9 @@
   - type: Sprite
     layers:  # KS14: /tg/ sprite port
     - state: turn
-      #offset: 0, -0.33333
+      map: ["railing"] # don't change this; see DirectionalSpriteOffsetComponent on BaseRailing
   - type: Icon
-    state: turn
+    state: turn # KS14: /tg/ sprite port
   - type: Fixtures
     fixtures:
       fix1:
@@ -140,9 +147,9 @@
   - type: Sprite
     layers:  # KS14: /tg/ sprite port
     - state: corner
-      #offset: 0, -0.33333
+      map: ["railing"] # don't change this; see DirectionalSpriteOffsetComponent on BaseRailing
   - type: Icon
-    state: corner_small
+    state: corner_small # KS14: /tg/ sprite port
   - type: Fixtures
     fixtures:
       fix1:
@@ -188,9 +195,9 @@
   - type: Sprite
     layers:  # KS14: /tg/ sprite port
     - state: round
-      #offset: 0, -0.33333
+      map: ["railing"] # don't change this; see DirectionalSpriteOffsetComponent on BaseRailing
   - type: Icon
-    state: round
+    state: round # KS14: /tg/ sprite port
   - type: Fixtures
     fixtures:
       fix1:

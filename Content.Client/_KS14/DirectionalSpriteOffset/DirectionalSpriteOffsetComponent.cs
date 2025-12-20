@@ -13,8 +13,9 @@ namespace Content.Client._KS14.DirectionalSpriteOffset;
 public sealed partial class DirectionalSpriteOffsetComponent : Component
 {
     /// <summary>
-    ///     Dictionary of layers, and their offsets per <see cref="RsiDirection"/>. 
+    ///     Dictionary of layers by their mapped key, and their offsets per <see cref="RsiDirection"/>.
+    ///         The layer must exist otherwise an exception will be thrown.
     /// </summary>
     [DataField]
-    public Dictionary<object, Dictionary<RsiDirection, Vector2>> LayerOffsetData = new();
+    public Dictionary<string, Dictionary<RsiDirection, Vector2>> LayerOffsetData = new();
 }

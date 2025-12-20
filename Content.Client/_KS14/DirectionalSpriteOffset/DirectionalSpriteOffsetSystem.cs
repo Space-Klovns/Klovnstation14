@@ -16,6 +16,7 @@ public sealed class DirectionalSpriteOffsetSystem : EntitySystem
 
     public override void Update(float dt)
     {
+        // this could actually be AllEQE but i think that's way too laggy
         var eqe = EntityQueryEnumerator<DirectionalSpriteOffsetComponent, SpriteComponent>();
 
         while (eqe.MoveNext(out var uid, out var directionalOffsetComponent, out var spriteComponent))
@@ -26,7 +27,8 @@ public sealed class DirectionalSpriteOffsetSystem : EntitySystem
 
             foreach (var (layerKey, layerData) in directionalOffsetComponent.LayerOffsetData)
             {
-                if (spriteComponent[layerKey] is not SpriteComponent.Layer /* geniuses, really */ layer)
+                // this will throw if the layer doesn't exist
+                if (spriteComponent[layerKey] is not SpriteComponent.Layer layer)
                     continue;
 
                 worldRotation ??= _transformSystem.GetWorldRotation(Transform(uid), EntityManager.TransformQuery);
