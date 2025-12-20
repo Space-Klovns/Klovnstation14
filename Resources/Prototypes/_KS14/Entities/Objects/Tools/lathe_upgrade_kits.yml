@@ -22,6 +22,12 @@
   description: An upgrade kit with all the parts needed to upgrade a lathe. This one will save materials at the cost of speed and producing heat.
   components:
   - type: UpgradeKit
+    whitelist:
+      components:
+      - Lathe
+    blacklist:
+      components:
+      - UpgradedMachine
     components:
     - type: UpgradedMachine
       upgrade: lathe-upgrade-kit-hyper-convection
@@ -42,6 +48,12 @@
   description: An upgrade kit with all the parts needed to upgrade a lathe. This one will speed up production at the cost of freezing the area.
   components:
   - type: UpgradeKit
+    whitelist:
+      components:
+      - Lathe
+    blacklist:
+      components:
+      - UpgradedMachine
     components:
     - type: UpgradedMachine
       upgrade: lathe-upgrade-kit-cryo-stabilizing
