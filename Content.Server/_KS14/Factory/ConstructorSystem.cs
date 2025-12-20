@@ -10,6 +10,8 @@ using Content.Server.Construction;
 using Content.Shared.Construction.Prototypes;
 using Content.Shared.DoAfter;
 using Robust.Shared.Maths;
+using Content.Shared.Hands.Components;
+using Content.Shared.Hands.EntitySystems;
 
 namespace Content.Server._KS14.Factory;
 
@@ -17,6 +19,7 @@ public sealed class ConstructorSystem : SharedConstructorSystem
 {
     [Dependency] private readonly ConstructionSystem _construction = default!;
     [Dependency] private readonly StartableMachineSystem _machine = default!;
+    [Dependency] private readonly SharedHandsSystem _hands = default!;
 
     private EntityQuery<ActiveDoAfterComponent> _activeQuery;
 
@@ -27,6 +30,13 @@ public sealed class ConstructorSystem : SharedConstructorSystem
         _activeQuery = GetEntityQuery<ActiveDoAfterComponent>();
 
         SubscribeLocalEvent<ConstructorComponent, MachineStartedEvent>(OnStarted);
+        SubscribeLocalEvent<ConstructorComponent, ComponentInit>(OnInit);
+    }
+
+    private void OnInit(Entity<ConstructorComponent> ent, ref ComponentInit args)
+    {
+        var hands = EnsureComp<HandsComponent>(ent);
+        _hands.AddHand((ent, hands), "output", HandLocation.Middle);
     }
 
     private void OnStarted(Entity<ConstructorComponent> ent, ref MachineStartedEvent args)
