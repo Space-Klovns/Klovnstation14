@@ -9,7 +9,16 @@
   description: The machine putting assistants out of a job, it can build anything using supplied materials.
   components:
   - type: Hands
-    showInHands: false
+    hands:
+      output:
+        location: Middle
+  - type: ContainerContainer
+    containers:
+      machine_board: !type:Container
+      machine_parts: !type:Container
+      storagebase: !type:Container
+      filter_slot: !type:ContainerSlot
+      output: !type:ContainerSlot
   # Appearance
   - type: Sprite
     sprite: _KS14/Structures/Machines/constructor.rsi

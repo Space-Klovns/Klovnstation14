@@ -103,6 +103,9 @@
     raiseEndedEvent: true # so Completed can be fired off
   - type: Hands
     showInHands: false
+    hands:
+      interactor_tool:
+        location: Middle
   - type: Strippable
     handDelay: 0.5
   - type: UserInterface # need stripping to be able to add/remove items without a robotic arm
