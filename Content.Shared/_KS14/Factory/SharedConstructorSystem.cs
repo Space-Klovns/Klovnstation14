@@ -37,9 +37,21 @@ public abstract class SharedConstructorSystem : EntitySystem
         if (!args.IsInDetailsRange)
             return;
 
-        var msg = ent.Comp.Construction is {} id
-            ? Loc.GetString("constructor-examine", ("name", Proto.Index(id)))
-            : Loc.GetString("constructor-examine-unset");
+        string msg;
+        if (ent.Comp.Construction is { } id)
+        {
+            var proto = Proto.Index(id);
+            // Use 'proto.Name' instead of just 'proto'.
+            // We also add a fallback to 'id' just in case the name is empty in YAML.
+            var name = !string.IsNullOrEmpty(proto.Name) ? proto.Name : id.ToString();
+
+            msg = Loc.GetString("constructor-examine", ("name", name));
+        }
+        else
+        {
+            msg = Loc.GetString("constructor-examine-unset");
+        }
+
         args.PushMarkup(msg);
     }
 
