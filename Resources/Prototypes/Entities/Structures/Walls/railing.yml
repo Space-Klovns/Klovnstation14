@@ -9,15 +9,15 @@
   description: Basic railing meant to protect idiots like you from falling.
   components:
   - type: Sprite
-    drawdepth: SmallObjects
+    drawdepth: OverMobs
     sprite: _KS14/Structures/railings.rsi # KS14: /tg/ sprite port
   - type: Icon
     sprite: _KS14/Structures/railings.rsi # KS14: /tg/ sprite port
   - type: DirectionalSpriteOffset # KS14: /tg/ sprite port
     layerOffsetData:
       railing: # don't change this key; everything inheriting BaseRailing must define a layer mapped to "railing"
-        South: 0, 0.3333
-        North: 0, -0.3333
+        South: 0, -0.3333
+        North: 0, 0.3333
         West: 0, 0
         East: 0, 0
   - type: Physics
