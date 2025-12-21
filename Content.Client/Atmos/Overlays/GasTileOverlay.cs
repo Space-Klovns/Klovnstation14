@@ -30,25 +30,25 @@ namespace Content.Client.Atmos.Overlays
         private readonly ShaderInstance _shader;
 
         // Gas overlays
-        private readonly float[] _timer;
-        private readonly float[][] _frameDelays;
-        private readonly int[] _frameCounter;
+        public readonly float[] _timer; // KS14: Made public
+        public readonly float[][] _frameDelays; // KS14: Made public
+        public readonly int[] _frameCounter; // KS14: Made public
 
         // TODO combine textures into a single texture atlas.
-        private readonly Texture[][] _frames;
+        public readonly Texture[][] _frames;
 
         // Fire overlays
         private const int FireStates = 3;
         private const string FireRsiPath = "/Textures/Effects/fire.rsi";
 
-        private readonly float[] _fireTimer = new float[FireStates];
-        private readonly float[][] _fireFrameDelays = new float[FireStates][];
-        private readonly int[] _fireFrameCounter = new int[FireStates];
-        private readonly Texture[][] _fireFrames = new Texture[FireStates][];
+        public readonly float[] _fireTimer = new float[FireStates]; // KS14: Made public
+        public readonly float[][] _fireFrameDelays = new float[FireStates][]; // KS14: Made public
+        public readonly int[] _fireFrameCounter = new int[FireStates]; // KS14: Made public
+        public readonly Texture[][] _fireFrames = new Texture[FireStates][]; // KS14: Made public
 
         private int _gasCount;
 
-        public const int GasOverlayZIndex = (int) Shared.DrawDepth.DrawDepth.Effects; // Under ghosts, above mostly everything else
+        public const int GasOverlayZIndex = (int)Shared.DrawDepth.DrawDepth.Effects; // Under ghosts, above mostly everything else
 
         public GasTileOverlay(GasTileOverlaySystem system, IEntityManager entManager, IResourceCache resourceCache, IPrototypeManager protoMan, SpriteSystem spriteSys, SharedTransformSystem xformSys)
         {
@@ -72,9 +72,9 @@ namespace Content.Client.Atmos.Overlays
                 SpriteSpecifier overlay;
 
                 if (!string.IsNullOrEmpty(gasPrototype.GasOverlaySprite) && !string.IsNullOrEmpty(gasPrototype.GasOverlayState))
-                    overlay = new SpriteSpecifier.Rsi(new (gasPrototype.GasOverlaySprite), gasPrototype.GasOverlayState);
+                    overlay = new SpriteSpecifier.Rsi(new(gasPrototype.GasOverlaySprite), gasPrototype.GasOverlayState);
                 else if (!string.IsNullOrEmpty(gasPrototype.GasOverlayTexture))
-                    overlay = new SpriteSpecifier.Texture(new (gasPrototype.GasOverlayTexture));
+                    overlay = new SpriteSpecifier.Texture(new(gasPrototype.GasOverlayTexture));
                 else
                     continue;
 
@@ -192,18 +192,18 @@ namespace Content.Client.Atmos.Overlays
                 {
                     if (!state.overlayQuery.TryGetComponent(uid, out var comp) ||
                         !state.xformQuery.TryGetComponent(uid, out var gridXform))
-                        {
-                            return true;
-                        }
+                    {
+                        return true;
+                    }
 
                     var (_, _, worldMatrix, invMatrix) = state.xformSys.GetWorldPositionRotationMatrixWithInv(gridXform);
                     state.drawHandle.SetTransform(worldMatrix);
                     var floatBounds = invMatrix.TransformBox(state.WorldBounds).Enlarged(grid.TileSize);
                     var localBounds = new Box2i(
-                        (int) MathF.Floor(floatBounds.Left),
-                        (int) MathF.Floor(floatBounds.Bottom),
-                        (int) MathF.Ceiling(floatBounds.Right),
-                        (int) MathF.Ceiling(floatBounds.Top));
+                        (int)MathF.Floor(floatBounds.Left),
+                        (int)MathF.Floor(floatBounds.Bottom),
+                        (int)MathF.Ceiling(floatBounds.Right),
+                        (int)MathF.Ceiling(floatBounds.Top));
 
                     // Currently it would be faster to group drawing by gas rather than by chunk, but if the textures are
                     // ever moved to a single atlas, that should no longer be the case. So this is just grouping draw calls

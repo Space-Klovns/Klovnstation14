@@ -79,7 +79,7 @@ public sealed class GasCanisterSystem : SharedGasCanisterSystem
         if (!_nodeContainer.TryGetNode(nodeContainer, canister.PortName, out PortablePipeNode? portNode))
             return;
 
-        if (portNode.NodeGroup is PipeNet {NodeCount: > 1} net)
+        if (portNode.NodeGroup is PipeNet { NodeCount: > 1 } net)
         {
             MixContainerWithPipeNet(canister.Air, net.Air);
         }
@@ -98,6 +98,28 @@ public sealed class GasCanisterSystem : SharedGasCanisterSystem
                 _atmos.ReleaseGasTo(canister.Air, environment, canister.ReleasePressure);
             }
         }
+
+        // KS14 Start
+        var totalMoles = canister.Air.TotalMoles;
+        canister.NetworkedMoles = totalMoles;
+        DirtyField(uid, canister, nameof(canister.NetworkedMoles));
+
+        var similars = 0;
+        for (var i = 0; i < GasTileOverlaySystem.VisibleGasId.Length; i++)
+        {
+            var allGasId = GasTileOverlaySystem.VisibleGasId[i];
+
+            var newValue = (byte)(canister.Air[allGasId] / totalMoles * byte.MaxValue);
+            if (canister.AppearanceGasPercentages[i] == newValue)
+                similars++;
+
+            canister.AppearanceGasPercentages[i] = newValue;
+        }
+
+        // don't dirty if entire array was the same
+        if (similars != GasTileOverlaySystem.VisibleGasId.Length)
+            DirtyField(uid, canister, nameof(canister.AppearanceGasPercentages));
+        // KS14 End
 
         // If last pressure is very close to the current pressure, do nothing.
         if (MathHelper.CloseToPercent(canister.Air.Pressure, canister.LastPressure))

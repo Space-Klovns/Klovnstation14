@@ -6,7 +6,7 @@ using Robust.Shared.GameStates;
 
 namespace Content.Shared.Atmos.Piping.Unary.Components;
 
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true)]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true, true)]
 public sealed partial class GasCanisterComponent : Component, IGasMixtureHolder
 {
     [DataField("port")]
@@ -55,4 +55,14 @@ public sealed partial class GasCanisterComponent : Component, IGasMixtureHolder
 
     [GuidebookData]
     public float Volume => Air.Volume;
+
+    // KS14
+    /// <summary>
+    ///     Length of this should be that of <see cref="EntitySystems.SharedGasTileOverlaySystem.VisibleGasId">
+    /// </summary>
+    [AutoNetworkedField]
+    public byte[] AppearanceGasPercentages = new byte[Atmospherics.TotalNumberOfGases];
+
+    [AutoNetworkedField]
+    public float NetworkedMoles = 0f;
 }

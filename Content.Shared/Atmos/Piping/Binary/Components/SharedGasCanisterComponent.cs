@@ -21,7 +21,17 @@ namespace Content.Shared.Atmos.Piping.Binary.Components
     public enum GasCanisterVisuals
     {
         PressureState,
-        TankInserted
+        TankInserted,
+
+        // KS14
+        /// <summary>
+        ///     Array of bytes with length being
+        ///         number of gases that exist.
+        /// 
+        ///     Used as a percentage (from 0 being empty, 255 being full)
+        ///         of gases in the canister.
+        /// </summary>
+        GasPercentages,
     }
 
     #endregion
@@ -48,7 +58,7 @@ namespace Content.Shared.Atmos.Piping.Binary.Components
     public sealed class GasCanisterHoldingTankEjectMessage : BoundUserInterfaceMessage
     {
         public GasCanisterHoldingTankEjectMessage()
-        {}
+        { }
     }
 
     [Serializable, NetSerializable]
