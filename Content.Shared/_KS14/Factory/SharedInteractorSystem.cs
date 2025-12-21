@@ -141,7 +141,10 @@ public abstract class SharedInteractorSystem : EntitySystem
     protected bool InteractWith(Entity<InteractorComponent> ent, EntityUid target)
     {
         if (_hands.GetActiveItem(ent.Owner) is not {} tool)
-            return _interaction.InteractHand(ent, target);
+        {
+            _interaction.InteractHand(ent, target);
+            return true;
+        }
 
         var coords = Transform(target).Coordinates;
         return _interaction.InteractUsing(ent, tool, target, coords);

@@ -485,21 +485,22 @@ namespace Content.Shared.Interaction
             return uid != null && IsDeleted(uid.Value);
         }
 
-        public bool InteractHand(EntityUid user, EntityUid target) // Goobstation - useful return value
+        public void InteractHand(EntityUid user, EntityUid target)
         {
             if (IsDeleted(user) || IsDeleted(target))
-                return false; // Goobstation
+                return;
 
             var complexInteractions = _actionBlockerSystem.CanComplexInteract(user);
             if (!complexInteractions)
             {
-                return InteractionActivate(user, // Goobstation
+                InteractionActivate(user,
                     target,
                     checkCanInteract: false,
                     checkUseDelay: true,
                     checkAccess: false,
                     complexInteractions: complexInteractions,
                     checkDeletion: false);
+                return;
             }
 
             // allow for special logic before main interaction
@@ -508,24 +509,25 @@ namespace Content.Shared.Interaction
             if (ev.Handled)
             {
                 _adminLogger.Add(LogType.InteractHand, LogImpact.Low, $"{ToPrettyString(user):user} interacted with {ToPrettyString(target):target}, but it was handled by another system");
-                return false; // Goobstation
+                return;
             }
 
             DebugTools.Assert(!IsDeleted(user) && !IsDeleted(target));
+            // all interactions should only happen when in range / unobstructed, so no range check is needed
             var message = new InteractHandEvent(user, target);
-            RaiseLocalEvent(target, message, false);
-            _adminLogger.Add(LogType.InteractHand, LogImpact.Low, $"{ToPrettyString(user):user} interacted with {ToPrettyString(target):target}");
+            RaiseLocalEvent(target, message, true);
+            _adminLogger.Add(LogType.InteractHand, LogImpact.Low, $"{user} interacted with {target}");
             DoContactInteraction(user, target, message);
             if (message.Handled)
-                return true;
+                return;
 
             DebugTools.Assert(!IsDeleted(user) && !IsDeleted(target));
             // Else we run Activate.
-            return InteractionActivate(user,
+            InteractionActivate(user,
                 target,
                 checkCanInteract: false,
                 checkUseDelay: true,
-                checkAccess: true,
+                checkAccess: false,
                 complexInteractions: complexInteractions,
                 checkDeletion: false);
         }
