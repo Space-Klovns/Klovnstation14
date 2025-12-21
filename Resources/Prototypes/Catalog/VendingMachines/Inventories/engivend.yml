@@ -24,6 +24,7 @@
 - type: vendingMachineInventory
   id: EngiVendInventory
   startingInventory:
+    ClothingOuterSuitArc: 3 # KS14 - arc suits
     ClothingEyesGlassesMeson: 4
     ClothingEyesHudDiagnostic: 4
     ClothingHeadHatWelding: 6

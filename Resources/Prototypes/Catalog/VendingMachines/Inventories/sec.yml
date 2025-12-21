@@ -31,6 +31,7 @@
 - type: vendingMachineInventory
   id: SecTechInventory
   startingInventory:
+    ClothingOuterArmorHazardous: 3 # KS14 - hazardous environment armor
     SecurityWhistle: 5
     Handcuffs: 8
     GrenadeFlashBang: 4

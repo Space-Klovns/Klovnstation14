@@ -8,7 +8,9 @@
     sprite: _KS14/Clothing/Head/Hoods/arc.rsi
   - type: Clothing
     sprite: _KS14/Clothing/Head/Hoods/arc.rsi
-  - type: Insulated # without the hood, the suit won't work!
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
   - type: Armor
     modifiers:
       coefficients:

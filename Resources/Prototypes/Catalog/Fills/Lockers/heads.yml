@@ -356,6 +356,7 @@
     - id: CargoRequestScienceComputerCircuitboard
     - id: StationAiFixerCircuitboard
     - id: RubberStampRd
+    - id: ClothingOuterSuitArc # KS14
 
 # Hardsuit table, used for suit storage as well
 - type: entityTable
