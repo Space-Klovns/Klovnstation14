@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+#
+# SPDX-License-Identifier: MIT
+
 - type: reaction
   id: Citadelium
   minTemp: 351.15 # boiling point of ethanol, to imply that space salt is somewhat organic

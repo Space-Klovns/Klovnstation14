@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2024 Nemanja
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+#
+# SPDX-License-Identifier: MIT
+
 - type: weightedRandom
   id: AsteroidOre
   weights:

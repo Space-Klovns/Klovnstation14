@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+#
+# SPDX-License-Identifier: MIT
+
 - type: reagent
   id: SpaceSalt
   name: reagent-name-space-salt
