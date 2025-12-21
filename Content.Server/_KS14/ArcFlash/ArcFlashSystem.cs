@@ -31,16 +31,16 @@ public sealed class MindShieldSystem : EntitySystem
         TransformComponent? transform = null;
         if (Resolve(uid, ref electrified, ref transform, false))
             if (_electrocutionSystem.IsPowered(uid, electrified, transform))
-                _lightning.ShootRandomLightnings(uid, 3, 3, lightningPrototype: "ArcFlashLightning"); //change all of this to cvar pl0x
+                _lightning.ShootRandomLightnings(uid, deviceComp.lightningRange, deviceComp.lightningAmount, lightningPrototype: deviceComp.lightningPrototype);
     }
     private void OnDeconstruction(EntityUid uid, ArcFlashDeconstructableComponent deviceComp, ref MachineDeconstructedEvent args)
     {
         //there is no way for us to check battery status anyway
-        _lightning.ShootRandomLightnings(uid, 3, 3, lightningPrototype: "ArcFlashLightning"); //change all of this to cvar pl0x
+        _lightning.ShootRandomLightnings(uid, deviceComp.lightningRange, deviceComp.lightningAmount, lightningPrototype: deviceComp.lightningPrototype);
     }
     private void OnAPCDeconstruction(EntityUid uid, ArcFlashDeconstructableComponent deviceComp, ref APCDeconstructedEvent args)
     {
         //there is no way for us to check battery status anyway
-        _lightning.ShootRandomLightnings(uid, 3, 3, lightningPrototype: "ArcFlashLightning"); //change all of this to cvar pl0x
+        _lightning.ShootRandomLightnings(uid, deviceComp.lightningRange, deviceComp.lightningAmount, lightningPrototype: deviceComp.lightningPrototype);
     }
 }

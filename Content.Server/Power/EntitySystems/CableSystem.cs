@@ -25,6 +25,10 @@ public sealed partial class CableSystem : EntitySystem
     [Dependency] private readonly ElectrocutionSystem _electrocutionSystem = default!;
     //KS14 start
     [Dependency] private readonly LightningSystem _lightning = default!;
+
+    private readonly float arcFlashRange = 4f; //all of this stays here for now
+    private readonly int arcFlashAmount = 2;
+    private readonly string arcFlashProto = "ArcFlashLightningStrong";
     //KS14 end
 
     public override void Initialize()
@@ -67,7 +71,7 @@ public sealed partial class CableSystem : EntitySystem
         TransformComponent? transform = null;
         if (Resolve(uid, ref electrified, ref transform, false))
             if (cable.CableType == CableType.HighVoltage && _electrocutionSystem.IsPowered(uid, electrified, transform))
-                _lightning.ShootRandomLightnings(uid, 3, 3, lightningPrototype: "ArcFlashLightning"); //change all of this to cvar pl0x
+                _lightning.ShootRandomLightnings(uid, arcFlashRange, arcFlashAmount, lightningPrototype: arcFlashProto);
         // KS end
 
         _adminLogger.Add(LogType.CableCut, LogImpact.High, $"The {ToPrettyString(uid)} at {xform.Coordinates} was cut by {ToPrettyString(args.User)}.");

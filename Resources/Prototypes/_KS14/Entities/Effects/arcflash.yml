@@ -1,25 +1,37 @@
 - type: entity
   name: arc flash
-  id: ArcFlashLightning
-  parent: ChargedLightning
+  id: ArcFlashLightningWeak
+  parent: BaseLightning
   categories: [ HideSpawnMenu ]
   components:
     - type: Sprite
       sprite: /Textures/Effects/lightning.rsi
       drawdepth: Effects
       layers:
-        - state: "red_lightning"
+        - state: "blue_lightning"
           shader: unshaded
     - type: Electrified
       requirePower: false
-      shockDamage: 60
+      isArcFlash: true
+      shockDamage: 30
     - type: Lightning
       canArc: true
-      lightningPrototype: HyperchargedLightning
     - type: PointLight
       enabled: true
-      color: "#ff0000"
+      color: "#4080FF"
       radius: 3.5
       softness: 1
       autoRot: true
       castShadows: false
+
+- type: entity
+  name: arc flash
+  id: ArcFlashLightningStrong
+  parent: ArcFlashLightningWeak
+  categories: [ HideSpawnMenu ]
+  components:
+    - type: Electrified
+      requirePower: false
+      isArcFlash: true
+      shockDamage: 60
+

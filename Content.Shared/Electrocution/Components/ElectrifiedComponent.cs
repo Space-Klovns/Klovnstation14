@@ -128,4 +128,12 @@ public sealed partial class ElectrifiedComponent : Component
 
     [DataField, AutoNetworkedField]
     public bool IsWireCut = false;
+
+    /// <summary>
+    /// KS14
+    /// Boolean that checks for arc flash protection and ignores insulation. This is quite literally all it does.
+    /// Yes, it is hardcoded, but I don't see a need for a dynamic system anytime soon untill power refactor makes arc flashes stronger and weaker based on power.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool IsArcFlash = false;
 }
