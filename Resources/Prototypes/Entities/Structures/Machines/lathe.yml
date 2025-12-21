@@ -259,7 +259,7 @@
     - state: panel
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
   - type: Machine
-    board: EngineeringTechFabCircuitboard
+    board: AutolatheMachineCircuitboard
   - type: MaterialStorage
     whitelist:
       tags:
