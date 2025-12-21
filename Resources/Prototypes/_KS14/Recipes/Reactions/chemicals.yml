@@ -13,12 +13,11 @@
   products:
     Citadelium: 4
 
-- type: reaction
+- type: reaction # since plasma is essentially tritiated ethanol, it would react EVIL with citadelium (what did i mean by this?)
   id: CitadeliumExplosion
   impact: High
   priority: 25
   conserveEnergy: false
-  minTemp: 408.15 # 135 deg celsius; this value is reflected in the locale for citadelium
   reactants:
     Citadelium:
       amount: 1
