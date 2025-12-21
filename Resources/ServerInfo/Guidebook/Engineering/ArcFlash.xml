@@ -4,10 +4,10 @@
   Some high-powered electrical devices create dangerous arc flashes, which are lethal even to otherwise insulated crew!
 
   <Box>
-    <GuideEntityEmbed Entity="BaseSubstation"/>
-    <GuideEntityEmbed Entity="BaseSMES"/>
+    <GuideEntityEmbed Entity="SubstationBasic"/>
+    <GuideEntityEmbed Entity="SMESBasic"/>
     <GuideEntityEmbed Entity="CableHVStack"/>
-    <GuideEntityEmbed Entity="BaseAPC"/>
+    <GuideEntityEmbed Entity="APCBasic"/>
   </Box>
 
   ## What can cause an arc flash
