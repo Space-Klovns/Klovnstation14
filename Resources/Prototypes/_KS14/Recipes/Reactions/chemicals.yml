@@ -1,11 +1,33 @@
 - type: reaction
   id: Citadelium
+  minTemp: 351.15 # boiling point of ethanol, to imply that space salt is somewhat organic
   reactants:
     SpaceSalt:
       amount: 1
-    Bicaridine:
+    Epinephrine: # lol whatever
       amount: 1
-    PwrGame:
+    Hydrogen:
+      amount: 1
+    Copper:
       amount: 1
   products:
-    Citadelium: 3
+    Citadelium: 4
+
+- type: reaction
+  id: CitadeliumExplosion
+  impact: High
+  priority: 25
+  conserveEnergy: false
+  minTemp: 408.15 # 135 deg celsius; this value is reflected in the locale for citadelium
+  reactants:
+    Citadelium:
+      amount: 1
+    Plasma:
+      amount: 1
+  effects:
+  - !type:ExplosionReactionEffect
+    explosionType: FireBomb
+    intensityPerUnit: 0.75
+    maxTotalIntensity: 130
+    intensitySlope: 5
+    maxIntensity: 12

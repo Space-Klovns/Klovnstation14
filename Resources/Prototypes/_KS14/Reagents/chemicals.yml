@@ -18,7 +18,9 @@
   group: Biological
   flavor: chalky
   physicalDesc: reagent-physical-desc-bubbling
-  color: "#ff0000"
+  color: "#c95151"
+  boilingPoint: 415.15
+  meltingPoint: 408.15
   metabolisms:
     Medicine:
       effects:
@@ -26,3 +28,26 @@
         effectProto: StatusEffectSafeCritHumanoid
         time: 3
         type: Update
+
+      # Purge sleep chems
+      - !type:AdjustReagent
+        conditions:
+        - !type:ReagentThreshold
+          reagent: Nocturine
+          min: 1
+        reagent: Nocturine
+        amount: -3
+      - !type:AdjustReagent
+        conditions:
+        - !type:ReagentThreshold
+          reagent: NorepinephricAcid
+          min: 1
+        reagent: NorepinephricAcid
+        amount: -10
+      - !type:AdjustReagent
+        conditions:
+        - !type:ReagentThreshold
+          reagent: ChloralHydrate
+          min: 1
+        reagent: ChloralHydrate
+        amount: -10
