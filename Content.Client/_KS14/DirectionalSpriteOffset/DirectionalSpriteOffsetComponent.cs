@@ -16,6 +16,6 @@ public sealed partial class DirectionalSpriteOffsetComponent : Component
     ///     Dictionary of layers by their mapped key, and their offsets per <see cref="RsiDirection"/>.
     ///         The layer must exist otherwise an exception will be thrown.
     /// </summary>
-    [DataField]
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
     public Dictionary<string, Dictionary<RsiDirection, Vector2>> LayerOffsetData = new();
 }
