@@ -1,0 +1,58 @@
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
+#
+# SPDX-License-Identifier: MPL-2.0
+
+#try keeping weights at 100/100 for ease of tweaking (Ideally)
+#also sort by weight
+
+- type: entityTable
+  id: MaintAmmoTable
+  table: !type:GroupSelector
+    children:
+    - !type:GroupSelector #will roll most often
+      weight: 90
+      children:
+      - id: ShellShotgunImprovised
+        weight: 30
+      - id: ShellShotgunSlug
+        weight: 20
+      - id: MagazinePistol #.35
+        weight: 15
+      - id: ShellShotgun
+        weight: 10
+      - id: ShellShotgunBeanbag
+        weight: 5
+      - id: MagazinePistolEmpty
+        weight: 5
+      - id: MagazineShotgun
+        weight: 5
+      - id: CartridgeCap #troll
+      - id: MagazineBoxMagnum #.45
+        weight: 3
+      - id: MagazinePistolUranium #funny
+        weight: 2
+    - !type:GroupSelector #exists to make l6 ammo rarer bcz hype
+      weight: 10
+      children:
+      - id: ShellShotgunImprovised #troll
+        weight: 80
+      - id: MagazineShotgun
+        weight: 10
+      - id: MagazineBoxLightRifleBig #golden scar
+        weight: 10
+
+- type: entity
+  name: Maint Loot Spawner
+  suffix: Ammo
+  id: MaintenanceAmmoSpawner
+  parent: MarkerBase
+  components:
+  - type: Sprite
+    layers:
+    - state: red
+    - sprite: Objects/Weapons/Guns/Ammunition/Boxes/rifle.rsi
+      state: base
+  - type: EntityTableSpawner
+    table: !type:NestedSelector
+      tableId: MaintAmmoTable
+      prob: 0.8 #same as maint weapon spawner post ks changes

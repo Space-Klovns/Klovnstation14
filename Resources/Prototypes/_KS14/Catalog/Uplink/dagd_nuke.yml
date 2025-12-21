@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: 2025 Gerkada
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MIT
+
+- type: listing
+  id: UplinkNukeCodes
+  name: uplink-nuke-codes-name
+  description: uplink-nuke-codes-desc
+  productEntity: NukeCodePaperStation
+  categories:
+  - UplinkObjective
+  conditions:
+  - !type:ListingLimitedStockCondition
+    stock: 1
+  - !type:BuyerObjectiveWhitelistCondition
+    whitelist:
+      components:
+      - DieCondition
+
+- type: storeCategory
+  id: UplinkObjective
+  name: store-category-objective
+  priority: 11
+
+- type: storePreset
+  id: TraitorStore
+  storeName: store-preset-traitor-name
+  categories:
+  - UplinkObjective
+  currencyWhitelist:
+  - Telecrystal
+  initialBalance:
+    Telecrystal: 0

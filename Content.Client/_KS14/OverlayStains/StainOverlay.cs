@@ -138,7 +138,9 @@ public sealed class StainOverlay : Overlay
         var stainedEnumerator = _entityManager.EntityQueryEnumerator<StainedComponent, SpriteComponent, TransformComponent>();
         while (stainedEnumerator.MoveNext(out var uid, out var stainedComponent, out var spriteComponent, out var transformComponent))
         {
-            var (_, _, worldMatrix) = _transformSystem.GetWorldPositionRotationMatrix(transformComponent);
+            var (worldPosition, worldRotation) = _transformSystem.GetWorldPositionRotation(transformComponent);
+            var worldMatrix = Matrix3Helpers.CreateTransform(worldPosition, worldRotation - transformComponent.LocalRotation);
+
             var scaledWorld = Matrix3x2.Multiply(ScaleMatrix, worldMatrix);
             worldHandle.SetTransform(scaledWorld);
 
@@ -146,7 +148,7 @@ public sealed class StainOverlay : Overlay
                 worldHandle.DrawTexture(
                     texture,
                     new Vector2(stainData.X - convertedTextureWidth, stainData.Y - convertedTextureHeight),
-                    angle: new(stainData.Z * MathF.Tau), modulate: color
+                    angle: new Angle(stainData.Z * MathF.Tau), modulate: color
                 );
         }
 

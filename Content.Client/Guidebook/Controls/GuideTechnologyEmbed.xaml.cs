@@ -1,3 +1,10 @@
+// SPDX-FileCopyrightText: 2023 Nemanja
+// SPDX-FileCopyrightText: 2025 Gerkada
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using System.Diagnostics.CodeAnalysis;
 using Content.Client.Guidebook.Richtext;
 using Content.Client.Message;
@@ -86,7 +93,14 @@ public sealed partial class GuideTechnologyEmbed : BoxContainer, IDocumentTag, I
 
         NameLabel.SetMarkup($"[bold]{Loc.GetString(technology.Name)}[/bold]");
         DescriptionLabel.SetMessage(_research.GetTechnologyDescription(technology, includePrereqs: true, disciplinePrototype: discipline));
-        TechTexture.Texture = _sprite.Frame0(technology.Icon);
+        if (technology.EntityIcon.HasValue)
+        {
+            TechTexture.Texture = _sprite.GetPrototypeIcon(technology.EntityIcon.Value).Default;
+        }
+        else if (technology.Icon != null)
+        {
+            TechTexture.Texture = _sprite.Frame0(technology.Icon);
+        }
 
         DisciplineColorBackground.PanelOverride = new StyleBoxFlat
         {
