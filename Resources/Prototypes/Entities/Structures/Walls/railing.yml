@@ -18,8 +18,8 @@
       railing: # don't change this key; everything inheriting BaseRailing must define a layer mapped to "railing"
         South: 0, -0.3333
         North: 0, 0.3333
-        West: 0, 0
-        East: 0, 0
+        West: 0.3333, 0
+        East: -0.3333, 0
   - type: Physics
     bodyType: Static
   - type: InteractionOutline
