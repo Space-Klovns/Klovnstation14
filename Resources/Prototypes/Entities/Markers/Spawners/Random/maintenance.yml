@@ -39,16 +39,13 @@
 # SPDX-FileCopyrightText: 2025 DeusMaldPr
 # SPDX-FileCopyrightText: 2025 IProduceWidgets
 # SPDX-FileCopyrightText: 2025 Julian Giebel
-# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Momo
 # SPDX-FileCopyrightText: 2025 Smugman
 # SPDX-FileCopyrightText: 2025 Southbridge
 # SPDX-FileCopyrightText: 2025 T
 # SPDX-FileCopyrightText: 2025 Unkn0wn_Gh0st
 # SPDX-FileCopyrightText: 2025 centcomofficer24
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 lzk
-# SPDX-FileCopyrightText: 2025 nabegator220
 # SPDX-FileCopyrightText: 2025 slarticodefast
 #
 # SPDX-License-Identifier: MIT
@@ -81,6 +78,8 @@
       - id: ClothingHeadHelmetCosmonaut
       - id: ClothingHeadHelmetBasic
       - id: ClothingShoeSlippersDuck
+      - id: ClothingUnderSocksBee
+      - id: ClothingUnderSocksCoder
       - id: ClothingHeadHatSquid
       # Animal Masks
       - !type:GroupSelector
@@ -147,6 +146,23 @@
       children:
       - id: ClothingNeckCloakHerald
       - id: ClothingHeadHelmetTemplar
+      # Cloaks
+      - !type:GroupSelector
+        children:
+        - id: ClothingNeckCloakTrans
+        - id: ClothingNeckCloakAdmin
+        - id: ClothingNeckCloakMoth
+        - id: ClothingNeckCloakVoid
+        - id: ClothingNeckCloakGoliathCloak
+        - id: ClothingNeckCloakAce
+        - id: ClothingNeckCloakAro
+        - id: ClothingNeckCloakAroace
+        - id: ClothingNeckCloakBi
+        - id: ClothingNeckCloakIntersex
+        - id: ClothingNeckCloakLesbian
+        - id: ClothingNeckCloakGay
+        - id: ClothingNeckCloakEnby
+        - id: ClothingNeckCloakPan
       - id: ToySkeleton
       - id: Basketball
       - id: Football
@@ -175,6 +191,27 @@
       - id: ClothingUniformJumpsuitPirate
       - id: ClothingShoesBootsCowboyFancy
       - id: ClothingHeadHatCowboyBountyHunter
+      # Pins
+      - !type:GroupSelector
+        children:
+        - id: ClothingNeckLGBTPin
+        - id: ClothingNeckAllyPin
+        - id: ClothingNeckAromanticPin
+        - id: ClothingNeckAsexualPin
+        - id: ClothingNeckAroacePin
+        - id: ClothingNeckBisexualPin
+        - id: ClothingNeckGayPin
+        - id: ClothingNeckIntersexPin
+        - id: ClothingNeckLesbianPin
+        - id: ClothingNeckNonBinaryPin
+        - id: ClothingNeckPansexualPin
+        - id: ClothingNeckPluralPin
+        - id: ClothingNeckOmnisexualPin
+        - id: ClothingNeckGenderqueerPin
+        - id: ClothingNeckGenderfluidPin
+        - id: ClothingNeckTransPin
+        - id: ClothingNeckAutismPin
+        - id: ClothingNeckGoldAutismPin
     # Rare Group
     - !type:GroupSelector
       weight: 2

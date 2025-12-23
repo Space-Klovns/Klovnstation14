@@ -26,7 +26,6 @@
 # SPDX-FileCopyrightText: 2024 deltanedas
 # SPDX-FileCopyrightText: 2024 lzk
 # SPDX-FileCopyrightText: 2024 metalgearsloth
-# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Southbridge
 # SPDX-FileCopyrightText: 2025 Unkn0wn_Gh0st
 # SPDX-FileCopyrightText: 2025 Velcroboy
@@ -202,6 +201,12 @@
       prob: 0.33
       rolls: !type:RangeNumberSelector
         range: 0, 2
+    # Plushies
+    - !type:NestedSelector
+      tableId: AllPlushiesTable
+      prob: 0.10
+      rolls: !type:RangeNumberSelector
+        range: 1, 2
     # Weapons
     - !type:NestedSelector
       tableId: MaintWeaponTable
