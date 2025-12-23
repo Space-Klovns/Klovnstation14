@@ -2,27 +2,15 @@
 #
 # SPDX-License-Identifier: MIT
 
-- type: entityTable
+- type: entityTable # KS14 - Removed most plushies
   id: AllPlushiesTable
   table: !type:GroupSelector
     children:
-    - id: PlushieBee
     - id: PlushieNar
       weight: 0.5
     - id: PlushieRatvar
       weight: 0.5
     - id: PlushieNuke
-    - id: PlushieSlime
-    - id: PlushieSnake
-    - id: PlushieExperiment
-    - !type:GroupSelector
-      children:
-      - id: PlushieLizard
-        weight: 9
-      - id: PlushieSpaceLizard
-        weight: 1
-      - id: PlushieLizardInversed
-        weight: 0.5
     - !type:GroupSelector
       children:
       - id: PlushieCarp
@@ -32,21 +20,6 @@
         weight: 0.25
       - id: PlushieRainbowCarp
         weight: 0.15
-    - id: PlushieVox
-    - id: PlushieRouny
-    - !type:GroupSelector
-      children:
-      - id: PlushieSharkBlue
-      - id: PlushieSharkGrey
-      - id: PlushieSharkPink
-    - id: PlushieAtmosian
-    - id: PlushieDiona
-    - id: PlushieXeno
-    - id: PlushieHampter
-    - id: PlushieMoth
-    - id: PlushieArachind
-    - id: PlushiePenguin
-    - id: PlushieVulp
 
 - type: entityTable
   id: AllPottedPlantsTable
@@ -91,55 +64,7 @@
         rolls: !type:ConstantNumberSelector
           value: 5
 
-- type: entity
-  id: CrateFunPlushie
-  parent: CrateGenericSteel
-  name: plushie crate
-  description: A buncha soft plushies. Throw them around and then wonder how you're gonna explain this purchase to NT.
-  components:
-  - type: EntityTableContainerFill
-    containers:
-      entity_storage: !type:NestedSelector
-        tableId: AllPlushiesTable
-        rolls: !type:ConstantNumberSelector
-          value: 10
-
-- type: entity
-  id: CrateFunLizardPlushieBulk
-  parent: CrateGenericSteel
-  name: bulk lizard plushie crate
-  description: A buncha soft lizard plushies. Throw them around and then wonder how you're gonna explain this purchase to NT.
-  components:
-  - type: EntityTableContainerFill
-    containers:
-      entity_storage: !type:AllSelector
-        children:
-        - id: PlushieLizard
-          amount: !type:ConstantNumberSelector
-            value: 3
-        - id: PlushieSpaceLizard
-          amount: !type:ConstantNumberSelector
-            value: 3
-
-- type: entity
-  id: CrateFunSharkPlushieBulk
-  parent: CrateGenericSteel
-  name: bulk soft toy shark crate
-  description: A crate filled with a variety of everyone's favorite finned friend. Rawr!
-  components:
-  - type: EntityTableContainerFill
-    containers:
-      entity_storage: !type:AllSelector
-        children:
-        - id: PlushieSharkBlue
-          amount: !type:ConstantNumberSelector
-            value: 2
-        - id: PlushieSharkPink
-          amount: !type:ConstantNumberSelector
-            value: 2
-        - id: PlushieSharkGrey
-          amount: !type:ConstantNumberSelector
-            value: 2
+# KS14 - Removed slop
 
 - type: entity
   id: CrateFunInstrumentsVariety

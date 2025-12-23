@@ -59,8 +59,7 @@
   - FlowerWreath
   - Hairflower
   - Headphones
-#  - PlushieLizard, klovn
-#  - PlushieSpaceLizard
+  # KS14 - Removed slop
   - ThreeCandles
   - Lighter
   - CigPackGreen
@@ -69,24 +68,7 @@
   - CigPackBlack
   - CigarCase
   - CigarGold
-  - ClothingNeckLGBTPin
-  - ClothingNeckAllyPin
-  - ClothingNeckAromanticPin
-  - ClothingNeckAsexualPin
-  - ClothingNeckAroacePin
-  - ClothingNeckBisexualPin
-  - ClothingNeckGayPin
-  - ClothingNeckIntersexPin
-  - ClothingNeckLesbianPin
-  - ClothingNeckNonBinaryPin
-  - ClothingNeckPansexualPin
-  - ClothingNeckPluralPin
-  - ClothingNeckOmnisexualPin
-  - ClothingNeckGenderqueerPin
-  - ClothingNeckGenderfluidPin
-  - ClothingNeckTransPin
-  - ClothingNeckAutismPin
-  - ClothingNeckGoldAutismPin
+  # KS14 - Removed pins
   - OffsetCane
   - OffsetCaneWood
   - OffsetCaneClown

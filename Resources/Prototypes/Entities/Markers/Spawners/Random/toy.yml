@@ -14,26 +14,13 @@
         - PlushieGhost
       rareChance: 0.03
       prototypes:
-        - PlushieBee
-        - PlushieAtmosian
         - PlushieNuke
-        - PlushieLizard
         - PlushieNar
         - PlushieCarp
-        - PlushieSlime
-        - PlushieSnake
-        - PlushieVox
         - PlushieRatvar
-        - PlushieSpaceLizard
-        - PlushieRouny
         - PlushieLamp
-        - PlushieSharkBlue
-        - PlushieSharkPink
-        - PlushieSharkGrey
         - ToyAmongPequeno
         - ToyMouse
-        - PlushieDiona
-        - PlushieArachind
       chance: 0.5
       offset: 0.2
 

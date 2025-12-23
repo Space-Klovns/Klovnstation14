@@ -1019,8 +1019,8 @@
     belt: Bible
     ears: ClothingHeadsetService
     outerClothing: ClothingOuterPlagueSuit
-    pocket1: PlushieSharkGrey
-    pocket2: FoodSnackEnergy
+    # KS14 - Removed plushie
+    pocket1: FoodSnackEnergy
 
 - type: startingGear
   id: VisitorChaplainAlt
@@ -1032,8 +1032,8 @@
     belt: Bible
     ears: ClothingHeadsetService
     outerClothing: ClothingOuterNunRobe
-    pocket1: PlushiePenguin
-    pocket2: DrinkCoconutWaterCarton
+    # KS14 - Removed plushie
+    pocket1: DrinkCoconutWaterCarton
 
 - type: startingGear
   id: VisitorChef

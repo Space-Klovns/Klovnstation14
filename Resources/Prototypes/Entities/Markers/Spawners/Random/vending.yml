@@ -43,8 +43,7 @@
       weight: 40
     - id: VendingMachineWinter
       weight: 40
-    - id: VendingMachinePride
-      weight: 10
+    # KS14 - Removed 'ide vendor
     - id: VendingMachineTheater
       weight: 10
 

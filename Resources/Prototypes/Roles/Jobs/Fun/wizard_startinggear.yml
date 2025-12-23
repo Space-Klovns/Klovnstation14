@@ -36,5 +36,5 @@
   equipment:
     eyes: ClothingEyesGlassesCheapSunglasses
     mask: ClothingMaskBreath
-    neck: ClothingNeckLGBTPin
+    # KS14 - Removed
     gloves: ClothingHandsGlovesColorBlack

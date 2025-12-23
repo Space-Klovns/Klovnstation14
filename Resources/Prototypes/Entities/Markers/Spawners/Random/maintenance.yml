@@ -78,8 +78,7 @@
       - id: ClothingHeadHelmetCosmonaut
       - id: ClothingHeadHelmetBasic
       - id: ClothingShoeSlippersDuck
-      - id: ClothingUnderSocksBee
-      - id: ClothingUnderSocksCoder
+      # KS14 - Removed slop
       - id: ClothingHeadHatSquid
       # Animal Masks
       - !type:GroupSelector
@@ -146,23 +145,7 @@
       children:
       - id: ClothingNeckCloakHerald
       - id: ClothingHeadHelmetTemplar
-      # Cloaks
-      - !type:GroupSelector
-        children:
-        - id: ClothingNeckCloakTrans
-        - id: ClothingNeckCloakAdmin
-        - id: ClothingNeckCloakMoth
-        - id: ClothingNeckCloakVoid
-        - id: ClothingNeckCloakGoliathCloak
-        - id: ClothingNeckCloakAce
-        - id: ClothingNeckCloakAro
-        - id: ClothingNeckCloakAroace
-        - id: ClothingNeckCloakBi
-        - id: ClothingNeckCloakIntersex
-        - id: ClothingNeckCloakLesbian
-        - id: ClothingNeckCloakGay
-        - id: ClothingNeckCloakEnby
-        - id: ClothingNeckCloakPan
+      # KS14 - Removed clokes
       - id: ToySkeleton
       - id: Basketball
       - id: Football
@@ -191,27 +174,7 @@
       - id: ClothingUniformJumpsuitPirate
       - id: ClothingShoesBootsCowboyFancy
       - id: ClothingHeadHatCowboyBountyHunter
-      # Pins
-      - !type:GroupSelector
-        children:
-        - id: ClothingNeckLGBTPin
-        - id: ClothingNeckAllyPin
-        - id: ClothingNeckAromanticPin
-        - id: ClothingNeckAsexualPin
-        - id: ClothingNeckAroacePin
-        - id: ClothingNeckBisexualPin
-        - id: ClothingNeckGayPin
-        - id: ClothingNeckIntersexPin
-        - id: ClothingNeckLesbianPin
-        - id: ClothingNeckNonBinaryPin
-        - id: ClothingNeckPansexualPin
-        - id: ClothingNeckPluralPin
-        - id: ClothingNeckOmnisexualPin
-        - id: ClothingNeckGenderqueerPin
-        - id: ClothingNeckGenderfluidPin
-        - id: ClothingNeckTransPin
-        - id: ClothingNeckAutismPin
-        - id: ClothingNeckGoldAutismPin
+      # KS14 - Removed pins
     # Rare Group
     - !type:GroupSelector
       weight: 2

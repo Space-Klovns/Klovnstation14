@@ -108,35 +108,7 @@
   category: cargoproduct-category-name-fun
   group: market
 
-- type: cargoProduct
-  id: FunPlushies
-  icon:
-    sprite: Objects/Fun/Plushies/human.rsi
-    state: icon
-  product: CrateFunPlushie
-  cost: 1000
-  category: cargoproduct-category-name-fun
-  group: market
-
-- type: cargoProduct
-  id: FunLizardPlushies
-  icon:
-    sprite: Objects/Fun/Plushies/lizard.rsi
-    state: icon
-  product: CrateFunLizardPlushieBulk
-  cost: 500
-  category: cargoproduct-category-name-fun
-  group: market
-
-- type: cargoProduct
-  id: FunSharkPlushies
-  icon:
-    sprite: Objects/Fun/Plushies/shark.rsi
-    state: blue
-  product: CrateFunSharkPlushieBulk
-  cost: 500
-  category: cargoproduct-category-name-fun
-  group: market
+# KS14 - Removed plushies
 
 - type: cargoProduct
   id: FunBoardGames
