@@ -63,8 +63,8 @@
         ruins: !type:GridSpawnGroup
           hide: true
           nameGrid: true
-          minCount: 2
-          maxCount: 2
+          minCount: 3
+          maxCount: 4
           stationGrid: false
           paths:
           - /Maps/Ruins/abandoned_outpost.yml
@@ -86,8 +86,8 @@
           minimumDistance: 150
           maximumDistance: 300
           stationGrid: false
-          minCount: 12
-          maxCount: 16
+          minCount: 20
+          maxCount: 35
           addComponents:
           - type: Gravity
             enabled: true
@@ -101,6 +101,13 @@
           - ChunkDebrisSmall
           - ChunkDebrisSmall
           - ChunkDebris
+          - SpindlyAsteroid
+          - SpindlyAsteroid
+          - SpindlyAsteroid
+          - BlobAsteroid
+          - SwissCheeseAsteroid
+          - SwissCheeseAsteroid
+          - ClusterAsteroid
         vgroid: !type:DungeonSpawnGroup
           minimumDistance: 300
           maximumDistance: 350
