@@ -28,7 +28,6 @@ using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.XAML;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Content.Client.Research.UI;
@@ -37,25 +36,14 @@ namespace Content.Client.Research.UI;
 public sealed partial class ResearchConsoleMenu : FancyWindow
 {
     public Action<string>? OnTechnologyCardPressed;
-    public Action? OnTechnologyRediscoverPressed;
     public Action? OnServerButtonPressed;
 
     [Dependency] private readonly IEntityManager _entity = default!;
     [Dependency] private readonly IPrototypeManager _prototype = default!;
     [Dependency] private readonly IPlayerManager _player = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
-
     private readonly ResearchSystem _research;
     private readonly SpriteSystem _sprite;
     private readonly AccessReaderSystem _accessReader;
-
-    // if set to null  - we are waiting for server info and should not let rerolls
-    private TimeSpan? _nextRediscover;
-    private int _rediscoverCost;
-    private int _serverPoints;
-
-    private TimeSpan _nextUpdate;
-    private readonly TimeSpan _updateInterval = TimeSpan.FromMilliseconds(500);
 
     public EntityUid Entity;
 
@@ -69,7 +57,6 @@ public sealed partial class ResearchConsoleMenu : FancyWindow
         _accessReader = _entity.System<AccessReaderSystem>();
 
         ServerButton.OnPressed += _ => OnServerButtonPressed?.Invoke();
-        RediscoverButton.OnPressed += OnRediscoverPressed;
     }
 
     public void SetEntity(EntityUid entity)
@@ -93,7 +80,9 @@ public sealed partial class ResearchConsoleMenu : FancyWindow
             MinHeight = 10
         });
 
-        var hasAccess = HasAccess();
+        var hasAccess = _player.LocalEntity is not { } local ||
+                        !_entity.TryGetComponent<AccessReaderComponent>(Entity, out var access) ||
+                        _accessReader.IsAllowed(local, Entity, access);
         foreach (var techId in database.CurrentTechnologyCards)
         {
             var tech = _prototype.Index<TechnologyPrototype>(techId);
@@ -106,17 +95,7 @@ public sealed partial class ResearchConsoleMenu : FancyWindow
         SyncTechnologyList(UnlockedCardsContainer, unlockedTech);
     }
 
-<<<<<<< HEAD
     public void UpdateInformationPanel(FancyResearchConsoleState state)
-=======
-    private void UpdateRediscoverButton()
-    {
-        RediscoverButton.Disabled = !HasAccess() || _serverPoints < _rediscoverCost || _timing.CurTime < _nextRediscover;
-        RediscoverButton.Text = Loc.GetString("research-console-menu-server-rediscover-button", ("cost", _rediscoverCost));
-    }
-
-    public void UpdateInformationPanel(ResearchConsoleBoundInterfaceState state)
->>>>>>> upstream/master
     {
         var amountMsg = new FormattedMessage();
         amountMsg.AddMarkupOrThrow(Loc.GetString("research-console-menu-research-points-text",
@@ -174,27 +153,6 @@ public sealed partial class ResearchConsoleMenu : FancyWindow
             };
             TierDisplayContainer.AddChild(control);
         }
-
-        _serverPoints = state.Points;
-        _rediscoverCost = state.RediscoverCost;
-        _nextRediscover = state.NextRediscover;
-
-        UpdateRediscoverButton();
-    }
-
-    private void OnRediscoverPressed(BaseButton.ButtonEventArgs args)
-    {
-        RediscoverButton.Disabled = true;
-        _nextRediscover = null;
-
-        OnTechnologyRediscoverPressed?.Invoke();
-    }
-
-    private bool HasAccess()
-    {
-        return _player.LocalEntity is not { } local
-               || !_entity.TryGetComponent<AccessReaderComponent>(Entity, out var access)
-               || _accessReader.IsAllowed(local, Entity, access);
     }
 
     /// <summary>
@@ -236,25 +194,6 @@ public sealed partial class ResearchConsoleMenu : FancyWindow
         {
             container.Children.Remove(techControl);
         }
-    }
-
-    /// <inheritdoc />
-    protected override void FrameUpdate(FrameEventArgs args)
-    {
-        base.FrameUpdate(args);
-
-        if(_nextUpdate > _timing.CurTime)
-            return;
-
-        _nextUpdate = _timing.CurTime + _updateInterval;
-
-        if (!RediscoverButton.Disabled)
-            return;
-
-        if (_nextRediscover == null || _nextRediscover > _timing.CurTime)
-            return;
-
-        UpdateRediscoverButton();
     }
 }
 

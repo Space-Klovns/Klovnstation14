@@ -50,7 +50,6 @@
   description: job-description-hop
   playTimeTracker: JobHeadOfPersonnel
   requirements:
-<<<<<<< HEAD
 #    - !type:DepartmentTimeRequirement, klovn, redundant
 #      department: Engineering
 #      time: 9000 # 2.5 hours
@@ -60,23 +59,12 @@
 #    - !type:DepartmentTimeRequirement
 #      department: Science
 #      time: 9000 # 2.5 hrs
-=======
-    - !type:DepartmentTimeRequirement
-      department: Engineering
-      time: 2.5h
-    - !type:DepartmentTimeRequirement
-      department: Medical
-      time: 2.5h
-    - !type:DepartmentTimeRequirement
-      department: Science
-      time: 2.5h
->>>>>>> upstream/master
     - !type:DepartmentTimeRequirement
       department: Security
-      time: 2.5h
+      time: 9000 # 2.5 hrs
     - !type:DepartmentTimeRequirement
       department: Command
-      time: 2.5h
+      time: 9000 # 2.5 hours
   weight: 20
   startingGear: HoPGear
   icon: "JobIconHeadOfPersonnel"

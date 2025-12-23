@@ -25,22 +25,23 @@ using Robust.Shared.Prototypes;
 namespace Content.Client.Research.UI;
 
 [UsedImplicitly]
-public sealed class ResearchConsoleBoundUserInterface(EntityUid owner, Enum uiKey) : BoundUserInterface(owner, uiKey)
+public sealed class ResearchConsoleBoundUserInterface : BoundUserInterface
 {
     [ViewVariables]
     private ResearchConsoleMenu? _consoleMenu;
+
+    public ResearchConsoleBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
+    {
+    }
 
     protected override void Open()
     {
         base.Open();
 
-        _consoleMenu = this.CreateWindow<ResearchConsoleMenu>();
-        _consoleMenu.SetEntity(Owner);
+        var owner = Owner;
 
-        _consoleMenu.OnTechnologyRediscoverPressed += () =>
-        {
-            SendMessage(new ConsoleRediscoverTechnologyMessage());
-        };
+        _consoleMenu = this.CreateWindow<ResearchConsoleMenu>();
+        _consoleMenu.SetEntity(owner);
 
         _consoleMenu.OnTechnologyCardPressed += id =>
         {
@@ -73,7 +74,6 @@ public sealed class ResearchConsoleBoundUserInterface(EntityUid owner, Enum uiKe
 
         if (state is not FancyResearchConsoleState castState)
             return;
-
         _consoleMenu?.UpdatePanels(castState);
         _consoleMenu?.UpdateInformationPanel(castState);
     }

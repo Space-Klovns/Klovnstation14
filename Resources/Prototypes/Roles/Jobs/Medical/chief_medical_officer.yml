@@ -50,7 +50,6 @@
   requirements:
     - !type:RoleTimeRequirement
       role: JobChemist
-<<<<<<< HEAD
       time: 7200 #2 hrs, klovn
     - !type:RoleTimeRequirement
       role: JobMedicalDoctor
@@ -58,15 +57,6 @@
 #    - !type:DepartmentTimeRequirement, klovn, redundant
 #      department: Medical
 #      time: 36000 #10 hrs
-=======
-      time: 2.5h
-    - !type:RoleTimeRequirement
-      role: JobMedicalDoctor
-      time: 5h
-    - !type:DepartmentTimeRequirement
-      department: Medical
-      time: 10h
->>>>>>> upstream/master
   weight: 10
   startingGear: CMOGear
   icon: "JobIconChiefMedicalOfficer"

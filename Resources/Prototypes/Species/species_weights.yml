@@ -9,7 +9,6 @@
 - type: weightedRandomSpecies
   id: SpeciesWeights
   weights:
-<<<<<<< HEAD
     Human: 20
     Skeleton: 1 #klovn, GOIDAAAAAAAAAAAAAAAAAAA
 
@@ -18,13 +17,3 @@
  #   SlimePerson: 4
  #   Diona: 2
  #   Vulpkanin: 4
-=======
-    Human: 5
-    Reptilian: 4
-    SlimePerson: 4
-    Moth: 4
-    Dwarf: 2
-    Diona: 2
-    Vox: 1
-    Vulpkanin: 4
->>>>>>> upstream/master

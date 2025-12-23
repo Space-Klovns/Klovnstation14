@@ -82,9 +82,6 @@
     state: ointment
   - type: Item
     heldPrefix: ointment
-    storedSprite:
-      state: ointment-storage
-      sprite: Objects/Specific/Medical/medical.rsi
   - type: Healing
     damageContainers:
       - Biological
@@ -319,7 +316,6 @@
     - type: Tag
       tags:
         - SecBeltEquip
-        - Tourniquet
     - type: Sprite
       state: tourniquet
     - type: Item
@@ -359,7 +355,6 @@
     state: gauze
   - type: Item
     heldPrefix: gauze
-    storedRotation: -90
   - type: Construction
     graph: Gauze
     node: gauze
@@ -472,11 +467,10 @@
   components:
   - type: Label
     currentLabel: dexalin 10u
-  - type: EntityTableContainerFill
-    containers:
-      storagebase:
-        id: PillDexalin
-        amount: 7
+  - type: StorageFill
+    contents:
+    - id: PillDexalin
+      amount: 7
 
 - type: entity
   name: pill
@@ -506,11 +500,10 @@
   components:
   - type: Label
     currentLabel: dylovene 10u
-  - type: EntityTableContainerFill
-    containers:
-      storagebase:
-        id: PillDylovene
-        amount: 5
+  - type: StorageFill
+    contents:
+    - id: PillDylovene
+      amount: 5
 
 - type: entity
   name: pill
@@ -540,11 +533,10 @@
   components:
   - type: Label
     currentLabel: hyronalin 10u
-  - type: EntityTableContainerFill
-    containers:
-      storagebase:
-        id: PillHyronalin
-        amount: 5
+  - type: StorageFill
+    contents:
+    - id: PillHyronalin
+      amount: 5
 
 - type: entity
   name: pill
@@ -574,11 +566,10 @@
   components:
   - type: Label
     currentLabel: potassium iodide 10u
-  - type: EntityTableContainerFill
-    containers:
-      storagebase:
-        id: PillPotassiumIodide
-        amount: 5
+  - type: StorageFill
+    contents:
+    - id: PillPotassiumIodide
+      amount: 5
 
 - type: entity
   name: pill
@@ -628,11 +619,10 @@
   components:
   - type: Label
     currentLabel: iron 10u
-  - type: EntityTableContainerFill
-    containers:
-      storagebase:
-        id: PillIron
-        amount: 5
+  - type: StorageFill
+    contents:
+    - id: PillIron
+      amount: 5
 
 - type: entity
   name: pill canister
@@ -642,11 +632,10 @@
   components:
   - type: Label
     currentLabel: copper 10u
-  - type: EntityTableContainerFill
-    containers:
-      storagebase:
-        id: PillCopper
-        amount: 5
+  - type: StorageFill
+    contents:
+    - id: PillCopper
+      amount: 5
 
 - type: entity
   name: pill
@@ -676,11 +665,10 @@
   components:
   - type: Label
     currentLabel: kelotane 10u
-  - type: EntityTableContainerFill
-    containers:
-      storagebase:
-        id: PillKelotane
-        amount: 5
+  - type: StorageFill
+    contents:
+    - id: PillKelotane
+      amount: 5
 
 - type: entity
   name: pill
@@ -710,11 +698,10 @@
   components:
   - type: Label
     currentLabel: dermaline 10u
-  - type: EntityTableContainerFill
-    containers:
-      storagebase:
-        id: PillDermaline
-        amount: 5
+  - type: StorageFill
+    contents:
+    - id: PillDermaline
+      amount: 5
 
 - type: entity
   name: space mirage
@@ -757,11 +744,10 @@
   components:
   - type: Label
     currentLabel: tricordrazine 10u
-  - type: EntityTableContainerFill
-    containers:
-      storagebase:
-        id: PillTricordrazine
-        amount: 5
+  - type: StorageFill
+    contents:
+    - id: PillTricordrazine
+      amount: 5
 
 - type: entity
   name: pill
@@ -791,11 +777,10 @@
   components:
   - type: Label
     currentLabel: bicaridine 10u
-  - type: EntityTableContainerFill
-    containers:
-      storagebase:
-        id: PillBicaridine
-        amount: 5
+  - type: StorageFill
+    contents:
+    - id: PillBicaridine
+      amount: 5
 
 - type: entity
   name: pill
@@ -825,11 +810,10 @@
   components:
   - type: Label
     currentLabel: charcoal 10u
-  - type: EntityTableContainerFill
-    containers:
-      storagebase:
-        id: PillCharcoal
-        amount: 3
+  - type: StorageFill
+    contents:
+    - id: PillCharcoal
+      amount: 3
 
 - type: entity
   name: romerol pill
@@ -879,45 +863,68 @@
   id: PillCanisterRandom
   suffix: Random
   components:
-  - type: EntityTableContainerFill
-    containers:
-      storagebase: !type:GroupSelector
-        children:
-        - id: PillDexalin
-          amount: &Range1to6 !type:RangeNumberSelector
-            range: 1, 6
-        - id: PillDylovene
-          amount: *Range1to6
-        - id: PillHyronalin
-          amount: *Range1to6
-        - id: PillPotassiumIodide
-          amount: *Range1to6
-        - id: PillIron
-          amount: *Range1to6
-        - id: PillCopper
-          amount: *Range1to6
-        - id: PillKelotane
-          amount: *Range1to6
-        - id: PillDermaline
-          amount: *Range1to6
-        - id: PillTricordrazine
-          amount: *Range1to6
-        - id: PillBicaridine
-          amount: *Range1to6
-        - id: PillCharcoal
-          amount: *Range1to6
-        - id: PillAmbuzol
-          weight: 0.75
-          amount: *Range1to6
-        - id: PillAmbuzolPlus
-          weight: 0.75
-          amount: *Range1to6
-        - id: PillSpaceDrugs
-          weight: 0.75
-          amount: *Range1to6
-        - id: StrangePill
-          weight: 0.75
-          amount: *Range1to6
+  - type: StorageFill
+    contents:
+    - id: PillDexalin
+      prob: 0.10
+      maxAmount: 7
+      orGroup: RandomPill
+    - id: PillDylovene
+      prob: 0.10
+      maxAmount: 7
+      orGroup: RandomPill
+    - id: PillHyronalin
+      prob: 0.10
+      maxAmount: 7
+      orGroup: RandomPill
+    - id: PillPotassiumIodide
+      prob: 0.10
+      maxAmount: 7
+      orGroup: RandomPill
+    - id: PillIron
+      prob: 0.10
+      maxAmount: 7
+      orGroup: RandomPill
+    - id: PillCopper
+      prob: 0.10
+      maxAmount: 7
+      orGroup: RandomPill
+    - id: PillKelotane
+      prob: 0.10
+      maxAmount: 7
+      orGroup: RandomPill
+    - id: PillDermaline
+      prob: 0.10
+      maxAmount: 7
+      orGroup: RandomPill
+    - id: PillTricordrazine
+      prob: 0.10
+      maxAmount: 7
+      orGroup: RandomPill
+    - id: PillBicaridine
+      prob: 0.10
+      maxAmount: 7
+      orGroup: RandomPill
+    - id: PillCharcoal
+      prob: 0.10
+      maxAmount: 7
+      orGroup: RandomPill
+    - id: PillAmbuzol
+      prob: 0.075
+      maxAmount: 7
+      orGroup: RandomPill
+    - id: PillAmbuzolPlus
+      prob: 0.075
+      maxAmount: 7
+      orGroup: RandomPill
+    - id: PillSpaceDrugs
+      prob: 0.075
+      maxAmount: 7
+      orGroup: RandomPill
+    - id: StrangePill
+      prob: 0.075
+      maxAmount: 7
+      orGroup: RandomPill
 
 # Syringes
 - type: entity

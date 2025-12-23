@@ -5,20 +5,19 @@ using Content.Server.Body.Components;
 using Content.Server.Temperature.Components;
 using Content.Shared.Alert;
 using Content.Shared.Atmos;
-using Content.Shared.Damage.Components;
-using Content.Shared.Damage.Systems;
+using Content.Shared.Damage;
 using Content.Shared.Database;
 using Content.Shared.Inventory;
 using Content.Shared.Rejuvenate;
 using Content.Shared.Temperature;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Physics.Events;
 using Content.Shared.Projectiles;
-using Content.Shared.Temperature.Components;
-using Content.Shared.Temperature.Systems;
 
 namespace Content.Server.Temperature.Systems;
 
-public sealed class TemperatureSystem : SharedTemperatureSystem
+public sealed class TemperatureSystem : EntitySystem
 {
     [Dependency] private readonly AlertsSystem _alerts = default!;
     [Dependency] private readonly AtmosphereSystem _atmosphere = default!;
@@ -41,8 +40,6 @@ public sealed class TemperatureSystem : SharedTemperatureSystem
 
     public override void Initialize()
     {
-        base.Initialize();
-
         SubscribeLocalEvent<TemperatureComponent, OnTemperatureChangeEvent>(EnqueueDamage);
         SubscribeLocalEvent<TemperatureComponent, AtmosExposedUpdateEvent>(OnAtmosExposedUpdate);
         SubscribeLocalEvent<TemperatureComponent, RejuvenateEvent>(OnRejuvenate);
@@ -128,7 +125,8 @@ public sealed class TemperatureSystem : SharedTemperatureSystem
             true);
     }
 
-    public override void ChangeHeat(EntityUid uid, float heatAmount, bool ignoreHeatResistance = false, TemperatureComponent? temperature = null)
+    public void ChangeHeat(EntityUid uid, float heatAmount, bool ignoreHeatResistance = false,
+        TemperatureComponent? temperature = null)
     {
         if (!Resolve(uid, ref temperature, false))
             return;
@@ -161,6 +159,16 @@ public sealed class TemperatureSystem : SharedTemperatureSystem
         var heat = temperatureDelta * (airHeatCapacity * heatCapacity /
                                        (airHeatCapacity + heatCapacity));
         ChangeHeat(uid, heat * temperature.AtmosTemperatureTransferEfficiency, temperature: temperature);
+    }
+
+    public float GetHeatCapacity(EntityUid uid, TemperatureComponent? comp = null, PhysicsComponent? physics = null)
+    {
+        if (!Resolve(uid, ref comp) || !Resolve(uid, ref physics, false) || physics.FixturesMass <= 0)
+        {
+            return Atmospherics.MinimumHeatCapacity;
+        }
+
+        return comp.SpecificHeat * physics.FixturesMass;
     }
 
     private void OnInit(EntityUid uid, InternalTemperatureComponent comp, MapInitEvent args)

@@ -33,10 +33,7 @@
     - id: FoodMeat
       amount: 5
   - type: Bloodstream
-    bloodReferenceSolution:
-      reagents:
-      - ReagentId: InsectBlood
-        Quantity: 300
+    bloodReagent: InsectBlood
   - type: DamageVisuals
     damageOverlayGroups:
       Brute:

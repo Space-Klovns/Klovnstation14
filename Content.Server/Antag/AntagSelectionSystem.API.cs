@@ -185,10 +185,7 @@ public sealed partial class AntagSelectionSystem
         if (roles.Count == 0)
             return false;
 
-        if (!_pref.TryGetCachedPreferences(session.UserId, out var pref))
-            return false;
-
-        var character = (HumanoidCharacterProfile) pref.SelectedCharacter;
+        var pref = (HumanoidCharacterProfile) _pref.GetPreferences(session.UserId).SelectedCharacter;
 
         var valid = false;
 
@@ -197,7 +194,8 @@ public sealed partial class AntagSelectionSystem
         {
             var list = new List<ProtoId<AntagPrototype>>{role};
 
-            if (character.AntagPreferences.Contains(role)
+
+            if (pref.AntagPreferences.Contains(role)
                 && !_ban.IsRoleBanned(session, list)
                 && _playTimeSystem.IsAllowed(session, list))
                 valid = true;

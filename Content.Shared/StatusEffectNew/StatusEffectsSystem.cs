@@ -51,7 +51,7 @@ public sealed partial class StatusEffectsSystem : EntitySystem
             if (effect.EndEffectTime is null)
                 continue;
 
-            if (_timing.CurTime < effect.EndEffectTime)
+            if (!(_timing.CurTime >= effect.EndEffectTime))
                 continue;
 
             if (effect.AppliedTo is null)
@@ -81,14 +81,14 @@ public sealed partial class StatusEffectsSystem : EntitySystem
         if (args.Container.ID != StatusEffectContainerComponent.ContainerId)
             return;
 
-        if (!_effectQuery.TryComp(args.Entity, out var statusComp))
+        if (!TryComp<StatusEffectComponent>(args.Entity, out var statusComp))
             return;
 
         // Make sure AppliedTo is set correctly so events can rely on it
         if (statusComp.AppliedTo != ent)
         {
             statusComp.AppliedTo = ent;
-            DirtyField(args.Entity, statusComp, nameof(StatusEffectComponent.AppliedTo));
+            Dirty(args.Entity, statusComp);
         }
     }
 
@@ -97,7 +97,7 @@ public sealed partial class StatusEffectsSystem : EntitySystem
         if (args.Container.ID != StatusEffectContainerComponent.ContainerId)
             return;
 
-        if (!_effectQuery.TryComp(args.Entity, out var statusComp))
+        if (!TryComp<StatusEffectComponent>(args.Entity, out var statusComp))
             return;
 
         var ev = new StatusEffectRemovedEvent(ent);
@@ -127,17 +127,20 @@ public sealed partial class StatusEffectsSystem : EntitySystem
     /// <returns>Returns true if the effect is applied.</returns>
     private bool TryApplyStatusEffect(Entity<StatusEffectComponent> statusEffectEnt)
     {
-        if (statusEffectEnt.Comp.Applied ||
-            statusEffectEnt.Comp.AppliedTo == null ||
-            _timing.CurTime < statusEffectEnt.Comp.StartEffectTime)
-            return false;
+        if (!statusEffectEnt.Comp.Applied &&
+            statusEffectEnt.Comp.AppliedTo != null &&
+            _timing.CurTime >= statusEffectEnt.Comp.StartEffectTime)
+        {
+            var ev = new StatusEffectAppliedEvent(statusEffectEnt.Comp.AppliedTo.Value);
+            RaiseLocalEvent(statusEffectEnt, ref ev);
 
-        var ev = new StatusEffectAppliedEvent(statusEffectEnt.Comp.AppliedTo.Value);
-        RaiseLocalEvent(statusEffectEnt, ref ev);
+            statusEffectEnt.Comp.Applied = true;
 
-        statusEffectEnt.Comp.Applied = true;
+            DirtyField(statusEffectEnt, statusEffectEnt.Comp, nameof(StatusEffectComponent.StartEffectTime));
+            return true;
+        }
 
-        return true;
+        return false;
     }
 
     public bool CanAddStatusEffect(EntityUid uid, EntProtoId effectProto)
@@ -204,7 +207,7 @@ public sealed partial class StatusEffectsSystem : EntitySystem
         var startTime = delay == null ? TimeSpan.Zero : _timing.CurTime + delay.Value;
         SetStatusEffectStartTime(effect.Value, startTime);
 
-        TryApplyStatusEffect((statusEffect.Value, effectComp));
+        TryApplyStatusEffect((effect.Value, effectComp));
 
         return true;
     }

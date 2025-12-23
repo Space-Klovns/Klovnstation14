@@ -136,7 +136,7 @@
   components:
   - type: PowerCellDraw
     drawRate: 1
-    useCharge: 0
+    useRate: 0
   - type: ToggleCellDraw
 
 - type: entity
@@ -171,7 +171,7 @@
   components:
   - type: PowerCellDraw
     drawRate: 1
-    useCharge: 0
+    useRate: 0
   - type: ToggleCellDraw
 
 - type: entity
@@ -210,12 +210,8 @@
       path: "/Audio/Weapons/Guns/Gunshots/kinetic_accel.ogg"
   - type: CorePoweredThrower
   - type: MeleeThrowOnHit
-<<<<<<< HEAD
     unanchorOnHit: true
     stunTime: 0.5
-=======
-    unanchorOnHit: Unanchorable
->>>>>>> upstream/master
   - type: ItemSlots
     slots:
       core_slot:

@@ -414,10 +414,6 @@
   - type: Edible
     trash:
     - TrashBananaPeel
-  - type: Butcherable
-    butcheringType: Knife
-    spawned:
-    - id: TrashBananaPeel
   - type: SolutionContainerManager
     solutions:
       food:
@@ -460,10 +456,6 @@
   - type: Edible
     trash:
     - TrashMimanaPeel
-  - type: Butcherable
-    butcheringType: Knife
-    spawned:
-    - id: TrashMimanaPeel
   - type: SolutionContainerManager
     solutions:
       food:
@@ -495,9 +487,9 @@
       Taco: Mimana
 
 - type: entity
+  name: banana peel
   parent: BaseItem
   id: TrashBananaPeel
-  name: banana peel
   components:
   - type: Sprite
     sprite: Objects/Specific/Hydroponics/banana.rsi
@@ -560,9 +552,9 @@
     quickEquip: false
 
 - type: entity
+  name: baked banana peel
   parent: TrashBananaPeel
   id: TrashBakedBananaPeel
-  name: baked banana peel
   components:
   - type: Clothing
     sprite: Objects/Specific/Hydroponics/banana.rsi
@@ -585,9 +577,9 @@
           Quantity: 2
 
 - type: entity
+  name: mimana peel
   parent: TrashBananaPeel
   id: TrashMimanaPeel
-  name: mimana peel
   components:
   - type: Sprite
     sprite: Objects/Specific/Hydroponics/mimana.rsi
@@ -605,9 +597,9 @@
         volume: -100
 
 - type: entity
+  name: bananium peel
   parent: TrashBananaPeel
   id: TrashBananiumPeel
-  name: bananium peel
   components:
   - type: Sprite
     sprite: Objects/Materials/materials.rsi
@@ -1294,10 +1286,6 @@
   - type: Edible
     trash:
     - FoodCornTrash
-  - type: Butcherable
-    butcheringType: Knife
-    spawned:
-    - id: FoodCornTrash #no idea why you'd ever do this, but it's just here for consistency
   - type: SolutionContainerManager
     solutions:
       food:
@@ -1767,7 +1755,7 @@
   - type: SolutionContainerManager
     solutions:
       food:
-        maxVol: 14
+        maxVol: 24
         reagents:
         - ReagentId: Bicaridine
           Quantity: 5
@@ -1775,6 +1763,8 @@
           Quantity: 5
         - ReagentId: Nutriment
           Quantity: 2
+        - ReagentId: Desoxyephedrine
+          Quantity: 10
         - ReagentId: Vitamin
           Quantity: 2
   - type: Sprite
@@ -1810,7 +1800,7 @@
   - type: SolutionContainerManager
     solutions:
       food:
-        maxVol: 10
+        maxVol: 20
         reagents:
         - ReagentId: Omnizine
           Quantity: 3
@@ -1818,6 +1808,8 @@
           Quantity: 5
         - ReagentId: Nutriment
           Quantity: 2
+        - ReagentId: Desoxyephedrine
+          Quantity: 10
   - type: Sprite
     sprite: Objects/Specific/Hydroponics/ambrosia_deus.rsi
   - type: Item
@@ -1887,12 +1879,10 @@
   - type: SolutionContainerManager
     solutions:
       food:
-        maxVol: 25
+        maxVol: 15
         reagents:
         - ReagentId: Razorium
           Quantity: 15
-        - ReagentId: Desoxyephedrine
-          Quantity: 10
   - type: Sprite
     sprite: Objects/Specific/Hydroponics/glasstle.rsi
   - type: Produce
@@ -2001,10 +1991,6 @@
   - type: Edible
     trash:
     - WeaponRevolverPython
-  - type: Butcherable
-    butcheringType: Knife
-    spawned:
-    - id: WeaponRevolverPython
   - type: Tag
     tags:
     - Fruit # It's in the name
@@ -2040,10 +2026,6 @@
   - type: Edible
     trash:
     - RevolverCapGun
-  - type: Butcherable
-    butcheringType: Knife
-    spawned:
-    - id: RevolverCapGun
   - type: Tag
     tags:
     - Fruit
@@ -2063,10 +2045,6 @@
   - type: Edible
     trash:
     - RevolverCapGunFake
-  - type: Butcherable
-    butcheringType: Knife
-    spawned:
-    - id: RevolverCapGunFake
 
 - type: entity
   name: rice bushel
@@ -2471,10 +2449,6 @@
   - type: Edible
     trash:
     - FoodBungoPit
-  - type: Butcherable
-    butcheringType: Knife
-    spawned:
-    - id: FoodBungoPit
   - type: SolutionContainerManager
     solutions:
       food:
@@ -2776,10 +2750,6 @@
   - type: Edible
     trash:
     - TrashCherryPit
-  - type: Butcherable
-    butcheringType: Knife
-    spawned:
-    - id: TrashCherryPit
   - type: SolutionContainerManager
     solutions:
       food:

@@ -96,6 +96,11 @@
   Commands:
   - listplayers
 
+- Flags: FUN
+  Commands:
+  - tippy
+  - tip
+
 - Flags: SERVER
   Commands:
   - delete

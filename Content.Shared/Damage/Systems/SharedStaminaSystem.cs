@@ -99,9 +99,6 @@ public abstract partial class SharedStaminaSystem : EntitySystem
 
     private void OnStartup(Entity<StaminaComponent> entity, ref ComponentStartup args)
     {
-        // Set the base threshold here since ModifiedCritThreshold can't be modified via yaml.
-        entity.Comp.CritThreshold = entity.Comp.BaseCritThreshold;
-
         UpdateStaminaVisuals(entity);
     }
 
@@ -445,7 +442,7 @@ public abstract partial class SharedStaminaSystem : EntitySystem
         {
             var key = thres.Key.Float();
 
-            if ((ent.Comp.StaminaDamage / ent.Comp.CritThreshold) >= key && key > closest && closest < 1f)
+            if (ent.Comp.StaminaDamage >= key && key > closest && closest < ent.Comp.CritThreshold)
                 closest = thres.Key;
         }
 

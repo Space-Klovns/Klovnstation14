@@ -34,23 +34,12 @@ Uncomment and modify the following line if you wish to change the auto-added lic
 <!-- Explain why this was changed. -->
 
 ## Media
-<<<<<<< HEAD
 <!-- Attach media if the PR makes ingame changes (clothing, items, features, etc). -->
 
 ## Requirements
 <!-- Confirm the following by placing an X in the brackets [X]: -->
 - [ ] Tested, works.
 - [ ] I have added media to this PR or it does not require an ingame showcase.
-=======
-<!-- Attach media if the PR makes in-game changes (clothing, items, features, etc).
-Small fixes/refactors are exempt. Media may be used in SS14 progress reports with credit. -->
-
-## Requirements
-<!-- Confirm the following by placing an X in the brackets [X]: -->
-- [ ] I have read and am following the [Pull Request and Changelog Guidelines](https://docs.spacestation14.com/en/general-development/codebase-info/pull-request-guidelines.html).
-- [ ] I have added media to this PR or it does not require an in-game showcase.
-<!-- You should understand that not following the above may get your PR closed at maintainer’s discretion -->
->>>>>>> upstream/master
 
 ## Breaking changes
 <!-- List any breaking changes, including namespaces, public class/method/field changes, prototype renames; and provide instructions for fixing them. -->

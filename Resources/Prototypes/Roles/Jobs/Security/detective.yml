@@ -33,11 +33,7 @@
   requirements:
   - !type:RoleTimeRequirement
     role: JobSecurityOfficer
-<<<<<<< HEAD
     time: 3600 #1 hrs, klovn
-=======
-    time: 5h
->>>>>>> upstream/master
   startingGear: DetectiveGear
   icon: "JobIconDetective"
   supervisors: job-supervisors-hos
@@ -46,6 +42,7 @@
   - Security
   - Brig
   - Maintenance
+  - Service
   - Detective
   - Cryogenics
   - External

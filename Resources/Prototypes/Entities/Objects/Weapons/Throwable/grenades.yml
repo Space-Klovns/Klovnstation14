@@ -188,8 +188,6 @@
     totalIntensity: 400
     intensitySlope: 30
     maxIntensity: 125
-    deleteAfterExplosion: false
-    repeatable: true
     canCreateVacuum: true
   - type: TimerTrigger
     delay: 4.5
@@ -635,4 +633,4 @@
       params:
         volume: 12
   - type: StaticPrice
-    price: 50
+    price: 1000

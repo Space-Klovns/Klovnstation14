@@ -1,27 +1,3 @@
-// SPDX-FileCopyrightText: 2021 Visne
-// SPDX-FileCopyrightText: 2022 Flipp Syder
-// SPDX-FileCopyrightText: 2022 Leon Friedrich
-// SPDX-FileCopyrightText: 2022 Paul Ritter
-// SPDX-FileCopyrightText: 2022 mirrorcult
-// SPDX-FileCopyrightText: 2022 wrexbe
-// SPDX-FileCopyrightText: 2023 DrSmugleaf
-// SPDX-FileCopyrightText: 2023 Moony
-// SPDX-FileCopyrightText: 2023 TemporalOroboros
-// SPDX-FileCopyrightText: 2023 metalgearsloth
-// SPDX-FileCopyrightText: 2023 moonheart08
-// SPDX-FileCopyrightText: 2024 SlamBamActionman
-// SPDX-FileCopyrightText: 2024 beck-thompson
-// SPDX-FileCopyrightText: 2024 c4llv07e
-// SPDX-FileCopyrightText: 2025 Alfred Baumann
-// SPDX-FileCopyrightText: 2025 PJB3005
-// SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
-// SPDX-FileCopyrightText: 2025 Vasilis The Pikachu
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
-// SPDX-FileCopyrightText: 2025 qwerltaz
-// SPDX-FileCopyrightText: 2025 āda
-//
-// SPDX-License-Identifier: MIT
-
 using System.Linq;
 using Content.Shared.Access;
 using Content.Shared.Access.Systems;
@@ -103,18 +79,6 @@ namespace Content.Client.Access.UI
                 JobPresetOptionButton.AddItem(Loc.GetString(job.Name), _jobPrototypeIds.Count - 1);
             }
 
-            SelectAllButton.OnPressed += _ =>
-            {
-                SetAllAccess(true);
-                SubmitData();
-            };
-
-            DeselectAllButton.OnPressed += _ =>
-            {
-                SetAllAccess(false);
-                SubmitData();
-            };
-
             JobPresetOptionButton.OnItemSelected += SelectJobPreset;
             _accessButtons.Populate(accessLevels, prototypeManager);
             AccessLevelControlContainer.AddChild(_accessButtons);
@@ -125,13 +89,14 @@ namespace Content.Client.Access.UI
             }
         }
 
-        /// <param name="enabled">If true, every individual access button will be pressed. If false, each will be depressed.</param>
-        private void SetAllAccess(bool enabled)
+        private void ClearAllAccess()
         {
             foreach (var button in _accessButtons.ButtonsList.Values)
             {
-                if (!button.Disabled && button.Pressed != enabled)
-                    button.Pressed = enabled;
+                if (button.Pressed)
+                {
+                    button.Pressed = false;
+                }
             }
         }
 
@@ -145,7 +110,7 @@ namespace Content.Client.Access.UI
             JobTitleLineEdit.Text = Loc.GetString(job.Name);
             args.Button.SelectId(args.Id);
 
-            SetAllAccess(false);
+            ClearAllAccess();
 
             // this is a sussy way to do this
             foreach (var access in job.Access)

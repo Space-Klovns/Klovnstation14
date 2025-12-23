@@ -49,17 +49,10 @@
   requirements:
   - !type:RoleTimeRequirement
     role: JobScientist
-<<<<<<< HEAD
     time: 7200 #2 hrs, klovn
 #  - !type:DepartmentTimeRequirement, klovn, redundant
 #    department: Science
 #    time: 36000 #10 hrs
-=======
-    time: 5h
-  - !type:DepartmentTimeRequirement
-    department: Science
-    time: 10h
->>>>>>> upstream/master
   weight: 10
   startingGear: ResearchDirectorGear
   icon: "JobIconResearchDirector"

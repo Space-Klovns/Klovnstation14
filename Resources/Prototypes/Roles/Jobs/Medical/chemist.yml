@@ -28,11 +28,7 @@
   requirements:
     - !type:DepartmentTimeRequirement
       department: Medical
-<<<<<<< HEAD
       time: 7200 #2 hrs, klovn
-=======
-      time: 5h
->>>>>>> upstream/master
   startingGear: ChemistGear
   icon: "JobIconChemist"
   supervisors: job-supervisors-cmo

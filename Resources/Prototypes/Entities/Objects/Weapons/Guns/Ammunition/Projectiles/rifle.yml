@@ -20,10 +20,10 @@
 # SPDX-License-Identifier: MIT
 
 - type: entity
-  parent: BaseBullet
   id: BulletRifle
-  categories: [ HideSpawnMenu ]
   name: bullet (.20 rifle)
+  parent: BaseBullet
+  categories: [ HideSpawnMenu ]
   components:
   - type: Projectile
     damage:
@@ -31,10 +31,10 @@
         Piercing: 27
 
 - type: entity
-  parent: BaseBulletPractice
   id: BulletRiflePractice
-  categories: [ HideSpawnMenu ]
   name: bullet (.20 rifle practice)
+  parent: BaseBulletPractice
+  categories: [ HideSpawnMenu ]
   components:
   - type: Projectile
     damage:
@@ -42,27 +42,22 @@
         Blunt: 2
 
 - type: entity
-  parent: BaseBulletIncendiary
   id: BulletRifleIncendiary
-  categories: [ HideSpawnMenu ]
+  parent: BaseBulletIncendiary
   name: bullet (.20 rifle incendiary)
+  categories: [ HideSpawnMenu ]
   components:
   - type: Projectile
     damage:
       types:
-<<<<<<< HEAD
         Blunt: 10
         Heat: 20
-=======
-        Piercing: 12
-        Heat: 5
->>>>>>> upstream/master
 
 - type: entity
-  parent: BaseBulletUranium
   id: BulletRifleUranium
-  categories: [ HideSpawnMenu ]
+  parent: BaseBulletUranium
   name: bullet (.20 rifle uranium)
+  categories: [ HideSpawnMenu ]
   components:
   - type: Projectile
     damage:

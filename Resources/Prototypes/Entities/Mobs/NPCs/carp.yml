@@ -87,7 +87,7 @@
       baseWalkSpeed: 2.5
       baseSprintSpeed: 3.5
     - type: Stamina
-      baseCritThreshold: 100
+      critThreshold: 100
     - type: DamageStateVisuals
       states:
         Alive:
@@ -190,7 +190,7 @@
   components:
   - type: PointLight
     radius: 1.5
-    energy: 2
+    energy: 0.5
   - type: RgbLightController
     layers: [ 0 ]
 
@@ -220,11 +220,7 @@
     - type: HTN
       rootTask:
         task: DragonCarpCompound
-    - type: Flammable
-      damage:
-       types: {}
-    - type: Temperature
-      heatDamageThreshold: 1200
+
 - type: entity
   id: MobCarpDungeon
   parent: MobCarp
@@ -272,7 +268,7 @@
         0: Alive
         150: Dead
     - type: Stamina
-      baseCritThreshold: 150
+      critThreshold: 150
     - type: DamageStateVisuals
       states:
         Alive:

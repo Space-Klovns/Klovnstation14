@@ -1,8 +1,5 @@
-using Robust.Shared.Audio.Systems;
-using Robust.Shared.Serialization;
-using System.Diagnostics.CodeAnalysis;
 using Content.Shared.Chemistry.EntitySystems;
-using Content.Shared.Damage.Components;
+using Content.Shared.Damage;
 using Content.Shared.DoAfter;
 using Content.Shared.Emag.Components;
 using Content.Shared.Emag.Systems;
@@ -11,6 +8,9 @@ using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
 using Content.Shared.NPC.Components;
 using Content.Shared.Popups;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Serialization;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Content.Shared.Silicons.Bots;
 

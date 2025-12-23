@@ -211,6 +211,8 @@
         orGroup: Magics
       - id: WeaponWandPolymorphBread
         orGroup: Magics
+      - id: WeaponStaffHealing
+        orGroup: Magics
       - id: WeaponStaffPolymorphDoor
         orGroup: Magics
       - id: AnimationStaff

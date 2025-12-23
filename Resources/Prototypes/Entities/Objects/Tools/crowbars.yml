@@ -6,11 +6,10 @@
 # SPDX-License-Identifier: MIT
 
 - type: entity
-  abstract: true
+  name: crowbar
   parent: BaseItem
   id: BaseCrowbar
-  name: crowbar
-  description: A multipurpose tool used for many tasks, such as prying doors or bludgeoning interdimensional invaders.
+  abstract: true
   components:
   - type: EmitSoundOnLand
     sound:
@@ -54,6 +53,7 @@
 - type: entity
   parent: BaseCrowbar
   id: Crowbar
+  description: A multipurpose tool to pry open doors and fight interdimensional invaders.
   components:
   - type: Sprite
     state: icon
@@ -64,8 +64,10 @@
 
 # Emergency (red) Crowbar
 - type: entity
+  name: emergency crowbar
   parent: BaseCrowbar
   id: CrowbarRed
+  description: An emergency crowbar designed to pry open doors and firelocks during power outages.
   components:
   - type: Tag
     tags:
@@ -100,6 +102,7 @@
 - type: entity
   parent: BaseCrowbar
   id: CrowbarGreen
+  description: A multipurpose tool to pry open doors and fight interdimensional invaders, printed from an autolathe.
   components:
   - type: Sprite
     layers:
@@ -130,6 +133,7 @@
 - type: entity
   parent: BaseCrowbar
   id: CrowbarOrange
+  description: A multipurpose tool to pry open doors and fight interdimensional invaders, found in toolboxes.
   components:
   - type: Sprite
     layers:
@@ -160,6 +164,7 @@
 - type: entity
   parent: BaseCrowbar
   id: CrowbarYellow
+  description: A multipurpose tool to pry open doors and fight interdimensional invaders, dispensed from Engineering.
   components:
   - type: Sprite
     layers:

@@ -20,7 +20,6 @@ using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Utility;
 
@@ -43,8 +42,6 @@ public abstract partial class SharedMindSystem : EntitySystem
     protected readonly Dictionary<NetUserId, EntityUid> UserMinds = new();
 
     private HashSet<Entity<MindComponent>> _pickingMinds = new();
-
-    private readonly EntProtoId _mindProto = "MindBase";
 
     public override void Initialize()
     {
@@ -229,7 +226,7 @@ public abstract partial class SharedMindSystem : EntitySystem
 
     public Entity<MindComponent> CreateMind(NetUserId? userId, string? name = null)
     {
-        var mindId = Spawn(_mindProto, MapCoordinates.Nullspace);
+        var mindId = Spawn(null, MapCoordinates.Nullspace);
         _metadata.SetEntityName(mindId, name == null ? "mind" : $"mind ({name})");
         var mind = EnsureComp<MindComponent>(mindId);
         mind.CharacterName = name;

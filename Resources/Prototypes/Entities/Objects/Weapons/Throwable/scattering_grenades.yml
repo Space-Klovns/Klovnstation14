@@ -57,7 +57,7 @@
 - type: entity
   parent: ClusterBang
   id: ClusterBangFull
-  name: clusterbang
+  name: ClusterBang
   description: Launches three flashbangs after the timer runs out.
   suffix: Full
   components:

@@ -28,12 +28,7 @@
 
         - !type:HTNPrimitiveTask
           operator: !type:SpeakOperator
-<<<<<<< HEAD
             speech: firebot-fire-detected
-=======
-            speech: !type:SingleSpeakOperatorSpeech
-              line: firebot-fire-detected
->>>>>>> upstream/master
             hidden: true
 
         - !type:HTNPrimitiveTask

@@ -1,6 +1,5 @@
 using Content.Server.Atmos.Components;
 using Content.Shared.Atmos;
-using Content.Shared.Atmos.Components;
 using Content.Shared.Damage;
 using Robust.Shared.Random;
 using Robust.Shared.Threading;
@@ -40,34 +39,17 @@ public sealed partial class AtmosphereSystem
          so simple vector operations like min/max/abs can be performed on them.
          */
 
-        var airtightComp = _airtightQuery.Comp(ent);
-        var currentPos = airtightComp.LastPosition.Tile;
         var tiles = new TileAtmosphere?[Atmospherics.Directions];
         for (var i = 0; i < Atmospherics.Directions; i++)
         {
             var direction = (AtmosDirection)(1 << i);
-            var offset = currentPos.Offset(direction);
+            var offset = ent.Comp.CurrentPosition.Offset(direction);
             tiles[i] = gridAtmosComp.Tiles.GetValueOrDefault(offset);
         }
 
         Span<float> pressures = stackalloc float[Atmospherics.Directions];
 
         GetBulkTileAtmospherePressures(tiles, pressures);
-
-        // This entity could be airtight but still be able to contain air on the tile it's on (ex. directional windows).
-        // As such, substitute the pressure of the pressure on top of the entity for the directions that it can accept air from.
-        // (Or rather, don't do so for directions that it blocks air from.)
-        if (!airtightComp.NoAirWhenFullyAirBlocked)
-        {
-            for (var i = 0; i < Atmospherics.Directions; i++)
-            {
-                var direction = (AtmosDirection)(1 << i);
-                if (!airtightComp.AirBlockedDirection.HasFlag(direction))
-                {
-                    pressures[i] = gridAtmosComp.Tiles.GetValueOrDefault(currentPos)?.Air?.Pressure ?? 0f;
-                }
-            }
-        }
 
         Span<float> opposingGroupA = stackalloc float[DeltaPressurePairCount];
         Span<float> opposingGroupB = stackalloc float[DeltaPressurePairCount];
@@ -176,7 +158,7 @@ public sealed partial class AtmosphereSystem
     /// containing the queue.</param>
     /// <param name="pressure">The current absolute pressure being experienced by the entity.</param>
     /// <param name="delta">The current delta pressure being experienced by the entity.</param>
-    private void EnqueueDeltaPressureDamage(Entity<DeltaPressureComponent> ent,
+    private static void EnqueueDeltaPressureDamage(Entity<DeltaPressureComponent> ent,
         GridAtmosphereComponent gridAtmosComp,
         float pressure,
         float delta)
@@ -185,7 +167,7 @@ public sealed partial class AtmosphereSystem
         var aboveMinDeltaPressure = delta > ent.Comp.MinPressureDelta;
         if (!aboveMinPressure && !aboveMinDeltaPressure)
         {
-            SetIsTakingDamageState(ent, false);
+            ent.Comp.IsTakingDamage = false;
             return;
         }
 
@@ -251,21 +233,8 @@ public sealed partial class AtmosphereSystem
         var maxPressureCapped = Math.Min(maxPressure, ent.Comp.MaxEffectivePressure);
         var appliedDamage = ScaleDamage(ent, ent.Comp.BaseDamage, maxPressureCapped);
 
-        _damage.ChangeDamage(ent.Owner, appliedDamage, ignoreResistances: true, interruptsDoAfters: false);
-        SetIsTakingDamageState(ent, true);
-    }
-
-    /// <summary>
-    /// Helper function to prevent spamming clients with dirty events when the damage state hasn't changed.
-    /// </summary>
-    /// <param name="ent">The entity to check.</param>
-    /// <param name="toSet">The value to set.</param>
-    private void SetIsTakingDamageState(Entity<DeltaPressureComponent> ent, bool toSet)
-    {
-        if (ent.Comp.IsTakingDamage == toSet)
-            return;
-        ent.Comp.IsTakingDamage = toSet;
-        Dirty(ent);
+        _damage.TryChangeDamage(ent, appliedDamage, ignoreResistances: true, interruptsDoAfters: false);
+        ent.Comp.IsTakingDamage = true;
     }
 
     /// <summary>

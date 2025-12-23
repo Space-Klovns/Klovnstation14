@@ -26,6 +26,7 @@
 - type: gameMapPool
   id: DefaultMapPool
   maps:
+  - Amber
   - Bagel
   - Box
   - Elkridge
@@ -36,8 +37,4 @@
   - Plasma
   - Reach
   - Exo
-<<<<<<< HEAD
   - Saltern # KS14: bring saltern back
-=======
-  - Snowball
->>>>>>> upstream/master

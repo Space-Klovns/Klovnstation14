@@ -50,17 +50,10 @@
   requirements:
     - !type:RoleTimeRequirement
       role: JobSecurityOfficer
-<<<<<<< HEAD
       time: 7200 #2 hrs
     - !type:DepartmentTimeRequirement
       department: Security
       time: 10800 #3 hrs
-=======
-      time: 5h
-    - !type:DepartmentTimeRequirement
-      department: Security
-      time: 10h
->>>>>>> upstream/master
   weight: 5
   startingGear: WardenGear
   icon: "JobIconWarden"
@@ -71,11 +64,10 @@
   - Brig
   - Armory
   - Maintenance
+  - Service
   - External
   - Detective
   - Cryogenics
-  - GenpopEnter
-  - GenpopLeave
   special:
   - !type:AddImplantSpecial
     implants: [ MindShieldImplant ]

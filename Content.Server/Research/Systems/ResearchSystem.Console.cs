@@ -32,48 +32,12 @@ public sealed partial class ResearchSystem
     private void InitializeConsole()
     {
         SubscribeLocalEvent<ResearchConsoleComponent, ConsoleUnlockTechnologyMessage>(OnConsoleUnlock);
-        SubscribeLocalEvent<ResearchConsoleComponent, ConsoleRediscoverTechnologyMessage>(OnRediscoverTechnology);
         SubscribeLocalEvent<ResearchConsoleComponent, BeforeActivatableUIOpenEvent>(OnConsoleBeforeUiOpened);
         SubscribeLocalEvent<ResearchConsoleComponent, ResearchServerPointsChangedEvent>(OnPointsChanged);
         SubscribeLocalEvent<ResearchConsoleComponent, ResearchRegistrationChangedEvent>(OnConsoleRegistrationChanged);
         SubscribeLocalEvent<ResearchConsoleComponent, TechnologyDatabaseModifiedEvent>(OnConsoleDatabaseModified);
         SubscribeLocalEvent<ResearchConsoleComponent, TechnologyDatabaseSynchronizedEvent>(OnConsoleDatabaseSynchronized);
         SubscribeLocalEvent<ResearchConsoleComponent, GotEmaggedEvent>(OnEmagged);
-    }
-
-    private void OnRediscoverTechnology(
-        EntityUid uid,
-        ResearchConsoleComponent console,
-        ConsoleRediscoverTechnologyMessage args
-    )
-    {
-        var act = args.Actor;
-
-        if (!this.IsPowered(uid, EntityManager))
-            return;
-
-        if (!HasAccess(uid, act))
-        {
-            _popup.PopupEntity(Loc.GetString("research-console-no-access-popup"), act);
-            return;
-        }
-
-        if (!TryGetClientServer(uid, out var serverEnt, out var serverComponent))
-            return;
-
-        if(serverComponent.NextRediscover > _timing.CurTime)
-            return;
-
-        var rediscoverCost = serverComponent.RediscoverCost;
-        if (rediscoverCost > serverComponent.Points)
-            return;
-
-        serverComponent.NextRediscover = _timing.CurTime + serverComponent.RediscoverInterval;
-
-        ModifyServerPoints(serverEnt.Value, -rediscoverCost);
-        UpdateTechnologyCards(serverEnt.Value);
-        SyncClientWithServer(uid);
-        UpdateConsoleInterface(uid);
     }
 
     private void OnConsoleUnlock(EntityUid uid, ResearchConsoleComponent component, ConsoleUnlockTechnologyMessage args)
@@ -86,7 +50,7 @@ public sealed partial class ResearchSystem
         if (!PrototypeManager.TryIndex<TechnologyPrototype>(args.Id, out var technologyPrototype))
             return;
 
-        if (!HasAccess(uid, act))
+        if (TryComp<AccessReaderComponent>(uid, out var access) && !_accessReader.IsAllowed(act, uid, access))
         {
             _popup.PopupEntity(Loc.GetString("research-console-no-access-popup"), act);
             return;
@@ -162,7 +126,6 @@ public sealed partial class ResearchSystem
         if (!Resolve(uid, ref component, ref clientComponent, false))
             return;
 
-<<<<<<< HEAD
         // Goobstation: R&D Console Rework Start
         var allTechs = PrototypeManager.EnumeratePrototypes<TechnologyPrototype>();
         Dictionary<string, ResearchAvailability> techList;
@@ -193,19 +156,7 @@ public sealed partial class ResearchSystem
         else
         {
             techList = allTechs.ToDictionary(proto => proto.ID, _ => ResearchAvailability.Unavailable);
-=======
-        
-        var points = 0;
-        var nextRediscover = TimeSpan.MaxValue;
-        var rediscoverCost = 0;
-        if (TryGetClientServer(uid, out _, out var serverComponent, clientComponent) && clientComponent.ConnectedToServer)
-        {
-            points = serverComponent.Points;
-            nextRediscover = serverComponent.NextRediscover;
-            rediscoverCost = serverComponent.RediscoverCost;
->>>>>>> upstream/master
         }
-        var state = new ResearchConsoleBoundInterfaceState(points, nextRediscover, rediscoverCost);
 
         _uiSystem.SetUiState(uid, ResearchConsoleUiKey.Key,
             new ResearchConsoleBoundInterfaceState(points, techList));
@@ -247,7 +198,6 @@ public sealed partial class ResearchSystem
         args.Handled = true;
     }
 
-<<<<<<< HEAD
     private bool UnlockTechnology(EntityUid uid, string techId, EntityUid actor)
     {
         if (!TryComp<ResearchClientComponent>(uid, out var clientComp) || clientComp.Server is not { } serverUid)
@@ -271,10 +221,5 @@ public sealed partial class ResearchSystem
         Dirty(serverUid, serverComp);
 
         return true;
-=======
-    private bool HasAccess(EntityUid uid, EntityUid act)
-    {
-        return TryComp<AccessReaderComponent>(uid, out var access) && _accessReader.IsAllowed(act, uid, access);
->>>>>>> upstream/master
     }
 }

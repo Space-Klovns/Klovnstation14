@@ -9,7 +9,6 @@
   - Revolutionary
   - AllHostile
   - Wizard
-  - Xenoborg
 
 - type: npcFaction
   id: NanoTrasen
@@ -36,14 +35,13 @@
 
 - type: npcFaction
   id: PetsNT
-  friendly:
-  - NanoTrasen
   hostile:
   - Mouse
   - SimpleHostile
   - Zombie
   - Xeno
   - AllHostile
+  - Wizard
   - Dragon
 
 - type: npcFaction
@@ -164,5 +162,5 @@
   - Xeno # rivalry
 
   # cause they are hostile to them
-  - SimpleHostile
+  - SimpleHostile 
   - AllHostile

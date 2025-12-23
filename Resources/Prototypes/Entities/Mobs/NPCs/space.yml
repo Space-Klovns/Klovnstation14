@@ -77,13 +77,11 @@
       0: Alive
       100: Dead
   - type: Stamina
-    baseCritThreshold: 150
+    critThreshold: 150
   - type: MovementAlwaysTouching
   - type: Bloodstream
-    bloodReferenceSolution:
-      reagents:
-      - ReagentId: Cryoxadone
-        Quantity: 300
+    bloodMaxVolume: 300
+    bloodReagent: Cryoxadone
   - type: CombatMode
   - type: Temperature
     heatDamageThreshold: 500
@@ -198,7 +196,7 @@
       Dead:
         Base: kangaroo-space-dead
   - type: Stamina
-    baseCritThreshold: 180
+    critThreshold: 180
   - type: Inventory
     speciesId: kangaroo
     templateId: spacekangaroo
@@ -239,7 +237,7 @@
       0: Alive
       90: Dead
   - type: Stamina
-    baseCritThreshold: 150
+    critThreshold: 150
   - type: DamageStateVisuals
     states:
       Alive:
@@ -255,10 +253,8 @@
       amount: 1
       prob: 0.5
   - type: Bloodstream
-    bloodReferenceSolution:
-      reagents:
-      - ReagentId: Cryoxadone
-        Quantity: 250
+    bloodMaxVolume: 250
+    bloodReagent: Cryoxadone
   - type: Fixtures
     fixtures:
       fix1:
@@ -342,7 +338,7 @@
         0: Alive
         100: Dead
     - type: Stamina
-      baseCritThreshold: 150
+      critThreshold: 150
     - type: DamageStateVisuals
       states:
         Alive:
@@ -360,10 +356,8 @@
           amount: 1
           prob: 0.3
     - type: Bloodstream
-      bloodReferenceSolution:
-        reagents:
-        - ReagentId: Cryoxadone
-          Quantity: 200
+      bloodMaxVolume: 200
+      bloodReagent: Cryoxadone
     - type: Fixtures
       fixtures:
         fix1:
@@ -402,7 +396,7 @@
       interactFailureString: petting-failure-generic
     - type: PointLight
       radius: 1.1
-      energy: 2.7
+      energy: 1.5
       color: "#4faffb"
     - type: Stealth
       enabledOnDeath: false
@@ -497,7 +491,7 @@
         Base: dead
       Dead:
         Base: dead
-  - type: Edible
+  - type: Food
   - type: Thirst
     startingThirst: 25  # spawn with Okay thirst state
     thresholds:
@@ -536,10 +530,8 @@
   - type: CombatMode
     combatToggleAction: ActionCombatModeToggleOff
   - type: Bloodstream
-    bloodReferenceSolution:
-      reagents:
-      - ReagentId: Cryoxadone
-        Quantity: 30
+    bloodMaxVolume: 30
+    bloodReagent: Cryoxadone
   - type: CanEscapeInventory
   - type: MobPrice
     price: 50
@@ -557,6 +549,7 @@
       methods: [Touch, Ingestion, Injection]
       effects:
       - !type:HealthChange
+        scaleByQuantity: true
         damage:
           types:
             Caustic: 1

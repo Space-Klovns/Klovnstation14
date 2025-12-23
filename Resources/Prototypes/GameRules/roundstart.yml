@@ -24,34 +24,10 @@
       prob: 0.5
     - id: SubWizard
       prob: 0.05
-    - id: Xenoborgs
-      prob: 0.05
 
 - type: entity
   parent: BaseGameRule
   id: SubGamemodesRuleNoWizard
-  components:
-  - type: SubGamemodes
-    rules:
-    - id: Thief
-      prob: 0.5
-    - id: Xenoborgs
-      prob: 0.05
-
-- type: entity
-  parent: BaseGameRule
-  id: SubGamemodesRuleNoXenoborg
-  components:
-  - type: SubGamemodes
-    rules:
-    - id: Thief
-      prob: 0.5
-    - id: SubWizard
-      prob: 0.05
-
-- type: entity
-  parent: BaseGameRule
-  id: SubGamemodesRuleNoWizardNoXenoborg
   components:
   - type: SubGamemodes
     rules:
@@ -276,21 +252,7 @@
       - type: ChangelingTransform
       - type: ActionGrant
         actions:
-        - ActionChangelingStore
-      # TODO: Make it so the changeling gamerule changeling can inherit from the changeling store preset somehow
-      - type: Store
-        name: store-preset-name-changeling
-        categories:
-        - ChangelingAbilities
-        currencyWhitelist:
-        - ChangelingDNA
-        balance:
-          ChangelingDNA: 50
-      - type: UserInterface
-        interfaces:
-          enum.StoreUiKey.Key:
-            type: StoreBoundUserInterface
-            requireInputValidation: false
+        - ActionRetractableItemArmBlade # Temporary addition, will inevitably be a purchasable in the bio-store
       mindRoles:
       - MindRoleChangeling
   - type: AntagObjectives
@@ -542,7 +504,6 @@
     - id: BasicTrashVariationPass
     - id: SolidWallRustingVariationPass
     - id: ReinforcedWallRustingVariationPass
-    - id: CutWireVariationPass
     - id: BasicPuddleMessVariationPass
       prob: 0.99
       orGroup: puddleMess
@@ -555,7 +516,7 @@
     - id: SolarPanelEmptyVariationPass
     - id: BasicDecalDirtVariationPass
     - id: BasicDecalGraffitiVariationPass
-    - id: BasicDecalBurnsVariationPass
+    - id: BasicDecalBrunsVariationPass
       prob: 0.50
       orGroup: monospaceDecals
     - id: BasicDecalDirtMonospaceVariationPass

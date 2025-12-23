@@ -33,14 +33,10 @@
   playTimeTracker: JobSecurityCadet
   requirements:
     - !type:OverallPlaytimeRequirement
-<<<<<<< HEAD
       time: 7200 #2 hrs, klovn
-=======
-      time: 10h
->>>>>>> upstream/master
     - !type:DepartmentTimeRequirement
       department: Security
-      time: 5h
+      time: 18000 #5 hrs
       inverted: true # stop playing intern if you're good at security!
   startingGear: SecurityCadetGear
   icon: "JobIconSecurityCadet"
@@ -50,6 +46,7 @@
   - Security
   - Brig
   - Maintenance
+  - Service
   - External
   - Cryogenics
   special:

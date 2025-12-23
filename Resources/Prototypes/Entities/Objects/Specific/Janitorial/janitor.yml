@@ -122,7 +122,7 @@
   - type: DnaSubstanceTrace
 
 - type: entity
-  parent: MopItem
+  parent: BaseItem
   name: advanced mop
   id: AdvMopItem
   description: Motorized mop that has a bigger reservoir and quickly replaces reagents inside with water. Automatic Clown Countermeasure not included.
@@ -134,9 +134,9 @@
       - map: ["enum.SolutionContainerLayers.Fill"]
         state: fill-2
         visible: false
+    - type: Appearance
     - type: SolutionContainerVisuals
       maxFillLevels: 2
-<<<<<<< HEAD
       fillBaseName: fill-
       inHandsFillBaseName: -fill-
       inHandsMaxFillLevels: 2
@@ -157,12 +157,14 @@
       damage:
         types:
           Blunt: 8
-=======
->>>>>>> upstream/master
     - type: Item
+      size: Large
       sprite: Objects/Specific/Janitorial/advmop.rsi
     - type: Absorbent
       pickupAmount: 100
+      useAbsorberSolution: true
+    - type: UseDelay
+      delay: 1.0
     - type: SolutionRegeneration
       solution: absorbed
       generated:
@@ -174,10 +176,15 @@
       preserve:
       - Water
       quantity: 10
+    - type: SolutionContainerManager
+      solutions:
+        absorbed:
+          maxVol: 100
     - type: Tag
       tags:
         - Mop
         - MopAdv
+    - type: DnaSubstanceTrace
 
 - type: entity
   name: wet floor sign
@@ -335,11 +342,9 @@
   parent: Plunger
   description: A plunger with a plastic suction cup coated in a thin layer of gold given as a token of appreciation for years of service. Still used to unclog drains.
   components:
-  - type: Tag # TODO change Plunger into a tool so we dont got to layer Tags like below.
+  - type: Tag
     tags:
     - GoldenPlunger
-    - Plunger
-    - WhitelistChameleon
   - type: Sprite
     sprite: Objects/Specific/Janitorial/golden_plunger.rsi
     state: plunger
@@ -368,7 +373,7 @@
   id: PlungerLoot
   weights:
     RandomSpawner100: 56
-    SpacemenFigurineSpawner90: 28
+    SpacemenFigureSpawner: 28
     SpawnMobCockroach: 5
     MaintenanceToolSpawner: 5
     SpawnMobMoproach: 2
@@ -419,6 +424,7 @@
     - type: Tag
       tags:
         - Mop
+    - type: CleansForensics
     - type: Fiber
       fiberColor: fibers-white
     - type: DnaSubstanceTrace

@@ -387,26 +387,26 @@
   - type: Sprite
     layers:
     - state: icon
-      color: "#639137"
+      color: "#79CC26"
   - type: Item
     inhandVisuals:
       left:
       - state: inhand-left
-        color: "#639137"
+        color: "#79CC26"
       right:
       - state: inhand-right
-        color: "#639137"
+        color: "#79CC26"
   - type: Clothing
     clothingVisuals:
       head:
       - state: equipped-HELMET
-        color: "#639137"
+        color: "#79CC26"
       jumpsuit:
       - state: equipped-INNERCLOTHING
-        color: "#639137"
+        color: "#79CC26"
       belt:
       - state: equipped-BELT
-        color: "#639137"
+        color: "#79CC26"
   - type: Fiber
     fiberColor: fibers-green
 
