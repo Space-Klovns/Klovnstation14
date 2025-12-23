@@ -1,5 +1,5 @@
 - type: reaction
-  id: Citadelium
+  id: Klovnide
   minTemp: 351.15 # boiling point of ethanol, to imply that space salt is somewhat organic
   reactants:
     SpaceSalt:
@@ -11,15 +11,15 @@
     Copper:
       amount: 1
   products:
-    Citadelium: 4
+    Klovnide: 4
 
-- type: reaction # since plasma is essentially tritiated ethanol, it would react EVIL with citadelium (what did i mean by this?)
-  id: CitadeliumExplosion
+- type: reaction # since plasma is essentially tritiated ethanol, it would react EVIL with klovnide (what did i mean by this?)
+  id: KlovnideExplosion
   impact: High
   priority: 25
   conserveEnergy: false
   reactants:
-    Citadelium:
+    Klovnide:
       amount: 1
     Plasma:
       amount: 1

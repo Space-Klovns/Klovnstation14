@@ -12,9 +12,9 @@
       - !type:SatiateHunger
 
 - type: reagent
-  id: Citadelium
-  name: reagent-name-citadelium
-  desc: reagent-desc-citadelium
+  id: Klovnide
+  name: reagent-name-klovnide
+  desc: reagent-desc-klovnide
   group: Biological
   flavor: chalky
   physicalDesc: reagent-physical-desc-bubbling
