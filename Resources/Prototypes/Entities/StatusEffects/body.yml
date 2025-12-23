@@ -1,4 +1,9 @@
-﻿# TODO LCDC: destroy this abstract when we upstream marge
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Princess Cheeseballs
+#
+# SPDX-License-Identifier: MIT
+
+# TODO LCDC: destroy this abstract when we upstream marge
 - type: entity
   parent: MobStatusEffectBase
   id: BloodstreamStatusEffectBase
