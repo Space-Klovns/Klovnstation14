@@ -1,3 +1,37 @@
+# SPDX-FileCopyrightText: 2022 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2023 Arendian
+# SPDX-FileCopyrightText: 2023 DrSmugleaf
+# SPDX-FileCopyrightText: 2023 Emisse
+# SPDX-FileCopyrightText: 2023 Leon Friedrich
+# SPDX-FileCopyrightText: 2023 Morb
+# SPDX-FileCopyrightText: 2023 Slava0135
+# SPDX-FileCopyrightText: 2023 Vordenburg
+# SPDX-FileCopyrightText: 2023 Whisper
+# SPDX-FileCopyrightText: 2023 brainfood1183
+# SPDX-FileCopyrightText: 2023 coolmankid12345
+# SPDX-FileCopyrightText: 2023 deltanedas
+# SPDX-FileCopyrightText: 2023 keronshb
+# SPDX-FileCopyrightText: 2024 Aexxie
+# SPDX-FileCopyrightText: 2024 Ghagliiarghii
+# SPDX-FileCopyrightText: 2024 Ilya246
+# SPDX-FileCopyrightText: 2024 Krunklehorn
+# SPDX-FileCopyrightText: 2024 Nemanja
+# SPDX-FileCopyrightText: 2024 Plykiya
+# SPDX-FileCopyrightText: 2024 Tayrtahn
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2024 plykiya
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 Preston Smith
+# SPDX-FileCopyrightText: 2025 ScarKy0
+# SPDX-FileCopyrightText: 2025 SlamBamActionman
+# SPDX-FileCopyrightText: 2025 UpAndLeaves
+# SPDX-FileCopyrightText: 2025 Zachary Higgs
+# SPDX-FileCopyrightText: 2025 beck-thompson
+# SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2025 slarticodefast
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 - type: entity
   id: BaseSubdermalImplant
   name: implant
@@ -116,10 +150,7 @@
         - Hands # no use giving a mouse a storage implant, but a monkey is another story...
     - type: Storage
       grid:
-      - 0,0,0,1
-      - 1,0,1,0
-      - 1,2,1,2
-      - 2,1,2,2
+      - 0,0,2,2
     - type: ContainerContainer
       containers:
         storagebase: !type:Container

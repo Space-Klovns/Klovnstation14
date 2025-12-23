@@ -1,3 +1,11 @@
+# SPDX-FileCopyrightText: 2024 Mr. 27
+# SPDX-FileCopyrightText: 2024 lzk
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 ivo
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 # Head
 - type: loadout
   id: JesterHat
@@ -8,6 +16,17 @@
   id: JesterAltHat
   equipment:
     head: ClothingHeadHatJesterAlt
+
+# Mask
+- type: loadout
+  id: ClownMask
+  equipment:
+    mask: ClothingMaskClown
+
+- type: loadout #Funky
+  id: ClownMaskJuggle
+  equipment:
+    mask: ClothingMaskClownJuggle
 
 # Jumpsuit
 - type: loadout
@@ -29,6 +48,11 @@
   id: JesterAltSuit
   equipment:
     jumpsuit: ClothingUniformJumpsuitJesterAlt
+
+- type: loadout # Clover
+  id: Juggaloshirt
+  equipment:
+    jumpsuit: ClothingUniformJumpsuitJuggalo
 
 # Back
 - type: loadout

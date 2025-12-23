@@ -17,7 +17,7 @@
 // SPDX-FileCopyrightText: 2025 metalgearsloth
 // SPDX-FileCopyrightText: 2025 nabegator220
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Atmos.Monitor.Components;
@@ -445,11 +445,11 @@ public sealed class AtmosMonitorSystem : EntitySystem
                 if (gas == null || monitor.GasThresholds == null)
                     return;
 
-                logPrefix = ((Gas) gas).ToString();
+                logPrefix = ((Gas)gas).ToString();
                 logValueSuffix = "kPa";
-                monitor.GasThresholds.TryGetValue((Gas) gas, out logPreviousThreshold);
+                monitor.GasThresholds.TryGetValue((Gas)gas, out logPreviousThreshold);
 
-                monitor.GasThresholds[(Gas) gas] = threshold;
+                monitor.GasThresholds[(Gas)gas] = threshold;
                 break;
         }
 

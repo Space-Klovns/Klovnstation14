@@ -1,3 +1,10 @@
+// SPDX-FileCopyrightText: 2022 Nemanja
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2025 Gerkada
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+//
+// SPDX-License-Identifier: MIT
+
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Set;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Dictionary;
@@ -17,8 +24,8 @@ public sealed partial class StorePresetPrototype : IPrototype
     /// <summary>
     /// The name displayed at the top of the store window
     /// </summary>
-    [DataField("storeName", required: true)]
-    public string StoreName { get; private set; } = string.Empty;
+    [DataField("storeName", required: false)]
+    public string StoreName { get; private set; } = "Store"; // Added default value
 
     /// <summary>
     /// The categories that this store can access

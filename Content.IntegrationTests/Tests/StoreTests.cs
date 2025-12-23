@@ -77,7 +77,7 @@ public sealed class StoreTests
             var mind = mindSystem.CreateMind(null);
             mindSystem.TransferTo(mind, human, mind: mind);
 
-            FixedPoint2 originalBalance = 20;
+            var originalBalance = FixedPoint2.New(60); // KS14: TC price multiplied x3
             uplinkSystem.AddUplink(human, originalBalance, null, true);
 
             var storeComponent = entManager.GetComponent<StoreComponent>(pda);
@@ -127,7 +127,7 @@ public sealed class StoreTests
                     Assert.That(plainDiscountedCost.Value, Is.LessThan(prototypeCost.Value), "Expected discounted cost to be lower then prototype cost.");
 
 
-                    var buyMsg = new StoreBuyListingMessage(discountedListingItem.ID){Actor = human};
+                    var buyMsg = new StoreBuyListingMessage(discountedListingItem.ID) { Actor = human };
                     server.EntMan.EventBus.RaiseLocalEvent(pda, buyMsg);
 
                     var newBalance = storeComponent.Balance[UplinkSystem.TelecrystalCurrencyPrototype];

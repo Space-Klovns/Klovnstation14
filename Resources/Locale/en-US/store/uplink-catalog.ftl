@@ -496,3 +496,7 @@ uplink-smuggler-satchel-desc = A handy, suspicious looking satchel. Just flat en
 
 uplink-acolyte-armor-name = Acolyte Armor
 uplink-acolyte-armor-desc = The must have of any self respecting cult leader. An evil looking piece of armor, made of bones, and surprisingly resistant to damage.
+
+#Objective
+uplink-nuke-codes-name = Nuclear Authentication Codes
+uplink-nuke-codes-desc = Contains the codes to the station nuke. Good luck.

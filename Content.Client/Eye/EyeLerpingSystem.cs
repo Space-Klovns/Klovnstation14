@@ -5,11 +5,12 @@
 // SPDX-FileCopyrightText: 2023 metalgearsloth
 // SPDX-FileCopyrightText: 2024 Leon Friedrich
 // SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2025 DeusMaldPr
 // SPDX-FileCopyrightText: 2025 Princess Cheeseballs
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 nabegator220
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using System.Numerics;
 using Content.Shared.Movement.Components;
@@ -137,7 +138,7 @@ public sealed class EyeLerpingSystem : EntitySystem
     private Vector2 UpdateZoom(EntityUid uid, float frameTime, EyeComponent? eye = null, ContentEyeComponent? content = null)
     {
         if (!Resolve(uid, ref content, ref eye, false))
-            return new Vector2(0.7f, 0.7f);
+            return Vector2.One;
 
         var diff = content.TargetZoom - eye.Zoom;
 
@@ -186,7 +187,7 @@ public sealed class EyeLerpingSystem : EntitySystem
 
     public override void FrameUpdate(float frameTime)
     {
-        var tickFraction = (float) _gameTiming.TickFraction / ushort.MaxValue;
+        var tickFraction = (float)_gameTiming.TickFraction / ushort.MaxValue;
         const double lerpMinimum = 0.00001;
         var query = AllEntityQuery<LerpingEyeComponent, EyeComponent, TransformComponent>();
 

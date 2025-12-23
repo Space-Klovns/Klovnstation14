@@ -1,0 +1,43 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+#
+# SPDX-License-Identifier: MPL-2.0
+
+name: Check Design Document
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - ready_for_review
+
+jobs:
+  Label:
+    if: ( github.event.pull_request.draft == false )
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check for design doc
+      env:
+        PR_BODY: ${{ github.event.pull_request.body }}
+      run: |
+        echo "Checking PR body for license..."
+        if grep -qi "design doc" <<< "$PR_BODY"; then
+          echo "Design doc found"
+          echo "DESIGN_DOC=yes" >> $GITHUB_ENV
+        else
+          echo "!!NO DESIGN DOC LOCATED, INITIATING NUCLEAR STRIKE!!"
+          echo "DESIGN_DOC=nah" >> $GITHUB_ENV
+        fi
+
+    - name: Comment on PR
+      if: ${{ env.DESIGN_DOC == 'nah' }}
+      uses: peter-evans/create-or-update-comment@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        issue-number: ${{ github.event.pull_request.number }}
+        body: |
+          Please wait 🛑
+          Before contributing to wizden repository 🤚
+          I do not see your vision 👓
+          Where is your design doc ❓
+          Why does this pr add something that i cant see with a naked eye unless i played the game? 😴

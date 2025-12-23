@@ -10,7 +10,7 @@
 # SPDX-FileCopyrightText: 2025 keronshb
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - files: ["thunderdome.ogg"]
   license: "CC-BY-NC-SA-3.0"

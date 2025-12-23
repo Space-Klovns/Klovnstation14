@@ -26,6 +26,7 @@
 # SPDX-FileCopyrightText: 2024 nikthechampiongr
 # SPDX-FileCopyrightText: 2025 August Sun
 # SPDX-FileCopyrightText: 2025 BramvanZijp
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
 # SPDX-FileCopyrightText: 2025 FrauZj
 # SPDX-FileCopyrightText: 2025 FrauzJ
 # SPDX-FileCopyrightText: 2025 IProduceWidgets
@@ -34,7 +35,7 @@
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - type: entity
   name: BaseWeaponRifle
@@ -134,10 +135,6 @@
     containers:
       gun_magazine: !type:ContainerSlot
       gun_chamber: !type:ContainerSlot
-  - type: CursorOffsetRequiresWield
-  - type: EyeCursorOffset
-    maxOffset: 2
-    pvsIncrease: 0.2
   - type: MagazineVisuals
     magState: mag
     steps: 1
@@ -182,10 +179,6 @@
     containers:
       gun_magazine: !type:ContainerSlot
       gun_chamber: !type:ContainerSlot
-  - type: CursorOffsetRequiresWield
-  - type: EyeCursorOffset
-    maxOffset: 2
-    pvsIncrease: 0.2
   - type: MagazineVisuals
     magState: mag
     steps: 1
@@ -208,6 +201,7 @@
   - type: Clothing
     sprite: Objects/Weapons/Guns/Rifles/lecter.rsi
   - type: Gun
+    fireRate: 3
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/ltrifle.ogg
   - type: ItemSlots
@@ -233,10 +227,6 @@
     containers:
       gun_magazine: !type:ContainerSlot
       gun_chamber: !type:ContainerSlot
-  - type: CursorOffsetRequiresWield
-  - type: EyeCursorOffset
-    maxOffset: 2
-    pvsIncrease: 0.2
   - type: MagazineVisuals
     magState: mag
     steps: 5
@@ -326,8 +316,8 @@
   #   sprintModifier: 0.75
   - type: CursorOffsetRequiresWield
   - type: EyeCursorOffset
-    maxOffset: 3
-    pvsIncrease: 0.3
+    maxOffset: 2
+    pvsIncrease: 0.2
   - type: ContainerContainer
     containers:
       gun_magazine: !type:ContainerSlot

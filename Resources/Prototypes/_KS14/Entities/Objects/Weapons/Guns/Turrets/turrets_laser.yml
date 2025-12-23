@@ -1,0 +1,62 @@
+# SPDX-FileCopyrightText: 2025 Gerkada
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: entity
+  parent: BaseWeaponTurret
+  id: WeaponTurretSyndicateLaserDisposable
+  name: laser turret
+  suffix: Syndicate, Disposable
+  description: A self-charging laser turret. Set it and forget it.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Guns/Turrets/turrets.rsi
+    drawdepth: Mobs
+    layers:
+    - state: laser_lethal
+  - type: HTN
+    rootTask:
+      task: LaserTurretCompound
+  - type: Battery
+    maxCharge: 2000
+    startingCharge: 2000
+  - type: BatterySelfRecharger
+    autoRecharge: true
+    autoRechargeRate: 40
+  - type: Construction
+    deconstructionTarget: null
+    graph: WeaponTurretSyndicateDisposable
+    node: disposableTurret
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:TriggerBehavior
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: ExplodeOnTrigger
+  - type: Explosive
+    explosionType: Default
+    maxIntensity: 10
+    intensitySlope: 1.5
+    totalIntensity: 30
+    canCreateVacuum: false
+  - type: Gun
+    fireRate: 1
+    selectedMode: FullAuto
+    availableModes:
+    - FullAuto
+    soundGunshot:
+      path: /Audio/Weapons/Guns/Gunshots/laser_cannon.ogg
+  - type: HitscanBatteryAmmoProvider
+    proto: RedMediumLaser
+    fireCost: 100
+  - type: NpcFactionMember
+    factions:
+    - Syndicate
+  - type: Repairable
+    qualityNeeded: "Anchoring"
+    doAfterDelay: 3

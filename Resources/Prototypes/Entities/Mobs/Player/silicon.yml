@@ -37,7 +37,9 @@
 # SPDX-FileCopyrightText: 2024 Zachary Higgs
 # SPDX-FileCopyrightText: 2024 metalgearsloth
 # SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
 # SPDX-FileCopyrightText: 2025 Errant
+# SPDX-FileCopyrightText: 2025 FrauZj
 # SPDX-FileCopyrightText: 2025 Killerqu00
 # SPDX-FileCopyrightText: 2025 Kowlin
 # SPDX-FileCopyrightText: 2025 Nemanja
@@ -49,12 +51,13 @@
 # SPDX-FileCopyrightText: 2025 YoungThug
 # SPDX-FileCopyrightText: 2025 beck-thompson
 # SPDX-FileCopyrightText: 2025 chromiumboy
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 keronshb
 # SPDX-FileCopyrightText: 2025 lizelive
 # SPDX-FileCopyrightText: 2025 nabegator220
 # SPDX-FileCopyrightText: 2025 slarticodefast
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 # Be careful with these as they get removed on shutdown too!
 - type: entity
@@ -94,6 +97,8 @@
     - ActionJumpToCore
     - ActionSurvCameraLights
     - ActionAIViewLaws
+    - ActionSelectControlledBot #KS14
+    - ActionMoveControlledBot #KS14
   - type: UserInterface
     interfaces:
       enum.RadarConsoleUiKey.Key:
@@ -304,7 +309,7 @@
   - type: ApcPowerReceiverBattery
     idleLoad: 500
     batteryRechargeRate: 1000
-    batteryRechargeEfficiency: 0 # Setting to zero until the light flickering issue associated with dynamic power loads is fixed
+    batteryRechargeEfficiency: 0 # Setting to zero until the light flickering issue associated with dynamic power loads is fixed 
   - type: StationAiCore
   - type: StationAiVision
   - type: InteractionOutline
@@ -373,7 +378,7 @@
       - StationAiCoreElectronics
   - type: StaticPrice
     price: 5000
-
+      
 # The job-ready version of an AI spawn.
 - type: entity
   id: PlayerStationAi
@@ -392,7 +397,7 @@
   description: An unfinished computer core for housing an artifical intelligence.
   components:
   - type: Anchorable
-    flags:
+    flags: 
     - Anchorable
   - type: Rotatable
   - type: Sprite
@@ -560,7 +565,6 @@
       tags:
       - GhostOnlyWarp
   - type: Eye
-    zoom: 0.7,0.7
   - type: ContentEye
   - type: Examiner
   - type: Actions

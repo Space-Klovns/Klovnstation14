@@ -51,6 +51,7 @@
 # SPDX-FileCopyrightText: 2025 ArtisticRoomba
 # SPDX-FileCopyrightText: 2025 August Sun
 # SPDX-FileCopyrightText: 2025 BramvanZijp
+# SPDX-FileCopyrightText: 2025 DeusMaldPr
 # SPDX-FileCopyrightText: 2025 FrauzJ
 # SPDX-FileCopyrightText: 2025 GaussiArson
 # SPDX-FileCopyrightText: 2025 Ignaz "Ian" Kraft
@@ -130,10 +131,6 @@
     fireCost: 62.5
   - type: StaticPrice
     price: 420
-  - type: CursorOffsetRequiresWield
-  - type: EyeCursorOffset
-    maxOffset: 2
-    pvsIncrease: 0.2
 
 - type: entity
   id: BaseWeaponPowerCell
@@ -550,10 +547,6 @@
     steps: 5
     zeroVisible: true
   - type: Appearance
-  - type: CursorOffsetRequiresWield
-  - type: EyeCursorOffset
-    maxOffset: 2
-    pvsIncrease: 0.2
 
 - type: entity
   name: practice disabler
@@ -619,7 +612,7 @@
       - Belt
   - type: ProjectileBatteryAmmoProvider
     proto: BulletDisabler
-    fireCost: 62.5
+    fireCost: 100
   - type: GuideHelp
     guides:
     - Security
@@ -649,7 +642,7 @@
         shader: unshaded
   - type: Gun
     selectedMode: FullAuto
-    fireRate: 4.5
+    fireRate: 4
     availableModes:
       - SemiAuto
       - FullAuto
@@ -657,7 +650,7 @@
       path: /Audio/Weapons/Guns/Gunshots/taser2.ogg
   - type: ProjectileBatteryAmmoProvider
     proto: BulletDisablerSmg
-    fireCost: 25
+    fireCost: 33
   - type: MagazineVisuals
     magState: mag
     steps: 5
@@ -992,10 +985,6 @@
     startingCharge: 1000
   - type: StaticPrice
     price: 100
-  - type: CursorOffsetRequiresWield
-  - type: EyeCursorOffset
-    maxOffset: 2
-    pvsIncrease: 0.2
 
 - type: entity
   name: xenoborg laser gun

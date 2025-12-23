@@ -35,6 +35,9 @@ spellbook-ethereal-jaunt-description = Slip into the ethereal plane to slip away
 spellbook-mind-swap-name = Mind Swap
 spellbook-mind-swap-description = Exchange bodies with another person!
 
+scrollrunes-name = Scroll Runes
+scrollrunes-description = Scroll of runes with power enough to stop people from ever thinking of chasing you in maints!
+
 spellbook-animate-name = Animate
 spellbook-animate-description = Bring an inanimate object to life!
 

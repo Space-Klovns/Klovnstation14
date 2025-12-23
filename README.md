@@ -1,4 +1,5 @@
 Klovnstation 14 _(KS14)_ is a fork of [Space Station 14](https://github.com/space-wizards/space-station-14).
+[Our discord server.](https://discord.gg/rSjZ48VnMx)
 We use the [Robust Toolbox engine](https://github.com/space-wizards/RobustToolbox).
 
 If you want to host or create content for base SS14, go to the [Space Station 14 repository](https://github.com/space-wizards/space-station-14), as it is holds all base code and resources for SS14 forks.

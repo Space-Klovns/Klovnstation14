@@ -1,0 +1,9 @@
+- files: ["alarm_buzzer.ogg"]
+  license: "CC-BY-4.0"
+  copyright: "Created by NoahBangs, clipped and converted Mono and .ogg by Jhrushbe"
+  source: https://freesound.org/people/NoahBangs/sounds/587950/
+
+- files: ["relay_click.ogg"]
+  license: "CC0-1.0"
+  copyright: "Created by bassmosphere, remixed and converted Mono and .ogg by Jhrushbe"
+  source: https://freesound.org/people/bassmosphere/sounds/384698/
