@@ -1,3 +1,16 @@
+# SPDX-FileCopyrightText: 2022 Morb
+# SPDX-FileCopyrightText: 2022 Peptide90
+# SPDX-FileCopyrightText: 2022 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2024 Flareguy
+# SPDX-FileCopyrightText: 2024 brainfood1183
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 Southbridge
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 - type: entity
   name: Empty Crate Spawner
   id: CrateEmptySpawner
@@ -42,10 +55,6 @@
   id: LowValueFunCrateTable
   table: !type:GroupSelector
     children:
-    - id: CrateFunPlushie
-      weight: 2
-    - id: CrateFunLizardPlushieBulk
-    - id: CrateFunSharkPlushieBulk
     - id: CrateCandles
     - id: CrateFunArtSupplies
     - id: CrateFunFoamGuns

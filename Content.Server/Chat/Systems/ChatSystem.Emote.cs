@@ -15,7 +15,7 @@
 // SPDX-FileCopyrightText: 2025 lzk
 // SPDX-FileCopyrightText: 2025 themias
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using System.Collections.Frozen;
 using Content.Server.Popups;

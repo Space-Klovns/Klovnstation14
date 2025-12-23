@@ -1,3 +1,26 @@
+# SPDX-FileCopyrightText: 2024 Doctor-Cpu
+# SPDX-FileCopyrightText: 2024 Ed
+# SPDX-FileCopyrightText: 2024 IProduceWidgets
+# SPDX-FileCopyrightText: 2024 TakoDragon
+# SPDX-FileCopyrightText: 2024 cool dolphin
+# SPDX-FileCopyrightText: 2024 joshepvodka
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2024 Арт
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 Boaz1111
+# SPDX-FileCopyrightText: 2025 Cass
+# SPDX-FileCopyrightText: 2025 Julian Giebel
+# SPDX-FileCopyrightText: 2025 Momo
+# SPDX-FileCopyrightText: 2025 Mora
+# SPDX-FileCopyrightText: 2025 T
+# SPDX-FileCopyrightText: 2025 centcomofficer24
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 lzk
+# SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2025 qrwas
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 # Timers
 - type: loadoutEffectGroup
   id: Command
@@ -27,19 +50,6 @@
   storage:
     back:
     - ClothingMultipleHeadphones
-
-# Toys
-- type: loadout
-  id: PlushieLizard
-  storage:
-    back:
-    - PlushieLizard
-
-- type: loadout
-  id: PlushieSpaceLizard
-  storage:
-    back:
-    - PlushieSpaceLizard
 
 - type: loadout
   id: ThreeCandles
@@ -105,133 +115,6 @@
     back:
     - CigarGold
   groupBy: "smokeables"
-
-# Pins
-- type: loadout
-  id: ClothingNeckLGBTPin
-  storage:
-    back:
-    - ClothingNeckLGBTPin
-  groupBy: "pin"
-
-- type: loadout
-  id: ClothingNeckAllyPin
-  storage:
-    back:
-    - ClothingNeckAllyPin
-  groupBy: "pin"
-
-- type: loadout
-  id: ClothingNeckAromanticPin
-  storage:
-    back:
-    - ClothingNeckAromanticPin
-  groupBy: "pin"
-
-- type: loadout
-  id: ClothingNeckAsexualPin
-  storage:
-    back:
-    - ClothingNeckAsexualPin
-  groupBy: "pin"
-
-- type: loadout
-  id: ClothingNeckBisexualPin
-  storage:
-    back:
-    - ClothingNeckBisexualPin
-  groupBy: "pin"
-
-- type: loadout
-  id: ClothingNeckGayPin
-  storage:
-    back:
-    - ClothingNeckGayPin
-  groupBy: "pin"
-
-- type: loadout
-  id: ClothingNeckIntersexPin
-  storage:
-    back:
-    - ClothingNeckIntersexPin
-  groupBy: "pin"
-
-- type: loadout
-  id: ClothingNeckLesbianPin
-  storage:
-    back:
-    - ClothingNeckLesbianPin
-  groupBy: "pin"
-
-- type: loadout
-  id: ClothingNeckNonBinaryPin
-  storage:
-    back:
-    - ClothingNeckNonBinaryPin
-  groupBy: "pin"
-
-- type: loadout
-  id: ClothingNeckPansexualPin
-  storage:
-    back:
-    - ClothingNeckPansexualPin
-  groupBy: "pin"
-
-- type: loadout
-  id: ClothingNeckOmnisexualPin
-  storage:
-    back:
-    - ClothingNeckOmnisexualPin
-  groupBy: "pin"
-
-- type: loadout
-  id: ClothingNeckGenderqueerPin
-  storage:
-    back:
-    - ClothingNeckGenderqueerPin
-  groupBy: "pin"
-
-- type: loadout
-  id: ClothingNeckTransPin
-  storage:
-    back:
-    - ClothingNeckTransPin
-  groupBy: "pin"
-
-- type: loadout
-  id: ClothingNeckAutismPin
-  storage:
-    back:
-    - ClothingNeckAutismPin
-  groupBy: "pin"
-
-- type: loadout
-  id: ClothingNeckGoldAutismPin
-  storage:
-    back:
-    - ClothingNeckGoldAutismPin
-  groupBy: "pin"
-
-- type: loadout
-  id: ClothingNeckAroacePin
-  storage:
-    back:
-    - ClothingNeckAroacePin
-  groupBy: "pin"
-
-- type: loadout
-  id: ClothingNeckPluralPin
-  storage:
-    back:
-    - ClothingNeckPluralPin
-  groupBy: "pin"
-
-- type: loadout
-  id: ClothingNeckGenderfluidPin
-  storage:
-    back:
-    - ClothingNeckGenderfluidPin
-  groupBy: "pin"
 
 # Canes
 # The white cane is intentionally not included here. Thats for the blind.

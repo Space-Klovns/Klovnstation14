@@ -297,3 +297,32 @@ Entries:
       message: Some advanced topicals are now easier to make.
   id: 38
   time: '2025-12-21T13:24:17.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: >-
+        Brought back Argon, a new noble gas that can be created from Frezon and
+        Plasma. At high concentrations, it will absorb other gases and stop all
+        atmospheric reactions.
+    - type: Tweak
+      message: >-
+        Corrected the default alarm thresholds for Argon and Zipion to match the
+        desired percentage values.
+    - type: Fix
+      message: >-
+        Fixed a crash related to the Air Alarm UI by ensuring default thresholds
+        are created for all gases.
+    - type: Fix
+      message: >-
+        Added Zipion and Argon to the default gas scrubber filter list so they
+        are scrubbed from the atmosphere by default.
+  id: 39
+  time: '2025-12-23T13:17:29.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Remove
+      message: Soft removed plushies and certain cloaks.
+    - type: Tweak
+      message: Salvagevend now has seismic charges in its contraband inventory.
+  id: 40
+  time: '2025-12-23T19:49:27.0000000+00:00'

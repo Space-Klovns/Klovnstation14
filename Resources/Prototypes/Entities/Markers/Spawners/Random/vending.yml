@@ -1,3 +1,16 @@
+# SPDX-FileCopyrightText: 2022 ChilbroBaggins
+# SPDX-FileCopyrightText: 2022 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2023 potato1234_x
+# SPDX-FileCopyrightText: 2024 Jeff
+# SPDX-FileCopyrightText: 2024 Velcroboy
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2025 Alpaccalypse
+# SPDX-FileCopyrightText: 2025 Southbridge
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 - type: entity
   id: RandomVending
   name: random vending machine spawner
@@ -43,8 +56,6 @@
       weight: 40
     - id: VendingMachineWinter
       weight: 40
-    - id: VendingMachinePride
-      weight: 10
     - id: VendingMachineTheater
       weight: 10
 

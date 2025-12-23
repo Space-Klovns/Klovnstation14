@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2025 Deltium
+# SPDX-FileCopyrightText: 2025 Gerkada
+# SPDX-FileCopyrightText: 2025 Syndicate Engineer
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
@@ -19,3 +22,20 @@
   - 0     # frezon
   effects:
   - !type:ZipionFormationReaction {}
+- type: gasReaction
+  id: ArgonFormation
+  priority: 2
+  maximumTemperature: 589
+  minimumRequirements:
+    Frezon: 1
+    Plasma: 2
+  effects:
+  - !type:ArgonFormationReaction {}
+
+- type: gasReaction
+  id: ArgonAbsorption
+  priority: 3  # Higher priority to check first
+  minimumRequirements:
+    Argon: 80
+  effects:
+  - !type:ArgonAbsorptionReaction {}

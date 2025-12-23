@@ -11,7 +11,7 @@
 // SPDX-FileCopyrightText: 2025 Nemanja
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -131,19 +131,19 @@ namespace Content.Server.Research.Systems
                     continue;
                 server.NextUpdateTime = _timing.CurTime + server.ResearchConsoleUpdateTime;
 
-                UpdateServer(uid, (int) server.ResearchConsoleUpdateTime.TotalSeconds, server);
+                UpdateServer(uid, (int)server.ResearchConsoleUpdateTime.TotalSeconds, server);
             }
         }
 
-    private void OnDatabaseRegistrationChanged(EntityUid uid, TechnologyDatabaseComponent component, ref ResearchRegistrationChangedEvent args)
-    {
-        if (TryComp<ResearchServerComponent>(uid, out var serverComp))
+        private void OnDatabaseRegistrationChanged(EntityUid uid, TechnologyDatabaseComponent component, ref ResearchRegistrationChangedEvent args)
         {
-            foreach (var client in serverComp.Clients)
+            if (TryComp<ResearchServerComponent>(uid, out var serverComp))
             {
-                RaiseLocalEvent(client, ref args);
+                foreach (var client in serverComp.Clients)
+                {
+                    RaiseLocalEvent(client, ref args);
+                }
             }
         }
     }
-}
 }

@@ -8,7 +8,7 @@
 // SPDX-FileCopyrightText: 2025 pathetic meowmeow
 // SPDX-FileCopyrightText: 2025 themias
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Shared.Database;
 using Content.Shared.Research.Components;

@@ -21,7 +21,7 @@
 # SPDX-FileCopyrightText: 2025 Spessmann
 # SPDX-FileCopyrightText: 2025 compilatron
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - type: gameMapPool
   id: DefaultMapPool

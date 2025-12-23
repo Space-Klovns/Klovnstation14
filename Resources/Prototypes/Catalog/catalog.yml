@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2023 DrSmugleaf
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - type: listing
   id: DebugListing
