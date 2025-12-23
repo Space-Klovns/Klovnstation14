@@ -1,0 +1,6 @@
+# see the start of migration.yml on how to use this
+
+#2025-10-29 // KS14 Change - Remove spacelaw
+BookSpaceLaw: null
+
+
