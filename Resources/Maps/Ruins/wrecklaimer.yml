@@ -1,11 +1,3 @@
-# SPDX-FileCopyrightText: 2024 Flareguy
-# SPDX-FileCopyrightText: 2024 metalgearsloth
-# SPDX-FileCopyrightText: 2025 SlimSlam
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-# SPDX-FileCopyrightText: 2025 nabegator220
-#
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
 meta:
   format: 6
   postmapinit: false
@@ -2944,6 +2936,13 @@ entities:
     components:
     - type: Transform
       pos: 7.5,-11.5
+      parent: 1
+- proto: CrateFunPlushie
+  entities:
+  - uid: 521
+    components:
+    - type: Transform
+      pos: 6.5,5.5
       parent: 1
 - proto: CrateInternals
   entities:

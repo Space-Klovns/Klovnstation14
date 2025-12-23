@@ -1,16 +1,3 @@
-# SPDX-FileCopyrightText: 2023 Alzore
-# SPDX-FileCopyrightText: 2023 Leon Friedrich
-# SPDX-FileCopyrightText: 2023 Nemanja
-# SPDX-FileCopyrightText: 2024 Emisse
-# SPDX-FileCopyrightText: 2024 IProduceWidgets
-# SPDX-FileCopyrightText: 2024 Ubaser
-# SPDX-FileCopyrightText: 2024 metalgearsloth
-# SPDX-FileCopyrightText: 2025 Spessmann
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-# SPDX-FileCopyrightText: 2025 nabegator220
-#
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
 meta:
   format: 7
   category: Grid
@@ -1040,6 +1027,81 @@ entities:
     - type: Transform
       pos: 9.5,-5.5
       parent: 1
+- proto: PlushieHampter
+  entities:
+  - uid: 141
+    components:
+    - type: Transform
+      pos: 13.49161,-8.2341175
+      parent: 1
+  - uid: 142
+    components:
+    - type: Transform
+      pos: 13.658281,-7.3376627
+      parent: 1
+  - uid: 144
+    components:
+    - type: Transform
+      pos: 13.7103615,-8.036065
+      parent: 1
+  - uid: 146
+    components:
+    - type: Transform
+      pos: 13.335363,-7.4731717
+      parent: 1
+  - uid: 149
+    components:
+    - type: Transform
+      pos: 13.137445,-7.879703
+      parent: 1
+  - uid: 154
+    components:
+    - type: Transform
+      pos: 5.5,-3.5
+      parent: 1
+    - type: CollisionWake
+      enabled: False
+    - type: Conveyed
+  - uid: 157
+    components:
+    - type: Transform
+      pos: 7.5,-5.5
+      parent: 1
+    - type: CollisionWake
+      enabled: False
+    - type: Conveyed
+  - uid: 158
+    components:
+    - type: Transform
+      pos: 5.5,-5.5
+      parent: 1
+    - type: CollisionWake
+      enabled: False
+    - type: Conveyed
+  - uid: 159
+    components:
+    - type: Transform
+      pos: 10.5,-5.5
+      parent: 1
+    - type: CollisionWake
+      enabled: False
+    - type: Conveyed
+  - uid: 160
+    components:
+    - type: Transform
+      pos: 12.5,-5.5
+      parent: 1
+    - type: CollisionWake
+      enabled: False
+    - type: Conveyed
+  - uid: 161
+    components:
+    - type: Transform
+      pos: 13.5,-5.5
+      parent: 1
+    - type: CollisionWake
+      enabled: False
+    - type: Conveyed
 - proto: PortableGeneratorJrPacman
   entities:
   - uid: 211

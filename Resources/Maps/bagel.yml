@@ -61865,12 +61865,26 @@ entities:
     - type: Transform
       pos: -38.4609,19.6876
       parent: 60
+- proto: ClothingNeckAromanticPin
+  entities:
+  - uid: 24089
+    components:
+    - type: Transform
+      pos: 83.621025,-13.51627
+      parent: 60
 - proto: ClothingNeckBling
   entities:
   - uid: 18461
     components:
     - type: Transform
       pos: 5.9221196,-5.3832207
+      parent: 60
+- proto: ClothingNeckCloakTrans
+  entities:
+  - uid: 7082
+    components:
+    - type: Transform
+      pos: -40.498245,-36.02266
       parent: 60
 - proto: ClothingNeckMantleHOP
   entities:
@@ -62190,6 +62204,18 @@ entities:
     components:
     - type: Transform
       pos: -36.49547,-36.772636
+      parent: 60
+- proto: ClothingUnderSocksCoder
+  entities:
+  - uid: 6780
+    components:
+    - type: Transform
+      pos: -40.49934,-36.642094
+      parent: 60
+  - uid: 18607
+    components:
+    - type: Transform
+      pos: -7.4850764,5.544639
       parent: 60
 - proto: ClothingUniformColorRainbow
   entities:
@@ -115639,6 +115665,77 @@ entities:
     components:
     - type: Transform
       pos: -111.5,25.5
+      parent: 60
+- proto: PlushieArachind
+  entities:
+  - uid: 25786
+    components:
+    - type: Transform
+      pos: -15.509459,27.453005
+      parent: 60
+- proto: PlushieAtmosian
+  entities:
+  - uid: 5031
+    components:
+    - type: Transform
+      pos: -63.488075,46.610695
+      parent: 60
+- proto: PlushieHampter
+  entities:
+  - uid: 19167
+    components:
+    - type: Transform
+      pos: 24.518976,-12.53022
+      parent: 60
+- proto: PlushieLamp
+  entities:
+  - uid: 8144
+    components:
+    - type: Transform
+      pos: -8.538639,25.673088
+      parent: 60
+- proto: PlushieLizard
+  entities:
+  - uid: 21
+    components:
+    - type: Transform
+      pos: 55.62253,-8.328542
+      parent: 60
+  - uid: 2149
+    components:
+    - type: Transform
+      pos: 30.651426,-14.7669
+      parent: 60
+  - uid: 8968
+    components:
+    - type: Transform
+      pos: 46.5736,-16.819004
+      parent: 60
+- proto: PlushieNar
+  entities:
+  - uid: 9524
+    components:
+    - type: Transform
+      pos: -19.542223,18.606672
+      parent: 60
+- proto: PlushieNuke
+  entities:
+  - uid: 10822
+    components:
+    - type: Transform
+      pos: 3.0700302,-3.5928688
+      parent: 7536
+- proto: PlushieSpaceLizard
+  entities:
+  - uid: 14714
+    components:
+    - type: Transform
+      pos: -7.4546165,-35.517254
+      parent: 60
+  - uid: 17883
+    components:
+    - type: Transform
+      pos: 30.505884,-10.627335
       parent: 60
 - proto: PonderingOrb
   entities:

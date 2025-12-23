@@ -44564,6 +44564,60 @@ entities:
       parent: 1668
     missingComponents:
     - WarpPoint
+- proto: PlushieGhost
+  entities:
+  - uid: 6072
+    components:
+    - type: Transform
+      pos: -11.029306,-17.366844
+      parent: 1668
+    - type: PointLight
+      color: '#32A836FF'
+- proto: PlushieLizard
+  entities:
+  - uid: 6074
+    components:
+    - type: Transform
+      pos: -16.573818,-17.423563
+      parent: 1668
+  - uid: 9561
+    components:
+    - type: Transform
+      pos: -36.464035,13.631715
+      parent: 1668
+  - uid: 9690
+    components:
+    - type: Transform
+      pos: -28.43419,-17.370127
+      parent: 1668
+- proto: PlushieLizardInversed
+  entities:
+  - uid: 9691
+    components:
+    - type: Transform
+      pos: -29.558764,-17.370127
+      parent: 1668
+- proto: PlushieSharkBlue
+  entities:
+  - uid: 9288
+    components:
+    - type: Transform
+      pos: -15.5,-2.5
+      parent: 1668
+- proto: PlushieSharkGrey
+  entities:
+  - uid: 4236
+    components:
+    - type: Transform
+      pos: -29.5,-2.5
+      parent: 1668
+- proto: PlushieSharkPink
+  entities:
+  - uid: 2281
+    components:
+    - type: Transform
+      pos: -46.5,1.5
+      parent: 1668
 - proto: PonderingOrbWizard
   entities:
   - uid: 9566
@@ -55355,6 +55409,13 @@ entities:
     components:
     - type: Transform
       pos: 7.5,-18.5
+      parent: 1668
+- proto: VendingMachinePride
+  entities:
+  - uid: 9108
+    components:
+    - type: Transform
+      pos: -39.5,1.5
       parent: 1668
 - proto: VendingMachineSciDrobe
   entities:

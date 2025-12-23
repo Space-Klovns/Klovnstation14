@@ -1,11 +1,3 @@
-# SPDX-FileCopyrightText: 2024 Emisse
-# SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-# SPDX-FileCopyrightText: 2025 metalgearsloth
-# SPDX-FileCopyrightText: 2025 nabegator220
-#
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
 meta:
   format: 6
   postmapinit: false
@@ -565,6 +557,17 @@ entities:
     - flags: InContainer
       type: MetaData
     - parent: 6
+      type: Transform
+    - canCollide: False
+      type: Physics
+    - type: InsideEntityStorage
+- proto: ClothingNeckCloakTrans
+  entities:
+  - uid: 332
+    components:
+    - flags: InContainer
+      type: MetaData
+    - parent: 331
       type: Transform
     - canCollide: False
       type: Physics
@@ -2093,6 +2096,20 @@ entities:
   - uid: 489
     components:
     - pos: 30.486202,10.491858
+      parent: 1653
+      type: Transform
+- proto: PlushieLizard
+  entities:
+  - uid: 41
+    components:
+    - pos: 35.503193,14.666253
+      parent: 1653
+      type: Transform
+- proto: PlushiePenguin
+  entities:
+  - uid: 415
+    components:
+    - pos: 13.526197,27.541958
       parent: 1653
       type: Transform
 - proto: PortableGeneratorJrPacman

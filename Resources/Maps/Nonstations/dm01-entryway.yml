@@ -1,23 +1,3 @@
-# SPDX-FileCopyrightText: 2023 Leon Friedrich
-# SPDX-FileCopyrightText: 2023 Nemanja
-# SPDX-FileCopyrightText: 2023 PuceTint
-# SPDX-FileCopyrightText: 2023 TsjipTsjip
-# SPDX-FileCopyrightText: 2023 deltanedas
-# SPDX-FileCopyrightText: 2024 Emisse
-# SPDX-FileCopyrightText: 2024 IProduceWidgets
-# SPDX-FileCopyrightText: 2024 QueerNB
-# SPDX-FileCopyrightText: 2024 Spanky
-# SPDX-FileCopyrightText: 2024 Ubaser
-# SPDX-FileCopyrightText: 2024 wafehling
-# SPDX-FileCopyrightText: 2025 Tayrtahn
-# SPDX-FileCopyrightText: 2025 Unisol
-# SPDX-FileCopyrightText: 2025 War Pigeon
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-# SPDX-FileCopyrightText: 2025 metalgearsloth
-# SPDX-FileCopyrightText: 2025 nabegator220
-#
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
 meta:
   format: 6
   postmapinit: false
@@ -3366,6 +3346,40 @@ entities:
     - type: Transform
       pos: 15.5,44.5
       parent: 2
+- proto: PlushieLamp
+  entities:
+  - uid: 357
+    components:
+    - type: Transform
+      pos: 21.5,32.5
+      parent: 2
+    - type: Physics
+      canCollide: False
+  - uid: 358
+    components:
+    - type: Transform
+      pos: 28.5,33.5
+      parent: 2
+    - type: Physics
+      canCollide: False
+- proto: PlushieSharkBlue
+  entities:
+  - uid: 359
+    components:
+    - type: Transform
+      pos: 3.5,22.5
+      parent: 2
+    - type: Physics
+      canCollide: False
+- proto: PlushieSpaceLizard
+  entities:
+  - uid: 360
+    components:
+    - type: Transform
+      pos: 36.5,19.5
+      parent: 2
+    - type: Physics
+      canCollide: False
 - proto: PortableGeneratorJrPacman
   entities:
   - uid: 404

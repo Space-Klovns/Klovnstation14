@@ -82035,6 +82035,15 @@ entities:
     - type: Transform
       pos: -46.98417,-7.2719007
       parent: 2
+- proto: ClothingNeckCloakGay
+  entities:
+  - uid: 24198
+    components:
+    - type: Transform
+      parent: 19505
+    - type: Physics
+      canCollide: False
+    - type: InsideEntityStorage
 - proto: ClothingNeckStethoscope
   entities:
   - uid: 2097
@@ -155596,6 +155605,60 @@ entities:
     - type: Transform
       pos: 55.5,22.5
       parent: 2
+- proto: PlushieCarp
+  entities:
+  - uid: 19089
+    components:
+    - type: Transform
+      pos: 28.498346,-41.510864
+      parent: 2
+  - uid: 19090
+    components:
+    - type: Transform
+      pos: 28.904596,-41.37024
+      parent: 2
+- proto: PlushieLamp
+  entities:
+  - uid: 5739
+    components:
+    - type: Transform
+      pos: -35.426277,-40.29563
+      parent: 2
+- proto: PlushieLizard
+  entities:
+  - uid: 11467
+    components:
+    - type: Transform
+      pos: -47.09023,-11.4053755
+      parent: 2
+- proto: PlushieLizardMirrored
+  entities:
+  - uid: 11466
+    components:
+    - type: Transform
+      pos: -47.64231,-11.394959
+      parent: 2
+- proto: PlushieMoth
+  entities:
+  - uid: 19091
+    components:
+    - type: Transform
+      pos: 31.467096,-38.62024
+      parent: 2
+- proto: PlushieSharkBlue
+  entities:
+  - uid: 18539
+    components:
+    - type: Transform
+      pos: 39.500645,13.141673
+      parent: 2
+- proto: PlushieSpaceLizard
+  entities:
+  - uid: 21001
+    components:
+    - type: Transform
+      pos: 31.976513,24.950718
+      parent: 1
 - proto: PonderingOrb
   entities:
   - uid: 23786

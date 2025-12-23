@@ -73391,6 +73391,25 @@ entities:
     - type: Transform
       pos: 54.483116,-49.66147
       parent: 8364
+- proto: ClothingUnderSocksBee
+  entities:
+  - uid: 5179
+    components:
+    - type: Transform
+      pos: 75.39761,12.476688
+      parent: 8364
+- proto: ClothingUnderSocksCoder
+  entities:
+  - uid: 5119
+    components:
+    - type: Transform
+      pos: -38.47627,-56.748375
+      parent: 8364
+  - uid: 27044
+    components:
+    - type: Transform
+      pos: -26.493788,-77.45809
+      parent: 8364
 - proto: ClothingUniformJumpsuitEngineeringHazard
   entities:
   - uid: 1623
@@ -135092,6 +135111,41 @@ entities:
     components:
     - type: Transform
       pos: -0.5,-14.5
+      parent: 8364
+- proto: PlushieArachind
+  entities:
+  - uid: 28248
+    components:
+    - type: Transform
+      pos: 14.575281,-54.354546
+      parent: 8364
+- proto: PlushieBee
+  entities:
+  - uid: 6609
+    components:
+    - type: Transform
+      pos: 5.436387,5.4152575
+      parent: 8364
+- proto: PlushieCarp
+  entities:
+  - uid: 6914
+    components:
+    - type: Transform
+      pos: 23.5,12.5
+      parent: 8364
+- proto: PlushieLamp
+  entities:
+  - uid: 21630
+    components:
+    - type: Transform
+      pos: 44.578045,-62.22757
+      parent: 8364
+- proto: PlushieRGBee
+  entities:
+  - uid: 5880
+    components:
+    - type: Transform
+      pos: -21.53196,-58.55052
       parent: 8364
 - proto: PortableFlasher
   entities:

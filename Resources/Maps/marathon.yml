@@ -56346,6 +56346,13 @@ entities:
     - type: Transform
       pos: 7.503625,43.354942
       parent: 30
+- proto: ClothingNeckCloakTrans
+  entities:
+  - uid: 3344
+    components:
+    - type: Transform
+      pos: -56.501534,-67.426544
+      parent: 30
 - proto: ClothingNeckScarfStripedBlue
   entities:
   - uid: 15999
@@ -56712,6 +56719,23 @@ entities:
     components:
     - type: Transform
       pos: -52.643486,-53.879913
+      parent: 30
+- proto: ClothingUnderSocksCoder
+  entities:
+  - uid: 9971
+    components:
+    - type: Transform
+      pos: -10.423332,-20.432281
+      parent: 30
+  - uid: 19756
+    components:
+    - type: Transform
+      pos: 11.522639,42.499584
+      parent: 30
+  - uid: 19757
+    components:
+    - type: Transform
+      pos: 24.447042,42.46136
       parent: 30
 - proto: ClothingUniformColorRainbow
   entities:
@@ -110614,6 +110638,65 @@ entities:
     components:
     - type: Transform
       pos: -0.5,82.5
+      parent: 30
+- proto: PlushieCarp
+  entities:
+  - uid: 17654
+    components:
+    - type: Transform
+      pos: -84.53038,-45.378
+      parent: 30
+- proto: PlushieLizard
+  entities:
+  - uid: 15217
+    components:
+    - type: Transform
+      pos: 20.536215,48.41713
+      parent: 30
+- proto: PlushieRatvar
+  entities:
+  - uid: 16150
+    components:
+    - type: Transform
+      pos: 46.48802,27.514986
+      parent: 30
+- proto: PlushieSharkBlue
+  entities:
+  - uid: 6990
+    components:
+    - type: Transform
+      pos: -34.45089,-23.359314
+      parent: 30
+- proto: PlushieSharkGrey
+  entities:
+  - uid: 22218
+    components:
+    - type: Transform
+      pos: -54.56163,13.394278
+      parent: 30
+- proto: PlushieSharkPink
+  entities:
+  - uid: 17526
+    components:
+    - type: Transform
+      pos: -58.458496,-65.4756
+      parent: 30
+  - uid: 22217
+    components:
+    - type: Transform
+      pos: 5.484742,-11.393534
+      parent: 30
+- proto: PlushieSpaceLizard
+  entities:
+  - uid: 16975
+    components:
+    - type: Transform
+      pos: -62.503014,39.372643
+      parent: 30
+  - uid: 20792
+    components:
+    - type: Transform
+      pos: 40.559143,-53.538166
       parent: 30
 - proto: PortableFlasher
   entities:

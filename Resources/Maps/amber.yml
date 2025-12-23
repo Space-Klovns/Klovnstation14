@@ -68676,12 +68676,75 @@ entities:
     - type: Transform
       pos: -27.629803,-60.323677
       parent: 2
+- proto: ClothingNeckCloakAce
+  entities:
+  - uid: 8506
+    components:
+    - type: Transform
+      pos: 47.501015,-87.459625
+      parent: 2
+- proto: ClothingNeckCloakAro
+  entities:
+  - uid: 16222
+    components:
+    - type: Transform
+      pos: 21.531446,-49.442505
+      parent: 2
+- proto: ClothingNeckCloakBi
+  entities:
+  - uid: 22995
+    components:
+    - type: Transform
+      pos: -12.49191,15.529358
+      parent: 2
+- proto: ClothingNeckCloakEnby
+  entities:
+  - uid: 16221
+    components:
+    - type: Transform
+      pos: 24.373571,-59.52213
+      parent: 2
+- proto: ClothingNeckCloakGay
+  entities:
+  - uid: 2876
+    components:
+    - type: Transform
+      pos: 45.549652,7.560146
+      parent: 2
+- proto: ClothingNeckCloakIntersex
+  entities:
+  - uid: 12387
+    components:
+    - type: Transform
+      pos: -53.479164,-55.353416
+      parent: 2
+- proto: ClothingNeckCloakLesbian
+  entities:
+  - uid: 4815
+    components:
+    - type: Transform
+      pos: -30.482735,-54.52887
+      parent: 2
 - proto: ClothingNeckCloakMoth
   entities:
   - uid: 19903
     components:
     - type: Transform
       pos: 44.536793,-50.46367
+      parent: 2
+- proto: ClothingNeckCloakPan
+  entities:
+  - uid: 19277
+    components:
+    - type: Transform
+      pos: 50.483807,-55.407658
+      parent: 2
+- proto: ClothingNeckCloakTrans
+  entities:
+  - uid: 7432
+    components:
+    - type: Transform
+      pos: 41.510986,-27.452278
       parent: 2
 - proto: ClothingNeckMantle
   entities:
@@ -68934,6 +68997,13 @@ entities:
     components:
     - type: Transform
       pos: 21.606699,15.433804
+      parent: 2
+- proto: ClothingUnderSocksCoder
+  entities:
+  - uid: 6471
+    components:
+    - type: Transform
+      pos: 27.539923,-8.522268
       parent: 2
 - proto: ClothingUniformColorRainbow
   entities:
@@ -121482,6 +121552,107 @@ entities:
     - type: Transform
       pos: 91.5,-42.5
       parent: 2
+- proto: PlushieAtmosian
+  entities:
+  - uid: 719
+    components:
+    - type: Transform
+      pos: 13.534338,-11.462252
+      parent: 2
+- proto: PlushieCarp
+  entities:
+  - uid: 24448
+    components:
+    - type: Transform
+      pos: -32.490696,19.75554
+      parent: 2
+- proto: PlushieDiona
+  entities:
+  - uid: 8572
+    components:
+    - type: Transform
+      pos: 6.540762,-45.45022
+      parent: 2
+- proto: PlushieLizard
+  entities:
+  - uid: 6264
+    components:
+    - type: Transform
+      pos: -38.669014,-51.243996
+      parent: 2
+  - uid: 7585
+    components:
+    - type: Transform
+      pos: 61.5,-78.5
+      parent: 2
+  - uid: 19554
+    components:
+    - type: Transform
+      pos: 61.5,-77.5
+      parent: 2
+  - uid: 19557
+    components:
+    - type: Transform
+      pos: 62.5,-77.5
+      parent: 2
+  - uid: 19974
+    components:
+    - type: Transform
+      pos: 62.5,-78.5
+      parent: 2
+  - uid: 19976
+    components:
+    - type: Transform
+      pos: 61.5,-79.5
+      parent: 2
+  - uid: 19977
+    components:
+    - type: Transform
+      pos: 62.5,-79.5
+      parent: 2
+  - uid: 23665
+    components:
+    - type: Transform
+      pos: 14.443679,-53.340305
+      parent: 2
+- proto: PlushieLizardMirrored
+  entities:
+  - uid: 1797
+    components:
+    - type: Transform
+      pos: 12.463518,-10.409437
+      parent: 2
+- proto: PlushieMoth
+  entities:
+  - uid: 6278
+    components:
+    - type: Transform
+      pos: -38.262566,-51.25442
+      parent: 2
+  - uid: 17566
+    components:
+    - type: Transform
+      pos: 30.5,-79.5
+      parent: 2
+- proto: PlushieSharkBlue
+  entities:
+  - uid: 6303
+    components:
+    - type: Transform
+      pos: -38.450157,-51.567135
+      parent: 2
+- proto: PlushieSharkPink
+  entities:
+  - uid: 10956
+    components:
+    - type: Transform
+      pos: 15.497364,-55.417336
+      parent: 2
+  - uid: 16502
+    components:
+    - type: Transform
+      pos: -45.514957,10.417316
+      parent: 2
 - proto: PortableFlasher
   entities:
   - uid: 12657
@@ -146245,6 +146416,13 @@ entities:
     components:
     - type: Transform
       pos: -15.5,-29.5
+      parent: 2
+- proto: VendingMachinePride
+  entities:
+  - uid: 9444
+    components:
+    - type: Transform
+      pos: 16.5,-26.5
       parent: 2
 - proto: VendingMachineRobotics
   entities:

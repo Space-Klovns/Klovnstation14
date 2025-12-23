@@ -94963,6 +94963,13 @@ entities:
     - type: Transform
       pos: 87.274826,46.783627
       parent: 13329
+- proto: ClothingNeckCloakTrans
+  entities:
+  - uid: 34255
+    components:
+    - type: Transform
+      pos: -35.53245,36.540043
+      parent: 13329
 - proto: ClothingNeckScarfStripedBlue
   entities:
   - uid: 18674
@@ -95433,6 +95440,25 @@ entities:
     components:
     - type: Transform
       pos: 73.32944,13.108924
+      parent: 13329
+- proto: ClothingUnderSocksBee
+  entities:
+  - uid: 33311
+    components:
+    - type: Transform
+      pos: 5.4999647,79.450584
+      parent: 13329
+  - uid: 33338
+    components:
+    - type: Transform
+      pos: 11.5237665,-2.4679627
+      parent: 13329
+- proto: ClothingUnderSocksCoder
+  entities:
+  - uid: 27934
+    components:
+    - type: Transform
+      pos: 122.42043,-26.759068
       parent: 13329
 - proto: ClothingUniformColorRainbow
   entities:
@@ -167443,6 +167469,74 @@ entities:
     components:
     - type: Transform
       pos: 124.5,49.5
+      parent: 13329
+- proto: PlushieArachind
+  entities:
+  - uid: 36012
+    components:
+    - type: Transform
+      pos: 99.47241,-39.30239
+      parent: 13329
+- proto: PlushieAtmosian
+  entities:
+  - uid: 23883
+    components:
+    - type: Transform
+      pos: 111.467224,-36.527515
+      parent: 13329
+- proto: PlushieBee
+  entities:
+  - uid: 12133
+    components:
+    - type: Transform
+      pos: -18.528942,-20.489607
+      parent: 13329
+- proto: PlushieExperiment
+  entities:
+  - uid: 24752
+    components:
+    - type: Transform
+      pos: 101.483894,-39.388832
+      parent: 13329
+- proto: PlushieLamp
+  entities:
+  - uid: 21256
+    components:
+    - type: Transform
+      pos: 85.33805,22.915941
+      parent: 13329
+  - uid: 31715
+    components:
+    - type: Transform
+      pos: 10.520601,19.828375
+      parent: 13329
+- proto: PlushieLizard
+  entities:
+  - uid: 18477
+    components:
+    - type: Transform
+      pos: 76.471954,53.52606
+      parent: 13329
+- proto: PlushieRGBee
+  entities:
+  - uid: 32722
+    components:
+    - type: Transform
+      pos: 116.4777,12.51419
+      parent: 13329
+- proto: PlushieSharkGrey
+  entities:
+  - uid: 34563
+    components:
+    - type: Transform
+      pos: 67.4763,-40.661396
+      parent: 13329
+- proto: PlushieSharkPink
+  entities:
+  - uid: 34653
+    components:
+    - type: Transform
+      pos: 110.72576,10.415595
       parent: 13329
 - proto: PoppySeeds
   entities:

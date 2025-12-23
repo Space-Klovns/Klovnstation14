@@ -1,10 +1,3 @@
-# SPDX-FileCopyrightText: 2023 Leon Friedrich
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-# SPDX-FileCopyrightText: 2025 metalgearsloth
-# SPDX-FileCopyrightText: 2025 nabegator220
-#
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
 meta:
   format: 6
   postmapinit: false
@@ -5060,6 +5053,66 @@ entities:
     - type: Transform
       pos: -19.5,21.5
       parent: 1024
+- proto: PlushieLizard
+  entities:
+  - uid: 1245
+    components:
+    - type: Transform
+      pos: -6.5760937,-9.476422
+      parent: 10
+    - type: Physics
+      canCollide: False
+- proto: PlushieSpaceLizard
+  entities:
+  - uid: 1246
+    components:
+    - type: Transform
+      pos: 11.724928,5.429369
+      parent: 10
+    - type: Physics
+      canCollide: False
+  - uid: 1247
+    components:
+    - type: Transform
+      pos: -3.543882,8.401216
+      parent: 10
+    - type: Physics
+      canCollide: False
+  - uid: 1248
+    components:
+    - type: Transform
+      pos: 11.493368,-5.4476123
+      parent: 10
+    - type: Physics
+      canCollide: False
+  - uid: 1249
+    components:
+    - type: Transform
+      pos: -2.5631237,3.462329
+      parent: 10
+    - type: Physics
+      canCollide: False
+  - uid: 1250
+    components:
+    - type: Transform
+      pos: -8.535989,1.4602432
+      parent: 10
+    - type: Physics
+      canCollide: False
+  - uid: 1251
+    components:
+    - type: Transform
+      pos: 14.597689,7.5790386
+      parent: 10
+    - type: Physics
+      canCollide: False
+  - uid: 1252
+    components:
+    - type: Transform
+      pos: 7.4887495,8.204691
+      parent: 10
+    - type: Physics
+      canCollide: False
 - proto: WallReinforced
   entities:
   - uid: 1

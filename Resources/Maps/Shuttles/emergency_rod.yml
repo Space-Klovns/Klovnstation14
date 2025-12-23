@@ -1,20 +1,3 @@
-# SPDX-FileCopyrightText: 2023 Emisse
-# SPDX-FileCopyrightText: 2023 Leon Friedrich
-# SPDX-FileCopyrightText: 2023 Nemanja
-# SPDX-FileCopyrightText: 2023 PuceTint
-# SPDX-FileCopyrightText: 2023 TsjipTsjip
-# SPDX-FileCopyrightText: 2023 deltanedas
-# SPDX-FileCopyrightText: 2024 Mr. 27
-# SPDX-FileCopyrightText: 2024 QueerNB
-# SPDX-FileCopyrightText: 2024 ScarKy0
-# SPDX-FileCopyrightText: 2024 Ubaser
-# SPDX-FileCopyrightText: 2024 metalgearsloth
-# SPDX-FileCopyrightText: 2025 Spanky
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-# SPDX-FileCopyrightText: 2025 nabegator220
-#
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
 meta:
   format: 7
   category: Grid
@@ -3606,6 +3589,20 @@ entities:
     - type: Transform
       rot: -1.5707963267948966 rad
       pos: 1.5,-11.5
+      parent: 2
+- proto: PlushieLizard
+  entities:
+  - uid: 431
+    components:
+    - type: Transform
+      pos: -3.4904594,20.463486
+      parent: 2
+- proto: PlushieSharkBlue
+  entities:
+  - uid: 660
+    components:
+    - type: Transform
+      pos: -0.311859,-5.467588
       parent: 2
 - proto: PosterContrabandWehWatches
   entities:

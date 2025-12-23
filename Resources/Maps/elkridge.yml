@@ -53303,6 +53303,13 @@ entities:
       inSlot: neck
     - type: Physics
       canCollide: False
+- proto: ClothingNeckCloakTrans
+  entities:
+  - uid: 1602
+    components:
+    - type: Transform
+      pos: 58.570602,32.7099
+      parent: 2
 - proto: ClothingNeckScarfStripedBlack
   entities:
   - uid: 4040
@@ -53481,6 +53488,18 @@ entities:
     components:
     - type: Transform
       pos: 12.630562,19.620356
+      parent: 2
+- proto: ClothingUnderSocksCoder
+  entities:
+  - uid: 2482
+    components:
+    - type: Transform
+      pos: 40.664803,-6.613131
+      parent: 2
+  - uid: 15213
+    components:
+    - type: Transform
+      pos: 58.633102,32.1474
       parent: 2
 - proto: ClothingUniformJumpskirtJanimaid
   entities:
@@ -93099,6 +93118,96 @@ entities:
     - type: Transform
       pos: -42.11523,-36.54279
       parent: 2
+- proto: PlushieArachind
+  entities:
+  - uid: 6311
+    components:
+    - type: Transform
+      pos: 38.34971,26.524454
+      parent: 2
+- proto: PlushieAtmosian
+  entities:
+  - uid: 14413
+    components:
+    - type: Transform
+      pos: 31.53195,-44.930218
+      parent: 2
+- proto: PlushieDiona
+  entities:
+  - uid: 6310
+    components:
+    - type: Transform
+      pos: 37.63096,27.430704
+      parent: 2
+- proto: PlushieHuman
+  entities:
+  - uid: 13455
+    components:
+    - type: Transform
+      pos: 36.50596,26.524454
+      parent: 2
+- proto: PlushieLizardMirrored
+  entities:
+  - uid: 13454
+    components:
+    - type: Transform
+      pos: 36.47471,25.743204
+      parent: 2
+- proto: PlushieMoth
+  entities:
+  - uid: 7111
+    components:
+    - type: Transform
+      pos: 1.4897368,21.561314
+      parent: 2
+  - uid: 12229
+    components:
+    - type: Transform
+      pos: 37.47471,24.555704
+      parent: 2
+- proto: PlushieNuke
+  entities:
+  - uid: 13501
+    components:
+    - type: Transform
+      pos: -44.436142,-3.5562878
+      parent: 2
+- proto: PlushieSharkBlue
+  entities:
+  - uid: 4208
+    components:
+    - type: Transform
+      pos: 2.5061994,22.396723
+      parent: 2
+  - uid: 12818
+    components:
+    - type: Transform
+      pos: 58.101852,32.288025
+      parent: 2
+- proto: PlushieSlime
+  entities:
+  - uid: 5385
+    components:
+    - type: Transform
+      pos: -27.518608,30.50676
+      parent: 2
+  - uid: 14208
+    components:
+    - type: Transform
+      pos: 38.38096,24.430704
+      parent: 2
+- proto: PlushieVox
+  entities:
+  - uid: 1785
+    components:
+    - type: Transform
+      pos: 21.444597,-15.281402
+      parent: 2
+  - uid: 12227
+    components:
+    - type: Transform
+      pos: 38.28721,25.680704
+      parent: 2
 - proto: PortableFlasher
   entities:
   - uid: 15004
@@ -110275,6 +110384,13 @@ entities:
     components:
     - type: Transform
       pos: -9.5,-46.5
+      parent: 2
+- proto: VendingMachinePride
+  entities:
+  - uid: 13514
+    components:
+    - type: Transform
+      pos: -23.5,-17.5
       parent: 2
 - proto: VendingMachineRoboDrobe
   entities:

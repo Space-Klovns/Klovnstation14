@@ -1,19 +1,3 @@
-# SPDX-FileCopyrightText: 2023 Leon Friedrich
-# SPDX-FileCopyrightText: 2023 Scribbles0
-# SPDX-FileCopyrightText: 2023 brainfood1183
-# SPDX-FileCopyrightText: 2023 deltanedas
-# SPDX-FileCopyrightText: 2024 Ed
-# SPDX-FileCopyrightText: 2024 Emisse
-# SPDX-FileCopyrightText: 2024 Kara
-# SPDX-FileCopyrightText: 2024 Nemanja
-# SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
-# SPDX-FileCopyrightText: 2024 QueerNB
-# SPDX-FileCopyrightText: 2024 metalgearsloth
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-# SPDX-FileCopyrightText: 2025 nabegator220
-#
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
 meta:
   format: 6
   postmapinit: false
@@ -1463,6 +1447,13 @@ entities:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: -1.5,-0.5
+      parent: 325
+- proto: PlushieNuke
+  entities:
+  - uid: 47
+    components:
+    - type: Transform
+      pos: 0.5061571,-5.233775
       parent: 325
 - proto: PortableGeneratorSuperPacmanMachineCircuitboard
   entities:

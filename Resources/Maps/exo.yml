@@ -44465,6 +44465,58 @@ entities:
     - type: Transform
       pos: 10.28999,-87.42052
       parent: 2
+- proto: ClothingNeckCloakAce
+  entities:
+  - uid: 17323
+    components:
+    - type: Transform
+      pos: -9.488791,-1.3849742
+      parent: 2
+- proto: ClothingNeckCloakAro
+  entities:
+  - uid: 8150
+    components:
+    - type: Transform
+      pos: 39.571434,-28.464401
+      parent: 2
+    - type: CollisionWake
+      enabled: False
+    - type: Conveyed
+- proto: ClothingNeckCloakBi
+  entities:
+  - uid: 6921
+    components:
+    - type: Transform
+      pos: 57.523323,-96.46691
+      parent: 2
+- proto: ClothingNeckCloakEnby
+  entities:
+  - uid: 13645
+    components:
+    - type: Transform
+      pos: 79.02105,-25.344301
+      parent: 2
+- proto: ClothingNeckCloakGay
+  entities:
+  - uid: 17328
+    components:
+    - type: Transform
+      pos: -39.37852,-58.430256
+      parent: 2
+- proto: ClothingNeckCloakIntersex
+  entities:
+  - uid: 7509
+    components:
+    - type: Transform
+      pos: 105.5457,-45.44423
+      parent: 2
+- proto: ClothingNeckCloakLesbian
+  entities:
+  - uid: 3874
+    components:
+    - type: Transform
+      pos: 68.37186,-17.557957
+      parent: 2
 - proto: ClothingNeckCloakMoth
   entities:
   - uid: 17237
@@ -44478,6 +44530,13 @@ entities:
     components:
     - type: Transform
       pos: -38.53285,-69.49862
+      parent: 2
+- proto: ClothingNeckCloakTrans
+  entities:
+  - uid: 17331
+    components:
+    - type: Transform
+      pos: 77.515434,-20.379131
       parent: 2
 - proto: ClothingNeckScarfStripedBlack
   entities:
@@ -44805,6 +44864,20 @@ entities:
     components:
     - type: Transform
       pos: 13.501459,-50.591175
+      parent: 2
+- proto: ClothingUnderSocksBee
+  entities:
+  - uid: 16047
+    components:
+    - type: Transform
+      pos: 82.43239,-18.852234
+      parent: 2
+- proto: ClothingUnderSocksCoder
+  entities:
+  - uid: 1826
+    components:
+    - type: Transform
+      pos: -48.461044,-61.42407
       parent: 2
 - proto: ClothingUniformJumpskirtColorGrey
   entities:
@@ -46463,6 +46536,13 @@ entities:
     - type: Transform
       pos: 10.5,-25.5
       parent: 2
+- proto: CrateFunLizardPlushieBulk
+  entities:
+  - uid: 16273
+    components:
+    - type: Transform
+      pos: 52.5,-16.5
+      parent: 2
 - proto: CrateGenericSteel
   entities:
   - uid: 2004
@@ -46485,6 +46565,7 @@ entities:
           occludes: True
           ents:
           - 561
+          - 5788
           - 6036
           - 6024
           - 6027
@@ -90411,6 +90492,159 @@ entities:
     - type: Transform
       pos: 91.5,-45.5
       parent: 2
+- proto: PlushieAtmosian
+  entities:
+  - uid: 892
+    components:
+    - type: Transform
+      pos: 52.515114,-62.52821
+      parent: 2
+- proto: PlushieBee
+  entities:
+  - uid: 17397
+    components:
+    - type: MetaData
+      desc: Know who you can trust...
+      name: good bee plushie
+    - type: Transform
+      pos: 83.24284,-18.388948
+      parent: 2
+  - uid: 17403
+    components:
+    - type: MetaData
+      desc: Or is it?...
+      name: evil bee plushie
+    - type: Transform
+      pos: 83.57618,-18.55573
+      parent: 2
+- proto: PlushieHampter
+  entities:
+  - uid: 16194
+    components:
+    - type: Transform
+      pos: 5.520261,-62.526257
+      parent: 2
+- proto: PlushieHuman
+  entities:
+  - uid: 17580
+    components:
+    - type: Transform
+      pos: 10.276115,-44.41428
+      parent: 2
+- proto: PlushieLizardInversed
+  entities:
+  - uid: 6922
+    components:
+    - type: Transform
+      pos: 83.443275,-72.485634
+      parent: 2
+- proto: PlushieLizardMirrored
+  entities:
+  - uid: 2944
+    components:
+    - type: Transform
+      pos: -40.104343,-58.180084
+      parent: 2
+  - uid: 11678
+    components:
+    - type: Transform
+      pos: 68.47602,-17.33558
+      parent: 2
+- proto: PlushieMoth
+  entities:
+  - uid: 16246
+    components:
+    - type: Transform
+      pos: 48.50465,-14.873544
+      parent: 2
+  - uid: 17367
+    components:
+    - type: Transform
+      pos: -31.508543,-62.98768
+      parent: 2
+- proto: PlushiePenguin
+  entities:
+  - uid: 15800
+    components:
+    - type: Transform
+      pos: 36.477215,-72.420235
+      parent: 2
+- proto: PlushieRGBee
+  entities:
+  - uid: 15420
+    components:
+    - type: Transform
+      pos: 43.497017,-16.53401
+      parent: 2
+- proto: PlushieRouny
+  entities:
+  - uid: 6030
+    components:
+    - type: Transform
+      parent: 2004
+    - type: Physics
+      canCollide: False
+    - type: InsideEntityStorage
+  - uid: 17565
+    components:
+    - type: Transform
+      rot: -1.5707963267948966 rad
+      pos: -38.765907,-20.743614
+      parent: 2
+- proto: PlushieSharkBlue
+  entities:
+  - uid: 5725
+    components:
+    - type: Transform
+      pos: -51.349125,-60.39075
+      parent: 2
+- proto: PlushieSharkGrey
+  entities:
+  - uid: 18453
+    components:
+    - type: Transform
+      pos: -50.612316,-60.515007
+      parent: 2
+- proto: PlushieSharkPink
+  entities:
+  - uid: 16676
+    components:
+    - type: Transform
+      pos: -51.020004,-60.457893
+      parent: 2
+- proto: PlushieSlime
+  entities:
+  - uid: 5788
+    components:
+    - type: Transform
+      parent: 2004
+    - type: Physics
+      canCollide: False
+    - type: InsideEntityStorage
+  - uid: 15790
+    components:
+    - type: Transform
+      pos: -39.603485,-58.0853
+      parent: 2
+- proto: PlushieVox
+  entities:
+  - uid: 19377
+    components:
+    - type: Transform
+      pos: 9.483602,-47.419678
+      parent: 2
+- proto: PlushieXeno
+  entities:
+  - uid: 11682
+    components:
+    - type: Transform
+      pos: 69.4742,-17.51508
+      parent: 2
+  - uid: 12704
+    components:
+    - type: Transform
+      pos: -22.499308,-16.520548
+      parent: 2
 - proto: PortableFlasher
   entities:
   - uid: 2164
@@ -109536,6 +109770,13 @@ entities:
     components:
     - type: Transform
       pos: 2.5,-57.5
+      parent: 2
+- proto: VendingMachinePride
+  entities:
+  - uid: 12823
+    components:
+    - type: Transform
+      pos: 15.5,-48.5
       parent: 2
 - proto: VendingMachineRoboDrobe
   entities:

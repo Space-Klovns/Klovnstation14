@@ -65860,6 +65860,13 @@ entities:
     - type: Transform
       pos: -116.47996,12.489793
       parent: 2
+- proto: ClothingNeckCloakLesbian
+  entities:
+  - uid: 22951
+    components:
+    - type: Transform
+      pos: -24.48211,-68.415665
+      parent: 2
 - proto: ClothingNeckClownmedal
   entities:
   - uid: 3277
@@ -65867,6 +65874,20 @@ entities:
     - type: Transform
       pos: -75.67967,-3.2953148
       parent: 2
+- proto: ClothingNeckGoldAutismPin
+  entities:
+  - uid: 2395
+    components:
+    - type: Transform
+      pos: -21.527897,-69.71385
+      parent: 2
+  - uid: 9590
+    components:
+    - type: Transform
+      parent: 21062
+    - type: Physics
+      canCollide: False
+    - type: InsideEntityStorage
 - proto: ClothingNeckGoldmedal
   entities:
   - uid: 4302
@@ -66031,6 +66052,20 @@ entities:
     components:
     - type: Transform
       pos: -66.47555,-40.507927
+      parent: 2
+- proto: ClothingUnderSocksCoder
+  entities:
+  - uid: 9657
+    components:
+    - type: Transform
+      parent: 9728
+    - type: Physics
+      canCollide: False
+    - type: InsideEntityStorage
+  - uid: 20344
+    components:
+    - type: Transform
+      pos: -115.44157,-60.670666
       parent: 2
 - proto: ClothingUniformJumpskirtJanimaidmini
   entities:
@@ -131708,6 +131743,70 @@ entities:
       parent: 7826
     - type: Physics
       canCollide: False
+- proto: PlushieArachind
+  entities:
+  - uid: 20444
+    components:
+    - type: MetaData
+      desc: An adorable stuffed toy that resembles an arachnid. It smells like tritium...
+    - type: Transform
+      pos: -120.44894,36.471443
+      parent: 2
+- proto: PlushieLizard
+  entities:
+  - uid: 16518
+    components:
+    - type: Transform
+      pos: -131.5,28.5
+      parent: 2
+- proto: PlushieNar
+  entities:
+  - uid: 3874
+    components:
+    - type: Transform
+      pos: -44.55997,-51.63969
+      parent: 2
+- proto: PlushieSharkBlue
+  entities:
+  - uid: 12252
+    components:
+    - type: MetaData
+      desc: This shark is a vicious killer of the ocean, trained in over 20 martial art styles, including sleeping carp. It merely takes the form of a plushie to fool the unaware into trusting it, only so it may strike when they're at their most vulnerable.
+      name: highly illegal syndicate shark
+    - type: Transform
+      pos: -14.584713,16.470493
+      parent: 2
+    - type: MeleeWeapon
+      attackRate: 10
+      autoAttack: True
+    - type: Item
+      size: Huge
+    - type: Contraband
+      allowedJobs: []
+      allowedDepartments: []
+      severity: Syndicate
+- proto: PlushieSlime
+  entities:
+  - uid: 3336
+    components:
+    - type: MetaData
+      desc: An adorable stuffed toy that resembles a slime. It smells like plasma...
+    - type: Transform
+      pos: -56.50602,-77.45183
+      parent: 2
+    - type: ContainerContainer
+      containers:
+        stash: !type:ContainerSlot
+          showEnts: False
+          occludes: True
+          ent: 3341
+- proto: PlushieSpaceLizard
+  entities:
+  - uid: 1777
+    components:
+    - type: Transform
+      pos: -107.48633,-20.615337
+      parent: 2
 - proto: PortableFlasher
   entities:
   - uid: 2394
@@ -154077,6 +154176,13 @@ entities:
     components:
     - type: Transform
       pos: -45.5,-18.5
+      parent: 2
+- proto: VendingMachinePride
+  entities:
+  - uid: 16887
+    components:
+    - type: Transform
+      pos: -60.5,-58.5
       parent: 2
 - proto: VendingMachinePwrGame
   entities:
