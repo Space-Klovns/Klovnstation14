@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 FrauzJ
+#
+# SPDX-License-Identifier: MIT
+
 - files: ["regen_mesh_begin.ogg", "regen_mesh_end.ogg"]
   license: "CC-BY-3.0"
   copyright: "Created by `grungussuss` for tgstation. Taken from 'regen_mesh_begin4.ogg', 'regen_mesh_end1.ogg' "
