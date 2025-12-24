@@ -1,9 +1,18 @@
+# SPDX-FileCopyrightText: 2021 Vera Aguilera Puerto
+# SPDX-FileCopyrightText: 2022 mirrorcult
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: soundCollection
   id: gib
-  files:
-  - /Audio/Effects/gib1.ogg
-  - /Audio/Effects/gib2.ogg
-  - /Audio/Effects/gib3.ogg
+  files: # KS14 - new sounds
+  - /Audio/_KS14/Effects/Flesh/flesh_break1.ogg
+  - /Audio/_KS14/Effects/Flesh/flesh_break2.ogg
+  - /Audio/_KS14/Effects/Flesh/flesh_tear1.ogg
+  - /Audio/_KS14/Effects/Flesh/flesh_tear2.ogg
+  - /Audio/_KS14/Effects/Flesh/flesh_tear3.ogg
 
 - type: soundCollection
   id: blood

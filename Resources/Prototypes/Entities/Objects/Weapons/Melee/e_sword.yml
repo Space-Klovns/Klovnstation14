@@ -35,6 +35,7 @@
 # SPDX-FileCopyrightText: 2024 slarticodefast
 # SPDX-FileCopyrightText: 2025 ArtisticRoomba
 # SPDX-FileCopyrightText: 2025 Centronias
+# SPDX-FileCopyrightText: 2025 FrauzJ
 # SPDX-FileCopyrightText: 2025 John
 # SPDX-FileCopyrightText: 2025 RedBookcase
 # SPDX-FileCopyrightText: 2025 Samuka-C
@@ -390,6 +391,7 @@
   - type: Reflect
     reflectProb: .75
     spread: 75
+  - type: FlipOnHit # WD EDIT
 
 # Item will look weird in handslot. Will need to adjust handstorage visuals in a future PR
 - type: entity

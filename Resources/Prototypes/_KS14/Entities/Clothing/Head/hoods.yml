@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: entity
+  parent: ClothingHeadBase
+  id: ClothingHeadHatHoodArc
+  name: arc hood
+  description: The hood of the arc flash suit.
+  components:
+  - type: Sprite
+    sprite: _KS14/Clothing/Head/Hoods/arc.rsi
+  - type: Clothing
+    sprite: _KS14/Clothing/Head/Hoods/arc.rsi
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
+  - type: Armor
+    modifiers:
+      coefficients:
+        Shock: 0.6
+  - type: IdentityBlocker
+  - type: BreathMask
+  - type: HideLayerClothing
+    slots:
+    - Hair
+    - Snout
+    - HeadTop
+    - HeadSide

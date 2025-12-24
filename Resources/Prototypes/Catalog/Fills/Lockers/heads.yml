@@ -57,6 +57,7 @@
 # SPDX-FileCopyrightText: 2025 BramvanZijp
 # SPDX-FileCopyrightText: 2025 Coolsurf6
 # SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Nemanja
 # SPDX-FileCopyrightText: 2025 ScarKy0
 # SPDX-FileCopyrightText: 2025 Theodore Lukin
@@ -116,7 +117,6 @@
     - id: MedalCase
     - id: NukeDisk
     - id: PinpointerNuclear
-    - id: PlushieNuke
       prob: 0.1
     - id: RubberStampCaptain
     - id: SpaceCash1000
@@ -356,6 +356,7 @@
     - id: CargoRequestScienceComputerCircuitboard
     - id: StationAiFixerCircuitboard
     - id: RubberStampRd
+    - id: ClothingOuterSuitArc # KS14
 
 # Hardsuit table, used for suit storage as well
 - type: entityTable

@@ -1,3 +1,36 @@
+# SPDX-FileCopyrightText: 2021 Fishfish458
+# SPDX-FileCopyrightText: 2021 Swept
+# SPDX-FileCopyrightText: 2021 SweptWasTaken
+# SPDX-FileCopyrightText: 2022 Checkraze
+# SPDX-FileCopyrightText: 2022 EmoGarbage404
+# SPDX-FileCopyrightText: 2022 Rane
+# SPDX-FileCopyrightText: 2022 Rinkashikachi
+# SPDX-FileCopyrightText: 2022 Visne
+# SPDX-FileCopyrightText: 2022 keronshb
+# SPDX-FileCopyrightText: 2023 Arendian
+# SPDX-FileCopyrightText: 2023 Ed
+# SPDX-FileCopyrightText: 2023 Emisse
+# SPDX-FileCopyrightText: 2023 EnDecc
+# SPDX-FileCopyrightText: 2023 Gotimanga
+# SPDX-FileCopyrightText: 2023 Leon Friedrich
+# SPDX-FileCopyrightText: 2023 Link
+# SPDX-FileCopyrightText: 2023 Nemanja
+# SPDX-FileCopyrightText: 2023 lapatison
+# SPDX-FileCopyrightText: 2024 Kukutis96513
+# SPDX-FileCopyrightText: 2024 MODERN
+# SPDX-FileCopyrightText: 2024 brainfood1183
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2025 Hannah Giovanna Dawson
+# SPDX-FileCopyrightText: 2025 RedBookcase
+# SPDX-FileCopyrightText: 2025 Sender
+# SPDX-FileCopyrightText: 2025 SpaceLizard
+# SPDX-FileCopyrightText: 2025 TeenSarlacc
+# SPDX-FileCopyrightText: 2025 Xeri Marai
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 - type: cargoProduct
   id: FunInstrumentsVariety
   icon:
@@ -105,36 +138,6 @@
     state: icon
   product: CrateFunFoamGuns
   cost: 3000
-  category: cargoproduct-category-name-fun
-  group: market
-
-- type: cargoProduct
-  id: FunPlushies
-  icon:
-    sprite: Objects/Fun/Plushies/human.rsi
-    state: icon
-  product: CrateFunPlushie
-  cost: 1000
-  category: cargoproduct-category-name-fun
-  group: market
-
-- type: cargoProduct
-  id: FunLizardPlushies
-  icon:
-    sprite: Objects/Fun/Plushies/lizard.rsi
-    state: icon
-  product: CrateFunLizardPlushieBulk
-  cost: 500
-  category: cargoproduct-category-name-fun
-  group: market
-
-- type: cargoProduct
-  id: FunSharkPlushies
-  icon:
-    sprite: Objects/Fun/Plushies/shark.rsi
-    state: blue
-  product: CrateFunSharkPlushieBulk
-  cost: 500
   category: cargoproduct-category-name-fun
   group: market
 

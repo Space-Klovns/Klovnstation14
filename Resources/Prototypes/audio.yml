@@ -1,3 +1,13 @@
+# SPDX-FileCopyrightText: 2024 Ed
+# SPDX-FileCopyrightText: 2024 Flareguy
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2024 pigeonpeas
+# SPDX-FileCopyrightText: 2024 slarticodefast
+# SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: ambientMusic
   id: Morgue
   sound:
@@ -335,3 +345,30 @@
   id: OnMapGrid
   rules:
     - !type:OnMapGridRule
+
+# KS14 additions
+# Advanced topicals item sounds
+- type: soundCollection
+  id: SutureEnd
+  files:
+    - /Audio/_KS14/Items/Medical/suture/suture_end1.ogg
+    - /Audio/_KS14/Items/Medical/suture/suture_end2.ogg
+    - /Audio/_KS14/Items/Medical/suture/suture_end3.ogg
+    - /Audio/_KS14/Items/Medical/suture/suture_end4.ogg
+
+- type: soundCollection
+  id: MeshBegin
+  files:
+    - /Audio/_KS14/Items/Medical/mesh/regen_mesh_begin1.ogg
+    - /Audio/_KS14/Items/Medical/mesh/regen_mesh_begin2.ogg
+    - /Audio/_KS14/Items/Medical/mesh/regen_mesh_begin3.ogg
+    - /Audio/_KS14/Items/Medical/mesh/regen_mesh_begin4.ogg
+
+- type: soundCollection
+  id: MeshEnd
+  files:
+    - /Audio/_KS14/Items/Medical/mesh/regen_mesh_end1.ogg
+    - /Audio/_KS14/Items/Medical/mesh/regen_mesh_end2.ogg
+    - /Audio/_KS14/Items/Medical/mesh/regen_mesh_end3.ogg
+    - /Audio/_KS14/Items/Medical/mesh/regen_mesh_end4.ogg
+    - /Audio/_KS14/Items/Medical/mesh/regen_mesh_end5.ogg

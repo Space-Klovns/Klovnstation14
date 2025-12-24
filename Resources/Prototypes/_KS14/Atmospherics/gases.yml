@@ -1,4 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Deltium
+# SPDX-FileCopyrightText: 2025 Gerkada
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Syndicate Engineer
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
@@ -13,3 +16,12 @@
   color: b924bf
   reagent: Zipion
   pricePerMole: 1
+- type: gas
+  id: 10
+  name: gases-argon
+  specificHeat: 25
+  heatCapacityRatio: 1.67
+  molarMass: 40
+  color: 8a2be2
+  reagent: Argon
+  pricePerMole: 0.5

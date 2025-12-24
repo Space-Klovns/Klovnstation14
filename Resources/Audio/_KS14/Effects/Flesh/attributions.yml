@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- files: ["flesh_break1.ogg", "flesh_break2.ogg", "flesh_tear1.ogg", "flesh_tear2.ogg", "flesh_tear3.ogg"]
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Taken from https://github.com/goonstation/goonstation at d150b4db9bc6e1460dcf43ae702a52eaf3dea544"
+  source: "https://github.com/goonstation/goonstation/blob/d150b4db9bc6e1460dcf43ae702a52eaf3dea544/sound/impact_sounds/"

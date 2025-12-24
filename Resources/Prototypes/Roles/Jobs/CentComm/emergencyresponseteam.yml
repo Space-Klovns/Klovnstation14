@@ -27,7 +27,7 @@
 # SPDX-FileCopyrightText: 2025 UpAndLeaves
 # SPDX-FileCopyrightText: 2025 beck-thompson
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 # Leader
 - type: job

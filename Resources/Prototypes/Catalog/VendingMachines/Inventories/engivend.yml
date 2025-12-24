@@ -18,12 +18,14 @@
 # SPDX-FileCopyrightText: 2025 Kittygyat
 # SPDX-FileCopyrightText: 2025 Smith
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
 #
 # SPDX-License-Identifier: MIT
 
 - type: vendingMachineInventory
   id: EngiVendInventory
   startingInventory:
+    ClothingOuterSuitArc: 3 # KS14 - arc suits
     ClothingEyesGlassesMeson: 4
     ClothingEyesHudDiagnostic: 4
     ClothingHeadHatWelding: 6

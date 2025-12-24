@@ -47,6 +47,7 @@
 # SPDX-FileCopyrightText: 2025 August Sun
 # SPDX-FileCopyrightText: 2025 BramvanZijp
 # SPDX-FileCopyrightText: 2025 Brassica Prime
+# SPDX-FileCopyrightText: 2025 FrauzJ
 # SPDX-FileCopyrightText: 2025 Hannah Giovanna Dawson
 # SPDX-FileCopyrightText: 2025 Hyper B
 # SPDX-FileCopyrightText: 2025 K-Dynamic
@@ -64,7 +65,7 @@
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 #When adding new hardsuits, please try to keep the organization consistent with hardsuit-helmets.yml (if possible.)
 
@@ -95,7 +96,7 @@
       coefficients:
         Blunt: 0.9
         Slash: 0.9
-        Piercing: 0.7
+        Piercing: 0.9
         Heat: 0.8
         Radiation: 0.5
   - type: ClothingSpeedModifier
@@ -131,7 +132,7 @@
       coefficients:
         Blunt: 0.9
         Slash: 0.9
-        Piercing: 0.7
+        Piercing: 0.9
         Shock: 0.8
         Caustic: 0.5
         Radiation: 0.2
@@ -166,7 +167,7 @@
       coefficients:
         Blunt: 0.8
         Slash: 0.8
-        Piercing: 0.7
+        Piercing: 0.75
         Radiation: 0.3 #salv is supposed to have radiation hazards in the future
         Caustic: 0.8
   - type: ClothingSpeedModifier
@@ -203,7 +204,7 @@
       coefficients:
         Blunt: 0.7
         Slash: 0.7
-        Piercing: 0.5
+        Piercing: 0.6
         Heat: 0.7
         Radiation: 0.4
         Caustic: 0.7
@@ -240,7 +241,7 @@
       coefficients:
         Blunt: 0.7
         Slash: 0.7
-        Piercing: 0.3
+        Piercing: 0.45
         Heat: 0.7 #Goliath hide gets grilled instead of you
         Radiation: 0.1
         Caustic: 0.8
@@ -379,11 +380,11 @@
       coefficients:
         Blunt: 0.45
         Slash: 0.45
-        Piercing: 0.3
+        Piercing: 0.35
         Caustic: 0.7
   - type: ClothingSpeedModifier
-    walkModifier: 0.8
-    sprintModifier: 0.8
+    walkModifier: 0.75
+    sprintModifier: 0.75
   - type: HeldSpeedModifier
   - type: ToggleableClothing
     clothingPrototype: ClothingHeadHelmetHardsuitWarden
@@ -409,7 +410,7 @@
       coefficients:
         Blunt: 0.5
         Slash: 0.5
-        Piercing: 0.25
+        Piercing: 0.55
         Heat: 0.5
         Radiation: 0.5
         Caustic: 0.6
@@ -448,7 +449,7 @@
       coefficients:
         Blunt: 0.8
         Slash: 0.8
-        Piercing: 0.6
+        Piercing: 0.8
         Heat: 0.4
         Radiation: 0.0
         Caustic: 0.7
@@ -481,6 +482,9 @@
   - type: Armor
     modifiers:
       coefficients:
+        Blunt: 0.85
+        Slash: 0.85
+        Heat: 0.85
         Caustic: 0.1
   - type: ZombificationResistance
     zombificationResistanceCoefficient: 0.4
@@ -515,7 +519,7 @@
       coefficients:
         Blunt: 0.6
         Slash: 0.8
-        Piercing: 0.7
+        Piercing: 0.8
         Heat: 0.3
         Radiation: 0.01
         Caustic: 0.2
@@ -561,9 +565,9 @@
   - type: Armor
     modifiers:
       coefficients:
-        Blunt: 0.45
-        Slash: 0.45
-        Piercing: 0.3
+        Blunt: 0.55
+        Slash: 0.55
+        Piercing: 0.4
         Radiation: 0.5
         Caustic: 0.5
   - type: ClothingSpeedModifier
@@ -595,7 +599,7 @@
       coefficients:
         Blunt: 0.8
         Slash: 0.8
-        Piercing: 0.6
+        Piercing: 0.7
         Heat: 0.9
         Radiation: 0.5
         Caustic: 0.8
@@ -811,10 +815,10 @@
   - type: Armor
     modifiers:
       coefficients:
-        Blunt: 0.35
-        Slash: 0.35
-        Piercing: 0.35
-        Heat: 0.35
+        Blunt: 0.45
+        Slash: 0.45
+        Piercing: 0.45
+        Heat: 0.45
         Radiation: 0.05
         Caustic: 0.1
   - type: ClothingSpeedModifier
@@ -1080,12 +1084,12 @@
   - type: Armor
     modifiers:
       coefficients:
-        Blunt: 0.5 # KS, zeds deal brute aswell
-        Slash: 0.5 # KS, zeds deal brute and slash dumbass
-        Piercing: 0.3
-        Heat: 0.2 # KS14, changes heat cold shock and caustic because its overtuned for what CBURN is
-        Cold: 0.2 # KS14
-        Shock: 0.2 # KS14
+        Blunt: 0.5 # KS, zeds deal blunt aswell
+        Slash: 0.5 # KS, zeds deal blunt and slash dumbass :fortune:
+        Piercing: 0.55
+        Heat: 0.35 # KS14, changes heat cold shock and caustic because its overtuned for what CBURN is
+        Cold: 0.35 # KS14
+        Shock: 0.35 # KS14
         Radiation: 0.1
         Caustic: 0.5 # KS14
   - type: ZombificationResistance
@@ -1119,7 +1123,7 @@
       coefficients:
         Blunt: 0.9
         Slash: 0.9
-        Piercing: 0.7
+        Piercing: 0.8
         Caustic: 0.8
   - type: ClothingSpeedModifier
     walkModifier: 0.9

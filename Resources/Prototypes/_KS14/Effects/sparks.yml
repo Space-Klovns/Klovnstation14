@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: 2025 Flareguy
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Thinbug
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: entity
+  id: EffectSparkMoving
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Physics
+    bodyType: Dynamic
+    canCollide: false # lol whatever. TODO: give proper collision(?)
+    bodyStatus: InAir
+    linearDamping: 0
+    angularDamping: 0
+  - type: Sprite
+    sprite: _KS14/Effects/sparks.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: sparks # i do wonder why the last, invisible frame is set to last for 50 seconds
+      shader: unshaded
+  - type: Tag
+    tags:
+    - HideContextMenu
+  - type: TimedDespawn
+    lifetime: 0.75
+  - type: EffectVisuals
+  - type: AnimationPlayer
+  - type: Fixtures
+    fixtures:
+      projectile:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.3
+        hard: false
