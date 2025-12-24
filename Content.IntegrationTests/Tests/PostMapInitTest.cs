@@ -55,6 +55,7 @@ namespace Content.IntegrationTests.Tests
         /// </remarks>
         private static readonly Dictionary<string, HashSet<EntProtoId>> DoNotMapWhitelistSpecific = new()
         {
+            {"/Maps/meta.yml", ["RubberStampWarden"]},
             {"/Maps/bagel.yml", ["RubberStampMime"]},
             {"/Maps/reach.yml", ["HandheldCrewMonitor"]},
             {"/Maps/Shuttles/ShuttleEvent/honki.yml", ["GoldenBikeHorn", "RubberStampClown"]},
@@ -97,12 +98,14 @@ namespace Content.IntegrationTests.Tests
             "Saltern",
             "Reach",
             "Oasis",
-            "Amber",
-            "Plasma",
-            "Elkridge",
+            // "Amber",
+            // "Plasma",
+            // "Elkridge",
             "Relic",
             "dm01-entryway",
             "Exo",
+            "Meta",
+            "Omega"
         };
 
         private static readonly ProtoId<EntityCategoryPrototype> DoNotMapCategory = "DoNotMap";
