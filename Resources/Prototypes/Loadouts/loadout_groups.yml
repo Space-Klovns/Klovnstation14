@@ -33,6 +33,7 @@
 # SPDX-FileCopyrightText: 2025 Hitlinemoss
 # SPDX-FileCopyrightText: 2025 Julian Giebel
 # SPDX-FileCopyrightText: 2025 KingFroozy
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Momo
 # SPDX-FileCopyrightText: 2025 Mora
 # SPDX-FileCopyrightText: 2025 Phooooooooooooooooooooooooooooooosphate
@@ -44,6 +45,7 @@
 # SPDX-FileCopyrightText: 2025 ivo
 # SPDX-FileCopyrightText: 2025 kosticia
 # SPDX-FileCopyrightText: 2025 lzk
+# SPDX-FileCopyrightText: 2025 nabegator220
 # SPDX-FileCopyrightText: 2025 paige404
 # SPDX-FileCopyrightText: 2025 slarticodefast
 #
@@ -59,8 +61,6 @@
   - FlowerWreath
   - Hairflower
   - Headphones
-#  - PlushieLizard, klovn
-#  - PlushieSpaceLizard
   - ThreeCandles
   - Lighter
   - CigPackGreen
@@ -69,24 +69,6 @@
   - CigPackBlack
   - CigarCase
   - CigarGold
-  - ClothingNeckLGBTPin
-  - ClothingNeckAllyPin
-  - ClothingNeckAromanticPin
-  - ClothingNeckAsexualPin
-  - ClothingNeckAroacePin
-  - ClothingNeckBisexualPin
-  - ClothingNeckGayPin
-  - ClothingNeckIntersexPin
-  - ClothingNeckLesbianPin
-  - ClothingNeckNonBinaryPin
-  - ClothingNeckPansexualPin
-  - ClothingNeckPluralPin
-  - ClothingNeckOmnisexualPin
-  - ClothingNeckGenderqueerPin
-  - ClothingNeckGenderfluidPin
-  - ClothingNeckTransPin
-  - ClothingNeckAutismPin
-  - ClothingNeckGoldAutismPin
   - OffsetCane
   - OffsetCaneWood
   - OffsetCaneClown

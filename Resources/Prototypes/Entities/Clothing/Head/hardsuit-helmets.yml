@@ -1,3 +1,61 @@
+# SPDX-FileCopyrightText: 2020 FrostMando
+# SPDX-FileCopyrightText: 2020 Paul Ritter
+# SPDX-FileCopyrightText: 2020 Swept
+# SPDX-FileCopyrightText: 2020 Víctor Aguilera Puerto
+# SPDX-FileCopyrightText: 2021 Alex Evgrashin
+# SPDX-FileCopyrightText: 2021 xRiriq
+# SPDX-FileCopyrightText: 2022 Kara
+# SPDX-FileCopyrightText: 2022 Leon Friedrich
+# SPDX-FileCopyrightText: 2022 Peptide90
+# SPDX-FileCopyrightText: 2022 Rane
+# SPDX-FileCopyrightText: 2022 mirrorcult
+# SPDX-FileCopyrightText: 2023 Alekshhh
+# SPDX-FileCopyrightText: 2023 CrigCrag
+# SPDX-FileCopyrightText: 2023 EnDecc
+# SPDX-FileCopyrightText: 2023 Flareguy
+# SPDX-FileCopyrightText: 2023 Genkail
+# SPDX-FileCopyrightText: 2023 Nairod
+# SPDX-FileCopyrightText: 2023 Puro
+# SPDX-FileCopyrightText: 2023 Rainfall
+# SPDX-FileCopyrightText: 2023 Rainfey
+# SPDX-FileCopyrightText: 2023 SapphicOverload
+# SPDX-FileCopyrightText: 2023 StanTheCarpenter
+# SPDX-FileCopyrightText: 2023 brainfood1183
+# SPDX-FileCopyrightText: 2023 crazybrain23
+# SPDX-FileCopyrightText: 2023 lzk
+# SPDX-FileCopyrightText: 2023 metalgearsloth
+# SPDX-FileCopyrightText: 2024 Cojoke
+# SPDX-FileCopyrightText: 2024 ERROR404
+# SPDX-FileCopyrightText: 2024 Emisse
+# SPDX-FileCopyrightText: 2024 Hmeister-real
+# SPDX-FileCopyrightText: 2024 IProduceWidgets
+# SPDX-FileCopyrightText: 2024 Mr. 27
+# SPDX-FileCopyrightText: 2024 Plykiya
+# SPDX-FileCopyrightText: 2024 SlamBamActionman
+# SPDX-FileCopyrightText: 2024 Winkarst
+# SPDX-FileCopyrightText: 2024 buntobaggins
+# SPDX-FileCopyrightText: 2024 deltanedas
+# SPDX-FileCopyrightText: 2025 August Sun
+# SPDX-FileCopyrightText: 2025 Banedon
+# SPDX-FileCopyrightText: 2025 Brassica Prime
+# SPDX-FileCopyrightText: 2025 Centronias
+# SPDX-FileCopyrightText: 2025 Hyper B
+# SPDX-FileCopyrightText: 2025 Ivan
+# SPDX-FileCopyrightText: 2025 Killerqu00
+# SPDX-FileCopyrightText: 2025 Nemanja
+# SPDX-FileCopyrightText: 2025 Perry Fraser
+# SPDX-FileCopyrightText: 2025 RedBookcase
+# SPDX-FileCopyrightText: 2025 ScarKy0
+# SPDX-FileCopyrightText: 2025 Sparlight
+# SPDX-FileCopyrightText: 2025 Tiniest Shark
+# SPDX-FileCopyrightText: 2025 UpAndLeaves
+# SPDX-FileCopyrightText: 2025 Velken
+# SPDX-FileCopyrightText: 2025 dandy
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
 #When adding new hardsuits, please try to keep the organization consistent with hardsuit.yml (if possible.)
 
 #For now, since locational damage is not a thing, all "combat" hardsuits (with the exception of the deathsquad hardsuit) have the equvilent of a helmet in terms of armor.
@@ -78,6 +136,9 @@
     tags:
     - CorgiWearable
     - WhitelistChameleon
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #Engineering Hardsuit
 - type: entity
@@ -147,6 +208,9 @@
     tags:
     - CorgiWearable
     - WhitelistChameleon
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #Spationaut Hardsuit
 - type: entity
@@ -349,6 +413,9 @@
     tags:
     - CorgiWearable
     - WhitelistChameleon
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #Brigmedic Hardsuit
 - type: entity
@@ -375,6 +442,9 @@
   - type: PressureProtection
     highPressureMultiplier: 0.6
     lowPressureMultiplier: 1000
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #Warden's Hardsuit
 - type: entity
@@ -399,6 +469,9 @@
         Slash: 0.9
         Piercing: 0.9
         Heat: 0.9
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #Captain's Hardsuit
 - type: entity
@@ -418,6 +491,9 @@
     tags:
     - CorgiWearable
     - WhitelistChameleon
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #Chief Engineer's Hardsuit
 - type: entity
@@ -489,6 +565,9 @@
     tags:
     - CorgiWearable
     - WhitelistChameleon
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #Chief Medical Officer's Hardsuit
 - type: entity
@@ -510,6 +589,9 @@
     tags:
     - CorgiWearable
     - WhitelistChameleon
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #Research Director's Hardsuit
 - type: entity
@@ -531,6 +613,9 @@
     tags:
     - CorgiWearable
     - WhitelistChameleon
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #Head of Security's hardsuit
 - type: entity
@@ -555,6 +640,9 @@
         Slash: 0.9
         Piercing: 0.9
         Heat: 0.9
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #Luxury Mining Hardsuit
 - type: entity
@@ -603,6 +691,9 @@
     tags:
     - CorgiWearable
     - WhitelistChameleon
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #Blood-red Medic Hardsuit
 - type: entity
@@ -627,6 +718,9 @@
         Slash: 0.9
         Piercing: 0.9
         Heat: 0.9
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #Syndicate Elite Hardsuit
 - type: entity
@@ -660,6 +754,9 @@
     tags:
     - CorgiWearable
     - WhitelistChameleon
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #Syndicate Commander Hardsuit
 - type: entity
@@ -688,6 +785,9 @@
     tags:
     - CorgiWearable
     - WhitelistChameleon
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #Cybersun Juggernaut Hardsuit
 - type: entity
@@ -714,6 +814,9 @@
     tags:
     - CorgiWearable
     - WhitelistChameleon
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #Wizard Hardsuit
 - type: entity
@@ -742,6 +845,9 @@
     tags:
     - CorgiWearable
     - WhitelistChameleon
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #Organic Space Suit
 - type: entity
@@ -824,6 +930,9 @@
         Slash: 0.9
         Piercing: 0.9
         Heat: 0.9
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #CENTCOMM / ERT HARDSUITS
 #ERT Leader Hardsuit
@@ -981,6 +1090,9 @@
         Heat: 0.9
   - type: ZombificationResistance
     zombificationResistanceCoefficient: 0.75
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #Deathsquad Hardsuit
 - type: entity
@@ -1008,6 +1120,9 @@
         Heat: 0.80
         Radiation: 0.80
         Caustic: 0.95
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #MISC. HARDSUITS
 #Clown Hardsuit

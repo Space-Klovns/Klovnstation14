@@ -10,7 +10,7 @@
 // SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
 // SPDX-FileCopyrightText: 2025 nabegator220
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Monitor;
@@ -56,7 +56,7 @@ public sealed partial class AtmosMonitorComponent : Component
     public bool MonitorFire = false;
 
     [DataField("gasThresholdPrototypes",
-        customTypeSerializer:typeof(PrototypeIdValueDictionarySerializer<Gas, AtmosAlarmThresholdPrototype>))]
+        customTypeSerializer: typeof(PrototypeIdValueDictionarySerializer<Gas, AtmosAlarmThresholdPrototype>))]
     public Dictionary<Gas, string>? GasThresholdPrototypes;
 
     [DataField("gasThresholds")]

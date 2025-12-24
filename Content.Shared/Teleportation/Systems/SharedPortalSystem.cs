@@ -1,18 +1,43 @@
-﻿using System.Linq;
+// SPDX-FileCopyrightText: 2023 Chief-Engineer
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Kara
+// SPDX-FileCopyrightText: 2023 Leon Friedrich
+// SPDX-FileCopyrightText: 2023 Nemanja
+// SPDX-FileCopyrightText: 2023 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2024 Jezithyr
+// SPDX-FileCopyrightText: 2024 godisdeadLOL
+// SPDX-FileCopyrightText: 2024 metalgearsloth
+// SPDX-FileCopyrightText: 2025 J
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+// SPDX-FileCopyrightText: 2025 āda
+//
+// SPDX-License-Identifier: MPL-2.0
+
+using System.Linq;
+using Content.Shared._KS14.Random.Helpers; // KS14 Addition
+using Content.Shared._KS14.Sparks; // KS14 Addition
+using Content.Shared.Body.Components; // KS14 Addition
+using Content.Shared.Body.Systems; // KS14 Addition
 using Content.Shared.Ghost;
+using Content.Shared.IdentityManagement; // KS14 Addition
 using Content.Shared.Movement.Pulling.Components;
 using Content.Shared.Movement.Pulling.Systems;
 using Content.Shared.Popups;
 using Content.Shared.Projectiles;
+using Content.Shared.Random.Helpers;
 using Content.Shared.Teleportation.Components;
 using Content.Shared.Verbs;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components; // KS14 Addition
 using Robust.Shared.Network;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Player;
 using Robust.Shared.Random;
+using Robust.Shared.Timing; // KS14 Addition
 using Robust.Shared.Utility;
 
 namespace Content.Shared.Teleportation.Systems;
@@ -24,13 +49,16 @@ namespace Content.Shared.Teleportation.Systems;
 /// <seealso cref="PortalComponent"/>
 public abstract class SharedPortalSystem : EntitySystem
 {
-    [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly INetManager _netMan = default!;
     [Dependency] private readonly EntityLookupSystem _lookup = default!;
     [Dependency] private readonly SharedAudioSystem _audio = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly PullingSystem _pulling = default!;
     [Dependency] private readonly SharedPopupSystem _popup = default!;
+    [Dependency] private readonly SharedSparksSystem _sparksSystem = default!; // KS14 Addition
+    [Dependency] private readonly IGameTiming _curTiming = default!; // KS14 Addition
+    [Dependency] private readonly SharedBodySystem _bodySystem = default!; // KS14 Addition
+    [Dependency] private readonly ISharedPlayerManager _playerManager = default!; // KS14 Addition
 
     private const string PortalFixture = "portalFixture";
     private const string ProjectileFixture = "projectile";
@@ -121,7 +149,8 @@ public abstract class SharedPortalSystem : EntitySystem
                 return;
 
             // pick a target and teleport there
-            var target = _random.Pick(link.LinkedEntities);
+            // KS14: predicted random
+            var target = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed((int)_curTiming.CurTick.Value, KsSharedRandomExtensions.GetNetId(ent.Owner, EntityManager)).Pick(link.LinkedEntities);
 
             if (HasComp<PortalComponent>(target))
             {
@@ -190,6 +219,23 @@ public abstract class SharedPortalSystem : EntitySystem
         return true;
     }
 
+    // KS14 Addition
+    /// <summary>
+    /// Called on an entity being telefragged.
+    /// </summary>
+    /// <returns>False if the hit was already handled.</returns>
+    public virtual bool OnTelefrag(Entity<BodyComponent?> hitEntity, in Entity<PortalComponent> portalEntity)
+    {
+        if (Resolve(hitEntity, ref hitEntity.Comp, logMissing: false))
+        {
+            _popup.PopupEntity(Loc.GetString("portal-component-telefrag", ("name", Identity.Name(hitEntity, EntityManager, _playerManager.LocalEntity))), hitEntity, type: PopupType.LargeCaution);
+            _bodySystem.GibBody(hitEntity, gibOrgans: true, body: hitEntity.Comp, splatModifier: 9f);
+            return false;
+        }
+
+        return true;
+    }
+
     /// <summary>
     /// Handles teleporting a subject from the portal entity to a coordinate.
     /// Also deletes invalid portals.
@@ -241,6 +287,31 @@ public abstract class SharedPortalSystem : EntitySystem
 
         _transform.SetCoordinates(subject, target);
 
+        // KS14: Gib if tile isn't free (trollface emoji)
+        var sparkMultiplier = 1f;
+        if (ent.Comp.FragOnTargetTileOccupied &&
+            TryComp<BodyComponent>(subject, out var subjectBodyComponent))
+        {
+            var intersected = false;
+            foreach (var hitUid in _lookup.GetEntitiesIntersecting(_transform.ToMapCoordinates(target), LookupFlags.Static))
+            {
+                intersected = true;
+
+                if (ent.Comp.FragIntersectingEntities)
+                {
+                    OnTelefrag(hitUid, ent);
+                    sparkMultiplier += 2f;
+                }
+            }
+
+            // where's yo head at
+            if (intersected)
+                OnTelefrag((subject, subjectBodyComponent), ent);
+        }
+
+        // KS14: Do sparks
+        _sparksSystem.DoSparks(target, minimumSparks: (int)(2f * sparkMultiplier), maximumSparks: (int)(5f * sparkMultiplier), user: subject);
+
         if (!playSound)
             return;
 
@@ -258,18 +329,27 @@ public abstract class SharedPortalSystem : EntitySystem
     {
         var xform = Transform(ent);
         var coords = xform.Coordinates;
-        var newCoords = coords.Offset(_random.NextVector2(ent.Comp.MaxRandomRadius));
-        for (var i = 0; i < MaxRandomTeleportAttempts; i++)
+
+        var random = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed((int)_curTiming.CurTick.Value, KsSharedRandomExtensions.GetNetId(ent.Owner, EntityManager));
+        var newCoords = coords;
+
+        for (var i = 0; i <= MaxRandomTeleportAttempts; i++)
         {
-            var randVector = _random.NextVector2(ent.Comp.MaxRandomRadius);
-            newCoords = coords.Offset(randVector);
-            if (!_lookup.AnyEntitiesIntersecting(_transform.ToMapCoordinates(newCoords), LookupFlags.Static))
+            newCoords = coords.Offset(random.NextVector2(ent.Comp.MaxRandomRadius));
+            if (!ent.Comp.CanTeleportOnOccupiedTiles && // KS14: Added CanTeleportOnOccupiedTiles
+                _lookup.AnyEntitiesIntersecting(_transform.ToMapCoordinates(newCoords), LookupFlags.Static))
             {
-                // newCoords is not a wall
-                break;
+                // after "MaxRandomTeleportAttempts" attempts, end up in the walls
+                continue;
             }
-            // after "MaxRandomTeleportAttempts" attempts, end up in the walls
+
+            // newCoords is not a wall
+            break;
         }
+
+        // KS14: Align to tile if on a grid (whateverburger). wtf is this
+        if (TryComp<MapGridComponent>(newCoords.EntityId, out var gridComponent))
+            newCoords = new EntityCoordinates(newCoords.EntityId, MathF.Floor(newCoords.X / gridComponent.TileSize), MathF.Floor(newCoords.Y / gridComponent.TileSize));
 
         TeleportEntity(ent, subject, newCoords);
     }

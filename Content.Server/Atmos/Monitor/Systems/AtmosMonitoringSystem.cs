@@ -11,13 +11,16 @@
 // SPDX-FileCopyrightText: 2024 Leon Friedrich
 // SPDX-FileCopyrightText: 2024 chromiumboy
 // SPDX-FileCopyrightText: 2024 osjarw
+// SPDX-FileCopyrightText: 2025 Gerkada
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2025 Palladinium
 // SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
 // SPDX-FileCopyrightText: 2025 Southbridge
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 metalgearsloth
 // SPDX-FileCopyrightText: 2025 nabegator220
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Atmos.Monitor.Components;
@@ -111,14 +114,19 @@ public sealed class AtmosMonitorSystem : EntitySystem
             component.PressureThreshold ??= new(proto);
         }
 
-        if (component.GasThresholdPrototypes == null)
-            return;
-
         component.GasThresholds ??= new();
-        foreach (var (gas, id) in component.GasThresholdPrototypes)
+        if (component.GasThresholdPrototypes != null)
         {
-            var proto = _prototypeManager.Index<AtmosAlarmThresholdPrototype>(id);
-            component.GasThresholds.TryAdd(gas, new(proto));
+            foreach (var (gas, id) in component.GasThresholdPrototypes)
+            {
+                var proto = _prototypeManager.Index<AtmosAlarmThresholdPrototype>(id);
+                component.GasThresholds.TryAdd(gas, new(proto));
+            }
+        }
+
+        foreach (var gas in Enum.GetValues<Gas>())
+        {
+            component.GasThresholds.TryAdd(gas, new());
         }
     }
 
@@ -445,11 +453,11 @@ public sealed class AtmosMonitorSystem : EntitySystem
                 if (gas == null || monitor.GasThresholds == null)
                     return;
 
-                logPrefix = ((Gas) gas).ToString();
+                logPrefix = ((Gas)gas).ToString();
                 logValueSuffix = "kPa";
-                monitor.GasThresholds.TryGetValue((Gas) gas, out logPreviousThreshold);
+                monitor.GasThresholds.TryGetValue((Gas)gas, out logPreviousThreshold);
 
-                monitor.GasThresholds[(Gas) gas] = threshold;
+                monitor.GasThresholds[(Gas)gas] = threshold;
                 break;
         }
 

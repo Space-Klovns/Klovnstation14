@@ -1,3 +1,27 @@
+# SPDX-FileCopyrightText: 2020 Paul Ritter
+# SPDX-FileCopyrightText: 2020 Vera Aguilera Puerto
+# SPDX-FileCopyrightText: 2021 DrSmugleaf
+# SPDX-FileCopyrightText: 2021 Peptide90
+# SPDX-FileCopyrightText: 2021 Swept
+# SPDX-FileCopyrightText: 2022 Emisse
+# SPDX-FileCopyrightText: 2022 Nemanja
+# SPDX-FileCopyrightText: 2022 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2022 T-Stalker
+# SPDX-FileCopyrightText: 2022 Willhelm53
+# SPDX-FileCopyrightText: 2023 Chief-Engineer
+# SPDX-FileCopyrightText: 2023 DerbyX
+# SPDX-FileCopyrightText: 2023 Ed
+# SPDX-FileCopyrightText: 2023 Flareguy
+# SPDX-FileCopyrightText: 2023 Puro
+# SPDX-FileCopyrightText: 2023 metalgearsloth
+# SPDX-FileCopyrightText: 2023 mhamster
+# SPDX-FileCopyrightText: 2024 Mr. 27
+# SPDX-FileCopyrightText: 2025 RedBookcase
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 - type: entity
   name: Toy Spawner
   id: ToySpawner
@@ -11,29 +35,10 @@
     - type: RandomSpawner
       rarePrototypes:
         - FoamBlade
-        - PlushieGhost
       rareChance: 0.03
       prototypes:
-        - PlushieBee
-        - PlushieAtmosian
-        - PlushieNuke
-        - PlushieLizard
-        - PlushieNar
-        - PlushieCarp
-        - PlushieSlime
-        - PlushieSnake
-        - PlushieVox
-        - PlushieRatvar
-        - PlushieSpaceLizard
-        - PlushieRouny
-        - PlushieLamp
-        - PlushieSharkBlue
-        - PlushieSharkPink
-        - PlushieSharkGrey
         - ToyAmongPequeno
         - ToyMouse
-        - PlushieDiona
-        - PlushieArachind
       chance: 0.5
       offset: 0.2
 

@@ -1,0 +1,221 @@
+# SPDX-FileCopyrightText: 2025 Gerkada
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: entity
+  id: LootSpawnerSyndicateBase
+  name: syndicate loot spawner
+  parent: MarkerBase
+  abstract: true
+  components:
+  - type: RandomSpawner
+
+- type: entity
+  id: LootSpawnerSyndicateWeaponry
+  name: syndicate weaponry spawner
+  parent: LootSpawnerSyndicateBase
+  suffix: Syndicate, Weaponry
+  components:
+  - type: Sprite
+    layers:
+    - state: red
+      color: "#ff0000"
+    - sprite: Objects/Weapons/Guns/SMGs/c20r.rsi
+      state: base
+  - type: RandomSpawner
+    prototypes:
+    - WeaponPistolViper
+    - WeaponPistolCobra
+    - WeaponSubMachineGunC20r
+    - WeaponShotgunBulldog
+    - WeaponSniperHristov
+    - EnergySword
+    - EnergySwordDouble
+    chance: 0.8
+    offset: 0.0
+
+- type: entity
+  id: LootSpawnerSyndicateAmmo
+  name: syndicate ammo spawner
+  parent: LootSpawnerSyndicateBase
+  suffix: Syndicate, Ammo
+  components:
+  - type: Sprite
+    layers:
+    - state: red
+      color: "#ff0000"
+    - sprite: Objects/Weapons/Guns/Ammunition/Magazine/Pistol/pistol_mag.rsi
+      state: base
+  - type: RandomSpawner
+    prototypes:
+    - MagazinePistol
+    - MagazinePistolSubMachineGun
+    - MagazineShotgun
+    - MagazineBoxAntiMateriel
+    - MagazineGrenadeFrag
+    chance: 0.8
+    offset: 0.0
+
+- type: entity
+  id: LootSpawnerSyndicateExplosives
+  name: syndicate explosives spawner
+  parent: LootSpawnerSyndicateBase
+  suffix: Syndicate, Explosives
+  components:
+  - type: Sprite
+    layers:
+    - state: red
+      color: "#ff0000"
+    - sprite: Structures/Machines/bomb.rsi
+      state: syndicate-bomb
+  - type: RandomSpawner
+    prototypes:
+    - SyndieMiniBomb
+    - C4
+    - MobGrenadePenguin
+    - SyndicateBomb
+    - TrainingBomb
+    chance: 0.8
+    offset: 0.0
+
+- type: entity
+  id: LootSpawnerSyndicateWearables
+  name: syndicate wearables spawner
+  parent: LootSpawnerSyndicateBase
+  suffix: Syndicate, Wearables
+  components:
+  - type: Sprite
+    layers:
+    - state: red
+      color: "#ff0000"
+    - sprite: Clothing/OuterClothing/Hardsuits/syndicate.rsi
+      state: icon
+  - type: RandomSpawner
+    prototypes:
+    - ClothingOuterHardsuitSyndie
+    - ClothingShoesBootsMagSyndie
+    - ClothingMaskGasSyndicate
+    - ClothingBackpackSyndicate
+    - ClothingBackpackDuffelSyndicate
+    chance: 0.8
+    offset: 0.0
+
+- type: entity
+  id: LootSpawnerSyndicateChemicals
+  name: syndicate chemicals spawner
+  parent: LootSpawnerSyndicateBase
+  suffix: Syndicate, Chemicals
+  components:
+  - type: Sprite
+    layers:
+    - state: red
+      color: "#ff0000"
+    - sprite: Objects/Specific/Medical/syndihypo.rsi
+      state: hypo
+  - type: RandomSpawner
+    prototypes:
+    - SyringeEphedrine
+    - SyringeInaprovaline
+    - SyringeTranexamicAcid
+    chance: 0.8
+    offset: 0.0
+
+- type: entity
+  id: LootSpawnerSyndicateDeception
+  name: syndicate deception spawner
+  parent: LootSpawnerSyndicateBase
+  suffix: Syndicate, Deception
+  components:
+  - type: Sprite
+    layers:
+    - state: red
+      color: "#ff0000"
+    - sprite: Objects/Devices/chameleon_projector.rsi
+      state: icon
+  - type: RandomSpawner
+    prototypes:
+    - ChameleonProjector
+    - AgentIDCard
+    - ClothingMaskGasVoiceChameleon
+    chance: 0.8
+    offset: 0.0
+
+- type: entity
+  id: LootSpawnerSyndicateDisruption
+  name: syndicate disruption spawner
+  parent: LootSpawnerSyndicateBase
+  suffix: Syndicate, Disruption
+  components:
+  - type: Sprite
+    layers:
+    - state: red
+      color: "#ff0000"
+    - sprite: Objects/Tools/emag.rsi
+      state: icon
+  - type: RandomSpawner
+    prototypes:
+    - Emag
+    - RadioImplanter
+    - RadioJammer
+    chance: 0.8
+    offset: 0.0
+
+- type: entity
+  id: LootSpawnerSyndicateImplants
+  name: syndicate implants spawner
+  parent: LootSpawnerSyndicateBase
+  suffix: Syndicate, Implants
+  components:
+  - type: Sprite
+    layers:
+    - state: red
+      color: "#ff0000"
+    - sprite: Objects/Specific/Medical/syndi_implanter.rsi
+      state: implanter0
+  - type: RandomSpawner
+    prototypes:
+    - StorageImplant
+    - MicroBombImplant
+    - FreedomImplant
+    chance: 0.8
+    offset: 0.0
+
+- type: entity
+  id: LootSpawnerSyndicateAllies
+  name: syndicate allies spawner
+  parent: LootSpawnerSyndicateBase
+  suffix: Syndicate, Allies
+  components:
+  - type: Sprite
+    layers:
+    - state: red
+      color: "#ff0000"
+    - sprite: Objects/Specific/Medical/hypospray.rsi
+      state: combat_hypo
+  - type: RandomSpawner
+    prototypes:
+    - HoloparasiteInjector
+    - MedkitCombat
+    chance: 0.8
+    offset: 0.0
+
+- type: entity
+  id: LootSpawnerSyndicatePointless
+  name: syndicate pointless spawner
+  parent: LootSpawnerSyndicateBase
+  suffix: Syndicate, Pointless
+  components:
+  - type: Sprite
+    layers:
+    - state: red
+      color: "#ff0000"
+    - sprite: Objects/Fun/Balloons/syndicate.rsi
+      state: icon
+  - type: RandomSpawner
+    prototypes:
+    - SoapSyndie
+    - FoodPizzaMeat
+    - BalloonSyn
+    chance: 0.8
+    offset: 0.0

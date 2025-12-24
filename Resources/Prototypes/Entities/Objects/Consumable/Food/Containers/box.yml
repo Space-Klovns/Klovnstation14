@@ -38,6 +38,7 @@
 # SPDX-FileCopyrightText: 2025 Smugman
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 kosticia
+# SPDX-FileCopyrightText: 2025 nabegator220
 # SPDX-FileCopyrightText: 2025 pathetic meowmeow
 #
 # SPDX-License-Identifier: MIT
@@ -689,8 +690,6 @@
       - id: BalloonSyn
         prob: 0.6
         orGroup: GiftPool
-      - id: PlushieNuke
-        orGroup: GiftPool
 
 - type: entity
   parent: HappyHonkNukie
@@ -717,8 +716,6 @@
       orGroup: GiftPool
     - id: BalloonSyn
       prob: 0.6
-      orGroup: GiftPool
-    - id: PlushieNuke
       orGroup: GiftPool
     # drinks - 4 cans, up to 2 blood-red brews
     - id: DrinkNukieCan

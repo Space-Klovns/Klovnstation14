@@ -3,7 +3,7 @@
 # SPDX-FileCopyrightText: 2025 FrauzJ
 # SPDX-FileCopyrightText: 2025 keronshb
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - files: [rumble.ogg]
   copyright: "Made by Uzbazur freesound.org, modified by brainfood1183 (github)"

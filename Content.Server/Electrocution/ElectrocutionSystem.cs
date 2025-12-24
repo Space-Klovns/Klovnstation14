@@ -1,3 +1,45 @@
+// SPDX-FileCopyrightText: 2021 Clyybber
+// SPDX-FileCopyrightText: 2021 Vera Aguilera Puerto
+// SPDX-FileCopyrightText: 2021 pointer-to-null
+// SPDX-FileCopyrightText: 2022 0x6273
+// SPDX-FileCopyrightText: 2022 Acruid
+// SPDX-FileCopyrightText: 2022 Chief-Engineer
+// SPDX-FileCopyrightText: 2022 Flipp Syder
+// SPDX-FileCopyrightText: 2022 Paul Ritter
+// SPDX-FileCopyrightText: 2022 Willhelm53
+// SPDX-FileCopyrightText: 2022 wrexbe
+// SPDX-FileCopyrightText: 2023 Dawid Bla
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Errant
+// SPDX-FileCopyrightText: 2023 Kacper Urbańczyk
+// SPDX-FileCopyrightText: 2023 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2023 Slava0135
+// SPDX-FileCopyrightText: 2023 Tomás Alves
+// SPDX-FileCopyrightText: 2023 Visne
+// SPDX-FileCopyrightText: 2023 Vordenburg
+// SPDX-FileCopyrightText: 2023 chromiumboy
+// SPDX-FileCopyrightText: 2023 deltanedas
+// SPDX-FileCopyrightText: 2023 faint
+// SPDX-FileCopyrightText: 2023 keronshb
+// SPDX-FileCopyrightText: 2024 Ed
+// SPDX-FileCopyrightText: 2024 Fildrance
+// SPDX-FileCopyrightText: 2024 Jezithyr
+// SPDX-FileCopyrightText: 2024 Leon Friedrich
+// SPDX-FileCopyrightText: 2024 Nemanja
+// SPDX-FileCopyrightText: 2024 Varen
+// SPDX-FileCopyrightText: 2025 B_Kirill
+// SPDX-FileCopyrightText: 2025 J
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Princess Cheeseballs
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2025 TemporalOroboros
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+// SPDX-FileCopyrightText: 2025 metalgearsloth
+// SPDX-FileCopyrightText: 2025 nabegator220
+// SPDX-FileCopyrightText: 2025 slarticodefast
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Server.Administration.Logs;
 using Content.Server.NodeContainer;
 using Content.Server.NodeContainer.EntitySystems;
@@ -25,6 +67,7 @@ using Content.Shared.StatusEffect;
 using Content.Shared.Stunnable;
 using Content.Shared.Tag;
 using Content.Shared.Weapons.Melee.Events;
+using Content.Shared._KS14.ArcFlash.Components; //KS14
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
@@ -73,6 +116,7 @@ public sealed class ElectrocutionSystem : SharedElectrocutionSystem
     private const float JitterTimeMultiplier = 0.75f;
     private const float JitterAmplitude = 80f;
     private const float JitterFrequency = 8f;
+    private EntityQuery<ArcFlashInsulatedComponent> _flashProtQuery; //KS14 - arc flash
 
     public override void Initialize()
     {
@@ -84,6 +128,8 @@ public sealed class ElectrocutionSystem : SharedElectrocutionSystem
         SubscribeLocalEvent<ElectrifiedComponent, InteractUsingEvent>(OnElectrifiedInteractUsing);
         SubscribeLocalEvent<RandomInsulationComponent, MapInitEvent>(OnRandomInsulationMapInit);
         SubscribeLocalEvent<PoweredLightComponent, AttackedEvent>(OnLightAttacked);
+
+        _flashProtQuery = GetEntityQuery<ArcFlashInsulatedComponent>(); //KS14 - arc flash
 
         UpdatesAfter.Add(typeof(PowerNetSystem));
     }
@@ -127,7 +173,7 @@ public sealed class ElectrocutionSystem : SharedElectrocutionSystem
         }
     }
 
-    private bool IsPowered(EntityUid uid, ElectrifiedComponent electrified, TransformComponent transform)
+    public bool IsPowered(EntityUid uid, ElectrifiedComponent electrified, TransformComponent transform) //KS14 - changed to public so it could be used
     {
         if (!electrified.Enabled)
             return false;
@@ -216,11 +262,24 @@ public sealed class ElectrocutionSystem : SharedElectrocutionSystem
         if (!_random.Prob(electrified.Probability))
             return false;
 
+        // KS14 - arc flash - start
+        // we check if the player has an arc suit, and end the electrocution if he does
+        // this makes sense because an arc suit ought to be miles ahead of normal insulation
+        // if we ever decide to add partial arc protection this will need a rewrite to work with siemens instead of insulation
+        // that will be painful to do and at that point you might as well bite the bullet and write a parallel, separated system for arc flashes
+        // likely a TODO for power rework
+        if (electrified.IsArcFlash)
+        {
+            if (_flashProtQuery.HasComp(targetUid))
+                return false;
+        }
+        // KS14 - arc flash - end
+
         EnsureComp<ActivatedElectrifiedComponent>(uid);
         _appearance.SetData(uid, ElectrifiedVisuals.ShowSparks, true);
 
         siemens *= electrified.SiemensCoefficient;
-        if (!DoCommonElectrocutionAttempt(targetUid, uid, ref siemens) || siemens <= 0)
+        if (!DoCommonElectrocutionAttempt(targetUid, uid, ref siemens, ignoreInsulation: electrified.IsArcFlash) || siemens <= 0) // KS14 - added the isarcflash check
             return false; // If electrocution would fail, do nothing.
 
         var targets = new List<(EntityUid entity, int depth)>();
@@ -237,7 +296,8 @@ public sealed class ElectrocutionSystem : SharedElectrocutionSystem
                     (int) (electrified.ShockDamage * MathF.Pow(RecursiveDamageMultiplier, depth)),
                     TimeSpan.FromSeconds(electrified.ShockTime * MathF.Pow(RecursiveTimeMultiplier, depth)),
                     true,
-                    electrified.SiemensCoefficient
+                    electrified.SiemensCoefficient,
+                    ignoreInsulation: electrified.IsArcFlash // KS14 - arc flash
                 );
             }
             return lastRet;
@@ -266,7 +326,9 @@ public sealed class ElectrocutionSystem : SharedElectrocutionSystem
                     (int) (electrified.ShockDamage * MathF.Pow(RecursiveDamageMultiplier, depth) * damageScalar),
                     TimeSpan.FromSeconds(electrified.ShockTime * MathF.Pow(RecursiveTimeMultiplier, depth) * timeScalar),
                     true,
-                    electrified.SiemensCoefficient);
+                    electrified.SiemensCoefficient,
+                    ignoreInsulation: electrified.IsArcFlash // KS14 - arc flash
+                    );
             }
             return lastRet;
         }
@@ -313,9 +375,11 @@ public sealed class ElectrocutionSystem : SharedElectrocutionSystem
         bool refresh,
         float siemensCoefficient = 1f,
         StatusEffectsComponent? statusEffects = null,
-        TransformComponent? sourceTransform = null)
+        TransformComponent? sourceTransform = null,
+        bool ignoreInsulation = false // KS14
+        )
     {
-        if (!DoCommonElectrocutionAttempt(uid, sourceUid, ref siemensCoefficient))
+        if (!DoCommonElectrocutionAttempt(uid, sourceUid, ref siemensCoefficient, ignoreInsulation: ignoreInsulation)) // KS14
             return false;
 
         if (!DoCommonElectrocution(uid, sourceUid, shockDamage, time, refresh, siemensCoefficient, statusEffects))
@@ -402,7 +466,7 @@ public sealed class ElectrocutionSystem : SharedElectrocutionSystem
                 ? _stun.TryUpdateParalyzeDuration(uid, time * ParalyzeTimeMultiplier)
                 : _stun.TryAddParalyzeDuration(uid, time * ParalyzeTimeMultiplier);
         }
-            
+
 
         // TODO: Sparks here.
 

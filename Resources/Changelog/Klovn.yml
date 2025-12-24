@@ -247,3 +247,102 @@ Entries:
       message: 'Ported the guide to advanced mimery. Long live Livrah! '
   id: 32
   time: '2025-12-09T16:11:02.0000000+00:00'
+- author: syndicate-engineer
+  changes:
+    - type: Add
+      message: >-
+        Added new gas Argon, two reactions of Argon formation and Argon
+        Absorption
+    - type: Fix
+      message: added Zipion to paintable canister group
+  id: 33
+  time: '2025-12-17T18:01:35.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: >-
+        Ported the visual Tech Tree from Goobstation. Research is no longer
+        random!
+    - type: Tweak
+      message: Updated various technology prerequisites to fit the new tree structure.
+  id: 34
+  time: '2025-12-17T18:02:33.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: Added syndicate contraband spawners for mappers.
+  id: 35
+  time: '2025-12-17T18:03:49.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: >-
+        Flashlights are now smooth and follow your cursor when you have combat
+        mode enabled.
+  id: 36
+  time: '2025-12-17T18:05:15.0000000+00:00'
+- author: DecemberEpsilon
+  changes:
+    - type: Tweak
+      message: Tweaked armor values to fit more with KS gameplay.
+  id: 37
+  time: '2025-12-21T13:23:33.0000000+00:00'
+- author: DecemberEpsilon
+  changes:
+    - type: Tweak
+      message: Topicals are now faster to apply.
+    - type: Tweak
+      message: Topicals now come in stacks of 15.
+    - type: Tweak
+      message: Some advanced topicals are now easier to make.
+  id: 38
+  time: '2025-12-21T13:24:17.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: >-
+        Brought back Argon, a new noble gas that can be created from Frezon and
+        Plasma. At high concentrations, it will absorb other gases and stop all
+        atmospheric reactions.
+    - type: Tweak
+      message: >-
+        Corrected the default alarm thresholds for Argon and Zipion to match the
+        desired percentage values.
+    - type: Fix
+      message: >-
+        Fixed a crash related to the Air Alarm UI by ensuring default thresholds
+        are created for all gases.
+    - type: Fix
+      message: >-
+        Added Zipion and Argon to the default gas scrubber filter list so they
+        are scrubbed from the atmosphere by default.
+  id: 39
+  time: '2025-12-23T13:17:29.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Remove
+      message: Soft removed plushies and certain cloaks.
+    - type: Tweak
+      message: Salvagevend now has seismic charges in its contraband inventory.
+  id: 40
+  time: '2025-12-23T19:49:27.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Tweak
+      message: Salvage now has more stuff to do in space.
+  id: 41
+  time: '2025-12-23T20:07:22.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: >-
+        High-power electronics can now cause arc flashes. Consult the guidebook
+        for more information!
+  id: 42
+  time: '2025-12-23T21:34:06.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: New gibbing effects.
+  id: 43
+  time: '2025-12-24T23:14:14.0000000+00:00'
