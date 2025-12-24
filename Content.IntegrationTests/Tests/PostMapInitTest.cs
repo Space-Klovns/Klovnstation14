@@ -29,6 +29,7 @@
 // SPDX-FileCopyrightText: 2025 FrauzJ
 // SPDX-FileCopyrightText: 2025 IProduceWidgets
 // SPDX-FileCopyrightText: 2025 Killerqu00
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
 // SPDX-FileCopyrightText: 2025 SlamBamActionman
 // SPDX-FileCopyrightText: 2025 Spessmann
@@ -36,7 +37,9 @@
 // SPDX-FileCopyrightText: 2025 Unisol
 // SPDX-FileCopyrightText: 2025 Vortebo
 // SPDX-FileCopyrightText: 2025 compilatron
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 metalgearsloth
+// SPDX-FileCopyrightText: 2025 nabegator220
 //
 // SPDX-License-Identifier: MPL-2.0
 
