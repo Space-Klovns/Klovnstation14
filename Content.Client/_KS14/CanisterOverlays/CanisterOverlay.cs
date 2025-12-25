@@ -99,7 +99,7 @@ public sealed class CanisterOverlay : Overlay
 
             // every iteration of this loop should start with the shader as the mask shader
             // so, draw window mask to stencil buffer
-            worldHandle.DrawTexture(maskTexture, HalfNegativeVector2, Color.Black);
+            worldHandle.DrawTexture(maskTexture, HalfNegativeVector2, new Angle(180));
 
             // now, only draw on the window mask
             worldHandle.UseShader(stencilEqualDrawShader);

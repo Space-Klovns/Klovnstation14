@@ -3,7 +3,7 @@
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 
 - type: entity
   parent: GasCanister
@@ -23,7 +23,7 @@
     gasMixture:
       volume: 1500
       moles:
-        Zipion: 2769.36 # Zipion
+        Zipion: 2769.36
       temperature: 293.15
   - type: Destructible
     thresholds:
@@ -57,5 +57,12 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    sprite: _KS14/Structures/Storage/canister.rsi
-    state: zipion-1
+    layers:
+    - state: multi_shader
+      color: "#0f0f0f"
+    - state: double_stripe_shader
+      color: "#9e0664"
+    - state: outline
+      color: "#0f0f0f"
+    - state: broken
+      color: "#0f0f0f"

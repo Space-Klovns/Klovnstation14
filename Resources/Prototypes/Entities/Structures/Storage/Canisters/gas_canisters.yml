@@ -61,6 +61,7 @@
       sprite: _KS14/Structures/Storage/canister.rsi
       noRot: true
       layers:
+      - state: window-base
       - state: multi_shader
       - state: outline
     - type: Appearance
@@ -739,7 +740,13 @@
     - type: InteractionOutline
     - type: Sprite
       sprite: _KS14/Structures/Storage/canister.rsi
-      state: grey-1
+      layers:
+      - state: multi_shader
+        color: "#787878"
+      - state: outline
+        color: "#787878"
+      - state: broken
+        color: "#787878"
     - type: Physics
       bodyType: Dynamic
     - type: Fixtures
@@ -764,8 +771,14 @@
   id: StorageCanisterBroken
   categories: [ HideSpawnMenu ]
   components:
-    - type: Sprite
-      state: yellow-1
+  - type: Sprite
+    layers:
+    - state: multi_shader
+      color: "#787878"
+    - state: outline
+      color: "#787878"
+    - state: broken
+      color: "#787878"
 
 - type: entity
   parent: GasCanisterBrokenBase
@@ -773,7 +786,13 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    state: grey-1
+    layers:
+    - state: multi_shader
+      color: "#C6C0B5"
+    - state: outline
+      color: "#C6C0B5"
+    - state: broken
+      color: "#C6C0B5"
 
 - type: entity
   parent: GasCanisterBrokenBase
@@ -781,39 +800,79 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    state: blue-1
+    layers:
+    - state: multi_shader
+      color: "#2786E5"
+    - state: stripe
+      color: "#E8FEFE"
+    - state: outline
+      color: "#2786E5"
+    - state: broken
+      color: "#2786E5"
 
 - type: entity
   parent: GasCanisterBrokenBase
   id: NitrogenCanisterBroken
   categories: [ HideSpawnMenu ]
   components:
-    - type: Sprite
-      state: red-1
+  - type: Sprite
+    layers:
+    - state: multi_shader
+      color: "#E9FF5C"
+    - state: double_stripe
+      color: "#F4FCE8"
+    - state: outline
+      color: "#E9FF5C"
+    - state: broken
+      color: "#E9FF5C"
 
 - type: entity
   parent: GasCanisterBrokenBase
   id: CarbonDioxideCanisterBroken
   categories: [ HideSpawnMenu ]
   components:
-    - type: Sprite
-      state: black-1
+  - type: Sprite
+    layers:
+    - state: multi_shader
+      color: "#4E4C48"
+    - state: double_stripe
+      color: "#EAEAEA"
+    - state: outline
+      color: "#4E4C48"
+    - state: broken
+      color: "#"
 
 - type: entity
   parent: GasCanisterBrokenBase
   id: PlasmaCanisterBroken
   categories: [ HideSpawnMenu ]
   components:
-    - type: Sprite
-      state: orange-1
+  - type: Sprite
+    layers:
+    - state: multi_shader
+      color: "#F62800"
+    - state: hazard_stripes
+      color: "#000000"
+    - state: outline
+      color: "#F62800"
+    - state: broken
+      color: "#F62800"
 
 - type: entity
   parent: GasCanisterBrokenBase
   id: TritiumCanisterBroken
   categories: [ HideSpawnMenu ]
   components:
-    - type: Sprite
-      state: green-1
+  - type: Sprite
+    layers:
+    - state: multi_shader
+      color: "#3FCD40"
+    - state: hazard_stripes
+      color: "#000000"
+    - state: outline
+      color: "#3FCD40"
+    - state: broken
+      color: "#3FCD40"
 
 - type: entity
   parent: GasCanisterBrokenBase
@@ -821,24 +880,48 @@
   name: broken water vapor canister
   categories: [ HideSpawnMenu ]
   components:
-    - type: Sprite
-      state: water_vapor-1
+  - type: Sprite
+    layers:
+    - state: multi_shader
+      color: "#4C4E4D"
+    - state: double_stripe
+      color: "#F7D5D3"
+    - state: outline
+      color: "#4C4E4D"
+    - state: broken
+      color: "#4C4E4D"
 
 - type: entity
   parent: GasCanisterBrokenBase
   id: AmmoniaCanisterBroken
   categories: [ HideSpawnMenu ]
   components:
-    - type: Sprite
-      state: greenys-1
+  - type: Sprite
+    layers:
+    - state: multi_shader
+      color: "#009823"
+    - state: double_stripe
+      color: "#F7D5D3"
+    - state: outline
+      color: "#009823"
+    - state: broken
+      color: "#009823"
 
 - type: entity
   parent: GasCanisterBrokenBase
   id: NitrousOxideCanisterBroken
   categories: [ HideSpawnMenu ]
   components:
-    - type: Sprite
-      state: redws-1
+  - type: Sprite
+    layers:
+    - state: multi_shader
+      color: "#C63E3B"
+    - state: double_stripe
+      color: "#F7D5D3"
+    - state: outline
+      color: "#C63E3B"
+    - state: broken
+      color: "#C63E3B"
 
 - type: entity
   parent: GasCanisterBrokenBase
@@ -846,4 +929,12 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    state: frezon-1
+    layers:
+    - state: multi_shader
+      color: "#6696EE"
+    - state: double_stripe
+      color: "#FEFB30"
+    - state: outline
+      color: "#6696EE"
+    - state: broken
+      color: "#6696EE"
