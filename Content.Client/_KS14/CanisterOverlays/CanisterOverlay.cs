@@ -66,6 +66,12 @@ public sealed class CanisterOverlay : Overlay
 
     protected override void Draw(in OverlayDrawArgs args)
     {
+        /*
+            TODO LCDC: FIX THIS SHIT
+
+            I think worldbounds being drawn isn't working properly or something
+        */
+
         var canisterQuery = _entityManager.EntityQuery<GasCanisterComponent>();
         if (!canisterQuery.Any())
             return;
@@ -78,7 +84,7 @@ public sealed class CanisterOverlay : Overlay
 
         var maskShader = _prototypeManager.Index(StencilMaskShader).Instance();
         worldHandle.UseShader(maskShader);
-        worldHandle.DrawRect(args.WorldBounds, Color.White, filled: true);
+        worldHandle.DrawRect(args.WorldBounds, Color.Black, filled: true);
 
         var stencilEqualDrawShader = _prototypeManager.Index(StencilEqualDrawShader).Instance();
 
@@ -99,7 +105,7 @@ public sealed class CanisterOverlay : Overlay
 
             // every iteration of this loop should start with the shader as the mask shader
             // so, draw window mask to stencil buffer
-            worldHandle.DrawTexture(maskTexture, HalfNegativeVector2, new Angle(180));
+            worldHandle.DrawTexture(maskTexture, HalfNegativeVector2, modulate: Color.White);
 
             // now, only draw on the window mask
             worldHandle.UseShader(stencilEqualDrawShader);
