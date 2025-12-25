@@ -65,6 +65,9 @@
       "name": "window-base"
     },
     {
+      "name": "window-base_broken"
+    },
+    {
       "name": "window-mask"
     },
     {

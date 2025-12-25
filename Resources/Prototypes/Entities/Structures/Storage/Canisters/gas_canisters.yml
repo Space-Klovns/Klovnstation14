@@ -174,6 +174,7 @@
   components:
     - type: Sprite
       layers:
+      - state: window-base
       - state: multi_shader
         color: "#787878"
       - state: outline
@@ -216,6 +217,7 @@
   components:
   - type: Sprite
     layers:
+    - state: window-base
     - state: multi_shader
       color: "#C6C0B5"
     - state: outline
@@ -259,6 +261,7 @@
   components:
   - type: Sprite
     layers:
+    - state: window-base
     - state: multi_shader
       color: "#2786E5"
     - state: stripe
@@ -318,6 +321,7 @@
   components:
     - type: Sprite
       layers:
+      - state: window-base
       - state: multi_shader
         color: "#E9FF5C"
       - state: double_stripe
@@ -377,6 +381,7 @@
   components:
     - type: Sprite
       layers:
+      - state: window-base
       - state: multi_shader
         color: "#4E4C48"
       - state: double_stripe
@@ -438,6 +443,7 @@
   components:
     - type: Sprite
       layers:
+      - state: window-base
       - state: multi_shader
         color: "#F62800"
       - state: hazard_stripes
@@ -484,6 +490,7 @@
   components:
     - type: Sprite
       layers:
+      - state: window-base
       - state: multi_shader
         color: "#3FCD40"
       - state: hazard_stripes
@@ -530,6 +537,7 @@
   components:
     - type: Sprite
       layers:
+      - state: window-base
       - state: multi_shader
         color: "#4C4E4D"
       - state: double_stripe
@@ -574,6 +582,7 @@
   components:
     - type: Sprite
       layers:
+      - state: window-base
       - state: multi_shader
         color: "#009823"
       - state: double_stripe
@@ -620,6 +629,7 @@
   components:
     - type: Sprite
       layers:
+      - state: window-base
       - state: multi_shader
         color: "#C63E3B"
       - state: double_stripe
@@ -666,6 +676,7 @@
   components:
   - type: Sprite
     layers:
+    - state: window-base
     - state: multi_shader
       color: "#6696EE"
     - state: double_stripe
@@ -741,6 +752,7 @@
     - type: Sprite
       sprite: _KS14/Structures/Storage/canister.rsi
       layers:
+      - state: window-base_broken
       - state: multi_shader_broken
         color: "#787878"
       - state: outline_broken
@@ -771,6 +783,7 @@
   components:
   - type: Sprite
     layers:
+    - state: window-base_broken
     - state: multi_shader_broken
       color: "#787878"
     - state: outline_broken
@@ -783,6 +796,7 @@
   components:
   - type: Sprite
     layers:
+    - state: window-base_broken
     - state: multi_shader_broken
       color: "#C6C0B5"
     - state: outline_broken
@@ -795,6 +809,7 @@
   components:
   - type: Sprite
     layers:
+    - state: window-base_broken
     - state: multi_shader_broken
       color: "#2786E5"
     - state: stripe_broken
@@ -809,6 +824,7 @@
   components:
   - type: Sprite
     layers:
+    - state: window-base_broken
     - state: multi_shader_broken
       color: "#E9FF5C"
     - state: double_stripe_broken
@@ -823,6 +839,7 @@
   components:
   - type: Sprite
     layers:
+    - state: window-base_broken
     - state: multi_shader_broken
       color: "#4E4C48"
     - state: double_stripe_broken
@@ -837,6 +854,7 @@
   components:
   - type: Sprite
     layers:
+    - state: window-base_broken
     - state: multi_shader_broken
       color: "#F62800"
     - state: hazard_stripes_broken
@@ -851,6 +869,7 @@
   components:
   - type: Sprite
     layers:
+    - state: window-base_broken
     - state: multi_shader_broken
       color: "#3FCD40"
     - state: hazard_stripes_broken
@@ -866,6 +885,7 @@
   components:
   - type: Sprite
     layers:
+    - state: window-base_broken
     - state: multi_shader_broken
       color: "#4C4E4D"
     - state: double_stripe_broken
@@ -880,6 +900,7 @@
   components:
   - type: Sprite
     layers:
+    - state: window-base_broken
     - state: multi_shader_broken
       color: "#009823"
     - state: double_stripe_broken
@@ -894,6 +915,7 @@
   components:
   - type: Sprite
     layers:
+    - state: window-base_broken
     - state: multi_shader_broken
       color: "#C63E3B"
     - state: double_stripe_broken
@@ -908,6 +930,7 @@
   components:
   - type: Sprite
     layers:
+    - state: window-base_broken
     - state: multi_shader_broken
       color: "#6696EE"
     - state: double_stripe_broken

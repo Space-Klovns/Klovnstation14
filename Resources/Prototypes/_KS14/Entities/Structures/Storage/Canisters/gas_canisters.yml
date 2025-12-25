@@ -13,6 +13,7 @@
   components:
   - type: Sprite
     layers:
+    - state: window-base
     - state: multi_shader
       color: "#0f0f0f"
     - state: double_stripe_shader
@@ -58,6 +59,7 @@
   components:
   - type: Sprite
     layers:
+    - state: window-base_broken
     - state: multi_shader_broken
       color: "#0f0f0f"
     - state: double_stripe_broken
