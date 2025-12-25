@@ -37,6 +37,7 @@
 // SPDX-FileCopyrightText: 2025 Unisol
 // SPDX-FileCopyrightText: 2025 Vortebo
 // SPDX-FileCopyrightText: 2025 compilatron
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 metalgearsloth
 // SPDX-FileCopyrightText: 2025 nabegator220
 //
