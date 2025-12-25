@@ -1631,18 +1631,18 @@
     description: ghost-role-information-monkey-description
     rules: ghost-role-information-nonantagonist-rules
   - type: GhostTakeoverAvailable
-  - type: Clumsy
-    gunShootFailDamage:
-      types:
-        Blunt: 5
-        Piercing: 4
-      groups:
-        Burn: 3
-    catchingFailDamage:
-      types:
-        Blunt: 1
-    clumsySound:
-      path: /Audio/Animals/monkey_scream.ogg
+  # - type: Clumsy #KS14 change - monkey shoot gun
+  #   gunShootFailDamage:
+  #     types:
+  #       Blunt: 5
+  #       Piercing: 4
+  #     groups:
+  #       Burn: 3
+  #   catchingFailDamage:
+  #     types:
+  #       Blunt: 1
+  #   clumsySound:
+  #     path: /Audio/Animals/monkey_scream.ogg
 
 
 - type: entity
