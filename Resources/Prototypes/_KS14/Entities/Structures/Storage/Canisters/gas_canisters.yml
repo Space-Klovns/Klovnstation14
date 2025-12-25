@@ -58,11 +58,9 @@
   components:
   - type: Sprite
     layers:
-    - state: multi_shader
+    - state: multi_shader_broken
       color: "#0f0f0f"
-    - state: double_stripe_shader
+    - state: double_stripe_broken
       color: "#9e0664"
-    - state: outline
-      color: "#0f0f0f"
-    - state: broken
+    - state: outline_broken
       color: "#0f0f0f"

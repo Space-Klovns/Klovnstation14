@@ -1,7 +1,7 @@
 {
   "version": 1,
   "license": "CC-BY-SA-3.0",
-  "copyright": "Taken from https://github.com/tgstation/tgstation at commit f6d46d048038d855533476162a98dcc2d7fc2466 . `window-mask` modified from `window-base` by LaCumbiaDelCoronavirus.",
+  "copyright": "Taken from https://github.com/tgstation/tgstation at commit f6d46d048038d855533476162a98dcc2d7fc2466 . Modified by LaCumbiaDelCoronavirus.",
   "size": {
     "x": 32,
     "y": 32
@@ -20,7 +20,13 @@
       "name": "multi_shader"
     },
     {
+      "name": "multi_shader_broken"
+    },
+    {
       "name": "outline"
+    },
+    {
+      "name": "outline_broken"
     },
     {
       "name": "lights"
@@ -29,10 +35,19 @@
       "name": "stripe"
     },
     {
+      "name": "stripe_broken"
+    },
+    {
       "name": "double_stripe"
     },
     {
+      "name": "double_stripe_broken"
+    },
+    {
       "name": "hazard_stripes"
+    },
+    {
+      "name": "hazard_stripes_broken"
     },
     {
       "name": "broken"

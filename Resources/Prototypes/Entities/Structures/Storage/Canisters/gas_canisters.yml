@@ -741,11 +741,9 @@
     - type: Sprite
       sprite: _KS14/Structures/Storage/canister.rsi
       layers:
-      - state: multi_shader
+      - state: multi_shader_broken
         color: "#787878"
-      - state: outline
-        color: "#787878"
-      - state: broken
+      - state: outline_broken
         color: "#787878"
     - type: Physics
       bodyType: Dynamic
@@ -773,11 +771,9 @@
   components:
   - type: Sprite
     layers:
-    - state: multi_shader
+    - state: multi_shader_broken
       color: "#787878"
-    - state: outline
-      color: "#787878"
-    - state: broken
+    - state: outline_broken
       color: "#787878"
 
 - type: entity
@@ -787,11 +783,9 @@
   components:
   - type: Sprite
     layers:
-    - state: multi_shader
+    - state: multi_shader_broken
       color: "#C6C0B5"
-    - state: outline
-      color: "#C6C0B5"
-    - state: broken
+    - state: outline_broken
       color: "#C6C0B5"
 
 - type: entity
@@ -801,13 +795,11 @@
   components:
   - type: Sprite
     layers:
-    - state: multi_shader
+    - state: multi_shader_broken
       color: "#2786E5"
-    - state: stripe
+    - state: stripe_broken
       color: "#E8FEFE"
-    - state: outline
-      color: "#2786E5"
-    - state: broken
+    - state: outline_broken
       color: "#2786E5"
 
 - type: entity
@@ -817,13 +809,11 @@
   components:
   - type: Sprite
     layers:
-    - state: multi_shader
+    - state: multi_shader_broken
       color: "#E9FF5C"
-    - state: double_stripe
+    - state: double_stripe_broken
       color: "#F4FCE8"
-    - state: outline
-      color: "#E9FF5C"
-    - state: broken
+    - state: outline_broken
       color: "#E9FF5C"
 
 - type: entity
@@ -833,14 +823,12 @@
   components:
   - type: Sprite
     layers:
-    - state: multi_shader
+    - state: multi_shader_broken
       color: "#4E4C48"
-    - state: double_stripe
+    - state: double_stripe_broken
       color: "#EAEAEA"
-    - state: outline
+    - state: outline_broken
       color: "#4E4C48"
-    - state: broken
-      color: "#"
 
 - type: entity
   parent: GasCanisterBrokenBase
@@ -849,13 +837,11 @@
   components:
   - type: Sprite
     layers:
-    - state: multi_shader
+    - state: multi_shader_broken
       color: "#F62800"
-    - state: hazard_stripes
+    - state: hazard_stripes_broken
       color: "#000000"
-    - state: outline
-      color: "#F62800"
-    - state: broken
+    - state: outline_broken
       color: "#F62800"
 
 - type: entity
@@ -865,13 +851,11 @@
   components:
   - type: Sprite
     layers:
-    - state: multi_shader
+    - state: multi_shader_broken
       color: "#3FCD40"
-    - state: hazard_stripes
+    - state: hazard_stripes_broken
       color: "#000000"
-    - state: outline
-      color: "#3FCD40"
-    - state: broken
+    - state: outline_broken
       color: "#3FCD40"
 
 - type: entity
@@ -882,13 +866,11 @@
   components:
   - type: Sprite
     layers:
-    - state: multi_shader
+    - state: multi_shader_broken
       color: "#4C4E4D"
-    - state: double_stripe
+    - state: double_stripe_broken
       color: "#F7D5D3"
-    - state: outline
-      color: "#4C4E4D"
-    - state: broken
+    - state: outline_broken
       color: "#4C4E4D"
 
 - type: entity
@@ -898,13 +880,11 @@
   components:
   - type: Sprite
     layers:
-    - state: multi_shader
+    - state: multi_shader_broken
       color: "#009823"
-    - state: double_stripe
+    - state: double_stripe_broken
       color: "#F7D5D3"
-    - state: outline
-      color: "#009823"
-    - state: broken
+    - state: outline_broken
       color: "#009823"
 
 - type: entity
@@ -914,13 +894,11 @@
   components:
   - type: Sprite
     layers:
-    - state: multi_shader
+    - state: multi_shader_broken
       color: "#C63E3B"
-    - state: double_stripe
+    - state: double_stripe_broken
       color: "#F7D5D3"
-    - state: outline
-      color: "#C63E3B"
-    - state: broken
+    - state: outline_broken
       color: "#C63E3B"
 
 - type: entity
@@ -930,11 +908,9 @@
   components:
   - type: Sprite
     layers:
-    - state: multi_shader
+    - state: multi_shader_broken
       color: "#6696EE"
-    - state: double_stripe
+    - state: double_stripe_broken
       color: "#FEFB30"
-    - state: outline
-      color: "#6696EE"
-    - state: broken
+    - state: outline_broken
       color: "#6696EE"
