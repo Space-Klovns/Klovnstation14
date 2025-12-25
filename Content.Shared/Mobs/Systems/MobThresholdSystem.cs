@@ -500,7 +500,7 @@ public sealed class MobThresholdSystem : EntitySystem
     // untested btw idk if this will actually work
     private static void KsAdjustThresholds(Entity<ModifiedMobThresholdsStatusEffectComponent> ent, MobThresholdsComponent thresholdsComponent, bool flipSign)
     {
-        foreach (var (mobState, thresholdAdjustment) in ent.Comp.AdjustedThresholds)
+        foreach (var (mobState, thresholdAdjustment) in ent.Comp.ThresholdAdjustments)
         {
             FixedPoint2? correspondingOriginalThreshold = null;
             foreach (var (originalThreshold, comparedMobState) in thresholdsComponent.Thresholds)

@@ -19,5 +19,5 @@ public sealed partial class ModifiedMobThresholdsStatusEffectComponent : Compone
     ///         Does nothing for the mobstate if a threshold for it doesnt exist.
     /// </summary>
     [DataField]
-    public Dictionary<MobState, FixedPoint2> AdjustedThresholds = [];
+    public Dictionary<MobState, FixedPoint2> ThresholdAdjustments = [];
 }
