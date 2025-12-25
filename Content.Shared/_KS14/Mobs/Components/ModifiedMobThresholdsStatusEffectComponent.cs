@@ -14,9 +14,10 @@ namespace Content.Shared._KS14.Mobs.Components;
 [Access(typeof(MobThresholdSystem))]
 public sealed partial class ModifiedMobThresholdsStatusEffectComponent : Component
 {
+    /// <summary>
+    ///     Value to add to each threshold.
+    ///         Does nothing for the mobstate if a threshold for it doesnt exist.
+    /// </summary>
     [DataField]
-    public SortedDictionary<FixedPoint2, MobState> NewThresholds = [];
-
-    [DataField]
-    public SortedDictionary<FixedPoint2, MobState> OldThresholds = [];
+    public Dictionary<MobState, FixedPoint2> AdjustedThresholds = [];
 }

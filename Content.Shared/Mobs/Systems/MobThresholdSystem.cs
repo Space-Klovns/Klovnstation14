@@ -13,6 +13,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Content.Shared._KS14.Mobs.Components; // KS14: Ports upstream https://github.com/space-wizards/space-station-14/pull/41930
 using Content.Shared.Alert;
 using Content.Shared.Damage;
@@ -495,13 +496,34 @@ public sealed class MobThresholdSystem : EntitySystem
     // KS14: Starting port from upstream https://github.com/space-wizards/space-station-14/pull/41930
     #endregion
     #region Modified Thresholds
+
+    // untested btw idk if this will actually work
+    private static void KsAdjustThresholds(Entity<ModifiedMobThresholdsStatusEffectComponent> ent, MobThresholdsComponent thresholdsComponent, bool flipSign)
+    {
+        foreach (var (mobState, thresholdAdjustment) in ent.Comp.AdjustedThresholds)
+        {
+            FixedPoint2? correspondingOriginalThreshold = null;
+            foreach (var (originalThreshold, comparedMobState) in thresholdsComponent.Thresholds)
+                if (comparedMobState == mobState)
+                {
+                    correspondingOriginalThreshold = originalThreshold;
+                    break;
+                }
+
+            if (correspondingOriginalThreshold == null)
+                continue;
+
+            thresholdsComponent.Thresholds.Remove(correspondingOriginalThreshold.Value);
+            thresholdsComponent.Thresholds[correspondingOriginalThreshold.Value + (flipSign ? -thresholdAdjustment : thresholdAdjustment)] = mobState;
+        }
+    }
+
     private void OnThresholdModified(Entity<ModifiedMobThresholdsStatusEffectComponent> ent, ref StatusEffectAppliedEvent args)
     {
         if (!TryComp<MobThresholdsComponent>(args.Target, out var thresholdsComponent))
             return;
 
-        ent.Comp.OldThresholds = thresholdsComponent.Thresholds;
-        thresholdsComponent.Thresholds = ent.Comp.NewThresholds;
+        KsAdjustThresholds(ent, thresholdsComponent, false);
         VerifyThresholds(args.Target);
     }
 
@@ -510,7 +532,7 @@ public sealed class MobThresholdSystem : EntitySystem
         if (!TryComp<MobThresholdsComponent>(args.Target, out var thresholdsComponent))
             return;
 
-        thresholdsComponent.Thresholds = ent.Comp.OldThresholds;
+        KsAdjustThresholds(ent, thresholdsComponent, true);
         VerifyThresholds(args.Target);
     }
     // KS14: Ending port from upstream https://github.com/space-wizards/space-station-14/pull/41930

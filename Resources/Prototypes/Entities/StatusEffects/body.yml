@@ -35,7 +35,6 @@
       - MobState
       - MobThresholds
   - type: ModifiedMobThresholdsStatusEffect
-    newThresholds:
-      0: Alive
-      200: Critical
-      300: Dead
+    thresholdAdjustments: #additions
+      Critical: 100
+      Dead: 200
