@@ -393,7 +393,7 @@
     layers:
     - state: pink
     - sprite: _KS14/Structures/Storage/canister.rsi
-      state: blue
+      state: mapme
   - type: EntityTableSpawner
     table: !type:GroupSelector
       prob: 0.9

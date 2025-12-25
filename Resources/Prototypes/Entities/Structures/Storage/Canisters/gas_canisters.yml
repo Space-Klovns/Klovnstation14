@@ -61,9 +61,9 @@
       sprite: _KS14/Structures/Storage/canister.rsi
       noRot: true
       layers:
-      - state: window-base
       - state: multi_shader
       - state: outline
+      - state: window-base
     - type: Appearance
     - type: GenericVisualizer
       visuals:
@@ -159,8 +159,8 @@
       price: 200
     - type: AccessReader
       access: [["Atmospherics"], ["Engineering"], ["Research"]]
-    - type: Lock
-      locked: false
+    # - type: Lock
+    #   locked: false
     - type: GuideHelp
       guides:
       - GasCanisters
@@ -174,11 +174,11 @@
   components:
     - type: Sprite
       layers:
-      - state: window-base
       - state: multi_shader
         color: "#787878"
       - state: outline
         color: "#787878"
+      - state: window-base
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -217,11 +217,11 @@
   components:
   - type: Sprite
     layers:
-    - state: window-base
     - state: multi_shader
       color: "#C6C0B5"
     - state: outline
       color: "#C6C0B5"
+    - state: window-base
   - type: GasCanister
     gasMixture:
       volume: 1500
@@ -261,13 +261,13 @@
   components:
   - type: Sprite
     layers:
-    - state: window-base
     - state: multi_shader
       color: "#2786E5"
     - state: stripe
       color: "#E8FEFE"
     - state: outline
       color: "#2786E5"
+    - state: window-base
   - type: GasCanister
     gasMixture:
       volume: 1500
@@ -321,13 +321,13 @@
   components:
     - type: Sprite
       layers:
-      - state: window-base
       - state: multi_shader
         color: "#E9FF5C"
       - state: double_stripe
         color: "#F4FCE8"
       - state: outline
         color: "#E9FF5C"
+      - state: window-base
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -381,13 +381,13 @@
   components:
     - type: Sprite
       layers:
-      - state: window-base
       - state: multi_shader
         color: "#4E4C48"
       - state: double_stripe
         color: "#EAEAEA"
       - state: outline
         color: "#4E4C48"
+      - state: window-base
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -443,13 +443,13 @@
   components:
     - type: Sprite
       layers:
-      - state: window-base
       - state: multi_shader
         color: "#F62800"
       - state: hazard_stripes
         color: "#000000"
       - state: outline
         color: "#F62800"
+      - state: window-base
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -490,13 +490,13 @@
   components:
     - type: Sprite
       layers:
-      - state: window-base
       - state: multi_shader
         color: "#3FCD40"
       - state: hazard_stripes
         color: "#000000"
       - state: outline
         color: "#3FCD40"
+      - state: window-base
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -537,13 +537,13 @@
   components:
     - type: Sprite
       layers:
-      - state: window-base
       - state: multi_shader
         color: "#4C4E4D"
       - state: double_stripe
         color: "#F7D5D3"
       - state: outline
         color: "#4C4E4D"
+      - state: window-base
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -582,13 +582,13 @@
   components:
     - type: Sprite
       layers:
-      - state: window-base
       - state: multi_shader
         color: "#009823"
       - state: double_stripe
         color: "#F7D5D3"
       - state: outline
         color: "#009823"
+      - state: window-base
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -629,13 +629,13 @@
   components:
     - type: Sprite
       layers:
-      - state: window-base
       - state: multi_shader
         color: "#C63E3B"
       - state: double_stripe
         color: "#F7D5D3"
       - state: outline
         color: "#C63E3B"
+      - state: window-base
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -676,13 +676,13 @@
   components:
   - type: Sprite
     layers:
-    - state: window-base
     - state: multi_shader
       color: "#6696EE"
     - state: double_stripe
       color: "#FEFB30"
     - state: outline
       color: "#6696EE"
+    - state: window-base
   - type: GasCanister
     gasMixture:
       volume: 1500

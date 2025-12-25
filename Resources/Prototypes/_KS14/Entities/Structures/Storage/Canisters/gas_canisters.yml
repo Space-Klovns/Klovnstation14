@@ -13,13 +13,13 @@
   components:
   - type: Sprite
     layers:
-    - state: window-base
     - state: multi_shader
       color: "#0f0f0f"
     - state: double_stripe_shader
       color: "#9e0664"
     - state: outline
       color: "#0f0f0f"
+    - state: window-base
   - type: GasCanister
     gasMixture:
       volume: 1500
