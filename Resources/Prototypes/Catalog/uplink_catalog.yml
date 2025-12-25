@@ -102,6 +102,7 @@
 # SPDX-FileCopyrightText: 2025 August Sun
 # SPDX-FileCopyrightText: 2025 FrauZj
 # SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 Gerkada
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Minemoder5000
 # SPDX-FileCopyrightText: 2025 Nox
@@ -2010,16 +2011,6 @@
   productEntity: ClothingBackpackDuffelSyndicateCostumeClown
   cost:
     Telecrystal: 6
-  categories:
-  - UplinkPointless
-
-- type: listing
-  id: UplinkCarpSuitBundle
-  name: uplink-carp-suit-bundle-name
-  description: uplink-carp-suit-bundle-desc
-  productEntity: ClothingBackpackDuffelSyndicateCarpSuit
-  cost:
-    Telecrystal: 12
   categories:
   - UplinkPointless
 

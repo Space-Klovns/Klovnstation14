@@ -8,7 +8,7 @@
 # SPDX-FileCopyrightText: 2025 SlamBamActionman
 # SPDX-FileCopyrightText: 2025 Zalycon
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - type: species
   id: SlimePerson

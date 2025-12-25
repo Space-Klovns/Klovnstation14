@@ -1,4 +1,21 @@
-﻿- type: guideEntry
+# SPDX-FileCopyrightText: 2023 AJCM-git
+# SPDX-FileCopyrightText: 2023 Aru Moon
+# SPDX-FileCopyrightText: 2023 Julian Giebel
+# SPDX-FileCopyrightText: 2023 Leon Friedrich
+# SPDX-FileCopyrightText: 2023 Naive817
+# SPDX-FileCopyrightText: 2023 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2023 chromiumboy
+# SPDX-FileCopyrightText: 2023 end
+# SPDX-FileCopyrightText: 2024 Ben Velie
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 GrownSamoyedDog
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: guideEntry
   id: Engineering
   name: guide-entry-engineering
   text: "/ServerInfo/Guidebook/Engineering/Engineering.xml"
@@ -284,6 +301,7 @@
     - PowerStorage
     - Ramping
     - VoltageNetworks
+    - ArcFlash # KS14
 
 - type: guideEntry
   id: InspectingPower
@@ -365,3 +383,8 @@
   id: SolarPanels
   name: guide-entry-solarpanels
   text: "/ServerInfo/Guidebook/Engineering/SolarPanels.xml"
+
+- type: guideEntry # KS14
+  id: ArcFlash
+  name: guide-entry-arcflash
+  text: "/ServerInfo/Guidebook/Engineering/ArcFlash.xml"

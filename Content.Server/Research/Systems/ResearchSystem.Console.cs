@@ -8,7 +8,7 @@
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 themias
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Server.Power.EntitySystems;
 using Content.Server.Research.Components;
@@ -160,7 +160,7 @@ public sealed partial class ResearchSystem
 
         _uiSystem.SetUiState(uid, ResearchConsoleUiKey.Key,
             new ResearchConsoleBoundInterfaceState(points, techList));
-            // Goobstation: R&D Console Rework End
+        // Goobstation: R&D Console Rework End
     }
 
     private void OnPointsChanged(EntityUid uid, ResearchConsoleComponent component, ref ResearchServerPointsChangedEvent args)

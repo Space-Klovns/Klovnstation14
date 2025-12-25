@@ -1,3 +1,32 @@
+# SPDX-FileCopyrightText: 2021 shaeone
+# SPDX-FileCopyrightText: 2022 Cheackraze
+# SPDX-FileCopyrightText: 2022 Moony
+# SPDX-FileCopyrightText: 2023 Chief-Engineer
+# SPDX-FileCopyrightText: 2023 Ed
+# SPDX-FileCopyrightText: 2023 Flareguy
+# SPDX-FileCopyrightText: 2023 Leon Friedrich
+# SPDX-FileCopyrightText: 2023 Nemanja
+# SPDX-FileCopyrightText: 2023 Puro
+# SPDX-FileCopyrightText: 2023 Velcroboy
+# SPDX-FileCopyrightText: 2023 Whisper
+# SPDX-FileCopyrightText: 2023 metalgearsloth
+# SPDX-FileCopyrightText: 2024 K-Dynamic
+# SPDX-FileCopyrightText: 2024 Mr. 27
+# SPDX-FileCopyrightText: 2024 Plykiya
+# SPDX-FileCopyrightText: 2024 SlamBamActionman
+# SPDX-FileCopyrightText: 2024 Tayrtahn
+# SPDX-FileCopyrightText: 2024 degradka
+# SPDX-FileCopyrightText: 2024 deltanedas
+# SPDX-FileCopyrightText: 2024 lzk
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 IProduceWidgets
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 kosticia
+# SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2025 paige404
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 - type: entity
   id: PresentBase
   name: present
@@ -52,51 +81,7 @@
         orGroup: GiftPool
       - id: JetpackMiniFilled
         orGroup: GiftPool
-      - id: PlushieGhost
-        orGroup: GiftPool
-      - id: PlushieBee
-        orGroup: GiftPool
-      - id: PlushieRGBee
-        orGroup: GiftPool
-      - id: PlushieNuke
-        orGroup: GiftPool
-      - id: PlushieRouny
-        orGroup: GiftPool
-      - id: PlushieLizard #Weh!
-        orGroup: GiftPool
-      - id: PlushieRainbowLizard
-        orGroup: GiftPool
-      - id: PlushieNar
-        orGroup: GiftPool
-      - id: PlushieCarp
-        orGroup: GiftPool
-      - id: PlushieMagicarp
-        orGroup: GiftPool
-      - id: PlushieHolocarp
-        orGroup: GiftPool
-      - id: PlushieRainbowCarp
-        orGroup: GiftPool
-      - id: PlushieSlime
-        orGroup: GiftPool
-      - id: PlushieSnake
-        orGroup: GiftPool
-      - id: PlushieVox
-        orGroup: GiftPool
-      - id: PlushieRatvar
-        orGroup: GiftPool
-      - id: PlushieSpaceLizard
-        orGroup: GiftPool
-      - id: PlushieSharkBlue
-        orGroup: GiftPool
-      - id: PlushieSharkPink
-        orGroup: GiftPool
-      - id: PlushieSharkGrey
-        orGroup: GiftPool
       - id: ToyAmongPequeno
-        orGroup: GiftPool
-      - id: PlushieDiona
-        orGroup: GiftPool
-      - id: PlushieArachind
         orGroup: GiftPool
       - id: ClothingNeckCloakMoth
         orGroup: GiftPool
@@ -196,8 +181,6 @@
         orGroup: GiftPool
       - id: ViolaInstrument
         orGroup: GiftPool
-      - id: ClothingNeckCloakTrans
-        orGroup: GiftPool
       - id: ClothingNeckCloakAdmin
         orGroup: GiftPool
       - id: ToySkeleton
@@ -223,10 +206,6 @@
       - id: ClothingHeadHelmetCosmonaut
         orGroup: GiftPool
       - id: ClothingShoeSlippersDuck
-        orGroup: GiftPool
-      - id: ClothingUnderSocksBee
-        orGroup: GiftPool
-      - id: ClothingUnderSocksCoder
         orGroup: GiftPool
       - id: ClothingBeltUtilityFilled
         orGroup: GiftPool

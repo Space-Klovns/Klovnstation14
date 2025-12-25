@@ -1,14 +1,20 @@
+# SPDX-FileCopyrightText: 2024 Nemanja
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MIT
+
 - type: weightedRandom
   id: AsteroidOre
   weights:
     OreIron: 1.0
     OreQuartz: 1.0
     OreCoal: 0.33
-    OreSalt: 0.25
     OreGold: 0.25
     OreSilver: 0.25
     OrePlasma: 0.20
     OreUranium: 0.20
+    OreSalt: 0.20 # KS14: Ports upstream https://github.com/space-wizards/space-station-14/pull/41930
     OreArtifactFragment: 0.10
     OreBananium: 0.10
 
@@ -41,8 +47,8 @@
   replacement: AsteroidRock
   entity: AsteroidRockSalt
   count: 3
-  minGroupSize: 5
-  maxGroupSize: 7
+  minGroupSize: 2 # KS14: Ports upstream https://github.com/space-wizards/space-station-14/pull/41930
+  maxGroupSize: 4 # KS14: Ports upstream https://github.com/space-wizards/space-station-14/pull/41930
 
 - type: oreDunGen
   id: OreGold

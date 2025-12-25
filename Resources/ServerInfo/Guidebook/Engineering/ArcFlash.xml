@@ -1,0 +1,37 @@
+<Document>
+  # Arc Flash
+  The infrastructure of your space station operates with high voltages and currents.
+  Some high-powered electrical devices create dangerous arc flashes, which are lethal even to otherwise insulated crew!
+
+  <Box>
+    <GuideEntityEmbed Entity="SubstationBasic"/>
+    <GuideEntityEmbed Entity="SMESBasic"/>
+    <GuideEntityEmbed Entity="CableHVStack"/>
+    <GuideEntityEmbed Entity="APCBasic"/>
+  </Box>
+
+  ## What can cause an arc flash
+  Arc flashes come in two flavors, strong and weak, and are caused by the following:
+  - Cutting powered HV wire creates a strong arc flash
+  - Deconstructing a substation, SMES or APC causes a strong arc flash
+  - Unanchoring a substation or SMES on powered HV cabling causes a weak arc flash
+
+  ## How to work around an arc flash
+  <Box>
+    <GuideEntityEmbed Entity="ClothingOuterSuitArc"/>
+    <GuideEntityEmbed Entity="ClothingOuterHardsuitEngineering"/>
+  </Box>
+  There are ways to work around an arc flash.
+  For example, when you are trying to unanchor a SMES bank, it is smart to first cut it off from the wider grid, disable power charging and discharging and THEN unanchor the SMESes.
+  You will need personal protection either way, so here's a non-exhaustive list:
+  - All command hardsuits
+  - The engineering and atmos hardsuit
+  - Syndicate web vests and raid suit
+  - The security hazardous environment armor
+  - Syndicate hardsuits
+  - Security hardsuits
+
+  Outside of special cases like the raid suit, HEV armor and the web vests, which have advanced mitigation features, you will need to wear the helmet of your suit to get protection.
+  The arc suit has some shock damage protection built in, but you should ideally put the helmet on.
+
+</Document>

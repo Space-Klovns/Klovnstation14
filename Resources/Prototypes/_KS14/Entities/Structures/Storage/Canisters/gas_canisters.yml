@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2025 Deltium
 # SPDX-FileCopyrightText: 2025 Gerkada
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Syndicate Engineer
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
@@ -67,3 +68,65 @@
       color: "#9e0664"
     - state: outline_broken
       color: "#0f0f0f"
+
+- type: entity
+  parent: GasCanister
+  id: ArgonCanister
+  name: argon canister
+  description: A canister that can contain any type of gas. This one is supposed to contain argon. It can be attached to connector ports using a wrench.
+  components:
+  - type: Sprite
+    layers:
+    - state: multi_shader
+      color: "#5632a8"
+    - state: double_stripe_shader
+      color: "#36b0e0"
+    - state: outline
+      color: "#5632a8"
+    - state: window-base
+  - type: GasCanister
+    gasMixture:
+      volume: 1500
+      moles:
+        Argon: 2769.36 # Argon
+      temperature: 293.15
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 600
+      behaviors:
+        - !type:DoActsBehavior
+          acts: [ "Destruction" ]
+    - trigger:
+        !type:DamageTrigger
+        damage: 300
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalBreak
+      - !type:SpawnEntitiesBehavior
+        spawn:
+          ArgonCanisterBroken:
+            min: 1
+            max: 1
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+      - !type:DumpCanisterBehavior
+  - type: Lock
+    locked: true
+
+- type: entity
+  parent: GasCanisterBrokenBase
+  id: ArgonCanisterBroken
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#5632a8"
+    - state: double_stripe_broken
+      color: "#36b0e0"
+    - state: outline_broken
+      color: "#5632a8"

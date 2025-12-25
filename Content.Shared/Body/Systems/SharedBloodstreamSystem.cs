@@ -41,6 +41,7 @@
 
 using System.Numerics; // KS14 Addition
 using Content.Shared._KS14.OverlayStains;
+using Content.Shared._KS14.Random.Helpers;
 using Content.Shared.Alert;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Events;
@@ -317,9 +318,8 @@ public abstract class SharedBloodstreamSystem : EntitySystem
         var targetTransform = Transform(entity);
         var originTransform = Transform(originUid);
 
-        // TODO: use KsRandomExtensions when it gets merged
         // TODO: fix occasional mispredict here
-        var predictedRandom = new System.Random(SharedRandomExtensions.HashCodeCombine(new() { (int)_timing.CurTick.Value, (int)targetTransform.LocalPosition.LengthSquared() }));
+        var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed((int)_timing.CurTick.Value, (int)targetTransform.LocalPosition.LengthSquared());
 
         // TODO: Something better target-origin
         var gridRelative = targetTransform.Coordinates.EntityId == originTransform.Coordinates.EntityId;

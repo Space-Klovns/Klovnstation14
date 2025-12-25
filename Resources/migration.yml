@@ -1,3 +1,67 @@
+# SPDX-FileCopyrightText: 2023 DrSmugleaf
+# SPDX-FileCopyrightText: 2023 Jeff
+# SPDX-FileCopyrightText: 2023 Kevin Zheng
+# SPDX-FileCopyrightText: 2023 Leon Friedrich
+# SPDX-FileCopyrightText: 2023 SpaceCat
+# SPDX-FileCopyrightText: 2023 TemporalOroboros
+# SPDX-FileCopyrightText: 2023 Vordenburg
+# SPDX-FileCopyrightText: 2023 Whisper
+# SPDX-FileCopyrightText: 2023 c4llv07e
+# SPDX-FileCopyrightText: 2024 Debug
+# SPDX-FileCopyrightText: 2024 Ed
+# SPDX-FileCopyrightText: 2024 Emisse
+# SPDX-FileCopyrightText: 2024 Errant
+# SPDX-FileCopyrightText: 2024 Flareguy
+# SPDX-FileCopyrightText: 2024 Gyrandola
+# SPDX-FileCopyrightText: 2024 Hannah Giovanna Dawson
+# SPDX-FileCopyrightText: 2024 IProduceWidgets
+# SPDX-FileCopyrightText: 2024 KonstantinAngelov
+# SPDX-FileCopyrightText: 2024 LankLTE
+# SPDX-FileCopyrightText: 2024 Litraxx
+# SPDX-FileCopyrightText: 2024 MilenVolf
+# SPDX-FileCopyrightText: 2024 MossyGreySlope
+# SPDX-FileCopyrightText: 2024 Mr. 27
+# SPDX-FileCopyrightText: 2024 NotSoDamn
+# SPDX-FileCopyrightText: 2024 NotSoDana
+# SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2024 Plykiya
+# SPDX-FileCopyrightText: 2024 Tunguso4ka
+# SPDX-FileCopyrightText: 2024 TurboTracker
+# SPDX-FileCopyrightText: 2024 Ubaser
+# SPDX-FileCopyrightText: 2024 Vasilis
+# SPDX-FileCopyrightText: 2024 Velcroboy
+# SPDX-FileCopyrightText: 2024 deltanedas
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2024 nikthechampiongr
+# SPDX-FileCopyrightText: 2024 potato1234_x
+# SPDX-FileCopyrightText: 2025 Alpaccalypse
+# SPDX-FileCopyrightText: 2025 AndrewFenriz
+# SPDX-FileCopyrightText: 2025 Arcane-Waffle
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 Boaz1111
+# SPDX-FileCopyrightText: 2025 Ghagliiarghii
+# SPDX-FileCopyrightText: 2025 Hanz
+# SPDX-FileCopyrightText: 2025 Hitlinemoss
+# SPDX-FileCopyrightText: 2025 JustinWinningham
+# SPDX-FileCopyrightText: 2025 K-Dynamic
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Nemanja
+# SPDX-FileCopyrightText: 2025 Nox
+# SPDX-FileCopyrightText: 2025 Ps3Moira
+# SPDX-FileCopyrightText: 2025 Radezolid
+# SPDX-FileCopyrightText: 2025 ScarKy0
+# SPDX-FileCopyrightText: 2025 Simon
+# SPDX-FileCopyrightText: 2025 SlamBamActionman
+# SPDX-FileCopyrightText: 2025 Southbridge
+# SPDX-FileCopyrightText: 2025 Tayrtahn
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 lzk
+# SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2025 slarticodefast
+# SPDX-FileCopyrightText: 2025 āda
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 # This is a basic dictionary that maps old entity prototype ids to new ids. This only works for entity prototypes, and
 # is intended to allow maps to load without having to manually edit them. An empty or "null" string results in the
 # entity getting deleted.
@@ -725,3 +789,67 @@ PrefilledSyringe: Syringe
 
 #2025-10-29 // KS14 Change - Remove spacelaw
 BookSpaceLaw: null
+
+#2025-12-23 // KS14 Change - Remove slop
+#plushies
+PlushieBee: null
+PlushieNar: null
+PlushieRatvar: null
+PlushieNuke: null
+PlushieSlime: null
+PlushieSnake: null
+PlushieExperiment: null
+PlushieLizard: null
+PlushieSpaceLizard: null
+PlushieLizardInversed: null
+PlushieCarp: null
+PlushieHolocarp: null
+PlushieMagicarp: null
+PlushieRainbowCarp: null
+PlushieVox: null
+PlushieRouny: null
+PlushieSharkBlue: null
+PlushieSharkGrey: null
+PlushieSharkPink: null
+PlushieAtmosian: null
+PlushieDiona: null
+PlushieXeno: null
+PlushieHampter: null
+PlushieMoth: null
+PlushieArachnid: null
+PlushiePenguin: null
+#crates
+CrateFunPlushie: null
+CrateFunLizardPlushieBulk: null
+CrateFunSharkPlushieBulk: null
+#vend+its items
+VendingMachinePride: null
+ClothingNeckLGBTPin: null
+ClothingNeckAromanticPin: null
+ClothingNeckAsexualPin: null
+ClothingNeckBisexualPin: null
+ClothingNeckGayPin: null
+ClothingNeckIntersexPin: null
+ClothingNeckLesbianPin: null
+ClothingNeckNonBinaryPin: null
+ClothingNeckPansexualPin: null
+ClothingNeckOmnisexualPin: null
+ClothingNeckTransPin: null
+ClothingNeckAutismPin: null
+ClothingNeckGoldAutismPin: null
+ClothingNeckCloakAce: null
+ClothingNeckCloakAro: null
+ClothingNeckCloakBi: null
+ClothingNeckCloakEnby: null
+ClothingNeckCloakGay: null
+ClothingNeckCloakIntersex: null
+ClothingNeckCloakLesbian: null
+ClothingNeckCloakPan: null
+ClothingNeckCloakTrans: null
+ClothingHeadHatXmasCrown: null
+BedsheetRainbow: null
+ClothingHeadHatFlowerWreath: null
+ClothingUniformColorRainbow: null
+ClothingUnderSocksCoder: null
+ClothingUnderSocksBee: null
+ClothingNeckScarfStripedLesbianLong: null

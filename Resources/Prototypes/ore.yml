@@ -1,3 +1,20 @@
+# SPDX-FileCopyrightText: 2023 Alekshhh
+# SPDX-FileCopyrightText: 2023 Velcroboy
+# SPDX-FileCopyrightText: 2023 Vordenburg
+# SPDX-FileCopyrightText: 2023 cOrigin
+# SPDX-FileCopyrightText: 2023 forthbridge
+# SPDX-FileCopyrightText: 2023 metalgearsloth
+# SPDX-FileCopyrightText: 2024 Ed
+# SPDX-FileCopyrightText: 2024 Emisse
+# SPDX-FileCopyrightText: 2024 Nemanja
+# SPDX-FileCopyrightText: 2024 Zadeon
+# SPDX-FileCopyrightText: 2025 Firewars763
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 brainfood1183
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MIT
+
 # TODO: Kill ore veins
 # Split it into 2 components, 1 for "spawn XYZ on destruction" and 1 for "randomly select one of these for spawn on destruction"
 
@@ -33,12 +50,6 @@
   minOreYield: 1
   maxOreYield: 3
 
-- type: ore
-  id: OreSalt
-  oreEntity: Salt1
-  minOreYield: 1
-  maxOreYield: 3
-
 # Low yields
 - type: ore
   id: OrePlasma
@@ -61,6 +72,12 @@
 - type: ore
   id: OreDiamond
   oreEntity: DiamondOre1
+  minOreYield: 1
+  maxOreYield: 2
+
+- type: ore # KS14: Ports upstream https://github.com/space-wizards/space-station-14/pull/41930
+  id: OreSalt
+  oreEntity: Salt1
   minOreYield: 1
   maxOreYield: 2
 

@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: 2025 Flareguy
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Thinbug
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: entity
+  id: EffectGib
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: TimedDespawn
+    lifetime: 1.35
+  - type: Sprite
+    sprite: _KS14/Effects/gib.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: gibbed-h
+  - type: EffectVisuals
+  - type: Tag
+    tags:
+    - HideContextMenu
+  - type: EmitSoundOnSpawn
+    sound: 
+      collection: gib
+  - type: AnimationPlayer

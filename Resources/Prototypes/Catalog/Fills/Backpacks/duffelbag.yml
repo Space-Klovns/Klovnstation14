@@ -47,6 +47,7 @@
 # SPDX-FileCopyrightText: 2025 FrauZj
 # SPDX-FileCopyrightText: 2025 FrauzJ
 # SPDX-FileCopyrightText: 2025 Ghagliiarghii
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Nemanja
 # SPDX-FileCopyrightText: 2025 PicklOH
 # SPDX-FileCopyrightText: 2025 ScarKy0
@@ -54,9 +55,10 @@
 # SPDX-FileCopyrightText: 2025 Stomf
 # SPDX-FileCopyrightText: 2025 beck-thompson
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
 # SPDX-FileCopyrightText: 2025 robinthedragon
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - type: entity
   parent: ClothingBackpackDuffelMedical
@@ -221,21 +223,9 @@
 
 - type: entity
   parent: ClothingBackpackDuffelSyndicateBundle
-  id: ClothingBackpackDuffelSyndicateCarpSuit
-  name: carp suit duffel bag
-  description: Contains a carp suit and some friends to play with.
-  components:
-  - type: StorageFill
-    contents:
-    - id: ClothingOuterSuitCarp
-    - id: PlushieCarp
-      amount: 6
-
-- type: entity
-  parent: ClothingBackpackDuffelSyndicateBundle
   id: ClothingBackpackDuffelSyndicatePyjamaBundle
   name: syndicate pyjama duffel bag
-  description: Contains 3 pairs of syndicate pyjamas and 4 plushies for the ultimate sleepover.
+  description: Contains 3 pairs of syndicate pyjamas for the ultimate sleepover.
   components:
   - type: Storage
     grid:
@@ -252,10 +242,6 @@
         amount: 3
       - id: BedsheetSyndie
         amount: 3
-      - id: PlushieCarp
-      - id: PlushieNuke
-      - id: PlushieLizard
-      - id: PlushieSharkBlue
 
 - type: entity
   parent: ClothingBackpackDuffelSyndicateBundle

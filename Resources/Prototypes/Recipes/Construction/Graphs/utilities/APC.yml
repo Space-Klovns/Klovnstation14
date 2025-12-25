@@ -1,3 +1,16 @@
+# SPDX-FileCopyrightText: 2020 Git-Nivrak
+# SPDX-FileCopyrightText: 2021 DrSmugleaf
+# SPDX-FileCopyrightText: 2021 metalgearsloth
+# SPDX-FileCopyrightText: 2022 Peptide90
+# SPDX-FileCopyrightText: 2022 rolfero
+# SPDX-FileCopyrightText: 2023 Slava0135
+# SPDX-FileCopyrightText: 2025 Ertanic
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 hoshizora
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: constructionGraph
   id: APC
   start: start
@@ -38,6 +51,9 @@
             - !type:GivePrototype
               prototype: APCElectronics
               amount: 1
+            - !type:RaiseEvent
+              event: !type:APCDeconstructedEvent
+              broadcast: false
           conditions:
             - !type:WirePanel
               open: true

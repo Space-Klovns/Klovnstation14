@@ -1,3 +1,23 @@
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 deltanedas
+// SPDX-FileCopyrightText: 2024 Jake Huxell
+// SPDX-FileCopyrightText: 2024 Plykiya
+// SPDX-FileCopyrightText: 2024 chromiumboy
+// SPDX-FileCopyrightText: 2024 nikthechampiongr
+// SPDX-FileCopyrightText: 2025 Gerkada
+// SPDX-FileCopyrightText: 2025 J
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Nemanja
+// SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2025 TemporalOroboros
+// SPDX-FileCopyrightText: 2025 gus
+// SPDX-FileCopyrightText: 2025 metalgearsloth
+// SPDX-FileCopyrightText: 2025 nabegator220
+// SPDX-FileCopyrightText: 2025 slarticodefast
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 using Content.Shared.Administration.Logs;
 using Content.Shared.Charges.Components;
 using Content.Shared.Charges.Systems;
@@ -289,7 +309,13 @@ public sealed class RCDSystem : EntitySystem
 
         // Play audio and consume charges
         _audio.PlayPredicted(component.SuccessSound, uid, args.User);
-        _sharedCharges.AddCharges(uid, -args.Cost);
+        // Goobstation - start
+        var prototype = _protoManager.Index(component.ProtoId);
+        if (prototype.Mode == RcdMode.Deconstruct)
+            _sharedCharges.AddCharges(uid, args.Cost / 2);
+        else
+            _sharedCharges.AddCharges(uid, -args.Cost);
+        // Goobstation - end
     }
 
     private void OnRCDconstructionGhostRotationEvent(RCDConstructionGhostRotationEvent ev, EntitySessionEventArgs session)

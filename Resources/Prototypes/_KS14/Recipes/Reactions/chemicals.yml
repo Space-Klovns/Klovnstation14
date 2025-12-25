@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MIT
+
+- type: reaction
+  id: Klovnide
+  minTemp: 351.15 # boiling point of ethanol, to imply that space salt is somewhat organic
+  reactants:
+    SpaceSalt:
+      amount: 1
+    Epinephrine: # lol whatever
+      amount: 1
+    Hydrogen:
+      amount: 1
+    Copper:
+      amount: 1
+  products:
+    Klovnide: 4
+
+- type: reaction # since plasma is essentially tritiated ethanol, it would react very explosively with klovnide ==
+  id: KlovnideExplosion
+  impact: High
+  priority: 25
+  conserveEnergy: false
+  reactants:
+    Klovnide:
+      amount: 1
+    Plasma:
+      amount: 1
+  effects:
+  - !type:ExplosionReactionEffect # insanely explosive
+    explosionType: HardBomb
+    intensityPerUnit: 4
+    maxTotalIntensity: 250
+    intensitySlope: 1
+    maxIntensity: 40

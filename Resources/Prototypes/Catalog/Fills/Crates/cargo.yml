@@ -1,3 +1,19 @@
+# SPDX-FileCopyrightText: 2023 EnDecc
+# SPDX-FileCopyrightText: 2024 Ed
+# SPDX-FileCopyrightText: 2024 EdenTheLiznerd
+# SPDX-FileCopyrightText: 2024 Emisse
+# SPDX-FileCopyrightText: 2024 IProduceWidgets
+# SPDX-FileCopyrightText: 2024 Moomoobeef
+# SPDX-FileCopyrightText: 2024 Mr. 27
+# SPDX-FileCopyrightText: 2024 lzk
+# SPDX-FileCopyrightText: 2025 Centronias
+# SPDX-FileCopyrightText: 2025 Nemanja
+# SPDX-FileCopyrightText: 2025 Princess Cheeseballs
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 - type: entity
   id: CrateCargoLuxuryHardsuit
   parent: CratePirate
@@ -233,9 +249,6 @@
     - id: ClothingHeadHatCardborg
       prob: 0.01
       orGroup: Clothes
-    - id: ClothingUnderSocksCoder
-      prob: 0.01
-      orGroup: Clothes
     - id: ClothingUniformJumpskirtOfLife
       prob: 0.01
       orGroup: Clothes
@@ -279,49 +292,6 @@
     - id: ClothingBeltChampion
       prob: 0.01
       orGroup: Swag
-    #plushies
-    - id: PlushieRGBee
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieGhost
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieHampter
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieGhostRevenant
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushiePenguin
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieHuman
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieLizard
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieRouny
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieLamp
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieSharkBlue
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieMoth
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieVulp
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieArachind
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieThrongler #hehe
-      prob: 0.0005
-      orGroup: Plushies
     #useful
     - id: AmeJar
       prob: 0.01
