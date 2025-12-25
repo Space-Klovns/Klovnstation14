@@ -71,7 +71,7 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: TimedDespawn
-    lifetime: 0.15
+    lifetime: 0.2 # KS14
   - type: Sprite
     drawdepth: BelowMobs
     layers:
