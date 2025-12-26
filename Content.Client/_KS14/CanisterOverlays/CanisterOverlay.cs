@@ -1,11 +1,14 @@
 // SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
+
+// This was originally licensed mpl but i stole some code from upstream so it's MIT now
 
 using System.Linq;
 using System.Numerics;
 using Content.Client.Atmos.EntitySystems;
 using Content.Client.Atmos.Overlays;
+using Content.Client.Graphics;
 using Content.Shared.Atmos.Piping.Unary.Components;
 using Content.Shared.Atmos.Prototypes;
 using Robust.Client.GameObjects;
@@ -25,12 +28,13 @@ public sealed class CanisterOverlay : Overlay
 
     [Dependency] private readonly IEntityManager _entityManager = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private readonly IClyde _clyde = default!;
 
     private readonly TransformSystem _transformSystem = default!;
     private readonly SpriteSystem _spriteSystem = default!;
     private readonly GasTileOverlaySystem _gasTileOverlaySystem = default!;
 
-    public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowFOV;
+    public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
     public SpriteSpecifier.Rsi WindowMaskSpriteSpecifier;
 
@@ -44,6 +48,13 @@ public sealed class CanisterOverlay : Overlay
     private readonly int _visibleGasCount;
     private readonly float[] _visibleGasMolesVisibleMin;
     private readonly float[] _visibleGasMolesVisibleMax;
+
+    private OverlayResourceCache<OverlayResources> _resources = new();
+
+    /// <summary>
+    ///     Stores canister components and their matrix.
+    /// </summary>
+    private readonly List<(GasCanisterComponent, Matrix3x2)> _drawDataCache = new();
 
     public CanisterOverlay(SpriteSpecifier.Rsi maskSpriteSpecifier, GasTileOverlay gasTileOverlay /* TODO LCDC: HOLY SHIT THIS IS DEMENTED */)
     {
@@ -68,52 +79,93 @@ public sealed class CanisterOverlay : Overlay
         }
     }
 
+    protected override void DisposeBehavior()
+    {
+        _resources.Dispose();
+        base.DisposeBehavior();
+    }
+
+    private sealed class OverlayResources : IDisposable
+    {
+        public IRenderTexture? MaskTarget;
+
+        public void Dispose()
+        {
+            MaskTarget?.Dispose();
+        }
+    }
+
     protected override void Draw(in OverlayDrawArgs args)
     {
-        /*
-            TODO LCDC: FIX THIS SHIT
-
-            I think worldbounds being drawn isn't working properly or something
-        */
-
-        var canisterQuery = _entityManager.EntityQuery<GasCanisterComponent>();
-        if (!canisterQuery.Any())
+        // Don't draw anything if no entities with canistercomponent even exist.
+        if (!_entityManager.EntityQuery<GasCanisterComponent>(includePaused: false).Any())
             return;
 
         var viewport = args.Viewport;
         var worldHandle = args.WorldHandle;
         worldHandle.SetTransform(Matrix3x2.Identity);
 
+        var resources = _resources.GetForViewport(args.Viewport, static _ => new());
+        // update if necessary
+        var targetSize = viewport.RenderTarget.Size;
+        if (resources.MaskTarget?.Size != targetSize)
+        {
+            resources.MaskTarget?.Dispose();
+            resources.MaskTarget = _clyde.CreateRenderTarget(targetSize, new(RenderTargetColorFormat.Rgba8Srgb), name: "canister-overlay-mask");
+        }
+
         var maskTexture = _spriteSystem.GetState(WindowMaskSpriteSpecifier).Frame0;
-
-        var maskShader = _prototypeManager.Index(StencilMaskShader).Instance();
-        worldHandle.UseShader(maskShader);
-        worldHandle.DrawRect(args.WorldBounds, Color.Black, filled: true);
-
-        var stencilEqualDrawShader = _prototypeManager.Index(StencilEqualDrawShader).Instance();
 
         // because canisters always have the same rotation as the camera, we use the camera's rotation
         var rotationMatrix = Matrix3Helpers.CreateRotation(-(viewport.Eye?.Rotation ?? Angle.Zero));
 
-        var canisterEnumerator = _entityManager.EntityQueryEnumerator<GasCanisterComponent, TransformComponent>();
-        while (canisterEnumerator.MoveNext(out var canisterComponent, out var transformComponent))
+        // Draw on the stencil target
+        _drawDataCache.Clear();
+        worldHandle.RenderInRenderTarget(resources.MaskTarget, () =>
         {
-            // save some performance if we can
-            if (canisterComponent.NetworkedMoles == 0f)
-                continue;
+            var canisterEnumerator = _entityManager.EntityQueryEnumerator<GasCanisterComponent, TransformComponent>();
+            while (canisterEnumerator.MoveNext(out var canisterComponent, out var transformComponent))
+            {
+                // save some performance if we can, because canisters with no moles don't matter
+                if (canisterComponent.NetworkedMoles == 0f)
+                    continue;
 
-            var worldPosition = _transformSystem.GetWorldPosition(transformComponent);
+                var worldPosition = _transformSystem.GetWorldPosition(transformComponent);
 
-            var scaledWorld = Matrix3x2.Multiply(ScaleMatrix, Matrix3Helpers.CreateTranslation(worldPosition));
-            worldHandle.SetTransform(Matrix3x2.Multiply(rotationMatrix, scaledWorld));
+                var scaledWorld = Matrix3x2.Multiply(ScaleMatrix, Matrix3Helpers.CreateTranslation(worldPosition));
+                var canisterTransform = Matrix3x2.Multiply(rotationMatrix, scaledWorld);
 
-            // every iteration of this loop should start with the shader as the mask shader
-            // so, draw window mask to stencil buffer
-            worldHandle.DrawTexture(maskTexture, HalfNegativeVector2, modulate: Color.White);
+                _drawDataCache.Add((canisterComponent, canisterTransform));
+                worldHandle.SetTransform(canisterTransform);
 
-            // now, only draw on the window mask
-            worldHandle.UseShader(stencilEqualDrawShader);
+                // so, draw window mask to stencil target
+                worldHandle.DrawTexture(maskTexture, HalfNegativeVector2, modulate: Color.White);
+            }
+        },
+        Color.Transparent);
 
+        // reset after setting transform million times
+        worldHandle.SetTransform(Matrix3x2.Identity);
+
+        // oops who cares
+        if (_drawDataCache.Count == 0)
+        {
+            worldHandle.UseShader(null);
+            return;
+        }
+
+        //var maskShader = _prototypeManager.Index(StencilMaskShader).Instance();
+        //worldHandle.UseShader(maskShader);
+
+        // Draw stencil target onto stencil mask so we can actually use it
+        worldHandle.DrawTextureRect(resources.MaskTarget.Texture, args.WorldBounds);
+
+        // Finally, draw gas textures on pixels that are white on our stencil mask
+        //var stencilEqualDrawShader = _prototypeManager.Index(StencilEqualDrawShader).Instance();
+        //worldHandle.UseShader(stencilEqualDrawShader);
+        foreach (var (canisterComponent, canisterMatrix) in _drawDataCache)
+        {
+            worldHandle.SetTransform(canisterMatrix);
             for (var i = 0; i < _visibleGasCount; i++)
             {
                 // 0 to 1
@@ -134,12 +186,10 @@ public sealed class CanisterOverlay : Overlay
                     (gasMoles - gasMolesVisibleMin) / (gasMolesVisibleMax - gasMolesVisibleMin);
 
                 // TODO LCDC MAYBE: find a way to scale this down so it's higher resolution
-                worldHandle.DrawTexture(_gasTileOverlay._frames[i][_gasTileOverlay._frameCounter[i]], HalfNegativeVector2, Color.White.WithAlpha(opacity));
+                worldHandle.DrawTexture(_gasTileOverlay._frames[i][_gasTileOverlay._frameCounter[i]], HalfNegativeVector2, modulate: Color.White.WithAlpha(opacity));
 
                 // TODO LCDC: render fire textures for overlay
             }
-
-            worldHandle.UseShader(maskShader);
         }
 
         worldHandle.SetTransform(Matrix3x2.Identity);
