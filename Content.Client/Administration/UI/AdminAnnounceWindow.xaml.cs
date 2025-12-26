@@ -13,16 +13,21 @@ namespace Content.Client.Administration.UI
     {
         [Dependency] private readonly ILocalizationManager _localization = default!;
 
-        public AdminAnnounceWindow()
+         public AdminAnnounceWindow()
         {
             RobustXamlLoader.Load(this);
             IoCManager.InjectDependencies(this);
 
-            Announcement.Placeholder = new Rope.Leaf(_localization.GetString("admin-announce-announcement-placeholder"));
-            AnnounceMethod.AddItem(_localization.GetString("admin-announce-type-station"));
-            AnnounceMethod.SetItemMetadata(0, AdminAnnounceType.Station);
+
             AnnounceMethod.AddItem(_localization.GetString("admin-announce-type-server"));
-            AnnounceMethod.SetItemMetadata(1, AdminAnnounceType.Server);
+            AnnounceMethod.SetItemMetadata(0, AdminAnnounceType.Server);
+            AnnounceMethod.AddItem(_localization.GetString("admin-announce-type-station"));
+            AnnounceMethod.SetItemMetadata(1, AdminAnnounceType.Station);
+            AnnounceMethod.AddItem(_localization.GetString("admin-announce-type-syndicate"));
+            AnnounceMethod.SetItemMetadata(2, AdminAnnounceType.Syndicate);
+            AnnounceMethod.AddItem(_localization.GetString("admin-announce-type-wizard"));
+            AnnounceMethod.SetItemMetadata(3, AdminAnnounceType.Wizard);
+
             AnnounceMethod.OnItemSelected += AnnounceMethodOnOnItemSelected;
             Announcement.OnKeyBindUp += AnnouncementOnOnTextChanged;
         }
@@ -35,7 +40,22 @@ namespace Content.Client.Administration.UI
         private void AnnounceMethodOnOnItemSelected(OptionButton.ItemSelectedEventArgs args)
         {
             AnnounceMethod.SelectId(args.Id);
-            Announcer.Editable = ((AdminAnnounceType?)args.Button.SelectedMetadata ?? AdminAnnounceType.Station) == AdminAnnounceType.Station;
+            var selectedType = (AdminAnnounceType?)args.Button.SelectedMetadata ?? AdminAnnounceType.Station;
+            Announcer.Editable = selectedType == AdminAnnounceType.Station || selectedType == AdminAnnounceType.Syndicate || selectedType == AdminAnnounceType.Wizard;
+
+            switch (selectedType)
+            {
+                case AdminAnnounceType.Station:
+                    Announcer.Text = _localization.GetString("admin-announce-announcer-default");
+                    break;
+                case AdminAnnounceType.Syndicate:
+                    Announcer.Text = _localization.GetString("admin-announce-type-syndicate-default");
+                    break;
+                case AdminAnnounceType.Wizard:
+                    Announcer.Text = _localization.GetString("admin-announce-type-wizard-default");
+                    break;
+            }
+
         }
     }
 }

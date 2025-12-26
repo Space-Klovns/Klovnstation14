@@ -5,6 +5,9 @@ using Content.Server.Chat.Systems;
 using Content.Server.EUI;
 using Content.Shared.Administration;
 using Content.Shared.Eui;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Player;
 
 namespace Content.Server.Administration.UI
 {
@@ -50,7 +53,23 @@ namespace Content.Server.Administration.UI
                             break;
                         // TODO: Per-station announcement support
                         case AdminAnnounceType.Station:
-                            _chatSystem.DispatchGlobalAnnouncement(doAnnounce.Announcement, doAnnounce.Announcer, colorOverride: Color.Gold);
+                            _chatSystem.DispatchGlobalAnnouncement(doAnnounce.Announcement,
+                                doAnnounce.Announcer,
+                                colorOverride: Color.Gold,
+                                playSound: true,
+                                announcementSound: new SoundPathSpecifier("/Audio/_KS14/Announcements/commandreport.ogg"));
+                            break;
+                        case AdminAnnounceType.Syndicate:
+                            _chatSystem.DispatchGlobalAnnouncement(doAnnounce.Announcement,
+                                doAnnounce.Announcer,
+                                colorOverride: Color.FromHex("#ff0000"),
+                                playSound: true,
+                                announcementSound: new SoundPathSpecifier("/Audio/_KS14/Announcements/commandreport.ogg"));
+                            break;
+                        case AdminAnnounceType.Wizard:
+                            _chatSystem.DispatchGlobalAnnouncement(doAnnounce.Announcement,
+                                doAnnounce.Announcer,
+                                colorOverride: Color.FromHex("#ff00ff"));
                             break;
                     }
 
