@@ -5,6 +5,7 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using Content.Shared._KS14.PredictedSpawning;
 using Content.Shared._KS14.Random.Helpers;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
@@ -24,6 +25,7 @@ public abstract class SharedSparksSystem : EntitySystem
     [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
     [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
+    [Dependency] private readonly KsSharedPredictedSpawnSystem _ksPredictedSpawnSystem = default!;
 
     public static readonly EntProtoId DefaultSparkPrototype = "EffectSparkMoving";
     public static readonly SoundSpecifier DefaultSoundSpecifier = new SoundCollectionSpecifier("sparks");
@@ -93,7 +95,7 @@ public abstract class SharedSparksSystem : EntitySystem
         System.Random? random = null
     )
     {
-        var spark = EntityManager.PredictedSpawn(sparkPrototype);
+        var spark = _ksPredictedSpawnSystem.PredictedSpawn(sparkPrototype);
         random ??= KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
             (int)_gameTiming.CurTick.Value,
             KsSharedRandomExtensions.GetNetId(spark, EntityManager),
@@ -118,7 +120,7 @@ public abstract class SharedSparksSystem : EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid SpawnSpark(in MapCoordinates coordinates, in Vector2 velocityVector, in EntProtoId sparkPrototype)
     {
-        var spark = EntityManager.PredictedSpawn(sparkPrototype, coordinates);
+        var spark = _ksPredictedSpawnSystem.PredictedSpawn(sparkPrototype, coordinates);
         _physicsSystem.SetLinearVelocity(spark, velocityVector);
 
         return spark;
@@ -136,7 +138,7 @@ public abstract class SharedSparksSystem : EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid SpawnSparkAttached(in EntityCoordinates coordinates, in Vector2 velocityVector, in EntProtoId sparkPrototype)
     {
-        var spark = EntityManager.PredictedSpawnAttachedTo(sparkPrototype, coordinates);
+        var spark = _ksPredictedSpawnSystem.PredictedSpawnAttachedTo(sparkPrototype, coordinates);
         _physicsSystem.SetLinearVelocity(spark, velocityVector);
 
         return spark;
