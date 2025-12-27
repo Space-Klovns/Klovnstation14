@@ -3,7 +3,7 @@ using Content.Shared._KS14.PredictedSpawning;
 namespace Content.Client._KS14.PredictedSpawning;
 
 /// <inheritdoc/>
-public abstract class KsPredictedSpawnSystem : KsSharedPredictedSpawnSystem
+public sealed class KsPredictedSpawnSystem : KsSharedPredictedSpawnSystem
 {
     public override void Initialize()
     {
