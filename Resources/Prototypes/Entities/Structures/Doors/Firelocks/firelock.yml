@@ -45,24 +45,24 @@
         - state: closed
           map: ["enum.DoorVisualLayers.Base"]
         - state: closed_unlit
-          shader: unshaded
+          shader: Emissive # KS14
           map: ["enum.DoorVisualLayers.BaseUnlit"]
           visible: false
         - state: welded
           map: ["enum.WeldableLayers.BaseWelded"]
         - state: bolted_unlit
-          shader: unshaded
+          shader: Emissive # KS14
           map: ["enum.DoorVisualLayers.BaseBolted"]
           visible: false
         - state: panel_open
           map: ["enum.WiresVisualLayers.MaintenancePanel"]
         - state: pressure_unlit
           visible: false
-          shader: unshaded
+          shader: Emissive # KS14
           map: ["enum.FirelockVisualLayersPressure.Base"]
         - state: temperature_unlit
           visible: false
-          shader: unshaded
+          shader: Emissive # KS14
           map: ["enum.FirelockVisualLayersTemperature.Base"]
     - type: GenericVisualizer
       visuals:

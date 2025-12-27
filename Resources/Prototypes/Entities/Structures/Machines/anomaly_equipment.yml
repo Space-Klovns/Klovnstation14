@@ -135,7 +135,7 @@
       visible: false
       map: ["enum.EmitterVisualLayers.Lights"]
     - state: locked
-      shader: unshaded
+      shader: Emissive # KS14
       visible: false
       map: ["enum.LockVisualLayers.Lock"]
   - type: Transform

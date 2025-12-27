@@ -16,7 +16,7 @@
       map: ["enum.StorageVisualLayers.Door"]
     - state: locked
       map: ["enum.LockVisualLayers.Lock"]
-      shader: unshaded
+      shader: Emissive # KS14
     - state: welded
       visible: false
       map: ["enum.WeldableLayers.BaseWelded"]

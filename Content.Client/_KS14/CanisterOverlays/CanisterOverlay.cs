@@ -117,7 +117,8 @@ public sealed class CanisterOverlay : Overlay
         var maskTexture = _spriteSystem.GetState(WindowMaskSpriteSpecifier).Frame0;
 
         // because canisters always have the same rotation as the camera, we use the camera's rotation
-        var rotationMatrix = Matrix3Helpers.CreateRotation(-(viewport.Eye?.Rotation ?? Angle.Zero));
+        // TODO LCDC: maybe this should be negative maybe it shouldnt IDFK.
+        var rotationMatrix = Matrix3Helpers.CreateRotation(viewport.Eye?.Rotation ?? Angle.Zero);
 
         // Draw on the stencil target
         _drawDataCache.Clear();

@@ -510,7 +510,7 @@
       map: ["enum.WeldableLayers.BaseWelded"]
     - state: locked
       map: ["enum.LockVisualLayers.Lock"]
-      shader: unshaded
+      shader: Emissive # KS14
     - state: paper
       sprite: Structures/Storage/Crates/labels.rsi
       offset: "-0.46875,0.03125"
@@ -540,7 +540,7 @@
       map: ["enum.WeldableLayers.BaseWelded"]
     - state: locked
       map: ["enum.LockVisualLayers.Lock"]
-      shader: unshaded
+      shader: Emissive # KS14
     - state: paper
       sprite: Structures/Storage/Crates/labels.rsi
       offset: "-0.46875,0.03125"
@@ -570,7 +570,7 @@
       map: ["enum.WeldableLayers.BaseWelded"]
     - state: locked
       map: ["enum.LockVisualLayers.Lock"]
-      shader: unshaded
+      shader: Emissive # KS14
     - state: paper
       sprite: Structures/Storage/Crates/labels.rsi
       offset: "-0.46875,0.03125"
@@ -600,7 +600,7 @@
       map: ["enum.WeldableLayers.BaseWelded"]
     - state: locked
       map: ["enum.LockVisualLayers.Lock"]
-      shader: unshaded
+      shader: Emissive # KS14
     - state: paper
       sprite: Structures/Storage/Crates/labels.rsi
       offset: "-0.46875,0.03125"
@@ -630,7 +630,7 @@
       map: ["enum.WeldableLayers.BaseWelded"]
     - state: locked
       map: ["enum.LockVisualLayers.Lock"]
-      shader: unshaded
+      shader: Emissive # KS14
     - state: paper
       sprite: Structures/Storage/Crates/labels.rsi
       offset: "-0.46875,0.03125"
@@ -869,7 +869,7 @@
       map: ["enum.WeldableLayers.BaseWelded"]
     - state: locked
       map: ["enum.LockVisualLayers.Lock"]
-      shader: unshaded
+      shader: Emissive # KS14
     - state: paper
       sprite: Structures/Storage/Crates/labels.rsi
       offset: "0.0,0.03125"
