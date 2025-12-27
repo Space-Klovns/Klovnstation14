@@ -112,10 +112,6 @@ public abstract class SharedPortalSystem : EntitySystem
 
     private void OnCollide(Entity<PortalComponent> ent, ref StartCollideEvent args)
     {
-        // KS14
-        if (_curTiming.IsFirstTimePredicted)
-            return;
-
         if (!ShouldCollide(args.OurFixtureId, args.OtherFixtureId, args.OurFixture, args.OtherFixture))
             return;
 
