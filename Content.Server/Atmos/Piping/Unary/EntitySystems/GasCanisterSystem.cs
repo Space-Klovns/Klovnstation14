@@ -58,6 +58,14 @@ public sealed class GasCanisterSystem : SharedGasCanisterSystem
         SubscribeLocalEvent<GasCanisterComponent, AtmosDeviceUpdateEvent>(OnCanisterUpdated);
         SubscribeLocalEvent<GasCanisterComponent, PriceCalculationEvent>(CalculateCanisterPrice);
         SubscribeLocalEvent<GasCanisterComponent, GasAnalyzerScanEvent>(OnAnalyzed);
+
+        SubscribeLocalEvent<GasCanisterComponent, MapInitEvent>(OnCanisterMapInited); // KS14
+    }
+
+    // KS14
+    private void OnCanisterMapInited(Entity<GasCanisterComponent> entity, ref MapInitEvent args)
+    {
+        NetworkCanisterAppearance(entity, entity);
     }
 
     /// <summary>
