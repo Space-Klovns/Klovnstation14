@@ -169,7 +169,7 @@
     - state: corner
       map: ["railing"] # don't change this; see DirectionalSpriteOffsetComponent on BaseRailing
   - type: Icon
-    state: corner_small # KS14: /tg/ sprite port
+    state: corner # KS14: /tg/ sprite port
   - type: Fixtures
     fixtures:
       fix1:
