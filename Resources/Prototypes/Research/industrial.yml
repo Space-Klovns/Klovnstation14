@@ -151,12 +151,13 @@
   name: research-technology-mechanical-compression
   icon: # KS14: /tg/ sprite port
     sprite: _KS14/Structures/Machines/flatpacker.rsi
-    state: flatpacker
+    state: base
   discipline: Industrial
   tier: 1
   cost: 10000
   recipeUnlocks:
   - FlatpackerMachineCircuitboard
+  - MaterialSiloMachineCircuitboard
   # Goobstation R&D Console rework start
   position: 1,-4
   technologyPrerequisites:
