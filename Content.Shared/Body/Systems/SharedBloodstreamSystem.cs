@@ -408,7 +408,6 @@ public abstract class SharedBloodstreamSystem : EntitySystem
                 cleanable: true
             );
 
-            Log.Debug($"var: {accumulatedVariation}, at: {intpower}");
             power -= iterationDelta;
         }
 
