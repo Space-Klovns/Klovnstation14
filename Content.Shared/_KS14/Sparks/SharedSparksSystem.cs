@@ -40,6 +40,8 @@ public abstract class SharedSparksSystem : EntitySystem
     /// <summary>
     ///     Spawns a random number of sparks attached to a position, each launched in a random direction at a random velocity.
     ///         Optionally also plays a sound at the given position.
+    /// 
+    ///     The spark entity defined in <paramref name="sparkPrototype"/> should have a <see cref="Robust.Shared.Physics.Components.PhysicsComponent"/>. 
     /// </summary>
     public void DoSparks(
         in EntityCoordinates coordinates,
@@ -82,6 +84,8 @@ public abstract class SharedSparksSystem : EntitySystem
     /// <summary>
     ///     Spawns a single spark attached to a position, and launches it in a random direction at a random velocity.
     ///         Optionally also plays a sound at the given position.
+    /// 
+    ///     The spark entity defined in <paramref name="sparkPrototype"/> should have a <see cref="Robust.Shared.Physics.Components.PhysicsComponent"/>. 
     /// </summary>
     /// <param name="random">Random used to get velocity and direction of the spark. Should have a predicted seed if this method is being used in prediction.</param>
     /// <returns>The spawned entity.</returns>
@@ -115,6 +119,8 @@ public abstract class SharedSparksSystem : EntitySystem
 
     /// <summary>
     ///     Spawns a single spark at a position, and launches it in a given direction at a given velocity.
+    /// 
+    ///     The spark entity defined in <paramref name="sparkPrototype"/> should have a <see cref="Robust.Shared.Physics.Components.PhysicsComponent"/>. 
     /// </summary>
     /// <returns>The spawned entity.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -133,6 +139,8 @@ public abstract class SharedSparksSystem : EntitySystem
 
     /// <summary>
     ///     Spawns a single spark attached to a position, and launches it in a given direction at a given velocity.
+    /// 
+    ///     The spark entity defined in <paramref name="sparkPrototype"/> should have a <see cref="Robust.Shared.Physics.Components.PhysicsComponent"/>. 
     /// </summary>
     /// <returns>The spawned entity.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
