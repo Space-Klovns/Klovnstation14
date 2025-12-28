@@ -138,8 +138,6 @@
   - WeaponPistolCHIMP
   - AnomalySynchronizerCircuitboard
   - AnomalyVesselExperimentalCircuitboard
-  - AnomalyLocator
-  - AnomalyLocatorWide
   technologyPrerequisites:
   - BasicAnomalousResearch
   position: -3,0
