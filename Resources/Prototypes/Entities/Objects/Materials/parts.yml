@@ -22,6 +22,12 @@
   - type: Tag
     tags:
     - ConstructionMaterial
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/materials/iron_rod_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/materials/metal_drop.ogg
 
 - type: entity
   parent: PartBase

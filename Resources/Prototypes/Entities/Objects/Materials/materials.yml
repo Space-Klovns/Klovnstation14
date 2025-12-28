@@ -63,6 +63,12 @@
     prototype: CarpetCard
     doAfter: 0.5
     removeOnInteract: true
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/materials/cardboard_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/materials/cardboard_drop.ogg
 
 - type: entity
   parent: MaterialCardboard
@@ -265,6 +271,12 @@
         reagents:
         - ReagentId: Cellulose
           Quantity: 10
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/materials/wood_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/materials/wood_drop.ogg
 
 - type: entity
   parent: MaterialWoodPlank
@@ -358,6 +370,12 @@
   - type: Tag
     tags:
     - HideCorgi
+  - type: EmitSoundOnPickup
+    sound:
+      collection: ClothPickup
+  - type: EmitSoundOnDrop
+    sound:
+      collection: ClothDrop
 
 - type: entity
   parent: MaterialBase
@@ -396,6 +414,12 @@
     tags:
     - RawMaterial
     - Diamond
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/materials/metal_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/materials/metal_drop.ogg
 
 - type: entity
   parent: MaterialDiamond
@@ -749,6 +773,12 @@
           Quantity: 3
   - type: Item
     heldPrefix: bones
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/materials/wood_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/materials/wood_drop.ogg
 
 - type: entity
   parent: MaterialBones

@@ -22,6 +22,12 @@
     size: Normal
   - type: Sprite
     sprite: Objects/Storage/boxes.rsi
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/ammobox_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/ammobox_drop.ogg
 
 - type: entity
   parent: BaseAmmoProvider

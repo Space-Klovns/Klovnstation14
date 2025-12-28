@@ -18,6 +18,12 @@
     - type: Tag
       tags:
       - Spellbook
+    - type: EmitSoundOnPickup
+      sound:
+        path: /Audio/_KS14/Handling/book_pickup.ogg
+    - type: EmitSoundOnDrop
+      sound:
+        path: /Audio/_KS14/Handling/book_drop.ogg
 
 # For the Wizard Antag
 # Do not add discounts or price inflation

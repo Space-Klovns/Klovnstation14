@@ -10,3 +10,9 @@
     drawRate: 0
     useRate: 20
   - type: ToggleCellDraw
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/component_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/component_drop.ogg

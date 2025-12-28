@@ -99,6 +99,12 @@
       - !type:DoActsBehavior
         acts: [ "Destruction" ]
   - type: DnaSubstanceTrace
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/drinkglass_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/drinkglass_drop.ogg
 
 - type: entity
   parent: BaseChemistryEmptyBottle

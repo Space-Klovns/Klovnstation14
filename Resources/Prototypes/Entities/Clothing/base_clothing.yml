@@ -20,6 +20,7 @@
   - type: EmitSoundOnDrop
     sound:
       collection: ClothDrop
+
 - type: entity
   abstract: true
   id: GeigerCounterClothing

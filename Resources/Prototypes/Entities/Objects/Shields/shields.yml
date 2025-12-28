@@ -95,6 +95,12 @@
                   max: 2
     - type: StaticPrice
       price: 100
+    - type: EmitSoundOnPickup
+      sound:
+        path: /Audio/_KS14/Handling/shield/plastic_shield_pick_up.ogg
+    - type: EmitSoundOnDrop
+      sound:
+        path: /Audio/_KS14/Handling/shield/plastic_shield_drop.ogg
 
 #Security Shields
 

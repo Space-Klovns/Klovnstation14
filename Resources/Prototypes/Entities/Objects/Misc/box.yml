@@ -27,3 +27,9 @@
       Cardboard: 100
   - type: StaticPrice
     price: 10
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/materials/cardboard_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/materials/cardboard_drop.ogg

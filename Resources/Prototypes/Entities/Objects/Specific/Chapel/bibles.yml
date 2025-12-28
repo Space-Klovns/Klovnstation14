@@ -54,6 +54,12 @@
     - Book
   - type: StealTarget
     stealGroup: Bible
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/book_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/book_drop.ogg
 
 - type: entity
   parent: [Bible, BaseSyndicateContraband]

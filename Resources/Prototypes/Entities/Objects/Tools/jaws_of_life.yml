@@ -49,6 +49,12 @@
         Blunt: 10
     soundHit:
       collection: MetalThud
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/tools/rcd_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/tools/rcd_drop.ogg
 
 - type: entity
   name: syndicate jaws of life

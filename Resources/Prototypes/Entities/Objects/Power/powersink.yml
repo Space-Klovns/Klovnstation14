@@ -59,3 +59,9 @@
         - GhostOnlyWarp
     - type: StaticPrice
       price: 3000
+    - type: EmitSoundOnPickup
+      sound:
+        path: /Audio/_KS14/Handling/materials/metal_pick_up.ogg
+    - type: EmitSoundOnDrop
+      sound:
+        path: /Audio/_KS14/Handling/materials/metal_drop.ogg

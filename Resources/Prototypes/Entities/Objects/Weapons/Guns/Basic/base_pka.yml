@@ -49,3 +49,9 @@
     - Belt
   - type: UseDelay
     delay: 1
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/gun/gun_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/gun/gun_drop.ogg

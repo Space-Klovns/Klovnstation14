@@ -44,6 +44,12 @@
     noRot: false
   - type: Pullable
   - type: DamageExaminable
+  - type: EmitSoundOnPickup
+    sound:
+      collection: ClothPickup
+  - type: EmitSoundOnDrop
+    sound:
+      collection: ClothDrop
 
 - type: entity
   name: "storage item"
@@ -60,6 +66,12 @@
     containers:
       storagebase: !type:Container
         ents: []
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/backpack/backpack_pickup1.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/backpack/backdrop_drop1.ogg
 
 - type: entity
   id: BaseBagOpenClose

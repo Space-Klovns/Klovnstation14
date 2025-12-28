@@ -43,6 +43,12 @@
         ents: []
   - type: StaticPrice
     price: 500
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/shotgun/shotgun_pickup1.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/shotgun/shotgun_drop1.ogg
 
 - type: entity
   name: Bulldog

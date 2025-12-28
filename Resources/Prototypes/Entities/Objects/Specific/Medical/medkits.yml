@@ -21,6 +21,12 @@
   - type: Tag
     tags:
     - Medkit
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/medkit/medkit_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/medkit/medkit_drop.ogg
 
 - type: entity
   name: burn treatment kit

@@ -30,6 +30,12 @@
       interfaces:
         enum.StationMapUiKey.Key:
           type: StationMapBoundUserInterface
+    - type: EmitSoundOnPickup
+      sound:
+        path: /Audio/_KS14/Handling/component_pickup.ogg
+    - type: EmitSoundOnDrop
+      sound:
+        path: /Audio/_KS14/Handling/component_drop.ogg
 
 - type: entity
   id: HandheldStationMap

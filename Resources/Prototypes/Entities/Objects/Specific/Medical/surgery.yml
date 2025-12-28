@@ -45,6 +45,12 @@
   - type: Tag
     tags:
     - SurgeryTool
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/tools/wirecutter_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/tools/screwdriver_drop.ogg
 
 # Cautery
 
@@ -65,7 +71,7 @@
        types:
         Heat: 5
     soundHit:
-      path: /Audio/Effects/lightburn.ogg
+      path: /Audio/_KS14/Handling/surgery/cautery2.ogg
 
 # Drill
 
@@ -123,7 +129,7 @@
       types:
         Slash: 8
     soundHit:
-      path: /Audio/Weapons/bladeslice.ogg
+      path: /Audio/_KS14/Handling/surgery/scalpel1.ogg
 
 - type: entity
   name: shiv

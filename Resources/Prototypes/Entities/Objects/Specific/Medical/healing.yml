@@ -107,6 +107,9 @@
     count: 15
   - type: StackPrice
     price: 5
+  - type: EmitSoundOnPickup
+    sound:
+      collection: RegenMeshPickup
 
 - type: entity
   id: Ointment1
@@ -156,6 +159,9 @@
     count: 15
   - type: StackPrice
     price: 10
+  - type: EmitSoundOnPickup
+    sound:
+      collection: RegenMeshPickup
 
 - type: entity
   id: OintmentAdvanced1

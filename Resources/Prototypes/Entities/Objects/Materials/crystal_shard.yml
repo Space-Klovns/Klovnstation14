@@ -39,6 +39,12 @@
         acts: [ "Destruction" ]
   - type: StaticPrice
     price: 50
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/materials/glass_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/materials/glass_drop.ogg
 
 - type: entity
   parent: ShardCrystalBase

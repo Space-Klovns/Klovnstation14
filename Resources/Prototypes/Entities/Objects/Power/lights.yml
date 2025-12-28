@@ -112,6 +112,12 @@
   - type: ToolRefinable
     refineResult:
     - id: SheetGlass1
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/materials/glass_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/materials/glass_drop.ogg
 
 - type: entity
   parent: BaseLightbulb

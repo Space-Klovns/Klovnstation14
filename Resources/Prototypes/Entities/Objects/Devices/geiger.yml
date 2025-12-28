@@ -35,3 +35,9 @@
   - type: PhysicalComposition
     materialComposition:
       Plastic: 100
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/tools/multitool_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/tools/multitool_drop.ogg
