@@ -255,7 +255,12 @@ def process_git_log_output(output: str, author_timestamps):
             print(f"Skipping malformed line: {line}")
             continue
 
-        commit_hash, timestamp_str, author_name, body = parts
+        try:
+            commit_hash, timestamp_str, author_name, body = parts
+        except ValueError as e:
+            print(f"A ValueError occurred when processing git log output, expected 4 values got {parts}")
+            continue
+
         print(f"Processing commit {commit_hash[:8]} by {author_name}")
 
         try:
