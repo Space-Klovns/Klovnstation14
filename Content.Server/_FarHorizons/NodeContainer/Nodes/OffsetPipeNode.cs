@@ -6,7 +6,6 @@ using Content.Server.NodeContainer.Nodes;
 using Content.Shared.Atmos;
 using Content.Shared.NodeContainer;
 using Robust.Shared.Map.Components;
-using Robust.Server.GameObjects;
 
 namespace Content.Server._FarHorizons.NodeContainer.Nodes;
 

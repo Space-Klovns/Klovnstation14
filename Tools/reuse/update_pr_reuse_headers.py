@@ -19,6 +19,7 @@ LICENSE_CONFIG: dict[str, dict[str, str]] = {
     "mit": {"id": "MIT", "path": "LICENSES/MIT.txt"},
     "agpl": {"id": "AGPL-3.0-or-later", "path": "LICENSES/AGPL-3.0-or-later.txt"},
     "mpl": {"id": "MPL-2.0", "path": "LICENSES/MPL-2.0.txt"},
+    "cc-by-nc-sa-3.0": {"id": "CC-BY-NC-SA-3.0", "path": "LICENSES/CC-BY-NC-SA-3.0-US.txt"} # 'US' suffix as this is the united-states version of the license.
 }
 
 DEFAULT_LICENSE_LABEL = "mpl"
