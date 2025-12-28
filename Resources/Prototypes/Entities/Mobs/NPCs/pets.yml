@@ -597,7 +597,7 @@
     - id: FoodMeat
       amount: 3
     - id: Telecrystal5
-      amount: 1
+      amount: 3
   - type: Grammar
     attributes:
       proper: true

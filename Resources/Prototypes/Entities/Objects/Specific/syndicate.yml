@@ -67,7 +67,7 @@
   parent: [BaseItem, StorePresetUplink, BaseSyndicateContraband]
   id: BaseUplinkRadio
   name: syndicate uplink
-  description: Suspiciously looking old radio...
+  description: Suspicious looking old radio... #KS14 - grammar improvement :fortune:
   suffix: Empty
   components:
   - type: Sprite
