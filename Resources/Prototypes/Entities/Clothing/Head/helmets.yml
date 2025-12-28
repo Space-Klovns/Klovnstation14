@@ -26,6 +26,12 @@
         Slash: 0.9
         Piercing: 0.9
         Heat: 0.9
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/helmet/helmet_pickup1.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/helmet/helmet_drop1.ogg
 
 #Basic Helmet (Security Helmet)
 - type: entity

@@ -38,6 +38,12 @@
     interfaces:
       enum.StorageUiKey.Key:
         type: StorageBoundUserInterface
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/toolbelt_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/toolbelt_drop.ogg
 
 - type: entity
   abstract: true
