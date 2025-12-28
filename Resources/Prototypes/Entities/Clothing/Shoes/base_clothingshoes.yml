@@ -25,6 +25,12 @@
     - Recyclable
     - WhitelistChameleon
   - type: ProtectedFromStepTriggers
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/shoes/sneakers_pickup1.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/shoes/sneakers_drop1.ogg
 
 - type: entity
   abstract: true
