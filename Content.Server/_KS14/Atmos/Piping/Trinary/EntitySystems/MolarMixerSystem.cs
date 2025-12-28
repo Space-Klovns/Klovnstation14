@@ -116,7 +116,13 @@ namespace Content.Server._KS14.Atmos.Piping.Trinary.EntitySystems
             else
             {
                 if (inletOne.Air.TotalMoles < transferMolesOne || inletTwo.Air.TotalMoles < transferMolesTwo) //check for undersupply when properly mixing
-                    return;
+                {
+                    var transferCoefficient1 = inletOne.Air.TotalMoles/transferMolesOne;
+                    var transferCoefficient2 = inletTwo.Air.TotalMoles/transferMolesTwo;
+                    var transferCoefficient = MathF.Min(transferCoefficient1, transferCoefficient2);
+                    transferMolesOne = transferMolesOne * transferCoefficient;
+                    transferMolesTwo = transferMolesTwo * transferCoefficient;
+                }
             }
 
             // begin transfer
