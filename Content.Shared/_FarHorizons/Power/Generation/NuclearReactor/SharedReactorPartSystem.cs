@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 jhrushbe
+//
+// SPDX-License-Identifier: CC-BY-NC-SA-3.0
+
 using Content.Shared.Atmos;
 using Content.Shared.Damage.Components;
 using Content.Shared.Examine;
