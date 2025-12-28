@@ -356,7 +356,7 @@ public partial class SharedBodySystem
         _audioSystem.PlayPredicted(gibSoundOverride, bodyTransform.Coordinates, null);
 
         // KS14 Addition: Gib effect
-        SynchronousDeferralSystem.Defer(() => PredictedSpawnAtPosition(GibEffectProtoId, bodyTransform.Coordinates));
+        PredictedSpawnAtPosition(GibEffectProtoId, bodyTransform.Coordinates);
 
         return gibs;
     }
