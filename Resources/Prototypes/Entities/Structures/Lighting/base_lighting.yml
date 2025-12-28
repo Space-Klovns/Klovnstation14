@@ -467,8 +467,17 @@
     - state: emergency_light_on
       map: [ "enum.EmergencyLightVisualLayers.LightOn" ]
       color: "#7CFC00"
-      shader: "unshaded"
+      shader: Emissive # KS14
       visible: false
+  - type: GenericVisualizer # KS14
+    visuals:
+      enum.EmergencyLightVisuals.On:
+        enum.EmergencyLightVisualLayers.LightOff:
+          True: { visible: false }
+          False: { visible: true }
+        enum.EmergencyLightVisualLayers.LightOn:
+          True: { visible: true }
+          False: { visible: false }
   - type: Appearance
   - type: Construction
     graph: LightFixture
