@@ -1,0 +1,4 @@
+- files: ["*.ogg"]
+  license: "CC-BY-SA-3.0"
+  copyright: "Taken from /tg/station at commit 81c3d921295d6b925ff063bef13f623687d7bdbd"
+  source: "https://github.com/tgstation/tgstation/tree/81c3d921295d6b925ff063bef13f623687d7bdbd"
