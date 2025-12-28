@@ -34,6 +34,7 @@
 // SPDX-FileCopyrightText: 2025 ScarKy0
 // SPDX-FileCopyrightText: 2025 TheFlyingSentry
 // SPDX-FileCopyrightText: 2025 Zachary Higgs
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 nabegator220
 // SPDX-FileCopyrightText: 2025 pathetic meowmeow
 // SPDX-FileCopyrightText: 2025 slarticodefast
