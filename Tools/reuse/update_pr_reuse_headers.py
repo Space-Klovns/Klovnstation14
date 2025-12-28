@@ -255,6 +255,11 @@ def process_git_log_output(output: str, author_timestamps):
             print(f"Skipping malformed line: {line}")
             continue
 
+        commit_hash = None
+        timestamp_str = None
+        author_name = None
+        body = None
+        
         try:
             commit_hash, timestamp_str, author_name, body = parts
         except ValueError as e:
