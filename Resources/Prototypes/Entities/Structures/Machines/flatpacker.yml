@@ -1,25 +1,36 @@
-﻿- type: entity
+# SPDX-FileCopyrightText: 2024 Leon Friedrich
+# SPDX-FileCopyrightText: 2024 SpeltIncorrectyl
+# SPDX-FileCopyrightText: 2024 Tayrtahn
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Nemanja
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: entity
   id: MachineFlatpacker
   parent: [ BaseMachinePowered, ConstructibleMachine ]
-  name: Flatpacker 1001
+  name: flatpacker
   description: An industrial machine used for expediting machine construction across the station.
   components:
   - type: Sprite
-    sprite: Structures/Machines/flatpacker.rsi
+    sprite: _KS14/Structures/Machines/flatpacker.rsi # KS14: /tg/ sprite port
     snapCardinals: true
-    layers:
+    layers: # KS14: /tg/ sprite port
     - state: base
-    - state: screen
-      map: ["enum.PowerDeviceVisualLayers.Powered"]
+    - map: ["enum.WiresVisualLayers.MaintenancePanel"]
+      state: open
+    - map: ["enum.PowerDeviceVisualLayers.Powered"]
+      state: unlit
       shader: unshaded
-    - state: panel
-      map: ["enum.WiresVisualLayers.MaintenancePanel"]
-    - state: packing
-      map: ["anim"]
+    - map: ["anim"]
+      state: working_unlit
+      shader: unshaded # KS14
       visible: false
-    - state: inserting
+    - map: ["enum.MaterialStorageVisualLayers.Inserting"]
+      sprite: Structures/Machines/autolathe.rsi # KS14: /tg/ sprite port # it works because............. IT JUST IS, OKAY?
+      state: inserting
       visible: false
-      map: ["enum.MaterialStorageVisualLayers.Inserting"]
   - type: GenericVisualizer
     visuals:
       enum.PowerDeviceVisuals.Powered:

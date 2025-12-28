@@ -340,3 +340,46 @@ Entries:
         for more information!
   id: 42
   time: '2025-12-23T21:34:06.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: New gibbing effects.
+  id: 43
+  time: '2025-12-24T23:14:14.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added new reagent - klovnide. This reagent increases crit and death
+        threshold and can be created in chemistry lab by mixing some reagents,
+        including space salt from salt ore.
+    - type: Tweak
+      message: Decreased amount of salt ore.
+  id: 44
+  time: '2025-12-25T12:57:09.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: Deconstruction with RCD returns half the charges.
+  id: 45
+  time: '2025-12-25T15:34:23.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: Changed some visuals to look better
+  id: 46
+  time: '2025-12-25T17:16:42.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Remove
+      message: Scurrets are no longer accessible to players.
+  id: 47
+  time: '2025-12-28T00:03:58.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: 'R&D can now research and print the material silo board. '
+    - type: Fix
+      message: 'Fixed broken technology sprite in R&D research console UI. '
+  id: 48
+  time: '2025-12-28T10:18:30.0000000+00:00'

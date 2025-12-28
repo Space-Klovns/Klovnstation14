@@ -1,3 +1,26 @@
+# SPDX-FileCopyrightText: 2021 Stanbery Trask
+# SPDX-FileCopyrightText: 2022 Delete69
+# SPDX-FileCopyrightText: 2022 Fishfish458
+# SPDX-FileCopyrightText: 2022 Jacob Tong
+# SPDX-FileCopyrightText: 2022 Peptide90
+# SPDX-FileCopyrightText: 2022 Rane
+# SPDX-FileCopyrightText: 2022 fishfish458
+# SPDX-FileCopyrightText: 2023 Alekshhh
+# SPDX-FileCopyrightText: 2023 Leon Friedrich
+# SPDX-FileCopyrightText: 2023 Vordenburg
+# SPDX-FileCopyrightText: 2023 metalgearsloth
+# SPDX-FileCopyrightText: 2024 Ilya246
+# SPDX-FileCopyrightText: 2024 Kara
+# SPDX-FileCopyrightText: 2024 Winkarst
+# SPDX-FileCopyrightText: 2024 chromiumboy
+# SPDX-FileCopyrightText: 2024 lzk
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+#
+# SPDX-License-Identifier: MPL-2.0
+
+
+# TODO KS14: Add 'end' railings
+
 - type: entity
   parent: BaseStructure
   id: BaseRailing
@@ -6,10 +29,17 @@
   description: Basic railing meant to protect idiots like you from falling.
   components:
   - type: Sprite
-    drawdepth: SmallObjects
-    sprite: Structures/Walls/railing.rsi
+    drawdepth: OverMobs
+    sprite: _KS14/Structures/railings.rsi # KS14: /tg/ sprite port
   - type: Icon
-    sprite: Structures/Walls/railing.rsi
+    sprite: _KS14/Structures/railings.rsi # KS14: /tg/ sprite port
+  - type: DirectionalSpriteOffset # KS14: /tg/ sprite port
+    layerOffsetData:
+      railing: # don't change this key; everything inheriting BaseRailing must define a layer mapped to "railing"
+        South: 0, 0.25
+        North: 0, -0.25
+        West: -0.25, 0
+        East: 0.25, 0
   - type: Physics
     bodyType: Static
   - type: InteractionOutline
@@ -30,15 +60,17 @@
   id: Railing
   components:
   - type: Sprite
-    state: side
+    layers: # KS14: /tg/ sprite port
+    - state: straight
+      map: ["railing"] # don't change this; see DirectionalSpriteOffsetComponent on BaseRailing
   - type: Icon
-    state: side
+    state: straight # KS14: /tg/ sprite port
   - type: Fixtures
     fixtures:
       fix1:
         shape:
           !type:PhysShapeAabb
-          bounds: "-0.49,-0.49,0.49,-0.25"
+          bounds: "-0.49,-0.49,0.49,-0.36"
         density: 1000
         mask:
         - TableMask
@@ -76,15 +108,17 @@
   id: RailingCorner
   components:
   - type: Sprite
-    state: corner
+    layers:  # KS14: /tg/ sprite port
+    - state: turn
+      map: ["railing"] # don't change this; see DirectionalSpriteOffsetComponent on BaseRailing
   - type: Icon
-    state: corner
+    state: turn # KS14: /tg/ sprite port
   - type: Fixtures
     fixtures:
       fix1:
         shape:
           !type:PhysShapeAabb
-          bounds: "-0.49,-0.49,0.49,-0.25"
+          bounds: "-0.49,-0.49,0.49,-0.36"
         density: 1000
         mask:
         - TableMask
@@ -93,7 +127,7 @@
       fix2:
         shape:
           !type:PhysShapeAabb
-          bounds: "0.49,0.49,0.25,-0.49"
+          bounds: "0.49,0.49,0.36,-0.49"
         density: 1000
         mask:
         - TableMask
@@ -131,15 +165,17 @@
   id: RailingCornerSmall
   components:
   - type: Sprite
-    state: corner_small
+    layers:  # KS14: /tg/ sprite port
+    - state: corner
+      map: ["railing"] # don't change this; see DirectionalSpriteOffsetComponent on BaseRailing
   - type: Icon
-    state: corner_small
+    state: corner_small # KS14: /tg/ sprite port
   - type: Fixtures
     fixtures:
       fix1:
         shape:
           !type:PhysShapeAabb
-          bounds: "-0.49,0.49,-0.25,0.25"
+          bounds: "-0.49,0.49,-0.36,0.36"
         density: 1000
         mask:
         - TableMask
@@ -177,15 +213,17 @@
   id: RailingRound
   components:
   - type: Sprite
-    state: round
+    layers:  # KS14: /tg/ sprite port
+    - state: round
+      map: ["railing"] # don't change this; see DirectionalSpriteOffsetComponent on BaseRailing
   - type: Icon
-    state: round
+    state: round # KS14: /tg/ sprite port
   - type: Fixtures
     fixtures:
       fix1:
         shape:
           !type:PhysShapeAabb
-          bounds: "-0.49,-0.49,0.49,-0.25"
+          bounds: "-0.49,-0.49,0.49,-0.36"
         density: 1000
         mask:
           - TableMask
@@ -194,7 +232,7 @@
       fix2:
         shape:
           !type:PhysShapeAabb
-          bounds: "-0.49,-0.49,-0.25,0.49"
+          bounds: "-0.49,-0.49,-0.36,0.49"
         density: 1000
         mask:
           - TableMask
@@ -203,7 +241,7 @@
       fix3:
         shape:
           !type:PhysShapeAabb
-          bounds: "0.25,-0.49,0.49,0.49"
+          bounds: "0.36,-0.49,0.49,0.49"
         density: 1000
         mask:
           - TableMask

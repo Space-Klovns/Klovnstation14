@@ -1,4 +1,13 @@
-﻿using Robust.Shared.Audio;
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Kara
+// SPDX-FileCopyrightText: 2023 LordEclipse
+// SPDX-FileCopyrightText: 2024 metalgearsloth
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+//
+// SPDX-License-Identifier: MPL-2.0
+
+using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 
 namespace Content.Shared.Teleportation.Components;
@@ -53,4 +62,26 @@ public sealed partial class PortalComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField, ViewVariables(VVAccess.ReadWrite)]
     public bool RandomTeleport = true;
+
+    // KS14 Addition
+    /// <summary>
+    /// Can this portal randomly teleport onto occupied tiles?
+    /// </summary>
+    [DataField, AutoNetworkedField, ViewVariables(VVAccess.ReadWrite)]
+    public bool CanTeleportOnOccupiedTiles = true;
+
+    // KS14 Addition
+    /// <summary>
+    /// If <see cref="FragOnTargetTileOccupied"/> is true, this is whether both the tile-blocking entities
+    /// and portal-user are telefragged, or if only the portal-user is telefragged.
+    /// </summary>
+    [DataField, AutoNetworkedField, ViewVariables(VVAccess.ReadWrite)]
+    public bool FragIntersectingEntities = true;
+
+    // KS14 Addition
+    /// <summary>
+    /// Does this portal telefrag anything that goes through it, if the target tile is full?
+    /// </summary>
+    [DataField, AutoNetworkedField, ViewVariables(VVAccess.ReadWrite)]
+    public bool FragOnTargetTileOccupied = true;
 }

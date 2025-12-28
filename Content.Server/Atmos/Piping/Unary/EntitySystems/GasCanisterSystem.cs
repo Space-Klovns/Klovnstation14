@@ -1,3 +1,34 @@
+// SPDX-FileCopyrightText: 2021 20kdc
+// SPDX-FileCopyrightText: 2021 DrSmugleaf
+// SPDX-FileCopyrightText: 2021 Moony
+// SPDX-FileCopyrightText: 2021 collinlunn
+// SPDX-FileCopyrightText: 2021 moonheart08
+// SPDX-FileCopyrightText: 2022 Justin Trotter
+// SPDX-FileCopyrightText: 2022 Júlio César Ueti
+// SPDX-FileCopyrightText: 2022 Kevin Zheng
+// SPDX-FileCopyrightText: 2022 Rane
+// SPDX-FileCopyrightText: 2022 Vera Aguilera Puerto
+// SPDX-FileCopyrightText: 2022 Visne
+// SPDX-FileCopyrightText: 2022 theashtronaut
+// SPDX-FileCopyrightText: 2022 wrexbe
+// SPDX-FileCopyrightText: 2023 Kara
+// SPDX-FileCopyrightText: 2023 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2023 Slava0135
+// SPDX-FileCopyrightText: 2023 Vocal Night
+// SPDX-FileCopyrightText: 2023 Vordenburg
+// SPDX-FileCopyrightText: 2023 deltanedas
+// SPDX-FileCopyrightText: 2023 faint
+// SPDX-FileCopyrightText: 2024 Jake Huxell
+// SPDX-FileCopyrightText: 2024 Leon Friedrich
+// SPDX-FileCopyrightText: 2024 MilenVolf
+// SPDX-FileCopyrightText: 2024 Nemanja
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 PJB3005
+// SPDX-FileCopyrightText: 2025 metalgearsloth
+// SPDX-FileCopyrightText: 2025 slarticodefast
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Atmos.Piping.Components;
 using Content.Server.NodeContainer.EntitySystems;
@@ -79,7 +110,7 @@ public sealed class GasCanisterSystem : SharedGasCanisterSystem
         if (!_nodeContainer.TryGetNode(nodeContainer, canister.PortName, out PortablePipeNode? portNode))
             return;
 
-        if (portNode.NodeGroup is PipeNet {NodeCount: > 1} net)
+        if (portNode.NodeGroup is PipeNet { NodeCount: > 1 } net)
         {
             MixContainerWithPipeNet(canister.Air, net.Air);
         }
@@ -98,6 +129,28 @@ public sealed class GasCanisterSystem : SharedGasCanisterSystem
                 _atmos.ReleaseGasTo(canister.Air, environment, canister.ReleasePressure);
             }
         }
+
+        // KS14 Start
+        var totalMoles = canister.Air.TotalMoles;
+        canister.NetworkedMoles = totalMoles;
+        DirtyField(uid, canister, nameof(canister.NetworkedMoles));
+
+        var similars = 0;
+        for (var i = 0; i < GasTileOverlaySystem.VisibleGasId.Length; i++)
+        {
+            var allGasId = GasTileOverlaySystem.VisibleGasId[i];
+
+            var newValue = (byte)(canister.Air[allGasId] / totalMoles * byte.MaxValue);
+            if (canister.AppearanceGasPercentages[i] == newValue)
+                similars++;
+
+            canister.AppearanceGasPercentages[i] = newValue;
+        }
+
+        // don't dirty if entire array was the same
+        if (similars != GasTileOverlaySystem.VisibleGasId.Length)
+            DirtyField(uid, canister, nameof(canister.AppearanceGasPercentages));
+        // KS14 End
 
         // If last pressure is very close to the current pressure, do nothing.
         if (MathHelper.CloseToPercent(canister.Air.Pressure, canister.LastPressure))

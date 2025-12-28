@@ -1,5 +1,11 @@
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 metalgearsloth
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Shared.Administration.Logs;
 using Content.Shared.Atmos.Components;
+using Content.Shared.Atmos.EntitySystems; // KS14
 using Content.Shared.Atmos.Piping.Binary.Components;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Database;
@@ -12,9 +18,10 @@ namespace Content.Shared.Atmos.Piping.Unary.Systems;
 public abstract class SharedGasCanisterSystem : EntitySystem
 {
     [Dependency] protected readonly ISharedAdminLogManager AdminLogger = default!;
-    [Dependency] private   readonly ItemSlotsSystem _slots = default!;
-    [Dependency] private   readonly SharedAppearanceSystem _appearance = default!;
+    [Dependency] private readonly ItemSlotsSystem _slots = default!;
+    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
     [Dependency] protected readonly SharedUserInterfaceSystem UI = default!;
+    [Dependency] protected readonly SharedGasTileOverlaySystem GasTileOverlaySystem = default!; // KS14
 
     public override void Initialize()
     {
@@ -34,6 +41,9 @@ public abstract class SharedGasCanisterSystem : EntitySystem
     {
         // Ensure container
         _slots.AddItemSlot(ent.Owner, ent.Comp.ContainerName, ent.Comp.GasTankSlot);
+
+        // KS14
+        ent.Comp.AppearanceGasPercentages = new byte[GasTileOverlaySystem.VisibleGasId.Length];
     }
 
     private void OnCanisterContainerModified(EntityUid uid, GasCanisterComponent component, ContainerModifiedMessage args)

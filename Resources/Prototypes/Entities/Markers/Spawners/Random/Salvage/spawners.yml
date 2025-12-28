@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2025 Gerkada
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Nemanja
 #
 # SPDX-License-Identifier: MIT
@@ -393,7 +394,7 @@
     layers:
     - state: pink
     - sprite: _KS14/Structures/Storage/canister.rsi
-      state: blue
+      state: mapme
   - type: EntityTableSpawner
     table: !type:GroupSelector
       prob: 0.9

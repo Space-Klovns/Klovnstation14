@@ -1,4 +1,15 @@
-﻿using Robust.Shared.Serialization;
+// SPDX-FileCopyrightText: 2021 Vera Aguilera Puerto
+// SPDX-FileCopyrightText: 2021 Visne
+// SPDX-FileCopyrightText: 2022 Justin Trotter
+// SPDX-FileCopyrightText: 2022 mirrorcult
+// SPDX-FileCopyrightText: 2022 wrexbe
+// SPDX-FileCopyrightText: 2024 MilenVolf
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 metalgearsloth
+//
+// SPDX-License-Identifier: MPL-2.0
+
+using Robust.Shared.Serialization;
 
 namespace Content.Shared.Atmos.Piping.Binary.Components
 {
@@ -21,7 +32,17 @@ namespace Content.Shared.Atmos.Piping.Binary.Components
     public enum GasCanisterVisuals
     {
         PressureState,
-        TankInserted
+        TankInserted,
+
+        // KS14
+        /// <summary>
+        ///     Array of bytes with length being
+        ///         number of gases that exist.
+        /// 
+        ///     Used as a percentage (from 0 being empty, 255 being full)
+        ///         of gases in the canister.
+        /// </summary>
+        GasPercentages,
     }
 
     #endregion
@@ -48,7 +69,7 @@ namespace Content.Shared.Atmos.Piping.Binary.Components
     public sealed class GasCanisterHoldingTankEjectMessage : BoundUserInterfaceMessage
     {
         public GasCanisterHoldingTankEjectMessage()
-        {}
+        { }
     }
 
     [Serializable, NetSerializable]

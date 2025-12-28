@@ -1,4 +1,24 @@
+// SPDX-FileCopyrightText: 2020 DrSmugleaf
+// SPDX-FileCopyrightText: 2020 Metal Gear Sloth
+// SPDX-FileCopyrightText: 2020 Paul Ritter
+// SPDX-FileCopyrightText: 2020 Víctor Aguilera Puerto
+// SPDX-FileCopyrightText: 2021 GraniteSidewalk
+// SPDX-FileCopyrightText: 2021 Vera Aguilera Puerto
+// SPDX-FileCopyrightText: 2021 Visne
+// SPDX-FileCopyrightText: 2022 Acruid
+// SPDX-FileCopyrightText: 2022 ScalyChimp
+// SPDX-FileCopyrightText: 2022 hubismal
+// SPDX-FileCopyrightText: 2023 metalgearsloth
+// SPDX-FileCopyrightText: 2024 Leon Friedrich
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Quantum-cross
+// SPDX-FileCopyrightText: 2025 TemporalOroboros
+// SPDX-FileCopyrightText: 2025 slarticodefast
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Client.Atmos.Overlays;
+using Content.Client.Light;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Atmos.EntitySystems;
@@ -7,6 +27,11 @@ using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameStates;
+
+using Content.Client.Light;
+using Robust.Client.Graphics;
+using Robust.Shared.Utility;
+
 
 namespace Content.Client.Atmos.EntitySystems
 {
@@ -18,7 +43,8 @@ namespace Content.Client.Atmos.EntitySystems
         [Dependency] private readonly SpriteSystem _spriteSys = default!;
         [Dependency] private readonly SharedTransformSystem _xformSys = default!;
 
-        private GasTileOverlay _overlay = default!;
+        public GasTileOverlay _overlay = default!;
+        private CanisterOverlay _canisterOverlay = default!; // KS14
 
         public override void Initialize()
         {
@@ -28,11 +54,16 @@ namespace Content.Client.Atmos.EntitySystems
 
             _overlay = new GasTileOverlay(this, EntityManager, _resourceCache, ProtoMan, _spriteSys, _xformSys);
             _overlayMan.AddOverlay(_overlay);
+
+            // KS14: canisteroverlay
+            _canisterOverlay = new(new SpriteSpecifier.Rsi(new ResPath("/Textures/_KS14/Structures/Storage/canister.rsi"), "window-mask"), _overlay);
+            _overlayMan.AddOverlay(_canisterOverlay);
         }
 
         public override void Shutdown()
         {
             base.Shutdown();
+            _overlayMan.RemoveOverlay<CanisterOverlay>(); // KS14
             _overlayMan.RemoveOverlay<GasTileOverlay>();
         }
 
@@ -44,27 +75,27 @@ namespace Content.Client.Atmos.EntitySystems
             {
                 // is this a delta or full state?
                 case GasTileOverlayDeltaState delta:
-                {
-                    modifiedChunks = delta.ModifiedChunks;
-                    foreach (var index in comp.Chunks.Keys)
                     {
-                        if (!delta.AllChunks.Contains(index))
-                            comp.Chunks.Remove(index);
-                    }
+                        modifiedChunks = delta.ModifiedChunks;
+                        foreach (var index in comp.Chunks.Keys)
+                        {
+                            if (!delta.AllChunks.Contains(index))
+                                comp.Chunks.Remove(index);
+                        }
 
-                    break;
-                }
+                        break;
+                    }
                 case GasTileOverlayState state:
-                {
-                    modifiedChunks = state.Chunks;
-                    foreach (var index in comp.Chunks.Keys)
                     {
-                        if (!state.Chunks.ContainsKey(index))
-                            comp.Chunks.Remove(index);
-                    }
+                        modifiedChunks = state.Chunks;
+                        foreach (var index in comp.Chunks.Keys)
+                        {
+                            if (!state.Chunks.ContainsKey(index))
+                                comp.Chunks.Remove(index);
+                        }
 
-                    break;
-                }
+                        break;
+                    }
                 default:
                     return;
             }

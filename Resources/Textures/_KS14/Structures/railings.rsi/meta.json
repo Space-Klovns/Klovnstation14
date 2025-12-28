@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Originally taken from https://github.com/tgstation/tgstation at commit 594cac30b54ff909c453f0b736ea8ab2eca7f922; modified and 'straight', 'turn', 'round' were added based off originals, by LaCumbiaDelCoronavirus.",
+  "size": {
+    "x": 32,
+    "y": 48
+  },
+  "states": [
+    {
+      "name": "straight",
+      "directions": 4
+    },
+    {
+      "name": "round",
+      "directions": 4
+    },
+    {
+      "name": "turn",
+      "directions": 4
+    },
+    {
+      "name": "corner",
+      "directions": 4
+    },
+    {
+      "name": "end",
+      "directions": 4
+    },
+    {
+      "name": "end_flip",
+      "directions": 4
+    }
+  ]
+}
