@@ -22,14 +22,17 @@
 // SPDX-FileCopyrightText: 2024 LordCarve
 // SPDX-FileCopyrightText: 2024 Plykiya
 // SPDX-FileCopyrightText: 2024 nikthechampiongr
+// SPDX-FileCopyrightText: 2025 FrauZj
 // SPDX-FileCopyrightText: 2025 FrauzJ
 // SPDX-FileCopyrightText: 2025 J
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2025 Princess Cheeseballs
 // SPDX-FileCopyrightText: 2025 SlamBamActionman
 // SPDX-FileCopyrightText: 2025 Tayrtahn
 // SPDX-FileCopyrightText: 2025 Whatstone
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 lzk
+// SPDX-FileCopyrightText: 2025 nabegator220
 // SPDX-FileCopyrightText: 2025 slarticodefast
 //
 // SPDX-License-Identifier: MPL-2.0

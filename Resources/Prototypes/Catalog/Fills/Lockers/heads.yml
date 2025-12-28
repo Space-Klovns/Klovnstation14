@@ -357,6 +357,7 @@
     - id: StationAiFixerCircuitboard
     - id: RubberStampRd
     - id: ClothingOuterSuitArc # KS14
+    - id: AnomalyLocator #KS14 - same shit as goob
 
 # Hardsuit table, used for suit storage as well
 - type: entityTable

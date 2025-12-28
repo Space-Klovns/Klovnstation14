@@ -52,4 +52,12 @@
   Gas filters can be used in a variety of applications, for example:
   - Filtering out unwanted gasses from a [textlink="pipe network" link="PipeNetworks"]
   - Separating specific gasses for storage in a station's recyclernet
+
+  ## Molar Mixers
+  <Box>
+    <GuideEntityEmbed Entity="MolarMixer"/>
+  </Box>
+  As said above, standard gas mixers are unreliable when working with gases that have differing thermal energy.
+  The molar mixer is an advanced atmospherics device that will always mix at a molar level, instead of going off of pressure.
+  They are useful for atmospheric bombs, breathable mixes and can even be reconfigured to act as a molar pump by turning off one input.
 </Document>

@@ -1,10 +1,18 @@
 <Document>
   # Species
 
-  Nanotrasen employs... only humans. <!-- KLOVN -->
+  Nanotrasen employs humans, dwarves and vox. <!-- KLOVN -->
 
   <Box>
     <GuideEntityEmbed Entity="MobHuman" Caption="Human"/>
-    </Box>
+  </Box>
+
+  <Box>
+    <GuideEntityEmbed Entity="MobDwarf" Caption="Dwarf"/>
+  </Box>
+
+  <Box>
+    <GuideEntityEmbed Entity="MobVox" Caption="Vox"/>
+  </Box>
 
   </Document>

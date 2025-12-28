@@ -16,25 +16,31 @@
 # SPDX-FileCopyrightText: 2025 ArtisticRoomba
 # SPDX-FileCopyrightText: 2025 Deerstop
 # SPDX-FileCopyrightText: 2025 Emisse
+# SPDX-FileCopyrightText: 2025 FrauzJ
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 SlamBamActionman
 # SPDX-FileCopyrightText: 2025 Spessmann
 # SPDX-FileCopyrightText: 2025 compilatron
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2025 rottenheadphones
 #
 # SPDX-License-Identifier: MIT
 
 - type: gameMapPool
   id: DefaultMapPool
   maps:
-  - Amber
+  # - Amber
   - Bagel
   - Box
-  - Elkridge
+  # - Elkridge
   - Fland
   - Marathon
-  - Oasis
+  # - Oasis
   - Packed
-  - Plasma
+  # - Plasma
   - Reach
-  - Exo
+  # - Exo
   - Saltern # KS14: bring saltern back
+  - Meta
+  - Omega

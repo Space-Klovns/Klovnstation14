@@ -157,6 +157,7 @@
   cost: 10000
   recipeUnlocks:
   - FlatpackerMachineCircuitboard
+  - MaterialSiloMachineCircuitboard
   # Goobstation R&D Console rework start
   position: 1,-4
   technologyPrerequisites:
