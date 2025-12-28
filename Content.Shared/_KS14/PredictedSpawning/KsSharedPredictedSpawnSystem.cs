@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 
