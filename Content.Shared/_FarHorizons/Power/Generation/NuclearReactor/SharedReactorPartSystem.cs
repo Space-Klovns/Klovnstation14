@@ -1,4 +1,6 @@
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2025 jhrushbe
+// SPDX-FileCopyrightText: 2025 rottenheadphones
 //
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 
