@@ -34,7 +34,7 @@
   description: A heavy-duty suit designed for mining operations, offering protection against physical hazards and environmental dangers.
   components:
   - type: ToggleableClothing
-    clothingPrototype: ClothingHeadHatHoodWinterDefault
+    clothingPrototype: ClothingHeadHatHoodExplorerSuit
     slot: head
   - type: Sprite
     sprite: _KS14/Clothing/OuterClothing/Armor/explorer.rsi
