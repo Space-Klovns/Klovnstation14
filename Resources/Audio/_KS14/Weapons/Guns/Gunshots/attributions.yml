@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 FrauzJ
+#
+# SPDX-License-Identifier: MIT
+
 - files: ["plasmacutter.ogg"]
   license: "CC-BY-3.0"
   copyright: "Taken from commit https://github.com/tgstation/tgstation/commit/47606e453e597caeba20e4a04b277c1aff546e5a"
