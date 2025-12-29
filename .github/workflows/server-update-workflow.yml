@@ -1,0 +1,27 @@
+
+# Every once in a while, this POSTs the KS14 watchdog server to ask it to update with latest repo master.
+
+name: Watchdog Update Request
+
+on:
+  schedule:
+    # runs every day at 18:00 UTC
+    - cron: '0 0 * * *'
+
+  # run on push to master (disabled)
+  # push:
+  #   branches: [ master ]
+
+  # allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Send POST update request to watchdog
+      run: |
+        "curl -v
+              -X POST
+              -u ${{ vars.WATCHDOG_INSTANCE_NAME }}:${{ secrets.WATCHDOG_INSTANCE_API_TOKEN }} http://${{ secrets.WATCHDOG_IP_AND_PORT }}/instances/${{ vars.WATCHDOG_INSTANCE_NAME }}/update"
