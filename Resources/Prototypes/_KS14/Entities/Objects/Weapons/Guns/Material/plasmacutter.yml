@@ -1,0 +1,133 @@
+# SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: entity
+  parent: BaseItem
+  id: BaseWeaponPowerCellHitscanless
+  abstract: true
+  components:
+  - type: Sprite
+  - type: Item
+    size: Huge
+  - type: AmmoCounter
+  - type: Gun
+    fireRate: 2
+    selectedMode: SemiAuto
+    availableModes:
+    - SemiAuto
+    soundGunshot:
+      path: /Audio/Weapons/Guns/Gunshots/laser.ogg
+  - type: ItemSlots
+    slots:
+      cell_slot:
+        name: Magazine
+        startingItem: PowerCellSmall
+        insertSound: /Audio/Weapons/Guns/MagIn/batrifle_magin.ogg
+        ejectSound: /Audio/Weapons/Guns/MagOut/batrifle_magout.ogg
+        whitelist:
+          tags:
+            - PowerCell
+            - PowerCellSmall
+  - type: PowerCellSlot
+    cellSlotId: cell_slot
+  - type: Appearance
+  - type: StaticPrice
+    price: 500
+  - type: ContainerContainer
+    containers:
+      cell_slot: !type:ContainerSlot
+
+- type: entity
+  parent: BaseWeaponPowerCellHitscanless
+  id: BaseWeaponPowerCellSmallHitscanless
+  abstract: true
+  components:
+  - type: Item
+    size: Small
+    shape:
+    - 0,0,1,0
+    - 0,1,0,1
+  - type: Tag
+    tags:
+    - Sidearm
+  - type: Clothing
+    sprite: Objects/Weapons/Guns/Battery/taser.rsi
+    quickEquip: false
+    slots:
+    - Belt
+    - suitStorage
+
+- type: entity
+  name: plasma cutter
+  parent: BaseWeaponPowerCellSmallHitscanless
+  id: WeaponPlasmaCutter
+  description: A proficient mining tool.
+  components:
+  - type: Sprite
+    sprite: _KS14/Weapons/Guns/Battery/plasmacutter.rsi
+    state: icon
+  - type: Gun
+    fireRate: 1
+    soundGunshot:
+      path: /Audio/_KS14/Weapons/Guns/Gunshots/plasmacutter.ogg
+  - type: Item
+    size: Normal
+    shape:
+    - 0,0,2,1
+  # - type: Battery # pending gun prediction
+  #   maxCharge: 2000 # pending gun prediction
+  #   startingCharge: 2000 # pending gun prediction
+  # - type: MaterialAmmo # pending gun prediction
+  #   materialWhiteList: [Plasma, OrePlasma] # pending gun prediction
+  - type: ProjectileBatteryAmmoProvider
+    proto: BulletPlasmaCutter
+    fireCost: 25 # pending gun prediction
+  - type: Appearance
+  - type: PhysicalComposition
+    materialComposition:
+      Steel: 125
+      Glass: 75
+      Plasma: 75
+
+- type: entity
+  name: advanced plasma cutter
+  parent: WeaponPlasmaCutter
+  id: WeaponAdvancedPlasmaCutter
+  description: Upgraded version of very popular amongst miners tool.
+  components:
+  - type: Sprite
+    sprite: _KS14/Weapons/Guns/Battery/advplasmacutter.rsi
+    state: icon
+  - type: Gun
+    fireRate: 1.5
+    soundGunshot:
+      path: /Audio/_KS14/Weapons/Guns/Gunshots/plasmacutter.ogg
+  - type: ProjectileBatteryAmmoProvider
+    proto: BulletAdvancedPlasmaCutter
+    fireCost: 20 # pending gun prediction
+  - type: PhysicalComposition
+    materialComposition:
+      Steel: 125
+      Glass: 75
+      Uranium: 75
+
+# - type: entity
+#   parent: WeaponPlasmaCutter
+#   id: WeaponPlasmaCutterEmpty
+#   suffix: Empty
+#   components:
+#   - type: Battery
+#     maxCharge: 2000
+#     startingCharge: 0
+# Locknar - Firmware
+# - type: entity
+#   parent: WeaponAdvancedPlasmaCutter
+#   id: WeaponAdvancedPlasmaCutterEmpty
+#   suffix: Empty
+#   components:
+#   - type: Battery
+#     maxCharge: 4000
+#     startingCharge: 0
