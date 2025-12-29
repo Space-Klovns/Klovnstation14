@@ -1,0 +1,71 @@
+- type: entity
+  name: plasma cutter
+  parent: BaseWeaponPowerCellSmall
+  id: WeaponPlasmaCutter
+  description: A proficient mining tool.
+  components:
+  - type: Sprite
+    sprite: _KS14/Weapons/Guns/Battery/plasmacutter.rsi
+    state: icon
+  - type: Gun
+    fireRate: 2
+    soundGunshot:
+      path: /Audio/_KS14/Weapons/Guns/Gunshots/plasmacutter.ogg
+  - type: Item
+    size: Normal
+    shape:
+    - 0,0,2,1
+  # - type: Battery # pending gun prediction
+  #   maxCharge: 2000 # pending gun prediction
+  #   startingCharge: 2000 # pending gun prediction
+  # - type: MaterialAmmo # pending gun prediction
+  #   materialWhiteList: [Plasma, OrePlasma] # pending gun prediction
+  - type: ProjectileBatteryAmmoProvider
+    proto: BulletPlasmaCutter
+    fireCost: 25 # pending gun prediction
+  - type: Appearance
+  - type: PhysicalComposition
+    materialComposition:
+      Steel: 125
+      Glass: 75
+      Plasma: 75
+
+- type: entity
+  name: advanced plasma cutter
+  parent: WeaponPlasmaCutter
+  id: WeaponAdvancedPlasmaCutter
+  description: Upgraded version of very popular amongst miners tool.
+  components:
+  - type: Sprite
+    sprite: _KS14/Weapons/Guns/Battery/advplasmacutter.rsi
+    state: icon
+  - type: Gun
+    fireRate: 1
+    soundGunshot:
+      path: /Audio/_KS14/Weapons/Guns/Gunshots/plasmacutter.ogg
+  - type: ProjectileBatteryAmmoProvider
+    proto: BulletAdvancedPlasmaCutter
+    fireCost: 20 # pending gun prediction
+  - type: PhysicalComposition
+    materialComposition:
+      Steel: 125
+      Glass: 75
+      Uranium: 75
+
+# - type: entity
+#   parent: WeaponPlasmaCutter
+#   id: WeaponPlasmaCutterEmpty
+#   suffix: Empty
+#   components:
+#   - type: Battery
+#     maxCharge: 2000
+#     startingCharge: 0
+# Locknar - Firmware
+# - type: entity
+#   parent: WeaponAdvancedPlasmaCutter
+#   id: WeaponAdvancedPlasmaCutterEmpty
+#   suffix: Empty
+#   components:
+#   - type: Battery
+#     maxCharge: 4000
+#     startingCharge: 0
