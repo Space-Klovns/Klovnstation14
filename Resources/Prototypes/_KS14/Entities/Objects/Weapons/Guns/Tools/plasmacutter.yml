@@ -1,6 +1,62 @@
 - type: entity
+  id: BaseWeaponPowerCellHitscanless
+  parent: BaseItem
+  abstract: true
+  components:
+  - type: Sprite
+  - type: Item
+    size: Huge
+  - type: AmmoCounter
+  - type: Gun
+    fireRate: 2
+    selectedMode: SemiAuto
+    availableModes:
+    - SemiAuto
+    soundGunshot:
+      path: /Audio/Weapons/Guns/Gunshots/laser.ogg
+  - type: ItemSlots
+    slots:
+      cell_slot:
+        name: Magazine
+        startingItem: PowerCellSmall
+        insertSound: /Audio/Weapons/Guns/MagIn/batrifle_magin.ogg
+        ejectSound: /Audio/Weapons/Guns/MagOut/batrifle_magout.ogg
+        whitelist:
+          tags:
+            - PowerCell
+            - PowerCellSmall
+  - type: PowerCellSlot
+    cellSlotId: cell_slot
+  - type: Appearance
+  - type: StaticPrice
+    price: 500
+  - type: ContainerContainer
+    containers:
+      cell_slot: !type:ContainerSlot
+
+- type: entity
+  id: BaseWeaponPowerCellSmallHitscanless
+  parent: BaseWeaponPowerCellHitscanless
+  abstract: true
+  components:
+  - type: Item
+    size: Small
+    shape:
+    - 0,0,1,0
+    - 0,1,0,1
+  - type: Tag
+    tags:
+    - Sidearm
+  - type: Clothing
+    sprite: Objects/Weapons/Guns/Battery/taser.rsi
+    quickEquip: false
+    slots:
+    - Belt
+    - suitStorage
+
+- type: entity
   name: plasma cutter
-  parent: BaseWeaponPowerCellSmall
+  parent: BaseWeaponPowerCellSmallHitscanless
   id: WeaponPlasmaCutter
   description: A proficient mining tool.
   components:
@@ -8,7 +64,7 @@
     sprite: _KS14/Weapons/Guns/Battery/plasmacutter.rsi
     state: icon
   - type: Gun
-    fireRate: 2
+    fireRate: 1
     soundGunshot:
       path: /Audio/_KS14/Weapons/Guns/Gunshots/plasmacutter.ogg
   - type: Item
@@ -40,7 +96,7 @@
     sprite: _KS14/Weapons/Guns/Battery/advplasmacutter.rsi
     state: icon
   - type: Gun
-    fireRate: 1
+    fireRate: 1.5
     soundGunshot:
       path: /Audio/_KS14/Weapons/Guns/Gunshots/plasmacutter.ogg
   - type: ProjectileBatteryAmmoProvider

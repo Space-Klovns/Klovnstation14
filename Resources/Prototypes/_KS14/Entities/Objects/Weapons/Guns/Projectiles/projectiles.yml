@@ -40,7 +40,7 @@
         Heat: 18
         Structural: 100
   - type: TimedDespawn
-    lifetime: 0.4
+    lifetime: 0.3
   - type: PointLight
     radius: 4
     color: "#800080"
