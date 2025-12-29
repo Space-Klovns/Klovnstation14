@@ -780,7 +780,7 @@
       - Pickaxe
   - type: Damageable
     damageContainer: StructuralInorganic
-    damageModifierSet: Metallic
+    damageModifierSet: Rock
   - type: Destructible
     thresholds:
     - trigger:
