@@ -6,7 +6,7 @@
   parent: BaseWallmountMetallic
   id: CardReaderPad
   name: cardreader
-  description: A wall-mount access scanner. Interesting.
+  description: A wall-mount access scanner.
   components:
   - type: Transform
     anchored: false
@@ -25,7 +25,7 @@
   - type: Appearance
   - type: Sprite
     drawdepth: SmallObjects
-    sprite: _MNET14/Structures/Wallmounts/cardreader.rsi
+    sprite: _Manifest/Structures/Wallmounts/cardreader.rsi
     layers:
     - map: [ "enum.DurationSignalAccessReaderLayers.Base" ]
       state: base
@@ -77,7 +77,7 @@
   parent: CardReaderPad
   id: CardReaderPadCommand
   name: cardreader
-  description: A wall-mount access scanner. Interesting. This one has a blue stripe on it.
+  description: A wall-mount access scanner. This one has a blue stripe on it.
   suffix: Command
   components:
   - type: AccessReader
