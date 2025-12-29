@@ -38,10 +38,12 @@
   - type: DurationSignalAccessReader
     failureSound:
       path: /Audio/Machines/buzz-two.ogg
-      volume: -3
+      params:
+        volume: -3
     successSound:
       path: /Audio/Machines/chime.ogg
-      volume: -3
+      params:
+        volume: -3
   - type: WallMount
     arc: 120 # you have to get close to it
   - type: UseDelay
