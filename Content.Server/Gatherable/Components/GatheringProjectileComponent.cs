@@ -1,3 +1,10 @@
+// SPDX-FileCopyrightText: 2023 AJCM-git
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 metalgearsloth
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MPL-2.0
+
 namespace Content.Server.Gatherable.Components;
 
 /// <summary>

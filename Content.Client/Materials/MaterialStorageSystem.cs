@@ -1,3 +1,12 @@
+// SPDX-FileCopyrightText: 2023 Nemanja
+// SPDX-FileCopyrightText: 2023 Visne
+// SPDX-FileCopyrightText: 2023 metalgearsloth
+// SPDX-FileCopyrightText: 2024 Plykiya
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Shared.Materials;
 using Robust.Client.GameObjects;
 

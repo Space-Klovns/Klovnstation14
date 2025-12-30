@@ -1,3 +1,10 @@
+// SPDX-FileCopyrightText: 2023 AJCM-git
+// SPDX-FileCopyrightText: 2023 metalgearsloth
+// SPDX-FileCopyrightText: 2024 Ed
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Server.Gatherable.Components;
 using Content.Server.Projectiles;
 using Content.Shared.Projectiles;

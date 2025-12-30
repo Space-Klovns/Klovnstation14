@@ -1,3 +1,11 @@
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Hannah Giovanna Dawson
+// SPDX-FileCopyrightText: 2023 Leon Friedrich
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Nemanja
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Shared.Whitelist;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
