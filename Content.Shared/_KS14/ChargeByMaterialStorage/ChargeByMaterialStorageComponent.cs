@@ -23,7 +23,6 @@ public sealed partial class ChargeByMaterialStorageComponent : Component
     [Access(typeof(SharedChargeByMaterialStorageSystem), Other = AccessPermissions.Read)]
     public ProtoId<MaterialPrototype>[]? WhitelistedMaterials = null;
 
-    [DataField]
     [Access(typeof(SharedChargeByMaterialStorageSystem))]
     public int CachedTotalMaterialAmount = default;
 
