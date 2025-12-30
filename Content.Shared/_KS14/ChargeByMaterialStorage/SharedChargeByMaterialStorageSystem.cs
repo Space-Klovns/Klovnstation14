@@ -52,7 +52,7 @@ public abstract class SharedChargeByMaterialStorageSystem : EntitySystem
     {
         // Amount of material gained/lost
         var materialDelta = GetActiveStoredMaterialAmount(entity) - entity.Comp.CachedTotalMaterialAmount;
-        var powerDelta = 0f;
+        float powerDelta;
 
         if (materialDelta > 0) // Gain
         {
@@ -71,7 +71,8 @@ public abstract class SharedChargeByMaterialStorageSystem : EntitySystem
         else // Material delta of 0
             return;
 
-        AddCharge(entity, powerDelta);
+        // charge o algo, so negative
+        AddCharge(entity, -powerDelta);
     }
 
     // Empty on client because nothing ever happens on client

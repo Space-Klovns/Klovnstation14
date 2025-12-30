@@ -12,6 +12,14 @@
   components:
   - type: Transform
     noRot: true
+
+  - type: SoundOnGather # KS14
+  - type: Gatherable
+    toolWhitelist:
+      tags:
+      - Pickaxe
+      - PlasmaCutter # KS14 - Plasmacutter
+
   - type: IconSmooth
     key: walls
     mode: NoSprite
@@ -778,7 +786,7 @@
     toolWhitelist:
       tags:
       - Pickaxe
-      - PlasmaCutter # KS14 - Plasmacutter
+      - PlasmaCutter # KS14 - Plasmacutter  
   - type: Damageable
     damageContainer: StructuralInorganic
     damageModifierSet: Metallic

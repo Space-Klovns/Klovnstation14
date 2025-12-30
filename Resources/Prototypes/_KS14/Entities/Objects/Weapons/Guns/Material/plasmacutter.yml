@@ -8,42 +8,6 @@
 - type: Tag
   id: PlasmaCutter
 
-- type: entity
-  parent: BaseItem
-  id: BaseWeaponPowerCellHitscanless
-  abstract: true
-  components:
-  - type: Sprite
-  - type: Item
-    size: Huge
-  - type: AmmoCounter
-  - type: Gun
-    fireRate: 2
-    selectedMode: SemiAuto
-    availableModes:
-    - SemiAuto
-    soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/laser.ogg
-  - type: ItemSlots
-    slots:
-      cell_slot:
-        name: Magazine
-        startingItem: PowerCellSmall
-        insertSound: /Audio/Weapons/Guns/MagIn/batrifle_magin.ogg
-        ejectSound: /Audio/Weapons/Guns/MagOut/batrifle_magout.ogg
-        whitelist:
-          tags:
-            - PowerCell
-            - PowerCellSmall
-  - type: PowerCellSlot
-    cellSlotId: cell_slot
-  - type: Appearance
-  - type: StaticPrice
-    price: 500
-  - type: ContainerContainer
-    containers:
-      cell_slot: !type:ContainerSlot
-
 ## Basic plasmacutter
 
 - type: entity
@@ -53,7 +17,7 @@
   description: A proficient mining tool.
   components:
   - type: Sprite
-    sprite: _KS14/Weapons/Guns/Battery/plasmacutter.rsi
+    sprite: _KS14/Objects/Weapons/Guns/Battery/plasmacutter.rsi
     state: icon
   - type: Tag
     tags:
@@ -65,6 +29,7 @@
     - 0,0,2,1
   - type: Gun
     fireRate: 1
+    projectileSpeed: 25
     soundGunshot:
       path: /Audio/_KS14/Weapons/Guns/Gunshots/plasmacutter.ogg
     selectedMode: SemiAuto
@@ -103,6 +68,7 @@
     proto: BulletPlasmaCutter
     fireCost: 500  # 20 shots
 
+
 - type: entity
   parent: BaseBullet
   id: BulletPlasmaCutter
@@ -112,7 +78,7 @@
   components:
   - type: Sprite
     noRot: false
-    sprite: _KS14/Weapons/Guns/Projectiles/bullet_cutter.rsi
+    sprite: _KS14/Objects/Weapons/Guns/Projectiles/bullet_cutter.rsi
     layers:
     - state: icon
       shader: unshaded
@@ -120,7 +86,7 @@
     reflective:
     - Energy
   - type: GatheringProjectile
-    amount: 40 # 40 tiles at most
+    amount: 15 # 15 tiles at most
   - type: Projectile
     deleteOnCollide: false
     damage:
@@ -130,7 +96,7 @@
   - type: StaminaDamageOnCollide
     damage: 20
   - type: TimedDespawn
-    lifetime: 0.22
+    lifetime: 0.24 # 6m at 25m/s
   - type: PointLight
     radius: 2
     color: "#800080"
@@ -144,8 +110,7 @@
   description: Upgraded version of very popular amongst miners tool.
   components:
   - type: Sprite
-    sprite: _KS14/Weapons/Guns/Battery/advplasmacutter.rsi
-    state: icon
+    sprite: _KS14/Objects/Weapons/Guns/Battery/advplasmacutter.rsi
   - type: Gun
     fireRate: 1.5
     soundGunshot:
@@ -172,4 +137,4 @@
         Heat: 18
         Structural: 100
   - type: TimedDespawn
-    lifetime: 0.3
+    lifetime: 0.4 # 10m at 25m/s
