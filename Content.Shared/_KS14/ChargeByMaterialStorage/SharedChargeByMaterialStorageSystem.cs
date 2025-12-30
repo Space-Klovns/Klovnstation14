@@ -1,5 +1,4 @@
 using Content.Shared.Materials;
-using Content.Shared.Ninja.Systems;
 
 namespace Content.Shared._KS14.ChargeByMaterialStorage;
 

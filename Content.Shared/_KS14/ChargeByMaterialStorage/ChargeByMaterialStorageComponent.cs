@@ -6,13 +6,13 @@ namespace Content.Shared._KS14.ChargeByMaterialStorage;
 
 /// <summary>
 ///     Charges an entity's battery when material is inserted
-///         into the entity's <see cref="Materials.MaterialStorageComponent">.
+///         into the entity's <see cref="MaterialStorageComponent">.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
 public sealed partial class ChargeByMaterialStorageComponent : Component
 {
     /// <summary>
-    ///     If null, all materials in the entity's <see cref="Materials.MaterialStorageComponent"/>
+    ///     If null, all materials in the entity's <see cref="MaterialStorageComponent"/>
     ///         can be used to charge. Otherwise if this is notnull, then
     ///         only the specified materials can be used to charge.
     /// 
