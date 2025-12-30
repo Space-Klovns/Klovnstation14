@@ -107,7 +107,7 @@ public sealed class MaterialStorageSystem : SharedMaterialStorageSystem
                 ("machine", receiver),
                 ("item", toInsert)),
             receiver);
-        QueueDel(toInsert);
+        //QueueDel(toInsert); // KS14: Commented
 
         // Logging
         TryComp<StackComponent>(toInsert, out var stack);
