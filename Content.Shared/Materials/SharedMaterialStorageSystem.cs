@@ -377,13 +377,18 @@ public abstract class SharedMaterialStorageSystem : EntitySystem
             totalVolume += vol * maximumMultiplier;
         }
 
+        var oldTotalVolume = GetTotalMaterialAmount(receiver, storage, localOnly: true);
+
         // KS14
         if (isStack)
         {
-            if (!CanTakeVolume(receiver, totalVolume, out var excessMaterial, storage, localOnly: true))
+            if (storage.StorageLimit is { } storageLimit &&
+                oldTotalVolume + totalVolume > storageLimit)
             {
                 var takenStackUnits = maximumMultiplier;
                 var volumePerStackUnit = totalVolume / maximumMultiplier;
+
+                var excessMaterial = oldTotalVolume + totalVolume - storageLimit;
                 var excessStackUnits = (float)excessMaterial / (float)volumePerStackUnit;
 
                 // Only take however much we need with minimal excess
@@ -394,21 +399,21 @@ public abstract class SharedMaterialStorageSystem : EntitySystem
                 //totalVolume = takenStackUnits * volumePerStackUnit;
 
                 if (takenStackUnits >= stackComponent!.Count)
-                    QueueDel(toInsert);
+                    PredictedQueueDel(toInsert);
                 else
                     _heap.SetCount(toInsert, stackComponent!.Count - takenStackUnits, component: stackComponent);
 
                 maximumMultiplier = takenStackUnits;
             }
             else
-                QueueDel(toInsert);
+                PredictedQueueDel(toInsert);
         }
         else if (!CanTakeVolume(receiver, totalVolume, storage, localOnly: true))
             return false;
 
         foreach (var (mat, vol) in composition.MaterialComposition)
         {
-            TryChangeMaterialAmount(receiver, mat, vol * maximumMultiplier, storage);
+            TryChangeMaterialAmount(receiver, mat, Math.Min(vol * maximumMultiplier, storage.StorageLimit!.Value - oldTotalVolume), storage);
         }
 
         var insertingComp = EnsureComp<InsertingMaterialStorageComponent>(receiver);

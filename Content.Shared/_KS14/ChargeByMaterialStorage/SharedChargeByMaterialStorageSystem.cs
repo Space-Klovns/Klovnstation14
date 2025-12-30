@@ -79,7 +79,7 @@ public abstract class SharedChargeByMaterialStorageSystem : EntitySystem
                 );
         }
 
-        entity.Comp.CachedStoredMaterials = materialStorageComponent.Storage;
+        entity.Comp.CachedStoredMaterials = new(materialStorageComponent.Storage);
     }
 
     // Empty on client because nothing ever happens on client
