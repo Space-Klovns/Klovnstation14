@@ -17,7 +17,7 @@
 # SPDX-FileCopyrightText: 2024 lzk
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - type: entityTable
   id: FillSalvageSpecialistHardsuitSpatio
