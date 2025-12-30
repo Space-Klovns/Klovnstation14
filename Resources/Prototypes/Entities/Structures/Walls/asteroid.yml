@@ -13,12 +13,11 @@
   - type: Transform
     noRot: true
 
-  - type: SoundOnGather # KS14
-  - type: Gatherable
+  - type: SoundOnGather # KS14 - Plasmacutter
+  - type: Gatherable # KS14 - Plasmacutter
     toolWhitelist:
       tags:
-      - Pickaxe
-      - PlasmaCutter # KS14 - Plasmacutter
+      - PlasmaCutter
 
   - type: IconSmooth
     key: walls
