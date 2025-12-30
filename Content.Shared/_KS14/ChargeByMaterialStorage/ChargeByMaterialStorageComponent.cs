@@ -28,7 +28,7 @@ public sealed partial class ChargeByMaterialStorageComponent : Component
     public int CachedTotalMaterialAmount = default;
 
     /// <summary>
-    ///     Amount of energy gained, in joules, per unit of
+    ///     Amount of energy gained, in joules, per unit (cm³) of
     ///         material added to this entity.
     /// 
     ///     If zero, nothing happens when material is added
@@ -38,7 +38,7 @@ public sealed partial class ChargeByMaterialStorageComponent : Component
     public float GainRatio = 1f;
 
     /// <summary>
-    ///     Amount of energy added [sic], in joules, per unit of
+    ///     Amount of energy added [sic], in joules, per unit (cm³) of
     ///         material taken from this entity.
     /// 
     ///     If zero, nothing happens when material is taken
