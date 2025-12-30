@@ -8,8 +8,8 @@ public sealed class ChargeByMaterialStorageSystem : SharedChargeByMaterialStorag
 {
     [Dependency] private readonly BatterySystem _batterySystem = default!;
 
-    protected override void AddCharge(Entity<ChargeByMaterialStorageComponent> entity, float charge)
+    protected override void ChangeCharge(Entity<ChargeByMaterialStorageComponent> entity, float charge)
     {
-        _batterySystem.TryUseCharge(entity.Owner, -charge /* the name of the method is AddCharge, not UseCharge*/);
+        _batterySystem.ChangeCharge(entity.Owner, charge);
     }
 }

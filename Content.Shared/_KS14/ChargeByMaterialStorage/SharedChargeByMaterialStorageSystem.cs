@@ -15,7 +15,6 @@ public abstract class SharedChargeByMaterialStorageSystem : EntitySystem
     {
         base.Initialize();
 
-
         SubscribeLocalEvent<ChargeByMaterialStorageComponent, ComponentStartup>(OnStartup);
         SubscribeLocalEvent<ChargeByMaterialStorageComponent, MaterialAmountChangedEvent>(OnMaterialAmountChanged);
     }
@@ -27,15 +26,17 @@ public abstract class SharedChargeByMaterialStorageSystem : EntitySystem
     /// </summary>
     public Dictionary<ProtoId<MaterialPrototype>, int> GetActiveStoredMaterials(Entity<ChargeByMaterialStorageComponent> entity)
     {
-        var storedMaterials = _materialStorageSystem.GetStoredMaterials(entity.Owner, localOnly: entity.Comp.LocalOnly);
-        if (entity.Comp.WhitelistedMaterials is not { } whitelistedMaterials ||
-            whitelistedMaterials.Length == 0)
-            return storedMaterials;
+        if (entity.Comp.WhitelistedMaterials is not { } whitelistedMaterials)
+            return _materialStorageSystem.GetStoredMaterials(entity.Owner, localOnly: entity.Comp.LocalOnly);
 
+        if (whitelistedMaterials.Length == 0)
+            return new();
+
+        var storedMaterials = _materialStorageSystem.GetStoredMaterials(entity.Owner, localOnly: entity.Comp.LocalOnly);
         var activeStoredMaterials = new Dictionary<ProtoId<MaterialPrototype>, int>(whitelistedMaterials.Length);
-        for (var i = 0; i < whitelistedMaterials.Length; i++)
+
+        foreach (var whitelistedMaterial in whitelistedMaterials)
         {
-            var whitelistedMaterial = whitelistedMaterials[i];
             if (!storedMaterials.TryGetValue(whitelistedMaterial, out var materialAmount))
                 continue;
 
@@ -67,7 +68,7 @@ public abstract class SharedChargeByMaterialStorageSystem : EntitySystem
             if (materialDelta <= 0)
                 continue;
 
-            AddCharge(entity, materialDelta * entity.Comp.GainRatio);
+            ChangeCharge(entity, materialDelta * entity.Comp.GainRatio);
 
             if (entity.Comp.ConsumeAddedMaterials)
             {
@@ -87,5 +88,5 @@ public abstract class SharedChargeByMaterialStorageSystem : EntitySystem
 
     // Empty on client because nothing ever happens on client
     // TODO LCDC: PredictedBatteryComponent when apstrim merge
-    protected abstract void AddCharge(Entity<ChargeByMaterialStorageComponent> entity, float charge);
+    protected abstract void ChangeCharge(Entity<ChargeByMaterialStorageComponent> entity, float charge);
 }

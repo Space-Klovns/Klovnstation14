@@ -5,5 +5,5 @@ namespace Content.Client._KS14.ChargeByMaterialStorage;
 /// <inheritdoc/>
 public sealed class ChargeByMaterialStorageSystem : SharedChargeByMaterialStorageSystem
 {
-    protected override void AddCharge(Entity<ChargeByMaterialStorageComponent> entity, float charge) { }
+    protected override void ChangeCharge(Entity<ChargeByMaterialStorageComponent> entity, float charge) { }
 }
