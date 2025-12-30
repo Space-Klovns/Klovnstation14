@@ -16,7 +16,7 @@ public sealed partial class ChargeByMaterialStorageComponent : Component
     ///         can be used to charge. Otherwise if this is notnull, then
     ///         only the specified materials can be used to charge.
     /// 
-    ///     Currently does not support being changed during runtime. You should
+    ///     Currently does not support being changed during after the component is started. You should
     ///         only use this if you really need it.
     /// </summary>
     [DataField]
@@ -24,7 +24,7 @@ public sealed partial class ChargeByMaterialStorageComponent : Component
     public ProtoId<MaterialPrototype>[]? WhitelistedMaterials = null;
 
     [Access(typeof(SharedChargeByMaterialStorageSystem))]
-    public int CachedTotalMaterialAmount = default;
+    public Dictionary<ProtoId<MaterialPrototype>, int> CachedStoredMaterials = default;
 
     /// <summary>
     ///     Amount of energy gained, in joules, per unit (cm³) of
@@ -37,15 +37,19 @@ public sealed partial class ChargeByMaterialStorageComponent : Component
     public float GainRatio = 1f;
 
     /// <summary>
-    ///     Amount of energy added [sic], in joules, per unit (cm³) of
-    ///         material taken from this entity.
-    /// 
-    ///     If zero, nothing happens when material is taken
-    ///         from this entity. If you want the entity to lose
-    ///         energy when losing material, then this should be
-    ///         negative, and vice versa.
+    ///     When material is added, is it instantly deleted?
     /// </summary>
     [DataField]
-    public float LossRatio = 0f;
+    public bool ConsumeAddedMaterials = true;
+
+    /// <summary>
+    ///     Does this count only material added *directly* to the entity,
+    ///         or also include material indirectly added to the entity (ore silos, etc.)
+    /// 
+    ///     Currently does not support being changed during after the component is started.
+    /// </summary>
+    [DataField]
+    [Access(typeof(SharedChargeByMaterialStorageSystem))]
+    public bool LocalOnly = true;
 }
 

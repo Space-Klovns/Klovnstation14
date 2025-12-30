@@ -63,6 +63,7 @@
     - Plasma # takes processed plasma..
     - RawPlasma # ..and raw plasma (ore)
   - type: ChargeByMaterialStorage
+    consumeAddedMaterials: true
     gainRatio: 100 # 1 sheet is 100cm3, and 1 sheet should refill 10kJ, so ts is 100x
   - type: ProjectileBatteryAmmoProvider
     proto: BulletPlasmaCutter

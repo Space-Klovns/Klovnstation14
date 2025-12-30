@@ -10,6 +10,6 @@ public sealed class ChargeByMaterialStorageSystem : SharedChargeByMaterialStorag
 
     protected override void AddCharge(Entity<ChargeByMaterialStorageComponent> entity, float charge)
     {
-        _batterySystem.TryUseCharge(entity.Owner, charge);
+        _batterySystem.TryUseCharge(entity.Owner, -charge /* the name of the method is AddCharge, not UseCharge*/);
     }
 }

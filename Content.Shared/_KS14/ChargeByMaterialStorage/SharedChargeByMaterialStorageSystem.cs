@@ -1,4 +1,6 @@
+using System.Linq;
 using Content.Shared.Materials;
+using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.ChargeByMaterialStorage;
 
@@ -19,60 +21,68 @@ public abstract class SharedChargeByMaterialStorageSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Returns amount of material contained in the entity
+    ///     Returns amount of all materials contained in the entity
     ///         taking account the <see cref="ChargeByMaterialStorageComponent"/>'s
     ///         whitelist, if any. 
     /// </summary>
-    public int GetActiveStoredMaterialAmount(Entity<ChargeByMaterialStorageComponent> entity)
+    public Dictionary<ProtoId<MaterialPrototype>, int> GetActiveStoredMaterials(Entity<ChargeByMaterialStorageComponent> entity)
     {
-        if (entity.Comp.WhitelistedMaterials is not { } whitelistedMaterials)
-            return _materialStorageSystem.GetTotalMaterialAmount(entity.Owner);
+        var storedMaterials = _materialStorageSystem.GetStoredMaterials(entity.Owner, localOnly: entity.Comp.LocalOnly);
+        if (entity.Comp.WhitelistedMaterials is not { } whitelistedMaterials ||
+            whitelistedMaterials.Length == 0)
+            return storedMaterials;
 
-        var activeStoredMaterialAmount = 0;
-        var storedMaterials = _materialStorageSystem.GetStoredMaterials(entity.Owner);
-
-        for (var i = 0; i < entity.Comp.WhitelistedMaterials.Length; i++)
+        var activeStoredMaterials = new Dictionary<ProtoId<MaterialPrototype>, int>(whitelistedMaterials.Length);
+        for (var i = 0; i < whitelistedMaterials.Length; i++)
         {
-            var whitelistedMaterial = entity.Comp.WhitelistedMaterials[i];
+            var whitelistedMaterial = whitelistedMaterials[i];
             if (!storedMaterials.TryGetValue(whitelistedMaterial, out var materialAmount))
                 continue;
 
-            activeStoredMaterialAmount += materialAmount;
+            activeStoredMaterials[whitelistedMaterial] = materialAmount;
         }
 
-        return activeStoredMaterialAmount;
+        return activeStoredMaterials;
     }
 
     private void OnStartup(Entity<ChargeByMaterialStorageComponent> entity, ref ComponentStartup args)
     {
-        entity.Comp.CachedTotalMaterialAmount = GetActiveStoredMaterialAmount(entity);
+        entity.Comp.CachedStoredMaterials = GetActiveStoredMaterials(entity);
     }
 
+    // Top 10 dictionary allocation spams of all time
     private void OnMaterialAmountChanged(Entity<ChargeByMaterialStorageComponent> entity, ref MaterialAmountChangedEvent args)
     {
-        // Amount of material gained/lost
-        var materialDelta = GetActiveStoredMaterialAmount(entity) - entity.Comp.CachedTotalMaterialAmount;
-        float powerDelta;
+        var activeStoredMaterials = GetActiveStoredMaterials(entity);
 
-        if (materialDelta > 0) // Gain
+        MaterialStorageComponent? materialStorageComponent = null;
+        foreach (var (materialId, newMaterialAmount) in activeStoredMaterials)
         {
-            if (entity.Comp.GainRatio == 0f)
-                return;
+            var materialDelta = newMaterialAmount;
 
-            powerDelta = materialDelta * entity.Comp.GainRatio;
+            if (entity.Comp.CachedStoredMaterials.TryGetValue(materialId, out var oldMaterialAmount))
+                materialDelta -= oldMaterialAmount; // eq `materialDelta = newMaterialAmount - oldMaterialAmount`
+
+            // prevent feedback loop
+            if (materialDelta <= 0)
+                continue;
+
+            AddCharge(entity, materialDelta * entity.Comp.GainRatio);
+
+            if (entity.Comp.ConsumeAddedMaterials)
+            {
+                materialStorageComponent ??= Comp<MaterialStorageComponent>(entity.Owner);
+                _materialStorageSystem.TryChangeMaterialAmount(
+                    entity.Owner,
+                    materialId,
+                    -materialDelta,
+                    component: materialStorageComponent,
+                    localOnly: entity.Comp.LocalOnly
+                );
+            }
         }
-        else if (materialDelta < 0) // Loss
-        {
-            if (entity.Comp.LossRatio == 0f)
-                return;
 
-            powerDelta = materialDelta * entity.Comp.LossRatio;
-        }
-        else // Material delta of 0
-            return;
-
-        // charge o algo, so negative
-        AddCharge(entity, -powerDelta);
+        entity.Comp.CachedStoredMaterials = activeStoredMaterials;
     }
 
     // Empty on client because nothing ever happens on client
