@@ -1,4 +1,5 @@
 using Content.Server.Gatherable.Components;
+using Content.Server.Projectiles;
 using Content.Shared.Projectiles;
 using Robust.Shared.Physics.Events;
 
@@ -8,16 +9,24 @@ public sealed partial class GatherableSystem
 {
     private void InitializeProjectile()
     {
-        SubscribeLocalEvent<GatheringProjectileComponent, StartCollideEvent>(OnProjectileCollide);
+        SubscribeLocalEvent<GatheringProjectileComponent, StartCollideEvent>(OnProjectileCollide, before: [typeof(ProjectileSystem)]);
     }
 
     private void OnProjectileCollide(Entity<GatheringProjectileComponent> gathering, ref StartCollideEvent args)
     {
         if (!args.OtherFixture.Hard ||
             args.OurFixtureId != SharedProjectileSystem.ProjectileFixture ||
-            gathering.Comp.Amount <= 0 ||
-            !TryComp<GatherableComponent>(args.OtherEntity, out var gatherable))
+            gathering.Comp.Amount <= 0)
         {
+            return;
+        }
+
+        // KS14: Separated this check
+        if (!TryComp<GatherableComponent>(args.OtherEntity, out var gatherable))
+        {
+            if (gathering.Comp.DeleteOnHittingUngatherable)
+                QueueDel(gathering);
+
             return;
         }
 

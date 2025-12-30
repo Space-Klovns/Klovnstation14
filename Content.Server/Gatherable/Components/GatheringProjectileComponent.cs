@@ -11,4 +11,12 @@ public sealed partial class GatheringProjectileComponent : Component
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite), DataField("amount")]
     public int Amount = 1;
+
+    // KS14
+    /// <summary>
+    ///     Is this entity deleted immediately upon hitting
+    ///         something that can't be gathered?
+    /// </summary>
+    [ViewVariables(VVAccess.ReadWrite), DataField]
+    public bool DeleteOnHittingUngatherable = false;
 }

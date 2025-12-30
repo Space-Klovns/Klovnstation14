@@ -21,6 +21,8 @@
       prob: 0.3
       rolls: !type:ConstantNumberSelector
         value: 3
+    - id: WeaponPlasmaCutter # KS14
+    - id: MineralScanner # KS1
 
 - type: entity
   id: LockerSalvageSpecialistFilledHardsuit

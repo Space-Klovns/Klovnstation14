@@ -1,4 +1,3 @@
-using System.Linq;
 using Content.Shared.Materials;
 using Robust.Shared.Prototypes;
 
@@ -46,7 +45,7 @@ public abstract class SharedChargeByMaterialStorageSystem : EntitySystem
         return activeStoredMaterials;
     }
 
-    private void OnStartup(Entity<ChargeByMaterialStorageComponent> entity, ref ComponentStartup args)
+    protected virtual void OnStartup(Entity<ChargeByMaterialStorageComponent> entity, ref ComponentStartup args)
     {
         entity.Comp.CachedStoredMaterials = GetActiveStoredMaterials(entity);
     }
@@ -56,7 +55,7 @@ public abstract class SharedChargeByMaterialStorageSystem : EntitySystem
     {
         var activeStoredMaterials = GetActiveStoredMaterials(entity);
 
-        MaterialStorageComponent? materialStorageComponent = null;
+        var materialStorageComponent = Comp<MaterialStorageComponent>(entity.Owner);
         foreach (var (materialId, newMaterialAmount) in activeStoredMaterials)
         {
             var materialDelta = newMaterialAmount;
@@ -71,8 +70,6 @@ public abstract class SharedChargeByMaterialStorageSystem : EntitySystem
             ChangeCharge(entity, materialDelta * entity.Comp.GainRatio);
 
             if (entity.Comp.ConsumeAddedMaterials)
-            {
-                materialStorageComponent ??= Comp<MaterialStorageComponent>(entity.Owner);
                 _materialStorageSystem.TryChangeMaterialAmount(
                     entity.Owner,
                     materialId,
@@ -80,10 +77,9 @@ public abstract class SharedChargeByMaterialStorageSystem : EntitySystem
                     component: materialStorageComponent,
                     localOnly: entity.Comp.LocalOnly
                 );
-            }
         }
 
-        entity.Comp.CachedStoredMaterials = activeStoredMaterials;
+        entity.Comp.CachedStoredMaterials = materialStorageComponent.Storage;
     }
 
     // Empty on client because nothing ever happens on client

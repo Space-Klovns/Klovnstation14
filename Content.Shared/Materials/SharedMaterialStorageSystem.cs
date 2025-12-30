@@ -384,10 +384,10 @@ public abstract class SharedMaterialStorageSystem : EntitySystem
             {
                 var takenStackUnits = maximumMultiplier;
                 var volumePerStackUnit = totalVolume / maximumMultiplier;
-                var excessStackUnits = excessMaterial / volumePerStackUnit;
+                var excessStackUnits = (float)excessMaterial / (float)volumePerStackUnit;
 
                 // Only take however much we need with minimal excess
-                takenStackUnits -= (int)MathF.Ceiling(excessStackUnits);
+                takenStackUnits -= (int)MathF.Floor(excessStackUnits);
                 if (takenStackUnits <= 0)
                     return false;
 

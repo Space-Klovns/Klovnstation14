@@ -7,8 +7,6 @@ namespace Content.Shared._KS14.ChargeByMaterialStorage;
 /// <summary>
 ///     Charges an entity's battery when material is inserted
 ///         into the entity's <see cref="MaterialStorageComponent">.
-/// 
-///     Does not prevent wasting materials.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
 public sealed partial class ChargeByMaterialStorageComponent : Component
@@ -29,13 +27,23 @@ public sealed partial class ChargeByMaterialStorageComponent : Component
     public Dictionary<ProtoId<MaterialPrototype>, int> CachedStoredMaterials = new();
 
     /// <summary>
+    ///     If true, then the entity's <see cref="MaterialStorageComponent.StorageLimit">
+    ///         will be adjusted 
+    /// </summary>
+    [DataField]
+    public bool AdjustStorageLimitAccordingToBatteryCharge = false;
+
+    /// <summary>
     ///     Amount of energy gained, in joules, per unit (cm³) of
     ///         material added to this entity.
     /// 
     ///     If zero, nothing happens when material is added
     ///         to this entity.
+    /// 
+    ///     Currently does not support being changed during after the component is started.
     /// </summary>
     [DataField]
+    [Access(typeof(SharedChargeByMaterialStorageSystem), Other = AccessPermissions.Read)]
     public float GainRatio = 1f;
 
     /// <summary>

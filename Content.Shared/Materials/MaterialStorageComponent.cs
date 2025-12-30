@@ -23,6 +23,8 @@ public sealed partial class MaterialStorageComponent : Component
     ///     How much material the storage can store in total.
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite), DataField]
+    [Access(Other = AccessPermissions.ReadWriteExecute)] // KS14
+    [AutoNetworkedField] // KS14
     public int? StorageLimit;
 
     /// <summary>
