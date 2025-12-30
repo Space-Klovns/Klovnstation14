@@ -1,4 +1,4 @@
-﻿// SPDX-FileCopyrightText: 2022 Chief-Engineer
+// SPDX-FileCopyrightText: 2022 Chief-Engineer
 // SPDX-FileCopyrightText: 2022 Kevin Zheng
 // SPDX-FileCopyrightText: 2023 Hannah Giovanna Dawson
 // SPDX-FileCopyrightText: 2023 Leon Friedrich
@@ -9,6 +9,7 @@
 // SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2025 Nemanja
 // SPDX-FileCopyrightText: 2025 Winkarst
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 nabegator220
 //
 // SPDX-License-Identifier: MIT
