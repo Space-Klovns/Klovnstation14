@@ -123,7 +123,7 @@
   - ReactorControlRod
   - ReactorGasChannel
   - ReactorHeatExchanger
-  position: 0,-4
+  position: -1,-4
   technologyPrerequisites:
   - PowerGeneration
 
@@ -141,7 +141,7 @@
   - TurboItemRechargerCircuitboard
   - SMESAdvancedMachineCircuitboard
   # Goobstation R&D Console rework start
-  position: 1,-6
+  position: 0,-6
   technologyPrerequisites:
   - IndustrialEngineering
   # Goobstation R&D Console rework end
@@ -159,7 +159,7 @@
   - FlatpackerMachineCircuitboard
   - MaterialSiloMachineCircuitboard
   # Goobstation R&D Console rework start
-  position: 1,-4
+  position: 0,-4
   technologyPrerequisites:
   - SpaceScanning
   # Goobstation R&D Console rework end
@@ -179,7 +179,7 @@
   - CircuitImprinterHyperConvectionMachineCircuitboard
   - SheetifierMachineCircuitboard
   # Goobstation R&D Console rework start
-  position: 1,-5
+  position: 0,-5
   technologyPrerequisites:
   - MechanicalCompression
   # Goobstation R&D Console rework end
@@ -239,7 +239,7 @@
   - RipleyPeripheralsElectronics
   - MechEquipmentGrabber
   # Goobstation R&D Console rework start
-  position: 0,-5
+  position: 2,-1
   technologyPrerequisites:
   - SalvageEquipment
   # Goobstation R&D Console rework end
@@ -261,7 +261,7 @@
   - GyroscopeMachineCircuitboard
   - MiniGravityGeneratorCircuitboard
   # Goobstation R&D Console rework start
-  position: 2,-4
+  position: 1,-4
   technologyPrerequisites:
   - MechanicalCompression
   # Goobstation R&D Console rework end
@@ -302,7 +302,7 @@
     - Fulton
     - FultonBeacon
   # Goobstation R&D Console rework start
-  position: 2,-5
+  position: 1,-5
   technologyPrerequisites:
   - Shuttlecraft
   # Goobstation R&D Console rework end
@@ -310,19 +310,19 @@
 - type: technology
   id: MassExcavation
   name: research-technology-excavation
-  icon:
-    sprite: Objects/Tools/handdrilldiamond.rsi
-    state: handdrill
+  icon: # KS14
+    sprite: _KS14/Objects/Weapons/Guns/Battery/advplasmacutter.rsi
+    state: icon
   discipline: Industrial
   tier: 2
   cost: 12500
   recipeUnlocks:
     - OreBagOfHolding
-    - MiningDrillDiamond
+    - WeaponAdvancedPlasmaCutter # KS14, replaced diamond mining drill with adv. plasmacutter
     - AdvancedMineralScannerEmpty
     - BorgModuleAdvancedMining
   # Goobstation R&D Console rework start
-  position: 0,-6
+  position: 3,-1
   technologyPrerequisites:
   - RipleyAPLU
   # Goobstation R&D Console rework end
@@ -344,7 +344,7 @@
   technologyPrerequisites:
   - AdvancedPowercells
   - AdvancedToolsTechnology
-  position: 2,-6
+  position: 1,-6
 
 - type: technology
   id: BluespaceStorage
@@ -360,7 +360,7 @@
   - ClothingBackpackSatchelHolding
   - ClothingBackpackDuffelHolding
   # Goobstation R&D Console rework start
-  position: 2,-7
+  position: 1,-7
   technologyPrerequisites:
   - OptimizedMicrogalvanism
   # Goobstation R&D Console rework end
