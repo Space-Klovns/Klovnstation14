@@ -10,6 +10,7 @@
 # SPDX-FileCopyrightText: 2024 Plykiya
 # SPDX-FileCopyrightText: 2024 metalgearsloth
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 nabegator220
 #
 # SPDX-License-Identifier: MIT
 
@@ -67,7 +68,7 @@
   parent: [BaseItem, StorePresetUplink, BaseSyndicateContraband]
   id: BaseUplinkRadio
   name: syndicate uplink
-  description: Suspiciously looking old radio...
+  description: Suspicious looking old radio... #KS14 - grammar improvement :fortune:
   suffix: Empty
   components:
   - type: Sprite

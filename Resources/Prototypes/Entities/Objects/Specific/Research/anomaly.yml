@@ -12,11 +12,16 @@
 # SPDX-FileCopyrightText: 2024 deltanedas
 # SPDX-FileCopyrightText: 2024 metalgearsloth
 # SPDX-FileCopyrightText: 2025 Centronias
+# SPDX-FileCopyrightText: 2025 FrauZj
 # SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 Gerkada
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Quantum-cross
 # SPDX-FileCopyrightText: 2025 Velcroboy
 # SPDX-FileCopyrightText: 2025 Winkarst
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 keronshb
+# SPDX-FileCopyrightText: 2025 nabegator220
 #
 # SPDX-License-Identifier: MIT
 
@@ -190,6 +195,7 @@
   id: WeaponGauntletGorilla
   description: A robust piece of research equipment. When powered with an anomaly core, a single blow can launch anomalous objects through the air.
   components:
+  - type: GorillaGauntlet # KS14
   - type: Sprite
     sprite: Objects/Weapons/Melee/gorilla.rsi
     state: icon

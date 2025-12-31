@@ -88,11 +88,11 @@ namespace Content.Server.Nuke
         [DataField("alertLevelOnActivate")] public string AlertLevelOnActivate = default!;
         [DataField("alertLevelOnDeactivate")] public string AlertLevelOnDeactivate = default!;
 
-       /// <summary>
-       ///     If the detonation should end the current round if on the main grid.
-       /// </summary>
-       [DataField("endRound")]
-       public bool EndRound = true;
+        /// <summary>
+        ///     If the detonation should end the current round if on the main grid.
+        /// </summary>
+        [DataField("endRound")]
+        public bool EndRound = true;
 
         /// <summary>
         ///     This is stored so we can do a funny by making 0 shift the last played note up by 12 semitones (octave)

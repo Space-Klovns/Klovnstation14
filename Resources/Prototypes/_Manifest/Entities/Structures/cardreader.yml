@@ -1,0 +1,84 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: entity
+  parent: BaseWallmountMetallic
+  id: CardReaderPad
+  name: cardreader
+  description: A wall-mount access scanner.
+  components:
+  - type: Transform
+    anchored: false
+  - type: Physics
+    canCollide: true
+  - type: Fixtures
+    fixtures:
+      bump:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.3,-0.7,0.3,-0.5"
+        hard: false
+        layer:
+        - MidImpassable
+        - HighImpassable
+  - type: Appearance
+  - type: Sprite
+    drawdepth: SmallObjects
+    sprite: _Manifest/Structures/Wallmounts/cardreader.rsi
+    layers:
+    - map: [ "enum.DurationSignalAccessReaderLayers.Base" ]
+      state: base
+    - map: [ "enum.DurationSignalAccessReaderLayers.Fail" ]
+      visible: false
+      shader: unshaded
+    - map: [ "enum.DurationSignalAccessReaderLayers.Success" ]
+      visible: false
+      shader: unshaded
+  - type: DurationSignalAccessReader
+    failureSound:
+      path: /Audio/Machines/buzz-two.ogg
+      params:
+        volume: -3
+    successSound:
+      path: /Audio/Machines/chime.ogg
+      params:
+        volume: -3
+  - type: WallMount
+    arc: 120 # you have to get close to it
+  - type: UseDelay
+    delays:
+      signalAccessReader:
+        length: 0.8
+  - type: Rotatable
+  - type: DeviceNetwork
+    deviceNetId: Wireless
+  - type: WirelessNetworkConnection
+    range: 200
+  - type: DeviceLinkSource
+    ports:
+    - Off
+    - On
+  - type: Destructible
+    thresholds: # todo: add instadestruction trigger
+    - trigger:
+        !type:DamageTrigger
+        damage: 75
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalBreak
+          params:
+            volume: -4
+
+- type: entity
+  parent: CardReaderPad
+  id: CardReaderPadCommand
+  name: cardreader
+  description: A wall-mount access scanner. This one has a blue stripe on it.
+  suffix: Command
+  components:
+  - type: AccessReader
+    access: [["Command"]]

@@ -1,3 +1,23 @@
+# SPDX-FileCopyrightText: 2021 Swept
+# SPDX-FileCopyrightText: 2021 Vera Aguilera Puerto
+# SPDX-FileCopyrightText: 2022 Chris V
+# SPDX-FileCopyrightText: 2022 Leon Friedrich
+# SPDX-FileCopyrightText: 2023 Velcroboy
+# SPDX-FileCopyrightText: 2023 lzk
+# SPDX-FileCopyrightText: 2023 metalgearsloth
+# SPDX-FileCopyrightText: 2024 Alekshhh
+# SPDX-FileCopyrightText: 2024 Ed
+# SPDX-FileCopyrightText: 2024 IProduceWidgets
+# SPDX-FileCopyrightText: 2024 Ubaser
+# SPDX-FileCopyrightText: 2024 Zadeon
+# SPDX-FileCopyrightText: 2024 mubururu_
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Nemanja
+# SPDX-FileCopyrightText: 2025 brainfood1183
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MIT
+
 - type: entity
   abstract: true
   parent: BaseItem
@@ -412,13 +432,11 @@
   - type: Extractable
     grindableSolutionName: saltore
   - type: SolutionContainerManager
-    solutions:
+    solutions: # KS14: Ports upstream https://github.com/space-wizards/space-station-14/pull/41930
       saltore:
         reagents:
-        - ReagentId: TableSalt
+        - ReagentId: SpaceSalt
           Quantity: 10
-        - ReagentId: Iodine
-          Quantity: 5
   - type: Item
     heldPrefix: salt
 

@@ -1,4 +1,11 @@
-﻿- type: entity
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Princess Cheeseballs
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MIT
+
+# TODO LCDC: destroy this abstract when we upstream marge
+- type: entity
   parent: MobStatusEffectBase
   id: BloodstreamStatusEffectBase
   abstract: true
@@ -16,3 +23,18 @@
     - type: StutteringAccent
     - type: DrunkStatusEffect
     - type: RejuvenateRemovedStatusEffect
+
+- type: entity
+  parent: BloodstreamStatusEffectBase
+  id: StatusEffectSafeCritHumanoid
+  name: safe crit
+  components:
+  - type: StatusEffect
+    whitelist:
+      components:
+      - MobState
+      - MobThresholds
+  - type: ModifiedMobThresholdsStatusEffect
+    thresholdAdjustments: #additions
+      Critical: 100
+      Dead: 200

@@ -54,9 +54,11 @@
 # SPDX-FileCopyrightText: 2025 DeusMaldPr
 # SPDX-FileCopyrightText: 2025 FrauzJ
 # SPDX-FileCopyrightText: 2025 GaussiArson
+# SPDX-FileCopyrightText: 2025 Gerkada
 # SPDX-FileCopyrightText: 2025 Ignaz "Ian" Kraft
 # SPDX-FileCopyrightText: 2025 K-Dynamic
 # SPDX-FileCopyrightText: 2025 Kirus59
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Nox
 # SPDX-FileCopyrightText: 2025 Princess Cheeseballs
 # SPDX-FileCopyrightText: 2025 Samuka-C
@@ -70,7 +72,7 @@
 # SPDX-FileCopyrightText: 2025 nabegator220
 # SPDX-FileCopyrightText: 2025 slarticodefast
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - type: entity
   id: BaseWeaponBattery
@@ -238,6 +240,7 @@
   id: WeaponLaserGun
   description: A weapon using light amplified by the stimulated emission of radiation.
   components:
+  - type: GunExecutionWhitelist
   - type: Sprite
     sprite: Objects/Weapons/Guns/Battery/laser_retro.rsi
     layers:
@@ -263,6 +266,7 @@
   id: WeaponMakeshiftLaser
   description: Better pray it won't burn your hands off.
   components:
+  - type: GunExecutionWhitelist
   - type: Sprite
     sprite: Objects/Weapons/Guns/Battery/makeshift.rsi
     layers:
@@ -322,9 +326,11 @@
 
 - type: entity
   name: laser carbine
-  parent: [BaseLaserRifle, BaseGunWieldable, BaseSecurityContraband]
+  parent: [BaseLaserRifle, BaseSecurityContraband]
   id: WeaponLaserCarbine
   description: Favoured by Nanotrasen Security for being cheap and easy to use.
+  components:
+  - type: GunExecutionWhitelist
 
 - type: entity
   name: practice laser carbine
@@ -345,6 +351,7 @@
   id: WeaponPulsePistol
   description: A state of the art energy pistol favoured as a sidearm by the NT operatives.
   components:
+  - type: GunExecutionWhitelist
   - type: Sprite
     sprite: Objects/Weapons/Guns/Battery/pulse_pistol.rsi
     layers:
@@ -381,6 +388,7 @@
   id: WeaponPulseCarbine
   description: A high tech energy carbine favoured by the NT-ERT operatives.
   components:
+  - type: GunExecutionWhitelist
   - type: Item
     size: Large
   - type: Sprite
@@ -419,6 +427,7 @@
   id: WeaponPulseRifle
   description: A weapon that is almost as infamous as its users.
   components:
+  - type: GunExecutionWhitelist
   - type: Item
     size: Huge
     shape:
@@ -455,6 +464,7 @@
   id: WeaponLaserCannon
   description: A heavy duty, high powered laser weapon.
   components:
+  - type: GunExecutionWhitelist
   - type: Item
     size: Huge
     shape:
@@ -522,6 +532,7 @@
   id: WeaponXrayCannon
   description: An experimental weapon that uses concentrated x-ray energy against its target.
   components:
+  - type: GunExecutionWhitelist
   - type: Item
     size: Huge
     shape:
@@ -721,6 +732,7 @@
   id: WeaponAntiqueLaser
   description: This is an antique laser pistol. All craftsmanship is of the highest quality. It is decorated with a mahogany grip and chrome filigree. The object menaces with spikes of energy. On the item is an image of a captain and a clown. The clown is dead. The captain is striking a heroic pose.
   components:
+  - type: GunExecutionWhitelist
   - type: Sprite
     sprite: Objects/Weapons/Guns/Battery/antiquelasergun.rsi
     layers:
@@ -765,6 +777,7 @@
   id: WeaponAdvancedLaser
   description: An experimental high-energy laser pistol with a self-charging nuclear battery.
   components:
+  - type: GunExecutionWhitelist
   - type: Item
     size: Normal
     shape:
@@ -869,6 +882,7 @@
   id: WeaponBehonkerLaser
   description: The eye of a behonker, it fires a laser when squeezed.
   components:
+  - type: GunExecutionWhitelist
   - type: Sprite
     sprite: Objects/Weapons/Guns/Battery/behonker_eye.rsi
     layers:
@@ -998,3 +1012,4 @@
   components:
   - type: HitscanBatteryAmmoProvider
     proto: RedHeavyLaser
+  - type: GunExecutionWhitelist

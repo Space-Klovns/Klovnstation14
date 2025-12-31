@@ -39,6 +39,7 @@
 # SPDX-FileCopyrightText: 2025 FrauzJ
 # SPDX-FileCopyrightText: 2025 John
 # SPDX-FileCopyrightText: 2025 K-Dynamic
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Leon Friedrich
 # SPDX-FileCopyrightText: 2025 RedBookcase
 # SPDX-FileCopyrightText: 2025 ScarKy0
@@ -209,7 +210,7 @@
   parent: [ClothingOuterStorageBase, AllowSuitStorageClothing, BaseSyndicateContraband]
   id: ClothingOuterVestWeb
   name: web vest
-  description: A synthetic armor vest. This one has added webbing and ballistic plates.
+  description: A synthetic armor vest. This one has added webbing and ballistic plates. Highly advanced circuitry inside allows it to resist arc flashes.
   components:
   - type: Sprite
     sprite: Clothing/OuterClothing/Vests/webvest.rsi
@@ -226,13 +227,16 @@
     damageCoefficient: 0.9
   - type: StaticPrice
     price: 1500
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #Elite web vest
 - type: entity
   parent: [ClothingOuterStorageBase, AllowSuitStorageClothing, BaseSyndicateContraband]
   id: ClothingOuterVestWebElite
   name: elite web vest
-  description: A synthetic armor vest. This one has added webbing and heat resistant fibers.
+  description: A synthetic armor vest. This one has added webbing and heat resistant fibers. Highly advanced circuitry inside allows it to resist arc flashes.
   components:
   - type: Sprite
     sprite: Clothing/OuterClothing/Vests/elitevest.rsi
@@ -256,6 +260,9 @@
     reduction: 0.85
   - type: StaticPrice
     price: 2500
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 #Mercenary web vest
 - type: entity
@@ -359,6 +366,9 @@
     autoRechargeRate: 2
   - type: Item
     size: Normal
+  - type: ClothingGrantComponent # KS14 - arc flash
+    component:
+    - type: ArcFlashInsulated
 
 - type: entity
   parent: [ClothingOuterBaseLarge, AllowSuitStorageClothing, BaseSecurityContraband]

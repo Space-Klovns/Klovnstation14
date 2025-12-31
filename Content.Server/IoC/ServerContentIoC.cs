@@ -36,7 +36,7 @@
 // SPDX-FileCopyrightText: 2025 beck-thompson
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
 //
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: MIT
 
 using Content.Server.Administration;
 using Content.Server.Administration.Logs;

@@ -326,3 +326,162 @@ Entries:
       message: Salvagevend now has seismic charges in its contraband inventory.
   id: 40
   time: '2025-12-23T19:49:27.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Tweak
+      message: Salvage now has more stuff to do in space.
+  id: 41
+  time: '2025-12-23T20:07:22.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: >-
+        High-power electronics can now cause arc flashes. Consult the guidebook
+        for more information!
+  id: 42
+  time: '2025-12-23T21:34:06.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: New gibbing effects.
+  id: 43
+  time: '2025-12-24T23:14:14.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added new reagent - klovnide. This reagent increases crit and death
+        threshold and can be created in chemistry lab by mixing some reagents,
+        including space salt from salt ore.
+    - type: Tweak
+      message: Decreased amount of salt ore.
+  id: 44
+  time: '2025-12-25T12:57:09.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: Deconstruction with RCD returns half the charges.
+  id: 45
+  time: '2025-12-25T15:34:23.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: Changed some visuals to look better
+  id: 46
+  time: '2025-12-25T17:16:42.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Remove
+      message: Scurrets are no longer accessible to players.
+  id: 47
+  time: '2025-12-28T00:03:58.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: 'R&D can now research and print the material silo board. '
+    - type: Fix
+      message: 'Fixed broken technology sprite in R&D research console UI. '
+  id: 48
+  time: '2025-12-28T10:18:30.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: Added voxes and dwarves back!
+  id: 49
+  time: '2025-12-28T10:54:39.0000000+00:00'
+- author: DecemberEpsilon
+  changes:
+    - type: Add
+      message: Added Meta and Omega back into rotation!
+    - type: Remove
+      message: Removed Amber, Plasma, Exo, Oasis from rotation
+  id: 50
+  time: '2025-12-28T10:55:37.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Fix
+      message: Fixed the molar mixer.
+  id: 51
+  time: '2025-12-28T11:51:45.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Tweak
+      message: The RD now has an anomaly locator roundstart.
+  id: 52
+  time: '2025-12-28T13:23:53.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: >-
+        Smart equip to your back slot is now available and is bound to F by
+        default.
+  id: 53
+  time: '2025-12-28T13:51:53.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Remove
+      message: Removed canister overlay pending rework and new pc [TODO]
+    - type: Add
+      message: Made more textures use emissive shader
+  id: 54
+  time: '2025-12-28T17:48:52.0000000+00:00'
+- author: FrauZj
+  changes:
+    - type: Tweak
+      message: Changed announcement sound
+  id: 55
+  time: '2025-12-28T21:38:48.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Portals made by the RD hand teleporter won't telefrag you anymore. All
+        other portals still do though, including bluespace anomalies.
+  id: 56
+  time: '2025-12-29T23:10:45.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Fix
+      message: Fixed TC price inconsistencies.
+  id: 57
+  time: '2025-12-30T16:35:26.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: You can now suicide and execute people with guns!
+    - type: Add
+      message: >-
+        The bartender now has a russian revolver in his booze cabinet, it cannot
+        be used as a normal gun, but it has no ammo UI, making it perfect for
+        russian roulette games!
+  id: 58
+  time: '2025-12-30T16:37:13.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added the plasma cutter, available to salvage in their lockers. It is
+        refilled by inserting plasma sheets or raw plasma ore into it. An
+        advanced variant exists and is researchable in T2 Mass Excavation.
+  id: 59
+  time: '2025-12-31T00:46:31.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: >-
+        You can now punch anomalies inside of disposal units. Requires a
+        G.O.R.I.L.L.A. gauntlet. 
+  id: 60
+  time: '2025-12-31T01:08:31.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: >-
+        The execute verb is now available on a wide variety of rifles, SMGs,
+        shotguns, and hitscan laser weapons.
+    - type: Add
+      message: You can now execute unrestricted targets with rifles.
+    - type: Tweak
+      message: Made the whole system event-based.
+  id: 61
+  time: '2025-12-31T13:37:47.0000000+00:00'

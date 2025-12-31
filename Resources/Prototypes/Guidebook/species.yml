@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Errant
 # SPDX-FileCopyrightText: 2025 DeusMaldPr
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 ScarKy0
+# SPDX-FileCopyrightText: 2025 nabegator220
 #
 # SPDX-License-Identifier: MIT
 
@@ -12,12 +14,12 @@
   children:
 #  - Arachnid
 #  - Diona
-#  - Dwarf
+  - Dwarf
   - Human
 #  - Moth
 #  - Reptilian
 #  - SlimePerson
-#  - Vox
+  - Vox
 #  - Vulpkanin
 
 #- type: guideEntry
@@ -30,10 +32,10 @@
 #  name: species-name-diona
 #  text: "/ServerInfo/Guidebook/Mobs/Diona.xml"
 
-#- type: guideEntry
-#  id: Dwarf
-#  name: species-name-dwarf
-#  text: "/ServerInfo/Guidebook/Mobs/Dwarf.xml"
+- type: guideEntry
+  id: Dwarf
+  name: species-name-dwarf
+  text: "/ServerInfo/Guidebook/Mobs/Dwarf.xml"
 
 - type: guideEntry
   id: Human
@@ -55,10 +57,10 @@
 #  name: species-name-slime
 #  text: "/ServerInfo/Guidebook/Mobs/SlimePerson.xml"
 
-#- type: guideEntry
-#  id: Vox
-#  name: species-name-vox
-#  text: "/ServerInfo/Guidebook/Mobs/Vox.xml"
+- type: guideEntry
+  id: Vox
+  name: species-name-vox
+  text: "/ServerInfo/Guidebook/Mobs/Vox.xml"
 
 #- type: guideEntry
 #  id: Vulpkanin

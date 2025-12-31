@@ -1,3 +1,13 @@
+// SPDX-FileCopyrightText: 2024 Celene
+// SPDX-FileCopyrightText: 2024 Mervill
+// SPDX-FileCopyrightText: 2024 Scribbles0
+// SPDX-FileCopyrightText: 2025 Gerkada
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+// SPDX-FileCopyrightText: 2025 nabegator220
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 using Content.Shared.ActionBlocker;
 using Content.Shared.Chat;
 using Content.Shared.CombatMode;
@@ -105,9 +115,10 @@ public sealed class SharedExecutionSystem : EntitySystem
         if (!TryComp<MobStateComponent>(victim, out var mobState))
             return false;
 
+        // KS14: Youre now allowed to execute the dead
         // You're not allowed to execute dead people (no fun allowed)
-        if (_mobState.IsDead(victim, mobState))
-            return false;
+        // if (_mobState.IsDead(victim, mobState))
+        //     return false;
 
         // You must be able to attack people to execute
         if (!_actionBlocker.CanAttack(attacker, victim))
@@ -151,7 +162,7 @@ public sealed class SharedExecutionSystem : EntitySystem
         args.Handled = true;
     }
 
-    private void ShowExecutionInternalPopup(string locString, EntityUid attacker, EntityUid victim, EntityUid weapon, bool predict = true)
+    public void ShowExecutionInternalPopup(string locString, EntityUid attacker, EntityUid victim, EntityUid weapon, bool predict = true) // Made public by goobstation
     {
         if (predict)
         {
@@ -173,7 +184,7 @@ public sealed class SharedExecutionSystem : EntitySystem
         }
     }
 
-    private void ShowExecutionExternalPopup(string locString, EntityUid attacker, EntityUid victim, EntityUid weapon)
+    public void ShowExecutionExternalPopup(string locString, EntityUid attacker, EntityUid victim, EntityUid weapon) // Made public by goobstation
     {
         _popup.PopupEntity(
             Loc.GetString(locString, ("attacker", Identity.Entity(attacker, EntityManager)), ("victim", Identity.Entity(victim, EntityManager)), ("weapon", weapon)),

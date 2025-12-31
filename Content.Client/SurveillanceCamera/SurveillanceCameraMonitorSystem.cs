@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2023 metalgearsloth
 // SPDX-FileCopyrightText: 2025 Hagvan
 //
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: MIT
 
 using Robust.Shared.Utility;
 
@@ -21,7 +21,7 @@ public sealed class SurveillanceCameraMonitorSystem : EntitySystem
         while (query.MoveNext(out var uid, out var comp))
         {
             var curTime = _gameTiming.CurTime; // Goobstation
-            comp.TimeLeft -= (float) (curTime - comp.PreviousCurTime).TotalSeconds; // Goobstation
+            comp.TimeLeft -= (float)(curTime - comp.PreviousCurTime).TotalSeconds; // Goobstation
 
             if (comp.TimeLeft <= 0)
             {

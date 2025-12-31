@@ -57,6 +57,7 @@
 # SPDX-FileCopyrightText: 2025 BramvanZijp
 # SPDX-FileCopyrightText: 2025 Coolsurf6
 # SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Nemanja
 # SPDX-FileCopyrightText: 2025 ScarKy0
 # SPDX-FileCopyrightText: 2025 Theodore Lukin
@@ -65,7 +66,7 @@
 # SPDX-FileCopyrightText: 2025 keronshb
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 
 - type: entityTable
   id: LockerFillQuarterMaster
@@ -356,6 +357,8 @@
     - id: CargoRequestScienceComputerCircuitboard
     - id: StationAiFixerCircuitboard
     - id: RubberStampRd
+    - id: ClothingOuterSuitArc # KS14
+    - id: AnomalyLocator #KS14 - same shit as goob
 
 # Hardsuit table, used for suit storage as well
 - type: entityTable

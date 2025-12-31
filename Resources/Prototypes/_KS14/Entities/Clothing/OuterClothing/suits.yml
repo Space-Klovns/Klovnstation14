@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: entity
+  parent: [ClothingOuterBaseLarge, AllowSuitStorageClothing]
+  id: ClothingOuterSuitArc
+  name: arc flash suit
+  description: "A suit that protects against arc flashes, common to working with high-powered electrical equipment. It won't work without its hood."
+  components:
+  - type: Sprite
+    sprite: _KS14/Clothing/OuterClothing/Suits/arc.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Shock: 0.3
+  - type: Clothing
+    sprite: _KS14/Clothing/OuterClothing/Suits/arc.rsi
+  - type: GroupExamine
+  - type: ToggleableClothing
+    clothingPrototype: ClothingHeadHatHoodArc
+    slot: head
+  - type: ContainerContainer
+    containers:
+      toggleable-clothing: !type:ContainerSlot {}
+  - type: ProtectedFromStepTriggers
+    slots: WITHOUT_POCKET
+  - type: HideLayerClothing
+    slots:
+    - Tail

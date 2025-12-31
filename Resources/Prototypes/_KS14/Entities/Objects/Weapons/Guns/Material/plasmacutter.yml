@@ -1,0 +1,143 @@
+# SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+# Normalise in-file tags
+- type: Tag
+  id: PlasmaCutter
+
+## Basic plasmacutter
+
+- type: entity
+  parent: BaseItem
+  id: WeaponPlasmaCutter
+  name: plasma cutter
+  description: A proficient mining tool.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Guns/Battery/plasmacutter.rsi
+    state: icon
+  - type: Tag
+    tags:
+    - Sidearm
+    - PlasmaCutter
+  - type: Item
+    size: Normal
+    shape:
+    - 0,0,2,1
+  - type: Gun
+    fireRate: 1
+    projectileSpeed: 25
+    soundGunshot:
+      path: /Audio/_KS14/Weapons/Guns/Gunshots/plasmacutter.ogg
+    selectedMode: SemiAuto
+    availableModes:
+    - SemiAuto
+  - type: AmmoCounter
+  - type: Clothing
+    sprite: Objects/Weapons/Guns/Battery/taser.rsi
+    quickEquip: false
+    slots:
+    - Belt
+    - suitStorage
+
+  - type: PhysicalComposition
+    materialComposition:
+      Steel: 125
+      Glass: 75
+      Plasma: 75
+  - type: StaticPrice
+    price: 600
+
+  # Material charge
+  - type: Battery
+    maxCharge: 10000
+    startingCharge: 10000
+  - type: MaterialStorage
+    storageLimit: 0 # as charge is full, we don't need to fill it
+    dropOnDeconstruct: false
+    canEjectStoredMaterials: false
+    materialWhiteList:
+    - Plasma # takes processed plasma..
+    - RawPlasma # ..and raw plasma (ore)
+  - type: ChargeByMaterialStorage
+    consumeAddedMaterials: true
+    adjustStorageLimitAccordingToBatteryCharge: true
+    gainRatio: 100 # 1 sheet is 100cm3, and 1 sheet should refill 10kJ (full battery)
+  - type: ProjectileBatteryAmmoProvider
+    proto: BulletPlasmaCutter
+    fireCost: 500  # 20 shots
+
+
+- type: entity
+  parent: BaseBullet
+  id: BulletPlasmaCutter
+  name: cutter bolt
+  categories: [ HideSpawnMenu ]
+  description: Not too bad, but you still don't want to get hit by it.
+  components:
+  - type: Sprite
+    noRot: false
+    sprite: _KS14/Objects/Weapons/Guns/Projectiles/bullet_cutter.rsi
+    layers:
+    - state: icon
+      shader: unshaded
+  - type: Reflective
+    reflective:
+    - Energy
+  - type: GatheringProjectile
+    deleteOnHittingUngatherable: true
+    amount: 15 # 15 tiles at most
+  - type: Projectile
+    deleteOnCollide: false
+    damage:
+      types:
+        Heat: 5
+        Structural: 40
+  - type: StaminaDamageOnCollide
+    damage: 20
+  - type: TimedDespawn
+    lifetime: 0.24 # 6m at 25m/s
+  - type: PointLight
+    radius: 2
+    color: "#800080"
+
+## Adv. plasmacutter
+
+- type: entity
+  parent: WeaponPlasmaCutter
+  id: WeaponAdvancedPlasmaCutter
+  name: advanced plasma cutter
+  description: Upgraded version of tool very popular amongst miners.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Guns/Battery/advplasmacutter.rsi
+  - type: Gun
+    fireRate: 1.5
+    soundGunshot:
+      path: /Audio/_KS14/Weapons/Guns/Gunshots/plasmacutter.ogg
+  - type: ProjectileBatteryAmmoProvider
+    proto: BulletPlasmaCutter
+    fireCost: 250  # 40 shots (x2 of basic plascutter)
+  - type: PhysicalComposition
+    materialComposition:
+      Steel: 200
+      Glass: 75
+      Uranium: 100
+      Plasma: 50 # its STILL a plasma cutter
+  - type: StaticPrice
+    price: 1200
+
+- type: entity
+  id: BulletAdvancedPlasmaCutter
+  parent: BulletPlasmaCutter
+  components:
+  - type: Projectile
+    damage:
+      types:
+        Heat: 18
+        Structural: 100
+  - type: TimedDespawn
+    lifetime: 0.4 # 10m at 25m/s
