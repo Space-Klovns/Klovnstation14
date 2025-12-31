@@ -1,3 +1,26 @@
+// SPDX-FileCopyrightText: 2022 metalgearsloth
+// SPDX-FileCopyrightText: 2023 Alex Evgrashin
+// SPDX-FileCopyrightText: 2023 HerCoyote23
+// SPDX-FileCopyrightText: 2023 Interrobang01
+// SPDX-FileCopyrightText: 2023 Kara
+// SPDX-FileCopyrightText: 2023 Leon Friedrich
+// SPDX-FileCopyrightText: 2023 Visne
+// SPDX-FileCopyrightText: 2023 Vordenburg
+// SPDX-FileCopyrightText: 2023 gus
+// SPDX-FileCopyrightText: 2023 router
+// SPDX-FileCopyrightText: 2024 Kot
+// SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2024 SlamBamActionman
+// SPDX-FileCopyrightText: 2024 Thomas
+// SPDX-FileCopyrightText: 2024 Vasilis
+// SPDX-FileCopyrightText: 2025 FrauzJ
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2025 nabegator220
+// SPDX-FileCopyrightText: 2025 slarticodefast
+//
+// SPDX-License-Identifier: MIT
+
 using System.Collections.Frozen;
 using System.Text.RegularExpressions;
 using Content.Shared.Popups;
@@ -29,7 +52,7 @@ public abstract class SharedChatSystem : EntitySystem
     public const int WhisperClearRange = 2; // how far whisper goes while still being understandable, in world units
     public const int WhisperMuffledRange = 5; // how far whisper goes at all, in world units
     public static readonly SoundSpecifier DefaultAnnouncementSound
-        = new SoundPathSpecifier("/Audio/Announcements/announce.ogg");
+        = new SoundPathSpecifier("/Audio/_KS14/Announcements/announce.ogg"); //KS14 change
 
     public static readonly ProtoId<RadioChannelPrototype> CommonChannel = "Common";
 

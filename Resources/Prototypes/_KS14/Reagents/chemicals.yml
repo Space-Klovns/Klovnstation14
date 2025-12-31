@@ -1,0 +1,58 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MIT
+
+- type: reagent
+  id: SpaceSalt
+  name: reagent-name-space-salt
+  desc: reagent-desc-space-salt
+  group: Biological
+  flavor: salty
+  physicalDesc: reagent-physical-desc-cloudy
+  color: "#b9bf95"
+  metabolisms:
+    Food:
+      effects:
+      - !type:SatiateHunger
+
+- type: reagent
+  id: Klovnide
+  name: reagent-name-klovnide
+  desc: reagent-desc-klovnide
+  group: Biological
+  flavor: chalky
+  physicalDesc: reagent-physical-desc-bubbling
+  color: "#c95151"
+  boilingPoint: 415.15
+  meltingPoint: 408.15
+  metabolisms:
+    Medicine:
+      effects:
+      - !type:ModifyStatusEffect
+        effectProto: StatusEffectSafeCritHumanoid
+        time: 3
+        type: Update
+
+      # Purge sleep chems
+      - !type:AdjustReagent
+        conditions:
+        - !type:ReagentThreshold
+          reagent: Nocturine
+          min: 1
+        reagent: Nocturine
+        amount: -3
+      - !type:AdjustReagent
+        conditions:
+        - !type:ReagentThreshold
+          reagent: NorepinephricAcid
+          min: 1
+        reagent: NorepinephricAcid
+        amount: -10
+      - !type:AdjustReagent
+        conditions:
+        - !type:ReagentThreshold
+          reagent: ChloralHydrate
+          min: 1
+        reagent: ChloralHydrate
+        amount: -10

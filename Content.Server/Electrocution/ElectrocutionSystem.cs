@@ -38,7 +38,7 @@
 // SPDX-FileCopyrightText: 2025 nabegator220
 // SPDX-FileCopyrightText: 2025 slarticodefast
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Server.Administration.Logs;
 using Content.Server.NodeContainer;
@@ -293,7 +293,7 @@ public sealed class ElectrocutionSystem : SharedElectrocutionSystem
                 lastRet = TryDoElectrocution(
                     entity,
                     uid,
-                    (int) (electrified.ShockDamage * MathF.Pow(RecursiveDamageMultiplier, depth)),
+                    (int)(electrified.ShockDamage * MathF.Pow(RecursiveDamageMultiplier, depth)),
                     TimeSpan.FromSeconds(electrified.ShockTime * MathF.Pow(RecursiveTimeMultiplier, depth)),
                     true,
                     electrified.SiemensCoefficient,
@@ -323,7 +323,7 @@ public sealed class ElectrocutionSystem : SharedElectrocutionSystem
                     entity,
                     uid,
                     node,
-                    (int) (electrified.ShockDamage * MathF.Pow(RecursiveDamageMultiplier, depth) * damageScalar),
+                    (int)(electrified.ShockDamage * MathF.Pow(RecursiveDamageMultiplier, depth) * damageScalar),
                     TimeSpan.FromSeconds(electrified.ShockTime * MathF.Pow(RecursiveTimeMultiplier, depth) * timeScalar),
                     true,
                     electrified.SiemensCoefficient,
@@ -443,7 +443,7 @@ public sealed class ElectrocutionSystem : SharedElectrocutionSystem
 
         if (shockDamage != null)
         {
-            shockDamage = (int) (shockDamage * siemensCoefficient);
+            shockDamage = (int)(shockDamage * siemensCoefficient);
 
             if (shockDamage.Value <= 0)
                 return false;

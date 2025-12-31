@@ -35,6 +35,8 @@
 # SPDX-FileCopyrightText: 2025 DeusMaldPr
 # SPDX-FileCopyrightText: 2025 FrauZj
 # SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 Gerkada
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Nox
 # SPDX-FileCopyrightText: 2025 RedBookcase
 # SPDX-FileCopyrightText: 2025 SlamBamActionman
@@ -242,6 +244,7 @@
     proto: CartridgeMagnum
   - type: StaticPrice
     price: 0
+  - type: GunExecutionWhitelist
 
 - type: entity
   parent: WeaponPistolFlintlock

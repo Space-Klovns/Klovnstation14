@@ -36,7 +36,7 @@
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 metalgearsloth
 //
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: MIT
 
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;

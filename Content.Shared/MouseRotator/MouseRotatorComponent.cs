@@ -4,7 +4,7 @@
 // SPDX-FileCopyrightText: 2025 Gerkada
 // SPDX-FileCopyrightText: 2025 Tayrtahn
 //
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: MIT
 
 using System.Numerics;
 using Robust.Shared.GameStates;

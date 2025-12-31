@@ -1,134 +1,150 @@
 {
   "version": 1,
   "license": "CC-BY-SA-3.0",
-  "copyright": "Taken from TauCetiClassic at commit https://github.com/TauCetiStation/TauCetiClassic/tree/13b5c47145804dd24507b75f250de5e87d34e194. Zipion and zipion-1 modified from original by Klovnstation 14.",
+  "copyright": "Taken from https://github.com/tgstation/tgstation at commit f6d46d048038d855533476162a98dcc2d7fc2466 . Modified by LaCumbiaDelCoronavirus.",
   "size": {
     "x": 32,
     "y": 32
   },
   "states": [
     {
-      "name": "black"
+      "name": "mapme"
     },
     {
-      "name": "black-1"
+      "name": "base"
     },
     {
-      "name": "blue"
+      "name": "add_shader"
     },
     {
-      "name": "blue-1"
+      "name": "multi_shader"
     },
     {
-      "name": "can-connector"
+      "name": "multi_shader_broken"
     },
     {
-      "name": "locked"
+      "name": "outline"
     },
     {
-      "name": "unlocked"
+      "name": "outline_broken"
     },
     {
-      "name": "can-o0",
-      "delays": [
-        [
-          0.5,
-          0.5
-        ]
-      ]
+      "name": "lights"
     },
     {
-      "name": "can-o1"
+      "name": "stripe"
     },
     {
-      "name": "can-o2"
+      "name": "stripe_broken"
     },
     {
-      "name": "can-o3"
+      "name": "double_stripe"
     },
     {
-      "name": "can-oa1"
+      "name": "double_stripe_broken"
+    },
+    {
+      "name": "hazard_stripes"
+    },
+    {
+      "name": "hazard_stripes_broken"
+    },
+    {
+      "name": "broken"
+    },
+    {
+      "name": "broken_cutout"
     },
     {
       "name": "can-open"
     },
     {
-      "name": "grey"
+      "name": "can-connector"
     },
     {
-      "name": "grey-1"
+      "name": "window-base"
     },
     {
-      "name": "orange"
+      "name": "window-base_broken"
     },
     {
-      "name": "orange-1"
+      "name": "window-mask"
     },
     {
-      "name": "red"
+      "name": "can-3"
     },
     {
-      "name": "red-1"
+      "name": "can-2"
     },
     {
-      "name": "redws"
+      "name": "can-1"
     },
     {
-      "name": "redws-1"
+      "name": "can-0",
+      "delays": [
+        [
+          0.2,
+          0.2
+        ]
+      ]
     },
     {
-      "name": "yellow"
+      "name": "tier1"
     },
     {
-      "name": "yellow-1"
+      "name": "tier2"
     },
     {
-      "name": "green"
+      "name": "tier3",
+      "delays": [
+        [
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      ]
     },
     {
-      "name": "green-1"
+      "name": "can-3-light"
     },
     {
-      "name": "greenys"
+      "name": "can-2-light"
     },
     {
-      "name": "greenys-1"
+      "name": "can-1-light"
     },
     {
-      "name": "darkblue"
+      "name": "can-0-light",
+      "delays": [
+        [
+          0.2,
+          0.2
+        ]
+      ]
     },
     {
-      "name": "darkblue-1"
+      "name": "cell_hatch"
     },
     {
-      "name": "frezon"
-    },
-    {
-      "name": "frezon-1"
-    },
-    {
-      "name": "water_vapor"
-    },
-    {
-      "name": "water_vapor-1"
-    },
-    {
-      "name": "zipion"
-    },
-    {
-      "name": "zipion-1"
-    },
-    {
-      "name": "argon"
-    },
-    {
-      "name": "argon-1"
-    },
-    {
-      "name": "scrubber-connector"
-    },
-    {
-      "name": "scrubber-open"
+      "name": "shielding",
+      "delays": [
+        [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      ]
     }
   ]
 }

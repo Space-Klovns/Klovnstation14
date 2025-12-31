@@ -1,0 +1,75 @@
+light_mode unshaded;
+
+uniform highp float bloom_intensity = 1.5;
+
+void fragment() {
+    lowp vec4 color = zTextureSpec(TEXTURE, UV);
+        
+    // Hardcoded 7-tap Gaussian kernel (σ = 1.0)
+    const lowp float gauss_weights[13] = float[13](
+        0.382,  //  0σ
+
+        /// CARDINALS
+        // Left
+        0.006,  // -3σ X
+        0.061,  // -2σ X
+        0.242,  // -1σ X
+        // Right
+        0.242,  // +1σ X //0.49193
+        0.061,  // +2σ X //0.24698
+        0.006,  // +3σ X
+
+
+        // Down
+        0.006,  // -3σ Y
+        0.061,  // -2σ Y
+        0.242,  // -1σ Y
+        // Up
+        0.242,  // +1σ Y
+        0.061,  // +2σ Y
+        0.006   // +3σ Y
+    );
+
+    // Offsets for each weight
+    const lowp vec2 gauss_offsets[13] = vec2[13](
+        vec2(0.0, 0.0), //  0σ
+
+        /// CARDINALS
+        // Left
+        vec2(-3, 0),  // -3σ X
+        vec2(-2, 0),  // -2σ X
+        vec2(-1, 0),  // -1σ X
+        // Right
+        vec2(1, 0),   // +1σ X
+        vec2(2, 0),   // +2σ X
+        vec2(3, 0),   // +3σ X
+
+        // Down
+        vec2(0, -3),  // -3σ Y
+        vec2(0, -2),  // -2σ Y
+        vec2(0, -1),  // -1σ Y
+        // Up
+        vec2(0, 1),   // +1σ Y
+        vec2(0, 2),   // +2σ Y
+        vec2(0, 3)    // +3σ Y
+    );
+
+    // Gaussian-ish blur
+    lowp vec4 blur = vec4(0.0);
+    for (int i = 0; i < 13; i++) {
+        lowp vec2 offset = gauss_offsets[i] * TEXTURE_PIXEL_SIZE;
+        lowp vec2 sampleUV2 = UV2 + offset;
+
+        // demented hack to make sure things outside of the current texture but in the atlas aren't sampled
+        // also cuts off sampling at the edges of textures but WHO CARES
+        if (sampleUV2.x <= 0.1 || sampleUV2.x >= 0.9 ||
+            sampleUV2.y <= 0.1 || sampleUV2.y >= 0.9)
+        {
+            continue;
+        }
+
+        blur += zTextureSpec(TEXTURE, UV + offset) * gauss_weights[i];
+    }
+    
+    COLOR = color + blur * bloom_intensity;
+}

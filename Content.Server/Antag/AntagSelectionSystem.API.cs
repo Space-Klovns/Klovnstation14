@@ -7,7 +7,7 @@
 // SPDX-FileCopyrightText: 2025 beck-thompson
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
 //
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: MIT
 
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -185,14 +185,14 @@ public sealed partial class AntagSelectionSystem
         if (roles.Count == 0)
             return false;
 
-        var pref = (HumanoidCharacterProfile) _pref.GetPreferences(session.UserId).SelectedCharacter;
+        var pref = (HumanoidCharacterProfile)_pref.GetPreferences(session.UserId).SelectedCharacter;
 
         var valid = false;
 
         // Check each individual antag role
         foreach (var role in roles)
         {
-            var list = new List<ProtoId<AntagPrototype>>{role};
+            var list = new List<ProtoId<AntagPrototype>> { role };
 
 
             if (pref.AntagPreferences.Contains(role)

@@ -1,6 +1,9 @@
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 jhrushbe
+// SPDX-FileCopyrightText: 2025 rottenheadphones
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: CC-BY-NC-SA-3.0
 
 using Content.Server._FarHorizons.NodeContainer.Nodes;
 using Content.Server.Atmos.EntitySystems;

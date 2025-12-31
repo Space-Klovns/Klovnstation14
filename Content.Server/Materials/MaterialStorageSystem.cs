@@ -1,4 +1,20 @@
-﻿using System.Linq;
+// SPDX-FileCopyrightText: 2022 Chief-Engineer
+// SPDX-FileCopyrightText: 2022 Kevin Zheng
+// SPDX-FileCopyrightText: 2023 Hannah Giovanna Dawson
+// SPDX-FileCopyrightText: 2023 Leon Friedrich
+// SPDX-FileCopyrightText: 2023 Rane
+// SPDX-FileCopyrightText: 2023 Vasilis
+// SPDX-FileCopyrightText: 2023 metalgearsloth
+// SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Nemanja
+// SPDX-FileCopyrightText: 2025 Winkarst
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+// SPDX-FileCopyrightText: 2025 nabegator220
+//
+// SPDX-License-Identifier: MIT
+
+using System.Linq;
 using Content.Server.Administration.Logs;
 using Content.Shared.Materials;
 using Content.Shared.Popups;
@@ -107,7 +123,7 @@ public sealed class MaterialStorageSystem : SharedMaterialStorageSystem
                 ("machine", receiver),
                 ("item", toInsert)),
             receiver);
-        QueueDel(toInsert);
+        //QueueDel(toInsert); // KS14: Commented
 
         // Logging
         TryComp<StackComponent>(toInsert, out var stack);

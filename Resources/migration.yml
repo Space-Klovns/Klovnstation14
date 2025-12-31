@@ -60,7 +60,7 @@
 # SPDX-FileCopyrightText: 2025 slarticodefast
 # SPDX-FileCopyrightText: 2025 āda
 #
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 
 # This is a basic dictionary that maps old entity prototype ids to new ids. This only works for entity prototypes, and
 # is intended to allow maps to load without having to manually edit them. An empty or "null" string results in the

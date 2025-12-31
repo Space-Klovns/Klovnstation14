@@ -1,3 +1,12 @@
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Hannah Giovanna Dawson
+// SPDX-FileCopyrightText: 2023 Leon Friedrich
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Nemanja
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+//
+// SPDX-License-Identifier: MIT
+
 using Content.Shared.Whitelist;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
@@ -23,6 +32,8 @@ public sealed partial class MaterialStorageComponent : Component
     ///     How much material the storage can store in total.
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite), DataField]
+    [Access(Other = AccessPermissions.ReadWriteExecute)] // KS14
+    [AutoNetworkedField] // KS14
     public int? StorageLimit;
 
     /// <summary>

@@ -1,3 +1,23 @@
+// SPDX-FileCopyrightText: 2023 Chief-Engineer
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Kara
+// SPDX-FileCopyrightText: 2023 Leon Friedrich
+// SPDX-FileCopyrightText: 2023 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2023 Vordenburg
+// SPDX-FileCopyrightText: 2023 keronshb
+// SPDX-FileCopyrightText: 2023 metalgearsloth
+// SPDX-FileCopyrightText: 2024 Moony
+// SPDX-FileCopyrightText: 2024 icekot8
+// SPDX-FileCopyrightText: 2024 moonheart08
+// SPDX-FileCopyrightText: 2024 nikthechampiongr
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 ScarKy0
+// SPDX-FileCopyrightText: 2025 SlamBamActionman
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+// SPDX-FileCopyrightText: 2025 slarticodefast
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Server.Administration.Logs;
 using Content.Server.Popups;
 using Content.Shared.DoAfter;
@@ -96,8 +116,14 @@ public sealed class HandTeleporterSystem : EntitySystem
             timeout.EnteredPortal = null;
             component.FirstPortal = Spawn(component.FirstPortalPrototype, Transform(user).Coordinates);
 
-            if (component.AllowPortalsOnDifferentMaps && TryComp<PortalComponent>(component.FirstPortal, out var portal))
-                portal.CanTeleportToOtherMaps = true;
+            // KS14 - sets FragOnTargetTileOccupied to false
+            if (TryComp<PortalComponent>(component.FirstPortal, out var portal))
+            {
+                portal.FragOnTargetTileOccupied = false;
+
+                if (component.AllowPortalsOnDifferentMaps)
+                    portal.CanTeleportToOtherMaps = true;
+            }
 
             _adminLogger.Add(LogType.EntitySpawn, LogImpact.High, $"{ToPrettyString(user):player} opened {ToPrettyString(component.FirstPortal.Value)} at {Transform(component.FirstPortal.Value).Coordinates} using {ToPrettyString(uid)}");
             _audio.PlayPvs(component.NewPortalSound, uid);
@@ -118,8 +144,14 @@ public sealed class HandTeleporterSystem : EntitySystem
             timeout.EnteredPortal = null;
             component.SecondPortal = Spawn(component.SecondPortalPrototype, Transform(user).Coordinates);
 
-            if (component.AllowPortalsOnDifferentMaps && TryComp<PortalComponent>(component.SecondPortal, out var portal))
-                portal.CanTeleportToOtherMaps = true;
+            // KS14 - sets FragOnTargetTileOccupied to false
+            if (TryComp<PortalComponent>(component.SecondPortal, out var portal))
+            {
+                portal.FragOnTargetTileOccupied = false;
+
+                if (component.AllowPortalsOnDifferentMaps)
+                    portal.CanTeleportToOtherMaps = true;
+            }
 
             _adminLogger.Add(LogType.EntitySpawn, LogImpact.High, $"{ToPrettyString(user):player} opened {ToPrettyString(component.SecondPortal.Value)} at {Transform(component.SecondPortal.Value).Coordinates} linked to {ToPrettyString(component.FirstPortal!.Value)} using {ToPrettyString(uid)}");
             _link.TryLink(component.FirstPortal!.Value, component.SecondPortal.Value, true);

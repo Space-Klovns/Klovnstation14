@@ -1,3 +1,10 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 deltanedas
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: MIT
+
 ## Static
 
 - type: latheRecipePack
@@ -18,7 +25,7 @@
   id: Mining
   recipes:
   - MiningDrill
-  - MiningDrillDiamond
+  - WeaponAdvancedPlasmaCutter # KS14, replaced diamond mining drill with adv. plasmacutter
   - MineralScannerEmpty
   - AdvancedMineralScannerEmpty
   - OreBagOfHolding

@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 slarticodefast
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Shared.Damage;
 using Content.Shared.Damage.Prototypes;

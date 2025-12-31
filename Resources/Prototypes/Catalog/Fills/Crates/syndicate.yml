@@ -1,11 +1,23 @@
+# SPDX-FileCopyrightText: 2022 Alex Evgrashin
+# SPDX-FileCopyrightText: 2022 Rinkashikachi
+# SPDX-FileCopyrightText: 2023 Hyenh
+# SPDX-FileCopyrightText: 2024 AlexUm & XGabriel08X
+# SPDX-FileCopyrightText: 2024 Nemanja
+# SPDX-FileCopyrightText: 2024 Plykiya
+# SPDX-FileCopyrightText: 2024 lzk
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: entity
   id: CrateSyndicateSurplusBundle
   parent: [ CrateSyndicate, StorePresetUplink, BaseSyndicateContraband ]
   name: Syndicate surplus crate
-  description: Contains 50 telecrystals worth of completely random Syndicate items. It can be useless junk or really good.
+  description: Contains 150 telecrystals worth of completely random Syndicate items. It can be useless junk or really good.
   components:
     - type: SurplusBundle
-      totalPrice: 50
+      totalPrice: 150
 
 - type: entity
   id: CrateCybersunJuggernautBundle
@@ -26,7 +38,7 @@
   id: CrateSyndicateSuperSurplusBundle
   parent: [ CrateSyndicate, StorePresetUplink, BaseSyndicateContraband ]
   name: Syndicate super surplus crate
-  description: Contains 125 telecrystals worth of completely random Syndicate items.
+  description: Contains 375 telecrystals worth of completely random Syndicate items.
   components:
     - type: SurplusBundle
-      totalPrice: 125
+      totalPrice: 375

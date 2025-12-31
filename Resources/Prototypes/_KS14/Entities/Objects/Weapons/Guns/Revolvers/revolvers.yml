@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: 2025 Gerkada
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- type: entity # Goob, the normal revolver but no ammo counter
+  name: Russian Revolver
+  parent: BaseItem
+  id: WeaponRussianRevolver
+  description: The latest in Nanotrasen’s recreational department, a normal revolver but with built guards around the cylinder to prevent seeing what slot bullets are in, has special sensors preventing it from shooting anyone who isn't cuffed or isn't the user, fun for the whole family!.
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Revolvers/inspector.rsi
+    state: icon
+  - type: Clothing
+    sprite: Objects/Weapons/Guns/Revolvers/inspector.rsi
+    quickEquip: false
+    slots:
+    - suitStorage
+    - Belt
+  - type: Item
+    size: Small
+    shape:
+    - 0,0,1,0
+    - 0,1,0,1
+  - type: Tag
+    tags:
+    - Sidearm
+  - type: Gun
+    selectedMode: SemiAuto
+    fireRate: 0 # Good luck firing it
+    availableModes:
+    - SemiAuto
+    soundGunshot:
+      path: /Audio/Weapons/Guns/Gunshots/revolver.ogg
+  - type: UseDelay
+    delay: 0.66
+  - type: ContainerContainer
+    containers:
+      revolver-ammo: !type:Container
+  - type: RevolverAmmoProvider
+    whitelist:
+      tags:
+        - CartridgeMagnum
+        - SpeedLoaderMagnum
+    capacity: 6
+    chambers: [ true, true, true, true, true, true ]
+    ammoSlots: [ null, null, null, null, null, null ]
+    soundEject:
+      path: /Audio/Weapons/Guns/MagOut/revolver_magout.ogg
+    soundInsert:
+      path: /Audio/Weapons/Guns/MagIn/revolver_magin.ogg
+  - type: StaticPrice
+    price: 500
+  - type: GunExecutionWhitelist

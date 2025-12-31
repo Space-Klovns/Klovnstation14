@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2025 DeusMaldPr
+# SPDX-FileCopyrightText: 2025 Gerkada
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 #
@@ -32,6 +33,7 @@
   - type: Construction
     graph: mk1Graph
     node: mk1
+  - type: GunExecutionWhitelist
 
 # TODO use this for mk1 construction when you can craft mags etc
 - type: entity

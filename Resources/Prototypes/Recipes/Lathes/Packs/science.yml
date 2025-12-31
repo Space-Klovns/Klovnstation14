@@ -1,3 +1,16 @@
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 Entvari
+# SPDX-FileCopyrightText: 2025 Flareguy
+# SPDX-FileCopyrightText: 2025 Gerkada
+# SPDX-FileCopyrightText: 2025 Nemanja
+# SPDX-FileCopyrightText: 2025 SharkSnake98
+# SPDX-FileCopyrightText: 2025 deltanedas
+# SPDX-FileCopyrightText: 2025 slarticodefast
+# SPDX-FileCopyrightText: 2025 āda
+# SPDX-FileCopyrightText: 2025 Голубь
+#
+# SPDX-License-Identifier: MIT
+
 ## Static
 
 - type: latheRecipePack
@@ -74,6 +87,7 @@
   - CircuitImprinterHyperConvectionMachineCircuitboard
   - TechDiskComputerCircuitboard
   - FlatpackerMachineCircuitboard
+  - MaterialSiloMachineCircuitboard
   - SheetifierMachineCircuitboard
   - PowerCageRechargerCircuitboard
   - AnalysisComputerCircuitboard

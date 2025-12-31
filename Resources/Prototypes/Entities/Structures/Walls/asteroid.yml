@@ -34,6 +34,7 @@
 # SPDX-FileCopyrightText: 2025 Firewars763
 # SPDX-FileCopyrightText: 2025 FrauzJ
 # SPDX-FileCopyrightText: 2025 Ilya246
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Leon Friedrich
 # SPDX-FileCopyrightText: 2025 Nemanja
 # SPDX-FileCopyrightText: 2025 brainfood1183
@@ -50,10 +51,11 @@
 
 #Asteroid rock
 - type: entity
-  id: AsteroidRock
+  id: BaseUngatherableAsteroidRock # KS14
   parent: BaseWall
   name: asteroid rock
   description: A rocky asteroid.
+  abstract: true # KS14
   components:
   - type: Transform
     noRot: true
@@ -104,6 +106,17 @@
         layer:
         - WallLayer
         density: 2000
+
+# KS14
+- type: entity
+  parent: BaseUngatherableAsteroidRock
+  id: AsteroidRock
+  components:
+  - type: SoundOnGather # KS14 - Plasmacutter
+  - type: Gatherable # KS14 - Plasmacutter
+    toolWhitelist:
+      tags:
+      - PlasmaCutter
 
 - type: entity
   abstract: true
@@ -469,7 +482,7 @@
       map: [ "enum.MiningScannerVisualLayers.Overlay" ]
 
 - type: entity
-  parent: [ BaseRockGibtonite, AsteroidRock ]
+  parent: [ BaseRockGibtonite, BaseUngatherableAsteroidRock ]
   id: AsteroidRockGibtonite
   components:
   - type: Sprite
@@ -499,11 +512,12 @@
     oreRarityPrototypeId: RandomOreDistributionStandard
 
 - type: entity
-  id: IronRock
-  parent: AsteroidRock
+  id: BaseUngatherableIronRock # KS14
+  parent: BaseUngatherableAsteroidRock # KS14
   name: ironrock
   suffix: Low Ore Yield
   description: A rocky asteroid.
+  abstract: true # KS14
   components:
   - type: IconSmooth
     key: walls
@@ -524,6 +538,17 @@
       state: ironrock_north
     - map: [ "enum.EdgeLayer.West" ]
       state: ironrock_west
+
+# KS14
+- type: entity
+  parent: BaseUngatherableIronRock
+  id: IronRock
+  components:
+  - type: SoundOnGather # KS14 - Plasmacutter
+  - type: Gatherable # KS14 - Plasmacutter
+    toolWhitelist:
+      tags:
+      - PlasmaCutter
 
 - type: entity
   id: IronRockMining
@@ -768,7 +793,7 @@
       map: [ "enum.MiningScannerVisualLayers.Overlay" ]
 
 - type: entity
-  parent: [ BaseRockGibtonite, IronRock ]
+  parent: [ BaseRockGibtonite, BaseUngatherableIronRock ]
   id: IronRockGibtonite
   components:
   - type: Sprite
@@ -823,9 +848,10 @@
     toolWhitelist:
       tags:
       - Pickaxe
+      - PlasmaCutter # KS14 - Plasmacutter  
   - type: Damageable
     damageContainer: StructuralInorganic
-    damageModifierSet: Rock # KS14
+    damageModifierSet: Rock # KS14, Metallic -> Rock
   - type: Destructible
     thresholds:
     - trigger:

@@ -105,7 +105,6 @@ public sealed class StainSystem : EntitySystem
         }
 
         Dirty(entity);
-        Log.Debug($"Applying stain at offset: {offset}, for entity: {ToPrettyString(entity.Owner)}");
     }
 
     /// <summary>
@@ -139,6 +138,5 @@ public sealed class StainSystem : EntitySystem
         }
 
         AddOffsetStain((entity, entity.Comp2), sourceRelativeToEntityPosition.Normalized() * -coefficient, color, rotationScale);
-        Log.Debug($"At source: (local) {sourceCoordinates.Position}");
     }
 }

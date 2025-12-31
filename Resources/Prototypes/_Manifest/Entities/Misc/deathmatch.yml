@@ -1,0 +1,138 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: entity
+  parent: MarkerBase
+  id: ProceduralSpawnDeathmatch
+  name: deathmatch spawnpoint
+  components:
+  - type: Sprite
+    layers:
+    - state: red
+
+- type: entity
+  id: BaseDeathmatchBarrier
+  placement:
+    mode: SnapgridCenter
+  abstract: true
+  components:
+  - type: Transform
+    anchored: true
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        mask:
+        - FullTileMask
+        layer:
+        - WallLayer
+  - type: Airtight
+
+- type: entity
+  parent: BaseDeathmatchBarrier
+  id: HolosignForcefieldDeathmatch
+  name: impenetrable force field
+  description: As the name implies.
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Sprite
+    sprite: Structures/Holo/field.rsi
+    state: icon
+    color: '#FFFFFF' # fully white, 100% alpha
+  - type: Clickable
+
+- type: entity
+  parent: HolosignForcefieldDeathmatch
+  id: HolosignMetaphysicalForcefieldDeathmatch
+  name: metaphysical force field
+  description: A force field that blocks metaphysical things and gases from passing through it.
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Sprite
+    sprite: Structures/Holo/field.rsi
+    layers:
+    - state: icon
+      color: '#FFFFFFCC' # fully white, 50% alpha
+      shader: Noir
+  - type: Clickable
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        mask:
+        - FullTileMask
+        - GhostImpassable
+
+- type: entity
+  parent: BaseDeathmatchBarrier
+  id: WallStaticDeathmatch
+  name: deathmatch static barrier
+  components:
+  - type: Sprite
+    sprite: Structures/Holo/field.rsi
+    layers:
+    - state: icon
+      shader: CameraStatic
+  - type: Tag
+    tags:
+    - HideContextMenu
+  - type: Occluder
+
+- type: entity
+  parent: BaseDeathmatchBarrier
+  id: WallHallucination
+  name: disrupted wall
+  description: It's staring back at you. Holy shit.
+  components:
+  - type: Sprite
+    sprite: Structures/Walls/solid.rsi
+    layers:
+    - state: full
+      shader: Stealth
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        mask:
+        - FullTileMask
+        - GhostImpassable # This is a hallucination wall so hallucinations shouldn't be able to get past it.
+        layer:
+        - WallLayer
+  - type: Tag
+    tags:
+    - HideContextMenu
+  - type: Occluder
+
+- type: entity
+  id: FloorHallucinationEntity
+  name: weird floor
+  description: What the fuck is wrong with this floor??! Holy shit!
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Physics
+    bodyType: Static
+    canCollide: false
+  - type: Transform
+    anchored: true
+  - type: Sprite
+    sprite: Decals/Overlays/greyscale.rsi
+    layers:
+    - sprite: Decals/Overlays/greyscale.rsi
+      state: fulltile_overlay
+      shader: Stealth
+  - type: Tag
+    tags:
+    - HideContextMenu

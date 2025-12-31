@@ -7,7 +7,7 @@
 // SPDX-FileCopyrightText: 2025 Tayrtahn
 // SPDX-FileCopyrightText: 2025 eoineoineoin
 //
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: MIT
 
 using Content.Client.Pinpointer.UI; // Goobstation
 using Content.Client.Resources;

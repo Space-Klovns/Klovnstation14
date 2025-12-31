@@ -11,7 +11,7 @@
 // SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
 // SPDX-FileCopyrightText: 2025 metalgearsloth
 //
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: MIT
 
 using Content.Server.Administration.Logs;
 using Content.Server.DeviceNetwork.Systems;

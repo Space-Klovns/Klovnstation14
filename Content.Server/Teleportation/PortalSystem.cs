@@ -7,7 +7,7 @@
 // SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Server.Destructible; // KS14 Addition
 using Content.Shared.Administration.Logs;

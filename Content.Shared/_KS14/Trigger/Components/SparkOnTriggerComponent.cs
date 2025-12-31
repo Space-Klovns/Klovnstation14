@@ -35,7 +35,7 @@ public sealed partial class SparkOnTriggerComponent : BaseXOnTriggerComponent
     ///     Prototype to spawn as sparks.
     /// </summary>
     [DataField]
-    public EntProtoId Prototype = "EffectSparks";
+    public EntProtoId Prototype = "EffectSparkMoving";
 
     /// <summary>
     ///     Sound to play upon trigger, at position of sparks.
