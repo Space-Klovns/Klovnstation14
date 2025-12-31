@@ -5,7 +5,7 @@
 // SPDX-FileCopyrightText: 2025 Nemanja
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Shared.Whitelist;
 using Robust.Shared.Audio;
