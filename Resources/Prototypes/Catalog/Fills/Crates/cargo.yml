@@ -249,9 +249,7 @@
     - id: ClothingHeadHatCardborg
       prob: 0.01
       orGroup: Clothes
-    - id: ClothingUnderSocksCoder
-      prob: 0.01
-      orGroup: Clothes
+    # KS14: Removed slop
     - id: ClothingUniformJumpskirtOfLife
       prob: 0.01
       orGroup: Clothes
@@ -296,48 +294,7 @@
       prob: 0.01
       orGroup: Swag
     #plushies
-    - id: PlushieRGBee
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieGhost
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieHampter
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieGhostRevenant
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushiePenguin
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieHuman
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieLizard
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieRouny
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieLamp
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieSharkBlue
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieMoth
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieVulp
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieArachind
-      prob: 0.01
-      orGroup: Plushies
-    - id: PlushieThrongler #hehe
-      prob: 0.0005
-      orGroup: Plushies
+    # KS14: Removed slop plushies
     #useful
     - id: AmeJar
       prob: 0.01

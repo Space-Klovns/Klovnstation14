@@ -81,52 +81,7 @@
         orGroup: GiftPool
       - id: JetpackMiniFilled
         orGroup: GiftPool
-      - id: PlushieGhost
-        orGroup: GiftPool
-      - id: PlushieBee
-        orGroup: GiftPool
-      - id: PlushieRGBee
-        orGroup: GiftPool
-      - id: PlushieNuke
-        orGroup: GiftPool
-      - id: PlushieRouny
-        orGroup: GiftPool
-      - id: PlushieLizard #Weh!
-        orGroup: GiftPool
-      - id: PlushieRainbowLizard
-        orGroup: GiftPool
-      - id: PlushieNar
-        orGroup: GiftPool
-      - id: PlushieCarp
-        orGroup: GiftPool
-      - id: PlushieMagicarp
-        orGroup: GiftPool
-      - id: PlushieHolocarp
-        orGroup: GiftPool
-      - id: PlushieRainbowCarp
-        orGroup: GiftPool
-      - id: PlushieSlime
-        orGroup: GiftPool
-      - id: PlushieSnake
-        orGroup: GiftPool
-      - id: PlushieVox
-        orGroup: GiftPool
-      - id: PlushieRatvar
-        orGroup: GiftPool
-      - id: PlushieSpaceLizard
-        orGroup: GiftPool
-      - id: PlushieSharkBlue
-        orGroup: GiftPool
-      - id: PlushieSharkPink
-        orGroup: GiftPool
-      - id: PlushieSharkGrey
-        orGroup: GiftPool
-      - id: ToyAmongPequeno
-        orGroup: GiftPool
-      - id: PlushieDiona
-        orGroup: GiftPool
-      - id: PlushieArachind
-        orGroup: GiftPool
+      # KS14: Removed slop
       - id: ClothingNeckCloakMoth
         orGroup: GiftPool
       - id: TennisBall
@@ -253,10 +208,7 @@
         orGroup: GiftPool
       - id: ClothingShoeSlippersDuck
         orGroup: GiftPool
-      - id: ClothingUnderSocksBee
-        orGroup: GiftPool
-      - id: ClothingUnderSocksCoder
-        orGroup: GiftPool
+      # KS14: Removed slop
       - id: ClothingBeltUtilityFilled
         orGroup: GiftPool
       - id: WeaponFlareGun
