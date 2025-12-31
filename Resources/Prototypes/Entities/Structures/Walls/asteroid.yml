@@ -77,12 +77,6 @@
     - map: [ "enum.EdgeLayer.West" ]
       state: rock_asteroid_west
   - type: MiningScannerViewable
-  - type: SoundOnGather
-  - type: Gatherable
-    toolWhitelist:
-      tags:
-      - Pickaxe
-  - type: Damageable
   - type: Damageable
     damageContainer: StructuralInorganic
     damageModifierSet: Rock
@@ -831,7 +825,7 @@
       - Pickaxe
   - type: Damageable
     damageContainer: StructuralInorganic
-    damageModifierSet: Rock
+    damageModifierSet: Rock # KS14
   - type: Destructible
     thresholds:
     - trigger:
