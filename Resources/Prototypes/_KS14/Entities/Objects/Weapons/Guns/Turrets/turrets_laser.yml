@@ -4,12 +4,15 @@
 # SPDX-License-Identifier: MPL-2.0
 
 - type: entity
-  parent: BaseWeaponTurret
-  id: WeaponTurretSyndicateLaserDisposable
+  parent: [BaseWeaponTurret, BaseSyndicateContraband]
+  id: WeaponTurretSyndicateLaser
   name: laser turret
-  suffix: Syndicate, Disposable
+  suffix: Syndicate, Laser
   description: A self-charging laser turret. Set it and forget it.
   components:
+  - type: NpcFactionMember
+    factions:
+    - Syndicate
   - type: Sprite
     sprite: _KS14/Objects/Weapons/Guns/Turrets/turrets.rsi
     drawdepth: Mobs
@@ -24,26 +27,6 @@
   - type: BatterySelfRecharger
     autoRecharge: true
     autoRechargeRate: 40
-  - type: Construction
-    deconstructionTarget: null
-    graph: WeaponTurretSyndicateDisposable
-    node: disposableTurret
-  - type: Destructible
-    thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 100
-      behaviors:
-      - !type:TriggerBehavior
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
-  - type: ExplodeOnTrigger
-  - type: Explosive
-    explosionType: Default
-    maxIntensity: 10
-    intensitySlope: 1.5
-    totalIntensity: 30
-    canCreateVacuum: false
   - type: Gun
     fireRate: 1
     selectedMode: FullAuto
@@ -54,9 +37,14 @@
   - type: HitscanBatteryAmmoProvider
     proto: RedMediumLaser
     fireCost: 100
-  - type: NpcFactionMember
-    factions:
-    - Syndicate
-  - type: Repairable
-    qualityNeeded: "Anchoring"
-    doAfterDelay: 3
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalGlassBreak
