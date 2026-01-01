@@ -28,7 +28,7 @@
   # KS14: bring saltern back; no longer fallback
   stations:
     Saltern:
-      stationProto: StandardNanotrasenStation
+      stationProto: ATSlessNanotrasenStation
       components:
         - type: StationNameSetup
           mapNameTemplate: '{0} Saltern {1}'
