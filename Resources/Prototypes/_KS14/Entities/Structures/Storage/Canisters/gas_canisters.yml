@@ -5,7 +5,7 @@
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 
 - type: entity
   parent: GasCanister
@@ -15,13 +15,18 @@
   components:
   - type: Sprite
     layers:
-    - sprite: _KS14/Structures/Storage/canister.rsi
-      state: zipion
+    - state: multi_shader
+      color: "#0f0f0f"
+    - state: double_stripe
+      color: "#9e0664"
+    - state: outline
+      color: "#0f0f0f"
+    - state: window-base
   - type: GasCanister
     gasMixture:
       volume: 1500
       moles:
-        Zipion: 2769.36 # Zipion
+        Zipion: 2769.36
       temperature: 293.15
   - type: Destructible
     thresholds:
@@ -55,8 +60,14 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    sprite: _KS14/Structures/Storage/canister.rsi
-    state: zipion-1
+    layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#0f0f0f"
+    - state: double_stripe_broken
+      color: "#9e0664"
+    - state: outline_broken
+      color: "#0f0f0f"
 
 - type: entity
   parent: GasCanister
@@ -66,8 +77,13 @@
   components:
   - type: Sprite
     layers:
-    - sprite: _KS14/Structures/Storage/canister.rsi
-      state: argon
+    - state: multi_shader
+      color: "#00d5ff"
+    - state: double_stripe
+      color: "#990685"
+    - state: outline
+      color: "#00d5ff"
+    - state: window-base
   - type: GasCanister
     gasMixture:
       volume: 1500
@@ -106,5 +122,11 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    sprite: _KS14/Structures/Storage/canister.rsi
-    state: argon-1
+    layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#00d5ff"
+    - state: double_stripe_broken
+      color: "#990685"
+    - state: outline_broken
+      color: "#00d5ff"

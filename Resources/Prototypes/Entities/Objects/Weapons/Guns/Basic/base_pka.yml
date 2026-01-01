@@ -24,6 +24,7 @@
     - SemiAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/kinetic_accel.ogg
+    projectileSpeed: 25
   - type: AmmoCounter
   - type: Appearance
   - type: GenericVisualizer
@@ -49,3 +50,9 @@
     - Belt
   - type: UseDelay
     delay: 1
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gun/gun_pick_up.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gun/gun_drop.ogg

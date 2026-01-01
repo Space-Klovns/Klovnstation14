@@ -1,4 +1,13 @@
-﻿using System.Diagnostics.CodeAnalysis;
+// SPDX-FileCopyrightText: 2024 ElectroJr
+// SPDX-FileCopyrightText: 2025 B_Kirill
+// SPDX-FileCopyrightText: 2025 Kyle Tyo
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Leon Friedrich
+// SPDX-FileCopyrightText: 2026 Gerkada
+//
+// SPDX-License-Identifier: MIT
+
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using Robust.Shared.ContentPack;
@@ -23,6 +32,7 @@ public sealed class MapMigrationSystem : EntitySystem
     [Dependency] private readonly IResourceManager _resMan = default!;
 
     private const string MigrationFile = "/migration.yml";
+    private const string MigrationFileKs14 = "/migration_ks14.yml"; // KS14
 
     public override void Initialize()
     {
@@ -30,23 +40,34 @@ public sealed class MapMigrationSystem : EntitySystem
         SubscribeLocalEvent<BeforeEntityReadEvent>(OnBeforeReadEvent);
 
 #if DEBUG
-        if (!TryReadFile(out var mappings))
+        if (!TryReadFile(MigrationFile, out var mappings))
             return;
 
         // Verify that all of the entries map to valid entity prototypes.
         foreach (var node in mappings.Children.Values)
         {
-            var newId = ((ValueDataNode) node).Value;
+            var newId = ((ValueDataNode)node).Value;
+            if (!string.IsNullOrEmpty(newId) && newId != "null")
+                DebugTools.Assert(_protoMan.HasIndex<EntityPrototype>(newId), $"{newId} is not an entity prototype.");
+        }
+
+        if (!TryReadFile(MigrationFileKs14, out var mappingsKs)) // KS14
+            return;
+
+        // Verify that all of the entries map to valid entity prototypes.
+        foreach (var node in mappingsKs.Children.Values)
+        {
+            var newId = ((ValueDataNode)node).Value;
             if (!string.IsNullOrEmpty(newId) && newId != "null")
                 DebugTools.Assert(_protoMan.HasIndex<EntityPrototype>(newId), $"{newId} is not an entity prototype.");
         }
 #endif
     }
 
-    private bool TryReadFile([NotNullWhen(true)] out MappingDataNode? mappings)
+    private bool TryReadFile(string file, [NotNullWhen(true)] out MappingDataNode? mappings)
     {
         mappings = null;
-        var path = new ResPath(MigrationFile);
+        var path = new ResPath(file);
         if (!_resMan.TryContentFileRead(path, out var stream))
             return false;
 
@@ -56,13 +77,13 @@ public sealed class MapMigrationSystem : EntitySystem
         if (documents == null)
             return false;
 
-        mappings = (MappingDataNode) documents.Root;
+        mappings = (MappingDataNode)documents.Root;
         return true;
     }
 
-    private void OnBeforeReadEvent(BeforeEntityReadEvent ev)
+    private void ProcessEvent(ref BeforeEntityReadEvent ev, string file)
     {
-        if (!TryReadFile(out var mappings))
+        if (!TryReadFile(file, out var mappings))
             return;
 
         foreach (var (key, value) in mappings)
@@ -75,5 +96,11 @@ public sealed class MapMigrationSystem : EntitySystem
             else
                 ev.RenamedPrototypes.Add(key, valueNode.Value);
         }
+    }
+
+    private void OnBeforeReadEvent(BeforeEntityReadEvent ev)
+    {
+        ProcessEvent(ref ev, MigrationFile);
+        ProcessEvent(ref ev, MigrationFileKs14); // KS14
     }
 }

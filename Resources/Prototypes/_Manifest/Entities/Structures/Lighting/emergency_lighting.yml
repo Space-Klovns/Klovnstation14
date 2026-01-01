@@ -1,0 +1,133 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MIT
+
+### Abstracts
+
+- type: entity
+  parent: AlwaysPoweredWallLight
+  id: BaseAlwaysPoweredActiveEmergencyLight
+  name: emergency light
+  description: A small light with an internal battery that turns on as soon as it stops receiving any power, or in case of an emergency.
+  abstract: true
+  components:
+  - type: PointLight
+    enabled: true
+    radius: 5
+    energy: 0.6
+    offset: "0, 0.4"
+    color: "#ff0000"
+    mask: /Textures/Effects/LightMasks/double_cone.png
+  - type: RotatingLight
+    speed: 40
+  - type: Sprite
+    sprite: Structures/Wallmounts/Lighting/emergency_light.rsi
+
+- type: entity
+  id: BasePoweredEmergencyLight
+  abstract: true
+  components:
+  - type: ApcPowerReceiver
+  - type: ExtensionCableReceiver
+  - type: Battery
+    maxCharge: 30000
+    startingCharge: 30000 # only these mapped ones get free 30k charge
+  - type: PoweredLight
+  - type: GenericVisualizer
+    visuals:
+      enum.PoweredLightState.On:
+        enum.PoweredLightLayers.Glow:
+          False: { visible: false }
+          True: { visible: true }
+  - type: Appearance
+
+- type: entity
+  parent: BaseLightbulb
+  id: BaseLightbulbEmergency
+  abstract: true
+  components:
+  - type: LightBulb
+    lightRadius: 5
+    lightEnergy: 0.6
+
+### Prefabs
+## Red
+
+- type: entity
+  parent: BaseAlwaysPoweredActiveEmergencyLight
+  id: AlwaysPoweredActiveEmergencyLightRed
+  suffix: "Active, Always Powered, Red"
+  placement:
+    mode: SnapgridCenter
+    snap: [ Wallmount ]
+  components:
+  - type: PointLight
+    color: "#ff0000"
+  - type: Sprite
+    layers:
+    - map: ["enum.PoweredLightLayers.Base"]
+      state: base
+    - map: ["enum.PoweredLightLayers.Glow"]
+      state: emergency_light_on
+      color: "#ff0000"
+      shader: Emissive # KS14
+
+# - type: entity
+#   parent: BaseLightbulbEmergency
+#   name: red emergency light bulb
+#   id: LightbulbEmergencyRed
+#   components:
+#   - type: LightBulb
+#     color: "#ff0000"
+
+# - type: entity
+#   parent: [ BasePoweredEmergencyLight, AlwaysPoweredActiveEmergencyLightRed ]
+#   id: PoweredActiveEmergencyLightRed
+#   suffix: "Active, Red"
+#   placement:
+#     mode: SnapgridCenter
+#     snap: [ Wallmount ]
+#   components:
+#   - type: PoweredLight
+#     hasLampOnSpawn: LightbulbEmergencyRed
+
+## Violet
+
+- type: entity
+  parent: BaseAlwaysPoweredActiveEmergencyLight
+  id: AlwaysPoweredActiveEmergencyLightViolet
+  suffix: "Active, Always Powered, Violet"
+  placement:
+    mode: SnapgridCenter
+    snap: [ Wallmount ]
+  components:
+  - type: PointLight
+    color: "#ee82ee"
+  - type: Sprite
+    layers:
+    - map: ["enum.PoweredLightLayers.Base"]
+      state: base
+    - map: ["enum.PoweredLightLayers.Glow"]
+      state: emergency_light_on
+      color: "#ee82ee"
+      shader: Emissive # KS14
+
+# - type: entity
+#   parent: BaseLightbulbEmergency
+#   name: violet emergency light bulb
+#   id: LightbulbEmergencyViolet
+#   components:
+#   - type: LightBulb
+#     color: "#ee82ee"
+
+# - type: entity
+#   parent: [ BasePoweredEmergencyLight, AlwaysPoweredActiveEmergencyLightViolet ]
+#   id: PoweredActiveEmergencyLightViolet
+#   suffix: "Active, Violet"
+#   placement:
+#     mode: SnapgridCenter
+#     snap: [ Wallmount ]
+#   components:
+#   - type: PoweredLight
+#     hasLampOnSpawn: LightbulbEmergencyViolet

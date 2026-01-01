@@ -1,3 +1,4 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
@@ -42,7 +43,7 @@
       mirrorEntity: MolarMixerFlipped
     - type: Construction
       graph: GasTrinary
-      node: mixer
+      node: molarmixer
     - type: AmbientSound
       enabled: false
       volume: -9
@@ -63,7 +64,36 @@
   placement:
     mode: SnapgridCenter
   components:
+  - type: Sprite
+    sprite: _KS14/Structures/Piping/Atmospherics/molarmixer.rsi
+    layers:
+    - sprite: Structures/Piping/Atmospherics/pipe.rsi
+      state: pipeTrinaryConnectors
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+    - state: molarMixerF
+      map: [ "enum.SubfloorLayers.FirstLayer", "enabled" ]
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.FilterVisuals.Enabled:
+        enabled:
+          True: { state: molarMixerFOn }
+          False: { state: molarMixerF }
   - type: Flippable
     mirrorEntity: MolarMixer
   - type: Construction
-    node: mixerflipped
+    node: molarmixerflipped
+  - type: NodeContainer
+    nodes:
+      inlet:
+        !type:PipeNode
+        nodeGroupID: Pipe
+        pipeDirection: South
+      filter:
+        !type:PipeNode
+        nodeGroupID: Pipe
+        pipeDirection: West
+      outlet:
+        !type:PipeNode
+        nodeGroupID: Pipe
+        pipeDirection: North

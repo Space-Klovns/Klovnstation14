@@ -13,7 +13,7 @@
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 āda
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using System.Linq;
 using Content.Shared._KS14.Random.Helpers; // KS14 Addition

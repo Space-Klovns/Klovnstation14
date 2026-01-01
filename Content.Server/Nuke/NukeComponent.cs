@@ -32,6 +32,7 @@ using Content.Shared.Explosion;
 using Content.Shared.Nuke;
 using Robust.Shared.Audio;
 using Robust.Shared.Map;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 
 namespace Content.Server.Nuke
@@ -88,11 +89,11 @@ namespace Content.Server.Nuke
         [DataField("alertLevelOnActivate")] public string AlertLevelOnActivate = default!;
         [DataField("alertLevelOnDeactivate")] public string AlertLevelOnDeactivate = default!;
 
-       /// <summary>
-       ///     If the detonation should end the current round if on the main grid.
-       /// </summary>
-       [DataField("endRound")]
-       public bool EndRound = true;
+        /// <summary>
+        ///     If the detonation should end the current round if on the main grid.
+        /// </summary>
+        [DataField("endRound")]
+        public bool EndRound = true;
 
         /// <summary>
         ///     This is stored so we can do a funny by making 0 shift the last played note up by 12 semitones (octave)
@@ -196,6 +197,14 @@ namespace Content.Server.Nuke
         /// </summary>
         [DataField]
         public string EnteredCode = "";
+
+        /// <summary>
+        ///     Time at which the last nuke code was entered.
+        ///     Used to apply a cooldown to prevent clients from attempting to brute force the nuke code by sending keypad messages every tick.
+        ///     <seealso cref="SharedNukeComponent.EnterCodeCooldown"/>
+        /// </summary>
+        [DataField(customTypeSerializer: typeof(TimeOffsetSerializer))]
+        public TimeSpan LastCodeEnteredAt = TimeSpan.Zero;
 
         /// <summary>
         ///     Current status of a nuclear bomb.

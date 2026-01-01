@@ -28,6 +28,12 @@
     disguiseProto: ChameleonDisguise
   - type: StaticPrice
     price: 5000
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/multitool_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/multitool_drop.ogg
 
 - type: entity
   categories: [ HideSpawnMenu ]

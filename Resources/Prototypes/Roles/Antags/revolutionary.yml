@@ -16,7 +16,7 @@
   requirements:
   - !type:DepartmentTimeRequirement
     department: Security
-    time: 3600 #1 hrs, klovn
+    time: 1h #1 hrs, klovn
 
 - type: antag
   id: Rev

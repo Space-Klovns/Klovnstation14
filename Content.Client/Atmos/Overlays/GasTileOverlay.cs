@@ -1,8 +1,31 @@
+// SPDX-FileCopyrightText: 2020 Metal Gear Sloth
+// SPDX-FileCopyrightText: 2020 Víctor Aguilera Puerto
+// SPDX-FileCopyrightText: 2021 E F R
+// SPDX-FileCopyrightText: 2021 GraniteSidewalk
+// SPDX-FileCopyrightText: 2021 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2021 Vera Aguilera Puerto
+// SPDX-FileCopyrightText: 2022 Acruid
+// SPDX-FileCopyrightText: 2022 DrSmugleaf
+// SPDX-FileCopyrightText: 2022 hubismal
+// SPDX-FileCopyrightText: 2022 mirrorcult
+// SPDX-FileCopyrightText: 2023 Visne
+// SPDX-FileCopyrightText: 2023 Ygg01
+// SPDX-FileCopyrightText: 2024 Leon Friedrich
+// SPDX-FileCopyrightText: 2024 eoineoineoin
+// SPDX-FileCopyrightText: 2024 metalgearsloth
+// SPDX-FileCopyrightText: 2025 Kyle Tyo
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2025 TemporalOroboros
+//
+// SPDX-License-Identifier: MIT
+
 using System.Numerics;
 using Content.Client.Atmos.Components;
 using Content.Client.Atmos.EntitySystems;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
+using Content.Shared.Atmos.EntitySystems;
 using Content.Shared.Atmos.Prototypes;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
@@ -23,6 +46,7 @@ namespace Content.Client.Atmos.Overlays
 
         private readonly IEntityManager _entManager;
         private readonly IMapManager _mapManager;
+        private readonly SharedAtmosphereSystem _atmosphereSystem;
         private readonly SharedMapSystem _mapSystem;
         private readonly SharedTransformSystem _xformSys;
 
@@ -30,30 +54,31 @@ namespace Content.Client.Atmos.Overlays
         private readonly ShaderInstance _shader;
 
         // Gas overlays
-        private readonly float[] _timer;
-        private readonly float[][] _frameDelays;
-        private readonly int[] _frameCounter;
+        public readonly float[] _timer; // KS14: Made public
+        public readonly float[][] _frameDelays; // KS14: Made public
+        public readonly int[] _frameCounter; // KS14: Made public
 
         // TODO combine textures into a single texture atlas.
-        private readonly Texture[][] _frames;
+        public readonly Texture[][] _frames;
 
         // Fire overlays
         private const int FireStates = 3;
         private const string FireRsiPath = "/Textures/Effects/fire.rsi";
 
-        private readonly float[] _fireTimer = new float[FireStates];
-        private readonly float[][] _fireFrameDelays = new float[FireStates][];
-        private readonly int[] _fireFrameCounter = new int[FireStates];
-        private readonly Texture[][] _fireFrames = new Texture[FireStates][];
+        public readonly float[] _fireTimer = new float[FireStates]; // KS14: Made public
+        public readonly float[][] _fireFrameDelays = new float[FireStates][]; // KS14: Made public
+        public readonly int[] _fireFrameCounter = new int[FireStates]; // KS14: Made public
+        public readonly Texture[][] _fireFrames = new Texture[FireStates][]; // KS14: Made public
 
         private int _gasCount;
 
-        public const int GasOverlayZIndex = (int) Shared.DrawDepth.DrawDepth.Effects; // Under ghosts, above mostly everything else
+        public const int GasOverlayZIndex = (int)Shared.DrawDepth.DrawDepth.Effects; // Under ghosts, above mostly everything else
 
         public GasTileOverlay(GasTileOverlaySystem system, IEntityManager entManager, IResourceCache resourceCache, IPrototypeManager protoMan, SpriteSystem spriteSys, SharedTransformSystem xformSys)
         {
             _entManager = entManager;
             _mapManager = IoCManager.Resolve<IMapManager>();
+            _atmosphereSystem = entManager.System<SharedAtmosphereSystem>();
             _mapSystem = entManager.System<SharedMapSystem>();
             _xformSys = xformSys;
             _shader = protoMan.Index(UnshadedShader).Instance();
@@ -67,14 +92,14 @@ namespace Content.Client.Atmos.Overlays
 
             for (var i = 0; i < _gasCount; i++)
             {
-                var gasPrototype = protoMan.Index<GasPrototype>(system.VisibleGasId[i].ToString());
+                var gasPrototype = _atmosphereSystem.GetGas(system.VisibleGasId[i]);
 
                 SpriteSpecifier overlay;
 
                 if (!string.IsNullOrEmpty(gasPrototype.GasOverlaySprite) && !string.IsNullOrEmpty(gasPrototype.GasOverlayState))
-                    overlay = new SpriteSpecifier.Rsi(new (gasPrototype.GasOverlaySprite), gasPrototype.GasOverlayState);
+                    overlay = new SpriteSpecifier.Rsi(new(gasPrototype.GasOverlaySprite), gasPrototype.GasOverlayState);
                 else if (!string.IsNullOrEmpty(gasPrototype.GasOverlayTexture))
-                    overlay = new SpriteSpecifier.Texture(new (gasPrototype.GasOverlayTexture));
+                    overlay = new SpriteSpecifier.Texture(new(gasPrototype.GasOverlayTexture));
                 else
                     continue;
 
@@ -192,18 +217,18 @@ namespace Content.Client.Atmos.Overlays
                 {
                     if (!state.overlayQuery.TryGetComponent(uid, out var comp) ||
                         !state.xformQuery.TryGetComponent(uid, out var gridXform))
-                        {
-                            return true;
-                        }
+                    {
+                        return true;
+                    }
 
                     var (_, _, worldMatrix, invMatrix) = state.xformSys.GetWorldPositionRotationMatrixWithInv(gridXform);
                     state.drawHandle.SetTransform(worldMatrix);
                     var floatBounds = invMatrix.TransformBox(state.WorldBounds).Enlarged(grid.TileSize);
                     var localBounds = new Box2i(
-                        (int) MathF.Floor(floatBounds.Left),
-                        (int) MathF.Floor(floatBounds.Bottom),
-                        (int) MathF.Ceiling(floatBounds.Right),
-                        (int) MathF.Ceiling(floatBounds.Top));
+                        (int)MathF.Floor(floatBounds.Left),
+                        (int)MathF.Floor(floatBounds.Bottom),
+                        (int)MathF.Ceiling(floatBounds.Right),
+                        (int)MathF.Ceiling(floatBounds.Top));
 
                     // Currently it would be faster to group drawing by gas rather than by chunk, but if the textures are
                     // ever moved to a single atlas, that should no longer be the case. So this is just grouping draw calls

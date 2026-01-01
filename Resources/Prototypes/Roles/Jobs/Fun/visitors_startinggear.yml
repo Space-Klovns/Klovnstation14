@@ -1,9 +1,4 @@
-# SPDX-FileCopyrightText: 2024 IProduceWidgets
-# SPDX-FileCopyrightText: 2025 Andrew Malcolm O'Neill
-# SPDX-FileCopyrightText: 2025 Hitlinemoss
-# SPDX-FileCopyrightText: 2025 K-Dynamic
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-# SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: Contributors to the GoobStation14 project
 #
 # SPDX-License-Identifier: MPL-2.0
 
@@ -1024,8 +1019,21 @@
     belt: Bible
     ears: ClothingHeadsetService
     outerClothing: ClothingOuterPlagueSuit
+    # KS14 - Removed plushie
+    pocket1: FoodSnackEnergy
+
+- type: startingGear
+  id: VisitorChaplainAlt
+  equipment:
+    jumpsuit: ClothingUniformJumpsuitChaplain
+    shoes: ClothingShoesColorBlack
+    head: ClothingHeadHatHoodNunHood
+    id: VisitorPDA
+    belt: Bible
+    ears: ClothingHeadsetService
+    outerClothing: ClothingOuterNunRobe
+    # KS14 - Removed plushie
     pocket1: DrinkCoconutWaterCarton
-    pocket2: FoodSnackEnergy
 
 - type: startingGear
   id: VisitorChef

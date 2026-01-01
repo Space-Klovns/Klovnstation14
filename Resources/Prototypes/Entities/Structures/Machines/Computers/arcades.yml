@@ -37,7 +37,7 @@
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 
 - type: entity
   abstract: true
@@ -51,7 +51,7 @@
   - type: ExtensionCableReceiver
   - type: PointLight
     radius: 1.8
-    energy: 1.6
+    energy: 3.0
     color: "#3db83b"
   - type: LitOnPowered
   - type: Sprite
@@ -129,7 +129,7 @@
     - FoamBlade
     - FoamCutlass
     - Football
-    - GlowstickBase #green
+    - GlowstickGreen
     - GlowstickBlue
     - GlowstickYellow
     - GlowstickPurple
@@ -140,6 +140,15 @@
     - GunpetInstrument
     - BirdToyInstrument
     - MysteryFigureBox
+    # KS14 - Removed slop
+    - PlushieNuke
+    - PlushieCarp
+    - PlushieMagicarp
+    - PlushieHolocarp
+    - PlushieRainbowCarp
+    - PlushieRatvar
+    - PlushieNar
+    # KS14 - Removed slop
     - PlasticBanana
     - RevolverCapGun
     - SnapPopBox
@@ -147,14 +156,14 @@
     - ToyMouse
     - ToyAi
     - ToyNuke
-    - ToyGriffin
+    - ToyFigurineGriffin
     - ToyHonk
     - ToyIan
     - ToyMarauder
     - ToyMauler
     - ToyGygax
     - ToyOdysseus
-    - ToyOwlman
+    - ToyFigurineOwlman
     - ToyDeathRipley
     - ToyPhazon
     - ToyFireRipley
@@ -162,7 +171,7 @@
     - ToyRipley
     - ToySeraph
     - ToyDurand
-    - ToySkeleton
+    - ToyFigurineSkeleton
     - ToySword
     - ToyAmongPequeno
     - ToyRubberDuck

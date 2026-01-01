@@ -16,7 +16,7 @@
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 
 - type: entity
   id: AirSensorBase
@@ -112,6 +112,10 @@
         enum.PowerDeviceVisualLayers.Powered:
           True: { state: gsensor1 }
           False: { state: gsensor0 }
+  - type: Tag
+    tags:
+    - AirSensor
+    - ForceFixRotations
 
 - type: entity
   parent: BaseItem

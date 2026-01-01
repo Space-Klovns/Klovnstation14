@@ -1,3 +1,48 @@
+# SPDX-FileCopyrightText: 2019 Acruid
+# SPDX-FileCopyrightText: 2019 DamianX
+# SPDX-FileCopyrightText: 2019 L.E.D
+# SPDX-FileCopyrightText: 2020 AJCM-git
+# SPDX-FileCopyrightText: 2020 Hugo Laloge
+# SPDX-FileCopyrightText: 2020 Víctor Aguilera Puerto
+# SPDX-FileCopyrightText: 2020 lajolico
+# SPDX-FileCopyrightText: 2021 20kdc
+# SPDX-FileCopyrightText: 2021 DrSmugleaf
+# SPDX-FileCopyrightText: 2021 Paul Ritter
+# SPDX-FileCopyrightText: 2021 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2021 ShadowCommander
+# SPDX-FileCopyrightText: 2021 Swept
+# SPDX-FileCopyrightText: 2021 wrexbe
+# SPDX-FileCopyrightText: 2022 Chris V
+# SPDX-FileCopyrightText: 2022 Jacob Tong
+# SPDX-FileCopyrightText: 2022 Peptide90
+# SPDX-FileCopyrightText: 2022 Tomeno
+# SPDX-FileCopyrightText: 2022 Veritius
+# SPDX-FileCopyrightText: 2022 mirrorcult
+# SPDX-FileCopyrightText: 2023 Flareguy
+# SPDX-FileCopyrightText: 2023 Kara
+# SPDX-FileCopyrightText: 2023 Vordenburg
+# SPDX-FileCopyrightText: 2023 Whisper
+# SPDX-FileCopyrightText: 2023 crazybrain23
+# SPDX-FileCopyrightText: 2023 daerSeebaer
+# SPDX-FileCopyrightText: 2024 Ed
+# SPDX-FileCopyrightText: 2024 Emisse
+# SPDX-FileCopyrightText: 2024 IProduceWidgets
+# SPDX-FileCopyrightText: 2024 Jeff
+# SPDX-FileCopyrightText: 2024 Velcroboy
+# SPDX-FileCopyrightText: 2024 Zadeon
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2025 Firewars763
+# SPDX-FileCopyrightText: 2025 Ilya246
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Leon Friedrich
+# SPDX-FileCopyrightText: 2025 Nemanja
+# SPDX-FileCopyrightText: 2025 brainfood1183
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 lzk
+# SPDX-FileCopyrightText: 2025 slarticodefast
+#
+# SPDX-License-Identifier: MIT
+
 #TODO: Someone should probably move the ore vein prototypes into their own file, or otherwise split this up in some way. This should not be 1.5k lines long.
 
 # Anyway
@@ -5,10 +50,11 @@
 
 #Asteroid rock
 - type: entity
-  id: AsteroidRock
+  id: BaseUngatherableAsteroidRock # KS14
   parent: BaseWall
   name: asteroid rock
   description: A rocky asteroid.
+  abstract: true # KS14
   components:
   - type: Transform
     noRot: true
@@ -59,6 +105,17 @@
         layer:
         - WallLayer
         density: 2000
+
+# KS14
+- type: entity
+  parent: BaseUngatherableAsteroidRock
+  id: AsteroidRock
+  components:
+  - type: SoundOnGather # KS14 - Plasmacutter
+  - type: Gatherable # KS14 - Plasmacutter
+    toolWhitelist:
+      tags:
+      - PlasmaCutter
 
 - type: entity
   abstract: true
@@ -424,7 +481,7 @@
       map: [ "enum.MiningScannerVisualLayers.Overlay" ]
 
 - type: entity
-  parent: [ BaseRockGibtonite, AsteroidRock ]
+  parent: [ BaseRockGibtonite, BaseUngatherableAsteroidRock ]
   id: AsteroidRockGibtonite
   components:
   - type: Sprite
@@ -454,11 +511,12 @@
     oreRarityPrototypeId: RandomOreDistributionStandard
 
 - type: entity
-  id: IronRock
-  parent: AsteroidRock
+  id: BaseUngatherableIronRock # KS14
+  parent: BaseUngatherableAsteroidRock # KS14
   name: ironrock
   suffix: Low Ore Yield
   description: A rocky asteroid.
+  abstract: true # KS14
   components:
   - type: IconSmooth
     key: walls
@@ -479,6 +537,17 @@
       state: ironrock_north
     - map: [ "enum.EdgeLayer.West" ]
       state: ironrock_west
+
+# KS14
+- type: entity
+  parent: BaseUngatherableIronRock
+  id: IronRock
+  components:
+  - type: SoundOnGather # KS14 - Plasmacutter
+  - type: Gatherable # KS14 - Plasmacutter
+    toolWhitelist:
+      tags:
+      - PlasmaCutter
 
 - type: entity
   id: IronRockMining
@@ -723,7 +792,7 @@
       map: [ "enum.MiningScannerVisualLayers.Overlay" ]
 
 - type: entity
-  parent: [ BaseRockGibtonite, IronRock ]
+  parent: [ BaseRockGibtonite, BaseUngatherableIronRock ]
   id: IronRockGibtonite
   components:
   - type: Sprite
@@ -778,6 +847,7 @@
     toolWhitelist:
       tags:
       - Pickaxe
+      - PlasmaCutter # KS14 - Plasmacutter  
   - type: Damageable
     damageContainer: StructuralInorganic
     damageModifierSet: Metallic

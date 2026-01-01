@@ -1,4 +1,11 @@
-﻿#nullable enable
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Leon Friedrich
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+// SPDX-FileCopyrightText: 2025 nabegator220
+//
+// SPDX-License-Identifier: MIT
+
+#nullable enable
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
@@ -23,6 +30,8 @@ public class RaiseEventBenchmark
         PoolManager.Startup(typeof(BenchSystem).Assembly);
         _pair = PoolManager.GetServerClient().GetAwaiter().GetResult();
         var entMan = _pair.Server.EntMan;
+        var fact = _pair.Server.ResolveDependency<IComponentFactory>();
+        var bus = (EntityEventBus)entMan.EventBus;
         _sys = entMan.System<BenchSystem>();
 
         _pair.Server.WaitPost(() =>
@@ -30,6 +39,8 @@ public class RaiseEventBenchmark
             var uid = entMan.Spawn();
             _sys.Ent = new(uid, entMan.GetComponent<TransformComponent>(uid));
             _sys.Ent2 = new(_sys.Ent.Owner, _sys.Ent.Comp);
+            _sys.NetId = fact.GetRegistration<TransformComponent>().NetID!.Value;
+            _sys.EvSubs = bus.GetNetCompEventHandlers<BenchSystem.BenchEv>();
         })
             .GetAwaiter()
             .GetResult();
@@ -61,6 +72,12 @@ public class RaiseEventBenchmark
     }
 
     [Benchmark]
+    public int RaiseNetEvent()
+    {
+        return _sys.RaiseNetIdEvent();
+    }
+
+    [Benchmark]
     public int RaiseCSharpEvent()
     {
         return _sys.CSharpEvent();
@@ -74,6 +91,8 @@ public class RaiseEventBenchmark
         public delegate void EntityEventHandler(EntityUid uid, TransformComponent comp, ref BenchEv ev);
 
         public event EntityEventHandler? OnCSharpEvent;
+        public ushort NetId;
+        internal EntityEventBus.DirectedEventHandler?[] EvSubs = default!;
 
         public override void Initialize()
         {
@@ -92,7 +111,7 @@ public class RaiseEventBenchmark
         public int RaiseCompEvent()
         {
             var ev = new BenchEv();
-            EntityManager.EventBus.RaiseComponentEvent(Ent.Owner, Ent.Comp, ref ev);
+            RaiseComponentEvent(Ent.Owner, Ent.Comp, ref ev);
             return ev.N;
         }
 
@@ -100,7 +119,16 @@ public class RaiseEventBenchmark
         {
             // Raise with an IComponent instead of concrete type
             var ev = new BenchEv();
-            EntityManager.EventBus.RaiseComponentEvent(Ent2.Owner, Ent2.Comp, ref ev);
+            RaiseComponentEvent(Ent2.Owner, Ent2.Comp, ref ev);
+            return ev.N;
+        }
+
+        public int RaiseNetIdEvent()
+        {
+            // Raise a "IComponent" event using a net-id index delegate array (for PVS & client game-state events)
+            var ev = new BenchEv();
+            ref var unitEv = ref Unsafe.As<BenchEv, EntityEventBus.Unit>(ref ev);
+            EvSubs[NetId]?.Invoke(Ent2.Owner, Ent2.Comp, ref unitEv);
             return ev.N;
         }
 
@@ -118,6 +146,7 @@ public class RaiseEventBenchmark
         }
 
         [ByRefEvent]
+        [ComponentEvent(Exclusive = false)]
         public struct BenchEv
         {
             public int N;

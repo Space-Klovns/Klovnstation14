@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Content.Server.Store.Systems;
+using Content.Server.StoreDiscount.Systems;
 using Content.Server.Traitor.Uplink;
 using Content.Shared.FixedPoint;
 using Content.Shared.Inventory;
@@ -82,13 +83,15 @@ public sealed class StoreTests
 
             var storeComponent = entManager.GetComponent<StoreComponent>(pda);
             var discountComponent = entManager.GetComponent<StoreDiscountComponent>(pda);
+
+            // KS14: De-hardcoded value and added StoreDiscountSystem.DefaultTotalAvailableDiscounts
             Assert.That(
                 discountComponent.Discounts,
-                Has.Exactly(6).Items,
-                $"After applying discount total discounted items count was expected to be '6' "
-                + $"but was actually {discountComponent.Discounts.Count}- this can be due to discount "
+                Has.Exactly(StoreDiscountSystem.DefaultTotalAvailableDiscounts).Items,
+                $"After applying discount total discounted items count was expected to be '{StoreDiscountSystem.DefaultTotalAvailableDiscounts}' "
+                + $"but was actually {discountComponent.Discounts.Count}; this can be due to discount "
                 + $"categories settings (maxItems, weight) not being realistically set, or default "
-                + $"discounted count being changed from '6' in StoreDiscountSystem.InitializeDiscounts."
+                + $"discounted count being changed from '{StoreDiscountSystem.DefaultTotalAvailableDiscounts}' in StoreDiscountSystem.InitializeDiscounts."
             );
             var discountedListingItems = storeComponent.FullListingsCatalog
                                                        .Where(x => x.IsCostModified)

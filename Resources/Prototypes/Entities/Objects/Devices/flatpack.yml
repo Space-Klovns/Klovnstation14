@@ -35,6 +35,12 @@
       cpu_supply: "#A46106"
   - type: StaticPrice
     price: 250
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/materials/cardboard_pick_up.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/materials/cardboard_drop.ogg
 
 - type: entity
   parent: BaseFlatpack

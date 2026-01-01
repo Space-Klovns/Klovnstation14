@@ -65,7 +65,7 @@
 // SPDX-FileCopyrightText: 2025 Tayrtahn
 // SPDX-FileCopyrightText: 2025 metalgearsloth
 //
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: MIT
 
 using Content.Shared._KS14.SurveillanceCamera;
 using Content.Server.DeviceNetwork.Systems;

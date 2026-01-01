@@ -50,19 +50,19 @@
   requirements:
     - !type:DepartmentTimeRequirement
       department: Engineering
-      time: 7200 # 2 hours, klovn
+      time: 2h # 2 hours, klovn
     - !type:DepartmentTimeRequirement
       department: Medical
-      time: 7200 # 2 hours, klovn
+      time: 2h # 2 hours, klovn
 #    - !type:DepartmentTimeRequirement, klovn, redundant
 #      department: Science
-#      time: 14400 # 4 hours
+#      time: 4h # 4 hours
     - !type:DepartmentTimeRequirement
       department: Security
-      time: 14400 # 4 hours
+      time: 4h
     - !type:DepartmentTimeRequirement
       department: Command
-      time: 14400 # 4 hours
+      time: 4h
   weight: 20
   startingGear: CaptainGear
   icon: "JobIconCaptain"

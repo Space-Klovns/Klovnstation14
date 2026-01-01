@@ -14,6 +14,12 @@
     - HighRiskItem
   - type: StealTarget
     stealGroup: HandTeleporter
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/multitool_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/multitool_drop.ogg
 
 - type: entity
   id: HandTeleporterAdmeme

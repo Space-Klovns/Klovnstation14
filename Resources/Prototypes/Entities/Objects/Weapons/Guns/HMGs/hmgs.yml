@@ -24,6 +24,12 @@
       path: /Audio/Weapons/Guns/Empty/lmg_empty.ogg
   - type: StaticPrice
     price: 500
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_pickup1.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_drop1.ogg
   # No chamber because HMG may want its own
 
 - type: entity

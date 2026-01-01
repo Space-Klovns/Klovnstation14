@@ -9,7 +9,7 @@
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 
 - type: vendingMachineInventory
   id: SalvageEquipmentInventory
@@ -24,4 +24,5 @@
     WeaponGrapplingGun: 4
     WeaponProtoKineticAccelerator: 4
   contrabandInventory:
-    SeismicCharge: 2 #klovn - may be a mistake
+    PlushieCarp: 1
+    SeismicCharge: 2 # KS14 - may be a mistake

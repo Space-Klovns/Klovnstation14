@@ -17,7 +17,7 @@
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 
 # NOTE! All mobs that come out of this should have Salvage rulesets.
 # These rulesets exist because Salvage mobs kept harassing the station and going out of control.
@@ -102,6 +102,7 @@
         - MobTickSalvage
         - MobTickSalvage
         - MobTickSalvage
+        - PlushieCarp
         - DehydratedSpaceCarp
       chance: 0.25
       offset: 0.2
@@ -153,6 +154,7 @@
     - MobTickSalvage
     - MobTickSalvage
     - MobTickSalvage
+    - PlushieCarp
     - DehydratedSpaceCarp
     chance: 0.75
     offset: 0.2

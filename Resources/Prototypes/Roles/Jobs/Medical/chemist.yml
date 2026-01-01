@@ -28,7 +28,7 @@
   requirements:
     - !type:DepartmentTimeRequirement
       department: Medical
-      time: 7200 #2 hrs, klovn
+      time: 2h #2 hrs, klovn
   startingGear: ChemistGear
   icon: "JobIconChemist"
   supervisors: job-supervisors-cmo

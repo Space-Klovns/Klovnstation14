@@ -1,0 +1,68 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2026 Gerkada
+#
+# SPDX-License-Identifier: MIT
+
+# see the start of migration.yml on how to use this
+
+#2025-10-29 Remove spacelaw
+BookSpaceLaw: null
+
+#2025-12-23  Remove slop
+#plushies
+PlushieBee: null
+PlushieRGBee: null
+PlushieSlime: null
+PlushieSnake: null
+PlushieExperiment: null
+PlushieLizard: null
+PlushieLizardMirrored: null # DIfferent from below
+PlushieLizardInversed: null # Different from above
+PlushieSpaceLizard: null
+PlushieVox: null
+PlushieVulp: null
+PlushieRouny: null
+PlushieSharkBlue: null
+PlushieSharkGrey: null
+PlushieSharkPink: null
+PlushieDiona: null
+PlushieXeno: null
+PlushieHampter: null
+PlushieMoth: null
+PlushieArachind: null # [SIC]; yes, this prototype is actually spelt 'Arachind' and not 'Arachnid'
+PlushieAtmosian: null
+PlushiePenguin: null
+#crates
+CrateFunPlushie: null
+CrateFunLizardPlushieBulk: null
+CrateFunSharkPlushieBulk: null
+#vend+its items
+VendingMachinePride: null
+ClothingNeckLGBTPin: null
+ClothingNeckAromanticPin: null
+ClothingNeckAsexualPin: null
+ClothingNeckBisexualPin: null
+ClothingNeckGayPin: null
+ClothingNeckIntersexPin: null
+ClothingNeckLesbianPin: null
+ClothingNeckNonBinaryPin: null
+ClothingNeckPansexualPin: null
+ClothingNeckOmnisexualPin: null
+ClothingNeckTransPin: null
+ClothingNeckAutismPin: null
+ClothingNeckGoldAutismPin: null
+ClothingNeckCloakAce: null
+ClothingNeckCloakAro: null
+ClothingNeckCloakBi: null
+ClothingNeckCloakEnby: null
+ClothingNeckCloakGay: null
+ClothingNeckCloakIntersex: null
+ClothingNeckCloakLesbian: null
+ClothingNeckCloakPan: null
+ClothingNeckCloakTrans: null
+BedsheetRainbow: null
+ClothingHeadHatFlowerWreath: null
+ClothingUniformColorRainbow: null
+ClothingUnderSocksCoder: null
+ClothingUnderSocksBee: null
+ClothingNeckScarfStripedLesbianLong: null

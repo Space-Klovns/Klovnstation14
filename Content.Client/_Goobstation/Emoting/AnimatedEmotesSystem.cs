@@ -11,94 +11,31 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using System.Linq;
 using System.Numerics;
-using Content.Client.Animations;
-using Content.Client.DamageState;
 using Content.Shared._Goobstation.Emoting;
-using Content.Shared.Chat.Prototypes;
 using Robust.Client.Animations;
 using Robust.Client.GameObjects;
-using Robust.Client.Graphics;
 using Robust.Shared.Animations;
-using Robust.Shared.GameStates;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Timing;
 
 namespace Content.Client._Goobstation.Emoting;
 
-public sealed partial class AnimatedEmotesSystem : SharedAnimatedEmotesSystem
+public sealed partial class AnimatedEmotesSystem : EntitySystem
 {
     [Dependency] private readonly AnimationPlayerSystem _anim = default!;
-    [Dependency] private readonly IPrototypeManager _prot = default!;
-    // [Dependency] private readonly RaysSystem _rays = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly TransformSystem _transform = default!;
-
-    private const int TweakAnimationDurationMs = 1100; // 11 frames * 100ms per frame
-    private const int FlexAnimationDurationMs = 200 * 7; // 7 frames * 200ms per frame
 
     public override void Initialize()
     {
         base.Initialize();
 
-        SubscribeLocalEvent<AnimatedEmotesComponent, ComponentHandleState>(OnHandleState);
-
         SubscribeLocalEvent<AnimatedEmotesComponent, AnimationFlipEmoteEvent>(OnFlip);
         SubscribeLocalEvent<AnimatedEmotesComponent, AnimationSpinEmoteEvent>(OnSpin);
         SubscribeLocalEvent<AnimatedEmotesComponent, AnimationJumpEmoteEvent>(OnJump);
-        // SubscribeLocalEvent<AnimatedEmotesComponent, AnimationTweakEmoteEvent>(OnTweak);
-        // SubscribeLocalEvent<AnimatedEmotesComponent, AnimationFlexEmoteEvent>(OnFlex);
-        // SubscribeNetworkEvent<BibleFartSmiteEvent>(OnBibleSmite);
     }
 
-    // public void OnBibleSmite(BibleFartSmiteEvent args)
-    // {
-    //     EntityUid uid = GetEntity(args.Bible);
-    //     if (!_timing.IsFirstTimePredicted || uid == EntityUid.Invalid)
-    //         return;
-
-    //     var rays = _rays.DoRays(_transform.GetMapCoordinates(uid),
-    //         Color.LightGoldenrodYellow,
-    //         Color.AntiqueWhite,
-    //         10,
-    //         15,
-    //         minMaxRadius: new Vector2(3f, 6f),
-    //         minMaxEnergy: new Vector2(2f, 4f),
-    //         proto: "EffectRayCharge",
-    //         server: false);
-
-    //     if (rays == null)
-    //         return;
-
-    //     var track = EnsureComp<TrackUserComponent>(rays.Value);
-    //     track.User = uid;
-    // }
-
-    public void PlayEmote(EntityUid uid, Animation anim, string animationKey = "emoteAnimKeyId")
+    private static readonly Animation FlipAnimation = new()
     {
-        if (_anim.HasRunningAnimation(uid, animationKey))
-            return;
-
-        _anim.Play(uid, anim, animationKey);
-    }
-
-    private void OnHandleState(EntityUid uid, AnimatedEmotesComponent component, ref ComponentHandleState args)
-    {
-        if (args.Current is not AnimatedEmotesComponentState state
-        || !_prot.TryIndex<EmotePrototype>(state.Emote, out var emote))
-            return;
-
-        if (emote.Event != null)
-            RaiseLocalEvent(uid, emote.Event);
-    }
-
-    private void OnFlip(Entity<AnimatedEmotesComponent> ent, ref AnimationFlipEmoteEvent args)
-    {
-        var a = new Animation
-        {
-            Length = TimeSpan.FromMilliseconds(500),
-            AnimationTracks =
+        Length = TimeSpan.FromMilliseconds(500),
+        AnimationTracks =
             {
                 new AnimationTrackComponentProperty
                 {
@@ -113,15 +50,12 @@ public sealed partial class AnimatedEmotesSystem : SharedAnimatedEmotesSystem
                     }
                 }
             }
-        };
-        PlayEmote(ent, a);
-    }
-    private void OnSpin(Entity<AnimatedEmotesComponent> ent, ref AnimationSpinEmoteEvent args)
+    };
+
+    private static readonly Animation SpinAnimation = new()
     {
-        var a = new Animation
-        {
-            Length = TimeSpan.FromMilliseconds(600),
-            AnimationTracks =
+        Length = TimeSpan.FromMilliseconds(600),
+        AnimationTracks =
             {
                 new AnimationTrackComponentProperty
                 {
@@ -142,15 +76,12 @@ public sealed partial class AnimatedEmotesSystem : SharedAnimatedEmotesSystem
                     }
                 }
             }
-        };
-        PlayEmote(ent, a, "emoteAnimSpin");
-    }
-    private void OnJump(Entity<AnimatedEmotesComponent> ent, ref AnimationJumpEmoteEvent args)
+    };
+
+    private static readonly Animation JumpAnimation = new()
     {
-        var a = new Animation
-        {
-            Length = TimeSpan.FromMilliseconds(250),
-            AnimationTracks =
+        Length = TimeSpan.FromMilliseconds(250),
+        AnimationTracks =
             {
                 new AnimationTrackComponentProperty
                 {
@@ -165,94 +96,26 @@ public sealed partial class AnimatedEmotesSystem : SharedAnimatedEmotesSystem
                     }
                 }
             }
-        };
-        PlayEmote(ent, a);
-    }
-    // private void OnTweak(Entity<AnimatedEmotesComponent> ent, ref AnimationTweakEmoteEvent args)
-    // {
-    //     NetEntity netEntity = EntityManager.GetNetEntity(ent.Owner);
+    };
 
-    //     if (!EntityManager.TryGetEntityData(netEntity, out _, out var metaData))
-    //     {
-    //         var sawmill = Logger.GetSawmill("tweak-emotes");
-    //         sawmill.Warning($"EntityPrototype is null for entity {netEntity}");
-    //         return;
-    //     }
-
-    //     if (metaData.EntityPrototype == null)
-    //     {
-    //         var sawmill = Logger.GetSawmill("tweak-emotes");
-    //         sawmill.Warning($"EntityPrototype is null for entity {netEntity} (Type: {metaData.EntityName})");
-    //         return;
-    //     }
-
-    //     var stateNumber = string.Concat(metaData.EntityPrototype.ID.Where(Char.IsDigit));
-    //     if (string.IsNullOrEmpty(stateNumber))
-    //     {
-    //         stateNumber = "0";
-    //     }
-
-    //     var a = new Animation
-    //     {
-    //         Length = TimeSpan.FromMilliseconds(TweakAnimationDurationMs),
-    //         AnimationTracks =
-    //         {
-    //             new AnimationTrackSpriteFlick
-    //             {
-    //                 LayerKey = DamageStateVisualLayers.Base,
-    //                 KeyFrames =
-    //                 {
-    //                     new AnimationTrackSpriteFlick.KeyFrame(new RSI.StateId($"{metaData.EntityPrototype.SetName}-tweaking-{stateNumber}"), 0f)
-    //                 }
-    //             }
-    //         }
-    //     };
-    //     PlayEmote(ent, a);
-    // }
-    private void OnFlex(Entity<AnimatedEmotesComponent> ent, ref AnimationFlexEmoteEvent args)
+    public void PlayEmote(EntityUid uid, Animation anim, string animationKey = "emoteAnimKeyId")
     {
-        NetEntity netEntity = EntityManager.GetNetEntity(ent.Owner);
-
-        if (!EntityManager.TryGetEntityData(netEntity, out _, out var metaData))
-        {
-            var sawmill = Logger.GetSawmill("flex-emotes");
-            sawmill.Warning($"EntityPrototype is null for entity {netEntity}");
+        if (_anim.HasRunningAnimation(uid, animationKey))
             return;
-        }
 
-        if (metaData.EntityPrototype == null)
-        {
-            var sawmill = Logger.GetSawmill("flex-emotes");
-            sawmill.Warning($"EntityPrototype is null for entity {netEntity} (Type: {metaData.EntityName})");
-            return;
-        }
+        _anim.Play(uid, anim, animationKey);
+    }
 
-        var a = new Animation
-        {
-            Length = TimeSpan.FromMilliseconds(FlexAnimationDurationMs + 100), // give it time to reset
-            AnimationTracks =
-            {
-                new AnimationTrackSpriteFlick
-                {
-                    LayerKey = DamageStateVisualLayers.Base,
-                    KeyFrames =
-                    {
-                        new AnimationTrackSpriteFlick.KeyFrame(new RSI.StateId($"{metaData.EntityPrototype.SetName?.ToLower()}_flex"), 0f),
-                        new AnimationTrackSpriteFlick.KeyFrame(new RSI.StateId($"{metaData.EntityPrototype.SetName?.ToLower()}"), FlexAnimationDurationMs / 1000f)
-                    }
-                },
-                // don't display the glow while flexing
-                new AnimationTrackSpriteFlick
-                {
-                    LayerKey = DamageStateVisualLayers.BaseUnshaded,
-                    KeyFrames =
-                    {
-                        new AnimationTrackSpriteFlick.KeyFrame(new RSI.StateId($"{metaData.EntityPrototype.SetName?.ToLower()}_flex_damage"), 0f),
-                        new AnimationTrackSpriteFlick.KeyFrame(new RSI.StateId($"nautdamage"), FlexAnimationDurationMs / 1000f)
-                    }
-                }
-            }
-        };
-        PlayEmote(ent, a);
+    private void OnFlip(Entity<AnimatedEmotesComponent> ent, ref AnimationFlipEmoteEvent args)
+    {
+        PlayEmote(ent, FlipAnimation, animationKey: "emoteAnimFlip");
+    }
+    private void OnSpin(Entity<AnimatedEmotesComponent> ent, ref AnimationSpinEmoteEvent args)
+    {
+        PlayEmote(ent, SpinAnimation, animationKey: "emoteAnimSpin");
+    }
+    private void OnJump(Entity<AnimatedEmotesComponent> ent, ref AnimationJumpEmoteEvent args)
+    {
+        PlayEmote(ent, JumpAnimation, animationKey: "emoteAnimJump");
     }
 }

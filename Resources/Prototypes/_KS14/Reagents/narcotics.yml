@@ -15,7 +15,7 @@
     Narcotic:
       metabolismRate: 1.0
       effects:
-      - !type:MovespeedModifier
+      - !type:MovementSpeedModifier
         walkSpeedModifier: 1.15
         sprintSpeedModifier: 1.15
       - !type:SatiateHunger

@@ -25,7 +25,7 @@
 # SPDX-FileCopyrightText: 2025 nabegator220
 # SPDX-FileCopyrightText: 2025 paige404
 #
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 
 - type: entity
   id: PresentBase
@@ -37,6 +37,12 @@
     sprite: Objects/Decoration/present.rsi
     layers:
       - state: present
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/materials/cardboard_pick_up.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/materials/cardboard_drop.ogg
 
 - type: entity
   id: Present
@@ -81,8 +87,7 @@
         orGroup: GiftPool
       - id: JetpackMiniFilled
         orGroup: GiftPool
-      - id: ToyAmongPequeno
-        orGroup: GiftPool
+      # KS14: Removed slop
       - id: ClothingNeckCloakMoth
         orGroup: GiftPool
       - id: TennisBall
@@ -95,7 +100,7 @@
         orGroup: GiftPool
       - id: ToyFigurinePassenger
         orGroup: GiftPool
-      - id: ToyGriffin
+      - id: ToyFigurineGriffin
         orGroup: GiftPool
       - id: ToyHonk
         orGroup: GiftPool
@@ -109,7 +114,7 @@
         orGroup: GiftPool
       - id: ToyOdysseus
         orGroup: GiftPool
-      - id: ToyOwlman
+      - id: ToyFigurineOwlman
         orGroup: GiftPool
       - id: ToyDeathRipley
         orGroup: GiftPool
@@ -125,7 +130,7 @@
         orGroup: GiftPool
       - id: ToyDurand
         orGroup: GiftPool
-      - id: ToySkeleton
+      - id: ToyFigurineSkeleton
         orGroup: GiftPool
       - id: FoamBlade
         orGroup: GiftPool
@@ -181,9 +186,11 @@
         orGroup: GiftPool
       - id: ViolaInstrument
         orGroup: GiftPool
+      - id: ClothingNeckCloakTrans
+        orGroup: GiftPool
       - id: ClothingNeckCloakAdmin
         orGroup: GiftPool
-      - id: ToySkeleton
+      - id: ToyFigurineSkeleton
         orGroup: GiftPool
       - id: Basketball
         orGroup: GiftPool
@@ -207,6 +214,7 @@
         orGroup: GiftPool
       - id: ClothingShoeSlippersDuck
         orGroup: GiftPool
+      # KS14: Removed slop
       - id: ClothingBeltUtilityFilled
         orGroup: GiftPool
       - id: WeaponFlareGun
@@ -339,7 +347,7 @@
         orGroup: GiftPool
       - id: Bola
         orGroup: GiftPool
-      - id: GlowstickBase
+      - id: GlowstickGreen
         orGroup: GiftPool
       - id: GlowstickBlue
         orGroup: GiftPool

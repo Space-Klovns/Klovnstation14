@@ -46,13 +46,13 @@
   requirements:
     - !type:RoleTimeRequirement
       role: JobCargoTechnician
-      time: 9000 #2.5 hrs, klovn
+      time: 2.5h #2.5 hrs, klovn
     - !type:RoleTimeRequirement
       role: JobSalvageSpecialist
-      time: 9000 #2.5 hrs
+      time: 2.5h #2.5 hrs
 #    - !type:DepartmentTimeRequirement, klovn, redundant
 #      department: Cargo
-#      time: 36000 #10 hours
+#      time: 10h #10 hours
   weight: 10
   startingGear: QuartermasterGear
   icon: "JobIconQuarterMaster"

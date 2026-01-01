@@ -35,6 +35,8 @@
 # SPDX-FileCopyrightText: 2025 DeusMaldPr
 # SPDX-FileCopyrightText: 2025 FrauZj
 # SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 Gerkada
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Nox
 # SPDX-FileCopyrightText: 2025 RedBookcase
 # SPDX-FileCopyrightText: 2025 SlamBamActionman
@@ -83,6 +85,12 @@
         ents: []
   - type: StaticPrice
     price: 500
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_pickup1.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_drop1.ogg
 
 - type: entity
   name: Kardashev-Mosin
@@ -242,6 +250,7 @@
     proto: CartridgeMagnum
   - type: StaticPrice
     price: 0
+  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
 
 - type: entity
   parent: WeaponPistolFlintlock

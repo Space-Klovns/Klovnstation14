@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: entity
+  parent: Airlock
+  id: AirlockLabs
+  name: bulkhead
+  suffix: Labs
+  components:
+  - type: Sprite
+    sprite: _Manifest/Structures/Doors/Airlocks/labs.rsi
+  - type: Door # the opening animation is 0.51sec
+    openTimeOne: 0.21
+    openTimeTwo: 0.3
+    pryTime: 1

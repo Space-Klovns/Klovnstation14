@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2023 Ahion
+// SPDX-FileCopyrightText: 2023 Visne
+// SPDX-FileCopyrightText: 2024 Errant
+// SPDX-FileCopyrightText: 2024 Kara
+// SPDX-FileCopyrightText: 2024 Leon Friedrich
+// SPDX-FileCopyrightText: 2024 Nemanja
+// SPDX-FileCopyrightText: 2024 Plykiya
+// SPDX-FileCopyrightText: 2024 Wrexbe (Josh)
+// SPDX-FileCopyrightText: 2024 chromiumboy
+// SPDX-FileCopyrightText: 2024 eoineoineoin
+// SPDX-FileCopyrightText: 2024 metalgearsloth
+// SPDX-FileCopyrightText: 2025 Gerkada
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 nabegator220
+//
+// SPDX-License-Identifier: MIT
+
 using Content.Client.Stylesheets;
 using Content.Client.UserInterface.Controls;
 using Content.Shared.Input;
@@ -128,11 +145,7 @@ public partial class NavMapControl : MapGridControl
 
         var topPanel = new PanelContainer()
         {
-            PanelOverride = new StyleBoxFlat()
-            {
-                BackgroundColor = StyleNano.ButtonColorContext.WithAlpha(1f),
-                BorderColor = StyleNano.PanelDark
-            },
+            StyleClasses = { StyleClass.PanelDark },
             VerticalExpand = false,
             HorizontalExpand = true,
             SetWidth = 650f,
@@ -462,6 +475,27 @@ public partial class NavMapControl : MapGridControl
             UpdateNavMap();
         }
     }
+
+    // Carpmosia-start - AI Navmap
+    public void AiFrameUpdate(float seconds, EntityUid? newMapUid)
+    {
+        if (MapUid != newMapUid)
+        {
+            MapUid = newMapUid;
+            ForceNavMapUpdate();
+        }
+        else
+        {
+            // Update the timer
+            _updateTimer += seconds;
+            if (_updateTimer >= UpdateTime)
+            {
+                _updateTimer -= UpdateTime;
+                UpdateNavMap();
+            }
+        }
+    }
+    // Carpmosia-end - AI Navmap
 
     protected virtual void UpdateNavMap()
     {

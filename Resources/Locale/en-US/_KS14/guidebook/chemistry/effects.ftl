@@ -1,3 +1,5 @@
+entity-effect-guidebook-stain-clean = Cleans touched entities of stains.
+
 reagent-effect-guidebook-add-to-chemicals =
     { $chance ->
         [1] { $deltasign ->

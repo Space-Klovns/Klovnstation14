@@ -54,9 +54,11 @@
 # SPDX-FileCopyrightText: 2025 DeusMaldPr
 # SPDX-FileCopyrightText: 2025 FrauzJ
 # SPDX-FileCopyrightText: 2025 GaussiArson
+# SPDX-FileCopyrightText: 2025 Gerkada
 # SPDX-FileCopyrightText: 2025 Ignaz "Ian" Kraft
 # SPDX-FileCopyrightText: 2025 K-Dynamic
 # SPDX-FileCopyrightText: 2025 Kirus59
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Nox
 # SPDX-FileCopyrightText: 2025 Princess Cheeseballs
 # SPDX-FileCopyrightText: 2025 Samuka-C
@@ -70,7 +72,7 @@
 # SPDX-FileCopyrightText: 2025 nabegator220
 # SPDX-FileCopyrightText: 2025 slarticodefast
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - type: entity
   id: BaseWeaponBattery
@@ -99,6 +101,12 @@
     startingCharge: 1000
   - type: StaticPrice
     price: 500
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_pickup1.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_drop1.ogg
 
 - type: entity
   parent: [BaseWeaponBattery, BaseGunWieldable]
@@ -126,11 +134,20 @@
     selectedMode: SemiAuto
     availableModes:
     - SemiAuto
-  - type: HitscanBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: RedLaser
     fireCost: 62.5
   - type: StaticPrice
     price: 420
+  - type: Tag
+    tags:
+    - LaserWeapon
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_pickup1.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_drop1.ogg
 
 - type: entity
   id: BaseWeaponPowerCell
@@ -148,7 +165,7 @@
     - SemiAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/laser.ogg
-  - type: HitscanBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: RedLightLaser
     fireCost: 50
   - type: ItemSlots
@@ -170,6 +187,12 @@
   - type: ContainerContainer
     containers:
       cell_slot: !type:ContainerSlot
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_pickup1.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_drop1.ogg
 
 - type: entity
   id: BaseWeaponBatterySmall
@@ -190,6 +213,12 @@
     slots:
     - Belt
     - suitStorage
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/pistol/pistol_pickup1.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/pistol/pistol_drop1.ogg
 
 - type: entity
   id: BaseWeaponPowerCellSmall
@@ -231,6 +260,10 @@
     magState: mag
     steps: 5
     zeroVisible: true
+  - type: Tag
+    tags:
+    - Sidearm
+    - LaserWeapon
 
 - type: entity
   name: retro laser blaster
@@ -238,6 +271,7 @@
   id: WeaponLaserGun
   description: A weapon using light amplified by the stimulated emission of radiation.
   components:
+  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
   - type: Sprite
     sprite: Objects/Weapons/Guns/Battery/laser_retro.rsi
     layers:
@@ -248,7 +282,7 @@
       shader: unshaded
   - type: Item
     storedOffset: 0,-5
-  - type: HitscanBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: RedMediumLaser
     fireCost: 62.5
   - type: MagazineVisuals
@@ -256,6 +290,10 @@
     steps: 5
     zeroVisible: true
   - type: Appearance
+  - type: Tag
+    tags:
+    - Sidearm
+    - LaserWeapon
 
 - type: entity
   name: makeshift laser pistol
@@ -263,6 +301,7 @@
   id: WeaponMakeshiftLaser
   description: Better pray it won't burn your hands off.
   components:
+  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
   - type: Sprite
     sprite: Objects/Weapons/Guns/Battery/makeshift.rsi
     layers:
@@ -280,12 +319,16 @@
   - type: Appearance
   - type: Clothing
     sprite: Objects/Weapons/Guns/Battery/makeshift.rsi
-  - type: HitscanBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: RedLaser
     fireCost: 62.5
   - type: Battery
     maxCharge: 500
     startingCharge: 500
+  - type: Tag
+    tags:
+    - Sidearm
+    - LaserWeapon
 
 - type: entity
   name: tesla gun
@@ -311,7 +354,7 @@
       path: /Audio/Effects/Lightning/lightningshock.ogg
       params:
         variation: 0.2
-  - type: ProjectileBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: TeslaGunBullet
     fireCost: 300
   - type: MagazineVisuals
@@ -322,9 +365,11 @@
 
 - type: entity
   name: laser carbine
-  parent: [BaseLaserRifle, BaseGunWieldable, BaseSecurityContraband]
+  parent: [BaseLaserRifle, BaseSecurityContraband]
   id: WeaponLaserCarbine
   description: Favoured by Nanotrasen Security for being cheap and easy to use.
+  components:
+  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
 
 - type: entity
   name: practice laser carbine
@@ -334,7 +379,7 @@
   components:
   - type: StaticPrice
     price: 300
-  - type: HitscanBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: RedLaserPractice
     fireCost: 62.5
   - type: PacifismAllowedGun
@@ -345,6 +390,7 @@
   id: WeaponPulsePistol
   description: A state of the art energy pistol favoured as a sidearm by the NT operatives.
   components:
+  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
   - type: Sprite
     sprite: Objects/Weapons/Guns/Battery/pulse_pistol.rsi
     layers:
@@ -368,12 +414,16 @@
     - SemiAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/laser3.ogg
-  - type: HitscanBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: Pulse
     fireCost: 200
   - type: Battery
     maxCharge: 2000
     startingCharge: 2000
+  - type: Tag
+    tags:
+    - Sidearm
+    - LaserWeapon
 
 - type: entity
   name: pulse carbine
@@ -381,6 +431,7 @@
   id: WeaponPulseCarbine
   description: A high tech energy carbine favoured by the NT-ERT operatives.
   components:
+  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
   - type: Item
     size: Large
   - type: Sprite
@@ -406,7 +457,7 @@
       - FullAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/laser3.ogg
-  - type: HitscanBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: Pulse
     fireCost: 200
   - type: Battery
@@ -419,6 +470,7 @@
   id: WeaponPulseRifle
   description: A weapon that is almost as infamous as its users.
   components:
+  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
   - type: Item
     size: Huge
     shape:
@@ -442,7 +494,7 @@
     fireRate: 1.5
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/laser3.ogg
-  - type: HitscanBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: Pulse
     fireCost: 100
   - type: Battery
@@ -455,6 +507,7 @@
   id: WeaponLaserCannon
   description: A heavy duty, high powered laser weapon.
   components:
+  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
   - type: Item
     size: Huge
     shape:
@@ -478,7 +531,7 @@
     fireRate: 1.5
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/laser_cannon.ogg
-  - type: HitscanBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: RedHeavyLaser
     fireCost: 100
   - type: Tag
@@ -509,7 +562,7 @@
         path: /Audio/Weapons/emitter.ogg
         params:
           pitch: 2
-    - type: ProjectileBatteryAmmoProvider
+    - type: BatteryAmmoProvider
       proto: AntiParticlesProjectile
       fireCost: 500
     - type: Battery
@@ -522,6 +575,7 @@
   id: WeaponXrayCannon
   description: An experimental weapon that uses concentrated x-ray energy against its target.
   components:
+  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
   - type: Item
     size: Huge
     shape:
@@ -539,7 +593,7 @@
   - type: Gun
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/laser3.ogg
-  - type: HitscanBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: XrayLaser
     fireCost: 100
   - type: MagazineVisuals
@@ -581,7 +635,7 @@
     projectileSpeed: 35 # any higher and this causes issues in lag
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/taser2.ogg
-  - type: ProjectileBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: BulletDisablerPractice
     fireCost: 62.5
   - type: Tag
@@ -610,7 +664,7 @@
     slots:
       - suitStorage
       - Belt
-  - type: ProjectileBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: BulletDisabler
     fireCost: 100
   - type: GuideHelp
@@ -648,7 +702,7 @@
       - FullAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/taser2.ogg
-  - type: ProjectileBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: BulletDisablerSmg
     fireCost: 33
   - type: MagazineVisuals
@@ -688,7 +742,8 @@
     fireRate: 0.5
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/taser.ogg
-  - type: ProjectileBatteryAmmoProvider
+    projectileSpeed: 25
+  - type: BatteryAmmoProvider
     proto: BulletTaser
     fireCost: 500
   - type: MagazineVisuals
@@ -711,7 +766,7 @@
       path: /Audio/Effects/tesla_collapse.ogg # The wrath of god...
       params:
         volume: -6
-  - type: ProjectileBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: BulletTaserSuper
     fireCost: 200
 
@@ -734,11 +789,10 @@
   - type: Gun
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/laser_cannon.ogg
-  - type: HitscanBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: RedMediumLaser
     fireCost: 100
   - type: BatterySelfRecharger
-    autoRecharge: true
     autoRechargeRate: 40
   - type: MagazineVisuals
     magState: mag
@@ -750,6 +804,7 @@
     - HighRiskItem
     - Sidearm
     - WeaponAntiqueLaser
+    - LaserWeapon
   - type: StaticPrice
     price: 750
   - type: StealTarget
@@ -758,6 +813,7 @@
     flavorKind: station-event-random-sentience-flavor-inanimate
     weight: 0.0002 # 5,000 times less likely than 1 regular animal
     # not putting a BlockMovement component here cause that's funny.
+  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
 
 - type: entity
   name: advanced laser pistol
@@ -765,6 +821,7 @@
   id: WeaponAdvancedLaser
   description: An experimental high-energy laser pistol with a self-charging nuclear battery.
   components:
+  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
   - type: Item
     size: Normal
     shape:
@@ -782,11 +839,10 @@
   - type: Gun
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/laser_cannon.ogg
-  - type: HitscanBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: RedMediumLaser
     fireCost: 100
   - type: BatterySelfRecharger
-    autoRecharge: true
     autoRechargeRate: 30
   - type: MagazineVisuals
     magState: mag
@@ -795,6 +851,10 @@
   - type: Appearance
   - type: StaticPrice
     price: 63
+  - type: Tag
+    tags:
+    - Sidearm
+    - LaserWeapon
 
 - type: entity
   name: C.H.I.M.P. handcannon
@@ -825,7 +885,7 @@
     fireRate: 1.5
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/taser2.ogg
-  - type: ProjectileBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: AnomalousParticleDeltaStrong
     fireCost: 100
   - type: BatteryWeaponFireModes
@@ -869,6 +929,7 @@
   id: WeaponBehonkerLaser
   description: The eye of a behonker, it fires a laser when squeezed.
   components:
+  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
   - type: Sprite
     sprite: Objects/Weapons/Guns/Battery/behonker_eye.rsi
     layers:
@@ -878,18 +939,21 @@
     fireRate: 1
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/laser_clown.ogg
-  - type: HitscanBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: RedMediumLaser
     fireCost: 100
   - type: BatterySelfRecharger
-    autoRecharge: true
     autoRechargeRate: 40
   - type: StaticPrice
     price: 750
+  - type: Tag
+    tags:
+    - Sidearm
+    - LaserWeapon
 
 - type: entity
   name: energy shotgun
-  parent: [BaseWeaponBattery, BaseGunWieldable, BaseGrandTheftContraband]
+  parent: [BaseWeaponBattery, BaseGunWieldable, BaseSecurityContraband]
   id: WeaponEnergyShotgun
   description: A one-of-a-kind prototype energy weapon that uses various shotgun configurations. It offers the possibility of both lethal and non-lethal shots, making it a versatile weapon.
   components:
@@ -912,35 +976,71 @@
     fireRate: 2
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/laser_cannon.ogg
-  - type: ProjectileBatteryAmmoProvider
-    proto: BulletLaserSpread
-    fireCost: 150
+  - type: BatteryAmmoProvider
+    proto: BulletLaserSpreadNarrow
+    fireCost: 80
   - type: BatteryWeaponFireModes
     fireModes:
-    - proto: BulletLaserSpread
-      fireCost: 150
     - proto: BulletLaserSpreadNarrow
-      fireCost: 200
+      fireCost: 80
     - proto: BulletDisablerSmgSpread
-      fireCost: 120
+      fireCost: 48
+      pacifismAllowedMode: true
   - type: Item
     size: Large
     sprite: Objects/Weapons/Guns/Battery/inhands_64x.rsi
     heldPrefix: energy
+  - type: GunRequiresWield #remove when inaccuracy on spreads is fixed
+  - type: Battery
+    maxCharge: 480
+    startingCharge: 480
+
+- type: entity
+  name: energy magnum
+  parent: [BaseWeaponBatterySmall, BaseGrandTheftContraband]
+  id: WeaponEnergyMagnum
+  description: A high powered self-charging energy pistol designed for elite security personnel. It has has three firing modes allowing for either high damage, window piercing, or non-lethal disabling.
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Battery/energy_magnum.rsi
+    layers:
+    - state: base
+      map: [ "enum.GunVisualLayers.Base" ]
+    - state: mag-unshaded-1
+      visible: false
+      map: [ "enum.GunVisualLayers.MagUnshaded" ]
+      shader: unshaded
+  - type: MagazineVisuals
+    magState: mag
+    steps: 4
+    zeroVisible: true
+  - type: Appearance
+  - type: Clothing
+    sprite: Objects/Weapons/Guns/Battery/energy_magnum.rsi
   - type: Tag
     tags:
     - HighRiskItem
+    - Sidearm
   - type: StealTarget
-    stealGroup: WeaponEnergyShotgun
-  - type: GunRequiresWield #remove when inaccuracy on spreads is fixed
-  - type: Battery
-    maxCharge: 1200
-    startingCharge: 1200
+    stealGroup: WeaponEnergyMagnum
+  - type: Gun
+    soundGunshot:
+      path: /Audio/Weapons/Guns/Gunshots/laser_cannon.ogg
+  - type: BatteryAmmoProvider
+    proto: BulletLaserMagnum
+    fireCost: 150
+  - type: BatteryWeaponFireModes
+    fireModes:
+    - proto: BulletLaserMagnum
+      fireCost: 150
+    - proto: BulletLaserWindowPiercingMagnum
+      fireCost: 150
+    - proto: BulletDisabler
+      fireCost: 62.5
+      pacifismAllowedMode: true
   - type: BatterySelfRecharger
-    autoRecharge: true
-    autoRechargeRate: 24
-    autoRechargePause: true
-    autoRechargePauseTime: 30
+    autoRechargeRate: 48
+    autoRechargePauseTime: 10
 
 - type: entity
   name: temperature gun
@@ -971,7 +1071,7 @@
     fireRate: 1
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/taser2.ogg
-  - type: ProjectileBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: BoltTempgunCold
     fireCost: 100
   - type: BatteryWeaponFireModes
@@ -987,14 +1087,22 @@
     price: 100
 
 - type: entity
-  name: xenoborg laser gun
   parent: [WeaponAdvancedLaser, BaseXenoborgContraband]
-  id: XenoborgLaserGun
+  id: WeaponLaserGunXenoborg
+  name: xenoborg laser gun
 
 - type: entity
-  name: xenoborg heavy laser gun
-  parent: [WeaponAdvancedLaser, BaseXenoborgContraband]
-  id: XenoborgHeavyLaserGun
+  parent: [WeaponLaserCannon, BaseXenoborgContraband]
+  id: WeaponLaserCannonXenoborg
+  name: xenoborg laser cannon
   components:
-  - type: HitscanBatteryAmmoProvider
-    proto: RedHeavyLaser
+  - type: BatterySelfRecharger
+    autoRechargeRate: 30
+  # "remove" wield bonus and penalty so borgs can use it
+  - type: GunWieldBonus
+    minAngle: 0
+    maxAngle: 0
+  - type: Gun
+    fireRate: 2
+    minAngle: 1
+    maxAngle: 2

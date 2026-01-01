@@ -38,6 +38,12 @@
       - !type:DoActsBehavior
         acts: [ "Destruction" ]
   - type: ApcPowerReceiver
-    powerLoad: 15000
+    powerLoad: 5000
   - type: StaticPrice
     price: 7500
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/materials/metal_pick_up.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/materials/metal_drop.ogg

@@ -9,7 +9,7 @@
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 
 - type: entity
   id: RandomVending
@@ -56,6 +56,7 @@
       weight: 40
     - id: VendingMachineWinter
       weight: 40
+    # KS14 - Removed 'ide vendor
     - id: VendingMachineTheater
       weight: 10
 

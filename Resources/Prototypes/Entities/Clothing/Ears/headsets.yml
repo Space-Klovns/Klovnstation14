@@ -26,6 +26,12 @@
   - type: GuideHelp
     guides:
     - Radio
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      collection: HeadsetPickup
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/headset/headset_drop1.ogg
 
 - type: entity
   parent: ClothingHeadset
@@ -303,3 +309,14 @@
       sprite: Clothing/Ears/Headsets/wizard.rsi
     - type: Clothing
       sprite: Clothing/Ears/Headsets/wizard.rsi
+
+- type: entity
+  parent: [ClothingHeadset, BaseMajorContraband]
+  id: ClothingHeadsetNinja
+  name: green headset
+  description: Who could refuse to wear this stylish black and green headset?
+  components:
+  - type: Sprite
+    sprite: Clothing/Ears/Headsets/ninja.rsi
+  - type: Clothing
+    sprite: Clothing/Ears/Headsets/ninja.rsi

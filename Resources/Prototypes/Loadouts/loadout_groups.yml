@@ -33,7 +33,6 @@
 # SPDX-FileCopyrightText: 2025 Hitlinemoss
 # SPDX-FileCopyrightText: 2025 Julian Giebel
 # SPDX-FileCopyrightText: 2025 KingFroozy
-# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Momo
 # SPDX-FileCopyrightText: 2025 Mora
 # SPDX-FileCopyrightText: 2025 Phooooooooooooooooooooooooooooooosphate
@@ -45,11 +44,11 @@
 # SPDX-FileCopyrightText: 2025 ivo
 # SPDX-FileCopyrightText: 2025 kosticia
 # SPDX-FileCopyrightText: 2025 lzk
-# SPDX-FileCopyrightText: 2025 nabegator220
 # SPDX-FileCopyrightText: 2025 paige404
 # SPDX-FileCopyrightText: 2025 slarticodefast
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
+
 
 # Miscellaneous
 - type: loadoutGroup
@@ -61,6 +60,7 @@
   - FlowerWreath
   - Hairflower
   - Headphones
+  # KS14 - Removed slop
   - ThreeCandles
   - Lighter
   - CigPackGreen
@@ -69,28 +69,29 @@
   - CigPackBlack
   - CigarCase
   - CigarGold
+  # KS14 - Removed pins
   - OffsetCane
   - OffsetCaneWood
   - OffsetCaneClown
   - OffsetCaneMime
   - OffsetCaneNT
   - Cane
-  - TowelColorBlack
-  - TowelColorDarkBlue
-  - TowelColorDarkGreen
-  - TowelColorGold
+  - TowelColorWhite
   - TowelColorGray
+  - TowelColorBlack
+  - TowelColorRed
+  - TowelColorOrange
+  - TowelColorLightBrown
+  - TowelColorYellow
+  - TowelColorDarkGreen
   - TowelColorGreen
   - TowelColorLightBlue
-  - TowelColorLightBrown
+  - TowelColorDarkBlue
+  - TowelColorPurple
   - TowelColorMaroon
   - TowelColorMime
-  - TowelColorOrange
-  - TowelColorPurple
-  - TowelColorRed
   - TowelColorSilver
-  - TowelColorWhite
-  - TowelColorYellow
+  - TowelColorGold
 
 - type: loadoutGroup
   id: Glasses
@@ -186,6 +187,12 @@
   - CaptainOuterClothing
   - CaptainWintercoat
 
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: CaptainJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
+
 - type: loadoutGroup
   id: HoPHead
   name: loadout-group-hop-head
@@ -223,6 +230,12 @@
   minLimit: 0
   loadouts:
   - HoPWintercoat
+
+# KS14 - Removed slop down below  
+# - type: loadoutGroup
+#   id: HoPJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
 
 # Civilian
 - type: loadoutGroup
@@ -279,6 +292,12 @@
   - BlackShoes
   - WinterBoots
 
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: PassengerJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
+
 - type: loadoutGroup
   id: BartenderHead
   name: loadout-group-bartender-head
@@ -303,6 +322,20 @@
   - BartenderVest
   - BartenderApron
   - BartenderWintercoat
+
+- type: loadoutGroup
+  id: BartenderJobTrinkets
+  name: loadout-group-jobtrinkets
+  minLimit: 0
+  loadouts:
+  # KS14 - Removed slop plushie
+  - BartenderGoldenShaker
+
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: ServiceWorkerJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
 
 - type: loadoutGroup
   id: ChefHead
@@ -334,6 +367,12 @@
   - ChefJacket
   - ChefWintercoat
 
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: ChefJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
+
 - type: loadoutGroup
   id: LibrarianJumpsuit
   name: loadout-group-librarian-jumpsuit
@@ -342,6 +381,12 @@
   - LibrarianJumpskirt
   - CuratorJumpsuit
   - CuratorJumpskirt
+
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: LibrarianJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
 
 - type: loadoutGroup
   id: LawyerJumpsuit
@@ -364,6 +409,12 @@
   minLimit: 0
   loadouts:
   - LawyerNeck
+
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: LawyerJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
 
 - type: loadoutGroup
   id: ChaplainHead
@@ -409,16 +460,23 @@
   loadouts:
   - ChaplainNeck
 
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: ChaplainJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
+
 - type: loadoutGroup
   id: ChaplainBible
   name: loadout-group-chaplain-bible
   minLimit: 1
   loadouts:
   - Bible
-  - BibleDruid
   - BibleNanoTrasen
-  - BibleSatanic
-  - BibleTanakh
+  - BibleDruid
+  - BibleHonk
+  - BibleRatvar
+  - BibleNarsie
 
 - type: loadoutGroup
   id: JanitorHead
@@ -451,10 +509,11 @@
   - JanitorWintercoat
 
 - type: loadoutGroup
-  id: JanitorPlunger
-  name: loadout-group-janitor-plunger
+  id: JanitorJobTrinkets
+  name: loadout-group-jobtrinkets
   minLimit: 0
   loadouts:
+  # KS14 - Removed slop plushie
   - JanitorGoldenPlunger
 
 - type: loadoutGroup
@@ -488,6 +547,12 @@
   loadouts:
   - BotanistApron
   - BotanistWintercoat
+
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: BotanistJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
 
 - type: loadoutGroup
   id: ClownHead
@@ -539,6 +604,14 @@
   - EmergencyNitrogenClown
   - EmergencyOxygenClown
   - LoadoutSpeciesVoxNitrogen
+
+# - type: loadoutGroup
+#   id: ClownJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
+#   loadouts:
+  # KS14 - Removed slop plushie
+  # KS14: Removed pin loadout
 
 - type: loadoutGroup
   id: MimeHead
@@ -597,6 +670,12 @@
   - EmergencySpeciesMothMime
   - LoadoutSpeciesVoxNitrogen
 
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: MimeJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
+
 - type: loadoutGroup
   id: MusicianJumpsuit
   name: loadout-group-musician-jumpsuit
@@ -646,6 +725,12 @@
   - Ocarina
   - Bagpipe
 
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: MusicianJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
+
 # Cargo
 - type: loadoutGroup
   id: QuartermasterHead
@@ -686,6 +771,12 @@
   loadouts:
   - BrownShoes
   - CargoWinterBoots
+
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: QuartermasterJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
 
 - type: loadoutGroup
   id: CargoTechnicianHead
@@ -730,6 +821,12 @@
   - CargoTechnicianPDA
   - SeniorCourierPDA
 
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: CargoTechnicianJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
+
 - type: loadoutGroup
   id: SalvageSpecialistBackpack
   name: loadout-group-salvage-specialist-backpack
@@ -751,6 +848,12 @@
   loadouts:
   - SalvageBoots
   - CargoWinterBoots
+
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: SalvageSpecialistJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
 
 # Engineering
 - type: loadoutGroup
@@ -792,12 +895,24 @@
   - BrownShoes
   - EngineeringWinterBoots
 
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: ChiefEngineerJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
+
 - type: loadoutGroup
   id: TechnicalAssistantJumpsuit
   name: loadout-group-technical-assistant-jumpsuit
   loadouts:
   - YellowJumpsuit
   - YellowJumpskirt
+
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: TechnicalAssistantJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
 
 - type: loadoutGroup
   id: StationEngineerHead
@@ -849,6 +964,12 @@
   - StationEngineerPDA
   - SeniorEngineerPDA
 
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: StationEngineerJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
+
 - type: loadoutGroup
   id: AtmosphericTechnicianJumpsuit
   name: loadout-group-atmospheric-technician-jumpsuit
@@ -878,6 +999,12 @@
   loadouts:
   - WhiteShoes
   - EngineeringWinterBoots
+
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: AtmosphericTechnicianJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
 
 - type: loadoutGroup
   id: SurvivalExtended
@@ -926,6 +1053,12 @@
   loadouts:
   - BrownShoes
   - ScienceWinterBoots
+
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: ResearchDirectorJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
 
 - type: loadoutGroup
   id: ScientistHead
@@ -998,12 +1131,24 @@
   - ScientistPDA
   - SeniorResearcherPDA
 
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: ScientistJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
+
 - type: loadoutGroup
   id: ResearchAssistantJumpsuit
   name: loadout-group-research-assistant-jumpsuit
   loadouts:
   - WhiteJumpsuit
   - WhiteJumpskirt
+
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: ResearchAssistantJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
 
 # Security
 - type: loadoutGroup
@@ -1041,6 +1186,14 @@
   - HeadofSecurityWinterCoat
 
 - type: loadoutGroup
+  id: HeadofSecurityJobTrinkets
+  name: loadout-group-jobtrinkets
+  minLimit: 0
+  loadouts:
+  # KS14 - Removed slop plushie
+  - SecStar
+
+- type: loadoutGroup
   id: WardenHead
   name: loadout-group-warden-head
   minLimit: 0
@@ -1061,6 +1214,14 @@
   loadouts:
   - WardenCoat
   - WardenArmoredWinterCoat
+
+- type: loadoutGroup
+  id: WardenJobTrinkets
+  name: loadout-group-jobtrinkets
+  minLimit: 0
+  loadouts:
+  # KS14 - Removed slop plushie
+  - SecStar
 
 - type: loadoutGroup
   id: SecurityHead
@@ -1122,6 +1283,14 @@
   - SeniorOfficerPDA
 
 - type: loadoutGroup
+  id: SecurityJobTrinkets
+  name: loadout-group-jobtrinkets
+  minLimit: 0
+  loadouts:
+  # KS14 - Removed slop plushie
+  - SecStar
+
+- type: loadoutGroup
   id: DetectiveHead
   name: loadout-group-detective-head
   minLimit: 0
@@ -1154,11 +1323,26 @@
   - DetectiveCoatGrey
 
 - type: loadoutGroup
+  id: DetectiveJobTrinkets
+  name: loadout-group-jobtrinkets
+  minLimit: 0
+  loadouts:
+  # KS14 - Removed slop plushie
+  - SecStar
+
+- type: loadoutGroup
   id: SecurityCadetJumpsuit
   name: loadout-group-security-cadet-jumpsuit
   loadouts:
   - RedJumpsuit
   - RedJumpskirt
+
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: SecurityCadetJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
+#   loadouts:
 
 - type: loadoutGroup
   id: SurvivalSecurity
@@ -1169,13 +1353,6 @@
   - EmergencyNitrogenSecurity
   - EmergencyOxygenSecurity
   - LoadoutSpeciesVoxNitrogen
-
-- type: loadoutGroup
-  id: SecurityStar
-  name: loadout-group-security-star
-  minLimit: 0
-  loadouts:
-  - SecStar
 
 # Medical
 - type: loadoutGroup
@@ -1217,6 +1394,12 @@
   loadouts:
   - BrownShoes
   - MedicalWinterBoots
+
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: ChiefMedicalOfficerJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
 
 - type: loadoutGroup
   id: MedicalDoctorHead
@@ -1289,12 +1472,24 @@
   loadouts:
   - SterileMask
 
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: MedicalDoctorJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
+
 - type: loadoutGroup
   id: MedicalInternJumpsuit
   name: loadout-group-medical-intern-jumpsuit
   loadouts:
   - WhiteJumpsuit
   - WhiteJumpskirt
+
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: MedicalInternJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
 
 - type: loadoutGroup
   id: ChemistJumpsuit
@@ -1319,6 +1514,12 @@
   - ChemistBackpack
   - ChemistSatchel
   - ChemistDuffel
+
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: ChemistJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
 
 - type: loadoutGroup
   id: ParamedicHead
@@ -1350,6 +1551,12 @@
   - WhiteShoes
   - MedicalWinterBoots
 
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: ParamedicJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
+
 - type: loadoutGroup
   id: MedicalEyewear
   name: loadout-group-medical-glasses
@@ -1379,6 +1586,12 @@
   - ReporterJumpsuit
   - JournalistJumpsuit
 
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: ReporterJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
+
 - type: loadoutGroup
   id: PsychologistJumpsuit
   name: loadout-group-psychologist-jumpsuit
@@ -1386,21 +1599,11 @@
   - PsychologistJumpsuit
   - PsychologistJumpskirt
 
-- type: loadoutGroup
-  id: BoxerJumpsuit
-  name: loadout-group-boxer-jumpsuit
-  loadouts:
-  - BoxerShorts
-  - BoxerShortsWithTop
-
-- type: loadoutGroup
-  id: BoxerGloves
-  name: loadout-group-boxer-gloves
-  loadouts:
-  - RedBoxingGloves
-  - BlueBoxingGloves
-  - GreenBoxingGloves
-  - YellowBoxingGloves
+# KS14 - Removed slop down below
+# - type: loadoutGroup
+#   id: PsychologistJobTrinkets
+#   name: loadout-group-jobtrinkets
+#   minLimit: 0
 
 # Other
 - type: loadoutGroup
@@ -1412,6 +1615,15 @@
   - EmergencyNitrogenSyndicate
   - EmergencyOxygenSyndicate
   - LoadoutSpeciesVoxNitrogen
+
+- type: loadoutGroup
+  id: SurvivalMilitaryDouble
+  name: loadout-group-survival-military
+  minLimit: 2
+  hidden: true
+  loadouts:
+  - EmergencyNitrogenMilitaryDouble
+  - EmergencyOxygenMilitaryDouble
 
 - type: loadoutGroup
   id: GroupSpeciesBreathTool

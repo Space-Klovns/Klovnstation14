@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: shader
+  id: Emissive
+  kind: source
+  path: "/Textures/_KS14/Shaders/bloom.swsl"

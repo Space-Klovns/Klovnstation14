@@ -31,7 +31,7 @@
   requirements:
   - !type:DepartmentTimeRequirement
     department: Engineering
-    time: 10800 #3 hrs, klovn
+    time: 3h #3 hrs, klovn
   startingGear: AtmosphericTechnicianGear
   icon: "JobIconAtmosphericTechnician"
   supervisors: job-supervisors-ce

@@ -27,13 +27,19 @@
         type: StorageBoundUserInterface
   # to prevent bag open/honk spam
   - type: UseDelay
-    delay: 0.5
+    delay: 0.1
   - type: ExplosionResistance
     damageCoefficient: 0.9
   - type: Tag
     tags:
     - WhitelistChameleon
     - Backpack
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/backpack/backpack_pickup1.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/backpack/backpack_drop1.ogg
 
 - type: entity
   parent: ClothingBackpack
@@ -208,13 +214,15 @@
   parent: [ ClothingBackpack, BaseCentcommContraband ]
   id: ClothingBackpackERTLeader
   name: ERT leader backpack
-  description: A spacious backpack with lots of pockets, worn by the Commander of an Emergency Response Team.
+  description: A spacious backpack with lots of pockets, worn by the Leader of an Emergency Response Team.
   components:
   - type: Sprite
     sprite: Clothing/Back/Backpacks/ertleader.rsi
   - type: Storage
     grid:
-    - 0,0,10,3
+    - 0,0,8,3
+  - type: ExplosionResistance
+    damageCoefficient: 0.1
 
 - type: entity
   parent: ClothingBackpackERTLeader
@@ -362,7 +370,7 @@
   id: ClothingBackpackDebug
   name: wackpack
   description: What the fuck is this?
-  suffix: Debug
+  suffix: DEBUG
   components:
   - type: Storage
     grid:
@@ -378,7 +386,7 @@
   id: ClothingBackpackDebug2
   name: big wackpack
   description: What the fuck is this?
-  suffix: Debug
+  suffix: DEBUG
   components:
   - type: Storage
     grid:
@@ -389,7 +397,7 @@
   id: ClothingBackpackDebug3
   name: gay wackpack
   description: What the fuck is this?
-  suffix: Debug
+  suffix: DEBUG
   components:
   - type: Storage
     grid:
@@ -410,7 +418,7 @@
   id: ClothingBackpackDebug4
   name: offset wackpack
   description: What the fuck is this?
-  suffix: Debug
+  suffix: DEBUG
   components:
   - type: Storage
     grid:

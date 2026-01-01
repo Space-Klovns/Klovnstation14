@@ -23,6 +23,12 @@
     steps: 3
     zeroVisible: false
   - type: Appearance
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/ammobox_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/ammobox_drop.ogg
 
 # Boxes
 - type: entity
@@ -44,7 +50,7 @@
   parent: BaseMagazineBoxPistol
   id: MagazineBoxPistolPractice
   name: ammunition box (.35 auto practice)
-  description: A cardboard box of .35 auto rounds. Intended to hold non-harmful chalk ammunition.
+  description: A cardboard box of .35 auto rounds. Intended to hold harmless practice ammunition.
   components:
   - type: BallisticAmmoProvider
     proto: CartridgePistolPractice
@@ -73,8 +79,8 @@
     - state: incendiary
 
 - type: entity
-  id: MagazineBoxPistolUranium
   parent: BaseMagazineBoxPistol
+  id: MagazineBoxPistolUranium
   name: ammunition box (.35 auto uranium)
   description: A cardboard box of .35 auto rounds. Intended to hold exotic uranium-core ammunition.
   components:

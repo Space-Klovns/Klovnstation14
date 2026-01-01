@@ -52,19 +52,19 @@
   requirements:
 #    - !type:DepartmentTimeRequirement, klovn, redundant
 #      department: Engineering
-#      time: 9000 # 2.5 hours
+#      time: 2.5h # 2.5 hours
 #    - !type:DepartmentTimeRequirement
 #      department: Medical
-#      time: 9000 # 2.5 hours
+#      time: 2.5h # 2.5 hours
 #    - !type:DepartmentTimeRequirement
 #      department: Science
-#      time: 9000 # 2.5 hrs
+#      time: 2.5h # 2.5 hrs
     - !type:DepartmentTimeRequirement
       department: Security
-      time: 9000 # 2.5 hrs
+      time: 2.5h
     - !type:DepartmentTimeRequirement
       department: Command
-      time: 9000 # 2.5 hours
+      time: 2.5h
   weight: 20
   startingGear: HoPGear
   icon: "JobIconHeadOfPersonnel"

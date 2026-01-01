@@ -26,7 +26,6 @@
 # SPDX-FileCopyrightText: 2024 deltanedas
 # SPDX-FileCopyrightText: 2024 lzk
 # SPDX-FileCopyrightText: 2024 metalgearsloth
-# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Southbridge
 # SPDX-FileCopyrightText: 2025 Unkn0wn_Gh0st
 # SPDX-FileCopyrightText: 2025 Velcroboy
@@ -37,9 +36,32 @@
 
 - type: entity
   id: LockerSyndicatePersonalFilled
-  suffix: Filled
+  suffix: Nukie, Filled
   parent: LockerSyndicatePersonal
+  description: It's a personal storage unit for operative gear.
   components:
+  - type: AccessReader
+    access: [["NuclearOperative"]]
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:AllSelector
+        children:
+        - id: ClothingBeltMilitaryWebbing
+        - id: ClothingHandsGlovesCombat
+        - id: JetpackBlackFilled
+        - id: ClothingUniformJumpsuitOperative
+        - id: ClothingUniformJumpskirtOperative
+        - id: ClothingHeadsetAltSyndicate
+        - id: ClothingEyesHudSyndicate
+
+- type: entity
+  id: LockerSyndicateWallFilled
+  suffix: Nukie, Filled
+  parent: LockerWallSyndicate
+  description: It's a personal storage unit for operative gear.
+  components:
+  - type: AccessReader
+    access: [["NuclearOperative"]]
   - type: EntityTableContainerFill
     containers:
       entity_storage: !type:AllSelector
@@ -202,6 +224,12 @@
       prob: 0.33
       rolls: !type:RangeNumberSelector
         range: 0, 2
+    # Plushies
+    - !type:NestedSelector
+      tableId: AllPlushiesTable
+      prob: 0.10
+      rolls: !type:RangeNumberSelector
+        range: 1, 2
     # Weapons
     - !type:NestedSelector
       tableId: MaintWeaponTable
@@ -233,3 +261,83 @@
     containers:
       entity_storage: !type:NestedSelector
         tableId: MaintenanceLockerLoot
+
+# Intended to very occasionally be useful for prisoners, so mostly functional items instead of fluff
+
+- type: entityTable
+  id: ToiletCisternCommonToolsTable
+  table: !type:GroupSelector
+    children:
+    - id: Screwdriver
+    - id: Wrench
+    - id: Wirecutter
+    - id: Welder
+    - id: ClothingMaskGas
+    - id: PowerCellSmall
+    - id: RadioHandheld
+    - id: Syringe
+    - id: CableApcStack
+    - id: Lighter
+
+- type: entityTable
+  id: ToiletCisternRareToolsTable
+  table: !type:GroupSelector
+    children:
+    - id: ClothingHandsGlovesColorYellow
+    - id: DrinkSpaceLube
+    - id: WelderIndustrial
+    - id: ClothingHeadHatWeldingMaskFlame
+    - id: PowerCellMedium
+    - id: DoubleEmergencyOxygenTankFilled
+    - id: DoubleEmergencyNitrogenTankFilled
+
+- type: entityTable
+  id: ToiletCisternUtilityTable
+  table: !type:GroupSelector
+    children:
+    - id: Brutepack
+    - id: Ointment
+    - id: Gauze
+    - id: ChemistryBottleUnstableMutagen
+
+- type: entityTable
+  id: ToiletCisternWeaponsTable
+  table: !type:GroupSelector
+    children:
+    - id: SurvivalKnife
+    - id: ScalpelShiv
+    - id: Shiv
+    - id: SawImprov
+    - id: HydroponicsToolHatchet
+    - id: ClothingHandsKnuckleDusters
+    - id: WeaponFlareGun
+
+- type: entityTable
+  id: ToiletCisternSyndicateTable
+  table: !type:GroupSelector
+    children:
+    - id: CyberPen
+    - id: CigPackSyndicate
+    - id: SoapSyndie
+    - id: SyndicatePersonalAI
+    - id: UplinkLighterBox
+
+- type: entityTable
+  id: ToiletCisternLoot
+  table: !type:GroupSelector
+    children:
+    - !type:NestedSelector
+      weight: 25
+      tableId: ToiletCisternCommonToolsTable
+    - !type:NestedSelector
+      weight: 8
+      tableId: ToiletCisternRareToolsTable
+    - !type:NestedSelector
+      weight: 5
+      tableId: ToiletCisternUtilityTable
+    - !type:NestedSelector
+      weight: 3
+      tableId: ToiletCisternWeaponsTable
+    - !type:NestedSelector
+      weight: 1
+      tableId: ToiletCisternSyndicateTable

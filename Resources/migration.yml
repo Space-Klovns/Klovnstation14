@@ -60,7 +60,7 @@
 # SPDX-FileCopyrightText: 2025 slarticodefast
 # SPDX-FileCopyrightText: 2025 āda
 #
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 
 # This is a basic dictionary that maps old entity prototype ids to new ids. This only works for entity prototypes, and
 # is intended to allow maps to load without having to manually edit them. An empty or "null" string results in the
@@ -119,7 +119,7 @@ MagazineBoxLightRifleHighVelocity: MagazineBoxLightRifle
 MagazineBoxMagnumHighVelocity: MagazineBoxMagnum
 MagazineBoxPistolHighVelocity: MagazineBoxPistol
 MagazineBoxRifleHighVelocity: MagazineBoxRifle
-MagazineCaselessRifleHighVelocity: MagazineCaselessRifle
+MagazineCaselessRifleHighVelocity: MagazinePistolCaselessRifle
 MagazineCaselessRifleShortHighVelocity: null
 MagazineLightRifleHighVelocity: MagazineLightRifle
 MagazineMagnumSubMachineGunHighVelocity: null
@@ -129,7 +129,7 @@ MagazinePistolHighVelocity: MagazinePistol
 MagazinePistolSubMachineGunHighVelocity: MagazinePistolSubMachineGun
 MagazineRifleHighVelocity: MagazineRifle
 SpeedLoaderMagnumHighVelocity: SpeedLoaderMagnum
-SpeedLoaderPistolHighVelocity: SpeedLoaderPistol
+SpeedLoaderPistolHighVelocity: null
 
 # 2023-08-07
 #If the name is anything to go off of, these are presumably just CEV-Eris versions of the snow rock (which we already have.)
@@ -369,9 +369,9 @@ MagazineMagnumRubber: MagazineMagnum
 MagazineMagnumSubMachineGunRubber: null
 MagazineLightRifleRubber: MagazineLightRifle
 MagazineRifleRubber: MagazineRifle
-MagazineCaselessRifleRubber: MagazineCaselessRifle
+MagazineCaselessRifleRubber: MagazinePistolCaselessRifle
 MagazineCaselessRifleShortRubber: null
-SpeedLoaderPistolRubber: SpeedLoaderPistol
+SpeedLoaderPistolRubber: null
 SpeedLoaderMagnumRubber: SpeedLoaderMagnum
 MagazineBoxPistolRubber: MagazineBoxPistol
 # RIP box of magnum rubbers 202X to 2024
@@ -790,66 +790,40 @@ PrefilledSyringe: Syringe
 #2025-10-29 // KS14 Change - Remove spacelaw
 BookSpaceLaw: null
 
-#2025-12-23 // KS14 Change - Remove slop
-#plushies
-PlushieBee: null
-PlushieNar: null
-PlushieRatvar: null
-PlushieNuke: null
-PlushieSlime: null
-PlushieSnake: null
-PlushieExperiment: null
-PlushieLizard: null
-PlushieSpaceLizard: null
-PlushieLizardInversed: null
-PlushieCarp: null
-PlushieHolocarp: null
-PlushieMagicarp: null
-PlushieRainbowCarp: null
-PlushieVox: null
-PlushieRouny: null
-PlushieSharkBlue: null
-PlushieSharkGrey: null
-PlushieSharkPink: null
-PlushieAtmosian: null
-PlushieDiona: null
-PlushieXeno: null
-PlushieHampter: null
-PlushieMoth: null
-PlushieArachnid: null
-PlushiePenguin: null
-#crates
-CrateFunPlushie: null
-CrateFunLizardPlushieBulk: null
-CrateFunSharkPlushieBulk: null
-#vend+its items
-VendingMachinePride: null
-ClothingNeckLGBTPin: null
-ClothingNeckAromanticPin: null
-ClothingNeckAsexualPin: null
-ClothingNeckBisexualPin: null
-ClothingNeckGayPin: null
-ClothingNeckIntersexPin: null
-ClothingNeckLesbianPin: null
-ClothingNeckNonBinaryPin: null
-ClothingNeckPansexualPin: null
-ClothingNeckOmnisexualPin: null
-ClothingNeckTransPin: null
-ClothingNeckAutismPin: null
-ClothingNeckGoldAutismPin: null
-ClothingNeckCloakAce: null
-ClothingNeckCloakAro: null
-ClothingNeckCloakBi: null
-ClothingNeckCloakEnby: null
-ClothingNeckCloakGay: null
-ClothingNeckCloakIntersex: null
-ClothingNeckCloakLesbian: null
-ClothingNeckCloakPan: null
-ClothingNeckCloakTrans: null
-ClothingHeadHatXmasCrown: null
-BedsheetRainbow: null
-ClothingHeadHatFlowerWreath: null
-ClothingUniformColorRainbow: null
-ClothingUnderSocksCoder: null
-ClothingUnderSocksBee: null
-ClothingNeckScarfStripedLesbianLong: null
+# 2025-10-6
+BibleTanakh: null
+BibleSatanic: null
+
+# 2025-10-08
+ClothingBeltAssault: ClothingBeltMilitaryWebbing
+WarpPointBombing: null
+
+# 2025-10-13
+ToyGriffin: ToyFigurineGriffin
+ToyOwlman: ToyFigurineOwlman
+ToySkeleton: ToyFigurineSkeleton
+
+# 2025-10-28
+DrinkKiraSpecial: DrinkOrangeLimeSodaGlass
+
+# 2025-11-08
+DebugSMES: SMESBasicEmpty
+DebugSubstation: SubstationBasicEmpty
+DebugSubstationWall: BaseSubstationWall
+DebugAPC: BaseAPC
+MagazineCaselessRifle: MagazinePistolCaselessRifle
+MagazineCaselessRiflePractice: MagazinePistolCaselessRiflePractice
+SpeedLoaderPistol: null
+SpeedLoaderPistolPractice: null
+
+# 2025-12-05
+GlowstickBase: GlowstickGreen
+
+# 2025-12-06
+SpawnPointZookeeper: null
+SpawnPointBoxer: null
+
+# 2025-12-07
+FigureSpawner: MechFigurineSpawner50
+ToySpawner: PlushieSpawner50
+SpacemenFigureSpawner: SpacemenFigurineSpawner90

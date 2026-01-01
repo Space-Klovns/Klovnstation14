@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: latheRecipe
+  id: WeaponAdvancedPlasmaCutter
+  result: WeaponAdvancedPlasmaCutter
+  completetime: 5
+  materials:
+    Steel: 400
+    Glass: 150
+    Uranium: 200
+    Plasma: 100

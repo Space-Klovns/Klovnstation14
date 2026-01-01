@@ -20,6 +20,7 @@
 # SPDX-FileCopyrightText: 2024 MODERN
 # SPDX-FileCopyrightText: 2024 brainfood1183
 # SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2025 Gerkada
 # SPDX-FileCopyrightText: 2025 Hannah Giovanna Dawson
 # SPDX-FileCopyrightText: 2025 RedBookcase
 # SPDX-FileCopyrightText: 2025 Sender
@@ -141,6 +142,8 @@
   category: cargoproduct-category-name-fun
   group: market
 
+# KS14 - Removed plushies
+
 - type: cargoProduct
   id: FunBoardGames
   icon:
@@ -231,15 +234,15 @@
   category: cargoproduct-category-name-fun
   group: market
 
-- type: cargoProduct
-  id: HydratedScurret
-  icon:
-    sprite: Structures/Wallmounts/posters.rsi
-    state: poster55_legit
-  product: CrateFunScurret
-  cost: 25000 # You will surely not regret buying this
-  category: cargoproduct-category-name-fun
-  group: market
+# - type: cargoProduct
+#   id: HydratedScurret
+#   icon:
+#     sprite: Structures/Wallmounts/posters.rsi
+#     state: poster55_legit
+#   product: CrateFunScurret
+#   cost: 25000 # You will surely not regret buying this
+#   category: cargoproduct-category-name-fun
+#   group: market
 
 - type: cargoProduct
   id: FunCrateGambling

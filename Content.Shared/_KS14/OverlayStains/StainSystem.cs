@@ -42,31 +42,31 @@ public sealed class StainSystem : EntitySystem
         {
             Methods = new() { ReactionMethod.Touch },
             Reagents = new() { "Water", "SpaceCleaner", "Bleach" }, // TODO: Un-hardcode
-            Effects = new() { new StainCleanReaction() }
+            Effects = new[] { new StainClean() }
         };
     }
 
     /// <summary>
     ///     Removes <see cref="StainedComponent"/> from the specified uid.
     /// </summary>
-    public void CleanEntity(EntityUid uid)
+    public void CleanEntity(Entity<StainedComponent?> entity)
     {
-        if (StainedQuery.TryGetComponent(uid, out var stainedComponent))
+        if (!StainedQuery.Resolve(entity, ref entity.Comp))
+            return;
+
+        if (TryComp<ReactiveComponent>(entity, out var reactiveComponent))
         {
-            if (TryComp<ReactiveComponent>(uid, out var reactiveComponent))
+            SynchronousDeferralSystem.Defer(() => reactiveComponent.Reactions?.Remove(StainCleanEffectEntry));
+
+            // clean up
+            if (entity.Comp.OwnsBoundReactiveComponent)
             {
-                SynchronousDeferralSystem.Defer(() => reactiveComponent.Reactions?.Remove(StainCleanEffectEntry));
-
-                // clean up
-                if (stainedComponent.OwnsBoundReactiveComponent)
-                {
-                    stainedComponent.OwnsBoundReactiveComponent = false;
-                    RemCompDeferred(uid, reactiveComponent);
-                }
+                entity.Comp.OwnsBoundReactiveComponent = false;
+                RemCompDeferred(entity.Owner, reactiveComponent);
             }
-
-            RemComp(uid, stainedComponent);
         }
+
+        RemComp(entity, entity.Comp);
     }
 
     /// <summary>
@@ -105,7 +105,6 @@ public sealed class StainSystem : EntitySystem
         }
 
         Dirty(entity);
-        Log.Debug($"Applying stain at offset: {offset}, for entity: {ToPrettyString(entity.Owner)}");
     }
 
     /// <summary>
@@ -139,6 +138,5 @@ public sealed class StainSystem : EntitySystem
         }
 
         AddOffsetStain((entity, entity.Comp2), sourceRelativeToEntityPosition.Normalized() * -coefficient, color, rotationScale);
-        Log.Debug($"At source: (local) {sourceCoordinates.Position}");
     }
 }

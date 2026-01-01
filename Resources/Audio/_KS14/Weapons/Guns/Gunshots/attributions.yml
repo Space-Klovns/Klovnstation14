@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- files: ["plasmacutter.ogg"]
+  license: CC-BY-SA-3.0
+  copyright: Taken from commit https://github.com/tgstation/tgstation/ at commit 47606e453e597caeba20e4a04b277c1aff546e5a
+  source: https://github.com/tgstation/tgstation/commit/47606e453e597caeba20e4a04b277c1aff546e5a

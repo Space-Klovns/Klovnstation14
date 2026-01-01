@@ -19,7 +19,7 @@
       effects:
       - !type:AddReagentToBlood
         conditions:
-        - !type:BloodReagentThreshold
+        - !type:BloodReagentCondition
           reagent: Zipion
           min: 1
         reagent: Zipium
@@ -28,7 +28,7 @@
       effects:
       - !type:AddReagentToBlood
         conditions:
-        - !type:BloodReagentThreshold
+        - !type:BloodReagentCondition
           reagent: Zipion
           min: 1
         reagent: Zipium

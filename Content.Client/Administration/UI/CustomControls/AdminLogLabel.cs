@@ -1,4 +1,16 @@
-﻿using Content.Shared.Administration.Logs;
+// SPDX-FileCopyrightText: 2021 DrSmugleaf
+// SPDX-FileCopyrightText: 2021 Javier Guardia Fernández
+// SPDX-FileCopyrightText: 2022 mirrorcult
+// SPDX-FileCopyrightText: 2025 B_Kirill
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Southbridge
+// SPDX-FileCopyrightText: 2025 Vasilis The Pikachu
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+// SPDX-FileCopyrightText: 2025 nabegator220
+//
+// SPDX-License-Identifier: MIT
+
+using Content.Shared.Administration.Logs;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 
@@ -15,7 +27,7 @@ public sealed class AdminLogLabel : RichTextLabel
         OnVisibilityChanged += VisibilityChanged;
     }
 
-    public SharedAdminLog Log { get; }
+    public new SharedAdminLog Log { get; }
 
     public HSeparator Separator { get; }
 

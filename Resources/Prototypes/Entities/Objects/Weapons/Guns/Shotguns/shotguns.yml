@@ -1,3 +1,56 @@
+# SPDX-FileCopyrightText: 2020 AJCM-git
+# SPDX-FileCopyrightText: 2020 DrSmugleaf
+# SPDX-FileCopyrightText: 2020 Hugo Laloge
+# SPDX-FileCopyrightText: 2020 Jackson Lewis
+# SPDX-FileCopyrightText: 2020 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2020 py01
+# SPDX-FileCopyrightText: 2021 Galactic Chimp
+# SPDX-FileCopyrightText: 2021 Paul Ritter
+# SPDX-FileCopyrightText: 2022 Emisse
+# SPDX-FileCopyrightText: 2022 Rane
+# SPDX-FileCopyrightText: 2022 Ranger6012
+# SPDX-FileCopyrightText: 2022 ScalyChimp
+# SPDX-FileCopyrightText: 2022 Scribbles0
+# SPDX-FileCopyrightText: 2022 Swept
+# SPDX-FileCopyrightText: 2022 Visne
+# SPDX-FileCopyrightText: 2022 ZeroDayDaemon
+# SPDX-FileCopyrightText: 2022 keronshb
+# SPDX-FileCopyrightText: 2022 mirrorcult
+# SPDX-FileCopyrightText: 2023 Flareguy
+# SPDX-FileCopyrightText: 2023 IProduceWidgets
+# SPDX-FileCopyrightText: 2023 LankLTE
+# SPDX-FileCopyrightText: 2023 Leon Friedrich
+# SPDX-FileCopyrightText: 2023 Nemanja
+# SPDX-FileCopyrightText: 2023 Peptide90
+# SPDX-FileCopyrightText: 2023 TaralGit
+# SPDX-FileCopyrightText: 2023 Whisper
+# SPDX-FileCopyrightText: 2023 and_a
+# SPDX-FileCopyrightText: 2023 brainfood1183
+# SPDX-FileCopyrightText: 2023 lapatison
+# SPDX-FileCopyrightText: 2023 liltenhead
+# SPDX-FileCopyrightText: 2023 lzk
+# SPDX-FileCopyrightText: 2023 vanx
+# SPDX-FileCopyrightText: 2024 Errant
+# SPDX-FileCopyrightText: 2024 Kara
+# SPDX-FileCopyrightText: 2024 RiceMar1244
+# SPDX-FileCopyrightText: 2024 S1rFl0
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2024 nikthechampiongr
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 BramvanZijp
+# SPDX-FileCopyrightText: 2025 Crazydave91920
+# SPDX-FileCopyrightText: 2025 Gerkada
+# SPDX-FileCopyrightText: 2025 John
+# SPDX-FileCopyrightText: 2025 K-Dynamic
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Nox
+# SPDX-FileCopyrightText: 2025 SpeltIncorrectyl
+# SPDX-FileCopyrightText: 2025 TeenSarlacc
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: MIT
+
 - type: entity
   name: BaseWeaponShotgun
   parent: BaseItem
@@ -43,6 +96,12 @@
         ents: []
   - type: StaticPrice
     price: 500
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/shotgun/shotgun_pickup1.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/shotgun/shotgun_drop1.ogg
 
 - type: entity
   name: Bulldog
@@ -51,6 +110,7 @@
   id: WeaponShotgunBulldog
   description: An automatic magazine-fed shotgun for close-quarters combat. Kicks like a mule on steroids. Uses .50 shotgun shells.
   components:
+  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
   - type: Sprite
     sprite: Objects/Weapons/Guns/Shotguns/bulldog.rsi
     layers:
@@ -104,10 +164,11 @@
 
 - type: entity
   name: double-barreled shotgun
-  parent: [BaseWeaponShotgun, BaseGunWieldable, BaseSecurityBartenderZookeeperContraband]
+  parent: [BaseWeaponShotgun, BaseGunWieldable, BaseSecurityBartenderContraband]
   id: WeaponShotgunDoubleBarreled
   description: An immortal classic. Uses .50 shotgun shells.
   components:
+  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
   - type: Sprite
     sprite: Objects/Weapons/Guns/Shotguns/db_shotgun.rsi
   - type: Item
@@ -140,6 +201,7 @@
   id: WeaponShotgunEnforcer
   description: A premium semi-automatic shotgun, and the pride of all security forces. Uses .50 shotgun shells.
   components: # intend for Enforcer to have wider choke for semi-auto function
+  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
   - type: Sprite
     sprite: Objects/Weapons/Guns/Shotguns/enforcer.rsi
   - type: Clothing
@@ -163,6 +225,7 @@
   id: WeaponShotgunKammerer
   description: An old yet faithful design, and a favorite among irregular forces of many worlds. Uses .50 shotgun shells.
   components: # intend for Kammerer to have tighter choke for slower fire rate and/or manual cycling
+  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
   - type: Item
     sprite: Objects/Weapons/Guns/Shotguns/pump_inhands_64x.rsi
   - type: Sprite
@@ -184,6 +247,7 @@
   id: WeaponShotgunSawn
   description: Groovy! Uses .50 shotgun shells.
   components: # needs to be super inaccurate because you don't need to wield it
+  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
   - type: Sprite
     sprite: Objects/Weapons/Guns/Shotguns/sawn.rsi
   - type: Clothing
@@ -294,3 +358,30 @@
   components:
   - type: BallisticAmmoProvider
     proto: ShellShotgunImprovised
+
+- type: entity
+  parent: [BaseWeaponShotgun, BaseGunWieldable, BaseSyndicateContraband]
+  id: WeaponShotgunHushpup
+  name: Hushpup
+  description: An obscure modification of the Enforcer, fitted with an experimental muffler. Great for those with a strict moral code. Uses .50 shotgun shells.
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Shotguns/hushpup.rsi
+  - type: Clothing
+    sprite: Objects/Weapons/Guns/Shotguns/hushpup.rsi
+  - type: Item
+    sprite: Objects/Weapons/Guns/Shotguns/hushpup.rsi
+    shape:
+    - 0,0,3,0 # smaller than BaseShotgun by 1 tile
+  - type: BallisticAmmoProvider
+    capacity: 4
+  - type: GunRequiresWield
+  - type: Gun
+    soundGunshot:
+      path: /Audio/Weapons/Guns/Gunshots/hushpup.ogg
+      params:
+        volume: -3
+        rolloffFactor: 1.3
+    fireRate: 2
+  - type: GunSpreadModifier
+    spread: 1.2

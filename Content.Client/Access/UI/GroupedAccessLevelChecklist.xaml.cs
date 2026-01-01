@@ -1,3 +1,14 @@
+// SPDX-FileCopyrightText: 2025 Brandon Li
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 LordCarve
+// SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2025 chromiumboy
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+// SPDX-FileCopyrightText: 2025 nabegator220
+//
+// SPDX-License-Identifier: MIT
+
 using Content.Client.Stylesheets;
 using Content.Client.UserInterface.Controls;
 using Content.Shared.Access;
@@ -119,11 +130,11 @@ public sealed partial class GroupedAccessLevelChecklist : BoxContainer
             if (_groupedAccessLevels.Count > 1)
             {
                 if (AccessGroupList.ChildCount == 0)
-                    accessGroupButton.AddStyleClass(StyleBase.ButtonOpenLeft);
+                    accessGroupButton.AddStyleClass(StyleClass.ButtonOpenLeft);
                 else if (_groupedAccessLevels.Count > 1 && AccessGroupList.ChildCount == (_groupedAccessLevels.Count - 1))
-                    accessGroupButton.AddStyleClass(StyleBase.ButtonOpenRight);
+                    accessGroupButton.AddStyleClass(StyleClass.ButtonOpenRight);
                 else
-                    accessGroupButton.AddStyleClass(StyleBase.ButtonOpenBoth);
+                    accessGroupButton.AddStyleClass(StyleClass.ButtonOpenBoth);
             }
 
             accessGroupButton.Pressed = _accessGroupTabIndex == orderedAccessGroups.IndexOf(accessGroup);

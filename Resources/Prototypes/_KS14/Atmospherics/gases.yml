@@ -8,7 +8,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 - type: gas
-  id: 9
+  id: Zipion
   name: gases-zipion
   specificHeat: 5 # Weak, we don't want zipion to fuck with anything the atmos noob mixes it with
   heatCapacityRatio: 1.3
@@ -16,8 +16,9 @@
   color: b924bf
   reagent: Zipion
   pricePerMole: 1
+  
 - type: gas
-  id: 10
+  id: Argon
   name: gases-argon
   specificHeat: 25
   heatCapacityRatio: 1.67

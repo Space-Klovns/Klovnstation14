@@ -78,9 +78,14 @@ public sealed partial class EmotePrototype : IPrototype
     /// </summary>
     [DataField]
     public HashSet<string> ChatTriggers = new();
+
     // goob edit - animations
+    /// <summary>
+    ///     This event is raised by-value on
+    ///         everything that uses the emote.
+    /// </summary>
     [DataField]
-    public object? Event = null;
+    public EntityEventArgs? Event = null;
 }
 
 /// <summary>
