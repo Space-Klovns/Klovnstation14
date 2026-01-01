@@ -68,10 +68,10 @@
   - type: Sprite
   - type: EmitSoundOnPickup
     sound:
-      path: /Audio/_KS14/Handling/granade/grenade_pick_up.ogg
+      path: /Audio/_KS14/Handling/grenade/grenade_pick_up.ogg
   - type: EmitSoundOnDrop
     sound:
-      path: /Audio/_KS14/Handling/granade/grenade_drop.ogg
+      path: /Audio/_KS14/Handling/grenade/grenade_drop.ogg
 
 - type: entity
   id: GrenadeBaton
@@ -191,10 +191,10 @@
   - type: Sprite
   - type: EmitSoundOnPickup
     sound:
-      path: /Audio/_KS14/Handling/granade/grenade_pick_up.ogg
+      path: /Audio/_KS14/Handling/grenade/grenade_pick_up.ogg
   - type: EmitSoundOnDrop
     sound:
-      path: /Audio/_KS14/Handling/granade/grenade_drop.ogg
+      path: /Audio/_KS14/Handling/grenade/grenade_drop.ogg
 
 - type: entity
   id: CannonBall

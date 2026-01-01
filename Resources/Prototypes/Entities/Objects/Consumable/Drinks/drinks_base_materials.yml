@@ -307,7 +307,7 @@
       Gold: 25
   - type: EmitSoundOnPickup
     sound:
-      path: /Audio/_KS14/Handling/drinkglass_pick_up.ogg
+      path: /Audio/_KS14/Handling/drinkglass_pickup.ogg
   - type: EmitSoundOnDrop
     sound:
       path: /Audio/_KS14/Handling/drinkglass_drop.ogg

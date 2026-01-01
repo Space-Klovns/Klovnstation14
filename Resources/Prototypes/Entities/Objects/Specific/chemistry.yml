@@ -646,4 +646,4 @@
       path: /Audio/_KS14/Handling/pill_bottle_pickup.ogg
   - type: EmitSoundOnDrop
     sound:
-      path: /Audio/_KS14/Handling/pill_bottle_drop.ogg
+      path: /Audio/_KS14/Handling/pill_bottle_place.ogg

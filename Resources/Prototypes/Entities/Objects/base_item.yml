@@ -71,7 +71,7 @@
       path: /Audio/_KS14/Handling/backpack/backpack_pickup1.ogg
   - type: EmitSoundOnDrop
     sound:
-      path: /Audio/_KS14/Handling/backpack/backdrop_drop1.ogg
+      path: /Audio/_KS14/Handling/backpack/backpack_drop1.ogg
 
 - type: entity
   id: BaseBagOpenClose

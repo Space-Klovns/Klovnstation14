@@ -40,7 +40,7 @@
     - GasCanisters
   - type: EmitSoundOnPickup
     sound:
-      path: /Audio/_KS14/Handling/gasanalyzer/gas_analyzer_pickup.ogg
+      path: /Audio/_KS14/Handling/gas_analyzer/gas_analyzer_pickup.ogg
   - type: EmitSoundOnDrop
     sound:
-      path: /Audio/_KS14/Handling/gasanalyzer/gas_analyzer_drop.ogg
+      path: /Audio/_KS14/Handling/gas_analyzer/gas_analyzer_drop.ogg
