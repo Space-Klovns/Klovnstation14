@@ -1,4 +1,4 @@
-using Content.Server.Destructible;
+using Content.Shared.Destructible; // Trauma - moved to shared
 using Content.Server.NPC.Components;
 using Content.Server.NPC.Pathfinding;
 using Content.Shared.Climbing;

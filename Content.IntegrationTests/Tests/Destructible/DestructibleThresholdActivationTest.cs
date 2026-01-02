@@ -1,7 +1,8 @@
 using System.Linq;
-using Content.Server.Destructible;
-using Content.Server.Destructible.Thresholds;
+using Content.Shared.Destructible; // Trama - moved to shared
+using Content.Shared.Destructible.Thresholds; // Trauma - moved to shared
 using Content.Server.Destructible.Thresholds.Behaviors;
+using Content.Shared.Destructible.Thresholds.Behaviors; // Trauma
 using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;

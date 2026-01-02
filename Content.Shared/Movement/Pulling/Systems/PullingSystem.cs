@@ -252,10 +252,26 @@ public sealed class PullingSystem : EntitySystem
         if (component.Pulling != args.BlockingEntity)
             return;
 
-        if (TryComp(args.BlockingEntity, out PullableComponent? comp))
-        {
-            TryStopPull(args.BlockingEntity, comp);
-        }
+        if (!_combatMode.IsInCombatMode(uid)
+            || HasComp<GrabThrownComponent>(args.BlockingEntity)
+            || component.GrabStage <= GrabStage.Soft)
+            return;
+
+        var distanceToCursor = args.Direction.Length();
+        var direction = args.Direction.Normalized() * MathF.Min(distanceToCursor, component.ThrowingDistance);
+
+        var damage = new DamageSpecifier();
+        damage.DamageDict.Add("Blunt", 5);
+
+        TryStopPull(args.BlockingEntity, comp, uid, true);
+        _grabThrown.Throw(args.BlockingEntity,
+            uid,
+            direction,
+            component.GrabThrownSpeed,
+            damage * component.GrabThrowDamageModifier); // Throwing the grabbed person
+        _throwing.TryThrow(uid, -direction * throwerPhysics.InvMass); // Throws back the grabber
+        _audio.PlayPredicted(new SoundPathSpecifier("/Audio/Effects/thudswoosh.ogg"), uid, uid);
+        component.NextStageChange = _timing.CurTime.Add(TimeSpan.FromSeconds(3f)); // To avoid grab and throw spamming
     }
 
     private void AddPullVerbs(EntityUid uid, PullableComponent component, GetVerbsEvent<Verb> args)

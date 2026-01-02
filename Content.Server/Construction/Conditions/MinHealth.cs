@@ -1,4 +1,4 @@
-using Content.Server.Destructible;
+using Content.Shared.Destructible; // Trauma - moved to shared
 using Content.Shared.Construction;
 using Content.Shared.Damage.Components;
 using Content.Shared.Examine;
@@ -34,7 +34,7 @@ public sealed partial class MinHealth : IGraphCondition
             return false;
         }
 
-        var destructionSys = entMan.System<DestructibleSystem>();
+        var destructionSys = entMan.System<SharedDestructibleSystem>(); // Trauma - use shared version
         var maxHealth = destructionSys.DestroyedAt(uid, destructibleComp);
         var curHealth = maxHealth - damageComp.TotalDamage;
         var proportionHealth = curHealth / maxHealth;

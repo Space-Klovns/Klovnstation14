@@ -1,5 +1,5 @@
-﻿using System.Text;
-using Content.Server.Destructible;
+using System.Text;
+using Content.Shared.Destructible; // Trauma - moved to shared
 using Content.Shared.Speech.Components;
 using Content.Shared.Damage.Components;
 using Content.Shared.FixedPoint;
@@ -15,7 +15,7 @@ public sealed class DamagedSiliconAccentSystem : EntitySystem
     [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly SharedBatterySystem _battery = default!;
     [Dependency] private readonly PowerCellSystem _powerCell = default!;
-    [Dependency] private readonly DestructibleSystem _destructibleSystem = default!;
+    [Dependency] private readonly SharedDestructibleSystem _destructibleSystem = default!; // Trauma - use shared version
 
     public override void Initialize()
     {

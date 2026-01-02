@@ -248,13 +248,14 @@ namespace Content.Server.Atmos.EntitySystems
                     // TODO: Technically these directions won't be correct but uhh I'm just here for optimisations buddy not to fix my old bugs.
                     if (throwTarget != EntityCoordinates.Invalid)
                     {
-                        var pos = ((_transformSystem.ToMapCoordinates(throwTarget).Position - _transformSystem.GetWorldPosition(xform)).Normalized() + dirVec).Normalized();
-                        _physics.ApplyLinearImpulse(uid, pos * moveForce, body: physics);
+                        var pos = throwTarget.ToMap(EntityManager, _transformSystem).Position - xform.WorldPosition + dirVec;
+                        _throwing.TryThrow(uid, pos.Normalized() * MathF.Min(moveForce, SpaceWindMaxVelocity), moveForce,
+                            predicted: false); // Trauma
                     }
                     else
                     {
-                        moveForce = MathF.Min(moveForce, SpaceWindMaxPushForce);
-                        _physics.ApplyLinearImpulse(uid, dirVec * moveForce, body: physics);
+                        _throwing.TryThrow(uid, dirVec.Normalized() * MathF.Min(moveForce, SpaceWindMaxVelocity), moveForce,
+                            predicted: false); // Trauma
                     }
 
                     component.LastHighPressureMovementAirCycle = cycle;
