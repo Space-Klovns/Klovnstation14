@@ -181,7 +181,7 @@ public sealed class ThrowingSystem : EntitySystem
 
         var comp = new ThrownItemComponent
         {
-            Thrower = user,
+            Thrower = TerminatingOrDeleted(user) ? null : user, // Trauma - don't network a deleted entity
             Animate = animated,
         };
 
