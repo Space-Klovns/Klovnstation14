@@ -123,6 +123,8 @@ public sealed class HandTeleporterSystem : EntitySystem
 
                 if (component.AllowPortalsOnDifferentMaps)
                     portal.CanTeleportToOtherMaps = true;
+
+                Dirty(component.FirstPortal.Value, portal);
             }
 
             _adminLogger.Add(LogType.EntitySpawn, LogImpact.High, $"{ToPrettyString(user):player} opened {ToPrettyString(component.FirstPortal.Value)} at {Transform(component.FirstPortal.Value).Coordinates} using {ToPrettyString(uid)}");
@@ -151,6 +153,8 @@ public sealed class HandTeleporterSystem : EntitySystem
 
                 if (component.AllowPortalsOnDifferentMaps)
                     portal.CanTeleportToOtherMaps = true;
+
+                Dirty(component.SecondPortal.Value, portal);
             }
 
             _adminLogger.Add(LogType.EntitySpawn, LogImpact.High, $"{ToPrettyString(user):player} opened {ToPrettyString(component.SecondPortal.Value)} at {Transform(component.SecondPortal.Value).Coordinates} linked to {ToPrettyString(component.FirstPortal!.Value)} using {ToPrettyString(uid)}");
