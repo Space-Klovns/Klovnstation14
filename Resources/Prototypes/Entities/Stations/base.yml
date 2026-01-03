@@ -226,6 +226,7 @@
   id: BaseStationShuttlesATSless
   abstract: true
   components:
+      groups:
         ruins: !type:GridSpawnGroup
           hide: true
           nameGrid: true
