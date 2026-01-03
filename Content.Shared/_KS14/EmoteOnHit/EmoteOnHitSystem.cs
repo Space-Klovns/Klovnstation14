@@ -29,6 +29,6 @@ public sealed class SharedFlipOnHitSystem : EntitySystem
             return;
 
         // Not networked because MeleeHitEvent is (hopefully) shared
-        _chatSystem.TryEmoteWithoutChat(entity.Owner, entity.Comp.Emote, networked: false);
+        _chatSystem.TryEmoteWithoutChat(args.User, entity.Comp.Emote, networked: false);
     }
 }

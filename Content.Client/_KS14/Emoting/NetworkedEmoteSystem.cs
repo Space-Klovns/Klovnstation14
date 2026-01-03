@@ -43,5 +43,10 @@ public sealed class NetworkedEmoteSystem : EntitySystem
 
         var emoteEvent = new EmoteEvent(emotePrototype);
         RaiseLocalEvent(uid.Value, ref emoteEvent);
+
+        // goob emote event edit start
+        if (emotePrototype.Event is { } specificEvent)
+            RaiseLocalEvent(uid.Value, specificEvent);
+        // goob edit end
     }
 }
