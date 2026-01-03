@@ -31,7 +31,7 @@
   # KS14: bring saltern back; no longer fallback
   stations:
     Saltern:
-      stationProto: ATSlessNanotrasenStation
+      stationProto: StandardNanotrasenStation # CERTIFIED KS14 COMMENT: this SHOULD use ATSlessNanotrasenStation but this needs ruins to generate on planetmap first.
       components:
         - type: StationNameSetup
           mapNameTemplate: '{0} Saltern {1}'
