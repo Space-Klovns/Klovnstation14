@@ -21,6 +21,7 @@ using System.Collections.Frozen;
 using Content.Shared.Chat.Prototypes;
 using Content.Shared.Speech;
 using Robust.Shared.Audio;
+using Robust.Shared.Player;
 using Robust.Shared.Random;
 
 namespace Content.Shared.Chat;
@@ -125,25 +126,27 @@ public abstract partial class SharedChatSystem
     /// <summary>
     /// Makes the selected entity emote using the given <see cref="EmotePrototype"/> without sending any messages to chat.
     /// </summary>
+    /// <param name="networked">KS14: Should this emote be networked to the client?</param>
     /// <returns>True if an emote was performed. False if the emote is unavailable, cancelled, etc.</returns>
-    public bool TryEmoteWithoutChat(EntityUid uid, string emoteId, bool ignoreActionBlocker = false)
+    public bool TryEmoteWithoutChat(EntityUid uid, string emoteId, bool ignoreActionBlocker = false, bool networked = true /* KS14 */)
     {
         if (!_prototypeManager.Resolve<EmotePrototype>(emoteId, out var proto))
             return false;
 
-        return TryEmoteWithoutChat(uid, proto, ignoreActionBlocker);
+        return TryEmoteWithoutChat(uid, proto, ignoreActionBlocker, networked: networked /* KS14 */);
     }
 
     /// <summary>
     /// Makes the selected entity emote using the given <see cref="EmotePrototype"/> without sending any messages to chat.
     /// </summary>
+    /// <param name="networked">KS14: Should this emote be networked to the client?</param>
     /// <returns>True if an emote was performed. False if the emote is unavailable, cancelled, etc.</returns>
-    public bool TryEmoteWithoutChat(EntityUid uid, EmotePrototype proto, bool ignoreActionBlocker = false)
+    public bool TryEmoteWithoutChat(EntityUid uid, EmotePrototype proto, bool ignoreActionBlocker = false, bool networked = true /* KS14 */)
     {
         if (!_actionBlocker.CanEmote(uid) && !ignoreActionBlocker)
             return false;
 
-        return TryInvokeEmoteEvent(uid, proto);
+        return TryInvokeEmoteEvent(uid, proto, networked: networked /* KS14 */);
     }
 
     /// <summary>
@@ -233,8 +236,9 @@ public abstract partial class SharedChatSystem
     /// </summary>
     /// <param name="uid">The entity which is emoting</param>
     /// <param name="proto">The emote which is being performed</param>
+    /// <param name="networked">KS14: Should this emote be networked to the client?</param>
     /// <returns>True if the emote was performed, false otherwise.</returns>
-    private bool TryInvokeEmoteEvent(EntityUid uid, EmotePrototype proto)
+    private bool TryInvokeEmoteEvent(EntityUid uid, EmotePrototype proto, bool networked = true /* KS14 */)
     {
         var beforeEv = new BeforeEmoteEvent(uid, proto);
         RaiseLocalEvent(uid, ref beforeEv, true);
@@ -272,6 +276,13 @@ public abstract partial class SharedChatSystem
 
         var ev = new EmoteEvent(proto);
         RaiseLocalEvent(uid, ref ev);
+
+        // KS14-Goob emote networking
+        if (networked)
+            RaiseNetworkEvent(
+                new _KS14.Emoting.NetworkedEmoteMessage(GetNetEntity(uid), proto.ID),
+                Filter.Pvs(uid, entityManager: EntityManager)
+            );
 
         // goob emote event edit start
         if (proto.Event is { } specificEvent)

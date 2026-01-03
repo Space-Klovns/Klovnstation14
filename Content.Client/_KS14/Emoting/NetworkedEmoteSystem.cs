@@ -1,0 +1,43 @@
+using Content.Shared._KS14.Emoting;
+using Content.Shared.Chat;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Utility;
+using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
+
+namespace Content.Client._KS14.Emoting;
+
+/// <summary>
+///     Handles <see cref="NetworkedEmoteMessage"/>
+///         on the client, converting it to an <see cref="EmoteEvent"/>.  
+/// </summary>
+public sealed class NetworkedEmoteSystem : EntitySystem
+{
+    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeNetworkEvent<NetworkedEmoteMessage>(OnNetworkedEmoteMessage);
+    }
+
+    private void OnNetworkedEmoteMessage(NetworkedEmoteMessage args)
+    {
+        if (!_prototypeManager.TryIndex(args.EmoteId, out var emotePrototype))
+        {
+            DebugTools.Assert(
+                $"When handling NetworkedEmoteMessage, could not index any EmotePrototype of ID '{(args.EmoteId.ToString().IsWhiteSpace() ? "[WHITESPACE ID]" : args.EmoteId.ToString())}'");
+
+            return;
+        }
+
+        if (!TryGetEntity(args.NetId, out var uid))
+        {
+            DebugTools.Assert($"When handling NetworkedEmoteMessage, could not find any EntityUid corresponding to NetEntity of {args.NetId}");
+            return;
+        }
+
+        var emoteEvent = new EmoteEvent(emotePrototype);
+        RaiseLocalEvent(uid.Value, ref emoteEvent);
+    }
+}
