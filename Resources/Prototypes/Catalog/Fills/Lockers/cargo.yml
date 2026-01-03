@@ -44,7 +44,8 @@
       rolls: !type:ConstantNumberSelector
         value: 3
     - id: WeaponPlasmaCutter # KS14
-    - id: MineralScanner # KS1
+    - id: MineralScanner # KS14
+    - id: ClothingOuterExplorerSuit # KS14
 
 - type: entity
   id: LockerSalvageSpecialistFilledHardsuit
