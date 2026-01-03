@@ -26,6 +26,14 @@ public abstract partial class SharedGunSystem
 
     private void OnBasicEntityTakeAmmo(EntityUid uid, BasicEntityAmmoProviderComponent component, TakeAmmoEvent args)
     {
+        // <Trauma>
+        WeightedRandomEntityPrototype? prototypes = null;
+        if (component.Proto == null && (!ProtoManager.TryIndex(component.Prototypes, out prototypes) ||
+                                        prototypes.Weights.Count == 0))
+            return;
+        var rand = Random(uid);
+        // </Trauma>
+
         for (var i = 0; i < args.Shots; i++)
         {
             if (component.Count <= 0)
@@ -36,7 +44,10 @@ public abstract partial class SharedGunSystem
                 component.Count--;
             }
 
-            var ent = Spawn(component.Proto, args.Coordinates);
+            // <Trauma>
+            var proto = component.Proto ?? prototypes!.Pick(rand);
+            var ent = PredictedSpawnAtPosition(proto, args.Coordinates);
+            // </Trauma>
             args.Ammo.Add((ent, EnsureShootable(ent)));
         }
 

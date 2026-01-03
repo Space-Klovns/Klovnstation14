@@ -70,7 +70,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
 
         if (_damageable.TryChangeDamage((target, damageableComponent), ev.Damage, out var damage, component.IgnoreResistances, origin: component.Shooter) && Exists(component.Shooter))
         {
-            if (!deleted)
+            if (!deleted && _net.IsServer) // intentionally not predicting so you know if color flashes its 100% a hit
             {
                 _color.RaiseEffect(Color.Red, new List<EntityUid> { target }, Filter.Pvs(target, entityManager: EntityManager));
             }
@@ -131,7 +131,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
         if (component.DeleteOnCollide && component.ProjectileSpent)
             PredictedQueueDel(uid);
 
-        if (component.ImpactEffect != null && TryComp(uid, out TransformComponent? xform))
+        if (component.ImpactEffect != null && TryComp(uid, out TransformComponent? xform) && _timing.IsFirstTimePredicted)
         {
             RaiseLocalEvent(new ImpactEffectEvent(component.ImpactEffect, GetNetCoordinates(xform.Coordinates)));
         }
