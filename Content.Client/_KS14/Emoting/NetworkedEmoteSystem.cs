@@ -9,6 +9,10 @@ namespace Content.Client._KS14.Emoting;
 /// <summary>
 ///     Handles <see cref="NetworkedEmoteMessage"/>
 ///         on the client, converting it to an <see cref="EmoteEvent"/>.  
+///
+///     This entire system is only done because player-inputted emotes are (right now)
+///         only handled on-server and therefore not predicted, so we do this goidafix
+///         to make server experience consistent with client.
 /// </summary>
 public sealed class NetworkedEmoteSystem : EntitySystem
 {
