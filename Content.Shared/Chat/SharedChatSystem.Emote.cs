@@ -10,10 +10,14 @@
 // SPDX-FileCopyrightText: 2024 Verm
 // SPDX-FileCopyrightText: 2024 geraeumig
 // SPDX-FileCopyrightText: 2025 Centronias
+// SPDX-FileCopyrightText: 2025 FrauZj
 // SPDX-FileCopyrightText: 2025 FrauzJ
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 lzk
+// SPDX-FileCopyrightText: 2025 nabegator220
+// SPDX-FileCopyrightText: 2025 slarticodefast
 // SPDX-FileCopyrightText: 2025 themias
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
 //
 // SPDX-License-Identifier: MIT
 
