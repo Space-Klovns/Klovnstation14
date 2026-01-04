@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
+using Content.Client.Chat;
 using Content.Shared._KS14.Emoting;
 using Content.Shared.Chat;
 using Robust.Shared.Prototypes;
@@ -22,6 +23,7 @@ namespace Content.Client._KS14.Emoting;
 public sealed class NetworkedEmoteSystem : EntitySystem
 {
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private readonly ChatSystem _chatSystem = default!;
 
     public override void Initialize()
     {
@@ -46,12 +48,6 @@ public sealed class NetworkedEmoteSystem : EntitySystem
             return;
         }
 
-        var emoteEvent = new EmoteEvent(emotePrototype);
-        RaiseLocalEvent(uid.Value, ref emoteEvent);
-
-        // goob emote event edit start
-        if (emotePrototype.Event is { } specificEvent)
-            RaiseLocalEvent(uid.Value, specificEvent);
-        // goob edit end
+        _chatSystem.ImmediatelyInvokeEmoteEvent(uid.Value, emotePrototype);
     }
 }

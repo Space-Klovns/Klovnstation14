@@ -130,27 +130,27 @@ public abstract partial class SharedChatSystem
     /// <summary>
     /// Makes the selected entity emote using the given <see cref="EmotePrototype"/> without sending any messages to chat.
     /// </summary>
-    /// <param name="networked">KS14: Should this emote be networked to the client?</param>
+    /// <param name="networkedFilter">KS14: If not null, this emote will be networked and these are the sessions that it will be networked to.</param>
     /// <returns>True if an emote was performed. False if the emote is unavailable, cancelled, etc.</returns>
-    public bool TryEmoteWithoutChat(EntityUid uid, string emoteId, bool ignoreActionBlocker = false, bool networked = true /* KS14 */)
+    public bool TryEmoteWithoutChat(EntityUid uid, string emoteId, bool ignoreActionBlocker = false, Filter? networkedFilter = null /* KS14*/)
     {
         if (!_prototypeManager.Resolve<EmotePrototype>(emoteId, out var proto))
             return false;
 
-        return TryEmoteWithoutChat(uid, proto, ignoreActionBlocker, networked: networked /* KS14 */);
+        return TryEmoteWithoutChat(uid, proto, ignoreActionBlocker, networkedFilter: networkedFilter /* KS14 */);
     }
 
     /// <summary>
     /// Makes the selected entity emote using the given <see cref="EmotePrototype"/> without sending any messages to chat.
     /// </summary>
-    /// <param name="networked">KS14: Should this emote be networked to the client?</param>
+    /// <param name="networkedFilter">KS14: If not null, this emote will be networked and these are the sessions that it will be networked to.</param>
     /// <returns>True if an emote was performed. False if the emote is unavailable, cancelled, etc.</returns>
-    public bool TryEmoteWithoutChat(EntityUid uid, EmotePrototype proto, bool ignoreActionBlocker = false, bool networked = true /* KS14 */)
+    public bool TryEmoteWithoutChat(EntityUid uid, EmotePrototype proto, bool ignoreActionBlocker = false, Filter? networkedFilter = null /* KS14 */)
     {
         if (!_actionBlocker.CanEmote(uid) && !ignoreActionBlocker)
             return false;
 
-        return TryInvokeEmoteEvent(uid, proto, networked: networked /* KS14 */);
+        return TryInvokeEmoteEvent(uid, proto, networkedFilter: networkedFilter /* KS14 */);
     }
 
     /// <summary>
@@ -200,7 +200,8 @@ public abstract partial class SharedChatSystem
         if (!AllowedToUseEmote(source, emote))
             return true;
 
-        return TryInvokeEmoteEvent(source, emote);
+        return TryInvokeEmoteEvent(source, emote,
+            networkedFilter: Filter.Pvs(source, entityManager: EntityManager) /* KS14: Fully networked */);
 
     }
     /// <summary>
@@ -240,9 +241,9 @@ public abstract partial class SharedChatSystem
     /// </summary>
     /// <param name="uid">The entity which is emoting</param>
     /// <param name="proto">The emote which is being performed</param>
-    /// <param name="networked">KS14: Should this emote be networked to the client?</param>
+    /// <param name="networkedFilter">KS14: If not null, this emote will be networked and these are the sessions that it will be networked to.</param>
     /// <returns>True if the emote was performed, false otherwise.</returns>
-    private bool TryInvokeEmoteEvent(EntityUid uid, EmotePrototype proto, bool networked = true /* KS14 */)
+    private bool TryInvokeEmoteEvent(EntityUid uid, EmotePrototype proto, Filter? networkedFilter = null /* KS14 */)
     {
         var beforeEv = new BeforeEmoteEvent(uid, proto);
         RaiseLocalEvent(uid, ref beforeEv, true);
@@ -278,22 +279,36 @@ public abstract partial class SharedChatSystem
             return false;
         }
 
-        var ev = new EmoteEvent(proto);
-        RaiseLocalEvent(uid, ref ev);
+        ImmediatelyInvokeEmoteEvent(uid, proto);
 
         // KS14-Goob emote networking
-        if (networked)
+        if (networkedFilter is { } filter)
             RaiseNetworkEvent(
                 new _KS14.Emoting.NetworkedEmoteMessage(GetNetEntity(uid), proto.ID),
-                Filter.Pvs(uid, entityManager: EntityManager)
+                filter
             );
 
+        return true;
+    }
+
+    /// <summary>
+    /// Immediately raises <see cref="EmoteEvent"/> on something. Don't use this unless
+    /// Not networked.
+    /// you know what you are doing.
+    /// </summary>
+    /// <param name="uid">The entity which is emoting</param>
+    /// <param name="proto">The emote which is being performed</param>
+    /// <param name="networked">KS14: Should this emote be networked to the client?</param>
+    // KS14: Moved to own method
+    public void ImmediatelyInvokeEmoteEvent(EntityUid uid, EmotePrototype emotePrototype)
+    {
+        var ev = new EmoteEvent(emotePrototype);
+        RaiseLocalEvent(uid, ref ev);
+
         // goob emote event edit start
-        if (proto.Event is { } specificEvent)
+        if (emotePrototype.Event is { } specificEvent)
             RaiseLocalEvent(uid, specificEvent);
         // goob edit end
-
-        return true;
     }
 
     private string TrimPunctuation(string textInput)

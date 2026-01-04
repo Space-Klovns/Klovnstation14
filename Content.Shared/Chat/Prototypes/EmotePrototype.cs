@@ -85,7 +85,7 @@ public sealed partial class EmotePrototype : IPrototype
     ///         everything that uses the emote.
     /// </summary>
     [DataField]
-    public EntityEventArgs? Event = null;
+    public object? Event = null;
 }
 
 /// <summary>

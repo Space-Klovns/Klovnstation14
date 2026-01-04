@@ -7,6 +7,7 @@ using Content.Shared.Chat;
 using Content.Shared.Item.ItemToggle;
 using Content.Shared.Standing;
 using Content.Shared.Weapons.Melee.Events;
+using Robust.Shared.Player;
 
 namespace Content.Shared._KS14.EmoteOnHit;
 
@@ -33,7 +34,8 @@ public sealed class SharedFlipOnHitSystem : EntitySystem
             _standingStateSystem.IsDown(args.User))
             return;
 
-        // Not networked because MeleeHitEvent is (hopefully) shared
-        _chatSystem.TryEmoteWithoutChat(args.User, entity.Comp.Emote, networked: false);
+        // Networked to everyone except for the user; to predict
+        _chatSystem.TryEmoteWithoutChat(args.User, entity.Comp.Emote,
+            networkedFilter: Filter.PvsExcept(args.User, entityManager: EntityManager));
     }
 }
