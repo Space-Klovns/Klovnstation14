@@ -57,4 +57,10 @@ public sealed partial class BallisticAmmoProviderComponent : Component
     /// </summary>
     [DataField]
     public TimeSpan FillDelay = TimeSpan.FromSeconds(0.5);
+
+    /// <summary>
+    /// KS14 - when porting gunpred this was desired
+    /// </summary>
+    [ViewVariables(VVAccess.ReadWrite), DataField("autoCycle"), AutoNetworkedField]
+    public bool AutoCycle = true;
 }

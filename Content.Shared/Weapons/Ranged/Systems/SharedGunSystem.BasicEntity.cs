@@ -1,5 +1,6 @@
 ﻿using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Weapons.Ranged.Events;
+using Content.Shared.Random;
 using Robust.Shared.GameStates;
 
 namespace Content.Shared.Weapons.Ranged.Systems;
@@ -26,14 +27,6 @@ public abstract partial class SharedGunSystem
 
     private void OnBasicEntityTakeAmmo(EntityUid uid, BasicEntityAmmoProviderComponent component, TakeAmmoEvent args)
     {
-        // <Trauma>
-        WeightedRandomEntityPrototype? prototypes = null;
-        if (component.Proto == null && (!ProtoManager.TryIndex(component.Prototypes, out prototypes) ||
-                                        prototypes.Weights.Count == 0))
-            return;
-        var rand = Random(uid);
-        // </Trauma>
-
         for (var i = 0; i < args.Shots; i++)
         {
             if (component.Count <= 0)
@@ -44,10 +37,8 @@ public abstract partial class SharedGunSystem
                 component.Count--;
             }
 
-            // <Trauma>
-            var proto = component.Proto ?? prototypes!.Pick(rand);
+            var proto = component.Proto;
             var ent = PredictedSpawnAtPosition(proto, args.Coordinates);
-            // </Trauma>
             args.Ammo.Add((ent, EnsureShootable(ent)));
         }
 

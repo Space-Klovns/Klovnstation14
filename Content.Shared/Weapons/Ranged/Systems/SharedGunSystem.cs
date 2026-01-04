@@ -514,7 +514,7 @@ public abstract partial class SharedGunSystem : EntitySystem
             // pneumatic cannon doesn't shoot bullets it just throws them, ignore ammo handling
             if (throwItems && ent != null)
             {
-                ShootOrThrow(ent.Value, mapDirection, gunVelocity, gun, gunUid, user, targetCoordinates: toMapBeforeRecoil);
+                ShootOrThrow(ent.Value, mapDirection, gunVelocity, gun, gunUid, user);
                 shotProjectiles.Add(ent.Value); // Goobstation
                 continue;
             }
@@ -565,7 +565,6 @@ public abstract partial class SharedGunSystem : EntitySystem
                     var hitscanEv = new HitscanTraceEvent
                     {
                         FromCoordinates = fromCoordinates,
-                        TargetCoordinates = toMapBeforeRecoil, // Goob
                         ShotDirection = mapDirection.Normalized(),
                         Gun = gunUid,
                         Shooter = user,
@@ -601,25 +600,19 @@ public abstract partial class SharedGunSystem : EntitySystem
                 var angles = LinearSpread(mapAngle - spreadEvent.Spread / 2,
                     mapAngle + spreadEvent.Spread / 2, ammoSpreadComp.Count);
 
-                ShootOrThrow(ammoEnt, angles[0].ToVec(), gunVelocity, gun, gunUid, user, targetCoordinates: toMapBeforeRecoil); // Goobstation
+                ShootOrThrow(ammoEnt, angles[0].ToVec(), gunVelocity, gun, gunUid, user);
                 shotProjectiles.Add(ammoEnt);
 
                 for (var i = 1; i < ammoSpreadComp.Count; i++)
                 {
                     var newuid = PredictedSpawnAtPosition(ammoSpreadComp.Proto, fromEnt);
-                    // Lavaland Change: Raise event when a projectile/pellet is fired from a gun.
-                    RaiseLocalEvent(gunUid, new ProjectileShotEvent()
-                    {
-                        FiredProjectile = newuid
-                    });
-                    SetProjectilePerfectHitEntities(newuid, user, new MapCoordinates(toMap, fromMap.MapId)); // Goob
-                    ShootOrThrow(newuid, angles[i].ToVec(), gunVelocity, gun, gunUid, user, targetCoordinates: toMapBeforeRecoil); // Goobstation
+                    ShootOrThrow(newuid, angles[i].ToVec(), gunVelocity, gun, gunUid, user);
                     shotProjectiles.Add(newuid);
                 }
             }
             else
             {
-                ShootOrThrow(ammoEnt, mapDirection, gunVelocity, gun, gunUid, user, targetCoordinates: toMapBeforeRecoil); // Goobstation
+                ShootOrThrow(ammoEnt, mapDirection, gunVelocity, gun, gunUid, user);
                 shotProjectiles.Add(ammoEnt);
             }
 
@@ -647,9 +640,6 @@ public abstract partial class SharedGunSystem : EntitySystem
         Physics.UpdateIsPredicted(uid, physics); // Trauma - predict this shit
 
         TransformSystem.SetWorldRotation(uid, direction.ToWorldAngle() + projectile.Angle);
-        // <Trauma>
-        if (targetCoordinates is {} target)
-            projectile.TargetCoordinates = target;
 
         // this lets the client ignore the server-spawned projectile that it predicted shooting
         if (user is {} userUid && _netManager.IsServer)

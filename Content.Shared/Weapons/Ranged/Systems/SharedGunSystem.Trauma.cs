@@ -1,4 +1,3 @@
-using Content.Goobstation.Common.Weapons.Ranged;
 using Content.Shared.Projectiles;
 using Content.Shared.Random.Helpers;
 using Content.Shared.Weapons.Ranged.Components;
@@ -51,7 +50,7 @@ public abstract partial class SharedGunSystem
             return;
         }
 
-        ShootProjectile(uid, mapDirection, gunVelocity, gunUid, user, gun.ProjectileSpeedModified, targetCoordinates); // Goobstation
+        ShootProjectile(uid, mapDirection, gunVelocity, gunUid, user, gun.ProjectileSpeedModified);
     }
 
     /// <summary>
@@ -86,14 +85,6 @@ public abstract partial class SharedGunSystem
 
         // Convert it so angle can go either side.
         var random = Random(uid).NextFloat(-0.5f, 0.5f);
-
-        // <Goob>
-        var angleEv = new GetRecoilModifiersEvent(uid, user ?? uid);
-        if (user != null)
-            RaiseLocalEvent(user.Value, ref angleEv);
-        RaiseLocalEvent(comp.Owner, ref angleEv);
-        random *= angleEv.Modifier;
-        // </Goob>
 
         var spread = comp.CurrentAngle.Theta * random;
         var angle = new Angle(direction.Theta + comp.CurrentAngle.Theta * random);
