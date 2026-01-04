@@ -13,6 +13,7 @@
 // SPDX-FileCopyrightText: 2025 nabegator220
 // SPDX-FileCopyrightText: 2025 āda
 // SPDX-FileCopyrightText: 2026 deltanedas
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
