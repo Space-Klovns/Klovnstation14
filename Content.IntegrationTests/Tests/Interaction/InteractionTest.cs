@@ -15,7 +15,7 @@ using Content.Shared.Item.ItemToggle;
 using Content.Shared.Mind;
 using Content.Shared.Players;
 using Content.Shared.Weapons.Ranged.Systems;
-using Content.Trauma.Shared.Hands; // Trauma
+using Content.Shared._Trauma.Hands; // Trauma
 using Robust.Client.Input;
 using Robust.Client.State;
 using Robust.Client.UserInterface;

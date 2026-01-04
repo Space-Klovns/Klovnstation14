@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-using Content.Goobstation.Common.Hands;
 using Content.Shared.ActionBlocker;
 using Content.Shared.CombatMode;
 using Content.Shared.Damage.Systems;
@@ -24,7 +23,7 @@ using Robust.Shared.Random;
 using Robust.Shared.Timing;
 using System.Numerics;
 
-namespace Content.Trauma.Shared.Hands;
+namespace Content.Shared._Trauma.Hands;
 
 /// <summary>
 /// Predicting hand-related stuff that is serverside for no reason.
@@ -128,17 +127,6 @@ public sealed class PredictedHandsSystem : EntitySystem
             !_hands.TryGetActiveItem((player, hands), out var throwEnt) ||
             !_actionBlocker.CanThrow(player, throwEnt.Value))
             return false;
-
-        // <Goob> - added throwing for grabbed mobs, moved direction.
-        var direction = _transform.ToMapCoordinates(coordinates).Position - _transform.GetWorldPosition(player);
-
-        if (_virtualQuery.TryComp(throwEnt, out var virt))
-        {
-            var virtEv = new VirtualItemThrownEvent(virt.BlockingEntity, player, throwEnt.Value, direction);
-            RaiseLocalEvent(player, ref virtEv);
-            RaiseLocalEvent(virt.BlockingEntity, ref virtEv);
-        }
-        // </Goob>
 
         if (_timing.CurTime < hands.NextThrowTime)
             return false;

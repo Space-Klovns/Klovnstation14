@@ -255,7 +255,7 @@ public sealed partial class ShuttleSystem
 
             if (direction.LengthSquared() > minsq)
             {
-                _stuns.TryCrawling(ent, knockdownTime);
+                _stuns.TryCrawling(ent.Owner, knockdownTime);
                 var physicsComp = _physicsQuery.GetComponent(ent);
                 _throwing.TryThrow(ent, direction, physicsComp, Transform(ent), _projQuery, direction.Length(), playSound: false,
                     predicted: false); // Trauma

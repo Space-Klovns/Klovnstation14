@@ -2,7 +2,7 @@
 using Content.Shared.Throwing;
 using Robust.Client.Physics;
 
-namespace Content.Trauma.Client.Throwing;
+namespace Content.Client._Trauma.Throwing;
 
 /// <summary>
 /// Lets thrown items' physics be predicted.

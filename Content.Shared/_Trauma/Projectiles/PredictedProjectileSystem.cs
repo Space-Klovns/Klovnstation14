@@ -1,5 +1,3 @@
-using Content.Goobstation.Common.Projectiles;
-using Content.Goobstation.Common.Weapons.Penetration;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Destructible;
 using Content.Shared.Effects;
@@ -7,7 +5,7 @@ using Content.Shared.Camera;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Database;
-using Content.Goobstation.Maths.FixedPoint;
+using Content.Shared.FixedPoint;
 using Content.Shared.Projectiles;
 using Content.Shared.Weapons.Ranged.Systems;
 using Robust.Shared.Network;
@@ -15,7 +13,7 @@ using Robust.Shared.Physics.Events;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 
-namespace Content.Trauma.Shared.Projectiles;
+namespace Content.Shared._Trauma.Projectiles;
 
 /// <summary>
 /// Handles predicting projectile hits.
@@ -54,8 +52,6 @@ public sealed class PredictedProjectileSystem : EntitySystem
         if (attemptEv.Cancelled)
         {
             _projectile.SetShooter(uid, component, target);
-            _gun.SetTarget(uid, null, out _); // Goobstation
-            component.IgnoredEntities.Clear(); // Goobstation
             return;
         }
 
@@ -91,12 +87,13 @@ public sealed class PredictedProjectileSystem : EntitySystem
                 _recoil.KickCamera(target, args.OurBody.LinearVelocity.Normalized());
         }
 
-        if ((component.DeleteOnCollide && component.ProjectileSpent) || (component.NoPenetrateMask & args.OtherFixture.CollisionLayer) != 0) // Goobstation - Make x-ray arrows not penetrate blob
+        if ((component.DeleteOnCollide && component.ProjectileSpent)) 
             PredictedQueueDel(uid);
 
         if (component.ImpactEffect != null && TryComp(uid, out TransformComponent? xform))
         {
             RaiseLocalEvent(new ImpactEffectEvent(component.ImpactEffect, GetNetCoordinates(xform.Coordinates)));
+        }
         }
     }
 }
