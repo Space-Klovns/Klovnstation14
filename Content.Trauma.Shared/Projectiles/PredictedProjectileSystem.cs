@@ -3,7 +3,6 @@ using Content.Goobstation.Common.Weapons.Penetration;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Destructible;
 using Content.Shared.Effects;
-using Content.Shared._Shitmed.Targeting;
 using Content.Shared.Camera;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
@@ -71,15 +70,9 @@ public sealed class PredictedProjectileSystem : EntitySystem
             damageRequired = FixedPoint2.Max(damageRequired, FixedPoint2.Zero);
         }
 
-        // <Goob>
-        TargetBodyPart? targetPart = null;
-        if (TryComp(uid, out ProjectileMissTargetPartChanceComponent? missComp) &&
-            !missComp.PerfectHitEntities.Contains(target))
-            targetPart = TargetBodyPart.Chest;
-        // </Goob>
         var deleted = Deleted(target);
 
-        if (_damageable.TryChangeDamage((target, damageableComponent), ev.Damage, out var damage, component.IgnoreResistances, origin: component.Shooter, targetPart: targetPart) && Exists(component.Shooter))
+        if (_damageable.TryChangeDamage((target, damageableComponent), ev.Damage, out var damage, component.IgnoreResistances, origin: component.Shooter) && Exists(component.Shooter))
         {
             if (!deleted)
             {
@@ -89,88 +82,6 @@ public sealed class PredictedProjectileSystem : EntitySystem
             _adminLogger.Add(LogType.BulletHit,
                 LogImpact.Medium,
                 $"Projectile {ToPrettyString(uid):projectile} shot by {ToPrettyString(component.Shooter!.Value):user} hit {otherName:target} and dealt {damage:damage} damage");
-
-            // <Goob> - Splits penetration change if target have PenetratableComponent
-            if (!TryComp<PenetratableComponent>(target, out var penetratable))
-            {
-                // If the object won't be destroyed, it "tanks" the penetration hit.
-                if (damage.GetTotal() < damageRequired)
-                {
-                    component.ProjectileSpent = true;
-                }
-
-                if (!component.ProjectileSpent)
-                {
-                    component.PenetrationAmount += damageRequired;
-                    // The projectile has dealt enough damage to be spent.
-                    if (component.PenetrationAmount >= component.PenetrationThreshold)
-                    {
-                        component.ProjectileSpent = true;
-                    }
-                }
-            }
-            else
-            {
-                // Goobstation - Here penetration threshold count as "penetration health".
-                // If it's lower than damage than penetation damage entity cause it deletes projectile
-                if (component.PenetrationThreshold < penetratable.PenetrateDamage)
-                {
-                    component.ProjectileSpent = true;
-                }
-
-                component.PenetrationThreshold -= FixedPoint2.New(penetratable.PenetrateDamage);
-                component.Damage *= (1 - penetratable.DamagePenaltyModifier);
-            }
-            // </Goob>
-
-            // If penetration is to be considered, we need to do some checks to see if the projectile should stop.
-            if (component.PenetrationThreshold != 0)
-            {
-                // If a damage type is required, stop the bullet if the hit entity doesn't have that type.
-                if (component.PenetrationDamageTypeRequirement != null)
-                {
-                    var stopPenetration = false;
-                    foreach (var requiredDamageType in component.PenetrationDamageTypeRequirement)
-                    {
-                        if (!damage.DamageDict.Keys.Contains(requiredDamageType))
-                        {
-                            stopPenetration = true;
-                            break;
-                        }
-                    }
-                    if (stopPenetration)
-                        component.ProjectileSpent = true;
-                }
-
-                // If the object won't be destroyed, it "tanks" the penetration hit.
-                if (damage.GetTotal() < damageRequired)
-                {
-                    component.ProjectileSpent = true;
-                }
-
-                if (!component.ProjectileSpent)
-                {
-                    component.PenetrationAmount += damageRequired;
-                    // The projectile has dealt enough damage to be spent.
-                    if (component.PenetrationAmount >= component.PenetrationThreshold)
-                    {
-                        component.ProjectileSpent = true;
-                    }
-                }
-            }
-            else
-            {
-                component.ProjectileSpent = true;
-            }
-        }
-
-        // <Goob>
-        if (component.Penetrate)
-        {
-            component.IgnoredEntities.Add(target);
-            component.ProjectileSpent = false; // Hardlight bow should be able to deal damage while piercing, no?
-        }
-        // </Goob>
 
         if (!deleted)
         {
