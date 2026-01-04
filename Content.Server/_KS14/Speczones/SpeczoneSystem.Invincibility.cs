@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Server.Atmos.Components;
 using Content.Shared._KS14.Sparks;
 using Content.Shared.Damage.Components;
