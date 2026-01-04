@@ -2,6 +2,7 @@ using Content.Server.Fluids.EntitySystems;
 using Content.Shared.Destructible;
 using Content.Shared.Destructible.Thresholds.Behaviors;
 using Content.Shared.Fluids.Components;
+using Content.Shared.Chemistry.EntitySystems;
 using JetBrains.Annotations;
 
 namespace Content.Server.Destructible.Thresholds.Behaviors;
@@ -30,32 +31,33 @@ public sealed partial class SpillBehavior : IThresholdBehavior
         var puddleSystem = system.EntityManager.System<PuddleSystem>();
         var solutionContainer = system.EntityManager.System<SharedSolutionContainerSystem>();
         var coordinates = system.EntityManager.GetComponent<TransformComponent>(owner).Coordinates;
+    }
 
-        /// <summary>
-        /// If there is a SpillableComponent on EntityUidowner use it to create a puddle/smear.
-        /// Or whatever solution is specified in the behavior itself.
-        /// If none are available do nothing.
-        /// </summary>
-        /// <param name="owner">Entity on which behavior is executed</param>
-        /// <param name="system">system calling the behavior</param>
-        /// <param name="cause"></param>
-        public void Execute(EntityUid owner, SharedDestructibleSystem system, EntityUid? cause = null)
+    /// <summary>
+    /// If there is a SpillableComponent on EntityUidowner use it to create a puddle/smear.
+    /// Or whatever solution is specified in the behavior itself.
+    /// If none are available do nothing.
+    /// </summary>
+    /// <param name="owner">Entity on which behavior is executed</param>
+    /// <param name="system">system calling the behavior</param>
+    /// <param name="cause"></param>
+    public void Execute(EntityUid owner, SharedDestructibleSystem system, EntityUid? cause = null)
+    {
+        var solutionContainerSystem = system.EntityManager.System<SharedSolutionContainerSystem>();
+        var spillableSystem = system.EntityManager.System<PuddleSystem>();
+
+        var coordinates = system.EntityManager.GetComponent<TransformComponent>(owner).Coordinates;
+
+        if (system.EntityManager.TryGetComponent(owner, out SpillableComponent? spillableComponent) &&
+            solutionContainerSystem.TryGetSolution(owner, spillableComponent.SolutionName, out _, out var compSolution))
         {
-            var solutionContainerSystem = system.EntityManager.System<SharedSolutionContainerSystem>();
-            var spillableSystem = system.EntityManager.System<PuddleSystem>();
-
-            var coordinates = system.EntityManager.GetComponent<TransformComponent>(owner).Coordinates;
-
-            if (system.EntityManager.TryGetComponent(owner, out SpillableComponent? spillableComponent) &&
-                solutionContainerSystem.TryGetSolution(owner, spillableComponent.SolutionName, out _, out var compSolution))
-            {
-                spillableSystem.TrySplashSpillAt(owner, coordinates, compSolution, out _, false, user: cause);
-            }
-            else if (Solution != null &&
-                     solutionContainerSystem.TryGetSolution(owner, Solution, out _, out var behaviorSolution))
-            {
-                spillableSystem.TrySplashSpillAt(owner, coordinates, behaviorSolution, out _, user: cause);
-            }
+            spillableSystem.TrySplashSpillAt(owner, coordinates, compSolution, out _, false, user: cause);
+        }
+        else if (Solution != null &&
+                    solutionContainerSystem.TryGetSolution(owner, Solution, out _, out var behaviorSolution))
+        {
+            spillableSystem.TrySplashSpillAt(owner, coordinates, behaviorSolution, out _, user: cause);
         }
     }
 }
+
