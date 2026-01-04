@@ -1,12 +1,13 @@
-using Robust.Shared.Prototypes;
-
 namespace Content.Server._KS14.Speczones;
 
 [RegisterComponent, Access(typeof(SpeczoneSystem))]
 [UnsavedComponent]
 public sealed partial class SpeczoneComponent : Component
 {
-    public ProtoId<SpeczonePrototype> ProtoId;
+    /// <summary>
+    ///     <see cref="SpeczonePrototype"/> of this speczone. 
+    /// </summary>
+    public SpeczonePrototype Prototype;
 
     /// <summary>
     ///     Entities with <see cref="SpeczoneEntryComponent"/> that are

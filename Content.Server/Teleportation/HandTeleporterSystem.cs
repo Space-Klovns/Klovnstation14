@@ -103,6 +103,14 @@ public sealed class HandTeleporterSystem : EntitySystem
         if (Deleted(user))
             return;
 
+        // KS14 Start
+        var attemptHandTeleEvent = new AttemptUpdateHandTeleporterPortalsEvent(uid, false);
+        RaiseLocalEvent(ref attemptHandTeleEvent);
+
+        if (attemptHandTeleEvent.Cancelled)
+            return;
+        // KS14 End
+
         var xform = Transform(user);
 
         // Create the first portal.

@@ -20,9 +20,16 @@ public sealed partial class SpeczonePrototype : IPrototype
     public ResPath MapPath { get; private set; } = default!;
 
     /// <summary>
-    ///     Should *all* airtight entities on the speczone become invincible?
+    ///     Should *all* airtight entities on this speczone become invincible?
     ///         Also makes doors unhackable.
     /// </summary>
     [DataField]
     public bool MakeAirtightInvincible = true;
+
+    /// <summary>
+    ///     Should hand teleporter be prevented from being used
+    ///         on this speczone?
+    /// </summary>
+    [DataField]
+    public bool PreventHandTeleporter = true;
 }

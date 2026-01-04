@@ -38,7 +38,8 @@ public sealed partial class HandTeleporterComponent : Component
     [DataField("secondPortalPrototype", customTypeSerializer: typeof(PrototypeIdSerializer<EntityPrototype>))]
     public string SecondPortalPrototype = "PortalBlue";
 
-    [DataField("newPortalSound")] public SoundSpecifier NewPortalSound =
+    [DataField("newPortalSound")]
+    public SoundSpecifier NewPortalSound =
         new SoundPathSpecifier("/Audio/Machines/high_tech_confirm.ogg")
         {
             Params = AudioParams.Default.WithVolume(-2f)
@@ -58,3 +59,10 @@ public sealed partial class HandTeleporterComponent : Component
 public sealed partial class TeleporterDoAfterEvent : SimpleDoAfterEvent
 {
 }
+
+// KS14 Addition
+/// <summary>
+///     Raised locally for a hand teleporter before it handles updating portals.
+/// </summary>
+[ByRefEvent]
+public record struct AttemptUpdateHandTeleporterPortalsEvent(EntityUid Teleporter, bool Cancelled = false);

@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using Content.Server._KS14.Sparks;
+using Content.Server.Popups;
 using Content.Shared.Doors.Components;
 using Content.Shared.GameTicking;
 using Content.Shared.Random.Helpers;
@@ -26,6 +27,8 @@ public sealed partial class SpeczoneSystem : EntitySystem
     [Dependency] private readonly PrototypeManager _prototypeManager = default!;
     [Dependency] private readonly MapLoaderSystem _mapLoaderSystem = default!;
     [Dependency] private readonly TransformSystem _transformSystem = default!;
+    [Dependency] private readonly PopupSystem _popupSystem = default!;
+    [Dependency] private readonly SparksSystem _sparksSystem = default!;
 
     private EntityQuery<SpeczoneComponent> _speczoneQuery;
     private EntityQuery<RCDDeconstructableComponent> _rcdDeconstructableQuery;
@@ -58,6 +61,8 @@ public sealed partial class SpeczoneSystem : EntitySystem
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundCleanup);
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
 
+        SetupInvincibility();
+
         foreach (var speczonePrototype in _prototypeManager.EnumeratePrototypes<SpeczonePrototype>())
             TryLoadSpeczonePrototype(speczonePrototype, out _);
 
@@ -66,16 +71,16 @@ public sealed partial class SpeczoneSystem : EntitySystem
 
     private void OnSpeczoneStartup(Entity<SpeczoneComponent> entity, ref ComponentStartup args)
     {
-        if (_speczones.ContainsKey(entity.Comp.ProtoId))
+        if (_speczones.ContainsKey(entity.Comp.Prototype.ID))
         {
-            DebugTools.Assert($"While SpeczoneComponent was starting, speczone of same ID {entity.Comp.ProtoId} already existed in cache!");
-            Log.Error($"While SpeczoneComponent was starting, speczone of same ID {entity.Comp.ProtoId} already existed in cache!"
+            DebugTools.Assert($"While SpeczoneComponent was starting, speczone of same ID {entity.Comp.Prototype.ID} already existed in cache!");
+            Log.Error($"While SpeczoneComponent was starting, speczone of same ID {entity.Comp.Prototype.ID} already existed in cache!"
                 + "SpeczoneComponent of existing speczone will be removed.");
             RemCompDeferred(entity.Owner, entity.Comp);
             return;
         }
 
-        _speczones[entity.Comp.ProtoId] = entity;
+        _speczones[entity.Comp.Prototype.ID] = entity;
         _speczoneUids.Add(entity.Owner);
 
         UpdateSpeczoneEntryPoints();
@@ -83,7 +88,7 @@ public sealed partial class SpeczoneSystem : EntitySystem
 
     private void OnSpeczoneShutdown(Entity<SpeczoneComponent> entity, ref ComponentShutdown args)
     {
-        _speczones.Remove(entity.Comp.ProtoId);
+        _speczones.Remove(entity.Comp.Prototype.ID);
         _speczoneUids.Remove(entity.Owner);
     }
 
@@ -157,7 +162,7 @@ public sealed partial class SpeczoneSystem : EntitySystem
         if (!_speczoneQuery.TryGetComponent(mapEntity.Owner, out var existingSpeczoneComponent))
         {
             speczoneComponent = _componentFactory.GetComponent<SpeczoneComponent>();
-            speczoneComponent.ProtoId = prototype.ID;
+            speczoneComponent.Prototype = prototype;
 
             AddComp(mapEntity.Owner, speczoneComponent, overwrite: false);
         }
