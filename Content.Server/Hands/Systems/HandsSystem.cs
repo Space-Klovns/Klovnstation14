@@ -49,6 +49,9 @@ namespace Content.Server.Hands.Systems
 
             SubscribeLocalEvent<HandsComponent, BeforeExplodeEvent>(OnExploded);
 
+            SubscribeLocalEvent<HandsComponent, BodyPartAddedEvent>(HandleBodyPartAdded);
+            SubscribeLocalEvent<HandsComponent, BodyPartRemovedEvent>(HandleBodyPartRemoved);
+
             // Trauma - moved OnDropHandItems and HandleThrowItem to PredictedHandsSystem
         }
 
@@ -69,6 +72,32 @@ namespace Content.Server.Hands.Systems
             {
                 args.Contents.Add(held);
             }
+        }
+
+        private void HandleBodyPartAdded(Entity<HandsComponent> ent, ref BodyPartAddedEvent args)
+        {
+            if (args.Part.Comp.PartType != BodyPartType.Hand)
+                return;
+
+            // If this annoys you, which it should.
+            // Ping Smugleaf.
+            var location = args.Part.Comp.Symmetry switch
+            {
+                BodyPartSymmetry.None => HandLocation.Middle,
+                BodyPartSymmetry.Left => HandLocation.Left,
+                BodyPartSymmetry.Right => HandLocation.Right,
+                _ => throw new ArgumentOutOfRangeException(nameof(args.Part.Comp.Symmetry))
+            };
+
+            AddHand(ent.AsNullable(), args.Slot, location);
+        }
+
+        private void HandleBodyPartRemoved(EntityUid uid, HandsComponent component, ref BodyPartRemovedEvent args)
+        {
+            if (args.Part.Comp.PartType != BodyPartType.Hand)
+                return;
+
+            RemoveHand(uid, args.Slot);
         }
 
         #region interactions

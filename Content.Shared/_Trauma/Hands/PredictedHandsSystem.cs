@@ -36,6 +36,7 @@ public sealed class PredictedHandsSystem : EntitySystem
     [Dependency] private readonly SharedContainerSystem _container = default!;
     [Dependency] private readonly SharedHandsSystem _hands = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+    [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly SharedStackSystem _stack = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly ThrowingSystem _throwing = default!;
@@ -55,6 +56,7 @@ public sealed class PredictedHandsSystem : EntitySystem
         base.Initialize();
 
         SubscribeLocalEvent<HandsComponent, DisarmedEvent>(OnDisarmed, before: new[] {typeof(SharedStunSystem), typeof(SharedStaminaSystem)});
+            SubscribeLocalEvent<HandsComponent, DropHandItemsEvent>(OnDropHandItems);
 
         CommandBinds.Builder
             .Bind(ContentKeyFunctions.ThrowItemInHand, new PointerInputCmdHandler(HandleThrowItem))
@@ -103,6 +105,49 @@ public sealed class PredictedHandsSystem : EntitySystem
 
         ThrowHeldItem(player, coordinates);
         return false; // always send to server
+    }
+
+    private void OnDropHandItems(Entity<HandsComponent> entity, ref DropHandItemsEvent args)
+    {
+        // If the holder doesn't have a physics component, they ain't moving
+        var holderVelocity = _physicsQuery.TryComp(entity, out var physics) ? physics.LinearVelocity : Vector2.Zero;
+        var spreadMaxAngle = Angle.FromDegrees(DropHeldItemsSpread);
+
+        foreach (var hand in entity.Comp.Hands.Keys)
+        {
+            if (!_hands.TryGetHeldItem(entity.AsNullable(), hand, out var heldEntity))
+                continue;
+
+            var throwAttempt = new FellDownThrowAttemptEvent(entity);
+            RaiseLocalEvent(heldEntity.Value, ref throwAttempt);
+
+            if (throwAttempt.Cancelled)
+                continue;
+
+            if (!_hands.TryDrop((entity, entity.Comp), hand, checkActionBlocker: false))
+                continue;
+
+            // Rotate the item's throw vector a bit for each item
+            var angleOffset = _random.NextAngle(-spreadMaxAngle, spreadMaxAngle);
+            // Rotate the holder's velocity vector by the angle offset to get the item's velocity vector
+            var itemVelocity = angleOffset.RotateVec(holderVelocity);
+            // Decrease the distance of the throw by a random amount
+            itemVelocity *= _random.NextFloat(1f);
+            // Heavier objects don't get thrown as far
+            // If the item doesn't have a physics component, it isn't going to get thrown anyway, but we'll assume infinite mass
+            itemVelocity *= _physicsQuery.TryComp(heldEntity, out var heldPhysics) ? heldPhysics.InvMass : 0;
+            // Throw at half the holder's intentional throw speed and
+            // vary the speed a little to make it look more interesting
+            var throwSpeed = entity.Comp.BaseThrowspeed * _random.NextFloat(0.45f, 0.55f);
+
+            _throwing.TryThrow(heldEntity.Value,
+                itemVelocity,
+                throwSpeed,
+                entity,
+                pushbackRatio: 0,
+                compensateFriction: false
+            );
+        }
     }
 
     /// <summary>

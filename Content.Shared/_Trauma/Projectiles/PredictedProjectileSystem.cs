@@ -79,6 +79,47 @@ public sealed class PredictedProjectileSystem : EntitySystem
                 LogImpact.Medium,
                 $"Projectile {ToPrettyString(uid):projectile} shot by {ToPrettyString(component.Shooter!.Value):user} hit {otherName:target} and dealt {damage:damage} damage");
 
+            // If penetration is to be considered, we need to do some checks to see if the projectile should stop.
+            if (component.PenetrationThreshold != 0)
+            {
+                // If a damage type is required, stop the bullet if the hit entity doesn't have that type.
+                if (component.PenetrationDamageTypeRequirement != null)
+                {
+                    var stopPenetration = false;
+                    foreach (var requiredDamageType in component.PenetrationDamageTypeRequirement)
+                    {
+                        if (!damage.DamageDict.Keys.Contains(requiredDamageType))
+                        {
+                            stopPenetration = true;
+                            break;
+                        }
+                    }
+                    if (stopPenetration)
+                        component.ProjectileSpent = true;
+                }
+
+                // If the object won't be destroyed, it "tanks" the penetration hit.
+                if (damage.GetTotal() < damageRequired)
+                {
+                    component.ProjectileSpent = true;
+                }
+
+                if (!component.ProjectileSpent)
+                {
+                    component.PenetrationAmount += damageRequired;
+                    // The projectile has dealt enough damage to be spent.
+                    if (component.PenetrationAmount >= component.PenetrationThreshold)
+                    {
+                        component.ProjectileSpent = true;
+                    }
+                }
+            }
+            else
+            {
+                component.ProjectileSpent = true;
+            }
+        }
+
         if (!deleted)
         {
             _gun.PlayImpactSound(target, damage, component.SoundHit, component.ForceSound);
@@ -87,13 +128,12 @@ public sealed class PredictedProjectileSystem : EntitySystem
                 _recoil.KickCamera(target, args.OurBody.LinearVelocity.Normalized());
         }
 
-        if ((component.DeleteOnCollide && component.ProjectileSpent)) 
+        if (component.DeleteOnCollide && component.ProjectileSpent)
             PredictedQueueDel(uid);
 
         if (component.ImpactEffect != null && TryComp(uid, out TransformComponent? xform))
         {
             RaiseLocalEvent(new ImpactEffectEvent(component.ImpactEffect, GetNetCoordinates(xform.Coordinates)));
-        }
         }
     }
 }
