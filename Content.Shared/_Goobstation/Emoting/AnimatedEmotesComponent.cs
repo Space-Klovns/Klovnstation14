@@ -1,3 +1,8 @@
+// SPDX-FileCopyrightText: 2025 FrauZj
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MPL-2.0
+
 namespace Content.Shared._Goobstation.Emoting;
 
 /// <summary>
