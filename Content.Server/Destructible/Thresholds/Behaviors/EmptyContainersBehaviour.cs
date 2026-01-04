@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2023 DrSmugleaf
 // SPDX-FileCopyrightText: 2023 Nemanja
 // SPDX-FileCopyrightText: 2026 deltanedas
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 

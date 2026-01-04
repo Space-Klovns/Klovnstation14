@@ -18,6 +18,7 @@
 // SPDX-FileCopyrightText: 2025 TemporalOroboros
 // SPDX-FileCopyrightText: 2025 lzk
 // SPDX-FileCopyrightText: 2026 deltanedas
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
 // SPDX-FileCopyrightText: 2026 nabegator220
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later

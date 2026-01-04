@@ -2,9 +2,9 @@
 // SPDX-FileCopyrightText: 2025 Hannah Giovanna Dawson
 // SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2025 Princess Cheeseballs
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 nabegator220
 // SPDX-FileCopyrightText: 2026 deltanedas
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
 //
 // SPDX-License-Identifier: MIT
 

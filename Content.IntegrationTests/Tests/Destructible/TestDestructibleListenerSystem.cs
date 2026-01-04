@@ -4,6 +4,7 @@
 // SPDX-FileCopyrightText: 2022 mirrorcult
 // SPDX-FileCopyrightText: 2022 wrexbe
 // SPDX-FileCopyrightText: 2026 deltanedas
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
