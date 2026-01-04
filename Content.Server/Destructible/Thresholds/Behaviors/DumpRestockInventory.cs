@@ -1,3 +1,16 @@
+// SPDX-FileCopyrightText: 2023 Chief-Engineer
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Nemanja
+// SPDX-FileCopyrightText: 2023 Vordenburg
+// SPDX-FileCopyrightText: 2024 TemporalOroboros
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 metalgearsloth
+// SPDX-FileCopyrightText: 2025 nabegator220
+// SPDX-FileCopyrightText: 2025 āda
+// SPDX-FileCopyrightText: 2026 deltanedas
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 using Robust.Shared.Random;
 using Content.Shared.Destructible;
 using Content.Shared.Destructible.Thresholds.Behaviors;

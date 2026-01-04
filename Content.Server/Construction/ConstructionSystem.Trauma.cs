@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 deltanedas
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 namespace Content.Server.Construction;
 
 /// <summary>

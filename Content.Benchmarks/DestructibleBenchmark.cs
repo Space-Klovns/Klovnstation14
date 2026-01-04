@@ -4,6 +4,7 @@
 // SPDX-FileCopyrightText: 2025 Princess Cheeseballs
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 nabegator220
+// SPDX-FileCopyrightText: 2026 deltanedas
 //
 // SPDX-License-Identifier: MIT
 
