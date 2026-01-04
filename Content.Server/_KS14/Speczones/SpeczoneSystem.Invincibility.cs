@@ -1,0 +1,36 @@
+using Content.Server.Atmos.Components;
+using Content.Shared.Damage.Components;
+using Content.Shared.Wires;
+
+namespace Content.Server._KS14.Speczones;
+
+// This file handles making speczones invincible-ish
+
+public sealed partial class SpeczoneSystem : EntitySystem
+{
+    /// <summary>
+    ///     Processes invincibility of all speczone entities.
+    /// </summary>
+    private void ProcessSpeczoneInvincibility(SpeczonePrototype prototype, EntityUid mapUid)
+    {
+        if (!prototype.MakeAirtightInvincible)
+            return;
+
+        var eqe = EntityQueryEnumerator<AirtightComponent, DamageableComponent, TransformComponent>();
+        while (eqe.MoveNext(out var uid, out var _, out var damageableComponent, out var transformComponent))
+        {
+            if (transformComponent.MapUid is not { } otherMapUid ||
+                otherMapUid != mapUid)
+                continue;
+
+            RemComp(uid, damageableComponent);
+
+            if (_rcdDeconstructableQuery.TryGetComponent(uid, out var rcdDeconstructableComponent))
+                RemComp(uid, rcdDeconstructableComponent);
+
+            if (_doorQuery.HasComponent(uid) &&
+                TryComp<WiresPanelComponent>(uid, out var wirePanelComponent))
+                RemComp(uid, wirePanelComponent);
+        }
+    }
+}
