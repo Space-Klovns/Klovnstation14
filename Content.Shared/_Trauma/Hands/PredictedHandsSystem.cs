@@ -101,18 +101,6 @@ public sealed class PredictedHandsSystem : EntitySystem
         if (session?.AttachedEntity is not {} player || !Exists(player) || !coordinates.IsValid(EntityManager))
             return false;
 
-        // <Goob>
-        if (_hands.TryGetActiveItem(player, out var item) && _virtualQuery.TryComp(item, out var virtComp))
-        {
-            var virtEv = new VirtualItemDropAttemptEvent(virtComp.BlockingEntity, player, item.Value, true);
-            RaiseLocalEvent(player, ref virtEv);
-            if (virtEv.Cancelled) return false;
-
-            RaiseLocalEvent(virtComp.BlockingEntity, ref virtEv);
-            if (virtEv.Cancelled) return false;
-        }
-        // </Goob>
-
         ThrowHeldItem(player, coordinates);
         return false; // always send to server
     }
@@ -134,6 +122,9 @@ public sealed class PredictedHandsSystem : EntitySystem
         hands.NextThrowTime = _timing.CurTime + hands.ThrowCooldown;
         Dirty(player, hands);
 
+        var direction = _transform.ToMapCoordinates(coordinates).Position - _transform.GetWorldPosition(player);
+
+        /*commented out demonic upstream conflict shit
         if (TryComp(throwEnt, out StackComponent? stack) && stack.Count > 1 && stack.ThrowIndividually)
         {
             if (_stack.Split((throwEnt.Value, stack), 1, Transform(player).Coordinates) is not {} splitStack)
@@ -141,6 +132,7 @@ public sealed class PredictedHandsSystem : EntitySystem
 
             throwEnt = splitStack;
         }
+        */
 
         if (direction == Vector2.Zero)
             return true;
