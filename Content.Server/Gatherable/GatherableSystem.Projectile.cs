@@ -32,7 +32,7 @@ public sealed partial class GatherableSystem
         // KS14: Separated this check
         if (!TryComp<GatherableComponent>(args.OtherEntity, out var gatherable))
         {
-            if (gathering.Comp.DeleteOnHittingUngatherable)
+            if (gathering.Comp.DeleteOnUngatherable)
                 QueueDel(gathering);
 
             return;

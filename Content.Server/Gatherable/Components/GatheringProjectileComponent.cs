@@ -22,9 +22,9 @@ public sealed partial class GatheringProjectileComponent : Component
 
     // KS14
     /// <summary>
-    ///     Is this entity deleted immediately upon hitting
+    ///     Is this entity deleted immediately upon making contact with
     ///         something that can't be gathered?
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite), DataField]
-    public bool DeleteOnHittingUngatherable = true;
+    public bool DeleteOnUngatherable = true;
 }
