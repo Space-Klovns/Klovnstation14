@@ -1,4 +1,8 @@
-﻿- type: entity
+# SPDX-FileCopyrightText: 2026 DeusMaldPr
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: entity
   parent: ClothingNeckBase
   id: ClothingNeckRaiderPin
   name: raider pin
