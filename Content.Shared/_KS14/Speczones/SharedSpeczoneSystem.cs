@@ -22,12 +22,12 @@ public abstract class SharedSpeczoneSystem : EntitySystem
 
         _sharedSpeczoneQuery = GetEntityQuery<SharedSpeczoneComponent>();
 
-        SubscribeLocalEvent<AttemptUpdateHandTeleporterPortalsEvent>(OnAttemptUseHandTeleporter);
+        SubscribeLocalEvent<AttemptUpdateHandTeleporterPortalsEvent>(OnAttemptUseHandTeleporter); // Only raised on server
         SubscribeLocalEvent<AttemptUseRcdEvent>(OnAttemptUseRcd);
     }
 
     /// <returns>True if the use of an item was cancelled.</returns>
-    private bool TryInterfereUse(EntityUid item)
+    private bool TryInterfereUse(EntityUid item, EntityUid? user = null)
     {
         var teleporterTransform = Transform(item);
         if (teleporterTransform.MapUid is not { } mapUid ||
@@ -40,7 +40,12 @@ public abstract class SharedSpeczoneSystem : EntitySystem
             PopupType.SmallCaution
         );
 
-        _sparksSystem.DoSpark(teleporterTransform.Coordinates, SharedSparksSystem.DefaultSparkPrototype, soundSpecifier: SharedSparksSystem.DefaultSoundSpecifier);
+        _sparksSystem.DoSpark(
+            teleporterTransform.Coordinates,
+            SharedSparksSystem.DefaultSparkPrototype,
+            soundSpecifier: SharedSparksSystem.DefaultSoundSpecifier,
+            user: user
+        );
         return true;
     }
 
@@ -51,6 +56,6 @@ public abstract class SharedSpeczoneSystem : EntitySystem
 
     private void OnAttemptUseRcd(ref AttemptUseRcdEvent args)
     {
-        args.Cancelled |= TryInterfereUse(args.RcdUid);
+        args.Cancelled |= TryInterfereUse(args.RcdUid, user: args.User);
     }
 }

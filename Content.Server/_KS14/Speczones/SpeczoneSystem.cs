@@ -27,6 +27,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     [Dependency] private readonly IRobustRandom _robustRandom = default!;
     [Dependency] private readonly IComponentFactory _componentFactory = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private readonly MapSystem _mapSystem = default!;
     [Dependency] private readonly MapLoaderSystem _mapLoaderSystem = default!;
     [Dependency] private readonly TransformSystem _transformSystem = default!;
 
@@ -215,6 +216,8 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     ///     Tries to insert an entity into a speczone.
     ///         Specified speczone defaults to first one available
     ///         if none was specified.
+    /// 
+    ///     Unpauses the speczone if necessary.
     /// </summary>
     /// <returns>True if the entity was moved.</returns>
     public bool InsertIntoSpeczone(Entity<TransformComponent> entity, string? speczoneId, [NotNullWhen(true)] out EntityCoordinates? entryCoordinates)
@@ -235,6 +238,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
         if (!TryGetSpeczoneEntryPoint(speczoneEntity!, out entryCoordinates))
             return false;
 
+        _mapSystem.SetPaused(speczoneEntity.Owner, false);
         _transformSystem.SetCoordinates(entity.Owner, entity.Comp, entryCoordinates.Value, unanchor: true);
         return true;
     }

@@ -155,7 +155,7 @@ public sealed class RCDSystem : EntitySystem
             return;
 
         // KS14 Start
-        var attemptRcdEvent = new AttemptUseRcdEvent(uid, false);
+        var attemptRcdEvent = new AttemptUseRcdEvent(uid, args.User, false);
         RaiseLocalEvent(ref attemptRcdEvent);
 
         if (attemptRcdEvent.Cancelled)

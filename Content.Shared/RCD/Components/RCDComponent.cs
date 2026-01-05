@@ -64,4 +64,4 @@ public sealed partial class RCDComponent : Component
 ///     Raised locally for an RCD before it tries building something
 /// </summary>
 [ByRefEvent]
-public record struct AttemptUseRcdEvent(EntityUid RcdUid, bool Cancelled = false);
+public record struct AttemptUseRcdEvent(EntityUid RcdUid, EntityUid User, bool Cancelled = false);
