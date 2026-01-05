@@ -3,11 +3,14 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
+using Content.Shared._KS14.Speczones;
+using Robust.Shared.GameStates;
+
 namespace Content.Server._KS14.Speczones;
 
-[RegisterComponent, Access(typeof(SpeczoneSystem))]
+[RegisterComponent]
 [UnsavedComponent]
-public sealed partial class SpeczoneComponent : Component
+public sealed partial class SpeczoneComponent : SharedSpeczoneComponent
 {
     /// <summary>
     ///     <see cref="SpeczonePrototype"/> of this speczone. 

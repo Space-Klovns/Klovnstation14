@@ -6,8 +6,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using Content.Server._KS14.Sparks;
-using Content.Server.Popups;
+using Content.Shared._KS14.Speczones;
 using Content.Shared.Doors.Components;
 using Content.Shared.GameTicking;
 using Content.Shared.Random.Helpers;
@@ -22,18 +21,14 @@ using Robust.Shared.Utility;
 
 namespace Content.Server._KS14.Speczones;
 
-/// <summary>
-///     Kept you waiting, huh?
-/// </summary>
-public sealed partial class SpeczoneSystem : EntitySystem
+/// <inheritdoc/>
+public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
 {
     [Dependency] private readonly IRobustRandom _robustRandom = default!;
     [Dependency] private readonly IComponentFactory _componentFactory = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly MapLoaderSystem _mapLoaderSystem = default!;
     [Dependency] private readonly TransformSystem _transformSystem = default!;
-    [Dependency] private readonly PopupSystem _popupSystem = default!;
-    [Dependency] private readonly SparksSystem _sparksSystem = default!;
 
     private EntityQuery<SpeczoneComponent> _speczoneQuery;
     private EntityQuery<RCDDeconstructableComponent> _rcdDeconstructableQuery;
@@ -65,8 +60,6 @@ public sealed partial class SpeczoneSystem : EntitySystem
 
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundCleanup);
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
-
-        SetupInvincibility();
 
         foreach (var speczonePrototype in _prototypeManager.EnumeratePrototypes<SpeczonePrototype>())
             TryLoadSpeczonePrototype(speczonePrototype, out _);

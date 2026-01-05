@@ -58,3 +58,10 @@ public sealed partial class RCDComponent : Component
     [ViewVariables(VVAccess.ReadOnly)]
     public Transform ConstructionTransform { get; private set; }
 }
+
+// KS14 Addition
+/// <summary>
+///     Raised locally for an RCD before it tries building something
+/// </summary>
+[ByRefEvent]
+public record struct AttemptUseRcdEvent(EntityUid RcdUid, bool Cancelled = false);

@@ -30,11 +30,4 @@ public sealed partial class SpeczonePrototype : IPrototype
     /// </summary>
     [DataField]
     public bool MakeAirtightInvincible = true;
-
-    /// <summary>
-    ///     Should hand teleporter be prevented from being used
-    ///         on this speczone?
-    /// </summary>
-    [DataField]
-    public bool PreventHandTeleporter = true;
 }

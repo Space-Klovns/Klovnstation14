@@ -154,6 +154,14 @@ public sealed class RCDSystem : EntitySystem
         if (args.Handled || !args.CanReach)
             return;
 
+        // KS14 Start
+        var attemptRcdEvent = new AttemptUseRcdEvent(uid, false);
+        RaiseLocalEvent(ref attemptRcdEvent);
+
+        if (attemptRcdEvent.Cancelled)
+            return;
+        // KS14 End
+
         var user = args.User;
         var location = args.ClickLocation;
         var prototype = _protoManager.Index(component.ProtoId);
