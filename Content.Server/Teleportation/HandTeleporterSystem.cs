@@ -12,9 +12,9 @@
 // SPDX-FileCopyrightText: 2024 nikthechampiongr
 // SPDX-FileCopyrightText: 2025 ScarKy0
 // SPDX-FileCopyrightText: 2025 SlamBamActionman
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 slarticodefast
 // SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
 //
 // SPDX-License-Identifier: MPL-2.0
 
