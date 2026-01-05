@@ -213,7 +213,7 @@ public sealed partial class SpeczoneSystem : EntitySystem
         }
 
         var entryPoint = _robustRandom.Pick(speczoneEntity.Comp.EntryMarkers);
-        entryCoordinates = Transform(entryPoint).Coordinates;
+        entryCoordinates = entryPoint.Comp.Coordinates;
 
         return true;
     }
@@ -224,14 +224,22 @@ public sealed partial class SpeczoneSystem : EntitySystem
     ///         if none was specified.
     /// </summary>
     /// <returns>True if the entity was moved.</returns>
-    public bool InsertIntoSpeczone(Entity<TransformComponent> entity, string? speczoneId)
+    public bool InsertIntoSpeczone(Entity<TransformComponent> entity, string? speczoneId, [NotNullWhen(true)] out EntityCoordinates? entryCoordinates)
     {
         if (_speczones.Count == 0)
+        {
+            entryCoordinates = null;
             return false;
+        }
 
         speczoneId ??= _speczones.Keys.First();
-        if (!_speczones.TryGetValue(speczoneId, out var speczoneEntity) ||
-            !TryGetSpeczoneEntryPoint(speczoneEntity!, out var entryCoordinates))
+        if (!_speczones.TryGetValue(speczoneId, out var speczoneEntity))
+        {
+            entryCoordinates = null;
+            return false;
+        }
+
+        if (!TryGetSpeczoneEntryPoint(speczoneEntity!, out entryCoordinates))
             return false;
 
         _transformSystem.SetCoordinates(entity.Owner, entity.Comp, entryCoordinates.Value, unanchor: true);
