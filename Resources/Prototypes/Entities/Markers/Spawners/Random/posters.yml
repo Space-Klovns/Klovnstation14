@@ -95,6 +95,7 @@
       - PosterContrabandExoAcid
       - PosterContrabandExoRun
       - PosterContrabandExoChomp
+      - PosterContrabandKlovnRedFOSS #KS14
     chance: 1
 
 - type: entity
@@ -161,4 +162,5 @@
       - PosterLegitOppenhopper
       - PosterLegitTyrone
       - PosterLegitHelio
+      - PosterLegitKlovnXFixit #KS14
     chance: 1

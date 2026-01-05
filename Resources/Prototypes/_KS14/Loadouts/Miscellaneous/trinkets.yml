@@ -1,0 +1,17 @@
+﻿- type: loadoutEffectGroup
+  id: MasterRaider
+  effects:
+  - !type:JobRequirementLoadoutEffect
+    requirement:
+      !type:RoleTimeRequirement
+      role: JobPassenger
+      time: 72000 #20 hrs, maybe (IDEALLY) raise later if we have Real klovn pop
+
+- type: loadout
+  id: ClothingNeckRaiderPin
+  storage:
+    back:
+    - ClothingNeckRaiderPin
+  effects:
+  - !type:GroupLoadoutEffect
+    proto: MasterRaider
