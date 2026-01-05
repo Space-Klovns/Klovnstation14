@@ -220,9 +220,10 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     ///     Unpauses the speczone if necessary.
     /// </summary>
     /// <returns>True if the entity was moved.</returns>
-    public bool InsertIntoSpeczone(Entity<TransformComponent> entity, string? speczoneId, [NotNullWhen(true)] out EntityCoordinates? entryCoordinates)
+    public bool TryInsertIntoSpeczone(Entity<TransformComponent?> entity, string? speczoneId, [NotNullWhen(true)] out EntityCoordinates? entryCoordinates)
     {
-        if (_speczones.Count == 0)
+        if (_speczones.Count == 0 ||
+            !EntityManager.TransformQuery.Resolve(entity.Owner, ref entity.Comp))
         {
             entryCoordinates = null;
             return false;
