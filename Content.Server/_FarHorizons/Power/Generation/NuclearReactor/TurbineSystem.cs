@@ -20,10 +20,9 @@ using Robust.Server.GameObjects;
 using Content.Server.Weapons.Ranged.Systems;
 using Content.Server._FarHorizons.NodeContainer.Nodes;
 using Robust.Shared.Utility;
-using Content.Shared.Damage;
 using Content.Server.Destructible;
 using Content.Shared.FixedPoint;
-using Content.Server.Destructible.Thresholds.Triggers;
+using Content.Shared.Destructible.Thresholds.Triggers;
 
 namespace Content.Server._FarHorizons.Power.Generation.FissionGenerator;
 
@@ -73,7 +72,7 @@ public sealed class TurbineSystem : SharedTurbineSystem
             foreach (var behavior in threshold.Behaviors)
             {
                 if (behavior is TurbineBladeDestructionBehaviour bladeDestructionBehaviour)
-                    damageNeeded = Math.Min(damageNeeded.Float(), trigger.Damage);
+                    damageNeeded = Math.Min(damageNeeded.Float(), trigger.Damage.Float());
             }
         }
 

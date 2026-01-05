@@ -136,7 +136,7 @@ public abstract class SharedDurationSignalAccessReaderSystem : EntitySystem
 
         // This is a reallyneat trick, thanks to whoever made this hashcodecombine implementation.
         var (readerUid, readerComponent) = reader;
-        var seed = SharedRandomExtensions.HashCodeCombine(new() { (int)_gameTiming.CurTick.Value, GetNetEntity(readerUid).Id }); // sandbox violation giveaway if you make it `[...] instead of `new() { ... }`
+        var seed = SharedRandomExtensions.HashCodeCombine(new[] { (int)_gameTiming.CurTick.Value, GetNetEntity(readerUid).Id }); // sandbox violation giveaway if you make it `[...] instead of `new() { ... }`
 
         // fumble if unlucky enough
         if (new System.Random(seed).Prob(readerComponent.RepeatChance))

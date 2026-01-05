@@ -40,8 +40,13 @@
           acts: [ "Destruction" ]
     - type: PowerSink
     - type: Battery
-      maxCharge: 7500000
-      pricePerJoule: 0.0003
+      # Very important:
+      # Disable networking to prevent the battery getting continuously dirtied every tick as it interacts with the power network.
+      # This can not be done by changing the charge rate as the power supply ramps up over time.
+      # This disables prediction for this battery.
+      netsync: false
+      maxCharge: 250000000
+      pricePerJoule: 0.000009
     - type: ExaminableBattery
     - type: PowerConsumer
       voltage: High
@@ -59,3 +64,9 @@
         - GhostOnlyWarp
     - type: StaticPrice
       price: 3000
+    - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+      sound:
+        path: /Audio/_KS14/Handling/materials/metal_pick_up.ogg
+    - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+      sound:
+        path: /Audio/_KS14/Handling/materials/metal_drop.ogg

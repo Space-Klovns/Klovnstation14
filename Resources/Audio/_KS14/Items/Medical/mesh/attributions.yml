@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2025 FrauzJ
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- files: ["regen_mesh_begin1.ogg", "regen_mesh_begin2.ogg", "regen_mesh_begin3.ogg", "regen_mesh_begin4.ogg", "regen_mesh_end1.ogg", "regen_mesh_end2.ogg", "regen_mesh_end3.ogg", "regen_mesh_end4.ogg", "regen_mesh_end5.ogg"]
+  license: "CC-BY-3.0"
+  copyright: "Created by `grungussuss` for tgstation. Modified for Klovnstation14"
+  source: "https://github.com/tgstation/tgstation/commit/e98eb5db8d42a8cd7372bc496816e1f8f765bc64"

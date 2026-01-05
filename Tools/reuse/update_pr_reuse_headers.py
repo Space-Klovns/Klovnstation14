@@ -19,6 +19,7 @@ LICENSE_CONFIG: dict[str, dict[str, str]] = {
     "mit": {"id": "MIT", "path": "LICENSES/MIT.txt"},
     "agpl": {"id": "AGPL-3.0-or-later", "path": "LICENSES/AGPL-3.0-or-later.txt"},
     "mpl": {"id": "MPL-2.0", "path": "LICENSES/MPL-2.0.txt"},
+    "cc-by-nc-sa-3.0": {"id": "CC-BY-NC-SA-3.0", "path": "LICENSES/CC-BY-NC-SA-3.0-US.txt"} # 'US' suffix as this is the united-states version of the license.
 }
 
 DEFAULT_LICENSE_LABEL = "mpl"
@@ -254,7 +255,17 @@ def process_git_log_output(output: str, author_timestamps):
             print(f"Skipping malformed line: {line}")
             continue
 
-        commit_hash, timestamp_str, author_name, body = parts
+        commit_hash = None
+        timestamp_str = None
+        author_name = None
+        body = None
+        
+        try:
+            commit_hash, timestamp_str, author_name, body = parts
+        except ValueError as e:
+            print(f"A ValueError occurred when processing git log output, expected 4 values got {parts}")
+            continue
+
         print(f"Processing commit {commit_hash[:8]} by {author_name}")
 
         try:

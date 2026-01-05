@@ -11,6 +11,7 @@ using Robust.Shared.Timing;
 using System.Runtime.CompilerServices;
 using Content.Server.AlertLevel;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
+using Content.Shared.Damage.Systems;
 
 namespace Content.Server._KS14.TeslaGate;
 

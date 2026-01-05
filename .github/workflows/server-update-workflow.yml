@@ -1,0 +1,41 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+#
+# SPDX-License-Identifier: MPL-2.0
+
+# Every once in a while, this POSTs the KS14 watchdog server to ask it to update with latest repo master.
+
+name: Watchdog Update Request
+
+on:
+  schedule:
+    # runs every day at 16:00 UTC
+    - cron: '0 16 * * *'
+
+  # run on push to master (disabled)
+  # push:
+  #   branches: [ master ]
+
+  # allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    # Ip and port arent really that secret but whatever.
+    steps:
+    - name: Send POST update request to watchdog
+      # Output of curl is hidden and we only say if something ever happened or nothing ever happened (as usual).
+      # emoji goidacode gods btw
+      run: |
+        STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+          -X POST \
+          -u ${{ vars.WATCHDOG_INSTANCE_NAME }}:${{ secrets.WATCHDOG_INSTANCE_API_TOKEN }} \
+          "http://${{ secrets.WATCHDOG_IP_AND_PORT }}/instances/${{ vars.WATCHDOG_INSTANCE_NAME }}/update")
+
+        if [ "$STATUS_CODE" -eq 200 ]; then
+          echo "✅ Status code of POST request ($STATUS_CODE) indicates success."
+        else
+          echo "❌ POST request failed with status code $STATUS_CODE."
+          exit 1
+        fi

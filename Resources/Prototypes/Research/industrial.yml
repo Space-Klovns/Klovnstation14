@@ -1,3 +1,72 @@
+# SPDX-FileCopyrightText: 2023 Kadeo64
+# SPDX-FileCopyrightText: 2023 Nim
+# SPDX-FileCopyrightText: 2023 RiceMar1244
+# SPDX-FileCopyrightText: 2023 Stanislav4ix
+# SPDX-FileCopyrightText: 2023 T-Stalker
+# SPDX-FileCopyrightText: 2023 Tunguso4ka
+# SPDX-FileCopyrightText: 2023 lzk228
+# SPDX-FileCopyrightText: 2023 Арт
+# SPDX-FileCopyrightText: 2024 12rabbits
+# SPDX-FileCopyrightText: 2024 Alpaccalypse
+# SPDX-FileCopyrightText: 2024 Alzore
+# SPDX-FileCopyrightText: 2024 Boaz1111
+# SPDX-FileCopyrightText: 2024 Brandon Hu
+# SPDX-FileCopyrightText: 2024 Dimastra
+# SPDX-FileCopyrightText: 2024 Ed
+# SPDX-FileCopyrightText: 2024 Emisse
+# SPDX-FileCopyrightText: 2024 Eoin Mcloughlin
+# SPDX-FileCopyrightText: 2024 FungiFellow
+# SPDX-FileCopyrightText: 2024 GitHubUser53123
+# SPDX-FileCopyrightText: 2024 IProduceWidgets
+# SPDX-FileCopyrightText: 2024 Ilya246
+# SPDX-FileCopyrightText: 2024 JIPDawg
+# SPDX-FileCopyrightText: 2024 Kevin Zheng
+# SPDX-FileCopyrightText: 2024 Menshin
+# SPDX-FileCopyrightText: 2024 Mervill
+# SPDX-FileCopyrightText: 2024 Moomoobeef
+# SPDX-FileCopyrightText: 2024 NULL882
+# SPDX-FileCopyrightText: 2024 Nemanja
+# SPDX-FileCopyrightText: 2024 PJBot
+# SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2024 Piras314
+# SPDX-FileCopyrightText: 2024 PopGamer46
+# SPDX-FileCopyrightText: 2024 PursuitInAshes
+# SPDX-FileCopyrightText: 2024 QueerNB
+# SPDX-FileCopyrightText: 2024 Saphire Lattice
+# SPDX-FileCopyrightText: 2024 ScarKy0
+# SPDX-FileCopyrightText: 2024 ShadowCommander
+# SPDX-FileCopyrightText: 2024 Simon
+# SPDX-FileCopyrightText: 2024 Spessmann
+# SPDX-FileCopyrightText: 2024 Thomas
+# SPDX-FileCopyrightText: 2024 Winkarst
+# SPDX-FileCopyrightText: 2024 eoineoineoin
+# SPDX-FileCopyrightText: 2024 github-actions[bot]
+# SPDX-FileCopyrightText: 2024 lzk
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2024 stellar-novas
+# SPDX-FileCopyrightText: 2024 themias
+# SPDX-FileCopyrightText: 2024 yglop
+# SPDX-FileCopyrightText: 2025 Aiden
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 Entvari
+# SPDX-FileCopyrightText: 2025 FaDeOkno
+# SPDX-FileCopyrightText: 2025 Gerkada
+# SPDX-FileCopyrightText: 2025 GoobBot
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Nox
+# SPDX-FileCopyrightText: 2025 SX_7
+# SPDX-FileCopyrightText: 2025 Speebro
+# SPDX-FileCopyrightText: 2025 Ted Lukin
+# SPDX-FileCopyrightText: 2025 beck-thompson
+# SPDX-FileCopyrightText: 2025 coderabbitai[bot]
+# SPDX-FileCopyrightText: 2025 deltanedas
+# SPDX-FileCopyrightText: 2025 deltanedas <@deltanedas:kde.org>
+# SPDX-FileCopyrightText: 2025 gluesniffler
+# SPDX-FileCopyrightText: 2025 slarticodefast
+# SPDX-FileCopyrightText: 2025 Голубь
+#
+# SPDX-License-Identifier: MIT
+
 # Tier 1
 
 - type: technology
@@ -15,6 +84,11 @@
   - OreProcessorIndustrialMachineCircuitboard
   - ClothingMaskWeldingGas
   - ClothingShoesBootsJump
+  # Goobstation R&D Console rework start
+  position: 0,-1
+  technologyPrerequisites:
+  - SpaceScanning
+  # Goobstation R&D Console rework end
 
 - type: technology
   id: SpaceScanning
@@ -28,6 +102,30 @@
   recipeUnlocks:
   - RadarConsoleCircuitboard
   - HandHeldMassScanner
+  # Goobstation R&D Console rework start
+  position: 0,-3
+  technologyPrerequisites:
+  - PowerGeneration
+  # Goobstation R&D Console rework end
+
+- type: technology
+  id: IndustrialNuclearGeneration
+  name: research-technology-industrial-nuclear-generation
+  icon:
+    sprite: _FarHorizons/Structures/Power/Generation/FissionGenerator/nuclear_reactor.rsi
+    state: reactor
+  discipline: Industrial
+  tier: 2
+  cost: 12500
+  recipeUnlocks:
+  - CerenkiteFuelRod
+  - UraniumFuelRod
+  - ReactorControlRod
+  - ReactorGasChannel
+  - ReactorHeatExchanger
+  position: -1,-4
+  technologyPrerequisites:
+  - PowerGeneration
 
 - type: technology
   id: AdvancedPowercells
@@ -42,18 +140,29 @@
   - PowerCellHigh
   - TurboItemRechargerCircuitboard
   - SMESAdvancedMachineCircuitboard
+  # Goobstation R&D Console rework start
+  position: 0,-6
+  technologyPrerequisites:
+  - IndustrialEngineering
+  # Goobstation R&D Console rework end
 
 - type: technology
   id: MechanicalCompression
   name: research-technology-mechanical-compression
-  icon:
-    sprite: Structures/Machines/flatpacker.rsi
+  icon: # KS14: /tg/ sprite port
+    sprite: _KS14/Structures/Machines/flatpacker.rsi
     state: base
   discipline: Industrial
   tier: 1
   cost: 10000
   recipeUnlocks:
   - FlatpackerMachineCircuitboard
+  - MaterialSiloMachineCircuitboard
+  # Goobstation R&D Console rework start
+  position: 0,-4
+  technologyPrerequisites:
+  - SpaceScanning
+  # Goobstation R&D Console rework end
 
 - type: technology
   id: IndustrialEngineering
@@ -69,6 +178,11 @@
   - ProtolatheHyperConvectionMachineCircuitboard
   - CircuitImprinterHyperConvectionMachineCircuitboard
   - SheetifierMachineCircuitboard
+  # Goobstation R&D Console rework start
+  position: 0,-5
+  technologyPrerequisites:
+  - MechanicalCompression
+  # Goobstation R&D Console rework end
 
 - type: technology
   id: PowerGeneration
@@ -86,6 +200,7 @@
   - SolarControlComputerCircuitboard
   - SolarTrackerElectronics
   - EmitterCircuitboard
+  position: 0,-2
 
 - type: technology
   id: AtmosphericTech
@@ -99,6 +214,11 @@
   recipeUnlocks:
   - ThermomachineFreezerMachineCircuitBoard
   - GasRecyclerMachineCircuitboard
+  # Goobstation R&D Console rework start
+  position: -2,-4
+  technologyPrerequisites:
+  - SpaceScanning
+  # Goobstation R&D Console rework end
 
 - type: technology
   id: RipleyAPLU
@@ -118,6 +238,11 @@
   - RipleyCentralElectronics
   - RipleyPeripheralsElectronics
   - MechEquipmentGrabber
+  # Goobstation R&D Console rework start
+  position: 2,-1
+  technologyPrerequisites:
+  - SalvageEquipment
+  # Goobstation R&D Console rework end
 
 # Tier 2
 
@@ -135,6 +260,11 @@
   - ThrusterMachineCircuitboard
   - GyroscopeMachineCircuitboard
   - MiniGravityGeneratorCircuitboard
+  # Goobstation R&D Console rework start
+  position: 1,-4
+  technologyPrerequisites:
+  - MechanicalCompression
+  # Goobstation R&D Console rework end
 
 - type: technology
   id: AdvancedAtmospherics
@@ -151,6 +281,9 @@
   - HolofanProjector
   technologyPrerequisites:
   - AtmosphericTech
+  # Goobstation R&D Console rework start
+  position: -2,-5
+  # Goobstation R&D Console rework end
 
 - type: technology
   id: AdvancedToolsTechnology
@@ -168,37 +301,33 @@
     - BorgModuleAdvancedTool
     - Fulton
     - FultonBeacon
+  # Goobstation R&D Console rework start
+  position: 1,-5
+  technologyPrerequisites:
+  - Shuttlecraft
+  # Goobstation R&D Console rework end
 
 - type: technology
   id: MassExcavation
   name: research-technology-excavation
-  icon:
-    sprite: Objects/Tools/handdrilldiamond.rsi
-    state: handdrill
+  icon: # KS14
+    sprite: _KS14/Objects/Weapons/Guns/Battery/advplasmacutter.rsi
+    state: icon
   discipline: Industrial
   tier: 2
   cost: 12500
   recipeUnlocks:
     - OreBagOfHolding
-    - MiningDrillDiamond
+    - WeaponAdvancedPlasmaCutter # KS14, replaced diamond mining drill with adv. plasmacutter
     - AdvancedMineralScannerEmpty
     - BorgModuleAdvancedMining
+  # Goobstation R&D Console rework start
+  position: 3,-1
+  technologyPrerequisites:
+  - RipleyAPLU
+  # Goobstation R&D Console rework end
 
 # Tier 3
-
-- type: technology
-  id: BluespaceStorage
-  name: research-technology-bluespace-storage
-  icon:
-    sprite: Clothing/Back/Backpacks/holding.rsi
-    state: holding
-  discipline: Industrial
-  tier: 3
-  cost: 15000
-  recipeUnlocks:
-  - ClothingBackpackHolding
-  - ClothingBackpackSatchelHolding
-  - ClothingBackpackDuffelHolding
 
 - type: technology
   id: OptimizedMicrogalvanism
@@ -214,3 +343,24 @@
   - PowerCellHyper
   technologyPrerequisites:
   - AdvancedPowercells
+  - AdvancedToolsTechnology
+  position: 1,-6
+
+- type: technology
+  id: BluespaceStorage
+  name: research-technology-bluespace-storage
+  icon:
+    sprite: Clothing/Back/Backpacks/holding.rsi
+    state: holding
+  discipline: Industrial
+  tier: 3
+  cost: 15000
+  recipeUnlocks:
+  - ClothingBackpackHolding
+  - ClothingBackpackSatchelHolding
+  - ClothingBackpackDuffelHolding
+  # Goobstation R&D Console rework start
+  position: 1,-7
+  technologyPrerequisites:
+  - OptimizedMicrogalvanism
+  # Goobstation R&D Console rework end

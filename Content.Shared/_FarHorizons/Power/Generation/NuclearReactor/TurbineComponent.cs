@@ -1,4 +1,7 @@
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 jhrushbe
+// SPDX-FileCopyrightText: 2025 rottenheadphones
 //
 // SPDX-License-Identifier: MPL-2.0
 
@@ -86,7 +89,7 @@ public sealed partial class TurbineComponent : Component
     /// <summary>
     /// If the turbine is functional or not
     /// </summary>
-    [DataField]
+    [DataField, AutoNetworkedField]
     public bool Ruined = false;
 
     /// <summary>

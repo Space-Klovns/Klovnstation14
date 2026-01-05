@@ -76,6 +76,12 @@
     - type: ContainerContainer
       containers:
         AccessOverrider-privilegedId: !type:ContainerSlot
+    - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+      sound:
+        path: /Audio/_KS14/Handling/component_pickup.ogg
+    - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+      sound:
+        path: /Audio/_KS14/Handling/component_drop.ogg
 
 - type: entity
   parent: AccessConfigurator
@@ -137,6 +143,35 @@
       ejectSound: /Audio/Machines/id_swipe.ogg
       insertSound: /Audio/Weapons/Guns/MagIn/batrifle_magin.ogg
       ejectOnBreak: true
+      swap: false
+      whitelist:
+        components:
+        - IdCard
+    denialSound:
+      path: /Audio/Machines/custom_deny.ogg
+    doAfter: 0.5
+
+- type: entity
+  parent: AccessConfigurator
+  id: AccessConfiguratorXenoborg
+  name: xenoborg access configurator
+  description: A modified access configurator used by the xenoborgs.
+  components:
+  - type: Sprite
+    sprite: Objects/Tools/access_configurator.rsi
+  - type: Clothing
+    sprite: Objects/Tools/access_configurator.rsi
+  - type: AccessOverrider
+    showPrivilegedId: false
+    accessLevels:
+    - Xenoborg
+    privilegedIdSlot:
+      name: id-card-console-privileged-id
+      startingItem: XenoborgIDCard
+      ejectSound: /Audio/Machines/id_swipe.ogg
+      insertSound: /Audio/Weapons/Guns/MagIn/batrifle_magin.ogg
+      ejectOnBreak: true
+      disableEject: true
       swap: false
       whitelist:
         components:

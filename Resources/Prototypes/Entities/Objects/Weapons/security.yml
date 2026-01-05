@@ -48,14 +48,16 @@
 # SPDX-FileCopyrightText: 2024 wrexbe
 # SPDX-FileCopyrightText: 2025 BramvanZijp
 # SPDX-FileCopyrightText: 2025 Centronias
+# SPDX-FileCopyrightText: 2025 FrauzJ
 # SPDX-FileCopyrightText: 2025 K-Dynamic
 # SPDX-FileCopyrightText: 2025 ScarKy0
 # SPDX-FileCopyrightText: 2025 Token
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 metalgearsloth
 # SPDX-FileCopyrightText: 2025 nabegator220
 # SPDX-FileCopyrightText: 2025 slarticodefast
 #
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 
 - type: entity
   name: stun baton
@@ -167,7 +169,7 @@
         Blunt: 25
     soundHit:
       collection: MetalThud
-    bluntStaminaDamageFactor: 1.5
+    bluntStaminaDamageFactor: 1.2
   - type: Item
     size: Normal
   - type: Tag

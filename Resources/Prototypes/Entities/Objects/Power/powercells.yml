@@ -46,7 +46,7 @@
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - type: entity
   id: BasePowerCell
@@ -80,9 +80,22 @@
   - type: Tag
     tags:
       - PowerCell
-  - type: Appearance
-  - type: PowerCellVisuals
   - type: Riggable
+  - type: Appearance
+  - type: BatteryVisuals
+  - type: GenericVisualizer
+    visuals:
+      enum.BatteryVisuals.State:
+        enum.PowerCellVisualLayers.Unshaded:
+          Full: {visible: true, state: o2}
+          Neither: {visible: true, state: o1}
+          Empty: {visible: false}
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/component_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/component_drop.ogg
 
 - type: entity
   name: potato battery
@@ -148,9 +161,7 @@
   description: A self rechargeable power cell, designed for fast recharge rate at the expense of capacity.
   components:
   - type: BatterySelfRecharger
-    autoRecharge: true
     autoRechargeRate: 36 # 10 seconds to recharge
-    autoRechargePause: true
     autoRechargePauseTime: 30
 
 - type: entity
@@ -279,7 +290,6 @@
     maxCharge: 720
     startingCharge: 720
   - type: BatterySelfRecharger
-    autoRecharge: true
     autoRechargeRate: 12 # takes 1 minute to charge itself back to full
 
 - type: entity
@@ -315,7 +325,6 @@
       maxCharge: 1200
       startingCharge: 1200
     - type: BatterySelfRecharger
-      autoRecharge: true
       autoRechargeRate: 40
 
 # Power cage (big heavy power cell for big devices)

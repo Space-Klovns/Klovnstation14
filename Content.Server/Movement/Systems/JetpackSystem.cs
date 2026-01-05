@@ -1,3 +1,13 @@
+// SPDX-FileCopyrightText: 2022 Júlio César Ueti
+// SPDX-FileCopyrightText: 2022 rolfero
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Wrexbe (Josh)
+// SPDX-FileCopyrightText: 2025 Gerkada
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+// SPDX-FileCopyrightText: 2025 metalgearsloth
+//
+// SPDX-License-Identifier: MIT
+
 using Content.Server.Atmos.Components;
 using Content.Server.Atmos.EntitySystems;
 using Content.Shared.Atmos.Components;
@@ -13,18 +23,17 @@ public sealed class JetpackSystem : SharedJetpackSystem
     [Dependency] private readonly GasTankSystem _gasTank = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
 
-    protected override bool CanEnable(EntityUid uid, JetpackComponent component)
+    protected override bool CanEnable(Entity<JetpackComponent> jetpack)
     {
-        return base.CanEnable(uid, component) &&
-               TryComp<GasTankComponent>(uid, out var gasTank) &&
-               !(gasTank.Air.TotalMoles < component.MoleUsage);
+        return TryComp<GasTankComponent>(jetpack.Owner, out var gasTank) &&
+               !(gasTank.Air.TotalMoles < jetpack.Comp.MoleUsage);
     }
 
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
 
-        var toDisable = new ValueList<(EntityUid Uid, JetpackComponent Component)>();
+        var toDisable = new ValueList<Entity<JetpackComponent>>();
         var query = EntityQueryEnumerator<ActiveJetpackComponent, JetpackComponent, GasTankComponent>();
 
         while (query.MoveNext(out var uid, out var active, out var comp, out var gasTankComp))
@@ -33,14 +42,14 @@ public sealed class JetpackSystem : SharedJetpackSystem
                 continue;
 
             var gasTank = (uid, gasTankComp);
-            active.TargetTime = _timing.CurTime + TimeSpan.FromSeconds(active.EffectCooldown);
+            active.TargetTime = _timing.CurTime + active.EffectCooldown;
             var usedAir = _gasTank.RemoveAir(gasTank, comp.MoleUsage);
 
             if (usedAir == null)
                 continue;
 
             var usedEnoughAir =
-                MathHelper.CloseTo(usedAir.TotalMoles, comp.MoleUsage, comp.MoleUsage/100);
+                MathHelper.CloseTo(usedAir.TotalMoles, comp.MoleUsage, comp.MoleUsage / 100);
 
             if (!usedEnoughAir)
             {
@@ -50,9 +59,9 @@ public sealed class JetpackSystem : SharedJetpackSystem
             _gasTank.UpdateUserInterface(gasTank);
         }
 
-        foreach (var (uid, comp) in toDisable)
+        foreach (var jetpack in toDisable)
         {
-            SetEnabled(uid, comp, false);
+            SetEnabled(jetpack, false);
         }
     }
 }

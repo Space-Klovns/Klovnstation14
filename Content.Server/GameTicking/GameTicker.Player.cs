@@ -1,3 +1,32 @@
+// SPDX-FileCopyrightText: 2021 20kdc
+// SPDX-FileCopyrightText: 2021 Galactic Chimp
+// SPDX-FileCopyrightText: 2021 Javier Guardia Fernández
+// SPDX-FileCopyrightText: 2021 Paul Ritter
+// SPDX-FileCopyrightText: 2021 Vera Aguilera Puerto
+// SPDX-FileCopyrightText: 2022 Moony
+// SPDX-FileCopyrightText: 2022 Radosvik
+// SPDX-FileCopyrightText: 2022 Veritius
+// SPDX-FileCopyrightText: 2022 mirrorcult
+// SPDX-FileCopyrightText: 2022 wrexbe
+// SPDX-FileCopyrightText: 2023 Chief-Engineer
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Kara
+// SPDX-FileCopyrightText: 2023 Leon Friedrich
+// SPDX-FileCopyrightText: 2023 Nemanja
+// SPDX-FileCopyrightText: 2023 ShadowCommander
+// SPDX-FileCopyrightText: 2023 metalgearsloth
+// SPDX-FileCopyrightText: 2024 DEATHB4DEFEAT
+// SPDX-FileCopyrightText: 2024 DoutorWhite
+// SPDX-FileCopyrightText: 2024 LordCarve
+// SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2024 Repo
+// SPDX-FileCopyrightText: 2024 nikthechampiongr
+// SPDX-FileCopyrightText: 2025 Gerkada
+// SPDX-FileCopyrightText: 2025 J
+// SPDX-FileCopyrightText: 2025 Milon
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 using Content.Shared.Administration;
 using Content.Shared.CCVar;
 using Content.Shared.GameTicking;
@@ -122,6 +151,15 @@ namespace Content.Server.GameTicking
 
                 case SessionStatus.Disconnected:
                 {
+                    // Harmony start - ready manifest
+                    if (_playerGameStatuses.TryGetValue(session.UserId, out var playerGameStatus) &&
+                        playerGameStatus == PlayerGameStatus.ReadyToPlay)
+                        _playerGameStatuses[session.UserId] = PlayerGameStatus.NotReadyToPlay;
+
+                    var playerDisconnected = new PlayerDisconnectedEvent();
+                    RaiseLocalEvent(ref playerDisconnected);
+                    // Harmony end - ready manifest
+
                     _chatManager.SendAdminAnnouncement(Loc.GetString("player-leave-message", ("name", args.Session.Name)));
                     if (mindId != null)
                     {
@@ -217,6 +255,11 @@ namespace Content.Server.GameTicking
         {
             RaiseNetworkEvent(new RequestWindowAttentionEvent());
         }
+
+        // Harmony start - ready manifest
+        [ByRefEvent]
+        public struct PlayerDisconnectedEvent;
+        // Harmony end - ready manifest
     }
 
     public sealed class PlayerJoinedLobbyEvent : EntityEventArgs

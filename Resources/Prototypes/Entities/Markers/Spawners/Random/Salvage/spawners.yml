@@ -1,3 +1,9 @@
+# SPDX-FileCopyrightText: 2025 Gerkada
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Nemanja
+#
+# SPDX-License-Identifier: MIT
+
 - type: entityTable
   id: SalvageScrapSpawnerCommon
   table: !type:GroupSelector
@@ -387,8 +393,8 @@
   - type: Sprite
     layers:
     - state: pink
-    - sprite: Structures/Storage/canister.rsi
-      state: blue
+    - sprite: _KS14/Structures/Storage/canister.rsi
+      state: mapme
   - type: EntityTableSpawner
     table: !type:GroupSelector
       prob: 0.9

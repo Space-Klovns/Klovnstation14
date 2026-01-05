@@ -1,3 +1,14 @@
+// SPDX-FileCopyrightText: 2024 Nemanja
+// SPDX-FileCopyrightText: 2024 deltanedas
+// SPDX-FileCopyrightText: 2025 Errant
+// SPDX-FileCopyrightText: 2025 Gerkada
+// SPDX-FileCopyrightText: 2025 Milon
+// SPDX-FileCopyrightText: 2025 SlamBamActionman
+// SPDX-FileCopyrightText: 2025 beck-thompson
+// SPDX-FileCopyrightText: 2025 github_actions[bot]
+//
+// SPDX-License-Identifier: MIT
+
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Server.Antag.Components;
@@ -174,19 +185,21 @@ public sealed partial class AntagSelectionSystem
         if (roles.Count == 0)
             return false;
 
-        var pref = (HumanoidCharacterProfile) _pref.GetPreferences(session.UserId).SelectedCharacter;
+        if (!_pref.TryGetCachedPreferences(session.UserId, out var pref))
+            return false;
+
+        var character = (HumanoidCharacterProfile)pref.SelectedCharacter;
 
         var valid = false;
 
         // Check each individual antag role
         foreach (var role in roles)
         {
-            var list = new List<ProtoId<AntagPrototype>>{role};
+            var list = new List<ProtoId<AntagPrototype>> { role };
 
-
-            if (pref.AntagPreferences.Contains(role)
+            if (character.AntagPreferences.Contains(role)
                 && !_ban.IsRoleBanned(session, list)
-                && _playTime.IsAllowed(session, list))
+                && _playTimeSystem.IsAllowed(session, list))
                 valid = true;
         }
 

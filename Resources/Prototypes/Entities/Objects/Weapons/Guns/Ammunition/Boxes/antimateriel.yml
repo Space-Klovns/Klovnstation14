@@ -45,6 +45,12 @@
     steps: 4
     zeroVisible: false
   - type: Appearance
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/ammobox_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/ammobox_drop.ogg
 
 # Boxes
 - type: entity
@@ -71,6 +77,7 @@
   parent: BaseMagazineBoxAntiMateriel
   id: MagazineBoxAntiMateriel
   name: ammunition box (.60 anti-materiel)
+  description: A cardboard box of .60 anti-materiel rounds.
   components:
   - type: BallisticAmmoProvider
     proto: CartridgeAntiMateriel

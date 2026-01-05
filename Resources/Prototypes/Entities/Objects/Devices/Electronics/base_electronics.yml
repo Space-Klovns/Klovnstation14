@@ -10,11 +10,15 @@
   - type: Sprite
     sprite: Objects/Misc/module.rsi
     state: generic
-  - type: StaticPrice
-    price: 100
   - type: PhysicalComposition
     materialComposition:
       Glass: 200
     chemicalComposition:
       Silicon: 20
   - type: Circuitboard
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/component_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/component_drop.ogg

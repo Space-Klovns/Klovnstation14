@@ -7,6 +7,8 @@
   - type: Sprite
     sprite: Objects/Devices/igniter.rsi
     state: icon
+  - type: Item
+    storedRotation: -90
   - type: IgnitionSource
     temperature: 800
   - type: IgniteOnTrigger
@@ -28,3 +30,9 @@
   - type: Tag
     tags:
     - Igniter
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/component_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/component_drop.ogg

@@ -24,3 +24,9 @@
       message: war-declarator-default-message
     - type: AccessReader
       access: [["NuclearOperative"]]
+    - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+      sound:
+        path: /Audio/_KS14/Handling/tools/multitool_pickup.ogg
+    - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+      sound:
+        path: /Audio/_KS14/Handling/tools/multitool_drop.ogg

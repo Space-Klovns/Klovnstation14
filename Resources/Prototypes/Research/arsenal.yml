@@ -1,3 +1,77 @@
+# SPDX-FileCopyrightText: 2023 Emisse
+# SPDX-FileCopyrightText: 2023 HerCoyote23
+# SPDX-FileCopyrightText: 2023 Kevin Zheng
+# SPDX-FileCopyrightText: 2023 Nim
+# SPDX-FileCopyrightText: 2023 RiceMar1244
+# SPDX-FileCopyrightText: 2023 Stanislav4ix
+# SPDX-FileCopyrightText: 2023 T-Stalker
+# SPDX-FileCopyrightText: 2023 Vordenburg
+# SPDX-FileCopyrightText: 2024 Alex Pavlenko
+# SPDX-FileCopyrightText: 2024 Alice "Arimah" Heurlin
+# SPDX-FileCopyrightText: 2024 Alzore
+# SPDX-FileCopyrightText: 2024 Boaz1111
+# SPDX-FileCopyrightText: 2024 Chief-Engineer
+# SPDX-FileCopyrightText: 2024 Cojoke
+# SPDX-FileCopyrightText: 2024 DrSmugleaf
+# SPDX-FileCopyrightText: 2024 Ed
+# SPDX-FileCopyrightText: 2024 Errant
+# SPDX-FileCopyrightText: 2024 Flareguy
+# SPDX-FileCopyrightText: 2024 Ghagliiarghii
+# SPDX-FileCopyrightText: 2024 GitHubUser53123
+# SPDX-FileCopyrightText: 2024 HS
+# SPDX-FileCopyrightText: 2024 Leon Friedrich
+# SPDX-FileCopyrightText: 2024 MilenVolf
+# SPDX-FileCopyrightText: 2024 Mr. 27
+# SPDX-FileCopyrightText: 2024 NULL882
+# SPDX-FileCopyrightText: 2024 Nairod
+# SPDX-FileCopyrightText: 2024 PJBot
+# SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2024 Plykiya
+# SPDX-FileCopyrightText: 2024 Redfire1331
+# SPDX-FileCopyrightText: 2024 Rouge2t7
+# SPDX-FileCopyrightText: 2024 Tayrtahn
+# SPDX-FileCopyrightText: 2024 Truoizys
+# SPDX-FileCopyrightText: 2024 TsjipTsjip
+# SPDX-FileCopyrightText: 2024 Ubaser
+# SPDX-FileCopyrightText: 2024 Vasilis
+# SPDX-FileCopyrightText: 2024 beck-thompson
+# SPDX-FileCopyrightText: 2024 deltanedas <@deltanedas:kde.org>
+# SPDX-FileCopyrightText: 2024 icekot8
+# SPDX-FileCopyrightText: 2024 lzk
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2024 neutrino
+# SPDX-FileCopyrightText: 2024 osjarw
+# SPDX-FileCopyrightText: 2024 plykiya
+# SPDX-FileCopyrightText: 2024 redfire1331
+# SPDX-FileCopyrightText: 2024 takemysoult
+# SPDX-FileCopyrightText: 2024 to4no_fix
+# SPDX-FileCopyrightText: 2024 Арт
+# SPDX-FileCopyrightText: 2025 Aiden
+# SPDX-FileCopyrightText: 2025 Aidenkrz
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 Aviu00
+# SPDX-FileCopyrightText: 2025 Creatorbot01
+# SPDX-FileCopyrightText: 2025 FaDeOkno
+# SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 Gerkada
+# SPDX-FileCopyrightText: 2025 GoobBot
+# SPDX-FileCopyrightText: 2025 IProduceWidgets
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Nemanja
+# SPDX-FileCopyrightText: 2025 SX-7
+# SPDX-FileCopyrightText: 2025 SX_7
+# SPDX-FileCopyrightText: 2025 Solstice
+# SPDX-FileCopyrightText: 2025 Speebro
+# SPDX-FileCopyrightText: 2025 Ted Lukin
+# SPDX-FileCopyrightText: 2025 coderabbitai[bot]
+# SPDX-FileCopyrightText: 2025 deltanedas
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 gluesniffler
+# SPDX-FileCopyrightText: 2025 pheenty
+# SPDX-FileCopyrightText: 2025 slarticodefast
+#
+# SPDX-License-Identifier: MIT
+
 # Tier 1
 
 - type: technology
@@ -13,6 +87,7 @@
   - WeaponProtoKineticAccelerator
   - ShuttleGunKineticCircuitboard
   # These are roundstart but not replenishable for salvage
+  position: 1,0 # Goobstation R&D Console rework
 
 - type: technology
   id: DraconicMunitions
@@ -35,6 +110,11 @@
   - MagazineBoxMagnumIncendiary
   - MagazineBoxLightRifleIncendiary
   - MagazineBoxRifleIncendiary
+  # Goobstation R&D Console rework start
+  position: 2,2
+  technologyPrerequisites:
+  - SalvageWeapons
+  # Goobstation R&D Console rework end
 
 - type: technology
   id: WeaponizedLaserManipulation
@@ -47,6 +127,11 @@
   cost: 7500
   recipeUnlocks:
   - WeaponLaserCarbine
+  # Goobstation R&D Console rework start
+  position: 4,0
+  technologyPrerequisites:
+  - SalvageWeapons
+  # Goobstation R&D Console rework end
 
 - type: technology
   id: NonlethalAmmunition
@@ -62,6 +147,11 @@
   - BoxShellTranquilizer
   - BoxBeanbag
   - WeaponDisabler
+  # Goobstation R&D Console rework start
+  position: 2,3
+  technologyPrerequisites:
+  - SalvageWeapons
+  # Goobstation R&D Console rework end
 
 - type: technology
   id: UraniumMunitions
@@ -83,6 +173,11 @@
   - MagazineBoxLightRifleUranium
   - MagazineBoxRifleUranium
   - BoxShotgunUranium
+  # Goobstation R&D Console rework start
+  position: 3,2
+  technologyPrerequisites:
+  - DraconicMunitions
+  # Goobstation R&D Console rework end
 
 - type: technology
   id: AdvancedRiotControl
@@ -98,6 +193,11 @@
   - TelescopicShield
   - HoloprojectorSecurity
   - WeaponDisablerSMG
+  # Goobstation R&D Console rework start
+  position: 3,3
+  technologyPrerequisites:
+  - NonlethalAmmunition
+  # Goobstation R&D Console rework end
 
 - type: technology
   id: ExplosiveTechnology
@@ -119,6 +219,9 @@
   - CableDetStack1
   - EmptyDetonator
   - ClusterBang
+  position: 3,4
+  technologyPrerequisites:
+  - NonlethalAmmunition
 
 - type: technology
   id: SpecialMeans
@@ -131,6 +234,11 @@
   cost: 5000
   recipeUnlocks:
   - ClothingBackpackElectropack
+  # Goobstation R&D Console rework start
+  position: 4,3
+  technologyPrerequisites:
+  - AdvancedRiotControl
+  # Goobstation R&D Console rework end
 
 # Tier 2
 
@@ -145,6 +253,11 @@
   cost: 10000
   recipeUnlocks:
   - WeaponLaserCannon
+  # Goobstation R&D Console rework start
+  position: 5,0
+  technologyPrerequisites:
+  - WeaponizedLaserManipulation
+  # Goobstation R&D Console rework end
 
 - type: technology
   id: WaveParticleHarnessing
@@ -157,6 +270,11 @@
   cost: 10000
   recipeUnlocks:
   - WeaponXrayCannon
+  # Goobstation R&D Console rework start
+  technologyPrerequisites:
+  - WeaponizedLaserManipulation
+  position: 5,1
+  # Goobstation R&D Console rework end
 
 - type: technology
   id: KineticModifications
@@ -171,6 +289,7 @@
   - PKAUpgradeDamage
   - PKAUpgradeRange
   - PKAUpgradeFireRate
+  position: 5,2
 
 - type: technology
   id: BasicShuttleArmament
@@ -193,6 +312,8 @@
   - ShuttleGunFriendshipCircuitboard
   technologyPrerequisites:
   - SalvageWeapons
+  - Shuttlecraft  # Goobstation R&D Console rework
+  position: 2,-4  # Goobstation R&D Console rework
 
 - type: technology
   id: DualWieldingTechnology
@@ -205,6 +326,7 @@
   cost: 10000
   recipeUnlocks:
   - ClothingBackpackHarmpack
+  position: 5, 3 # Goobstation R&D Console rework
 
 # Tier 3
 
@@ -220,6 +342,11 @@
   recipeUnlocks:
   - WeaponAdvancedLaser
   - PortableRecharger
+  # Goobstation R&D Console rework start
+  position: 6,0
+  technologyPrerequisites:
+  - ConcentratedLaserWeaponry
+  # Goobstation R&D Console rework end
 
 - type: technology
   id: ThermalWeaponry
@@ -232,6 +359,9 @@
   cost: 15000
   recipeUnlocks:
   - WeaponTemperatureGun
+  position: 5,3
+  technologyPrerequisites:
+  - ConcentratedLaserWeaponry
 
 - type: technology
   id: AdvancedShuttleWeapon
@@ -246,5 +376,6 @@
   - GrenadeEMP
   - PowerCageHigh
   - ShuttleGunDusterCircuitboard
+  position: 3,-4
   technologyPrerequisites:
   - BasicShuttleArmament

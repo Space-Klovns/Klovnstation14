@@ -7,16 +7,22 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.OverlayStains;
 
-public sealed partial class StainCleanReaction : EntityEffect
+/// <inheritdoc cref="EntityEffectSystem{T,TEffect}"/>
+public sealed partial class StainCleanEntityEffectSystem : EntityEffectSystem<StainedComponent, StainClean>
 {
-    private StainSystem _stainSystem = default!;
+    [Dependency] private readonly StainSystem _stainSystem = default!;
 
-    protected override string? ReagentEffectGuidebookText(IPrototypeManager prototype, IEntitySystemManager entSys)
-        => Loc.GetString("reagent-effect-guidebook-wash-cream-pie-reaction", ("chance", Probability));
-
-    public override void Effect(EntityEffectBaseArgs args)
+    protected override void Effect(Entity<StainedComponent> entity, ref EntityEffectEvent<StainClean> args)
     {
-        _stainSystem ??= args.EntityManager.System<StainSystem>();
-        _stainSystem.CleanEntity(args.TargetEntity);
+        _stainSystem.CleanEntity(entity!);
+    }
+}
+
+/// <inheritdoc cref="EntityEffect"/>
+public sealed partial class StainClean : EntityEffectBase<StainClean>
+{
+    public override string EntityEffectGuidebookText(IPrototypeManager prototype, IEntitySystemManager entSys)
+    {
+        return Loc.GetString("entity-effect-guidebook-stain-clean");
     }
 }

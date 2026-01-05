@@ -1,6 +1,59 @@
+# SPDX-FileCopyrightText: 2020 20kdc
+# SPDX-FileCopyrightText: 2020 ike709
+# SPDX-FileCopyrightText: 2020 py01
+# SPDX-FileCopyrightText: 2021 Acruid
+# SPDX-FileCopyrightText: 2021 DrSmugleaf
+# SPDX-FileCopyrightText: 2021 Galactic Chimp
+# SPDX-FileCopyrightText: 2021 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2021 ShadowCommander
+# SPDX-FileCopyrightText: 2021 Swept
+# SPDX-FileCopyrightText: 2021 collinlunn
+# SPDX-FileCopyrightText: 2021 mirrorcult
+# SPDX-FileCopyrightText: 2021 moonheart08
+# SPDX-FileCopyrightText: 2022 Electro
+# SPDX-FileCopyrightText: 2022 Jacob Tong
+# SPDX-FileCopyrightText: 2022 Justin Trotter
+# SPDX-FileCopyrightText: 2022 Mervill
+# SPDX-FileCopyrightText: 2022 Paul Ritter
+# SPDX-FileCopyrightText: 2022 Profane McBane
+# SPDX-FileCopyrightText: 2022 Rane
+# SPDX-FileCopyrightText: 2022 Rinkashikachi
+# SPDX-FileCopyrightText: 2022 TekuNut
+# SPDX-FileCopyrightText: 2022 Vera Aguilera Puerto
+# SPDX-FileCopyrightText: 2023 Kevin Zheng
+# SPDX-FileCopyrightText: 2023 Leon Friedrich
+# SPDX-FileCopyrightText: 2023 Vordenburg
+# SPDX-FileCopyrightText: 2023 lzk
+# SPDX-FileCopyrightText: 2023 potato1234_x
+# SPDX-FileCopyrightText: 2023 Łukasz Mędrek
+# SPDX-FileCopyrightText: 2024 Flareguy
+# SPDX-FileCopyrightText: 2024 Jeff
+# SPDX-FileCopyrightText: 2024 Kara
+# SPDX-FileCopyrightText: 2024 MilenVolf
+# SPDX-FileCopyrightText: 2024 Plykiya
+# SPDX-FileCopyrightText: 2024 TGRCDev
+# SPDX-FileCopyrightText: 2024 Velcroboy
+# SPDX-FileCopyrightText: 2024 lapatison
+# SPDX-FileCopyrightText: 2025 ActiveMammmoth
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 Gerkada
+# SPDX-FileCopyrightText: 2025 Hitlinemoss
+# SPDX-FileCopyrightText: 2025 K-Dynamic
+# SPDX-FileCopyrightText: 2025 Nemanja
+# SPDX-FileCopyrightText: 2025 Tiniest Shark
+# SPDX-FileCopyrightText: 2025 Whatstone
+# SPDX-FileCopyrightText: 2025 Winkarst
+# SPDX-FileCopyrightText: 2025 beck-thompson
+# SPDX-FileCopyrightText: 2025 metalgearsloth
+# SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+#
+# SPDX-License-Identifier: MIT
+
 - type: entity
   abstract: true
-  parent: BaseStructureDynamic
+  parent: [ BaseStructureDynamic, BasePaperLabelableVisualized ]
   id: GasCanister
   name: gas canister
   description: A canister that can contain any type of gas. It can be attached to connector ports using a wrench.
@@ -10,10 +63,12 @@
     - type: Transform
       noRot: true
     - type: Sprite
-      sprite: Structures/Storage/canister.rsi
+      sprite: _KS14/Structures/Storage/canister.rsi
       noRot: true
       layers:
-        - state: grey
+      - state: multi_shader
+      - state: outline
+      - state: window-base
     - type: Appearance
     - type: GenericVisualizer
       visuals:
@@ -25,16 +80,37 @@
           tankInserted:
             False: { state: can-open, visible: false }
             True: { state: can-open, visible: true }
-        enum.LockVisuals.Locked:
-          locked:
-            False: { state: unlocked, shader: "unshaded" }
-            True: { state: locked, shader: "unshaded" }
+        # enum.LockVisuals.Locked:
+        #   locked:
+        #     False: { state: unlocked, shader: "unshaded" }
+        #     True: { state: locked, shader: "unshaded" }
         enum.GasCanisterVisuals.PressureState:
           pressureLight:
-            0: { state: can-o0, shader: "unshaded" }
-            1: { state: can-o1, shader: "unshaded" }
-            2: { state: can-o2, shader: "unshaded" }
-            3: { state: can-o3, shader: "unshaded" }
+            0: { state: can-0, shader: "Emissive" }
+            1: { state: can-1, shader: "Emissive" }
+            2: { state: can-2, shader: "Emissive" }
+            3: { state: can-3, shader: "Emissive" }
+        enum.PaperLabelVisuals.HasLabel:
+          enum.PaperLabelVisuals.Layer:
+            True: { visible: true }
+            False: { visible: false }
+        enum.StorageVisuals.Open:
+          enum.PaperLabelVisuals.Layer:
+            True: { visible: false }
+        enum.PaperLabelVisuals.LabelType:
+          enum.PaperLabelVisuals.Layer: # KS14: Specified upstream sprites - this might be slightly unperformant but idc
+            Paper:
+              sprite: /Structures/Storage/canister.rsi
+              state: paper
+            Bounty:
+              sprite: /Structures/Storage/canister.rsi
+              state: bounty
+            CaptainsPaper:
+              sprite: /Structures/Storage/canister.rsi
+              state: captains_paper
+            Invoice:
+              sprite: /Structures/Storage/canister.rsi
+              state: invoice
     - type: ActivatableUI
       key: enum.GasCanisterUiKey.Key
     - type: UIRequiresLock
@@ -89,6 +165,7 @@
     - type: ContainerContainer
       containers:
         tank_slot: !type:ContainerSlot {}
+        paper_label: !type:ContainerSlot
     - type: NodeContainer
       nodes:
         port:
@@ -96,7 +173,6 @@
           nodeGroupID: Pipe
           rotationsEnabled: false
           volume: 1
-    - type: ItemSlots
     - type: GasPortable
     - type: GasCanister
       gasTankSlot:
@@ -109,8 +185,8 @@
       price: 200
     - type: AccessReader
       access: [["Atmospherics"], ["Engineering"], ["Research"]]
-    - type: Lock
-      locked: false
+    # - type: Lock
+    #   locked: false
     - type: GuideHelp
       guides:
       - GasCanisters
@@ -124,7 +200,11 @@
   components:
     - type: Sprite
       layers:
-        - state: yellow
+      - state: multi_shader
+        color: "#787878"
+      - state: outline
+        color: "#787878"
+      - state: window-base
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -163,7 +243,11 @@
   components:
   - type: Sprite
     layers:
-      - state: grey
+    - state: multi_shader
+      color: "#C6C0B5"
+    - state: outline
+      color: "#C6C0B5"
+    - state: window-base
   - type: GasCanister
     gasMixture:
       volume: 1500
@@ -203,7 +287,13 @@
   components:
   - type: Sprite
     layers:
-      - state: blue
+    - state: multi_shader
+      color: "#2786E5"
+    - state: stripe
+      color: "#E8FEFE"
+    - state: outline
+      color: "#2786E5"
+    - state: window-base
   - type: GasCanister
     gasMixture:
       volume: 1500
@@ -257,7 +347,13 @@
   components:
     - type: Sprite
       layers:
-        - state: red
+      - state: multi_shader
+        color: "#E9FF5C"
+      - state: double_stripe
+        color: "#F4FCE8"
+      - state: outline
+        color: "#E9FF5C"
+      - state: window-base
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -311,7 +407,13 @@
   components:
     - type: Sprite
       layers:
-        - state: black
+      - state: multi_shader
+        color: "#4E4C48"
+      - state: double_stripe
+        color: "#EAEAEA"
+      - state: outline
+        color: "#4E4C48"
+      - state: window-base
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -367,7 +469,13 @@
   components:
     - type: Sprite
       layers:
-        - state: orange
+      - state: multi_shader
+        color: "#F62800"
+      - state: hazard_stripes
+        color: "#000000"
+      - state: outline
+        color: "#F62800"
+      - state: window-base
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -408,7 +516,13 @@
   components:
     - type: Sprite
       layers:
-        - state: green
+      - state: multi_shader
+        color: "#3FCD40"
+      - state: hazard_stripes
+        color: "#000000"
+      - state: outline
+        color: "#3FCD40"
+      - state: window-base
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -449,7 +563,13 @@
   components:
     - type: Sprite
       layers:
-        - state: water_vapor
+      - state: multi_shader
+        color: "#4C4E4D"
+      - state: double_stripe
+        color: "#F7D5D3"
+      - state: outline
+        color: "#4C4E4D"
+      - state: window-base
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -488,7 +608,13 @@
   components:
     - type: Sprite
       layers:
-        - state: greenys
+      - state: multi_shader
+        color: "#009823"
+      - state: double_stripe
+        color: "#F7D5D3"
+      - state: outline
+        color: "#009823"
+      - state: window-base
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -529,7 +655,13 @@
   components:
     - type: Sprite
       layers:
-        - state: redws
+      - state: multi_shader
+        color: "#C63E3B"
+      - state: double_stripe
+        color: "#F7D5D3"
+      - state: outline
+        color: "#C63E3B"
+      - state: window-base
     - type: GasCanister
       gasMixture:
         volume: 1500
@@ -570,7 +702,13 @@
   components:
   - type: Sprite
     layers:
-    - state: frezon
+    - state: multi_shader
+      color: "#6696EE"
+    - state: double_stripe
+      color: "#FEFB30"
+    - state: outline
+      color: "#6696EE"
+    - state: window-base
   - type: GasCanister
     gasMixture:
       volume: 1500
@@ -638,8 +776,13 @@
       damageModifierSet: Metallic
     - type: InteractionOutline
     - type: Sprite
-      sprite: Structures/Storage/canister.rsi
-      state: grey-1
+      sprite: _KS14/Structures/Storage/canister.rsi
+      layers:
+      - state: window-base_broken
+      - state: multi_shader_broken
+        color: "#787878"
+      - state: outline_broken
+        color: "#787878"
     - type: Physics
       bodyType: Dynamic
     - type: Fixtures
@@ -664,8 +807,13 @@
   id: StorageCanisterBroken
   categories: [ HideSpawnMenu ]
   components:
-    - type: Sprite
-      state: yellow-1
+  - type: Sprite
+    layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#787878"
+    - state: outline_broken
+      color: "#787878"
 
 - type: entity
   parent: GasCanisterBrokenBase
@@ -673,7 +821,12 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    state: grey-1
+    layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#C6C0B5"
+    - state: outline_broken
+      color: "#C6C0B5"
 
 - type: entity
   parent: GasCanisterBrokenBase
@@ -681,39 +834,74 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    state: blue-1
+    layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#2786E5"
+    - state: stripe_broken
+      color: "#E8FEFE"
+    - state: outline_broken
+      color: "#2786E5"
 
 - type: entity
   parent: GasCanisterBrokenBase
   id: NitrogenCanisterBroken
   categories: [ HideSpawnMenu ]
   components:
-    - type: Sprite
-      state: red-1
+  - type: Sprite
+    layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#E9FF5C"
+    - state: double_stripe_broken
+      color: "#F4FCE8"
+    - state: outline_broken
+      color: "#E9FF5C"
 
 - type: entity
   parent: GasCanisterBrokenBase
   id: CarbonDioxideCanisterBroken
   categories: [ HideSpawnMenu ]
   components:
-    - type: Sprite
-      state: black-1
+  - type: Sprite
+    layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#4E4C48"
+    - state: double_stripe_broken
+      color: "#EAEAEA"
+    - state: outline_broken
+      color: "#4E4C48"
 
 - type: entity
   parent: GasCanisterBrokenBase
   id: PlasmaCanisterBroken
   categories: [ HideSpawnMenu ]
   components:
-    - type: Sprite
-      state: orange-1
+  - type: Sprite
+    layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#F62800"
+    - state: hazard_stripes_broken
+      color: "#000000"
+    - state: outline_broken
+      color: "#F62800"
 
 - type: entity
   parent: GasCanisterBrokenBase
   id: TritiumCanisterBroken
   categories: [ HideSpawnMenu ]
   components:
-    - type: Sprite
-      state: green-1
+  - type: Sprite
+    layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#3FCD40"
+    - state: hazard_stripes_broken
+      color: "#000000"
+    - state: outline_broken
+      color: "#3FCD40"
 
 - type: entity
   parent: GasCanisterBrokenBase
@@ -721,24 +909,45 @@
   name: broken water vapor canister
   categories: [ HideSpawnMenu ]
   components:
-    - type: Sprite
-      state: water_vapor-1
+  - type: Sprite
+    layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#4C4E4D"
+    - state: double_stripe_broken
+      color: "#F7D5D3"
+    - state: outline_broken
+      color: "#4C4E4D"
 
 - type: entity
   parent: GasCanisterBrokenBase
   id: AmmoniaCanisterBroken
   categories: [ HideSpawnMenu ]
   components:
-    - type: Sprite
-      state: greenys-1
+  - type: Sprite
+    layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#009823"
+    - state: double_stripe_broken
+      color: "#F7D5D3"
+    - state: outline_broken
+      color: "#009823"
 
 - type: entity
   parent: GasCanisterBrokenBase
   id: NitrousOxideCanisterBroken
   categories: [ HideSpawnMenu ]
   components:
-    - type: Sprite
-      state: redws-1
+  - type: Sprite
+    layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#C63E3B"
+    - state: double_stripe_broken
+      color: "#F7D5D3"
+    - state: outline_broken
+      color: "#C63E3B"
 
 - type: entity
   parent: GasCanisterBrokenBase
@@ -746,4 +955,11 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    state: frezon-1
+    layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#6696EE"
+    - state: double_stripe_broken
+      color: "#FEFB30"
+    - state: outline_broken
+      color: "#6696EE"

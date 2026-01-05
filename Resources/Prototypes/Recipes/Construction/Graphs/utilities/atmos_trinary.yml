@@ -1,3 +1,12 @@
+# SPDX-FileCopyrightText: 2022 Jack Fox
+# SPDX-FileCopyrightText: 2022 Kevin Zheng
+# SPDX-FileCopyrightText: 2022 Vera Aguilera Puerto
+# SPDX-FileCopyrightText: 2023 08A
+# SPDX-FileCopyrightText: 2023 metalgearsloth
+# SPDX-FileCopyrightText: 2025 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: constructionGraph
   id: GasTrinary
   start: start
@@ -31,6 +40,19 @@
         doAfter: 1
 
     - to: pneumaticvalve
+      steps:
+      - material: Steel
+        amount: 2
+        doAfter: 1
+
+    # Molar mixer - KS14
+    - to: molarmixer
+      steps:
+      - material: Steel
+        amount: 2
+        doAfter: 1
+
+    - to: molarmixerflipped
       steps:
       - material: Steel
         amount: 2
@@ -104,6 +126,39 @@
 
   - node: pneumaticvalve
     entity: PressureControlledValve
+    edges:
+    - to: start
+      conditions:
+      - !type:EntityAnchored
+        anchored: false
+      completed:
+      - !type:SpawnPrototype
+        prototype: SheetSteel1
+        amount: 2
+      - !type:DeleteEntity
+      steps:
+      - tool: Welding
+        doAfter: 1
+
+  # Molar mixer - KS14
+  - node: molarmixer
+    entity: MolarMixer
+    edges:
+    - to: start
+      conditions:
+      - !type:EntityAnchored
+        anchored: false
+      completed:
+      - !type:SpawnPrototype
+        prototype: SheetSteel1
+        amount: 2
+      - !type:DeleteEntity
+      steps:
+      - tool: Welding
+        doAfter: 1
+
+  - node: molarmixerflipped
+    entity: MolarMixerFlipped
     edges:
     - to: start
       conditions:

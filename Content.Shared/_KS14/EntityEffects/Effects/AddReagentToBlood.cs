@@ -14,7 +14,19 @@ using Content.Shared.Chemistry.Components;
 
 namespace Content.Shared._KS14.EntityEffects.Effects;
 
-public sealed partial class AddReagentToBlood : EntityEffect
+/// <inheritdoc cref="EntityEffectSystem{T,TEffect}"/>
+public sealed partial class AddReagentToBloodEntityEffectSystem : EntityEffectSystem<BloodstreamComponent, AddReagentToBlood>
+{
+    [Dependency] private readonly SharedBloodstreamSystem _bloodstreamSystem = default!;
+
+    protected override void Effect(Entity<BloodstreamComponent> entity, ref EntityEffectEvent<AddReagentToBlood> args)
+    {
+        _bloodstreamSystem.TryAddToBloodstream(entity!, new Solution(args.Effect.Reagent, args.Effect.Amount, args.Effect.Data));
+    }
+}
+
+/// <inheritdoc cref="EntityEffect"/>
+public sealed partial class AddReagentToBlood : EntityEffectBase<AddReagentToBlood>
 {
     [DataField(required: true)]
     public ProtoId<ReagentPrototype> Reagent;
@@ -25,29 +37,15 @@ public sealed partial class AddReagentToBlood : EntityEffect
     [DataField]
     public List<ReagentData>? Data = null;
 
-    [Dependency] private SharedBloodstreamSystem? _bloodstreamSystem = null;
-
-    public override void Effect(EntityEffectBaseArgs args)
+    public override string? EntityEffectGuidebookText(IPrototypeManager prototype, IEntitySystemManager entSys)
     {
-        if (!args.EntityManager.TryGetComponent<BloodstreamComponent>(args.TargetEntity, out var blood))
-            return;
+        if (!prototype.TryIndex(Reagent, out var reagentProto))
+            throw new NotImplementedException();
 
-        // yeah wtf is this
-        _bloodstreamSystem ??= args.EntityManager.System<SharedBloodstreamSystem>();
-        _bloodstreamSystem.TryAddToChemicals((args.TargetEntity, blood), new Solution(Reagent, Amount, Data));
-    }
-
-    protected override string? ReagentEffectGuidebookText(IPrototypeManager prototype, IEntitySystemManager entSys)
-    {
-        if (prototype.TryIndex(Reagent, out var reagentProto))
-        {
-            return Loc.GetString("reagent-effect-guidebook-add-to-chemicals",
-                ("chance", Probability),
-                ("deltasign", MathF.Sign(Amount.Float())),
-                ("reagent", reagentProto.LocalizedName),
-                ("amount", MathF.Abs(Amount.Float())));
-        }
-
-        throw new NotImplementedException();
+        return Loc.GetString("reagent-effect-guidebook-add-to-chemicals",
+            ("chance", Probability),
+            ("deltasign", MathF.Sign(Amount.Float())),
+            ("reagent", reagentProto.LocalizedName),
+            ("amount", MathF.Abs(Amount.Float())));
     }
 }

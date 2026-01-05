@@ -28,7 +28,7 @@
 # SPDX-FileCopyrightText: 2025 Princess Cheeseballs
 # SPDX-FileCopyrightText: 2025 kosticia
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - type: entity
   name: space tick
@@ -84,7 +84,7 @@
       - !type:GibBehavior
         recursive: false
   - type: Stamina
-    critThreshold: 15
+    baseCritThreshold: 15
     animationThreshold: 5
   - type: MovementAlwaysTouching
   - type: DamageStateVisuals
@@ -98,7 +98,10 @@
     - id: FoodMeatXeno
       amount: 1
   - type: Bloodstream
-    bloodMaxVolume: 50
+    bloodReferenceSolution:
+      reagents:
+      - ReagentId: Blood
+        Quantity: 50
   - type: CombatMode
   - type: MeleeWeapon
     soundHit:

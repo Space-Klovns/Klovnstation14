@@ -1,3 +1,13 @@
+# SPDX-FileCopyrightText: 2023 Kara
+# SPDX-FileCopyrightText: 2023 deltanedas
+# SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2025 ScarKy0
+# SPDX-FileCopyrightText: 2025 metalgearsloth
+# SPDX-FileCopyrightText: 2026 FrauzJ
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+#
+# SPDX-License-Identifier: MIT
+
 - type: biomeMarkerLayer
   id: Lizards
   prototype: MobLizard
@@ -7,19 +17,19 @@
 - type: biomeMarkerLayer
   id: WatchersLavaland
   prototype: MobWatcherLavaland
-  minGroupSize: 3
+  minGroupSize: 1 # KS14 change
   maxGroupSize: 3
 
 - type: biomeMarkerLayer
   id: WatchersIcewing
   prototype: MobWatcherIcewing
-  minGroupSize: 3
+  minGroupSize: 1 # KS14 change
   maxGroupSize: 3
 
 - type: biomeMarkerLayer
   id: WatchersMagmawing
   prototype: MobWatcherMagmawing
-  minGroupSize: 3
+  minGroupSize: 1 # KS14 change
   maxGroupSize: 3
 
 - type: biomeMarkerLayer
@@ -65,3 +75,17 @@
 #- type: biomeMarkerLayer
 #  id: Experiment
 #  proto: DungeonMarkerExperiment
+
+
+# KS14 additions
+- type: biomeMarkerLayer
+  id: Goliath
+  prototype: MobGoliath
+  minGroupSize: 1
+  maxGroupSize: 2
+
+- type: biomeMarkerLayer
+  id: Basilisk
+  prototype: MobBasilisk
+  minGroupSize: 1
+  maxGroupSize: 2

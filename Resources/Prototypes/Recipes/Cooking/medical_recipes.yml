@@ -1,3 +1,11 @@
+# SPDX-FileCopyrightText: 2024 Alzore
+# SPDX-FileCopyrightText: 2024 blueDev2
+# SPDX-FileCopyrightText: 2025 FrauzJ
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 pathetic meowmeow
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: microwaveMealRecipe
   id: RecipeAloeCream
   name: aloe cream recipe
@@ -14,7 +22,7 @@
   time: 10
   group: Medicinal
   solids:
-    FoodPoppy: 1
+    # FoodPoppy: 1 # KS14 change - easier to make
     Brutepack: 1
     MaterialCloth1: 1
   reagents:
@@ -28,7 +36,7 @@
   time: 10
   group: Medicinal
   solids:
-    FoodAloe: 1
+    # FoodAloe: 1 # KS14 change - easier to make
     Ointment: 1
     MaterialCloth1: 1
   reagents:

@@ -11,6 +11,12 @@
   - type: GuideHelp
     guides:
     - Science
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/disk_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/disk_drop.ogg
 
 - type: entity
   parent: ResearchDisk

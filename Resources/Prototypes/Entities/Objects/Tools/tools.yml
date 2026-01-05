@@ -60,12 +60,13 @@
 # SPDX-FileCopyrightText: 2025 5tickman
 # SPDX-FileCopyrightText: 2025 ArtisticRoomba
 # SPDX-FileCopyrightText: 2025 Booblesnoot42
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Nox
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 metalgearsloth
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - type: entity
   name: wirecutter
@@ -112,6 +113,12 @@
       Steel: 100
   - type: StaticPrice
     price: 30
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/wirecutter_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/wirecutter_drop.ogg
 
 - type: entity
   name: screwdriver
@@ -156,6 +163,12 @@
       Steel: 100
   - type: StaticPrice
     price: 30
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/screwdriver_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/screwdriver_drop.ogg
 
 - type: entity
   name: wrench
@@ -198,6 +211,12 @@
   - type: GuideHelp
     guides:
     - Construction
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/wrench_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/wrench_drop.ogg
 
 - type: entity
   name: multitool
@@ -213,7 +232,7 @@
     layers:
     - state: icon
     - state: green-unlit
-      shader: unshaded
+      shader: Emissive # KS14
   - type: Item
     size: Small
   - type: Clothing
@@ -252,6 +271,12 @@
     - WirePanels
     - Airlocks
     - InspectingPower
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/multitool_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/multitool_drop.ogg
 
 - type: entity
   name: network configurator
@@ -303,6 +328,12 @@
     - type: GuideHelp
       guides:
       - Networking
+    - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+      sound:
+        path: /Audio/_KS14/Handling/tools/multitool_pickup.ogg
+    - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+      sound:
+        path: /Audio/_KS14/Handling/tools/multitool_drop.ogg
 
 #Power tools
 #Later on these should switch probably switch damage when changing the tool behavior.
@@ -359,6 +390,12 @@
         Piercing: 10
     soundHit:
       path: "/Audio/Items/drill_hit.ogg"
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/rpd_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/rpd_drop.ogg
 
 - type: entity
   id: RCD
@@ -412,6 +449,12 @@
   - type: ActivatableUI
     inHandsOnly: true
     key: enum.RcdUiKey.Key
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/rcd_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/rcd_drop.ogg
 
 - type: entity
   id: RCDEmpty
@@ -527,6 +570,12 @@
           state: omnitool-pulsing
         changeSound:
           path: /Audio/Items/change_drill.ogg
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/crowbar_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/crowbar_drop.ogg
 
 #Other
 - type: entity
@@ -555,6 +604,12 @@
   - type: StaticPrice
     price: 25
   - type: Shovel
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/crowbar_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/crowbar_drop.ogg
 
 - type: entity
   parent: BaseItem

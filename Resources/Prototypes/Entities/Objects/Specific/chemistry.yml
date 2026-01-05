@@ -97,6 +97,12 @@
   - type: StaticPrice
     price: 30
   - type: DnaSubstanceTrace
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/beaker_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/beaker_place.ogg
 
 - type: entity
   parent: BaseItem
@@ -199,6 +205,96 @@
           Quantity: 50
 
 - type: entity
+  parent: Beaker
+  id: BeakerSmallArith
+  suffix: arithrazine
+  components:
+  - type: Label
+    currentLabel: reagent-name-arithrazine
+  - type: SolutionContainerManager
+    solutions:
+      beaker:
+        maxVol: 50
+        reagents:
+        - ReagentId: Arithrazine
+          Quantity: 50
+
+- type: entity
+  parent: Beaker
+  id: BeakerSmallSigy
+  suffix: sigynate
+  components:
+  - type: Label
+    currentLabel: reagent-name-sigynate
+  - type: SolutionContainerManager
+    solutions:
+      beaker:
+        maxVol: 50
+        reagents:
+        - ReagentId: Sigynate
+          Quantity: 50
+
+- type: entity
+  parent: Beaker
+  id: BeakerSmallPhal
+  suffix: phalanximine
+  components:
+  - type: Label
+    currentLabel: reagent-name-phalanximine
+  - type: SolutionContainerManager
+    solutions:
+      beaker:
+        maxVol: 50
+        reagents:
+        - ReagentId: Phalanximine
+          Quantity: 50
+
+- type: entity
+  parent: Beaker
+  id: BeakerSmallDiph
+  suffix: diphenhydramine
+  components:
+  - type: Label
+    currentLabel: reagent-name-diphenhydramine
+  - type: SolutionContainerManager
+    solutions:
+      beaker:
+        maxVol: 50
+        reagents:
+        - ReagentId: Diphenhydramine
+          Quantity: 50
+
+- type: entity
+  parent: Beaker
+  id: BeakerSmallBruiz
+  suffix: bruizine
+  components:
+  - type: Label
+    currentLabel: reagent-name-bruizine
+  - type: SolutionContainerManager
+    solutions:
+      beaker:
+        maxVol: 50
+        reagents:
+        - ReagentId: Bruizine
+          Quantity: 50
+
+- type: entity
+  parent: Beaker
+  id: BeakerSmallLace
+  suffix: lacerinol
+  components:
+  - type: Label
+    currentLabel: reagent-name-lacerinol
+  - type: SolutionContainerManager
+    solutions:
+      beaker:
+        maxVol: 50
+        reagents:
+        - ReagentId: Lacerinol
+          Quantity: 50
+
+- type: entity
   name: large beaker
   parent: BaseBeaker
   description: Used to contain a large amount of chemicals or solutions.
@@ -289,16 +385,12 @@
       injector:
         maxVol: 5
   - type: Injector
-    injectOnly: false
     ignoreMobs: true
     ignoreClosed: false
-    transferAmounts:
-    - 1
-    - 2
-    - 3
-    - 4
-    - 5
-    currentTransferAmount: 1
+    activeModeProtoId: DropperDrawMode
+    allowedModes:
+    - DropperDrawMode
+    - DropperInjectMode
   - type: ExaminableSolution
     solution: dropper
     exactVolume: true
@@ -324,6 +416,12 @@
     tags:
     - Dropper
   - type: PhysicalComposition
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      collection: SyringePickup
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      collection: SyringeDrop
 
 - type: entity
   parent: Dropper
@@ -371,11 +469,10 @@
       injector:
         maxVol: 15
   - type: Injector
-    injectOnly: false
-    transferAmounts:
-    - 5
-    - 10
-    - 15
+    activeModeProtoId: SyringeDrawMode
+    allowedModes:
+    - SyringeDrawMode
+    - SyringeInjectMode
   - type: ExaminableSolution
     solution: injector
     exactVolume: true
@@ -392,13 +489,17 @@
   - type: Tag
     tags:
     - Syringe
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      collection: SyringePickup
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      collection: SyringeDrop
 
 - type: entity
   parent: BaseSyringe
   id: Syringe
   components:
-  - type: Injector
-    currentTransferAmount: 15
   - type: Tag
     tags:
     - Syringe
@@ -421,14 +522,6 @@
     solutions:
       injector:
         maxVol: 5
-  - type: Injector
-    transferAmounts:
-    - 1
-    - 2
-    - 3
-    - 4
-    - 5
-    currentTransferAmount: 5
   - type: SolutionContainerVisuals
     maxFillLevels: 3
     fillBaseName: minisyringe
@@ -482,7 +575,7 @@
   id: PrefilledSyringe
   components:
   - type: Injector
-    toggleState: Inject
+    activeModeProtoId: SyringeInjectMode
 
 - type: entity
   id: SyringeBluespace
@@ -505,8 +598,10 @@
       injector:
         maxVol: 100
   - type: Injector
-    delay: 2.5
-    injectOnly: false
+    activeModeProtoId: BluespaceSyringeDrawMode
+    allowedModes:
+    - BluespaceSyringeInjectMode
+    - BluespaceSyringeDrawMode
   - type: SolutionContainerVisuals
     maxFillLevels: 2
     fillBaseName: syringe
@@ -537,11 +632,10 @@
         maxVol: 10
         canReact: false
   - type: Injector
-    injectOnly: false
-    transferAmounts:
-    - 5
-    - 10
-    currentTransferAmount: 10
+    activeModeProtoId: CryostasisSyringeDrawMode
+    allowedModes:
+    - CryostasisSyringeInjectMode
+    - CryostasisSyringeDrawMode
   - type: Tag
     tags:
     - Syringe
@@ -617,9 +711,15 @@
     quickInsert: true
     areaInsert: true
     areaInsertRadius: 1
-    storageInsertSound: /Audio/Effects/pill_insert.ogg
+    storageInsertSound: /Audio/_KS14/Handling/pill_bottle_place.ogg
     storageRemoveSound: /Audio/Effects/pill_remove.ogg
     whitelist:
       tags:
       - Pill
   - type: Dumpable
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/pill_bottle_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/pill_bottle_place.ogg

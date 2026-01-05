@@ -33,6 +33,12 @@
   - type: Construction
     graph: PipeBomb
     node: pipebomb
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/grenade/grenade_pick_up.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/grenade/grenade_drop.ogg
 
 - type: entity
   parent: [ BaseItem, BaseMinorContraband ]

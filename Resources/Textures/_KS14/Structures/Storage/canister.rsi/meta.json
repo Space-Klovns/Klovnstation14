@@ -1,0 +1,150 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from https://github.com/tgstation/tgstation at commit f6d46d048038d855533476162a98dcc2d7fc2466 . Modified by LaCumbiaDelCoronavirus.",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "mapme"
+    },
+    {
+      "name": "base"
+    },
+    {
+      "name": "add_shader"
+    },
+    {
+      "name": "multi_shader"
+    },
+    {
+      "name": "multi_shader_broken"
+    },
+    {
+      "name": "outline"
+    },
+    {
+      "name": "outline_broken"
+    },
+    {
+      "name": "lights"
+    },
+    {
+      "name": "stripe"
+    },
+    {
+      "name": "stripe_broken"
+    },
+    {
+      "name": "double_stripe"
+    },
+    {
+      "name": "double_stripe_broken"
+    },
+    {
+      "name": "hazard_stripes"
+    },
+    {
+      "name": "hazard_stripes_broken"
+    },
+    {
+      "name": "broken"
+    },
+    {
+      "name": "broken_cutout"
+    },
+    {
+      "name": "can-open"
+    },
+    {
+      "name": "can-connector"
+    },
+    {
+      "name": "window-base"
+    },
+    {
+      "name": "window-base_broken"
+    },
+    {
+      "name": "window-mask"
+    },
+    {
+      "name": "can-3"
+    },
+    {
+      "name": "can-2"
+    },
+    {
+      "name": "can-1"
+    },
+    {
+      "name": "can-0",
+      "delays": [
+        [
+          0.2,
+          0.2
+        ]
+      ]
+    },
+    {
+      "name": "tier1"
+    },
+    {
+      "name": "tier2"
+    },
+    {
+      "name": "tier3",
+      "delays": [
+        [
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      ]
+    },
+    {
+      "name": "can-3-light"
+    },
+    {
+      "name": "can-2-light"
+    },
+    {
+      "name": "can-1-light"
+    },
+    {
+      "name": "can-0-light",
+      "delays": [
+        [
+          0.2,
+          0.2
+        ]
+      ]
+    },
+    {
+      "name": "cell_hatch"
+    },
+    {
+      "name": "shielding",
+      "delays": [
+        [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2025 FrauzJ
+#
+# SPDX-License-Identifier: MIT
+
+- files: ["announce.ogg", "announce_dig.ogg", "announce_syndie.ogg", "commandreport.ogg"]
+  license: CC-BY-SA-3.0
+  copyright: Created by tgstation taken from commit 436ba869ebcd0b60b63973fb7562f447ee655205
+  source: "https://github.com/tgstation/tgstation/commit/436ba869ebcd0b60b63973fb7562f447ee655205"

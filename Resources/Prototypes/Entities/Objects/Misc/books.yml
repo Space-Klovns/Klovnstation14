@@ -44,6 +44,12 @@
     damage:
       types:
         Blunt: 1
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/book_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/book_drop.ogg
 
 - type: entity
   parent: BaseItem

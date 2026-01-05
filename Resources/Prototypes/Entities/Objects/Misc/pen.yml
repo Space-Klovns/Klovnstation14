@@ -11,7 +11,7 @@
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - type: entity
   name: pen
@@ -41,6 +41,20 @@
         maxDistance: 2
   - type: UseDelay
     delay: 1.5
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PolygonShape
+          vertices:
+          - -0.3,0.1
+          - -0.1,0.3
+          - 0.3,-0.1
+          - 0.1,-0.3
+        density: 20 # derived from base_item
+        mask:
+        - ItemMask
+        restitution: 0.3
+        friction: 0.2
 
 - type: entity
   parent: Pen
@@ -57,20 +71,6 @@
     damage:
       types:
         Piercing: 3
-  - type: Fixtures
-    fixtures:
-      fix1:
-        shape: !type:PolygonShape
-          vertices:
-          - -0.3,0.1
-          - -0.1,0.3
-          - 0.3,-0.1
-          - 0.1,-0.3
-        density: 20 # derived from base_item
-        mask:
-        - ItemMask
-        restitution: 0.3
-        friction: 0.2
 
 #TODO: I want the luxury pen to write a cool font like Merriweather in the future.
 
@@ -94,7 +94,6 @@
     tags:
     - Write
     - WriteIgnoreStamps
-    - Pickaxe
     - Pen
   - type: MeleeWeapon
     wideAnimationRotation: -45

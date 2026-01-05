@@ -9,6 +9,12 @@
     state: combat_hypo
   - type: GuardianCreator
     guardianProto: MobHoloparasiteGuardian
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/component_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/component_drop.ogg
 
 - type: entity
   name: holoclown injector
@@ -38,11 +44,13 @@
   id: BoxHoloparasite
   description: A box containing a holoparasite injector.
   components:
-  - type: StorageFill
-    contents:
-      - id: HoloparasiteInjector
-      - id: HoloparasiteInfo
-      - id: ClothingHeadHatBizarreSoft
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector
+        children:
+        - id: HoloparasiteInjector
+        - id: HoloparasiteInfo
+        - id: ClothingHeadHatBizarreSoft
   - type: Sprite
     layers:
       - state: box
@@ -54,15 +62,18 @@
   id: BoxHoloclown
   description: A box containing a holoclown injector.
   components:
-  - type: StorageFill
-    contents:
-      - id: HoloClownInjector
-      - id: ToyFigurineHoloClown
-      - id: ToyHammer
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector
+        children:
+        - id: HoloClownInjector
+        - id: ToyFigurineHoloClown
+        - id: ToyHammer
   - type: Sprite
     layers:
       - state: box_hug
       - state: holo
   - type: Tag
     tags:
-      - BoxHug
+    - BoxCardboard
+    - BoxHug

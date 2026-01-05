@@ -1,3 +1,16 @@
+# SPDX-FileCopyrightText: 2024 IgorAnt028
+# SPDX-FileCopyrightText: 2024 Ilya246
+# SPDX-FileCopyrightText: 2024 Plykiya
+# SPDX-FileCopyrightText: 2024 Sphiral
+# SPDX-FileCopyrightText: 2025 B_Kirill
+# SPDX-FileCopyrightText: 2025 Hyper B
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 beck-thompson
+# SPDX-FileCopyrightText: 2025 kosticia
+# SPDX-FileCopyrightText: 2025 lzk
+#
+# SPDX-License-Identifier: MIT
+
 # Parents
 - type: entity
   parent: BaseWallmount
@@ -54,13 +67,13 @@
     - state: rbase
       map: ["enum.StorageVisualLayers.Base"]
     - state: unlocked
-      shader: unshaded
+      shader: Emissive # KS14
       # used to keep the unlocked light visible while open.
     - state: closed
       map: ["enum.StorageVisualLayers.Door"]
     - state: locked
       map: ["enum.LockVisualLayers.Lock"]
-      shader: unshaded
+      shader: Emissive # KS14
   - type: Appearance
   - type: EntityStorageVisuals
     stateDoorOpen: open
@@ -206,7 +219,7 @@
       map: ["enum.StorageVisualLayers.Door"]
     - state: locked
       map: ["enum.LockVisualLayers.Lock"]
-      shader: unshaded
+      shader: Emissive # KS14
   - type: Destructible
     thresholds:
     - trigger: # Excess damage, don't spawn entities
@@ -441,14 +454,14 @@
     - state: base
       map: ["enum.StorageVisualLayers.Base"]
     - state: unlocked
-      shader: unshaded
+      shader: Emissive # KS14
     - state: chem-0
     - map: ["enum.StorageFillLayers.Fill"]
     - state: closed
       map: ["enum.StorageVisualLayers.Door"]
     - state: locked
       map: ["enum.LockVisualLayers.Lock"]
-      shader: unshaded
+      shader: Emissive # KS14
   - type: StorageFillVisualizer
     maxFillLevels: 7
     fillBaseName: chem

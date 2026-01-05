@@ -1,3 +1,21 @@
+# SPDX-FileCopyrightText: 2021 Peptide90
+# SPDX-FileCopyrightText: 2021 Swept
+# SPDX-FileCopyrightText: 2021 SweptWasTaken
+# SPDX-FileCopyrightText: 2022 20kdc
+# SPDX-FileCopyrightText: 2022 Rinkashikachi
+# SPDX-FileCopyrightText: 2023 Interrobang01
+# SPDX-FileCopyrightText: 2023 Kevin Zheng
+# SPDX-FileCopyrightText: 2023 lapatison
+# SPDX-FileCopyrightText: 2024 MODERN
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 Gerkada
+# SPDX-FileCopyrightText: 2025 Ilya246
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 lzk
+#
+# SPDX-License-Identifier: MIT
+
 - type: cargoProduct
   id: AtmosphericsAir
   icon:
@@ -81,7 +99,7 @@
 #- type: cargoProduct
 #  id: AtmosphericsWaterVapor
 #  icon:
-#    sprite: Structures/Storage/canister.rsi
+#    sprite: _KS14/Structures/Storage/canister.rsi
 #    state: water_vapor
 #  product: WaterVaporCanister
 #  cost: 2600
@@ -101,7 +119,7 @@
 #- type: cargoProduct
 #  id: AtmosphericsTritium
 #  icon:
-#    sprite: Structures/Storage/canister.rsi
+#    sprite: _KS14/Structures/Storage/canister.rsi
 #    state: green
 #  product: TritiumCanister
 #  cost: 15500

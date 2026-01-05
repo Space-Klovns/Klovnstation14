@@ -30,7 +30,7 @@
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 # Base
 
@@ -45,6 +45,12 @@
   - type: Tag
     tags:
     - SurgeryTool
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/wirecutter_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/tools/screwdriver_drop.ogg
 
 # Cautery
 
@@ -65,7 +71,7 @@
        types:
         Heat: 5
     soundHit:
-      path: /Audio/Effects/lightburn.ogg
+      path: /Audio/_KS14/Handling/surgery/cautery2.ogg
 
 # Drill
 
@@ -123,7 +129,7 @@
       types:
         Slash: 8
     soundHit:
-      path: /Audio/Weapons/bladeslice.ogg
+      path: /Audio/_KS14/Handling/surgery/scalpel1.ogg
 
 - type: entity
   name: shiv
@@ -135,6 +141,17 @@
     state: shiv
   - type: Item
     heldPrefix: shiv
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeAabb
+          bounds: "-0.375,-0.15,0.35,0.12"
+        density: 20 # derived from base_item
+        mask:
+        - ItemMask
+        restitution: 0.3
+        friction: 0.2
+
 
 - type: entity
   name: advanced scalpel

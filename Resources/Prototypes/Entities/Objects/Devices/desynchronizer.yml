@@ -13,3 +13,9 @@
     polymorph: VoidPocket
   - type: UseDelay
     delay: 220 # long delay to ensure it can't be spammed, use it wisely
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/component_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/component_drop.ogg

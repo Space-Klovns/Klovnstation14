@@ -1,7 +1,7 @@
 - type: entity
-  id: BaseCartridge
-  parent: BaseItem
   abstract: true
+  parent: BaseItem
+  id: BaseCartridge
   components:
   - type: Sprite
     drawdepth: Items
@@ -40,3 +40,9 @@
         volume: -1
   - type: StaticPrice
     price: 1
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      collection: SyringePickup
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      collection: SyringeDrop

@@ -5,7 +5,7 @@
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - type: htnCompound
   id: MedibotCompound
@@ -32,7 +32,8 @@
 
         - !type:HTNPrimitiveTask
           operator: !type:SpeakOperator
-            speech: medibot-start-inject
+            speech: !type:SingleSpeakOperatorSpeech
+              line: medibot-start-inject
             hidden: true
 
         - !type:HTNPrimitiveTask

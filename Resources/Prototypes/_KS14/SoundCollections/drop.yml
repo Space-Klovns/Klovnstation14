@@ -1,0 +1,15 @@
+- type: soundCollection
+  id: ClothDrop
+  files:
+    - /Audio/_KS14/Handling/cloth/cloth_drop1.ogg
+    - /Audio/_KS14/Handling/cloth/cloth_drop2.ogg
+    - /Audio/_KS14/Handling/cloth/cloth_drop3.ogg
+    - /Audio/_KS14/Handling/cloth/cloth_drop4.ogg
+    - /Audio/_KS14/Handling/cloth/cloth_drop5.ogg
+
+- type: soundCollection
+  id: SyringeDrop
+  files:
+      - /Audio/_KS14/Handling/suture/needle_drop1.ogg
+      - /Audio/_KS14/Handling/suture/needle_drop2.ogg
+      - /Audio/_KS14/Handling/suture/needle_drop3.ogg

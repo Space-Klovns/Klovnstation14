@@ -1,4 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Deltium
+# SPDX-FileCopyrightText: 2025 Gerkada
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Syndicate Engineer
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
@@ -16,7 +19,7 @@
       effects:
       - !type:AddReagentToBlood
         conditions:
-        - !type:BloodReagentThreshold
+        - !type:BloodReagentCondition
           reagent: Zipion
           min: 1
         reagent: Zipium
@@ -25,8 +28,13 @@
       effects:
       - !type:AddReagentToBlood
         conditions:
-        - !type:BloodReagentThreshold
+        - !type:BloodReagentCondition
           reagent: Zipion
           min: 1
         reagent: Zipium
         amount: 2.5
+- type: reagent
+  id: Argon
+  name: reagents-argon
+  desc: reagent-desc-argon
+  physicalDesc: reagent-physical-desc-argon

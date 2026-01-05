@@ -1,0 +1,28 @@
+- type: soundCollection
+  id: ClothPickup
+  files:
+    - /Audio/_KS14/Handling/cloth/cloth_pickup1.ogg
+    - /Audio/_KS14/Handling/cloth/cloth_pickup2.ogg
+    - /Audio/_KS14/Handling/cloth/cloth_pickup3.ogg
+    - /Audio/_KS14/Handling/cloth/cloth_pickup4.ogg
+    - /Audio/_KS14/Handling/cloth/cloth_pickup5.ogg
+
+- type: soundCollection
+  id: HeadsetPickup
+  files:
+    - /Audio/_KS14/Handling/headset/headset_pickup1.ogg
+    - /Audio/_KS14/Handling/headset/headset_pickup2.ogg
+    - /Audio/_KS14/Handling/headset/headset_pickup3.ogg
+
+- type: soundCollection
+  id: RegenMeshPickup
+  files:
+    - /Audio/_KS14/Handling/regenerative_mesh/regen_mesh_pickup1.ogg
+    - /Audio/_KS14/Handling/regenerative_mesh/regen_mesh_pickup2.ogg
+    - /Audio/_KS14/Handling/regenerative_mesh/regen_mesh_pickup3.ogg
+
+- type: soundCollection
+  id: SyringePickup
+  files:
+      - /Audio/_KS14/Handling/suture/needle_pickup1.ogg
+      - /Audio/_KS14/Handling/suture/needle_pickup2.ogg

@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2025 John Willis
 //
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: MIT
 
 // Goobstation Start
 // I really want to put this in the goobstation namespace

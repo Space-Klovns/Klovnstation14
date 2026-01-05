@@ -1,3 +1,27 @@
+# SPDX-FileCopyrightText: 2023 Moony
+# SPDX-FileCopyrightText: 2023 deltanedas
+# SPDX-FileCopyrightText: 2024 Carolyn3114
+# SPDX-FileCopyrightText: 2024 Ed
+# SPDX-FileCopyrightText: 2024 Emisse
+# SPDX-FileCopyrightText: 2024 Flareguy
+# SPDX-FileCopyrightText: 2024 Julian Giebel
+# SPDX-FileCopyrightText: 2024 MilenVolf
+# SPDX-FileCopyrightText: 2024 Ubaser
+# SPDX-FileCopyrightText: 2024 Vasilis
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2025 FrauZj
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Nemanja
+# SPDX-FileCopyrightText: 2025 ScarKy0
+# SPDX-FileCopyrightText: 2025 SlimSlam
+# SPDX-FileCopyrightText: 2025 Southbridge
+# SPDX-FileCopyrightText: 2025 TytosB
+# SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2026 FrauzJ
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+#
+# SPDX-License-Identifier: MIT
+
 - type: entity
   id: BaseStation
   abstract: true
@@ -63,8 +87,8 @@
         ruins: !type:GridSpawnGroup
           hide: true
           nameGrid: true
-          minCount: 2
-          maxCount: 2
+          minCount: 3
+          maxCount: 4
           stationGrid: false
           paths:
           - /Maps/Ruins/abandoned_outpost.yml
@@ -86,8 +110,8 @@
           minimumDistance: 150
           maximumDistance: 300
           stationGrid: false
-          minCount: 12
-          maxCount: 16
+          minCount: 20
+          maxCount: 35
           addComponents:
           - type: Gravity
             enabled: true
@@ -101,6 +125,13 @@
           - ChunkDebrisSmall
           - ChunkDebrisSmall
           - ChunkDebris
+          - SpindlyAsteroid
+          - SpindlyAsteroid
+          - SpindlyAsteroid
+          - BlobAsteroid
+          - SwissCheeseAsteroid
+          - SwissCheeseAsteroid
+          - ClusterAsteroid
         vgroid: !type:DungeonSpawnGroup
           minimumDistance: 300
           maximumDistance: 350
@@ -189,3 +220,71 @@
   abstract: true
   components:
     - type: StationEventEligible # For when someone makes this more granular in the future.
+
+#KS14 additions
+
+- type: entity
+  id: BaseStationShuttlesATSless
+  abstract: true
+  components:
+  - type: GridSpawn
+    groups:
+      ruins: !type:GridSpawnGroup
+        hide: true
+        nameGrid: true
+        minCount: 4
+        maxCount: 6
+        stationGrid: false
+        paths:
+        - /Maps/Ruins/abandoned_outpost.yml
+        - /Maps/Ruins/atmos_interchange.yml
+        - /Maps/Ruins/chunked_tcomms.yml
+        - /Maps/Ruins/biodome_satellite.yml
+        - /Maps/Ruins/derelict.yml
+        - /Maps/Ruins/djstation.yml
+        - /Maps/Ruins/empty_flagship.yml
+        - /Maps/Ruins/hydro_outpost.yml
+        - /Maps/Ruins/old_ai_sat.yml
+        - /Maps/Ruins/ruined_prison_ship.yml
+        - /Maps/Ruins/syndicate_dropship.yml
+        - /Maps/Ruins/whiteship_ancient.yml
+        - /Maps/Ruins/whiteship_bluespacejumper.yml
+        - /Maps/Ruins/wrecklaimer.yml
+        - /Maps/Ruins/displaced_telescience.yml
+      wrecks: !type:DungeonSpawnGroup
+        minimumDistance: 150
+        maximumDistance: 300
+        stationGrid: false
+        minCount: 20
+        maxCount: 35
+        addComponents:
+        - type: Gravity
+          enabled: true
+          inherent: true
+        - type: IFF
+          flags: HideLabel
+          color: "#88b0d1"
+        protos:
+        - ChunkDebrisSmall
+        - ChunkDebrisSmall
+        - ChunkDebrisSmall
+        - ChunkDebrisSmall
+        - ChunkDebris
+        - SpindlyAsteroid
+        - SpindlyAsteroid
+        - SpindlyAsteroid
+        - BlobAsteroid
+        - SwissCheeseAsteroid
+        - SwissCheeseAsteroid
+        - ClusterAsteroid
+      vgroid: !type:DungeonSpawnGroup
+        minimumDistance: 300
+        maximumDistance: 350
+        nameDataset: NamesBorer
+        stationGrid: false
+        addComponents:
+        - type: Gravity
+          enabled: true
+          inherent: true
+        protos:
+        - VGRoid

@@ -15,3 +15,9 @@
     price: 500
   - type: GuideHelp
     guides: [ AME, Power ]
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gas_tank/gas_tank_pick_up.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gas_tank/gas_tank_drop.ogg

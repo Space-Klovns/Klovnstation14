@@ -4,6 +4,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+# ATMOS
 - type: construction
   id: FireSensor
   graph: FireSensor
@@ -13,3 +14,28 @@
   placementMode: SnapgridCenter
   objectType: Structure
   canRotate: true
+
+- type: construction
+  id: MolarMixer
+  graph: GasTrinary
+  startNode: start
+  targetNode: molarmixer
+  category: construction-category-utilities
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  mirror: MolarMixerFlipped
+  conditions:
+    - !type:NoUnstackableInTile
+
+- type: construction
+  id: MolarMixerFlipped
+  hide: true
+  graph: GasTrinary
+  startNode: start
+  targetNode: molarmixerflipped
+  category: construction-category-utilities
+  placementMode: SnapgridCenter
+  canBuildInImpassable: false
+  mirror: MolarMixer
+  conditions:
+    - !type:NoUnstackableInTile

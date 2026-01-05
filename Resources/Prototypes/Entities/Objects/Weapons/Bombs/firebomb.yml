@@ -55,6 +55,12 @@
   - type: Construction
     graph: FireBomb
     node: firebomb
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/grenade/grenade_pick_up.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/grenade/grenade_drop.ogg
 
 # has igniter but no fuel or wires
 - type: entity
@@ -84,6 +90,12 @@
     tags:
     - Trash
     # no DrinkCan, prevent using it to make another ied
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/grenade/grenade_pick_up.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/grenade/grenade_drop.ogg
 
 - type: entity
   parent: FireBombEmpty
