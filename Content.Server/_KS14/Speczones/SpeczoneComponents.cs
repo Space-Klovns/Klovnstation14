@@ -4,7 +4,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 using Content.Shared._KS14.Speczones;
-using Robust.Shared.GameStates;
 
 namespace Content.Server._KS14.Speczones;
 

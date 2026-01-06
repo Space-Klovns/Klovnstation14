@@ -68,6 +68,8 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
         UpdateSpeczoneEntryPoints();
     }
 
+    protected override bool HasSpeczoneComponent(EntityUid uid) => HasComp<SpeczoneComponent>(uid);
+
     private void OnSpeczoneStartup(Entity<SpeczoneComponent> entity, ref ComponentStartup args)
     {
         if (_speczones.ContainsKey(entity.Comp.Prototype.ID))
@@ -156,17 +158,9 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
         }
 
         // adding the speczone to the internal cache is handled by OnSpeczoneStartup
-
-        SpeczoneComponent speczoneComponent;
-        if (!_speczoneQuery.TryGetComponent(mapEntity.Owner, out var existingSpeczoneComponent))
-        {
-            speczoneComponent = _componentFactory.GetComponent<SpeczoneComponent>();
-            speczoneComponent.Prototype = prototype;
-
-            AddComp(mapEntity.Owner, speczoneComponent, overwrite: false);
-        }
-        else
-            speczoneComponent = existingSpeczoneComponent;
+        var speczoneComponent = _componentFactory.GetComponent<SpeczoneComponent>();
+        speczoneComponent.Prototype = prototype;
+        AddComp(mapEntity.Owner, speczoneComponent, overwrite: false);
 
         ProcessSpeczoneInvincibility(prototype, mapEntity.Owner);
         speczoneEntity = (mapEntity.Owner, speczoneComponent);
