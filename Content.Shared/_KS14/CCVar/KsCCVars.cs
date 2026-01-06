@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Robust.Shared.Configuration;
 
 namespace Content.Shared._KS14.CCVar;
