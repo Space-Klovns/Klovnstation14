@@ -1286,6 +1286,7 @@
     - SyndicateAgent
     - Wizard
     - Xenoborg
+    - Bluelab # KS14
   - type: Tag #  Ignore Chameleon tags
     tags:
     - DoorBumpOpener

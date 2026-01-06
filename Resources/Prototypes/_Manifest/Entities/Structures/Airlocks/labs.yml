@@ -15,3 +15,12 @@
     openTimeOne: 0.21
     openTimeTwo: 0.3
     pryTime: 1
+
+- type: entity
+  parent: AirlockLabs
+  id: AirlockLabsUnpryable
+  suffix: Labs, Unpryable
+  description: It seems to be effectively unpryable.
+  components:
+  - type: Door
+    canPry: false

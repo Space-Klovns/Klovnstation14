@@ -135,6 +135,7 @@
     - SyndicateAgent
     - Wizard
     - Xenoborg
+    - Bluelab # KS14
     - GenpopEnter
     - GenpopLeave
     privilegedIdSlot:

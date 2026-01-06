@@ -235,6 +235,7 @@
     - SyndicateAgent
     - Wizard
     - Xenoborg
+    - Bluelab # KS14
 
 - type: entity
   parent: [ DoorRemoteCanEletrifyDoors, BaseXenoborgContraband ]

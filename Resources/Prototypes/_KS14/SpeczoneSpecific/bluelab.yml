@@ -1,0 +1,46 @@
+- type: accessLevel
+  id: Bluelab
+  name: id-card-access-level-bluelab
+  canAddToIdCard: false
+
+- type: entity
+  parent: IDCardStandard
+  id: BluelabIDCard
+  name: laboratory ID card
+  components:
+  - type: Sprite
+    layers:
+    - state: centcom
+    - state: stripe_top
+      color: "#134975"
+    - state: stripe_bottom
+      color: "#0d304d"
+    - sprite: Interface/Misc/job_icons.rsi
+      offset: -0.09375, 0.0625
+      state: Nanotrasen
+  - type: Item
+    heldPrefix: blue
+  - type: Access
+    tags:
+    - Bluelab
+  - type: IdCard
+    jobIcon: JobIconNanotrasen
+    jobTitle: job-name-bluelab
+    canMicrowave: false
+
+- type: entity
+  parent: DoorElectronics
+  id: DoorElectronicsLabs
+  suffix: Labs, Locked
+  components:
+  - type: AccessReader
+    access: [["Bluelab"]]
+
+- type: entity
+  parent: AirlockLabsUnpryable
+  id: AirlockLabsUnpryableBluelabLocked
+  suffix: Labs, Locked, Unpryable
+  components:
+  - type: ContainerFill
+    containers:
+      board: [ DoorElectronicsLabs ]

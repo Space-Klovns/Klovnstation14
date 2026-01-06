@@ -8,6 +8,7 @@ using Content.Shared.IdentityManagement;
 using Content.Shared.Popups;
 using Content.Shared.RCD.Components;
 using Content.Shared.Teleportation.Components;
+using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.Speczones;
 
@@ -20,6 +21,7 @@ namespace Content.Shared._KS14.Speczones;
 /// </summary>
 public abstract class SharedSpeczoneSystem : EntitySystem
 {
+    [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
     [Dependency] private readonly SharedSparksSystem _sparksSystem = default!;
 
@@ -51,22 +53,25 @@ public abstract class SharedSpeczoneSystem : EntitySystem
     }
 
     /// <returns>True if the use of an item was cancelled.</returns>
-    private bool TryInterfereUse(EntityUid item, EntityUid? user = null)
+    private bool TryInterfereUse(EntityUid item, EntityUid? user = null, bool predictEffects = false)
     {
         if (!CheckEntityIsInSpeczone(item, out var transformComponent))
             return false;
-
-        _popupSystem.PopupEntity(
-            Loc.GetString("speczone-invincibility-use-interrupted", ("entity", Identity.Name(item, EntityManager))),
-            item,
-            PopupType.SmallCaution
-        );
 
         _sparksSystem.DoSpark(
             transformComponent.Coordinates,
             SharedSparksSystem.DefaultSparkPrototype,
             soundSpecifier: SharedSparksSystem.DefaultSoundSpecifier,
             user: user
+        );
+
+        if (predictEffects && !_gameTiming.IsFirstTimePredicted)
+            return true;
+
+        _popupSystem.PopupEntity(
+            Loc.GetString("speczone-invincibility-use-interrupted", ("entity", Identity.Name(item, EntityManager))),
+            item,
+            PopupType.SmallCaution
         );
         return true;
     }
@@ -78,6 +83,6 @@ public abstract class SharedSpeczoneSystem : EntitySystem
 
     private void OnAttemptUseRcd(ref AttemptUseRcdEvent args)
     {
-        args.Cancelled |= TryInterfereUse(args.RcdUid, user: args.User);
+        args.Cancelled |= TryInterfereUse(args.RcdUid, user: args.User, predictEffects: true);
     }
 }
