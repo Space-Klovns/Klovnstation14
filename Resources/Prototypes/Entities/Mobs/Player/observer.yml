@@ -120,7 +120,7 @@
   - type: Tag
     tags: # BAD: Intentional removal of inherited tag
     - AllowGhostShownByEvent
-  - type: DeleteOnEnteringSpeczone # KS14: player-ghosts shouldn't be able to see inside SZs
+  - type: RelocateOnEnteringSpeczone # KS14: player-ghosts shouldn't be able to see inside SZs
 
 - type: entity
   parent: BaseMentalAction

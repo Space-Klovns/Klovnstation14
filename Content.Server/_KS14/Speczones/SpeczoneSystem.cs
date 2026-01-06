@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Content.Server.GameTicking;
 using Content.Server.GameTicking.Events;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Speczones;
@@ -36,6 +37,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     [Dependency] private readonly MapSystem _mapSystem = default!;
     [Dependency] private readonly MapLoaderSystem _mapLoaderSystem = default!;
     [Dependency] private readonly TransformSystem _transformSystem = default!;
+    [Dependency] private readonly GameTicker _gameTicker = default!;
 
     private EntityQuery<SpeczoneComponent> _speczoneQuery;
     private EntityQuery<RCDDeconstructableComponent> _rcdDeconstructableQuery;
@@ -76,6 +78,8 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
         SubscribeLocalEvent<RoundStartingEvent>(OnRoundStarting);
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundCleanup);
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
+
+        SetupRelocation();
     }
 
     protected override bool HasSpeczoneComponent(EntityUid uid) => HasComp<SpeczoneComponent>(uid);
@@ -211,7 +215,8 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     /// </summary>
     private void UpdateSpeczoneEntryPoints()
     {
-        var speczoneEntryEnumerator = EntityQueryEnumerator<SpeczoneEntryComponent, TransformComponent>();
+        // include paused
+        var speczoneEntryEnumerator = EntityManager.AllEntityQueryEnumerator<SpeczoneEntryComponent, TransformComponent>();
         while (speczoneEntryEnumerator.MoveNext(out var uid, out var _, out var transformComponent))
         {
             if (!_speczoneQuery.TryGetComponent(transformComponent.MapUid, out var speczoneComponent))
@@ -247,7 +252,8 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     /// <summary>
     ///     Tries to insert an entity into a speczone.
     ///         Specified speczone defaults to first one available
-    ///         if none was specified.
+    ///         if none was specified. Does nothing if there are no
+    ///         entry points to the speczone.
     /// 
     ///     Unpauses the speczone if necessary.
     /// </summary>

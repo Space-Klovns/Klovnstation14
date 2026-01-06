@@ -14,4 +14,4 @@ namespace Content.Shared._KS14.Speczones;
 /// </summary>
 [NetworkedComponent]
 [RegisterComponent]
-public sealed partial class DeleteOnEnteringSpeczoneComponent : Component;
+public sealed partial class RelocateOnEnteringSpeczoneComponent : Component;

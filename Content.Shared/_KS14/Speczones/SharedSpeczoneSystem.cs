@@ -27,9 +27,6 @@ public abstract class SharedSpeczoneSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<DeleteOnEnteringSpeczoneComponent, ComponentStartup>(OnStartup);
-        SubscribeLocalEvent<DeleteOnEnteringSpeczoneComponent, EntParentChangedMessage>(OnEntParentChanged);
-
         SubscribeLocalEvent<AttemptUpdateHandTeleporterPortalsEvent>(OnAttemptUseHandTeleporter); // Only raised on server
         SubscribeLocalEvent<AttemptUseRcdEvent>(OnAttemptUseRcd);
     }
@@ -43,7 +40,7 @@ public abstract class SharedSpeczoneSystem : EntitySystem
     protected abstract bool HasSpeczoneComponent(EntityUid uid);
 
     /// <returns>True if the entity is in a speczone.</returns>
-    private bool CheckEntityIsInSpeczone(EntityUid uid, out TransformComponent transformComponent)
+    public bool CheckEntityIsInSpeczone(EntityUid uid, out TransformComponent transformComponent)
     {
         transformComponent = Transform(uid);
         if (transformComponent.MapUid is not { } mapUid ||
@@ -51,18 +48,6 @@ public abstract class SharedSpeczoneSystem : EntitySystem
             return false;
 
         return true;
-    }
-
-    private void OnStartup(Entity<DeleteOnEnteringSpeczoneComponent> entity, ref ComponentStartup args)
-    {
-        if (CheckEntityIsInSpeczone(entity, out _))
-            PredictedQueueDel(entity);
-    }
-
-    private void OnEntParentChanged(Entity<DeleteOnEnteringSpeczoneComponent> entity, ref EntParentChangedMessage args)
-    {
-        if (CheckEntityIsInSpeczone(entity, out _))
-            PredictedQueueDel(entity);
     }
 
     /// <returns>True if the use of an item was cancelled.</returns>
