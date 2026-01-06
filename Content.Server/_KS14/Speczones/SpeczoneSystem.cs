@@ -6,24 +6,30 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using Content.Server.GameTicking.Events;
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Speczones;
 using Content.Shared.Doors.Components;
 using Content.Shared.GameTicking;
 using Content.Shared.Random.Helpers;
 using Content.Shared.RCD.Components;
 using Robust.Server.GameObjects;
+using Robust.Shared.Configuration;
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Utility;
+using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Content.Server._KS14.Speczones;
 
 /// <inheritdoc/>
 public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
 {
+    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
     [Dependency] private readonly IRobustRandom _robustRandom = default!;
     [Dependency] private readonly IComponentFactory _componentFactory = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
@@ -36,16 +42,21 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     private EntityQuery<DoorComponent> _doorQuery;
 
     /// <summary>
-    ///     Dictionary of speczones cached by their prototype ID.
+    ///     Dictionary of loaded speczones cached by their prototype ID.
     ///         Don't modify this directly.
     /// </summary>
     private readonly Dictionary<string, Entity<SpeczoneComponent>> _speczones = new();
 
     /// <summary>
-    ///     Speczones cached by their EntityUid.
+    ///     Loaded speczones cached by their EntityUid.
     ///         Don't modify this directly.
     /// </summary>
     private readonly HashSet<EntityUid> _speczoneUids = new();
+
+    /// <summary>
+    ///     Reverse backing field for <see cref="KsCCVars"/>.
+    /// </summary>
+    private bool _loadSpeczones = true;
 
     public override void Initialize()
     {
@@ -55,29 +66,41 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
         _rcdDeconstructableQuery = GetEntityQuery<RCDDeconstructableComponent>();
         _doorQuery = GetEntityQuery<DoorComponent>();
 
+        _configurationManager.OnValueChanged(KsCCVars.SpeczonesEnabled, x => _loadSpeczones = x, invokeImmediately: true);
+
+        SubscribeLocalEvent<SpeczoneComponent, ComponentInit>(OnSpeczoneInit);
         SubscribeLocalEvent<SpeczoneComponent, ComponentStartup>(OnSpeczoneStartup);
         SubscribeLocalEvent<SpeczoneComponent, ComponentShutdown>(OnSpeczoneShutdown);
         SubscribeLocalEvent<SpeczoneEntryComponent, ComponentShutdown>(OnSpeczoneEntryShutdown);
 
+        SubscribeLocalEvent<RoundStartingEvent>(OnRoundStarting);
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundCleanup);
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
-
-        foreach (var speczonePrototype in _prototypeManager.EnumeratePrototypes<SpeczonePrototype>())
-            TryLoadSpeczonePrototype(speczonePrototype, out _);
-
-        UpdateSpeczoneEntryPoints();
     }
 
     protected override bool HasSpeczoneComponent(EntityUid uid) => HasComp<SpeczoneComponent>(uid);
+
+    private void OnSpeczoneInit(Entity<SpeczoneComponent> entity, ref ComponentInit args)
+    {
+        if (entity.Comp.Prototype != null)
+            return;
+
+        // This will throw but who cares.
+        DebugTools.Assert($"While SpeczoneComponent was starting, it had a null SpeczonePrototype!");
+        Log.Error($"While SpeczoneComponent was starting, it had a null SpeczonePrototype! "
+            + "The SpeczoneComponent of this speczone will be removed.");
+        RemComp(entity.Owner, entity.Comp);
+    }
 
     private void OnSpeczoneStartup(Entity<SpeczoneComponent> entity, ref ComponentStartup args)
     {
         if (_speczones.ContainsKey(entity.Comp.Prototype.ID))
         {
             DebugTools.Assert($"While SpeczoneComponent was starting, speczone of same ID {entity.Comp.Prototype.ID} already existed in cache!");
-            Log.Error($"While SpeczoneComponent was starting, speczone of same ID {entity.Comp.Prototype.ID} already existed in cache!"
-                + "SpeczoneComponent of existing speczone will be removed.");
+            Log.Error($"While SpeczoneComponent was starting, speczone of same ID {entity.Comp.Prototype.ID} already existed in cache! "
+                + "The SpeczoneComponent of this speczone will be removed at the end of the tick.");
             RemCompDeferred(entity.Owner, entity.Comp);
+
             return;
         }
 
@@ -101,6 +124,18 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
             return;
 
         mapSpeczoneComponent.EntryMarkers.Remove((entity.Owner, entityTransform));
+    }
+
+    private void OnRoundStarting(RoundStartingEvent args)
+    {
+        if (!_loadSpeczones)
+            return;
+        // Initialise speczones
+
+        foreach (var speczonePrototype in _prototypeManager.EnumeratePrototypes<SpeczonePrototype>())
+            TryLoadSpeczonePrototype(speczonePrototype, out _);
+
+        UpdateSpeczoneEntryPoints();
     }
 
     private void OnRoundCleanup(RoundRestartCleanupEvent args)
@@ -237,4 +272,17 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
         _transformSystem.SetCoordinates(entity.Owner, entity.Comp, entryCoordinates.Value, unanchor: true);
         return true;
     }
+
+    /// <summary>
+    ///     Tries to get a speczone given it's prototype ID.
+    /// </summary>
+    /// <param name="id">Prototype ID of the speczone being queried for.</param>
+    /// <param name="speczoneEntity">Null when this method returns false.</param>
+    /// <returns>True if the specified speczone was found, false otherwise.</returns>
+    public bool TryGetSpeczoneEntity(string id, [MaybeNullWhen(false)] out Entity<SpeczoneComponent> speczoneEntity)
+        => _speczones.TryGetValue(id, out speczoneEntity);
+
+    /// <returns>An enumerator of the <see cref="EntityUid"/>s of every existing speczone.</returns>
+    public IEnumerator<EntityUid> GetSpeczoneUidEnumerator()
+        => _speczoneUids.GetEnumerator();
 }

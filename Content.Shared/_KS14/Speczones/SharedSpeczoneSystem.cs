@@ -13,6 +13,10 @@ namespace Content.Shared._KS14.Speczones;
 
 /// <summary>
 ///     Kept you waiting, huh?
+/// 
+///     Manages speczones and loading them. At any moment,
+///         a speczone may not exist for any reason and you
+///         should not assume that a speczone always exists.
 /// </summary>
 public abstract class SharedSpeczoneSystem : EntitySystem
 {

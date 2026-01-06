@@ -7,14 +7,18 @@ using Content.Shared._KS14.Speczones;
 
 namespace Content.Server._KS14.Speczones;
 
+/// <summary>
+///     Must only be added as a component when <see cref="Prototype"/>
+///         has been properly set to something.
+/// </summary>
 [RegisterComponent]
 [UnsavedComponent]
 public sealed partial class SpeczoneComponent : SharedSpeczoneComponent
 {
     /// <summary>
-    ///     <see cref="SpeczonePrototype"/> of this speczone. 
+    ///     <see cref="SpeczonePrototype"/> of this speczone. Should be notnull.
     /// </summary>
-    public SpeczonePrototype Prototype;
+    public SpeczonePrototype Prototype = default!; // this suppression is, infact, necessary
 
     /// <summary>
     ///     Entities with <see cref="SpeczoneEntryComponent"/> that are

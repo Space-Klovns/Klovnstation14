@@ -31,7 +31,7 @@ public sealed class InsertIntoSpeczoneCommand : LocalizedEntityCommands
 
         if (!EntityUid.TryParse(args[0], out var uid) ||
             !uid.IsValid() ||
-            EntityManager.EntityExists(uid))
+            !EntityManager.EntityExists(uid))
         {
             shell.WriteError(Loc.GetString("cmd-insertintospeczone-invalid-uid"));
             return;
