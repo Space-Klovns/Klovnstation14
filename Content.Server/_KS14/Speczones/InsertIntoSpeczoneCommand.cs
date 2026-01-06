@@ -1,4 +1,6 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MIT
 
 // Licensed MIT because this was copied from core files
 
