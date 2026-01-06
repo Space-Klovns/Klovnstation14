@@ -94,6 +94,9 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
 
     private void OnSpeczoneStartup(Entity<SpeczoneComponent> entity, ref ComponentStartup args)
     {
+        if (entity.Comp.Prototype == null)
+            return;
+
         if (_speczones.ContainsKey(entity.Comp.Prototype.ID))
         {
             DebugTools.Assert($"While SpeczoneComponent was starting, speczone of same ID {entity.Comp.Prototype.ID} already existed in cache!");
