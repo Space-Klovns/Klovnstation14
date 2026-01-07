@@ -22,12 +22,5 @@ public sealed partial class SpeczonePrototype : IPrototype
     ///     Path to the map to load as the speczone.
     /// </summary>
     [DataField(required: true)]
-    public ResPath MapPath { get; private set; } = default!;
-
-    /// <summary>
-    ///     Should *all* airtight entities on this speczone become invincible?
-    ///         Also makes doors unhackable.
-    /// </summary>
-    [DataField]
-    public bool MakeAirtightInvincible = true;
+    public ResPath MapPath { get; private set; } = default;
 }

@@ -3,40 +3,102 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
-using Content.Server.Atmos.Components;
+using Content.Server.Construction.Components;
 using Content.Shared._KS14.Speczones;
+using Content.Shared.Construction.Components;
 using Content.Shared.Damage.Components;
+using Content.Shared.Doors.Components;
+using Content.Shared.RCD.Components;
 using Content.Shared.Wires;
+using Robust.Shared.Map.Components;
 
 namespace Content.Server._KS14.Speczones;
 
 // This file handles making speczones invincible-ish
+// This is fucking insane
 
 public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
 {
     /// <summary>
-    ///     Processes invincibility of all speczone entities.
+    ///     Recursively processes invincibility of all the entities on the grids specified.
     /// </summary>
-    private void ProcessSpeczoneInvincibility()
+    private void StartInvincibilityProcessingHierarchy(HashSet<Entity<MapGridComponent>> grids)
     {
-        var eqe = EntityManager.AllEntityQueryEnumerator<AirtightComponent, DamageableComponent, TransformComponent>();
-        while (eqe.MoveNext(out var uid, out var _, out var damageableComponent, out var transformComponent))
+        var damageableQuery = GetEntityQuery<DamageableComponent>();
+        var rcdDeconstructableQuery = GetEntityQuery<RCDDeconstructableComponent>();
+        var constructionQuery = GetEntityQuery<ConstructionComponent>();
+        var anchorableQuery = GetEntityQuery<AnchorableComponent>();
+        var doorQuery = GetEntityQuery<DoorComponent>();
+
+        foreach (var grid in grids)
         {
-            if (transformComponent.MapUid is not { } mapUid ||
-                !_speczoneQuery.HasComponent(mapUid))
-                continue;
-
-            RemComp(uid, damageableComponent);
-
-            if (_rcdDeconstructableQuery.TryGetComponent(uid, out var rcdDeconstructableComponent))
-                RemComp(uid, rcdDeconstructableComponent);
-
-            if (_anchorableQuery.TryGetComponent(uid, out var anchorableComponent))
-                RemComp(uid, anchorableComponent);
-
-            if (_doorQuery.HasComponent(uid) &&
-                TryComp<WiresPanelComponent>(uid, out var wirePanelComponent))
-                RemComp(uid, wirePanelComponent);
+            var enumerator = Transform(grid).ChildEnumerator;
+            while (enumerator.MoveNext(out var uid))
+                RecursivelyProcessEntityInvincibility(
+                    uid,
+                    damageableQuery,
+                    rcdDeconstructableQuery,
+                    constructionQuery,
+                    anchorableQuery,
+                    doorQuery
+                );
         }
+    }
+
+    private void RecursivelyProcessEntityInvincibility(
+        EntityUid parentUid,
+        EntityQuery<DamageableComponent> damageableQuery,
+        EntityQuery<RCDDeconstructableComponent> rcdDeconstructableQuery,
+        EntityQuery<ConstructionComponent> constructionQuery,
+        EntityQuery<AnchorableComponent> anchorableQuery,
+        EntityQuery<DoorComponent> doorQuery)
+    {
+        ProcessEntityInvincibility(
+            parentUid,
+            damageableQuery,
+            rcdDeconstructableQuery,
+            constructionQuery,
+            anchorableQuery,
+            doorQuery
+        );
+
+        var enumerator = Transform(parentUid).ChildEnumerator;
+        while (enumerator.MoveNext(out var uid))
+            RecursivelyProcessEntityInvincibility(
+                uid,
+                damageableQuery,
+                rcdDeconstructableQuery,
+                constructionQuery,
+                anchorableQuery,
+                doorQuery
+            );
+    }
+
+    private void ProcessEntityInvincibility(
+        EntityUid uid,
+        EntityQuery<DamageableComponent> damageableQuery,
+        EntityQuery<RCDDeconstructableComponent> rcdDeconstructableQuery,
+        EntityQuery<ConstructionComponent> constructionQuery,
+        EntityQuery<AnchorableComponent> anchorableQuery,
+        EntityQuery<DoorComponent> doorQuery
+    )
+    {
+        if (!damageableQuery.TryGetComponent(uid, out var damageableComponent))
+            return;
+
+        RemComp(uid, damageableComponent);
+
+        if (constructionQuery.TryGetComponent(uid, out var constructionComponent))
+            RemComp(uid, constructionComponent);
+
+        if (rcdDeconstructableQuery.TryGetComponent(uid, out var rcdDeconstructableComponent))
+            RemComp(uid, rcdDeconstructableComponent);
+
+        if (anchorableQuery.TryGetComponent(uid, out var anchorableComponent))
+            RemComp(uid, anchorableComponent);
+
+        if (doorQuery.HasComponent(uid) &&
+            TryComp<WiresPanelComponent>(uid, out var wirePanelComponent))
+            RemComp(uid, wirePanelComponent);
     }
 }

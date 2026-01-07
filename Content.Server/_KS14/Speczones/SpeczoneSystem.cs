@@ -40,9 +40,6 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     [Dependency] private readonly GameTicker _gameTicker = default!;
 
     private EntityQuery<SpeczoneComponent> _speczoneQuery;
-    private EntityQuery<RCDDeconstructableComponent> _rcdDeconstructableQuery;
-    private EntityQuery<AnchorableComponent> _anchorableQuery;
-    private EntityQuery<DoorComponent> _doorQuery;
 
     /// <summary>
     ///     Dictionary of loaded speczones cached by their prototype ID.
@@ -66,14 +63,9 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
         base.Initialize();
 
         _speczoneQuery = GetEntityQuery<SpeczoneComponent>();
-        _rcdDeconstructableQuery = GetEntityQuery<RCDDeconstructableComponent>();
-        _anchorableQuery = GetEntityQuery<AnchorableComponent>();
-        _doorQuery = GetEntityQuery<DoorComponent>();
 
         _configurationManager.OnValueChanged(KsCCVars.SpeczonesEnabled, x => _loadSpeczones = x, invokeImmediately: true);
 
-        SubscribeLocalEvent<SpeczoneComponent, ComponentInit>(OnSpeczoneInit);
-        SubscribeLocalEvent<SpeczoneComponent, ComponentStartup>(OnSpeczoneStartup);
         SubscribeLocalEvent<SpeczoneComponent, ComponentShutdown>(OnSpeczoneShutdown);
         SubscribeLocalEvent<SpeczoneEntryComponent, ComponentShutdown>(OnSpeczoneEntryShutdown);
 
@@ -86,46 +78,9 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
 
     protected override bool HasSpeczoneComponent(EntityUid uid) => HasComp<SpeczoneComponent>(uid);
 
-    private void UpdateAllSpeczones()
-    {
-        UpdateSpeczoneEntryPoints();
-        ProcessSpeczoneInvincibility();
-    }
-
-    private void OnSpeczoneInit(Entity<SpeczoneComponent> entity, ref ComponentInit args)
-    {
-        if (entity.Comp.Prototype != null)
-            return;
-
-        // This will throw but who cares.
-        DebugTools.Assert($"While SpeczoneComponent was starting, it had a null SpeczonePrototype!");
-        Log.Error($"While SpeczoneComponent was starting, it had a null SpeczonePrototype! "
-            + "The SpeczoneComponent of this speczone will be removed.");
-        RemComp(entity.Owner, entity.Comp);
-    }
-
-    private void OnSpeczoneStartup(Entity<SpeczoneComponent> entity, ref ComponentStartup args)
-    {
-        if (entity.Comp.Prototype == null)
-            return;
-
-        if (_speczones.ContainsKey(entity.Comp.Prototype.ID))
-        {
-            DebugTools.Assert($"While SpeczoneComponent was starting, speczone of same ID {entity.Comp.Prototype.ID} already existed in cache!");
-            Log.Error($"While SpeczoneComponent was starting, speczone of same ID {entity.Comp.Prototype.ID} already existed in cache! "
-                + "The SpeczoneComponent of this speczone will be removed at the end of the tick.");
-            RemCompDeferred(entity.Owner, entity.Comp);
-
-            return;
-        }
-
-        _speczones[entity.Comp.Prototype.ID] = entity;
-        _speczoneUids.Add(entity.Owner);
-    }
-
     private void OnSpeczoneShutdown(Entity<SpeczoneComponent> entity, ref ComponentShutdown args)
     {
-        _speczones.Remove(entity.Comp.Prototype.ID);
+        _speczones.Remove(entity.Comp.PrototypeId);
         _speczoneUids.Remove(entity.Owner);
     }
 
@@ -148,7 +103,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
         foreach (var speczonePrototype in _prototypeManager.EnumeratePrototypes<SpeczonePrototype>())
             TryLoadSpeczonePrototype(speczonePrototype, out _);
 
-        UpdateAllSpeczones();
+        UpdateSpeczoneEntryPoints();
     }
 
     private void OnRoundCleanup(RoundRestartCleanupEvent args)
@@ -178,7 +133,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
         }
 
         if (anythingHappenedEver)
-            UpdateAllSpeczones();
+            UpdateSpeczoneEntryPoints();
     }
 
     /// <summary>
@@ -190,27 +145,40 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     {
         if (_speczones.ContainsKey(prototype.ID))
         {
+            DebugTools.Assert($"When loading speczone prototype of ID {prototype.ID}, it already existed in internal cache.");
+            Log.Error($"When loading speczone prototype of ID {prototype.ID}, it already existed in internal cache.");
+
             speczoneEntity = null;
             return false;
         }
 
         if (!_mapLoaderSystem.TryLoadMap(
             prototype.MapPath,
-            out var maybeMapEntity,
-            out var _,
-            DeserializationOptions.Default with { InitializeMaps = true, PauseMaps = true }) ||
-            maybeMapEntity is not { } mapEntity)
+            out var mapEntity,
+            out var loadedGrids,
+            DeserializationOptions.Default with { InitializeMaps = true, PauseMaps = true })
+        )
         {
+            DebugTools.Assert($"When loading speczone prototype of ID {prototype.ID}, failed to load map!");
+            Log.Error($"When loading speczone prototype of ID {prototype.ID}, failed to load map!");
+
             speczoneEntity = null;
             return false;
         }
 
         // adding the speczone to the internal cache is handled by OnSpeczoneStartup
         var speczoneComponent = _componentFactory.GetComponent<SpeczoneComponent>();
-        speczoneComponent.Prototype = prototype;
-        AddComp(mapEntity.Owner, speczoneComponent, overwrite: false);
+        speczoneComponent.PrototypeId = prototype.ID;
+        AddComp(mapEntity.Value.Owner, speczoneComponent, overwrite: false);
 
-        speczoneEntity = (mapEntity.Owner, speczoneComponent);
+        // this one method will probably take a while
+        StartInvincibilityProcessingHierarchy(loadedGrids);
+
+        speczoneEntity = (mapEntity.Value.Owner, speczoneComponent);
+
+        _speczones[prototype.ID] = speczoneEntity.Value;
+        _speczoneUids.Add(mapEntity.Value.Owner);
+
         return true;
     }
 

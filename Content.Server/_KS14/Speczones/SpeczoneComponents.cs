@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 using Content.Shared._KS14.Speczones;
+using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.Speczones;
 
@@ -16,9 +17,9 @@ namespace Content.Server._KS14.Speczones;
 public sealed partial class SpeczoneComponent : SharedSpeczoneComponent
 {
     /// <summary>
-    ///     <see cref="SpeczonePrototype"/> of this speczone. Should be notnull.
+    ///     ID of the <see cref="SpeczonePrototype"/> of this speczone.
     /// </summary>
-    public SpeczonePrototype Prototype = default!; // this suppression is, infact, necessary
+    public ProtoId<SpeczonePrototype> PrototypeId = "default";
 
     /// <summary>
     ///     Entities with <see cref="SpeczoneEntryComponent"/> that are
