@@ -86,6 +86,12 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
 
     protected override bool HasSpeczoneComponent(EntityUid uid) => HasComp<SpeczoneComponent>(uid);
 
+    private void UpdateAllSpeczones()
+    {
+        UpdateSpeczoneEntryPoints();
+        ProcessSpeczoneInvincibility();
+    }
+
     private void OnSpeczoneInit(Entity<SpeczoneComponent> entity, ref ComponentInit args)
     {
         if (entity.Comp.Prototype != null)
@@ -115,8 +121,6 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
 
         _speczones[entity.Comp.Prototype.ID] = entity;
         _speczoneUids.Add(entity.Owner);
-
-        UpdateSpeczoneEntryPoints();
     }
 
     private void OnSpeczoneShutdown(Entity<SpeczoneComponent> entity, ref ComponentShutdown args)
@@ -144,7 +148,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
         foreach (var speczonePrototype in _prototypeManager.EnumeratePrototypes<SpeczonePrototype>())
             TryLoadSpeczonePrototype(speczonePrototype, out _);
 
-        UpdateSpeczoneEntryPoints();
+        UpdateAllSpeczones();
     }
 
     private void OnRoundCleanup(RoundRestartCleanupEvent args)
@@ -174,12 +178,12 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
         }
 
         if (anythingHappenedEver)
-            UpdateSpeczoneEntryPoints();
+            UpdateAllSpeczones();
     }
 
     /// <summary>
-    ///     Loads a map for a speczone. Does not initialise <see cref="SpeczoneEntryComponent"/> on the
-    ///         <see cref="SpeczoneComponent"/>.
+    ///     Loads a map for a speczone. Does not initialise <see cref="SpeczoneEntryComponent"/>s on the
+    ///         <see cref="SpeczoneComponent"/>, and does not process invincibility.
     /// </summary>
     /// <returns>False if no map was loaded successfully.</returns>
     private bool TryLoadSpeczonePrototype(SpeczonePrototype prototype, [NotNullWhen(true)] out Entity<SpeczoneComponent>? speczoneEntity)
@@ -206,7 +210,6 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
         speczoneComponent.Prototype = prototype;
         AddComp(mapEntity.Owner, speczoneComponent, overwrite: false);
 
-        ProcessSpeczoneInvincibility(prototype, mapEntity.Owner);
         speczoneEntity = (mapEntity.Owner, speczoneComponent);
         return true;
     }

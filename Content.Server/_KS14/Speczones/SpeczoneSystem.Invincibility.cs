@@ -17,16 +17,13 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     /// <summary>
     ///     Processes invincibility of all speczone entities.
     /// </summary>
-    private void ProcessSpeczoneInvincibility(SpeczonePrototype prototype, EntityUid mapUid)
+    private void ProcessSpeczoneInvincibility()
     {
-        if (!prototype.MakeAirtightInvincible)
-            return;
-
-        var eqe = EntityQueryEnumerator<AirtightComponent, DamageableComponent, TransformComponent>();
+        var eqe = EntityManager.AllEntityQueryEnumerator<AirtightComponent, DamageableComponent, TransformComponent>();
         while (eqe.MoveNext(out var uid, out var _, out var damageableComponent, out var transformComponent))
         {
-            if (transformComponent.MapUid is not { } otherMapUid ||
-                otherMapUid != mapUid)
+            if (transformComponent.MapUid is not { } mapUid ||
+                !_speczoneQuery.HasComponent(mapUid))
                 continue;
 
             RemComp(uid, damageableComponent);

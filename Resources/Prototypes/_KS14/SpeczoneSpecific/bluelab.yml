@@ -50,7 +50,7 @@
   id: RecyclerLabsMobile
   name: mobile recycler
   description: Whose bright fucking idea was it to make it move?!
-  suffix: Labs
+  suffix: Labs, Always Awake, Powered
   components:
   - type: Fixtures
     fixtures:
@@ -83,8 +83,19 @@
         - MidImpassable
         - LowImpassable
         hard: False
+  - type: Sprite
+    layers:
+    - state: grinder-o1bld
+      # No recycler map key because recycler uses wrong state for it on startup
+  - type: Physics
+    #sleepingAllowed: false # I don't think this is necessary
+    bodyType: Dynamic
   - type: Transform
     anchored: false
   - type: MaterialReclaimer
     enabled: true
     powered: true
+  - type: AmbientSound
+    enabled: true
+  - type: Emagged
+    emagType: Interaction
