@@ -719,7 +719,7 @@ entities:
         SnowfallLight: {}
     - type: Biome
       forcedMarkerLayers: []
-      markerLayers: [OreArtifactFragmentLow, OreSaltLow, OreCoalLow, OreIronLow, OreQuartzLow, OrePlasmaLow, OreSilverLow,  OreGoldLow, OreDiamondLow, OreUraniumLow, WatchersIcewing]
+      markerLayers: [OreArtifactFragmentLow, OreSaltLow, OreCoalLow, OreIronLow, OreQuartzLow, OrePlasmaLow, OreSilverLow,  OreGoldLow, OreDiamondLow, OreUraniumLow, OreArtifactFragment, OreSalt, OreCoal, OreIron, OreQuartz, OrePlasma, OreSilver, OreGold, OreDiamond, OreUranium, WatchersIcewing, Goliath, Basilisk]
       loadedMarkers: {}
       pendingMarkers: {}
       loadedChunks:
