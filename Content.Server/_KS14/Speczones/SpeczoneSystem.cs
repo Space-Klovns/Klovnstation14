@@ -226,7 +226,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
         {
             if (!_speczoneQuery.TryGetComponent(transformComponent.MapUid, out var speczoneComponent))
             {
-                Log.Error($"Speczone entry point '{ToPrettyString(uid)}' was not on a speczone map. Map: '{ToPrettyString(transformComponent.MapUid) ?? "N/A"}'");
+                Log.Info($"When updating speczone entry points, '{ToPrettyString(uid)}' was not on a speczone map. Map: '{ToPrettyString(transformComponent.MapUid) ?? "N/A"}'");
                 continue;
             }
 
