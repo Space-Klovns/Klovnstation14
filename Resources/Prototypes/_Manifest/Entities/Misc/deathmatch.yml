@@ -70,9 +70,10 @@
           !type:PhysShapeAabb
           bounds: "-0.5,-0.5,0.5,0.5"
         layer:
-        - MobImpassable # KS14
         - InteractImpassable
-        - Opaque 
+        - Opaque
+        mask:
+        - MobImpassable # KS14 
 
 - type: entity
   parent: HolosignForcefieldDeathmatch
