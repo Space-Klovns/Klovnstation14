@@ -1,0 +1,39 @@
+# SPDX-FileCopyrightText: 2026 Gerkada
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+# Lone ERT Operative spawner
+- type: entity
+  id: SpawnPointLoneERT
+  parent: MarkerBase
+  name: Lone ERT Operative
+  suffix: ERTRole, Lone
+  components:
+  - type: GhostRole
+    name: ghost-role-information-lone-ert-name
+    description: ghost-role-information-lone-ert-description
+    rules: ghost-role-information-lone-ert-rules
+    raffle:
+        settings: short
+  - type: GhostRoleMobSpawner
+    prototype: MobHumanLoneERT
+
+# Lone ERT Operative mob
+- type: entity
+  categories: [ HideSpawnMenu ]
+  name: Lone ERT Operative
+  parent: MobHuman
+  id: MobHumanLoneERT
+  components:
+  - type: RandomHumanoidAppearance
+  - type: NpcFactionMember
+    factions:
+    - NanoTrasen
+  - type: Loadout
+    prototypes: [ ERTLeaderGear ]
+    roleLoadout: [ RoleSurvivalMilitaryDouble ]
+  - type: RandomMetadata
+    nameSegments:
+    - NamesMilitaryLast
+    nameFormat: name-format-ert-leader

@@ -10,13 +10,13 @@
 // SPDX-FileCopyrightText: 2024 icekot8
 // SPDX-FileCopyrightText: 2024 moonheart08
 // SPDX-FileCopyrightText: 2024 nikthechampiongr
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2025 ScarKy0
 // SPDX-FileCopyrightText: 2025 SlamBamActionman
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 slarticodefast
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Server.Administration.Logs;
 using Content.Server.Popups;
@@ -103,6 +103,14 @@ public sealed class HandTeleporterSystem : EntitySystem
         if (Deleted(user))
             return;
 
+        // KS14 Start
+        var attemptHandTeleEvent = new AttemptUpdateHandTeleporterPortalsEvent(uid, false);
+        RaiseLocalEvent(ref attemptHandTeleEvent);
+
+        if (attemptHandTeleEvent.Cancelled)
+            return;
+        // KS14 End
+
         var xform = Transform(user);
 
         // Create the first portal.
@@ -123,6 +131,8 @@ public sealed class HandTeleporterSystem : EntitySystem
 
                 if (component.AllowPortalsOnDifferentMaps)
                     portal.CanTeleportToOtherMaps = true;
+
+                Dirty(component.FirstPortal.Value, portal);
             }
 
             _adminLogger.Add(LogType.EntitySpawn, LogImpact.High, $"{ToPrettyString(user):player} opened {ToPrettyString(component.FirstPortal.Value)} at {Transform(component.FirstPortal.Value).Coordinates} using {ToPrettyString(uid)}");
@@ -151,6 +161,8 @@ public sealed class HandTeleporterSystem : EntitySystem
 
                 if (component.AllowPortalsOnDifferentMaps)
                     portal.CanTeleportToOtherMaps = true;
+
+                Dirty(component.SecondPortal.Value, portal);
             }
 
             _adminLogger.Add(LogType.EntitySpawn, LogImpact.High, $"{ToPrettyString(user):player} opened {ToPrettyString(component.SecondPortal.Value)} at {Transform(component.SecondPortal.Value).Coordinates} linked to {ToPrettyString(component.FirstPortal!.Value)} using {ToPrettyString(uid)}");

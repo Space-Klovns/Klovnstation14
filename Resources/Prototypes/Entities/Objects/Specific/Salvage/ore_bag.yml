@@ -1,3 +1,16 @@
+# SPDX-FileCopyrightText: 2022 Kara
+# SPDX-FileCopyrightText: 2022 ninruB
+# SPDX-FileCopyrightText: 2023 Nemanja
+# SPDX-FileCopyrightText: 2023 liltenhead
+# SPDX-FileCopyrightText: 2023 lzk
+# SPDX-FileCopyrightText: 2023 metalgearsloth
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 Nox
+# SPDX-FileCopyrightText: 2026 FrauzJ
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+#
+# SPDX-License-Identifier: MIT
+
 - type: entity
   name: ore bag
   id: OreBag
@@ -14,11 +27,11 @@
     slots:
     - belt
   - type: Item
-    size: Ginormous
+    size: Small
   - type: Storage
     maxItemSize: Normal
     grid:
-    - 0,0,9,3
+    - 0,0,1,2
     quickInsert: true
     areaInsert: true
     whitelist:

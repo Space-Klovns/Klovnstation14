@@ -1,0 +1,42 @@
+# SPDX-FileCopyrightText: 2023 Kara
+# SPDX-FileCopyrightText: 2023 Leon Friedrich
+# SPDX-FileCopyrightText: 2023 Moony
+# SPDX-FileCopyrightText: 2023 deltanedas
+# SPDX-FileCopyrightText: 2024 Ed
+# SPDX-FileCopyrightText: 2024 Emisse
+# SPDX-FileCopyrightText: 2024 Julian Giebel
+# SPDX-FileCopyrightText: 2024 Plykiya
+# SPDX-FileCopyrightText: 2024 Ubaser
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2025 FrauZj
+# SPDX-FileCopyrightText: 2025 Nemanja
+# SPDX-FileCopyrightText: 2025 ScarKy0
+# SPDX-FileCopyrightText: 2026 FrauzJ
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+#
+# SPDX-License-Identifier: MIT
+
+- type: entity
+  id: ATSlessNanotrasenStation
+  parent:
+    - BaseStation
+    - BaseStationNews
+    - BaseStationCargo
+    - BaseStationJobsSpawning
+    - BaseStationRecords
+    - BaseStationArrivals
+    - BaseStationGateway
+    - BaseStationShuttlesATSless
+    - BaseStationCentcomm
+    - BaseStationEvacuation
+    - BaseStationAlertLevels
+    - BaseStationMagnet
+    - BaseStationExpeditions
+    - BaseStationSalvageJobs
+    - BaseStationSiliconLawAsimov
+    - BaseStationAllEventsEligible
+    - BaseStationNanotrasen
+    - BaseStationDeliveries
+  categories: [ HideSpawnMenu ]
+  components:
+    - type: Transform

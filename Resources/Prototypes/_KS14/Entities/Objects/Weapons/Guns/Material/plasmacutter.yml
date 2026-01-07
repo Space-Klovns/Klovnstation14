@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2025 FrauzJ
-# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
 #
 # SPDX-License-Identifier: MPL-2.0
 
@@ -88,7 +88,7 @@
     reflective:
     - Energy
   - type: GatheringProjectile
-    deleteOnHittingUngatherable: true
+    deleteOnUngatherable: true
     amount: 15 # 15 tiles at most
   - type: Projectile
     deleteOnCollide: false

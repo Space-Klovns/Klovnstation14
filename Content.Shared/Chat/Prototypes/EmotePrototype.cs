@@ -2,9 +2,11 @@
 // SPDX-FileCopyrightText: 2023 DrSmugleaf
 // SPDX-FileCopyrightText: 2023 Visne
 // SPDX-FileCopyrightText: 2024 Morb
+// SPDX-FileCopyrightText: 2025 FrauZj
 // SPDX-FileCopyrightText: 2025 FrauzJ
 // SPDX-FileCopyrightText: 2025 Tayrtahn
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
 //
 // SPDX-License-Identifier: MIT
 
@@ -85,7 +87,7 @@ public sealed partial class EmotePrototype : IPrototype
     ///         everything that uses the emote.
     /// </summary>
     [DataField]
-    public EntityEventArgs? Event = null;
+    public object? Event = null;
 }
 
 /// <summary>

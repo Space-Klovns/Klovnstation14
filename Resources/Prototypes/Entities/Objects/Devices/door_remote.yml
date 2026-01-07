@@ -1,3 +1,29 @@
+# SPDX-FileCopyrightText: 2022 Chris V
+# SPDX-FileCopyrightText: 2022 Veritius
+# SPDX-FileCopyrightText: 2022 WlarusFromDaSpace
+# SPDX-FileCopyrightText: 2022 mirrorcult
+# SPDX-FileCopyrightText: 2023 Ed
+# SPDX-FileCopyrightText: 2023 Nairod
+# SPDX-FileCopyrightText: 2023 Tom Leys
+# SPDX-FileCopyrightText: 2023 lzk
+# SPDX-FileCopyrightText: 2023 lzk228
+# SPDX-FileCopyrightText: 2024 Baptr0b0t
+# SPDX-FileCopyrightText: 2024 Nemanja
+# SPDX-FileCopyrightText: 2024 Plykiya
+# SPDX-FileCopyrightText: 2024 Winkarst
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2025 BramvanZijp
+# SPDX-FileCopyrightText: 2025 Fildrance
+# SPDX-FileCopyrightText: 2025 Samuka
+# SPDX-FileCopyrightText: 2025 Samuka-C
+# SPDX-FileCopyrightText: 2025 ScarKy0
+# SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2026 FrauZj
+# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: entity
   parent: BaseItem
   id: DoorRemoteDefault
@@ -235,6 +261,7 @@
     - SyndicateAgent
     - Wizard
     - Xenoborg
+    - Bluelab # KS14
 
 - type: entity
   parent: [ DoorRemoteCanEletrifyDoors, BaseXenoborgContraband ]

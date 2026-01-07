@@ -35,17 +35,19 @@
 # SPDX-FileCopyrightText: 2024 slarticodefast
 # SPDX-FileCopyrightText: 2025 ArtisticRoomba
 # SPDX-FileCopyrightText: 2025 Centronias
+# SPDX-FileCopyrightText: 2025 FrauZj
 # SPDX-FileCopyrightText: 2025 FrauzJ
 # SPDX-FileCopyrightText: 2025 John
 # SPDX-FileCopyrightText: 2025 RedBookcase
 # SPDX-FileCopyrightText: 2025 Samuka-C
 # SPDX-FileCopyrightText: 2025 Vasilis The Pikachu
 # SPDX-FileCopyrightText: 2025 beck-thompson
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 keronshb
 # SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - type: entity
   id: BaseMeleeWeaponEnergy # more generic naming in case someone makes like, idk, an energy axe
@@ -391,7 +393,9 @@
   - type: Reflect
     reflectProb: .75
     spread: 75
-  - type: FlipOnHit # WD EDIT
+  - type: EmoteOnHit # KS14/WD Edit
+    emote: Flip
+    requireStanding: true
 
 # Item will look weird in handslot. Will need to adjust handstorage visuals in a future PR
 - type: entity

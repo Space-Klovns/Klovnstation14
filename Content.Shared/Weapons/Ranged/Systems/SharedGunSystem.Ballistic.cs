@@ -208,7 +208,33 @@ public abstract partial class SharedGunSystem
         UpdateAmmoCount(uid);
     }
 
-    protected abstract void Cycle(EntityUid uid, BallisticAmmoProviderComponent component, MapCoordinates coordinates);
+    /// <summary>
+    /// Trauma - moved server implementation here and predicted it
+    /// </summary>
+    protected void Cycle(EntityUid uid, BallisticAmmoProviderComponent component, MapCoordinates coordinates)
+    {
+        // TODO: Combine with TakeAmmo
+        if (component.Entities.Count > 0)
+        {
+            var existing = component.Entities[^1];
+            component.Entities.RemoveAt(component.Entities.Count - 1);
+            DirtyField(uid, component, nameof(BallisticAmmoProviderComponent.Entities));
+
+            Containers.Remove(existing, component.Container);
+            EnsureShootable(existing);
+        }
+        else if (component.UnspawnedCount > 0)
+        {
+            component.UnspawnedCount--;
+            DirtyField(uid, component, nameof(BallisticAmmoProviderComponent.UnspawnedCount));
+            var ent = EntityManager.PredictedSpawn(component.Proto, coordinates);
+            EnsureShootable(ent);
+            EjectCartridge(Random(uid), ent);
+        }
+
+        var cycledEvent = new GunCycledEvent();
+        RaiseLocalEvent(uid, ref cycledEvent);
+    }
 
     private void OnBallisticInit(EntityUid uid, BallisticAmmoProviderComponent component, ComponentInit args)
     {
@@ -243,16 +269,30 @@ public abstract partial class SharedGunSystem
             if (component.Entities.Count > 0)
             {
                 var existingEnt = component.Entities[^1];
-                component.Entities.RemoveAt(component.Entities.Count - 1);
-                DirtyField(uid, component, nameof(BallisticAmmoProviderComponent.Entities));
-                Containers.Remove(existingEnt, component.Container);
-                ammoEntity = existingEnt;
+                // <Goob> - check AutoCycle before removing spent ammo
+                if (component.AutoCycle)
+                {
+                    component.Entities.RemoveAt(component.Entities.Count - 1);
+                    DirtyField(uid, component, nameof(BallisticAmmoProviderComponent.Entities));
+                    Containers.Remove(existingEnt, component.Container);
+                    ammoEntity = existingEnt;
+                }
+                // </Goob>
             }
             else if (component.UnspawnedCount > 0)
             {
                 component.UnspawnedCount--;
                 DirtyField(uid, component, nameof(BallisticAmmoProviderComponent.UnspawnedCount));
                 ammoEntity = Spawn(component.Proto, args.Coordinates);
+
+                // <Goob> - put spent ammo back in the gun if it doesn't autocycle
+                if (!component.AutoCycle)
+                {
+                    component.Entities.Add(ammoEntity.Value);
+                    Containers.Insert(ammoEntity.Value, component.Container);
+                    DirtyField(uid, component, nameof(BallisticAmmoProviderComponent.Entities));
+                }
+                // </Goob>
             }
 
             if (ammoEntity is { } ent)

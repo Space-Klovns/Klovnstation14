@@ -1,3 +1,72 @@
+// SPDX-FileCopyrightText: 2018 PJB3005
+// SPDX-FileCopyrightText: 2018 clusterfack
+// SPDX-FileCopyrightText: 2019 Silver
+// SPDX-FileCopyrightText: 2020 Clyybber
+// SPDX-FileCopyrightText: 2020 DamianX
+// SPDX-FileCopyrightText: 2020 Exp
+// SPDX-FileCopyrightText: 2020 F77F
+// SPDX-FileCopyrightText: 2020 FL-OZ
+// SPDX-FileCopyrightText: 2020 Injazz
+// SPDX-FileCopyrightText: 2020 Jackson Lewis
+// SPDX-FileCopyrightText: 2020 Swept
+// SPDX-FileCopyrightText: 2020 Tomeno
+// SPDX-FileCopyrightText: 2020 Tyler Young
+// SPDX-FileCopyrightText: 2020 Víctor Aguilera Puerto
+// SPDX-FileCopyrightText: 2020 adrian
+// SPDX-FileCopyrightText: 2020 ancientpower
+// SPDX-FileCopyrightText: 2020 chairbender
+// SPDX-FileCopyrightText: 2020 ike709
+// SPDX-FileCopyrightText: 2020 moneyl
+// SPDX-FileCopyrightText: 2020 nuke
+// SPDX-FileCopyrightText: 2020 py01
+// SPDX-FileCopyrightText: 2020 scuffedjays
+// SPDX-FileCopyrightText: 2020 zumorica
+// SPDX-FileCopyrightText: 2021 AJCM-git
+// SPDX-FileCopyrightText: 2021 GraniteSidewalk
+// SPDX-FileCopyrightText: 2021 Pancake
+// SPDX-FileCopyrightText: 2021 Paul
+// SPDX-FileCopyrightText: 2021 ShadowCommander
+// SPDX-FileCopyrightText: 2021 Visne
+// SPDX-FileCopyrightText: 2022 0x6273
+// SPDX-FileCopyrightText: 2022 20kdc
+// SPDX-FileCopyrightText: 2022 Acruid
+// SPDX-FileCopyrightText: 2022 Alex Evgrashin
+// SPDX-FileCopyrightText: 2022 Flipp Syder
+// SPDX-FileCopyrightText: 2022 Jezithyr
+// SPDX-FileCopyrightText: 2022 Kara
+// SPDX-FileCopyrightText: 2022 Paul Ritter
+// SPDX-FileCopyrightText: 2022 Rane
+// SPDX-FileCopyrightText: 2022 Vera Aguilera Puerto
+// SPDX-FileCopyrightText: 2022 Veritius
+// SPDX-FileCopyrightText: 2022 mirrorcult
+// SPDX-FileCopyrightText: 2022 wrexbe
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Miro Kavaliou
+// SPDX-FileCopyrightText: 2023 Moony
+// SPDX-FileCopyrightText: 2023 TemporalOroboros
+// SPDX-FileCopyrightText: 2023 c4llv07e
+// SPDX-FileCopyrightText: 2024 LordCarve
+// SPDX-FileCopyrightText: 2024 Nemanja
+// SPDX-FileCopyrightText: 2024 Tayrtahn
+// SPDX-FileCopyrightText: 2024 Vasilis
+// SPDX-FileCopyrightText: 2024 deltanedas
+// SPDX-FileCopyrightText: 2024 metalgearsloth
+// SPDX-FileCopyrightText: 2024 nikthechampiongr
+// SPDX-FileCopyrightText: 2024 no
+// SPDX-FileCopyrightText: 2024 slarticodefast
+// SPDX-FileCopyrightText: 2025 Justin Pfeifler
+// SPDX-FileCopyrightText: 2025 Leon Friedrich
+// SPDX-FileCopyrightText: 2025 Matthew Herber
+// SPDX-FileCopyrightText: 2025 Myra
+// SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2025 Simon
+// SPDX-FileCopyrightText: 2025 deathride58
+// SPDX-FileCopyrightText: 2025 nabegator220
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
+//
+// SPDX-License-Identifier: MIT
+
 using Content.Client.Administration.Managers;
 using Content.Client.Changelog;
 using Content.Client.Chat.Managers;
@@ -83,7 +152,7 @@ namespace Content.Client.Entry
 
             foreach (var callback in TestingCallbacks)
             {
-                var cast = (ClientModuleTestingCallbacks) callback;
+                var cast = (ClientModuleTestingCallbacks)callback;
                 cast.ClientBeforeIoC?.Invoke();
             }
         }
@@ -129,6 +198,8 @@ namespace Content.Client.Entry
             _prototypeManager.RegisterIgnore("ghostRoleRaffleDecider");
             _prototypeManager.RegisterIgnore("codewordGenerator");
             _prototypeManager.RegisterIgnore("codewordFaction");
+
+            _prototypeManager.RegisterIgnore("speczone"); // KS14
 
             _componentFactory.GenerateNetIds();
             _adminManager.Initialize();
@@ -208,7 +279,7 @@ namespace Content.Client.Entry
             else if (_gameController.LaunchState.FromLauncher)
             {
                 _stateManager.RequestStateChange<LauncherConnecting>();
-                var state = (LauncherConnecting) _stateManager.CurrentState;
+                var state = (LauncherConnecting)_stateManager.CurrentState;
 
                 if (disconnected)
                 {

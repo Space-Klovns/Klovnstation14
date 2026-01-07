@@ -70,6 +70,7 @@ public sealed partial class HandsComponent : Component
     ///     The time at which throws will be allowed again.
     /// </summary>
     [DataField, AutoPausedField]
+    [Access(Other = AccessPermissions.ReadWrite)] // Trauma
     public TimeSpan NextThrowTime;
 
     /// <summary>
@@ -156,6 +157,7 @@ public sealed class HandsComponentState : ComponentState
     public readonly Dictionary<string, Hand> Hands;
     public readonly List<string> SortedHands;
     public readonly string? ActiveHandId;
+    public readonly TimeSpan NextThrowTime; // Trauma - fuck you not using auto state
 
     public HandsComponentState(HandsComponent handComp)
     {
@@ -163,6 +165,7 @@ public sealed class HandsComponentState : ComponentState
         Hands = new(handComp.Hands);
         SortedHands = new(handComp.SortedHands);
         ActiveHandId = handComp.ActiveHandId;
+        NextThrowTime = handComp.NextThrowTime; // Trauma
     }
 }
 

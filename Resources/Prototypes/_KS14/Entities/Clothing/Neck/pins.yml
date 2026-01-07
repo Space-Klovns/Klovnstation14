@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 DeusMaldPr
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: entity
+  parent: ClothingNeckBase
+  id: ClothingNeckRaiderPin
+  name: raider pin
+  description: Товарищи набегаторы! Сокрушим преграды застоя! Пусть наша стремительная тесла станет грозой для врагов и зарей для угнетенных. Набегаторы всех серверов, объединяйтесь! Нам нечего терять, кроме наших оков и сменных аккаунтов! Гойда!
+  # TRANSLATION: Comrade raiders! Let's break down the barriers of stagnation! Let our tesla become a thunderstorm for enemies and a dawn for the oppressed. Raiders of all servers, unite! We have nothing to lose except our shackles and disposal accounts! Goida!
+  components:
+  - type: Item
+    size: Tiny
+  - type: Sprite
+    sprite: _KS14/Clothing/Neck/Misc/pins.rsi
+    state: raider
+  - type: Clothing
+    sprite: _KS14/Clothing/Neck/Misc/pins.rsi
+    equippedPrefix: raider

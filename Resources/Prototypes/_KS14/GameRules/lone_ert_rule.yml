@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Gerkada
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: entity
+  id: LoneERTSpawn
+  parent: BaseGameRule
+  name: LoneERTSpawn
+  components:
+  - type: StationEvent
+    weight: 0 # Admin Only
+  - type: LoneERTRule
+    path: /Maps/_KS14/Shuttles/ShuttleEvent/lone_ert.yml

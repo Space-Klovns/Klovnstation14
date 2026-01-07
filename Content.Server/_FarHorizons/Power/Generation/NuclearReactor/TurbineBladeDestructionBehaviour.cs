@@ -3,8 +3,8 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
-using Content.Server.Destructible;
-using Content.Server.Destructible.Thresholds.Behaviors;
+using Content.Shared.Destructible;
+using Content.Shared.Destructible.Thresholds.Behaviors;
 using JetBrains.Annotations;
 
 namespace Content.Server._FarHorizons.Power.Generation.FissionGenerator;
@@ -19,7 +19,7 @@ public sealed partial class TurbineBladeDestructionBehaviour : IThresholdBehavio
 {
     private TurbineSystem? _turbineSystem = null;
 
-    public void Execute(EntityUid owner, DestructibleSystem system, EntityUid? cause = null)
+    public void Execute(EntityUid owner, SharedDestructibleSystem system, EntityUid? cause = null)
     {
         _turbineSystem ??= system.EntityManager.System<TurbineSystem>();
         _turbineSystem.TearApart(owner, cause: cause);

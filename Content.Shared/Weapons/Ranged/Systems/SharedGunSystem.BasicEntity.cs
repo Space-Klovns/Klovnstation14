@@ -1,5 +1,6 @@
 ﻿using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Weapons.Ranged.Events;
+using Content.Shared.Random;
 using Robust.Shared.GameStates;
 
 namespace Content.Shared.Weapons.Ranged.Systems;
@@ -36,7 +37,8 @@ public abstract partial class SharedGunSystem
                 component.Count--;
             }
 
-            var ent = Spawn(component.Proto, args.Coordinates);
+            var proto = component.Proto;
+            var ent = PredictedSpawnAtPosition(proto, args.Coordinates);
             args.Ammo.Add((ent, EnsureShootable(ent)));
         }
 

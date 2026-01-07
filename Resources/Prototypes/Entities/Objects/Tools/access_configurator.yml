@@ -1,3 +1,21 @@
+# SPDX-FileCopyrightText: 2023 Velcroboy
+# SPDX-FileCopyrightText: 2024 Leon Friedrich
+# SPDX-FileCopyrightText: 2024 TsjipTsjip
+# SPDX-FileCopyrightText: 2024 keronshb
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2025 Kowlin
+# SPDX-FileCopyrightText: 2025 Nemanja
+# SPDX-FileCopyrightText: 2025 Samuka
+# SPDX-FileCopyrightText: 2025 Samuka-C
+# SPDX-FileCopyrightText: 2025 ScarKy0
+# SPDX-FileCopyrightText: 2025 chromiumboy
+# SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2026 FrauZj
+# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: entity
   parent: BaseItem
   id: AccessConfigurator
@@ -135,6 +153,7 @@
     - SyndicateAgent
     - Wizard
     - Xenoborg
+    - Bluelab # KS14
     - GenpopEnter
     - GenpopLeave
     privilegedIdSlot:

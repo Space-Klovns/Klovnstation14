@@ -1,3 +1,4 @@
+# SPDX-FileCopyrightText: 2025 FrauzJ
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
@@ -26,3 +27,25 @@
   - type: ClothingGrantComponent # KS14 - arc flash
     component:
     - type: ArcFlashInsulated
+
+- type: entity
+  parent: [ClothingOuterWinterCoatToggleable, ClothingOuterBaseMedium, AllowSuitStorageClothing, BaseCargoContraband]
+  id: ClothingOuterExplorerSuit
+  name: explorer suit
+  description: A heavy-duty suit designed for mining operations, offering protection against physical hazards and environmental dangers.
+  components:
+  - type: ToggleableClothing
+    clothingPrototype: ClothingHeadHatHoodExplorerSuit
+    slot: head
+  - type: Sprite
+    sprite: _KS14/Clothing/OuterClothing/Armor/explorer.rsi
+  - type: Clothing
+    sprite: _KS14/Clothing/OuterClothing/Armor/explorer.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.75
+        Slash: 0.65
+        Piercing: 0.75
+        Radiation: 0.35
+        Heat: 0.75

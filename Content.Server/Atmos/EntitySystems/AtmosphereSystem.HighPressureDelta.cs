@@ -1,3 +1,28 @@
+// SPDX-FileCopyrightText: 2022 20kdc
+// SPDX-FileCopyrightText: 2022 Jacob Tong
+// SPDX-FileCopyrightText: 2022 Tomeno
+// SPDX-FileCopyrightText: 2022 Vera Aguilera Puerto
+// SPDX-FileCopyrightText: 2022 keronshb
+// SPDX-FileCopyrightText: 2022 mirrorcult
+// SPDX-FileCopyrightText: 2022 wrexbe
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Jezithyr
+// SPDX-FileCopyrightText: 2023 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2023 Visne
+// SPDX-FileCopyrightText: 2024 Leon Friedrich
+// SPDX-FileCopyrightText: 2024 Nemanja
+// SPDX-FileCopyrightText: 2024 Plykiya
+// SPDX-FileCopyrightText: 2024 metalgearsloth
+// SPDX-FileCopyrightText: 2024 nikthechampiongr
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2025 TemporalOroboros
+// SPDX-FileCopyrightText: 2025 lzk
+// SPDX-FileCopyrightText: 2026 deltanedas
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
+// SPDX-FileCopyrightText: 2026 nabegator220
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 using Content.Server.Atmos.Components;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
@@ -10,11 +35,13 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Utility;
+using Content.Shared.Throwing;
 
 namespace Content.Server.Atmos.EntitySystems
 {
     public sealed partial class AtmosphereSystem
     {
+        [Dependency] private readonly ThrowingSystem _throwing = default!;
         private static readonly ProtoId<SoundCollectionPrototype> DefaultSpaceWindSounds = "SpaceWind";
 
         private const int SpaceWindSoundCooldownCycles = 75;
@@ -248,13 +275,14 @@ namespace Content.Server.Atmos.EntitySystems
                     // TODO: Technically these directions won't be correct but uhh I'm just here for optimisations buddy not to fix my old bugs.
                     if (throwTarget != EntityCoordinates.Invalid)
                     {
-                        var pos = ((_transformSystem.ToMapCoordinates(throwTarget).Position - _transformSystem.GetWorldPosition(xform)).Normalized() + dirVec).Normalized();
-                        _physics.ApplyLinearImpulse(uid, pos * moveForce, body: physics);
+                        var pos = throwTarget.ToMap(EntityManager, _transformSystem).Position - xform.WorldPosition + dirVec;
+                        _throwing.TryThrow(uid, pos.Normalized() * MathF.Min(moveForce, SpaceWindMaxVelocity), moveForce,
+                            predicted: false); // Trauma
                     }
                     else
                     {
-                        moveForce = MathF.Min(moveForce, SpaceWindMaxPushForce);
-                        _physics.ApplyLinearImpulse(uid, dirVec * moveForce, body: physics);
+                        _throwing.TryThrow(uid, dirVec.Normalized() * MathF.Min(moveForce, SpaceWindMaxVelocity), moveForce,
+                            predicted: false); // Trauma
                     }
 
                     component.LastHighPressureMovementAirCycle = cycle;

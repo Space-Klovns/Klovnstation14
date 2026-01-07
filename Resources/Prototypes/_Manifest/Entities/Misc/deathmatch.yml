@@ -1,5 +1,5 @@
-# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
 #
 # SPDX-License-Identifier: MPL-2.0
 
@@ -47,6 +47,33 @@
     state: icon
     color: '#FFFFFF' # fully white, 100% alpha
   - type: Clickable
+
+- type: entity
+  parent: BaseDeathmatchBarrier
+  id: HolosignForcefieldInorganic
+  name: inorganic force field
+  description: Does not let gases nor living-or-dead things through. Blocks lasers.
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Sprite
+    sprite: Structures/Holo/field.rsi
+    layers:
+    - state: icon
+      color: '#FFFFFFCC' # fully white, 50% alpha
+      shader: Noir
+  - type: Clickable
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        layer:
+        - InteractImpassable
+        - Opaque
+        mask:
+        - MobImpassable # KS14 
 
 - type: entity
   parent: HolosignForcefieldDeathmatch

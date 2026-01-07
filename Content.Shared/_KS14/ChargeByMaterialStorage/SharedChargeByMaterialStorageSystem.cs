@@ -104,7 +104,7 @@ public sealed class SharedChargeByMaterialStorageSystem : EntitySystem
             if (materialDelta <= 0)
                 continue;
 
-            ChangeCharge(entity, materialDelta * entity.Comp.GainRatio);
+            _batterySystem.ChangeCharge(entity.Owner, materialDelta * entity.Comp.GainRatio);
 
             if (entity.Comp.ConsumeAddedMaterials)
                 _materialStorageSystem.TryChangeMaterialAmount(
@@ -117,17 +117,5 @@ public sealed class SharedChargeByMaterialStorageSystem : EntitySystem
         }
 
         entity.Comp.CachedStoredMaterials = new(materialStorageComponent.Storage);
-    }
-
-    private void ChangeCharge(Entity<ChargeByMaterialStorageComponent> entity, float addedCharge)
-    {
-        if (!TryComp<BatteryComponent>(entity, out var batteryComponent))
-            return;
-
-        var batteryEntity = new Entity<BatteryComponent?>(entity.Owner, batteryComponent);
-        if (_batterySystem.GetCharge(batteryEntity) + addedCharge > batteryComponent.MaxCharge)
-            return;
-
-        _batterySystem.ChangeCharge(batteryEntity, addedCharge);
     }
 }

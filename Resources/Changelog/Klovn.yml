@@ -539,3 +539,49 @@ Entries:
         a toolbox.
   id: 69
   time: '2026-01-01T18:22:07.0000000+00:00'
+- author: DecemberEpsilon
+  changes:
+    - type: Tweak
+      message: Salvage maybe will be fun in 20000 years.
+    - type: Add
+      message: Salvage explorer suit
+    - type: Tweak
+      message: Salvage Specialist's locker's contents' were's changed's.
+    - type: Tweak
+      message: Health Points of Rocks were Changed ✅
+    - type: Add
+      message: Saltern now spawns ore or something.
+    - type: Remove
+      message: Tested, works.
+  id: 70
+  time: '2026-01-04T00:04:03.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Fixed problems with flip emotes etc. Desword now properly makes you
+        flip.
+    - type: Fix
+      message: Fixed paper labels on canisters giving epic fail sprites.
+  id: 71
+  time: '2026-01-04T18:19:56.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: Added gun prediction, it is now way less aids to shoot guns.
+  id: 72
+  time: '2026-01-05T18:35:27.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Add
+      message: Two posters
+    - type: Add
+      message: Raiders
+  id: 73
+  time: '2026-01-05T19:56:08.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: Added a Lone ERT Operative ghost-role and shuttle. Admeme only.
+  id: 74
+  time: '2026-01-07T02:48:24.0000000+00:00'

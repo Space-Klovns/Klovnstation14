@@ -37,13 +37,17 @@
 # SPDX-FileCopyrightText: 2025 ActiveMammmoth
 # SPDX-FileCopyrightText: 2025 ArtisticRoomba
 # SPDX-FileCopyrightText: 2025 Gerkada
+# SPDX-FileCopyrightText: 2025 Hitlinemoss
 # SPDX-FileCopyrightText: 2025 K-Dynamic
-# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Nemanja
+# SPDX-FileCopyrightText: 2025 Tiniest Shark
 # SPDX-FileCopyrightText: 2025 Whatstone
 # SPDX-FileCopyrightText: 2025 Winkarst
 # SPDX-FileCopyrightText: 2025 beck-thompson
 # SPDX-FileCopyrightText: 2025 metalgearsloth
+# SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
 #
 # SPDX-License-Identifier: MIT
 
@@ -94,11 +98,19 @@
           enum.PaperLabelVisuals.Layer:
             True: { visible: false }
         enum.PaperLabelVisuals.LabelType:
-          enum.PaperLabelVisuals.Layer:
-            Paper: { state: paper }
-            Bounty: { state: bounty }
-            CaptainsPaper: { state: captains_paper }
-            Invoice: { state: invoice }
+          enum.PaperLabelVisuals.Layer: # KS14: Specified upstream sprites - this might be slightly unperformant but idc
+            Paper:
+              sprite: /Structures/Storage/canister.rsi
+              state: paper
+            Bounty:
+              sprite: /Structures/Storage/canister.rsi
+              state: bounty
+            CaptainsPaper:
+              sprite: /Structures/Storage/canister.rsi
+              state: captains_paper
+            Invoice:
+              sprite: /Structures/Storage/canister.rsi
+              state: invoice
     - type: ActivatableUI
       key: enum.GasCanisterUiKey.Key
     - type: UIRequiresLock

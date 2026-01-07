@@ -32,6 +32,7 @@
 # SPDX-FileCopyrightText: 2024 Zadeon
 # SPDX-FileCopyrightText: 2024 metalgearsloth
 # SPDX-FileCopyrightText: 2025 Firewars763
+# SPDX-FileCopyrightText: 2025 FrauzJ
 # SPDX-FileCopyrightText: 2025 Ilya246
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Leon Friedrich
@@ -850,7 +851,7 @@
       - PlasmaCutter # KS14 - Plasmacutter  
   - type: Damageable
     damageContainer: StructuralInorganic
-    damageModifierSet: Metallic
+    damageModifierSet: Rock # KS14, Metallic -> Rock
   - type: Destructible
     thresholds:
     - trigger:

@@ -1,0 +1,106 @@
+# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: accessLevel
+  id: Bluelab
+  name: id-card-access-level-bluelab
+  canAddToIdCard: false
+
+- type: entity
+  parent: IDCardStandard
+  id: BluelabIDCard
+  name: laboratory ID card
+  components:
+  - type: Sprite
+    layers:
+    - state: centcom
+    - state: stripe_top
+      color: "#134975"
+    - state: stripe_bottom
+      color: "#0d304d"
+    - sprite: Interface/Misc/job_icons.rsi
+      offset: -0.09375, 0.0625
+      state: Nanotrasen
+  - type: Item
+    heldPrefix: blue
+  - type: Access
+    tags:
+    - Bluelab
+  - type: IdCard
+    jobIcon: JobIconNanotrasen
+    jobTitle: job-name-bluelab
+    canMicrowave: false
+
+- type: entity
+  parent: DoorElectronics
+  id: DoorElectronicsLabs
+  suffix: Labs, Locked
+  components:
+  - type: AccessReader
+    access: [["Bluelab"]]
+
+- type: entity
+  parent: AirlockLabsUnpryable
+  id: AirlockLabsUnpryableBluelabLocked
+  suffix: Labs, Locked, Unpryable
+  components:
+  - type: ContainerFill
+    containers:
+      board: [ DoorElectronicsLabs ]
+
+- type: entity
+  parent: Recycler
+  id: RecyclerLabsMobile
+  name: mobile recycler
+  description: Whose bright fucking idea was it to make it move?!
+  suffix: Labs, Always Awake, Emagged, Powered
+  components:
+  - type: Fixtures
+    fixtures:
+      brrt:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.15,-0.15,0.15,0.15"
+        hard: false
+        layer:
+        - FullTileLayer
+      collision:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.25,-0.25,0.25,0.25"
+        hard: true
+        mask:
+        - Impassable
+        layer:
+        - Opaque
+        - BulletImpassable
+      conveyor:
+        shape: !type:PolygonShape
+          vertices:
+          - -0.55,-0.55
+          - 0.55,-0.55
+          - 0.55,0.55
+          - -0.55,0.55
+        layer:
+        - Impassable
+        - MidImpassable
+        - LowImpassable
+        hard: False
+  - type: Sprite
+    layers:
+    - state: grinder-o1bld
+      # No recycler map key because recycler uses wrong state for it on startup
+  - type: Physics
+    sleepingAllowed: false # Necessary
+    bodyType: Dynamic
+  - type: Transform
+    anchored: false
+  - type: MaterialReclaimer
+    enabled: true
+    powered: true
+  - type: AmbientSound
+    enabled: true
+  - type: Emagged
+    emagType: Interaction

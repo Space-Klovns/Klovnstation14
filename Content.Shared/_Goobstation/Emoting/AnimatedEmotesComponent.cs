@@ -1,4 +1,8 @@
-using Robust.Shared.Serialization;
+// SPDX-FileCopyrightText: 2025 FrauZj
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
+//
+// SPDX-License-Identifier: MPL-2.0
 
 namespace Content.Shared._Goobstation.Emoting;
 
@@ -8,6 +12,6 @@ namespace Content.Shared._Goobstation.Emoting;
 [RegisterComponent]
 public sealed partial class AnimatedEmotesComponent : Component;
 
-[Serializable, NetSerializable, DataDefinition] public sealed partial class AnimationFlipEmoteEvent : EntityEventArgs { }
-[Serializable, NetSerializable, DataDefinition] public sealed partial class AnimationSpinEmoteEvent : EntityEventArgs { }
-[Serializable, NetSerializable, DataDefinition] public sealed partial class AnimationJumpEmoteEvent : EntityEventArgs { }
+[DataDefinition] public sealed partial class AnimationFlipEmoteEvent;
+[DataDefinition] public sealed partial class AnimationSpinEmoteEvent;
+[DataDefinition] public sealed partial class AnimationJumpEmoteEvent;

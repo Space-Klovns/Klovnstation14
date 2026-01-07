@@ -1,5 +1,4 @@
 # SPDX-FileCopyrightText: 2024 Alzore
-# SPDX-FileCopyrightText: 2024 ArtisticRoomba
 # SPDX-FileCopyrightText: 2024 Bellwether
 # SPDX-FileCopyrightText: 2024 Cojoke
 # SPDX-FileCopyrightText: 2024 DieselMohawk
@@ -26,26 +25,33 @@
 # SPDX-FileCopyrightText: 2024 themias
 # SPDX-FileCopyrightText: 2024 Арт
 # SPDX-FileCopyrightText: 2025 96flo
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
 # SPDX-FileCopyrightText: 2025 Brassica Prime
 # SPDX-FileCopyrightText: 2025 Cass
-# SPDX-FileCopyrightText: 2025 DeusMaldPr
 # SPDX-FileCopyrightText: 2025 Hannah Giovanna Dawson
 # SPDX-FileCopyrightText: 2025 Hitlinemoss
+# SPDX-FileCopyrightText: 2025 Huaqas
 # SPDX-FileCopyrightText: 2025 Julian Giebel
 # SPDX-FileCopyrightText: 2025 KingFroozy
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Momo
 # SPDX-FileCopyrightText: 2025 Mora
+# SPDX-FileCopyrightText: 2025 Nox
 # SPDX-FileCopyrightText: 2025 Phooooooooooooooooooooooooooooooosphate
+# SPDX-FileCopyrightText: 2025 SlamBamActionman
 # SPDX-FileCopyrightText: 2025 T
 # SPDX-FileCopyrightText: 2025 Trosling
 # SPDX-FileCopyrightText: 2025 Vasilis The Pikachu
+# SPDX-FileCopyrightText: 2025 beck-thompson
 # SPDX-FileCopyrightText: 2025 centcomofficer24
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 ivo
 # SPDX-FileCopyrightText: 2025 kosticia
 # SPDX-FileCopyrightText: 2025 lzk
+# SPDX-FileCopyrightText: 2025 nabegator220
 # SPDX-FileCopyrightText: 2025 paige404
 # SPDX-FileCopyrightText: 2025 slarticodefast
+# SPDX-FileCopyrightText: 2026 DeusMaldPr
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
 #
 # SPDX-License-Identifier: MIT
 
@@ -70,6 +76,7 @@
   - CigarCase
   - CigarGold
   # KS14 - Removed pins
+  - ClothingNeckRaiderPin #KS14
   - OffsetCane
   - OffsetCaneWood
   - OffsetCaneClown

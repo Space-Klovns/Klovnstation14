@@ -1,10 +1,30 @@
+// SPDX-FileCopyrightText: 2023 TemporalOroboros
+// SPDX-FileCopyrightText: 2023 Visne
+// SPDX-FileCopyrightText: 2024 AJCM-git
+// SPDX-FileCopyrightText: 2024 DrSmugleaf
+// SPDX-FileCopyrightText: 2024 Nemanja
+// SPDX-FileCopyrightText: 2024 Tayrtahn
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Leon Friedrich
+// SPDX-FileCopyrightText: 2025 PJB3005
+// SPDX-FileCopyrightText: 2025 Vasilis The Pikachu
+// SPDX-FileCopyrightText: 2025 Winkarst
+// SPDX-FileCopyrightText: 2025 metalgearsloth
+// SPDX-FileCopyrightText: 2025 nabegator220
+// SPDX-FileCopyrightText: 2025 āda
+// SPDX-FileCopyrightText: 2026 deltanedas
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 #nullable enable
 using System.Collections.Generic;
 using Content.Server.Cargo.Systems;
 using Content.Server.Construction.Completions;
 using Content.Server.Construction.Components;
-using Content.Server.Destructible;
+using Content.Shared.Destructible; // Trauma - moved to shared
 using Content.Server.Destructible.Thresholds.Behaviors;
+using Content.Shared.Destructible.Thresholds.Behaviors; // Trauma
 using Content.Server.Lathe;
 using Content.Server.Stack;
 using Content.Shared.Chemistry.Reagent;

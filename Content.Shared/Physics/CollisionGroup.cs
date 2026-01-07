@@ -1,3 +1,29 @@
+// SPDX-FileCopyrightText: 2019 L.E.D
+// SPDX-FileCopyrightText: 2019 PrPleGoo
+// SPDX-FileCopyrightText: 2020 Acruid
+// SPDX-FileCopyrightText: 2020 ComicIronic
+// SPDX-FileCopyrightText: 2020 DrSmugleaf
+// SPDX-FileCopyrightText: 2020 Paul Ritter
+// SPDX-FileCopyrightText: 2020 ancientpower
+// SPDX-FileCopyrightText: 2021 Daniel Castro Razo
+// SPDX-FileCopyrightText: 2021 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2021 Swept
+// SPDX-FileCopyrightText: 2021 Visne
+// SPDX-FileCopyrightText: 2022 Ian Pike
+// SPDX-FileCopyrightText: 2022 Jacob Tong
+// SPDX-FileCopyrightText: 2023 Repo
+// SPDX-FileCopyrightText: 2024 MilenVolf
+// SPDX-FileCopyrightText: 2024 lzk
+// SPDX-FileCopyrightText: 2024 metalgearsloth
+// SPDX-FileCopyrightText: 2025 Princess Cheeseballs
+// SPDX-FileCopyrightText: 2025 Tao
+// SPDX-FileCopyrightText: 2025 Vasilis The Pikachu
+// SPDX-FileCopyrightText: 2025 keronshb
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
+//
+// SPDX-License-Identifier: MIT
+
 using JetBrains.Annotations;
 using Robust.Shared.Map;
 using Robust.Shared.Physics.Dynamics;
@@ -13,17 +39,20 @@ namespace Content.Shared.Physics;
 [FlagsFor(typeof(CollisionLayer)), FlagsFor(typeof(CollisionMask))]
 public enum CollisionGroup
 {
-    None               = 0,
-    Opaque             = 1 << 0, // 1 Blocks light, can be hit by lasers
-    Impassable         = 1 << 1, // 2 Walls, objects impassable by any means
-    MidImpassable      = 1 << 2, // 4 Mobs, players, crabs, etc
-    HighImpassable     = 1 << 3, // 8 Things on top of tables and things that block tall/large mobs.
-    LowImpassable      = 1 << 4, // 16 For things that can fit under a table or squeeze under an airlock
-    GhostImpassable    = 1 << 5, // 32 Things impassible by ghosts/observers, ie blessed tiles or forcefields
-    BulletImpassable   = 1 << 6, // 64 Can be hit by bullets
+    None = 0,
+    Opaque = 1 << 0, // 1 Blocks light, can be hit by lasers
+    Impassable = 1 << 1, // 2 Walls, objects impassable by any means
+    MidImpassable = 1 << 2, // 4 Mobs, players, crabs, etc
+    HighImpassable = 1 << 3, // 8 Things on top of tables and things that block tall/large mobs.
+    LowImpassable = 1 << 4, // 16 For things that can fit under a table or squeeze under an airlock
+    GhostImpassable = 1 << 5, // 32 Things impassible by ghosts/observers, ie blessed tiles or forcefields
+    BulletImpassable = 1 << 6, // 64 Can be hit by bullets
     InteractImpassable = 1 << 7, // 128 Blocks interaction/InRangeUnobstructed
     // Y dis door passable when all the others impassable / collision.
-    DoorPassable       = 1 << 8, // 256 Allows door to close over top, Like blast doors over conveyors for disposals rooms/cargo.
+    DoorPassable = 1 << 8, // 256 Allows door to close over top, Like blast doors over conveyors for disposals rooms/cargo.
+
+    // KS14 Addition
+    MobImpassable = 1 << 9, // 512 KS14: For all mobs ever. Used primarily for the inorganic forcefield.
 
     MapGrid = MapGridHelpers.CollisionGroup, // Map grids, like shuttles. This is the actual grid itself, not the walls or other entities connected to the grid.
 
@@ -35,17 +64,17 @@ public enum CollisionGroup
 
     // Humanoids, etc.
     MobMask = Impassable | HighImpassable | MidImpassable | LowImpassable,
-    MobLayer = Opaque | BulletImpassable,
+    MobLayer = Opaque | BulletImpassable | MobImpassable /* KS14: Added MobImpassable */,
     // Mice, drones
     SmallMobMask = Impassable | LowImpassable,
-    SmallMobLayer = Opaque | BulletImpassable,
+    SmallMobLayer = Opaque | BulletImpassable | MobImpassable /* KS14: Added MobImpassable */,
     // Birds/other small flyers
     FlyingMobMask = Impassable | HighImpassable,
-    FlyingMobLayer = Opaque | BulletImpassable,
+    FlyingMobLayer = Opaque | BulletImpassable | MobImpassable /* KS14: Added MobImpassable */,
 
     // Mechs
     LargeMobMask = Impassable | HighImpassable | MidImpassable | LowImpassable,
-    LargeMobLayer = Opaque | HighImpassable | MidImpassable | LowImpassable | BulletImpassable,
+    LargeMobLayer = Opaque | HighImpassable | MidImpassable | LowImpassable | BulletImpassable | MobImpassable /* KS14: Added MobImpassable */,
 
     // Machines, computers
     MachineMask = Impassable | MidImpassable | LowImpassable,

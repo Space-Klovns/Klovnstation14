@@ -20,7 +20,7 @@ using Robust.Server.GameObjects;
 using Content.Server.Weapons.Ranged.Systems;
 using Content.Server._FarHorizons.NodeContainer.Nodes;
 using Robust.Shared.Utility;
-using Content.Server.Destructible;
+using Content.Shared.Destructible;
 using Content.Shared.FixedPoint;
 using Content.Shared.Destructible.Thresholds.Triggers;
 

@@ -1,3 +1,28 @@
+// SPDX-FileCopyrightText: 2022 keronshb
+// SPDX-FileCopyrightText: 2023 AJCM-git
+// SPDX-FileCopyrightText: 2023 Arendian
+// SPDX-FileCopyrightText: 2023 Nemanja
+// SPDX-FileCopyrightText: 2024 BramvanZijp
+// SPDX-FileCopyrightText: 2024 CaasGit
+// SPDX-FileCopyrightText: 2024 DrSmugleaf
+// SPDX-FileCopyrightText: 2024 Kara
+// SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2024 Plykiya
+// SPDX-FileCopyrightText: 2024 SlamBamActionman
+// SPDX-FileCopyrightText: 2024 TemporalOroboros
+// SPDX-FileCopyrightText: 2025 Kyle Tyo
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Leon Friedrich
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2025 beck-thompson
+// SPDX-FileCopyrightText: 2025 metalgearsloth
+// SPDX-FileCopyrightText: 2025 slarticodefast
+// SPDX-FileCopyrightText: 2026 deltanedas
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
+// SPDX-FileCopyrightText: 2026 nabegator220
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 using System.Numerics;
 using Content.Client.Animations;
 using Content.Client.Gameplay;
@@ -83,7 +108,7 @@ public sealed partial class GunSystem : SharedGunSystem
         SubscribeAllEvent<MuzzleFlashEvent>(OnMuzzleFlash);
 
         // Plays animated effects on the client.
-        SubscribeNetworkEvent<HitscanEvent>(OnHitscan);
+        SubscribeAllEvent<HitscanEvent>(OnHitscan); // Trauma - all instead of network
 
         InitializeMagazineVisuals();
         InitializeSpentAmmo();
@@ -211,71 +236,10 @@ public sealed partial class GunSystem : SharedGunSystem
         });
     }
 
-    public override void Shoot(EntityUid gunUid, GunComponent gun, List<(EntityUid? Entity, IShootable Shootable)> ammo,
-        EntityCoordinates fromCoordinates, EntityCoordinates toCoordinates, out bool userImpulse, EntityUid? user = null, bool throwItems = false)
-    {
-        userImpulse = true;
+    // Trauma - predicted Shoot
 
-        // Rather than splitting client / server for every ammo provider it's easier
-        // to just delete the spawned entities. This is for programmer sanity despite the wasted perf.
-        // This also means any ammo specific stuff can be grabbed as necessary.
-        var direction = TransformSystem.ToMapCoordinates(fromCoordinates).Position - TransformSystem.ToMapCoordinates(toCoordinates).Position;
-        var worldAngle = direction.ToAngle().Opposite();
-
-        foreach (var (ent, shootable) in ammo)
-        {
-            if (throwItems)
-            {
-                Recoil(user, direction, gun.CameraRecoilScalarModified);
-                if (IsClientSide(ent!.Value))
-                    Del(ent.Value);
-                else
-                    RemoveShootable(ent.Value);
-                continue;
-            }
-
-            // TODO: Clean this up in a gun refactor at some point - too much copy pasting
-            switch (shootable)
-            {
-                case CartridgeAmmoComponent cartridge:
-                    if (!cartridge.Spent)
-                    {
-                        SetCartridgeSpent(ent!.Value, cartridge, true);
-                        MuzzleFlash(gunUid, cartridge, worldAngle, user);
-                        Audio.PlayPredicted(gun.SoundGunshotModified, gunUid, user);
-                        Recoil(user, direction, gun.CameraRecoilScalarModified);
-                        // TODO: Can't predict entity deletions.
-                        //if (cartridge.DeleteOnSpawn)
-                        //    Del(cartridge.Owner);
-                    }
-                    else
-                    {
-                        userImpulse = false;
-                        Audio.PlayPredicted(gun.SoundEmpty, gunUid, user);
-                    }
-
-                    if (IsClientSide(ent!.Value))
-                        Del(ent.Value);
-
-                    break;
-                case AmmoComponent newAmmo:
-                    MuzzleFlash(gunUid, newAmmo, worldAngle, user);
-                    Audio.PlayPredicted(gun.SoundGunshotModified, gunUid, user);
-                    Recoil(user, direction, gun.CameraRecoilScalarModified);
-                    if (IsClientSide(ent!.Value))
-                        Del(ent.Value);
-                    else
-                        RemoveShootable(ent.Value);
-                    break;
-                case HitscanAmmoComponent:
-                    Audio.PlayPredicted(gun.SoundGunshotModified, gunUid, user);
-                    Recoil(user, direction, gun.CameraRecoilScalarModified);
-                    break;
-            }
-        }
-    }
-
-    private void Recoil(EntityUid? user, Vector2 recoil, float recoilScalar)
+    // Trauma - override virtual protected method
+    protected override void Recoil(EntityUid? user, Vector2 recoil, float recoilScalar)
     {
         if (!Timing.IsFirstTimePredicted || user == null || recoil == Vector2.Zero || recoilScalar == 0)
             return;
@@ -406,6 +370,5 @@ public sealed partial class GunSystem : SharedGunSystem
         _animPlayer.Play((gunUid, uidPlayer), animTwo, "muzzle-flash-light");
     }
 
-    // TODO: Move RangedDamageSoundComponent to shared so this can be predicted.
-    public override void PlayImpactSound(EntityUid otherEntity, DamageSpecifier? modifiedDamage, SoundSpecifier? weaponSound, bool forceWeaponSound) {}
+    // Trauma - predicted PlayImpactSound
 }

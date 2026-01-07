@@ -1,41 +1,8 @@
-// SPDX-FileCopyrightText: 2022 Rane
-// SPDX-FileCopyrightText: 2022 Salex08
-// SPDX-FileCopyrightText: 2023 AJCM-git
-// SPDX-FileCopyrightText: 2023 Arendian
-// SPDX-FileCopyrightText: 2023 Errant
-// SPDX-FileCopyrightText: 2023 Kara
-// SPDX-FileCopyrightText: 2023 Leon Friedrich
-// SPDX-FileCopyrightText: 2023 TaralGit
-// SPDX-FileCopyrightText: 2023 and_a
-// SPDX-FileCopyrightText: 2023 deltanedas
-// SPDX-FileCopyrightText: 2024 Dakamakat
-// SPDX-FileCopyrightText: 2024 DrSmugleaf
-// SPDX-FileCopyrightText: 2024 Ed
-// SPDX-FileCopyrightText: 2024 I.K
-// SPDX-FileCopyrightText: 2024 MilenVolf
-// SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
-// SPDX-FileCopyrightText: 2024 SlamBamActionman
-// SPDX-FileCopyrightText: 2024 TemporalOroboros
-// SPDX-FileCopyrightText: 2024 keronshb
-// SPDX-FileCopyrightText: 2024 metalgearsloth
-// SPDX-FileCopyrightText: 2024 nikthechampiongr
-// SPDX-FileCopyrightText: 2025 Gerkada
-// SPDX-FileCopyrightText: 2025 J
-// SPDX-FileCopyrightText: 2025 KOTOB
-// SPDX-FileCopyrightText: 2025 Kyle Tyo
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2025 Nemanja
-// SPDX-FileCopyrightText: 2025 Plykiya
-// SPDX-FileCopyrightText: 2025 Princess Cheeseballs
-// SPDX-FileCopyrightText: 2025 TGRCDev
-// SPDX-FileCopyrightText: 2025 Tayrtahn
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
-// SPDX-FileCopyrightText: 2025 nabegator220
-// SPDX-FileCopyrightText: 2025 slarticodefast
-// SPDX-FileCopyrightText: 2025 sleepyyapril
-//
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
+// <Trauma>
+using Content.Shared.Mech.Components;
+using Content.Shared.Weapons.Hitscan.Events;
+using Content.Shared._Trauma.Projectiles;
+// </Trauma>
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Content.Shared.ActionBlocker;
@@ -83,7 +50,7 @@ public abstract partial class SharedGunSystem : EntitySystem
     [Dependency] protected readonly IMapManager MapManager = default!;
     [Dependency] private readonly INetManager _netManager = default!;
     [Dependency] protected readonly IPrototypeManager ProtoManager = default!;
-    [Dependency] protected readonly IRobustRandom Random = default!;
+    //[Dependency] protected readonly IRobustRandom Random = default!; // Trauma - predicted Random(uid) used instead
     [Dependency] protected readonly ISharedAdminLogManager Logs = default!;
     [Dependency] protected readonly DamageableSystem Damageable = default!;
     [Dependency] protected readonly ExamineSystemShared Examine = default!;
@@ -495,7 +462,10 @@ public abstract partial class SharedGunSystem : EntitySystem
         Shoot(gunUid, gun, new List<(EntityUid? Entity, IShootable Shootable)>(1) { (ammo, shootable) }, fromCoordinates, toCoordinates, out userImpulse, user, throwItems);
     }
 
-    public abstract void Shoot(
+    /// <summary>
+    /// Trauma - moved server version here and predicted it
+    /// </summary>
+    public void Shoot(
         EntityUid gunUid,
         GunComponent gun,
         List<(EntityUid? Entity, IShootable Shootable)> ammo,
@@ -503,7 +473,157 @@ public abstract partial class SharedGunSystem : EntitySystem
         EntityCoordinates toCoordinates,
         out bool userImpulse,
         EntityUid? user = null,
-        bool throwItems = false);
+        bool throwItems = false)
+    {
+        userImpulse = false;
+
+        if (user != null)
+        {
+            var selfEvent = new SelfBeforeGunShotEvent(user.Value, (gunUid, gun), ammo);
+            RaiseLocalEvent(user.Value, selfEvent);
+            if (selfEvent.Cancelled)
+                return;
+        }
+
+        var fromMap = TransformSystem.ToMapCoordinates(fromCoordinates);
+        var toMap = TransformSystem.ToMapCoordinates(toCoordinates).Position;
+        var mapDirection = toMap - fromMap.Position;
+        // <Trauma> - prevent shooting with 0,0 direction
+        if (mapDirection == Vector2.Zero)
+            return;
+        // </Trauma>
+        var mapAngle = mapDirection.ToAngle();
+        var angle = GetRecoilAngle(Timing.CurTime, (gunUid, gun), mapDirection.ToAngle(), user); // Trauma - pass gunUid and user
+
+        userImpulse = true;
+
+        // If applicable, this ensures the projectile is parented to grid on spawn, instead of the map.
+        var fromEnt = MapManager.TryFindGridAt(fromMap, out var gridUid, out _)
+            ? TransformSystem.WithEntityId(fromCoordinates, gridUid)
+            : new EntityCoordinates(_map.GetMapOrInvalid(fromMap.MapId), fromMap.Position);
+
+        var toMapBeforeRecoil = toMap; // Goobstation
+
+        // Update shot based on the recoil
+        toMap = fromMap.Position + angle.ToVec() * mapDirection.Length();
+        mapDirection = toMap - fromMap.Position;
+        var gunVelocity = Physics.GetMapLinearVelocity(fromEnt);
+
+        // I must be high because this was getting tripped even when true.
+        // DebugTools.Assert(direction != Vector2.Zero);
+        var shotProjectiles = new List<EntityUid>(ammo.Count);
+
+        foreach (var (ent, shootable) in ammo)
+        {
+            // pneumatic cannon doesn't shoot bullets it just throws them, ignore ammo handling
+            if (throwItems && ent != null)
+            {
+                ShootOrThrow(ent.Value, mapDirection, gunVelocity, gun, gunUid, user);
+                shotProjectiles.Add(ent.Value); // Goobstation
+                continue;
+            }
+
+            // TODO: Clean this up in a gun refactor at some point - too much copy pasting
+            switch (shootable)
+            {
+                // Cartridge shoots something else
+                case CartridgeAmmoComponent cartridge:
+                    if (!cartridge.Spent)
+                    {
+                        var uid = PredictedSpawnAtPosition(cartridge.Prototype, fromEnt);
+                        CreateAndFireProjectiles(uid, cartridge);
+
+                        RaiseLocalEvent(ent!.Value, new AmmoShotEvent()
+                        {
+                            FiredProjectiles = shotProjectiles,
+                        });
+
+                        SetCartridgeSpent(ent.Value, cartridge, true);
+
+                        if (cartridge.DeleteOnSpawn)
+                            PredictedDel(ent.Value);
+                    }
+                    else
+                    {
+                        userImpulse = false;
+                        Audio.PlayPredicted(gun.SoundEmpty, gunUid, user);
+                    }
+
+                    // Something like ballistic might want to leave it in the container still
+                    if (!cartridge.DeleteOnSpawn && !Containers.IsEntityInContainer(ent!.Value))
+                        EjectCartridge(Random(gunUid), ent.Value, angle);
+
+                    Dirty(ent!.Value, cartridge);
+                    break;
+                // Ammo shoots itself
+                case AmmoComponent newAmmo:
+                    if (ent == null)
+                        break;
+                    CreateAndFireProjectiles(ent.Value, newAmmo);
+
+                    break;
+                case HitscanAmmoComponent:
+                    if (ent == null)
+                        break;
+
+                    var hitscanEv = new HitscanTraceEvent
+                    {
+                        FromCoordinates = fromCoordinates,
+                        ShotDirection = mapDirection.Normalized(),
+                        Gun = gunUid,
+                        Shooter = user,
+                        Target = gun.Target,
+                    };
+                    RaiseLocalEvent(ent.Value, ref hitscanEv);
+                    PredictedDel(ent);
+
+                    Audio.PlayPredicted(gun.SoundGunshotModified, gunUid, user);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            // <Trauma>
+            if (userImpulse)
+                Recoil(user, mapDirection, gun.CameraRecoilScalarModified);
+            // </Trauma>
+        }
+
+        RaiseLocalEvent(gunUid, new AmmoShotEvent()
+        {
+            FiredProjectiles = shotProjectiles,
+        });
+
+        void CreateAndFireProjectiles(EntityUid ammoEnt, AmmoComponent ammoComp)
+        {
+            if (TryComp<ProjectileSpreadComponent>(ammoEnt, out var ammoSpreadComp))
+            {
+                var spreadEvent = new GunGetAmmoSpreadEvent(ammoSpreadComp.Spread);
+                RaiseLocalEvent(gunUid, ref spreadEvent);
+
+                var angles = LinearSpread(mapAngle - spreadEvent.Spread / 2,
+                    mapAngle + spreadEvent.Spread / 2, ammoSpreadComp.Count);
+
+                ShootOrThrow(ammoEnt, angles[0].ToVec(), gunVelocity, gun, gunUid, user);
+                shotProjectiles.Add(ammoEnt);
+
+                for (var i = 1; i < ammoSpreadComp.Count; i++)
+                {
+                    var newuid = PredictedSpawnAtPosition(ammoSpreadComp.Proto, fromEnt);
+                    ShootOrThrow(newuid, angles[i].ToVec(), gunVelocity, gun, gunUid, user);
+                    shotProjectiles.Add(newuid);
+                }
+            }
+            else
+            {
+                ShootOrThrow(ammoEnt, mapDirection, gunVelocity, gun, gunUid, user);
+                shotProjectiles.Add(ammoEnt);
+            }
+
+            MuzzleFlash(gunUid, ammoComp, mapDirection.ToAngle(), user);
+            Audio.PlayPredicted(gun.SoundGunshotModified, gunUid, user);
+        }
+    }
 
     public void ShootProjectile(EntityUid uid, Vector2 direction, Vector2 gunVelocity, EntityUid? gunUid, EntityUid? user = null, float speed = ProjectileSpeed)
     {
@@ -521,7 +641,16 @@ public abstract partial class SharedGunSystem : EntitySystem
         if (shooter != null)
             Projectiles.SetShooter(uid, projectile, shooter.Value);
 
+        Physics.UpdateIsPredicted(uid, physics); // Trauma - predict this shit
+
         TransformSystem.SetWorldRotation(uid, direction.ToWorldAngle() + projectile.Angle);
+
+        if (user is {} userUid)
+        {
+            var ev = new PlayerShotProjectileEvent(uid, userUid);
+            RaiseLocalEvent(ref ev);
+        }
+        // </Trauma>
     }
 
     protected abstract void Popup(string message, EntityUid? uid, EntityUid? user);
@@ -552,18 +681,21 @@ public abstract partial class SharedGunSystem : EntitySystem
     /// Drops a single cartridge / shell
     /// </summary>
     protected void EjectCartridge(
+        System.Random rand, // Trauma - predicted random instance for the gun
         EntityUid entity,
         Angle? angle = null,
         bool playSound = true)
     {
         // TODO: Sound limit version.
-        var offsetPos = Random.NextVector2(EjectOffset);
+        // <Trauma> - use random from params
+        var offsetPos = rand.NextAngle().RotateVec(new Vector2(rand.NextFloat(0, EjectOffset), 0));
         var xform = Transform(entity);
 
         var coordinates = xform.Coordinates;
         coordinates = coordinates.Offset(offsetPos);
 
-        TransformSystem.SetLocalRotation(entity, Random.NextAngle(), xform);
+        TransformSystem.SetLocalRotation(entity, rand.NextAngle(), xform);
+        // </Trauma>
         TransformSystem.SetCoordinates(entity, xform, coordinates);
 
         // decides direction the casing ejects and only when not cycling
@@ -701,7 +833,39 @@ public abstract partial class SharedGunSystem : EntitySystem
 
     protected abstract void CreateEffect(EntityUid gunUid, MuzzleFlashEvent message, EntityUid? user = null);
 
-    public abstract void PlayImpactSound(EntityUid otherEntity, DamageSpecifier? modifiedDamage, SoundSpecifier? weaponSound, bool forceWeaponSound);
+    /// <summary>
+    /// Trauma - made concrete, only played by client.
+    /// All callers are predicted so anyone in PVS range would already play it locally anyway.
+    /// </summary>
+    public void PlayImpactSound(EntityUid otherEntity, DamageSpecifier? modifiedDamage, SoundSpecifier? weaponSound, bool forceWeaponSound)
+    {
+        if (_netManager.IsServer)
+            return;
+
+        DebugTools.Assert(!Deleted(otherEntity), "Impact sound entity was deleted");
+
+        // Like projectiles and melee,
+        // 1. Entity specific sound
+        // 2. Ammo's sound
+        // 3. Nothing
+        if (!forceWeaponSound && modifiedDamage != null && modifiedDamage.GetTotal() > 0 && TryComp<RangedDamageSoundComponent>(otherEntity, out var rangedSound))
+        {
+            var type = SharedMeleeWeaponSystem.GetHighestDamageSound(modifiedDamage, ProtoManager);
+
+            if (type != null && rangedSound.SoundTypes?.TryGetValue(type, out var damageSoundType) == true)
+            {
+                Audio.PlayLocal(damageSoundType, otherEntity, null, AudioParams.Default.WithVariation(MeleeSoundSystem.DamagePitchVariation));
+                return;
+            }
+            if (type != null && rangedSound.SoundGroups?.TryGetValue(type, out var damageSoundGroup) == true)
+            {
+                Audio.PlayLocal(damageSoundGroup, otherEntity, null, AudioParams.Default.WithVariation(MeleeSoundSystem.DamagePitchVariation));
+                return;
+            }
+        }
+
+        Audio.PlayLocal(weaponSound, otherEntity, null);
+    }
 
     /// <summary>
     /// Used for animated effects on the client.

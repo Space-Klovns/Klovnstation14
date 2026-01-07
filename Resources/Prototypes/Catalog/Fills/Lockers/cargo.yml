@@ -16,7 +16,8 @@
 # SPDX-FileCopyrightText: 2024 Nemanja
 # SPDX-FileCopyrightText: 2024 lzk
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2026 FrauzJ
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
 #
 # SPDX-License-Identifier: MIT
 
@@ -44,7 +45,8 @@
       rolls: !type:ConstantNumberSelector
         value: 3
     - id: WeaponPlasmaCutter # KS14
-    - id: MineralScanner # KS1
+    - id: MineralScanner # KS14
+    - id: ClothingOuterExplorerSuit # KS14
 
 - type: entity
   id: LockerSalvageSpecialistFilledHardsuit

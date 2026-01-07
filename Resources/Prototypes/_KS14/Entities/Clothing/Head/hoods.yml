@@ -1,3 +1,4 @@
+# SPDX-FileCopyrightText: 2025 FrauzJ
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
 #
@@ -28,3 +29,25 @@
     - Snout
     - HeadTop
     - HeadSide
+
+
+- type: entity
+  parent: ClothingHeadHatHoodWinterBase
+  id: ClothingHeadHatHoodExplorerSuit
+  categories: [ HideSpawnMenu ]
+  name: explorer hood
+  components:
+  - type: Sprite
+    sprite: _KS14/Clothing/Head/Hoods/explorerhood.rsi
+  - type: Clothing
+    sprite: _KS14/Clothing/Head/Hoods/explorerhood.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.90
+        Slash: 0.85
+        Piercing: 0.90
+        Heat: 0.90
+
+
+

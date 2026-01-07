@@ -1,3 +1,35 @@
+// SPDX-FileCopyrightText: 2020 Víctor Aguilera Puerto
+// SPDX-FileCopyrightText: 2020 a.rudenko
+// SPDX-FileCopyrightText: 2021 Acruid
+// SPDX-FileCopyrightText: 2021 Vera Aguilera Puerto
+// SPDX-FileCopyrightText: 2022 Kognise
+// SPDX-FileCopyrightText: 2022 Rane
+// SPDX-FileCopyrightText: 2022 corentt
+// SPDX-FileCopyrightText: 2022 mirrorcult
+// SPDX-FileCopyrightText: 2022 theashtronaut
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Errant
+// SPDX-FileCopyrightText: 2023 Ilya246
+// SPDX-FileCopyrightText: 2023 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2023 Slava0135
+// SPDX-FileCopyrightText: 2023 Vyacheslav Kovalevsky
+// SPDX-FileCopyrightText: 2023 keronshb
+// SPDX-FileCopyrightText: 2023 tgrkzus
+// SPDX-FileCopyrightText: 2023 themias
+// SPDX-FileCopyrightText: 2024 Ed
+// SPDX-FileCopyrightText: 2024 Jake Huxell
+// SPDX-FileCopyrightText: 2024 Kara
+// SPDX-FileCopyrightText: 2024 Leon Friedrich
+// SPDX-FileCopyrightText: 2024 Mervill
+// SPDX-FileCopyrightText: 2024 Plykiya
+// SPDX-FileCopyrightText: 2024 TurboTracker
+// SPDX-FileCopyrightText: 2025 metalgearsloth
+// SPDX-FileCopyrightText: 2025 slarticodefast
+// SPDX-FileCopyrightText: 2026 deltanedas
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 using Content.Server.Explosion.EntitySystems;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
@@ -116,7 +148,8 @@ namespace Content.Server.Atmos.EntitySystems
             }
             var strength = removed.TotalMoles * MathF.Sqrt(removed.Temperature);
             var dir = _random.NextAngle().ToWorldVec();
-            _throwing.TryThrow(gasTank, dir * strength, strength);
+            _throwing.TryThrow(gasTank, dir * strength, strength,
+                predicted: false); // Trauma
             if (gasTank.Comp.OutputPressure >= MinimumSoundValvePressure)
                 _audioSys.PlayPvs(gasTank.Comp.RuptureSound, gasTank);
         }

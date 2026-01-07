@@ -11,11 +11,14 @@
 // SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2025 SlamBamActionman
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
+// SPDX-FileCopyrightText: 2026 deltanedas
 //
 // SPDX-License-Identifier: MIT
 
 using Content.Shared.Body.Components;
 using Content.Shared.Database;
+using Content.Shared.Destructible;
+using Content.Shared.Destructible.Thresholds.Behaviors;
 using JetBrains.Annotations;
 
 namespace Content.Server.Destructible.Thresholds.Behaviors
@@ -28,7 +31,7 @@ namespace Content.Server.Destructible.Thresholds.Behaviors
 
         public LogImpact Impact => LogImpact.Extreme;
 
-        public void Execute(EntityUid owner, DestructibleSystem system, EntityUid? cause = null)
+        public void Execute(EntityUid owner, SharedDestructibleSystem system, EntityUid? cause = null)
         {
             if (system.EntityManager.TryGetComponent(owner, out BodyComponent? body))
             {

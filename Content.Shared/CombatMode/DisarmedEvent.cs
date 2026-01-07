@@ -30,4 +30,15 @@ public record struct DisarmedEvent(EntityUid Target, EntityUid Source, float Pus
     public bool IsStunned;
 
     public bool Handled;
+
+    /// <summary>
+    ///     Probability to disarm in addition to shoving.
+    /// </summary>
+    public float DisarmProbability { get; init; } = 0.2f;
+
+    /// <summary>
+    ///     Whether the entity was successfully stunned from a shove.
+    /// </summary>
+    public bool WasDisarmed { get; set; }
+
 }

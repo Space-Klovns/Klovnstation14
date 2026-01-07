@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2023 AJCM-git
 // SPDX-FileCopyrightText: 2023 DrSmugleaf
 // SPDX-FileCopyrightText: 2023 metalgearsloth
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
 //
 // SPDX-License-Identifier: MIT
 
@@ -22,9 +22,9 @@ public sealed partial class GatheringProjectileComponent : Component
 
     // KS14
     /// <summary>
-    ///     Is this entity deleted immediately upon hitting
+    ///     Is this entity deleted immediately upon making contact with
     ///         something that can't be gathered?
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite), DataField]
-    public bool DeleteOnHittingUngatherable = false;
+    public bool DeleteOnUngatherable = true;
 }

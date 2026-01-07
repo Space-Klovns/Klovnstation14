@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: 2026 DeusMaldPr
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: loadoutEffectGroup
+  id: MasterRaider
+  effects:
+  - !type:JobRequirementLoadoutEffect
+    requirement:
+      !type:RoleTimeRequirement
+      role: JobPassenger
+      time: 72000 #20 hrs, maybe (IDEALLY) raise later if we have Real klovn pop
+
+- type: loadout
+  id: ClothingNeckRaiderPin
+  storage:
+    back:
+    - ClothingNeckRaiderPin
+  effects:
+  - !type:GroupLoadoutEffect
+    proto: MasterRaider

@@ -16,6 +16,9 @@
 # SPDX-FileCopyrightText: 2024 deltanedas
 # SPDX-FileCopyrightText: 2025 Damn Feds
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 rottenheadphones
+# SPDX-FileCopyrightText: 2026 FrauzJ
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
 #
 # SPDX-License-Identifier: MIT
 
@@ -28,7 +31,7 @@
   # KS14: bring saltern back; no longer fallback
   stations:
     Saltern:
-      stationProto: StandardNanotrasenStation
+      stationProto: StandardNanotrasenStation # CERTIFIED KS14 COMMENT: this SHOULD use ATSlessNanotrasenStation but this needs ruins to generate on planetmap first.
       components:
         - type: StationNameSetup
           mapNameTemplate: '{0} Saltern {1}'
@@ -71,7 +74,7 @@
             SecurityOfficer: [ 4, 4 ]
             SecurityCadet: [ 4, 4 ] #intern, not counted
             #supply (3 - 5)
-            SalvageSpecialist: [ 1, 3 ]
+            SalvageSpecialist: [ 3, 3 ]
             CargoTechnician: [ 2, 2 ]
             #civilian (3+)
             Passenger: [ -1, -1 ] #infinite, not counted

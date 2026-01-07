@@ -1,5 +1,5 @@
-# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
 #
 # SPDX-License-Identifier: MPL-2.0
 
@@ -15,3 +15,12 @@
     openTimeOne: 0.21
     openTimeTwo: 0.3
     pryTime: 1
+
+- type: entity
+  parent: AirlockLabs
+  id: AirlockLabsUnpryable
+  suffix: Labs, Unpryable
+  description: It seems to be effectively unpryable.
+  components:
+  - type: Door
+    canPry: false

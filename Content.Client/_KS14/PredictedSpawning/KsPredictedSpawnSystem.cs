@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 using Content.Shared._KS14.PredictedSpawning;
+using Robust.Client.Physics;
 
 namespace Content.Client._KS14.PredictedSpawning;
 
@@ -14,14 +15,11 @@ public sealed class KsPredictedSpawnSystem : KsSharedPredictedSpawnSystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<PredictedSpawnComponent, ComponentAdd>(OnPredictedSpawnEntityReconciled);
+        SubscribeLocalEvent<KsPredictedSpawnComponent, UpdateIsPredictedEvent>(OnPredictedSpawnCheckPhysicsPrediction);
     }
 
-    private void OnPredictedSpawnEntityReconciled(Entity<PredictedSpawnComponent> entity, ref ComponentAdd args)
+    private void OnPredictedSpawnCheckPhysicsPrediction(Entity<KsPredictedSpawnComponent> entity, ref UpdateIsPredictedEvent args)
     {
-        QueueDel(entity);
+        args.IsPredicted = true;
     }
-
-    protected override EntityUid FlagPredictedAndReturn(EntityUid uid)
-        => uid;
 }

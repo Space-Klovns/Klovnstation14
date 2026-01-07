@@ -6,7 +6,7 @@
 // SPDX-FileCopyrightText: 2024 nikthechampiongr
 // SPDX-FileCopyrightText: 2025 Gerkada
 // SPDX-FileCopyrightText: 2025 J
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 JesterX666
 // SPDX-FileCopyrightText: 2025 Nemanja
 // SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
 // SPDX-FileCopyrightText: 2025 Tayrtahn
@@ -15,6 +15,8 @@
 // SPDX-FileCopyrightText: 2025 metalgearsloth
 // SPDX-FileCopyrightText: 2025 nabegator220
 // SPDX-FileCopyrightText: 2025 slarticodefast
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
 //
 // SPDX-License-Identifier: MIT
 
@@ -153,6 +155,14 @@ public sealed class RCDSystem : EntitySystem
     {
         if (args.Handled || !args.CanReach)
             return;
+
+        // KS14 Start
+        var attemptRcdEvent = new AttemptUseRcdEvent(uid, args.User, false);
+        RaiseLocalEvent(ref attemptRcdEvent);
+
+        if (attemptRcdEvent.Cancelled)
+            return;
+        // KS14 End
 
         var user = args.User;
         var location = args.ClickLocation;

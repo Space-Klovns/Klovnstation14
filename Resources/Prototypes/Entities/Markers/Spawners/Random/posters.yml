@@ -1,3 +1,24 @@
+# SPDX-FileCopyrightText: 2021 AJCM-git
+# SPDX-FileCopyrightText: 2022 EmoGarbage404
+# SPDX-FileCopyrightText: 2022 Morbo
+# SPDX-FileCopyrightText: 2022 Nemanja
+# SPDX-FileCopyrightText: 2022 Peptide90
+# SPDX-FileCopyrightText: 2022 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2022 brainfood1183
+# SPDX-FileCopyrightText: 2023 Emisse
+# SPDX-FileCopyrightText: 2024 ScarKy0
+# SPDX-FileCopyrightText: 2024 hiucko
+# SPDX-FileCopyrightText: 2025 Hannah Giovanna Dawson
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 SlamBamActionman
+# SPDX-FileCopyrightText: 2025 Spessmann
+# SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2025 temm1ie
+# SPDX-FileCopyrightText: 2026 DeusMaldPr
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: entity
   parent: MarkerBase
   id: RandomPosterAny
@@ -95,6 +116,7 @@
       - PosterContrabandExoAcid
       - PosterContrabandExoRun
       - PosterContrabandExoChomp
+      - PosterContrabandKlovnRedFOSS #KS14
     chance: 1
 
 - type: entity
@@ -161,5 +183,6 @@
       - PosterLegitOppenhopper
       - PosterLegitTyrone
       - PosterLegitHelio
+      - PosterLegitKlovnXFixit #KS14
       - PosterLegitBotanyFear
     chance: 1
