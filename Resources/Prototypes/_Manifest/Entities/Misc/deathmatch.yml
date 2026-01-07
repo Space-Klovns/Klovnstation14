@@ -49,6 +49,33 @@
   - type: Clickable
 
 - type: entity
+  parent: BaseDeathmatchBarrier
+  id: HolosignForcefieldInorganic
+  name: inorganic force field
+  description: Does not let gases nor living-or-dead things through. Blocks lasers.
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Sprite
+    sprite: Structures/Holo/field.rsi
+    layers:
+    - state: icon
+      color: '#FFFFFFCC' # fully white, 50% alpha
+      shader: Noir
+  - type: Clickable
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        layer:
+        # - MobImpassable # KS14
+        - HumanoidBlockLayer
+        - InteractImpassable
+        - Opaque 
+
+- type: entity
   parent: HolosignForcefieldDeathmatch
   id: HolosignMetaphysicalForcefieldDeathmatch
   name: metaphysical force field

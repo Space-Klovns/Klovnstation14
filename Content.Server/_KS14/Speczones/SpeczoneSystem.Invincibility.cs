@@ -34,6 +34,9 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
             if (_rcdDeconstructableQuery.TryGetComponent(uid, out var rcdDeconstructableComponent))
                 RemComp(uid, rcdDeconstructableComponent);
 
+            if (_anchorableQuery.TryGetComponent(uid, out var anchorableComponent))
+                RemComp(uid, anchorableComponent);
+
             if (_doorQuery.HasComponent(uid) &&
                 TryComp<WiresPanelComponent>(uid, out var wirePanelComponent))
                 RemComp(uid, wirePanelComponent);

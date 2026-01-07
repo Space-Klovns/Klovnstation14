@@ -6,11 +6,11 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Content.Server.GameTicking;
 using Content.Server.GameTicking.Events;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Speczones;
+using Content.Shared.Construction.Components;
 using Content.Shared.Doors.Components;
 using Content.Shared.GameTicking;
 using Content.Shared.Random.Helpers;
@@ -41,6 +41,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
 
     private EntityQuery<SpeczoneComponent> _speczoneQuery;
     private EntityQuery<RCDDeconstructableComponent> _rcdDeconstructableQuery;
+    private EntityQuery<AnchorableComponent> _anchorableQuery;
     private EntityQuery<DoorComponent> _doorQuery;
 
     /// <summary>
@@ -66,6 +67,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
 
         _speczoneQuery = GetEntityQuery<SpeczoneComponent>();
         _rcdDeconstructableQuery = GetEntityQuery<RCDDeconstructableComponent>();
+        _anchorableQuery = GetEntityQuery<AnchorableComponent>();
         _doorQuery = GetEntityQuery<DoorComponent>();
 
         _configurationManager.OnValueChanged(KsCCVars.SpeczonesEnabled, x => _loadSpeczones = x, invokeImmediately: true);
