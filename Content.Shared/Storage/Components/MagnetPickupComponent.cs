@@ -1,3 +1,15 @@
+// SPDX-FileCopyrightText: 2023 Stray-Pyramid
+// SPDX-FileCopyrightText: 2023 metalgearsloth
+// SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2025 DrSmugleaf
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 kosticia
+// SPDX-FileCopyrightText: 2025 nabegator220
+// SPDX-FileCopyrightText: 2026 FrauzJ
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Shared.Inventory;
 using Robust.Shared.GameStates;
 
@@ -20,7 +32,7 @@ public sealed partial class MagnetPickupComponent : Component
     /// What container slot the magnet needs to be in to work.
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite), DataField("slotFlags")]
-    public SlotFlags SlotFlags = SlotFlags.BELT;
+    public SlotFlags SlotFlags = SlotFlags.BELT| SlotFlags.POCKET;
 
     [ViewVariables(VVAccess.ReadWrite), DataField("range")]
     public float Range = 1f;

@@ -6,6 +6,7 @@
 # SPDX-FileCopyrightText: 2023 metalgearsloth
 # SPDX-FileCopyrightText: 2025 ArtisticRoomba
 # SPDX-FileCopyrightText: 2025 Nox
+# SPDX-FileCopyrightText: 2026 FrauZj
 # SPDX-FileCopyrightText: 2026 FrauzJ
 # SPDX-FileCopyrightText: 2026 github_actions[bot]
 #
@@ -31,7 +32,7 @@
   - type: Storage
     maxItemSize: Normal
     grid:
-    - 0,0,1,2
+    - 0,0,9,3
     quickInsert: true
     areaInsert: true
     whitelist:
@@ -49,3 +50,4 @@
     - type: Storage
       grid:
       - 0,0,9,5
+
