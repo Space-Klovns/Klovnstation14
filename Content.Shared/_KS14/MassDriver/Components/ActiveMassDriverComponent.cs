@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gerkada
+//
+// SPDX-License-Identifier: MIT
+
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 

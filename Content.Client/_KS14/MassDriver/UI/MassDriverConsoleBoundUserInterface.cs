@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Gerkada
+//
+// SPDX-License-Identifier: MIT
+
 using Content.Shared._KS14.MassDriver;
 using JetBrains.Annotations;
 using Robust.Client.UserInterface;

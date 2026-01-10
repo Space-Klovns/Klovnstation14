@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Gerkada
+#
+# SPDX-License-Identifier: MIT
+
 - type: wireLayout
   id: MassDriver
   dummyWires: 3
