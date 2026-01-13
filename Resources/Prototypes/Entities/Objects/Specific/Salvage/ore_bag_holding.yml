@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2023 Stanislav4ix
+# SPDX-FileCopyrightText: 2026 FrauzJ
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: entity
   name: ore bag of holding
   id: OreBagOfHolding
