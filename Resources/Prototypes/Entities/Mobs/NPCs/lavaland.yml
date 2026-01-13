@@ -45,11 +45,11 @@
       50: Dead
   - type: Butcherable
     spawned:
-    - id: DiamondOre1
-      amount: 1
+    - id: MaterialDiamond
+      amount: 2
   - type: MovementSpeedModifier
-    baseWalkSpeed: 5
-    baseSprintSpeed: 7
+    baseWalkSpeed: 1
+    baseSprintSpeed: 3
   - type: BatteryAmmoProvider
     proto: WatcherBolt
     fireCost: 50
