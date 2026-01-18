@@ -5,7 +5,6 @@ using Content.Shared.Body.Systems;
 using Content.Server.Stack;
 using Content.Server.Stunnable;
 using Content.Shared.ActionBlocker;
-using Content.Shared.Body.Part;
 using Content.Shared.CombatMode;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Explosion;
@@ -43,7 +42,11 @@ namespace Content.Server.Hands.Systems
         {
             base.Initialize();
 
+<<<<<<< HEAD
             // Trauma - moved OnDisarmed to PredictedHandsSystem
+=======
+            SubscribeLocalEvent<HandsComponent, DisarmedEvent>(OnDisarmed, before: new[] {typeof(StunSystem), typeof(SharedStaminaSystem)});
+>>>>>>> upstream/master
 
             SubscribeLocalEvent<HandsComponent, ComponentGetState>(GetComponentState);
 
@@ -74,6 +77,7 @@ namespace Content.Server.Hands.Systems
             }
         }
 
+<<<<<<< HEAD
         private void HandleBodyPartAdded(Entity<HandsComponent> ent, ref BodyPartAddedEvent args)
         {
             if (args.Part.Comp.PartType != BodyPartType.Hand)
@@ -98,6 +102,24 @@ namespace Content.Server.Hands.Systems
                 return;
 
             RemoveHand(uid, args.Slot);
+=======
+        private void OnDisarmed(EntityUid uid, HandsComponent component, ref DisarmedEvent args)
+        {
+            if (args.Handled)
+                return;
+
+            // Break any pulls
+            if (TryComp(uid, out PullerComponent? puller) && TryComp(puller.Pulling, out PullableComponent? pullable))
+                _pullingSystem.TryStopPull(puller.Pulling.Value, pullable);
+
+            var offsetRandomCoordinates = _transformSystem.GetMoverCoordinates(args.Target).Offset(_random.NextVector2(1f, 1.5f));
+            if (!ThrowHeldItem(args.Target, offsetRandomCoordinates))
+                return;
+
+            args.PopupPrefix = "disarm-action-";
+
+            args.Handled = true; // no shove/stun.
+>>>>>>> upstream/master
         }
 
         #region interactions

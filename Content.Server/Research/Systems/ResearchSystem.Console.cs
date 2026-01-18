@@ -126,10 +126,24 @@ public sealed partial class ResearchSystem
         if (!Resolve(uid, ref component, ref clientComponent, false))
             return;
 
+<<<<<<< HEAD
         // Goobstation: R&D Console Rework Start
         var allTechs = PrototypeManager.EnumeratePrototypes<TechnologyPrototype>();
         Dictionary<string, ResearchAvailability> techList;
         var points = 0;
+=======
+        ResearchConsoleBoundInterfaceState state;
+
+        if (TryGetClientServer(uid, out _, out var serverComponent, clientComponent))
+        {
+            var points = clientComponent.ConnectedToServer ? serverComponent.Points : 0;
+            state = new ResearchConsoleBoundInterfaceState(points);
+        }
+        else
+        {
+            state = new ResearchConsoleBoundInterfaceState(default);
+        }
+>>>>>>> upstream/master
 
         if (TryGetClientServer(uid, out var serverUid, out var server, clientComponent) &&
             TryComp<TechnologyDatabaseComponent>(serverUid, out var db))
@@ -197,6 +211,7 @@ public sealed partial class ResearchSystem
 
         args.Handled = true;
     }
+<<<<<<< HEAD
 
     private bool UnlockTechnology(EntityUid uid, string techId, EntityUid actor)
     {
@@ -222,4 +237,6 @@ public sealed partial class ResearchSystem
 
         return true;
     }
+=======
+>>>>>>> upstream/master
 }

@@ -172,4 +172,18 @@ public sealed partial class ResearchSystem
         return true;
     }
 
+<<<<<<< HEAD
+=======
+    private void OnDatabaseRegistrationChanged(EntityUid uid, TechnologyDatabaseComponent component, ref ResearchRegistrationChangedEvent args)
+    {
+        if (args.Server != null)
+            return;
+        component.MainDiscipline = null;
+        component.CurrentTechnologyCards = new List<string>();
+        component.SupportedDisciplines = new List<ProtoId<TechDisciplinePrototype>>();
+        component.UnlockedTechnologies = new List<ProtoId<TechnologyPrototype>>();
+        component.UnlockedRecipes = new List<ProtoId<LatheRecipePrototype>>();
+        Dirty(uid, component);
+    }
+>>>>>>> upstream/master
 }

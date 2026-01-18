@@ -4,7 +4,23 @@
   Nanotrasen employs humans, dwarves and vox. <!-- KLOVN -->
 
   <Box>
+<<<<<<< HEAD
     <GuideEntityEmbed Entity="MobHuman" Caption="Human"/>
+=======
+  <GuideEntityEmbed Entity="AppearanceArachnid" Caption="Arachnid"/>
+  <GuideEntityEmbed Entity="AppearanceDiona" Caption="Diona"/>
+  <GuideEntityEmbed Entity="AppearanceDwarf" Caption="Dwarf"/>
+  <GuideEntityEmbed Entity="AppearanceHuman" Caption="Human"/>
+  </Box>
+  <Box>
+  <GuideEntityEmbed Entity="AppearanceMoth" Caption="Moth Person"/>
+  <GuideEntityEmbed Entity="AppearanceReptilian" Caption="Reptilian"/>
+  <GuideEntityEmbed Entity="AppearanceSlimePerson" Caption="Slime Person"/>
+  <GuideEntityEmbed Entity="AppearanceVox" Caption="Vox"/>
+  </Box>
+  <Box>
+    <GuideEntityEmbed Entity="AppearanceVulpkanin" Caption="Vulpkanin"/>
+>>>>>>> upstream/master
   </Box>
 
   <Box>

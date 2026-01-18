@@ -36,8 +36,12 @@ public sealed class SurveillanceCameraSystem : SharedSurveillanceCameraSystem
     [Dependency] private readonly UserInterfaceSystem _userInterface = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
     [Dependency] private readonly IAdminLogManager _adminLogger = default!;
+<<<<<<< HEAD
 
     [Dependency] private readonly TransformSystem _transformSystem = default!; // Goobstation
+=======
+    [Dependency] private readonly SurveillanceCameraMapSystem _cameraMapSystem = default!;
+>>>>>>> upstream/master
 
     // Pings a surveillance camera subnet. All cameras will always respond
     // with a data message if they are on the same subnet.
@@ -99,7 +103,7 @@ public sealed class SurveillanceCameraSystem : SharedSurveillanceCameraSystem
             {
                 { DeviceNetworkConstants.Command, string.Empty },
                 { CameraAddressData, deviceNet.Address },
-                { CameraNameData, component.CameraId },
+                { CameraNameData, component.UseEntityNameAsCameraId ? MetaData(uid).EntityName : component.CameraId },
                 { CameraSubnetData, string.Empty }
             };
 
@@ -242,7 +246,8 @@ public sealed class SurveillanceCameraSystem : SharedSurveillanceCameraSystem
             }
         }
 
-        var state = new SurveillanceCameraSetupBoundUiState(camera.CameraId, deviceNet.ReceiveFrequency ?? 0,
+        var name = camera.UseEntityNameAsCameraId ? MetaData(uid).EntityName : camera.CameraId;
+        var state = new SurveillanceCameraSetupBoundUiState(name, deviceNet.ReceiveFrequency ?? 0,
             camera.AvailableNetworks, camera.NameSet, camera.NetworkSet);
         _userInterface.SetUiState(uid, SurveillanceCameraSetupUiKey.Camera, state);
     }
@@ -296,6 +301,8 @@ public sealed class SurveillanceCameraSystem : SharedSurveillanceCameraSystem
         }
 
         UpdateVisuals(camera, component);
+
+        _cameraMapSystem.UpdateCameraMarker((camera, component));
     }
 
     public void AddActiveViewer(EntityUid camera, EntityUid player, EntityUid? monitor = null, SurveillanceCameraComponent? component = null, ActorComponent? actor = null)

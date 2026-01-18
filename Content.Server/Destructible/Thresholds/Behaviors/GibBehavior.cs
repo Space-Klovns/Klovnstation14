@@ -33,10 +33,14 @@ namespace Content.Server.Destructible.Thresholds.Behaviors
 
         public void Execute(EntityUid owner, SharedDestructibleSystem system, EntityUid? cause = null)
         {
+<<<<<<< HEAD
             if (system.EntityManager.TryGetComponent(owner, out BodyComponent? body))
             {
                 system.BodySystem.GibBody(owner, _recursive, body, splatModifier: 8.5f);
             }
+=======
+            system.Gibbing.Gib(owner, _recursive);
+>>>>>>> upstream/master
         }
     }
 }

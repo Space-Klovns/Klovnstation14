@@ -95,7 +95,11 @@ public sealed partial class ResearchConsoleMenu : FancyWindow
         SyncTechnologyList(UnlockedCardsContainer, unlockedTech);
     }
 
+<<<<<<< HEAD
     public void UpdateInformationPanel(FancyResearchConsoleState state)
+=======
+    public void UpdateInformationPanel(ResearchConsoleBoundInterfaceState state)
+>>>>>>> upstream/master
     {
         var amountMsg = new FormattedMessage();
         amountMsg.AddMarkupOrThrow(Loc.GetString("research-console-menu-research-points-text",

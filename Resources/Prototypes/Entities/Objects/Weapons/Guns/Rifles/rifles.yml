@@ -337,6 +337,7 @@
     steps: 1
     zeroVisible: true
   - type: Appearance
+<<<<<<< HEAD
   # KS14 change, removed speed debuff for wielding Estoc
 - type: entity
   name: Foam Force Astro Ace
@@ -373,3 +374,5 @@
   - type: PacifismAllowedGun
   - type: StaticPrice
     price: 100
+=======
+>>>>>>> upstream/master

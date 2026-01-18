@@ -44,12 +44,20 @@ public sealed class SurveillanceCameraMonitorBoundUserInterface : BoundUserInter
         _window.CameraSwitchTimer += OnCameraSwitchTimer;
         _window.CameraDisconnect += OnCameraDisconnect;
 
+<<<<<<< HEAD
         _window.SetEntity(Owner); // Goobstation
+=======
+        var xform = EntMan.GetComponent<TransformComponent>(Owner);
+        var gridUid = xform.GridUid ?? xform.MapUid;
+
+        if (gridUid is not null)
+            _window?.SetMap(gridUid.Value);
+>>>>>>> upstream/master
     }
 
-    private void OnCameraSelected(string address)
+    private void OnCameraSelected(string address, string? subnet)
     {
-        SendMessage(new SurveillanceCameraMonitorSwitchMessage(address));
+        SendMessage(new SurveillanceCameraMonitorSwitchMessage(address, subnet));
     }
 
     private void OnCameraSwitchTimer()

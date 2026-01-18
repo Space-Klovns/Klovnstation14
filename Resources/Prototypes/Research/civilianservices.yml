@@ -170,11 +170,16 @@
   - FauxTileAstroSnow
   - FauxTileAstroAsteroidSand
   - FauxTileDesertAstroSand
+<<<<<<< HEAD
   # Goobstation R&D Console rework start
   position: 1,5
   technologyPrerequisites:
   - AudioVisualCommunication
   # Goobstation R&D Console rework end
+=======
+  - FauxTileAstroIronsand
+  - FauxTileAstroIronsandBorderless
+>>>>>>> upstream/master
 
 - type: technology
   id: BiochemicalStasis
@@ -206,7 +211,7 @@
   tier: 2
   cost: 5000
   recipeUnlocks:
-  - BorgModuleAdvancedChemical
+  - BorgModuleAdvancedTopical
   - AdvancedJetInjector
 # Goobstation R&D Console rework start
   position: -1, 4

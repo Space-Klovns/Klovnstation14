@@ -17,7 +17,7 @@
     time: 7200 #2 hrs, klovn
   setPreference: false
   startingGear: DeathSquadGear
-  icon: "JobIconNanotrasen"
+  icon: "JobIconDeathSquad"
   supervisors: job-supervisors-centcom
   canBeAntag: false
   accessGroups:

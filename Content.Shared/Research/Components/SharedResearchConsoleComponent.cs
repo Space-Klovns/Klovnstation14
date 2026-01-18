@@ -43,6 +43,7 @@ namespace Content.Shared._KS14.Research.Components
     public sealed class ResearchConsoleBoundInterfaceState : BoundUserInterfaceState
     {
         public int Points;
+<<<<<<< HEAD
 
         /// <summary>
         /// Goobstation field - all researches and their availablities
@@ -53,6 +54,11 @@ namespace Content.Shared._KS14.Research.Components
         {
             Points = points;
             Researches = researches; // Goobstation R&D console rework
+=======
+        public ResearchConsoleBoundInterfaceState(int points)
+        {
+            Points = points;
+>>>>>>> upstream/master
         }
     }
 }

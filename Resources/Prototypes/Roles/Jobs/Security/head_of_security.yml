@@ -52,10 +52,17 @@
   requirements:
     - !type:RoleTimeRequirement
       role: JobWarden
+<<<<<<< HEAD
       time: 1h #1 hr
 #    - !type:RoleTimeRequirement Klovn, meme role
 #      role: JobDetective
 #      time: 3600 #1 hr, knowing how to use the tools is important
+=======
+      time: 3h
+    - !type:RoleTimeRequirement
+      role: JobDetective
+      time: 1h # knowing how to use the tools is important
+>>>>>>> upstream/master
     - !type:RoleTimeRequirement
       role: JobSecurityOfficer
       time: 3h #3 hrs, klovn
