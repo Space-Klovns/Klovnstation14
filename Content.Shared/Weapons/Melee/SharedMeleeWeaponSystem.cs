@@ -842,10 +842,10 @@ public abstract class SharedMeleeWeaponSystem : EntitySystem
         }
 
 
-        if (MobState.IsIncapacitated(target.Value))
-        {
-            return false;
-        }
+        // if (MobState.IsIncapacitated(target.Value))
+        // {
+        //     return false;
+        // }
 
         if (!TryComp<CombatModeComponent>(user, out var combatMode) ||
             combatMode.CanDisarm != true)

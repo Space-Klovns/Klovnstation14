@@ -26,6 +26,15 @@ using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
+using Robust.Shared.Map;
+using Robust.Shared.Random;
+using Content.Shared.Interaction;
+using System.Numerics;
+using Robust.Shared.Utility;
+using static Content.Shared.Interaction.SharedInteractionSystem;
 
 namespace Content.Shared.Damage.Systems;
 
@@ -44,6 +53,10 @@ public abstract partial class SharedStaminaSystem : EntitySystem
     [Dependency] private readonly SharedColorFlashEffectSystem _color = default!;
     [Dependency] private readonly StatusEffectsSystem _status = default!;
     [Dependency] protected readonly SharedStunSystem StunSystem = default!;
+    [Dependency] private readonly IEntityManager _entityManager = default!;
+    [Dependency] private readonly SharedPhysicsSystem _broadphase = default!;
+    [Dependency] private readonly IRobustRandom _random = default!;
+    private SharedTransformSystem _sharedTransformSystem = default!;
 
     /// <summary>
     /// How much of a buffer is there between the stun duration and when stuns can be re-applied.
@@ -72,6 +85,7 @@ public abstract partial class SharedStaminaSystem : EntitySystem
 
         SubscribeLocalEvent<StaminaDamageOnHitComponent, MeleeHitEvent>(OnMeleeHit);
 
+        _sharedTransformSystem = _entityManager.System<SharedTransformSystem>();
         Subs.CVar(_config, CCVars.PlaytestStaminaDamageModifier, value => UniversalStaminaDamageModifier = value, true);
     }
 
@@ -136,18 +150,80 @@ public abstract partial class SharedStaminaSystem : EntitySystem
         if (args.Handled)
             return;
 
-        if (component.Critical)
-            return;
+        var target = args.Target;
+        var source = args.Source;
 
-        var damage = args.PushProbability * component.CritThreshold;
-        TakeStaminaDamage(uid, damage, component, source: args.Source);
+        var targetTransform = Transform(target);
+        var sourceTransform = Transform(source);
 
-        args.PopupPrefix = "disarm-action-shove-";
-        args.IsStunned = component.Critical;
+        var targetPos = _sharedTransformSystem.GetWorldPosition(targetTransform);
+        var sourcePos = _sharedTransformSystem.GetWorldPosition(sourceTransform);
 
+        var pushDir = targetPos - sourcePos;
+
+        if (pushDir.LengthSquared() > 0)
+        {
+            pushDir = pushDir.Normalized();
+        }
+
+        var wallCheckRay = new CollisionRay(targetPos, pushDir, component.CollisionMask);
+        var wallCheckLength = component.CheckDistance;
+
+        var mapCoordinates = _sharedTransformSystem.GetMapCoordinates(targetTransform);
+
+        var wallCheckResults = _broadphase.IntersectRay(
+            mapCoordinates.MapId,
+            wallCheckRay,
+            wallCheckLength,
+            target
+        );
+
+        bool hitWall = false;
+        EntityUid? hitEntity = null;
+        foreach (var hit in wallCheckResults)
+        {
+            if (hit.HitEntity != source)
+            {
+                hitWall = true;
+                hitEntity = hit.HitEntity;
+                break;
+            }
+        }
+
+        if (hitWall)
+        {
+
+            var fullPush = pushDir * component.MaxPushDistance;
+            if (TryComp<PhysicsComponent>(target, out var physics))
+            {
+                _broadphase.ApplyLinearImpulse(target, fullPush, body: physics);
+            }
+            if (!component.WallShoveCooldown || component.WallShoveCooldownEnd < Timing.CurTime)
+            {
+                StunSystem.TryKnockdown(target, TimeSpan.FromSeconds(2), refresh: true, false, true, true);
+                TakeStaminaDamage(target, 50f, component, source: source);
+
+                component.WallShoveCooldown = true;
+                component.WallShoveCooldownEnd = Timing.CurTime + TimeSpan.FromSeconds(5);
+
+                Dirty(uid, component);
+            }
+            args.IsStunned = component.Critical;
+            args.PopupPrefix = "disarm-action-shove-collision-";
+        }
+        else
+        {
+            var fullPush = pushDir * component.MinPushDistance;
+
+            if (TryComp<PhysicsComponent>(target, out var physics))
+            {
+                _broadphase.ApplyLinearImpulse(target, fullPush, body: physics);
+            }
+
+            args.PopupPrefix = "disarm-action-shove-";
+        }
         args.Handled = true;
     }
-
     private void OnMeleeHit(EntityUid uid, StaminaDamageOnHitComponent component, MeleeHitEvent args)
     {
         if (!args.IsHit ||

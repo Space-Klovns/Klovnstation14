@@ -5,6 +5,7 @@ using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
+using Content.Shared.Physics;
 
 namespace Content.Shared.Damage.Components;
 
@@ -169,8 +170,31 @@ public sealed partial class StaminaComponent : Component
     ///     The offset that an entity had before jittering started,
     ///     so that we can reset it properly.
     /// </summary>
+    #endregion
+    #region Shove Data
     [DataField]
     public Vector2 StartOffset = Vector2.Zero;
+
+    [DataField("wallShoveCooldown")]
+    public bool WallShoveCooldown { get; set; } = false;
+
+    [DataField("wallShoveCooldownEnd")]
+    public TimeSpan WallShoveCooldownEnd { get; set; } = TimeSpan.Zero;
+
+    [DataField("maxPushDistance")]
+    public float MaxPushDistance = 1500f;
+
+    [DataField("minPushDistance")]
+    public float MinPushDistance = 1000f;
+
+    [DataField("checkDistance")]
+    public float CheckDistance = 1f;
+
+    [DataField("collisionMask")]
+    public int CollisionMask = (int)CollisionGroup.WallLayer;
+
+    [ViewVariables]
+    public TimeSpan NextPush;
 
     #endregion
 }
