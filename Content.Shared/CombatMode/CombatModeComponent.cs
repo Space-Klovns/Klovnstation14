@@ -13,6 +13,7 @@
 // SPDX-FileCopyrightText: 2023 iacore
 // SPDX-FileCopyrightText: 2023 metalgearsloth
 // SPDX-FileCopyrightText: 2026 FrauzJ
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
 //
 // SPDX-License-Identifier: MIT
 
