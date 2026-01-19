@@ -193,6 +193,10 @@ public sealed partial class StaminaComponent : Component
     #endregion
     #region Shove Data
 
+    /// <summary>
+    ///     The offset that an entity had before jittering started,
+    ///     so that we can reset it properly.
+    /// </summary>
     [DataField("wallShoveCooldown")]
     public bool WallShoveCooldown { get; set; } = false;
 
@@ -213,8 +217,10 @@ public sealed partial class StaminaComponent : Component
 
     [DataField("knockdownRefresh")]
     public bool KnockdownRefresh = true;
+
     [DataField("knockdownAutostand")]
     public bool KnockdownAutostand = true;
+
     [DataField("knockdownDrop")]
     public bool KnockdownDrop = true;
 
