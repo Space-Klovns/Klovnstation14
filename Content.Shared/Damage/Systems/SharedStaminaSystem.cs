@@ -231,7 +231,7 @@ public abstract partial class SharedStaminaSystem : EntitySystem
             }
             if (!component.WallShoveCooldown || component.WallShoveCooldownEnd < Timing.CurTime)
             {
-                StunSystem.TryKnockdown(target, TimeSpan.FromSeconds(2), component.KnockdownRefresh, component.KnockdownAutostand, component.KnockdownDrop, true);
+                StunSystem.TryKnockdown(target, TimeSpan.FromSeconds(2), component.KnockdownRefresh, component.KnockdownAutostand, component.KnockdownDrop);
                 TakeStaminaDamage(target, 50f, component, source: source);
 
                 component.WallShoveCooldown = true;
