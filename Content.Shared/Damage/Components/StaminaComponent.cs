@@ -210,6 +210,13 @@ public sealed partial class StaminaComponent : Component
     [DataField("collisionMask")]
     public int CollisionMask = (int)CollisionGroup.WallLayer;
 
+    [DataField("knockdownRefresh")]
+    public bool KnockdownRefresh = true;
+    [DataField("knockdownAutostand")]
+    public bool KnockdownAutostand = false;
+    [DataField("knockdownDrop")]
+    public bool KnockdownDrop = true;
+
     [ViewVariables]
     public TimeSpan NextPush;
 
