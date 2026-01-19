@@ -170,10 +170,12 @@ public sealed partial class StaminaComponent : Component
     ///     The offset that an entity had before jittering started,
     ///     so that we can reset it properly.
     /// </summary>
-    #endregion
-    #region Shove Data
+
     [DataField]
     public Vector2 StartOffset = Vector2.Zero;
+
+    #endregion
+    #region Shove Data
 
     [DataField("wallShoveCooldown")]
     public bool WallShoveCooldown { get; set; } = false;
