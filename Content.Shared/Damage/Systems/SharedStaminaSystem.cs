@@ -241,7 +241,7 @@ public abstract partial class SharedStaminaSystem : EntitySystem
                 Dirty(uid, component);
             }
             args.IsStunned = component.Critical;
-            args.PopupPrefix = "disarm-action-shove-collision-";
+            args.PopupPrefix = "shove-collision-";
         }
         else
         {
@@ -256,7 +256,7 @@ public abstract partial class SharedStaminaSystem : EntitySystem
                 _broadphase.ApplyLinearImpulse(target, fullPush, body: physics);
             }
 
-            args.PopupPrefix = "disarm-action-shove-";
+            args.PopupPrefix = "shove-";
         }
         args.Handled = true;
     }
