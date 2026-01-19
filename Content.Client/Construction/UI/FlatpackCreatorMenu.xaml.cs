@@ -1,3 +1,11 @@
+// SPDX-FileCopyrightText: 2024 Leon Friedrich
+// SPDX-FileCopyrightText: 2024 SpeltIncorrectyl
+// SPDX-FileCopyrightText: 2024 metalgearsloth
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2026 Nemanja
+//
+// SPDX-License-Identifier: MIT
+
 using System.Linq;
 using Content.Client.Materials;
 using Content.Client.Message;

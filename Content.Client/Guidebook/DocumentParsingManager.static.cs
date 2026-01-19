@@ -1,3 +1,10 @@
+// SPDX-FileCopyrightText: 2023 Leon Friedrich
+// SPDX-FileCopyrightText: 2024 Thomas
+// SPDX-FileCopyrightText: 2025 pathetic meowmeow
+// SPDX-FileCopyrightText: 2026 Princess Cheeseballs
+//
+// SPDX-License-Identifier: MIT
+
 using System.Linq;
 using Content.Client.Guidebook.Controls;
 using Pidgin;
