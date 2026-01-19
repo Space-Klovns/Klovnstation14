@@ -3,3 +3,5 @@ disarm-action-popup-message-other-clients = {CAPITALIZE(THE($performerName))} di
 disarm-action-popup-message-cursor = Disarmed {THE($targetName)}!
 disarm-action-shove-popup-message-other-clients = {CAPITALIZE(THE($performerName))} shoves {THE($targetName)}!
 disarm-action-shove-popup-message-cursor = You shove {THE($targetName)}!
+disarm-action-shove-collision-popup-message-cursor = You shove {THE($targetName)} into a wall!
+disarm-action-shove-collision-popup-message-other-clients ={CAPITALIZE(THE($performerName))} shoves {THE($targetName)} into a wall!
