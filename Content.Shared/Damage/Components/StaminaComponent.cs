@@ -200,16 +200,16 @@ public sealed partial class StaminaComponent : Component
     public TimeSpan WallShoveCooldownEnd { get; set; } = TimeSpan.Zero;
 
     [DataField("maxPushDistance")]
-    public float MaxPushDistance = 1300f;
+    public float MaxPushDistance = 1400f;
 
     [DataField("minPushDistance")]
-    public float MinPushDistance = 900f;
+    public float MinPushDistance = 800f;
 
     [DataField("checkDistance")]
     public float CheckDistance = 1f;
 
     [DataField("collisionMask")]
-    public int CollisionMask = (int)CollisionGroup.WallLayer;
+    public int CollisionMask = (int)CollisionGroup.TableLayer;
 
     [DataField("knockdownRefresh")]
     public bool KnockdownRefresh = true;

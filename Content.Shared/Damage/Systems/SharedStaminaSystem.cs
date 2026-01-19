@@ -222,10 +222,10 @@ public abstract partial class SharedStaminaSystem : EntitySystem
             }
         }
 
-        if (hitWall)
+        if (hitWall && !HasComp<KnockedDownComponent>(target))
         {
 
-            var fullPush = pushDir * component.MaxPushDistance;
+            var fullPush = pushDir * component.MinPushDistance;
             if (TryComp<PhysicsComponent>(target, out var physics))
             {
                 _broadphase.ApplyLinearImpulse(target, fullPush, body: physics);
@@ -245,7 +245,11 @@ public abstract partial class SharedStaminaSystem : EntitySystem
         }
         else
         {
-            var fullPush = pushDir * component.MinPushDistance;
+            var fullPush = pushDir * component.MaxPushDistance;
+            if (HasComp<KnockedDownComponent>(target))
+            {
+                fullPush = pushDir * component.MinPushDistance;
+            }
 
             if (TryComp<PhysicsComponent>(target, out var physics))
             {
