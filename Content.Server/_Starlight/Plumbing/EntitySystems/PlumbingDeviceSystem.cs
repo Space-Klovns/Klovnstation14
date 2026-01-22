@@ -10,6 +10,7 @@ using Content.Shared.Tag;
 using JetBrains.Annotations;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Random;
 using Robust.Shared.Timing;
 
 namespace Content.Server._Starlight.Plumbing.EntitySystems;
@@ -23,6 +24,7 @@ namespace Content.Server._Starlight.Plumbing.EntitySystems;
 public sealed class PlumbingDeviceSystem : EntitySystem
 {
     [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly SharedSolutionContainerSystem _solutionSystem = default!;
     [Dependency] private readonly PuddleSystem _puddleSystem = default!;
     [Dependency] private readonly PopupSystem _popup = default!;
@@ -47,6 +49,9 @@ public sealed class PlumbingDeviceSystem : EntitySystem
 
         var curTime = _timing.CurTime;
 
+        // Collect devices that need updating this tick
+        var devicesToUpdate = new List<(EntityUid Uid, PlumbingDeviceComponent Device)>();
+
         var query = EntityQueryEnumerator<PlumbingDeviceComponent>();
         while (query.MoveNext(out var uid, out var device))
         {
@@ -58,6 +63,15 @@ public sealed class PlumbingDeviceSystem : EntitySystem
             if (curTime < device.NextUpdateTime)
                 continue;
 
+            devicesToUpdate.Add((uid, device));
+        }
+
+        // Shuffle to ensure fair distribution when multiple devices pull from same network
+        _random.Shuffle(devicesToUpdate);
+
+        // Now update in random order
+        foreach (var (uid, device) in devicesToUpdate)
+        {
             // Schedule next update
             device.NextUpdateTime = curTime + device.UpdateInterval;
 

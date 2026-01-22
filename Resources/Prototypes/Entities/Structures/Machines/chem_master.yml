@@ -100,3 +100,14 @@
     guides:
     - Chemicals
     - Chemist
+  # Starlight - Plumbing integration
+  - type: PlumbingDevice
+    updateInterval: 2
+  - type: PlumbingTank
+    solutionName: buffer
+  - type: NodeContainer
+    nodes:
+      inlet:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: Fourway

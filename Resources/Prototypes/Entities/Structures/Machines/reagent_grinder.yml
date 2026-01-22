@@ -103,3 +103,12 @@
     solution: output
   - type: ExaminableSolution
     solution: output
+  # Starlight - Plumbing integration
+  - type: PlumbingOutlet
+    solutionName: output
+  - type: NodeContainer
+    nodes:
+      outlet:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: Fourway
