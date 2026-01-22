@@ -27,10 +27,16 @@ public abstract class SharedFpvDroneSystem : EntitySystem
     [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
     [Dependency] private readonly SharedHandsSystem _handsSystem = default!;
     [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
+    [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
     [Dependency] private readonly PowerCellSystem _powerCellSystem = default!;
     [Dependency] private readonly RemoteDroneControllerSystem _droneControllerSystem = default!;
     [Dependency] private readonly ItemSlotsSystem _itemSlotsSystem = default!;
     [Dependency] private readonly INetManager _netManager = default!;
+
+    /// <summary>
+    ///     Minimum charge for an FPV to work.
+    /// </summary>
+    public const float ChargeThreshold = 0.5f;
 
     public override void Initialize()
     {
@@ -65,7 +71,7 @@ public abstract class SharedFpvDroneSystem : EntitySystem
 
     private void OnFpvAttemptControl(Entity<FpvDroneComponent> entity, ref RemoteDroneAttemptControlEvent args)
     {
-        args.Cancelled |= !_powerCellSystem.HasCharge(entity.Owner, entity.Comp.ActiveChargeRate);
+        args.Cancelled |= !_powerCellSystem.HasCharge(entity.Owner, ChargeThreshold);
     }
 
     private void OnFpvControlStarted(Entity<FpvDroneComponent> entity, ref RemoteDroneControlStartedEvent args)
@@ -104,6 +110,7 @@ public abstract class SharedFpvDroneSystem : EntitySystem
         if (TryComp<PowerCellSlotComponent>(entity.Owner, out var powerCellSlotComponent))
             _itemSlotsSystem.SetLock(entity.Owner, powerCellSlotComponent.CellSlotId, true);
 
+        _appearanceSystem.SetData(entity.Owner, FpvDroneVisuals.Active, true);
         DoHeartbeat(args.ControllerEntity.Owner);
         UpdateFpvSurveillance(entity);
     }
@@ -142,6 +149,7 @@ public abstract class SharedFpvDroneSystem : EntitySystem
         if (TryComp<PowerCellSlotComponent>(entity.Owner, out var powerCellSlotComponent))
             _itemSlotsSystem.SetLock(entity.Owner, powerCellSlotComponent.CellSlotId, false);
 
+        _appearanceSystem.SetData(entity.Owner, FpvDroneVisuals.Active, false);
         DoHeartbeat(args.ControllerEntity.Owner);
     }
 }

@@ -39,7 +39,6 @@ public sealed class RemoteDroneControllerSystem : EntitySystem
         SubscribeLocalEvent<RemoteDroneComponent, ComponentShutdown>(OnDroneShutdown);
 
         //// UI
-
         SubscribeLocalEvent<RemoteDroneControllerComponent, ActivatableUIOpenAttemptEvent>(OnInterfaceOpenedAttempt);
         SubscribeLocalEvent<RemoteDroneControllerComponent, AfterActivatableUIOpenEvent>(OnInterfaceOpened);
         Subs.BuiEvents<RemoteDroneControllerComponent>(SurveillanceCameraMonitorUiKey.Key, subs =>
@@ -61,7 +60,7 @@ public sealed class RemoteDroneControllerSystem : EntitySystem
             return;
         }
 
-        if (!AttemptControlDrone(entity, droneUid, args.User))
+        if (AttemptControlDroneWasCancelled(entity, droneUid, args.User))
         {
             args.Cancel();
             if (!args.Silent)
@@ -69,7 +68,6 @@ public sealed class RemoteDroneControllerSystem : EntitySystem
 
             return;
         }
-
     }
 
     private void OnInterfaceOpened(Entity<RemoteDroneControllerComponent> entity, ref AfterActivatableUIOpenEvent args)
@@ -208,7 +206,9 @@ public sealed class RemoteDroneControllerSystem : EntitySystem
         return true;
     }
 
-    public bool AttemptControlDrone(Entity<RemoteDroneControllerComponent> controllerEntity, EntityUid droneUid, EntityUid userUid)
+    /// <returns>Whether RemoteDroneAttemptControlEvent was cancelled.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool AttemptControlDroneWasCancelled(Entity<RemoteDroneControllerComponent> controllerEntity, EntityUid droneUid, EntityUid userUid)
     {
         var attemptEvent = new RemoteDroneAttemptControlEvent(controllerEntity, droneUid, userUid);
         RaiseLocalEvent(controllerEntity, ref attemptEvent);
@@ -230,7 +230,7 @@ public sealed class RemoteDroneControllerSystem : EntitySystem
         if (!ResolveDroneLink(controllerEntity, out var droneUid))
             return false;
 
-        if (!AttemptControlDrone(controllerEntity, droneUid.Value, userUid))
+        if (AttemptControlDroneWasCancelled(controllerEntity, droneUid.Value, userUid))
         {
             _popupSystem.PopupClient(Loc.GetString("remote-drone-controller-bad-connection"), controllerEntity.Owner, userUid, PopupType.SmallCaution);
             return false;

@@ -1,5 +1,6 @@
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
+using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.FpvDrone;
 
@@ -28,10 +29,7 @@ public sealed partial class FpvDroneComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField]
     public bool Active = false;
-
-    /// <summary>
-    ///     Battery charge-rate of the drone when it's active.
-    /// </summary>
-    [DataField]
-    public float ActiveChargeRate = -10f;
 }
+
+[Serializable, NetSerializable]
+public enum FpvDroneVisuals : byte { Active }
