@@ -48,7 +48,7 @@
         type: SurveillanceCameraMonitorBoundUserInterface
 
 - type: entity
-  parent: BaseStructureDynamic
+  parent: [ BaseMob, BaseStructureDynamic ]
   id: RemoteDroneFpv
   name: fpv drone
   description: A relic of a historic war.
@@ -60,16 +60,21 @@
       - map: [ "enum.SurveillanceCameraVisualsKey.Key" ]
         state: mobilevision
 
-  - type: RemoteDrone # TODO fix
+  - type: RemoteDrone
     sinkPort: RemoteDroneReceiver
+  - type: FpvDrone
 
   - type: Eye
-  - type: InputMover
-  - type: MobMover
-  - type: Input
-    context: "human"
+  - type: CanMoveInAir
+  - type: MovementSpeedModifier
+    baseWalkSpeed: 4.0
+    baseSprintSpeed: 8
+    baseAcceleration: 5
+    baseFriction: 5
+    frictionNoInput: 3.5
 
-  - type: RequireProjectileTarget # EVIL
+  - type: RequireProjectileTarget
+    active: True # EVIL
   - type: InteractionOutline
 
   - type: WirelessNetworkConnection
@@ -90,16 +95,14 @@
       - !type:DoActsBehavior
         acts: ["Destruction"]
 
-  - type: Physics
-    bodyType: KinematicController
   - type: Fixtures
     fixtures:
       fix1:
         shape:
           !type:PhysShapeCircle
-          radius: 0.4
+          radius: 0.3
         density: 45
         mask:
-        - MachineMask
+        - SmallMobMask
         layer:
-        - BulletImpassable
+        - SmallMobLayer

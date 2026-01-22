@@ -9,6 +9,7 @@ namespace Content.Shared._KS14.RemoteDrone;
 /// </summary>
 [RegisterComponent, NetworkedComponent]
 [AutoGenerateComponentState]
+[Access(typeof(SharedRemoteDroneControllerSystem))]
 public sealed partial class RemoteDroneComponent : Component
 {
     /// <summary>
@@ -25,21 +26,3 @@ public sealed partial class RemoteDroneComponent : Component
     [DataField, ViewVariables]
     public ProtoId<SinkPortPrototype> SinkPort;
 }
-
-/// <summary>
-///     Raised when a remote drone <i>starts</i> being controlled by something,
-///         on both the drone and controller, after all related internal logic is completed.
-/// </summary>
-[ByRefEvent]
-public record struct RemoteDroneControlStartedEvent(Entity<RemoteDroneControllerComponent> ControllerEntity, EntityUid DroneUid);
-
-/// <summary>
-///     Raised when a remote drone <i>stops</i> being controlled by something,
-///         on both the drone and controller, after all related internal logic is completed.
-///
-///     The drone may not exist when this is called. When this is raised, the drone's viewsubscriber
-///         and <see cref="RemoteDroneControllerComponent.UserSession"/> have not yet been removed.
-/// </summary>
-[ByRefEvent]
-public record struct RemoteDroneControlEndedEvent(Entity<RemoteDroneControllerComponent> ControllerEntity, EntityUid? DroneUid);
-

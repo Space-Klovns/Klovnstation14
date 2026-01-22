@@ -14,7 +14,7 @@ using Robust.Shared.Map; // Goobstation
 namespace Content.Server.SurveillanceCamera;
 
 [RegisterComponent]
-[Access(typeof(SurveillanceCameraMonitorSystem))]
+[Access(typeof(SurveillanceCameraMonitorSystem), Other = AccessPermissions.ReadExecute /* KS14 Change: FPV drones require this */)]
 public sealed partial class SurveillanceCameraMonitorComponent : Component
 {
     // Currently active camera viewed by this monitor.

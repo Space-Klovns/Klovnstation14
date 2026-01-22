@@ -2,11 +2,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Content.Shared.DeviceLinking;
 using Content.Shared.DeviceLinking.Events;
-using Content.Shared.Interaction;
-using Content.Shared.Movement.Components;
-using Content.Shared.Movement.Systems;
 using Content.Shared.Power.Components;
 using Content.Shared.Power.EntitySystems;
+using Content.Shared.SurveillanceCamera;
+using Content.Shared.UserInterface;
 using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
@@ -15,7 +14,6 @@ namespace Content.Shared._KS14.RemoteDrone;
 public abstract class SharedRemoteDroneControllerSystem : EntitySystem
 {
     [Dependency] private readonly SharedPowerReceiverSystem _powerReceiverSystem = default!;
-    [Dependency] private readonly SharedMoverController _moverController = default!;
     [Dependency] private readonly SharedDeviceLinkSystem _sharedDeviceLinkSystem = default!;
 
     private EntityQuery<RemoteDroneComponent> _droneQuery;
@@ -25,10 +23,9 @@ public abstract class SharedRemoteDroneControllerSystem : EntitySystem
         base.Initialize();
         _droneQuery = GetEntityQuery<RemoteDroneComponent>();
 
-        SubscribeLocalEvent<RemoteDroneControllerComponent, ActivateInWorldEvent>(OnControllerActivate);
-
         //// Ports
         // Drones themselves aren't subscribed to port events, only controllers, to avoid confusion
+        SubscribeLocalEvent<RemoteDroneControllerComponent, LinkAttemptEvent>(OnControllerLinkAttempt);
         SubscribeLocalEvent<RemoteDroneControllerComponent, NewLinkEvent>(OnControllerLinked);
         SubscribeLocalEvent<RemoteDroneControllerComponent, PortDisconnectedEvent>(OnControllerUnlinked);
 
@@ -39,19 +36,60 @@ public abstract class SharedRemoteDroneControllerSystem : EntitySystem
         //// Shutdown
         SubscribeLocalEvent<RemoteDroneControllerComponent, ComponentShutdown>(OnControllerShutdown);
         SubscribeLocalEvent<RemoteDroneComponent, ComponentShutdown>(OnDroneShutdown);
+
+        //// UI
+
+        SubscribeLocalEvent<RemoteDroneControllerComponent, ActivatableUIOpenAttemptEvent>(OnInterfaceOpenedAttempt);
+        SubscribeLocalEvent<RemoteDroneControllerComponent, AfterActivatableUIOpenEvent>(OnInterfaceOpened);
+        Subs.BuiEvents<RemoteDroneControllerComponent>(SurveillanceCameraMonitorUiKey.Key, subs =>
+        {
+            subs.Event<BoundUIClosedEvent>(OnInterfaceClosed);
+        });
     }
 
     #region Events
 
-    private void OnControllerActivate(Entity<RemoteDroneControllerComponent> entity, ref ActivateInWorldEvent args)
+    private void OnInterfaceOpenedAttempt(Entity<RemoteDroneControllerComponent> entity, ref ActivatableUIOpenAttemptEvent args)
     {
-        if (!args.Complex || entity.Comp.LinkedDroneUid == null)
+        if (entity.Comp.LinkedDroneUid != null)
             return;
 
-        if (!TryStartControlling(entity, args.User))
+        args.Cancel();
+    }
+
+    private void OnInterfaceOpened(Entity<RemoteDroneControllerComponent> entity, ref AfterActivatableUIOpenEvent args)
+    {
+        TryStartControlling(entity, args.User);
+    }
+
+    private void OnInterfaceClosed(Entity<RemoteDroneControllerComponent> entity, ref BoundUIClosedEvent args)
+    {
+        if (args.Actor != entity.Comp.UserUid)
             return;
 
-        args.Handled = true;
+        if (!TryComp<ActivatableUIComponent>(entity, out var activatableUiComponent) ||
+            !args.UiKey.Equals(activatableUiComponent.Key))
+            return;
+
+        TryStopControlling(entity);
+    }
+
+    // this might break if this event becomes pure
+    private void OnControllerLinkAttempt(Entity<RemoteDroneControllerComponent> entity, ref LinkAttemptEvent args)
+    {
+        if (args.SourcePort != entity.Comp.SourcePort.ToString())
+            return;
+
+        if (!_droneQuery.TryGetComponent(args.Sink, out var droneComponent))
+        {
+            Log.Error($"Tried to link remote drone controller `{ToPrettyString(entity.Owner)}` to entity that doesn't have RemoteDroneComponent `{ToPrettyString(args.Sink)}`.");
+            DebugTools.Assert($"Tried to link remote drone controller `{ToPrettyString(entity.Owner)}` to entity that doesn't have RemoteDroneComponent `{ToPrettyString(args.Sink)}`.");
+
+            return;
+        }
+
+        droneComponent.LinkedControllerUid = args.Source;
+        Dirty(args.Sink, droneComponent);
     }
 
     private void OnControllerLinked(Entity<RemoteDroneControllerComponent> entity, ref NewLinkEvent args)
@@ -59,19 +97,16 @@ public abstract class SharedRemoteDroneControllerSystem : EntitySystem
         if (args.SourcePort != entity.Comp.SourcePort.ToString())
             return;
 
-        if (_droneQuery.TryGetComponent(args.Sink, out var droneComponent))
-        {
-            droneComponent.LinkedControllerUid = args.Source;
-            Dirty(args.Sink, droneComponent);
-        }
-        else
-        {
-            Log.Error($"Tried to link remote drone controller `{ToPrettyString(entity.Owner)}` to entity that doesn't have RemoteDroneComponent `{ToPrettyString(args.Sink)}`.");
-            DebugTools.Assert($"Tried to link remote drone controller `{ToPrettyString(entity.Owner)}` to entity that doesn't have RemoteDroneComponent `{ToPrettyString(args.Sink)}`.");
-            return;
-        }
+        // remove earlier link if it exists
+        if (entity.Comp.LinkedDroneUid is { } alreadyLinkedDroneUid)
+            _sharedDeviceLinkSystem.RemoveSinkFromSource(entity.Owner, alreadyLinkedDroneUid);
 
         entity.Comp.LinkedDroneUid = args.Sink;
+
+        var linkEvent = new RemoteDroneLinkedEvent(entity, args.Sink);
+        RaiseLocalEvent(entity, ref linkEvent);
+        RaiseLocalEvent(args.Sink, ref linkEvent);
+
         Dirty(entity);
     }
 
@@ -92,10 +127,14 @@ public abstract class SharedRemoteDroneControllerSystem : EntitySystem
         }
         else
         {
-            Log.Error($"Tried to unlink remote drone controller `{ToPrettyString(controllerEntity.Owner)}` from entity that doesn't have RemoteDroneComponent `{ToPrettyString(droneUid)}`.");
             DebugTools.Assert($"Tried to unlink remote drone controller `{ToPrettyString(controllerEntity.Owner)}` from entity that doesn't have RemoteDroneComponent `{ToPrettyString(droneUid)}`.");
+            Log.Error($"Tried to unlink remote drone controller `{ToPrettyString(controllerEntity.Owner)}` from entity that doesn't have RemoteDroneComponent `{ToPrettyString(droneUid)}`.");
             return;
         }
+
+        var unlinkEvent = new RemoteDroneUnlinkedEvent(controllerEntity, droneUid);
+        RaiseLocalEvent(controllerEntity, ref unlinkEvent);
+        RaiseLocalEvent(droneUid, ref unlinkEvent);
 
         TryStopControlling(controllerEntity);
         controllerEntity.Comp.LinkedDroneUid = null;
@@ -128,8 +167,8 @@ public abstract class SharedRemoteDroneControllerSystem : EntitySystem
             TryHandleUnlink((linkedControllerUid, controllerComp), entity);
         else
         {
-            Log.Error($"Tried to unlink remote drone `{ToPrettyString(entity.Owner)}` from entity that doesn't have RemoteDroneControllerComponent `{ToPrettyString(linkedControllerUid)}`.");
             DebugTools.Assert($"Tried to unlink remote drone `{ToPrettyString(entity.Owner)}` from entity that doesn't have RemoteDroneControllerComponent `{ToPrettyString(linkedControllerUid)}`.");
+            Log.Error($"Tried to unlink remote drone `{ToPrettyString(entity.Owner)}` from entity that doesn't have RemoteDroneControllerComponent `{ToPrettyString(linkedControllerUid)}`.");
         }
     }
 
@@ -170,8 +209,8 @@ public abstract class SharedRemoteDroneControllerSystem : EntitySystem
             return false;
 
         controllerEntity.Comp.Controlling = true;
+        controllerEntity.Comp.UserUid = userUid;
 
-        _moverController.SetRelay(controllerEntity.Owner, droneUid.Value);
         BeforeStartingControl(controllerEntity, userUid);
 
         var controlEvent = new RemoteDroneControlStartedEvent(controllerEntity, droneUid.Value);
@@ -198,17 +237,14 @@ public abstract class SharedRemoteDroneControllerSystem : EntitySystem
         if (!ResolveDroneLink(controllerEntity, out var droneUid))
             return false;
 
-        controllerEntity.Comp.Controlling = false;
-
-        // Clean up relay components
-        RemCompDeferred<RelayInputMoverComponent>(controllerEntity);
-        RemCompDeferred<MovementRelayTargetComponent>(droneUid.Value);
-
         var controlEvent = new RemoteDroneControlEndedEvent(controllerEntity, droneUid.Value);
         RaiseLocalEvent(controllerEntity, ref controlEvent);
         RaiseLocalEvent(droneUid.Value, ref controlEvent);
 
         AfterEndingControl(controllerEntity);
+
+        controllerEntity.Comp.Controlling = false;
+        controllerEntity.Comp.UserUid = null;
 
         Dirty(controllerEntity);
         return true;

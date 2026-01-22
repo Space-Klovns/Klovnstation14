@@ -274,15 +274,16 @@ public sealed class SurveillanceCameraMonitorSystem : EntitySystem
                     }
                     if (mobile.HasValue && mobile.Value) // if camera is mobile, it should be in the mobile cameras list
                     {
-                        if (component.KnownMobileCameras.Count == 0) // was it the first mobile camera added?
-                            EnsureComp<HasMobileCamerasSurveillanceCameraMonitorComponent>(uid);
-                        if (!component.KnownMobileCameras.ContainsKey(address))
-                        {
-                            component.KnownMobileCameras.Add(address, (name, netEntity.Value));
-                            foreach (var player in component.Viewers)
-                                if (TryComp<ActorComponent>(player, out var actor))
-                                    _pvsOverrideSystem.AddSessionOverride(_entityManager.GetEntity(netEntity.Value.Item2.NetEntity), actor.PlayerSession);
-                        }
+                        // KS14: made this into method
+                        var cameraUid = _entityManager.GetEntity(netEntity.Value.Item2.NetEntity);
+                        KsAddMobileCamera(
+                            cameraUid,
+                            component,
+                            address,
+                            name,
+                            netEntity.Value.Item1,
+                            netEntity.Value.Item2
+                        );
                     }
                     else if (!component.KnownCameras.ContainsKey(address))
                         component.KnownCameras.Add(address, (name, netEntity.Value));
@@ -301,6 +302,29 @@ public sealed class SurveillanceCameraMonitorSystem : EntitySystem
                     break;
             }
         }
+    }
+
+    // KS14
+    public void KsAddMobileCamera(
+        EntityUid cameraUid,
+        SurveillanceCameraMonitorComponent component,
+        string cameraAddress,
+        string cameraName,
+        NetEntity cameraNetEntity,
+        NetCoordinates cameraNetCoordinates
+    )
+    {
+        if (component.KnownMobileCameras.Count == 0) // was it the first mobile camera added?
+            EnsureComp<HasMobileCamerasSurveillanceCameraMonitorComponent>(cameraUid);
+
+        if (component.KnownMobileCameras.ContainsKey(cameraAddress))
+            return;
+
+        component.KnownMobileCameras.Add(cameraAddress, (cameraName, (cameraNetEntity, cameraNetCoordinates)));
+
+        foreach (var player in component.Viewers)
+            if (TryComp<ActorComponent>(player, out var actor))
+                _pvsOverrideSystem.AddSessionOverride(cameraUid, actor.PlayerSession);
     }
 
     private void OnDisconnectMessage(EntityUid uid, SurveillanceCameraMonitorComponent component,

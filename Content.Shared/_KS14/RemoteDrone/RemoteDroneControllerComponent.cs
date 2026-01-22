@@ -11,6 +11,7 @@ namespace Content.Shared._KS14.RemoteDrone;
 /// </summary>
 [RegisterComponent, NetworkedComponent]
 [AutoGenerateComponentState]
+[Access(typeof(SharedRemoteDroneControllerSystem))]
 public sealed partial class RemoteDroneControllerComponent : Component
 {
     /// <summary>
@@ -34,8 +35,14 @@ public sealed partial class RemoteDroneControllerComponent : Component
     public ProtoId<SourcePortPrototype> SourcePort;
 
     /// <summary>
+    ///     Uid of the entity controlling the drone.
+    /// </summary>
+    [AutoNetworkedField]
+    [ViewVariables(VVAccess.ReadOnly)]
+    public EntityUid? UserUid = null;
+
+    /// <summary>
     ///     Session of the player controlling the drone.
-    ///
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly)]
     public ICommonSession? UserSession = null;
