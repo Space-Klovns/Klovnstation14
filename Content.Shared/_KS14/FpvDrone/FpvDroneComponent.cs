@@ -22,4 +22,16 @@ public sealed partial class FpvDroneComponent : Component
     /// </summary>
     [AutoNetworkedField, ViewVariables(VVAccess.ReadOnly)]
     public EntityUid? AudioUid;
+
+    /// <summary>
+    ///     Is the drone currently flying and using power?
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool Active = false;
+
+    /// <summary>
+    ///     Battery charge-rate of the drone when it's active.
+    /// </summary>
+    [DataField]
+    public float ActiveChargeRate = -10f;
 }

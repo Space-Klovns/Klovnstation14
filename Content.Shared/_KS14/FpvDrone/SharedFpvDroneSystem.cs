@@ -1,9 +1,15 @@
 using Content.Shared._KS14.RemoteDrone;
+using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Hands.Components;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Item;
 using Content.Shared.Movement.Components;
 using Content.Shared.Movement.Systems;
+using Content.Shared.Power;
+using Content.Shared.Power.EntitySystems;
+using Content.Shared.PowerCell;
+using Content.Shared.PowerCell.Components;
+using Content.Shared.UserInterface;
 using Content.Shared.Weapons.Ranged.Components;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Containers;
@@ -14,32 +20,45 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared._KS14.FpvDrone;
 
+/// <summary>
+///     Assumes that FPV drone's surveillance monitor components have NeverAutomaticallyHeartbeat set to true.
+/// </summary>
 public abstract class SharedFpvDroneSystem : EntitySystem
 {
-    [Dependency] private readonly RemoteDroneControllerSystem _droneControllerSystem = default!;
     [Dependency] private readonly SharedMoverController _moverController = default!;
     [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
     [Dependency] private readonly SharedHandsSystem _handsSystem = default!;
     [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
+    [Dependency] private readonly PowerCellSystem _powerCellSystem = default!;
+    [Dependency] private readonly RemoteDroneControllerSystem _droneControllerSystem = default!;
+    [Dependency] private readonly ItemSlotsSystem _itemSlotsSystem = default!;
     [Dependency] private readonly INetManager _netManager = default!;
 
     public override void Initialize()
     {
         base.Initialize();
 
+        SubscribeLocalEvent<FpvDroneComponent, PowerCellSlotEmptyEvent>(OnPowerCellEmpty);
         SubscribeLocalEvent<FpvDroneComponent, GettingPickedUpAttemptEvent>(OnAttemptPickup);
 
         SubscribeLocalEvent<FpvDroneComponent, RemoteDroneControlStartedEvent>(OnFpvControlStarted);
         SubscribeLocalEvent<FpvDroneComponent, RemoteDroneControlEndedEvent>(OnFpvControlEnded);
     }
 
-    private void OnAttemptPickup(Entity<FpvDroneComponent> entity, ref GettingPickedUpAttemptEvent args)
+    private void OnPowerCellEmpty(Entity<FpvDroneComponent> entity, ref PowerCellSlotEmptyEvent args)
     {
-        if (!_droneControllerSystem.ResolveDroneAndController(entity.Owner, out _, out var controllerEntity))
+        if (!_droneControllerSystem.ResolveDroneAndController(entity.Owner, out _, out var controllerEntity) ||
+            !controllerEntity.Value.Comp.Controlling)
             return;
 
-        if (!controllerEntity.Value.Comp.Controlling)
+        _droneControllerSystem.TryStopControlling(controllerEntity.Value);
+    }
+
+    private void OnAttemptPickup(Entity<FpvDroneComponent> entity, ref GettingPickedUpAttemptEvent args)
+    {
+        if (!_droneControllerSystem.ResolveDroneAndController(entity.Owner, out _, out var controllerEntity) ||
+            !controllerEntity.Value.Comp.Controlling)
             return;
 
         // Only cancel if the drone is currently being controlled.
@@ -56,16 +75,16 @@ public abstract class SharedFpvDroneSystem : EntitySystem
         }
 
         // if the drone is being held in any hand then try to drop it
-        if (_containerSystem.TryGetContainingContainer(entity.Owner, out _) &&
-            TryComp<HandsComponent>(entity.Owner, out var handsComponent))
+        if (_containerSystem.TryGetContainingContainer(entity.Owner, out var container) &&
+            TryComp<HandsComponent>(container.Owner, out var handsComponent))
         {
-            foreach (var handId in _handsSystem.EnumerateHands((entity.Owner, handsComponent)))
+            foreach (var handId in _handsSystem.EnumerateHands((container.Owner, handsComponent)))
             {
-                var heldItem = _handsSystem.GetHeldItem((entity.Owner, handsComponent), handId);
+                var heldItem = _handsSystem.GetHeldItem((container.Owner, handsComponent), handId);
                 if (heldItem != entity.Owner)
                     continue;
 
-                _handsSystem.TryDrop(entity.Owner, handId, checkActionBlocker: false);
+                _handsSystem.TryDrop(container.Owner, handId, checkActionBlocker: false);
             }
         }
 
@@ -77,8 +96,20 @@ public abstract class SharedFpvDroneSystem : EntitySystem
 
         if (TryComp<FlyBySoundComponent>(entity.Owner, out var flyBySoundComponent))
             flyBySoundComponent.Prob = entity.Comp.FlybySoundProbability;
+
+        _powerCellSystem.SetDrawEnabled(entity.Owner, true);
+        if (TryComp<PowerCellSlotComponent>(entity.Owner, out var powerCellSlotComponent))
+            _itemSlotsSystem.SetLock(entity.Owner, powerCellSlotComponent.CellSlotId, true);
+
+        DoHeartbeat(entity.Owner);
+        UpdateFpvSurveillance(entity);
     }
 
+    // Does nothing on client
+    protected virtual void UpdateFpvSurveillance(Entity<FpvDroneComponent> entity) { }
+
+    // Does nothing on client
+    protected virtual void DoHeartbeat(EntityUid uid) { }
 
     private void OnFpvControlEnded(Entity<FpvDroneComponent> entity, ref RemoteDroneControlEndedEvent args)
     {
@@ -103,5 +134,11 @@ public abstract class SharedFpvDroneSystem : EntitySystem
 
         if (TryComp<FlyBySoundComponent>(entity.Owner, out var flyBySoundComponent))
             flyBySoundComponent.Prob = 0f;
+
+        _powerCellSystem.SetDrawEnabled(entity.Owner, false);
+        if (TryComp<PowerCellSlotComponent>(entity.Owner, out var powerCellSlotComponent))
+            _itemSlotsSystem.SetLock(entity.Owner, powerCellSlotComponent.CellSlotId, false);
+
+        DoHeartbeat(entity.Owner);
     }
 }

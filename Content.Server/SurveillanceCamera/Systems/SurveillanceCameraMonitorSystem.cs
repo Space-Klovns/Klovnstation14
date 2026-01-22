@@ -119,6 +119,10 @@ public sealed class SurveillanceCameraMonitorSystem : EntitySystem
         var query = EntityQueryEnumerator<ActiveSurveillanceCameraMonitorComponent, SurveillanceCameraMonitorComponent>();
         while (query.MoveNext(out var uid, out _, out var monitor))
         {
+            // KS14
+            if (monitor.NeverAutomaticallyHeartbeat)
+                continue;
+
             /*if (Paused(uid))
             {
                 continue;
@@ -129,17 +133,18 @@ public sealed class SurveillanceCameraMonitorSystem : EntitySystem
 
             if (monitor.LastHeartbeat > MaxHeartbeatTime) // Goobstation
             {
-                DisconnectCamera(uid, true, monitor);
-                RemComp<ActiveSurveillanceCameraMonitorComponent>(uid);
-                monitor.LastHeartbeatSent = 0f; // Goobstation
-                monitor.LastHeartbeat = 0f; // Goobstation
-                RefreshCameras(uid, monitor); // Goobstation
+                // KS14: Made into its own function
+                InvokeHeartbeat(uid, monitor);
             }
         }
         // Goobstation start
         var queryTwo = EntityQueryEnumerator<ReconnectingSurveillanceCameraMonitorComponent, SurveillanceCameraMonitorComponent>();
         while (queryTwo.MoveNext(out var uid, out var reconnectingComponent, out var monitor))
         {
+            // KS14
+            if (monitor.NeverAutomaticallyHeartbeat)
+                continue;
+
             if (reconnectingComponent.TicksDelay-- == 0)
             {
                 ReconnectToSubnets(uid, monitor);
@@ -149,6 +154,10 @@ public sealed class SurveillanceCameraMonitorSystem : EntitySystem
         var queryThree = EntityQueryEnumerator<HasMobileCamerasSurveillanceCameraMonitorComponent, SurveillanceCameraMonitorComponent>();
         while (queryThree.MoveNext(out var uid, out var _, out var monitor))
         {
+            // KS14
+            if (monitor.NeverAutomaticallyHeartbeat)
+                continue;
+
             if (monitor.KnownMobileCameras.Count > 0)
             {
                 // Collect expired cameras and cache their entity references
@@ -201,6 +210,16 @@ public sealed class SurveillanceCameraMonitorSystem : EntitySystem
             }
         }
         // Goobstation end
+    }
+
+    // KS14 Change
+    public void InvokeHeartbeat(EntityUid uid, SurveillanceCameraMonitorComponent monitorComponent)
+    {
+        DisconnectCamera(uid, true, monitorComponent);
+        RemComp<ActiveSurveillanceCameraMonitorComponent>(uid);
+        monitorComponent.LastHeartbeatSent = 0f; // Goobstation
+        monitorComponent.LastHeartbeat = 0f; // Goobstation
+        RefreshCameras(uid, monitorComponent); // Goobstation
     }
 
     /// ROUTING:

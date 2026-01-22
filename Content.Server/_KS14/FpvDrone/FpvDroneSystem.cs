@@ -3,52 +3,47 @@ using Content.Shared._KS14.FpvDrone;
 using Content.Shared._KS14.RemoteDrone;
 using Content.Shared.DeviceNetwork.Components;
 using Robust.Server.GameObjects;
-using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.FpvDrone;
 
 public sealed class FpvDroneSystem : SharedFpvDroneSystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly TransformSystem _transformSystem = default!;
     [Dependency] private readonly SurveillanceCameraMonitorSystem _surveillanceMonitorSystem = default!;
 
-    private static TimeSpan _nextUpdate = TimeSpan.MinValue;
-    private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(1.5);
-
-    // TODO LCDC: Something less horrible than this
-    public override void Update(float frameTime)
+    protected override void UpdateFpvSurveillance(Entity<FpvDroneComponent> entity)
     {
-        base.Update(frameTime);
-
-        if (_gameTiming.CurTime < _nextUpdate)
+        base.UpdateFpvSurveillance(entity);
+        if (!TryComp<RemoteDroneComponent>(entity.Owner, out var remoteDroneComponent) ||
+            !TryComp<DeviceNetworkComponent>(entity.Owner, out var deviceNetworkComponent))
             return;
 
-        _nextUpdate = _gameTiming.CurTime + UpdateInterval;
-
-        var fpvEqe = EntityQueryEnumerator<FpvDroneComponent, RemoteDroneComponent, DeviceNetworkComponent>();
-        while (fpvEqe.MoveNext(out var droneUid, out _, out var remoteDroneComponent, out var deviceNetworkComponent))
+        if (remoteDroneComponent.LinkedControllerUid is not { } controllerUid ||
+            !TryComp<SurveillanceCameraMonitorComponent>(controllerUid, out var controllerSurveillanceMonitorComponent))
         {
-            if (remoteDroneComponent.LinkedControllerUid is not { } controllerUid ||
-                !TryComp<SurveillanceCameraMonitorComponent>(controllerUid, out var controllerSurveillanceMonitorComponent))
-            {
-                continue;
-            }
-
-            if (controllerSurveillanceMonitorComponent.KnownMobileCameras.ContainsKey(deviceNetworkComponent.Address))
-                continue;
-
-            _surveillanceMonitorSystem.KsAddMobileCamera(
-                droneUid,
-                controllerSurveillanceMonitorComponent,
-                deviceNetworkComponent.Address,
-                Name(droneUid),
-                GetNetEntity(droneUid),
-                GetNetCoordinates(_transformSystem.ToCoordinates(droneUid, _transformSystem.ToMapCoordinates(Transform(droneUid).Coordinates)))
-            );
-            _surveillanceMonitorSystem.TrySwitchCameraByUid(controllerUid, droneUid, monitor: controllerSurveillanceMonitorComponent);
-
-            _surveillanceMonitorSystem.UpdateUserInterface(controllerUid, controllerSurveillanceMonitorComponent);
+            return;
         }
+
+        if (controllerSurveillanceMonitorComponent.KnownMobileCameras.ContainsKey(deviceNetworkComponent.Address))
+            return;
+
+        _surveillanceMonitorSystem.KsAddMobileCamera(
+            entity,
+            controllerSurveillanceMonitorComponent,
+            deviceNetworkComponent.Address,
+            Name(entity.Owner),
+            GetNetEntity(entity.Owner),
+            GetNetCoordinates(_transformSystem.ToCoordinates(entity.Owner, _transformSystem.ToMapCoordinates(Transform(entity.Owner).Coordinates)))
+        );
+        _surveillanceMonitorSystem.TrySwitchCameraByUid(controllerUid, entity.Owner, monitor: controllerSurveillanceMonitorComponent);
+        _surveillanceMonitorSystem.UpdateUserInterface(controllerUid, controllerSurveillanceMonitorComponent);
+    }
+
+    protected override void DoHeartbeat(EntityUid uid)
+    {
+        base.DoHeartbeat(uid);
+
+        if (TryComp<SurveillanceCameraMonitorComponent>(uid, out var monitorComponent))
+            _surveillanceMonitorSystem.InvokeHeartbeat(uid, monitorComponent);
     }
 }

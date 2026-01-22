@@ -19,6 +19,7 @@
   parent: BaseItem
   id: RemoteDroneLaptop
   name: drone control laptop
+  description: Controls drones. Must be linked to a drone to work.
   components: # Drone control laptop intentionally doesnt have DeviceNetwork so that it can be hardcoded or whatever
   - type: Sprite
     sprite: _KS14/Objects/Misc/modular_laptop.rsi
@@ -36,11 +37,12 @@
     range: 150
     ports:
     - RemoteDroneSender
+  - type: SurveillanceCameraMonitor
+    neverAutomaticallyHeartbeat: true
 
   # UI
   - type: ActivatableUI
     key: enum.SurveillanceCameraMonitorUiKey.Key
-  - type: SurveillanceCameraMonitor
   - type: ActivatableUIRequiresVision
   - type: UserInterface
     interfaces:
@@ -51,7 +53,7 @@
   parent: [ BaseMob, BaseStructureDynamic ]
   id: RemoteDroneFpv
   name: fpv drone
-  description: A relic of a historic war.
+  description: A relic of a historic war. Must be linked to a drone controller to work. Uses about 3 joules of energy per second when active.
   components:
   # Misc
   - type: Sprite
@@ -65,6 +67,36 @@
     sound:
       path: /Audio/_KS14/Effects/fpv_drone_flyby.ogg
 
+  # Cell
+  - type: PowerCellDraw
+    drawRate: 3 # 120 seconds on a small cell
+    enabled: false
+  - type: PowerCellSlot
+    cellSlotId: cell_slot
+  - type: ContainerContainer
+    containers:
+      cell_slot: !type:ContainerSlot
+      storagebase: !type:Container
+  - type: ItemSlots
+    slots:
+      cell_slot:
+        name: power-cell-slot-component-slot-name-default
+        startingItem: PowerCellSmall
+        swap: false
+
+  # Storage
+  - type: Storage
+    grid:
+    - 0,0,3,1
+    maxItemSize: Normal
+    blacklist:
+      components:
+      - RemoteDroneController # wtf no
+  - type: UserInterface
+    interfaces:
+     enum.StorageUiKey.Key:
+      type: StorageBoundUserInterface
+
   # Mob
   - type: Eye
   - type: CanMoveInAir
@@ -73,7 +105,7 @@
     baseSprintSpeed: 8
     baseAcceleration: 5
     baseFriction: 5
-    frictionNoInput: 3.5
+    weightlessAcceleration: 0
 
   # Other mob-related
   - type: RequireProjectileTarget
@@ -114,6 +146,10 @@
         !type:DamageTrigger
         damage: 60
       behaviors:
+      - !type:EmptyContainersBehaviour
+        containers:
+        - cell_slot
+        - storagebase
       - !type:DoActsBehavior
         acts: ["Destruction"]
 
