@@ -1,0 +1,250 @@
+using Content.Server._Starlight.Plumbing.NodeGroups;
+using Content.Server._Starlight.Plumbing.Nodes;
+using Content.Shared._Starlight.Plumbing.Components;
+using Content.Shared.Chemistry.Components;
+using Content.Shared.Chemistry.EntitySystems;
+using Content.Shared.Chemistry.Reagent;
+using Content.Shared.FixedPoint;
+using JetBrains.Annotations;
+
+namespace Content.Server._Starlight.Plumbing.EntitySystems;
+
+/// <summary>
+///     Provides methods for pulling reagents from plumbing networks.
+///     All plumbing machines should use this system to pull from outlets from the network attached to their inlet.
+///     Raises PlumbingPullAttemptEvent before each reagent pull, allowing other
+///     systems (like filters) to deny specific reagents. 
+///     Machines try to pull from each outlet in their network using a "round-robin" style approach
+///     to ensure fair distribution when multiple sources are available.
+/// </summary>
+[UsedImplicitly]
+public sealed class PlumbingPullSystem : EntitySystem
+{
+    [Dependency] private readonly SharedSolutionContainerSystem _solutionSystem = default!;
+
+    private EntityQuery<PlumbingOutletComponent> _outletQuery;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+        _outletQuery = GetEntityQuery<PlumbingOutletComponent>();
+    }
+
+    /// <summary>
+    ///     Pulls all allowed reagents from outlets on a plumbing network into a destination solution.
+    /// </summary>
+    /// <param name="puller">The entity doing the pulling.</param>
+    /// <param name="network">The plumbing network to pull from.</param>
+    /// <param name="destination">The solution to add pulled reagents to.</param>
+    /// <param name="maxAmount">Maximum amount to pull total.</param>
+    /// <param name="roundRobinIndex">
+    ///     Index tracking which outlet to start from. The returned NextIndex should be
+    ///     stored for the next call to cycle through outlets fairly. Initialize to 0.
+    /// </param>
+    /// <returns>Tuple of (amount pulled, next round-robin index to use).</returns>
+    public (FixedPoint2 Pulled, int NextIndex) PullFromNetwork(
+        EntityUid puller,
+        IPlumbingNet network,
+        Entity<SolutionComponent> destination,
+        FixedPoint2 maxAmount,
+        int roundRobinIndex)
+    {
+        var remaining = FixedPoint2.Min(maxAmount, destination.Comp.Solution.AvailableVolume);
+        if (remaining <= 0)
+            return (FixedPoint2.Zero, roundRobinIndex);
+
+        // Build list of valid outlets to pull from
+        var outlets = new List<(PlumbingNode Node, PlumbingOutletComponent Outlet)>();
+        foreach (var node in network.Nodes)
+        {
+            if (node is not PlumbingNode plumbingNode || plumbingNode.Owner == puller)
+                continue;
+
+            if (!_outletQuery.TryGetComponent(plumbingNode.Owner, out var outlet))
+                continue;
+
+            if (outlet.OutletName != null && plumbingNode.Name != outlet.OutletName)
+                continue;
+
+            outlets.Add((plumbingNode, outlet));
+        }
+
+        if (outlets.Count == 0)
+            return (FixedPoint2.Zero, roundRobinIndex);
+
+        // Round-robin: start from the saved index, wrap around
+        // This ensures each outlet gets a fair chance to be pulled from first
+        var startIndex = roundRobinIndex % outlets.Count;
+
+        var totalPulled = FixedPoint2.Zero;
+
+        for (var i = 0; i < outlets.Count && remaining > 0; i++)
+        {
+            var index = (startIndex + i) % outlets.Count;
+            var (plumbingNode, outlet) = outlets[index];
+
+            var pulled = PullFromOutlet(puller, plumbingNode.Owner, plumbingNode.Name, outlet.SolutionName, destination, remaining);
+            totalPulled += pulled;
+            remaining -= pulled;
+        }
+
+        var nextIndex = (startIndex + 1) % outlets.Count;
+        return (totalPulled, nextIndex);
+    }
+
+    /// <summary>
+    ///     Pulls specific reagents from outlets on a plumbing network sequentially.
+    ///     Pulls each reagent fully before moving to the next to avoid floating point errors.
+    /// </summary>
+    /// <param name="puller">The entity doing the pulling.</param>
+    /// <param name="network">The plumbing network to pull from.</param>
+    /// <param name="destination">The solution to add pulled reagents to.</param>
+    /// <param name="reagentTargets">Map of reagent ID to amount still needed.</param>
+    /// <param name="transferLimit">Maximum total amount to transfer per update.</param>
+    /// <returns>Map of reagent ID to amount actually pulled.</returns>
+    public Dictionary<string, FixedPoint2> PullSpecificReagents(
+        EntityUid puller,
+        IPlumbingNet network,
+        Entity<SolutionComponent> destination,
+        Dictionary<string, FixedPoint2> reagentTargets,
+        FixedPoint2 transferLimit)
+    {
+        var pulled = new Dictionary<string, FixedPoint2>();
+        var destSolution = destination.Comp.Solution;
+        var remaining = FixedPoint2.Min(transferLimit, destSolution.AvailableVolume);
+
+        if (remaining <= 0)
+            return pulled;
+
+        // Sequential pulling: fill each reagent fully before moving to the next
+        foreach (var (reagentId, neededAmount) in reagentTargets)
+        {
+            if (remaining <= 0)
+                break;
+
+            if (neededAmount <= 0)
+                continue;
+
+            var stillNeeded = neededAmount;
+
+            // Try to pull this reagent from all available outlets
+            foreach (var node in network.Nodes)
+            {
+                if (remaining <= 0 || stillNeeded <= 0)
+                    break;
+
+                if (node is not PlumbingNode plumbingNode || plumbingNode.Owner == puller)
+                    continue;
+
+                if (!_outletQuery.TryGetComponent(plumbingNode.Owner, out var outlet))
+                    continue;
+
+                if (outlet.OutletName != null && plumbingNode.Name != outlet.OutletName)
+                    continue;
+
+                if (!_solutionSystem.TryGetSolution(plumbingNode.Owner, outlet.SolutionName, out var sourceSolutionEnt, out var sourceSolution))
+                    continue;
+
+                var available = sourceSolution.GetReagentQuantity(new ReagentId(reagentId, null));
+                if (available <= 0)
+                    continue;
+
+                // Check if this reagent can be pulled
+                var attemptEv = new PlumbingPullAttemptEvent(puller, plumbingNode.Name, reagentId);
+                RaiseLocalEvent(plumbingNode.Owner, ref attemptEv);
+
+                if (attemptEv.Cancelled)
+                    continue;
+
+                // Pull as much as we can of this reagent
+                var toPull = FixedPoint2.Min(available, stillNeeded);
+                toPull = FixedPoint2.Min(toPull, remaining);
+
+                var actualPulled = _solutionSystem.RemoveReagent(sourceSolutionEnt.Value, new ReagentId(reagentId, null), toPull);
+                if (actualPulled > 0)
+                {
+                    _solutionSystem.TryAddReagent(destination, new ReagentId(reagentId, null), actualPulled, out var actuallyAdded);
+
+                    // Return any excess to source to prevent loss. May not be needed
+                    var excess = actualPulled - actuallyAdded;
+                    if (excess > 0)
+                        _solutionSystem.TryAddReagent(sourceSolutionEnt.Value, new ReagentId(reagentId, null), excess, out _);
+
+                    pulled[reagentId] = pulled.GetValueOrDefault(reagentId, FixedPoint2.Zero) + actuallyAdded;
+                    stillNeeded -= actuallyAdded;
+                    remaining -= actuallyAdded;
+                }
+            }
+        }
+
+        return pulled;
+    }
+
+    /// <summary>
+    ///     Pulls allowed reagents from a specific outlet into a destination solution.
+    /// </summary>
+    private FixedPoint2 PullFromOutlet(
+        EntityUid puller,
+        EntityUid sourceOwner,
+        string nodeName,
+        string solutionName,
+        Entity<SolutionComponent> destination,
+        FixedPoint2 maxAmount)
+    {
+        if (!_solutionSystem.TryGetSolution(sourceOwner, solutionName, out var sourceSolutionEnt, out var sourceSolution))
+            return FixedPoint2.Zero;
+
+        if (sourceSolution.Volume <= 0)
+            return FixedPoint2.Zero;
+
+        var destSolution = destination.Comp.Solution;
+        var availableSpace = destSolution.AvailableVolume;
+        if (availableSpace <= 0)
+            return FixedPoint2.Zero;
+
+        var remaining = FixedPoint2.Min(maxAmount, availableSpace);
+
+        // Build snapshot of allowed reagents to avoid modifying collection during iteration
+        var allowedReagents = new List<(ReagentId Reagent, FixedPoint2 Quantity)>();
+
+        foreach (var reagent in sourceSolution.Contents)
+        {
+            var attemptEv = new PlumbingPullAttemptEvent(puller, nodeName, reagent.Reagent.Prototype);
+            RaiseLocalEvent(sourceOwner, ref attemptEv);
+
+            if (!attemptEv.Cancelled)
+                allowedReagents.Add((reagent.Reagent, reagent.Quantity));
+        }
+
+        if (allowedReagents.Count == 0)
+            return FixedPoint2.Zero;
+
+        var totalPulled = FixedPoint2.Zero;
+
+        foreach (var (reagent, quantity) in allowedReagents)
+        {
+            if (remaining <= 0)
+                break;
+
+            var toPull = FixedPoint2.Min(quantity, remaining);
+            if (toPull <= 0)
+                continue;
+
+            var pulled = _solutionSystem.RemoveReagent(sourceSolutionEnt.Value, reagent, toPull);
+            if (pulled > 0)
+            {
+                _solutionSystem.TryAddReagent(destination, reagent, pulled, out var actuallyAdded);
+
+                // Return any excess to source to prevent loss. May not be needed
+                var excess = pulled - actuallyAdded;
+                if (excess > 0)
+                    _solutionSystem.TryAddReagent(sourceSolutionEnt.Value, reagent, excess, out _);
+
+                totalPulled += actuallyAdded;
+                remaining -= actuallyAdded;
+            }
+        }
+
+        return totalPulled;
+    }
+}

@@ -1,0 +1,436 @@
+# Base plumbing machine entity - all plumbing machines inherit from this
+- type: entity
+  abstract: true
+  id: PlumbingMachineBase
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    anchored: true
+    noRot: false
+  - type: Clickable
+  - type: Appearance
+  - type: InteractionOutline
+  - type: Anchorable
+  - type: Pullable
+  - type: Rotatable
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: -0.25,-0.25,0.25,0.25
+        density: 190
+        mask:
+        - MachineMask
+        layer:
+        - MachineLayer
+  - type: AtmosPipeColor
+  - type: Damageable
+    damageContainer: StructuralInorganic
+    damageModifierSet: Metallic
+
+# =============================================================================
+# Plumbing Tank - stores reagents in the network
+# =============================================================================
+- type: entity
+  parent: PlumbingMachineBase
+  id: PlumbingTank
+  name: plumbing tank
+  description: A tank that pulls reagents from its inlet (north) and stores up to 400u. Other machines can pull from its outlets (south, east, west).
+  components:
+  - type: Sprite
+    sprite: Structures/Storage/canister.rsi
+    layers:
+    - state: grey
+      color: "#4169E1"
+  - type: PlumbingDevice
+    updateInterval: 2
+  - type: PlumbingTank
+    solutionName: tank
+    transferAmount: 10
+    inletName: inlet
+  - type: Plungeable
+  - type: PlumbingOutlet
+    solutionName: tank
+  - type: SolutionContainerManager
+    solutions:
+      tank:
+        maxVol: 400
+        canReact: false
+  - type: ExaminableSolution
+    solution: tank
+  - type: NodeContainer
+    nodes:
+      inlet:  # Pulls reagents FROM the network (north side)
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: North
+      outletSouth:  # Provides reagents TO the network (south side)
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: South
+      outletEast:  # Provides reagents TO the network (east side)
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: East
+      outletWest:  # Provides reagents TO the network (west side)
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: West
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:SpillBehavior
+        solution: tank
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+  - type: StaticPrice
+    price: 100
+
+# =============================================================================
+# Plumbing Input - pour reagents into the network
+# =============================================================================
+- type: entity
+  parent: PlumbingMachineBase
+  id: PlumbingInput
+  name: plumbing input
+  description: A small tank you pour reagents into. Other machines pull from this. Connects in all directions.
+  components:
+  - type: Sprite
+    sprite: Structures/Storage/canister.rsi
+    layers:
+    - state: grey
+      color: "#32CD32"
+  - type: PlumbingInput
+    solutionName: input
+  - type: Plungeable
+  - type: PlumbingOutlet
+    solutionName: input
+  - type: SolutionContainerManager
+    solutions:
+      input:
+        maxVol: 100
+        canReact: false
+  - type: ExaminableSolution
+    solution: input
+  - type: NodeContainer
+    nodes:
+      outlet:  # Provides reagents TO the network (all directions)
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: Fourway
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:SpillBehavior
+        solution: input
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+  - type: StaticPrice
+    price: 75
+
+# =============================================================================
+# Plumbing Output - draw reagents from the network
+# =============================================================================
+- type: entity
+  parent: PlumbingMachineBase
+  id: PlumbingOutput
+  name: plumbing output
+  description: A small tank that pulls reagents from the network. Draw from it with a container. Connects in all directions.
+  components:
+  - type: Sprite
+    sprite: Structures/Storage/canister.rsi
+    layers:
+    - state: grey
+      color: "#DC143C"
+  - type: PlumbingDevice
+    updateInterval: 2
+  - type: PlumbingOutput
+    solutionName: output
+    requestAmount: 10
+    inletName: inlet
+  - type: Plungeable
+  - type: SolutionContainerManager
+    solutions:
+      output:
+        maxVol: 100
+        canReact: false
+  - type: ExaminableSolution
+    solution: output
+  - type: NodeContainer
+    nodes:
+      inlet:  # Pulls reagents FROM the network (all directions)
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: Fourway
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:SpillBehavior
+        solution: output
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+  - type: StaticPrice
+    price: 75
+
+# =============================================================================
+# Plumbing Reactor - accumulates reagents and triggers reactions
+# =============================================================================
+- type: entity
+  parent: PlumbingMachineBase
+  id: PlumbingReactor
+  name: plumbing reactor
+  description: Pulls target reagents from inlet (north) and triggers reactions when targets are met. Products available at outlet (south).
+  components:
+  - type: Sprite
+    sprite: Structures/Storage/canister.rsi
+    layers:
+    - state: grey
+      color: "#FF8C00"
+  - type: PlumbingDevice
+    updateInterval: 2
+  - type: PlumbingReactor
+    bufferSolutionName: buffer
+    outputSolutionName: output
+    transferAmount: 10
+    inletName: inlet
+    outletName: outlet
+  - type: Plungeable
+  - type: PlumbingOutlet
+    solutionName: output
+    outletName: outlet
+  - type: SolutionContainerManager
+    solutions:
+      buffer:
+        maxVol: 100
+        canReact: false  # Reactions triggered manually when targets met
+      output:
+        maxVol: 100
+        canReact: false
+  - type: ExaminableSolution
+    solution: buffer
+  - type: NodeContainer
+    nodes:
+      inlet:  # Pulls reagents FROM the network (north side)
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: North
+      outlet:  # Provides products TO the network (south side)
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: South
+  - type: UserInterface
+    interfaces:
+      enum.PlumbingReactorUiKey.Key:
+        type: PlumbingReactorBoundUserInterface
+  - type: ActivatableUI
+    key: enum.PlumbingReactorUiKey.Key
+  - type: ApcPowerReceiver
+    powerLoad: 300
+  - type: ExtensionCableReceiver
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:SpillBehavior
+        solution: buffer
+      - !type:SpillBehavior
+        solution: output
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+  - type: StaticPrice
+    price: 150
+
+# =============================================================================
+# Plumbing Filter - separates specific reagents into two outputs
+# =============================================================================
+- type: entity
+  parent: PlumbingMachineBase
+  id: PlumbingFilter
+  name: plumbing filter
+  description: Filters specific reagents. Pulls from inlet (north). Filtered reagents at west output, non-filtered at south output.
+  components:
+  - type: Sprite
+    sprite: Structures/Piping/Atmospherics/gasfilter.rsi
+    layers:
+    - sprite: Structures/Piping/Atmospherics/pipe.rsi
+      state: pipeTrinaryConnectors
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+      color: "#8B4513"
+    - state: gasFilter
+  - type: PipeColorVisuals
+  - type: PlumbingDevice
+    updateInterval: 2
+  - type: PlumbingFilter
+    inletName: inlet
+    filterNodeName: filter
+    passthroughNodeName: passthrough
+    bufferSolutionName: buffer
+    transferAmount: 10
+  - type: Plungeable
+  - type: PlumbingOutlet
+    solutionName: buffer
+  - type: SolutionContainerManager
+    solutions:
+      buffer:
+        maxVol: 20
+        canReact: false
+  - type: ExaminableSolution
+    solution: buffer
+  - type: NodeContainer
+    nodes:
+      inlet:  # Pulls reagents FROM the network (north side)
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: North
+      filter:  # Provides FILTERED reagents TO the network (west side)
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: West
+      passthrough:  # Provides NON-FILTERED reagents TO the network (south side)
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: South
+  - type: AtmosPipeColor
+    color: "#8B4513"
+  - type: UserInterface
+    interfaces:
+      enum.PlumbingFilterUiKey.Key:
+        type: PlumbingFilterBoundUserInterface
+  - type: ActivatableUI
+    key: enum.PlumbingFilterUiKey.Key
+  - type: Flippable
+    mirrorEntity: PlumbingFilterFlipped
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:SpillBehavior
+        solution: buffer
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+  - type: StaticPrice
+    price: 125
+
+# Plumbing Filter - flipped variant (mirror of above)
+- type: entity
+  parent: PlumbingFilter
+  id: PlumbingFilterFlipped
+  suffix: Flipped
+  description: Filters specific reagents. Pulls from inlet (south). Filtered reagents at west output, non-filtered at north output.
+  components:
+  - type: Sprite
+    sprite: Structures/Piping/Atmospherics/gasfilter.rsi
+    layers:
+    - sprite: Structures/Piping/Atmospherics/pipe.rsi
+      state: pipeTrinaryConnectors
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+      color: "#8B4513"
+    - state: gasFilterF
+  - type: NodeContainer
+    nodes:
+      inlet:  # Pulls reagents FROM the network (south side)
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: South
+      filter:  # Provides FILTERED reagents TO the network (west side)
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: West
+      passthrough:  # Provides NON-FILTERED reagents TO the network (north side)
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: North
+  - type: Flippable
+    mirrorEntity: PlumbingFilter
+
+# =============================================================================
+# Plumbing Synthesizer - generates reagents from power
+# =============================================================================
+- type: entity
+  parent: PlumbingMachineBase
+  id: PlumbingSynthesizer
+  name: plumbing synthesizer
+  description: Generates reagents using power. Select a reagent and it fills its buffer for other machines to pull from. Output at south.
+  components:
+  - type: Sprite
+    sprite: Structures/Storage/canister.rsi
+    layers:
+    - state: orange
+  - type: PlumbingDevice
+    updateInterval: 2
+  - type: PlumbingSynthesizer
+    bufferSolutionName: buffer
+    generatableReagents:
+      Iron: 2
+      Carbon: 2
+      Copper: 2
+      Hydrogen: 2
+      Oxygen: 0
+      Sugar: 2
+      Silicon: 5
+      Phosphorus: 5
+  - type: Plungeable
+  - type: PlumbingOutlet
+    solutionName: buffer
+  - type: SolutionContainerManager
+    solutions:
+      buffer:
+        maxVol: 10
+        canReact: false
+  - type: ExaminableSolution
+    solution: buffer
+  - type: NodeContainer
+    nodes:
+      outlet:  # Provides reagents TO the network (south side)
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: South
+  - type: UserInterface
+    interfaces:
+      enum.PlumbingSynthesizerUiKey.Key:
+        type: PlumbingSynthesizerBoundUserInterface
+  - type: ActivatableUI
+    key: enum.PlumbingSynthesizerUiKey.Key
+  - type: PowerCellSlot
+    cellSlotId: cell_slot
+  - type: ItemSlots
+    slots:
+      cell_slot:
+        name: power-cell-slot-component-slot-name-default
+        startingItem: PowerCellMedium
+  - type: ContainerContainer
+    containers:
+      cell_slot: !type:ContainerSlot
+  - type: ApcPowerReceiver
+    powerLoad: 0
+  - type: ExtensionCableReceiver
+  - type: PredictedBatteryVisuals
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:SpillBehavior
+        solution: buffer
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+  - type: StaticPrice
+    price: 200
