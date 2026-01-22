@@ -19,7 +19,7 @@
   parent: BaseItem
   id: RemoteDroneLaptop
   name: drone control laptop
-  components:
+  components: # Drone control laptop intentionally doesnt have DeviceNetwork so that it can be hardcoded or whatever
   - type: Sprite
     sprite: _KS14/Objects/Misc/modular_laptop.rsi
     layers:
@@ -36,6 +36,16 @@
     range: 150
     ports:
     - RemoteDroneSender
+
+  # UI
+  - type: ActivatableUI
+    key: enum.SurveillanceCameraMonitorUiKey.Key
+  - type: SurveillanceCameraMonitor
+  - type: ActivatableUIRequiresVision
+  - type: UserInterface
+    interfaces:
+      enum.SurveillanceCameraMonitorUiKey.Key:
+        type: SurveillanceCameraMonitorBoundUserInterface
 
 - type: entity
   parent: BaseStructureDynamic
@@ -54,6 +64,10 @@
     sinkPort: RemoteDroneReceiver
 
   - type: Eye
+  - type: InputMover
+  - type: MobMover
+  - type: Input
+    context: "human"
 
   - type: RequireProjectileTarget # EVIL
   - type: InteractionOutline
@@ -71,7 +85,7 @@
     thresholds:
     - trigger:
         !type:DamageTrigger
-        damage: 500
+        damage: 60
       behaviors:
       - !type:DoActsBehavior
         acts: ["Destruction"]
