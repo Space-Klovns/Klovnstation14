@@ -1,5 +1,7 @@
+using Content.Shared.DeviceLinking;
 using Robust.Shared.GameStates;
 using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.RemoteDrone;
 
@@ -17,6 +19,19 @@ public sealed partial class RemoteDroneControllerComponent : Component
     [AutoNetworkedField]
     [ViewVariables(VVAccess.ReadOnly)]
     public EntityUid? LinkedDroneUid = null;
+
+    /// <summary>
+    ///     Whether the drone is currently being operated.
+    /// </summary>
+    [AutoNetworkedField]
+    [ViewVariables(VVAccess.ReadOnly)]
+    public bool Controlling = false;
+
+    /// <summary>
+    ///     Port to connect to drone.
+    /// </summary>
+    [DataField, ViewVariables]
+    public ProtoId<SourcePortPrototype> SourcePort;
 
     /// <summary>
     ///     Session of the player controlling the drone.

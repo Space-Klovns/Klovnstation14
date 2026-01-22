@@ -31,12 +31,4 @@ public sealed class RemoteDroneControllerSystem : SharedRemoteDroneControllerSys
         controllerEntity.Comp.UserSession = null;
         _viewSubscriberSystem.RemoveViewSubscriber(controllerEntity.Comp.LinkedDroneUid!.Value, userSession!);
     }
-
-    protected override bool StopControlling(Entity<RemoteDroneControllerComponent> controllerEntity)
-    {
-        if (!base.StopControlling(controllerEntity))
-            return false;
-
-        return true;
-    }
 }

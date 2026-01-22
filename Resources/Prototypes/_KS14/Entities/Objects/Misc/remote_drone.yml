@@ -1,0 +1,91 @@
+
+## Device ports
+
+- type: sourcePort
+  id: RemoteDroneSender
+  name: signal-port-name-remote-drone-sender
+  description: signal-port-description-remote-drone-sender
+  defaultLinks: [ RemoteDroneReceiver ]
+
+- type: sinkPort
+  id: RemoteDroneReceiver
+  name: signal-port-name-remote-drone-receiver
+  description: signal-port-description-remote-drone-receiver
+  defaultLinks: [ RemoteDroneSender ]
+
+## Entities
+
+- type: entity
+  parent: BaseItem
+  id: RemoteDroneLaptop
+  name: drone control laptop
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Misc/modular_laptop.rsi
+    layers:
+    - state: laptop
+      scale: 0.5, 0.5
+    - state: hostile
+      scale: 0.5, 0.5
+      shader: unshaded
+  - type: RemoteDroneController
+    sourcePort: RemoteDroneSender
+  - type: WirelessNetworkConnection
+    range: 150
+  - type: DeviceLinkSource
+    range: 150
+    ports:
+    - RemoteDroneSender
+
+- type: entity
+  parent: BaseStructureDynamic
+  id: RemoteDroneFpv
+  name: fpv drone
+  description: A relic of a historic war.
+  components:
+  - type: Sprite
+    noRot: true
+    sprite: Structures/monitors.rsi
+    layers:
+      - map: [ "enum.SurveillanceCameraVisualsKey.Key" ]
+        state: mobilevision
+
+  - type: RemoteDrone # TODO fix
+    sinkPort: RemoteDroneReceiver
+
+  - type: Eye
+
+  - type: RequireProjectileTarget # EVIL
+  - type: InteractionOutline
+
+  - type: WirelessNetworkConnection
+    range: 150
+  - type: DeviceLinkSink
+    ports:
+    - RemoteDroneReceiver
+
+  - type: Damageable
+    damageContainer: StructuralInorganic
+    damageModifierSet: Metallic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 500
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+
+  - type: Physics
+    bodyType: KinematicController
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.4
+        density: 45
+        mask:
+        - MachineMask
+        layer:
+        - BulletImpassable

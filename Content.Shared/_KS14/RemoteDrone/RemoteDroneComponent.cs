@@ -1,4 +1,6 @@
+using Content.Shared.DeviceLinking;
 using Robust.Shared.GameStates;
+using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.RemoteDrone;
 
@@ -16,6 +18,12 @@ public sealed partial class RemoteDroneComponent : Component
     [AutoNetworkedField]
     [ViewVariables(VVAccess.ReadOnly)]
     public EntityUid? LinkedControllerUid = null;
+
+    /// <summary>
+    ///     Port to connect to controller.
+    /// </summary>
+    [DataField, ViewVariables]
+    public ProtoId<SinkPortPrototype> SinkPort;
 }
 
 /// <summary>
