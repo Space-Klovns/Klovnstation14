@@ -5,11 +5,8 @@ using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Item;
 using Content.Shared.Movement.Components;
 using Content.Shared.Movement.Systems;
-using Content.Shared.Power;
-using Content.Shared.Power.EntitySystems;
 using Content.Shared.PowerCell;
 using Content.Shared.PowerCell.Components;
-using Content.Shared.UserInterface;
 using Content.Shared.Weapons.Ranged.Components;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Containers;
@@ -39,14 +36,15 @@ public abstract class SharedFpvDroneSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<FpvDroneComponent, PowerCellSlotEmptyEvent>(OnPowerCellEmpty);
-        SubscribeLocalEvent<FpvDroneComponent, GettingPickedUpAttemptEvent>(OnAttemptPickup);
+        SubscribeLocalEvent<FpvDroneComponent, PowerCellSlotEmptyEvent>(OnFpvPowerCellEmpty);
+        SubscribeLocalEvent<FpvDroneComponent, GettingPickedUpAttemptEvent>(OnFpvAttemptPickup);
 
+        SubscribeLocalEvent<FpvDroneComponent, RemoteDroneAttemptControlEvent>(OnFpvAttemptControl);
         SubscribeLocalEvent<FpvDroneComponent, RemoteDroneControlStartedEvent>(OnFpvControlStarted);
         SubscribeLocalEvent<FpvDroneComponent, RemoteDroneControlEndedEvent>(OnFpvControlEnded);
     }
 
-    private void OnPowerCellEmpty(Entity<FpvDroneComponent> entity, ref PowerCellSlotEmptyEvent args)
+    private void OnFpvPowerCellEmpty(Entity<FpvDroneComponent> entity, ref PowerCellSlotEmptyEvent args)
     {
         if (!_droneControllerSystem.ResolveDroneAndController(entity.Owner, out _, out var controllerEntity) ||
             !controllerEntity.Value.Comp.Controlling)
@@ -55,7 +53,7 @@ public abstract class SharedFpvDroneSystem : EntitySystem
         _droneControllerSystem.TryStopControlling(controllerEntity.Value);
     }
 
-    private void OnAttemptPickup(Entity<FpvDroneComponent> entity, ref GettingPickedUpAttemptEvent args)
+    private void OnFpvAttemptPickup(Entity<FpvDroneComponent> entity, ref GettingPickedUpAttemptEvent args)
     {
         if (!_droneControllerSystem.ResolveDroneAndController(entity.Owner, out _, out var controllerEntity) ||
             !controllerEntity.Value.Comp.Controlling)
@@ -63,6 +61,11 @@ public abstract class SharedFpvDroneSystem : EntitySystem
 
         // Only cancel if the drone is currently being controlled.
         args.Cancel();
+    }
+
+    private void OnFpvAttemptControl(Entity<FpvDroneComponent> entity, ref RemoteDroneAttemptControlEvent args)
+    {
+        args.Cancelled |= !_powerCellSystem.HasCharge(entity.Owner, entity.Comp.ActiveChargeRate);
     }
 
     private void OnFpvControlStarted(Entity<FpvDroneComponent> entity, ref RemoteDroneControlStartedEvent args)
@@ -101,7 +104,7 @@ public abstract class SharedFpvDroneSystem : EntitySystem
         if (TryComp<PowerCellSlotComponent>(entity.Owner, out var powerCellSlotComponent))
             _itemSlotsSystem.SetLock(entity.Owner, powerCellSlotComponent.CellSlotId, true);
 
-        DoHeartbeat(entity.Owner);
+        DoHeartbeat(args.ControllerEntity.Owner);
         UpdateFpvSurveillance(entity);
     }
 
@@ -139,6 +142,6 @@ public abstract class SharedFpvDroneSystem : EntitySystem
         if (TryComp<PowerCellSlotComponent>(entity.Owner, out var powerCellSlotComponent))
             _itemSlotsSystem.SetLock(entity.Owner, powerCellSlotComponent.CellSlotId, false);
 
-        DoHeartbeat(entity.Owner);
+        DoHeartbeat(args.ControllerEntity.Owner);
     }
 }

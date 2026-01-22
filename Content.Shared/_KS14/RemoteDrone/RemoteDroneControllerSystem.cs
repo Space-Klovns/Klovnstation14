@@ -52,13 +52,24 @@ public sealed class RemoteDroneControllerSystem : EntitySystem
 
     private void OnInterfaceOpenedAttempt(Entity<RemoteDroneControllerComponent> entity, ref ActivatableUIOpenAttemptEvent args)
     {
-        if (entity.Comp.LinkedDroneUid != null)
+        if (entity.Comp.LinkedDroneUid is not { } droneUid)
+        {
+            args.Cancel();
+            if (!args.Silent)
+                _popupSystem.PopupClient(Loc.GetString("remote-drone-controller-no-linked-drone"), entity.Owner, args.User);
+
             return;
+        }
 
-        args.Cancel();
+        if (!AttemptControlDrone(entity, droneUid, args.User))
+        {
+            args.Cancel();
+            if (!args.Silent)
+                _popupSystem.PopupClient(Loc.GetString("remote-drone-controller-bad-connection"), entity.Owner, args.User, PopupType.SmallCaution);
 
-        if (!args.Silent)
-            _popupSystem.PopupClient(Loc.GetString("remote-drone-controller-no-linked-drone"), entity.Owner, args.User);
+            return;
+        }
+
     }
 
     private void OnInterfaceOpened(Entity<RemoteDroneControllerComponent> entity, ref AfterActivatableUIOpenEvent args)
@@ -87,8 +98,10 @@ public sealed class RemoteDroneControllerSystem : EntitySystem
     // this might break if this event becomes pure
     private void OnControllerLinkAttempt(Entity<RemoteDroneControllerComponent> entity, ref LinkAttemptEvent args)
     {
-        if (args.SourcePort != entity.Comp.SourcePort.ToString() ||
-            !_droneQuery.TryGetComponent(args.Sink, out var droneComponent))
+        if (args.SourcePort != entity.Comp.SourcePort.ToString())
+            return;
+
+        if (!_droneQuery.TryGetComponent(args.Sink, out var droneComponent))
         {
             args.Cancel();
             return;
@@ -195,6 +208,15 @@ public sealed class RemoteDroneControllerSystem : EntitySystem
         return true;
     }
 
+    public bool AttemptControlDrone(Entity<RemoteDroneControllerComponent> controllerEntity, EntityUid droneUid, EntityUid userUid)
+    {
+        var attemptEvent = new RemoteDroneAttemptControlEvent(controllerEntity, droneUid, userUid);
+        RaiseLocalEvent(controllerEntity, ref attemptEvent);
+        RaiseLocalEvent(droneUid, ref attemptEvent);
+
+        return attemptEvent.Cancelled;
+    }
+
     /// <summary>
     ///     Assumes the controller is currently linked to a drone. Calls necessary
     ///         before-control-changed methods before raising events. Will dirty the controller entity.
@@ -207,6 +229,12 @@ public sealed class RemoteDroneControllerSystem : EntitySystem
 
         if (!ResolveDroneLink(controllerEntity, out var droneUid))
             return false;
+
+        if (!AttemptControlDrone(controllerEntity, droneUid.Value, userUid))
+        {
+            _popupSystem.PopupClient(Loc.GetString("remote-drone-controller-bad-connection"), controllerEntity.Owner, userUid, PopupType.SmallCaution);
+            return false;
+        }
 
         controllerEntity.Comp.Controlling = true;
         controllerEntity.Comp.UserUid = userUid;

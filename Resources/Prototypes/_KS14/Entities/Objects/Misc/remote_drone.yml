@@ -105,7 +105,7 @@
     baseSprintSpeed: 8
     baseAcceleration: 5
     baseFriction: 5
-    weightlessAcceleration: 0
+    baseWeightlessModifier: 0
 
   # Other mob-related
   - type: RequireProjectileTarget
