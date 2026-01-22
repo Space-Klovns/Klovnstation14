@@ -304,7 +304,7 @@ public sealed class SurveillanceCameraMonitorSystem : EntitySystem
         }
     }
 
-    // KS14
+    // KS14: FPV drones, made this into its own method
     public void KsAddMobileCamera(
         EntityUid cameraUid,
         SurveillanceCameraMonitorComponent component,
@@ -647,7 +647,7 @@ public sealed class SurveillanceCameraMonitorSystem : EntitySystem
 
     // Attempts to switch over the current viewed camera on this monitor
     // to the new camera.
-    private void TrySwitchCameraByUid(EntityUid uid, EntityUid newCamera, SurveillanceCameraMonitorComponent? monitor = null)
+    public /* KS14 FPV drones: made public */ void TrySwitchCameraByUid(EntityUid uid, EntityUid newCamera, SurveillanceCameraMonitorComponent? monitor = null)
     {
         if (!Resolve(uid, ref monitor))
         {
@@ -690,7 +690,7 @@ public sealed class SurveillanceCameraMonitorSystem : EntitySystem
         AddViewer(uid, player);
     }
 
-    private void UpdateUserInterface(EntityUid uid, SurveillanceCameraMonitorComponent? monitor = null, EntityUid? player = null)
+    public /* KS14 FPV drones: made public */ void UpdateUserInterface(EntityUid uid, SurveillanceCameraMonitorComponent? monitor = null, EntityUid? player = null)
     {
         if (!Resolve(uid, ref monitor))
         {

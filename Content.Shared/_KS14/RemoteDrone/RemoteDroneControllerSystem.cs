@@ -2,19 +2,20 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Content.Shared.DeviceLinking;
 using Content.Shared.DeviceLinking.Events;
-using Content.Shared.Power.Components;
-using Content.Shared.Power.EntitySystems;
+using Content.Shared.Popups;
 using Content.Shared.SurveillanceCamera;
 using Content.Shared.UserInterface;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Content.Shared._KS14.RemoteDrone;
 
-public abstract class SharedRemoteDroneControllerSystem : EntitySystem
+public sealed class RemoteDroneControllerSystem : EntitySystem
 {
-    [Dependency] private readonly SharedPowerReceiverSystem _powerReceiverSystem = default!;
+    [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly SharedDeviceLinkSystem _sharedDeviceLinkSystem = default!;
+    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
 
     private EntityQuery<RemoteDroneComponent> _droneQuery;
 
@@ -55,15 +56,24 @@ public abstract class SharedRemoteDroneControllerSystem : EntitySystem
             return;
 
         args.Cancel();
+
+        if (!args.Silent)
+            _popupSystem.PopupClient(Loc.GetString("remote-drone-controller-no-linked-drone"), entity.Owner, args.User);
     }
 
     private void OnInterfaceOpened(Entity<RemoteDroneControllerComponent> entity, ref AfterActivatableUIOpenEvent args)
     {
+        if (!_gameTiming.IsFirstTimePredicted)
+            return;
+
         TryStartControlling(entity, args.User);
     }
 
     private void OnInterfaceClosed(Entity<RemoteDroneControllerComponent> entity, ref BoundUIClosedEvent args)
     {
+        if (!_gameTiming.IsFirstTimePredicted)
+            return;
+
         if (args.Actor != entity.Comp.UserUid)
             return;
 
@@ -77,14 +87,10 @@ public abstract class SharedRemoteDroneControllerSystem : EntitySystem
     // this might break if this event becomes pure
     private void OnControllerLinkAttempt(Entity<RemoteDroneControllerComponent> entity, ref LinkAttemptEvent args)
     {
-        if (args.SourcePort != entity.Comp.SourcePort.ToString())
-            return;
-
-        if (!_droneQuery.TryGetComponent(args.Sink, out var droneComponent))
+        if (args.SourcePort != entity.Comp.SourcePort.ToString() ||
+            !_droneQuery.TryGetComponent(args.Sink, out var droneComponent))
         {
-            Log.Error($"Tried to link remote drone controller `{ToPrettyString(entity.Owner)}` to entity that doesn't have RemoteDroneComponent `{ToPrettyString(args.Sink)}`.");
-            DebugTools.Assert($"Tried to link remote drone controller `{ToPrettyString(entity.Owner)}` to entity that doesn't have RemoteDroneComponent `{ToPrettyString(args.Sink)}`.");
-
+            args.Cancel();
             return;
         }
 
@@ -190,17 +196,11 @@ public abstract class SharedRemoteDroneControllerSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Called right before raising control-starting events.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected virtual void BeforeStartingControl(Entity<RemoteDroneControllerComponent> controllerEntity, EntityUid userUid) { }
-
-    /// <summary>
     ///     Assumes the controller is currently linked to a drone. Calls necessary
     ///         before-control-changed methods before raising events. Will dirty the controller entity.
     /// </summary>
     /// <returns>Whether there was success.</returns>
-    protected bool TryStartControlling(Entity<RemoteDroneControllerComponent> controllerEntity, EntityUid userUid)
+    public bool TryStartControlling(Entity<RemoteDroneControllerComponent> controllerEntity, EntityUid userUid)
     {
         if (controllerEntity.Comp.Controlling)
             return false;
@@ -211,8 +211,6 @@ public abstract class SharedRemoteDroneControllerSystem : EntitySystem
         controllerEntity.Comp.Controlling = true;
         controllerEntity.Comp.UserUid = userUid;
 
-        BeforeStartingControl(controllerEntity, userUid);
-
         var controlEvent = new RemoteDroneControlStartedEvent(controllerEntity, droneUid.Value);
         RaiseLocalEvent(controllerEntity, ref controlEvent);
         RaiseLocalEvent(droneUid.Value, ref controlEvent);
@@ -221,15 +219,8 @@ public abstract class SharedRemoteDroneControllerSystem : EntitySystem
         return true;
     }
 
-    // If you change this in any way make sure to change description for RemoteDroneControlEndedEvent and change the other instance of this notice if necessary
-    /// <summary>
-    ///     Called right after raising control-ending events.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected virtual void AfterEndingControl(Entity<RemoteDroneControllerComponent> controllerEntity) { }
-
     /// <inheritdoc cref="TryStartControlling(Entity{RemoteDroneControllerComponent}, EntityUid)"/>
-    protected bool TryStopControlling(Entity<RemoteDroneControllerComponent> controllerEntity)
+    public bool TryStopControlling(Entity<RemoteDroneControllerComponent> controllerEntity)
     {
         if (!controllerEntity.Comp.Controlling)
             return false;
@@ -241,8 +232,6 @@ public abstract class SharedRemoteDroneControllerSystem : EntitySystem
         RaiseLocalEvent(controllerEntity, ref controlEvent);
         RaiseLocalEvent(droneUid.Value, ref controlEvent);
 
-        AfterEndingControl(controllerEntity);
-
         controllerEntity.Comp.Controlling = false;
         controllerEntity.Comp.UserUid = null;
 
@@ -250,12 +239,21 @@ public abstract class SharedRemoteDroneControllerSystem : EntitySystem
         return true;
     }
 
-    protected bool IsApcOrBatteryPowered(EntityUid uid)
+    /// <summary>
+    ///    Resolves the drone controller entity for a given drone UID.
+    /// </summary>
+    /// <returns>Whether both drone component and controller entity were successfully resolved.</returns>
+    public bool ResolveDroneAndController(EntityUid droneUid, [MaybeNullWhen(false)] out RemoteDroneComponent droneComponent, [NotNullWhen(true)] out Entity<RemoteDroneControllerComponent>? controllerEntity)
     {
-        if (TryComp<BatteryComponent>(uid, out var batteryComponent) &&
-            batteryComponent.State == BatteryState.Empty)
+        if (!_droneQuery.TryGetComponent(droneUid, out droneComponent) ||
+            droneComponent.LinkedControllerUid is not { } lCU ||
+            !TryComp<RemoteDroneControllerComponent>(lCU, out var droneControllerComponent))
+        {
+            controllerEntity = null;
             return false;
+        }
 
-        return _powerReceiverSystem.IsPowered(uid);
+        controllerEntity = (lCU, droneControllerComponent);
+        return true;
     }
 }

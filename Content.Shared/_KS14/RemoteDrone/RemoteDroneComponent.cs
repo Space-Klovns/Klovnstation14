@@ -9,7 +9,7 @@ namespace Content.Shared._KS14.RemoteDrone;
 /// </summary>
 [RegisterComponent, NetworkedComponent]
 [AutoGenerateComponentState]
-[Access(typeof(SharedRemoteDroneControllerSystem))]
+[Access(typeof(RemoteDroneControllerSystem))]
 public sealed partial class RemoteDroneComponent : Component
 {
     /// <summary>

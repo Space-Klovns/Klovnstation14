@@ -46,6 +46,9 @@ public sealed class FpvDroneSystem : SharedFpvDroneSystem
                 GetNetEntity(droneUid),
                 GetNetCoordinates(_transformSystem.ToCoordinates(droneUid, _transformSystem.ToMapCoordinates(Transform(droneUid).Coordinates)))
             );
+            _surveillanceMonitorSystem.TrySwitchCameraByUid(controllerUid, droneUid, monitor: controllerSurveillanceMonitorComponent);
+
+            _surveillanceMonitorSystem.UpdateUserInterface(controllerUid, controllerSurveillanceMonitorComponent);
         }
     }
 }

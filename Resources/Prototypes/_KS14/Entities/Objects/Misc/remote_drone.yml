@@ -24,9 +24,9 @@
     sprite: _KS14/Objects/Misc/modular_laptop.rsi
     layers:
     - state: laptop
-      scale: 0.5, 0.5
+      scale: 0.8, 0.8
     - state: hostile
-      scale: 0.5, 0.5
+      scale: 0.8, 0.8
       shader: unshaded
   - type: RemoteDroneController
     sourcePort: RemoteDroneSender
@@ -53,17 +53,19 @@
   name: fpv drone
   description: A relic of a historic war.
   components:
+  # Misc
   - type: Sprite
     noRot: true
     sprite: Structures/monitors.rsi
     layers:
-      - map: [ "enum.SurveillanceCameraVisualsKey.Key" ]
-        state: mobilevision
+    - map: [ "enum.SurveillanceCameraVisualsKey.Key" ]
+      state: mobilevision
+  - type: FlyBySound
+    prob: 0
+    sound:
+      path: /Audio/_KS14/Effects/fpv_drone_flyby.ogg
 
-  - type: RemoteDrone
-    sinkPort: RemoteDroneReceiver
-  - type: FpvDrone
-
+  # Mob
   - type: Eye
   - type: CanMoveInAir
   - type: MovementSpeedModifier
@@ -73,16 +75,36 @@
     baseFriction: 5
     frictionNoInput: 3.5
 
+  # Other mob-related
   - type: RequireProjectileTarget
     active: True # EVIL
-  - type: InteractionOutline
+  #- type: InteractionOutline
 
+  # Device network
   - type: WirelessNetworkConnection
     range: 150
   - type: DeviceLinkSink
     ports:
     - RemoteDroneReceiver
+  - type: DeviceNetwork
+    deviceNetId: Private
 
+  # Drone
+  - type: RemoteDrone
+    sinkPort: RemoteDroneReceiver
+  - type: FpvDrone
+    flybySoundProbability: 0.65
+    audioSpecifier:
+      path: /Audio/_KS14/Effects/fpv_drone_static.ogg
+      params:
+        loop: true
+        volume: -1
+  - type: SurveillanceCamera
+    mobile: True  # Goobstation - mobile cameras fix
+  - type: Item
+    size: Ginormous
+
+  # Damage
   - type: Damageable
     damageContainer: StructuralInorganic
     damageModifierSet: Metallic
@@ -95,6 +117,7 @@
       - !type:DoActsBehavior
         acts: ["Destruction"]
 
+  # Fixtures
   - type: Fixtures
     fixtures:
       fix1:
@@ -106,3 +129,9 @@
         - SmallMobMask
         layer:
         - SmallMobLayer
+      fly-by:
+        shape: !type:PhysShapeCircle
+          radius: 3.25
+        hard: False
+        layer:
+        - MobMask

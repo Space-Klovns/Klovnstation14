@@ -16,7 +16,8 @@ public record struct RemoteDroneUnlinkedEvent(Entity<RemoteDroneControllerCompon
 
 /// <summary>
 ///     Raised when a remote drone <i>starts</i> being controlled by something,
-///         on both the drone and controller.
+///         on both the drone and controller. When this is raised, the drone controller's
+///         <see cref="RemoteDroneControllerComponent.UserUid"/> should be assumed to be notnull.
 /// </summary>
 [ByRefEvent]
 public record struct RemoteDroneControlStartedEvent(Entity<RemoteDroneControllerComponent> ControllerEntity, EntityUid DroneUid);
@@ -25,8 +26,7 @@ public record struct RemoteDroneControlStartedEvent(Entity<RemoteDroneController
 ///     Raised when a remote drone <i>stops</i> being controlled by something,
 ///         on both the drone and controller.
 ///
-///     The drone may not exist when this is called. When this is raised, the drone's viewsubscriber
-///         and <see cref="RemoteDroneControllerComponent.UserSession"/> have not yet been removed.
+///     The drone may not exist when this is raised.
 /// </summary>
 [ByRefEvent]
 public record struct RemoteDroneControlEndedEvent(Entity<RemoteDroneControllerComponent> ControllerEntity, EntityUid? DroneUid);
