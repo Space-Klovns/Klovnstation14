@@ -31,5 +31,19 @@ public sealed partial class FpvDroneComponent : Component
     public bool Active = false;
 }
 
+/// <summary>
+///     Added to a drone controller that is linked to an FPV drone.
+///         This is used to store battery state of the FPV drone, without
+///         having to override PVS just for the drone to be networked to everyone.
+/// </summary>
+[RegisterComponent, NetworkedComponent]
+[Access(typeof(SharedFpvDroneSystem))]
+[AutoGenerateComponentState]
+public sealed partial class FpvDroneControllerComponent : Component
+{
+    [DataField, AutoNetworkedField]
+    public bool HasSufficientCharge = false;
+}
+
 [Serializable, NetSerializable]
 public enum FpvDroneVisuals : byte { Active }

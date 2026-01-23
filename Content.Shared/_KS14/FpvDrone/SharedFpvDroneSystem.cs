@@ -5,6 +5,8 @@ using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Item;
 using Content.Shared.Movement.Components;
 using Content.Shared.Movement.Systems;
+using Content.Shared.Power;
+using Content.Shared.Power.Components;
 using Content.Shared.PowerCell;
 using Content.Shared.PowerCell.Components;
 using Content.Shared.Weapons.Ranged.Components;
@@ -42,12 +44,57 @@ public abstract class SharedFpvDroneSystem : EntitySystem
     {
         base.Initialize();
 
+        SubscribeLocalEvent<FpvDroneComponent, RemoteDroneLinkedEvent>(OnFpvLinked);
+        SubscribeLocalEvent<FpvDroneComponent, RemoteDroneUnlinkedEvent>(OnFpvUnlinked);
+        SubscribeLocalEvent<FpvDroneComponent, PowerCellChangedEvent>(OnFpvCellChanged);
+        SubscribeLocalEvent<FpvDroneComponent, BatteryStateChangedEvent>(OnFpvBatteryStateChanged);
+
         SubscribeLocalEvent<FpvDroneComponent, PowerCellSlotEmptyEvent>(OnFpvPowerCellEmpty);
         SubscribeLocalEvent<FpvDroneComponent, GettingPickedUpAttemptEvent>(OnFpvAttemptPickup);
 
         SubscribeLocalEvent<FpvDroneComponent, RemoteDroneAttemptControlEvent>(OnFpvAttemptControl);
         SubscribeLocalEvent<FpvDroneComponent, RemoteDroneControlStartedEvent>(OnFpvControlStarted);
         SubscribeLocalEvent<FpvDroneComponent, RemoteDroneControlEndedEvent>(OnFpvControlEnded);
+    }
+
+    private void OnFpvLinked(Entity<FpvDroneComponent> entity, ref RemoteDroneLinkedEvent args)
+    {
+        var fpvControllerComponent = EntityManager.ComponentFactory.GetComponent<FpvDroneControllerComponent>();
+        fpvControllerComponent.HasSufficientCharge = _powerCellSystem.HasCharge(entity.Owner, ChargeThreshold);
+        AddComp(args.ControllerEntity, fpvControllerComponent);
+    }
+
+    private void OnFpvUnlinked(Entity<FpvDroneComponent> entity, ref RemoteDroneUnlinkedEvent args)
+    {
+        RemComp<FpvDroneControllerComponent>(args.ControllerEntity);
+    }
+
+    private void OnFpvCellChanged(Entity<FpvDroneComponent> entity, ref PowerCellChangedEvent args)
+    {
+        if (args.Ejected)
+            TryUpdateFpvChargeState(entity, false);
+        else
+            TryUpdateFpvChargeState(entity, _powerCellSystem.HasCharge(entity.Owner, ChargeThreshold));
+    }
+
+    private void OnFpvBatteryStateChanged(Entity<FpvDroneComponent> entity, ref BatteryStateChangedEvent args)
+    {
+        TryUpdateFpvChargeState(entity, args.NewState != BatteryState.Empty);
+    }
+
+    private void TryUpdateFpvChargeState(EntityUid droneUid, bool hasSufficientCharge)
+    {
+        if (!_droneControllerSystem.ResolveDroneAndController(droneUid, out _, out var controllerEntity))
+            return;
+
+        if (!TryComp<FpvDroneControllerComponent>(controllerEntity, out var fpvControllerComponent))
+        {
+            DebugTools.Assert($"FPV drone's controller didnt have FpvDroneControllerComponent.");
+            return;
+        }
+
+        fpvControllerComponent.HasSufficientCharge = hasSufficientCharge;
+        Dirty(controllerEntity.Value.Owner, fpvControllerComponent);
     }
 
     private void OnFpvPowerCellEmpty(Entity<FpvDroneComponent> entity, ref PowerCellSlotEmptyEvent args)
@@ -71,7 +118,14 @@ public abstract class SharedFpvDroneSystem : EntitySystem
 
     private void OnFpvAttemptControl(Entity<FpvDroneComponent> entity, ref RemoteDroneAttemptControlEvent args)
     {
-        args.Cancelled |= !_powerCellSystem.HasCharge(entity.Owner, ChargeThreshold);
+        if (!TryComp<FpvDroneControllerComponent>(args.ControllerEntity, out var fpvControllerComponent))
+        {
+            DebugTools.Assert($"FPV drone's controller didnt have FpvDroneControllerComponent.");
+            args.Cancelled = true;
+            return;
+        }
+
+        args.Cancelled |= !fpvControllerComponent.HasSufficientCharge;
     }
 
     private void OnFpvControlStarted(Entity<FpvDroneComponent> entity, ref RemoteDroneControlStartedEvent args)
