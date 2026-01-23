@@ -40,7 +40,7 @@ public abstract class SharedFpvDroneSystem : EntitySystem
     [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
     [Dependency] private readonly PowerCellSystem _powerCellSystem = default!;
-    [Dependency] private readonly RemoteDroneControllerSystem _droneControllerSystem = default!;
+    [Dependency] private readonly RemoteDroneSystem _droneControllerSystem = default!;
     [Dependency] private readonly ItemSlotsSystem _itemSlotsSystem = default!;
     [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
     [Dependency] private readonly INetManager _netManager = default!;

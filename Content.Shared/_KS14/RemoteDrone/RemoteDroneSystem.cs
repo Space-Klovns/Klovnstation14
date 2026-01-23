@@ -15,7 +15,7 @@ using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Content.Shared._KS14.RemoteDrone;
 
-public sealed class RemoteDroneControllerSystem : EntitySystem
+public sealed class RemoteDroneSystem : EntitySystem
 {
     [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly SharedDeviceLinkSystem _sharedDeviceLinkSystem = default!;

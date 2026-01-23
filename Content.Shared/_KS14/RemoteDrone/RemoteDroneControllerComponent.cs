@@ -15,7 +15,7 @@ namespace Content.Shared._KS14.RemoteDrone;
 /// </summary>
 [RegisterComponent, NetworkedComponent]
 [AutoGenerateComponentState]
-[Access(typeof(RemoteDroneControllerSystem))]
+[Access(typeof(RemoteDroneSystem))]
 public sealed partial class RemoteDroneControllerComponent : Component
 {
     /// <summary>
@@ -36,7 +36,7 @@ public sealed partial class RemoteDroneControllerComponent : Component
     ///     Port to connect to drone.
     /// </summary>
     [DataField, ViewVariables]
-    public ProtoId<SourcePortPrototype> SourcePort;
+    public ProtoId<SourcePortPrototype> SourcePort = string.Empty;
 
     /// <summary>
     ///     Uid of the entity controlling the drone.

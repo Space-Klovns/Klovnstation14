@@ -28,10 +28,10 @@ public sealed partial class FpvDroneComponent : Component
     ///     UID of the audio entity used for the drone flying sound.
     /// </summary>
     [AutoNetworkedField, ViewVariables(VVAccess.ReadOnly)]
-    public EntityUid? AudioUid;
+    public EntityUid? AudioUid = null;
 
     [DataField(required: true), ViewVariables]
-    public ProtoId<SinkPortPrototype> DropStoragePort;
+    public ProtoId<SinkPortPrototype> DropStoragePort = string.Empty;
 
     /// <summary>
     ///     ID of the container to be emptied upon the necessary signal.
