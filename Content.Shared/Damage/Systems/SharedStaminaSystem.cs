@@ -143,7 +143,6 @@ public abstract partial class SharedStaminaSystem : EntitySystem
         // if (component.Critical)
         //     return;
 
-        var damage = args.PushProbability * component.CritThreshold;
         if (TryComp<ComplexShoveComponent>(args.Source, out var sourceComplexShoveComponent) &&
             _complexShoveSystem.TryGetDeltaUnitSafe(args.Source, uid, out var deltaUnit, out var sourceWorldPosition))
         {
@@ -152,7 +151,7 @@ public abstract partial class SharedStaminaSystem : EntitySystem
                 args.PopupPrefix = "disarm-action-shove-collision-";
                 goto finishShove;
             }
-            else if (_complexShoveSystem.TryBasicShove((args.Source, sourceComplexShoveComponent), (uid, component), deltaUnit.Value, damage))
+            else if (_complexShoveSystem.TryBasicShove((args.Source, sourceComplexShoveComponent), (uid, component), deltaUnit.Value))
             {
                 args.PopupPrefix = "disarm-action-shove-";
                 goto finishShove;
@@ -162,6 +161,7 @@ public abstract partial class SharedStaminaSystem : EntitySystem
         }
 
         // KS14 end
+        var damage = args.PushProbability * component.CritThreshold;
         TakeStaminaDamage(uid, damage, component, source: args.Source);
 
         args.PopupPrefix = "disarm-action-shove-";

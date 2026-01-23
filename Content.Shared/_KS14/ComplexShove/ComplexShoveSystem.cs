@@ -70,7 +70,7 @@ public sealed class ComplexShoveSystem : EntitySystem
             shovedEntity.Owner,
             shovedEntity.Comp.CritThreshold * shoverEntity.Comp2.WallshoveStaminaDamageFraction,
             component: shovedEntity.Comp,
-            source: shovedEntity,
+            source: shoverEntity,
             ignoreResist: true
         );
 
@@ -81,16 +81,16 @@ public sealed class ComplexShoveSystem : EntitySystem
     }
 
     /// <returns>Whether basic shove did anything.</returns>
-    public bool TryBasicShove(Entity<ComplexShoveComponent?> shoverEntity, Entity<StaminaComponent> shovedEntity, Vector2 deltaUnit, float staminaDamage)
+    public bool TryBasicShove(Entity<ComplexShoveComponent?> shoverEntity, Entity<StaminaComponent> shovedEntity, Vector2 deltaUnit)
     {
         if (!Resolve(shoverEntity, ref shoverEntity.Comp, logMissing: false))
             return false;
 
         _staminaSystem.TakeStaminaDamage(
-            shoverEntity.Owner,
-            staminaDamage,
+            shovedEntity.Owner,
+            shovedEntity.Comp.CritThreshold * shoverEntity.Comp.BasicShoveStaminaDamageFraction,
             component: shovedEntity.Comp,
-            source: shovedEntity,
+            source: shoverEntity,
             ignoreResist: true
         );
 
