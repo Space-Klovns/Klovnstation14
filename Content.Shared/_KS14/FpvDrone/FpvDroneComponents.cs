@@ -32,7 +32,7 @@ public sealed partial class FpvDroneComponent : Component
     public EntityUid? AudioUid = null;
 
     [DataField(required: true), ViewVariables]
-    public ProtoId<SinkPortPrototype> DropStoragePort = string.Empty;
+    public ProtoId<SinkPortPrototype> DropStoragePort = "FpvDroneTrigger";
 
     /// <summary>
     ///     ID of the container to be emptied upon the necessary signal.

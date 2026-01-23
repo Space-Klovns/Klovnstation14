@@ -37,7 +37,7 @@ public sealed partial class RemoteDroneControllerComponent : Component
     ///     Port to connect to drone.
     /// </summary>
     [DataField, ViewVariables]
-    public ProtoId<SourcePortPrototype> SourcePort = string.Empty;
+    public ProtoId<SourcePortPrototype> SourcePort = "RemoteDroneSender";
 
     /// <summary>
     ///     Uid of the entity controlling the drone.

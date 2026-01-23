@@ -29,5 +29,5 @@ public sealed partial class RemoteDroneComponent : Component
     ///     Port to connect to controller.
     /// </summary>
     [DataField, ViewVariables]
-    public ProtoId<SinkPortPrototype> SinkPort = string.Empty;
+    public ProtoId<SinkPortPrototype> SinkPort = "RemoteDroneReceiver";
 }
