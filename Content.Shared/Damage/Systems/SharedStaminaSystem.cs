@@ -1,4 +1,5 @@
 using System.Linq;
+using Content.Shared._KS14.ComplexShove; // KS14
 using Content.Shared.Administration.Logs;
 using Content.Shared.Alert;
 using Content.Shared.CCVar;
@@ -44,6 +45,7 @@ public abstract partial class SharedStaminaSystem : EntitySystem
     [Dependency] private readonly SharedColorFlashEffectSystem _color = default!;
     [Dependency] private readonly StatusEffectsSystem _status = default!;
     [Dependency] protected readonly SharedStunSystem StunSystem = default!;
+    [Dependency] private readonly ComplexShoveSystem _complexShoveSystem = default!; // KS14
 
     /// <summary>
     /// How much of a buffer is there between the stun duration and when stuns can be re-applied.
@@ -113,7 +115,7 @@ public abstract partial class SharedStaminaSystem : EntitySystem
 
         var curTime = Timing.CurTime;
         var pauseTime = _metadata.GetPauseTime(uid);
-        return MathF.Max(0f, component.StaminaDamage - MathF.Max(0f, (float) (curTime - (component.NextUpdate + pauseTime)).TotalSeconds * component.Decay));
+        return MathF.Max(0f, component.StaminaDamage - MathF.Max(0f, (float)(curTime - (component.NextUpdate + pauseTime)).TotalSeconds * component.Decay));
     }
 
     private void OnRejuvenate(Entity<StaminaComponent> entity, ref RejuvenateEvent args)
@@ -136,15 +138,35 @@ public abstract partial class SharedStaminaSystem : EntitySystem
         if (args.Handled)
             return;
 
-        if (component.Critical)
-            return;
+        // KS14: added stamcrit shoving
+        // KS14 start
+        // if (component.Critical)
+        //     return;
 
         var damage = args.PushProbability * component.CritThreshold;
+        if (TryComp<ComplexShoveComponent>(args.Source, out var sourceComplexShoveComponent) &&
+            _complexShoveSystem.TryGetDeltaUnitSafe(args.Source, uid, out var deltaUnit, out var sourceWorldPosition))
+        {
+            if (_complexShoveSystem.TryWallshove((args.Source, null, sourceComplexShoveComponent), (uid, component), sourceWorldPosition.Value, deltaUnit.Value))
+            {
+                args.PopupPrefix = "disarm-action-shove-collision-";
+                goto finishShove;
+            }
+            else if (_complexShoveSystem.TryBasicShove((args.Source, sourceComplexShoveComponent), (uid, component), deltaUnit.Value, damage))
+            {
+                args.PopupPrefix = "disarm-action-shove-";
+                goto finishShove;
+            }
+
+            // if nothing happened then just default to normal shove.
+        }
+
+        // KS14 end
         TakeStaminaDamage(uid, damage, component, source: args.Source);
 
         args.PopupPrefix = "disarm-action-shove-";
+    finishShove: // ks14 : added goto
         args.IsStunned = component.Critical;
-
         args.Handled = true;
     }
 
@@ -232,7 +254,7 @@ public abstract partial class SharedStaminaSystem : EntitySystem
     }
 
     // Here so server can properly tell all clients in PVS range to start the animation
-    protected virtual void SetStaminaAnimation(Entity<StaminaComponent> entity){}
+    protected virtual void SetStaminaAnimation(Entity<StaminaComponent> entity) { }
 
     private void SetStaminaAlert(EntityUid uid, StaminaComponent? component = null)
     {
@@ -240,7 +262,7 @@ public abstract partial class SharedStaminaSystem : EntitySystem
             return;
 
         var severity = ContentHelpers.RoundToLevels(MathF.Max(0f, component.CritThreshold - component.StaminaDamage), component.CritThreshold, 7);
-        _alerts.ShowAlert(uid, component.StaminaAlert, (short) severity);
+        _alerts.ShowAlert(uid, component.StaminaAlert, (short)severity);
     }
 
     /// <summary>

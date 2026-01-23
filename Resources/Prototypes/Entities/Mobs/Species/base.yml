@@ -247,6 +247,8 @@
   - type: Buckle
   - type: CombatMode
     canDisarm: true
+    disarmFailChance: 0 # KS14: shove rework
+  - type: ComplexShove # KS14: shove rework
   - type: MeleeWeapon
     soundHit:
       collection: Punch
