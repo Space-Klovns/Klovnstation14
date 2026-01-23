@@ -11,7 +11,11 @@
   id: RemoteDroneReceiver
   name: signal-port-name-remote-drone-receiver
   description: signal-port-description-remote-drone-receiver
-  defaultLinks: [ RemoteDroneSender ]
+
+- type: sinkPort
+  id: FpvDroneTrigger
+  name: signal-port-name-fpv-drone-trigger
+  description: signal-port-description-fpv-drone-trigger
 
 ## Entities
 
@@ -75,6 +79,15 @@
     prob: 0
     sound:
       path: /Audio/_KS14/Effects/fpv_drone_flyby.ogg
+  - type: DamageOnHighSpeedImpact
+    damage:
+      types:
+        Brute: 25
+    minimumSpeed: 3
+    speedDamageFactor: 4
+    soundHit:
+      collection: MetalThud
+    damageCooldown: 0.8
 
   # Cell
   - type: PowerCellDraw
@@ -122,12 +135,14 @@
 
   # Device network
   - type: WirelessNetworkConnection
-    range: 150
+    range: 250
+  - type: DeviceNetwork
+    deviceNetId: Wireless
+    receiveFrequencyId: BasicDevice
   - type: DeviceLinkSink
     ports:
     - RemoteDroneReceiver
-  - type: DeviceNetwork
-    deviceNetId: Private
+    - FpvDroneTrigger
 
   # Drone
   - type: RemoteDrone
@@ -139,6 +154,8 @@
       params:
         loop: true
         volume: -1
+    emptiedContainerId: storagebase
+    dropStoragePort: FpvDroneTrigger
   - type: SurveillanceCamera
     mobile: True  # Goobstation - mobile cameras fix
   - type: Item

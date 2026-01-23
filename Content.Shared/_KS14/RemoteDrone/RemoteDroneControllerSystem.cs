@@ -25,7 +25,7 @@ public sealed class RemoteDroneControllerSystem : EntitySystem
         _droneQuery = GetEntityQuery<RemoteDroneComponent>();
 
         //// Ports
-        // Drones themselves aren't subscribed to port events, only controllers, to avoid confusion
+        SubscribeLocalEvent<RemoteDroneComponent, LinkAttemptEvent>(OnDroneLinkAttempt);
         SubscribeLocalEvent<RemoteDroneControllerComponent, LinkAttemptEvent>(OnControllerLinkAttempt);
         SubscribeLocalEvent<RemoteDroneControllerComponent, NewLinkEvent>(OnControllerLinked);
         SubscribeLocalEvent<RemoteDroneControllerComponent, PortDisconnectedEvent>(OnControllerUnlinked);
@@ -51,6 +51,15 @@ public sealed class RemoteDroneControllerSystem : EntitySystem
 
     private void OnInterfaceOpenedAttempt(Entity<RemoteDroneControllerComponent> entity, ref ActivatableUIOpenAttemptEvent args)
     {
+        if (entity.Comp.Controlling)
+        {
+            args.Cancel();
+            if (!args.Silent)
+                _popupSystem.PopupClient(Loc.GetString("remote-drone-controller-already-in-use"), entity.Owner, args.User);
+
+            return;
+        }
+
         if (entity.Comp.LinkedDroneUid is not { } droneUid)
         {
             args.Cancel();
@@ -91,6 +100,18 @@ public sealed class RemoteDroneControllerSystem : EntitySystem
             return;
 
         TryStopControlling(entity);
+    }
+
+    // Drones can only link to drone controllers
+    private void OnDroneLinkAttempt(Entity<RemoteDroneComponent> entity, ref LinkAttemptEvent args)
+    {
+        if (args.SinkPort != entity.Comp.SinkPort.ToString())
+            return;
+
+        if (HasComp<RemoteDroneControllerComponent>(args.Source))
+            return;
+
+        args.Cancel();
     }
 
     // this might break if this event becomes pure

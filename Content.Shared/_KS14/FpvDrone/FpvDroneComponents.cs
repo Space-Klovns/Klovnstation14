@@ -1,5 +1,7 @@
+using Content.Shared.DeviceLinking;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.FpvDrone;
@@ -23,6 +25,15 @@ public sealed partial class FpvDroneComponent : Component
     /// </summary>
     [AutoNetworkedField, ViewVariables(VVAccess.ReadOnly)]
     public EntityUid? AudioUid;
+
+    [DataField(required: true), ViewVariables]
+    public ProtoId<SinkPortPrototype> DropStoragePort;
+
+    /// <summary>
+    ///     ID of the container to be emptied upon the necessary signal.
+    /// </summary>
+    [DataField, ViewVariables]
+    public string EmptiedContainerId = "storagebase";
 
     /// <summary>
     ///     Is the drone currently flying and using power?

@@ -1,10 +1,14 @@
 using Content.Shared._KS14.RemoteDrone;
 using Content.Shared.Containers.ItemSlots;
+using Content.Shared.DeviceLinking;
+using Content.Shared.DeviceLinking.Events;
 using Content.Shared.Hands.Components;
 using Content.Shared.Hands.EntitySystems;
+using Content.Shared.IdentityManagement;
 using Content.Shared.Item;
 using Content.Shared.Movement.Components;
 using Content.Shared.Movement.Systems;
+using Content.Shared.Popups;
 using Content.Shared.Power;
 using Content.Shared.Power.Components;
 using Content.Shared.PowerCell;
@@ -24,6 +28,7 @@ namespace Content.Shared._KS14.FpvDrone;
 /// </summary>
 public abstract class SharedFpvDroneSystem : EntitySystem
 {
+    [Dependency] private readonly SharedDeviceLinkSystem _deviceLinkSystem = default!;
     [Dependency] private readonly SharedMoverController _moverController = default!;
     [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
@@ -33,6 +38,7 @@ public abstract class SharedFpvDroneSystem : EntitySystem
     [Dependency] private readonly PowerCellSystem _powerCellSystem = default!;
     [Dependency] private readonly RemoteDroneControllerSystem _droneControllerSystem = default!;
     [Dependency] private readonly ItemSlotsSystem _itemSlotsSystem = default!;
+    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
     [Dependency] private readonly INetManager _netManager = default!;
 
     /// <summary>
@@ -43,6 +49,9 @@ public abstract class SharedFpvDroneSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
+
+        SubscribeLocalEvent<FpvDroneComponent, MapInitEvent>(OnFpvMapInit);
+        SubscribeLocalEvent<FpvDroneComponent, SignalReceivedEvent>(OnFpvSignalReceived);
 
         SubscribeLocalEvent<FpvDroneComponent, RemoteDroneLinkedEvent>(OnFpvLinked);
         SubscribeLocalEvent<FpvDroneComponent, RemoteDroneUnlinkedEvent>(OnFpvUnlinked);
@@ -55,6 +64,24 @@ public abstract class SharedFpvDroneSystem : EntitySystem
         SubscribeLocalEvent<FpvDroneComponent, RemoteDroneAttemptControlEvent>(OnFpvAttemptControl);
         SubscribeLocalEvent<FpvDroneComponent, RemoteDroneControlStartedEvent>(OnFpvControlStarted);
         SubscribeLocalEvent<FpvDroneComponent, RemoteDroneControlEndedEvent>(OnFpvControlEnded);
+    }
+
+    private void OnFpvMapInit(Entity<FpvDroneComponent> entity, ref MapInitEvent args)
+    {
+        _deviceLinkSystem.EnsureSinkPorts(entity.Owner, entity.Comp.DropStoragePort);
+    }
+
+    private void OnFpvSignalReceived(Entity<FpvDroneComponent> entity, ref SignalReceivedEvent args)
+    {
+        if (args.Port != entity.Comp.DropStoragePort.ToString())
+            return;
+
+        if (!_containerSystem.TryGetContainer(entity.Owner, entity.Comp.EmptiedContainerId, out var container))
+            return;
+
+        var removedEntities = _containerSystem.EmptyContainer(container, force: true);
+        if (removedEntities.Count != 0)
+            _popupSystem.PopupEntity(Loc.GetString("fpv-drone-payload-dropped", ("name", Identity.Name(entity.Owner, EntityManager))), entity.Owner, PopupType.MediumCaution);
     }
 
     private void OnFpvLinked(Entity<FpvDroneComponent> entity, ref RemoteDroneLinkedEvent args)
@@ -158,7 +185,10 @@ public abstract class SharedFpvDroneSystem : EntitySystem
             entity.Comp.AudioUid ??= _audioSystem.PlayPvs(entity.Comp.AudioSpecifier, entity.Owner)?.Entity;
 
         if (TryComp<FlyBySoundComponent>(entity.Owner, out var flyBySoundComponent))
+        {
             flyBySoundComponent.Prob = entity.Comp.FlybySoundProbability;
+            Dirty(entity.Owner, flyBySoundComponent);
+        }
 
         _powerCellSystem.SetDrawEnabled(entity.Owner, true);
         if (TryComp<PowerCellSlotComponent>(entity.Owner, out var powerCellSlotComponent))
@@ -197,7 +227,10 @@ public abstract class SharedFpvDroneSystem : EntitySystem
         entity.Comp.AudioUid = null;
 
         if (TryComp<FlyBySoundComponent>(entity.Owner, out var flyBySoundComponent))
+        {
             flyBySoundComponent.Prob = 0f;
+            Dirty(entity.Owner, flyBySoundComponent);
+        }
 
         _powerCellSystem.SetDrawEnabled(entity.Owner, false);
         if (TryComp<PowerCellSlotComponent>(entity.Owner, out var powerCellSlotComponent))
