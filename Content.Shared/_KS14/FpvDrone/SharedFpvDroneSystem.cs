@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Shared._KS14.RemoteDrone;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.DeviceLinking;

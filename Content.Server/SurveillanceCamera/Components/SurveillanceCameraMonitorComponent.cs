@@ -6,6 +6,8 @@
 // SPDX-FileCopyrightText: 2025 Aiden
 // SPDX-FileCopyrightText: 2025 Hagvan
 // SPDX-FileCopyrightText: 2025 John Willis
+// SPDX-FileCopyrightText: 2025 nabegator220
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
 //
 // SPDX-License-Identifier: MIT
 
