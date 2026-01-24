@@ -13,7 +13,7 @@
 // SPDX-FileCopyrightText: 2025 nabegator220
 // SPDX-FileCopyrightText: 2026 FrauzJ
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Shared.Inventory;
 using Content.Shared.Storage.Components;
@@ -36,7 +36,7 @@ public sealed class MagnetPickupSystem : EntitySystem
     [Dependency] private readonly EntityWhitelistSystem _whitelistSystem = default!;
 
 
-    private static readonly TimeSpan ScanDelay = TimeSpan.FromSeconds(0.5f);
+    private static readonly TimeSpan ScanDelay = TimeSpan.FromSeconds(0.5f); // KS14: changed to 0.5
 
     private EntityQuery<PhysicsComponent> _physicsQuery;
 

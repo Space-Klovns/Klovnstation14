@@ -7,7 +7,7 @@
 // SPDX-FileCopyrightText: 2025 nabegator220
 // SPDX-FileCopyrightText: 2026 FrauzJ
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Shared.Inventory;
 using Robust.Shared.GameStates;
@@ -31,7 +31,7 @@ public sealed partial class MagnetPickupComponent : Component
     /// What container slot the magnet needs to be in to work.
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite), DataField("slotFlags")]
-    public SlotFlags SlotFlags = SlotFlags.BELT || SlotFlags.POCKET;
+    public SlotFlags SlotFlags = SlotFlags.BELT;
 
     [ViewVariables(VVAccess.ReadWrite), DataField("range")]
     public float Range = 1f;

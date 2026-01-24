@@ -19,19 +19,19 @@
   id: WatchersLavaland
   prototype: MobWatcherLavaland
   minGroupSize: 1 # KS14 change
-  maxGroupSize: 2
+  maxGroupSize: 2 # KS14 change
 
 - type: biomeMarkerLayer
   id: WatchersIcewing
   prototype: MobWatcherIcewing
   minGroupSize: 1 # KS14 change
-  maxGroupSize: 2
+  maxGroupSize: 2 # KS14 change
 
 - type: biomeMarkerLayer
   id: WatchersMagmawing
   prototype: MobWatcherMagmawing
   minGroupSize: 1 # KS14 change
-  maxGroupSize: 2
+  maxGroupSize: 2 # KS14 change
 
 - type: biomeMarkerLayer
   id: Cows
