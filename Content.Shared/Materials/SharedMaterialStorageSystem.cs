@@ -22,6 +22,8 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Content.Shared.Research.Components;
+using Robust.Shared.Audio.Systems; // KS14: Added to shared
+using Content.Shared.Popups; // KS14: Added to shared
 
 namespace Content.Shared.Materials;
 
@@ -36,6 +38,8 @@ public abstract class SharedMaterialStorageSystem : EntitySystem
     [Dependency] private readonly IPrototypeManager _prototype = default!;
     [Dependency] private readonly EntityWhitelistSystem _whitelistSystem = default!;
     [Dependency] private readonly SharedStackSystem _heap = default!;
+    [Dependency] private readonly SharedAudioSystem _audio = default!; // KS14: Added to shared
+    [Dependency] private readonly SharedPopupSystem _popup = default!; // KS14: Added to shared
 
     /// <summary>
     /// Default volume for a sheet if the material's entity prototype has no material composition.
@@ -451,6 +455,15 @@ public abstract class SharedMaterialStorageSystem : EntitySystem
 
         var ev = new MaterialEntityInsertedEvent(material);
         RaiseLocalEvent(receiver, ref ev);
+
+        // KS14: moved ts to shared
+        _audio.PlayPredicted(storage.InsertingSound, receiver, user);
+        _popup.PopupPredicted(Loc.GetString("machine-insert-item",
+                ("user", user),
+                ("machine", receiver),
+                ("item", toInsert)),
+            receiver, user);
+
         return true;
     }
 

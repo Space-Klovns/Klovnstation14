@@ -10,7 +10,6 @@ using Content.Client.Atmos.EntitySystems;
 using Content.Client.Atmos.Overlays;
 using Content.Client.Graphics;
 using Content.Shared.Atmos.Piping.Unary.Components;
-using Content.Shared.Atmos.Prototypes;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;

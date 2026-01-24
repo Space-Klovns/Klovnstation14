@@ -17,7 +17,7 @@
 using System.Linq;
 using Content.Server.Administration.Logs;
 using Content.Shared.Materials;
-using Content.Shared.Popups;
+// KS14: Moved _popup to shared
 using Content.Shared.Stacks;
 using Content.Server.Power.Components;
 using Content.Server.Stack;
@@ -25,7 +25,7 @@ using Content.Shared.ActionBlocker;
 using Content.Shared.Construction;
 using Content.Shared.Database;
 using JetBrains.Annotations;
-using Robust.Shared.Audio.Systems;
+// KS14: Moved _audio to shared
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 
@@ -39,8 +39,8 @@ public sealed class MaterialStorageSystem : SharedMaterialStorageSystem
     [Dependency] private readonly IAdminLogManager _adminLogger = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly ActionBlockerSystem _actionBlocker = default!;
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
+    // KS14: Moved _audio to shared
+    // KS14: Moved _popup to shared
     [Dependency] private readonly StackSystem _stackSystem = default!;
 
     public override void Initialize()
@@ -117,12 +117,8 @@ public sealed class MaterialStorageSystem : SharedMaterialStorageSystem
             return false;
         if (!base.TryInsertMaterialEntity(user, toInsert, receiver, storage, material, composition))
             return false;
-        _audio.PlayPvs(storage.InsertingSound, receiver);
-        _popup.PopupEntity(Loc.GetString("machine-insert-item",
-                ("user", user),
-                ("machine", receiver),
-                ("item", toInsert)),
-            receiver);
+
+        // KS14: moved fx to shared
         //QueueDel(toInsert); // KS14: Commented
 
         // Logging
