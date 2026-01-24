@@ -4,6 +4,7 @@ using Content.Shared._Starlight.Plumbing.Components;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Chemistry.Reagent;
+using Content.Shared.Containers.ItemSlots;
 using Content.Shared.FixedPoint;
 using JetBrains.Annotations;
 
@@ -11,16 +12,19 @@ namespace Content.Server._Starlight.Plumbing.EntitySystems;
 
 /// <summary>
 ///     Provides methods for pulling reagents from plumbing networks.
-///     All plumbing machines should use this system to pull from outlets from the network attached to their inlet.
-///     Raises PlumbingPullAttemptEvent before each reagent pull, allowing other
-///     systems (like filters) to deny specific reagents. 
+///     All plumbing machines should use this system to pull from outlets on the network attached to their inlet.
+///     Raises <see cref="PlumbingPullAttemptEvent"/> before each reagent pull, allowing other
+///     systems (like filters) to deny specific reagents.
 ///     Machines try to pull from each outlet in their network using a "round-robin" style approach
 ///     to ensure fair distribution when multiple sources are available.
+///     Supports outlets with valves (Enabled flag) and indirect solution lookup via container slots
+///     (e.g., pulling from a beaker inside a dispenser).
 /// </summary>
 [UsedImplicitly]
 public sealed class PlumbingPullSystem : EntitySystem
 {
     [Dependency] private readonly SharedSolutionContainerSystem _solutionSystem = default!;
+    [Dependency] private readonly ItemSlotsSystem _itemSlots = default!;
 
     private EntityQuery<PlumbingOutletComponent> _outletQuery;
 
@@ -49,7 +53,7 @@ public sealed class PlumbingPullSystem : EntitySystem
         FixedPoint2 maxAmount,
         int roundRobinIndex)
     {
-        // MaxVolume == 0 means unlimited capacity. Added to make ChemMaster compatible.
+        // MaxVolume == 0 means unlimited capacity (e.g., ChemMaster buffer)
         var availableVolume = destination.Comp.Solution.MaxVolume == FixedPoint2.Zero
             ? maxAmount
             : destination.Comp.Solution.AvailableVolume;
@@ -65,6 +69,10 @@ public sealed class PlumbingPullSystem : EntitySystem
                 continue;
 
             if (!_outletQuery.TryGetComponent(plumbingNode.Owner, out var outlet))
+                continue;
+
+            // Skip disabled outlets (valve closed)
+            if (!outlet.Enabled)
                 continue;
 
             // Only nodes whose names start with the outlet prefix are valid
@@ -88,7 +96,7 @@ public sealed class PlumbingPullSystem : EntitySystem
             var index = (startIndex + i) % outlets.Count;
             var (plumbingNode, outlet) = outlets[index];
 
-            var pulled = PullFromOutlet(puller, plumbingNode.Owner, plumbingNode.Name, outlet.SolutionName, destination, remaining);
+            var pulled = PullFromOutlet(puller, plumbingNode.Owner, plumbingNode.Name, outlet, destination, remaining);
             totalPulled += pulled;
             remaining -= pulled;
         }
@@ -99,7 +107,7 @@ public sealed class PlumbingPullSystem : EntitySystem
 
     /// <summary>
     ///     Pulls specific reagents from outlets on a plumbing network sequentially.
-    ///     Pulls each reagent fully before moving to the next to avoid floating point errors.
+    ///     Used by the plumbing reactor to pull in its targeted reagents.
     /// </summary>
     /// <param name="puller">The entity doing the pulling.</param>
     /// <param name="network">The plumbing network to pull from.</param>
@@ -124,7 +132,7 @@ public sealed class PlumbingPullSystem : EntitySystem
         if (remaining <= 0)
             return pulled;
 
-        // Check if destination is unlimited (MaxVolume == 0). Added to make ChemMaster compatible.
+        // Unlimited solutions (MaxVolume == 0) need direct AddReagent since TryAddReagent doesn't handle them
         var isUnlimited = destSolution.MaxVolume == FixedPoint2.Zero;
 
         // Sequential pulling: fill each reagent fully before moving to the next
@@ -150,14 +158,18 @@ public sealed class PlumbingPullSystem : EntitySystem
                 if (!_outletQuery.TryGetComponent(plumbingNode.Owner, out var outlet))
                     continue;
 
+                // Skip disabled outlets (valve closed)
+                if (!outlet.Enabled)
+                    continue;
+
                 // Only nodes whose names start with the outlet prefix are valid
                 if (!plumbingNode.Name.StartsWith(outlet.OutletPrefix, StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                if (!_solutionSystem.TryGetSolution(plumbingNode.Owner, outlet.SolutionName, out var sourceSolutionEnt, out var sourceSolution))
+                if (GetOutletSolution(plumbingNode.Owner, outlet) is not { } sourceSoln)
                     continue;
 
-                var available = sourceSolution.GetReagentQuantity(new ReagentId(reagentId, null));
+                var available = sourceSoln.Comp.Solution.GetReagentQuantity(new ReagentId(reagentId, null));
                 if (available <= 0)
                     continue;
 
@@ -172,12 +184,12 @@ public sealed class PlumbingPullSystem : EntitySystem
                 var toPull = FixedPoint2.Min(available, stillNeeded);
                 toPull = FixedPoint2.Min(toPull, remaining);
 
-                var actualPulled = _solutionSystem.RemoveReagent(sourceSolutionEnt.Value, new ReagentId(reagentId, null), toPull);
+                var actualPulled = _solutionSystem.RemoveReagent(sourceSoln, new ReagentId(reagentId, null), toPull);
                 if (actualPulled > 0)
                 {
                     if (isUnlimited)
                     {
-                        // Directly add to solution for unlimited buffers. IE the chemmaster
+                        // Directly add to unlimited solutions since TryAddReagent doesn't handle them
                         destSolution.AddReagent(new ReagentId(reagentId, null), actualPulled);
                         Dirty(destination);
                         pulled[reagentId] = pulled.GetValueOrDefault(reagentId, FixedPoint2.Zero) + actualPulled;
@@ -191,7 +203,7 @@ public sealed class PlumbingPullSystem : EntitySystem
                         // Return any excess to source to prevent loss
                         var excess = actualPulled - actuallyAdded;
                         if (excess > 0)
-                            _solutionSystem.TryAddReagent(sourceSolutionEnt.Value, new ReagentId(reagentId, null), excess, out _);
+                            _solutionSystem.TryAddReagent(sourceSoln, new ReagentId(reagentId, null), excess, out _);
 
                         pulled[reagentId] = pulled.GetValueOrDefault(reagentId, FixedPoint2.Zero) + actuallyAdded;
                         stillNeeded -= actuallyAdded;
@@ -211,13 +223,14 @@ public sealed class PlumbingPullSystem : EntitySystem
         EntityUid puller,
         EntityUid sourceOwner,
         string nodeName,
-        string solutionName,
+        PlumbingOutletComponent outlet,
         Entity<SolutionComponent> destination,
         FixedPoint2 maxAmount)
     {
-        if (!_solutionSystem.TryGetSolution(sourceOwner, solutionName, out var sourceSolutionEnt, out var sourceSolution))
+        if (GetOutletSolution(sourceOwner, outlet) is not { } sourceSoln)
             return FixedPoint2.Zero;
 
+        var sourceSolution = sourceSoln.Comp.Solution;
         if (sourceSolution.Volume <= 0)
             return FixedPoint2.Zero;
 
@@ -247,8 +260,7 @@ public sealed class PlumbingPullSystem : EntitySystem
 
         var totalPulled = FixedPoint2.Zero;
 
-        // Check if destination is unlimited (MaxVolume == 0). You guessed it, the chemmaster.
-        // If so, we bypass TryAddReagent which doesn't handle unlimited solutions
+        // Unlimited solutions (MaxVolume == 0) need direct AddReagent since TryAddReagent doesn't handle them
         var isUnlimited = destSolution.MaxVolume == FixedPoint2.Zero;
 
         foreach (var (reagent, quantity) in allowedReagents)
@@ -260,12 +272,12 @@ public sealed class PlumbingPullSystem : EntitySystem
             if (toPull <= 0)
                 continue;
 
-            var pulled = _solutionSystem.RemoveReagent(sourceSolutionEnt.Value, reagent, toPull);
+            var pulled = _solutionSystem.RemoveReagent(sourceSoln, reagent, toPull);
             if (pulled > 0)
             {
                 if (isUnlimited)
                 {
-                    // Directly add to solution for unlimited buffers (like the ChemMaster)
+                    // Directly add to unlimited solutions since TryAddReagent doesn't handle them
                     destSolution.AddReagent(reagent, pulled);
                     Dirty(destination);
                     totalPulled += pulled;
@@ -278,7 +290,7 @@ public sealed class PlumbingPullSystem : EntitySystem
                     // Return any excess to source to prevent loss
                     var excess = pulled - actuallyAdded;
                     if (excess > 0)
-                        _solutionSystem.TryAddReagent(sourceSolutionEnt.Value, reagent, excess, out _);
+                        _solutionSystem.TryAddReagent(sourceSoln, reagent, excess, out _);
 
                     totalPulled += actuallyAdded;
                     remaining -= actuallyAdded;
@@ -287,5 +299,34 @@ public sealed class PlumbingPullSystem : EntitySystem
         }
 
         return totalPulled;
+    }
+
+    /// <summary>
+    ///     Gets the solution entity to pull from for an outlet, handling pulling from beakers in container slots.
+    ///     If ContainerSlotId is set, gets the solution from the entity in that item slot.
+    ///     Otherwise, gets the solution directly from the outlet entity.
+    /// </summary>
+    /// <returns>The solution entity, or null if not found.</returns>
+    private Entity<SolutionComponent>? GetOutletSolution(EntityUid outletOwner, PlumbingOutletComponent outlet)
+    {
+        EntityUid targetEntity;
+
+        if (outlet.ContainerSlotId != null)
+        {
+            // Get the entity from the specified container slot
+            var containerEntity = _itemSlots.GetItemOrNull(outletOwner, outlet.ContainerSlotId);
+            if (containerEntity == null)
+                return null;
+            targetEntity = containerEntity.Value;
+        }
+        else
+        {
+            // Get solution directly from the outlet entity
+            targetEntity = outletOwner;
+        }
+
+        return _solutionSystem.TryGetSolution(targetEntity, outlet.SolutionName, out var solutionEnt, out _)
+            ? solutionEnt
+            : null;
     }
 }

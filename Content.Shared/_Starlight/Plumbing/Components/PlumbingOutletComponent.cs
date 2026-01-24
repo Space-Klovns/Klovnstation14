@@ -1,3 +1,5 @@
+using Robust.Shared.GameStates;
+
 namespace Content.Shared._Starlight.Plumbing.Components;
 
 /// <summary>
@@ -5,7 +7,7 @@ namespace Content.Shared._Starlight.Plumbing.Components;
 ///     <see cref="PlumbingPullSystem"/> discovers entities with this component
 ///     when other machines request reagents from the network.
 /// </summary>
-[RegisterComponent]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class PlumbingOutletComponent : Component
 {
     /// <summary>
@@ -21,4 +23,17 @@ public sealed partial class PlumbingOutletComponent : Component
     /// </summary>
     [DataField]
     public string OutletPrefix = "outlet";
+
+    /// <summary>
+    ///     If true, this outlet can be pulled from. If false, it's blocked.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool Enabled = true;
+
+    /// <summary>
+    ///     If set, look for the solution on the entity in this container slot instead of on this entity.
+    ///     Useful for machines like dispensers where the solution is in a beaker.
+    /// </summary>
+    [DataField]
+    public string? ContainerSlotId;
 }
