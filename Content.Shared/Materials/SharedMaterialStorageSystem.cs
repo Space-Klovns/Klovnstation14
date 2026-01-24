@@ -380,6 +380,8 @@ public abstract class SharedMaterialStorageSystem : EntitySystem
         // KS14: added a bunch of new logic here
 
         var isStack = TryComp<StackComponent>(toInsert, out var stackComponent);
+
+        // This is the multiplier, for the materials that the material-entity is composed of, that determines how much of that material is actually added.
         var maximumMultiplier = isStack ? stackComponent!.Count : 1;
 
         var totalVolume = 0;
@@ -415,7 +417,7 @@ public abstract class SharedMaterialStorageSystem : EntitySystem
                 if (takenStackUnits >= stackComponent!.Count)
                     PredictedQueueDel(toInsert);
                 else
-                    _heap.SetCount(toInsert, stackComponent!.Count - takenStackUnits, component: stackComponent);
+                    _heap.SetCount((toInsert, stackComponent), stackComponent!.Count - takenStackUnits);
 
                 maximumMultiplier = takenStackUnits;
             }
@@ -425,9 +427,16 @@ public abstract class SharedMaterialStorageSystem : EntitySystem
         else if (!CanTakeVolume(receiver, totalVolume, storage, localOnly: true))
             return false;
 
+        // TODO LCDC: test if this works with entities made up of more than 1 material
         foreach (var (mat, vol) in composition.MaterialComposition)
         {
-            TryChangeMaterialAmount(receiver, mat, Math.Min(vol * maximumMultiplier, storage.StorageLimit!.Value - oldTotalVolume), storage);
+            var amountAdded = vol * maximumMultiplier;
+
+            // amount of material added will be limited so that it doesnt go over storagelimit
+            if (storage.StorageLimit is { } storageLimit)
+                amountAdded = Math.Min(amountAdded, storageLimit - oldTotalVolume);
+
+            TryChangeMaterialAmount(receiver, mat, amountAdded, storage);
         }
 
         var insertingComp = EnsureComp<InsertingMaterialStorageComponent>(receiver);
