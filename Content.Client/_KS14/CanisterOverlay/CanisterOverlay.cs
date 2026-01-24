@@ -21,7 +21,6 @@ namespace Content.Client._KS14.CanisterOverlay;
 // Obviously does not support any kind of prototype hot-reloading
 public sealed class CanisterOverlay : Overlay
 {
-    private static readonly ProtoId<ShaderPrototype> UnshadedShader = "unshaded";
     private static readonly ProtoId<ShaderPrototype> StencilMaskShader = "StencilMask";
     private static readonly ProtoId<ShaderPrototype> StencilEqualDrawShader = "StencilEqualDraw";
 
@@ -123,22 +122,25 @@ public sealed class CanisterOverlay : Overlay
 
         // Draw on the stencil target
         _drawDataCache.Clear();
+
+        var scale = viewport.RenderScale / (Vector2.One / (targetSize / (Vector2)viewport.Size));
         worldHandle.RenderInRenderTarget(resources.MaskTarget, () =>
         {
+            var invMatrix = resources.MaskTarget.GetWorldToLocalMatrix(viewport.Eye!, scale);
             var canisterEnumerator = _entityManager.EntityQueryEnumerator<GasCanisterComponent, TransformComponent>();
             while (canisterEnumerator.MoveNext(out var canisterComponent, out var transformComponent))
             {
                 // save some performance if we can, because canisters with no moles don't matter
-                if (canisterComponent.NetworkedMoles == 0f)
+                if (canisterComponent.NetworkedMoles <= float.Epsilon)
                     continue;
 
-                var worldPosition = _transformSystem.GetWorldPosition(transformComponent);
+                var scaledWorld = Matrix3x2.Multiply(ScaleMatrix, Matrix3Helpers.CreateTranslation(_transformSystem.GetWorldPosition(transformComponent)));
+                var canisterWorldMatrix = Matrix3x2.Multiply(rotationMatrix, scaledWorld);
+                // Apply the inverse matrix to transform to render target space. otherwise, we would be rendering in worldspace
+                var canisterRenderTargetMatrix = Matrix3x2.Multiply(canisterWorldMatrix, invMatrix);
 
-                var scaledWorld = Matrix3x2.Multiply(ScaleMatrix, Matrix3Helpers.CreateTranslation(worldPosition));
-                var canisterTransform = Matrix3x2.Multiply(rotationMatrix, scaledWorld);
-
-                _drawDataCache.Add((canisterComponent, canisterTransform));
-                worldHandle.SetTransform(canisterTransform);
+                _drawDataCache.Add((canisterComponent, canisterWorldMatrix));
+                worldHandle.SetTransform(canisterRenderTargetMatrix);
 
                 // so, draw window mask to stencil target
                 worldHandle.DrawTexture(maskTexture, HalfNegativeVector2, modulate: Color.White);
@@ -165,9 +167,9 @@ public sealed class CanisterOverlay : Overlay
         // Finally, draw gas textures on pixels that are white on our stencil mask
         var stencilEqualDrawShader = _prototypeManager.Index(StencilEqualDrawShader).Instance();
         worldHandle.UseShader(stencilEqualDrawShader);
-        foreach (var (canisterComponent, canisterMatrix) in _drawDataCache)
+        foreach (var (canisterComponent, canisterWorldMatrix) in _drawDataCache)
         {
-            worldHandle.SetTransform(canisterMatrix);
+            worldHandle.SetTransform(canisterWorldMatrix);
             for (var i = 0; i < _visibleGasCount; i++)
             {
                 // 0 to 1
@@ -187,7 +189,7 @@ public sealed class CanisterOverlay : Overlay
                     1f :
                     (gasMoles - gasMolesVisibleMin) / (gasMolesVisibleMax - gasMolesVisibleMin);
 
-                // TODO LCDC MAYBE: find a way to scale this down so it's higher resolution
+                // TODO LCDC MAYBE: find a way to scale this down so it's higher quality
                 worldHandle.DrawTexture(_gasTileOverlay._frames[i][_gasTileOverlay._frameCounter[i]], HalfNegativeVector2, modulate: Color.White.WithAlpha(opacity));
 
                 // TODO LCDC: render fire textures for overlay

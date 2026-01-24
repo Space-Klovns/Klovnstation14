@@ -4,15 +4,13 @@
 //
 // SPDX-License-Identifier: MIT
 
-using Content.Shared.Atmos.Piping.Binary.Components;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Guidebook;
-using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 
 namespace Content.Shared.Atmos.Piping.Unary.Components;
 
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true, true)]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true, fieldDeltas: true)] // KS14: Added fielddeltas
 public sealed partial class GasCanisterComponent : Component, IGasMixtureHolder
 {
     [DataField("port")]
@@ -64,11 +62,12 @@ public sealed partial class GasCanisterComponent : Component, IGasMixtureHolder
 
     // KS14
     /// <summary>
-    ///     Length of this should be that of <see cref="EntitySystems.SharedGasTileOverlaySystem.VisibleGasId">
+    ///     Length of this should be the same as <see cref="EntitySystems.SharedGasTileOverlaySystem.VisibleGasId">
     /// </summary>
-    [AutoNetworkedField]
-    public byte[] AppearanceGasPercentages = new byte[Atmospherics.TotalNumberOfGases];
+    [AutoNetworkedField, ViewVariables(VVAccess.ReadWrite)]
+    public byte[] AppearanceGasPercentages = []; // empty array is placeholder; it is properly initialised in ComponentInit
 
-    [AutoNetworkedField]
+    // KS14
+    [AutoNetworkedField, ViewVariables(VVAccess.ReadWrite)]
     public float NetworkedMoles = 0f;
 }

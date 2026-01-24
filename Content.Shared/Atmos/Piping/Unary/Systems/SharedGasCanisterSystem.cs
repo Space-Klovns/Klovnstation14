@@ -26,6 +26,10 @@ public abstract class SharedGasCanisterSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
+
+        SubscribeLocalEvent<GasCanisterComponent, ComponentInit>(OnCanisterInit); // KS14 Addition
+        SubscribeLocalEvent<GasCanisterComponent, MapInitEvent>(OnCanisterMapInited); // KS14 Addition
+
         SubscribeLocalEvent<GasCanisterComponent, EntInsertedIntoContainerMessage>(OnCanisterContainerModified);
         SubscribeLocalEvent<GasCanisterComponent, EntRemovedFromContainerMessage>(OnCanisterContainerModified);
         SubscribeLocalEvent<GasCanisterComponent, ItemSlotInsertAttemptEvent>(OnCanisterInsertAttempt);
@@ -37,13 +41,47 @@ public abstract class SharedGasCanisterSystem : EntitySystem
         SubscribeLocalEvent<GasCanisterComponent, GasCanisterChangeReleaseValveMessage>(OnCanisterChangeReleaseValve);
     }
 
+    // KS14
+    private void OnCanisterInit(Entity<GasCanisterComponent> ent, ref ComponentInit args)
+    {
+        ent.Comp.AppearanceGasPercentages = new byte[GasTileOverlaySystem.VisibleGasId.Length];
+    }
+
+    // KS14
+    private void OnCanisterMapInited(Entity<GasCanisterComponent> ent, ref MapInitEvent args)
+    {
+        // This can be called in init/startup just fine afaict but whatever
+        UpdateCanisterAppearance(ent, ent);
+    }
+
+    // KS14
+    protected void UpdateCanisterAppearance(EntityUid uid, GasCanisterComponent canister)
+    {
+        var totalMoles = canister.Air.TotalMoles;
+        canister.NetworkedMoles = totalMoles;
+        DirtyField(uid, canister, nameof(canister.NetworkedMoles));
+
+        var similars = 0;
+        for (var i = 0; i < GasTileOverlaySystem.VisibleGasId.Length; i++)
+        {
+            var allGasId = GasTileOverlaySystem.VisibleGasId[i];
+
+            var newValue = (byte)(canister.Air[allGasId] / totalMoles * byte.MaxValue);
+            if (canister.AppearanceGasPercentages[i] == newValue)
+                similars++;
+
+            canister.AppearanceGasPercentages[i] = newValue;
+        }
+
+        // don't dirty if entire array was the same
+        if (similars != GasTileOverlaySystem.VisibleGasId.Length)
+            DirtyField(uid, canister, nameof(canister.AppearanceGasPercentages));
+    }
+
     private void OnCanisterStartup(Entity<GasCanisterComponent> ent, ref ComponentStartup args)
     {
         // Ensure container
         _slots.AddItemSlot(ent.Owner, ent.Comp.ContainerName, ent.Comp.GasTankSlot);
-
-        // KS14
-        ent.Comp.AppearanceGasPercentages = new byte[GasTileOverlaySystem.VisibleGasId.Length];
     }
 
     private void OnCanisterContainerModified(EntityUid uid, GasCanisterComponent component, ContainerModifiedMessage args)

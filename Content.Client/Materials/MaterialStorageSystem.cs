@@ -60,7 +60,7 @@ public sealed class MaterialStorageSystem : SharedMaterialStorageSystem
     {
         if (!base.TryInsertMaterialEntity(user, toInsert, receiver, storage, material, composition))
             return false;
-        //_transform.DetachEntity(toInsert, Transform(toInsert)); // KS14: Commented
+        //_transform.DetachEntity(toInsert, Transform(toInsert)); // KS14: Commented out
         return true;
     }
 }

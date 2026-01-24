@@ -37,11 +37,11 @@ using Content.Server.NodeContainer.Nodes;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Atmos.Piping.Binary.Components;
+using Content.Shared.Atmos.Piping.Unary.Components;
 using Content.Shared.Atmos.Piping.Unary.Systems;
 using Content.Shared.Cargo;
 using Content.Shared.Database;
 using Content.Shared.NodeContainer;
-using GasCanisterComponent = Content.Shared.Atmos.Piping.Unary.Components.GasCanisterComponent;
 
 namespace Content.Server.Atmos.Piping.Unary.EntitySystems;
 
@@ -58,14 +58,6 @@ public sealed class GasCanisterSystem : SharedGasCanisterSystem
         SubscribeLocalEvent<GasCanisterComponent, AtmosDeviceUpdateEvent>(OnCanisterUpdated);
         SubscribeLocalEvent<GasCanisterComponent, PriceCalculationEvent>(CalculateCanisterPrice);
         SubscribeLocalEvent<GasCanisterComponent, GasAnalyzerScanEvent>(OnAnalyzed);
-
-        SubscribeLocalEvent<GasCanisterComponent, MapInitEvent>(OnCanisterMapInited); // KS14
-    }
-
-    // KS14
-    private void OnCanisterMapInited(Entity<GasCanisterComponent> entity, ref MapInitEvent args)
-    {
-        NetworkCanisterAppearance(entity, entity);
     }
 
     /// <summary>
@@ -107,33 +99,12 @@ public sealed class GasCanisterSystem : SharedGasCanisterSystem
             new GasCanisterBoundUserInterfaceState(canister.Air.Pressure, portStatus, tankPressure));
     }
 
-    // KS14
-    private void NetworkCanisterAppearance(EntityUid uid, GasCanisterComponent canister)
-    {
-        var totalMoles = canister.Air.TotalMoles;
-        canister.NetworkedMoles = totalMoles;
-        DirtyField(uid, canister, nameof(canister.NetworkedMoles));
-
-        var similars = 0;
-        for (var i = 0; i < GasTileOverlaySystem.VisibleGasId.Length; i++)
-        {
-            var allGasId = GasTileOverlaySystem.VisibleGasId[i];
-
-            var newValue = (byte)(canister.Air[allGasId] / totalMoles * byte.MaxValue);
-            if (canister.AppearanceGasPercentages[i] == newValue)
-                similars++;
-
-            canister.AppearanceGasPercentages[i] = newValue;
-        }
-
-        // don't dirty if entire array was the same
-        if (similars != GasTileOverlaySystem.VisibleGasId.Length)
-            DirtyField(uid, canister, nameof(canister.AppearanceGasPercentages));
-    }
-
     private void OnCanisterUpdated(EntityUid uid, GasCanisterComponent canister, ref AtmosDeviceUpdateEvent args)
     {
         _atmos.React(canister.Air, canister);
+
+        // KS14
+        UpdateCanisterAppearance(uid, canister);
 
         if (!TryComp<NodeContainerComponent>(uid, out var nodeContainer)
             || !TryComp<AppearanceComponent>(uid, out var appearance))
@@ -161,9 +132,6 @@ public sealed class GasCanisterSystem : SharedGasCanisterSystem
                 _atmos.ReleaseGasTo(canister.Air, environment, canister.ReleasePressure);
             }
         }
-
-        // KS14
-        NetworkCanisterAppearance(uid, canister);
 
         // If last pressure is very close to the current pressure, do nothing.
         if (MathHelper.CloseToPercent(canister.Air.Pressure, canister.LastPressure))
