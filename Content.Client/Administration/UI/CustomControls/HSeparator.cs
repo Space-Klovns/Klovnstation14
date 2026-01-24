@@ -1,4 +1,11 @@
-﻿using Robust.Client.Graphics;
+// SPDX-FileCopyrightText: 2021 DrSmugleaf
+// SPDX-FileCopyrightText: 2021 Javier Guardia Fernández
+// SPDX-FileCopyrightText: 2022 mirrorcult
+// SPDX-FileCopyrightText: 2026 Gerkada
+//
+// SPDX-License-Identifier: MIT
+
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
@@ -9,16 +16,24 @@ public sealed class HSeparator : Control
 {
     private static readonly Color SeparatorColor = Color.FromHex("#3D4059");
 
+    private readonly StyleBoxFlat _styleBox;
+
+    public Color Color
+    {
+        get => _styleBox.BackgroundColor;
+        set => _styleBox.BackgroundColor = value;
+    }
+
     public HSeparator(Color color)
     {
-        AddChild(new PanelContainer
+        _styleBox = new StyleBoxFlat
         {
-            PanelOverride = new StyleBoxFlat
-            {
-                BackgroundColor = color,
-                ContentMarginBottomOverride = 2, ContentMarginLeftOverride = 2
-            }
-        });
+            BackgroundColor = color,
+            ContentMarginBottomOverride = 2,
+            ContentMarginLeftOverride = 2
+        };
+
+        AddChild(new PanelContainer { PanelOverride = _styleBox });
     }
 
     public HSeparator() : this(SeparatorColor) { }

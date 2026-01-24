@@ -585,3 +585,17 @@ Entries:
       message: Added a Lone ERT Operative ghost-role and shuttle. Admeme only.
   id: 74
   time: '2026-01-07T02:48:24.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: Added mass drivers.
+  id: 75
+  time: '2026-01-15T18:09:49.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Tweak
+      message: >-
+        You can anchor most machines and containers onto tiles with directional
+        windows.
+  id: 76
+  time: '2026-01-15T18:10:31.0000000+00:00'

@@ -31,11 +31,12 @@
 # SPDX-FileCopyrightText: 2025 RedBookcase
 # SPDX-FileCopyrightText: 2025 ScarKy0
 # SPDX-FileCopyrightText: 2025 Theodore Lukin
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 metalgearsloth
 # SPDX-FileCopyrightText: 2025 nabegator220
 # SPDX-FileCopyrightText: 2025 onesch
 # SPDX-FileCopyrightText: 2025 slarticodefast
+# SPDX-FileCopyrightText: 2026 Gerkada
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
 #
 # SPDX-License-Identifier: MIT
 
@@ -231,7 +232,7 @@
 - type: entity
   name: floodlight
   id: Floodlight
-  parent: BaseLamp
+  parent: [ BaseLamp, BaseRelaxedAnchoring ]
   description: A pole with powerful mounted lights on it.
   components:
   - type: Item
@@ -292,7 +293,7 @@
 - type: entity
   name: broken floodlight
   id: FloodlightBroken
-  parent: BaseItem
+  parent: [ BaseItem, BaseRelaxedAnchoring ]
   description: A pole with powerful mounted lights on it. It's broken.
   components:
   - type: Item

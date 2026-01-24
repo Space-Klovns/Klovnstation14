@@ -112,6 +112,7 @@
   - type: Tag
     tags:
     - Wooden
+    - Directional
   - type: Flammable
     fireSpread: true
     damage:

@@ -1,3 +1,16 @@
+# SPDX-FileCopyrightText: 2022 Francesco
+# SPDX-FileCopyrightText: 2022 Jacob Tong
+# SPDX-FileCopyrightText: 2022 Jane Lewis
+# SPDX-FileCopyrightText: 2022 Lamrr
+# SPDX-FileCopyrightText: 2023 metalgearsloth
+# SPDX-FileCopyrightText: 2024 lzk
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 IProduceWidgets
+# SPDX-FileCopyrightText: 2026 Gerkada
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 - type: entity
   id: Memorial
   parent: BaseStructure
@@ -46,7 +59,7 @@
       offset: "0.0,0.5"
 
 - type: entity
-  parent: Memorial
+  parent: [ Memorial, BaseRelaxedAnchoring ]
   id: Monolith
   name: monolith
   description: |

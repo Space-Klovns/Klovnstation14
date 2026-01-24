@@ -1,6 +1,19 @@
+# SPDX-FileCopyrightText: 2022 Deahaka
+# SPDX-FileCopyrightText: 2022 eclips_e
+# SPDX-FileCopyrightText: 2023 Ed
+# SPDX-FileCopyrightText: 2023 brainfood1183
+# SPDX-FileCopyrightText: 2023 lzk
+# SPDX-FileCopyrightText: 2023 metalgearsloth
+# SPDX-FileCopyrightText: 2024 Ilya246
+# SPDX-FileCopyrightText: 2024 Kara
+# SPDX-FileCopyrightText: 2026 Gerkada
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 - type: entity
   id: AltarBase
-  parent: BaseStructure
+  parent: [ BaseStructure, BaseRelaxedAnchoring ]
   name: altar
   description: Altar of the Gods.
   abstract: true

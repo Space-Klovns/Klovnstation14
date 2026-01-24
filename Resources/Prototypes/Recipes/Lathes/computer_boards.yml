@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 āda
+# SPDX-FileCopyrightText: 2026 Gerkada
+#
+# SPDX-License-Identifier: MIT
+
 # Base categories
 
 - type: latheRecipe
@@ -56,6 +61,11 @@
   parent: [ BaseCircuitboardRecipe, BaseEngineeringComputerRecipeCategory ]
   id: SolarControlComputerCircuitboard
   result: SolarControlComputerCircuitboard
+
+- type: latheRecipe
+  parent: [ BaseCircuitboardRecipe, BaseEngineeringComputerRecipeCategory ]
+  id: MassDriverComputerCircuitboard
+  result: MassDriverComputerCircuitboard
 
 # Medical
 

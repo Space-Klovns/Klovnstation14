@@ -1,5 +1,21 @@
+# SPDX-FileCopyrightText: 2024 Ed
+# SPDX-FileCopyrightText: 2024 Kara
+# SPDX-FileCopyrightText: 2024 Kevin Zheng
+# SPDX-FileCopyrightText: 2024 Tayrtahn
+# SPDX-FileCopyrightText: 2024 lzk
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 B_Kirill
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2025 slarticodefast
+# SPDX-FileCopyrightText: 2026 Gerkada
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 - type: entity
   id: TeslaCoil
+  parent: BaseRelaxedAnchoring
   name: tesla coil
   description: A machine that converts lightning strikes into an electric current.
   placement:
@@ -122,6 +138,7 @@
 
 - type: entity
   id: TeslaGroundingRod
+  parent: BaseRelaxedAnchoring
   name: grounding rod
   description: A machine that keeps lightning from striking too far away.
   placement:

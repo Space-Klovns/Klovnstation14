@@ -22,6 +22,7 @@
     tags:
       - ForceFixRotations
       - Window
+      - Directional
   - type: Sprite
     drawdepth: WallTops
     sprite: Structures/Windows/window.rsi
@@ -139,6 +140,7 @@
   - type: Tag
     tags:
       - Window
+      - Directional
   - type: MeleeSound
     soundGroups:
       Brute:

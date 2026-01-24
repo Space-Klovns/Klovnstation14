@@ -465,6 +465,9 @@
   id: DNASolutionScannable # Used by ForensicScannerSystem for scanning a tagged entity's solution container. Exists only on Puddle.
 
 - type: Tag
+  id: Directional # Marks directional structures that can be anchored inside of by appropriate entities.
+
+- type: Tag
   id: DockArrivals # Used by ArrivalsSystem for finding a priority FTL destination.
 
 - type: Tag

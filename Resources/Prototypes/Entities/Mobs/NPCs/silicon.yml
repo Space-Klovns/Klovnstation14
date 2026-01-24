@@ -34,17 +34,23 @@
 # SPDX-FileCopyrightText: 2024 superjj18
 # SPDX-FileCopyrightText: 2024 voidnull000
 # SPDX-FileCopyrightText: 2025 AsnDen
+# SPDX-FileCopyrightText: 2025 Centronias
 # SPDX-FileCopyrightText: 2025 Errant
 # SPDX-FileCopyrightText: 2025 Flareguy
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Nemanja
+# SPDX-FileCopyrightText: 2025 PJB3005
 # SPDX-FileCopyrightText: 2025 Princess Cheeseballs
+# SPDX-FileCopyrightText: 2025 SlamBamActionman
 # SPDX-FileCopyrightText: 2025 Tayrtahn
+# SPDX-FileCopyrightText: 2025 Vasilis The Pikachu
 # SPDX-FileCopyrightText: 2025 chromiumboy
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 godisdeadLOL
 # SPDX-FileCopyrightText: 2025 lzk
 # SPDX-FileCopyrightText: 2025 nabegator220
 # SPDX-FileCopyrightText: 2025 slarticodefast
+# SPDX-FileCopyrightText: 2026 Gerkada
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
 #
 # SPDX-License-Identifier: MIT
 
@@ -366,6 +372,7 @@
   - MobSiliconBase
   - ShowMedicalIcons
   - StripableInventoryBase
+  - BaseRelaxedAnchoring
   id: MobMedibot
   name: medibot
   description: No substitute for a doctor, but better than nothing.
