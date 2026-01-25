@@ -277,8 +277,8 @@
     updateInterval: 2
   - type: PlumbingFilter
     inletName: inlet
-    filterNodeName: filter
-    passthroughNodeName: passthrough
+    filterNodeName: outletFilter
+    passthroughNodeName: outletPassthrough
     bufferSolutionName: buffer
     transferAmount: 10
   - type: Plungeable
@@ -297,11 +297,11 @@
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: North
-      filter:  # Provides FILTERED reagents TO the network (west side)
+      outletFilter:  # Provides FILTERED reagents TO the network (west side)
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: West
-      passthrough:  # Provides NON-FILTERED reagents TO the network (south side)
+      outletPassthrough:  # Provides NON-FILTERED reagents TO the network (south side)
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: South
@@ -349,11 +349,11 @@
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: South
-      filter:  # Provides FILTERED reagents TO the network (west side)
+      outletFilter:  # Provides FILTERED reagents TO the network (west side)
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: West
-      passthrough:  # Provides NON-FILTERED reagents TO the network (north side)
+      outletPassthrough:  # Provides NON-FILTERED reagents TO the network (north side)
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: North

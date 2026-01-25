@@ -25,13 +25,13 @@ public sealed partial class PlumbingFilterComponent : Component
     ///     Name of the filter outlet node - only filtered reagents can be pulled here.
     /// </summary>
     [DataField]
-    public string FilterNodeName = "filter";
+    public string FilterNodeName = "outletFilter";
 
     /// <summary>
     ///     Name of the passthrough outlet node - only non-filtered reagents can be pulled here.
     /// </summary>
     [DataField]
-    public string PassthroughNodeName = "passthrough";
+    public string PassthroughNodeName = "outletPassthrough";
 
     /// <summary>
     ///     Name of the solution buffer that holds the reagents.
