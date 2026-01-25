@@ -90,6 +90,14 @@ public sealed class ComplexShoveSystem : EntitySystem
         if (!Resolve(shoverEntity, ref shoverEntity.Comp, logMissing: false))
             return false;
 
+        _staminaSystem.TakeStaminaDamage(
+            shovedEntity.Owner,
+            shovedEntity.Comp.CritThreshold * shoverEntity.Comp.BasicShoveStaminaDamageFraction / 6.5,
+            component: shovedEntity.Comp,
+            source: shoverEntity,
+            ignoreResist: true
+        );
+
         var pushPower = IsUidDown(shovedEntity) ? shoverEntity.Comp.DownedPushPower : shoverEntity.Comp.StandingPushPower;
         _physicsSystem.ApplyLinearImpulse(shovedEntity.Owner, deltaUnit * pushPower);
 
