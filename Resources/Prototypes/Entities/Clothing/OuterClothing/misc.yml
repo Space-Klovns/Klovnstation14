@@ -225,9 +225,9 @@
   - type: Armor # KS14 - Add armor to base outer wiz armor
     modifiers:
       coefficients:
-        Blunt: 0.6
-        Slash: 0.6
-        Piercing: 0.6
+        Blunt: 0.65
+        Slash: 0.65
+        Piercing: 0.65
         Heat: 0.7
         Caustic: 0.7
   - type: ExplosionResistance # KS14 - Add armor to base outer wiz armor

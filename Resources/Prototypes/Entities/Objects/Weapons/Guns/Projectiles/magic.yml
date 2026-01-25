@@ -54,9 +54,9 @@
   - type: ExplodeOnTrigger
   - type: Explosive
     explosionType: FireBomb
-    totalIntensity: 5 # low intensity, the point is to burn attackers not to break open walls, dragons can just eat them
-    intensitySlope: 1
-    maxIntensity: 3
+    totalIntensity: 10 # low intensity, the point is to burn attackers not to break open walls, dragons can just eat them, KS14 change - 2x buff
+    intensitySlope: 2
+    maxIntensity: 6
     canCreateVacuum: false
     deleteAfterExplosion: false
     repeatable: true

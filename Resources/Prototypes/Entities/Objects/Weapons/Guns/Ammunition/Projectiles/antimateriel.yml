@@ -27,10 +27,29 @@
   - type: Projectile
     damage:
       types:
-        Piercing: 90
-        Structural: 300
+        Piercing: 80
+        Structural: 120
     penetrationThreshold: 360
     penetrationDamageTypeRequirement:
     - Structural
   - type: StaminaDamageOnCollide
     damage: 60
+
+############################
+#KS14 additions
+
+- type: entity
+  categories: [ HideSpawnMenu ]
+  parent: BaseBullet
+  id: BulletAntiMaterielAP
+  name: bullet (.60 anti-materiel)
+  components:
+  - type: Projectile
+    damage:
+      types:
+        Piercing: 50
+        Structural: 300
+    penetrationThreshold: 360
+    penetrationDamageTypeRequirement:
+    - Structural
+    ignoreResistances: true

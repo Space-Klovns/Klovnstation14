@@ -45,7 +45,7 @@
   - type: Projectile
     damage:
       types:
-        Piercing: 45
+        Piercing: 40
         Structural: 30
 
 
@@ -62,7 +62,7 @@
   - type: Projectile
     damage:
       types:
-        Blunt: 12
+        Blunt: 10
   - type: StaminaDamageOnCollide
     damage: 40 # 3 hits to stun
 
@@ -75,8 +75,8 @@
   - type: Projectile
     damage:
       types:
-        Piercing: 12
-        Structural: 15
+        Piercing: 10
+        Structural: 10
 
 - type: entity
   parent: PelletShotgun
@@ -148,7 +148,7 @@
     damage:
       types:
         Piercing: 3
-        Slash: 5
+        Slash: 3
 
 - type: entity
   parent: PelletShotgunImprovised
@@ -158,7 +158,7 @@
   - type: ProjectileSpread
     proto: PelletShotgunImprovised
     count: 10
-    spread: 25
+    spread: 35
 
 - type: entity
   parent: BaseBulletPractice
@@ -234,8 +234,8 @@
   - type: Projectile
     damage:
       types:
-        Radiation: 8
-        Piercing: 8
+        Radiation: 5
+        Piercing: 5
 
 - type: entity
   parent: PelletShotgunUranium
@@ -262,7 +262,7 @@
   - type: Projectile
     damage:
       types:
-        Piercing: 35
+        Piercing: 25
         Structural: 5
 
 - type: entity

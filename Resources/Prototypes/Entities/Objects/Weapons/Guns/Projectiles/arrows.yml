@@ -182,6 +182,7 @@
     damage:
       types:
         Piercing: 30
+        Poison: 5
   - type: Construction
     graph: ImprovisedArrowCarp
     node: ImprovisedArrowCarp

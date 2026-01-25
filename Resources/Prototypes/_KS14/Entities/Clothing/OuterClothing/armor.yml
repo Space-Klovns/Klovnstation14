@@ -17,13 +17,15 @@
   - type: Armor
     modifiers:
       coefficients:
-        Blunt: 0.75
-        Slash: 0.75
-        Piercing: 0.75
-        Radiation: 0.25
-        Heat: 0.6
+        Blunt: 0.85
+        Slash: 0.85
+        Piercing: 0.85
+        Radiation: 0.50
+        Heat: 0.80
+        Cold: 0.80
+        Shock: 0.80
   - type: ExplosionResistance
-    damageCoefficient: 0.50
+    damageCoefficient: 0.75
   - type: ClothingGrantComponent # KS14 - arc flash
     component:
     - type: ArcFlashInsulated

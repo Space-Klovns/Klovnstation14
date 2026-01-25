@@ -19,7 +19,7 @@
   - type: Projectile
     damage:
       types:
-        Piercing: 30
+        Piercing: 20
 
 - type: entity
   parent: BulletHeavyRifle
