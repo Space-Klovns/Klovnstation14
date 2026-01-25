@@ -93,7 +93,7 @@ public sealed class ComplexShoveSystem : EntitySystem
 
         _staminaSystem.TakeStaminaDamage(
             shovedEntity.Owner,
-            shovedEntity.Comp.CritThreshold * shoverEntity.Comp.BasicShoveStaminaDamageFraction / 6.5,
+            shovedEntity.Comp.CritThreshold * shoverEntity.Comp.BasicShoveStaminaDamageFraction / 6.5f,
             component: shovedEntity.Comp,
             source: shoverEntity,
             ignoreResist: true
