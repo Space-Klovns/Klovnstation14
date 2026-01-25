@@ -53,10 +53,7 @@ public sealed class PlumbingPullSystem : EntitySystem
         FixedPoint2 maxAmount,
         int roundRobinIndex)
     {
-        // MaxVolume == 0 means unlimited capacity (e.g., ChemMaster buffer)
-        var availableVolume = destination.Comp.Solution.MaxVolume == FixedPoint2.Zero
-            ? maxAmount
-            : destination.Comp.Solution.AvailableVolume;
+        var availableVolume = destination.Comp.Solution.AvailableVolume;
         var remaining = FixedPoint2.Min(maxAmount, availableVolume);
         if (remaining <= 0)
             return (FixedPoint2.Zero, roundRobinIndex);
@@ -124,16 +121,11 @@ public sealed class PlumbingPullSystem : EntitySystem
     {
         var pulled = new Dictionary<string, FixedPoint2>();
         var destSolution = destination.Comp.Solution;
-        var availableVolume = destSolution.MaxVolume == FixedPoint2.Zero
-            ? transferLimit
-            : destSolution.AvailableVolume;
+        var availableVolume = destSolution.AvailableVolume;
         var remaining = FixedPoint2.Min(transferLimit, availableVolume);
 
         if (remaining <= 0)
             return pulled;
-
-        // Unlimited solutions (MaxVolume == 0) need direct AddReagent since TryAddReagent doesn't handle them
-        var isUnlimited = destSolution.MaxVolume == FixedPoint2.Zero;
 
         // Sequential pulling: fill each reagent fully before moving to the next
         foreach (var (reagentId, neededAmount) in reagentTargets)
@@ -187,28 +179,16 @@ public sealed class PlumbingPullSystem : EntitySystem
                 var actualPulled = _solutionSystem.RemoveReagent(sourceSoln, new ReagentId(reagentId, null), toPull);
                 if (actualPulled > 0)
                 {
-                    if (isUnlimited)
-                    {
-                        // Directly add to unlimited solutions since TryAddReagent doesn't handle them
-                        destSolution.AddReagent(new ReagentId(reagentId, null), actualPulled);
-                        Dirty(destination);
-                        pulled[reagentId] = pulled.GetValueOrDefault(reagentId, FixedPoint2.Zero) + actualPulled;
-                        stillNeeded -= actualPulled;
-                        remaining -= actualPulled;
-                    }
-                    else
-                    {
-                        _solutionSystem.TryAddReagent(destination, new ReagentId(reagentId, null), actualPulled, out var actuallyAdded);
+                    _solutionSystem.TryAddReagent(destination, new ReagentId(reagentId, null), actualPulled, out var actuallyAdded);
 
-                        // Return any excess to source to prevent loss
-                        var excess = actualPulled - actuallyAdded;
-                        if (excess > 0)
-                            _solutionSystem.TryAddReagent(sourceSoln, new ReagentId(reagentId, null), excess, out _);
+                    // Return any excess to source to prevent loss
+                    var excess = actualPulled - actuallyAdded;
+                    if (excess > 0)
+                        _solutionSystem.TryAddReagent(sourceSoln, new ReagentId(reagentId, null), excess, out _);
 
-                        pulled[reagentId] = pulled.GetValueOrDefault(reagentId, FixedPoint2.Zero) + actuallyAdded;
-                        stillNeeded -= actuallyAdded;
-                        remaining -= actuallyAdded;
-                    }
+                    pulled[reagentId] = pulled.GetValueOrDefault(reagentId, FixedPoint2.Zero) + actuallyAdded;
+                    stillNeeded -= actuallyAdded;
+                    remaining -= actuallyAdded;
                 }
             }
         }
@@ -235,9 +215,7 @@ public sealed class PlumbingPullSystem : EntitySystem
             return FixedPoint2.Zero;
 
         var destSolution = destination.Comp.Solution;
-        var availableSpace = destSolution.MaxVolume == FixedPoint2.Zero
-            ? maxAmount
-            : destSolution.AvailableVolume;
+        var availableSpace = destSolution.AvailableVolume;
         if (availableSpace <= 0)
             return FixedPoint2.Zero;
 
@@ -260,9 +238,6 @@ public sealed class PlumbingPullSystem : EntitySystem
 
         var totalPulled = FixedPoint2.Zero;
 
-        // Unlimited solutions (MaxVolume == 0) need direct AddReagent since TryAddReagent doesn't handle them
-        var isUnlimited = destSolution.MaxVolume == FixedPoint2.Zero;
-
         foreach (var (reagent, quantity) in allowedReagents)
         {
             if (remaining <= 0)
@@ -275,26 +250,15 @@ public sealed class PlumbingPullSystem : EntitySystem
             var pulled = _solutionSystem.RemoveReagent(sourceSoln, reagent, toPull);
             if (pulled > 0)
             {
-                if (isUnlimited)
-                {
-                    // Directly add to unlimited solutions since TryAddReagent doesn't handle them
-                    destSolution.AddReagent(reagent, pulled);
-                    Dirty(destination);
-                    totalPulled += pulled;
-                    remaining -= pulled;
-                }
-                else
-                {
-                    _solutionSystem.TryAddReagent(destination, reagent, pulled, out var actuallyAdded);
+                _solutionSystem.TryAddReagent(destination, reagent, pulled, out var actuallyAdded);
 
-                    // Return any excess to source to prevent loss
-                    var excess = pulled - actuallyAdded;
-                    if (excess > 0)
-                        _solutionSystem.TryAddReagent(sourceSoln, reagent, excess, out _);
+                // Return any excess to source to prevent loss
+                var excess = pulled - actuallyAdded;
+                if (excess > 0)
+                    _solutionSystem.TryAddReagent(sourceSoln, reagent, excess, out _);
 
-                    totalPulled += actuallyAdded;
-                    remaining -= actuallyAdded;
-                }
+                totalPulled += actuallyAdded;
+                remaining -= actuallyAdded;
             }
         }
 

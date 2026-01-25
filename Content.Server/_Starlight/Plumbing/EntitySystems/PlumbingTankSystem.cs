@@ -31,8 +31,7 @@ public sealed class PlumbingTankSystem : EntitySystem
         if (!_solutionSystem.TryGetSolution(ent.Owner, ent.Comp.SolutionName, out var tankSolutionEnt, out var tankSolution))
             return;
 
-        // Check if we have space (MaxVolume == 0 means unlimited). Changed to make chemmaster plumbing work
-        if (tankSolution.MaxVolume != FixedPoint2.Zero && tankSolution.AvailableVolume <= 0)
+        if (tankSolution.AvailableVolume <= 0)
             return;
 
         // Get the inlet node

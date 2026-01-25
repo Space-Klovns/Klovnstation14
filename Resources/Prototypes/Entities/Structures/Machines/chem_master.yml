@@ -92,10 +92,11 @@
           - PillCanister
   - type: SolutionContainerManager
     solutions:
-      buffer: {}
+      buffer:
+        maxVol: 5000 # Starlight: limited to 5000u for plumbing compatibility and realism
   - type: DumpableSolution
     solution: buffer
-    unlimited: true
+    # unlimited: true # Starlight: no longer unlimited
   - type: GuideHelp
     guides:
     - Chemicals
