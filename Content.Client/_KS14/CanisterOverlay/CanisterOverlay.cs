@@ -33,7 +33,7 @@ public sealed class CanisterOverlay : Overlay
     private readonly SpriteSystem _spriteSystem = default!;
     private readonly GasTileOverlaySystem _gasTileOverlaySystem = default!;
 
-    public override OverlaySpace Space => OverlaySpace.WorldSpace;
+    public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowFOV;
 
     public SpriteSpecifier.Rsi WindowMaskSpriteSpecifier;
 
@@ -146,7 +146,7 @@ public sealed class CanisterOverlay : Overlay
                 worldHandle.DrawTexture(maskTexture, HalfNegativeVector2, modulate: Color.White);
             }
         },
-        Color.Transparent);
+        Color.Black);
 
         // reset after setting transform million times
         worldHandle.SetTransform(Matrix3x2.Identity);
@@ -158,15 +158,12 @@ public sealed class CanisterOverlay : Overlay
             return;
         }
 
-        var maskShader = _prototypeManager.Index(StencilMaskShader).Instance();
-        worldHandle.UseShader(maskShader);
-
         // Draw stencil target onto stencil mask so we can actually use it
+        worldHandle.UseShader(_prototypeManager.Index(StencilMaskShader).Instance());
         worldHandle.DrawTextureRect(resources.MaskTarget.Texture, args.WorldBounds);
 
         // Finally, draw gas textures on pixels that are white on our stencil mask
-        var stencilEqualDrawShader = _prototypeManager.Index(StencilEqualDrawShader).Instance();
-        worldHandle.UseShader(stencilEqualDrawShader);
+        worldHandle.UseShader(_prototypeManager.Index(StencilEqualDrawShader).Instance());
         foreach (var (canisterComponent, canisterWorldMatrix) in _drawDataCache)
         {
             worldHandle.SetTransform(canisterWorldMatrix);

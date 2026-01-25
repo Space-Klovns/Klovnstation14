@@ -21,7 +21,7 @@ public sealed class StainOverlay : Overlay
 {
     private static readonly ProtoId<ShaderPrototype> UnshadedShader = "unshaded";
     private static readonly ProtoId<ShaderPrototype> StencilMaskShader = "StencilMask";
-    private static readonly ProtoId<ShaderPrototype> StencilEqualDrawShader = "StencilEqualDraw";
+    private static readonly ProtoId<ShaderPrototype> StencilDrawShader = "StencilDraw";
 
     [Dependency] private readonly IClyde _clyde = default!;
     [Dependency] private readonly IEntityManager _entityManager = default!;
@@ -33,7 +33,13 @@ public sealed class StainOverlay : Overlay
     private readonly SpriteSystem _spriteSystem = default!;
     private readonly EntityLookupSystem _entityLookupSystem = default!;
 
+    /// <summary>
+    ///     Based on <see cref="Shared._KS14.CCVar.KsCCVars.ComplexStainDrawing"/>
+    /// </summary>
+    public bool ComplexDrawing = false;
+
     private EntityQuery<TransformComponent> _transformQuery;
+    private EntityQuery<SpriteComponent> _spriteQuery;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowFOV;
 
@@ -59,6 +65,7 @@ public sealed class StainOverlay : Overlay
         _entityLookupSystem = _entityManager.System<EntityLookupSystem>();
 
         _transformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+        _spriteQuery = _entityManager.GetEntityQuery<SpriteComponent>();
 
         ZIndex = AfterLightTargetOverlay.ContentZIndex + 1;
     }
@@ -82,6 +89,7 @@ public sealed class StainOverlay : Overlay
         var scale = viewport.RenderScale / (Vector2.One / lightScale);
         var invMatrix = viewport.GetWorldToLocalMatrix();
         var realTime = _gameTiming.RealTime;
+        var eyeRotation = viewport.Eye?.Rotation ?? Angle.Zero;
 
         var res = _resources.GetForViewport(viewport, static _ => new CachedResources());
 
@@ -112,16 +120,29 @@ public sealed class StainOverlay : Overlay
                     // TODO: Draw actual sprite texture to stencil?
                     foreach (var uid in _intersectingEntities)
                     {
-                        if (!_entityManager.TryGetComponent(uid, out TransformComponent? transformComponent) ||
-                            !_entityManager.TryGetComponent<SpriteComponent>(uid, out var spriteComponent))
+                        if (!_transformQuery.TryGetComponent(uid, out var transformComponent) ||
+                            !_spriteQuery.TryGetComponent(uid, out var spriteComponent))
                             continue;
 
-                        var bounds = _spriteSystem.CalculateBounds((uid, spriteComponent), transformComponent.Coordinates.Position, transformComponent.LocalRotation, viewport.Eye?.Rotation ?? Angle.Zero);
-                        worldHandle.DrawRect(bounds, Color.White);
+                        if (ComplexDrawing)
+                        {
+                            foreach (var layer in spriteComponent.AllLayers)
+                            {
+                                if (layer.Texture is not { } layerTexture)
+                                    continue;
+
+                                worldHandle.DrawTexture(layerTexture, transformComponent.Coordinates.Position, transformComponent.LocalRotation, modulate: Color.Black);
+                            }
+                        }
+                        else
+                        {
+                            var bounds = _spriteSystem.CalculateBounds((uid, spriteComponent), transformComponent.Coordinates.Position, transformComponent.LocalRotation, eyeRotation);
+                            worldHandle.DrawRect(bounds, Color.Black);
+                        }
                     }
                 }
 
-            }, Color.Transparent);
+            }, Color.White);
 
         worldHandle.SetTransform(Matrix3x2.Identity);
 
@@ -133,7 +154,7 @@ public sealed class StainOverlay : Overlay
         var convertedTextureWidth = texture.Width / DblPixelsPerMeter;
         var convertedTextureHeight = texture.Height / DblPixelsPerMeter;
 
-        worldHandle.UseShader(_prototypeManager.Index(StencilEqualDrawShader).Instance());
+        worldHandle.UseShader(_prototypeManager.Index(StencilDrawShader).Instance());
 
         var stainedEnumerator = _entityManager.EntityQueryEnumerator<StainedComponent, SpriteComponent, TransformComponent>();
         while (stainedEnumerator.MoveNext(out var uid, out var stainedComponent, out var spriteComponent, out var transformComponent))
