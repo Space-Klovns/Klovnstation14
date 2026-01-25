@@ -1,3 +1,4 @@
+// SPDX-FileCopyrightText: 2026 FrauzJ
 // SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
 //
 // SPDX-License-Identifier: MPL-2.0
