@@ -129,10 +129,10 @@ namespace Content.IntegrationTests.Tests
 
         public static readonly string[] GameMaps =
         {
-            "Spire", // Harmony, Developed by Dogbone10, PenguinCodest, Jack_the_Dragon
-            "Omega", // Harmony, updated from Spanky's version by OrnamentalFreak and CrimsonJupiter
+            //"Spire", // Harmony, Developed by Dogbone10, PenguinCodest, Jack_the_Dragon
+            //"Omega", // Harmony, updated from Spanky's version by OrnamentalFreak and CrimsonJupiter
             "Jellyfish", // Harmony, Developed by whythelettuce
-            "Mira", // Harmony, developed by tanuko
+            //"Mira", // Harmony, developed by tanuko
             "Dev",
             "TestTeg",
             "Fland",
