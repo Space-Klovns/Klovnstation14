@@ -1,6 +1,4 @@
-// SPDX-FileCopyrightText: 2026 FrauzJ
 // SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
 //
 // SPDX-License-Identifier: MPL-2.0
 
@@ -94,7 +92,7 @@ public sealed class ComplexShoveSystem : EntitySystem
 
         _staminaSystem.TakeStaminaDamage(
             shovedEntity.Owner,
-            shovedEntity.Comp.CritThreshold * shoverEntity.Comp.BasicShoveStaminaDamageFraction / 6.5f,
+            shovedEntity.Comp.CritThreshold * shoverEntity.Comp.BasicShoveStaminaDamageFraction,
             component: shovedEntity.Comp,
             source: shoverEntity,
             ignoreResist: true
