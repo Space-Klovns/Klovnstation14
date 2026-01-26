@@ -492,9 +492,9 @@
   productEntity: C4
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 8
   cost:
-    Telecrystal: 6
+    Telecrystal: 12 #you can still get 6 c4 if you want and cause insane damage. we might need further nerfs
   categories:
   - UplinkExplosives
 
@@ -523,9 +523,9 @@
   productEntity: ClothingBackpackDuffelSyndicateC4tBundle
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 24
+    Telecrystal: 35
   cost:
-    Telecrystal: 36 #you're buying bulk so its a 25% discount, so no additional random discount over it
+    Telecrystal: 50 # c-4 is insanely destructive. you should not be getting much help in planting tons of it and this price should make you reconsider
   categories:
   - UplinkExplosives
 
