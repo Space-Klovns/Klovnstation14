@@ -249,10 +249,9 @@ public abstract class SharedDisposalUnitSystem : EntitySystem
             return;
         }
 
-        if (component.Engaged)
+        if (component.Engaged && !TryFlush(uid, component))
         {
-            // Run ManualEngage to recalculate a new flush time
-            ManualEngage(uid, component);
+            QueueAutomaticEngage(uid, component);
         }
     }
 
