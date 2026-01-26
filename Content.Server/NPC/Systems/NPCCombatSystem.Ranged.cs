@@ -206,6 +206,7 @@ public sealed partial class NPCCombatSystem
             }
 
             _gun.AttemptShoot(uid, gun, targetCordinates, comp.Target);
+            comp.ShootAccumulator = 0f;
         }
     }
 }
