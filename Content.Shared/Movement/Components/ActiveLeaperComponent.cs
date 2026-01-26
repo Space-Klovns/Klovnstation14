@@ -30,6 +30,13 @@ public sealed partial class ActiveLeaperComponent : Component
 
     // KS14 addition
     /// <summary>
+    /// If specified, the enemy hit will be knocked down for this many seconds.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public TimeSpan? HitKnockdownDuration = null;
+
+    // KS14 addition
+    /// <summary>
     /// If specified, this much stamina damage will be dealt to any hit targets.
     /// </summary>
     [DataField, AutoNetworkedField]

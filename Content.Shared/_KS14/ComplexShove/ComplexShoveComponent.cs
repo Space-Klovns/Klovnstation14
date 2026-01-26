@@ -31,7 +31,7 @@ public sealed partial class ComplexShoveComponent : Component
     ///         basicshove ANYTHING 4 times to stamcrit (assumning no stamregen)
     /// </summary>
     [DataField, ViewVariables]
-    public float BasicShoveStaminaDamageFraction = 0.2f;
+    public float BasicShoveStaminaDamageFraction = 0.05f;
 
     /// <summary>
     ///     Maximum distance from a person getting shoved to a wall
