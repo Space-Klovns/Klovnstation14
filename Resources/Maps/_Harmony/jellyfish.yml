@@ -14790,13 +14790,6 @@ entities:
     - type: Transform
       pos: 4.3911257,22.314373
       parent: 2
-- proto: BoxTapeRecorder
-  entities:
-  - uid: 2620
-    components:
-    - type: Transform
-      pos: 32.350765,-11.387132
-      parent: 2
 - proto: BoxVial
   entities:
   - uid: 11915
@@ -36979,13 +36972,6 @@ entities:
     - type: Transform
       pos: -24.5,8.5
       parent: 2
-- proto: CardBoxBlack
-  entities:
-  - uid: 5966
-    components:
-    - type: Transform
-      pos: 32.33019,20.677074
-      parent: 2
 - proto: CargoMailTeleporter
   entities:
   - uid: 2187
@@ -48567,13 +48553,6 @@ entities:
     components:
     - type: Transform
       pos: -25.5,18.5
-      parent: 2
-- proto: DrinkAviationGlass
-  entities:
-  - uid: 16122
-    components:
-    - type: Transform
-      pos: 41.699284,2.6780622
       parent: 2
 - proto: DrinkBeerBottleFull
   entities:
@@ -83005,96 +82984,6 @@ entities:
     components:
     - type: Transform
       pos: 17.5,-40.5
-      parent: 2
-    - type: Fixtures
-      fixtures: {}
-- proto: PosterHarmonyAlwaysWatching
-  entities:
-  - uid: 11985
-    components:
-    - type: Transform
-      pos: -41.5,16.5
-      parent: 2
-    - type: Fixtures
-      fixtures: {}
-- proto: PosterHarmonyCan
-  entities:
-  - uid: 11994
-    components:
-    - type: Transform
-      pos: -15.5,2.5
-      parent: 2
-    - type: Fixtures
-      fixtures: {}
-- proto: PosterHarmonyDoNotGamble
-  entities:
-  - uid: 12009
-    components:
-    - type: Transform
-      pos: -10.5,-20.5
-      parent: 2
-    - type: Fixtures
-      fixtures: {}
-  - uid: 12133
-    components:
-    - type: Transform
-      pos: -32.5,25.5
-      parent: 2
-    - type: Fixtures
-      fixtures: {}
-- proto: PosterHarmonyMakeshiftClown
-  entities:
-  - uid: 11977
-    components:
-    - type: Transform
-      rot: -1.5707963267948966 rad
-      pos: 9.5,-20.5
-      parent: 2
-    - type: Fixtures
-      fixtures: {}
-- proto: PosterHarmonyMoney
-  entities:
-  - uid: 11996
-    components:
-    - type: Transform
-      pos: 31.5,-16.5
-      parent: 2
-    - type: Fixtures
-      fixtures: {}
-- proto: PosterHarmonyMuhrinePropaganda
-  entities:
-  - uid: 12002
-    components:
-    - type: Transform
-      pos: -13.5,-49.5
-      parent: 2
-    - type: Fixtures
-      fixtures: {}
-- proto: PosterHarmonySafetyLizz
-  entities:
-  - uid: 12010
-    components:
-    - type: Transform
-      pos: -22.5,-37.5
-      parent: 2
-    - type: Fixtures
-      fixtures: {}
-- proto: PosterHarmonySmokeBreak
-  entities:
-  - uid: 11966
-    components:
-    - type: Transform
-      rot: -1.5707963267948966 rad
-      pos: 38.5,-5.5
-      parent: 2
-    - type: Fixtures
-      fixtures: {}
-- proto: PosterHarmonyWallMeat
-  entities:
-  - uid: 12027
-    components:
-    - type: Transform
-      pos: -5.5,-20.5
       parent: 2
     - type: Fixtures
       fixtures: {}
