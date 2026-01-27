@@ -1,11 +1,11 @@
 meta:
   format: 7
   category: Map
-  engineVersion: 267.3.0
-  forkId: harmony
-  forkVersion: f9664519760d8706a57ab1fc6a5445f4ce899b70
-  time: 11/20/2025 20:39:14
-  entityCount: 16101
+  engineVersion: 270.1.0
+  forkId: ""
+  forkVersion: ""
+  time: 01/27/2026 19:07:26
+  entityCount: 16088
 maps:
 - 1
 grids:
@@ -4622,6 +4622,7 @@ entities:
     - type: GridPathfinding
     - type: NavMap
     - type: ImplicitRoof
+    - type: ExplosionAirtightGrid
 - proto: AcousticGuitarInstrument
   entities:
   - uid: 3
@@ -14675,13 +14676,6 @@ entities:
     components:
     - type: Transform
       pos: -29.5,-18.5
-      parent: 2
-- proto: BookSpaceLaw
-  entities:
-  - uid: 1469
-    components:
-    - type: Transform
-      pos: -7.468976,17.592701
       parent: 2
 - proto: BoozeDispenser
   entities:
@@ -38968,27 +38962,6 @@ entities:
     - type: Transform
       pos: -0.5106895,-15.532991
       parent: 2
-- proto: ClothingNeckCloakTrans
-  entities:
-  - uid: 6182
-    components:
-    - type: Transform
-      pos: 33.543144,-20.431847
-      parent: 2
-- proto: ClothingNeckIntersexPin
-  entities:
-  - uid: 6183
-    components:
-    - type: Transform
-      pos: 19.693497,8.613337
-      parent: 2
-- proto: ClothingNeckNonBinaryPin
-  entities:
-  - uid: 6184
-    components:
-    - type: Transform
-      pos: 8.410957,-44.59256
-      parent: 2
 - proto: ClothingNeckScarfStripedBlue
   entities:
   - uid: 6185
@@ -39057,13 +39030,6 @@ entities:
     components:
     - type: Transform
       pos: 12.437459,-29.32733
-      parent: 2
-- proto: ClothingNeckTransPin
-  entities:
-  - uid: 6192
-    components:
-    - type: Transform
-      pos: -14.357392,4.331708
       parent: 2
 - proto: ClothingOuterApron
   entities:
@@ -39253,13 +39219,6 @@ entities:
     components:
     - type: Transform
       pos: -9.419544,-48.840183
-      parent: 2
-- proto: ClothingUniformColorRainbow
-  entities:
-  - uid: 6221
-    components:
-    - type: Transform
-      pos: 20.434938,9.522341
       parent: 2
 - proto: ClothingUniformJumpskirtOperative
   entities:
@@ -78878,26 +78837,12 @@ entities:
     - type: Transform
       pos: 10.5,52.5
       parent: 2
-- proto: PlushieArachind
+- proto: PlushieSpawner50
   entities:
-  - uid: 11755
+  - uid: 13937
     components:
     - type: Transform
-      pos: -44.48728,4.471773
-      parent: 2
-- proto: PlushieLizard
-  entities:
-  - uid: 11756
-    components:
-    - type: Transform
-      pos: -44.486626,-24.313948
-      parent: 2
-- proto: PlushieSharkGrey
-  entities:
-  - uid: 11757
-    components:
-    - type: Transform
-      pos: -29.518469,34.407963
+      pos: -10.5,11.5
       parent: 2
 - proto: PortableFlasher
   entities:
@@ -79121,31 +79066,6 @@ entities:
     components:
     - type: Transform
       pos: -42.5,-22.5
-      parent: 2
-    - type: Fixtures
-      fixtures: {}
-- proto: PosterHarmonyDoNotGamble
-  entities:
-  - uid: 11788
-    components:
-    - type: Transform
-      pos: -41.5,-32.5
-      parent: 2
-    - type: Fixtures
-      fixtures: {}
-  - uid: 11789
-    components:
-    - type: Transform
-      pos: -44.5,-33.5
-      parent: 2
-    - type: Fixtures
-      fixtures: {}
-- proto: PosterHarmonyMoney
-  entities:
-  - uid: 11790
-    components:
-    - type: Transform
-      pos: 18.5,22.5
       parent: 2
     - type: Fixtures
       fixtures: {}
@@ -92757,13 +92677,6 @@ entities:
     - type: Transform
       pos: -26.669348,34.58727
       parent: 2
-- proto: ToySpawner
-  entities:
-  - uid: 13937
-    components:
-    - type: Transform
-      pos: -10.5,11.5
-      parent: 2
 - proto: TrashBag
   entities:
   - uid: 13938
@@ -93311,13 +93224,6 @@ entities:
     components:
     - type: Transform
       pos: -7.5,-5.5
-      parent: 2
-- proto: VendingMachinePride
-  entities:
-  - uid: 13999
-    components:
-    - type: Transform
-      pos: -21.5,-1.5
       parent: 2
 - proto: VendingMachineRoboDrobe
   entities:
