@@ -129,7 +129,7 @@ namespace Content.IntegrationTests.Tests
 
         public static readonly string[] GameMaps =
         {
-            //"Spire", // KS14: ported from Harmony, Developed by Dogbone10, PenguinCodest, Jack_the_Dragon
+            "Spire", // KS14: ported from Harmony, Developed by Dogbone10, PenguinCodest, Jack_the_Dragon
             "Jellyfish", // KS14: ported from Harmony, Developed by whythelettuce
             //"Mira", // KS14: ported from Harmony, developed by tanuko
             "Dev",
