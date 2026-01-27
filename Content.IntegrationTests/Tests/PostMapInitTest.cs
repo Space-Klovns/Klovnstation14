@@ -18,7 +18,6 @@
 // SPDX-FileCopyrightText: 2024 778b
 // SPDX-FileCopyrightText: 2024 Ed
 // SPDX-FileCopyrightText: 2024 Emisse
-// SPDX-FileCopyrightText: 2024 Errant
 // SPDX-FileCopyrightText: 2024 Leon Friedrich
 // SPDX-FileCopyrightText: 2024 Rainfey
 // SPDX-FileCopyrightText: 2024 Southbridge
@@ -26,11 +25,14 @@
 // SPDX-FileCopyrightText: 2025 ArtisticRoomba
 // SPDX-FileCopyrightText: 2025 Deerstop
 // SPDX-FileCopyrightText: 2025 ElectroJr
+// SPDX-FileCopyrightText: 2025 Errant
+// SPDX-FileCopyrightText: 2025 FrauZj
 // SPDX-FileCopyrightText: 2025 FrauzJ
 // SPDX-FileCopyrightText: 2025 IProduceWidgets
+// SPDX-FileCopyrightText: 2025 Kate
 // SPDX-FileCopyrightText: 2025 Killerqu00
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2025 Pok
 // SPDX-FileCopyrightText: 2025 SlamBamActionman
 // SPDX-FileCopyrightText: 2025 Spessmann
 // SPDX-FileCopyrightText: 2025 Tayrtahn
@@ -38,8 +40,11 @@
 // SPDX-FileCopyrightText: 2025 Vortebo
 // SPDX-FileCopyrightText: 2025 compilatron
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
+// SPDX-FileCopyrightText: 2025 lettuce
 // SPDX-FileCopyrightText: 2025 metalgearsloth
-// SPDX-FileCopyrightText: 2025 nabegator220
+// SPDX-FileCopyrightText: 2025 tanuko
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2026 nabegator220
 //
 // SPDX-License-Identifier: MIT
 

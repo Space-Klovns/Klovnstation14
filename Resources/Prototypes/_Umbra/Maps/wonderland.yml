@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Kate
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: gameMap
   id: Wonderland
   mapName: 'Wonderland'

@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Kate
+# SPDX-FileCopyrightText: 2025 tanuko
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: gameMap
   id: Mira
   mapName: 'Mira Station'
