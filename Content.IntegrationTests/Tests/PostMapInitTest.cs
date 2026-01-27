@@ -39,11 +39,11 @@
 // SPDX-FileCopyrightText: 2025 Unisol
 // SPDX-FileCopyrightText: 2025 Vortebo
 // SPDX-FileCopyrightText: 2025 compilatron
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 lettuce
 // SPDX-FileCopyrightText: 2025 metalgearsloth
 // SPDX-FileCopyrightText: 2025 tanuko
 // SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
 // SPDX-FileCopyrightText: 2026 nabegator220
 //
 // SPDX-License-Identifier: MIT
