@@ -4,7 +4,7 @@ meta:
   engineVersion: 270.1.0
   forkId: ""
   forkVersion: ""
-  time: 01/27/2026 16:18:35
+  time: 01/27/2026 16:56:41
   entityCount: 26220
 maps:
 - 1
@@ -10559,7 +10559,7 @@ entities:
       pos: -39.5,12.5
       parent: 2
     - type: Door
-      secondsUntilStateChange: -8092.568
+      secondsUntilStateChange: -8302.857
       state: Opening
     - type: DeviceLinkSource
       lastSignals:
@@ -10979,18 +10979,18 @@ entities:
       rot: -1.5707963267948966 rad
       pos: -63.5,-26.5
       parent: 2
-- proto: AirlockExternalGlassShuttleEscapePodLanding
-  entities:
+    - type: AccessReader
+      accessListsOriginal: []
   - uid: 321
     components:
     - type: Transform
-      pos: 15.5,-65.5
+      pos: 13.5,-65.5
       parent: 2
   - uid: 322
     components:
     - type: Transform
       rot: -1.5707963267948966 rad
-      pos: -80.5,38.5
+      pos: -80.5,34.5
       parent: 2
   - uid: 323
     components:
@@ -11001,12 +11001,12 @@ entities:
   - uid: 324
     components:
     - type: Transform
-      pos: 11.5,-65.5
+      pos: 17.5,-65.5
       parent: 2
   - uid: 325
     components:
     - type: Transform
-      pos: 19.5,-65.5
+      pos: 11.5,-65.5
       parent: 2
   - uid: 326
     components:
@@ -11018,7 +11018,7 @@ entities:
     components:
     - type: Transform
       rot: -1.5707963267948966 rad
-      pos: -80.5,34.5
+      pos: -80.5,38.5
       parent: 2
 - proto: AirlockExternalGlassShuttleLocked
   entities:
@@ -164685,7 +164685,7 @@ entities:
       lastSignals:
         DoorStatus: True
     - type: Door
-      secondsUntilStateChange: -46233.227
+      secondsUntilStateChange: -46443.516
       state: Opening
     - type: Airlock
       autoClose: False
