@@ -123,6 +123,7 @@ namespace Content.IntegrationTests.Tests
         {
             "/Maps/centcomm.yml",
             "/Maps/_Moffstation/frezon.yml", // Contains handheld crew monitor & other head of staff items
+            "/Maps/Shuttles/AdminSpawn/ERT-Small-Deathsquad.yml" // handheld crew mon
         };
 
         /// <summary>
