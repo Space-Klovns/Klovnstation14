@@ -26,6 +26,9 @@
   - type: HideLayerClothing
     slots:
     - Hair
+    - FacialHair
+    - Special
+    - StencilMask
     - Snout
     - HeadTop
     - HeadSide

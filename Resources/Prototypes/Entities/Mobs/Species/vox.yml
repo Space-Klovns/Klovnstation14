@@ -150,6 +150,12 @@
       visible: false
   - type: HumanoidAppearance
     species: Vox
+    hideLayersOnEquip:
+    - Tail
+    - Hair
+    - FacialHair
+    - Special
+    - StencilMask
     undergarmentTop: UndergarmentTopTanktopVox
     undergarmentBottom: UndergarmentBottomBoxersVox
     markingsDisplacement:
@@ -220,6 +226,12 @@
   components:
   - type: HumanoidAppearance
     species: Vox
+    hideLayersOnEquip:
+    - Tail
+    - Hair
+    - FacialHair
+    - Special
+    - StencilMask
     undergarmentTop: UndergarmentTopTanktopVox
     undergarmentBottom: UndergarmentBottomBoxersVox
     markingsDisplacement:
