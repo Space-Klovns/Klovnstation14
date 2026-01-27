@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2025 ScarKy0
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
+// SPDX-FileCopyrightText: 2026 nabegator220
 //
 // SPDX-License-Identifier: MIT
 
@@ -27,6 +28,13 @@ public sealed partial class ActiveLeaperComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField]
     public TimeSpan? GuaranteedKnockdownDuration = null;
+
+    // KS14 addition
+    /// <summary>
+    /// If specified, the enemy hit will be knocked down for this many seconds.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public TimeSpan? HitKnockdownDuration = null;
 
     // KS14 addition
     /// <summary>

@@ -1,7 +1,12 @@
+// SPDX-FileCopyrightText: 2026 nabegator220
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Shared.Administration.Logs;
 using Content.Shared.Destructible;
 using Content.Shared.Effects;
 using Content.Shared.Camera;
+using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Database;
@@ -131,45 +136,11 @@ public sealed class PredictedProjectileSystem : EntitySystem
                 LogImpact.Medium,
                 $"Projectile {ToPrettyString(uid):projectile} shot by {ToPrettyString(shooter):user} hit {otherName:target} and dealt {damage:damage} damage");
 
-            // If penetration is to be considered, we need to do some checks to see if the projectile should stop.
-            if (comp.PenetrationThreshold != 0)
-            {
-                // If a damage type is required, stop the bullet if the hit entity doesn't have that type.
-                if (comp.PenetrationDamageTypeRequirement != null)
-                {
-                    var stopPenetration = false;
-                    foreach (var requiredDamageType in comp.PenetrationDamageTypeRequirement)
-                    {
-                        if (!damage.DamageDict.Keys.Contains(requiredDamageType))
-                        {
-                            stopPenetration = true;
-                            break;
-                        }
-                    }
-                    if (stopPenetration)
-                        comp.ProjectileSpent = true;
-                }
-
-                // If the object won't be destroyed, it "tanks" the penetration hit.
-                if (damage.GetTotal() < damageRequired)
-                {
-                    comp.ProjectileSpent = true;
-                }
-
-                if (!comp.ProjectileSpent)
-                {
-                    comp.PenetrationAmount += damageRequired;
-                    // The projectile has dealt enough damage to be spent.
-                    if (comp.PenetrationAmount >= comp.PenetrationThreshold)
-                    {
-                        comp.ProjectileSpent = true;
-                    }
-                }
-            }
-            else
-            {
-                comp.ProjectileSpent = true;
-            }
+            comp.ProjectileSpent = !TryPenetrate((uid, comp), target, damage, damageRequired);
+        }
+        else
+        {
+            comp.ProjectileSpent = true;
         }
 
         if (!deleted)
@@ -187,5 +158,40 @@ public sealed class PredictedProjectileSystem : EntitySystem
         {
             RaiseLocalEvent(new ImpactEffectEvent(comp.ImpactEffect, GetNetCoordinates(xform.Coordinates)));
         }
+    }
+    private bool TryPenetrate(Entity<ProjectileComponent> projectile, EntityUid target, DamageSpecifier damage, FixedPoint2 damageRequired)
+    {
+        var comp = projectile.Comp;
+
+        // If penetration is to be considered, we need to do some checks to see if the projectile should stop.
+        if (comp.PenetrationThreshold == 0)
+            return false;
+        // If a damage type is required, stop the bullet if the hit entity doesn't have that type.
+        if (comp.PenetrationDamageTypeRequirement != null)
+        {
+            foreach (var requiredDamageType in comp.PenetrationDamageTypeRequirement)
+            {
+                if (!damage.DamageDict.Keys.Contains(requiredDamageType))
+                    return false;
+            }
+        }
+
+        // If the object won't be destroyed, it "tanks" the penetration hit.
+        if (damage.GetTotal() < damageRequired)
+        {
+            return false;
+        }
+
+        if (!comp.ProjectileSpent)
+        {
+            comp.PenetrationAmount += damageRequired;
+            // The projectile has dealt enough damage to be spent.
+            if (comp.PenetrationAmount >= comp.PenetrationThreshold)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

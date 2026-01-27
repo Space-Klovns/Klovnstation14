@@ -90,7 +90,6 @@
 # SPDX-FileCopyrightText: 2024 TruePaInt
 # SPDX-FileCopyrightText: 2024 Ubaser
 # SPDX-FileCopyrightText: 2024 Verm
-# SPDX-FileCopyrightText: 2024 beck-thompson
 # SPDX-FileCopyrightText: 2024 deltanedas
 # SPDX-FileCopyrightText: 2024 lzk
 # SPDX-FileCopyrightText: 2024 metalgearsloth
@@ -100,27 +99,35 @@
 # SPDX-FileCopyrightText: 2024 takemysoult
 # SPDX-FileCopyrightText: 2025 ArtisticRoomba
 # SPDX-FileCopyrightText: 2025 August Sun
+# SPDX-FileCopyrightText: 2025 Entvari
 # SPDX-FileCopyrightText: 2025 FrauZj
 # SPDX-FileCopyrightText: 2025 FrauzJ
-# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 GeneralGaws
+# SPDX-FileCopyrightText: 2025 Gerkada
 # SPDX-FileCopyrightText: 2025 Minemoder5000
+# SPDX-FileCopyrightText: 2025 MissKay1994
 # SPDX-FileCopyrightText: 2025 Nox
+# SPDX-FileCopyrightText: 2025 PJB3005
 # SPDX-FileCopyrightText: 2025 Preston Smith
 # SPDX-FileCopyrightText: 2025 RedBookcase
-# SPDX-FileCopyrightText: 2025 ScarKy0
 # SPDX-FileCopyrightText: 2025 SlamBamActionman
 # SPDX-FileCopyrightText: 2025 Smugman
+# SPDX-FileCopyrightText: 2025 Super
 # SPDX-FileCopyrightText: 2025 Theodore Lukin
 # SPDX-FileCopyrightText: 2025 Unkn0wn_Gh0st
 # SPDX-FileCopyrightText: 2025 Vasilis The Pikachu
 # SPDX-FileCopyrightText: 2025 Velcroboy
 # SPDX-FileCopyrightText: 2025 Zachary Higgs
+# SPDX-FileCopyrightText: 2025 beck-thompson
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 halycon
 # SPDX-FileCopyrightText: 2025 hyperDelegate
 # SPDX-FileCopyrightText: 2025 keronshb
-# SPDX-FileCopyrightText: 2025 nabegator220
 # SPDX-FileCopyrightText: 2025 robinthedragon
 # SPDX-FileCopyrightText: 2025 themias
+# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2026 ScarKy0
+# SPDX-FileCopyrightText: 2026 nabegator220
 #
 # SPDX-License-Identifier: MPL-2.0
 
@@ -492,9 +499,9 @@
   productEntity: C4
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 8
   cost:
-    Telecrystal: 6
+    Telecrystal: 12 #you can still get 6 c4 if you want and cause insane damage. we might need further nerfs
   categories:
   - UplinkExplosives
 
@@ -523,9 +530,9 @@
   productEntity: ClothingBackpackDuffelSyndicateC4tBundle
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 24
+    Telecrystal: 35
   cost:
-    Telecrystal: 36 #you're buying bulk so its a 25% discount, so no additional random discount over it
+    Telecrystal: 50 # c-4 is insanely destructive. you should not be getting much help in planting tons of it and this price should make you reconsider
   categories:
   - UplinkExplosives
 

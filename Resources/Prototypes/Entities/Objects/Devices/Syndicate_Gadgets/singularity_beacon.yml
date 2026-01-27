@@ -1,3 +1,16 @@
+# SPDX-FileCopyrightText: 2024 Ilya246
+# SPDX-FileCopyrightText: 2024 Kara
+# SPDX-FileCopyrightText: 2024 Tayrtahn
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Partmedia
+# SPDX-FileCopyrightText: 2025 mubururu_
+# SPDX-FileCopyrightText: 2025 slarticodefast
+# SPDX-FileCopyrightText: 2026 FrauZj
+# SPDX-FileCopyrightText: 2026 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: entity
   id: SingularityBeacon
   parent: [BaseMachinePowered, BaseSyndicateContraband]
@@ -38,7 +51,7 @@
       - !type:DoActsBehavior
         acts: [ "Destruction" ]
   - type: ApcPowerReceiver
-    powerLoad: 5000
+    powerLoad: 15000
   - type: StaticPrice
     price: 7500
   - type: EmitSoundOnPickup # KS14: pickup/drop sounds

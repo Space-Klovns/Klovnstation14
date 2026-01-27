@@ -3,6 +3,7 @@
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 slarticodefast
 // SPDX-FileCopyrightText: 2025 Голубь
+// SPDX-FileCopyrightText: 2026 nabegator220
 //
 // SPDX-License-Identifier: MIT
 
@@ -62,7 +63,7 @@ public sealed partial class JumpAbilityComponent : Component
     /// <summary>
     /// The duration of the knockdown after finishing a jump, when <see cref="KnockdownOnFinish"/>
     /// is true.
-    /// 
+    ///
     /// Not applied after a collision, if <see cref="CanCollide"/> is true or this is null.
     /// </summary>
     [DataField]
@@ -70,10 +71,17 @@ public sealed partial class JumpAbilityComponent : Component
 
     // KS14 addition
     /// <summary>
-    /// Damage dealt to hit entities if <see cref="CanCollide"/> is true. 
+    /// Damage dealt to hit entities if <see cref="CanCollide"/> is true.
     /// </summary>
     [DataField, AutoNetworkedField]
     public float HitStaminaDamage = 60f;
+
+    // KS14 addition
+    /// <summary>
+    /// Knockdown duration dealt to hit entities if <see cref="CanCollide"/> is true.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public TimeSpan? HitKnockdownDuration = null;
 
     /// <summary>
     /// This gets played whenever the jump action is used.

@@ -1,3 +1,26 @@
+// SPDX-FileCopyrightText: 2018 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2019 Silver
+// SPDX-FileCopyrightText: 2020 py01
+// SPDX-FileCopyrightText: 2021 Acruid
+// SPDX-FileCopyrightText: 2021 DrSmugleaf
+// SPDX-FileCopyrightText: 2021 Visne
+// SPDX-FileCopyrightText: 2022 Rane
+// SPDX-FileCopyrightText: 2022 rolfero
+// SPDX-FileCopyrightText: 2022 wrexbe
+// SPDX-FileCopyrightText: 2023 James Simonson
+// SPDX-FileCopyrightText: 2023 Kevin Zheng
+// SPDX-FileCopyrightText: 2023 Slava0135
+// SPDX-FileCopyrightText: 2023 TemporalOroboros
+// SPDX-FileCopyrightText: 2024 eoineoineoin
+// SPDX-FileCopyrightText: 2024 metalgearsloth
+// SPDX-FileCopyrightText: 2025 ArtisticRoomba
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Partmedia
+// SPDX-FileCopyrightText: 2025 slarticodefast
+// SPDX-FileCopyrightText: 2026 nabegator220
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Robust.Shared.Serialization;
 
 namespace Content.Shared.APC
@@ -181,17 +204,13 @@ namespace Content.Shared.APC
         public readonly int Power;
         public readonly ApcExternalPowerState ApcExternalPower;
         public readonly float Charge;
-        public readonly float MaxLoad;
-        public readonly bool Tripped;
 
-        public ApcBoundInterfaceState(bool mainBreaker, int power, ApcExternalPowerState apcExternalPower, float charge, float maxLoad, bool tripped)
+        public ApcBoundInterfaceState(bool mainBreaker, int power, ApcExternalPowerState apcExternalPower, float charge)
         {
             MainBreaker = mainBreaker;
             Power = power;
             ApcExternalPower = apcExternalPower;
             Charge = charge;
-            MaxLoad = maxLoad;
-            Tripped = tripped;
         }
 
         public bool Equals(ApcBoundInterfaceState? other)
@@ -201,9 +220,7 @@ namespace Content.Shared.APC
             return MainBreaker == other.MainBreaker &&
                    Power == other.Power &&
                    ApcExternalPower == other.ApcExternalPower &&
-                   MathHelper.CloseTo(Charge, other.Charge) &&
-                   MathHelper.CloseTo(MaxLoad, other.MaxLoad) &&
-                   Tripped == other.Tripped;
+                   MathHelper.CloseTo(Charge, other.Charge);
         }
 
         public override bool Equals(object? obj)
@@ -213,7 +230,7 @@ namespace Content.Shared.APC
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(MainBreaker, Power, (int) ApcExternalPower, Charge, MaxLoad, Tripped);
+            return HashCode.Combine(MainBreaker, Power, (int) ApcExternalPower, Charge);
         }
     }
 

@@ -3,6 +3,7 @@
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 slarticodefast
 // SPDX-FileCopyrightText: 2025 Голубь
+// SPDX-FileCopyrightText: 2026 nabegator220
 //
 // SPDX-License-Identifier: MIT
 
@@ -77,6 +78,9 @@ public sealed partial class SharedJumpAbilitySystem : EntitySystem
         if (entity.Comp.StaminaDamage != 0f && _gameTiming.IsFirstTimePredicted /* which genius thought to predict this event */) // KS14 addition
             _staminaSystem.TakeStaminaDamage(args.OtherEntity, entity.Comp.StaminaDamage);
 
+        if (entity.Comp.HitKnockdownDuration is { } hitKnockdownDuration && _gameTiming.IsFirstTimePredicted) // KS14 addition
+            _stun.TryKnockdown(args.OtherEntity, hitKnockdownDuration, force: true);
+
         RemCompDeferred<ActiveLeaperComponent>(entity);
     }
 
@@ -141,6 +145,7 @@ public sealed partial class SharedJumpAbilitySystem : EntitySystem
         {
             leaperComp.KnockdownDuration = entity.Comp.CollideKnockdown;
             leaperComp.StaminaDamage = entity.Comp.HitStaminaDamage;
+            leaperComp.HitKnockdownDuration = entity.Comp.HitKnockdownDuration;
         }
 
         leaperComp.GuaranteedKnockdownDuration = entity.Comp.FinishKnockdown; // KS14 addition

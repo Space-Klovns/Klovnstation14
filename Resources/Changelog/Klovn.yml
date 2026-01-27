@@ -629,3 +629,15 @@ Entries:
       message: shove does 6.5 times less dmg
   id: 80
   time: '2026-01-25T20:03:49.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Tweak
+      message: >-
+        C-4 is now more expensive. You can now flush things quickly again.
+        Shoves and leaps have been adjusted. APCs no longer overload.
+    - type: Fix
+      message: >-
+        Fixed gun prediction issues. Fixed NPC ranged attack issues. Fixed
+        reflection prediction issues.
+  id: 81
+  time: '2026-01-27T15:05:15.0000000+00:00'

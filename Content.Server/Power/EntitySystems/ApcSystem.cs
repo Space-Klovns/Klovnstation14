@@ -1,3 +1,30 @@
+// SPDX-FileCopyrightText: 2022 Kara
+// SPDX-FileCopyrightText: 2022 Moony
+// SPDX-FileCopyrightText: 2022 Rane
+// SPDX-FileCopyrightText: 2022 mirrorcult
+// SPDX-FileCopyrightText: 2022 rolfero
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 James Simonson
+// SPDX-FileCopyrightText: 2023 Kevin Zheng
+// SPDX-FileCopyrightText: 2023 Leon Friedrich
+// SPDX-FileCopyrightText: 2023 Nemanja
+// SPDX-FileCopyrightText: 2023 Slava0135
+// SPDX-FileCopyrightText: 2023 Visne
+// SPDX-FileCopyrightText: 2023 deltanedas
+// SPDX-FileCopyrightText: 2023 keronshb
+// SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2024 eoineoineoin
+// SPDX-FileCopyrightText: 2024 metalgearsloth
+// SPDX-FileCopyrightText: 2025 ArtisticRoomba
+// SPDX-FileCopyrightText: 2025 AshBats
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Partmedia
+// SPDX-FileCopyrightText: 2025 ScarKy0
+// SPDX-FileCopyrightText: 2025 slarticodefast
+// SPDX-FileCopyrightText: 2026 nabegator220
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Server.Popups;
 using Content.Server.Power.Components;
 using Content.Server.Power.Pow3r;
@@ -46,40 +73,17 @@ public sealed class ApcSystem : EntitySystem
     public override void Update(float deltaTime)
     {
         var query = EntityQueryEnumerator<ApcComponent, PowerNetworkBatteryComponent, UserInterfaceComponent>();
-        var curTime = _gameTiming.CurTime;
         while (query.MoveNext(out var uid, out var apc, out var battery, out var ui))
         {
-            if (apc.LastUiUpdate + ApcComponent.VisualsChangeDelay < curTime && _ui.IsUiOpen((uid, ui), ApcUiKey.Key))
+            if (apc.LastUiUpdate + ApcComponent.VisualsChangeDelay < _gameTiming.CurTime && _ui.IsUiOpen((uid, ui), ApcUiKey.Key))
             {
-                apc.LastUiUpdate = curTime;
+                apc.LastUiUpdate = _gameTiming.CurTime;
                 UpdateUIState(uid, apc, battery);
             }
 
             if (apc.NeedStateUpdate)
             {
                 UpdateApcState(uid, apc, battery);
-            }
-
-            // Overload
-            if (apc.MainBreakerEnabled && battery.CurrentSupply > apc.MaxLoad)
-            {
-                // Not already overloaded, start timer
-                if (apc.TripStartTime == null)
-                {
-                    apc.TripStartTime = curTime;
-                }
-                else
-                {
-                    if (curTime - apc.TripStartTime > apc.TripTime)
-                    {
-                        apc.TripFlag = true;
-                        ApcToggleBreaker(uid, apc, battery); // off, we already checked MainBreakerEnabled above
-                    }
-                }
-            }
-            else
-            {
-                apc.TripStartTime = null;
             }
         }
     }
@@ -136,9 +140,6 @@ public sealed class ApcSystem : EntitySystem
 
         apc.MainBreakerEnabled = !apc.MainBreakerEnabled;
         battery.CanDischarge = apc.MainBreakerEnabled;
-
-        if (apc.MainBreakerEnabled)
-            apc.TripFlag = false;
 
         UpdateUIState(uid, apc);
         _audio.PlayPvs(apc.OnReceiveMessageSound, uid, AudioParams.Default.WithVolume(-2f));
@@ -210,9 +211,7 @@ public sealed class ApcSystem : EntitySystem
 
         var state = new ApcBoundInterfaceState(apc.MainBreakerEnabled,
             (int) MathF.Ceiling(battery.CurrentSupply), apc.LastExternalState,
-            charge,
-            apc.MaxLoad,
-            apc.TripFlag);
+            charge);
 
         _ui.SetUiState((uid, ui), ApcUiKey.Key, state);
     }

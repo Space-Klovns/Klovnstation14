@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2026 nabegator220
 #
 # SPDX-License-Identifier: MPL-2.0
 
@@ -14,7 +15,8 @@
     canCollide: true
     jumpDistance: 1.25
     finishKnockdown: 0.85
-    hitStaminaDamage: 40
+    hitStaminaDamage: 0
+    hitKnockdownDuration: 2
     jumpSound:
       path: /Audio/Weapons/punchmiss.ogg
       params:

@@ -1,3 +1,28 @@
+// SPDX-FileCopyrightText: 2023 Chief-Engineer
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Kara
+// SPDX-FileCopyrightText: 2023 Leon Friedrich
+// SPDX-FileCopyrightText: 2023 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2023 Slava0135
+// SPDX-FileCopyrightText: 2023 avery
+// SPDX-FileCopyrightText: 2023 kalane15
+// SPDX-FileCopyrightText: 2024 Hannah Giovanna Dawson
+// SPDX-FileCopyrightText: 2024 Nemanja
+// SPDX-FileCopyrightText: 2024 Plykiya
+// SPDX-FileCopyrightText: 2024 metalgearsloth
+// SPDX-FileCopyrightText: 2025 J
+// SPDX-FileCopyrightText: 2025 kosticia
+// SPDX-FileCopyrightText: 2025 ruddygreat
+// SPDX-FileCopyrightText: 2025 slarticodefast
+// SPDX-FileCopyrightText: 2026 deltanedas
+//
+// SPDX-License-Identifier: MPL-2.0
+
+// <Trauma>
+using Content.Shared.Audio;
+using Content.Shared.Random.Helpers;
+using Robust.Shared.Timing;
+// </Trauma>
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Content.Shared.Administration.Logs;
@@ -25,6 +50,9 @@ namespace Content.Shared.Weapons.Reflect;
 /// </summary>
 public sealed class ReflectSystem : EntitySystem
 {
+    // <Trauma>
+    [Dependency] private readonly IGameTiming _timing = default!;
+    // </Trauma>
     [Dependency] private readonly INetManager _netManager = default!;
     [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
@@ -100,16 +128,20 @@ public sealed class ReflectSystem : EntitySystem
 
     private bool TryReflectProjectile(Entity<ReflectComponent> reflector, EntityUid user, Entity<ProjectileComponent?> projectile)
     {
+        // <Trauma>
+        var seed = SharedRandomExtensions.HashCodeCombine((int) _timing.CurTick.Value, GetNetEntity(reflector).Id);
+        var rand = new System.Random(seed);
+        // </Trauma>
         if (!TryComp<ReflectiveComponent>(projectile, out var reflective) ||
             (reflector.Comp.Reflects & reflective.Reflective) == 0x0 ||
             !_toggle.IsActivated(reflector.Owner) ||
-            !_random.Prob(reflector.Comp.ReflectProb) ||
+            !rand.Prob(reflector.Comp.ReflectProb) || // Trauma - use predicted random
             !TryComp<PhysicsComponent>(projectile, out var physics))
         {
             return false;
         }
 
-        var rotation = _random.NextAngle(-reflector.Comp.Spread / 2, reflector.Comp.Spread / 2).Opposite();
+        var rotation = rand.NextAngle(-reflector.Comp.Spread / 2, reflector.Comp.Spread / 2).Opposite(); // Trauma - use predicted random
         var existingVelocity = _physics.GetMapLinearVelocity(projectile, component: physics);
         var relativeVelocity = existingVelocity - _physics.GetMapLinearVelocity(user);
         var newVelocity = rotation.RotateVec(relativeVelocity);
@@ -149,9 +181,15 @@ public sealed class ReflectSystem : EntitySystem
         ReflectType hitscanReflectType,
         [NotNullWhen(true)] out Vector2? newDirection)
     {
+        // <Trauma>
+        var seed = SharedRandomExtensions.HashCodeCombine((int) _timing.CurTick.Value, GetNetEntity(reflector).Id);
+        var rand = new System.Random(seed);
+        // </Trauma>
         if ((reflector.Comp.Reflects & hitscanReflectType) == 0x0 ||
             !_toggle.IsActivated(reflector.Owner) ||
-            !_random.Prob(reflector.Comp.ReflectProb))
+            // <Trauma>
+            !((reflector.Comp.Reflects & hitscanReflectType) != 0x0 && rand.Prob(reflector.Comp.ReflectProb)))
+            // </Trauma>
         {
             newDirection = null;
             return false;
@@ -159,7 +197,7 @@ public sealed class ReflectSystem : EntitySystem
 
         PlayAudioAndPopup(reflector.Comp, user);
 
-        var spread = _random.NextAngle(-reflector.Comp.Spread / 2, reflector.Comp.Spread / 2);
+        var spread = rand.NextAngle(-reflector.Comp.Spread / 2, reflector.Comp.Spread / 2); // Trauma - use predicted random
         newDirection = -spread.RotateVec(direction);
 
         if (shooter != null)
@@ -172,12 +210,13 @@ public sealed class ReflectSystem : EntitySystem
 
     private void PlayAudioAndPopup(ReflectComponent reflect, EntityUid user)
     {
-        // Can probably be changed for prediction
-        if (_netManager.IsServer)
-        {
-            _popup.PopupEntity(Loc.GetString("reflect-shot"), user);
-            _audio.PlayPvs(reflect.SoundOnReflect, user);
-        }
+        // <Trauma> - clientside only, all clients predict projectiles (also fun note that user is not the user)
+        if (_netManager.IsServer || !_timing.IsFirstTimePredicted)
+            return;
+
+        _popup.PopupEntity(Loc.GetString("reflect-shot"), user);
+        _audio.PlayLocal(reflect.SoundOnReflect, user, null);
+        // </Trauma>
     }
 
     private void OnReflectEquipped(Entity<ReflectComponent> ent, ref GotEquippedEvent args)
