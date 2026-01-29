@@ -34,4 +34,10 @@ public sealed partial class PlumbingDeviceComponent : Component
 ///     Subscribe to this event in your system to handle device-specific logic.
 /// </summary>
 [ByRefEvent]
-public readonly struct PlumbingDeviceUpdateEvent;
+public readonly struct PlumbingDeviceUpdateEvent(float dt)
+{
+    /// <summary>
+    ///     Time since last update in seconds. Used for time-based calculations (just the reactor heating for now)
+    /// </summary>
+    public readonly float dt = dt;
+}

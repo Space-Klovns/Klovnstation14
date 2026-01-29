@@ -75,7 +75,7 @@ public sealed class PlumbingDeviceSystem : EntitySystem
             // Schedule next update
             device.NextUpdateTime = curTime + device.UpdateInterval;
 
-            var ev = new PlumbingDeviceUpdateEvent();
+            var ev = new PlumbingDeviceUpdateEvent((float)device.UpdateInterval.TotalSeconds);
             RaiseLocalEvent(uid, ref ev);
         }
     }

@@ -43,7 +43,7 @@ public sealed partial class PlumbingReactorComponent : Component
     ///     Amount to pull from tanks per update.
     /// </summary>
     [DataField]
-    public FixedPoint2 TransferAmount = FixedPoint2.New(10);
+    public FixedPoint2 TransferAmount = FixedPoint2.New(20);
 
     /// <summary>
     ///     Whether the reactor is currently enabled.
@@ -66,8 +66,8 @@ public sealed partial class PlumbingReactorComponent : Component
     public float TargetTemperature = Atmospherics.T20C;
 
     /// <summary>
-    ///     Maximum temperature change per update tick in Kelvin.
+    ///     Maximum heat transfer rate when powered, in watts.
     /// </summary>
     [DataField]
-    public float TemperatureChangeRate = 10f;
+    public float HeatTransferPower = 500f;
 }

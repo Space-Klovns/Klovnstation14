@@ -8,6 +8,7 @@ using Content.Shared._Starlight.Plumbing;
 using Content.Shared._Starlight.Plumbing.Components;
 using Content.Shared.Atmos;
 using Content.Shared.Chemistry;
+using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Chemistry.Reaction;
 using Content.Shared.Chemistry.Reagent;
@@ -66,21 +67,6 @@ public sealed class PlumbingReactorSystem : EntitySystem
             return;
         }
 
-        // Temperature control - only if powered
-        if (_power.IsPowered(ent.Owner))
-        {
-            var currentTemp = buffer.Temperature;
-            var targetTemp = ent.Comp.TargetTemperature;
-            var maxChange = ent.Comp.TemperatureChangeRate;
-
-            if (!MathHelper.CloseTo(currentTemp, targetTemp, 0.1f))
-            {
-                var delta = targetTemp - currentTemp;
-                var change = Math.Clamp(delta, -maxChange, maxChange);
-                _solutionSystem.SetTemperature(bufferEnt.Value, currentTemp + change);
-            }
-        }
-
         // If we have no targets, don't pull anything
         if (ent.Comp.ReagentTargets.Count == 0)
         {
@@ -115,9 +101,22 @@ public sealed class PlumbingReactorSystem : EntitySystem
         if (neededTargets.Count > 0)
             _pullSystem.PullSpecificReagents(ent.Owner, inletNode.PlumbingNet, bufferEnt.Value, neededTargets, ent.Comp.TransferAmount);
 
-        // If all targets are met, react and move products
+        // If all targets are met, heat and react
         if (allMet)
         {
+            // Start heating only once reagents are ready
+            if (_power.IsPowered(ent.Owner))
+            {
+                ApplyTemperatureControl(ent, bufferEnt.Value, buffer, args.dt);
+            }
+
+            // Dont do the reaction until we reach the the target temperature or close enough, but update the ui.
+            if (!MathHelper.CloseTo(buffer.Temperature, ent.Comp.TargetTemperature, 0.5f))
+            {
+                UpdateUI(ent);
+                return;
+            }
+
             // Trigger reactions in the buffer
             _reactionSystem.FullyReactSolution(bufferEnt.Value);
 
@@ -131,16 +130,55 @@ public sealed class PlumbingReactorSystem : EntitySystem
                 products.Add((reagent.Reagent, reagent.Quantity));
             }
 
-            // Move products to output
-            foreach (var (reagent, quantity) in products)
+            // Move products to output and reset temperature only if we produced something
+            if (products.Count > 0)
             {
-                var removed = _solutionSystem.RemoveReagent(bufferEnt.Value, reagent, quantity);
-                if (removed > 0)
-                    _solutionSystem.TryAddReagent(outputEnt.Value, reagent, removed, out _);
+                foreach (var (reagent, quantity) in products)
+                {
+                    var removed = _solutionSystem.RemoveReagent(bufferEnt.Value, reagent, quantity);
+                    if (removed > 0)
+                        _solutionSystem.TryAddReagent(outputEnt.Value, reagent, removed, out _);
+                }
+
+                // Reset buffer to ambient temperature after products are transferred.
+                _solutionSystem.SetTemperature(bufferEnt.Value, Atmospherics.T20C);
             }
         }
 
         UpdateUI(ent);
+    }
+
+    /// <summary>
+    ///     Applies temperature control by adding thermal energy to reach target temperature. Adds negative thermal energy for cooling.
+    /// </summary>
+    private void ApplyTemperatureControl(
+        Entity<PlumbingReactorComponent> ent,
+        Entity<SolutionComponent> solutionEnt,
+        Solution solution,
+        float dt)
+    {
+        var currentTemp = solution.Temperature;
+        var targetTemp = ent.Comp.TargetTemperature;
+
+        // Skip if already at target or close enough
+        if (MathHelper.CloseTo(currentTemp, targetTemp, 0.5f))
+            return;
+
+        var heatCap = solution.GetHeatCapacity(_prototypeManager);
+        if (heatCap <= 0f)
+            return; // Don't heat empty solution
+
+        // Calculate max energy we can transfer this tick in joules, watts * seconds = joules
+        var maxEnergyTransfer = ent.Comp.HeatTransferPower * dt;
+
+        // Calculate energy needed to reach target exactly
+        var tempDiff = targetTemp - currentTemp;
+        var energyNeeded = tempDiff * heatCap;
+
+        // Energy added should be either the exact amounted needed or the max we can do this tick
+        var energyTransfer = Math.Clamp(energyNeeded, -maxEnergyTransfer, maxEnergyTransfer);
+
+        _solutionSystem.AddThermalEnergy(solutionEnt, energyTransfer);
     }
 
     private void OnToggle(Entity<PlumbingReactorComponent> ent, ref PlumbingReactorToggleMessage args)

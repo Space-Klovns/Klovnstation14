@@ -97,16 +97,31 @@ public sealed partial class PlumbingReactorWindow : DefaultWindow
             TemperatureInput.Text = state.TargetTemperature.ToString("F1");
         CurrentTemperatureLabel.Text = $"({state.CurrentTemperature:F1} K)";
 
-        // Update targets list - shows current/target progress
+        // Update targets list - shows all buffer contents
+        // Target reagents show progress, non-target reagents show 0 target qty
         TargetsList.Clear();
+
+        // First add all target reagents
         foreach (var (reagentId, targetQuantity) in state.ReagentTargets)
         {
-            // Get current amount from buffer
             var currentAmount = state.BufferContents.GetValueOrDefault(reagentId, FixedPoint2.Zero);
             TargetsList.Add(new ItemList.Item(TargetsList)
             {
                 Metadata = reagentId,
                 Text = $"{reagentId}: {currentAmount}u / {targetQuantity}u"
+            });
+        }
+
+        // Then add non-target reagents so a player knows to plunger it to remove them
+        foreach (var (reagentId, currentAmount) in state.BufferContents)
+        {
+            if (state.ReagentTargets.ContainsKey(reagentId))
+                continue; 
+
+            TargetsList.Add(new ItemList.Item(TargetsList)
+            {
+                Metadata = reagentId,
+                Text = $"{reagentId}: {currentAmount}u / 0u"
             });
         }
 

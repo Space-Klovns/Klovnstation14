@@ -104,11 +104,27 @@
   # Starlight - Plumbing integration
   - type: PlumbingDevice
     updateInterval: 2
-  - type: PlumbingTank
+  - type: PlumbingInlet
     solutionName: buffer
+  - type: PlumbingOutlet
+    solutionName: beaker
+    containerSlotId: beakerSlot
+    enabled: false
   - type: NodeContainer
     nodes:
-      inlet:
+      inletNorth:
         !type:PlumbingNode
         nodeGroupID: Plumbing
-        pipeDirection: Fourway
+        pipeDirection: North
+      inletEast:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: East
+      inletWest:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: West
+      outletSouth:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: South

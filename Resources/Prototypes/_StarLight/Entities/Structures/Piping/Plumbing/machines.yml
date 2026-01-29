@@ -48,10 +48,8 @@
       color: "#4169E1"
   - type: PlumbingDevice
     updateInterval: 2
-  - type: PlumbingTank
+  - type: PlumbingInlet
     solutionName: tank
-    transferAmount: 10
-    inletName: inlet
   - type: Plungeable
   - type: PlumbingOutlet
     solutionName: tank
@@ -156,8 +154,6 @@
     updateInterval: 2
   - type: PlumbingOutput
     solutionName: output
-    requestAmount: 10
-    inletName: inlet
   - type: Plungeable
   - type: SolutionContainerManager
     solutions:
@@ -204,7 +200,6 @@
   - type: PlumbingReactor
     bufferSolutionName: buffer
     outputSolutionName: output
-    transferAmount: 10
     inletName: inlet
     outletName: outlet
   - type: Plungeable
@@ -220,7 +215,7 @@
         maxVol: 100
         canReact: false
   - type: ExaminableSolution
-    solution: buffer
+    solution: output
   - type: NodeContainer
     nodes:
       inlet:  # Pulls reagents FROM the network (north side)
@@ -238,7 +233,7 @@
   - type: ActivatableUI
     key: enum.PlumbingReactorUiKey.Key
   - type: ApcPowerReceiver
-    powerLoad: 300
+    powerLoad: 750
   - type: ExtensionCableReceiver
   - type: Destructible
     thresholds:
@@ -280,7 +275,6 @@
     filterNodeName: outletFilter
     passthroughNodeName: outletPassthrough
     bufferSolutionName: buffer
-    transferAmount: 10
   - type: Plungeable
   - type: PlumbingOutlet
     solutionName: buffer
@@ -434,3 +428,80 @@
         acts: ["Destruction"]
   - type: StaticPrice
     price: 200
+# =============================================================================
+# Plumbing Drain - floor drain that outputs to plumbing network
+# =============================================================================
+- type: entity
+  parent: PlumbingMachineBase
+  id: PlumbingDrain
+  name: plumbing drain
+  description: A floor drain that absorbs puddles and routes them into the plumbing network instead of disposing them.
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Sprite
+    drawdepth: FloorObjects
+    sprite: Objects/Specific/Janitorial/drain.rsi
+    layers:
+    - state: icon
+    - map: [ "enum.SolutionContainerLayers.Fill" ]
+      state: fill-1
+      visible: false
+  - type: Physics
+    bodyType: Static
+    canCollide: false
+  - type: Fixtures
+    fixtures: {}
+  - type: AmbientSound
+    enabled: false
+    volume: -8
+    range: 8
+    sound:
+      path: /Audio/Ambience/Objects/drain.ogg
+  - type: Drain
+    unitsDestroyedPerSecond: 0
+  - type: DumpableSolution
+    solution: drainBuffer
+  - type: Appearance
+  - type: SolutionContainerVisuals
+    maxFillLevels: 1
+    fillBaseName: fill-
+    solutionName: drainBuffer
+  - type: PlumbingOutlet
+    solutionName: drainBuffer
+  - type: SolutionContainerManager
+    solutions:
+      drainBuffer:
+        maxVol: 400
+  - type: NodeContainer
+    nodes:
+      outletNorth:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: North
+      outletSouth:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: South
+      outletEast:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: East
+      outletWest:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: West
+  - type: ExaminableSolution
+    solution: drainBuffer
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:SpillBehavior
+        solution: drainBuffer
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+  - type: StaticPrice
+    price: 150

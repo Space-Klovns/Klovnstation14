@@ -16,16 +16,16 @@ public sealed partial class PlumbingOutputComponent : Component
     public string SolutionName = "output";
 
     /// <summary>
-    ///     Name of the inlet node for pulling reagents from the network.
+    ///     Prefix for inlet node names. All nodes starting with this prefix will be used for pulling reagents.
     /// </summary>
     [DataField]
-    public string InletName = "duct";
+    public string InletPrefix = "inlet";
 
     /// <summary>
-    ///     Amount to request per update.
+    ///     Amount to transfer per update.
     /// </summary>
     [DataField]
-    public FixedPoint2 RequestAmount = FixedPoint2.New(10);
+    public FixedPoint2 TransferAmount = FixedPoint2.New(20);
 
     /// <summary>
     ///     Round-robin index for fair outlet selection.

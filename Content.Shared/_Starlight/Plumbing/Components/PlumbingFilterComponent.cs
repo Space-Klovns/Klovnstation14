@@ -43,7 +43,7 @@ public sealed partial class PlumbingFilterComponent : Component
     ///     Amount to transfer per update.
     /// </summary>
     [DataField]
-    public FixedPoint2 TransferAmount = FixedPoint2.New(10);
+    public FixedPoint2 TransferAmount = FixedPoint2.New(20);
 
     /// <summary>
     ///     Whether the filter is currently enabled.

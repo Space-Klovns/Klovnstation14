@@ -7,6 +7,7 @@ using Content.Shared.Chemistry.Components;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.FixedPoint;
 using Content.Shared.Interaction;
+using Content.Shared.NodeContainer;
 using JetBrains.Annotations;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
@@ -41,15 +42,26 @@ public sealed class PlumbingOutputSystem : EntitySystem
         if (solution.AvailableVolume <= 0)
             return;
 
-        if (!_nodeContainer.TryGetNode<PlumbingNode>(ent.Owner, ent.Comp.InletName, out var inletNode))
+        // Get node container to find all inlet nodes
+        if (!TryComp<NodeContainerComponent>(ent.Owner, out var nodeContainer))
             return;
 
-        if (inletNode.PlumbingNet == null)
-            return;
+        // Pull from all inlet nodes (any node starting with the inlet prefix)
+        foreach (var (nodeName, node) in nodeContainer.Nodes)
+        {
+            if (!nodeName.StartsWith(ent.Comp.InletPrefix, StringComparison.OrdinalIgnoreCase))
+                continue;
 
-        // Pull from network (with round-robin for fair source selection)
-        var (_, nextIndex) = _pullSystem.PullFromNetwork(ent.Owner, inletNode.PlumbingNet, solutionEnt.Value, ent.Comp.RequestAmount, ent.Comp.RoundRobinIndex);
-        ent.Comp.RoundRobinIndex = nextIndex;
+            if (node is not PlumbingNode plumbingNode || plumbingNode.PlumbingNet == null)
+                continue;
+
+            if (solution.AvailableVolume <= 0)
+                break;
+
+            // Pull from network (with round-robin for fair source selection)
+            var (_, nextIndex) = _pullSystem.PullFromNetwork(ent.Owner, plumbingNode.PlumbingNet, solutionEnt.Value, ent.Comp.TransferAmount, ent.Comp.RoundRobinIndex);
+            ent.Comp.RoundRobinIndex = nextIndex;
+        }
     }
 
     private void OnOutputInteractUsing(Entity<PlumbingOutputComponent> ent, ref InteractUsingEvent args)
