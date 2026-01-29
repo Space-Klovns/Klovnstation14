@@ -102,7 +102,14 @@
     canCollide: false
     bodyType: static
   - type: StaticPrice
-    price: 30
+    price: 30 # Starlight
+  # Starlight Start: RPD
+  - type: RCDDeconstructable
+    cost: 1
+    delay: 2
+    fx: EffectRCDDeconstruct2
+    rpd: true
+  # Starlight End
 
 - type: entity
   abstract: true

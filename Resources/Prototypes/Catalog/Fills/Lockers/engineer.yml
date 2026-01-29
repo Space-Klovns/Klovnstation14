@@ -157,6 +157,7 @@
     - id: MedkitOxygenFilled
     - id: HolofanProjector
     - id: RCD
+    - id: RPD # Starlight: RPD
     - id: RCDAmmo
     - id: AirGrenade
 
