@@ -263,11 +263,6 @@
   copyright: "The Future Soon by Jonathan Coulton"
   source: "https://www.youtube.com/watch?v=l5PEz3kGbp4"
 
-- files: ["wepumpin.ogg"]
-  license: "CC-BY-NC-SA-3.0"
-  copyright: "wepump.in by vap0r"
-  source: "https://www.youtube.com/watch?v=RniwXIzFvHs"
-
 - files: ["ddosking.ogg"]
   license: "CC-BY-NC-SA-3.0"
   copyright: "DDOS King by shaggs & vap0r"
@@ -292,8 +287,3 @@
   license: "CC-BY-NC-SA-3.0"
   copyright: "Blind Rage by Emarex"
   source: "https://soundcloud.com/emarexofficial/blind-rage-3rd-edit-volume-fixed"
-
-- files: ["pumptillidie.ogg"]
-  license: "CC-BY-NC-SA-3.0"
-  copyright: "Pump Till I Die (remix) by vap0r"
-  source: "https://www.youtube.com/watch?v=cUPpdbW809Y"
