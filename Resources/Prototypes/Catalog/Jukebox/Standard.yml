@@ -180,7 +180,7 @@
 
 - type: jukebox
   id: thunderdome
-  name: Sector11 (ID: 312622)
+  name: Sector11
   path:
     path: /Audio/Lobby/thunderdome.ogg
 
