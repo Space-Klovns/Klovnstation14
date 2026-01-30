@@ -1,20 +1,29 @@
 - type: lobbyBackground
-  id: 1984hnk
-  background: /Textures/LobbyScreens/1984hnk.png
+  id: 198HNK
+  background: /Textures/LobbyScreens/198hnk.png
+  title: lobby-state-background-198hnk-title
+  artist: lobby-state-background-198hnk-artist
 
 - type: lobbyBackground
-  id: engiwherespower
+  id: EngiPower
   background: /Textures/LobbyScreens/engiwherespower.png
+  title: lobby-state-background-engiwherespower-title
+  artist: lobby-state-background-engiwherespower-artist
 
 - type: lobbyBackground
-  id: fucktiders
+  id: FuckTiders
   background: /Textures/LobbyScreens/fucktiders.png
+  title: lobby-state-background-fucktiders-title
+  artist: lobby-state-background-fucktiders-artist
 
 - type: lobbyBackground
-  id: middlestation
+  id: Middlestation
   background: /Textures/LobbyScreens/middlestation.png
+  title: lobby-state-background-middlestation-title
+  artist: lobby-state-background-middlestation-artist
 
 - type: lobbyBackground
-  id: smartguy
+  id: Smartguy
   background: /Textures/LobbyScreens/smartguy.png
-
+  title: lobby-state-background-smartguy-title
+  artist: lobby-state-background-smartguy-artist
