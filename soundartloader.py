@@ -19,13 +19,3 @@ for item in jb_songs:
     jb_music_cfg.write(f"- type: jukebox\n  id: {stripped_item}\n  name:  {stripped_item}\n  path:\n    path: /Audio/Lobby/{item}\n\n")
 
 jb_music_cfg.close()
-
-#load lobby screens
-lobby_screen_path = path.join(script_path, './Resources/Textures/', 'LobbyScreens')
-lobby_screens = [f for f in listdir(lobby_screen_path) if path.isfile(path.join(lobby_screen_path, f)) and (".webp" in f or ".png" in f)]
-lobby_screen_cfg = open(path.join(script_path,"./Resources/Prototypes/lobbyscreens.yml"), "w")
-for item in lobby_screens:
-    stripped_item = item.split(".")[0]
-    lobby_screen_cfg.write(f"- type: lobbyBackground\n  id: {stripped_item}\n  background: /Textures/LobbyScreens/{item}\n\n")
-
-lobby_screen_cfg.close()
