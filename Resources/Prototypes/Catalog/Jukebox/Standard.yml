@@ -1,9 +1,3 @@
-# SPDX-FileCopyrightText: 2024 metalgearsloth
-# SPDX-FileCopyrightText: 2024 pigeonpeas
-# SPDX-FileCopyrightText: 2026 nabegator220
-#
-# SPDX-License-Identifier: MPL-2.0
-
 - type: jukebox
   id: absconditus
   name: Absconditus
@@ -60,7 +54,7 @@
 
 - type: jukebox
   id: endless_space
-  name: Solus- Endless Space (ID: 67583)
+  name: Solus- Endless Space
   path:
     path: /Audio/Lobby/endless_space.ogg
 
