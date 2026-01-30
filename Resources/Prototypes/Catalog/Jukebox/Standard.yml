@@ -1,210 +1,198 @@
 - type: jukebox
   id: absconditus
-  name:  absconditus
+  name: Absconditus
   path:
     path: /Audio/Lobby/absconditus.ogg
 
 - type: jukebox
   id: atomicamnesiammx
-  name:  atomicamnesiammx
+  name: Atomic Amnesia MMX
   path:
     path: /Audio/Lobby/atomicamnesiammx.ogg
 
 - type: jukebox
   id: blindrage
-  name:  blindrage
+  name: Blind Rage
   path:
     path: /Audio/Lobby/blindrage.ogg
 
 - type: jukebox
   id: chollima
-  name:  chollima
+  name: Chollima On The Wing
   path:
     path: /Audio/Lobby/chollima.ogg
 
 - type: jukebox
   id: clownalwayswins
-  name:  clownalwayswins
+  name: Clown Always Wins
   path:
     path: /Audio/Lobby/clownalwayswins.ogg
 
 - type: jukebox
   id: clownwmv
-  name:  clownwmv
+  name: Clown.wmv
   path:
     path: /Audio/Lobby/clownwmv.ogg
 
 - type: jukebox
   id: comet_haley
-  name:  comet_haley
+  name: Comet Halley
   path:
     path: /Audio/Lobby/comet_haley.ogg
 
 - type: jukebox
   id: dawsonschristian
-  name:  dawsonschristian
+  name: Dawson's Christian
   path:
     path: /Audio/Lobby/dawsonschristian.ogg
 
 - type: jukebox
   id: ddosking
-  name:  ddosking
+  name: DDOS KING
   path:
     path: /Audio/Lobby/ddosking.ogg
 
 - type: jukebox
   id: endless_space
-  name:  endless_space
+  name: Solus- Endless Space (ID: 67583)
   path:
     path: /Audio/Lobby/endless_space.ogg
 
 - type: jukebox
   id: every_light_is_blinking_at_once
-  name:  every_light_is_blinking_at_once
+  name: every light is blinking at once
   path:
     path: /Audio/Lobby/every_light_is_blinking_at_once.ogg
 
 - type: jukebox
   id: heatwave0
-  name:  heatwave0
+  name: Heatwave0
   path:
     path: /Audio/Lobby/heatwave0.ogg
 
 - type: jukebox
   id: horn
-  name:  horn
+  name: Horn!
   path:
     path: /Audio/Lobby/horn.ogg
 
 - type: jukebox
   id: lasers_rip_apart_the_bulkhead
-  name:  lasers_rip_apart_the_bulkhead
+  name: lasers rip apart the bulkhead
   path:
     path: /Audio/Lobby/lasers_rip_apart_the_bulkhead.ogg
 
 - type: jukebox
   id: marhaba
-  name:  marhaba
+  name: Marhaba
   path:
     path: /Audio/Lobby/marhaba.ogg
 
 - type: jukebox
   id: merchant
-  name:  merchant
+  name: merchant
   path:
     path: /Audio/Lobby/merchant.ogg
 
 - type: jukebox
   id: mod
-  name:  mod
+  name: flip-flap
   path:
     path: /Audio/Lobby/mod.flip-flap.ogg
 
 - type: jukebox
   id: monument
-  name:  monument
+  name: Monument
   path:
     path: /Audio/Lobby/monument.ogg
 
 - type: jukebox
   id: netsplit
-  name:  netsplit
+  name: Netsplit
   path:
     path: /Audio/Lobby/netsplit.ogg
 
 - type: jukebox
-  id: pumptillidie
-  name:  pumptillidie
-  path:
-    path: /Audio/Lobby/pumptillidie.ogg
-
-- type: jukebox
   id: pwmur
-  name:  pwmur
+  name: phoron will make us rich
   path:
     path: /Audio/Lobby/pwmur.ogg
 
 - type: jukebox
   id: redsun
-  name:  redsun
+  name: Red Sun in the Sky / The People of Yianbian Love Chairman Mao
   path:
     path: /Audio/Lobby/redsun.ogg
 
 - type: jukebox
   id: singuloose
-  name:  singuloose
+  name: Singuloose
   path:
     path: /Audio/Lobby/singuloose.ogg
 
 - type: jukebox
   id: skubstep
-  name:  skubstep
+  name: Skubstep
   path:
     path: /Audio/Lobby/skubstep.ogg
 
 - type: jukebox
   id: skubstub
-  name:  skubstub
+  name: Skubstub
   path:
     path: /Audio/Lobby/skubstub.ogg
 
 - type: jukebox
   id: sneedsfeedandseed
-  name:  sneedsfeedandseed
+  name: Sneed's Feed and Seed
   path:
     path: /Audio/Lobby/sneedsfeedandseed.ogg
 
 - type: jukebox
   id: space_asshole
-  name:  space_asshole
+  name: Space Asshole
   path:
     path: /Audio/Lobby/space_asshole.ogg
 
 - type: jukebox
   id: space_radiation
-  name:  space_radiation
+  name: Space Radiation
   path:
     path: /Audio/Lobby/space_radiation.ogg
 
 - type: jukebox
   id: Spac_Stac
-  name:  Spac_Stac
+  name: Spac Stac
   path:
     path: /Audio/Lobby/Spac_Stac.ogg
 
 - type: jukebox
   id: thewizard
-  name:  thewizard
+  name: The Wizard
   path:
     path: /Audio/Lobby/thewizard.ogg
 
 - type: jukebox
   id: the_future_soon
-  name:  the_future_soon
+  name: The Future Soon
   path:
     path: /Audio/Lobby/the_future_soon.ogg
 
 - type: jukebox
   id: thunderdome
-  name:  thunderdome
+  name: Sector11 (ID: 312622)
   path:
     path: /Audio/Lobby/thunderdome.ogg
 
 - type: jukebox
   id: title2
-  name:  title2
+  name: robocop
   path:
     path: /Audio/Lobby/title2.ogg
 
 - type: jukebox
   id: title3
-  name:  title3
+  name: Title 3.ogg
   path:
     path: /Audio/Lobby/title3.ogg
-
-- type: jukebox
-  id: wepumpin
-  name:  wepumpin
-  path:
-    path: /Audio/Lobby/wepumpin.ogg
 
