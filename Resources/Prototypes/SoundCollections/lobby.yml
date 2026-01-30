@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 # SPDX-FileCopyrightText: 2021 SweptWasTaken
 # SPDX-FileCopyrightText: 2021 ike709
 # SPDX-FileCopyrightText: 2022 20kdc
@@ -18,7 +16,6 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
->>>>>>> 928b48851634d09c70cfa1b7803af55c34098408
 - type: soundCollection
   id: LobbyMusic
   files:
