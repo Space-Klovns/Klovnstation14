@@ -1,0 +1,31 @@
+# Security borg
+- type: borgType
+  id: security
+
+  # Description
+  dummyPrototype: BorgChassisSecurity
+
+  # Functional
+  extraModuleCount: 1
+  moduleWhitelist:
+    tags:
+    - BorgModulePatrol
+    - BorgModuleSecurity
+
+  defaultModules:
+  - BorgModulePatrol
+  - BorgModuleProtection
+  radioChannels:
+  - Security
+  - Science
+
+  # Visual
+  inventoryTemplateId: borgSecborg
+  spriteBodyState: security
+  spriteHasMindState: security_e
+  spriteNoMindState: security_e_r
+  spriteToggleLightState: security_l
+
+  # Pet
+  petSuccessString: petting-success-security-cyborg
+  petFailureString: petting-failure-security-cyborg

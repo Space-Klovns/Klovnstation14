@@ -1,0 +1,58 @@
+- type: entity
+  id: BaseBorgModuleSecurity
+  parent: BaseBorgModule
+  abstract: true
+  components:
+  - type: BorgModule
+    borgFitTypes:
+    - borg-type-security
+  - type: Tag
+    tags:
+    - BorgModuleSecurity
+  - type: Item
+    inhandVisuals:
+      left:
+      - state: base-icon-inhand-left
+        color: "#CC0000"
+      - state: base-module-inhand-left
+        color: "#5E0E11"
+      - state: base-part-inhand-left
+      - state: base-stripes-inhand-left
+        color: "#501112"
+      right:
+      - state: base-icon-inhand-right
+        color: "#CC0000"
+      - state: base-module-inhand-right
+        color: "#5E0E11"
+      - state: base-part-inhand-right
+      - state: base-stripes-inhand-right
+        color: "#501112"
+
+# secborg modules
+- type: entity
+  id: BorgModulePatrol
+  parent: [ BaseBorgModuleSecurity, BaseProviderBorgModule ]
+  name: security cyborg module
+  components:
+  - type: Sprite
+    layers:
+    - state: service
+    - state: icon-patrol
+  - type: ItemBorgModule
+    hands:
+    - item: Pen
+    - item: BooksBag
+    - item: HandLabeler
+    - item: RubberStampApproved
+    - item: RubberStampDenied
+    - item: BorgDropper
+    - item: DrinkShaker
+      hand:
+        emptyLabel: borg-slot-small-containers-empty
+        emptyRepresentative: DrinkShaker
+        whitelist:
+          components:
+          - FitsInDispenser
+    - item: BarSpoon
+  - type: BorgModuleIcon
+    icon: { sprite: Interface/Actions/actions_borg.rsi, state: service-module }
