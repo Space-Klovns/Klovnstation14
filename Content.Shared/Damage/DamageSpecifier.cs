@@ -69,6 +69,15 @@ namespace Content.Shared.Damage
         public Dictionary<string, float>? FlatPenetration;
 
         /// <summary>
+        ///     KS14
+        ///     Right now percentile damage penetration applies to flat damage resistances
+        ///     If an armor has 10 flat slash resistance but you have 40% slash ap then it decreases that resist to 6 slash
+        ///     This is so its more intuitive (having percentile ap ruins everyone). You can however disable it
+        /// </summary>
+        [DataField("disableCrossInteraction")]
+        public bool disableCrossInteraction = false;
+
+        /// <summary>
         ///     Returns a sum of the damage values.
         /// </summary>
         /// <remarks>
@@ -173,8 +182,8 @@ namespace Content.Shared.Damage
             newDamage.DamageDict.EnsureCapacity(damageSpec.DamageDict.Count);
 
             // Capture nullable AP dictionaries into locals to satisfy nullable analysis and avoid repeated lookups.
-            var percentilePenDict = damageSpec.PercentilePenetration;
-            var flatPenDict = damageSpec.FlatPenetration;
+            var percentilePenDict = damageSpec.PercentilePenetration ?? new Dictionary<string, float>();
+            var flatPenDict = damageSpec.FlatPenetration ?? new Dictionary<string, float>();
 
             foreach (var (key, value) in damageSpec.DamageDict)
             {
@@ -187,29 +196,37 @@ namespace Content.Shared.Damage
                     continue;
                 }
 
-                float newValue = value.Float();
+                float newValueFlat = value.Float();
+                float newValuePercentile = value.Float();
 
                 if (modifierSet.FlatReduction.TryGetValue(key, out var reduction))
                 {
-                    if (flatPenDict is { } flatPen && flatPen.TryGetValue(key, out var flatPenetrationForDamType))
+                    if (!damageSpec.disableCrossInteraction && percentilePenDict.TryGetValue(key, out var percentileDecreaseOfFlatRes)) // If you have 40% pierce pen it makes every flat resist only 60% of its former status - this is done to be more intuitive as per _uranium's request - KS14
+                    {
+                        var multiplier = 1 - percentileDecreaseOfFlatRes;
+                        reduction *= multiplier;
+                    }
+                    if (flatPenDict.TryGetValue(key, out var flatPenetrationForDamType))
                     {
                         reduction = Math.Max(0f, reduction - flatPenetrationForDamType); // dont go into the negatives
                     }
-                    newValue = Math.Max(0f, newValue - reduction); // flat reductions can't heal you
+                    newValueFlat = Math.Max(0f, newValueFlat - reduction); // flat reductions can't heal you
                 }
 
                 if (modifierSet.Coefficients.TryGetValue(key, out var coefficient))
                 {
-                    if (percentilePenDict is { } percentPen && percentPen.TryGetValue(key, out var percentilePenetrationForDamType))
+                    var percentileReduction = 1-coefficient; //coefficient is how much of the dmg you take. if its .7, that means the actual damage reduction is 30%
+                    if (percentilePenDict.TryGetValue(key, out var percentilePenetrationForDamType))
                     {
-                        var multiplier = 1 - percentilePenetrationForDamType;
-                        coefficient *= multiplier;
+                        var multiplier = 1 - percentilePenetrationForDamType; //penetration is similarly a coefficient. if its .2, we strip away 8O% of the enemys defense
+                        percentileReduction *= multiplier;  //if the enemy reduces 30% of incoming damage, and we punch through half that, that means the result is 15%
                     }
-                    newValue *= coefficient; // coefficients can heal you, e.g. cauterizing bleeding
+                    newValuePercentile *= (1-percentileReduction); //if we now reduce 15% of incoming damage, that means the damage needs to be multiplied by .85
+                    // coefficients can also heal you, e.g. cauterizing bleeding
                 }
 
-                if (newValue != 0)
-                    newDamage.DamageDict[key] = FixedPoint2.New(newValue);
+                if (newValueFlat != 0 || newValuePercentile != 0)
+                    newDamage.DamageDict[key] = FixedPoint2.New(Math.Min(newValueFlat, newValuePercentile));
             }
 
             return newDamage;

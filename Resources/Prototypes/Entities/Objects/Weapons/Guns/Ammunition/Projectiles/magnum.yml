@@ -72,7 +72,7 @@
       types:
         Piercing: 30
       percentilePenetration:
-        Piercing: 1 #100% chance
+        Piercing: 1 #100% AP
 
 - type: entity
   parent: BaseBulletUranium
