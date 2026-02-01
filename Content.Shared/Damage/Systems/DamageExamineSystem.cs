@@ -79,6 +79,37 @@ public sealed class DamageExamineSystem : EntitySystem
             }
         }
 
+        // KS14 START
+        // Show percentile penetration per damage type if present (KS14)
+        if (damageSpecifier.PercentilePenetration is { } percentPen && percentPen.Count > 0)
+        {
+            foreach (var (key, val) in percentPen)
+            {
+                var typeName = _prototype.Index<DamageTypePrototype>(key).LocalizedName;
+                var perc = val * 100f;
+                var ap = (int)Math.Round(perc);
+                var abs = Math.Abs(ap);
+                var arg = abs == 0 ? 0 : ap / abs; // yields 1 for positive, -1 for negative
+                msg.PushNewline();
+                msg.AddMarkupOrThrow(Loc.GetString("armor-penetration-percentile", ("type", typeName), ("arg", arg), ("abs", abs)));
+            }
+        }
+
+        // Show flat penetration per damage type if present (KS14)
+        if (damageSpecifier.FlatPenetration is { } flatPen && flatPen.Count > 0)
+        {
+            foreach (var (key, val) in flatPen)
+            {
+                var typeName = _prototype.Index<DamageTypePrototype>(key).LocalizedName;
+                var ap = (int)Math.Round(val);
+                var abs = Math.Abs(ap);
+                var arg = abs == 0 ? 0 : ap / abs; // yields 1 for positive, -1 for negative
+                msg.PushNewline();
+                msg.AddMarkupOrThrow(Loc.GetString("armor-penetration-flat", ("type", typeName), ("arg", arg), ("abs", abs)));
+            }
+        }
+        // KS14 END
+
         return msg;
     }
 }

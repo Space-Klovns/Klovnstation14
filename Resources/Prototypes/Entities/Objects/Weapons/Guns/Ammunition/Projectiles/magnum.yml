@@ -71,7 +71,8 @@
     damage:
       types:
         Piercing: 30
-    ignoreResistances: true
+      percentilePenetration:
+        Piercing: 1 #100% chance
 
 - type: entity
   parent: BaseBulletUranium
