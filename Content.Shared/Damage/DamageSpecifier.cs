@@ -228,7 +228,12 @@ namespace Content.Shared.Damage
                     }
                     if (flatPenDict.TryGetValue(key, out var flatPenetrationForDamType))
                     {
-                        reduction = Math.Max(0f, reduction - flatPenetrationForDamType); // dont go into the negatives
+                        if (reduction > 0f)
+                            reduction = Math.Max(0f, reduction - flatPenetrationForDamType); // dont go into the negatives
+                        else
+                        {
+                            reduction -= flatPenetrationForDamType; //this fixes negative reductions that are supposed to increase damage and lets them stack. truly an unholy combo
+                        }
                     }
                     newValueFlat = Math.Max(0f, newValueFlat - reduction); // flat reductions can't heal you
                 }
