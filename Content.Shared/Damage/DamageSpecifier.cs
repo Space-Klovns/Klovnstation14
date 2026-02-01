@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;
@@ -44,6 +45,28 @@ namespace Content.Shared.Damage
         [ViewVariables(VVAccess.ReadWrite)]
         [IncludeDataField(customTypeSerializer: typeof(DamageSpecifierDictionarySerializer), readOnly: true)]
         public Dictionary<string, FixedPoint2> DamageDict { get; set; } = new();
+
+        /// <summary>
+        ///     KS14 addition
+        ///     This is just a way for you to specify that a projectile/whatever gets through the percentile reduction given by armor.
+        ///     It works via a percentile system - 0 is no AP, 1 is full AP.
+        ///     If you go over 1 or under -1 the system will make stupid mistakes, please do not do it
+        ///     I removed the clamp because I trust the sanity of my contribs and I can squeeze some minimal perf out by removing it
+        ///     Why -1? Because you can set it to -1 to make armor twice as effective against it - could be fun for hollow points!
+        /// </summary>
+
+        [DataField("percentilePenetration", customTypeSerializer: typeof(PrototypeIdDictionarySerializer<float, DamageTypePrototype>))]
+        public Dictionary<string, float>? PercentilePenetration;
+
+        /// <summary>
+        ///     KS14
+        ///     This is just a way for you to specify that a projectile/whatever ignores some flat reduction given by armor.
+        ///     It works by subtracting these reductions from the armor's reductions, of course that can't go below zero.
+        ///     If you set this to a negative number it actually adds to the flat resistances - could be useful for something.
+        /// </summary>
+
+        [DataField("flatPenetration", customTypeSerializer: typeof(PrototypeIdDictionarySerializer<float, DamageTypePrototype>))]
+        public Dictionary<string, float>? FlatPenetration;
 
         /// <summary>
         ///     Returns a sum of the damage values.
@@ -101,6 +124,10 @@ namespace Content.Shared.Damage
         public DamageSpecifier(DamageSpecifier damageSpec)
         {
             DamageDict = new(damageSpec.DamageDict);
+            if (damageSpec.PercentilePenetration != null)
+                PercentilePenetration = new(damageSpec.PercentilePenetration);
+            if (damageSpec.FlatPenetration != null)
+                FlatPenetration = new(damageSpec.FlatPenetration);
         }
 
         /// <summary>
@@ -145,6 +172,10 @@ namespace Content.Shared.Damage
             DamageSpecifier newDamage = new();
             newDamage.DamageDict.EnsureCapacity(damageSpec.DamageDict.Count);
 
+            // Capture nullable AP dictionaries into locals to satisfy nullable analysis and avoid repeated lookups.
+            var percentilePenDict = damageSpec.PercentilePenetration;
+            var flatPenDict = damageSpec.FlatPenetration;
+
             foreach (var (key, value) in damageSpec.DamageDict)
             {
                 if (value == 0)
@@ -159,10 +190,23 @@ namespace Content.Shared.Damage
                 float newValue = value.Float();
 
                 if (modifierSet.FlatReduction.TryGetValue(key, out var reduction))
+                {
+                    if (flatPenDict is { } flatPen && flatPen.TryGetValue(key, out var flatPenetrationForDamType))
+                    {
+                        reduction = Math.Max(0f, reduction - flatPenetrationForDamType); // dont go into the negatives
+                    }
                     newValue = Math.Max(0f, newValue - reduction); // flat reductions can't heal you
+                }
 
                 if (modifierSet.Coefficients.TryGetValue(key, out var coefficient))
+                {
+                    if (percentilePenDict is { } percentPen && percentPen.TryGetValue(key, out var percentilePenetrationForDamType))
+                    {
+                        var multiplier = 1 - percentilePenetrationForDamType;
+                        coefficient *= multiplier;
+                    }
                     newValue *= coefficient; // coefficients can heal you, e.g. cauterizing bleeding
+                }
 
                 if (newValue != 0)
                     newDamage.DamageDict[key] = FixedPoint2.New(newValue);
@@ -355,20 +399,22 @@ namespace Content.Shared.Damage
         #region Operators
         public static DamageSpecifier operator *(DamageSpecifier damageSpec, FixedPoint2 factor)
         {
-            DamageSpecifier newDamage = new();
-            foreach (var entry in damageSpec.DamageDict)
+            DamageSpecifier newDamage = new(damageSpec);
+            var keys = new List<string>(newDamage.DamageDict.Keys);
+            foreach (var key in keys)
             {
-                newDamage.DamageDict.Add(entry.Key, entry.Value * factor);
+                newDamage.DamageDict[key] = newDamage.DamageDict[key] * factor;
             }
             return newDamage;
         }
 
         public static DamageSpecifier operator *(DamageSpecifier damageSpec, float factor)
         {
-            DamageSpecifier newDamage = new();
-            foreach (var entry in damageSpec.DamageDict)
+            DamageSpecifier newDamage = new(damageSpec);
+            var keys = new List<string>(newDamage.DamageDict.Keys);
+            foreach (var key in keys)
             {
-                newDamage.DamageDict.Add(entry.Key, entry.Value * factor);
+                newDamage.DamageDict[key] = newDamage.DamageDict[key] * factor;
             }
             return newDamage;
         }
@@ -385,11 +431,11 @@ namespace Content.Shared.Damage
 
         public static DamageSpecifier operator /(DamageSpecifier damageSpec, float factor)
         {
-            DamageSpecifier newDamage = new();
-
-            foreach (var entry in damageSpec.DamageDict)
+            DamageSpecifier newDamage = new(damageSpec);
+            var keys = new List<string>(newDamage.DamageDict.Keys);
+            foreach (var key in keys)
             {
-                newDamage.DamageDict.Add(entry.Key, entry.Value / factor);
+                newDamage.DamageDict[key] = newDamage.DamageDict[key] / factor;
             }
             return newDamage;
         }
