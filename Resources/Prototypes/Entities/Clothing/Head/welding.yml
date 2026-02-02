@@ -10,9 +10,6 @@
   - type: FlashImmunity
   - type: IdentityBlocker
   - type: EyeProtection
-  - type: HeldGrantComponent
-    component:
-      - type: ArcFlashInsulated
   - type: PhysicalComposition
     materialComposition:
       Steel: 200
