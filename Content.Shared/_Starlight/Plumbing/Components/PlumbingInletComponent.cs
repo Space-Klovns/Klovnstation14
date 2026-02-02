@@ -17,10 +17,10 @@ public sealed partial class PlumbingInletComponent : Component
     public string SolutionName = "tank";
 
     /// <summary>
-    ///     Prefix for inlet node names. All nodes starting with this prefix will be used for pulling reagents.
+    ///     The name of the inlet node to pull from.
     /// </summary>
     [DataField]
-    public string InletPrefix = "inlet";
+    public string InletName = "inlet";
 
     /// <summary>
     ///     Amount to transfer per update.

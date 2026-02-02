@@ -14,6 +14,9 @@
     - state: mixer_screens
       shader: unshaded
       map: ["enum.PowerDeviceVisualLayers.Powered"]
+  - type: PlumbingConnectorAppearance
+    offset: 0.09375
+  - type: AtmosPipeColor
   - type: Icon
     sprite: Structures/Machines/mixer.rsi
     state: mixer_empty
@@ -112,19 +115,11 @@
     enabled: false
   - type: NodeContainer
     nodes:
-      inletNorth:
+      inlet:  # Pulls reagents FROM the network (north, east, west sides)
         !type:PlumbingNode
         nodeGroupID: Plumbing
-        pipeDirection: North
-      inletEast:
-        !type:PlumbingNode
-        nodeGroupID: Plumbing
-        pipeDirection: East
-      inletWest:
-        !type:PlumbingNode
-        nodeGroupID: Plumbing
-        pipeDirection: West
-      outletSouth:
+        pipeDirection: TNorth
+      outlet:  # Provides reagents TO the network (south side)
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: South

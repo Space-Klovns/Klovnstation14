@@ -94,7 +94,7 @@ public sealed class PlumbingFilterSystem : EntitySystem
     private void OnToggle(Entity<PlumbingFilterComponent> ent, ref PlumbingFilterToggleMessage args)
     {
         ent.Comp.Enabled = args.Enabled;
-        Dirty(ent);
+        DirtyField(ent, ent.Comp, nameof(PlumbingFilterComponent.Enabled));
         UpdateUI(ent);
     }
 
@@ -113,21 +113,21 @@ public sealed class PlumbingFilterSystem : EntitySystem
         }
 
         ent.Comp.FilteredReagents.Add(new ProtoId<ReagentPrototype>(reagentId));
-        Dirty(ent);
+        DirtyField(ent, ent.Comp, nameof(PlumbingFilterComponent.FilteredReagents));
         UpdateUI(ent);
     }
 
     private void OnRemoveReagent(Entity<PlumbingFilterComponent> ent, ref PlumbingFilterRemoveReagentMessage args)
     {
         ent.Comp.FilteredReagents.Remove(new ProtoId<ReagentPrototype>(args.ReagentId));
-        Dirty(ent);
+        DirtyField(ent, ent.Comp, nameof(PlumbingFilterComponent.FilteredReagents));
         UpdateUI(ent);
     }
 
     private void OnClear(Entity<PlumbingFilterComponent> ent, ref PlumbingFilterClearMessage args)
     {
         ent.Comp.FilteredReagents.Clear();
-        Dirty(ent);
+        DirtyField(ent, ent.Comp, nameof(PlumbingFilterComponent.FilteredReagents));
         UpdateUI(ent);
     }
 

@@ -12,7 +12,7 @@ namespace Content.Shared._Starlight.Plumbing.Components;
 ///     Filter outlet only provides reagents in the filter list.
 ///     Passthrough outlet only provides reagents NOT in the filter list.
 /// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true)]
 public sealed partial class PlumbingFilterComponent : Component
 {
     /// <summary>

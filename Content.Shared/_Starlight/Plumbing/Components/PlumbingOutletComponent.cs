@@ -17,12 +17,10 @@ public sealed partial class PlumbingOutletComponent : Component
     public string SolutionName = "tank";
 
     /// <summary>
-    ///     Prefix for node names that are valid outlets.
-    ///     Only nodes whose names start with this prefix (case-insensitive) will provide reagents.
-    ///     For example, "outlet" matches "outlet", "outletSouth", "outletEast", etc.
+    ///     The name of the outlet node.
     /// </summary>
     [DataField]
-    public string OutletPrefix = "outlet";
+    public string OutletName = "outlet";
 
     /// <summary>
     ///     If true, this outlet can be pulled from. If false, it's blocked.

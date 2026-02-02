@@ -61,6 +61,10 @@
   name: industrial reagent grinder
   description: An industrial reagent grinder.
   components:
+  - type: Appearance
+  - type: PlumbingConnectorAppearance
+    offset: 0.09375
+  - type: AtmosPipeColor
   - type: SolutionContainerManager
     solutions:
       output:

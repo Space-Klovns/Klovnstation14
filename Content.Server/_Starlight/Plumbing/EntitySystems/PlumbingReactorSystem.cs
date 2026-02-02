@@ -17,6 +17,7 @@ using Content.Shared.Power;
 using JetBrains.Annotations;
 using Robust.Server.GameObjects;
 using Robust.Shared.Prototypes;
+using SharedAppearanceSystem = Robust.Shared.GameObjects.SharedAppearanceSystem;
 
 namespace Content.Server._Starlight.Plumbing.EntitySystems;
 
@@ -35,6 +36,22 @@ public sealed class PlumbingReactorSystem : EntitySystem
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly PlumbingPullSystem _pullSystem = default!;
     [Dependency] private readonly PowerReceiverSystem _power = default!;
+    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
+
+    /// <summary>
+    ///     Temperature tolerance for considering target reached (in Kelvin).
+    /// </summary>
+    private const float TemperatureTolerance = 0.5f;
+
+    /// <summary>
+    ///     Minimum allowed target temperature (absolute zero).
+    /// </summary>
+    private const float MinTemperature = 0f;
+
+    /// <summary>
+    ///     Maximum allowed target temperature.
+    /// </summary>
+    private const float MaxTemperature = 1000f;
 
     public override void Initialize()
     {
@@ -94,6 +111,8 @@ public sealed class PlumbingReactorSystem : EntitySystem
             {
                 allMet = false;
                 neededTargets[reagentId] = needed;
+                // Start sprite animation when targets set
+                _appearance.SetData(ent.Owner, PlumbingVisuals.Running, true); 
             }
         }
 
@@ -111,7 +130,7 @@ public sealed class PlumbingReactorSystem : EntitySystem
             }
 
             // Dont do the reaction until we reach the the target temperature or close enough, but update the ui.
-            if (!MathHelper.CloseTo(buffer.Temperature, ent.Comp.TargetTemperature, 0.5f))
+            if (!MathHelper.CloseTo(buffer.Temperature, ent.Comp.TargetTemperature, TemperatureTolerance))
             {
                 UpdateUI(ent);
                 return;
@@ -142,6 +161,9 @@ public sealed class PlumbingReactorSystem : EntitySystem
 
                 // Reset buffer to ambient temperature after products are transferred.
                 _solutionSystem.SetTemperature(bufferEnt.Value, Atmospherics.T20C);
+
+                // Stop sprite animation when products are made
+                _appearance.SetData(ent.Owner, PlumbingVisuals.Running, false); 
             }
         }
 
@@ -161,7 +183,7 @@ public sealed class PlumbingReactorSystem : EntitySystem
         var targetTemp = ent.Comp.TargetTemperature;
 
         // Skip if already at target or close enough
-        if (MathHelper.CloseTo(currentTemp, targetTemp, 0.5f))
+        if (MathHelper.CloseTo(currentTemp, targetTemp, TemperatureTolerance))
             return;
 
         var heatCap = solution.GetHeatCapacity(_prototypeManager);
@@ -184,8 +206,12 @@ public sealed class PlumbingReactorSystem : EntitySystem
     private void OnToggle(Entity<PlumbingReactorComponent> ent, ref PlumbingReactorToggleMessage args)
     {
         ent.Comp.Enabled = args.Enabled;
-        Dirty(ent);
+        DirtyField(ent, ent.Comp, nameof(PlumbingReactorComponent.Enabled));
         UpdateUI(ent);
+
+        // Turn off visual animation when disabled
+        if (!args.Enabled)
+            _appearance.SetData(ent.Owner, PlumbingVisuals.Running, false);
     }
 
     private void OnSetTarget(Entity<PlumbingReactorComponent> ent, ref PlumbingReactorSetTargetMessage args)
@@ -196,7 +222,7 @@ public sealed class PlumbingReactorSystem : EntitySystem
         {
             if (reagentId != null)
                 ent.Comp.ReagentTargets.Remove(new ProtoId<ReagentPrototype>(reagentId));
-            Dirty(ent);
+            DirtyField(ent, ent.Comp, nameof(PlumbingReactorComponent.ReagentTargets));
             UpdateUI(ent);
             return;
         }
@@ -212,29 +238,29 @@ public sealed class PlumbingReactorSystem : EntitySystem
         }
 
         ent.Comp.ReagentTargets[new ProtoId<ReagentPrototype>(reagentId)] = args.Quantity;
-        Dirty(ent);
+        DirtyField(ent, ent.Comp, nameof(PlumbingReactorComponent.ReagentTargets));
         UpdateUI(ent);
     }
 
     private void OnRemoveTarget(Entity<PlumbingReactorComponent> ent, ref PlumbingReactorRemoveTargetMessage args)
     {
         ent.Comp.ReagentTargets.Remove(new ProtoId<ReagentPrototype>(args.ReagentId));
-        Dirty(ent);
+        DirtyField(ent, ent.Comp, nameof(PlumbingReactorComponent.ReagentTargets));
         UpdateUI(ent);
     }
 
     private void OnClearTargets(Entity<PlumbingReactorComponent> ent, ref PlumbingReactorClearTargetsMessage args)
     {
         ent.Comp.ReagentTargets.Clear();
-        Dirty(ent);
+        DirtyField(ent, ent.Comp, nameof(PlumbingReactorComponent.ReagentTargets));
         UpdateUI(ent);
     }
 
     private void OnSetTemperature(Entity<PlumbingReactorComponent> ent, ref PlumbingReactorSetTemperatureMessage args)
     {
         // Clamp to reasonable values 
-        ent.Comp.TargetTemperature = Math.Clamp(args.Temperature, 0f, 1000f);
-        Dirty(ent);
+        ent.Comp.TargetTemperature = Math.Clamp(args.Temperature, MinTemperature, MaxTemperature);
+        DirtyField(ent, ent.Comp, nameof(PlumbingReactorComponent.TargetTemperature));
         UpdateUI(ent);
     }
 

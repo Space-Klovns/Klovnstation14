@@ -10,7 +10,7 @@ namespace Content.Shared._Starlight.Plumbing.Components;
 ///     its buffer. Other machines can pull the generated reagents via
 ///     the <see cref="PlumbingOutletComponent"/> on this entity.
 /// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true)]
 public sealed partial class PlumbingSynthesizerComponent : Component
 {
     /// <summary>

@@ -13,7 +13,9 @@ using Content.Shared.Power.EntitySystems;
 using Content.Shared.UserInterface;
 using JetBrains.Annotations;
 using Robust.Server.GameObjects;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using SharedAppearanceSystem = Robust.Shared.GameObjects.SharedAppearanceSystem;
 
 namespace Content.Server._Starlight.Plumbing.EntitySystems;
 
@@ -31,10 +33,21 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
     [Dependency] private readonly PowerCellSystem _powerCell = default!;
     [Dependency] private readonly BatterySystem _battery = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
+    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
     private readonly Dictionary<EntityUid, TimeSpan> _nextUiUpdate = new();
-    private static readonly TimeSpan UiUpdateInterval = TimeSpan.FromSeconds(0.5);
-    private const float ChargeRate = 5f; // 5W charge rate when powered
+
+    /// <summary>
+    ///     How often to update the UI when open (in seconds).
+    /// </summary>
+    private const float UiUpdateIntervalSeconds = 0.5f;
+    private static readonly TimeSpan UiUpdateInterval = TimeSpan.FromSeconds(UiUpdateIntervalSeconds);
+
+    /// <summary>
+    ///     Charge rate when powered, in watts.
+    /// </summary>
+    private const float ChargeRate = 5f;
 
     public override void Initialize()
     {
@@ -92,6 +105,10 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
 
     private void OnSynthesizerUpdate(Entity<PlumbingSynthesizerComponent> ent, ref PlumbingDeviceUpdateEvent args)
     {
+        // Update overlay visibility based on buffer contents
+        if (_solutionSystem.TryGetSolution(ent.Owner, ent.Comp.BufferSolutionName, out _, out var bufferCheck))
+            _appearance.SetData(ent.Owner, PlumbingVisuals.Running, bufferCheck.Volume > 0);
+
         if (!ent.Comp.Enabled)
             return;
 
@@ -138,6 +155,9 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
             return;
 
         _solutionSystem.TryAddReagent(bufferEnt.Value, new ReagentId(ent.Comp.SelectedReagent.Value, null), toGenerate, out _);
+
+        // Show overlay when buffer has contents
+        _appearance.SetData(ent.Owner, PlumbingVisuals.Running, buffer.Volume > 0);
         UpdateUI(ent);
     }
 
@@ -156,7 +176,7 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
     private void OnToggle(Entity<PlumbingSynthesizerComponent> ent, ref PlumbingSynthesizerToggleMessage args)
     {
         ent.Comp.Enabled = args.Enabled;
-        Dirty(ent);
+        DirtyField(ent, ent.Comp, nameof(PlumbingSynthesizerComponent.Enabled));
         UpdateUI(ent);
     }
 
@@ -171,7 +191,7 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
             ent.Comp.SelectedReagent = args.ReagentId;
         }
 
-        Dirty(ent);
+        DirtyField(ent, ent.Comp, nameof(PlumbingSynthesizerComponent.SelectedReagent));
         UpdateUI(ent);
     }
 

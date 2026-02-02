@@ -12,7 +12,7 @@ namespace Content.Shared._Starlight.Plumbing.Components;
 ///     then triggers reactions in the buffer at a configurable temperature.
 ///     Products are moved to an output solution for other machines to pull.
 /// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true)]
 public sealed partial class PlumbingReactorComponent : Component
 {
     /// <summary>

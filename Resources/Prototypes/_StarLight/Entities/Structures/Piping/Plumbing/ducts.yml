@@ -25,11 +25,14 @@
   - type: Transform
     anchored: true
   - type: Sprite
-    sprite: Structures/Piping/Atmospherics/pipe.rsi
+    sprite: _Starlight/Structures/Piping/Plumbing/fluid_ducts.rsi
     drawdepth: ThinPipe
     visible: false
   - type: Appearance
   - type: PipeAppearance
+    sprite:
+    - sprite: _Starlight/Structures/Piping/Plumbing/fluid_ducts.rsi
+      state: ductConnector
   - type: PipeColorVisuals
   - type: AtmosPipeColor
   - type: Clickable
@@ -92,12 +95,12 @@
         pipeDirection: Longitudinal  # North-South connection
   - type: Sprite
     layers:
-    - state: pipeStraight
+    - state: ductStraight
       map: [ "enum.PipeVisualLayers.Pipe" ]
       color: "#4169E1"
   - type: Item
     storedSprite:
-      sprite: Structures/Piping/Atmospherics/pipe.rsi
+      sprite: _Starlight/Structures/Piping/Plumbing/fluid_ducts.rsi
       state: storageStraight
     shape:
     - 0,0,0,2
@@ -119,13 +122,13 @@
         pipeDirection: SWBend  # South-West corner
   - type: Sprite
     layers:
-    - state: pipeBend
+    - state: ductBend
       map: [ "enum.PipeVisualLayers.Pipe" ]
       color: "#4169E1"
   - type: Item
     size: Small
     storedSprite:
-      sprite: Structures/Piping/Atmospherics/pipe.rsi
+      sprite: _Starlight/Structures/Piping/Plumbing/fluid_ducts.rsi
       state: storageBend
 
 # --------------------------------
@@ -145,12 +148,12 @@
         pipeDirection: TSouth  # T facing south
   - type: Sprite
     layers:
-    - state: pipeTJunction
+    - state: ductTJunction
       map: [ "enum.PipeVisualLayers.Pipe" ]
       color: "#4169E1"
   - type: Item
     storedSprite:
-      sprite: Structures/Piping/Atmospherics/pipe.rsi
+      sprite: _Starlight/Structures/Piping/Plumbing/fluid_ducts.rsi
       state: storageTJunction
 
 # --------------------------------
@@ -170,11 +173,11 @@
         pipeDirection: Fourway  # All directions
   - type: Sprite
     layers:
-    - state: pipeFourway
+    - state: ductFourway
       map: [ "enum.PipeVisualLayers.Pipe" ]
       color: "#4169E1"
   - type: Item
     size: Small
     storedSprite:
-      sprite: Structures/Piping/Atmospherics/pipe.rsi
+      sprite: _Starlight/Structures/Piping/Plumbing/fluid_ducts.rsi
       state: storageFourway

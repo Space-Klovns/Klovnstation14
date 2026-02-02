@@ -72,8 +72,8 @@ public sealed class PlumbingPullSystem : EntitySystem
             if (!outlet.Enabled)
                 continue;
 
-            // Only nodes whose names start with the outlet prefix are valid
-            if (!plumbingNode.Name.StartsWith(outlet.OutletPrefix, StringComparison.OrdinalIgnoreCase))
+            // Only the outlet node is valid
+            if (!plumbingNode.Name.Equals(outlet.OutletName, StringComparison.OrdinalIgnoreCase))
                 continue;
 
             outlets.Add((plumbingNode, outlet));
@@ -154,8 +154,8 @@ public sealed class PlumbingPullSystem : EntitySystem
                 if (!outlet.Enabled)
                     continue;
 
-                // Only nodes whose names start with the outlet prefix are valid
-                if (!plumbingNode.Name.StartsWith(outlet.OutletPrefix, StringComparison.OrdinalIgnoreCase))
+                // Only the outlet node is valid
+                if (!plumbingNode.Name.Equals(outlet.OutletName, StringComparison.OrdinalIgnoreCase))
                     continue;
 
                 if (GetOutletSolution(plumbingNode.Owner, outlet) is not { } sourceSoln)

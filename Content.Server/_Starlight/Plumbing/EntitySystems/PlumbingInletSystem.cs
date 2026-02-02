@@ -34,24 +34,18 @@ public sealed class PlumbingInletSystem : EntitySystem
         if (solution.AvailableVolume <= 0)
             return;
 
-        // Get node container to find all inlet nodes
+        // Get node container to find the inlet node
         if (!TryComp<NodeContainerComponent>(ent.Owner, out var nodeContainer))
             return;
 
-        // Pull from all inlet nodes (any node starting with the inlet prefix)
-        foreach (var (nodeName, node) in nodeContainer.Nodes)
-        {
-            if (!nodeName.StartsWith(ent.Comp.InletPrefix, StringComparison.OrdinalIgnoreCase))
-                continue;
+        // Get the inlet node directly
+        if (!nodeContainer.Nodes.TryGetValue(ent.Comp.InletName, out var node))
+            return;
 
-            if (node is not PlumbingNode plumbingNode || plumbingNode.PlumbingNet == null)
-                continue;
+        if (node is not PlumbingNode plumbingNode || plumbingNode.PlumbingNet == null)
+            return;
 
-            if (solution.AvailableVolume <= 0)
-                break;
-
-            var (_, nextIndex) = _pullSystem.PullFromNetwork(ent.Owner, plumbingNode.PlumbingNet, solutionEnt.Value, ent.Comp.TransferAmount, ent.Comp.RoundRobinIndex);
-            ent.Comp.RoundRobinIndex = nextIndex;
-        }
+        var (_, nextIndex) = _pullSystem.PullFromNetwork(ent.Owner, plumbingNode.PlumbingNet, solutionEnt.Value, ent.Comp.TransferAmount, ent.Comp.RoundRobinIndex);
+        ent.Comp.RoundRobinIndex = nextIndex;
     }
 }
