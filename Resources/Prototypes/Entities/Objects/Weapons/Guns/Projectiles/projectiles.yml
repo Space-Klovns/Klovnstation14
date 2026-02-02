@@ -248,7 +248,7 @@
     damage:
       types:
         Piercing: 11 # 20% decrease
-      percentilePenetration:
+      percentilePenetration: #KS14 - nuarmor
         Piercing: 1 #100% chance
 
 - type: entity

@@ -153,10 +153,12 @@ namespace Content.Shared.Damage
         public DamageSpecifier(DamageSpecifier damageSpec)
         {
             DamageDict = new(damageSpec.DamageDict);
+            //KS14 start
             if (damageSpec.PercentilePenetration != null)
                 PercentilePenetration = new(damageSpec.PercentilePenetration);
             if (damageSpec.FlatPenetration != null)
                 FlatPenetration = new(damageSpec.FlatPenetration);
+            //KS14 end
         }
 
         /// <summary>
@@ -200,6 +202,9 @@ namespace Content.Shared.Damage
             // more cause they're just bloody stumps.
             DamageSpecifier newDamage = new();
             newDamage.DamageDict.EnsureCapacity(damageSpec.DamageDict.Count);
+
+            //basically all of this is KS modified past this point
+            //KS14 START
 
             // Capture nullable AP dictionaries into locals to satisfy nullable analysis and avoid repeated lookups.
             var percentilePenDict = damageSpec.PercentilePenetration ?? new Dictionary<string, float>();
@@ -253,6 +258,7 @@ namespace Content.Shared.Damage
                 if (newValueFlat != 0 || newValuePercentile != 0)
                     newDamage.DamageDict[key] = FixedPoint2.New(Math.Min(newValueFlat, newValuePercentile));
             }
+            //KS14 END
 
             return newDamage;
         }
@@ -441,6 +447,7 @@ namespace Content.Shared.Damage
         #region Operators
         public static DamageSpecifier operator *(DamageSpecifier damageSpec, FixedPoint2 factor)
         {
+            //KS14 start
             DamageSpecifier newDamage = new(damageSpec);
             var keys = new List<string>(newDamage.DamageDict.Keys);
             foreach (var key in keys)
@@ -448,10 +455,12 @@ namespace Content.Shared.Damage
                 newDamage.DamageDict[key] = newDamage.DamageDict[key] * factor;
             }
             return newDamage;
+            //KS14 end
         }
 
         public static DamageSpecifier operator *(DamageSpecifier damageSpec, float factor)
         {
+            //KS14 start
             DamageSpecifier newDamage = new(damageSpec);
             var keys = new List<string>(newDamage.DamageDict.Keys);
             foreach (var key in keys)
@@ -459,6 +468,7 @@ namespace Content.Shared.Damage
                 newDamage.DamageDict[key] = newDamage.DamageDict[key] * factor;
             }
             return newDamage;
+            //KS14 end
         }
 
         public static DamageSpecifier operator /(DamageSpecifier damageSpec, FixedPoint2 factor)
@@ -473,6 +483,7 @@ namespace Content.Shared.Damage
 
         public static DamageSpecifier operator /(DamageSpecifier damageSpec, float factor)
         {
+            //KS14 start
             DamageSpecifier newDamage = new(damageSpec);
             var keys = new List<string>(newDamage.DamageDict.Keys);
             foreach (var key in keys)
@@ -480,6 +491,7 @@ namespace Content.Shared.Damage
                 newDamage.DamageDict[key] = newDamage.DamageDict[key] / factor;
             }
             return newDamage;
+            //KS14 end
         }
 
         public static DamageSpecifier operator +(DamageSpecifier damageSpecA, DamageSpecifier damageSpecB)

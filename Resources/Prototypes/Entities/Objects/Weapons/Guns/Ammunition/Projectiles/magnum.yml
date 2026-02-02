@@ -72,7 +72,7 @@
     damage:
       types:
         Piercing: 30
-      percentilePenetration:
+      percentilePenetration: #KS14 - nuarmor
         Piercing: 1 #100% AP
 
 - type: entity
