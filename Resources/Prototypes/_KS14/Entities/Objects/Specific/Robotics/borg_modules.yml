@@ -36,7 +36,7 @@
   components:
   - type: Sprite
     layers:
-    - state: service
+    - state: security
     - state: icon-patrol
   - type: ItemBorgModule
     hands:
@@ -54,5 +54,19 @@
           components:
           - FitsInDispenser
     - item: BarSpoon
+  - type: BorgModuleIcon
+    icon: { sprite: Interface/Actions/actions_borg.rsi, state: service-module }
+
+- type: entity
+  id: BorgModuleProtection
+  parent: [ BaseBorgModuleSecurity, BaseProviderBorgModule ]
+  name: security cyborg module
+  components:
+  - type: Sprite
+    layers:
+    - state: security
+    - state: icon-protection
+  - type: ItemBorgModule
+    hands:
   - type: BorgModuleIcon
     icon: { sprite: Interface/Actions/actions_borg.rsi, state: service-module }
