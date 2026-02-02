@@ -9,7 +9,6 @@
 // SPDX-FileCopyrightText: 2022 theashtronaut
 // SPDX-FileCopyrightText: 2023 DrSmugleaf
 // SPDX-FileCopyrightText: 2023 Errant
-// SPDX-FileCopyrightText: 2023 Ilya246
 // SPDX-FileCopyrightText: 2023 Pieter-Jan Briers
 // SPDX-FileCopyrightText: 2023 Slava0135
 // SPDX-FileCopyrightText: 2023 Vyacheslav Kovalevsky
@@ -23,10 +22,12 @@
 // SPDX-FileCopyrightText: 2024 Mervill
 // SPDX-FileCopyrightText: 2024 Plykiya
 // SPDX-FileCopyrightText: 2024 TurboTracker
+// SPDX-FileCopyrightText: 2025 Ilya246
 // SPDX-FileCopyrightText: 2025 metalgearsloth
 // SPDX-FileCopyrightText: 2025 slarticodefast
 // SPDX-FileCopyrightText: 2026 deltanedas
 // SPDX-FileCopyrightText: 2026 github_actions[bot]
+// SPDX-FileCopyrightText: 2026 nabegator220
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -206,7 +207,7 @@ namespace Content.Server.Atmos.EntitySystems
 
                 // Let's cap the explosion, yeah?
                 // !1984
-                range = Math.Min(Math.Min(range, GasTankComponent.MaxExplosionRange), _maxExplosionRange);
+                range = Math.Min(range, component.MaxExplosionRange ?? _maxExplosionRange); // Goobstation - Fix tank explosion cap shitcode
 
                 _explosions.TriggerExplosive(owner, radius: range);
 

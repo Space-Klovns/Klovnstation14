@@ -1,3 +1,10 @@
+// SPDX-FileCopyrightText: 2025 Ilya246
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Perry Fraser
+// SPDX-FileCopyrightText: 2025 metalgearsloth
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
@@ -7,7 +14,8 @@ namespace Content.Shared.Atmos.Components;
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true)]
 public sealed partial class GasTankComponent : Component, IGasMixtureHolder
 {
-    public const float MaxExplosionRange = 26f;
+    [DataField]
+    public float? MaxExplosionRange; // KS14 port of Goobstation - If null, use the atmos explosion range cvar, otherwise, use this value
     private const float DefaultLowPressure = 0f;
     private const float DefaultOutputPressure = Atmospherics.OneAtmosphere;
 

@@ -673,3 +673,9 @@ Entries:
       message: Fixed attributions and rules.
   id: 85
   time: '2026-01-30T18:17:48.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Fix
+      message: Maxcaps can now be properly huge.
+  id: 86
+  time: '2026-02-02T16:16:30.0000000+00:00'
