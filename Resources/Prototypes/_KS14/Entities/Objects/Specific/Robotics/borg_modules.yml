@@ -32,7 +32,7 @@
 - type: entity
   id: BorgModulePatrol
   parent: [ BaseBorgModuleSecurity, BaseProviderBorgModule ]
-  name: security cyborg module
+  name: patrol cyborg module
   components:
   - type: Sprite
     layers:
@@ -47,7 +47,7 @@
 - type: entity
   id: BorgModuleProtection
   parent: [ BaseBorgModuleSecurity, BaseProviderBorgModule ]
-  name: security cyborg module
+  name: protection cyborg module
   components:
   - type: Sprite
     layers:
@@ -59,7 +59,7 @@
     - item: HoloprojectorSecurityBorg
     - item: Tourniquet
       hand:
-        emptyLabel: borg-slot-small-containers-empty
+        emptyLabel: borg-slot-medicine-empty
         emptyRepresentative: Ointment
         whitelist:
           tags: # SAME SHIT AS THE MEDICAL BELT
