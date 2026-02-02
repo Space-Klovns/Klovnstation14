@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: entity
   name: cyborg flash shield
   parent: BaseItem
