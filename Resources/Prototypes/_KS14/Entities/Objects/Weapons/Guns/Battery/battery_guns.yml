@@ -1,0 +1,8 @@
+- type: entity
+  parent: [WeaponDisabler]
+  id: WeaponDisablerBorg
+  name: cyborg disabler
+  description: A self charging integrated disabler for security cyborgs.
+  components:
+  - type: BatterySelfRecharger
+    autoRechargeRate: 30
