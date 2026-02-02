@@ -6,7 +6,7 @@
 // SPDX-FileCopyrightText: 2025 Ilya246
 // SPDX-FileCopyrightText: 2025 Misandry
 // SPDX-FileCopyrightText: 2025 gus
-// SPDX-FileCopyrightText: 2025 nabegator220
+// SPDX-FileCopyrightText: 2026 nabegator220
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
