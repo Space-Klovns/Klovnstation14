@@ -5,3 +5,5 @@
   components:
   - type: BorgSwitchableType
     selectedBorgType: security
+  - type: SiliconLawProvider
+    laws: SecborgLawset # custom laws here
