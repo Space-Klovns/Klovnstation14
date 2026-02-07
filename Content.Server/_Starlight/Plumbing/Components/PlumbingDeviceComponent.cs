@@ -1,3 +1,4 @@
+using Robust.Shared.Audio;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
 namespace Content.Server._Starlight.Plumbing.Components;
@@ -20,6 +21,12 @@ public sealed partial class PlumbingDeviceComponent : Component
     /// </summary>
     [DataField]
     public TimeSpan UpdateInterval = TimeSpan.FromSeconds(2);
+
+    /// <summary>
+    ///     Sound played when a UI button is clicked (toggle, select, etc.).
+    /// </summary>
+    [DataField]
+    public SoundSpecifier ClickSound = new SoundPathSpecifier("/Audio/Machines/machine_switch.ogg");
 
     /// <summary>
     ///     The next time this device should be updated.

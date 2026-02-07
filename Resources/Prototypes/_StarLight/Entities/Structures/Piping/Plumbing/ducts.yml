@@ -71,6 +71,12 @@
             volume: -8
       - !type:DoActsBehavior
         acts: [Breakage]
+  - type: PipeRestrictOverlap
+  - type: RCDDeconstructable
+    cost: 1
+    delay: 2
+    fx: EffectRCDDeconstruct2
+    rpld: true
   - type: StaticPrice
     price: 20
 

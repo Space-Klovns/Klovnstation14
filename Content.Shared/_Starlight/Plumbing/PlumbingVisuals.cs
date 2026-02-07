@@ -38,7 +38,13 @@ public enum PlumbingVisuals : byte
     ///     Whether the entity is covered by a floor tile.
     ///     Used to hide connector layers under floors without using SubFloorHide.
     /// </summary>
-    CoveredByFloor
+    CoveredByFloor,
+
+    /// <summary>
+    ///     Directions that have mixing inlet nodes.
+    ///     Used to color mixing inlet connectors green.
+    /// </summary>
+    MixingInletDirections
 }
 
 [Serializable, NetSerializable]

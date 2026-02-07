@@ -33,6 +33,11 @@
         layer:
         - MachineLayer
   - type: AtmosPipeColor
+  - type: RCDDeconstructable
+    cost: 2
+    delay: 2
+    fx: EffectRCDDeconstruct2
+    rpld: true
   - type: Damageable
     damageContainer: StructuralInorganic
     damageModifierSet: Metallic
@@ -149,6 +154,8 @@
     rotateWhileAnchored: false
   - type: PlumbingDevice
     updateInterval: 2
+  - type: PlumbingInlet
+    solutionName: output
   - type: PlumbingOutput
     solutionName: output
   - type: PlumbingOutlet
@@ -263,7 +270,6 @@
     bufferSolutionName: buffer
     outputSolutionName: output
     inletName: inlet
-    outletName: outlet
   - type: Plungeable
   - type: PlumbingOutlet
     solutionName: output
@@ -313,6 +319,150 @@
     price: 150
 
 # =============================================================================
+# Plumbing Smart Fridge - stores reagents from the network, fills labeled jugs
+# =============================================================================
+- type: entity
+  parent: PlumbingMachineBase
+  id: PlumbingSmartFridge
+  name: plumbing smart fridge
+  description: A plumbing-connected smart fridge. Pulls all reagents from the network and stores up to 200u of each. Insert a labeled jug to fill it with the matching reagent.
+  components:
+  - type: Sprite
+    sprite: Structures/Machines/smartfridge.rsi
+    layers:
+    - state: smartfridge
+      map: ["enum.StorageVisualLayers.Base"]
+    - state: smartfridge_door
+      map: ["enum.StorageVisualLayers.Door"]
+      shader: unshaded
+  - type: PointLight
+    radius: 1.2
+    energy: 3.0
+    color: "#9dc5c9"
+  - type: PlumbingDevice
+    updateInterval: 2
+  - type: PlumbingInlet
+    solutionName: fridge
+  - type: PlumbingSmartFridge
+    solutionName: fridge
+    maxPerReagent: 200
+  - type: SolutionContainerManager
+    solutions:
+      fridge:
+        maxVol: 50000
+        canReact: false
+  - type: ExaminableSolution
+    solution: fridge
+  - type: NodeContainer
+    nodes:
+      inlet:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: Fourway
+  - type: UserInterface
+    interfaces:
+      enum.PlumbingSmartFridgeUiKey.Key:
+        type: PlumbingSmartFridgeBoundUserInterface
+  - type: ActivatableUI
+    key: enum.PlumbingSmartFridgeUiKey.Key
+  - type: ApcPowerReceiver
+    powerLoad: 200
+  - type: ExtensionCableReceiver
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 200
+      behaviors:
+      - !type:SpillBehavior
+        solution: fridge
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+  - type: StaticPrice
+    price: 200
+
+# =============================================================================
+# Plumbing Pill Press - automatically creates pills or patches from reagents
+# =============================================================================
+- type: entity
+  parent: PlumbingMachineBase
+  id: PlumbingPillPress
+  name: plumbing pill press
+  description: Pulls reagents from the network and automatically presses them into pills or patches at a configurable dosage. Has optional mixing inlets (E/W) for ratio-controlled mixing.
+  components:
+  - type: Sprite
+    sprite: _Starlight/Structures/Piping/Plumbing/plumbers.rsi
+    layers:
+    - state: pill_press_off
+      map: [ "enum.PlumbingVisualLayers.Base" ]
+  - type: GenericVisualizer
+    visuals:
+      enum.PlumbingVisuals.Running:
+        enum.PlumbingVisualLayers.Base:
+          True: { state: pill_press }
+          False: { state: pill_press_off }
+  - type: PlumbingDevice
+    updateInterval: 2
+  - type: PlumbingPillPress
+    bufferSolutionName: buffer
+    dosage: 10
+  - type: PlumbingConnectorAppearance
+    offset: 0.09375
+    mixingInletNames:
+    - mixingInletEast
+    - mixingInletWest
+  - type: PlumbingInlet
+    solutionName: buffer
+    inletName: inlet
+  - type: SolutionContainerManager
+    solutions:
+      buffer:
+        maxVol: 20
+        canReact: false
+      stagingEast:
+        maxVol: 20
+        canReact: false
+      stagingWest:
+        maxVol: 20
+        canReact: false
+  - type: ExaminableSolution
+    solution: buffer
+  - type: NodeContainer
+    nodes:
+      inlet:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: North
+      mixingInletEast:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: East
+      mixingInletWest:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: West
+  - type: UserInterface
+    interfaces:
+      enum.PlumbingPillPressUiKey.Key:
+        type: PlumbingPillPressBoundUserInterface
+  - type: ActivatableUI
+    key: enum.PlumbingPillPressUiKey.Key
+  - type: ApcPowerReceiver
+    powerLoad: 200
+  - type: ExtensionCableReceiver
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:SpillBehavior
+        solution: buffer
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+  - type: StaticPrice
+    price: 150
+# =============================================================================
 # Plumbing Filter - separates specific reagents into two outputs
 # =============================================================================
 - type: entity
@@ -327,18 +477,22 @@
     - state: filter
   - type: PlumbingDevice
     updateInterval: 2
+  - type: PlumbingInlet
+    solutionName: buffer
   - type: PlumbingFilter
-    inletName: inlet
     filterNodeName: outletFilter
     passthroughNodeName: outletPassthrough
     bufferSolutionName: buffer
   - type: Plungeable
   - type: PlumbingOutlet
     solutionName: buffer
+    outletNames:
+    - outletFilter
+    - outletPassthrough
   - type: SolutionContainerManager
     solutions:
       buffer:
-        maxVol: 20
+        maxVol: 40
         canReact: false
   - type: ExaminableSolution
     solution: buffer
@@ -475,8 +629,12 @@
   - type: ContainerContainer
     containers:
       cell_slot: !type:ContainerSlot
+  - type: Charger
+    slotId: cell_slot
+    chargeRate: 5
+    passiveDraw: 1
   - type: ApcPowerReceiver
-    powerLoad: 0
+    powerLoad: 1
   - type: ExtensionCableReceiver
   - type: PredictedBatteryVisuals
   - type: Destructible

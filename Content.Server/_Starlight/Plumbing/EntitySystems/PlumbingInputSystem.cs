@@ -11,7 +11,7 @@ using Robust.Shared.Audio.Systems;
 namespace Content.Server._Starlight.Plumbing.EntitySystems;
 
 /// <summary>
-///     Handles plumbing input machine behavior: Input is a small tank (with no inlets) that players can pour reagents into.
+///     Handles plumbing input machine behavior: A small tank (with no inlets) that players can pour reagents into.
 /// </summary>
 [UsedImplicitly]
 public sealed class PlumbingInputSystem : EntitySystem
@@ -55,7 +55,7 @@ public sealed class PlumbingInputSystem : EntitySystem
         _solutionSystem.TryAddSolution(inputSolutionEnt.Value, split);
 
         _popup.PopupEntity(Loc.GetString("plumbing-input-poured", ("amount", toTransfer)), ent.Owner, args.User);
-        _audio.PlayPvs(new SoundPathSpecifier("/Audio/Items/drink.ogg"), ent.Owner); // Random noise for now
+        _audio.PlayPvs(ent.Comp.InteractSound, ent.Owner);
 
         args.Handled = true;
     }

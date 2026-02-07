@@ -51,13 +51,18 @@
         },
         {
             "name": "pill_press",
+            "directions": 4,
             "delays": [
-                [
-                    0.1,
-                    0.1,
-                    0.1
-                ]
+                [ 0.1, 0.1, 0.1 ],
+                [ 0.1, 0.1, 0.1 ],
+                [ 0.1, 0.1, 0.1 ],
+                [ 0.1, 0.1, 0.1 ]
             ],
+            "copyright": "TGStation"
+        },
+        {
+            "name": "pill_press_off",
+            "directions": 4,
             "copyright": "TGStation"
         },
         {

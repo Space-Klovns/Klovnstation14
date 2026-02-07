@@ -56,7 +56,7 @@ public sealed class PlumbingOutputSystem : EntitySystem
         _solutionSystem.TryAddSolution(refillableSolutionEnt.Value, split);
 
         _popup.PopupEntity(Loc.GetString("plumbing-output-filled", ("amount", toTransfer)), ent.Owner, args.User);
-        _audio.PlayPvs(new SoundPathSpecifier("/Audio/Items/drink.ogg"), ent.Owner);
+        _audio.PlayPvs(ent.Comp.InteractSound, ent.Owner);
 
         args.Handled = true;
     }

@@ -72,8 +72,17 @@ public sealed class PlumbingPullSystem : EntitySystem
             if (!outlet.Enabled)
                 continue;
 
-            // Only the outlet node is valid
-            if (!plumbingNode.Name.Equals(outlet.OutletName, StringComparison.OrdinalIgnoreCase))
+            // Only outlet nodes are valid
+            var isOutletNode = false;
+            foreach (var name in outlet.OutletNames)
+            {
+                if (plumbingNode.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+                {
+                    isOutletNode = true;
+                    break;
+                }
+            }
+            if (!isOutletNode)
                 continue;
 
             outlets.Add((plumbingNode, outlet));
@@ -154,8 +163,17 @@ public sealed class PlumbingPullSystem : EntitySystem
                 if (!outlet.Enabled)
                     continue;
 
-                // Only the outlet node is valid
-                if (!plumbingNode.Name.Equals(outlet.OutletName, StringComparison.OrdinalIgnoreCase))
+                // Only outlet nodes are valid
+                var isOutletNode = false;
+                foreach (var name in outlet.OutletNames)
+                {
+                    if (plumbingNode.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        isOutletNode = true;
+                        break;
+                    }
+                }
+                if (!isOutletNode)
                     continue;
 
                 if (GetOutletSolution(plumbingNode.Owner, outlet) is not { } sourceSoln)
@@ -244,6 +262,17 @@ public sealed class PlumbingPullSystem : EntitySystem
                 break;
 
             var toPull = FixedPoint2.Min(quantity, remaining);
+            if (toPull <= 0)
+                continue;
+
+            // Raise destination-side event — allows the puller to cap or deny the pull
+            var intoEv = new PlumbingPullIntoAttemptEvent(sourceOwner, reagent.Prototype, toPull);
+            RaiseLocalEvent(puller, ref intoEv);
+
+            if (intoEv.Cancelled)
+                continue;
+
+            toPull = FixedPoint2.Min(toPull, intoEv.MaxAllowed);
             if (toPull <= 0)
                 continue;
 

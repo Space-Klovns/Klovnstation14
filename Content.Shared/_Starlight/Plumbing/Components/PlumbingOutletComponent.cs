@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Robust.Shared.GameStates;
 
 namespace Content.Shared._Starlight.Plumbing.Components;
@@ -17,10 +18,12 @@ public sealed partial class PlumbingOutletComponent : Component
     public string SolutionName = "tank";
 
     /// <summary>
-    ///     The name of the outlet node.
+    ///     The outlet node names that serve this solution.
+    ///     Defaults to a single "outlet" node. Devices with multiple outlets
+    ///     (e.g. the filter) can list several names.
     /// </summary>
     [DataField]
-    public string OutletName = "outlet";
+    public List<string> OutletNames = new() { "outlet" };
 
     /// <summary>
     ///     If true, this outlet can be pulled from. If false, it's blocked.

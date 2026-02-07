@@ -1,15 +1,14 @@
 using Content.Server._Starlight.Plumbing.Components;
-using Content.Server._Starlight.Plumbing.Nodes;
-using Content.Server.NodeContainer.EntitySystems;
 using Content.Server.Popups;
 using Content.Server.UserInterface;
 using Content.Shared._Starlight.Plumbing;
 using Content.Shared._Starlight.Plumbing.Components;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Chemistry.Reagent;
-using Content.Shared.FixedPoint;
 using JetBrains.Annotations;
 using Robust.Server.GameObjects;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Prototypes;
 
 namespace Content.Server._Starlight.Plumbing.EntitySystems;
@@ -24,18 +23,15 @@ namespace Content.Server._Starlight.Plumbing.EntitySystems;
 [UsedImplicitly]
 public sealed class PlumbingFilterSystem : EntitySystem
 {
-    [Dependency] private readonly SharedSolutionContainerSystem _solutionSystem = default!;
-    [Dependency] private readonly NodeContainerSystem _nodeContainer = default!;
     [Dependency] private readonly UserInterfaceSystem _ui = default!;
     [Dependency] private readonly PopupSystem _popup = default!;
+    [Dependency] private readonly SharedAudioSystem _audio = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly PlumbingPullSystem _pullSystem = default!;
 
     public override void Initialize()
     {
         base.Initialize();
 
-        SubscribeLocalEvent<PlumbingFilterComponent, PlumbingDeviceUpdateEvent>(OnFilterUpdate);
         SubscribeLocalEvent<PlumbingFilterComponent, PlumbingPullAttemptEvent>(OnPullAttempt);
         SubscribeLocalEvent<PlumbingFilterComponent, PlumbingFilterToggleMessage>(OnToggle);
         SubscribeLocalEvent<PlumbingFilterComponent, PlumbingFilterAddReagentMessage>(OnAddReagent);
@@ -44,38 +40,21 @@ public sealed class PlumbingFilterSystem : EntitySystem
         SubscribeLocalEvent<PlumbingFilterComponent, BoundUIOpenedEvent>(OnUIOpened);
     }
 
-    private void OnFilterUpdate(Entity<PlumbingFilterComponent> ent, ref PlumbingDeviceUpdateEvent args)
-    {
-        if (!ent.Comp.Enabled)
-            return;
-
-        // Get our buffer
-        if (!_solutionSystem.TryGetSolution(ent.Owner, ent.Comp.BufferSolutionName, out var bufferSolutionEnt, out var bufferSolution))
-            return;
-
-        // Check if we have room in the buffer
-        if (bufferSolution.AvailableVolume <= 0)
-            return;
-
-        // Get inlet node
-        if (!_nodeContainer.TryGetNode<PlumbingNode>(ent.Owner, ent.Comp.InletName, out var inletNode))
-            return;
-
-        if (inletNode.PlumbingNet == null)
-            return;
-
-        // Pull from network 
-        var (_, nextIndex) = _pullSystem.PullFromNetwork(ent.Owner, inletNode.PlumbingNet, bufferSolutionEnt.Value, ent.Comp.TransferAmount, ent.Comp.RoundRobinIndex);
-        ent.Comp.RoundRobinIndex = nextIndex;
-    }
-
     /// <summary>
     ///     Handles pull attempts - restricts which reagents can be pulled based on outlet node.
     /// </summary>
     private void OnPullAttempt(Entity<PlumbingFilterComponent> ent, ref PlumbingPullAttemptEvent args)
     {
+        // When disabled, block the filter outlet entirely — everything goes through passthrough
+        if (!ent.Comp.Enabled)
+        {
+            if (args.NodeName == ent.Comp.FilterNodeName)
+                args.Cancelled = true;
+            return;
+        }
+
         // Check which outlet is being pulled from
-        var isFilteredReagent = ent.Comp.FilteredReagents.Contains(new ProtoId<ReagentPrototype>(args.ReagentPrototype));
+        var isFilteredReagent = ent.Comp.FilteredReagents.Contains(args.ReagentPrototype);
 
         if (args.NodeName == ent.Comp.FilterNodeName)
         {
@@ -95,25 +74,22 @@ public sealed class PlumbingFilterSystem : EntitySystem
     {
         ent.Comp.Enabled = args.Enabled;
         DirtyField(ent, ent.Comp, nameof(PlumbingFilterComponent.Enabled));
+        ClickSound(ent.Owner);
         UpdateUI(ent);
     }
 
     private void OnAddReagent(Entity<PlumbingFilterComponent> ent, ref PlumbingFilterAddReagentMessage args)
     {
-        var reagentId = FindReagentCaseInsensitive(args.ReagentId);
-
         // Validate the reagent ID exists
-        if (reagentId == null)
+        if (!_prototypeManager.HasIndex<ReagentPrototype>(args.ReagentId))
         {
-            if (args.Actor is { Valid: true })
-            {
-                _popup.PopupEntity(Loc.GetString("plumbing-filter-invalid-reagent", ("reagent", args.ReagentId)), ent.Owner, args.Actor);
-            }
+            _popup.PopupEntity(Loc.GetString("plumbing-filter-invalid-reagent", ("reagent", args.ReagentId)), ent.Owner, args.Actor);
             return;
         }
 
-        ent.Comp.FilteredReagents.Add(new ProtoId<ReagentPrototype>(reagentId));
+        ent.Comp.FilteredReagents.Add(new ProtoId<ReagentPrototype>(args.ReagentId));
         DirtyField(ent, ent.Comp, nameof(PlumbingFilterComponent.FilteredReagents));
+        ClickSound(ent.Owner);
         UpdateUI(ent);
     }
 
@@ -121,6 +97,7 @@ public sealed class PlumbingFilterSystem : EntitySystem
     {
         ent.Comp.FilteredReagents.Remove(new ProtoId<ReagentPrototype>(args.ReagentId));
         DirtyField(ent, ent.Comp, nameof(PlumbingFilterComponent.FilteredReagents));
+        ClickSound(ent.Owner);
         UpdateUI(ent);
     }
 
@@ -128,6 +105,7 @@ public sealed class PlumbingFilterSystem : EntitySystem
     {
         ent.Comp.FilteredReagents.Clear();
         DirtyField(ent, ent.Comp, nameof(PlumbingFilterComponent.FilteredReagents));
+        ClickSound(ent.Owner);
         UpdateUI(ent);
     }
 
@@ -152,23 +130,9 @@ public sealed class PlumbingFilterSystem : EntitySystem
         _ui.SetUiState(ent.Owner, PlumbingFilterUiKey.Key, state);
     }
 
-    /// <summary>
-    ///     Finds a reagent prototype ID case-insensitively.
-    /// </summary>
-    /// <returns>The correctly-cased reagent ID, or null if not found.</returns>
-    private string? FindReagentCaseInsensitive(string input)
+    private void ClickSound(EntityUid uid)
     {
-        // Try exact match first
-        if (_prototypeManager.HasIndex<ReagentPrototype>(input))
-            return input;
-
-        // Search case-insensitively
-        foreach (var proto in _prototypeManager.EnumeratePrototypes<ReagentPrototype>())
-        {
-            if (string.Equals(proto.ID, input, StringComparison.OrdinalIgnoreCase))
-                return proto.ID;
-        }
-
-        return null;
+        if (TryComp<PlumbingDeviceComponent>(uid, out var device))
+            _audio.PlayPvs(device.ClickSound, uid, AudioParams.Default.WithVolume(-2f));
     }
 }

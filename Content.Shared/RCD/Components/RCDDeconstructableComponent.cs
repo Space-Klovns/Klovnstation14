@@ -15,7 +15,7 @@ public sealed partial class RCDDeconstructableComponent : Component
     public int Cost = 1;
 
     /// <summary>
-    /// The length of the deconstruction 
+    /// The length of the deconstruction
     /// </summary>
     [DataField, ViewVariables(VVAccess.ReadWrite)]
     public float Delay = 1f;
@@ -34,9 +34,15 @@ public sealed partial class RCDDeconstructableComponent : Component
 
     // Starlight Start: RPD
     /// <summary>
-    /// Toggles whether this entity is deconstructable by the RPD or not
+    /// Toggles whether this entity is deconstructable by the RPD (atmos pipes) or not
     /// </summary>
     [DataField("rpd"), ViewVariables(VVAccess.ReadWrite)]
     public bool RpdDeconstructable = false;
-    // Starlight End: RPD
+
+    /// <summary>
+    /// Toggles whether this entity is deconstructable by the RPLD (plumbing) or not
+    /// </summary>
+    [DataField("rpld"), ViewVariables(VVAccess.ReadWrite)]
+    public bool RpldDeconstructable = false;
+    // Starlight End
 }

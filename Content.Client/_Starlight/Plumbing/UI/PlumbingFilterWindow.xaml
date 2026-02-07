@@ -15,6 +15,7 @@
             <LineEdit Name="ReagentIdInput" PlaceHolder="{Loc plumbing-filter-reagent-id}" HorizontalExpand="True" />
             <Button Name="AddReagentButton" Text="{Loc plumbing-filter-add}" MinWidth="50" />
         </BoxContainer>
+        <ItemList Name="SuggestionList" SelectMode="Single" MinHeight="80" MaxHeight="120" HorizontalExpand="True" Visible="False" />
 
         <!-- Filtered reagents list -->
         <PanelContainer StyleClasses="LowDivider" />

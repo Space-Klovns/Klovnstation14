@@ -1,4 +1,6 @@
+using Content.Shared.Chemistry.Reagent;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Prototypes;
 
 namespace Content.Server._Starlight.Plumbing;
 
@@ -15,21 +17,21 @@ public struct PlumbingPullAttemptEvent
     public EntityUid Puller;
 
     /// <summary>
-    ///     The name of the node being pulled from
+    ///     The name of the node being pulled from.
     /// </summary>
     public string NodeName;
 
     /// <summary>
     ///     The reagent prototype ID being checked.
     /// </summary>
-    public string ReagentPrototype;
+    public ProtoId<ReagentPrototype> ReagentPrototype;
 
     /// <summary>
     ///     Set to true to deny pulling this reagent.
     /// </summary>
     public bool Cancelled;
 
-    public PlumbingPullAttemptEvent(EntityUid puller, string nodeName, string reagentPrototype)
+    public PlumbingPullAttemptEvent(EntityUid puller, string nodeName, ProtoId<ReagentPrototype> reagentPrototype)
     {
         Puller = puller;
         NodeName = nodeName;

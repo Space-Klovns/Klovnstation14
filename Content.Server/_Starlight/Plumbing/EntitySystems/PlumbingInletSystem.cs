@@ -26,6 +26,11 @@ public sealed class PlumbingInletSystem : EntitySystem
 
     private void OnInletUpdate(Entity<PlumbingInletComponent> ent, ref PlumbingDeviceUpdateEvent args)
     {
+        // When the pill press is in mixing mode, don't pull from the normal inlet —
+        // mixing inlets handle all pulling instead.
+        if (TryComp<PlumbingPillPressComponent>(ent.Owner, out var pillPress) && pillPress.MixingEnabled)
+            return;
+
         // Get our solution
         if (!_solutionSystem.TryGetSolution(ent.Owner, ent.Comp.SolutionName, out var solutionEnt, out var solution))
             return;

@@ -22,12 +22,6 @@ public sealed partial class PlumbingReactorComponent : Component
     public string InletName = "inlet";
 
     /// <summary>
-    ///     Name of the outlet node for pushing products to the network.
-    /// </summary>
-    [DataField]
-    public string OutletName = "outlet";
-
-    /// <summary>
     ///     Name of the buffer solution that holds reagents waiting to react.
     /// </summary>
     [DataField]

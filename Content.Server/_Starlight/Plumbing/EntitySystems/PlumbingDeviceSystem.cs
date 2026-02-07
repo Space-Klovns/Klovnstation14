@@ -1,6 +1,7 @@
 using Content.Server._Starlight.Plumbing.Components;
 using Content.Server.Fluids.EntitySystems;
 using Content.Server.Popups;
+using Content.Shared._Starlight.Plumbing;
 using Content.Shared._Starlight.Plumbing.Components;
 using Content.Shared.Chemistry.Components.SolutionManager;
 using Content.Shared.Chemistry.EntitySystems;
@@ -11,7 +12,9 @@ using JetBrains.Annotations;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Random;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using SharedAppearanceSystem = Robust.Shared.GameObjects.SharedAppearanceSystem;
 
 namespace Content.Server._Starlight.Plumbing.EntitySystems;
 
@@ -30,10 +33,11 @@ public sealed class PlumbingDeviceSystem : EntitySystem
     [Dependency] private readonly PopupSystem _popup = default!;
     [Dependency] private readonly SharedAudioSystem _audio = default!;
     [Dependency] private readonly TagSystem _tag = default!;
+    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
 
     private EntityQuery<TransformComponent> _xformQuery;
 
-    private const string PlungerTag = "Plunger";
+    private static readonly ProtoId<TagPrototype> PlungerTag = "Plunger";
 
     public override void Initialize()
     {
@@ -41,6 +45,16 @@ public sealed class PlumbingDeviceSystem : EntitySystem
         _xformQuery = GetEntityQuery<TransformComponent>();
 
         SubscribeLocalEvent<PlungeableComponent, InteractUsingEvent>(OnPlungeableInteractUsing);
+        SubscribeLocalEvent<PlumbingDeviceComponent, AnchorStateChangedEvent>(OnAnchorChanged);
+    }
+
+    /// <summary>
+    ///     When a plumbing device is unanchored, stop its running animation.
+    /// </summary>
+    private void OnAnchorChanged(Entity<PlumbingDeviceComponent> ent, ref AnchorStateChangedEvent args)
+    {
+        if (!args.Anchored && ent.Comp.RequireAnchored)
+            _appearance.SetData(ent.Owner, PlumbingVisuals.Running, false);
     }
 
     public override void Update(float frameTime)
@@ -116,7 +130,7 @@ public sealed class PlumbingDeviceSystem : EntitySystem
         if (totalDrained > 0)
         {
             _popup.PopupEntity(Loc.GetString("plumbing-drain-success", ("amount", totalDrained)), ent.Owner, args.User);
-            _audio.PlayPvs(new SoundPathSpecifier("/Audio/Effects/Fluids/slosh.ogg"), ent.Owner);
+            _audio.PlayPvs(ent.Comp.DrainSound, ent.Owner);
         }
         else
         {

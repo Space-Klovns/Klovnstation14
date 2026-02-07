@@ -16,12 +16,6 @@ namespace Content.Shared._Starlight.Plumbing.Components;
 public sealed partial class PlumbingFilterComponent : Component
 {
     /// <summary>
-    ///     Name of the inlet node (North) - pulls from this network.
-    /// </summary>
-    [DataField]
-    public string InletName = "inlet";
-
-    /// <summary>
     ///     Name of the filter outlet node - only filtered reagents can be pulled here.
     /// </summary>
     [DataField]
@@ -40,12 +34,6 @@ public sealed partial class PlumbingFilterComponent : Component
     public string BufferSolutionName = "buffer";
 
     /// <summary>
-    ///     Amount to transfer per update.
-    /// </summary>
-    [DataField]
-    public FixedPoint2 TransferAmount = FixedPoint2.New(20);
-
-    /// <summary>
     ///     Whether the filter is currently enabled.
     /// </summary>
     [DataField, AutoNetworkedField]
@@ -57,10 +45,4 @@ public sealed partial class PlumbingFilterComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField]
     public HashSet<ProtoId<ReagentPrototype>> FilteredReagents = new();
-
-    /// <summary>
-    ///     Round-robin index for rotating through outlet selection.
-    ///     Tracks which outlet to start from when pulling from multiple sources.
-    /// </summary>
-    public int RoundRobinIndex;
 }

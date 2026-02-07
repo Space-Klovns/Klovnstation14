@@ -79,12 +79,16 @@ public sealed class PlumbingConnectorAppearanceSystem : EntitySystem
         if (!TryComp<MapGridComponent>(xform.GridUid, out var grid))
             return;
 
+        if (!TryComp<PlumbingConnectorAppearanceComponent>(uid, out var connectorComp))
+            return;
+
         var tile = _map.TileIndicesFor(xform.GridUid.Value, grid, xform.Coordinates);
 
         var nodeDirections = PipeDirection.None;
         var connectedDirections = PipeDirection.None;
         var inletDirections = PipeDirection.None;
         var outletDirections = PipeDirection.None;
+        var mixingInletDirections = PipeDirection.None;
 
         TryComp<PlumbingInletComponent>(uid, out var inletComp);
         TryComp<PlumbingOutletComponent>(uid, out var outletComp);
@@ -97,11 +101,37 @@ public sealed class PlumbingConnectorAppearanceSystem : EntitySystem
             var nodeDir = plumbingNode.CurrentPipeDirection;
             nodeDirections |= nodeDir;
 
-            // Classify as inlet/outlet based on node name
-            if (inletComp != null && nodeName.Equals(inletComp.InletName, StringComparison.OrdinalIgnoreCase))
-                inletDirections |= nodeDir;
-            else if (outletComp != null && nodeName.Equals(outletComp.OutletName, StringComparison.OrdinalIgnoreCase))
-                outletDirections |= nodeDir;
+            // Check if this is a mixing inlet (configured per-entity via MixingInletNames DataField)
+            if (connectorComp.MixingInletNames.Contains(nodeName))
+            {
+                mixingInletDirections |= nodeDir;
+            }
+            // Classify as inlet/outlet based on component match OR node name fallback
+            else
+            {
+                var isInlet = inletComp != null && nodeName.Equals(inletComp.InletName, StringComparison.OrdinalIgnoreCase);
+                var isOutlet = false;
+                if (outletComp != null)
+                {
+                    foreach (var outletName in outletComp.OutletNames)
+                    {
+                        if (nodeName.Equals(outletName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            isOutlet = true;
+                            break;
+                        }
+                    }
+                }
+
+                // Fallback: any node literally named "inlet" is colored as inlet
+                if (!isInlet && !isOutlet && nodeName.Equals("inlet", StringComparison.OrdinalIgnoreCase))
+                    isInlet = true;
+
+                if (isInlet)
+                    inletDirections |= nodeDir;
+                else if (isOutlet)
+                    outletDirections |= nodeDir;
+            }
 
             // Check connections in each direction
             connectedDirections |= GetConnectedDirections(node, nodeDir, tile, xform.GridUid.Value, grid);
@@ -113,6 +143,7 @@ public sealed class PlumbingConnectorAppearanceSystem : EntitySystem
         _appearance.SetData(uid, PlumbingVisuals.ConnectedDirections, (int)connectedDirections, appearance);
         _appearance.SetData(uid, PlumbingVisuals.InletDirections, (int)inletDirections, appearance);
         _appearance.SetData(uid, PlumbingVisuals.OutletDirections, (int)outletDirections, appearance);
+        _appearance.SetData(uid, PlumbingVisuals.MixingInletDirections, (int)mixingInletDirections, appearance);
         _appearance.SetData(uid, PlumbingVisuals.CoveredByFloor, coveredByFloor, appearance);
     }
 

@@ -1,6 +1,4 @@
 using Content.Server._Starlight.Plumbing.Components;
-using Content.Server.Power.Components;
-using Content.Server.Power.EntitySystems;
 using Content.Server.UserInterface;
 using Content.Shared._Starlight.Plumbing;
 using Content.Shared._Starlight.Plumbing.Components;
@@ -8,12 +6,12 @@ using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.FixedPoint;
 using Content.Shared.PowerCell;
-using Content.Shared.PowerCell.Components;
 using Content.Shared.Power.EntitySystems;
 using Content.Shared.UserInterface;
 using JetBrains.Annotations;
 using Robust.Server.GameObjects;
-using Robust.Shared.Prototypes;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Timing;
 using SharedAppearanceSystem = Robust.Shared.GameObjects.SharedAppearanceSystem;
 
@@ -23,7 +21,7 @@ namespace Content.Server._Starlight.Plumbing.EntitySystems;
 ///     Handles plumbing synthesizer machine behavior: basically a small reagent dispenser,
 ///     you can select a generatable reagent and it will produce it into its buffer container.
 ///     Uses power from an internal battery and the reagents have the same power cost as reagent dispensers.
-///     Charges from APC like reagent dispensers as well.   
+///     Battery charging from APC is handled by <see cref="Content.Shared.Power.EntitySystems.ChargerSystem"/>.
 /// </summary>
 [UsedImplicitly]
 public sealed class PlumbingSynthesizerSystem : EntitySystem
@@ -31,10 +29,10 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
     [Dependency] private readonly SharedSolutionContainerSystem _solutionSystem = default!;
     [Dependency] private readonly UserInterfaceSystem _ui = default!;
     [Dependency] private readonly PowerCellSystem _powerCell = default!;
-    [Dependency] private readonly BatterySystem _battery = default!;
+    [Dependency] private readonly SharedBatterySystem _battery = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private readonly SharedAudioSystem _audio = default!;
 
     private readonly Dictionary<EntityUid, TimeSpan> _nextUiUpdate = new();
 
@@ -43,11 +41,6 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
     /// </summary>
     private const float UiUpdateIntervalSeconds = 0.5f;
     private static readonly TimeSpan UiUpdateInterval = TimeSpan.FromSeconds(UiUpdateIntervalSeconds);
-
-    /// <summary>
-    ///     Charge rate when powered, in watts.
-    /// </summary>
-    private const float ChargeRate = 5f;
 
     public override void Initialize()
     {
@@ -62,7 +55,7 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Charge the battery when the machine is powered like a dispenser
+    ///     Update UI periodically when open.
     /// </summary>
     public override void Update(float frameTime)
     {
@@ -70,30 +63,17 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
 
         var curTime = _timing.CurTime;
 
-        var query = EntityQueryEnumerator<PlumbingSynthesizerComponent, PowerCellSlotComponent, ApcPowerReceiverComponent, ActivatableUIComponent>();
-        while (query.MoveNext(out var uid, out var synth, out var cellSlot, out var powerReceiver, out var activatableUI))
+        var query = EntityQueryEnumerator<PlumbingSynthesizerComponent, ActivatableUIComponent>();
+        while (query.MoveNext(out var uid, out var synth, out var activatableUI))
         {
-            if (!_powerCell.TryGetBatteryFromSlot((uid, cellSlot), out var batteryUid))
-                continue;
-
-            if (!powerReceiver.Powered)
-                continue;
-
-            if (_battery.IsFull((batteryUid.Value, batteryUid.Value.Comp)))
-                continue;
-
-            // Charge the battery
-            _battery.ChangeCharge((batteryUid.Value, batteryUid.Value.Comp), ChargeRate * frameTime);
-
-            // Update UI periodically if open
             var uiOpen = activatableUI.Key != null && _ui.IsUiOpen(uid, activatableUI.Key);
-            if (uiOpen)
+            if (!uiOpen)
+                continue;
+
+            if (!_nextUiUpdate.TryGetValue(uid, out var nextUpdate) || curTime >= nextUpdate)
             {
-                if (!_nextUiUpdate.TryGetValue(uid, out var nextUpdate) || curTime >= nextUpdate)
-                {
-                    _nextUiUpdate[uid] = curTime + UiUpdateInterval;
-                    UpdateUI((uid, synth));
-                }
+                _nextUiUpdate[uid] = curTime + UiUpdateInterval;
+                UpdateUI((uid, synth));
             }
         }
     }
@@ -177,6 +157,7 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
     {
         ent.Comp.Enabled = args.Enabled;
         DirtyField(ent, ent.Comp, nameof(PlumbingSynthesizerComponent.Enabled));
+        ClickSound(ent.Owner);
         UpdateUI(ent);
     }
 
@@ -192,6 +173,7 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
         }
 
         DirtyField(ent, ent.Comp, nameof(PlumbingSynthesizerComponent.SelectedReagent));
+        ClickSound(ent.Owner);
         UpdateUI(ent);
     }
 
@@ -209,7 +191,7 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
         var batteryCharge = 0f;
         if (_powerCell.TryGetBatteryFromSlot(ent.Owner, out var battery))
         {
-            batteryCharge = battery.Value.Comp.LastCharge / battery.Value.Comp.MaxCharge;
+            batteryCharge = _battery.GetChargeLevel(battery.Value.AsNullable());
         }
 
         var generatableReagents = new Dictionary<string, float>();
@@ -232,5 +214,11 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
             batteryCharge);
 
         _ui.SetUiState(ent.Owner, PlumbingSynthesizerUiKey.Key, state);
+    }
+
+    private void ClickSound(EntityUid uid)
+    {
+        if (TryComp<PlumbingDeviceComponent>(uid, out var device))
+            _audio.PlayPvs(device.ClickSound, uid, AudioParams.Default.WithVolume(-2f));
     }
 }

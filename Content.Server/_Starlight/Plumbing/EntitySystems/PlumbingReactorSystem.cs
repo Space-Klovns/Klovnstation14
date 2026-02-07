@@ -16,6 +16,8 @@ using Content.Shared.FixedPoint;
 using Content.Shared.Power;
 using JetBrains.Annotations;
 using Robust.Server.GameObjects;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Prototypes;
 using SharedAppearanceSystem = Robust.Shared.GameObjects.SharedAppearanceSystem;
 
@@ -37,6 +39,7 @@ public sealed class PlumbingReactorSystem : EntitySystem
     [Dependency] private readonly PlumbingPullSystem _pullSystem = default!;
     [Dependency] private readonly PowerReceiverSystem _power = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
+    [Dependency] private readonly SharedAudioSystem _audio = default!;
 
     /// <summary>
     ///     Temperature tolerance for considering target reached (in Kelvin).
@@ -44,9 +47,9 @@ public sealed class PlumbingReactorSystem : EntitySystem
     private const float TemperatureTolerance = 0.5f;
 
     /// <summary>
-    ///     Minimum allowed target temperature (absolute zero).
+    ///     Minimum allowed target temperature (cosmic microwave background).
     /// </summary>
-    private const float MinTemperature = 0f;
+    private const float MinTemperature = Atmospherics.TCMB;
 
     /// <summary>
     ///     Maximum allowed target temperature.
@@ -111,10 +114,12 @@ public sealed class PlumbingReactorSystem : EntitySystem
             {
                 allMet = false;
                 neededTargets[reagentId] = needed;
-                // Start sprite animation when targets set
-                _appearance.SetData(ent.Owner, PlumbingVisuals.Running, true); 
             }
         }
+
+        // Only set running appearance when state actually changes
+        if (neededTargets.Count > 0)
+            _appearance.SetData(ent.Owner, PlumbingVisuals.Running, true);
 
         // Pull specific reagents if any are needed
         if (neededTargets.Count > 0)
@@ -163,7 +168,7 @@ public sealed class PlumbingReactorSystem : EntitySystem
                 _solutionSystem.SetTemperature(bufferEnt.Value, Atmospherics.T20C);
 
                 // Stop sprite animation when products are made
-                _appearance.SetData(ent.Owner, PlumbingVisuals.Running, false); 
+                _appearance.SetData(ent.Owner, PlumbingVisuals.Running, false);
             }
         }
 
@@ -207,6 +212,7 @@ public sealed class PlumbingReactorSystem : EntitySystem
     {
         ent.Comp.Enabled = args.Enabled;
         DirtyField(ent, ent.Comp, nameof(PlumbingReactorComponent.Enabled));
+        ClickSound(ent.Owner);
         UpdateUI(ent);
 
         // Turn off visual animation when disabled
@@ -216,29 +222,41 @@ public sealed class PlumbingReactorSystem : EntitySystem
 
     private void OnSetTarget(Entity<PlumbingReactorComponent> ent, ref PlumbingReactorSetTargetMessage args)
     {
-        var reagentId = FindReagentCaseInsensitive(args.ReagentId);
-
         if (args.Quantity <= 0)
         {
-            if (reagentId != null)
-                ent.Comp.ReagentTargets.Remove(new ProtoId<ReagentPrototype>(reagentId));
+            if (_prototypeManager.HasIndex<ReagentPrototype>(args.ReagentId))
+                ent.Comp.ReagentTargets.Remove(new ProtoId<ReagentPrototype>(args.ReagentId));
             DirtyField(ent, ent.Comp, nameof(PlumbingReactorComponent.ReagentTargets));
             UpdateUI(ent);
             return;
         }
 
         // Validate that the reagent ID exists
-        if (reagentId == null)
+        if (!_prototypeManager.HasIndex<ReagentPrototype>(args.ReagentId))
         {
-            if (args.Actor is { Valid: true })
-            {
-                _popup.PopupEntity(Loc.GetString("plumbing-reactor-invalid-reagent", ("reagent", args.ReagentId)), ent.Owner, args.Actor);
-            }
+            _popup.PopupEntity(Loc.GetString("plumbing-reactor-invalid-reagent", ("reagent", args.ReagentId)), ent.Owner, args.Actor);
             return;
         }
 
-        ent.Comp.ReagentTargets[new ProtoId<ReagentPrototype>(reagentId)] = args.Quantity;
+        // Clamp target quantity to remaining buffer capacity (max volume minus other targets)
+        var clampedQuantity = args.Quantity;
+        if (_solutionSystem.TryGetSolution(ent.Owner, ent.Comp.BufferSolutionName, out _, out var buffer))
+        {
+            var otherTargetsTotal = FixedPoint2.Zero;
+            var key = new ProtoId<ReagentPrototype>(args.ReagentId);
+            foreach (var (protoId, quantity) in ent.Comp.ReagentTargets)
+            {
+                if (protoId != key)
+                    otherTargetsTotal += quantity;
+            }
+
+            var remaining = FixedPoint2.Max(buffer.MaxVolume - otherTargetsTotal, FixedPoint2.Zero);
+            clampedQuantity = FixedPoint2.Min(clampedQuantity, remaining);
+        }
+
+        ent.Comp.ReagentTargets[new ProtoId<ReagentPrototype>(args.ReagentId)] = clampedQuantity;
         DirtyField(ent, ent.Comp, nameof(PlumbingReactorComponent.ReagentTargets));
+        ClickSound(ent.Owner);
         UpdateUI(ent);
     }
 
@@ -246,6 +264,7 @@ public sealed class PlumbingReactorSystem : EntitySystem
     {
         ent.Comp.ReagentTargets.Remove(new ProtoId<ReagentPrototype>(args.ReagentId));
         DirtyField(ent, ent.Comp, nameof(PlumbingReactorComponent.ReagentTargets));
+        ClickSound(ent.Owner);
         UpdateUI(ent);
     }
 
@@ -253,6 +272,7 @@ public sealed class PlumbingReactorSystem : EntitySystem
     {
         ent.Comp.ReagentTargets.Clear();
         DirtyField(ent, ent.Comp, nameof(PlumbingReactorComponent.ReagentTargets));
+        ClickSound(ent.Owner);
         UpdateUI(ent);
     }
 
@@ -261,6 +281,7 @@ public sealed class PlumbingReactorSystem : EntitySystem
         // Clamp to reasonable values 
         ent.Comp.TargetTemperature = Math.Clamp(args.Temperature, MinTemperature, MaxTemperature);
         DirtyField(ent, ent.Comp, nameof(PlumbingReactorComponent.TargetTemperature));
+        ClickSound(ent.Owner);
         UpdateUI(ent);
     }
 
@@ -311,19 +332,9 @@ public sealed class PlumbingReactorSystem : EntitySystem
         _ui.SetUiState(ent.Owner, PlumbingReactorUiKey.Key, state);
     }
 
-    private string? FindReagentCaseInsensitive(string input)
+    private void ClickSound(EntityUid uid)
     {
-        // Try exact match first
-        if (_prototypeManager.HasIndex<ReagentPrototype>(input))
-            return input;
-
-        // Search case-insensitively
-        foreach (var proto in _prototypeManager.EnumeratePrototypes<ReagentPrototype>())
-        {
-            if (string.Equals(proto.ID, input, StringComparison.OrdinalIgnoreCase))
-                return proto.ID;
-        }
-
-        return null;
+        if (TryComp<PlumbingDeviceComponent>(uid, out var device))
+            _audio.PlayPvs(device.ClickSound, uid, AudioParams.Default.WithVolume(-2f));
     }
 }

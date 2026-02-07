@@ -22,6 +22,7 @@ public sealed class PlumbingConnectorAppearanceSystem : EntitySystem
 
     private static readonly Color InletColor = new(1.0f, 0.35f, 0.35f);  // Vibrant Red
     private static readonly Color OutletColor = new(0.35f, 0.6f, 1.0f);  // Vibrant Blue
+    private static readonly Color MixingInletColor = new(0.35f, 0.9f, 0.35f);  // Vibrant Green
     private static readonly PlumbingConnectionLayer[] ConnectionLayers = Enum.GetValues<PlumbingConnectionLayer>();
 
     private EntityQuery<TransformComponent> _xformQuery;
@@ -93,6 +94,8 @@ public sealed class PlumbingConnectorAppearanceSystem : EntitySystem
             inletDirectionsInt = 0;
         if (!_appearance.TryGetData<int>(uid, PlumbingVisuals.OutletDirections, out var outletDirectionsInt, args.Component))
             outletDirectionsInt = 0;
+        if (!_appearance.TryGetData<int>(uid, PlumbingVisuals.MixingInletDirections, out var mixingInletDirectionsInt, args.Component))
+            mixingInletDirectionsInt = 0;
 
         // Check if covered by a floor tile
         if (!_appearance.TryGetData<bool>(uid, PlumbingVisuals.CoveredByFloor, out var coveredByFloor, args.Component))
@@ -102,6 +105,7 @@ public sealed class PlumbingConnectorAppearanceSystem : EntitySystem
         var connectedDirections = (PipeDirection)connectedDirectionsInt;
         var inletDirections = (PipeDirection)inletDirectionsInt;
         var outletDirections = (PipeDirection)outletDirectionsInt;
+        var mixingInletDirections = (PipeDirection)mixingInletDirectionsInt;
 
         // Get the entity's local rotation to transform world directions to local
         if (!_xformQuery.TryGetComponent(uid, out var xform))
@@ -112,6 +116,7 @@ public sealed class PlumbingConnectorAppearanceSystem : EntitySystem
         var nodeDirectionsLocal = nodeDirections.RotatePipeDirection(-localRotation);
         var inletDirectionsLocal = inletDirections.RotatePipeDirection(-localRotation);
         var outletDirectionsLocal = outletDirections.RotatePipeDirection(-localRotation);
+        var mixingInletDirectionsLocal = mixingInletDirections.RotatePipeDirection(-localRotation);
 
 
         foreach (var layerKey in ConnectionLayers)
@@ -121,9 +126,10 @@ public sealed class PlumbingConnectorAppearanceSystem : EntitySystem
             var isConnected = connectedDirectionsLocal.HasDirection(dir);
             var isInlet = inletDirectionsLocal.HasDirection(dir);
             var isOutlet = outletDirectionsLocal.HasDirection(dir);
+            var isMixingInlet = mixingInletDirectionsLocal.HasDirection(dir);
 
-            // Determine color based on inlet/outlet
-            var color = isInlet ? InletColor : isOutlet ? OutletColor : Color.White;
+            // Determine color based on inlet/outlet/mixing
+            var color = isMixingInlet ? MixingInletColor : isInlet ? InletColor : isOutlet ? OutletColor : Color.White;
 
             // Single layer, swap sprite based on connection state
             var layerName = layerKey.ToString();

@@ -25,6 +25,7 @@
             <LineEdit Name="QuantityInput" PlaceHolder="{Loc plumbing-reactor-quantity}" MinWidth="60" />
             <Button Name="AddTargetButton" Text="{Loc plumbing-reactor-add}" MinWidth="50" />
         </BoxContainer>
+        <ItemList Name="SuggestionList" SelectMode="Single" MinHeight="80" MaxHeight="120" HorizontalExpand="True" Visible="False" />
 
         <!-- Targets list (shows current/target) -->
         <PanelContainer StyleClasses="LowDivider" />

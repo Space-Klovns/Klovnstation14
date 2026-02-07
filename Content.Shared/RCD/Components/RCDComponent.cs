@@ -44,7 +44,7 @@ public sealed partial class RCDComponent : Component
 
     // Starlight Start
     /// <summary>
-    /// A cached copy of currently selected RCD prototype
+    /// Indicates whether this is an RPD (atmos pipes)
     /// </summary>
     /// <remarks>
     /// If the ProtoId is changed, make sure to update the CachedPrototype as well
@@ -53,7 +53,14 @@ public sealed partial class RCDComponent : Component
     public RCDPrototype CachedPrototype { get; set; } = default!;
 
     /// <summary>
-    /// Indicates if a mirrored version of the construction prototype should be used (if available)
+    /// Indicates whether this is an RPLD (plumbing)
+    /// </summary>
+    [DataField("isRPLD"), AutoNetworkedField]
+    public bool IsRPLD { get; set; } = false;
+
+    /// <summary>
+    /// When true the RCD will use the prototype's MirrorPrototype (if available) for placement/validation.
+    /// This is networked so the server can validate/finalize mirror placement.
     /// </summary>
     [AutoNetworkedField, ViewVariables(VVAccess.ReadOnly)]
     public bool UseMirrorPrototype = false;
