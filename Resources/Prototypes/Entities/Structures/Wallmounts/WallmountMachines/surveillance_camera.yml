@@ -75,6 +75,7 @@
         type: WiresBoundUserInterface
   - type: StaticPrice
     price: 200
+  - type: RequireProjectileTarget
   - type: Destructible
     thresholds:
       - trigger:
