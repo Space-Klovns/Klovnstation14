@@ -46,7 +46,7 @@ public sealed partial class ComplexShoveComponent : Component
     ///         should be applied.
     /// </summary>
     [DataField, ViewVariables(VVAccess.ReadWrite)]
-    public long WallshoveCollisionMask = (long)CollisionGroup.Impassable;
+    public long WallshoveCollisionMask = (long)CollisionGroup.MidImpassable;
 
     /// <summary>
     ///     Push force applied to targets who are standing.
