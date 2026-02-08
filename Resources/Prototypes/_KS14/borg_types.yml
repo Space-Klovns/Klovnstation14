@@ -14,7 +14,6 @@
   extraModuleCount: 1
   moduleWhitelist:
     tags:
-    - BorgModulePatrol
     - BorgModuleSecurity
 
   defaultModules:
