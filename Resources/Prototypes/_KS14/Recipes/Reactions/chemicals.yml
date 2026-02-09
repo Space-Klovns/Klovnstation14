@@ -22,7 +22,6 @@
   id: KlovnideExplosion
   impact: High
   priority: 25
-  conserveEnergy: false
   reactants:
     Klovnide:
       amount: 1
