@@ -133,7 +133,7 @@ public sealed class SharpSystem : EntitySystem
             args.Args.User,
             popupType);
 
-        _gibbing.Gib(args.Args.Target.Value); // does nothing if ent can't be gibbed
+        _gibbing.Gib(args.Args.Target.Value, doGibVisFx: false); // does nothing if ent can't be gibbed - KS14 fix - removed vfx from knife butchering
         _destructibleSystem.DestroyEntity(args.Args.Target.Value);
 
         args.Handled = true;
