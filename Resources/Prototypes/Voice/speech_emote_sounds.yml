@@ -40,6 +40,8 @@
       collection: MaleGasp
     DefaultDeathgasp:
       collection: MaleDeathGasp
+    Gulp: # Goob
+      path: /Audio/_Goobstation/Voice/Human/gulp.ogg
 
 - type: emoteSounds
   id: FemaleHuman
@@ -82,6 +84,8 @@
       collection: FemaleGasp
     DefaultDeathgasp:
       collection: FemaleDeathGasp
+    Gulp: # Goob
+      path: /Audio/_Goobstation/Voice/Human/gulp.ogg
 
 - type: emoteSounds
   id: MaleReptilian
@@ -246,6 +250,8 @@
       path: /Audio/Effects/Gasp/vox_gasp.ogg
     DefaultDeathgasp:
       path: /Audio/Effects/Gasp/vox_DeathGasp.ogg
+    Gulp: # Goob
+      path: /Audio/_Goobstation/Voice/gulpexotic.ogg
   params:
     variation: 0.125
     # TODO: We need vox sounds for the other emotes
@@ -269,6 +275,8 @@
       collection: MaleGasp
     DefaultDeathgasp:
       collection: DeathGasp
+    Gulp: # Goob
+      path: /Audio/_Goobstation/Voice/gulpexotic.ogg
   params:
     variation: 0.125
 
@@ -293,6 +301,8 @@
       collection: BikeHorn
     Gasp:
       collection: MaleGasp
+    Gulp: # Goob
+      path: /Audio/_Goobstation/Voice/gulpexotic.ogg
     DefaultDeathgasp:
       collection: DeathGasp
 
@@ -335,6 +345,8 @@
       collection: MaleGasp
     DefaultDeathgasp:
       collection: MaleDeathGasp
+    Gulp: # Goob
+      path: /Audio/_Goobstation/Voice/Human/gulp.ogg
   params:
     variation: 0.125
     pitch: 0.75
@@ -378,6 +390,8 @@
       collection: FemaleGasp
     DefaultDeathgasp:
       collection: FemaleDeathGasp
+    Gulp: # Goob
+      path: /Audio/_Goobstation/Voice/Human/gulp.ogg
   params:
     variation: 0.125
     pitch: 0.75
@@ -405,6 +419,8 @@
       collection: BikeHorn
     Gasp:
       collection: MaleGasp
+    Gulp: # Goob
+      path: /Audio/_Goobstation/Voice/gulpexotic.ogg
     DefaultDeathgasp:
       collection: MothDeathGasp
 
@@ -510,6 +526,8 @@
       collection: BikeHorn
     Gasp:
       collection: MaleGasp
+    Gulp: # Goob
+      path: /Audio/_Goobstation/Voice/gulpexotic.ogg
     DefaultDeathgasp:
       collection: MaleDeathGasp
 
@@ -550,6 +568,8 @@
       collection: BikeHorn
     Gasp:
       collection: FemaleGasp
+    Gulp: # Goob
+      path: /Audio/_Goobstation/Voice/gulpexotic.ogg
     DefaultDeathgasp:
       collection: FemaleDeathGasp
 
