@@ -1,4 +1,8 @@
-﻿- type: emote
+# SPDX-FileCopyrightText: 2026 DeusMaldPr
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: emote
   id: Gulp
   name: chat-emote-name-gulp
   category: Vocal
