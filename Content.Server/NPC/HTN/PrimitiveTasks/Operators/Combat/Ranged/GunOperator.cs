@@ -4,6 +4,7 @@ using Content.Server.NPC.Components;
 using Content.Shared.CombatMode;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
+using Content.Shared.Weapons.Ranged.Components;
 using Robust.Shared.Audio;
 
 namespace Content.Server.NPC.HTN.PrimitiveTasks.Operators.Combat.Ranged;
@@ -63,7 +64,8 @@ public sealed partial class GunOperator : HTNOperator, IHtnConditionalShutdown
     {
         base.Startup(blackboard);
 
-        var ranged = _entManager.EnsureComponent<NPCRangedCombatComponent>(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner));
+        var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
+        var ranged = _entManager.EnsureComponent<NPCRangedCombatComponent>(owner);
         ranged.Target = blackboard.GetValue<EntityUid>(TargetKey);
         ranged.UseOpaqueForLOSChecks = UseOpaqueForLOSChecks;
 
@@ -75,6 +77,12 @@ public sealed partial class GunOperator : HTNOperator, IHtnConditionalShutdown
         if (blackboard.TryGetValue<SoundSpecifier>("SoundTargetInLOS", out var losSound, _entManager))
         {
             ranged.SoundTargetInLOS = losSound;
+        }
+
+        // Set the shoot delay based on the gun's fire rate
+        if (_entManager.TryGetComponent<GunComponent>(owner, out var gunComp) && gunComp.FireRate > 0)
+        {
+            ranged.ShootDelay = 1f / gunComp.FireRate;
         }
     }
 
