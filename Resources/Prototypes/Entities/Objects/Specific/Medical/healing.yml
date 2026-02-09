@@ -90,11 +90,11 @@
       - Biological
     delay: 2
     damage:
-      types:
-        Heat: -5
-        Cold: -5
-        Shock: -5
-        Caustic: -1.5
+      types: #klovn numbers
+        Heat: -10
+        Cold: -10
+        Shock: -10
+        Caustic: -4 #klovnend
     healingBeginSound:
       path: "/Audio/Items/Medical/ointment_begin.ogg"
       params:
@@ -142,10 +142,10 @@
       - Biological
     delay: 1.5
     damage:
-      types:
-        Heat: -10
-        Cold: -10
-        Shock: -10
+      types: #klovn numbers
+        Heat: -15
+        Cold: -15
+        Shock: -15 #klovnend
         Caustic: -10
     healingBeginSound:
       params:
@@ -194,8 +194,11 @@
       - Biological
     delay: 2
     damage:
-      groups:
-        Brute: -15 # 5 for each type in the group
+      Bruise: -10 #klovn stat
+      Slash: -10
+      Piercing: -10
+#      groups: <wizden way of handling it
+#        Brute: -15 # 5 for each type in the group, klovnend
     healingBeginSound:
       path: "/Audio/Items/Medical/brutepack_begin.ogg"
       params:
@@ -241,8 +244,12 @@
       - Biological
     delay: 1.5
     damage:
-      groups:
-        Brute: -30 # 10 for each type in the group
+      types:
+        Bruise: -15 #klovn star
+        Slash: -15
+        Piercing: -15
+#      groups: < wizden way of handling it
+#        Brute: -30 # 10 for each type in the group, klovn end
     bloodlossModifier: -10 # a suture should stop ongoing bleeding
     healingBeginSound:
       path: "/Audio/_KS14/Items/Medical/suture/suture_begin1.ogg"
@@ -334,8 +341,8 @@
       damageContainers:
         - Biological
       damage:
-        groups:
-          Brute: 5 # Tourniquets HURT!
+#        groups: klovn, i dont care its ass to play with so No one uses this item (it also means you still have bleeding after the fact #lol!)
+#          Brute: 5 # Tourniquets HURT!
         types:
           Asphyxiation: 5 # Essentially Stopping all blood reaching a part of your body
       bloodlossModifier: -10 # Tourniquets stop bleeding
@@ -375,8 +382,9 @@
     delay: 2
     damage:
       types:
+        Bruise: -3 #klovn, at least something lol
         Slash: -5
-        Piercing: -10
+        Piercing: -13 #klovn
     bloodlossModifier: -10
     healingBeginSound:
       path: "/Audio/Items/Medical/brutepack_begin.ogg"
@@ -405,7 +413,7 @@
 - type: entity
   name: aloe cream
   description: A topical cream for burns.
-  parent: Ointment ##Yes it's a direct reskin
+  parent: Ointment #Yes it's a direct reskin < klovn, fixed failcomment
   id: AloeCream
   components:
   - type: Healing
@@ -482,7 +490,7 @@
     containers:
       storagebase:
         id: PillDexalin
-        amount: 7
+        amount: 10 #klovn
 
 - type: entity
   name: pill
@@ -516,7 +524,7 @@
     containers:
       storagebase:
         id: PillDylovene
-        amount: 5
+        amount: 10 #klovn
 
 - type: entity
   name: pill
@@ -550,7 +558,7 @@
     containers:
       storagebase:
         id: PillHyronalin
-        amount: 5
+        amount: 10 #klovn
 
 - type: entity
   name: pill
@@ -584,7 +592,7 @@
     containers:
       storagebase:
         id: PillPotassiumIodide
-        amount: 5
+        amount: 10 #klovn
 
 - type: entity
   name: pill
@@ -638,7 +646,7 @@
     containers:
       storagebase:
         id: PillIron
-        amount: 5
+        amount: 10 #klovn
 
 - type: entity
   name: pill canister
@@ -652,7 +660,7 @@
     containers:
       storagebase:
         id: PillCopper
-        amount: 5
+        amount: 10 #klovn
 
 - type: entity
   name: pill
@@ -686,7 +694,7 @@
     containers:
       storagebase:
         id: PillKelotane
-        amount: 5
+        amount: 10 #klovn
 
 - type: entity
   name: pill
@@ -720,7 +728,7 @@
     containers:
       storagebase:
         id: PillDermaline
-        amount: 5
+        amount: #klovn
 
 - type: entity
   name: space mirage
@@ -767,7 +775,7 @@
     containers:
       storagebase:
         id: PillTricordrazine
-        amount: 5
+        amount: #klovn
 
 - type: entity
   name: pill
@@ -801,7 +809,7 @@
     containers:
       storagebase:
         id: PillBicaridine
-        amount: 5
+        amount: 10 #klovn
 
 - type: entity
   name: pill
@@ -835,7 +843,7 @@
     containers:
       storagebase:
         id: PillCharcoal
-        amount: 3
+        amount: 10 #klovn
 
 - type: entity
   name: romerol pill
