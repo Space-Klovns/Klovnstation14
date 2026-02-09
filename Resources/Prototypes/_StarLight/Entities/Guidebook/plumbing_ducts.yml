@@ -7,7 +7,6 @@
 # ============================================================================
 
 - type: entity
-  noSpawn: true
   id: GuidebookPlumbingDuctStraight
   name: fluid duct
   suffix: Straight, Guidebook
@@ -20,7 +19,6 @@
     - state: storageStraight
 
 - type: entity
-  noSpawn: true
   id: GuidebookPlumbingDuctBend
   name: fluid duct
   suffix: Bend, Guidebook
@@ -33,7 +31,6 @@
     - state: storageBend
 
 - type: entity
-  noSpawn: true
   id: GuidebookPlumbingDuctTJunction
   name: fluid duct
   suffix: T-Junction, Guidebook
@@ -46,7 +43,6 @@
     - state: storageTjunction
 
 - type: entity
-  noSpawn: true
   id: GuidebookPlumbingDuctFourway
   name: fluid duct
   suffix: Fourway, Guidebook

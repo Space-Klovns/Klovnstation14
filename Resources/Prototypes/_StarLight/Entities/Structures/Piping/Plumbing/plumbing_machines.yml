@@ -302,7 +302,6 @@
   - type: Plungeable
   - type: PlumbingOutlet
     solutionName: output
-    outletName: outlet
   - type: SolutionContainerManager
     solutions:
       buffer:
@@ -682,7 +681,6 @@
   - type: ApcPowerReceiver
     powerLoad: 1
   - type: ExtensionCableReceiver
-  - type: PredictedBatteryVisuals
   - type: Destructible
     thresholds:
     - trigger:

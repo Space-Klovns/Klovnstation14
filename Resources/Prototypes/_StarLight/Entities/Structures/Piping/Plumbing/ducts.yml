@@ -160,7 +160,7 @@
   - type: Item
     storedSprite:
       sprite: _Starlight/Structures/Piping/Plumbing/fluid_ducts.rsi
-      state: storageTJunction
+      state: storageTjunction
 
 # --------------------------------
 # Fourway Duct
