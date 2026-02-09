@@ -19,4 +19,4 @@
         walkSpeedModifier: 1.15
         sprintSpeedModifier: 1.15
       - !type:SatiateHunger
-        factor: -3
+        factor: -1
