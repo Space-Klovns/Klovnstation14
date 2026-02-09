@@ -96,25 +96,21 @@ public sealed class PlumbingSmartFridgeSystem : EntitySystem
         if (args.Handled)
             return;
 
-        // Check if the used item has a label
         if (!TryComp<LabelComponent>(args.Used, out var label) || string.IsNullOrEmpty(label.CurrentLabel))
         {
             _popup.PopupEntity(Loc.GetString("plumbing-smart-fridge-no-label"), ent.Owner, args.User);
             return;
         }
 
-        // Try to match the label to a reagent
         if (!TryMatchLabelToReagent(label.CurrentLabel, out var reagentId))
         {
             _popup.PopupEntity(Loc.GetString("plumbing-smart-fridge-no-match"), ent.Owner, args.User);
             return;
         }
 
-        // Get the fridge's solution
         if (!_solutionSystem.TryGetSolution(ent.Owner, ent.Comp.SolutionName, out var fridgeSolnEnt, out var fridgeSolution))
             return;
 
-        // Check if the fridge has this reagent
         var available = fridgeSolution.GetReagentQuantity(new ReagentId(reagentId, null));
         if (available <= FixedPoint2.Zero)
         {
@@ -124,11 +120,9 @@ public sealed class PlumbingSmartFridgeSystem : EntitySystem
             return;
         }
 
-        // Get the jug's refillable solution
         if (!_solutionSystem.TryGetRefillableSolution(args.Used, out var jugSolnEnt, out var jugSolution))
             return;
 
-        // Check if the jug has room
         var jugAvailable = jugSolution.AvailableVolume;
         if (jugAvailable <= FixedPoint2.Zero)
         {
@@ -136,7 +130,6 @@ public sealed class PlumbingSmartFridgeSystem : EntitySystem
             return;
         }
 
-        // Fill the jug: transfer min(available in fridge, available space in jug)
         var transferAmount = FixedPoint2.Min(available, jugAvailable);
         var removed = _solutionSystem.RemoveReagent(fridgeSolnEnt.Value, new ReagentId(reagentId, null), transferAmount);
 
@@ -157,6 +150,7 @@ public sealed class PlumbingSmartFridgeSystem : EntitySystem
 
     /// <summary>
     /// Attempts to match a label string to a reagent prototype ID.
+    /// Labels can contain rich text markup and abbreviations like ":[color=#ffaa00]BIC|BRT|15/5u".
     /// The algorithm strips markup, skips leading punctuation, extracts the first alphabetic token,
     /// then tries: 1) prefix match, 2) ordered subsequence match against all reagent names.
     /// Results are cached for performance.

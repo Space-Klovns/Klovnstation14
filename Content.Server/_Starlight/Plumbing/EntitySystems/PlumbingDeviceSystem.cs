@@ -63,7 +63,6 @@ public sealed class PlumbingDeviceSystem : EntitySystem
 
         var curTime = _timing.CurTime;
 
-        // Collect devices that need updating this tick
         var devicesToUpdate = new List<(EntityUid Uid, PlumbingDeviceComponent Device)>();
 
         var query = EntityQueryEnumerator<PlumbingDeviceComponent>();
@@ -73,7 +72,6 @@ public sealed class PlumbingDeviceSystem : EntitySystem
             if (device.RequireAnchored && (!_xformQuery.TryGetComponent(uid, out var xform) || !xform.Anchored))
                 continue;
 
-            // Check if it's time for an update using CurTime comparison
             if (curTime < device.NextUpdateTime)
                 continue;
 
@@ -83,10 +81,8 @@ public sealed class PlumbingDeviceSystem : EntitySystem
         // Shuffle to ensure fair distribution when multiple devices pull from same network
         _random.Shuffle(devicesToUpdate);
 
-        // Now update in random order
         foreach (var (uid, device) in devicesToUpdate)
         {
-            // Schedule next update
             device.NextUpdateTime = curTime + device.UpdateInterval;
 
             var ev = new PlumbingDeviceUpdateEvent((float)device.UpdateInterval.TotalSeconds);
@@ -102,11 +98,9 @@ public sealed class PlumbingDeviceSystem : EntitySystem
         if (args.Handled)
             return;
 
-        // Check if the used item is a plunger
         if (!_tag.HasTag(args.Used, PlungerTag))
             return;
 
-        // Get all solutions on this entity
         if (!TryComp<SolutionContainerManagerComponent>(ent.Owner, out var solutionManager))
             return;
 

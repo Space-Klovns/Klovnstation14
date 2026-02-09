@@ -68,11 +68,9 @@ public sealed class PlumbingPullSystem : EntitySystem
             if (!_outletQuery.TryGetComponent(plumbingNode.Owner, out var outlet))
                 continue;
 
-            // Skip disabled outlets (valve closed)
             if (!outlet.Enabled)
                 continue;
 
-            // Only outlet nodes are valid
             var isOutletNode = false;
             foreach (var name in outlet.OutletNames)
             {
@@ -159,11 +157,9 @@ public sealed class PlumbingPullSystem : EntitySystem
                 if (!_outletQuery.TryGetComponent(plumbingNode.Owner, out var outlet))
                     continue;
 
-                // Skip disabled outlets (valve closed)
                 if (!outlet.Enabled)
                     continue;
 
-                // Only outlet nodes are valid
                 var isOutletNode = false;
                 foreach (var name in outlet.OutletNames)
                 {
@@ -183,14 +179,12 @@ public sealed class PlumbingPullSystem : EntitySystem
                 if (available <= 0)
                     continue;
 
-                // Check if this reagent can be pulled
                 var attemptEv = new PlumbingPullAttemptEvent(puller, plumbingNode.Name, reagentId);
                 RaiseLocalEvent(plumbingNode.Owner, ref attemptEv);
 
                 if (attemptEv.Cancelled)
                     continue;
 
-                // Pull as much as we can of this reagent
                 var toPull = FixedPoint2.Min(available, stillNeeded);
                 toPull = FixedPoint2.Min(toPull, remaining);
 
@@ -306,7 +300,6 @@ public sealed class PlumbingPullSystem : EntitySystem
 
         if (outlet.ContainerSlotId != null)
         {
-            // Get the entity from the specified container slot
             var containerEntity = _itemSlots.GetItemOrNull(outletOwner, outlet.ContainerSlotId);
             if (containerEntity == null)
                 return null;
@@ -314,7 +307,6 @@ public sealed class PlumbingPullSystem : EntitySystem
         }
         else
         {
-            // Get solution directly from the outlet entity
             targetEntity = outletOwner;
         }
 

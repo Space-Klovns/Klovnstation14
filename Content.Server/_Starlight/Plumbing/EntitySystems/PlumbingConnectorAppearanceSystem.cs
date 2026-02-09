@@ -50,7 +50,6 @@ public sealed class PlumbingConnectorAppearanceSystem : EntitySystem
 
     private void OnTileChanged(ref TileChangedEvent ev)
     {
-        // When a tile changes, update all plumbing connector entities on that tile
         var grid = ev.Entity.Comp;
 
         foreach (var change in ev.Changes)
@@ -101,7 +100,6 @@ public sealed class PlumbingConnectorAppearanceSystem : EntitySystem
             var nodeDir = plumbingNode.CurrentPipeDirection;
             nodeDirections |= nodeDir;
 
-            // Check if this is a mixing inlet (configured per-entity via MixingInletNames DataField)
             if (connectorComp.MixingInletNames.Contains(nodeName))
             {
                 mixingInletDirections |= nodeDir;
@@ -109,7 +107,19 @@ public sealed class PlumbingConnectorAppearanceSystem : EntitySystem
             // Classify as inlet/outlet based on component match OR node name fallback
             else
             {
-                var isInlet = inletComp != null && nodeName.Equals(inletComp.InletName, StringComparison.OrdinalIgnoreCase);
+                var isInlet = false;
+                if (inletComp != null)
+                {
+                    foreach (var inletName in inletComp.InletNames)
+                    {
+                        if (nodeName.Equals(inletName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            isInlet = true;
+                            break;
+                        }
+                    }
+                }
+
                 var isOutlet = false;
                 if (outletComp != null)
                 {
@@ -133,7 +143,6 @@ public sealed class PlumbingConnectorAppearanceSystem : EntitySystem
                     outletDirections |= nodeDir;
             }
 
-            // Check connections in each direction
             connectedDirections |= GetConnectedDirections(node, nodeDir, tile, xform.GridUid.Value, grid);
         }
 

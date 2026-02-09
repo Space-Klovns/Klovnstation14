@@ -85,11 +85,9 @@ public sealed class PlumbingConnectorAppearanceSystem : EntitySystem
             return;
         }
 
-        // Get the directions that are connected
         if (!_appearance.TryGetData<int>(uid, PlumbingVisuals.ConnectedDirections, out var connectedDirectionsInt, args.Component))
             connectedDirectionsInt = 0;
 
-        // Get inlet/outlet directions for coloring
         if (!_appearance.TryGetData<int>(uid, PlumbingVisuals.InletDirections, out var inletDirectionsInt, args.Component))
             inletDirectionsInt = 0;
         if (!_appearance.TryGetData<int>(uid, PlumbingVisuals.OutletDirections, out var outletDirectionsInt, args.Component))
@@ -97,7 +95,6 @@ public sealed class PlumbingConnectorAppearanceSystem : EntitySystem
         if (!_appearance.TryGetData<int>(uid, PlumbingVisuals.MixingInletDirections, out var mixingInletDirectionsInt, args.Component))
             mixingInletDirectionsInt = 0;
 
-        // Check if covered by a floor tile
         if (!_appearance.TryGetData<bool>(uid, PlumbingVisuals.CoveredByFloor, out var coveredByFloor, args.Component))
             coveredByFloor = false;
 
@@ -111,7 +108,6 @@ public sealed class PlumbingConnectorAppearanceSystem : EntitySystem
         if (!_xformQuery.TryGetComponent(uid, out var xform))
             return;
         var localRotation = xform.LocalRotation;
-        // Rotate directions to local coordinates
         var connectedDirectionsLocal = connectedDirections.RotatePipeDirection(-localRotation);
         var nodeDirectionsLocal = nodeDirections.RotatePipeDirection(-localRotation);
         var inletDirectionsLocal = inletDirections.RotatePipeDirection(-localRotation);
@@ -131,7 +127,6 @@ public sealed class PlumbingConnectorAppearanceSystem : EntitySystem
             // Determine color based on inlet/outlet/mixing
             var color = isMixingInlet ? MixingInletColor : isInlet ? InletColor : isOutlet ? OutletColor : Color.White;
 
-            // Single layer, swap sprite based on connection state
             var layerName = layerKey.ToString();
             if (_sprite.LayerMapTryGet((uid, args.Sprite), layerName, out var layerKey2, false))
             {
@@ -168,7 +163,6 @@ public sealed class PlumbingConnectorAppearanceSystem : EntitySystem
     }
 
 
-    // Rotation offset for plumbing connector sprites based on the direction of the connection
     private SpriteComponent.DirectionOffset ToOffset(PlumbingConnectionLayer layer)
     {
         return layer switch

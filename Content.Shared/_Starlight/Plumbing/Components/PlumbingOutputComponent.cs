@@ -1,5 +1,3 @@
-using Robust.Shared.Audio;
-
 namespace Content.Shared._Starlight.Plumbing.Components;
 
 /// <summary>
@@ -14,10 +12,4 @@ public sealed partial class PlumbingOutputComponent : Component
     /// </summary>
     [DataField]
     public string SolutionName = "output";
-
-    /// <summary>
-    ///     Sound played when reagents are drawn out.
-    /// </summary>
-    [DataField]
-    public SoundSpecifier InteractSound = new SoundPathSpecifier("/Audio/Items/drink.ogg");
 }

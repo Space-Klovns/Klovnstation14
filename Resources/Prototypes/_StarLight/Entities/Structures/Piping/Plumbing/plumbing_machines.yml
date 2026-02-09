@@ -71,11 +71,11 @@
     solution: tank
   - type: NodeContainer
     nodes:
-      inlet:  # Pulls reagents FROM the network (north side)
+      inlet:
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: North
-      outlet:  # Provides reagents TO the network (south, east, west sides)
+      outlet:
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: TSouth
@@ -119,7 +119,7 @@
     solution: input
   - type: NodeContainer
     nodes:
-      outlet:  # Provides reagents TO the network (all directions)
+      outlet:
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: Fourway
@@ -156,6 +156,10 @@
     updateInterval: 2
   - type: PlumbingInlet
     solutionName: output
+    inletNames:
+    - inletNorth
+    - inletEast
+    - inletWest
   - type: PlumbingOutput
     solutionName: output
   - type: PlumbingOutlet
@@ -175,10 +179,18 @@
     solution: output
   - type: NodeContainer
     nodes:
-      inlet:
+      inletNorth:
         !type:PlumbingNode
         nodeGroupID: Plumbing
-        pipeDirection: TNorth
+        pipeDirection: North
+      inletEast:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: East
+      inletWest:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: West
       outlet:
         !type:PlumbingNode
         nodeGroupID: Plumbing
@@ -215,6 +227,11 @@
     updateInterval: 2
   - type: PlumbingInlet
     solutionName: output
+    inletNames:
+    - inletNorth
+    - inletEast
+    - inletSouth
+    - inletWest
   - type: PlumbingOutput
     solutionName: output
   - type: Plungeable
@@ -227,10 +244,22 @@
     solution: output
   - type: NodeContainer
     nodes:
-      inlet:  # Pulls reagents FROM the network (all directions)
+      inletNorth:
         !type:PlumbingNode
         nodeGroupID: Plumbing
-        pipeDirection: Fourway
+        pipeDirection: North
+      inletEast:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: East
+      inletSouth:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: South
+      inletWest:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: West
   - type: Destructible
     thresholds:
     - trigger:
@@ -286,11 +315,11 @@
     solution: output
   - type: NodeContainer
     nodes:
-      inlet:  # Pulls reagents FROM the network (north side)
+      inlet:
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: North
-      outlet:  # Provides products TO the network (south side)
+      outlet:
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: South
@@ -343,6 +372,11 @@
     updateInterval: 2
   - type: PlumbingInlet
     solutionName: fridge
+    inletNames:
+    - inletNorth
+    - inletEast
+    - inletSouth
+    - inletWest
   - type: PlumbingSmartFridge
     solutionName: fridge
     maxPerReagent: 200
@@ -355,10 +389,22 @@
     solution: fridge
   - type: NodeContainer
     nodes:
-      inlet:
+      inletNorth:
         !type:PlumbingNode
         nodeGroupID: Plumbing
-        pipeDirection: Fourway
+        pipeDirection: North
+      inletEast:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: East
+      inletSouth:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: South
+      inletWest:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: West
   - type: UserInterface
     interfaces:
       enum.PlumbingSmartFridgeUiKey.Key:
@@ -413,7 +459,8 @@
     - mixingInletWest
   - type: PlumbingInlet
     solutionName: buffer
-    inletName: inlet
+    inletNames:
+    - inlet
   - type: SolutionContainerManager
     solutions:
       buffer:
@@ -498,15 +545,15 @@
     solution: buffer
   - type: NodeContainer
     nodes:
-      inlet:  # Pulls reagents FROM the network (north side)
+      inlet:
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: North
-      outletFilter:  # Provides FILTERED reagents TO the network (west side)
+      outletFilter:
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: West
-      outletPassthrough:  # Provides NON-FILTERED reagents TO the network (south side)
+      outletPassthrough:
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: South
@@ -533,7 +580,6 @@
   - type: StaticPrice
     price: 125
 
-# Plumbing Filter - flipped variant (mirror of above)
 - type: entity
   parent: PlumbingFilter
   id: PlumbingFilterFlipped
@@ -546,15 +592,15 @@
     - state: filterF
   - type: NodeContainer
     nodes:
-      inlet:  # Pulls reagents FROM the network (south side)
+      inlet:
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: South
-      outletFilter:  # Provides FILTERED reagents TO the network (west side)
+      outletFilter:
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: West
-      outletPassthrough:  # Provides NON-FILTERED reagents TO the network (north side)
+      outletPassthrough:
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: North
@@ -609,7 +655,7 @@
     solution: buffer
   - type: NodeContainer
     nodes:
-      outlet:  # Provides reagents TO the network (south side)
+      outlet:
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: South
@@ -696,7 +742,7 @@
         maxVol: 400
   - type: NodeContainer
     nodes:
-      outlet:  # Provides reagents TO the network (all directions)
+      outlet:
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: Fourway

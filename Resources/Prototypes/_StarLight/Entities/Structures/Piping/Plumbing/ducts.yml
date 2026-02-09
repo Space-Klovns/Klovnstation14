@@ -98,7 +98,7 @@
       duct:
         !type:PlumbingNode
         nodeGroupID: Plumbing
-        pipeDirection: Longitudinal  # North-South connection
+        pipeDirection: Longitudinal
   - type: Sprite
     layers:
     - state: ductStraight
@@ -125,7 +125,7 @@
       duct:
         !type:PlumbingNode
         nodeGroupID: Plumbing
-        pipeDirection: SWBend  # South-West corner
+        pipeDirection: SWBend
   - type: Sprite
     layers:
     - state: ductBend
@@ -151,7 +151,7 @@
       duct:
         !type:PlumbingNode
         nodeGroupID: Plumbing
-        pipeDirection: TSouth  # T facing south
+        pipeDirection: TSouth
   - type: Sprite
     layers:
     - state: ductTJunction
@@ -176,7 +176,7 @@
       duct:
         !type:PlumbingNode
         nodeGroupID: Plumbing
-        pipeDirection: Fourway  # All directions
+        pipeDirection: Fourway
   - type: Sprite
     layers:
     - state: ductFourway

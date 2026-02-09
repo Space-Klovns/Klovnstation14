@@ -63,7 +63,6 @@ public sealed class PlumbingPillPressSystem : EntitySystem
             return;
         }
 
-        // Handle mixing mode pulls
         if (ent.Comp.MixingEnabled)
             HandleMixingPull(ent);
 
@@ -83,7 +82,7 @@ public sealed class PlumbingPillPressSystem : EntitySystem
 
             produced = true;
 
-            // Spawn on the same tile, offset slightly south (grid-local)
+            // Spawn on the same tile, offset slightly south
             var spawnCoords = Transform(ent.Owner).Coordinates.Offset(new Vector2(0, -0.3f));
 
             if (ent.Comp.OutputMode == PillPressOutputMode.Pill)
@@ -138,23 +137,19 @@ public sealed class PlumbingPillPressSystem : EntitySystem
         if (buffer.Volume >= dosage)
             return;
 
-        // Calculate per-inlet targets based on ratios and dosage
         var eastFraction = ent.Comp.InletRatioEast / totalRatio;
         var eastTarget = FixedPoint2.New((int) MathF.Round(eastFraction * (float) dosage));
         var westTarget = dosage - eastTarget; // Remainder goes to west to avoid rounding loss
 
-        // Get staging solutions
         if (!_solutionSystem.TryGetSolution(ent.Owner, ent.Comp.StagingEastSolutionName, out var stagingEastEnt, out var stagingEast))
             return;
 
         if (!_solutionSystem.TryGetSolution(ent.Owner, ent.Comp.StagingWestSolutionName, out var stagingWestEnt, out var stagingWest))
             return;
 
-        // Get node container for the E/W inlet nodes
         if (!TryComp<NodeContainerComponent>(ent.Owner, out var nodeContainer))
             return;
 
-        // Pull into east staging if needed
         if (ent.Comp.InletRatioEast > 0 && stagingEast.Volume < eastTarget)
         {
             if (nodeContainer.Nodes.TryGetValue(ent.Comp.InletEastNodeName, out var eastNode)
@@ -166,7 +161,6 @@ public sealed class PlumbingPillPressSystem : EntitySystem
             }
         }
 
-        // Pull into west staging if needed
         if (ent.Comp.InletRatioWest > 0 && stagingWest.Volume < westTarget)
         {
             if (nodeContainer.Nodes.TryGetValue(ent.Comp.InletWestNodeName, out var westNode)
@@ -178,14 +172,12 @@ public sealed class PlumbingPillPressSystem : EntitySystem
             }
         }
 
-        // Check if both staging solutions have met their targets
         var eastMet = ent.Comp.InletRatioEast <= 0 || stagingEast.Volume >= eastTarget;
         var westMet = ent.Comp.InletRatioWest <= 0 || stagingWest.Volume >= westTarget;
 
         if (!eastMet || !westMet)
             return;
 
-        // Both targets met — dump staging into main buffer
         if (stagingEast.Volume > 0)
         {
             var eastWithdrawal = _solutionSystem.SplitSolution(stagingEastEnt.Value, stagingEast.Volume);

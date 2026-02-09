@@ -37,7 +37,6 @@ public sealed partial class PlumbingPillPressWindow : DefaultWindow
         RobustXamlLoader.Load(this);
         IoCManager.InjectDependencies(this);
 
-        // Toggle button
         ToggleStatusButton.OnPressed += _ =>
         {
             _enabled = !_enabled;
@@ -45,7 +44,6 @@ public sealed partial class PlumbingPillPressWindow : DefaultWindow
             OnToggle?.Invoke(_enabled);
         };
 
-        // Output mode selector
         OutputModeSelector.AddItem(Loc.GetString("plumbing-pill-press-mode-pill"), (int) PillPressOutputMode.Pill);
         OutputModeSelector.AddItem(Loc.GetString("plumbing-pill-press-mode-patch"), (int) PillPressOutputMode.Patch);
         OutputModeSelector.OnItemSelected += args =>
@@ -54,7 +52,7 @@ public sealed partial class PlumbingPillPressWindow : DefaultWindow
             OnSetOutputMode?.Invoke((PillPressOutputMode) args.Id);
         };
 
-        // Dosage input — only sent when "Set" is clicked
+
         DosageInput.Text = "10";
         SetDosageButton.OnPressed += _ =>
         {
@@ -63,7 +61,6 @@ public sealed partial class PlumbingPillPressWindow : DefaultWindow
             OnSetDosage?.Invoke(val);
         };
 
-        // Mixing mode toggle
         MixingToggle.OnToggled += args =>
         {
             _mixingEnabled = args.Pressed;
@@ -71,7 +68,7 @@ public sealed partial class PlumbingPillPressWindow : DefaultWindow
             OnSetMixing?.Invoke(_mixingEnabled);
         };
 
-        // Ratio inputs — gas-mixer style: typing in one auto-fills the other
+        // Ratio inputs: typing in one auto-fills the other
         EastRatioInput.Text = "50";
         WestRatioInput.Text = "50";
 
@@ -117,10 +114,9 @@ public sealed partial class PlumbingPillPressWindow : DefaultWindow
             SetRatioButton.Disabled = true;
         };
 
-        // Initially hide mixing controls
         MixingContainer.Visible = false;
 
-        // Pill type grid – 20 buttons with pill sprites, same pattern as ChemMaster
+        // Pill type grid, same pattern as ChemMaster
         var spriteSystem = _entityManager.System<SpriteSystem>();
         var resourcePath = new ResPath(PillsRsiPath);
         var pillTypeGroup = new ButtonGroup();
@@ -181,26 +177,22 @@ public sealed partial class PlumbingPillPressWindow : DefaultWindow
         _enabled = state.Enabled;
         UpdateToggleButton();
 
-        // Update dosage — don't overwrite while user is typing
+        // Update dosage don't overwrite while user is typing
         if (!DosageInput.HasKeyboardFocus())
             DosageInput.Text = state.Dosage.ToString();
 
-        // Update output mode
         OutputModeSelector.SelectId((int) state.OutputMode);
 
-        // Show/hide pill type selector based on mode
         PillTypeContainer.Visible = state.OutputMode == PillPressOutputMode.Pill;
 
-        // Update pill type selection
         if (state.PillType < PillTypeCount)
             PillTypeButtons[state.PillType].Pressed = true;
 
-        // Update mixing mode
         _mixingEnabled = state.MixingEnabled;
         MixingToggle.Pressed = state.MixingEnabled;
         UpdateMixingVisibility();
 
-        // Update ratio inputs — don't overwrite while user is typing
+        // Update ratio inputs and don't overwrite while user is typing
         if (!EastRatioInput.HasKeyboardFocus() && !WestRatioInput.HasKeyboardFocus())
         {
             EastRatioInput.Text = ((int) state.InletRatioEast).ToString();

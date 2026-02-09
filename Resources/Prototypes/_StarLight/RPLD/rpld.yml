@@ -108,7 +108,7 @@
   sprite: /Textures/_Starlight/Interface/Radial/RPLD/reaction_chamber.png
   mode: ConstructObject
   prototype: PlumbingReactor
-  cost: 3
+  cost: 5
   delay: 0
   collisionMask: Impassable
   rotation: User
@@ -152,8 +152,20 @@
   fx: EffectRCDConstruct0
 
 - type: rcd
-  id: PlumbingRpldDrain
+  id: PlumbingRpldSmartFridge
   category: PlumbingMachines
+  sprite: /Textures/_Starlight/Interface/Radial/RPLD/smart_fridge.png
+  mode: ConstructObject
+  prototype: PlumbingSmartFridge
+  cost: 5
+  delay: 0
+  collisionMask: Impassable
+  rotation: User
+  fx: EffectRCDConstruct0
+
+- type: rcd
+  id: PlumbingRpldDrain
+  category: PlumbingMachiness
   sprite: /Textures/_Starlight/Interface/Radial/RPLD/drain.png
   mode: ConstructObject
   prototype: PlumbingDrain

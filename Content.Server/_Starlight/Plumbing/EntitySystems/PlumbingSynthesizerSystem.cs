@@ -85,7 +85,6 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
 
     private void OnSynthesizerUpdate(Entity<PlumbingSynthesizerComponent> ent, ref PlumbingDeviceUpdateEvent args)
     {
-        // Update overlay visibility based on buffer contents
         if (_solutionSystem.TryGetSolution(ent.Owner, ent.Comp.BufferSolutionName, out _, out var bufferCheck))
             _appearance.SetData(ent.Owner, PlumbingVisuals.Running, bufferCheck.Volume > 0);
 
@@ -98,23 +97,18 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
         if (!_solutionSystem.TryGetSolution(ent.Owner, ent.Comp.BufferSolutionName, out var bufferEnt, out var buffer))
             return;
 
-        // Check if buffer has space
         var availableSpace = buffer.AvailableVolume;
         if (availableSpace <= 0)
             return;
 
-        // Get power drain for selected reagent
         if (!ent.Comp.GeneratableReagents.TryGetValue(ent.Comp.SelectedReagent.Value, out var powerDrain))
             return;
 
-        // Calculate how much we can generate
         var toGenerate = FixedPoint2.Min(availableSpace, buffer.MaxVolume);
 
-        // Check if we have enough power
         var powerNeeded = powerDrain * (float)toGenerate;
         if (!_powerCell.HasCharge(ent.Owner, powerNeeded))
         {
-            // Try to generate as much as we can afford
             if (!_powerCell.TryGetBatteryFromSlot(ent.Owner, out var batteryCheck))
                 return;
 
@@ -130,13 +124,11 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
             powerNeeded = powerDrain * (float)toGenerate;
         }
 
-        // Use power and generate reagent
         if (!_powerCell.TryUseCharge(ent.Owner, powerNeeded))
             return;
 
         _solutionSystem.TryAddReagent(bufferEnt.Value, new ReagentId(ent.Comp.SelectedReagent.Value, null), toGenerate, out _);
 
-        // Show overlay when buffer has contents
         _appearance.SetData(ent.Owner, PlumbingVisuals.Running, buffer.Volume > 0);
         UpdateUI(ent);
     }
@@ -146,7 +138,6 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
     /// </summary>
     private void OnPullAttempt(Entity<PlumbingSynthesizerComponent> ent, ref PlumbingPullAttemptEvent args)
     {
-        // If no reagent selected, or the requested reagent doesn't match, cancel
         if (ent.Comp.SelectedReagent == null || args.ReagentPrototype != ent.Comp.SelectedReagent)
         {
             args.Cancelled = true;
@@ -187,7 +178,6 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
         if (!_solutionSystem.TryGetSolution(ent.Owner, ent.Comp.BufferSolutionName, out _, out var buffer))
             return;
 
-        // Get battery charge ratio
         var batteryCharge = 0f;
         if (_powerCell.TryGetBatteryFromSlot(ent.Owner, out var battery))
         {

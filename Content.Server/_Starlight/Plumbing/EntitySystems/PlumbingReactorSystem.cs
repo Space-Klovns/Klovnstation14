@@ -80,28 +80,24 @@ public sealed class PlumbingReactorSystem : EntitySystem
         if (!_solutionSystem.TryGetSolution(ent.Owner, ent.Comp.OutputSolutionName, out var outputEnt, out var output))
             return;
 
-        // Don't process if output buffer is full
         if (output.AvailableVolume <= 0)
         {
             UpdateUI(ent);
             return;
         }
 
-        // If we have no targets, don't pull anything
         if (ent.Comp.ReagentTargets.Count == 0)
         {
             UpdateUI(ent);
             return;
         }
 
-        // Get inlet node network
         if (!_nodeContainer.TryGetNode<PlumbingNode>(ent.Owner, ent.Comp.InletName, out var inletNode))
             return;
 
         if (inletNode.PlumbingNet == null)
             return;
 
-        // Build target dictionary with amounts still needed, checking if any are needed
         var neededTargets = new Dictionary<string, FixedPoint2>();
         var allMet = true;
 
@@ -117,15 +113,12 @@ public sealed class PlumbingReactorSystem : EntitySystem
             }
         }
 
-        // Only set running appearance when state actually changes
         if (neededTargets.Count > 0)
             _appearance.SetData(ent.Owner, PlumbingVisuals.Running, true);
 
-        // Pull specific reagents if any are needed
         if (neededTargets.Count > 0)
             _pullSystem.PullSpecificReagents(ent.Owner, inletNode.PlumbingNet, bufferEnt.Value, neededTargets, ent.Comp.TransferAmount);
 
-        // If all targets are met, heat and react
         if (allMet)
         {
             // Start heating only once reagents are ready
@@ -141,7 +134,6 @@ public sealed class PlumbingReactorSystem : EntitySystem
                 return;
             }
 
-            // Trigger reactions in the buffer
             _reactionSystem.FullyReactSolution(bufferEnt.Value);
 
             var products = new List<(ReagentId Reagent, FixedPoint2 Quantity)>();
@@ -154,7 +146,6 @@ public sealed class PlumbingReactorSystem : EntitySystem
                 products.Add((reagent.Reagent, reagent.Quantity));
             }
 
-            // Move products to output and reset temperature only if we produced something
             if (products.Count > 0)
             {
                 foreach (var (reagent, quantity) in products)
@@ -167,7 +158,6 @@ public sealed class PlumbingReactorSystem : EntitySystem
                 // Reset buffer to ambient temperature after products are transferred.
                 _solutionSystem.SetTemperature(bufferEnt.Value, Atmospherics.T20C);
 
-                // Stop sprite animation when products are made
                 _appearance.SetData(ent.Owner, PlumbingVisuals.Running, false);
             }
         }
@@ -187,7 +177,6 @@ public sealed class PlumbingReactorSystem : EntitySystem
         var currentTemp = solution.Temperature;
         var targetTemp = ent.Comp.TargetTemperature;
 
-        // Skip if already at target or close enough
         if (MathHelper.CloseTo(currentTemp, targetTemp, TemperatureTolerance))
             return;
 
@@ -198,11 +187,9 @@ public sealed class PlumbingReactorSystem : EntitySystem
         // Calculate max energy we can transfer this tick in joules, watts * seconds = joules
         var maxEnergyTransfer = ent.Comp.HeatTransferPower * dt;
 
-        // Calculate energy needed to reach target exactly
         var tempDiff = targetTemp - currentTemp;
         var energyNeeded = tempDiff * heatCap;
 
-        // Energy added should be either the exact amounted needed or the max we can do this tick
         var energyTransfer = Math.Clamp(energyNeeded, -maxEnergyTransfer, maxEnergyTransfer);
 
         _solutionSystem.AddThermalEnergy(solutionEnt, energyTransfer);
@@ -215,7 +202,6 @@ public sealed class PlumbingReactorSystem : EntitySystem
         ClickSound(ent.Owner);
         UpdateUI(ent);
 
-        // Turn off visual animation when disabled
         if (!args.Enabled)
             _appearance.SetData(ent.Owner, PlumbingVisuals.Running, false);
     }
@@ -231,7 +217,6 @@ public sealed class PlumbingReactorSystem : EntitySystem
             return;
         }
 
-        // Validate that the reagent ID exists
         if (!_prototypeManager.HasIndex<ReagentPrototype>(args.ReagentId))
         {
             _popup.PopupEntity(Loc.GetString("plumbing-reactor-invalid-reagent", ("reagent", args.ReagentId)), ent.Owner, args.Actor);
@@ -313,7 +298,6 @@ public sealed class PlumbingReactorSystem : EntitySystem
             }
         }
 
-        // Convert ProtoId to string for UI state
         var reagentTargets = new Dictionary<string, FixedPoint2>();
         foreach (var (protoId, quantity) in ent.Comp.ReagentTargets)
         {

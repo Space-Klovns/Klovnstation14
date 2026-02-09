@@ -26,31 +26,39 @@ public sealed class PlumbingInletSystem : EntitySystem
 
     private void OnInletUpdate(Entity<PlumbingInletComponent> ent, ref PlumbingDeviceUpdateEvent args)
     {
-        // When the pill press is in mixing mode, don't pull from the normal inlet —
+        // When the pill press is in mixing mode, don't pull from the normal inlet
         // mixing inlets handle all pulling instead.
         if (TryComp<PlumbingPillPressComponent>(ent.Owner, out var pillPress) && pillPress.MixingEnabled)
             return;
 
-        // Get our solution
         if (!_solutionSystem.TryGetSolution(ent.Owner, ent.Comp.SolutionName, out var solutionEnt, out var solution))
             return;
             
-        // Make sure there is room in pull in reagents 
         if (solution.AvailableVolume <= 0)
             return;
 
-        // Get node container to find the inlet node
         if (!TryComp<NodeContainerComponent>(ent.Owner, out var nodeContainer))
             return;
 
-        // Get the inlet node directly
-        if (!nodeContainer.Nodes.TryGetValue(ent.Comp.InletName, out var node))
-            return;
+        // Pull from each inlet's network independently, sharing a single transfer budget
+        // so total throughput stays at TransferAmount regardless of inlet count.
+        var remaining = ent.Comp.TransferAmount;
 
-        if (node is not PlumbingNode plumbingNode || plumbingNode.PlumbingNet == null)
-            return;
+        foreach (var inletName in ent.Comp.InletNames)
+        {
+            if (remaining <= 0 || solution.AvailableVolume <= 0)
+                break;
 
-        var (_, nextIndex) = _pullSystem.PullFromNetwork(ent.Owner, plumbingNode.PlumbingNet, solutionEnt.Value, ent.Comp.TransferAmount, ent.Comp.RoundRobinIndex);
-        ent.Comp.RoundRobinIndex = nextIndex;
+            if (!nodeContainer.Nodes.TryGetValue(inletName, out var node))
+                continue;
+
+            if (node is not PlumbingNode plumbingNode || plumbingNode.PlumbingNet == null)
+                continue;
+
+            var roundRobinIndex = ent.Comp.RoundRobinIndices.GetValueOrDefault(inletName, 0);
+            var (pulled, nextIndex) = _pullSystem.PullFromNetwork(ent.Owner, plumbingNode.PlumbingNet, solutionEnt.Value, remaining, roundRobinIndex);
+            ent.Comp.RoundRobinIndices[inletName] = nextIndex;
+            remaining -= pulled;
+        }
     }
 }

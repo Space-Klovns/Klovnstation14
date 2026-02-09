@@ -53,18 +53,15 @@ public sealed class PlumbingFilterSystem : EntitySystem
             return;
         }
 
-        // Check which outlet is being pulled from
         var isFilteredReagent = ent.Comp.FilteredReagents.Contains(args.ReagentPrototype);
 
         if (args.NodeName == ent.Comp.FilterNodeName)
         {
-            // Filter outlet: only allow filtered reagents
             if (!isFilteredReagent)
                 args.Cancelled = true;
         }
         else if (args.NodeName == ent.Comp.PassthroughNodeName)
         {
-            // Passthrough outlet: only allow non-filtered reagents
             if (isFilteredReagent)
                 args.Cancelled = true;
         }
@@ -80,7 +77,6 @@ public sealed class PlumbingFilterSystem : EntitySystem
 
     private void OnAddReagent(Entity<PlumbingFilterComponent> ent, ref PlumbingFilterAddReagentMessage args)
     {
-        // Validate the reagent ID exists
         if (!_prototypeManager.HasIndex<ReagentPrototype>(args.ReagentId))
         {
             _popup.PopupEntity(Loc.GetString("plumbing-filter-invalid-reagent", ("reagent", args.ReagentId)), ent.Owner, args.Actor);

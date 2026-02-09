@@ -31,7 +31,6 @@ public sealed partial class PlumbingSynthesizerWindow : DefaultWindow
         {
             if (args.Id == 0)
             {
-                // "None" option
                 OnSelectReagent?.Invoke(null);
             }
             else if (_reagentIndexMap.TryGetValue(args.Id, out var reagentId))
@@ -53,17 +52,13 @@ public sealed partial class PlumbingSynthesizerWindow : DefaultWindow
         _enabled = state.Enabled;
         UpdateToggleButton();
 
-        // Update battery bar
         BatteryBar.Value = state.BatteryCharge;
 
-        // Update reagent selector
         _reagentIndexMap.Clear();
         ReagentSelector.Clear();
 
-        // Add "None" option
         ReagentSelector.AddItem(Loc.GetString("plumbing-synthesizer-none"), 0);
 
-        // Sort reagent IDs alphabetically
         var sortedReagents = new List<string>(state.GeneratableReagents.Keys);
         sortedReagents.Sort();
 

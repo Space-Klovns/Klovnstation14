@@ -91,7 +91,6 @@ public sealed partial class PlumbingFilterWindow : DefaultWindow
         _enabled = state.Enabled;
         UpdateToggleButton();
 
-        // Update filtered reagents list
         FilteredList.Clear();
         foreach (var reagentId in state.FilteredReagents)
         {

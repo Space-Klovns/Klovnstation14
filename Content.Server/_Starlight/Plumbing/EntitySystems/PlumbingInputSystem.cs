@@ -5,8 +5,7 @@ using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.FixedPoint;
 using Content.Shared.Interaction;
 using JetBrains.Annotations;
-using Robust.Shared.Audio;
-using Robust.Shared.Audio.Systems;
+
 
 namespace Content.Server._Starlight.Plumbing.EntitySystems;
 
@@ -18,7 +17,6 @@ public sealed class PlumbingInputSystem : EntitySystem
 {
     [Dependency] private readonly SharedSolutionContainerSystem _solutionSystem = default!;
     [Dependency] private readonly PopupSystem _popup = default!;
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
 
     public override void Initialize()
     {
@@ -55,7 +53,6 @@ public sealed class PlumbingInputSystem : EntitySystem
         _solutionSystem.TryAddSolution(inputSolutionEnt.Value, split);
 
         _popup.PopupEntity(Loc.GetString("plumbing-input-poured", ("amount", toTransfer)), ent.Owner, args.User);
-        _audio.PlayPvs(ent.Comp.InteractSound, ent.Owner);
 
         args.Handled = true;
     }
