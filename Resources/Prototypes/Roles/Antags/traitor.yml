@@ -38,6 +38,7 @@
     gloves: ClothingHandsGlovesColorBlack
   storage:
     back:
+    - BoxSurvivalSlotsSyndicate # Goobstation - Slots Based Survival Boxes
     - WeaponPistolViper
     - PinpointerSyndicateNuclear
     - DeathAcidifierImplanter

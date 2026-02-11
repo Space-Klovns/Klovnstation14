@@ -12,6 +12,9 @@
     belt: ClothingBeltWand
     pocket1: WizardTeleportScroll
     pocket2: WizardsGrimoire
+  storage:
+    back:
+    - BoxSurvivalSlots # Goobstation - Slots Based Survival Boxes
 
 - type: startingGear
   id: WizardRedGear

@@ -21,6 +21,9 @@
     ears: ClothingHeadsetAltCommand
     outerClothing: ClothingOuterArmorCaptainCarapace
     pocket1: WeaponDisabler
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
 
 - type: startingGear
   id: VisitorCaptainAlt
@@ -37,6 +40,9 @@
     ears: ClothingHeadsetAltCommand
     outerClothing: ClothingOuterArmorCaptainCarapace
     pocket1: WeaponDisabler
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
 
 - type: startingGear
   id: VisitorCE
@@ -51,6 +57,9 @@
     ears: ClothingHeadsetCE
     outerClothing: ClothingOuterVestHazard
     pocket1: WeaponDisabler
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
 
 - type: startingGear
   id: VisitorCEAlt
@@ -65,6 +74,9 @@
     ears: ClothingHeadsetCE
     outerClothing: ClothingOuterWinterCE
     pocket1: WeaponDisabler
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
 
 - type: startingGear
   id: VisitorCMO
@@ -80,6 +92,9 @@
     belt: ClothingBeltMedicalFilled
     outerClothing: ClothingOuterCoatLabCmo
     pocket1: WeaponDisabler
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
 
 - type: startingGear
   id: VisitorCMOAlt
@@ -95,6 +110,9 @@
     belt: ClothingBeltMedicalFilled
     outerClothing: ClothingOuterCoatLabCmo
     pocket1: WeaponDisabler
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
 
 - type: startingGear
   id: VisitorHOP
@@ -109,6 +127,9 @@
     ears: ClothingHeadsetAltCommand
     outerClothing: ClothingOuterWinterHoP
     pocket1: WeaponDisabler
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
 
 - type: startingGear
   id: VisitorHOPAlt
@@ -123,6 +144,9 @@
     ears: ClothingHeadsetAltCommand
     outerClothing: ClothingOuterWinterHoP
     pocket1: WeaponDisabler
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
 
 - type: startingGear
   id: VisitorHOS
@@ -140,6 +164,9 @@
     outerClothing: ClothingOuterCoatHoSTrench
     pocket1: WeaponDisabler
     pocket2: MagazinePistolSubMachineGunTopMounted
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - WeaponSubMachineGunWt550
 
@@ -158,6 +185,9 @@
     eyes: ClothingEyesGlassesSecurity
     pocket1: WeaponDisabler
     pocket2: MagazinePistolSubMachineGunTopMounted
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - WeaponSubMachineGunWt550
 
@@ -174,6 +204,9 @@
     ears: ClothingHeadsetRD
     outerClothing: ClothingOuterCoatRD
     pocket1: WeaponDisabler
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
 
 - type: startingGear
   id: VisitorRDAlt
@@ -188,6 +221,9 @@
     ears: ClothingHeadsetRD
     outerClothing: ClothingOuterCoatRD
     pocket1: WeaponDisabler
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
 
 - type: startingGear
   id: VisitorQM
@@ -202,6 +238,9 @@
     outerClothing: ClothingOuterWinterQM
     pocket1: WeaponDisabler
     pocket2: AppraisalTool
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
 
 - type: startingGear
   id: VisitorQMAlt
@@ -216,6 +255,9 @@
     outerClothing: ClothingOuterWinterQM
     pocket1: WeaponDisabler
     pocket2: AppraisalTool
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
 
 # Security
 
@@ -233,6 +275,9 @@
     outerClothing: ClothingOuterArmorBasic
     pocket1: WeaponPistolMk58
     pocket2: MagazinePistol
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - FlashlightSeclite
 
@@ -251,6 +296,9 @@
     outerClothing: ClothingOuterArmorBasicSlim
     pocket1: WeaponPistolMk58
     pocket2: MagazinePistol
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - FlashlightSeclite
 
@@ -268,6 +316,9 @@
     outerClothing: ClothingOuterArmorBasic
     pocket1: WeaponPistolMk58
     pocket2: MagazinePistol
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - FlashlightSeclite
 
@@ -286,6 +337,9 @@
     outerClothing: ClothingOuterArmorBasicSlim
     pocket1: WeaponPistolMk58
     pocket2: MagazinePistol
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - FlashlightSeclite
 
@@ -304,6 +358,9 @@
     outerClothing: ClothingOuterCoatDetectiveLoadout
     pocket1: ForensicScanner
     pocket2: ForensicPad
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - FlashlightSeclite
 
@@ -322,6 +379,9 @@
     outerClothing: ClothingOuterVestDetective
     pocket1: ForensicScanner
     pocket2: ForensicPad
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - FlashlightSeclite
 
@@ -341,6 +401,9 @@
     outerClothing: ClothingOuterCoatWarden
     pocket1: WeaponDisabler
     pocket2: Zipties
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - FlashlightSeclite
   - WeaponShotgunKammerer
@@ -360,6 +423,9 @@
     outerClothing: ClothingOuterWinterWarden
     pocket1: WeaponDisabler
     pocket2: Zipties
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - FlashlightSeclite
   - WeaponShotgunKammerer
@@ -377,6 +443,9 @@
     ears: ClothingHeadsetCargo
     pocket1: AppraisalTool
     pocket2: DrinkColaCan
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - DrinkRumBottleFull
 
@@ -392,6 +461,9 @@
     pocket1: AppraisalTool
     pocket2: SpaceCash500
     outerClothing: ClothingOuterWinterCargo
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - FoodBoxPizzaFilled
   - KnifePlastic
@@ -408,6 +480,9 @@
     ears: ClothingHeadsetCargo
     pocket1: SurvivalKnife
     pocket2: HandheldGPSBasic
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - FoodSnackBoritos
 
@@ -424,6 +499,9 @@
     outerClothing: ClothingOuterWinterCargo
     pocket1: SurvivalKnife
     pocket2: HandheldGPSBasic
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - Shovel
 
@@ -443,6 +521,9 @@
     outerClothing: ClothingOuterSuitAtmosFire
     suitstorage: AirTankFilled
     pocket1: CrowbarRed
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - FireExtinguisher
 
@@ -462,6 +543,9 @@
     outerClothing: ClothingOuterWinterAtmos
     pocket1: FlashlightLantern
     pocket2: CrowbarRed
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - FoodSnackBoritos
 
@@ -478,6 +562,9 @@
     eyes: ClothingEyesGlassesMeson
     pocket1: LightReplacer
     pocket2: Welder
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - CableApcStack
 
@@ -496,6 +583,9 @@
     outerClothing: ClothingOuterVestHazard
     pocket1: HolofanProjector
     pocket2: GasAnalyzer
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - SheetSteel
 
@@ -514,6 +604,9 @@
     outerClothing: ClothingOuterWinterEngi
     pocket1: RCD
     pocket2: RCDAmmo
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - trayScanner
   - CableApcStack
@@ -532,6 +625,9 @@
     eyes: ClothingEyesGlassesMeson
     pocket1: RCD
     pocket2: RCDAmmo
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - SheetSteel
   - SheetGlass
@@ -552,6 +648,9 @@
     outerClothing: ClothingOuterCoatLabChem
     pocket1: PillCanisterRandom
     pocket2: PillCanisterRandom
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - PillCanisterRandom
   - PillCanisterRandom
@@ -570,6 +669,9 @@
     outerClothing: ClothingOuterWinterChem
     pocket1: PillCanisterRandom
     pocket2: PillCanisterRandom
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - PillCanisterRandom
   - PillCanisterRandom
@@ -589,6 +691,9 @@
     outerClothing: ClothingOuterCoatLabGene
     pocket1: PillCanisterCharcoal
     pocket2: PillCanisterRandom
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - SyringePhalanximine
 
@@ -607,6 +712,9 @@
     outerClothing: ClothingOuterWinterGen
     pocket1: PillCanisterHyronalin
     pocket2: PillCanisterRandom
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - SyringeBicaridine
 
@@ -625,6 +733,9 @@
     outerClothing: ClothingOuterCoatLabViro
     pocket1: PillCanisterTricordrazine
     pocket2: PillCanisterRandom
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - SyringeSigynate
 
@@ -644,6 +755,9 @@
     outerClothing: ClothingOuterWinterViro
     pocket1: PillCanisterTricordrazine
     pocket2: PillCanisterRandom
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - SyringeEphedrine
 
@@ -663,6 +777,9 @@
     outerClothing: ClothingOuterCoatLab
     pocket1: PillCanisterTricordrazine
     pocket2: PillCanisterDermaline
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - SyringeInaprovaline
 
@@ -682,6 +799,9 @@
     outerClothing: ClothingOuterWinterMed
     pocket1: PillCanisterTricordrazine
     pocket2: PillCanisterBicaridine
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - SyringeSaline
 
@@ -700,6 +820,9 @@
     eyes: ClothingEyesGlasses
     pocket1: Scalpel
     pocket2: Gauze
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - Cautery
   - Drill
@@ -718,6 +841,9 @@
     eyes: ClothingEyesHudMedical
     pocket1: WhoopieCushion
     pocket2: PillSpaceDrugs
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - CigarCase
   - Lighter
@@ -735,6 +861,9 @@
     eyes: ClothingEyesHudMedical
     pocket1: BulletFoam
     pocket2: PillSpaceDrugs
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - FoamCrossbow
   - DrinkWhiskeyBottleFull
@@ -755,6 +884,9 @@
     outerClothing: ClothingOuterWinterPara
     pocket1: CombatMedipen
     pocket2: Brutepack
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - SyringeTranexamicAcid
   - Gauze
@@ -775,6 +907,9 @@
     outerClothing: ClothingOuterCoatParamedicWB
     pocket1: CombatMedipen
     pocket2: Brutepack
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - AntiPoisonMedipen
   - Gauze
@@ -792,6 +927,9 @@
     eyes: ClothingEyesHudMedical
     pocket1: Ointment
     pocket2: Brutepack
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - Bloodpack
   - Gauze
@@ -809,6 +947,9 @@
     eyes: ClothingEyesHudMedical
     pocket1: Ointment
     pocket2: Brutepack
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - Bloodpack
   - Gauze
@@ -827,6 +968,9 @@
     eyes: ClothingEyesHudMedical
     pocket1: RegenerativeMesh
     pocket2: PillCanisterBicaridine
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - ScalpelAdvanced
   - MedicatedSuture
@@ -845,6 +989,9 @@
     eyes: ClothingEyesHudMedical
     pocket1: RegenerativeMesh
     pocket2: PillCanisterBicaridine
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - ScalpelAdvanced
   - MedicatedSuture
@@ -863,6 +1010,9 @@
     eyes: ClothingEyesHudMedical
     pocket1: RegenerativeMesh
     pocket2: PillCanisterBicaridine
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - ScalpelAdvanced
   - MedicatedSuture
@@ -880,6 +1030,9 @@
     back: ClothingBackpackScience
     ears: ClothingHeadsetScience
     eyes: ClothingEyesGlasses
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - NetworkConfigurator
 
@@ -894,6 +1047,9 @@
     back: ClothingBackpackSatchelScience
     ears: ClothingHeadsetScience
     eyes: ClothingEyesGlasses
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - DrinkHotCoffee
 
@@ -908,6 +1064,9 @@
     back: ClothingBackpackScience
     ears: ClothingHeadsetScience
     eyes: ClothingEyesGlasses
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - DrinkHotCoffee
 
@@ -923,6 +1082,9 @@
     back: ClothingBackpackSatchelScience
     ears: ClothingHeadsetScience
     eyes: ClothingEyesGlasses
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - AnomalyScanner
 
@@ -942,6 +1104,9 @@
     outerClothing: ClothingOuterArmorBasicSlim
     pocket1: DrinkVodkaBottleFull
     pocket2: BarSpoon
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
 
 - type: startingGear
   id: VisitorBartenderAlt
@@ -957,6 +1122,9 @@
     outerClothing: ClothingOuterWinterBar
     pocket1: WeaponShotgunSawn
     pocket2: DrinkTequilaBottleFull
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
 
 - type: startingGear
   id: VisitorBotanist
@@ -967,6 +1135,9 @@
     id: VisitorPDA
     back: ClothingBackpackDuffelHydroponics
     ears: ClothingHeadsetService
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - HydroponicsToolScythe
 
@@ -982,6 +1153,9 @@
     ears: ClothingHeadsetService
     pocket1: HydroponicsToolMiniHoe
     pocket2: HydroponicsToolSpade
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
 
 - type: startingGear
   id: VisitorBoxer
@@ -994,6 +1168,9 @@
     ears: ClothingHeadsetService
     pocket1: DrinkVodkaBottleFull
     pocket2: SoapDeluxe
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
 
 - type: startingGear
   id: VisitorBoxerAlt
@@ -1007,6 +1184,9 @@
     outerClothing: ClothingOuterSkub
     pocket1: Skub
     pocket2: DrinkSpaceGlue
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
 
 - type: startingGear #!! make sure these are bible users.
   id: VisitorChaplain
@@ -1021,6 +1201,9 @@
     outerClothing: ClothingOuterPlagueSuit
     # KS14 - Removed plushie
     pocket1: FoodSnackEnergy
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
 
 - type: startingGear
   id: VisitorChaplainAlt
@@ -1034,6 +1217,9 @@
     outerClothing: ClothingOuterNunRobe
     # KS14 - Removed plushie
     pocket1: DrinkCoconutWaterCarton
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
 
 - type: startingGear
   id: VisitorChef
@@ -1049,6 +1235,9 @@
     outerClothing: ClothingOuterJacketChef
     pocket1: ButchCleaver
     pocket2: BookHowToCookForFortySpaceman
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - ClothingMaskItalianMoustache
   - DrinkWineBottleFull
@@ -1067,6 +1256,9 @@
     outerClothing: ClothingOuterWinterChef
     pocket1: RollingPin
     pocket2: BookHowToCookForFortySpaceman
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - ClothingMaskItalianMoustache
   - FoodCheese
@@ -1082,6 +1274,9 @@
     mask: ClothingMaskClown
     pocket1: BikeHorn
     pocket2: ClownRecorder
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
 
 - type: startingGear
   id: VisitorJanitor
@@ -1095,6 +1290,9 @@
     belt: ClothingBeltJanitorFilled
     ears: ClothingHeadsetService
     outerClothing: ClothingOuterWinterJani
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - MopItem
   - Bucket
@@ -1111,6 +1309,9 @@
     belt: ClothingBeltJanitorFilled
     ears: ClothingHeadsetService
     outerClothing: ClothingOuterBioJanitor
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - MopItem
   - Bucket
@@ -1127,6 +1328,9 @@
     ears: ClothingHeadsetSecurity
     pocket1: RubberStampLawyer
     pocket2: LuxuryPen
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - BriefcaseBrownFilled
 
@@ -1142,6 +1346,9 @@
     ears: ClothingHeadsetSecurity
     pocket1: RubberStampLawyer
     pocket2: SmokingPipeFilledTobacco
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - BriefcaseBrownFilled
 
@@ -1158,6 +1365,9 @@
     ears: ClothingHeadsetSecurity
     pocket1: RubberStampLawyer
     pocket2: SmokingPipeFilledTobacco
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - BriefcaseBrownFilled
 
@@ -1176,6 +1386,9 @@
     outerClothing: ClothingOuterCoatExpensive
     pocket1: RubberStampLawyer
     pocket2: LuxuryPen
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - BriefcaseBrownFilled
 
@@ -1192,6 +1405,9 @@
     ears: ClothingHeadsetSecurity
     pocket1: RubberStampLawyer
     pocket2: LuxuryPen
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - BriefcaseBrownFilled
 
@@ -1210,6 +1426,9 @@
     ears: ClothingHeadsetCentCom
     pocket1: RubberStampLawyer
     pocket2: LuxuryPen
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - BriefcaseBrownFilled
 
@@ -1226,6 +1445,9 @@
     ears: ClothingHeadsetService
     pocket1: BookJanitorTale
     pocket2: BookRandomStory
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
   inhand:
   - Cane
 
@@ -1242,6 +1464,10 @@
     ears: ClothingHeadsetService
     pocket1: BookSun
     pocket2: BookRandomStory
+  storage: #klovn
+    back:
+    - BoxSurvivalSlots #goob
+    #Klovn: I DONT FUCKING CARE ANYMORE, COPY PASTE THE REST YOURSELF
   inhand:
   - BoxFolderClipboardThreePapers
 

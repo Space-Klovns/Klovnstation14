@@ -66,6 +66,7 @@
     back:
     - Flash
     - MagazinePistol
+    - BaseBallBat #klovn - NABEG
 
 - type: chameleonOutfit
   id: SecurityCadetChameleonOutfit

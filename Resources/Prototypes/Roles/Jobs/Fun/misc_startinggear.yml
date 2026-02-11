@@ -15,7 +15,7 @@
     ears: ClothingHeadsetGrey
   storage:
     back:
-    - BoxSurvival
+    - BoxSurvivalSlots #goob
 
 # Syndicate Operative Outfit - Civilian
 - type: startingGear
@@ -42,7 +42,7 @@
     id: SyndiPDA
   storage:
     back:
-    - BoxSurvival
+    - BoxSurvivalSlots #goob
 
 # Syndicate Footsoldier Gear
 - type: startingGear
@@ -58,7 +58,7 @@
     shoes: ClothingShoesBootsCombatFilled
   storage:
     back:
-    - BoxSurvivalSyndicate
+    - BoxSurvivalSlotsSyndicate #goob
 
 - type: startingGear
   id: SyndicateFootsoldierTeamLeaderGear
@@ -143,6 +143,9 @@
     ears: ClothingHeadsetBrigmedic
     mask: ClothingMaskBreathMedicalSecurity
     belt: ClothingBeltMedicalFilled
+  storage: #klovn
+    back:
+    - BoxSurvivalSlotsSecurity # Goobstation - Slots Based Survival Boxes
 
 # Aghost
 - type: startingGear

@@ -682,6 +682,9 @@
     damage:
       types:
         Blunt: 1 # bonk
+  - type: Tag #Goobstation
+    tags:
+    - BreadEmergency
 # Tastes like France.
 
 - type: entity
@@ -726,6 +729,9 @@
           Quantity: 1
         - ReagentId: Blackpepper
           Quantity: 1
+  - type: Tag #klovn actually, even doe moths arent real lolololol
+    tags:
+    - BreadEmergency
 
 - type: entity
   name: crostini
