@@ -735,7 +735,7 @@
     containers:
       storagebase:
         id: PillDermaline
-        amount: #klovn
+        amount: 10 #klovn
 
 - type: entity
   name: space mirage
@@ -782,7 +782,7 @@
     containers:
       storagebase:
         id: PillTricordrazine
-        amount: #klovn
+        amount: 10 #klovn
 
 - type: entity
   name: pill
