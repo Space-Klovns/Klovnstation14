@@ -770,9 +770,6 @@
           Quantity: 1
         - ReagentId: Blackpepper
           Quantity: 1
-  - type: Tag #klovn actually, even doe moths arent real lolololol
-    tags:
-    - BreadEmergency
 
 - type: entity
   name: crostini
