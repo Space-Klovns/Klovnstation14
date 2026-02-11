@@ -514,3 +514,57 @@
       - SpaceMedipen
   - type: Label
     currentLabel: reagent-name-nitrogen
+
+# KLOVN ADDITIONS:
+
+- type: entity
+  parent: BoxSurvivalSlots
+  id: BoxSurvivalSlotsMilitaryDouble
+  name: survival box
+  description: It's a box with basic internals inside.
+  suffix: MilitaryDouble
+  components:
+  - type: ContainerFill
+    containers:
+      water:
+      - DrinkWaterBottleFull
+      nutriblock:
+      - FoodSnackNutribrick
+      flare:
+      - Flare
+      tank:
+      - DoubleEmergencyOxygenTankFilled
+      mask:
+      - ClothingMaskGasSecurity
+      emergencypen:
+      - EmergencyMedipen
+      spacepen:
+      - SpaceMedipen
+  - type: Sprite
+    state: box_sec
+
+- type: entity
+  parent: BoxSurvivalSlotsSecurity
+  id: BoxSurvivalSlotsMilitaryDoubleNitrogen
+  suffix: MilitaryDoubleNitrogen
+  components:
+  - type: ContainerFill
+    containers:
+      water:
+      - DrinkWaterBottleFull
+      nutriblock:
+      - FoodSnackNutribrick
+      flare:
+      - Flare
+      tank:
+      - DoubleEmergencyNitrogenTankFilled
+      mask:
+      - ClothingMaskGasSecurity
+      emergencypen:
+      - EmergencyMedipen
+      spacepen:
+      - SpaceMedipen
+  - type: Label
+    currentLabel: reagent-name-nitrogen
+  - type: Sprite
+    state: box_sec #custom sprite these later to be green or whatever but I genuinely dont gaf
