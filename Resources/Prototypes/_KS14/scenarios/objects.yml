@@ -2,6 +2,7 @@
   name: pinpointer
   id: PinpointerScenarioObjective
   parent: PinpointerBase
+  suffix: Scenario, Objective
   components:
   - type: Pinpointer
     component: ScenarioObjective

@@ -1,0 +1,16 @@
+- type: entity
+  id: ScenarioVendorBundleTiderfallTiderBase
+  name: assistant loadout
+  description: All you need to terrorise your local maintenance tunnel.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite:  Clothing/Mask/gas.rsi
+    state: "icon"
+  - type: CMVendorBundle
+    bundle:
+    - ClothingUniformJumpsuitColorGrey
+    - ClothingBackpack
+    - ClothingShoesColorBlack
+    - ClothingMaskGas
+    - ChameleonPDA

@@ -1,0 +1,87 @@
+- type: entity
+  id: ColMarTechBase
+  name: ColMarTech vendor
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    anchored: true
+    noRot: true
+  - type: Clickable
+  - type: InteractionOutline
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.45,-0.45,0.45,0.45"
+        density: 200
+        mask:
+        - MachineMask
+        layer:
+        - MachineLayer
+  - type: Tag
+    tags:
+    - Structure
+  #    offState: off
+  #    brokenState: broken
+  - type: Sprite
+    sprite: _Crescent/Structures/armoryPF.rsi
+    layers:
+    - state: "off"
+      map: [ "enum.VendingMachineVisualLayers.Base" ]
+    - state: "base"
+      map: [ "enum.VendingMachineVisualLayers.BaseUnshaded"]
+  - type: UserInterface
+    interfaces:
+      enum.CMAutomatedVendorUI.Key:
+        type: CMAutomatedVendorBui
+  - type: AmbientOnPowered
+  - type: AmbientSound
+    volume: -9
+    range: 3
+    enabled: false
+    sound:
+      path: /Audio/Ambience/Objects/vending_machine_hum.ogg
+  - type: ActivatableUI
+    key: enum.CMAutomatedVendorUI.Key
+  - type: ActivatableUIRequiresAccess
+  - type: WallMount
+    arc: 360
+
+- type: entity
+  abstract: true
+  parent: ColMarTechBase
+  id: ColMarTechBaseAnchorable
+  components:
+  - type: Transform
+    anchored: true
+  - type: Anchorable
+  - type: Pullable
+  - type: Physics
+    bodyType: Static
+  - type: Damageable
+    damageContainer: StructuralInorganic
+    damageModifierSet: StructuralMetallic
+  - type: Destructible # TODO RMC14 some of these should just be knocked over with a do after by xenos
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 500
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+  - type: Fixtures #TODO remove this component(making it use the parent's fixtures) after vendor tipping is added.
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.45,-0.45,0.45,0.45"
+        density: 200
+        mask:
+        - MachineMask
+        layer:
+        - MachineLayer
+        - BulletImpassable

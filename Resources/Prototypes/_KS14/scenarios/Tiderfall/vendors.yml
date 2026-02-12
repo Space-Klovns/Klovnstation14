@@ -1,0 +1,15 @@
+- type: entity
+  parent: ColMarTechScenarioBase
+  id: ColMarTechScenarioTiderfallNt
+  suffix: Tiderfall, Nanotrasen
+  components:
+  - type: Sprite
+    sprite: _Crescent/Structures/syndicatearmory.rsi
+  - type: CMAutomatedVendor
+    sections:
+    - name: Class Kit
+      choices: { CMClass: 1 }
+      entries:
+      - id: ScenarioVendorBundleTiderfallTiderBase
+        name: base wearables
+        recommended: true
