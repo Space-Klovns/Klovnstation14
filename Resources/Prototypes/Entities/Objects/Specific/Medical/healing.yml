@@ -204,8 +204,8 @@
       Bruise: -10 #klovn stat
       Slash: -10
       Piercing: -10
-#      groups: <wizden way of handling it
-#        Brute: -15 # 5 for each type in the group, klovnend
+      groups:
+        Brute: -30 # klovn, 10 for each type in the group, was -15
     healingBeginSound:
       path: "/Audio/Items/Medical/brutepack_begin.ogg"
       params:
@@ -252,11 +252,8 @@
     delay: 1.5
     damage:
       types:
-        Bruise: -15 #klovn star
-        Slash: -15
-        Piercing: -15
-#      groups: < wizden way of handling it
-#        Brute: -30 # 10 for each type in the group, klovn end
+      groups:
+        Brute: -45 # klovn, 15 for each type in the group, was -30
     bloodlossModifier: -10 # a suture should stop ongoing bleeding
     healingBeginSound:
       path: "/Audio/_KS14/Items/Medical/suture/suture_begin1.ogg"
