@@ -1,5 +1,7 @@
 using Content.Shared.Body.Prototypes;
 using Content.Shared.Body.Systems;
+using Content.Shared.Damage;
+using Content.Shared.FixedPoint;
 using Robust.Shared.Audio;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
@@ -41,4 +43,12 @@ public sealed partial class BodyComponent : Component
     [ViewVariables]
     [DataField, AutoNetworkedField]
     public HashSet<EntityUid> LegEntities = new();
+
+    // KS14 Addition
+    /// <summary>
+    ///     Amount of damage taken in one hit (currently explosions only)
+    ///         to dismember SOMETHING.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public FixedPoint2 DismembermentThreshold = FixedPoint2.New(70f);
 }

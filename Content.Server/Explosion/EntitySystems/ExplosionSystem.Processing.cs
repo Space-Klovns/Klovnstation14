@@ -1,3 +1,4 @@
+using Content.Shared.Body.Components;
 using Content.Shared.CCVar;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
@@ -186,7 +187,7 @@ public sealed partial class ExplosionSystem
         if (!_physicsQuery.TryGetComponent(uid, out var physics))
             return false;
 
-        return physics.CanCollide && physics.Hard && (physics.CollisionLayer & (int) CollisionGroup.Impassable) != 0;
+        return physics.CanCollide && physics.Hard && (physics.CollisionLayer & (int)CollisionGroup.Impassable) != 0;
     }
 
     /// <summary>
@@ -448,6 +449,12 @@ public sealed partial class ExplosionSystem
             GetEntitiesToDamage(uid, originalDamage, id);
             foreach (var (entity, damage) in _toDamage)
             {
+                // KS14 changes start
+                var bodyEntity = new Entity<BodyComponent?>(entity, null);
+                if (_dismembermentSystem.CanDismemberByDamage(bodyEntity, damage, out var totalDoneDamage))
+                    HandleExplosionDamage(bodyEntity, throwForce, totalDoneDamage.Value, cause, epicenter.Position, xform);
+                // KS14 changes end
+
                 if (!_damageableQuery.TryComp(entity, out var damageable))
                     continue;
 
