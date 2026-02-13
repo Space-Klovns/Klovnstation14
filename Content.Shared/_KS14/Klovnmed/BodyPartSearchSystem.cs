@@ -20,12 +20,14 @@ public sealed class BodyPartSearchSystem : EntitySystem
     [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
 
     private EntityQuery<BodyPartComponent> _bodyPartQuery;
+    private EntityQuery<ContainerManagerComponent> _containerManagerQuery;
 
     public override void Initialize()
     {
         base.Initialize();
 
         _bodyPartQuery = GetEntityQuery<BodyPartComponent>();
+        _containerManagerQuery = GetEntityQuery<ContainerManagerComponent>();
     }
 
     /// <summary>
@@ -34,16 +36,21 @@ public sealed class BodyPartSearchSystem : EntitySystem
     /// </summary>
     public void SearchRecursiveForTypeAndPopulate(EntityUid uid, BodyPartType partType, ref ValueList<Entity<BodyPartComponent>> list)
     {
-        if (!_bodyPartQuery.TryGetComponent(uid, out var bodyPartComponent) ||
-            bodyPartComponent.PartType != partType)
+        if (_bodyPartQuery.TryGetComponent(uid, out var bodyPartComponent) &&
+            bodyPartComponent.PartType == partType)
         {
-            foreach (var container in _containerSystem.GetAllContainers(uid))
-                SearchRecursiveForTypeAndPopulate(container.Owner, partType, ref list);
-
+            list.Add((uid, bodyPartComponent));
             return;
         }
 
-        list.Add((uid, bodyPartComponent));
+        if (!_containerManagerQuery.TryGetComponent(uid, out var containerManagerComponent))
+            return;
+
+        foreach (var container in _containerSystem.GetAllContainers(uid, containerManager: containerManagerComponent))
+        {
+            foreach (var containedUid in container.ContainedEntities)
+                SearchRecursiveForTypeAndPopulate(containedUid, partType, ref list);
+        }
     }
 
     /// <summary>

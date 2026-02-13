@@ -14,12 +14,12 @@ public sealed partial class DismemberOnTriggerComponent : BaseXOnTriggerComponen
     /// <summary>
     ///     Range of minimum and maximum number of sparks to emit upon trigger.
     /// </summary>
-    [DataField, ViewVariables]
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
     public BodyPartType PartType = BodyPartType.Leg;
 
     /// <summary>
     ///     Throw-speed of bodypart being dismembered.
     /// </summary>
-    [DataField, ViewVariables]
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
     public float ThrowSpeed = 10f;
 }

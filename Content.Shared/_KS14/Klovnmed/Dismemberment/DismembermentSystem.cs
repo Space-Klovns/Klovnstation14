@@ -37,7 +37,7 @@ public sealed class DismembermentSystem : EntitySystem
     /// <returns>Whether anything happened.</returns>
     public bool TryDismemberRandomBodyPartOfType(Entity<BodyComponent?> bodyEntity, BodyPartType partType, [NotNullWhen(true)] out Entity<BodyPartComponent>? partEntity, Vector2? direction = null, float throwSpeed = 10f, EntityUid? user = null)
     {
-        if (!_bodyQuery.Resolve(bodyEntity, ref bodyEntity.Comp) ||
+        if (!_bodyQuery.Resolve(bodyEntity, ref bodyEntity.Comp, logMissing: false) ||
             !_bodyPartSearchSystem.TryGetRandomBodyPartOfType(bodyEntity, partType, out var predictedRandom, out partEntity))
         {
             partEntity = null;
@@ -49,12 +49,12 @@ public sealed class DismembermentSystem : EntitySystem
 
         if (throwSpeed != 0f)
         {
-            direction = (predictedRandom ?? KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
+            direction ??= (predictedRandom ?? KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
                 (int)_gameTiming.CurTick.Value,
                 KsSharedRandomExtensions.GetNetId(partEntity.Value.Owner, EntityManager)
             )).NextUnitVector2();
 
-            _throwingSystem.TryThrow(partEntity.Value.Owner, direction.Value, baseThrowSpeed: throwSpeed, user: user);
+            _throwingSystem.TryThrow(partEntity.Value.Owner, direction.Value, baseThrowSpeed: throwSpeed, user: user, recoil: false);
         }
 
         return true;
