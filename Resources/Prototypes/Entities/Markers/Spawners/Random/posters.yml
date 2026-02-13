@@ -117,6 +117,7 @@
       - PosterContrabandExoRun
       - PosterContrabandExoChomp
       - PosterContrabandKlovnRedFOSS #KS14
+      - PosterContrabandKlovnEgg #KS14
     chance: 1
 
 - type: entity

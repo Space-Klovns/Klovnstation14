@@ -22,3 +22,13 @@
   - type: Sprite
     sprite: _KS14/Structures/Wallmounts/posters.rsi
     state: klovn_poster1_contraband
+
+- type: entity
+  parent: PosterBase
+  id: PosterContrabandKlovnEgg
+  name: "Egg Poster"
+  description: "The poster seems to be against noticing eggs. You have no idea what this means."
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/Wallmounts/posters.rsi
+    state: klovn_poster2_contraband
