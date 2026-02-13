@@ -1,0 +1,85 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+using Content.Shared._KS14.Random.Helpers;
+using Content.Shared.Body.Part;
+using Robust.Shared.Collections;
+using Robust.Shared.Containers;
+using Robust.Shared.Timing;
+using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
+
+namespace Content.Shared._KS14.Klovnmed;
+
+/// <summary>
+///     All methods that search for bodyparts here assume that
+///         all bodyparts will only either be contained in either a Body,
+///         or another BodyPart.
+/// </summary>
+public sealed class BodyPartSearchSystem : EntitySystem
+{
+    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
+
+    private EntityQuery<BodyPartComponent> _bodyPartQuery;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        _bodyPartQuery = GetEntityQuery<BodyPartComponent>();
+    }
+
+    /// <summary>
+    ///     Populates a ValueList with bodyparts of a given type
+    ///         by searching recursively.
+    /// </summary>
+    public void SearchRecursiveForTypeAndPopulate(EntityUid uid, BodyPartType partType, ref ValueList<Entity<BodyPartComponent>> list)
+    {
+        if (!_bodyPartQuery.TryGetComponent(uid, out var bodyPartComponent) ||
+            bodyPartComponent.PartType != partType)
+        {
+            foreach (var container in _containerSystem.GetAllContainers(uid))
+                SearchRecursiveForTypeAndPopulate(container.Owner, partType, ref list);
+
+            return;
+        }
+
+        list.Add((uid, bodyPartComponent));
+    }
+
+    /// <summary>
+    ///     Tries to get a random bodypart by searching recursively, returns
+    ///         false if none was found.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGetRandomBodyPartOfType(EntityUid bodyUid, BodyPartType partType, [NotNullWhen(true)] out Entity<BodyPartComponent>? partEntity)
+        => TryGetRandomBodyPartOfType(bodyUid, partType, out _, out partEntity);
+
+    /// <inheritdoc cref="TryGetRandomBodyPartOfType(EntityUid, BodyPartType, out Entity{BodyPartComponent}?)"/>
+    public bool TryGetRandomBodyPartOfType(EntityUid bodyUid, BodyPartType partType, out System.Random? predictedRandom, [NotNullWhen(true)] out Entity<BodyPartComponent>? partEntity)
+    {
+        var list = new ValueList<Entity<BodyPartComponent>>();
+        SearchRecursiveForTypeAndPopulate(bodyUid, partType, ref list);
+
+        if (list.Count == 0)
+        {
+            partEntity = null;
+            predictedRandom = null;
+            return false;
+        }
+        else if (list.Count == 1)
+        {
+            partEntity = list[0];
+            predictedRandom = null;
+            return true;
+        }
+
+        predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
+            (int)_gameTiming.CurTick.Value,
+            KsSharedRandomExtensions.GetNetId(bodyUid, EntityManager),
+            list.Count
+        );
+
+        partEntity = list[predictedRandom.Next(list.Count)];
+        return true;
+    }
+}
