@@ -303,8 +303,7 @@
   parent: ChemicalMedipen
   id: EmergencyMedipen
   name: emergency medipen
-  #klovn - added a mention of omnizine to description
-  description: A single-dose, non-refillable medipen containing epinephrine, a little omnizine and tranexamic acid, used to temporarily stabilize patients in critical condition and buy time for them to recieve proper medical treatment. Beware of overdose.
+  description: A single-dose, non-refillable medipen containing epinephrine, and tranexamic acid, used to temporarily stabilize patients in critical condition and buy time for them to recieve proper medical treatment. Beware of overdose.
   components:
   - type: Sprite
     sprite: Objects/Specific/Medical/medipen.rsi
@@ -321,11 +320,9 @@
         maxVol: 15
         reagents:
         - ReagentId: Epinephrine
-          Quantity: 10 #klovn, was 12
+          Quantity: 12
         - ReagentId: TranexamicAcid
           Quantity: 3
-        - ReagentId: Omnizine #klovn
-          Quantity: 2
   - type: Tag #goob port
     tags:
     - EmergencyMedipen
