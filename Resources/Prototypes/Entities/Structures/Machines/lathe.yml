@@ -502,6 +502,7 @@
   - type: Lathe
     idleState: icon
     runningState: building
+    timeMultiplier: 2 #KS14 change to speed shit up
     staticPacks:
     - FriendlyCubesStatic
   - type: EmagLatheRecipes
