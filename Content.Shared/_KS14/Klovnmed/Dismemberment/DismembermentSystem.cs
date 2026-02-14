@@ -49,6 +49,8 @@ public sealed class DismembermentSystem : EntitySystem
     ///     Tries to dismember a random body-part of given type from someone,
     ///         setting its coordinates to those of the victim and throwing it in a random direction.
     ///         Does no throwing logic if <paramref name="throwSpeed"/> is exactly 0f.
+    ///
+    ///     Supports <see cref="partType"/> having more than one bit set.
     /// </summary>
     /// <returns>Whether anything happened.</returns>
     public bool TryDismemberRandomBodyPartOfType(Entity<BodyComponent?, TransformComponent?> bodyEntity, BodyPartType partType, [NotNullWhen(true)] out Entity<BodyPartComponent>? partEntity, Vector2? direction = null, float throwSpeed = 10f, EntityUid? cause = null)

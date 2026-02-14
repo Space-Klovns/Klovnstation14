@@ -3,7 +3,6 @@ using Content.Shared._KS14.BloodSpray;
 using Content.Shared._KS14.Klovnmed.Dismemberment;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Part;
-using Robust.Shared.Collections;
 
 namespace Content.Server.Explosion.EntitySystems;
 
@@ -26,7 +25,7 @@ public sealed partial class ExplosionSystem
         var positionalDelta = worldPosition - worldEpicenter;
         var distance = positionalDelta.Length();
 
-        var eligiblePartTypes = new ValueList<BodyPartType>();
+        var eligiblePartTypeField = BodyPartType.Other;
 
         // point is that the further you get from epicenter the higher the potential damage area goes
         for (var i = 0; i < _dismembermentTargetDistanceValues.Length; i++)
@@ -34,22 +33,26 @@ public sealed partial class ExplosionSystem
             if (distance < _dismembermentTargetDistanceKeys[i])
                 break;
 
-            eligiblePartTypes.Add(_dismembermentTargetDistanceValues[i]);
+            eligiblePartTypeField |= _dismembermentTargetDistanceValues[i];
         }
 
-        if (eligiblePartTypes.Count == 0)
+        if (eligiblePartTypeField == BodyPartType.Other)
             return;
 
         Vector2Helpers.Normalize(ref positionalDelta);
 
         // maximum of 1 to (1 to 2) maximum number of dismemberments
-        var maximumDismemberments = Math.Min(Math.Max(1, distance * 3.5f), _robustRandom.Next(1, 2)); // IDFK
+
+        var distanceWithMinimumOne = Math.Max(1f, distance);
+
+        // maximum potential dismemberments gets lower with distance
+        var maximumDismemberments = Math.Min(Math.Max(1, (int)(3f / distanceWithMinimumOne)), _robustRandom.Next(1, 3)); // IDFK
 
         for (var i = 0; i < maximumDismemberments; i++)
         {
             _dismembermentSystem.TryDismemberRandomBodyPartOfType(
                 (entity, entity.Comp, transformComponent),
-                eligiblePartTypes[_robustRandom.Next(eligiblePartTypes.Count)], // take random parttype
+                eligiblePartTypeField,
                 out _,
                 direction: positionalDelta,
                 throwSpeed: throwForce * 0.65f,

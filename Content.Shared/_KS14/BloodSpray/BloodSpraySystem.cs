@@ -50,7 +50,7 @@ public sealed class BloodSpraySystem : EntitySystem
     // - [x] Tested, works.
     // TODO: Clean up code
     // Coder's Ultimatum
-    public void HandleBleedEffects(Entity<BloodstreamComponent> entity, float bloodloss, Vector2 targetWorldCoordinates, TransformComponent targetTransform, EntityUid parentUid, Vector2 worldDeltaUnit, EntityUid? originUid = null)
+    public void HandleBleedEffects(Entity<BloodstreamComponent> entity, float bloodloss, Vector2 targetWorldPosition, TransformComponent targetTransform, EntityUid parentUid, Vector2 worldDeltaUnit, EntityUid? originUid = null)
     {
         // it shouldnt be 0 ever anyway
         if (bloodloss <= 0.5f)
@@ -61,10 +61,10 @@ public sealed class BloodSpraySystem : EntitySystem
 
         // TODO: fix occasional mispredict here
         var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed((int)_gameTiming.CurTick.Value, (int)targetTransform.LocalPosition.LengthSquared());
-        var invParentWorldMatrix = _transformSystem.GetInvWorldMatrix(targetTransform.ParentUid);
+        var parentInvWorldMatrix = _transformSystem.GetInvWorldMatrix(parentUid);
 
         var bloodColor = bloodSolution.GetColor(_prototypeManager);
-        bloodColor = bloodColor.WithAlpha(bloodColor.A * predictedRandom.NextFloat(0.28f, (float)0.456522013370650220069420M)); // random alpha
+        bloodColor = bloodColor.WithAlpha(bloodColor.A * predictedRandom.NextFloat(0.28f, 0.2206761f)); // random alpha
 
         const float maxPower = 1.75f;
         var power = MathF.Max(maxPower * (1f - MathF.Exp(-bloodloss / 6f)), 0f);
@@ -106,15 +106,11 @@ public sealed class BloodSpraySystem : EntitySystem
                 hitParentUid = Transform(hitData.Entity).ParentUid;
 
             // docs for RayHit lie because RayHit.Point isnt the *caller* changing it to local terms, but instead the code constructing it; it is also local to the hit entity's parent(? TODO: confirm that assumption)
+            // tldr `hitData.Point` is local to `hitData.Entity`'s ParentUid
             effectCoordinates = new(hitParentUid, hitData.Point);
         }
         else
-        {
-            effectCoordinates = new(
-                targetTransform.ParentUid, // we guess lol
-                Vector2.Transform(targetWorldCoordinates + worldDeltaUnit, invParentWorldMatrix)
-            );
-        }
+            effectCoordinates = new EntityCoordinates(targetTransform.ParentUid, targetTransform.LocalPosition/*Vector2.Transform(targetWorldPosition + worldDeltaUnit * power, parentInvWorldMatrix)*/);
 
         var accumulatedVariation = Vector2.Zero;
         while (power > 0f)

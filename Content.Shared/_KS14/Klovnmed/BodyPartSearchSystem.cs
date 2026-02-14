@@ -33,11 +33,13 @@ public sealed class BodyPartSearchSystem : EntitySystem
     /// <summary>
     ///     Populates a ValueList with bodyparts of a given type
     ///         by searching recursively.
+    ///
+    ///     Supports <see cref="partType"/> having more than one bit set.
     /// </summary>
     public void SearchRecursiveForTypeAndPopulate(EntityUid uid, BodyPartType partType, ref ValueList<Entity<BodyPartComponent>> list)
     {
         if (_bodyPartQuery.TryGetComponent(uid, out var bodyPartComponent) &&
-            bodyPartComponent.PartType == partType)
+            partType.HasFlag(bodyPartComponent.PartType)) // check if the parttype fits
         {
             list.Add((uid, bodyPartComponent));
             return;
@@ -56,6 +58,8 @@ public sealed class BodyPartSearchSystem : EntitySystem
     /// <summary>
     ///     Tries to get a random bodypart by searching recursively, returns
     ///         false if none was found.
+    ///
+    ///     Supports <see cref="partType"/> having more than one bit set.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetRandomBodyPartOfType(EntityUid bodyUid, BodyPartType partType, [NotNullWhen(true)] out Entity<BodyPartComponent>? partEntity)
