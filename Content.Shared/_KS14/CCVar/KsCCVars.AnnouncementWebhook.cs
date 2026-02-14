@@ -11,19 +11,19 @@ public sealed partial class KsCCVars
     /// </summary>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<bool> AnnouncementWebhookEnabled =
-        CVarDef.Create("klovn.announcementwebhook.enabled", false, CVar.SERVERONLY);
+        CVarDef.Create("klovn.announcementwebhook.enabled", true, CVar.SERVERONLY);
 
     /// <summary>
     ///     Port to listen on, for HTTPS.
     /// </summary>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<int> AnnouncementWebhookPort =
-        CVarDef.Create("klovn.announcementwebhook.port", 2200, CVar.SERVERONLY);
+        CVarDef.Create("klovn.announcementwebhook.port", 8065, CVar.SERVERONLY);
 
     /// <summary>
     ///     Should overlay stains be drawn more expensively?
     /// </summary>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<string> AnnouncementWebhookToken =
-        CVarDef.Create("klovn.announcementwebhook.token", string.Empty, CVar.SERVERONLY | CVar.CONFIDENTIAL);
+        CVarDef.Create("klovn.announcementwebhook.token", "debug", CVar.SERVERONLY | CVar.CONFIDENTIAL);
 }

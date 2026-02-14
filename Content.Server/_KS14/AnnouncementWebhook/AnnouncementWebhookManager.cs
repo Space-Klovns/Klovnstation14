@@ -19,31 +19,34 @@ public sealed class AnnouncementWebhookManager
     [Dependency] private readonly IConfigurationManager _configurationManager = default!;
     [Dependency] private readonly IChatManager _chatManager = default!;
 
-    private readonly HttpListener _httpListener = default!;
-
+    private HttpListener _httpListener = null!;
     private ISawmill _sawmill = default!;
 
     private bool _enabled = false;
-    private int _port = 2200;
+    private int _port = 0;
     private string _token = "";
 
-    private CancellationTokenSource _listenTaskCancellationTokenSource = null!;
+    private CancellationTokenSource _listenTas = new();
+    private CancellationTokenSource _listenTaskCancellationTokenSource = new();
 
     public void Initialize()
     {
         _sawmill = Logger.GetSawmill("announcement_webhook");
+        _httpListener = new();
 
         _configurationManager.OnValueChanged(KsCCVars.AnnouncementWebhookEnabled, OnEnabledChanged, invokeImmediately: true);
         _configurationManager.OnValueChanged(KsCCVars.AnnouncementWebhookPort, OnPortChanged, invokeImmediately: true);
         _configurationManager.OnValueChanged(KsCCVars.AnnouncementWebhookToken, (x) => _token = x, invokeImmediately: true);
-
-        ResetListeningTask();
     }
 
     private void OnEnabledChanged(bool enabled)
     {
         _enabled = enabled;
-        ResetListeningTask();
+
+        if (enabled)
+            _ = StartListeningAsync(_listenTaskCancellationTokenSource.Token);
+        else
+            _httpListener.Stop();
     }
 
     private void OnPortChanged(int newPort)
@@ -86,14 +89,19 @@ public sealed class AnnouncementWebhookManager
 
         _listenTaskCancellationTokenSource = new();
 
+        if (_httpListener.IsListening)
+            _httpListener.Stop();
+
         _httpListener.Prefixes.Clear();
-        _httpListener.Prefixes.Add($"http://*:{_port}/");
+        _httpListener.Prefixes.Add($"http://localhost:{_port}/");
         _ = StartListeningAsync(_listenTaskCancellationTokenSource.Token);
     }
 
     public void Shutdown()
     {
-        _httpListener.Stop();
+        if (_httpListener.IsListening)
+            _httpListener.Stop();
+
         _httpListener.Close();
     }
 
@@ -133,6 +141,7 @@ public sealed class AnnouncementWebhookManager
             }
 
             _sawmill.Info($"Received announcement message successfully: `{data.Message}`");
+            _chatManager.DispatchServerAnnouncement(data.Message);
 
             response.StatusCode = 200;
             await WriteResponseAsync(response, "OK");
