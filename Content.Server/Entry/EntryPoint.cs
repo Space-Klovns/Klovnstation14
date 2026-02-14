@@ -1,3 +1,4 @@
+using Content.Server._KS14.AnnouncementWebhook; // KS14
 using Content.Server._KS14.Antag; // KS14
 using Content.Server._KS14.IoC; // KS14
 using Content.Server.Acz;
@@ -79,6 +80,7 @@ namespace Content.Server.Entry
         [Dependency] private readonly ServerInfoManager _serverInfo = default!;
         [Dependency] private readonly ServerUpdateManager _updateManager = default!;
         [Dependency] private readonly LastRolledAntagManager _lastRolledAntagManager = default!; // KS14
+        [Dependency] private readonly AnnouncementWebhookManager _announcementWebhookManager = default!; // KS14
 
         public override void PreInit()
         {
@@ -171,6 +173,7 @@ namespace Content.Server.Entry
             _multiServerKick.Initialize();
             _cvarCtrl.Initialize();
             _lastRolledAntagManager.Initialize(); // KS14
+            _announcementWebhookManager.Initialize(); // KS14
         }
 
         public override void Update(ModUpdateLevel level, FrameEventArgs frameEventArgs)
@@ -197,9 +200,12 @@ namespace Content.Server.Entry
 
         protected override void Dispose(bool disposing)
         {
+            _announcementWebhookManager.Shutdown(); // KS14
+
             var dest = _cfg.GetCVar(CCVars.DestinationFile);
             if (!string.IsNullOrEmpty(dest))
             {
+                _lastRolledAntagManager.Shutdown(); // KS14
                 _playTimeTracking.Shutdown();
                 _dbManager.Shutdown();
             }

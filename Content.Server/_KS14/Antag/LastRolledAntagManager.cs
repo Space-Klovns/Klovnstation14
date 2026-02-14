@@ -11,8 +11,6 @@ using Robust.Shared.Player;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
 
 namespace Content.Server._KS14.Antag;
 
