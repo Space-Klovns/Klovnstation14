@@ -26,18 +26,24 @@
 // SPDX-FileCopyrightText: 2024 themias
 // SPDX-FileCopyrightText: 2024 Łukasz Lindert
 // SPDX-FileCopyrightText: 2025 DrSmugleaf
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Fildrance
+// SPDX-FileCopyrightText: 2025 Hannah Giovanna Dawson
+// SPDX-FileCopyrightText: 2025 Ignaz "Ian" Kraft
 // SPDX-FileCopyrightText: 2025 Nemanja
+// SPDX-FileCopyrightText: 2025 Nikovnik
 // SPDX-FileCopyrightText: 2025 Orsoniks
+// SPDX-FileCopyrightText: 2025 PJB3005
 // SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
 // SPDX-FileCopyrightText: 2025 Princess Cheeseballs
 // SPDX-FileCopyrightText: 2025 ScarKy0
 // SPDX-FileCopyrightText: 2025 TheFlyingSentry
+// SPDX-FileCopyrightText: 2025 Vasilis The Pikachu
 // SPDX-FileCopyrightText: 2025 Zachary Higgs
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 nabegator220
-// SPDX-FileCopyrightText: 2025 pathetic meowmeow
 // SPDX-FileCopyrightText: 2025 slarticodefast
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2026 pathetic meowmeow
 //
 // SPDX-License-Identifier: MIT
 

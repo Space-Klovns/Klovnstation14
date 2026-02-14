@@ -1,3 +1,12 @@
+// SPDX-FileCopyrightText: 2022 Nemanja
+// SPDX-FileCopyrightText: 2022 Paul Ritter
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Jezithyr
+// SPDX-FileCopyrightText: 2023 metalgearsloth
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Shared.Body.Prototypes;
 using Content.Shared.Body.Systems;
 using Content.Shared.Damage;

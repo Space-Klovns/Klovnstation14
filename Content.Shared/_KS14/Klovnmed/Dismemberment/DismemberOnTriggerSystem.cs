@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Shared.Trigger;
 
 namespace Content.Shared._KS14.Klovnmed.Dismemberment;
