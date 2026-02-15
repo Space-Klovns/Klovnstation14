@@ -345,7 +345,6 @@
           Asphyxiation: 5 # Essentially Stopping all blood reaching a part of your body
       bloodlossModifier: -8 # Tourniquets stop bleeding # KS14: -10 -> -8 (as they are buffed now)
       delay: 10 # KS14: changed from `0.5` -> `0.65`
-      selfHealPenaltyMultiplier: 0 # KS14: Made tourniquets instaheal yourself
       healingBeginSound:
         path: "/Audio/Items/Medical/brutepack_begin.ogg"
         params:
