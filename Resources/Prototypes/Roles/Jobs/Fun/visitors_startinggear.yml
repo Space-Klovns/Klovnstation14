@@ -822,7 +822,7 @@
 #    mask: ClothingMaskBreathMedical # right now this is broken for vox, but maybe some day.
     id: VisitorPDA
     belt: ClothingBeltStorageWaistbag
-    back: NitrousOxideTankFilled
+    back: ClothingBackpackSatchelMedical
     ears: ClothingHeadsetMedical
     eyes: ClothingEyesGlasses
     pocket1: Scalpel
@@ -830,6 +830,7 @@
   storage: #klovn
     back:
     - BoxSurvivalSlots #goob
+    - NitrousOxideTankFilled
   inhand:
   - Cautery
   - Drill
