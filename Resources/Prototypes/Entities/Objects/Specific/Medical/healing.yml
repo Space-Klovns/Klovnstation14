@@ -145,7 +145,7 @@
   - type: Healing
     damageContainers:
       - Biological
-    delay: 1.5
+    delay: 0.75 # KS14: halved delay
     damage:
       types:
         Heat: -10
@@ -244,7 +244,7 @@
   - type: Healing
     damageContainers:
       - Biological
-    delay: 1.5
+    delay: 0.75 # KS14: halved delay
     damage:
       groups:
         Brute: -30 # 10 for each type in the group
@@ -344,7 +344,8 @@
         types:
           Asphyxiation: 5 # Essentially Stopping all blood reaching a part of your body
       bloodlossModifier: -8 # Tourniquets stop bleeding # KS14: -10 -> -8 (as they are buffed now)
-      delay: 0 # KS14: 0.5 -> 0
+      delay: 0.65 # KS14: changed from `0.5` -> `0.65`
+      selfHealPenaltyMultiplier: -1 # KS14: Made tourniquets instaheal yourself
       healingBeginSound:
         path: "/Audio/Items/Medical/brutepack_begin.ogg"
         params:
@@ -377,12 +378,12 @@
   - type: Healing
     damageContainers:
       - Biological
-    delay: 1 # KS14: halved delay and healing
+    delay: 1 # KS14: halved delay
     damage:
       types:
-        Slash: -2.5 # KS14: -5 => -2.5
-        Piercing: -5 # KS14: -10 => -5
-    bloodlossModifier: -5 # KS14: -10 => -5
+        Slash: -5
+        Piercing: -10
+    bloodlossModifier: -10
     healingBeginSound:
       path: "/Audio/Items/Medical/brutepack_begin.ogg"
       params:

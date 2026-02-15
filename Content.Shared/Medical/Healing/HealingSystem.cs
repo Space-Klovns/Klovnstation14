@@ -283,6 +283,6 @@ public sealed class HealingSystem : EntitySystem
         //basically make it scale from 1 to the multiplier.
 
         var output = percentDamage * (mod - 1) + 1;
-        return Math.Max(output, 1);
+        return Math.Max(output, 0f /* KS14: Changed minimum to 0, so that you can have things that selfheal instantly */);
     }
 }
