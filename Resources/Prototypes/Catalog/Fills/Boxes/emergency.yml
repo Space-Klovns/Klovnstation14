@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+
 - type: entity
   parent: BoxCardboardSmallOutsideBigInside # KS14: Changed to inherit from BoxCardboardSmall instead of BoxCardboard
   id: BoxSurvival
