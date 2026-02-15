@@ -63,7 +63,7 @@
   result: SpaceCarpCube
   materials:
     Biomass: 24
-    Gold: 200 # KS14 change from plasma to gold
+    GoldIngot: 200 # KS14 change from plasma to gold
 
 - type: latheRecipe
   parent: BaseCubeRecipe
@@ -72,7 +72,7 @@
   completetime: 15
   materials:
     Biomass: 8
-    Gold: 100 # less biomass but more plasma, # KS14 change from plasma to gold
+    GoldIngot: 100 # less biomass but more plasma, # KS14 change from plasma to gold
 
 - type: latheRecipe
   parent: BaseCubeRecipe
@@ -80,4 +80,4 @@
   result: AbominationCube
   materials: # abominations are slow and essentially worse than even carp
     Biomass: 28
-    Gold: 100 # more biomass but less plasma, # KS14 change from plasma to gold
+    GoldIngot: 100 # more biomass but less plasma, # KS14 change from plasma to gold
