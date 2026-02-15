@@ -344,13 +344,14 @@
     - type: Healing
       damageContainers:
         - Biological
-      damage:
-        groups:
-          Blunt: 2.5 # Tourniquets HURT! # KS14: Changed from `Brute: 5` to `Blunt: 2.5` (former makes you bleed geeg)
+      damage: # KS14: Commented out blunt dmg
+        # groups:
+        #   Brute: 5 # Tourniquets HURT!
         types:
           Asphyxiation: 5 # Essentially Stopping all blood reaching a part of your body
       bloodlossModifier: -8 # Tourniquets stop bleeding # KS14: -10 -> -8 (as they are buffed now)
-      delay: 10 # KS14: changed from `0.5` -> `0.65`
+      delay: 0.65 # KS14: changed from `0.5` -> `0.65`
+      selfHealDelayMultiplier: 0 # KS14
       healingBeginSound:
         path: "/Audio/Items/Medical/brutepack_begin.ogg"
         params:

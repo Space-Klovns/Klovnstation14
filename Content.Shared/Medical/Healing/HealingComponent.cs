@@ -52,6 +52,14 @@ public sealed partial class HealingComponent : Component
     [DataField, AutoNetworkedField]
     public TimeSpan Delay = TimeSpan.FromSeconds(3f);
 
+    // KS14 Addition
+    /// <summary>
+    ///     Multiplier for doafter duration for healing, when healing yourself.
+    ///         Applied *after* penalty.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float SelfHealDelayMultiplier = 1f;
+
     /// <summary>
     /// Delay multiplier when healing yourself.
     /// </summary>
