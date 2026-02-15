@@ -9,4 +9,4 @@ namespace Content.Shared._KS14.Speczones;
 ///     Intended to be manually added by admins.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
-public abstract partial class AlwaysAllowedInSpeczoneComponent : Component;
+public sealed partial class AlwaysAllowedInSpeczoneComponent : Component;
