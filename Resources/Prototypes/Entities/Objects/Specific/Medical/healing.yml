@@ -201,9 +201,6 @@
       - Biological
     delay: 2
     damage:
-      Bruise: -10 #klovn stat
-      Slash: -10
-      Piercing: -10
       groups:
         Brute: -30 # klovn, 10 for each type in the group, was -15
     healingBeginSound:
