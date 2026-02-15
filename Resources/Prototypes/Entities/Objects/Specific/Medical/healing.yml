@@ -67,6 +67,11 @@
   # Inherited
   - type: StaticPrice
     price: 0
+  - type: Healing # KS14 - Added default
+    selfHealPenaltyMultiplier: 2 # instead of 3 (component default)
+    damage:
+      types:
+        Piercing: 0
 
 - type: entity
   name: ointment
@@ -335,11 +340,11 @@
         - Biological
       damage:
         groups:
-          Brute: 5 # Tourniquets HURT!
+          Blunt: 2.5 # Tourniquets HURT! # KS14: Changed from `Brute: 5` to `Blunt: 2.5` (former makes you bleed geeg)
         types:
           Asphyxiation: 5 # Essentially Stopping all blood reaching a part of your body
-      bloodlossModifier: -10 # Tourniquets stop bleeding
-      delay: 0.5
+      bloodlossModifier: -8 # Tourniquets stop bleeding # KS14: -10 -> -8 (as they are buffed now)
+      delay: 0 # KS14: 0.5 -> 0
       healingBeginSound:
         path: "/Audio/Items/Medical/brutepack_begin.ogg"
         params:
@@ -372,12 +377,12 @@
   - type: Healing
     damageContainers:
       - Biological
-    delay: 2
+    delay: 1 # KS14: halved delay and healing
     damage:
       types:
-        Slash: -5
-        Piercing: -10
-    bloodlossModifier: -10
+        Slash: -2.5 # KS14: -5 => -2.5
+        Piercing: -5 # KS14: -10 => -5
+    bloodlossModifier: -5 # KS14: -10 => -5
     healingBeginSound:
       path: "/Audio/Items/Medical/brutepack_begin.ogg"
       params:

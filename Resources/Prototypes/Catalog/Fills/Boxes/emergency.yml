@@ -1,5 +1,5 @@
 - type: entity
-  parent: BoxCardboard
+  parent: BoxCardboardSmall # KS14: Changed to inherit from BoxCardboardSmall instead of BoxCardboard
   id: BoxSurvival
   name: survival box
   description: It's a box with basic internals inside.
@@ -43,7 +43,7 @@
     currentLabel: reagent-name-nitrogen
 
 - type: entity
-  parent: BoxCardboard
+  parent: BoxCardboardSmall # KS14: Changed to inherit from BoxCardboardSmall instead of BoxCardboard
   id: BoxSurvivalEngineering
   name: extended-capacity survival box
   description: It's a box with basic internals inside. This one is labelled to contain an extended-capacity tank.
@@ -88,7 +88,7 @@
 
 - type: entity
 
-  parent: BoxCardboard
+  parent: BBoxCardboardSmall # KS14: Changed to inherit from BoxCardboardSmall instead of BoxCardboardd
   id: BoxSurvivalSecurity
   name: survival box
   description: It's a box with basic internals inside.
@@ -133,7 +133,7 @@
 
 - type: entity
 
-  parent: BoxCardboard
+  parent: BoxCardboardSmall # KS14: Changed to inherit from BoxCardboardSmall instead of BoxCardboard
   id: BoxSurvivalMedical
   name: survival box
   description: It's a box with basic internals inside.
@@ -177,7 +177,7 @@
     currentLabel: reagent-name-nitrogen
 
 - type: entity
-  parent: BoxCardboard
+  parent: BoxCardboardSmall # KS14: Changed to inherit from BoxCardboardSmall instead of BoxCardboard
   id: BoxHug
   name: box of hugs
   description: A special box for sensitive people.
@@ -277,7 +277,7 @@
         - id: DrinkWaterBottleFull
 
 - type: entity
-  parent: BoxCardboard
+  parent: BoxCardboardSmall # KS14: Changed to inherit from BoxCardboardSmall instead of BoxCardboard
   id: BoxSurvivalSyndicate
   name: extended-capacity survival box
   description: It's a box with basic internals inside. This one is labelled to contain an extended-capacity tank.
