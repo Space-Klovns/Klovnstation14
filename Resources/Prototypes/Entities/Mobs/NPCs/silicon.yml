@@ -47,10 +47,11 @@
 # SPDX-FileCopyrightText: 2025 chromiumboy
 # SPDX-FileCopyrightText: 2025 godisdeadLOL
 # SPDX-FileCopyrightText: 2025 lzk
-# SPDX-FileCopyrightText: 2025 nabegator220
 # SPDX-FileCopyrightText: 2025 slarticodefast
+# SPDX-FileCopyrightText: 2026 DeusMaldPr
 # SPDX-FileCopyrightText: 2026 Gerkada
 # SPDX-FileCopyrightText: 2026 github_actions[bot]
+# SPDX-FileCopyrightText: 2026 nabegator220
 #
 # SPDX-License-Identifier: MIT
 
@@ -392,7 +393,7 @@
         reagent: Tricordrazine
         quantity: 30
         minDamage: 0
-        maxDamage: 50
+        maxDamage: 100 #klovn,Real trico
       Critical:
         reagent: Inaprovaline
         quantity: 15

@@ -1,4 +1,34 @@
-﻿using Content.Shared.Administration.Logs;
+// SPDX-FileCopyrightText: 2022 Jacob Tong
+// SPDX-FileCopyrightText: 2022 KIBORG04
+// SPDX-FileCopyrightText: 2022 Kara D
+// SPDX-FileCopyrightText: 2022 Mervill
+// SPDX-FileCopyrightText: 2022 Rane
+// SPDX-FileCopyrightText: 2022 mirrorcult
+// SPDX-FileCopyrightText: 2022 wrexbe
+// SPDX-FileCopyrightText: 2023 Jezithyr
+// SPDX-FileCopyrightText: 2023 Kevin Zheng
+// SPDX-FileCopyrightText: 2023 Leon Friedrich
+// SPDX-FileCopyrightText: 2023 Ygg01
+// SPDX-FileCopyrightText: 2023 keronshb
+// SPDX-FileCopyrightText: 2024 Gyrandola
+// SPDX-FileCopyrightText: 2024 Kara
+// SPDX-FileCopyrightText: 2024 Krunklehorn
+// SPDX-FileCopyrightText: 2024 Plykiya
+// SPDX-FileCopyrightText: 2024 TemporalOroboros
+// SPDX-FileCopyrightText: 2024 metalgearsloth
+// SPDX-FileCopyrightText: 2024 nikthechampiongr
+// SPDX-FileCopyrightText: 2025 DrSmugleaf
+// SPDX-FileCopyrightText: 2025 Nemanja
+// SPDX-FileCopyrightText: 2025 Princess Cheeseballs
+// SPDX-FileCopyrightText: 2025 ScarKy0
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2025 Winkarst-cpu
+// SPDX-FileCopyrightText: 2026 nabegator220
+// SPDX-FileCopyrightText: 2026 pathetic meowmeow
+//
+// SPDX-License-Identifier: MPL-2.0
+
+using Content.Shared.Administration.Logs;
 using Content.Shared.Database;
 using Content.Shared.Destructible;
 using Content.Shared.DoAfter;
@@ -133,7 +163,7 @@ public sealed class SharpSystem : EntitySystem
             args.Args.User,
             popupType);
 
-        _gibbing.Gib(args.Args.Target.Value); // does nothing if ent can't be gibbed
+        _gibbing.Gib(args.Args.Target.Value, doGibVisFx: false); // does nothing if ent can't be gibbed - KS14 fix - removed vfx from knife butchering
         _destructibleSystem.DestroyEntity(args.Args.Target.Value);
 
         args.Handled = true;

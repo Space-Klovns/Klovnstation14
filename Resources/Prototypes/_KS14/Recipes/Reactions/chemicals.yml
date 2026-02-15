@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2026 FrauzJ
 #
 # SPDX-License-Identifier: MIT
 
@@ -22,7 +23,6 @@
   id: KlovnideExplosion
   impact: High
   priority: 25
-  conserveEnergy: false
   reactants:
     Klovnide:
       amount: 1

@@ -1,3 +1,24 @@
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Leon Friedrich
+// SPDX-FileCopyrightText: 2023 Nemanja
+// SPDX-FileCopyrightText: 2024 Ed
+// SPDX-FileCopyrightText: 2024 LordCarve
+// SPDX-FileCopyrightText: 2024 MilenVolf
+// SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2024 Plykiya
+// SPDX-FileCopyrightText: 2024 metalgearsloth
+// SPDX-FileCopyrightText: 2024 nikthechampiongr
+// SPDX-FileCopyrightText: 2025 Kyle Tyo
+// SPDX-FileCopyrightText: 2025 Quantum-cross
+// SPDX-FileCopyrightText: 2025 ScarKy0
+// SPDX-FileCopyrightText: 2025 SlamBamActionman
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2025 keronshb
+// SPDX-FileCopyrightText: 2025 ninruB
+// SPDX-FileCopyrightText: 2026 nabegator220
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using System.Diagnostics.CodeAnalysis;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Anomaly.Components;
@@ -416,7 +437,7 @@ public abstract class SharedAnomalySystem : EntitySystem
             if (tilerefs.Count == 0)
                 break;
 
-            var tileref = Random.Pick(tilerefs);
+            var tileref = Random.PickAndTake(tilerefs); //KS14 change
 
             // Get the world position of the tile to calculate the distance to the anomalous object
             var tileWorldPos = _map.GridTileToWorldPos(xform.GridUid.Value, grid, tileref.GridIndices);

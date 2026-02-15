@@ -1,3 +1,45 @@
+# SPDX-FileCopyrightText: 2023 Alekshhh
+# SPDX-FileCopyrightText: 2023 Alex Evgrashin
+# SPDX-FileCopyrightText: 2023 Kara
+# SPDX-FileCopyrightText: 2023 Kevin Zheng
+# SPDX-FileCopyrightText: 2023 Morb
+# SPDX-FileCopyrightText: 2023 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2023 PixelTK
+# SPDX-FileCopyrightText: 2023 Visne
+# SPDX-FileCopyrightText: 2023 brainfood1183
+# SPDX-FileCopyrightText: 2023 justproggramer
+# SPDX-FileCopyrightText: 2023 lzk228
+# SPDX-FileCopyrightText: 2023 metalgearsloth
+# SPDX-FileCopyrightText: 2024 Errant
+# SPDX-FileCopyrightText: 2024 Keer-Sar
+# SPDX-FileCopyrightText: 2024 LankLTE
+# SPDX-FileCopyrightText: 2024 MilenVolf
+# SPDX-FileCopyrightText: 2024 Minemoder5000
+# SPDX-FileCopyrightText: 2024 Mr. 27
+# SPDX-FileCopyrightText: 2024 RenQ
+# SPDX-FileCopyrightText: 2024 Wertan
+# SPDX-FileCopyrightText: 2024 Whisper
+# SPDX-FileCopyrightText: 2024 lzk
+# SPDX-FileCopyrightText: 2024 no
+# SPDX-FileCopyrightText: 2024 pocl v
+# SPDX-FileCopyrightText: 2024 themias
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 AsnDen
+# SPDX-FileCopyrightText: 2025 Ben Dake
+# SPDX-FileCopyrightText: 2025 Hannah Giovanna Dawson
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 Mora
+# SPDX-FileCopyrightText: 2025 Samuka-C
+# SPDX-FileCopyrightText: 2025 ScarKy0
+# SPDX-FileCopyrightText: 2025 SurrealShibe
+# SPDX-FileCopyrightText: 2025 Tayrtahn
+# SPDX-FileCopyrightText: 2025 imatsoup
+# SPDX-FileCopyrightText: 2025 keronshb
+# SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2026 DeusMaldPr
+#
+# SPDX-License-Identifier: MPL-2.0
+
 # species
 - type: emoteSounds
   id: MaleHuman
@@ -40,6 +82,8 @@
       collection: MaleGasp
     DefaultDeathgasp:
       collection: MaleDeathGasp
+    Gulp: # Goob
+      path: /Audio/_Goobstation/Voice/Human/gulp.ogg
 
 - type: emoteSounds
   id: FemaleHuman
@@ -82,6 +126,8 @@
       collection: FemaleGasp
     DefaultDeathgasp:
       collection: FemaleDeathGasp
+    Gulp: # Goob
+      path: /Audio/_Goobstation/Voice/Human/gulp.ogg
 
 - type: emoteSounds
   id: MaleReptilian
@@ -246,6 +292,8 @@
       path: /Audio/Effects/Gasp/vox_gasp.ogg
     DefaultDeathgasp:
       path: /Audio/Effects/Gasp/vox_DeathGasp.ogg
+    Gulp: # Goob
+      path: /Audio/_Goobstation/Voice/gulpexotic.ogg
   params:
     variation: 0.125
     # TODO: We need vox sounds for the other emotes
@@ -269,6 +317,8 @@
       collection: MaleGasp
     DefaultDeathgasp:
       collection: DeathGasp
+    Gulp: # Goob
+      path: /Audio/_Goobstation/Voice/gulpexotic.ogg
   params:
     variation: 0.125
 
@@ -293,6 +343,8 @@
       collection: BikeHorn
     Gasp:
       collection: MaleGasp
+    Gulp: # Goob
+      path: /Audio/_Goobstation/Voice/gulpexotic.ogg
     DefaultDeathgasp:
       collection: DeathGasp
 
@@ -335,6 +387,8 @@
       collection: MaleGasp
     DefaultDeathgasp:
       collection: MaleDeathGasp
+    Gulp: # Goob
+      path: /Audio/_Goobstation/Voice/Human/gulp.ogg
   params:
     variation: 0.125
     pitch: 0.75
@@ -378,6 +432,8 @@
       collection: FemaleGasp
     DefaultDeathgasp:
       collection: FemaleDeathGasp
+    Gulp: # Goob
+      path: /Audio/_Goobstation/Voice/Human/gulp.ogg
   params:
     variation: 0.125
     pitch: 0.75
@@ -405,6 +461,8 @@
       collection: BikeHorn
     Gasp:
       collection: MaleGasp
+    Gulp: # Goob
+      path: /Audio/_Goobstation/Voice/gulpexotic.ogg
     DefaultDeathgasp:
       collection: MothDeathGasp
 
@@ -510,6 +568,8 @@
       collection: BikeHorn
     Gasp:
       collection: MaleGasp
+    Gulp: # Goob
+      path: /Audio/_Goobstation/Voice/gulpexotic.ogg
     DefaultDeathgasp:
       collection: MaleDeathGasp
 
@@ -550,6 +610,8 @@
       collection: BikeHorn
     Gasp:
       collection: FemaleGasp
+    Gulp: # Goob
+      path: /Audio/_Goobstation/Voice/gulpexotic.ogg
     DefaultDeathgasp:
       collection: FemaleDeathGasp
 

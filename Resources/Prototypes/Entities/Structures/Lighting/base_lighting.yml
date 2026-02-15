@@ -30,7 +30,6 @@
 # SPDX-FileCopyrightText: 2023 TemporalOroboros
 # SPDX-FileCopyrightText: 2023 deltanedas
 # SPDX-FileCopyrightText: 2023 lzk
-# SPDX-FileCopyrightText: 2023 metalgearsloth
 # SPDX-FileCopyrightText: 2024 Alzore
 # SPDX-FileCopyrightText: 2024 Boaz1111
 # SPDX-FileCopyrightText: 2024 Boolean-Buckeye
@@ -50,7 +49,10 @@
 # SPDX-FileCopyrightText: 2025 Southbridge
 # SPDX-FileCopyrightText: 2025 SpaceRox1244
 # SPDX-FileCopyrightText: 2025 claustro305
+# SPDX-FileCopyrightText: 2025 metalgearsloth
 # SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2025 slarticodefast
+# SPDX-FileCopyrightText: 2026 FrauzJ
 #
 # SPDX-License-Identifier: MPL-2.0
 
@@ -113,6 +115,7 @@
         - None
         layer:
         - TabletopMachineLayer
+  - type: RequireProjectileTarget
   - type: Destructible
     thresholds:
     - trigger:
