@@ -8,7 +8,7 @@
 // SPDX-FileCopyrightText: 2025 slarticodefast
 // SPDX-FileCopyrightText: 2026 DeusMaldPr
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Shared.Alert;
 using Content.Shared.Buckle.Components;
@@ -315,7 +315,7 @@ public abstract partial class SharedStunSystem
         var doAfterArgs = new DoAfterArgs(EntityManager, entity, ev.DoAfterTime, new TryStandDoAfterEvent(), entity, entity)
         {
             BreakOnDamage = true,
-            DamageThreshold = 999, // klovn, was 5, Easiest method to bypass this, no i wont fuck around and find out if ticking the above box to false breaks anything
+            DamageThreshold = 12, // klovn, was 5, Easiest method to bypass this, no i wont fuck around and find out if ticking the above box to false breaks anything
             CancelDuplicate = true,
             RequireCanInteract = false,
             BreakOnHandChange = true
