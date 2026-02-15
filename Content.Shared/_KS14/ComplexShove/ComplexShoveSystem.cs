@@ -10,7 +10,6 @@ using System.Runtime.CompilerServices;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Mobs.Systems;
-using Content.Shared.Physics;
 using Content.Shared.Stunnable;
 using Robust.Shared.Physics.Systems;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
@@ -25,6 +24,7 @@ public sealed class ComplexShoveSystem : EntitySystem
     [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
     [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private readonly SharedStaminaSystem _staminaSystem = default!;
+    [Dependency] private readonly SharedStunSystem _stunSystem = default!;
     [Dependency] private readonly RayCastSystem _rayCastSystem = default!;
     [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
 
@@ -79,6 +79,12 @@ public sealed class ComplexShoveSystem : EntitySystem
             source: shoverEntity,
             ignoreResist: true
         );
+
+        if (shoverEntity.Comp2.WallshoveKnockdownDuration != TimeSpan.Zero &&
+            shovedEntity.Comp.StaminaDamage >= shoverEntity.Comp2.WallshoveKnockdownStaminaDamageThreshold)
+        {
+            _stunSystem.TryKnockdown(shovedEntity.Owner, shoverEntity.Comp2.WallshoveKnockdownDuration, refresh: false /* so that it stacks */, drop: false);
+        }
 
         var pushPower = IsUidDown(shovedEntity) ? shoverEntity.Comp2.DownedPushPower : shoverEntity.Comp2.StandingPushPower;
         _physicsSystem.ApplyLinearImpulse(shovedEntity.Owner, deltaUnit * pushPower);
