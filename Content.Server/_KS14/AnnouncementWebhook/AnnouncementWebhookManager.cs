@@ -55,7 +55,7 @@ public sealed class AnnouncementWebhookManager
             _chatManager.DispatchServerAnnouncement(message);
     }
 
-    private async void OnEnabledChanged(bool enabled)
+    private void OnEnabledChanged(bool enabled)
     {
         if (_shutdown)
             return;
@@ -65,13 +65,16 @@ public sealed class AnnouncementWebhookManager
         if (enabled)
             _ = StartListeningAsync();
         else if (_httpListener.IsListening)
+        {
             _httpListener.Stop();
+            _sawmill.Info($"Stopped listening for announcements to forward");
+        }
     }
 
     public async Task StartListeningAsync()
     {
         _httpListener.Start();
-        _sawmill.Info($"Started listening for announcements to forward on port ");
+        _sawmill.Info($"Started listening for announcements to forward");
 
         while (_enabled)
         {
