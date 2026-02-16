@@ -23,7 +23,7 @@
   - Construction
   - Power
   - Atmospherics
-  - Plumbing
+  - Plumbing # Starlight
   - ShuttleCraft
   - Networking
 
@@ -395,23 +395,3 @@
   id: ArcFlash
   name: guide-entry-arcflash
   text: "/ServerInfo/Guidebook/Engineering/ArcFlash.xml"
-
-# Starlight - Plumbing
-- type: guideEntry
-  id: Plumbing
-  name: guide-entry-plumbing
-  text: "/ServerInfo/Guidebook/Engineering/Plumbing.xml"
-  children:
-  - PlumbingFlow
-  - PlumbingMachines
-
-- type: guideEntry
-  id: PlumbingFlow
-  name: guide-entry-plumbingflow
-  text: "/ServerInfo/Guidebook/Engineering/PlumbingFlow.xml"
-
-- type: guideEntry
-  id: PlumbingMachines
-  name: guide-entry-plumbingmachines
-  text: "/ServerInfo/Guidebook/Engineering/PlumbingMachines.xml"
-

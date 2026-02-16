@@ -165,7 +165,7 @@
 
 - type: rcd
   id: PlumbingRpldDrain
-  category: PlumbingMachiness
+  category: PlumbingMachines
   sprite: /Textures/_Starlight/Interface/Radial/RPLD/drain.png
   mode: ConstructObject
   prototype: PlumbingDrain

@@ -715,7 +715,7 @@ public sealed class RCDSystem : EntitySystem
         if (target == null)
         {
             // Starlight Start: RPD/RPLD
-            if (TryComp<RCDComponent>(uid, out var rcd) && (rcd.IsRPD || rcd.IsRPLD))
+            if (component.IsRpd || component.IsRPLD)
             {
                 if (popMsgs)
                     _popup.PopupClient(Loc.GetString("rcd-component-deconstruct-target-not-on-whitelist-message"), uid, user);
@@ -757,16 +757,16 @@ public sealed class RCDSystem : EntitySystem
         // Attempt to deconstruct an object
         else
         {
-            // Starlight Start: RPD
+            // Starlight Start: RPD/RPLD
             // The object is not in the RPD whitelist
-            if (!TryComp<RCDDeconstructableComponent>(target, out var deconstructible) || !deconstructible.RpdDeconstructable && component.IsRpd)
+            if (!TryComp<RCDDeconstructableComponent>(target, out var deconstructible) || !deconstructible.RpdDeconstructable && component.IsRpd || !deconstructible.RpldDeconstructable && component.IsRPLD)
             {
                 if (popMsgs)
                     _popup.PopupClient(Loc.GetString("rcd-component-deconstruct-target-not-on-whitelist-message"), uid, user);
 
                 return false;
             }
-            // Starlight End: RPD
+            // Starlight End: RPD/RPLD
 
             // Starlight Start: RPD/RPLD
             if (TryComp<RCDComponent>(uid, out var rcd) && rcd.IsRPLD)
