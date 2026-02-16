@@ -25,6 +25,7 @@ public sealed class AnnouncementWebhookManager
 
     private ConcurrentQueue<string> _pendingAnnouncements = new();
 
+    private Task? _listeningTask = null!;
     private HttpListener _httpListener = null!;
     private ISawmill _sawmill = default!;
 
@@ -51,7 +52,7 @@ public sealed class AnnouncementWebhookManager
             _chatManager.DispatchServerAnnouncement(message);
     }
 
-    private void OnEnabledChanged(bool enabled)
+    private async void OnEnabledChanged(bool enabled)
     {
         if (_shutdown)
             return;
@@ -59,9 +60,14 @@ public sealed class AnnouncementWebhookManager
         _enabled = enabled;
 
         if (enabled)
-            _ = StartListeningAsync();
+            _listeningTask = StartListeningAsync();
         else if (_httpListener.IsListening)
+        {
+            if (_listeningTask != null)
+                await _listeningTask;
+
             _httpListener.Stop();
+        }
     }
 
     public async Task StartListeningAsync()
@@ -69,13 +75,17 @@ public sealed class AnnouncementWebhookManager
         _httpListener.Start();
         _sawmill.Info($"Started listening for announcements to forward on port ");
 
-        while (_httpListener.IsListening &&
-            _enabled)
+        while (_enabled)
         {
             try
             {
                 var context = await _httpListener.GetContextAsync();
                 _ = Task.Run(() => ProcessRequestAsync(context));
+            }
+            catch (ObjectDisposedException) when (!_enabled)
+            {
+                // shut down does this, so exit silently
+                break;
             }
             catch (HttpListenerException ex)
             {
