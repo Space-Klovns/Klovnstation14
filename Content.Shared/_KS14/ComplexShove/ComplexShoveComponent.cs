@@ -15,6 +15,19 @@ namespace Content.Shared._KS14.ComplexShove;
 public sealed partial class ComplexShoveComponent : Component
 {
     /// <summary>
+    ///     Amount of stamina damage an entity being wallshoved
+    ///         must have in order to be knocked down.
+    /// </summary>
+    [DataField, ViewVariables]
+    public float WallshoveKnockdownStaminaDamageThreshold = 35f;
+
+    /// <summary>
+    ///     Knockdown duration done to wallshoved people
+    /// </summary>
+    [DataField, ViewVariables]
+    public TimeSpan WallshoveKnockdownDuration = TimeSpan.FromSeconds(1f);
+
+    /// <summary>
     ///     Fraction of stamina crit threshold of a shoved person,
     ///         that is the amount of stamina damage done to them when wallshoving.
     ///
@@ -22,7 +35,7 @@ public sealed partial class ComplexShoveComponent : Component
     ///         wallshove ANYTHING 4 times to stamcrit (assumning no stamregen)
     /// </summary>
     [DataField, ViewVariables]
-    public float WallshoveStaminaDamageFraction = 0.5f;
+    public float WallshoveStaminaDamageFraction = 0.25f;
 
     /// <summary>
     ///     Fraction of stamina crit threshold of a shoved person,

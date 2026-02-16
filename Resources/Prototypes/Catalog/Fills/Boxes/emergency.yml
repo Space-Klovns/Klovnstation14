@@ -1,5 +1,32 @@
+# SPDX-FileCopyrightText: 2022 Julian Giebel
+# SPDX-FileCopyrightText: 2022 Kara
+# SPDX-FileCopyrightText: 2022 T-Stalker
+# SPDX-FileCopyrightText: 2022 ZeroDayDaemon
+# SPDX-FileCopyrightText: 2023 Alzore
+# SPDX-FileCopyrightText: 2023 Nemanja
+# SPDX-FileCopyrightText: 2023 Puro
+# SPDX-FileCopyrightText: 2024 Aexxie
+# SPDX-FileCopyrightText: 2024 Errant
+# SPDX-FileCopyrightText: 2024 IProduceWidgets
+# SPDX-FileCopyrightText: 2024 Jay
+# SPDX-FileCopyrightText: 2024 TsjipTsjip
+# SPDX-FileCopyrightText: 2024 Vasilis
+# SPDX-FileCopyrightText: 2024 lzk
+# SPDX-FileCopyrightText: 2024 themias
+# SPDX-FileCopyrightText: 2025 5tickman
+# SPDX-FileCopyrightText: 2025 Nox
+# SPDX-FileCopyrightText: 2025 SurrealShibe
+# SPDX-FileCopyrightText: 2025 kosticia
+# SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2025 āda
+# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2026 SnappingOpossum
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+#
+# SPDX-License-Identifier: MIT
+
 - type: entity
-  parent: BoxCardboard
+  parent: BoxCardboardSmallOutsideBigInside # KS14: Changed to inherit from BoxCardboardSmall instead of BoxCardboard
   id: BoxSurvival
   name: survival box
   description: It's a box with basic internals inside.
@@ -43,7 +70,7 @@
     currentLabel: reagent-name-nitrogen
 
 - type: entity
-  parent: BoxCardboard
+  parent: BoxCardboardSmallOutsideBigInside # KS14: Changed to inherit from BoxCardboardSmall instead of BoxCardboard
   id: BoxSurvivalEngineering
   name: extended-capacity survival box
   description: It's a box with basic internals inside. This one is labelled to contain an extended-capacity tank.
@@ -88,7 +115,7 @@
 
 - type: entity
 
-  parent: BoxCardboard
+  parent: BoxCardboardSmallOutsideBigInside # KS14: Changed to inherit from BoxCardboardSmall instead of BoxCardboard
   id: BoxSurvivalSecurity
   name: survival box
   description: It's a box with basic internals inside.
@@ -133,7 +160,7 @@
 
 - type: entity
 
-  parent: BoxCardboard
+  parent: BoxCardboardSmallOutsideBigInside # KS14: Changed to inherit from BoxCardboardSmall instead of BoxCardboard
   id: BoxSurvivalMedical
   name: survival box
   description: It's a box with basic internals inside.
@@ -177,7 +204,7 @@
     currentLabel: reagent-name-nitrogen
 
 - type: entity
-  parent: BoxCardboard
+  parent: BoxCardboardSmallOutsideBigInside # KS14: Changed to inherit from BoxCardboardSmall instead of BoxCardboard
   id: BoxHug
   name: box of hugs
   description: A special box for sensitive people.
@@ -277,7 +304,7 @@
         - id: DrinkWaterBottleFull
 
 - type: entity
-  parent: BoxCardboard
+  parent: BoxCardboardSmallOutsideBigInside # KS14: Changed to inherit from BoxCardboardSmall instead of BoxCardboard
   id: BoxSurvivalSyndicate
   name: extended-capacity survival box
   description: It's a box with basic internals inside. This one is labelled to contain an extended-capacity tank.

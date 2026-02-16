@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+# SPDX-FileCopyrightText: 2026 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: entity
+  parent: [WeaponDisabler]
+  id: WeaponDisablerBorg
+  name: cyborg disabler
+  description: A self charging integrated disabler for security cyborgs.
+  components:
+  - type: BatterySelfRecharger
+    autoRechargeRate: 30

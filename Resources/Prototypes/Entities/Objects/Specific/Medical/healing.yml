@@ -56,6 +56,7 @@
 # SPDX-FileCopyrightText: 2025 slarticodefast
 # SPDX-FileCopyrightText: 2026 DeusMaldPr
 # SPDX-FileCopyrightText: 2026 FrauZj
+# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2026 github_actions[bot]
 #
 # SPDX-License-Identifier: MIT
@@ -74,6 +75,11 @@
   # Inherited
   - type: StaticPrice
     price: 0
+  - type: Healing # KS14 - Added default
+    selfHealPenaltyMultiplier: 2 # instead of 3 (component default)
+    damage:
+      types:
+        Piercing: 0
 
 - type: entity
   name: ointment
@@ -147,7 +153,7 @@
   - type: Healing
     damageContainers:
       - Biological
-    delay: 1.5
+    delay: 0.75 # KS14: halved delay
     damage:
       types: #klovn numbers
         Heat: -15
@@ -246,7 +252,7 @@
   - type: Healing
     damageContainers:
       - Biological
-    delay: 1.5
+    delay: 0.75 # KS14: halved delay
     damage:
       types:
       groups:
@@ -341,13 +347,14 @@
     - type: Healing
       damageContainers:
         - Biological
-      damage:
-#        groups: klovn, i dont care its ass to play with so No one uses this item (it also means you still have bleeding after the fact #lol!)
-#          Brute: 5 # Tourniquets HURT!
+      damage: # KS14: Commented out blunt dmg
+        # groups:
+        #   Brute: 5 # Tourniquets HURT!
         types:
           Asphyxiation: 5 # Essentially Stopping all blood reaching a part of your body
-      bloodlossModifier: -10 # Tourniquets stop bleeding
-      delay: 0.5
+      bloodlossModifier: -8 # Tourniquets stop bleeding # KS14: -10 -> -8 (as they are buffed now)
+      delay: 0.65 # KS14: changed from `0.5` -> `0.65`
+      selfHealDelayMultiplier: 0 # KS14
       healingBeginSound:
         path: "/Audio/Items/Medical/brutepack_begin.ogg"
         params:
@@ -380,7 +387,7 @@
   - type: Healing
     damageContainers:
       - Biological
-    delay: 2
+    delay: 1 # KS14: halved delay
     damage:
       types:
         Bruise: -3 #klovn, at least something lol

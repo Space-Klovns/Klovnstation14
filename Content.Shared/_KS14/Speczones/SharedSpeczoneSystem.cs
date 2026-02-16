@@ -14,7 +14,7 @@ namespace Content.Shared._KS14.Speczones;
 
 /// <summary>
 ///     Kept you waiting, huh?
-/// 
+///
 ///     Manages speczones and loading them. At any moment,
 ///         a speczone may not exist for any reason and you
 ///         should not assume that a speczone always exists.
@@ -25,9 +25,13 @@ public abstract class SharedSpeczoneSystem : EntitySystem
     [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
     [Dependency] private readonly SharedSparksSystem _sparksSystem = default!;
 
+    private EntityQuery<AlwaysAllowedInSpeczoneComponent> _alwaysAllowedQuery;
+
     public override void Initialize()
     {
         base.Initialize();
+
+        _alwaysAllowedQuery = GetEntityQuery<AlwaysAllowedInSpeczoneComponent>();
 
         SubscribeLocalEvent<AttemptUpdateHandTeleporterPortalsEvent>(OnAttemptUseHandTeleporter); // Only raised on server
         SubscribeLocalEvent<AttemptUseRcdEvent>(OnAttemptUseRcd);
@@ -53,9 +57,12 @@ public abstract class SharedSpeczoneSystem : EntitySystem
     }
 
     /// <returns>True if the use of an item was cancelled.</returns>
-    private bool TryInterfereUse(EntityUid item, EntityUid? user = null, bool predictEffects = false)
+    private bool TryInterfereUse(EntityUid uid, EntityUid? user = null, bool predictEffects = false)
     {
-        if (!CheckEntityIsInSpeczone(item, out var transformComponent))
+        if (_alwaysAllowedQuery.HasComponent(uid))
+            return false;
+
+        if (!CheckEntityIsInSpeczone(uid, out var transformComponent))
             return false;
 
         _sparksSystem.DoSpark(
@@ -69,8 +76,8 @@ public abstract class SharedSpeczoneSystem : EntitySystem
             return true;
 
         _popupSystem.PopupEntity(
-            Loc.GetString("speczone-invincibility-use-interrupted", ("entity", Identity.Name(item, EntityManager))),
-            item,
+            Loc.GetString("speczone-invincibility-use-interrupted", ("entity", Identity.Name(uid, EntityManager))),
+            uid,
             PopupType.SmallCaution
         );
         return true;

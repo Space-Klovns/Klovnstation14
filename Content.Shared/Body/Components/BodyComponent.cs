@@ -1,5 +1,16 @@
+// SPDX-FileCopyrightText: 2022 Nemanja
+// SPDX-FileCopyrightText: 2022 Paul Ritter
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Jezithyr
+// SPDX-FileCopyrightText: 2023 metalgearsloth
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Shared.Body.Prototypes;
 using Content.Shared.Body.Systems;
+using Content.Shared.Damage;
+using Content.Shared.FixedPoint;
 using Robust.Shared.Audio;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
@@ -41,4 +52,12 @@ public sealed partial class BodyComponent : Component
     [ViewVariables]
     [DataField, AutoNetworkedField]
     public HashSet<EntityUid> LegEntities = new();
+
+    // KS14 Addition
+    /// <summary>
+    ///     Amount of damage taken in one hit (currently explosions only)
+    ///         to dismember SOMETHING.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public FixedPoint2 DismembermentThreshold = FixedPoint2.New(70f);
 }

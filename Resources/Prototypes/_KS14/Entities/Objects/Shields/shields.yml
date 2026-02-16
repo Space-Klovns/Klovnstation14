@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+# SPDX-FileCopyrightText: 2026 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: entity
+  name: cyborg flash shield
+  parent: BaseItem
+  id: FlashShieldBorg
+  description: An integrated shield that allows the cyborg to be flash-resistant when held. Offers no resistances.
+  components:
+    - type: Sprite
+      sprite: Objects/Weapons/Melee/shields.rsi
+      state: riot-icon
+    - type: Item
+      sprite: Objects/Weapons/Melee/shields.rsi
+      size: Ginormous
+      heldPrefix: riot
+    - type: HeldGrantComponent
+      component:
+      - type: FlashImmunity

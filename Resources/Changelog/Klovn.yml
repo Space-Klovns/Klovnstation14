@@ -693,3 +693,59 @@ Entries:
       message: We are using the new logo now.
   id: 88
   time: '2026-02-03T22:01:49.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: Added secborgs.
+  id: 89
+  time: '2026-02-08T14:54:50.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Add
+      message: You VVill Gulp
+  id: 90
+  time: '2026-02-11T13:34:23.0000000+00:00'
+- author: DecemberEpsilon
+  changes:
+    - type: Tweak
+      message: explosion chem bombs are BVCK
+  id: 91
+  time: '2026-02-11T13:34:45.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Add
+      message: Egg
+  id: 92
+  time: '2026-02-13T05:00:04.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Tweak
+      message: Tricordizene now heals you if you aren't crit, not just up to 50 damage.
+    - type: Tweak
+      message: >-
+        Epinephrine heals slightly more and will now heal to 90 damage (instead
+        of just 100, ie, slightly over crit, not just right at it)
+    - type: Tweak
+      message: >-
+        Potassium iodine will heal SLIGHT amounts of rad damage aswell as
+        metabolize 50% slower than before. 
+  id: 93
+  time: '2026-02-14T15:38:49.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: You can now be delimbed from explosions.
+  id: 94
+  time: '2026-02-14T18:25:49.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: Sutures, meshes, and gauze now heal 2x faster.
+    - type: Tweak
+      message: >-
+        Tourniquets now heal the user instantly but heal slightly less bleeding.
+        They also don't do any brute damage anymore.
+    - type: Tweak
+      message: Survival boxes are now 2x2 in bags, but still hold 3x3 storage inside.
+  id: 95
+  time: '2026-02-15T19:05:19.0000000+00:00'

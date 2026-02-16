@@ -27,15 +27,18 @@
 # SPDX-FileCopyrightText: 2025 August Sun
 # SPDX-FileCopyrightText: 2025 BramvanZijp
 # SPDX-FileCopyrightText: 2025 DeusMaldPr
-# SPDX-FileCopyrightText: 2025 FrauZj
-# SPDX-FileCopyrightText: 2025 FrauzJ
 # SPDX-FileCopyrightText: 2025 Gerkada
 # SPDX-FileCopyrightText: 2025 IProduceWidgets
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Nox
 # SPDX-FileCopyrightText: 2025 RedBookcase
+# SPDX-FileCopyrightText: 2025 RedSpy
+# SPDX-FileCopyrightText: 2025 beck-thompson
 # SPDX-FileCopyrightText: 2025 github_actions[bot]
 # SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2026 FrauZj
+# SPDX-FileCopyrightText: 2026 FrauzJ
+# SPDX-FileCopyrightText: 2026 āda
 #
 # SPDX-License-Identifier: MIT
 
@@ -210,7 +213,7 @@
   - type: Clothing
     sprite: Objects/Weapons/Guns/Rifles/lecter.rsi
   - type: Gun
-    fireRate: 3
+    fireRate: 4
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/ltrifle.ogg
   - type: ItemSlots

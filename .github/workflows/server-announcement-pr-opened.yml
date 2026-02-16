@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+#
+# SPDX-License-Identifier: MPL-2.0
+
+name: Server Announcement on PR opened
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  notify-server:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Send PR notification
+      run: |
+        PR_NUMBER="${{ github.event.pull_request.number }}"
+        PR_TITLE="${{ github.event.pull_request.title }}"
+        PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+
+        # Build and send JSON
+        JSON_PAYLOAD=$(jq -n \
+          --arg token "${{ secrets.ANNOUNCEMENT_WEBHOOK_TOKEN }}" \
+          --arg message "🔔 New PR #${PR_NUMBER} opened: ${PR_TITLE} by ${PR_AUTHOR}" \
+          '{Token: $token, Message: $message}')
+
+        curl -s -o /dev/null -w "%{http_code}" \
+          -X POST \
+          -H "Content-Type: application/json" \
+          -d "$JSON_PAYLOAD" \
+          "${{ vars.ANNOUNCEMENT_WEBHOOK_INTERFACE }}"

@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2025 DeusMaldPr
 # SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-# SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+# SPDX-FileCopyrightText: 2026 nabegator220
 #
 # SPDX-License-Identifier: MPL-2.0
 
@@ -21,3 +21,6 @@
 
 - type: Tag # For eshield repair
   id: BrokenEnergyShield
+
+- type: Tag
+  id: BorgModuleSecurity # KS14 - secborgs
