@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: 2025 Gerkada
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 

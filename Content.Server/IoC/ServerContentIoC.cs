@@ -21,13 +21,13 @@
 // SPDX-FileCopyrightText: 2023 ShadowCommander
 // SPDX-FileCopyrightText: 2024 AJCM-git
 // SPDX-FileCopyrightText: 2024 DrSmugleaf
-// SPDX-FileCopyrightText: 2024 Leon Friedrich
 // SPDX-FileCopyrightText: 2024 Nemanja
 // SPDX-FileCopyrightText: 2024 SlamBamActionman
 // SPDX-FileCopyrightText: 2024 metalgearsloth
 // SPDX-FileCopyrightText: 2024 nikthechampiongr
 // SPDX-FileCopyrightText: 2025 Fildrance
 // SPDX-FileCopyrightText: 2025 Gerkada
+// SPDX-FileCopyrightText: 2025 Leon Friedrich
 // SPDX-FileCopyrightText: 2025 Myra
 // SPDX-FileCopyrightText: 2025 PJB3005
 // SPDX-FileCopyrightText: 2025 Palladinium
@@ -35,6 +35,8 @@
 // SPDX-FileCopyrightText: 2025 Simon
 // SPDX-FileCopyrightText: 2025 beck-thompson
 // SPDX-FileCopyrightText: 2025 github_actions[bot]
+// SPDX-FileCopyrightText: 2025 nabegator220
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
 //
 // SPDX-License-Identifier: MIT
 
