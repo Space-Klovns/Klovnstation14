@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Server._KS14.AnnouncementWebhook;
 using Content.Server._KS14.Antag;
 
