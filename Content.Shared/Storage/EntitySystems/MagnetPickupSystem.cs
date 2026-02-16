@@ -9,10 +9,11 @@
 // SPDX-FileCopyrightText: 2025 DrSmugleaf
 // SPDX-FileCopyrightText: 2025 Kyle Tyo
 // SPDX-FileCopyrightText: 2025 kosticia
-// SPDX-FileCopyrightText: 2025 nabegator220
+// SPDX-FileCopyrightText: 2026 FrauZj
 // SPDX-FileCopyrightText: 2026 FrauzJ
 // SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2026 github_actions[bot]
+// SPDX-FileCopyrightText: 2026 nabegator220
 //
 // SPDX-License-Identifier: MIT
 
