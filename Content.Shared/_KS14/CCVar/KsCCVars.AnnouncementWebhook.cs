@@ -12,7 +12,7 @@ public sealed partial class KsCCVars
     /// </summary>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<bool> AnnouncementWebhookEnabled =
-        CVarDef.Create("klovn.announcementwebhook.enabled", true, CVar.SERVERONLY);
+        CVarDef.Create("klovn.announcementwebhook.enabled", false, CVar.SERVERONLY);
 
     /// <summary>
     ///     Interface to listen on. For example, a value of `http://localhost:8065/` means that
@@ -29,5 +29,5 @@ public sealed partial class KsCCVars
     /// </summary>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<string> AnnouncementWebhookToken =
-        CVarDef.Create("klovn.announcementwebhook.token", "debug", CVar.SERVERONLY | CVar.CONFIDENTIAL);
+        CVarDef.Create("klovn.announcementwebhook.token", DateTime.Now.ToString() /* dont get trolled */, CVar.SERVERONLY | CVar.CONFIDENTIAL);
 }
