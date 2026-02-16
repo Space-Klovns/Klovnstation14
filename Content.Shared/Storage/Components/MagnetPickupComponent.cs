@@ -36,4 +36,8 @@ public sealed partial class MagnetPickupComponent : Component
 
     [ViewVariables(VVAccess.ReadWrite), DataField("range")]
     public float Range = 1f;
+
+    //KS14
+    [ViewVariables(VVAccess.ReadWrite), DataField("slotIrrespective")]
+    public bool SlotIrrespective = false;
 }
