@@ -8,20 +8,24 @@ public sealed partial class KsCCVars
 {
     /// <summary>
     ///     Is the external in-game announcement webhook open?
+    ///         Can be changed during runtime.
     /// </summary>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<bool> AnnouncementWebhookEnabled =
         CVarDef.Create("klovn.announcementwebhook.enabled", true, CVar.SERVERONLY);
 
     /// <summary>
-    ///     Port to listen on, for HTTPS.
+    ///     Interface to listen on. For example, a value of `http://localhost:8065/` means that
+    ///         the server responds to requests directed at `localhost`, on port `8065`.
+    ///         Not able to be changed during runtime; you have to restart the server.
     /// </summary>
     [CVarControl(AdminFlags.Debug)]
-    public static readonly CVarDef<int> AnnouncementWebhookPort =
-        CVarDef.Create("klovn.announcementwebhook.port", 8065, CVar.SERVERONLY);
+    public static readonly CVarDef<string> AnnouncementWebhookInterface =
+        CVarDef.Create("klovn.announcementwebhook.port", "http://localhost:8065/", CVar.SERVERONLY);
 
     /// <summary>
     ///     Should overlay stains be drawn more expensively?
+    ///         Can be changed during runtime.
     /// </summary>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<string> AnnouncementWebhookToken =

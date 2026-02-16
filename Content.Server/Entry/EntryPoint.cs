@@ -194,6 +194,7 @@ namespace Content.Server.Entry
                     _playTimeTracking.Update();
                     _watchlistWebhookManager.Update();
                     _connection.Update();
+                    _announcementWebhookManager.Update(); // KS14
                     break;
             }
         }

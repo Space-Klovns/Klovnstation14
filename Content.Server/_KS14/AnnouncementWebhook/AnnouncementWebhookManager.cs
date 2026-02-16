@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -7,6 +8,9 @@ using System.Threading.Tasks;
 using Content.Server.Chat.Managers;
 using Content.Shared._KS14.CCVar;
 using Robust.Shared.Configuration;
+using HttpListener = SpaceWizards.HttpListener.HttpListener;
+using HttpListenerContext = SpaceWizards.HttpListener.HttpListenerContext;
+using HttpListenerResponse = SpaceWizards.HttpListener.HttpListenerResponse;
 
 namespace Content.Server._KS14.AnnouncementWebhook;
 
@@ -19,24 +23,31 @@ public sealed class AnnouncementWebhookManager
     [Dependency] private readonly IConfigurationManager _configurationManager = default!;
     [Dependency] private readonly IChatManager _chatManager = default!;
 
+    private ConcurrentQueue<string> _pendingAnnouncements = new();
+
     private HttpListener _httpListener = null!;
     private ISawmill _sawmill = default!;
 
     private bool _enabled = false;
-    private int _port = 0;
     private string _token = "";
-
-    private CancellationTokenSource _listenTas = new();
-    private CancellationTokenSource _listenTaskCancellationTokenSource = new();
 
     public void Initialize()
     {
         _sawmill = Logger.GetSawmill("announcement_webhook");
         _httpListener = new();
 
-        _configurationManager.OnValueChanged(KsCCVars.AnnouncementWebhookEnabled, OnEnabledChanged, invokeImmediately: true);
-        _configurationManager.OnValueChanged(KsCCVars.AnnouncementWebhookPort, OnPortChanged, invokeImmediately: true);
+        _httpListener.Prefixes.Add(_configurationManager.GetCVar(KsCCVars.AnnouncementWebhookInterface));
         _configurationManager.OnValueChanged(KsCCVars.AnnouncementWebhookToken, (x) => _token = x, invokeImmediately: true);
+        _configurationManager.OnValueChanged(KsCCVars.AnnouncementWebhookEnabled, OnEnabledChanged, invokeImmediately: true);
+    }
+
+    public void Update()
+    {
+        if (_pendingAnnouncements.Count == 0)
+            return;
+
+        while (_pendingAnnouncements.TryDequeue(out var message))
+            _chatManager.DispatchServerAnnouncement(message);
     }
 
     private void OnEnabledChanged(bool enabled)
@@ -44,24 +55,17 @@ public sealed class AnnouncementWebhookManager
         _enabled = enabled;
 
         if (enabled)
-            _ = StartListeningAsync(_listenTaskCancellationTokenSource.Token);
+            _ = StartListeningAsync();
         else
             _httpListener.Stop();
     }
 
-    private void OnPortChanged(int newPort)
-    {
-        _port = newPort;
-        ResetListeningTask();
-    }
-
-    public async Task StartListeningAsync(CancellationToken cancellationToken)
+    public async Task StartListeningAsync()
     {
         _httpListener.Start();
         _sawmill.Info($"Started listening for announcements to forward on port ");
 
         while (_httpListener.IsListening &&
-            !cancellationToken.IsCancellationRequested &&
             _enabled)
         {
             try
@@ -80,21 +84,6 @@ public sealed class AnnouncementWebhookManager
                 break;
             }
         }
-    }
-
-    private void ResetListeningTask()
-    {
-        _listenTaskCancellationTokenSource.Cancel();
-        _listenTaskCancellationTokenSource.Dispose();
-
-        _listenTaskCancellationTokenSource = new();
-
-        if (_httpListener.IsListening)
-            _httpListener.Stop();
-
-        _httpListener.Prefixes.Clear();
-        _httpListener.Prefixes.Add($"http://localhost:{_port}/");
-        _ = StartListeningAsync(_listenTaskCancellationTokenSource.Token);
     }
 
     public void Shutdown()
@@ -141,13 +130,15 @@ public sealed class AnnouncementWebhookManager
             }
 
             _sawmill.Info($"Received announcement message successfully: `{data.Message}`");
-            _chatManager.DispatchServerAnnouncement(data.Message);
+            _pendingAnnouncements.Enqueue(data.Message);
 
             response.StatusCode = 200;
             await WriteResponseAsync(response, "OK");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _sawmill.Error($"Exception occurred when processing request: {ex}");
+
             response.StatusCode = 500;
             await WriteResponseAsync(response, $"An error occurred processing request");
         }
@@ -155,18 +146,17 @@ public sealed class AnnouncementWebhookManager
         response.Close();
     }
 
+    /// <summary>
+    ///     Responds with a newline.
+    /// </summary>
     private static async Task WriteResponseAsync(HttpListenerResponse response, string message)
     {
-        var buffer = Encoding.UTF8.GetBytes(message);
+        var buffer = Encoding.UTF8.GetBytes(message + '\n');
         response.ContentType = "text/plain";
         response.ContentLength64 = buffer.Length;
 
         await response.OutputStream.WriteAsync(buffer, new CancellationTokenSource(5000).Token);
     }
 
-    private sealed class RequestData
-    {
-        public string Token = default!;
-        public string Message = default!;
-    }
+    private sealed record RequestData(string Token, string Message);
 }
