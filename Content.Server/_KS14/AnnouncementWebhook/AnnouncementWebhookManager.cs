@@ -29,7 +29,6 @@ public sealed class AnnouncementWebhookManager
 
     private ConcurrentQueue<string> _pendingAnnouncements = new();
 
-    private Task? _listeningTask = null!;
     private HttpListener _httpListener = null!;
     private ISawmill _sawmill = default!;
 
@@ -64,14 +63,9 @@ public sealed class AnnouncementWebhookManager
         _enabled = enabled;
 
         if (enabled)
-            _listeningTask = StartListeningAsync();
+            _ = StartListeningAsync();
         else if (_httpListener.IsListening)
-        {
-            if (_listeningTask != null)
-                await _listeningTask;
-
             _httpListener.Stop();
-        }
     }
 
     public async Task StartListeningAsync()
