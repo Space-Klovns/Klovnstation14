@@ -29,6 +29,7 @@ public sealed class AnnouncementWebhookManager
     private ISawmill _sawmill = default!;
 
     private bool _enabled = false;
+    private bool _shutdown = false;
     private string _token = "";
 
     public void Initialize()
@@ -52,11 +53,14 @@ public sealed class AnnouncementWebhookManager
 
     private void OnEnabledChanged(bool enabled)
     {
+        if (_shutdown)
+            return;
+
         _enabled = enabled;
 
         if (enabled)
             _ = StartListeningAsync();
-        else
+        else if (_httpListener.IsListening)
             _httpListener.Stop();
     }
 
@@ -88,6 +92,7 @@ public sealed class AnnouncementWebhookManager
 
     public void Shutdown()
     {
+        _shutdown = true;
         if (_httpListener.IsListening)
             _httpListener.Stop();
 
