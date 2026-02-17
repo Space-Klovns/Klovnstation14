@@ -1,4 +1,15 @@
-﻿using System.Linq;
+// SPDX-FileCopyrightText: 2023 AJCM-git
+// SPDX-FileCopyrightText: 2023 Kara
+// SPDX-FileCopyrightText: 2023 TaralGit
+// SPDX-FileCopyrightText: 2023 TemporalOroboros
+// SPDX-FileCopyrightText: 2023 and_a
+// SPDX-FileCopyrightText: 2023 metalgearsloth
+// SPDX-FileCopyrightText: 2026 mq
+// SPDX-FileCopyrightText: 2026 nabegator220
+//
+// SPDX-License-Identifier: MPL-2.0
+
+using System.Linq;
 using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Weapons.Ranged.Events;
 
@@ -25,7 +36,7 @@ public partial class SharedGunSystem
 
             var ammoEnt = container.ContainedEntities[0];
 
-            Containers.Remove(ent.Owner, container); // Trauma - predicted this shit
+            Containers.Remove(ammoEnt, container); // Trauma - predicted this shit
 
             args.Ammo.Add((ammoEnt, EnsureShootable(ammoEnt)));
         }

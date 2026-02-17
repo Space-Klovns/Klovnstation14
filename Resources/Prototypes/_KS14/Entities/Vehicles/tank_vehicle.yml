@@ -1,0 +1,257 @@
+# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+#
+# SPDX-License-Identifier: MPL-2.0
+
+### Tank body
+
+- type: entity
+  parent: [ BaseMob, BaseStructureDynamic ]
+  id: VehicleTankBody
+  name: tank
+  description: Amazing.
+  components:
+  #- type: PhysicsVehicle
+
+  # Sprite
+  - type: Sprite
+    drawdepth: LargeObjects
+    sprite: _KS14/Vehicles/tank.rsi
+    layers:
+    - map: ["enum.TankVisualLayers.Base"]
+      state: tank_base
+    - map: ["enum.TankVisualLayers.Armor"]
+      state: ballistic_armor_0
+    - map: ["treads"]
+      state: treads_0
+  - type: SpriteMovement
+    movementLayers:
+      treads:
+        state: treads_0_moving
+    noMovementLayers:
+      treads:
+        state: treads_0
+
+  # Damage-sprites
+  ## TODO: holy shiet damagevisuals suck
+
+  # Sound
+  - type: AmbientSound
+    volume: 1
+    range: 15
+    sound:
+      path: /Audio/Ambience/Objects/engine_hum.ogg
+      params:
+        pitch: 0.5
+
+  # Other mob-related
+  - type: InputMover
+  - type: MovementSpeedModifier
+    baseWalkSpeed: 8
+    baseSprintSpeed: 16
+    baseAcceleration: 0.15
+    baseFriction: 1
+    baseWeightlessModifier: 0
+
+  #- type: NoRotateOnMove
+  - type: NoRotateOnInteract
+
+  # Damage
+  - type: ExaminableDamage
+    messages: WindowMessages
+  - type: Damageable
+    damageContainer: StructuralInorganic
+    damageModifierSet: Metallic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 750
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+
+  # Fixtures
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 1.35
+        density: 30
+
+### Tank turret
+
+- type: entity
+  parent: BaseStructureDynamic
+  id: VehicleTankTurret
+  name: tank turret
+  description: Look inside to check if it's loaded.
+  components:
+  #- type: BlockMovement
+
+  # Sprite
+  - type: Sprite
+    sprite: _KS14/Vehicles/tank.rsi
+    drawdepth: Overdoors # necessary for it to appear over tanks
+    layers:
+    - state: tank_turret_0
+    - state: ace_autocannon_0
+      offset: 0,-1
+
+  - type: CombatMode
+    toggleMouseRotator: false
+  - type: MouseRotator
+    angleTolerance: 5
+    rotationSpeed: 75
+    simple4DirMode: false
+
+  # Gun
+  - type: ContainerContainer
+    containers:
+      ballistic-ammo: !type:Container
+  - type: Gun
+    fireRate: 3.5
+    selectedMode: FullAuto
+    availableModes:
+    - FullAuto
+    soundGunshot:
+      path: /Audio/_KS14/Effects/tank_fire.ogg
+      params:
+        volume: 4
+        pitch: 0.9
+  - type: BallisticAmmoProvider
+    proto: CartridgeMagnumUranium
+    capacity: 120
+
+  # Physics
+  - type: Physics
+    bodyType: KinematicController
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 1.35
+        density: 0
+        layer:
+        - MachineLayer
+        - BulletImpassable
+
+  # Damage
+  - type: ExaminableDamage
+    messages: WindowMessages
+  - type: Damageable
+    damageContainer: StructuralInorganic
+    damageModifierSet: Metallic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 650
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+      - !type:PlaySoundBehavior
+        sound:
+          path: /Audio/_KS14/Effects/tank_explosion.ogg
+          params:
+            pitch: 0.46
+            maxDistance: 50
+            referenceDistance: 20
+      - !type:ExplodeBehavior
+  - type: Explosive
+    explosionType: Default
+    maxIntensity: 950
+    intensitySlope: 25
+    totalIntensity: 950
+    canCreateVacuum: false
+
+#### Hostile
+### Tank body
+
+- type: entity
+  parent: VehicleTankBody
+  id: VehicleTankBodyNpcAllHostile
+  suffix: NPC, All Hostile
+  description: Holy shit! It doesn't seem friendly at all.
+  components:
+  - type: MobMover
+  - type: HTN
+    rootTask:
+      task: VehicleTankHostileCompound
+    blackboard:
+      NavSmash: !type:Bool
+        true
+  - type: MeleeWeapon
+    soundHit:
+      collection: MetalThud
+    damage:
+      types:
+        Blunt: 25
+        Structural: 150
+
+### Tank turret
+
+- type: entity
+  parent: VehicleTankTurret
+  id: VehicleTankTurretNpcAllHostile
+  suffix: NPC, All Hostile
+  components:
+  - type: NpcFactionMember
+    factions:
+    - AllHostile
+  - type: HTN
+    rootTask:
+      task: EnergyTurretCompound
+    blackboard:
+      RotateSpeed: !type:Single
+        1.5
+      SoundTargetInLOS: !type:SoundPathSpecifier
+        path: /Audio/Effects/double_beep.ogg
+
+#### HTN Data
+
+- type: htnCompound
+  id: VehicleTankHostileCompound
+  branches:
+  - tasks:
+    - !type:HTNCompoundTask
+      task: VehicleTankCombatCompound
+  - tasks:
+    - !type:HTNCompoundTask
+      task: IdleCompound
+
+- type: htnCompound
+  id: VehicleTankCombatCompound
+  branches:
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:UtilityOperator
+        proto: NearbyGunTargets
+
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+        shutdownState: PlanFinished
+        pathfindInPlanning: true
+        removeKeyOnFinish: false
+        targetKey: TargetCoordinates
+        pathfindKey: TargetPathfind
+        stopOnLineOfSight: false
+        rangeKey: MeleeRange
+
+    - !type:HTNPrimitiveTask
+      operator: !type:JukeOperator
+        jukeType: AdjacentTile
+
+    # - !type:HTNPrimitiveTask
+    #   preconditions:
+    #     - !type:KeyExistsPrecondition
+    #       key: Target
+    #   operator: !type:GunOperator
+    #     targetKey: Target
+    #   services:
+    #     - !type:UtilityService
+    #       id: RangedService
+    #       proto: NearbyGunTargets
+    #       key: Target

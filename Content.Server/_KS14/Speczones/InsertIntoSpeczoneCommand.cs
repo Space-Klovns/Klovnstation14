@@ -26,7 +26,7 @@ public sealed class InsertIntoSpeczoneCommand : LocalizedEntityCommands
     {
         if (args.Length != 1 && args.Length != 2)
         {
-            shell.WriteError(Loc.GetString(Loc.GetString("cmd-insertintospeczone-invalid-args")));
+            shell.WriteError(Loc.GetString("cmd-insertintospeczone-invalid-args"));
             return;
         }
 

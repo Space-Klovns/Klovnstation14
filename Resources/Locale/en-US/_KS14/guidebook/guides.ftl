@@ -1,1 +1,1 @@
-guide-entry-arcflash= Arc Flash
+guide-entry-arcflash = Arc Flash

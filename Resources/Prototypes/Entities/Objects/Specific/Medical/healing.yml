@@ -37,19 +37,27 @@
 # SPDX-FileCopyrightText: 2024 Velcroboy
 # SPDX-FileCopyrightText: 2024 Whisper
 # SPDX-FileCopyrightText: 2024 dffdff2423
-# SPDX-FileCopyrightText: 2024 lzk
 # SPDX-FileCopyrightText: 2024 osjarw
 # SPDX-FileCopyrightText: 2024 veprolet
 # SPDX-FileCopyrightText: 2025 ArtisticRoomba
 # SPDX-FileCopyrightText: 2025 FrauzJ
 # SPDX-FileCopyrightText: 2025 J
 # SPDX-FileCopyrightText: 2025 Killerqu00
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2025 Nox
 # SPDX-FileCopyrightText: 2025 ScarKy0
 # SPDX-FileCopyrightText: 2025 SeamLesss
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 SnappingOpossum
+# SPDX-FileCopyrightText: 2025 Tiniest Shark
+# SPDX-FileCopyrightText: 2025 YoungThug
+# SPDX-FileCopyrightText: 2025 lzk
+# SPDX-FileCopyrightText: 2025 nabegator220
 # SPDX-FileCopyrightText: 2025 pathetic meowmeow
 # SPDX-FileCopyrightText: 2025 slarticodefast
+# SPDX-FileCopyrightText: 2026 DeusMaldPr
+# SPDX-FileCopyrightText: 2026 FrauZj
+# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
 #
 # SPDX-License-Identifier: MIT
 
@@ -67,6 +75,11 @@
   # Inherited
   - type: StaticPrice
     price: 0
+  - type: Healing # KS14 - Added default
+    selfHealPenaltyMultiplier: 2 # instead of 3 (component default)
+    damage:
+      types:
+        Piercing: 0
 
 - type: entity
   name: ointment
@@ -90,11 +103,11 @@
       - Biological
     delay: 2
     damage:
-      types:
-        Heat: -5
-        Cold: -5
-        Shock: -5
-        Caustic: -1.5
+      types: #klovn numbers
+        Heat: -10
+        Cold: -10
+        Shock: -10
+        Caustic: -4 #klovnend
     healingBeginSound:
       path: "/Audio/Items/Medical/ointment_begin.ogg"
       params:
@@ -140,12 +153,12 @@
   - type: Healing
     damageContainers:
       - Biological
-    delay: 1.5
+    delay: 0.75 # KS14: halved delay
     damage:
-      types:
-        Heat: -10
-        Cold: -10
-        Shock: -10
+      types: #klovn numbers
+        Heat: -15
+        Cold: -15
+        Shock: -15 #klovnend
         Caustic: -10
     healingBeginSound:
       params:
@@ -195,7 +208,7 @@
     delay: 2
     damage:
       groups:
-        Brute: -15 # 5 for each type in the group
+        Brute: -30 # klovn, 10 for each type in the group, was -15
     healingBeginSound:
       path: "/Audio/Items/Medical/brutepack_begin.ogg"
       params:
@@ -239,10 +252,11 @@
   - type: Healing
     damageContainers:
       - Biological
-    delay: 1.5
+    delay: 0.75 # KS14: halved delay
     damage:
+      types:
       groups:
-        Brute: -30 # 10 for each type in the group
+        Brute: -45 # klovn, 15 for each type in the group, was -30
     bloodlossModifier: -10 # a suture should stop ongoing bleeding
     healingBeginSound:
       path: "/Audio/_KS14/Items/Medical/suture/suture_begin1.ogg"
@@ -333,13 +347,14 @@
     - type: Healing
       damageContainers:
         - Biological
-      damage:
-        groups:
-          Brute: 5 # Tourniquets HURT!
+      damage: # KS14: Commented out blunt dmg
+        # groups:
+        #   Brute: 5 # Tourniquets HURT!
         types:
           Asphyxiation: 5 # Essentially Stopping all blood reaching a part of your body
-      bloodlossModifier: -10 # Tourniquets stop bleeding
-      delay: 0.5
+      bloodlossModifier: -8 # Tourniquets stop bleeding # KS14: -10 -> -8 (as they are buffed now)
+      delay: 0.65 # KS14: changed from `0.5` -> `0.65`
+      selfHealDelayMultiplier: 0 # KS14
       healingBeginSound:
         path: "/Audio/Items/Medical/brutepack_begin.ogg"
         params:
@@ -372,11 +387,12 @@
   - type: Healing
     damageContainers:
       - Biological
-    delay: 2
+    delay: 1 # KS14: halved delay
     damage:
       types:
+        Bruise: -3 #klovn, at least something lol
         Slash: -5
-        Piercing: -10
+        Piercing: -13 #klovn
     bloodlossModifier: -10
     healingBeginSound:
       path: "/Audio/Items/Medical/brutepack_begin.ogg"
@@ -405,7 +421,7 @@
 - type: entity
   name: aloe cream
   description: A topical cream for burns.
-  parent: Ointment ##Yes it's a direct reskin
+  parent: Ointment #Yes it's a direct reskin < klovn, fixed failcomment
   id: AloeCream
   components:
   - type: Healing
@@ -474,7 +490,7 @@
   name: pill canister
   parent: PillCanister
   id: PillCanisterDexalin
-  suffix: Dexalin 10u, 7
+  suffix: Dexalin 10u #Klovn
   components:
   - type: Label
     currentLabel: dexalin 10u
@@ -482,7 +498,7 @@
     containers:
       storagebase:
         id: PillDexalin
-        amount: 7
+        amount: 10 #klovn
 
 - type: entity
   name: pill
@@ -508,7 +524,7 @@
   name: pill canister
   parent: PillCanister
   id: PillCanisterDylovene
-  suffix: Dylovene 10u, 5
+  suffix: Dylovene 10u #Klovn
   components:
   - type: Label
     currentLabel: dylovene 10u
@@ -516,7 +532,7 @@
     containers:
       storagebase:
         id: PillDylovene
-        amount: 5
+        amount: 10 #klovn
 
 - type: entity
   name: pill
@@ -542,7 +558,7 @@
   name: pill canister
   parent: PillCanister
   id: PillCanisterHyronalin
-  suffix: Hyronalin 10u, 5
+  suffix: Hyronalin 10u #klovn
   components:
   - type: Label
     currentLabel: hyronalin 10u
@@ -550,7 +566,7 @@
     containers:
       storagebase:
         id: PillHyronalin
-        amount: 5
+        amount: 10 #klovn
 
 - type: entity
   name: pill
@@ -576,7 +592,7 @@
   name: pill canister
   parent: PillCanister
   id: PillCanisterPotassiumIodide
-  suffix: Potassium iodide 10u, 5
+  suffix: Potassium iodide 10u #Klovn
   components:
   - type: Label
     currentLabel: potassium iodide 10u
@@ -584,7 +600,7 @@
     containers:
       storagebase:
         id: PillPotassiumIodide
-        amount: 5
+        amount: 10 #klovn
 
 - type: entity
   name: pill
@@ -630,7 +646,7 @@
   name: pill canister
   parent: PillCanister
   id: PillCanisterIron
-  suffix: Iron 10u, 5
+  suffix: Iron 10u #Klovn
   components:
   - type: Label
     currentLabel: iron 10u
@@ -638,13 +654,13 @@
     containers:
       storagebase:
         id: PillIron
-        amount: 5
+        amount: 10 #klovn
 
 - type: entity
   name: pill canister
   parent: PillCanister
   id: PillCanisterCopper
-  suffix: Copper 10u, 5
+  suffix: Copper 10u #klovn
   components:
   - type: Label
     currentLabel: copper 10u
@@ -652,7 +668,7 @@
     containers:
       storagebase:
         id: PillCopper
-        amount: 5
+        amount: 10 #klovn
 
 - type: entity
   name: pill
@@ -678,7 +694,7 @@
   name: pill canister
   parent: PillCanister
   id: PillCanisterKelotane
-  suffix: Kelotane 10u, 5
+  suffix: Kelotane 10u #klovn
   components:
   - type: Label
     currentLabel: kelotane 10u
@@ -686,7 +702,7 @@
     containers:
       storagebase:
         id: PillKelotane
-        amount: 5
+        amount: 10 #klovn
 
 - type: entity
   name: pill
@@ -712,7 +728,7 @@
   name: pill canister
   parent: PillCanister
   id: PillCanisterDermaline
-  suffix: Dermaline 10u, 5
+  suffix: Dermaline 10u #klovn
   components:
   - type: Label
     currentLabel: dermaline 10u
@@ -720,7 +736,7 @@
     containers:
       storagebase:
         id: PillDermaline
-        amount: 5
+        amount: 10 #klovn
 
 - type: entity
   name: space mirage
@@ -759,7 +775,7 @@
   name: pill canister
   parent: PillCanister
   id: PillCanisterTricordrazine
-  suffix: Tricordrazine 10u, 5
+  suffix: Tricordrazine 10u #klovn
   components:
   - type: Label
     currentLabel: tricordrazine 10u
@@ -767,7 +783,7 @@
     containers:
       storagebase:
         id: PillTricordrazine
-        amount: 5
+        amount: 10 #klovn
 
 - type: entity
   name: pill
@@ -793,7 +809,7 @@
   name: pill canister
   parent: PillCanister
   id: PillCanisterBicaridine
-  suffix: Bicaridine 10u, 5
+  suffix: Bicaridine 10u #klovn
   components:
   - type: Label
     currentLabel: bicaridine 10u
@@ -801,7 +817,7 @@
     containers:
       storagebase:
         id: PillBicaridine
-        amount: 5
+        amount: 10 #klovn
 
 - type: entity
   name: pill
@@ -827,7 +843,7 @@
   name: pill canister
   parent: PillCanister
   id: PillCanisterCharcoal
-  suffix: Charcoal 10u, 3
+  suffix: Charcoal 10u #klovn
   components:
   - type: Label
     currentLabel: charcoal 10u
@@ -835,7 +851,7 @@
     containers:
       storagebase:
         id: PillCharcoal
-        amount: 3
+        amount: 10 #klovn
 
 - type: entity
   name: romerol pill

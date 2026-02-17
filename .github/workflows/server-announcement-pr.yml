@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+#
+# SPDX-License-Identifier: MPL-2.0
+
+name: Server Announcement on PR status update
+
+on:
+  pull_request:
+    types: [opened, reopened, closed]
+
+jobs:
+  notify-server:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Send PR notification
+      env:
+        SUFFIX: "${{ github.event.pull_request.title }} by ${{ github.event.pull_request.user.login }}"
+      run: |
+        PR_NUMBER="${{ github.event.pull_request.number }}"
+
+        # Build and send JSON
+        JSON_PAYLOAD=$null
+        PREFIX="(Space-Klovns/Klovnstation14) PR #${PR_NUMBER}"
+        MESSAGE="FUCK"
+
+        if [[ "${{ github.event.action }}" == "closed" ]]; then
+          if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
+            MESSAGE="$PREFIX was merged: $SUFFIX"
+          else
+            MESSAGE="$PREFIX was closed without merging: $SUFFIX"
+          fi
+        else
+          MESSAGE="$PREFIX was opened: $SUFFIX"
+        fi
+
+        JSON_PAYLOAD=$(jq -n \
+          --arg token "${{ secrets.ANNOUNCEMENT_WEBHOOK_TOKEN }}" \
+          --arg message $MESSAGE \
+          '{Token: $token, Message: $message}')
+
+        curl -s -o /dev/null -w "%{http_code}" \
+          -X POST \
+          -H "Content-Type: application/json" \
+          -d "$JSON_PAYLOAD" \
+          "${{ vars.ANNOUNCEMENT_WEBHOOK_INTERFACE }}"

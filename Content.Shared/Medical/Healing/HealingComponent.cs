@@ -1,7 +1,11 @@
+// SPDX-FileCopyrightText: 2025 FrauZj
 // SPDX-FileCopyrightText: 2025 FrauzJ
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2025 Princess Cheeseballs
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
 // SPDX-FileCopyrightText: 2025 slarticodefast
+// SPDX-FileCopyrightText: 2026 DeusMaldPr
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
 //
 // SPDX-License-Identifier: MIT
 
@@ -50,13 +54,21 @@ public sealed partial class HealingComponent : Component
     /// How long it takes to apply the damage.
     /// </summary>
     [DataField, AutoNetworkedField]
-    public TimeSpan Delay = TimeSpan.FromSeconds(3f);
+    public TimeSpan Delay = TimeSpan.FromSeconds(2f); //klovn, was 3f
+
+    // KS14 Addition
+    /// <summary>
+    ///     Multiplier for doafter duration for healing, when healing yourself.
+    ///         Applied *after* penalty.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float SelfHealDelayMultiplier = 1f;
 
     /// <summary>
     /// Delay multiplier when healing yourself.
     /// </summary>
     [DataField, AutoNetworkedField]
-    public float SelfHealPenaltyMultiplier = 3f;
+    public float SelfHealPenaltyMultiplier = 2f; // klovn, was 3f, changed for gameplay reasons
 
     /// <summary>
     /// Sound played on healing begin.

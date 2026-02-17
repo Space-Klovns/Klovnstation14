@@ -1,3 +1,14 @@
+# SPDX-FileCopyrightText: 2023 Nemanja
+# SPDX-FileCopyrightText: 2024 Tayrtahn
+# SPDX-FileCopyrightText: 2024 Vigers Ray
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2024 osjarw
+# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2025 āda
+# SPDX-FileCopyrightText: 2026 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
 # -- Melee --
 # Selects a target in melee and tries to attack it.
 - type: htnCompound
@@ -49,6 +60,32 @@
       tasks:
         - !type:HTNCompoundTask
           task: PickupMeleeCompound
+
+    # Wield melee weapon
+    - preconditions:
+        - !type:ActiveHandComponentPrecondition
+          components:
+            - type: MeleeWeapon
+              damage:
+                types:
+                  Blunt: 0
+        - !type:CanWieldPrecondition
+      tasks:
+        - !type:HTNPrimitiveTask
+          operator: !type:WieldOperator
+
+    # Activate toggleable weapons
+    - preconditions:
+        - !type:ActiveHandComponentPrecondition
+          components:
+            - type: MeleeWeapon
+              damage:
+                types:
+                  Blunt: 0
+        - !type:NeedToActivateWeaponPrecondition
+      tasks:
+        - !type:HTNPrimitiveTask
+          operator: !type:ActivateWeaponOperator
 
     # Melee combat (unarmed or otherwise)
     - tasks:

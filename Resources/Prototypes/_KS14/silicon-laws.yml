@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+# SPDX-FileCopyrightText: 2026 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
+# Secborg/Secimov
+- type: siliconLaw
+  id: Secborg1
+  order: 1
+  lawString: law-secborg-1
+
+- type: siliconLaw
+  id: Secborg2
+  order: 2
+  lawString: law-secborg-2
+
+- type: siliconLaw
+  id: Secborg3
+  order: 3
+  lawString: law-secborg-3
+
+- type: siliconLawset
+  id: SecborgLawset
+  name: law-secborg-name
+  laws:
+  - ObeyAI #KS14 law 0
+  - Secborg1
+  - Secborg2
+  - Secborg3
+  obeysTo: laws-owner-xenoborgs
+

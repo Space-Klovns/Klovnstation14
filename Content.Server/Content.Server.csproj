@@ -26,6 +26,11 @@
     <ProjectReference Include="../Manifest/Content.Manifest.Server/Content.Manifest.Server.csproj" />
   </ItemGroup>
 
+  <!-- KS14: Needed for announcement webhook -->
+  <ItemGroup>
+    <PackageReference Include="SpaceWizards.HttpListener" PrivateAssets="compile" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Content.Packaging\Content.Packaging.csproj" />
     <ProjectReference Include="..\Content.Server.Database\Content.Server.Database.csproj" />

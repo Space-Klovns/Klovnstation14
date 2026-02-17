@@ -1,3 +1,38 @@
+// SPDX-FileCopyrightText: 2022 Flipp Syder
+// SPDX-FileCopyrightText: 2022 Moony
+// SPDX-FileCopyrightText: 2022 Nemanja
+// SPDX-FileCopyrightText: 2022 Paul Ritter
+// SPDX-FileCopyrightText: 2023 20kdc
+// SPDX-FileCopyrightText: 2023 Chief-Engineer
+// SPDX-FileCopyrightText: 2023 ShadowCommander
+// SPDX-FileCopyrightText: 2023 Visne
+// SPDX-FileCopyrightText: 2023 metalgearsloth
+// SPDX-FileCopyrightText: 2024 Aexxie
+// SPDX-FileCopyrightText: 2024 DrSmugleaf
+// SPDX-FileCopyrightText: 2024 Jake Huxell
+// SPDX-FileCopyrightText: 2024 LordCarve
+// SPDX-FileCopyrightText: 2024 MilenVolf
+// SPDX-FileCopyrightText: 2024 Mr. 27
+// SPDX-FileCopyrightText: 2024 Saphire Lattice
+// SPDX-FileCopyrightText: 2024 TsjipTsjip
+// SPDX-FileCopyrightText: 2024 beck-thompson
+// SPDX-FileCopyrightText: 2024 deltanedas
+// SPDX-FileCopyrightText: 2024 eoineoineoin
+// SPDX-FileCopyrightText: 2025 B_Kirill
+// SPDX-FileCopyrightText: 2025 Hannah Giovanna Dawson
+// SPDX-FileCopyrightText: 2025 JesterX666
+// SPDX-FileCopyrightText: 2025 Leon Friedrich
+// SPDX-FileCopyrightText: 2025 SlamBamActionman
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2025 Zachary Higgs
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2026 Vasilis The Pikachu
+// SPDX-FileCopyrightText: 2026 Velken
+// SPDX-FileCopyrightText: 2026 nabegator220
+//
+// SPDX-License-Identifier: MPL-2.0
+
+using Content.Shared.Body.Components;
 using Content.Shared.CCVar;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
@@ -186,7 +221,7 @@ public sealed partial class ExplosionSystem
         if (!_physicsQuery.TryGetComponent(uid, out var physics))
             return false;
 
-        return physics.CanCollide && physics.Hard && (physics.CollisionLayer & (int) CollisionGroup.Impassable) != 0;
+        return physics.CanCollide && physics.Hard && (physics.CollisionLayer & (int)CollisionGroup.Impassable) != 0;
     }
 
     /// <summary>
@@ -448,6 +483,12 @@ public sealed partial class ExplosionSystem
             GetEntitiesToDamage(uid, originalDamage, id);
             foreach (var (entity, damage) in _toDamage)
             {
+                // KS14 changes start
+                var bodyEntity = new Entity<BodyComponent?>(entity, null);
+                if (_dismembermentSystem.CanDismemberByDamage(bodyEntity, damage, out var totalDoneDamage))
+                    HandleExplosionDamage(bodyEntity, throwForce, totalDoneDamage.Value, cause, epicenter.Position, xform);
+                // KS14 changes end
+
                 if (!_damageableQuery.TryComp(entity, out var damageable))
                     continue;
 

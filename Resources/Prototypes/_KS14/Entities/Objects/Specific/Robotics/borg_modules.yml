@@ -1,0 +1,90 @@
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+# SPDX-FileCopyrightText: 2026 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: entity
+  id: BaseBorgModuleSecurity
+  parent: BaseBorgModule
+  abstract: true
+  components:
+  - type: BorgModule
+    borgFitTypes:
+    - borg-type-security
+  - type: Tag
+    tags:
+    - BorgModuleSecurity
+  - type: Item
+    inhandVisuals:
+      left:
+      - state: base-icon-inhand-left
+        color: "#CC0000"
+      - state: base-module-inhand-left
+        color: "#5E0E11"
+      - state: base-part-inhand-left
+      - state: base-stripes-inhand-left
+        color: "#501112"
+      right:
+      - state: base-icon-inhand-right
+        color: "#CC0000"
+      - state: base-module-inhand-right
+        color: "#5E0E11"
+      - state: base-part-inhand-right
+      - state: base-stripes-inhand-right
+        color: "#501112"
+
+# secborg modules
+- type: entity
+  id: BorgModulePatrol
+  parent: [ BaseBorgModuleSecurity, BaseProviderBorgModule ]
+  name: patrol cyborg module
+  components:
+  - type: Sprite
+    layers:
+    - state: security
+    - state: icon-patrol
+  - type: ItemBorgModule
+    hands:
+    - item: FlashShieldBorg
+  - type: BorgModuleIcon
+    icon: { sprite: Interface/Actions/actions_borg.rsi, state: patrol-module }
+
+- type: entity
+  id: BorgModuleProtection
+  parent: [ BaseBorgModuleSecurity, BaseProviderBorgModule ]
+  name: protection cyborg module
+  components:
+  - type: Sprite
+    layers:
+    - state: security
+    - state: icon-protection
+  - type: ItemBorgModule
+    hands:
+    - item: WeaponDisablerBorg
+    - item: HoloprojectorSecurityBorg
+    - item: Tourniquet
+      hand:
+        emptyLabel: borg-slot-medicine-empty
+        emptyRepresentative: Ointment
+        whitelist:
+          tags: # SAME SHIT AS THE MEDICAL BELT
+          - Wrench
+          - Bottle
+          - Spray
+          - Brutepack
+          - Bloodpack
+          - Gauze
+          - Ointment
+          - Tourniquet
+          - CigPack
+          - PillCanister
+          - Radio
+          - DiscreteHealthAnalyzer
+          - SurgeryTool
+          - Dropper
+          components:
+          - Injector
+          - Pill
+          - HandLabeler
+  - type: BorgModuleIcon
+    icon: { sprite: Interface/Actions/actions_borg.rsi, state: protection-module }
