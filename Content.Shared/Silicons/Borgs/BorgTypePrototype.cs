@@ -5,6 +5,7 @@ using Content.Shared.Silicons.Borgs.Components;
 using Content.Shared.Whitelist;
 using Robust.Shared.Audio;
 using Robust.Shared.Prototypes;
+using Content.Shared.Silicons.Laws; //KS14
 
 namespace Content.Shared.Silicons.Borgs;
 
@@ -151,4 +152,12 @@ public sealed partial class BorgTypePrototype : IPrototype
     /// </summary>
     [DataField]
     public SoundSpecifier FootstepCollection { get; set; } = new SoundCollectionSpecifier(DefaultFootsteps);
+
+    /// KS14 -Laws
+
+    /// <summary>
+    /// KS14 - do we have a specific lawset that we want to use for this borg?
+    /// </summary>
+    [DataField]
+    public ProtoId<SiliconLawsetPrototype> Laws = string.Empty;
 }

@@ -33,3 +33,6 @@
   # Pet
   petSuccessString: petting-success-security-cyborg
   petFailureString: petting-failure-security-cyborg
+
+  # Laws
+  laws: Secborg

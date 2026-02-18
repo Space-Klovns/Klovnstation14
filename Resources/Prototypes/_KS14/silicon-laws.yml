@@ -20,7 +20,7 @@
   lawString: law-secborg-3
 
 - type: siliconLawset
-  id: SecborgLawset
+  id: Secborg
   name: law-secborg-name
   laws:
   - ObeyAI #KS14 law 0
