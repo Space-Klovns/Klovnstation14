@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Rinary
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Client.Items;
 using Content.Client.Message;
 using Content.Shared.RCD.Components;

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Rinary
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Client.Gameplay;
 using Content.Client.Hands.Systems;
 using Content.Shared.Atmos.Components;

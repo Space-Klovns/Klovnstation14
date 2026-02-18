@@ -1,3 +1,14 @@
+// SPDX-FileCopyrightText: 2024 chromiumboy
+// SPDX-FileCopyrightText: 2025 Kyle Tyo
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Nemanja
+// SPDX-FileCopyrightText: 2025 gus
+// SPDX-FileCopyrightText: 2025 nabegator220
+// SPDX-FileCopyrightText: 2025 slarticodefast
+// SPDX-FileCopyrightText: 2026 Rinary
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using Content.Client.Hands.Systems;
 using Content.Shared.Interaction;
 using Content.Shared.RCD;

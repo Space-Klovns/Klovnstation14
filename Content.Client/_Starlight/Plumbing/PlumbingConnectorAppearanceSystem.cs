@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Riley
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using System.Numerics;
 using Content.Shared._Starlight.Plumbing;
 using Content.Shared._Starlight.Plumbing.Components;
