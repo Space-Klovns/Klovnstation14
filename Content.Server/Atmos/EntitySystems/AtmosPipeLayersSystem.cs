@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025 Perry Fraser
 // SPDX-FileCopyrightText: 2025 chromiumboy
 // SPDX-FileCopyrightText: 2026 Rinary
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
 //
 // SPDX-License-Identifier: MPL-2.0
 

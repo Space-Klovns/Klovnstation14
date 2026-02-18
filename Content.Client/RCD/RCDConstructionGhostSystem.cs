@@ -6,6 +6,7 @@
 // SPDX-FileCopyrightText: 2025 nabegator220
 // SPDX-FileCopyrightText: 2025 slarticodefast
 // SPDX-FileCopyrightText: 2026 Rinary
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
 //
 // SPDX-License-Identifier: MPL-2.0
 
