@@ -7,8 +7,17 @@
   components:
   - type: Sprite
     sprite: Structures/dispensers.rsi
-    state: industrial-working
-    snapCardinals: true
+    # Starlight-start: Chem Dispenser unpowered/wiring panel states
+    layers:
+      - state: industrial-off
+      - state: industrial-working
+        visible: false
+        map: [ "enum.PowerDeviceVisualLayers.Powered" ]
+      - state: industrial-panel
+        map: ["enum.WiresVisualLayers.MaintenancePanel"]
+        visible: false
+    snapCardinals: false # Starlight-edit: allow non-cardinal rotation for chem dispenser to avoid conflict with 4 direction plumbing connector sprites
+    # Starlight-end
   - type: Storage
     openOnActivate: false
     whitelist:

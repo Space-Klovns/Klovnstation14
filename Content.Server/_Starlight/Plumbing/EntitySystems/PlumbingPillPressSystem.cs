@@ -1,6 +1,7 @@
 using System.Numerics;
 using Content.Server._Starlight.Plumbing.Components;
 using Content.Server._Starlight.Plumbing.Nodes;
+using Content.Shared.Starlight.Medical.Items.Components;
 using Content.Shared._Starlight.Plumbing;
 using Content.Shared._Starlight.Plumbing.Components;
 using Content.Shared.Chemistry;
@@ -14,6 +15,7 @@ using JetBrains.Annotations;
 using Robust.Server.GameObjects;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using SharedAppearanceSystem = Robust.Shared.GameObjects.SharedAppearanceSystem;
 
@@ -32,8 +34,11 @@ public sealed class PlumbingPillPressSystem : EntitySystem
     [Dependency] private readonly SharedAudioSystem _audio = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
     [Dependency] private readonly PlumbingPullSystem _pullSystem = default!;
+    [Dependency] private readonly EntityLookupSystem _lookup = default!;
 
     private static readonly EntProtoId PillPrototypeId = "Pill";
+    private const int MaxOutputEntitiesOnTile = 30;
+
     /// <summary>Max dosage matches the ChemMaster limit.</summary>
     private const uint MaxDosage = 20;
     private const uint MinDosage = 1;
@@ -70,12 +75,26 @@ public sealed class PlumbingPillPressSystem : EntitySystem
         var dosage = FixedPoint2.New(ent.Comp.Dosage);
         var produced = false;
 
-        while (solution.Volume >= dosage)
+        if (solution.Volume >= dosage)
         {
+            // Spawn on the same tile, offset slightly south
+            var spawnCoords = Transform(ent.Owner).Coordinates.Offset(new Vector2(0, -0.3f));
+
+            if (GetOutputEntityCount(spawnCoords) >= MaxOutputEntitiesOnTile)
+            {
+                _appearance.SetData(ent.Owner, PlumbingVisuals.Running, false);
+                UpdateUiState(ent);
+                return;
+            }
+
             var withdrawal = _solutionSystem.SplitSolution(solutionEnt.Value, dosage);
 
             if (withdrawal.Volume <= FixedPoint2.Zero)
-                break;
+            {
+                _appearance.SetData(ent.Owner, PlumbingVisuals.Running, false);
+                UpdateUiState(ent);
+                return;
+            }
 
             produced = true;
 
@@ -276,5 +295,18 @@ public sealed class PlumbingPillPressSystem : EntitySystem
     {
         if (TryComp<PlumbingDeviceComponent>(uid, out var device))
             _audio.PlayPvs(device.ClickSound, uid, AudioParams.Default.WithVolume(-2f));
+    }
+
+    private int GetOutputEntityCount(EntityCoordinates coords)
+    {
+        var count = 0;
+
+        foreach (var entity in _lookup.GetEntitiesIntersecting(coords))
+        {
+            if (HasComp<PillComponent>(entity))
+                count++;
+        }
+
+        return count;
     }
 }
