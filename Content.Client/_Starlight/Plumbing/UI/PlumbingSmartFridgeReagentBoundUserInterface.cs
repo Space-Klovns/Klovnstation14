@@ -9,11 +9,11 @@ using Robust.Client.UserInterface;
 namespace Content.Client._Starlight.Plumbing.UI;
 
 [UsedImplicitly]
-public sealed class PlumbingSmartFridgeBoundUserInterface : BoundUserInterface
+public sealed class PlumbingSmartFridgeReagentBoundUserInterface : BoundUserInterface
 {
     private PlumbingSmartFridgeWindow? _window;
 
-    public PlumbingSmartFridgeBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
+    public PlumbingSmartFridgeReagentBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
     {
     }
 

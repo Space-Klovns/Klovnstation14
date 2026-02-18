@@ -417,7 +417,7 @@
   - type: UserInterface
     interfaces:
       enum.PlumbingSmartFridgeUiKey.Key:
-        type: PlumbingSmartFridgeBoundUserInterface
+        type: PlumbingSmartFridgeReagentBoundUserInterface
   - type: ActivatableUI
     key: enum.PlumbingSmartFridgeUiKey.Key
   - type: ApcPowerReceiver
