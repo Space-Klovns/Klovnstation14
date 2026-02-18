@@ -170,8 +170,6 @@ namespace Content.Client.Chemistry.UI
             InputEjectButton.Disabled = castState.InputContainerInfo is null;
             OutputEjectButton.Disabled = castState.OutputContainerInfo is null;
             CreateBottleButton.Disabled = castState.OutputContainerInfo?.Reagents == null;
-            CreatePillButton.Disabled = castState.OutputContainerInfo?.PillEntities == null; // Starlight-edit
-            CreatePatchButton.Disabled = castState.OutputContainerInfo?.PatchEntities == null; // Starlight-edit
 
             // Starlight-start: Plumbing valve
             ValveButton.Text = Loc.GetString(castState.ValveOpen

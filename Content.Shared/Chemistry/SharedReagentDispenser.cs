@@ -105,20 +105,6 @@ namespace Content.Shared.Chemistry
     }
     // Starlight-end
 
-    // Starlight Start
-    // Required for UI to not flash while cell is charging/discharging
-    [Serializable, NetSerializable]
-    public sealed class ReagentDispenserEnergyUpdateMessage : BoundUserInterfaceMessage
-    {
-        public readonly float EnergyAmount;
-
-        public ReagentDispenserEnergyUpdateMessage(float energyAmount)
-        {
-            EnergyAmount = energyAmount;
-        }
-    }
-    // Starlight End
-
     public enum ReagentDispenserDispenseAmount
     {
         U1 = 1,
@@ -155,17 +141,14 @@ namespace Content.Shared.Chemistry
 
         public readonly ReagentDispenserDispenseAmount SelectedDispenseAmount;
 
-        public readonly float EnergyAmount; // Starlight-edit: Energy bar
-
         public readonly bool ValveOpen; // Starlight-edit: Plumbing valve
 
-        public ReagentDispenserBoundUserInterfaceState(ContainerInfo? outputContainer, NetEntity? outputContainerEntity, List<ReagentInventoryItem> inventory, ReagentDispenserDispenseAmount selectedDispenseAmount, float energyAmount, bool valveOpen) // Starlight-edit: Energy bar, Plumbing valve
+        public ReagentDispenserBoundUserInterfaceState(ContainerInfo? outputContainer, NetEntity? outputContainerEntity, List<ReagentInventoryItem> inventory, ReagentDispenserDispenseAmount selectedDispenseAmount, bool valveOpen) // Starlight-edit: Plumbing valve
         {
             OutputContainer = outputContainer;
             OutputContainerEntity = outputContainerEntity;
             Inventory = inventory;
             SelectedDispenseAmount = selectedDispenseAmount;
-            EnergyAmount = energyAmount; // Starlight-edit: Energy bar
             ValveOpen = valveOpen; // Starlight-edit: Plumbing valve
         }
     }

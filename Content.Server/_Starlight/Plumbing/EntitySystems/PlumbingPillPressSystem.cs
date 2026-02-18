@@ -21,7 +21,7 @@ namespace Content.Server._Starlight.Plumbing.EntitySystems;
 
 /// <summary>
 ///     Handles the plumbing pill press: pulls reagents from the inlet network into a buffer,
-///     and automatically creates pills or patches when the buffer has enough for the set dosage.
+///     and automatically creates pills when the buffer has enough for the set dosage.
 ///     Supports optional mixing mode with two ratio-controlled inlets (E/W).
 /// </summary>
 [UsedImplicitly]
@@ -34,8 +34,6 @@ public sealed class PlumbingPillPressSystem : EntitySystem
     [Dependency] private readonly PlumbingPullSystem _pullSystem = default!;
 
     private static readonly EntProtoId PillPrototypeId = "Pill";
-    private static readonly EntProtoId PatchPrototypeId = "Patch";
-
     /// <summary>Max dosage matches the ChemMaster limit.</summary>
     private const uint MaxDosage = 20;
     private const uint MinDosage = 1;
@@ -48,7 +46,6 @@ public sealed class PlumbingPillPressSystem : EntitySystem
         SubscribeLocalEvent<PlumbingPillPressComponent, PlumbingDeviceUpdateEvent>(OnDeviceUpdate);
         SubscribeLocalEvent<PlumbingPillPressComponent, PlumbingPillPressToggleMessage>(OnToggle);
         SubscribeLocalEvent<PlumbingPillPressComponent, PlumbingPillPressSetDosageMessage>(OnSetDosage);
-        SubscribeLocalEvent<PlumbingPillPressComponent, PlumbingPillPressSetOutputModeMessage>(OnSetOutputMode);
         SubscribeLocalEvent<PlumbingPillPressComponent, PlumbingPillPressSetPillTypeMessage>(OnSetPillType);
         SubscribeLocalEvent<PlumbingPillPressComponent, PlumbingPillPressSetMixingMessage>(OnSetMixing);
         SubscribeLocalEvent<PlumbingPillPressComponent, PlumbingPillPressSetInletRatioMessage>(OnSetInletRatio);
@@ -85,33 +82,18 @@ public sealed class PlumbingPillPressSystem : EntitySystem
             // Spawn on the same tile, offset slightly south
             var spawnCoords = Transform(ent.Owner).Coordinates.Offset(new Vector2(0, -0.3f));
 
-            if (ent.Comp.OutputMode == PillPressOutputMode.Pill)
-            {
-                var item = Spawn(PillPrototypeId, spawnCoords);
-                _solutionSystem.EnsureSolutionEntity(item,
-                    SharedChemMaster.PillSolutionName,
-                    out var itemSolution,
-                    dosage);
+            var item = Spawn(PillPrototypeId, spawnCoords);
+            _solutionSystem.EnsureSolutionEntity(item,
+                SharedChemMaster.PillSolutionName,
+                out var itemSolution,
+                dosage);
 
-                if (itemSolution.HasValue)
-                    _solutionSystem.TryAddSolution(itemSolution.Value, withdrawal);
+            if (itemSolution.HasValue)
+                _solutionSystem.TryAddSolution(itemSolution.Value, withdrawal);
 
-                var pill = Comp<PillComponent>(item);
-                pill.PillType = ent.Comp.PillType;
-                Dirty(item, pill);
-            }
-            else
-            {
-                var item = Spawn(PatchPrototypeId, spawnCoords);
-
-                _solutionSystem.EnsureSolutionEntity(item,
-                    SharedChemMaster.PatchSolutionName,
-                    out var itemSolution,
-                    dosage);
-
-                if (itemSolution.HasValue)
-                    _solutionSystem.TryAddSolution(itemSolution.Value, withdrawal);
-            }
+            var pill = Comp<PillComponent>(item);
+            pill.PillType = ent.Comp.PillType;
+            Dirty(item, pill);
         }
 
         _appearance.SetData(ent.Owner, PlumbingVisuals.Running, produced || solution.Volume >= dosage);
@@ -208,14 +190,6 @@ public sealed class PlumbingPillPressSystem : EntitySystem
         UpdateUiState(ent);
     }
 
-    private void OnSetOutputMode(Entity<PlumbingPillPressComponent> ent, ref PlumbingPillPressSetOutputModeMessage args)
-    {
-        ent.Comp.OutputMode = args.OutputMode;
-        DirtyField(ent, ent.Comp, nameof(PlumbingPillPressComponent.OutputMode));
-        ClickSound(ent);
-        UpdateUiState(ent);
-    }
-
     private void OnSetPillType(Entity<PlumbingPillPressComponent> ent, ref PlumbingPillPressSetPillTypeMessage args)
     {
         if (args.PillType >= MaxPillTypes)
@@ -287,7 +261,6 @@ public sealed class PlumbingPillPressSystem : EntitySystem
         var state = new PlumbingPillPressBoundUserInterfaceState(
             bufferVolume,
             ent.Comp.Dosage,
-            ent.Comp.OutputMode,
             ent.Comp.PillType,
             ent.Comp.Enabled,
             ent.Comp.MixingEnabled,

@@ -11,12 +11,6 @@
 
         <PanelContainer StyleClasses="LowDivider" />
 
-        <!-- Output mode selector -->
-        <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
-            <Label Text="{Loc plumbing-pill-press-output-mode}" />
-            <OptionButton Name="OutputModeSelector" MinWidth="100" HorizontalExpand="True" />
-        </BoxContainer>
-
         <!-- Dosage input -->
         <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
             <Label Text="{Loc plumbing-pill-press-dosage}" />
@@ -26,7 +20,7 @@
 
         <PanelContainer StyleClasses="LowDivider" />
 
-        <!-- Pill type selector (hidden for patches) -->
+        <!-- Pill type selector  -->
         <BoxContainer Name="PillTypeContainer" Orientation="Vertical" SeparationOverride="4">
             <Label Text="{Loc plumbing-pill-press-pill-type}" StyleClasses="LabelHeading" />
             <GridContainer Name="PillTypeGrid" Columns="10" />

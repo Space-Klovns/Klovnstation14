@@ -779,7 +779,7 @@ public sealed class RCDSystem : EntitySystem
                     return false;
                 }
             }
-            else if (rcd != null && rcd.IsRPD)
+            else if (rcd != null && rcd.IsRpd)
             {
                 if (popMsgs)
                     _popup.PopupClient(Loc.GetString("rcd-component-deconstruct-target-not-on-whitelist-message"), uid, user);

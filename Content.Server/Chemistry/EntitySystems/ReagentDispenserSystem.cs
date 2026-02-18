@@ -64,10 +64,6 @@ namespace Content.Server.Chemistry.EntitySystems
 
             SubscribeLocalEvent<ReagentDispenserComponent, MapInitEvent>(OnMapInit, before: new[] { typeof(ItemSlotsSystem) });
             // Starlight Start
-            SubscribeLocalEvent<ReagentDispenserComponent, ComponentRemove>(OnComponentRemove);
-            SubscribeLocalEvent<ReagentDispenserComponent, PowerCellChangedEvent>(OnPowerCellChanged);
-            SubscribeLocalEvent<ReagentDispenserComponent, DestructionEventArgs>(OnDestruction);
-            SubscribeLocalEvent<ReagentDispenserComponent, PowerCellSlotEmptyEvent>(OnPowerCellSlotEmpty);
             SubscribeLocalEvent<ReagentDispenserComponent, ReagentDispenserToggleValveMessage>(OnToggleValveMessage);
             // Starlight End
         }
@@ -84,9 +80,8 @@ namespace Content.Server.Chemistry.EntitySystems
 
             var inventory = GetInventory(reagentDispenser);
 
-            var energy = _powercell.TryGetBatteryFromSlot(reagentDispenser.Owner, out var battery) ? _battery.GetChargeLevel(battery.Value.AsNullable()) : 0f; // Starlight-edit: Energy bar, get current energy level for UI with GetChargeLevel.
             var valveOpen = TryComp<PlumbingOutletComponent>(reagentDispenser.Owner, out var plumbingOutlet) && plumbingOutlet.Enabled; // Starlight-edit: Plumbing valve
-            var state = new ReagentDispenserBoundUserInterfaceState(outputContainerInfo, GetNetEntity(outputContainer), inventory, reagentDispenser.Comp.DispenseAmount, energy, valveOpen); // Starlight-edit: Energy bar, Plumbing valve
+            var state = new ReagentDispenserBoundUserInterfaceState(outputContainerInfo, GetNetEntity(outputContainer), inventory, reagentDispenser.Comp.DispenseAmount, valveOpen); // Starlight-edit: Plumbing valve
             _userInterfaceSystem.SetUiState(reagentDispenser.Owner, ReagentDispenserUiKey.Key, state);
         }
 

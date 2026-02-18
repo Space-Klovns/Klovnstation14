@@ -74,7 +74,6 @@ namespace Content.Client.Chemistry.UI
             EjectButton.Disabled = castState.OutputContainer is null;
 
             // Starlight-start
-            UpdateEnergyDisplay(castState.EnergyAmount);
             // Update valve button
             ValveButton.Text = Loc.GetString(castState.ValveOpen
                 ? "reagent-dispenser-window-valve-open"
