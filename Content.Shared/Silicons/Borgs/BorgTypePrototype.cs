@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
+﻿// SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
 // SPDX-FileCopyrightText: 2025 Tayrtahn
 // SPDX-FileCopyrightText: 2026 nabegator220
 //
@@ -162,8 +162,8 @@ public sealed partial class BorgTypePrototype : IPrototype
     /// KS14 -Laws
 
     /// <summary>
-    /// KS14 - do we have a specific lawset that we want to use for this borg?
+    /// KS14 - do we have a specific lawset that we want to use for this borg? Default being asimov.
     /// </summary>
     [DataField]
-    public ProtoId<SiliconLawsetPrototype> Laws = string.Empty;
+    public ProtoId<SiliconLawsetPrototype> Laws = "Asimov";
 }
