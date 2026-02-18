@@ -1,7 +1,6 @@
 using System.Numerics;
 using Content.Server._Starlight.Plumbing.Components;
 using Content.Server._Starlight.Plumbing.Nodes;
-using Content.Shared.Starlight.Medical.Items.Components;
 using Content.Shared._Starlight.Plumbing;
 using Content.Shared._Starlight.Plumbing.Components;
 using Content.Shared.Chemistry;
@@ -57,7 +56,7 @@ public sealed class PlumbingPillPressSystem : EntitySystem
         SubscribeLocalEvent<PlumbingPillPressComponent, BoundUIOpenedEvent>(OnUIOpened);
     }
 
-    private void OnDeviceUpdate(Entity<PlumbingPillPressComponent> ent, ref PlumbingDeviceUpdateEvent args)
+private void OnDeviceUpdate(Entity<PlumbingPillPressComponent> ent, ref PlumbingDeviceUpdateEvent args)
     {
         if (!ent.Comp.Enabled)
         {
@@ -98,9 +97,6 @@ public sealed class PlumbingPillPressSystem : EntitySystem
 
             produced = true;
 
-            // Spawn on the same tile, offset slightly south
-            var spawnCoords = Transform(ent.Owner).Coordinates.Offset(new Vector2(0, -0.3f));
-
             var item = Spawn(PillPrototypeId, spawnCoords);
             _solutionSystem.EnsureSolutionEntity(item,
                 SharedChemMaster.PillSolutionName,
@@ -113,6 +109,7 @@ public sealed class PlumbingPillPressSystem : EntitySystem
             var pill = Comp<PillComponent>(item);
             pill.PillType = ent.Comp.PillType;
             Dirty(item, pill);
+
         }
 
         _appearance.SetData(ent.Owner, PlumbingVisuals.Running, produced || solution.Volume >= dosage);

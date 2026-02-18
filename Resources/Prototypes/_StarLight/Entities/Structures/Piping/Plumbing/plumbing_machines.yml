@@ -662,6 +662,7 @@
       Sugar: 2
       Silicon: 5
       Phosphorus: 5
+      Water: 2
   - type: Plungeable
   - type: PlumbingOutlet
     solutionName: buffer
@@ -778,3 +779,13 @@
         acts: ["Destruction"]
   - type: StaticPrice
     price: 150
+
+- type: entity
+  parent: PlumbingSynthesizer
+  id: PlumbingSynthesizerWater
+  name: Plumbing Synthesizer
+  suffix: Water
+  description: Generates basic reagents using power from an internal battery.
+  components:
+    - type: PlumbingSynthesizer
+      selectedReagent: Water
