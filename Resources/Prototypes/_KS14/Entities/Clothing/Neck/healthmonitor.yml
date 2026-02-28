@@ -1,0 +1,30 @@
+- type: entity
+  parent: ClothingNeckBase
+  id: healthmonitor
+  name: health monitor
+  description: A small, wearable device that outputs a signal when its wearer goes crit or dies.
+  components:
+  - type: Sprite
+    sprite: _KS14/Clothing/Neck/Misc/healthmonitor.rsi
+  - type: Clothing
+    sprite: _KS14/Clothing/Neck/Misc/healthmonitor.rsi
+  - type: StaticPrice
+    price: 40
+  - type: DeviceLinkSource
+    ports:
+    - Crit
+    - Dead
+  - type: SignalRattleOnTrigger
+  - type: TriggerOnMobstateChange
+    mobState:
+    - Critical
+    - Dead
+    targetMobstateEntity: false
+  - type: EmitSoundOnTrigger
+    sound:
+      collection: TriggerActivate
+  - type: DeviceNetwork
+    deviceNetId: Wireless
+    receiveFrequencyId: BasicDevice
+  - type: WirelessNetworkConnection
+    range: 15
