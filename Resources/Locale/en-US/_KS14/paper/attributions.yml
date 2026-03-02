@@ -1,4 +1,8 @@
-﻿- files: ["book-authorbooks.ftl"]
+# SPDX-FileCopyrightText: 2026 DeusMaldPr
+#
+# SPDX-License-Identifier: MIT
+
+- files: ["book-authorbooks.ftl"]
   license: "CC-BY-SA-3.0"
   copyright: "Created by Soot for klovn-station-14."
   source: "github.com/Space-Klovns/Klovnstation14/pull/187"
