@@ -390,7 +390,7 @@
     delay: 1 # KS14: halved delay
     damage:
       types:
-        Bruise: -3 #klovn, at least something lol
+        Blunt: -3 #klovn, at least something lol
         Slash: -5
         Piercing: -13 #klovn
     bloodlossModifier: -10
