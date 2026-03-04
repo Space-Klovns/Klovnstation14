@@ -24,9 +24,6 @@
     mobState:
     - Critical
     - Dead
-  - type: EmitSoundOnTrigger
-    sound:
-      collection: TriggerActivate
   - type: DeviceNetwork
     deviceNetId: Wireless
     receiveFrequencyId: BasicDevice

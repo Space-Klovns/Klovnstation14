@@ -1,5 +1,6 @@
 ﻿using Content.Shared.Implants;
 using Content.Shared.Interaction.Events;
+using Content.Shared.Inventory;
 using Content.Shared.Mobs;
 using Content.Shared.Popups;
 using Content.Shared.Trigger.Components.Triggers;
@@ -24,7 +25,7 @@ public sealed partial class TriggerOnMobstateChangeSystem : TriggerOnXSystem
         SubscribeLocalEvent<TriggerOnMobstateChangeComponent, ImplantRelayEvent<MobStateChangedEvent>>(OnMobStateRelay);
         SubscribeLocalEvent<TriggerOnMobstateChangeComponent, ImplantRelayEvent<SuicideEvent>>(OnSuicideRelay);
 
-        SubscribeLocalEvent<TriggerOnMobstateChangeComponent, ClothingRelayEvent<MobStateChangedEvent>>(OnMobStateClothingRelay); //KS14
+        SubscribeLocalEvent<TriggerOnMobstateChangeComponent, InventoryRelayedEvent<MobStateChangedEvent>>(OnMobStateInventoryRelay); //KS14
     }
 
     private void OnMobStateChanged(EntityUid uid, TriggerOnMobstateChangeComponent component, MobStateChangedEvent args)
@@ -44,12 +45,12 @@ public sealed partial class TriggerOnMobstateChangeSystem : TriggerOnXSystem
     }
 
     //KS14 START
-    private void OnMobStateClothingRelay(EntityUid uid, TriggerOnMobstateChangeComponent component, ClothingRelayEvent<MobStateChangedEvent> args)
+    private void OnMobStateInventoryRelay(EntityUid uid, TriggerOnMobstateChangeComponent component, InventoryRelayedEvent<MobStateChangedEvent> args)
     {
-        if (!component.MobState.Contains(args.Event.NewMobState))
+        if (!component.MobState.Contains(args.Args.NewMobState))
             return;
 
-        Trigger.Trigger(uid, component.TargetMobstateEntity ? args.WearerEntity : args.Event.Origin, component.KeyOut);
+        Trigger.Trigger(uid, component.TargetMobstateEntity ? args.Owner : args.Args.Origin, component.KeyOut);
     }
     //KS14 END
 
