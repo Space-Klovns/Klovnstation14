@@ -15,11 +15,15 @@
     - Crit
     - Dead
   - type: SignalRattleOnTrigger
+    targetUser: true
+  - type: ClothingGrantComponent
+    component:
+    - type: ClothingRelayEventRequired
+  - type: WornRelayEvent
   - type: TriggerOnMobstateChange
     mobState:
     - Critical
     - Dead
-    targetMobstateEntity: false
   - type: EmitSoundOnTrigger
     sound:
       collection: TriggerActivate

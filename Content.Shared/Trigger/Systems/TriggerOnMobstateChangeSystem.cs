@@ -3,6 +3,10 @@ using Content.Shared.Interaction.Events;
 using Content.Shared.Mobs;
 using Content.Shared.Popups;
 using Content.Shared.Trigger.Components.Triggers;
+//KS14 START
+using Content.Shared._KS14.Clothing.EntitySystems;
+using Content.Shared._KS14.Clothing.Components;
+//KS14 END
 
 namespace Content.Shared.Trigger.Systems;
 
@@ -19,6 +23,8 @@ public sealed partial class TriggerOnMobstateChangeSystem : TriggerOnXSystem
 
         SubscribeLocalEvent<TriggerOnMobstateChangeComponent, ImplantRelayEvent<MobStateChangedEvent>>(OnMobStateRelay);
         SubscribeLocalEvent<TriggerOnMobstateChangeComponent, ImplantRelayEvent<SuicideEvent>>(OnSuicideRelay);
+
+        SubscribeLocalEvent<TriggerOnMobstateChangeComponent, ClothingRelayEvent<MobStateChangedEvent>>(OnMobStateClothingRelay); //KS14
     }
 
     private void OnMobStateChanged(EntityUid uid, TriggerOnMobstateChangeComponent component, MobStateChangedEvent args)
@@ -36,6 +42,16 @@ public sealed partial class TriggerOnMobstateChangeSystem : TriggerOnXSystem
 
         Trigger.Trigger(uid, component.TargetMobstateEntity ? args.ImplantedEntity : args.Event.Origin, component.KeyOut);
     }
+
+    //KS14 START
+    private void OnMobStateClothingRelay(EntityUid uid, TriggerOnMobstateChangeComponent component, ClothingRelayEvent<MobStateChangedEvent> args)
+    {
+        if (!component.MobState.Contains(args.Event.NewMobState))
+            return;
+
+        Trigger.Trigger(uid, component.TargetMobstateEntity ? args.WearerEntity : args.Event.Origin, component.KeyOut);
+    }
+    //KS14 END
 
     /// <summary>
     /// Checks if the user has any implants that prevent suicide to avoid some cheesy strategies

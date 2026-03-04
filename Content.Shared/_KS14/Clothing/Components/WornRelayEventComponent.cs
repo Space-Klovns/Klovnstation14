@@ -3,9 +3,9 @@ using Robust.Shared.GameStates;
 namespace Content.Shared._KS14.Clothing.Components;
 
 /// <summary>
-/// KS14 - when worn this relays mobstatechange events to the entity that grants it.
+/// KS14 - used to relay events to clothing similar to how implanters do it.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
-public sealed partial class WornHealthMonitorComponent : Component
+public sealed partial class WornRelayEventComponent : Component
 {
 }
