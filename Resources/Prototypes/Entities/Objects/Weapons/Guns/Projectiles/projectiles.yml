@@ -249,7 +249,7 @@
       types:
         Piercing: 11 # 20% decrease
       percentilePenetration: #KS14 - nuarmor
-        Piercing: 1 #100% chance
+        Piercing: 1 #100% of armor ignored
 
 - type: entity
   id: BaseBulletUranium

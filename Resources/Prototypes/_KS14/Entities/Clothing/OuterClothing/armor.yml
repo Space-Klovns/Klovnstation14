@@ -25,6 +25,8 @@
         Heat: 0.80
         Cold: 0.80
         Shock: 0.80
+      flatReductions: #KS14 modified
+        Piercing: 3.1
   - type: ExplosionResistance
     damageCoefficient: 0.75
   - type: ClothingGrantComponent # KS14 - arc flash

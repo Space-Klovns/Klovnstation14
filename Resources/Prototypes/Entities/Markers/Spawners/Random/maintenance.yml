@@ -342,14 +342,13 @@
       weight: 95
       children:
       - id: Machete
-      - id: Claymore
       - id: BaseBallBat
       - id: CombatKnife
       - id: Spear
       - id: RifleStock
       - id: ModularReceiver
       - id: HydroponicsToolScythe
-      - id: PistolBarrel #KS14, odds may be too high, HOWEVER, i dont give a fuck!
+
     # Rare Group
     - !type:GroupSelector
       weight: 5
@@ -372,6 +371,8 @@
       - id: Bola
       - id: SurvivalKnife
       - id: ScalpelShiv
+      - id: Claymore #KS14 rebalance
+      - id: PistolBarrel #KS14
       - id: Shiv
       - id: SawImprov
       - id: HydroponicsToolMiniHoe

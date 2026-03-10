@@ -212,6 +212,8 @@
         Cold: 0.7
         Radiation: 0.4
         Caustic: 0.7
+      flatReductions: #KS14 modified
+        Piercing: 7.4
   - type: ClothingSpeedModifier
     walkModifier: 0.75
     sprintModifier: 0.75
@@ -291,6 +293,8 @@
         Heat: 0.3
         Cold: 0.3
         Radiation: 0.1
+      flatReductions: #KS14 modified
+        Piercing: 8.9
   - type: ExplosionResistance
     damageCoefficient: 0.2
   - type: TemperatureProtection
@@ -323,6 +327,8 @@
         Piercing: 0.6
         Heat: 0.8
         Caustic: 0.7
+      flatReductions: #KS14 modified
+        Piercing: 7.4
   - type: ClothingSpeedModifier
     walkModifier: 0.75
     sprintModifier: 0.75
@@ -388,6 +394,8 @@
         Slash: 0.45
         Piercing: 0.35
         Caustic: 0.7
+      flatReductions: #KS14 modified
+        Piercing: 11
   - type: ClothingSpeedModifier
     walkModifier: 0.75
     sprintModifier: 0.75
@@ -413,16 +421,18 @@
     damageCoefficient: 0.5
   - type: Armor
     modifiers:
-      coefficients:
+      coefficients: # KS14 modified
         Blunt: 0.65
         Slash: 0.65
-        Piercing: 0.65
+        Piercing: 0.60
         Heat: 0.6
         Radiation: 0.5
         Caustic: 0.6
-  - type: ClothingSpeedModifier
-    walkModifier: 0.8
-    sprintModifier: 0.8
+      flatReductions: #KS14 modified
+        Piercing: 7.4
+  - type: ClothingSpeedModifier # KS14 modified
+    walkModifier: 0.85
+    sprintModifier: 0.85
   - type: HeldSpeedModifier
   - type: ToggleableClothing
     clothingPrototype: ClothingHeadHelmetHardsuitCap
@@ -580,6 +590,8 @@
         Radiation: 0.5
         Heat: 0.8
         Caustic: 0.5
+      flatReductions: #KS14 modified
+        Piercing: 8.9
   - type: ClothingSpeedModifier
     walkModifier: 0.8
     sprintModifier: 0.8
@@ -614,6 +626,8 @@
         Cold: 0.9
         Radiation: 0.5
         Caustic: 0.8
+      flatReductions: #KS14 modified
+        Piercing: 5.7
   - type: ClothingSpeedModifier
     walkModifier: 0.9
     sprintModifier: 0.9
@@ -652,6 +666,8 @@
         Cold: 0.8
         Radiation: 0.5
         Caustic: 0.5
+      flatReductions: #KS14 modified
+        Piercing: 9.6
   - type: ClothingSpeedModifier
     walkModifier: 0.9
     sprintModifier: 0.9
@@ -719,6 +735,8 @@
         Cold: 0.2
         Radiation: 0.01
         Caustic: 0.4
+      flatReductions: #KS14 modified
+        Piercing: 8.1
   - type: Item
     size: Huge
   - type: ToggleableClothing
@@ -760,6 +778,8 @@
         Cold: 0.5
         Radiation: 0.25
         Caustic: 0.4
+      flatReductions: #KS14 modified
+        Piercing: 11
   - type: ClothingSpeedModifier
     walkModifier: 0.9
     sprintModifier: 0.9
@@ -838,6 +858,8 @@
         Heat: 0.6
         Radiation: 0.05
         Caustic: 0.1
+      flatReductions: #KS14 modified
+        Piercing: 7.4
   - type: ClothingSpeedModifier
     walkModifier: 0.85
     sprintModifier: 0.85
@@ -940,6 +962,8 @@
         Piercing: 0.5
         Heat: 0.4
         Caustic: 0.75
+      flatReductions: #KS14 modified
+        Piercing: 8.9
   - type: ClothingSpeedModifier
     walkModifier: 0.8
     sprintModifier: 0.8
@@ -1072,6 +1096,8 @@
         Heat: 0.1
         Radiation: 0.1
         Caustic: 0.1
+      flatReductions: #KS14 modified
+        Piercing: 14
   - type: ClothingSpeedModifier
     walkModifier: 1.0
     sprintModifier: 1.0
@@ -1109,6 +1135,8 @@
         Shock: 0.35 # KS14
         Radiation: 0.1
         Caustic: 0.5 # KS14
+      flatReductions: #KS14 modified
+        Piercing: 8.1
   - type: ZombificationResistance
     zombificationResistanceCoefficient: 0.25
   - type: ClothingSpeedModifier
@@ -1192,6 +1220,8 @@
         Slash: 0.9
         Piercing: 0.7
         Caustic: 0.8
+      flatReductions: #KS14 modified
+        Piercing: 5.7
   - type: ClothingSpeedModifier
     walkModifier: 0.9
     sprintModifier: 0.9

@@ -6,8 +6,11 @@
     edges:
     - to: armor
       steps:
-      - material: Bones
-        amount: 6
+      - material: Bones # KS14 modified
+        amount: 8
+        doAfter: 2
+      - material: Durathread
+        amount: 2
         doAfter: 2
   - node: armor
     entity: ClothingOuterArmorBone

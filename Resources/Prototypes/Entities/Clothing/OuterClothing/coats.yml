@@ -75,6 +75,8 @@
         Piercing: 0.6
         Heat: 0.7
         Caustic: 0.75 # not the full 90% from ss13 because of the head
+      flatReductions: #KS14 modified
+        Piercing: 7.4
   - type: ExplosionResistance
     damageCoefficient: 0.9
 

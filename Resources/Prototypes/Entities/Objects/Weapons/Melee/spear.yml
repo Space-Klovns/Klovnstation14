@@ -183,7 +183,7 @@
 
 - type: entity
   name: bone spear
-  parent: Spear
+  parent: SpearReinforced #KS14 buff
   id: SpearBone
   description: A spear made of bones.
   components:

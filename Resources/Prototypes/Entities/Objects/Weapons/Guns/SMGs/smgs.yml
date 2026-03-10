@@ -150,14 +150,10 @@
       map: ["enum.GunVisualLayers.Mag"]
   - type: Clothing
     sprite: Objects/Weapons/Guns/SMGs/c20r.rsi
-  - type: Wieldable
-    unwieldOnUse: false
-  - type: GunWieldBonus
-    minAngle: -19
-    maxAngle: -16
   - type: Gun
-    minAngle: 21
-    maxAngle: 32
+    minAngle: 2
+    maxAngle: 16
+    selectedMode: FullAuto
     shotsPerBurst: 5
     availableModes:
     - Burst
@@ -179,7 +175,7 @@
   name: C-20r ROW #I think ROW stands for Recharging Onboard Weapon so i'm following the L6C's example
   id: WeaponSubMachineGunC20rROW
   parent: BaseItem
-  description: A burst-fire C-20r submachine gun for use by cyborgs. Creates .35 caliber ammo on the fly from an internal ammo fabricator, which slowly self-charges.
+  description: A C-20r submachine gun for use by cyborgs. Creates .35 caliber ammo on the fly from an internal ammo fabricator, which slowly self-charges.
   components:
   - type: Gun
     minAngle: 2
@@ -187,10 +183,9 @@
     angleIncrease: 4
     angleDecay: 16
     fireRate: 8
-    burstFireRate: 8
-    selectedMode: Burst
+    selectedMode: FullAuto
     availableModes:
-    - Burst
+    - FullAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/c-20r.ogg
   - type: Sprite
@@ -240,7 +235,7 @@
     - type: Gun
       minAngle: 21
       maxAngle: 32
-      fireRate: 6
+      fireRate: 7 # KS14 change
       burstFireRate: 18
       soundGunshot:
         path: /Audio/Weapons/Guns/Gunshots/atreides.ogg
