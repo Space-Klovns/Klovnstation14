@@ -11,6 +11,7 @@ using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Database;
 using Content.Shared.NodeContainer;
 using Robust.Shared.Containers;
+using Robust.Shared.Network; // KS14
 using GasCanisterComponent = Content.Shared.Atmos.Piping.Unary.Components.GasCanisterComponent;
 
 namespace Content.Shared.Atmos.Piping.Unary.Systems;
@@ -18,6 +19,7 @@ namespace Content.Shared.Atmos.Piping.Unary.Systems;
 public abstract class SharedGasCanisterSystem : EntitySystem
 {
     [Dependency] protected readonly ISharedAdminLogManager AdminLogger = default!;
+    [Dependency] protected readonly INetManager _netManager = default!; // KS14
     [Dependency] private readonly ItemSlotsSystem _slots = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
     [Dependency] protected readonly SharedUserInterfaceSystem UI = default!;
@@ -86,7 +88,8 @@ public abstract class SharedGasCanisterSystem : EntitySystem
 
         // KS14 Addition
         // This can be called in init/startup just fine afaict but whatever
-        UpdateCanisterAppearance(ent, ent);
+        if (_netManager.IsServer)
+            UpdateCanisterAppearance(ent, ent);
     }
 
     private void OnCanisterStartup(Entity<GasCanisterComponent> ent, ref ComponentStartup args)

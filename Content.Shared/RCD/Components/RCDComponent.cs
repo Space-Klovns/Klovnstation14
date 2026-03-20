@@ -125,10 +125,3 @@ public enum RpdMode : byte
     Free = 3,
     // Starlight End
 }
-
-// KS14 Addition
-/// <summary>
-///     Raised locally for an RCD before it tries building something
-/// </summary>
-[ByRefEvent]
-public record struct AttemptUseRcdEvent(EntityUid RcdUid, EntityUid User, bool Cancelled = false);

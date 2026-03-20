@@ -36,6 +36,7 @@ namespace Content.Server.Teleportation;
 /// </summary>
 public sealed class HandTeleporterSystem : EntitySystem
 {
+    [Dependency] private readonly _KS14.Speczones.SpeczoneSystem _speczoneSystem = default!; // KS14
     [Dependency] private readonly IAdminLogManager _adminLogger = default!;
     [Dependency] private readonly LinkedEntitySystem _link = default!;
     [Dependency] private readonly AudioSystem _audio = default!;
@@ -104,10 +105,7 @@ public sealed class HandTeleporterSystem : EntitySystem
             return;
 
         // KS14 Start
-        var attemptHandTeleEvent = new AttemptUpdateHandTeleporterPortalsEvent(uid, false);
-        RaiseLocalEvent(ref attemptHandTeleEvent);
-
-        if (attemptHandTeleEvent.Cancelled)
+        if (_speczoneSystem.AttemptInterfere(uid, user: user, predicted: false))
             return;
         // KS14 End
 

@@ -308,6 +308,7 @@
       storedOffset: 0,-6
     - type: AmmoCounter
     - type: GrapplingGun
+    - type: BlockShootingInSpeczone # KS14: Speczones
     - type: Gun
       soundGunshot: /Audio/Weapons/Guns/Gunshots/harpoon.ogg
       fireRate: 0.5

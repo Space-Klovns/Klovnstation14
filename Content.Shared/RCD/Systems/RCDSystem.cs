@@ -64,6 +64,7 @@ namespace Content.Shared.RCD.Systems;
 
 public sealed class RCDSystem : EntitySystem
 {
+    [Dependency] private readonly _KS14.Speczones.SharedSpeczoneSystem _speczoneSystem = default!; // KS14
     [Dependency] private readonly INetManager _net = default!;
     [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
     [Dependency] private readonly ITileDefinitionManager _tileDefMan = default!;
@@ -269,10 +270,7 @@ public sealed class RCDSystem : EntitySystem
             return;
 
         // KS14 Start
-        var attemptRcdEvent = new AttemptUseRcdEvent(uid, args.User, false);
-        RaiseLocalEvent(ref attemptRcdEvent);
-
-        if (attemptRcdEvent.Cancelled)
+        if (_speczoneSystem.AttemptInterfere(uid, user: args.User, predicted: true))
             return;
         // KS14 End
 

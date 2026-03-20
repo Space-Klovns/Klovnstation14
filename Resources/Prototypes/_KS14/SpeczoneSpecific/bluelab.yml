@@ -54,7 +54,7 @@
   parent: Recycler
   id: RecyclerLabsMobile
   name: mobile recycler
-  description: Whose bright fucking idea was it to make it move?!
+  description: What use could this possibly serve?
   suffix: Labs, Always Awake, Emagged, Powered
   components:
   - type: Fixtures
@@ -104,3 +104,29 @@
     enabled: true
   - type: Emagged
     emagType: Interaction
+
+- type: entity
+  parent: ReinforcedPlasmaWindow
+  id: ReinforcedPlasmaWindowBluelabsAtmosSetpiece
+  suffix: Labs, Setpiece, Dont Map
+  components:
+  - type: DeviceLinkSink
+    ports:
+    - Trigger
+
+  - type: TriggerOnSignal
+  - type: DeviceNetwork
+    deviceNetId: Wireless
+    receiveFrequencyId: BasicDevice
+  - type: WirelessNetworkConnection
+    range: 200
+
+  - type: AddComponentsOnTrigger
+    components: # YAML goidacode is real?
+    - type: MobState
+    - type: PassiveDamage
+      allowedStates:
+      - Alive # by default mobstate is Alive
+      damage:
+        types:
+          Blunt: 15
