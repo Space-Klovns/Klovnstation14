@@ -130,3 +130,42 @@
       damage:
         types:
           Blunt: 15
+
+- type: entity
+  parent: MarkerBase
+  id: KsChasmIconsmoother
+  name: iconsmooth marker
+  suffix: KS14, Iconsmooth Marker, Chasm
+  components:
+  - type: Sprite
+    layers:
+    - state: blue
+  - type: IconSmooth
+    key: chasm
+    mode: NoSprite
+
+- type: entity
+  parent: MarkerBase
+  id: KsCatwalkIconsmoother
+  name: iconsmooth marker
+  suffix: KS14, Iconsmooth Marker, Catwalk
+  components:
+  - type: Sprite
+    layers:
+    - state: green
+  - type: IconSmooth
+    key: catwalk
+    mode: NoSprite
+
+- type: entity
+  parent: MarkerBase
+  id: BluelabSpookyAmbienceTagMarker
+  name: spooky ambience
+  suffix: Labs, Spooky Ambience
+  components:
+  - type: Sprite
+    layers:
+    - state: red
+  - type: Tag
+    tags:
+    - SpookyFog

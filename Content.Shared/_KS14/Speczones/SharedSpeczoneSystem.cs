@@ -73,7 +73,7 @@ public abstract class SharedSpeczoneSystem : EntitySystem
         if (_alwaysAllowedQuery.HasComponent(uid))
             return false;
 
-        if (!CheckEntityIsInSpeczone(uid, out var transformComponent))
+        if (!CheckEntityIsInSpeczone(user ?? uid, out var transformComponent))
             return false;
 
         _sparksSystem.DoSpark(
