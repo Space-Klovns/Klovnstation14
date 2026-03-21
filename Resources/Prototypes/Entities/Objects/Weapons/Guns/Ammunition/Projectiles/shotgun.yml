@@ -81,7 +81,7 @@
   - type: Projectile
     damage:
       types:
-        Piercing: 10
+        Piercing: 12 # KS14
         Structural: 10
 
 - type: entity

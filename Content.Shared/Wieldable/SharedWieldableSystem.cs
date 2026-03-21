@@ -382,6 +382,21 @@ public abstract class SharedWieldableSystem : EntitySystem
     }
 
     /// <summary>
+    /// KS14 - unwieldall but it returns a boolean if someone has been unwielded - required for a specific bit of demoncode
+    /// </summary>
+    /// <param name="force">If this is true we will bypass UnwieldAttemptEvent.</param>
+    public bool TryUnwieldAll(Entity<HandsComponent?> wielder, bool force = false)
+    {
+        var result = false;
+        foreach (var held in _hands.EnumerateHeld(wielder))
+        {
+            if (TryComp<WieldableComponent>(held, out var wieldable))
+                result |= TryUnwield(held, wieldable, wielder, force);
+        }
+        return result;
+    }
+
+    /// <summary>
     /// Sets wielded without doing any checks.
     /// </summary>
     private void SetWielded(Entity<WieldableComponent> ent, bool wielded)
