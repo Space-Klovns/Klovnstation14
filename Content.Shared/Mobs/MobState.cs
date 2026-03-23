@@ -1,4 +1,9 @@
-﻿using Content.Shared.Inventory; // ks14: MOBSTATERELAY
+// SPDX-FileCopyrightText: 2023 Jezithyr
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MPL-2.0
+
+using Content.Shared.Inventory; // ks14: MOBSTATERELAY
 using Content.Shared.Mobs.Components;
 using Robust.Shared.Serialization;
 
