@@ -146,14 +146,15 @@ public sealed class ApcSystem : EntitySystem
         UpdateUIState(uid, apc);
 
         // KS14 Start: Added off sound
+        // TODO LCDC: generalised wallmount-interaction-position function
         var apcTransform = Transform(uid);
-        var apcSoundOrigin = new EntityCoordinates(apcTransform.ParentUid, apcTransform.LocalPosition + apcTransform.LocalRotation.ToVec());
+        var apcSoundOrigin = new EntityCoordinates(apcTransform.ParentUid, apcTransform.LocalPosition + apcTransform.LocalRotation.ToWorldVec() * 0.75f);
 
         if (!apc.MainBreakerEnabled &&
             battery.NetworkBattery.CurrentStorage > 10f)
-            _audio.PlayPvs(apc.OffSound, uid);
+            _audio.PlayPvs(apc.OffSound, apcSoundOrigin);
         else
-            _audio.PlayPvs(apc.OnReceiveMessageSound, uid);
+            _audio.PlayPvs(apc.OnReceiveMessageSound, apcSoundOrigin);
         // KS14 End
 
         if (user != null)
