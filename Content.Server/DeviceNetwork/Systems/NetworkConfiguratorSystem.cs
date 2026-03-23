@@ -20,7 +20,7 @@
 // SPDX-FileCopyrightText: 2025 slarticodefast
 // SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using System.Linq;
 using Content.Server.Administration.Logs;
