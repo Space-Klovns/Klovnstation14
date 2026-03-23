@@ -1,17 +1,19 @@
 using System.Runtime.CompilerServices;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
-namespace Content.Shared._KS14.MovementIllusion;
+namespace Content.Server._KS14.MovementIllusion;
 
 public sealed partial class MovementIllusionSystem : EntitySystem
 {
     [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
 
-    [Dependency] private readonly EntityQuery<MovementIllusionMapComponent> _illMapQuery = default!;
-    [Dependency] private readonly EntityQuery<MovementIllusionFocusComponent> _illFocusQuery = default!;
+    [Dependency] private readonly EntityQuery<MovementIllusionMapComponent> _illMapQuery = default;
+    [Dependency] private readonly EntityQuery<MovementIllusionFocusComponent> _illFocusQuery = default;
+    [Dependency] private readonly EntityQuery<PhysicsComponent> _physicsQuery = default;
 
     private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(1f);
     private TimeSpan _nextUpdate = TimeSpan.MinValue;
@@ -32,9 +34,9 @@ public sealed partial class MovementIllusionSystem : EntitySystem
 
         _nextUpdate = _gameTiming.CurTime + UpdateInterval;
 
-        var eqe = EntityQueryEnumerator<MovementIllusionBanishedComponent>();
-        while (eqe.MoveNext(out var uid, out var component))
-            _physicsSystem.SetLinearVelocity(uid, component.Velocity, wakeBody: false);
+        var eqe = EntityQueryEnumerator<MovementIllusionBanishedComponent, PhysicsComponent>();
+        while (eqe.MoveNext(out var uid, out var illusionBanishedComponent, out var physicsComponent))
+            _physicsSystem.SetLinearVelocity(uid, illusionBanishedComponent.Velocity, wakeBody: false, body: physicsComponent);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)] // The server can handle it
@@ -50,12 +52,12 @@ public sealed partial class MovementIllusionSystem : EntitySystem
 
         if (_illFocusQuery.HasComponent(args.Transform.ParentUid))
             RemComp<MovementIllusionBanishedComponent>(args.Entity);
-        else
+        else if (_physicsQuery.TryGetComponent(args.Entity, out var physicsComponent))
         {
-            var illusionBanishedComponent = AddComp<MovementIllusionBanishedComponent>(args.Entity);
+            var illusionBanishedComponent = EnsureComp<MovementIllusionBanishedComponent>(args.Entity);
             illusionBanishedComponent.Velocity = illusionMapComponent.Velocity;
 
-            _physicsSystem.WakeBody(args.Entity);
+            _physicsSystem.SetLinearVelocity(args.Entity, illusionBanishedComponent.Velocity, wakeBody: true, body: physicsComponent);
         }
     }
 }

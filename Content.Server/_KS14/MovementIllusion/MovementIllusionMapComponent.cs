@@ -1,13 +1,12 @@
 using System.Numerics;
-using Robust.Shared.GameStates;
 
-namespace Content.Shared._KS14.MovementIllusion;
+namespace Content.Server._KS14.MovementIllusion;
 
 /// <summary>
 ///     Added to a map which should move every thing on it
 ///         that doesn't have <see cref="MovementIllusionFocusComponent"/>.
 /// </summary>
-[RegisterComponent, NetworkedComponent]
+[RegisterComponent]
 public sealed partial class MovementIllusionMapComponent : Component
 {
     /// <summary>

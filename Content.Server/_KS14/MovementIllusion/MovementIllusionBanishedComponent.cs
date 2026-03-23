@@ -1,12 +1,11 @@
 using System.Numerics;
-using Robust.Shared.GameStates;
 
-namespace Content.Shared._KS14.MovementIllusion;
+namespace Content.Server._KS14.MovementIllusion;
 
 /// <summary>
 ///     These things will move ETERNALLY
 /// </summary>
-[RegisterComponent, NetworkedComponent]
+[RegisterComponent]
 [UnsavedComponent]
 public sealed partial class MovementIllusionBanishedComponent : Component
 {
