@@ -48,7 +48,7 @@
     sound:
       path: "/Audio/_KS14/Effects/Hailer/sec_death.ogg"
       params:
-        volume: 2.5
+        volume: 4
         variation: 0.1
   # KS14 End
 
