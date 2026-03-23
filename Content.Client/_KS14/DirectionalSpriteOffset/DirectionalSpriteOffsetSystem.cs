@@ -5,11 +5,14 @@
 using System.Numerics;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
+using Robust.Shared.Map;
+using Robust.Shared.Reflection;
 
 namespace Content.Client._KS14.DirectionalSpriteOffset;
 
 public sealed class DirectionalSpriteOffsetSystem : EntitySystem
 {
+    [Dependency] private readonly IReflectionManager _reflectionManager = default!;
     [Dependency] private readonly IEyeManager _eyeManager = default!;
     [Dependency] private readonly TransformSystem _transformSystem = default!;
     [Dependency] private readonly SpriteSystem _spriteSystem = default!;
@@ -18,17 +21,29 @@ public sealed class DirectionalSpriteOffsetSystem : EntitySystem
     {
         base.Initialize();
         UpdatesOutsidePrediction = true;
+
+        SubscribeLocalEvent<DirectionalSpriteOffsetComponent, ComponentInit>(OnInit);
+    }
+
+    private void OnInit(Entity<DirectionalSpriteOffsetComponent> entity, ref ComponentInit args)
+    {
+        foreach (var (key, value) in entity.Comp.LayerOffsetDataMappings!)
+            entity.Comp.LayerOffsetData[ParseKey(key)] = value;
+
+        entity.Comp.LayerOffsetDataMappings = null;
     }
 
     // This makes more sense to be FrameUpdate but it doesn't matter and it wastes more performance.
     public override void Update(float dt)
     {
-        // this could actually be AllEQE to be included for mapping but i think that's way too laggy
-        var eqe = EntityQueryEnumerator<DirectionalSpriteOffsetComponent, SpriteComponent>();
+        var eqe = AllEntityQuery<DirectionalSpriteOffsetComponent, SpriteComponent, TransformComponent>();
         var eyeRotation = _eyeManager.CurrentEye.Rotation;
 
-        while (eqe.MoveNext(out var uid, out var directionalOffsetComponent, out var spriteComponent))
+        while (eqe.MoveNext(out var uid, out var directionalOffsetComponent, out var spriteComponent, out var transformComponent))
         {
+            if (transformComponent.MapID == MapId.Nullspace)
+                continue;
+
             // worldRotation isn't calculated until we actually use it,
             // and in that case it becomes cached for future uses in this iteration
             Angle? worldRotation = null;
@@ -48,5 +63,13 @@ public sealed class DirectionalSpriteOffsetSystem : EntitySystem
                 _spriteSystem.LayerSetOffset(layer, directionalOffset);
             }
         }
+    }
+
+    private object ParseKey(string keyString)
+    {
+        if (_reflectionManager.TryParseEnumReference(keyString, out var @enum))
+            return @enum;
+
+        return keyString;
     }
 }
