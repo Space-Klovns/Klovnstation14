@@ -46,7 +46,7 @@ entities:
   - uid: 1
     components:
     - type: MetaData
-      name: Map Entity
+      name: "[Speczone] Labs"
     - type: Transform
     - type: Map
       mapPaused: True
