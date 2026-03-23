@@ -146,7 +146,7 @@ public sealed class ApcSystem : EntitySystem
 
         // KS14: Added off sound
         if (!apc.MainBreakerEnabled &&
-            battery.NetworkBattery.CurrentStorage > (battery.NetworkBattery.Capacity * 0.00001))
+            battery.NetworkBattery.CurrentStorage > 10f)
             _audio.PlayPvs(apc.OffSound, uid);
         else
             _audio.PlayPvs(apc.OnReceiveMessageSound, uid);
