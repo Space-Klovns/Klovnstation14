@@ -12,7 +12,7 @@
   id: Morgue
   sound:
     params:
-      volume: -12
+      volume: -5 # KS14: -12 -> -5
     collection: AmbienceSpooky
   rules: NearMorgue
   priority: 4
@@ -21,7 +21,7 @@
   id: SpookyFog
   sound:
     params:
-      volume: -12
+      volume: -5 # KS14: -12 -> -5
     collection: AmbienceSpookyFog
   rules: NearSpookyFog
   priority: 5
@@ -30,7 +30,7 @@
   id: Holy
   sound:
     params:
-      volume: -12
+      volume: -6 # KS14: -12 -> -6
     collection: AmbienceHoly
   rules: NearPrayable
   priority: 4
@@ -49,7 +49,7 @@
   id: Medical
   sound:
     params:
-      volume: -12
+      volume: -9 # KS14: -12 -> -9
     collection: AmbienceMedical
   rules: NearMedical
   priority: 3
@@ -58,7 +58,7 @@
   id: Engineering
   sound:
     params:
-      volume: -12
+      volume: -8 # KS14: -12 -> -8
     collection: AmbienceEngineering
   rules: NearEngineering
   priority: 3
@@ -68,7 +68,7 @@
   id: Maintenance
   sound:
     params:
-      volume: -12
+      volume: -9 # KS14: -12 -> -9
     collection: AmbienceMaintenance
   rules: NearMaintenance
   priority: 2
@@ -77,7 +77,7 @@
   id: Space
   sound:
     params:
-      volume: -10
+      volume: -8 # KS14: -10 -> -8
     collection: AmbienceSpace
   fadeIn: true
   interruptable: true
@@ -207,13 +207,21 @@
 - type: soundCollection
   id: AmbienceSpace
   files:
-    - /Audio/Ambience/constellations.ogg
-    - /Audio/Ambience/starlight.ogg
-    - /Audio/Ambience/drifting.ogg
-    - /Audio/Ambience/spookyspace1.ogg
-    - /Audio/Ambience/spookyspace2.ogg
+    # - /Audio/Ambience/constellations.ogg # KS14 - Commented
+    # - /Audio/Ambience/starlight.ogg # KS14 - Commented
+    # - /Audio/Ambience/drifting.ogg # KS14 - Commented
+    # - /Audio/Ambience/spookyspace1.ogg # KS14 - Commented
+    # - /Audio/Ambience/spookyspace2.ogg # KS14 - Commented
     - /Audio/Ambience/ambispace2.ogg
-    - /Audio/Lobby/title2.ogg
+    # - /Audio/Lobby/title2.ogg # KS14 - Commented
+
+    # KS14 Start
+    - /Audio/Ambience/ambispace.ogg
+    - /Audio/Ambience/ambispace3.ogg
+    - /Audio/Ambience/ambispace4.ogg
+    - /Audio/Ambience/ambispace5.ogg
+    - /Audio/Ambience/ambispace6.ogg
+    # KS14 End
 
 - type: soundCollection
   id: AmbienceSpooky
@@ -276,11 +284,13 @@
 # TODO
 - type: rules
   id: NearEngineering
-  rules:
-    - !type:NearbyAccessRule
-      access:
-        - Engineering
-      range: 2.5
+  rules: # KS14: Only nearby plating
+  - !type:NearbyTilesPercentRule # KS14
+    ignoreAnchored: true
+    percent: 0.6
+    tiles:
+      - Plating
+    range: 6
 
 - type: rules
   id: NearMaintenance
@@ -319,7 +329,7 @@
       anchored: true
       components:
         - type: Prayable
-      range: 5
+      range: 12 # KS14: 5 -> 12
 
 - type: rules
   id: NearMorgue
@@ -329,7 +339,7 @@
       count: 2
       components:
         - type: Morgue
-      range: 3
+      range: 7 # KS14: 3 -> 7
 
 - type: rules
   id: NearSpookyFog
