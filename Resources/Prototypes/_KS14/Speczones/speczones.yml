@@ -6,3 +6,7 @@
 - type: speczone
   id: bluelab
   mapPath: /Maps/_KS14/Speczones/bluelab.yml
+
+- type: speczone
+  id: poyezd
+  mapPath: /Maps/_KS14/Speczones/poyezd.yml
