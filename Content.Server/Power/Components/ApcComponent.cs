@@ -44,6 +44,10 @@ public sealed partial class ApcComponent : BaseApcNetComponent
     [DataField("onReceiveMessageSound")]
     public SoundSpecifier OnReceiveMessageSound = new SoundPathSpecifier("/Audio/Machines/machine_switch.ogg");
 
+    // KS14: Added off sound
+    [DataField]
+    public SoundSpecifier OffSound = new SoundPathSpecifier("/Audio/Machines/machine_switch.ogg");
+
     public ApcChargeState LastChargeState;
     public TimeSpan? LastChargeStateTime;
 

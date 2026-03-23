@@ -143,7 +143,13 @@ public sealed class ApcSystem : EntitySystem
         battery.CanDischarge = apc.MainBreakerEnabled;
 
         UpdateUIState(uid, apc);
-        _audio.PlayPvs(apc.OnReceiveMessageSound, uid, AudioParams.Default.WithVolume(-2f));
+
+        // KS14: Added off sound
+        if (!apc.MainBreakerEnabled &&
+            battery.NetworkBattery.CurrentStorage > (battery.NetworkBattery.Capacity * 0.00001))
+            _audio.PlayPvs(apc.OffSound, uid);
+        else
+            _audio.PlayPvs(apc.OnReceiveMessageSound, uid);
 
         if (user != null)
         {

@@ -42,7 +42,7 @@
   parent: BaseWallmount
   categories: [ HideSpawnMenu ]
   id: BaseAPC
-  name: APC
+  name: area power receiver # KS14: "APC" -> "area power receiver"
   description: A control terminal for the area's electrical systems.
   placement:
     mode: SnapgridCenter
@@ -126,6 +126,16 @@
     voltage: Apc
   - type: Apc
     voltage: Apc
+  # KS14: /tg/ parity start
+    onReceiveMessageSound:
+      path: /Audio/_KS14/Machines/Terminal/terminal_on.ogg
+      params:
+        volume: 1
+    offSound:
+      path: /Audio/_KS14/Machines/Terminal/terminal_off.ogg
+      params:
+        volume: 1
+  # KS14 /tg/ parity end
   - type: ExtensionCableProvider
   - type: UserInterface
     interfaces:
