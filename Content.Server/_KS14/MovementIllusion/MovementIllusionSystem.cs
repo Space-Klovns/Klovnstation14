@@ -15,7 +15,8 @@ public sealed partial class MovementIllusionSystem : EntitySystem
     [Dependency] private readonly EntityQuery<MovementIllusionFocusComponent> _illFocusQuery = default;
     [Dependency] private readonly EntityQuery<PhysicsComponent> _physicsQuery = default;
 
-    private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(1f);
+    private static readonly TimeSpan CleanupDelay = TimeSpan.FromSeconds(120f);
+    private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(6f);
     private TimeSpan _nextUpdate = TimeSpan.MinValue;
 
     public override void Initialize()
@@ -36,7 +37,15 @@ public sealed partial class MovementIllusionSystem : EntitySystem
 
         var eqe = EntityQueryEnumerator<MovementIllusionBanishedComponent, PhysicsComponent>();
         while (eqe.MoveNext(out var uid, out var illusionBanishedComponent, out var physicsComponent))
+        {
+            if (_gameTiming.CurTime > illusionBanishedComponent.DeleteTime)
+            {
+                QueueDel(uid);
+                continue;
+            }
+
             _physicsSystem.SetLinearVelocity(uid, illusionBanishedComponent.Velocity, wakeBody: false, body: physicsComponent);
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)] // The server can handle it
@@ -55,9 +64,10 @@ public sealed partial class MovementIllusionSystem : EntitySystem
         else if (_physicsQuery.TryGetComponent(args.Entity, out var physicsComponent))
         {
             var illusionBanishedComponent = EnsureComp<MovementIllusionBanishedComponent>(args.Entity);
+            illusionBanishedComponent.DeleteTime = _gameTiming.CurTime + CleanupDelay;
             illusionBanishedComponent.Velocity = illusionMapComponent.Velocity;
 
-            _physicsSystem.SetLinearVelocity(args.Entity, illusionBanishedComponent.Velocity, wakeBody: true, body: physicsComponent);
+            _physicsSystem.SetLinearVelocity(args.Entity, physicsComponent.LinearVelocity + illusionBanishedComponent.Velocity, body: physicsComponent);
         }
     }
 }

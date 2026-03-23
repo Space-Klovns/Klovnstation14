@@ -11,5 +11,9 @@ public sealed partial class MovementIllusionBanishedComponent : Component
 {
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
+    public TimeSpan DeleteTime = TimeSpan.MinValue;
+
+    [DataField]
+    [ViewVariables(VVAccess.ReadWrite)]
     public Vector2 Velocity = Vector2.Zero;
 }
