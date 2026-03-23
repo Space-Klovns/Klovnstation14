@@ -40,6 +40,7 @@ using Content.Shared.Rounding;
 using Robust.Server.GameObjects;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Map;
 using Robust.Shared.Timing;
 
 namespace Content.Server.Power.EntitySystems;
@@ -144,12 +145,16 @@ public sealed class ApcSystem : EntitySystem
 
         UpdateUIState(uid, apc);
 
-        // KS14: Added off sound
+        // KS14 Start: Added off sound
+        var apcTransform = Transform(uid);
+        var apcSoundOrigin = new EntityCoordinates(apcTransform.ParentUid, apcTransform.LocalPosition + apcTransform.LocalRotation.ToVec());
+
         if (!apc.MainBreakerEnabled &&
             battery.NetworkBattery.CurrentStorage > 10f)
             _audio.PlayPvs(apc.OffSound, uid);
         else
             _audio.PlayPvs(apc.OnReceiveMessageSound, uid);
+        // KS14 End
 
         if (user != null)
         {
