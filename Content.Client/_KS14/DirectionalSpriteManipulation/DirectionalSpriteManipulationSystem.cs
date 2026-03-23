@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
 //
 // SPDX-License-Identifier: MPL-2.0
 

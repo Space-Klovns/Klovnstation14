@@ -17,10 +17,11 @@
 // SPDX-FileCopyrightText: 2024 metalgearsloth
 // SPDX-FileCopyrightText: 2025 ArtisticRoomba
 // SPDX-FileCopyrightText: 2025 AshBats
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2025 Partmedia
 // SPDX-FileCopyrightText: 2025 ScarKy0
 // SPDX-FileCopyrightText: 2025 slarticodefast
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2026 MidoriKurage
 // SPDX-FileCopyrightText: 2026 nabegator220
 //
 // SPDX-License-Identifier: MIT
