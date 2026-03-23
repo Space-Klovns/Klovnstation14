@@ -1,3 +1,15 @@
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2024 Kara
+// SPDX-FileCopyrightText: 2024 Tayrtahn
+// SPDX-FileCopyrightText: 2025 Centronias
+// SPDX-FileCopyrightText: 2025 Nemanja
+// SPDX-FileCopyrightText: 2025 TemporalOroboros
+// SPDX-FileCopyrightText: 2025 metalgearsloth
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using System.Diagnostics.CodeAnalysis;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Buckle.Components;

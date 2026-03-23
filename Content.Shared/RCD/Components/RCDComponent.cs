@@ -3,6 +3,7 @@
 // SPDX-FileCopyrightText: 2025 gus
 // SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2026 github_actions[bot]
+// SPDX-FileCopyrightText: 2026 nabegator220
 //
 // SPDX-License-Identifier: MIT
 
