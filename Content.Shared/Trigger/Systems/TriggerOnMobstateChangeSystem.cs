@@ -1,5 +1,6 @@
 ﻿using Content.Shared.Implants;
 using Content.Shared.Interaction.Events;
+using Content.Shared.Inventory; // KS14: MOBSTATERELAY
 using Content.Shared.Mobs;
 using Content.Shared.Popups;
 using Content.Shared.Trigger.Components.Triggers;
@@ -19,6 +20,8 @@ public sealed partial class TriggerOnMobstateChangeSystem : TriggerOnXSystem
 
         SubscribeLocalEvent<TriggerOnMobstateChangeComponent, ImplantRelayEvent<MobStateChangedEvent>>(OnMobStateRelay);
         SubscribeLocalEvent<TriggerOnMobstateChangeComponent, ImplantRelayEvent<SuicideEvent>>(OnSuicideRelay);
+
+        SubscribeLocalEvent<TriggerOnMobstateChangeComponent, InventoryRelayedEvent<MobStateChangedEvent>>(OnMobStateInventoryRelay); // KS14: MOBSTATERELAY
     }
 
     private void OnMobStateChanged(EntityUid uid, TriggerOnMobstateChangeComponent component, MobStateChangedEvent args)
@@ -36,6 +39,16 @@ public sealed partial class TriggerOnMobstateChangeSystem : TriggerOnXSystem
 
         Trigger.Trigger(uid, component.TargetMobstateEntity ? args.ImplantedEntity : args.Event.Origin, component.KeyOut);
     }
+
+    // KS14: MOBSTATERELAY Start
+    private void OnMobStateInventoryRelay(EntityUid uid, TriggerOnMobstateChangeComponent component, InventoryRelayedEvent<MobStateChangedEvent> args)
+    {
+        if (!component.MobState.Contains(args.Args.NewMobState))
+            return;
+
+        Trigger.Trigger(uid, component.TargetMobstateEntity ? args.Owner : args.Args.Origin, component.KeyOut);
+    }
+    // KS14: MOBSTATERELAY End
 
     /// <summary>
     /// Checks if the user has any implants that prevent suicide to avoid some cheesy strategies

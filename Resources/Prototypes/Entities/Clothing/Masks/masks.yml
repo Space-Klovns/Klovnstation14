@@ -39,6 +39,18 @@
         Slash: 0.95
         Piercing: 0.95
         Heat: 0.95
+  # KS14 Start
+  - type: TriggerOnMobstateChange
+    mobState: [ Dead ]
+    keyOut: death
+  - type: EmitSoundOnTrigger
+    keysIn: [ death ]
+    sound:
+      path: "/Audio/_KS14/Effects/Hailer/sec_death.ogg"
+      params:
+        volume: 1
+        variation: 0.125
+  # KS14 End
 
 - type: entity
   parent: [ClothingMaskGas, BaseSyndicateContraband]
