@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using System.Runtime.CompilerServices;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
