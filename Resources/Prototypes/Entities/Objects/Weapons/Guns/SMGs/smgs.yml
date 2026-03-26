@@ -134,7 +134,7 @@
     zeroVisible: true
   - type: Appearance
 
-- type: entity
+- type: entity #KS14 modified
   name: C-20r submachine gun
   parent: [BaseWeaponSubMachineGun, BaseSyndicateContraband]
   id: WeaponSubMachineGunC20r
@@ -154,6 +154,7 @@
     minAngle: 2
     maxAngle: 16
     selectedMode: FullAuto
+    burstFireRate: 8
     shotsPerBurst: 5
     availableModes:
     - Burst
@@ -171,7 +172,7 @@
   - type: StaticPrice
     price: 5000
 
-- type: entity
+- type: entity #KS14 modified
   name: C-20r ROW #I think ROW stands for Recharging Onboard Weapon so i'm following the L6C's example
   id: WeaponSubMachineGunC20rROW
   parent: BaseItem

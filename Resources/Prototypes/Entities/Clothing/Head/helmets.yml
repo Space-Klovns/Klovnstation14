@@ -484,7 +484,7 @@
   name: bone helmet
   description: Cool-looking helmet made of skull of your enemies.
   components:
-  - type: IdentityBlocker
+  - type: IdentityBlocker #KS14 modified
   - type: Sprite
     sprite: Clothing/Head/Helmets/bone_helmet.rsi
   - type: Clothing

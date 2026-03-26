@@ -28,7 +28,7 @@
     damage:
       types:
         Piercing: 19
-      percentilePenetration:
+      percentilePenetration: #KS14 modified
         Piercing: 0.07
 
 - type: entity
