@@ -56,8 +56,10 @@
   - type: Projectile
     damage:
       types:
-        Piercing: 12
-        Heat: 6
+        Piercing: 13
+        Heat: 7
+      percentilePenetration:
+        Piercing: 0.15
 
 - type: entity
   parent: BaseBulletUranium
@@ -66,8 +68,12 @@
   name: bullet (.20 rifle uranium)
   components:
   - type: Projectile
-    damage:
+    damage: #KS14 modified
       types:
-        Radiation: 6
-        Piercing: 12
+        Radiation: 7
+        Piercing: 13
+      percentilePenetration:
+        Piercing: 0.15
+      flatPenetration:
+        Piercing: 7
 

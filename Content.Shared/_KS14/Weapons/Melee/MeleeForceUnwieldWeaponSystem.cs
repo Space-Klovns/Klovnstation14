@@ -26,8 +26,10 @@ public sealed class MeleeForceUnwieldWeaponSystem : EntitySystem
     private void OnAttacked(Entity<MeleeForceUnwieldWeaponComponent> ent, ref AttackedEvent args)
     {
         // Only trigger if hit by a melee weapon
-        if (!HasComp<MeleeWeaponComponent>(args.Used))
+        if (!TryComp<MeleeWeaponComponent>(args.Used, out var meleeWeaponComp))
             return;
+
+        var prob = meleeWeaponComp.
 
         // Evil KS14 hack
         // the weapon grants the MeleeForceUnwieldWeaponComponent to the guy holding it

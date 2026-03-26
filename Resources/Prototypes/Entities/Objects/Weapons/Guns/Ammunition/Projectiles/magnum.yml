@@ -59,8 +59,8 @@
   - type: Projectile
     damage:
       types:
-        Piercing: 25
-        Heat: 15
+        Piercing: 20
+        Heat: 20
 
 - type: entity
   parent: BaseBulletAP
@@ -83,6 +83,6 @@
   components:
   - type: Projectile
     damage:
-      types:
-        Radiation: 25
-        Piercing: 15
+      types: #KS14 modified
+        Radiation: 20
+        Piercing: 20
