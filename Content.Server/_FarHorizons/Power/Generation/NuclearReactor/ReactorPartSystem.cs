@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 
 using Content.Server.Atmos.EntitySystems;
-using Content.Server.Atmos.Piping.Components;
 using Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
 using Content.Shared.Atmos;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 using Robust.Shared.Random;
 using Content.Shared._FarHorizons.Materials.Systems;
+using Content.Shared.Atmos.Components;
 
 namespace Content.Server._FarHorizons.Power.Generation.FissionGenerator;
 

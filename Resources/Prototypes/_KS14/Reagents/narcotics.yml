@@ -13,7 +13,7 @@
   flavor: minty
   color: "#b924bf"
   metabolisms:
-    Narcotic:
+    Bloodstream:
       metabolismRate: 1.0
       effects:
       - !type:MovementSpeedModifier

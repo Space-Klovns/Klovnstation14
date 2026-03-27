@@ -3,7 +3,7 @@
 # SPDX-FileCopyrightText: 2025 DeusMaldPr
 # SPDX-FileCopyrightText: 2025 ScarKy0
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 #default species weights used for randomly selected species
 - type: weightedRandomSpecies

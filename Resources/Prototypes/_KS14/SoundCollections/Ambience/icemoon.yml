@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: soundCollection
+  id: KsAmbienceIcemoon
+  files:
+  - /Audio/_KS14/Ambience/Icemoon/ambiicemelody1.ogg
+  - /Audio/_KS14/Ambience/Icemoon/ambiicemelody2.ogg
+  - /Audio/_KS14/Ambience/Icemoon/ambiicemelody3.ogg
+  - /Audio/_KS14/Ambience/Icemoon/ambiicemelody4.ogg
+  - /Audio/_KS14/Ambience/Icemoon/ambiicesting1.ogg
+  - /Audio/_KS14/Ambience/Icemoon/ambiicesting2.ogg
+  - /Audio/_KS14/Ambience/Icemoon/ambiicesting3.ogg
+  - /Audio/_KS14/Ambience/Icemoon/ambiicesting4.ogg
+  - /Audio/_KS14/Ambience/Icemoon/ambiicesting5.ogg
+  - /Audio/_KS14/Ambience/Icemoon/ambiicetheme.ogg

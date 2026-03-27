@@ -16,7 +16,7 @@
 // SPDX-FileCopyrightText: 2025 slarticodefast
 // SPDX-FileCopyrightText: 2026 deltanedas
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 // <Trauma>
 using Content.Shared.Audio;
@@ -54,7 +54,6 @@ public sealed class ReflectSystem : EntitySystem
     [Dependency] private readonly IGameTiming _timing = default!;
     // </Trauma>
     [Dependency] private readonly INetManager _netManager = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
     [Dependency] private readonly ItemToggleSystem _toggle = default!;
     [Dependency] private readonly SharedPopupSystem _popup = default!;
@@ -129,7 +128,7 @@ public sealed class ReflectSystem : EntitySystem
     private bool TryReflectProjectile(Entity<ReflectComponent> reflector, EntityUid user, Entity<ProjectileComponent?> projectile)
     {
         // <Trauma>
-        var seed = SharedRandomExtensions.HashCodeCombine((int) _timing.CurTick.Value, GetNetEntity(reflector).Id);
+        var seed = SharedRandomExtensions.HashCodeCombine((int)_timing.CurTick.Value, GetNetEntity(reflector).Id);
         var rand = new System.Random(seed);
         // </Trauma>
         if (!TryComp<ReflectiveComponent>(projectile, out var reflective) ||
@@ -182,14 +181,14 @@ public sealed class ReflectSystem : EntitySystem
         [NotNullWhen(true)] out Vector2? newDirection)
     {
         // <Trauma>
-        var seed = SharedRandomExtensions.HashCodeCombine((int) _timing.CurTick.Value, GetNetEntity(reflector).Id);
+        var seed = SharedRandomExtensions.HashCodeCombine((int)_timing.CurTick.Value, GetNetEntity(reflector).Id);
         var rand = new System.Random(seed);
         // </Trauma>
         if ((reflector.Comp.Reflects & hitscanReflectType) == 0x0 ||
             !_toggle.IsActivated(reflector.Owner) ||
             // <Trauma>
             !((reflector.Comp.Reflects & hitscanReflectType) != 0x0 && rand.Prob(reflector.Comp.ReflectProb)))
-            // </Trauma>
+        // </Trauma>
         {
             newDirection = null;
             return false;

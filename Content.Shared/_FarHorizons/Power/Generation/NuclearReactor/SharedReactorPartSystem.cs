@@ -140,6 +140,7 @@ public abstract class SharedReactorPartSystem : EntitySystem
             if (component.Temperature == Atmospherics.T20C)
             {
                 burncomp.IsDamageActive = false;
+                burncomp.Damage = new(); // KS14: it cant be null
                 continue;
             }
 

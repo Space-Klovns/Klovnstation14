@@ -17,13 +17,14 @@
 // SPDX-FileCopyrightText: 2024 metalgearsloth
 // SPDX-FileCopyrightText: 2025 ArtisticRoomba
 // SPDX-FileCopyrightText: 2025 AshBats
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2025 Partmedia
 // SPDX-FileCopyrightText: 2025 ScarKy0
 // SPDX-FileCopyrightText: 2025 slarticodefast
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2026 MidoriKurage
 // SPDX-FileCopyrightText: 2026 nabegator220
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Server.Popups;
 using Content.Server.Power.Components;
@@ -40,6 +41,7 @@ using Content.Shared.Rounding;
 using Robust.Server.GameObjects;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Map;
 using Robust.Shared.Timing;
 
 namespace Content.Server.Power.EntitySystems;
@@ -91,7 +93,8 @@ public sealed class ApcSystem : EntitySystem
     // Change the APC's state only when the battery state changes, or when it's first created.
     private void OnBatteryChargeChanged(EntityUid uid, ApcComponent component, ref ChargeChangedEvent args)
     {
-        UpdateApcState(uid, component);
+        // Defer until the next tick.
+        component.NeedStateUpdate = true;
     }
 
     private static void OnApcStartup(EntityUid uid, ApcComponent component, ComponentStartup args)
@@ -142,7 +145,18 @@ public sealed class ApcSystem : EntitySystem
         battery.CanDischarge = apc.MainBreakerEnabled;
 
         UpdateUIState(uid, apc);
-        _audio.PlayPvs(apc.OnReceiveMessageSound, uid, AudioParams.Default.WithVolume(-2f));
+
+        // KS14 Start: Added off sound
+        // TODO LCDC: generalised wallmount-interaction-position function
+        var apcTransform = Transform(uid);
+        var apcSoundOrigin = new EntityCoordinates(apcTransform.ParentUid, apcTransform.LocalPosition + apcTransform.LocalRotation.ToWorldVec() * 0.75f);
+
+        if (!apc.MainBreakerEnabled &&
+            battery.NetworkBattery.CurrentStorage > 10f)
+            _audio.PlayPvs(apc.OffSound, apcSoundOrigin);
+        else
+            _audio.PlayPvs(apc.OnReceiveMessageSound, apcSoundOrigin);
+        // KS14 End
 
         if (user != null)
         {
@@ -164,7 +178,7 @@ public sealed class ApcSystem : EntitySystem
     }
 
     public void UpdateApcState(EntityUid uid,
-        ApcComponent? apc=null,
+        ApcComponent? apc = null,
         PowerNetworkBatteryComponent? battery = null)
     {
         if (!Resolve(uid, ref apc, ref battery, false))
@@ -210,7 +224,7 @@ public sealed class ApcSystem : EntitySystem
         var charge = ContentHelpers.RoundToNearestLevels(battery.CurrentStorage / battery.Capacity, 1.0, 100 / ChargeAccuracy) / 100f * ChargeAccuracy;
 
         var state = new ApcBoundInterfaceState(apc.MainBreakerEnabled,
-            (int) MathF.Ceiling(battery.CurrentSupply), apc.LastExternalState,
+            (int)MathF.Ceiling(battery.CurrentSupply), apc.LastExternalState,
             charge);
 
         _ui.SetUiState((uid, ui), ApcUiKey.Key, state);

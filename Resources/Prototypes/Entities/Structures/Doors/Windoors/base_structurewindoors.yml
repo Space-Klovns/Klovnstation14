@@ -221,7 +221,9 @@
   - type: PryUnpowered
   - type: Tag
     tags:
-    - Directional
+    - Directional # KS14: Directional anchoring or w/e
+    - DoorRemoteWhitelist
+    # This tag is used by door remotes to allow or not a door remote to normally be able to interact with a door
 
 - type: entity
   id: BaseSecureWindoor
@@ -297,6 +299,8 @@
       - Directional
       - SecureWindoor
       # This tag is used to nagivate the Airlock construction graph. It's needed because the construction graph is shared between Airlock, AirlockGlass, and HighSecDoor
+      - DoorRemoteWhitelist
+      # This tag is used by door remotes to allow or not a door remote to normally be able to interact with a door
 
 
 #Plasma Windoors
@@ -443,6 +447,8 @@
       - Directional
       - SecurePlasmaWindoor
       # This tag is used to nagivate the Airlock construction graph. It's needed because the construction graph is shared between Airlock, AirlockGlass, and HighSecDoor
+      - DoorRemoteWhitelist
+      # This tag is used by door remotes to allow or not a door remote to normally be able to interact with a door
 
 
 #Uranium Windoors
@@ -589,3 +595,5 @@
       - Directional
       - SecureUraniumWindoor
       # This tag is used to nagivate the Airlock construction graph. It's needed because the construction graph is shared between Airlock, AirlockGlass, and HighSecDoor
+      - DoorRemoteWhitelist
+      # This tag is used by door remotes to allow or not a door remote to normally be able to interact with a door

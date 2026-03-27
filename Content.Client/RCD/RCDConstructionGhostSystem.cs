@@ -8,7 +8,7 @@
 // SPDX-FileCopyrightText: 2026 Rinary
 // SPDX-FileCopyrightText: 2026 github_actions[bot]
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Client.Hands.Systems;
 using Content.Shared.Interaction;
@@ -22,7 +22,6 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Input;
 using Content.Client._Starlight.RCD;
 using Robust.Shared.Input.Binding;
-using Content.Client.Atmos;
 using Content.Shared.Input;
 // Starlight End
 
@@ -44,7 +43,6 @@ public sealed class RCDConstructionGhostSystem : EntitySystem
     private Direction _placementDirection = default;
     // Starlight Start: RPD
     private bool _useMirrorPrototype = false;
-    public event EventHandler? FlipConstructionPrototype;
 
     public override void Initialize()
     {
@@ -146,7 +144,7 @@ public sealed class RCDConstructionGhostSystem : EntitySystem
         if (heldEntity == placerEntity &&
             prototype == placerProto &&
             _placementManager.CurrentPermission?.PlacementOption == desiredMode)
-        // Starlight edit End
+            // Starlight edit End
             return;
 
         // Create a new placer

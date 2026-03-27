@@ -28,9 +28,6 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared._KS14.FpvDrone;
 
-/// <summary>
-///     Assumes that FPV drone's surveillance monitor components have NeverAutomaticallyHeartbeat set to true.
-/// </summary>
 public abstract class SharedFpvDroneSystem : EntitySystem
 {
     [Dependency] private readonly SharedDeviceLinkSystem _deviceLinkSystem = default!;
@@ -200,7 +197,7 @@ public abstract class SharedFpvDroneSystem : EntitySystem
             _itemSlotsSystem.SetLock(entity.Owner, powerCellSlotComponent.CellSlotId, true);
 
         _appearanceSystem.SetData(entity.Owner, FpvDroneVisuals.Active, true);
-        DoHeartbeat(args.ControllerEntity.Owner);
+        OnDroneDisabled(args.ControllerEntity.Owner);
         UpdateFpvSurveillance(entity);
     }
 
@@ -208,7 +205,7 @@ public abstract class SharedFpvDroneSystem : EntitySystem
     protected virtual void UpdateFpvSurveillance(Entity<FpvDroneComponent> entity) { }
 
     // Does nothing on client
-    protected virtual void DoHeartbeat(EntityUid uid) { }
+    protected virtual void OnDroneDisabled(EntityUid uid) { }
 
     private void OnFpvControlEnded(Entity<FpvDroneComponent> entity, ref RemoteDroneControlEndedEvent args)
     {
@@ -242,6 +239,6 @@ public abstract class SharedFpvDroneSystem : EntitySystem
             _itemSlotsSystem.SetLock(entity.Owner, powerCellSlotComponent.CellSlotId, false);
 
         _appearanceSystem.SetData(entity.Owner, FpvDroneVisuals.Active, false);
-        DoHeartbeat(args.ControllerEntity.Owner);
+        OnDroneDisabled(entity);
     }
 }

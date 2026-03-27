@@ -21,7 +21,7 @@
 // SPDX-FileCopyrightText: 2024 lzk
 // SPDX-FileCopyrightText: 2025 nabegator220
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Server.RoundEnd;
 using Content.Shared.Dataset;
@@ -112,7 +112,7 @@ public sealed partial class NukeopsRuleComponent : Component
     public WinType WinType = WinType.Neutral;
 
     [DataField]
-    public List<WinCondition> WinConditions = new ();
+    public List<WinCondition> WinConditions = new();
 
     [DataField]
     public EntityUid? TargetStation;

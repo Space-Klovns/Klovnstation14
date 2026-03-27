@@ -13,6 +13,7 @@ using Content.Shared._KS14.Speczones;
 using Content.Shared.GameTicking;
 using Content.Shared.Random.Helpers;
 using Robust.Server.GameObjects;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.EntitySerialization.Systems;
@@ -95,12 +96,23 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     {
         if (!_loadSpeczones)
             return;
+
         // Initialise speczones
 
+        var loadedSpeczoneEntities = new ValueList<Entity<SpeczoneComponent>>();
         foreach (var speczonePrototype in _prototypeManager.EnumeratePrototypes<SpeczonePrototype>())
-            TryLoadSpeczonePrototype(speczonePrototype, out _);
+        {
+            if (!TryLoadSpeczonePrototype(speczonePrototype, out var speczoneEntity, initializeMaps: false))
+                continue;
+
+            loadedSpeczoneEntities.Add(speczoneEntity.Value);
+        }
 
         UpdateSpeczoneEntryPoints();
+
+        // Maps should be initialised only when all other maps have loaded, so that any necessary links can be formed
+        foreach (var speczoneEntity in loadedSpeczoneEntities)
+            _mapSystem.InitializeMap(speczoneEntity.Owner, unpause: false);
     }
 
     private void OnRoundCleanup(RoundRestartCleanupEvent args)
@@ -138,7 +150,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     ///         <see cref="SpeczoneComponent"/>, and does not process invincibility.
     /// </summary>
     /// <returns>False if no map was loaded successfully.</returns>
-    private bool TryLoadSpeczonePrototype(SpeczonePrototype prototype, [NotNullWhen(true)] out Entity<SpeczoneComponent>? speczoneEntity)
+    private bool TryLoadSpeczonePrototype(SpeczonePrototype prototype, [NotNullWhen(true)] out Entity<SpeczoneComponent>? speczoneEntity, bool initializeMaps = true)
     {
         if (_speczones.ContainsKey(prototype.ID))
         {
@@ -153,7 +165,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
             prototype.MapPath,
             out var mapEntity,
             out var loadedGrids,
-            DeserializationOptions.Default with { InitializeMaps = true, PauseMaps = true })
+            DeserializationOptions.Default with { InitializeMaps = initializeMaps, PauseMaps = true })
         )
         {
             DebugTools.Assert($"When loading speczone prototype of ID {prototype.ID}, failed to load map!");
@@ -181,12 +193,12 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
 
     /// <summary>
     ///     Adds new speczone entry-points to their current map's <see cref="SpeczoneComponent.EntryMarkers"/>.
-    ///         Does not remove any. Only adds. 
+    ///         Does not remove any. Only adds.
     /// </summary>
     private void UpdateSpeczoneEntryPoints()
     {
         // include paused
-        var speczoneEntryEnumerator = EntityManager.AllEntityQueryEnumerator<SpeczoneEntryComponent, TransformComponent>();
+        var speczoneEntryEnumerator = AllEntityQuery<SpeczoneEntryComponent, TransformComponent>();
         while (speczoneEntryEnumerator.MoveNext(out var uid, out var _, out var transformComponent))
         {
             if (!_speczoneQuery.TryGetComponent(transformComponent.MapUid, out var speczoneComponent))
@@ -224,7 +236,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     ///         Specified speczone defaults to first one available
     ///         if none was specified. Does nothing if there are no
     ///         entry points to the speczone.
-    /// 
+    ///
     ///     Unpauses the speczone if necessary.
     /// </summary>
     /// <returns>True if the entity was moved.</returns>

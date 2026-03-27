@@ -42,7 +42,7 @@
 # SPDX-FileCopyrightText: 2025 Minemoder5000
 # SPDX-FileCopyrightText: 2025 beck-thompson
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - type: job
   id: HeadOfSecurity
@@ -55,7 +55,7 @@
       time: 1h #1 hr
 #    - !type:RoleTimeRequirement Klovn, meme role
 #      role: JobDetective
-#      time: 3600 #1 hr, knowing how to use the tools is important
+#      time: 1h, knowing how to use the tools is important
     - !type:RoleTimeRequirement
       role: JobSecurityOfficer
       time: 3h #3 hrs, klovn

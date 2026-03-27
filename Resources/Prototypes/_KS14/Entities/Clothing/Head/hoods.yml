@@ -25,14 +25,9 @@
   - type: IdentityBlocker
   - type: BreathMask
   - type: HideLayerClothing
-    slots:
-    - Hair
-    - FacialHair
-    - Special
-    - StencilMask
-    - Snout
-    - HeadTop
-    - HeadSide
+    layers:
+      Hair: HEAD
+      Snout: HEAD
 
 
 - type: entity
@@ -52,6 +47,3 @@
         Slash: 0.85
         Piercing: 0.90
         Heat: 0.90
-
-
-

@@ -97,9 +97,6 @@
       head-reptilian:
       - state: equipped-head-light-reptilian
         shader: unshaded
-      head-dog:
-      - state: equipped-head-light-dog
-        shader: unshaded
   - type: Clothing
     clothingVisuals:
       head:
@@ -118,10 +115,6 @@
       - state: equipped-head-reptilian
       - state: equipped-head-unshaded-reptilian
         shader: unshaded
-      head-dog:
-      - state: equipped-head-dog
-      - state: equipped-head-unshaded-dog
-        shader: unshaded
   - type: PointLight
     color: "#adffe6"
   - type: PressureProtection
@@ -134,7 +127,6 @@
     reduction: 0.2
   - type: Tag
     tags:
-    - CorgiWearable
     - WhitelistChameleon
   - type: ClothingGrantComponent # KS14 - arc flash
     component:
@@ -174,9 +166,6 @@
       head-reptilian:
       - state: equipped-head-light-reptilian
         shader: unshaded
-      head-dog:
-      - state: equipped-head-light-dog
-        shader: unshaded
   - type: Clothing
     clothingVisuals:
       head:
@@ -195,10 +184,6 @@
       - state: equipped-head-reptilian
       - state: equipped-head-unshaded-reptilian
         shader: unshaded
-      head-dog:
-      - state: equipped-head-dog
-      - state: equipped-head-unshaded-dog
-        shader: unshaded
   - type: PointLight
     color: "#ffdbad"
   - type: PressureProtection
@@ -206,7 +191,6 @@
     lowPressureMultiplier: 1000
   - type: Tag
     tags:
-    - CorgiWearable
     - WhitelistChameleon
   - type: ClothingGrantComponent # KS14 - arc flash
     component:
@@ -245,9 +229,6 @@
       head-reptilian:
       - state: equipped-head-light-reptilian
         shader: unshaded
-      head-dog:
-      - state: equipped-head-light-dog
-        shader: unshaded
   - type: Clothing
     clothingVisuals:
       head:
@@ -266,10 +247,6 @@
       - state: equipped-head-reptilian
       - state: equipped-head-unshaded-reptilian
         shader: unshaded
-      head-dog:
-      - state: equipped-head-dog
-      - state: equipped-head-unshaded-dog
-        shader: unshaded
   - type: PointLight
     radius: 6
   - type: PressureProtection
@@ -277,14 +254,13 @@
     lowPressureMultiplier: 1000
   - type: Tag
     tags:
-    - CorgiWearable
     - WhitelistChameleon
 
 #Salvage Hardsuit
 - type: entity
   parent: [ ClothingHeadHardsuitBase, ClothingHeadSuitWithLightBase ]
   id: ClothingHeadHelmetHardsuitSalvage
-  name: salvage hardsuit helmet
+  name: mining hardsuit helmet
   description: A special helmet designed for work in a hazardous, low pressure environment. Has reinforced plating for wildlife encounters and dual floodlights.
   components:
   - type: Sprite
@@ -299,7 +275,6 @@
     energy: 3
   - type: Tag
     tags:
-    - CorgiWearable
     - WhitelistChameleon
 
 #Goliath Hardsuit
@@ -332,9 +307,6 @@
       head-reptilian:
       - state: equipped-head-light-reptilian
         shader: unshaded
-      head-dog:
-      - state: equipped-head-light-dog
-        shader: unshaded
   - type: Clothing
     clothingVisuals:
       head:
@@ -349,10 +321,6 @@
       - state: equipped-head-reptilian
       - state: equipped-head-unshaded-reptilian
         shader: unshaded
-      head-dog:
-      - state: equipped-head-dog
-      - state: equipped-head-unshaded-dog
-        shader: unshaded
   - type: PointLight
     radius: 6
   - type: PressureProtection
@@ -360,7 +328,6 @@
     lowPressureMultiplier: 1000
   - type: Tag
     tags:
-    - CorgiWearable
     - WhitelistChameleon
 
 #Maxim Hardsuit
@@ -411,7 +378,6 @@
         Heat: 0.9
   - type: Tag
     tags:
-    - CorgiWearable
     - WhitelistChameleon
   - type: ClothingGrantComponent # KS14 - arc flash
     component:
@@ -489,7 +455,6 @@
     lowPressureMultiplier: 1000
   - type: Tag
     tags:
-    - CorgiWearable
     - WhitelistChameleon
   - type: ClothingGrantComponent # KS14 - arc flash
     component:
@@ -529,9 +494,6 @@
       head-reptilian:
       - state: equipped-head-light-reptilian
         shader: unshaded
-      head-dog:
-      - state: equipped-head-light-dog
-        shader: unshaded
   - type: Clothing
     clothingVisuals:
       head:
@@ -550,10 +512,6 @@
       - state: equipped-head-reptilian
       - state: equipped-head-unshaded-reptilian
         shader: unshaded
-      head-dog:
-      - state: equipped-head-dog
-      - state: equipped-head-unshaded-dog
-        shader: unshaded
   - type: PointLight
     color: "#daffad"
   - type: PressureProtection
@@ -563,7 +521,6 @@
     reduction: 0.2
   - type: Tag
     tags:
-    - CorgiWearable
     - WhitelistChameleon
   - type: ClothingGrantComponent # KS14 - arc flash
     component:
@@ -587,7 +544,6 @@
     lowPressureMultiplier: 1000
   - type: Tag
     tags:
-    - CorgiWearable
     - WhitelistChameleon
   - type: ClothingGrantComponent # KS14 - arc flash
     component:
@@ -611,7 +567,6 @@
     lowPressureMultiplier: 1000
   - type: Tag
     tags:
-    - CorgiWearable
     - WhitelistChameleon
   - type: ClothingGrantComponent # KS14 - arc flash
     component:
@@ -689,7 +644,6 @@
         Heat: 0.9
   - type: Tag
     tags:
-    - CorgiWearable
     - WhitelistChameleon
   - type: ClothingGrantComponent # KS14 - arc flash
     component:
@@ -752,7 +706,6 @@
         Heat: 0.9
   - type: Tag
     tags:
-    - CorgiWearable
     - WhitelistChameleon
   - type: ClothingGrantComponent # KS14 - arc flash
     component:
@@ -783,7 +736,6 @@
         Heat: 0.9
   - type: Tag
     tags:
-    - CorgiWearable
     - WhitelistChameleon
   - type: ClothingGrantComponent # KS14 - arc flash
     component:
@@ -812,7 +764,6 @@
         Heat: 0.9
   - type: Tag
     tags:
-    - CorgiWearable
     - WhitelistChameleon
   - type: ClothingGrantComponent # KS14 - arc flash
     component:
@@ -843,7 +794,6 @@
         Heat: 0.9
   - type: Tag
     tags:
-    - CorgiWearable
     - WhitelistChameleon
   - type: ClothingGrantComponent # KS14 - arc flash
     component:

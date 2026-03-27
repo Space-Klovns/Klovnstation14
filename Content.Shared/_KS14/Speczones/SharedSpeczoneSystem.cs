@@ -6,8 +6,7 @@
 using Content.Shared._KS14.Sparks;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Popups;
-using Content.Shared.RCD.Components;
-using Content.Shared.Teleportation.Components;
+using Content.Shared.Weapons.Ranged.Events;
 using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.Speczones;
@@ -33,8 +32,20 @@ public abstract class SharedSpeczoneSystem : EntitySystem
 
         _alwaysAllowedQuery = GetEntityQuery<AlwaysAllowedInSpeczoneComponent>();
 
-        SubscribeLocalEvent<AttemptUpdateHandTeleporterPortalsEvent>(OnAttemptUseHandTeleporter); // Only raised on server
-        SubscribeLocalEvent<AttemptUseRcdEvent>(OnAttemptUseRcd);
+        SubscribeLocalEvent<AttemptGeneralSpeczoneInterferableEvent>(OnAttemptInterfere);
+        SubscribeLocalEvent<BlockShootingInSpeczoneComponent, ShotAttemptedEvent>(OnAttemptShoot);
+    }
+
+    /// <summary>
+    ///     Helper for raising AttemptGeneralSpeczoneInterferableEvent
+    /// </summary>
+    /// <returns>Whether the event was cancelled (interfered).</returns>
+    public bool AttemptInterfere(EntityUid uid, EntityUid? user = null, bool predicted = false)
+    {
+        var ev = new AttemptGeneralSpeczoneInterferableEvent(uid, User: user, Predicted: predicted);
+        RaiseLocalEvent(ref ev);
+
+        return ev.Cancelled;
     }
 
     /// <remarks>
@@ -57,39 +68,59 @@ public abstract class SharedSpeczoneSystem : EntitySystem
     }
 
     /// <returns>True if the use of an item was cancelled.</returns>
-    private bool TryInterfereUse(EntityUid uid, EntityUid? user = null, bool predictEffects = false)
+    public bool TryInterfereUse(EntityUid uid, EntityUid? user = null, bool predictEffects = false)
     {
         if (_alwaysAllowedQuery.HasComponent(uid))
             return false;
 
-        if (!CheckEntityIsInSpeczone(uid, out var transformComponent))
+        if (!CheckEntityIsInSpeczone(user ?? uid, out var transformComponent))
             return false;
 
         _sparksSystem.DoSpark(
             transformComponent.Coordinates,
             SharedSparksSystem.DefaultSparkPrototype,
             soundSpecifier: SharedSparksSystem.DefaultSoundSpecifier,
-            user: user
+            user: predictEffects ? user : null // ts sucks but whatever
         );
 
-        if (predictEffects && !_gameTiming.IsFirstTimePredicted)
-            return true;
+        if (predictEffects)
+        {
+            if (!_gameTiming.IsFirstTimePredicted)
+                return true;
 
-        _popupSystem.PopupEntity(
-            Loc.GetString("speczone-invincibility-use-interrupted", ("entity", Identity.Name(uid, EntityManager))),
-            uid,
-            PopupType.SmallCaution
-        );
+            _popupSystem.PopupPredicted(
+                Loc.GetString("speczone-invincibility-use-interrupted", ("entity", Identity.Name(uid, EntityManager))),
+                uid,
+                user,
+                PopupType.SmallCaution
+            );
+        }
+        else
+        {
+            _popupSystem.PopupEntity(
+                Loc.GetString("speczone-invincibility-use-interrupted", ("entity", Identity.Name(uid, EntityManager))),
+                uid,
+                PopupType.SmallCaution
+            );
+        }
+
         return true;
     }
 
-    private void OnAttemptUseHandTeleporter(ref AttemptUpdateHandTeleporterPortalsEvent args)
+    private void OnAttemptInterfere(ref AttemptGeneralSpeczoneInterferableEvent args)
     {
-        args.Cancelled |= TryInterfereUse(args.Teleporter);
+        args.Cancelled |= TryInterfereUse(args.Uid, user: args.User, predictEffects: args.Predicted);
     }
 
-    private void OnAttemptUseRcd(ref AttemptUseRcdEvent args)
+    private void OnAttemptShoot(Entity<BlockShootingInSpeczoneComponent> entity, ref ShotAttemptedEvent args)
     {
-        args.Cancelled |= TryInterfereUse(args.RcdUid, user: args.User, predictEffects: true);
+        if (TryInterfereUse(entity.Owner, user: args.User, predictEffects: true))
+            args.Cancel();
     }
 }
+
+/// <summary>
+///     General-use event raised on things that can be blocked in speczones.
+/// </summary>
+[ByRefEvent]
+public record struct AttemptGeneralSpeczoneInterferableEvent(EntityUid Uid, EntityUid? User = null, bool Predicted = false, bool Cancelled = false);

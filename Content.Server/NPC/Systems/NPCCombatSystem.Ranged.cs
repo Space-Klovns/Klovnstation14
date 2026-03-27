@@ -6,7 +6,7 @@
 // SPDX-FileCopyrightText: 2026 mq
 // SPDX-FileCopyrightText: 2026 nabegator220
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Server.NPC.Components;
 using Content.Shared.CombatMode;

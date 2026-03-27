@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2025 jhrushbe
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using System.Diagnostics.CodeAnalysis;
 using Content.Client.Stylesheets;
@@ -160,7 +160,7 @@ public sealed partial class TurbineWindow : FancyWindow
         TurbineStatorLoadSlider.Value = msg.StatorLoad;
         _suppressSliderEvents = false;
 
-        _speedLevel = ContentHelpers.RoundToNearestLevels(msg.RPM, msg.BestRPM*1.2, _speedMeter.Length);
+        _speedLevel = ContentHelpers.RoundToNearestLevels(msg.RPM, msg.BestRPM * 1.2, _speedMeter.Length);
     }
 
     private void UpdateIndicators(TurbineBuiState msg)

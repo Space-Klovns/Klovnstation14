@@ -1,3 +1,16 @@
+// SPDX-FileCopyrightText: 2023 DrSmugleaf
+// SPDX-FileCopyrightText: 2023 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2024 Kara
+// SPDX-FileCopyrightText: 2024 Tayrtahn
+// SPDX-FileCopyrightText: 2025 Centronias
+// SPDX-FileCopyrightText: 2025 Nemanja
+// SPDX-FileCopyrightText: 2025 TemporalOroboros
+// SPDX-FileCopyrightText: 2025 metalgearsloth
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
+//
+// SPDX-License-Identifier: MIT
+
 using System.Diagnostics.CodeAnalysis;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Buckle.Components;
@@ -22,6 +35,7 @@ namespace Content.Shared.Weapons.Misc;
 
 public abstract partial class SharedTetherGunSystem : EntitySystem
 {
+    [Dependency] private readonly _KS14.Speczones.SharedSpeczoneSystem _speczoneSystem = default!; // KS14
     [Dependency] private readonly INetManager _netManager = default!;
     [Dependency] private readonly ActionBlockerSystem _blocker = default!;
     [Dependency] private readonly SharedHandsSystem _hands = default!;
@@ -164,6 +178,11 @@ public abstract partial class SharedTetherGunSystem : EntitySystem
     {
         if (!Resolve(gun, ref component))
             return false;
+
+        // KS14 Start
+        if (_speczoneSystem.AttemptInterfere(gun, user: user, predicted: true))
+            return false;
+        // KS14 End
 
         if (!CanTether(gun, component, target, user))
             return false;

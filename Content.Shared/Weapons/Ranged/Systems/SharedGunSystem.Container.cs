@@ -7,7 +7,7 @@
 // SPDX-FileCopyrightText: 2026 mq
 // SPDX-FileCopyrightText: 2026 nabegator220
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using System.Linq;
 using Content.Shared.Weapons.Ranged.Components;

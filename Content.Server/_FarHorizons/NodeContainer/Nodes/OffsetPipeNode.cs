@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: 2025 jhrushbe
 // SPDX-FileCopyrightText: 2025 rottenheadphones
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Server.NodeContainer.Nodes;
 using Content.Shared.Atmos;
@@ -21,7 +21,7 @@ namespace Content.Server._FarHorizons.NodeContainer.Nodes;
 /// Due to its nature, it should be queued to reflood via the <see cref="NodeGroupSystem"/> if it does not have any ReachableNodes.
 /// </para>
 /// </remarks>
-/// This is kinda just a nasty copy of <see cref="PipeNode"/>, but the LinkableNodesInDirection() 
+/// This is kinda just a nasty copy of <see cref="PipeNode"/>, but the LinkableNodesInDirection()
 /// and PipesInDirection() methods had too restricted of access.
 [DataDefinition]
 [Virtual]
@@ -39,17 +39,18 @@ public partial class OffsetPipeNode : PipeNode
     [DataField]
     public int OffsetNorth = 0;
 
-    public override IEnumerable<Node> GetReachableNodes(TransformComponent xform,
+    public override IEnumerable<Node> GetReachableNodes(
+            Entity<TransformComponent> xform,
             EntityQuery<NodeContainerComponent> nodeQuery,
             EntityQuery<TransformComponent> xformQuery,
-            MapGridComponent? grid,
+            Entity<MapGridComponent>? grid,
             IEntityManager entMan)
     {
 
-        if (!xform.Anchored || grid == null)
+        if (!xform.Comp.Anchored || grid is not { } gridEnt)
             yield break;
 
-        var pos = grid.TileIndicesFor(xform.Coordinates);
+        var pos = gridEnt.Comp.TileIndicesFor(xform.Comp.Coordinates);
 
         for (var i = 0; i < PipeDirectionHelpers.PipeDirections; i++)
         {

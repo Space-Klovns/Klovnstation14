@@ -7,7 +7,7 @@
 # SPDX-FileCopyrightText: 2025 āda
 # SPDX-FileCopyrightText: 2026 nabegator220
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 # -- Melee --
 # Selects a target in melee and tries to attack it.

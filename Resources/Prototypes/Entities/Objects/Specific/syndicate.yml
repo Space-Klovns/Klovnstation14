@@ -138,4 +138,5 @@
   components:
   - type: Store
     balance:
-      Telecrystal: 299997
+      Telecrystal: 99999
+    expectedFaction: #nulls out the expected faction

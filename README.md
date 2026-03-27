@@ -12,10 +12,11 @@ The [Wizard's Den docs site](https://docs.spacestation14.com/) has documentation
 
 All code in this codebase is released under the AGPL-3.0-or-later license. Each file includes REUSE Specification headers or separate .license files that specify a dual license option. This dual licensing is provided to simplify the process for projects that are not using AGPL, allowing them to adopt the relevant portions of the code under an alternative license. You can review the complete texts of these licenses in the LICENSES/ directory.
 
-Source files in this repository are licensed under one of the three below licenses:
+Source files in this repository are licensed under one of the four below licenses:
 - [MIT](https://github.com/Space-Klovns/Klovnstation14/blob/master/LICENSES/MIT.txt)
 - [MPL-2.0](https://github.com/Space-Klovns/Klovnstation14/blob/master/LICENSES/MPL-2.0.txt)
 - [AGPL-3.0-or-later](https://github.com/Space-Klovns/Klovnstation14/blob/master/LICENSES/AGPL-3.0-or-later.txt)
+- [CC-BY-NC-SA-3.0](https://github.com/Space-Klovns/Klovnstation14/blob/master/LICENSES/CC-BY-NC-SA-3.0-US.txt)
 
 All code past commit hash f9a52e8fbb8066e56d34ba1908c399699e801c42 on Wed, 29 Oct 2025 16:04:39 +0000 is also automatically subject to [this notice](NOTICE).
 Inclusion of additional legal notices is allowed under §7(b) of the (A)GPL assuming they do not infringe on any of the freedoms granted to the user by the license.

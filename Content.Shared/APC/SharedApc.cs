@@ -19,7 +19,7 @@
 // SPDX-FileCopyrightText: 2025 slarticodefast
 // SPDX-FileCopyrightText: 2026 nabegator220
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Robust.Shared.Serialization;
 
@@ -74,7 +74,7 @@ namespace Content.Shared.APC
         /// <summary>
         /// Bitfield indicating status of APC lock indicator.
         /// </summary>
-        Lock = (1<<0),
+        Lock = (1 << 0),
         /// <summary>
         /// Bit state indicating that the given APC lock is unlocked.
         /// </summary>
@@ -82,7 +82,7 @@ namespace Content.Shared.APC
         /// <summary>
         /// Bit state indicating that the given APC lock is locked.
         /// </summary>
-        Locked = (1<<0),
+        Locked = (1 << 0),
 
         /// <summary>
         /// Bitmask for the full state for a given APC lock indicator.
@@ -110,7 +110,7 @@ namespace Content.Shared.APC
         /// <summary>
         /// Bitfield indicating whether the APC is automatically regulating the given channel.
         /// </summary>
-        Control = (1<<0),
+        Control = (1 << 0),
         /// <summary>
         /// Bit state indicating that the APC has been set to automatically toggle the given channel depending on available power.
         /// </summary>
@@ -123,7 +123,7 @@ namespace Content.Shared.APC
         /// <summary>
         /// Bitfield indicating whether the APC is currently providing power on the given channel.
         /// </summary>
-        Power = (1<<1),
+        Power = (1 << 1),
         /// <summary>
         /// Bit state indicating that the APC is currently not providing power on the given channel.
         /// </summary>
@@ -230,7 +230,7 @@ namespace Content.Shared.APC
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(MainBreaker, Power, (int) ApcExternalPower, Charge);
+            return HashCode.Combine(MainBreaker, Power, (int)ApcExternalPower, Charge);
         }
     }
 

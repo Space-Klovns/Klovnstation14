@@ -1,0 +1,337 @@
+# SPDX-FileCopyrightText: 2018 clusterfack
+# SPDX-FileCopyrightText: 2019 L.E.D
+# SPDX-FileCopyrightText: 2020 20kdc
+# SPDX-FileCopyrightText: 2020 4dplanner
+# SPDX-FileCopyrightText: 2020 ComicIronic
+# SPDX-FileCopyrightText: 2020 DamianX
+# SPDX-FileCopyrightText: 2020 GlassEclipse
+# SPDX-FileCopyrightText: 2020 Hugal31
+# SPDX-FileCopyrightText: 2020 Injazz
+# SPDX-FileCopyrightText: 2020 Metal Gear Sloth
+# SPDX-FileCopyrightText: 2020 PrPleGoo
+# SPDX-FileCopyrightText: 2020 ShadowCommander
+# SPDX-FileCopyrightText: 2020 SoulSloth
+# SPDX-FileCopyrightText: 2020 Víctor Aguilera Puerto
+# SPDX-FileCopyrightText: 2020 a.rudenko
+# SPDX-FileCopyrightText: 2020 creadth
+# SPDX-FileCopyrightText: 2020 moneyl
+# SPDX-FileCopyrightText: 2020 nuke
+# SPDX-FileCopyrightText: 2020 zumorica
+# SPDX-FileCopyrightText: 2021 Acruid
+# SPDX-FileCopyrightText: 2021 Galactic Chimp
+# SPDX-FileCopyrightText: 2021 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2021 Remie Richards
+# SPDX-FileCopyrightText: 2021 SethLafuente
+# SPDX-FileCopyrightText: 2021 Silver
+# SPDX-FileCopyrightText: 2021 Swept
+# SPDX-FileCopyrightText: 2021 Tomeno
+# SPDX-FileCopyrightText: 2021 Vera Aguilera Puerto
+# SPDX-FileCopyrightText: 2021 Ygg01
+# SPDX-FileCopyrightText: 2021 collinlunn
+# SPDX-FileCopyrightText: 2021 py01
+# SPDX-FileCopyrightText: 2022 ElectroJr
+# SPDX-FileCopyrightText: 2022 EmoGarbage404
+# SPDX-FileCopyrightText: 2022 Flipp Syder
+# SPDX-FileCopyrightText: 2022 Jacob Tong
+# SPDX-FileCopyrightText: 2022 Julian Giebel
+# SPDX-FileCopyrightText: 2022 Kara D
+# SPDX-FileCopyrightText: 2022 Mervill
+# SPDX-FileCopyrightText: 2022 Moony
+# SPDX-FileCopyrightText: 2022 Paul Ritter
+# SPDX-FileCopyrightText: 2022 Peptide90
+# SPDX-FileCopyrightText: 2022 Rane
+# SPDX-FileCopyrightText: 2022 T-Stalker
+# SPDX-FileCopyrightText: 2022 TekuNut
+# SPDX-FileCopyrightText: 2022 hubismal
+# SPDX-FileCopyrightText: 2022 ike709
+# SPDX-FileCopyrightText: 2022 mirrorcult
+# SPDX-FileCopyrightText: 2022 och-och
+# SPDX-FileCopyrightText: 2022 rolfero
+# SPDX-FileCopyrightText: 2023 AJCM-git
+# SPDX-FileCopyrightText: 2023 Alex Evgrashin
+# SPDX-FileCopyrightText: 2023 Arimah Greene
+# SPDX-FileCopyrightText: 2023 Artjom
+# SPDX-FileCopyrightText: 2023 DEATHB4DEFEAT
+# SPDX-FileCopyrightText: 2023 DrSmugleaf
+# SPDX-FileCopyrightText: 2023 Errant
+# SPDX-FileCopyrightText: 2023 I.K
+# SPDX-FileCopyrightText: 2023 Jezithyr
+# SPDX-FileCopyrightText: 2023 Kara
+# SPDX-FileCopyrightText: 2023 LankLTE
+# SPDX-FileCopyrightText: 2023 Leon Friedrich
+# SPDX-FileCopyrightText: 2023 Morb
+# SPDX-FileCopyrightText: 2023 Slava0135
+# SPDX-FileCopyrightText: 2023 Visne
+# SPDX-FileCopyrightText: 2023 Waylon Cude
+# SPDX-FileCopyrightText: 2023 Whisper
+# SPDX-FileCopyrightText: 2023 avery
+# SPDX-FileCopyrightText: 2023 brainfood1183
+# SPDX-FileCopyrightText: 2023 faint
+# SPDX-FileCopyrightText: 2023 forthbridge
+# SPDX-FileCopyrightText: 2023 keronshb
+# SPDX-FileCopyrightText: 2023 liltenhead
+# SPDX-FileCopyrightText: 2023 lzk
+# SPDX-FileCopyrightText: 2023 notquitehadouken
+# SPDX-FileCopyrightText: 2023 qwerltaz
+# SPDX-FileCopyrightText: 2024 Cojoke
+# SPDX-FileCopyrightText: 2024 Ed
+# SPDX-FileCopyrightText: 2024 Nemanja
+# SPDX-FileCopyrightText: 2024 Ubaser
+# SPDX-FileCopyrightText: 2024 beck-thompson
+# SPDX-FileCopyrightText: 2024 deltanedas
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 K-Dynamic
+# SPDX-FileCopyrightText: 2025 PJB3005
+# SPDX-FileCopyrightText: 2025 Princess Cheeseballs
+# SPDX-FileCopyrightText: 2025 Red
+# SPDX-FileCopyrightText: 2025 ScarKy0
+# SPDX-FileCopyrightText: 2025 SlamBamActionman
+# SPDX-FileCopyrightText: 2025 TemporalOroboros
+# SPDX-FileCopyrightText: 2025 Tiniest Shark
+# SPDX-FileCopyrightText: 2025 Vasilis The Pikachu
+# SPDX-FileCopyrightText: 2025 Winkarst
+# SPDX-FileCopyrightText: 2025 github_actions[bot]
+# SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2025 slarticodefast
+# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+#
+# SPDX-License-Identifier: MIT
+
+- type: entity
+  abstract: true
+  parent:
+  - BaseMob
+  - MobCombat
+  - MobDamageable
+  - MobPolymorphable
+  - StripableInventoryBase
+  - BaseSpeciesAppearance
+  id: BaseSpeciesMob
+  save: false
+  components:
+  - type: DamageVisuals
+    thresholds: [ 10, 20, 30, 50, 70, 100 ]
+    targetLayers:
+    - "enum.HumanoidVisualLayers.Chest"
+    - "enum.HumanoidVisualLayers.Head"
+    - "enum.HumanoidVisualLayers.LArm"
+    - "enum.HumanoidVisualLayers.LLeg"
+    - "enum.HumanoidVisualLayers.RArm"
+    - "enum.HumanoidVisualLayers.RLeg"
+    damageOverlayGroups:
+      Brute:
+        sprite: Mobs/Effects/brute_damage.rsi
+        color: "#FF0000"
+      Burn:
+        sprite: Mobs/Effects/burn_damage.rsi
+  - type: GenericVisualizer
+    visuals:
+      enum.CreamPiedVisuals.Creamed:
+        clownedon:
+          True: { visible: true }
+          False: { visible: false }
+  - type: StatusIcon
+    bounds: -0.5,-0.5,0.5,0.5
+  - type: JobStatus
+  - type: RotationVisuals
+    defaultRotation: 90
+    horizontalRotation: 90
+  - type: HumanoidProfile
+  - type: TypingIndicator
+  - type: SlowOnDamage
+    speedModifierThresholds:
+      60: 0.7
+      80: 0.5
+  - type: Fixtures
+    fixtures: # TODO: This needs a second fixture just for mob collisions.
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.35
+        density: 185
+        restitution: 0.0
+        mask:
+        - MobMask
+        layer:
+        - MobLayer
+  - type: FloorOcclusion
+  - type: RangedDamageSound
+    soundGroups:
+      Brute:
+        collection:
+          MeatBulletImpact
+    soundTypes:
+      Heat:
+        collection:
+          MeatLaserImpact
+  - type: Reactive
+    groups:
+      Flammable: [ Touch ]
+      Extinguish: [ Touch ]
+      Acidic: [Touch, Ingestion]
+    reactions:
+    - reagents: [Water, SpaceCleaner]
+      methods: [Touch]
+      effects:
+      - !type:WashCreamPie
+  - type: StatusEffects
+    allowed:
+    - Electrocution
+    - RatvarianLanguage
+    - PressureImmunity
+    - Muted
+    - TemporaryBlindness
+    - Pacified
+    - Flashed
+    - RadiationProtection
+    - Adrenaline
+    - StatusEffectSafeCritHumanoid # KS14: Ports upstream https://github.com/space-wizards/space-station-14/pull/41930
+  - type: Identity
+  - type: IdExaminable
+  - type: Internals
+  - type: FloatingVisuals
+  - type: Climbing
+  - type: Cuffable
+  - type: Ensnareable
+    sprite: Objects/Misc/ensnare.rsi
+    state: icon
+  - type: AnimationPlayer
+  - type: Buckle
+  - type: CombatMode
+    canDisarm: true
+    disarmFailChance: 0 # KS14: shove rework
+  - type: ComplexShove # KS14: shove rework
+  - type: MeleeWeapon
+    soundHit:
+      collection: Punch
+    angle: 30
+    animation: WeaponArcFist
+    attackRate: 1
+    damage:
+      types:
+        Blunt: 5
+  - type: SleepEmitSound
+  - type: SSDIndicator
+  - type: StandingState
+  - type: Crawler
+  - type: Dna
+  - type: MindContainer
+  - type: MindExaminable
+  - type: CanEnterCryostorage
+  - type: InteractionPopup
+    successChance: 1
+    interactSuccessString: hugging-success-generic
+    interactSuccessSound: /Audio/Effects/thudswoosh.ogg
+    messagePerceivedByOthers: hugging-success-generic-others
+  - type: CanHostGuardian
+  - type: NpcFactionMember
+    factions:
+    - NanoTrasen
+  - type: CreamPied
+  - type: ParcelWrapOverride
+    parcelPrototype: WrappedParcelHumanoid
+    wrapDelay: 5
+  - type: Stripping
+  - type: UserInterface
+    interfaces:
+      enum.HumanoidMarkingModifierKey.Key:
+        type: HumanoidMarkingModifierBoundUserInterface
+      enum.StrippingUiKey.Key:
+        type: StrippableBoundUserInterface
+  - type: Puller
+  - type: Speech
+    speechSounds: Alto
+  - type: DamageForceSay
+  - type: Vocal
+    sounds:
+      Male: MaleHuman
+      Female: FemaleHuman
+      Unsexed: MaleHuman
+  - type: Emoting
+  - type: BodyEmotes
+    soundsId: GeneralBodyEmotes
+  - type: Grammar
+    attributes:
+      proper: true
+  - type: MobPrice
+    price: 1500 # Kidnapping a living person and selling them for cred is a good move.
+    deathPenalty: 0.01 # However they really ought to be living and intact, otherwise they're worth 100x less.
+  - type: Tag
+    tags:
+    - CanPilot
+    - FootstepSound
+    - DoorBumpOpener
+    - AnomalyHost
+
+- type: entity
+  abstract: true
+  parent:
+  - MobBloodstream
+  - MobRespirator
+  - MobAtmosStandard
+  - MobFlammable
+  - BaseSpeciesMob
+  - MobLeaper # KS14 Change
+  id: BaseSpeciesMobOrganic
+  save: false
+  components:
+  - type: Hunger
+  - type: Thirst
+  - type: Barotrauma
+    damage:
+      types:
+        Blunt: 0.50
+        Heat: 0.1
+  - type: PassiveDamage
+    allowedStates:
+    - Alive
+    damage:
+      types:
+        Heat: -0.07
+        Blunt: -0.05
+        Piercing: -0.05
+        Slash: -0.05
+  - type: Fingerprint
+  - type: Blindable
+  - type: Temperature
+    currentTemperature: 310.15
+    specificHeat: 42
+  - type: TemperatureDamage
+    heatDamageThreshold: 325
+    coldDamageThreshold: 260
+    coldDamage:
+      types:
+        Cold: 0.1 #per second, scales with temperature & other constants
+    heatDamage:
+      types:
+        Heat: 1.5 #per second, scales with temperature & other constants
+  - type: TemperatureSpeed
+    thresholds:
+      293: 0.9
+      280: 0.8
+      260: 0.7
+  - type: ThermalRegulator
+    metabolismHeat: 800
+    radiatedHeat: 100
+    implicitHeatRegulation: 500
+    sweatHeatRegulation: 2000
+    shiveringHeatRegulation: 2000
+    normalBodyTemperature: 310.15
+    thermalRegulationTemperatureThreshold: 2
+  - type: Perishable
+  - type: Butcherable
+    butcheringType: Spike
+    spawned:
+    - id: FoodMeat
+      amount: 5
+  - type: Respirator
+    damage:
+      types:
+        Asphyxiation: 1.0
+    damageRecovery:
+      types:
+        Asphyxiation: -1.0
+  - type: FireVisuals
+    alternateState: Standing
+  - type: StunVisuals

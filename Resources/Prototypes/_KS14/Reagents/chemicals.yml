@@ -12,7 +12,7 @@
   physicalDesc: reagent-physical-desc-cloudy
   color: "#b9bf95"
   metabolisms:
-    Food:
+    Metabolites:
       effects:
       - !type:SatiateHunger
 
@@ -27,7 +27,7 @@
   boilingPoint: 415.15
   meltingPoint: 408.15
   metabolisms:
-    Medicine:
+    Bloodstream:
       effects:
       - !type:ModifyStatusEffect
         effectProto: StatusEffectSafeCritHumanoid

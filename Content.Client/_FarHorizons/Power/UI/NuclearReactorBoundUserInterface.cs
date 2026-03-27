@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: 2025 jhrushbe
 // SPDX-FileCopyrightText: 2025 rottenheadphones
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
 using JetBrains.Annotations;

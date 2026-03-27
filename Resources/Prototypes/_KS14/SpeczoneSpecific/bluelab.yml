@@ -54,7 +54,7 @@
   parent: Recycler
   id: RecyclerLabsMobile
   name: mobile recycler
-  description: Whose bright fucking idea was it to make it move?!
+  description: What use could this possibly serve?
   suffix: Labs, Always Awake, Emagged, Powered
   components:
   - type: Fixtures
@@ -104,3 +104,68 @@
     enabled: true
   - type: Emagged
     emagType: Interaction
+
+- type: entity
+  parent: ReinforcedPlasmaWindow
+  id: ReinforcedPlasmaWindowBluelabsAtmosSetpiece
+  suffix: Labs, Setpiece, Dont Map
+  components:
+  - type: DeviceLinkSink
+    ports:
+    - Trigger
+
+  - type: TriggerOnSignal
+  - type: DeviceNetwork
+    deviceNetId: Wireless
+    receiveFrequencyId: BasicDevice
+  - type: WirelessNetworkConnection
+    range: 200
+
+  - type: AddComponentsOnTrigger
+    components: # YAML goidacode is real?
+    - type: MobState
+    - type: PassiveDamage
+      allowedStates:
+      - Alive # by default mobstate is Alive
+      damage:
+        types:
+          Blunt: 15
+
+- type: entity
+  parent: MarkerBase
+  id: KsChasmIconsmoother
+  name: iconsmooth marker
+  suffix: KS14, Iconsmooth Marker, Chasm
+  components:
+  - type: Sprite
+    layers:
+    - state: blue
+  - type: IconSmooth
+    key: chasm
+    mode: NoSprite
+
+- type: entity
+  parent: MarkerBase
+  id: KsCatwalkIconsmoother
+  name: iconsmooth marker
+  suffix: KS14, Iconsmooth Marker, Catwalk
+  components:
+  - type: Sprite
+    layers:
+    - state: green
+  - type: IconSmooth
+    key: catwalk
+    mode: NoSprite
+
+- type: entity
+  parent: MarkerBase
+  id: BluelabSpookyAmbienceTagMarker
+  name: spooky ambience
+  suffix: Labs, Spooky Ambience
+  components:
+  - type: Sprite
+    layers:
+    - state: red
+  - type: Tag
+    tags:
+    - SpookyFog

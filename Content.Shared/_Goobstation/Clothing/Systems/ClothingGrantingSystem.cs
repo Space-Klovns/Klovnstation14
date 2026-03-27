@@ -15,13 +15,14 @@ using Content.Shared.Clothing.Components;
 using Content.Shared.Inventory.Events;
 using Content.Shared.Tag;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Timing;
 
 namespace Content.Shared._Goobstation.Clothing.Systems;
 
 public sealed class ClothingGrantingSystem : EntitySystem
 {
+    [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly IComponentFactory _componentFactory = default!;
-    [Dependency] private readonly ISerializationManager _serializationManager = default!;
     [Dependency] private readonly TagSystem _tagSystem = default!;
 
     public override void Initialize()
@@ -48,21 +49,12 @@ public sealed class ClothingGrantingSystem : EntitySystem
         //    return;
         //}
 
-        foreach (var (name, data) in component.Components)
-        {
-            var newComp = (Component) _componentFactory.GetComponent(name);
+        // KS14: Made this less abhorrent WTF is wrong with goobcoders?
+        if (_gameTiming.ApplyingState)
+            return;
 
-            if (HasComp(args.Equipee, newComp.GetType()))
-                continue;
-
-            newComp.Owner = args.Equipee;
-
-            var temp = (object) newComp;
-            _serializationManager.CopyTo(data.Component, ref temp);
-            EntityManager.AddComponent(args.Equipee, (Component)temp!);
-
-            component.Active[name] = true; // Goobstation
-        }
+        EntityManager.AddComponents(args.Equipee, component.Components, removeExisting: false);
+        UpdateActivity(args.Equipee, component);
     }
 
     private void OnCompUnequip(EntityUid uid, ClothingGrantComponentComponent component, GotUnequippedEvent args)
@@ -70,22 +62,25 @@ public sealed class ClothingGrantingSystem : EntitySystem
         // Goobstation
         //if (!component.IsActive) return;
 
-        foreach (var (name, data) in component.Components)
-        {
-            // Goobstation
-            if (!component.Active.ContainsKey(name) || !component.Active[name])
-                continue;
+        // KS14: Made this less abhorrent WTF is wrong with goobcoders?
+        if (_gameTiming.ApplyingState)
+            return;
 
-            var newComp = (Component) _componentFactory.GetComponent(name);
-
-            RemComp(args.Equipee, newComp.GetType());
-            component.Active[name] = false; // Goobstation
-        }
+        EntityManager.RemoveComponents(args.Equipee, component.Components);
+        UpdateActivity(args.Equipee, component);
 
         // Goobstation
         //component.IsActive = false;
     }
 
+    private void UpdateActivity(EntityUid equippe, ClothingGrantComponentComponent component)
+    {
+        foreach (var (name, _) in component.Components)
+        {
+            var compRegistration = _componentFactory.GetRegistration(name);
+            component.Active[name] = HasComp(equippe, compRegistration.Type);
+        }
+    }
 
     private void OnTagEquip(EntityUid uid, ClothingGrantTagComponent component, GotEquippedEvent args)
     {

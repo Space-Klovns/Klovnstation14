@@ -18,8 +18,6 @@
 using System.Linq;
 using Content.Shared._KS14.Random.Helpers; // KS14 Addition
 using Content.Shared._KS14.Sparks; // KS14 Addition
-using Content.Shared.Body.Components; // KS14 Addition
-using Content.Shared.Body.Systems; // KS14 Addition
 using Content.Shared.Ghost;
 using Content.Shared.Gibbing;
 using Content.Shared.IdentityManagement; // KS14 Addition
@@ -29,6 +27,7 @@ using Content.Shared.Popups;
 using Content.Shared.Projectiles;
 using Content.Shared.Random.Helpers;
 using Content.Shared.Teleportation.Components;
+using Content.Shared.Weapons.Misc;
 using Content.Shared.Verbs;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
@@ -36,10 +35,12 @@ using Robust.Shared.Map.Components; // KS14 Addition
 using Robust.Shared.Network;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Random;
 using Robust.Shared.Timing; // KS14 Addition
 using Robust.Shared.Utility;
+using Content.Shared.Body;
 
 namespace Content.Shared.Teleportation.Systems;
 
@@ -60,6 +61,7 @@ public abstract class SharedPortalSystem : EntitySystem
     [Dependency] private readonly IGameTiming _curTiming = default!; // KS14 Addition
     [Dependency] private readonly GibbingSystem _gibbingSystem = default!; // KS14 Addition
     [Dependency] private readonly ISharedPlayerManager _playerManager = default!; // KS14 Addition
+    [Dependency] private readonly SharedJointSystem _joints = default!;
 
     private const string PortalFixture = "portalFixture";
     private const string ProjectileFixture = "projectile";
@@ -133,6 +135,9 @@ public abstract class SharedPortalSystem : EntitySystem
         {
             _pulling.TryStopPull(pullerComp.Pulling.Value, subjectPulling);
         }
+
+        // also break grapple joints
+        _joints.RemoveJoint(subject, SharedGrapplingGunSystem.GrapplingJoint);
 
         // if they came from another portal, just return and wait for them to exit the portal
         if (HasComp<PortalTimeoutComponent>(subject))

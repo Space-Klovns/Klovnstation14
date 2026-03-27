@@ -34,6 +34,7 @@ using Content.Server.Administration.Logs;
 using Content.Server.Audio;
 using Content.Shared.Throwing;
 using Content.Shared._KS14.Deferral;
+using Content.Shared.Atmos.Components;
 
 namespace Content.Server._FarHorizons.Power.Generation.FissionGenerator;
 
@@ -42,7 +43,6 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
     // The great wall of dependencies
     [Dependency] private readonly AtmosphereSystem _atmosphereSystem = default!;
     [Dependency] private readonly EntityManager _entityManager = default!;
-    [Dependency] private readonly MetaDataSystem _metaDataSystem = default!;
     [Dependency] private readonly NodeContainerSystem _nodeContainer = default!;
     [Dependency] private readonly NodeGroupSystem _nodeGroupSystem = default!;
     [Dependency] private readonly ReactorPartSystem _partSystem = default!;

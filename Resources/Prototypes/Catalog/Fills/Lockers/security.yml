@@ -93,6 +93,8 @@
       amount: 2
     - id: NetworkConfigurator
     - id: Binoculars
+    - id: PlushieLizardJobWarden
+      prob: 0.02
 
 - type: entityTable
   id: FillLockerWardenHarduit
@@ -134,7 +136,7 @@
       prob: 0.1
     - id: HoloprojectorSecurity
       prob: 0.6
-
+    # KS14: Removed slop plushies and spacelaw
 - type: entity
   id: LockerBrigmedicFilled
   suffix: Brigmedic, Filled
@@ -209,6 +211,8 @@
     - id: HoloprojectorSecurity
     - id: BoxEvidenceMarkers
     - id: HandLabeler
+    - id: PlushieLizardJobDetective
+      prob: 0.02
 
 - type: entity
   id: ClosetBombFilled

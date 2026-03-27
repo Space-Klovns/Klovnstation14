@@ -372,3 +372,7 @@
   - type: Appearance
   - type: StaticPrice
     price: 5000
+  - type: MeleeWeapon
+    damage:
+      types:
+        Blunt: 8

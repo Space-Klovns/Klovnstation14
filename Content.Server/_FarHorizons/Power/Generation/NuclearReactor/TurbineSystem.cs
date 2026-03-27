@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2025 jhrushbe
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Atmos.Piping.Components;
@@ -23,6 +23,7 @@ using Robust.Shared.Utility;
 using Content.Shared.Destructible;
 using Content.Shared.FixedPoint;
 using Content.Shared.Destructible.Thresholds.Triggers;
+using Content.Shared.Atmos.Components;
 
 namespace Content.Server._FarHorizons.Power.Generation.FissionGenerator;
 

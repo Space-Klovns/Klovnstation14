@@ -25,7 +25,7 @@
 // SPDX-FileCopyrightText: 2026 github_actions[bot]
 // SPDX-FileCopyrightText: 2026 nabegator220
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Client.Stylesheets;
 using Content.Client.UserInterface.Controls;
@@ -263,11 +263,11 @@ namespace Content.Client.Chemistry.UI
                 return "";
 
             var reagent = (state.DrawSource switch
-                {
-                    ChemMasterDrawSource.Internal => state.BufferReagents,
-                    ChemMasterDrawSource.External => state.InputContainerInfo.Reagents ?? [],
-                    _ => throw new($"Chemmaster {state.OutputContainerInfo} draw source is not set"),
-                }).MinBy(r => r.Quantity)
+            {
+                ChemMasterDrawSource.Internal => state.BufferReagents,
+                ChemMasterDrawSource.External => state.InputContainerInfo.Reagents ?? [],
+                _ => throw new($"Chemmaster {state.OutputContainerInfo} draw source is not set"),
+            }).MinBy(r => r.Quantity)
                 .Reagent;
             _prototypeManager.TryIndex(reagent.Prototype, out ReagentPrototype? proto);
             return proto?.LocalizedName ?? "";
@@ -332,7 +332,7 @@ namespace Content.Client.Chemistry.UI
                 _prototypeManager.TryIndex(reagentId.Prototype, out ReagentPrototype? proto);
                 var name = proto?.LocalizedName ?? Loc.GetString("chem-master-window-unknown-reagent-text");
                 var reagentColor = proto?.SubstanceColor ?? default(Color);
-                reagentList.Add(new (reagentId, name, reagentColor, quantity));
+                reagentList.Add(new(reagentId, name, reagentColor, quantity));
             }
 
             // We sort here since we need sorted list to be filled first.
@@ -425,7 +425,7 @@ namespace Content.Client.Chemistry.UI
             var rowColor1 = Color.FromHex("#1B1B1E");
             var rowColor2 = Color.FromHex("#202025");
             var currentRowColor = (rowCount % 2 == 1) ? rowColor1 : rowColor2;
-            if ((reagentColor == default(Color))|(!addReagentButtons))
+            if ((reagentColor == default(Color)) | (!addReagentButtons))
             {
                 reagentColor = currentRowColor;
             }

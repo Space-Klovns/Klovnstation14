@@ -34,8 +34,8 @@
 // SPDX-FileCopyrightText: 2024 ArchRBX
 // SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
 // SPDX-FileCopyrightText: 2025 BarryNorfolk
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2025 Quantum-cross
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
 //
 // SPDX-License-Identifier: MIT
 
@@ -63,7 +63,7 @@ namespace Content.Server.Entry
             "OptionsVisualizer",
             "AnomalyScannerScreen",
             "MultipartMachineGhost",
-            "DirectionalSpriteOffset" // KS14 change: FFS
+            "DirectionalSpriteManipulation" // KS14 change: FFS
         };
     }
 }

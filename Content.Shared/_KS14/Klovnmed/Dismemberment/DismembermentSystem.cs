@@ -5,10 +5,8 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Content.Shared._KS14.Random.Helpers;
-using Content.Shared.Body.Components;
-using Content.Shared.Body.Part;
+using Content.Shared.Body;
 using Content.Shared.Damage;
-using Content.Shared.FixedPoint;
 using Content.Shared.Throwing;
 using Robust.Shared.Timing;
 
@@ -24,7 +22,7 @@ public sealed class DismembermentSystem : EntitySystem
     [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
     [Dependency] private readonly ThrowingSystem _throwingSystem = default!;
-    [Dependency] private readonly BodyPartSearchSystem _bodyPartSearchSystem = default!;
+    [Dependency] private readonly OrganSearchSystem _organSearchSystem = default!;
 
     private EntityQuery<BodyComponent> _bodyQuery;
 
@@ -45,7 +43,7 @@ public sealed class DismembermentSystem : EntitySystem
         }
 
         var totalDamageFp2 = damageSpecifier.GetTotal();
-        totalDamage = (float)damageSpecifier.GetTotal();
+        totalDamage = (float)totalDamageFp2;
         return totalDamageFp2 >= bodyEntity.Comp.DismembermentThreshold;
     }
 
@@ -57,26 +55,26 @@ public sealed class DismembermentSystem : EntitySystem
     ///     Supports <see cref="partType"/> having more than one bit set.
     /// </summary>
     /// <returns>Whether anything happened.</returns>
-    public bool TryDismemberRandomBodyPartOfType(Entity<BodyComponent?, TransformComponent?> bodyEntity, BodyPartType partType, [NotNullWhen(true)] out Entity<BodyPartComponent>? partEntity, Vector2? direction = null, float throwSpeed = 10f, EntityUid? cause = null)
+    public bool TryDismemberRandomBodyPartOfType(Entity<BodyComponent?, TransformComponent?> bodyEntity, BodyPartType partType, [NotNullWhen(true)] out EntityUid? partUid, Vector2? direction = null, float throwSpeed = 10f, EntityUid? cause = null)
     {
         if (!_bodyQuery.Resolve(bodyEntity, ref bodyEntity.Comp1, logMissing: false) ||
             !EntityManager.TransformQuery.Resolve(bodyEntity, ref bodyEntity.Comp2, logMissing: true) ||
-            !_bodyPartSearchSystem.TryGetRandomBodyPartOfType(bodyEntity, partType, out var predictedRandom, out partEntity))
+            !_organSearchSystem.TryGetRandomBodyPartOfType((bodyEntity, bodyEntity.Comp1), partType, out var predictedRandom, out partUid))
         {
-            partEntity = null;
+            partUid = null;
             return false;
         }
 
-        _transformSystem.SetCoordinates(partEntity.Value.Owner, bodyEntity.Comp2.Coordinates);
+        _transformSystem.SetCoordinates(partUid.Value, bodyEntity.Comp2.Coordinates);
 
         if (throwSpeed != 0f)
         {
             direction ??= (predictedRandom ?? KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
                 (int)_gameTiming.CurTick.Value,
-                KsSharedRandomExtensions.GetNetId(partEntity.Value.Owner, EntityManager)
+                KsSharedRandomExtensions.GetNetId(partUid.Value, EntityManager)
             )).NextUnitVector2();
 
-            _throwingSystem.TryThrow(partEntity.Value.Owner, direction.Value, baseThrowSpeed: throwSpeed, user: cause, recoil: false);
+            _throwingSystem.TryThrow(partUid.Value, direction.Value, baseThrowSpeed: throwSpeed, user: cause, recoil: false);
         }
 
         return true;

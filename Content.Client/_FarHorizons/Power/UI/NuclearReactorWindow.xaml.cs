@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: 2025 jhrushbe
 // SPDX-FileCopyrightText: 2025 rottenheadphones
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using System.Diagnostics.CodeAnalysis;
 using Content.Client.UserInterface.Controls;

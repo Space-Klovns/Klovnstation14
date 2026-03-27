@@ -811,3 +811,31 @@ Entries:
       message: Fixed gauze
   id: 103
   time: '2026-03-08T15:26:09.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: >-
+        FPV drone battery usage has been changed and they should last ~1.5
+        minutes on a medium powercell.
+    - type: Tweak
+      message: FPV drone now takes more damage on impact.
+    - type: Fix
+      message: >-
+        FPV drone control UI is more responsive. You can now also have multiple
+        people pilot the same drone (on different controllers).
+    - type: Tweak
+      message: Nutriment now regenerates more blood and stops more bleeding.
+    - type: Remove
+      message: Removed spire map because it was pissing me off
+  id: 104
+  time: '2026-03-20T13:46:48.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Security gasmask is now a pseudo sec hailer.
+    - type: Add
+      message: New ambience
+    - type: Remove
+      message: Removed some old ambience
+  id: 105
+  time: '2026-03-23T19:59:56.0000000+00:00'

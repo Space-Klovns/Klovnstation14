@@ -17,7 +17,7 @@
 # SPDX-FileCopyrightText: 2026 FrauzJ
 # SPDX-FileCopyrightText: 2026 github_actions[bot]
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - type: entity
   id: ProjectileFireball
@@ -127,8 +127,7 @@
     deleteOnCollide: false
     onlyCollideWhenShot: true
     damage:
-      types:
-        Brute: 0
+      types: {}
   - type: Sprite
     noRot: true
     sprite: Structures/Storage/closet.rsi
@@ -267,11 +266,18 @@
       color: white
   - type: Projectile
     damage:
-      groups: # good enough. Maybe make it call the rejuvenate command later.
-        Brute: -900
-        Burn: -900
-        Airloss: -600
-        Toxin: -600
+      types: # good enough. Maybe make it call the rejuvenate command later.
+        Asphyxiation: -200
+        Bloodloss: -200
+        Blunt: -200
+        Caustic: -200
+        Cold: -200
+        Heat: -200
+        Piercing: -200
+        Poison: -200
+        Radiation: -200
+        Shock: -200
+        Slash: -200
     ignoreResistances: true
 
 - type: entity

@@ -1,4 +1,10 @@
-﻿using Content.Shared.Mobs.Components;
+// SPDX-FileCopyrightText: 2023 Jezithyr
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MIT
+
+using Content.Shared.Inventory; // ks14: MOBSTATERELAY
+using Content.Shared.Mobs.Components;
 using Robust.Shared.Serialization;
 
 namespace Content.Shared.Mobs;
@@ -28,7 +34,7 @@ public enum MobState : byte
 /// <param name="NewMobState">The new MobState</param>
 /// <param name="Origin">The Entity that caused this state change</param>
 public record struct MobStateChangedEvent(EntityUid Target, MobStateComponent Component, MobState OldMobState,
-    MobState NewMobState, EntityUid? Origin = null);
+    MobState NewMobState, EntityUid? Origin = null, SlotFlags TargetSlots = SlotFlags.WITHOUT_POCKET /* KS14: MOBSTATERELAY */) : IInventoryRelayEvent /* KS14: MOBSTATERELAY: Inherits this */;
 
 public static class A
 {

@@ -9,7 +9,7 @@
 // SPDX-FileCopyrightText: 2026 github_actions[bot]
 // SPDX-FileCopyrightText: 2026 nabegator220
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Shared.Damage;
 using Content.Shared.Damage.Prototypes;
@@ -21,151 +21,151 @@ using Content.Shared.FixedPoint;
 
 namespace Content.Tests.Shared
 {
-    // Basic tests of various damage prototypes and classes.
-    [TestFixture]
-    [TestOf(typeof(DamageSpecifier))]
-    [TestOf(typeof(DamageModifierSetPrototype))]
-    [TestOf(typeof(DamageGroupPrototype))]
-    public sealed class DamageTest : ContentUnitTest
+  // Basic tests of various damage prototypes and classes.
+  [TestFixture]
+  [TestOf(typeof(DamageSpecifier))]
+  [TestOf(typeof(DamageModifierSetPrototype))]
+  [TestOf(typeof(DamageGroupPrototype))]
+  public sealed class DamageTest : ContentUnitTest
+  {
+    private static readonly ProtoId<DamageGroupPrototype> BruteDamageGroup = "Brute";
+    private static readonly ProtoId<DamageTypePrototype> RadiationDamageType = "Radiation";
+    private static readonly ProtoId<DamageTypePrototype> SlashDamageType = "Slash";
+    private static readonly ProtoId<DamageTypePrototype> PiercingDamageType = "Piercing";
+
+    private IPrototypeManager _prototypeManager;
+
+    private DamageSpecifier _damageSpec;
+
+    [OneTimeSetUp]
+    public void OneTimeSetup()
     {
-        private static readonly ProtoId<DamageGroupPrototype> BruteDamageGroup = "Brute";
-        private static readonly ProtoId<DamageTypePrototype> RadiationDamageType = "Radiation";
-        private static readonly ProtoId<DamageTypePrototype> SlashDamageType = "Slash";
-        private static readonly ProtoId<DamageTypePrototype> PiercingDamageType = "Piercing";
+      IoCManager.Resolve<ISerializationManager>().Initialize();
+      _prototypeManager = IoCManager.Resolve<IPrototypeManager>();
+      _prototypeManager.Initialize();
+      _prototypeManager.LoadString(_damagePrototypes);
+      _prototypeManager.ResolveResults();
 
-        private IPrototypeManager _prototypeManager;
+      // Create a damage data set
+      _damageSpec = new(_prototypeManager.Index(BruteDamageGroup), 6);
+      _damageSpec += new DamageSpecifier(_prototypeManager.Index(RadiationDamageType), 3);
+      _damageSpec += new DamageSpecifier(_prototypeManager.Index(SlashDamageType), -1); // already exists in brute
+    }
 
-        private DamageSpecifier _damageSpec;
+    //Check that DamageSpecifier will split groups and can do arithmetic operations
+    [Test]
+    public void DamageSpecifierTest()
+    {
+      /* KS14 - since our damagespecifier works differently this test is disabled for a while
+      // Create a copy of the damage data
+      DamageSpecifier damageSpec = new(_damageSpec);
 
-        [OneTimeSetUp]
-        public void OneTimeSetup()
-        {
-            IoCManager.Resolve<ISerializationManager>().Initialize();
-            _prototypeManager = IoCManager.Resolve<IPrototypeManager>();
-            _prototypeManager.Initialize();
-            _prototypeManager.LoadString(_damagePrototypes);
-            _prototypeManager.ResolveResults();
+      // Check that it properly split up the groups into types
+      FixedPoint2 damage;
+      Assert.That(damageSpec.GetTotal(), Is.EqualTo(FixedPoint2.New(8)));
+      Assert.That(damageSpec.DamageDict.TryGetValue("Blunt", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(2)));
+      Assert.That(damageSpec.DamageDict.TryGetValue("Piercing", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(2)));
+      Assert.That(damageSpec.DamageDict.TryGetValue("Slash", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(1)));
+      Assert.That(damageSpec.DamageDict.TryGetValue("Radiation", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(3)));
 
-            // Create a damage data set
-            _damageSpec = new(_prototypeManager.Index(BruteDamageGroup), 6);
-            _damageSpec += new DamageSpecifier(_prototypeManager.Index(RadiationDamageType), 3);
-            _damageSpec += new DamageSpecifier(_prototypeManager.Index(SlashDamageType), -1); // already exists in brute
-        }
+      // check that integer multiplication works
+      damageSpec = damageSpec * 2;
+      Assert.That(damageSpec.GetTotal(), Is.EqualTo(FixedPoint2.New(16)));
+      Assert.That(damageSpec.DamageDict.TryGetValue("Blunt", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(4)));
+      Assert.That(damageSpec.DamageDict.TryGetValue("Piercing", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(4)));
+      Assert.That(damageSpec.DamageDict.TryGetValue("Slash", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(2)));
+      Assert.That(damageSpec.DamageDict.TryGetValue("Radiation", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(6)));
 
-        //Check that DamageSpecifier will split groups and can do arithmetic operations
-        [Test]
-        public void DamageSpecifierTest()
-        {
-            /* KS14 - since our damagespecifier works differently this test is disabled for a while
-            // Create a copy of the damage data
-            DamageSpecifier damageSpec = new(_damageSpec);
+      // check that float multiplication works
+      damageSpec = damageSpec * 2.2f;
+      Assert.That(damageSpec.DamageDict.TryGetValue("Blunt", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(8.8)));
+      Assert.That(damageSpec.DamageDict.TryGetValue("Piercing", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(8.8)));
+      Assert.That(damageSpec.DamageDict.TryGetValue("Slash", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(4.4)));
+      Assert.That(damageSpec.DamageDict.TryGetValue("Radiation", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(13.2)));
+      Assert.That(damageSpec.GetTotal(), Is.EqualTo(FixedPoint2.New(8.8 + 8.8 + 4.4 + 13.2)));
 
-            // Check that it properly split up the groups into types
-            FixedPoint2 damage;
-            Assert.That(damageSpec.GetTotal(), Is.EqualTo(FixedPoint2.New(8)));
-            Assert.That(damageSpec.DamageDict.TryGetValue("Blunt", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(2)));
-            Assert.That(damageSpec.DamageDict.TryGetValue("Piercing", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(2)));
-            Assert.That(damageSpec.DamageDict.TryGetValue("Slash", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(1)));
-            Assert.That(damageSpec.DamageDict.TryGetValue("Radiation", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(3)));
+      // check that integer division works
+      damageSpec = damageSpec / 2;
+      Assert.That(damageSpec.DamageDict.TryGetValue("Blunt", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(4.4)));
+      Assert.That(damageSpec.DamageDict.TryGetValue("Piercing", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(4.4)));
+      Assert.That(damageSpec.DamageDict.TryGetValue("Slash", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(2.2)));
+      Assert.That(damageSpec.DamageDict.TryGetValue("Radiation", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(6.6)));
 
-            // check that integer multiplication works
-            damageSpec = damageSpec * 2;
-            Assert.That(damageSpec.GetTotal(), Is.EqualTo(FixedPoint2.New(16)));
-            Assert.That(damageSpec.DamageDict.TryGetValue("Blunt", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(4)));
-            Assert.That(damageSpec.DamageDict.TryGetValue("Piercing", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(4)));
-            Assert.That(damageSpec.DamageDict.TryGetValue("Slash", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(2)));
-            Assert.That(damageSpec.DamageDict.TryGetValue("Radiation", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(6)));
+      // check that float division works
+      damageSpec = damageSpec / 2.2f;
+      Assert.That(damageSpec.DamageDict.TryGetValue("Blunt", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(2)));
+      Assert.That(damageSpec.DamageDict.TryGetValue("Piercing", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(2)));
+      Assert.That(damageSpec.DamageDict.TryGetValue("Slash", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(1)));
+      Assert.That(damageSpec.DamageDict.TryGetValue("Radiation", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(3)));
 
-            // check that float multiplication works
-            damageSpec = damageSpec * 2.2f;
-            Assert.That(damageSpec.DamageDict.TryGetValue("Blunt", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(8.8)));
-            Assert.That(damageSpec.DamageDict.TryGetValue("Piercing", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(8.8)));
-            Assert.That(damageSpec.DamageDict.TryGetValue("Slash", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(4.4)));
-            Assert.That(damageSpec.DamageDict.TryGetValue("Radiation", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(13.2)));
-            Assert.That(damageSpec.GetTotal(), Is.EqualTo(FixedPoint2.New(8.8 + 8.8 + 4.4 + 13.2)));
+      // Lets also test the constructor with damage types and damage groups works properly.
+      damageSpec = new(_prototypeManager.Index(BruteDamageGroup), 4);
+      Assert.That(damageSpec.DamageDict.TryGetValue("Blunt", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(1.33)));
+      Assert.That(damageSpec.DamageDict.TryGetValue("Slash", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(1.33)));
+      Assert.That(damageSpec.DamageDict.TryGetValue("Piercing", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(1.34))); // doesn't divide evenly, so the 0.01 goes to the last one
 
-            // check that integer division works
-            damageSpec = damageSpec / 2;
-            Assert.That(damageSpec.DamageDict.TryGetValue("Blunt", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(4.4)));
-            Assert.That(damageSpec.DamageDict.TryGetValue("Piercing", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(4.4)));
-            Assert.That(damageSpec.DamageDict.TryGetValue("Slash", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(2.2)));
-            Assert.That(damageSpec.DamageDict.TryGetValue("Radiation", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(6.6)));
+      damageSpec = new(_prototypeManager.Index(PiercingDamageType), 4);
+      Assert.That(damageSpec.DamageDict.TryGetValue("Piercing", out damage));
+      Assert.That(damage, Is.EqualTo(FixedPoint2.New(4)));
+  }
 
-            // check that float division works
-            damageSpec = damageSpec / 2.2f;
-            Assert.That(damageSpec.DamageDict.TryGetValue("Blunt", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(2)));
-            Assert.That(damageSpec.DamageDict.TryGetValue("Piercing", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(2)));
-            Assert.That(damageSpec.DamageDict.TryGetValue("Slash", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(1)));
-            Assert.That(damageSpec.DamageDict.TryGetValue("Radiation", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(3)));
+  //Check that DamageSpecifier will be properly adjusted by a resistance set
+  [Test]
+  public void ModifierSetTest()
+  {
+      // Create a copy of the damage data
+      DamageSpecifier damageSpec = 10 * new DamageSpecifier(_damageSpec);
 
-            // Lets also test the constructor with damage types and damage groups works properly.
-            damageSpec = new(_prototypeManager.Index(BruteDamageGroup), 4);
-            Assert.That(damageSpec.DamageDict.TryGetValue("Blunt", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(1.33)));
-            Assert.That(damageSpec.DamageDict.TryGetValue("Slash", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(1.33)));
-            Assert.That(damageSpec.DamageDict.TryGetValue("Piercing", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(1.34))); // doesn't divide evenly, so the 0.01 goes to the last one
+      // Create a modifier set
+      var modifierSet = _prototypeManager.Index<DamageModifierSetPrototype>(ModifierTestSetId);
 
-            damageSpec = new(_prototypeManager.Index(PiercingDamageType), 4);
-            Assert.That(damageSpec.DamageDict.TryGetValue("Piercing", out damage));
-            Assert.That(damage, Is.EqualTo(FixedPoint2.New(4)));
-        }
+      //damage is initially   20 / 20 / 10 / 30
+      //Each time we subtract -5 /  0 /  8 /  0.5
+      //then multiply by       1 / -2 /  3 /  1.5
 
-        //Check that DamageSpecifier will be properly adjusted by a resistance set
-        [Test]
-        public void ModifierSetTest()
-        {
-            // Create a copy of the damage data
-            DamageSpecifier damageSpec = 10 * new DamageSpecifier(_damageSpec);
+      // Apply once
+      damageSpec = DamageSpecifier.ApplyModifierSet(damageSpec, modifierSet);
+      Assert.That(damageSpec.DamageDict["Blunt"], Is.EqualTo(FixedPoint2.New(25)));
+      Assert.That(damageSpec.DamageDict["Piercing"], Is.EqualTo(FixedPoint2.New(-40))); // became healing
+      Assert.That(damageSpec.DamageDict["Slash"], Is.EqualTo(FixedPoint2.New(6)));
+      Assert.That(damageSpec.DamageDict["Radiation"], Is.EqualTo(FixedPoint2.New(44.25)));
 
-            // Create a modifier set
-            var modifierSet = _prototypeManager.Index<DamageModifierSetPrototype>(ModifierTestSetId);
+      // And again, checking for some other behavior
+      damageSpec = DamageSpecifier.ApplyModifierSet(damageSpec, modifierSet);
+      Assert.That(damageSpec.DamageDict["Blunt"], Is.EqualTo(FixedPoint2.New(30)));
+      Assert.That(damageSpec.DamageDict["Piercing"], Is.EqualTo(FixedPoint2.New(-40))); // resistances don't apply to healing
+      Assert.That(!damageSpec.DamageDict.ContainsKey("Slash"));  // Reduction reduced to 0, and removed from specifier
+      Assert.That(damageSpec.DamageDict["Radiation"], Is.EqualTo(FixedPoint2.New(65.62)));
+      */
+    }
 
-            //damage is initially   20 / 20 / 10 / 30
-            //Each time we subtract -5 /  0 /  8 /  0.5
-            //then multiply by       1 / -2 /  3 /  1.5
+    private const string ModifierTestSetId = "ModifierTestSet";
 
-            // Apply once
-            damageSpec = DamageSpecifier.ApplyModifierSet(damageSpec, modifierSet);
-            Assert.That(damageSpec.DamageDict["Blunt"], Is.EqualTo(FixedPoint2.New(25)));
-            Assert.That(damageSpec.DamageDict["Piercing"], Is.EqualTo(FixedPoint2.New(-40))); // became healing
-            Assert.That(damageSpec.DamageDict["Slash"], Is.EqualTo(FixedPoint2.New(6)));
-            Assert.That(damageSpec.DamageDict["Radiation"], Is.EqualTo(FixedPoint2.New(44.25)));
-
-            // And again, checking for some other behavior
-            damageSpec = DamageSpecifier.ApplyModifierSet(damageSpec, modifierSet);
-            Assert.That(damageSpec.DamageDict["Blunt"], Is.EqualTo(FixedPoint2.New(30)));
-            Assert.That(damageSpec.DamageDict["Piercing"], Is.EqualTo(FixedPoint2.New(-40))); // resistances don't apply to healing
-            Assert.That(!damageSpec.DamageDict.ContainsKey("Slash"));  // Reduction reduced to 0, and removed from specifier
-            Assert.That(damageSpec.DamageDict["Radiation"], Is.EqualTo(FixedPoint2.New(65.62)));
-            */
-        }
-
-        private const string ModifierTestSetId = "ModifierTestSet";
-
-        // Default damage Yaml
-        private readonly string _damagePrototypes = $@"
+    // Default damage Yaml
+    private readonly string _damagePrototypes = $@"
 - type: damageType
   id: Blunt
   name: damage-type-blunt
@@ -317,5 +317,5 @@ namespace Content.Tests.Shared
     - Heat
     - Shock
 ";
-    }
+  }
 }

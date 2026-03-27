@@ -14,7 +14,7 @@
 // SPDX-FileCopyrightText: 2025 nabegator220
 // SPDX-FileCopyrightText: 2026 deltanedas
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using System.Diagnostics.CodeAnalysis;
 using Content.Shared.Actions;
@@ -187,7 +187,7 @@ public struct AttemptPacifiedThrowEvent
     public EntityUid ItemUid;
     public EntityUid PlayerUid;
 
-    public AttemptPacifiedThrowEvent(EntityUid itemUid,  EntityUid playerUid)
+    public AttemptPacifiedThrowEvent(EntityUid itemUid, EntityUid playerUid)
     {
         ItemUid = itemUid;
         PlayerUid = playerUid;

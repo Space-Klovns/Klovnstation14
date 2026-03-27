@@ -1,6 +1,53 @@
+# SPDX-FileCopyrightText: 2020 AJCM-git
+# SPDX-FileCopyrightText: 2020 DrSmugleaf
+# SPDX-FileCopyrightText: 2020 py01
+# SPDX-FileCopyrightText: 2021 Galactic Chimp
+# SPDX-FileCopyrightText: 2021 Paul Ritter
+# SPDX-FileCopyrightText: 2021 Pieter-Jan Briers
+# SPDX-FileCopyrightText: 2021 Swept
+# SPDX-FileCopyrightText: 2021 Vera Aguilera Puerto
+# SPDX-FileCopyrightText: 2022 Peptide90
+# SPDX-FileCopyrightText: 2022 T-Stalker
+# SPDX-FileCopyrightText: 2022 Visne
+# SPDX-FileCopyrightText: 2022 Vordenburg
+# SPDX-FileCopyrightText: 2022 mirrorcult
+# SPDX-FileCopyrightText: 2022 rolfero
+# SPDX-FileCopyrightText: 2023 Dvir
+# SPDX-FileCopyrightText: 2023 TaralGit
+# SPDX-FileCopyrightText: 2023 and_a
+# SPDX-FileCopyrightText: 2023 brainfood1183
+# SPDX-FileCopyrightText: 2023 gus
+# SPDX-FileCopyrightText: 2024 Boaz1111
+# SPDX-FileCopyrightText: 2024 Ed
+# SPDX-FileCopyrightText: 2024 Kara
+# SPDX-FileCopyrightText: 2024 Nemanja
+# SPDX-FileCopyrightText: 2024 Plykiya
+# SPDX-FileCopyrightText: 2024 RiceMar1244
+# SPDX-FileCopyrightText: 2024 Winkarst
+# SPDX-FileCopyrightText: 2024 deltanedas
+# SPDX-FileCopyrightText: 2024 lzk
+# SPDX-FileCopyrightText: 2024 metalgearsloth
+# SPDX-FileCopyrightText: 2024 nikthechampiongr
+# SPDX-FileCopyrightText: 2024 vanx
+# SPDX-FileCopyrightText: 2025 ArtisticRoomba
+# SPDX-FileCopyrightText: 2025 August Sun
+# SPDX-FileCopyrightText: 2025 Centronias
+# SPDX-FileCopyrightText: 2025 Ignaz "Ian" Kraft
+# SPDX-FileCopyrightText: 2025 Minerva
+# SPDX-FileCopyrightText: 2025 Nox
+# SPDX-FileCopyrightText: 2025 Southbridge
+# SPDX-FileCopyrightText: 2025 nabegator220
+# SPDX-FileCopyrightText: 2026 FrauZj
+# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+# SPDX-FileCopyrightText: 2026 Princess Cheeseballs
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+# SPDX-FileCopyrightText: 2026 āda
+#
+# SPDX-License-Identifier: MIT
+
 - type: entity
   name: BaseWeaponLauncher
-  parent: BaseItem
+  parent: [ BaseItem, BaseGunWieldable ]
   id: BaseWeaponLauncher
   description: A rooty tooty point and shooty.
   abstract: true
@@ -19,16 +66,18 @@
     containers:
       ballistic-ammo: !type:Container
         ents: []
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_pickup1.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_drop1.ogg
+  - type: Gun
+    fireRate: 1
+    projectileSpeed: 25 # Slower than a bullet, same speed as our old projectile limit.
+    selectedMode: SemiAuto
+    availableModes:
+    - SemiAuto
+    soundGunshot:
+      path: /Audio/Weapons/Guns/Gunshots/grenade_launcher.ogg
 
 - type: entity
   name: china lake
-  parent: [BaseWeaponLauncher, BaseGunWieldable, BaseSyndicateContraband]
+  parent: [BaseWeaponLauncher, BaseSyndicateContraband]
   id: WeaponLauncherChinaLake
   description: PLOOP.
   components:
@@ -47,13 +96,6 @@
     shape:
     - 0,0,4,2
   - type: AmmoCounter
-  - type: Gun
-    fireRate: 1
-    selectedMode: SemiAuto
-    availableModes:
-      - SemiAuto
-    soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/grenade_launcher.ogg
   - type: BallisticAmmoProvider
     whitelist:
       tags:
@@ -67,7 +109,7 @@
     price: 10000
 
 - type: entity
-  parent: [ BaseWeaponLauncher, BaseGunWieldable, BaseMajorContraband ]
+  parent: [ BaseWeaponLauncher, BaseMajorContraband ]
   id: WeaponLauncherHydra
   name: hydra
   description: PLOOP... FSSSSSS...
@@ -85,13 +127,6 @@
   - type: Item
     size: Huge
   - type: AmmoCounter
-  - type: Gun
-    fireRate: 1
-    selectedMode: SemiAuto
-    availableModes:
-    - SemiAuto
-    soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/grenade_launcher.ogg
   - type: GunRequiresWield
   - type: ContainerContainer
     containers:
@@ -320,6 +355,7 @@
       storedOffset: 0,-6
     - type: AmmoCounter
     - type: GrapplingGun
+    - type: BlockShootingInSpeczone # KS14: Speczones
     - type: Gun
       soundGunshot: /Audio/Weapons/Guns/Gunshots/harpoon.ogg
       fireRate: 0.5

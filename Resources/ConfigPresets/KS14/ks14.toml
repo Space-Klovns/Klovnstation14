@@ -18,9 +18,8 @@ github     = "https://github.com/Space-Klovns/Klovnstation14"
 website    = "https://klovnstation.org"
 wiki       = "https://klovnstation14.miraheze.org/wiki/Main_Page"
 
-#[auth] - not working with our shit apparently
+#[auth]
 #server = "https://auth.simplestation.org/"
-
 
 [ooc]
 enable_during_round = true

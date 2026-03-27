@@ -70,10 +70,3 @@ public sealed partial class HandTeleporterComponent : Component
 public sealed partial class TeleporterDoAfterEvent : SimpleDoAfterEvent
 {
 }
-
-// KS14 Addition
-/// <summary>
-///     Raised locally for a hand teleporter before it handles updating portals.
-/// </summary>
-[ByRefEvent]
-public record struct AttemptUpdateHandTeleporterPortalsEvent(EntityUid Teleporter, bool Cancelled = false);

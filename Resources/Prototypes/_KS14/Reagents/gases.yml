@@ -15,20 +15,21 @@
   flavor: minty
   color: "#b924bf"
   metabolisms:
-    Gas:
+    Respiration:
       effects:
       - !type:AddReagentToBlood
         reagent: Zipium
         amount: 2.5
-    Narcotic:
+    Bloodstream:
       effects:
-      - !type:AddReagentToBlood
+      - !type:AdjustReagent
         conditions:
         - !type:BloodReagentCondition
           reagent: Zipion
           min: 1
         reagent: Zipium
         amount: 2.5
+
 - type: reagent
   id: Argon
   name: reagents-argon

@@ -24,7 +24,7 @@
 # SPDX-FileCopyrightText: 2025 Minemoder5000
 # SPDX-FileCopyrightText: 2025 beck-thompson
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - type: job
   id: SecurityCadet
@@ -36,7 +36,7 @@
       time: 2h #2 hrs, klovn
     - !type:DepartmentTimeRequirement
       department: Security
-      time: 5h
+      time: 10h
       inverted: true # stop playing intern if you're good at security!
   startingGear: SecurityCadetGear
   icon: "JobIconSecurityCadet"

@@ -26,7 +26,7 @@
 // SPDX-FileCopyrightText: 2026 nabegator220
 // SPDX-FileCopyrightText: 2026 pathetic meowmeow
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Shared.Administration.Logs;
 using Content.Shared.Database;
@@ -224,7 +224,7 @@ public sealed class SharpSystem : EntitySystem
             },
             Message = message,
             Disabled = disabled,
-            Icon = new SpriteSpecifier.Texture(new ("/Textures/Interface/VerbIcons/cutlery.svg.192dpi.png")),
+            Icon = new SpriteSpecifier.Texture(new("/Textures/Interface/VerbIcons/cutlery.svg.192dpi.png")),
             Text = Loc.GetString("butcherable-verb-name"),
         };
 

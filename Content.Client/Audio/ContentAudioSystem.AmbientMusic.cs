@@ -1,3 +1,12 @@
+// SPDX-FileCopyrightText: 2024 Ed
+// SPDX-FileCopyrightText: 2024 Leon Friedrich
+// SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2024 metalgearsloth
+// SPDX-FileCopyrightText: 2025 Kyle Tyo
+// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+//
+// SPDX-License-Identifier: MIT
+
 using System.Linq;
 using Content.Client.Gameplay;
 using Content.Shared.Audio;
@@ -30,10 +39,10 @@ public sealed partial class ContentAudioSystem
     [Dependency] private readonly RulesSystem _rules = default!;
     [Dependency] private readonly SharedAudioSystem _audio = default!;
 
-    private readonly TimeSpan _minAmbienceTime = TimeSpan.FromSeconds(30);
-    private readonly TimeSpan _maxAmbienceTime = TimeSpan.FromSeconds(60);
+    private readonly TimeSpan _minAmbienceTime = TimeSpan.FromSeconds(15); // KS14: 30 -> 15
+    private readonly TimeSpan _maxAmbienceTime = TimeSpan.FromSeconds(45); // KS14: 60 -> 45
 
-    private const float AmbientMusicFadeTime = 10f;
+    private const float AmbientMusicFadeTime = 16f; // KS14: 10 -> 16
     private static float _volumeSlider;
 
     // Don't need to worry about this being serializable or pauseable as it doesn't affect the sim.

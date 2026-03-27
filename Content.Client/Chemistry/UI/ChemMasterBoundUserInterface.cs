@@ -16,7 +16,7 @@
 // SPDX-FileCopyrightText: 2026 Riley
 // SPDX-FileCopyrightText: 2026 github_actions[bot]
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Shared.Chemistry;
 using Content.Shared.Containers.ItemSlots;
@@ -62,10 +62,10 @@ namespace Content.Client.Chemistry.UI
                 new ChemMasterSetModeMessage(ChemMasterMode.Discard));
             _window.CreatePillButton.OnPressed += _ => SendMessage(
                 new ChemMasterCreatePillsMessage(
-                    (uint) _window.PillDosage.Value, (uint) _window.PillNumber.Value, _window.LabelLine));
+                    (uint)_window.PillDosage.Value, (uint)_window.PillNumber.Value, _window.LabelLine));
             _window.CreateBottleButton.OnPressed += _ => SendMessage(
                 new ChemMasterOutputToBottleMessage(
-                    (uint) _window.BottleDosage.Value, _window.LabelLine));
+                    (uint)_window.BottleDosage.Value, _window.LabelLine));
             _window.BufferSortButton.OnPressed += _ => SendMessage(
                     new ChemMasterSortingTypeCycleMessage());
             _window.OutputBufferDraw.OnPressed += _ => SendMessage(
@@ -94,7 +94,7 @@ namespace Content.Client.Chemistry.UI
         {
             base.UpdateState(state);
 
-            var castState = (ChemMasterBoundUserInterfaceState) state;
+            var castState = (ChemMasterBoundUserInterfaceState)state;
 
             _window?.UpdateState(castState); // Update window state
         }

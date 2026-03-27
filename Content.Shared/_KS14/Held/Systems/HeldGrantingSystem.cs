@@ -40,14 +40,14 @@ public sealed class HeldGrantingSystem : EntitySystem
 
         foreach (var (name, data) in component.Components)
         {
-            var newComp = (Component) _componentFactory.GetComponent(name);
+            var newComp = (Component)_componentFactory.GetComponent(name);
 
             if (HasComp(holder, newComp.GetType()))
                 continue;
 
-            var temp = (object) newComp;
+            var temp = (object)newComp;
             _serializationManager.CopyTo(data.Component, ref temp);
-            EntityManager.AddComponent(holder, (Component)temp!);
+            AddComp(holder, (Component)temp!);
 
             component.Active[name] = true;
         }
@@ -62,7 +62,7 @@ public sealed class HeldGrantingSystem : EntitySystem
             if (!component.Active.ContainsKey(name) || !component.Active[name])
                 continue;
 
-            var newComp = (Component) _componentFactory.GetComponent(name);
+            var newComp = (Component)_componentFactory.GetComponent(name);
 
             RemComp(holder, newComp.GetType());
             component.Active[name] = false;

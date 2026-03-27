@@ -17,7 +17,7 @@
 // SPDX-FileCopyrightText: 2024 lzk
 // SPDX-FileCopyrightText: 2026 nabegator220
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using System.Linq;
 using Content.Server.Light.Components;
@@ -110,7 +110,7 @@ public sealed class LightReplacerSystem : SharedLightReplacerSystem
         // behaviour will depends on target type
         if (eventArgs.Target != null)
         {
-            var targetUid = (EntityUid) eventArgs.Target;
+            var targetUid = (EntityUid)eventArgs.Target;
 
             // replace broken light in fixture?
             if (TryComp<PoweredLightComponent>(targetUid, out var fixture))

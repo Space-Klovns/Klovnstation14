@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 github_actions[bot]
 // SPDX-FileCopyrightText: 2026 nabegator220
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Shared._Starlight.Plumbing;
 using Content.Shared.Chemistry;
@@ -33,7 +33,7 @@ public sealed partial class PlumbingPillPressWindow : DefaultWindow
     private bool _mixingEnabled;
     private bool _eastLastEdited = true;
     private const string PillsRsiPath = "/Textures/Objects/Specific/Chemistry/pills.rsi";
-    private const int PillTypeCount = (int) SharedChemMaster.PillTypes;
+    private const int PillTypeCount = (int)SharedChemMaster.PillTypes;
 
     public Button[] PillTypeButtons { get; } = new Button[PillTypeCount];
 
@@ -188,8 +188,8 @@ public sealed partial class PlumbingPillPressWindow : DefaultWindow
         // Update ratio inputs and don't overwrite while user is typing
         if (!EastRatioInput.HasKeyboardFocus() && !WestRatioInput.HasKeyboardFocus())
         {
-            EastRatioInput.Text = ((int) state.InletRatioEast).ToString();
-            WestRatioInput.Text = ((int) state.InletRatioWest).ToString();
+            EastRatioInput.Text = ((int)state.InletRatioEast).ToString();
+            WestRatioInput.Text = ((int)state.InletRatioWest).ToString();
         }
     }
 }

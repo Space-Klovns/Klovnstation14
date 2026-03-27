@@ -22,7 +22,7 @@
 # SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
 # SPDX-FileCopyrightText: 2026 github_actions[bot]
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - type: entity
   parent: BaseItem
@@ -241,6 +241,7 @@
   parent: [DoorRemoteCanEletrifyDoors, BaseCommandContraband]
   id: DoorRemoteAll
   name: super door remote
+  description: A gadget which can open and bolt doors remotely. This one works even on wooden doors!
   suffix: Admeme
   components:
   - type: Sprite
@@ -252,6 +253,8 @@
       color: "#22871a"
   - type: DoorRemote
     includeUserAccess: true
+    requireInRangeUnoccluded: false
+    requireTagWhitelist: false
   - type: Access
     groups:
     - AllAccess

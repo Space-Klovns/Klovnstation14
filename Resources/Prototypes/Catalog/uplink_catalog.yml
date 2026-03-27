@@ -129,7 +129,7 @@
 # SPDX-FileCopyrightText: 2026 ScarKy0
 # SPDX-FileCopyrightText: 2026 nabegator220
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 # TODO: make more categories
 # Guns
@@ -141,9 +141,9 @@
   productEntity: WeaponPistolViper
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   categories:
   - UplinkWeaponry
 
@@ -154,9 +154,9 @@
   productEntity: WeaponRevolverPythonAP
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 18 # KS14 Change: x3
   cost:
-    Telecrystal: 12 # Originally was 13 and then 8 TC but was not used due to high cost
+    Telecrystal: 36 # KS14 Change: x3
   categories:
   - UplinkWeaponry
 
@@ -168,9 +168,9 @@
   productEntity: WeaponPistolCobra
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkWeaponry
 
@@ -192,7 +192,7 @@
   icon: { sprite: /Textures/Objects/Weapons/Melee/e_sword.rsi, state: icon }
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   productEntity: EnergySword
   cost:
     Telecrystal: 24 #KS14 change
@@ -206,10 +206,10 @@
   icon: { sprite: /Textures/Objects/Weapons/Melee/e_sword_double.rsi, state: icon }
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 45
+    Telecrystal: 45 # KS14 Change: x3
   productEntity: EnergySwordDouble
   cost:
-    Telecrystal: 54
+    Telecrystal: 54 # KS14 Change: x3
   categories:
   - UplinkWeaponry
 
@@ -221,9 +221,9 @@
   productEntity: EnergyDaggerBox
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkWeaponry
 
@@ -233,10 +233,10 @@
   description: uplink-energycrossbow-desc
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   productEntity: WeaponEnergyCrossbow
   cost:
-    Telecrystal: 5
+    Telecrystal: 5 # KS14 Change: x3
   categories:
   - UplinkWeaponry
   conditions:
@@ -251,7 +251,7 @@
   productEntity: ThrowingKnivesKit
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
     Telecrystal: 12  #KS14 change
   categories:
@@ -264,29 +264,11 @@
   productEntity: ClothingHandsGlovesNorthStar
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   cost:
     Telecrystal: 18  #KS14 change
   categories:
   - UplinkWeaponry
-
-- type: listing
-  id: UplinkDisposableTurret
-  name: uplink-disposable-turret-name
-  description: uplink-disposable-turret-desc
-  productEntity: ToolboxElectricalTurretFilled
-  discountCategory: usualDiscounts
-  discountDownTo:
-    Telecrystal: 9
-  cost:
-    Telecrystal: 15 #KS14 change
-  categories:
-  - UplinkWeaponry
-  conditions:
-    - !type:StoreWhitelistCondition
-      blacklist:
-        tags:
-          - NukeOpsUplink
 
 - type: listing
   id: UplinkEshield
@@ -296,11 +278,25 @@
   productEntity: EnergyShield
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   cost:
-    Telecrystal: 18
+    Telecrystal: 18 # KS14 Change: x3
   categories:
   - UplinkWeaponry #KS14 change added to syndie uplink
+
+- type: listing
+  id: uplinkRiggedBoxingGloves
+  name: uplink-rigged-boxing-gloves-name
+  description: uplink-rigged-boxing-gloves-desc
+  icon: { sprite: Clothing/Hands/Gloves/Boxing/boxingblue.rsi, state: icon }
+  productEntity: ClothingHandsGlovesBoxingRiggedBlue # TODO Replace this with the random spawner when it's not bugged
+  # # discountCategory: veryRareDiscounts # KS14: Removed veryRareDiscounts # KS14: Removed veryRareDiscounts
+  discountDownTo:
+    Telecrystal: 8 # KS14 Change: x3
+  cost:
+    Telecrystal: 10 # KS14 Change: x3
+  categories:
+  - UplinkWeaponry
 
 - type: listing
   id: UplinkSniperBundle
@@ -310,9 +306,9 @@
   productEntity: BriefcaseSyndieSniperBundleFilled
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 18
+    Telecrystal: 18 # KS14 Change: x3
   cost:
-    Telecrystal: 36
+    Telecrystal: 36 # KS14 Change: x3
   categories:
   - UplinkWeaponry
 
@@ -321,7 +317,7 @@
   name: uplink-hushpup-name
   description: uplink-hushpup-desc
   icon: { sprite: /Textures/Objects/Weapons/Guns/Shotguns/hushpup.rsi, state: icon }
-  productEntity: ClothingBackpackDuffelSyndicateFilledHushpup
+  productEntity: BriefcaseWeaponHushpupFilled
   discountCategory: rareDiscounts
   discountDownTo:
     Telecrystal: 24
@@ -331,6 +327,25 @@
   - UplinkWeaponry
 
 - type: listing
+  id: UplinkC20R
+  name: uplink-c20r-name
+  description: uplink-c20r-desc
+  icon: { sprite: /Textures/Objects/Weapons/Guns/SMGs/c20r.rsi, state: icon }
+  productEntity: BriefcaseWeaponC20Filled
+  # discountCategory: veryRareDiscounts # KS14: Removed veryRareDiscounts
+  discountDownTo:
+    Telecrystal: 30 # KS14 Change: x3
+  cost:
+    Telecrystal: 42 # KS14 Change: x3
+  categories:
+  - UplinkWeaponry
+  conditions:
+  - !type:StoreWhitelistCondition
+    blacklist:
+      tags:
+      - NukeOpsUplink
+
+- type: listing
   id: UplinkC20RBundle
   name: uplink-c20r-bundle-name
   description: uplink-c20r-bundle-desc
@@ -338,11 +353,54 @@
   productEntity: ClothingBackpackDuffelSyndicateFilledSMG
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 30
+    Telecrystal: 30 # KS14 Change: x3
   cost:
-    Telecrystal: 51
+    Telecrystal: 51 # KS14 Change: x3
   categories:
   - UplinkWeaponry
+  conditions:
+  - !type:StoreWhitelistCondition
+    whitelist:
+      tags:
+      - NukeOpsUplink
+
+- type: listing
+  id: UplinkBulldog
+  name: uplink-bulldog-name
+  description: uplink-bulldog-desc
+  icon: { sprite: /Textures/Objects/Weapons/Guns/Shotguns/bulldog.rsi, state: icon }
+  productEntity: BriefcaseWeaponBulldogFilled
+  # discountCategory: veryRareDiscounts # KS14: Removed veryRareDiscounts
+  discountDownTo:
+    Telecrystal: 30 # KS14 Change: x3
+  cost:
+    Telecrystal: 42 # KS14 Change: x3
+  categories:
+  - UplinkWeaponry
+  conditions:
+  - !type:StoreWhitelistCondition
+    blacklist:
+      tags:
+      - NukeOpsUplink
+
+- type: listing
+  id: UplinkBulldogBundle
+  name: uplink-bulldog-bundle-name
+  description: uplink-bulldog-bundle-desc
+  icon: { sprite: /Textures/Objects/Weapons/Guns/Shotguns/bulldog.rsi, state: icon }
+  productEntity: ClothingBackpackDuffelSyndicateFilledShotgun
+  # discountCategory: veryRareDiscounts # KS14: Removed veryRareDiscounts
+  discountDownTo:
+    Telecrystal: 12 # KS14 Change: x3
+  cost:
+    Telecrystal: 20 # KS14 Change: x3
+  categories:
+  - UplinkWeaponry
+  conditions:
+  - !type:StoreWhitelistCondition
+    whitelist:
+      tags:
+      - NukeOpsUplink
 
 - type: listing
   id: UplinkEstocBundle
@@ -352,25 +410,16 @@
   productEntity: ClothingBackpackDuffelSyndicateFilledRifle
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 33
+    Telecrystal: 33 # KS14 Change: x3
   cost:
-    Telecrystal: 54
+    Telecrystal: 54 # KS14 Change: x3
   categories:
   - UplinkWeaponry
-
-- type: listing
-  id: UplinkBulldogBundle
-  name: uplink-buldog-bundle-name
-  description: uplink-buldog-bundle-desc
-  icon: { sprite: /Textures/Objects/Weapons/Guns/Shotguns/bulldog.rsi, state: icon }
-  productEntity: ClothingBackpackDuffelSyndicateFilledShotgun
-  discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
-  discountDownTo:
-    Telecrystal: 36
-  cost:
-    Telecrystal: 60
-  categories:
-  - UplinkWeaponry
+  conditions:
+  - !type:StoreWhitelistCondition
+    whitelist:
+      tags:
+      - NukeOpsUplink
 
 - type: listing
   id: UplinkGrenadeLauncherBundle
@@ -380,11 +429,16 @@
   productEntity: ClothingBackpackDuffelSyndicateFilledGrenadeLauncher
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 60
+    Telecrystal: 60 # KS14 Change: x3
   cost:
-    Telecrystal: 75
+    Telecrystal: 75 # KS14 Change: x3
   categories:
   - UplinkWeaponry
+  conditions:
+  - !type:StoreWhitelistCondition
+    whitelist:
+      tags:
+      - NukeOpsUplink
 
 - type: listing
   id: UplinkL6SawBundle
@@ -394,9 +448,9 @@
   productEntity: ClothingBackpackDuffelSyndicateFilledLMG
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 72
+    Telecrystal: 72 # KS14 Change: x3
   cost:
-    Telecrystal: 90
+    Telecrystal: 90 # KS14 Change: x3
   categories:
   - UplinkWeaponry
 
@@ -409,9 +463,9 @@
   productEntity: ExGrenade
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkExplosives
 
@@ -421,7 +475,7 @@
   description: uplink-flash-grenade-desc
   productEntity: GrenadeFlashBang
   cost:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   categories:
   - UplinkExplosives
 
@@ -431,7 +485,7 @@
   description: uplink-smoke-grenade-desc
   productEntity: SmokeGrenade
   cost:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   categories:
   - UplinkExplosives
 
@@ -442,9 +496,9 @@
   productEntity: SyndieMiniBomb
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   cost:
-    Telecrystal: 18
+    Telecrystal: 18 # KS14 Change: x3
   categories:
     - UplinkExplosives
 
@@ -455,9 +509,9 @@
   productEntity: SingularityGrenade
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
     - UplinkDisruption
 
@@ -468,9 +522,9 @@
   productEntity: WhiteholeGrenade
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
     - UplinkDisruption
 
@@ -481,9 +535,9 @@
   productEntity: MobGrenadePenguin
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   cost:
-    Telecrystal: 15
+    Telecrystal: 15 # KS14 Change: x3
   categories:
     - UplinkExplosives
   conditions:
@@ -499,9 +553,9 @@
   productEntity: C4
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 8
+    Telecrystal: 8 # KS14 Change: x3
   cost:
-    Telecrystal: 12 #you can still get 6 c4 if you want and cause insane damage. we might need further nerfs
+    Telecrystal: 12 #you can still get 6 c4 if you want and cause insane damage. we might need further nerfs # KS14 Change: x3
   categories:
   - UplinkExplosives
 
@@ -512,9 +566,9 @@
   productEntity: ClothingBeltMilitaryWebbingGrenadeFilled
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 18
+    Telecrystal: 18 # KS14 Change: x3
   cost:
-    Telecrystal: 36
+    Telecrystal: 36 # KS14 Change: x3
   categories:
   - UplinkExplosives
   conditions:
@@ -530,9 +584,9 @@
   productEntity: ClothingBackpackDuffelSyndicateC4tBundle
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 35
+    Telecrystal: 35 # KS14 Change: x3
   cost:
-    Telecrystal: 50 # c-4 is insanely destructive. you should not be getting much help in planting tons of it and this price should make you reconsider
+    Telecrystal: 50 # KS14 Change: x3 # c-4 is insanely destructive. you should not be getting much help in planting tons of it and this price should make you reconsider
   categories:
   - UplinkExplosives
 
@@ -543,9 +597,9 @@
   productEntity: EmpGrenade
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkExplosives
 
@@ -557,9 +611,9 @@
   productEntity: PenExplodingBox
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkExplosives
 
@@ -569,7 +623,7 @@
   description: uplink-exploding-syndicate-bomb-desc
   productEntity: SyndicateBomb
   cost:
-    Telecrystal: 33
+    Telecrystal: 33 # KS14 Change: x3
   categories:
     - UplinkExplosives
   restockTime: 1800
@@ -585,7 +639,7 @@
   description: uplink-exploding-syndicate-bomb-desc
   productEntity: SyndicateBomb
   cost:
-    Telecrystal: 33
+    Telecrystal: 33 # KS14 Change: x3
   categories:
     - UplinkExplosives
   conditions:
@@ -601,9 +655,9 @@
   productEntity: ClusterGrenade
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 15
+    Telecrystal: 15 # KS14 Change: x3
   cost:
-    Telecrystal: 24
+    Telecrystal: 24 # KS14 Change: x3
   categories:
   - UplinkExplosives
 
@@ -614,9 +668,9 @@
   productEntity: GrenadeShrapnel
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkExplosives
 
@@ -640,9 +694,9 @@
   productEntity: ElectricalDisruptionKit
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   cost:
-    Telecrystal: 18
+    Telecrystal: 18 # KS14 Change: x3
   categories:
     - UplinkExplosives
 
@@ -690,7 +744,7 @@
   icon: { sprite: /Textures/Objects/Weapons/Guns/Ammunition/Magazine/Shotgun/m12.rsi, state: slug }
   productEntity: MagazineShotgunSlug
   cost:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   categories:
   - UplinkAmmo
 
@@ -702,7 +756,7 @@
   icon: { sprite: /Textures/Objects/Weapons/Guns/Ammunition/Magazine/CaselessRifle/caseless_pistol_mag.rsi, state: red-icon }
   productEntity: MagazinePistolCaselessRifle
   cost:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   categories:
   - UplinkAmmo
 
@@ -714,7 +768,7 @@
   icon: { sprite: /Textures/Objects/Weapons/Guns/Ammunition/SpeedLoaders/Magnum/magnum_speed_loader.rsi, state: icon }
   productEntity: SpeedLoaderMagnumAP
   cost:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   categories:
   - UplinkAmmo
 
@@ -725,7 +779,7 @@
   description: uplink-mosin-ammo-desc
   productEntity: MagazineBoxLightRifle
   cost:
-    Telecrystal: 3
+    Telecrystal: 9 # KS14 Change: x3
   categories:
   - UplinkAmmo
 
@@ -736,7 +790,7 @@
   description: uplink-estoc-ammo-desc
   productEntity: MagazineRifle
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkAmmo
 
@@ -747,7 +801,7 @@
   description: uplink-sniper-ammo-desc
   productEntity: MagazineBoxAntiMateriel
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkAmmo
 
@@ -757,7 +811,7 @@
   description: uplink-ammo-bundle-desc
   productEntity: ClothingBackpackDuffelSyndicateAmmoFilled
   cost:
-    Telecrystal: 45
+    Telecrystal: 45 # KS14 Change: x3
   categories:
   - UplinkAmmo
   conditions:
@@ -780,9 +834,9 @@
   productEntity: HypopenBox
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   cost:
-    Telecrystal: 18
+    Telecrystal: 18 # KS14 Change: x3
   categories:
   - UplinkChemicals
 
@@ -794,9 +848,9 @@
   productEntity: HypoDartBox
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkChemicals
 
@@ -808,9 +862,9 @@
   productEntity: ChemicalSynthesisKit
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkChemicals
 
@@ -821,7 +875,7 @@
   icon: { sprite: /Textures/Structures/Wallmounts/signs.rsi, state: bio }
   productEntity: ClothingBackpackDuffelZombieBundle
   cost:
-    Telecrystal: 120
+    Telecrystal: 120 # KS14 Change: x3
   categories:
   - UplinkChemicals
   conditions:
@@ -841,7 +895,7 @@
   icon: { sprite: /Textures/Structures/Wallmounts/signs.rsi, state: bio }
   productEntity: ClothingBackpackDuffelZombieBundleSyndicate #KS14 addition for syndies
   cost:
-    Telecrystal: 75
+    Telecrystal: 75 # KS14 Change: x3
   categories:
   - UplinkChemicals
   conditions:
@@ -857,9 +911,9 @@
   productEntity: ChemistryBottleNocturine
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   cost:
-    Telecrystal: 18
+    Telecrystal: 18 # KS14 Change: x3
   categories:
   - UplinkChemicals
 
@@ -870,9 +924,9 @@
   productEntity: MedkitCombatFilled
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 12 #KS14 change
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkChemicals
 
@@ -883,9 +937,9 @@
   productEntity: CombatMedipen
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkChemicals
 
@@ -896,9 +950,9 @@
   productEntity: Stimpack
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 3 #KS14 change
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6 #KS14 change
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkChemicals
 
@@ -909,9 +963,9 @@
   productEntity: StimkitFilled
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 9 #KS14 change
+    Telecrystal: 9 # KS14 Change: x3
   cost:
-    Telecrystal: 15 #KS14 change
+    Telecrystal: 15 # KS14 Change: x3
   categories:
   - UplinkChemicals
 
@@ -921,7 +975,7 @@
   description: uplink-cigarettes-desc
   productEntity: CigPackSyndicate
   cost:
-    Telecrystal: 3
+    Telecrystal: 8 # KS14 Change: x3, increased 3 -> 8
   categories:
   - UplinkChemicals
 
@@ -932,9 +986,9 @@
   productEntity: ClothingBackpackDuffelNukieMedicalBundleFilled #KS14 change, renamed it cause i added syndicate version
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 48
+    Telecrystal: 48 # KS14 Change: x3
   cost:
-    Telecrystal: 72
+    Telecrystal: 72 # KS14 Change: x3
   categories:
   - UplinkChemicals
   conditions:
@@ -954,7 +1008,7 @@
   description: uplink-syndicate-id-card-desc
   productEntity: SyndicateIDCard
   cost:
-    Telecrystal: 1
+    Telecrystal: 3 # KS14 Change: x3
   categories:
   - UplinkDeception
 
@@ -965,9 +1019,9 @@
   productEntity: AgentIDCard
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   categories:
   - UplinkDeception
 
@@ -978,9 +1032,9 @@
   productEntity: StealthBox
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 15
+    Telecrystal: 15 # KS14 Change: x3
   categories:
   - UplinkDeception
 
@@ -991,9 +1045,9 @@
   productEntity: ChameleonProjector
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 6 #KS14 change
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 9 #KS14 change
+    Telecrystal: 9 # KS14 Change: x3
   categories:
   - UplinkDeception
 
@@ -1005,9 +1059,9 @@
   productEntity: BoxEncryptionKeySyndie # Two for the price of one
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkDeception
 
@@ -1018,7 +1072,7 @@
   icon: { sprite: /Textures/Objects/Devices/encryption_keys.rsi, state: ai_label }
   productEntity: EncryptionKeyBinarySyndicate
   cost:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   categories:
   - UplinkDeception
 
@@ -1028,7 +1082,7 @@
   description: uplink-cyberpen-desc
   productEntity: CyberPen
   cost:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   categories:
   - UplinkDeception
 
@@ -1038,7 +1092,7 @@
   description: uplink-decoy-disk-desc
   productEntity: NukeDiskFake
   cost:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   categories:
   - UplinkDeception
 
@@ -1049,9 +1103,9 @@
   productEntity: LanternFlash
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkDeception
 
@@ -1062,9 +1116,9 @@
   productEntity: BriefcaseSyndieLobbyingBundleFilled
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
     - UplinkDeception
 
@@ -1086,9 +1140,9 @@
   productEntity: ClothingBackpackDuffelSyndicateDecoyKitFilled
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   cost:
-    Telecrystal: 18
+    Telecrystal: 18 # KS14 Change: x3
   categories:
   - UplinkDeception
 
@@ -1099,9 +1153,9 @@
   productEntity: SyndicateBombFake
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkDeception
   restockTime: 1800
@@ -1118,9 +1172,9 @@
   productEntity: SyndicateBombFake
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 1
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 4
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkDeception
   conditions:
@@ -1138,9 +1192,9 @@
   productEntity: AccessBreaker
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkDisruption
 
@@ -1151,9 +1205,9 @@
   productEntity: Emag
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   cost:
-    Telecrystal: 15
+    Telecrystal: 15 # KS14 Change: x3
   categories:
   - UplinkDisruption
 
@@ -1164,9 +1218,9 @@
   productEntity: RadioJammer
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   categories:
   - UplinkDisruption
 
@@ -1177,11 +1231,29 @@
   productEntity: BorgModuleSyndicateWeapon
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   cost:
-    Telecrystal: 15
+    Telecrystal: 15 # KS14 Change: x3
   categories:
   - UplinkDisruption
+
+- type: listing
+  id: UplinkDisposableTurret
+  name: uplink-disposable-turret-name
+  description: uplink-disposable-turret-desc
+  productEntity: ToolboxElectricalTurretFilled
+  discountCategory: usualDiscounts
+  discountDownTo:
+    Telecrystal: 6 # KS14 Change: x3
+  cost:
+    Telecrystal: 12 # KS14 Change: x3
+  categories:
+  - UplinkDisruption
+  # conditions: # KS14: Allowed in nukeops uplink
+  # - !type:StoreWhitelistCondition
+  #   blacklist:
+  #     tags:
+  #     - NukeOpsUplink
 
 - type: listing
   id: UplinkSyndicateMartyrModule
@@ -1191,9 +1263,9 @@
   icon: { sprite: /Textures/Objects/Specific/Robotics/borgmodule.rsi, state: syndicateborgbomb }
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
     - UplinkDisruption
 
@@ -1203,7 +1275,7 @@
   description: uplink-soap-desc
   productEntity: SoapSyndie
   cost:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   categories:
   - UplinkDisruption
 
@@ -1214,9 +1286,9 @@
   productEntity: SlipocalypseClusterSoap
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkDisruption
 
@@ -1227,9 +1299,9 @@
   productEntity: ToolboxSyndicateFilled
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 2 # KS14 Change: x3, then 3 -> 2
   cost:
-    Telecrystal: 6
+    Telecrystal: 4 # KS14 Change: x3, then 6 -> 4
   categories:
   - UplinkDisruption
 
@@ -1240,9 +1312,9 @@
   productEntity: SyndicateJawsOfLife
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkDisruption
 
@@ -1267,27 +1339,23 @@
   productEntity: PowerSink
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   cost:
-    Telecrystal: 24
+    Telecrystal: 24 # KS14 Change: x3
   categories:
-  - UplinkDisruption
-  conditions:
-  - !type:BuyerWhitelistCondition
-      blacklist:
-        components:
-          - SurplusBundle
+  - UplinkExplosives
 
 - type: listing
-  id: UplinkAntimovCircuitBoard
-  name: uplink-antimov-law-name
-  description: uplink-antimov-law-desc
-  productEntity: AntimovCircuitBoard
+  id: UplinkSyndimovCircuitKit
+  name: uplink-syndimov-law-name
+  description: uplink-syndimov-law-desc
+  icon: { sprite: /Textures/Objects/Storage/boxicons.rsi, state: syndicate_circuit }
+  productEntity: SyndimovCircuitKit
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 30
+    Telecrystal: 30 # KS14 Change: x3
   cost:
-    Telecrystal: 42
+    Telecrystal: 42 # KS14 Change: x3
   categories:
   - UplinkDisruption
   conditions:
@@ -1297,7 +1365,7 @@
        - NukeOpsUplink
 
 - type: listing
-  id: UplinkNukieAntimovCircuitBoard
+  id: UplinkAntimovCircuitBoard
   name: uplink-antimov-law-name
   description: uplink-antimov-law-desc
   productEntity: AntimovCircuitBoard
@@ -1320,7 +1388,7 @@
   description: uplink-surplus-bundle-desc
   productEntity: CrateSyndicateSurplusBundle
   cost:
-    Telecrystal: 60
+    Telecrystal: 60 # KS14 Change: x3
   categories:
   - UplinkDisruption
   conditions:
@@ -1339,7 +1407,7 @@
   description: uplink-super-surplus-bundle-desc
   productEntity: CrateSyndicateSuperSurplusBundle
   cost:
-    Telecrystal: 120
+    Telecrystal: 120 # KS14 Change: x3
   categories:
   - UplinkDisruption
   conditions:
@@ -1358,7 +1426,7 @@
   description: uplink-starter-kit-desc
   productEntity: ClothingBackpackDuffelSyndicateFilledStarterKit
   cost:
-    Telecrystal: 120
+    Telecrystal: 120 # KS14 Change: x3
   categories:
   - UplinkDisruption
   conditions:
@@ -1371,7 +1439,6 @@
         components:
         - SurplusBundle
 
-
 - type: listing
   id: UplinkSingarityBeacon
   name: uplink-singularity-beacon-name
@@ -1379,19 +1446,31 @@
   productEntity: SingularityBeacon
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   cost:
-    Telecrystal: 36
+    Telecrystal: 36 # KS14 Change: x3
   categories:
     - UplinkDisruption
+  conditions:
+  - !type:StoreWhitelistCondition
+    whitelist:
+      tags:
+      - NukeOpsUplink
+  - !type:BuyerWhitelistCondition
+    blacklist:
+      components:
+      - SurplusBundle
 
 - type: listing
   id: UplinkCameraBug
   name: uplink-cameraBug-name
   description: uplink-cameraBug-desc
   productEntity: CameraBug
+  discountCategory: usualDiscounts
+  discountDownTo:
+    Telecrystal: 1 # KS14 Change: x3, then became 1tc
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkDisruption
 
@@ -1405,9 +1484,9 @@
   productEntity: BoxHoloparasite
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 24
+    Telecrystal: 24 # KS14 Change: x3
   cost:
-    Telecrystal: 42
+    Telecrystal: 42 # KS14 Change: x3
   categories:
   - UplinkAllies
   conditions:
@@ -1424,9 +1503,9 @@
   icon: { sprite: Objects/Devices/communication.rsi, state: old-radio-urist }
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 21
+    Telecrystal: 21 # KS14 Change: x3
   cost:
-    Telecrystal: 42
+    Telecrystal: 42 # KS14 Change: x3
   categories:
   - UplinkAllies
   conditions:
@@ -1442,7 +1521,7 @@
   productEntity: ReinforcementRadioSyndicateNukeops
   icon: { sprite: Objects/Devices/communication.rsi, state: old-radio-nukeop }
   cost:
-    Telecrystal: 90
+    Telecrystal: 90 # KS14 Change: x3
   categories:
   - UplinkAllies
   conditions:
@@ -1458,7 +1537,7 @@
   productEntity: ReinforcementRadioSyndicateCyborgAssault
   icon: { sprite: Objects/Devices/communication.rsi, state: old-radio-borg-assault }
   cost:
-    Telecrystal: 195
+    Telecrystal: 195 # KS14 Change: x3
   categories:
     - UplinkAllies
   conditions:
@@ -1475,9 +1554,9 @@
   icon: { sprite: Objects/Devices/communication.rsi, state: old-radio-ancestor }
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   cost:
-    Telecrystal: 18
+    Telecrystal: 18 # KS14 Change: x3
   categories:
   - UplinkAllies
   conditions:
@@ -1494,9 +1573,9 @@
   icon: { sprite: Objects/Devices/communication.rsi, state: old-radio-ancestor }
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   cost:
-    Telecrystal: 18
+    Telecrystal: 18 # KS14 Change: x3
   categories:
   - UplinkAllies
   conditions:
@@ -1512,9 +1591,9 @@
   productEntity: DehydratedSpaceCarp
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkAllies
   conditions:
@@ -1531,9 +1610,9 @@
   productEntity: ReinforcementRadioSyndicateSyndiCat
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   cost:
-    Telecrystal: 18
+    Telecrystal: 18 # KS14 Change: x3
   categories:
     - UplinkAllies
 
@@ -1544,7 +1623,7 @@
   icon: { sprite: /Textures/Objects/Fun/pai.rsi, state: syndicate-icon-pai-off }
   productEntity: SyndicatePersonalAI
   cost:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   categories:
     - UplinkAllies
   conditions:
@@ -1561,9 +1640,9 @@
   productEntity: StorageImplanter
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   cost:
-    Telecrystal: 24
+    Telecrystal: 24 # KS14 Change: x3
   categories:
     - UplinkImplants
   conditions:
@@ -1580,9 +1659,9 @@
   productEntity: FreedomImplanter
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   cost:
-    Telecrystal: 15
+    Telecrystal: 15 # KS14 Change: x3
   categories:
     - UplinkImplants
 
@@ -1594,9 +1673,9 @@
   productEntity: ScramImplanter
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   cost:
-    Telecrystal: 18 # it's a gamble that may kill you easily so 6 TC per 2 uses, second one more of a backup
+    Telecrystal: 18 # KS14 Change: x3 # it's a gamble that may kill you easily so 6 TC per 2 uses, second one more of a backup
   categories:
     - UplinkImplants
 
@@ -1608,9 +1687,9 @@
   productEntity: DnaScramblerImplanter
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 15
+    Telecrystal: 15 # KS14 Change: x3
   categories:
     - UplinkImplants
 
@@ -1618,13 +1697,13 @@
   id: UplinkEmpImplanter
   name: uplink-emp-implanter-name
   description: uplink-emp-implanter-desc
-  icon: { sprite: /Textures/Objects/Magic/magicactions.rsi, state: shield }
+  icon: { sprite: /Textures/Effects/emp.rsi, state: emp_disable }
   productEntity: EmpImplanter
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
     - UplinkImplants
 
@@ -1636,9 +1715,9 @@
   productEntity: RadioImplanter
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkImplants
 
@@ -1649,7 +1728,7 @@
   icon: { sprite: /Textures/Actions/Implants/implants.rsi, state: explosive }
   productEntity: MicroBombImplanter
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkImplants
   conditions:
@@ -1669,7 +1748,7 @@
   icon: { sprite: /Textures/Actions/Implants/implants.rsi, state: explosive }
   productEntity: MacroBombImplanter
   cost:
-    Telecrystal: 39
+    Telecrystal: 39 # KS14 Change: x3
   categories:
     - UplinkImplants
   conditions:
@@ -1689,7 +1768,7 @@
   icon: { sprite: /Textures/Objects/Magic/magicactions.rsi, state: gib }
   productEntity: DeathAcidifierImplanter
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
     - UplinkImplants
   conditions:
@@ -1706,9 +1785,9 @@
   productEntity: UplinkImplanter
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkImplants
   conditions:
@@ -1723,7 +1802,7 @@
   description: uplink-deathrattle-implant-desc
   productEntity: BoxDeathRattleImplants
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkImplants
   conditions:
@@ -1743,9 +1822,9 @@
   icon: { sprite: Interface/Actions/actions_fakemindshield.rsi, state: icon-on }
   productEntity: FakeMindShieldImplanter
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkImplants
 
@@ -1757,9 +1836,9 @@
   productEntity: VoiceMaskImplanter
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 1
+    Telecrystal: 3
   cost:
-    Telecrystal: 2
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkImplants
 
@@ -1772,9 +1851,9 @@
   productEntity: JetpackBlackFilled
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkWearables
 
@@ -1785,9 +1864,9 @@
   productEntity: ClothingMaskGasVoiceChameleon
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkWearables
 
@@ -1797,7 +1876,7 @@
   description: uplink-holster-desc
   productEntity: ClothingBeltSyndieHolster
   cost:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   categories:
   - UplinkWearables
 
@@ -1807,7 +1886,7 @@
   description: uplink-chest-rig-desc
   productEntity: ClothingBeltMilitaryWebbing
   cost:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   categories:
   - UplinkWearables
 
@@ -1815,13 +1894,13 @@
   id: UplinkChameleon
   name: uplink-chameleon-name
   description: uplink-chameleon-desc
-  productEntity: ClothingBackpackChameleonFill
+  productEntity: ClothingBackpackChameleonFillAgent
   icon: { sprite: /Textures/Clothing/Uniforms/Jumpsuit/rainbow.rsi, state: icon }
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
     - UplinkWearables
 
@@ -1832,9 +1911,9 @@
   productEntity: ClothingShoesChameleonNoSlips
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkWearables
 
@@ -1845,9 +1924,9 @@
   productEntity: ClothingOuterVestWeb
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   categories:
   - UplinkWearables
 
@@ -1858,9 +1937,9 @@
   productEntity: ClothingOuterVestWebElite
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   cost:
-    Telecrystal: 15
+    Telecrystal: 15 # KS14 Change: x3
   categories:
   - UplinkWearables
 
@@ -1871,9 +1950,9 @@
   productEntity: ClothingShoesBootsMagSyndie
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkWearables
 
@@ -1885,9 +1964,9 @@
   productEntity: ClothingBackpackDuffelSyndicateEVABundle
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkWearables
 
@@ -1899,9 +1978,9 @@
   productEntity: ClothingOuterHardsuitCarp
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkWearables
 
@@ -1913,9 +1992,9 @@
   productEntity: ClothingBackpackDuffelSyndicateHardsuitBundle
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   cost:
-    Telecrystal: 24
+    Telecrystal: 24 # KS14 Change: x3
   categories:
   - UplinkWearables
 
@@ -1926,7 +2005,7 @@
   icon: { sprite: /Textures/Clothing/OuterClothing/Armor/syndie-raid.rsi, state: icon }
   productEntity: ClothingBackpackSyndicateRaidBundle
   cost:
-    Telecrystal: 24
+    Telecrystal: 24 # KS14 Change: x3
   categories:
   - UplinkWearables
   conditions:
@@ -1943,9 +2022,9 @@
   productEntity: ClothingBackpackDuffelSyndicateEliteHardsuitBundle
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 21
+    Telecrystal: 21 # KS14 Change: x3
   cost:
-    Telecrystal: 30
+    Telecrystal: 30 # KS14 Change: x3
   categories:
   - UplinkWearables
 
@@ -1957,9 +2036,9 @@
   productEntity: CrateCybersunJuggernautBundle
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 24
+    Telecrystal: 24 # KS14 Change: x3
   cost:
-    Telecrystal: 36
+    Telecrystal: 36 # KS14 Change: x3
   categories:
   - UplinkWearables
 
@@ -1969,7 +2048,7 @@
   description: uplink-clothing-eyes-hud-syndicate-desc
   productEntity: ClothingEyesHudSyndicate
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
     - UplinkWearables
   conditions:
@@ -1979,22 +2058,12 @@
           - NukeOpsUplink
 
 - type: listing
-  id: UplinkClothingConductingGloves
-  name: uplink-clothing-conducting-gloves-name
-  description: uplink-clothing-conducting-gloves-desc
-  productEntity: ClothingHandsGlovesConducting
-  cost:
-    Telecrystal: 3
-  categories:
-  - UplinkWearables
-
-- type: listing
   id: UplinkBackpackSyndicate
   name: uplink-backpack-syndicate-name
   description: uplink-backpack-syndicate-desc
   productEntity: ClothingBackpackSyndicate
   cost:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   categories:
     - UplinkWearables
 
@@ -2006,7 +2075,7 @@
   description: uplink-barber-scissors-desc
   productEntity: BarberScissors
   cost:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   categories:
   - UplinkPointless
 
@@ -2016,7 +2085,17 @@
   description: uplink-snack-box-desc
   productEntity: HappyHonkNukieSnacks
   cost:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
+  categories:
+  - UplinkPointless
+
+- type: listing
+  id: UplinkClothingConductingGloves
+  name: uplink-clothing-conducting-gloves-name
+  description: uplink-clothing-conducting-gloves-desc
+  productEntity: ClothingHandsGlovesConducting
+  cost:
+    Telecrystal: 3 # KS14 Change: x3
   categories:
   - UplinkPointless
 
@@ -2027,9 +2106,9 @@
   productEntity: RevolverCapGun
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkPointless
 
@@ -2040,12 +2119,16 @@
   productEntity: RubberStampSyndicate
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkPointless
+  conditions:
+  - !type:ListingLimitedStockCondition
+    stock: 1
 
+# KS14: Removed
 # - type: listing
 #   id: UplinkCatEars
 #   name: uplink-cat-ears-name
@@ -2062,9 +2145,12 @@
   description: uplink-outlaw-hat-desc
   productEntity: ClothingHeadHatOutlawHat
   cost:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   categories:
   - UplinkPointless
+  conditions:
+  - !type:ListingLimitedStockCondition
+    stock: 1
 
 - type: listing
   id: UplinkOutlawGlasses
@@ -2072,7 +2158,7 @@
   description: uplink-outlaw-glasses-desc
   productEntity: ClothingEyesGlassesOutlawGlasses
   cost:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   categories:
   - UplinkPointless
 
@@ -2082,7 +2168,7 @@
   description: uplink-costume-pyjama-desc
   productEntity: ClothingBackpackDuffelSyndicatePyjamaBundle
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkPointless
 
@@ -2092,7 +2178,7 @@
   description: uplink-costume-clown-desc
   productEntity: ClothingBackpackDuffelSyndicateCostumeClown
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkPointless
 
@@ -2102,7 +2188,7 @@
   description: uplink-carp-suit-bundle-desc
   productEntity: ClothingBackpackDuffelSyndicateCarpSuit
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkPointless
 
@@ -2112,9 +2198,12 @@
   description: uplink-operative-suit-desc
   productEntity: ClothingUniformJumpsuitOperative
   cost:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   categories:
   - UplinkPointless
+  conditions:
+  - !type:ListingLimitedStockCondition
+    stock: 1
 
 - type: listing
   id: UplinkOperativeSkirt
@@ -2122,9 +2211,12 @@
   description: uplink-operative-skirt-desc
   productEntity: ClothingUniformJumpskirtOperative
   cost:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   categories:
   - UplinkPointless
+  conditions:
+  - !type:ListingLimitedStockCondition
+    stock: 1
 
 - type: listing
   id: UplinkBalloon
@@ -2132,9 +2224,14 @@
   description: uplink-balloon-desc
   productEntity: BalloonSyn
   cost:
-    Telecrystal: 60
+    Telecrystal: 60 # KS14 Change: x3
   categories:
   - UplinkPointless
+  conditions:
+  - !type:BuyerWhitelistCondition
+    blacklist:
+      components:
+      - SurplusBundle
 
 - type: listing
   id: UplinkScarfSyndieRed
@@ -2142,9 +2239,12 @@
   description: uplink-scarf-syndie-red-desc
   productEntity: ClothingNeckScarfStripedSyndieRed
   cost:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   categories:
   - UplinkPointless
+  conditions:
+  - !type:ListingLimitedStockCondition
+    stock: 1
 
 - type: listing
   id: UplinkScarfSyndieGreen
@@ -2152,9 +2252,12 @@
   description: uplink-scarf-syndie-green-desc
   productEntity: ClothingNeckScarfStripedSyndieGreen
   cost:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   categories:
     - UplinkPointless
+  conditions:
+  - !type:ListingLimitedStockCondition
+    stock: 1
 
 - type: listing
   id: UplinkSyndicateBusinessCard
@@ -2167,17 +2270,6 @@
   - !type:ListingLimitedStockCondition
     stock: 3
 
-#KS14
-- type: listing
-  id: UplinkBoombox
-  name: uplink-boombox-name
-  description: uplink-boombox-desc
-  productEntity: Boombox
-  cost:
-    Telecrystal: 3 # epic for gunning down tiders with an L6 therefore its got to be cheap
-  categories:
-    - UplinkPointless
-
 # Job Specific
 
 - type: listing
@@ -2187,9 +2279,9 @@
   productEntity: GatfruitSeeds
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   cost:
-    Telecrystal: 18
+    Telecrystal: 18 # KS14 Change: x3
   categories:
   - UplinkJob
   conditions:
@@ -2198,32 +2290,15 @@
     - Botanist
 
 - type: listing
-  id: uplinkRiggedBoxingGloves # KS14: Removed 'boxer' suffix
-  name: uplink-rigged-boxing-gloves-name
-  description: uplink-rigged-boxing-gloves-desc
-  productEntity: ClothingHandsGlovesBoxingRigged
-  discountCategory: usualDiscounts
-  discountDownTo:
-    Telecrystal: 6
-  cost:
-    Telecrystal: 12
-  categories:
-    - UplinkJob
-  conditions:
-    - !type:BuyerJobCondition
-      whitelist:
-      - Passenger # KS14: Changed from boxer to passenger
-
-- type: listing
   id: uplinkNecronomicon
   name: uplink-necronomicon-name
   description: uplink-necronomicon-desc
   productEntity: BibleNecronomicon
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkJob
   conditions:
@@ -2238,9 +2313,9 @@
   productEntity: HolyHandGrenade
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 24
+    Telecrystal: 24 # KS14 Change: x3
   cost:
-    Telecrystal: 60
+    Telecrystal: 60 # KS14 Change: x3
   categories:
   - UplinkJob
   conditions:
@@ -2255,9 +2330,9 @@
   productEntity: RevolverCapGunFake
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkJob
   conditions:
@@ -2275,9 +2350,9 @@
   productEntity: TrashBananaPeelExplosiveUnarmed
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkJob
   conditions:
@@ -2292,9 +2367,9 @@
   productEntity: ClusterBananaPeel
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   cost:
-    Telecrystal: 18
+    Telecrystal: 18 # KS14 Change: x3
   categories:
   - UplinkJob
   conditions:
@@ -2310,9 +2385,9 @@
   productEntity: BoxHoloclown
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 18
+    Telecrystal: 18 # KS14 Change: x3
   cost:
-    Telecrystal: 36
+    Telecrystal: 36 # KS14 Change: x3
   categories:
   - UplinkJob
   conditions:
@@ -2326,10 +2401,10 @@
   description: uplink-hot-potato-desc
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   productEntity: HotPotato
   cost:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   categories:
   - UplinkJob
   conditions:
@@ -2348,9 +2423,9 @@
   productEntity: WeaponPistolCHIMPUpgradeKit
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 0
+    Telecrystal: 0 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkJob
   conditions:
@@ -2365,9 +2440,9 @@
   productEntity: WetFloorSignMineExplosive
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 12 # was 4, with my buff made it 5 to be closer to minibomb -panzer; KS14 - back to 4 cause noone buys this geeg
+    Telecrystal: 12 # KS14 Change: x3 # was 4, with my buff made it 5 to be closer to minibomb -panzer; KS14 - back to 4 cause noone buys this geeg
   categories:
   - UplinkJob
   conditions:
@@ -2382,7 +2457,7 @@
   icon: { sprite:  Objects/Misc/monkeycube.rsi, state: box}
   productEntity: SyndicateSpongeBox
   cost:
-    Telecrystal: 15 # KS14 change, noone buys ts so let it be cheaper
+    Telecrystal: 15 # KS14 Change: x3 # KS14 change, noone buys ts so let it be cheaper
   categories:
   - UplinkJob
   conditions:
@@ -2400,19 +2475,15 @@
   productEntity: CaneSheathFilled
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   categories:
   - UplinkJob
   conditions:
   - !type:BuyerJobCondition
     whitelist:
     - Librarian
-  - !type:BuyerWhitelistCondition
-    blacklist:
-      components:
-      - SurplusBundle
 
 - type: listing
   id: UplinkCombatBakery
@@ -2422,9 +2493,9 @@
   productEntity: CombatBakeryKit
   discountCategory: usualDiscounts
   discountDownTo:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkJob
   conditions:
@@ -2440,7 +2511,7 @@
   icon: { sprite:  Objects/Tools/Lighters/syndielighter.rsi, state: icon}
   productEntity: UplinkLighterBox
   cost:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   categories:
   - UplinkPointless
 
@@ -2450,7 +2521,7 @@
   description: uplink-smuggler-satchel-desc
   productEntity: ClothingBackpackSatchelSmugglerUnanchored
   cost:
-    Telecrystal: 3 #KS14 change
+    Telecrystal: 3 # KS14 Change: x3
   categories:
   - UplinkDeception
 
@@ -2462,9 +2533,9 @@
   productEntity: ClothingBackpackDuffelAcolyteBundle
   discountCategory: rareDiscounts #KS14 change - im not a big fan of 0.0001% chances
   discountDownTo:
-    Telecrystal: 9
+    Telecrystal: 9 # KS14 Change: x3
   cost:
-    Telecrystal: 12
+    Telecrystal: 12 # KS14 Change: x3
   categories:
   - UplinkJob
   conditions:
@@ -2480,9 +2551,9 @@
   productEntity: SawAdvanced
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 3
+    Telecrystal: 3 # KS14 Change: x3
   cost:
-    Telecrystal: 6
+    Telecrystal: 6 # KS14 Change: x3
   categories:
   - UplinkJob
   conditions:
@@ -2497,9 +2568,9 @@
   productEntity: ClothingBackpackDuffelSyndicateMedicalBundleFilled
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 36
+    Telecrystal: 36 # KS14 Change: x3
   cost:
-    Telecrystal: 54
+    Telecrystal: 54 # KS14 Change: x3
   categories:
   - UplinkJob # KS14 - added simplified version of nukie med bundle, lets see how it will play out
   conditions:
@@ -2516,9 +2587,9 @@
   productEntity: WeaponSubMachineGunBriefcase
   discountCategory: rareDiscounts # KS14
   discountDownTo:
-    Telecrystal: 30
+    Telecrystal: 30 # KS14 Change: x3
   cost:
-    Telecrystal: 45
+    Telecrystal: 45 # KS14 Change: x3
   categories:
   - UplinkJob
   conditions:

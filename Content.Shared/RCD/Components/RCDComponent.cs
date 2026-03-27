@@ -3,6 +3,7 @@
 // SPDX-FileCopyrightText: 2025 gus
 // SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2026 github_actions[bot]
+// SPDX-FileCopyrightText: 2026 nabegator220
 //
 // SPDX-License-Identifier: MIT
 
@@ -125,10 +126,3 @@ public enum RpdMode : byte
     Free = 3,
     // Starlight End
 }
-
-// KS14 Addition
-/// <summary>
-///     Raised locally for an RCD before it tries building something
-/// </summary>
-[ByRefEvent]
-public record struct AttemptUseRcdEvent(EntityUid RcdUid, EntityUid User, bool Cancelled = false);

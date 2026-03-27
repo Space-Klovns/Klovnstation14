@@ -28,7 +28,7 @@
 // SPDX-FileCopyrightText: 2026 github_actions[bot]
 // SPDX-FileCopyrightText: 2026 nabegator220
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Client.Stylesheets;
 using Content.Client.UserInterface.Controls;
@@ -94,7 +94,7 @@ namespace Content.Client.Chemistry.UI
         /// <param name="state">State data sent by the server.</param>
         public void UpdateState(BoundUserInterfaceState state)
         {
-            var castState = (ReagentDispenserBoundUserInterfaceState) state;
+            var castState = (ReagentDispenserBoundUserInterfaceState)state;
             UpdateContainerInfo(castState);
             UpdateReagentsList(castState.Inventory);
 

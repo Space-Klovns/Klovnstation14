@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 nabegator220
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Shared.Administration.Logs;
 using Content.Shared.Destructible;
@@ -73,7 +73,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
     {
         if (!_query.TryComp(uid, out var comp) ||
             !_physicsQuery.TryComp(uid, out var physics) ||
-            FindHardFixture(target) is not {} otherFixture)
+            FindHardFixture(target) is not { } otherFixture)
             return;
 
         DoHit((uid, comp, physics), target, otherFixture);
@@ -117,9 +117,11 @@ public sealed class PredictedProjectileSystem : EntitySystem
 
         var otherName = ToPrettyString(target);
         var damageRequired = _destructible.DestroyedAt(target);
+        var totalDamage = _damageable.GetTotalDamage(target);
+
         if (TryComp<DamageableComponent>(target, out var damageable))
         {
-            damageRequired -= damageable.TotalDamage;
+            damageRequired -= totalDamage;
             damageRequired = FixedPoint2.Max(damageRequired, FixedPoint2.Zero);
         }
 
@@ -161,18 +163,19 @@ public sealed class PredictedProjectileSystem : EntitySystem
     }
     private bool TryPenetrate(Entity<ProjectileComponent> projectile, EntityUid target, DamageSpecifier damage, FixedPoint2 damageRequired)
     {
-        var comp = projectile.Comp;
-
         // If penetration is to be considered, we need to do some checks to see if the projectile should stop.
-        if (comp.PenetrationThreshold == 0)
+        if (projectile.Comp.PenetrationThreshold == 0)
             return false;
+
         // If a damage type is required, stop the bullet if the hit entity doesn't have that type.
-        if (comp.PenetrationDamageTypeRequirement != null)
+        if (projectile.Comp.PenetrationDamageTypeRequirement != null)
         {
-            foreach (var requiredDamageType in comp.PenetrationDamageTypeRequirement)
+            foreach (var requiredDamageType in projectile.Comp.PenetrationDamageTypeRequirement)
             {
-                if (!damage.DamageDict.Keys.Contains(requiredDamageType))
-                    return false;
+                if (damage.DamageDict.Keys.Contains(requiredDamageType))
+                    continue;
+
+                return false;
             }
         }
 
@@ -182,11 +185,11 @@ public sealed class PredictedProjectileSystem : EntitySystem
             return false;
         }
 
-        if (!comp.ProjectileSpent)
+        if (!projectile.Comp.ProjectileSpent)
         {
-            comp.PenetrationAmount += damageRequired;
+            projectile.Comp.PenetrationAmount += damageRequired;
             // The projectile has dealt enough damage to be spent.
-            if (comp.PenetrationAmount >= comp.PenetrationThreshold)
+            if (projectile.Comp.PenetrationAmount >= projectile.Comp.PenetrationThreshold)
             {
                 return false;
             }

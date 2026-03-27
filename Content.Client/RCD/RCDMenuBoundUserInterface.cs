@@ -8,7 +8,7 @@
 // SPDX-FileCopyrightText: 2026 Rinary
 // SPDX-FileCopyrightText: 2026 github_actions[bot]
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Client.Popups;
 using Content.Client.UserInterface.Controls;

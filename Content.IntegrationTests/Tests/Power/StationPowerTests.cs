@@ -7,7 +7,7 @@
 // SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
 // SPDX-FileCopyrightText: 2026 nabegator220
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using System.Collections.Generic;
 using System.Linq;
@@ -31,7 +31,33 @@ public sealed class StationPowerTests
     /// </summary>
     private const float MinimumPowerDurationSeconds = 10 * 60;
 
-    private static readonly string[] GameMaps = PostMapInitTest.GameMaps; // KS14: Made same
+    private static readonly string[] GameMaps = PostMapInitTest.GameMaps; // KS14: Use this instead
+    // private static readonly string[] GameMaps =
+    // [
+    //     "Bagel",
+    //     "Box",
+    //     // KS14: Removed elkridge
+    //     "Fland",
+    //     "Marathon",
+    //     // KS14: Removed oasis
+    //     "Packed",
+    //     // KS14: Removed plasma, relic
+    //     "Snowball",
+    //     "Reach",
+    //     // KS14: Removed exo
+
+    //     "Saltern", // KS14: Added
+    //     "Meta", // KS14: Added
+
+    //     "Mira", // KS14: Added
+    //     "Omega", // KS14: Added
+    //     "Spire", // KS14: Added
+    //     "Jellyfish", // KS14: Added
+
+    //     "Wonderland", // KS14: Added
+
+    //     "Frezon", // KS14: Added
+    // ];
 
     [Test, TestCaseSource(nameof(GameMaps))]
     public async Task TestStationStartingPowerWindow(string mapProtoId)

@@ -68,7 +68,7 @@
 # SPDX-FileCopyrightText: 2025 nabegator220
 # SPDX-FileCopyrightText: 2025 qwerltaz
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 # Bounds Guide
 #1D2L3U4R
@@ -1007,4 +1007,3 @@
       gender: male
   - type: Loadout
     prototypes: [ MobPollyGear ]
-

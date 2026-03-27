@@ -42,7 +42,7 @@
 # SPDX-FileCopyrightText: 2025 Minemoder5000
 # SPDX-FileCopyrightText: 2025 beck-thompson
 #
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MIT
 
 - type: job
   id: HeadOfPersonnel
@@ -97,6 +97,8 @@
   - Cargo
   - Atmospherics
   - Medical
+  - GenpopEnter
+  - GenpopLeave
   special:
   - !type:AddImplantSpecial
     implants: [ MindShieldImplant ]
@@ -127,4 +129,3 @@
     mask: ClothingMaskNeckGaiterRed
     neck: ClothingNeckCloakHop
     outerClothing: ClothingOuterWinterHoP
-

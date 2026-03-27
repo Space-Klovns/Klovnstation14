@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
+#
+# SPDX-License-Identifier: MPL-2.0
+
+- type: rules
+  id: KsOutsideIcemoon
+  rules:
+  - !type:GridInRangeRule
+    inverted: true
+    range: 3
+    gridComponents:
+    - type: StationMember
+  - !type:NearbyTilesPercentRule
+    ignoreAnchored: false
+    percent: 0.1
+    tiles: [ FloorSnow ]
+    range: 10
+
+- type: ambientMusic
+  id: KsIcemoon
+  sound:
+    params:
+      volume: -2.5
+    collection: KsAmbienceIcemoon
+  rules: KsOutsideIcemoon
+  interruptable: true
+  priority: 7

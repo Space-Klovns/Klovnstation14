@@ -20,7 +20,7 @@
 // SPDX-FileCopyrightText: 2026 Riley
 // SPDX-FileCopyrightText: 2026 github_actions[bot]
 //
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 
 using Content.Client.Guidebook.Components;
 using Content.Client.UserInterface.Controls;
@@ -80,7 +80,7 @@ namespace Content.Client.Chemistry.UI
         {
             base.UpdateState(state);
 
-            var castState = (ReagentDispenserBoundUserInterfaceState) state;
+            var castState = (ReagentDispenserBoundUserInterfaceState)state;
             _window?.UpdateState(castState); //Update window state
         }
     }

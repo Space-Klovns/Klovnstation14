@@ -4,7 +4,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 using Robust.Shared.Map;
-using Robust.Shared.Network;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
@@ -16,11 +15,10 @@ namespace Content.Shared._KS14.PredictedSpawning;
 
 /// <summary>
 ///     Contains replacements for <see cref="EntityManager.PredictedSpawn(string?, Robust.Shared.Prototypes.ComponentRegistry?, bool)"/>
-///         and it's million variants, because RT's implementation is very bad. 
+///         and it's million variants, because RT's implementation is very bad.
 /// </summary>
 public abstract class KsSharedPredictedSpawnSystem : EntitySystem
 {
-    [Dependency] private readonly INetManager _netManager = default!;
     [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
 
     private EntityQuery<PhysicsComponent> _physicsQuery = default!;
@@ -45,7 +43,7 @@ public abstract class KsSharedPredictedSpawnSystem : EntitySystem
 
     /// <inheritdoc cref="PredictedSpawn(string, ComponentRegistry?, bool)"/>
     public new EntityUid PredictedSpawnAttachedTo(string entityProtoId, EntityCoordinates coordinates, ComponentRegistry? componentOverrides = null, Angle rotation = default)
-        => FlagPredictedAndReturn(EntityManager.PredictedSpawnAttachedTo(entityProtoId, coordinates, overrides: componentOverrides, rotation: rotation));
+        => FlagPredictedAndReturn(PredictedSpawnAttachedTo(entityProtoId, coordinates, overrides: componentOverrides, rotation: rotation));
 
     /// <summary>
     ///     Flags the given entity as predicted.

@@ -47,7 +47,6 @@
     ports:
     - RemoteDroneSender
   - type: SurveillanceCameraMonitor
-    neverAutomaticallyHeartbeat: true
 
   # UI
   - type: ActivatableUI
@@ -62,7 +61,7 @@
   parent: [ BaseMob, BaseStructureDynamic ]
   id: RemoteDroneFpv
   name: fpv drone
-  description: A relic of a historic war. Must be linked to a drone controller to work. Uses about 3 joules of energy per second when active.
+  description: A relic of a historic war. Must be linked to a drone controller to work. Uses about 8 joules of energy per second when active.
   components:
   # Misc
   - type: Sprite
@@ -87,16 +86,16 @@
   - type: DamageOnHighSpeedImpact
     damage:
       types:
-        Brute: 25
+        Blunt: 40
     minimumSpeed: 3
-    speedDamageFactor: 4
+    speedDamageFactor: 2
     soundHit:
       collection: MetalThud
     damageCooldown: 0.8
 
   # Cell
   - type: PowerCellDraw
-    drawRate: 3 # 120 seconds on a small cell
+    drawRate: 8 # ~1.5 min flight time on medium cell (720J)
     enabled: false
   - type: PowerCellSlot
     cellSlotId: cell_slot
@@ -162,7 +161,6 @@
     emptiedContainerId: storagebase
     dropStoragePort: FpvDroneTrigger
   - type: SurveillanceCamera
-    mobile: True  # Goobstation - mobile cameras fix
   - type: Item
     size: Ginormous
 
