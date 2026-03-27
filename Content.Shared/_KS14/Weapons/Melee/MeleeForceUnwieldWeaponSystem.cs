@@ -4,6 +4,7 @@ using Content.Shared.Weapons.Melee;
 using Content.Shared.Weapons.Melee.Events;
 using Content.Shared.Wieldable;
 using Content.Shared.Wieldable.Components;
+using Robust.Shared.Random;
 
 namespace Content.Shared._KS14.Weapons.Melee;
 
@@ -15,6 +16,7 @@ public sealed class MeleeForceUnwieldWeaponSystem : EntitySystem
 {
     [Dependency] private readonly SharedWieldableSystem _wieldable = default!;
     [Dependency] private readonly SharedPopupSystem _popup = default!;
+    [Dependency] private readonly IRobustRandom _random = default!;
 
     public override void Initialize()
     {
@@ -29,7 +31,17 @@ public sealed class MeleeForceUnwieldWeaponSystem : EntitySystem
         if (!TryComp<MeleeWeaponComponent>(args.Used, out var meleeWeaponComp))
             return;
 
-        var prob = meleeWeaponComp.
+        var damageSpec = meleeWeaponComp.Damage;
+        var prob = 0L;
+
+        foreach (var (key, value) in damageSpec.DamageDict)
+        {
+            if (ent.Comp.UnwieldDict.ContainsKey(key))
+                prob = Math.Clamp(Math.Max(prob, (long)(damageSpec.DamageDict[key] * ent.Comp.UnwieldDict[key])), 0L, 100L);
+        }
+
+        if (_random.NextFloat(100) > prob)
+            return;
 
         // Evil KS14 hack
         // the weapon grants the MeleeForceUnwieldWeaponComponent to the guy holding it

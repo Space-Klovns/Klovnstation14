@@ -94,7 +94,6 @@
   - type: SpeedModifiedOnWield # KS14
     walkModifier: 0.9
     sprintModifier: 0.9
-  - type: ProneWieldBonus # KS14
 
 - type: entity
   name: L6C ROW
