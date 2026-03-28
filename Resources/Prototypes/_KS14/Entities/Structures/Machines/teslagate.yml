@@ -3,14 +3,12 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-
-
 - type: entity
   parent: [BaseMachinePowered, ConstructibleMachine]
   id: TeslaGate
   name: tesla gate
   suffix: "1x1, 3.2 sec"
-  description: It keeps people like you from walking through
+  description: It keeps people like you from walking through.
   placement:
     mode: SnapgridCenter
   components:
@@ -92,6 +90,14 @@
 
 - type: entity
   parent: TeslaGate
+  id: TeslaGateAlwaysEnabled
+  suffix: "1x1, 3.2 sec, Enabled"
+  components:
+  - type: TeslaGate
+    enabled: true
+
+- type: entity
+  parent: TeslaGate
   id: TeslaGateQuick
   name: overcharged tesla gate
   description: Oh no. Yeah, you're not getting through that.
@@ -128,4 +134,17 @@
     layers:
     - state: fax-machine
   - type: StaticPrice
-    price: 1500
+    price: 900
+
+- type: entity
+  parent: CrateSecgear
+  id: CrateSecurityTeslaGate
+  name: tesla-gate flatpack crate
+  description: Contains three flatpacks for tesla gates. Requires Armory access to open.
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:AllSelector
+        children:
+        - id: TeslaGateFlatpack
+          amount: 3

@@ -254,6 +254,7 @@
     - CrateSecurityTrackingMindshieldImplants
     - CrateSecurityHelmet
     - CrateSecurityArmor
+    - CrateSecurityTeslaGate # KS14
     - CrateRestraints
     - CrateEmergencyExplosive
     - CrateSecurityBiosuit

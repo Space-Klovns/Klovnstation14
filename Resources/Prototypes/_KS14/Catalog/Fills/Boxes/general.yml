@@ -3,12 +3,12 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-
 # Stored as 2x2, but has 3x3 storage
 - type: entity
   parent: BoxCardboardSmall
   id: BoxCardboardSmallOutsideBigInside
   name: bluespace-assisted small cardboard box
+  suffix: "2x2 outside, 3x3 inside"
   components:
   - type: Item
     size: Small

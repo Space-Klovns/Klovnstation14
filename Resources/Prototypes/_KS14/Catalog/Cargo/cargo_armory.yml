@@ -1,0 +1,9 @@
+- type: cargoProduct
+  id: SecurityTeslaGate
+  icon:
+    sprite: _KS14/Structures/Machines/teslagate.rsi
+    state: base
+  product: CrateSecurityTeslaGate
+  cost: 3100
+  category: cargoproduct-category-name-security
+  group: market
