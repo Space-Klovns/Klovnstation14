@@ -12,8 +12,8 @@
     - type: StationMember
   - !type:NearbyTilesPercentRule
     ignoreAnchored: false
-    percent: 0.1
-    tiles: [ FloorSnow ]
+    percent: 0.5
+    tiles: [ FloorSnow, FloorIce ]
     range: 10
 
 - type: ambientMusic
