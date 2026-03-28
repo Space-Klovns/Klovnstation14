@@ -32,6 +32,8 @@ public sealed partial class WallMountComponent : Component, IComponentTreeEntry<
     public Angle Direction = Angle.Zero;
 
     // ES START
+    [ViewVariables(VVAccess.ReadWrite)]
+    public float OriginalAlpha = 1f; // KS14
     public EntityUid? TreeUid { get; set; }
     public DynamicTree<ComponentTreeEntry<WallMountComponent>>? Tree { get; set; }
     public bool AddToTree => Arc != Angle.FromDegrees(360);

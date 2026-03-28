@@ -18,13 +18,15 @@ public sealed class ESWallMountVisibilityOverlay : Overlay
     private readonly SpriteSystem _sprite;
     private readonly ESWallMountTreeSystem _tree;
 
+    private const float Feather = 0.65f; // KS14
+
     public ESWallMountVisibilityOverlay()
     {
         IoCManager.InjectDependencies(this);
 
-        _xform  = _ent.EntitySysManager.GetEntitySystem<TransformSystem>();
+        _xform = _ent.EntitySysManager.GetEntitySystem<TransformSystem>();
         _sprite = _ent.EntitySysManager.GetEntitySystem<SpriteSystem>();
-        _tree   = _ent.EntitySysManager.GetEntitySystem<ESWallMountTreeSystem>();
+        _tree = _ent.EntitySysManager.GetEntitySystem<ESWallMountTreeSystem>();
     }
 
     // b4 entities so we can modify their visibility and such
@@ -48,6 +50,9 @@ public sealed class ESWallMountVisibilityOverlay : Overlay
 
             if (!args.Viewport.Eye.DrawFov)
             {
+                if (!sprite.Visible) // KS14
+                    _sprite.SetColor((uid, sprite), sprite.Color.WithAlpha(entry.Component.OriginalAlpha));
+
                 _sprite.SetVisible((uid, sprite), true);
                 continue;
             }
@@ -74,6 +79,32 @@ public sealed class ESWallMountVisibilityOverlay : Overlay
             var angleBetween = Angle.ShortestDistance(distAngle, wallmountScreenRotation);
             var visible = angleBetween > -MathHelper.PiOver2 && angleBetween < MathHelper.PiOver2;
             //Log.Info($"wallmount {Name(uid)} screenrot {wallmountScreenRotation.Degrees} distangle {distAngle.Degrees} anglebetween {angleBetween.Degrees}");
+
+            // KS14 start
+            if (sprite.Visible != visible)
+            {
+                if (visible)
+                    entry.Component.OriginalAlpha = sprite.Color.A;
+                else
+                    _sprite.SetColor((uid, sprite), sprite.Color.WithAlpha(entry.Component.OriginalAlpha));
+            }
+
+            var z = Math.Abs((float)angleBetween.Theta) / MathHelper.PiOver2;
+            var d = z < Feather;
+            var r = d ? 0f : z - Feather;
+            var x = d ? 0f : entry.Component.OriginalAlpha / Feather;
+            var alpha = float.Lerp(entry.Component.OriginalAlpha, 0f - x, Math.Min(r, 1f));
+
+            if (visible)
+            {
+                _sprite.SetColor((uid, sprite), sprite.Color.WithAlpha(alpha));
+
+                if (sprite.Visible != visible)
+                    entry.Component.OriginalAlpha = sprite.Color.A;
+            }
+            else if (sprite.Visible != visible)
+                _sprite.SetColor((uid, sprite), sprite.Color.WithAlpha(entry.Component.OriginalAlpha));
+            // KS14 end
 
             _sprite.SetVisible((uid, sprite), visible);
         }
