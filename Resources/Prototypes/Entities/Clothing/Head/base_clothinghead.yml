@@ -142,6 +142,11 @@
     - HeadTop
     - HeadSide
     - FacialHair
+  # KS14 Start
+  - type: EmoteAudioEffect
+    emoteCategory: Vocal
+    presetId: MuffledMask
+  # KS14 End
 
 - type: entity
   abstract: true
@@ -191,6 +196,11 @@
     - HeadTop
     - HeadSide
     - FacialHair
+  # KS14 Start
+  - type: EmoteAudioEffect
+    emoteCategory: Vocal
+    presetId: MuffledMask
+  # KS14 End
 
 - type: entity
   abstract: true

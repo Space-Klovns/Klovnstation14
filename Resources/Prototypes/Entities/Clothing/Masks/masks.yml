@@ -89,6 +89,11 @@
     layers:
       Snout: Mask
     hideOnToggle: true
+  # KS14 Start
+  - type: EmoteAudioEffect
+    emoteCategory: Vocal
+    presetId: MuffledMask
+  # KS14 End
 
 - type: entity
   parent: [ClothingMaskGas, BaseSecurityContraband]
@@ -110,9 +115,6 @@
         Piercing: 0.95
         Heat: 0.95
   # KS14 Start
-  - type: EmoteAudioEffect
-    emoteCategory: Vocal
-    presetId: MuffledMask
   - type: TriggerOnMobstateChange
     mobState: [ Dead ]
     keyOut: death
