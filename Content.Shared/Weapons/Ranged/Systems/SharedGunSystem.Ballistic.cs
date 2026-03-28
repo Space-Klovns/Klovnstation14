@@ -283,7 +283,7 @@ public abstract partial class SharedGunSystem
             {
                 ent.Comp.UnspawnedCount--;
                 DirtyField(ent!, nameof(BallisticAmmoProviderComponent.UnspawnedCount));
-                ammoEntity = Spawn(ent.Comp.Proto, args.Coordinates);
+                ammoEntity = PredictedSpawnAttachedTo(ent.Comp.Proto, args.Coordinates); // KS14: Predicted
 
                 // <Goob> - put spent ammo back in the gun if it doesn't autocycle
                 if (!ent.Comp.AutoCycle)
