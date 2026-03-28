@@ -58,6 +58,22 @@ public sealed partial class RadioJammerComponent : Component
     [DataField]
     [AutoNetworkedField]
     public int SelectedPowerLevel = 1;
+
+    // KS14
+    /// <summary>
+    ///     Instead of blocking received messages, do we just garble them?
+    /// </summary>
+    [DataField]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public bool GarbleReceivedMessagesInstead = false;
+
+    // KS14
+    /// <summary>
+    ///     Chance for each character in message to be garbled
+    /// </summary>
+    [DataField]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public float GarbleStrength = 0.8f;
 }
 
 [Serializable, NetSerializable]

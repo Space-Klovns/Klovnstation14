@@ -13,6 +13,9 @@ using Robust.Shared.Utility;
 using ClimbableComponent = Content.Shared.Climbing.Components.ClimbableComponent;
 using ClimbingComponent = Content.Shared.Climbing.Components.ClimbingComponent;
 using Robust.Shared.Random;
+using Content.Shared.Access.Components; // KS14: ANK
+using Robust.Shared.Prototypes; // KS14: ANK
+using Content.Shared.Access; // KS14: ANK
 
 namespace Content.Server.NPC.Systems;
 
@@ -81,10 +84,25 @@ public sealed partial class NPCSteeringSystem
             var isAccessRequired = (poly.Data.Flags & PathfindingBreadcrumbFlag.Access) != 0x0;
             var isClimbable = (poly.Data.Flags & PathfindingBreadcrumbFlag.Climb) != 0x0;
 
+            // KS14: ANK Start
+            var hasAnyAccess = false;
+            ICollection<ProtoId<AccessLevelPrototype>> accesses = null!;
+            ICollection<Shared.StationRecords.StationRecordKey> stationKeys = null!;
+            if ((component.Flags & PathFlags.Interact) != 0x0)
+            {
+                var accessSources = _accessSystem.FindPotentialAccessItems(uid);
+                accesses = _accessSystem.FindAccessTags(uid, accessSources);
+                _accessSystem.FindStationRecordKeys(uid, out stationKeys, accessSources);
+
+                hasAnyAccess = accesses.Count > 0 || stationKeys.Count > 0;
+            }
+            // KS14: ANK End
+
             // Just walk into it stupid
-            if (isDoor && !isAccessRequired)
+            if (isDoor && (!isAccessRequired || hasAnyAccess) /* KS14: ANK: made check for hasAnyAccess */)
             {
                 var doorQuery = GetEntityQuery<DoorComponent>();
+                var readerQuery = GetEntityQuery<AccessReaderComponent>(); // KS14: ANK
 
                 // ... At least if it's not a bump open.
                 foreach (var ent in obstacleEnts)
@@ -94,6 +112,14 @@ public sealed partial class NPCSteeringSystem
 
                     if (!door.BumpOpen && (component.Flags & PathFlags.Interact) != 0x0)
                     {
+                        // KS14: ANK Start
+                        if (isAccessRequired && readerQuery.TryGetComponent(ent, out var readerComponent))
+                        {
+                            if (!_accessSystem.IsAllowed(accesses, stationKeys, ent, readerComponent))
+                                continue;
+                        }
+                        // KS14: ANK End
+
                         if (door.State != DoorState.Opening)
                         {
                             _interaction.InteractionActivate(uid, ent);

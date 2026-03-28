@@ -1,0 +1,114 @@
+- type: htnCompound
+  id: KsOperativeHostileCompound
+  branches:
+  - tasks:
+    - !type:HTNCompoundTask
+      task: RangedCombatCompound
+  - tasks:
+    - !type:HTNCompoundTask
+      task: MeleeCombatCompound
+
+  - preconditions:
+    - !type:KeyExistsPrecondition
+      key: LastTargetCoordinates
+    tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:UtilityOperator
+        proto: KsOperativeNearbyCampingMarkers
+        key: CampingTarget
+        keyCoordinates: CampingTargetCoordinates
+
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "Moving to position."
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+        removeKeyOnFinish: false
+        stopOnLineOfSight: false
+        pathfindInPlanning: true
+        targetKey: LastTargetCoordinates
+        pathfindKey: CampingTargetPathfind
+        rangeKey: CampingRange
+
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "Holding position."
+
+    - !type:HTNPrimitiveTask
+      operator: !type:StaticWaitOperator
+        key: CampingTime
+
+  - tasks:
+    - !type:HTNCompoundTask
+      task: KsDoAdvanceCompound
+
+- type: htnCompound
+  id: KsDoAdvanceCompound
+  branches:
+  - tasks:
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "Advancing."
+
+    - !type:HTNPrimitiveTask
+      operator: !type:SetNullOperator
+        key: LastTargetCoordinates
+    - !type:HTNPrimitiveTask
+      operator: !type:UtilityOperator
+        proto: KsOperativeAdvanceMarkers
+        key: CampingTarget
+        keyCoordinates: CampingTargetCoordinates
+
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+        removeKeyOnFinish: false
+        stopOnLineOfSight: false
+        pathfindInPlanning: true
+        targetKey: CampingTargetCoordinates
+        pathfindKey: CampingTargetPathfind
+        rangeKey: CampingRange
+
+    - !type:HTNPrimitiveTask
+      operator: !type:StaticWaitOperator
+        key: AdvanceTime
+
+- type: utilityQuery
+  id: KsOperativeNearbyCampingMarkers
+  query:
+  - !type:ComponentQuery
+    components:
+    - type: NpcCampingSpot
+  considerations:
+  - !type:TargetDistanceCon
+    curve: !type:PresetCurve
+      preset: KsTargetDistanceLessClose
+  - !type:CoordinatesInLOSCon
+    curve: !type:InverseBoolCurve
+    toKey: LastTargetCoordinates
+    radius: 7
+
+- type: utilityQuery
+  id: KsOperativeAdvanceMarkers
+  query:
+  - !type:ComponentQuery
+    components:
+    - type: NpcCampingSpot
+  considerations:
+  - !type:TargetDistanceCon
+    curve: !type:PresetCurve
+      preset: KsTargetDistanceLessClose
+  - !type:CoordinatesInLOSCon
+    curve: !type:InverseBoolCurve
+    toKey: CampingTargetCoordinates
+    radius: 5
+
+- type: utilityCurvePreset # Prefer further than closer, but not too far
+  id: KsTargetDistanceLessClose
+  curve: !type:QuadraticCurve
+    slope: -0.25       # ≈ 1 / (width^2)
+    exponent: 2
+    xOffset: 2.0       # ideal distance
+    yOffset: 1.0

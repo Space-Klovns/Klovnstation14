@@ -139,14 +139,20 @@ public sealed class RadioSystem : EntitySystem
                 continue;
 
             // check if message can be sent to specific receiver
-            var attemptEv = new RadioReceiveAttemptEvent(channel, radioSource, receiver);
+            var attemptEv = new RadioReceiveAttemptEvent(channel, radioSource, receiver, chatMsg /* KS14 */);
             RaiseLocalEvent(ref attemptEv);
             RaiseLocalEvent(receiver, ref attemptEv);
             if (attemptEv.Cancelled)
                 continue;
 
+            // KS14 Start
+            var sentEv = attemptEv.NewChatMessage is { } newChatMsg ?
+                new RadioReceiveEvent(message, messageSource, channel, radioSource, newChatMsg) :
+                ev;
+            // KS14 End
+
             // send the message
-            RaiseLocalEvent(receiver, ref ev);
+            RaiseLocalEvent(receiver, ref sentEv);
         }
 
         if (name != Name(messageSource))

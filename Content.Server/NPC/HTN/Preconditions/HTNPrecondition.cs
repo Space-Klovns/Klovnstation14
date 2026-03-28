@@ -12,7 +12,7 @@ public abstract partial class HTNPrecondition
     /// <param name="sysManager"></param>
     public virtual void Initialize(IEntitySystemManager sysManager)
     {
-        IoCManager.InjectDependencies(this);
+        sysManager.DependencyCollection.InjectDependencies(this); // KS14: ANK: use injectdependencies with system collection, so that entity systems are injected
     }
 
     /// <summary>

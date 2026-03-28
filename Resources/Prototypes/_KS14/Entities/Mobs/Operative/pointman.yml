@@ -1,0 +1,153 @@
+- type: entity
+  parent: MarkerBase
+  id: KsMarkerNpcCamping
+  name: camping marker
+  suffix: KS14, NPC Camping Spot Marker
+  components:
+  - type: Transform
+    anchored: false
+  - type: Sprite
+    layers:
+    - state: blue
+  - type: NpcCampingSpot
+
+## Base
+- type: randomHumanoidSettings
+  id: KsBaseOperative
+  speciesBlacklist:
+  - Vox
+  - Dwarf
+  components:
+  - type: NoSlip
+  - type: MovementSpeedModifier
+    baseSprintSpeed: 3.375
+    baseWalkSpeed: 1.875
+  - type: RandomHumanoidAppearance
+    randomizeName: false
+  - type: NpcFactionMember
+    factions:
+    - Syndicate
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      100: Critical
+      101: Dead
+  - type: HTN
+    rootTask:
+      task: KsOperativeHostileCompound
+    blackboard:
+      VisionRadius: !type:Single
+        17.5
+      AggroVisionRadius: !type:Single
+        25
+      CampingRange: !type:Single
+        0.25
+      CampingTime: !type:Single
+        5
+      AdvanceTime: !type:Single
+        5
+      NavInteract: !type:Bool
+        true
+
+- type: randomHumanoidSettings
+  parents: [ KsBaseOperative ]
+  id: KsBaseEliteOperative
+  speciesBlacklist:
+  - Vox
+  - Dwarf
+  components:
+  - type: NoSlip
+  - type: RandomHumanoidAppearance
+    randomizeName: false
+  - type: NpcFactionMember
+    factions:
+    - Syndicate
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      140: Critical
+      150: Dead
+  - type: HTN
+    rootTask:
+      task: KsOperativeHostileCompound
+    blackboard:
+      VisionRadius: !type:Single
+        17.5
+      AggroVisionRadius: !type:Single
+        25
+      CampingRange: !type:Single
+        0.3
+      CampingTime: !type:Single
+        10
+      AdvanceTime: !type:Single
+        12
+      NavInteract: !type:Bool
+        true
+
+- type: startingGear
+  parent: SyndicateFootsoldierGearRuin
+  id: KsBaseOperativeGear
+  equipment:
+    mask: ClothingMaskGasSecurity
+    eyes: ClothingEyesGlassesSunglasses
+  storage:
+    back:
+    - Machete
+
+- type: startingGear
+  parent: KsBaseOperativeGear
+  id: KsBaseEliteOperativeGear
+  equipment:
+    neck: ClothingNeckMantleHOS
+    feet: ClothingShoesBootsJack
+  storage:
+    back:
+    - EnergySword
+
+## Pistol
+
+- type: entity
+  parent: RandomHumanoidSpawnerERTSecurityEVA
+  id: KsRandomHumanoidSpawnerOperativeArmedPistol
+  name: unknown combatant
+  suffix: KS, Armed, Pistol
+  components:
+  - type: RandomHumanoidSpawner
+    settings: KsOperativeArmedPistol
+
+- type: randomHumanoidSettings
+  parent: KsBaseOperative
+  id: KsOperativeArmedPistol
+  components:
+  - type: Loadout
+    prototypes: [ KsOperativePistolGear ]
+
+- type: startingGear
+  parent: KsBaseOperativeGear
+  id: KsOperativePistolGear
+  inhand:
+  - WeaponPistolMk1
+
+## Shotgun
+
+- type: entity
+  parent: RandomHumanoidSpawnerERTSecurityEVA
+  id: KsRandomHumanoidSpawnerOperativeArmedEnforcer
+  name: unknown combatant
+  suffix: KS, Armed, Elite, Enforcer
+  components:
+  - type: RandomHumanoidSpawner
+    settings: KsEliteOperativeArmedEnforcer
+
+- type: randomHumanoidSettings
+  parent: KsBaseEliteOperative
+  id: KsEliteOperativeArmedEnforcer
+  components:
+  - type: Loadout
+    prototypes: [ KsEliteOperativeEnforcerGear ]
+
+- type: startingGear
+  parent: KsBaseEliteOperativeGear
+  id: KsEliteOperativeEnforcerGear
+  inhand:
+  - WeaponShotgunEnforcer

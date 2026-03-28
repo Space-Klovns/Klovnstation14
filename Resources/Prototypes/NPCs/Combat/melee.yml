@@ -117,6 +117,17 @@
 - type: htnCompound
   id: PickupMeleeCompound
   branches:
+    # KS14: ANK start
+    # look in inventory first
+    - tasks:
+      - !type:HTNPrimitiveTask
+        operator: !type:UtilityOperator
+          proto: InventoryMeleeWeapons
+
+      - !type:HTNPrimitiveTask
+        operator: !type:EquipOperator
+    # KS14: ANK end
+
     - tasks:
         - !type:HTNPrimitiveTask
           operator: !type:UtilityOperator

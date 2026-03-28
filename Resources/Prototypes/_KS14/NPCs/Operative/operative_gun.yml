@@ -1,0 +1,176 @@
+# SPDX-FileCopyrightText: 2023 metalgearsloth
+# SPDX-FileCopyrightText: 2026 nabegator220
+#
+# SPDX-License-Identifier: MIT
+
+# Tries to shoot a target at range.
+- type: htnCompound
+  id: KsOperativeGunCombatCompound
+  branches:
+  # Pick target, then move into range and shoot them.
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:UtilityOperator
+        proto: NearbyGunTargets
+
+    - !type:HTNPrimitiveTask
+      operator: !type:CopyKeyOperator
+        originKey: TargetCoordinates
+        targetKey: LastTargetCoordinates
+
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "CONTACT!!!"
+
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+        shutdownState: PlanFinished
+        pathfindInPlanning: true
+        removeKeyOnFinish: true
+        targetKey: TargetCoordinates
+        pathfindKey: TargetPathfind
+        rangeKey: RangedRange
+
+    - !type:HTNPrimitiveTask
+      preconditions:
+      - !type:KeyExistsPrecondition
+        key: Target
+      operator: !type:GunOperator
+        targetKey: Target
+      services:
+        - !type:UtilityService
+          id: RangedService
+          proto: NearbyGunTargets
+          key: Target
+
+# Selects ammo in range, then moves to it and picks it up
+- type: htnCompound
+  id: KsOperativePickupAmmoCompound
+  branches:
+  # Find ammo then pick it up.
+  - tasks:
+      - !type:HTNPrimitiveTask
+        operator: !type:UtilityOperator
+          proto: NearbyAmmo
+
+      - !type:HTNPrimitiveTask
+        operator: !type:MoveToOperator
+
+      - !type:HTNPrimitiveTask
+        preconditions:
+          - !type:TargetInRangePrecondition
+            targetKey: Target
+            rangeKey: InteractRange
+        operator: !type:InteractWithOperator
+          targetKey: Target
+
+- type: htnCompound
+  id: KsOperativeRangedCombatCompound
+  branches:
+    # Close or rack the gun chamber if necessary
+    - preconditions:
+        - !type:ActiveHandComponentPrecondition
+          components:
+          - type: Gun
+        - !type:GunAmmoPrecondition
+          minPercent: 0.001
+        - !type:NeedToRackBoltPrecondition
+      tasks:
+        - !type:HTNPrimitiveTask
+          operator: !type:RackBoltOperator
+
+    # Wield gun
+    - preconditions:
+      - !type:ActiveHandComponentPrecondition
+        components:
+        - type: Gun
+      - !type:CanWieldPrecondition
+      tasks:
+      - !type:HTNPrimitiveTask
+        operator: !type:WieldOperator
+
+    # Move to target and shoot them if ammo
+    - preconditions:
+      - !type:GunAmmoPrecondition
+        minPercent: 0.001
+      tasks:
+      - !type:HTNCompoundTask
+        task: KsOperativeGunCombatCompound
+
+    # Pickup gun with ammo if we have no gun
+    - preconditions:
+      - !type:ActiveHandComponentPrecondition
+        components:
+        - type: Gun
+        invert: true
+      tasks:
+      - !type:HTNCompoundTask
+        task: PickupGunCompound
+
+    # Discard gun if no ammo
+    - preconditions:
+      - !type:ActiveHandComponentPrecondition
+        components:
+        - type: Gun
+      - !type:GunAmmoPrecondition
+        maxPercent: 0.001
+      tasks:
+      - tasks:
+        - !type:HTNCompoundTask
+          task: KsOperativeReloadOrDiscardActiveGun
+
+- type: htnCompound
+  id: KsOperativeReloadOrDiscardActiveGun
+  branches:
+  - tasks:
+    - !type:HTNCompoundTask
+      task: KsOperativeReloadActiveGun
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:DropOperator
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "I'm out of ammo!"
+
+- type: htnCompound
+  id: KsOperativeReloadActiveGun
+  branches:
+  - tasks:
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "Reloading!"
+
+    # Look for ammo
+    - !type:HTNPrimitiveTask
+      operator: !type:UtilityOperator
+        proto: KsInventoryAmmo
+        key: ChosenAmmo
+
+    - !type:HTNPrimitiveTask
+      operator: !type:CopyKeyOperator
+        originKey: ActiveHand
+        targetKey: WeaponActiveHand
+
+    # Equip ammo in offhand
+    - !type:HTNPrimitiveTask
+      operator: !type:EquipOperator
+        targetKey: ChosenAmmo
+    - !type:HTNPrimitiveTask
+      operator: !type:InteractWithOperator
+        targetKey: ChosenAmmo
+
+- type: utilityQuery
+  id: KsInventoryAmmo
+  query:
+  - !type:InventoryQuery
+  - !type:ComponentFilter
+    components:
+    - type: BallisticAmmoProvider
+    - type: Item
+  considerations:
+  - !type:TargetAmmoMatchesCon
+    curve: !type:BoolCurve
+  # TODO: Get ammo count.
