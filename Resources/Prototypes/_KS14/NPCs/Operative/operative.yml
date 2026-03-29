@@ -3,7 +3,7 @@
   branches:
   - tasks:
     - !type:HTNCompoundTask
-      task: RangedCombatCompound
+      task: KsOperativeRangedCombatCompound
   - tasks:
     - !type:HTNCompoundTask
       task: MeleeCombatCompound
@@ -24,9 +24,8 @@
           line: "Moving to position."
     - !type:HTNPrimitiveTask
       operator: !type:MoveToOperator
-        removeKeyOnFinish: false
+        removeKeyOnFinish: true
         stopOnLineOfSight: false
-        pathfindInPlanning: true
         targetKey: LastTargetCoordinates
         pathfindKey: CampingTargetPathfind
         rangeKey: CampingRange

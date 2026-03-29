@@ -13,7 +13,7 @@ using JetBrains.Annotations;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
-using Content.Shared._KS14.IoC; // KS14: ANK
+using Content.Server._KS14.IoC; // KS14: ANK
 
 namespace Content.Server.NPC.HTN;
 

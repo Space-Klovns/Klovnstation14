@@ -61,11 +61,11 @@ public sealed partial class RadioJammerComponent : Component
 
     // KS14
     /// <summary>
-    ///     Instead of blocking received messages, do we just garble them?
+    ///     Dont block sent messages, and garble received messages instead of blocking them fully.
     /// </summary>
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
-    public bool GarbleReceivedMessagesInstead = false;
+    public bool OnlyGarbleReceivedMessages = false;
 
     // KS14
     /// <summary>

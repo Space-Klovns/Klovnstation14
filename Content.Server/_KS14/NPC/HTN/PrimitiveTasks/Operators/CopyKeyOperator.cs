@@ -11,11 +11,13 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 /// </summary>
 public sealed partial class CopyKeyOperator : HTNOperator
 {
+    [Dependency] private readonly IEntityManager _entityManager = default!;
+
     [DataField(required: true)] public string OriginKey = "Origin";
     [DataField(required: true)] public string TargetKey = "Target";
 
     public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard, CancellationToken _) => (true, new Dictionary<string, object>()
         {
-            {TargetKey, blackboard.GetValue<object>(OriginKey)}
+            {TargetKey, blackboard.GetValueOrDefault<object>(OriginKey, _entityManager)!}
         });
 }

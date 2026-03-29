@@ -21,8 +21,7 @@ public sealed partial class StaticWaitOperator : HTNOperator
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
-        if (!blackboard.TryGetValue<float>(TimerKey, out var timer, _entityManager))
-            return HTNOperatorStatus.Finished;
+        var timer = blackboard.GetValueOrDefault<float>(TimerKey, _entityManager);
 
         timer += frameTime;
         blackboard.SetValue(TimerKey, timer);

@@ -1,4 +1,4 @@
-namespace Content.Shared._KS14.IoC;
+namespace Content.Server._KS14.IoC;
 
 public sealed class SystemCollectionHookSystem : EntitySystem
 {
@@ -6,10 +6,11 @@ public sealed class SystemCollectionHookSystem : EntitySystem
 
     /// <inheritdoc cref="EntitySystemManager.DependencyCollection"/>
     [Access(Other = AccessPermissions.ReadExecute)]
-    public IDependencyCollection DependencyCollection => ((EntitySystemManager)_entitySystemManager).DependencyCollection;
+    public IDependencyCollection DependencyCollection => _entitySystemManager.DependencyCollection;
     public Action<IDependencyCollection>? OnSystemCollectionAvailable = null;
 
     private bool _initialisedAllSystems = false;
+
     public override void Update(float frameTime) // Best i could do without reflection or some other bs
     {
         base.Update(frameTime);

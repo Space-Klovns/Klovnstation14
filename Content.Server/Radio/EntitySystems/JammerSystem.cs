@@ -37,8 +37,13 @@ public sealed class JammerSystem : SharedJammerSystem
 
     private void OnRadioSendAttempt(ref RadioSendAttemptEvent args)
     {
-        if (ShouldCancel(args.RadioSource, args.Channel.Frequency, out _ /* KS14 */))
+        if (ShouldCancel(args.RadioSource, args.Channel.Frequency, out var radioJammerComponent /* KS14 */))
+        {
+            if (radioJammerComponent!.OnlyGarbleReceivedMessages) // KS14
+                return;
+
             args.Cancelled = true;
+        }
     }
 
     private void OnRadioReceiveAttempt(ref RadioReceiveAttemptEvent args)
@@ -47,7 +52,7 @@ public sealed class JammerSystem : SharedJammerSystem
         {
             // KS14 start
             if (radioJammerComponent is { } &&
-                radioJammerComponent.GarbleReceivedMessagesInstead)
+                radioJammerComponent.OnlyGarbleReceivedMessages)
             {
                 var oldMessage = args.OriginalChatMessage.Message.Message;
                 var garbledMessage = GarbleString(oldMessage, radioJammerComponent.GarbleStrength);

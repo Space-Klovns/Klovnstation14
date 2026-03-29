@@ -15,7 +15,7 @@ public abstract partial class HTNOperator
     /// </summary>
     public virtual void Initialize(IEntitySystemManager sysManager)
     {
-        sysManager.DependencyCollection.InjectDependencies(this); // KS14: ANK: use injectdependencies with system collection, so that entity systems are injected
+        sysManager.DependencyCollection.InjectDependencies(this, oneOff: true); // KS14: ANK: use injectdependencies with system collection, so that entity systems are injected
     }
 
     /// <summary>

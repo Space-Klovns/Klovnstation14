@@ -31,7 +31,9 @@ using System.Linq;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Temperature.Components;
-using Content.Shared._KS14.IoC; // KS14: ANK
+using Content.Server._KS14.IoC; // KS14: ANK
+using Content.Shared.Containers.ItemSlots;
+using Content.Shared.Weapons.Ranged.Systems; // KS14: ANK
 
 namespace Content.Server.NPC.Systems;
 
@@ -58,6 +60,7 @@ public sealed class NPCUtilitySystem : EntitySystem
     [Dependency] private readonly TurretTargetSettingsSystem _turretTargetSettings = default!;
     [Dependency] private readonly DamageableSystem _damageable = default!;
     [Dependency] private readonly SystemCollectionHookSystem _collectionHook = default!; // KS14: ANK
+    [Dependency] private readonly ItemSlotsSystem _itemSlotsSystem = default!; // KS14: ANK
 
     private EntityQuery<PuddleComponent> _puddleQuery;
     private EntityQuery<TransformComponent> _xformQuery;
@@ -273,12 +276,12 @@ public sealed class NPCUtilitySystem : EntitySystem
                 {
                     if (!blackboard.TryGetValue(NPCBlackboard.ActiveHand, out string? activeHand, EntityManager) ||
                         !_hands.TryGetHeldItem(owner, activeHand, out var heldEntity) ||
-                        !TryComp<BallisticAmmoProviderComponent>(heldEntity, out var heldGun))
+                        !_itemSlotsSystem.TryGetSlot(heldEntity.Value, SharedGunSystem.MagazineSlot, out var magazineSlot)) // KS14: ANK: use itemslot
                     {
                         return 0f;
                     }
 
-                    if (_whitelistSystem.IsWhitelistFailOrNull(heldGun.Whitelist, targetUid))
+                    if (_whitelistSystem.IsWhitelistFailOrNull(magazineSlot.Whitelist, targetUid)) // KS14: ANK: use itemslot
                     {
                         return 0f;
                     }

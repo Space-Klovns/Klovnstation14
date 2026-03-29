@@ -26,7 +26,7 @@ public sealed partial class SwapToFreeHandOperator : HTNOperator
             return (true, new Dictionary<string, object>()
             {
                 {
-                    NPCBlackboard.ActiveHand, handsComp.Hands[hand]
+                    NPCBlackboard.ActiveHand, hand
                 },
                 {
                     NPCBlackboard.ActiveHandFree, true
@@ -43,11 +43,19 @@ public sealed partial class SwapToFreeHandOperator : HTNOperator
         var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
         var handSystem = _entManager.System<HandsSystem>();
 
-        if (!handSystem.TrySelectEmptyHand(owner))
-        {
+        // KS14: ANK: Changed logic for this to ACTUALLY WORK
+        if (!_entManager.TryGetComponent<HandsComponent>(owner, out var handsComponent))
             return HTNOperatorStatus.Failed;
+
+        foreach (var hand in handsComponent.Hands.Keys)
+        {
+            if (handSystem.TryGetHeldItem((owner, handsComponent), hand, out _))
+                continue;
+
+            handSystem.SetActiveHand((owner, handsComponent), hand);
+            return HTNOperatorStatus.Finished;
         }
 
-        return HTNOperatorStatus.Finished;
+        return HTNOperatorStatus.Failed;
     }
 }

@@ -5,16 +5,15 @@ using Content.Shared.Hands.Components;
 
 namespace Content.Server.NPC.HTN.PrimitiveTasks.Operators.Interactions;
 
-
 /// <summary>
 ///     Swaps to the hand id at the given key.
 /// </summary>
 public sealed partial class SwapToHandOperator : HTNOperator
 {
-    [Dependency] private readonly IEntityManager _entManager = default!;
+    [Dependency] private readonly IEntityManager _entityManager = default!;
     [Dependency] private readonly HandsSystem _handsSystem = default!;
 
-    [Dependency] private readonly EntityQuery<HandsComponent> _handsQuery = default!;
+    //[Dependency] private readonly EntityQuery<HandsComponent> _handsQuery = default;
 
     /// <summary>
     ///     Key of ID of the hand.
@@ -25,8 +24,9 @@ public sealed partial class SwapToHandOperator : HTNOperator
 
     public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard, CancellationToken cancelToken)
     {
-        if (!blackboard.TryGetValue<string>(Key, out var handId, _entManager) ||
-            !_handsQuery.HasComponent(blackboard.GetValue<EntityUid>(NPCBlackboard.Owner)))
+        if (!blackboard.TryGetValue<string>(Key, out var handId, _entityManager) ||
+            !blackboard.TryGetValue<EntityUid>(NPCBlackboard.Owner, out var ownerUid, _entityManager) ||
+            !_entityManager.TryGetComponent<HandsComponent>(ownerUid, out var handsComponent))
         {
             return (false, null);
         }
@@ -37,7 +37,7 @@ public sealed partial class SwapToHandOperator : HTNOperator
                 NPCBlackboard.ActiveHand, handId
             },
             {
-                NPCBlackboard.ActiveHandFree, ProbablyFree
+                NPCBlackboard.ActiveHandFree, _handsSystem.HandIsEmpty((ownerUid, handsComponent), handId)
             },
         });
     }

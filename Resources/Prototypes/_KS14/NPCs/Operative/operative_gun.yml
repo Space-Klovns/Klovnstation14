@@ -20,6 +20,7 @@
 
     - !type:HTNPrimitiveTask # VOICELINE
       operator: !type:SpeakOperator
+        cooldown: 5
         speech: !type:SingleSpeakOperatorSpeech
           line: "CONTACT!!!"
 
@@ -68,57 +69,56 @@
 - type: htnCompound
   id: KsOperativeRangedCombatCompound
   branches:
-    # Close or rack the gun chamber if necessary
-    - preconditions:
-        - !type:ActiveHandComponentPrecondition
-          components:
-          - type: Gun
-        - !type:GunAmmoPrecondition
-          minPercent: 0.001
-        - !type:NeedToRackBoltPrecondition
-      tasks:
-        - !type:HTNPrimitiveTask
-          operator: !type:RackBoltOperator
-
-    # Wield gun
-    - preconditions:
-      - !type:ActiveHandComponentPrecondition
-        components:
-        - type: Gun
-      - !type:CanWieldPrecondition
-      tasks:
+  # Close or rack the gun chamber if necessary
+  - preconditions:
+    - !type:ActiveHandComponentPrecondition
+      components:
+      - type: Gun
+    - !type:GunAmmoPrecondition
+      minPercent: 0.001
+    - !type:NeedToRackBoltPrecondition
+    tasks:
       - !type:HTNPrimitiveTask
-        operator: !type:WieldOperator
+        operator: !type:RackBoltOperator
 
-    # Move to target and shoot them if ammo
-    - preconditions:
-      - !type:GunAmmoPrecondition
-        minPercent: 0.001
-      tasks:
-      - !type:HTNCompoundTask
-        task: KsOperativeGunCombatCompound
+  # Wield gun
+  - preconditions:
+    - !type:ActiveHandComponentPrecondition
+      components:
+      - type: Gun
+    - !type:CanWieldPrecondition
+    tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:WieldOperator
 
-    # Pickup gun with ammo if we have no gun
-    - preconditions:
-      - !type:ActiveHandComponentPrecondition
-        components:
-        - type: Gun
-        invert: true
-      tasks:
-      - !type:HTNCompoundTask
-        task: PickupGunCompound
+  # Move to target and shoot them if ammo
+  - preconditions:
+    - !type:GunAmmoPrecondition
+      minPercent: 0.001
+    tasks:
+    - !type:HTNCompoundTask
+      task: KsOperativeGunCombatCompound
 
-    # Discard gun if no ammo
-    - preconditions:
-      - !type:ActiveHandComponentPrecondition
-        components:
-        - type: Gun
-      - !type:GunAmmoPrecondition
-        maxPercent: 0.001
-      tasks:
-      - tasks:
-        - !type:HTNCompoundTask
-          task: KsOperativeReloadOrDiscardActiveGun
+  # Pickup gun with ammo if we have no gun
+  - preconditions:
+    - !type:ActiveHandComponentPrecondition
+      components:
+      - type: Gun
+      invert: true
+    tasks:
+    - !type:HTNCompoundTask
+      task: PickupGunCompound
+
+  # Discard gun if no ammo
+  - preconditions:
+    - !type:ActiveHandComponentPrecondition
+      components:
+      - type: Gun
+    - !type:GunAmmoPrecondition
+      maxPercent: 0.001
+    tasks:
+    - !type:HTNCompoundTask
+      task: KsOperativeReloadOrDiscardActiveGun
 
 - type: htnCompound
   id: KsOperativeReloadOrDiscardActiveGun
@@ -129,6 +129,7 @@
   - tasks:
     - !type:HTNPrimitiveTask
       operator: !type:DropOperator
+
     - !type:HTNPrimitiveTask # VOICELINE
       operator: !type:SpeakOperator
         speech: !type:SingleSpeakOperatorSpeech
@@ -141,7 +142,7 @@
     - !type:HTNPrimitiveTask # VOICELINE
       operator: !type:SpeakOperator
         speech: !type:SingleSpeakOperatorSpeech
-          line: "Reloading!"
+          line: "Changing mags!"
 
     # Look for ammo
     - !type:HTNPrimitiveTask
@@ -154,13 +155,28 @@
         originKey: ActiveHand
         targetKey: WeaponActiveHand
 
+    - !type:HTNPrimitiveTask
+      operator: !type:GetActiveHeldItemOperator
+        key: ActiveWeapon
+
+    - !type:HTNPrimitiveTask
+      operator: !type:SwapToFreeHandOperator
+
     # Equip ammo in offhand
     - !type:HTNPrimitiveTask
       operator: !type:EquipOperator
-        targetKey: ChosenAmmo
+        target: ChosenAmmo
+
     - !type:HTNPrimitiveTask
-      operator: !type:InteractWithOperator
-        targetKey: ChosenAmmo
+      operator: !type:InteractUsingOperator
+        targetKey: ActiveWeapon
+
+    - !type:HTNPrimitiveTask
+      operator: !type:DropOperator
+
+    - !type:HTNPrimitiveTask
+      operator: !type:SwapToHandOperator
+        key: WeaponActiveHand
 
 - type: utilityQuery
   id: KsInventoryAmmo

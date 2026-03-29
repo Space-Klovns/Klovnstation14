@@ -48,8 +48,8 @@
         sound:
           collection: MetalBreak
   - type: RadioJammer
-    garbleReceivedMessagesInstead: true
-    garbleStrength: 0.35
+    onlyGarbleReceivedMessages: true
+    garbleStrength: 0.65
     selectedPowerLevel: 0
     settings:
     - wattage: 0

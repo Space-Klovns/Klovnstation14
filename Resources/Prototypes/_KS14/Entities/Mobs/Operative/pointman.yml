@@ -36,6 +36,8 @@
     rootTask:
       task: KsOperativeHostileCompound
     blackboard:
+      ReloadActDelay: !type:Single
+        1
       VisionRadius: !type:Single
         17.5
       AggroVisionRadius: !type:Single
@@ -127,27 +129,38 @@
   id: KsOperativePistolGear
   inhand:
   - WeaponPistolMk1
+  storage:
+    back:
+    - Machete
+    - MagazinePistol
 
 ## Shotgun
 
 - type: entity
   parent: RandomHumanoidSpawnerERTSecurityEVA
-  id: KsRandomHumanoidSpawnerOperativeArmedEnforcer
+  id: KsRandomHumanoidSpawnerOperativeArmedBulldog
   name: unknown combatant
-  suffix: KS, Armed, Elite, Enforcer
+  suffix: KS, Armed, Elite, Bulldog
   components:
   - type: RandomHumanoidSpawner
-    settings: KsEliteOperativeArmedEnforcer
+    settings: KsEliteOperativeArmedBulldog
 
 - type: randomHumanoidSettings
   parent: KsBaseEliteOperative
-  id: KsEliteOperativeArmedEnforcer
+  id: KsEliteOperativeArmedBulldog
   components:
   - type: Loadout
-    prototypes: [ KsEliteOperativeEnforcerGear ]
+    prototypes: [ KsEliteOperativeBulldogGear ]
 
 - type: startingGear
   parent: KsBaseEliteOperativeGear
-  id: KsEliteOperativeEnforcerGear
+  id: KsEliteOperativeBulldogGear
   inhand:
-  - WeaponShotgunEnforcer
+  - WeaponShotgunBulldog
+  storage:
+    back:
+    - EnergySword
+    - MagazineShotgun
+    - MagazineShotgun
+    - MagazineShotgun
+    - CombatMedipen
