@@ -1,10 +1,3 @@
-// SPDX-FileCopyrightText: 2022 DrSmugleaf
-// SPDX-FileCopyrightText: 2024 Nemanja
-// SPDX-FileCopyrightText: 2025 Gerkada
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
-//
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
 using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 

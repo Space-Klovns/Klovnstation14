@@ -1,10 +1,3 @@
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
-// SPDX-FileCopyrightText: 2025 jhrushbe
-// SPDX-FileCopyrightText: 2025 rottenheadphones
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
 using JetBrains.Annotations;
 using Robust.Client.UserInterface;

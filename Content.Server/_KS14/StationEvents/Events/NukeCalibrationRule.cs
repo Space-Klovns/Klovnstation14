@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Server.Nuke;
 using Content.Shared.GameTicking.Components;
 using Content.Shared.Station.Components;

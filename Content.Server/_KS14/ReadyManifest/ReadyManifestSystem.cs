@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2025 Gerkada
-//
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
 using Content.Server.EUI;
 using Content.Server.GameTicking;
 using Content.Server.GameTicking.Events;

@@ -1,9 +1,3 @@
-// SPDX-FileCopyrightText: 2025 Gerkada
-// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-//
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
 using Content.Server.Database;
 using Microsoft.EntityFrameworkCore;
 using Robust.Shared.Asynchronous;

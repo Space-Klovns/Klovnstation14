@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-//
-// SPDX-License-Identifier: MIT
-
 using System.Numerics;
 using Content.Shared._KS14.BloodSpray;
 using Content.Shared._KS14.Klovnmed;

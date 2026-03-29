@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2025 jhrushbe
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Shared.Administration.Logs;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;

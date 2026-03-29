@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2025 jhrushbe
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Client.UserInterface;
 using Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
 using JetBrains.Annotations;

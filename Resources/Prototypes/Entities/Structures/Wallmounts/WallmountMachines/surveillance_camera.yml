@@ -1,18 +1,3 @@
-# SPDX-FileCopyrightText: 2022 Flipp Syder
-# SPDX-FileCopyrightText: 2022 Mervill
-# SPDX-FileCopyrightText: 2022 Visne
-# SPDX-FileCopyrightText: 2023 DrSmugleaf
-# SPDX-FileCopyrightText: 2023 Leon Friedrich
-# SPDX-FileCopyrightText: 2024 Ilya246
-# SPDX-FileCopyrightText: 2024 Kara
-# SPDX-FileCopyrightText: 2024 metalgearsloth
-# SPDX-FileCopyrightText: 2025 Spessmann
-# SPDX-FileCopyrightText: 2025 claustro305
-# SPDX-FileCopyrightText: 2025 kosticia
-# SPDX-FileCopyrightText: 2026 FrauzJ
-#
-# SPDX-License-Identifier: MIT
-
 - type: entity
   abstract: true
   id: SurveillanceCameraBase
@@ -54,7 +39,10 @@
   - type: Electrified
     enabled: false
     usesApcPower: true
+  # ES START
   - type: WallMount
+    arc: 360
+  # ES END
   - type: ApcPowerReceiver
   - type: ExtensionCableReceiver
   - type: Eye
@@ -249,7 +237,10 @@
     - type: Construction
       graph: SurveillanceCamera
       node: assembly
+    # ES START
     - type: WallMount
+      arc: 360
+    # ES END
     - type: Transform
       anchored: true
     - type: Damageable

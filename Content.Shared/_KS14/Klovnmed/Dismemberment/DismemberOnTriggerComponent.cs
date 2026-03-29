@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-//
-// SPDX-License-Identifier: MPL-2.0
-
 using Content.Shared.Trigger.Components.Effects;
 using Robust.Shared.GameStates;
 

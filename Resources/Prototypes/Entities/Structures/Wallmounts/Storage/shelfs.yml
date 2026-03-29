@@ -1,16 +1,3 @@
-# SPDX-FileCopyrightText: 2024 IgorAnt028
-# SPDX-FileCopyrightText: 2024 Ilya246
-# SPDX-FileCopyrightText: 2024 Plykiya
-# SPDX-FileCopyrightText: 2024 Sphiral
-# SPDX-FileCopyrightText: 2025 B_Kirill
-# SPDX-FileCopyrightText: 2025 Hyper B
-# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-# SPDX-FileCopyrightText: 2025 beck-thompson
-# SPDX-FileCopyrightText: 2025 kosticia
-# SPDX-FileCopyrightText: 2025 lzk
-#
-# SPDX-License-Identifier: MIT
-
 # Parents
 - type: entity
   parent: BaseWallmount

@@ -1,9 +1,3 @@
-// SPDX-FileCopyrightText: 2025 FrauZj
-// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-//
-// SPDX-License-Identifier: MIT
-
 namespace Content.Shared._Goobstation.Emoting;
 
 /// <summary>

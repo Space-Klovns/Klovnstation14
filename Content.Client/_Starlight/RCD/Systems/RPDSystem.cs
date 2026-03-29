@@ -1,8 +1,3 @@
-// SPDX-FileCopyrightText: 2026 Rinary
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Client.Items;
 using Content.Client.Message;
 using Content.Shared.RCD.Components;

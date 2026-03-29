@@ -1,15 +1,3 @@
-// SPDX-FileCopyrightText: 2024 Aidenkrz
-// SPDX-FileCopyrightText: 2024 Piras314
-// SPDX-FileCopyrightText: 2024 VMSolidus
-// SPDX-FileCopyrightText: 2025 Aiden
-// SPDX-FileCopyrightText: 2025 GoobBot
-// SPDX-FileCopyrightText: 2025 Ilya246
-// SPDX-FileCopyrightText: 2025 Misandry
-// SPDX-FileCopyrightText: 2025 gus
-// SPDX-FileCopyrightText: 2026 nabegator220
-//
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
 using Content.Shared._KS14.Held.Components;
 using Content.Shared.Hands;
 using Content.Shared.Tag;

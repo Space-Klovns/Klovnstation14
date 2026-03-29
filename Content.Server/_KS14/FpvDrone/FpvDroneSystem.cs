@@ -1,8 +1,3 @@
-// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-//
-// SPDX-License-Identifier: MPL-2.0
-
 using Content.Server.SurveillanceCamera;
 using Content.Shared._KS14.FpvDrone;
 using Content.Shared._KS14.RemoteDrone;

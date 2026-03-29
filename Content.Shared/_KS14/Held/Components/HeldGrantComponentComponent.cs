@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2026 nabegator220
-//
-// SPDX-License-Identifier: MPL-2.0
-
 using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.Held.Components // KS14 - this is an analogue to the goobstation clothinggrantsystem that we already ported

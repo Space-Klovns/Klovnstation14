@@ -1,16 +1,3 @@
-# SPDX-FileCopyrightText: 2023 Dvir
-# SPDX-FileCopyrightText: 2023 Kara
-# SPDX-FileCopyrightText: 2024 Brandon Hu
-# SPDX-FileCopyrightText: 2025 ArtisticRoomba
-# SPDX-FileCopyrightText: 2025 Zokkie
-# SPDX-FileCopyrightText: 2025 nabegator220
-# SPDX-FileCopyrightText: 2025 slarticodefast
-# SPDX-FileCopyrightText: 2026 FrauzJ
-# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-# SPDX-FileCopyrightText: 2026 github_actions[bot]
-#
-# SPDX-License-Identifier: MIT
-
 - type: entity
   name: watcher
   id: MobWatcherBase

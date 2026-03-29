@@ -1,8 +1,3 @@
-# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-# SPDX-FileCopyrightText: 2026 github_actions[bot]
-#
-# SPDX-License-Identifier: MIT
-
 - files: ["warning_buzzer.ogg"]
   license: "CC0-1.0"
   copyright: "Created by `qubodup` on freesound.org, edited and converted to Mono and .ogg for Klovnstation 14"

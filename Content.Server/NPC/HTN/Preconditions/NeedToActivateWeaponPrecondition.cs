@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2026 nabegator220
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Server.Hands.Systems;
 using Content.Shared.Item.ItemToggle.Components;
 

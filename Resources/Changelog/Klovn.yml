@@ -839,3 +839,9 @@ Entries:
       message: Removed some old ambience
   id: 105
   time: '2026-03-23T19:59:56.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Fix
+      message: Fixed the right click menu.
+  id: 106
+  time: '2026-03-29T16:49:21.0000000+00:00'

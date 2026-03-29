@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2026 Gerkada
-//
-// SPDX-License-Identifier: MIT
-
 using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.MassDriver;

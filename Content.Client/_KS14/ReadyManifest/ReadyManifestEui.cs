@@ -1,10 +1,3 @@
-// SPDX-FileCopyrightText: 2022 Flipp Syder
-// SPDX-FileCopyrightText: 2022 metalgearsloth
-// SPDX-FileCopyrightText: 2023 Leon Friedrich
-// SPDX-FileCopyrightText: 2025 Gerkada
-//
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
 using Content.Client._KS14.ReadyManifest.UI;
 using Content.Client.Eui;
 using Content.Shared._KS14.ReadyManifest;

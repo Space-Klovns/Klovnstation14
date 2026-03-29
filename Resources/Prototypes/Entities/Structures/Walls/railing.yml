@@ -1,26 +1,3 @@
-# SPDX-FileCopyrightText: 2021 Stanbery Trask
-# SPDX-FileCopyrightText: 2022 Delete69
-# SPDX-FileCopyrightText: 2022 Fishfish458
-# SPDX-FileCopyrightText: 2022 Jacob Tong
-# SPDX-FileCopyrightText: 2022 Peptide90
-# SPDX-FileCopyrightText: 2022 Rane
-# SPDX-FileCopyrightText: 2022 fishfish458
-# SPDX-FileCopyrightText: 2023 Alekshhh
-# SPDX-FileCopyrightText: 2023 Leon Friedrich
-# SPDX-FileCopyrightText: 2023 Vordenburg
-# SPDX-FileCopyrightText: 2024 Ilya246
-# SPDX-FileCopyrightText: 2024 Kara
-# SPDX-FileCopyrightText: 2024 Winkarst
-# SPDX-FileCopyrightText: 2024 chromiumboy
-# SPDX-FileCopyrightText: 2024 lzk
-# SPDX-FileCopyrightText: 2025 metalgearsloth
-# SPDX-FileCopyrightText: 2025 nabegator220
-# SPDX-FileCopyrightText: 2026 Gerkada
-# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-#
-# SPDX-License-Identifier: MIT
-
-
 # TODO KS14: Add 'end' railings
 
 - type: entity

@@ -1,9 +1,3 @@
-# SPDX-FileCopyrightText: 2025 Kate
-# SPDX-FileCopyrightText: 2025 tanuko
-# SPDX-FileCopyrightText: 2026 github_actions[bot]
-#
-# SPDX-License-Identifier: MIT
-
 - type: gameMap
   id: Mira
   mapName: 'Mira Station'

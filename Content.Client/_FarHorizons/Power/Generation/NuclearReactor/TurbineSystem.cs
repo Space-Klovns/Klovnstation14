@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2025 jhrushbe
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Client.Examine;
 using Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
 using Robust.Client.GameObjects;

@@ -1,21 +1,3 @@
-# SPDX-FileCopyrightText: 2024 router
-# SPDX-FileCopyrightText: 2024 username
-# SPDX-FileCopyrightText: 2024 whateverusername0 <whateveremail>
-# SPDX-FileCopyrightText: 2025 Aiden
-# SPDX-FileCopyrightText: 2025 Aviu00
-# SPDX-FileCopyrightText: 2025 BombasterDS
-# SPDX-FileCopyrightText: 2025 BombasterDS2
-# SPDX-FileCopyrightText: 2025 FrauzJ
-# SPDX-FileCopyrightText: 2025 GoobBot
-# SPDX-FileCopyrightText: 2025 Ilya246
-# SPDX-FileCopyrightText: 2025 MoutardOMiel
-# SPDX-FileCopyrightText: 2025 OnsenCapy
-# SPDX-FileCopyrightText: 2025 SX-7
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-# SPDX-FileCopyrightText: 2025 pheenty
-#
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
 - type: emote
   id: Flip
   name: chat-emote-name-flip

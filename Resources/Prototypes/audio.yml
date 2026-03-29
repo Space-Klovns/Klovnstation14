@@ -1,15 +1,3 @@
-# SPDX-FileCopyrightText: 2024 Ed
-# SPDX-FileCopyrightText: 2024 Flareguy
-# SPDX-FileCopyrightText: 2024 metalgearsloth
-# SPDX-FileCopyrightText: 2024 pigeonpeas
-# SPDX-FileCopyrightText: 2024 slarticodefast
-# SPDX-FileCopyrightText: 2025 FrauZj
-# SPDX-FileCopyrightText: 2025 FrauzJ
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-#
-# SPDX-License-Identifier: MIT
-
 - type: ambientMusic
   id: Morgue
   sound:
@@ -218,11 +206,11 @@
     # - /Audio/Lobby/title2.ogg # KS14 - Commented
 
     # KS14 Start
-    - /Audio/_KS14/Space/Ambience/ambispace.ogg
-    - /Audio/_KS14/Space/Ambience/ambispace3.ogg
-    - /Audio/_KS14/Space/Ambience/ambispace4.ogg
-    - /Audio/_KS14/Space/Ambience/ambispace5.ogg
-    - /Audio/_KS14/Space/Ambience/ambispace6.ogg
+    - /Audio/_KS14/Ambience/Space/ambispace.ogg
+    - /Audio/_KS14/Ambience/Space/ambispace3.ogg
+    - /Audio/_KS14/Ambience/Space/ambispace4.ogg
+    - /Audio/_KS14/Ambience/Space/ambispace5.ogg
+    - /Audio/_KS14/Ambience/Space/ambispace6.ogg
     # KS14 End
 
 - type: soundCollection

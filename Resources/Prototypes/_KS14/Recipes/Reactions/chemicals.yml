@@ -1,9 +1,3 @@
-# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-# SPDX-FileCopyrightText: 2026 FrauzJ
-#
-# SPDX-License-Identifier: MIT
-
 - type: reaction
   id: Klovnide
   minTemp: 351.15 # boiling point of ethanol, to imply that space salt is somewhat organic

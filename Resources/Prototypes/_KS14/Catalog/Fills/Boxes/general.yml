@@ -1,9 +1,3 @@
-# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-# SPDX-FileCopyrightText: 2026 github_actions[bot]
-#
-# SPDX-License-Identifier: MPL-2.0
-
-
 # Stored as 2x2, but has 3x3 storage
 - type: entity
   parent: BoxCardboardSmall
