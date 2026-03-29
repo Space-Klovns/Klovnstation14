@@ -44,7 +44,7 @@
 
 - type: entity
   name: BaseWeaponRifle #KS14 HEAVILY MODIFIED PROTOTYPE
-  parent: BaseItem
+  parent: BaseItem # KS14 modified, removed basegunwieldable
   id: BaseWeaponRifle
   description: A rooty tooty point and shooty.
   abstract: true
@@ -136,7 +136,7 @@
   - type: Gun
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/rifle2.ogg
-    angleIncrease: 7
+    angleIncrease: 7 # KS14 modified
   - type: ChamberMagazineAmmoProvider
     soundRack:
       path: /Audio/Weapons/Guns/Cock/ltrifle_cock.ogg
@@ -280,7 +280,13 @@
     pvsIncrease: 0.2
   - type: StaticPrice
     price: 1500 #3x lecter
-    #KS14 - removed burst specification here
+  #- type: Gun KS14 - removes superfluous spec
+  #  shotsPerBurst: 3
+  #  selectedMode: Burst
+  #  availableModes:
+  #  - Burst
+  #  - SemiAuto
+  #  - FullAuto
 
 - type: entity
   name: Estoc DMR

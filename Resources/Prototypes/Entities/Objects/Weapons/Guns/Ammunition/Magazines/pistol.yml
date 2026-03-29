@@ -208,7 +208,7 @@
   id: MagazinePistolEmpty
   name: pistol magazine (.35 auto any)
   suffix: empty
-  description: 14-round double-stack magazine for pistols.
+  description: 14-round double-stack magazine for pistols. # KS14 modified
   components:
   - type: BallisticAmmoProvider
     proto: null

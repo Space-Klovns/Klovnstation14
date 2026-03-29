@@ -424,6 +424,7 @@ public abstract class SharedWieldableSystem : EntitySystem
         }
         return result;
     }
+    // KS14 end
 
     /// <summary>
     /// Sets wielded without doing any checks.

@@ -31,7 +31,7 @@
   name: bullet (.20 rifle)
   components:
   - type: Projectile
-    damage:
+    damage: # KS14 modified
       types:
         Piercing: 20
       percentilePenetration:
@@ -55,7 +55,7 @@
   name: bullet (.20 rifle incendiary)
   components:
   - type: Projectile
-    damage:
+    damage: # KS14 modified
       types:
         Piercing: 13
         Heat: 7

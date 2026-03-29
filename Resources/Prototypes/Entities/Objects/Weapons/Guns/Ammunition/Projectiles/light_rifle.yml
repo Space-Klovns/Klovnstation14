@@ -33,7 +33,7 @@
   - type: Projectile
     damage:
       types:
-        Piercing: 23
+        Piercing: 23 # KS14 modified
       percentilePenetration:
         Piercing: 0.2
 
@@ -55,7 +55,7 @@
   name: bullet (.30 rifle incendiary)
   components:
   - type: Projectile
-    damage:
+    damage: # KS14 modified
       types:
         Piercing: 14
         Heat: 9

@@ -12,10 +12,10 @@
     edges:
     - to: armor
       steps:
-      - material: Bones # KS14 modified
+      - material: Bones # KS14 modified, was 6
         amount: 8
         doAfter: 2
-      - material: Durathread
+      - material: Durathread # KS14 modified, added durathread
         amount: 2
         doAfter: 2
   - node: armor

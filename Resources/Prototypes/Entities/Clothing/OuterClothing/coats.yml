@@ -128,7 +128,7 @@
         Caustic: 0.75 # not the full 90% from ss13 because of the head
       flatReductions: #KS14 modified
         Piercing: 7.4
-  - type: ExplosionResistance
+  - type: ExplosionResistance # KS14 modified
     damageCoefficient: 0.9
 
 - type: entity
