@@ -1,4 +1,5 @@
 using Content.Server.Mech.Systems;
+using Content.Shared._Trauma.Mech;
 using Content.Server.Power.Components;
 using Content.Server.Power.EntitySystems;
 using Content.Shared.Mech.Components;
@@ -11,18 +12,19 @@ using Content.Shared.Power.Components;
 namespace Content.Server.Mech.Equipment.EntitySystems;
 public sealed class MechGunSystem : EntitySystem
 {
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly ThrowingSystem _throwing = default!;
-    [Dependency] private readonly MechSystem _mech = default!;
-    [Dependency] private readonly BatterySystem _battery = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private ThrowingSystem _throwing = default!;
+    [Dependency] private MechSystem _mech = default!;
+    [Dependency] private BatterySystem _battery = default!;
 
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeLocalEvent<MechEquipmentComponent, GunShotEvent>(MechGunShot);
+
+        SubscribeLocalEvent<MechEquipmentComponent, MechGunFiredEvent>(OnGunFired);
     }
 
-    private void MechGunShot(EntityUid uid, MechEquipmentComponent component, ref GunShotEvent args)
+    private void OnGunFired(EntityUid uid, MechEquipmentComponent component, ref MechGunFiredEvent args)
     {
         if (!component.EquipmentOwner.HasValue)
             return;
