@@ -1,7 +1,3 @@
-# SPDX-FileCopyrightText: 2025 DeusMaldPr
-#
-# SPDX-License-Identifier: MPL-2.0
-
 - type: entity
   id: PresentGibstick
   parent: [PresentBase, BaseItem]

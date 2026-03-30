@@ -1,8 +1,3 @@
-// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-//
-// SPDX-License-Identifier: MIT
-
 // Licensed MIT because this was copied from core files
 
 using System.Linq;

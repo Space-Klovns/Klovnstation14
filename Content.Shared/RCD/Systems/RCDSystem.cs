@@ -1,28 +1,3 @@
-// SPDX-FileCopyrightText: 2023 DrSmugleaf
-// SPDX-FileCopyrightText: 2023 deltanedas
-// SPDX-FileCopyrightText: 2024 Jake Huxell
-// SPDX-FileCopyrightText: 2024 Plykiya
-// SPDX-FileCopyrightText: 2024 chromiumboy
-// SPDX-FileCopyrightText: 2024 nikthechampiongr
-// SPDX-FileCopyrightText: 2025 Gerkada
-// SPDX-FileCopyrightText: 2025 J
-// SPDX-FileCopyrightText: 2025 JesterX666
-// SPDX-FileCopyrightText: 2025 Nemanja
-// SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
-// SPDX-FileCopyrightText: 2025 Tayrtahn
-// SPDX-FileCopyrightText: 2025 TemporalOroboros
-// SPDX-FileCopyrightText: 2025 gus
-// SPDX-FileCopyrightText: 2025 metalgearsloth
-// SPDX-FileCopyrightText: 2025 slarticodefast
-// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2026 TriviaSolari
-// SPDX-FileCopyrightText: 2026 Vasilis The Pikachu
-// SPDX-FileCopyrightText: 2026 Velken
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-// SPDX-FileCopyrightText: 2026 nabegator220
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Shared.Administration.Logs;
 using Content.Shared.Charges.Systems;
 using Content.Shared.Construction;

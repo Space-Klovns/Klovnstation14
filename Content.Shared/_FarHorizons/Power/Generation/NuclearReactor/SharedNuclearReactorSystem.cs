@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2025 jhrushbe
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Emag.Systems;
 using Content.Shared.IdentityManagement;

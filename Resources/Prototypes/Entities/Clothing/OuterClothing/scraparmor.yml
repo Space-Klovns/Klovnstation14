@@ -1,3 +1,11 @@
+# SPDX-FileCopyrightText: 2025 RedBookcase
+# SPDX-FileCopyrightText: 2025 ToastEnjoyer
+# SPDX-FileCopyrightText: 2025 Vasilis The Pikachu
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+# SPDX-FileCopyrightText: 2026 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
 # Separate yml file for scrap armor since it has so many construction steps.
 # Listed from first step of crafting to the final armor
 
@@ -74,6 +82,8 @@
         Piercing: 0.5 #Some nukie tier physical protection...
         Heat: 0.8
         Radiation: 0.8 #Hey, it's a bunch of solid steel.
+      flatReductions: #KS14 modified
+        Piercing: 8.9
   - type: ExplosionResistance
     damageCoefficient: 0.80
   - type: ClothingSpeedModifier #But that protection comes at a price.

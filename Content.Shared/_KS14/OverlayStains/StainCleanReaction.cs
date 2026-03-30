@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Shared.EntityEffects;
 using Robust.Shared.Prototypes;
 

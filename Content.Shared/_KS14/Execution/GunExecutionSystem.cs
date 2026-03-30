@@ -1,17 +1,3 @@
-// SPDX-FileCopyrightText: 2024 Celene
-// SPDX-FileCopyrightText: 2024 Mervill
-// SPDX-FileCopyrightText: 2024 Plykiya
-// SPDX-FileCopyrightText: 2024 Scribbles0
-// SPDX-FileCopyrightText: 2025 Aiden
-// SPDX-FileCopyrightText: 2025 Aviu00
-// SPDX-FileCopyrightText: 2025 Gerkada
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2025 Piras314
-// SPDX-FileCopyrightText: 2025 Solstice
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
-//
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
 using Content.Shared.Chat;
 using Content.Shared.Database;
 using Content.Shared.DoAfter;

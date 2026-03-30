@@ -1,17 +1,3 @@
-# SPDX-FileCopyrightText: 2024 Boaz1111
-# SPDX-FileCopyrightText: 2024 Emisse
-# SPDX-FileCopyrightText: 2024 JustCone
-# SPDX-FileCopyrightText: 2024 Leon Friedrich
-# SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
-# SPDX-FileCopyrightText: 2025 Damn Feds
-# SPDX-FileCopyrightText: 2025 Hitlinemoss
-# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-# SPDX-FileCopyrightText: 2025 compilatron
-# SPDX-FileCopyrightText: 2025 nabegator220
-# SPDX-FileCopyrightText: 2026 github_actions[bot]
-#
-# SPDX-License-Identifier: MIT
-
 - type: gameMap
   id: Frezon
   mapName: 'Frezon'

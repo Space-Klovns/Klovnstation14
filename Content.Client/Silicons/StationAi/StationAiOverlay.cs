@@ -1,10 +1,3 @@
-// SPDX-FileCopyrightText: 2024 metalgearsloth
-// SPDX-FileCopyrightText: 2025 Gerkada
-// SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
-// SPDX-FileCopyrightText: 2025 Tayrtahn
-//
-// SPDX-License-Identifier: MIT
-
 using System.Numerics;
 using System.Linq; // Carpmosia-edit - AI Navmap
 using Content.Client.Pinpointer.UI; // Carpmosia-edit - AI Navmap

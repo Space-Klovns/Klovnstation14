@@ -1,28 +1,3 @@
-// SPDX-FileCopyrightText: 2022 Flipp Syder
-// SPDX-FileCopyrightText: 2022 TekuNut
-// SPDX-FileCopyrightText: 2023 2013HORSEMEATSCANDAL
-// SPDX-FileCopyrightText: 2023 DrSmugleaf
-// SPDX-FileCopyrightText: 2023 Kevin Zheng
-// SPDX-FileCopyrightText: 2023 Moony
-// SPDX-FileCopyrightText: 2023 Morb
-// SPDX-FileCopyrightText: 2023 OctoRocket
-// SPDX-FileCopyrightText: 2023 Robert Hardy
-// SPDX-FileCopyrightText: 2023 Scribbles0
-// SPDX-FileCopyrightText: 2023 Vyacheslav Titov
-// SPDX-FileCopyrightText: 2023 Ygg01
-// SPDX-FileCopyrightText: 2023 csqrb
-// SPDX-FileCopyrightText: 2023 lzk228
-// SPDX-FileCopyrightText: 2023 metalgearsloth
-// SPDX-FileCopyrightText: 2024 Brandon Hu
-// SPDX-FileCopyrightText: 2024 Leon Friedrich
-// SPDX-FileCopyrightText: 2024 Nemanja
-// SPDX-FileCopyrightText: 2024 Rainfey
-// SPDX-FileCopyrightText: 2024 deltanedas
-// SPDX-FileCopyrightText: 2024 lzk
-// SPDX-FileCopyrightText: 2025 nabegator220
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Server.RoundEnd;
 using Content.Shared.Dataset;
 using Content.Shared.NPC.Prototypes;

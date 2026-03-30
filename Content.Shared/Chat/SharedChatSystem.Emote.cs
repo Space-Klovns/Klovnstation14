@@ -1,26 +1,3 @@
-// SPDX-FileCopyrightText: 2023 20kdc
-// SPDX-FileCopyrightText: 2023 Alex Evgrashin
-// SPDX-FileCopyrightText: 2023 HerCoyote23
-// SPDX-FileCopyrightText: 2023 Kara
-// SPDX-FileCopyrightText: 2023 Leon Friedrich
-// SPDX-FileCopyrightText: 2023 Visne
-// SPDX-FileCopyrightText: 2023 metalgearsloth
-// SPDX-FileCopyrightText: 2024 Morb
-// SPDX-FileCopyrightText: 2024 Plykiya
-// SPDX-FileCopyrightText: 2024 Verm
-// SPDX-FileCopyrightText: 2024 geraeumig
-// SPDX-FileCopyrightText: 2025 Centronias
-// SPDX-FileCopyrightText: 2025 FrauZj
-// SPDX-FileCopyrightText: 2025 FrauzJ
-// SPDX-FileCopyrightText: 2025 lzk
-// SPDX-FileCopyrightText: 2025 nabegator220
-// SPDX-FileCopyrightText: 2025 slarticodefast
-// SPDX-FileCopyrightText: 2025 themias
-// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-//
-// SPDX-License-Identifier: MIT
-
 using System.Collections.Frozen;
 using Content.Shared.Chat.Prototypes;
 using Content.Shared.Speech;

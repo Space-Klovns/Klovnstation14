@@ -1,4 +1,9 @@
+// ES START
+// Modified to implement IComponentTreeEntry for visibility purposes
+
+using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameStates;
+using Robust.Shared.Physics;
 
 namespace Content.Shared.Wall;
 
@@ -10,7 +15,7 @@ namespace Content.Shared.Wall;
 ///     in a limited arc, providing basic functionality for directional wall mounts.
 /// </remarks>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
-public sealed partial class WallMountComponent : Component
+public sealed partial class WallMountComponent : Component, IComponentTreeEntry<WallMountComponent>
 {
     /// <summary>
     ///     Range of angles for which the exemption applies. Bigger is more permissive.
@@ -25,4 +30,13 @@ public sealed partial class WallMountComponent : Component
     [ViewVariables(VVAccess.ReadWrite)]
     [DataField("direction"), AutoNetworkedField]
     public Angle Direction = Angle.Zero;
+
+    // ES START
+    [ViewVariables(VVAccess.ReadWrite)]
+    public float OriginalAlpha = 1f; // KS14
+    public EntityUid? TreeUid { get; set; }
+    public DynamicTree<ComponentTreeEntry<WallMountComponent>>? Tree { get; set; }
+    public bool AddToTree => Arc != Angle.FromDegrees(360);
+    public bool TreeUpdateQueued { get; set; }
+    // ES END
 }

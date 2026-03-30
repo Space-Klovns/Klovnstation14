@@ -1,14 +1,3 @@
-# SPDX-FileCopyrightText: 2022 Alex Evgrashin
-# SPDX-FileCopyrightText: 2024 Nemanja
-# SPDX-FileCopyrightText: 2024 Pieter-Jan Briers
-# SPDX-FileCopyrightText: 2024 SlamBamActionman
-# SPDX-FileCopyrightText: 2024 deltanedas
-# SPDX-FileCopyrightText: 2024 keronshb
-# SPDX-FileCopyrightText: 2025 Gerkada
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-#
-# SPDX-License-Identifier: MIT
-
 - type: entity
   id: StorePresetUplink
   abstract: true

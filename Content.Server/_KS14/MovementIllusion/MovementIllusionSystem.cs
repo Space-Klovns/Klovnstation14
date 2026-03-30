@@ -1,8 +1,3 @@
-// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-//
-// SPDX-License-Identifier: MPL-2.0
-
 using System.Runtime.CompilerServices;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
@@ -16,9 +11,13 @@ public sealed partial class MovementIllusionSystem : EntitySystem
     [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
 
-    [Dependency] private readonly EntityQuery<MovementIllusionMapComponent> _illMapQuery = default;
-    [Dependency] private readonly EntityQuery<MovementIllusionFocusComponent> _illFocusQuery = default;
-    [Dependency] private readonly EntityQuery<PhysicsComponent> _physicsQuery = default;
+    // TODO LCDC: ON ENGINE UPDATE: FIX THIS
+    /*[Dependency]*/
+    private /*readonly*/ EntityQuery<MovementIllusionMapComponent> _illMapQuery = default;
+    /*[Dependency]*/
+    private /*readonly*/ EntityQuery<MovementIllusionFocusComponent> _illFocusQuery = default;
+    /*[Dependency]*/
+    private /*readonly*/ EntityQuery<PhysicsComponent> _physicsQuery = default;
 
     private static readonly TimeSpan CleanupDelay = TimeSpan.FromSeconds(120f);
     private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(6f);
@@ -27,6 +26,11 @@ public sealed partial class MovementIllusionSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
+
+        // TODO LCDC: ON ENGINE UPDATE: FIX THIS
+        _illMapQuery = GetEntityQuery<MovementIllusionMapComponent>();
+        _illFocusQuery = GetEntityQuery<MovementIllusionFocusComponent>();
+        _physicsQuery = GetEntityQuery<PhysicsComponent>();
 
         SubscribeLocalEvent<EntParentChangedMessage>(OnParentChanged);
     }

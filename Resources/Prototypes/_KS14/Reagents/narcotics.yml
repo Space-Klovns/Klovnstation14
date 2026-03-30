@@ -1,9 +1,3 @@
-# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-# SPDX-FileCopyrightText: 2026 nabegator220
-#
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
 - type: reagent
   id: Zipium
   name: reagent-name-zipium

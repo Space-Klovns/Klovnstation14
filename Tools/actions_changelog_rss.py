@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-
-#
 # Updates an RSS file on a remote server with updates to the changelog.
 # See https://docs.spacestation14.io/en/hosting/changelogs for instructions.
 #

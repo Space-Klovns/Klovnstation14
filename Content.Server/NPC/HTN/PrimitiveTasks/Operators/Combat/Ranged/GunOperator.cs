@@ -1,11 +1,3 @@
-// SPDX-FileCopyrightText: 2023 DrSmugleaf
-// SPDX-FileCopyrightText: 2023 Jezithyr
-// SPDX-FileCopyrightText: 2023 metalgearsloth
-// SPDX-FileCopyrightText: 2025 chromiumboy
-// SPDX-FileCopyrightText: 2026 nabegator220
-//
-// SPDX-License-Identifier: MIT
-
 using System.Threading;
 using System.Threading.Tasks;
 using Content.Server.NPC.Components;

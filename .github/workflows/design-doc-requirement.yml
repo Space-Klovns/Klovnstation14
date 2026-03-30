@@ -1,7 +1,3 @@
-# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-#
-# SPDX-License-Identifier: MPL-2.0
-
 name: Check Design Document
 
 on:
@@ -20,8 +16,7 @@ jobs:
       env:
         PR_BODY: ${{ github.event.pull_request.body }}
       run: |
-        echo "Checking PR body for license..."
-        if grep -qi "design doc" <<< "$PR_BODY"; then
+        if grep -qi -- "- \[x\] Design doc" <<< "$PR_BODY"; then
           echo "Design doc found"
           echo "DESIGN_DOC=yes" >> $GITHUB_ENV
         else
@@ -41,3 +36,15 @@ jobs:
           I do not see your vision 👓
           Where is your design doc ❓
           Why does this pr add something that i cant see with a naked eye unless i played the game? 😴
+
+    - name: Remove label from PR
+      if: ${{ env.DESIGN_DOC == 'nah' }}
+      uses: actions-ecosystem/action-remove-labels@v1
+      with:
+        labels: "KS: Design Doc present"
+
+    - name: Label PR
+      if: ${{ env.DESIGN_DOC == 'yes' }}
+      uses: actions-ecosystem/action-add-labels@v1
+      with:
+        labels: "KS: Design Doc present"

@@ -1,11 +1,3 @@
-# SPDX-FileCopyrightText: 2023 Flareguy
-# SPDX-FileCopyrightText: 2025 Ertanic
-# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-#
-# SPDX-License-Identifier: MPL-2.0
-
-
 # taken from improvised shotgun
 - type: constructionGraph
   id: SyringeShotgunGraph

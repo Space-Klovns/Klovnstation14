@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 using Content.Client._KS14.CanisterOverlay; // KS14
 using Content.Client.Atmos.Overlays;
 using JetBrains.Annotations;

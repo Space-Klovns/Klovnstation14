@@ -1,29 +1,3 @@
-# SPDX-FileCopyrightText: 2020 Paul Ritter
-# SPDX-FileCopyrightText: 2020 Víctor Aguilera Puerto
-# SPDX-FileCopyrightText: 2021 20kdc
-# SPDX-FileCopyrightText: 2021 Acruid
-# SPDX-FileCopyrightText: 2021 DrSmugleaf
-# SPDX-FileCopyrightText: 2021 Julian Giebel
-# SPDX-FileCopyrightText: 2021 Leon Friedrich
-# SPDX-FileCopyrightText: 2021 Pieter-Jan Briers
-# SPDX-FileCopyrightText: 2021 Swept
-# SPDX-FileCopyrightText: 2021 Vera Aguilera Puerto
-# SPDX-FileCopyrightText: 2021 mirrorcult
-# SPDX-FileCopyrightText: 2022 Jacob Tong
-# SPDX-FileCopyrightText: 2022 Peptide90
-# SPDX-FileCopyrightText: 2022 wrexbe
-# SPDX-FileCopyrightText: 2023 Kevin Zheng
-# SPDX-FileCopyrightText: 2023 metalgearsloth
-# SPDX-FileCopyrightText: 2025 K-Dynamic
-# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-# SPDX-FileCopyrightText: 2025 nabegator220
-# SPDX-FileCopyrightText: 2025 slarticodefast
-# SPDX-FileCopyrightText: 2025 āda
-# SPDX-FileCopyrightText: 2026 Gerkada
-# SPDX-FileCopyrightText: 2026 github_actions[bot]
-#
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
 - type: entity
   id: DebugGenerator
   parent: BaseGenerator

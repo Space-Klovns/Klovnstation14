@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-//
-// SPDX-License-Identifier: MPL-2.0
-
 using System.Numerics;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;

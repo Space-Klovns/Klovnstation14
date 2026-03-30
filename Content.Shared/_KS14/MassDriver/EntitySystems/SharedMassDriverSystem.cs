@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2026 Gerkada
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Shared._KS14.MassDriver.Components;
 using Content.Shared.Throwing;
 using Content.Shared.Power;

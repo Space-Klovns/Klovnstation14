@@ -1,12 +1,3 @@
-// SPDX-FileCopyrightText: 2023 Slava0135
-// SPDX-FileCopyrightText: 2024 KrasnoshchekovPavel
-// SPDX-FileCopyrightText: 2024 Preston Smith
-// SPDX-FileCopyrightText: 2024 beck-thompson
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-// SPDX-FileCopyrightText: 2026 nabegator220
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Events;
 using Content.Shared.Damage.Prototypes;

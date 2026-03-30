@@ -1,8 +1,3 @@
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
-// SPDX-FileCopyrightText: 2025 nabegator220
-//
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
 using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.Atmos.Piping.Trinary.Components

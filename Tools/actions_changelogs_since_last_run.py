@@ -25,7 +25,7 @@ DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
 
 CHANGELOG_FILE = "Resources/Changelog/Klovn.yml"
 
-TYPES_TO_EMOJI = {"Fix": "🐛", "Add": "🆕", "Remove": "❌", "Tweak": "⚒️"}
+TYPES_TO_EMOJI = {"Fix": "⚒️", "Add": "✅", "Remove": "❌", "Tweak": "😂"}
 
 ChangelogEntry = dict[str, Any]
 

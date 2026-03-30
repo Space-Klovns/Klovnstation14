@@ -1,8 +1,3 @@
-# SPDX-FileCopyrightText: 2025 FrauzJ
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-#
-# SPDX-License-Identifier: MIT
-
 - files: ["*.ogg"]
   license: "CC-BY-SA-3.0"
   copyright: "Taken from /tg/station at commit 81c3d921295d6b925ff063bef13f623687d7bdbd"

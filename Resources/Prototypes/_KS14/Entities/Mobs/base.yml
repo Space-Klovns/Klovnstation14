@@ -1,9 +1,3 @@
-# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-# SPDX-FileCopyrightText: 2026 nabegator220
-#
-# SPDX-License-Identifier: MPL-2.0
-
 # Used for mobs that can leap forward
 - type: entity
   save: false

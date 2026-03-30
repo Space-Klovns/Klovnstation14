@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-//
-// SPDX-License-Identifier: MPL-2.0
-
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Content.Shared._KS14.Random.Helpers;

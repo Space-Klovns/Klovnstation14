@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-//
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
 // Dependencies
 const fs = require("fs");
 const yaml = require("js-yaml");

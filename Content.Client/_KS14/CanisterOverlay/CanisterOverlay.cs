@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-//
-// SPDX-License-Identifier: MIT
-
 // This was originally licensed mpl but i stole some code from upstream so it's MIT now
 
 using System.Linq;

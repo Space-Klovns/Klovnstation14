@@ -1,10 +1,3 @@
-# SPDX-FileCopyrightText: 2023 Stanislav4ix
-# SPDX-FileCopyrightText: 2026 FrauzJ
-# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-# SPDX-FileCopyrightText: 2026 github_actions[bot]
-#
-# SPDX-License-Identifier: MIT
-
 - type: entity
   name: ore bag of holding
   id: OreBagOfHolding

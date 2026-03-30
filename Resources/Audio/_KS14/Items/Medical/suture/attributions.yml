@@ -1,6 +1,3 @@
-# SPDX-FileCopyrightText: 2025 FrauzJ
-#
-# SPDX-License-Identifier: MPL-2.0
 - files: ["suture_begin1.ogg", "suture_end1.ogg", "suture_end2.ogg", "suture_end3.ogg", "suture_end4.ogg"]
   license: "CC-BY-3.0"
   copyright: "Created by `grungussuss` for tgstation. Modified for Klovnstation14 "

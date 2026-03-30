@@ -1,8 +1,3 @@
-// SPDX-FileCopyrightText: 2026 Riley
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Client.Medical.Cryogenics;
 using Content.Shared._Starlight.Plumbing;
 using Content.Shared.FixedPoint;
