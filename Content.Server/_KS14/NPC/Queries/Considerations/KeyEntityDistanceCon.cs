@@ -4,12 +4,16 @@ using Robust.Server.GameObjects;
 
 namespace Content.Server._KS14.NPC.Queries.Considerations;
 
-public sealed partial class KeyDistanceCon : UtilityConsideration
+/// <summary>
+///     Scores entities based on their distance from
+///         the given entity key.
+/// </summary>
+public sealed partial class KeyEntityDistanceCon : UtilityConsideration
 {
     [Dependency] private readonly TransformSystem _transformSystem = default!;
 
     /// <summary>
-    ///     Key to get distance from.
+    ///     Key of the entity to get distance from.
     /// </summary>
     [DataField(required: true)] public string Key = "Target";
 
@@ -18,13 +22,13 @@ public sealed partial class KeyDistanceCon : UtilityConsideration
         if (!blackboard.TryGetValue<EntityUid>(Key, out var keyUid, EntityManager))
             return 0f;
 
-        if (!EntityManager.TransformQuery.TryGetComponent(keyUid, out var targetXform) ||
-            !EntityManager.TransformQuery.TryGetComponent(ownerUid, out var xform))
+        if (!EntityManager.TransformQuery.TryGetComponent(keyUid, out var keyTransform) ||
+            !EntityManager.TransformQuery.TryGetComponent(targetUid, out var targetTransform))
         {
             return 0f;
         }
 
-        if (!targetXform.Coordinates.TryDistance(EntityManager, _transformSystem, xform.Coordinates,
+        if (!keyTransform.Coordinates.TryDistance(EntityManager, _transformSystem, targetTransform.Coordinates,
             out var distance))
         {
             return 0f;

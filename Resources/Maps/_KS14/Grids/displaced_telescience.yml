@@ -1884,8 +1884,21 @@ entities:
       pos: 2.5000086,-1.333174
       parent: 1
     - type: InsertIntoSpeczoneOnTrigger
-      speczoneId: bluelabs
+      speczoneId: bluelab
+      targetUser: true
+      keysIn:
+      - trigger
+    - type: KnockdownOnTrigger
+      knockdownAmount: 5
+      drop: false
+      targetUser: true
+      keysIn:
+      - trigger
+    - type: TriggerOnCollide
+      fixtureID: fix1
+      ignoreOtherNonHard: false
     - type: Anomaly
+      skipMapInit: false
       healthChangePerSecond: 0
       minPulseLength: 1500
       maxPulseLength: 1800

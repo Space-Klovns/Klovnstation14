@@ -26,7 +26,7 @@ public enum CollisionGroup
     DoorPassable = 1 << 8, // 256 Allows door to close over top, Like blast doors over conveyors for disposals rooms/cargo.
 
     // KS14 Addition
-    MobImpassable = 1 << 9, // 512 KS14: For all mobs ever. Used primarily for the inorganic forcefield.
+    MobImpassable = 1 << 9, // 512 KS14: For all mobs ever. Used primarily for the inorganic forcefield, and throwing.
 
     MapGrid = MapGridHelpers.CollisionGroup, // Map grids, like shuttles. This is the actual grid itself, not the walls or other entities connected to the grid.
 

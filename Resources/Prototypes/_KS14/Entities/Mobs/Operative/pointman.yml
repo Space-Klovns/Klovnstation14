@@ -45,9 +45,9 @@
       CampingRange: !type:Single
         0.25
       CampingTime: !type:Single
-        5
+        15
       AdvanceTime: !type:Single
-        5
+        20
       NavInteract: !type:Bool
         true
 
@@ -80,9 +80,9 @@
       CampingRange: !type:Single
         0.3
       CampingTime: !type:Single
-        10
+        25
       AdvanceTime: !type:Single
-        12
+        30
       NavInteract: !type:Bool
         true
 

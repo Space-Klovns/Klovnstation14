@@ -8,6 +8,12 @@
     - !type:HTNCompoundTask
       task: MeleeCombatCompound
 
+  ## Healing
+  - tasks:
+    - !type:HTNCompoundTask
+      task: KsOperativeConsiderHealingAndRetreatCompound
+
+  ## Camping
   - preconditions:
     - !type:KeyExistsPrecondition
       key: LastTargetCoordinates
@@ -42,13 +48,7 @@
       operator: !type:SetNullOperator
         key: LastTargetCoordinates
 
-  - tasks:
-    - !type:HTNPrimitiveTask
-      operator: !type:GetDamageOperator
-        key: OurDamage
-    - !type:HTNCompoundTask
-      task: KsOperativeHealingCompound
-
+  ## Advancing
   - tasks:
     - !type:HTNCompoundTask
       task: KsDoAdvanceCompound
@@ -64,7 +64,7 @@
     curve: !type:BoolCurve
     toKey: LastTargetCoordinates
     radius: 6.5
-  - !type:KeyDistanceCon
+  - !type:KeyCoordinatesDistanceCon # prioritise places closest to where the target was
     key: LastTargetCoordinates
     curve: !type:PresetCurve
-      preset: KsTargetDistanceInverse
+      preset: TargetDistance
