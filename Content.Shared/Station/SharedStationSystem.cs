@@ -131,6 +131,17 @@ public abstract partial class SharedStationSystem : EntitySystem
         return stations;
     }
 
+    // KS14
+    public List<Entity<StationDataComponent>> GetStationEntities()
+    {
+        var stations = new List<Entity<StationDataComponent>>();
+        var query = EntityQueryEnumerator<StationDataComponent>();
+        while (query.MoveNext(out var uid, out var dataComponent))
+            stations.Add((uid, dataComponent));
+
+        return stations;
+    }
+
     public HashSet<EntityUid> GetStationsSet()
     {
         var stations = new HashSet<EntityUid>();

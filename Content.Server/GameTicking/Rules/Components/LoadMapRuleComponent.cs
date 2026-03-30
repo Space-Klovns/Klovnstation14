@@ -30,6 +30,13 @@ public sealed partial class LoadMapRuleComponent : Component
     [DataField]
     public ResPath? GridPath;
 
+    // KS14
+    /// <summary>
+    ///     Grid will spawn quite far away.
+    /// </summary>
+    [DataField]
+    public bool LoadGridOnStationMap;
+
     /// <summary>
     /// A <see cref="PreloadedGridPrototype"/> to move to a new map.
     /// If there are no instances left nothing is done.

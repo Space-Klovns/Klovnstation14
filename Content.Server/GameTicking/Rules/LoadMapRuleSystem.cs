@@ -1,8 +1,11 @@
 using System.Linq;
 using Content.Server.GameTicking.Rules.Components;
 using Content.Server.GridPreloader;
+using Content.Server.Shuttles.Systems; // KS14: LoadGridOnStationMap
+using Content.Server.Station.Systems; // KS14: LoadGridOnStationMap
 using Content.Server.StationEvents.Events;
 using Content.Shared.GameTicking.Components;
+using Content.Shared.Station.Components;
 using Robust.Server.GameObjects;
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.EntitySerialization.Systems;
@@ -19,6 +22,8 @@ public sealed class LoadMapRuleSystem : StationEventSystem<LoadMapRuleComponent>
     [Dependency] private readonly MapLoaderSystem _mapLoader = default!;
     [Dependency] private readonly TransformSystem _transform = default!;
     [Dependency] private readonly GridPreloaderSystem _gridPreloader = default!;
+    [Dependency] private readonly StationSystem _stationSystem = default!; // KS14: LoadGridOnStationMap
+    [Dependency] private readonly ShuttleSystem _shuttleSystem = default!; // KS14: LoadGridOnStationMap
 
     protected override void Added(EntityUid uid, LoadMapRuleComponent comp, GameRuleComponent rule, GameRuleAddedEvent args)
     {
@@ -29,6 +34,7 @@ public sealed class LoadMapRuleSystem : StationEventSystem<LoadMapRuleComponent>
             ForceEndSelf(uid, rule);
             return;
         }
+
 
         MapId mapId;
         IReadOnlyList<EntityUid> grids;
@@ -43,12 +49,12 @@ public sealed class LoadMapRuleSystem : StationEventSystem<LoadMapRuleComponent>
             grids = GameTicker.LoadGameMap(gameMap, out mapId, null);
             Log.Info($"Created map {mapId} for {ToPrettyString(uid):rule}");
         }
-        else if (comp.MapPath is {} path)
+        else if (comp.MapPath is { } path)
         {
             DebugTools.AssertNull(comp.GridPath);
             DebugTools.AssertNull(comp.PreloadedGrid);
 
-            var opts = DeserializationOptions.Default with {InitializeMaps = true};
+            var opts = DeserializationOptions.Default with { InitializeMaps = true };
             if (!_mapLoader.TryLoadMap(path, out var map, out var gridSet, opts))
             {
                 Log.Error($"Failed to load map from {path}!");
@@ -56,7 +62,7 @@ public sealed class LoadMapRuleSystem : StationEventSystem<LoadMapRuleComponent>
                 return;
             }
 
-            grids = gridSet.Select( x => x.Owner).ToList();
+            grids = gridSet.Select(x => x.Owner).ToList();
             mapId = map.Value.Comp.MapId;
         }
         else if (comp.GridPath is { } gPath)
@@ -64,18 +70,50 @@ public sealed class LoadMapRuleSystem : StationEventSystem<LoadMapRuleComponent>
             DebugTools.AssertNull(comp.PreloadedGrid);
 
             // I fucking love it when "map paths" choses to ar
+
+            // KS14 Start: LoadGridOnStationMap
+            EntityUid? stationGridUid = null;
+            TransformComponent stationTransform = null!;
+            MapId? stationMapId = null;
+            if (comp.LoadGridOnStationMap)
+            {
+                var stationEntities = _stationSystem.GetStationEntities();
+                if (!stationEntities.TryFirstOrNull(out var stationEntity) ||
+                    !stationEntity.Value.Comp.Grids.TryFirstOrNull(out stationGridUid))
+                {
+                    Log.Error($"Failed to find a station to load grid onto!");
+                    ForceEndSelf(uid, rule);
+                    return;
+                }
+
+                stationTransform = Transform(stationGridUid.Value);
+                stationMapId = stationTransform.MapID;
+            }
+            // KS14 End: LoadGridOnStationMap
+
             _map.CreateMap(out mapId);
-            var opts = DeserializationOptions.Default with {InitializeMaps = true};
-            if (!_mapLoader.TryLoadGrid(mapId, gPath, out var grid, opts))
+
+            var opts = DeserializationOptions.Default with { InitializeMaps = true };
+            if (!_mapLoader.TryLoadGrid(stationMapId ?? mapId /* KS14: LoadGridOnStationMap */, gPath, out var grid, opts))
             {
                 Log.Error($"Failed to load grid from {gPath}!");
                 ForceEndSelf(uid, rule);
                 return;
             }
 
-            grids = new List<EntityUid> {grid.Value.Owner};
+            // KS14 Start: LoadGridOnStationMap
+            if (comp.LoadGridOnStationMap)
+            {
+                _shuttleSystem.TryFTLProximity(grid.Value, stationGridUid!.Value, targetXform: stationTransform);
+                _map.DeleteMap(mapId);
+
+                mapId = stationMapId!.Value;
+            }
+            // KS14 End: LoadGridOnStationMap
+
+            grids = new List<EntityUid> { grid.Value.Owner };
         }
-        else if (comp.PreloadedGrid is {} preloaded)
+        else if (comp.PreloadedGrid is { } preloaded)
         {
             // TODO: If there are no preloaded grids left, any rule announcements will still go off!
             if (!_gridPreloader.TryGetPreloadedGrid(preloaded, out var loadedShuttle))
