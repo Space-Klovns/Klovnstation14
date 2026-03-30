@@ -170,7 +170,9 @@ public sealed class ChainSystem : EntitySystem
         var brokenEv = new ChainInitiallyBrokenEvent(entity);
         foreach (var edgeUid in entity.Comp.EdgeUids)
         {
-            var edgeComponent = _edgeQuery.GetComponent(edgeUid);
+            if (!_edgeQuery.TryGetComponent(edgeUid, out var edgeComponent)) // sometimes edge component doesnt get its shutdown called before this, so a deleted entity might not be removed from the list of edges yet
+                continue;
+
             // first time the chain was segmented
             if (!edgeComponent.Broken)
             {
