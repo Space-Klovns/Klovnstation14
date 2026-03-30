@@ -50,9 +50,7 @@ public sealed class ESWallMountVisibilityOverlay : Overlay
 
             if (!args.Viewport.Eye.DrawFov)
             {
-                if (!sprite.Visible) // KS14
-                    _sprite.SetColor((uid, sprite), sprite.Color.WithAlpha(entry.Component.OriginalAlpha));
-
+                _sprite.SetColor((uid, sprite), sprite.Color.WithAlpha(entry.Component.OriginalAlpha));
                 _sprite.SetVisible((uid, sprite), true);
                 continue;
             }

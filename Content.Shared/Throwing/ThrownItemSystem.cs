@@ -14,6 +14,8 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
+using Robust.Shared.Physics.Dynamics;
+using System.Numerics;
 
 namespace Content.Shared.Throwing
 {
@@ -37,6 +39,7 @@ namespace Content.Shared.Throwing
             base.Initialize();
             SubscribeLocalEvent<ThrownItemComponent, MapInitEvent>(OnMapInit);
             SubscribeLocalEvent<ThrownItemComponent, PhysicsSleepEvent>(OnSleep);
+            SubscribeLocalEvent<ThrownItemComponent, EndCollideEvent>(HandleCollisionEnd);
             SubscribeLocalEvent<ThrownItemComponent, StartCollideEvent>(HandleCollision);
             SubscribeLocalEvent<ThrownItemComponent, PreventCollideEvent>(PreventCollision);
             SubscribeLocalEvent<ThrownItemComponent, ThrownEvent>(ThrowItem);
@@ -60,18 +63,21 @@ namespace Content.Shared.Throwing
 
             var fixture = fixturesComponent.Fixtures.Values.First();
             var shape = fixture.Shape;
-            _fixtures.TryCreateFixture(uid, shape, ThrowingFixture, hard: false, collisionMask: (int) CollisionGroup.ThrownItem, manager: fixturesComponent, body: body);
+            _fixtures.TryCreateFixture(uid, shape, ThrowingFixture, hard: true, collisionMask: (int)CollisionGroup.ThrownItem, manager: fixturesComponent, body: body);
         }
 
         private void HandleCollision(EntityUid uid, ThrownItemComponent component, ref StartCollideEvent args)
         {
-            if (!args.OtherFixture.Hard)
-                return;
-
-            if (args.OtherEntity == component.Thrower)
-                return;
+            // KS14: Removed redundant if statements
 
             ThrowCollideInteraction(component, args.OurEntity, args.OtherEntity);
+        }
+
+        private void HandleCollisionEnd(EntityUid uid, ThrownItemComponent component, ref EndCollideEvent args)
+        {
+            // KS14
+            if (args.OurFixtureId == ThrowingFixture)
+                _physics.SetLinearVelocity(args.OtherEntity, component.Collided[args.OtherEntity], body: args.OtherBody);
         }
 
         private void PreventCollision(EntityUid uid, ThrownItemComponent component, ref PreventCollideEvent args)
@@ -79,7 +85,10 @@ namespace Content.Shared.Throwing
             if (args.OtherEntity == component.Thrower)
             {
                 args.Cancelled = true;
+                return; // KS14
             }
+
+            component.Collided[args.OtherEntity] = args.OtherBody.LinearVelocity; // KS14
         }
 
         private void OnSleep(EntityUid uid, ThrownItemComponent thrownItem, ref PhysicsSleepEvent @event)
