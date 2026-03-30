@@ -14,76 +14,8 @@ public sealed partial class AnimatedEmotesSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<AnimatedEmotesComponent, AnimationFlipEmoteEvent>(OnFlip);
-        SubscribeLocalEvent<AnimatedEmotesComponent, AnimationSpinEmoteEvent>(OnSpin);
-        SubscribeLocalEvent<AnimatedEmotesComponent, AnimationJumpEmoteEvent>(OnJump);
+        SubscribeLocalEvent<AnimatedEmotesComponent, AnimationEmoteEvent>(OnAnimationEmoteEvent);
     }
-
-    private static readonly Animation FlipAnimation = new()
-    {
-        Length = TimeSpan.FromMilliseconds(500),
-        AnimationTracks =
-            {
-                new AnimationTrackComponentProperty
-                {
-                    ComponentType = typeof(SpriteComponent),
-                    Property = nameof(SpriteComponent.Rotation),
-                    InterpolationMode = AnimationInterpolationMode.Linear,
-                    KeyFrames =
-                    {
-                        new AnimationTrackProperty.KeyFrame(Angle.Zero, 0f),
-                        new AnimationTrackProperty.KeyFrame(Angle.FromDegrees(180), 0.25f),
-                        new AnimationTrackProperty.KeyFrame(Angle.FromDegrees(360), 0.25f),
-                    }
-                }
-            }
-    };
-
-    private static readonly Animation SpinAnimation = new()
-    {
-        Length = TimeSpan.FromMilliseconds(600),
-        AnimationTracks =
-            {
-                new AnimationTrackComponentProperty
-                {
-                    ComponentType = typeof(TransformComponent),
-                    Property = nameof(TransformComponent.LocalRotation),
-                    InterpolationMode = AnimationInterpolationMode.Linear,
-                    KeyFrames =
-                    {
-                        new AnimationTrackProperty.KeyFrame(Angle.FromDegrees(0), 0f),
-                        new AnimationTrackProperty.KeyFrame(Angle.FromDegrees(90), 0.075f),
-                        new AnimationTrackProperty.KeyFrame(Angle.FromDegrees(180), 0.075f),
-                        new AnimationTrackProperty.KeyFrame(Angle.FromDegrees(270), 0.075f),
-                        new AnimationTrackProperty.KeyFrame(Angle.Zero, 0.075f),
-                        new AnimationTrackProperty.KeyFrame(Angle.FromDegrees(90), 0.075f),
-                        new AnimationTrackProperty.KeyFrame(Angle.FromDegrees(180), 0.075f),
-                        new AnimationTrackProperty.KeyFrame(Angle.FromDegrees(270), 0.075f),
-                        new AnimationTrackProperty.KeyFrame(Angle.Zero, 0.075f),
-                    }
-                }
-            }
-    };
-
-    private static readonly Animation JumpAnimation = new()
-    {
-        Length = TimeSpan.FromMilliseconds(250),
-        AnimationTracks =
-            {
-                new AnimationTrackComponentProperty
-                {
-                    ComponentType = typeof(SpriteComponent),
-                    Property = nameof(SpriteComponent.Offset),
-                    InterpolationMode = AnimationInterpolationMode.Cubic,
-                    KeyFrames =
-                    {
-                        new AnimationTrackProperty.KeyFrame(Vector2.Zero, 0f),
-                        new AnimationTrackProperty.KeyFrame(new Vector2(0, .20f), 0.125f),
-                        new AnimationTrackProperty.KeyFrame(Vector2.Zero, 0.125f),
-                    }
-                }
-            }
-    };
 
     public void PlayEmote(EntityUid uid, Animation anim, string animationKey = "emoteAnimKeyId")
     {
@@ -93,16 +25,74 @@ public sealed partial class AnimatedEmotesSystem : EntitySystem
         _anim.Play(uid, anim, animationKey);
     }
 
-    private void OnFlip(Entity<AnimatedEmotesComponent> ent, ref AnimationFlipEmoteEvent args)
+    private void OnAnimationEmoteEvent(Entity<AnimatedEmotesComponent> ent, ref AnimationEmoteEvent args)
     {
-        PlayEmote(ent, FlipAnimation, animationKey: "emoteAnimFlip");
+        PlayEmote(ent, Animations[args.AnimationKey], animationKey: args.AnimationKey);
     }
-    private void OnSpin(Entity<AnimatedEmotesComponent> ent, ref AnimationSpinEmoteEvent args)
-    {
-        PlayEmote(ent, SpinAnimation, animationKey: "emoteAnimSpin");
-    }
-    private void OnJump(Entity<AnimatedEmotesComponent> ent, ref AnimationJumpEmoteEvent args)
-    {
-        PlayEmote(ent, JumpAnimation, animationKey: "emoteAnimJump");
-    }
+
+    private static readonly Dictionary<string, Animation> Animations = new() {
+        { "emoteAnimFlip", new()
+            {
+                Length = TimeSpan.FromMilliseconds(500),
+                AnimationTracks =
+                    {
+                        new AnimationTrackComponentProperty
+                        {
+                            ComponentType = typeof(SpriteComponent),
+                            Property = nameof(SpriteComponent.Rotation),
+                            InterpolationMode = AnimationInterpolationMode.Linear,
+                            KeyFrames =
+                            {
+                                new AnimationTrackProperty.KeyFrame(Angle.Zero, 0f),
+                                new AnimationTrackProperty.KeyFrame(Angle.FromDegrees(180), 0.25f),
+                                new AnimationTrackProperty.KeyFrame(Angle.FromDegrees(360), 0.25f),
+                            }
+                        }
+                    }
+            }! },
+        { "emoteAnimSpin", new()
+            {
+                Length = TimeSpan.FromMilliseconds(600),
+                AnimationTracks =
+                    {
+                        new AnimationTrackComponentProperty
+                        {
+                            ComponentType = typeof(TransformComponent),
+                            Property = nameof(TransformComponent.LocalRotation),
+                            InterpolationMode = AnimationInterpolationMode.Linear,
+                            KeyFrames =
+                            {
+                                new AnimationTrackProperty.KeyFrame(Angle.FromDegrees(0), 0f),
+                                new AnimationTrackProperty.KeyFrame(Angle.FromDegrees(90), 0.075f),
+                                new AnimationTrackProperty.KeyFrame(Angle.FromDegrees(180), 0.075f),
+                                new AnimationTrackProperty.KeyFrame(Angle.FromDegrees(270), 0.075f),
+                                new AnimationTrackProperty.KeyFrame(Angle.Zero, 0.075f),
+                                new AnimationTrackProperty.KeyFrame(Angle.FromDegrees(90), 0.075f),
+                                new AnimationTrackProperty.KeyFrame(Angle.FromDegrees(180), 0.075f),
+                                new AnimationTrackProperty.KeyFrame(Angle.FromDegrees(270), 0.075f),
+                                new AnimationTrackProperty.KeyFrame(Angle.Zero, 0.075f),
+                            }
+                        }
+                    }
+            } },
+        { "emoteAnimJump", new()
+            {
+                Length = TimeSpan.FromMilliseconds(250),
+                AnimationTracks =
+                    {
+                        new AnimationTrackComponentProperty
+                        {
+                            ComponentType = typeof(SpriteComponent),
+                            Property = nameof(SpriteComponent.Offset),
+                            InterpolationMode = AnimationInterpolationMode.Cubic,
+                            KeyFrames =
+                            {
+                                new AnimationTrackProperty.KeyFrame(Vector2.Zero, 0f),
+                                new AnimationTrackProperty.KeyFrame(new Vector2(0, .20f), 0.125f),
+                                new AnimationTrackProperty.KeyFrame(Vector2.Zero, 0.125f),
+                            }
+                        }
+                    }
+            } }
+    };
 }

@@ -55,13 +55,14 @@ public abstract partial class SharedChatSystem
         bool hideLog = false,
         string? nameOverride = null,
         bool ignoreActionBlocker = false,
-        bool forceEmote = false
+        bool forceEmote = false,
+        Filter? networkedFilter = null /* KS14 */
     )
     {
         if (!_prototypeManager.Resolve<EmotePrototype>(emoteId, out var proto))
             return false;
 
-        return TryEmoteWithChat(source, proto, range, hideLog: hideLog, nameOverride, ignoreActionBlocker: ignoreActionBlocker, forceEmote: forceEmote);
+        return TryEmoteWithChat(source, proto, range, hideLog: hideLog, nameOverride, ignoreActionBlocker: ignoreActionBlocker, forceEmote: forceEmote, networkedFilter: networkedFilter /* KS14 */);
     }
 
     /// <summary>
@@ -85,13 +86,14 @@ public abstract partial class SharedChatSystem
         bool hideLog = false,
         string? nameOverride = null,
         bool ignoreActionBlocker = false,
-        bool forceEmote = false
+        bool forceEmote = false,
+        Filter? networkedFilter = null /* KS14 */
     )
     {
         if (!forceEmote && !AllowedToUseEmote(source, emote))
             return false;
 
-        var didEmote = TryEmoteWithoutChat(source, emote, ignoreActionBlocker);
+        var didEmote = TryEmoteWithoutChat(source, emote, ignoreActionBlocker, networkedFilter: networkedFilter /* KS14 */);
 
         // check if proto has valid message for chat
         if (didEmote && emote.ChatMessages.Count != 0)
@@ -269,9 +271,8 @@ public abstract partial class SharedChatSystem
     }
 
     /// <summary>
-    /// Immediately raises <see cref="EmoteEvent"/> on something. Don't use this unless
+    /// Immediately raises <see cref="EmoteEvent"/> on something.
     /// Not networked.
-    /// you know what you are doing.
     /// </summary>
     /// <param name="uid">The entity which is emoting</param>
     /// <param name="proto">The emote which is being performed</param>
