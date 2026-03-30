@@ -13,7 +13,7 @@
       operator: !type:UtilityOperator
         proto: NearbyGunTargets
 
-    - !type:HTNPrimitiveTask
+    - !type:HTNPrimitiveTask # copy target coords
       operator: !type:CopyKeyOperator
         originKey: TargetCoordinates
         targetKey: LastTargetCoordinates
@@ -159,8 +159,10 @@
       operator: !type:GetActiveHeldItemOperator
         key: ActiveWeapon
 
-    - !type:HTNPrimitiveTask
+    - !type:HTNPrimitiveTask # Hands: swap to free
       operator: !type:SwapToFreeHandOperator
+    - !type:HTNPrimitiveTask # Wait one tick for any virtual item from the wield to be deleted so that a hand is free, as they are QueueDel'd
+      operator: !type:WaitTickOperator
 
     # Equip ammo in offhand
     - !type:HTNPrimitiveTask
@@ -173,10 +175,13 @@
 
     - !type:HTNPrimitiveTask
       operator: !type:DropOperator
+        succeedIfHandEmpty: true
 
-    - !type:HTNPrimitiveTask
+    - !type:HTNPrimitiveTask # Hands: swap back
       operator: !type:SwapToHandOperator
         key: WeaponActiveHand
+    - !type:HTNPrimitiveTask # Wielding: wield
+      operator: !type:WieldOperator
 
 - type: utilityQuery
   id: KsInventoryAmmo

@@ -9,6 +9,13 @@ namespace Content.Server.NPC.HTN.PrimitiveTasks.Operators.Interactions;
 public sealed partial class DropOperator : HTNOperator
 {
     [Dependency] private readonly IEntityManager _entManager = default!;
+    [Dependency] private readonly HandsSystem _handsSystem = default!; // KS14: ANK
+
+    // KS14: ANK
+    /// <summary>
+    ///     Normally this fails if nothing is in the hand.
+    /// </summary>
+    [DataField] public bool SucceedIfHandEmpty = false;
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {
@@ -19,9 +26,13 @@ public sealed partial class DropOperator : HTNOperator
 
         var owner = blackboard.GetValueOrDefault<EntityUid>(NPCBlackboard.Owner, _entManager);
         // TODO: Need some sort of interaction cooldown probably.
-        var handsSystem = _entManager.System<HandsSystem>();
 
-        if (handsSystem.TryDrop(owner))
+        // KS14: ANK
+        if (SucceedIfHandEmpty &&
+            _handsSystem.HandIsEmpty(owner, activeHand))
+            return HTNOperatorStatus.Finished;
+
+        if (_handsSystem.TryDrop(owner))
         {
             return HTNOperatorStatus.Finished;
         }

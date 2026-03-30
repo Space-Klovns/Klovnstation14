@@ -2,6 +2,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Content.Server.Hands.Systems;
 using Content.Shared.Hands.Components;
+using Content.Shared.Inventory.VirtualItem;
 
 namespace Content.Server.NPC.HTN.PrimitiveTasks.Operators.Interactions;
 
@@ -49,7 +50,8 @@ public sealed partial class SwapToFreeHandOperator : HTNOperator
 
         foreach (var hand in handsComponent.Hands.Keys)
         {
-            if (handSystem.TryGetHeldItem((owner, handsComponent), hand, out _))
+            if (handSystem.TryGetHeldItem((owner, handsComponent), hand, out var heldUid) &&
+                !_entManager.HasComponent<VirtualItemComponent>(heldUid)) // KS14: ANK: dont continue if theres only a virtual item
                 continue;
 
             handSystem.SetActiveHand((owner, handsComponent), hand);

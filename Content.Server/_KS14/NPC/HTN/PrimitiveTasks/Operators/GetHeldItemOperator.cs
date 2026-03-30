@@ -4,7 +4,6 @@ using Content.Server.Hands.Systems;
 using Content.Server.NPC;
 using Content.Server.NPC.HTN;
 using Content.Server.NPC.HTN.PrimitiveTasks;
-using Content.Shared.Hands.Components;
 
 namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 

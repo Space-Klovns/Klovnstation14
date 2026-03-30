@@ -18,6 +18,12 @@
         - !type:HTNPrimitiveTask
           operator: !type:UtilityOperator
             proto: NearbyMeleeTargets
+
+        - !type:HTNPrimitiveTask # KS14: KDA # copy target coords
+          operator: !type:CopyKeyOperator
+            originKey: TargetCoordinates
+            targetKey: LastTargetCoordinates
+
         - !type:HTNCompoundTask
           task: BeforeMeleeAttackTargetCompound
 

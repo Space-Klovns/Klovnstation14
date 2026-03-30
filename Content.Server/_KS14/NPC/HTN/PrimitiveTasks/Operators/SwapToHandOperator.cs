@@ -1,9 +1,12 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Content.Server.Hands.Systems;
+using Content.Server.NPC;
+using Content.Server.NPC.HTN;
+using Content.Server.NPC.HTN.PrimitiveTasks;
 using Content.Shared.Hands.Components;
 
-namespace Content.Server.NPC.HTN.PrimitiveTasks.Operators.Interactions;
+namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 
 /// <summary>
 ///     Swaps to the hand id at the given key.

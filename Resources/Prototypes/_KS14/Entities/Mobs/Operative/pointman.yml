@@ -34,7 +34,7 @@
       101: Dead
   - type: HTN
     rootTask:
-      task: KsOperativeHostileCompound
+      task: KsOperativeCombatCompound
     blackboard:
       ReloadActDelay: !type:Single
         1
@@ -71,7 +71,7 @@
       150: Dead
   - type: HTN
     rootTask:
-      task: KsOperativeHostileCompound
+      task: KsOperativeCombatCompound
     blackboard:
       VisionRadius: !type:Single
         17.5
@@ -92,19 +92,27 @@
   equipment:
     mask: ClothingMaskGasSecurity
     eyes: ClothingEyesGlassesSunglasses
+    belt: ClothingBeltMilitaryWebbing
   storage:
     back:
     - Machete
+    belt:
+    - EmergencyMedipen
 
 - type: startingGear
   parent: KsBaseOperativeGear
   id: KsBaseEliteOperativeGear
   equipment:
     neck: ClothingNeckMantleHOS
-    feet: ClothingShoesBootsJack
+    shoes: ClothingShoesBootsJack
+    outerClothing: ClothingOuterArmorBulletproof
+    belt: ClothingBeltMilitaryWebbing
   storage:
     back:
     - EnergySword
+    belt:
+    - CombatMedipen
+    - CombatMedipen
 
 ## Pistol
 
@@ -163,4 +171,3 @@
     - MagazineShotgun
     - MagazineShotgun
     - MagazineShotgun
-    - CombatMedipen

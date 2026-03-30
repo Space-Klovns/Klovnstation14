@@ -63,7 +63,7 @@ public sealed class JammerSystem : SharedJammerSystem
                     ("fontSize", 12),
                     ("verb", Loc.GetString("chat-speech-verb-default")),
                     ("channel", $"\\[{args.Channel.LocalizedName}\\]"),
-                    ("name", "???"),
+                    ("name", "unknown interference"),
                     ("message", garbledMessage));
 
                 var newChat = new ChatMessage(
