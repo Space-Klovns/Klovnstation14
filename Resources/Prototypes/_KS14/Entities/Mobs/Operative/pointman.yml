@@ -52,18 +52,12 @@
         true
 
 - type: randomHumanoidSettings
-  parents: [ KsBaseOperative ]
+  parent: [ KsBaseOperative ]
   id: KsBaseEliteOperative
   speciesBlacklist:
   - Vox
   - Dwarf
   components:
-  - type: NoSlip
-  - type: RandomHumanoidAppearance
-    randomizeName: false
-  - type: NpcFactionMember
-    factions:
-    - Syndicate
   - type: MobThresholds
     thresholds:
       0: Alive
