@@ -50,12 +50,5 @@ namespace Content.Shared.Throwing
         /// </summary>
         [DataField]
         public Vector2? OriginalScale = null;
-
-        // KS14
-        /// <summary>
-        ///     Collided things and their velocity when initially collided.
-        /// </summary>
-        [DataField]
-        public Dictionary<EntityUid, Vector2> Collided = new();
     }
 }
