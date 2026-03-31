@@ -57,7 +57,7 @@
   parent: [ BaseItem, KsBaseWireSegment ]
   id: KsWireStart
   name: wire activator
-  description: "There are instructions on the side of it:\n'1. CONNECT TO WIRE END'"
+  description: "There are instructions on the side of it:\n'1. CONNECT TO WIRE END'\n'2. PRESS BUTTON'"
   components:
   - type: Sprite
     layers:
@@ -68,8 +68,8 @@
       scale: 0.75,0.75
   - type: LinkedChainStart
     segmentId: KsWireSegment
-    segmentOffset: 0.12
-    segments: 9
+    segmentOffset: 0.125
+    segments: 13
     keysIn:
     - trigger
 

@@ -3,7 +3,6 @@ using Content.Shared.Interaction;
 using Content.Shared.Trigger;
 using Content.Shared.Trigger.Systems;
 using Content.Shared.Verbs;
-using Robust.Shared.Network;
 
 namespace Content.Shared._KS14.LinkedChain;
 
@@ -19,6 +18,7 @@ public sealed class LinkedChainSystem : EntitySystem
     {
         base.Initialize();
 
+        SubscribeLocalEvent<LinkedChainStartComponent, ChainSegmentedEvent>(OnStartAdjacentLinkBroken);
         SubscribeLocalEvent<LinkedChainStartComponent, GetVerbsEvent<AlternativeVerb>>(OnGetAltVerbs);
 
         SubscribeLocalEvent<LinkedChainStartComponent, ChainInitiallyBrokenEvent>(OnStartChainBroken);
@@ -29,6 +29,11 @@ public sealed class LinkedChainSystem : EntitySystem
 
         SubscribeLocalEvent<LinkedChainStartComponent, ComponentShutdown>(OnStartShutdown);
         SubscribeLocalEvent<LinkedChainEndComponent, ComponentShutdown>(OnEndShutdown);
+    }
+
+    private void OnStartAdjacentLinkBroken(Entity<LinkedChainStartComponent> entity, ref ChainSegmentedEvent args)
+    {
+        _chainSystem.TryBreakChainFrom(entity.Owner, removeJoints: true);
     }
 
     private void OnStartChainBroken(Entity<LinkedChainStartComponent> entity, ref ChainInitiallyBrokenEvent args)
