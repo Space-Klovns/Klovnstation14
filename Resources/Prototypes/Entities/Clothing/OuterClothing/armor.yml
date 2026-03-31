@@ -154,7 +154,7 @@
   parent: [ClothingOuterArmorBase, ClothingOuterStorageBase, BaseSyndicateContraband]
   id: ClothingOuterVestWeb
   name: web vest
-  description: A synthetic armor vest. This one has added webbing and ballistic plates. Highly advanced circuitry inside allows it to resist arc flashes.
+  description: A synthetic armor vest. This one has added webbing and ballistic plates.
   components:
   - type: Sprite
     sprite: Clothing/OuterClothing/Vests/webvest.rsi
@@ -173,16 +173,13 @@
     damageCoefficient: 0.9
   - type: StaticPrice
     price: 1500
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #Elite web vest
 - type: entity
   parent: [ClothingOuterArmorBase, AllowSuitStorageClothing, BaseSyndicateContraband]
   id: ClothingOuterVestWebElite
   name: elite web vest
-  description: A synthetic armor vest. This one has added webbing and heat resistant fibers. Highly advanced circuitry inside allows it to resist arc flashes.
+  description: A synthetic armor vest. This one has added webbing and heat resistant fibers.
   components:
   - type: Sprite
     sprite: Clothing/OuterClothing/Vests/elitevest.rsi
@@ -213,9 +210,6 @@
     reduction: 0.85
   - type: StaticPrice
     price: 2500
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #Mercenary web vest
 - type: entity
