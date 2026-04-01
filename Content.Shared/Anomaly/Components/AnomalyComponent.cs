@@ -276,7 +276,7 @@ public sealed partial class AnomalyComponent : Component
 
     // KS14: Displaced telescience
     [DataField]
-    public bool SkipMapInit = true;
+    public bool SkipMapInit = false;
 }
 
 /// <summary>

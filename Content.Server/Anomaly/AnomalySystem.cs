@@ -62,7 +62,7 @@ public sealed partial class AnomalySystem : SharedAnomalySystem
     private void OnMapInit(Entity<AnomalyComponent> anomaly, ref MapInitEvent args)
     {
         // KS14: Displaced telesci start
-        if (!anomaly.Comp.SkipMapInit)
+        if (anomaly.Comp.SkipMapInit)
             return;
         // KS14: Displaced telesci end
 

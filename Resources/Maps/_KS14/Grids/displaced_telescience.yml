@@ -1898,12 +1898,10 @@ entities:
       fixtureID: fix1
       ignoreOtherNonHard: false
     - type: Anomaly
-      skipMapInit: false
-      healthChangePerSecond: 0
+      skipMapInit: true
+      healthChangePerSecond: 0.02
       minPulseLength: 1500
       maxPulseLength: 1800
-      pulseVariation: 0
-      pulseStabilityVariation: 0,0
       supercriticalSound: !type:SoundPathSpecifier
         params:
           variation: null
