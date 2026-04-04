@@ -4,6 +4,7 @@ using Content.Shared._KS14.Random.Helpers;
 using Content.Shared.Body;
 using Content.Shared.Damage;
 using Content.Shared.Throwing;
+using Robust.Shared.Containers;
 using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.Klovnmed.Dismemberment;
@@ -19,6 +20,7 @@ public sealed class DismembermentSystem : EntitySystem
     [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
     [Dependency] private readonly ThrowingSystem _throwingSystem = default!;
     [Dependency] private readonly OrganSearchSystem _organSearchSystem = default!;
+    [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
 
     private EntityQuery<BodyComponent> _bodyQuery;
 
@@ -61,7 +63,8 @@ public sealed class DismembermentSystem : EntitySystem
             return false;
         }
 
-        _transformSystem.SetCoordinates(partUid.Value, bodyEntity.Comp2.Coordinates);
+        var partTransform = Transform(partUid.Value);
+        _containerSystem.Remove(partUid.Value, _containerSystem.GetContainer(partTransform.ParentUid, BodyHierarchySystem.ConstContainerId), force: true, destination: bodyEntity.Comp2.Coordinates);
 
         if (throwSpeed != 0f)
         {

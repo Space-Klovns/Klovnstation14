@@ -40,7 +40,8 @@ public sealed partial class BodySystem
     public void RelayEvent<T>(Entity<BodyComponent> ent, ref T args) where T : struct
     {
         var ev = new BodyRelayedEvent<T>(ent, args);
-        foreach (var organ in ent.Comp.Organs?.ContainedEntities ?? [])
+        // KS14: Use hierarchy instead of container
+        foreach (var organ in ent.Comp.RecursiveChildUids)
         {
             RaiseLocalEvent(organ, ref ev);
         }
@@ -57,7 +58,8 @@ public sealed partial class BodySystem
     public void RelayEvent<T>(Entity<BodyComponent> ent, T args) where T : class
     {
         var ev = new BodyRelayedEvent<T>(ent, args);
-        foreach (var organ in ent.Comp.Organs?.ContainedEntities ?? [])
+        // KS14: Use hierarchy instead of container
+        foreach (var organ in ent.Comp.RecursiveChildUids)
         {
             RaiseLocalEvent(organ, ref ev);
         }

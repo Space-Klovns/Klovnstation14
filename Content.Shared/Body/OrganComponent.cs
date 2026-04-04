@@ -1,3 +1,5 @@
+using Content.Shared._KS14.Hierarchy; // KS14
+using Content.Shared._KS14.Klovnmed; // KS14
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 
@@ -8,9 +10,23 @@ namespace Content.Shared.Body;
 /// </summary>
 /// <seealso cref="BodySystem" />
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
-[Access(typeof(BodySystem))]
-public sealed partial class OrganComponent : Component
+[Access(typeof(BodySystem), typeof(BodyHierarchySystem) /* KS14: Klovnmed access */)]
+public sealed partial class OrganComponent : Component, IHierarchyElementComponent // KS14: IHierarchyElementComponent
 {
+    // KS14
+    [ViewVariables(VVAccess.ReadOnly)]
+    [AutoNetworkedField]
+    public EntityUid? HierarchyUid { get; set; }
+
+    // KS14
+    [ViewVariables(VVAccess.ReadOnly)]
+    [AutoNetworkedField]
+    public HashSet<EntityUid> ChildUids { get; set; }
+
+    // KS14
+    [ViewVariables(VVAccess.ReadOnly)]
+    public Robust.Shared.Containers.Container Container { get; set; }
+
     /// <summary>
     /// The body entity containing this organ, if any
     /// </summary>

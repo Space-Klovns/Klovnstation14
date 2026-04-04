@@ -14,5 +14,21 @@ public sealed partial class InitialBodyComponent : Component
     /// The organs to spawn based on their category.
     /// </summary>
     [DataField(required: true)]
-    public Dictionary<ProtoId<OrganCategoryPrototype>, EntProtoId<OrganComponent>> Organs;
+    public List<InitialBodyPart> Organs; // KS14: use initialbodypart
+
+    public HashSet<ProtoId<OrganCategoryPrototype>> TotalCategories = []; // KS14
+}
+
+// KS14
+[DataDefinition]
+public sealed partial class InitialBodyPart
+{
+    [DataField(required: true)]
+    public ProtoId<OrganCategoryPrototype> Category = "";
+
+    [DataField(required: true)]
+    public EntProtoId<OrganComponent> Entity = "";
+
+    [DataField]
+    public List<InitialBodyPart>? Children = null;
 }

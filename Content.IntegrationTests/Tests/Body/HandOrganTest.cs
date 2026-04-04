@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Content.Shared.Body;
 using Content.Shared.Hands.Components;
 using Robust.Shared.Containers;
@@ -59,17 +60,18 @@ public sealed class HandOrganTest
             var container = entityManager.System<SharedContainerSystem>();
             var body = entityManager.SpawnEntity("TheBody", mapData.GridCoords);
             var hands = entityManager.GetComponent<HandsComponent>(body);
+            var bodyComponent = entityManager.GetComponent<BodyComponent>(body); // KS14
 
             Assert.That(hands.Count, Is.EqualTo(2));
 
-            var handsContainer = container.GetContainer(body, BodyComponent.ContainerID);
+            // KS14: Use hierarchy instead of container
 
             var expectedCount = 2;
-            var contained = handsContainer.ContainedEntities.ToList();
+            var contained = bodyComponent.RecursiveChildUids; // KS14: Use hierarchy instead of container
             foreach (var hand in contained)
             {
                 expectedCount--;
-                container.Remove(hand, handsContainer);
+                entityManager.DeleteEntity(hand); // KS14
                 Assert.That(hands.Count, Is.EqualTo(expectedCount));
             }
 
@@ -77,7 +79,7 @@ public sealed class HandOrganTest
             foreach (var proto in protos)
             {
                 expectedCount++;
-                entityManager.SpawnInContainerOrDrop(proto, body, BodyComponent.ContainerID);
+                entityManager.SpawnAttachedTo(proto, new(body, Vector2.Zero)); // KS14: Use hierarchy instead of container
                 Assert.That(hands.Count, Is.EqualTo(expectedCount));
             }
         });

@@ -254,7 +254,23 @@ public sealed class MarkingManager
         if (!appearancePrototype.TryGetComponent<InitialBodyComponent>(out var initialBody, _component))
             return new();
 
-        return initialBody.Organs;
+        // KS14 Start
+        var organs = new Dictionary<ProtoId<OrganCategoryPrototype>, EntProtoId<OrganComponent>>();
+        void Recurse(InitialBodyPart initialBodyPart)
+        {
+            organs[initialBodyPart.Category] = initialBodyPart.Entity;
+            if (initialBodyPart.Children is not { } children)
+                return;
+
+            foreach (var arrangement in children)
+                Recurse(arrangement);
+        }
+
+        foreach (var arrangement in initialBody.Organs)
+            Recurse(arrangement);
+
+        return organs;
+        // KS14 End
     }
 
     /// <summary>

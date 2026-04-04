@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Hierarchy; // KS14
 using Content.Shared.FixedPoint; // KS14
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
@@ -10,23 +11,35 @@ namespace Content.Shared.Body;
 /// <seealso cref="BodySystem" />
 /// <seealso cref="SharedVisualBodySystem" />
 [RegisterComponent, NetworkedComponent]
+[AutoGenerateComponentState] // KS14
 [Access(typeof(BodySystem))]
-public sealed partial class BodyComponent : Component
+public sealed partial class BodyComponent : Component, IHierarchyComponent // KS14: IHierarchyComponent
 {
-    public const string ContainerID = "body_organs";
+    // KS14
+    [ViewVariables(VVAccess.ReadOnly)]
+    [AutoNetworkedField]
+    public List<EntityUid> RecursiveChildUids { get; set; }
 
-    /// <summary>
-    /// The actual container with entities with <see cref="OrganComponent" /> in it
-    /// </summary>
-    [ViewVariables]
-    public Container? Organs;
+    // KS14
+    [ViewVariables(VVAccess.ReadOnly)]
+    public Container Container { get; set; }
+
+    // KS14: No just no
+    //public const string ContainerID = "body_organs";
+
+    // KS14: Removed, you need to use hierarchy for it
+    // /// <summary>
+    // /// The actual container with entities with <see cref="OrganComponent" /> in it
+    // /// </summary>
+    // [ViewVariables]
+    // public Container? Organs;
 
     // KS14 Addition
     /// <summary>
     ///     Amount of damage taken in one hit (currently explosions only)
     ///         to dismember SOMETHING.
     /// </summary>
-    [DataField,]
+    [DataField]
     public FixedPoint2 DismembermentThreshold = FixedPoint2.New(70f);
 }
 
