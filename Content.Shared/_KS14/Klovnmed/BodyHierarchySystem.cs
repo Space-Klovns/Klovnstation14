@@ -7,7 +7,9 @@ namespace Content.Shared._KS14.Klovnmed;
 public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, OrganComponent>
 {
     public const string ConstContainerId = "body_organs";
+
     public override string ContainerId => ConstContainerId; // for compatibility
+    public override bool Replicated => true;
 
     public override void Initialize()
     {
@@ -28,7 +30,6 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
     protected override void AddElementToHierarchy(Entity<BodyComponent> hierarchyEntity, Entity<OrganComponent> addedEntity)
     {
         base.AddElementToHierarchy(hierarchyEntity, addedEntity);
-        Dirty(hierarchyEntity);
 
         var body = new OrganInsertedIntoEvent(addedEntity);
         RaiseLocalEvent(hierarchyEntity, ref body);
@@ -42,7 +43,6 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
     protected override void RemoveElementFromHierarchy(Entity<BodyComponent> hierarchyEntity, Entity<OrganComponent> removedEntity)
     {
         base.RemoveElementFromHierarchy(hierarchyEntity, removedEntity);
-        Dirty(hierarchyEntity);
 
         var body = new OrganRemovedFromEvent(removedEntity);
         RaiseLocalEvent(hierarchyEntity, ref body);
@@ -56,18 +56,15 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
     protected override void AddDirectChild(Entity<OrganComponent> elementEntity, EntityUid childUid)
     {
         base.AddDirectChild(elementEntity, childUid);
-        Dirty(elementEntity);
     }
 
     protected override void RemoveDirectChild(Entity<OrganComponent> elementEntity, EntityUid childUid)
     {
         base.RemoveDirectChild(elementEntity, childUid);
-        Dirty(elementEntity);
     }
 
     protected override void RecursivelyUpdateDescendants(Entity<OrganComponent> elementEntity, Entity<BodyComponent>? newHierarchyEntity)
     {
         base.RecursivelyUpdateDescendants(elementEntity, newHierarchyEntity);
-        Dirty(elementEntity);
     }
 }
