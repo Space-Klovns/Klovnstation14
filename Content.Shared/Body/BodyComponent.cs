@@ -12,7 +12,7 @@ namespace Content.Shared.Body;
 /// <seealso cref="BodySystem" />
 /// <seealso cref="SharedVisualBodySystem" />
 [RegisterComponent, NetworkedComponent]
-[Access(typeof(BodySystem), typeof(BodyHierarchySystem) /* KS14: Klovnmed access */, typeof(_KS14.InventoryRequiresOrgan.InventoryRequiresOrganSystem) /* KS14: Klovnmed access */)]
+[Access(typeof(BodySystem), typeof(BodyHierarchySystem) /* KS14: Klovnmed access */)]
 public sealed partial class BodyComponent : Component, IHierarchyComponent // KS14: IHierarchyComponent
 {
     // KS14
@@ -20,6 +20,7 @@ public sealed partial class BodyComponent : Component, IHierarchyComponent // KS
     ///     Organ categories present and how many of them there are.
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly)]
+    [Access(typeof(BodyHierarchySystem), Other = AccessPermissions.ReadExecute)]
     public Dictionary<Robust.Shared.Prototypes.ProtoId<OrganCategoryPrototype>, int> PresentOrganCategories = [];
 
     // KS14
