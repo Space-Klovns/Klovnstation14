@@ -86,13 +86,13 @@
     - category: LegLeft # leg
       entity: OrganArachnidLegLeft
       children:
-      - category: HandLeft
+      - category: FootLeft
         entity: OrganArachnidFootLeft
 
     - category: LegRight # leg
       entity: OrganArachnidLegRight
       children:
-      - category: HandRight
+      - category: FootRight
         entity: OrganArachnidFootRight
   - type: HumanoidProfile
     species: Arachnid

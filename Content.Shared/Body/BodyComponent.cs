@@ -11,13 +11,11 @@ namespace Content.Shared.Body;
 /// <seealso cref="BodySystem" />
 /// <seealso cref="SharedVisualBodySystem" />
 [RegisterComponent, NetworkedComponent]
-[AutoGenerateComponentState] // KS14
 [Access(typeof(BodySystem))]
 public sealed partial class BodyComponent : Component, IHierarchyComponent // KS14: IHierarchyComponent
 {
     // KS14
     [ViewVariables(VVAccess.ReadOnly)]
-    [AutoNetworkedField]
     public List<EntityUid> RecursiveChildUids { get; set; }
 
     // KS14

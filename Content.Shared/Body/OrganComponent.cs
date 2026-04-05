@@ -15,12 +15,10 @@ public sealed partial class OrganComponent : Component, IHierarchyElementCompone
 {
     // KS14
     [ViewVariables(VVAccess.ReadOnly)]
-    [AutoNetworkedField]
     public EntityUid? HierarchyUid { get; set; }
 
     // KS14
     [ViewVariables(VVAccess.ReadOnly)]
-    [AutoNetworkedField]
     public HashSet<EntityUid> ChildUids { get; set; }
 
     // KS14

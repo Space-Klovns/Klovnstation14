@@ -175,13 +175,13 @@
     - category: LegLeft # leg
       entity: OrganVoxLegLeft
       children:
-      - category: HandLeft
+      - category: FootLeft
         entity: OrganVoxFootLeft
 
     - category: LegRight # leg
       entity: OrganVoxLegRight
       children:
-      - category: HandRight
+      - category: FootRight
         entity: OrganVoxFootRight
   - type: HumanoidProfile
     species: Vox

@@ -42,6 +42,8 @@ public sealed class InitialBodySystem : EntitySystem
 
         foreach (var arrangement in ent.Comp.Organs)
             Recurse(arrangement, ent);
+
+        Dirty(ent); // KS14
         // KS14 End
 
         // KS14: Slopcode commented out

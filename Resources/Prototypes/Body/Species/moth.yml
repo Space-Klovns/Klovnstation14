@@ -152,13 +152,13 @@
     - category: LegLeft # leg
       entity: OrganMothLegLeft
       children:
-      - category: HandLeft
+      - category: FootLeft
         entity: OrganMothFootLeft
 
     - category: LegRight # leg
       entity: OrganMothLegRight
       children:
-      - category: HandRight
+      - category: FootRight
         entity: OrganMothFootRight
   - type: HumanoidProfile
     species: Moth

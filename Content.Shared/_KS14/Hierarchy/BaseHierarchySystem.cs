@@ -14,7 +14,6 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
     [Dependency] protected readonly SharedContainerSystem ContainerSystem = default!;
 
     public abstract string ContainerId { get; }
-    public virtual bool ServerOnly => false;
 
     private EntityQuery<THierarchyComp> _hierarchyQuery;
     private EntityQuery<TElementComp> _elementQuery;
@@ -28,9 +27,6 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
 
         SubscribeLocalEvent<THierarchyComp, ComponentAdd>(OnHierarchyAdd);
         SubscribeLocalEvent<TElementComp, ComponentAdd>(OnElementAdd);
-        // if (ServerOnly &&
-        //     NetManager.IsClient)
-        //     return;
 
         SubscribeLocalEvent<THierarchyComp, ComponentInit>(OnHierarchyInit);
         SubscribeLocalEvent<TElementComp, ComponentInit>(OnElementInit);
@@ -68,6 +64,9 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
         var newParentUid = args.Transform.ParentUid;
         if (!ContainerSystem.HasContainer(newParentUid, ContainerId, containerManager: null))
         {
+            if (_elementQuery.TryGetComponent(args.OldParent, out var oldParentElementComponent))
+                RemoveDirectChild((args.OldParent.Value, oldParentElementComponent), elementEntity);
+
             if (elementEntity.Comp.HierarchyUid != null)
                 UpdateElementChildrenNewHierarchy(elementEntity, null);
 
@@ -87,25 +86,26 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
                 return;
 
             UpdateElementChildrenNewHierarchy(elementEntity, newElementParentComponent.HierarchyUid);
+            AddDirectChild((newParentUid, newElementParentComponent), args.Entity);
         }
     }
 
     private void OnEntInsertedIntoElementMessage(Entity<TElementComp> newContainerEntity, ref EntInsertedIntoContainerMessage args)
     {
-        if (args.Container.ID != ContainerId ||
-            !_elementQuery.HasComponent(args.Entity))
-            return;
+        // if (args.Container.ID != ContainerId ||
+        //     !_elementQuery.HasComponent(args.Entity))
+        //     return;
 
-        AddDirectChild(newContainerEntity, args.Entity);
+        // AddDirectChild(newContainerEntity, args.Entity);
     }
 
     private void OnEntRemovedFromElementMessage(Entity<TElementComp> oldContainerEntity, ref EntRemovedFromContainerMessage args)
     {
-        if (args.Container.ID != ContainerId ||
-            !_elementQuery.HasComponent(args.Entity))
-            return;
+        // if (args.Container.ID != ContainerId ||
+        //     !_elementQuery.HasComponent(args.Entity))
+        //     return;
 
-        RemoveDirectChild(oldContainerEntity, args.Entity);
+        // RemoveDirectChild(oldContainerEntity, args.Entity);
     }
 
     private void OnHierarchyAdd(Entity<THierarchyComp> hierarchyEntity, ref ComponentAdd args)

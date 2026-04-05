@@ -55,13 +55,13 @@
     - category: LegLeft # leg
       entity: OrganGingerbreadLegLeft
       children:
-      - category: HandLeft
+      - category: FootLeft
         entity: OrganGingerbreadFootLeft
 
     - category: LegRight # leg
       entity: OrganGingerbreadLegRight
       children:
-      - category: HandRight
+      - category: FootRight
         entity: OrganGingerbreadFootRight
   - type: HumanoidProfile
     species: Gingerbread

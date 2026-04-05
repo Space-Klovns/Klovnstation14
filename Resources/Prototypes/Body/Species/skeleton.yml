@@ -74,13 +74,13 @@
     - category: LegLeft # leg
       entity: OrganSkeletonLegLeft
       children:
-      - category: HandLeft
+      - category: FootLeft
         entity: OrganSkeletonFootLeft
 
     - category: LegRight # leg
       entity: OrganSkeletonLegRight
       children:
-      - category: HandRight
+      - category: FootRight
         entity: OrganSkeletonFootRight
   - type: HumanoidProfile
     species: Skeleton

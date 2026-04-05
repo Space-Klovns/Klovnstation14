@@ -130,13 +130,13 @@
     - category: LegLeft # leg
       entity: OrganReptilianLegLeft
       children:
-      - category: HandLeft
+      - category: FootLeft
         entity: OrganReptilianFootLeft
 
     - category: LegRight # leg
       entity: OrganReptilianLegRight
       children:
-      - category: HandRight
+      - category: FootRight
         entity: OrganReptilianFootRight
   - type: HumanoidProfile
     species: Reptilian

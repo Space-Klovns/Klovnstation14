@@ -83,13 +83,13 @@
     - category: LegLeft # leg
       entity: OrganSlimeLegLeft
       children:
-      - category: HandLeft
+      - category: FootLeft
         entity: OrganSlimeFootLeft
 
     - category: LegRight # leg
       entity: OrganSlimeLegRight
       children:
-      - category: HandRight
+      - category: FootRight
         entity: OrganSlimeFootRight
   - type: HumanoidProfile
     species: SlimePerson

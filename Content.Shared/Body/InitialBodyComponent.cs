@@ -1,3 +1,4 @@
+using Robust.Shared.GameStates; // KS14
 using Robust.Shared.Prototypes;
 
 namespace Content.Shared.Body;
@@ -7,6 +8,7 @@ namespace Content.Shared.Body;
 /// Liable to change as the body becomes more complex.
 /// </summary>
 [RegisterComponent]
+[NetworkedComponent, AutoGenerateComponentState] // KS14
 [Access(typeof(InitialBodySystem))]
 public sealed partial class InitialBodyComponent : Component
 {
@@ -16,7 +18,9 @@ public sealed partial class InitialBodyComponent : Component
     [DataField(required: true)]
     public List<InitialBodyPart> Organs; // KS14: use initialbodypart
 
-    public HashSet<ProtoId<OrganCategoryPrototype>> TotalCategories = []; // KS14
+    // KS14
+    [AutoNetworkedField]
+    public HashSet<ProtoId<OrganCategoryPrototype>> TotalCategories = [];
 }
 
 // KS14

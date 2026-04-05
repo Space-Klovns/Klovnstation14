@@ -84,13 +84,13 @@
     - category: LegLeft # leg
       entity: OrganDionaLegLeft
       children:
-      - category: HandLeft
+      - category: FootLeft
         entity: OrganDionaFootLeft
 
     - category: LegRight # leg
       entity: OrganDionaLegRight
       children:
-      - category: HandRight
+      - category: FootRight
         entity: OrganDionaFootRight
   - type: HumanoidProfile
     species: Diona

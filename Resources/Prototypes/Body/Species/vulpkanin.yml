@@ -110,13 +110,13 @@
     - category: LegLeft # leg
       entity: OrganVulpkaninLegLeft
       children:
-      - category: HandLeft
+      - category: FootLeft
         entity: OrganVulpkaninFootLeft
 
     - category: LegRight # leg
       entity: OrganVulpkaninLegRight
       children:
-      - category: HandRight
+      - category: FootRight
         entity: OrganVulpkaninFootRight
   - type: HumanoidProfile
     species: Vulpkanin

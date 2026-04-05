@@ -55,13 +55,13 @@
     - category: LegLeft # leg
       entity: OrganHumanLegLeft
       children:
-      - category: HandLeft
+      - category: FootLeft
         entity: OrganHumanFootLeft
 
     - category: LegRight # leg
       entity: OrganHumanLegRight
       children:
-      - category: HandRight
+      - category: FootRight
         entity: OrganHumanFootRight
   - type: HumanoidProfile
     species: Dwarf
