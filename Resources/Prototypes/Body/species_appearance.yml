@@ -88,8 +88,8 @@
   - type: HideableHumanoidLayers
   - type: WormWithoutOrgans # KS14
     categories:
-    - LegLeft
-    - LegRight
+    - FootLeft
+    - FootRight
   - type: InventoryRequiresOrgan # KS14
     categories:
       gloves:

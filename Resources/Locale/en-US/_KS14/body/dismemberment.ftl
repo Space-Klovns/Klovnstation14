@@ -1,17 +1,18 @@
 ks-body-component-limbs-fine = { CAPITALIZE(SUBJECT($target)) } { CONJUGATE-HAVE($target) } no missing limbs.
-ks-body-component-dismembered = [color=#EB4034]{ CAPITALIZE(POSS-ADJ($target)) } {$category} is missing![/color]
+ks-body-component-dismembered = [color=#EB4034]{ CAPITALIZE(POSS-ADJ($target)) } {$category} missing![/color]
 
 # categories
 
-ks-body-component-dismemberedcategory-Torso = torso, somehow,
-ks-body-component-dismemberedcategory-Head = head
+ks-body-component-dismemberedcategory-Torso = torso is somehow
+ks-body-component-dismemberedcategory-Head = head is
+ks-body-component-dismemberedcategory-Ears = ears are
 
-ks-body-component-dismemberedcategory-ArmLeft = left arm
-ks-body-component-dismemberedcategory-ArmRight = right arm
-ks-body-component-dismemberedcategory-HandLeft = left hand
-ks-body-component-dismemberedcategory-HandRight = right hand
+ks-body-component-dismemberedcategory-ArmLeft = left arm is
+ks-body-component-dismemberedcategory-ArmRight = right arm is
+ks-body-component-dismemberedcategory-HandLeft = left hand is
+ks-body-component-dismemberedcategory-HandRight = right hand is
 
-ks-body-component-dismemberedcategory-LegLeft = left leg
-ks-body-component-dismemberedcategory-LegRight = right leg
-ks-body-component-dismemberedcategory-FootLeft = left foot
-ks-body-component-dismemberedcategory-FootRight = right foot
+ks-body-component-dismemberedcategory-LegLeft = left leg is
+ks-body-component-dismemberedcategory-LegRight = right leg is
+ks-body-component-dismemberedcategory-FootLeft = left foot is
+ks-body-component-dismemberedcategory-FootRight = right foot is
