@@ -1,8 +1,5 @@
-using Robust.Shared.Collections;
 using Robust.Shared.Containers;
-using Robust.Shared.Player;
-using Robust.Shared.Serialization;
-using Robust.Shared.Utility;
+using Robust.Shared.Network;
 
 namespace Content.Shared._KS14.Hierarchy;
 
@@ -13,10 +10,11 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
     where THierarchyComp : Component, IHierarchyComponent
     where TElementComp : Component, IHierarchyElementComponent
 {
-    [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
+    [Dependency] protected readonly INetManager NetManager = default!;
+    [Dependency] protected readonly SharedContainerSystem ContainerSystem = default!;
 
     public abstract string ContainerId { get; }
-    public virtual bool Replicated => false;
+    public virtual bool ServerOnly => false;
 
     private EntityQuery<THierarchyComp> _hierarchyQuery;
     private EntityQuery<TElementComp> _elementQuery;
@@ -28,21 +26,14 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
         _hierarchyQuery = GetEntityQuery<THierarchyComp>();
         _elementQuery = GetEntityQuery<TElementComp>();
 
-        // Networking
-
-        if (Replicated)
-        {
-            SubscribeNetworkEvent<HierarchyStateMessage>(OnHierarchyStateMessage);
-            SubscribeNetworkEvent<HierarchyElementStateMessage>(OnElementStateMessage);
-        }
-
-        // The rest
+        SubscribeLocalEvent<THierarchyComp, ComponentAdd>(OnHierarchyAdd);
+        SubscribeLocalEvent<TElementComp, ComponentAdd>(OnElementAdd);
+        // if (ServerOnly &&
+        //     NetManager.IsClient)
+        //     return;
 
         SubscribeLocalEvent<THierarchyComp, ComponentInit>(OnHierarchyInit);
         SubscribeLocalEvent<TElementComp, ComponentInit>(OnElementInit);
-
-        SubscribeLocalEvent<THierarchyComp, ComponentAdd>(OnHierarchyAdd);
-        SubscribeLocalEvent<TElementComp, ComponentAdd>(OnElementAdd);
 
         SubscribeLocalEvent<THierarchyComp, EntityTerminatingEvent>(OnHierarchyTerminating);
         SubscribeLocalEvent<THierarchyComp, ComponentShutdown>(OnHierarchyShutdown);
@@ -52,77 +43,6 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
         SubscribeLocalEvent<TElementComp, EntParentChangedMessage>(OnElementParentChanged);
 
         SubscribeLocalEvent<TElementComp, ComponentShutdown>(OnElementShutdown);
-    }
-
-    private void OnHierarchyStateMessage(HierarchyStateMessage message)
-    {
-        if (!TryGetEntity(message.TargetUid, out var hierarchyUid) ||
-            !_hierarchyQuery.TryGetComponent(hierarchyUid, out var hierarchyComponent))
-            return;
-
-        var retainedUids = new ValueList<EntityUid>();
-        foreach (var netId in message.RecursiveChildUids)
-        {
-            if (!TryGetEntity(netId, out var childUid))
-                continue;
-
-            retainedUids.Add(childUid.Value);
-        }
-
-        foreach (var retainedUid in retainedUids)
-        {
-            if (hierarchyComponent.RecursiveChildUids.Contains(retainedUid))
-                continue;
-
-            UpdateElementChildrenNewHierarchy((retainedUid, _elementQuery.GetComponent(retainedUid)), null);
-            Log.Info($"Via rep attached {ToPrettyString(retainedUid)}");
-        }
-        foreach (var otherUid in hierarchyComponent.RecursiveChildUids)
-        {
-            if (retainedUids.Contains(otherUid))
-                continue;
-
-            UpdateElementChildrenNewHierarchy((otherUid, _elementQuery.GetComponent(otherUid)), hierarchyUid);
-            Log.Info($"Via rep detached {ToPrettyString(otherUid)}");
-        }
-    }
-
-    private void OnElementStateMessage(HierarchyElementStateMessage message)
-    {
-        if (!TryGetEntity(message.TargetUid, out var elementUid) ||
-            !_elementQuery.TryGetComponent(elementUid, out var elementComponent))
-            return;
-
-        if (TryGetEntity(message.HierarchyUid, out var newHierarchyUid))
-            UpdateElementChildrenNewHierarchy((elementUid.Value, elementComponent), newHierarchyUid);
-        else
-            UpdateElementChildrenNewHierarchy((elementUid.Value, elementComponent), null);
-
-        var retainedUids = new ValueList<EntityUid>();
-        foreach (var netId in message.ChildUids)
-        {
-            if (!TryGetEntity(netId, out var childUid))
-                continue;
-
-            retainedUids.Add(childUid.Value);
-        }
-
-        foreach (var retainedUid in retainedUids)
-        {
-            if (elementComponent.ChildUids.Contains(retainedUid))
-                continue;
-
-            RemoveDirectChild((elementUid.Value, elementComponent), retainedUid);
-            Log.Info($"Via rep added {ToPrettyString(retainedUid)}");
-        }
-        foreach (var otherUid in elementComponent.ChildUids)
-        {
-            if (retainedUids.Contains(otherUid))
-                continue;
-
-            AddDirectChild((elementUid.Value, elementComponent), otherUid);
-            Log.Info($"Via rep removed {ToPrettyString(otherUid)}");
-        }
     }
 
     private void UpdateElementChildrenNewHierarchy(Entity<TElementComp> elementEntity, EntityUid? newHierarchyUid)
@@ -146,7 +66,7 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
     protected virtual void OnElementParentChanged(Entity<TElementComp> elementEntity, ref EntParentChangedMessage args)
     {
         var newParentUid = args.Transform.ParentUid;
-        if (!_containerSystem.HasContainer(newParentUid, ContainerId, containerManager: null))
+        if (!ContainerSystem.HasContainer(newParentUid, ContainerId, containerManager: null))
         {
             if (elementEntity.Comp.HierarchyUid != null)
                 UpdateElementChildrenNewHierarchy(elementEntity, null);
@@ -188,16 +108,6 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
         RemoveDirectChild(oldContainerEntity, args.Entity);
     }
 
-    private void OnHierarchyInit(Entity<THierarchyComp> hierarchyEntity, ref ComponentInit args)
-    {
-        hierarchyEntity.Comp.Container = _containerSystem.EnsureContainer<Container>(hierarchyEntity.Owner, ContainerId);
-    }
-
-    private void OnElementInit(Entity<TElementComp> elementEntity, ref ComponentInit args)
-    {
-        elementEntity.Comp.Container = _containerSystem.EnsureContainer<Container>(elementEntity.Owner, ContainerId);
-    }
-
     private void OnHierarchyAdd(Entity<THierarchyComp> hierarchyEntity, ref ComponentAdd args)
     {
         hierarchyEntity.Comp.RecursiveChildUids = [];
@@ -207,6 +117,16 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
     {
         elementEntity.Comp.HierarchyUid = null;
         elementEntity.Comp.ChildUids = [];
+    }
+
+    private void OnHierarchyInit(Entity<THierarchyComp> hierarchyEntity, ref ComponentInit args)
+    {
+        hierarchyEntity.Comp.Container = ContainerSystem.EnsureContainer<Container>(hierarchyEntity.Owner, ContainerId);
+    }
+
+    private void OnElementInit(Entity<TElementComp> elementEntity, ref ComponentInit args)
+    {
+        elementEntity.Comp.Container = ContainerSystem.EnsureContainer<Container>(elementEntity.Owner, ContainerId);
     }
 
     private void OnElementShutdown(Entity<TElementComp> elementEntity, ref ComponentShutdown args)
@@ -241,36 +161,28 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
         }
     }
 
-    private void UpdateHierarchyEntityState(Entity<THierarchyComp> entity)
-    {
-        if (!Replicated)
-            return;
+    /// <summary>
+    ///     Called when the entitys <see cref="THierarchyComp.RecursiveChildUids"/> was updated.
+    /// </summary>
+    protected virtual void UpdateHierarchyEntityState(Entity<THierarchyComp> entity) { }
 
-        var list = new List<NetEntity>();
-        foreach (var uid in entity.Comp.RecursiveChildUids)
-            list.Add(GetNetEntity(uid));
+    /// <summary>
+    ///     Called when the entitys <see cref="TElementComp.ChildUids"/> was updated.
+    /// </summary>
+    protected virtual void UpdateElementEntityChildren(Entity<TElementComp> entity) { }
 
-        RaiseNetworkEvent(new HierarchyStateMessage(GetNetEntity(entity), list), Filter.Pvs(entity));
-    }
-
-    private void UpdateElementEntityState(Entity<TElementComp> entity)
-    {
-        if (!Replicated)
-            return;
-
-        var list = new List<NetEntity>();
-        foreach (var uid in entity.Comp.ChildUids)
-            list.Add(GetNetEntity(uid));
-
-        RaiseNetworkEvent(new HierarchyElementStateMessage(GetNetEntity(entity), GetNetEntity(entity.Comp.HierarchyUid), list), Filter.Pvs(entity));
-    }
+    /// <summary>
+    ///     Called when the entitys <see cref="TElementComp.HierarchyUid"/> was updated.
+    /// </summary>
+    protected virtual void UpdateElementEntityHierarchy(Entity<TElementComp> entity) { }
 
     [MustCallBase(true)]
     protected virtual void AddElementToHierarchy(Entity<THierarchyComp> hierarchyEntity, Entity<TElementComp> addedEntity)
     {
         if (hierarchyEntity.Comp.RecursiveChildUids.Contains(addedEntity))
         {
-            DebugTools.Assert($"Element entity {ToPrettyString(addedEntity.Owner)} already contained in hierarchy {ToPrettyString(hierarchyEntity.Owner)}!");
+            //DebugTools.Assert($"Element entity {ToPrettyString(addedEntity.Owner)} already contained in hierarchy {ToPrettyString(hierarchyEntity.Owner)}!");
+            Log.Error($"Element entity {ToPrettyString(addedEntity.Owner)} already contained in element {ToPrettyString(hierarchyEntity.Owner)}!");
             return;
         }
 
@@ -298,19 +210,20 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
     {
         if (elementEntity.Comp.ChildUids.Contains(childUid))
         {
-            DebugTools.Assert($"Element entity {ToPrettyString(childUid)} already contained in element {ToPrettyString(elementEntity.Owner)}!");
+            //DebugTools.Assert($"Element entity {ToPrettyString(childUid)} already contained in element {ToPrettyString(elementEntity.Owner)}!");
+            Log.Error($"Element entity {ToPrettyString(childUid)} already contained in element {ToPrettyString(elementEntity.Owner)}!");
             return;
         }
 
         elementEntity.Comp.ChildUids.Add(childUid);
-        UpdateElementEntityState(elementEntity);
+        UpdateElementEntityChildren(elementEntity);
     }
 
     [MustCallBase(true)]
     protected virtual void RemoveDirectChild(Entity<TElementComp> elementEntity, EntityUid childUid)
     {
         elementEntity.Comp.ChildUids.Remove(childUid);
-        UpdateElementEntityState(elementEntity);
+        UpdateElementEntityChildren(elementEntity);
     }
 
     /// <summary>
@@ -327,7 +240,7 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
             AddElementToHierarchy(newHierarchyEntity.Value, elementEntity);
 
         elementEntity.Comp.HierarchyUid = newHierarchyEntity;
-        UpdateElementEntityState(elementEntity);
+        UpdateElementEntityHierarchy(elementEntity);
 
         foreach (var childUid in elementEntity.Comp.ChildUids)
             RecursivelyUpdateDescendants((childUid, _elementQuery.GetComponent(childUid)), newHierarchyEntity);
@@ -345,21 +258,3 @@ public record struct HierarchyElementAddedEvent<TElementComp>(Entity<TElementCom
 /// </summary>
 [ByRefEvent]
 public record struct HierarchyElementRemovedEvent<TElementComp>(Entity<TElementComp> RemovedEntity) where TElementComp : Component, IHierarchyElementComponent;
-
-[Serializable, NetSerializable]
-public sealed class HierarchyStateMessage(NetEntity targetUid, List<NetEntity> recursiveChildUids) : EntityEventArgs
-{
-    public NetEntity TargetUid = targetUid;
-
-    public List<NetEntity> RecursiveChildUids = recursiveChildUids;
-}
-
-[Serializable, NetSerializable]
-public sealed class HierarchyElementStateMessage(NetEntity targetUid, NetEntity? hierarchyUid, List<NetEntity> childUids) : EntityEventArgs
-{
-    public NetEntity TargetUid = targetUid;
-
-    public NetEntity? HierarchyUid = hierarchyUid;
-
-    public List<NetEntity> ChildUids = childUids;
-}

@@ -16,7 +16,7 @@ namespace Content.Shared.Body;
 /// <seealso cref="BodyRelayedEvent{TEvent}" />
 public sealed partial class BodySystem : EntitySystem
 {
-    [Dependency] private readonly SharedContainerSystem _container = default!;
+    // KS14: Unused system, removed
 
     private EntityQuery<BodyComponent> _bodyQuery;
     private EntityQuery<OrganComponent> _organQuery;

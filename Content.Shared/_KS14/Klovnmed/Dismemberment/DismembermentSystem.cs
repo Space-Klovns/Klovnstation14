@@ -17,7 +17,6 @@ namespace Content.Shared._KS14.Klovnmed.Dismemberment;
 public sealed class DismembermentSystem : EntitySystem
 {
     [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
     [Dependency] private readonly ThrowingSystem _throwingSystem = default!;
     [Dependency] private readonly OrganSearchSystem _organSearchSystem = default!;
     [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
