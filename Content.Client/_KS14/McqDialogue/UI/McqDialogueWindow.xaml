@@ -1,4 +1,6 @@
 <DefaultWindow xmlns="https://spacestation14.io"
-               Title="Dialogue">
+               Title="Dialogue"
+               MinSize="500 110"
+               SetSize="500 110">
 
 </DefaultWindow>
