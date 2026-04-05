@@ -4,9 +4,6 @@ using Robust.Client.UserInterface.CustomControls;
 
 namespace Content.Client._KS14.McqDialogue.UI;
 
-/// <summary>
-/// Client-side UI used to control a molar mixer.
-/// </summary>
 [GenerateTypedNameReferences]
 public sealed partial class McqDialogueWindow() : DefaultWindow()
 {
@@ -19,7 +16,7 @@ public sealed partial class McqDialogueWindow() : DefaultWindow()
             StyleClasses = { "OpenBoth" }
         };
 
-        OptionsContainer.AddChild(button);
+        AddChild(button);
         button.OnPressed += (args) => { handler(); };
     }
 }
