@@ -12,7 +12,7 @@
         doAfter: 3
   - node: OpenIncision # Start surgery
     edges:
-    - &endSurgery
+    - &endSurgeryEarly
       to: Base # Cauterise -> Stop surgery (early)
       steps:
       - tool: Welding
@@ -29,7 +29,7 @@
     - !type:TakeOrgan
       category: Head
     edges:
-    - *endSurgery
+    - *endSurgeryEarly
 
 - type: construction
   hide: true
