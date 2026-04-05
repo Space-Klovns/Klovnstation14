@@ -54,8 +54,6 @@
         entity: OrganDionaBrainNymphing
       - category: Eyes
         entity: OrganDionaEyes
-      - category: Ears
-        entity: OrganDionaEars
       - category: Tongue
         entity: OrganDionaTongue
 
@@ -64,8 +62,6 @@
       children:
       - category: Lungs
         entity: OrganDionaLungsNymphing
-      - category: Heart
-        entity: OrganDionaHeart
       - category: Stomach
         entity: OrganDionaStomachNymphing
 

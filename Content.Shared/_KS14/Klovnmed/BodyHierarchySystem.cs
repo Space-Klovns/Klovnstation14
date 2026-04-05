@@ -21,7 +21,7 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
         if (args.Container.ID != ContainerId)
             return;
 
-        // I just want contents to be visible not removable. Still interactable and whatnot doe
+        // i just want contents to be visible not removable. Still interactable and whatnot doe
         args.Cancel();
     }
 
@@ -29,11 +29,18 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
     {
         base.AddElementToHierarchy(hierarchyEntity, addedEntity);
 
+        if (addedEntity.Comp.Category is { } addedCategory)
+        {
+            hierarchyEntity.Comp.PresentOrganCategories[addedCategory] =
+                hierarchyEntity.Comp.PresentOrganCategories.TryGetValue(addedCategory, out var count) ?
+                    count + 1 :
+                    1;
+        }
 
-        var body = new OrganInsertedIntoEvent(addedEntity);
+        var body = new OrganInsertedIntoEvent(addedEntity, hierarchyEntity, addedEntity);
         RaiseLocalEvent(hierarchyEntity, ref body);
 
-        var ev = new OrganGotInsertedEvent(hierarchyEntity);
+        var ev = new OrganGotInsertedEvent(hierarchyEntity, hierarchyEntity, addedEntity);
         RaiseLocalEvent(addedEntity, ref ev);
 
         addedEntity.Comp.Container.ShowContents = true;
@@ -43,26 +50,22 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
     {
         base.RemoveElementFromHierarchy(hierarchyEntity, removedEntity);
 
-        var body = new OrganRemovedFromEvent(removedEntity);
+        // lets just make the jolly assumption that an organs category wont change for no reason while its inside
+        if (removedEntity.Comp.Category is { } removedCategory)
+        {
+            var newCount = hierarchyEntity.Comp.PresentOrganCategories[removedCategory] - 1;
+            if (newCount == 0)
+                hierarchyEntity.Comp.PresentOrganCategories.Remove(removedCategory);
+            else
+                hierarchyEntity.Comp.PresentOrganCategories[removedCategory] = newCount;
+        }
+
+        var body = new OrganRemovedFromEvent(removedEntity, hierarchyEntity, removedEntity);
         RaiseLocalEvent(hierarchyEntity, ref body);
 
-        var ev = new OrganGotRemovedEvent(hierarchyEntity);
+        var ev = new OrganGotRemovedEvent(hierarchyEntity, hierarchyEntity, removedEntity);
         RaiseLocalEvent(removedEntity, ref ev);
+
         removedEntity.Comp.Container.ShowContents = false;
     }
-
-    // protected override void UpdateHierarchyEntityState(Entity<BodyComponent> entity)
-    // {
-    //     Dirty(entity);
-    // }
-
-    // protected override void UpdateElementEntityChildren(Entity<OrganComponent> entity)
-    // {
-    //     Dirty(entity);
-    // }
-
-    // protected override void UpdateElementEntityHierarchy(Entity<OrganComponent> entity)
-    // {
-    //     Dirty(entity);
-    // }
 }

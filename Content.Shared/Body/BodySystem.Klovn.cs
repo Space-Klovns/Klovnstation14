@@ -5,7 +5,6 @@ namespace Content.Shared.Body;
 
 public sealed partial class BodySystem : EntitySystem
 {
-
     public void InitializeKlovn()
     {
         SubscribeLocalEvent<BodyComponent, HealthBeingExaminedEvent>(OnHealthBeingExamined);
@@ -25,24 +24,28 @@ public sealed partial class BodySystem : EntitySystem
             presentCategories.Add(category);
         }
 
-        var first = false;
+        args.Message.PushNewline();
+        var allOkay = true;
+
         foreach (var requiredCategory in initialBodyComponent.TotalCategories)
         {
             if (presentCategories.Contains(requiredCategory))
                 continue;
 
-            if (!Loc.TryGetString("body-component-dismemberedcategory-" + requiredCategory.Id, out var categoryLoc))
+            if (!Loc.TryGetString("ks-body-component-dismemberedcategory-" + requiredCategory.Id, out var categoryLoc))
                 continue;
 
-            // add an extra newline b4 everything
-            if (!first)
-            {
-                first = true;
-                args.Message.PushNewline();
-            }
-
             args.Message.PushNewline();
-            args.Message.AddMarkupOrThrow(Loc.GetString("body-component-dismembered", ("target", entity.Owner), ("category", categoryLoc)));
+            args.Message.AddMarkupOrThrow(Loc.GetString("ks-body-component-dismembered", ("target", entity.Owner), ("category", categoryLoc)));
+
+            // FUCK
+            allOkay = false;
+        }
+
+        if (allOkay)
+        {
+            args.Message.PushNewline();
+            args.Message.AddMarkupOrThrow(Loc.GetString("ks-body-component-limbs-fine", ("target", entity.Owner)));
         }
     }
 }

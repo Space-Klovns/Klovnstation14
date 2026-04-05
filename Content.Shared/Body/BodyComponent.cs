@@ -1,4 +1,5 @@
 using Content.Shared._KS14.Hierarchy; // KS14
+using Content.Shared._KS14.Klovnmed; // KS14
 using Content.Shared.FixedPoint; // KS14
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
@@ -11,9 +12,16 @@ namespace Content.Shared.Body;
 /// <seealso cref="BodySystem" />
 /// <seealso cref="SharedVisualBodySystem" />
 [RegisterComponent, NetworkedComponent]
-[Access(typeof(BodySystem))]
+[Access(typeof(BodySystem), typeof(BodyHierarchySystem) /* KS14: Klovnmed access */, typeof(_KS14.InventoryRequiresOrgan.InventoryRequiresOrganSystem) /* KS14: Klovnmed access */)]
 public sealed partial class BodyComponent : Component, IHierarchyComponent // KS14: IHierarchyComponent
 {
+    // KS14
+    /// <summary>
+    ///     Organ categories present and how many of them there are.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public Dictionary<Robust.Shared.Prototypes.ProtoId<OrganCategoryPrototype>, int> PresentOrganCategories = [];
+
     // KS14
     [ViewVariables(VVAccess.ReadOnly)]
     public List<EntityUid> RecursiveChildUids { get; set; }
@@ -45,22 +53,22 @@ public sealed partial class BodyComponent : Component, IHierarchyComponent // KS
 /// Raised on organ entity, when it is inserted into a body
 /// </summary>
 [ByRefEvent]
-public readonly record struct OrganGotInsertedEvent(EntityUid Target);
+public readonly record struct OrganGotInsertedEvent(EntityUid Target, BodyComponent BodyComponent, OrganComponent OrganComponent); // KS14: Added BodyComponent and OrganComponent
 
 /// <summary>
 /// Raised on organ entity, when it is removed from a body
 /// </summary>
 [ByRefEvent]
-public readonly record struct OrganGotRemovedEvent(EntityUid Target);
+public readonly record struct OrganGotRemovedEvent(EntityUid Target, BodyComponent BodyComponent, OrganComponent OrganComponent); // KS14: Added BodyComponent and OrganComponent
 
 /// <summary>
 /// Raised on body entity, when an organ is inserted into it
 /// </summary>
 [ByRefEvent]
-public readonly record struct OrganInsertedIntoEvent(EntityUid Organ);
+public readonly record struct OrganInsertedIntoEvent(EntityUid Organ, BodyComponent BodyComponent, OrganComponent OrganComponent); // KS14: Added BodyComponent and OrganComponent
 
 /// <summary>
 /// Raised on body entity, when an organ is removed from it
 /// </summary>
 [ByRefEvent]
-public readonly record struct OrganRemovedFromEvent(EntityUid Organ);
+public readonly record struct OrganRemovedFromEvent(EntityUid Organ, BodyComponent BodyComponent, OrganComponent OrganComponent); // KS14: Added BodyComponent and OrganComponent

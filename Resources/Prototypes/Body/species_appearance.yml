@@ -86,6 +86,16 @@
   - type: ContainerContainer
   - type: Appearance
   - type: HideableHumanoidLayers
+  - type: InventoryRequiresOrgan # KS14
+    categories:
+      gloves:
+      - HandLeft
+      - HandRight
+      shoes:
+      - FootLeft
+      - FootRight
+      ears:
+      - Ears
   - type: UserInterface
     interfaces:
       enum.HumanoidMarkingModifierKey.Key:
