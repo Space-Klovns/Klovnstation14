@@ -83,7 +83,9 @@
   - type: Organ
     category: ArmLeft
   - type: Sprite
-    state: l_arm
+    layers: # KS14: made singular state into layer, gave offset
+    - state: l_arm
+      offset: -0.2,0
   - type: VisualOrgan
     layer: enum.HumanoidVisualLayers.LArm
     data:
@@ -102,7 +104,9 @@
   - type: Organ
     category: ArmRight
   - type: Sprite
-    state: r_arm
+    layers: # KS14: made singular state into layer, gave offset
+    - state: r_arm
+      offset: 0.2,0
   - type: VisualOrgan
     layer: enum.HumanoidVisualLayers.RArm
     data:
@@ -433,7 +437,9 @@
   abstract: true
   components:
   - type: Sprite
-    state: head_m
+    layers: # KS14: made singular state into layer, gave offset
+    - state: head_m
+      offset: 0,-0.3
   - type: VisualOrgan
     data:
       state: head_m

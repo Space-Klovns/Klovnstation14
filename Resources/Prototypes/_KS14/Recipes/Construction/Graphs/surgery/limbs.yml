@@ -1,19 +1,18 @@
 - type: constructionGraph
   id: SurgeryGraph
-  start: Base
+  start: start
   graph:
-  - node: Base
+  - node: start # ConstructionComponent.DeconstructionNode
     header: construction-component-to-perform-header
     localizedName: surgery-cleanup-name
     edges:
-    - to: OpenIncision # Open incision -> start surgery
+    - to: OpenIncision # Start surgery -> Incision
       steps:
-      - tool: Cutting
+      - tool: Slicing
         doAfter: 3
-  - node: OpenIncision # Start surgery
-    edges:
-    - &endSurgeryEarly
-      to: Base # Cauterise -> Stop surgery (early)
+  - node: OpenIncision # Incision
+    edges: &surgery_transient
+    - to: Base # Incision -> Cauterise -> Stop surgery (early)
       steps:
       - tool: Welding
         doAfter: 1.5
@@ -22,14 +21,24 @@
       - !type:HasOrgan
         category: Head
       steps:
-      - tool: Slicing
+      - tool: Cutting
         doAfter: 5
+    - to: RemoveArmLeft # Incision -> Cut left arm
+      conditions:
+      - !type:HasOrgan
+        category: ArmLeft
+      steps:
+      - tool: Cutting
+        doAfter: 5
+
   - node: RemoveHead # Cut head
     actions:
     - !type:TakeOrgan
       category: Head
-    edges:
-    - *endSurgeryEarly
+  - node: RemoveArmLeft # Cut head
+    actions:
+    - !type:TakeOrgan
+      category: Head
 
 - type: construction
   hide: true

@@ -79,6 +79,11 @@
   - type: Construction
     graph: SurgeryGraph
     node: Base
+    destructionNode: start
+  - type: ConstructionPathfindingDialogue
+    targetDatums:
+    - Head
+    - ArmLeft
   - type: WormWithoutOrgans
     categories:
     - FootLeft

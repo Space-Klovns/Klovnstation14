@@ -24,9 +24,11 @@ public sealed class McqDialogueSystem : EntitySystem
         if (!Exists(entity.Comp.Target))
             return;
 
+
+
         QueueDel(entity);
 
-        var ev = new McqDialogueSelected(args.Id);
+        var ev = new McqDialogueSelectedEvent(args.Id);
         RaiseLocalEvent(entity.Comp.Target, ref ev);
     }
 
@@ -38,13 +40,14 @@ public sealed class McqDialogueSystem : EntitySystem
         var dialogueComponent = EnsureComp<ActiveMcqDialogueComponent>(uiUid);
         dialogueComponent.Target = sourceUid;
         dialogueComponent.User = userUid;
-        dialogueComponent.Options.AddRange(options);
+        foreach (var optionDatum in options)
+            dialogueComponent.OptionIds.Add(optionDatum.Id);
 
         _userInterfaceSystem.OpenUi((uiUid, uiComponent), McqDialogueUiKey.Key, userUid, predicted: false);
         _userInterfaceSystem.SetUiState((
             uiUid, uiComponent),
             McqDialogueUiKey.Key,
-            new McqDialogueBoundUserInterfaceState(dialogueComponent.Options)
+            new McqDialogueBoundUserInterfaceState([.. options])
         );
     }
 }

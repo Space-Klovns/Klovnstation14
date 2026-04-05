@@ -10,7 +10,7 @@ public sealed partial class ActiveMcqDialogueComponent : Component
     public EntityUid Target = EntityUid.Invalid;
     public EntityUid User = EntityUid.Invalid;
 
-    public List<McqDialogueData> Options = [];
+    public List<string> OptionIds = [];
 }
 
 [Serializable, NetSerializable]
@@ -32,4 +32,4 @@ public sealed class McqDialogueBoundUserInterfaceState(List<McqDialogueData> dia
 public enum McqDialogueUiKey : byte { Key }
 
 [ByRefEvent]
-public record struct McqDialogueSelected(string Id);
+public record struct McqDialogueSelectedEvent(string Id);
