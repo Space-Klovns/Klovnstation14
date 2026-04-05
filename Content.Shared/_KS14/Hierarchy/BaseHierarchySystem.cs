@@ -15,15 +15,15 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
 
     public abstract string ContainerId { get; }
 
-    private EntityQuery<THierarchyComp> _hierarchyQuery;
-    private EntityQuery<TElementComp> _elementQuery;
+    protected EntityQuery<THierarchyComp> HierarchyQuery;
+    protected EntityQuery<TElementComp> ElementQuery;
 
     public override void Initialize()
     {
         base.Initialize();
 
-        _hierarchyQuery = GetEntityQuery<THierarchyComp>();
-        _elementQuery = GetEntityQuery<TElementComp>();
+        HierarchyQuery = GetEntityQuery<THierarchyComp>();
+        ElementQuery = GetEntityQuery<TElementComp>();
 
         SubscribeLocalEvent<TElementComp, ComponentStartup>(OnElementStartup);
 
@@ -53,16 +53,16 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
     private void UpdateElementChildrenNewHierarchy(Entity<TElementComp> elementEntity, EntityUid? newHierarchyUid)
     {
         if (elementEntity.Comp.HierarchyUid is { } oldHierarchyUid)
-            RemoveElementFromHierarchy((oldHierarchyUid, _hierarchyQuery.GetComponent(oldHierarchyUid)), elementEntity);
+            RemoveElementFromHierarchy((oldHierarchyUid, HierarchyQuery.GetComponent(oldHierarchyUid)), elementEntity);
 
-        Entity<THierarchyComp>? newHierarchyEntity = newHierarchyUid == null ? null : (newHierarchyUid.Value, _hierarchyQuery.GetComponent(newHierarchyUid.Value));
+        Entity<THierarchyComp>? newHierarchyEntity = newHierarchyUid == null ? null : (newHierarchyUid.Value, HierarchyQuery.GetComponent(newHierarchyUid.Value));
         if (newHierarchyEntity is { })
             AddElementToHierarchy(newHierarchyEntity.Value, elementEntity);
 
         elementEntity.Comp.HierarchyUid = newHierarchyUid;
         foreach (var childUid in elementEntity.Comp.ChildUids)
             RecursivelyUpdateDescendants(
-                (childUid, _elementQuery.GetComponent(childUid)),
+                (childUid, ElementQuery.GetComponent(childUid)),
                 newHierarchyEntity
             );
     }
@@ -71,7 +71,7 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
     {
         if (!ContainerSystem.HasContainer(newParentUid, ContainerId, containerManager: null))
         {
-            if (_elementQuery.TryGetComponent(oldParentUid, out var oldParentElementComponent))
+            if (ElementQuery.TryGetComponent(oldParentUid, out var oldParentElementComponent))
                 RemoveDirectChild((oldParentUid.Value, oldParentElementComponent), elementEntity);
 
             if (elementEntity.Comp.HierarchyUid != null)
@@ -80,14 +80,14 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
             return;
         }
 
-        if (_hierarchyQuery.HasComponent(newParentUid)) // use new hierarchy parent as hierarchy
+        if (HierarchyQuery.HasComponent(newParentUid)) // use new hierarchy parent as hierarchy
         {
             if (newParentUid == elementEntity.Comp.HierarchyUid)
                 return;
 
             UpdateElementChildrenNewHierarchy(elementEntity, newParentUid);
         }
-        else if (_elementQuery.TryGetComponent(newParentUid, out var newElementParentComponent)) // use hierarchy of new element parent
+        else if (ElementQuery.TryGetComponent(newParentUid, out var newElementParentComponent)) // use hierarchy of new element parent
         {
             if (newParentUid == newElementParentComponent.HierarchyUid)
                 return;
@@ -129,7 +129,7 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
         if (elementEntity.Comp.HierarchyUid is not { } hierarchyUid)
             return;
 
-        _hierarchyQuery.GetComponent(hierarchyUid).RecursiveChildUids.Remove(elementEntity);
+        HierarchyQuery.GetComponent(hierarchyUid).RecursiveChildUids.Remove(elementEntity);
 
         // Removal from any parent element (if present) is handled by containers and whatnot
     }
@@ -143,7 +143,7 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
     protected virtual void OnElementTerminating(Entity<TElementComp> elementEntity, ref EntityTerminatingEvent args)
     {
         if (elementEntity.Comp.HierarchyUid is { } hierarchyUid &&
-            _hierarchyQuery.TryGetComponent(hierarchyUid, out var hierarchyComponent)) // because comp may be deleted
+            HierarchyQuery.TryGetComponent(hierarchyUid, out var hierarchyComponent)) // because comp may be deleted
         {
             // skip the rest of RemoveElementFromHierarchy
             hierarchyComponent.RecursiveChildUids.Remove(elementEntity);
@@ -159,7 +159,7 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
         for (var i = hierarchyEntity.Comp.RecursiveChildUids.Count - 1; i > -1; i--)
         {
             var childUid = hierarchyEntity.Comp.RecursiveChildUids[i];
-            if (!_elementQuery.TryGetComponent(childUid, out var elementComponent))
+            if (!ElementQuery.TryGetComponent(childUid, out var elementComponent))
             {
                 hierarchyEntity.Comp.RecursiveChildUids.RemoveAt(i);
                 continue;
@@ -243,7 +243,7 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
     protected virtual void RecursivelyUpdateDescendants(Entity<TElementComp> elementEntity, Entity<THierarchyComp>? newHierarchyEntity)
     {
         if (elementEntity.Comp.HierarchyUid is { } oldHierarchyUid)
-            RemoveElementFromHierarchy((oldHierarchyUid, _hierarchyQuery.GetComponent(oldHierarchyUid)), elementEntity);
+            RemoveElementFromHierarchy((oldHierarchyUid, HierarchyQuery.GetComponent(oldHierarchyUid)), elementEntity);
 
         if (newHierarchyEntity is { })
             AddElementToHierarchy(newHierarchyEntity.Value, elementEntity);
@@ -252,7 +252,7 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
         UpdateElementEntityHierarchy(elementEntity);
 
         foreach (var childUid in elementEntity.Comp.ChildUids)
-            RecursivelyUpdateDescendants((childUid, _elementQuery.GetComponent(childUid)), newHierarchyEntity);
+            RecursivelyUpdateDescendants((childUid, ElementQuery.GetComponent(childUid)), newHierarchyEntity);
     }
 }
 

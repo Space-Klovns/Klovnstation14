@@ -71,11 +71,35 @@
       state: "creampie_human"
       visible: false
 
+- type: entity # KS14
+  id: ComplexBodyBase
+  abstract: true
+  save: false
+  components:
+  - type: Construction
+    graph: SurgeryGraph
+    node: Base
+  - type: WormWithoutOrgans
+    categories:
+    - FootLeft
+    - FootRight
+  - type: InventoryRequiresOrgan
+    categories:
+      gloves:
+      - HandLeft
+      - HandRight
+      shoes:
+      - FootLeft
+      - FootRight
+      ears:
+      - Ears
+
 - type: entity
   id: BaseSpeciesAppearance
   parent:
   - InventoryBase
   - BaseSpeciesLayers
+  - ComplexBodyBase # KS14
   abstract: true
   save: false
   components:
@@ -86,20 +110,6 @@
   - type: ContainerContainer
   - type: Appearance
   - type: HideableHumanoidLayers
-  - type: WormWithoutOrgans # KS14
-    categories:
-    - FootLeft
-    - FootRight
-  - type: InventoryRequiresOrgan # KS14
-    categories:
-      gloves:
-      - HandLeft
-      - HandRight
-      shoes:
-      - FootLeft
-      - FootRight
-      ears:
-      - Ears
   - type: UserInterface
     interfaces:
       enum.HumanoidMarkingModifierKey.Key:

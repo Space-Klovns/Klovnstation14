@@ -1,0 +1,43 @@
+- type: constructionGraph
+  id: SurgeryGraph
+  start: Base
+  graph:
+  - node: Base
+    header: construction-component-to-perform-header
+    localizedName: surgery-cleanup-name
+    edges:
+    - to: OpenIncision # Open incision -> start surgery
+      steps:
+      - tool: Cutting
+        doAfter: 3
+  - node: OpenIncision # Start surgery
+    edges:
+    - &endSurgery
+      to: Base # Cauterise -> Stop surgery (early)
+      steps:
+      - tool: Welding
+        doAfter: 1.5
+    - to: RemoveHead # Incision -> Cut head
+      conditions:
+      - !type:HasOrgan
+        category: Head
+      steps:
+      - tool: Slicing
+        doAfter: 5
+  - node: RemoveHead # Cut head
+    actions:
+    - !type:TakeOrgan
+      category: Head
+    edges:
+    - *endSurgery
+
+- type: construction
+  hide: true
+  id: HeadRemoval
+  name: surgery-head-removal-name
+  description: surgery-head-removal-desc
+  graph: SurgeryGraph
+  startNode: Base
+  targetNode: RemoveHead
+  category: Surgery
+  objectType: NodeToNode

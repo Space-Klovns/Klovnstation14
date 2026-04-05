@@ -1,6 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
 using Content.Shared._KS14.Hierarchy;
 using Content.Shared.Body;
 using Robust.Shared.Containers;
+using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.Klovnmed;
 
@@ -14,6 +16,29 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
         base.Initialize();
 
         SubscribeLocalEvent<OrganComponent, ContainerIsRemovingAttemptEvent>(OnOrganElementRemovingAttempt);
+    }
+
+    public bool TryGetOrgan(Entity<BodyComponent?> entity, ProtoId<OrganCategoryPrototype> category, [NotNullWhen(true)] out EntityUid? organUid)
+    {
+        if (!HierarchyQuery.Resolve(entity, ref entity.Comp))
+        {
+            organUid = null;
+            return false;
+        }
+
+        foreach (var childUid in entity.Comp.RecursiveChildUids)
+        {
+            var organComponent = ElementQuery.GetComponent(childUid);
+            if (organComponent.Category is not { } childCategory ||
+                childCategory != category)
+                continue;
+
+            organUid = childUid;
+            return true;
+        }
+
+        organUid = null;
+        return false;
     }
 
     private void OnOrganElementRemovingAttempt(Entity<OrganComponent> entity, ref ContainerIsRemovingAttemptEvent args)
