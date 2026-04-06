@@ -1,0 +1,13 @@
+<DefaultWindow xmlns="https://spacestation14.io"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            Title="{Loc 'signal-speaker-ui-header'}"
+            SetWidth="400"
+            MinWidth="150">
+    <BoxContainer Orientation="Vertical" SeparationOverride="4">
+        <Label Name="CurrentTextLabel" Text="{Loc 'signal-speaker-current-text-label'}" />
+        <LineEdit Name="TextLineEdit" />
+        <BoxContainer Orientation="Horizontal" Align="Center">
+            <Button Name="ApplyButton" Text="{Loc 'signal-speaker-ui-apply-text'}" />
+        </BoxContainer>
+    </BoxContainer>
+</DefaultWindow>
