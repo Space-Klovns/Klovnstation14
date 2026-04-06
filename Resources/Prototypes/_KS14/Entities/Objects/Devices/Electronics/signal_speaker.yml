@@ -1,0 +1,30 @@
+- type: entity
+  parent: BaseItem
+  id: SignalSpeaker
+  name: signal speaker
+  description: A portable signal speaker device. Use it to set the text for a speak-on-trigger parent.
+  components:
+  - type: Sprite
+    sprite: Structures/Specific/Atmospherics/sensor.rsi
+    state: gsensor1
+    drawdepth: FloorObjects
+  - type: Item
+    sprite: Structures/Specific/Atmospherics/sensor.rsi
+    storedRotation: -90
+  - type: UseDelay
+    delay: 2.0
+  - type: ActivatableUI
+    key: enum.SignalSpeakerUiKey.Key
+    inHandsOnly: true
+  - type: UserInterface
+    interfaces:
+      enum.SignalSpeakerUiKey.Key:
+        type: SignalSpeakerBoundUserInterface
+  - type: SignalSpeaker
+  - type: PhysicalComposition
+  - type: TriggerOnSignal
+  - type: SpeakOnTrigger
+    text: "This device has not been configured."
+  - type: DeviceLinkSink
+    ports:
+    - Trigger
