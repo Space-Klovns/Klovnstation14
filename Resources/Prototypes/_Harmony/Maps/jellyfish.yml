@@ -1,9 +1,3 @@
-# SPDX-FileCopyrightText: 2025 lettuce
-# SPDX-FileCopyrightText: 2026 github_actions[bot]
-# SPDX-FileCopyrightText: 2026 nabegator220
-#
-# SPDX-License-Identifier: MPL-2.0
-
 - type: gameMap
   id: Jellyfish
   mapName: 'Jellyfish'

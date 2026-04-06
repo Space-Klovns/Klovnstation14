@@ -92625,7 +92625,7 @@ entities:
     - type: Transform
       pos: 26.489439,14.7007885
       parent: 2
-- proto: TorsoHuman
+- proto: OrganHumanTorso
   entities:
   - uid: 13929
     components:

@@ -1,9 +1,3 @@
-// SPDX-FileCopyrightText: 2025 Perry Fraser
-// SPDX-FileCopyrightText: 2025 metalgearsloth
-// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Guidebook;
 using Robust.Shared.GameStates;

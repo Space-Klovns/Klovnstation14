@@ -793,3 +793,61 @@ Entries:
       message: Added plumbing and the RPD for atmos.
   id: 100
   time: '2026-02-18T17:08:42.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Fix
+      message: Fixed secborg laws.
+  id: 101
+  time: '2026-02-28T13:39:44.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Add
+      message: Added more handwritten books
+  id: 102
+  time: '2026-03-02T13:28:50.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Fix
+      message: Fixed gauze
+  id: 103
+  time: '2026-03-08T15:26:09.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: >-
+        FPV drone battery usage has been changed and they should last ~1.5
+        minutes on a medium powercell.
+    - type: Tweak
+      message: FPV drone now takes more damage on impact.
+    - type: Fix
+      message: >-
+        FPV drone control UI is more responsive. You can now also have multiple
+        people pilot the same drone (on different controllers).
+    - type: Tweak
+      message: Nutriment now regenerates more blood and stops more bleeding.
+    - type: Remove
+      message: Removed spire map because it was pissing me off
+  id: 104
+  time: '2026-03-20T13:46:48.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Security gasmask is now a pseudo sec hailer.
+    - type: Add
+      message: New ambience
+    - type: Remove
+      message: Removed some old ambience
+  id: 105
+  time: '2026-03-23T19:59:56.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Fix
+      message: Fixed the right click menu.
+  id: 106
+  time: '2026-03-29T16:49:21.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Tweak
+      message: Gun and armor rework.
+  id: 107
+  time: '2026-03-29T18:00:29.0000000+00:00'

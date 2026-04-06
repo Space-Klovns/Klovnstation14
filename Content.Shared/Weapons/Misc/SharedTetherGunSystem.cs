@@ -22,6 +22,7 @@ namespace Content.Shared.Weapons.Misc;
 
 public abstract partial class SharedTetherGunSystem : EntitySystem
 {
+    [Dependency] private readonly _KS14.Speczones.SharedSpeczoneSystem _speczoneSystem = default!; // KS14
     [Dependency] private readonly INetManager _netManager = default!;
     [Dependency] private readonly ActionBlockerSystem _blocker = default!;
     [Dependency] private readonly SharedHandsSystem _hands = default!;
@@ -164,6 +165,11 @@ public abstract partial class SharedTetherGunSystem : EntitySystem
     {
         if (!Resolve(gun, ref component))
             return false;
+
+        // KS14 Start
+        if (_speczoneSystem.AttemptInterfere(gun, user: user, predicted: true))
+            return false;
+        // KS14 End
 
         if (!CanTether(gun, component, target, user))
             return false;

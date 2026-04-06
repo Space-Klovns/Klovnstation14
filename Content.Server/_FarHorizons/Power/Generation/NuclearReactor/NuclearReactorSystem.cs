@@ -1,10 +1,3 @@
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
-// SPDX-FileCopyrightText: 2025 jhrushbe
-// SPDX-FileCopyrightText: 2025 rottenheadphones
-//
-// SPDX-License-Identifier: CC-BY-NC-SA-3.0
-
 using Content.Server._FarHorizons.NodeContainer.Nodes;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Atmos.Piping.Components;
@@ -34,6 +27,7 @@ using Content.Server.Administration.Logs;
 using Content.Server.Audio;
 using Content.Shared.Throwing;
 using Content.Shared._KS14.Deferral;
+using Content.Shared.Atmos.Components;
 
 namespace Content.Server._FarHorizons.Power.Generation.FissionGenerator;
 
@@ -42,7 +36,6 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
     // The great wall of dependencies
     [Dependency] private readonly AtmosphereSystem _atmosphereSystem = default!;
     [Dependency] private readonly EntityManager _entityManager = default!;
-    [Dependency] private readonly MetaDataSystem _metaDataSystem = default!;
     [Dependency] private readonly NodeContainerSystem _nodeContainer = default!;
     [Dependency] private readonly NodeGroupSystem _nodeGroupSystem = default!;
     [Dependency] private readonly ReactorPartSystem _partSystem = default!;

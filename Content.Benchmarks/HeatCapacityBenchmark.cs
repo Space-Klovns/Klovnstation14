@@ -1,8 +1,3 @@
-// SPDX-FileCopyrightText: 2026 ArtisticRoomba
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-//
-// SPDX-License-Identifier: MIT
-
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using Content.IntegrationTests;

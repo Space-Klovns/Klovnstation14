@@ -1,10 +1,3 @@
-// SPDX-FileCopyrightText: 2024 Whisper
-// SPDX-FileCopyrightText: 2025 Tayrtahn
-// SPDX-FileCopyrightText: 2026 deltanedas
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-//
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
 using Content.Shared.Body.Components;
 using Content.Shared.Destructible;
 using Content.Shared.Destructible.Thresholds.Behaviors;

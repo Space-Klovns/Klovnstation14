@@ -1,14 +1,3 @@
-// SPDX-FileCopyrightText: 2025 Aiden
-// SPDX-FileCopyrightText: 2025 FaDeOkno
-// SPDX-FileCopyrightText: 2025 Gerkada
-// SPDX-FileCopyrightText: 2025 GoobBot
-// SPDX-FileCopyrightText: 2025 SX-7
-// SPDX-FileCopyrightText: 2025 coderabbitai[bot]
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
-// SPDX-FileCopyrightText: 2025 gluesniffler
-//
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
 using System.Linq;
 using System.Numerics;
 using Content.Client.Research;

@@ -1,14 +1,3 @@
-// SPDX-FileCopyrightText: 2022 Andreas Kämper
-// SPDX-FileCopyrightText: 2022 EmoGarbage404
-// SPDX-FileCopyrightText: 2022 Nemanja
-// SPDX-FileCopyrightText: 2023 Chief-Engineer
-// SPDX-FileCopyrightText: 2023 DrSmugleaf
-// SPDX-FileCopyrightText: 2024 Kara
-// SPDX-FileCopyrightText: 2026 deltanedas
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-//
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
 using Content.Server.VendingMachines;
 using Content.Shared.Destructible;
 using Content.Shared.Destructible.Thresholds.Behaviors;

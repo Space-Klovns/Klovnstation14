@@ -79,7 +79,7 @@ anomaly-generator-flavor-right = v1.1
 
 anomaly-behavior-unknown = [color=red]ERROR. Cannot be read.[/color]
 
-anomaly-behavior-title = behavior deviation analysis:
+anomaly-behavior-title = Behavior Deviation Analysis:
 anomaly-behavior-point = [color=gold]Anomaly produces {$mod}% of the points[/color]
 
 anomaly-behavior-safe = [color=forestgreen]The anomaly is extremely stable. Extremely rare pulsations.[/color]
@@ -100,3 +100,4 @@ anomaly-behavior-moving = [color=crimson]Coordinate instability was detected.[/c
 
 gorilla-shove-not-disposals = You can only shove this into a disposals unit!
 gorilla-shove-gauntlet-not-active = The gauntlet isn't active!
+anomaly-secret-admin = [color=red](ERROR)[/color]

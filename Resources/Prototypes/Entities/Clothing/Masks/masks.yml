@@ -39,6 +39,18 @@
         Slash: 0.95
         Piercing: 0.95
         Heat: 0.95
+  # KS14 Start
+  - type: TriggerOnMobstateChange
+    mobState: [ Dead ]
+    keyOut: death
+  - type: EmitSoundOnTrigger
+    keysIn: [ death ]
+    sound:
+      path: "/Audio/_KS14/Effects/Hailer/sec_death.ogg"
+      params:
+        volume: 4
+        variation: 0.1
+  # KS14 End
 
 - type: entity
   parent: [ClothingMaskGas, BaseSyndicateContraband]
@@ -718,9 +730,6 @@
     sprite: Clothing/Mask/italian_moustache.rsi
   - type: Item
     storedRotation: -90
-  - type: AddAccentClothing
-    accent: ReplacementAccent
-    replacement: italian
 
 - type: entity
   parent: ClothingMaskBase

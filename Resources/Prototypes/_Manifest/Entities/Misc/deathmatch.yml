@@ -1,8 +1,3 @@
-# SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-# SPDX-FileCopyrightText: 2026 github_actions[bot]
-#
-# SPDX-License-Identifier: MPL-2.0
-
 - type: entity
   parent: MarkerBase
   id: ProceduralSpawnDeathmatch
@@ -73,7 +68,7 @@
         - InteractImpassable
         - Opaque
         mask:
-        - MobImpassable # KS14 
+        - MobImpassable # KS14
 
 - type: entity
   parent: HolosignForcefieldDeathmatch

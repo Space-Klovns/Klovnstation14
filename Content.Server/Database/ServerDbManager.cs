@@ -1,32 +1,3 @@
-// SPDX-FileCopyrightText: 2021 Acruid
-// SPDX-FileCopyrightText: 2021 Javier Guardia Fernández
-// SPDX-FileCopyrightText: 2021 Leo
-// SPDX-FileCopyrightText: 2021 Saphire Lattice
-// SPDX-FileCopyrightText: 2022 Kevin Zheng
-// SPDX-FileCopyrightText: 2022 ShadowCommander
-// SPDX-FileCopyrightText: 2022 Vera Aguilera Puerto
-// SPDX-FileCopyrightText: 2022 Veritius
-// SPDX-FileCopyrightText: 2022 mirrorcult
-// SPDX-FileCopyrightText: 2023 Chief-Engineer
-// SPDX-FileCopyrightText: 2023 Riggle
-// SPDX-FileCopyrightText: 2023 Visne
-// SPDX-FileCopyrightText: 2023 metalgearsloth
-// SPDX-FileCopyrightText: 2024 AJCM-git
-// SPDX-FileCopyrightText: 2024 DrSmugleaf
-// SPDX-FileCopyrightText: 2024 Julian Giebel
-// SPDX-FileCopyrightText: 2024 Nemanja
-// SPDX-FileCopyrightText: 2024 Simon
-// SPDX-FileCopyrightText: 2025 Gerkada
-// SPDX-FileCopyrightText: 2025 Myra
-// SPDX-FileCopyrightText: 2025 PJB3005
-// SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
-// SPDX-FileCopyrightText: 2025 Tayrtahn
-// SPDX-FileCopyrightText: 2025 YotaXP
-// SPDX-FileCopyrightText: 2025 beck-thompson
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
-//
-// SPDX-License-Identifier: MIT
-
 using System.Collections.Immutable;
 using System.IO;
 using System.Net;
@@ -49,6 +20,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager;
 using LogLevel = Robust.Shared.Log.LogLevel;
 using MSLogLevel = Microsoft.Extensions.Logging.LogLevel;
 
@@ -60,15 +32,19 @@ namespace Content.Server.Database
 
         void Shutdown();
 
+        Task<bool> HasPendingModelChanges();
+
         #region Preferences
-        Task<PlayerPreferences> InitPrefsAsync(
+        Task<Preference> InitPrefsAsync(
             NetUserId userId,
-            ICharacterProfile defaultProfile,
+            HumanoidCharacterProfile defaultProfile,
             CancellationToken cancel);
 
         Task SaveSelectedCharacterIndexAsync(NetUserId userId, int index);
 
-        Task SaveCharacterSlotAsync(NetUserId userId, ICharacterProfile? profile, int slot);
+        Task MakeCharacterSlotLegacyAsync(NetUserId userId, int slot);
+
+        Task SaveCharacterSlotAsync(NetUserId userId, HumanoidCharacterProfile? profile, int slot);
 
         Task SaveAdminOOCColorAsync(NetUserId userId, Color color);
 
@@ -76,7 +52,7 @@ namespace Content.Server.Database
 
         // Single method for two operations for transaction.
         Task DeleteSlotAndSetSelectedIndex(NetUserId userId, int deleteSlot, int newSlot);
-        Task<PlayerPreferences?> GetPlayerPreferencesAsync(NetUserId userId, CancellationToken cancel);
+        Task<Preference?> GetPlayerPreferencesAsync(NetUserId userId, CancellationToken cancel);
         #endregion
 
         #region User Ids
@@ -403,6 +379,7 @@ namespace Content.Server.Database
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IResourceManager _res = default!;
         [Dependency] private readonly ILogManager _logMgr = default!;
+        [Dependency] private readonly ISerializationManager _serialization = default!;
 
         private ServerDbBase _db = default!;
         private LoggingProvider _msLogProvider = default!;
@@ -434,11 +411,11 @@ namespace Content.Server.Database
             {
                 case "sqlite":
                     SetupSqlite(out var contextFunc, out var inMemory);
-                    _db = new ServerDbSqlite(contextFunc, inMemory, _cfg, _synchronous, opsLog);
+                    _db = new ServerDbSqlite(contextFunc, inMemory, _cfg, _synchronous, opsLog, _serialization);
                     break;
                 case "postgres":
                     var (pgOptions, conString) = CreatePostgresOptions();
-                    _db = new ServerDbPostgres(pgOptions, conString, _cfg, opsLog, notifyLog);
+                    _db = new ServerDbPostgres(pgOptions, conString, _cfg, opsLog, notifyLog, _serialization);
                     break;
                 default:
                     throw new InvalidDataException($"Unknown database engine {engine}.");
@@ -455,9 +432,9 @@ namespace Content.Server.Database
             _db.Shutdown();
         }
 
-        public Task<PlayerPreferences> InitPrefsAsync(
+        public Task<Preference> InitPrefsAsync(
             NetUserId userId,
-            ICharacterProfile defaultProfile,
+            HumanoidCharacterProfile defaultProfile,
             CancellationToken cancel)
         {
             DbWriteOpsMetric.Inc();
@@ -470,7 +447,13 @@ namespace Content.Server.Database
             return RunDbCommand(() => _db.SaveSelectedCharacterIndexAsync(userId, index));
         }
 
-        public Task SaveCharacterSlotAsync(NetUserId userId, ICharacterProfile? profile, int slot)
+        public Task MakeCharacterSlotLegacyAsync(NetUserId userId, int slot)
+        {
+            DbWriteOpsMetric.Inc();
+            return RunDbCommand(() => _db.MakeCharacterSlotLegacyAsync(userId, slot));
+        }
+
+        public Task SaveCharacterSlotAsync(NetUserId userId, HumanoidCharacterProfile? profile, int slot)
         {
             DbWriteOpsMetric.Inc();
             return RunDbCommand(() => _db.SaveCharacterSlotAsync(userId, profile, slot));
@@ -494,7 +477,7 @@ namespace Content.Server.Database
             return RunDbCommand(() => _db.SaveConstructionFavoritesAsync(userId, constructionFavorites));
         }
 
-        public Task<PlayerPreferences?> GetPlayerPreferencesAsync(NetUserId userId, CancellationToken cancel)
+        public Task<Preference?> GetPlayerPreferencesAsync(NetUserId userId, CancellationToken cancel)
         {
             DbReadOpsMetric.Inc();
             return RunDbCommand(() => _db.GetPlayerPreferencesAsync(userId, cancel));
@@ -1041,6 +1024,11 @@ namespace Content.Server.Database
                     handler(notification);
                 }
             }
+        }
+
+        public Task<bool> HasPendingModelChanges()
+        {
+            return RunDbCommand(() => _db.HasPendingModelChanges());
         }
 
         // Wrapper functions to run DB commands from the thread pool.

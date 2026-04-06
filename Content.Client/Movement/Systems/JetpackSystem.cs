@@ -1,33 +1,15 @@
-// SPDX-FileCopyrightText: 2022 Kara
-// SPDX-FileCopyrightText: 2022 Leon Friedrich
-// SPDX-FileCopyrightText: 2022 rolfero
-// SPDX-FileCopyrightText: 2023 Visne
-// SPDX-FileCopyrightText: 2024 Plykiya
-// SPDX-FileCopyrightText: 2024 slarticodefast
-// SPDX-FileCopyrightText: 2025 Funce
-// SPDX-FileCopyrightText: 2025 Gerkada
-// SPDX-FileCopyrightText: 2025 Tayrtahn
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
-// SPDX-FileCopyrightText: 2025 metalgearsloth
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Shared.Clothing.Components;
 using Content.Shared.Clothing.EntitySystems;
 using Content.Shared.Movement.Components;
 using Content.Shared.Movement.Systems;
 using Robust.Client.GameObjects;
-using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Components;
-using Robust.Shared.Timing;
-
 namespace Content.Client.Movement.Systems;
 
 public sealed class JetpackSystem : SharedJetpackSystem
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly ClothingSystem _clothing = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly SharedMapSystem _mapSystem = default!;
@@ -54,7 +36,7 @@ public sealed class JetpackSystem : SharedJetpackSystem
     {
         base.Update(frameTime);
 
-        if (!_timing.IsFirstTimePredicted)
+        if (!GameTiming.IsFirstTimePredicted)
             return;
 
         // TODO: Please don't copy-paste this I beg
@@ -72,11 +54,11 @@ public sealed class JetpackSystem : SharedJetpackSystem
             }
 
             // Only spawn particles if we're far-enough from the last place at which we spawned particles, and a long-enough timespan has passed since then.
-            if (_transform.InRange(transform.Coordinates, comp.LastCoordinates.Value, comp.MaxDistance) && _timing.CurTime < comp.TargetTime)
+            if (_transform.InRange(transform.Coordinates, comp.LastCoordinates.Value, comp.MaxDistance) && GameTiming.CurTime < comp.TargetTime)
                 continue;
 
             comp.LastCoordinates = currentCoords;
-            comp.TargetTime = _timing.CurTime + comp.EffectCooldown;
+            comp.TargetTime = GameTiming.CurTime + comp.EffectCooldown;
             CreateParticles(uid, transform);
         }
     }

@@ -1,8 +1,3 @@
-// SPDX-FileCopyrightText: 2025 Gerkada
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Server.Disposal.Unit;
 using Content.Shared.Disposal.Components;
 using Content.Server.Popups;
@@ -77,12 +72,13 @@ public sealed class GorillaShoveSystem : EntitySystem
         var disposals = _lookup.GetEntitiesInRange<DisposalUnitComponent>(xform.Coordinates, 1.5f);
         var targetDisposal = disposals.FirstOrDefault();
 
-        if (targetDisposal == null)
-        {
-            // No charge consumed yet, just return
-            _popup.PopupEntity(Loc.GetString("gorilla-shove-not-disposals"), user, user);
-            return;
-        }
+        // KS14 GERKADA TODO BOTHER: this is always false
+        // if (targetDisposal == null)
+        // {
+        //     // No charge consumed yet, just return
+        //     _popup.PopupEntity(Loc.GetString("gorilla-shove-not-disposals"), user, user);
+        //     return;
+        // }
 
         //Prepare entity
         if (xform.Anchored)

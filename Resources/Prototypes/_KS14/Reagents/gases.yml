@@ -1,12 +1,3 @@
-# SPDX-FileCopyrightText: 2025 Deltium
-# SPDX-FileCopyrightText: 2025 Gerkada
-# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-# SPDX-FileCopyrightText: 2025 Syndicate Engineer
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-# SPDX-FileCopyrightText: 2026 nabegator220
-#
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
 - type: reagent
   id: Zipion
   name: reagent-name-zipion
@@ -15,20 +6,21 @@
   flavor: minty
   color: "#b924bf"
   metabolisms:
-    Gas:
+    Respiration:
       effects:
       - !type:AddReagentToBlood
         reagent: Zipium
         amount: 2.5
-    Narcotic:
+    Bloodstream:
       effects:
-      - !type:AddReagentToBlood
+      - !type:AdjustReagent
         conditions:
         - !type:BloodReagentCondition
           reagent: Zipion
           min: 1
         reagent: Zipium
         amount: 2.5
+
 - type: reagent
   id: Argon
   name: reagents-argon

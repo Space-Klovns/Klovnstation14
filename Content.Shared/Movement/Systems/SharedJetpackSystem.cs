@@ -1,19 +1,3 @@
-// SPDX-FileCopyrightText: 2022 TekuNut
-// SPDX-FileCopyrightText: 2023 DrSmugleaf
-// SPDX-FileCopyrightText: 2023 Kara
-// SPDX-FileCopyrightText: 2023 deltanedas
-// SPDX-FileCopyrightText: 2023 metalgearsloth
-// SPDX-FileCopyrightText: 2024 Ed
-// SPDX-FileCopyrightText: 2024 Leon Friedrich
-// SPDX-FileCopyrightText: 2024 Tayrtahn
-// SPDX-FileCopyrightText: 2024 slarticodefast
-// SPDX-FileCopyrightText: 2025 Funce
-// SPDX-FileCopyrightText: 2025 Gerkada
-// SPDX-FileCopyrightText: 2025 Princess Cheeseballs
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
-//
-// SPDX-License-Identifier: MIT
-
 using System.Diagnostics.CodeAnalysis;
 using Content.Shared.Actions;
 using Content.Shared.Gravity;
@@ -25,14 +9,16 @@ using Robust.Shared.Containers;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
+using Robust.Shared.Timing; // KS14 Change
 
 namespace Content.Shared.Movement.Systems;
 
 public abstract class SharedJetpackSystem : EntitySystem
 {
-    [Dependency] private readonly MovementSpeedModifierSystem _movementSpeedModifier = default!;
     [Dependency] protected readonly SharedAppearanceSystem Appearance = default!;
     [Dependency] protected readonly SharedContainerSystem Container = default!;
+    [Dependency] protected readonly IGameTiming GameTiming = default!; // KS14 Change
+    [Dependency] private readonly MovementSpeedModifierSystem _movementSpeedModifier = default!;
     [Dependency] private readonly SharedPopupSystem _popup = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
     [Dependency] private readonly ActionContainerSystem _actionContainer = default!;
@@ -157,7 +143,8 @@ public abstract class SharedJetpackSystem : EntitySystem
         if (TryComp<PhysicsComponent>(user, out var physics))
             _physics.SetBodyStatus(user, physics, BodyStatus.InAir);
 
-        EnsureComp<ActiveJetpackComponent>(jetpackUid);
+        if (!GameTiming.ApplyingState) // KS14: only do if not applying state
+            EnsureComp<ActiveJetpackComponent>(user);
 
         userComp.Jetpack = jetpackUid;
         userComp.WeightlessAcceleration = jetpackComp.Acceleration;
@@ -169,7 +156,9 @@ public abstract class SharedJetpackSystem : EntitySystem
 
     private void EndUserFlying(EntityUid user, Entity<JetpackComponent> jetpack)
     {
-        RemComp<ActiveJetpackComponent>(jetpack.Owner);
+        if (!GameTiming.ApplyingState) // KS14: only do if not applying state
+            RemComp<ActiveJetpackComponent>(jetpack.Owner);
+
         if (TryComp<PhysicsComponent>(user, out var physics))
             _physics.SetBodyStatus(user, physics, BodyStatus.OnGround);
 

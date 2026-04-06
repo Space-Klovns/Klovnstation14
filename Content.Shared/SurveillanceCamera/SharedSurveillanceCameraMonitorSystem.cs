@@ -1,15 +1,5 @@
-// SPDX-FileCopyrightText: 2022 Flipp Syder
-// SPDX-FileCopyrightText: 2023 metalgearsloth
-// SPDX-FileCopyrightText: 2025 Aiden
-// SPDX-FileCopyrightText: 2025 DrSmugleaf
-// SPDX-FileCopyrightText: 2025 Hagvan
-// SPDX-FileCopyrightText: 2025 John Willis
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Shared.DeviceNetwork;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Map; // Goobstation
 using Robust.Shared.Serialization;
 
 namespace Content.Shared.SurveillanceCamera;
@@ -25,20 +15,23 @@ public sealed class SurveillanceCameraMonitorUiState : BoundUserInterfaceState
 
     // Currently available subnets. Does not send the entirety of the possible
     // cameras to view because that could be really, really large
+    public HashSet<string> Subnets { get; }
 
     public string ActiveAddress;
 
+    // Currently active subnet.
+    public string ActiveSubnet { get; }
+
     // Known cameras, by address and name.
-    public Dictionary<string, (string, (NetEntity, NetCoordinates))> Cameras { get; } // Goobstation
+    public Dictionary<string, string> Cameras { get; }
 
-    public Dictionary<string, (string, (NetEntity, NetCoordinates))> MobileCameras { get; } // Goobstation
-
-    public SurveillanceCameraMonitorUiState(NetEntity? activeCamera, string activeAddress, Dictionary<string, (string, (NetEntity, NetCoordinates))> cameras, Dictionary<string, (string, (NetEntity, NetCoordinates))> mobileCameras) // Goobstation
+    public SurveillanceCameraMonitorUiState(NetEntity? activeCamera, HashSet<string> subnets, string activeAddress, string activeSubnet, Dictionary<string, string> cameras)
     {
         ActiveCamera = activeCamera;
+        Subnets = subnets;
         ActiveAddress = activeAddress;
+        ActiveSubnet = activeSubnet;
         Cameras = cameras;
-        MobileCameras = mobileCameras; // Goobstation
     }
 }
 
@@ -46,10 +39,12 @@ public sealed class SurveillanceCameraMonitorUiState : BoundUserInterfaceState
 public sealed class SurveillanceCameraMonitorSwitchMessage : BoundUserInterfaceMessage
 {
     public string Address { get; }
+    public string? CameraSubnet { get; }
 
-    public SurveillanceCameraMonitorSwitchMessage(string address)
+    public SurveillanceCameraMonitorSwitchMessage(string address, string? cameraSubnet = null)
     {
         Address = address;
+        CameraSubnet = cameraSubnet;
     }
 }
 

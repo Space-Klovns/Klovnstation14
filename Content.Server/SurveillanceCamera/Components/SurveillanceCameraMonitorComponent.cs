@@ -1,19 +1,3 @@
-// SPDX-FileCopyrightText: 2022 Flipp Syder
-// SPDX-FileCopyrightText: 2022 Pieter-Jan Briers
-// SPDX-FileCopyrightText: 2022 Vera Aguilera Puerto
-// SPDX-FileCopyrightText: 2022 metalgearsloth
-// SPDX-FileCopyrightText: 2023 DrSmugleaf
-// SPDX-FileCopyrightText: 2025 Aiden
-// SPDX-FileCopyrightText: 2025 Hagvan
-// SPDX-FileCopyrightText: 2025 John Willis
-// SPDX-FileCopyrightText: 2025 nabegator220
-// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-//
-// SPDX-License-Identifier: MIT
-
-using Robust.Shared.Map; // Goobstation
-
 namespace Content.Server.SurveillanceCamera;
 
 [RegisterComponent]
@@ -45,31 +29,16 @@ public sealed partial class SurveillanceCameraMonitorComponent : Component
     // Set of viewers currently looking at this monitor.
     public HashSet<EntityUid> Viewers { get; } = new();
 
+    // Current active subnet.
+    [ViewVariables]
+    public string ActiveSubnet { get; set; } = default!;
+
     // Known cameras in this subnet by address with name values.
     // This is cleared when the subnet is changed.
     [ViewVariables]
-    public Dictionary<string, (string, (NetEntity, NetCoordinates))> KnownCameras { get; } = new(); //Goobstation
-
-    // The same as KnownCameras but for MobileCameras only: sec bodycams, no pro, dragable wireless camera
-    [ViewVariables]
-    public Dictionary<string, (string, (NetEntity, NetCoordinates))> KnownMobileCameras { get; } = new(); //Goobstation
-
-    // Mobile cameras should receive a heartbeat as they constantly stream their location
-    [ViewVariables]
-    public Dictionary<string, float> KnownMobileCamerasLastHeartbeat { get; } = new(); //Goobstation
-
-    // Mobile cameras should receive a heartbeat as they constantly stream their location
-    [ViewVariables]
-    public Dictionary<string, float> KnownMobileCamerasLastHeartbeatSent { get; } = new(); //Goobstation
+    public Dictionary<string, string> KnownCameras { get; } = new();
 
     [ViewVariables]
     // The subnets known by this camera monitor.
     public Dictionary<string, string> KnownSubnets { get; } = new();
-
-    // KS14 Change: FPVs
-    /// <summary>
-    ///     Never automatically do update.
-    /// </summary>
-    [DataField, ViewVariables]
-    public bool NeverAutomaticallyHeartbeat = false;
 }

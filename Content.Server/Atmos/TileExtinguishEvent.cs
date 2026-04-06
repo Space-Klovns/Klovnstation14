@@ -1,8 +1,3 @@
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2025 nabegator220
-//
-// SPDX-License-Identifier: MIT
-
 namespace Content.Server.Atmos;
 
 /// <summary>

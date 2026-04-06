@@ -29,7 +29,6 @@ public abstract partial class SharedDestructibleSystem
 
     [Dependency] public readonly SharedAtmosphereSystem AtmosphereSystem = default!;
     [Dependency] public readonly SharedAudioSystem AudioSystem = default!;
-    [Dependency] public readonly SharedBodySystem BodySystem = default!;
     [Dependency] public readonly SharedConstructionSystem ConstructionSystem = default!;
     [Dependency] public readonly SharedExplosionSystem ExplosionSystem = default!;
     [Dependency] public readonly SharedStackSystem StackSystem = default!;

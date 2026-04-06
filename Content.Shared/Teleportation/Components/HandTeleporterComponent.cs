@@ -1,14 +1,3 @@
-// SPDX-FileCopyrightText: 2023 DrSmugleaf
-// SPDX-FileCopyrightText: 2023 Kara
-// SPDX-FileCopyrightText: 2023 Leon Friedrich
-// SPDX-FileCopyrightText: 2023 keronshb
-// SPDX-FileCopyrightText: 2024 icekot8
-// SPDX-FileCopyrightText: 2025 ScarKy0
-// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Shared.DoAfter;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
@@ -70,10 +59,3 @@ public sealed partial class HandTeleporterComponent : Component
 public sealed partial class TeleporterDoAfterEvent : SimpleDoAfterEvent
 {
 }
-
-// KS14 Addition
-/// <summary>
-///     Raised locally for a hand teleporter before it handles updating portals.
-/// </summary>
-[ByRefEvent]
-public record struct AttemptUpdateHandTeleporterPortalsEvent(EntityUid Teleporter, bool Cancelled = false);

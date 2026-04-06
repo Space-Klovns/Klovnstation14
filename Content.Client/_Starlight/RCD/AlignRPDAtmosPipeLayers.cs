@@ -1,8 +1,3 @@
-// SPDX-FileCopyrightText: 2026 Rinary
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-//
-// SPDX-License-Identifier: MPL-2.0
-
 using Content.Client.Gameplay;
 using Content.Client.Hands.Systems;
 using Content.Shared.Atmos.Components;
@@ -94,7 +89,7 @@ public sealed class AlignRPDAtmosPipeLayers : PlacementMode
             return;
 
         // Draw guide circles for each pipe layer if we are not in line/grid placing mode
-        if (rcd.CurrentMode == RpdMode.Free && pManager.PlacementType == PlacementTypes.None )
+        if (rcd.CurrentMode == RpdMode.Free && pManager.PlacementType == PlacementTypes.None)
         {
             var gridRotation = _transformSystem.GetWorldRotation(gridUid.Value);
             var worldPosition = _mapSystem.LocalToWorld(gridUid.Value, grid, MouseCoords.Position);
@@ -201,7 +196,7 @@ public sealed class AlignRPDAtmosPipeLayers : PlacementMode
     {
         if (_currentEyeRotation != eyeRotation.Theta)
         {
-            _currentEyeRotation = (float) eyeRotation.Theta;
+            _currentEyeRotation = (float)eyeRotation.Theta;
             _entityNetwork.SendSystemNetworkMessage(new RPDEyeRotationEvent(_entityManager.GetNetEntity(heldEntity), _currentEyeRotation));
         }
     }

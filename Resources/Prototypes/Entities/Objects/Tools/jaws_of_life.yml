@@ -57,10 +57,10 @@
       path: /Audio/_KS14/Handling/tools/rcd_drop.ogg
 
 - type: entity
-  name: syndicate jaws of life
+  name: syndicate jaws of death
   parent: [JawsOfLife, BaseSyndicateContraband]
   id: SyndicateJawsOfLife
-  description: Useful for entering the station or its departments.
+  description: Useful for breaking into secure areas and other nefarious activities.
   components:
   - type: Sprite
     sprite: Objects/Tools/jaws_of_life.rsi

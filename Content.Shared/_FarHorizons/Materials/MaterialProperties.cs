@@ -1,8 +1,3 @@
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
-//
-// SPDX-License-Identifier: CC-BY-NC-SA-3.0
-
 namespace Content.Shared._FarHorizons.Materials;
 
 /// <summary>

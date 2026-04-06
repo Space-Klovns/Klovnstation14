@@ -1,8 +1,3 @@
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
 using Robust.Client.GameObjects;
 using Robust.Shared.Prototypes;
@@ -35,10 +30,10 @@ public sealed class ReactorPartSystem : SharedReactorPartSystem
 
     protected override void AccUpdate()
     {
-        var query = EntityQueryEnumerator<ReactorPartComponent>();
-        while (query.MoveNext(out var uid, out var component))
+        var query = EntityQueryEnumerator<ReactorPartComponent, SpriteComponent>();
+        while (query.MoveNext(out var uid, out var component, out var sprite))
         {
-            _sprite.LayerSetColor((uid, EntityManager.GetComponent<SpriteComponent>(uid)), 0, _proto.Index(component.Material).Color);
+            _sprite.LayerSetColor((uid, sprite), 0, _proto.Index(component.Material).Color);
         }
     }
 }

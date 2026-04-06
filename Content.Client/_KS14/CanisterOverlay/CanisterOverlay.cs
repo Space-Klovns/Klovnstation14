@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-//
-// SPDX-License-Identifier: MIT
-
 // This was originally licensed mpl but i stole some code from upstream so it's MIT now
 
 using System.Linq;
@@ -22,7 +18,7 @@ namespace Content.Client._KS14.CanisterOverlay;
 public sealed class CanisterOverlay : Overlay
 {
     private static readonly ProtoId<ShaderPrototype> StencilMaskShader = "StencilMask";
-    private static readonly ProtoId<ShaderPrototype> StencilEqualDrawShader = "StencilEqualDraw";
+    private static readonly ProtoId<ShaderPrototype> StencilDrawShader = "StencilDraw";
 
     [Dependency] private readonly IEntityManager _entityManager = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
@@ -35,7 +31,7 @@ public sealed class CanisterOverlay : Overlay
 
     public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowFOV;
 
-    public SpriteSpecifier.Rsi WindowMaskSpriteSpecifier;
+    public SpriteSpecifier.Rsi WindowMaskSpriteSpecifier = new SpriteSpecifier.Rsi(new ResPath("/Textures/_KS14/Structures/Storage/canister.rsi"), "window-mask");
 
     // see: DoAfterOverlay.cs
     private const float Scale = 1f;
@@ -43,7 +39,7 @@ public sealed class CanisterOverlay : Overlay
 
     public static readonly Vector2 HalfNegativeVector2 = new(-0.5f, -0.5f);
 
-    private readonly GasTileOverlay _gasTileOverlay;
+    private readonly GasTileVisibleGasOverlay _gasTileOverlay;
     private readonly int _visibleGasCount;
     private readonly float[] _visibleGasMolesVisibleMin;
     private readonly float[] _visibleGasMolesVisibleMax;
@@ -55,9 +51,8 @@ public sealed class CanisterOverlay : Overlay
     /// </summary>
     private readonly List<(GasCanisterComponent, Matrix3x2)> _drawDataCache = new();
 
-    public CanisterOverlay(SpriteSpecifier.Rsi maskSpriteSpecifier, GasTileOverlay gasTileOverlay /* TODO LCDC: HOLY SHIT THIS IS DEMENTED */)
+    public CanisterOverlay(GasTileVisibleGasOverlay gasTileOverlay /* TODO LCDC: HOLY SHIT THIS IS DEMENTED */)
     {
-        WindowMaskSpriteSpecifier = maskSpriteSpecifier;
         _gasTileOverlay = gasTileOverlay;
 
         IoCManager.InjectDependencies(this);
@@ -143,10 +138,10 @@ public sealed class CanisterOverlay : Overlay
                 worldHandle.SetTransform(canisterRenderTargetMatrix);
 
                 // so, draw window mask to stencil target
-                worldHandle.DrawTexture(maskTexture, HalfNegativeVector2, modulate: Color.White);
+                worldHandle.DrawTexture(maskTexture, HalfNegativeVector2, modulate: Color.Black);
             }
         },
-        Color.Black);
+        Color.White);
 
         // reset after setting transform million times
         worldHandle.SetTransform(Matrix3x2.Identity);
@@ -163,7 +158,8 @@ public sealed class CanisterOverlay : Overlay
         worldHandle.DrawTextureRect(resources.MaskTarget.Texture, args.WorldBounds);
 
         // Finally, draw gas textures on pixels that are white on our stencil mask
-        worldHandle.UseShader(_prototypeManager.Index(StencilEqualDrawShader).Instance());
+        worldHandle.UseShader(_prototypeManager.Index(StencilDrawShader).Instance());
+        //worldHandle.UseShader(null);
         foreach (var (canisterComponent, canisterWorldMatrix) in _drawDataCache)
         {
             worldHandle.SetTransform(canisterWorldMatrix);

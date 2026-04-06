@@ -1,34 +1,14 @@
-// SPDX-FileCopyrightText: 2022 Moony
-// SPDX-FileCopyrightText: 2022 Paul Ritter
-// SPDX-FileCopyrightText: 2022 Sam Weaver
-// SPDX-FileCopyrightText: 2022 ShadowCommander
-// SPDX-FileCopyrightText: 2022 metalgearsloth
-// SPDX-FileCopyrightText: 2022 mirrorcult
-// SPDX-FileCopyrightText: 2022 wrexbe
-// SPDX-FileCopyrightText: 2023 Darkie
-// SPDX-FileCopyrightText: 2023 DrSmugleaf
-// SPDX-FileCopyrightText: 2024 LordCarve
-// SPDX-FileCopyrightText: 2024 themias
-// SPDX-FileCopyrightText: 2025 Hannah Giovanna Dawson
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2025 Leon Friedrich
-// SPDX-FileCopyrightText: 2025 slarticodefast
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-// SPDX-FileCopyrightText: 2026 nabegator220
-//
-// SPDX-License-Identifier: MPL-2.0
-
 using System.Linq;
 using System.Collections.Generic; //KS14
 using System.Text.Json.Serialization;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.FixedPoint;
-using JetBrains.Annotations;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Dictionary;
 using Robust.Shared.Utility;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Dictionary;
 
 namespace Content.Shared.Damage
 {
@@ -40,31 +20,13 @@ namespace Content.Shared.Damage
     ///     functions to apply resistance sets and supports basic math operations to modify this dictionary.
     /// </remarks>
     [DataDefinition, Serializable, NetSerializable]
-    public sealed partial class DamageSpecifier : IEquatable<DamageSpecifier>
+    public sealed partial class DamageSpecifier : IEquatable<DamageSpecifier>, IRobustCloneable<DamageSpecifier>
     {
-        // For the record I regret so many of the decisions i made when rewriting damageable
-        // Why is it just shitting out dictionaries left and right
-        // One day Arrays, stackalloc spans, and SIMD will save the day.
-        // TODO DAMAGEABLE REFACTOR
-
-        // These exist solely so the wiki works. Please do not touch them or use them.
-        [JsonPropertyName("types")]
-        [DataField("types", customTypeSerializer: typeof(PrototypeIdDictionarySerializer<FixedPoint2, DamageTypePrototype>))]
-        [UsedImplicitly]
-        private Dictionary<string, FixedPoint2>? _damageTypeDictionary;
-
-        [JsonPropertyName("groups")]
-        [DataField("groups", customTypeSerializer: typeof(PrototypeIdDictionarySerializer<FixedPoint2, DamageGroupPrototype>))]
-        [UsedImplicitly]
-        private Dictionary<string, FixedPoint2>? _damageGroupDictionary;
-
         /// <summary>
         ///     Main DamageSpecifier dictionary. Most DamageSpecifier functions exist to somehow modifying this.
         /// </summary>
-        [JsonIgnore]
-        [ViewVariables(VVAccess.ReadWrite)]
-        [IncludeDataField(customTypeSerializer: typeof(DamageSpecifierDictionarySerializer), readOnly: true)]
-        public Dictionary<string, FixedPoint2> DamageDict { get; set; } = new();
+        [DataField("types")]
+        public Dictionary<ProtoId<DamageTypePrototype>, FixedPoint2> DamageDict { get; set; } = new();
 
         /// <summary>
         ///     KS14 addition
@@ -135,6 +97,11 @@ namespace Content.Shared.Damage
         /// </summary>
         [JsonIgnore]
         public bool Empty => DamageDict.Count == 0;
+
+        public DamageSpecifier Clone()
+        {
+            return new DamageSpecifier(this);
+        }
 
         public override string ToString()
         {
@@ -245,13 +212,13 @@ namespace Content.Shared.Damage
 
                 if (modifierSet.Coefficients.TryGetValue(key, out var coefficient))
                 {
-                    var percentileReduction = 1-coefficient; //coefficient is how much of the dmg you take. if its .7, that means the actual damage reduction is 30%
+                    var percentileReduction = 1 - coefficient; //coefficient is how much of the dmg you take. if its .7, that means the actual damage reduction is 30%
                     if (percentilePenDict.TryGetValue(key, out var percentilePenetrationForDamType))
                     {
                         var multiplier = 1 - percentilePenetrationForDamType; //penetration is similarly a coefficient. if its .2, we strip away 8O% of the enemys defense
                         percentileReduction *= multiplier;  //if the enemy reduces 30% of incoming damage, and we punch through half that, that means the result is 15%
                     }
-                    newValuePercentile *= (1-percentileReduction); //if we now reduce 15% of incoming damage, that means the damage needs to be multiplied by .85
+                    newValuePercentile *= (1 - percentileReduction); //if we now reduce 15% of incoming damage, that means the damage needs to be multiplied by .85
                     // coefficients can also heal you, e.g. cauterizing bleeding
                 }
 
@@ -426,15 +393,15 @@ namespace Content.Shared.Damage
         ///     total of each group. If no members of a group are present in this <see cref="DamageSpecifier"/>, the
         ///     group is not included in the resulting dictionary.
         /// </remarks>
-        public Dictionary<string, FixedPoint2> GetDamagePerGroup(IPrototypeManager protoManager)
+        public Dictionary<ProtoId<DamageGroupPrototype>, FixedPoint2> GetDamagePerGroup(IPrototypeManager protoManager)
         {
-            var dict = new Dictionary<string, FixedPoint2>();
+            var dict = new Dictionary<ProtoId<DamageGroupPrototype>, FixedPoint2>();
             GetDamagePerGroup(protoManager, dict);
             return dict;
         }
 
         /// <inheritdoc cref="GetDamagePerGroup(Robust.Shared.Prototypes.IPrototypeManager)"/>
-        public void GetDamagePerGroup(IPrototypeManager protoManager, Dictionary<string, FixedPoint2> dict)
+        public void GetDamagePerGroup(IPrototypeManager protoManager, Dictionary<ProtoId<DamageGroupPrototype>, FixedPoint2> dict)
         {
             dict.Clear();
             foreach (var group in protoManager.EnumeratePrototypes<DamageGroupPrototype>())
@@ -449,8 +416,7 @@ namespace Content.Shared.Damage
         {
             //KS14 start
             DamageSpecifier newDamage = new(damageSpec);
-            var keys = new List<string>(newDamage.DamageDict.Keys);
-            foreach (var key in keys)
+            foreach (var key in newDamage.DamageDict.Keys)
             {
                 newDamage.DamageDict[key] = newDamage.DamageDict[key] * factor;
             }
@@ -462,8 +428,7 @@ namespace Content.Shared.Damage
         {
             //KS14 start
             DamageSpecifier newDamage = new(damageSpec);
-            var keys = new List<string>(newDamage.DamageDict.Keys);
-            foreach (var key in keys)
+            foreach (var key in newDamage.DamageDict.Keys)
             {
                 newDamage.DamageDict[key] = newDamage.DamageDict[key] * factor;
             }
@@ -485,8 +450,7 @@ namespace Content.Shared.Damage
         {
             //KS14 start
             DamageSpecifier newDamage = new(damageSpec);
-            var keys = new List<string>(newDamage.DamageDict.Keys);
-            foreach (var key in keys)
+            foreach (var key in newDamage.DamageDict.Keys)
             {
                 newDamage.DamageDict[key] = newDamage.DamageDict[key] / factor;
             }

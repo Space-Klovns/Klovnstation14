@@ -1,14 +1,3 @@
-# SPDX-FileCopyrightText: 2023 Emisse
-# SPDX-FileCopyrightText: 2023 SaveliyM360
-# SPDX-FileCopyrightText: 2024 Ko4ergaPunk
-# SPDX-FileCopyrightText: 2024 degradka
-# SPDX-FileCopyrightText: 2024 lzk
-# SPDX-FileCopyrightText: 2025 DeusMaldPr
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-# SPDX-FileCopyrightText: 2025 kosticia
-#
-# SPDX-License-Identifier: MIT
-
 - type: entity
   parent: BaseSign
   id: BaseFlag

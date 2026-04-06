@@ -1,8 +1,3 @@
-# SPDX-FileCopyrightText: 2026 github_actions[bot]
-# SPDX-FileCopyrightText: 2026 nabegator220
-#
-# SPDX-License-Identifier: MPL-2.0
-
 # Security borg
 - type: borgType
   id: security
@@ -33,3 +28,6 @@
   # Pet
   petSuccessString: petting-success-security-cyborg
   petFailureString: petting-failure-security-cyborg
+
+  # Laws
+  laws: Secborg

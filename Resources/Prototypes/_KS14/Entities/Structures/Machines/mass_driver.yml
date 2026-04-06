@@ -1,7 +1,3 @@
-# SPDX-FileCopyrightText: 2026 Gerkada
-#
-# SPDX-License-Identifier: MIT
-
 - type: entity
   id: MassDriver
   name: mass driver

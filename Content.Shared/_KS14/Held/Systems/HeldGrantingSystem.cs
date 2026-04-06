@@ -1,15 +1,3 @@
-// SPDX-FileCopyrightText: 2024 Aidenkrz
-// SPDX-FileCopyrightText: 2024 Piras314
-// SPDX-FileCopyrightText: 2024 VMSolidus
-// SPDX-FileCopyrightText: 2025 Aiden
-// SPDX-FileCopyrightText: 2025 GoobBot
-// SPDX-FileCopyrightText: 2025 Ilya246
-// SPDX-FileCopyrightText: 2025 Misandry
-// SPDX-FileCopyrightText: 2025 gus
-// SPDX-FileCopyrightText: 2026 nabegator220
-//
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
 using Content.Shared._KS14.Held.Components;
 using Content.Shared.Hands;
 using Content.Shared.Tag;
@@ -40,14 +28,14 @@ public sealed class HeldGrantingSystem : EntitySystem
 
         foreach (var (name, data) in component.Components)
         {
-            var newComp = (Component) _componentFactory.GetComponent(name);
+            var newComp = (Component)_componentFactory.GetComponent(name);
 
             if (HasComp(holder, newComp.GetType()))
                 continue;
 
-            var temp = (object) newComp;
+            var temp = (object)newComp;
             _serializationManager.CopyTo(data.Component, ref temp);
-            EntityManager.AddComponent(holder, (Component)temp!);
+            AddComp(holder, (Component)temp!);
 
             component.Active[name] = true;
         }
@@ -62,7 +50,7 @@ public sealed class HeldGrantingSystem : EntitySystem
             if (!component.Active.ContainsKey(name) || !component.Active[name])
                 continue;
 
-            var newComp = (Component) _componentFactory.GetComponent(name);
+            var newComp = (Component)_componentFactory.GetComponent(name);
 
             RemComp(holder, newComp.GetType());
             component.Active[name] = false;

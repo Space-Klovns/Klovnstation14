@@ -1,10 +1,3 @@
-// SPDX-FileCopyrightText: 2024 metalgearsloth
-// SPDX-FileCopyrightText: 2025 Gerkada
-// SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
-// SPDX-FileCopyrightText: 2025 Tayrtahn
-//
-// SPDX-License-Identifier: MIT
-
 using System.Numerics;
 using System.Linq; // Carpmosia-edit - AI Navmap
 using Content.Client.Pinpointer.UI; // Carpmosia-edit - AI Navmap
@@ -23,7 +16,6 @@ namespace Content.Client.Silicons.StationAi;
 
 public sealed class StationAiOverlay : Overlay
 {
-    private static readonly ProtoId<ShaderPrototype> CameraStaticShader = "CameraStatic";
     private static readonly ProtoId<ShaderPrototype> StencilMaskShader = "StencilMask";
     private static readonly ProtoId<ShaderPrototype> StencilDrawShader = "StencilDraw";
 
@@ -78,14 +70,14 @@ public sealed class StationAiOverlay : Overlay
         _entManager.TryGetComponent(gridUid, out BroadphaseComponent? broadphase);
 
         var invMatrix = args.Viewport.GetWorldToLocalMatrix();
-        _accumulator -= (float) _timing.FrameTime.TotalSeconds;
+        _accumulator -= (float)_timing.FrameTime.TotalSeconds;
 
         if (grid != null && broadphase != null)
         {
             var lookups = _entManager.System<EntityLookupSystem>();
             var xforms = _entManager.System<SharedTransformSystem>();
 
-            _navMap.AiFrameUpdate((float) _timing.FrameTime.TotalSeconds, gridUid); // Carpmosia-edit - AI Navmap
+            _navMap.AiFrameUpdate((float)_timing.FrameTime.TotalSeconds, gridUid); // Carpmosia-edit - AI Navmap
             if (_accumulator <= 0f)
             {
                 _accumulator = MathF.Max(0f, _accumulator + _updateRate);
@@ -94,7 +86,7 @@ public sealed class StationAiOverlay : Overlay
             }
 
             var gridMatrix = xforms.GetWorldMatrix(gridUid);
-            var matty =  Matrix3x2.Multiply(gridMatrix, invMatrix);
+            var matty = Matrix3x2.Multiply(gridMatrix, invMatrix);
 
             // Draw visible tiles to stencil
             worldHandle.RenderInRenderTarget(res.StencilTexture!, () =>
@@ -160,7 +152,7 @@ public sealed class StationAiOverlay : Overlay
     }
 
     // Carpmosia-start - AI Navmap
-    protected void DrawNavMap(DrawingHandleWorld handle, MapGridComponent grid)
+    private void DrawNavMap(DrawingHandleWorld handle, MapGridComponent grid)
     {
         if (!_sRGBLookUp.TryGetValue(_navMap.WallColor, out var wallsRGB))
         {

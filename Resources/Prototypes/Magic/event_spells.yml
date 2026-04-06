@@ -1,12 +1,3 @@
-# SPDX-FileCopyrightText: 2024 Leon Friedrich
-# SPDX-FileCopyrightText: 2025 ActiveMammmoth
-# SPDX-FileCopyrightText: 2025 J
-# SPDX-FileCopyrightText: 2025 deltanedas
-# SPDX-FileCopyrightText: 2025 keronshb
-# SPDX-FileCopyrightText: 2025 nabegator220
-#
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
 - type: entity
   parent: BaseAction
   id: ActionSummonGhosts

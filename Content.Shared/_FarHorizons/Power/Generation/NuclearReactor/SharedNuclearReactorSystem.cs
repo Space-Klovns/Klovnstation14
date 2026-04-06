@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2025 jhrushbe
-//
-// SPDX-License-Identifier: MPL-2.0
-
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Emag.Systems;
 using Content.Shared.IdentityManagement;

@@ -1,23 +1,3 @@
-// SPDX-FileCopyrightText: 2023 Chief-Engineer
-// SPDX-FileCopyrightText: 2023 DrSmugleaf
-// SPDX-FileCopyrightText: 2023 Kara
-// SPDX-FileCopyrightText: 2023 Leon Friedrich
-// SPDX-FileCopyrightText: 2023 Pieter-Jan Briers
-// SPDX-FileCopyrightText: 2023 Vordenburg
-// SPDX-FileCopyrightText: 2023 keronshb
-// SPDX-FileCopyrightText: 2023 metalgearsloth
-// SPDX-FileCopyrightText: 2024 Moony
-// SPDX-FileCopyrightText: 2024 icekot8
-// SPDX-FileCopyrightText: 2024 moonheart08
-// SPDX-FileCopyrightText: 2024 nikthechampiongr
-// SPDX-FileCopyrightText: 2025 ScarKy0
-// SPDX-FileCopyrightText: 2025 SlamBamActionman
-// SPDX-FileCopyrightText: 2025 slarticodefast
-// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Server.Administration.Logs;
 using Content.Server.Popups;
 using Content.Shared.DoAfter;
@@ -36,6 +16,7 @@ namespace Content.Server.Teleportation;
 /// </summary>
 public sealed class HandTeleporterSystem : EntitySystem
 {
+    [Dependency] private readonly _KS14.Speczones.SpeczoneSystem _speczoneSystem = default!; // KS14
     [Dependency] private readonly IAdminLogManager _adminLogger = default!;
     [Dependency] private readonly LinkedEntitySystem _link = default!;
     [Dependency] private readonly AudioSystem _audio = default!;
@@ -104,10 +85,7 @@ public sealed class HandTeleporterSystem : EntitySystem
             return;
 
         // KS14 Start
-        var attemptHandTeleEvent = new AttemptUpdateHandTeleporterPortalsEvent(uid, false);
-        RaiseLocalEvent(ref attemptHandTeleEvent);
-
-        if (attemptHandTeleEvent.Cancelled)
+        if (_speczoneSystem.AttemptInterfere(uid, user: user, predicted: false))
             return;
         // KS14 End
 

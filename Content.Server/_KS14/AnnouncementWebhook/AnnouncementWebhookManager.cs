@@ -1,8 +1,3 @@
-// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-//
-// SPDX-License-Identifier: MPL-2.0
-
 using System.Collections.Concurrent;
 using System.IO;
 using System.Net;

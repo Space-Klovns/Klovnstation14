@@ -27,6 +27,7 @@ namespace Content.Server.DeviceNetwork.Systems;
 [UsedImplicitly]
 public sealed class NetworkConfiguratorSystem : SharedNetworkConfiguratorSystem
 {
+    [Dependency] private readonly _KS14.Speczones.SpeczoneSystem _speczoneSystem = default!; // KS14
     [Dependency] private readonly DeviceListSystem _deviceListSystem = default!;
     [Dependency] private readonly DeviceLinkSystem _deviceLinkSystem = default!;
     [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
@@ -336,6 +337,11 @@ public sealed class NetworkConfiguratorSystem : SharedNetworkConfiguratorSystem
     {
         if (!canReach || !target.HasValue)
             return;
+
+        // KS14 Start
+        if (_speczoneSystem.AttemptInterfere(uid, user: user, predicted: false))
+            return;
+        // KS14 End
 
         DetermineMode(uid, configurator, target, user);
 

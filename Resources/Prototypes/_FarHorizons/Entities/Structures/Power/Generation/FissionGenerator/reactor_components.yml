@@ -91,6 +91,7 @@
   categories: [ HideSpawnMenu ]
   name: control rod
   description: A control rod assembly for a nuclear reactor.
+  abstract: true
   components:
   - type: ReactorPart
     rodType: 2 #1<<1

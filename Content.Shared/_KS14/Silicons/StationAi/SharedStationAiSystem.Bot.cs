@@ -1,8 +1,3 @@
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
-// SPDX-FileCopyrightText: 2025 nabegator220
-//
-// SPDX-License-Identifier: MPL-2.0
-
 using Content.Shared.Actions;
 using Content.Shared._KS14.Silicons.Bots.Components;
 using Robust.Shared.Serialization;
@@ -43,11 +38,13 @@ public abstract partial class SharedStationAiSystem
     {
         var target = args.Target;
         //do we have an actual bot to move? did it not get deleted in between it being selected and moved?
-        if (currentTargetedBot == null || (currentTargetedBot != null && !Exists(currentTargetedBot)))
-        {
-            _popup.PopupClient(Loc.GetString("ai-controlled-bot-not-found"), args.Performer, PopupType.MediumCaution);
-            return;
-        }
+
+        // KS14 APSTRIMY: commented out because its always true
+        // if (currentTargetedBot == null || (currentTargetedBot != null && !Exists(currentTargetedBot)))
+        // {
+        //     _popup.PopupClient(Loc.GetString("ai-controlled-bot-not-found"), args.Performer, PopupType.MediumCaution);
+        //     return;
+        // }
         //move to server, our job here is done
         _popup.PopupClient(Loc.GetString("ai-bot-targeting-successful"), args.Performer, PopupType.Medium);
         TryMoveBot(currentTargetedBot, target);
@@ -56,7 +53,7 @@ public abstract partial class SharedStationAiSystem
     public virtual void TryMoveBot(
         EntityUid botUid,
         EntityCoordinates targetCoordinates)
-    {}
+    { }
 }
 /// <summary>
 /// Invoked when the entity target action ActionSelectControlledBot is called.

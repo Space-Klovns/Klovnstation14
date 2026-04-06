@@ -1,39 +1,3 @@
-# SPDX-FileCopyrightText: 2021 SETh lafuente
-# SPDX-FileCopyrightText: 2021 SethLafuente
-# SPDX-FileCopyrightText: 2022 EmoGarbage404
-# SPDX-FileCopyrightText: 2022 Julian Giebel
-# SPDX-FileCopyrightText: 2022 Lamrr
-# SPDX-FileCopyrightText: 2022 Myctai
-# SPDX-FileCopyrightText: 2022 Peptide90
-# SPDX-FileCopyrightText: 2022 Swept
-# SPDX-FileCopyrightText: 2023 Danger Revolution!
-# SPDX-FileCopyrightText: 2023 DangerRevoltion
-# SPDX-FileCopyrightText: 2023 Emisse
-# SPDX-FileCopyrightText: 2023 IntegerTempest
-# SPDX-FileCopyrightText: 2023 JoeHammad1844
-# SPDX-FileCopyrightText: 2023 Kara
-# SPDX-FileCopyrightText: 2023 MisterMecky
-# SPDX-FileCopyrightText: 2023 Sailor
-# SPDX-FileCopyrightText: 2023 Slava0135
-# SPDX-FileCopyrightText: 2023 Vordenburg
-# SPDX-FileCopyrightText: 2024 Alzore
-# SPDX-FileCopyrightText: 2024 BramvanZijp
-# SPDX-FileCopyrightText: 2024 Ed
-# SPDX-FileCopyrightText: 2024 Flareguy
-# SPDX-FileCopyrightText: 2024 Nemanja
-# SPDX-FileCopyrightText: 2024 brainfood1183
-# SPDX-FileCopyrightText: 2024 cool dolphin
-# SPDX-FileCopyrightText: 2024 deltanedas
-# SPDX-FileCopyrightText: 2024 lzk
-# SPDX-FileCopyrightText: 2024 metalgearsloth
-# SPDX-FileCopyrightText: 2025 Southbridge
-# SPDX-FileCopyrightText: 2025 Unkn0wn_Gh0st
-# SPDX-FileCopyrightText: 2025 Velcroboy
-# SPDX-FileCopyrightText: 2025 github_actions[bot]
-# SPDX-FileCopyrightText: 2025 nabegator220
-#
-# SPDX-License-Identifier: MIT
-
 - type: entity
   id: LockerSyndicatePersonalFilled
   suffix: Nukie, Filled
@@ -75,6 +39,13 @@
         - id: ClothingEyesHudSyndicate
 
 - type: entityTable
+  id: FillEmergencyInflatables
+  table: !type:AllSelector
+    children:
+    - id: InflatableWallStack5
+    - id: InflatableDoorStack1
+
+- type: entityTable
   id: FillLockerEmergencyStandard
   table: !type:AllSelector
     children:
@@ -92,6 +63,8 @@
       prob: 0.1
     - id: BoxMRE
       prob: 0.1
+    - !type:NestedSelector
+      tableId: FillEmergencyInflatables
 
 - type: entity
   id: ClosetEmergencyFilledRandom
@@ -128,6 +101,8 @@
       - id: EmergencyNitrogenTankFilled
         weight: 4
       - id: NitrogenTankFilled
+    - !type:NestedSelector
+      tableId: FillEmergencyInflatables
 
 - type: entity
   id: ClosetEmergencyN2FilledRandom
@@ -230,6 +205,10 @@
       prob: 0.10
       rolls: !type:RangeNumberSelector
         range: 1, 2
+    - !type:NestedSelector
+      tableId: MaintenancePlushies
+      prob: 0.02
+
     # Weapons
     - !type:NestedSelector
       tableId: MaintWeaponTable
@@ -241,6 +220,19 @@
     # Recursive
     - id: ClosetMaintenanceFilledRandom
       prob: 0.01
+
+- type: entityTable
+  id: MaintenancePlushies
+  table: !type:GroupSelector
+    children:
+    - id: PlushieLizardJobBoxer
+    - id: PlushieLizardJobClown
+    - id: PlushieLizardJobLibrarian
+    - id: PlushieLizardJobMime
+    - id: PlushieLizardJobMusician
+    - id: PlushieLizardJobPassenger
+    - id: PlushieLizardJobReporter
+    - id: PlushieLizardJobZookeeper
 
 - type: entity
   id: ClosetMaintenanceFilledRandom

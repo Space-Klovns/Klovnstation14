@@ -1,9 +1,3 @@
-// SPDX-FileCopyrightText: 2026 Riley
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-// SPDX-FileCopyrightText: 2026 nabegator220
-//
-// SPDX-License-Identifier: MPL-2.0
-
 using Content.Shared._Starlight.Plumbing;
 using JetBrains.Annotations;
 using Robust.Client.UserInterface;

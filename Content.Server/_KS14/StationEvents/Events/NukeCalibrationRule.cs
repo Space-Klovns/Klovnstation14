@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Server.Nuke;
 using Content.Shared.GameTicking.Components;
 using Content.Shared.Station.Components;
@@ -25,7 +21,6 @@ public sealed class NukeCalibrationRule : StationEventSystem<NukeCalibrationRule
     [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
     [Dependency] private readonly PopupSystem _popups = default!;
     [Dependency] private readonly TransformSystem _transform = default!;
-    [Dependency] private readonly SharedMapSystem _map = default!;
 
     protected override void Started(EntityUid uid, NukeCalibrationRuleComponent component, GameRuleComponent gameRule, GameRuleStartedEvent args)
     {

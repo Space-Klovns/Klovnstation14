@@ -1,38 +1,3 @@
-// SPDX-FileCopyrightText: 2022 Flipp Syder
-// SPDX-FileCopyrightText: 2022 Moony
-// SPDX-FileCopyrightText: 2022 Nemanja
-// SPDX-FileCopyrightText: 2022 Paul Ritter
-// SPDX-FileCopyrightText: 2023 20kdc
-// SPDX-FileCopyrightText: 2023 Chief-Engineer
-// SPDX-FileCopyrightText: 2023 ShadowCommander
-// SPDX-FileCopyrightText: 2023 Visne
-// SPDX-FileCopyrightText: 2023 metalgearsloth
-// SPDX-FileCopyrightText: 2024 Aexxie
-// SPDX-FileCopyrightText: 2024 DrSmugleaf
-// SPDX-FileCopyrightText: 2024 Jake Huxell
-// SPDX-FileCopyrightText: 2024 LordCarve
-// SPDX-FileCopyrightText: 2024 MilenVolf
-// SPDX-FileCopyrightText: 2024 Mr. 27
-// SPDX-FileCopyrightText: 2024 Saphire Lattice
-// SPDX-FileCopyrightText: 2024 TsjipTsjip
-// SPDX-FileCopyrightText: 2024 beck-thompson
-// SPDX-FileCopyrightText: 2024 deltanedas
-// SPDX-FileCopyrightText: 2024 eoineoineoin
-// SPDX-FileCopyrightText: 2025 B_Kirill
-// SPDX-FileCopyrightText: 2025 Hannah Giovanna Dawson
-// SPDX-FileCopyrightText: 2025 JesterX666
-// SPDX-FileCopyrightText: 2025 Leon Friedrich
-// SPDX-FileCopyrightText: 2025 SlamBamActionman
-// SPDX-FileCopyrightText: 2025 Tayrtahn
-// SPDX-FileCopyrightText: 2025 Zachary Higgs
-// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2026 Vasilis The Pikachu
-// SPDX-FileCopyrightText: 2026 Velken
-// SPDX-FileCopyrightText: 2026 nabegator220
-//
-// SPDX-License-Identifier: MPL-2.0
-
-using Content.Shared.Body.Components;
 using Content.Shared.CCVar;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
@@ -52,7 +17,10 @@ using Robust.Shared.Random;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using System.Numerics;
+using Content.Shared.Damage.Systems;
+using Robust.Shared.Prototypes;
 using TimedDespawnComponent = Robust.Shared.Spawners.TimedDespawnComponent;
+using Content.Shared.Body; // KS14 Addition
 
 namespace Content.Server.Explosion.EntitySystems;
 
@@ -548,10 +516,11 @@ public sealed partial class ExplosionSystem
         int maxTileBreak,
         bool canCreateVacuum,
         List<(Vector2i GridIndices, Tile Tile)> damagedTiles,
-        ExplosionPrototype type)
+        ExplosionPrototype type,
+        TileHistoryComponent? history,
+        ref (TileHistoryChunk? Chunk, Vector2i Indices)? chunk)
     {
-        if (_tileDefinitionManager[tileRef.Tile.TypeId] is not ContentTileDefinition tileDef
-            || tileDef.Indestructible)
+        if (_tileDefinitionManager[tileRef.Tile.TypeId] is not ContentTileDefinition tileDef || tileDef.Indestructible)
             return;
 
         if (!CanCreateVacuum)
@@ -559,29 +528,69 @@ public sealed partial class ExplosionSystem
         else if (tileDef.MapAtmosphere)
             canCreateVacuum = true; // is already a vacuum.
 
+        // break the tile into its underlying parts
         int tileBreakages = 0;
         while (maxTileBreak > tileBreakages && _robustRandom.Prob(type.TileBreakChance(effectiveIntensity)))
         {
             tileBreakages++;
             effectiveIntensity -= type.TileBreakRerollReduction;
 
-            // does this have a base-turf that we can break it down to?
-            if (string.IsNullOrEmpty(tileDef.BaseTurf))
+            if (GetNextTile((tileDef, tileRef.GridIndices), history, ref chunk) is not { } newId)
                 break;
 
-            if (_tileDefinitionManager[tileDef.BaseTurf] is not ContentTileDefinition newDef)
-                break;
+            var newDef = (ContentTileDefinition)_tileDefinitionManager[newId];
 
             if (newDef.MapAtmosphere && !canCreateVacuum)
                 break;
 
             tileDef = newDef;
+
+            if (newDef.Indestructible)
+                break;
         }
 
         if (tileDef.TileId == tileRef.Tile.TypeId)
             return;
 
         damagedTiles.Add((tileRef.GridIndices, new Tile(tileDef.TileId)));
+    }
+
+    private ProtoId<ContentTileDefinition>? GetNextTile((ContentTileDefinition tileDef, Vector2i gridIndices) tile,
+        TileHistoryComponent? history,
+        ref (TileHistoryChunk? Chunk, Vector2i Indices)? chunk)
+    {
+        if (chunk?.Chunk == null || !chunk.Value.Chunk.History.TryGetValue(tile.gridIndices, out var stack))
+            return tile.tileDef.BaseTurf; // No tile stack means we return BaseTurf if it exists!
+
+        // last entry in the stack
+        if (stack.Count > 1)
+        {
+            var newId = stack[^1];
+            stack.RemoveAt(stack.Count - 1);
+            chunk.Value.Chunk.LastModified = _timing.CurTick;
+            return newId;
+        }
+
+        chunk.Value.Chunk.History.Remove(tile.gridIndices);
+        if (chunk.Value.Chunk.History.Count == 0)
+        {
+            history?.ChunkHistory.Remove(chunk.Value.Indices);
+            chunk = null;
+        }
+        else
+        {
+            chunk.Value.Chunk.LastModified = _timing.CurTick;
+        }
+
+        return stack[0]; // If the stack is somehow empty, this will throw, but we will have at least removed it from dict first!
+    }
+
+    public void DirtyHistory(EntityUid grid)
+    {
+        if (!_tileHistoryQuery.TryComp(grid, out var history))
+            return;
+
+        Dirty(grid, history);
     }
 }
 
@@ -615,10 +624,13 @@ sealed class Explosion
         /// <summary>
         ///     The actual grid that this corresponds to. If null, this implies space.
         /// </summary>
-        public Entity<MapGridComponent>? MapGrid;
+        public Entity<MapGridComponent, TileHistoryComponent?>? MapGrid;
     }
 
     private readonly List<ExplosionData> _explosionData = new();
+
+    private Entity<MapGridComponent, TileHistoryComponent?>? _currentGrid;
+    private (TileHistoryChunk? Chunk, Vector2i Indices)? _currentChunk;
 
     /// <summary>
     ///     The explosion intensity associated with each tile iteration.
@@ -667,7 +679,6 @@ sealed class Explosion
     private DamageSpecifier? _expectedDamage;
 #endif
     private Entity<BroadphaseComponent> _currentLookup = default!;
-    private Entity<MapGridComponent>? _currentGrid;
     private float _currentIntensity;
     private float _currentThrowForce;
     private List<Vector2i>.Enumerator _currentEnumerator;
@@ -733,7 +744,8 @@ sealed class Explosion
         EntityUid visualEnt,
         EntityUid? cause,
         SharedMapSystem mapSystem,
-        Shared.Damage.Systems.DamageableSystem damageable)
+        DamageableSystem damageable,
+        EntityQuery<TileHistoryComponent> historyQuery)
     {
         VisualEnt = visualEnt;
         Cause = cause;
@@ -764,7 +776,7 @@ sealed class Explosion
             {
                 TileLists = spaceData.TileLists,
                 Lookup = (mapUid, entMan.GetComponent<BroadphaseComponent>(mapUid)),
-                MapGrid = null
+                MapGrid = null,
             });
 
             _spaceMatrix = spaceMatrix;
@@ -773,11 +785,12 @@ sealed class Explosion
 
         foreach (var grid in gridData)
         {
+            var history = historyQuery.CompOrNull(grid.Grid);
             _explosionData.Add(new ExplosionData
             {
                 TileLists = grid.TileLists,
                 Lookup = (grid.Grid, entMan.GetComponent<BroadphaseComponent>(grid.Grid)),
-                MapGrid = grid.Grid,
+                MapGrid = (grid.Grid, entMan.GetComponent<MapGridComponent>(grid.Grid), history),
             });
         }
 
@@ -826,10 +839,11 @@ sealed class Explosion
                 _currentEnumerator = tileList.GetEnumerator();
                 _currentLookup = _explosionData[_currentDataIndex].Lookup;
                 _currentGrid = _explosionData[_currentDataIndex].MapGrid;
+                _currentChunk = null;
                 _currentDataIndex++;
 
                 // sanity checks, in case something changed while the explosion was being processed over several ticks.
-                if (_currentLookup.Comp.Deleted || _currentGrid != null && !_entMan.EntityExists(_currentGrid.Value))
+                if (_currentLookup.Comp.Deleted || (_currentGrid is { } grid && !_entMan.EntityExists(grid.Owner)))
                     continue;
 
                 return true;
@@ -885,19 +899,19 @@ sealed class Explosion
 
             // Is the current tile on a grid (instead of in space)?
             if (_currentGrid is { } currentGrid &&
-                _mapSystem.TryGetTileRef(currentGrid, currentGrid.Comp, _currentEnumerator.Current, out var tileRef) &&
+                _mapSystem.TryGetTileRef(currentGrid.Owner, currentGrid.Comp1, _currentEnumerator.Current, out var tileRef) &&
                 !tileRef.Tile.IsEmpty)
             {
-                if (!_tileUpdateDict.TryGetValue(currentGrid, out var tileUpdateList))
+                if (!_tileUpdateDict.TryGetValue((currentGrid.Owner, currentGrid.Comp1), out var tileUpdateList))
                 {
                     tileUpdateList = new();
-                    _tileUpdateDict[currentGrid] = tileUpdateList;
+                    _tileUpdateDict[(currentGrid.Owner, currentGrid.Comp1)] = tileUpdateList;
                 }
 
                 // damage entities on the tile. Also figures out whether there are any solid entities blocking the floor
                 // from being destroyed.
                 var canDamageFloor = _system.ExplodeTile(_currentLookup,
-                    currentGrid,
+                    (currentGrid.Owner, currentGrid.Comp1),
                     _currentEnumerator.Current,
                     _currentThrowForce,
                     _currentDamage,
@@ -911,7 +925,24 @@ sealed class Explosion
 
                 // If the floor is not blocked by some dense object, damage the floor tiles.
                 if (canDamageFloor)
-                    _system.DamageFloorTile(tileRef, _currentIntensity * _tileBreakScale, _maxTileBreak, _canCreateVacuum, tileUpdateList, ExplosionType);
+                {
+                    var tileIndices = _currentEnumerator.Current;
+                    var chunkIndices = SharedMapSystem.GetChunkIndices(tileIndices, TileSystem.ChunkSize);
+                    if (_currentChunk?.Indices != chunkIndices)
+                    {
+                        var chunk = currentGrid.Comp2?.ChunkHistory.GetValueOrDefault(chunkIndices);
+                        _currentChunk = (chunk, chunkIndices);
+                    }
+
+                    _system.DamageFloorTile(tileRef,
+                        _currentIntensity * _tileBreakScale,
+                        _maxTileBreak,
+                        _canCreateVacuum,
+                        tileUpdateList,
+                        ExplosionType,
+                        currentGrid.Comp2,
+                        ref _currentChunk);
+                }
             }
             else
             {
@@ -951,6 +982,8 @@ sealed class Explosion
             if (list.Count > 0 && _entMan.EntityExists(grid.Owner))
             {
                 _mapSystem.SetTiles(grid.Owner, grid, list);
+
+                _system.DirtyHistory(grid.Owner);
             }
         }
         _tileUpdateDict.Clear();

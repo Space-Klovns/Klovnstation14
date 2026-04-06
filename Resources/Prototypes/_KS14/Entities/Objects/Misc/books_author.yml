@@ -1,0 +1,102 @@
+- type: entity
+  parent: BookBase
+  id: BookKS14NTCIUAtmosian
+  name: Report on Dangerous Atmosians
+  description: A part of a series of reports by Aloise Montagne for the NT Crime Investigation Unit, this one seems slightly charred at the edges.
+  components:
+  - type: Sprite
+    sprite: Objects/Misc/books.rsi
+    layers:
+    - state: paper
+    - state: cover_strong
+      color: "#334E6D"
+    - state: decor_diagonal
+      color: "#EFB341"
+    - state: decor_middle
+      color: "#2681a5"
+    - state: icon_letter_N
+    - state: detail_bookmark
+      color: "#61363d"
+  - type: Paper
+    content: book-text-ks14-ntciu-atmosian
+
+- type: entity
+  parent: BookBase
+  id: BookKS14NTCIUTide
+  name: Report on the behaviour of assistants
+  description: A part of a series of reports by Aloise Montagne for the NT Crime Investigation Unit, this one seems to have been stolen multiple times.
+  components:
+  - type: Sprite
+    sprite: Objects/Misc/books.rsi
+    layers:
+    - state: paper
+    - state: cover_strong
+      color: "#334E6D"
+    - state: decor_diagonal
+      color: "#b0b0b0"
+    - state: decor_middle
+      color: "#334E6D"
+    - state: icon_letter_N
+    - state: overlay_dirt
+  - type: Paper
+    content: book-text-ks14-ntciu-tide
+
+- type: entity
+  parent: BookBase
+  id: BookKS14NTCIUAI
+  name: Report on the Station Ai
+  description: A part of a series of reports by Aloise Montagne for the NT Crime Investigation Unit, the clankers don't want you reading this one!
+  components:
+  - type: Sprite
+    sprite: Objects/Misc/books.rsi
+    layers:
+    - state: paper
+    - state: cover_strong
+      color: "#334E6D"
+    - state: icon_borg
+    - state: detail_bookmark
+      color: "#61363d"
+  - type: Paper
+    content: book-text-ks14-ntciu-ai
+
+- type: entity
+  parent: BookBase
+  id: BookKS14NTCIUEngiAssistant
+  name: Report on Technical Assistants
+  description: A part of a series of reports by Aloise Montagne for the NT Crime Investigation Unit, this one seems like free insuls.
+  components:
+  - type: Sprite
+    sprite: Objects/Misc/books.rsi
+    layers:
+    - state: paper
+    - state: cover_strong
+      color: "#334E6D"
+    - state: decor_diagonal
+      color: "#EFB341"
+    - state: decor_middle
+      color: "#334E6D"
+    - state: icon_letter_N
+    - state: detail_bookmark
+      color: "#61363d"
+    - state: overlay_dirt
+  - type: Paper
+    content: book-text-ks14-ntciu-engi-assistant
+
+- type: entity
+  parent: BookBase
+  id: BookKS14LoneOpReport
+  name: stolen syndicate manuscripts
+  description: A copy of the original manuscripts found in the vessel of a syndicate operative. Most people think it was written by NT as propaganda.
+  components:
+  - type: Sprite
+    sprite: Objects/Misc/books.rsi
+    layers:
+    - state: paper
+    - state: cover_old
+      color: "#8f4a4b"
+    - state: decor_middle
+      color: "#120101"
+    - state: icon_nuclear
+    - state: overlay_dirt
+  - type: Paper
+    content: book-text-ks14-loneop

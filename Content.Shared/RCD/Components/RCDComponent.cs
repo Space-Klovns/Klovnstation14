@@ -1,11 +1,3 @@
-// SPDX-FileCopyrightText: 2023 deltanedas
-// SPDX-FileCopyrightText: 2024 chromiumboy
-// SPDX-FileCopyrightText: 2025 gus
-// SPDX-FileCopyrightText: 2026 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Shared.RCD.Systems;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
@@ -125,10 +117,3 @@ public enum RpdMode : byte
     Free = 3,
     // Starlight End
 }
-
-// KS14 Addition
-/// <summary>
-///     Raised locally for an RCD before it tries building something
-/// </summary>
-[ByRefEvent]
-public record struct AttemptUseRcdEvent(EntityUid RcdUid, EntityUid User, bool Cancelled = false);

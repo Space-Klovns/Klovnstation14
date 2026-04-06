@@ -1,10 +1,15 @@
-﻿using Content.Server.Inventory;
+using Content.Server.Inventory;
 using Content.Shared.Inventory;
 using Content.Shared.Radio.Components;
 using Content.Shared.Silicons.Borgs;
 using Content.Shared.Silicons.Borgs.Components;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
+//KS14 start
+using Robust.Shared.Log;
+using Content.Server.Silicons.Laws;
+using Content.Shared.Silicons.Laws.Components;
+//KS14 end
 
 namespace Content.Server.Silicons.Borgs;
 
@@ -15,6 +20,7 @@ public sealed class BorgSwitchableTypeSystem : SharedBorgSwitchableTypeSystem
 {
     [Dependency] private readonly BorgSystem _borgSystem = default!;
     [Dependency] private readonly ServerInventorySystem _inventorySystem = default!;
+    [Dependency] private readonly SiliconLawSystem _siliconLawSystem = default!; //KS14
 
     protected override void SelectBorgModule(Entity<BorgSwitchableTypeComponent> ent, ProtoId<BorgTypePrototype> borgType)
     {
@@ -76,6 +82,13 @@ public sealed class BorgSwitchableTypeSystem : SharedBorgSwitchableTypeSystem
         {
             _inventorySystem.SetTemplateId((ent.Owner, inventory), prototype.InventoryTemplateId);
         }
+
+        // Configure zakony - KS14 start
+        if (prototype.Laws != string.Empty)
+        {
+            _siliconLawSystem.SetLaws(_siliconLawSystem.GetLawset(prototype.Laws).Laws, ent);
+        }
+        // KS14 end
 
         base.SelectBorgModule(ent, borgType);
     }

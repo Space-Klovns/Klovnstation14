@@ -199,6 +199,7 @@
     - id: NukeDiskFake
     - id: DiceBag
     - id: SpectralLocator
+    - id: Magic9Ball
     - id: BarberScissors
     # KS14: Removed pin
     - id: ClothingShoesSkates

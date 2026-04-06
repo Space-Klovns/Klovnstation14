@@ -1,26 +1,3 @@
-// SPDX-FileCopyrightText: 2018 Pieter-Jan Briers
-// SPDX-FileCopyrightText: 2019 Silver
-// SPDX-FileCopyrightText: 2020 py01
-// SPDX-FileCopyrightText: 2021 Acruid
-// SPDX-FileCopyrightText: 2021 DrSmugleaf
-// SPDX-FileCopyrightText: 2021 Visne
-// SPDX-FileCopyrightText: 2022 Rane
-// SPDX-FileCopyrightText: 2022 rolfero
-// SPDX-FileCopyrightText: 2022 wrexbe
-// SPDX-FileCopyrightText: 2023 James Simonson
-// SPDX-FileCopyrightText: 2023 Kevin Zheng
-// SPDX-FileCopyrightText: 2023 Slava0135
-// SPDX-FileCopyrightText: 2023 TemporalOroboros
-// SPDX-FileCopyrightText: 2024 eoineoineoin
-// SPDX-FileCopyrightText: 2024 metalgearsloth
-// SPDX-FileCopyrightText: 2025 ArtisticRoomba
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2025 Partmedia
-// SPDX-FileCopyrightText: 2025 slarticodefast
-// SPDX-FileCopyrightText: 2026 nabegator220
-//
-// SPDX-License-Identifier: MPL-2.0
-
 using Robust.Shared.Serialization;
 
 namespace Content.Shared.APC
@@ -74,7 +51,7 @@ namespace Content.Shared.APC
         /// <summary>
         /// Bitfield indicating status of APC lock indicator.
         /// </summary>
-        Lock = (1<<0),
+        Lock = (1 << 0),
         /// <summary>
         /// Bit state indicating that the given APC lock is unlocked.
         /// </summary>
@@ -82,7 +59,7 @@ namespace Content.Shared.APC
         /// <summary>
         /// Bit state indicating that the given APC lock is locked.
         /// </summary>
-        Locked = (1<<0),
+        Locked = (1 << 0),
 
         /// <summary>
         /// Bitmask for the full state for a given APC lock indicator.
@@ -110,7 +87,7 @@ namespace Content.Shared.APC
         /// <summary>
         /// Bitfield indicating whether the APC is automatically regulating the given channel.
         /// </summary>
-        Control = (1<<0),
+        Control = (1 << 0),
         /// <summary>
         /// Bit state indicating that the APC has been set to automatically toggle the given channel depending on available power.
         /// </summary>
@@ -123,7 +100,7 @@ namespace Content.Shared.APC
         /// <summary>
         /// Bitfield indicating whether the APC is currently providing power on the given channel.
         /// </summary>
-        Power = (1<<1),
+        Power = (1 << 1),
         /// <summary>
         /// Bit state indicating that the APC is currently not providing power on the given channel.
         /// </summary>
@@ -230,7 +207,7 @@ namespace Content.Shared.APC
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(MainBreaker, Power, (int) ApcExternalPower, Charge);
+            return HashCode.Combine(MainBreaker, Power, (int)ApcExternalPower, Charge);
         }
     }
 

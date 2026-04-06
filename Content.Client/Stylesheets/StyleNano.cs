@@ -1,59 +1,3 @@
-// SPDX-FileCopyrightText: 2019 CatTheSystem
-// SPDX-FileCopyrightText: 2019 Peter Wedder
-// SPDX-FileCopyrightText: 2019 Silver
-// SPDX-FileCopyrightText: 2019 Víctor Aguilera Puerto
-// SPDX-FileCopyrightText: 2019 moneyl
-// SPDX-FileCopyrightText: 2020 AJCM-git
-// SPDX-FileCopyrightText: 2020 Hugal31
-// SPDX-FileCopyrightText: 2020 Hugo Laloge
-// SPDX-FileCopyrightText: 2020 Vera Aguilera Puerto
-// SPDX-FileCopyrightText: 2021 Daniel Castro Razo
-// SPDX-FileCopyrightText: 2021 E F R
-// SPDX-FileCopyrightText: 2021 Swept
-// SPDX-FileCopyrightText: 2021 T
-// SPDX-FileCopyrightText: 2021 Tomeno
-// SPDX-FileCopyrightText: 2021 chairbender
-// SPDX-FileCopyrightText: 2022 Acruid
-// SPDX-FileCopyrightText: 2022 DrSmugleaf
-// SPDX-FileCopyrightText: 2022 Flipp Syder
-// SPDX-FileCopyrightText: 2022 Jacob Tong
-// SPDX-FileCopyrightText: 2022 Jezithyr
-// SPDX-FileCopyrightText: 2022 Kara
-// SPDX-FileCopyrightText: 2022 Michael Phillips
-// SPDX-FileCopyrightText: 2022 Paul Ritter
-// SPDX-FileCopyrightText: 2022 ShadowCommander
-// SPDX-FileCopyrightText: 2022 mirrorcult
-// SPDX-FileCopyrightText: 2022 wrexbe
-// SPDX-FileCopyrightText: 2023 08A
-// SPDX-FileCopyrightText: 2023 0x6273
-// SPDX-FileCopyrightText: 2023 Ahion
-// SPDX-FileCopyrightText: 2023 Eoin Mcloughlin
-// SPDX-FileCopyrightText: 2023 Moony
-// SPDX-FileCopyrightText: 2023 Nemanja
-// SPDX-FileCopyrightText: 2023 Visne
-// SPDX-FileCopyrightText: 2023 iacore
-// SPDX-FileCopyrightText: 2023 keronshb
-// SPDX-FileCopyrightText: 2023 metalgearsloth
-// SPDX-FileCopyrightText: 2024 Errant
-// SPDX-FileCopyrightText: 2024 James Simonson
-// SPDX-FileCopyrightText: 2024 Julian Giebel
-// SPDX-FileCopyrightText: 2024 Leon Friedrich
-// SPDX-FileCopyrightText: 2024 Repo
-// SPDX-FileCopyrightText: 2024 Simon
-// SPDX-FileCopyrightText: 2024 Sk1tch
-// SPDX-FileCopyrightText: 2024 Willhelm53
-// SPDX-FileCopyrightText: 2024 ike709
-// SPDX-FileCopyrightText: 2024 maylokana
-// SPDX-FileCopyrightText: 2025 Ciarán Walsh
-// SPDX-FileCopyrightText: 2025 Gerkada
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
-// SPDX-FileCopyrightText: 2025 chromiumboy
-// SPDX-FileCopyrightText: 2025 eoineoineoin
-// SPDX-FileCopyrightText: 2025 nabegator220
-//
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
 using System.Linq;
 using System.Numerics;
 using Content.Client._KS14.ReadyManifest.UI;
@@ -124,7 +68,6 @@ namespace Content.Client.Stylesheets
         public const string StyleClassChatChannelSelectorButton = "chatSelectorOptionButton";
         public const string StyleClassChatFilterOptionButton = "chatFilterOptionButton";
         public const string StyleClassStorageButton = "storageButton";
-        public const string StyleClassInset = "Inset";
 
         public const string StyleClassConsoleHeading = "ConsoleHeading";
         public const string StyleClassConsoleSubHeading = "ConsoleSubHeading";
@@ -141,8 +84,6 @@ namespace Content.Client.Stylesheets
         public const string StyleClassLabelBig = "LabelBig";
         public const string StyleClassLabelSmall = "LabelSmall";
         public const string StyleClassButtonBig = "ButtonBig";
-
-        public const string StyleClassButtonHelp = "HelpButton";
 
         public const string StyleClassPopupMessageSmall = "PopupMessageSmall";
         public const string StyleClassPopupMessageSmallCaution = "PopupMessageSmallCaution";
@@ -587,13 +528,6 @@ namespace Content.Client.Stylesheets
             var sliderFillWhite = new StyleBoxTexture(sliderFillBox) { Modulate = Color.White };
 
             var boxFont13 = resCache.GetFont("/Fonts/Boxfont-round/Boxfont Round.ttf", 13);
-
-            var insetBack = new StyleBoxTexture
-            {
-                Texture = buttonTex,
-                Modulate = Color.FromHex("#202023"),
-            };
-            insetBack.SetPatchMargin(StyleBox.Margin.All, 10);
 
             // Default paper background:
             var paperBackground = new StyleBoxTexture
@@ -1406,17 +1340,12 @@ namespace Content.Client.Stylesheets
                     new StyleProperty(PanelContainer.StylePropertyPanel, new StyleBoxFlat { BackgroundColor = NanoGold, ContentMarginBottomOverride = 2, ContentMarginLeftOverride = 2}),
                 }),
 
-                Element<TextureButton>()
-                    .Class(StyleClassButtonHelp)
-                    .Prop(TextureButton.StylePropertyTexture, resCache.GetTexture("/Textures/Interface/VerbIcons/information.svg.192dpi.png")),
-
                 // Labels ---
                 Element<Label>().Class(StyleClassLabelBig)
                     .Prop(Label.StylePropertyFont, notoSans16),
 
                 Element<Label>().Class(StyleClassLabelSmall)
                  .Prop(Label.StylePropertyFont, notoSans10),
-                // ---
 
                 // Different Background shapes ---
                 Element<PanelContainer>().Class(ClassAngleRect)
@@ -1679,13 +1608,32 @@ namespace Content.Client.Stylesheets
                         BackgroundColor = FancyTreeSelectedRowColor,
                     }),
 
+                // Inset background (News manager, notifications)
+                Element<PanelContainer>().Class("InsetBackground")
+                    .Prop(PanelContainer.StylePropertyPanel, new StyleBoxFlat
+                    {
+                        BackgroundColor = Color.FromHex("#202023"),
+                    }),
+
+                // Default fancy window border styles
+                Element<PanelContainer>().Class("DefaultBorderBottom")
+                    .Prop(PanelContainer.StylePropertyPanel, new StyleBoxFlat
+                    {
+                        BorderColor= Color.FromHex("#3B3E56"),
+                        BorderThickness= new Thickness(0, 0, 0, 1),
+                    }),
+
+
+                Element<PanelContainer>().Class("DefaultBorderTop")
+                    .Prop(PanelContainer.StylePropertyPanel, new StyleBoxFlat
+                    {
+                        BorderColor= Color.FromHex("#3B3E56"),
+                        BorderThickness= new Thickness(0, 1, 0, 0),
+                    }),
+
                 // Silicon law edit ui
                 Element<Label>().Class(SiliconLawContainer.StyleClassSiliconLawPositionLabel)
                     .Prop(Label.StylePropertyFontColor, NanoGold),
-
-                Element<PanelContainer>()
-                    .Class(StyleClassInset)
-                    .Prop(PanelContainer.StylePropertyPanel, insetBack),
 
                 // Harmony start - ready manifest
 

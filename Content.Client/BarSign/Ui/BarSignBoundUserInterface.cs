@@ -1,13 +1,7 @@
-// SPDX-FileCopyrightText: 2024 Nemanja
-// SPDX-FileCopyrightText: 2025 Pieter-Jan Briers
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-// SPDX-FileCopyrightText: 2026 slarticodefast
-//
-// SPDX-License-Identifier: MIT
-
 using System.Linq;
 using Content.Shared.BarSign;
 using JetBrains.Annotations;
+using Robust.Client.UserInterface;
 using Robust.Shared.Prototypes;
 
 namespace Content.Client.BarSign.Ui;
@@ -23,13 +17,12 @@ public sealed class BarSignBoundUserInterface(EntityUid owner, Enum uiKey) : Bou
     {
         base.Open();
 
-        var sign = EntMan.GetComponentOrNull<BarSignComponent>(Owner)?.Current is { } current
-            ? _prototype.Index(current)
-            : null;
         var allSigns = BarSignSystem.GetAllBarSigns(_prototype)
             .OrderBy(p => Loc.GetString(p.Name))
             .ToList();
-        _menu = new(sign, allSigns);
+
+        _menu = this.CreateWindow<BarSignMenu>();
+        _menu.LoadSigns(allSigns);
 
         _menu.OnSignSelected += id =>
         {
@@ -37,16 +30,17 @@ public sealed class BarSignBoundUserInterface(EntityUid owner, Enum uiKey) : Bou
         };
 
         _menu.OnClose += Close;
-        _menu.OpenCentered();
+        _menu.OpenToLeft();
     }
 
     public override void Update()
     {
-        if (!EntMan.TryGetComponent<BarSignComponent>(Owner, out var signComp))
+        if (!EntMan.TryGetComponent<BarSignComponent>(Owner, out var signComp)
+            || !_prototype.Resolve(signComp.Current, out var signPrototype))
             return;
 
-        if (_prototype.Resolve(signComp.Current, out var signPrototype))
-            _menu?.UpdateState(signPrototype);
+        _menu?.UpdateState(signPrototype);
     }
+
 }
 

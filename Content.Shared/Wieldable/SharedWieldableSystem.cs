@@ -1,3 +1,33 @@
+// SPDX-FileCopyrightText: 2023 Kara
+// SPDX-FileCopyrightText: 2023 Pieter-Jan Briers
+// SPDX-FileCopyrightText: 2023 TaralGit
+// SPDX-FileCopyrightText: 2023 Vordenburg
+// SPDX-FileCopyrightText: 2023 and_a
+// SPDX-FileCopyrightText: 2023 stopbreaking
+// SPDX-FileCopyrightText: 2024 AJCM-git
+// SPDX-FileCopyrightText: 2024 Brandon Hu
+// SPDX-FileCopyrightText: 2024 Doomsdrayk
+// SPDX-FileCopyrightText: 2024 DrSmugleaf
+// SPDX-FileCopyrightText: 2024 Errant
+// SPDX-FileCopyrightText: 2024 Froffy025
+// SPDX-FileCopyrightText: 2024 Plykiya
+// SPDX-FileCopyrightText: 2024 RiceMar1244
+// SPDX-FileCopyrightText: 2024 WarMechanic
+// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
+// SPDX-FileCopyrightText: 2025 Nemanja
+// SPDX-FileCopyrightText: 2025 SlamBamActionman
+// SPDX-FileCopyrightText: 2025 Tayrtahn
+// SPDX-FileCopyrightText: 2025 Winkarst
+// SPDX-FileCopyrightText: 2025 deltanedas
+// SPDX-FileCopyrightText: 2025 imatsoup
+// SPDX-FileCopyrightText: 2025 keronshb
+// SPDX-FileCopyrightText: 2025 metalgearsloth
+// SPDX-FileCopyrightText: 2025 slarticodefast
+// SPDX-FileCopyrightText: 2026 github_actions[bot]
+// SPDX-FileCopyrightText: 2026 nabegator220
+//
+// SPDX-License-Identifier: MPL-2.0
+
 using System.Linq;
 using Content.Shared.Examine;
 using Content.Shared.Hands;
@@ -380,6 +410,22 @@ public abstract class SharedWieldableSystem : EntitySystem
                 TryUnwield(held, wieldable, wielder, force);
         }
     }
+
+    /// <summary>
+    /// KS14 - unwieldall but it returns a boolean if someone has been unwielded - required for a specific bit of demoncode
+    /// </summary>
+    /// <param name="force">If this is true we will bypass UnwieldAttemptEvent.</param>
+    public bool TryUnwieldAll(Entity<HandsComponent?> wielder, bool force = false)
+    {
+        var result = false;
+        foreach (var held in _hands.EnumerateHeld(wielder))
+        {
+            if (TryComp<WieldableComponent>(held, out var wieldable))
+                result |= TryUnwield(held, wieldable, wielder, force);
+        }
+        return result;
+    }
+    // KS14 end
 
     /// <summary>
     /// Sets wielded without doing any checks.

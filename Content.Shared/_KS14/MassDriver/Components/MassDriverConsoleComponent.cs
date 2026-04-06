@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2026 Gerkada
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Shared.DeviceLinking;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;

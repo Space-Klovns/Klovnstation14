@@ -1,3 +1,10 @@
+# SPDX-FileCopyrightText: 2023 Tunguso4ka
+# SPDX-FileCopyrightText: 2025 Tao
+# SPDX-FileCopyrightText: 2026 github_actions[bot]
+# SPDX-FileCopyrightText: 2026 nabegator220
+#
+# SPDX-License-Identifier: MPL-2.0
+
 - type: constructionGraph
   id: BoneArmor
   start: start
@@ -6,8 +13,11 @@
     edges:
     - to: armor
       steps:
-      - material: Bones
-        amount: 6
+      - material: Bones # KS14 modified, was 6
+        amount: 8
+        doAfter: 2
+      - material: Durathread # KS14 modified, added durathread
+        amount: 2
         doAfter: 2
   - node: armor
     entity: ClothingOuterArmorBone

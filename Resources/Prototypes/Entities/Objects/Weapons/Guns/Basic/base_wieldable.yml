@@ -10,4 +10,10 @@
     maxAngle: -30
   - type: Gun
     minAngle: 21
-    maxAngle: 32   
+    maxAngle: 32
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_pickup1.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_drop1.ogg

@@ -1,28 +1,3 @@
-# SPDX-FileCopyrightText: 2020 AJCM-git
-# SPDX-FileCopyrightText: 2020 DrSmugleaf
-# SPDX-FileCopyrightText: 2020 Pieter-Jan Briers
-# SPDX-FileCopyrightText: 2021 Leon Friedrich
-# SPDX-FileCopyrightText: 2021 Swept
-# SPDX-FileCopyrightText: 2022 Charlese2
-# SPDX-FileCopyrightText: 2022 Kara
-# SPDX-FileCopyrightText: 2022 Vera Aguilera Puerto
-# SPDX-FileCopyrightText: 2022 metalgearsloth
-# SPDX-FileCopyrightText: 2023 Boaz1111
-# SPDX-FileCopyrightText: 2023 Vordenburg
-# SPDX-FileCopyrightText: 2023 kerisargit
-# SPDX-FileCopyrightText: 2024 IProduceWidgets
-# SPDX-FileCopyrightText: 2024 Nemanja
-# SPDX-FileCopyrightText: 2024 Plykiya
-# SPDX-FileCopyrightText: 2025 Hitlinemoss
-# SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-# SPDX-FileCopyrightText: 2025 Princess Cheeseballs
-# SPDX-FileCopyrightText: 2025 SlamBamActionman
-# SPDX-FileCopyrightText: 2025 nabegator220
-# SPDX-FileCopyrightText: 2026 FrauzJ
-# SPDX-FileCopyrightText: 2026 github_actions[bot]
-#
-# SPDX-License-Identifier: MIT
-
 - type: entity
   parent: BaseBullet
   id: BulletRifle
@@ -30,9 +5,11 @@
   name: bullet (.20 rifle)
   components:
   - type: Projectile
-    damage:
+    damage: # KS14 modified
       types:
-        Piercing: 18
+        Piercing: 20
+      percentilePenetration:
+        Piercing: 0.15
 
 - type: entity
   parent: BaseBulletPractice
@@ -52,10 +29,12 @@
   name: bullet (.20 rifle incendiary)
   components:
   - type: Projectile
-    damage:
+    damage: # KS14 modified
       types:
-        Piercing: 12
-        Heat: 6
+        Piercing: 13
+        Heat: 7
+      percentilePenetration:
+        Piercing: 0.15
 
 - type: entity
   parent: BaseBulletUranium
@@ -64,8 +43,12 @@
   name: bullet (.20 rifle uranium)
   components:
   - type: Projectile
-    damage:
+    damage: #KS14 modified
       types:
-        Radiation: 6
-        Piercing: 12
+        Radiation: 7
+        Piercing: 13
+      percentilePenetration:
+        Piercing: 0.15
+      flatPenetration:
+        Piercing: 7
 

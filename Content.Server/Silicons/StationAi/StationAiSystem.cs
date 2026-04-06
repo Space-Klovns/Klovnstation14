@@ -1,13 +1,3 @@
-// SPDX-FileCopyrightText: 2024 ScarKy0
-// SPDX-FileCopyrightText: 2024 metalgearsloth
-// SPDX-FileCopyrightText: 2025 Tayrtahn
-// SPDX-FileCopyrightText: 2025 chromiumboy
-// SPDX-FileCopyrightText: 2025 deltanedas
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
-// SPDX-FileCopyrightText: 2025 nabegator220
-//
-// SPDX-License-Identifier: MIT
-
 using Content.Server.Chat.Systems;
 using Content.Server.Construction;
 using Content.Server.Destructible;
@@ -134,7 +124,7 @@ public sealed class StationAiSystem : SharedStationAiSystem
                 // Set the new AI brain to the 'rebooting' state
                 if (TryComp<StationAiCustomizationComponent>(aiBrain, out var customization))
                     SetStationAiState((aiBrain, customization), StationAiState.Rebooting);
-                
+
             }
 
             // Delete the new AI brain if it cannot be inserted into the core
@@ -266,7 +256,7 @@ public sealed class StationAiSystem : SharedStationAiSystem
             accent.OverrideChargeLevel = _battery.GetChargeLevel((ent.Owner, battery));
 
         if (TryComp<DamageableComponent>(ent, out var damageable))
-            accent.OverrideTotalDamage = damageable.TotalDamage;
+            accent.OverrideTotalDamage = _damageable.GetTotalDamage((ent, damageable));
 
         if (TryComp<DestructibleComponent>(ent, out var destructible))
             accent.DamageAtMaxCorruption = _destructible.DestroyedAt(ent, destructible);
@@ -313,7 +303,7 @@ public sealed class StationAiSystem : SharedStationAiSystem
         if (!_proto.TryIndex(_damageAlert, out var proto))
             return;
 
-        var damagePercent = damageable.TotalDamage / _destructible.DestroyedAt(ent, destructible);
+        var damagePercent = _damageable.GetTotalDamage((ent, damageable)) / _destructible.DestroyedAt(ent, destructible);
         var damageLevel = Math.Round(damagePercent.Float() * proto.MaxSeverity);
 
         _alerts.ShowAlert(held.Value, _damageAlert, (short)Math.Clamp(damageLevel, 0, proto.MaxSeverity));

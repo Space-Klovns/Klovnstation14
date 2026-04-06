@@ -1,15 +1,3 @@
-// SPDX-FileCopyrightText: 2022 metalgearsloth
-// SPDX-FileCopyrightText: 2023 Chief-Engineer
-// SPDX-FileCopyrightText: 2023 DrSmugleaf
-// SPDX-FileCopyrightText: 2023 Riggle
-// SPDX-FileCopyrightText: 2025 David
-// SPDX-FileCopyrightText: 2025 Kowlin
-// SPDX-FileCopyrightText: 2025 Princess Cheeseballs
-// SPDX-FileCopyrightText: 2026 Pieter-Jan Briers
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-//
-// SPDX-License-Identifier: MIT
-
 using System.Text;
 using Content.Shared.Administration.Notes;
 using Content.Shared.Database;

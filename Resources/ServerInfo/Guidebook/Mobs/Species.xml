@@ -1,7 +1,8 @@
+<!-- KS14: humans, dwarves and vox ONLY -->
 <Document>
   # Species
 
-  Nanotrasen employs humans, dwarves and vox. <!-- KLOVN -->
+  Nanotrasen employs humans, dwarves and vox.
 
   <Box>
     <GuideEntityEmbed Entity="MobHuman" Caption="Human"/>

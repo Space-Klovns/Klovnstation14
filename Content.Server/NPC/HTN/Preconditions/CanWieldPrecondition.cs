@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 2026 nabegator220
-//
-// SPDX-License-Identifier: MPL-2.0
-
 using Content.Server.Hands.Systems;
 using Content.Shared.Wieldable;
 using Content.Shared.Wieldable.Components;

@@ -1,27 +1,16 @@
-// SPDX-FileCopyrightText: 2022 Flipp Syder
-// SPDX-FileCopyrightText: 2023 metalgearsloth
-// SPDX-FileCopyrightText: 2025 Hagvan
-//
-// SPDX-License-Identifier: MIT
-
 using Robust.Shared.Utility;
-
-using Robust.Client.Timing; // Goobstation
 
 namespace Content.Client.SurveillanceCamera;
 
 public sealed class SurveillanceCameraMonitorSystem : EntitySystem
 {
-    [Dependency] private readonly IClientGameTiming _gameTiming = default!; // Goobstation
-
     public override void Update(float frameTime)
     {
         var query = EntityQueryEnumerator<ActiveSurveillanceCameraMonitorVisualsComponent>();
 
         while (query.MoveNext(out var uid, out var comp))
         {
-            var curTime = _gameTiming.CurTime; // Goobstation
-            comp.TimeLeft -= (float)(curTime - comp.PreviousCurTime).TotalSeconds; // Goobstation
+            comp.TimeLeft -= frameTime;
 
             if (comp.TimeLeft <= 0)
             {
@@ -29,8 +18,6 @@ public sealed class SurveillanceCameraMonitorSystem : EntitySystem
 
                 RemCompDeferred<ActiveSurveillanceCameraMonitorVisualsComponent>(uid);
             }
-
-            comp.PreviousCurTime = curTime; // Goobstation
         }
     }
 
@@ -38,7 +25,6 @@ public sealed class SurveillanceCameraMonitorSystem : EntitySystem
     {
         var comp = EnsureComp<ActiveSurveillanceCameraMonitorVisualsComponent>(uid);
         comp.OnFinish = onFinish;
-        comp.PreviousCurTime = _gameTiming.CurTime; // Goobstation
     }
 
     public void RemoveTimer(EntityUid uid)

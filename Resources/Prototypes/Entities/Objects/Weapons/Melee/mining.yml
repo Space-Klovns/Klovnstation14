@@ -1,27 +1,3 @@
-# SPDX-FileCopyrightText: 2023 AJCM-git
-# SPDX-FileCopyrightText: 2023 DrSmugleaf
-# SPDX-FileCopyrightText: 2023 I.K
-# SPDX-FileCopyrightText: 2023 Nairod
-# SPDX-FileCopyrightText: 2023 Nemanja
-# SPDX-FileCopyrightText: 2023 deltanedas
-# SPDX-FileCopyrightText: 2023 kalane15
-# SPDX-FileCopyrightText: 2023 metalgearsloth
-# SPDX-FileCopyrightText: 2023 nikthechampiongr
-# SPDX-FileCopyrightText: 2023 notquitehadouken
-# SPDX-FileCopyrightText: 2024 Emisse
-# SPDX-FileCopyrightText: 2024 Kara
-# SPDX-FileCopyrightText: 2024 MilenVolf
-# SPDX-FileCopyrightText: 2024 Mr. 27
-# SPDX-FileCopyrightText: 2024 Plykiya
-# SPDX-FileCopyrightText: 2025 Alzore
-# SPDX-FileCopyrightText: 2025 FrauzJ
-# SPDX-FileCopyrightText: 2025 Pronana
-# SPDX-FileCopyrightText: 2025 RedBookcase
-# SPDX-FileCopyrightText: 2025 SlamBamActionman
-# SPDX-FileCopyrightText: 2025 Winkarst
-#
-# SPDX-License-Identifier: MIT
-
 - type: entity
   name: pickaxe
   parent: BaseItem
@@ -42,14 +18,13 @@
       params:
         volume: -3
     damage:
-      groups:
-        Brute: 5
+      types:
+        Piercing: 5
   - type: Wieldable
   - type: IncreaseDamageOnWield
     damage:
-      groups:
-        Brute: 10
       types:
+        Piercing: 10
         Structural: 30
   - type: Item
     size: Normal
@@ -86,9 +61,8 @@
       path: "/Audio/Items/drill_hit.ogg"
     attackRate: 4
     damage:
-      groups:
-        Brute: 3
       types:
+        Piercing: 3
         Structural: 15
 
 - type: entity
@@ -108,9 +82,8 @@
       path: "/Audio/Items/drill_hit.ogg"
     attackRate: 4
     damage:
-      groups:
-        Brute: 6
       types:
+        Piercing: 6
         Structural: 30
 
 
@@ -155,8 +128,10 @@
     delay: 0.9
   - type: LeechOnMarker
     leech:
-      groups:
-        Brute: -10
+      types:
+        Blunt: -5 # KS14: -2 -> -5
+        Slash: -5 # KS14: -2 -> -5
+        Piercing: -5 # KS14: -2 -> -5
   - type: Gun
     soundGunshot: /Audio/Weapons/plasma_cutter.ogg
     fireRate: 1
@@ -256,9 +231,10 @@
     delay: 1.9
   - type: LeechOnMarker
     leech:
-      groups:
-        Brute: -21
-  - type: MeleeWeapon
+      types:
+        Blunt: -7.5 # KS14: -5 -> -7.5
+        Piercing: -7.5 # KS14: -5 -> -7.5
+        Slash: -7.5 # KS14: -5 -> -7.5
   - type: Tag
     tags:
       - Pickaxe

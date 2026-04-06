@@ -1,9 +1,3 @@
-// SPDX-FileCopyrightText: 2024 Nemanja
-// SPDX-FileCopyrightText: 2026 Rinary
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-//
-// SPDX-License-Identifier: MPL-2.0
-
 // Starlight Start: Moved to Shared ``Content.Shared\_Starlight\Atmos\Components\PipeRestrictOverlapComponent.cs``
 /*
 using Content.Server.Atmos.EntitySystems;

@@ -1,10 +1,3 @@
-// SPDX-FileCopyrightText: 2025 LaCumbiaDelCoronavirus
-// SPDX-FileCopyrightText: 2025 github_actions[bot]
-// SPDX-FileCopyrightText: 2025 jhrushbe
-// SPDX-FileCopyrightText: 2025 rottenheadphones
-//
-// SPDX-License-Identifier: CC-BY-NC-SA-3.0
-
 using Content.Shared.Atmos;
 using Content.Shared.Damage.Components;
 using Content.Shared.Examine;
@@ -140,6 +133,7 @@ public abstract class SharedReactorPartSystem : EntitySystem
             if (component.Temperature == Atmospherics.T20C)
             {
                 burncomp.IsDamageActive = false;
+                burncomp.Damage = new(); // KS14: it cant be null
                 continue;
             }
 
