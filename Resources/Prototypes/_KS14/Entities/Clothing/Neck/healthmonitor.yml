@@ -1,6 +1,6 @@
 - type: entity
   parent: ClothingNeckBase
-  id: healthmonitor
+  id: HealthMonitor
   name: health monitor
   description: A small, wearable device that outputs a signal when its wearer goes crit or dies.
   components:
