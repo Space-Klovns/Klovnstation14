@@ -13,6 +13,7 @@ using JetBrains.Annotations;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
+using Content.Server._KS14.IoC; // KS14: ANK
 
 namespace Content.Server.NPC.HTN;
 
@@ -22,6 +23,7 @@ public sealed class HTNSystem : EntitySystem
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly NPCSystem _npc = default!;
     [Dependency] private readonly NPCUtilitySystem _utility = default!;
+    [Dependency] private readonly SystemCollectionHookSystem _collectionHook = default!; // KS14: ANK
 
     private readonly JobQueue _planQueue = new(0.004);
 
@@ -39,7 +41,8 @@ public sealed class HTNSystem : EntitySystem
         SubscribeLocalEvent<HTNComponent, ComponentShutdown>(OnHTNShutdown);
         SubscribeNetworkEvent<RequestHTNMessage>(OnHTNMessage);
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypeLoad);
-        OnLoad();
+
+        _collectionHook.HookAction(OnLoad); // KS14: ANK: made this only load when all systems started
     }
 
     private void OnHTNMessage(RequestHTNMessage msg, EntitySessionEventArgs args)

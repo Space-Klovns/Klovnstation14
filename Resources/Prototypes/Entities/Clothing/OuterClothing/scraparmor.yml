@@ -1,11 +1,3 @@
-# SPDX-FileCopyrightText: 2025 RedBookcase
-# SPDX-FileCopyrightText: 2025 ToastEnjoyer
-# SPDX-FileCopyrightText: 2025 Vasilis The Pikachu
-# SPDX-FileCopyrightText: 2026 github_actions[bot]
-# SPDX-FileCopyrightText: 2026 nabegator220
-#
-# SPDX-License-Identifier: MPL-2.0
-
 # Separate yml file for scrap armor since it has so many construction steps.
 # Listed from first step of crafting to the final armor
 

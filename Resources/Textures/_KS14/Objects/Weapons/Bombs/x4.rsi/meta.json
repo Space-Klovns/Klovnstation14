@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from https://github.com/tgstation/tgstation/ at commit 4b35c47bf4fb70b64ac383db115fcbd56a109bc7",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "icon"
+    },
+    {
+      "name": "primed",
+      "delays": [
+        [
+          0.1,
+          0.1
+        ]
+      ]
+    }
+  ]
+}

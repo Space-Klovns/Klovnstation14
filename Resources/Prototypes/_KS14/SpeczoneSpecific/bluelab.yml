@@ -108,6 +108,7 @@
   - type: DeviceLinkSink
     ports:
     - Trigger
+  - type: SpeczoneLoadAsSaved
 
   - type: TriggerOnSignal
   - type: DeviceNetwork

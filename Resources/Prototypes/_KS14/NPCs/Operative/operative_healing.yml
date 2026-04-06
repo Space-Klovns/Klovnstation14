@@ -1,0 +1,155 @@
+- type: htnCompound
+  id: KsOperativeHealingCompound
+  branches:
+  - preconditions:
+    - !type:KeyFloatGreaterPrecondition
+      key: OurDamage
+      value: 60
+    - !type:KeyComponentPrecondition
+      key: Owner
+      invert: true
+      components:
+      - type: NPCRecentlyInjected
+    tasks:
+    - !type:HTNCompoundTask
+      task: KsOperativeRetreatCompound
+    # Look for meds (DOOOCTOOOOOOOS) (fail if we have no meds)
+    - !type:HTNPrimitiveTask
+      operator: !type:UtilityOperator
+        proto: KsInventoryMeds
+        key: ChosenMeds
+
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "Healing, cover me!"
+
+    - !type:HTNPrimitiveTask # Hands: cache current hand
+      operator: !type:CopyKeyOperator
+        originKey: ActiveHand
+        targetKey: LastActiveHand
+
+    - !type:HTNPrimitiveTask # Hands: swap to free
+      operator: !type:SwapToFreeHandOperator
+    - !type:HTNPrimitiveTask # Wait one tick for any virtual item from the wield to be deleted so that a hand is free, as they are QueueDel'd
+      operator: !type:WaitTickOperator
+
+    - !type:HTNPrimitiveTask # Equip meds in offhand
+      operator: !type:EquipOperator
+        target: ChosenMeds
+
+    - !type:HTNPrimitiveTask # Use meds on ourself
+      operator: !type:InteractUsingOperator
+        targetKey: Owner
+    - !type:HTNPrimitiveTask
+      operator: !type:EnsureComponentOperator
+        targetKey: Owner
+        components:
+        - type: NPCRecentlyInjected
+          removeTime: 30 # 30s
+
+    - !type:HTNPrimitiveTask # Drop used
+      operator: !type:DropOperator
+        succeedIfHandEmpty: true
+
+    - !type:HTNPrimitiveTask # Hands: swap back
+      operator: !type:SwapToHandOperator
+        key: LastActiveHand
+    - !type:HTNPrimitiveTask # Wielding: wield
+      operator: !type:WieldOperator
+
+- type: htnCompound
+  id: KsOperativeConsiderHealingCompound
+  branches:
+  - tasks:
+    - !type:HTNPrimitiveTask
+        operator: !type:GetDamageOperator
+          key: OurDamage
+    - !type:HTNCompoundTask
+      task: KsOperativeHealingCompound
+
+- type: htnCompound
+  id: KsOperativeConsiderHealingAndRetreatCompound
+  branches:
+  - tasks:
+    - !type:HTNCompoundTask
+      task: KsOperativeConsiderHealingCompound
+    - !type:HTNPrimitiveTask # Wait until we finish moving to our retreat position
+      operator: !type:WaitUntilNullOperator
+        key: RetreatTargetCoordinates
+
+
+- type: htnCompound
+  id: KsOperativeRetreatCompound
+  branches:
+
+  # Try to retreat AWAY from target
+  # - preconditions:
+  #   - !type:KeyExistsPrecondition
+  #     key: LastTargetCoordinates
+  #   tasks:
+  #   - !type:HTNPrimitiveTask # VOICELINE
+  #     operator: !type:SpeakOperator
+  #       speech: !type:SingleSpeakOperatorSpeech
+  #         line: "Taking cover!"
+  #   - !type:HTNPrimitiveTask
+  #     operator: !type:UtilityOperator
+  #       proto: KsOperativeRetreatableCampingMarkers
+  #       key: RetreatTarget
+  #       keyCoordinates: RetreatTargetCoordinates
+  #   - !type:HTNPrimitiveTask
+  #     operator: !type:MoveToOperator
+  #       removeKeyOnFinish: true
+  #       stopOnLineOfSight: false
+  #       targetKey: RetreatTargetCoordinates
+  #       pathfindKey: RetreatTargetPathfind
+  #       rangeKey: CampingRange
+
+  # Just retreat
+  - tasks:
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "Falling back!"
+    - !type:HTNPrimitiveTask
+      operator: !type:UtilityOperator
+        proto: KsOperativeRetreatableCampingMarkers
+        key: RetreatTarget
+        keyCoordinates: RetreatTargetCoordinates
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+        removeKeyOnFinish: true
+        stopOnLineOfSight: false
+        shutdownState: PlanFinished
+        targetKey: RetreatTargetCoordinates
+        pathfindKey: RetreatTargetPathfind
+        rangeKey: CampingRange
+
+
+- type: utilityQuery
+  id: KsOperativeRetreatableCampingMarkers
+  query:
+  - !type:ComponentQuery
+    components:
+    - type: NpcCampingSpot
+  considerations:
+  - !type:KeyCoordinatesDistanceCon
+    key: OwnerCoordinates
+    curve: !type:PresetCurve
+      preset: TargetDistance
+  - !type:CoordinatesInLOSCon # Dont go to markers that have LOS of where the target was
+    curve: !type:InverseBoolCurve
+    toKey: LastTargetCoordinates
+    radius: 5
+
+- type: utilityQuery
+  id: KsInventoryMeds
+  query:
+  - !type:InventoryQuery
+  - !type:ComponentFilter
+    components:
+    - type: NpcHealingItem
+    - type: Item
+  considerations:
+  - !type:HasSolutionCon
+    curve: !type:BoolCurve

@@ -273,6 +273,10 @@ public sealed partial class AnomalyComponent : Component
 
     [DataField]
     public bool DeleteEntity = true;
+
+    // KS14: Displaced telescience
+    [DataField]
+    public bool SkipMapInit = false;
 }
 
 /// <summary>

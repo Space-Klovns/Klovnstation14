@@ -6,6 +6,8 @@ namespace Content.Shared._Goobstation.Emoting;
 [RegisterComponent]
 public sealed partial class AnimatedEmotesComponent : Component;
 
-[DataDefinition] public sealed partial class AnimationFlipEmoteEvent;
-[DataDefinition] public sealed partial class AnimationSpinEmoteEvent;
-[DataDefinition] public sealed partial class AnimationJumpEmoteEvent;
+[DataDefinition]
+public sealed partial class AnimationEmoteEvent
+{
+    [DataField] public string AnimationKey = "emoteAnimKeyId";
+}

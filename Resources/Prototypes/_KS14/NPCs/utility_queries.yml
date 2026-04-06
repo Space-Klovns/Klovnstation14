@@ -1,0 +1,26 @@
+- type: utilityQuery
+  id: InventoryMeleeWeapons
+  query:
+  - !type:InventoryQuery
+  - !type:ComponentFilter
+    components:
+    # Just serializer things
+    - type: MeleeWeapon
+      damage:
+        types:
+          Blunt: 0
+    - type: Item
+  considerations:
+  - !type:TargetMeleeCon
+    curve: !type:QuadraticCurve
+      slope: 0.5
+      exponent: 0.5
+      yOffset: 0
+
+- type: utilityCurvePreset
+  id: NearbyGunsDistance
+  curve: !type:QuadraticCurve
+    slope: 0.1667   # 1/6
+    exponent: 1
+    yOffset: 0
+    xOffset: 0

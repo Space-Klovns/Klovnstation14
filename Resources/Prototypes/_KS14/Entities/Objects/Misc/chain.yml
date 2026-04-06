@@ -1,0 +1,129 @@
+- type: entity
+  id: KsBaseWireSegment
+  abstract: true
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Misc/chain.rsi
+  - type: Damageable
+    damageModifierSet: Electronic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 15
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          path: /Audio/Effects/snap.ogg
+          params:
+            volume: 1
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+
+- type: entity
+  parent: KsBaseWireSegment
+  id: KsWireSegment
+  name: wire segment
+  #categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    drawdepth: Items
+    noRot: false
+    layers:
+    - state: simple
+      scale: 0.6,0.6
+  - type: Clickable
+  - type: InteractionOutline
+  - type: MovedByPressure
+  - type: CollisionWake
+  - type: GravityAffected
+  - type: Physics
+    bodyType: Dynamic
+    fixedRotation: false
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.1,-0.2,0.1,0.2"
+        density: 20
+        mask:
+        - ItemMask
+        restitution: 0.3  # fite me
+        friction: 0.2
+  - type: Pullable
+
+- type: entity
+  parent: [ BaseItem, KsBaseWireSegment ]
+  id: KsWireStart
+  name: wire activator
+  description: "There are instructions on the side of it:\n'1. CONNECT TO WIRE END'\n'2. PRESS BUTTON'"
+  components:
+  - type: Sprite
+    layers:
+    - state: segment
+      scale: 0.75,0.75
+    - state: stripe
+      color: '#4287f5'
+      scale: 0.75,0.75
+  - type: LinkedChainStart
+    segmentId: KsWireSegment
+    segmentOffset: 0.125
+    segments: 11
+    keysIn:
+    - trigger
+
+  - type: UseDelay
+  - type: TriggerOnUse
+
+- type: entity
+  parent: [ BaseItem, KsBaseWireSegment ]
+  id: KsWireEnd
+  name: wire end
+  description: Needs to be connected with a wire to work, obviously.
+  components:
+  - type: Sprite
+    layers:
+    - state: segment
+      scale: 0.75,0.75
+    - state: stripe
+      color: '#f54254'
+      scale: 0.75,0.75
+      rotation: 180
+  - type: LinkedChainEnd
+
+- type: entity
+  parent: KsWireEnd
+  id: KsWireEndBreachingCharge
+  name: wired composition X-4 breaching charge
+  description: Needs to be connected with a wire to work, obviously. This one breaches the door. It has glue on the back.
+  components:
+  - type: Sprite
+    layers:
+    - sprite: _KS14/Objects/Weapons/Bombs/x4.rsi
+      state: icon
+      scale: 0.85,0.85
+      offset: 0.1,0
+    - state: segment
+      scale: 0.75,0.75
+    - state: stripe
+      color: '#f54254'
+      scale: 0.75,0.75
+      rotation: 180
+  - type: ExplodeOnTrigger
+  - type: Explosive
+    explosionType: DemolitionCharge
+    totalIntensity: 50
+    intensitySlope: 15
+    maxIntensity: 75
+    canCreateVacuum: false
+  - type: StickyVisualizer
+  - type: Appearance
+  - type: Sticky
+    stickDelay: 1.5
+    unstickDelay: 3
+    whitelist:
+      tags:
+      - Wall
+      components:
+      - Airlock

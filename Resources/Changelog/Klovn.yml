@@ -851,3 +851,33 @@ Entries:
       message: Gun and armor rework.
   id: 107
   time: '2026-03-29T18:00:29.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Added a way to enter speczones without admin intervention.
+    - type: Add
+      message: Gmod 2d rope physics in ss14
+    - type: Remove
+      message: Displaced telescience can no longer spawn as a roundstart ruin.
+    - type: Tweak
+      message: Handgrenades are now bouncier.
+    - type: Fix
+      message: Fixed wallmounts looking weird when toggling FOV
+  id: 108
+  time: '2026-04-01T14:17:13.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed spin/jump/flip emotes not working when used from emotewheel.
+  id: 109
+  time: '2026-04-03T09:13:49.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Tweak
+      message: Bicardine heals slightly more but heals it slower (3/u > 4dmg/u)
+    - type: Tweak
+      message: >-
+        T2 Brute meds now heal very small amounts of the brute damage type
+        they're not specialized for, and don't deal residual damage.
+  id: 110
+  time: '2026-04-03T09:15:08.0000000+00:00'

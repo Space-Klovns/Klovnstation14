@@ -1,0 +1,58 @@
+- type: htnCompound
+  id: KsDoAdvanceCompound
+  branches:
+  - tasks:
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "Advancing."
+
+    - !type:HTNPrimitiveTask
+      operator: !type:UtilityOperator
+        proto: KsOperativeAdvanceMarkers
+        key: CampingTarget
+        keyCoordinates: CampingTargetCoordinates
+
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+        removeKeyOnFinish: false
+        stopOnLineOfSight: false
+        pathfindInPlanning: true
+        targetKey: CampingTargetCoordinates
+        pathfindKey: CampingTargetPathfind
+        rangeKey: CampingRange
+
+    - !type:HTNPrimitiveTask
+      operator: !type:StaticWaitOperator
+        key: AdvanceTime
+
+- type: utilityQuery
+  id: KsOperativeAdvanceMarkers
+  query:
+  - !type:ComponentQuery
+    components:
+    - type: NpcCampingSpot
+  considerations:
+  - !type:TargetDistanceCon
+    curve: !type:PresetCurve
+      preset: KsTargetDistanceLessClose
+  - !type:CoordinatesInLOSCon
+    curve: !type:InverseBoolCurve
+    toKey: CampingTargetCoordinates
+    radius: 5
+
+- type: utilityCurvePreset # Prefer farther
+  id: KsTargetDistanceInverse
+  curve: !type:QuadraticCurve
+    slope: 1
+    exponent: -1
+    yOffset: 1
+    xOffset: 1
+
+- type: utilityCurvePreset # Prefer further than closer, but not too far
+  id: KsTargetDistanceLessClose
+  curve: !type:QuadraticCurve
+    slope: -0.25       # ≈ 1 / (width^2)
+    exponent: 2
+    xOffset: 2.0       # ideal distance
+    yOffset: 1.0

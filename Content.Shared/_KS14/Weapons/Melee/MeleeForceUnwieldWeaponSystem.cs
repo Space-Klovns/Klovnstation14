@@ -1,8 +1,3 @@
-// SPDX-FileCopyrightText: 2026 github_actions[bot]
-// SPDX-FileCopyrightText: 2026 nabegator220
-//
-// SPDX-License-Identifier: MPL-2.0
-
 using Content.Shared._KS14.Weapons.Melee;
 using Content.Shared.Popups;
 using Content.Shared.Weapons.Melee;

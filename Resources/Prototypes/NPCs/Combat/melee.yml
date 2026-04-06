@@ -7,6 +7,12 @@
         - !type:HTNPrimitiveTask
           operator: !type:UtilityOperator
             proto: NearbyMeleeTargets
+
+        - !type:HTNPrimitiveTask # KS14: KDA # copy target coords
+          operator: !type:CopyKeyOperator
+            originKey: TargetCoordinates
+            targetKey: LastTargetCoordinates
+
         - !type:HTNCompoundTask
           task: BeforeMeleeAttackTargetCompound
 
@@ -106,6 +112,17 @@
 - type: htnCompound
   id: PickupMeleeCompound
   branches:
+    # KS14: ANK start
+    # look in inventory first
+    - tasks:
+      - !type:HTNPrimitiveTask
+        operator: !type:UtilityOperator
+          proto: InventoryMeleeWeapons
+
+      - !type:HTNPrimitiveTask
+        operator: !type:EquipOperator
+    # KS14: ANK end
+
     - tasks:
         - !type:HTNPrimitiveTask
           operator: !type:UtilityOperator

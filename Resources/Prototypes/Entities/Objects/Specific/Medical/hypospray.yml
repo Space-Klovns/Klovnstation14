@@ -245,6 +245,7 @@
   name: emergency medipen
   description: A single-dose, non-refillable medipen containing epinephrine and tranexamic acid, used to temporarily stabilize patients in critical condition and buy time for them to recieve proper medical treatment. Beware of overdose.
   components:
+  - type: NpcHealingItem # KS14: ANK
   - type: Sprite
     sprite: Objects/Specific/Medical/medipen.rsi
     layers:
@@ -307,6 +308,7 @@
   name: brute auto-injector
   description: A single-dose, non-refillable medipen containing bicaridine and tranexamic acid, used to quickly and easily treat simple physical injuries. Commonly used as a combat medicine.
   components:
+  - type: NpcHealingItem # KS14: ANK
   - type: Item
     inhandVisuals:
       left:
@@ -418,6 +420,7 @@
   name: puncturase auto-injector
   description: A single-dose, non-refillable medipen containing puncturase and tranexamic acid, used to quickly and easily treat puncture wounds. Commonly used as a combat medicine.
   components:
+  - type: NpcHealingItem # KS14: ANK
   - type: Item
     inhandVisuals:
       left:
@@ -644,6 +647,7 @@
   name: combat medipen
   description: A single-dose, non-refillable medipen containing a chemical cocktail that treats most forms of damage.
   components:
+  - type: NpcHealingItem # KS14: ANK
   - type: Item
     inhandVisuals:
       left:

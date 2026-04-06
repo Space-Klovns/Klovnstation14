@@ -16,12 +16,14 @@ public readonly record struct HeadsetRadioReceiveRelayEvent(RadioReceiveEvent Re
 /// Use this event to cancel sending message per receiver
 /// </summary>
 [ByRefEvent]
-public record struct RadioReceiveAttemptEvent(RadioChannelPrototype Channel, EntityUid RadioSource, EntityUid RadioReceiver)
+public record struct RadioReceiveAttemptEvent(RadioChannelPrototype Channel, EntityUid RadioSource, EntityUid RadioReceiver, MsgChatMessage OriginalChatMessage /* KS14 */)
 {
     public readonly RadioChannelPrototype Channel = Channel;
     public readonly EntityUid RadioSource = RadioSource;
     public readonly EntityUid RadioReceiver = RadioReceiver;
     public bool Cancelled = false;
+
+    public MsgChatMessage? NewChatMessage = null; // KS14
 }
 
 /// <summary>

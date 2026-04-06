@@ -1,0 +1,27 @@
+- type: entity
+  parent: BaseGameRule
+  id: DisplacedTelescienceSpawn
+  components:
+  - type: StationEvent
+    earliestStart: 35
+    weight: 2.20
+    minimumPlayers: 4
+    duration: 25
+    maxOccurrences: 1
+    occursDuringRoundEnd: false
+    startAnnouncement: station-event-displaced-telescience
+    startAnnouncementColor: DarkMagenta
+    startAudio:
+      path: /Audio/_KS14/Effects/marsfacility_glitchy.ogg
+      params:
+        volume: -9
+  - type: RuleGrids
+  - type: LoadMapRule
+    loadGridOnStationMap: true
+    gridPath: /Maps/_KS14/Grids/displaced_telescience.yml
+  - type: PowerGridCheckRule
+    secondsUntilOff: 2.5
+    powerOnSound:
+      path: /Audio/Effects/explosionfar.ogg
+      params:
+        pitch: 0.7

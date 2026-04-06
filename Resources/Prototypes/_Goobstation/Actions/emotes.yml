@@ -10,39 +10,8 @@
   - does a flip
   - does a flip.
   - does a flip!
-  event: !type:AnimationFlipEmoteEvent
-
-# - type: emote
-#   id: Tweak
-#   name: chat-emote-name-tweak
-#   chatMessages: ["chat-emote-msg-tweak"]
-#   whitelist:
-#     tags:
-#     - Mouse
-#   chatTriggers:
-#   - tweak
-#   - tweaks
-#   - tweaks.
-#   - tweaks!
-#   event: !type:AnimationTweakEmoteEvent
-
-# - type: emote
-#   id: Flex
-#   name: chat-emote-name-flex
-#   chatMessages: ["chat-emote-msg-flex"]
-#   whitelist:
-#     tags:
-#     - Blobbernaut
-#   chatTriggers:
-#   - flex
-#   - flexes
-#   - flexes muscles
-#   - flexes its muscles
-#   - shows off
-#   - shows off muscles
-#   - shows off its muscles
-#   - intimidates
-#   event: !type:AnimationFlexEmoteEvent
+  event: !type:AnimationEmoteEvent
+    animationKey: emoteAnimFlip
 
 - type: emote
   id: Spin
@@ -54,7 +23,8 @@
   - spins
   - spins.
   - spins!
-  event: !type:AnimationSpinEmoteEvent
+  event: !type:AnimationEmoteEvent
+    animationKey: emoteAnimSpin
 
 - type: emote
   id: Jump
@@ -65,4 +35,5 @@
   - jumps
   - jumps.
   - jumps!
-  event: !type:AnimationJumpEmoteEvent
+  event: !type:AnimationEmoteEvent
+    animationKey: emoteAnimJump

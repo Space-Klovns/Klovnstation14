@@ -1,0 +1,70 @@
+- type: htnCompound
+  id: KsOperativeCombatCompound
+  branches:
+  - tasks:
+    - !type:HTNCompoundTask
+      task: KsOperativeRangedCombatCompound
+  - tasks:
+    - !type:HTNCompoundTask
+      task: MeleeCombatCompound
+
+  ## Healing
+  - tasks:
+    - !type:HTNCompoundTask
+      task: KsOperativeConsiderHealingAndRetreatCompound
+
+  ## Camping
+  - preconditions:
+    - !type:KeyExistsPrecondition
+      key: LastTargetCoordinates
+    tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:UtilityOperator
+        proto: KsOperativeNearbyCampingMarkers
+        key: CampingTarget
+        keyCoordinates: CampingTargetCoordinates
+
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "Disengaging."
+    - !type:HTNPrimitiveTask
+      operator: !type:MoveToOperator
+        removeKeyOnFinish: true
+        stopOnLineOfSight: false
+        targetKey: CampingTargetCoordinates
+        pathfindKey: CampingTargetPathfind
+        rangeKey: CampingRange
+
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "Holding position."
+
+    - !type:HTNPrimitiveTask
+      operator: !type:StaticWaitOperator
+        key: CampingTime
+    - !type:HTNPrimitiveTask # Don't camp again
+      operator: !type:SetNullOperator
+        key: LastTargetCoordinates
+
+  ## Advancing
+  - tasks:
+    - !type:HTNCompoundTask
+      task: KsDoAdvanceCompound
+
+- type: utilityQuery
+  id: KsOperativeNearbyCampingMarkers
+  query:
+  - !type:ComponentQuery
+    components:
+    - type: NpcCampingSpot
+  considerations:
+  - !type:CoordinatesInLOSCon # We want to camp in places visible from where the target was last
+    curve: !type:BoolCurve
+    toKey: LastTargetCoordinates
+    radius: 6.5
+  - !type:KeyCoordinatesDistanceCon # prioritise places closest to where the target was
+    key: LastTargetCoordinates
+    curve: !type:PresetCurve
+      preset: TargetDistance

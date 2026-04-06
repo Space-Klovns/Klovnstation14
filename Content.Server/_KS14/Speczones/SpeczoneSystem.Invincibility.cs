@@ -20,6 +20,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     /// </summary>
     private void StartInvincibilityProcessingHierarchy(HashSet<Entity<MapGridComponent>> grids)
     {
+        var loadAsSavedQuery = GetEntityQuery<SpeczoneLoadAsSavedComponent>();
         var airtightQuery = GetEntityQuery<AirtightComponent>();
         var damageableQuery = GetEntityQuery<DamageableComponent>();
         var rcdDeconstructableQuery = GetEntityQuery<RCDDeconstructableComponent>();
@@ -33,6 +34,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
             while (enumerator.MoveNext(out var uid))
                 RecursivelyProcessEntityInvincibility(
                     uid,
+                    loadAsSavedQuery,
                     airtightQuery,
                     damageableQuery,
                     rcdDeconstructableQuery,
@@ -45,6 +47,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
 
     private void RecursivelyProcessEntityInvincibility(
         EntityUid parentUid,
+        EntityQuery<SpeczoneLoadAsSavedComponent> loadAsSavedQuery,
         EntityQuery<AirtightComponent> airtightQuery,
         EntityQuery<DamageableComponent> damageableQuery,
         EntityQuery<RCDDeconstructableComponent> rcdDeconstructableQuery,
@@ -54,6 +57,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     {
         ProcessEntityInvincibility(
             parentUid,
+            loadAsSavedQuery,
             airtightQuery,
             damageableQuery,
             rcdDeconstructableQuery,
@@ -66,6 +70,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
         while (enumerator.MoveNext(out var uid))
             RecursivelyProcessEntityInvincibility(
                 uid,
+                loadAsSavedQuery,
                 airtightQuery,
                 damageableQuery,
                 rcdDeconstructableQuery,
@@ -77,6 +82,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
 
     private void ProcessEntityInvincibility(
         EntityUid uid,
+        EntityQuery<SpeczoneLoadAsSavedComponent> loadAsSavedQuery,
         EntityQuery<AirtightComponent> airtightQuery,
         EntityQuery<DamageableComponent> damageableQuery,
         EntityQuery<RCDDeconstructableComponent> rcdDeconstructableQuery,
@@ -87,6 +93,9 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     {
         if (!airtightQuery.HasComponent(uid) ||
             !damageableQuery.TryGetComponent(uid, out var damageableComponent))
+            return;
+
+        if (loadAsSavedQuery.HasComponent(uid))
             return;
 
         RemComp(uid, damageableComponent);

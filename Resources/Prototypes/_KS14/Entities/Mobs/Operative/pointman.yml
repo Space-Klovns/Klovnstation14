@@ -1,0 +1,167 @@
+- type: entity
+  parent: MarkerBase
+  id: KsMarkerNpcCamping
+  name: camping marker
+  suffix: KS14, NPC Camping Spot Marker
+  components:
+  - type: Transform
+    anchored: false
+  - type: Sprite
+    layers:
+    - state: blue
+  - type: NpcCampingSpot
+
+## Base
+- type: randomHumanoidSettings
+  id: KsBaseOperative
+  speciesBlacklist:
+  - Vox
+  - Dwarf
+  components:
+  - type: NoSlip
+  - type: MovementSpeedModifier
+    baseSprintSpeed: 3.375
+    baseWalkSpeed: 1.875
+  - type: RandomHumanoidAppearance
+    randomizeName: false
+  - type: NpcFactionMember
+    factions:
+    - AllHostile
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      100: Critical
+      101: Dead
+  - type: HTN
+    rootTask:
+      task: KsOperativeCombatCompound
+    blackboard:
+      ReloadActDelay: !type:Single
+        1
+      VisionRadius: !type:Single
+        17.5
+      AggroVisionRadius: !type:Single
+        25
+      CampingRange: !type:Single
+        0.25
+      CampingTime: !type:Single
+        15
+      AdvanceTime: !type:Single
+        20
+      NavInteract: !type:Bool
+        true
+
+- type: randomHumanoidSettings
+  parent: [ KsBaseOperative ]
+  id: KsBaseEliteOperative
+  speciesBlacklist:
+  - Vox
+  - Dwarf
+  components:
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      140: Critical
+      150: Dead
+  - type: HTN
+    rootTask:
+      task: KsOperativeCombatCompound
+    blackboard:
+      VisionRadius: !type:Single
+        17.5
+      AggroVisionRadius: !type:Single
+        25
+      CampingRange: !type:Single
+        0.3
+      CampingTime: !type:Single
+        25
+      AdvanceTime: !type:Single
+        30
+      NavInteract: !type:Bool
+        true
+
+- type: startingGear
+  parent: SyndicateFootsoldierGearRuin
+  id: KsBaseOperativeGear
+  equipment:
+    mask: ClothingMaskGasSecurity
+    eyes: ClothingEyesGlassesSunglasses
+    belt: ClothingBeltMilitaryWebbing
+  storage:
+    back:
+    - Machete
+    belt:
+    - EmergencyMedipen
+
+- type: startingGear
+  parent: KsBaseOperativeGear
+  id: KsBaseEliteOperativeGear
+  equipment:
+    neck: ClothingNeckMantleHOS
+    shoes: ClothingShoesBootsJack
+    outerClothing: ClothingOuterArmorBulletproof
+    belt: ClothingBeltMilitaryWebbing
+  storage:
+    back:
+    - EnergySword
+    belt:
+    - CombatMedipen
+    - CombatMedipen
+
+## Pistol
+
+- type: entity
+  parent: RandomHumanoidSpawnerERTSecurityEVA
+  id: KsRandomHumanoidSpawnerOperativeArmedPistol
+  name: unknown combatant
+  suffix: KS, Armed, Pistol
+  components:
+  - type: RandomHumanoidSpawner
+    settings: KsOperativeArmedPistol
+
+- type: randomHumanoidSettings
+  parent: KsBaseOperative
+  id: KsOperativeArmedPistol
+  components:
+  - type: Loadout
+    prototypes: [ KsOperativePistolGear ]
+
+- type: startingGear
+  parent: KsBaseOperativeGear
+  id: KsOperativePistolGear
+  inhand:
+  - WeaponPistolMk1
+  storage:
+    back:
+    - Machete
+    - MagazinePistol
+
+## Shotgun
+
+- type: entity
+  parent: RandomHumanoidSpawnerERTSecurityEVA
+  id: KsRandomHumanoidSpawnerOperativeArmedBulldog
+  name: unknown combatant
+  suffix: KS, Armed, Elite, Bulldog
+  components:
+  - type: RandomHumanoidSpawner
+    settings: KsEliteOperativeArmedBulldog
+
+- type: randomHumanoidSettings
+  parent: KsBaseEliteOperative
+  id: KsEliteOperativeArmedBulldog
+  components:
+  - type: Loadout
+    prototypes: [ KsEliteOperativeBulldogGear ]
+
+- type: startingGear
+  parent: KsBaseEliteOperativeGear
+  id: KsEliteOperativeBulldogGear
+  inhand:
+  - WeaponShotgunBulldog
+  storage:
+    back:
+    - EnergySword
+    - MagazineShotgun
+    - MagazineShotgun
+    - MagazineShotgun

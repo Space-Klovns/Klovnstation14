@@ -1,5 +1,5 @@
 cmd-addjoint-desc = Adds a joint of a specified type between two entities. Capitalisation matters when specifying joint type. You can specify whether the connected entities should collide with each other or not (defaults to no).
-cmd-addjoint-help = insertintospeczone <first UID [uid]> <second UID [uid]> <joint type [string]> <joint collision [bool, optional]>
+cmd-addjoint-help = addjoint <first UID [uid]> <second UID [uid]> <joint type [string]> <joint collision [bool, optional]>
 
 cmd-addjoint-invalid-args = Expected exactly either 3 or 4 arguments.
 cmd-addjoint-bad-uid = {$alleged} is not a valid entity.

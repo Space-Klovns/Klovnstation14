@@ -32,3 +32,11 @@ public sealed partial class SpeczoneComponent : SharedSpeczoneComponent
 /// </summary>
 [RegisterComponent, Access(typeof(SpeczoneSystem))]
 public sealed partial class SpeczoneEntryComponent : Component;
+
+
+/// <summary>
+///     Marks an entity to not be manipulated by the speczone system
+///         (e.g., being made invincible) when loaded in a speczone.
+/// </summary>
+[RegisterComponent]
+public sealed partial class SpeczoneLoadAsSavedComponent : Component;

@@ -31,6 +31,7 @@ using Robust.Shared.Utility;
 using Content.Shared.Prying.Systems;
 using Microsoft.Extensions.ObjectPool;
 using Prometheus;
+using Content.Shared.Access.Systems; // KS14: ANK
 
 namespace Content.Server.NPC.Systems;
 
@@ -67,6 +68,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly SharedCombatModeSystem _combat = default!;
+    [Dependency] private readonly AccessReaderSystem _accessSystem = default!; // KS14: ANK
 
     private EntityQuery<FixturesComponent> _fixturesQuery;
     private EntityQuery<MovementSpeedModifierComponent> _modifierQuery;

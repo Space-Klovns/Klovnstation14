@@ -1,0 +1,58 @@
+- type: entity
+  parent: BaseMachine
+  id: KsOperativeRadioJammer
+  name: high-power radio jammer
+  suffix: KS14, 50 tiles, Enabled
+  description: A high-powered radio jammer used by the Syndicate to disrupt communications. It emits a strong signal that garbles received messages within a 50-tile radius, making it difficult for anyone nearby to communicate effectively.
+  components:
+  - type: Sprite
+    sprite: Structures/Machines/rndpointsource.rsi
+    layers:
+    - state: rndpointsource-off
+    - state: rndpointsource
+      shader: unshaded
+      map: ["enum.PowerDeviceVisualLayers.Powered"]
+  - type: PointLight
+    radius: 2.5
+    energy: 4.0
+    color: "#3db83b"
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.ToggleableVisuals.Enabled:
+        enum.PowerDeviceVisualLayers.Powered:
+          True: { visible: true }
+          False: { visible: false }
+  - type: ItemTogglePointLight
+  - type: ItemToggle
+    activated: true
+    soundActivate:
+      path: /Audio/_KS14/Machines/Terminal/terminal_on.ogg
+      params:
+        volume: 4
+        pitch: 1
+    soundDeactivate:
+      path: /Audio/_KS14/Machines/Terminal/terminal_off.ogg
+      params:
+        volume: 4
+        pitch: 0.82
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalBreak
+  - type: RadioJammer
+    onlyGarbleReceivedMessages: true
+    garbleStrength: 0.65
+    selectedPowerLevel: 0
+    settings:
+    - wattage: 0
+      range: 50
+      message: radio-jammer-component-set-message-high
+      name: radio-jammer-component-setting-high
