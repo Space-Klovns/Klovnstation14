@@ -6,7 +6,6 @@ using Content.Shared._KS14.Signal.SignalSpeaker.Components;
 using Content.Shared.Popups;
 using Content.Shared.Trigger.Components.Effects;
 using Content.Shared.Verbs;
-using Content.Shared.Whitelist;
 using Robust.Shared.GameStates;
 using Robust.Shared.Network;
 
@@ -18,13 +17,11 @@ public abstract class SharedSignalSpeakerSystem : EntitySystem
     [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
     [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
     [Dependency] private readonly INetManager _netManager = default!;
-    [Dependency] private readonly EntityWhitelistSystem _whitelistSystem = default!;
 
     public override void Initialize()
     {
         base.Initialize();
 
-        SubscribeLocalEvent<SignalSpeakerComponent, AfterInteractEvent>(AfterInteractOn);
         SubscribeLocalEvent<SignalSpeakerComponent, GetVerbsEvent<UtilityVerb>>(OnUtilityVerb);
         SubscribeLocalEvent<SignalSpeakerComponent, ExaminedEvent>(OnExamined);
         // Bound UI subscriptions
@@ -60,31 +57,30 @@ public abstract class SharedSignalSpeakerSystem : EntitySystem
     {
     }
 
-    private void ApplyTextToParent(Entity<SignalSpeakerComponent> ent, EntityUid user)
+    private void ApplyTextToSpeaker(Entity<SignalSpeakerComponent> ent, EntityUid user)
     {
         if (ent.Comp.AssignedText == string.Empty)
             return;
 
-        var parent = Transform(ent).ParentUid;
-        if (parent == EntityUid.Invalid || !TryComp<SpeakOnTriggerComponent>(parent, out var speakComp))
+        if (!TryComp<SpeakOnTriggerComponent>(ent.Owner, out var speakComp))
         {
             _popupSystem.PopupClient(Loc.GetString("signal-speaker-no-trigger"), user, user);
             return;
         }
 
-        speakComp.Text = ent.Comp.AssignedText;
-        Dirty(parent, speakComp);
+        speakComp.NonLocText = ent.Comp.AssignedText;
+        Dirty(ent.Owner, speakComp);
 
         _popupSystem.PopupClient(Loc.GetString("signal-speaker-successfully-applied"), user, user);
 
         // Log
         _adminLogger.Add(LogType.Action, LogImpact.Low,
-            $"{ToPrettyString(user):user} set speak text on {ToPrettyString(parent):target} with {ToPrettyString(ent):signalspeaker}");
+            $"{ToPrettyString(user):user} set speak text on {ToPrettyString(ent):signalspeaker}");
     }
 
     private void OnUtilityVerb(Entity<SignalSpeakerComponent> ent, ref GetVerbsEvent<UtilityVerb> args)
     {
-        if (args.Target is not { Valid: true } target || !_whitelistSystem.CheckBoth(target, ent.Comp.Blacklist, ent.Comp.Whitelist) || !args.CanAccess)
+        if (args.Target is not { Valid: true } target || !args.CanAccess)
             return;
 
         var user = args.User;
@@ -93,20 +89,12 @@ public abstract class SharedSignalSpeakerSystem : EntitySystem
         {
             Act = () =>
             {
-                ApplyTextToParent(ent, user);
+                ApplyTextToSpeaker(ent, user);
             },
             Text = Loc.GetString("signal-speaker-apply-text")
         };
 
         args.Verbs.Add(applyVerb);
-    }
-
-    private void AfterInteractOn(Entity<SignalSpeakerComponent> ent, ref AfterInteractEvent args)
-    {
-        if (args.Target is not { Valid: true } target || !_whitelistSystem.CheckBoth(target, ent.Comp.Blacklist, ent.Comp.Whitelist) || !args.CanReach)
-            return;
-
-        ApplyTextToParent(ent, args.User);
     }
 
     private void OnSignalSpeakerTextChanged(EntityUid uid, SignalSpeakerComponent signalSpeaker, SignalSpeakerTextChangedMessage args)
@@ -123,7 +111,7 @@ public abstract class SharedSignalSpeakerSystem : EntitySystem
 
     private void OnSignalSpeakerApply(EntityUid uid, SignalSpeakerComponent signalSpeaker, SignalSpeakerApplyMessage args)
     {
-        ApplyTextToParent((uid, signalSpeaker), args.Actor);
+        ApplyTextToSpeaker((uid, signalSpeaker), args.Actor);
     }
 
     private void OnExamined(Entity<SignalSpeakerComponent> ent, ref ExaminedEvent args)

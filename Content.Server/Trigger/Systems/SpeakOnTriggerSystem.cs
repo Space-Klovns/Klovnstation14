@@ -31,8 +31,12 @@ public sealed class SpeakOnTriggerSystem : EntitySystem
             return;
 
         string message;
-        if (ent.Comp.Text != null)
+        //KS14 start
+        if (ent.Comp.NonLocText != null)
+            message = ent.Comp.NonLocText;
+        else if (ent.Comp.Text != null)
             message = Loc.GetString(ent.Comp.Text);
+        //KS14 end
         else
         {
             if (!_prototypeManager.Resolve(ent.Comp.Pack, out var messagePack))

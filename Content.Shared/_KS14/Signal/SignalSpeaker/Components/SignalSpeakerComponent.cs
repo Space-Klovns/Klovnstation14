@@ -16,14 +16,6 @@ public sealed partial class SignalSpeakerComponent : Component
     [ViewVariables(VVAccess.ReadWrite)]
     [DataField]
     public int MaxTextChars = 50;
-
-    [ViewVariables(VVAccess.ReadWrite)]
-    [DataField]
-    public EntityWhitelist? Whitelist;
-
-    [ViewVariables(VVAccess.ReadWrite)]
-    [DataField]
-    public EntityWhitelist? Blacklist;
 }
 
 [Serializable, NetSerializable]
