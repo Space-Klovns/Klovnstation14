@@ -20,7 +20,7 @@ public sealed partial class SetNode : IGraphAction
 
     public void PerformAction(EntityUid uid, EntityUid? userUid, IEntityManager entityManager)
     {
-        if (entityManager.TryGetComponent<ConstructionComponent>(uid, out var constructionComponent))
+        if (!entityManager.TryGetComponent<ConstructionComponent>(uid, out var constructionComponent))
             return;
 
         _constructionSystem.ChangeNode(uid, userUid, Node, performActions: PerformActions, constructionComponent);
