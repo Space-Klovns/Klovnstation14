@@ -78,12 +78,13 @@
   components:
   - type: Construction
     graph: SurgeryGraph
-    node: Base
-    destructionNode: start
-  - type: ConstructionPathfindingDialogue
-    targetDatums:
-    - Head
-    - ArmLeft
+    node: start
+    destructionNode: null
+  - type: ConstructionEdgeDialogue
+    nodeNames:
+    - OpenIncision
+    blacklistedTargets:
+    - start
   - type: WormWithoutOrgans
     categories:
     - FootLeft

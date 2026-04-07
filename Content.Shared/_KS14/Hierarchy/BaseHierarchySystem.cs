@@ -13,7 +13,12 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
     [Dependency] protected readonly INetManager NetManager = default!;
     [Dependency] protected readonly SharedContainerSystem ContainerSystem = default!;
 
+    /// <summary>
+    ///     Should be set on the system. Internal container id value will not update
+    ///         after this is set.
+    /// </summary>
     public abstract string ContainerId { get; }
+    private string _containerId = default!;
 
     protected EntityQuery<THierarchyComp> HierarchyQuery;
     protected EntityQuery<TElementComp> ElementQuery;
@@ -21,6 +26,8 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
     public override void Initialize()
     {
         base.Initialize();
+
+        _containerId = ContainerId;
 
         HierarchyQuery = GetEntityQuery<THierarchyComp>();
         ElementQuery = GetEntityQuery<TElementComp>();
@@ -69,7 +76,9 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
 
     private void UpdateNewParent(Entity<TElementComp> elementEntity, EntityUid newParentUid, EntityUid? oldParentUid)
     {
-        if (!ContainerSystem.HasContainer(newParentUid, ContainerId, containerManager: null))
+        // if (!ContainerSystem.TryGetContainingContainer(newParentUid, elementEntity.Owner, out var containingContainer) ||
+        //     containingContainer.ID != _containerId)
+        if (!ContainerSystem.HasContainer(newParentUid, _containerId, null))
         {
             if (ElementQuery.TryGetComponent(oldParentUid, out var oldParentElementComponent))
                 RemoveDirectChild((oldParentUid.Value, oldParentElementComponent), elementEntity);
@@ -116,12 +125,12 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
 
     private void OnHierarchyInit(Entity<THierarchyComp> hierarchyEntity, ref ComponentInit args)
     {
-        hierarchyEntity.Comp.Container = ContainerSystem.EnsureContainer<Container>(hierarchyEntity.Owner, ContainerId);
+        hierarchyEntity.Comp.Container = ContainerSystem.EnsureContainer<Container>(hierarchyEntity.Owner, _containerId);
     }
 
     private void OnElementInit(Entity<TElementComp> elementEntity, ref ComponentInit args)
     {
-        elementEntity.Comp.Container = ContainerSystem.EnsureContainer<Container>(elementEntity.Owner, ContainerId);
+        elementEntity.Comp.Container = ContainerSystem.EnsureContainer<Container>(elementEntity.Owner, _containerId);
     }
 
     private void OnElementShutdown(Entity<TElementComp> elementEntity, ref ComponentShutdown args)

@@ -11,8 +11,8 @@
       - tool: Slicing
         doAfter: 3
   - node: OpenIncision # Incision
-    edges: &surgery_transient
-    - to: Base # Incision -> Cauterise -> Stop surgery (early)
+    edges:
+    - to: start # Incision -> Cauterise -> Stop surgery (early)
       steps:
       - tool: Welding
         doAfter: 1.5
@@ -20,25 +20,23 @@
       conditions:
       - !type:HasOrgan
         category: Head
-      steps:
+      steps: &amputation_steps
       - tool: Cutting
         doAfter: 5
-    - to: RemoveArmLeft # Incision -> Cut left arm
+    - to: RemoveEars # Incision -> Cut head
       conditions:
       - !type:HasOrgan
-        category: ArmLeft
-      steps:
-      - tool: Cutting
-        doAfter: 5
+        category: Ears
+      steps: *amputation_steps
 
   - node: RemoveHead # Cut head
     actions:
     - !type:TakeOrgan
       category: Head
-  - node: RemoveArmLeft # Cut head
+  - node: RemoveEars # Cut ears
     actions:
     - !type:TakeOrgan
-      category: Head
+      category: Ears
 
 - type: construction
   hide: true
@@ -46,7 +44,7 @@
   name: surgery-head-removal-name
   description: surgery-head-removal-desc
   graph: SurgeryGraph
-  startNode: Base
+  startNode: start
   targetNode: RemoveHead
   category: Surgery
   objectType: NodeToNode

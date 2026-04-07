@@ -9,7 +9,7 @@ namespace Content.Shared.Body;
 /// Marks an entity as being able to be inserted into an entity with <seealso cref="BodyComponent" />.
 /// </summary>
 /// <seealso cref="BodySystem" />
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+[RegisterComponent, NetworkedComponent/*, AutoGenerateComponentState KS14: Removed this*/]
 [Access(typeof(BodySystem), typeof(BodyHierarchySystem) /* KS14: Klovnmed access */)]
 public sealed partial class OrganComponent : Component, IHierarchyElementComponent // KS14: IHierarchyElementComponent
 {
@@ -28,8 +28,8 @@ public sealed partial class OrganComponent : Component, IHierarchyElementCompone
     /// <summary>
     /// The body entity containing this organ, if any
     /// </summary>
-    [DataField, AutoNetworkedField]
-    public EntityUid? Body;
+    //[DataField, AutoNetworkedField] // KS14: Removed datafield
+    public EntityUid? Body => HierarchyUid; // KS14: Made this point to hierarchy
 
     /// <summary>
     /// What kind of organ is this, if any

@@ -19,6 +19,13 @@ public sealed partial class MetabolizerComponent : Component
     [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoNetworkedField, AutoPausedField]
     public TimeSpan NextUpdate;
 
+    // KS14: Klovnmed, added this so you can just manually do this
+    /// <summary>
+    ///     Whether this shouldnt update every <see cref="UpdateInterval"/>.
+    /// </summary>
+    [DataField]
+    public bool StopAutoUpdate = false;
+
     /// <summary>
     ///     How often to metabolize reagents.
     /// </summary>

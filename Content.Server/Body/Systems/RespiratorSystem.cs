@@ -24,6 +24,7 @@ using Content.Shared.Mobs.Systems;
 using JetBrains.Annotations;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using Content.Shared.Mobs.Components;
 
 namespace Content.Server.Body.Systems;
 
@@ -42,6 +43,7 @@ public sealed class RespiratorSystem : EntitySystem
     [Dependency] private readonly MobStateSystem _mobState = default!;
     [Dependency] private readonly SharedEntityConditionsSystem _entityConditions = default!;
     [Dependency] private readonly SharedSolutionContainerSystem _solutionContainerSystem = default!;
+    [Dependency] private readonly MetabolizerSystem _metabolizerSystem = default!; // KS14: klovnmed
 
     private static readonly ProtoId<MetabolismStagePrototype> RespirationStage = new("Respiration");
 
@@ -77,20 +79,20 @@ public sealed class RespiratorSystem : EntitySystem
     {
         base.Update(frameTime);
 
-        var query = EntityQueryEnumerator<RespiratorComponent>();
-        while (query.MoveNext(out var uid, out var respirator))
+        var query = EntityQueryEnumerator<RespiratorComponent, MobStateComponent /* KS14: Added mobstate query */>();
+        while (query.MoveNext(out var uid, out var respirator, out var mobStateComponent /* KS14: Added mobstate query */))
         {
             if (_gameTiming.CurTime < respirator.NextUpdate)
                 continue;
 
             respirator.NextUpdate += respirator.AdjustedUpdateInterval;
 
-            if (_mobState.IsDead(uid))
+            if (_mobState.IsDead(uid, component: mobStateComponent)) // KS14: Added mobstate query
                 continue;
 
             UpdateSaturation(uid, -(float)respirator.UpdateInterval.TotalSeconds, respirator);
 
-            if (!_mobState.IsIncapacitated(uid)) // cannot breathe in crit.
+            if (!_mobState.IsIncapacitated(uid, component: mobStateComponent)) // KS14: Added mobstate query // cannot breathe in crit.
             {
                 switch (respirator.Status)
                 {
@@ -376,6 +378,18 @@ public sealed class RespiratorSystem : EntitySystem
 
         _atmosSys.Merge(ent.Comp.Air, args.Args.Gas);
         _lungSystem.GasToReagent(ent, ent);
+
+        // KS14: Klovnmed
+        if (TryComp<MetabolizerComponent>(ent.Owner, out var metabolizerComponent) &&
+            TryComp<OrganComponent>(ent.Owner, out var organComponent))
+        {
+            if (organComponent.HierarchyUid is { } bodyUid)
+                // todo
+                return;
+
+            // Needs organcomponent so that this is targetted at the body not the lungs
+            _metabolizerSystem.TryMetabolize((ent.Owner, metabolizerComponent, organComponent));
+        }
 
         args.Args = args.Args with
         {

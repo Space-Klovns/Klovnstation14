@@ -30,7 +30,7 @@ public sealed class InitialBodySystem : EntitySystem
         {
             ent.Comp.TotalCategories.Add(initialBodyPart.Category);
 
-            var spawnedUid = Spawn(initialBodyPart.Entity, new EntityCoordinates(parent, Vector2.Zero));
+            var spawnedUid = Spawn(initialBodyPart.Entity);
             _container.Insert(spawnedUid, _container.GetContainer(parent, _KS14.Klovnmed.BodyHierarchySystem.ConstContainerId));
 
             if (initialBodyPart.Children is not { } children)

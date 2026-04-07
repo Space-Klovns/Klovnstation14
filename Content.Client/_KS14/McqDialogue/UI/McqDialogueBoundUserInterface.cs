@@ -1,20 +1,17 @@
 using Content.Shared._KS14.McqDialogue;
-using JetBrains.Annotations;
 using Robust.Client.UserInterface;
 
 namespace Content.Client._KS14.McqDialogue.UI;
 
-[UsedImplicitly]
 public sealed class McqDialogueBoundUserInterface(EntityUid owner, Enum uiKey) : BoundUserInterface(owner, uiKey)
 {
-    [ViewVariables]
-    private McqDialogueWindow? _window;
+    [ViewVariables] private McqDialogueWindow? _window;
 
     protected override void Open()
     {
         base.Open();
 
-        _window = this.CreateWindow<McqDialogueWindow>();
+        _window ??= this.CreateWindow<McqDialogueWindow>();
     }
 
     /// <summary>
@@ -23,7 +20,6 @@ public sealed class McqDialogueBoundUserInterface(EntityUid owner, Enum uiKey) :
     /// <param name="state"></param>
     protected override void UpdateState(BoundUserInterfaceState state)
     {
-        base.UpdateState(state);
         if (_window == null || state is not McqDialogueBoundUserInterfaceState dialogueState)
             return;
 

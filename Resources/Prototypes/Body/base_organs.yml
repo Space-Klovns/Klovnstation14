@@ -338,6 +338,7 @@
   - type: Lung
   - type: Metabolizer
     stages: [ Respiration ]
+    stopAutoUpdate: true # KS14: Klovnmed
   - type: SolutionContainerManager
     solutions:
       Lung:

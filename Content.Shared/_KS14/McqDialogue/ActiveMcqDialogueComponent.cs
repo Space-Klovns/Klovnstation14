@@ -5,12 +5,21 @@ namespace Content.Shared._KS14.McqDialogue;
 
 [RegisterComponent, NetworkedComponent]
 [UnsavedComponent]
+[Access(typeof(McqDialogueSystem), Other = AccessPermissions.Read)]
 public sealed partial class ActiveMcqDialogueComponent : Component
 {
-    public EntityUid Target = EntityUid.Invalid;
+    public Entity<McqDialogueSourceComponent> Source = default;
     public EntityUid User = EntityUid.Invalid;
 
     public List<string> OptionIds = [];
+}
+
+[RegisterComponent]
+[UnsavedComponent]
+[Access(typeof(McqDialogueSystem), Other = AccessPermissions.Read)]
+public sealed partial class McqDialogueSourceComponent : Component
+{
+    public HashSet<Entity<ActiveMcqDialogueComponent>> Dialogues = new();
 }
 
 [Serializable, NetSerializable]
@@ -30,6 +39,9 @@ public sealed class McqDialogueBoundUserInterfaceState(List<McqDialogueData> dia
 
 [Serializable, NetSerializable]
 public enum McqDialogueUiKey : byte { Key }
+
+[ByRefEvent]
+public record struct McqDialogueClosedEvent;
 
 [ByRefEvent]
 public record struct McqDialogueSelectedEvent(string Id);

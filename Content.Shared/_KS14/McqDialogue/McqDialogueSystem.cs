@@ -14,40 +14,59 @@ public sealed class McqDialogueSystem : EntitySystem
         SubscribeLocalEvent<ActiveMcqDialogueComponent, McqDialogueDataSelectedMessage>(OnDataSelected);
     }
 
+    public void CloseDialogue(Entity<ActiveMcqDialogueComponent?> dialogueEntity, Entity<McqDialogueSourceComponent>? sourceEntity = null)
+    {
+        if (!Resolve(dialogueEntity, ref dialogueEntity.Comp))
+            return;
+
+        sourceEntity ??= dialogueEntity.Comp.Source!;
+        var sourceComponent = sourceEntity.Value.Comp;
+
+        sourceComponent.Dialogues.Remove(dialogueEntity!);
+        if (sourceComponent.Dialogues.Count == 0)
+            RemComp(sourceEntity.Value, sourceComponent);
+
+        PredictedQueueDel(dialogueEntity);
+    }
+
     private void OnDialogueClosed(Entity<ActiveMcqDialogueComponent> entity, ref BoundUIClosedEvent args)
     {
-        QueueDel(entity);
+        CloseDialogue(entity!, entity.Comp.Source);
+
+        var ev = new McqDialogueClosedEvent();
+        RaiseLocalEvent(entity.Comp.Source, ref ev);
     }
 
     private void OnDataSelected(Entity<ActiveMcqDialogueComponent> entity, ref McqDialogueDataSelectedMessage args)
     {
-        if (!Exists(entity.Comp.Target))
+        if (!Exists(entity.Comp.Source))
             return;
 
-
-
-        QueueDel(entity);
+        CloseDialogue(entity!, entity.Comp.Source);
 
         var ev = new McqDialogueSelectedEvent(args.Id);
-        RaiseLocalEvent(entity.Comp.Target, ref ev);
+        RaiseLocalEvent(entity.Comp.Source, ref ev);
     }
 
     public void StartDialogue(EntityUid sourceUid, EntityUid userUid, IEnumerable<McqDialogueData> options)
     {
-        var uiUid = Spawn(null, new(sourceUid, Vector2.Zero));
-        var uiComponent = EnsureComp<UserInterfaceComponent>(uiUid);
-
-        var dialogueComponent = EnsureComp<ActiveMcqDialogueComponent>(uiUid);
-        dialogueComponent.Target = sourceUid;
+        var dialogueUid = Spawn("McqDialogue", new(sourceUid, Vector2.Zero));
+        var dialogueComponent = Comp<ActiveMcqDialogueComponent>(dialogueUid);
         dialogueComponent.User = userUid;
         foreach (var optionDatum in options)
             dialogueComponent.OptionIds.Add(optionDatum.Id);
 
-        _userInterfaceSystem.OpenUi((uiUid, uiComponent), McqDialogueUiKey.Key, userUid, predicted: false);
-        _userInterfaceSystem.SetUiState((
-            uiUid, uiComponent),
+        var dialogueSourceComponent = EnsureComp<McqDialogueSourceComponent>(sourceUid);
+        dialogueSourceComponent.Dialogues.Add((dialogueUid, dialogueComponent));
+        dialogueComponent.Source = (sourceUid, dialogueSourceComponent);
+
+        var uiComponent = Comp<UserInterfaceComponent>(dialogueUid);
+        _userInterfaceSystem.SetUiState(
+            (dialogueUid, uiComponent),
             McqDialogueUiKey.Key,
             new McqDialogueBoundUserInterfaceState([.. options])
         );
+        _userInterfaceSystem.OpenUi((dialogueUid, uiComponent), McqDialogueUiKey.Key, userUid);
+
     }
 }
