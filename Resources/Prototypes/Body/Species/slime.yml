@@ -58,10 +58,10 @@
   - type: InitialBody # KS14: Re-arranged
     organs:
     - category: Head # head
-      entity: OrganSlimeHead
+      entity: OrganSlimePersonHead
 
     - category: Torso # torso
-      entity: OrganSlimeTorso
+      entity: OrganSlimePersonTorso
       children:
       - category: Brain
         entity: OrganSlimePersonCore
@@ -69,28 +69,28 @@
         entity: OrganSlimePersonLungs
 
     - category: ArmLeft # arm
-      entity: OrganSlimeArmLeft
+      entity: OrganSlimePersonArmLeft
       children:
       - category: HandLeft
-        entity: OrganSlimeHandLeft
+        entity: OrganSlimePersonHandLeft
 
     - category: ArmRight # arm
-      entity: OrganSlimeArmRight
+      entity: OrganSlimePersonArmRight
       children:
       - category: HandRight
-        entity: OrganSlimeHandRight
+        entity: OrganSlimePersonHandRight
 
     - category: LegLeft # leg
-      entity: OrganSlimeLegLeft
+      entity: OrganSlimePersonLegLeft
       children:
       - category: FootLeft
-        entity: OrganSlimeFootLeft
+        entity: OrganSlimePersonFootLeft
 
     - category: LegRight # leg
-      entity: OrganSlimeLegRight
+      entity: OrganSlimePersonLegRight
       children:
       - category: FootRight
-        entity: OrganSlimeFootRight
+        entity: OrganSlimePersonFootRight
   - type: HumanoidProfile
     species: SlimePerson
 
@@ -188,6 +188,7 @@
     - id: FoodMeatSlime
       amount: 5
   - type: Respirator
+    requiredOrganCategory: null # KS14: Klovnmed, slimes dont need a head to breathe unlike default mobs
     damage:
       types:
         Asphyxiation: 0.2

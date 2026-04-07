@@ -1,16 +1,14 @@
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Containers;
-using Robust.Shared.Network;
 
 namespace Content.Shared._KS14.Hierarchy;
 
 // TODO: ughh optimise this
-// I like how it works though im very proud of this goidacode
 
 public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : EntitySystem
     where THierarchyComp : Component, IHierarchyComponent
     where TElementComp : Component, IHierarchyElementComponent
 {
-    [Dependency] protected readonly INetManager NetManager = default!;
     [Dependency] protected readonly SharedContainerSystem ContainerSystem = default!;
 
     /// <summary>
@@ -49,6 +47,19 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
         SubscribeLocalEvent<TElementComp, ComponentShutdown>(OnElementShutdown);
     }
 
+    public bool TryGetHierarchyEntityOfElement(Entity<TElementComp?> elementEntity, [NotNullWhen(true)] out Entity<THierarchyComp>? hierarchyEntity)
+    {
+        if (!ElementQuery.Resolve(elementEntity, ref elementEntity.Comp) ||
+            elementEntity.Comp.HierarchyUid is not { } hierarchyUid)
+        {
+            hierarchyEntity = null;
+            return false;
+        }
+
+        hierarchyEntity = (hierarchyUid, HierarchyQuery.GetComponent(hierarchyUid));
+        return true;
+    }
+
     private void OnElementStartup(Entity<TElementComp> elementEntity, ref ComponentStartup args)
     {
         if (elementEntity.Comp.HierarchyUid != null)
@@ -76,8 +87,7 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
 
     private void UpdateNewParent(Entity<TElementComp> elementEntity, EntityUid newParentUid, EntityUid? oldParentUid)
     {
-        // if (!ContainerSystem.TryGetContainingContainer(newParentUid, elementEntity.Owner, out var containingContainer) ||
-        //     containingContainer.ID != _containerId)
+        ContainerSystem.TryGetContainingContainer(newParentUid, elementEntity.Owner, out var containingContainer);
         if (!ContainerSystem.HasContainer(newParentUid, _containerId, null))
         {
             if (ElementQuery.TryGetComponent(oldParentUid, out var oldParentElementComponent))

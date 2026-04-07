@@ -226,12 +226,13 @@
     - id: FoodMeat
       amount: 5
   - type: Respirator
+    requiredOrganCategory: Head # KS14: Klovnmed, you generally need a head to breathe
     damage:
       types:
-        Asphyxiation: 1.0
+        Asphyxiation: 4 # KS14: 1 -> 4
     damageRecovery:
       types:
-        Asphyxiation: -1.0
+        Asphyxiation: -2.75 # KS14: -1 -> -2.75
   - type: FireVisuals
     alternateState: Standing
   - type: StunVisuals

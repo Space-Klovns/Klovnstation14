@@ -92,7 +92,9 @@ public sealed class RespiratorSystem : EntitySystem
 
             UpdateSaturation(uid, -(float)respirator.UpdateInterval.TotalSeconds, respirator);
 
-            if (!_mobState.IsIncapacitated(uid, component: mobStateComponent)) // KS14: Added mobstate query // cannot breathe in crit.
+            var hasRequiredBreathingOrgan = KsHasOrganRequiredToBreathe((uid, respirator)); // KS14: Klovnmed
+            if (hasRequiredBreathingOrgan && // KS14: Klovnmed
+                !_mobState.IsIncapacitated(uid, component: mobStateComponent)) // KS14: Added mobstate query // cannot breathe in crit.
             {
                 switch (respirator.Status)
                 {
@@ -109,7 +111,8 @@ public sealed class RespiratorSystem : EntitySystem
 
             if (respirator.Saturation < respirator.SuffocationThreshold)
             {
-                if (_gameTiming.CurTime >= respirator.LastGaspEmoteTime + respirator.GaspEmoteCooldown)
+                if (hasRequiredBreathingOrgan && // KS14: how can you gasp without a head, LCDC TODO: make general blocker for emotes when you dont have a head
+                    _gameTiming.CurTime >= respirator.LastGaspEmoteTime + respirator.GaspEmoteCooldown)
                 {
                     respirator.LastGaspEmoteTime = _gameTiming.CurTime;
                     _chat.TryEmoteWithChat(uid,
@@ -126,6 +129,15 @@ public sealed class RespiratorSystem : EntitySystem
             StopSuffocation((uid, respirator));
             respirator.SuffocationCycles = 0;
         }
+    }
+
+    private bool KsHasOrganRequiredToBreathe(Entity<RespiratorComponent> entity)
+    {
+        if (entity.Comp.RequiredOrganCategory is not { } requiredCategory ||
+            !TryComp<BodyComponent>(entity.Owner, out var bodyComponent))
+            return true;
+
+        return bodyComponent.PresentOrganCategories.ContainsKey(requiredCategory);
     }
 
     public void Inhale(Entity<RespiratorComponent?> entity)
@@ -376,6 +388,8 @@ public sealed class RespiratorSystem : EntitySystem
         if (args.Args.Handled)
             return;
 
+        // TODO KLOVNMED KS14: reduce efficiency of inhaling based on different factors
+
         _atmosSys.Merge(ent.Comp.Air, args.Args.Gas);
         _lungSystem.GasToReagent(ent, ent);
 
@@ -383,10 +397,6 @@ public sealed class RespiratorSystem : EntitySystem
         if (TryComp<MetabolizerComponent>(ent.Owner, out var metabolizerComponent) &&
             TryComp<OrganComponent>(ent.Owner, out var organComponent))
         {
-            if (organComponent.HierarchyUid is { } bodyUid)
-                // todo
-                return;
-
             // Needs organcomponent so that this is targetted at the body not the lungs
             _metabolizerSystem.TryMetabolize((ent.Owner, metabolizerComponent, organComponent));
         }
