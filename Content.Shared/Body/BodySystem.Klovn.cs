@@ -25,7 +25,6 @@ public sealed partial class BodySystem : EntitySystem
             presentCategories.Add(category);
         }
 
-        args.Message.PushNewline();
         var allOkay = true;
 
         foreach (var requiredCategory in initialBodyComponent.TotalCategories)
@@ -36,17 +35,17 @@ public sealed partial class BodySystem : EntitySystem
             if (!Loc.TryGetString("ks-body-component-dismemberedcategory-" + requiredCategory.Id, out var categoryLoc))
                 continue;
 
-            args.Message.PushNewline();
             args.Message.AddMarkupOrThrow(Loc.GetString("ks-body-component-dismembered", ("target", entity.Owner), ("category", categoryLoc)));
+            args.Message.PushNewline();
 
-            // FUCK
+            // FUCK SOMETHING IS MISSING
             allOkay = false;
         }
 
         if (allOkay)
         {
+            args.Message.AddMarkupOrThrow(Loc.GetString("ks-body-component-limbs-fine"));
             args.Message.PushNewline();
-            args.Message.AddMarkupOrThrow(Loc.GetString("ks-body-component-limbs-fine", ("target", entity.Owner)));
         }
     }
 

@@ -29,7 +29,8 @@ public sealed class McqDialogueSystem : EntitySystem
     {
         if (!Resolve(dialogueEntity, ref dialogueEntity.Comp) ||
             TerminatingOrDeleted(dialogueEntity.Comp.Source) ||
-            TerminatingOrDeleted(dialogueEntity.Owner))
+            TerminatingOrDeleted(dialogueEntity.Owner) ||
+            dialogueEntity.Comp.Deleted)
             return;
 
         var sourceEntity = dialogueEntity.Comp.Source!;

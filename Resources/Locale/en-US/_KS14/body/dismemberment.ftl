@@ -1,4 +1,4 @@
-ks-body-component-limbs-fine = { CAPITALIZE(SUBJECT($target)) } { CONJUGATE-HAVE($target) } no missing limbs.
+ks-body-component-limbs-fine = No body-parts are visibly missing.
 ks-body-component-dismembered = [color=#EB4034]{ CAPITALIZE(POSS-ADJ($target)) } {$category} missing![/color]
 
 # categories
