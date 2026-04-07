@@ -22,7 +22,17 @@ public sealed class BrainSystem : EntitySystem
 
     private void HandleMind(EntityUid newEntity, EntityUid oldEntity)
     {
-        if (TerminatingOrDeleted(newEntity) || TerminatingOrDeleted(oldEntity))
+        // KS14: Separated termination here
+        if (TerminatingOrDeleted(newEntity))
+        {
+            if (!_mindSystem.TryGetMind(oldEntity, out var otherMindId, out var otherMind))
+                return;
+
+            _mindSystem.TransferTo(otherMindId, null, mind: otherMind);
+            return;
+        }
+
+        if (TerminatingOrDeleted(oldEntity))
             return;
 
         EnsureComp<MindContainerComponent>(newEntity);

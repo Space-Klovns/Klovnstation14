@@ -3,6 +3,7 @@ using Content.Shared._KS14.Hierarchy;
 using Content.Shared.Body;
 using Robust.Shared.Containers;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Utility;
 
 namespace Content.Shared._KS14.Klovnmed;
 
@@ -18,27 +19,18 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
         SubscribeLocalEvent<OrganComponent, ContainerIsRemovingAttemptEvent>(OnOrganElementRemovingAttempt);
     }
 
-    public bool TryGetOrgan(Entity<BodyComponent?> entity, ProtoId<OrganCategoryPrototype> category, [NotNullWhen(true)] out EntityUid? organUid)
+    /// <returns>True if the entity was found.</returns>
+    public bool TryGetOrgan(Entity<BodyComponent?> entity, ProtoId<OrganCategoryPrototype> category, [NotNullWhen(true)] out Entity<OrganComponent>? organEntity)
     {
-        if (!HierarchyQuery.Resolve(entity, ref entity.Comp))
+        if (!HierarchyQuery.Resolve(entity, ref entity.Comp) ||
+            !entity.Comp.PresentOrganCategories.TryGetValue(category, out var foundOrganEntity))
         {
-            organUid = null;
+            organEntity = null;
             return false;
         }
 
-        foreach (var childUid in entity.Comp.RecursiveChildUids)
-        {
-            var organComponent = ElementQuery.GetComponent(childUid);
-            if (organComponent.Category is not { } childCategory ||
-                childCategory != category)
-                continue;
-
-            organUid = childUid;
-            return true;
-        }
-
-        organUid = null;
-        return false;
+        organEntity = foundOrganEntity;
+        return true;
     }
 
     private void OnOrganElementRemovingAttempt(Entity<OrganComponent> entity, ref ContainerIsRemovingAttemptEvent args)
@@ -56,10 +48,13 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
 
         if (addedEntity.Comp.Category is { } addedCategory)
         {
-            hierarchyEntity.Comp.PresentOrganCategories[addedCategory] =
-                hierarchyEntity.Comp.PresentOrganCategories.TryGetValue(addedCategory, out var count) ?
-                    count + 1 :
-                    1;
+            if (hierarchyEntity.Comp.PresentOrganCategories.ContainsKey(addedCategory))
+            {
+                DebugTools.Assert($"Organ category {addedCategory.Id} is already present in entity {ToPrettyString(hierarchyEntity)}! Added organ: {ToPrettyString(addedEntity)}");
+                Log.Error($"Organ category {addedCategory.Id} is already present in entity {ToPrettyString(hierarchyEntity)}! Added organ: {ToPrettyString(addedEntity)}");
+            }
+
+            hierarchyEntity.Comp.PresentOrganCategories[addedCategory] = addedEntity;
         }
 
         var body = new OrganInsertedIntoEvent(addedEntity, hierarchyEntity, addedEntity);
@@ -77,13 +72,7 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
 
         // lets just make the jolly assumption that an organs category wont change for no reason while its inside
         if (removedEntity.Comp.Category is { } removedCategory)
-        {
-            var newCount = hierarchyEntity.Comp.PresentOrganCategories[removedCategory] - 1;
-            if (newCount == 0)
-                hierarchyEntity.Comp.PresentOrganCategories.Remove(removedCategory);
-            else
-                hierarchyEntity.Comp.PresentOrganCategories[removedCategory] = newCount;
-        }
+            hierarchyEntity.Comp.PresentOrganCategories.Remove(removedCategory);
 
         var body = new OrganRemovedFromEvent(removedEntity, hierarchyEntity, removedEntity);
         RaiseLocalEvent(hierarchyEntity, ref body);

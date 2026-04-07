@@ -31,7 +31,7 @@ public sealed class McqDialogueBoundUserInterface(EntityUid owner, Enum uiKey) :
                 Close();
             }
 
-            _window.AddOption(datum.Text, Handler);
+            _window.AddOption(datum, Handler);
         }
     }
 }

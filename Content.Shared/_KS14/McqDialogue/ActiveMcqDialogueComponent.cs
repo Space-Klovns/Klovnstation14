@@ -1,10 +1,8 @@
-using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.McqDialogue;
 
-[RegisterComponent, NetworkedComponent]
-[UnsavedComponent]
+[RegisterComponent, UnsavedComponent]
 [Access(typeof(McqDialogueSystem), Other = AccessPermissions.Read)]
 public sealed partial class ActiveMcqDialogueComponent : Component
 {
@@ -14,8 +12,7 @@ public sealed partial class ActiveMcqDialogueComponent : Component
     public List<string> OptionIds = [];
 }
 
-[RegisterComponent]
-[UnsavedComponent]
+[RegisterComponent, UnsavedComponent]
 [Access(typeof(McqDialogueSystem), Other = AccessPermissions.Read)]
 public sealed partial class McqDialogueSourceComponent : Component
 {

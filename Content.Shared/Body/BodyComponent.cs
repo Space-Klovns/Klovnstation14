@@ -17,11 +17,12 @@ public sealed partial class BodyComponent : Component, IHierarchyComponent // KS
 {
     // KS14
     /// <summary>
-    ///     Organ categories present and how many of them there are.
+    ///     Organ categories present and their entities.
+    ///         Only one is allowed.
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly)]
     [Access(typeof(BodyHierarchySystem), Other = AccessPermissions.ReadExecute)]
-    public Dictionary<Robust.Shared.Prototypes.ProtoId<OrganCategoryPrototype>, int> PresentOrganCategories = [];
+    public Dictionary<Robust.Shared.Prototypes.ProtoId<OrganCategoryPrototype>, Entity<OrganComponent>> PresentOrganCategories = [];
 
     // KS14
     [ViewVariables(VVAccess.ReadOnly)]

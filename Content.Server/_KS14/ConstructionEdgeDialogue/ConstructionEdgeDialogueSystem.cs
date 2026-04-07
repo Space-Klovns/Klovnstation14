@@ -39,7 +39,8 @@ public sealed class ConstructionEdgeDialogueSystem : EntitySystem
             return;
 
         var edge = currentNode.Edges[id];
-        if (entity.Comp.BlacklistedTargets.Contains(edge.Target))
+        if (entity.Comp.BlacklistedTargets.Contains(edge.Target) ||
+            !_constructionSystem.CheckConditions(entity.Owner, edge.Conditions))
             return;
 
         _constructionSystem.SetEdgeIndex(constructionComponent, id);
@@ -61,7 +62,8 @@ public sealed class ConstructionEdgeDialogueSystem : EntitySystem
         var index = 0;
         foreach (var edge in currentNode.Edges)
         {
-            if (entity.Comp.BlacklistedTargets.Contains(edge.Target))
+            if (entity.Comp.BlacklistedTargets.Contains(edge.Target) ||
+                !_constructionSystem.CheckConditions(entity.Owner, edge.Conditions))
             {
                 index++;
                 continue;

@@ -116,6 +116,8 @@
   description: An immortal classic. Uses .50 shotgun shells.
   components:
   - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
+  - type: GunExecutionOrganRemoval # KS14
+    removedCategory: Head
   - type: Sprite
     sprite: Objects/Weapons/Guns/Shotguns/db_shotgun.rsi
   - type: Item
@@ -149,6 +151,8 @@
   description: A premium semi-automatic shotgun, and the pride of all security forces. Uses .50 shotgun shells.
   components: # intend for Enforcer to have wider choke for semi-auto function
   - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
+  - type: GunExecutionOrganRemoval # KS14
+    removedCategory: Head
   - type: Sprite
     sprite: Objects/Weapons/Guns/Shotguns/enforcer.rsi
   - type: Clothing
@@ -173,6 +177,8 @@
   description: An old yet faithful design, and a favorite among irregular forces of many worlds. Uses .50 shotgun shells.
   components: # intend for Kammerer to have tighter choke for slower fire rate and/or manual cycling
   - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
+  - type: GunExecutionOrganRemoval # KS14
+    removedCategory: Head
   - type: Item
     sprite: Objects/Weapons/Guns/Shotguns/pump_inhands_64x.rsi
   - type: Sprite

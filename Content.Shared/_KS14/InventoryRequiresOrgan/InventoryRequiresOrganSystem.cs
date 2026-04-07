@@ -20,7 +20,7 @@ public sealed class InventoryRequiresOrganSystem : EntitySystem
     }
 
     /// <returns>True if the inventory slot can continue being active.</returns>
-    public static bool ShouldDisableSlot(List<ProtoId<OrganCategoryPrototype>> requiredCategories, Dictionary<ProtoId<OrganCategoryPrototype>, int> presentOrganCategoryCounts)
+    public static bool ShouldDisableSlot(List<ProtoId<OrganCategoryPrototype>> requiredCategories, Dictionary<ProtoId<OrganCategoryPrototype>, Entity<OrganComponent>> presentOrganCategoryCounts)
     {
         // actually a lie because ALL of the required categories must be missing, for this to cancel
 

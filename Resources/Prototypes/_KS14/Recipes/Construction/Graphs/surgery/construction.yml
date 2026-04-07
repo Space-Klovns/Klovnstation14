@@ -1,0 +1,19 @@
+# - type: construction
+#   hide: true
+#   name: null
+#   description: null
+#   id: SurgeryOpenIncision
+#   graph: SurgeryGraph
+#   startNode: start
+#   targetNode: OpenIncision
+#   category: Surgery
+#   objectType: NodeToNode
+
+# - type: construction
+#   hide: true
+#   id: SurgeryCloseIncision
+#   graph: SurgeryGraph
+#   startNode: OpenIncision
+#   targetNode: start
+#   category: Surgery
+#   objectType: NodeToNode

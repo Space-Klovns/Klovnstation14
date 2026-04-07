@@ -66,7 +66,7 @@ public sealed class MetabolizerSystem : EntitySystem
         while (query.MoveNext(out var uid, out var comp))
         {
             if (comp.StopAutoUpdate)
-                return;
+                continue;
 
             // Only update as frequently as it should
             if (_gameTiming.CurTime < comp.NextUpdate)

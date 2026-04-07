@@ -99,6 +99,14 @@
       - FootRight
       ears:
       - Ears
+      eyes:
+      - Head
+      mask:
+      - Head
+      head:
+      - Head
+  - type: RequiresOrganToSee
+    category: Eyes
 
 - type: entity
   id: BaseSpeciesAppearance

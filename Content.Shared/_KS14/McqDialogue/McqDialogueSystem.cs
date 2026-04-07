@@ -10,28 +10,42 @@ public sealed class McqDialogueSystem : EntitySystem
     {
         base.Initialize();
 
+        SubscribeLocalEvent<McqDialogueSourceComponent, ComponentShutdown>(OnDialogueSourceShutdown);
+
         SubscribeLocalEvent<ActiveMcqDialogueComponent, BoundUIClosedEvent>(OnDialogueClosed);
         SubscribeLocalEvent<ActiveMcqDialogueComponent, McqDialogueDataSelectedMessage>(OnDataSelected);
     }
 
-    public void CloseDialogue(Entity<ActiveMcqDialogueComponent?> dialogueEntity, Entity<McqDialogueSourceComponent>? sourceEntity = null)
+
+    private void OnDialogueSourceShutdown(Entity<McqDialogueSourceComponent> entity, ref ComponentShutdown args)
     {
-        if (!Resolve(dialogueEntity, ref dialogueEntity.Comp))
+        foreach (var dialogueEntity in entity.Comp.Dialogues)
+            PredictedQueueDel(dialogueEntity);
+
+        entity.Comp.Dialogues.Clear();
+    }
+
+    public void CloseDialogue(Entity<ActiveMcqDialogueComponent?> dialogueEntity)
+    {
+        if (!Resolve(dialogueEntity, ref dialogueEntity.Comp) ||
+            TerminatingOrDeleted(dialogueEntity.Comp.Source) ||
+            TerminatingOrDeleted(dialogueEntity.Owner))
             return;
 
-        sourceEntity ??= dialogueEntity.Comp.Source!;
-        var sourceComponent = sourceEntity.Value.Comp;
+        var sourceEntity = dialogueEntity.Comp.Source!;
+        var sourceComponent = sourceEntity.Comp;
 
         sourceComponent.Dialogues.Remove(dialogueEntity!);
         if (sourceComponent.Dialogues.Count == 0)
-            RemComp(sourceEntity.Value, sourceComponent);
+            RemComp(sourceEntity, sourceComponent);
 
-        PredictedQueueDel(dialogueEntity);
+        // immediately remove it
+        PredictedQueueDel(dialogueEntity.Owner);
     }
 
     private void OnDialogueClosed(Entity<ActiveMcqDialogueComponent> entity, ref BoundUIClosedEvent args)
     {
-        CloseDialogue(entity!, entity.Comp.Source);
+        CloseDialogue(entity!);
 
         var ev = new McqDialogueClosedEvent();
         RaiseLocalEvent(entity.Comp.Source, ref ev);
@@ -42,7 +56,7 @@ public sealed class McqDialogueSystem : EntitySystem
         if (!Exists(entity.Comp.Source))
             return;
 
-        CloseDialogue(entity!, entity.Comp.Source);
+        CloseDialogue(entity!);
 
         var ev = new McqDialogueSelectedEvent(args.Id);
         RaiseLocalEvent(entity.Comp.Source, ref ev);
@@ -57,16 +71,16 @@ public sealed class McqDialogueSystem : EntitySystem
             dialogueComponent.OptionIds.Add(optionDatum.Id);
 
         var dialogueSourceComponent = EnsureComp<McqDialogueSourceComponent>(sourceUid);
-        dialogueSourceComponent.Dialogues.Add((dialogueUid, dialogueComponent));
         dialogueComponent.Source = (sourceUid, dialogueSourceComponent);
+        dialogueSourceComponent.Dialogues.Add((dialogueUid, dialogueComponent));
 
         var uiComponent = Comp<UserInterfaceComponent>(dialogueUid);
+
+        _userInterfaceSystem.OpenUi((dialogueUid, uiComponent), McqDialogueUiKey.Key, userUid);
         _userInterfaceSystem.SetUiState(
             (dialogueUid, uiComponent),
             McqDialogueUiKey.Key,
             new McqDialogueBoundUserInterfaceState([.. options])
         );
-        _userInterfaceSystem.OpenUi((dialogueUid, uiComponent), McqDialogueUiKey.Key, userUid);
-
     }
 }

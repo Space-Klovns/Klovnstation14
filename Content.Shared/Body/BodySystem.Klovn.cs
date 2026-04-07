@@ -1,4 +1,5 @@
 using Content.Shared.HealthExaminable;
+using JetBrains.Annotations;
 using Robust.Shared.Prototypes;
 
 namespace Content.Shared.Body;
@@ -47,5 +48,28 @@ public sealed partial class BodySystem : EntitySystem
             args.Message.PushNewline();
             args.Message.AddMarkupOrThrow(Loc.GetString("ks-body-component-limbs-fine", ("target", entity.Owner)));
         }
+    }
+
+    /// <summary>
+    ///     Relays the given event to organs within an entity that may have a body.
+    /// </summary>
+    /// <inheritdoc cref="RelayEvent{T}(Entity{BodyComponent}, ref T)"/>
+    [PublicAPI]
+    public void RelayEventNullable<T>(Entity<BodyComponent?> ent, ref T args) where T : struct
+    {
+        if (!_bodyQuery.Resolve(ent, ref ent.Comp, logMissing: false))
+            return;
+
+        RelayEvent(ent!, ref args);
+    }
+
+    /// <inheritdoc cref="RelayEventNullable{T}(Entity{BodyComponent?}, ref T)"/>
+    [PublicAPI]
+    public void RelayEventNullable<T>(Entity<BodyComponent?> ent, T args) where T : class
+    {
+        if (!_bodyQuery.Resolve(ent, ref ent.Comp, logMissing: false))
+            return;
+
+        RelayEvent(ent!, args);
     }
 }

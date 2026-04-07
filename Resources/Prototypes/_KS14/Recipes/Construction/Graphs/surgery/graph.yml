@@ -3,8 +3,6 @@
   start: start
   graph:
   - node: start # ConstructionComponent.DeconstructionNode
-    header: construction-component-to-perform-header
-    localizedName: surgery-cleanup-name
     edges:
     - to: OpenIncision # Start surgery -> Incision
       steps:
@@ -12,39 +10,49 @@
         doAfter: 3
   - node: OpenIncision # Incision
     edges:
-    - to: start # Incision -> Cauterise -> Stop surgery (early)
+    # Cauterise to stop surgery early
+    - to: start
       steps:
       - tool: Welding
         doAfter: 1.5
-    - to: RemoveHead # Incision -> Cut head
+
+    ## Limb removal edges
+    - to: Remove Head # Incision -> Cut head
       conditions:
       - !type:HasOrgan
         category: Head
       steps: &amputation_steps
       - tool: Cutting
         doAfter: 5
-    - to: RemoveEars # Incision -> Cut head
+    - to: Remove Ears # Incision -> Cut ears
       conditions:
       - !type:HasOrgan
         category: Ears
       steps: *amputation_steps
+    - to: Remove Eyes # Incision -> Cut ears
+      conditions:
+      - !type:HasOrgan
+        category: Eyes
+      steps: *amputation_steps
+    ##
 
-  - node: RemoveHead # Cut head
+  ## Limb removal nodes
+  - node: Remove Head # Cut head
     actions:
     - !type:TakeOrgan
       category: Head
-  - node: RemoveEars # Cut ears
+    - !type:SetNode
+      node: OpenIncision
+  - node: Remove Ears # Cut ears
     actions:
     - !type:TakeOrgan
       category: Ears
-
-- type: construction
-  hide: true
-  id: HeadRemoval
-  name: surgery-head-removal-name
-  description: surgery-head-removal-desc
-  graph: SurgeryGraph
-  startNode: start
-  targetNode: RemoveHead
-  category: Surgery
-  objectType: NodeToNode
+    - !type:SetNode
+      node: OpenIncision
+  - node: Remove Eyes # Cut eyes
+    actions:
+    - !type:TakeOrgan
+      category: Eyes
+    - !type:SetNode
+      node: OpenIncision
+  ##

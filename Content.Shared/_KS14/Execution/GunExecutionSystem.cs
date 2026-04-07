@@ -13,6 +13,8 @@ using Robust.Shared.Timing;
 using System.Numerics;
 using Content.Shared.FixedPoint;
 using Content.Shared.Damage.Components;
+using Content.Shared.Body;
+using Content.Shared._KS14.BloodSpray;
 
 namespace Content.Shared._KS14.Execution;
 
@@ -24,15 +26,13 @@ public sealed class SharedGunExecutionSystem : EntitySystem
     [Dependency] private readonly SharedAudioSystem _audio = default!;
     [Dependency] private readonly SharedDoAfterSystem _doAfter = default!;
     [Dependency] private readonly SharedSuicideSystem _suicide = default!;
-    //[Dependency] private readonly SharedCombatModeSystem _combat = default!;
     [Dependency] private readonly SharedExecutionSystem _execution = default!;
     [Dependency] private readonly SharedGunSystem _gunSystem = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly SharedCameraRecoilSystem _recoil = default!;
     [Dependency] private readonly INetManager _net = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
-
-    private const float GunExecutionTime = 4.0f;
+    [Dependency] private readonly BloodSpraySystem _bloodSpraySystem = default!;
 
     /// <summary>
     ///     Minimum amount of damage a gun
@@ -171,12 +171,8 @@ public sealed class SharedGunExecutionSystem : EntitySystem
         // Raise an event on the ammo to get its damage and handle its consumption.
         var gunExecutedEvent = new GunExecutedEvent(attacker, victim);
 
-        // If the TakeAmmoEvent returns an entity, we raise the event on that entity.
-        if (ammoUid.HasValue)
-            RaiseLocalEvent(ammoUid.Value, ref gunExecutedEvent);
-        // If not (e.g. for battery weapons), we raise it on the gun itself.
-        else
-            RaiseLocalEvent(weapon, ref gunExecutedEvent);
+        // If the TakeAmmoEvent returns an entity, we raise the event on that entity. If not (e.g. for battery weapons) we raise it on the gun
+        RaiseLocalEvent(ammoUid ?? weapon, ref gunExecutedEvent);
 
         var damage = gunExecutedEvent.Damage;
         if (damage == null || damage.GetTotal() < MinimumValidDamage)
@@ -197,7 +193,7 @@ public sealed class SharedGunExecutionSystem : EntitySystem
         }
 
         var finishedEv = new GunFinishedExecutionEvent();
-        RaiseLocalEvent(weapon, ref finishedEv);
+        RaiseLocalEvent(ammoUid ?? weapon, ref finishedEv);
 
         // Effects and damage
         //var prev = _combat.IsInCombatMode(attacker);
@@ -214,6 +210,19 @@ public sealed class SharedGunExecutionSystem : EntitySystem
         _execution.ShowExecutionInternalPopup($"{messagePrefix}-popup-gun-complete-internal", attacker, victim, weapon, predict: true);
         _execution.ShowExecutionExternalPopup($"{messagePrefix}-popup-gun-complete-external", attacker, victim, weapon);
         _suicide.ApplyLethalDamage((victim, damageableComponent), damage);
+
+        if (TryComp<GunExecutionOrganRemovalComponent>(weapon, out var organRemovalComponent) &&
+            TryComp<BodyComponent>(victim, out var bodyComponent) &&
+            bodyComponent.PresentOrganCategories.TryGetValue(organRemovalComponent.RemovedCategory, out var removedOrganEntity))
+        {
+            PredictedQueueDel(removedOrganEntity);
+
+            _bloodSpraySystem.HandleBleedEffects(
+                victim,
+                damage,
+                attacker
+            );
+        }
 
         // Client-side prediction for recoil
         if (_net.IsClient && // because KickCamera on server networks it to be called on client

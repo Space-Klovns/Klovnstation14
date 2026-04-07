@@ -201,7 +201,8 @@ public abstract class SharedBloodstreamSystem : EntitySystem
         TryModifyBleedAmount(ent.AsNullable(), totalFloat);
 
         // KS14 Addition: effects
-        _bloodSpraySystem.HandleBleedEffects(ent, args, bloodloss);
+        if (args.Origin is { } originUid)
+            _bloodSpraySystem.HandleBleedEffects(ent!, args.DamageDelta, originUid);
 
         // Critical hit. Causes target to lose blood, using the bleed rate modifier of the weapon, currently divided by 5
         // The crit chance is currently the bleed rate modifier divided by 25.

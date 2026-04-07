@@ -42,7 +42,10 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
         SubscribeLocalEvent<THierarchyComp, ComponentShutdown>(OnHierarchyShutdown);
         SubscribeLocalEvent<TElementComp, EntityTerminatingEvent>(OnElementTerminating);
 
-        SubscribeLocalEvent<TElementComp, EntParentChangedMessage>(OnElementParentChanged);
+        SubscribeLocalEvent<THierarchyComp, EntRemovedFromContainerMessage>(OnElementRemovedFromHierarchy);
+        SubscribeLocalEvent<TElementComp, EntRemovedFromContainerMessage>(OnElementRemovedFromElement);
+        SubscribeLocalEvent<TElementComp, EntGotInsertedIntoContainerMessage>(OnElementGotInsertedIntoContainer);
+
 
         SubscribeLocalEvent<TElementComp, ComponentShutdown>(OnElementShutdown);
     }
@@ -65,7 +68,7 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
         if (elementEntity.Comp.HierarchyUid != null)
             return;
 
-        UpdateNewParent(elementEntity, Transform(elementEntity).ParentUid, null);
+        //UpdateNewParent(elementEntity, Transform(elementEntity).ParentUid, null);
     }
 
     private void UpdateElementChildrenNewHierarchy(Entity<TElementComp> elementEntity, EntityUid? newHierarchyUid)
@@ -85,20 +88,31 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
             );
     }
 
-    private void UpdateNewParent(Entity<TElementComp> elementEntity, EntityUid newParentUid, EntityUid? oldParentUid)
+    private void OnElementRemovedFromHierarchy(Entity<THierarchyComp> parentHierarchyEntity, ref EntRemovedFromContainerMessage args)
     {
-        ContainerSystem.TryGetContainingContainer(newParentUid, elementEntity.Owner, out var containingContainer);
-        if (!ContainerSystem.HasContainer(newParentUid, _containerId, null))
-        {
-            if (ElementQuery.TryGetComponent(oldParentUid, out var oldParentElementComponent))
-                RemoveDirectChild((oldParentUid.Value, oldParentElementComponent), elementEntity);
-
-            if (elementEntity.Comp.HierarchyUid != null)
-                UpdateElementChildrenNewHierarchy(elementEntity, null);
-
+        if (args.Container.ID != _containerId)
             return;
-        }
 
+        UpdateElementChildrenNewHierarchy((args.Entity, ElementQuery.GetComponent(args.Entity)), null);
+    }
+
+    private void OnElementRemovedFromElement(Entity<TElementComp> parentElementEntity, ref EntRemovedFromContainerMessage args)
+    {
+        if (args.Container.ID != _containerId)
+            return;
+
+        RemoveDirectChild(parentElementEntity, args.Entity);
+
+        if (parentElementEntity.Comp.HierarchyUid != null)
+            UpdateElementChildrenNewHierarchy((args.Entity, ElementQuery.GetComponent(args.Entity)), null);
+    }
+
+    private void OnElementGotInsertedIntoContainer(Entity<TElementComp> elementEntity, ref EntGotInsertedIntoContainerMessage args)
+    {
+        if (args.Container.ID != _containerId)
+            return;
+        elementEntity.Comp.Container = ContainerSystem.EnsureContainer<Container>(elementEntity.Owner, _containerId);
+        var newParentUid = args.Container.Owner;
         if (HierarchyQuery.HasComponent(newParentUid)) // use new hierarchy parent as hierarchy
         {
             if (newParentUid == elementEntity.Comp.HierarchyUid)
@@ -114,12 +128,14 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
             UpdateElementChildrenNewHierarchy(elementEntity, newElementParentComponent.HierarchyUid);
             AddDirectChild((newParentUid, newElementParentComponent), elementEntity);
         }
+        else
+            throw new InvalidOperationException("Hierarchy element got into some bullshit container with valid container id but neither a hierarchy nor element component and we are just bailing");
     }
 
     [MustCallBase(true)]
     protected virtual void OnElementParentChanged(Entity<TElementComp> elementEntity, ref EntParentChangedMessage args)
     {
-        UpdateNewParent(elementEntity, args.Transform.ParentUid, args.OldParent);
+        //UpdateNewParent(elementEntity, args.Transform.ParentUid, args.OldParent);
     }
 
     private void OnHierarchyAdd(Entity<THierarchyComp> hierarchyEntity, ref ComponentAdd args)
@@ -164,13 +180,20 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
         if (elementEntity.Comp.HierarchyUid is { } hierarchyUid &&
             HierarchyQuery.TryGetComponent(hierarchyUid, out var hierarchyComponent)) // because comp may be deleted
         {
-            // skip the rest of RemoveElementFromHierarchy
-            hierarchyComponent.RecursiveChildUids.Remove(elementEntity);
-            elementEntity.Comp.HierarchyUid = null;
+            if (TerminatingOrDeleted(hierarchyUid))
+            {
+                // skip the rest of RemoveElementFromHierarchy
+                hierarchyComponent.RecursiveChildUids.Remove(elementEntity);
+                elementEntity.Comp.HierarchyUid = null;
+            }
+            else // Raise events
+                RemoveElementFromHierarchy((hierarchyUid, hierarchyComponent), elementEntity);
         }
 
-        // Same here
+        // Same here but raise events if necessary too
         elementEntity.Comp.ChildUids.Clear();
+
+        // We dont need to do recursive BS here because every child entity is going to be terminated too if the parent is getting terminated
     }
 
     private void OnHierarchyShutdown(Entity<THierarchyComp> hierarchyEntity, ref ComponentShutdown args)
