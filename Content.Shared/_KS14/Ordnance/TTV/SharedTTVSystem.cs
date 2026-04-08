@@ -1,4 +1,4 @@
-using Content.Server._KS14.Ordnance.TTV;
+using Content.Shared._KS14.Ordnance.TTV;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Database;

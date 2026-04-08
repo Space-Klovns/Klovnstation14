@@ -1,4 +1,3 @@
-using Content.Server._KS14.Ordnance.TTV;
 using Content.Shared._KS14.Ordnance.TTV;
 using Content.Shared.Clothing.Components;
 using Content.Shared.Clothing.EntitySystems;

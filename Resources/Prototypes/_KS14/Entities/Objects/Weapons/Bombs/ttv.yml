@@ -5,7 +5,7 @@
   description: Cuban Pete sends his regards.
   components:
   - type: Sprite
-    sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
+    sprite: _KS14/Objects/Weapons/Bombs/ttv.rsi
     granularLayersRendering: true
     layers:
     - map: ["left"]
@@ -43,7 +43,7 @@
   components:
   - type: Clothing
     slots: BACK
-    sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
+    sprite: _KS14/Objects/Weapons/Bombs/ttv.rsi
     equippedPrefix: ttv
     clothingVisuals:
       backpack:

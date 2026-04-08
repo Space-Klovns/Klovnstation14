@@ -1,7 +1,7 @@
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 
-namespace Content.Server._KS14.Ordnance.TTV;
+namespace Content.Shared._KS14.Ordnance.TTV;
 
 /// <summary>A tank-transfer valve that can hold multiple itemslots.</summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
