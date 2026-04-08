@@ -57,7 +57,7 @@ public sealed class InventoryRequiresOrganSystem : EntitySystem
     private void OnOrganRemoved(Entity<InventoryRequiresOrganComponent> entity, ref OrganRemovedFromEvent args)
     {
         if (TerminatingOrDeleted(entity) ||
-            Transform(entity.Owner).ParentUid == EntityUid.Invalid)
+            !Transform(entity.Owner).ParentUid.IsValid())
             return;
 
         foreach (var (slotId, requiredCategories) in entity.Comp.Categories)
