@@ -6,13 +6,17 @@
   components:
   - type: Sprite
     sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
-    state: valve
+    granularLayersRendering: true
+    layers:
+    - map: ["left"]
+    - map: ["enum.TTVLayers.Valve"]
+      state: valve
+    - map: ["right"]
+      offset: -0.48,0
   - type: Item
+    heldPrefix: ttv
     size: Ginormous
   - type: TTV
-    spriteOffsets:
-      left: 0,0
-      right: -0.48,0
   - type: UseDelay
     delay: 1
   - type: Explosive
@@ -31,6 +35,20 @@
           tags:
           - GasTank
   - type: Appearance
+
+- type: entity
+  parent: TankTransferValve
+  id: TankTransferValveWearable
+  suffix: Wearable
+  components:
+  - type: Clothing
+    slots: BACK
+    sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
+    equippedPrefix: ttv
+    clothingVisuals:
+      backpack:
+      - map: [ "ttv" ]
+        state: ttv-BACKPACK
 
 - type: entity
   parent: TankTransferValve

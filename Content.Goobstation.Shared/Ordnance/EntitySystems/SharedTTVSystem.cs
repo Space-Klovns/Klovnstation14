@@ -1,4 +1,4 @@
-using Content.Goobstation.Server.TTV;
+using Content.Goobstation.Server.Ordnance.TTV;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Database;
@@ -7,7 +7,7 @@ using Content.Shared.Interaction;
 using Content.Shared.Interaction.Events;
 using Robust.Shared.Audio.Systems;
 
-namespace Content.Goobstation.Client.TTV;
+namespace Content.Goobstation.Shared.Ordnance.TTV;
 
 public abstract class SharedTTVSystem : EntitySystem
 {

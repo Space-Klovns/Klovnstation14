@@ -1,4 +1,4 @@
-namespace Content.Goobstation.Server.TTV;
+namespace Content.Goobstation.Server.Ordnance.TTV;
 
 
 /// <summary>Component for things that are inside a TTV, used for sake of performance.</summary>

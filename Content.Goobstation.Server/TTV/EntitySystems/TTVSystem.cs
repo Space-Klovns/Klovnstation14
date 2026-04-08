@@ -1,23 +1,19 @@
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using Content.Goobstation.Client.TTV;
+using Content.Goobstation.Shared.Ordnance.TTV;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Explosion.EntitySystems;
 using Content.Shared.Atmos;
-using Content.Shared.Atmos.Components;
 using Content.Shared.CCVar;
 using Content.Shared.Containers.ItemSlots;
 using Robust.Shared.Containers;
 using IConfigurationManager = Robust.Shared.Configuration.IConfigurationManager;
 
-namespace Content.Goobstation.Server.TTV;
+namespace Content.Goobstation.Server.Ordnance.TTV;
 
 public sealed class TTVSystem : SharedTTVSystem
 {
     [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-    [Dependency] AtmosphereSystem _atmosphereSystem = default!;
-    [Dependency] ItemSlotsSystem _slotsSystem = default!;
-    [Dependency] ExplosionSystem _explosionSystem = default!;
+    [Dependency] private readonly AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private readonly ExplosionSystem _explosionSystem = default!;
 
     // Timers are the same as the ones from GasTankSystem
     private const float TimerDelay = 0.5f;
@@ -27,8 +23,9 @@ public sealed class TTVSystem : SharedTTVSystem
 
     /// <summary>How many times will the TTV react to build up before exploding?</summary>
     public const int IgnitionReactTimes = 3;
-    public const float FragmentPressure = 84 * Atmospherics.OneAtmosphere;
-    public const float FragmentScale = 84 * Atmospherics.OneAtmosphere;
+    public const float FragmentPressure = 40f * Atmospherics.OneAtmosphere;
+    // On /tg/, this was 84atm, calibrated so that a TTV assembled using two 70L normal air tanks will maxcap at atleast 160atm. However, normal airtanks on SS14 are 5L so I made this 6.65atm.
+    public const float FragmentScale = 6.65f * Atmospherics.OneAtmosphere;
 
     public override void Initialize()
     {
@@ -59,38 +56,34 @@ public sealed class TTVSystem : SharedTTVSystem
         if (_timer < TimerDelay)
             return;
 
-        _timer -= TimerDelay;
+        _timer = 0;
 
-        var ttvQuery = EntityQueryEnumerator<TTVComponent>();
-        while (ttvQuery.MoveNext(out var uid, out var ttvComponent))
+        var ttvQuery = EntityQueryEnumerator<TTVComponent, ItemSlotsComponent>();
+        while (ttvQuery.MoveNext(out var uid, out var ttvComponent, out var slotsComponent))
         {
-            if (!ttvComponent.Open || ttvComponent.Igniting)
+            if (!ttvComponent.Open)
                 continue;
 
-            if (!UpdateTTV(uid, out var mixture))
-                continue;
+            EqualizeTTV((uid, slotsComponent), out var mixture);
 
-            if (mixture.Temperature >= Atmospherics.T0C + 400)
-                StartExploding((uid, ttvComponent));
+            if (!ttvComponent.Igniting &&
+                (mixture.Temperature >= Atmospherics.T0C + 400 ||
+                mixture.Pressure > FragmentPressure))
+                StartExploding((uid, ttvComponent, slotsComponent));
         }
     }
 
     /// <summary>
-    /// Reacts and then equalises contents of every tank connected to a TTV.
+    ///     Reacts and then equalises contents of every tank connected to a TTV.
+    ///         This can lose gas due to inaccuracy.
     /// </summary>
     /// <returns>Whether the TTV was updated.</returns>
-    public bool UpdateTTV(EntityUid ttv, [NotNullWhen(true)] out GasMixture? mixture)
+    public void EqualizeTTV(Entity<ItemSlotsComponent> ttv, out GasMixture mixture)
     {
-        if (!TryComp<ItemSlotsComponent>(ttv, out var slotsComponent))
-        {
-            mixture = null;
-            return false;
-        }
-
         GasMixture mergedMixture = new();
         List<GasMixture> affectedMixtures = new();
 
-        foreach (var (_, slot) in slotsComponent.Slots)
+        foreach (var (_, slot) in ttv.Comp.Slots)
         {
             if (slot.Item is not { } itemUid || !GasTankQuery.TryComp(itemUid, out var itemGasTankComponent))
                 continue;
@@ -101,26 +94,25 @@ public sealed class TTVSystem : SharedTTVSystem
 
             mergedMixture.Volume += airToMerge.Volume;
             _atmosphereSystem.Merge(mergedMixture, airToMerge);
+
+            airToMerge.Clear();
             affectedMixtures.Add(airToMerge);
         }
 
         _atmosphereSystem.DivideInto(mergedMixture, affectedMixtures);
-
         mixture = mergedMixture;
-        return true;
     }
 
-    public void StartExploding(Entity<TTVComponent> ttv)
+    public void StartExploding(Entity<TTVComponent, ItemSlotsComponent> ttv)
     {
-        if (!TryComp<ItemSlotsComponent>(ttv, out var slotsComponent))
-            return;
+        var slotsComponent = ttv.Comp2;
+        ttv.Comp1.Igniting = true;
 
         GasMixture combinedMixture = new(volume: 0f);
         int mixtureCount = 0;
 
         foreach (var (_, slot) in slotsComponent.Slots)
         {
-            _slotsSystem.SetLock(ttv, slot, true, slotsComponent);
             if (slot.Item is not { } itemUid || !GasTankQuery.TryComp(itemUid, out var itemGasTankComponent))
                 continue;
 
@@ -130,14 +122,13 @@ public sealed class TTVSystem : SharedTTVSystem
             combinedMixture.Volume += airToMerge.Volume;
 
             ++mixtureCount;
-
-            QueueDel(itemUid);
         }
 
         if (mixtureCount == 0)
             return;
 
-        _explosionSystem.TriggerExplosive(ttv, radius: Ignite(combinedMixture));
+        ttv.Comp1.Igniting = false;
+        _explosionSystem.TriggerExplosive(ttv, delete: false, radius: Ignite(combinedMixture));
     }
 
     /// <summary>Explodes and gets the explosion power of a mixture.</summary>

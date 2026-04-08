@@ -1,9 +1,7 @@
-using System.Numerics;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 
-namespace Content.Goobstation.Server.TTV;
-
+namespace Content.Goobstation.Server.Ordnance.TTV;
 
 /// <summary>A tank-transfer valve that can hold multiple itemslots.</summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
@@ -21,10 +19,16 @@ public sealed partial class TTVComponent : Component
     [DataField]
     public SoundSpecifier ToggleSound = new SoundCollectionSpecifier("valveSqueak");
 
+    /// <summary>Map key used for this TTV when displaying tanks on it, while being worn.</summary>
     [DataField]
-    public Dictionary<string, Vector2> SpriteOffsets { get; private set; }
+    public string ClothingMapKey = "ttv";
 }
 
 /// <summary>Raised on a gas tank to check whether it can react.</summary>
 [ByRefEvent]
 public record struct TTVTankUpdateAttemptEvent(EntityUid Tank, bool Cancelled = false);
+
+public enum TTVLayers : byte
+{
+    Valve,
+}

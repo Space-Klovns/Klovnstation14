@@ -1,7 +1,7 @@
     {
   "version": 1,
   "license": "CC-BY-SA-3.0",
-  "copyright": "Taken from https://github.com/tgstation/tgstation/blob/fde2eb31779b49a5494bf9f5bd59b4895da5b582/icons/obj/devices/assemblies.dmi",
+  "copyright": "Taken from https://github.com/tgstation/tgstation/ at commit fde2eb31779b49a5494bf9f5bd59b4895da5b582",
   "size": {
     "x": 32,
     "y": 32
@@ -42,6 +42,24 @@
     },
     {
       "name": "valve_cables"
+    },
+    {
+      "name": "ttv-inhand-left"
+    },
+    {
+      "name": "ttv-inhand-right"
+    },
+    {
+      "name": "ttv-BACKPACK"
+    },
+    {
+      "name": "ttvl-BACKPACK"
+    },
+    {
+      "name": "ttvlr-BACKPACK"
+    },
+    {
+      "name": "ttvr-BACKPACK"
     }
   ]
 }

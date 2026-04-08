@@ -1,6 +1,6 @@
 using Robust.Shared.Utility;
 
-namespace Content.Goobstation.Server.TTV;
+namespace Content.Goobstation.Server.Ordnance.TTV;
 
 
 /// <summary>Component for items that are compatible in a TTV.</summary>
