@@ -79,7 +79,7 @@
   - type: Construction
     graph: SurgeryGraph
     node: start
-    destructionNode: null
+    deconstructionTarget: null
   - type: ConstructionEdgeDialogue
     nodeNames:
     - OpenIncision
