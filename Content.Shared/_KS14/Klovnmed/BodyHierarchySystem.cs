@@ -35,7 +35,7 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
 
     private void OnOrganElementRemovingAttempt(Entity<OrganComponent> entity, ref ContainerIsRemovingAttemptEvent args)
     {
-        if (args.Container.ID != ContainerId)
+        if (args.Container.ID != ConstContainerId)
             return;
 
         // i just want contents to be visible not removable. Still interactable and whatnot doe
@@ -64,6 +64,7 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
         RaiseLocalEvent(addedEntity, ref ev);
 
         addedEntity.Comp.Container.ShowContents = true;
+        Dirty(addedEntity.Owner, Comp<ContainerManagerComponent>(addedEntity.Owner));
     }
 
     protected override void RemoveElementFromHierarchy(Entity<BodyComponent> hierarchyEntity, Entity<OrganComponent> removedEntity)
@@ -81,5 +82,6 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
         RaiseLocalEvent(removedEntity, ref ev);
 
         removedEntity.Comp.Container.ShowContents = false;
+        Dirty(removedEntity.Owner, Comp<ContainerManagerComponent>(removedEntity.Owner));
     }
 }

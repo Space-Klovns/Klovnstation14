@@ -56,6 +56,9 @@ public sealed class InventoryRequiresOrganSystem : EntitySystem
 
     private void OnOrganRemoved(Entity<InventoryRequiresOrganComponent> entity, ref OrganRemovedFromEvent args)
     {
+        if (TerminatingOrDeleted(entity))
+            return;
+
         foreach (var (slotId, requiredCategories) in entity.Comp.Categories)
         {
             if (!ShouldDisableSlot(requiredCategories, args.BodyComponent.PresentOrganCategories))
