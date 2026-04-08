@@ -38,5 +38,5 @@ public sealed partial class DismembermentByDamageComponent : Component
     public TimeSpan LastUpdate = TimeSpan.MinValue;
 
     [DataField, AutoNetworkedField, AutoPausedField]
-    public TimeSpan LastFuckup = TimeSpan.MinValue;
+    public TimeSpan NextFuckup = TimeSpan.MinValue;
 }

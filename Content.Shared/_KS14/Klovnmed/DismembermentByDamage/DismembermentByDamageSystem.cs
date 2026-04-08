@@ -23,7 +23,7 @@ public sealed class DismembermentByDamageSystem : EntitySystem
     /// <summary>
     ///     How much of the damage accumulated is lost every second.
     /// </summary>
-    public static readonly TimeSpan FuckupInterval = TimeSpan.FromSeconds(1);
+    public static readonly TimeSpan FuckupCooldown = TimeSpan.FromSeconds(1);
 
     public override void Initialize()
     {
@@ -60,7 +60,7 @@ public sealed class DismembermentByDamageSystem : EntitySystem
         entity.Comp.LastAccumulatedDamage = LazyEvaluateAccumulatedDamageSince(entity.Comp) + damageDelta;
         entity.Comp.LastUpdate = _gameTiming.CurTime;
 
-        if (_gameTiming.CurTime > entity.Comp.LastFuckup)
+        if (_gameTiming.CurTime > entity.Comp.NextFuckup)
             TryFuckUp(entity, args.Origin);
 
         Dirty(entity);
@@ -98,7 +98,7 @@ public sealed class DismembermentByDamageSystem : EntitySystem
         );
         _dismembermentSystem.DismemberPart(entity.Owner, predictedRandom.Pick(eligibleUids), direction: deltaUnit + predictedRandom.NextVector2(1.5f), throwSpeed: 12f, cause: origin, predictedRandom: predictedRandom);
 
-        entity.Comp.LastFuckup = _gameTiming.CurTime;
+        entity.Comp.NextFuckup = _gameTiming.CurTime + FuckupCooldown;
     }
 
     public static float LazyEvaluateAccumulatedDamage(float accumulatedDamage, float deltaTime)

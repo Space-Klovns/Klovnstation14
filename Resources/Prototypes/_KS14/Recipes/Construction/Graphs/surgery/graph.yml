@@ -78,7 +78,7 @@
     - to: Close Ribcage
       steps:
       - tool: Cauterisation
-        doAfter: 6.5
+        doAfter: 1
 
     ## Limb removal edges
     - to: Cut Heart out
