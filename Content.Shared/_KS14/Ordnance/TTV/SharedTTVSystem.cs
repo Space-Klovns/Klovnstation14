@@ -1,13 +1,12 @@
-using Content.Goobstation.Server.Ordnance.TTV;
+using Content.Server._KS14.Ordnance.TTV;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Database;
 using Content.Shared.Examine;
-using Content.Shared.Interaction;
 using Content.Shared.Interaction.Events;
 using Robust.Shared.Audio.Systems;
 
-namespace Content.Goobstation.Shared.Ordnance.TTV;
+namespace Content.Shared._KS14.Ordnance.TTV;
 
 public abstract class SharedTTVSystem : EntitySystem
 {
@@ -52,5 +51,10 @@ public abstract class SharedTTVSystem : EntitySystem
             $"{ToPrettyString(args.User):player} {(open ? "opened" : "closed")} TTV {ToPrettyString(ttv)}");
 
         args.Handled = true;
+
+        if (open)
+            OnTTVOpen(ttv);
     }
+
+    protected virtual void OnTTVOpen(Entity<TTVComponent> ttv) { }
 }

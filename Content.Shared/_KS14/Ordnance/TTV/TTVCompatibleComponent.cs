@@ -1,7 +1,6 @@
 using Robust.Shared.Utility;
 
-namespace Content.Goobstation.Server.Ordnance.TTV;
-
+namespace Content.Server._KS14.Ordnance.TTV;
 
 /// <summary>Component for items that are compatible in a TTV.</summary>
 [RegisterComponent, ComponentProtoName("ttvCompatible")]

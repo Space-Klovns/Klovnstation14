@@ -11,7 +11,7 @@ using Robust.Shared.Audio.Systems;
 using Robust.Shared.Random;
 using Robust.Shared.Configuration;
 using Content.Shared.CCVar;
-using Content.Goobstation.Server.Ordnance.TTV; // Goobstation edit
+using Content.Server._KS14.Ordnance.TTV; // Goobstation edit
 
 namespace Content.Server.Atmos.EntitySystems
 {
@@ -55,16 +55,6 @@ namespace Content.Server.Atmos.EntitySystems
                 });
         }
 
-        // Goobstation edit start - TTV
-        private bool CanUpdate(EntityUid uid)
-        {
-            TTVTankUpdateAttemptEvent ev = new(uid);
-            RaiseLocalEvent(ref ev);
-
-            return ev.Cancelled;
-        }
-        // Goobstation edit end - TTV
-
         private void OnParentChange(EntityUid uid, GasTankComponent component, ref EntParentChangedMessage args)
         {
             // When an item is moved from hands -> pockets, the container removal briefly dumps the item on the floor.
@@ -88,10 +78,6 @@ namespace Content.Server.Atmos.EntitySystems
             while (query.MoveNext(out var uid, out var comp))
             {
                 var gasTank = (uid, comp);
-                // Goobstation start - TTVs
-                if (!CanUpdate(uid))
-                    continue;
-                // Goobstation end - TTVs
                 if (comp.IsValveOpen && !comp.IsLowPressure && comp.OutputPressure > 0)
                 {
                     ReleaseGas(gasTank);
@@ -171,10 +157,6 @@ namespace Content.Server.Atmos.EntitySystems
         public void CheckStatus(Entity<GasTankComponent> ent)
         {
             var (owner, component) = ent;
-            // Goobstation start - TTVs
-            if (!CanUpdate(owner))
-                return;
-            // Goobstation end - TTVs
             if (component.Air == null)
                 return;
 

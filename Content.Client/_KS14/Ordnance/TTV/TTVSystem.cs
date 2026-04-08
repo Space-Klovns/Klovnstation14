@@ -1,6 +1,5 @@
-using Content.Client.Items.Systems;
-using Content.Goobstation.Server.Ordnance.TTV;
-using Content.Goobstation.Shared.Ordnance.TTV;
+using Content.Server._KS14.Ordnance.TTV;
+using Content.Shared._KS14.Ordnance.TTV;
 using Content.Shared.Clothing.Components;
 using Content.Shared.Clothing.EntitySystems;
 using Content.Shared.Containers.ItemSlots;
@@ -8,7 +7,7 @@ using Robust.Client.GameObjects;
 using Robust.Shared.Containers;
 using Robust.Shared.Utility;
 
-namespace Content.Goobstation.Client.Ordnance.TTV;
+namespace Content.Client._KS14.Ordnance.TTV;
 
 public sealed class TTVSystem : SharedTTVSystem
 {

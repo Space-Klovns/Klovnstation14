@@ -69,7 +69,7 @@
     sprite: Objects/Tanks/oxygen.rsi
   - type: Clothing
     sprite: Objects/Tanks/oxygen.rsi
-  - type: ttvCompatible # Goobstation - TTV
+  - type: ttvCompatible # KS14: TTVs
     sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
     state: oxygen
 
@@ -85,7 +85,7 @@
     sprite: Objects/Tanks/red.rsi
   - type: Clothing
     sprite: Objects/Tanks/red.rsi
-  - type: ttvCompatible # Goobstation - TTV
+  - type: ttvCompatible # KS14: TTVs
     sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
     state: nitrogen
 
@@ -120,7 +120,7 @@
   - type: PhysicalComposition
     materialComposition:
       Steel: 100
-  - type: ttvCompatible # Goobstation - TTV
+  - type: ttvCompatible # KS14: TTVs
     sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
     state: emergency
 
@@ -139,7 +139,7 @@
       sprite: Objects/Tanks/emergency_red.rsi
   - type: Clothing
     sprite: Objects/Tanks/emergency_red.rsi
-  - type: ttvCompatible # Goobstation - TTV
+  - type: ttvCompatible # KS14: TTVs
     sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
     state: emergency
 
@@ -162,7 +162,7 @@
       temperature: 293.15
   - type: Clothing
     sprite: Objects/Tanks/emergency_extended.rsi
-  - type: ttvCompatible # Goobstation - TTV
+  - type: ttvCompatible # KS14: TTVs
     sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
     state: emergency_engi
 
@@ -181,7 +181,7 @@
       sprite: Objects/Tanks/emergency_extended_red.rsi
   - type: Clothing
     sprite: Objects/Tanks/emergency_extended_red.rsi
-  - type: ttvCompatible # Goobstation - TTV
+  - type: ttvCompatible # KS14: TTVs
     sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
     state: emergency_engi
 
@@ -209,7 +209,7 @@
     damage:
       types:
         Blunt: 7.5
-  - type: ttvCompatible # Goobstation - TTV
+  - type: ttvCompatible # KS14: TTVs
     sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
     state: emergency_double
 
@@ -228,7 +228,7 @@
       sprite: Objects/Tanks/emergency_double_red.rsi
   - type: Clothing
     sprite: Objects/Tanks/emergency_double_red.rsi
-  - type: ttvCompatible # Goobstation - TTV
+  - type: ttvCompatible # KS14: TTVs
     sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
     state: emergency_double
 
@@ -247,7 +247,7 @@
       sprite: Objects/Tanks/emergency_clown.rsi
   - type: Clothing
     sprite: Objects/Tanks/emergency_clown.rsi
-  - type: ttvCompatible # Goobstation - TTV
+  - type: ttvCompatible # KS14: TTVs
     sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
     state: emergency
 
@@ -260,9 +260,9 @@
   - type: GasTank
     outputPressure: 101.3
   - type: Tag
-    tags: # Goobstation - TTV
+    tags: # KS14: TTVs
     - GasTank
-  - type: ttvCompatible # Goobstation - TTV
+  - type: ttvCompatible # KS14: TTVs
     sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
     state: generic
 
@@ -281,9 +281,9 @@
   - type: Clothing
     sprite: Objects/Tanks/anesthetic.rsi
   - type: Tag
-    tags: # Goobstation - TTV
+    tags: # KS14: TTVs
     - GasTank
-  - type: ttvCompatible # Goobstation - TTV
+  - type: ttvCompatible # KS14: TTVs
     sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
     state: anesthetic
 
@@ -305,6 +305,6 @@
     slots:
     - Belt
     - suitStorage
-  - type: ttvCompatible # Goobstation - TTV
+  - type: ttvCompatible # KS14: TTVs
     sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
     state: plasma

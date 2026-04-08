@@ -1,7 +1,7 @@
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 
-namespace Content.Goobstation.Server.Ordnance.TTV;
+namespace Content.Server._KS14.Ordnance.TTV;
 
 /// <summary>A tank-transfer valve that can hold multiple itemslots.</summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
@@ -23,10 +23,6 @@ public sealed partial class TTVComponent : Component
     [DataField]
     public string ClothingMapKey = "ttv";
 }
-
-/// <summary>Raised on a gas tank to check whether it can react.</summary>
-[ByRefEvent]
-public record struct TTVTankUpdateAttemptEvent(EntityUid Tank, bool Cancelled = false);
 
 public enum TTVLayers : byte
 {
