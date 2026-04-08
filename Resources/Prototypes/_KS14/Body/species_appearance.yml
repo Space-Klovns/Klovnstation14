@@ -1,0 +1,50 @@
+- type: entity
+  id: ComplexBodyBase
+  abstract: true
+  save: false
+  components:
+  - type: Construction
+    graph: SurgeryGraph
+    node: start
+    deconstructionTarget: null
+  - type: ConstructionEdgeDialogue
+    nodeNames:
+    - OpenIncision
+    - Saw open ribcage
+    blacklistedTargets:
+    - start
+  - type: WormWithoutOrgans
+    categories:
+    - FootLeft
+    - FootRight
+  - type: InventoryRequiresOrgan
+    categories:
+      gloves:
+      - HandLeft
+      - HandRight
+      shoes:
+      - FootLeft
+      - FootRight
+      ears:
+      - Ears
+      eyes:
+      - Head
+      mask:
+      - Head
+      head:
+      - Head
+  - type: RequiresOrganToSee
+    category: Eyes
+  - type: DismembermentByDamage
+    accumulatedDamageThreshold: 180
+    deltaDamageThreshold: 10.5
+    damageProtoId: Piercing
+    organCategories:
+    - ArmLeft
+    - ArmRight
+    - LegLeft
+    - LegRight
+    - HandLeft
+    - HandRight
+    - FootLeft
+    - FootRight

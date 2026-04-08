@@ -1,4 +1,13 @@
 - type: entity
+  id: KsBaseBodyEntity
+  abstract: true
+  components:
+  - type: ContainerContainer
+    containers:
+      body_organs: !type:Container
+        showEnts: False
+
+- type: entity
   id: KsBaseOrganSquishy
   abstract: true
   components:
