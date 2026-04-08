@@ -69,6 +69,9 @@
     sprite: Objects/Tanks/oxygen.rsi
   - type: Clothing
     sprite: Objects/Tanks/oxygen.rsi
+  - type: ttvCompatible # Goobstation - TTV
+    sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
+    state: oxygen
 
 - type: entity
   parent: GasTankRoundBase
@@ -82,6 +85,9 @@
     sprite: Objects/Tanks/red.rsi
   - type: Clothing
     sprite: Objects/Tanks/red.rsi
+  - type: ttvCompatible # Goobstation - TTV
+    sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
+    state: nitrogen
 
 - type: entity
   parent: GasTankRoundBase
@@ -114,6 +120,9 @@
   - type: PhysicalComposition
     materialComposition:
       Steel: 100
+  - type: ttvCompatible # Goobstation - TTV
+    sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
+    state: emergency
 
 - type: entity
   parent: EmergencyOxygenTank
@@ -130,6 +139,9 @@
       sprite: Objects/Tanks/emergency_red.rsi
   - type: Clothing
     sprite: Objects/Tanks/emergency_red.rsi
+  - type: ttvCompatible # Goobstation - TTV
+    sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
+    state: emergency
 
 - type: entity
   parent: EmergencyOxygenTank
@@ -150,6 +162,9 @@
       temperature: 293.15
   - type: Clothing
     sprite: Objects/Tanks/emergency_extended.rsi
+  - type: ttvCompatible # Goobstation - TTV
+    sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
+    state: emergency_engi
 
 - type: entity
   parent: ExtendedEmergencyOxygenTank
@@ -166,6 +181,9 @@
       sprite: Objects/Tanks/emergency_extended_red.rsi
   - type: Clothing
     sprite: Objects/Tanks/emergency_extended_red.rsi
+  - type: ttvCompatible # Goobstation - TTV
+    sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
+    state: emergency_engi
 
 - type: entity
   parent: ExtendedEmergencyOxygenTank
@@ -191,6 +209,9 @@
     damage:
       types:
         Blunt: 7.5
+  - type: ttvCompatible # Goobstation - TTV
+    sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
+    state: emergency_double
 
 - type: entity
   parent: DoubleEmergencyOxygenTank
@@ -207,6 +228,9 @@
       sprite: Objects/Tanks/emergency_double_red.rsi
   - type: Clothing
     sprite: Objects/Tanks/emergency_double_red.rsi
+  - type: ttvCompatible # Goobstation - TTV
+    sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
+    state: emergency_double
 
 - type: entity
   parent: EmergencyOxygenTank
@@ -223,6 +247,9 @@
       sprite: Objects/Tanks/emergency_clown.rsi
   - type: Clothing
     sprite: Objects/Tanks/emergency_clown.rsi
+  - type: ttvCompatible # Goobstation - TTV
+    sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
+    state: emergency
 
 - type: entity
   parent: GasTankRoundBase
@@ -232,6 +259,12 @@
   components:
   - type: GasTank
     outputPressure: 101.3
+  - type: Tag
+    tags: # Goobstation - TTV
+    - GasTank
+  - type: ttvCompatible # Goobstation - TTV
+    sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
+    state: generic
 
 - type: entity
   parent: GasTankRoundBase
@@ -247,6 +280,12 @@
     outputPressure: 30.4
   - type: Clothing
     sprite: Objects/Tanks/anesthetic.rsi
+  - type: Tag
+    tags: # Goobstation - TTV
+    - GasTank
+  - type: ttvCompatible # Goobstation - TTV
+    sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
+    state: anesthetic
 
 - type: entity
   # it's a square so no rolling dough
@@ -266,3 +305,6 @@
     slots:
     - Belt
     - suitStorage
+  - type: ttvCompatible # Goobstation - TTV
+    sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
+    state: plasma

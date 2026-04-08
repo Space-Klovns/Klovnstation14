@@ -1,0 +1,68 @@
+- type: entity
+  parent: BaseItem
+  id: TankTransferValve
+  name: tank transfer valve
+  description: Cuban Pete sends his regards.
+  components:
+  - type: Sprite
+    sprite: _Goobstation/Objects/Weapons/Bombs/ttv.rsi
+    state: valve
+  - type: Item
+    size: Ginormous
+  - type: TTV
+    spriteOffsets:
+      left: 0,0
+      right: -0.48,0
+  - type: UseDelay
+    delay: 1
+  - type: Explosive
+    explosionType: Thermobaric
+    maxIntensity: 60
+  - type: ItemSlots
+    slots:
+      left:
+        name: Left tank
+        whitelist:
+          tags:
+          - GasTank
+      right:
+        name: Right tank
+        whitelist:
+          tags:
+          - GasTank
+  - type: Appearance
+
+- type: entity
+  parent: TankTransferValve
+  id: SanabiTransferValve
+  name: sanabi transfer valve
+  description: Holy shit...
+  components:
+  - type: TTV
+    spriteOffsets:
+      left: 0,0
+      right: -0.5,0
+      bottom: -0.25,-0.2
+      top: -0.25,0.2
+  - type: ItemSlots
+    slots:
+      left:
+        name: Left tank
+        whitelist:
+          tags:
+          - GasTank
+      right:
+        name: Right tank
+        whitelist:
+          tags:
+          - GasTank
+      bottom:
+        name: Lower tank
+        whitelist:
+          tags:
+          - GasTank
+      top:
+        name: Upper tank
+        whitelist:
+          tags:
+          - GasTank
