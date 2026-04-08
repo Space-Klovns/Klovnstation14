@@ -32,12 +32,17 @@
   - type: Item
     sprite: Objects/Specific/Medical/Surgery/cautery.rsi
     storedRotation: 90
+  - type: Tool # KS14
+    qualities:
+    - Cauterisation
+    useSound:
+      path: /Audio/_KS14/Handling/surgery/cautery1.ogg
   - type: MeleeWeapon
     damage:
        types:
         Heat: 5
     soundHit:
-      path: /Audio/_KS14/Handling/surgery/cautery2.ogg
+      collection: KsSurgeryCautery # KS14
 
 # Drill
 
@@ -72,12 +77,13 @@
   parent: BaseToolSurgery
   description: A surgical tool used to make incisions into flesh.
   components:
-  - type: Sharp
-    butcherDelayModifier: 1.5 # Butchering with a scalpel, regardless of the type, will take 50% longer
+  # KS14: Removed sharp
   - type: Tool
     qualities:
-    - Slicing
-    speedModifier: 0.66 # pretend the sixes go on forever :)
+    - Incision # KS14: incision
+    # KS14: Removed speed modifier
+    useSound: # KS14
+      path: /Audio/_KS14/Handling/surgery/scalpel2.ogg
   - type: Utensil
     types:
       - Knife
@@ -95,7 +101,7 @@
       types:
         Slash: 8
     soundHit:
-      path: /Audio/_KS14/Handling/surgery/scalpel1.ogg
+      collection: KsSurgeryScalpel # KS14
 
 - type: entity
   name: shiv
@@ -105,6 +111,8 @@
   components:
   - type: Sprite
     state: shiv
+  - type: Tool # KS14
+    speedModifier: 0.45
   - type: Item
     heldPrefix: shiv
   - type: Fixtures
@@ -129,6 +137,8 @@
     state: advanced
   - type: Item
     heldPrefix: advanced
+  - type: Tool # KS14
+    speedModifier: 1.5
   - type: MeleeWeapon
     damage:
       types:
@@ -142,6 +152,8 @@
   components:
   - type: Sprite
     state: laser
+  - type: Tool # KS14
+    speedModifier: 2
   - type: Item
     heldPrefix: laser
 

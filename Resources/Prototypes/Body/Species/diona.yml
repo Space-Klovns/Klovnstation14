@@ -51,19 +51,17 @@
       entity: OrganDionaHead
       children:
       - category: Brain
-        entity: OrganDionaBrainNymphing
+        entity: OrganDionaBrain
       - category: Eyes
         entity: OrganDionaEyes
-      - category: Tongue
-        entity: OrganDionaTongue
 
     - category: Torso # torso
       entity: OrganDionaTorso
       children:
       - category: Lungs
-        entity: OrganDionaLungsNymphing
+        entity: OrganDionaLungs
       - category: Stomach
-        entity: OrganDionaStomachNymphing
+        entity: OrganDionaStomach
 
     - category: ArmLeft # arm
       entity: OrganDionaArmLeft

@@ -54,34 +54,34 @@
   - type: InitialBody # KS14: Re-arranged
     organs:
     - category: Head # head
-      entity: OrganSkeletonHead
+      entity: OrganSkeletonPersonHead
 
     - category: Torso # torso
-      entity: OrganSkeletonTorso
+      entity: OrganSkeletonPersonTorso
 
     - category: ArmLeft # arm
-      entity: OrganSkeletonArmLeft
+      entity: OrganSkeletonPersonArmLeft
       children:
       - category: HandLeft
-        entity: OrganSkeletonHandLeft
+        entity: OrganSkeletonPersonHandLeft
 
     - category: ArmRight # arm
-      entity: OrganSkeletonArmRight
+      entity: OrganSkeletonPersonArmRight
       children:
       - category: HandRight
-        entity: OrganSkeletonHandRight
+        entity: OrganSkeletonPersonHandRight
 
     - category: LegLeft # leg
-      entity: OrganSkeletonLegLeft
+      entity: OrganSkeletonPersonLegLeft
       children:
       - category: FootLeft
-        entity: OrganSkeletonFootLeft
+        entity: OrganSkeletonPersonFootLeft
 
     - category: LegRight # leg
-      entity: OrganSkeletonLegRight
+      entity: OrganSkeletonPersonLegRight
       children:
       - category: FootRight
-        entity: OrganSkeletonFootRight
+        entity: OrganSkeletonPersonFootRight
   - type: HumanoidProfile
     species: Skeleton
 

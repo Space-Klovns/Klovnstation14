@@ -1,0 +1,10 @@
+- type: entity
+  id: KsBaseOrganSquishy
+  abstract: true
+  components:
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      collection: KsHandlingOrgan
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      collection: KsHandlingOrgan

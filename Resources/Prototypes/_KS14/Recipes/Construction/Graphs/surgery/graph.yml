@@ -7,14 +7,22 @@
     - to: OpenIncision # Start surgery -> Incision
       steps:
       - tool: Slicing
-        doAfter: 3
+        doAfter: 8 # use the proper tool smh
+    - to: OpenIncision # Start surgery -> Incision
+      steps:
+      - tool: Incision
+        doAfter: 5
   - node: OpenIncision # Incision
     edges:
     # Cauterise to stop surgery early
     - to: start
       steps:
       - tool: Welding
-        doAfter: 1.5
+        doAfter: 6.5
+    - to: start
+      steps:
+      - tool: Cauterisation
+        doAfter: 2.5
 
     ## Limb removal edges
     - to: Remove Head # Incision -> Cut head
