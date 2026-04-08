@@ -25,4 +25,4 @@
     containers:
       storagebase: !type:AllSelector
         children:
-        - id: SpaceCash10000
+        - id: SpaceCash5000
