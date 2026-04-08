@@ -239,7 +239,7 @@
       - RFoot
 
 - type: entity
-  parent: [ OrganBase, KsBaseOrganSquishy ] # KS14: Added KsBaseOrganSquishy to parents
+  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
   id: OrganBaseBrain
   name: brain
   abstract: true
@@ -288,7 +288,7 @@
       - Eyes
 
 - type: entity
-  parent: [ OrganBase, KsBaseOrganSquishy ] # KS14: Added KsBaseOrganSquishy to parents
+  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
   id: OrganBaseTongue
   name: tongue
   abstract: true
@@ -301,7 +301,7 @@
     - state: tongue
 
 - type: entity
-  parent: [ OrganBase, KsBaseOrganSquishy ] # KS14: Added KsBaseOrganSquishy to parents
+  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
   id: OrganBaseAppendix
   name: appendix
   abstract: true
@@ -327,7 +327,7 @@
     - state: ears
 
 - type: entity
-  parent: [ OrganBase, KsBaseOrganSquishy ] # KS14: Added KsBaseOrganSquishy to parents
+  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
   id: OrganBaseLungs
   name: lungs
   abstract: true
@@ -352,7 +352,7 @@
     heldPrefix: lungs
 
 - type: entity
-  parent: [ OrganBase, KsBaseOrganSquishy ] # KS14: Added KsBaseOrganSquishy to parents
+  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
   id: OrganBaseHeart
   name: heart
   abstract: true
@@ -368,7 +368,7 @@
     stages: [ Bloodstream ]
 
 - type: entity
-  parent: [ OrganBase, KsBaseOrganSquishy ] # KS14: Added KsBaseOrganSquishy to parents
+  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
   id: OrganBaseStomach
   name: stomach
   abstract: true
@@ -391,7 +391,7 @@
     heldPrefix: stomach
 
 - type: entity
-  parent: [ OrganBase, KsBaseOrganSquishy ] # KS14: Added KsBaseOrganSquishy to parents
+  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
   id: OrganBaseLiver
   name: liver
   abstract: true
@@ -409,7 +409,7 @@
     stages: [ Metabolites ]
 
 - type: entity
-  parent: [ OrganBase, KsBaseOrganSquishy ] # KS14: Added KsBaseOrganSquishy to parents
+  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
   id: OrganBaseKidneys
   name: kidneys
   abstract: true

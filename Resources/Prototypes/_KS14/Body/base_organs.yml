@@ -5,6 +5,10 @@
   - type: EmitSoundOnPickup # KS14: pickup/drop sounds
     sound:
       collection: KsHandlingOrgan
+      params:
+        volume: -5
   - type: EmitSoundOnDrop # KS14: pickup/drop sounds
     sound:
       collection: KsHandlingOrgan
+      params:
+        volume: -5

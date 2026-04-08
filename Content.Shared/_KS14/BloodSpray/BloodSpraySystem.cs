@@ -26,6 +26,7 @@ public sealed class BloodSpraySystem : EntitySystem
     [Dependency] private readonly EntityLookupSystem _lookupSystem = default!; // KS14 Addition
     [Dependency] private readonly RayCastSystem _rayCastSystem = default!; // KS14 Addition
 
+    private static readonly QueryFilter StaticQueryFilter = new() { LayerBits = 1L, Flags = QueryFlags.Static, MaskBits = (long)CollisionGroup.Impassable };
     private static readonly Vector2 DecalOffset = Vector2.One / 2; // KS14 Addition; this is related to texture size of the blood splatter.
 
     public void HandleBleedEffects(Entity<BloodstreamComponent?> entity, DamageSpecifier bloodlossSpecifier, EntityUid originUid)
@@ -52,7 +53,7 @@ public sealed class BloodSpraySystem : EntitySystem
     public void HandleBleedEffects(Entity<BloodstreamComponent> entity, float bloodloss, TransformComponent targetTransform, EntityUid parentUid, Vector2 worldDeltaUnit)
     {
         // it shouldnt be 0 ever anyway
-        if (bloodloss <= 0.5f)
+        if (bloodloss <= 5f)
             return;
 
         if (!_solutionContainerSystem.ResolveSolution(entity.Owner, entity.Comp.BloodSolutionName, ref entity.Comp.BloodSolution, out var bloodSolution))
@@ -63,10 +64,10 @@ public sealed class BloodSpraySystem : EntitySystem
         var parentInvWorldMatrix = _transformSystem.GetInvWorldMatrix(parentUid);
 
         var bloodColor = bloodSolution.GetColor(_prototypeManager);
-        bloodColor = bloodColor.WithAlpha(bloodColor.A * predictedRandom.NextFloat(0.28f, 0.2206761f)); // random alpha
+        bloodColor = bloodColor.WithAlpha(bloodColor.A * predictedRandom.NextFloat(0.12f, 0.2f)); // random alpha
 
         const float maxPower = 1.75f;
-        var power = MathF.Max(maxPower * (1f - MathF.Exp(-bloodloss / 6f)), 0f);
+        var power = MathF.Max(maxPower * (1f - MathF.Exp(-bloodloss / 7.8f)), 0f);
 
         const float iterationDelta = 0.25f;
         var iteratedPower = (int)(power / iterationDelta);
@@ -92,7 +93,7 @@ public sealed class BloodSpraySystem : EntitySystem
             ref rayResult,
             targetTransform.LocalPosition,
             localDeltaUnit * power + totalVariation,
-            new QueryFilter() { LayerBits = 1L, Flags = QueryFlags.Static, MaskBits = (long)CollisionGroup.Impassable }
+            StaticQueryFilter
         );
 
         EntityCoordinates effectCoordinates;
@@ -103,6 +104,7 @@ public sealed class BloodSpraySystem : EntitySystem
             // docs for RayHit lie because RayHit.Point isnt the *caller* changing it to local terms, but instead the code constructing it; it is also local to the hit entity's parent(? TODO: confirm that assumption)
             // tldr `hitData.Point` is local to `hitData.Entity`'s ParentUid
             effectCoordinates = new(targetTransform.ParentUid /* it should just be the hitdatas hit entitys transforms parentuid, but im GIGA LAZY. TODO LCDC FIX ALL THIS SHITT */, hitData.Point);
+            localDeltaUnit *= -1; // it should go other way
         }
         else
             effectCoordinates = new EntityCoordinates(targetTransform.ParentUid, targetTransform.LocalPosition);
@@ -117,7 +119,7 @@ public sealed class BloodSpraySystem : EntitySystem
             accumulatedVariation += cachedVariations[intpower];
             _decalSystem.TryAddDecal(
                 "splatter",
-                effectCoordinates.WithPosition(effectCoordinates.Position + accumulatedVariation - DecalOffset - localDeltaUnit * power),
+                effectCoordinates.WithPosition(effectCoordinates.Position + accumulatedVariation - DecalOffset + localDeltaUnit * power),
                 out _,
                 color: bloodColor,
                 rotation: predictedRandom.NextAngle(),

@@ -59,7 +59,6 @@ public sealed class HealthExaminableSystem : EntitySystem
     public FormattedMessage CreateMarkup(EntityUid uid, HealthExaminableComponent component, DamageableComponent damage)
     {
         var msg = new FormattedMessage();
-        msg.PushNewline(); // KS14, for aesthetic purpose
         var anythingHappened = false; // KS14
 
         // KS14: removed `first`
@@ -96,15 +95,15 @@ public sealed class HealthExaminableSystem : EntitySystem
 
             // KS14: removed `first`
 
-            msg.AddMarkupOrThrow(chosenLocStr);
             msg.PushNewline(); // KS14
+            msg.AddMarkupOrThrow(chosenLocStr);
             anythingHappened = true; // KS14
         }
 
         if (!anythingHappened) // KS14: Check anythingHappened instead of msg.IsEmpty
         {
-            msg.AddMarkupOrThrow(Loc.GetString($"health-examinable-{component.LocPrefix}-none"));
             msg.PushNewline(); // KS14
+            msg.AddMarkupOrThrow(Loc.GetString($"health-examinable-{component.LocPrefix}-none"));
         }
 
         // Anything else want to add on to this?

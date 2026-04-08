@@ -1,7 +1,7 @@
 - type: tool
   id: Incision
-  name: tool-quality-Incision-name
-  toolName: tool-quality-Incision-tool-name
+  name: tool-quality-incision-name
+  toolName: tool-quality-incision-tool-name
   spawn: Scalpel
 
 - type: tool

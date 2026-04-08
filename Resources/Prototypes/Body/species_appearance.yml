@@ -83,6 +83,7 @@
   - type: ConstructionEdgeDialogue
     nodeNames:
     - OpenIncision
+    - Saw open ribcage
     blacklistedTargets:
     - start
   - type: WormWithoutOrgans
@@ -107,6 +108,19 @@
       - Head
   - type: RequiresOrganToSee
     category: Eyes
+  - type: DismembermentByDamage
+    accumulatedDamageThreshold: 180
+    deltaDamageThreshold: 10.5
+    damageProtoId: Piercing
+    organCategories:
+    - ArmLeft
+    - ArmRight
+    - LegLeft
+    - LegRight
+    - HandLeft
+    - HandRight
+    - FootLeft
+    - FootRight
 
 - type: entity
   id: BaseSpeciesAppearance

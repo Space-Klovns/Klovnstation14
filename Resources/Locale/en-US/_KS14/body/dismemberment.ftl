@@ -6,6 +6,7 @@ ks-body-component-dismembered = [color=#EB4034]{ CAPITALIZE(POSS-ADJ($target)) }
 ks-body-component-dismemberedcategory-Torso = torso is somehow
 ks-body-component-dismemberedcategory-Head = head is
 ks-body-component-dismemberedcategory-Ears = ears are
+ks-body-component-dismemberedcategory-Eyes = eyes are
 
 ks-body-component-dismemberedcategory-ArmLeft = left arm is
 ks-body-component-dismemberedcategory-ArmRight = right arm is

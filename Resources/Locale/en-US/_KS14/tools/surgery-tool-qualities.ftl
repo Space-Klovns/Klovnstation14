@@ -1,4 +1,4 @@
-tool-quality-incision-name = incision
+tool-quality-incision-name = Incision
 tool-quality-incision-tool-name = Scalpel
 
 tool-quality-cauterisation-name = Cauterisation

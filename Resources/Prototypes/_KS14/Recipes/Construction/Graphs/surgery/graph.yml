@@ -7,11 +7,11 @@
     - to: OpenIncision # Start surgery -> Incision
       steps:
       - tool: Slicing
-        doAfter: 8 # use the proper tool smh
+        doAfter: 12 # use the proper tool smh
     - to: OpenIncision # Start surgery -> Incision
       steps:
       - tool: Incision
-        doAfter: 5
+        doAfter: 3
   - node: OpenIncision # Incision
     edges:
     # Cauterise to stop surgery early
@@ -24,43 +24,82 @@
       - tool: Cauterisation
         doAfter: 2.5
 
+    # Open ribcage
+    - to: Saw open ribcage
+      steps:
+      - tool: Sawing
+        doAfter: 4
+
     ## Limb removal edges
-    - to: Remove Head # Incision -> Cut head
+    - to: Saw Head off # Incision -> Cut head
       conditions:
       - !type:HasOrgan
         category: Head
-      steps: &amputation_steps
-      - tool: Cutting
-        doAfter: 5
-    - to: Remove Ears # Incision -> Cut ears
+      steps:
+      - tool: Sawing
+        doAfter: 6.5
+    - to: Cut Ears off # Incision -> Cut ears
       conditions:
       - !type:HasOrgan
         category: Ears
-      steps: *amputation_steps
-    - to: Remove Eyes # Incision -> Cut ears
+      steps: &cutting_amputation_steps
+      - tool: Cutting
+        doAfter: 3
+    - to: Cut Eyes off # Incision -> Cut ears
       conditions:
       - !type:HasOrgan
         category: Eyes
-      steps: *amputation_steps
+      steps: *cutting_amputation_steps
     ##
-
   ## Limb removal nodes
-  - node: Remove Head # Cut head
+  - node: Saw Head off
     actions:
     - !type:TakeOrgan
       category: Head
     - !type:SetNode
       node: OpenIncision
-  - node: Remove Ears # Cut ears
+  - node: Cut Ears off
     actions:
     - !type:TakeOrgan
       category: Ears
     - !type:SetNode
       node: OpenIncision
-  - node: Remove Eyes # Cut eyes
+  - node: Cut Eyes off
     actions:
     - !type:TakeOrgan
       category: Eyes
     - !type:SetNode
       node: OpenIncision
+  ##
+
+  # Ribcage
+  - node: Saw open ribcage
+    edges:
+    - to: Close Ribcage
+      steps:
+      - tool: Cauterisation
+        doAfter: 6.5
+
+    ## Limb removal edges
+    - to: Cut Heart out
+      conditions:
+      - !type:HasOrgan
+        category: Heart
+      steps:
+      - tool: Incision
+        doAfter: 4.5
+    ##
+
+  - node: Close Ribcage
+    actions:
+    - !type:SetNode
+      node: OpenIncision
+
+  ## Limb removal nodes
+  - node: Cut Heart out
+    actions:
+    - !type:TakeOrgan
+      category: Heart
+    - !type:SetNode
+      node: Saw open ribcage
   ##

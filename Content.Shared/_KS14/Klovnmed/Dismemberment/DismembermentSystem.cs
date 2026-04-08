@@ -62,19 +62,26 @@ public sealed class DismembermentSystem : EntitySystem
             return false;
         }
 
-        var partTransform = Transform(partUid.Value);
-        _containerSystem.Remove(partUid.Value, _containerSystem.GetContainer(partTransform.ParentUid, BodyHierarchySystem.ConstContainerId), force: true, destination: bodyEntity.Comp2.Coordinates);
+        DismemberPart((bodyEntity.Owner, bodyEntity.Comp2), partUid.Value, direction: direction, throwSpeed: throwSpeed, cause: cause, predictedRandom: predictedRandom);
+        return true;
+    }
+
+    public void DismemberPart(Entity<TransformComponent?> bodyEntity, EntityUid partUid, Vector2? direction = null, float throwSpeed = 0f, EntityUid? cause = null, System.Random? predictedRandom = null)
+    {
+        if (!EntityManager.TransformQuery.Resolve(bodyEntity, ref bodyEntity.Comp))
+            return;
+
+        var partTransform = Transform(partUid);
+        _containerSystem.Remove(partUid, _containerSystem.GetContainer(partTransform.ParentUid, BodyHierarchySystem.ConstContainerId), force: true, destination: bodyEntity.Comp.Coordinates);
 
         if (throwSpeed != 0f)
         {
             direction ??= (predictedRandom ?? KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
                 (int)_gameTiming.CurTick.Value,
-                KsSharedRandomExtensions.GetNetId(partUid.Value, EntityManager)
+                KsSharedRandomExtensions.GetNetId(partUid, EntityManager)
             )).NextUnitVector2();
 
-            _throwingSystem.TryThrow(partUid.Value, direction.Value, baseThrowSpeed: throwSpeed, user: cause, recoil: false);
+            _throwingSystem.TryThrow(partUid, direction.Value, baseThrowSpeed: throwSpeed, user: cause, recoil: false);
         }
-
-        return true;
     }
 }
