@@ -18,5 +18,5 @@
 - type: Tag
   id: BorgModuleSecurity # KS14 - secborgs
 
-- type: tag # For TTVs
+- type: Tag # For TTVs
   id: GasTank

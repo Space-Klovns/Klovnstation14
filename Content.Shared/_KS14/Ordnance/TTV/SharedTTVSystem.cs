@@ -54,6 +54,8 @@ public abstract class SharedTTVSystem : EntitySystem
 
         if (open)
             OnTTVOpen(ttv);
+
+        Dirty(ttv);
     }
 
     protected virtual void OnTTVOpen(Entity<TTVComponent> ttv) { }

@@ -9,6 +9,17 @@ public sealed class TTVSystem : SharedTTVSystem
 {
     [Dependency] private readonly AtmosphereSystem _atmosphereSystem = default!;
 
+    public override void Initialize()
+    {
+        base.Initialize();
+        SubscribeLocalEvent<TTVComponent, GasAnalyzerScanEvent>(OnAnalyzed);
+    }
+
+    private void OnAnalyzed(Entity<TTVComponent> entity, ref GasAnalyzerScanEvent args)
+    {
+
+    }
+
     protected override void OnTTVOpen(Entity<TTVComponent> ttv)
     {
         base.OnTTVOpen(ttv);
