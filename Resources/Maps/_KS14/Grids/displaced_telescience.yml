@@ -1879,7 +1879,7 @@ entities:
   - uid: 11
     components:
     - type: MetaData
-      desc: An impossible object. Arcs flash between it and the telepad. There's a slight blue glow around it.
+      desc: An impossible object. Arcs flash between it and the telepad. There's a slight blue glow around it, reality distorting around it.
     - type: Transform
       pos: 2.5000086,-1.333174
       parent: 1
@@ -1900,8 +1900,6 @@ entities:
     - type: Anomaly
       skipMapInit: true
       healthChangePerSecond: 0.02
-      minPulseLength: 1500
-      maxPulseLength: 1800
       supercriticalSound: !type:SoundPathSpecifier
         params:
           variation: null
@@ -1926,7 +1924,6 @@ entities:
         path: /Audio/Ambience/ambiruin2.ogg
       minPointsPerSecond: 40
       maxPointsPerSecond: 170
-      growingPointMultiplier: 0
       corePrototype: AnomalyBluespace
       coreInertPrototype: MobAbomination
       animationTime: 7
