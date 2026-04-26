@@ -16,7 +16,6 @@ public abstract class SharedSignalSpeakerSystem : EntitySystem
     [Dependency] protected readonly SharedUserInterfaceSystem UserInterfaceSystem = default!;
     [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
     [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
-    [Dependency] private readonly INetManager _netManager = default!;
 
     public override void Initialize()
     {
