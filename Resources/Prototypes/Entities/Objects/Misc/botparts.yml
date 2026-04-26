@@ -2,7 +2,7 @@
   parent: BaseItem
   id: ProximitySensor
   name: proximity sensor
-  description: Senses moving things in close proximity and sends a signal when active. Can be remotely enabled with a signal, bypassing the timer.
+  description: Senses moving things in close proximity and sends a signal when active. Can be remotely enabled with a signal, bypassing the timer. #KS14 heavily modified
   components:
   - type: Sprite
     sprite: Objects/Misc/proximity_sensor.rsi

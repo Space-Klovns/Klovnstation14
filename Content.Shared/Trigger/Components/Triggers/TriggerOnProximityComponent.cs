@@ -1,5 +1,5 @@
 using Content.Shared.Physics;
-using Content.Shared.Trigger.Systems;
+using Content.Shared.Trigger.Systems; //KS14
 using Robust.Shared.GameStates;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
@@ -13,9 +13,10 @@ namespace Content.Shared.Trigger.Components.Triggers;
 /// The user is the entity that collided with the fixture.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
-[AutoGenerateComponentState(fieldDeltas: true), AutoGenerateComponentPause]
+[AutoGenerateComponentState(fieldDeltas: true), AutoGenerateComponentPause] //KS14
 public sealed partial class TriggerOnProximityComponent : BaseTriggerOnXComponent
 {
+    //KS14 start
     /// <summary>
     /// The keys that, upon being triggered, will enable the proximity trigger.
     /// If this shares a key with <see cref="DisablingKeysIn"/>, this trigger
@@ -39,6 +40,7 @@ public sealed partial class TriggerOnProximityComponent : BaseTriggerOnXComponen
     /// </summary>
     [DataField, AutoNetworkedField]
     public HashSet<string> TogglingKeysIn = new();
+    //KS14 end
 
     /// <summary>
     /// The ID if the fixture that is observed for collisions.
@@ -64,6 +66,7 @@ public sealed partial class TriggerOnProximityComponent : BaseTriggerOnXComponen
     [DataField, AutoNetworkedField]
     public TimeSpan AnimationDuration = TimeSpan.FromSeconds(0.6f);
 
+    //KS14 start
     /// <summary>
     /// Whether an unoccluded line of sight between the proximity trigger and any
     /// colliding objects is required for it to be triggered.
@@ -77,6 +80,7 @@ public sealed partial class TriggerOnProximityComponent : BaseTriggerOnXComponen
     /// </summary>
     [DataField, AutoNetworkedField]
     public bool Examinable = false;
+    //KS14 end
 
     /// <summary>
     /// Whether the entity needs to be anchored for the proximity to work.

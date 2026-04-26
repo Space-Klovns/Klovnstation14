@@ -197,7 +197,7 @@
         path: /Audio/Weapons/flash.ogg
     - type: FlashOnTrigger
       range: 3
-    - type: Physics
+    - type: Physics #KS14
       sleepingAllowed: false # should be inverse of whether the proximity trigger starts enabled
     - type: TriggerOnProximity
       enabled: true

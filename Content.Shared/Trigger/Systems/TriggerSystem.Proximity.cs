@@ -1,11 +1,13 @@
+//KS14 start
 using System.Numerics;
 using Content.Shared.Examine;
+//KS14 end
 using Content.Shared.Trigger.Components.Triggers;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Events;
 
 namespace Content.Shared.Trigger.Systems;
-
+// KS14 - basically all of this is KS14 shit ported from an old closed wizden PR by KS14 maint 87mhe. Itd be easier to comment what WASNT changed.
 public sealed partial class TriggerSystem
 {
     private void InitializeProximity()
@@ -15,10 +17,12 @@ public sealed partial class TriggerSystem
         SubscribeLocalEvent<TriggerOnProximityComponent, MapInitEvent>(OnMapInit);
         // Shouldn't need re-anchoring.
         SubscribeLocalEvent<TriggerOnProximityComponent, AnchorStateChangedEvent>(OnProximityAnchor);
+        //KS14 start
         SubscribeLocalEvent<TriggerOnProximityComponent, TriggerEvent>(OnProximityReceivingTrigger);
         SubscribeLocalEvent<TriggerOnProximityComponent, ExaminedEvent>(OnProximityExamined);
+        //KS14 end
     }
-
+    //KS14 start
     /// <summary>
     /// Gets the velocity of either an entity's grid, or itself if it is not on any grid.
     /// I.e., the velocity of the entity only relative to the map, unlike <see cref="PhysicsComponent.LinearVelocity"/>.
@@ -95,6 +99,7 @@ public sealed partial class TriggerSystem
 
         SetProximityAppearance(ent);
     }
+    //KS14 end
 
     private void OnProximityAnchor(Entity<TriggerOnProximityComponent> ent, ref AnchorStateChangedEvent args)
     {
@@ -107,12 +112,14 @@ public sealed partial class TriggerSystem
             ent.Comp.Colliding.Clear();
         }
         // Re-check for contacts as we cleared them.
+        //KS14 start
         else if (_physicsQuery.TryGetComponent(ent, out var body))
         {
             // It's enabled so don't let it sleep.
             UpdateProximityAwakeness((ent.Owner, body), false);
             _physics.RegenerateContacts((ent.Owner, body));
         }
+        //KS14 end
 
         Dirty(ent);
     }
@@ -123,11 +130,13 @@ public sealed partial class TriggerSystem
 
         SetProximityAppearance(ent);
 
+        //KS14 start
         if (!_physicsQuery.TryGetComponent(ent, out var body))
             return;
 
         // If its enabled dont let it sleep.
         UpdateProximityAwakeness((ent.Owner, body), !ent.Comp.Enabled);
+        //KS14 end
         _fixture.TryCreateFixture(
             ent.Owner,
             ent.Comp.Shape,
@@ -167,7 +176,7 @@ public sealed partial class TriggerSystem
         if (!ent.Comp.Repeating)
         {
             ent.Comp.Enabled = false;
-            UpdateProximityAwakeness(ent.Owner, true);
+            UpdateProximityAwakeness(ent.Owner, true); //KS14
 
             ent.Comp.Colliding.Clear();
         }
@@ -199,10 +208,10 @@ public sealed partial class TriggerSystem
                 Dirty(uid, trigger);
                 SetProximityAppearance((uid, trigger));
             }
-
-            var colliding = trigger.Colliding;
+            var colliding = trigger.Colliding; //KS14
 
             // Continue if we're disabled, on cooldown, or the list of colliding objects is empty.
+            //KS14 start
             if (!trigger.Enabled ||
                 curTime < trigger.NextTrigger ||
                 colliding.Count == 0)
@@ -215,7 +224,7 @@ public sealed partial class TriggerSystem
             var triggerSpeed = trigger.TriggerSpeed;
 
             // Check for anything colliding and moving fast enough, relative to us.
-            foreach (var (collidingUid, collidingPhysics) in colliding)
+            foreach (var (collidingUid, collidingPhysics) in colliding) 
             {
                 if (TerminatingOrDeleted(collidingUid))
                     continue;
@@ -230,6 +239,7 @@ public sealed partial class TriggerSystem
                 Activate((uid, trigger), collidingUid);
                 break;
             }
+            //KS14 end
         }
     }
 }
