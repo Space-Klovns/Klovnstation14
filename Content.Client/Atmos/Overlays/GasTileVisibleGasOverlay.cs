@@ -41,10 +41,10 @@ public sealed class GasTileVisibleGasOverlay : Overlay
     // Gas overlays
     private readonly float[] _timer;
     private readonly float[][] _frameDelays;
-    public /* KS14: Made public */ readonly int[] _frameCounter;
+    public /* KS14: Canister overlay: made public */  readonly int[] _frameCounter;
 
     // TODO combine textures into a single texture atlas.
-    public /* KS14: Made public */ readonly Texture[][] _frames;
+    public /* KS14: Canister overlay: made public */  readonly Texture[][] _frames;
 
     private readonly int _gasCount;
 

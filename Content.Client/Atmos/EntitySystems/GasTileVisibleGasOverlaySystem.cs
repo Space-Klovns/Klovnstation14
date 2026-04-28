@@ -1,4 +1,3 @@
-using Content.Client._KS14.CanisterOverlay; // KS14
 using Content.Client.Atmos.Overlays;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
@@ -12,26 +11,23 @@ namespace Content.Client.Atmos.EntitySystems;
 public sealed class GasTileVisibleGasOverlaySystem : EntitySystem
 {
     [Dependency] private readonly IOverlayManager _overlayMan = default!;
+    [Dependency] private readonly _KS14.CanisterOverlay.CanisterOverlaySystem _canisterOverlaySystem = default!; // KS14: Canister overlay
 
     private GasTileVisibleGasOverlay _visibleGasOverlay = default!;
-    private CanisterOverlay _canisterOverlay = default!; // KS14
 
     public override void Initialize()
     {
         base.Initialize();
 
         _visibleGasOverlay = new GasTileVisibleGasOverlay();
+        _canisterOverlaySystem.AddOverlay(_visibleGasOverlay); // KS14: Canister overlay
         _overlayMan.AddOverlay(_visibleGasOverlay);
-
-        _canisterOverlay = new CanisterOverlay(_visibleGasOverlay); // KS14
-        _overlayMan.AddOverlay(_canisterOverlay); // KS14
     }
 
     public override void Shutdown()
     {
         base.Shutdown();
         _overlayMan.RemoveOverlay<GasTileVisibleGasOverlay>();
-        _overlayMan.RemoveOverlay<CanisterOverlay>(); // KS14
     }
 
 }

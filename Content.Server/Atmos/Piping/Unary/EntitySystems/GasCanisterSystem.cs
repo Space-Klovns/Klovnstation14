@@ -18,6 +18,7 @@ public sealed class GasCanisterSystem : SharedGasCanisterSystem
     [Dependency] private readonly AtmosphereSystem _atmos = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
     [Dependency] private readonly NodeContainerSystem _nodeContainer = default!;
+    [Dependency] private readonly Shared._KS14.Atmos.Piping.Unary.GasCanisterOverlayDataSystem _ksGasCanisterOverlayDataSystem = default!; // KS14
 
     public override void Initialize()
     {
@@ -71,8 +72,7 @@ public sealed class GasCanisterSystem : SharedGasCanisterSystem
     {
         _atmos.React(canister.Air, canister);
 
-        // KS14
-        UpdateCanisterAppearance(uid, canister);
+        _ksGasCanisterOverlayDataSystem.UpdateCanisterAppearance(uid, canister); // KS14
 
         if (!TryComp<NodeContainerComponent>(uid, out var nodeContainer)
             || !TryComp<AppearanceComponent>(uid, out var appearance))

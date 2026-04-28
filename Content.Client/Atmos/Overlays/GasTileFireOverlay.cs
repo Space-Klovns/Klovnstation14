@@ -34,10 +34,10 @@ public sealed class GasTileFireOverlay : Overlay
 
     private readonly float[] _timer;
     private readonly float[][] _frameDelays;
-    private readonly int[] _frameCounter;
+    public /* KS14: Canister overlay: made public */ readonly int[] _frameCounter;
 
     // TODO combine textures into a single texture atlas.
-    private readonly Texture[][] _frames;
+    public /* KS14: Canister overlay: made public */ readonly Texture[][] _frames;
 
     private const int FireStates = 3;
     private const string FireRsiPath = "/Textures/Effects/fire.rsi";

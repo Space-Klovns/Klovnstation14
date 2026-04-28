@@ -139,6 +139,7 @@
       - GasCanisters
     - type: Paintable
       group: Canisters
+    - type: GasCanisterOverlay # KS14
 
 - type: entity
   parent: GasCanister

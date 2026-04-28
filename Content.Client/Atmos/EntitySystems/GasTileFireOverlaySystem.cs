@@ -11,6 +11,7 @@ namespace Content.Client.Atmos.EntitySystems;
 public sealed class GasTileFireOverlaySystem : EntitySystem
 {
     [Dependency] private readonly IOverlayManager _overlayMan = default!;
+    [Dependency] private readonly _KS14.CanisterOverlay.CanisterOverlaySystem _canisterOverlaySystem = default!; // KS14: Canister overlay
 
     private GasTileFireOverlay _fireOverlay = default!;
 
@@ -19,6 +20,7 @@ public sealed class GasTileFireOverlaySystem : EntitySystem
         base.Initialize();
 
         _fireOverlay = new GasTileFireOverlay();
+        _canisterOverlaySystem.AddOverlay(_fireOverlay); // KS14: Canister overlay
         _overlayMan.AddOverlay(_fireOverlay);
     }
 

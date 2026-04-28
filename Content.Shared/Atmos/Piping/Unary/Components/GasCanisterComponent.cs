@@ -53,15 +53,4 @@ public sealed partial class GasCanisterComponent : Component, IGasMixtureHolder
 
     [GuidebookData]
     public float Volume => Air.Volume;
-
-    // KS14
-    /// <summary>
-    ///     Length of this should be the same as <see cref="EntitySystems.SharedGasTileOverlaySystem.VisibleGasId">
-    /// </summary>
-    [AutoNetworkedField, ViewVariables(VVAccess.ReadWrite)]
-    public byte[] AppearanceGasPercentages = []; // empty array is placeholder; it is properly initialised in ComponentInit
-
-    // KS14
-    [AutoNetworkedField, ViewVariables(VVAccess.ReadWrite)]
-    public float NetworkedMoles = 0f;
 }
