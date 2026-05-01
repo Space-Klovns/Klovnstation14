@@ -1,0 +1,8 @@
+- type: shader
+  id: StencilEqualDrawUnshaded
+  kind: canvas
+  light_mode: unshaded
+  stencil:
+    ref: 1
+    op: Keep
+    func: Equal

@@ -19,7 +19,7 @@ public sealed class CanisterOverlay : Overlay
 {
     private static readonly ProtoId<ShaderPrototype> StencilMaskShader = "StencilMask";
     private static readonly ProtoId<ShaderPrototype> StencilEqualDrawShader = "StencilEqualDraw";
-    private static readonly ProtoId<ShaderPrototype> UnshadedShader = "unshaded";
+    private static readonly ProtoId<ShaderPrototype> StencilEqualDrawUnshadedShader = "StencilEqualDrawUnshaded";
 
     [Dependency] private readonly IEntityManager _entityManager = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
@@ -39,7 +39,7 @@ public sealed class CanisterOverlay : Overlay
     ///         scaled down. The bottom-left corner of the mask texture is always in the
     ///         bottom-left regardless of its size.
     /// </summary>
-    private const float WindowMaskSizeMultiplier = 0.45f;
+    private const float WindowMaskSizeMultiplier = 0.8f;
 
     // see: DoAfterOverlay.cs
     private const float Scale = 1f;
@@ -62,8 +62,8 @@ public sealed class CanisterOverlay : Overlay
     /* TODO LCDC KILL THIS ^^^ */
 
     private readonly int _visibleGasCount;
-    private readonly float[] _visibleGasMolesVisibleMin = [Atmospherics.TotalNumberOfGases];
-    private readonly float[] _visibleGasMolesVisibleMax = [Atmospherics.TotalNumberOfGases];
+    private readonly float[] _visibleGasMolesVisibleMin = new float[Atmospherics.TotalNumberOfGases];
+    private readonly float[] _visibleGasMolesVisibleMax = new float[Atmospherics.TotalNumberOfGases];
 
     private OverlayResourceCache<OverlayResources> _resources = new();
 
@@ -81,6 +81,9 @@ public sealed class CanisterOverlay : Overlay
         _spriteSystem = _entityManager.System<SpriteSystem>();
         _appearanceSystem = _entityManager.System<AppearanceSystem>();
 
+        if (!_atmosphereSystem.GasPrototypesAreInitialised)
+            _atmosphereSystem.InitializeGases();
+
         for (var i = 0; i < Atmospherics.TotalNumberOfGases; i++)
         {
             var gasPrototype = _atmosphereSystem.GetGas(i);
@@ -88,9 +91,9 @@ public sealed class CanisterOverlay : Overlay
                 (string.IsNullOrEmpty(gasPrototype.GasOverlaySprite) || string.IsNullOrEmpty(gasPrototype.GasOverlayState)))
                 continue;
 
+            _visibleGasMolesVisibleMin[_visibleGasCount] = gasPrototype.GasMolesVisible;
+            _visibleGasMolesVisibleMax[_visibleGasCount] = gasPrototype.GasMolesVisibleMax;
             _visibleGasCount += 1;
-            _visibleGasMolesVisibleMin[i] = gasPrototype.GasMolesVisible;
-            _visibleGasMolesVisibleMax[i] = gasPrototype.GasMolesVisibleMax;
         }
         Array.Resize(ref _visibleGasMolesVisibleMin, _visibleGasCount);
         Array.Resize(ref _visibleGasMolesVisibleMax, _visibleGasCount);
@@ -190,7 +193,7 @@ public sealed class CanisterOverlay : Overlay
         var equalDrawShader = _prototypeManager.Index(StencilEqualDrawShader).Instance();
         worldHandle.UseShader(equalDrawShader);
 
-        var unshadedShader = _prototypeManager.Index(UnshadedShader).Instance();
+        var unshadedShader = _prototypeManager.Index(StencilEqualDrawUnshadedShader).Instance();
         var canisterEqe = _entityManager.EntityQueryEnumerator<GasCanisterOverlayComponent, TransformComponent>();
         foreach (var (overlayComponent, canisterWorldMatrix) in _drawDataCache)
         {

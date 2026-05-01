@@ -79,7 +79,7 @@
       map: ["airAlarmBase"]
     - state: alarm0
       map: ["airAlarmState"] # TODO: fire alarm enum
-      shader: unshaded # KS14
+      shader: Emissive # KS14
     - state: alarmx
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
   # KS14 Start: /tg/ sprite port

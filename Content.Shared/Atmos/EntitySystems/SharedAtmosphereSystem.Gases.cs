@@ -92,6 +92,8 @@ public abstract partial class SharedAtmosphereSystem
             // OxidiserFuel mask is just fuel and oxidizer combined, because both are required for a reaction to occur.
             GasOxidiserFuelMask[i] = GasFuelMask[i] * GasOxidizerMask[i];
         }
+
+        GasPrototypesAreInitialised = true; // KS14
     }
 
     /// <summary>
