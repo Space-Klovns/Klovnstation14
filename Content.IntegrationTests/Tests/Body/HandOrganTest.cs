@@ -12,6 +12,7 @@ namespace Content.IntegrationTests.Tests.Body;
 [TestOf(typeof(HandOrganSystem))]
 public sealed class HandOrganTest
 {
+    // KS14: Modified prototype to match hierarchy
     [TestPrototypes]
     private const string Prototypes = @"
 - type: entity
@@ -23,13 +24,36 @@ public sealed class HandOrganTest
     containers:
       body_organs: !type:AllSelector
         children:
+        - id: LeftArm
+        - id: RightArm
+
+- type: entity
+  id: LeftArm
+  components:
+  - type: Organ
+    category: LeftArm
+  - type: EntityTableContainerFill
+    containers:
+      body_organs: !type:AllSelector
+        children:
         - id: LeftHand
+
+- type: entity
+  id: RightArm
+  components:
+  - type: Organ
+    category: RightArm
+  - type: EntityTableContainerFill
+    containers:
+      body_organs: !type:AllSelector
+        children:
         - id: RightHand
 
 - type: entity
   id: LeftHand
   components:
   - type: Organ
+    category: LeftHand
   - type: HandOrgan
     handID: left
     data:
@@ -39,6 +63,7 @@ public sealed class HandOrganTest
   id: RightHand
   components:
   - type: Organ
+    category: RightHand
   - type: HandOrgan
     handID: right
     data:
@@ -67,7 +92,7 @@ public sealed class HandOrganTest
             // KS14: Use hierarchy instead of container
 
             var expectedCount = 2;
-            var contained = bodyComponent.RecursiveChildUids.ToList(); // KS14: Use hierarchy instead of container
+            EntityUid[] contained = [bodyComponent.PresentOrganCategories["LeftHand"], bodyComponent.PresentOrganCategories["RightHand"]]; // KS14: Use hierarchy instead of container
             foreach (var hand in contained)
             {
                 expectedCount--;
