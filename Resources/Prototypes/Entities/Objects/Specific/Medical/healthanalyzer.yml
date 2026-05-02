@@ -10,6 +10,7 @@
     - state: icon
     - state: analyzer
       shader: unshaded
+      map: [ "unlit" ] # KS14
   - type: Item
     heldPrefix: analyzer
     storedRotation: -90
@@ -36,3 +37,10 @@
   - type: EmitSoundOnDrop # KS14: pickup/drop sounds
     sound:
       path: /Audio/_KS14/Handling/component_drop.ogg
+  # KS14: emissive start
+  - type: EmissiveLayers
+    glowRadius: 0
+    intensity: 0.01
+    layers:
+    - unlit
+  # KS14: emissive end

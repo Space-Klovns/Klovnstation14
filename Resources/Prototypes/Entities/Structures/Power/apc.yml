@@ -95,12 +95,14 @@
       path: /Audio/_KS14/Machines/Terminal/terminal_off.ogg
       params:
         volume: 1
-  - type: EmissiveLayers # KS14
+  # KS14 /tg/ parity end
+  # KS14: emissive start
+  - type: EmissiveLayers
     glowRadius: 0.5
     offset: 0, -0.5
     layers:
     - enum.ApcVisualLayers.ChargeState
-  # KS14 /tg/ parity end
+  # KS14: emissive end
   - type: ExtensionCableProvider
   - type: UserInterface
     interfaces:
