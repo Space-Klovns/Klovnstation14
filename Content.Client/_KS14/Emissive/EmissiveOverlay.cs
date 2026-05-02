@@ -12,7 +12,6 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 
 namespace Content.Client._KS14.Emissive;
 
@@ -35,7 +34,7 @@ public sealed class EmissiveOverlay : Overlay
 
     private readonly EntityQuery<SpriteComponent> _spriteQuery = default!;
 
-    private readonly RemQueue<EntityUid> _entitiesToRemoveFromShaders = new();
+    private readonly List<EntityUid> _entitiesToRemoveFromShaders = [];
     private readonly HashSet<Entity<EmissiveLayersComponent>> _entities = [];
     private readonly HashSet<EntityUid> _allShaderEntities = [];
     /// <summary>
@@ -122,8 +121,8 @@ public sealed class EmissiveOverlay : Overlay
                     {
                         shader = _prototypeManager.Index(Shader).InstanceUnique();
                         _shaders[ent.Owner] = shader;
-                        _allShaderEntities.Add(ent);
                     }
+                    _allShaderEntities.Add(ent);
                     shader.SetParameter("bloom_intensity", ent.Comp.Intensity);
                     worldHandle.UseShader(shader);
 
@@ -189,24 +188,22 @@ public sealed class EmissiveOverlay : Overlay
             }
         }, null);
 
-        // {
-        //     foreach (var (oldUid, oldShader) in _shaders)
-        //     {
-        //         if (_allShaderEntities.Contains(oldUid!))
-        //             continue;
+        // Now, start purging old shaders that are no longer in use
 
-        //         _entitiesToRemoveFromShaders.Add(oldUid);
-        //         oldShader.Dispose();
-        //     }
-        //     if (_entitiesToRemoveFromShaders.Count > 0)
-        //         Logger.Info($"Purged {_entitiesToRemoveFromShaders.Count} shaders");
+        foreach (var (oldUid, oldShader) in _shaders)
+        {
+            if (_allShaderEntities.Contains(oldUid!))
+                continue;
 
-        //     foreach (var uid in _entitiesToRemoveFromShaders)
-        //         _shaders.Remove(uid);
+            oldShader.Dispose();
+            _entitiesToRemoveFromShaders.Add(oldUid);
+        }
 
-        //     _entitiesToRemoveFromShaders.Clear();
-        // }
-        // _allShaderEntities.Clear();
+        foreach (var uid in _entitiesToRemoveFromShaders)
+            _shaders.Remove(uid);
+
+        _entitiesToRemoveFromShaders.Clear();
+        _allShaderEntities.Clear();
     }
 
     private Enum? ParseKey(string keyString, [NotNullWhen(true)] out bool isEnum)
