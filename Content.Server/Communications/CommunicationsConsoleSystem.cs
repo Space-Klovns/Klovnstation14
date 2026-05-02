@@ -225,11 +225,21 @@ namespace Content.Server.Communications
             }
         }
 
+        // KS14: Separated announcement sanitisation into its own method
+        private string KsSanitiseMessage(string message) => SharedChatSystem.SanitizeAnnouncement(message, _cfg.GetCVar(CCVars.ChatMaxAnnouncementLength));
+
+        // KS14: Separated announcement sanitisation into its own method
+        private string? KsSanitiseMessagePossiblyEmpty(string message)
+        {
+            var ex = KsSanitiseMessage(message);
+            return ex.IsWhiteSpace() ? null : ex;
+        }
+
         private void OnAnnounceMessage(EntityUid uid, CommunicationsConsoleComponent comp,
             CommunicationsConsoleAnnounceMessage message)
         {
-            var maxLength = _cfg.GetCVar(CCVars.ChatMaxAnnouncementLength);
-            var msg = SharedChatSystem.SanitizeAnnouncement(message.Message, maxLength);
+            // KS14: Separated announcement sanitisation into its own method
+            var msg = KsSanitiseMessage(message.Message);
             var author = Loc.GetString("comms-console-announcement-unknown-sender");
             if (message.Actor is { Valid: true } mob)
             {
@@ -312,7 +322,7 @@ namespace Content.Server.Communications
                 return;
             }
 
-            _roundEndSystem.RequestRoundEnd(mob, uid);
+            _roundEndSystem.RequestRoundEnd(mob, uid, callReason: KsSanitiseMessagePossiblyEmpty(message.Message) /* KS14: Added evac call reason */);
             _adminLogger.Add(LogType.Action, LogImpact.High, $"{ToPrettyString(mob):player} has called the shuttle.");
         }
 
@@ -329,7 +339,7 @@ namespace Content.Server.Communications
                 return;
             }
 
-            _roundEndSystem.CancelRoundEndCountdown(mob, uid);
+            _roundEndSystem.CancelRoundEndCountdown(mob, uid, recallReason: KsSanitiseMessagePossiblyEmpty(message.Message) /* KS14: Added evac call reason */);
             _adminLogger.Add(LogType.Action, LogImpact.High, $"{ToPrettyString(message.Actor):player} has recalled the shuttle.");
         }
     }

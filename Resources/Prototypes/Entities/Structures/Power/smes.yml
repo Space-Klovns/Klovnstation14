@@ -30,6 +30,14 @@
           shader: unshaded
         - map: [ "enum.WiresVisualLayers.MaintenancePanel" ]
           state: smes-open
+    # KS14: emissive start
+    - type: EmissiveLayers
+      glowRadius: 0.3
+      layers:
+      - enum.SmesVisualLayers.Charge
+      - enum.SmesVisualLayers.Input
+      - enum.SmesVisualLayers.Output
+    # KS14: emissive end
     - type: Smes
     - type: Appearance
     - type: Battery
@@ -69,8 +77,8 @@
       supplyRampTolerance: 5000
       supplyRampRate: 1000
     - type: PointLight
-      radius: 1.2
-      energy: 3.0
+      radius: 0.3 # KS14: Changed to 0.3
+      energy: 0.3 # KS14: Changed to 0.3
       color: "#c9c042"
       castShadows: false
     - type: WiresPanel

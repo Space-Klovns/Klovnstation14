@@ -24,7 +24,7 @@ namespace Content.Client.Communications.UI
         public string CurrentLevel = string.Empty;
         public TimeSpan? CountdownEnd;
 
-        public event Action? OnEmergencyLevel;
+        public event Action<string>? OnEmergencyLevel; // KS14: Evac reason text
         public event Action<string>? OnAlertLevel;
         public event Action<string>? OnAnnounce;
         public event Action<string>? OnBroadcast;
@@ -70,7 +70,7 @@ namespace Content.Client.Communications.UI
 
             AlertLevelButton.Disabled = !AlertLevelSelectable;
 
-            EmergencyShuttleButton.OnPressed += _ => OnEmergencyLevel?.Invoke();
+            EmergencyShuttleButton.OnPressed += _ => OnEmergencyLevel?.Invoke(Rope.Collapse(MessageInput.TextRope)); // KS14: Evac reason text
             EmergencyShuttleButton.Disabled = !CanCall;
         }
 

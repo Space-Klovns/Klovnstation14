@@ -46,7 +46,7 @@ public sealed class EmissiveOverlay : Overlay
 
     private readonly Dictionary<string, Enum?> _enumKeyCache = [];
 
-    public const int ContentZIndex = BeforeLightTargetOverlay.ContentZIndex + 1;
+    public const int ContentZIndex = BeforeLightTargetOverlay.ContentZIndex + 2;
 
     public EmissiveOverlay()
     {

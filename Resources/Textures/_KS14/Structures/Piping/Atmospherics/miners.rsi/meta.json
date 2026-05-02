@@ -1,0 +1,1 @@
+{"version": 1, "size": {"x": 32, "y": 32}, "license": "CC-BY-SA-3.0", "copyright": "By AraiMaia for Funky Station", "states": [{"name": "miner", "directions": 1, "delays": [[1.0]]}, {"name": "on", "directions": 1, "delays": [[0.1, 0.1]]}]}

@@ -140,7 +140,7 @@ namespace Content.Server.RoundEnd
         /// <param name="text">text in the announcement of shuttle calling</param>
         /// <param name="name">name in the announcement of shuttle calling</param>
         /// <param name="cantRecall">if the station shouldn't be able to recall the shuttle</param>
-        public void RequestRoundEnd(EntityUid? requester = null, EntityUid? machine = null, bool checkCooldown = true, string text = "round-end-system-shuttle-called-announcement", string name = "round-end-system-shuttle-sender-announcement", bool cantRecall = false)
+        public void RequestRoundEnd(EntityUid? requester = null, EntityUid? machine = null, bool checkCooldown = true, string text = "round-end-system-shuttle-called-announcement", string name = "round-end-system-shuttle-sender-announcement", bool cantRecall = false, string? callReason = null /* KS14: Added evac call reason */)
         {
             var duration = DefaultCountdownDuration;
 
@@ -155,7 +155,7 @@ namespace Content.Server.RoundEnd
                 }
             }
 
-            RequestRoundEnd(duration, requester, machine, checkCooldown, text, name, cantRecall);
+            RequestRoundEnd(duration, requester, machine, checkCooldown, text, name, cantRecall, callReason /* KS14: Added evac call reason */);
         }
 
         /// <summary>
@@ -168,7 +168,7 @@ namespace Content.Server.RoundEnd
         /// <param name="text">text in the announcement of shuttle calling</param>
         /// <param name="name">name in the announcement of shuttle calling</param>
         /// <param name="cantRecall">if the station shouldn't be able to recall the shuttle</param>
-        public void RequestRoundEnd(TimeSpan countdownTime, EntityUid? requester = null, EntityUid? machine = null, bool checkCooldown = true, string text = "round-end-system-shuttle-called-announcement", string name = "round-end-system-shuttle-sender-announcement", bool cantRecall = false)
+        public void RequestRoundEnd(TimeSpan countdownTime, EntityUid? requester = null, EntityUid? machine = null, bool checkCooldown = true, string text = "round-end-system-shuttle-called-announcement", string name = "round-end-system-shuttle-sender-announcement", bool cantRecall = false, string? callReason = null /* KS14: Added evac call reason */)
         {
             if (_gameTicker.RunLevel != GameRunLevel.InRound)
                 return;
@@ -205,7 +205,8 @@ namespace Content.Server.RoundEnd
 
             _chatSystem.DispatchGlobalAnnouncement(Loc.GetString(text,
                 ("time", time),
-                ("units", Loc.GetString(units))),
+                ("units", Loc.GetString(units)),
+                ("reason", callReason ?? Loc.GetString("ks-round-end-system-shuttle-noreason")) /* KS14: Added evac call reason */),
                 Loc.GetString(name),
                 false,
                 null,
@@ -238,7 +239,7 @@ namespace Content.Server.RoundEnd
             }
         }
 
-        public void CancelRoundEndCountdown(EntityUid? requester = null, EntityUid? machine = null, bool forceRecall = false)
+        public void CancelRoundEndCountdown(EntityUid? requester = null, EntityUid? machine = null, bool forceRecall = false, string? recallReason = null /* KS14: Added evac recall reason */)
         {
             if (_gameTicker.RunLevel != GameRunLevel.InRound)
                 return;
@@ -258,7 +259,7 @@ namespace Content.Server.RoundEnd
             else
                 _adminLogger.Add(LogType.ShuttleRecalled, LogImpact.High, $"Shuttle recalled{what}");
 
-            _chatSystem.DispatchGlobalAnnouncement(Loc.GetString("round-end-system-shuttle-recalled-announcement"),
+            _chatSystem.DispatchGlobalAnnouncement(Loc.GetString("round-end-system-shuttle-recalled-announcement", ("reason", recallReason ?? Loc.GetString("ks-round-end-system-shuttle-noreason")) /* KS14: Added evac recall reason */),
                 Loc.GetString("round-end-system-shuttle-sender-announcement"), false, colorOverride: Color.Gold);
 
             _audio.PlayGlobal("/Audio/Announcements/shuttlerecalled.ogg", Filter.Broadcast(), true);

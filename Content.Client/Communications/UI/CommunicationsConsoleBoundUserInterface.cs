@@ -26,7 +26,7 @@ namespace Content.Client.Communications.UI
             _menu.OnAnnounce += AnnounceButtonPressed;
             _menu.OnBroadcast += BroadcastButtonPressed;
             _menu.OnAlertLevel += AlertLevelSelected;
-            _menu.OnEmergencyLevel += EmergencyShuttleButtonPressed;
+            _menu.OnEmergencyLevel += EmergencyShuttleButtonPressed; // KS14: Evac reason text
         }
 
         public void AlertLevelSelected(string level)
@@ -38,12 +38,12 @@ namespace Content.Client.Communications.UI
             }
         }
 
-        public void EmergencyShuttleButtonPressed()
+        public void EmergencyShuttleButtonPressed(string message) // KS14: Evac reason text
         {
             if (_menu!.CountdownStarted)
-                RecallShuttle();
+                RecallShuttle(message); // KS14: Evac reason text
             else
-                CallShuttle();
+                CallShuttle(message); // KS14: Evac reason text
         }
 
         public void AnnounceButtonPressed(string message)
@@ -58,14 +58,20 @@ namespace Content.Client.Communications.UI
             SendMessage(new CommunicationsConsoleBroadcastMessage(message));
         }
 
-        public void CallShuttle()
+        public void CallShuttle(string message) // KS14: Evac reason text
         {
-            SendMessage(new CommunicationsConsoleCallEmergencyShuttleMessage());
+            var maxLength = _cfg.GetCVar(CCVars.ChatMaxAnnouncementLength); // KS14: Evac reason text
+            var msg = SharedChatSystem.SanitizeAnnouncement(message, maxLength); // KS14: Evac reason text
+
+            SendMessage(new CommunicationsConsoleCallEmergencyShuttleMessage(msg)); // KS14: Evac reason text
         }
 
-        public void RecallShuttle()
+        public void RecallShuttle(string message) // KS14: Evac reason text
         {
-            SendMessage(new CommunicationsConsoleRecallEmergencyShuttleMessage());
+            var maxLength = _cfg.GetCVar(CCVars.ChatMaxAnnouncementLength); // KS14: Evac reason text
+            var msg = SharedChatSystem.SanitizeAnnouncement(message, maxLength); // KS14: Evac reason text
+
+            SendMessage(new CommunicationsConsoleRecallEmergencyShuttleMessage(msg)); // KS14: Evac reason text
         }
 
         protected override void UpdateState(BoundUserInterfaceState state)

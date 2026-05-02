@@ -2,6 +2,7 @@
   abstract: true
   name: gas miner
   description: Gases mined from the gas giant below (above?) flow out through this massive vent.
+  parent: BaseStructure
   id: GasMinerBase
   placement:
     mode: SnapgridCenter
@@ -9,25 +10,36 @@
     - type: Clickable
     - type: InteractionOutline
     - type: Physics
-      canCollide: false
+      canCollide: true # KS14: false -> true
     - type: Fixtures
       fixtures:
         fix1:
-          shape:
-            !type:PhysShapeCircle
-            radius: .4
+          shape: # KS14: Changed shape to aabb
+            !type:PhysShapeAabb
+            bounds: "-0.5,-0.5,0.5,0.5"
           density: 190
-          mask:
-            - MachineMask
+          mask: # KS14: changed collision
+          - FullTileMask
+          layer: # KS14: changed collision
+          - MachineLayer
     - type: Transform
       anchored: true
+      noRot: true # KS14
     - type: Anchorable
       flags:
       - Anchorable
+    - type: AmbientSound # KS14: Ambient sound
+      volume: -9
+      range: 4
+      sound:
+        path: /Audio/_KS14/Ambience/Objects/wind_plant_hum.ogg
     - type: Pullable
     - type: Sprite
-      sprite: Structures/Piping/Atmospherics/miners.rsi
-      state: miner
+      noRot: true # KS14
+      sprite: _KS14/Structures/Piping/Atmospherics/miners.rsi # KS14: KS14 textures
+      layers: # KS14: use one layer with map, instead of just setting state on spritecomponent
+      - state: miner
+        map: ["base"]
     - type: AtmosDevice
     - type: GasMiner
       maxExternalPressure: 300
@@ -35,6 +47,16 @@
     - type: GuideHelp
       guides:
       - GasMiningAndStorage
+    # KS14: Gasminer visuals start
+    - type: Appearance
+    - type: GenericVisualizer
+      visuals:
+        enum.GasMinerVisuals.State:
+          base:
+            Disabled: { state: "miner" }
+            Idle: { state: "miner" }
+            Working: { state: "on" }
+    # KS14 End
 
 - type: entity
   name: O2 gas miner

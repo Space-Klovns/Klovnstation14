@@ -58,3 +58,7 @@ public enum GasMinerState : byte
     Idle,
     Working,
 }
+
+// KS14: Gasminer appearance
+[Serializable, NetSerializable]
+public enum GasMinerVisuals : byte { State }

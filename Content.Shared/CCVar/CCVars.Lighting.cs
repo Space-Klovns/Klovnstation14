@@ -11,7 +11,7 @@ public sealed partial class CCVars
     /// Distance in world-pixels of ambient occlusion.
     /// </summary>
     public static readonly CVarDef<string> AmbientOcclusionColor =
-        CVarDef.Create("light.ambient_occlusion_color", "#04080FAA", CVar.CLIENTONLY);
+        CVarDef.Create("light.ambient_occlusion_color", "#000000", CVar.CLIENTONLY);
 
     /// <summary>
     /// Distance in world-pixels of ambient occlusion.

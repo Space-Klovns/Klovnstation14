@@ -28,7 +28,8 @@
     - map: ["enum.PoweredLightLayers.Base"]
       state: base
     - map: ["enum.PoweredLightLayers.Glow"]
-      state: glow
+      state: tube # KS14: greyscale lighting textures
+      sprite: _KS14/Structures/Wallmounts/Lighting/light_glow_greyscale.rsi # KS14: greyscale lighting textures
       shader: unshaded
     state: base
   - type: PointLight
@@ -264,6 +265,13 @@
     - type: Sprite
       sprite: Structures/Wallmounts/Lighting/light_small.rsi
       state: base
+      layers: # KS14: Specified layers
+      - map: ["enum.PoweredLightLayers.Base"]
+        state: base
+      - map: ["enum.PoweredLightLayers.Glow"]
+        state: small # KS14: greyscale lighting textures
+        sprite: _KS14/Structures/Wallmounts/Lighting/light_glow_greyscale.rsi # KS14: greyscale lighting textures
+        shader: unshaded
     - type: PointLight
       energy: 1.0
       radius: 6

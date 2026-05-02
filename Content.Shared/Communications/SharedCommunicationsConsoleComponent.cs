@@ -63,14 +63,18 @@ namespace Content.Shared.Communications
         }
     }
 
+    // KS14: Added message
     [Serializable, NetSerializable]
-    public sealed class CommunicationsConsoleCallEmergencyShuttleMessage : BoundUserInterfaceMessage
+    public sealed class CommunicationsConsoleCallEmergencyShuttleMessage(string message) : BoundUserInterfaceMessage
     {
+        public readonly string Message = message;
     }
 
+    // KS14: Added message
     [Serializable, NetSerializable]
-    public sealed class CommunicationsConsoleRecallEmergencyShuttleMessage : BoundUserInterfaceMessage
+    public sealed class CommunicationsConsoleRecallEmergencyShuttleMessage(string message) : BoundUserInterfaceMessage
     {
+        public readonly string Message = message;
     }
 
     [Serializable, NetSerializable]

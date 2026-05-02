@@ -29,8 +29,11 @@
   description: A virtual map of the surrounding station.
   suffix: Wall
   components:
-    - type: WallMount
-      arc: 360
+    # ES START
+    # - type: WallMount
+    #  arc: 360
+    - type: ESInteractionIgnoreAnchoredInTile
+    # ES END
     - type: Appearance
     - type: StationMap
     - type: Sprite

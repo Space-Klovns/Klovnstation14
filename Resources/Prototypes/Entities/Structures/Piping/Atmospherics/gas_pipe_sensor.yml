@@ -18,6 +18,12 @@
     - map: [ "enum.PowerDeviceVisualLayers.Powered" ]
       state: lights
       shader: unshaded
+  # KS14: emissive start
+  - type: EmissiveLayers
+    glowRadius: 0.3
+    layers:
+    - enum.PowerDeviceVisualLayers.Powered
+  # KS14: emissive end
   - type: AtmosPipeLayers
     spriteRsiPaths:
       Primary: Structures/Piping/Atmospherics/gas_pipe_sensor.rsi

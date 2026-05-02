@@ -22,7 +22,7 @@ public sealed class BeforeLightTargetOverlay : Overlay
     /// </summary>
     private float _skirting = 2f;
 
-    public const int ContentZIndex = -10;
+    public const int ContentZIndex = -11; // KS14: -10 => -11, to make space for EmissiveOverlay thats now after this and RoofOverlay
 
     public BeforeLightTargetOverlay()
     {
@@ -34,7 +34,7 @@ public sealed class BeforeLightTargetOverlay : Overlay
     {
         // Code is weird but I don't think engine should be enlarging the lighting render target arbitrarily either, maybe via cvar?
         // The problem is the blur has no knowledge of pixels outside the viewport so with a large enough blur radius you get sampling issues.
-        var size = args.Viewport.LightRenderTarget.Size + (int) (_skirting * EyeManager.PixelsPerMeter);
+        var size = args.Viewport.LightRenderTarget.Size + (int)(_skirting * EyeManager.PixelsPerMeter);
         EnlargedBounds = args.WorldBounds.Enlarged(_skirting / 2f);
 
         var res = _resources.GetForViewport(args.Viewport, static _ => new CachedResources());

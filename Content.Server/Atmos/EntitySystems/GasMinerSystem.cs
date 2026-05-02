@@ -13,6 +13,7 @@ public sealed class GasMinerSystem : SharedGasMinerSystem
 {
     [Dependency] private readonly AtmosphereSystem _atmosphereSystem = default!;
     [Dependency] private readonly TransformSystem _transformSystem = default!;
+    [Dependency] private readonly AppearanceSystem _appearanceSystem = default!; // KS14: Gasminer appearance
 
     public override void Initialize()
     {
@@ -50,6 +51,7 @@ public sealed class GasMinerSystem : SharedGasMinerSystem
         if (miner.MinerState != oldState)
         {
             Dirty(ent);
+            _appearanceSystem.SetData(ent.Owner, GasMinerVisuals.State, miner.MinerState); // KS14: Gasminer appearance
         }
     }
 
@@ -81,7 +83,8 @@ public sealed class GasMinerSystem : SharedGasMinerSystem
 
         var toSpawnReal = Math.Clamp(allowableMoles, 0f, toSpawnTarget);
 
-        if (toSpawnReal < Atmospherics.GasMinMoles) {
+        if (toSpawnReal < Atmospherics.GasMinMoles)
+        {
             return 0f;
         }
 
