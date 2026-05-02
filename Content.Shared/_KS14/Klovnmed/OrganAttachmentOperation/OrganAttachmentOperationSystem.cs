@@ -20,7 +20,7 @@ public sealed class OrganAttachmentOperationSystem : EntitySystem
     /// <summary>
     ///     How much of the damage accumulated is lost every second.
     /// </summary>
-    public static readonly TimeSpan ReattachmentDuration = TimeSpan.FromSeconds(5);
+    public static readonly TimeSpan ReattachmentDuration = TimeSpan.FromSeconds(3d);
 
     public override void Initialize()
     {

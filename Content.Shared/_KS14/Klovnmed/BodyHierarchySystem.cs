@@ -3,12 +3,15 @@ using Content.Shared._KS14.Hierarchy;
 using Content.Shared.Body;
 using Robust.Shared.Containers;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Content.Shared._KS14.Klovnmed;
 
 public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, OrganComponent>
 {
+    [Dependency] private readonly IGameTiming _gameTiming = default!;
+
     public const string ConstContainerId = "body_organs"; // for compatibility
     public override string ContainerId => ConstContainerId;
 
@@ -38,7 +41,7 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
         if (args.Container.ID != ConstContainerId)
             return;
 
-        if (GameTiming.ApplyingState)
+        if (_gameTiming.ApplyingState)
             return;
 
         // i just want contents to be visible not removable. Still interactable and whatnot doe
@@ -60,14 +63,11 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
             hierarchyEntity.Comp.PresentOrganCategories[addedCategory] = addedEntity;
         }
 
-        if (!GameTiming.ApplyingState)
-        {
-            var body = new OrganInsertedIntoEvent(addedEntity, hierarchyEntity, addedEntity);
-            RaiseLocalEvent(hierarchyEntity, ref body);
+        var body = new OrganInsertedIntoEvent(addedEntity, hierarchyEntity, addedEntity);
+        RaiseLocalEvent(hierarchyEntity, ref body);
 
-            var ev = new OrganGotInsertedEvent(hierarchyEntity, hierarchyEntity, addedEntity);
-            RaiseLocalEvent(addedEntity, ref ev);
-        }
+        var ev = new OrganGotInsertedEvent(hierarchyEntity, hierarchyEntity, addedEntity);
+        RaiseLocalEvent(addedEntity, ref ev);
 
         addedEntity.Comp.Container.ShowContents = false;
         Dirty(addedEntity.Owner, Comp<ContainerManagerComponent>(addedEntity.Owner));
@@ -81,14 +81,11 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
         if (removedEntity.Comp.Category is { } removedCategory)
             hierarchyEntity.Comp.PresentOrganCategories.Remove(removedCategory);
 
-        if (!GameTiming.ApplyingState)
-        {
-            var body = new OrganRemovedFromEvent(removedEntity, hierarchyEntity, removedEntity);
-            RaiseLocalEvent(hierarchyEntity, ref body);
+        var body = new OrganRemovedFromEvent(removedEntity, hierarchyEntity, removedEntity);
+        RaiseLocalEvent(hierarchyEntity, ref body);
 
-            var ev = new OrganGotRemovedEvent(hierarchyEntity, hierarchyEntity, removedEntity);
-            RaiseLocalEvent(removedEntity, ref ev);
-        }
+        var ev = new OrganGotRemovedEvent(hierarchyEntity, hierarchyEntity, removedEntity);
+        RaiseLocalEvent(removedEntity, ref ev);
 
         removedEntity.Comp.Container.ShowContents = true;
         Dirty(removedEntity.Owner, Comp<ContainerManagerComponent>(removedEntity.Owner));

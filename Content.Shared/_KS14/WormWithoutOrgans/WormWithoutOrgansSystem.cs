@@ -1,5 +1,6 @@
 using Content.Shared.Body;
 using Content.Shared.Movement.Components;
+using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.WormWithoutOrgans;
 
@@ -7,6 +8,8 @@ namespace Content.Shared._KS14.WormWithoutOrgans;
 
 public sealed class WormWithoutOrgansSystem : EntitySystem
 {
+    [Dependency] private readonly IGameTiming _gameTiming = default!;
+
     public override void Initialize()
     {
         base.Initialize();
@@ -38,6 +41,9 @@ public sealed class WormWithoutOrgansSystem : EntitySystem
 
     private void OnOrganRemoved(Entity<WormWithoutOrgansComponent> entity, ref OrganRemovedFromEvent args)
     {
+        if (_gameTiming.ApplyingState)
+            return;
+
         if (HasComp<WormComponent>(entity) ||
             HasAllRequiredOrgans(entity, args.BodyComponent))
             return;

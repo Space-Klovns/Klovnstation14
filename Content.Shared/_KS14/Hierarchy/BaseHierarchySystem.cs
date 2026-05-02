@@ -1,6 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Containers;
-using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.Hierarchy;
 
@@ -10,7 +9,6 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
     where THierarchyComp : Component, IHierarchyComponent
     where TElementComp : Component, IHierarchyElementComponent
 {
-    [Dependency] protected readonly IGameTiming GameTiming = default!;
     [Dependency] protected readonly SharedContainerSystem ContainerSystem = default!;
 
     /// <summary>
@@ -227,11 +225,9 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
         }
 
         hierarchyEntity.Comp.RecursiveChildUids.Add(addedEntity);
-        if (!GameTiming.ApplyingState)
-        {
-            var addedEv = new HierarchyElementAddedEvent<TElementComp>(addedEntity);
-            RaiseLocalEvent(hierarchyEntity, ref addedEv);
-        }
+
+        var addedEv = new HierarchyElementAddedEvent<TElementComp>(addedEntity);
+        RaiseLocalEvent(hierarchyEntity, ref addedEv);
 
         UpdateHierarchyEntityState(hierarchyEntity);
     }
@@ -240,11 +236,9 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
     protected virtual void RemoveElementFromHierarchy(Entity<THierarchyComp> hierarchyEntity, Entity<TElementComp> removedEntity)
     {
         hierarchyEntity.Comp.RecursiveChildUids.Remove(removedEntity);
-        if (!GameTiming.ApplyingState)
-        {
-            var removedEv = new HierarchyElementRemovedEvent<TElementComp>(removedEntity);
-            RaiseLocalEvent(hierarchyEntity, ref removedEv);
-        }
+
+        var removedEv = new HierarchyElementRemovedEvent<TElementComp>(removedEntity);
+        RaiseLocalEvent(hierarchyEntity, ref removedEv);
 
         UpdateHierarchyEntityState(hierarchyEntity);
     }
