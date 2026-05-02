@@ -3,7 +3,7 @@
   abstract: true
   parent: BaseStructure
   name: firelock
-  description: Apply crowbar.
+  description: Apply crowbar. Stand clear of firelock during operation.
   components:
     - type: Anchorable
       flags:
@@ -100,6 +100,7 @@
       # KS14 start
       performCollisionCheck: false
       forcedCollisionCheckOnClick: true
+      crushableBodyPartType: [ Arm, Leg ]
       # KS14 end
       openDrawDepth: WallTops
       closeTimeOne: 0.1

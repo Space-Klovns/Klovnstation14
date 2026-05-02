@@ -30,6 +30,8 @@
       AirWarning: false
       AirNormal: false
   - type: AtmosAlarmable
+    alarmSound: # KS14: Set alarm sound
+      path: /Audio/Ambience/Objects/alarm.ogg
     syncWith:
     - AirAlarm
     - AirSensor

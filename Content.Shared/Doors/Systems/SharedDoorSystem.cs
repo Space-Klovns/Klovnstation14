@@ -46,6 +46,7 @@ public abstract partial class SharedDoorSystem : EntitySystem
     [Dependency] protected readonly SharedPopupSystem Popup = default!;
     [Dependency] private readonly SharedMapSystem _mapSystem = default!;
     [Dependency] private readonly SharedPowerReceiverSystem _powerReceiver = default!;
+    [Dependency] private readonly _KS14.Klovnmed.Dismemberment.DismembermentSystem _dismembermentSystem = default!; // KS14: Crush dismemberment
 
     public static readonly ProtoId<TagPrototype> DoorBumpTag = "DoorBumpOpener";
 
@@ -534,6 +535,14 @@ public abstract partial class SharedDoorSystem : EntitySystem
             if (door.CrushDamage != null)
                 _damageableSystem.TryChangeDamage(entity, door.CrushDamage, origin: uid);
 
+            // KS14: Crush dismemberment start
+            if (door.CrushableBodyPartType is { } crushableType &&
+                _dismembermentSystem.TryDismemberRandomBodyPartOfType(entity, crushableType, out var partUid, cause: uid))
+            {
+                _dismembermentSystem.TryRandomlyCrushPart(partUid.Value, victimUid: entity, predicted: false);
+            }
+            // KS14: Crush dismemberment end
+
             _stunSystem.TryUpdateParalyzeDuration(entity, stunTime);
         }
 
@@ -577,6 +586,9 @@ public abstract partial class SharedDoorSystem : EntitySystem
             //TODO: Make only shutters ignore these objects upon colliding instead of all airlocks
             // Excludes Glasslayer for windows, GlassAirlockLayer for windoors, TableLayer for tables
             if (otherPhysics.Comp.CollisionLayer == (int)CollisionGroup.GlassLayer || otherPhysics.Comp.CollisionLayer == (int)CollisionGroup.GlassAirlockLayer || otherPhysics.Comp.CollisionLayer == (int)CollisionGroup.TableLayer)
+                continue;
+
+            if (otherPhysics.Comp.CollisionLayer == (int)CollisionGroup.AirlockLayer) // KS14: Check for AirlockLayer
                 continue;
 
             // Ignore low-passable entities.

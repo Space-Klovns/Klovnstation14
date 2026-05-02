@@ -305,6 +305,14 @@ public sealed partial class DoorComponent : Component
     [DataField]
     public bool? ForcedCollisionCheckOnClick = null;
 
+    // KS14
+    /// <summary>
+    ///     Bodypart types that may be hit when crushing something.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadWrite)]
+    [DataField]
+    public _KS14.Klovnmed.BodyPartType? CrushableBodyPartType = null;
+
     [DataField(customTypeSerializer: typeof(ConstantSerializer<DrawDepthTag>))]
     public int OpenDrawDepth = (int)DrawDepth.DrawDepth.Doors;
 

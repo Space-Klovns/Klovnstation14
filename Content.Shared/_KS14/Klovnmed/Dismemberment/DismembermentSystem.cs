@@ -1,10 +1,17 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using Content.Shared._KS14.KsPopup;
 using Content.Shared._KS14.Random.Helpers;
 using Content.Shared.Body;
+using Content.Shared.Chat;
+using Content.Shared.Chat.Prototypes;
 using Content.Shared.Damage;
+using Content.Shared.Mobs.Systems;
+using Content.Shared.Popups;
 using Content.Shared.Throwing;
 using Robust.Shared.Containers;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Random;
 using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.Klovnmed.Dismemberment;
@@ -20,8 +27,12 @@ public sealed class DismembermentSystem : EntitySystem
     [Dependency] private readonly ThrowingSystem _throwingSystem = default!;
     [Dependency] private readonly OrganSearchSystem _organSearchSystem = default!;
     [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
+    [Dependency] private readonly KsPopupSystem _ksPopupSystem = default!;
+    [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
+    [Dependency] private readonly SharedChatSystem _chatSystem = default!;
 
     private EntityQuery<BodyComponent> _bodyQuery;
+    private static readonly ProtoId<EmotePrototype> DismemberEmote = "Scream";
 
     public override void Initialize()
     {
@@ -82,6 +93,41 @@ public sealed class DismembermentSystem : EntitySystem
             )).NextUnitVector2();
 
             _throwingSystem.TryThrow(partUid, direction.Value, baseThrowSpeed: throwSpeed, user: cause, recoil: false);
+        }
+    }
+
+    public void DoFixedEmote(EntityUid victimUid)
+    {
+        if (!_mobStateSystem.IsAlive(victimUid))
+            return;
+
+        _chatSystem.TryEmoteWithChat(victimUid, DismemberEmote);
+    }
+
+    /// <summary>
+    ///     Rolls a predicted random chance to destroy a bodypart.
+    /// </summary>
+    public void TryRandomlyCrushPart(EntityUid partUid, float chance = 0.5f, EntityUid? victimUid = null, System.Random? predictedRandom = null, bool predicted = true)
+    {
+        predictedRandom ??= KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
+            (int)_gameTiming.CurTick.Value,
+            KsSharedRandomExtensions.GetNetId(partUid, EntityManager));
+
+        if (!predictedRandom.Prob(chance))
+            return;
+
+        PredictedQueueDel(partUid);
+
+        if (victimUid is { })
+        {
+            _ksPopupSystem.PopupTargetAndUser(
+                partUid,
+                victimUid.Value,
+                "someones bodypart gets crushed",
+                "yhour bodypart gets crushed",
+                type: PopupType.MediumCaution,
+                predicted: predicted
+            );
         }
     }
 }
