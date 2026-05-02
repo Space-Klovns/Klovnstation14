@@ -37,6 +37,12 @@
       - map: [ enum.ExpendableLightVisualLayers.Overlay ]
         state: flare_unlit
         color: "#FF0000"
+  # KS14: emissive start
+  - type: EmissiveLayers
+    glowRadius: 1
+    layers:
+    - enum.ExpendableLightVisualLayers.Glow
+  # KS14: emissive end
   - type: Icon
     sprite: Objects/Misc/flare.rsi
     state: icon

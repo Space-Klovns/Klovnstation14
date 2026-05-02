@@ -162,7 +162,14 @@
     layers:
     - state: icon
     - state: green-unlit
-      shader: Emissive # KS14
+      shader: unshaded
+      map: ["screen"] # KS14
+  # KS14: emissive start
+  - type: EmissiveLayers
+    glowRadius: 0.1
+    layers:
+    - screen
+  # KS14: emissive end
   - type: Item
     size: Small
   - type: Clothing

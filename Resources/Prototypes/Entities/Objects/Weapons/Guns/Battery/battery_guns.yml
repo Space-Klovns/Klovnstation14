@@ -31,6 +31,13 @@
   - type: EmitSoundOnDrop # KS14: pickup/drop sounds
     sound:
       path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_drop1.ogg
+  # KS14: emissive start
+  - type: EmissiveLayers
+    glowRadius: 0.15
+    layers:
+    - enum.GunVisualLayers.BaseUnshaded
+    - enum.GunVisualLayers.MagUnshaded
+  # KS14: emissive end
 
 - type: entity
   parent: [BaseWeaponBattery, BaseGunWieldable]

@@ -74,6 +74,16 @@
           enum.FirelockVisualLayersTemperature.Base:
             True: { visible: true }
             False: { visible: false }
+    # KS14: emissive start
+    - type: EmissiveLayers
+      glowRadius: 0.4
+      intensity: 1.2
+      useSpriteTransform: false
+      layers:
+      - enum.DoorVisualLayers.BaseUnlit
+      - enum.FirelockVisualLayersPressure.Base
+      - enum.FirelockVisualLayersTemperature.Base
+    # KS14: emissive end
     - type: AnimationPlayer
     - type: Fixtures
       fixtures:

@@ -15,6 +15,13 @@
         state: television_wall
       - map: ["computerLayerScreen"]
         state: television_wallscreen
+        shader: unshaded # KS14
+  # KS14: emissive start
+  - type: EmissiveLayers
+    glowRadius: 0.05
+    layers:
+    - computerLayerScreen
+  # KS14: emissive end
   - type: DeviceNetwork
     deviceNetId: Wireless
     receiveFrequencyId: SurveillanceCamera

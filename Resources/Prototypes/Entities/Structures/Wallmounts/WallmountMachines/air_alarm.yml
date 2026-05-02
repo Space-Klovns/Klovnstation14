@@ -58,6 +58,13 @@
         type: AirAlarmBoundUserInterface
       enum.WiresUiKey.Key:
         type: WiresBoundUserInterface
+  - type: DeviceLinkVisuals # KS14: show connection status
+  - type: GenericVisualizer # KS14: show connection status
+    visuals:
+      enum.DeviceLinkVisuals.Connected:
+        airAlarmBase:
+          True: { state: alarmp_remote }
+          False: { state: alarmp }
   - type: WiresPanel
   - type: Wires
     boardName: wires-board-name-airalarm
@@ -79,10 +86,16 @@
       map: ["airAlarmBase"]
     - state: alarm0
       map: ["airAlarmState"] # TODO: fire alarm enum
-      shader: Emissive # KS14
+      shader: unshaded # KS14
     - state: alarmx
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
   # KS14 Start: /tg/ sprite port
+  - type: EmissiveLayers
+    glowRadius: 0.45
+    offset: 0.35,-0.8
+    useSpriteTransform: false # because of dirspritemanip
+    layers:
+    - airAlarmState
   - type: DirectionalSpriteManipulation
     overrideRsiDirections: Dir4
     data:
@@ -160,7 +173,7 @@
       enum.ConstructionVisuals.Key:
         enum.ConstructionVisuals.Layer:
           assembly: { state: alarm_b1 }
-          electronics: { state: alarm_b1 }
+          electronics: { state: alarm_b2 } # KS14: alarm_b1 => alarm_b2
   - type: Construction
     graph: AirAlarm
     node: assembly

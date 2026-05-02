@@ -254,6 +254,13 @@
       - state: mag-unshaded-0
         map: ["enum.GunVisualLayers.MagUnshaded"]
         shader: unshaded
+  # KS14: emissive start
+  - type: EmissiveLayers
+    glowRadius: 0.35
+    layers:
+    - enum.GunVisualLayers.BaseUnshaded
+    - enum.GunVisualLayers.MagUnshaded
+  # KS14: emissive end
   - type: Clothing
     sprite: Objects/Weapons/Guns/SMGs/wt550.rsi
   - type: ChamberMagazineAmmoProvider

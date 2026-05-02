@@ -25,6 +25,12 @@
       sprite: Structures/Storage/closet_labels.rsi
       offset: "-0.065,0"
       map: ["enum.PaperLabelVisuals.Layer"]
+  # KS14: emissive start
+  - type: EmissiveLayers
+    glowRadius: 0.25
+    layers:
+    - enum.LockVisualLayers.Lock
+  # KS14: emissive end
   - type: Destructible
     thresholds:
     - trigger:

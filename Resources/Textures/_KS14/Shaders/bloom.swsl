@@ -1,6 +1,6 @@
 light_mode unshaded;
 
-uniform highp float bloom_intensity = 1.5;
+uniform highp float bloom_intensity = 2.2;
 uniform highp float threshold = 0.15;
 
 void fragment() {

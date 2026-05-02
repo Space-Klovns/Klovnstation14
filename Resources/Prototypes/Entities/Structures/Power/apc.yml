@@ -15,8 +15,8 @@
     sound:
       path: /Audio/Ambience/Objects/hdd_buzz.ogg
   - type: PointLight
-    radius: 1.5
-    energy: 3.0
+    radius: 0 # KS14: 0
+    energy: 0 # KS14: 0
     color: "#3db83b"
     castShadows: false
     netsync: false
@@ -95,6 +95,11 @@
       path: /Audio/_KS14/Machines/Terminal/terminal_off.ogg
       params:
         volume: 1
+  - type: EmissiveLayers # KS14
+    glowRadius: 0.5
+    offset: 0, -0.5
+    layers:
+    - enum.ApcVisualLayers.ChargeState
   # KS14 /tg/ parity end
   - type: ExtensionCableProvider
   - type: UserInterface

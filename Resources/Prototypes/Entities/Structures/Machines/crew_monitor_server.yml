@@ -8,13 +8,18 @@
       sprite: Structures/Machines/server.rsi
       snapCardinals: true
       layers:
-        - state: server-off
+        - state: server-nopower # KS14: server-off -> server-nopower
         - state: server-on
-          visible: false
-          map: [ "enum.PowerDeviceVisualLayers.Powered" ]
+          shader: unshaded # KS14, also remove `visible: false``
+          sprite: _KS14/Structures/Machines/server.rsi # KS14: use ks14 variant
+          map: ["enum.PowerDeviceVisualLayers.Powered"]
         - state: variant-crew
         - state: server_o
           map: ["enum.WiresVisualLayers.MaintenancePanel"]
+    # KS14: emissive start
+    - type: EmissiveLayers
+      intensity: 3
+    # KS14: emissive end
     - type: Construction
       graph: Machine
       node: machine

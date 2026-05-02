@@ -21,6 +21,13 @@
   - type: Sprite
     sprite: Structures/Machines/VendingMachines/empty.rsi
     snapCardinals: true
+  # KS14: emissive start
+  - type: EmissiveLayers
+    glowRadius: 0.05
+    intensity: 0
+    layers:
+    - enum.VendingMachineVisualLayers.BaseUnshaded
+  # KS14: emissive end
   - type: Physics
     bodyType: Static
   - type: Transform
@@ -91,11 +98,7 @@
   - type: Electrified
     enabled: false
     usesApcPower: true
-  - type: PointLight
-    enabled: false
-    castShadows: false
-    radius: 1.5
-  - type: LitOnPowered
+  # KS14: Removed PointLight, LitOnPowered
   - type: ApcPowerReceiver
     powerLoad: 200
   - type: Actions

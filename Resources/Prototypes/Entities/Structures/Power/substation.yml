@@ -86,16 +86,25 @@
     - state: substation
     - state: screen
       shader: unshaded
+      map: ["screen"] # KS14
     - state: full
       shader: unshaded
+      map: ["screen2"] # KS14
   - type: Battery
     maxCharge: 2500000
     startingCharge: 0
   - type: PointLight
-    radius: 1.5
-    energy: 1
+    radius: 0.3 # KS14: Set to 0.3
+    energy: 0.3 # KS14: Set to 0.3
     color: "#ff6900"
     castShadows: false
+  # KS14: emissive start
+  - type: EmissiveLayers
+    glowRadius: 0.3
+    layers:
+    - screen
+    - screen2
+  # KS14: emissive end
   - type: PowerMonitoringDevice
     sprite: Structures/Power/substation.rsi
     state: substation_static

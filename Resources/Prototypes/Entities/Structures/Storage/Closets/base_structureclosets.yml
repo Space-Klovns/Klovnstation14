@@ -212,6 +212,12 @@
     - state: welded
       visible: false
       map: ["enum.WeldableLayers.BaseWelded"]
+  # KS14: emissive start
+  - type: EmissiveLayers
+    glowRadius: 0.25
+    layers:
+    - enum.LockVisualLayers.Lock
+  # KS14: emissive end
   - type: Paintable
     group: WallLocker
 
@@ -245,6 +251,12 @@
     - state: locked
       map: ["enum.LockVisualLayers.Lock"]
       shader: unshaded
+  # KS14: emissive start
+  - type: EmissiveLayers
+    glowRadius: 0.25
+    layers:
+    - enum.LockVisualLayers.Lock
+  # KS14: emissive end
   - type: MovedByPressure
   - type: DamageOnHighSpeedImpact
     damage:

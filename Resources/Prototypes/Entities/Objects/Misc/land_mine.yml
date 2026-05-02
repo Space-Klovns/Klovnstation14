@@ -31,6 +31,13 @@
     - state: landmine-unshaded
       shader: unshaded
       map: [ "enum.ToggleableVisuals.Layer" ]
+  # KS14: emissive start
+  - type: EmissiveLayers
+    glowRadius: 1
+
+    layers:
+    - enum.ToggleableVisuals.Layer
+  # KS14: emissive end
   - type: Appearance
   - type: GenericVisualizer
     visuals:

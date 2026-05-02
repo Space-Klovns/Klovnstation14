@@ -1,0 +1,267 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
+using Content.Client.Light;
+using Content.Shared._KS14.Emissive;
+using Robust.Client.GameObjects;
+using Robust.Client.Graphics;
+using Robust.Client.Utility;
+using Robust.Shared.Enums;
+using Robust.Shared.Graphics.RSI;
+using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Reflection;
+using Robust.Shared.Timing;
+using Robust.Shared.Utility;
+
+namespace Content.Client._KS14.Emissive;
+
+public sealed class EmissiveOverlay : Overlay
+{
+    private static readonly ProtoId<ShaderPrototype> Shader = "Emissive";
+
+    public override OverlaySpace Space => OverlaySpace.BeforeLighting;
+
+    [Dependency] private readonly EntityManager _entityManager = default!;
+    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly IOverlayManager _overlay = default!;
+
+    private readonly SharedTransformSystem _transformSystem = default!;
+    private readonly EntityLookupSystem _lookupSystem = default!;
+    private readonly SpriteSystem _spriteSystem = default!;
+
+    private readonly EntityQuery<SpriteComponent> _spriteQuery = default!;
+
+    private readonly RemQueue<EntityUid> _entitiesToRemoveFromShaders = new();
+    private readonly HashSet<Entity<EmissiveLayersComponent>> _entities = [];
+    private readonly HashSet<EntityUid> _allShaderEntities = [];
+    /// <summary>
+    ///     Because a new shader has to be instantiated if you want to use a custom parameter yaaaaaaaaay
+    /// </summary>
+    private readonly Dictionary<EntityUid, ShaderInstance> _shaders = [];
+    private List<Entity<MapGridComponent>> _grids = [];
+
+    private readonly Dictionary<string, Enum?> _enumKeyCache = [];
+
+    public const int ContentZIndex = BeforeLightTargetOverlay.ContentZIndex + 1;
+
+    public EmissiveOverlay()
+    {
+        IoCManager.InjectDependencies(this);
+
+        _transformSystem = _entityManager.System<SharedTransformSystem>();
+        _lookupSystem = _entityManager.System<EntityLookupSystem>();
+        _spriteSystem = _entityManager.System<SpriteSystem>();
+
+        _spriteQuery = _entityManager.GetEntityQuery<SpriteComponent>();
+
+        ZIndex = ContentZIndex;
+    }
+
+    protected override bool BeforeDraw(in OverlayDrawArgs args)
+    {
+        if (args.Viewport.Eye == null)
+            return false;
+
+        return true;
+    }
+
+    protected override void Draw(in OverlayDrawArgs args)
+    {
+        var mapId = args.MapId;
+        var worldHandle = args.WorldHandle;
+
+        var lightOverlay = _overlay.GetOverlay<BeforeLightTargetOverlay>();
+        var bounds = lightOverlay.EnlargedBounds;
+        var target = lightOverlay.GetCachedForViewport(args.Viewport).EnlargedLightTarget;
+
+        var viewport = args.Viewport;
+        _grids.Clear();
+        _mapManager.FindGridsIntersecting(mapId, bounds, ref _grids, approx: true);
+
+        if (_grids.Count == 0)
+            return;
+
+        var lightScale = viewport.LightRenderTarget.Size / (Vector2)viewport.Size;
+        var scale = viewport.RenderScale / (Vector2.One / lightScale);
+
+        var eyeRotation = args.Viewport.Eye?.Rotation ?? new();
+
+        var transformQuery = _entityManager.TransformQuery;
+        var curTime = _gameTiming.CurTime;
+
+        args.WorldHandle.RenderInRenderTarget(target,
+        () =>
+        {
+            var invMatrix = target.GetWorldToLocalMatrix(viewport.Eye!, scale);
+
+            foreach (var grid in _grids)
+            {
+                var gridInvMatrix = _transformSystem.GetInvWorldMatrix(grid);
+                var localBounds = gridInvMatrix.TransformBox(bounds);
+
+                _entities.Clear();
+                _lookupSystem.GetLocalEntitiesIntersecting(grid.Owner, localBounds, _entities);
+
+                if (_entities.Count == 0)
+                    continue;
+
+                var gridMatrix = _transformSystem.GetWorldMatrix(grid.Owner);
+
+                foreach (var ent in _entities)
+                {
+                    var spriteComponent = _spriteQuery.GetComponent(ent);
+                    if (!spriteComponent.Visible)
+                        continue;
+
+                    // GetValueRefOrAddDefault isnt sandboxed so GEG
+                    if (!_shaders.TryGetValue(ent.Owner, out var shader))
+                    {
+                        shader = _prototypeManager.Index(Shader).InstanceUnique();
+                        _shaders[ent.Owner] = shader;
+                        _allShaderEntities.Add(ent);
+                    }
+                    shader.SetParameter("bloom_intensity", ent.Comp.Intensity);
+                    worldHandle.UseShader(shader);
+
+                    var transformComponent = transformQuery.GetComponent(ent);
+
+                    var matty = Matrix3x2.Multiply(gridMatrix, invMatrix);
+
+                    worldHandle.SetTransform(matty);
+
+                    var renderPosition = transformComponent.Coordinates.Position;
+                    var spriteRotation = transformComponent.LocalRotation + eyeRotation;
+                    if (ent.Comp.UseSpriteTransform)
+                    {
+                        renderPosition += spriteComponent.Offset;
+                        spriteRotation += spriteComponent.Rotation;
+                    }
+
+                    var spriteColor = spriteComponent.Color;
+
+
+                    foreach (var layerId in ent.Comp.Layers)
+                    {
+                        // insanity
+                        SpriteComponent.Layer? layer = null;
+                        var layerEnumKey = ParseKey(layerId, out var isKeyEnum);
+                        if (isKeyEnum)
+                        {
+                            if (!_spriteSystem.TryGetLayer((ent.Owner, spriteComponent), layerEnumKey!, out layer, false))
+                                continue;
+                        }
+                        else if (!_spriteSystem.TryGetLayer((ent.Owner, spriteComponent), layerId, out layer, false))
+                            continue;
+
+                        if (!layer.Visible)
+                            continue;
+
+                        var textureRotation = spriteRotation + Angle.FromDegrees(ent.Comp.ROTOF);
+                        var origin = renderPosition;
+                        if (ent.Comp.UseSpriteTransform)
+                        {
+                            textureRotation += layer.Rotation;
+                            origin += layer.Offset;
+                        }
+
+                        var texture = GetLayerTexture(spriteComponent, layer, textureRotation);
+                        var box = Box2.CenteredAround(origin + ent.Comp.Offset, texture.Size / (float)EyeManager.PixelsPerMeter).Enlarged(ent.Comp.GlowRadius);
+
+                        var textureBox = new Box2Rotated(
+                            box,
+                            textureRotation,
+                            origin // The pivot-point should be at the origin of the box, not origin of the world (0,0)
+                        );
+
+                        worldHandle.DrawTextureRect(
+                            texture,
+                            textureBox,
+                            modulate: spriteColor * layer.Color
+                        );
+                    }
+
+                    worldHandle.UseShader(null);
+                }
+            }
+        }, null);
+
+        // {
+        //     foreach (var (oldUid, oldShader) in _shaders)
+        //     {
+        //         if (_allShaderEntities.Contains(oldUid!))
+        //             continue;
+
+        //         _entitiesToRemoveFromShaders.Add(oldUid);
+        //         oldShader.Dispose();
+        //     }
+        //     if (_entitiesToRemoveFromShaders.Count > 0)
+        //         Logger.Info($"Purged {_entitiesToRemoveFromShaders.Count} shaders");
+
+        //     foreach (var uid in _entitiesToRemoveFromShaders)
+        //         _shaders.Remove(uid);
+
+        //     _entitiesToRemoveFromShaders.Clear();
+        // }
+        // _allShaderEntities.Clear();
+    }
+
+    private Enum? ParseKey(string keyString, [NotNullWhen(true)] out bool isEnum)
+    {
+        if (_enumKeyCache.TryGetValue(keyString, out var foundEnum))
+        {
+            isEnum = foundEnum is { };
+            return foundEnum;
+        }
+
+        if (_reflectionManager.TryParseEnumReference(keyString, out var @enum))
+        {
+            _enumKeyCache[keyString] = @enum;
+            isEnum = true;
+            return @enum;
+        }
+
+        _enumKeyCache[keyString] = null;
+        isEnum = false;
+        return null;
+    }
+
+    private Texture GetLayerTexture(SpriteComponent spriteComponent, SpriteComponent.Layer layer, Angle rotation)
+    {
+        var state = layer.ActualState;
+        var dir = state == null ? RsiDirection.South : SpriteComponent.Layer.GetDirection(state.RsiDirections, rotation);
+
+        Direction? overrideDirection = spriteComponent.EnableDirectionOverride ? spriteComponent.DirectionOverride : null;
+        if (overrideDirection != null && state != null)
+            dir = overrideDirection.Value.Convert(state.RsiDirections);
+
+        dir = dir.OffsetRsiDir(layer.DirOffset);
+
+        return state?.GetFrame(dir, layer.AnimationFrame) ?? layer.Texture ?? _spriteSystem.GetFallbackTexture();
+    }
+
+    /*
+    South = 0,
+    North = 1,
+    East = 2,
+    West = 3,
+    SouthEast = 4,
+    SouthWest = 5,
+    NorthEast = 6,
+    NorthWest = 7,
+    */
+    private static readonly Angle[] RsiDirectionToAngle = [
+        new(0), // South
+        new(Math.PI), // North
+        new(Math.PI * 0.5d), // East
+        new(Math.PI * 1.5d), // West
+
+        new(Math.PI* 0.75d), // SouthEast
+        new(Math.PI * 1.25d), // SouthWest
+        new(Math.PI * 0.25d), // NorthEast
+        new(Math.PI * 1.75d), // NorthWest
+    ];
+}

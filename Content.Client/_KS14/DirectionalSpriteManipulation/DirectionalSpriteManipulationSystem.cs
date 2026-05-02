@@ -1,9 +1,7 @@
 using System.Numerics;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
-using Robust.Client.State;
 using Robust.Client.Utility;
-using Robust.Shared.Graphics.RSI;
 using Robust.Shared.Map;
 using Robust.Shared.Reflection;
 
@@ -43,7 +41,7 @@ public sealed class DirectionalSpriteManipulationSystem : EntitySystem
             if (transformComponent.MapID == MapId.Nullspace)
                 continue;
 
-            var effectiveRotation = _transformSystem.GetWorldRotation(Transform(uid), EntityManager.TransformQuery) + eyeRotation;
+            var effectiveRotation = _transformSystem.GetWorldRotation(transformComponent, EntityManager.TransformQuery) + eyeRotation;
 
             foreach (var (layerKey, layerData) in directionalOffsetComponent.LayerData)
             {

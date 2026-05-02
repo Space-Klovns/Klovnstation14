@@ -61,6 +61,16 @@
       map: ["enum.DoorVisualLayers.BaseEmagging"]
       shader: unshaded
       visible: false
+    # KS14: emissive start
+    - type: EmissiveLayers
+      glowRadius: 0.4
+      intensity: 3
+      layers:
+      - enum.DoorVisualLayers.BaseUnlit
+      - enum.DoorVisualLayers.BaseBolted
+      - enum.DoorVisualLayers.BaseEmergencyAccess
+      - enum.DoorVisualLayers.BaseEmagging
+    # KS14: emissive end
   - type: AnimationPlayer
   - type: ApcPowerReceiver
   - type: ExtensionCableReceiver

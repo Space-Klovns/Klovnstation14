@@ -223,6 +223,11 @@
     - type: Sprite
       sprite: Structures/Piping/Atmospherics/thermomachine.rsi
       snapCardinals: true
+    # KS14: emissive start
+    - type: EmissiveLayers
+      glowRadius: 0
+      intensity: -1
+    # KS14: emissive end
     - type: Appearance
     - type: PipeColorVisuals
     - type: Rotatable
@@ -482,4 +487,3 @@
   - type: GuideHelp
     guides:
     - GasCondensing
-

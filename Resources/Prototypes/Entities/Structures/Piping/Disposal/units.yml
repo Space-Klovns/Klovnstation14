@@ -23,15 +23,24 @@
       map: [ "enum.DisposalUnitVisualLayers.OverlayFlush" ]
     - state: dispover-charge
       map: [ "enum.DisposalUnitVisualLayers.OverlayCharging" ]
-      shader: Emissive # KS14
+      shader: unshaded
     - state: dispover-ready
       map: [ "enum.DisposalUnitVisualLayers.OverlayReady" ]
-      shader: Emissive # KS14
+      shader: unshaded
     - state: dispover-full
       map: [ "enum.DisposalUnitVisualLayers.OverlayFull" ]
-      shader: Emissive # KS14
+      shader: unshaded
     - state: dispover-handle
       map: [ "enum.DisposalUnitVisualLayers.OverlayEngaged" ]
+  # KS14: emissive start
+  - type: EmissiveLayers
+    glowRadius: 0.25
+    intensity: 3
+    layers:
+    - enum.DisposalUnitVisualLayers.OverlayCharging
+    - enum.DisposalUnitVisualLayers.OverlayReady
+    - enum.DisposalUnitVisualLayers.OverlayFull
+  # KS14: emissive end
   - type: Physics
     bodyType: Static
   - type: Fixtures
@@ -125,13 +134,13 @@
         map: [ "enum.DisposalUnitVisualLayers.OverlayFlush" ]
       - state: dispover-charge
         map: [ "enum.DisposalUnitVisualLayers.OverlayCharging" ]
-        shader: Emissive # KS14
+        shader: unshaded
       - state: dispover-ready
         map: [ "enum.DisposalUnitVisualLayers.OverlayReady" ]
-        shader: Emissive # KS14
+        shader: unshaded
       - state: dispover-full
         map: [ "enum.DisposalUnitVisualLayers.OverlayFull" ]
-        shader: Emissive # KS14
+        shader: unshaded
       - state: mailover-handle
         map: [ "enum.DisposalUnitVisualLayers.OverlayEngaged" ]
   - type: Construction
