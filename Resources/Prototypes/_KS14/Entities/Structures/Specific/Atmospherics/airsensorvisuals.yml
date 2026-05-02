@@ -1,0 +1,19 @@
+- type: entity
+  id: AirSensorBaseVisuals
+  abstract: true
+  components:
+  - type: Appearance
+  - type: Sprite
+    drawdepth: FloorObjects
+    sprite: _KS14/Structures/Specific/Atmospherics/sensor.rsi # KS14: ks14
+    layers: # KS14: added base
+    - state: base
+    - state: gsensor1
+      shader: unshaded # KS14: unshaded
+      map: [ "enum.PowerDeviceVisualLayers.Powered" ]
+  - type: GenericVisualizer
+    visuals:
+      enum.PowerDeviceVisuals.Powered:
+        enum.PowerDeviceVisualLayers.Powered:
+          True: { visible: true } # KS14: changed to set visible instead of state
+          False: { visible: false } # KS14: changed to set visible instead of state

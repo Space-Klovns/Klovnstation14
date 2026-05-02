@@ -42,29 +42,12 @@
     layers:
     - enum.PowerDeviceVisualLayers.Powered
   # KS14: emissive end
-  # KS14: move start
-  - type: Appearance
-  - type: Sprite
-    drawdepth: FloorObjects
-    sprite: _KS14/Structures/Specific/Atmospherics/sensor.rsi # KS14: ks14
-    layers: # KS14: added base
-    - state: base
-    - state: gsensor1
-      shader: unshaded # KS14: unshaded
-      map: [ "enum.PowerDeviceVisualLayers.Powered" ]
-  - type: GenericVisualizer
-    visuals:
-      enum.PowerDeviceVisuals.Powered:
-        enum.PowerDeviceVisualLayers.Powered:
-          True: { visible: true } # KS14: changed to set visible instead of state
-          False: { visible: false } # KS14: changed to set visible instead of state
-  # KS14: move end
 
 - type: entity
   id: AirSensor
   name: air sensor
   description: Air sensor. It senses air.
-  parent: AirSensorBase
+  parent: [ AirSensorBase, AirSensorBaseVisuals ] # KS14: Added AirSensorBaseVisuals
   placement:
     mode: SnapgridCenter
   components:
@@ -103,7 +86,7 @@
   - type: Construction
     graph: AirSensor
     node: sensor
-  # KS14: Moved Sprite, Appearance and GenericVisualizer to AirSensorBase
+  # KS14: Moved Sprite, Appearance and GenericVisualizer to AirSensorBaseVisuals
   - type: Tag
     tags:
     - AirSensor
