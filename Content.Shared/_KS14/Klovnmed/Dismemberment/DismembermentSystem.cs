@@ -120,14 +120,15 @@ public sealed class DismembermentSystem : EntitySystem
 
         if (victimUid is { })
         {
-            _ksPopupSystem.PopupTargetAndUser(
-                partUid,
-                victimUid.Value,
-                "someones bodypart gets crushed",
-                "yhour bodypart gets crushed",
-                type: PopupType.MediumCaution,
-                predicted: predicted
-            );
+            // bro
+            //     _ksPopupSystem.PopupTargetAndUser(
+            //         partUid,
+            //         victimUid.Value,
+            //         "someones bodypart gets crushed",
+            //         "yhour bodypart gets crushed",
+            //         type: PopupType.MediumCaution,
+            //         predicted: predicted
+            //     );
         }
     }
 }

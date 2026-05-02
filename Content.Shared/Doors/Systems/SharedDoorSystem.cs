@@ -539,6 +539,7 @@ public abstract partial class SharedDoorSystem : EntitySystem
             if (door.CrushableBodyPartType is { } crushableType &&
                 _dismembermentSystem.TryDismemberRandomBodyPartOfType(entity, crushableType, out var partUid, cause: uid))
             {
+                _dismembermentSystem.DoFixedEmote(entity);
                 _dismembermentSystem.TryRandomlyCrushPart(partUid.Value, victimUid: entity, predicted: false);
             }
             // KS14: Crush dismemberment end
