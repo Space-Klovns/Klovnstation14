@@ -36,10 +36,16 @@ public sealed partial class AtmosAlarmableComponent : Component
     [ViewVariables] public bool IgnoreAlarms { get; set; } = false;
 
     [DataField("alarmSound")]
-    public SoundSpecifier AlarmSound { get; set; } = new SoundPathSpecifier("/Audio/Machines/alarm.ogg");
+    public SoundSpecifier AlarmSound { get; set; } = new SoundCollectionSpecifier("KsFireAlarm", AudioParams.Default with { Variation = 0.1f }); // KS14: Changed alarm sound to point to KsFireAlarm
+
+    // KS14
+    /// <summary>
+    ///     Entity of the alarm sound.
+    /// </summary>
+    [ViewVariables] public EntityUid? AlarmSoundUid = null;
 
     [DataField("alarmVolume")]
-    public float AlarmVolume { get; set; } = -10;
+    public float AlarmVolume { get; set; } = -2.2f; // KS14: -10 => -2.2f
 
     /// <summary>
     ///     List of tags to check for when synchronizing alarms.

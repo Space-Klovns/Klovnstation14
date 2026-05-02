@@ -1,3 +1,4 @@
+using Content.Shared.Body;
 using Content.Shared.Damage;
 using Content.Shared.Doors.Systems;
 using Content.Shared.Tools;
@@ -291,11 +292,24 @@ public sealed partial class DoorComponent : Component
     [DataField]
     public bool ClickOpen = true;
 
-    [DataField(customTypeSerializer: typeof(ConstantSerializer<DrawDepthTag>))]
-    public int OpenDrawDepth = (int) DrawDepth.DrawDepth.Doors;
+    // KS14
+    /// <summary>
+    ///     If this and <see cref="ClickOpen"/> are both true, closing this door
+    ///         by clicking will force it to do collision checks.
+    ///
+    ///     If false, closing this door by clicking will never do collision checks.
+    ///
+    ///     If null, assumes <see cref="PerformCollisionCheck"/> for collision checks.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadWrite)]
+    [DataField]
+    public bool? ForcedCollisionCheckOnClick = null;
 
     [DataField(customTypeSerializer: typeof(ConstantSerializer<DrawDepthTag>))]
-    public int ClosedDrawDepth = (int) DrawDepth.DrawDepth.Doors;
+    public int OpenDrawDepth = (int)DrawDepth.DrawDepth.Doors;
+
+    [DataField(customTypeSerializer: typeof(ConstantSerializer<DrawDepthTag>))]
+    public int ClosedDrawDepth = (int)DrawDepth.DrawDepth.Doors;
 }
 
 [Serializable, NetSerializable]

@@ -46,6 +46,7 @@ public abstract class SharedFirelockSystem : EntitySystem
         if (!_doorSystem.TryClose(uid, door))
             return false;
 
+        _appearance.SetData(uid, DoorVisuals.ClosedLights, true); // KS14
         return _doorSystem.OnPartialClose(uid, door);
     }
 
@@ -107,7 +108,7 @@ public abstract class SharedFirelockSystem : EntitySystem
 
     protected virtual void OnComponentStartup(Entity<FirelockComponent> ent, ref ComponentStartup args)
     {
-        UpdateVisuals(ent.Owner,ent.Comp, args);
+        UpdateVisuals(ent.Owner, ent.Comp, args);
     }
 
     private void UpdateVisuals(EntityUid uid, FirelockComponent component, EntityEventArgs args) => UpdateVisuals(uid, component);

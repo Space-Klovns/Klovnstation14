@@ -215,7 +215,7 @@ public abstract class SharedPortalSystem : EntitySystem
     /// <returns>False if the hit was already handled.</returns>
     public virtual bool OnTelefrag(EntityUid hitUid, in Entity<PortalComponent> portalEntity)
     {
-        if (!HasComp<BodyComponent>(hitUid))
+        if (HasComp<BodyComponent>(hitUid))
         {
             _popup.PopupEntity(Loc.GetString("portal-component-telefrag", ("name", Identity.Name(hitUid, EntityManager, _playerManager.LocalEntity))), hitUid, type: PopupType.LargeCaution);
             _gibbingSystem.Gib(hitUid, dropGiblets: true);

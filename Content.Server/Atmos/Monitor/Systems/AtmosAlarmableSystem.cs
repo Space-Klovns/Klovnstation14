@@ -42,11 +42,30 @@ public sealed class AtmosAlarmableSystem : EntitySystem
 
     public const string ResetAll = "atmos_alarmable_reset_all";
 
+    private readonly HashSet<Entity<AtmosAlarmableComponent>> _alarmsOnDanger = []; // KS14: alertsounds
+
     public override void Initialize()
     {
+        SubscribeLocalEvent<AtmosAlarmableComponent, ComponentShutdown>(OnShutdown); // KS14: alertsounds
+
         SubscribeLocalEvent<AtmosAlarmableComponent, MapInitEvent>(OnMapInit);
         SubscribeLocalEvent<AtmosAlarmableComponent, DeviceNetworkPacketEvent>(OnPacketRecv);
         SubscribeLocalEvent<AtmosAlarmableComponent, PowerChangedEvent>(OnPowerChange);
+    }
+
+    // KS14: Add update loop, keep playing alert sounds if possible
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        foreach (var entity in _alarmsOnDanger)
+            PlayAlertSound(entity, AtmosAlarmType.Danger, entity);
+    }
+
+    // KS14: alertsounds
+    private void OnShutdown(Entity<AtmosAlarmableComponent> entity, ref ComponentShutdown args)
+    {
+        _alarmsOnDanger.Remove(entity);
     }
 
     private void OnMapInit(EntityUid uid, AtmosAlarmableComponent component, MapInitEvent args)
@@ -173,8 +192,18 @@ public sealed class AtmosAlarmableSystem : EntitySystem
             return;
         }
 
+        // KS14: alerts start
+        if (type != AtmosAlarmType.Danger)
+            _alarmsOnDanger.Remove((uid, alarmable));
+        // KS14: alerts end
+
         if (sync)
         {
+            // KS14: alerts start
+            if (type == AtmosAlarmType.Danger)
+                _alarmsOnDanger.Add((uid, alarmable));
+            // KS14: alerts end
+
             SyncAlertsToNetwork(uid, null, alarmable);
         }
 
@@ -217,6 +246,11 @@ public sealed class AtmosAlarmableSystem : EntitySystem
         }
 
         TryUpdateAlert(uid, alarmType, alarmable, false);
+        // KS14: alerts start
+        // Forcealerts always loop
+        if (alarmType == AtmosAlarmType.Danger)
+            _alarmsOnDanger.Add((uid, alarmable));
+        // KS14: alerts end
 
         if (alarmable.ReceiveOnly)
         {
@@ -304,7 +338,13 @@ public sealed class AtmosAlarmableSystem : EntitySystem
     {
         if (alarm == AtmosAlarmType.Danger)
         {
-            _audioSystem.PlayPvs(alarmable.AlarmSound, uid, AudioParams.Default.WithVolume(alarmable.AlarmVolume));
+            // KS14: add AlarmSoundUid
+            if (Exists(alarmable.AlarmSoundUid))
+                return;
+
+            // KS14: add AlarmSoundUid
+            alarmable.AlarmSoundUid =
+                _audioSystem.PlayPvs(alarmable.AlarmSound, uid, AudioParams.Default.WithVolume(alarmable.AlarmVolume).WithLoop(false)/* KS14: disable looping */)?.Entity;
         }
     }
 

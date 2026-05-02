@@ -73,11 +73,11 @@
     layers:
     - state: fire0
       map: ["fireAlarmBase"]
+    - state: fire_b2 # KS14: Moved maintpanel layer to under unshaded layer
+      map: ["enum.WiresVisualLayers.MaintenancePanel"]
     - state: fire_off
       shader: unshaded # KS14: unshaded
       map: ["fireAlarmState"]
-    - state: fire_b2
-      map: ["enum.WiresVisualLayers.MaintenancePanel"]
   # KS14: emissive start
   - type: EmissiveLayers
     glowRadius: 0.75

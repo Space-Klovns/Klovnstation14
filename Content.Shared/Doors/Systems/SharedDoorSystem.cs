@@ -206,7 +206,7 @@ public abstract partial class SharedDoorSystem : EntitySystem
         if (args.Handled || !args.Complex || !door.ClickOpen)
             return;
 
-        if (!TryToggleDoor(uid, door, args.User, predicted: true))
+        if (!TryToggleDoor(uid, door, args.User, predicted: true, door.ClickOpen ? door.ForcedCollisionCheckOnClick : null /* KS14: Add ForcedCollisionCheckOnClick */))
             _pryingSystem.TryPry(uid, args.User, out _);
 
         args.Handled = true;
@@ -288,7 +288,7 @@ public abstract partial class SharedDoorSystem : EntitySystem
             Audio.PlayPvs(door.DenySound, uid, AudioParams.Default.WithVolume(-3));
     }
 
-    public bool TryToggleDoor(EntityUid uid, DoorComponent? door = null, EntityUid? user = null, bool predicted = false)
+    public bool TryToggleDoor(EntityUid uid, DoorComponent? door = null, EntityUid? user = null, bool predicted = false, bool? forceCollisionCheck = null /* KS14: Add ForcedCollisionCheckOnClick */)
     {
         if (!Resolve(uid, ref door))
             return false;
@@ -300,7 +300,7 @@ public abstract partial class SharedDoorSystem : EntitySystem
 
         if (door.State == DoorState.Open)
         {
-            return TryClose(uid, door, user, predicted);
+            return TryClose(uid, door, user, predicted, forceCollisionCheck: forceCollisionCheck /* KS14: Add ForcedCollisionCheckOnClick */);
         }
 
         return false;
@@ -408,12 +408,12 @@ public abstract partial class SharedDoorSystem : EntitySystem
     #endregion
 
     #region Closing
-    public bool TryClose(EntityUid uid, DoorComponent? door = null, EntityUid? user = null, bool predicted = false)
+    public bool TryClose(EntityUid uid, DoorComponent? door = null, EntityUid? user = null, bool predicted = false, bool? forceCollisionCheck = null /* KS14: Add ForcedCollisionCheckOnClick */)
     {
         if (!Resolve(uid, ref door))
             return false;
 
-        if (!CanClose(uid, door, user))
+        if (!CanClose(uid, door, user, forceCollisionCheck: forceCollisionCheck /* KS14: Add ForcedCollisionCheckOnClick */))
             return false;
 
         StartClosing(uid, door, user, predicted);
@@ -426,7 +426,7 @@ public abstract partial class SharedDoorSystem : EntitySystem
     /// <param name="uid"> The uid of the door</param>
     /// <param name="door"> The doorcomponent of the door</param>
     /// <param name="user"> The user (if any) opening the door</param>
-    public bool CanClose(EntityUid uid, DoorComponent? door = null, EntityUid? user = null, bool partial = false)
+    public bool CanClose(EntityUid uid, DoorComponent? door = null, EntityUid? user = null, bool partial = false, bool? forceCollisionCheck = null /* KS14: Add ForcedCollisionCheckOnClick */)
     {
         if (!Resolve(uid, ref door))
             return false;
@@ -436,7 +436,7 @@ public abstract partial class SharedDoorSystem : EntitySystem
         if (door.State is DoorState.Welded or DoorState.Closed)
             return false;
 
-        var ev = new BeforeDoorClosedEvent(door.PerformCollisionCheck, partial);
+        var ev = new BeforeDoorClosedEvent(forceCollisionCheck ?? door.PerformCollisionCheck /* KS14: Add ForcedCollisionCheckOnClick */, partial);
         RaiseLocalEvent(uid, ev);
         if (ev.Cancelled)
             return false;
@@ -576,7 +576,7 @@ public abstract partial class SharedDoorSystem : EntitySystem
 
             //TODO: Make only shutters ignore these objects upon colliding instead of all airlocks
             // Excludes Glasslayer for windows, GlassAirlockLayer for windoors, TableLayer for tables
-            if (otherPhysics.Comp.CollisionLayer == (int) CollisionGroup.GlassLayer || otherPhysics.Comp.CollisionLayer == (int) CollisionGroup.GlassAirlockLayer || otherPhysics.Comp.CollisionLayer == (int) CollisionGroup.TableLayer)
+            if (otherPhysics.Comp.CollisionLayer == (int)CollisionGroup.GlassLayer || otherPhysics.Comp.CollisionLayer == (int)CollisionGroup.GlassAirlockLayer || otherPhysics.Comp.CollisionLayer == (int)CollisionGroup.TableLayer)
                 continue;
 
             // Ignore low-passable entities.
@@ -584,7 +584,7 @@ public abstract partial class SharedDoorSystem : EntitySystem
                 continue;
 
             //For when doors need to close over conveyor belts
-            if (otherPhysics.Comp.CollisionLayer == (int) CollisionGroup.ConveyorMask)
+            if (otherPhysics.Comp.CollisionLayer == (int)CollisionGroup.ConveyorMask)
                 continue;
 
             if ((physics.CollisionMask & otherPhysics.Comp.CollisionLayer) == 0 && (otherPhysics.Comp.CollisionMask & physics.CollisionLayer) == 0)

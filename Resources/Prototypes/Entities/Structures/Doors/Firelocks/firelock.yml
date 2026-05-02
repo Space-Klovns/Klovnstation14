@@ -97,6 +97,10 @@
           layer:
           - AirlockLayer
     - type: Door
+      # KS14 start
+      performCollisionCheck: false
+      forcedCollisionCheckOnClick: true
+      # KS14 end
       openDrawDepth: WallTops
       closeTimeOne: 0.1
       closeTimeTwo: 0.6
@@ -107,7 +111,7 @@
       clickOpen: true
       crushDamage:
         types:
-          Blunt: 15
+          Blunt: 45 # KS14: 15 -> 45
       openSound:
         path: /Audio/Machines/airlock_open.ogg
       closeSound:

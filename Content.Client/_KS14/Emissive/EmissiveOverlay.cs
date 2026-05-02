@@ -133,7 +133,7 @@ public sealed class EmissiveOverlay : Overlay
                     worldHandle.SetTransform(matty);
 
                     var renderPosition = transformComponent.Coordinates.Position;
-                    var spriteRotation = transformComponent.LocalRotation + eyeRotation;
+                    var spriteRotation = transformComponent.LocalRotation;
                     if (ent.Comp.UseSpriteTransform)
                     {
                         renderPosition += spriteComponent.Offset;

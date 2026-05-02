@@ -1,0 +1,8 @@
+- files:
+  - fire_alarm1.ogg
+  - fire_alarm2.ogg
+  - fire_alarm3.ogg
+  - fire_alarm4.ogg
+  license: "CC-BY-SA-3.0"
+  copyright: "Taken from https://github.com/tgstation/tgstation/ at commit ba8471b8dbf2c83345809bac7154880e37da7120"
+  source: "https://github.com/tgstation/tgstation/blob/ba8471b8dbf2c83345809bac7154880e37da7120/sound/machines/fire_alarm/"

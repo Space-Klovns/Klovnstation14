@@ -1,6 +1,6 @@
 - files:
   - terminal_off.ogg
   - terminal_on.ogg
-  license: "CC-BY-3.0"
+  license: "CC-BY-SA-3.0"
   copyright: "Taken from https://github.com/tgstation/tgstation/ at commit c945d4c9f2753a0b3c1582ae5b803ab4b39f8534"
-  source: "https://github.com/tgstation/tgstation/blob/c945d4c9f2753a0b3c1582ae5b803ab4b39f8534/sound/items/sec_hailer/sec_death.ogg"
+  source: "https://github.com/tgstation/tgstation/blob/c945d4c9f2753a0b3c1582ae5b803ab4b39f8534/"

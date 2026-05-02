@@ -1,0 +1,7 @@
+- type: soundCollection
+  id: KsFireAlarm
+  files:
+  - /Audio/_KS14/Machines/FireAlarm/fire_alarm1.ogg
+  - /Audio/_KS14/Machines/FireAlarm/fire_alarm2.ogg
+  - /Audio/_KS14/Machines/FireAlarm/fire_alarm3.ogg
+  - /Audio/_KS14/Machines/FireAlarm/fire_alarm4.ogg
