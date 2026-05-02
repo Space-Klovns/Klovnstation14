@@ -18,7 +18,7 @@
   id: OrganBase
   name: organ
   abstract: true
-  parent: BaseItem
+  parent: [ BaseItem, KsBaseBodyEntity ] # KS14: Klovnmed: Now parents off KsBaseBodyEntity
   components:
   - type: Organ
 
@@ -83,7 +83,9 @@
   - type: Organ
     category: ArmLeft
   - type: Sprite
-    state: l_arm
+    layers: # KS14: made singular state into layer, gave offset
+    - state: l_arm
+      offset: -0.2,0
   - type: VisualOrgan
     layer: enum.HumanoidVisualLayers.LArm
     data:
@@ -102,7 +104,9 @@
   - type: Organ
     category: ArmRight
   - type: Sprite
-    state: r_arm
+    layers: # KS14: made singular state into layer, gave offset
+    - state: r_arm
+      offset: 0.2,0
   - type: VisualOrgan
     layer: enum.HumanoidVisualLayers.RArm
     data:
@@ -235,7 +239,7 @@
       - RFoot
 
 - type: entity
-  parent: OrganBase
+  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
   id: OrganBaseBrain
   name: brain
   abstract: true
@@ -284,7 +288,7 @@
       - Eyes
 
 - type: entity
-  parent: OrganBase
+  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
   id: OrganBaseTongue
   name: tongue
   abstract: true
@@ -297,7 +301,7 @@
     - state: tongue
 
 - type: entity
-  parent: OrganBase
+  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
   id: OrganBaseAppendix
   name: appendix
   abstract: true
@@ -323,7 +327,7 @@
     - state: ears
 
 - type: entity
-  parent: OrganBase
+  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
   id: OrganBaseLungs
   name: lungs
   abstract: true
@@ -334,6 +338,7 @@
   - type: Lung
   - type: Metabolizer
     stages: [ Respiration ]
+    stopAutoUpdate: true # KS14: Klovnmed
   - type: SolutionContainerManager
     solutions:
       Lung:
@@ -347,7 +352,7 @@
     heldPrefix: lungs
 
 - type: entity
-  parent: OrganBase
+  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
   id: OrganBaseHeart
   name: heart
   abstract: true
@@ -363,7 +368,7 @@
     stages: [ Bloodstream ]
 
 - type: entity
-  parent: OrganBase
+  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
   id: OrganBaseStomach
   name: stomach
   abstract: true
@@ -386,7 +391,7 @@
     heldPrefix: stomach
 
 - type: entity
-  parent: OrganBase
+  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
   id: OrganBaseLiver
   name: liver
   abstract: true
@@ -404,7 +409,7 @@
     stages: [ Metabolites ]
 
 - type: entity
-  parent: OrganBase
+  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
   id: OrganBaseKidneys
   name: kidneys
   abstract: true
@@ -433,7 +438,9 @@
   abstract: true
   components:
   - type: Sprite
-    state: head_m
+    layers: # KS14: made singular state into layer, gave offset
+    - state: head_m
+      offset: 0,-0.3
   - type: VisualOrgan
     data:
       state: head_m

@@ -1,0 +1,23 @@
+- type: entity
+  id: KsBaseBodyEntity
+  abstract: true
+  components:
+  - type: ContainerContainer
+    containers:
+      body_organs: !type:Container
+        showEnts: False
+
+- type: entity
+  id: KsBaseOrganSquishy
+  abstract: true
+  components:
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      collection: KsHandlingOrgan
+      params:
+        volume: -5
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      collection: KsHandlingOrgan
+      params:
+        volume: -5

@@ -45,22 +45,47 @@
           32:
             sprite: Mobs/Species/Human/displacement.rsi
             state: jumpsuit-female
-  - type: InitialBody
+  - type: InitialBody # KS14: Re-arranged
     organs:
-      Torso: OrganDionaTorso
-      Head: OrganDionaHead
-      ArmLeft: OrganDionaArmLeft
-      ArmRight: OrganDionaArmRight
-      HandRight: OrganDionaHandRight
-      HandLeft: OrganDionaHandLeft
-      LegLeft: OrganDionaLegLeft
-      LegRight: OrganDionaLegRight
-      FootLeft: OrganDionaFootLeft
-      FootRight: OrganDionaFootRight
-      Brain: OrganDionaBrainNymphing
-      Eyes: OrganDionaEyes
-      Lungs: OrganDionaLungsNymphing
-      Stomach: OrganDionaStomachNymphing
+    - category: Head # head
+      entity: OrganDionaHead
+      children:
+      - category: Brain
+        entity: OrganDionaBrain
+      - category: Eyes
+        entity: OrganDionaEyes
+
+    - category: Torso # torso
+      entity: OrganDionaTorso
+      children:
+      - category: Lungs
+        entity: OrganDionaLungs
+      - category: Stomach
+        entity: OrganDionaStomach
+
+    - category: ArmLeft # arm
+      entity: OrganDionaArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganDionaHandLeft
+
+    - category: ArmRight # arm
+      entity: OrganDionaArmRight
+      children:
+      - category: HandRight
+        entity: OrganDionaHandRight
+
+    - category: LegLeft # leg
+      entity: OrganDionaLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganDionaFootLeft
+
+    - category: LegRight # leg
+      entity: OrganDionaLegRight
+      children:
+      - category: FootRight
+        entity: OrganDionaFootRight
   - type: HumanoidProfile
     species: Diona
 

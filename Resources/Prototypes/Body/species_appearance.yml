@@ -76,6 +76,7 @@
   parent:
   - InventoryBase
   - BaseSpeciesLayers
+  - ComplexBodyBase # KS14
   abstract: true
   save: false
   components:

@@ -41,28 +41,59 @@
   - type: Inventory
     templateId: arachnid
     speciesId: arachnid
-  - type: InitialBody
+  - type: InitialBody # KS14: Re-arranged
     organs:
-      Torso: OrganArachnidTorso
-      Head: OrganArachnidHead
-      ArmLeft: OrganArachnidArmLeft
-      ArmRight: OrganArachnidArmRight
-      HandRight: OrganArachnidHandRight
-      HandLeft: OrganArachnidHandLeft
-      LegLeft: OrganArachnidLegLeft
-      LegRight: OrganArachnidLegRight
-      FootLeft: OrganArachnidFootLeft
-      FootRight: OrganArachnidFootRight
-      Brain: OrganArachnidBrain
-      Eyes: OrganArachnidEyes
-      Tongue: OrganArachnidTongue
-      Appendix: OrganArachnidAppendix
-      Ears: OrganArachnidEars
-      Lungs: OrganArachnidLungs
-      Heart: OrganArachnidHeart
-      Stomach: OrganArachnidStomach
-      Liver: OrganArachnidLiver
-      Kidneys: OrganArachnidKidneys
+    - category: Head # head
+      entity: OrganArachnidHead
+      children:
+      - category: Brain
+        entity: OrganArachnidBrain
+      - category: Eyes
+        entity: OrganArachnidEyes
+      - category: Ears
+        entity: OrganArachnidEars
+      - category: Tongue
+        entity: OrganArachnidTongue
+
+    - category: Torso # torso
+      entity: OrganArachnidTorso
+      children:
+      - category: Appendix
+        entity: OrganArachnidAppendix
+      - category: Lungs
+        entity: OrganArachnidLungs
+      - category: Heart
+        entity: OrganArachnidHeart
+      - category: Stomach
+        entity: OrganArachnidStomach
+      - category: Liver
+        entity: OrganArachnidLiver
+      - category: Kidneys
+        entity: OrganArachnidKidneys
+
+    - category: ArmLeft # arm
+      entity: OrganArachnidArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganArachnidHandLeft
+
+    - category: ArmRight # arm
+      entity: OrganArachnidArmRight
+      children:
+      - category: HandRight
+        entity: OrganArachnidHandRight
+
+    - category: LegLeft # leg
+      entity: OrganArachnidLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganArachnidFootLeft
+
+    - category: LegRight # leg
+      entity: OrganArachnidLegRight
+      children:
+      - category: FootRight
+        entity: OrganArachnidFootRight
   - type: HumanoidProfile
     species: Arachnid
 

@@ -85,28 +85,59 @@
           32:
             sprite: Mobs/Species/Reptilian/displacement.rsi
             state: mask
-  - type: InitialBody
+  - type: InitialBody # KS14: Re-arranged
     organs:
-      Torso: OrganReptilianTorso
-      Head: OrganReptilianHead
-      ArmLeft: OrganReptilianArmLeft
-      ArmRight: OrganReptilianArmRight
-      HandRight: OrganReptilianHandRight
-      HandLeft: OrganReptilianHandLeft
-      LegLeft: OrganReptilianLegLeft
-      LegRight: OrganReptilianLegRight
-      FootLeft: OrganReptilianFootLeft
-      FootRight: OrganReptilianFootRight
-      Brain: OrganReptilianBrain
-      Eyes: OrganReptilianEyes
-      Tongue: OrganReptilianTongue
-      Appendix: OrganReptilianAppendix
-      Ears: OrganReptilianEars
-      Lungs: OrganReptilianLungs
-      Heart: OrganReptilianHeart
-      Stomach: OrganReptilianStomach
-      Liver: OrganReptilianLiver
-      Kidneys: OrganReptilianKidneys
+    - category: Head # head
+      entity: OrganReptilianHead
+      children:
+      - category: Brain
+        entity: OrganReptilianBrain
+      - category: Eyes
+        entity: OrganReptilianEyes
+      - category: Ears
+        entity: OrganReptilianEars
+      - category: Tongue
+        entity: OrganReptilianTongue
+
+    - category: Torso # torso
+      entity: OrganReptilianTorso
+      children:
+      - category: Appendix
+        entity: OrganReptilianAppendix
+      - category: Lungs
+        entity: OrganReptilianLungs
+      - category: Heart
+        entity: OrganReptilianHeart
+      - category: Stomach
+        entity: OrganReptilianStomach
+      - category: Liver
+        entity: OrganReptilianLiver
+      - category: Kidneys
+        entity: OrganReptilianKidneys
+
+    - category: ArmLeft # arm
+      entity: OrganReptilianArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganReptilianHandLeft
+
+    - category: ArmRight # arm
+      entity: OrganReptilianArmRight
+      children:
+      - category: HandRight
+        entity: OrganReptilianHandRight
+
+    - category: LegLeft # leg
+      entity: OrganReptilianLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganReptilianFootLeft
+
+    - category: LegRight # leg
+      entity: OrganReptilianLegRight
+      children:
+      - category: FootRight
+        entity: OrganReptilianFootRight
   - type: HumanoidProfile
     species: Reptilian
 

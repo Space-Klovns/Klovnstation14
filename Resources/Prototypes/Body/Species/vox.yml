@@ -130,28 +130,59 @@
         32:
           sprite: Mobs/Species/Vox/displacement.rsi
           state: hand_r
-  - type: InitialBody
+  - type: InitialBody # KS14: Re-arranged
     organs:
-      Torso: OrganVoxTorso
-      Head: OrganVoxHead
-      ArmLeft: OrganVoxArmLeft
-      ArmRight: OrganVoxArmRight
-      HandRight: OrganVoxHandRight
-      HandLeft: OrganVoxHandLeft
-      LegLeft: OrganVoxLegLeft
-      LegRight: OrganVoxLegRight
-      FootLeft: OrganVoxFootLeft
-      FootRight: OrganVoxFootRight
-      Brain: OrganVoxBrain
-      Eyes: OrganVoxEyes
-      Tongue: OrganVoxTongue
-      Appendix: OrganVoxAppendix
-      Ears: OrganVoxEars
-      Lungs: OrganVoxLungs
-      Heart: OrganVoxHeart
-      Stomach: OrganVoxStomach
-      Liver: OrganVoxLiver
-      Kidneys: OrganVoxKidneys
+    - category: Head # head
+      entity: OrganVoxHead
+      children:
+      - category: Brain
+        entity: OrganVoxBrain
+      - category: Eyes
+        entity: OrganVoxEyes
+      - category: Ears
+        entity: OrganVoxEars
+      - category: Tongue
+        entity: OrganVoxTongue
+
+    - category: Torso # torso
+      entity: OrganVoxTorso
+      children:
+      - category: Appendix
+        entity: OrganVoxAppendix
+      - category: Lungs
+        entity: OrganVoxLungs
+      - category: Heart
+        entity: OrganVoxHeart
+      - category: Stomach
+        entity: OrganVoxStomach
+      - category: Liver
+        entity: OrganVoxLiver
+      - category: Kidneys
+        entity: OrganVoxKidneys
+
+    - category: ArmLeft # arm
+      entity: OrganVoxArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganVoxHandLeft
+
+    - category: ArmRight # arm
+      entity: OrganVoxArmRight
+      children:
+      - category: HandRight
+        entity: OrganVoxHandRight
+
+    - category: LegLeft # leg
+      entity: OrganVoxLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganVoxFootLeft
+
+    - category: LegRight # leg
+      entity: OrganVoxLegRight
+      children:
+      - category: FootRight
+        entity: OrganVoxFootRight
   - type: HumanoidProfile
     species: Vox
 

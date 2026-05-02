@@ -1,0 +1,28 @@
+- type: trait
+  id: Amputee
+  name: trait-amputee-name
+  description: trait-amputee-desc
+  category: Disabilities
+  traitGear: BriefcaseAmputeeFilled
+  whitelist:
+    components:
+    - Body
+  specials:
+  - !type:AddComponentSpecial
+    components:
+    - type: RemoveRandomOrgan
+      categories:
+      - ArmLeft
+      - ArmRight
+      - Ears
+
+- type: entity
+  id: BriefcaseAmputeeFilled
+  parent: BriefcaseBrown
+  suffix: Amputee, Spesos
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector
+        children:
+        - id: SpaceCash5000

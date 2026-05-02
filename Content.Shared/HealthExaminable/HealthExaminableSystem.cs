@@ -17,7 +17,19 @@ public sealed class HealthExaminableSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<HealthExaminableComponent, GetVerbsEvent<ExamineVerb>>(OnGetExamineVerbs);
+        // KS14: instead of its own verb this is added to ExaminedEvent
+        SubscribeLocalEvent<HealthExaminableComponent, ExaminedEvent>(OnExamined);
+        //SubscribeLocalEvent<HealthExaminableComponent, GetVerbsEvent<ExamineVerb>>(OnGetExamineVerbs);
+    }
+
+    // KS14
+    private void OnExamined(Entity<HealthExaminableComponent> entity, ref ExaminedEvent args)
+    {
+        if (!TryComp<DamageableComponent>(entity, out var damage) ||
+            !_examineSystem.IsInDetailsRange(args.Examiner, entity.Owner))
+            return;
+
+        args.PushMessage(CreateMarkup(entity, entity, damage), priority: -1);
     }
 
     private void OnGetExamineVerbs(EntityUid uid, HealthExaminableComponent component, GetVerbsEvent<ExamineVerb> args)
@@ -38,7 +50,7 @@ public sealed class HealthExaminableSystem : EntitySystem
             Category = VerbCategory.Examine,
             Disabled = !detailsRange,
             Message = detailsRange ? null : Loc.GetString("health-examinable-verb-disabled"),
-            Icon = new SpriteSpecifier.Texture(new ("/Textures/Interface/VerbIcons/rejuvenate.svg.192dpi.png"))
+            Icon = new SpriteSpecifier.Texture(new("/Textures/Interface/VerbIcons/rejuvenate.svg.192dpi.png"))
         };
 
         args.Verbs.Add(verb);
@@ -47,8 +59,9 @@ public sealed class HealthExaminableSystem : EntitySystem
     public FormattedMessage CreateMarkup(EntityUid uid, HealthExaminableComponent component, DamageableComponent damage)
     {
         var msg = new FormattedMessage();
+        var anythingHappened = false; // KS14
 
-        var first = true;
+        // KS14: removed `first`
         var damageSpecifier = _damageable.GetAllDamage((uid, damage));
         foreach (var type in component.ExaminableTypes)
         {
@@ -80,19 +93,16 @@ public sealed class HealthExaminableSystem : EntitySystem
             if (closest == FixedPoint2.Zero)
                 continue;
 
-            if (!first)
-            {
-                msg.PushNewline();
-            }
-            else
-            {
-                first = false;
-            }
+            // KS14: removed `first`
+
+            msg.PushNewline(); // KS14
             msg.AddMarkupOrThrow(chosenLocStr);
+            anythingHappened = true; // KS14
         }
 
-        if (msg.IsEmpty)
+        if (!anythingHappened) // KS14: Check anythingHappened instead of msg.IsEmpty
         {
+            msg.PushNewline(); // KS14
             msg.AddMarkupOrThrow(Loc.GetString($"health-examinable-{component.LocPrefix}-none"));
         }
 

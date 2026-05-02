@@ -16,7 +16,7 @@ namespace Content.Shared.Body;
 /// <seealso cref="BodyRelayedEvent{TEvent}" />
 public sealed partial class BodySystem : EntitySystem
 {
-    [Dependency] private readonly SharedContainerSystem _container = default!;
+    // KS14: Unused system, removed
 
     private EntityQuery<BodyComponent> _bodyQuery;
     private EntityQuery<OrganComponent> _organQuery;
@@ -25,73 +25,78 @@ public sealed partial class BodySystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<BodyComponent, ComponentInit>(OnBodyInit);
-        SubscribeLocalEvent<BodyComponent, ComponentShutdown>(OnBodyShutdown);
+        // SubscribeLocalEvent<BodyComponent, ComponentInit>(OnBodyInit); // KS14: Commented in favour of hierarchy system
+        // SubscribeLocalEvent<BodyComponent, ComponentShutdown>(OnBodyShutdown); // KS14: Commented in favour of hierarchy system
 
         SubscribeLocalEvent<BodyComponent, CanDragEvent>(OnCanDrag);
 
-        SubscribeLocalEvent<BodyComponent, EntInsertedIntoContainerMessage>(OnBodyEntInserted);
-        SubscribeLocalEvent<BodyComponent, EntRemovedFromContainerMessage>(OnBodyEntRemoved);
+        // SubscribeLocalEvent<BodyComponent, EntInsertedIntoContainerMessage>(OnBodyEntInserted); // KS14: Commented in favour of hierarchy system
+        // SubscribeLocalEvent<BodyComponent, EntRemovedFromContainerMessage>(OnBodyEntRemoved); // KS14: Commented in favour of hierarchy system
 
         _bodyQuery = GetEntityQuery<BodyComponent>();
         _organQuery = GetEntityQuery<OrganComponent>();
 
         InitializeRelay();
+        InitializeKlovn(); // KS14
     }
 
-    private void OnBodyInit(Entity<BodyComponent> ent, ref ComponentInit args)
-    {
-        ent.Comp.Organs =
-            _container.EnsureContainer<Container>(ent, BodyComponent.ContainerID);
-    }
+    // KS14: Commented in favour of hierarchy system
+    // private void OnBodyInit(Entity<BodyComponent> ent, ref ComponentInit args)
+    // {
+    //     ent.Comp.Organs =
+    //         _container.EnsureContainer<Container>(ent, BodyComponent.ContainerID);
+    // }
 
-    private void OnBodyShutdown(Entity<BodyComponent> ent, ref ComponentShutdown args)
-    {
-        if (ent.Comp.Organs is { } organs)
-            _container.ShutdownContainer(organs);
-    }
+    // KS14: Commented in favour of hierarchy system
+    // private void OnBodyShutdown(Entity<BodyComponent> ent, ref ComponentShutdown args)
+    // {
+    //     if (ent.Comp.Organs is { } organs)
+    //         _container.ShutdownContainer(organs);
+    // }
 
-    private void OnBodyEntInserted(Entity<BodyComponent> ent, ref EntInsertedIntoContainerMessage args)
-    {
-        if (args.Container.ID != BodyComponent.ContainerID)
-            return;
+    // KS14: Commented in favour of hierarchy system
+    // private void OnBodyEntInserted(Entity<BodyComponent> ent, ref EntInsertedIntoContainerMessage args)
+    // {
+    //     if (args.Container.ID != BodyComponent.ContainerID)
+    //         return;
 
-        if (!_organQuery.TryComp(args.Entity, out var organ))
-            return;
+    //     if (!_organQuery.TryComp(args.Entity, out var organ))
+    //         return;
 
-        var body = new OrganInsertedIntoEvent(args.Entity);
-        RaiseLocalEvent(ent, ref body);
+    //     var body = new OrganInsertedIntoEvent(args.Entity);
+    //     RaiseLocalEvent(ent, ref body);
 
-        var ev = new OrganGotInsertedEvent(ent);
-        RaiseLocalEvent(args.Entity, ref ev);
+    //     var ev = new OrganGotInsertedEvent(ent);
+    //     RaiseLocalEvent(args.Entity, ref ev);
 
-        if (organ.Body != ent)
-        {
-            organ.Body = ent;
-            Dirty(args.Entity, organ);
-        }
-    }
+    //     if (organ.Body != ent)
+    //     {
+    //         organ.Body = ent;
+    //         Dirty(args.Entity, organ);
+    //     }
+    // }
 
-    private void OnBodyEntRemoved(Entity<BodyComponent> ent, ref EntRemovedFromContainerMessage args)
-    {
-        if (args.Container.ID != BodyComponent.ContainerID)
-            return;
+    // KS14: Commented in favour of hierarchy system
+    // private void OnBodyEntRemoved(Entity<BodyComponent> ent, ref EntRemovedFromContainerMessage args)
+    // {
+    //     if (args.Container.ID != BodyComponent.ContainerID)
+    //         return;
 
-        if (!_organQuery.TryComp(args.Entity, out var organ))
-            return;
+    //     if (!_organQuery.TryComp(args.Entity, out var organ))
+    //         return;
 
-        var body = new OrganRemovedFromEvent(args.Entity);
-        RaiseLocalEvent(ent, ref body);
+    //     var body = new OrganRemovedFromEvent(args.Entity);
+    //     RaiseLocalEvent(ent, ref body);
 
-        var ev = new OrganGotRemovedEvent(ent);
-        RaiseLocalEvent(args.Entity, ref ev);
+    //     var ev = new OrganGotRemovedEvent(ent);
+    //     RaiseLocalEvent(args.Entity, ref ev);
 
-        if (organ.Body == null)
-            return;
+    //     if (organ.Body == null)
+    //         return;
 
-        organ.Body = null;
-        Dirty(args.Entity, organ);
-    }
+    //     organ.Body = null;
+    //     Dirty(args.Entity, organ);
+    // }
 
     private void OnCanDrag(Entity<BodyComponent> ent, ref CanDragEvent args)
     {

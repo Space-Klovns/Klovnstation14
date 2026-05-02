@@ -23,25 +23,40 @@ public sealed class InitialBodySystem : EntitySystem
         if (TerminatingOrDeleted(ent) || !Exists(ent))
             return;
 
-        if (!_container.TryGetContainer(ent, BodyComponent.ContainerID, out var container, containerComp))
+        // KS14: Use hierarchy instead of container
+
+        // KS14 Start
+        void Recurse(InitialBodyPart initialBodyPart, EntityUid parent)
         {
-            Log.Error($"Entity {ToPrettyString(ent)} with a {nameof(InitialBodyComponent)} is missing a container ({BodyComponent.ContainerID}).");
-            return;
+            ent.Comp.TotalCategories.Add(initialBodyPart.Category);
+
+            var spawnedUid = Spawn(initialBodyPart.Entity);
+            _container.Insert(spawnedUid, _container.GetContainer(parent, _KS14.Klovnmed.BodyHierarchySystem.ConstContainerId));
+
+            if (initialBodyPart.Children is not { } children)
+                return;
+
+            foreach (var arrangement in children)
+                Recurse(arrangement, spawnedUid);
         }
 
-        var xform = Transform(ent);
-        var coords = new EntityCoordinates(ent, Vector2.Zero);
+        foreach (var arrangement in ent.Comp.Organs)
+            Recurse(arrangement, ent);
 
-        foreach (var proto in ent.Comp.Organs.Values)
-        {
-            // TODO: When e#6192 is merged replace this all with TrySpawnInContainer...
-            var spawn = Spawn(proto, coords);
+        Dirty(ent); // KS14
+        // KS14 End
 
-            if (!_container.Insert(spawn, container, containerXform: xform))
-            {
-                Log.Error($"Entity {ToPrettyString(ent)} with a {nameof(InitialBodyComponent)} failed to insert an entity: {ToPrettyString(spawn)}.\n");
-                Del(spawn);
-            }
-        }
+        // KS14: Slopcode commented out
+        // foreach (var proto in ent.Comp.Organs.Values)
+        // {
+        //     // TODO: When e#6192 is merged replace this all with TrySpawnInContainer...
+        //     var spawn = Spawn(proto, coords);
+
+        //     if (!_container.Insert(spawn, container, containerXform: xform))
+        //     {
+        //         Log.Error($"Entity {ToPrettyString(ent)} with a {nameof(InitialBodyComponent)} failed to insert an entity: {ToPrettyString(spawn)}.\n");
+        //         Del(spawn);
+        //     }
+        // }
     }
 }

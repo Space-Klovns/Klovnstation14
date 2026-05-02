@@ -14,10 +14,10 @@
     maxItemSize: Normal
     grid:
     - 0,0,6,3
-    storageOpenSound: /Audio/Items/toolbox_open.ogg
+    storageOpenSound: /Audio/_KS14/Handling/toolbox/toolbox_open.ogg # KS14: Use ks14 handling sounds
     storageCloseSound: /Audio/Items/toolbox_close.ogg
     storageInsertSound: /Audio/Items/toolbox_insert.ogg
-    storageRemoveSound: /Audio/Items/toolbox_remove.ogg
+    storageRemoveSound: /Audio/_KS14/Handling/toolbox/toolbox_rustle.ogg # KS14: Use ks14 handling sounds
   - type: Item
     size: Ginormous
   - type: MeleeWeapon
@@ -36,6 +36,12 @@
           True: { state: icon-open }
           False: { state: icon }
   - type: Appearance
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/toolbox/toolbox_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/toolbox/toolbox_drop.ogg
 
 - type: entity
   name: emergency toolbox

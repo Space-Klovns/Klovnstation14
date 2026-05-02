@@ -4,6 +4,7 @@ using Content.Shared._KS14.Random.Helpers;
 using Content.Shared.Body;
 using Content.Shared.Damage;
 using Content.Shared.Throwing;
+using Robust.Shared.Containers;
 using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.Klovnmed.Dismemberment;
@@ -16,9 +17,9 @@ namespace Content.Shared._KS14.Klovnmed.Dismemberment;
 public sealed class DismembermentSystem : EntitySystem
 {
     [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
     [Dependency] private readonly ThrowingSystem _throwingSystem = default!;
     [Dependency] private readonly OrganSearchSystem _organSearchSystem = default!;
+    [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
 
     private EntityQuery<BodyComponent> _bodyQuery;
 
@@ -61,18 +62,26 @@ public sealed class DismembermentSystem : EntitySystem
             return false;
         }
 
-        _transformSystem.SetCoordinates(partUid.Value, bodyEntity.Comp2.Coordinates);
+        DismemberPart((bodyEntity.Owner, bodyEntity.Comp2), partUid.Value, direction: direction, throwSpeed: throwSpeed, cause: cause, predictedRandom: predictedRandom);
+        return true;
+    }
+
+    public void DismemberPart(Entity<TransformComponent?> bodyEntity, EntityUid partUid, Vector2? direction = null, float throwSpeed = 0f, EntityUid? cause = null, System.Random? predictedRandom = null)
+    {
+        if (!EntityManager.TransformQuery.Resolve(bodyEntity, ref bodyEntity.Comp))
+            return;
+
+        var partTransform = Transform(partUid);
+        _containerSystem.Remove(partUid, _containerSystem.GetContainer(partTransform.ParentUid, BodyHierarchySystem.ConstContainerId), force: true, destination: bodyEntity.Comp.Coordinates);
 
         if (throwSpeed != 0f)
         {
             direction ??= (predictedRandom ?? KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
                 (int)_gameTiming.CurTick.Value,
-                KsSharedRandomExtensions.GetNetId(partUid.Value, EntityManager)
+                KsSharedRandomExtensions.GetNetId(partUid, EntityManager)
             )).NextUnitVector2();
 
-            _throwingSystem.TryThrow(partUid.Value, direction.Value, baseThrowSpeed: throwSpeed, user: cause, recoil: false);
+            _throwingSystem.TryThrow(partUid, direction.Value, baseThrowSpeed: throwSpeed, user: cause, recoil: false);
         }
-
-        return true;
     }
 }

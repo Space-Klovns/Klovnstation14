@@ -1,0 +1,11 @@
+- type: tool
+  id: Incision
+  name: tool-quality-incision-name
+  toolName: tool-quality-incision-tool-name
+  spawn: Scalpel
+
+- type: tool
+  id: Cauterisation
+  name: tool-quality-cauterisation-name
+  toolName: tool-quality-cauterisation-tool-name
+  spawn: Cautery

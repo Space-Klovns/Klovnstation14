@@ -66,6 +66,13 @@ namespace Content.Server.Body.Components
         [DataField]
         public float MinSaturation = -2.0f;
 
+        // KS14: Klovnmed
+        /// <summary>
+        ///     Organ category required to breathe or whatever. Null if none is required.
+        /// </summary>
+        [DataField]
+        public ProtoId<Shared.Body.OrganCategoryPrototype>? RequiredOrganCategory = null;
+
         // TODO HYPEROXIA?
 
         [DataField(required: true)]

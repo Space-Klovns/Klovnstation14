@@ -65,28 +65,59 @@
   id: AppearanceVulpkanin
   name: vulpkanin appearance
   components:
-  - type: InitialBody
+  - type: InitialBody # KS14: Re-arranged
     organs:
-      Torso: OrganVulpkaninTorso
-      Head: OrganVulpkaninHead
-      ArmLeft: OrganVulpkaninArmLeft
-      ArmRight: OrganVulpkaninArmRight
-      HandRight: OrganVulpkaninHandRight
-      HandLeft: OrganVulpkaninHandLeft
-      LegLeft: OrganVulpkaninLegLeft
-      LegRight: OrganVulpkaninLegRight
-      FootLeft: OrganVulpkaninFootLeft
-      FootRight: OrganVulpkaninFootRight
-      Brain: OrganVulpkaninBrain
-      Eyes: OrganVulpkaninEyes
-      Tongue: OrganVulpkaninTongue
-      Appendix: OrganVulpkaninAppendix
-      Ears: OrganVulpkaninEars
-      Lungs: OrganVulpkaninLungs
-      Heart: OrganVulpkaninHeart
-      Stomach: OrganVulpkaninStomach
-      Liver: OrganVulpkaninLiver
-      Kidneys: OrganVulpkaninKidneys
+    - category: Head # head
+      entity: OrganVulpkaninHead
+      children:
+      - category: Brain
+        entity: OrganVulpkaninBrain
+      - category: Eyes
+        entity: OrganVulpkaninEyes
+      - category: Ears
+        entity: OrganVulpkaninEars
+      - category: Tongue
+        entity: OrganVulpkaninTongue
+
+    - category: Torso # torso
+      entity: OrganVulpkaninTorso
+      children:
+      - category: Appendix
+        entity: OrganVulpkaninAppendix
+      - category: Lungs
+        entity: OrganVulpkaninLungs
+      - category: Heart
+        entity: OrganVulpkaninHeart
+      - category: Stomach
+        entity: OrganVulpkaninStomach
+      - category: Liver
+        entity: OrganVulpkaninLiver
+      - category: Kidneys
+        entity: OrganVulpkaninKidneys
+
+    - category: ArmLeft # arm
+      entity: OrganVulpkaninArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganVulpkaninHandLeft
+
+    - category: ArmRight # arm
+      entity: OrganVulpkaninArmRight
+      children:
+      - category: HandRight
+        entity: OrganVulpkaninHandRight
+
+    - category: LegLeft # leg
+      entity: OrganVulpkaninLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganVulpkaninFootLeft
+
+    - category: LegRight # leg
+      entity: OrganVulpkaninLegRight
+      children:
+      - category: FootRight
+        entity: OrganVulpkaninFootRight
   - type: HumanoidProfile
     species: Vulpkanin
   - type: Inventory

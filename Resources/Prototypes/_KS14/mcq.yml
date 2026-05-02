@@ -1,0 +1,10 @@
+- type: entity
+  id: McqDialogue
+  name: you should not see this
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: ActiveMcqDialogue
+  - type: UserInterface
+    interfaces:
+      enum.McqDialogueUiKey.Key:
+        type: McqDialogueBoundUserInterface

@@ -14,7 +14,7 @@ public abstract partial class SharedVisualBodySystem : EntitySystem
 {
     [Dependency] private readonly IPrototypeManager _prototype = default!;
     [Dependency] private readonly MarkingManager _marking = default!;
-    [Dependency] private readonly SharedContainerSystem _container = default!;
+    // KS14: Unused system, removed
 
     public override void Initialize()
     {
@@ -190,4 +190,3 @@ public readonly record struct ApplyOrganProfileDataEvent(OrganProfileData? Base,
 /// </summary>
 [ByRefEvent]
 public readonly record struct ApplyOrganMarkingsEvent(Dictionary<ProtoId<OrganCategoryPrototype>, Dictionary<HumanoidVisualLayers, List<Marking>>> Markings);
-

@@ -11,6 +11,11 @@
     maxItemSize: Small
     grid:
     - 0,0,3,1
+    # KS14: handling sounds start
+    storageOpenSound: /Audio/_KS14/Handling/medkit/medkit_open.ogg
+    storageInsertSound: /Audio/_KS14/Handling/medkit/medkit_rustle.ogg
+    storageRemoveSound: /Audio/_KS14/Handling/medkit/medkit_rustle.ogg
+    # KS14: handling sounds end
   - type: Item
     size: Large
     sprite: Objects/Specific/Medical/firstaidkits.rsi
@@ -105,4 +110,3 @@
   - type: Item
     heldPrefix: blackkit
     size: Normal
-

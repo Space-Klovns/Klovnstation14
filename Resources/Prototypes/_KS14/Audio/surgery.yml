@@ -1,0 +1,22 @@
+- type: soundCollection
+  id: KsSurgeryScalpel
+  files:
+  - /Audio/_KS14/Handling/surgery/scalpel1.ogg
+  - /Audio/_KS14/Handling/surgery/scalpel2.ogg
+
+- type: soundCollection
+  id: KsSurgeryCautery
+  files:
+  - /Audio/_KS14/Handling/surgery/cautery1.ogg
+  - /Audio/_KS14/Handling/surgery/cautery2.ogg
+
+- type: soundCollection
+  id: KsSurgerySaw
+  files:
+  - /Audio/_KS14/Handling/surgery/saw.ogg
+
+- type: soundCollection
+  id: KsHandlingOrgan
+  files:
+  - /Audio/_KS14/Handling/surgery/organ1.ogg
+  - /Audio/_KS14/Handling/surgery/organ2.ogg

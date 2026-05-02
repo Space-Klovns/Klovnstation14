@@ -10,28 +10,59 @@
           32:
             sprite: Mobs/Species/Human/displacement.rsi
             state: jumpsuit-female
-  - type: InitialBody
+  - type: InitialBody # KS14: Re-arranged
     organs:
-      Torso: OrganHumanTorso
-      Head: OrganHumanHead
-      ArmLeft: OrganHumanArmLeft
-      ArmRight: OrganHumanArmRight
-      HandRight: OrganHumanHandRight
-      HandLeft: OrganHumanHandLeft
-      LegLeft: OrganHumanLegLeft
-      LegRight: OrganHumanLegRight
-      FootLeft: OrganHumanFootLeft
-      FootRight: OrganHumanFootRight
-      Brain: OrganHumanBrain
-      Eyes: OrganHumanEyes
-      Tongue: OrganHumanTongue
-      Appendix: OrganHumanAppendix
-      Ears: OrganHumanEars
-      Lungs: OrganHumanLungs
-      Heart: OrganDwarfHeart
-      Stomach: OrganDwarfStomach
-      Liver: OrganDwarfLiver
-      Kidneys: OrganHumanKidneys
+    - category: Head # head
+      entity: OrganHumanHead
+      children:
+      - category: Brain
+        entity: OrganHumanBrain
+      - category: Eyes
+        entity: OrganHumanEyes
+      - category: Ears
+        entity: OrganHumanEars
+      - category: Tongue
+        entity: OrganHumanTongue
+
+    - category: Torso # torso
+      entity: OrganHumanTorso
+      children:
+      - category: Appendix
+        entity: OrganHumanAppendix
+      - category: Lungs
+        entity: OrganHumanLungs
+      - category: Heart
+        entity: OrganDwarfHeart
+      - category: Stomach
+        entity: OrganDwarfStomach
+      - category: Liver
+        entity: OrganHumanLiver
+      - category: Kidneys
+        entity: OrganHumanKidneys
+
+    - category: ArmLeft # arm
+      entity: OrganHumanArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganHumanHandLeft
+
+    - category: ArmRight # arm
+      entity: OrganHumanArmRight
+      children:
+      - category: HandRight
+        entity: OrganHumanHandRight
+
+    - category: LegLeft # leg
+      entity: OrganHumanLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganHumanFootLeft
+
+    - category: LegRight # leg
+      entity: OrganHumanLegRight
+      children:
+      - category: FootRight
+        entity: OrganHumanFootRight
   - type: HumanoidProfile
     species: Dwarf
   - type: ScaleVisuals

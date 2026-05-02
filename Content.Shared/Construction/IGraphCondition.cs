@@ -8,5 +8,11 @@ namespace Content.Shared.Construction
         bool Condition(EntityUid uid, IEntityManager entityManager);
         bool DoExamine(ExaminedEvent args);
         IEnumerable<ConstructionGuideEntry> GenerateGuideEntry();
+
+        // KS14
+        virtual void Initialize(IEntitySystemManager sysManager)
+        {
+            sysManager.DependencyCollection.InjectDependencies(this);
+        }
     }
 }

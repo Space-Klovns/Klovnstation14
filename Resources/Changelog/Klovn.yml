@@ -895,3 +895,46 @@ Entries:
         real functionality to the proximity sensor.
   id: 112
   time: '2026-04-26T13:54:08.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Amputee trait; you can get 5k spesos in exchange for losing a random
+        bodypart.
+    - type: Fix
+      message: Fixed explosions dismembering your internal organs.
+    - type: Fix
+      message: Fixed bloodsprays going in the wrong direction.
+    - type: Add
+      message: >-
+        Added handling sounds to medkits, toolboxes, coords disks, auth disks,
+        and the RPD.
+    - type: Fix
+      message: Fixed alot of /tg/ audio being stereo instead of mono.
+    - type: Add
+      message: >-
+        Basic surgery has been implemented. You can't re-add limbs yet. Start
+        surgery by using a scalpel on someone, alt-interact to select an
+        operation.
+    - type: Add
+      message: >-
+        You now need some body parts to use some inventory slots, like ears for
+        headsets.
+    - type: Add
+      message: You now need eyes to see, and legs to walk, obviously.
+    - type: Tweak
+      message: Buffed asphyxiation damage.
+    - type: Tweak
+      message: >-
+        Health examine verb has been removed, and health status is now showed on
+        general examine menu.
+    - type: Add
+      message: >-
+        When examining health, you can now see what limbs (to an extent) are
+        missing.
+    - type: Add
+      message: >-
+        When executing with some weapons like the enforcer, double-barrel, etc.,
+        you can shoot someones head off.
+  id: 113
+  time: '2026-05-02T17:11:00.0000000+00:00'

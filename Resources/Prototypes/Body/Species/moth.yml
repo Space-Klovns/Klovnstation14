@@ -107,28 +107,59 @@
           32:
             sprite: Mobs/Species/Moth/displacement.rsi
             state: shoes
-  - type: InitialBody
+  - type: InitialBody # KS14: Re-arranged
     organs:
-      Torso: OrganMothTorso
-      Head: OrganMothHead
-      ArmLeft: OrganMothArmLeft
-      ArmRight: OrganMothArmRight
-      HandRight: OrganMothHandRight
-      HandLeft: OrganMothHandLeft
-      LegLeft: OrganMothLegLeft
-      LegRight: OrganMothLegRight
-      FootLeft: OrganMothFootLeft
-      FootRight: OrganMothFootRight
-      Brain: OrganMothBrain
-      Eyes: OrganMothEyes
-      Tongue: OrganMothTongue
-      Appendix: OrganMothAppendix
-      Ears: OrganMothEars
-      Lungs: OrganMothLungs
-      Heart: OrganMothHeart
-      Stomach: OrganMothStomach
-      Liver: OrganMothLiver
-      Kidneys: OrganMothKidneys
+    - category: Head # head
+      entity: OrganMothHead
+      children:
+      - category: Brain
+        entity: OrganMothBrain
+      - category: Eyes
+        entity: OrganMothEyes
+      - category: Ears
+        entity: OrganMothEars
+      - category: Tongue
+        entity: OrganMothTongue
+
+    - category: Torso # torso
+      entity: OrganMothTorso
+      children:
+      - category: Appendix
+        entity: OrganMothAppendix
+      - category: Lungs
+        entity: OrganMothLungs
+      - category: Heart
+        entity: OrganMothHeart
+      - category: Stomach
+        entity: OrganMothStomach
+      - category: Liver
+        entity: OrganMothLiver
+      - category: Kidneys
+        entity: OrganMothKidneys
+
+    - category: ArmLeft # arm
+      entity: OrganMothArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganMothHandLeft
+
+    - category: ArmRight # arm
+      entity: OrganMothArmRight
+      children:
+      - category: HandRight
+        entity: OrganMothHandRight
+
+    - category: LegLeft # leg
+      entity: OrganMothLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganMothFootLeft
+
+    - category: LegRight # leg
+      entity: OrganMothLegRight
+      children:
+      - category: FootRight
+        entity: OrganMothFootRight
   - type: HumanoidProfile
     species: Moth
 

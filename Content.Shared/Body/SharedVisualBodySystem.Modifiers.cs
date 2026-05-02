@@ -59,9 +59,8 @@ public abstract partial class SharedVisualBodySystem
         if (!Resolve(source, ref source.Comp) || !Resolve(target, ref target.Comp))
             return;
 
-        var sourceOrgans = _container.EnsureContainer<Container>(source, BodyComponent.ContainerID);
-
-        foreach (var sourceOrgan in sourceOrgans.ContainedEntities)
+        // KS14: Use hierarchy instead of container
+        foreach (var sourceOrgan in source.Comp.RecursiveChildUids)
         {
             var evt = new OrganCopyAppearanceEvent(sourceOrgan);
             RaiseLocalEvent(target, ref evt);
@@ -82,7 +81,8 @@ public abstract partial class SharedVisualBodySystem
         [NotNullWhen(true)] out Dictionary<ProtoId<OrganCategoryPrototype>, OrganMarkingData>? markings,
         [NotNullWhen(true)] out Dictionary<ProtoId<OrganCategoryPrototype>, Dictionary<HumanoidVisualLayers, List<Marking>>>? applied)
     {
-        if (!Resolve(ent, ref ent.Comp))
+        if (!Resolve(ent, ref ent.Comp) ||
+            !TryComp<BodyComponent>(ent, out var bodyComponent)) // KS14
         {
             profiles = null;
             markings = null;
@@ -94,9 +94,8 @@ public abstract partial class SharedVisualBodySystem
         markings = new();
         applied = new();
 
-        var organContainer = _container.EnsureContainer<Container>(ent, BodyComponent.ContainerID);
-
-        foreach (var organ in organContainer.ContainedEntities)
+        // KS14: Use hierarchy instead of container
+        foreach (var organ in bodyComponent.RecursiveChildUids)
         {
             if (!TryComp<OrganComponent>(organ, out var organComp) || organComp.Category is not { } category)
                 continue;
@@ -151,11 +150,11 @@ public abstract partial class SharedVisualBodySystem
 
         ApplyProfile(ent,
             new()
-        {
-            Sex = sex,
-            SkinColor = appearance.SkinColor,
-            EyeColor = appearance.EyeColor,
-        });
+            {
+                Sex = sex,
+                SkinColor = appearance.SkinColor,
+                EyeColor = appearance.EyeColor,
+            });
 
         var markingsEvt = new ApplyOrganMarkingsEvent(appearance.Markings);
         RaiseLocalEvent(ent, ref markingsEvt);

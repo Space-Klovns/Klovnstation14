@@ -51,18 +51,37 @@
           32:
             sprite: Mobs/Species/Human/displacement.rsi
             state: jumpsuit-female
-  - type: InitialBody
+  - type: InitialBody # KS14: Re-arranged
     organs:
-      Torso: OrganSkeletonPersonTorso
-      Head: OrganSkeletonPersonHead
-      ArmLeft: OrganSkeletonPersonArmLeft
-      ArmRight: OrganSkeletonPersonArmRight
-      HandRight: OrganSkeletonPersonHandRight
-      HandLeft: OrganSkeletonPersonHandLeft
-      LegLeft: OrganSkeletonPersonLegLeft
-      LegRight: OrganSkeletonPersonLegRight
-      FootLeft: OrganSkeletonPersonFootLeft
-      FootRight: OrganSkeletonPersonFootRight
+    - category: Head # head
+      entity: OrganSkeletonPersonHead
+
+    - category: Torso # torso
+      entity: OrganSkeletonPersonTorso
+
+    - category: ArmLeft # arm
+      entity: OrganSkeletonPersonArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganSkeletonPersonHandLeft
+
+    - category: ArmRight # arm
+      entity: OrganSkeletonPersonArmRight
+      children:
+      - category: HandRight
+        entity: OrganSkeletonPersonHandRight
+
+    - category: LegLeft # leg
+      entity: OrganSkeletonPersonLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganSkeletonPersonFootLeft
+
+    - category: LegRight # leg
+      entity: OrganSkeletonPersonLegRight
+      children:
+      - category: FootRight
+        entity: OrganSkeletonPersonFootRight
   - type: HumanoidProfile
     species: Skeleton
 

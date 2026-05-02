@@ -9,8 +9,7 @@ namespace Content.Shared._KS14.PredictedSpawning;
 // TODO LCDC: MAKE THIS ACTUALLY WORK GEEEG
 
 /// <summary>
-///     Contains replacements for <see cref="EntityManager.PredictedSpawn(string?, Robust.Shared.Prototypes.ComponentRegistry?, bool)"/>
-///         and it's million variants, because RT's implementation is very bad.
+///     Contains replacements for <see cref="EntityManager.PredictedSpawn(string?, Robust.Shared.Prototypes.ComponentRegistry?, bool)"/>.
 /// </summary>
 public abstract class KsSharedPredictedSpawnSystem : EntitySystem
 {
@@ -26,8 +25,8 @@ public abstract class KsSharedPredictedSpawnSystem : EntitySystem
     }
 
     /// <remarks>
-    ///     This has a very slight overhead of adding <see cref="KsPredictedSpawnComponent"/>
-    ///         to the entity.
+    ///     Does predicted spawn as usual, while predicting physics too.
+    ///         If specified user is notnull,
     /// </remarks>
     public EntityUid PredictedSpawn(string entityProtoId, ComponentRegistry? componentOverrides = null, bool doMapInit = false)
         => FlagPredictedAndReturn(EntityManager.PredictedSpawn(entityProtoId, overrides: componentOverrides, doMapInit: doMapInit));

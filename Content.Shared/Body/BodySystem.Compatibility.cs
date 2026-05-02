@@ -20,7 +20,8 @@ public sealed partial class BodySystem
         if (!_bodyQuery.Resolve(ent, ref ent.Comp))
             return false;
 
-        foreach (var organ in ent.Comp.Organs?.ContainedEntities ?? [])
+        // KS14: Use hierarchy instead of container
+        foreach (var organ in ent.Comp.RecursiveChildUids)
         {
             if (TryComp<TComp>(organ, out var comp))
                 organs.Add((organ, comp));

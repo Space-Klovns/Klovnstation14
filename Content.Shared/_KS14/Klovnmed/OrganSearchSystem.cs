@@ -1,7 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Content.Shared._KS14.Random.Helpers;
 using Content.Shared.Body;
+using Robust.Shared.Collections;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
@@ -50,31 +52,6 @@ public sealed class OrganSearchSystem : EntitySystem
         return BodyPartType.Other;
     }
 
-    // /// <summary>
-    // ///     Populates a ValueList with bodyparts of a given type
-    // ///         by searching recursively.
-    // ///
-    // ///     Supports <see cref="partType"/> having more than one bit set.
-    // /// </summary>
-    // public void SearchRecursiveForTypeAndPopulate(EntityUid uid, BodyPartType partType, ref ValueList<Entity<OrganComponent>> list)
-    // {
-    //     if (_organQuery.TryGetComponent(uid, out var bodyPartComponent) &&
-    //         partType.HasFlag(GetPartType(bodyPartComponent.Category))) // check if the parttype fits
-    //     {
-    //         list.Add((uid, bodyPartComponent));
-    //         return;
-    //     }
-
-    //     if (!_containerManagerQuery.TryGetComponent(uid, out var containerManagerComponent))
-    //         return;
-
-    //     foreach (var container in _containerSystem.GetAllContainers(uid, containerManager: containerManagerComponent))
-    //     {
-    //         foreach (var containedUid in container.ContainedEntities)
-    //             SearchRecursiveForTypeAndPopulate(containedUid, partType, ref list);
-    //     }
-    // }
-
     /// <summary>
     ///     Tries to get a random bodypart by searching recursively, returns
     ///         false if none was found.
@@ -88,19 +65,29 @@ public sealed class OrganSearchSystem : EntitySystem
     /// <inheritdoc cref="TryGetRandomBodyPartOfType(EntityUid, BodyPartType, out Entity{OrganComponent}?)"/>
     public bool TryGetRandomBodyPartOfType(Entity<BodyComponent> bodyEntity, BodyPartType partType, out System.Random? predictedRandom, [NotNullWhen(true)] out EntityUid? partUid)
     {
-        // var list = new ValueList<Entity<OrganComponent>>();
-        // SearchRecursiveForTypeAndPopulate(bodyUid, partType, ref list);
-        var list = bodyEntity.Comp.Organs?.ContainedEntities ?? [];
+        var eligible = new ValueList<EntityUid>();
+        foreach (var possiblePartUid in bodyEntity.Comp.RecursiveChildUids)
+        {
+            if (!TryComp<OrganComponent>(possiblePartUid, out var organComponent))
+                continue;
 
-        if (list.Count == 0)
+            var otherPartType = GetPartType(organComponent.Category);
+            if (otherPartType == BodyPartType.Other || // because its 0 so hasflag would always return true
+                !partType.HasFlag(otherPartType))
+                continue;
+
+            eligible.Add(possiblePartUid);
+        }
+
+        if (eligible.Count == 0)
         {
             partUid = null;
             predictedRandom = null;
             return false;
         }
-        else if (list.Count == 1)
+        else if (eligible.Count == 1)
         {
-            partUid = list[0];
+            partUid = eligible.First();
             predictedRandom = null;
             return true;
         }
@@ -108,24 +95,24 @@ public sealed class OrganSearchSystem : EntitySystem
         predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
             (int)_gameTiming.CurTick.Value,
             KsSharedRandomExtensions.GetNetId(bodyEntity.Owner, EntityManager),
-            list.Count
+            eligible.Count
         );
 
-        partUid = list[predictedRandom.Next(list.Count)];
+        partUid = eligible[predictedRandom.Next(eligible.Count)];
         return true;
     }
 }
 
-[Flags] // KS14 Klovnmed: added FlagsAttribute
+[Flags]
 [Serializable, NetSerializable]
 public enum BodyPartType
 {
     Other = 0,
-    Torso = 1 << 0 /* KS14 change: added value */,
-    Head = 1 << 1 /* KS14 change: added value */,
-    Arm = 1 << 2 /* KS14 change: added value */,
-    Hand = 1 << 3 /* KS14 change: added value */,
-    Leg = 1 << 4 /* KS14 change: added value */,
-    Foot = 1 << 5 /* KS14 change: added value */,
-    Tail = 1 << 6 /* KS14 change: added value */
+    Torso = 1 << 0,
+    Head = 1 << 1,
+    Arm = 1 << 2,
+    Hand = 1 << 3,
+    Leg = 1 << 4,
+    Foot = 1 << 5,
+    Tail = 1 << 6
 }

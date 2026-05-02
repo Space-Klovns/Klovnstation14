@@ -55,20 +55,42 @@
           32:
             sprite: Mobs/Species/Human/displacement.rsi
             state: jumpsuit-female
-  - type: InitialBody
+  - type: InitialBody # KS14: Re-arranged
     organs:
-      Torso: OrganSlimePersonTorso
-      Head: OrganSlimePersonHead
-      ArmLeft: OrganSlimePersonArmLeft
-      ArmRight: OrganSlimePersonArmRight
-      HandRight: OrganSlimePersonHandRight
-      HandLeft: OrganSlimePersonHandLeft
-      LegLeft: OrganSlimePersonLegLeft
-      LegRight: OrganSlimePersonLegRight
-      FootLeft: OrganSlimePersonFootLeft
-      FootRight: OrganSlimePersonFootRight
-      Brain: OrganSlimePersonCore
-      Lungs: OrganSlimePersonLungs
+    - category: Head # head
+      entity: OrganSlimePersonHead
+
+    - category: Torso # torso
+      entity: OrganSlimePersonTorso
+      children:
+      - category: Brain
+        entity: OrganSlimePersonCore
+      - category: Lungs
+        entity: OrganSlimePersonLungs
+
+    - category: ArmLeft # arm
+      entity: OrganSlimePersonArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganSlimePersonHandLeft
+
+    - category: ArmRight # arm
+      entity: OrganSlimePersonArmRight
+      children:
+      - category: HandRight
+        entity: OrganSlimePersonHandRight
+
+    - category: LegLeft # leg
+      entity: OrganSlimePersonLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganSlimePersonFootLeft
+
+    - category: LegRight # leg
+      entity: OrganSlimePersonLegRight
+      children:
+      - category: FootRight
+        entity: OrganSlimePersonFootRight
   - type: HumanoidProfile
     species: SlimePerson
 
@@ -166,6 +188,7 @@
     - id: FoodMeatSlime
       amount: 5
   - type: Respirator
+    requiredOrganCategory: null # KS14: Klovnmed, slimes dont need a head to breathe unlike default mobs
     damage:
       types:
         Asphyxiation: 0.2

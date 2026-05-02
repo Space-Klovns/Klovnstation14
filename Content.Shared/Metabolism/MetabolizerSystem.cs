@@ -65,6 +65,9 @@ public sealed class MetabolizerSystem : EntitySystem
 
         while (query.MoveNext(out var uid, out var comp))
         {
+            if (comp.StopAutoUpdate)
+                continue;
+
             // Only update as frequently as it should
             if (_gameTiming.CurTime < comp.NextUpdate)
                 continue;
@@ -193,9 +196,9 @@ public sealed class MetabolizerSystem : EntitySystem
             if (reagents >= ent.Comp1.MaxReagentsProcessable)
                 return;
 
-            var scale = (float) mostToRemove;
+            var scale = (float)mostToRemove;
             if (!solutionData.MetabolizeAll)
-                scale /= (float) rate;
+                scale /= (float)rate;
 
             // if it's possible for them to be dead, and they are,
             // then we shouldn't process any effects, but should probably
@@ -264,7 +267,7 @@ public sealed class MetabolizerSystem : EntitySystem
         }
     }
 
-    private void TryMetabolize(Entity<MetabolizerComponent, OrganComponent?, SolutionContainerManagerComponent?> ent)
+    public /* KS14: Klovnmed, made public */ void TryMetabolize(Entity<MetabolizerComponent, OrganComponent?, SolutionContainerManagerComponent?> ent)
     {
         _organQuery.Resolve(ent, ref ent.Comp2, logMissing: false);
 
@@ -311,4 +314,3 @@ public sealed class MetabolizerSystem : EntitySystem
         return true;
     }
 }
-

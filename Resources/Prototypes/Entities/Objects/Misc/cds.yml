@@ -17,3 +17,9 @@
       types:
         Slash: 1
   - type: ShuttleDestinationCoordinates
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/disk_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/disk_drop.ogg
