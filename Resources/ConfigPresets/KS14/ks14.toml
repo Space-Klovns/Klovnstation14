@@ -21,9 +21,6 @@ wiki       = "https://klovnstation14.miraheze.org/wiki/Main_Page"
 #[auth]
 #server = "https://auth.simplestation.org/"
 
-[ic]
-show_ssd_indicator = false
-
 [ooc]
 enable_during_round = true
 
