@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from at https://github.com/tgstation/tgstation/ commit ba8471b8dbf2c83345809bac7154880e37da7120",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "trimline_fill",
+      "directions": 8
+    },
+    {
+      "name": "trimline_mid_fill",
+      "directions": 4
+    },
+    {
+      "name": "trimline_corner_fill",
+      "directions": 4
+    },
+    {
+      "name": "trimline_end_fill",
+      "directions": 4
+    },
+    {
+      "name": "trimline_box_fill"
+    },
+    {
+      "name": "trimline_arrow_cw_fill",
+      "directions": 8
+    },
+    {
+      "name": "trimline_arrow_ccw_fill",
+      "directions": 8
+    },
+    {
+      "name": "trimline_warn_fill",
+      "directions": 8
+    },
+    {
+      "name": "trimline_corner_warn_fill",
+      "directions": 4
+    }
+  ]
+}

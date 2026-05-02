@@ -841,78 +841,78 @@ entities:
             6564: 5,26
         - node:
             color: '#DE3A3A96'
-            id: BrickCornerOverlayNE
+            id: TrimlineCornerNE
           decals:
             5392: -16,29
         - node:
             color: '#DE3A3A96'
-            id: BrickCornerOverlayNW
+            id: TrimlineCornerNW
           decals:
             5391: -19,29
         - node:
             color: '#DE3A3A96'
-            id: BrickCornerOverlaySE
+            id: TrimlineCornerSE
           decals:
             5394: -16,27
         - node:
             color: '#DE3A3A96'
-            id: BrickCornerOverlaySW
+            id: TrimlineCornerSW
           decals:
             5393: -19,27
         - node:
             color: '#DE3A3A96'
-            id: BrickLineOverlayE
+            id: TrimlineE
           decals:
             5398: -16,28
         - node:
             color: '#DE3A3A96'
-            id: BrickLineOverlayN
+            id: TrimlineN
           decals:
             5395: -18,29
             5396: -17,29
         - node:
             color: '#43990996'
-            id: BrickLineOverlayS
+            id: TrimlineS
           decals:
             5209: -13,31
         - node:
             color: '#52B4E996'
-            id: BrickLineOverlayS
+            id: TrimlineS
           decals:
             5207: -7,31
         - node:
             color: '#8C347F96'
-            id: BrickLineOverlayS
+            id: TrimlineS
           decals:
             5208: -10,31
         - node:
             color: '#DE3A3A96'
-            id: BrickLineOverlayS
+            id: TrimlineS
           decals:
             5399: -17,27
         - node:
             color: '#DE3A3A96'
-            id: BrickLineOverlayW
+            id: TrimlineW
           decals:
             5397: -19,28
         - node:
             color: '#FFFFFFFF'
-            id: BrickTileDarkCornerNe
+            id: TrimlineNe
           decals:
             6489: 59,5
         - node:
             color: '#FFFFFFFF'
-            id: BrickTileDarkCornerNw
+            id: TrimlineNw
           decals:
             6486: 57,5
         - node:
             color: '#FFFFFFFF'
-            id: BrickTileDarkCornerSe
+            id: TrimlineSe
           decals:
             6484: 59,3
         - node:
             color: '#FFFFFFFF'
-            id: BrickTileDarkCornerSw
+            id: TrimlineSw
           decals:
             6485: 57,3
         - node:
@@ -927,28 +927,28 @@ entities:
             2901: 11,45
         - node:
             color: '#FFFFFFFF'
-            id: BrickTileDarkInnerSe
+            id: TrimlineCornerSe
           decals:
             2905: 6,45
         - node:
             color: '#FFFFFFFF'
-            id: BrickTileDarkInnerSw
+            id: TrimlineCornerSw
           decals:
             2903: 12,45
         - node:
             color: '#FFFFFFFF'
-            id: BrickTileDarkLineE
+            id: TrimlineE
           decals:
             2904: 6,44
         - node:
             color: '#FFFFFFFF'
-            id: BrickTileDarkLineN
+            id: TrimlineN
           decals:
             2910: 12,45
             2911: 6,45
         - node:
             color: '#FFFFFFFF'
-            id: BrickTileDarkLineS
+            id: TrimlineS
           decals:
             2906: 12,47
             2907: 11,47
@@ -956,12 +956,12 @@ entities:
             2909: 6,47
         - node:
             color: '#FFFFFFFF'
-            id: BrickTileDarkLineW
+            id: TrimlineW
           decals:
             2902: 12,44
         - node:
             color: '#DE3A3A96'
-            id: BrickTileSteelCornerNe
+            id: TrimlineNe
           decals:
             5291: -6,45
             5311: 2,45
@@ -969,7 +969,7 @@ entities:
             5383: -2,40
         - node:
             color: '#DE3A3A96'
-            id: BrickTileSteelCornerNw
+            id: TrimlineNw
           decals:
             5292: -10,45
             5305: -4,45
@@ -977,7 +977,7 @@ entities:
             5382: -4,40
         - node:
             color: '#DE3A3A96'
-            id: BrickTileSteelCornerSe
+            id: TrimlineSe
           decals:
             5294: -6,43
             5312: 2,42
@@ -985,7 +985,7 @@ entities:
             5381: -2,37
         - node:
             color: '#DE3A3A96'
-            id: BrickTileSteelCornerSw
+            id: TrimlineSw
           decals:
             5293: -10,43
             5313: -4,42
@@ -993,24 +993,24 @@ entities:
             5380: -4,37
         - node:
             color: '#FFFFFFFF'
-            id: BrickTileSteelCornerSw
+            id: TrimlineSw
           decals:
             3039: 19,-23
             3054: 32,-21
         - node:
             color: '#FFFFFFFF'
-            id: BrickTileSteelInnerNe
+            id: TrimlineCornerNe
           decals:
             3042: 17,-25
         - node:
             color: '#FFFFFFFF'
-            id: BrickTileSteelInnerSe
+            id: TrimlineCornerSe
           decals:
             5591: 21,-23
             5593: 22,-21
         - node:
             color: '#DE3A3A96'
-            id: BrickTileSteelLineE
+            id: TrimlineE
           decals:
             5318: 2,43
             5319: 2,44
@@ -1020,7 +1020,7 @@ entities:
             5385: -2,38
         - node:
             color: '#FFFFFFFF'
-            id: BrickTileSteelLineE
+            id: TrimlineE
           decals:
             3043: 17,-24
             3044: 17,-23
@@ -1029,7 +1029,7 @@ entities:
             5592: 22,-22
         - node:
             color: '#DE3A3A96'
-            id: BrickTileSteelLineN
+            id: TrimlineN
           decals:
             5298: -9,45
             5299: -8,45
@@ -1041,7 +1041,7 @@ entities:
             5310: 0,45
         - node:
             color: '#FFFFFFFF'
-            id: BrickTileSteelLineN
+            id: TrimlineN
           decals:
             3040: 19,-25
             3041: 18,-25
@@ -1053,7 +1053,7 @@ entities:
             5063: -36,25
         - node:
             color: '#DE3A3A96'
-            id: BrickTileSteelLineS
+            id: TrimlineS
           decals:
             5295: -9,43
             5296: -8,43
@@ -1063,7 +1063,7 @@ entities:
             5317: 0,42
         - node:
             color: '#FFFFFFFF'
-            id: BrickTileSteelLineS
+            id: TrimlineS
           decals:
             3012: 22,-18
             3056: 33,-21
@@ -1071,7 +1071,7 @@ entities:
             4974: -3,-10
         - node:
             color: '#DE3A3A96'
-            id: BrickTileSteelLineW
+            id: TrimlineW
           decals:
             5301: -10,44
             5314: -4,43
@@ -1081,7 +1081,7 @@ entities:
             5386: -4,38
         - node:
             color: '#FFFFFFFF'
-            id: BrickTileSteelLineW
+            id: TrimlineW
           decals:
             3055: 32,-20
             5586: 30,-20
@@ -3539,27 +3539,27 @@ entities:
             328: -42,19
         - node:
             color: '#FFFFFFFF'
-            id: MiniTileSteelCornerNe
+            id: TrimlineNe
           decals:
             5582: 28,-19
         - node:
             color: '#FFFFFFFF'
-            id: MiniTileSteelCornerNw
+            id: TrimlineNw
           decals:
             5583: 24,-19
         - node:
             color: '#FFFFFFFF'
-            id: MiniTileSteelCornerSe
+            id: TrimlineSe
           decals:
             5589: 22,-23
         - node:
             color: '#FFFFFFFF'
-            id: MiniTileSteelCornerSw
+            id: TrimlineSw
           decals:
             5588: 28,-16
         - node:
             color: '#FFFFFFFF'
-            id: MiniTileSteelInnerNw
+            id: TrimlineCornerNw
           decals:
             5584: 24,-20
         - node:

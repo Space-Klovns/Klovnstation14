@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": null,
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "trimline_shrink_cw_w"
+    },
+    {
+      "name": "trimline_sw"
+    },
+    {
+      "name": "trimline_tram_e"
+    },
+    {
+      "name": "trimline_tram_n"
+    },
+    {
+      "name": "trimline_tram_s"
+    },
+    {
+      "name": "trimline_tram_w"
+    },
+    {
+      "name": "trimline_w"
+    },
+    {
+      "name": "trimline_box"
+    },
+    {
+      "name": "trimline_corner_e"
+    },
+    {
+      "name": "trimline_corner_n"
+    },
+    {
+      "name": "trimline_corner_s"
+    },
+    {
+      "name": "trimline_corner_w"
+    },
+    {
+      "name": "trimline_e"
+    },
+    {
+      "name": "trimline_end_e"
+    },
+    {
+      "name": "trimline_end_n"
+    },
+    {
+      "name": "trimline_end_s"
+    },
+    {
+      "name": "trimline_end_w"
+    },
+    {
+      "name": "trimline_mid_e"
+    },
+    {
+      "name": "trimline_mid_n"
+    },
+    {
+      "name": "trimline_mid_s"
+    },
+    {
+      "name": "trimline_mid_w"
+    },
+    {
+      "name": "trimline_n"
+    },
+    {
+      "name": "trimline_ne"
+    },
+    {
+      "name": "trimline_nw"
+    },
+    {
+      "name": "trimline_s"
+    },
+    {
+      "name": "trimline_se"
+    },
+    {
+      "name": "trimline_shrink_ccw_e"
+    },
+    {
+      "name": "trimline_shrink_ccw_n"
+    },
+    {
+      "name": "trimline_shrink_ccw_s"
+    },
+    {
+      "name": "trimline_shrink_ccw_w"
+    },
+    {
+      "name": "trimline_shrink_cw_e"
+    },
+    {
+      "name": "trimline_shrink_cw_n"
+    },
+    {
+      "name": "trimline_shrink_cw_s"
+    }
+  ]
+}

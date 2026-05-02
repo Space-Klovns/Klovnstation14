@@ -1,0 +1,392 @@
+### UNFILLED TRIMLINES
+## Trimline
+- type: decal
+  id: TrimlineS
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_s
+
+- type: decal
+  id: TrimlineN
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_n
+
+- type: decal
+  id: TrimlineE
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_e
+
+- type: decal
+  id: TrimlineW
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_w
+
+- type: decal
+  id: TrimlineSw
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_sw
+
+- type: decal
+  id: TrimlineNe
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_ne
+
+- type: decal
+  id: TrimlineNw
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_nw
+
+- type: decal
+  id: TrimlineSe
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_se
+
+## TrimlineArrowCcw
+# LCDC TODO: Sprite
+# - type: decal
+#   id: TrimlineArrowCcw
+#   tags: ["station", "overlay"]
+#   defaultCustomColor: true
+#   sprite:
+#     sprite: _KS14/Decals/Overlays/trimline.rsi
+#     state: trimline_arrow_ccw
+
+## TrimlineArrowCw
+# LCDC TODO: Sprite
+# - type: decal
+#   id: TrimlineArrowCw
+#   tags: ["station", "overlay"]
+#   defaultCustomColor: true
+#   sprite:
+#     sprite: _KS14/Decals/Overlays/trimline.rsi
+#     state: trimline_arrow_cw
+
+## TrimlineBox
+- type: decal
+  id: TrimlineBox
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_box
+
+## TrimlineCorner
+- type: decal
+  id: TrimlineCornerSe
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_corner_se
+
+- type: decal
+  id: TrimlineCornerNw
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_corner_nw
+
+- type: decal
+  id: TrimlineCornerNe
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_corner_ne
+
+- type: decal
+  id: TrimlineCornerSw
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_corner_sw
+
+## TrimlineEnd
+- type: decal
+  id: TrimlineEndS
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_end_s
+
+- type: decal
+  id: TrimlineEndN
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_end_n
+
+- type: decal
+  id: TrimlineEndE
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_end_e
+
+- type: decal
+  id: TrimlineEndW
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_end_w
+
+## TrimlineMid
+- type: decal
+  id: TrimlineMidS
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_mid_s
+
+- type: decal
+  id: TrimlineMidN
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_mid_n
+
+- type: decal
+  id: TrimlineMidE
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_mid_e
+
+- type: decal
+  id: TrimlineMidW
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_mid_w
+
+## TrimlineWarn
+- type: decal
+  id: TrimlineWarnS
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_warn_s
+
+- type: decal
+  id: TrimlineWarnN
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_warn_n
+
+- type: decal
+  id: TrimlineWarnE
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_warn_e
+
+- type: decal
+  id: TrimlineWarnW
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_warn_w
+
+## FILLED TRIMLINES
+# TODO LCDC: Fix sprites for these
+# - type: decal
+#   id: TrimlineFill
+#   tags: ["station", "overlay"]
+#   defaultCustomColor: true
+#   sprite:
+#     sprite: _KS14/Decals/Overlays/trimline.rsi
+#     state: trimline_fill
+
+# - type: decal
+#   id: TrimlineFillArrowCcw
+#   tags: ["station", "overlay"]
+#   defaultCustomColor: true
+#   sprite:
+#     sprite: _KS14/Decals/Overlays/trimline.rsi
+#     state: trimline_arrow_ccw_fill
+
+# - type: decal
+#   id: TrimlineFillArrowCw
+#   tags: ["station", "overlay"]
+#   defaultCustomColor: true
+#   sprite:
+#     sprite: _KS14/Decals/Overlays/trimline.rsi
+#     state: trimline_arrow_cw_fill
+
+# - type: decal
+#   id: TrimlineFillBox
+#   tags: ["station", "overlay"]
+#   defaultCustomColor: true
+#   sprite:
+#     sprite: _KS14/Decals/Overlays/trimline.rsi
+#     state: trimline_box_fill
+
+# - type: decal
+#   id: TrimlineFillCorner
+#   tags: ["station", "overlay"]
+#   defaultCustomColor: true
+#   sprite:
+#     sprite: _KS14/Decals/Overlays/trimline.rsi
+#     state: trimline_corner_fill
+
+# - type: decal
+#   id: TrimlineFillEnd
+#   tags: ["station", "overlay"]
+#   defaultCustomColor: true
+#   sprite:
+#     sprite: _KS14/Decals/Overlays/trimline.rsi
+#     state: trimline_end_fill
+
+# - type: decal
+#   id: TrimlineFillMid
+#   tags: ["station", "overlay"]
+#   defaultCustomColor: true
+#   sprite:
+#     sprite: _KS14/Decals/Overlays/trimline.rsi
+#     state: trimline_mid_fill
+
+# - type: decal
+#   id: TrimlineFillWarn
+#   tags: ["station", "overlay"]
+#   defaultCustomColor: true
+#   sprite:
+#     sprite: _KS14/Decals/Overlays/trimline.rsi
+#     state: trimline_warn_fill
+
+### UNIQUE TRIMLINES
+## TrimlineShrinkCcw
+- type: decal
+  id: TrimlineShrinkCcwS
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_shrink_ccw_s
+
+- type: decal
+  id: TrimlineShrinkCcwN
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_shrink_ccw_n
+
+- type: decal
+  id: TrimlineShrinkCcwE
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_shrink_ccw_e
+
+- type: decal
+  id: TrimlineShrinkCcwW
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_shrink_ccw_w
+
+## TrimlineShrinkcw
+- type: decal
+  id: TrimlineShrinkCwS
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_shrink_cw_s
+
+- type: decal
+  id: TrimlineShrinkCwN
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_shrink_cw_n
+
+- type: decal
+  id: TrimlineShrinkCwE
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_shrink_cw_e
+
+- type: decal
+  id: TrimlineShrinkCwW
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_shrink_cw_w
+
+## TrimlineTram
+- type: decal
+  id: TrimlineTramS
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_tram_s
+
+- type: decal
+  id: TrimlineTramN
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_tram_n
+
+- type: decal
+  id: TrimlineTramE
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_tram_e
+
+- type: decal
+  id: TrimlineTramW
+  tags: ["station", "overlay"]
+  defaultCustomColor: true
+  sprite:
+    sprite: _KS14/Decals/Overlays/trimline.rsi
+    state: trimline_tram_w
