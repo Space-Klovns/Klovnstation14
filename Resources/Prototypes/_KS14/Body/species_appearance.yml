@@ -48,3 +48,20 @@
     - HandRight
     - FootLeft
     - FootRight
+  - type: OrganAttachmentOperation
+    baseOrganCategories:
+    - ArmLeft
+    - ArmRight
+    - LegLeft
+    - LegRight
+    - Head
+
+    - FootLeft
+    - FootRight
+    - HandLeft
+    - HandRight
+    organRoutes:
+      FootLeft: LegLeft
+      FootRight: LegRight
+      HandLeft: ArmLeft
+      HandRight: ArmRight

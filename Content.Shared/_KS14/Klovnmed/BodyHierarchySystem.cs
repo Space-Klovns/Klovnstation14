@@ -38,6 +38,9 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
         if (args.Container.ID != ConstContainerId)
             return;
 
+        if (GameTiming.ApplyingState)
+            return;
+
         // i just want contents to be visible not removable. Still interactable and whatnot doe
         args.Cancel();
     }
@@ -57,13 +60,16 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
             hierarchyEntity.Comp.PresentOrganCategories[addedCategory] = addedEntity;
         }
 
-        var body = new OrganInsertedIntoEvent(addedEntity, hierarchyEntity, addedEntity);
-        RaiseLocalEvent(hierarchyEntity, ref body);
+        if (!GameTiming.ApplyingState)
+        {
+            var body = new OrganInsertedIntoEvent(addedEntity, hierarchyEntity, addedEntity);
+            RaiseLocalEvent(hierarchyEntity, ref body);
 
-        var ev = new OrganGotInsertedEvent(hierarchyEntity, hierarchyEntity, addedEntity);
-        RaiseLocalEvent(addedEntity, ref ev);
+            var ev = new OrganGotInsertedEvent(hierarchyEntity, hierarchyEntity, addedEntity);
+            RaiseLocalEvent(addedEntity, ref ev);
+        }
 
-        addedEntity.Comp.Container.ShowContents = true;
+        addedEntity.Comp.Container.ShowContents = false;
         Dirty(addedEntity.Owner, Comp<ContainerManagerComponent>(addedEntity.Owner));
     }
 
@@ -75,13 +81,16 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
         if (removedEntity.Comp.Category is { } removedCategory)
             hierarchyEntity.Comp.PresentOrganCategories.Remove(removedCategory);
 
-        var body = new OrganRemovedFromEvent(removedEntity, hierarchyEntity, removedEntity);
-        RaiseLocalEvent(hierarchyEntity, ref body);
+        if (!GameTiming.ApplyingState)
+        {
+            var body = new OrganRemovedFromEvent(removedEntity, hierarchyEntity, removedEntity);
+            RaiseLocalEvent(hierarchyEntity, ref body);
 
-        var ev = new OrganGotRemovedEvent(hierarchyEntity, hierarchyEntity, removedEntity);
-        RaiseLocalEvent(removedEntity, ref ev);
+            var ev = new OrganGotRemovedEvent(hierarchyEntity, hierarchyEntity, removedEntity);
+            RaiseLocalEvent(removedEntity, ref ev);
+        }
 
-        removedEntity.Comp.Container.ShowContents = false;
+        removedEntity.Comp.Container.ShowContents = true;
         Dirty(removedEntity.Owner, Comp<ContainerManagerComponent>(removedEntity.Owner));
     }
 }
