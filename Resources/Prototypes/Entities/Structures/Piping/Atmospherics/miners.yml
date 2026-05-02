@@ -24,7 +24,6 @@
           - MachineLayer
     - type: Transform
       anchored: true
-      noRot: true # KS14
     - type: Anchorable
       flags:
       - Anchorable
