@@ -67,7 +67,7 @@ public sealed class HandOrganTest
             // KS14: Use hierarchy instead of container
 
             var expectedCount = 2;
-            var contained = bodyComponent.RecursiveChildUids; // KS14: Use hierarchy instead of container
+            var contained = bodyComponent.RecursiveChildUids.ToList(); // KS14: Use hierarchy instead of container
             foreach (var hand in contained)
             {
                 expectedCount--;
