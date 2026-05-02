@@ -13,6 +13,8 @@ public sealed class DeviceLinkVisualsSystem : EntitySystem
 
         SubscribeLocalEvent<DeviceLinkVisualsComponent, NewLinkEvent>(OnConnected);
         SubscribeLocalEvent<DeviceLinkVisualsComponent, PortDisconnectedEvent>(OnDisconnected);
+
+        SubscribeLocalEvent<DeviceLinkVisualsComponent, MapInitEvent>(OnMapInit);
     }
 
     private void OnConnected(Entity<DeviceLinkVisualsComponent> entity, ref NewLinkEvent args)
@@ -21,6 +23,11 @@ public sealed class DeviceLinkVisualsSystem : EntitySystem
     }
 
     private void OnDisconnected(Entity<DeviceLinkVisualsComponent> entity, ref PortDisconnectedEvent args)
+    {
+        Update(entity);
+    }
+
+    private void OnMapInit(Entity<DeviceLinkVisualsComponent> entity, ref MapInitEvent args)
     {
         Update(entity);
     }
