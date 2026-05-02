@@ -577,6 +577,7 @@
     staticPacks:
     - BioGenIngredientsStatic
     - BioGenMaterialsStatic
+    - KsBioGenBodypartsStatic # KS14: Klovnmed
   - type: EmagLatheRecipes
     emagStaticPacks:
     - BioGenEmagStatic

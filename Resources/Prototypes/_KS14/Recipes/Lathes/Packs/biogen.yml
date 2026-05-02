@@ -1,0 +1,86 @@
+## Static
+
+- type: latheRecipePack
+  id: KsBioGenBodypartsStatic
+  recipes:
+  - KsBioGenOrganHumanArmLeft
+  - KsBioGenOrganHumanArmRight
+  - KsBioGenOrganHumanHandLeft
+  - KsBioGenOrganHumanHandRight
+
+  - KsBioGenOrganHumanLegLeft
+  - KsBioGenOrganHumanLegRight
+  - KsBioGenOrganHumanFootLeft
+  - KsBioGenOrganHumanFootRight
+
+- type: latheRecipe
+  id: KsBioGenOrganHumanArmLeft
+  result: OrganHumanArmLeft
+  categories:
+  - Materials
+  completetime: 3
+  materials:
+    Biomass: 2
+
+- type: latheRecipe
+  id: KsBioGenOrganHumanArmRight
+  result: OrganHumanArmRight
+  categories:
+  - Materials
+  completetime: 3
+  materials:
+    Biomass: 2
+
+- type: latheRecipe
+  id: KsBioGenOrganHumanHandLeft
+  result: OrganHumanHandLeft
+  categories:
+  - Materials
+  completetime: 3
+  materials:
+    Biomass: 2
+
+- type: latheRecipe
+  id: KsBioGenOrganHumanHandRight
+  result: OrganHumanHandRight
+  categories:
+  - Materials
+  completetime: 3
+  materials:
+    Biomass: 2
+
+- type: latheRecipe
+  id: KsBioGenOrganHumanLegLeft
+  result: OrganHumanLegLeft
+  categories:
+  - Materials
+  completetime: 3
+  materials:
+    Biomass: 2
+
+- type: latheRecipe
+  id: KsBioGenOrganHumanLegRight
+  result: OrganHumanLegRight
+  categories:
+  - Materials
+  completetime: 3
+  materials:
+    Biomass: 2
+
+- type: latheRecipe
+  id: KsBioGenOrganHumanFootLeft
+  result: OrganHumanFootLeft
+  categories:
+  - Materials
+  completetime: 3
+  materials:
+    Biomass: 2
+
+- type: latheRecipe
+  id: KsBioGenOrganHumanFootRight
+  result: OrganHumanFootRight
+  categories:
+  - Materials
+  completetime: 3
+  materials:
+    Biomass: 2
