@@ -239,26 +239,4 @@ public sealed class EmissiveOverlay : Overlay
 
         return state?.GetFrame(dir, layer.AnimationFrame) ?? layer.Texture ?? _spriteSystem.GetFallbackTexture();
     }
-
-    /*
-    South = 0,
-    North = 1,
-    East = 2,
-    West = 3,
-    SouthEast = 4,
-    SouthWest = 5,
-    NorthEast = 6,
-    NorthWest = 7,
-    */
-    private static readonly Angle[] RsiDirectionToAngle = [
-        new(0), // South
-        new(Math.PI), // North
-        new(Math.PI * 0.5d), // East
-        new(Math.PI * 1.5d), // West
-
-        new(Math.PI* 0.75d), // SouthEast
-        new(Math.PI * 1.25d), // SouthWest
-        new(Math.PI * 0.25d), // NorthEast
-        new(Math.PI * 1.75d), // NorthWest
-    ];
 }
