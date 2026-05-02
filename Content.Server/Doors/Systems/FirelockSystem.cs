@@ -87,7 +87,7 @@ namespace Content.Server.Doors.Systems
                     && appearanceQuery.TryGetComponent(uid, out var appearance))
                 {
                     var (pressure, fire) = CheckPressureAndFire(uid, firelock, xform, airtight, airtightQuery);
-                    _appearance.SetData(uid, DoorVisuals.ClosedLights, fire || pressure, appearance);
+                    // KS14: Removed ClosedLights appearance data here
                     firelock.Temperature = fire;
                     firelock.Pressure = pressure;
                     _appearance.SetData(uid, FirelockVisuals.PressureWarning, pressure, appearance);
@@ -112,14 +112,15 @@ namespace Content.Server.Doors.Systems
 
             if (args.AlarmType == AtmosAlarmType.Normal)
             {
+                _appearance.SetData(uid, DoorVisuals.ClosedLights, false); // KS14
                 if (doorComponent.State == DoorState.Closed)
                 {
                     _doorSystem.TryOpen(uid);
-                    _appearance.SetData(uid, DoorVisuals.ClosedLights, false); // KS14
                 }
             }
             else if (args.AlarmType == AtmosAlarmType.Danger)
             {
+                _appearance.SetData(uid, DoorVisuals.ClosedLights, true); // KS14
                 EmergencyPressureStop(uid, component, doorComponent);
             }
         }
