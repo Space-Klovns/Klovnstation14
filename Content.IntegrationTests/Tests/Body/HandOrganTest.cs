@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
+using Content.Shared._KS14.Klovnmed; // KS14
 using Content.Shared.Body;
 using Content.Shared.Hands.Components;
 using Robust.Shared.Containers;
@@ -75,11 +75,11 @@ public sealed class HandOrganTest
                 Assert.That(hands.Count, Is.EqualTo(expectedCount));
             }
 
-            var protos = new List<string>() { "LeftHand", "RightHand" };
-            foreach (var proto in protos)
+            var protos = new List<(string, string)>() { ("LeftArm", "LeftHand"), ("RightArm", "RightHand") }; // KS14: Use hierarchy instead of container
+            foreach (var (parentCategory, proto) in protos) // KS14
             {
                 expectedCount++;
-                entityManager.SpawnAttachedTo(proto, new(body, Vector2.Zero)); // KS14: Use hierarchy instead of container
+                entityManager.SpawnInContainerOrDrop(proto, bodyComponent.PresentOrganCategories[parentCategory], BodyHierarchySystem.ConstContainerId); // KS14: Use hierarchy instead of container
                 Assert.That(hands.Count, Is.EqualTo(expectedCount));
             }
         });
