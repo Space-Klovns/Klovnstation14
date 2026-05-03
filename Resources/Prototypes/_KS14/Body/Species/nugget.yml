@@ -34,7 +34,7 @@
   parent:
   - KsAppearanceHumanNugget
   - BaseSpeciesMobOrganic
-  id: MobHumanNugget
+  id: KsMobHumanNugget
   name: Urist McNugget
   components:
   - type: Butcherable
