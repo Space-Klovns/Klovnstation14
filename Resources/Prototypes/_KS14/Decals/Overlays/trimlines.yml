@@ -193,37 +193,14 @@
     state: trimline_mid_w
 
 ## TrimlineWarn
-- type: decal
-  id: TrimlineWarnS
-  tags: ["station", "overlay"]
-  defaultCustomColor: true
-  sprite:
-    sprite: _KS14/Decals/Overlays/trimline.rsi
-    state: trimline_warn_s
-
-- type: decal
-  id: TrimlineWarnN
-  tags: ["station", "overlay"]
-  defaultCustomColor: true
-  sprite:
-    sprite: _KS14/Decals/Overlays/trimline.rsi
-    state: trimline_warn_n
-
-- type: decal
-  id: TrimlineWarnE
-  tags: ["station", "overlay"]
-  defaultCustomColor: true
-  sprite:
-    sprite: _KS14/Decals/Overlays/trimline.rsi
-    state: trimline_warn_e
-
-- type: decal
-  id: TrimlineWarnW
-  tags: ["station", "overlay"]
-  defaultCustomColor: true
-  sprite:
-    sprite: _KS14/Decals/Overlays/trimline.rsi
-    state: trimline_warn_w
+# TODO LCDC: Fix sprites for these
+# - type: decal
+#   id: TrimlineWarn
+#   tags: ["station", "overlay"]
+#   defaultCustomColor: true
+#   sprite:
+#     sprite: _KS14/Decals/Overlays/trimline.rsi
+#     state: trimline_warn
 
 ## FILLED TRIMLINES
 # TODO LCDC: Fix sprites for these

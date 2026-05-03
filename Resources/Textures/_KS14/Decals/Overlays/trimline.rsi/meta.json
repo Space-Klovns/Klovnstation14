@@ -32,16 +32,16 @@
       "name": "trimline_box"
     },
     {
-      "name": "trimline_corner_e"
+      "name": "trimline_corner_ne"
     },
     {
-      "name": "trimline_corner_n"
+      "name": "trimline_corner_nw"
     },
     {
-      "name": "trimline_corner_s"
+      "name": "trimline_corner_se"
     },
     {
-      "name": "trimline_corner_w"
+      "name": "trimline_corner_sw"
     },
     {
       "name": "trimline_e"
