@@ -100,7 +100,7 @@
       # KS14 start
       performCollisionCheck: false
       forcedCollisionCheckOnClick: true
-      crushableBodyPartType: [ Arm, Leg ]
+      crushableBodyPartType: [ Arm, Leg, Hand, Foot ]
       # KS14 end
       openDrawDepth: WallTops
       closeTimeOne: 0.1
@@ -242,6 +242,10 @@
       - ForceNoFixRotations # Prevent fixrotations from targeting these, since the base Firelock is targeted
     - type: Door
       occludes: false
+      # KS14 start: thin firelocks should not crush
+      performCollisionCheck: true
+      forcedCollisionCheckOnClick: null
+      # KS14 end
     - type: Physics
       canCollide: false
     - type: StaticPrice
