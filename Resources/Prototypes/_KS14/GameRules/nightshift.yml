@@ -1,4 +1,4 @@
-- type: entity # Not automatically spawned
+- type: entity
   parent: BaseGameRule
   id: BaseNightshift
   abstract: true
@@ -24,7 +24,7 @@
     - delta
     - epsilon
 
-- type: entity # Not automatically spawned
+- type: entity
   parent: BaseNightshift
   id: NightshiftSaltern
   components:

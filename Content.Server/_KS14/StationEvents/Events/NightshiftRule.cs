@@ -52,11 +52,12 @@ public sealed class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
 
         var nightshiftLightComponent = AddComp<NightshiftBulbComponent>(args.Entity);
         nightshiftLightComponent.OwningRuleUid = light.Comp.OwningRuleUid;
-
         if (nightshiftLightComponent.OwningRuleUid is not { })
             return;
 
-        _bulbSystem.SetColor(args.Entity, Comp<NightshiftRuleComponent>(nightshiftLightComponent.OwningRuleUid!.Value).Color);
+        var ruleComponent = Comp<NightshiftRuleComponent>(nightshiftLightComponent.OwningRuleUid!.Value);
+        ruleComponent.Bulbs.Add(args.Entity);
+        _bulbSystem.SetColor(args.Entity, ruleComponent.Color);
     }
 
     private void OnAlertLevelChanged(AlertLevelChangedEvent args)
@@ -168,7 +169,7 @@ public sealed class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
             var ruleQuery = EntityQueryEnumerator<NightshiftRuleComponent>();
             while (ruleQuery.MoveNext(out var otherRuleComponent))
             {
-                if (ruleComponent.StationUid == EntityUid.Invalid)
+                if (otherRuleComponent.StationUid == EntityUid.Invalid)
                     continue;
 
                 ineligibleStations.Add(otherRuleComponent.StationUid);
@@ -188,5 +189,7 @@ public sealed class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
 
         if (ruleComponent.Enabled)
             Disable((ruleUid, ruleComponent));
+
+        ruleComponent.StationUid = EntityUid.Invalid;
     }
 }
