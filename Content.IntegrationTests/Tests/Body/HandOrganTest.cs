@@ -31,7 +31,7 @@ public sealed class HandOrganTest
   id: LeftArm
   components:
   - type: Organ
-    category: LeftArm
+    category: ArmLeft
   - type: EntityTableContainerFill
     containers:
       body_organs: !type:AllSelector
@@ -42,7 +42,7 @@ public sealed class HandOrganTest
   id: RightArm
   components:
   - type: Organ
-    category: RightArm
+    category: ArmRight
   - type: EntityTableContainerFill
     containers:
       body_organs: !type:AllSelector
@@ -53,7 +53,7 @@ public sealed class HandOrganTest
   id: LeftHand
   components:
   - type: Organ
-    category: LeftHand
+    category: HandLeft
   - type: HandOrgan
     handID: left
     data:
@@ -63,7 +63,7 @@ public sealed class HandOrganTest
   id: RightHand
   components:
   - type: Organ
-    category: RightHand
+    category: HandRight
   - type: HandOrgan
     handID: right
     data:
