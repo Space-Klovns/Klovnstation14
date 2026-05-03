@@ -1,0 +1,43 @@
+- type: entity
+  parent: AppearanceHuman
+  id: KsAppearanceHumanNugget
+  name: nugget appearance
+  abstract: true
+  components:
+  - type: InitialBody
+    organs:
+    - category: Head # head
+      entity: OrganHumanHead
+      children:
+      # intentionally missing brain, eyes, ears
+      - category: Tongue
+        entity: OrganHumanTongue
+
+    - category: Torso # torso
+      entity: OrganHumanTorso
+      children:
+      - category: Appendix
+        entity: OrganHumanAppendix
+      # intentionally missing lungs, heart
+      - category: Stomach
+        entity: OrganHumanStomach
+      - category: Liver
+        entity: OrganHumanLiver
+      - category: Kidneys
+        entity: OrganHumanKidneys
+
+    # And nothing else
+  - type: HumanoidProfile
+    species: Human
+
+- type: entity
+  parent:
+  - KsAppearanceHumanNugget
+  - BaseSpeciesMobOrganic
+  id: MobHuman
+  name: Urist McNugget
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeatHuman
+      amount: 5

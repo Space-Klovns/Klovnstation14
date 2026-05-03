@@ -65,6 +65,12 @@
       FootRight: LegRight
       HandLeft: ArmLeft
       HandRight: ArmRight
+
+      Brain: Head
+      Eyes: Head
+      Ears: Head
+
+      Heart: Torso
   - type: OrganAttachmentConstruction
     netNode: start # same as construction start node
     baseOrgansAlwaysAttachable: true
