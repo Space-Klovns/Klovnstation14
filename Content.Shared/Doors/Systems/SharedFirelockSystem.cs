@@ -68,6 +68,11 @@ public abstract class SharedFirelockSystem : EntitySystem
         if (args.Cancelled || !component.Powered || args.StrongPry || args.PryPowered)
             return;
 
+        // KS14 start: dont let people pry open doors closed
+        if (TryComp<DoorComponent>(uid, out var doorComponent))
+            args.Cancelled |= doorComponent.State == DoorState.Open;
+        // KS14 end
+
         args.Cancelled = true;
     }
 
