@@ -5,7 +5,6 @@ using Content.Server._KS14.StationEvents.Components;
 using Content.Shared.Light.Components;
 using Content.Server.Light.EntitySystems;
 using Content.Server.AlertLevel;
-using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Content.Shared.Light.EntitySystems;
 
