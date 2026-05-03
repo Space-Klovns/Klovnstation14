@@ -15,7 +15,7 @@ public sealed class AutomaticNightshiftSystem : EntitySystem
     [Dependency] private readonly GameTicker _gameTicker = default!;
     [Dependency] private readonly StationSystem _stationSystem = default!;
 
-    private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(5d);
+    private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(15d);
     private TimeSpan _nextUpdate = TimeSpan.MinValue;
 
     public override void Initialize()
