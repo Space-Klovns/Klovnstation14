@@ -32,6 +32,13 @@
       sprite: _KS14/Structures/Wallmounts/Lighting/light_glow_greyscale.rsi # KS14: greyscale lighting textures
       shader: unshaded
     state: base
+  # KS14: emissive start
+  - type: EmissiveLayers
+    glowRadius: 0.25
+    intensity: 2.2
+    layers:
+    - enum.PoweredLightLayers.Glow
+  # KS14: emissive end
   - type: PointLight
     color: "#FFE4CE" # 5000K color temp
     energy: 0.8

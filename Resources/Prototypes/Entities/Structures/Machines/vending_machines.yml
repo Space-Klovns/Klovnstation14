@@ -24,7 +24,7 @@
   # KS14: emissive start
   - type: EmissiveLayers
     glowRadius: 0.05
-    intensity: 0
+    intensity: 0.1
     layers:
     - enum.VendingMachineVisualLayers.BaseUnshaded
   # KS14: emissive end
@@ -98,7 +98,11 @@
   - type: Electrified
     enabled: false
     usesApcPower: true
-  # KS14: Removed PointLight, LitOnPowered
+  - type: PointLight
+    enabled: true
+    castShadows: false
+    radius: 0 # KS14: set to 0
+  # KS14: Removed LitOnPowered
   - type: ApcPowerReceiver
     powerLoad: 200
   - type: Actions
