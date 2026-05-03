@@ -47,4 +47,12 @@ public sealed partial class OrganAttachmentConstructionComponent : Component
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
     public bool BaseOrgansAlwaysAttachable = false;
+
+    /// <summary>
+    ///     Organs are always attachable to this entity, if its
+    ///         in the body.
+    /// </summary>
+    [DataField]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public bool OrgansAlwaysAttachableWhenInBody = true;
 }

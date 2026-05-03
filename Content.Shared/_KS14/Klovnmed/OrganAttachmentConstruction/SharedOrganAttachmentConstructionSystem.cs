@@ -11,6 +11,8 @@ namespace Content.Shared._KS14.Klovnmed.OrganAttachmentConstruction;
 /// </summary>
 public abstract class SharedOrganAttachmentConstructionSystem : EntitySystem
 {
+    [Dependency] private readonly BodyHierarchySystem _bodyHierarchySystem = default!;
+
     public override void Initialize()
     {
         base.Initialize();
@@ -38,6 +40,10 @@ public abstract class SharedOrganAttachmentConstructionSystem : EntitySystem
                 args.Component.BaseOrganCategories.Contains(args.Category))
                 return;
         }
+
+        if (entity.Comp.OrgansAlwaysAttachableWhenInBody &&
+            _bodyHierarchySystem.TryGetBody(entity.Owner, out _))
+            return;
 
         if (entity.Comp.NetNode is not { } currentNode)
             goto cancelled;

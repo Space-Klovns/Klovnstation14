@@ -36,6 +36,20 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
         return true;
     }
 
+    /// <returns>True if the body was found.</returns>
+    public bool TryGetBody(Entity<OrganComponent?> entity, [NotNullWhen(true)] out Entity<BodyComponent>? bodyEntity)
+    {
+        if (!ElementQuery.Resolve(entity, ref entity.Comp, logMissing: false) ||
+            entity.Comp.HierarchyUid is not { } bodyUid)
+        {
+            bodyEntity = null;
+            return false;
+        }
+
+        bodyEntity = (bodyUid, HierarchyQuery.GetComponent(bodyUid));
+        return true;
+    }
+
     private void OnOrganElementRemovingAttempt(Entity<OrganComponent> entity, ref ContainerIsRemovingAttemptEvent args)
     {
         if (args.Container.ID != ConstContainerId)

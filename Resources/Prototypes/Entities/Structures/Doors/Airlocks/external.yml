@@ -20,6 +20,17 @@
     layoutId: AirlockExternal
   - type: Paintable
     group: null
+  # KS14: emissive start
+  - type: EmissiveLayers
+    glowRadius: 1
+    intensity: 0.5
+    offset: 0,-1.35
+    layers:
+    - enum.DoorVisualLayers.BaseUnlit
+    - enum.DoorVisualLayers.BaseBolted
+    - enum.DoorVisualLayers.BaseEmergencyAccess
+    - enum.DoorVisualLayers.BaseEmagging
+  # KS14: emissive end
 
 - type: entity
   parent: AirlockExternal
