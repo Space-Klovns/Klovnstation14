@@ -33,10 +33,12 @@ public sealed class OrganAttachmentOperationSystem : EntitySystem
         SubscribeLocalEvent<OrganAttachmentOperationComponent, OrganAttachmentDoAfterEvent>(OnDoAfter);
     }
 
-    private bool RaiseCanAttachOrganCancelled(EntityUid uid, ProtoId<OrganCategoryPrototype> category)
+    private bool RaiseCanAttachOrganCancelled(Entity<OrganAttachmentOperationComponent?> entity, ProtoId<OrganCategoryPrototype> category)
     {
-        var ev = new CanAttachOrganEvent(false, category);
-        RaiseLocalEvent(uid, ref ev);
+        Resolve(entity.Owner, ref entity.Comp, logMissing: false);
+
+        var ev = new CanAttachOrganEvent(false, category, entity.Comp);
+        RaiseLocalEvent(entity, ref ev);
 
         return ev.Cancelled;
     }
@@ -65,7 +67,7 @@ public sealed class OrganAttachmentOperationSystem : EntitySystem
             !GetApplicableOrganCategories(entity).Contains(category))
             return;
 
-        if (RaiseCanAttachOrganCancelled(entity, category) ||
+        if (RaiseCanAttachOrganCancelled(entity!, category) ||
             _bodyHierarchySystem.TryGetOrgan(entity.Owner, category, out _) ||
             !_containerSystem.TryGetContainer(entity.Owner, BodyHierarchySystem.ConstContainerId, out var bodyContainer) ||
             !_containerSystem.CanInsert(args.Used, bodyContainer))
@@ -78,7 +80,7 @@ public sealed class OrganAttachmentOperationSystem : EntitySystem
         if (entity.Comp.OrganRoutes.TryGetValue(category, out var routeCategory))
         {
             if (!_bodyHierarchySystem.TryGetOrgan(entity.Owner, routeCategory, out var routeOrganEntity) ||
-                RaiseCanAttachOrganCancelled(routeOrganEntity.Value, routeCategory))
+                RaiseCanAttachOrganCancelled(routeOrganEntity.Value.Owner, category))
             {
                 _popupSystem.PopupClient(Loc.GetString("ks-organ-attachment-operation-wontfit"), entity.Owner, args.User);
                 return;
@@ -103,7 +105,7 @@ public sealed class OrganAttachmentOperationSystem : EntitySystem
             innerEvent.Used is not { } usedUid)
             return;
 
-        if (RaiseCanAttachOrganCancelled(entity, args.Event.Category))
+        if (RaiseCanAttachOrganCancelled(entity!, args.Event.Category))
         {
             args.Cancel();
             return;

@@ -112,7 +112,7 @@
       clickOpen: true
       crushDamage:
         types:
-          Blunt: 45 # KS14: 15 -> 45
+          Blunt: 35 # KS14: 15 -> 35
       openSound:
         path: /Audio/Machines/airlock_open.ogg
       closeSound:

@@ -38092,9 +38092,12 @@ entities:
     - type: LightCycle
       maxLightLevel: 1
       minLightLevel: 0.12
-      offset: 1320
-      duration: 6300
+      offset: 2600
+      duration: 2700
       originalColor: '#748FE8FF'
+    - type: AutomaticNightshift
+      proto: NightshiftSaltern
+      startTimeFraction: 0.7
     - type: SunShadow
     - type: SunShadowCycle
       directions:

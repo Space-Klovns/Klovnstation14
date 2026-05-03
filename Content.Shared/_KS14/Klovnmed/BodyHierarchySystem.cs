@@ -13,11 +13,11 @@ public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, Org
     [Dependency] private readonly IGameTiming _gameTiming = default!;
 
     public const string ConstContainerId = "body_organs"; // for compatibility
-    public override string ContainerId => ConstContainerId;
 
     public override void Initialize()
     {
         base.Initialize();
+        ContainerId = ConstContainerId;
 
         SubscribeLocalEvent<OrganComponent, ContainerIsRemovingAttemptEvent>(OnOrganElementRemovingAttempt);
     }

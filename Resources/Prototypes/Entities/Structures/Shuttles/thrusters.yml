@@ -16,6 +16,14 @@
           - MachineMask
           layer:
           - MachineLayer
+    # KS14: emissive start
+    - type: EmissiveLayers
+      glowRadius: 0.1
+      intensity: 0.3
+      layers:
+      - enum.ThrusterVisualLayers.ThrustOn
+      - enum.ThrusterVisualLayers.ThrustingUnshaded
+    # KS14: emissive end
     - type: AmbientSound
       enabled: false
       range: 4

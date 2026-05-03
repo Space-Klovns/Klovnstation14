@@ -1,0 +1,33 @@
+- type: entity # Not automatically spawned
+  parent: BaseGameRule
+  id: BaseNightshift
+  abstract: true
+  components:
+  - type: StationEvent
+    startAnnouncement: ks-station-event-nightshift-start-announcement
+    startAnnouncementColor: Gray
+    endAnnouncement: ks-station-event-nightshift-end-announcement
+    endAnnouncementColor: Gray
+    startAudio: &nsaudio
+      path: /Audio/Misc/notice2.ogg
+      params:
+        volume: -3
+    endAudio: *nsaudio
+    duration: 1890
+    maxDuration: 1890
+  - type: NightshiftRule
+    dangerousAlertLevels:
+    - violet
+    - yellow
+    - red
+    - gamma
+    - delta
+    - epsilon
+
+- type: entity # Not automatically spawned
+  parent: BaseNightshift
+  id: NightshiftSaltern
+  components:
+  - type: StationEvent
+    duration: 1890
+    maxDuration: 1890

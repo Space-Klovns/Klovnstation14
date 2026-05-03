@@ -44,8 +44,8 @@
     # KS14: Gasminer visuals start
     - type: AmbientSound # KS14: Ambient sound
       enabled: false
-      volume: -9
-      range: 7.5
+      volume: -12
+      range: 4.5
       sound:
         path: /Audio/_KS14/Ambience/Objects/wind_plant_hum.ogg
     - type: Appearance

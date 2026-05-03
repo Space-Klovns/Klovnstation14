@@ -67,3 +67,4 @@
       HandRight: ArmRight
   - type: OrganAttachmentConstruction
     netNode: start # same as construction start node
+    baseOrgansAlwaysAttachable: true

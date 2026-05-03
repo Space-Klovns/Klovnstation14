@@ -31,12 +31,12 @@ public sealed partial class OrganAttachmentOperationComponent : Component
 
 /// <summary>
 ///     Raised on something with <see cref="OrganAttachmentOperationComponent"/> to
-///         attempt to cancel an organ attachment if necessary.
+///         attempt to cancel an organ attachment if necessary, with the category of the organ being attached.
 ///
 ///     This will be raised every tick during doafters.
 /// </summary>
 [ByRefEvent]
-public record struct CanAttachOrganEvent(bool Cancelled, ProtoId<OrganCategoryPrototype> Category, OrganAttachmentOperationComponent Component);
+public record struct CanAttachOrganEvent(bool Cancelled, ProtoId<OrganCategoryPrototype> Category, OrganAttachmentOperationComponent? Component);
 
 /// <summary>
 ///     Raised on something with <see cref="OrganAttachmentOperationComponent"/> to

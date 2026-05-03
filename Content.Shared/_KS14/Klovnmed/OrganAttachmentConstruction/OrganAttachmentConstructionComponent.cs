@@ -39,4 +39,12 @@ public sealed partial class OrganAttachmentConstructionComponent : Component
     [DataField, AutoNetworkedField]
     [ViewVariables(VVAccess.ReadWrite)]
     public string? NetNode = null;
+
+    /// <summary>
+    ///     Whether the categories in <see cref="OrganAttachmentOperation.OrganAttachmentOperationComponent.BaseOrganCategories"/>
+    ///         are always attachable.
+    /// </summary>
+    [DataField]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public bool BaseOrgansAlwaysAttachable = false;
 }

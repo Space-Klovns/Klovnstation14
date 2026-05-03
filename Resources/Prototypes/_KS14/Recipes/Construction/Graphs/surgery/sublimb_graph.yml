@@ -43,3 +43,8 @@
     - !type:EmptyContainer
       container: body_organs
       pickup: true
+    - !type:PlaySound
+      sound:
+        collection: KsHandlingOrgan
+        params:
+          volume: -2

@@ -12,11 +12,10 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
     [Dependency] protected readonly SharedContainerSystem ContainerSystem = default!;
 
     /// <summary>
-    ///     Should be set on the system. Internal container id value will not update
-    ///         after this is set.
+    ///     Must be set on initialisation.
     /// </summary>
-    public abstract string ContainerId { get; }
-    private string _containerId = default!;
+    [Access(Other = AccessPermissions.Read)]
+    public string ContainerId = "hierarchy_container";
 
     protected EntityQuery<THierarchyComp> HierarchyQuery;
     protected EntityQuery<TElementComp> ElementQuery;
@@ -24,8 +23,6 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
     public override void Initialize()
     {
         base.Initialize();
-
-        _containerId = ContainerId;
 
         HierarchyQuery = GetEntityQuery<THierarchyComp>();
         ElementQuery = GetEntityQuery<TElementComp>();
@@ -79,7 +76,7 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
 
     private void OnElementRemovedFromHierarchy(Entity<THierarchyComp> parentHierarchyEntity, ref EntRemovedFromContainerMessage args)
     {
-        if (args.Container.ID != _containerId)
+        if (args.Container.ID != ContainerId)
             return;
 
         UpdateElementChildrenNewHierarchy((args.Entity, ElementQuery.GetComponent(args.Entity)), null);
@@ -87,7 +84,7 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
 
     private void OnElementRemovedFromElement(Entity<TElementComp> parentElementEntity, ref EntRemovedFromContainerMessage args)
     {
-        if (args.Container.ID != _containerId)
+        if (args.Container.ID != ContainerId)
             return;
 
         RemoveDirectChild(parentElementEntity, args.Entity);
@@ -98,10 +95,10 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
 
     private void OnElementGotInsertedIntoContainer(Entity<TElementComp> elementEntity, ref EntGotInsertedIntoContainerMessage args)
     {
-        if (args.Container.ID != _containerId)
+        if (args.Container.ID != ContainerId)
             return;
 
-        elementEntity.Comp.Container = ContainerSystem.EnsureContainer<Container>(elementEntity.Owner, _containerId);
+        elementEntity.Comp.Container = ContainerSystem.EnsureContainer<Container>(elementEntity.Owner, ContainerId);
         var newParentUid = args.Container.Owner;
         if (HierarchyQuery.HasComponent(newParentUid)) // use new hierarchy parent as hierarchy
         {
@@ -135,12 +132,12 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
 
     private void OnHierarchyInit(Entity<THierarchyComp> hierarchyEntity, ref ComponentInit args)
     {
-        hierarchyEntity.Comp.Container = ContainerSystem.EnsureContainer<Container>(hierarchyEntity.Owner, _containerId);
+        hierarchyEntity.Comp.Container = ContainerSystem.EnsureContainer<Container>(hierarchyEntity.Owner, ContainerId);
     }
 
     private void OnElementInit(Entity<TElementComp> elementEntity, ref ComponentInit args)
     {
-        elementEntity.Comp.Container = ContainerSystem.EnsureContainer<Container>(elementEntity.Owner, _containerId);
+        elementEntity.Comp.Container = ContainerSystem.EnsureContainer<Container>(elementEntity.Owner, ContainerId);
     }
 
     private void OnElementShutdown(Entity<TElementComp> elementEntity, ref ComponentShutdown args)

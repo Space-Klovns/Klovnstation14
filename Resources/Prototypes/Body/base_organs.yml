@@ -75,7 +75,7 @@
       - HeadTop
 
 - type: entity
-  parent: [OrganBase, KsBaseSublimb] # KS14: Klovnmed: inherits from KsBaseSublimb
+  parent: [KsBaseSublimb, OrganBase] # KS14: Klovnmed: inherits from KsBaseSublimb (superior)
   id: OrganBaseArmLeft
   name: left arm
   abstract: true
@@ -101,7 +101,7 @@
   # KS14: Klovnmed end
 
 - type: entity
-  parent: [OrganBase, KsBaseSublimb] # KS14: Klovnmed: inherits from KsBaseSublimb
+  parent: [KsBaseSublimb, OrganBase] # KS14: Klovnmed: inherits from KsBaseSublimb (superior)
   id: OrganBaseArmRight
   name: right arm
   abstract: true
@@ -139,7 +139,9 @@
     data:
       location: Left
   - type: Sprite
-    state: l_hand
+    layers: # KS14: made singular state into layer, gave offset
+    - state: l_hand
+      offset: 0.2,0
   - type: VisualOrgan
     layer: enum.HumanoidVisualLayers.LHand
     data:
@@ -162,7 +164,9 @@
     data:
       location: Right
   - type: Sprite
-    state: r_hand
+    layers: # KS14: made singular state into layer, gave offset
+    - state: r_hand
+      offset: 0.2,0
   - type: VisualOrgan
     layer: enum.HumanoidVisualLayers.RHand
     data:
@@ -173,7 +177,7 @@
       - RHand
 
 - type: entity
-  parent: [OrganBase, KsBaseSublimb] # KS14: Klovnmed: inherits from KsBaseSublimb
+  parent: [KsBaseSublimb, OrganBase] # KS14: Klovnmed: inherits from KsBaseSublimb (superior)
   id: OrganBaseLegLeft
   name: left leg
   abstract: true
@@ -197,7 +201,7 @@
   # KS14: Klovnmed end
 
 - type: entity
-  parent: [OrganBase, KsBaseSublimb] # KS14: Klovnmed: inherits from KsBaseSublimb
+  parent: [KsBaseSublimb, OrganBase] # KS14: Klovnmed: inherits from KsBaseSublimb (superior)
   id: OrganBaseLegRight
   name: right leg
   abstract: true

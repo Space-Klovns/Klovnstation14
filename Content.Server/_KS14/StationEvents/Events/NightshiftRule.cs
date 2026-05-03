@@ -105,18 +105,23 @@ public sealed class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
     {
         base.Started(ruleUid, ruleComponent, gameRule, args);
 
-        var ineligibleStations = new HashSet<EntityUid>();
-        var ruleQuery = EntityQueryEnumerator<NightshiftRuleComponent>();
-        while (ruleQuery.MoveNext(out var otherRuleComponent))
+        // Allow overwriting it
+        EntityUid? stationUid = ruleComponent.StationUid;
+        if (stationUid == EntityUid.Invalid)
         {
-            if (ruleComponent.StationUid == EntityUid.Invalid)
-                continue;
+            var ineligibleStations = new HashSet<EntityUid>();
+            var ruleQuery = EntityQueryEnumerator<NightshiftRuleComponent>();
+            while (ruleQuery.MoveNext(out var otherRuleComponent))
+            {
+                if (ruleComponent.StationUid == EntityUid.Invalid)
+                    continue;
 
-            ineligibleStations.Add(otherRuleComponent.StationUid);
+                ineligibleStations.Add(otherRuleComponent.StationUid);
+            }
+
+            if (!TryGetRandomStation(out stationUid, filter: (uid) => !ineligibleStations.Contains(uid)))
+                return;
         }
-
-        if (!TryGetRandomStation(out var stationUid, filter: (uid) => ineligibleStations.Contains(uid)))
-            return;
 
         ruleComponent.StationUid = stationUid.Value;
         Enable((ruleUid, ruleComponent));

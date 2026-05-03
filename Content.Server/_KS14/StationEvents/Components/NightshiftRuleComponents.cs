@@ -1,10 +1,9 @@
+using Content.Server._KS14.AutomaticNightshift;
 using Content.Server._KS14.StationEvents.Events;
-using Content.Server.AlertLevel;
-using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.StationEvents.Components;
 
-[RegisterComponent, Access(typeof(NightshiftRule))]
+[RegisterComponent, Access(typeof(NightshiftRule), typeof(AutomaticNightshiftSystem))]
 public sealed partial class NightshiftRuleComponent : Component
 {
     [DataField]

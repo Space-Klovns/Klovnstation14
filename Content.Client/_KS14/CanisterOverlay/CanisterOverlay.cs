@@ -71,10 +71,12 @@ public sealed class CanisterOverlay : Overlay
     ///     Stores canister components and their matrix.
     /// </summary>
     private readonly List<(GasCanisterOverlayComponent, Matrix3x2)> _drawDataCache = new();
+    public const int CanisterZIndex = (int)Shared.DrawDepth.DrawDepth.Objects; // Under ghosts and fire, above mostly everything else
 
     public CanisterOverlay()
     {
         IoCManager.InjectDependencies(this);
+        ZIndex = CanisterZIndex;
 
         _atmosphereSystem = _entityManager.System<AtmosphereSystem>();
         _transformSystem = _entityManager.System<TransformSystem>();
