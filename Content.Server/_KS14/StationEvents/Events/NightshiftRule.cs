@@ -43,7 +43,7 @@ public sealed class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
         if (args.Container.ID != SharedPoweredLightSystem.LightBulbContainer)
             return;
 
-        RemComp<NightshiftBulbComponent>(light);
+        RemComp<NightshiftBulbComponent>(args.Entity);
     }
 
     private void OnInserted(Entity<NightshiftLightComponent> light, ref EntInsertedIntoContainerMessage args)
