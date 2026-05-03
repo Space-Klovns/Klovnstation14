@@ -118,7 +118,7 @@ public sealed class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
                 continue;
 
             ruleEntity.Comp.Lights.Add(lightUid);
-            var nightshiftLightComponent = AddComp<NightshiftBulbComponent>(lightUid);
+            var nightshiftLightComponent = AddComp<NightshiftLightComponent>(lightUid);
             nightshiftLightComponent.OwningRuleUid = ruleEntity;
 
             ruleEntity.Comp.Bulbs.Add(bulbUid);
@@ -147,7 +147,7 @@ public sealed class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
 
         foreach (var lightUid in ruleEntity.Comp.Lights)
         {
-            var nightshiftLightComponent = _nightshiftBulbQuery.GetComponent(lightUid);
+            var nightshiftLightComponent = _nightshiftLightQuery.GetComponent(lightUid);
             nightshiftLightComponent.OwningRuleUid = null;
 
             RemComp(lightUid, nightshiftLightComponent);

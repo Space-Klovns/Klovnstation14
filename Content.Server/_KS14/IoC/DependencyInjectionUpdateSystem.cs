@@ -1,3 +1,5 @@
+using Content.Server.GameTicking.Events;
+
 namespace Content.Server._KS14.IoC;
 
 public sealed class SystemCollectionHookSystem : EntitySystem
@@ -11,15 +13,30 @@ public sealed class SystemCollectionHookSystem : EntitySystem
 
     private bool _initialisedAllSystems = false;
 
-    public override void Update(float frameTime) // Best i could do without reflection or some other bs
+    public override void Initialize()
     {
-        base.Update(frameTime);
+        base.Initialize();
+        SubscribeLocalEvent<RoundStartingEvent>(OnRoundStarting);
+    }
 
+    private void TryInitialise()
+    {
         if (_initialisedAllSystems)
             return;
 
         OnSystemCollectionAvailable?.Invoke(DependencyCollection);
         _initialisedAllSystems = true;
+    }
+
+    private void OnRoundStarting(RoundStartingEvent args)
+    {
+        TryInitialise();
+    }
+
+    public override void Update(float frameTime) // Best i could do without reflection or some other bs
+    {
+        base.Update(frameTime);
+        TryInitialise();
     }
 
     public void HookAction(Action act) => OnSystemCollectionAvailable += (_) => act();

@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using Content.Server._KS14.IoC;
 using Content.Server.GameTicking;
 using Content.Server.GameTicking.Events;
 using Content.Shared._KS14.CCVar;
@@ -62,7 +63,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
         SubscribeLocalEvent<SpeczoneComponent, ComponentShutdown>(OnSpeczoneShutdown);
         SubscribeLocalEvent<SpeczoneEntryComponent, ComponentShutdown>(OnSpeczoneEntryShutdown);
 
-        SubscribeLocalEvent<RoundStartingEvent>(OnRoundStarting);
+        SubscribeLocalEvent<RoundStartingEvent>(OnRoundStarting, after: [typeof(SystemCollectionHookSystem)]);
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundCleanup);
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
 
