@@ -14,6 +14,13 @@
       state: glow
       shader: unshaded
     state: base
+  # KS14: emissive start
+  - type: EmissiveLayers
+    glowRadius: 0.1
+    intensity: 1
+    layers:
+    - enum.PoweredLightLayers.Glow
+  # KS14: emissive end
   - type: PointLight
     radius: 1.5
     energy: 0.45

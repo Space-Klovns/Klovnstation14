@@ -61,14 +61,12 @@ namespace Content.Server.Doors.Systems
             var query = EntityQueryEnumerator<FirelockComponent, DoorComponent>();
             while (query.MoveNext(out var uid, out var firelock, out var door))
             {
-                var didPressureStop = false; // KS14
                 if (_atmosAlarmQuery.TryComp(uid, out var alarmable)
                     && alarmable.LastAlarmState == AtmosAlarmType.Danger
                     && this.IsPowered(uid, EntityManager)
                     && door.State == DoorState.Open)
                 {
-                    didPressureStop = // KS14
-                        EmergencyPressureStop(uid, firelock, door);
+                    EmergencyPressureStop(uid, firelock, door);
                 }
 
                 // only bother to check pressure on doors that are some variation of closed.
@@ -76,9 +74,6 @@ namespace Content.Server.Doors.Systems
                     && door.State != DoorState.Welded
                     && door.State != DoorState.Denying)
                 {
-                    if (!didPressureStop) // KS14
-                        _appearance.SetData(uid, DoorVisuals.ClosedLights, false);
-
                     continue;
                 }
 

@@ -64,10 +64,13 @@
   - type: UnpoweredFlashlight
   - type: PointLight
     enabled: false
-    radius: 1.7
-    falloff: 3
-    softness: 5
+    radius: 3 # KS14: 1.7 -> 3
+    falloff: 25 # KS14: 3 -> 25
+    energy: 0.7 # KS14
+    softness: 12 # KS14: 5 -> 12
+    curveFactor: 2 # KS14
     autoRot: true
+    mask: /Textures/Effects/LightMasks/cone.png # KS14: Mask
   - type: Ringer
   - type: RingerUplink
   - type: DeviceNetwork

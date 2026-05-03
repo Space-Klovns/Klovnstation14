@@ -6,7 +6,8 @@ namespace Content.Shared.Light
     public enum PoweredLightVisuals : byte
     {
         BulbState,
-        Blinking
+        Blinking,
+        Color // KS14 addition: doesnt actually do anything by itself, just forces appearances to update lol
     }
 
     [Serializable, NetSerializable]

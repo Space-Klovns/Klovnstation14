@@ -9,3 +9,21 @@
     minimumPlayers: 20
   - type: NukeCalibrationRule
     autoDisarmChance: 0.220
+
+- type: entity
+  id: Nightshift
+  parent: BaseGameRule
+  components:
+  - type: StationEvent
+    weight: 1
+    duration: 900
+    reoccurrenceDelay: 2
+    minimumPlayers: 0
+  - type: NightshiftRule
+    dangerousAlertLevels:
+    - violet
+    - yellow
+    - red
+    - gamma
+    - delta
+    - epsilon

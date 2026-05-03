@@ -1,13 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
-using Content.Shared._KS14.KsPopup;
 using Content.Shared._KS14.Random.Helpers;
 using Content.Shared.Body;
 using Content.Shared.Chat;
 using Content.Shared.Chat.Prototypes;
 using Content.Shared.Damage;
 using Content.Shared.Mobs.Systems;
-using Content.Shared.Popups;
 using Content.Shared.Throwing;
 using Robust.Shared.Containers;
 using Robust.Shared.Prototypes;
@@ -27,7 +25,7 @@ public sealed class DismembermentSystem : EntitySystem
     [Dependency] private readonly ThrowingSystem _throwingSystem = default!;
     [Dependency] private readonly OrganSearchSystem _organSearchSystem = default!;
     [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
-    [Dependency] private readonly KsPopupSystem _ksPopupSystem = default!;
+    //[Dependency] private readonly KsPopupSystem _ksPopupSystem = default!;
     [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
     [Dependency] private readonly SharedChatSystem _chatSystem = default!;
 

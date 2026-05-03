@@ -252,7 +252,20 @@ public abstract class SharedPoweredLightSystem : EntitySystem
         return true;
     }
 
-    protected void UpdateLight(EntityUid uid,
+    // KS14
+    public void UpdateLightWithBulb(Entity<PoweredLightComponent?> lightEntity, Entity<LightBulbComponent?> bulbEntity, AppearanceComponent? appearanceComponent = null)
+    {
+        if (!Resolve(lightEntity, ref lightEntity.Comp, false) ||
+            !Resolve(bulbEntity, ref bulbEntity.Comp, false))
+            return;
+
+        SetLight(lightEntity, true, bulbEntity.Comp.Color, lightEntity, bulbEntity.Comp.LightRadius, bulbEntity.Comp.LightEnergy, bulbEntity.Comp.LightSoftness);
+
+        if (Resolve(lightEntity.Owner, ref appearanceComponent))
+            _appearance.SetData(lightEntity.Owner, PoweredLightVisuals.Color, bulbEntity.Comp.Color, appearanceComponent);
+    }
+
+    public /* KS14: Made public, for nightshift rule */ void UpdateLight(EntityUid uid,
         PoweredLightComponent? light = null,
         SharedApcPowerReceiverComponent? powerReceiver = null,
         AppearanceComponent? appearance = null,
@@ -290,7 +303,7 @@ public abstract class SharedPoweredLightSystem : EntitySystem
             case LightBulbState.Normal:
                 if (powerReceiver.Powered && light.On)
                 {
-                    SetLight(uid, true, lightBulb.Color, light, lightBulb.LightRadius, lightBulb.LightEnergy, lightBulb.LightSoftness);
+                    UpdateLightWithBulb((uid, light), (bulbUid.Value, lightBulb), appearance); // KS14: Separated SetLight and appearance into UpdateLightWithBulb
                     _appearance.SetData(uid, PoweredLightVisuals.BulbState, PoweredLightState.On, appearance);
                     var time = GameTiming.CurTime;
                     if (time > light.LastThunk + ThunkDelay)

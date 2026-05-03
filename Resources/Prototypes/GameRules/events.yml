@@ -3,6 +3,7 @@
   table: !type:AllSelector # we need to pass a list of rules, since rules have further restrictions to consider via StationEventComp
     children:
     - id: NukeCalibration # KS14: wizden-april-fools-2025 nuke-calibration -> ks14 port
+    - id: Nightshift # KS14
     - id: AnomalySpawn
     - id: BluespaceArtifact
     - id: BluespaceLocker
