@@ -70,6 +70,12 @@ public sealed class WeatherSystem : SharedWeatherSystem
 
             var occlusion = 0f;
 
+            // KS14 Start
+            const float maxX = 3f;
+            const float ksXCutoff = 0.8f;
+            var distance = 0f;
+            // KS14 End
+
             // Work out tiles nearby to determine volume.
             if (_gridQuery.TryComp(playerXform.GridUid, out var grid))
             {
@@ -122,17 +128,28 @@ public sealed class WeatherSystem : SharedWeatherSystem
                     var entPos = _transform.GetMapCoordinates(playerXform);
                     var nodePosition = _transform.ToMapCoordinates(nearestNode.Value).Position;
                     var delta = nodePosition - entPos.Position;
-                    var distance = delta.Length();
+                    distance = delta.Length(); // KS14: now uses existing var
                     occlusion = _audio.GetOcclusion(entPos, delta, distance);
                 }
                 else
                 {
                     occlusion = 3f;
+                    distance = maxX; // KS14
                 }
             }
 
             var alpha = GetWeatherPercent((uid, status));
             alpha *= SharedAudioSystem.VolumeToGain(weather.Sound.Params.Volume);
+
+            // KS14 Start
+            // Try to fade audio linearly to zero past a point
+            if (distance > ksXCutoff)
+            {
+                var rest = (MathF.Min(distance, maxX) - ksXCutoff) / (maxX - ksXCutoff);
+                alpha = float.Lerp(alpha, 0f, rest);
+            }
+            // KS14 End
+
             _audio.SetGain(weather.Stream, alpha, audio);
             audio.Occlusion = occlusion;
         }
