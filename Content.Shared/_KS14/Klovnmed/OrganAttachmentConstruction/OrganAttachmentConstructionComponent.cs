@@ -8,6 +8,8 @@ namespace Content.Shared._KS14.Klovnmed.OrganAttachmentConstruction;
 ///     When on something with <see cref="OrganAttachmentOperation.OrganAttachmentOperationComponent"/>,
 ///         will only allow attaching organs if entitys ConstructionComponent
 ///         is on a specific node.
+///
+///     Base organ categories (of the operation component) are always allowed.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
 [AutoGenerateComponentState(fieldDeltas: true)]

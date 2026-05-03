@@ -27,11 +27,6 @@
     - type: Anchorable
       flags:
       - Anchorable
-    - type: AmbientSound # KS14: Ambient sound
-      volume: -9
-      range: 4
-      sound:
-        path: /Audio/_KS14/Ambience/Objects/wind_plant_hum.ogg
     - type: Pullable
     - type: Sprite
       noRot: true # KS14
@@ -47,6 +42,12 @@
       guides:
       - GasMiningAndStorage
     # KS14: Gasminer visuals start
+    - type: AmbientSound # KS14: Ambient sound
+      enabled: false
+      volume: -9
+      range: 7.5
+      sound:
+        path: /Audio/_KS14/Ambience/Objects/wind_plant_hum.ogg
     - type: Appearance
     - type: GenericVisualizer
       visuals:

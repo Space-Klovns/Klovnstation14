@@ -5,6 +5,7 @@ using Content.Server._KS14.StationEvents.Components;
 using Content.Shared.Light.Components;
 using Content.Server.Light.EntitySystems;
 using Content.Server.AlertLevel;
+using Robust.Shared.Collections;
 
 namespace Content.Server._KS14.StationEvents.Events;
 
@@ -87,9 +88,7 @@ public sealed class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
     {
         foreach (var bulbUid in ruleEntity.Comp.Lights)
         {
-            if (!_nightshiftBulbQuery.TryGetComponent(bulbUid, out var nightshiftBulbComponent))
-                continue;
-
+            var nightshiftBulbComponent = _nightshiftBulbQuery.GetComponent(bulbUid);
             nightshiftBulbComponent.OwningRuleUid = null;
 
             _bulbSystem.SetColor(bulbUid, nightshiftBulbComponent.OriginalColor);
@@ -106,7 +105,17 @@ public sealed class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
     {
         base.Started(ruleUid, ruleComponent, gameRule, args);
 
-        if (!TryGetRandomStation(out var stationUid))
+        var ineligibleStations = new HashSet<EntityUid>();
+        var ruleQuery = EntityQueryEnumerator<NightshiftRuleComponent>();
+        while (ruleQuery.MoveNext(out var otherRuleComponent))
+        {
+            if (ruleComponent.StationUid == EntityUid.Invalid)
+                continue;
+
+            ineligibleStations.Add(otherRuleComponent.StationUid);
+        }
+
+        if (!TryGetRandomStation(out var stationUid, filter: (uid) => ineligibleStations.Contains(uid)))
             return;
 
         ruleComponent.StationUid = stationUid.Value;
@@ -117,6 +126,7 @@ public sealed class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
     {
         base.Ended(ruleUid, ruleComponent, gameRule, args);
 
-        Disable((ruleUid, ruleComponent));
+        if (ruleComponent.Enabled)
+            Disable((ruleUid, ruleComponent));
     }
 }

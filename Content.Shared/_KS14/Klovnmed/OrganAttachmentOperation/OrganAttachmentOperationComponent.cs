@@ -10,7 +10,6 @@ namespace Content.Shared._KS14.Klovnmed.OrganAttachmentOperation;
 ///     Allows organs to be attached to this entity, if its a body or another organ.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
-[Access(typeof(OrganAttachmentOperationSystem))]
 public sealed partial class OrganAttachmentOperationComponent : Component
 {
     /// <summary>
@@ -37,7 +36,7 @@ public sealed partial class OrganAttachmentOperationComponent : Component
 ///     This will be raised every tick during doafters.
 /// </summary>
 [ByRefEvent]
-public record struct CanAttachOrganEvent(bool Cancelled, ProtoId<OrganCategoryPrototype> Category);
+public record struct CanAttachOrganEvent(bool Cancelled, ProtoId<OrganCategoryPrototype> Category, OrganAttachmentOperationComponent Component);
 
 /// <summary>
 ///     Raised on something with <see cref="OrganAttachmentOperationComponent"/> to

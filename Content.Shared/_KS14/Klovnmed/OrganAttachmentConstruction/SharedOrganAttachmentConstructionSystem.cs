@@ -28,7 +28,8 @@ public abstract class SharedOrganAttachmentConstructionSystem : EntitySystem
     private void OnCanAttachOrgan(Entity<OrganAttachmentConstructionComponent> entity, ref CanAttachOrganEvent args)
     {
         if (args.Cancelled ||
-            entity.Comp.AlwaysAttachable.ContainsKey(args.Category))
+            entity.Comp.AlwaysAttachable.ContainsKey(args.Category) ||
+            args.Component.BaseOrganCategories.Contains(args.Category)) // Base organs are always allowed
             return;
 
         if (entity.Comp.NetNode is not { } currentNode)

@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Content.Server.Audio; // KS14: Gasminer sounds
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Atmos.EntitySystems;
@@ -14,6 +15,7 @@ public sealed class GasMinerSystem : SharedGasMinerSystem
     [Dependency] private readonly AtmosphereSystem _atmosphereSystem = default!;
     [Dependency] private readonly TransformSystem _transformSystem = default!;
     [Dependency] private readonly AppearanceSystem _appearanceSystem = default!; // KS14: Gasminer appearance
+    [Dependency] private readonly AmbientSoundSystem _ambientSoundSystem = default!; // KS14: Gasminer sounds
 
     public override void Initialize()
     {
@@ -52,6 +54,7 @@ public sealed class GasMinerSystem : SharedGasMinerSystem
         {
             Dirty(ent);
             _appearanceSystem.SetData(ent.Owner, GasMinerVisuals.State, miner.MinerState); // KS14: Gasminer appearance
+            _ambientSoundSystem.SetAmbience(ent.Owner, miner.MinerState == GasMinerState.Working ? true : false); // KS14: Gasminer sounds
         }
     }
 
