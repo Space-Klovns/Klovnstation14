@@ -1,0 +1,4 @@
+- type: guideEntry # KS14
+  id: ArcFlash
+  name: guide-entry-arcflash
+  text: "/ServerInfo/_KS14/Guidebook/Engineering/ArcFlash.xml"

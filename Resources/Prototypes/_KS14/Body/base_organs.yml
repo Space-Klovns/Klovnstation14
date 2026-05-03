@@ -1,5 +1,14 @@
 - type: entity
-  id: KsBaseBodyEntity
+  id: KsBaseBodyEntityShowsContents
+  abstract: true
+  components:
+  - type: ContainerContainer
+    containers:
+      body_organs: !type:Container
+        showEnts: True
+
+- type: entity
+  id: KsBaseBodyEntityHidesContents
   abstract: true
   components:
   - type: ContainerContainer
@@ -21,3 +30,18 @@
       collection: KsHandlingOrgan
       params:
         volume: -5
+
+- type: entity
+  parent: KsBaseBodyEntityShowsContents
+  id: KsBaseSublimb
+  abstract: true
+  components:
+  - type: OrganAttachmentOperation
+  - type: OrganAttachmentConstruction
+    netNode: start # same as construction start node
+    nodes:
+      OpenIncision: null
+  - type: Construction
+    graph: SublimbGraph
+    node: start
+    deconstructionTarget: null

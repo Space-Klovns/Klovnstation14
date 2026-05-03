@@ -1,0 +1,45 @@
+# This is for sublimbs: aka, organs that are in other organs (like the hand of an arm)
+
+- type: constructionGraph
+  id: SublimbGraph
+  start: start
+  graph:
+  - node: start # ConstructionComponent.DeconstructionNode
+    edges:
+    - to: OpenIncision # Start surgery -> Incision
+      steps:
+      - tool: Slicing
+        doAfter: 3 # use the proper tool smh
+    - to: OpenIncision # Start surgery -> Incision
+      steps:
+      - tool: Incision
+        doAfter: 1
+  - node: OpenIncision # Incision, name of this node must correspond with KsBaseSublimb entity
+    edges:
+    # Cauterise to stop surgery early
+    - to: start # Incision -> Start
+      steps:
+      - tool: Welding
+        doAfter: 2.5
+    - to: start # Incision -> Start
+      steps:
+      - tool: Cauterisation
+        doAfter: 1
+
+    # Remove the sublimb if its present
+    - to: Saw organ off # Incision -> Cut limb
+      conditions:
+      - !type:ContainerNotEmpty
+        container: body_organs
+      steps:
+      - tool: Sawing
+        doAfter: 1.5
+
+  ## Limb removal nodes
+  - node: Saw organ off # Cut limb
+    actions:
+    - !type:SetNode
+      node: OpenIncision
+    - !type:EmptyContainer
+      container: body_organs
+      pickup: true

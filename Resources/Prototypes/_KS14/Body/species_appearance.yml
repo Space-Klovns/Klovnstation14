@@ -13,6 +13,8 @@
     - Saw open ribcage
     blacklistedTargets:
     - start
+  - type: OrganAttachmentConstruction
+    netNode: start # same as construction start node
   - type: WormWithoutOrgans
     categories:
     - FootLeft

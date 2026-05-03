@@ -43,7 +43,7 @@ public sealed class ConstructionEdgeDialogueSystem : EntitySystem
             !_constructionSystem.CheckConditions(entity.Owner, edge.Conditions))
             return;
 
-        _constructionSystem.SetEdgeIndex(constructionComponent, id);
+        ConstructionSystem.SetEdgeIndex(constructionComponent, id);
     }
 
     private void OnGetAltVerb(Entity<ConstructionEdgeDialogueComponent> entity, ref GetVerbsEvent<AlternativeVerb> args)

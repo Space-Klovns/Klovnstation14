@@ -268,6 +268,10 @@ namespace Content.Server.Construction
             if (!Exists(uid))
                 return false;
 
+            // KS14 start: raise events for node change
+            RaiseNodeChangeEvent(uid, node);
+            // KS14 end
+
             UpdatePathfinding(uid, construction);
             return true;
         }

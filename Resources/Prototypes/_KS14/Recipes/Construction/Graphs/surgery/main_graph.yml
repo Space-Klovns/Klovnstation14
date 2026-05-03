@@ -52,19 +52,19 @@
       steps: *cutting_amputation_steps
     ##
   ## Limb removal nodes
-  - node: Saw Head off
+  - node: Saw Head off # Transient node for: OpenIncision
     actions:
     - !type:TakeOrgan
       category: Head
     - !type:SetNode
       node: OpenIncision
-  - node: Cut Ears off
+  - node: Cut Ears off # Transient node for: OpenIncision
     actions:
     - !type:TakeOrgan
       category: Ears
     - !type:SetNode
       node: OpenIncision
-  - node: Cut Eyes off
+  - node: Cut Eyes off # Transient node for: OpenIncision
     actions:
     - !type:TakeOrgan
       category: Eyes
@@ -74,6 +74,11 @@
 
   # Ribcage
   - node: Saw open ribcage
+    actions:
+    - !type:AddAttachableOrganCategory
+      category: Heart
+    - !type:AddAttachableOrganCategory
+      category: Lungs
     edges:
     - to: Close Ribcage
       steps:
@@ -81,25 +86,46 @@
         doAfter: 1
 
     ## Limb removal edges
-    - to: Cut Heart out
+    - to: Cut Heart out # Transient node for: Saw open ribcage
       conditions:
       - !type:HasOrgan
         category: Heart
       steps:
       - tool: Incision
         doAfter: 4.5
+
+    - to: Cut Lungs out # Transient node for: Saw open ribcage
+      conditions:
+      - !type:HasOrgan
+        category: Lungs
+      steps:
+      - tool: Incision
+        doAfter: 3.5
     ##
 
-  - node: Close Ribcage
+  - node: Close Ribcage # Transient node for: OpenIncision
     actions:
     - !type:SetNode
       node: OpenIncision
+    - !type:RemoveAttachableOrganCategory
+      category: Heart
+    - !type:RemoveAttachableOrganCategory
+      category: Lungs
 
   ## Limb removal nodes
-  - node: Cut Heart out
+  - node: Cut Heart out # Transient node for: Saw open ribcage
     actions:
     - !type:TakeOrgan
       category: Heart
     - !type:SetNode
       node: Saw open ribcage
+      performActions: false # Dont perform actions so as to not re-add the category
+
+  - node: Cut Lungs out # Transient node for: Saw open ribcage
+    actions:
+    - !type:TakeOrgan
+      category: Lungs
+    - !type:SetNode
+      node: Saw open ribcage
+      performActions: false # Dont perform actions so as to not re-add the category
   ##

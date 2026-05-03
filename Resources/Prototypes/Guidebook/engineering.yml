@@ -373,8 +373,3 @@
   id: SolarPanels
   name: guide-entry-solarpanels
   text: "/ServerInfo/Guidebook/Engineering/SolarPanels.xml"
-
-- type: guideEntry # KS14
-  id: ArcFlash
-  name: guide-entry-arcflash
-  text: "/ServerInfo/Guidebook/Engineering/ArcFlash.xml"

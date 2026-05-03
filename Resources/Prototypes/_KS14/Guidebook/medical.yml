@@ -1,0 +1,4 @@
+- type: guideEntry # KS14
+  id: Surgery
+  name: guide-entry-surgery
+  text: "/ServerInfo/_KS14/Guidebook/Medical/Surgery.xml"

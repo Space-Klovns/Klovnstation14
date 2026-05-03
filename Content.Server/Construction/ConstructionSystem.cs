@@ -31,6 +31,7 @@ namespace Content.Server.Construction
             InitializeInteractions();
             InitializeInitial();
             InitializeMachines();
+            InitializeKlovn(); // KS14
 
             SubscribeLocalEvent<ConstructionComponent, ComponentInit>(OnConstructionInit);
             SubscribeLocalEvent<ConstructionComponent, ComponentStartup>(OnConstructionStartup);
@@ -39,22 +40,22 @@ namespace Content.Server.Construction
         private void OnConstructionInit(Entity<ConstructionComponent> ent, ref ComponentInit args)
         {
             var construction = ent.Comp;
-            if (GetCurrentGraph(ent, construction) is not {} graph)
+            if (GetCurrentGraph(ent, construction) is not { } graph)
             {
                 Log.Warning($"Prototype {Comp<MetaDataComponent>(ent).EntityPrototype?.ID}'s construction component has an invalid graph specified.");
                 return;
             }
 
-            if (GetNodeFromGraph(graph, construction.Node) is not {} node)
+            if (GetNodeFromGraph(graph, construction.Node) is not { } node)
             {
                 Log.Warning($"Prototype {Comp<MetaDataComponent>(ent).EntityPrototype?.ID}'s construction component has an invalid node specified.");
                 return;
             }
 
             ConstructionGraphEdge? edge = null;
-            if (construction.EdgeIndex is {} edgeIndex)
+            if (construction.EdgeIndex is { } edgeIndex)
             {
-                if (GetEdgeFromNode(node, edgeIndex) is not {} currentEdge)
+                if (GetEdgeFromNode(node, edgeIndex) is not { } currentEdge)
                 {
                     Log.Warning($"Prototype {Comp<MetaDataComponent>(ent).EntityPrototype?.ID}'s construction component has an invalid edge index specified.");
                     return;
@@ -63,7 +64,7 @@ namespace Content.Server.Construction
                 edge = currentEdge;
             }
 
-            if (construction.TargetNode is {} targetNodeId)
+            if (construction.TargetNode is { } targetNodeId)
             {
                 if (GetNodeFromGraph(graph, targetNodeId) is not { } targetNode)
                 {
@@ -77,10 +78,14 @@ namespace Content.Server.Construction
 
         private void OnConstructionStartup(EntityUid uid, ConstructionComponent construction, ComponentStartup args)
         {
-            if (GetCurrentNode(uid, construction) is not {} node)
+            if (GetCurrentNode(uid, construction) is not { } node)
                 return;
 
             PerformActions(uid, null, node.Actions);
+
+            // KS14 start: raise events for node change
+            RaiseNodeChangeEvent(uid, node);
+            // KS14 end
         }
 
         public override void Update(float frameTime)

@@ -1,0 +1,29 @@
+<Document>
+  # Surgery
+  Surgery is surgery.
+
+  Here is a list of operations and how they can be done, and on what:
+
+  ## Operations
+
+  ### Body
+  - Re-adding any limb: use the limb on the body
+
+  - Opening an incision: use a slicing or cutting tool, slicing is generally preferable
+  - Cauterising an incision: use a welding or cauterising tool while the incision is opened and ribcage is closed
+
+  - Cutting head/ears/eyes off: while the incision is opened and ribcage is closed, select the operation and examine the patient to see steps
+
+  - Opening the ribcage: after opening an incision, select the operation and use a saw
+  - Closing the ribcage: use a cauterising tool
+
+  - Re-adding the heart/lungs: while the ribcage is open, use the organ on the body
+  - Cutting the heart/lungs out: while the ribcage is open, select the operation and examine the patient to see steps
+
+  ### Individual limbs
+  - Opening an incision: same as for the body
+  - Cauterising an incision: same as for the body
+
+  - Cutting hands/feet off: use a saw on the limb
+  - Re-adding hands/feet: while the incision is opened, use the body-part on the limb to reattach it
+</Document>
