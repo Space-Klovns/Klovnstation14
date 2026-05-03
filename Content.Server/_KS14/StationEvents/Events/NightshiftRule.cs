@@ -6,6 +6,8 @@ using Content.Shared.Light.Components;
 using Content.Server.Light.EntitySystems;
 using Content.Server.AlertLevel;
 using Robust.Shared.Collections;
+using Robust.Shared.Containers;
+using Content.Shared.Light.EntitySystems;
 
 namespace Content.Server._KS14.StationEvents.Events;
 
@@ -16,16 +18,46 @@ public sealed class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
 
     private EntityQuery<StationMemberComponent> _stationMemberQuery;
     private EntityQuery<NightshiftBulbComponent> _nightshiftBulbQuery;
+    private EntityQuery<NightshiftLightComponent> _nightshiftLightQuery;
 
     public override void Initialize()
     {
         base.Initialize();
 
         _stationMemberQuery = GetEntityQuery<StationMemberComponent>();
+
         _nightshiftBulbQuery = GetEntityQuery<NightshiftBulbComponent>();
+        _nightshiftLightQuery = GetEntityQuery<NightshiftLightComponent>();
+
+        SubscribeLocalEvent<NightshiftLightComponent, EntRemovedFromContainerMessage>(OnRemoved, before: [typeof(SharedPoweredLightSystem)]);
+        SubscribeLocalEvent<NightshiftLightComponent, EntInsertedIntoContainerMessage>(OnInserted, before: [typeof(SharedPoweredLightSystem)]);
 
         SubscribeLocalEvent<AlertLevelChangedEvent>(OnAlertLevelChanged);
+
+        SubscribeLocalEvent<NightshiftLightComponent, ComponentShutdown>(OnNightshiftLightShutdown);
         SubscribeLocalEvent<NightshiftBulbComponent, ComponentShutdown>(OnNightshiftBulbShutdown);
+    }
+
+    private void OnRemoved(Entity<NightshiftLightComponent> light, ref EntRemovedFromContainerMessage args)
+    {
+        if (args.Container.ID != SharedPoweredLightSystem.LightBulbContainer)
+            return;
+
+        RemComp<NightshiftBulbComponent>(light);
+    }
+
+    private void OnInserted(Entity<NightshiftLightComponent> light, ref EntInsertedIntoContainerMessage args)
+    {
+        if (args.Container.ID != SharedPoweredLightSystem.LightBulbContainer)
+            return;
+
+        var nightshiftLightComponent = AddComp<NightshiftBulbComponent>(args.Entity);
+        nightshiftLightComponent.OwningRuleUid = light.Comp.OwningRuleUid;
+
+        if (nightshiftLightComponent.OwningRuleUid is not { })
+            return;
+
+        _bulbSystem.SetColor(args.Entity, Comp<NightshiftRuleComponent>(nightshiftLightComponent.OwningRuleUid!.Value).Color);
     }
 
     private void OnAlertLevelChanged(AlertLevelChangedEvent args)
@@ -46,13 +78,25 @@ public sealed class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
         }
     }
 
-    private void OnNightshiftBulbShutdown(Entity<NightshiftBulbComponent> entity, ref ComponentShutdown args)
+    private void OnNightshiftLightShutdown(Entity<NightshiftLightComponent> entity, ref ComponentShutdown args)
     {
-        if (entity.Comp.OwningRuleUid is not { })
+        if (entity.Comp.OwningRuleUid is not { } ||
+            Terminating(entity))
             return;
 
-        if (Terminating(entity))
+        Comp<NightshiftRuleComponent>(entity.Comp.OwningRuleUid.Value).Lights.Remove(entity);
+
+        if (_poweredLightSystem.GetBulb(entity.Owner) is { } bulbUid)
+            RemComp<NightshiftBulbComponent>(bulbUid);
+    }
+
+    private void OnNightshiftBulbShutdown(Entity<NightshiftBulbComponent> entity, ref ComponentShutdown args)
+    {
+        if (entity.Comp.OwningRuleUid is not { } ||
+            Terminating(entity))
             return;
+
+        Comp<NightshiftRuleComponent>(entity.Comp.OwningRuleUid.Value).Bulbs.Remove(entity);
 
         _bulbSystem.SetColor(entity.Owner, entity.Comp.OriginalColor);
         _poweredLightSystem.UpdateLight(Transform(entity.Owner).ParentUid);
@@ -73,8 +117,11 @@ public sealed class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
                 bulbComponent.State != LightBulbState.Normal)
                 continue;
 
-            ruleEntity.Comp.Lights.Add(bulbUid);
+            ruleEntity.Comp.Lights.Add(lightUid);
+            var nightshiftLightComponent = AddComp<NightshiftBulbComponent>(lightUid);
+            nightshiftLightComponent.OwningRuleUid = ruleEntity;
 
+            ruleEntity.Comp.Bulbs.Add(bulbUid);
             var nightshiftBulbComponent = AddComp<NightshiftBulbComponent>(bulbUid);
             nightshiftBulbComponent.OwningRuleUid = ruleEntity;
             nightshiftBulbComponent.OriginalColor = bulbComponent.Color;
@@ -86,7 +133,7 @@ public sealed class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
 
     private void Disable(Entity<NightshiftRuleComponent> ruleEntity)
     {
-        foreach (var bulbUid in ruleEntity.Comp.Lights)
+        foreach (var bulbUid in ruleEntity.Comp.Bulbs)
         {
             var nightshiftBulbComponent = _nightshiftBulbQuery.GetComponent(bulbUid);
             nightshiftBulbComponent.OwningRuleUid = null;
@@ -96,8 +143,17 @@ public sealed class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
 
             RemComp(bulbUid, nightshiftBulbComponent);
         }
+        ruleEntity.Comp.Bulbs.Clear();
 
+        foreach (var lightUid in ruleEntity.Comp.Lights)
+        {
+            var nightshiftLightComponent = _nightshiftBulbQuery.GetComponent(lightUid);
+            nightshiftLightComponent.OwningRuleUid = null;
+
+            RemComp(lightUid, nightshiftLightComponent);
+        }
         ruleEntity.Comp.Lights.Clear();
+
         ruleEntity.Comp.Enabled = false;
     }
 

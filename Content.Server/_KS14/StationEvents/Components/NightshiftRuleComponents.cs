@@ -17,14 +17,34 @@ public sealed partial class NightshiftRuleComponent : Component
     public bool Enabled = false;
 
     /// <summary>
-    ///     Affected lights+bulbs and their original colors.
+    ///     Affected lights.
     /// </summary>
     [DataField]
     public HashSet<EntityUid> Lights = [];
 
+    /// <summary>
+    ///     Affected bulbs.
+    /// </summary>
+    [DataField]
+    public HashSet<EntityUid> Bulbs = [];
+
     [DataField]
     public HashSet<string> DangerousAlertLevels = [];
 }
+
+/// <summary>
+///     Added to a PoweredLight affected by nightshift.
+/// </summary>
+[RegisterComponent, Access(typeof(NightshiftRule))]
+public sealed partial class NightshiftLightComponent : Component
+{
+    [DataField]
+    public EntityUid? OwningRuleUid = null;
+
+    [DataField]
+    public Color NewColor = Color.Red;
+}
+
 
 /// <summary>
 ///     Added to a bulb affected by nightshift.
