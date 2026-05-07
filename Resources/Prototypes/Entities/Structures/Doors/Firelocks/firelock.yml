@@ -100,7 +100,8 @@
       # KS14 start
       performCollisionCheck: false
       forcedCollisionCheckOnClick: true
-      crushableBodyPartType: [ Arm, Leg, Hand, Foot ]
+      crushableBodyPartType: [ Arm, Leg, Hand ]
+      crushDelimbDamageThreshold: 90
       # KS14 end
       openDrawDepth: WallTops
       closeTimeOne: 0.1

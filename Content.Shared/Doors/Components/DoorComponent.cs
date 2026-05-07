@@ -313,6 +313,14 @@ public sealed partial class DoorComponent : Component
     [DataField]
     public _KS14.Klovnmed.BodyPartType? CrushableBodyPartType = null;
 
+    // KS14
+    /// <summary>
+    ///     Minimum total damage before bodyparts can be dismembered.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadWrite)]
+    [DataField]
+    public float CrushDelimbDamageThreshold = 0f;
+
     [DataField(customTypeSerializer: typeof(ConstantSerializer<DrawDepthTag>))]
     public int OpenDrawDepth = (int)DrawDepth.DrawDepth.Doors;
 
