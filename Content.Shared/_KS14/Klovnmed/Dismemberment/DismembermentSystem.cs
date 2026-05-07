@@ -61,15 +61,22 @@ public sealed class DismembermentSystem : EntitySystem
     ///     Supports <see cref="partType"/> having more than one bit set.
     /// </summary>
     /// <returns>Whether anything happened.</returns>
-    public bool TryDismemberRandomBodyPartOfType(Entity<BodyComponent?, TransformComponent?> bodyEntity, BodyPartType partType, [NotNullWhen(true)] out EntityUid? partUid, Vector2? direction = null, float throwSpeed = 10f, EntityUid? cause = null)
+    // wall of parameters
+    public bool TryDismemberRandomBodyPartOfType(Entity<BodyComponent?, TransformComponent?> bodyEntity, BodyPartType partType, [NotNullWhen(true)] out EntityUid? partUid, Vector2? direction = null, float throwSpeed = 10f, EntityUid? cause = null, System.Random? predictedRandom = null)
     {
         if (!_bodyQuery.Resolve(bodyEntity, ref bodyEntity.Comp1, logMissing: false) ||
             !EntityManager.TransformQuery.Resolve(bodyEntity, ref bodyEntity.Comp2, logMissing: true) ||
-            !_organSearchSystem.TryGetRandomBodyPartOfType((bodyEntity, bodyEntity.Comp1), partType, out var predictedRandom, out partUid))
+            !_organSearchSystem.TryGetRandomBodyPartOfType((bodyEntity, bodyEntity.Comp1), partType, out predictedRandom, out partUid))
         {
             partUid = null;
             return false;
         }
+
+        predictedRandom ??= KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
+            (int)_gameTiming.CurTick.Value,
+            KsSharedRandomExtensions.GetNetId(bodyEntity.Owner, EntityManager),
+            (int)partType
+        );
 
         DismemberPart((bodyEntity.Owner, bodyEntity.Comp2), partUid.Value, direction: direction, throwSpeed: throwSpeed, cause: cause, predictedRandom: predictedRandom);
         return true;
