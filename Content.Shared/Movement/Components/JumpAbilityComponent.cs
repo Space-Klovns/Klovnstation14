@@ -55,10 +55,10 @@ public sealed partial class JumpAbilityComponent : Component
     /// The duration of the knockdown after finishing a jump, when <see cref="KnockdownOnFinish"/>
     /// is true.
     ///
-    /// Not applied after a collision, if <see cref="CanCollide"/> is true or this is null.
+    /// Not applied after a collision with something that gets knocked down, if <see cref="CanCollide"/> is true or this is null.
     /// </summary>
     [DataField]
-    public TimeSpan? FinishKnockdown = TimeSpan.FromSeconds(1);
+    public TimeSpan? PunishKnockdown = TimeSpan.FromSeconds(1);
 
     // KS14 addition
     /// <summary>

@@ -16,15 +16,14 @@ public sealed partial class ActiveLeaperComponent : Component
 
     // KS14
     [DataField]
-    public bool HitAnything = false;
+    public bool Punish = true;
 
     // KS14 addition
     /// <summary>
     /// If specified, this is how long to stun the owner for if they collided with the environment.
-    ///     Otherwise, they will be knocked down with this duration if they hit something.
     /// </summary>
     [DataField, AutoNetworkedField]
-    public TimeSpan? GuaranteedKnockdownDuration = null;
+    public TimeSpan? PunishStunDuration = null;
 
     // KS14 addition
     /// <summary>
