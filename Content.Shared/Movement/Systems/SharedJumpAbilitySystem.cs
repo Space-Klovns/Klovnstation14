@@ -64,7 +64,7 @@ public sealed partial class SharedJumpAbilitySystem : EntitySystem
     private void OnLeaperCollide(Entity<ActiveLeaperComponent> entity, ref StartCollideEvent args)
     {
         if (entity.Comp.KnockdownDuration is { } collisionKnockdownDuration) // KS14 change: made optional
-            _stun.TryKnockdown(entity.Owner, collisionKnockdownDuration, force: true);
+            _stun.TryKnockdown(entity.Owner, collisionKnockdownDuration);
 
         if (entity.Comp.StaminaDamage != 0f && _gameTiming.IsFirstTimePredicted /* which genius thought to predict this event */) // KS14 addition
             _staminaSystem.TakeStaminaDamage(args.OtherEntity, entity.Comp.StaminaDamage);
@@ -72,13 +72,29 @@ public sealed partial class SharedJumpAbilitySystem : EntitySystem
         if (entity.Comp.HitKnockdownDuration is { } hitKnockdownDuration && _gameTiming.IsFirstTimePredicted) // KS14 addition
             _stun.TryKnockdown(args.OtherEntity, hitKnockdownDuration, force: true);
 
+        if (entity.Comp.GuaranteedKnockdownDuration is { } guaranteedKnockdownDuration) // KS14 addition, instead of stunning, knock them down if they hit something
+            _stun.TryKnockdown(entity.Owner, guaranteedKnockdownDuration, force: true, refresh: false, drop: false);
+
+        entity.Comp.HitAnything = true; // KS14
+
         RemCompDeferred<ActiveLeaperComponent>(entity);
     }
 
     private void OnLeaperLand(Entity<ActiveLeaperComponent> entity, ref LandEvent args)
     {
-        if (entity.Comp.GuaranteedKnockdownDuration is { } guaranteedKnockdownDuration) // KS14 addition
-            _stun.TryKnockdown(entity.Owner, guaranteedKnockdownDuration, force: true, refresh: false, drop: false);
+        if (entity.Comp.HitAnything) // KS14 addition
+        {
+            return;
+        }
+        else
+        {
+            // Stun them if they didnt hit anything to break their fall
+            if (entity.Comp.GuaranteedKnockdownDuration is { } guaranteedKnockdownDuration) // KS14 addition
+            {
+                _stun.TryAddStunDuration(entity.Owner, guaranteedKnockdownDuration);
+                _stun.TryKnockdown(entity.Owner, guaranteedKnockdownDuration, force: true, refresh: false, drop: true);
+            }
+        }
 
         RemCompDeferred<ActiveLeaperComponent>(entity);
     }

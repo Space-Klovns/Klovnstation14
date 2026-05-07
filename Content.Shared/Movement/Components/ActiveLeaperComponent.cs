@@ -14,10 +14,14 @@ public sealed partial class ActiveLeaperComponent : Component
     [DataField, AutoNetworkedField]
     public TimeSpan? KnockdownDuration = null; // KS14: Made optional
 
+    // KS14
+    [DataField]
+    public bool HitAnything = false;
+
     // KS14 addition
     /// <summary>
-    /// If specified, this is how long to stun the owner for if they didn't collide with the
-    /// environment after finishing the leap.
+    /// If specified, this is how long to stun the owner for if they collided with the environment.
+    ///     Otherwise, they will be knocked down with this duration if they hit something.
     /// </summary>
     [DataField, AutoNetworkedField]
     public TimeSpan? GuaranteedKnockdownDuration = null;

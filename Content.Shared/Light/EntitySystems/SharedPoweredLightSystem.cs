@@ -254,7 +254,8 @@ public abstract class SharedPoweredLightSystem : EntitySystem
                 Transform(uid).Coordinates,
                 SharedSparksSystem.DefaultSparkPrototype,
                 soundSpecifier: SharedSparksSystem.DefaultSoundSpecifier,
-                maximumSparks: 3
+                maximumSparks: 3,
+                user: user
             );
         }
         // KS14 end: sparks on light breaking
