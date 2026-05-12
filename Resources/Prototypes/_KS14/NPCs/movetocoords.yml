@@ -7,5 +7,5 @@
           operator: !type:MoveToOperator
             pathfindInPlanning: true
             targetKey: FollowTarget
-            rangeKey: FollowCloseRange
+            rangeKey: MeleeRange
             removeKeyOnFinish: true

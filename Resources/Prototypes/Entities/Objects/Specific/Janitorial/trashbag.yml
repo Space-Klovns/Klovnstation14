@@ -39,6 +39,15 @@
   - type: MagnetPickup # KS14 - janitor power creep
     slotIrrespective: true
     range: 3
+  - type: ItemToggle #KS14 - toggles ported from old ks
+    soundActivate:
+      collection: sparks
+      params:
+        variation: 0.250
+    soundDeactivate:
+      collection: sparks
+      params:
+        variation: 0.250
 
 - type: entity
   name: trash bag

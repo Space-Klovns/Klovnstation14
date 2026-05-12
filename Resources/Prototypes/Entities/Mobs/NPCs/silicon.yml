@@ -128,6 +128,14 @@
     blackboard:
       NavInteract: !type:Bool
         true
+      NavPry: !type:Bool
+        true
+  - type: Prying #this is gonna be a lot of fun - KS14
+    pryPowered: true
+    force: true
+    speedModifier: 1.5
+    useSound:
+      path: /Audio/Items/crowbar.ogg
   - type: SolutionContainerManager
     solutions:
       spray:
@@ -184,6 +192,14 @@
     blackboard:
       NavInteract: !type:Bool
         true
+      NavPry: !type:Bool
+        true
+  - type: Prying #this is gonna be a lot of fun - KS14
+    pryPowered: true
+    force: true
+    speedModifier: 1.5
+    useSound:
+      path: /Audio/Items/crowbar.ogg
   - type: Slippery
     slipData:
       launchForwardsMultiplier: 2
@@ -310,6 +326,14 @@
     blackboard:
       NavInteract: !type:Bool
         true
+      NavPry: !type:Bool
+        true
+  - type: Prying #this is gonna be a lot of fun - KS14
+    pryPowered: true
+    force: true
+    speedModifier: 1.5
+    useSound:
+      path: /Audio/Items/crowbar.ogg
   - type: DrainableSolution
     solution: drainBuffer
   - type: InteractionPopup
@@ -356,6 +380,14 @@
     blackboard:
       NavInteract: !type:Bool
         true
+      NavPry: !type:Bool
+        true
+  - type: Prying #this is gonna be a lot of fun - KS14
+    pryPowered: true
+    force: true
+    speedModifier: 1.5
+    useSound:
+      path: /Audio/Items/crowbar.ogg
   - type: Construction
     graph: MediBot
     node: bot
@@ -409,6 +441,14 @@
     blackboard:
       NavInteract: !type:Bool
         true
+      NavPry: !type:Bool
+        true
+  - type: Prying #this is gonna be a lot of fun - KS14
+    pryPowered: true
+    force: true
+    speedModifier: 1.5
+    useSound:
+      path: /Audio/Items/crowbar.ogg
   - type: ControllableBot #KS14
 
 - type: entity
@@ -487,6 +527,14 @@
     blackboard:
       NavInteract: !type:Bool
         true
+      NavPry: !type:Bool
+        true
+  - type: Prying #this is gonna be a lot of fun - KS14
+    pryPowered: true
+    force: true
+    speedModifier: 1.5
+    useSound:
+      path: /Audio/Items/crowbar.ogg
   - type: ControllableBot #KS14
 
 - type: entity
@@ -522,6 +570,14 @@
     blackboard:
       NavInteract: !type:Bool
         true
+      NavPry: !type:Bool
+        true
+  - type: Prying #this is gonna be a lot of fun - KS14
+    pryPowered: true
+    force: true
+    speedModifier: 1.5
+    useSound:
+      path: /Audio/Items/crowbar.ogg
   - type: InteractionPopup
     interactSuccessString: hugging-success-generic
     interactSuccessSound: /Audio/Effects/thudswoosh.ogg
