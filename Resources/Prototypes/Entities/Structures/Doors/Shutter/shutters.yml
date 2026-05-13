@@ -55,7 +55,7 @@
     closingAnimationTime: 1.4
     crushDamage:
       types:
-        Blunt: 5 # getting shutters closed on you probably doesn't hurt that much
+        Blunt: 15 # KS14: thumbsup
     openSound:
       path: /Audio/Machines/shutter.ogg
     closeSound:
