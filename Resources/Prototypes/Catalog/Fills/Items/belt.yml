@@ -126,16 +126,18 @@
     containers:
       storagebase: !type:AllSelector
         children:
-        - id: Bloodpack
-          amount: 2
+        - id: Brutepack #klovnstart
+        - id: Ointment
         - id: Gauze
+        - id: Bloodpack
         # Reagents focused on emergency response rather than outright healing
-        - id: ChemistryBottleInaprovaline
-          amount: 2
-        - id: ChemistryBottleHaloperidol
-        - id: ChemistryBottleEthylredoxrazine
-        - id: ChemistryBottleIpecac
-        - id: ChemistryBottleCharcoal
+        #kys wizden comment above mi
+        - id: ChemistryBottleBicaridine
+        - id: ChemistryBottleDylovene
+        - id: ChemistryBottleDexalin
+        - id: ChemistryBottleEpinephrine
+        - id: ChemistryBottleIpecac #larp
+        - id: ChemistryBottleCharcoal #klovnend
 
 - type: entity
   id: ClothingBeltPlantFilled

@@ -184,6 +184,7 @@
       - DiscreteHealthAnalyzer
       - SurgeryTool
       - Dropper
+      - GlassBeaker #ks14
       components:
       - Injector
       - Pill

@@ -35,3 +35,4 @@
     neck: ClothingNeckStethoscope
     outerClothing: ClothingOuterCoatLab
     gloves: ClothingHandsGlovesLatex
+    belt: ClothingBeltMedicalFilled #KS14

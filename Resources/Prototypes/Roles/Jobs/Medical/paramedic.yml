@@ -32,3 +32,4 @@
     neck: ClothingNeckStethoscope
     outerClothing: ClothingOuterCoatParamedicWB
     gloves: ClothingHandsGlovesLatex
+    belt: ClothingBeltMedicalEMTFilled #KS14
