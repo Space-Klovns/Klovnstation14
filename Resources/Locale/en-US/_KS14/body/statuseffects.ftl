@@ -1,0 +1,13 @@
+drowsiness = Drowsiness
+hallucinations = Hallucinations
+max-stamina-twox = 2x Max Stamina
+pain-numbness = Pain Numbness
+thin-blood = Thin Blood
+stunned = Stunned
+safe-crit = Safe Crit
+scrambled = Scrambled
+forced-sleep = Forced Sleep
+max-stamina-onepointfivex = 1.5x Max Stamina
+drunk = Drunk
+hemorrhage = Hemorrhage
+woozy = Woozy
