@@ -2,13 +2,17 @@ using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using Content.Server.Administration.Managers;
+using Content.Server.Destructible;
 using Content.Server.DoAfter;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.Events;
 using Content.Server.NPC.Pathfinding;
+using Content.Shared.Access.Systems;
 using Content.Shared.CCVar;
+using Content.Shared.Climbing.Components;
 using Content.Shared.Climbing.Systems;
 using Content.Shared.CombatMode;
+using Content.Shared.Doors.Components;
 using Content.Shared.Interaction;
 using Content.Shared.Movement.Components;
 using Content.Shared.Movement.Events;
@@ -31,7 +35,7 @@ using Robust.Shared.Utility;
 using Content.Shared.Prying.Systems;
 using Microsoft.Extensions.ObjectPool;
 using Prometheus;
-using Content.Shared.Access.Systems; // KS14: ANK
+using Content.Shared.Destructible;
 
 namespace Content.Server.NPC.Systems;
 
@@ -59,6 +63,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
     [Dependency] private readonly DoAfterSystem _doAfter = default!;
     [Dependency] private readonly EntityLookupSystem _lookup = default!;
     [Dependency] private readonly NpcFactionSystem _npcFaction = default!;
+    [Dependency] private readonly AccessReaderSystem _accessSystem = default!;
     [Dependency] private readonly PathfindingSystem _pathfindingSystem = default!;
     [Dependency] private readonly PryingSystem _pryingSystem = default!;
     [Dependency] private readonly SharedMapSystem _mapSystem = default!;
@@ -68,13 +73,16 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly SharedCombatModeSystem _combat = default!;
-    [Dependency] private readonly AccessReaderSystem _accessSystem = default!; // KS14: ANK
 
     private EntityQuery<FixturesComponent> _fixturesQuery;
     private EntityQuery<MovementSpeedModifierComponent> _modifierQuery;
     private EntityQuery<NpcFactionMemberComponent> _factionQuery;
     private EntityQuery<PhysicsComponent> _physicsQuery;
     private EntityQuery<TransformComponent> _xformQuery;
+    // For obstacle detection:
+    private EntityQuery<DoorComponent> _doorQuery;
+    private EntityQuery<ClimbableComponent> _climbableQuery;
+    private EntityQuery<DestructibleComponent> _destructibleQuery;
 
     private ObjectPool<HashSet<EntityUid>> _entSetPool =
         new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>());
@@ -92,8 +100,6 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
 
     private readonly HashSet<ICommonSession> _subscribedSessions = new();
 
-    private object _obstacles = new();
-
     private int _activeSteeringCount;
 
     public override void Initialize()
@@ -106,6 +112,9 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         _factionQuery = GetEntityQuery<NpcFactionMemberComponent>();
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
         _xformQuery = GetEntityQuery<TransformComponent>();
+        _doorQuery = GetEntityQuery<DoorComponent>();
+        _climbableQuery = GetEntityQuery<ClimbableComponent>();
+        _destructibleQuery = GetEntityQuery<DestructibleComponent>();
 
         for (var i = 0; i < InterestDirections; i++)
         {
@@ -358,6 +367,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         var ev = new NPCSteeringEvent(steering, xform, worldPos, offsetRot);
         RaiseLocalEvent(uid, ref ev);
         // If seek has arrived at the target node for example then immediately re-steer.
+        // Note: this seems like it's always true? Not sure when it should be false...
         var forceSteer = true;
 
         if (steering.CanSeek && !TrySeek(uid, mover, steering, body, xform, offsetRot, moveSpeed, interest, frameTime, ref forceSteer))
@@ -380,7 +390,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         }
 
         // Avoid static objects like walls
-        CollisionAvoidance(uid, offsetRot, worldPos, agentRadius, layer, mask, xform, danger);
+        CollisionAvoidance(uid, steering, offsetRot, worldPos, agentRadius, layer, mask, xform, danger);
         DebugTools.Assert(!float.IsNaN(danger[0]));
 
         Separation(uid, offsetRot, worldPos, agentRadius, layer, mask, body, xform, danger);

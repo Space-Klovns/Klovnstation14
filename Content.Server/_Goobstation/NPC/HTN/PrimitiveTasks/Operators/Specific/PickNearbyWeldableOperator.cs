@@ -61,6 +61,7 @@ public sealed partial class PickNearbyWeldableOperator : HTNOperator
 
         var damageQuery = _entManager.GetEntityQuery<DamageableComponent>();
         var emagged = _entManager.HasComponent<EmaggedComponent>(owner);
+        var weldbotDamageGroups = _weldbot.GetDamageAmountGroups(weldbot, _prototypeManager);
 
         foreach (var target in _lookup.GetEntitiesInRange(owner, range))
         {
@@ -71,7 +72,7 @@ public sealed partial class PickNearbyWeldableOperator : HTNOperator
                 continue;
 
             var targetDamage = _damageableSystem.GetDamagePerGroup((target, damage));
-            if (!emagged && targetDamage.Keys.Intersect(weldbot.DamageAmount.DamageDict.Keys).All(key => targetDamage.TryGetValue(key, out var value) ? value == 0 : true))
+            if (!emagged && !targetDamage.Keys.Intersect(weldbotDamageGroups.Keys).Any(key => targetDamage.TryGetValue(key, out var value) ? value > 0 : false))
                 continue;
 
             //Needed to make sure it doesn't sometimes stop right outside it's interaction range

@@ -23,7 +23,6 @@
   - type: Pullable
   - type: Tag
     tags:
-    - DoorBumpOpener
     - SiliconEmotes
     - Unimplantable
     - SiliconMob
@@ -104,7 +103,6 @@
     - Robotics
   - type: Tag
     tags:
-    - DoorBumpOpener
     - SiliconEmotes
     - Bot
     - Unimplantable
@@ -512,7 +510,6 @@
       collection: FootstepBorg
   - type: Tag
     tags:
-    - DoorBumpOpener
     - FootstepSound
     - SiliconEmotes
     - Bot

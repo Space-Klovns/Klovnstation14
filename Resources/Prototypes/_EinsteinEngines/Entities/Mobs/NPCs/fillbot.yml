@@ -37,14 +37,15 @@
       enum.StrippingUiKey.Key:
         type: StrippableBoundUserInterface
   - type: Hands
-    showInHands: false
+    hands:
+      hand_right:
+        location: Right
+    sortedHands:
+    - hand_right
   - type: ComplexInteraction
   - type: DeviceLinkSource
     ports:
       - FillItems
-  - type: Body
-    prototype: SiliconHand
-    requiredLegs: 0
   - type: InteractionPopup
     interactSuccessString: petting-success-fillbot
     interactFailureString: petting-failure-fillbot

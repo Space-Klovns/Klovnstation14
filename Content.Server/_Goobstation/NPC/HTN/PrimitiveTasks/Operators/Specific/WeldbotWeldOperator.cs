@@ -69,23 +69,25 @@ public sealed partial class WeldbotWeldOperator : HTNOperator
             return HTNOperatorStatus.Failed;
 
         var existingDamage = _damageableSystem.GetDamagePerGroup((target, damage));
-        if (existingDamage.Keys.Intersect(botComp.DamageAmount.DamageDict.Keys).All(key => existingDamage.TryGetValue(key, out var value) ? value == 0 : true)
+        var botDamage = _weldbot.GetDamageAmount(botComp);
+        var damageGroups = _weldbot.GetDamageAmountGroups(botComp, _prototypeManager);
+        if (existingDamage.Keys.Intersect(damageGroups.Keys).All(key => existingDamage.TryGetValue(key, out var value) ? value == 0 : true)
             && !_entMan.HasComponent<EmaggedComponent>(owner))
             return HTNOperatorStatus.Failed;
 
         if (botComp.IsEmagged)
         {
-            _damageableSystem.TryChangeDamage(target, -botComp.DamageAmount, true, false, damage);
+            _damageableSystem.TryChangeDamage((target, damage), -botDamage, true, false);
         }
         else
         {
-            _damageableSystem.TryChangeDamage(target, botComp.DamageAmount, true, false, damage);
+            _damageableSystem.TryChangeDamage((target, damage), botDamage, true, false);
         }
 
         _audio.PlayPvs(botComp.WeldSound, target);
 
         var postDamage = _damageableSystem.GetDamagePerGroup((target, damage));
-        if (postDamage.Keys.Intersect(botComp.DamageAmount.DamageDict.Keys).All(key => postDamage.TryGetValue(key, out var value) ? value == 0 : true)) //only say "all done if we're actually done!"
+        if (postDamage.Keys.Intersect(damageGroups.Keys).All(key => postDamage.TryGetValue(key, out var value) ? value == 0 : true)) //only say "all done if we're actually done!"
             _chat.TrySendInGameICMessage(owner, Loc.GetString("weldbot-finish-weld"), InGameICChatType.Speak, hideChat: true, hideLog: true);
 
         return HTNOperatorStatus.Finished;
