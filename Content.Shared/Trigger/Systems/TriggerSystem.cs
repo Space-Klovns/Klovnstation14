@@ -14,6 +14,10 @@ using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Random;
 using Robust.Shared.Audio.Systems;
+//KS14 start
+using Robust.Shared.Physics.Components;
+using Content.Shared.Examine;
+//KS14 end
 
 
 namespace Content.Shared.Trigger.Systems;
@@ -44,12 +48,15 @@ public sealed partial class TriggerSystem : EntitySystem
     [Dependency] private readonly SharedRoleSystem _role = default!;
     [Dependency] private readonly SharedMindSystem _mind = default!;
     [Dependency] private readonly EntityTableSystem _entityTable = default!;
+    [Dependency] private readonly ExamineSystemShared _examineSystem = default!; //KS14
 
     public const string DefaultTriggerKey = "trigger";
+    private EntityQuery<PhysicsComponent> _physicsQuery; //KS14
 
     public override void Initialize()
     {
         base.Initialize();
+        _physicsQuery = GetEntityQuery<PhysicsComponent>(); //KS14
 
         InitializeCollide();
         InitializeCondition();

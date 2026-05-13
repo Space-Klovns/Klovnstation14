@@ -1,0 +1,9 @@
+- type: sourcePort
+  id: Crit
+  name: signal-port-name-crit
+  description: signal-port-description-crit
+
+- type: sourcePort
+  id: Dead
+  name: signal-port-name-dead
+  description: signal-port-description-dead

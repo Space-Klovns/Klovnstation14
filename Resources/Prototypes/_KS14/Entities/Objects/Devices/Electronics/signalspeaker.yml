@@ -1,0 +1,34 @@
+- type: entity
+  name: signal speaker
+  description: A small speaker that can be configured to say whatever you want and then triggered via signal.
+  parent: [BaseItem]
+  id: SignalSpeaker
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Signal/signalspeaker.rsi
+    state: icon
+  - type: DeviceLinkSink
+    ports:
+    - Trigger
+  - type: PhysicalComposition
+    materialComposition:
+      Plastic: 100
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/component_pickup.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/component_drop.ogg
+  - type: TriggerOnSignal
+  - type: Speech
+    speechSounds: Pai # it just sounds better
+  - type: SpeakOnTrigger
+    nonLocText: This device has not been configured yet.
+  - type: SignalSpeaker
+  - type: ActivatableUI
+    key: enum.SignalSpeakerUiKey.Key
+    inHandsOnly: true
+  - type: UserInterface
+    interfaces:
+      enum.SignalSpeakerUiKey.Key:
+        type: SignalSpeakerBoundUserInterface

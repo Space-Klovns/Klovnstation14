@@ -1,0 +1,5 @@
+- type: latheRecipePack
+  id: KlovnSignalStatic
+  recipes:
+  - HealthMonitor
+  - SignalSpeaker
