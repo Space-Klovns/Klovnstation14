@@ -1,6 +1,6 @@
 #TODO - split up this file when it gets big enough, try to keep the "categories" sperate
 
-- type: Tag # Ganimed -> KS14 fire sensor port
+- type: Tag # Ganimed
   id: FireSensor
 
 - type: Tag # For crafting syringe shotgun out of syringe gun
@@ -12,8 +12,11 @@
 - type: Tag # For eshield repair
   id: PowerCellHigh
 
+- type: Tag
+  id: MesonGoggles # Goobstation - more toolbelt items
+
 - type: Tag # For eshield repair
   id: BrokenEnergyShield
 
 - type: Tag
-  id: BorgModuleSecurity # KS14 - secborgs
+  id: BorgModuleSecurity #Secborgs

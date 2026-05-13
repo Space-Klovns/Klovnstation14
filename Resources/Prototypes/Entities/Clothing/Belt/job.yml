@@ -30,6 +30,7 @@
       - WeldingMask
       - RemoteSignaller
       - UtilityKnife
+      - MesonGoggles # Goobstation
       components:
       - StationMap
       - SprayPainter
@@ -43,6 +44,7 @@
       - TrayScanner
       - GasAnalyzer
       - HandLabeler
+      - RadarConsole # Goobstation
   - type: ItemMapper
     sprite: &BeltOverlay Clothing/Belt/belt_overlay.rsi
     mapLayers:
@@ -78,6 +80,18 @@
         whitelist:
           tags:
           - Multitool
+      weldmask:
+        whitelist:
+          tags:
+          - WeldingMask
+      mass_scanner:
+        whitelist:
+          components:
+          - RadarConsole
+      meson:
+        whitelist:
+          tags:
+          - MesonGoggles
   - type: Appearance
 
 - type: entity
