@@ -78,11 +78,8 @@ public sealed class FloorTileSystem : EntitySystem
         if (location.EntityId != EntityUid.Invalid && TryComp<MapGridComponent>(location.EntityId, out var targetGridComp))
         {
             var mapID = Transform(location.EntityId).MapID;
-            if (mapID != null)
-            {
-                var gridsOnMap = _mapManager.GetAllGrids(mapID).Count();
-                isPlanetMap = gridsOnMap > 1;
-            }
+            var gridsOnMap = _mapManager.GetAllGrids(mapID).Count();
+            isPlanetMap = gridsOnMap > 1;
         }
 
         // Disallow placement close to grids.

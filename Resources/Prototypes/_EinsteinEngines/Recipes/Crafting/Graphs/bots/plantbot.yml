@@ -10,6 +10,7 @@
         icon:
           sprite: Objects/Tools/bucket.rsi
           state: icon
+        name: construction-graph-tag-bucket
       - tag: ProximitySensor
         icon:
           sprite: Objects/Misc/proximity_sensor.rsi
