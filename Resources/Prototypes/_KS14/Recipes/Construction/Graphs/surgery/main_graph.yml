@@ -92,6 +92,68 @@
       - !type:HasOrgan
         category: Eyes
       steps: *cutting_amputation_steps
+
+    ## Limb amputation edges (arms, hands, legs, feet)
+    - to: Saw Arm Left off # Incision -> Cut left arm
+      conditions:
+      - !type:HasOrgan
+        category: ArmLeft
+      - !type:HasOrgan
+        category: HandLeft
+        inverted: true
+      steps:
+      - tool: Sawing
+        doAfter: 5
+    - to: Saw Arm Right off # Incision -> Cut right arm
+      conditions:
+      - !type:HasOrgan
+        category: ArmRight
+      - !type:HasOrgan
+        category: HandRight
+        inverted: true
+      steps:
+      - tool: Sawing
+        doAfter: 5
+    - to: Saw Hand Left off # Incision -> Cut left hand
+      conditions:
+      - !type:HasOrgan
+        category: HandLeft
+      steps: *cutting_amputation_steps
+    - to: Saw Hand Right off # Incision -> Cut right hand
+      conditions:
+      - !type:HasOrgan
+        category: HandRight
+      steps: *cutting_amputation_steps
+    - to: Saw Leg Left off # Incision -> Cut left leg
+      conditions:
+      - !type:HasOrgan
+        category: LegLeft
+      - !type:HasOrgan
+        category: FootLeft
+        inverted: true
+      steps:
+      - tool: Sawing
+        doAfter: 6.5
+    - to: Saw Leg Right off # Incision -> Cut right leg
+      conditions:
+      - !type:HasOrgan
+        category: LegRight
+      - !type:HasOrgan
+        category: FootRight
+        inverted: true
+      steps:
+      - tool: Sawing
+        doAfter: 6.5
+    - to: Cut Foot Left off # Incision -> Cut left foot
+      conditions:
+      - !type:HasOrgan
+        category: FootLeft
+      steps: *cutting_amputation_steps
+    - to: Cut Foot Right off # Incision -> Cut right foot
+      conditions:
+      - !type:HasOrgan
+        category: FootRight
+      steps: *cutting_amputation_steps
     ##
   ## Limb removal nodes
   - node: Saw Head off # Transient node for: OpenIncision
@@ -115,6 +177,71 @@
     - !type:SetNode
       node: OpenIncision
       performActions: false # Dont perform actions so as to not re-add the category
+
+  ## Limb amputation nodes
+  - node: Saw Arm Left off # Transient node for: OpenIncision
+    actions:
+    - !type:TakeOrgan
+      category: ArmLeft
+    - !type:SetNode
+      node: OpenIncision
+      performActions: false
+
+  - node: Saw Arm Right off # Transient node for: OpenIncision
+    actions:
+    - !type:TakeOrgan
+      category: ArmRight
+    - !type:SetNode
+      node: OpenIncision
+      performActions: false
+
+  - node: Saw Hand Left off # Transient node for: OpenIncision
+    actions:
+    - !type:TakeOrgan
+      category: HandLeft
+    - !type:SetNode
+      node: OpenIncision
+      performActions: false
+
+  - node: Saw Hand Right off # Transient node for: OpenIncision
+    actions:
+    - !type:TakeOrgan
+      category: HandRight
+    - !type:SetNode
+      node: OpenIncision
+      performActions: false
+
+  - node: Saw Leg Left off # Transient node for: OpenIncision
+    actions:
+    - !type:TakeOrgan
+      category: LegLeft
+    - !type:SetNode
+      node: OpenIncision
+      performActions: false
+
+  - node: Saw Leg Right off # Transient node for: OpenIncision
+    actions:
+    - !type:TakeOrgan
+      category: LegRight
+    - !type:SetNode
+      node: OpenIncision
+      performActions: false
+
+  - node: Cut Foot Left off # Transient node for: OpenIncision
+    actions:
+    - !type:TakeOrgan
+      category: FootLeft
+    - !type:SetNode
+      node: OpenIncision
+      performActions: false
+
+  - node: Cut Foot Right off # Transient node for: OpenIncision
+    actions:
+    - !type:TakeOrgan
+      category: FootRight
+    - !type:SetNode
+      node: OpenIncision
+      performActions: false
   ##
 
   # Exposed head
