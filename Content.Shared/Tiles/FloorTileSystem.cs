@@ -73,28 +73,44 @@ public sealed class FloorTileSystem : EntitySystem
 
         var map = _transform.ToMapCoordinates(location);
 
+        // Check if we're on a planetmap (multi-grid map) - if so, skip the range check
+        var isPlanetMap = false;
+        if (location.EntityId != EntityUid.Invalid && TryComp<MapGridComponent>(location.EntityId, out var targetGridComp))
+        {
+            var mapID = Transform(location.EntityId).MapID;
+            if (mapID != null)
+            {
+                var gridsOnMap = _mapManager.GetAllGrids(mapID).Count();
+                isPlanetMap = gridsOnMap > 1;
+            }
+        }
+
         // Disallow placement close to grids.
         // FTLing close is okay but this makes alignment too finnicky.
         // While you may already have a tile close you want to replace when we get half-tiles that may also be finnicky
         // so we're just gon with this for now.
-        const bool inRange = true;
-        var state = (inRange, location.EntityId);
-        _mapManager.FindGridsIntersecting(map.MapId, new Box2(map.Position - CheckRange, map.Position + CheckRange), ref state,
-            static (EntityUid entityUid, MapGridComponent grid, ref (bool weh, EntityUid EntityId) tuple) =>
-            {
-                if (tuple.EntityId == entityUid)
-                    return true;
-
-                tuple.weh = false;
-                return false;
-            });
-
-        if (!state.inRange)
+        // Skip this check for planetmaps (multiple grids on same map)
+        if (!isPlanetMap)
         {
-            if (_netManager.IsClient && _timing.IsFirstTimePredicted)
-                _popup.PopupEntity(Loc.GetString("invalid-floor-placement"), args.User);
+            const bool inRange = true;
+            var state = (inRange, location.EntityId);
+            _mapManager.FindGridsIntersecting(map.MapId, new Box2(map.Position - CheckRange, map.Position + CheckRange), ref state,
+                static (EntityUid entityUid, MapGridComponent grid, ref (bool weh, EntityUid EntityId) tuple) =>
+                {
+                    if (tuple.EntityId == entityUid)
+                        return true;
 
-            return;
+                    tuple.weh = false;
+                    return false;
+                });
+
+            if (!state.inRange)
+            {
+                if (_netManager.IsClient && _timing.IsFirstTimePredicted)
+                    _popup.PopupEntity(Loc.GetString("invalid-floor-placement"), args.User);
+
+                return;
+            }
         }
 
         var userPos = _transform.ToMapCoordinates(transformQuery.GetComponent(args.User).Coordinates).Position;
