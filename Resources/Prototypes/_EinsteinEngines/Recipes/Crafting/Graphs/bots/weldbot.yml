@@ -11,15 +11,18 @@
           sprite: Objects/Misc/proximity_sensor.rsi
           state: icon
         doAfter: 2
+        name: construction-graph-tag-proximity-sensor
       - tag: WeldingMask
         icon:
           sprite: Clothing/Head/Welding/welding.rsi
           state: icon
         doAfter: 2
+        name: construction-graph-tag-welding-mask
       - tag: WeldingTool
         icon:
           sprite: Objects/Tools/welder.rsi
           state: icon
         doAfter: 2
+        name: construction-graph-tag-welding-tool
   - node: bot
     entity: MobWeldbot

@@ -13,10 +13,12 @@
           sprite: Objects/Misc/proximity_sensor.rsi
           state: icon
         doAfter: 2
+        name: construction-graph-tag-proximity-sensor
       - tag: BorgArm
         icon:
           sprite: Mobs/Silicon/drone.rsi
           state: l_hand
         doAfter: 2
+        name: construction-graph-tag-borg-arm
   - node: bot
     entity: MobFillBot
