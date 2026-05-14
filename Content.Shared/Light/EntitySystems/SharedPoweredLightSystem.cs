@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Sparks; // KS14: sparks on light breaking
 using Content.Shared.Audio;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
@@ -36,6 +37,7 @@ public abstract class SharedPoweredLightSystem : EntitySystem
     [Dependency] private readonly SharedPointLightSystem _pointLight = default!;
     [Dependency] private readonly SharedStorageSystem _storage = default!;
     [Dependency] private readonly SharedDeviceLinkSystem _deviceLink = default!;
+    [Dependency] private readonly SharedSparksSystem _sparksSystem = default!; // KS14: sparks on light breaking
 
     private static readonly TimeSpan ThunkDelay = TimeSpan.FromSeconds(2);
     public const string LightBulbContainer = "light_bulb";
@@ -244,6 +246,19 @@ public abstract class SharedPoweredLightSystem : EntitySystem
             return false;
         if (lightBulb.State == LightBulbState.Broken)
             return false;
+
+        // KS14 start: sparks on light breaking
+        if (light.CurrentLit)
+        {
+            _sparksSystem.DoSparks(
+                Transform(uid).Coordinates,
+                SharedSparksSystem.DefaultSparkPrototype,
+                soundSpecifier: SharedSparksSystem.DefaultSoundSpecifier,
+                maximumSparks: 3,
+                user: user
+            );
+        }
+        // KS14 end: sparks on light breaking
 
         // break it
         _bulbSystem.SetState(bulbUid.Value, LightBulbState.Broken, lightBulb);

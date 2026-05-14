@@ -8,9 +8,10 @@
     action: ActionGravityDive
     canCollide: true
     jumpDistance: 1.25
-    finishKnockdown: 0.85
-    hitStaminaDamage: 0
-    hitKnockdownDuration: 2
+    punishKnockdown: 3.2
+    hitStaminaDamage: 10
+    collideKnockdown: 2.2
+    hitKnockdownDuration: 3.2
     jumpSound:
       path: /Audio/Weapons/punchmiss.ogg
       params:

@@ -1000,3 +1000,55 @@ Entries:
       message: Fixed some gas miner mispredicts.
   id: 116
   time: '2026-05-03T14:38:26.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: >-
+        Explosions now need to do more damage to delimb you. They will also no
+        longer delimb feet.
+    - type: Tweak
+      message: >-
+        You must have atleast 90 total damage for firelocks to delimb you. They
+        will also no longer delimb feet.
+    - type: Fix
+      message: >-
+        Fixed limbs thrown from explosion dismemberment being thrown in exact
+        same direction. 
+    - type: Tweak
+      message: >-
+        Diving now fullstuns you if you dont hit anything, but doesnt if you hit
+        something.
+    - type: Tweak
+      message: Diving is now stronger against people getting hit.
+  id: 117
+  time: '2026-05-13T18:10:17.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Add
+      message: Epinephrine bottles to nanomed plus
+    - type: Tweak
+      message: Iron pills to first aid kids, another bruise pack to brute kits
+    - type: Tweak
+      message: Moved filled medical belts to loadout (You spawn in with it)
+    - type: Tweak
+      message: Paramed belt fill now useful
+    - type: Tweak
+      message: >-
+        Paramed gets a handheld crew monitor, which is no longer a steal
+        objective
+    - type: Tweak
+      message: Tweaked medical doctor locker fill
+    - type: Tweak
+      message: Medbelts can store beakers
+    - type: Tweak
+      message: Dermaline and Bic now both od at 20u
+  id: 118
+  time: '2026-05-13T20:57:37.0000000+00:00'
+- author: DecemberEpsilon
+  changes:
+    - type: Tweak
+      message: No more firelock delimb
+    - type: Tweak
+      message: Movement buffs when crawling
+  id: 119
+  time: '2026-05-13T21:28:03.0000000+00:00'

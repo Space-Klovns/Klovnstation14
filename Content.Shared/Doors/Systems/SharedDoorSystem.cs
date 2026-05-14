@@ -46,7 +46,6 @@ public abstract partial class SharedDoorSystem : EntitySystem
     [Dependency] protected readonly SharedPopupSystem Popup = default!;
     [Dependency] private readonly SharedMapSystem _mapSystem = default!;
     [Dependency] private readonly SharedPowerReceiverSystem _powerReceiver = default!;
-    [Dependency] private readonly _KS14.Klovnmed.Dismemberment.DismembermentSystem _dismembermentSystem = default!; // KS14: Crush dismemberment
 
     public static readonly ProtoId<TagPrototype> DoorBumpTag = "DoorBumpOpener";
 
@@ -534,15 +533,6 @@ public abstract partial class SharedDoorSystem : EntitySystem
             door.CurrentlyCrushing.Add(entity);
             if (door.CrushDamage != null)
                 _damageableSystem.TryChangeDamage(entity, door.CrushDamage, origin: uid);
-
-            // KS14: Crush dismemberment start
-            if (door.CrushableBodyPartType is { } crushableType &&
-                _dismembermentSystem.TryDismemberRandomBodyPartOfType(entity, crushableType, out var partUid, cause: uid))
-            {
-                _dismembermentSystem.DoFixedEmote(entity);
-                _dismembermentSystem.TryRandomlyCrushPart(partUid.Value, victimUid: entity, predicted: false);
-            }
-            // KS14: Crush dismemberment end
 
             _stunSystem.TryUpdateParalyzeDuration(entity, stunTime);
         }

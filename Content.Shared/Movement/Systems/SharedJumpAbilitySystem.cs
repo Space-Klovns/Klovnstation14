@@ -63,22 +63,55 @@ public sealed partial class SharedJumpAbilitySystem : EntitySystem
 
     private void OnLeaperCollide(Entity<ActiveLeaperComponent> entity, ref StartCollideEvent args)
     {
-        if (entity.Comp.KnockdownDuration is { } collisionKnockdownDuration) // KS14 change: made optional
-            _stun.TryKnockdown(entity.Owner, collisionKnockdownDuration, force: true);
+        if (!_gameTiming.IsFirstTimePredicted) // KS14
+            return;
 
-        if (entity.Comp.StaminaDamage != 0f && _gameTiming.IsFirstTimePredicted /* which genius thought to predict this event */) // KS14 addition
+        if (entity.Comp.KnockdownDuration is { } collisionKnockdownDuration) // KS14 change: made optional
+            _stun.TryKnockdown(entity.Owner, collisionKnockdownDuration);
+
+        if (entity.Comp.StaminaDamage != 0f) // KS14 addition
             _staminaSystem.TakeStaminaDamage(args.OtherEntity, entity.Comp.StaminaDamage);
 
         if (entity.Comp.HitKnockdownDuration is { } hitKnockdownDuration && _gameTiming.IsFirstTimePredicted) // KS14 addition
-            _stun.TryKnockdown(args.OtherEntity, hitKnockdownDuration, force: true);
+            entity.Comp.Punish = !_stun.TryKnockdown(args.OtherEntity, hitKnockdownDuration, refresh: false, force: true);
+        else
+            entity.Comp.Punish = true;
 
         RemCompDeferred<ActiveLeaperComponent>(entity);
     }
 
+    /*
+    punished = true;
+    knocked = false;
+
+    if (punished || knocked)
+        punished = true
+        => punished = true
+
+    if (punished(true) || !knocked(!false => true))
+        punished = true
+        => punished = true
+
+    if (punished(true) || knocked(true))
+        punished = false
+        => punished = true
+    */
+
     private void OnLeaperLand(Entity<ActiveLeaperComponent> entity, ref LandEvent args)
     {
-        if (entity.Comp.GuaranteedKnockdownDuration is { } guaranteedKnockdownDuration) // KS14 addition
-            _stun.TryKnockdown(entity.Owner, guaranteedKnockdownDuration, force: true, refresh: false, drop: false);
+        if (!entity.Comp.Punish) // KS14 addition
+        {
+            return;
+        }
+        else
+        {
+            // Stun them if they didnt hit anything to break their fall
+            if (entity.Comp.PunishStunDuration is { } guaranteedKnockdownDuration) // KS14 addition
+            {
+                _stun.TryAddStunDuration(entity.Owner, guaranteedKnockdownDuration);
+                _stun.TryKnockdown(entity.Owner, guaranteedKnockdownDuration, force: true, refresh: false, drop: true);
+            }
+        }
 
         RemCompDeferred<ActiveLeaperComponent>(entity);
     }
@@ -139,7 +172,7 @@ public sealed partial class SharedJumpAbilitySystem : EntitySystem
             leaperComp.HitKnockdownDuration = entity.Comp.HitKnockdownDuration;
         }
 
-        leaperComp.GuaranteedKnockdownDuration = entity.Comp.FinishKnockdown; // KS14 addition
+        leaperComp.PunishStunDuration = entity.Comp.PunishKnockdown; // KS14 addition
         Dirty(entity.Owner, leaperComp);
 
         args.Handled = true;
@@ -155,7 +188,7 @@ public sealed partial class SharedJumpAbilitySystem : EntitySystem
         targetComp.CanCollide = ent.Comp.CanCollide;
         targetComp.JumpSound = ent.Comp.JumpSound;
         targetComp.CollideKnockdown = ent.Comp.CollideKnockdown;
-        targetComp.FinishKnockdown = ent.Comp.FinishKnockdown; // KS14 change
+        targetComp.PunishKnockdown = ent.Comp.PunishKnockdown; // KS14 change
         targetComp.JumpDistance = ent.Comp.JumpDistance;
         targetComp.JumpThrowSpeed = ent.Comp.JumpThrowSpeed;
         AddComp(args.CloneUid, targetComp, true);

@@ -100,7 +100,6 @@
       # KS14 start
       performCollisionCheck: false
       forcedCollisionCheckOnClick: true
-      crushableBodyPartType: [ Arm, Leg, Hand, Foot ]
       # KS14 end
       openDrawDepth: WallTops
       closeTimeOne: 0.1
@@ -112,7 +111,7 @@
       clickOpen: true
       crushDamage:
         types:
-          Blunt: 35 # KS14: 15 -> 35
+          Blunt: 15
       openSound:
         path: /Audio/Machines/airlock_open.ogg
       closeSound:

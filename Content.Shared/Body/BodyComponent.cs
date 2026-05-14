@@ -48,7 +48,7 @@ public sealed partial class BodyComponent : Component, IHierarchyComponent // KS
     ///         to dismember SOMETHING.
     /// </summary>
     [DataField]
-    public FixedPoint2 DismembermentThreshold = FixedPoint2.New(70f);
+    public FixedPoint2 DismembermentThreshold = FixedPoint2.New(80f);
 }
 
 /// <summary>

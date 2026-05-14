@@ -31,7 +31,7 @@ public sealed class OreSiloSystem : SharedOreSiloSystem
         var xform = Transform(ent);
 
         // Sneakily uses override with TComponent parameter
-        _entityLookup.GetEntitiesInRange(xform.Coordinates, ent.Comp.Range, _clientLookup);
+        _entityLookup.GetEntitiesOnMap(xform.MapID, _clientLookup);
 
         foreach (var client in _clientLookup)
         {

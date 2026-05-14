@@ -68,7 +68,7 @@
   - type: Door
     crushDamage:
       types:
-        Blunt: 50
+        Blunt: 25 # thumbsup
     openSound:
       path: /Audio/Machines/airlock_open.ogg
     closeSound:

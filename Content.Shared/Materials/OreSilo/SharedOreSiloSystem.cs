@@ -157,10 +157,7 @@ public abstract class SharedOreSiloSystem : EntitySystem
         if (!_powerReceiver.IsPowered(silo.Owner))
             return false;
 
-        if (_transform.GetGrid(client) != _transform.GetGrid(silo.Owner))
-            return false;
-
-        if (!_transform.InRange((silo.Owner, silo.Comp2), client, silo.Comp1.Range))
+        if (_transform.GetMap(client) != _transform.GetMap(silo.Owner))
             return false;
 
         return true;

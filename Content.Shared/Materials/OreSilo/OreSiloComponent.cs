@@ -21,9 +21,10 @@ public sealed partial class OreSiloComponent : Component
     /// </summary>
     /// <remarks>
     /// Default value should be big enough to span a single large department.
+    /// KS14: removed since we check map anyway
     /// </remarks>
-    [DataField, AutoNetworkedField]
-    public float Range = 20f;
+    // [DataField, AutoNetworkedField]
+    // public float Range = 20f;
 }
 
 [Serializable, NetSerializable]

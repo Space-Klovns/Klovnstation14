@@ -29,6 +29,16 @@ public sealed class BloodSpraySystem : EntitySystem
     private static readonly QueryFilter StaticQueryFilter = new() { LayerBits = 1L, Flags = QueryFlags.Static, MaskBits = (long)CollisionGroup.Impassable };
     private static readonly Vector2 DecalOffset = Vector2.One / 2; // KS14 Addition; this is related to texture size of the blood splatter.
 
+    private EntityUid RecursivelyGetGridOrMapUid(TransformComponent transformComponent)
+    {
+        if (transformComponent.GridUid is { })
+            return transformComponent.GridUid.Value;
+        else if (transformComponent.MapUid == transformComponent.ParentUid)
+            return transformComponent.ParentUid;
+
+        return RecursivelyGetGridOrMapUid(Transform(transformComponent.ParentUid));
+    }
+
     public void HandleBleedEffects(Entity<BloodstreamComponent?> entity, DamageSpecifier bloodlossSpecifier, EntityUid originUid)
         => HandleBleedEffects(entity, (float)bloodlossSpecifier.GetTotal(), originUid);
 
@@ -43,7 +53,7 @@ public sealed class BloodSpraySystem : EntitySystem
         var worldDeltaUnit = _transformSystem.GetWorldPosition(targetTransform) - _transformSystem.GetWorldPosition(originTransform);
 
         Vector2Helpers.Normalize(ref worldDeltaUnit);
-        HandleBleedEffects(entity!, bloodloss, targetTransform, originTransform.ParentUid, worldDeltaUnit);
+        HandleBleedEffects(entity!, bloodloss, targetTransform, RecursivelyGetGridOrMapUid(originTransform), worldDeltaUnit);
     }
 
     // TODO: Clean up code

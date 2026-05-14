@@ -2,6 +2,7 @@ using System.Numerics;
 using Content.Shared._KS14.BloodSpray;
 using Content.Shared._KS14.Klovnmed;
 using Content.Shared._KS14.Klovnmed.Dismemberment;
+using Content.Shared._KS14.Random.Helpers;
 using Content.Shared.Body;
 using Content.Shared.Body.Components;
 
@@ -14,8 +15,8 @@ public sealed partial class ExplosionSystem
     [Dependency] private readonly DismembermentSystem _dismembermentSystem = default!;
     [Dependency] private readonly BloodSpraySystem _bloodSpraySystem = default!;
 
-    private readonly float[] _dismembermentTargetDistanceKeys = [0f, 0f, 1.25f, 2.5f, 7.5f]; // should be same length as below
-    private readonly BodyPartType[] _dismembermentTargetDistanceValues = [BodyPartType.Foot, BodyPartType.Leg, BodyPartType.Hand, BodyPartType.Arm, BodyPartType.Head]; // should be same length as above
+    private readonly float[] _dismembermentTargetDistanceKeys = [0f, 1.25f, 2.5f, 7.5f]; // should be same length as below
+    private readonly BodyPartType[] _dismembermentTargetDistanceValues = [BodyPartType.Leg, BodyPartType.Hand, BodyPartType.Arm, BodyPartType.Head]; // should be same length as above
 
     // holy hardcoding
     private void HandleExplosionDamage(Entity<BodyComponent?> entity, float throwForce, float totalDamage, EntityUid? cause, Vector2 worldEpicenter, TransformComponent? transformComponent)
@@ -45,9 +46,14 @@ public sealed partial class ExplosionSystem
         // maximum of 1 to (1 to 2) maximum number of dismemberments
 
         var distanceWithMinimumOne = Math.Max(1f, distance);
+        var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
+            (int)_timing.CurTick.Value,
+            KsSharedRandomExtensions.GetNetId(entity.Owner, EntityManager),
+            (int)totalDamage
+        );
 
         // maximum potential dismemberments gets lower with distance
-        var maximumDismemberments = Math.Min(Math.Max(1, (int)(3f / distanceWithMinimumOne)), _robustRandom.Next(1, 3)); // IDFK
+        var maximumDismemberments = Math.Min(Math.Max(1, (int)(3f / distanceWithMinimumOne)), predictedRandom.Next(1, 3)); // IDFK
 
         for (var i = 0; i < maximumDismemberments; i++)
         {
@@ -57,7 +63,8 @@ public sealed partial class ExplosionSystem
                 out _,
                 direction: positionalDelta,
                 throwSpeed: throwForce * 0.65f,
-                cause: cause
+                cause: cause,
+                predictedRandom: predictedRandom
             );
         }
 
