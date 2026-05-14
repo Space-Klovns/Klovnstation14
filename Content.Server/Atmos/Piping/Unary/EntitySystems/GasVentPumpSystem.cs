@@ -28,6 +28,7 @@ using Content.Shared.Verbs;
 using JetBrains.Annotations;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using System.Transactions;
 
 namespace Content.Server.Atmos.Piping.Unary.EntitySystems
 {
@@ -100,8 +101,12 @@ namespace Content.Server.Atmos.Piping.Unary.EntitySystems
 
             var timeDelta = args.dt;
             var pressureDelta = timeDelta * vent.TargetPressureChange;
+            //KS14 start - smartvents
+            vent.PrevPressure = vent.CurPressure;
+            vent.CurPressure = environment.Pressure;
 
-            var lockout = (environment.Pressure < vent.UnderPressureLockoutThreshold) && !vent.IsPressureLockoutManuallyDisabled;
+            var lockout = vent.CurPressure/vent.PrevPressure+0.1 /*hacky null division fix*/ < vent.MinPressureDiscrepancyValue || vent.CurPressure < vent.UnderPressureLockoutThreshold;
+            //KS14 end
             if (vent.UnderPressureLockout != lockout) // update visuals only if this changes
             {
                 vent.UnderPressureLockout = lockout;

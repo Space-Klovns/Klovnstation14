@@ -41,7 +41,7 @@ namespace Content.Server.Atmos.Piping.Unary.Components
         /// </summary>
         [DataField]
         [GuidebookData]
-        public float UnderPressureLockoutThreshold = 80; // this must be tuned in conjunction with atmos.mmos_spacing_speed
+        public float UnderPressureLockoutThreshold = 10; // this must be tuned in conjunction with atmos.mmos_spacing_speed
 
         /// <summary>
         ///     Pressure locked vents still leak a little (leading to eventual pressurization of sealed sections)
@@ -78,6 +78,18 @@ namespace Content.Server.Atmos.Piping.Unary.Components
         /// How long the doAfter should take when attempting to manually disable the pressure lockout.
         /// </summary>
         public float ManualLockoutDisableDoAfter = 2.0f;
+        /// <summary>
+        /// KS14 - Used for the subtraction comparison of states for vent lockouts.
+        /// </summary>
+        public float PrevPressure = 0f;
+        /// <summary>
+        /// KS14 - Used for the subtraction comparison of states for vent lockouts.
+        /// </summary>
+        public float CurPressure = 0f;
+        /// <summary>
+        /// KS14 - Used for the subtraction comparison of states for vent lockouts.
+        /// </summary>
+        public float MinPressureDiscrepancyValue = 0.95f;
 
         [DataField]
         public float ExternalPressureBound
