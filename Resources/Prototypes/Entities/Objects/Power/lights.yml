@@ -128,9 +128,9 @@
   components:
   - type: LightBulb
     bulb: Bulb
-    color: "#FFD1A3" # 4000K color temp
-    lightEnergy: 0.8 #was 1, klovn
-    lightRadius: 5 # was 6
+    color: "#FFB475" # 3100K color temp
+    lightEnergy: 0.5
+    lightRadius: 5
     lightSoftness: 1.1
   - type: Tag
     tags:
@@ -238,11 +238,10 @@
   description: A light fixture.
   components:
   - type: LightBulb
-    color: "#FFE4CE" # 5000K color temp
-    lightEnergy: 0.65 #klovn, 65 65, was 0.8
-    lightRadius: 8 #was 10
+    color: "#FFC99D" # 3800K color temp
+    lightEnergy: 0.5
+    lightRadius: 7
     lightSoftness: 1
-    PowerUse: 25
 
 - type: entity
   parent: LightTube

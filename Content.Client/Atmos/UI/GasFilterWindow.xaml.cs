@@ -89,24 +89,29 @@ namespace Content.Client.Atmos.UI
         {
             foreach (var gas in gases)
             {
+                if (!Enum.TryParse<Gas>(gas.ID, out var gasEnum))
+                    continue;
+
                 var gasButton = new Button
                 {
-                    Name = gas.ID.ToString(),
+                    Name = gas.ID,
                     Text = Loc.GetString(gas.Name),
                     ToggleMode = true,
                     HorizontalExpand = true,
-                    Pressed = _selectedGases.Contains((Gas) int.Parse(gas.ID))
+                    Pressed = _selectedGases.Contains(gasEnum)
                 };
                 gasButton.OnToggled += args =>
                 {
-                    var gasId = (Gas) int.Parse(gasButton.Name);
+                    if (!Enum.TryParse<Gas>(gasButton.Name, out var gas))
+                        return;
+                    
                     if (args.Pressed)
-                        _selectedGases.Add(gasId);
+                        _selectedGases.Add(gas);
                     else
-                        _selectedGases.Remove(gasId);
+                        _selectedGases.Remove(gas);
                     FilterGasesChanged?.Invoke(new HashSet<Gas>(_selectedGases));
                 };
-                _gasControls.Add((Gas) int.Parse(gas.ID), gasButton);
+                _gasControls.Add(gasEnum, gasButton);
                 GasContainer.AddChild(gasButton);
             }
         }
