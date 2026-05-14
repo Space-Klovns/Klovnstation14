@@ -34,6 +34,7 @@
     - Deconstruct
     - AirAlarm
     - AirSensor
+    - MolarMixer #KS14 molar mixers
   - type: LimitedCharges
     maxCharges: 90
   - type: Sprite

@@ -1,0 +1,13 @@
+- type: rcd
+  id: MolarMixer
+  category: AtmosphericUtility
+  sprite: /Textures/_KS14/Interface/Radial/RPD/molar_mixer.png
+  mode: ConstructObject
+  prototype: MolarMixer
+  mirrorPrototype: MolarMixerFlipped
+  cost: 3
+  delay: 0
+  collisionMask: Impassable
+  rotation: User
+  hasLayers: true
+  fx: EffectRCDConstruct0
