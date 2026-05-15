@@ -1,0 +1,113 @@
+- type: entity
+  parent: BaseMachinePowered
+  id: KsAtmosShieldGen
+  name: atmospheric shield generator
+  description: Produces an atmos shield in a line between itself and another generator with both facing the other, while active. Powered by LV. Field must not be obstructed by walls. Will turn on after gaining power if turned off due to power loss.
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    anchored: true
+    noRot: false
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.45,0.4,0.45,0.5"
+        density: 190
+        mask:
+        - MachineMask
+        layer:
+        - MachineLayer
+
+  - type: RequireProjectileTarget
+  - type: RangedDamageSound
+    soundGroups:
+      Brute:
+        collection:
+          MetalBulletImpact
+    soundTypes:
+      Heat:
+        collection:
+          MetalLaserImpact
+  - type: Damageable
+    damageContainer: StructuralInorganic
+    damageModifierSet: StructuralMetallic
+
+  - type: Sprite
+    sprite: _KS14/Structures/Machines/atmos_shield_gen.rsi
+    drawdepth: Overdoors
+    layers:
+    - state: base
+    - state: wantpower
+      shader: unshaded
+      map: ["emissive"]
+  - type: EmissiveLayers # TODO LCDC EMISSIVES: this behaves fine on south sprite, not otherwise doe
+    glowRadius: 0.1
+    intensity: 1
+    offset: 0,-0.25
+    layers:
+    - emissive
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.KsFieldGeneratorVisuals.State:
+        emissive:
+          Off: { visible: false }
+          NeedsPower: { visible: true, state: wantpower }
+          On: { visible: true, state: active }
+
+  - type: KsFieldGenerator
+    fieldProto: KsAtmosShield
+
+- type: entity
+  parent: KsAtmosShieldGen
+  id: KsAtmosShieldGenEnabled
+  suffix: Starts Enabled
+  components:
+  - type: KsFieldGenerator
+    enabled: true
+
+- type: entity
+  id: KsAtmosShield
+  name: atmospheric shield
+  desc: Shields you from air.
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    anchored: true
+  - type: Physics
+    bodyType: Static
+    canCollide: false
+
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+            bounds: "-0.5,-0.5,0.5,0.5"
+
+  - type: Icon
+    sprite: _KS14/Structures/Holo/atmos_shield.rsi
+    state: full
+  - type: Sprite
+    sprite: _KS14/Structures/Holo/atmos_shield.rsi
+    drawdepth: OverMobs
+    layers:
+    - state: icon
+      color: '#ffffff4d'
+      shader: null
+    - state: icon
+      color: '#ffffff4d'
+      shader: unshaded
+
+  - type: Airtight
+    noAirWhenFullyAirBlocked: false
