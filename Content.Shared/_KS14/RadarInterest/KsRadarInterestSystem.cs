@@ -7,6 +7,7 @@ using Robust.Shared.Serialization;
 namespace Content.Shared._KS14.RadarInterest;
 
 // Shoddy system for getting data for things that should be shown on radar and will probably never locally move
+// TODO LCDC: Handle deletion of interests, currently it does epic fails
 
 public sealed class KsRadarInterestSystem : EntitySystem
 {
@@ -64,6 +65,9 @@ public sealed class KsRadarInterestSystem : EntitySystem
 
     private void OnInterestParentChanged(Entity<KsRadarInterestComponent> entity, ref EntParentChangedMessage args)
     {
+        if (TerminatingOrDeleted(entity)) // shutdown should handle this idk
+            return;
+
         StaticInterests[entity.Owner] = (entity.Comp.Data, args.Transform.ParentUid, args.Transform.LocalPosition);
 
         RaiseNetworkEvent(new KsStaticRadarInterestDeltaMessage(

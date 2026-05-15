@@ -1,7 +1,7 @@
 - type: entity
   id: KsGeyserBase
   name: undiscovered geyser
-  description: It's a geyser.
+  description: It's a geyser. When scanned, it will conveniently show up on mass scanners.
   abstract: true
   placement:
     mode: SnapgridCenter
@@ -26,6 +26,7 @@
     fillBaseName: soup
     solutionName: buffer
 
+  # Trigger
   - type: KsScanTriggerOnDiscovered
     keyOut: discovered
   - type: AddComponentsOnTrigger
@@ -34,6 +35,11 @@
     - type: KsRadarInterest
       data:
         text: ""
+  - type: SpawnOnTrigger # Placeholder for mining points lol
+    keysIn: [discovered]
+    proto: SpaceCash2500
+    useMapCoords: true
+    predicted: true
 
   # Plumbing
   - type: PlumbingDevice

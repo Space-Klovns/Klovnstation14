@@ -161,8 +161,7 @@ public sealed partial class ShuttleNavControl : BaseShuttleControl
 
         // Draw our grid in detail
         var ourGridId = xform.GridUid;
-        if (EntManager.TryGetComponent<MapGridComponent>(ourGridId, out var ourGrid) &&
-            fixturesQuery.HasComponent(ourGridId.Value))
+        if (EntManager.TryGetComponent<MapGridComponent>(ourGridId, out var ourGrid))
         {
             var ourGridToWorld = _transform.GetWorldMatrix(ourGridId.Value);
             var ourGridToShuttle = Matrix3x2.Multiply(ourGridToWorld, worldToShuttle);
@@ -170,8 +169,13 @@ public sealed partial class ShuttleNavControl : BaseShuttleControl
             var color = _shuttles.GetIFFColor(ourGridId.Value, self: true);
 
             KsDrawInterests(handle, ourGridToView, new Box2(mapPos.Position - MaxRadarRangeVector, mapPos.Position + MaxRadarRangeVector), (ourGridId.Value, ourGrid)); // KS14
-            DrawGrid(handle, ourGridToView, (ourGridId.Value, ourGrid), color);
-            DrawDocks(handle, ourGridId.Value, ourGridToView);
+
+            // KS14: Moved fixture query to only encompass this
+            if (fixturesQuery.HasComponent(ourGridId.Value))
+            {
+                DrawGrid(handle, ourGridToView, (ourGridId.Value, ourGrid), color);
+                DrawDocks(handle, ourGridId.Value, ourGridToView);
+            }
         }
 
         // Draw radar position on the station
@@ -277,7 +281,6 @@ public sealed partial class ShuttleNavControl : BaseShuttleControl
             if (!gridAABB.Intersects(viewAABB))
                 continue;
 
-            KsDrawInterests(handle, curGridToView, viewAABB, grid); // KS14
             DrawGrid(handle, curGridToView, grid, labelColor);
             DrawDocks(handle, gUid, curGridToView);
         }
@@ -299,10 +302,6 @@ public sealed partial class ShuttleNavControl : BaseShuttleControl
     // KS14
     private void KsDrawInterests(DrawingHandleScreen handle, Matrix3x2 curGridToViewMatrix, Box2 viewAABB, Entity<MapGridComponent> gridEntity)
     {
-        var position = Vector2.Transform(Vector2.Zero, curGridToViewMatrix);
-        handle.DrawCircle(position, 5, Color.ToSrgb(Color.DarkRed), true);
-        handle.DrawString(Font, position, "TEST", Color.DarkRed);
-
         foreach (var (_, interest) in _ksRadarInterestSystem.StaticInterests)
         {
             if (gridEntity.Owner != interest.Item2)
