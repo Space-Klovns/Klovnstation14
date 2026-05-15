@@ -51,13 +51,9 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
             if (TryUpdateAnchoredPosition(entity, Transform(entity)))
                 GenerateFields(entity);
         }
-
-        if (entity.Comp.LinkedGeneratorUid is { } linkedUid)
+        else if (entity.Comp.LinkedGeneratorUid is { } linkedUid)
         {
-            SetEnabled(linkedUid, entity.Comp.Enabled);
-
-            if (!entity.Comp.Enabled)
-                UnlinkAndClearFields(entity);
+            UnlinkAndClearFields(entity);
         }
 
         _popupSystem.PopupPredicted(

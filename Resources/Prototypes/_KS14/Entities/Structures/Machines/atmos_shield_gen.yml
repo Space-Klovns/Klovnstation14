@@ -1,5 +1,5 @@
 - type: entity
-  parent: BaseMachinePowered
+  parent: [BaseMachinePowered, ConstructibleMachine]
   id: KsAtmosShieldGen
   name: atmospheric shield generator
   description: Produces an atmos shield in a line between itself and another generator with both facing the other, while active. Powered by LV. Field must not be obstructed by walls. Will turn on after gaining power if turned off due to power loss.
@@ -22,6 +22,9 @@
         - MachineMask
         layer:
         - MachineLayer
+
+  - type: Machine
+    board: KsAtmosShieldGenCircuitboard
 
   - type: RequireProjectileTarget
   - type: RangedDamageSound
@@ -111,3 +114,22 @@
 
   - type: Airtight
     noAirWhenFullyAirBlocked: false
+
+- type: entity
+  parent: BaseMachineCircuitboard
+  id: KsAtmosShieldGenCircuitboard
+  name: atmospheric shield generator machine board
+  description: An electronics board used in atmospheric shield generators.
+  components:
+  - type: Sprite
+    state: engineering
+  - type: MachineBoard
+    prototype: KsAtmosShieldGen
+    stackRequirements:
+      Steel: 3
+      Manipulator: 1
+
+- type: latheRecipe
+  parent: [ BaseGoldCircuitboardRecipe, BaseEngineeringMachineRecipeCategory ]
+  id: KsAtmosShieldGenCircuitboard
+  result: KsAtmosShieldGenCircuitboard

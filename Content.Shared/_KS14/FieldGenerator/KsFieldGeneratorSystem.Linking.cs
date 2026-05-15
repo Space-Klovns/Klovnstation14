@@ -81,7 +81,10 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
             return;
 
         var originTileCoordinates = (Vector2)_mapSystem.CoordinatesToTile(fallbackParentUid, mapGridComponent, transformComponent.Coordinates);
-        var direction = transformComponent.LocalRotation.RoundToCardinalAngle().ToWorldVec();
+
+        var directionAngle = transformComponent.LocalRotation.RoundToCardinalAngle();
+        var directionDir = directionAngle.GetDir();
+        var direction = directionAngle.ToWorldVec();
 
         var rayResult = new RayResult();
         _rayCastSystem.CastRayClosest(
@@ -114,24 +117,29 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
                 if (otherGeneratorUid == entity.Owner)
                     continue;
 
-                // TODO LCDC: Skip generators if they arent facing this one, but thats too much work for now.
+                // Make sure the other generator is facing us
+                var otherTransformComponent = Transform(otherGeneratorUid);
+                if (directionDir.GetOpposite() != otherTransformComponent.LocalRotation.GetDir())
+                    continue;
 
-                TryLinkGenerators((entity, entity.Comp, transformComponent), otherGeneratorUid, tiles, (fallbackParentUid, mapGridComponent));
-                return;
+                if (TryLinkGenerators((entity, entity.Comp, transformComponent), (otherGeneratorUid, null, otherTransformComponent), tiles, (fallbackParentUid, mapGridComponent)))
+                    return;
             }
         }
     }
 
-    public void TryLinkGenerators(Entity<KsFieldGeneratorComponent, TransformComponent> firstGeneratorEntity, Entity<KsFieldGeneratorComponent?> secondGeneratorEntity, in ValueList<Vector2i> tiles, Entity<MapGridComponent> gridEntity)
+    public bool TryLinkGenerators(Entity<KsFieldGeneratorComponent, TransformComponent> firstGeneratorEntity, Entity<KsFieldGeneratorComponent?, TransformComponent?> secondGeneratorEntity, in ValueList<Vector2i> tiles, Entity<MapGridComponent> gridEntity)
     {
-        if (!Resolve(secondGeneratorEntity.Owner, ref secondGeneratorEntity.Comp) ||
-            !CanGeneratorWork(secondGeneratorEntity!))
-            return;
+        if (!Resolve(secondGeneratorEntity.Owner, ref secondGeneratorEntity.Comp1) ||
+            !secondGeneratorEntity.Comp1.Enabled ||
+            !CanGeneratorWork(secondGeneratorEntity!, transformComponent: secondGeneratorEntity.Comp2))
+            return false;
 
         LinkGenerators(firstGeneratorEntity, secondGeneratorEntity!, tiles, gridEntity);
+        return true;
     }
 
-    private void LinkGenerators(Entity<KsFieldGeneratorComponent, TransformComponent> firstGeneratorEntity, Entity<KsFieldGeneratorComponent> secondGeneratorEntity, in ValueList<Vector2i> tiles, Entity<MapGridComponent> gridEntity)
+    private void LinkGenerators(Entity<KsFieldGeneratorComponent, TransformComponent> firstGeneratorEntity, Entity<KsFieldGeneratorComponent, TransformComponent?> secondGeneratorEntity, in ValueList<Vector2i> tiles, Entity<MapGridComponent> gridEntity)
     {
         foreach (var tilePos in tiles)
         {
@@ -142,15 +150,14 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
             fieldComponent.GeneratorUids.Add(secondGeneratorEntity);
 
             firstGeneratorEntity.Comp1.FieldUids.Add(fieldUid);
-            secondGeneratorEntity.Comp.FieldUids.Add(fieldUid);
-
+            secondGeneratorEntity.Comp1.FieldUids.Add(fieldUid);
         }
 
         firstGeneratorEntity.Comp1.LinkedGeneratorUid = secondGeneratorEntity.Owner;
         DirtyField(firstGeneratorEntity.Owner, firstGeneratorEntity.Comp1, nameof(firstGeneratorEntity.Comp1.LinkedGeneratorUid));
 
-        secondGeneratorEntity.Comp.LinkedGeneratorUid = firstGeneratorEntity.Owner;
-        DirtyField(secondGeneratorEntity.Owner, secondGeneratorEntity.Comp, nameof(secondGeneratorEntity.Comp.LinkedGeneratorUid));
+        secondGeneratorEntity.Comp1.LinkedGeneratorUid = firstGeneratorEntity.Owner;
+        DirtyField(secondGeneratorEntity.Owner, secondGeneratorEntity.Comp1, nameof(secondGeneratorEntity.Comp1.LinkedGeneratorUid));
     }
 
     private void OnAnchorStateChanged(Entity<KsFieldGeneratorComponent> entity, ref AnchorStateChangedEvent args)

@@ -262,6 +262,7 @@
     - CargoBoardsStatic
     - MedicalBoardsStatic
     - EngineeringBoardsStatic
+    - KlovnEngineeringBoardsStatic # KS14
     dynamicPacks:
     - EngineeringBoards
     - CargoBoards
