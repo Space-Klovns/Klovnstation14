@@ -115,7 +115,7 @@
   - type: Sprite
     state: medical
   - type: MachineBoard
-    prototype: BiomassReclaimer
+    prototype: KsPlumbingTeleporterBeacon
     stackRequirements:
       Manipulator: 1
       Steel: 2
@@ -134,7 +134,7 @@
   - type: Sprite
     state: medical
   - type: MachineBoard # TODO KS14 PLUMBING: bluespace crystal maybi?
-    prototype: BiomassReclaimer
+    prototype: KsPlumbingTeleporterRecipient
     stackRequirements:
       Manipulator: 2
       Plasma: 3
