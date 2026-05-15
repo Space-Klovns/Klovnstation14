@@ -14,7 +14,7 @@
     layers:
     - state: geyser
     - state: soup1
-      map: ["enum.SolutionContainerLayers.Fill"]
+      map: ["enum.SolutionContainerLayers.Fill", "enum.MiningScannerVisualLayers.Overlay"]
       shader: unshaded
     - state: soup1
       color: '#000000ab'
@@ -79,6 +79,7 @@
   - type: KsScanDiscoverable
     discoveryPopupLoc: ks-specific-geyser-discovered
     trueName: discovered geyser
+  - type: MiningScannerViewable
 
 - type: entity
   parent: KsGeyserBase

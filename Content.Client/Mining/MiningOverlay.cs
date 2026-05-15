@@ -88,7 +88,7 @@ public sealed class MiningOverlay : Overlay
                 : (float)Math.Clamp((animTime - viewerComp.AnimationDuration) / viewerComp.AnimationDuration, 0f, 1f);
             var color = Color.White.WithAlpha(alpha);
 
-            handle.DrawTexture(texture, -(Vector2)texture.Size / 2f / EyeManager.PixelsPerMeter, layer.Rotation, modulate: color);
+            handle.DrawTexture(texture, -(Vector2)texture.Size / 2f / EyeManager.PixelsPerMeter + sprite.Offset /* KS14: Add sprite offset */, layer.Rotation, modulate: color);
 
         }
         handle.SetTransform(Matrix3x2.Identity);
