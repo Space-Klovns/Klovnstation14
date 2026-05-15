@@ -44,10 +44,6 @@
   - type: StaticPrice
     price: 45
 
-  # Construction
-  - type: Machine
-    board: KsPlumbingTeleporterBeaconCircuitboard
-
 - type: entity
   parent: [PlumbingMachineBase, ConstructibleMachine]
   id: KsPlumbingTeleporterRecipient
@@ -100,25 +96,6 @@
     board: KsPlumbingTeleporterRecipientCircuitboard
 
 ### Circuits
-
-- type: latheRecipe
-  parent: [ BaseGoldCircuitboardRecipe, BaseMedicalMachineRecipeCategory ]
-  id: KsPlumbingTeleporterBeaconCircuitboard
-  result: KsPlumbingTeleporterBeaconCircuitboard
-
-- type: entity
-  parent: BaseMachineCircuitboard
-  id: KsPlumbingTeleporterBeaconCircuitboard
-  name: chemical beacon machine board
-  description: A machine printed circuit board for a chemical beacon.
-  components:
-  - type: Sprite
-    state: medical
-  - type: MachineBoard
-    prototype: KsPlumbingTeleporterBeacon
-    stackRequirements:
-      Manipulator: 1
-      Steel: 2
 
 - type: latheRecipe
   parent: [ BaseGoldCircuitboardRecipe, BaseMedicalMachineRecipeCategory ]
