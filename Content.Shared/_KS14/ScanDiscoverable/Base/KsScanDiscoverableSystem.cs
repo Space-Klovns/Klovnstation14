@@ -3,7 +3,7 @@ using Content.Shared.Interaction;
 using Content.Shared.Popups;
 using Robust.Shared.Player;
 
-namespace Content.Shared._KS14.ScanDiscoverable;
+namespace Content.Shared._KS14.ScanDiscoverable.Base;
 
 public sealed class KsScanDiscoverableSystem : EntitySystem
 {
@@ -46,8 +46,15 @@ public sealed class KsScanDiscoverableSystem : EntitySystem
 
         var ev = new KsAfterScanDiscoveringEvent(entity.Comp.TrueName, args);
         RaiseLocalEvent(entity, ref ev);
+        RaiseLocalEvent(args.Used, ref ev);
 
         args.Handled = true;
         RemComp(entity, entity.Comp);
     }
 }
+
+/// <summary>
+///     After something is discovered, raised on the thing that was discovered and what was used to discover it.
+/// </summary>
+[ByRefEvent]
+public record struct KsAfterScanDiscoveringEvent(string TrueName, InteractUsingEvent InteractUsingEvent);

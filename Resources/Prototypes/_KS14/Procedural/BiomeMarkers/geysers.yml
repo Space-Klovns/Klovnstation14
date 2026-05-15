@@ -1,0 +1,6 @@
+- type: biomeMarkerLayer
+  id: RandomGeysers
+  prototype: GeyserSpawner
+  minGroupSize: 1
+  maxGroupSize: 1
+  radius: 50

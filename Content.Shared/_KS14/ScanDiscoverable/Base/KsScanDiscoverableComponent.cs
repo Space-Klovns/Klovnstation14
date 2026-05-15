@@ -1,7 +1,7 @@
 using Content.Shared.Interaction;
 using Robust.Shared.GameStates;
 
-namespace Content.Shared._KS14.ScanDiscoverable;
+namespace Content.Shared._KS14.ScanDiscoverable.Base;
 
 [RegisterComponent, NetworkedComponent]
 public sealed partial class KsScanDiscoverableComponent : Component
@@ -28,9 +28,3 @@ public sealed partial class KsScanDiscoverableComponent : Component
     [ViewVariables(VVAccess.ReadWrite)]
     public LocId? DiscoveryPopupLoc = null;
 }
-
-/// <summary>
-///     Raised on something after being discovered.
-/// </summary>
-[ByRefEvent]
-public record struct KsAfterScanDiscoveringEvent(string TrueName, InteractUsingEvent InteractUsingEvent);

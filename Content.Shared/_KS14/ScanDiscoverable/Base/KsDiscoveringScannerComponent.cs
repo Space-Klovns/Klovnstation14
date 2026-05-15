@@ -1,6 +1,6 @@
 using Robust.Shared.GameStates;
 
-namespace Content.Shared._KS14.ScanDiscoverable;
+namespace Content.Shared._KS14.ScanDiscoverable.Base;
 
 /// <summary>
 ///     For items that can discover things via clicking on them.
