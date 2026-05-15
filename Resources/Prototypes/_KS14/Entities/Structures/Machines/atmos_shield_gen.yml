@@ -77,7 +77,7 @@
 - type: entity
   id: KsAtmosShield
   name: atmospheric shield
-  desc: Shields you from air.
+  description: Shields you from air.
   placement:
     mode: SnapgridCenter
   components:
