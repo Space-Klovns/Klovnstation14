@@ -702,6 +702,7 @@ entities:
       - WatchersIcewing
       - Goliath
       - Basilisk
+      - RandomGeysers
       loadedMarkers:
         OreArtifactFragmentLow:
         - 0,-128
