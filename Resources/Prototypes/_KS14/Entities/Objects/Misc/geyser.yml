@@ -26,6 +26,15 @@
     fillBaseName: soup
     solutionName: buffer
 
+  - type: KsScanTriggerOnDiscovered
+    keyOut: discovered
+  - type: AddComponentsOnTrigger
+    keysIn: [discovered]
+    components: # copied from PenEmbeddable
+    - type: KsRadarInterest
+      data:
+        text: ""
+
   # Plumbing
   - type: PlumbingDevice
     updateInterval: 2
