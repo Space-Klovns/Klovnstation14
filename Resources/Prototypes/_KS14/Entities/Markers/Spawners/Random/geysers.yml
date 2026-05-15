@@ -15,4 +15,9 @@
       prob: 1
       children:
       - id: KsGeyserPlasma
+      - id: KsGeyserCarbonDioxide
+      - id: KsGeyserNitrogen
       - id: KsGeyserFresium
+      - id: KsGeyserKlovnide
+      - id: KsGeyserZipium
+      - id: KsGeyserArtifexium
