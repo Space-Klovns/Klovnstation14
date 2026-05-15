@@ -45,6 +45,12 @@
     sound:
       path: /Audio/_KS14/Handling/component_drop.ogg
   - type: KsDiscoveringScanner # KS14: geysers or whatever
+  - type: KsDiscoveringScannerFeedback # KS14: geysers or whatever
+    useSoundSpecifier:
+      path: /Audio/Machines/twobeep.ogg
+      params:
+        pitch: 2
+        volume: 3
 
 - type: entity
   id: MineralScanner
