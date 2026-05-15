@@ -1,0 +1,13 @@
+- type: rcd
+  id: KsPlumbingTeleporterBeacon
+  category: PlumbingMachines
+  sprite:
+    sprite: _KS14/Structures/Piping/Plumbing/teleporter.rsi
+    state: beacon
+  mode: ConstructObject
+  prototype: KsPlumbingTeleporterBeacon
+  cost: 4
+  delay: 0
+  collisionMask: MachineMask
+  rotation: User
+  fx: EffectRCDConstruct0

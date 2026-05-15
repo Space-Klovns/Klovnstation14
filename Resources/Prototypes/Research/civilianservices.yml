@@ -304,6 +304,7 @@
   recipeUnlocks:
   - BluespaceBeaker
   - SyringeBluespace
+  - KsPlumbingTeleporterRecipientCircuitboard # KS14: plumbing teleporters
   # Goobstation R&D Console rework start
   position: 2,6
   technologyPrerequisites:

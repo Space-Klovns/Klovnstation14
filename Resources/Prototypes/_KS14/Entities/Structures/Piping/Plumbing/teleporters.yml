@@ -1,0 +1,141 @@
+- type: entity
+  parent: [PlumbingMachineBase, ConstructibleMachine]
+  id: KsPlumbingTeleporterBeacon
+  name: chemical beacon
+  description: A self-powering bluespace anchor for reagents. Must be linked to a chemical recipient to work.
+  components:
+  # Sprite
+  - type: Sprite
+    sprite: _KS14/Structures/Piping/Plumbing/teleporter.rsi
+    layers:
+    - state: beacon
+      map: ["base"]
+  - type: GenericVisualizer
+    visuals:
+      enum.PipeNodeTeleporterVisuals.Connected:
+        base:
+          False: { state: beacon }
+          True: { state: beacon_working }
+
+  # Device
+  - type: DeviceNetwork
+    deviceNetId: Wireless
+    receiveFrequencyId: BasicDevice
+
+  # Piping
+  - type: PipeNodeTeleporterBeacon
+    nodeName: inlet
+  - type: NodeContainer
+    nodes:
+      inlet:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: South
+
+  # Misc
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 75
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+  - type: StaticPrice
+    price: 45
+
+  # Construction
+  - type: Machine
+    board: KsPlumbingTeleporterBeaconCircuitboard
+
+- type: entity
+  parent: [PlumbingMachineBase, ConstructibleMachine]
+  id: KsPlumbingTeleporterRecipient
+  name: chemical recipient
+  description: Receives chemicals from one or more chemical beacons, which must be added to this recipients device list.
+  components:
+  # Sprite
+  - type: Sprite
+    sprite: _KS14/Structures/Piping/Plumbing/teleporter.rsi
+    layers:
+    - state: recipient
+      map: ["base"]
+  - type: GenericVisualizer
+    visuals:
+      enum.PipeNodeTeleporterVisuals.Connected:
+        base:
+          False: { state: recipient }
+          True: { state: recipient_working }
+
+  # Device
+  - type: DeviceNetwork
+    deviceNetId: Wireless
+    receiveFrequencyId: BasicDevice
+  - type: DeviceList
+
+  # Piping
+  - type: PipeNodeTeleporterRecipient
+    nodeName: outlet
+  - type: NodeContainer
+    nodes:
+      outlet:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: South
+
+  # Misc
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 75
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+  - type: StaticPrice
+    price: 300
+
+  # Construction
+  - type: Machine
+    board: KsPlumbingTeleporterRecipientCircuitboard
+
+### Circuits
+
+- type: latheRecipe
+  parent: [ BaseGoldCircuitboardRecipe, BaseMedicalMachineRecipeCategory ]
+  id: KsPlumbingTeleporterBeaconCircuitboard
+  result: KsPlumbingTeleporterBeaconCircuitboard
+
+- type: entity
+  parent: BaseMachineCircuitboard
+  id: KsPlumbingTeleporterBeaconCircuitboard
+  name: chemical beacon machine board
+  description: A machine printed circuit board for a chemical beacon.
+  components:
+  - type: Sprite
+    state: medical
+  - type: MachineBoard
+    prototype: BiomassReclaimer
+    stackRequirements:
+      Manipulator: 1
+      Steel: 2
+
+- type: latheRecipe
+  parent: [ BaseGoldCircuitboardRecipe, BaseMedicalMachineRecipeCategory ]
+  id: KsPlumbingTeleporterRecipientCircuitboard
+  result: KsPlumbingTeleporterRecipientCircuitboard
+
+- type: entity
+  parent: BaseMachineCircuitboard
+  id: KsPlumbingTeleporterRecipientCircuitboard
+  name: chemical recipient machine board
+  description: A machine printed circuit board for a chemical recipient.
+  components:
+  - type: Sprite
+    state: medical
+  - type: MachineBoard # TODO KS14 PLUMBING: bluespace crystal maybi?
+    prototype: BiomassReclaimer
+    stackRequirements:
+      Manipulator: 2
+      Plasma: 3
+      Steel: 5
