@@ -1,0 +1,13 @@
+- type: explosion
+  id: OreVentClearing
+  damagePerIntensity:
+    types:
+      Structural: 70
+  tileBreakChance: [0]
+  tileBreakIntensity: [0]
+  tileBreakRerollReduction: 0
+  lightColor: '#00000000' # fully transparent
+  fireColor: '#00000000' # fully transparent
+  texturePath: /Textures/Effects/fire.rsi
+  fireStates: 3
+  temperature: 800

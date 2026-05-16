@@ -1,0 +1,61 @@
+- type: entity
+  id: KsOreVent
+  name: ore vent
+  description: "An ore vent, brimming with underground ore. Once discovered, it can be scanned again for ore extraction to be started."
+  placement:
+    mode: SnapgridCenter
+  components:
+  # Physics
+  - type: Transform
+    anchored: true
+    noRot: true
+  - type: Physics
+    bodyType: Static
+    canCollide: true
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.35
+        density: 1200
+        layer:
+        - HalfWallLayer
+
+  # Vent
+  - type: OreVent
+    preExtractionDuration: 3s
+  - type: Explosive
+    explosionType: OreVentClearing
+    maxIntensity: 10
+    totalIntensity: 80
+    intensitySlope: 5
+    canCreateVacuum: false
+    deleteAfterExplosion: false
+
+  # Sprites
+  - type: Sprite
+    sprite: _KS14/Objects/Mining/ore_vent.rsi
+    offset: 0,0.5
+    layers:
+    - state: ore_vent
+      map: ["enum.MiningScannerVisualLayers.Overlay", "vent"]
+  - type: SpriteFade
+  - type: InteractionOutline
+  - type: Clickable
+  - type: Appearance
+
+  # Scanning
+  - type: MiningScannerViewable
+
+  - type: KsScanDiscoverable
+    discoveryPopupLoc: ks-specific-orevent-discovered
+    trueName: discovered ore vent
+  - type: KsScanTriggerOnDiscovered
+    keyOut: discovered
+  - type: AddComponentsOnTrigger
+    keysIn: [discovered]
+    components: # copied from PenEmbeddable
+    - type: KsRadarInterest
+      data:
+        text: ore vent

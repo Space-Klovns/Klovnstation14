@@ -25,7 +25,7 @@
 
   # Sprites
   - type: Sprite
-    sprite: _KS14/Objects/Misc/geyser.rsi
+    sprite: _KS14/Objects/Mining/geyser.rsi
     noRot: true
     offset: 0,0.5
     layers:
