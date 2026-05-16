@@ -53,8 +53,7 @@ public sealed class UplinkSystem : EntitySystem
         }
 
         // If we didn't have an uplink, make an empty one.
-        entity.Comp.Store = Spawn(TraitorUplinkStore, MapCoordinates.Nullspace);
-        SetUplink(args.Implanted, entity.Comp.Store.Value, 0, false);
+        SetUplink(args.Implanted, Spawn(TraitorUplinkStore, MapCoordinates.Nullspace), 0, false);
         Log.Error($"{ToPrettyString(args.Implanted)} did not have an uplink when they were implanted.");
     }
 
