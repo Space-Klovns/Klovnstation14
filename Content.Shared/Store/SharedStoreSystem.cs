@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Content.Shared.Implants;
 using Content.Shared.Store.Components;
 
 namespace Content.Shared.Store;
@@ -50,19 +49,11 @@ public abstract partial class SharedStoreSystem : EntitySystem
     /// <returns>The store entity and component if found.</returns>
     public Entity<StoreComponent>? GetRemoteStore(Entity<RemoteStoreComponent?> entity)
     {
-        if (RemoteStoreQuery.Resolve(entity, ref entity.Comp)
+        if (RemoteStoreQuery.Resolve(entity, ref entity.Comp, false)
             && entity.Comp.Store != null
             && StoreQuery.TryComp(entity.Comp.Store, out var storeComp))
             return (entity.Comp.Store.Value, storeComp);
 
         return null;
-    }
-
-    public void SetRemoteStore(Entity<RemoteStoreComponent?> entity, EntityUid? store)
-    {
-        if (!RemoteStoreQuery.Resolve(entity, ref entity.Comp))
-            return;
-
-        entity.Comp.Store = store;
     }
 }
