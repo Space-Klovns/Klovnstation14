@@ -17,7 +17,7 @@
   - HumanoidProfile # Age, Sex, Gender
   - MeleeWeapon # Attack animation, damage and sound
   - NpcFactionMember
-  - RandomPrice
+  #- RandomPrice KS14 removed
   - TemperatureDamage
   - TemperatureSpeed
   # traits
