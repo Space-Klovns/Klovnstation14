@@ -1,6 +1,6 @@
 using Robust.Shared.Prototypes;
 
-namespace Content.Shared._KS14.OnCollide.RemoveComp // KS14 - used for hristov for now, if you want your bullet to remove a component from someone here you go
+namespace Content.Server._KS14.OnCollide.Comp // KS14 - used for hristov for now, if you want your bullet to remove a component from someone/thing here you go
 {
     [RegisterComponent]
     public sealed partial class RemoveCompOnCollideComponent : Component

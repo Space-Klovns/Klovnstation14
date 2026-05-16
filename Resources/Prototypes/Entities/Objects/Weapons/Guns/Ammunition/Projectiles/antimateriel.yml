@@ -12,6 +12,9 @@
     penetrationThreshold: 360
     penetrationDamageTypeRequirement:
     - Structural
+  - type: RemoveCompOnCollide
+    component:
+    - type: Airtight
   - type: StaminaDamageOnCollide
     damage: 60
 
@@ -24,6 +27,9 @@
   id: BulletAntiMaterielAP
   name: bullet (.60 anti-materiel)
   components:
+  - type: RemoveCompOnCollide
+    component:
+    - type: Airtight
   - type: Projectile
     damage:
       types:
