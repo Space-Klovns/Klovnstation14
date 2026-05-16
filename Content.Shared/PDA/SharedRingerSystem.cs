@@ -137,7 +137,6 @@ public abstract class SharedRingerSystem : EntitySystem
             return;
 
         ent.Comp.Unlocked = false;
-        ent.Comp.TargetStore = null;
         UI.CloseUi(ent.Owner, StoreUiKey.Key);
     }
 
@@ -250,10 +249,7 @@ public abstract class SharedRingerSystem : EntitySystem
 
         // Close store UI if we're locking
         if (!ent.Comp.Unlocked)
-        {
-            ent.Comp.TargetStore = null;
             UI.CloseUi(ent.Owner, StoreUiKey.Key);
-        }
 
         return true;
     }
