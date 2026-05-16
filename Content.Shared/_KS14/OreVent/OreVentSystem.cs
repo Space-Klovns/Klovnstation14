@@ -33,12 +33,7 @@ public sealed class OreVentSystem : EntitySystem
         if (entity.Comp.Tapped)
         {
             _popupSystem.PopupPredicted(
-                Loc.GetString(Loc.GetString("ks-specific-orevent-alreadytapped")),
-                entity,
-                args.User,
-                Filter.PvsExcept(args.User),
-                true
-            );
+                Loc.GetString(Loc.GetString("ks-specific-orevent-alreadytapped")), entity, args.User, Filter.PvsExcept(args.User), true);
 
             return;
         }
@@ -49,24 +44,22 @@ public sealed class OreVentSystem : EntitySystem
         if (entity.Comp.BeingTapped)
         {
             _popupSystem.PopupPredicted(
-                Loc.GetString(Loc.GetString("ks-specific-orevent-whatareyoudoing")),
-                entity,
-                args.User,
-                Filter.PvsExcept(args.User),
-                true,
-                type: PopupType.SmallCaution
-            );
+                Loc.GetString(Loc.GetString("ks-specific-orevent-whatareyoudoing")), entity, args.User, Filter.PvsExcept(args.User), true, type: PopupType.SmallCaution);
 
             return;
         }
 
-        var success = _doAfterSystem.TryStartDoAfter(new DoAfterArgs(EntityManager, args.User, entity.Comp.PreExtractionDuration, new OreVentPreExtractionEvent(), entity.Owner, entity.Owner, used: args.Used)
+        var success = _doAfterSystem.TryStartDoAfter(new DoAfterArgs(EntityManager, entity.Owner, entity.Comp.PreExtractionDuration, new OreVentPreExtractionEvent(), entity.Owner, entity.Owner, used: args.Used)
         {
             BreakOnDamage = true,
-            BreakOnMove = true,
-            NeedHand = true,
-            BreakOnDropItem = true,
-            DistanceThreshold = 1f
+
+            // max 1 tile distance between used item and doafter whateverburger
+            DistanceThreshold = 1f,
+
+            // because the doafter is on the ore vent
+            BreakOnMove = false,
+            NeedHand = false,
+            BreakOnDropItem = false
         });
         if (!success)
             return;

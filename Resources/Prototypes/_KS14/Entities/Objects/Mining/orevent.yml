@@ -23,6 +23,7 @@
         - HalfWallLayer
 
   # Vent
+  - type: DoAfter # doafter is on the vent
   - type: OreVent
     preExtractionDuration: 3s
   - type: Explosive
@@ -38,7 +39,7 @@
     sprite: _KS14/Objects/Mining/ore_vent.rsi
     offset: 0,0.5
     layers:
-    - state: ore_vent
+    - state: ore_vent_ice
       map: ["enum.MiningScannerVisualLayers.Overlay", "vent"]
   - type: SpriteFade
   - type: InteractionOutline
