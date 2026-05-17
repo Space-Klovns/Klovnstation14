@@ -42,7 +42,7 @@ public sealed class OreWellSystem : EntitySystem
         }
 
         // Although rate is in ore/sec, it is displayed in ore/min
-        args.PushMarkup(Loc.GetString("ks-specific-orewell-examined", ("rate", entity.Comp.IndividualResourceRate * 60)));
+        args.PushMarkup(Loc.GetString("ks-specific-orewell-examined", ("rate", (entity.Comp.IndividualResourceRate * 60).ToString("F1"))));
         foreach (var typeId in entity.Comp.ResourceTypes)
         {
             var type = _prototypeManager.Index(typeId);

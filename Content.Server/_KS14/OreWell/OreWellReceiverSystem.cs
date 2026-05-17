@@ -45,6 +45,10 @@ public sealed class OreWellReceiverSystem : EntitySystem
 
         foreach (var entity in _activeEntities)
         {
+            if (individualGenerated.Count == 0 &&
+                entity.Comp.Debt.Count == 0)
+                continue;
+
             var transformComponent = Transform(entity);
             var spawnCoordinates = new EntityCoordinates(transformComponent.ParentUid, transformComponent.LocalPosition);
 
@@ -56,7 +60,7 @@ public sealed class OreWellReceiverSystem : EntitySystem
 
                 // Try to pay off debt as best we can
                 var paidAmount = amount + entity.Comp.Debt.GetValueOrDefault(resourceId);
-                var spawnedAmount = Math.Min((int)paidAmount, resource.MaxCount ?? int.MaxValue);
+                var spawnedAmount = Math.Min((int)Math.Floor(paidAmount), resource.MaxCount ?? int.MaxValue);
 
                 // If we couldn't spawn anything, well fuck (can occur if we have between a 0-1 fractional paidAmount)
                 if (spawnedAmount <= 0)
@@ -64,7 +68,10 @@ public sealed class OreWellReceiverSystem : EntitySystem
 
                 // Debt: put off what we can't spawn (when left with decimals, or when stack cant get any bigger)
                 var debt = paidAmount - spawnedAmount;
-                entity.Comp.Debt[resourceId] = debt;
+                if (debt > 0)
+                    entity.Comp.Debt[resourceId] = debt;
+                else
+                    entity.Comp.Debt.Remove(resourceId);
 
                 var resourceUid = Spawn(resource.Spawn, spawnCoordinates);
                 _stackSystem.SetCount((resourceUid, null), spawnedAmount);

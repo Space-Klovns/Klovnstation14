@@ -45,9 +45,7 @@ public sealed partial class OreWellSettingPrototype : IPrototype, ISerialization
         if (ResourceCountRange.X > ResourceCountRange.Y)
             throw new ArgumentException("ResourceCountRange has higher min than max!");
 
-        if (PossibleResourceTypes.Length < ResourceCountRange.X)
-            throw new ArgumentException("Length of PossibleResourceTypes is less than min of ResourceCountRange!");
-
-
+        if (PossibleResourceTypes.Length < ResourceCountRange.Y)
+            throw new ArgumentException("Length of PossibleResourceTypes is less than max of ResourceCountRange!");
     }
 }

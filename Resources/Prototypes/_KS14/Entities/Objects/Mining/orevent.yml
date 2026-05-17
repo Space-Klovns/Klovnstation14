@@ -131,7 +131,7 @@
 
 - type: oreWellSetting
   id: Basic
-  totalResourceRateRange: 0.5,1
-  resourceCountRange: 1,2
+  totalResourceRateRange: 0.3,0.8
+  resourceCountRange: 1,1
   possibleResourceTypes:
   - SteelOre
