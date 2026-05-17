@@ -29,3 +29,11 @@ advertise = true
 tags = "lang:en,region:eu_w,rp:low"
 hub_urls = "https://hub.singularity14.co.uk/" # SimpleStation hub likes to not work and crash the game
 server_url = "ss14://game.klovnstation.org"
+
+
+## Release-only changes
+# These are here so that tests have an easier time passing, and its easier to debug shit
+
+[atmos]
+#disable deltap
+delta_pressure_damage = false

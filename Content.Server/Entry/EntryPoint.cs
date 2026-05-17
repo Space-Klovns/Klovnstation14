@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using Content.Server.Acz;
 using Content.Server.Administration;
@@ -218,12 +219,11 @@ namespace Content.Server.Entry
         {
             LoadBuildConfigPresets(cfg, res, sawmill);
 
-            var presets = cfg.GetCVar(CCVars.ConfigPresets);
-            presets += ",KS14/ks14_base"; // KS14
-            if (presets == "")
-                return;
+            // KS14: Changed logic to always include `KS14/ks14_base`
+            var presets = cfg.GetCVar(CCVars.ConfigPresets).Split(',').ToList();
+            presets.Add("KS14/ks14_base");
 
-            foreach (var preset in presets.Split(','))
+            foreach (var preset in presets)
             {
                 var path = $"{ConfigPresetsDir}{preset}.toml";
                 if (!res.TryContentFileRead(path, out var file))

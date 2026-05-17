@@ -14,8 +14,6 @@ enable_during_round = true
 [atmos]
 # Bigger maxcap explo. range
 max_explosion_range = 60
-#disable deltap
-delta_pressure_damage = false
 
 [pointing]
 # Virtually nonexistent somethingburger
