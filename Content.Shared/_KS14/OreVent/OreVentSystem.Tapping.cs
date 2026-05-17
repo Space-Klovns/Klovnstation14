@@ -1,4 +1,5 @@
 using System.Numerics;
+using Content.Shared._KS14.OreVent.Drone;
 using Content.Shared.DoAfter;
 using Robust.Shared.Map;
 
@@ -104,7 +105,7 @@ public sealed partial class OreVentSystem : EntitySystem
     private void OnTappingEnded(Entity<OreVentComponent> entity, MetaDataComponent? metaDataComponent = null)
     {
         entity.Comp.BeingTapped = false;
-        DirtyField(entity.Owner, entity.Comp, nameof(entity.Comp.Tapped), meta: metaDataComponent);
+        DirtyField(entity.Owner, entity.Comp, nameof(entity.Comp.BeingTapped), meta: metaDataComponent);
 
         QueueDel(entity.Comp.TappingProcessEntityUid);
         entity.Comp.TappingProcessEntityUid = null;

@@ -1,7 +1,7 @@
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
 
-namespace Content.Shared._KS14.OreVent;
+namespace Content.Shared._KS14.OreVent.Drone;
 
 /// <summary>
 ///     For drones that buckle to ore vents and do whatever.

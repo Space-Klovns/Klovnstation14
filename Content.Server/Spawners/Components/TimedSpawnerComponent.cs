@@ -41,6 +41,10 @@ public sealed partial class TimedSpawnerComponent : Component, ISerializationHoo
     [DataField]
     public float MaxRadius = 0f;
 
+    // KS14
+    [DataField]
+    public bool SpawnImmediately = false;
+
     /// <summary>
     /// Length of the interval between spawn attempts.
     /// </summary>

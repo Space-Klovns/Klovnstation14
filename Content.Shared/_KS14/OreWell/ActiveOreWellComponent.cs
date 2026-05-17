@@ -8,7 +8,7 @@ namespace Content.Shared._KS14.OreVent;
 /// </summary>
 [RegisterComponent, NetworkedComponent]
 
-public sealed partial class OreWellComponent : Component
+public sealed partial class ActiveOreWellComponent : Component
 {
 
 }

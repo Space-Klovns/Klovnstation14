@@ -36,6 +36,14 @@ public sealed class SpawnerSystem : EntitySystem
 
     private void OnMapInit(Entity<TimedSpawnerComponent> ent, ref MapInitEvent args)
     {
+        // KS14 Start
+        if (ent.Comp.SpawnImmediately)
+        {
+            ent.Comp.NextFire = _timing.CurTime;
+            return;
+        }
+        // KS14 End
+
         ent.Comp.NextFire = _timing.CurTime + ent.Comp.IntervalSeconds;
     }
 

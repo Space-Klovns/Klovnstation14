@@ -5,7 +5,6 @@
   components:
   # Physics
   - type: Transform
-    anchored: true
     noRot: true
   - type: Physics
     bodyType: Static
@@ -30,7 +29,8 @@
     - state: node_base
       map: ["enum.OreVentDroneVisualLayers.Base"]
       noRot: true
-    - visible: false
+    - state: node_base
+      visible: false
       map: ["enum.OreVentDroneVisualLayers.ProgressBar"]
   - type: Appearance
   - type: AnimationPlayer
@@ -52,6 +52,8 @@
   - type: OreVentDrone
     progressStates: 4
 
+  - type: AnimatedEmotes
+
   # Mob
   - type: MobState
   - type: NpcFactionMember
@@ -65,6 +67,7 @@
   components:
   - type: Sprite
     offset: 0,12.5
+    color: '#ffffff00' # Fully white fully transparent
 
 - type: damageContainer
   id: KsOreDrone

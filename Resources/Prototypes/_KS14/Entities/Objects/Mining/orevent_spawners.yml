@@ -11,6 +11,7 @@
   - type: TimedSpawner
     chance: 1
     intervalSeconds: 15
+    spawnImmediately: true
     minimumEntitiesSpawned: 2
     maximumEntitiesSpawned: 4
     minRadius: 4.5

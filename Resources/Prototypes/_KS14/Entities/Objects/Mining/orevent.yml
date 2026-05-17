@@ -113,8 +113,6 @@
     preExtractionDuration: 1s
     clearingIterations: 2
     clearRadius: 1
-    tappingProcessEntityProto: KsOreVentMobSpawnerLava
-    droneEntityProto: KsOreVentDrone
     extractionDuration: 5s
   - type: Sprite
     color: '#fb00ff80'

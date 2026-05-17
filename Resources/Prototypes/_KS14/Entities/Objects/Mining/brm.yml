@@ -1,0 +1,2 @@
+# - type: entity
+#   parent: [ BaseMachinePowered, ConstructibleMachine ]

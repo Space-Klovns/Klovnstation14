@@ -1,4 +1,4 @@
-namespace Content.Shared._KS14.OreVent;
+namespace Content.Shared._KS14.OreWell;
 
 /// <summary>
 ///     1984
