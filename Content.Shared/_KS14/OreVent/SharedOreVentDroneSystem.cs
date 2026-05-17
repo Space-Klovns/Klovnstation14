@@ -1,13 +1,13 @@
-using Content.Shared.Buckle;
 using Content.Shared.Chat;
+using Robust.Shared.Random;
 using Robust.Shared.Spawners;
 
 namespace Content.Shared._KS14.OreVent;
 
 public abstract class SharedOreVentDroneSystem : EntitySystem
 {
+    [Dependency] private readonly IRobustRandom _robustRandom = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
-    [Dependency] private readonly SharedBuckleSystem _buckleSystem = default!;
     [Dependency] private readonly SharedChatSystem _chatSystem = default!;
 
     public override void Initialize()
@@ -51,5 +51,8 @@ public abstract class SharedOreVentDroneSystem : EntitySystem
         var timedDespawnComponent = EntityManager.ComponentFactory.GetComponent<TimedDespawnComponent>();
         timedDespawnComponent.Lifetime = 4f;
         AddComp(entity, timedDespawnComponent);
+
+        if (_robustRandom.Prob(0.5f))
+            _chatSystem.TryEmoteWithChat(entity.Owner, "Flip", ignoreActionBlocker: true);
     }
 }
