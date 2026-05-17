@@ -1,0 +1,32 @@
+using Robust.Shared.Network;
+using Robust.Shared.Player;
+using Robust.Shared.Serialization;
+
+namespace Content.Shared._KS14.GenericSpriteFlick;
+
+public sealed class KsGenericSpriteFlickSystem : EntitySystem
+{
+    [Dependency] private readonly INetManager _netManager = default!;
+
+    public void Flick(EntityUid uid, object layerKey, string state, Filter? serverFilter = null)
+    {
+        var netEntity = GetNetEntity(uid);
+        var ev = new KsSpriteFlickEvent(netEntity, layerKey, state);
+
+        if (_netManager.IsServer)
+        {
+            serverFilter ??= Filter.Pvs(uid, entityManager: EntityManager);
+            RaiseNetworkEvent(ev, serverFilter);
+        }
+        else
+            RaiseLocalEvent(ev);
+    }
+}
+
+[Serializable, NetSerializable]
+public sealed class KsSpriteFlickEvent(NetEntity entity, object layerKey, string state) : EntityEventArgs
+{
+    public NetEntity Entity = entity;
+    public object LayerKey = layerKey;
+    public string State = state;
+}

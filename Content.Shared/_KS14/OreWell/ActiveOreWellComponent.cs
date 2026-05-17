@@ -1,6 +1,8 @@
+using Content.Shared.Materials;
 using Robust.Shared.GameStates;
+using Robust.Shared.Prototypes;
 
-namespace Content.Shared._KS14.OreVent;
+namespace Content.Shared._KS14.OreWell;
 
 /// <summary>
 ///     Component added to ore vents that have been
@@ -10,5 +12,25 @@ namespace Content.Shared._KS14.OreVent;
 
 public sealed partial class ActiveOreWellComponent : Component
 {
+    /// <summary>
+    ///     ID for the prototype that contains the settings for this.
+    /// </summary>
+    [DataField(required: true)]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public ProtoId<OreWellSettingPrototype> SettingId;
 
+    /// <summary>
+    ///     Rate of ore generated, per ore.
+    ///         In ore/second.
+    /// </summary>
+    [DataField(readOnly: true)]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public float IndividualResourceRate;
+
+    /// <summary>
+    ///     Each ore that is generated.
+    /// </summary>
+    [DataField(readOnly: true)]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public ProtoId<MaterialPrototype>[] ResourceTypes;
 }

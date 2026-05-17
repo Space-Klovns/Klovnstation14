@@ -1,0 +1,18 @@
+- type: entity
+  parent: [ BaseMachinePowered, ConstructibleMachine ]
+  id: BoulderRetrievalMatrix
+  name: ore retrieval matrix
+  description: Automagically teleports ores from ore wells.
+  components:
+  - type: Sprite
+    sprite: _KS1S4/Structures/Machines/mining_machines.rsi
+    layers:
+    - state: brm-off
+    - state: brm-toggled
+      shader: unshaded
+      visible: false
+      map: [ "enum.PowerDeviceVisualLayers.Powered" ]
+  - type: OreWellReceiver
+    flickLayerKey: enum.PowerDeviceVisualLayers.Powered
+    flickState: brm-flash
+  - type: AnimationPlayer

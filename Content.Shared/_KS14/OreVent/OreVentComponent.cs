@@ -1,3 +1,4 @@
+using Content.Shared._KS14.OreWell;
 using Content.Shared.DoAfter;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
@@ -89,6 +90,13 @@ public sealed partial class OreVentComponent : Component
     [AutoPausedField]
     [ViewVariables(VVAccess.ReadOnly)]
     public TimeSpan TappingFinishedTime = TimeSpan.MinValue;
+
+    /// <summary>
+    ///     Ore well setting to be applied when this gets tapped.
+    /// </summary>
+    [DataField(required: true)]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public ProtoId<OreWellSettingPrototype> OreWellSettingId;
 }
 
 [Serializable, NetSerializable]

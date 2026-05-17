@@ -1,4 +1,5 @@
 using Content.Shared._KS14.OreVent.Drone;
+using Content.Shared._KS14.OreWell;
 using Content.Shared._KS14.ScanDiscoverable.Base;
 using Content.Shared.DoAfter;
 using Content.Shared.Explosion.EntitySystems;
@@ -22,6 +23,7 @@ public sealed partial class OreVentSystem : EntitySystem
     [Dependency] private readonly SharedExplosionSystem _explosionSystem = default!;
     [Dependency] private readonly KsScanDiscoverableSystem _discoverableSystem = default!;
     [Dependency] private readonly SharedOreVentDroneSystem _oreVentDroneSystem = default!;
+    [Dependency] private readonly OreWellSystem _oreWellSystem = default!;
 
     public override void Initialize()
     {

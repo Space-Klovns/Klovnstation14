@@ -9,11 +9,24 @@ public sealed partial class OreVentSystem : EntitySystem
 {
     private void InitialiseTapping()
     {
+
+        SubscribeLocalEvent<OreVentComponent, MapInitEvent>(OnMapInit);
+
         SubscribeLocalEvent<OreVentComponent, OreVentTappingDoAfterEvent>(OnOreVentTappingDoAfter);
         SubscribeLocalEvent<OreVentComponent, DoAfterAttemptEvent<OreVentTappingDoAfterEvent>>(OnOreVentTappingDoAfterAttempt);
 
         SubscribeLocalEvent<OreVentComponent, OreVentDroneDestroyedEvent>(OnDroneDestroyed);
     }
+
+    private void OnMapInit(Entity<OreVentComponent> entity, ref MapInitEvent args)
+    {
+        if (!entity.Comp.Tapped)
+            return;
+
+        _appearanceSystem.SetData(entity.Owner, OreVentVisuals.Tapped, true);
+        _oreWellSystem.GenerateOreWellWithSettings(entity.Owner, entity.Comp.OreWellSettingId);
+    }
+
 
     private void OnOreVentTappingDoAfter(Entity<OreVentComponent> entity, ref OreVentTappingDoAfterEvent args)
     {
