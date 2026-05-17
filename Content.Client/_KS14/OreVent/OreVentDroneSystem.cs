@@ -74,9 +74,6 @@ public sealed class OreVentDroneSystem : SharedOreVentDroneSystem
         var eqe = EntityQueryEnumerator<OreVentDroneComponent, SpriteComponent>();
         while (eqe.MoveNext(out var uid, out var droneComponent, out var spriteComponent))
         {
-            if (droneComponent.LastMovementState != OreVentDroneMovement.Arriving)
-                continue;
-
             if (droneComponent.VentUid == EntityUid.Invalid ||
                 !TryComp<OreVentComponent>(droneComponent.VentUid, out var oreVentComponent))
                 continue;
@@ -84,9 +81,10 @@ public sealed class OreVentDroneSystem : SharedOreVentDroneSystem
             if (!_spriteSystem.LayerMapTryGet((uid, spriteComponent), OreVentDroneVisualLayers.ProgressBar, out var layerIndex, logMissing: false))
                 continue;
 
-            if (!oreVentComponent.BeingTapped)
+            if (!oreVentComponent.BeingTapped ||
+                droneComponent.LastMovementState != OreVentDroneMovement.Arriving)
             {
-                if (droneComponent.LastActiveProgressState != -1)
+                if (droneComponent.LastActiveProgressState == -1)
                     continue;
 
                 droneComponent.LastActiveProgressState = -1;
@@ -96,7 +94,7 @@ public sealed class OreVentDroneSystem : SharedOreVentDroneSystem
             }
 
             var invState = ContentHelpers.RoundToNearestLevels((oreVentComponent.TappingFinishedTime - _gameTiming.CurTime).TotalSeconds, oreVentComponent.ExtractionDuration.TotalSeconds, droneComponent.ProgressStates - 1);
-            var state = (droneComponent.ProgressStates - 1) - invState;
+            var state = droneComponent.ProgressStates - 1 - invState;
             if (droneComponent.LastActiveProgressState == state)
                 continue;
 

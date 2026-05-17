@@ -51,7 +51,6 @@
   # Drone
   - type: OreVentDrone
     progressStates: 4
-  - type: Buckle
 
   # Mob
   - type: MobState
@@ -62,7 +61,7 @@
 - type: entity
   parent: KsOreVentDrone
   id: KsOreVentDroneOffsetSprite
-  categories: [HideSpawnMenu]
+  categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
     offset: 0,12.5

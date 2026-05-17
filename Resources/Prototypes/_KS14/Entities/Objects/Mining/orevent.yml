@@ -28,7 +28,7 @@
     preExtractionDuration: 3s
     clearingIterations: 6
     tappingProcessEntityProto: KsOreVentMobSpawnerLava
-    droneEntityProto: KsOreVentDroneOffsetSprite
+    droneEntityProto: KsOreVentDrone
     extractionDuration: 45s
   - type: Explosive
     explosionType: OreVentClearing
@@ -38,8 +38,6 @@
     canCreateVacuum: false
     repeatable: true
     deleteAfterExplosion: false
-
-  - type: Strap # For the drone
 
   # Sprites
   - type: Sprite
@@ -104,3 +102,19 @@
         well:
           True: { visible: true }
           False: { visible: false }
+
+- type: entity
+  parent: KsOreVent
+  id: KsOreVentDebug
+  suffix: Debug
+  categories: [ Debug ]
+  components:
+  - type: OreVent
+    preExtractionDuration: 1s
+    clearingIterations: 2
+    clearRadius: 1
+    tappingProcessEntityProto: KsOreVentMobSpawnerLava
+    droneEntityProto: KsOreVentDrone
+    extractionDuration: 5s
+  - type: Sprite
+    color: '#fb00ff80'

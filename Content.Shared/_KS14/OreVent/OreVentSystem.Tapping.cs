@@ -19,7 +19,9 @@ public sealed partial class OreVentSystem : EntitySystem
         if (args.Cancelled)
         {
             CancelTapping(entity!);
+
             _popupSystem.PopupEntity(Loc.GetString("ks-specific-orevent-tapping-failed-destruction", ("vent", entity.Owner)), entity.Owner, type: Popups.PopupType.MediumCaution);
+            ClearAreaAround(entity, entity.Comp.ClearRadius / 2f);
 
             return;
         }
@@ -108,7 +110,7 @@ public sealed partial class OreVentSystem : EntitySystem
         entity.Comp.TappingProcessEntityUid = null;
 
         if (entity.Comp.DroneEntityUid is { } droneUid &&
-            Exists(droneUid))
+            !TerminatingOrDeleted(droneUid))
             _oreVentDroneSystem.Escape(droneUid);
 
         entity.Comp.DroneEntityUid = null;

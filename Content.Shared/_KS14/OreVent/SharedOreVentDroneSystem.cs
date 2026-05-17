@@ -1,4 +1,5 @@
 using Content.Shared.Buckle;
+using Content.Shared.Chat;
 using Robust.Shared.Spawners;
 
 namespace Content.Shared._KS14.OreVent;
@@ -7,6 +8,7 @@ public abstract class SharedOreVentDroneSystem : EntitySystem
 {
     [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
     [Dependency] private readonly SharedBuckleSystem _buckleSystem = default!;
+    [Dependency] private readonly SharedChatSystem _chatSystem = default!;
 
     public override void Initialize()
     {
@@ -33,7 +35,6 @@ public abstract class SharedOreVentDroneSystem : EntitySystem
         Dirty(entity);
 
         _appearanceSystem.SetData(entity.Owner, OreVentDroneVisuals.Movement, OreVentDroneMovement.Arriving);
-        _buckleSystem.TryBuckle(entity.Owner, entity.Owner, ventUid);
     }
 
     public void Escape(Entity<OreVentDroneComponent?> entity)
@@ -48,7 +49,7 @@ public abstract class SharedOreVentDroneSystem : EntitySystem
 
         // Yes this is horrible too
         var timedDespawnComponent = EntityManager.ComponentFactory.GetComponent<TimedDespawnComponent>();
-        timedDespawnComponent.Lifetime = 1.9f;
+        timedDespawnComponent.Lifetime = 4f;
         AddComp(entity, timedDespawnComponent);
     }
 }

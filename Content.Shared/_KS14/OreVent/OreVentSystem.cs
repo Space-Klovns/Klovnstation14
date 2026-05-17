@@ -1,5 +1,4 @@
 using Content.Shared._KS14.ScanDiscoverable.Base;
-using Content.Shared.Buckle.Components;
 using Content.Shared.DoAfter;
 using Content.Shared.Explosion.EntitySystems;
 using Content.Shared.Interaction;
@@ -28,20 +27,8 @@ public sealed partial class OreVentSystem : EntitySystem
         base.Initialize();
         InitialiseTapping();
 
-        SubscribeLocalEvent<OreVentComponent, StrapAttemptEvent>(OnStrapAttempt);
-
         SubscribeLocalEvent<OreVentComponent, InteractUsingEvent>(OnInteractUsing);
         SubscribeLocalEvent<OreVentComponent, OreVentPreExtractionDoAfterEvent>(OnPreExtractionDoAfter);
-    }
-
-    private void OnStrapAttempt(Entity<OreVentComponent> entity, ref StrapAttemptEvent args)
-    {
-        if (args.Cancelled ||
-            !entity.Comp.Tapped && HasComp<OreVentDroneComponent>(args.Buckle))
-            return;
-
-        args.Cancelled = true;
-        args.Popup = false;
     }
 
     private void OnInteractUsing(Entity<OreVentComponent> entity, ref InteractUsingEvent args)
@@ -54,7 +41,7 @@ public sealed partial class OreVentSystem : EntitySystem
         if (entity.Comp.Tapped)
         {
             _popupSystem.PopupPredicted(
-                Loc.GetString(Loc.GetString("ks-specific-orevent-alreadytapped")), entity, args.User, Filter.PvsExcept(args.User), true);
+                Loc.GetString("ks-specific-orevent-alreadytapped"), entity, args.User, Filter.PvsExcept(args.User), true);
 
             return;
         }
@@ -65,7 +52,7 @@ public sealed partial class OreVentSystem : EntitySystem
         if (entity.Comp.BeingTapped)
         {
             _popupSystem.PopupPredicted(
-                Loc.GetString(Loc.GetString("ks-specific-orevent-whatareyoudoing")), entity, args.User, Filter.PvsExcept(args.User), true, type: PopupType.SmallCaution);
+                Loc.GetString("ks-specific-orevent-whatareyoudoing"), entity, args.User, Filter.PvsExcept(args.User), true, type: PopupType.SmallCaution);
 
             return;
         }
@@ -102,7 +89,7 @@ public sealed partial class OreVentSystem : EntitySystem
         {
             // Clear the area around ts
             // TODO LCDC: Something better than explosions
-            ClearAreaAround(entity, entity.Comp.ClearRadius / (entity.Comp.ClearingIterations - args.Iteration));
+            ClearAreaAround(entity, entity.Comp.ClearRadius / (float)(entity.Comp.ClearingIterations - args.Iteration));
 
             // on last iteration, dont repeat and instead fall thru
             args.Iteration += 1;
