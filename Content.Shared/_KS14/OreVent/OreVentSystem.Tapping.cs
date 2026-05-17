@@ -8,19 +8,33 @@ public sealed partial class OreVentSystem : EntitySystem
 {
     private void InitialiseTapping()
     {
-        SubscribeLocalEvent<OreVentComponent, OreVentTappingDoAfterEvent>(OreVentTappingDoAfter);
+        SubscribeLocalEvent<OreVentComponent, OreVentTappingDoAfterEvent>(OnOreVentTappingDoAfter);
+        SubscribeLocalEvent<OreVentComponent, DoAfterAttemptEvent<OreVentTappingDoAfterEvent>>(OnOreVentTappingDoAfterAttempt);
+
         SubscribeLocalEvent<OreVentComponent, OreVentDroneDestroyedEvent>(OnDroneDestroyed);
     }
 
-    private void OreVentTappingDoAfter(Entity<OreVentComponent> entity, ref OreVentTappingDoAfterEvent args)
+    private void OnOreVentTappingDoAfter(Entity<OreVentComponent> entity, ref OreVentTappingDoAfterEvent args)
     {
         if (args.Cancelled)
         {
             CancelTapping(entity!);
+            _popupSystem.PopupEntity(Loc.GetString("ks-specific-orevent-tapping-failed-destruction", ("vent", entity.Owner)), entity.Owner, type: Popups.PopupType.MediumCaution);
+
             return;
         }
 
         SucceedTapping(entity.Owner);
+    }
+
+    private void OnOreVentTappingDoAfterAttempt(Entity<OreVentComponent> entity, ref DoAfterAttemptEvent<OreVentTappingDoAfterEvent> args)
+    {
+        if (args.Cancelled ||
+            entity.Comp.BeingTapped)
+            return;
+
+        // Cancel if its no longer being tapped for whatever reason
+        args.Cancel();
     }
 
     private void OnDroneDestroyed(Entity<OreVentComponent> entity, ref OreVentDroneDestroyedEvent args)
@@ -67,7 +81,9 @@ public sealed partial class OreVentSystem : EntitySystem
             BreakOnDropItem = false,
 
             RequireCanInteract = false,
-            Hidden = false
+            Hidden = true,
+
+            AttemptFrequency = AttemptFrequency.EveryTick
         });
     }
 

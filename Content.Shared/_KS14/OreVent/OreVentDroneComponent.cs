@@ -32,16 +32,10 @@ public sealed partial class OreVentDroneComponent : Component
     [ViewVariables(VVAccess.ReadWrite)]
     public int LastActiveProgressState = -1;
 
-    /// <summary>
-    ///     How many progress states this has.
-    /// </summary>
     [DataField]
-    [ViewVariables(VVAccess.ReadWrite)]
+    [ViewVariables(VVAccess.ReadOnly)]
     public OreVentDroneMovement LastMovementState = OreVentDroneMovement.None;
 }
-
-[Serializable, NetSerializable]
-public enum OreVentDroneVisualLayers : byte { ProgressBar }
 
 [Serializable, NetSerializable]
 public enum OreVentDroneVisuals : byte
@@ -54,11 +48,6 @@ public enum OreVentDroneVisuals : byte
     /// <summary>
     ///     Boolean
     /// </summary>
-    Flying,
-
-    /// <summary>
-    ///     Boolean
-    /// </summary>
     Movement
 }
 
@@ -67,8 +56,7 @@ public enum OreVentDroneMovement : byte
 {
     None = 0,
     Arriving = 1,
-    StartingUp = 2,
-    Dipping = 3
+    Dipping = 2
 }
 
 /// <summary>

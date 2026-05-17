@@ -1,11 +1,10 @@
-using Content.Shared._KS14.Deferral;
 using Content.Shared.Buckle;
+using Robust.Shared.Spawners;
 
 namespace Content.Shared._KS14.OreVent;
 
 public abstract class SharedOreVentDroneSystem : EntitySystem
 {
-    [Dependency] private readonly SynchronousDeferralSystem _synchronousDeferralSystem = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
     [Dependency] private readonly SharedBuckleSystem _buckleSystem = default!;
 
@@ -45,24 +44,11 @@ public abstract class SharedOreVentDroneSystem : EntitySystem
         entity.Comp.VentUid = EntityUid.Invalid;
         Dirty(entity);
 
-        if (TryComp<AppearanceComponent>(entity.Owner, out var appearanceComponent))
-        {
-            _appearanceSystem.SetData(entity.Owner, OreVentDroneVisuals.Progress, 0, component: appearanceComponent);
-            _appearanceSystem.SetData(entity.Owner, OreVentDroneVisuals.Movement, OreVentDroneMovement.StartingUp, component: appearanceComponent);
-        }
+        _appearanceSystem.SetData(entity.Owner, OreVentDroneVisuals.Movement, OreVentDroneMovement.Dipping);
 
-        // Yes this is horrible 2
-        _synchronousDeferralSystem.ScheduleForward(() => FinishEscape(entity.Owner), TimeSpan.FromSeconds(1.9d));
-    }
-
-    private void FinishEscape(EntityUid uid)
-    {
-        if (!TryComp<AppearanceComponent>(uid, out var appearanceComponent))
-            return;
-
-        _appearanceSystem.SetData(uid, OreVentDroneVisuals.Flying, true, component: appearanceComponent);
-        _appearanceSystem.SetData(uid, OreVentDroneVisuals.Movement, OreVentDroneMovement.Dipping, component: appearanceComponent);
-
-        QueueDel(uid);
+        // Yes this is horrible too
+        var timedDespawnComponent = EntityManager.ComponentFactory.GetComponent<TimedDespawnComponent>();
+        timedDespawnComponent.Lifetime = 1.9f;
+        AddComp(entity, timedDespawnComponent);
     }
 }

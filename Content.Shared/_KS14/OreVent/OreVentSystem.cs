@@ -122,6 +122,9 @@ public sealed partial class OreVentSystem : EntitySystem
         DirtyField(entity.Owner, entity.Comp, nameof(entity.Comp.DoingPreExtraction));
     }
 
-    private void ClearAreaAround(Entity<OreVentComponent> entity, float radius) =>
+    private void ClearAreaAround(Entity<OreVentComponent> entity, float radius)
+    {
         _explosionSystem.TriggerExplosive(entity.Owner, delete: false, radius: radius);
+        Log.Debug($"cleared area {radius}");
+    }
 }

@@ -49,6 +49,28 @@
       ]
     },
     {
+      "name": "progress_0",
+      "directions": 4,
+      "delays": [
+        [
+          0.2,
+          0.2
+        ],
+        [
+          0.2,
+          0.2
+        ],
+        [
+          0.2,
+          0.2
+        ],
+        [
+          0.2,
+          0.2
+        ]
+      ]
+    },
+    {
       "name": "progress_1",
       "directions": 4,
       "delays": [
@@ -94,28 +116,6 @@
     },
     {
       "name": "progress_3",
-      "directions": 4,
-      "delays": [
-        [
-          0.2,
-          0.2
-        ],
-        [
-          0.2,
-          0.2
-        ],
-        [
-          0.2,
-          0.2
-        ],
-        [
-          0.2,
-          0.2
-        ]
-      ]
-    },
-    {
-      "name": "progress_4",
       "directions": 4,
       "delays": [
         [

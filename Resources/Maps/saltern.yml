@@ -703,6 +703,7 @@ entities:
       - Goliath
       - Basilisk
       - RandomGeysers
+      - OreVentsIce
       loadedMarkers:
         OreArtifactFragmentLow:
         - 0,-128

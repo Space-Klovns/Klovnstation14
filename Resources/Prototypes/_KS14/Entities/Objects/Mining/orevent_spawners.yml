@@ -10,9 +10,21 @@
   components:
   - type: TimedSpawner
     chance: 1
-    intervalSeconds: 14
+    intervalSeconds: 15
     minimumEntitiesSpawned: 2
-    maximumEntitiesSpawned: 3
+    maximumEntitiesSpawned: 4
+    minRadius: 4.5
+    maxRadius: 6
+
+- type: entity
+  parent: KsOreVentMobSpawnerBase
+  id: KsOreVentMobSpawnerLava
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: TimedSpawner
+    prototypes:
+    - MobWatcherLavaland
+    - MobGoliath
 
 - type: entity
   parent: KsOreVentMobSpawnerBase
@@ -21,5 +33,6 @@
   components:
   - type: TimedSpawner
     prototypes:
-    - MobSpirate
-    - MobCivilian
+    - MobWatcherIcewing
+    - MobGoliath
+    - MobBasilisk

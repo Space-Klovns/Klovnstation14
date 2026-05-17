@@ -32,7 +32,7 @@ public sealed partial class OreVentComponent : Component
     ///     Is this vent in the process of being tapped?
     /// </summary>
     [DataField, AutoNetworkedField]
-    [ViewVariables(VVAccess.ReadOnly)]
+    [ViewVariables(VVAccess.ReadWrite)]
     public bool BeingTapped = false;
 
     /// <summary>
