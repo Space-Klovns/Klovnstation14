@@ -146,6 +146,7 @@ public sealed partial class OreVentSystem : EntitySystem
         entity.Comp.Tapped = true;
         DirtyField(entity.Owner, entity.Comp, nameof(entity.Comp.Tapped), meta: metaDataComponent);
 
+        _oreWellSystem.GenerateOreWellWithSettings(entity.Owner, entity.Comp.OreWellSettingId);
         _appearanceSystem.SetData(entity.Owner, OreVentVisuals.Tapped, true);
     }
 

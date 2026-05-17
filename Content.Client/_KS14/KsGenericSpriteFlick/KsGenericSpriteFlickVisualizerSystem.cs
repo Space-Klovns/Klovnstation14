@@ -1,13 +1,16 @@
+using Content.Shared._KS14;
 using Content.Shared._KS14.GenericSpriteFlick;
 using Robust.Client.Animations;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 
 namespace Content.Client._KS14.GenericSpriteFlick;
 
 public sealed class KsGenericSpriteFlickVisualizerSystem : EntitySystem
 {
+    [Dependency] private readonly IReflectionManager _reflectionManager = default!;
     [Dependency] private readonly AnimationPlayerSystem _animationPlayerSystem = default!;
     [Dependency] private readonly SpriteSystem _spriteSystem = default!;
 
@@ -15,7 +18,24 @@ public sealed class KsGenericSpriteFlickVisualizerSystem : EntitySystem
     {
         base.Initialize();
 
+        SubscribeLocalEvent<KsGenericSpriteFlickComponent, AnimationCompletedEvent>(OnAnimationComplete);
         SubscribeAllEvent<KsSpriteFlickEvent>(OnEvent);
+    }
+
+    // Try to reset to previous state
+    private void OnAnimationComplete(Entity<KsGenericSpriteFlickComponent> entity, ref AnimationCompletedEvent args)
+    {
+        if (!entity.Comp.AnimKeyLayerKeyMap.TryGetValue(args.Key, out var layerObjectKey) ||
+            !entity.Comp.PreviousStateMap.TryGetValue(layerObjectKey, out var state))
+            return;
+
+        if (!TryComp<SpriteComponent>(entity.Owner, out var spriteComponent))
+            return;
+
+        if (layerObjectKey is Enum layerEnumKey)
+            _spriteSystem.LayerSetRsiState((entity.Owner, spriteComponent), layerEnumKey, state);
+        else if (layerObjectKey is string layerStringKey)
+            _spriteSystem.LayerSetRsiState((entity.Owner, spriteComponent), layerStringKey, state);
     }
 
     private void OnEvent(KsSpriteFlickEvent args)
@@ -24,29 +44,35 @@ public sealed class KsGenericSpriteFlickVisualizerSystem : EntitySystem
             !TryComp<SpriteComponent>(uid.Value, out var spriteComponent))
             return;
 
-        var animationKey = args.State + args.LayerKey.ToString() + " ksgenericspriteflick";
+        var parsedLayerKey = (object?)KsEnumHelpers.ParseKey(args.LayerKey, out _, _reflectionManager) ?? args.LayerKey;
+        var animationKey = args.State + args.LayerKey + " ksgenericspriteflick";
+
         if (!TryComp<AnimationPlayerComponent>(uid.Value, out var animationPlayerComponent) ||
-            !_animationPlayerSystem.HasRunningAnimation(animationPlayerComponent, animationKey))
+            _animationPlayerSystem.HasRunningAnimation(animationPlayerComponent, animationKey))
             return;
 
         var flickComponent = EnsureComp<KsGenericSpriteFlickComponent>(uid.Value);
-        var animation = flickComponent.CachedAnimations.GetOrNew((args.State, args.LayerKey), out var exists);
+        var animation = flickComponent.CachedAnimations.GetOrNew((args.State, parsedLayerKey), out var exists);
+        flickComponent.AnimKeyLayerKeyMap[animationKey] = parsedLayerKey;
 
         if (!exists)
         {
             var state = _spriteSystem.GetState(new SpriteSpecifier.Rsi(spriteComponent.BaseRSI!.Path, args.State));
 
             animation.Length = TimeSpan.FromSeconds(state.AnimationLength);
-            animation.AnimationTracks.Add(new AnimationTrackSpriteFlick
-            {
-                LayerKey = args.LayerKey,
-                KeyFrames =
+            animation.AnimationTracks.Add(
+                new AnimationTrackSpriteFlick
                 {
-                    new AnimationTrackSpriteFlick.KeyFrame(new RSI.StateId(args.State), default)
+                    LayerKey = parsedLayerKey,
+                    KeyFrames =
+                    {
+                        new AnimationTrackSpriteFlick.KeyFrame(new RSI.StateId(args.State), default)
+                    }
                 }
-            });
+            );
         }
 
-        _animationPlayerSystem.Play((uid.Value, animationPlayerComponent), animation, args.State + args.LayerKey.ToString() + " ksgenericspriteflick");
+        flickComponent.PreviousStateMap[parsedLayerKey] = spriteComponent[parsedLayerKey].RsiState;
+        _animationPlayerSystem.Play((uid.Value, animationPlayerComponent), animation, animationKey);
     }
 }

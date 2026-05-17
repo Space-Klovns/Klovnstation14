@@ -1,4 +1,5 @@
 using Content.Shared.Materials;
+using Content.Shared.Stacks;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 
@@ -9,7 +10,8 @@ namespace Content.Shared._KS14.OreWell;
 ///         tapped and that have had ore vents installed on them.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
-
+[AutoGenerateComponentState]
+[Access(typeof(OreWellSystem), Other = AccessPermissions.Read)]
 public sealed partial class ActiveOreWellComponent : Component
 {
     /// <summary>
@@ -23,14 +25,14 @@ public sealed partial class ActiveOreWellComponent : Component
     ///     Rate of ore generated, per ore.
     ///         In ore/second.
     /// </summary>
-    [DataField(readOnly: true)]
+    [DataField(readOnly: true), AutoNetworkedField]
     [ViewVariables(VVAccess.ReadWrite)]
     public float IndividualResourceRate;
 
     /// <summary>
     ///     Each ore that is generated.
     /// </summary>
-    [DataField(readOnly: true)]
+    [DataField(readOnly: true), AutoNetworkedField]
     [ViewVariables(VVAccess.ReadWrite)]
-    public ProtoId<MaterialPrototype>[] ResourceTypes;
+    public ProtoId<StackPrototype>[] ResourceTypes;
 }

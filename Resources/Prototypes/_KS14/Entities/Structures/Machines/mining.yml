@@ -5,14 +5,35 @@
   description: Automagically teleports ores from ore wells.
   components:
   - type: Sprite
-    sprite: _KS1S4/Structures/Machines/mining_machines.rsi
+    sprite: _KS14/Structures/Machines/mining_machines.rsi
     layers:
     - state: brm-off
     - state: brm-toggled
       shader: unshaded
-      visible: false
-      map: [ "enum.PowerDeviceVisualLayers.Powered" ]
+      visible: true
+      map: [ "enum.PowerDeviceVisualLayers.Powered", "emissive" ]
   - type: OreWellReceiver
-    flickLayerKey: enum.PowerDeviceVisualLayers.Powered
+    flickLayerKey: "emissive" # not PowerDeviceVisualLayers, because thats client-only and this comp is serverside
     flickState: brm-flash
   - type: AnimationPlayer
+
+# Todo replace this shit
+- type: entity
+  parent: OreBox
+  id: KsOreBox
+  name: ore collector
+  description: A large storage container for holding unprocessed ores. It has built-in self-powering magnets to pick up ore. It won't budge.
+  suffix: Static, Enabled
+  components:
+  - type: Physics
+    bodyType: Static
+  - type: MagnetPickup
+    slotIrrespective: true # KS14 - a bit of the old power creep
+  - type: ItemToggle
+    activated: true
+    onActivate: false
+  - type: Damageable
+    damageContainer: StructuralInorganic
+    damageModifierSet: StructuralMetallicStrong
+  - type: Sprite
+    color: '#848484'

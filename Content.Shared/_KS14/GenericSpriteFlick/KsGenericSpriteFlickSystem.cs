@@ -8,7 +8,7 @@ public sealed class KsGenericSpriteFlickSystem : EntitySystem
 {
     [Dependency] private readonly INetManager _netManager = default!;
 
-    public void Flick(EntityUid uid, object layerKey, string state, Filter? serverFilter = null)
+    public void Flick(EntityUid uid, string layerKey, string state, Filter? serverFilter = null)
     {
         var netEntity = GetNetEntity(uid);
         var ev = new KsSpriteFlickEvent(netEntity, layerKey, state);
@@ -24,9 +24,9 @@ public sealed class KsGenericSpriteFlickSystem : EntitySystem
 }
 
 [Serializable, NetSerializable]
-public sealed class KsSpriteFlickEvent(NetEntity entity, object layerKey, string state) : EntityEventArgs
+public sealed class KsSpriteFlickEvent(NetEntity entity, string layerKey, string state) : EntityEventArgs
 {
     public NetEntity Entity = entity;
-    public object LayerKey = layerKey;
+    public string LayerKey = layerKey;
     public string State = state;
 }

@@ -30,6 +30,7 @@
     tappingProcessEntityProto: KsOreVentMobSpawnerLava
     droneEntityProto: KsOreVentDrone
     extractionDuration: 45s
+    oreWellSettingId: Basic
   - type: Explosive
     explosionType: OreVentClearing
     maxIntensity: 100
@@ -116,3 +117,21 @@
     extractionDuration: 5s
   - type: Sprite
     color: '#fb00ff80'
+
+- type: entity
+  parent: KsOreVentDebug
+  id: KsOreVentDebugTapped
+  suffix: Debug, Tapped
+  categories: [ Debug ]
+  components:
+  - type: OreVent
+    tapped: true
+
+## Settings
+
+- type: oreWellSetting
+  id: Basic
+  totalResourceRateRange: 0.5,1
+  resourceCountRange: 1,2
+  possibleResourceTypes:
+  - SteelOre

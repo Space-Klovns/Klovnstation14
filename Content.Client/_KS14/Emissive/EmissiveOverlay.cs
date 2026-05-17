@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Content.Client.Light;
+using Content.Shared._KS14;
 using Content.Shared._KS14.Emissive;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
@@ -42,8 +43,6 @@ public sealed class EmissiveOverlay : Overlay
     /// </summary>
     private readonly Dictionary<EntityUid, ShaderInstance> _shaders = [];
     private List<Entity<MapGridComponent>> _grids = [];
-
-    private readonly Dictionary<string, Enum?> _enumKeyCache = [];
 
     public const int ContentZIndex = BeforeLightTargetOverlay.ContentZIndex + 2;
 
@@ -146,7 +145,7 @@ public sealed class EmissiveOverlay : Overlay
                     {
                         // insanity
                         SpriteComponent.Layer? layer = null;
-                        var layerEnumKey = ParseKey(layerId, out var isKeyEnum);
+                        var layerEnumKey = KsEnumHelpers.ParseKey(layerId, out var isKeyEnum, _reflectionManager);
                         if (isKeyEnum)
                         {
                             if (!_spriteSystem.TryGetLayer((ent.Owner, spriteComponent), layerEnumKey!, out layer, false))
@@ -239,26 +238,6 @@ public sealed class EmissiveOverlay : Overlay
 
         _entitiesToRemoveFromShaders.Clear();
         _allShaderEntities.Clear();
-    }
-
-    private Enum? ParseKey(string keyString, [NotNullWhen(true)] out bool isEnum)
-    {
-        if (_enumKeyCache.TryGetValue(keyString, out var foundEnum))
-        {
-            isEnum = foundEnum is { };
-            return foundEnum;
-        }
-
-        if (_reflectionManager.TryParseEnumReference(keyString, out var @enum))
-        {
-            _enumKeyCache[keyString] = @enum;
-            isEnum = true;
-            return @enum;
-        }
-
-        _enumKeyCache[keyString] = null;
-        isEnum = false;
-        return null;
     }
 
     private Texture GetLayerTexture(SpriteComponent spriteComponent, SpriteComponent.Layer layer, Angle rotation)

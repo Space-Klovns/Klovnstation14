@@ -2,6 +2,7 @@ using Content.Server.Stack;
 using Content.Shared._KS14.GenericSpriteFlick;
 using Content.Shared._KS14.OreWell;
 using Content.Shared.Power;
+using Content.Shared.Stacks;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -37,9 +38,9 @@ public sealed class OreWellReceiverSystem : EntitySystem
         if (_gameTiming.CurTime < _nextUpdate)
             return;
 
-        var individualGenerated = _oreWellSystem.GenerateResourcesAndTake((float)Interval.TotalSeconds / _activeEntities.Count);
-        _nextUpdate += Interval;
+        _nextUpdate = _gameTiming.CurTime - TimeSpan.FromSeconds(frameTime) + Interval;
 
+        var individualGenerated = _oreWellSystem.GenerateResourcesAndTake((float)Interval.TotalSeconds / _activeEntities.Count);
         if (individualGenerated.Count == 0)
             return;
 
@@ -51,11 +52,17 @@ public sealed class OreWellReceiverSystem : EntitySystem
             foreach (var (resourceId, amount) in individualGenerated)
             {
                 var resource = _prototypeManager.Index(resourceId);
-                if (resource.StackEntity is not { } stackEntity)
-                    continue;
+                var resourceUid = Spawn(resource.Spawn, spawnCoordinates);
+                var stackComponent = Comp<StackComponent>(resourceUid);
 
-                var resourceUid = Spawn(stackEntity, spawnCoordinates);
-                _stackSystem.SetCount((resourceUid, null), (int)amount);
+                // Debt: put off what we can't spawn (when left with decimals, or when stack cant get any bigger)
+                var paidAmount = amount + entity.Comp.Debt.GetValueOrDefault(resourceId);
+                var spawnedAmount = Math.Min((int)paidAmount, _stackSystem.GetMaxCount(stackComponent));
+
+                var debt = paidAmount - spawnedAmount;
+                entity.Comp.Debt[resourceId] = debt;
+
+                _stackSystem.SetCount((resourceUid, null), spawnedAmount);
             }
 
             if (entity.Comp.FlickLayerKey is { } layerKey)
