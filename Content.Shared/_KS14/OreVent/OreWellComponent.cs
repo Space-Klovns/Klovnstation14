@@ -3,7 +3,8 @@ using Robust.Shared.GameStates;
 namespace Content.Shared._KS14.OreVent;
 
 /// <summary>
-///     For an ore well, on an ore vent.
+///     Component added to ore vents that have been
+///         tapped and that have had ore vents installed on them.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
 

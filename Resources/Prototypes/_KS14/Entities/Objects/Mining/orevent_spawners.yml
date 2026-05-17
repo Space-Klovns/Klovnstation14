@@ -1,0 +1,25 @@
+# Ore vents that are being tapped will spawn entities to
+#   handle entities being spawned for wave defence. These are those entities.
+
+- type: entity
+  id: KsOreVentMobSpawnerBase
+  name: ore-vent mob spawner
+  description: You shouldn't see this!
+  abstract: true
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: TimedSpawner
+    chance: 1
+    intervalSeconds: 14
+    minimumEntitiesSpawned: 2
+    maximumEntitiesSpawned: 3
+
+- type: entity
+  parent: KsOreVentMobSpawnerBase
+  id: KsOreVentMobSpawnerIce
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: TimedSpawner
+    prototypes:
+    - MobSpirate
+    - MobCivilian

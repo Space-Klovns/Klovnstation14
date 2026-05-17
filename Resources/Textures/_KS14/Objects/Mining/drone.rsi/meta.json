@@ -8,7 +8,7 @@
   },
   "states": [
     {
-      "name": "node_active",
+      "name": "node_base",
       "directions": 4
     },
     {

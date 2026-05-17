@@ -26,21 +26,37 @@
   - type: DoAfter # doafter is on the vent
   - type: OreVent
     preExtractionDuration: 3s
+    clearingIterations: 5
+    tappingProcessEntityProto: KsOreVentMobSpawnerIce
+    droneEntityProto: KsOreVentDroneOffsetSprite
+    extractionDuration: 5s
   - type: Explosive
     explosionType: OreVentClearing
-    maxIntensity: 10
+    maxIntensity: 100
     totalIntensity: 80
     intensitySlope: 5
     canCreateVacuum: false
+    repeatable: true
     deleteAfterExplosion: false
+
+  - type: Strap # For the drone
 
   # Sprites
   - type: Sprite
     sprite: _KS14/Objects/Mining/ore_vent.rsi
     offset: 0,0.5
     layers:
-    - state: ore_vent_ice
+    - state: ore_vent
       map: ["enum.MiningScannerVisualLayers.Overlay", "vent"]
+    - state: well
+      visible: false
+      map: ["well"]
+  - type: GenericVisualizer
+    visuals:
+      enum.OreVentVisuals.Tapped:
+        vent:
+          True: { state: ore_vent_active }
+          False: { state: ore_vent }
   - type: SpriteFade
   - type: InteractionOutline
   - type: Clickable
@@ -60,3 +76,25 @@
     - type: KsRadarInterest
       data:
         text: ore vent
+
+- type: entity
+  parent: KsOreVent
+  id: KsOreVentIce
+  suffix: Ice
+  components:
+  - type: Sprite
+    layers:
+    - state: ore_vent_ice
+      map: ["enum.MiningScannerVisualLayers.Overlay", "vent"]
+    - state: well
+      visible: false
+      map: ["well"]
+  - type: GenericVisualizer
+    visuals:
+      enum.OreVentVisuals.Tapped:
+        vent:
+          True: { state: ore_vent_ice_active }
+          False: { state: ore_vent_ice }
+        well:
+          True: { visible: true }
+          False: { visible: false }

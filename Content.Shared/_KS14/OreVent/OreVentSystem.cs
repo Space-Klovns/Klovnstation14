@@ -1,26 +1,47 @@
 using Content.Shared._KS14.ScanDiscoverable.Base;
+using Content.Shared.Buckle.Components;
 using Content.Shared.DoAfter;
+using Content.Shared.Explosion.EntitySystems;
 using Content.Shared.Interaction;
 using Content.Shared.Jittering;
 using Content.Shared.Popups;
+using Robust.Shared.Network;
 using Robust.Shared.Player;
+using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.OreVent;
 
-public sealed class OreVentSystem : EntitySystem
+public sealed partial class OreVentSystem : EntitySystem
 {
+    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private readonly INetManager _netManager = default!;
     [Dependency] private readonly SharedDoAfterSystem _doAfterSystem = default!;
     [Dependency] private readonly SharedJitteringSystem _jitteringSystem = default!;
     [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
+    [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
+    [Dependency] private readonly SharedExplosionSystem _explosionSystem = default!;
     [Dependency] private readonly KsScanDiscoverableSystem _discoverableSystem = default!;
-    [Dependency] private readonly OreWellSystem _oreWellSystem = default!;
+    [Dependency] private readonly SharedOreVentDroneSystem _oreVentDroneSystem = default!;
 
     public override void Initialize()
     {
         base.Initialize();
+        InitialiseTapping();
+
+        SubscribeLocalEvent<OreVentComponent, StrapAttemptEvent>(OnStrapAttempt);
 
         SubscribeLocalEvent<OreVentComponent, InteractUsingEvent>(OnInteractUsing);
-        SubscribeLocalEvent<OreVentComponent, OreVentPreExtractionEvent>(OnPreExtraction);
+        SubscribeLocalEvent<OreVentComponent, OreVentPreExtractionDoAfterEvent>(OnPreExtractionDoAfter);
+    }
+
+    private void OnStrapAttempt(Entity<OreVentComponent> entity, ref StrapAttemptEvent args)
+    {
+        if (args.Cancelled ||
+            !entity.Comp.Tapped && HasComp<OreVentDroneComponent>(args.Buckle))
+            return;
+
+        args.Cancelled = true;
+        args.Popup = false;
     }
 
     private void OnInteractUsing(Entity<OreVentComponent> entity, ref InteractUsingEvent args)
@@ -49,17 +70,18 @@ public sealed class OreVentSystem : EntitySystem
             return;
         }
 
-        var success = _doAfterSystem.TryStartDoAfter(new DoAfterArgs(EntityManager, entity.Owner, entity.Comp.PreExtractionDuration, new OreVentPreExtractionEvent(), entity.Owner, entity.Owner, used: args.Used)
+        var success = _doAfterSystem.TryStartDoAfter(new DoAfterArgs(EntityManager, entity.Owner, entity.Comp.PreExtractionDuration / entity.Comp.ClearingIterations, new OreVentPreExtractionDoAfterEvent(0), entity.Owner, entity.Owner, used: null)
         {
             BreakOnDamage = true,
-
-            // max 1 tile distance between used item and doafter whateverburger
-            DistanceThreshold = 1f,
+            DistanceThreshold = null,
 
             // because the doafter is on the ore vent
             BreakOnMove = false,
             NeedHand = false,
-            BreakOnDropItem = false
+            BreakOnDropItem = false,
+
+            RequireCanInteract = false,
+            Hidden = true
         });
         if (!success)
             return;
@@ -71,19 +93,35 @@ public sealed class OreVentSystem : EntitySystem
         DirtyField(entity.Owner, entity.Comp, nameof(entity.Comp.DoingPreExtraction));
     }
 
-    private void OnPreExtraction(Entity<OreVentComponent> entity, ref OreVentPreExtractionEvent args)
+    private void OnPreExtractionDoAfter(Entity<OreVentComponent> entity, ref OreVentPreExtractionDoAfterEvent args)
     {
+        if (args.Cancelled)
+            goto endExtraction;
+
+        if (args.Iteration < entity.Comp.ClearingIterations)
+        {
+            // Clear the area around ts
+            // TODO LCDC: Something better than explosions
+            ClearAreaAround(entity, entity.Comp.ClearRadius / (entity.Comp.ClearingIterations - args.Iteration));
+
+            // on last iteration, dont repeat and instead fall thru
+            args.Iteration += 1;
+            if (args.Iteration != entity.Comp.ClearingIterations)
+            {
+                args.Repeat = true;
+                return;
+            }
+        }
+
+        StartTapping(entity!);
+
+    endExtraction:
         RemCompDeferred<JitteringComponent>(entity);
 
         entity.Comp.DoingPreExtraction = false;
         DirtyField(entity.Owner, entity.Comp, nameof(entity.Comp.DoingPreExtraction));
-
-        if (args.Cancelled)
-            return;
-
-        entity.Comp.BeingTapped = true;
-        DirtyField(entity.Owner, entity.Comp, nameof(entity.Comp.BeingTapped));
-
-        _oreWellSystem.StartExtraction(entity.Owner);
     }
+
+    private void ClearAreaAround(Entity<OreVentComponent> entity, float radius) =>
+        _explosionSystem.TriggerExplosive(entity.Owner, delete: false, radius: radius);
 }

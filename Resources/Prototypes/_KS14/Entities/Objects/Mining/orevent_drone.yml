@@ -1,0 +1,77 @@
+- type: entity
+  parent: MobSiliconBase
+  id: KsOreVentDrone
+  name: NODE drone
+  description: Standard in-atmosphere drone, used by Nanotrasen to operate and excavate valuable ore vents.
+  components:
+  # Physics
+  - type: Transform
+    noRot: true
+  - type: Physics
+    bodyType: Static
+    canCollide: true
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.35
+        density: 80
+        layer:
+        - HalfWallLayer
+
+  # Sprites
+  - type: Sprite
+    sprite: _KS14/Objects/Mining/drone.rsi
+    drawdepth: OverMobs
+    layers:
+    - state: node_base
+      map: ["drone"]
+    - visible: false
+      map: ["progressbar"]
+  - type: Appearance
+  - type: AnimationPlayer
+  - type: GenericVisualizer
+    visuals:
+      enum.OreVentDroneVisuals.Flying:
+        drone:
+          True: { state: node_flying }
+          False: { state: node_base }
+      enum.OreVentDroneVisuals.Progress:
+        progressbar:
+          0: { visible: false }
+          1: { visible: true, state: progress_1 }
+          2: { visible: true, state: progress_2 }
+          3: { visible: true, state: progress_3 }
+          4: { visible: true, state: progress_4 }
+
+  # Damage
+  - type: Damageable
+    damageContainer: Inorganic # Not StructuralInorganic, because orevent explosion does Structural which would KILL him
+    damageModifierSet: StructuralMetallic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 240
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+
+  # Drone
+  - type: OreVentDrone
+    progressStates: 4
+  - type: Buckle
+
+  # Mob
+  - type: NpcFactionMember
+    factions:
+    - NanoTrasen
+
+- type: entity
+  parent: KsOreVentDrone
+  id: KsOreVentDroneOffsetSprite
+  categories: [HideSpawnMenu]
+  components:
+  - type: Sprite
+    offset: 0,12.5
