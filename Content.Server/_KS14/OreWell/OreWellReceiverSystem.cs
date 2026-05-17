@@ -2,7 +2,7 @@ using Content.Server.Stack;
 using Content.Shared._KS14.GenericSpriteFlick;
 using Content.Shared._KS14.OreWell;
 using Content.Shared.Power;
-using Content.Shared.Stacks;
+using Robust.Server.Audio;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -16,6 +16,7 @@ public sealed class OreWellReceiverSystem : EntitySystem
     [Dependency] private readonly OreWellSystem _oreWellSystem = default!;
     [Dependency] private readonly StackSystem _stackSystem = default!;
     [Dependency] private readonly KsGenericSpriteFlickSystem _spriteFlickSystem = default!;
+    [Dependency] private readonly AudioSystem _audioSystem = default!;
 
     private readonly HashSet<Entity<OreWellReceiverComponent>> _activeEntities = [];
 
@@ -47,6 +48,8 @@ public sealed class OreWellReceiverSystem : EntitySystem
             var transformComponent = Transform(entity);
             var spawnCoordinates = new EntityCoordinates(transformComponent.ParentUid, transformComponent.LocalPosition);
 
+            var spawnedAnything = false;
+
             foreach (var (resourceId, amount) in individualGenerated)
             {
                 var resource = _prototypeManager.Index(resourceId);
@@ -65,10 +68,18 @@ public sealed class OreWellReceiverSystem : EntitySystem
 
                 var resourceUid = Spawn(resource.Spawn, spawnCoordinates);
                 _stackSystem.SetCount((resourceUid, null), spawnedAmount);
+
+                spawnedAnything = true;
             }
+
+            if (!spawnedAnything)
+                continue;
 
             if (entity.Comp.FlickLayerKey is { } layerKey)
                 _spriteFlickSystem.Flick(entity.Owner, layerKey, entity.Comp.FlickState);
+
+            if (entity.Comp.Sound is { } soundSpecifier)
+                _audioSystem.PlayPvs(soundSpecifier, spawnCoordinates);
         }
     }
 

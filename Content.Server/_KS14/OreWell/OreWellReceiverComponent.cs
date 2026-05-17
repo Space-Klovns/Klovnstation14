@@ -1,4 +1,5 @@
 using Content.Shared.Stacks;
+using Robust.Shared.Audio;
 using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.OreWell;
@@ -11,6 +12,13 @@ public sealed partial class OreWellReceiverComponent : Component
 
     [DataField]
     public string FlickState = "";
+
+    /// <summary>
+    ///     Sound played when receiving ore.
+    /// </summary>
+    [DataField]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public SoundSpecifier? Sound = null;
 
     /// <summary>
     ///     How much is owed to be spawned in the next tick.

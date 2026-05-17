@@ -15,6 +15,10 @@
   - type: OreWellReceiver
     flickLayerKey: "emissive" # not PowerDeviceVisualLayers, because thats client-only and this comp is serverside
     flickState: brm-flash
+    sound:
+      path: /Audio/_KS14/Machines/Mining/teleport.ogg
+      params:
+        volume: -8
   - type: AnimationPlayer
 
 # Todo replace this shit

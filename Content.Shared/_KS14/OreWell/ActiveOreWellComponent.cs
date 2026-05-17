@@ -17,7 +17,7 @@ public sealed partial class ActiveOreWellComponent : Component
     /// <summary>
     ///     ID for the prototype that contains the settings for this.
     /// </summary>
-    [DataField(required: true)]
+    [DataField(required: true, serverOnly: true)]
     [ViewVariables(VVAccess.ReadWrite)]
     public ProtoId<OreWellSettingPrototype> SettingId;
 
@@ -25,14 +25,14 @@ public sealed partial class ActiveOreWellComponent : Component
     ///     Rate of ore generated, per ore.
     ///         In ore/second.
     /// </summary>
-    [DataField(readOnly: true), AutoNetworkedField]
+    [DataField, AutoNetworkedField]
     [ViewVariables(VVAccess.ReadWrite)]
-    public float IndividualResourceRate;
+    public float IndividualResourceRate = 0f;
 
     /// <summary>
     ///     Each ore that is generated.
     /// </summary>
-    [DataField(readOnly: true), AutoNetworkedField]
+    [DataField, AutoNetworkedField]
     [ViewVariables(VVAccess.ReadWrite)]
-    public ProtoId<StackPrototype>[] ResourceTypes;
+    public ProtoId<StackPrototype>[] ResourceTypes = [];
 }

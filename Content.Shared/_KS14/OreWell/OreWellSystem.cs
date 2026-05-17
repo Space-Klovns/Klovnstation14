@@ -3,6 +3,7 @@ using Content.Shared.Examine;
 using Content.Shared.Materials;
 using Content.Shared.Stacks;
 using Robust.Shared.Collections;
+using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Utility;
@@ -16,6 +17,7 @@ public sealed class OreWellSystem : EntitySystem
 {
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly IRobustRandom _robustRandom = default!;
+    [Dependency] private readonly INetManager _netManager = default!;
 
     public override void Initialize()
     {
@@ -68,6 +70,9 @@ public sealed class OreWellSystem : EntitySystem
 
     public void GenerateOreWellWithSettings(Entity<ActiveOreWellComponent?> entity, ProtoId<OreWellSettingPrototype> settingId)
     {
+        if (_netManager.IsClient)
+            return;
+
         if (Resolve(entity.Owner, ref entity.Comp, logMissing: false))
             return;
 
