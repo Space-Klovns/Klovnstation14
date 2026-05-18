@@ -177,8 +177,8 @@
     whitelist:
       tags:
       - Sheet
-      - Ingot
       - RawMaterial
+      - Ingot
   - type: ItemToggle
     activated: true
     onActivate: false
