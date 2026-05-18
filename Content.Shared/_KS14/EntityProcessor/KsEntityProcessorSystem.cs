@@ -64,6 +64,8 @@ public sealed class KsEntityProcessorSystem : EntitySystem
             // If not everything's done yet just remove the ones that were finished
             foreach (var processedUid in processedUids)
                 activeComponent.Processing.Remove(processedUid);
+
+            Dirty(uid, activeComponent);
         }
     }
 
@@ -108,6 +110,7 @@ public sealed class KsEntityProcessorSystem : EntitySystem
         {
             var activeComponent = EnsureComp<KsActiveEntityProcessorComponent>(processorEntity);
             activeComponent.Processing[processedEntity] = attemptEv.ProcessingFinishTime;
+            Dirty(processorEntity!.Owner, activeComponent);
         }
 
         return true;
@@ -122,6 +125,7 @@ public sealed class KsEntityProcessorSystem : EntitySystem
             return;
 
         entity.Comp.Processing.Remove(entity);
+        Dirty(entity);
     }
 
     private void OnPowerChanged(Entity<KsEntityProcessorComponent> entity, ref PowerChangedEvent args)
@@ -130,6 +134,7 @@ public sealed class KsEntityProcessorSystem : EntitySystem
             return;
 
         entity.Comp.Powered = args.Powered;
+        Dirty(entity);
     }
 
     private void OnStartup(Entity<KsEntityProcessorComponent> entity, ref ComponentStartup args)

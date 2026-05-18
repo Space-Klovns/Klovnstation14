@@ -4,7 +4,7 @@ namespace Content.Shared._KS14.EntityProcessor;
 ///     Added to object processors that are actively processing something.
 /// </summary>
 [RegisterComponent]
-[AutoGenerateComponentPause]
+[AutoGenerateComponentState, AutoGenerateComponentPause]
 [Access(typeof(KsEntityProcessorSystem))]
 public sealed partial class KsActiveEntityProcessorComponent : Component
 {
@@ -12,6 +12,7 @@ public sealed partial class KsActiveEntityProcessorComponent : Component
     ///     Dictionary of entities being processed, and timespan of the delay until theyre finished.
     /// </summary>
     [DataField]
+    [AutoNetworkedField]
     [AutoPausedField] // Yes, really, this works on dicts
     public Dictionary<EntityUid, TimeSpan> Processing = [];
 }

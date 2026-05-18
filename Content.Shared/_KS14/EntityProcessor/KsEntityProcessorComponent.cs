@@ -7,6 +7,7 @@ namespace Content.Shared._KS14.EntityProcessor;
 ///         Requires extra logic or whatever.
 /// </summary>
 [RegisterComponent]
+[AutoGenerateComponentState]
 [Access(typeof(KsEntityProcessorSystem))]
 public sealed partial class KsEntityProcessorComponent : Component
 {
@@ -17,6 +18,7 @@ public sealed partial class KsEntityProcessorComponent : Component
     public Container Container = default!;
 
     [DataField]
+    [AutoNetworkedField]
     [ViewVariables(VVAccess.ReadOnly)]
     public bool Powered = false;
 
