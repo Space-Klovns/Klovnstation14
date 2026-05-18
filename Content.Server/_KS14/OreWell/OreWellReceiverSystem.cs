@@ -60,7 +60,7 @@ public sealed class OreWellReceiverSystem : EntitySystem
 
                 // Try to pay off debt as best we can
                 var paidAmount = amount + entity.Comp.Debt.GetValueOrDefault(resourceId);
-                var spawnedAmount = Math.Min((int)Math.Floor(paidAmount), resource.MaxCount ?? int.MaxValue);
+                var spawnedAmount = (int)Math.Min(paidAmount, resource.MaxCount ?? int.MaxValue);
 
                 // If we couldn't spawn anything, well fuck (can occur if we have between a 0-1 fractional paidAmount)
                 if (spawnedAmount <= 0)

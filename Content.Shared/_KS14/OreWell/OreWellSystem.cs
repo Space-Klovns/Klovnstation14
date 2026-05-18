@@ -1,6 +1,5 @@
 using System.Linq;
 using Content.Shared.Examine;
-using Content.Shared.Materials;
 using Content.Shared.Stacks;
 using Robust.Shared.Collections;
 using Robust.Shared.Network;

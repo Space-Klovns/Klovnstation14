@@ -1,7 +1,8 @@
 - type: entity
-  id: KsOreVent
+  id: KsOreVentBase
   name: ore vent
   description: "An ore vent, brimming with underground ore. Once discovered, it can be scanned again for ore extraction to be started."
+  abstract: true
   placement:
     mode: SnapgridCenter
   components:
@@ -44,6 +45,42 @@
   - type: Sprite
     sprite: _KS14/Objects/Mining/ore_vent.rsi
     offset: 0,0.5
+  - type: SpriteFade
+  - type: InteractionOutline
+  - type: Clickable
+  - type: Appearance
+
+  # Scanning
+  - type: MiningScannerViewable
+
+- type: entity
+  parent: KsOreVentBase
+  id: KsOreVentBaseDiscoverable
+  abstract: true
+  components:
+  - type: KsScanDiscoverable
+    discoveryPopupLoc: ks-specific-orevent-discovered
+    trueName: discovered ore vent
+  - type: KsScanTriggerOnDiscovered
+    keyOut: discovered
+  - type: AddComponentsOnTrigger
+    keysIn: [discovered]
+    components: # copied from PenEmbeddable
+    - type: KsRadarInterest
+      data:
+        text: ore vent
+
+### Variants: undiscoverable
+
+- type: entity
+  parent: KsOreVentBase
+  id: KsOreVentLava
+  suffix: Lava, Undiscoverable
+  components:
+  - type: OreVent
+    tappingProcessEntityProto: KsOreVentMobSpawnerLava
+
+  - type: Sprite
     layers:
     - state: ore_vent
       map: ["enum.MiningScannerVisualLayers.Overlay", "vent"]
@@ -59,30 +96,11 @@
         well:
           True: { visible: true }
           False: { visible: false }
-  - type: SpriteFade
-  - type: InteractionOutline
-  - type: Clickable
-  - type: Appearance
-
-  # Scanning
-  - type: MiningScannerViewable
-
-  - type: KsScanDiscoverable
-    discoveryPopupLoc: ks-specific-orevent-discovered
-    trueName: discovered ore vent
-  - type: KsScanTriggerOnDiscovered
-    keyOut: discovered
-  - type: AddComponentsOnTrigger
-    keysIn: [discovered]
-    components: # copied from PenEmbeddable
-    - type: KsRadarInterest
-      data:
-        text: ore vent
 
 - type: entity
-  parent: KsOreVent
+  parent: KsOreVentBase
   id: KsOreVentIce
-  suffix: Ice
+  suffix: Ice, Undiscoverable
   components:
   - type: OreVent
     tappingProcessEntityProto: KsOreVentMobSpawnerIce
@@ -104,10 +122,46 @@
           True: { visible: true }
           False: { visible: false }
 
+### Variants: undiscoverable, tapped
+
 - type: entity
-  parent: KsOreVent
+  parent: KsOreVentLava
+  id: KsOreVentLavaTappedRoundstart
+  description: "An ore vent, brimming with underground ore. It's already tapped, for your convenience."
+  suffix: Lava, Tapped, Roundstart, Undiscoverable
+  components:
+  - type: OreVent
+    tapped: true
+    oreWellSettingId: Roundstart
+
+- type: entity
+  parent: KsOreVentIce
+  id: KsOreVentIceTappedRoundstart
+  description: "An ore vent, brimming with underground ore. It's already tapped, for your convenience."
+  suffix: Ice, Tapped, Roundstart, Undiscoverable
+  components:
+  - type: OreVent
+    tapped: true
+    oreWellSettingId: Roundstart
+
+### Variants: discoverable
+
+- type: entity
+  parent: [ KsOreVentBaseDiscoverable, KsOreVentLava ]
+  id: KsOreVentLavaDiscoverable
+  suffix: Lava, Discoverable
+
+- type: entity
+  parent: [ KsOreVentBaseDiscoverable, KsOreVentIce ]
+  id: KsOreVentIceDiscoverable
+  suffix: Ice, Discoverable
+
+### Variants: debug
+
+- type: entity
+  parent: KsOreVentBaseDiscoverable
   id: KsOreVentDebug
-  suffix: Debug
+  suffix: Debug, Discoverable
   categories: [ Debug ]
   components:
   - type: OreVent
@@ -121,7 +175,7 @@
 - type: entity
   parent: KsOreVentDebug
   id: KsOreVentDebugTapped
-  suffix: Debug, Tapped
+  suffix: Debug, Discoverable, Tapped
   categories: [ Debug ]
   components:
   - type: OreVent
@@ -130,8 +184,19 @@
 ## Settings
 
 - type: oreWellSetting
-  id: Basic
-  totalResourceRateRange: 0.3,0.8
-  resourceCountRange: 1,1
+  id: Roundstart
+  totalResourceRateRange: 0.75,0.75
+  resourceCountRange: 2,2
   possibleResourceTypes:
   - SteelOre
+  - SpaceQuartz
+
+- type: oreWellSetting
+  id: Basic
+  totalResourceRateRange: 0.3,0.8
+  resourceCountRange: 2,3
+  possibleResourceTypes:
+  - SteelOre
+  - Coal
+  - PlasmaOre
+  - GoldOre
