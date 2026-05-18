@@ -1,9 +1,5 @@
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -11,9 +7,12 @@ using System.Threading.Tasks;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.TTS;
 using Content.Shared.Chat;
+using Content.Shared.GameTicking;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.TTS;
 
@@ -22,6 +21,7 @@ public sealed class TtsSystem : SharedTtsSystem
 {
     [Dependency] private readonly IConfigurationManager _configurationManager = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private readonly IGameTiming _gameTiming = default!;
 
     private readonly HttpClient _httpClient = new();
     private readonly Dictionary<string, byte[]> _cache = new();
@@ -29,14 +29,35 @@ public sealed class TtsSystem : SharedTtsSystem
     private string _ttsEndpoint = "";
     private bool _enabled = false;
 
-    private const int MaxTextLength = 150;
+    private readonly Dictionary<EntityUid, TimeSpan> _timeUntilCooldownFinished = [];
+
+    private static readonly TimeSpan Cooldown = TimeSpan.FromSeconds(0.5f);
+    private const int MaxTextLength = 50;
 
     public override void Initialize()
     {
         SubscribeLocalEvent<EntitySpokeEvent>(OnSpoke);
+        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnCleanup);
 
         _configurationManager.OnValueChanged(KsCCVars.TtsEndpoint, (x) => _ttsEndpoint = x, invokeImmediately: true);
         _configurationManager.OnValueChanged(KsCCVars.TtsEnabled, (x) => _enabled = x, invokeImmediately: true);
+    }
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        var done = new ValueList<EntityUid>();
+        foreach (var (uid, time) in _timeUntilCooldownFinished)
+        {
+            if (time < _gameTiming.CurTime)
+                continue;
+
+            done.Add(uid);
+        }
+
+        foreach (var uid in done)
+            _timeUntilCooldownFinished.Remove(uid);
     }
 
     private void OnSpoke(EntitySpokeEvent args)
@@ -44,15 +65,22 @@ public sealed class TtsSystem : SharedTtsSystem
         TrySpeak(args.Source, "Default", args.Message);
     }
 
-    public void TrySpeak(EntityUid speaker, ProtoId<TtsVoicePrototype> voiceProto, string text)
+    private void OnCleanup(RoundRestartCleanupEvent args)
     {
-        if (!_enabled)
-            return;
-
-        _ = Speak(speaker, voiceProto, text);
+        _timeUntilCooldownFinished.Clear();
     }
 
-    public async Task Speak(EntityUid speaker, ProtoId<TtsVoicePrototype> voiceProto, string text)
+    public void TrySpeak(EntityUid speakerUid, ProtoId<TtsVoicePrototype> voiceProto, string text)
+    {
+        if (!_enabled ||
+            _timeUntilCooldownFinished.ContainsKey(speakerUid))
+            return;
+
+        _timeUntilCooldownFinished[speakerUid] = _gameTiming.CurTime + Cooldown;
+        _ = Speak(speakerUid, voiceProto, text);
+    }
+
+    public async Task Speak(EntityUid speakerUid, ProtoId<TtsVoicePrototype> voiceProto, string text)
     {
         if (string.IsNullOrWhiteSpace(text))
             return;
@@ -60,7 +88,7 @@ public sealed class TtsSystem : SharedTtsSystem
         if (!_prototypeManager.TryIndex(voiceProto, out var proto))
             return;
 
-        if (text.Length > 15)
+        if (text.Length > MaxTextLength)
             text = text[0..^MaxTextLength];
 
         var cacheId = BuildCacheId(proto, text);
@@ -77,14 +105,9 @@ public sealed class TtsSystem : SharedTtsSystem
                 var response = await _httpClient.PostAsJsonAsync(_ttsEndpoint, request);
                 response.EnsureSuccessStatusCode();
 
-                Log.Info($"Content-Type: {response.Content.Headers.ContentType}");
-                Log.Info($"Content-Length: {response.Content.Headers.ContentLength}");
-
                 bytes = await response.Content.ReadAsByteArrayAsync();
-                Log.Info($"First bytes: {BitConverter.ToString(bytes.Take(16).ToArray())}");
                 _cache[cacheId] = bytes;
 
-                Log.Info($"Generated TTS {cacheId}");
             }
             catch (Exception e)
             {
@@ -93,16 +116,7 @@ public sealed class TtsSystem : SharedTtsSystem
             }
         }
 
-        var ttsEntity = SpawnAttachedTo(null, new(speaker, Vector2.Zero));
-        var component = EntityManager.ComponentFactory.GetComponent<TtsAudioComponent>();
-        component.Bytes = bytes;
-
-        AddComp(ttsEntity, component);
-        Dirty(ttsEntity, component);
-
-        RaiseNetworkEvent(new PlayTtsEvent(GetNetEntity(speaker), bytes), Filter.Pvs(speaker));
-
-        Log.Debug($"Played TTS {cacheId}");
+        RaiseNetworkEvent(new PlayTtsEvent(GetNetEntity(speakerUid), bytes), Filter.Pvs(speakerUid));
     }
 
     private static string BuildCacheId(TtsVoicePrototype proto, string text)

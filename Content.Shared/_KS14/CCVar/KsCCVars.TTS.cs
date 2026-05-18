@@ -11,12 +11,12 @@ public sealed partial class KsCCVars
     /// </summary>
     [CVarControl(AdminFlags.Server)]
     public static readonly CVarDef<bool> TtsEnabled =
-        CVarDef.Create("klovn.tts.enabled", true, CVar.ARCHIVE | CVar.SERVER | CVar.REPLICATED);
+        CVarDef.Create("klovn.tts.enabled", false, CVar.ARCHIVE | CVar.SERVER | CVar.REPLICATED);
 
     /// <summary>
     ///     Address to be used when requesting data.
     /// </summary>
     [CVarControl(AdminFlags.Server)]
     public static readonly CVarDef<string> TtsEndpoint =
-        CVarDef.Create("klovn.tts.endpoint", "http://localhost:5000" /* Piper */, CVar.SERVER);
+        CVarDef.Create("klovn.tts.endpoint", "http://localhost:8000/tts" /* Piper */, CVar.SERVER);
 }

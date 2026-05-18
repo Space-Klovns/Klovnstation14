@@ -1,7 +1,15 @@
 - type: ttsVoice
   id: Default
-  voice: af_bella
+  voice: Microsoft David Desktop - English (United States)
 
 - type: ttsVoice
-  id: af_bella
-  voice: af_bella
+  id: david
+  voice: Microsoft David Desktop - English (United States)
+
+- type: ttsVoice
+  id: zira
+  voice: Microsoft Zira Desktop - English (United States)
+
+- type: ttsVoice
+  id: irina
+  voice: Microsoft Irina Desktop - Russian

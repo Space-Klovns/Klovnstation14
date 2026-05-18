@@ -23,21 +23,17 @@ public sealed class TtsSystem : SharedTtsSystem
         _configurationManager.OnValueChanged(KsCCVars.TtsEnabled, (x) => _enabled = x, invokeImmediately: true);
 
         SubscribeNetworkEvent<PlayTtsEvent>(OnPlayTts);
-        //SubscribeLocalEvent<TtsAudioComponent, ComponentStartup>(OnStartup);
     }
 
     private void OnPlayTts(PlayTtsEvent args)
     {
+        if (!_enabled)
+            return;
+
         if (!TryGetEntity(args.Source, out var uid))
             return;
 
         var stream = _audioManager.LoadAudioWav(new MemoryStream(args.Data));
         _audioSystem.PlayEntity(stream, uid.Value, null, audioParams: AudioParams.Default);
-    }
-
-    private void OnStartup(Entity<TtsAudioComponent> entity, ref ComponentStartup args)
-    {
-        var stream = _audioManager.LoadAudioOggVorbis(new MemoryStream(entity.Comp.Bytes));
-        _audioSystem.PlayEntity(stream, entity.Owner, null, audioParams: AudioParams.Default);
     }
 }
