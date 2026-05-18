@@ -110,6 +110,11 @@
       SteelOre: SheetSteel
       SpaceQuartz: SheetGlass
       PlasmaOre: SheetPlasma
+      UraniumOre: SheetUranium
+      BananiumOre: MaterialBananium
+      DiamondOre: MaterialDiamond
+      SilverOre: IngotSilver
+      GoldOre: IngotGold
   - type: KsEntityProcessor
     fixtureId: fix1
   - type: ContainerContainer
@@ -173,6 +178,7 @@
       tags:
       - Sheet
       - Ingot
+      - RawMaterial
   - type: ItemToggle
     activated: true
     onActivate: false
