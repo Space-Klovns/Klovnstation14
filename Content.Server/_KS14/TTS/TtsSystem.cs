@@ -1,13 +1,18 @@
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.TTS;
 using Content.Shared.Chat;
 using Robust.Shared.Configuration;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.TTS;
@@ -24,7 +29,7 @@ public sealed class TtsSystem : SharedTtsSystem
     private string _ttsEndpoint = "";
     private bool _enabled = false;
 
-    private const int MaxTextLength = 300;
+    private const int MaxTextLength = 150;
 
     public override void Initialize()
     {
@@ -66,15 +71,17 @@ public sealed class TtsSystem : SharedTtsSystem
                 var request = new TtsRequestBody
                 {
                     Voice = proto.Voice,
-                    Text = text,
-                    Speed = proto.Speed,
-                    Pitch = proto.Pitch
+                    Input = text
                 };
 
                 var response = await _httpClient.PostAsJsonAsync(_ttsEndpoint, request);
                 response.EnsureSuccessStatusCode();
 
+                Log.Info($"Content-Type: {response.Content.Headers.ContentType}");
+                Log.Info($"Content-Length: {response.Content.Headers.ContentLength}");
+
                 bytes = await response.Content.ReadAsByteArrayAsync();
+                Log.Info($"First bytes: {BitConverter.ToString(bytes.Take(16).ToArray())}");
                 _cache[cacheId] = bytes;
 
                 Log.Info($"Generated TTS {cacheId}");
@@ -93,23 +100,35 @@ public sealed class TtsSystem : SharedTtsSystem
         AddComp(ttsEntity, component);
         Dirty(ttsEntity, component);
 
+        RaiseNetworkEvent(new PlayTtsEvent(GetNetEntity(speaker), bytes), Filter.Pvs(speaker));
+
         Log.Debug($"Played TTS {cacheId}");
     }
 
     private static string BuildCacheId(TtsVoicePrototype proto, string text)
     {
         var raw =
-            $"{proto.Voice}|{proto.Speed}|{proto.Pitch}|{text}";
+            $"{proto.Voice}|{text}";
 
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(raw));
         return Convert.ToHexString(hash);
     }
 
-    public sealed class TtsRequestBody
+    public sealed record TtsRequestBody
     {
-        public string Voice = default!;
-        public string Text = default!;
-        public float Speed;
-        public float Pitch;
+        [JsonPropertyName("model")]
+        public string Model { get; set; } = "kokoro";
+
+        [JsonPropertyName("input")]
+        public string Input { get; set; } = default!;
+
+        [JsonPropertyName("voice")]
+        public string Voice { get; set; } = default!;
+
+        [JsonPropertyName("response_format")]
+        public string ResponseFormat { get; set; } = "ogg";
+
+        [JsonPropertyName("stream")]
+        public bool Stream { get; set; } = false;
     }
 }

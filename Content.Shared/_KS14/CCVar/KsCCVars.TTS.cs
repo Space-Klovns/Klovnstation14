@@ -13,7 +13,10 @@ public sealed partial class KsCCVars
     public static readonly CVarDef<bool> TtsEnabled =
         CVarDef.Create("klovn.tts.enabled", true, CVar.ARCHIVE | CVar.SERVER | CVar.REPLICATED);
 
+    /// <summary>
+    ///     Address to be used when requesting data.
+    /// </summary>
     [CVarControl(AdminFlags.Server)]
     public static readonly CVarDef<string> TtsEndpoint =
-        CVarDef.Create("klovn.tts.endpoint", "http://localhost:8880/tts", CVar.SERVER);
+        CVarDef.Create("klovn.tts.endpoint", "http://localhost:8880/v1/audio/speech" /* Kokoro-FastAPI */, CVar.SERVER);
 }

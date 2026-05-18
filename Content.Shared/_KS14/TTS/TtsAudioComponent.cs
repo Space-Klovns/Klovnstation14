@@ -20,13 +20,11 @@ public sealed partial class TtsAudioComponent : Component
 public sealed class PlayTtsEvent : EntityEventArgs
 {
     public NetEntity Source;
-    public string CacheId;
-    public bool RadioFilter;
+    public byte[] Data;
 
-    public PlayTtsEvent(NetEntity source, string cacheId, bool radioFilter)
+    public PlayTtsEvent(NetEntity source, byte[] data)
     {
         Source = source;
-        CacheId = cacheId;
-        RadioFilter = radioFilter;
+        Data = data;
     }
 }

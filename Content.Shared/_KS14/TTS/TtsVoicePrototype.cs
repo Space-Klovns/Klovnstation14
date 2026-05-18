@@ -1,5 +1,4 @@
 using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.TTS;
 
@@ -10,18 +9,9 @@ public sealed partial class TtsVoicePrototype : IPrototype
     [IdDataField]
     public string ID { get; private set; } = default!;
 
+    /// <summary>
+    ///     Actual back-end name of the voice.
+    /// </summary>
     [DataField(required: true)]
     public string Voice = default!;
-
-    [DataField]
-    public float Speed = 1f;
-
-    [DataField]
-    public float Pitch = 1f;
-
-    [DataField]
-    public float Volume = 0f;
-
-    [DataField]
-    public bool RadioFilter;
 }
