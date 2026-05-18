@@ -1,4 +1,5 @@
 using Robust.Shared.Containers;
+using Robust.Shared.GameStates;
 
 namespace Content.Shared._KS14.EntityProcessor;
 
@@ -6,7 +7,7 @@ namespace Content.Shared._KS14.EntityProcessor;
 ///     For generic machines or whatever that turn one thing into another, on collision.
 ///         Requires extra logic or whatever.
 /// </summary>
-[RegisterComponent]
+[RegisterComponent, NetworkedComponent]
 [AutoGenerateComponentState]
 [Access(typeof(KsEntityProcessorSystem))]
 public sealed partial class KsEntityProcessorComponent : Component

@@ -2,7 +2,6 @@ using Content.Shared.Stacks;
 using Robust.Shared.Network;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Utility;
 
 namespace Content.Shared._KS14.EntityProcessor.StackProcessor;
 
