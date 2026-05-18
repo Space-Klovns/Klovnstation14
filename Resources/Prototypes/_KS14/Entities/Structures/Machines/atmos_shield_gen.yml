@@ -18,10 +18,8 @@
           !type:PhysShapeAabb
           bounds: "-0.45,0.4,0.45,0.5"
         density: 190
-        mask:
-        - MachineMask
         layer:
-        - MachineLayer
+        - Impassable
 
   - type: Machine
     board: KsAtmosShieldGenCircuitboard
@@ -50,7 +48,7 @@
       map: ["emissive"]
   - type: EmissiveLayers
     glowRadius: 0
-    intensity: 2
+    intensity: 0
     offset: 0,-0.25
     layers:
     - emissive

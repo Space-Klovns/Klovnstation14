@@ -242,11 +242,15 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
         var transformComponent = Transform(entity);
         TryRemoveFromAnchoredPositions(entity, transformComponent);
 
+        ClearFields(entity);
+
         if (entity.Comp.LinkedGeneratorUid is not { } linkedUid ||
             !TryComp<KsFieldGeneratorComponent>(linkedUid, out var linkedGeneratorComponent))
             return;
 
         linkedGeneratorComponent.LinkedGeneratorUid = null;
         DirtyField(linkedUid, linkedGeneratorComponent, nameof(linkedGeneratorComponent.LinkedGeneratorUid));
+
+        ClearFields((linkedUid, linkedGeneratorComponent));
     }
 }
