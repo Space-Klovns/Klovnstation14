@@ -116,19 +116,10 @@ public sealed class TtsSystem : SharedTtsSystem
 
     public sealed record TtsRequestBody
     {
-        [JsonPropertyName("model")]
-        public string Model { get; set; } = "kokoro";
-
-        [JsonPropertyName("input")]
+        [JsonPropertyName("text")]
         public string Input { get; set; } = default!;
 
         [JsonPropertyName("voice")]
         public string Voice { get; set; } = default!;
-
-        [JsonPropertyName("response_format")]
-        public string ResponseFormat { get; set; } = "ogg";
-
-        [JsonPropertyName("stream")]
-        public bool Stream { get; set; } = false;
     }
 }

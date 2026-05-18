@@ -18,5 +18,5 @@ public sealed partial class KsCCVars
     /// </summary>
     [CVarControl(AdminFlags.Server)]
     public static readonly CVarDef<string> TtsEndpoint =
-        CVarDef.Create("klovn.tts.endpoint", "http://localhost:8880/v1/audio/speech" /* Kokoro-FastAPI */, CVar.SERVER);
+        CVarDef.Create("klovn.tts.endpoint", "http://localhost:5000" /* Piper */, CVar.SERVER);
 }
