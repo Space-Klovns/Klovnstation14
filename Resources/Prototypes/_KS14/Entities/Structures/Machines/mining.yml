@@ -98,6 +98,8 @@
           True: { visible: true }
           False: { visible: false }
   - type: EmissiveLayers
+    glowRadius: 3
+    intensity: 3
     layers:
     - smelter-em
   - type: AnimationPlayer
