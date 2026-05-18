@@ -173,15 +173,15 @@
   components:
   - type: MagnetPickup
     slotIrrespective: true
+  - type: ItemToggle
+    activated: true
+    onActivate: false
   - type: Storage
     whitelist:
       tags:
       - Sheet
       - RawMaterial
       - Ingot
-  - type: ItemToggle
-    activated: true
-    onActivate: false
   - type: Damageable
     damageContainer: StructuralInorganic
     damageModifierSet: StructuralMetallicStrong
