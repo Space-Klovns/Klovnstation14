@@ -13,12 +13,26 @@ public sealed partial class OreWellReceiverComponent : Component
     [DataField]
     public string FlickState = "";
 
+    [DataField]
+    public bool Powered = false;
+
+    [DataField]
+    public bool Enabled = false;
+
     /// <summary>
     ///     Sound played when receiving ore.
     /// </summary>
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
     public SoundSpecifier? Sound = null;
+
+    [DataField]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public SoundSpecifier? EnableSound = null;
+
+    [DataField]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public SoundSpecifier? DisableSound = null;
 
     /// <summary>
     ///     How much is owed to be spawned in the next tick.

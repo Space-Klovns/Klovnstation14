@@ -159,7 +159,7 @@
 ### Variants: debug
 
 - type: entity
-  parent: KsOreVentBaseDiscoverable
+  parent: [ KsOreVentBaseDiscoverable, KsOreVentLava ]
   id: KsOreVentDebug
   suffix: Debug, Discoverable
   categories: [ Debug ]

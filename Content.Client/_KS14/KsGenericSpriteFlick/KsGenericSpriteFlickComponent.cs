@@ -12,5 +12,5 @@ public sealed partial class KsGenericSpriteFlickComponent : Component
     public Dictionary<(string, object), Animation> CachedAnimations = [];
 
     public Dictionary<string, object> AnimKeyLayerKeyMap = [];
-    public Dictionary<object, RSI.StateId> PreviousStateMap = [];
+    public Dictionary<object, RSI.StateId> NextStateMap = [];
 }

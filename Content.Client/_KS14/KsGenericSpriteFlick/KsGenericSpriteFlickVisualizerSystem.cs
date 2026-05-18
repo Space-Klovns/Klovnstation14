@@ -22,11 +22,11 @@ public sealed class KsGenericSpriteFlickVisualizerSystem : EntitySystem
         SubscribeAllEvent<KsSpriteFlickEvent>(OnEvent);
     }
 
-    // Try to reset to previous state
+    // Try to reset to next state
     private void OnAnimationComplete(Entity<KsGenericSpriteFlickComponent> entity, ref AnimationCompletedEvent args)
     {
         if (!entity.Comp.AnimKeyLayerKeyMap.TryGetValue(args.Key, out var layerObjectKey) ||
-            !entity.Comp.PreviousStateMap.TryGetValue(layerObjectKey, out var state))
+            !entity.Comp.NextStateMap.TryGetValue(layerObjectKey, out var state))
             return;
 
         if (!TryComp<SpriteComponent>(entity.Owner, out var spriteComponent))
@@ -45,19 +45,19 @@ public sealed class KsGenericSpriteFlickVisualizerSystem : EntitySystem
             return;
 
         var parsedLayerKey = (object?)KsEnumHelpers.ParseKey(args.LayerKey, out _, _reflectionManager) ?? args.LayerKey;
-        var animationKey = args.State + args.LayerKey + " ksgenericspriteflick";
+        var animationKey = args.FlickState + args.LayerKey + " ksgenericspriteflick";
 
         if (!TryComp<AnimationPlayerComponent>(uid.Value, out var animationPlayerComponent) ||
             _animationPlayerSystem.HasRunningAnimation(animationPlayerComponent, animationKey))
             return;
 
         var flickComponent = EnsureComp<KsGenericSpriteFlickComponent>(uid.Value);
-        var animation = flickComponent.CachedAnimations.GetOrNew((args.State, parsedLayerKey), out var exists);
+        var animation = flickComponent.CachedAnimations.GetOrNew((args.FlickState, parsedLayerKey), out var exists);
         flickComponent.AnimKeyLayerKeyMap[animationKey] = parsedLayerKey;
 
         if (!exists)
         {
-            var state = _spriteSystem.GetState(new SpriteSpecifier.Rsi(spriteComponent.BaseRSI!.Path, args.State));
+            var state = _spriteSystem.GetState(new SpriteSpecifier.Rsi(spriteComponent.BaseRSI!.Path, args.FlickState));
 
             animation.Length = TimeSpan.FromSeconds(state.AnimationLength);
             animation.AnimationTracks.Add(
@@ -66,13 +66,13 @@ public sealed class KsGenericSpriteFlickVisualizerSystem : EntitySystem
                     LayerKey = parsedLayerKey,
                     KeyFrames =
                     {
-                        new AnimationTrackSpriteFlick.KeyFrame(new RSI.StateId(args.State), default)
+                        new AnimationTrackSpriteFlick.KeyFrame(new RSI.StateId(args.FlickState), default)
                     }
                 }
             );
         }
 
-        flickComponent.PreviousStateMap[parsedLayerKey] = spriteComponent[parsedLayerKey].RsiState;
+        flickComponent.NextStateMap[parsedLayerKey] = args.FinishState ?? spriteComponent[parsedLayerKey].RsiState;
         _animationPlayerSystem.Play((uid.Value, animationPlayerComponent), animation, animationKey);
     }
 }
