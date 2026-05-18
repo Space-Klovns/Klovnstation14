@@ -16,7 +16,7 @@ public sealed partial class OreVentDroneComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField]
     [ViewVariables(VVAccess.ReadOnly)]
-    public EntityUid VentUid = EntityUid.Invalid;
+    public EntityUid? VentUid = null;
 
     /// <summary>
     ///     How many progress states this has.

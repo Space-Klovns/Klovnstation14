@@ -23,11 +23,11 @@ public abstract class SharedOreVentDroneSystem : EntitySystem
 
     private void OnShutdown(Entity<OreVentDroneComponent> entity, ref ComponentShutdown args)
     {
-        if (entity.Comp.VentUid == EntityUid.Invalid)
+        if (entity.Comp.VentUid is not { } ventUid)
             return;
 
         var ev = new OreVentDroneDestroyedEvent(entity.Owner);
-        RaiseLocalEvent(entity.Comp.VentUid, ref ev);
+        RaiseLocalEvent(ventUid, ref ev);
     }
 
     public void Arrive(Entity<OreVentDroneComponent?> entity, EntityUid ventUid)
@@ -46,7 +46,7 @@ public abstract class SharedOreVentDroneSystem : EntitySystem
         if (!Resolve(entity.Owner, ref entity.Comp))
             return;
 
-        entity.Comp.VentUid = EntityUid.Invalid;
+        entity.Comp.VentUid = null;
         Dirty(entity);
 
         _appearanceSystem.SetData(entity.Owner, OreVentDroneVisuals.Movement, OreVentDroneMovement.Dipping);

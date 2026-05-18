@@ -165,8 +165,8 @@ public sealed class OreVentDroneSystem : SharedOreVentDroneSystem
         var eqe = EntityQueryEnumerator<OreVentDroneComponent, SpriteComponent>();
         while (eqe.MoveNext(out var uid, out var droneComponent, out var spriteComponent))
         {
-            if (droneComponent.VentUid == EntityUid.Invalid ||
-                !TryComp<OreVentComponent>(droneComponent.VentUid, out var oreVentComponent))
+            if (droneComponent.VentUid is not { } ventUid ||
+                !TryComp<OreVentComponent>(ventUid, out var oreVentComponent))
                 continue;
 
             if (!_spriteSystem.LayerMapTryGet((uid, spriteComponent), OreVentDroneVisualLayers.ProgressBar, out var layerIndex, logMissing: false))
