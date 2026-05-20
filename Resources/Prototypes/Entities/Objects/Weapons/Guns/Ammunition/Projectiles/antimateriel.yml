@@ -14,7 +14,7 @@
     - Structural
   - type: RemoveCompOnCollide
     taggedComponents:
-      hristovStaticVentable: Airtight
+      HristovStaticVentable: Airtight
   - type: StaminaDamageOnCollide
     damage: 60
 
@@ -37,5 +37,5 @@
     - Structural
     ignoreResistances: true
   - type: RemoveCompOnCollide
-      taggedComponents:
-        hristovStaticVentable: Airtight
+    taggedComponents:
+      HristovStaticVentable: Airtight
