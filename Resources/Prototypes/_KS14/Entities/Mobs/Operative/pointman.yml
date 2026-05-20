@@ -50,6 +50,8 @@
         20
       NavInteract: !type:Bool
         true
+  - type: TtsVoice
+    id: en_US-arctic-medium
 
 - type: randomHumanoidSettings
   parent: [ KsBaseOperative ]
@@ -79,6 +81,8 @@
         30
       NavInteract: !type:Bool
         true
+  - type: TtsVoice
+    id: en_GB-northern_english_male-medium
 
 - type: startingGear
   parent: SyndicateFootsoldierGearRuin

@@ -20,11 +20,14 @@ public sealed class EmoteAudioEffectSystem : EntitySystem
 
     private void OnEmoteSound(Entity<EmoteAudioEffectComponent> entity, ref EmoteSoundPlayedEvent args)
     {
-        if (!_prototypeManager.TryIndex(args.EmoteId, out var emotePrototype))
-            return;
+        if (args.EmoteId is { } emoteId)
+        {
+            if (!_prototypeManager.TryIndex(emoteId, out var emotePrototype))
+                return;
 
-        if (!entity.Comp.EmoteCategory.HasFlag(emotePrototype.Category))
-            return;
+            if (!entity.Comp.EmoteCategory.HasFlag(emotePrototype.Category))
+                return;
+        }
 
         _audioEffectSystem.TryAddEffect(args.AudioEntity, entity.Comp.PresetId);
     }
