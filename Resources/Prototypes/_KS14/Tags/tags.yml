@@ -22,7 +22,4 @@
   id: BorgModuleSecurity #Secborgs
 
 - type: Tag
-  id: HristovStaticVentable #Hristov rework
-
-- type: Tag
-  id: HristovDynamicVentable #Hristov rework
+  id: HristovVentable #Hristov rework

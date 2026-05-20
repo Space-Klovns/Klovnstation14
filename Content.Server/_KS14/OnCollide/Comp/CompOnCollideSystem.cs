@@ -1,17 +1,18 @@
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
-using Robust.Shared.Serialization.Manager;
 using Content.Shared.Throwing;
 using Content.Shared.Tag;
+using Robust.Shared.Serialization.Manager;
+using Content.Shared.Projectiles;
 
 namespace Content.Server._KS14.OnCollide.Comp
 {
     public sealed class CompOnCollideSystem : EntitySystem
     {
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
-        [Dependency] private readonly TagSystem _tagSystem = default!;
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
+        [Dependency] private readonly TagSystem _tagSystem = default!;
 
         public override void Initialize()
         {
@@ -32,6 +33,12 @@ namespace Content.Server._KS14.OnCollide.Comp
                 return;
 
             var otherEnt = args.OtherEntity;
+
+            //Only ignite when the colliding fixture is projectile or ignition.
+            if (args.OurFixtureId != SharedProjectileSystem.ProjectileFixture)
+            {
+                return;
+            }
 
             foreach (var (tag, components) in component.TaggedComponents)
             {
@@ -63,6 +70,12 @@ namespace Content.Server._KS14.OnCollide.Comp
                 return;
 
             var otherEnt = args.OtherEntity;
+
+            //Only ignite when the colliding fixture is projectile or ignition.
+            if (args.OurFixtureId != SharedProjectileSystem.ProjectileFixture)
+            {
+                return;
+            }
 
             foreach (var (tag, components) in component.TaggedComponents)
             {
