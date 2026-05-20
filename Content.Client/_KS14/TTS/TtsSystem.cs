@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.IO;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.TTS;
@@ -15,6 +16,7 @@ public sealed class TtsSystem : SharedTtsSystem
     [Dependency] private readonly AudioSystem _audioSystem = default!;
 
     private bool _enabled = false;
+    private ConcurrentQueue<(AudioStream Stream, EntityUid Uid)> _queued = [];
 
     public override void Initialize()
     {
@@ -25,15 +27,29 @@ public sealed class TtsSystem : SharedTtsSystem
         SubscribeNetworkEvent<PlayTtsEvent>(OnPlayTts);
     }
 
-    private void OnPlayTts(PlayTtsEvent args)
+    public override void Update(float frameTime)
     {
-        if (!_enabled)
+        base.Update(frameTime);
+
+        if (_queued.IsEmpty)
             return;
 
-        if (!TryGetEntity(args.Source, out var uid))
+        while (_queued.TryDequeue(out var datum))
+        {
+            if (TerminatingOrDeleted(datum.Uid))
+                continue;
+
+            _audioSystem.PlayEntity(datum.Stream, datum.Uid, null, audioParams: AudioParams.Default);
+        }
+    }
+
+    private async void OnPlayTts(PlayTtsEvent args)
+    {
+        if (!_enabled ||
+            !TryGetEntity(args.Source, out var uid))
             return;
 
         var stream = _audioManager.LoadAudioWav(new MemoryStream(args.Data));
-        _audioSystem.PlayEntity(stream, uid.Value, null, audioParams: AudioParams.Default);
+        _queued.Enqueue((stream, uid.Value));
     }
 }
