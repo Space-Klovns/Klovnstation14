@@ -5,9 +5,9 @@ namespace Content.Server._KS14.OnCollide.Comp // KS14 - used for hristov for now
     [RegisterComponent]
     public sealed partial class AddCompOnCollideComponent : Component
     {
-        [DataField("component", required: true)]
+        [DataField("taggedComponents", required: true)]
         [AlwaysPushInheritance]
-        public ComponentRegistry Components { get; private set; } = new();
+        public Dictionary<string, ComponentRegistry> TaggedComponents { get; private set; } = new();
 
     }
 }
