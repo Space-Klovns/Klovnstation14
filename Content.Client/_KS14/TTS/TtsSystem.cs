@@ -49,7 +49,7 @@ public sealed class TtsSystem : SharedTtsSystem
             !TryGetEntity(args.Source, out var uid))
             return;
 
-        var stream = _audioManager.LoadAudioWav(new MemoryStream(args.Data));
+        var stream = _audioManager.LoadAudioOggVorbis(new MemoryStream(args.Data));
         _queued.Enqueue((stream, uid.Value));
     }
 }
