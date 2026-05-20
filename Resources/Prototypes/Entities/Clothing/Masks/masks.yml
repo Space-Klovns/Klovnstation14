@@ -19,6 +19,11 @@
     layers:
       Snout: Mask
     hideOnToggle: true
+  # KS14 Start
+  - type: EmoteAudioEffect
+    emoteCategory: Vocal
+    presetId: MuffledMask
+  # KS14 End
 
 - type: entity
   parent: [ClothingMaskGas, BaseSecurityContraband]
