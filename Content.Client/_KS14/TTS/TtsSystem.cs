@@ -1,10 +1,8 @@
 using System.Collections.Concurrent;
 using System.IO;
-using Content.Shared._KS14.Audio;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Chat;
 using Content.Shared._KS14.TTS;
-using Content.Shared.Inventory;
 using Robust.Client.Audio;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
@@ -17,7 +15,6 @@ public sealed class TtsSystem : SharedTtsSystem
     [Dependency] private readonly IConfigurationManager _configurationManager = default!;
     [Dependency] private readonly IAudioManager _audioManager = default!;
     [Dependency] private readonly AudioSystem _audioSystem = default!;
-    [Dependency] private readonly AudioEffectSystem _audioEffectSystem = default!;
 
     private bool _enabled = false;
     private ConcurrentQueue<(AudioStream Stream, EntityUid Uid)> _queued = [];
