@@ -1,0 +1,47 @@
+using Content.Server._KS14.NPC.Components;
+using Content.Shared._KS14.NPC.Systems;
+using Robust.Shared.Map;
+
+namespace Content.Server._KS14.NPC.Systems;
+
+public sealed class NpcSensorSystem : SharedNpcSensorSystem
+{
+    [Dependency] private readonly EntityLookupSystem _lookupSystem = default!;
+
+    [Dependency] private readonly EntityQuery<NpcSensorsComponent> _sensorsQuery = default!;
+
+    private const string DisturbanceCoordinatesSensorKey = "__Sensor__Disturbance.TargetCoordinates";
+
+    public void AddEffect(Entity<NpcSensorsComponent?> entity, string key, object? value)
+    {
+        if (!_sensorsQuery.Resolve(entity.Owner, ref entity.Comp))
+            return;
+
+        entity.Comp.AggregatedEffects[key] = value;
+    }
+
+    public void AddEffects(Entity<NpcSensorsComponent?> entity, IEnumerable<(string, object?)> effects)
+    {
+        if (!_sensorsQuery.Resolve(entity.Owner, ref entity.Comp))
+            return;
+
+        foreach (var (key, value) in effects)
+            entity.Comp.AggregatedEffects[key] = value;
+    }
+
+    public void AddEffects(Entity<NpcSensorsComponent?> entity, Dictionary<string, object?> effects)
+    {
+        if (!_sensorsQuery.Resolve(entity.Owner, ref entity.Comp))
+            return;
+
+        foreach (var (key, value) in effects)
+            entity.Comp.AggregatedEffects[key] = value;
+    }
+
+    public override void DoDisturbance(EntityCoordinates coordinates, float radius)
+    {
+        var entities = _lookupSystem.GetEntitiesInRange<NpcSensorsComponent>(coordinates, radius, flags: LookupFlags.Approximate | LookupFlags.Sundries | LookupFlags.Dynamic | LookupFlags.Uncontained);
+        foreach (var entity in entities)
+            AddEffect(entity!, DisturbanceCoordinatesSensorKey, coordinates);
+    }
+}

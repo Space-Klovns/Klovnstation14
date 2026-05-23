@@ -3,6 +3,7 @@ using System.Linq;
 using System.Numerics;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.Pathfinding;
+using Content.Server.Power.EntitySystems;
 using Content.Shared.Climbing.Components;
 using Content.Shared.CombatMode;
 using Content.Shared.Doors.Components;
@@ -621,7 +622,8 @@ public sealed partial class NPCSteeringSystem
 
         var isAccessRequired = (flags & PathfindingBreadcrumbFlag.Access) != 0x0 &&
                                !_accessSystem.IsAllowed(ent, doorUid);
-        var canInteract = (ent.Comp.Flags & PathFlags.Interact) != 0x0;
+        var canInteract = (ent.Comp.Flags & PathFlags.Interact) != 0x0 &&
+            this.IsPowered(doorUid, EntityManager); // KS14: ANK: check if it's powered first; otherwise, don't
 
         // If not access locked we're fine if it can be bumped open or we can interact
         if (!isAccessRequired

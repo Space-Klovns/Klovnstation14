@@ -53,6 +53,7 @@ public abstract partial class SharedGunSystem : EntitySystem
     [Dependency] private readonly SharedCombatModeSystem _combatMode = default!;
     [Dependency] private readonly SharedHandsSystem _hands = default!;
     [Dependency] private readonly UseDelaySystem _useDelay = default!;
+    [Dependency] private readonly _KS14.NPC.Systems.SharedNpcSensorSystem _npcSensorSystem = default!; // KS14: ANK
     [Dependency] protected readonly DamageableSystem Damageable = default!;
     [Dependency] protected readonly ExamineSystemShared Examine = default!;
     [Dependency] protected readonly IPrototypeManager ProtoManager = default!;
@@ -543,6 +544,7 @@ public abstract partial class SharedGunSystem : EntitySystem
                     {
                         var uid = PredictedSpawnAtPosition(cartridge.Prototype, fromEnt);
                         CreateAndFireProjectiles(uid, cartridge);
+                        _npcSensorSystem.DoDisturbance(fromCoordinates, gun.Comp.SoundGunshotModified?.Params.MaxDistance ?? 0f); // KS14: ANK: AI sensors
 
                         RaiseLocalEvent(ent!.Value, new AmmoShotEvent()
                         {
@@ -571,6 +573,7 @@ public abstract partial class SharedGunSystem : EntitySystem
                     if (ent == null)
                         break;
                     CreateAndFireProjectiles(ent.Value, newAmmo);
+                    _npcSensorSystem.DoDisturbance(fromCoordinates, gun.Comp.SoundGunshotModified?.Params.MaxDistance ?? 0f); // KS14: ANK: AI sensors
 
                     break;
                 case HitscanAmmoComponent:
@@ -589,6 +592,7 @@ public abstract partial class SharedGunSystem : EntitySystem
                     PredictedDel(ent);
 
                     Audio.PlayPredicted(gun.Comp.SoundGunshotModified, gun, user);
+                    _npcSensorSystem.DoDisturbance(fromCoordinates, gun.Comp.SoundGunshotModified?.Params.MaxDistance ?? 0f); // KS14: ANK: AI sensors
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

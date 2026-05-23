@@ -50,9 +50,17 @@
         key: LastTargetCoordinates
 
   ## Advancing
-  - tasks:
+  - preconditions:
+    - !type:HasVirtualMarkerPrecondition
+      id: OpInCombat
+    tasks:
     - !type:HTNCompoundTask
       task: KsDoAdvanceCompound
+
+  ## Sensors
+  - tasks:
+    - !type:HTNCompoundTask
+      task: KsOperativeConsiderSensorsCompound
 
 - type: utilityQuery
   id: KsOperativeNearbyCampingMarkers

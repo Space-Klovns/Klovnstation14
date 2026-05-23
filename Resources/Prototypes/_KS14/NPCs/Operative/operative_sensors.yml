@@ -1,0 +1,46 @@
+
+# List of used sensors:
+#   Disturbance
+#     EntityCoordinates TargetCoordinates
+#
+#  ...
+
+
+- type: htnCompound
+  id: KsOperativeConsiderSensorsCompound
+  branches:
+  # Handle sense: Disturbance
+  - preconditions:
+    # DGAF about disturbances if not in combat
+    - !type:HasVirtualMarkerPrecondition
+      id: OpInCombat
+      invert: true
+
+    # Sensor key
+    - !type:KeyExistsPrecondition
+      key: "__Sensor__Disturbance.TargetCoordinates"
+    tasks:
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "Prepare the altar."
+
+    - !type:HTNPrimitiveTask
+      operator: !type:CopyKeyOperator
+        originKey: "__Sensor__Disturbance.TargetCoordinates"
+        targetKey: LastTargetCoordinates
+
+    # Delete sensor data
+    - !type:HTNPrimitiveTask
+      operator: !type:SetNullOperator
+        key: "__Sensor__Disturbance.TargetCoordinates"
+
+    # Enter combat
+    - !type:HTNPrimitiveTask # marker
+      operator: !type:EnsureVirtualMarkerOperator
+        id: OpInCombat
+
+  # Get sensor data
+  - tasks:
+    - !type:HTNPrimitiveTask
+        operator: !type:HandleSensorsOperator

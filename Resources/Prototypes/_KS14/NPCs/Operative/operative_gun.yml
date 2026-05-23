@@ -6,7 +6,7 @@
   - tasks:
     - !type:HTNPrimitiveTask
       operator: !type:UtilityOperator
-        proto: NearbyGunTargets
+        proto: KsNearbyGunTargets
 
     - !type:HTNPrimitiveTask # copy target coords
       operator: !type:CopyKeyOperator
@@ -34,11 +34,16 @@
         key: Target
       operator: !type:GunOperator
         targetKey: Target
+        opaqueKey: false
       services:
-        - !type:UtilityService
-          id: RangedService
-          proto: NearbyGunTargets
-          key: Target
+      - !type:UtilityService
+        id: RangedService
+        proto: KsNearbyGunTargets
+        key: Target
+
+    - !type:HTNPrimitiveTask # marker
+      operator: !type:EnsureVirtualMarkerOperator
+        id: OpInCombat
 
 # Selects ammo in range, then moves to it and picks it up
 - type: htnCompound
@@ -159,6 +164,10 @@
     - !type:HTNPrimitiveTask # Wait one tick for any virtual item from the wield to be deleted so that a hand is free, as they are QueueDel'd
       operator: !type:WaitTickOperator
 
+    - !type:HTNPrimitiveTask # Static reload act delay
+      operator: !type:StaticWaitOperator
+        key: ReloadActDelay
+
     # Equip ammo in offhand
     - !type:HTNPrimitiveTask
       operator: !type:EquipOperator
@@ -190,3 +199,23 @@
   - !type:TargetAmmoMatchesCon
     curve: !type:BoolCurve
   # TODO: Get ammo count.
+
+- type: utilityQuery
+  id: KsNearbyGunTargets
+  query:
+  - !type:NearbyHostilesQuery
+  considerations:
+  - !type:TargetIsAliveCon
+    curve: !type:BoolCurve
+  - !type:TargetIsCritCon
+    curve: !type:InverseBoolCurve
+  - !type:TargetDistanceCon
+    curve: !type:PresetCurve
+      preset: TargetDistance
+  - !type:TargetHealthCon
+    curve: !type:PresetCurve
+      preset: TargetHealth
+  - !type:TargetAccessibleCon
+    curve: !type:BoolCurve
+  - !type:TargetInLOSCon # InLOSOrCurrent -> InLOS
+    curve: !type:BoolCurve
