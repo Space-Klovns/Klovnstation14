@@ -33,6 +33,9 @@
     components:
     - type: NpcCampingSpot
   considerations:
+  - !type:RandomValueCon # A tad bit of randomness
+    curve: !type:BoolCurve
+    probability: 0.4
   - !type:TargetDistanceCon
     curve: !type:PresetCurve
       preset: KsTargetDistanceLessClose

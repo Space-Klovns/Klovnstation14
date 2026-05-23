@@ -74,6 +74,11 @@
   - tasks:
     - !type:HTNCompoundTask
       task: KsOperativeConsiderHealingCompound
+
+  - preconditions:
+    - !type:KeyExistsPrecondition
+      key: RetreatTargetCoordinates
+    tasks:
     - !type:HTNPrimitiveTask # Wait until we finish moving to our retreat position
       operator: !type:WaitUntilNullOperator
         key: RetreatTargetCoordinates
@@ -137,10 +142,14 @@
     key: OwnerCoordinates
     curve: !type:PresetCurve
       preset: TargetDistance
+  - !type:CoordinatesInFOVCon
+    curve: !type:InverseBoolCurve
+    toKey: LastTargetCoordinates
+    angle: 65
   - !type:CoordinatesInLOSCon # Dont go to markers that have LOS of where the target was
     curve: !type:InverseBoolCurve
     toKey: LastTargetCoordinates
-    radius: 5
+    radius: 7.5
 
 - type: utilityQuery
   id: KsInventoryMeds

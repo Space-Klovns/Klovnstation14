@@ -31,3 +31,5 @@
   - type: StationEvent
     duration: 1890
     maxDuration: 1890
+  - type: NightshiftRule
+    color: '#707391'
