@@ -83,10 +83,10 @@ public sealed partial class OreVentSystem : EntitySystem
 
         if (_netManager.IsClient)
             _popupSystem.PopupClient(
-                Loc.GetString("ks-specific-orevent-user", ("vent", entity.Owner)), entity, args.User, type: PopupType.LargeCaution);
+                Loc.GetString("ks-specific-orevent-startingextraction-user", ("vent", entity.Owner)), entity, args.User, type: PopupType.LargeCaution);
         else
             _popupSystem.PopupEntity(
-                Loc.GetString("ks-specific-orevent-others", ("vent", entity.Owner), ("user", Identity.Name(args.User, EntityManager, viewer: null))), entity, Filter.PvsExcept(args.User), true, type: PopupType.MediumCaution);
+                Loc.GetString("ks-specific-orevent-startingextraction-others", ("vent", entity.Owner), ("user", Identity.Name(args.User, EntityManager, viewer: null))), entity, Filter.PvsExcept(args.User), true, type: PopupType.MediumCaution);
     }
 
     private void OnAttemptPreExtractionDoAfter(Entity<OreVentComponent> entity, ref DoAfterAttemptEvent<OreVentPreExtractionDoAfterEvent> args)
