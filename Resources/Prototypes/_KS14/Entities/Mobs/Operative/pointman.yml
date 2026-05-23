@@ -82,7 +82,7 @@
       NavInteract: !type:Bool
         true
   - type: TtsVoice
-    id: en_GB-northern_english_male-medium
+    id: en_US-mlo-toc-medium
 
 - type: startingGear
   parent: SyndicateFootsoldierGearRuin

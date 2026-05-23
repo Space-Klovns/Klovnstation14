@@ -27,6 +27,7 @@
   - type: DoAfter # doafter is on the vent
   - type: OreVent
     preExtractionDuration: 3s
+    clearingDuration: 3s
     clearingIterations: 6
     tappingProcessEntityProto: KsOreVentMobSpawnerLava
     droneEntityProto: KsOreVentDrone
@@ -210,7 +211,7 @@
   categories: [ Debug ]
   components:
   - type: OreVent
-    preExtractionDuration: 1s
+    clearingDuration: 1s
     clearingIterations: 2
     clearRadius: 1
     extractionDuration: 5s

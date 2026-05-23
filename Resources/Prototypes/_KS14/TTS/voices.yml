@@ -125,3 +125,7 @@
 - type: ttsVoice
   id: en_US-sam-medium
   voice: en_US-sam-medium
+
+- type: ttsVoice
+  id: en_US-mlo-toc-medium
+  voice: en_US-mlo-toc-medium

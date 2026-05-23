@@ -3,6 +3,7 @@ using Content.Shared._KS14.OreWell;
 using Content.Shared._KS14.ScanDiscoverable.Base;
 using Content.Shared.DoAfter;
 using Content.Shared.Explosion.EntitySystems;
+using Content.Shared.IdentityManagement;
 using Content.Shared.Interaction;
 using Content.Shared.Jittering;
 using Content.Shared.Popups;
@@ -31,13 +32,17 @@ public sealed partial class OreVentSystem : EntitySystem
         InitialiseTapping();
 
         SubscribeLocalEvent<OreVentComponent, InteractUsingEvent>(OnInteractUsing);
+
         SubscribeLocalEvent<OreVentComponent, OreVentPreExtractionDoAfterEvent>(OnPreExtractionDoAfter);
+        SubscribeLocalEvent<OreVentComponent, DoAfterAttemptEvent<OreVentPreExtractionDoAfterEvent>>(OnAttemptPreExtractionDoAfter);
+
+        SubscribeLocalEvent<OreVentComponent, OreVentClearingDoAfterEvent>(OnClearingDoAfter);
     }
 
     private void OnInteractUsing(Entity<OreVentComponent> entity, ref InteractUsingEvent args)
     {
         if (args.Handled ||
-            entity.Comp.DoingPreExtraction ||
+            entity.Comp.DoingClearing ||
             !_discoverableSystem.IsScanner(args.Used))
             return;
 
@@ -60,7 +65,49 @@ public sealed partial class OreVentSystem : EntitySystem
             return;
         }
 
-        var success = _doAfterSystem.TryStartDoAfter(new DoAfterArgs(EntityManager, entity.Owner, entity.Comp.PreExtractionDuration / entity.Comp.ClearingIterations, new OreVentPreExtractionDoAfterEvent(0), entity.Owner, entity.Owner, used: null)
+        var success = _doAfterSystem.TryStartDoAfter(new DoAfterArgs(EntityManager, args.User, entity.Comp.ClearingDuration, new OreVentPreExtractionDoAfterEvent(), entity.Owner, entity.Owner, used: args.Used)
+        {
+            BreakOnDamage = true,
+
+            BreakOnMove = true,
+            NeedHand = true,
+            BreakOnDropItem = true,
+
+            RequireCanInteract = true,
+
+            AttemptFrequency = AttemptFrequency.EveryTick
+        });
+
+        if (!success)
+            return;
+
+        if (_netManager.IsClient)
+            _popupSystem.PopupClient(
+                Loc.GetString("ks-specific-orevent-user", ("vent", entity.Owner)), entity, args.User, type: PopupType.LargeCaution);
+        else
+            _popupSystem.PopupEntity(
+                Loc.GetString("ks-specific-orevent-others", ("vent", entity.Owner), ("user", Identity.Name(args.User, EntityManager, viewer: null))), entity, Filter.PvsExcept(args.User), true, type: PopupType.MediumCaution);
+    }
+
+    private void OnAttemptPreExtractionDoAfter(Entity<OreVentComponent> entity, ref DoAfterAttemptEvent<OreVentPreExtractionDoAfterEvent> args)
+    {
+        if (args.Cancelled)
+            return;
+
+        if (!entity.Comp.Tapped &&
+            !entity.Comp.BeingTapped &&
+            !entity.Comp.DoingClearing)
+            return;
+
+        args.Cancel();
+    }
+
+    private void OnPreExtractionDoAfter(Entity<OreVentComponent> entity, ref OreVentPreExtractionDoAfterEvent args)
+    {
+        if (args.Cancelled)
+            return;
+
+        var success = _doAfterSystem.TryStartDoAfter(new DoAfterArgs(EntityManager, entity.Owner, entity.Comp.ClearingDuration / entity.Comp.ClearingIterations, new OreVentClearingDoAfterEvent(0), entity.Owner, entity.Owner, used: null)
         {
             BreakOnDamage = true,
             DistanceThreshold = null,
@@ -79,11 +126,11 @@ public sealed partial class OreVentSystem : EntitySystem
         args.Handled = true;
         _jitteringSystem.AddJitter(entity.Owner, amplitude: -8, frequency: 80);
 
-        entity.Comp.DoingPreExtraction = true;
-        DirtyField(entity.Owner, entity.Comp, nameof(entity.Comp.DoingPreExtraction));
+        entity.Comp.DoingClearing = true;
+        DirtyField(entity.Owner, entity.Comp, nameof(entity.Comp.DoingClearing));
     }
 
-    private void OnPreExtractionDoAfter(Entity<OreVentComponent> entity, ref OreVentPreExtractionDoAfterEvent args)
+    private void OnClearingDoAfter(Entity<OreVentComponent> entity, ref OreVentClearingDoAfterEvent args)
     {
         if (args.Cancelled)
             goto endExtraction;
@@ -108,8 +155,8 @@ public sealed partial class OreVentSystem : EntitySystem
     endExtraction:
         RemCompDeferred<JitteringComponent>(entity);
 
-        entity.Comp.DoingPreExtraction = false;
-        DirtyField(entity.Owner, entity.Comp, nameof(entity.Comp.DoingPreExtraction));
+        entity.Comp.DoingClearing = false;
+        DirtyField(entity.Owner, entity.Comp, nameof(entity.Comp.DoingClearing));
     }
 
     private void ClearAreaAround(Entity<OreVentComponent> entity, float radius)

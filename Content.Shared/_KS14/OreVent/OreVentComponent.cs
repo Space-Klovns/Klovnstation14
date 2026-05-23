@@ -23,11 +23,11 @@ public sealed partial class OreVentComponent : Component
     public bool Tapped = false;
 
     /// <summary>
-    ///     Is pre-extraction doafter happening?
+    ///     Is the area around the vent being cleared?
     /// </summary>
     [DataField, AutoNetworkedField]
     [ViewVariables(VVAccess.ReadOnly)]
-    public bool DoingPreExtraction = false;
+    public bool DoingClearing = false;
 
     /// <summary>
     ///     Is this vent in the process of being tapped?
@@ -74,6 +74,10 @@ public sealed partial class OreVentComponent : Component
     [ViewVariables(VVAccess.ReadWrite)]
     public TimeSpan PreExtractionDuration = TimeSpan.Zero;
 
+    [DataField]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public TimeSpan ClearingDuration = TimeSpan.Zero;
+
     /// <summary>
     ///     How long it takes to finish extraction.
     /// </summary>
@@ -111,13 +115,19 @@ public enum OreVentVisuals
 [Serializable, NetSerializable]
 public sealed partial class OreVentPreExtractionDoAfterEvent : DoAfterEvent
 {
+    public override DoAfterEvent Clone() => this;
+}
+
+[Serializable, NetSerializable]
+public sealed partial class OreVentClearingDoAfterEvent : DoAfterEvent
+{
     /// <summary>
     ///     Clearing iteration.
     ///         The first clearing is at 0.
     /// </summary>
     public int Iteration = 0;
 
-    public OreVentPreExtractionDoAfterEvent(int iteration)
+    public OreVentClearingDoAfterEvent(int iteration)
     {
         Iteration = iteration;
     }
