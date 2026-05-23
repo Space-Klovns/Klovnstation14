@@ -40,7 +40,7 @@
   equipment:
     id: CMOPDA
     ears: ClothingHeadsetCMO
-    belt: ClothingBeltMedicalFilled
+    belt: ClothingBeltMedicalFilled #ks14
   storage:
     back:
     - Flash
