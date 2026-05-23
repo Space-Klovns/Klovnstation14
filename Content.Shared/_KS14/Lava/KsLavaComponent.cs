@@ -11,11 +11,9 @@ namespace Content.Shared._KS14.Lava;
 [Access(typeof(KsLavaSystem))]
 public sealed partial class KsLavaComponent : Component
 {
-    [DataField]
     [AutoNetworkedField]
     public EntityUid? LocalGridUid = null;
 
-    [DataField]
     [AutoNetworkedField]
     public Vector2i LocalTile = Vector2i.Zero;
 
