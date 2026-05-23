@@ -24,6 +24,7 @@
   id: DoctorGear
   equipment:
     ears: ClothingHeadsetMedical
+    belt: ClothingBeltMedicalFilled #ks14
 
 - type: chameleonOutfit
   id: MedicalDoctorChameleonOutfit
@@ -35,4 +36,4 @@
     neck: ClothingNeckStethoscope
     outerClothing: ClothingOuterCoatLab
     gloves: ClothingHandsGlovesLatex
-    belt: ClothingBeltMedicalFilled #KS14
+    belt: ClothingBeltMedical #KS14
