@@ -130,7 +130,6 @@
         pathfindKey: RetreatTargetPathfind
         rangeKey: CampingRange
 
-
 - type: utilityQuery
   id: KsOperativeRetreatableCampingMarkers
   query:
@@ -142,7 +141,7 @@
     key: OwnerCoordinates
     curve: !type:PresetCurve
       preset: TargetDistance
-  - !type:CoordinatesInFOVCon
+  - !type:CoordinatesInFOVCon # Don't go in the direction of the target ffs
     curve: !type:InverseBoolCurve
     toKey: LastTargetCoordinates
     angle: 65
