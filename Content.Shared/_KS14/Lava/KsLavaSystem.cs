@@ -3,8 +3,10 @@ using Content.Shared.Damage.Systems;
 using Content.Shared.GameTicking;
 using Content.Shared.StepTrigger.Systems;
 using Content.Shared.Stunnable;
+using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Systems;
+using Robust.Shared.Random;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -16,6 +18,8 @@ namespace Content.Shared._KS14.Lava;
 public sealed class KsLavaSystem : EntitySystem
 {
     [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private readonly INetManager _netManager = default!;
+    [Dependency] private readonly IRobustRandom _robustRandom = default!;
     [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
     [Dependency] private readonly DamageableSystem _damageableSystem = default!;
     [Dependency] private readonly SharedStunSystem _stunSystem = default!;
@@ -78,7 +82,15 @@ public sealed class KsLavaSystem : EntitySystem
         Dirty(args.Tripper, sinkingComponent);
 
         _physicsSystem.SetBodyType(args.Tripper, BodyType.Static);
-        _chatSystem.TryEmoteWithChat(args.Tripper, "Scream"); // yes i know
+        _transformSystem.SetCoordinates(args.Tripper, Transform(entity.Owner).Coordinates);
+
+        if (!_netManager.IsServer)
+            return;
+
+        if (_robustRandom.Prob(0.02f))
+            _chatSystem.TrySendInGameICMessage(args.Tripper, "gives a thumbs up as they melt to death…", InGameICChatType.Emote, false); // i wonder what this is in reference to
+        else
+            _chatSystem.TryEmoteWithChat(args.Tripper, "Scream"); // yes i know
     }
 
     private void OnEntParentChanged(Entity<KsLavaComponent> entity, ref EntParentChangedMessage args)

@@ -7,7 +7,6 @@ namespace Content.Shared._KS14.Lava;
 /// </summary>
 [RegisterComponent, NetworkedComponent]
 [AutoGenerateComponentState, AutoGenerateComponentPause]
-[Access(typeof(KsLavaSystem))]
 public sealed partial class KsLavaSinkingComponent : Component
 {
     /// <summary>
@@ -23,4 +22,6 @@ public sealed partial class KsLavaSinkingComponent : Component
     [DataField, AutoNetworkedField]
     [AutoPausedField]
     public TimeSpan SinkTime = TimeSpan.MinValue;
+
+    public object? Shader = null;
 }

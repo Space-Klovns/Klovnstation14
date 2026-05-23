@@ -15,13 +15,10 @@ public sealed class KsLavaSinkingSystem : EntitySystem
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
     private static readonly ProtoId<ShaderPrototype> ShaderId = "HorizontalCut";
-    private ShaderInstance _shaderInstance = null!;
 
     public override void Initialize()
     {
         base.Initialize();
-
-        _shaderInstance = _prototypeManager.Index(ShaderId).InstanceUnique();
 
         SubscribeLocalEvent<KsLavaSinkingComponent, ComponentStartup>(OnStartup);
         SubscribeLocalEvent<KsLavaSinkingComponent, ComponentShutdown>(OnShutdown);
@@ -44,7 +41,8 @@ public sealed class KsLavaSinkingSystem : EntitySystem
         if (!TryComp<SpriteComponent>(entity.Owner, out var spriteComponent))
             return;
 
-        spriteComponent.PostShader = enabled ? _shaderInstance : null;
+        entity.Comp.Shader = enabled ? _prototypeManager.Index(ShaderId).InstanceUnique() : null;
+        spriteComponent.PostShader = (ShaderInstance?)entity.Comp.Shader;
         spriteComponent.RaiseShaderEvent = enabled;
     }
 
@@ -53,7 +51,8 @@ public sealed class KsLavaSinkingSystem : EntitySystem
         var time = (float)((entity.Comp.SinkTime - _gameTiming.CurTime) / (entity.Comp.SinkTime - entity.Comp.StartTime));
         time = MathF.Max(time, 0f);
 
-        _shaderInstance.SetParameter("c", 1 - time);
-        _shaderInstance.SetParameter("alphaModifier", MathF.Max(time - 0.25f, 0f));
+        var shaderInstance = (ShaderInstance)entity.Comp.Shader!;
+        shaderInstance.SetParameter("c", 1 - time);
+        shaderInstance.SetParameter("alphaModifier", MathF.Max(time - 0.25f, 0f));
     }
 }
