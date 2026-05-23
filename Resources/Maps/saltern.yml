@@ -37778,12 +37778,11 @@ entities:
       - !type:BiomeEntityLayer
         threshold: -0.3
         noise:
-          frequency: 0.05
-          noiseType: Cellular
-          fractalType: FBm
-          octaves: 5
-          cellularDistanceFunction: Euclidean
-          cellularReturnType: Distance2
+          frequency: 0.2
+          noiseType: Perlin
+          fractalType: Ridged
+          gain: 0.5
+          octaves: 3
           seed: 0
         allowedTiles:
         - FloorSnow
