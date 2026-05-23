@@ -17,22 +17,11 @@ public sealed class KsStackProcessorSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<KsStackProcessorComponent, PreventCollideEvent>(OnPreventCollide);
-
         SubscribeLocalEvent<KsStackProcessorComponent, KsAttemptProcessEntityEvent>(OnAttemptProcess);
         SubscribeLocalEvent<KsStackProcessorComponent, KsStartedProcessingEntityEvent>(OnStartedProcessing);
         SubscribeLocalEvent<KsStackProcessorComponent, KsFinishedProcessingEntityEvent>(OnFinishedProcessing);
+        SubscribeLocalEvent<KsStackProcessorComponent, KsEntityRemovedFromActiveProcessorEvent>(OnEntityRemovedFromProcessor);
         SubscribeLocalEvent<KsStackProcessorComponent, KsFinishedProcessingEverythingEvent>(OnFinishedProcessingEverything);
-    }
-
-    private void OnPreventCollide(Entity<KsStackProcessorComponent> entity, ref PreventCollideEvent args)
-    {
-        if (args.Cancelled)
-            return;
-
-        if (!TryComp<StackComponent>(args.OtherEntity, out var stackComponent) ||
-            !entity.Comp.Conversions.ContainsKey(stackComponent.StackTypeId))
-            args.Cancelled = true;
     }
 
     private void OnAttemptProcess(Entity<KsStackProcessorComponent> entity, ref KsAttemptProcessEntityEvent args)
@@ -53,6 +42,10 @@ public sealed class KsStackProcessorSystem : EntitySystem
     private void OnStartedProcessing(Entity<KsStackProcessorComponent> entity, ref KsStartedProcessingEntityEvent args)
     {
         _appearanceSystem.SetData(entity.Owner, KsStackProcessorVisuals.Active, true);
+
+        var delta = _transformSystem.GetWorldPosition(args.ProcessedUid) - _transformSystem.GetWorldPosition(args.ProcessorEntity.Comp2);
+        entity.Comp.OutputOffsets[args.ProcessedUid] = -delta;
+        Dirty(entity);
     }
 
     private void OnFinishedProcessing(Entity<KsStackProcessorComponent> entity, ref KsFinishedProcessingEntityEvent args)
@@ -72,6 +65,7 @@ public sealed class KsStackProcessorSystem : EntitySystem
         var maxCount = _prototypeManager.Index(stackComponent.StackTypeId).MaxCount ?? int.MaxValue;
 
         var spawnCoordinates = _transformSystem.GetMoverCoordinates(entity.Owner);
+        spawnCoordinates = spawnCoordinates.WithPosition(spawnCoordinates.Position + entity.Comp.OutputOffsets[args.ProcessedUid]);
 
         if (spawnedCount <= maxCount)
         {
@@ -87,6 +81,14 @@ public sealed class KsStackProcessorSystem : EntitySystem
 
             _stackSystem.SetCount((PredictedSpawnAtPosition(convertedProto, spawnCoordinates), null), spawnedCount % maxCount);
         }
+    }
+
+    private void OnEntityRemovedFromProcessor(Entity<KsStackProcessorComponent> entity, ref KsEntityRemovedFromActiveProcessorEvent args)
+    {
+        if (!entity.Comp.OutputOffsets.Remove(args.ProcessedUid))
+            return;
+
+        Dirty(entity);
     }
 
     private void OnFinishedProcessingEverything(Entity<KsStackProcessorComponent> entity, ref KsFinishedProcessingEverythingEvent args)

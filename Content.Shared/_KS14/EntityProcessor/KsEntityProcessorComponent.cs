@@ -44,16 +44,26 @@ public sealed partial class KsEntityProcessorComponent : Component
 public record struct KsAttemptProcessEntityEvent(bool Cancelled, Entity<KsEntityProcessorComponent> ProcessorEntity, EntityUid ProcessedUid, TimeSpan ProcessingFinishTime);
 
 /// <summary>
-///     Raised on a processor when an entity is done being processed.
+///     Raised on a processor when an entity starts being processed, before
+///         it is forced into the processor container.
 /// </summary>
 [ByRefEvent]
-public record struct KsStartedProcessingEntityEvent(Entity<KsEntityProcessorComponent> ProcessorEntity, EntityUid ProcessedUid);
+public record struct KsStartedProcessingEntityEvent(Entity<KsEntityProcessorComponent, TransformComponent> ProcessorEntity, EntityUid ProcessedUid);
 
 /// <summary>
 ///     Raised on a processor when an entity is done being processed.
 /// </summary>
 [ByRefEvent]
 public record struct KsFinishedProcessingEntityEvent(Entity<KsEntityProcessorComponent, KsActiveEntityProcessorComponent?> Entity, EntityUid ProcessedUid);
+
+/// <summary>
+///     Raised on an active processor after an entity is removed from the processor container;
+///         can be either on successful processing or fail.
+///
+///     Not automatically raised by base processor code when something has <i>finished</i> processing.
+/// </summary>
+[ByRefEvent]
+public record struct KsEntityRemovedFromActiveProcessorEvent(Entity<KsActiveEntityProcessorComponent> Entity, EntityUid ProcessedUid);
 
 /// <summary>
 ///     Raised on a processor when there is nothing left to process.

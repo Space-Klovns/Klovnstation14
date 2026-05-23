@@ -33,9 +33,9 @@ public sealed partial class CoordinatesInFOVCon : UtilityConsideration
         if (!blackboard.TryGetValue<EntityCoordinates>(ReferenceCoordinatesKey, out var referenceCoordinates, EntityManager))
             return 0f;
 
-        var ownerPosition = _transformSystem.GetMapCoordinates(ownerUid).Position;
-        var targetPosition = _transformSystem.GetMapCoordinates(targetUid).Position;
-        var referencePosition = _transformSystem.ToMapCoordinates(referenceCoordinates).Position;
+        var ownerPosition = _transformSystem.GetWorldPosition(ownerUid);
+        var targetPosition = _transformSystem.GetWorldPosition(targetUid);
+        var referencePosition = _transformSystem.ToWorldPosition(referenceCoordinates);
 
         var forward = targetPosition - ownerPosition;
         Vector2Helpers.Normalize(ref forward);

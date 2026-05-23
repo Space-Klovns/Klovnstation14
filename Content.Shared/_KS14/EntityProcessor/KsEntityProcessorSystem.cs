@@ -87,13 +87,21 @@ public sealed class KsEntityProcessorSystem : EntitySystem
         var attemptEv = new KsAttemptProcessEntityEvent(false, processorEntity!, processedEntity, _gameTiming.CurTime);
         RaiseLocalEvent(processorEntity, ref attemptEv);
 
-        if (attemptEv.Cancelled)
+        var processorTransformComponent = Transform(processorEntity.Owner);
+
+        if (attemptEv.Cancelled ||
+            !_containerSystem.CanInsert(processedEntity.Owner, processorEntity.Comp.Container, containerXform: processorTransformComponent))
             return false;
 
-        _containerSystem.Insert((processedEntity, null, null, processedEntity), processorEntity.Comp.Container);
-
-        var startEv = new KsStartedProcessingEntityEvent(processorEntity!, processedEntity);
+        var startEv = new KsStartedProcessingEntityEvent((processorEntity.Owner, processorEntity.Comp, processorTransformComponent), processedEntity);
         RaiseLocalEvent(processorEntity, ref startEv);
+
+        _containerSystem.Insert(
+            (processedEntity, null, null, processedEntity),
+            processorEntity.Comp.Container,
+            containerXform: processorTransformComponent,
+            force: true /* already checked Caninsert */
+        );
 
         if (attemptEv.ProcessingFinishTime == _gameTiming.CurTime)
         {
@@ -126,6 +134,9 @@ public sealed class KsEntityProcessorSystem : EntitySystem
 
         entity.Comp.Processing.Remove(entity);
         Dirty(entity);
+
+        var ev = new KsEntityRemovedFromActiveProcessorEvent(entity, args.Entity);
+        RaiseLocalEvent(entity.Owner, ref ev);
     }
 
     private void OnPowerChanged(Entity<KsEntityProcessorComponent> entity, ref PowerChangedEvent args)

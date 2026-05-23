@@ -1,7 +1,8 @@
 light_mode unshaded;
 
-const highp float c = 0.3;
-const highp float alphaModifier = 0.2;
+// KS14: Made `c` and `alphaModifier` into `uniform` from `const`
+uniform highp float c = 0.3;
+uniform highp float alphaModifier = 0.2;
 const bool below = true;
 
 void fragment()

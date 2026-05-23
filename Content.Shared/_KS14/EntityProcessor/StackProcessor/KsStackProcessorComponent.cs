@@ -1,3 +1,4 @@
+using System.Numerics;
 using Content.Shared.Stacks;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
@@ -6,6 +7,7 @@ using Robust.Shared.Serialization;
 namespace Content.Shared._KS14.EntityProcessor.StackProcessor;
 
 [RegisterComponent, NetworkedComponent]
+[AutoGenerateComponentState]
 [Access(typeof(KsStackProcessorSystem))]
 public sealed partial class KsStackProcessorComponent : Component
 {
@@ -27,6 +29,13 @@ public sealed partial class KsStackProcessorComponent : Component
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
     public Dictionary<ProtoId<StackPrototype>, EntProtoId> Conversions = [];
+
+    /// <summary>
+    ///     Dict of things that are being processed, and where they will be outputted relative to the processor.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    [ViewVariables(VVAccess.ReadOnly)]
+    public Dictionary<EntityUid, Vector2> OutputOffsets = [];
 
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
