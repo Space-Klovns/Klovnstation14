@@ -103,6 +103,27 @@ public sealed partial class OreVentComponent : Component
     public ProtoId<OreWellSettingPrototype> OreWellSettingId;
 }
 
+/// <summary>
+///     Added to orevents that are clearing.
+/// </summary>
+[RegisterComponent, NetworkedComponent]
+[AutoGenerateComponentState, AutoGenerateComponentPause]
+public sealed partial class ActiveClearingOreVentComponent : Component
+{
+    [AutoNetworkedField, DataField]
+    [ViewVariables(VVAccess.ReadOnly)]
+    public TimeSpan IterationDelay = TimeSpan.Zero;
+
+    [DataField]
+    [AutoNetworkedField, AutoPausedField]
+    [ViewVariables(VVAccess.ReadOnly)]
+    public TimeSpan NextIteration = TimeSpan.MinValue;
+
+    [DataField]
+    [ViewVariables(VVAccess.ReadOnly)]
+    public int Iteration = 0;
+}
+
 [Serializable, NetSerializable]
 public enum OreVentVisuals
 {
@@ -115,23 +136,6 @@ public enum OreVentVisuals
 [Serializable, NetSerializable]
 public sealed partial class OreVentPreExtractionDoAfterEvent : DoAfterEvent
 {
-    public override DoAfterEvent Clone() => this;
-}
-
-[Serializable, NetSerializable]
-public sealed partial class OreVentClearingDoAfterEvent : DoAfterEvent
-{
-    /// <summary>
-    ///     Clearing iteration.
-    ///         The first clearing is at 0.
-    /// </summary>
-    public int Iteration = 0;
-
-    public OreVentClearingDoAfterEvent(int iteration)
-    {
-        Iteration = iteration;
-    }
-
     public override DoAfterEvent Clone() => this;
 }
 
