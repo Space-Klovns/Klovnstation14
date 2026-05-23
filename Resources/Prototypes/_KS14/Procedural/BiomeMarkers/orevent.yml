@@ -12,7 +12,6 @@
   minGroupSize: 1
   maxGroupSize: 1
   radius: 50
-  maxCount: 10
 
 - type: biomeMarkerLayer
   id: OreVentsIceRare
@@ -20,4 +19,4 @@
   minGroupSize: 1
   maxGroupSize: 1
   radius: 50
-  maxCount: 5
+  maxCount: 8
