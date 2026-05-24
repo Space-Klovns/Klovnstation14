@@ -96,7 +96,7 @@
     mask: ClothingMaskGasSecurity
     eyes: ClothingEyesGlassesSunglasses
     belt: ClothingBeltMilitaryWebbing
-    id: CaptainIDCard
+    id: SyndicateIDCard
   storage:
     back:
     - Machete

@@ -14,7 +14,7 @@
 
 ## Base
 - type: randomHumanoidSettings
-  parent: KsBaseOperative
+  parent: [ KsBaseOperative, EventHumanoidMindShielded ]
   id: KsBaseOperativeNt
   speciesBlacklist:
   - Vox
@@ -54,7 +54,9 @@
     outerClothing: ClothingOuterArmorBasic
 
     shoes: ClothingShoesBootsJack
-    id: CaptainIDCard
+    id: ERTSecurityIDCard
+
+    suitstorage: JetpackBlueFilled
   storage:
     back:
     - EnergySword
@@ -72,7 +74,7 @@
     mask: ClothingMaskGasERT
 
     jumpsuit: ClothingUniformJumpsuitERTLeader
-    # ears: ClothingHeadsetCentCom
+    id: ERTLeaderIDCard
   storage:
     back:
     - EnergySwordDouble
