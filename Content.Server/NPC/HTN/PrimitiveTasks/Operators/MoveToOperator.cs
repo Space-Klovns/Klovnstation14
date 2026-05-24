@@ -110,6 +110,7 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
         var distance = (targetMapCoords.Position - ownerMapCoords.Position).Length();
 
         if (RequireLosForRangeCheck ? _interactionSystem.InRangeUnobstructed(ownerMapCoords, targetMapCoords, range: range) : distance <= range)
+        // KS14: ANK: end
         {
             // In range
             return (true, new Dictionary<string, object>()
@@ -117,7 +118,6 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
                 {NPCBlackboard.OwnerCoordinates, blackboard.GetValueOrDefault<EntityCoordinates>(NPCBlackboard.OwnerCoordinates, _entManager)}
             });
         }
-        // KS14: ANK: end
 
         if (!PathfindInPlanning)
         {

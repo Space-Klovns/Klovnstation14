@@ -14,6 +14,11 @@
     - !type:HasVirtualMarkerPrecondition
       id: OpInCombat
 
+    # If someone is being chased or whatnot, don't try to reposition
+    - !type:KeyExistsPrecondition
+      key: "LastTargetCoordinates"
+      inverted: true
+
     # Only do this if its been ~15sec since last combat
     # Not actually used for melees lol
     - !type:KeyTimePassedPrecondition
@@ -38,6 +43,10 @@
     - !type:HTNPrimitiveTask
       operator: !type:SetNullOperator
         key: "__Sensor__Disturbance.TargetCoordinates"
+
+    - !type:HTNPrimitiveTask # Set combat time
+      operator: !type:SetTimeOperator
+        key: TimeOfLastCombat
 
   # Handle sense: Disturbance: Out-of-combat
   - preconditions:

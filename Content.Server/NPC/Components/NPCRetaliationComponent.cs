@@ -21,11 +21,4 @@ public sealed partial class NPCRetaliationComponent : Component
     /// todo: this needs to support timeoffsetserializer at some point
     [DataField("attackMemories")]
     public Dictionary<EntityUid, TimeSpan> AttackMemories = new();
-
-    // KS14
-    /// <summary>
-    ///     If true, NPCs won't care about faction relations to retaliate.
-    /// </summary>
-    [DataField]
-    public bool TriggerHappy = new();
 }
