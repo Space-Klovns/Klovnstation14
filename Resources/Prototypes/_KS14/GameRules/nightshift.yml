@@ -33,3 +33,24 @@
     maxDuration: 1890
   - type: NightshiftRule
     color: '#707391'
+
+- type: entity
+  parent: BaseNightshift
+  id: NightshiftTotalAlert
+  components:
+  - type: StationEvent
+    duration: 300
+    maxDuration: 300
+    startAnnouncement: ks-station-event-nightshift-totalalert-start-announcement
+    startAnnouncementColor: Red
+    endAnnouncement: ks-station-event-nightshift-totalalert-end-announcement
+    endAnnouncementColor: DarkGreen
+    startAudio:
+      path: /Audio/_KS14/Effects/warning_buzzer.ogg
+      params:
+        volume: 2
+        pitch: 0.45
+  - type: NightshiftRule
+    color: '#db5e56'
+    dangerousAlertLevels:
+    - green

@@ -44,7 +44,8 @@ public sealed class BloodSpraySystem : EntitySystem
 
     public void HandleBleedEffects(Entity<BloodstreamComponent?> entity, float bloodloss, EntityUid originUid)
     {
-        if (!Resolve(entity, ref entity.Comp))
+        if (!Resolve(entity, ref entity.Comp) ||
+            TerminatingOrDeleted(originUid))
             return;
 
         var targetTransform = Transform(entity);

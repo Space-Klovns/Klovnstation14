@@ -102,7 +102,7 @@ public sealed partial class NPCSteeringSystem
     {
         var ourCoordinates = xform.Coordinates;
         var destinationCoordinates = steering.Coordinates;
-        var inLos = true;
+        var inLos = !steering.ForceMove;
 
         // Check if we're in LOS if that's required.
         // TODO: Need something uhh better not sure on the interaction between these.

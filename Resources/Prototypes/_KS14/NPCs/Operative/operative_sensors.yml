@@ -9,9 +9,39 @@
 - type: htnCompound
   id: KsOperativeConsiderSensorsCompound
   branches:
-  # Handle sense: Disturbance
+  # Handle sense: Disturbance: In-combat
   - preconditions:
-    # DGAF about disturbances if not in combat
+    - !type:HasVirtualMarkerPrecondition
+      id: OpInCombat
+
+    # Only do this if its been ~15sec since last combat
+    # Not actually used for melees lol
+    - !type:KeyTimePassedPrecondition
+      key: TimeOfLastCombat
+      delay: 15s
+
+    # Sensor key
+    - !type:KeyExistsPrecondition
+      key: "__Sensor__Disturbance.TargetCoordinates"
+    tasks:
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:SpeakOperator
+        speech: !type:SingleSpeakOperatorSpeech
+          line: "Repositioning."
+
+    - !type:HTNPrimitiveTask
+      operator: !type:CopyKeyOperator
+        originKey: "__Sensor__Disturbance.TargetCoordinates"
+        targetKey: LastTargetCoordinates
+
+    # Delete sensor data
+    - !type:HTNPrimitiveTask
+      operator: !type:SetNullOperator
+        key: "__Sensor__Disturbance.TargetCoordinates"
+
+  # Handle sense: Disturbance: Out-of-combat
+  - preconditions:
+    # DGAF about disturbances if in combat
     - !type:HasVirtualMarkerPrecondition
       id: OpInCombat
       invert: true

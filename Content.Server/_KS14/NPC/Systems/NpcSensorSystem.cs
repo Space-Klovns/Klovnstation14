@@ -62,10 +62,15 @@ public sealed class NpcSensorSystem : SharedNpcSensorSystem
             entity.Comp.AggregatedEffects[key] = value;
     }
 
-    public override void DoDisturbance(EntityCoordinates coordinates, float radius)
+    public override void DoDisturbance(EntityCoordinates coordinates, float radius, EntityUid? source = null)
     {
         var entities = _lookupSystem.GetEntitiesInRange<NpcSensorsComponent>(coordinates, radius, flags: LookupFlags.Approximate | LookupFlags.Sundries | LookupFlags.Dynamic | LookupFlags.Uncontained);
         foreach (var entity in entities)
+        {
+            if (entity.Owner == source)
+                continue;
+
             AddEffect(entity!, DisturbanceCoordinatesSensorKey, coordinates);
+        }
     }
 }

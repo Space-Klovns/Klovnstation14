@@ -49,6 +49,11 @@
       operator: !type:SetNullOperator
         key: LastTargetCoordinates
 
+  ## Sensors
+  - tasks:
+    - !type:HTNCompoundTask
+      task: KsOperativeConsiderSensorsCompound
+
   ## Advancing
   - preconditions:
     - !type:HasVirtualMarkerPrecondition
@@ -56,11 +61,6 @@
     tasks:
     - !type:HTNCompoundTask
       task: KsDoAdvanceCompound
-
-  ## Sensors
-  - tasks:
-    - !type:HTNCompoundTask
-      task: KsOperativeConsiderSensorsCompound
 
 - type: utilityQuery
   id: KsOperativeNearbyCampingMarkers

@@ -26,7 +26,7 @@
     randomizeName: false
   - type: NpcFactionMember
     factions:
-    - AllHostile
+    - Syndicate
   - type: MobThresholds
     thresholds:
       0: Alive
@@ -38,7 +38,7 @@
       task: KsOperativeCombatCompound
     blackboard:
       ReloadActDelay: !type:Single
-        1
+        0
       VisionRadius: !type:Single
         17.5
       AggroVisionRadius: !type:Single
@@ -96,6 +96,7 @@
     mask: ClothingMaskGasSecurity
     eyes: ClothingEyesGlassesSunglasses
     belt: ClothingBeltMilitaryWebbing
+    id: CaptainIDCard
   storage:
     back:
     - Machete
@@ -197,10 +198,29 @@
   parent: KsBaseEliteOperativeGear
   id: KsEliteOperativeEstocGear
   inhand:
-  - WeaponRifleEstoc
+  - KsWeaponRifleEstocEliteOperative
   storage:
     back:
     - EnergySword
     - MagazineRifle
     - MagazineRifle
-    - MagazineRifleUranium
+    - MagazineRifle
+
+- type: entity
+  name: modified 'Estoc' DMR
+  parent: WeaponRifleEstoc
+  id: KsWeaponRifleEstocEliteOperative
+  description: A variant of the 'Estoc' DMR with several non-standard modifications present, heavily improving accuracy at the cost of making it bulkier.
+  suffix: KS14, NPC
+  components:
+  - type: Item
+    size: Ginormous
+  - type: Gun
+    minAngle: 15
+    maxAngle: 20
+    angleIncrease: 8
+    angleDecay: 9
+  - type: GunWieldBonus
+    minAngle: -15
+    maxAngle: -15
+    angleIncrease: -4

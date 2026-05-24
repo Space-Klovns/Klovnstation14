@@ -2,7 +2,7 @@
 - type: htnCompound
   id: KsOperativeGunCombatCompound
   branches:
-  # Pick target, then move into range and shoot them.
+  # Move into range and shoot the target.
   - tasks:
     - !type:HTNPrimitiveTask
       operator: !type:UtilityOperator
@@ -19,6 +19,10 @@
         speech: !type:SingleSpeakOperatorSpeech
           line: "CONTACT!!!"
 
+    - !type:HTNPrimitiveTask # Set combat time
+      operator: !type:SetTimeOperator
+        key: TimeOfLastCombat
+
     - !type:HTNPrimitiveTask
       operator: !type:MoveToOperator
         shutdownState: PlanFinished
@@ -27,6 +31,8 @@
         targetKey: TargetCoordinates
         pathfindKey: TargetPathfind
         rangeKey: RangedRange
+        stopOnLineOfSight: true
+        requireLosForRangeCheck: true
 
     - !type:HTNPrimitiveTask
       preconditions:
