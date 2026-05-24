@@ -4,8 +4,8 @@
   - tasks:
     - !type:HTNPrimitiveTask # VOICELINE
       operator: !type:SpeakOperator
-        speech: !type:SingleSpeakOperatorSpeech
-          line: "Advancing."
+        speech: !type:LocalizedSetSpeakOperatorSpeech
+          lineSet: KsOperativeAdvancing
 
     - !type:HTNPrimitiveTask
       operator: !type:UtilityOperator

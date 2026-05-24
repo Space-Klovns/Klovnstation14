@@ -31,8 +31,8 @@
     tasks:
     - !type:HTNPrimitiveTask # VOICELINE
       operator: !type:SpeakOperator
-        speech: !type:SingleSpeakOperatorSpeech
-          line: "Repositioning."
+        speech: !type:LocalizedSetSpeakOperatorSpeech
+          lineSet: KsOperativeDisturbanceCombat
 
     - !type:HTNPrimitiveTask
       operator: !type:CopyKeyOperator
@@ -61,8 +61,8 @@
     tasks:
     - !type:HTNPrimitiveTask # VOICELINE
       operator: !type:SpeakOperator
-        speech: !type:SingleSpeakOperatorSpeech
-          line: "Prepare the altar."
+        speech: !type:LocalizedSetSpeakOperatorSpeech
+          lineSet: KsOperativeDisturbance
 
     - !type:HTNPrimitiveTask
       operator: !type:CopyKeyOperator

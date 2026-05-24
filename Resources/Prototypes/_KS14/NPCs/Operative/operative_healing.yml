@@ -21,8 +21,8 @@
 
     - !type:HTNPrimitiveTask # VOICELINE
       operator: !type:SpeakOperator
-        speech: !type:SingleSpeakOperatorSpeech
-          line: "Healing, cover me!"
+        speech: !type:LocalizedSetSpeakOperatorSpeech
+          lineSet: KsOperativeHealing
 
     - !type:HTNPrimitiveTask # Hands: cache current hand
       operator: !type:CopyKeyOperator
@@ -114,8 +114,8 @@
   - tasks:
     - !type:HTNPrimitiveTask # VOICELINE
       operator: !type:SpeakOperator
-        speech: !type:SingleSpeakOperatorSpeech
-          line: "Falling back!"
+        speech: !type:LocalizedSetSpeakOperatorSpeech
+          lineSet: KsOperativeRetreating
     - !type:HTNPrimitiveTask
       operator: !type:UtilityOperator
         proto: KsOperativeRetreatableCampingMarkers

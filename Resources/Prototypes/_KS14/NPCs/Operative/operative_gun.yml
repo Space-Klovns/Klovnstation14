@@ -16,8 +16,8 @@
     - !type:HTNPrimitiveTask # VOICELINE
       operator: !type:SpeakOperator
         cooldown: 5
-        speech: !type:SingleSpeakOperatorSpeech
-          line: "CONTACT!!!"
+        speech: !type:LocalizedSetSpeakOperatorSpeech
+          lineSet: KsOperativeContact
 
     - !type:HTNPrimitiveTask # Set combat time
       operator: !type:SetTimeOperator
@@ -138,8 +138,8 @@
 
     - !type:HTNPrimitiveTask # VOICELINE
       operator: !type:SpeakOperator
-        speech: !type:SingleSpeakOperatorSpeech
-          line: "I'm out of ammo!"
+        speech: !type:LocalizedSetSpeakOperatorSpeech
+          lineSet: KsOperativeOutOfAmmo
 
 - type: htnCompound
   id: KsOperativeReloadActiveGun
@@ -147,8 +147,8 @@
   - tasks:
     - !type:HTNPrimitiveTask # VOICELINE
       operator: !type:SpeakOperator
-        speech: !type:SingleSpeakOperatorSpeech
-          line: "Changing mags!"
+        speech: !type:LocalizedSetSpeakOperatorSpeech
+          lineSet: KsOperativeReloading
 
     # Look for ammo
     - !type:HTNPrimitiveTask
