@@ -206,7 +206,7 @@ public sealed partial class NPCCombatSystem
             }
 
             _gun.AttemptShoot(uid, gun, targetCordinates, comp.Target);
-            comp.ShootAccumulator = 0f;
+            //comp.ShootAccumulator = 0f; // KS14: Repurpose ShootAccumulator to be used for the LOS delay, instead of artificially capping mob firerate
         }
     }
 }

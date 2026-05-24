@@ -207,7 +207,7 @@
     - MagazineRifle
 
 - type: entity
-  name: modified 'Estoc' DMR
+  name: modified Estoc DMR
   parent: WeaponRifleEstoc
   id: KsWeaponRifleEstocEliteOperative
   description: A variant of the 'Estoc' DMR with several non-standard modifications present, heavily improving accuracy at the cost of making it bulkier.
@@ -216,11 +216,17 @@
   - type: Item
     size: Ginormous
   - type: Gun
-    minAngle: 15
-    maxAngle: 20
+    minAngle: 20
+    maxAngle: 25
     angleIncrease: 8
     angleDecay: 9
   - type: GunWieldBonus
     minAngle: -15
     maxAngle: -15
     angleIncrease: -4
+
+  - type: Sprite
+    scale: 1.15,1.15
+    color: '#ffadba'
+  - type: Clothing
+    scale: 1.15,1.15

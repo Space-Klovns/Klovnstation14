@@ -14,7 +14,7 @@
 
 ## Base
 - type: randomHumanoidSettings
-  parent: [ KsBaseOperative, EventHumanoidMindShielded ]
+  parent: KsBaseOperative
   id: KsBaseOperativeNt
   speciesBlacklist:
   - Vox
@@ -28,6 +28,11 @@
   - type: NPCRetaliation # NT soldiers don't take kindly to friendly fire
     attackMemoryLength: 15
   - type: FactionException # necessary for NPCRetaliation
+  - type: AutoImplant
+    implants:
+    - MindShieldImplant
+    - DeathAcidifierImplant
+  - type: AntagImmune
 
 - type: randomHumanoidSettings
   parent: [ KsBaseOperativeNt, KsBaseEliteOperative ]
@@ -43,12 +48,12 @@
   parent: NanotrasenParamilitaryGear
   id: KsBaseOperativeNtGear
   equipment:
-    mask: ClothingMaskGasSecurity
+    mask: ClothingMaskGasSwat
     head: ClothingHeadHatBeretCommand
 
     jumpsuit: ClothingUniformJumpsuitCommandGeneric
     eyes: ClothingEyesGlassesCommand
-    belt: ClothingBeltMilitaryWebbing
+    belt: ClothingBeltMilitaryWebbingERT
     back: ClothingBackpackERTLeader
 
     outerClothing: ClothingOuterArmorBasic
@@ -68,7 +73,7 @@
   id: KsBaseEliteOperativeNtGear
   equipment:
     #neck: ClothingNeckCloakNanotrasen
-    belt: ClothingBeltMilitaryWebbing
+    belt: ClothingBeltMilitaryWebbingERT
 
     outerClothing: ClothingOuterHardsuitERTLeader
     mask: ClothingMaskGasERT
@@ -79,9 +84,9 @@
     back:
     - EnergySwordDouble
     belt:
+    - CombatMedipen
+    - CombatMedipen
     - BruteAutoInjector
-    - CombatMedipen
-    - CombatMedipen
 
 ## Pistol
 
@@ -157,6 +162,9 @@
     maxAngle: 25
     angleIncrease: 10
     angleDecay: 15
+    fireRate: 7.8
+    soundGunshot:
+      path: /Audio/Weapons/Guns/Gunshots/batrifle.ogg
   - type: GunWieldBonus
     minAngle: -20
     maxAngle: -20
@@ -168,10 +176,12 @@
         startingItem: MagazineRifleIncendiary
         insertSound:
           path: /Audio/Weapons/Guns/MagIn/ltrifle_magin.ogg
-          pitch: 0.75
+          params:
+            pitch: 0.75
         ejectSound:
           path: /Audio/Weapons/Guns/MagOut/ltrifle_magout.ogg
-          pitch: 0.75
+          params:
+            pitch: 0.75
         priority: 2
         whitelist:
           tags:
@@ -183,3 +193,9 @@
         whitelist:
           tags:
           - CartridgeRifle
+
+  - type: Sprite
+    scale: 1.15,1.15
+    color: '#adc9ff'
+  - type: Clothing
+    scale: 1.15,1.15
