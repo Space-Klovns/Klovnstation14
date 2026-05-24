@@ -346,6 +346,7 @@
   - type: GibOnTrigger
     targetUser: true
     deleteItems: true
+    doGibVisFx: false # KS14 Addition: there's already the acidifier vfx
   - type: SpawnOnTrigger
     proto: Acidifier
     predicted: true

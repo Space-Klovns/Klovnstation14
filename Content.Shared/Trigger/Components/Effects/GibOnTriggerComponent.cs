@@ -14,4 +14,11 @@ public sealed partial class GibOnTriggerComponent : BaseXOnTriggerComponent
     /// </summary>
     [DataField, AutoNetworkedField]
     public bool DeleteItems = false;
+
+    // KS14
+    /// <summary>
+    ///     Should the default gib effect be played?
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool DoGibVisFx = true;
 }

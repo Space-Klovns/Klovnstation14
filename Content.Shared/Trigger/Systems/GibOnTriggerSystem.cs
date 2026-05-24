@@ -20,7 +20,7 @@ public sealed class GibOnTriggerSystem : XOnTriggerSystem<GibOnTriggerComponent>
             }
         }
 
-        _gibbing.Gib(target, user: args.User);
+        _gibbing.Gib(target, user: args.User, doGibVisFx: ent.Comp.DoGibVisFx /* KS14 */);
         args.Handled = true;
     }
 }
