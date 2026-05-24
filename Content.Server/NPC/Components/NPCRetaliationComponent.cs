@@ -21,4 +21,12 @@ public sealed partial class NPCRetaliationComponent : Component
     /// todo: this needs to support timeoffsetserializer at some point
     [DataField("attackMemories")]
     public Dictionary<EntityUid, TimeSpan> AttackMemories = new();
+
+    // KS14
+    /// <summary>
+    ///     Duration to warn things for before they get shot at
+    /// </summary>
+    [DataField]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public TimeSpan? WarnDuration = null;
 }

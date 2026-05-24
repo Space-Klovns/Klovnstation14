@@ -44,3 +44,6 @@ ks-operative-line-disturbancecombat-3 = Moving to combat.
 
 ks-operative-line-disturbance-1 = It begins.
 ks-operative-line-disturbance-2 = Activity nearby.
+
+
+ks-operative-line-getaway-1 = Get away! This is your first and last warning!

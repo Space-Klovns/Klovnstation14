@@ -27,6 +27,9 @@
     id: en_US-john-medium
   - type: NPCRetaliation # NT soldiers don't take kindly to friendly fire
     attackMemoryLength: 15
+    warnDuration: 1.75s
+  - type: NpcRetaliationWarning
+    distanceThresholdSq: 4 # 2 tiles
   - type: FactionException # necessary for NPCRetaliation
   - type: AutoImplant
     implants:
@@ -43,6 +46,8 @@
   components:
   - type: TtsVoice
     id: en_GB-northern_english_male-medium
+  - type: NpcRetaliationWarning
+    distanceThresholdSq: 10.24 # 3.2 tiles
 
 - type: startingGear
   parent: NanotrasenParamilitaryGear

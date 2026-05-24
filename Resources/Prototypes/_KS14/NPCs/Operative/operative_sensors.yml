@@ -79,6 +79,22 @@
       operator: !type:EnsureVirtualMarkerOperator
         id: OpInCombat
 
+  # Handle sense: Retaliation warning
+  - preconditions:
+    # Sensor key
+    - !type:KeyExistsPrecondition
+      key: "__Sensor__WarningRetaliation"
+    tasks:
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:SpeakOperator
+        speech: !type:LocalizedSetSpeakOperatorSpeech
+          lineSet: KsOperativeGetAway
+
+    # Delete sensor data
+    - !type:HTNPrimitiveTask
+      operator: !type:SetNullOperator
+        key: "__Sensor__WarningRetaliation"
+
   # Get sensor data
   - tasks:
     - !type:HTNPrimitiveTask

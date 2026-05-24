@@ -59,3 +59,9 @@
   values:
     prefix: ks-operative-line-disturbance-
     count: 2
+
+- type: localizedDataset
+  id: KsOperativeGetAway
+  values:
+    prefix: ks-operative-line-getaway-
+    count: 1

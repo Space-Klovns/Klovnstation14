@@ -36,7 +36,7 @@ public sealed class NpcSensorSystem : SharedNpcSensorSystem
         DoDisturbance(coordinates, entity.Comp.Radius);
     }
 
-    public void AddEffect(Entity<NpcSensorsComponent?> entity, string key, object? value)
+    public void AddEffect(Entity<NpcSensorsComponent?> entity, string key, object value)
     {
         if (!_sensorsQuery.Resolve(entity.Owner, ref entity.Comp))
             return;
@@ -44,7 +44,7 @@ public sealed class NpcSensorSystem : SharedNpcSensorSystem
         entity.Comp.AggregatedEffects[key] = value;
     }
 
-    public void AddEffects(Entity<NpcSensorsComponent?> entity, IEnumerable<(string, object?)> effects)
+    public void AddEffects(Entity<NpcSensorsComponent?> entity, IEnumerable<(string, object)> effects)
     {
         if (!_sensorsQuery.Resolve(entity.Owner, ref entity.Comp))
             return;
@@ -53,7 +53,7 @@ public sealed class NpcSensorSystem : SharedNpcSensorSystem
             entity.Comp.AggregatedEffects[key] = value;
     }
 
-    public void AddEffects(Entity<NpcSensorsComponent?> entity, Dictionary<string, object?> effects)
+    public void AddEffects(Entity<NpcSensorsComponent?> entity, Dictionary<string, object> effects)
     {
         if (!_sensorsQuery.Resolve(entity.Owner, ref entity.Comp))
             return;

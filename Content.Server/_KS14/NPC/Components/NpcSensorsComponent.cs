@@ -9,7 +9,7 @@ namespace Content.Server._KS14.NPC.Components;
 [RegisterComponent]
 public sealed partial class NpcSensorsComponent : Component
 {
-    public Dictionary<string, object?> AggregatedEffects = [];
+    public Dictionary<string, object> AggregatedEffects = [];
 }
 
 
