@@ -47,3 +47,5 @@ ks-operative-line-disturbance-2 = Activity nearby.
 
 
 ks-operative-line-getaway-1 = Get away! This is your first and last warning!
+ks-operative-line-getaway-2 = Move back now! This is your only warning!
+ks-operative-line-getaway-3 = Move back now or face immediate termination!
