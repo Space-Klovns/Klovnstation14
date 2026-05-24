@@ -69,7 +69,7 @@
     back:
     - EnergySword
     belt:
-    - EmergencyMedipen
+    - CombatMedipen
 
 - type: startingGear
   parent: KsBaseOperativeNtGear
@@ -87,6 +87,7 @@
     back:
     - EnergySwordDouble
     belt:
+    - CombatMedipen
     - CombatMedipen
     - CombatMedipen
     - BruteAutoInjector
@@ -152,9 +153,9 @@
     - MagazineRifleUranium
 
 - type: entity
-  name: modified XL8
   parent: WeaponRifleLecterXL8
   id: KsWeaponRifleLecterXL8EliteOperative
+  name: modified XL8
   description: A variant of the Experimental Lecter 8 with several non-standard modifications present, heavily improving accuracy at the cost of making it bulkier.
   suffix: KS14, NPC
   components:
@@ -202,3 +203,45 @@
     color: '#adc9ff'
   - type: Clothing
     scale: 1.15,1.15
+
+## Minigun
+
+- type: entity
+  parent: RandomHumanoidSpawnerERTLeaderEVA
+  id: KsRandomHumanoidSpawnerOperativeNtArmedMinigun
+  name: nanotrasen paramilitary
+  suffix: KS, Armed, NT-Elite, Minigun
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: RandomHumanoidSpawner
+    settings: KsEliteOperativeNtArmedMinigun
+
+- type: randomHumanoidSettings
+  parent: KsBaseEliteOperativeNt
+  id: KsEliteOperativeNtArmedMinigun
+  components:
+  - type: Loadout
+    prototypes: [ KsEliteOperativeNtMinigunGear ]
+
+- type: startingGear
+  parent: KsBaseEliteOperativeNtGear
+  id: KsEliteOperativeNtMinigunGear
+  inhand:
+  - KsWeaponMinigunEliteOperative
+
+- type: entity
+  parent: WeaponMinigun
+  id: KsWeaponMinigunEliteOperative
+  name: bluespace-tethered minigun
+  suffix: KS14, NPC, Unremoveable
+  components:
+  - type: BallisticAmmoProvider
+    proto: CartridgeMagnum
+    capacity: 650
+
+  - type: Sprite
+    scale: 1.15,1.15
+    color: '#adc9ff'
+
+  - type: Unremoveable
+    deleteOnDrop: true
