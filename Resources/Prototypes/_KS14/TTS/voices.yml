@@ -7,12 +7,12 @@
   voice: en_GB-alan-medium
 
 - type: ttsVoice
-  id: en_GB-alba-medium
-  voice: en_GB-alba-medium
-
-- type: ttsVoice
   id: en_GB-aru-medium
   voice: en_GB-aru-medium
+
+- type: ttsVoice
+  id: en_GB-alba-medium
+  voice: en_GB-alba-medium
 
 - type: ttsVoice
   id: en_GB-cori-medium
