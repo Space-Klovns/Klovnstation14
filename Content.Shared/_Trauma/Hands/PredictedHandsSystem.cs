@@ -73,9 +73,8 @@ public sealed class PredictedHandsSystem : EntitySystem
 
     private void OnDisarmed(Entity<HandsComponent> ent, ref DisarmedEvent args)
     {
-        // KS14: Commented: don't care about this being handled
-        // if (args.Handled)
-        //     return;
+        if (args.Handled)
+            return;
 
         var seed = SharedRandomExtensions.HashCodeCombine((int)_timing.CurTick.Value, GetNetEntity(ent).Id);
         var rand = new System.Random(seed);
@@ -92,7 +91,8 @@ public sealed class PredictedHandsSystem : EntitySystem
         if (!ThrowHeldItem(args.Target, coords))
             return;
 
-        // args.Handled = true; // Successful disarm // KS14: Commented: don't care about this being handled
+        args.Handled = true;
+        args.PopupPrefix = "disarm-action-"; // KS14: Added popupprefix
     }
 
     #region Interactions
