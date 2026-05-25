@@ -28,6 +28,7 @@ using Content.Server.Audio;
 using Content.Shared.Throwing;
 using Content.Shared._KS14.Deferral;
 using Content.Shared.Atmos.Components;
+using Content.Server.Radiation.Systems;
 
 namespace Content.Server._FarHorizons.Power.Generation.FissionGenerator;
 
@@ -51,6 +52,7 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
     [Dependency] private readonly IAdminLogManager _adminLog = default!;
     [Dependency] private readonly AmbientSoundSystem _ambientSoundSystem = default!;
     [Dependency] private readonly ThrowingSystem _throwingSystem = default!;
+    [Dependency] private readonly RadiationSystem _radiationSystem = default!;
 
     private static readonly int _gridWidth = NuclearReactorComponent.ReactorGridWidth;
     private static readonly int _gridHeight = NuclearReactorComponent.ReactorGridHeight;
@@ -478,7 +480,7 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
     {
         var comp = EnsureComp<RadiationSourceComponent>(ent.Owner);
 
-        comp.Intensity = ent.Comp.RadiationLevel;
+        _radiationSystem.SetIntensity((ent.Owner, comp), ent.Comp.RadiationLevel);
         ent.Comp.RadiationLevel /= 2;
     }
 

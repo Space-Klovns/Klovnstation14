@@ -17,12 +17,11 @@ public sealed class RemoteDroneSystem : EntitySystem
     [Dependency] private readonly SharedDeviceLinkSystem _sharedDeviceLinkSystem = default!;
     [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
 
-    private EntityQuery<RemoteDroneComponent> _droneQuery;
+    [Dependency] private readonly EntityQuery<RemoteDroneComponent> _droneQuery = default!;
 
     public override void Initialize()
     {
         base.Initialize();
-        _droneQuery = GetEntityQuery<RemoteDroneComponent>();
 
         //// Ports
         SubscribeLocalEvent<RemoteDroneComponent, LinkAttemptEvent>(OnDroneLinkAttempt);

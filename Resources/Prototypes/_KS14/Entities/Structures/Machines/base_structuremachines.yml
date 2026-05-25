@@ -1,0 +1,34 @@
+- type: entity
+  parent: BaseMachine
+  id: KsBaseMachineGasPowered
+  abstract: true
+  components:
+  - type: GasPowerReceiver
+    molesConsumedSec: 1
+  - type: LightningTarget
+    priority: 1
+  - type: EmissiveLayers
+    glowRadius: 0.3
+    layers:
+    - enum.PowerDeviceVisualLayers.Powered
+
+  - type: AtmosDevice
+  - type: Tag
+    tags:
+    - Unstackable
+  - type: NodeContainer
+    nodes:
+      pipe: # hard-coded name 'pipe'
+        !type:PipeNode
+        nodeGroupID: Pipe
+        pipeDirection: South
+
+  - type: Rotatable
+  - type: PipeColorVisuals
+  - type: AtmosPipeColor
+  - type: AtmosPipeLayers
+    spriteLayersRsiPaths:
+      enum.PipeVisualLayers.Pipe:
+        Primary: Structures/Piping/Atmospherics/thermomachine.rsi
+        Secondary: Structures/Piping/Atmospherics/thermomachine_alt1.rsi
+        Tertiary: Structures/Piping/Atmospherics/thermomachine_alt2.rsi

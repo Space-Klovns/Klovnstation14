@@ -41,8 +41,8 @@ public sealed class ClothingGrantingSystem : EntitySystem
         if (_gameTiming.ApplyingState)
             return;
 
-        EntityManager.AddComponents(args.Equipee, component.Components, removeExisting: false);
-        UpdateActivity(args.Equipee, component);
+        EntityManager.AddComponents(args.EquipTarget, component.Components, removeExisting: false);
+        UpdateActivity(args.EquipTarget, component);
     }
 
     private void OnCompUnequip(EntityUid uid, ClothingGrantComponentComponent component, GotUnequippedEvent args)
@@ -54,8 +54,8 @@ public sealed class ClothingGrantingSystem : EntitySystem
         if (_gameTiming.ApplyingState)
             return;
 
-        EntityManager.RemoveComponents(args.Equipee, component.Components);
-        UpdateActivity(args.Equipee, component);
+        EntityManager.RemoveComponents(args.EquipTarget, component.Components);
+        UpdateActivity(args.EquipTarget, component);
 
         // Goobstation
         //component.IsActive = false;
@@ -78,8 +78,8 @@ public sealed class ClothingGrantingSystem : EntitySystem
         if (!clothing.Slots.HasFlag(args.SlotFlags))
             return;
 
-        EnsureComp<TagComponent>(args.Equipee);
-        _tagSystem.AddTag(args.Equipee, component.Tag);
+        EnsureComp<TagComponent>(args.EquipTarget);
+        _tagSystem.AddTag(args.EquipTarget, component.Tag);
 
         component.IsActive = true;
     }
@@ -89,7 +89,7 @@ public sealed class ClothingGrantingSystem : EntitySystem
         if (!component.IsActive)
             return;
 
-        _tagSystem.RemoveTag(args.Equipee, component.Tag);
+        _tagSystem.RemoveTag(args.EquipTarget, component.Tag);
 
         component.IsActive = false;
     }

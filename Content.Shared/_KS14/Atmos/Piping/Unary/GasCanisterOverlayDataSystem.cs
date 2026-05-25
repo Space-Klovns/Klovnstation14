@@ -12,13 +12,11 @@ public sealed class GasCanisterOverlayDataSystem : EntitySystem
     [Dependency] private readonly SharedAtmosphereSystem _atmosphereSystem = default!;
     [Dependency] private readonly SharedGasTileOverlaySystem _gasTileOverlaySystem = default!;
 
-    private EntityQuery<GasCanisterComponent> _canisterQuery;
+    [Dependency] private readonly EntityQuery<GasCanisterComponent> _canisterQuery = default!;
 
     public override void Initialize()
     {
         base.Initialize();
-
-        _canisterQuery = GetEntityQuery<GasCanisterComponent>();
 
         SubscribeLocalEvent<GasCanisterOverlayComponent, ComponentInit>(OnCanisterInit);
         SubscribeLocalEvent<GasCanisterOverlayComponent, MapInitEvent>(OnCanisterMapInit, after: [typeof(SharedGasCanisterSystem)]);

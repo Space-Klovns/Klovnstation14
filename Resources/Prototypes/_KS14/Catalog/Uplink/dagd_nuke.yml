@@ -12,18 +12,3 @@
     whitelist:
       components:
       - DieCondition
-
-- type: storeCategory
-  id: UplinkObjective
-  name: store-category-objective
-  priority: 11
-
-- type: storePreset
-  id: TraitorStore
-  storeName: store-preset-traitor-name
-  categories:
-  - UplinkObjective
-  currencyWhitelist:
-  - Telecrystal
-  initialBalance:
-    Telecrystal: 0

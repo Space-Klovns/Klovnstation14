@@ -12,6 +12,14 @@
       state: television
     - map: ["computerLayerScreen"]
       state: detective_television
+      shader: unshaded # KS14
+  # KS14: emissive start
+  - type: EmissiveLayers # TODO EMISSIVES: adjustable params for individual layers; rn, keyboards emit a bit too much light than i'd like them to
+    glowRadius: 0
+    intensity: 0.5
+    layers:
+    - computerLayerScreen
+  # KS14: emissive end
   - type: Computer
     board: ComputerTelevisionCircuitboard
   - type: PointLight

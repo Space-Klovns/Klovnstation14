@@ -7,7 +7,7 @@ internal static class KsServerContentIoC
 {
     public static void Register(IDependencyCollection dependencyCollection)
     {
-        // Add KsSharedContentIoC here if we ever need it.
+        // Shouldnt call shared
 
         dependencyCollection.Register<LastRolledAntagManager>();
         dependencyCollection.Register<AnnouncementWebhookManager>();

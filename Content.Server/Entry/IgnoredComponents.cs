@@ -22,7 +22,6 @@ namespace Content.Server.Entry
             "OptionsVisualizer",
             "AnomalyScannerScreen",
             "MultipartMachineGhost",
-            "DirectionalSpriteManipulation" // KS14 change: FFS
         };
     }
 }

@@ -1,0 +1,140 @@
+- type: entity
+  parent: [BaseMachinePowered, ConstructibleMachine]
+  id: KsAtmosShieldGen
+  name: atmospheric shield generator
+  description: Produces an atmos shield in a line between itself and another generator with both facing the other, while active. Powered by LV. Field must not be obstructed by walls. Will turn on after gaining power if turned off due to power loss.
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    anchored: true
+    noRot: false
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.45,0.4,0.45,0.5"
+        density: 190
+        layer:
+        - Impassable
+
+  - type: Machine
+    board: KsAtmosShieldGenCircuitboard
+
+  - type: RequireProjectileTarget
+  - type: RangedDamageSound
+    soundGroups:
+      Brute:
+        collection:
+          MetalBulletImpact
+    soundTypes:
+      Heat:
+        collection:
+          MetalLaserImpact
+  - type: Damageable
+    damageContainer: StructuralInorganic
+    damageModifierSet: StructuralMetallic
+
+  - type: Sprite
+    sprite: _KS14/Structures/Machines/atmos_shield_gen.rsi
+    drawdepth: Overdoors
+    layers:
+    - state: base
+    - state: wantpower
+      shader: unshaded
+      map: ["emissive"]
+  - type: EmissiveLayers
+    glowRadius: 0
+    intensity: 0
+    offset: 0,-0.25
+    layers:
+    - emissive
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.KsFieldGeneratorVisuals.State:
+        emissive:
+          Off: { visible: false }
+          NeedsPower: { visible: true, state: wantpower }
+          On: { visible: true, state: active }
+
+  - type: KsFieldGenerator
+    fieldProto: KsAtmosShield
+
+- type: entity
+  parent: KsAtmosShieldGen
+  id: KsAtmosShieldGenEnabled
+  suffix: Starts Enabled
+  components:
+  - type: KsFieldGenerator
+    enabled: true
+
+- type: entity
+  id: KsAtmosShield
+  name: atmospheric shield
+  description: Shields you from air.
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    anchored: true
+  - type: Physics
+    bodyType: Static
+    canCollide: false
+
+  - type: Tag
+    tags:
+    - HideContextMenu
+
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+            bounds: "-0.5,-0.5,0.5,0.5"
+
+  - type: Icon
+    sprite: _KS14/Structures/Holo/atmos_shield.rsi
+    state: full
+  - type: Sprite
+    sprite: _KS14/Structures/Holo/atmos_shield.rsi
+    drawdepth: OverMobs
+    layers:
+    - state: icon
+      color: '#ffffff4d'
+      shader: null
+    - state: icon
+      color: '#ffffff4d'
+      shader: unshaded
+      map: ["truth"]
+
+  - type: EmissiveLayers
+    glowRadius: 0.3
+    intensity: 0
+    layers:
+    - truth
+
+  - type: Airtight
+    noAirWhenFullyAirBlocked: false
+
+- type: entity
+  parent: BaseMachineCircuitboard
+  id: KsAtmosShieldGenCircuitboard
+  name: atmospheric shield generator machine board
+  description: An electronics board used in atmospheric shield generators.
+  components:
+  - type: Sprite
+    state: engineering
+  - type: MachineBoard
+    prototype: KsAtmosShieldGen
+    stackRequirements:
+      Steel: 3
+      Manipulator: 1
+
+- type: latheRecipe
+  parent: [ BaseGoldCircuitboardRecipe, BaseEngineeringMachineRecipeCategory ]
+  id: KsAtmosShieldGenCircuitboard
+  result: KsAtmosShieldGenCircuitboard

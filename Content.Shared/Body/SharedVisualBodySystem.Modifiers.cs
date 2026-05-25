@@ -81,8 +81,8 @@ public abstract partial class SharedVisualBodySystem
         [NotNullWhen(true)] out Dictionary<ProtoId<OrganCategoryPrototype>, OrganMarkingData>? markings,
         [NotNullWhen(true)] out Dictionary<ProtoId<OrganCategoryPrototype>, Dictionary<HumanoidVisualLayers, List<Marking>>>? applied)
     {
-        if (!Resolve(ent, ref ent.Comp) ||
-            !TryComp<BodyComponent>(ent, out var bodyComponent)) // KS14
+        if (!Resolve(ent, ref ent.Comp, logMissing: false) ||
+            !TryComp<BodyComponent>(ent, out var bodyComponent) /* KS14: Try get bodycomp */)
         {
             profiles = null;
             markings = null;

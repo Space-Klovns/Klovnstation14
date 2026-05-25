@@ -15,7 +15,7 @@ public sealed class OrganAttachmentOperationSystem : EntitySystem
     [Dependency] private readonly BodyHierarchySystem _bodyHierarchySystem = default!;
     [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
 
-    private EntityQuery<OrganComponent> _organQuery;
+    [Dependency] private readonly EntityQuery<OrganComponent> _organQuery = default!;
 
     /// <summary>
     ///     How much of the damage accumulated is lost every second.
@@ -25,8 +25,6 @@ public sealed class OrganAttachmentOperationSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
-
-        _organQuery = GetEntityQuery<OrganComponent>();
 
         SubscribeLocalEvent<OrganAttachmentOperationComponent, InteractUsingEvent>(OnInteractUsing, before: [typeof(Nutrition.EntitySystems.IngestionSystem)]);
         SubscribeLocalEvent<OrganAttachmentOperationComponent, DoAfterAttemptEvent<OrganAttachmentDoAfterEvent>>(OnDoAfterAttempt);

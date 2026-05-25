@@ -1,0 +1,204 @@
+- type: entity
+  id: KsGeyserBase
+  name: undiscovered geyser
+  description: It's a geyser. When scanned, it will conveniently show up on mass scanners.
+  abstract: true
+  placement:
+    mode: SnapgridCenter
+  components:
+  # Physics
+  - type: Transform
+    anchored: true
+    noRot: false
+  - type: Physics
+    bodyType: Static
+    canCollide: true
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: -0.35,-0.35,0.35,0.35
+        density: 1500
+        layer:
+        - HalfWallLayer
+
+  # Sprites
+  - type: Sprite
+    sprite: _KS14/Objects/Mining/geyser.rsi
+    noRot: true
+    offset: 0,0.5
+    layers:
+    - state: geyser
+    - state: soup1
+      map: ["enum.SolutionContainerLayers.Fill", "enum.MiningScannerVisualLayers.Overlay"]
+      shader: unshaded
+    - state: soup1
+      color: '#000000ab'
+  - type: InteractionOutline
+  - type: Clickable
+  - type: Appearance
+  - type: SolutionContainerVisuals
+    maxFillLevels: 1
+    fillBaseName: soup
+    solutionName: buffer
+
+  # Trigger
+  - type: KsScanTriggerOnDiscovered
+    keyOut: discovered
+  - type: AddComponentsOnTrigger
+    keysIn: [discovered]
+    components: # copied from PenEmbeddable
+    - type: KsRadarInterest
+      data:
+        text: ""
+  - type: SpawnOnTrigger # Placeholder for mining points lol
+    keysIn: [discovered]
+    proto: SpaceCash1000
+    useMapCoords: true
+    predicted: true
+
+  # Plumbing
+  - type: PlumbingDevice
+    updateInterval: 2
+  - type: PlumbingOutlet
+    solutionName: buffer
+  - type: NodeContainer
+    nodes:
+      outlet:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: Fourway
+
+  # Solution
+  - type: SolutionRegeneration
+    solution: buffer
+    generated:
+      reagents:
+      - ReagentId: Water
+        Quantity: 100
+  - type: SolutionContainerManager
+    solutions:
+      buffer:
+        maxVol: 100
+        canReact: false
+  - type: DrainableSolution
+    solution: buffer
+
+  # Geyser
+  - type: KsScanDiscoverable
+    discoveryPopupLoc: ks-specific-geyser-discovered
+    trueName: discovered geyser
+  - type: MiningScannerViewable
+
+- type: entity
+  parent: KsGeyserBase
+  id: KsGeyserBaseRare
+  abstract: true
+  components:
+  - type: KsScanDiscoverable
+    discoveryPopupLoc: ks-specific-geyser-discovered-rare
+  - type: SpawnOnTrigger
+    proto: SpaceCash2500
+
+- type: entity
+  parent: KsGeyserBase
+  id: KsGeyserPlasma
+  suffix: Plasma
+  components:
+  - type: SolutionRegeneration
+    solution: buffer
+    generated:
+      reagents:
+      - ReagentId: Plasma
+        Quantity: 100
+      temperature: 550
+  - type: KsScanDiscoverable
+    trueName: plasma geyser
+
+- type: entity
+  parent: KsGeyserBase
+  id: KsGeyserCarbonDioxide
+  suffix: CarbonDioxide
+  components:
+  - type: SolutionRegeneration
+    solution: buffer
+    generated:
+      reagents:
+      - ReagentId: CarbonDioxide
+        Quantity: 100
+      temperature: 220
+  - type: KsScanDiscoverable
+    trueName: liquid carbon dioxide geyser
+
+- type: entity
+  parent: KsGeyserBase
+  id: KsGeyserNitrogen
+  suffix: Nitrogen
+  components:
+  - type: SolutionRegeneration
+    solution: buffer
+    generated:
+      reagents:
+      - ReagentId: Nitrogen
+        Quantity: 100
+      temperature: 75
+  - type: KsScanDiscoverable
+    trueName: liquid nitrogen geyser
+
+- type: entity
+  parent: KsGeyserBaseRare
+  id: KsGeyserFresium
+  suffix: Fresium
+  components:
+  - type: SolutionRegeneration
+    solution: buffer
+    generated:
+      reagents:
+      - ReagentId: Fresium
+        Quantity: 100
+      temperature: 42
+  - type: KsScanDiscoverable
+    trueName: fresium geyser
+
+- type: entity
+  parent: KsGeyserBaseRare
+  id: KsGeyserKlovnide
+  suffix: Klovnide
+  components:
+  - type: SolutionRegeneration
+    solution: buffer
+    generated:
+      reagents:
+      - ReagentId: Klovnide
+        Quantity: 100
+  - type: KsScanDiscoverable
+    trueName: klovnide geyser
+
+- type: entity
+  parent: KsGeyserBaseRare
+  id: KsGeyserZipium
+  suffix: Zipium
+  components:
+  - type: SolutionRegeneration
+    solution: buffer
+    generated:
+      reagents:
+      - ReagentId: Zipium
+        Quantity: 100
+  - type: KsScanDiscoverable
+    trueName: zipium geyser
+
+- type: entity
+  parent: KsGeyserBaseRare
+  id: KsGeyserArtifexium
+  suffix: Artifexium
+  components:
+  - type: SolutionRegeneration
+    solution: buffer
+    generated:
+      reagents:
+      - ReagentId: Artifexium
+        Quantity: 100
+  - type: KsScanDiscoverable
+    trueName: artifexium geyser

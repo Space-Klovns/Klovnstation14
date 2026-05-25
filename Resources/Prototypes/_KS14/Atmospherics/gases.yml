@@ -1,19 +1,21 @@
 - type: gas
   id: Zipion
   name: gases-zipion
-  specificHeat: 5 # Weak, we don't want zipion to fuck with anything the atmos noob mixes it with
+  abbreviation: gas-zipion-abbreviation
+  molarHeatCapacity: 5
   heatCapacityRatio: 1.3
   molarMass: 20
-  color: b924bf
+  color: '#b924bf'
   reagent: Zipion
   pricePerMole: 1
-  
+
 - type: gas
   id: Argon
   name: gases-argon
-  specificHeat: 25
+  abbreviation: gas-argon-abbreviation
+  molarHeatCapacity: 25
   heatCapacityRatio: 1.67
   molarMass: 40
-  color: 8a2be2
+  color: '#8a2be2'
   reagent: Argon
   pricePerMole: 0.5

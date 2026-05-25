@@ -1,10 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using Content.Server._KS14.IoC;
 using Content.Server.GameTicking;
 using Content.Server.GameTicking.Events;
 using Content.Shared._KS14.CCVar;
+using Content.Shared._KS14.IoC;
 using Content.Shared._KS14.Speczones;
 using Content.Shared.GameTicking;
 using Content.Shared.Random.Helpers;
@@ -33,7 +33,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     [Dependency] private readonly TransformSystem _transformSystem = default!;
     [Dependency] private readonly GameTicker _gameTicker = default!;
 
-    private EntityQuery<SpeczoneComponent> _speczoneQuery;
+    [Dependency] private readonly EntityQuery<SpeczoneComponent> _speczoneQuery = default!;
 
     /// <summary>
     ///     Dictionary of loaded speczones cached by their prototype ID.
@@ -56,14 +56,12 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     {
         base.Initialize();
 
-        _speczoneQuery = GetEntityQuery<SpeczoneComponent>();
-
         _configurationManager.OnValueChanged(KsCCVars.SpeczonesEnabled, x => _loadSpeczones = x, invokeImmediately: true);
 
         SubscribeLocalEvent<SpeczoneComponent, ComponentShutdown>(OnSpeczoneShutdown);
         SubscribeLocalEvent<SpeczoneEntryComponent, ComponentShutdown>(OnSpeczoneEntryShutdown);
 
-        SubscribeLocalEvent<RoundStartingEvent>(OnRoundStarting, after: [typeof(SystemCollectionHookSystem)]);
+        SubscribeLocalEvent<RoundStartingEvent>(OnRoundStarting, after: [typeof(SystemCollectionHookManager)]);
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundCleanup);
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
 

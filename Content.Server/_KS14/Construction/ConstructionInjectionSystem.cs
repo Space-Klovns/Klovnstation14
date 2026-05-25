@@ -1,4 +1,4 @@
-using Content.Server._KS14.IoC;
+using Content.Shared._KS14.IoC;
 using Content.Shared.Construction;
 using Content.Shared.Construction.Prototypes;
 using Robust.Shared.Prototypes;
@@ -11,7 +11,7 @@ namespace Content.Server._KS14.Construction;
 public sealed class ConstructionInjectionSystem : EntitySystem
 {
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly SystemCollectionHookSystem _collectionHook = default!;
+    [Dependency] private readonly SystemCollectionHookManager _collectionHook = default!;
 
     public override void Initialize()
     {

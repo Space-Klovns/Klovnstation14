@@ -34,8 +34,11 @@
     state: base
   # KS14: emissive start
   - type: EmissiveLayers
+    #onlyRotateTexture: true
+    #useSpriteTransform: false
+    offset: 0,-0.3
     glowRadius: 0.25
-    intensity: 2.2
+    intensity: 1.3
     layers:
     - enum.PoweredLightLayers.Glow
   # KS14: emissive end

@@ -1,3 +1,6 @@
+// KS14: This file was reverted to https://github.com/LaCumbiaDelCoronavirus/ss14/blob/a21e8dd444ad5643e9e315dc5c4a06e30322276e/
+//      which is, `allow jetpacks to stay enabled when on grids and lightly rework jetpack system #37775` on wizden Github
+
 using System.Diagnostics.CodeAnalysis;
 using Content.Shared.Actions;
 using Content.Shared.Gravity;
@@ -9,16 +12,16 @@ using Robust.Shared.Containers;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
-using Robust.Shared.Timing; // KS14 Change
+using Robust.Shared.Timing;
 
 namespace Content.Shared.Movement.Systems;
 
 public abstract class SharedJetpackSystem : EntitySystem
 {
+    [Dependency] private readonly IGameTiming _gameTiming = default!; // KS14
+    [Dependency] private readonly MovementSpeedModifierSystem _movementSpeedModifier = default!;
     [Dependency] protected readonly SharedAppearanceSystem Appearance = default!;
     [Dependency] protected readonly SharedContainerSystem Container = default!;
-    [Dependency] protected readonly IGameTiming GameTiming = default!; // KS14 Change
-    [Dependency] private readonly MovementSpeedModifierSystem _movementSpeedModifier = default!;
     [Dependency] private readonly SharedPopupSystem _popup = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
     [Dependency] private readonly ActionContainerSystem _actionContainer = default!;
@@ -143,8 +146,7 @@ public abstract class SharedJetpackSystem : EntitySystem
         if (TryComp<PhysicsComponent>(user, out var physics))
             _physics.SetBodyStatus(user, physics, BodyStatus.InAir);
 
-        if (!GameTiming.ApplyingState) // KS14: only do if not applying state
-            EnsureComp<ActiveJetpackComponent>(user);
+        EnsureComp<ActiveJetpackComponent>(jetpackUid);
 
         userComp.Jetpack = jetpackUid;
         userComp.WeightlessAcceleration = jetpackComp.Acceleration;
@@ -156,9 +158,7 @@ public abstract class SharedJetpackSystem : EntitySystem
 
     private void EndUserFlying(EntityUid user, Entity<JetpackComponent> jetpack)
     {
-        if (!GameTiming.ApplyingState) // KS14: only do if not applying state
-            RemComp<ActiveJetpackComponent>(jetpack.Owner);
-
+        RemComp<ActiveJetpackComponent>(jetpack.Owner);
         if (TryComp<PhysicsComponent>(user, out var physics))
             _physics.SetBodyStatus(user, physics, BodyStatus.OnGround);
 
@@ -256,6 +256,11 @@ public abstract class SharedJetpackSystem : EntitySystem
 
     private void SetJetpackState(Entity<JetpackComponent> jetpack, EntityUid user, bool enabled, bool flyIfEnabled)
     {
+        // KS14: applyingstate guard statement
+        if (_gameTiming.ApplyingState ||
+            TerminatingOrDeleted(jetpack))
+            return;
+
         jetpack.Comp.Enabled = enabled;
         if (enabled)
         {
@@ -279,16 +284,17 @@ public abstract class SharedJetpackSystem : EntitySystem
         );
     }
 
+
     /// <returns>Whether the provided entity is an active, flying jetpack.</returns>
     /// <remarks>
-    /// Analogous to <c>HasComp<<see cref="ActiveJetpackComponent"/>>(<paramref name="uid"/>)</c>, however uses a dedicated <see cref="EntityQuery"/>.
+    /// Analogous to <c>HasComp&lt;<see cref="ActiveJetpackComponent"/>&gt;(<paramref name="uid"/>)</c>, however uses a dedicated <see cref="EntityQuery"/>.
     /// </remarks>
     private bool IsFlying(EntityUid uid)
         => _activeJetpackQuery.HasComp(uid);
 
     /// <returns>Whether the provided entity is using an enabled jetpack, but isn't necessarily flying with it.</returns>
     /// <remarks>
-    /// Analogous to <c>HasComp<<see cref="JetpackUserComponent"/>>(<paramref name="uid"/>)</c>, however uses a dedicated <see cref="EntityQuery"/>.
+    /// Analogous to <c>HasComp&lt;<see cref="JetpackUserComponent"/>&gt;(<paramref name="uid"/>)</c>, however uses a dedicated <see cref="EntityQuery"/>.
     /// </remarks>
     public bool IsJetpackUser(EntityUid uid)
         => _jetpackUserQuery.HasComp(uid);

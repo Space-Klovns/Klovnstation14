@@ -20,6 +20,11 @@
   equipment:
     mask: ClothingMaskClownJuggle
 
+- type: loadout
+  id: ClownMitre
+  equipment:
+    head: ClothingHeadHatMitreClown
+
 # Jumpsuit
 - type: loadout
   id: ClownSuit

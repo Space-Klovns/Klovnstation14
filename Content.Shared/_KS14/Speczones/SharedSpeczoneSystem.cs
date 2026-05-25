@@ -19,13 +19,11 @@ public abstract class SharedSpeczoneSystem : EntitySystem
     [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
     [Dependency] private readonly SharedSparksSystem _sparksSystem = default!;
 
-    private EntityQuery<AlwaysAllowedInSpeczoneComponent> _alwaysAllowedQuery;
+    [Dependency] private readonly EntityQuery<AlwaysAllowedInSpeczoneComponent> _alwaysAllowedQuery = default!;
 
     public override void Initialize()
     {
         base.Initialize();
-
-        _alwaysAllowedQuery = GetEntityQuery<AlwaysAllowedInSpeczoneComponent>();
 
         SubscribeLocalEvent<AttemptGeneralSpeczoneInterferableEvent>(OnAttemptInterfere);
         SubscribeLocalEvent<BlockShootingInSpeczoneComponent, ShotAttemptedEvent>(OnAttemptShoot);

@@ -16,12 +16,11 @@ public sealed class PhysicsVehicleSystem : EntitySystem
 {
     [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
 
-    private EntityQuery<PhysicsComponent> _physicsQuery;
+    [Dependency] private readonly EntityQuery<PhysicsComponent> _physicsQuery = default!;
 
     public override void Initialize()
     {
         base.Initialize();
-        _physicsQuery = GetEntityQuery<PhysicsComponent>();
 
         SubscribeLocalEvent<PhysicsVehicleComponent, UpdateWishDirEvent>(OnUpdateWishDir);
         SubscribeLocalEvent<PhysicsVehicleComponent, MoveInputEvent>(OnMoveInput);

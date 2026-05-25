@@ -20,8 +20,8 @@ public sealed class ChainSystem : EntitySystem
     [Dependency] private readonly INetManager _netManager = default!;
     [Dependency] private readonly SharedJointSystem _jointSystem = default!;
 
-    private EntityQuery<ChainLinkComponent> _linkQuery;
-    private EntityQuery<ChainEdgeComponent> _edgeQuery;
+    [Dependency] private readonly EntityQuery<ChainLinkComponent> _linkQuery = default!;
+    [Dependency] private readonly EntityQuery<ChainEdgeComponent> _edgeQuery = default!;
 
     public override void Initialize()
     {
@@ -30,9 +30,6 @@ public sealed class ChainSystem : EntitySystem
         SubscribeLocalEvent<ChainEdgeComponent, ComponentShutdown>(OnEdgeShutdown);
         SubscribeLocalEvent<ChainLinkComponent, ComponentShutdown>(OnLinkShutdown);
         SubscribeLocalEvent<ChainLinkComponent, JointRemovedEvent>(OnJointRemoved);
-
-        _linkQuery = GetEntityQuery<ChainLinkComponent>();
-        _edgeQuery = GetEntityQuery<ChainEdgeComponent>();
     }
 
     /// <returns>True if this entity is linked to anything.</returns>

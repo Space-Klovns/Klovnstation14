@@ -1,0 +1,4 @@
+- files: ["teleport.ogg"]
+  license: "CC-BY-SA-3.0"
+  copyright: "Taken from https://github.com/tgstation/tgstation at commit 436ba869ebcd0b60b63973fb7562f447ee655205; converted to mono"
+  source: "https://github.com/tgstation/tgstation/blob/436ba869ebcd0b60b63973fb7562f447ee655205/sound/machines/mining/auto_teleport.ogg"

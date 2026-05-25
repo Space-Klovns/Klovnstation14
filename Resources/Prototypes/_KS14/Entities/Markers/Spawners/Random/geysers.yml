@@ -1,0 +1,23 @@
+- type: entity
+  parent: MarkerBase
+  id: GeyserSpawner
+  name: Random Geyser Spawner
+  suffix: 100%
+  components:
+  - type: Sprite
+    layers:
+    - state: pink
+    - sprite: _KS14/Objects/Mining/geyser.rsi
+      state: geyser
+      offset: 0,0.5
+  - type: EntityTableSpawner
+    table: !type:GroupSelector
+      prob: 1
+      children:
+      - id: KsGeyserPlasma
+      - id: KsGeyserCarbonDioxide
+      - id: KsGeyserNitrogen
+      - id: KsGeyserFresium
+      - id: KsGeyserKlovnide
+      - id: KsGeyserZipium
+      - id: KsGeyserArtifexium

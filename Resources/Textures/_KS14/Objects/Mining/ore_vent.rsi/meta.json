@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from https://github.com/tgstation/tgstation at 6efa8dc27edcc715fe8abe9e05adddc25bbfe335",
+  "size": {
+    "x": 32,
+    "y": 64
+  },
+  "states": [
+    {
+      "name": "ore_vent"
+    },
+    {
+      "name": "ore_vent_active"
+    },
+    {
+      "name": "ore_vent_trimmed"
+    },
+    {
+      "name": "ore_vent_active_trimmed"
+    },
+    {
+      "name": "ore_vent_trimmed_top"
+    },
+    {
+      "name": "ore_vent_active_trimmed_top"
+    },
+    {
+      "name": "ore_vent_ice"
+    },
+    {
+      "name": "ore_vent_ice_active"
+    },
+    {
+      "name": "ore_vent_ice_trimmed"
+    },
+    {
+      "name": "ore_vent_ice_active_trimmed"
+    },
+    {
+      "name": "ore_vent_ice_trimmed_top"
+    },
+    {
+      "name": "ore_vent_ice_active_trimmed_top"
+    },
+    {
+      "name": "well",
+      "delays": [
+        [
+          1.5,
+          0.3,
+          0.3,
+          0.2,
+          0.1
+        ]
+      ]
+    },
+    {
+      "name": "radar"
+    },
+    {
+      "name": "radar_on",
+      "delays": [
+        [
+          1.4,
+          0.2
+        ]
+      ]
+    },
+    {
+      "name": "radar_off"
+    },
+    {
+      "name": "radar_em"
+    },
+    {
+      "name": "radar_core",
+      "delays": [
+        [
+          0.4,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ]
+      ]
+    },
+    {
+      "name": "radar_core_em"
+    }
+  ]
+}

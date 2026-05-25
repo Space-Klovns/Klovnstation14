@@ -18,8 +18,8 @@ public sealed partial class BodySystem : EntitySystem
 {
     // KS14: Unused system, removed
 
-    private EntityQuery<BodyComponent> _bodyQuery;
-    private EntityQuery<OrganComponent> _organQuery;
+    [Dependency] private readonly EntityQuery<BodyComponent> _bodyQuery = default!;
+    [Dependency] private readonly EntityQuery<OrganComponent> _organQuery = default!;
 
     public override void Initialize()
     {
@@ -32,9 +32,6 @@ public sealed partial class BodySystem : EntitySystem
 
         // SubscribeLocalEvent<BodyComponent, EntInsertedIntoContainerMessage>(OnBodyEntInserted); // KS14: Commented in favour of hierarchy system
         // SubscribeLocalEvent<BodyComponent, EntRemovedFromContainerMessage>(OnBodyEntRemoved); // KS14: Commented in favour of hierarchy system
-
-        _bodyQuery = GetEntityQuery<BodyComponent>();
-        _organQuery = GetEntityQuery<OrganComponent>();
 
         InitializeRelay();
         InitializeKlovn(); // KS14

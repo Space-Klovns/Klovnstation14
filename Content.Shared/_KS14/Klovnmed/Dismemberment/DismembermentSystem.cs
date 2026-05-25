@@ -5,6 +5,7 @@ using Content.Shared.Body;
 using Content.Shared.Chat;
 using Content.Shared.Chat.Prototypes;
 using Content.Shared.Damage;
+using Content.Shared.FixedPoint;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Throwing;
 using Robust.Shared.Containers;
@@ -29,18 +30,11 @@ public sealed class DismembermentSystem : EntitySystem
     [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
     [Dependency] private readonly SharedChatSystem _chatSystem = default!;
 
-    private EntityQuery<BodyComponent> _bodyQuery;
+    [Dependency] private readonly EntityQuery<BodyComponent> _bodyQuery = default!;
     private static readonly ProtoId<EmotePrototype> DismemberEmote = "Scream";
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        _bodyQuery = GetEntityQuery<BodyComponent>();
-    }
-
     /// <returns>True if, with the given damage, something can be dismembered from the given entity.</returns>
-    public bool CanDismemberByDamage(Entity<BodyComponent?> bodyEntity, DamageSpecifier damageSpecifier, [NotNullWhen(true)] out float? totalDamage)
+    public bool CanDismemberByDamage(Entity<BodyComponent?> bodyEntity, FixedPoint2 damageFp2, [NotNullWhen(true)] out float? totalDamage)
     {
         if (!_bodyQuery.Resolve(bodyEntity, ref bodyEntity.Comp, logMissing: false))
         {
@@ -48,9 +42,8 @@ public sealed class DismembermentSystem : EntitySystem
             return false;
         }
 
-        var totalDamageFp2 = damageSpecifier.GetTotal();
-        totalDamage = (float)totalDamageFp2;
-        return totalDamageFp2 >= bodyEntity.Comp.DismembermentThreshold;
+        totalDamage = (float)damageFp2;
+        return damageFp2 >= bodyEntity.Comp.DismembermentThreshold;
     }
 
     /// <summary>

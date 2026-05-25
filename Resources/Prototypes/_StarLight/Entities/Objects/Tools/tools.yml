@@ -90,6 +90,7 @@
   - type: RCD
     isRPLD: true
     availablePrototypes:
+    - KsPlumbingTeleporterBeacon # KS14: plumbing teleporters
     - PlumbingRpldDuctStraight
     - PlumbingRpldDuctBend
     - PlumbingRpldDuctTJunction

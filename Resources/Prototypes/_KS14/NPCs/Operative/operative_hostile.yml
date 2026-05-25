@@ -1,17 +1,18 @@
 - type: htnCompound
   id: KsOperativeCombatCompound
   branches:
+  ## Healing
+  - tasks:
+    - !type:HTNCompoundTask
+      task: KsOperativeConsiderHealingAndRetreatCompound
+
+  ## Combat
   - tasks:
     - !type:HTNCompoundTask
       task: KsOperativeRangedCombatCompound
   - tasks:
     - !type:HTNCompoundTask
       task: MeleeCombatCompound
-
-  ## Healing
-  - tasks:
-    - !type:HTNCompoundTask
-      task: KsOperativeConsiderHealingAndRetreatCompound
 
   ## Camping
   - preconditions:

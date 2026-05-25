@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Chat;
 using Content.Shared.Armor;
 using Content.Shared.Atmos;
 using Content.Shared.Chat;
@@ -65,6 +66,7 @@ public partial class InventorySystem
         SubscribeLocalEvent<InventoryComponent, DownedEvent>(RelayInventoryEvent);
 
         SubscribeLocalEvent<InventoryComponent, MobStateChangedEvent>(RelayInventoryEvent); // KS14: MOBSTATERELAY
+        SubscribeLocalEvent<InventoryComponent, EmoteSoundPlayedEvent>(RefRelayInventoryEvent); // KS14
 
         // by-ref events
         SubscribeLocalEvent<InventoryComponent, RefreshFrictionModifiersEvent>(RefRelayInventoryEvent);

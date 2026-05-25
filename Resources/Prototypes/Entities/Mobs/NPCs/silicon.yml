@@ -130,8 +130,6 @@
       NavPry: !type:Bool
         true
   - type: Prying #this is gonna be a lot of fun - KS14
-    pryPowered: true
-    force: true
     speedModifier: 1.5
     useSound:
       path: /Audio/Items/crowbar.ogg
@@ -194,8 +192,6 @@
       NavPry: !type:Bool
         true
   - type: Prying #this is gonna be a lot of fun - KS14
-    pryPowered: true
-    force: true
     speedModifier: 1.5
     useSound:
       path: /Audio/Items/crowbar.ogg
@@ -328,8 +324,6 @@
       NavPry: !type:Bool
         true
   - type: Prying #this is gonna be a lot of fun - KS14
-    pryPowered: true
-    force: true
     speedModifier: 1.5
     useSound:
       path: /Audio/Items/crowbar.ogg
@@ -382,8 +376,6 @@
       NavPry: !type:Bool
         true
   - type: Prying #this is gonna be a lot of fun - KS14
-    pryPowered: true
-    force: true
     speedModifier: 1.5
     useSound:
       path: /Audio/Items/crowbar.ogg
@@ -443,8 +435,6 @@
       NavPry: !type:Bool
         true
   - type: Prying #this is gonna be a lot of fun - KS14
-    pryPowered: true
-    force: true
     speedModifier: 1.5
     useSound:
       path: /Audio/Items/crowbar.ogg
@@ -528,8 +518,6 @@
       NavPry: !type:Bool
         true
   - type: Prying #this is gonna be a lot of fun - KS14
-    pryPowered: true
-    force: true
     speedModifier: 1.5
     useSound:
       path: /Audio/Items/crowbar.ogg
@@ -571,8 +559,6 @@
       NavPry: !type:Bool
         true
   - type: Prying #this is gonna be a lot of fun - KS14
-    pryPowered: true
-    force: true
     speedModifier: 1.5
     useSound:
       path: /Audio/Items/crowbar.ogg

@@ -2,7 +2,7 @@
   id: MineralScannerUnpowered
   parent: BaseItem
   name: mineral scanner
-  description: A scanner that checks surrounding rock for useful minerals. It must be in your hand or pocket to work.
+  description: A scanner that checks surrounding rock for useful minerals. It must be in your hand or pocket to work. Might be able to provide info about some things you encounter outside. # KS14: Added desc for discovery
   suffix: Always Powered
   components:
   - type: Sprite
@@ -44,6 +44,13 @@
   - type: EmitSoundOnDrop # KS14: pickup/drop sounds
     sound:
       path: /Audio/_KS14/Handling/component_drop.ogg
+  - type: KsDiscoveringScanner # KS14: geysers or whatever
+  - type: KsDiscoveringScannerFeedback # KS14: geysers or whatever
+    useSoundSpecifier:
+      path: /Audio/Machines/twobeep.ogg
+      params:
+        pitch: 2
+        volume: 3
 
 - type: entity
   id: MineralScanner

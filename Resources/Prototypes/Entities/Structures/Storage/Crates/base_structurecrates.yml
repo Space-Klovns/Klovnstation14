@@ -106,6 +106,13 @@
       sprite: Structures/Storage/Crates/labels.rsi
       offset: "-0.5,0"
       map: ["enum.PaperLabelVisuals.Layer"]
+  # KS14: emissive start
+  - type: EmissiveLayers
+    glowRadius: 0.1
+    intensity: 0.1
+    layers:
+    - enum.LockVisualLayers.Lock
+  # KS14: emissive end
   - type: Damageable
     damageContainer: StructuralInorganic
     damageModifierSet: StructuralMetallic

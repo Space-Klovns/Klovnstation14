@@ -71,6 +71,7 @@ public sealed class StationAiSystem : SharedStationAiSystem
     private readonly ProtoId<ChatNotificationPrototype> _aiWireSnippedChatNotificationPrototype = "AiWireSnipped";
     private readonly ProtoId<ChatNotificationPrototype> _aiLosingPowerChatNotificationPrototype = "AiLosingPower";
     private readonly ProtoId<ChatNotificationPrototype> _aiCriticalPowerChatNotificationPrototype = "AiCriticalPower";
+    private readonly ProtoId<ChatNotificationPrototype> _aiTakingDamageChatNotificationPrototype = "AiTakingDamage";
 
     private readonly ProtoId<JobPrototype> _stationAiJob = "StationAi";
     private readonly EntProtoId _stationAiBrain = "StationAiBrain";
@@ -239,7 +240,7 @@ public sealed class StationAiSystem : SharedStationAiSystem
 
     private void OnDamageChanged(Entity<StationAiCoreComponent> entity, ref DamageChangedEvent args)
     {
-        UpdateCoreIntegrityAlert(entity);
+        UpdateCoreIntegrityAlert(entity, args.DamageIncreased);
         UpdateDamagedAccent(entity);
     }
 
@@ -289,7 +290,7 @@ public sealed class StationAiSystem : SharedStationAiSystem
         }
     }
 
-    private void UpdateCoreIntegrityAlert(Entity<StationAiCoreComponent> ent)
+    private void UpdateCoreIntegrityAlert(Entity<StationAiCoreComponent> ent, bool damageIncreased = false)
     {
         if (!TryComp<DamageableComponent>(ent, out var damageable))
             return;
@@ -307,6 +308,12 @@ public sealed class StationAiSystem : SharedStationAiSystem
         var damageLevel = Math.Round(damagePercent.Float() * proto.MaxSeverity);
 
         _alerts.ShowAlert(held.Value, _damageAlert, (short)Math.Clamp(damageLevel, 0, proto.MaxSeverity));
+
+        if (damageIncreased)
+        {
+            var ev = new ChatNotificationEvent(_aiTakingDamageChatNotificationPrototype, ent);
+            RaiseLocalEvent(held.Value, ref ev);
+        }
     }
 
     private void OnDoAfterAttempt(Entity<StationAiCoreComponent> ent, ref DoAfterAttemptEvent<IntellicardDoAfterEvent> args)

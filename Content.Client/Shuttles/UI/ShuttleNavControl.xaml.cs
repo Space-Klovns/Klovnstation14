@@ -1,4 +1,5 @@
 using System.Numerics;
+using Content.Shared._KS14.RadarInterest; // KS14: radar interests
 using Content.Shared.Shuttles.BUIStates;
 using Content.Shared.Shuttles.Components;
 using Content.Shared.Shuttles.Systems;
@@ -23,6 +24,7 @@ public sealed partial class ShuttleNavControl : BaseShuttleControl
     [Dependency] private readonly IMapManager _mapManager = default!;
     private readonly SharedShuttleSystem _shuttles;
     private readonly SharedTransformSystem _transform;
+    private readonly KsRadarInterestSystem _ksRadarInterestSystem; // KS14
 
     /// <summary>
     /// Used to transform all of the radar objects. Typically is a shuttle console parented to a grid.
@@ -54,6 +56,7 @@ public sealed partial class ShuttleNavControl : BaseShuttleControl
         RobustXamlLoader.Load(this);
         _shuttles = EntManager.System<SharedShuttleSystem>();
         _transform = EntManager.System<SharedTransformSystem>();
+        _ksRadarInterestSystem = EntManager.System<KsRadarInterestSystem>(); // KS14
     }
 
     public void SetMatrix(EntityCoordinates? coordinates, Angle? angle)
@@ -158,16 +161,21 @@ public sealed partial class ShuttleNavControl : BaseShuttleControl
 
         // Draw our grid in detail
         var ourGridId = xform.GridUid;
-        if (EntManager.TryGetComponent<MapGridComponent>(ourGridId, out var ourGrid) &&
-            fixturesQuery.HasComponent(ourGridId.Value))
+        if (EntManager.TryGetComponent<MapGridComponent>(ourGridId, out var ourGrid))
         {
             var ourGridToWorld = _transform.GetWorldMatrix(ourGridId.Value);
             var ourGridToShuttle = Matrix3x2.Multiply(ourGridToWorld, worldToShuttle);
             var ourGridToView = ourGridToShuttle * shuttleToView;
             var color = _shuttles.GetIFFColor(ourGridId.Value, self: true);
 
-            DrawGrid(handle, ourGridToView, (ourGridId.Value, ourGrid), color);
-            DrawDocks(handle, ourGridId.Value, ourGridToView);
+            KsDrawInterests(handle, ourGridToView, new Box2(mapPos.Position - MaxRadarRangeVector, mapPos.Position + MaxRadarRangeVector), (ourGridId.Value, ourGrid)); // KS14
+
+            // KS14: Moved fixture query to only encompass this
+            if (fixturesQuery.HasComponent(ourGridId.Value))
+            {
+                DrawGrid(handle, ourGridToView, (ourGridId.Value, ourGrid), color);
+                DrawDocks(handle, ourGridId.Value, ourGridToView);
+            }
         }
 
         // Draw radar position on the station
@@ -289,7 +297,23 @@ public sealed partial class ShuttleNavControl : BaseShuttleControl
                 handle.DrawCircle(p, 5, Color.ToSrgb(Color.Cyan), true);
             }
         }
+    }
 
+    // KS14
+    private void KsDrawInterests(DrawingHandleScreen handle, Matrix3x2 curGridToViewMatrix, Box2 viewAABB, Entity<MapGridComponent> gridEntity)
+    {
+        foreach (var (_, interest) in _ksRadarInterestSystem.StaticInterests)
+        {
+            if (gridEntity.Owner != interest.Item2)
+                continue;
+
+            var interestPosition = Vector2.Transform(interest.Item3, curGridToViewMatrix);
+            if (!viewAABB.Contains(interestPosition))
+                continue;
+
+            handle.DrawCircle(interestPosition, 5, Color.ToSrgb(Color.DarkGoldenrod), true);
+            handle.DrawString(Font, interestPosition, interest.Item1.Text, Color.DarkGoldenrod);
+        }
     }
 
     private void DrawDocks(DrawingHandleScreen handle, EntityUid uid, Matrix3x2 gridToView)

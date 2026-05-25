@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Content.Shared._KS14.Klovnmed; // KS14
+using Content.IntegrationTests.Fixtures;
 using Content.Shared.Body;
 using Content.Shared.Hands.Components;
 using Robust.Shared.Containers;
@@ -10,7 +11,7 @@ namespace Content.IntegrationTests.Tests.Body;
 
 [TestFixture]
 [TestOf(typeof(HandOrganSystem))]
-public sealed class HandOrganTest
+public sealed class HandOrganTest : GameTest
 {
     // KS14: Modified prototype to match hierarchy
     [TestPrototypes]
@@ -72,7 +73,7 @@ public sealed class HandOrganTest
     [Test]
     public async Task HandInsertionAndRemovalTest()
     {
-        await using var pair = await PoolManager.GetServerClient();
+        var pair = Pair;
         var server = pair.Server;
 
         await server.WaitIdleAsync();
@@ -108,7 +109,5 @@ public sealed class HandOrganTest
                 Assert.That(hands.Count, Is.EqualTo(expectedCount));
             }
         });
-
-        await pair.CleanReturnAsync();
     }
 }

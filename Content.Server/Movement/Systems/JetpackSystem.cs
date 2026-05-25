@@ -1,3 +1,6 @@
+// KS14: This file was reverted to https://github.com/LaCumbiaDelCoronavirus/ss14/blob/a21e8dd444ad5643e9e315dc5c4a06e30322276e/
+//      which is, `allow jetpacks to stay enabled when on grids and lightly rework jetpack system #37775` on wizden Github
+
 using Content.Server.Atmos.Components;
 using Content.Server.Atmos.EntitySystems;
 using Content.Shared.Atmos.Components;
@@ -23,7 +26,7 @@ public sealed class JetpackSystem : SharedJetpackSystem
     {
         base.Update(frameTime);
 
-        var toDisable = new ValueList<Entity<JetpackComponent>>();
+        var toDisable = new ValueList<(EntityUid Uid, JetpackComponent Component)>();
         var query = EntityQueryEnumerator<ActiveJetpackComponent, JetpackComponent, GasTankComponent>();
 
         while (query.MoveNext(out var uid, out var active, out var comp, out var gasTankComp))

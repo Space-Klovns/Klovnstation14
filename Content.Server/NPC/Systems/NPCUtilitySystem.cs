@@ -30,10 +30,13 @@ using Content.Shared.Atmos.Components;
 using System.Linq;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
+using Content.Shared.Mobs.Components;
 using Content.Shared.Temperature.Components;
-using Content.Server._KS14.IoC; // KS14: ANK
-using Content.Shared.Containers.ItemSlots;
-using Content.Shared.Weapons.Ranged.Systems; // KS14: ANK
+using Content.Shared._KS14.IoC; // KS14: ANK
+using Content.Shared.Containers.ItemSlots; // KS14: ANK
+using Content.Shared.Weapons.Ranged.Systems;
+using Content.Shared.Stealth.Components;
+using Content.Shared.Stealth;
 
 namespace Content.Server.NPC.Systems;
 
@@ -59,8 +62,9 @@ public sealed class NPCUtilitySystem : EntitySystem
     [Dependency] private readonly MobThresholdSystem _thresholdSystem = default!;
     [Dependency] private readonly TurretTargetSettingsSystem _turretTargetSettings = default!;
     [Dependency] private readonly DamageableSystem _damageable = default!;
-    [Dependency] private readonly SystemCollectionHookSystem _collectionHook = default!; // KS14: ANK
+    [Dependency] private readonly SystemCollectionHookManager _collectionHook = default!; // KS14: ANK
     [Dependency] private readonly ItemSlotsSystem _itemSlotsSystem = default!; // KS14: ANK
+    [Dependency] private readonly SharedStealthSystem _stealth = default!;
 
     private EntityQuery<PuddleComponent> _puddleQuery;
     private EntityQuery<TransformComponent> _xformQuery;
@@ -80,7 +84,7 @@ public sealed class NPCUtilitySystem : EntitySystem
         _xformQuery = GetEntityQuery<TransformComponent>();
 
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded); // KS14: ANK
-        _collectionHook.OnSystemCollectionAvailable += InitializeConsiderations;
+        _collectionHook.HookAction(InitializeConsiderations);
     }
 
     // KS14: ANK
@@ -306,6 +310,15 @@ public sealed class NPCUtilitySystem : EntitySystem
 
                     return Math.Clamp(distance / radius, 0f, 1f);
                 }
+            case TargetIsVisibleCon:
+                {
+                    if (!TryComp(targetUid, out StealthComponent? stealth))
+                        return 1f; // If there is no StealthComponent, we see it.
+
+                    // Checking the visibility level
+                    var visibility = _stealth.GetVisibility(targetUid, stealth);
+                    return visibility >= 0.5f ? 1f : 0f; // Visibility threshold 0.5
+                }
             case TargetAmmoCon:
                 {
                     if (!HasComp<GunComponent>(targetUid))
@@ -325,12 +338,13 @@ public sealed class NPCUtilitySystem : EntitySystem
                 }
             case TargetHealthCon con:
                 {
-                    if (!TryComp(targetUid, out DamageableComponent? damage))
+                    if (!TryComp(targetUid, out DamageableComponent? damage) || !TryComp(targetUid, out MobThresholdsComponent? threshold))
                         return 0f;
+
                     var totalDamage = _damageable.GetTotalDamage((targetUid, damage));
-                    if (con.TargetState != MobState.Invalid && _thresholdSystem.TryGetPercentageForState(targetUid, con.TargetState, totalDamage, out var percentage))
+                    if (con.TargetState != MobState.Invalid && _thresholdSystem.TryGetPercentageForState(targetUid, con.TargetState, totalDamage, out var percentage, threshold))
                         return Math.Clamp((float)(1 - percentage), 0f, 1f);
-                    if (_thresholdSystem.TryGetIncapPercentage(targetUid, totalDamage, out var incapPercentage))
+                    if (_thresholdSystem.TryGetIncapPercentage(targetUid, totalDamage, out var incapPercentage, threshold))
                         return Math.Clamp((float)(1 - incapPercentage), 0f, 1f);
                     return 0f;
                 }

@@ -1,0 +1,203 @@
+### BRM
+
+- type: entity
+  parent: [ BaseMachinePowered, ConstructibleMachine ]
+  id: OreRetrievalMatrix
+  name: ore retrieval matrix
+  description: Expensive equipment used to automagically teleports ores from ore wells; tapped ore vents. Well, if you press the power button first that is.
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/Machines/mining_machines.rsi
+    layers:
+    - state: brm-off
+    - state: brm-toggled
+      shader: unshaded
+      visible: false
+      map: [ "emissive" ]
+  - type: AnimationPlayer
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.OreWellReceiverVisuals.Active:
+        emissive:
+          True: { visible: true }
+          False: { visible: false }
+  - type: OreWellReceiver
+    flickLayerKey: "emissive" # not PowerDeviceVisualLayers, because thats client-only and this comp is serverside
+    flickState: brm-flash
+    sound:
+      path: /Audio/_KS14/Machines/Mining/teleport.ogg
+      params:
+        volume: -8
+    enableSound:
+      path: /Audio/Weapons/click.ogg
+      params:
+        volume: -5
+    disableSound:
+      path: /Audio/Weapons/click.ogg
+      params:
+        volume: -5
+        pitch: 0.75
+
+- type: entity
+  parent: OreRetrievalMatrix
+  id: OreRetrievalMatrixEnabled
+  suffix: Enabled
+  components:
+  - type: OreWellReceiver
+    enabled: true
+  - type: Sprite
+    layers:
+    - state: brm-off
+    - state: brm-toggled
+      shader: unshaded
+      visible: true
+      map: [ "emissive" ]
+
+- type: entity
+  parent: BaseFlatpack
+  id: OreRetrievalMatrixFlatpack
+  name: ore retrieval matrix flatpack
+  description: A flatpack used for constructing an ore retrieval matrix.
+  components:
+  - type: Flatpack
+    entity: OreRetrievalMatrix
+  - type: Sprite
+    layers:
+    - state: fax-machine
+  - type: StaticPrice
+    price: 8500
+
+### ORE SMELTER
+
+- type: entity
+  parent: [ BaseMachinePowered, ConstructibleMachine ]
+  id: KsOreSmelter
+  name: automatic ore smelter
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/Machines/mining_machines.rsi
+    layers:
+    # - sprite: Structures/Piping/Atmospherics/pipe.rsi
+    #   state: pipeHalf
+    #   map: [ "enum.PipeVisualLayers.Pipe" ]
+    - state: smelter-off
+      map: [ "base" ]
+    - state: smelter-em
+      shader: unshaded
+      visible: false
+      map: [ "em" ]
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.KsStackProcessorVisuals.Active:
+        base:
+          True: { state: smelter }
+          False: { state: smelter-off }
+        em:
+          True: { visible: true }
+          False: { visible: false }
+  - type: EmissiveLayers
+    glowRadius: 3
+    intensity: 3
+    layers:
+    - smelter-em
+  - type: AnimationPlayer
+
+  - type: KsStackProcessor
+    processingTime: 3s
+    conversions:
+      SteelOre: SheetSteel
+      SpaceQuartz: SheetGlass
+      PlasmaOre: SheetPlasma
+      UraniumOre: SheetUranium
+      BananiumOre: MaterialBananium
+      DiamondOre: MaterialDiamond
+      SilverOre: IngotSilver
+      GoldOre: IngotGold
+  - type: KsEntityProcessor
+    fixtureId: fix1
+  - type: ContainerContainer
+    containers:
+      object-processor-container: !type:Container
+      machine_board: !type:Container
+      machine_parts: !type:Container
+
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.45,-0.45,0.45,0.45"
+        density: 190
+        mask:
+        - MachineMask
+        layer:
+        - MachineLayer
+        - Impassable
+
+  - type: Conveyor
+    angle: -90
+  - type: DeviceLinkSink
+    ports:
+    - Reverse
+    - Forward
+    - Off
+  - type: Transform
+    anchored: true
+    noRot: false
+
+- type: entity
+  parent: BaseFlatpack
+  id: KsOreSmelterFlatpack
+  name: automatic ore smelter flatpack
+  description: A flatpack used for constructing an automatic ore smelter.
+  components:
+  - type: Flatpack
+    entity: KsOreSmelter
+  - type: Sprite
+    layers:
+    - state: fax-machine
+  - type: StaticPrice
+    price: 850
+
+### ORE BOX
+
+# Todo replace this shit
+- type: entity
+  parent: OreBox
+  id: KsProcessedOreBox
+  name: processed material collector
+  description: A large storage container for holding the byproducts of ore processing; sheets, ingots, and the like. It has built-in self-powering magnets to pick up ore. It won't budge.
+  suffix: Enabled
+  components:
+  - type: MagnetPickup
+    slotIrrespective: true
+  - type: ItemToggle
+    activated: true
+    onActivate: false
+  - type: Storage
+    whitelist:
+      tags:
+      - Sheet
+      - RawMaterial
+      - Ingot
+  - type: Damageable
+    damageContainer: StructuralInorganic
+    damageModifierSet: StructuralMetallicStrong
+  - type: Sprite
+    color: '#848484'
+
+- type: entity
+  parent: BaseFlatpack
+  id: KsProcessedOreBoxFlatpack
+  name: processed material collector flatpack
+  description: A flatpack used for constructing a processed material collector.
+  components:
+  - type: Flatpack
+    entity: KsProcessedOreBox
+  - type: Sprite
+    layers:
+    - state: fax-machine
+  - type: StaticPrice
+    price: 550

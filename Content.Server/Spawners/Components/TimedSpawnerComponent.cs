@@ -27,6 +27,24 @@ public sealed partial class TimedSpawnerComponent : Component, ISerializationHoo
     [DataField]
     public float Chance = 1.0f;
 
+    // KS14: spawn radius
+    /// <summary>
+    ///     Minimum spawn radius.
+    /// </summary>
+    [DataField]
+    public float MinRadius = 0f;
+
+    // KS14: spawn radius
+    /// <summary>
+    ///     Max range that the mob will be spawned of this whateverburger.
+    /// </summary>
+    [DataField]
+    public float MaxRadius = 0f;
+
+    // KS14
+    [DataField]
+    public bool SpawnImmediately = false;
+
     /// <summary>
     /// Length of the interval between spawn attempts.
     /// </summary>
@@ -55,5 +73,9 @@ public sealed partial class TimedSpawnerComponent : Component, ISerializationHoo
     {
         if (MinimumEntitiesSpawned > MaximumEntitiesSpawned)
             throw new ArgumentException("MaximumEntitiesSpawned can't be lower than MinimumEntitiesSpawned!");
+
+        // KS14
+        if (MinRadius > MaxRadius || MaxRadius < 0)
+            throw new ArgumentException("Invalid MinRadius or MaxRadius!");
     }
 }

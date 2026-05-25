@@ -1,0 +1,127 @@
+- type: ttsVoice
+  id: en_GB-alan-low
+  voice: en_GB-alan-low
+
+- type: ttsVoice
+  id: en_GB-alan-medium
+  voice: en_GB-alan-medium
+
+- type: ttsVoice
+  id: en_GB-alba-medium
+  voice: en_GB-alba-medium
+
+- type: ttsVoice
+  id: en_GB-aru-medium
+  voice: en_GB-aru-medium
+
+- type: ttsVoice
+  id: en_GB-cori-medium
+  voice: en_GB-cori-medium
+
+- type: ttsVoice
+  id: en_GB-jenny_dioco-medium
+  voice: en_GB-jenny_dioco-medium
+
+- type: ttsVoice
+  id: en_GB-northern_english_male-medium
+  voice: en_GB-northern_english_male-medium
+
+- type: ttsVoice
+  id: en_GB-semaine-medium
+  voice: en_GB-semaine-medium
+
+- type: ttsVoice
+  id: en_GB-southern_english_female-low
+  voice: en_GB-southern_english_female-low
+
+- type: ttsVoice
+  id: en_GB-vctk-medium
+  voice: en_GB-vctk-medium
+
+- type: ttsVoice
+  id: en_US-amy-low
+  voice: en_US-amy-low
+
+- type: ttsVoice
+  id: en_US-amy-medium
+  voice: en_US-amy-medium
+
+- type: ttsVoice
+  id: en_US-arctic-medium
+  voice: en_US-arctic-medium
+
+- type: ttsVoice
+  id: en_US-bryce-medium
+  voice: en_US-bryce-medium
+
+- type: ttsVoice
+  id: en_US-danny-low
+  voice: en_US-danny-low
+
+- type: ttsVoice
+  id: en_US-hfc_female-medium
+  voice: en_US-hfc_female-medium
+
+- type: ttsVoice
+  id: en_US-hfc_male-medium
+  voice: en_US-hfc_male-medium
+
+- type: ttsVoice
+  id: en_US-joe-medium
+  voice: en_US-joe-medium
+
+- type: ttsVoice
+  id: en_US-john-medium
+  voice: en_US-john-medium
+
+- type: ttsVoice
+  id: en_US-kathleen-low
+  voice: en_US-kathleen-low
+
+- type: ttsVoice
+  id: en_US-kristin-medium
+  voice: en_US-kristin-medium
+
+- type: ttsVoice
+  id: en_US-kusal-medium
+  voice: en_US-kusal-medium
+
+- type: ttsVoice
+  id: en_US-l2arctic-medium
+  voice: en_US-l2arctic-medium
+
+- type: ttsVoice
+  id: en_US-lessac-low
+  voice: en_US-lessac-low
+
+- type: ttsVoice
+  id: en_US-lessac-medium
+  voice: en_US-lessac-medium
+
+- type: ttsVoice
+  id: en_US-libritts_r-medium
+  voice: en_US-libritts_r-medium
+
+- type: ttsVoice
+  id: en_US-ljspeech-medium
+  voice: en_US-ljspeech-medium
+
+- type: ttsVoice
+  id: en_US-norman-medium
+  voice: en_US-norman-medium
+
+- type: ttsVoice
+  id: en_US-reza_ibrahim-medium
+  voice: en_US-reza_ibrahim-medium
+
+- type: ttsVoice
+  id: en_US-ryan-low
+  voice: en_US-ryan-low
+
+- type: ttsVoice
+  id: en_US-ryan-medium
+  voice: en_US-ryan-medium
+
+- type: ttsVoice
+  id: en_US-sam-medium
+  voice: en_US-sam-medium

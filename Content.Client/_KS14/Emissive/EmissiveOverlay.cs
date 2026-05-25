@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Content.Client.Light;
+using Content.Shared._KS14;
 using Content.Shared._KS14.Emissive;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
@@ -42,8 +43,6 @@ public sealed class EmissiveOverlay : Overlay
     /// </summary>
     private readonly Dictionary<EntityUid, ShaderInstance> _shaders = [];
     private List<Entity<MapGridComponent>> _grids = [];
-
-    private readonly Dictionary<string, Enum?> _enumKeyCache = [];
 
     public const int ContentZIndex = BeforeLightTargetOverlay.ContentZIndex + 2;
 
@@ -108,7 +107,10 @@ public sealed class EmissiveOverlay : Overlay
                 if (_entities.Count == 0)
                     continue;
 
-                var gridMatrix = _transformSystem.GetWorldMatrix(grid.Owner);
+                var gridMatrix = Matrix3x2.Multiply(_transformSystem.GetWorldMatrix(grid.Owner), invMatrix);
+                worldHandle.SetTransform(gridMatrix);
+
+                var localEyeRotation = eyeRotation - gridInvMatrix.Rotation();
 
                 foreach (var ent in _entities)
                 {
@@ -128,26 +130,22 @@ public sealed class EmissiveOverlay : Overlay
 
                     var transformComponent = transformQuery.GetComponent(ent);
 
-                    var matty = Matrix3x2.Multiply(gridMatrix, invMatrix);
-
-                    worldHandle.SetTransform(matty);
-
                     var renderPosition = transformComponent.Coordinates.Position;
-                    var spriteRotation = transformComponent.LocalRotation;
+                    var spriteRotation = Angle.Zero;
                     if (ent.Comp.UseSpriteTransform)
                     {
                         renderPosition += spriteComponent.Offset;
                         spriteRotation += spriteComponent.Rotation;
                     }
+                    else
+                        spriteRotation += transformComponent.LocalRotation;
 
                     var spriteColor = spriteComponent.Color;
-
-
                     foreach (var layerId in ent.Comp.Layers)
                     {
                         // insanity
                         SpriteComponent.Layer? layer = null;
-                        var layerEnumKey = ParseKey(layerId, out var isKeyEnum);
+                        var layerEnumKey = KsEnumHelpers.ParseKey(layerId, out var isKeyEnum, _reflectionManager);
                         if (isKeyEnum)
                         {
                             if (!_spriteSystem.TryGetLayer((ent.Owner, spriteComponent), layerEnumKey!, out layer, false))
@@ -159,21 +157,57 @@ public sealed class EmissiveOverlay : Overlay
                         if (!layer.Visible)
                             continue;
 
-                        var textureRotation = spriteRotation + Angle.FromDegrees(ent.Comp.ROTOF);
+                        var textureRotation = spriteRotation;
+                        var drawRotation = spriteRotation;
+
                         var origin = renderPosition;
                         if (ent.Comp.UseSpriteTransform)
                         {
                             textureRotation += layer.Rotation;
-                            origin += layer.Offset;
+                            origin += textureRotation.RotateVec(layer.Offset); // This might need to be rotated by the texture rotation but idk
+
+                            var noRot = spriteComponent.NoRotation;
+                            var snapCardinals = spriteComponent.SnapCardinals;
+                            if (spriteComponent.GranularLayersRendering)
+                            {
+                                noRot = layer.RenderingStrategy == LayerRenderingStrategy.NoRotation || layer.RenderingStrategy == LayerRenderingStrategy.UseSpriteStrategy && noRot;
+                                snapCardinals = layer.RenderingStrategy == LayerRenderingStrategy.SnapToCardinals || layer.RenderingStrategy == LayerRenderingStrategy.UseSpriteStrategy && snapCardinals;
+                            }
+
+                            if (noRot) // If its no-rot
+                            {
+                                textureRotation = localEyeRotation;
+                                drawRotation = textureRotation;
+                            }
+                            else // With rotation
+                            {
+                                var cardinal = Angle.Zero;
+                                if (snapCardinals)
+                                {
+                                    cardinal = (spriteRotation + localEyeRotation)
+                                        .Reduced()
+                                        .FlipPositive() // angle on-screen. Used to decide the direction of 4/8 directional RSIs
+                                        .RoundToCardinalAngle();
+
+                                    drawRotation = spriteRotation - cardinal;
+                                }
+                                else if (layer.ActualState == null ||
+                                    SpriteComponent.Layer.GetDirection(layer.ActualState.RsiDirections, textureRotation) == RsiDirection.South) // if 1dir
+                                    drawRotation = transformComponent.LocalRotation;
+                                else
+                                    drawRotation = spriteRotation;
+
+                                textureRotation = spriteRotation - cardinal;
+                            }
                         }
 
                         var texture = GetLayerTexture(spriteComponent, layer, textureRotation);
-                        var box = Box2.CenteredAround(origin + ent.Comp.Offset, texture.Size / (float)EyeManager.PixelsPerMeter).Enlarged(ent.Comp.GlowRadius);
+                        var box = Box2.CenteredAround(origin + ent.Comp.Offset /* this is the centroid of the box */, texture.Size / (float)EyeManager.PixelsPerMeter).Enlarged(ent.Comp.GlowRadius);
 
                         var textureBox = new Box2Rotated(
                             box,
-                            textureRotation,
-                            origin // The pivot-point should be at the origin of the box, not origin of the world (0,0)
+                            ent.Comp.OnlyRotateTexture ? Angle.Zero : drawRotation,
+                            origin // /* this is the pivot-point of the box */ The pivot-point should be at the origin of the box, not origin of the world (0,0)
                         );
 
                         worldHandle.DrawTextureRect(
@@ -204,26 +238,6 @@ public sealed class EmissiveOverlay : Overlay
 
         _entitiesToRemoveFromShaders.Clear();
         _allShaderEntities.Clear();
-    }
-
-    private Enum? ParseKey(string keyString, [NotNullWhen(true)] out bool isEnum)
-    {
-        if (_enumKeyCache.TryGetValue(keyString, out var foundEnum))
-        {
-            isEnum = foundEnum is { };
-            return foundEnum;
-        }
-
-        if (_reflectionManager.TryParseEnumReference(keyString, out var @enum))
-        {
-            _enumKeyCache[keyString] = @enum;
-            isEnum = true;
-            return @enum;
-        }
-
-        _enumKeyCache[keyString] = null;
-        isEnum = false;
-        return null;
     }
 
     private Texture GetLayerTexture(SpriteComponent spriteComponent, SpriteComponent.Layer layer, Angle rotation)

@@ -89,8 +89,7 @@ public sealed class CanisterOverlay : Overlay
         for (var i = 0; i < Atmospherics.TotalNumberOfGases; i++)
         {
             var gasPrototype = _atmosphereSystem.GetGas(i);
-            if (string.IsNullOrEmpty(gasPrototype.GasOverlayTexture) &&
-                (string.IsNullOrEmpty(gasPrototype.GasOverlaySprite) || string.IsNullOrEmpty(gasPrototype.GasOverlayState)))
+            if (gasPrototype.GasOverlaySprite is not { })
                 continue;
 
             _visibleGasMolesVisibleMin[_visibleGasCount] = gasPrototype.GasMolesVisible;

@@ -159,13 +159,19 @@
       board: SurveillanceCameraWirelessRouterCircuitboard
     - type: Sprite
       sprite: Structures/Machines/server.rsi
+      snapCardinals: true # KS14: snapCardinals
       layers:
-        - state: server-off
+        - state: server-nopower # KS14: server-off -> server-nopower
         - state: server-on
-          visible: false
+          shader: unshaded # KS14
+          sprite: _KS14/Structures/Machines/server.rsi # KS14: use ks14 variant
           map: ["enum.PowerDeviceVisualLayers.Powered"]
         - state: server_o
           map: ["enum.WiresVisualLayers.MaintenancePanel"]
+    # KS14: emissive start
+    - type: EmissiveLayers
+      intensity: 3
+    # KS14: emissive end
     - type: GenericVisualizer
       visuals:
         enum.PowerDeviceVisuals.Powered:

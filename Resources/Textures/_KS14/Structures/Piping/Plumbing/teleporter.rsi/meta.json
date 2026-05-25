@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from https://github.com/tgstation/tgstation/ at commit 2b9286bc9dafebf446f28d013a8726e98ea04e49",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "beacon",
+      "delays": [
+        [
+          0.5,
+          0.5
+        ]
+      ]
+    },
+    {
+      "name": "beacon_working",
+      "delays": [
+        [
+          0.125,
+          0.075,
+          0.05,
+          0.05,
+          0.025,
+          0.05,
+          0.05,
+          0.05,
+          0.075,
+          0.125
+        ]
+      ]
+    },
+    {
+      "name": "recipient_working",
+      "delays": [
+        [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      ]
+    },
+    {
+      "name": "recipient",
+      "delays": [
+        [
+          0.2,
+          0.025,
+          0.05,
+          0.075,
+          0.1,
+          0.2,
+          0.075,
+          0.025,
+          0.2
+        ]
+      ]
+    }
+  ]
+}

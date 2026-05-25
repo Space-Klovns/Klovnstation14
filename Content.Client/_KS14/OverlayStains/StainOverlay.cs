@@ -11,7 +11,7 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
-namespace Content.Client.Light;
+namespace Content.Client._KS14.OverlayStains;
 
 public sealed class StainOverlay : Overlay
 {
@@ -25,17 +25,17 @@ public sealed class StainOverlay : Overlay
     [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly IMapManager _mapManager = default!;
 
-    private readonly TransformSystem _transformSystem = default!;
-    private readonly SpriteSystem _spriteSystem = default!;
-    private readonly EntityLookupSystem _entityLookupSystem = default!;
+    [Dependency] private readonly TransformSystem _transformSystem = default!;
+    [Dependency] private readonly SpriteSystem _spriteSystem = default!;
+    [Dependency] private readonly EntityLookupSystem _entityLookupSystem = default!;
 
     /// <summary>
     ///     Based on <see cref="Shared._KS14.CCVar.KsCCVars.ComplexStainDrawing"/>
     /// </summary>
     public bool ComplexDrawing = false;
 
-    private EntityQuery<TransformComponent> _transformQuery;
-    private EntityQuery<SpriteComponent> _spriteQuery;
+    [Dependency] private readonly EntityQuery<TransformComponent> _transformQuery = default!;
+    [Dependency] private readonly EntityQuery<SpriteComponent> _spriteQuery = default!;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowFOV;
 
@@ -54,27 +54,26 @@ public sealed class StainOverlay : Overlay
 
     public StainOverlay()
     {
-        IoCManager.InjectDependencies(this);
+        ZIndex = (int)Shared.DrawDepth.DrawDepth.WallTops;
+    }
 
-        _transformSystem = _entityManager.System<TransformSystem>();
-        _spriteSystem = _entityManager.System<SpriteSystem>();
-        _entityLookupSystem = _entityManager.System<EntityLookupSystem>();
+    protected override bool BeforeDraw(in OverlayDrawArgs args)
+    {
+        if (!base.BeforeDraw(args))
+            return false;
 
-        _transformQuery = _entityManager.GetEntityQuery<TransformComponent>();
-        _spriteQuery = _entityManager.GetEntityQuery<SpriteComponent>();
+        if (StainSpriteSpecifier == null)
+            return false;
 
-        ZIndex = AfterLightTargetOverlay.ContentZIndex + 1;
+        var stainedQuery = _entityManager.EntityQuery<StainedComponent>();
+        if (!stainedQuery.Any())
+            return false;
+
+        return false;
     }
 
     protected override void Draw(in OverlayDrawArgs args)
     {
-        if (StainSpriteSpecifier == null)
-            return;
-
-        var stainedQuery = _entityManager.EntityQuery<StainedComponent>();
-        if (!stainedQuery.Any())
-            return;
-
         var viewport = args.Viewport;
         var mapId = args.MapId;
         var worldBounds = args.WorldBounds;
@@ -107,11 +106,13 @@ public sealed class StainOverlay : Overlay
                 worldHandle.UseShader(_prototypeManager.Index(UnshadedShader).Instance());
                 foreach (var grid in _grids)
                 {
-                    var localMatrix = Matrix3x2.Multiply(_transformSystem.GetWorldMatrix(grid, _transformQuery), invMatrix);
-                    worldHandle.SetTransform(localMatrix);
-
                     _intersectingEntities.Clear();
                     _entityLookupSystem.GetEntitiesIntersecting(mapId, worldBoundBox, _intersectingEntities, LookupFlags.Static);
+                    if (_intersectingEntities.Count == 0)
+                        continue;
+
+                    var localMatrix = Matrix3x2.Multiply(_transformSystem.GetWorldMatrix(grid, _transformQuery), invMatrix);
+                    worldHandle.SetTransform(localMatrix);
 
                     // TODO: Draw actual sprite texture to stencil?
                     foreach (var uid in _intersectingEntities)
@@ -146,7 +147,7 @@ public sealed class StainOverlay : Overlay
         worldHandle.UseShader(_prototypeManager.Index(StencilMaskShader).Instance());
         worldHandle.DrawTextureRect(res.StainTarget.Texture, worldBounds);
 
-        var texture = _spriteSystem.GetFrame(StainSpriteSpecifier, realTime);
+        var texture = _spriteSystem.GetFrame(StainSpriteSpecifier!, realTime);
         var convertedTextureWidth = texture.Width / DblPixelsPerMeter;
         var convertedTextureHeight = texture.Height / DblPixelsPerMeter;
 

@@ -39,6 +39,7 @@
   - type: EmissiveLayers
     glowRadius: 0.3
     intensity: 1
+    useSpriteTransform: false
     layers:
     - enum.PowerDeviceVisualLayers.Powered
   # KS14: emissive end

@@ -25,6 +25,7 @@
   - type: Sprite
     drawdepth: WallMountedItems
     sprite: Structures/Power/apc.rsi
+    noRot: true
     layers:
     - state: base
     - state: panel
@@ -98,8 +99,10 @@
   # KS14 /tg/ parity end
   # KS14: emissive start
   - type: EmissiveLayers
-    glowRadius: 0.5
-    offset: 0, -0.5
+    glowRadius: 0
+    intensity: 0.8
+    offset: 0, -0.7
+    useSpriteTransform: false
     layers:
     - enum.ApcVisualLayers.ChargeState
   # KS14: emissive end

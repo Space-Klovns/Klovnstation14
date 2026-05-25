@@ -259,6 +259,9 @@
     actions:
     - !type:TakeOrgan
       category: Brain
+    - !type:SetNode
+      node: OpenIncision
+      performActions: false # Dont perform actions so as to not re-add the category
 
   - node: Cauterize head wound # Transient node for: OpenIncision
     actions:

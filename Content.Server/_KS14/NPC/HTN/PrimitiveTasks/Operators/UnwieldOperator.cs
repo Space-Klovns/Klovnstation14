@@ -15,13 +15,7 @@ public sealed partial class UnwieldOperator : HTNOperator
     [Dependency] private readonly IEntityManager _entityManager = default!;
     [Dependency] private readonly WieldableSystem _wieldableSystem = default!;
     [Dependency] private readonly HandsSystem _handsSystem = default!;
-    private EntityQuery<WieldableComponent> _wieldableQuery;
-
-    public override void Initialize(IEntitySystemManager sysManager)
-    {
-        base.Initialize(sysManager);
-        _wieldableQuery = _entityManager.GetEntityQuery<WieldableComponent>();
-    }
+    [Dependency] private readonly EntityQuery<WieldableComponent> _wieldableQuery = default!;
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {

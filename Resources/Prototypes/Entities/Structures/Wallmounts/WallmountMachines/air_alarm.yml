@@ -94,8 +94,8 @@
   # KS14 Start: /tg/ sprite port
   - type: EmissiveLayers
     glowRadius: 0.45
-    offset: 0.35,-0.8
-    useSpriteTransform: false # because of dirspritemanip
+    intensity: 1.5
+    offset: 0.25,-0.8
     layers:
     - airAlarmState
   - type: DirectionalSpriteManipulation

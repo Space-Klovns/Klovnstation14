@@ -4,11 +4,11 @@
     OreIron: 1.0
     OreQuartz: 1.0
     OreCoal: 0.33
+    OreSalt: 0.20
     OreGold: 0.25
     OreSilver: 0.25
     OrePlasma: 0.20
     OreUranium: 0.20
-    OreSalt: 0.20 # KS14: Ports upstream https://github.com/space-wizards/space-station-14/pull/41930
     OreArtifactFragment: 0.10
     OreBananium: 0.10
 
@@ -91,5 +91,3 @@
   count: 5
   minGroupSize: 1
   maxGroupSize: 2
-
-

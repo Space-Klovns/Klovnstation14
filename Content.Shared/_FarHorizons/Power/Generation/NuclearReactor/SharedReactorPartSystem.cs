@@ -9,6 +9,7 @@ using Robust.Shared.Prototypes;
 using Content.Shared._FarHorizons.Materials;
 using Content.Shared._FarHorizons.Materials.Systems;
 using Robust.Shared.Collections;
+using Content.Shared.Radiation.Systems;
 
 namespace Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
 
@@ -19,6 +20,7 @@ public abstract class SharedReactorPartSystem : EntitySystem
     [Dependency] private readonly SharedAudioSystem _audio = default!;
     [Dependency] private readonly SharedPointLightSystem _lightSystem = default!;
     [Dependency] private readonly IPrototypeManager _proto = default!;
+    [Dependency] private readonly SharedRadiationSystem _radiationSystem = default!;
 
     private readonly float _rate = 5;
     private readonly float _bias = 1.5f;
@@ -117,7 +119,8 @@ public abstract class SharedReactorPartSystem : EntitySystem
             if (!_entityManager.HasComponent<RadiationSourceComponent>(uid))
             {
                 var radcomp = EnsureComp<RadiationSourceComponent>(uid);
-                radcomp.Intensity = (component.Properties.Radioactivity * 0.1f) + (component.Properties.NeutronRadioactivity * 0.15f) + (component.Properties.FissileIsotopes * 0.125f);
+                _radiationSystem.SetIntensity((uid, radcomp),
+                    (component.Properties.Radioactivity * 0.1f) + (component.Properties.NeutronRadioactivity * 0.15f) + (component.Properties.FissileIsotopes * 0.125f));
             }
 
             if (component.Properties.NeutronRadioactivity > 0 && !_lightSystem.TryGetLight(uid, out _))

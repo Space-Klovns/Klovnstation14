@@ -15,7 +15,7 @@ public abstract partial class UtilityConsideration
     /// <summary>
     ///     Called when prototypes are reloaded, or this is initialised.
     /// </summary>
-    public virtual void Initialise(IDependencyCollection dependencyCollection) => dependencyCollection.InjectDependencies(this);
+    public virtual void Initialise(IDependencyCollection dependencyCollection) => dependencyCollection.InjectDependencies(this, oneOff: true); // AccessViolationException if not oneOff
 
     // KS14: ANK
     public virtual float GetScore(NPCBlackboard blackboard, EntityUid ownerUid, EntityUid targetUid) => throw new NotImplementedException();

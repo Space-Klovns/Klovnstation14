@@ -1,0 +1,7 @@
+#   The original version of this source code was ported from
+#       https://github.com/RMC-14/RMC-14/ at commit 2066df33076c46e67bed4770d7c14ebf107c643b
+
+- type: shader
+  id: KsShockwave
+  kind: source
+  path: "/Textures/_KS14/Shaders/shockwave.swsl"

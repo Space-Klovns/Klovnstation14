@@ -1,0 +1,26 @@
+- type: explosion
+  id: OreVentClearing
+  damagePerIntensity:
+    types:
+      Structural: 70
+  tileBreakChance: [0]
+  tileBreakIntensity: [0]
+  tileBreakRerollReduction: 0
+  lightColor: '#00000000' # fully transparent
+  fireColor: '#00000000' # fully transparent
+  smallSound:
+    path: /Audio/Effects/break_stone.ogg
+  smallSoundFar:
+    path: /Audio/Effects/break_stone.ogg
+    params:
+      volume: -14
+      pitch: 0.6
+  sound:
+    path: /Audio/Effects/break_stone.ogg
+    params:
+      pitch: 0.9
+  soundFar:
+    path: /Audio/Effects/break_stone.ogg
+    params:
+      volume: -12
+      pitch: 0.35

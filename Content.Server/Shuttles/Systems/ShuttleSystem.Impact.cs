@@ -256,9 +256,7 @@ public sealed partial class ShuttleSystem
             if (direction.LengthSquared() > minsq)
             {
                 _stuns.TryCrawling(ent.Owner, knockdownTime);
-                var physicsComp = _physicsQuery.GetComponent(ent);
-                _throwing.TryThrow(ent, direction, physicsComp, Transform(ent), _projQuery, direction.Length(), playSound: false,
-                    predicted: false); // Trauma
+                _throwing.TryThrow(ent, direction, ent.Comp, Transform(ent), direction.Length(), playSound: false, predicted: false /* Trauma: unpredicted */);
             }
             else
             {
@@ -416,8 +414,7 @@ public sealed partial class ShuttleSystem
                 else
                 {
                     var direction = throwDirection * tileData.DistanceFactor;
-                    _throwing.TryThrow(localEnt, direction, physics, localEnt.Comp, _projQuery, direction.Length(), playSound: false,
-                        predicted: false); // Trauma
+                    _throwing.TryThrow(localEnt, direction, physics, localEnt.Comp, direction.Length(), playSound: false, predicted: false /* Trauma: unpredicted */);
                 }
             }
 
