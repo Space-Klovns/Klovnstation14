@@ -218,7 +218,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
         }
 
         // If the object won't be destroyed, it "tanks" the penetration hit.
-        if (damage.GetTotal()*multiplier < damageRequired) //KS14, ugly code accounting for inaccuracies
+        if (damageRequired - damage.GetTotal()*multiplier > FixedPoint2.New(1)) //KS14, ugly code accounting for inaccuracies
         {
             return false;
         }
