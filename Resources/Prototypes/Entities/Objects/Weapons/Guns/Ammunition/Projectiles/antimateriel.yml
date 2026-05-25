@@ -14,11 +14,12 @@
     - Structural
   - type: RemoveCompOnCollide
     taggedComponents:
-      HristovVentable:
+      HristovWindowVentable:
         - type: Airtight
+        - type: DeltaPressure
   - type: AddCompOnCollide
     taggedComponents:
-      HristovVentable:
+      HristovWindowVentable:
         - type: HristovAppearance
   - type: StaminaDamageOnCollide
     damage: 60
@@ -43,9 +44,10 @@
     ignoreResistances: true
   - type: RemoveCompOnCollide
     taggedComponents:
-      HristovVentable:
+      HristovWindowVentable:
         - type: Airtight
+        - type: DeltaPressure
   - type: AddCompOnCollide
     taggedComponents:
-      HristovVentable:
+      HristovWindowVentable:
         - type: HristovAppearance

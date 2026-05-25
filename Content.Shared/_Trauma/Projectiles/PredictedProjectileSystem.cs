@@ -17,6 +17,7 @@ using Robust.Shared.Physics.Events;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Physics.Systems; // KS14
+using Robust.Shared.Log;
 
 namespace Content.Shared._Trauma.Projectiles;
 
@@ -116,6 +117,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
         var otherName = ToPrettyString(target);
         var destroyedThreshold = _destructible.DestroyedAt(target);
         var totalDamage = _damageable.GetTotalDamage(target);
+        Logger.Info($"destroyedthreshold {destroyedThreshold}");
 
         var damageRequired = destroyedThreshold;
 
@@ -133,11 +135,14 @@ public sealed class PredictedProjectileSystem : EntitySystem
         {
             var maxPenetrationDamage = destroyedThreshold * 0.5f;
             var totalDealingDamage = ev.Damage.GetTotal();
+            Logger.Info($"maxpendamage: {maxPenetrationDamage}");
+            Logger.Info($"totaldealingdamage: {totalDealingDamage}");
             if (totalDealingDamage > maxPenetrationDamage)
             {
                 var factor = maxPenetrationDamage / totalDealingDamage;
                 ev.Damage *= factor;
             }
+            Logger.Info($"damage of the event: {ev.Damage}");
         }
 
         // KS14 Impact start
