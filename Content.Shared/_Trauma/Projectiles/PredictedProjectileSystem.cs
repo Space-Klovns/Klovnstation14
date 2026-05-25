@@ -17,7 +17,6 @@ using Robust.Shared.Physics.Events;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Physics.Systems; // KS14
-using Robust.Shared.Log;
 
 namespace Content.Shared._Trauma.Projectiles;
 
@@ -115,34 +114,13 @@ public sealed class PredictedProjectileSystem : EntitySystem
         RaiseLocalEvent(uid, ref ev);
 
         var otherName = ToPrettyString(target);
-        var destroyedThreshold = _destructible.DestroyedAt(target);
+        var damageRequired = _destructible.DestroyedAt(target);
         var totalDamage = _damageable.GetTotalDamage(target);
-        Logger.Info($"destroyedthreshold {destroyedThreshold}");
-
-        var damageRequired = destroyedThreshold;
 
         if (TryComp<DamageableComponent>(target, out var damageable))
         {
             damageRequired -= totalDamage;
             damageRequired = FixedPoint2.Max(damageRequired, FixedPoint2.Zero);
-        }
-
-        // Store original damage for penetration check
-        var originalDamage = ev.Damage;
-
-        // Cap penetration damage to 50% of the structure's total health
-        if (comp.PenetrationThreshold > 0)
-        {
-            var maxPenetrationDamage = destroyedThreshold * 0.5f;
-            var totalDealingDamage = ev.Damage.GetTotal();
-            Logger.Info($"maxpendamage: {maxPenetrationDamage}");
-            Logger.Info($"totaldealingdamage: {totalDealingDamage}");
-            if (totalDealingDamage > maxPenetrationDamage)
-            {
-                var factor = maxPenetrationDamage / totalDealingDamage;
-                ev.Damage *= factor;
-            }
-            Logger.Info($"damage of the event: {ev.Damage}");
         }
 
         // KS14 Impact start
@@ -164,8 +142,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
                 LogImpact.Medium,
                 $"Projectile {ToPrettyString(uid):projectile} shot by {ToPrettyString(shooter):user} hit {otherName:target} and dealt {damage:damage} damage");
 
-            // Use original damage for penetration check, so cap doesn't prevent penetration
-            comp.ProjectileSpent = !TryPenetrate((uid, comp), target, originalDamage, damageRequired);
+            comp.ProjectileSpent = !TryPenetrate((uid, comp), target, damage, damageRequired);
         }
         else
         {
