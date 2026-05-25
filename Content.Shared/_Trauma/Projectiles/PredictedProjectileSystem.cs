@@ -5,6 +5,7 @@ using Content.Shared.Camera;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
+using Content.Shared.Damage.Prototypes; // KS14
 using Content.Shared.Database;
 using Content.Shared.FixedPoint;
 using Content.Shared.Projectiles;
@@ -17,6 +18,9 @@ using Robust.Shared.Physics.Events;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Physics.Systems; // KS14
+using Robust.Shared.Configuration; // KS14
+using Robust.Shared.Prototypes; // KS14
+using Content.Shared._KS14.CCVar; // KS14
 
 namespace Content.Shared._Trauma.Projectiles;
 
@@ -36,15 +40,27 @@ public sealed class PredictedProjectileSystem : EntitySystem
     [Dependency] private readonly SharedGunSystem _gun = default!;
     [Dependency] private readonly SharedProjectileSystem _projectile = default!;
     [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!; // KS14
+    [Dependency] private readonly IConfigurationManager _config = default!; // KS14
+    [Dependency] private readonly IPrototypeManager _prototypeManager = default!; // KS14
 
     private EntityQuery<ProjectileComponent> _query;
     private EntityQuery<PhysicsComponent> _physicsQuery;
     private EntityQuery<FixturesComponent> _fixturesQuery;
 
+    /// <summary>
+    /// KS14, impulse cvar <see cref="KsCCVars"/>.
+    /// </summary>
+    private float _gunImpulse = 0f;
+    /// <summary>
+    /// KS14, penetration cvar <see cref="KsCCVars"/>.
+    /// </summary>
+    private float _gunPenetrationMinShots = 1f;
+
     public override void Initialize()
     {
         base.Initialize();
-
+        _config.OnValueChanged(KsCCVars.GunImpulseMultiplier, x => _gunImpulse = x, invokeImmediately: true);
+        _config.OnValueChanged(KsCCVars.GunPenetrationMinShots, x => _gunPenetrationMinShots = x, invokeImmediately: true);
         _query = GetEntityQuery<ProjectileComponent>();
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
         _fixturesQuery = GetEntityQuery<FixturesComponent>();
@@ -115,23 +131,41 @@ public sealed class PredictedProjectileSystem : EntitySystem
 
         var otherName = ToPrettyString(target);
         var damageRequired = _destructible.DestroyedAt(target);
-        var totalDamage = _damageable.GetTotalDamage(target);
 
-        if (TryComp<DamageableComponent>(target, out var damageable))
-        {
-            damageRequired -= totalDamage;
-            damageRequired = FixedPoint2.Max(damageRequired, FixedPoint2.Zero);
-        }
+        //KS14 pen start
+        if (comp.PenetrationThreshold > 0) damageRequired /= _gunPenetrationMinShots;
+
+        if (!TryComp<DamageableComponent>(target, out var damageable))
+            return;
+        //KS14 pen end
 
         // KS14 Impact start
         if (_net.IsServer &&
             ent.Comp2.FixturesMass > float.Epsilon)
-            _physicsSystem.ApplyLinearImpulse(target, ent.Comp2.Momentum * 0.125f);
+            _physicsSystem.ApplyLinearImpulse(target, ent.Comp2.Momentum * _gunImpulse);
         // KS14 Impact end
+
+        // KS14 - demonic penetrationcode start
+        var multiplier = FixedPoint2.Zero;
+        var maxmultiplier = FixedPoint2.Zero;
+        var adjustedDamage = new DamageSpecifier();
+        if (comp.PenetrationThreshold > 0)
+        {
+            DamageModifierSetPrototype? targetDamageModifiers = null;
+            if (damageable?.DamageModifierSetId != null)
+            {
+                _prototypeManager.Resolve(damageable.DamageModifierSetId, out targetDamageModifiers);
+            }
+
+            multiplier = CalculateMultiplier(ev.Damage, targetDamageModifiers, damageRequired);
+            maxmultiplier = CalculateMultiplier(ev.Damage, targetDamageModifiers, comp.PenetrationThreshold-comp.PenetrationAmount);
+            adjustedDamage = ev.Damage * FixedPoint2.Min(multiplier, maxmultiplier);
+        }
+        // KS14 - demonic penetrationcode end
 
         var deleted = Deleted(target);
 
-        if (_damageable.TryChangeDamage((target, damageable), ev.Damage, out var damage, comp.IgnoreResistances, origin: shooter) && Exists(shooter))
+        if (_damageable.TryChangeDamage((target, damageable), !adjustedDamage.Empty ? adjustedDamage : ev.Damage, out var damage, comp.IgnoreResistances, origin: shooter) && Exists(shooter)) //KS14
         {
             if (!deleted && _net.IsServer) // intentionally not predicting so you know if color flashes its 100% a hit
             {
@@ -142,7 +176,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
                 LogImpact.Medium,
                 $"Projectile {ToPrettyString(uid):projectile} shot by {ToPrettyString(shooter):user} hit {otherName:target} and dealt {damage:damage} damage");
 
-            comp.ProjectileSpent = !TryPenetrate((uid, comp), target, damage, damageRequired);
+            comp.ProjectileSpent = !TryPenetrate((uid, comp), target, damage, damageRequired, multiplier); //KS14
         }
         else
         {
@@ -165,7 +199,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
             RaiseLocalEvent(new ImpactEffectEvent(comp.ImpactEffect, GetNetCoordinates(xform.Coordinates)));
         }
     }
-    private bool TryPenetrate(Entity<ProjectileComponent> projectile, EntityUid target, DamageSpecifier damage, FixedPoint2 damageRequired)
+    private bool TryPenetrate(Entity<ProjectileComponent> projectile, EntityUid target, DamageSpecifier damage, FixedPoint2 damageRequired, FixedPoint2 multiplier) //KS14 - added multiplier
     {
         // If penetration is to be considered, we need to do some checks to see if the projectile should stop.
         if (projectile.Comp.PenetrationThreshold == 0)
@@ -184,7 +218,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
         }
 
         // If the object won't be destroyed, it "tanks" the penetration hit.
-        if (damage.GetTotal() < damageRequired)
+        if (damage.GetTotal()*multiplier < damageRequired) //KS14, ugly code accounting for inaccuracies
         {
             return false;
         }
@@ -201,4 +235,100 @@ public sealed class PredictedProjectileSystem : EntitySystem
 
         return true;
     }
+    // KS14 penetration demoncode start
+    /// <summary>
+    /// Calculates the minimum multiplier needed for a projectile to deal
+    /// a desired amount of post-mitigation damage after all DamageSpecifier
+    /// interactions are applied.
+    ///
+    /// This exists because projectile penetration (passing through objects)
+    /// becomes inconsistent once multiple damage types, flat reductions,
+    /// percentile reductions, and penetration values are all interacting.
+    ///
+    /// The function reproduces DamageSpecifier mitigation logic, measures how
+    /// much damage would actually survive armor, then calculates the multiplier
+    /// required to reach the requested final damage amount.
+    /// </summary>
+    public static FixedPoint2 CalculateMultiplier(
+        DamageSpecifier damage,
+        DamageModifierSet? targetDamageModifiers,
+        FixedPoint2 targetDamage)
+    {
+        if (targetDamage <= FixedPoint2.Zero)
+            return FixedPoint2.Zero;
+
+        FixedPoint2 effectiveDamage = FixedPoint2.Zero;
+
+        foreach (var (damageType, baseDamage) in damage.DamageDict)
+        {
+            if (baseDamage <= FixedPoint2.Zero)
+                continue;
+
+            // -------------------------
+            // Percentile mitigation
+            // -------------------------
+
+            // Coefficients are "damage taken" multipliers.
+            // 0.6 means the target takes 60% damage.
+            float damageCoefficient =
+                targetDamageModifiers?.Coefficients.TryGetValue(damageType, out var coeff) == true
+                    ? coeff
+                    : 1f;
+
+            // Penetration weakens the reduction portion, not the final coefficient.
+            float percentilePenetration =
+                damage.PercentilePenetration?.TryGetValue(damageType, out var pen) == true
+                    ? pen
+                    : 0f;
+
+            float reduction = 1f - damageCoefficient;
+            reduction *= 1f - percentilePenetration;
+
+            float finalCoefficient = 1f - reduction;
+
+            FixedPoint2 percentileDamage =
+                baseDamage * (FixedPoint2) finalCoefficient;
+
+            // -------------------------
+            // Flat mitigation
+            // -------------------------
+
+            float flatReduction =
+                targetDamageModifiers?.FlatReduction.TryGetValue(damageType, out var reductionValue) == true
+                    ? reductionValue
+                    : 0f;
+
+            float flatPenetration =
+                damage.FlatPenetration?.TryGetValue(damageType, out var penetrationValue) == true
+                    ? penetrationValue
+                    : 0f;
+
+            // Percentile penetration can also weaken flat armor.
+            if (!damage.disableCrossInteraction)
+            {
+                flatReduction *= 1f - percentilePenetration;
+            }
+
+            // Apply flat penetration.
+            if (flatReduction > 0f)
+                flatReduction = Math.Max(0f, flatReduction - flatPenetration);
+            else
+                flatReduction -= flatPenetration;
+
+            FixedPoint2 flatDamage =
+                FixedPoint2.Max(
+                    FixedPoint2.Zero,
+                    baseDamage - (FixedPoint2) flatReduction);
+
+            // Match DamageSpecifier.ApplyModifierSet behavior:
+            // whichever mitigation path reduces damage more wins.
+            effectiveDamage += FixedPoint2.Min(flatDamage, percentileDamage);
+        }
+
+        if (effectiveDamage <= FixedPoint2.Zero)
+            return FixedPoint2.Zero;
+
+        return targetDamage / effectiveDamage;
+    }
+    //KS14 penetration demoncode end
 }
