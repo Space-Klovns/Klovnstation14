@@ -5,3 +5,6 @@ ks-specific-orevent-whatareyoudoing = The ore vent is in the process of being ta
 
 ks-specific-orevent-tapping-failed-destruction = {CAPITALIZE(THE($vent))} creaks and groans as the mining attempt fails, and the vent closes back up!
 ks-specific-orevent-tapping-failed-detachment = {CAPITALIZE(THE($drone))} detaches from {THE($vent)}, and it closes back up!
+
+ks-specific-orevent-startingextraction-others = {CAPITALIZE(THE($user))} prepares to start extracting {THE($vent)}. You might want to get away.
+ks-specific-orevent-startingextraction-user = You prepare to start extracting on {THE($vent)}… Are you sure about this?

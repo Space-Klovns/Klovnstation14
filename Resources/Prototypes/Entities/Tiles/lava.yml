@@ -50,9 +50,17 @@
         layer:
           - SlipLayer
         mask:
-          - ItemMask
+          - LowImpassable # KS14: ItemMask -> LowImpassable
         density: 1000
         hard: false
   - type: Tag
     tags:
       - HideContextMenu
+  # KS14: lava rework: start
+  - type: KsLava
+    damage:
+      types:
+        Heat: 20
+    knockdownDuration: 1.2
+    sinkDuration: 2.5
+  # KS14: lava rework: end

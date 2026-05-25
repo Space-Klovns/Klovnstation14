@@ -21,6 +21,7 @@
   equipment:
     id: ParamedicPDA
     ears: ClothingHeadsetMedical
+    belt: ClothingBeltMedicalEMTFilled #ks14
 
 - type: chameleonOutfit
   id: ParamedicChameleonOutfit
@@ -32,4 +33,4 @@
     neck: ClothingNeckStethoscope
     outerClothing: ClothingOuterCoatParamedicWB
     gloves: ClothingHandsGlovesLatex
-    belt: ClothingBeltMedicalEMTFilled #KS14
+    belt: ClothingBeltMedicalEMT #ks14

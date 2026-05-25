@@ -25,10 +25,6 @@
         key: CampingTarget
         keyCoordinates: CampingTargetCoordinates
 
-    - !type:HTNPrimitiveTask # VOICELINE
-      operator: !type:SpeakOperator
-        speech: !type:SingleSpeakOperatorSpeech
-          line: "Disengaging."
     - !type:HTNPrimitiveTask
       operator: !type:MoveToOperator
         removeKeyOnFinish: true
@@ -39,8 +35,8 @@
 
     - !type:HTNPrimitiveTask # VOICELINE
       operator: !type:SpeakOperator
-        speech: !type:SingleSpeakOperatorSpeech
-          line: "Holding position."
+        speech: !type:LocalizedSetSpeakOperatorSpeech
+          lineSet: KsOperativeHoldingPosition
 
     - !type:HTNPrimitiveTask
       operator: !type:StaticWaitOperator
@@ -49,8 +45,16 @@
       operator: !type:SetNullOperator
         key: LastTargetCoordinates
 
-  ## Advancing
+  ## Sensors
   - tasks:
+    - !type:HTNCompoundTask
+      task: KsOperativeConsiderSensorsCompound
+
+  ## Advancing
+  - preconditions:
+    - !type:HasVirtualMarkerPrecondition
+      id: OpInCombat
+    tasks:
     - !type:HTNCompoundTask
       task: KsDoAdvanceCompound
 

@@ -9,8 +9,10 @@ public sealed partial class KeyExistsPrecondition : HTNPrecondition
     [DataField(required: true), ViewVariables]
     public string Key = string.Empty;
 
+    [DataField] public bool Inverted = false; // KS14: ANK: added inverted
+
     public override bool IsMet(NPCBlackboard blackboard)
     {
-        return blackboard.ContainsKey(Key);
+        return blackboard.ContainsKey(Key) ^ Inverted /* KS14: ANK: added inverted */;
     }
 }

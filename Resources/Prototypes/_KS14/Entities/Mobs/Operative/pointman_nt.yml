@@ -1,0 +1,247 @@
+# They are neutral to NanoTrasen faction, not necessarily friendly
+- type: npcFaction
+  id: KsNanoTrasenOperative
+  hostile:
+  - SimpleHostile
+  - Syndicate
+  - Xeno
+  - Zombie
+  - Revolutionary
+  - Dragon
+  - AllHostile
+  - Wizard
+  - Xenoborg
+
+## Base
+- type: randomHumanoidSettings
+  parent: KsBaseOperative
+  id: KsBaseOperativeNt
+  speciesBlacklist:
+  - Vox
+  - Dwarf
+  components:
+  - type: NpcFactionMember
+    factions:
+    - KsNanoTrasenOperative
+  - type: TtsVoice
+    id: en_US-john-medium
+  - type: NPCRetaliation # NT soldiers don't take kindly to friendly fire
+    attackMemoryLength: 15
+    warnDuration: 1.75s
+  - type: NpcRetaliationWarning
+    distanceThresholdSq: 10.24 # 3.2 tiles
+  - type: FactionException # necessary for NPCRetaliation
+  - type: AutoImplant
+    implants:
+    - MindShieldImplant
+    - DeathAcidifierImplant
+  - type: AntagImmune
+
+- type: randomHumanoidSettings
+  parent: [ KsBaseOperativeNt, KsBaseEliteOperative ]
+  id: KsBaseEliteOperativeNt
+  speciesBlacklist:
+  - Vox
+  - Dwarf
+  components:
+  - type: TtsVoice
+    id: en_GB-northern_english_male-medium
+
+- type: startingGear
+  parent: NanotrasenParamilitaryGear
+  id: KsBaseOperativeNtGear
+  equipment:
+    mask: ClothingMaskGasSwat
+    head: ClothingHeadHatBeretCommand
+
+    jumpsuit: ClothingUniformJumpsuitCommandGeneric
+    eyes: ClothingEyesGlassesCommand
+    belt: ClothingBeltMilitaryWebbingERT
+    back: ClothingBackpackERTLeader
+
+    outerClothing: ClothingOuterArmorBasic
+
+    shoes: ClothingShoesBootsJack
+    id: ERTSecurityIDCard
+
+    suitstorage: JetpackBlueFilled
+  storage:
+    back:
+    - EnergySword
+    belt:
+    - CombatMedipen
+
+- type: startingGear
+  parent: KsBaseOperativeNtGear
+  id: KsBaseEliteOperativeNtGear
+  equipment:
+    #neck: ClothingNeckCloakNanotrasen
+    belt: ClothingBeltMilitaryWebbingERT
+
+    outerClothing: ClothingOuterHardsuitERTLeader
+    mask: ClothingMaskGasERT
+
+    jumpsuit: ClothingUniformJumpsuitERTLeader
+    id: ERTLeaderIDCard
+  storage:
+    back:
+    - EnergySwordDouble
+    belt:
+    - CombatMedipen
+    - CombatMedipen
+    - CombatMedipen
+    - BruteAutoInjector
+
+## Pistol
+
+- type: entity
+  parent: RandomHumanoidSpawnerERTLeaderEVA
+  id: KsRandomHumanoidSpawnerOperativeNtArmedPistol
+  name: nanotrasen paramilitary
+  suffix: KS, Armed, NT, Pistol
+  components:
+  - type: RandomHumanoidSpawner
+    settings: KsOperativeNtArmedPistol
+
+- type: randomHumanoidSettings
+  parent: KsBaseOperativeNt
+  id: KsOperativeNtArmedPistol
+  components:
+  - type: Loadout
+    prototypes: [ KsOperativeNtPistolGear ]
+
+- type: startingGear
+  parent: KsBaseOperativeNtGear
+  id: KsOperativeNtPistolGear
+  inhand:
+  - WeaponPistolN1984
+  storage:
+    back:
+    - EnergySword
+    - MagazineMagnumAP
+    - MagazineMagnum
+    - MagazineMagnum
+
+## XL8
+
+- type: entity
+  parent: RandomHumanoidSpawnerERTLeaderEVA
+  id: KsRandomHumanoidSpawnerOperativeNtArmedXL8
+  name: nanotrasen paramilitary
+  suffix: KS, Armed, NT-Elite, XL8
+  components:
+  - type: RandomHumanoidSpawner
+    settings: KsEliteOperativeNtArmedXL8
+
+- type: randomHumanoidSettings
+  parent: KsBaseEliteOperativeNt
+  id: KsEliteOperativeNtArmedXL8
+  components:
+  - type: Loadout
+    prototypes: [ KsEliteOperativeNtXL8Gear ]
+
+- type: startingGear
+  parent: KsBaseEliteOperativeNtGear
+  id: KsEliteOperativeNtXL8Gear
+  inhand:
+  - KsWeaponRifleLecterXL8EliteOperative
+  storage:
+    back:
+    - EnergySwordDouble
+    - MagazineRifleIncendiary
+    - MagazineRifleIncendiary
+    - MagazineRifleUranium
+
+- type: entity
+  parent: WeaponRifleLecterXL8
+  id: KsWeaponRifleLecterXL8EliteOperative
+  name: modified XL8
+  description: A variant of the Experimental Lecter 8 with several non-standard modifications present, heavily improving accuracy at the cost of making it bulkier.
+  suffix: KS14, NPC
+  components:
+  - type: Item
+    size: Ginormous
+  - type: Gun
+    minAngle: 15
+    maxAngle: 25
+    angleIncrease: 10
+    angleDecay: 15
+    fireRate: 7.8
+    soundGunshot:
+      path: /Audio/Weapons/Guns/Gunshots/batrifle.ogg
+  - type: GunWieldBonus
+    minAngle: -20
+    maxAngle: -20
+    angleIncrease: -4
+  - type: ItemSlots
+    slots:
+      gun_magazine:
+        name: Magazine
+        startingItem: MagazineRifleIncendiary
+        insertSound:
+          path: /Audio/Weapons/Guns/MagIn/ltrifle_magin.ogg
+          params:
+            pitch: 0.75
+        ejectSound:
+          path: /Audio/Weapons/Guns/MagOut/ltrifle_magout.ogg
+          params:
+            pitch: 0.75
+        priority: 2
+        whitelist:
+          tags:
+          - MagazineRifle
+        whitelistFailPopup: gun-magazine-whitelist-fail
+      gun_chamber:
+        name: Chamber
+        priority: 1
+        whitelist:
+          tags:
+          - CartridgeRifle
+
+  - type: Sprite
+    scale: 1.15,1.15
+    color: '#adc9ff'
+  - type: Clothing
+    scale: 1.15,1.15
+
+## Minigun
+
+- type: entity
+  parent: RandomHumanoidSpawnerERTLeaderEVA
+  id: KsRandomHumanoidSpawnerOperativeNtArmedMinigun
+  name: nanotrasen paramilitary
+  suffix: KS, Armed, NT-Elite, Minigun
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: RandomHumanoidSpawner
+    settings: KsEliteOperativeNtArmedMinigun
+
+- type: randomHumanoidSettings
+  parent: KsBaseEliteOperativeNt
+  id: KsEliteOperativeNtArmedMinigun
+  components:
+  - type: Loadout
+    prototypes: [ KsEliteOperativeNtMinigunGear ]
+
+- type: startingGear
+  parent: KsBaseEliteOperativeNtGear
+  id: KsEliteOperativeNtMinigunGear
+  inhand:
+  - KsWeaponMinigunEliteOperative
+
+- type: entity
+  parent: WeaponMinigun
+  id: KsWeaponMinigunEliteOperative
+  name: bluespace-tethered minigun
+  suffix: KS14, NPC, Unremoveable
+  components:
+  - type: BallisticAmmoProvider
+    proto: CartridgeMagnum
+    capacity: 650
+
+  - type: Sprite
+    scale: 1.15,1.15
+    color: '#adc9ff'
+
+  - type: Unremoveable
+    deleteOnDrop: true

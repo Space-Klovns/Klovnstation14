@@ -91,7 +91,8 @@ public sealed class PredictedHandsSystem : EntitySystem
         if (!ThrowHeldItem(args.Target, coords))
             return;
 
-        args.Handled = true; // Successful disarm
+        args.Handled = true;
+        args.PopupPrefix = "disarm-action-"; // KS14: Added popupprefix
     }
 
     #region Interactions

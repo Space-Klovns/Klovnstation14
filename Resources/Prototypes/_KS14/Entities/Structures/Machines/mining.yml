@@ -134,7 +134,6 @@
         - MachineMask
         layer:
         - MachineLayer
-        - Impassable
 
   - type: Conveyor
     angle: -90

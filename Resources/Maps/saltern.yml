@@ -705,7 +705,8 @@ entities:
       - Goliath
       - Basilisk
       - RandomGeysers
-      - OreVentsIce
+      - OreVentsIceBasic
+      - OreVentsIceRare
       loadedMarkers:
         OreArtifactFragmentLow:
         - 0,-128
@@ -873,7 +874,7 @@ entities:
         - 0,0
         - -128,-128
         - -128,0
-        OreVentsIce:
+        OreVentsIceBasic:
         - 0,-128
         - 0,0
         - -128,-128
@@ -6388,7 +6389,7 @@ entities:
           - 66,87
           - 69,87
           - 66,86
-          OreVentsIce:
+          OreVentsIceBasic:
           - 71,81
         88,96:
           OreIronLow:
@@ -8474,7 +8475,7 @@ entities:
           - -72,-39
           - -71,-39
           - -72,-38
-          OreVentsIce:
+          OreVentsIceBasic:
           - -66,-40
         -120,-120:
           OrePlasmaLow:
@@ -8938,7 +8939,7 @@ entities:
           - -94,39
           OreSalt:
           - -92,39
-          OreVentsIce:
+          OreVentsIceBasic:
           - -92,37
         96,104:
           OreGoldLow:
@@ -10260,7 +10261,7 @@ entities:
           - 65,75
           WatchersIcewing:
           - 66,76
-          OreVentsIce:
+          OreVentsIceBasic:
           - 69,78
         48,120:
           OreSalt:
@@ -10723,7 +10724,7 @@ entities:
           - -58,-41
           OreDiamond:
           - -63,-41
-          OreVentsIce:
+          OreVentsIceBasic:
           - -61,-48
         -24,-128:
           OreSalt:
@@ -13192,7 +13193,7 @@ entities:
         -80,32:
           Goliath:
           - -74,39
-          OreVentsIce:
+          OreVentsIceBasic:
           - -74,38
         -56,80:
           Goliath:
@@ -16409,7 +16410,7 @@ entities:
           RandomGeysers:
           - -84,-97
         88,-72:
-          OreVentsIce:
+          OreVentsIceBasic:
           - 90,-65
       loadedChunks:
       - 56,40
@@ -37777,12 +37778,11 @@ entities:
       - !type:BiomeEntityLayer
         threshold: -0.3
         noise:
-          frequency: 0.05
-          noiseType: Cellular
-          fractalType: FBm
-          octaves: 5
-          cellularDistanceFunction: Euclidean
-          cellularReturnType: Distance2
+          frequency: 0.2
+          noiseType: Perlin
+          fractalType: Ridged
+          gain: 0.5
+          octaves: 3
           seed: 0
         allowedTiles:
         - FloorSnow

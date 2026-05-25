@@ -21,8 +21,8 @@
 
     - !type:HTNPrimitiveTask # VOICELINE
       operator: !type:SpeakOperator
-        speech: !type:SingleSpeakOperatorSpeech
-          line: "Healing, cover me!"
+        speech: !type:LocalizedSetSpeakOperatorSpeech
+          lineSet: KsOperativeHealing
 
     - !type:HTNPrimitiveTask # Hands: cache current hand
       operator: !type:CopyKeyOperator
@@ -74,6 +74,11 @@
   - tasks:
     - !type:HTNCompoundTask
       task: KsOperativeConsiderHealingCompound
+
+  - preconditions:
+    - !type:KeyExistsPrecondition
+      key: RetreatTargetCoordinates
+    tasks:
     - !type:HTNPrimitiveTask # Wait until we finish moving to our retreat position
       operator: !type:WaitUntilNullOperator
         key: RetreatTargetCoordinates
@@ -109,8 +114,8 @@
   - tasks:
     - !type:HTNPrimitiveTask # VOICELINE
       operator: !type:SpeakOperator
-        speech: !type:SingleSpeakOperatorSpeech
-          line: "Falling back!"
+        speech: !type:LocalizedSetSpeakOperatorSpeech
+          lineSet: KsOperativeRetreating
     - !type:HTNPrimitiveTask
       operator: !type:UtilityOperator
         proto: KsOperativeRetreatableCampingMarkers
@@ -125,7 +130,6 @@
         pathfindKey: RetreatTargetPathfind
         rangeKey: CampingRange
 
-
 - type: utilityQuery
   id: KsOperativeRetreatableCampingMarkers
   query:
@@ -137,10 +141,14 @@
     key: OwnerCoordinates
     curve: !type:PresetCurve
       preset: TargetDistance
+  - !type:CoordinatesInFOVCon # Don't go in the direction of the target ffs
+    curve: !type:InverseBoolCurve
+    toKey: LastTargetCoordinates
+    angle: 65
   - !type:CoordinatesInLOSCon # Dont go to markers that have LOS of where the target was
     curve: !type:InverseBoolCurve
     toKey: LastTargetCoordinates
-    radius: 5
+    radius: 7.5
 
 - type: utilityQuery
   id: KsInventoryMeds

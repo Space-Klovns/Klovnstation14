@@ -23,11 +23,11 @@ public sealed partial class OreVentComponent : Component
     public bool Tapped = false;
 
     /// <summary>
-    ///     Is pre-extraction doafter happening?
+    ///     Is the area around the vent being cleared?
     /// </summary>
     [DataField, AutoNetworkedField]
     [ViewVariables(VVAccess.ReadOnly)]
-    public bool DoingPreExtraction = false;
+    public bool DoingClearing = false;
 
     /// <summary>
     ///     Is this vent in the process of being tapped?
@@ -74,6 +74,10 @@ public sealed partial class OreVentComponent : Component
     [ViewVariables(VVAccess.ReadWrite)]
     public TimeSpan PreExtractionDuration = TimeSpan.Zero;
 
+    [DataField]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public TimeSpan ClearingDuration = TimeSpan.Zero;
+
     /// <summary>
     ///     How long it takes to finish extraction.
     /// </summary>
@@ -99,6 +103,27 @@ public sealed partial class OreVentComponent : Component
     public ProtoId<OreWellSettingPrototype> OreWellSettingId;
 }
 
+/// <summary>
+///     Added to orevents that are clearing.
+/// </summary>
+[RegisterComponent, NetworkedComponent]
+[AutoGenerateComponentState, AutoGenerateComponentPause]
+public sealed partial class ActiveClearingOreVentComponent : Component
+{
+    [AutoNetworkedField, DataField]
+    [ViewVariables(VVAccess.ReadOnly)]
+    public TimeSpan IterationDelay = TimeSpan.Zero;
+
+    [DataField]
+    [AutoNetworkedField, AutoPausedField]
+    [ViewVariables(VVAccess.ReadOnly)]
+    public TimeSpan NextIteration = TimeSpan.MinValue;
+
+    [DataField]
+    [ViewVariables(VVAccess.ReadOnly)]
+    public int Iteration = 0;
+}
+
 [Serializable, NetSerializable]
 public enum OreVentVisuals
 {
@@ -111,17 +136,6 @@ public enum OreVentVisuals
 [Serializable, NetSerializable]
 public sealed partial class OreVentPreExtractionDoAfterEvent : DoAfterEvent
 {
-    /// <summary>
-    ///     Clearing iteration.
-    ///         The first clearing is at 0.
-    /// </summary>
-    public int Iteration = 0;
-
-    public OreVentPreExtractionDoAfterEvent(int iteration)
-    {
-        Iteration = iteration;
-    }
-
     public override DoAfterEvent Clone() => this;
 }
 

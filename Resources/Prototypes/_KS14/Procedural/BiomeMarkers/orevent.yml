@@ -7,9 +7,16 @@
   maxCount: 15
 
 - type: biomeMarkerLayer
-  id: OreVentsIce
-  prototype: KsOreVentIce
+  id: OreVentsIceBasic
+  prototype: KsOreVentIceBasic
   minGroupSize: 1
   maxGroupSize: 1
   radius: 50
-  maxCount: 15
+
+- type: biomeMarkerLayer
+  id: OreVentsIceRare
+  prototype: KsOreVentIceRare
+  minGroupSize: 1
+  maxGroupSize: 1
+  radius: 50
+  maxCount: 8

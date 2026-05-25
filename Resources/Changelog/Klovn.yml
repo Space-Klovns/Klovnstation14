@@ -1160,3 +1160,57 @@ Entries:
       message: This is how my voice sounds like.
   id: 126
   time: '2026-05-20T13:16:22.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added doafter for starting extraction on ore-vents, which will warn
+        nearby players.
+  id: 127
+  time: '2026-05-23T12:05:48.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Fix
+      message: You actually spawn with the medbelts now.
+  id: 128
+  time: '2026-05-23T13:54:19.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed ore vents destroying saltern's planetgen.
+    - type: Fix
+      message: >-
+        Fixed bloodsprays appearing for all damage types instead of just
+        bloodloss.
+    - type: Tweak
+      message: Made saltern's planetgen more aggressive.
+    - type: Tweak
+      message: Lava/liquid plasma is much more dangerous now.
+  id: 129
+  time: '2026-05-24T06:38:58.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed nightshift turning lights on even when they were unpowered.
+    - type: Fix
+      message: Fixed errors from bloodsprays.
+    - type: Fix
+      message: Fixed shoving something out of someones hand having no text.
+    - type: Fix
+      message: Fixed acidifier playing gib effects.
+    - type: Tweak
+      message: Improved UI for some dialogues such as surgery dialogue
+  id: 130
+  time: '2026-05-24T16:08:52.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Added fun!
+    - type: Remove
+      message: Removed fun!
+    - type: Tweak
+      message: Changed fun!
+    - type: Fix
+      message: Fixed fun!
+  id: 131
+  time: '2026-05-24T16:48:47.0000000+00:00'

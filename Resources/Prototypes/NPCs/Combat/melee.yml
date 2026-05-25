@@ -13,6 +13,10 @@
             originKey: TargetCoordinates
             targetKey: LastTargetCoordinates
 
+        - !type:HTNPrimitiveTask # KS14: ANK # marker
+          operator: !type:EnsureVirtualMarkerOperator
+            id: OpInCombat
+
         - !type:HTNCompoundTask
           task: BeforeMeleeAttackTargetCompound
 

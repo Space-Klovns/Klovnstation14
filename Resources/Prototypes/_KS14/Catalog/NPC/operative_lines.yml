@@ -1,0 +1,67 @@
+- type: localizedDataset
+  id: KsOperativeAdvancing
+  values:
+    prefix: ks-operative-line-advancing-
+    count: 4
+
+
+
+- type: localizedDataset
+  id: KsOperativeContact
+  values:
+    prefix: ks-operative-line-contact-
+    count: 6
+
+- type: localizedDataset
+  id: KsOperativeOutOfAmmo
+  values:
+    prefix: ks-operative-line-outofammo-
+    count: 4
+
+- type: localizedDataset
+  id: KsOperativeReloading
+  values:
+    prefix: ks-operative-line-reloading-
+    count: 5
+
+
+
+- type: localizedDataset
+  id: KsOperativeHealing
+  values:
+    prefix: ks-operative-line-healing-
+    count: 1
+
+- type: localizedDataset
+  id: KsOperativeRetreating
+  values:
+    prefix: ks-operative-line-retreating-
+    count: 3
+
+
+
+- type: localizedDataset
+  id: KsOperativeHoldingPosition
+  values:
+    prefix: ks-operative-line-holdingposition-
+    count: 2
+
+
+
+- type: localizedDataset
+  id: KsOperativeDisturbanceCombat
+  values:
+    prefix: ks-operative-line-disturbancecombat-
+    count: 3
+
+- type: localizedDataset
+  id: KsOperativeDisturbance
+  values:
+    prefix: ks-operative-line-disturbance-
+    count: 2
+
+- type: localizedDataset
+  id: KsOperativeGetAway
+  values:
+    prefix: ks-operative-line-getaway-
+    count: 3

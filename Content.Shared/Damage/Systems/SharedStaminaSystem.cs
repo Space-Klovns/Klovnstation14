@@ -137,8 +137,9 @@ public abstract partial class SharedStaminaSystem : EntitySystem
 
     private void OnDisarmed(EntityUid uid, StaminaComponent component, ref DisarmedEvent args)
     {
-        if (args.Handled)
-            return;
+        // KS14: Dont care about being handled
+        // if (args.Handled)
+        //     return;
 
         // KS14: added stamcrit shoving
         // KS14 start
@@ -150,12 +151,16 @@ public abstract partial class SharedStaminaSystem : EntitySystem
         {
             if (_complexShoveSystem.TryWallshove((args.Source, null, sourceComplexShoveComponent), (uid, component), sourceWorldPosition.Value, deltaUnit.Value))
             {
-                args.PopupPrefix = "disarm-action-shove-collision-";
+                if (!args.Handled)
+                    args.PopupPrefix = "disarm-action-shove-collision-";
+
                 goto finishShove;
             }
             else if (_complexShoveSystem.TryBasicShove((args.Source, sourceComplexShoveComponent), (uid, component), deltaUnit.Value))
             {
-                args.PopupPrefix = "disarm-action-shove-";
+                if (!args.Handled)
+                    args.PopupPrefix = "disarm-action-shove-";
+
                 goto finishShove;
             }
 
@@ -166,7 +171,10 @@ public abstract partial class SharedStaminaSystem : EntitySystem
         var damage = args.PushProbability * component.CritThreshold;
         TakeStaminaDamage(uid, damage, component, source: args.Source);
 
-        args.PopupPrefix = "disarm-action-shove-";
+        // KS14: Only apply popup if not handled
+        if (!args.Handled)
+            args.PopupPrefix = "disarm-action-shove-";
+
     finishShove: // ks14 : added goto
         args.IsStunned = component.Critical;
         args.Handled = true;
