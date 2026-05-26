@@ -9,28 +9,18 @@
             proto: NearbyGunTargets
 
         - !type:HTNPrimitiveTask
-          operator: !type:CopyKeyOperator
-            originKey: TargetCoordinates
-            targetKey: LastTargetCoordinates
-
-        - !type:HTNPrimitiveTask # VOICELINE
-          operator: !type:SpeakOperator
-            speech: !type:SingleSpeakOperatorSpeech
-              line: "CONTACT!!!"
-
-        - !type:HTNPrimitiveTask
           operator: !type:MoveToOperator
             shutdownState: PlanFinished
             pathfindInPlanning: true
-            removeKeyOnFinish: true # KS14: false -> true
+            removeKeyOnFinish: false
             targetKey: TargetCoordinates
             pathfindKey: TargetPathfind
             stopOnLineOfSight: true
             rangeKey: RangedRange # KS14: MeleeRange -> RangedRange
 
-        # - !type:HTNPrimitiveTask # KS14: ANK: removed juke
-        #   operator: !type:JukeOperator
-        #     jukeType: Away
+        - !type:HTNPrimitiveTask
+          operator: !type:JukeOperator
+            jukeType: Away
 
         - !type:HTNPrimitiveTask
           preconditions:
@@ -187,9 +177,5 @@
           preconditions:
             - !type:ActiveHandEntityPrecondition
           operator: !type:DropOperator
-        - !type:HTNPrimitiveTask # VOICELINE
-          operator: !type:SpeakOperator
-            speech: !type:SingleSpeakOperatorSpeech
-              line: "I'm out of ammo!"
 
 # TODO: Reload a nearby gun
