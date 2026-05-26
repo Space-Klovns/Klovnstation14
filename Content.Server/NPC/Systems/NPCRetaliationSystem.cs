@@ -2,7 +2,6 @@ using Content.Server.NPC.Components;
 using Content.Shared.CombatMode;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Systems;
-using Content.Shared.Interaction.Events;
 using Content.Shared.Mobs.Components;
 using Content.Shared.NPC.Components;
 using Content.Shared.NPC.Systems;
@@ -14,7 +13,7 @@ namespace Content.Server.NPC.Systems;
 /// <summary>
 ///     Handles NPC which become aggressive after being attacked.
 /// </summary>
-public sealed class NPCRetaliationSystem : EntitySystem
+public sealed partial /* KS14: Made partial */ class NPCRetaliationSystem : EntitySystem
 {
     [Dependency] private readonly NpcFactionSystem _npcFaction = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
@@ -26,7 +25,7 @@ public sealed class NPCRetaliationSystem : EntitySystem
         SubscribeLocalEvent<NPCRetaliationComponent, DamageChangedEvent>(OnDamageChanged);
         SubscribeLocalEvent<NPCRetaliationComponent, DisarmedEvent>(OnDisarmed);
 
-        SubscribeLocalEvent<NPCRetaliationComponent, ContactInteractionEvent>(KsOnDisarmed); // KS14: ANK: contact should warrant retaliation
+        InitialiseKlovn(); // KS14: ANK
     }
 
     private void OnDamageChanged(Entity<NPCRetaliationComponent> ent, ref DamageChangedEvent args)
@@ -45,12 +44,6 @@ public sealed class NPCRetaliationSystem : EntitySystem
         TryRetaliate(ent, args.Source);
     }
 
-    // KS14: ANK
-    private void KsOnDisarmed(Entity<NPCRetaliationComponent> ent, ref ContactInteractionEvent args)
-    {
-        TryRetaliate(ent, args.Other, tryWarn: true);
-    }
-
     public bool TryRetaliate(Entity<NPCRetaliationComponent> ent, EntityUid target, bool tryWarn = false /* KS14 */)
     {
         // don't retaliate against inanimate objects.
@@ -65,6 +58,7 @@ public sealed class NPCRetaliationSystem : EntitySystem
         if (tryWarn &&
             ent.Comp.WarnDuration is { } warnDuration &&
             !ent.Comp.AttackMemories.ContainsKey(target) &&
+            CompOrNull<MobStateComponent>(ent.Owner)?.CurrentState == Shared.Mobs.MobState.Alive && // only warn if we're alive lol, otherwise immediately escalate to aggro
             _retaliationWarningSystem.TryWarn(ent.Owner, target, warnDuration))
         {
             return false;

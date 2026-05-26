@@ -12,19 +12,42 @@
   - Wizard
   - Xenoborg
 
+# Voluntarily-activated (not on death) microbomb implant with a bit more boom.
+- type: entity
+  parent: BaseSubdermalImplant
+  id: KsOperativeNtVoluntaryMicroBombImplant
+  name: micro-bomb implant
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: SubdermalImplant
+    permanent: true
+    implantAction: ActionActivateMicroBomb
+  - type: TriggerOnActivateImplant
+  - type: GibOnTrigger
+    targetUser: true
+    deleteItems: true
+    doGibVisFx: false
+  - type: ExplodeOnTrigger
+  - type: Explosive
+    explosionType: MicroBomb
+    totalIntensity: 175
+    intensitySlope: 8
+    maxIntensity: 175
+    canCreateVacuum: false
+
 ## Base
 - type: randomHumanoidSettings
-  parent: KsBaseOperative
   id: KsBaseOperativeNt
+  abstract: true
   speciesBlacklist:
   - Vox
   - Dwarf
   components:
+  - type: KsFactionCollisionShooter
   - type: NpcFactionMember
     factions:
     - KsNanoTrasenOperative
-  - type: TtsVoice
-    id: en_US-john-medium
+
   - type: NPCRetaliation # NT soldiers don't take kindly to friendly fire
     attackMemoryLength: 15
     warnDuration: 1.75s
@@ -35,21 +58,37 @@
     implants:
     - MindShieldImplant
     - DeathAcidifierImplant
+    - KsOperativeNtVoluntaryMicroBombImplant
   - type: AntagImmune
+
+  - type: HTN
+    rootTask:
+      task: KsOperativeNtWrapperCombatCompound
+
+- type: randomHumanoidSettings
+  parent: [ KsBaseOperativeNt, KsBaseOperative ]
+  id: KsOperativeNt
+  speciesBlacklist:
+  - Vox
+  - Dwarf
+  components:
+  - type: TtsVoice
+    id: en_US-john-medium
 
 - type: randomHumanoidSettings
   parent: [ KsBaseOperativeNt, KsBaseEliteOperative ]
-  id: KsBaseEliteOperativeNt
+  id: KsEliteOperativeNt
   speciesBlacklist:
   - Vox
   - Dwarf
   components:
   - type: TtsVoice
     id: en_GB-northern_english_male-medium
+##
 
 - type: startingGear
   parent: NanotrasenParamilitaryGear
-  id: KsBaseOperativeNtGear
+  id: KsOperativeNtGear
   equipment:
     mask: ClothingMaskGasSwat
     head: ClothingHeadHatBeretCommand
@@ -72,8 +111,8 @@
     - CombatMedipen
 
 - type: startingGear
-  parent: KsBaseOperativeNtGear
-  id: KsBaseEliteOperativeNtGear
+  parent: KsOperativeNtGear
+  id: KsEliteOperativeNtGear
   equipment:
     #neck: ClothingNeckCloakNanotrasen
     belt: ClothingBeltMilitaryWebbingERT
@@ -104,14 +143,14 @@
     settings: KsOperativeNtArmedPistol
 
 - type: randomHumanoidSettings
-  parent: KsBaseOperativeNt
+  parent: KsOperativeNt
   id: KsOperativeNtArmedPistol
   components:
   - type: Loadout
     prototypes: [ KsOperativeNtPistolGear ]
 
 - type: startingGear
-  parent: KsBaseOperativeNtGear
+  parent: KsOperativeNtGear
   id: KsOperativeNtPistolGear
   inhand:
   - WeaponPistolN1984
@@ -134,14 +173,14 @@
     settings: KsEliteOperativeNtArmedXL8
 
 - type: randomHumanoidSettings
-  parent: KsBaseEliteOperativeNt
+  parent: KsEliteOperativeNt
   id: KsEliteOperativeNtArmedXL8
   components:
   - type: Loadout
     prototypes: [ KsEliteOperativeNtXL8Gear ]
 
 - type: startingGear
-  parent: KsBaseEliteOperativeNtGear
+  parent: KsEliteOperativeNtGear
   id: KsEliteOperativeNtXL8Gear
   inhand:
   - KsWeaponRifleLecterXL8EliteOperative
@@ -217,14 +256,14 @@
     settings: KsEliteOperativeNtArmedMinigun
 
 - type: randomHumanoidSettings
-  parent: KsBaseEliteOperativeNt
+  parent: KsEliteOperativeNt
   id: KsEliteOperativeNtArmedMinigun
   components:
   - type: Loadout
     prototypes: [ KsEliteOperativeNtMinigunGear ]
 
 - type: startingGear
-  parent: KsBaseEliteOperativeNtGear
+  parent: KsEliteOperativeNtGear
   id: KsEliteOperativeNtMinigunGear
   inhand:
   - KsWeaponMinigunEliteOperative

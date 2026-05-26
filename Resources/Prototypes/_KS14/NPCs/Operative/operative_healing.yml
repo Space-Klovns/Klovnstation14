@@ -87,30 +87,7 @@
 - type: htnCompound
   id: KsOperativeRetreatCompound
   branches:
-
-  # Try to retreat AWAY from target
-  # - preconditions:
-  #   - !type:KeyExistsPrecondition
-  #     key: LastTargetCoordinates
-  #   tasks:
-  #   - !type:HTNPrimitiveTask # VOICELINE
-  #     operator: !type:SpeakOperator
-  #       speech: !type:SingleSpeakOperatorSpeech
-  #         line: "Taking cover!"
-  #   - !type:HTNPrimitiveTask
-  #     operator: !type:UtilityOperator
-  #       proto: KsOperativeRetreatableCampingMarkers
-  #       key: RetreatTarget
-  #       keyCoordinates: RetreatTargetCoordinates
-  #   - !type:HTNPrimitiveTask
-  #     operator: !type:MoveToOperator
-  #       removeKeyOnFinish: true
-  #       stopOnLineOfSight: false
-  #       targetKey: RetreatTargetCoordinates
-  #       pathfindKey: RetreatTargetPathfind
-  #       rangeKey: CampingRange
-
-  # Just retreat
+  # Retreat
   - tasks:
     - !type:HTNPrimitiveTask # VOICELINE
       operator: !type:SpeakOperator
@@ -118,7 +95,7 @@
           lineSet: KsOperativeRetreating
     - !type:HTNPrimitiveTask
       operator: !type:UtilityOperator
-        proto: KsOperativeRetreatableCampingMarkers
+        proto: KsOperativeRetreatableCampingMarkers # preferably not towards the target
         key: RetreatTarget
         keyCoordinates: RetreatTargetCoordinates
     - !type:HTNPrimitiveTask

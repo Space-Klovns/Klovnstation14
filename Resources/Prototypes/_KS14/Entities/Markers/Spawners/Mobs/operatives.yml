@@ -30,4 +30,4 @@
   components:
   - type: ConditionalSpawner
     prototypes:
-    - KsRandomHumanoidSpawnerOperativeArmedPistol
+    - KsRandomHumanoidSpawnerOperativeSynArmedPistol

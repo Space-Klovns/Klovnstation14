@@ -218,7 +218,7 @@ public sealed partial class NPCBlackboard : IEnumerable<KeyValuePair<string, obj
                     foreach (var id in hands.Hands.Keys)
                     {
                         if (handSys.GetHeldItem((owner, hands), id) is { } heldUid &&
-                            !entManager.HasComponent<VirtualItemComponent>(heldUid)) // KS14: dont consider hands with virtual items as occupied
+                            !entManager.HasComponent<VirtualItemComponent>(heldUid)) // KS14: dont consider hands with virtual items as occupied, otherwise alot of wielding problems appear
                             continue;
 
                         handos.Add(id);

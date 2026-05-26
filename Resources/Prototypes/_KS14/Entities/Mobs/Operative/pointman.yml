@@ -13,85 +13,34 @@
 
 ## Base
 - type: randomHumanoidSettings
-  id: KsBaseOperative
+  parent: KsBaseOperative
+  id: KsOperativeSyn
   speciesBlacklist:
   - Vox
   - Dwarf
   components:
-  - type: NoSlip
-  - type: MovementSpeedModifier
-    baseSprintSpeed: 3.375
-    baseWalkSpeed: 1.875
-  - type: RandomHumanoidAppearance
-    randomizeName: false
+  - type: KsFactionCollisionShooter
   - type: NpcFactionMember
     factions:
     - Syndicate
-  - type: MobThresholds
-    thresholds:
-      0: Alive
-      100: Critical
-      101: Dead
-  - type: NpcSensors
-  - type: HTN
-    rootTask:
-      task: KsOperativeCombatCompound
-    blackboard:
-      ReloadActDelay: !type:Single
-        0
-      VisionRadius: !type:Single
-        17.5
-      AggroVisionRadius: !type:Single
-        25
-      CampingRange: !type:Single
-        0.5
-      CampingTime: !type:Single
-        25
-      AdvanceTime: !type:Single
-        30
-      NavInteract: !type:Bool
-        true
+
   - type: TtsVoice
     id: en_US-arctic-medium
 
 - type: randomHumanoidSettings
-  parent: [ KsBaseOperative ]
-  id: KsBaseEliteOperative
+  parent: [ KsBaseEliteOperative, KsOperativeSyn ]
+  id: KsEliteOperativeSyn
   speciesBlacklist:
   - Vox
   - Dwarf
   components:
-  - type: MobThresholds
-    thresholds:
-      0: Alive
-      140: Critical
-      150: Dead
-  - type: HTN
-    rootTask:
-      task: KsOperativeCombatCompound
-    blackboard:
-      ReloadActDelay: !type:Single
-        0
-      VisionRadius: !type:Single
-        20
-      AggroVisionRadius: !type:Single
-        25
-      CampingRange: !type:Single
-        0.45
-      CampingTime: !type:Single
-        10
-      AdvanceTime: !type:Single # Elite ops are generally more aggressive
-        15
-      NavInteract: !type:Bool
-        true
-      NavPry: !type:Bool
-        false
   - type: TtsVoice
     id: en_US-combatant-elite-medium
+##
 
 - type: startingGear
   parent: SyndicateFootsoldierGearRuin
-  id: KsBaseOperativeGear
+  id: KsOperativeSynGear
   equipment:
     mask: ClothingMaskGasSecurity
     eyes: ClothingEyesGlassesSunglasses
@@ -104,8 +53,8 @@
     - EmergencyMedipen
 
 - type: startingGear
-  parent: KsBaseOperativeGear
-  id: KsBaseEliteOperativeGear
+  parent: KsOperativeSynGear
+  id: KsEliteOperativeSynGear
   equipment:
     neck: ClothingNeckMantleHOS
     shoes: ClothingShoesBootsJack
@@ -122,23 +71,23 @@
 
 - type: entity
   parent: RandomHumanoidSpawnerERTSecurityEVA
-  id: KsRandomHumanoidSpawnerOperativeArmedPistol
+  id: KsRandomHumanoidSpawnerOperativeSynArmedPistol
   name: unknown combatant
-  suffix: KS, Armed, Pistol
+  suffix: KS, Armed, Synd, Pistol
   components:
   - type: RandomHumanoidSpawner
-    settings: KsOperativeArmedPistol
+    settings: KsOperativeSynArmedPistol
 
 - type: randomHumanoidSettings
-  parent: KsBaseOperative
-  id: KsOperativeArmedPistol
+  parent: KsOperativeSyn
+  id: KsOperativeSynArmedPistol
   components:
   - type: Loadout
-    prototypes: [ KsOperativePistolGear ]
+    prototypes: [ KsOperativeSynPistolGear ]
 
 - type: startingGear
-  parent: KsBaseOperativeGear
-  id: KsOperativePistolGear
+  parent: KsOperativeSynGear
+  id: KsOperativeSynPistolGear
   inhand:
   - WeaponPistolMk1
   storage:
@@ -150,23 +99,23 @@
 
 - type: entity
   parent: RandomHumanoidSpawnerERTSecurityEVA
-  id: KsRandomHumanoidSpawnerOperativeArmedBulldog
+  id: KsRandomHumanoidSpawnerOperativeSynArmedBulldog
   name: unknown combatant
-  suffix: KS, Armed, Elite, Bulldog
+  suffix: KS, Armed, Synd-Elite, Bulldog
   components:
   - type: RandomHumanoidSpawner
-    settings: KsEliteOperativeArmedBulldog
+    settings: KsEliteOperativeSynArmedBulldog
 
 - type: randomHumanoidSettings
-  parent: KsBaseEliteOperative
-  id: KsEliteOperativeArmedBulldog
+  parent: KsEliteOperativeSyn
+  id: KsEliteOperativeSynArmedBulldog
   components:
   - type: Loadout
-    prototypes: [ KsEliteOperativeBulldogGear ]
+    prototypes: [ KsEliteOperativeSynBulldogGear ]
 
 - type: startingGear
-  parent: KsBaseEliteOperativeGear
-  id: KsEliteOperativeBulldogGear
+  parent: KsEliteOperativeSynGear
+  id: KsEliteOperativeSynBulldogGear
   inhand:
   - WeaponShotgunBulldog
   storage:
@@ -182,21 +131,21 @@
   parent: RandomHumanoidSpawnerERTSecurityEVA
   id: KsRandomHumanoidSpawnerOperativeArmedEstoc
   name: unknown combatant
-  suffix: KS, Armed, Elite, Estoc
+  suffix: KS, Armed, Synd-Elite, Estoc
   components:
   - type: RandomHumanoidSpawner
-    settings: KsEliteOperativeArmedEstoc
+    settings: KsEliteOperativeSynArmedEstoc
 
 - type: randomHumanoidSettings
-  parent: KsBaseEliteOperative
-  id: KsEliteOperativeArmedEstoc
+  parent: KsEliteOperativeSyn
+  id: KsEliteOperativeSynArmedEstoc
   components:
   - type: Loadout
-    prototypes: [ KsEliteOperativeEstocGear ]
+    prototypes: [ KsEliteOperativeSynEstocGear ]
 
 - type: startingGear
-  parent: KsBaseEliteOperativeGear
-  id: KsEliteOperativeEstocGear
+  parent: KsEliteOperativeSynGear
+  id: KsEliteOperativeSynEstocGear
   inhand:
   - KsWeaponRifleEstocEliteOperative
   storage:
