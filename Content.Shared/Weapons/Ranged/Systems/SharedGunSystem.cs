@@ -414,17 +414,23 @@ public abstract partial class SharedGunSystem : EntitySystem
 
             return false;
         }
+        else // KS14:/MNET: default to newNextFire
+            gun.Comp.NextFire = newNextFire;
 
         // MNET Start
         gun.Comp.LastShotWasEmpty = false;
 
         // TODO: explain why this is being done
-        var ammoEv = new GetAmmoCountEvent();
-        RaiseLocalEvent(gun.Owner, ref ammoEv);
+
+        // KS14: answered the 8-month-old todo: this doesn't need to be done and fucks up basilisks by making them shoot infinite death beams
+        //      thus, its all commented now
+
+        // var ammoEv = new GetAmmoCountEvent();
+        // RaiseLocalEvent(gun.Owner, ref ammoEv);
 
         // if we have no ammo then don't update NextFire, so we can do empty-fire effects immediately after running out of ammo, instead of waiting
-        if (ammoEv.Count > 0)
-            gun.Comp.NextFire = newNextFire;
+        // if (ammoEv.Count > 0)
+        //  gun.Comp.NextFire = newNextFire;
 
         // NextFire has been touched regardless so need to dirty the gun.
         DirtyFields(gun!, null, nameof(GunComponent.LastShotWasEmpty), nameof(GunComponent.NextFire));
