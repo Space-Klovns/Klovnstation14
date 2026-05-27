@@ -1127,3 +1127,90 @@ Entries:
         between the actual sprite and the emissive please report them
   id: 124
   time: '2026-05-16T12:48:08.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added ore vents which can currently be found on Saltern. These can be
+        scanned with a mineral scanner twice in a row, to start the process of
+        tapping them. If you succeed, you will have a constant supply of some
+        materials from this ore vent being deposited into the station material
+        silo.
+    - type: Add
+      message: >-
+        Added the ore retrieval matrix, which spawns in cargo on Saltern and
+        teleports in ores from tapped ore vents. A flatpack exists in the QM's
+        locker on Saltern.
+    - type: Add
+      message: >-
+        Added the automatic ore smelter, which does as the name implies. A
+        flatpack exists in the QM's locker on Saltern.
+    - type: Add
+      message: >-
+        Added the processed material collector: a re-skinned ore box that
+        instead stores processed materials. They automatically pick up nearby
+        materials. You know where the flatpack is.
+    - type: Tweak
+      message: You can now interact with ore boxes to toggle magnetic pickup on them!
+  id: 125
+  time: '2026-05-18T16:50:55.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: This is how my voice sounds like.
+  id: 126
+  time: '2026-05-20T13:16:22.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added doafter for starting extraction on ore-vents, which will warn
+        nearby players.
+  id: 127
+  time: '2026-05-23T12:05:48.0000000+00:00'
+- author: DeusMaldPr
+  changes:
+    - type: Fix
+      message: You actually spawn with the medbelts now.
+  id: 128
+  time: '2026-05-23T13:54:19.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed ore vents destroying saltern's planetgen.
+    - type: Fix
+      message: >-
+        Fixed bloodsprays appearing for all damage types instead of just
+        bloodloss.
+    - type: Tweak
+      message: Made saltern's planetgen more aggressive.
+    - type: Tweak
+      message: Lava/liquid plasma is much more dangerous now.
+  id: 129
+  time: '2026-05-24T06:38:58.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed nightshift turning lights on even when they were unpowered.
+    - type: Fix
+      message: Fixed errors from bloodsprays.
+    - type: Fix
+      message: Fixed shoving something out of someones hand having no text.
+    - type: Fix
+      message: Fixed acidifier playing gib effects.
+    - type: Tweak
+      message: Improved UI for some dialogues such as surgery dialogue
+  id: 130
+  time: '2026-05-24T16:08:52.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Added fun!
+    - type: Remove
+      message: Removed fun!
+    - type: Tweak
+      message: Changed fun!
+    - type: Fix
+      message: Fixed fun!
+  id: 131
+  time: '2026-05-24T16:48:47.0000000+00:00'

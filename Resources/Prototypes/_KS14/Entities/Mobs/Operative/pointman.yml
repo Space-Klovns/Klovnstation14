@@ -26,30 +26,33 @@
     randomizeName: false
   - type: NpcFactionMember
     factions:
-    - AllHostile
+    - Syndicate
   - type: MobThresholds
     thresholds:
       0: Alive
       100: Critical
       101: Dead
+  - type: NpcSensors
   - type: HTN
     rootTask:
       task: KsOperativeCombatCompound
     blackboard:
       ReloadActDelay: !type:Single
-        1
+        0
       VisionRadius: !type:Single
         17.5
       AggroVisionRadius: !type:Single
         25
       CampingRange: !type:Single
-        0.25
+        0.5
       CampingTime: !type:Single
-        15
+        25
       AdvanceTime: !type:Single
-        20
+        30
       NavInteract: !type:Bool
         true
+  - type: TtsVoice
+    id: en_US-arctic-medium
 
 - type: randomHumanoidSettings
   parent: [ KsBaseOperative ]
@@ -67,18 +70,24 @@
     rootTask:
       task: KsOperativeCombatCompound
     blackboard:
+      ReloadActDelay: !type:Single
+        0
       VisionRadius: !type:Single
-        17.5
+        20
       AggroVisionRadius: !type:Single
         25
       CampingRange: !type:Single
-        0.3
+        0.45
       CampingTime: !type:Single
-        25
-      AdvanceTime: !type:Single
-        30
+        10
+      AdvanceTime: !type:Single # Elite ops are generally more aggressive
+        15
       NavInteract: !type:Bool
         true
+      NavPry: !type:Bool
+        false
+  - type: TtsVoice
+    id: en_US-combatant-elite-medium
 
 - type: startingGear
   parent: SyndicateFootsoldierGearRuin
@@ -87,6 +96,7 @@
     mask: ClothingMaskGasSecurity
     eyes: ClothingEyesGlassesSunglasses
     belt: ClothingBeltMilitaryWebbing
+    id: SyndicateIDCard
   storage:
     back:
     - Machete
@@ -165,3 +175,58 @@
     - MagazineShotgun
     - MagazineShotgun
     - MagazineShotgun
+
+## AR
+
+- type: entity
+  parent: RandomHumanoidSpawnerERTSecurityEVA
+  id: KsRandomHumanoidSpawnerOperativeArmedEstoc
+  name: unknown combatant
+  suffix: KS, Armed, Elite, Estoc
+  components:
+  - type: RandomHumanoidSpawner
+    settings: KsEliteOperativeArmedEstoc
+
+- type: randomHumanoidSettings
+  parent: KsBaseEliteOperative
+  id: KsEliteOperativeArmedEstoc
+  components:
+  - type: Loadout
+    prototypes: [ KsEliteOperativeEstocGear ]
+
+- type: startingGear
+  parent: KsBaseEliteOperativeGear
+  id: KsEliteOperativeEstocGear
+  inhand:
+  - KsWeaponRifleEstocEliteOperative
+  storage:
+    back:
+    - EnergySword
+    - MagazineRifle
+    - MagazineRifle
+    - MagazineRifle
+
+- type: entity
+  name: modified Estoc DMR
+  parent: WeaponRifleEstoc
+  id: KsWeaponRifleEstocEliteOperative
+  description: A variant of the 'Estoc' DMR with several non-standard modifications present, heavily improving accuracy at the cost of making it bulkier.
+  suffix: KS14, NPC
+  components:
+  - type: Item
+    size: Ginormous
+  - type: Gun
+    minAngle: 20
+    maxAngle: 25
+    angleIncrease: 8
+    angleDecay: 9
+  - type: GunWieldBonus
+    minAngle: -15
+    maxAngle: -15
+    angleIncrease: -4
+
+  - type: Sprite
+    scale: 1.15,1.15
+    color: '#ffadba'
+  - type: Clothing
+    scale: 1.15,1.15

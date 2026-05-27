@@ -39,6 +39,9 @@ public sealed partial class ArgonAbsorptionReaction : IGasReactionEffect
 
         if (totalAbsorbed > 0f)
         {
+            // Infinite argon
+            mixture.AdjustMoles(Gas.Argon, totalAbsorbed);
+
             return ReactionResult.Reacting | ReactionResult.StopReactions;
         }
 

@@ -1,4 +1,7 @@
-# CVar preset to be applied to the KS14 server
+
+#### KS14 RELEASE
+
+# This is a base; gameplay-only changes that will be present on the main KS14 server
 
 [game]
 # Changes the name of the server as it appears in the lobby and launcher.
@@ -7,9 +10,6 @@ desc = "Klovnstation 14 is a minimal rule server designed around said ruleset."
 maxplayers = 120
 soft_max_players = 90
 lobbyduration    = 300 # 5 minutes lobby timer
-# Removes role timers - we keep this until we have proper game time for everyone
-role_timers = false
-role_loadout_timers = false
 
 [infolinks]
 bug_report = "https://github.com/Space-Klovns/Klovnstation14/issues/new/choose"
@@ -21,19 +21,6 @@ wiki       = "https://klovnstation14.miraheze.org/wiki/Main_Page"
 #[auth]
 #server = "https://auth.simplestation.org/"
 
-[ooc]
-enable_during_round = true
-
-[atmos]
-# Bigger maxcap explo. range
-max_explosion_range = 60
-#disable deltap
-delta_pressure_damage = false
-
-[pointing]
-# Virtually nonexistent somethingburger
-cooldown_seconds = 0.05
-
 [shuttle]
 emergency_early_launch_allowed = true
 
@@ -42,3 +29,11 @@ advertise = true
 tags = "lang:en,region:eu_w,rp:low"
 hub_urls = "https://hub.singularity14.co.uk/" # SimpleStation hub likes to not work and crash the game
 server_url = "ss14://game.klovnstation.org"
+
+
+## Release-only changes
+# These are here so that tests have an easier time passing, and its easier to debug shit
+
+[atmos]
+#disable deltap
+delta_pressure_damage = false

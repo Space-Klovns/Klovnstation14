@@ -1,0 +1,39 @@
+uniform sampler2D SCREEN_TEXTURE;
+uniform highp vec2 renderScale;
+
+uniform highp float timeOffset;
+uniform highp vec2 position;
+uniform highp float falloffPower;
+uniform highp float sharpness;
+uniform highp float width;
+
+//  The original version of this source code was ported from
+//      https://github.com/RMC-14/RMC-14/ at commit 2066df33076c46e67bed4770d7c14ebf107c643b
+
+void fragment() {
+    highp vec2 coord = FRAGCOORD.xy * SCREEN_PIXEL_SIZE.xy;
+    highp float ratio = SCREEN_PIXEL_SIZE.y / SCREEN_PIXEL_SIZE.x * 0.6;
+
+    highp vec2 WaveCentre = position;
+
+    highp float Dist = distance(
+        vec2(coord.x, coord.y * ratio),
+        vec2(WaveCentre.x, WaveCentre.y * ratio)
+    );
+
+    // removes the first few frames of the "animation"
+    Dist = max(Dist, 0.13);
+
+    if (Dist <= (timeOffset + 0.1) && Dist >= (timeOffset - 0.1)) {
+        highp float Diff = Dist - timeOffset;
+        highp float ScaleDiff = 1.0 - pow(abs(Diff * sharpness), width);
+        highp float DiffTime = Diff * ScaleDiff;
+        highp vec2 DiffTexCoord = normalize(coord - WaveCentre);
+        coord += (DiffTexCoord * DiffTime) / (timeOffset * Dist * falloffPower);
+        highp vec4 Color = zTextureSpec(SCREEN_TEXTURE, coord);
+        Color += (Color * ScaleDiff) / (timeOffset * Dist * 40.0);
+        COLOR = Color;
+    } else {
+        COLOR = zTextureSpec(SCREEN_TEXTURE, UV);
+    }
+}

@@ -1,4 +1,5 @@
 using Content.Server.Spawners.Components;
+using Robust.Shared.Map; // KS14: spawn radius
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
 
@@ -35,6 +36,14 @@ public sealed class SpawnerSystem : EntitySystem
 
     private void OnMapInit(Entity<TimedSpawnerComponent> ent, ref MapInitEvent args)
     {
+        // KS14 Start
+        if (ent.Comp.SpawnImmediately)
+        {
+            ent.Comp.NextFire = _timing.CurTime;
+            return;
+        }
+        // KS14 End
+
         ent.Comp.NextFire = _timing.CurTime + ent.Comp.IntervalSeconds;
     }
 
@@ -44,11 +53,28 @@ public sealed class SpawnerSystem : EntitySystem
             return;
 
         var number = _random.Next(component.MinimumEntitiesSpawned, component.MaximumEntitiesSpawned);
-        var coordinates = Transform(uid).Coordinates;
+        var baseCoordinates = Transform(uid).Coordinates; // KS14: spawn radius: coordinates -> baseCoordinates
 
         for (var i = 0; i < number; i++)
         {
             var entity = _random.Pick(component.Prototypes);
+
+            // KS14 Start: spawn radius
+            EntityCoordinates coordinates;
+            if (component.MaxRadius > 0)
+            {
+                var minSq = component.MinRadius * component.MinRadius;
+                var maxSq = component.MaxRadius * component.MaxRadius;
+
+                var distance = MathF.Sqrt(
+                    _random.NextFloat(minSq, maxSq));
+
+                coordinates = baseCoordinates.WithPosition(baseCoordinates.Position + _random.NextAngle().RotateVec(new System.Numerics.Vector2(distance, 0f)));
+            }
+            else
+                coordinates = baseCoordinates;
+            // KS14 End: spawn radius
+
             SpawnAtPosition(entity, coordinates);
         }
     }

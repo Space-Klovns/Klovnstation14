@@ -2,11 +2,11 @@
 - type: htnCompound
   id: KsOperativeGunCombatCompound
   branches:
-  # Pick target, then move into range and shoot them.
+  # Move into range and shoot the target.
   - tasks:
     - !type:HTNPrimitiveTask
       operator: !type:UtilityOperator
-        proto: NearbyGunTargets
+        proto: KsNearbyGunTargets
 
     - !type:HTNPrimitiveTask # copy target coords
       operator: !type:CopyKeyOperator
@@ -16,8 +16,12 @@
     - !type:HTNPrimitiveTask # VOICELINE
       operator: !type:SpeakOperator
         cooldown: 5
-        speech: !type:SingleSpeakOperatorSpeech
-          line: "CONTACT!!!"
+        speech: !type:LocalizedSetSpeakOperatorSpeech
+          lineSet: KsOperativeContact
+
+    - !type:HTNPrimitiveTask # Set combat time
+      operator: !type:SetTimeOperator
+        key: TimeOfLastCombat
 
     - !type:HTNPrimitiveTask
       operator: !type:MoveToOperator
@@ -27,6 +31,8 @@
         targetKey: TargetCoordinates
         pathfindKey: TargetPathfind
         rangeKey: RangedRange
+        stopOnLineOfSight: true
+        requireLosForRangeCheck: true
 
     - !type:HTNPrimitiveTask
       preconditions:
@@ -34,11 +40,16 @@
         key: Target
       operator: !type:GunOperator
         targetKey: Target
+        opaqueKey: false
       services:
-        - !type:UtilityService
-          id: RangedService
-          proto: NearbyGunTargets
-          key: Target
+      - !type:UtilityService
+        id: RangedService
+        proto: KsNearbyGunTargets
+        key: Target
+
+    - !type:HTNPrimitiveTask # marker
+      operator: !type:EnsureVirtualMarkerOperator
+        id: OpInCombat
 
 # Selects ammo in range, then moves to it and picks it up
 - type: htnCompound
@@ -127,8 +138,8 @@
 
     - !type:HTNPrimitiveTask # VOICELINE
       operator: !type:SpeakOperator
-        speech: !type:SingleSpeakOperatorSpeech
-          line: "I'm out of ammo!"
+        speech: !type:LocalizedSetSpeakOperatorSpeech
+          lineSet: KsOperativeOutOfAmmo
 
 - type: htnCompound
   id: KsOperativeReloadActiveGun
@@ -136,8 +147,8 @@
   - tasks:
     - !type:HTNPrimitiveTask # VOICELINE
       operator: !type:SpeakOperator
-        speech: !type:SingleSpeakOperatorSpeech
-          line: "Changing mags!"
+        speech: !type:LocalizedSetSpeakOperatorSpeech
+          lineSet: KsOperativeReloading
 
     # Look for ammo
     - !type:HTNPrimitiveTask
@@ -158,6 +169,10 @@
       operator: !type:SwapToFreeHandOperator
     - !type:HTNPrimitiveTask # Wait one tick for any virtual item from the wield to be deleted so that a hand is free, as they are QueueDel'd
       operator: !type:WaitTickOperator
+
+    - !type:HTNPrimitiveTask # Static reload act delay
+      operator: !type:StaticWaitOperator
+        key: ReloadActDelay
 
     # Equip ammo in offhand
     - !type:HTNPrimitiveTask
@@ -190,3 +205,23 @@
   - !type:TargetAmmoMatchesCon
     curve: !type:BoolCurve
   # TODO: Get ammo count.
+
+- type: utilityQuery
+  id: KsNearbyGunTargets
+  query:
+  - !type:NearbyHostilesQuery
+  considerations:
+  - !type:TargetIsAliveCon
+    curve: !type:BoolCurve
+  - !type:TargetIsCritCon
+    curve: !type:InverseBoolCurve
+  - !type:TargetDistanceCon
+    curve: !type:PresetCurve
+      preset: TargetDistance
+  - !type:TargetHealthCon
+    curve: !type:PresetCurve
+      preset: TargetHealth
+  - !type:TargetAccessibleCon
+    curve: !type:BoolCurve
+  - !type:TargetInLOSCon # InLOSOrCurrent -> InLOS
+    curve: !type:BoolCurve

@@ -1,0 +1,25 @@
+- type: audioPreset
+  id: MuffledMask
+  density: 0.8000
+  diffusion: 0.6000
+  gain: 0.2000
+  gainHf: 0.3000
+  gainLf: 1.0000          # clamped to valid max
+  decayTime: 0.2000
+  decayHfRatio: 0.2000
+  decayLfRatio: 1.0000
+  reflectionsGain: 0.0200
+  reflectionsDelay: 0.0020
+  reflectionsPan: 0,0,0
+  lateReverbGain: 0.1000
+  lateReverbDelay: 0.0030
+  lateReverbPan: 0,0,0
+  echoTime: 0.1200
+  echoDepth: 0.0500
+  modulationTime: 0.2000
+  modulationDepth: 0.0000
+  airAbsorptionGainHf: 0.8920  # minimum valid value
+  hfReference: 1800.0000
+  lfReference: 300.0000
+  roomRolloffFactor: 0.0000
+  decayHfLimit: 1

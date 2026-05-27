@@ -1,4 +1,3 @@
-using Content.Shared.Interaction;
 using Robust.Shared.GameStates;
 
 namespace Content.Shared._KS14.ScanDiscoverable.Base;

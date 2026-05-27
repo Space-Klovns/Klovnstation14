@@ -124,7 +124,7 @@ public sealed class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
             nightshiftBulbComponent.OriginalColor = bulbComponent.Color;
 
             _bulbSystem.SetColor(bulbUid, ruleEntity.Comp.Color, bulb: bulbComponent);
-            _poweredLightSystem.UpdateLightWithBulb((lightUid, poweredLightComponent), (bulbUid, bulbComponent));
+            _poweredLightSystem.UpdateLightWithBulb((lightUid, poweredLightComponent), (bulbUid, bulbComponent), enabled: null /* use power state to determine this */);
         }
     }
 

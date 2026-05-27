@@ -25,7 +25,7 @@
 
   # Sprites
   - type: Sprite
-    sprite: _KS14/Objects/Misc/geyser.rsi
+    sprite: _KS14/Objects/Mining/geyser.rsi
     noRot: true
     offset: 0,0.5
     layers:
@@ -54,7 +54,7 @@
         text: ""
   - type: SpawnOnTrigger # Placeholder for mining points lol
     keysIn: [discovered]
-    proto: SpaceCash2500
+    proto: SpaceCash1000
     useMapCoords: true
     predicted: true
 
@@ -98,6 +98,8 @@
   components:
   - type: KsScanDiscoverable
     discoveryPopupLoc: ks-specific-geyser-discovered-rare
+  - type: SpawnOnTrigger
+    proto: SpaceCash2500
 
 - type: entity
   parent: KsGeyserBase

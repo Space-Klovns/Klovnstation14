@@ -1,0 +1,266 @@
+- type: entity
+  id: KsOreVentBase
+  name: ore vent
+  description: "An ore vent, brimming with underground ore. Once discovered, it can be scanned again for ore extraction to be started."
+  abstract: true
+  placement:
+    mode: SnapgridCenter
+  components:
+  # Physics
+  - type: Transform
+    anchored: true
+    noRot: true
+  - type: Physics
+    bodyType: Static
+    canCollide: true
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.35
+        density: 1200
+        layer:
+        - HalfWallLayer
+
+  # Vent
+  - type: DoAfter # doafter is on the vent
+  - type: OreVent
+    preExtractionDuration: 3s
+    clearingDuration: 3s
+    clearingIterations: 6
+    tappingProcessEntityProto: KsOreVentMobSpawnerLava
+    droneEntityProto: KsOreVentDrone
+    extractionDuration: 75s
+    oreWellSettingId: Basic
+  - type: Explosive
+    explosionType: OreVentClearing
+    maxIntensity: 100
+    totalIntensity: 80
+    intensitySlope: 5
+    canCreateVacuum: false
+    repeatable: true
+    deleteAfterExplosion: false
+
+  # Sprites
+  - type: Sprite
+    sprite: _KS14/Objects/Mining/ore_vent.rsi
+    offset: 0,0.5
+  - type: SpriteFade
+  - type: InteractionOutline
+  - type: Clickable
+  - type: Appearance
+
+  # Scanning
+  - type: MiningScannerViewable
+
+- type: entity
+  parent: KsOreVentBase
+  id: KsOreVentBaseDiscoverable
+  abstract: true
+  components:
+  - type: KsScanTriggerOnDiscovered
+    keyOut: discovered
+  - type: KsScanDiscoverable
+    discoveryPopupLoc: ks-specific-orevent-discovered
+    trueName: discovered ore vent
+  - type: AddComponentsOnTrigger
+    keysIn: [discovered]
+    components: # copied from PenEmbeddable
+    - type: KsRadarInterest
+      data:
+        text: discovered ore vent
+
+### Variants: undiscoverable
+
+- type: entity
+  parent: KsOreVentBase
+  id: KsOreVentLavaBase
+  suffix: Lava, Undiscoverable
+  abstract: true
+  components:
+  - type: OreVent
+    tappingProcessEntityProto: KsOreVentMobSpawnerLava
+
+  - type: Sprite
+    layers:
+    - state: ore_vent
+      map: ["enum.MiningScannerVisualLayers.Overlay", "vent"]
+    - state: well
+      visible: false
+      map: ["well"]
+  - type: GenericVisualizer
+    visuals:
+      enum.OreVentVisuals.Tapped:
+        vent:
+          True: { state: ore_vent_active }
+          False: { state: ore_vent }
+        well:
+          True: { visible: true }
+          False: { visible: false }
+
+- type: entity
+  parent: KsOreVentBase
+  id: KsOreVentIceBase
+  suffix: Ice, Undiscoverable
+  abstract: true
+  components:
+  - type: OreVent
+    tappingProcessEntityProto: KsOreVentMobSpawnerIce
+
+  - type: Sprite
+    layers:
+    - state: ore_vent_ice
+      map: ["enum.MiningScannerVisualLayers.Overlay", "vent"]
+    - state: well
+      visible: false
+      map: ["well"]
+  - type: GenericVisualizer
+    visuals:
+      enum.OreVentVisuals.Tapped:
+        vent:
+          True: { state: ore_vent_ice_active }
+          False: { state: ore_vent_ice }
+        well:
+          True: { visible: true }
+          False: { visible: false }
+
+### Variants: undiscoverable, tapped
+
+- type: entity
+  parent: KsOreVentLavaBase
+  id: KsOreVentLavaTappedRoundstart
+  description: "An ore vent, brimming with underground ore. It's already tapped, for your convenience."
+  suffix: Lava, Tapped, Roundstart, Undiscoverable
+  components:
+  - type: OreVent
+    tapped: true
+    oreWellSettingId: Roundstart
+
+- type: entity
+  parent: KsOreVentIceBase
+  id: KsOreVentIceTappedRoundstart
+  description: "An ore vent, brimming with underground ore. It's already tapped, for your convenience."
+  suffix: Ice, Tapped, Roundstart, Undiscoverable
+  components:
+  - type: OreVent
+    tapped: true
+    oreWellSettingId: Roundstart
+
+### Variants: discoverable
+
+- type: entity
+  parent: KsOreVentBaseDiscoverable
+  id: KsOreVentBaseDiscoverableBasic
+  abstract: true
+  components:
+  - type: KsScanDiscoverable
+    trueName: common ore vent
+  - type: AddComponentsOnTrigger
+    keysIn: [discovered]
+    components: # copied from PenEmbeddable
+    - type: KsRadarInterest
+      data:
+        text: common ore vent
+  - type: OreVent
+    oreWellSettingId: Basic
+
+- type: entity
+  parent: [ KsOreVentBaseDiscoverableBasic, KsOreVentLavaBase ]
+  id: KsOreVentLavaBasic
+  suffix: Lava, Discoverable, Basic
+
+- type: entity
+  parent: [ KsOreVentBaseDiscoverableBasic, KsOreVentIceBase ]
+  id: KsOreVentIceBasic
+  suffix: Ice, Discoverable, Basic
+
+- type: entity
+  parent: KsOreVentBaseDiscoverable
+  id: KsOreVentBaseDiscoverableRare
+  abstract: true
+  components:
+  - type: KsScanDiscoverable
+    trueName: rare ore vent
+  - type: AddComponentsOnTrigger
+    keysIn: [discovered]
+    components: # copied from PenEmbeddable
+    - type: KsRadarInterest
+      data:
+        text: rare ore vent
+  - type: OreVent
+    oreWellSettingId: Rare
+
+- type: entity
+  parent: [ KsOreVentBaseDiscoverableRare, KsOreVentLavaBase ]
+  id: KsOreVentLavaRare
+  suffix: Lava, Discoverable, Rare
+
+- type: entity
+  parent: [ KsOreVentBaseDiscoverableRare, KsOreVentIceBase ]
+  id: KsOreVentIceRare
+  suffix: Ice, Discoverable, Rare
+
+
+### Variants: debug
+
+- type: entity
+  parent: [ KsOreVentBaseDiscoverable, KsOreVentLavaBase ]
+  id: KsOreVentDebug
+  suffix: Debug, Discoverable
+  categories: [ Debug ]
+  components:
+  - type: OreVent
+    clearingDuration: 1s
+    clearingIterations: 2
+    clearRadius: 1
+    extractionDuration: 5s
+  - type: Sprite
+    color: '#fb00ff80'
+
+- type: entity
+  parent: KsOreVentDebug
+  id: KsOreVentDebugTapped
+  suffix: Debug, Discoverable, Tapped
+  categories: [ Debug ]
+  components:
+  - type: OreVent
+    tapped: true
+
+- type: entity
+  parent: KsOreVentDebugTapped
+  id: KsOreVentDebugTappedRare
+  suffix: Debug, Discoverable, Tapped, Rare
+  categories: [ Debug ]
+  components:
+  - type: OreVent
+    oreWellSettingId: Rare
+
+## Settings
+
+- type: oreWellSetting
+  id: Roundstart
+  totalResourceRateRange: 0.25,0.25
+  resourceCountRange: 2,2
+  possibleResourceTypes:
+  - SteelOre
+  - SpaceQuartz
+
+- type: oreWellSetting
+  id: Basic
+  totalResourceRateRange: 0.25,0.45
+  resourceCountRange: 2,3
+  possibleResourceTypes:
+  - SteelOre
+  - Coal
+  - PlasmaOre
+  - GoldOre
+
+- type: oreWellSetting
+  id: Rare
+  totalResourceRateRange: 0.2,0.3
+  resourceCountRange: 1,2
+  possibleResourceTypes:
+  - GoldOre
+  - DiamondOre
+  - UraniumOre

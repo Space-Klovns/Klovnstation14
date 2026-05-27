@@ -7,14 +7,16 @@
                   Margin="5 5 5 5"
                   SeparationOverride="10">
 
-        <ScrollContainer Name="OptionsScrollContainer"
-                         VerticalExpand="True"
-                         HorizontalExpand="True">
-            <BoxContainer Name="OptionsContainer"
-                          Orientation="Vertical"
-                          SeparationOverride="5"
-                          HorizontalExpand="True"/>
-        </ScrollContainer>
+        <controls:StripeBack>
+            <Label Text="Select one"
+                   HorizontalAlignment="Center"/>
+        </controls:StripeBack>
+
+        <BoxContainer Name="OptionsContainer"
+                      Orientation="Vertical"
+                      SeparationOverride="5"
+                      VerticalExpand="True"
+                      HorizontalExpand="True"/>
 
     </BoxContainer>
 </controls:FancyWindow>

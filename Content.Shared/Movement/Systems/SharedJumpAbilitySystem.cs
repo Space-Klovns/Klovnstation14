@@ -7,6 +7,7 @@ using Content.Shared.Gravity;
 using Content.Shared.Movement.Components;
 using Content.Shared.Movement.Pulling.Components;
 using Content.Shared.Movement.Pulling.Systems; // KS14
+using Content.Shared.Physics;
 using Content.Shared.Popups;
 using Content.Shared.Standing;
 using Content.Shared.Stunnable;
@@ -79,23 +80,6 @@ public sealed partial class SharedJumpAbilitySystem : EntitySystem
 
         RemCompDeferred<ActiveLeaperComponent>(entity);
     }
-
-    /*
-    punished = true;
-    knocked = false;
-
-    if (punished || knocked)
-        punished = true
-        => punished = true
-
-    if (punished(true) || !knocked(!false => true))
-        punished = true
-        => punished = true
-
-    if (punished(true) || knocked(true))
-        punished = false
-        => punished = true
-    */
 
     private void OnLeaperLand(Entity<ActiveLeaperComponent> entity, ref LandEvent args)
     {

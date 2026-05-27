@@ -271,13 +271,15 @@ public abstract class SharedPoweredLightSystem : EntitySystem
     }
 
     // KS14
-    public void UpdateLightWithBulb(Entity<PoweredLightComponent?> lightEntity, Entity<LightBulbComponent?> bulbEntity, AppearanceComponent? appearanceComponent = null)
+    /// <param name="enabled">If null then this will be automatically determined by whether the light is powered and on</param>
+    public void UpdateLightWithBulb(Entity<PoweredLightComponent?> lightEntity, Entity<LightBulbComponent?> bulbEntity, AppearanceComponent? appearanceComponent = null, bool? enabled = null)
     {
         if (!Resolve(lightEntity, ref lightEntity.Comp, false) ||
             !Resolve(bulbEntity, ref bulbEntity.Comp, false))
             return;
 
-        SetLight(lightEntity, true, bulbEntity.Comp.Color, lightEntity, bulbEntity.Comp.LightRadius, bulbEntity.Comp.LightEnergy, bulbEntity.Comp.LightSoftness);
+        enabled ??= lightEntity.Comp.On && _receiver.IsPowered(lightEntity.Owner);
+        SetLight(lightEntity, enabled.Value, bulbEntity.Comp.Color, lightEntity, bulbEntity.Comp.LightRadius, bulbEntity.Comp.LightEnergy, bulbEntity.Comp.LightSoftness);
 
         if (Resolve(lightEntity.Owner, ref appearanceComponent))
             _appearance.SetData(lightEntity.Owner, PoweredLightVisuals.Color, bulbEntity.Comp.Color, appearanceComponent);
@@ -321,7 +323,7 @@ public abstract class SharedPoweredLightSystem : EntitySystem
             case LightBulbState.Normal:
                 if (powerReceiver.Powered && light.On)
                 {
-                    UpdateLightWithBulb((uid, light), (bulbUid.Value, lightBulb), appearance); // KS14: Separated SetLight and appearance into UpdateLightWithBulb
+                    UpdateLightWithBulb((uid, light), (bulbUid.Value, lightBulb), appearance, enabled: true); // KS14: Separated SetLight and appearance into UpdateLightWithBulb
                     _appearance.SetData(uid, PoweredLightVisuals.BulbState, PoweredLightState.On, appearance);
                     var time = GameTiming.CurTime;
                     if (time > light.LastThunk + ThunkDelay)

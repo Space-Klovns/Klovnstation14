@@ -96,7 +96,6 @@
     glowRadius: 0.45
     intensity: 1.5
     offset: 0.25,-0.8
-    useSpriteTransform: false # because of dirspritemanip
     layers:
     - airAlarmState
   - type: DirectionalSpriteManipulation

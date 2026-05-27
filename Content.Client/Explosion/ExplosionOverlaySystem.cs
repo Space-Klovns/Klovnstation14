@@ -1,3 +1,5 @@
+using System.Linq; // KS14: Yes, really!
+using Content.Shared._KS14.Deferral;
 using Content.Shared.Explosion;
 using Content.Shared.Explosion.Components;
 using Robust.Client.Graphics;
@@ -5,6 +7,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Shared.GameStates;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Timing; // KS14
 
 namespace Content.Client.Explosion;
 
@@ -14,6 +17,7 @@ namespace Content.Client.Explosion;
 /// </summary>
 public sealed class ExplosionOverlaySystem : EntitySystem
 {
+    [Dependency] private readonly IGameTiming _gameTiming = default!; // KS14
     [Dependency] private readonly IPrototypeManager _protoMan = default!;
     [Dependency] private readonly IResourceCache _resCache = default!;
     [Dependency] private readonly IOverlayManager _overlayMan = default!;
@@ -78,6 +82,18 @@ public sealed class ExplosionOverlaySystem : EntitySystem
             _lights.SetEnergy(lightEntity, component.Intensity.Count, light);
             _lights.SetColor(lightEntity, type.LightColor, light);
             textures.LightEntity = lightEntity;
+
+            // KS14 Start
+            var shockwaveEntity = Spawn(null, component.Epicenter);
+            var shockwaveComponent = EntityManager.ComponentFactory.GetComponent<Shared._KS14.Explosion.Shockwave.KsShockwaveComponent>();
+            shockwaveComponent.StartTime = _gameTiming.CurTime;
+            shockwaveComponent.Width = component.Intensity.Count * 0.175f;
+            shockwaveComponent.Sharpness = component.Intensity.Max() * 0.16f;
+            shockwaveComponent.FalloffPower = MathF.Max(73f - component.Intensity.Average(), 10f);
+
+            AddComp(shockwaveEntity, shockwaveComponent);
+            SynchronousDeferralSystem.Schedule(() => QueueDel(shockwaveEntity), _gameTiming.CurTime + TimeSpan.FromSeconds(shockwaveComponent.Width / 2f));
+            // KS14 End
         }
 
 

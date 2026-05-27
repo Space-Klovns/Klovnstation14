@@ -451,17 +451,17 @@ public sealed partial class ExplosionSystem
             GetEntitiesToDamage(uid, originalDamage, id);
             foreach (var (entity, damage) in _toDamage)
             {
-                // KS14 changes start
-                var bodyEntity = new Entity<BodyComponent?>(entity, null);
-                if (_dismembermentSystem.CanDismemberByDamage(bodyEntity, damage, out var totalDoneDamage))
-                    HandleExplosionDamage(bodyEntity, throwForce, totalDoneDamage.Value, cause, epicenter.Position, xform);
-                // KS14 changes end
-
                 if (!_damageableQuery.TryComp(entity, out var damageable))
                     continue;
 
                 // TODO EXPLOSIONS turn explosions into entities, and pass the the entity in as the damage origin.
-                _damageableSystem.TryChangeDamage((entity, damageable), damage, ignoreResistances: true, ignoreGlobalModifiers: true);
+                _damageableSystem.TryChangeDamage((entity, damageable), damage, out var newDamage /* KS14: Added newDamage out */, ignoreResistances: true, ignoreGlobalModifiers: true);
+
+                // KS14 changes start
+                var bodyEntity = new Entity<BodyComponent?>(entity, null);
+                if (_dismembermentSystem.CanDismemberByDamage(bodyEntity, newDamage.GetTotal() - damage.GetTotal(), out var totalDoneDamage))
+                    HandleExplosionDamage(bodyEntity, throwForce, totalDoneDamage.Value, cause, epicenter.Position, xform);
+                // KS14 changes end
 
                 if (_actorQuery.HasComp(entity))
                 {

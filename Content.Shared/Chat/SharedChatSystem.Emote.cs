@@ -1,4 +1,5 @@
 using System.Collections.Frozen;
+using Content.Shared._KS14.Chat; // KS14
 using Content.Shared.Chat.Prototypes;
 using Content.Shared.Speech;
 using Robust.Shared.Audio;
@@ -161,7 +162,16 @@ public abstract partial class SharedChatSystem
 
         // optional override params > general params for all sounds in set > individual sound params
         var param = audioParams ?? proto.GeneralParams ?? sound.Params;
-        _audio.PlayPvs(sound, uid, param);
+        var audioEnt = _audio.PlayPvs(sound, uid, param);
+
+        // KS14 Start
+        if (audioEnt is { })
+        {
+            var ev = new EmoteSoundPlayedEvent((audioEnt.Value.Entity, audioEnt.Value.Component), emoteId);
+            RaiseLocalEvent(uid, ref ev);
+        }
+        // KS14 End
+
         return true;
     }
     /// <summary>

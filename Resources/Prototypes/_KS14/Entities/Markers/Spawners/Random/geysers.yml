@@ -7,7 +7,7 @@
   - type: Sprite
     layers:
     - state: pink
-    - sprite: _KS14/Objects/Misc/geyser.rsi
+    - sprite: _KS14/Objects/Mining/geyser.rsi
       state: geyser
       offset: 0,0.5
   - type: EntityTableSpawner

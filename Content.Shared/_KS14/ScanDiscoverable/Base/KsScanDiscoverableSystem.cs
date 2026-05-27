@@ -18,6 +18,12 @@ public sealed class KsScanDiscoverableSystem : EntitySystem
         SubscribeLocalEvent<KsScanDiscoverableComponent, InteractUsingEvent>(OnInteractUsing);
     }
 
+    /// <summary>
+    ///     Treats anything that isnt discoverable, as discovered.
+    /// </summary>
+    public bool IsDiscovered(EntityUid uid) => !HasComp<KsScanDiscoverableComponent>(uid);
+    public bool IsScanner(EntityUid uid) => HasComp<KsDiscoveringScannerComponent>(uid);
+
     private void OnExamined(Entity<KsScanDiscoverableComponent> entity, ref ExaminedEvent args)
     {
         if (entity.Comp.ExamineLoc is not { } examineLoc)
@@ -29,7 +35,7 @@ public sealed class KsScanDiscoverableSystem : EntitySystem
     private void OnInteractUsing(Entity<KsScanDiscoverableComponent> entity, ref InteractUsingEvent args)
     {
         if (args.Handled ||
-            !HasComp<KsDiscoveringScannerComponent>(args.Used))
+            !IsScanner(args.Used))
             return;
 
         _metaDataSystem.SetEntityName(entity.Owner, entity.Comp.TrueName);
@@ -49,6 +55,7 @@ public sealed class KsScanDiscoverableSystem : EntitySystem
         RaiseLocalEvent(args.Used, ref ev);
 
         args.Handled = true;
+
         RemComp(entity, entity.Comp);
     }
 }

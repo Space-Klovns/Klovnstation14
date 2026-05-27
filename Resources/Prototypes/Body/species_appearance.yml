@@ -37,9 +37,10 @@
     - map: [ "shoes" ]
     - map: [ "ears" ]
     - map: [ "eyes" ]
-    - map: [ "belt" ]
+    # KS14: Belt clothing goes over outerClothing ("belt" was originally here)
     - map: [ "id" ]
     - map: [ "outerClothing" ]
+    - map: [ "belt" ] # KS14: Belt clothing goes over outerClothing
     - map: [ "back" ]
     - map: [ "neck" ]
     - map: [ "suitstorage" ]

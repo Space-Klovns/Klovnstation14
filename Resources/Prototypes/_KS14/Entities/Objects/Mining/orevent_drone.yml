@@ -1,0 +1,76 @@
+- type: entity
+  id: KsOreVentDrone
+  name: NODE drone
+  description: Standard in-atmosphere drone, used by Nanotrasen to operate and excavate valuable ore vents.
+  components:
+  # Physics
+  - type: Transform
+    noRot: true
+  - type: Physics
+    bodyType: Static
+    canCollide: true
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.35
+        density: 80
+        layer:
+        - HalfWallLayer
+        - Opaque
+
+  # Sprites
+  - type: Sprite
+    sprite: _KS14/Objects/Mining/drone.rsi
+    drawdepth: OverMobs
+    #noRot: true
+    layers:
+    - state: node_base
+      map: ["enum.OreVentDroneVisualLayers.Base"]
+      noRot: true
+    - state: node_base
+      visible: false
+      map: ["enum.OreVentDroneVisualLayers.ProgressBar"]
+  - type: Appearance
+  - type: AnimationPlayer
+
+  # Damage
+  - type: Damageable
+    damageContainer: KsOreDrone
+    damageModifierSet: null
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 275
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+
+  # Drone
+  - type: OreVentDrone
+    progressStates: 4
+
+  - type: AnimatedEmotes
+
+  # Mob
+  - type: MobState
+  - type: NpcFactionMember
+    factions:
+    - NanoTrasen
+
+- type: entity
+  parent: KsOreVentDrone
+  id: KsOreVentDroneOffsetSprite
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    offset: 0,12.5
+    color: '#ffffff00' # Fully white fully transparent
+
+- type: damageContainer
+  id: KsOreDrone
+  supportedGroups:
+  - Brute
+  - Burn

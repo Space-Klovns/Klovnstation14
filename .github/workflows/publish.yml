@@ -9,9 +9,9 @@ on:
     # runs every day at 16:00 UTC
     - cron: '0 16 * * *'
 
-  # run on push to master (disabled)
-  # push:
-  #   branches: [ master ]
+  # run on push to master
+  push:
+    branches: [ master ]
 
   # allow manual triggering
   workflow_dispatch:

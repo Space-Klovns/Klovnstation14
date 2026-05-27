@@ -22,9 +22,9 @@
     group: null
   # KS14: emissive start
   - type: EmissiveLayers
-    glowRadius: 1
-    intensity: 0.5
-    offset: 0,-1.35
+    glowRadius: 0.3
+    intensity: 2.5
+    offset: 0,0
     layers:
     - enum.DoorVisualLayers.BaseUnlit
     - enum.DoorVisualLayers.BaseBolted

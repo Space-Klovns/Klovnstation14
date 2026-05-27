@@ -18,6 +18,7 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
     private NPCSteeringSystem _steering = default!;
     private PathfindingSystem _pathfind = default!;
     private SharedTransformSystem _transform = default!;
+    [Dependency] private readonly Interaction.InteractionSystem _interactionSystem = default!; // KS14
 
     /// <summary>
     /// When to shut the task down.
@@ -61,6 +62,16 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
     [DataField("stopOnLineOfSight")]
     public bool StopOnLineOfSight;
 
+    // KS14
+    /// <summary>
+    ///     By default, when this is false, an NPC will be considered as
+    ///         moved to its target if both are simply in range of each other.
+    ///
+    ///     If this is true, this check will also need to be in LOS to be considered as in range.
+    /// </summary>
+    [DataField]
+    public bool RequireLosForRangeCheck;
+
     private const string MovementCancelToken = "MovementCancelToken";
 
     public override void Initialize(IEntitySystemManager sysManager)
@@ -93,7 +104,13 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
 
         var range = blackboard.GetValueOrDefault<float>(RangeKey, _entManager);
 
-        if (xform.Coordinates.TryDistance(_entManager, targetCoordinates, out var distance) && distance <= range)
+        // KS14: ANK: start: Reworked this if statement
+        var ownerMapCoords = _transform.GetMapCoordinates(xform);
+        var targetMapCoords = _transform.ToMapCoordinates(targetCoordinates);
+        var distance = (targetMapCoords.Position - ownerMapCoords.Position).Length();
+
+        if (RequireLosForRangeCheck ? _interactionSystem.InRangeUnobstructed(ownerMapCoords, targetMapCoords, range: range) : distance <= range)
+        // KS14: ANK: end
         {
             // In range
             return (true, new Dictionary<string, object>()
@@ -114,7 +131,7 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
             blackboard.GetValue<EntityUid>(NPCBlackboard.Owner),
             xform.Coordinates,
                 targetCoordinates,
-            range,
+            RequireLosForRangeCheck ? MathF.Min(_interactionSystem.UnobstructedDistance(ownerMapCoords, targetMapCoords), range) : range, // KS14: RequireLosForRangeCheck
             cancelToken,
             _pathfind.GetFlags(blackboard));
 
@@ -146,10 +163,8 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
         var comp = _steering.Register(uid, targetCoordinates);
         comp.ArriveOnLineOfSight = StopOnLineOfSight;
 
-        if (blackboard.TryGetValue<float>(RangeKey, out var range, _entManager))
-        {
-            comp.Range = range;
-        }
+        // KS14: ANK: add RequireLosForRangeCheck
+        comp.Range = RequireLosForRangeCheck ? 0f : blackboard.GetValueOrDefault<float>(RangeKey, _entManager);
 
         if (blackboard.TryGetValue<PathResultEvent>(PathfindKey, out var result, _entManager))
         {
@@ -169,6 +184,16 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
 
         if (!_entManager.TryGetComponent<NPCSteeringComponent>(owner, out var steering))
             return HTNOperatorStatus.Failed;
+
+        // KS14: ANK: start
+        if (RequireLosForRangeCheck)
+        {
+            var range = blackboard.GetValueOrDefault<float>(RangeKey, _entManager);
+            steering.Range = _interactionSystem.InRangeUnobstructed(owner, steering.Coordinates, range: range) ?
+                range :
+                0f;
+        }
+        // KS14: ANK: end
 
         // Just keep moving in the background and let the other tasks handle it.
         if (ShutdownState == HTNPlanState.PlanFinished && steering.Status == SteeringStatus.Moving)
