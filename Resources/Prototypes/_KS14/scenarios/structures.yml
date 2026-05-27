@@ -23,7 +23,6 @@
         mask:
         - MachineMask
         - MobMask
-        - VaultLayer
   - type: Clickable
   - type: InteractionOutline
   - type: Sprite
@@ -35,6 +34,7 @@
   id: InvisibleBarrier5Min
   parent: MarkerBase
   name: invisible barrier
+  suffix: 5 min
   components:
   - type: Physics
     bodyType: Static
@@ -50,7 +50,6 @@
         mask:
         - MachineMask
         - MobMask
-        - VaultLayer
   - type: Sprite
     state: red
   - type: TimedDespawn
@@ -58,6 +57,7 @@
 
 - type: entity
   id: InvisibleBarrier10Min
+  suffix: 10 min
   parent: InvisibleBarrier5Min
   components:
   - type: TimedDespawn
@@ -65,6 +65,7 @@
 
 - type: entity
   id: InvisibleBarrier15Min
+  suffix: 15 min
   parent: InvisibleBarrier5Min
   components:
   - type: TimedDespawn
