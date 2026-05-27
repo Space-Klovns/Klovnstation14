@@ -1,0 +1,78 @@
+# KS14 Scenario Structures
+# Invincible rock walls and barriers for scenario creation
+
+- type: entity
+  id: RockWallInvincible
+  name: invincible rock wall
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    anchored: true
+  - type: Physics
+    bodyType: Static
+    canCollide: true
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        layer:
+        - WallLayer
+        mask:
+        - MachineMask
+        - MobMask
+        - VaultLayer
+  - type: Clickable
+  - type: InteractionOutline
+  - type: Sprite
+    sprite: Structures/Walls/rock.rsi
+    state: rock
+    drawdepth: Walls
+
+- type: entity
+  id: InvisibleBarrier5Min
+  parent: MarkerBase
+  name: invisible barrier
+  components:
+  - type: Physics
+    bodyType: Static
+    canCollide: true
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        layer:
+        - WallLayer
+        mask:
+        - MachineMask
+        - MobMask
+        - VaultLayer
+  - type: Sprite
+    state: red
+  - type: TimedDespawn
+    lifetime: 300
+
+- type: entity
+  id: InvisibleBarrier10Min
+  parent: InvisibleBarrier5Min
+  components:
+  - type: TimedDespawn
+    lifetime: 600
+
+- type: entity
+  id: InvisibleBarrier15Min
+  parent: InvisibleBarrier5Min
+  components:
+  - type: TimedDespawn
+    lifetime: 900
+
+- type: entity
+  parent: AirlockSyndicateLocked
+  id: AirlockMaintSyndieLocked
+  components:
+  - type: Sprite
+    sprite: Structures/Doors/Airlocks/Standard/maint.rsi
