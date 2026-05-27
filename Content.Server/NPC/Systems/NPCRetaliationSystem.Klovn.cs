@@ -23,18 +23,23 @@ public sealed partial class NPCRetaliationSystem : EntitySystem
         TryRetaliate(ent, args.Other, tryWarn: true);
     }
 
+    private void RetaliateOnThrowerIfPossible(Entity<NPCRetaliationComponent> entity, EntityUid originUid, bool tryWarn = false)
+    {
+        // super hardcode god
+        if (TryComp<ThrownItemComponent>(originUid, out var thrownItemComponent) &&
+            thrownItemComponent.Thrower is { } throwerUid)
+            TryRetaliate(entity, throwerUid, tryWarn: tryWarn);
+        else
+            TryRetaliate(entity, originUid, tryWarn: tryWarn);
+    }
+
     private void KsAfterStaminaDamage(Entity<NPCRetaliationComponent> ent, ref KsAfterStaminaDamageEvent args)
     {
         if (args.Damage <= 0f ||
             args.OriginUid is not { } originUid)
             return;
 
-        // super hardcode god
-        if (TryComp<ThrownItemComponent>(originUid, out var thrownItemComponent) &&
-            thrownItemComponent.Thrower is { } throwerUid)
-            TryRetaliate(ent, throwerUid, tryWarn: false /* lol no */);
-        else
-            TryRetaliate(ent, originUid, tryWarn: false /* lol no */);
+        RetaliateOnThrowerIfPossible(ent, originUid, tryWarn: false /* lol no */);
     }
 
     private void KsAfterStrippingStarted(Entity<NPCRetaliationComponent> ent, ref KsStrippingStartedEvent args)

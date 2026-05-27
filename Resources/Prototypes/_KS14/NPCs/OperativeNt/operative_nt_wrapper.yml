@@ -5,8 +5,14 @@
   branches:
   ## Forfeit
   - preconditions:
-    - !type:HandcuffedPrecondition
-      reactOnlyWhenFullyCuffed: true
+    - !type:LogicOrPrecondition
+      conditions:
+      - !type:HandcuffedPrecondition
+        reactOnlyWhenFullyCuffed: true
+
+      - !type:HasStatusEffectPrecondition
+        statusEffect: StatusEffectStunned # SharedStunSystem.StunId
+
     - !type:HasImplantPrecondition
       id: KsOperativeNtVoluntaryMicroBombImplant
     tasks:

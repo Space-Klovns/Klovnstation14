@@ -1,4 +1,6 @@
 using Content.Server._KS14.NPC.Components;
+using Content.Server.NPC.HTN;
+using Content.Server.NPC.Systems;
 using Content.Shared._KS14.NPC.Systems;
 using Content.Shared.Trigger;
 using Robust.Shared.Map;
@@ -8,6 +10,8 @@ namespace Content.Server._KS14.NPC.Systems;
 public sealed class NpcSensorSystem : SharedNpcSensorSystem
 {
     [Dependency] private readonly EntityLookupSystem _lookupSystem = default!;
+    [Dependency] private readonly NPCSystem _npcSystem = default!;
+    [Dependency] private readonly HTNSystem _htnSystem = default!;
 
     [Dependency] private readonly EntityQuery<NpcSensorsComponent> _sensorsQuery = default!;
 
@@ -36,12 +40,27 @@ public sealed class NpcSensorSystem : SharedNpcSensorSystem
         DoDisturbance(coordinates, entity.Comp.Radius);
     }
 
+    public void TryImmediatelyUpdatePlan(EntityUid uid)
+    {
+        // ack
+        // TODO LCDC: TODO ANK2: fix
+        // if (!TryComp<HTNComponent>(uid, out var htnComponent) ||
+        //     !htnComponent.Enabled ||
+        //     htnComponent.Planning ||
+        //     htnComponent.Plan is { })
+        //     return;
+
+        // _npcSystem.WakeNPC(uid, htnComponent);
+        // _htnSystem.Replan(htnComponent);
+    }
+
     public void AddEffect(Entity<NpcSensorsComponent?> entity, string key, object value)
     {
         if (!_sensorsQuery.Resolve(entity.Owner, ref entity.Comp))
             return;
 
         entity.Comp.AggregatedEffects[key] = value;
+        TryImmediatelyUpdatePlan(entity.Owner);
     }
 
     public void AddEffects(Entity<NpcSensorsComponent?> entity, IEnumerable<(string, object)> effects)
@@ -51,6 +70,8 @@ public sealed class NpcSensorSystem : SharedNpcSensorSystem
 
         foreach (var (key, value) in effects)
             entity.Comp.AggregatedEffects[key] = value;
+
+        TryImmediatelyUpdatePlan(entity.Owner);
     }
 
     public void AddEffects(Entity<NpcSensorsComponent?> entity, Dictionary<string, object> effects)
@@ -60,6 +81,8 @@ public sealed class NpcSensorSystem : SharedNpcSensorSystem
 
         foreach (var (key, value) in effects)
             entity.Comp.AggregatedEffects[key] = value;
+
+        TryImmediatelyUpdatePlan(entity.Owner);
     }
 
     public override void DoDisturbance(EntityCoordinates coordinates, float radius, EntityUid? source = null)

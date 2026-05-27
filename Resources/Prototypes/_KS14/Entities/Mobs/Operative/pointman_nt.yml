@@ -6,7 +6,7 @@
   - Syndicate
   - Xeno
   - Zombie
-  - Revolutionary
+  #- Revolutionary
   - Dragon
   - AllHostile
   - Wizard
@@ -16,7 +16,7 @@
 - type: entity
   parent: BaseSubdermalImplant
   id: KsOperativeNtVoluntaryMicroBombImplant
-  name: micro-bomb implant
+  name: suspended tritium-trioxygen ignition implant
   categories: [ HideSpawnMenu ]
   components:
   - type: SubdermalImplant
@@ -35,6 +35,18 @@
     maxIntensity: 175
     canCreateVacuum: false
 
+- type: entity
+  parent: OrganHumanHead
+  id: KsOrganOperativeNtHead
+  name: faceless head
+  description: Holy shit, what the fuck?! The surface of the face is unusually smooth, except for two small depressions where the eyes would be.
+  components:
+  - type: Sprite
+    sprite: _KS14/Mobs/Species/Partial/OperativeNt/parts.rsi
+  - type: VisualOrgan
+    data:
+      sprite: _KS14/Mobs/Species/Partial/OperativeNt/parts.rsi
+
 ## Base
 - type: randomHumanoidSettings
   id: KsBaseOperativeNt
@@ -49,7 +61,7 @@
     - KsNanoTrasenOperative
 
   - type: NPCRetaliation # NT soldiers don't take kindly to friendly fire
-    attackMemoryLength: 15
+    attackMemoryLength: 45
     warnDuration: 1.75s
   - type: NpcRetaliationWarning
     distanceThresholdSq: 10.24 # 3.2 tiles
@@ -64,6 +76,54 @@
   - type: HTN
     rootTask:
       task: KsOperativeNtWrapperCombatCompound
+
+  # Body
+  - type: InitialBody # KS14: Re-arranged
+    organs:
+    - category: Head # head
+      entity: KsOrganOperativeNtHead
+      children:
+      # - category: Brain
+      #   entity: PotatoAIChip
+      - category: Ears
+        entity: OrganHumanEars
+
+    - category: Torso # torso
+      entity: OrganHumanTorso
+      children:
+      - category: Appendix
+        entity: OrganHumanAppendix
+      - category: Lungs
+        entity: OrganHumanLungs
+      - category: Heart
+        entity: OrganHumanHeart
+      - category: Stomach
+        entity: OrganHumanStomach
+      - category: Liver
+        entity: OrganHumanLiver
+      - category: Kidneys
+        entity: OrganHumanKidneys
+    - category: ArmLeft # arm
+      entity: OrganHumanArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganHumanHandLeft
+    - category: ArmRight # arm
+      entity: OrganHumanArmRight
+      children:
+      - category: HandRight
+        entity: OrganHumanHandRight
+    - category: LegLeft # leg
+      entity: OrganHumanLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganHumanFootLeft
+    - category: LegRight # leg
+      entity: OrganHumanLegRight
+      children:
+      - category: FootRight
+        entity: OrganHumanFootRight
+
 
 - type: randomHumanoidSettings
   parent: [ KsBaseOperativeNt, KsBaseOperative ]

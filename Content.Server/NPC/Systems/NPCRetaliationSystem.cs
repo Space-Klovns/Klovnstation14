@@ -36,7 +36,7 @@ public sealed partial /* KS14: Made partial */ class NPCRetaliationSystem : Enti
         if (args.Origin is not { } origin)
             return;
 
-        TryRetaliate(ent, origin);
+        RetaliateOnThrowerIfPossible(ent, origin, tryWarn: false); // KS14: TryRetaliate -> RetaliateOnThrowerIfPossible
     }
 
     private void OnDisarmed(Entity<NPCRetaliationComponent> ent, ref DisarmedEvent args)
