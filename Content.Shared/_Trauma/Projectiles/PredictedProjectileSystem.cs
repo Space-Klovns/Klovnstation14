@@ -157,8 +157,8 @@ public sealed class PredictedProjectileSystem : EntitySystem
                 _prototypeManager.Resolve(damageable.DamageModifierSetId, out targetDamageModifiers);
             }
 
-            multiplier = CalculateMultiplier(ev.Damage, targetDamageModifiers, damageRequired);
-            maxmultiplier = CalculateMultiplier(ev.Damage, targetDamageModifiers, comp.PenetrationThreshold-comp.PenetrationAmount);
+            multiplier = CalculateMultiplier(ev.Damage, targetDamageModifiers, damageRequired.Float());
+            maxmultiplier = CalculateMultiplier(ev.Damage, targetDamageModifiers, comp.PenetrationThreshold.Float()-comp.PenetrationAmount.Float());
             adjustedDamage = ev.Damage * FixedPoint2.Min(multiplier, maxmultiplier);
         }
         // KS14 - demonic penetrationcode end
@@ -218,7 +218,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
         }
 
         // If the object won't be destroyed, it "tanks" the penetration hit.
-        if (damageRequired - damage.GetTotal()*multiplier > FixedPoint2.New(1)) //KS14, ugly code accounting for inaccuracies
+        if (FixedPoint2.Abs(damageRequired - damage.GetTotal()) > FixedPoint2.New(1)) //KS14, ugly code accounting for inaccuracies
         {
             return false;
         }
@@ -249,86 +249,71 @@ public sealed class PredictedProjectileSystem : EntitySystem
     /// much damage would actually survive armor, then calculates the multiplier
     /// required to reach the requested final damage amount.
     /// </summary>
-    public static FixedPoint2 CalculateMultiplier(
-        DamageSpecifier damage,
-        DamageModifierSet? targetDamageModifiers,
-        FixedPoint2 targetDamage)
+    public static float CalculateMultiplier(
+    DamageSpecifier damage,
+    DamageModifierSet? modifierSet,
+    float requiredEffectiveDamage)
     {
-        if (targetDamage <= FixedPoint2.Zero)
-            return FixedPoint2.Zero;
+        if (requiredEffectiveDamage <= 0f)
+            return 0f;
 
-        FixedPoint2 effectiveDamage = FixedPoint2.Zero;
+        float effectivePerUnit = 0f;
 
-        foreach (var (damageType, baseDamage) in damage.DamageDict)
+        foreach (var (type, baseFp) in damage.DamageDict)
         {
-            if (baseDamage <= FixedPoint2.Zero)
+            float baseDamage = baseFp.Float();
+            if (baseDamage <= 0f)
                 continue;
 
-            // -------------------------
-            // Percentile mitigation
-            // -------------------------
-
-            // Coefficients are "damage taken" multipliers.
-            // 0.6 means the target takes 60% damage.
-            float damageCoefficient =
-                targetDamageModifiers?.Coefficients.TryGetValue(damageType, out var coeff) == true
-                    ? coeff
-                    : 1f;
-
-            // Penetration weakens the reduction portion, not the final coefficient.
-            float percentilePenetration =
-                damage.PercentilePenetration?.TryGetValue(damageType, out var pen) == true
-                    ? pen
-                    : 0f;
-
-            float reduction = 1f - damageCoefficient;
-            reduction *= 1f - percentilePenetration;
-
-            float finalCoefficient = 1f - reduction;
-
-            FixedPoint2 percentileDamage =
-                baseDamage * (FixedPoint2) finalCoefficient;
+            // If no modifier set exists, BOTH paths are identity.
+            float flatDamage = baseDamage;
+            float percentDamage = baseDamage;
 
             // -------------------------
-            // Flat mitigation
+            // FLAT path (ApplyModifierSet behavior)
             // -------------------------
-
-            float flatReduction =
-                targetDamageModifiers?.FlatReduction.TryGetValue(damageType, out var reductionValue) == true
-                    ? reductionValue
-                    : 0f;
-
-            float flatPenetration =
-                damage.FlatPenetration?.TryGetValue(damageType, out var penetrationValue) == true
-                    ? penetrationValue
-                    : 0f;
-
-            // Percentile penetration can also weaken flat armor.
-            if (!damage.disableCrossInteraction)
+            if (modifierSet != null &&
+                modifierSet.FlatReduction.TryGetValue(type, out var flatReduction))
             {
-                flatReduction *= 1f - percentilePenetration;
+                float flatPen = 0f;
+                float percentPen = 0f;
+
+                damage.FlatPenetration?.TryGetValue(type, out flatPen);
+                damage.PercentilePenetration?.TryGetValue(type, out percentPen);
+
+                if (!damage.disableCrossInteraction)
+                    flatReduction *= 1f - percentPen;
+
+                if (flatReduction > 0f)
+                    flatReduction = MathF.Max(0f, flatReduction - flatPen);
+                else
+                    flatReduction -= flatPen;
+
+                flatDamage = MathF.Max(0f, baseDamage - flatReduction);
             }
 
-            // Apply flat penetration.
-            if (flatReduction > 0f)
-                flatReduction = Math.Max(0f, flatReduction - flatPenetration);
-            else
-                flatReduction -= flatPenetration;
+            // -------------------------
+            // PERCENT path (ApplyModifierSet behavior)
+            // -------------------------
+            if (modifierSet != null &&
+                modifierSet.Coefficients.TryGetValue(type, out var coeff))
+            {
+                float percentReduction = 1f - coeff;
 
-            FixedPoint2 flatDamage =
-                FixedPoint2.Max(
-                    FixedPoint2.Zero,
-                    baseDamage - (FixedPoint2) flatReduction);
+                if (damage.PercentilePenetration?.TryGetValue(type, out var pen) == true)
+                    percentReduction *= 1f - pen;
 
-            // Match DamageSpecifier.ApplyModifierSet behavior:
-            // whichever mitigation path reduces damage more wins.
-            effectiveDamage += FixedPoint2.Min(flatDamage, percentileDamage);
+                percentDamage = baseDamage * (1f - percentReduction);
+            }
+
+            // EXACT behavior match: take the better mitigation result
+            effectivePerUnit += MathF.Min(flatDamage, percentDamage);
         }
 
-        if (effectiveDamage <= FixedPoint2.Zero)
-            return FixedPoint2.Zero;
+        if (effectivePerUnit <= 0f)
+            return 0f;
 
-        return targetDamage / effectiveDamage;
+        return requiredEffectiveDamage / effectivePerUnit;
     }
     //KS14 penetration demoncode end
 }
