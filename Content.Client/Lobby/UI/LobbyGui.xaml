@@ -8,6 +8,7 @@
     xmlns:style="clr-namespace:Content.Client.Stylesheets"
     xmlns:lobbyUi="clr-namespace:Content.Client.Lobby.UI"
     xmlns:info="clr-namespace:Content.Client.Info"
+    xmlns:viewport="clr-namespace:Content.Client.Viewport"
     xmlns:widgets="clr-namespace:Content.Client.UserInterface.Systems.Chat.Widgets">
     <!-- Background -->
     <TextureRect Access="Public"
@@ -15,6 +16,21 @@
                  HorizontalExpand="True"
                  Name="Background"
                  Stretch="KeepAspectCovered"/>
+
+    <!-- KS14: viewport -->
+    <BoxContainer Orientation="Vertical"
+                  HorizontalExpand="True"
+                  VerticalExpand="True"
+                  Name="KsViewportContainer">
+        <Control VerticalExpand="True"
+                 HorizontalExpand="True">
+            <viewport:ScalingViewport Name="KsViewport"
+                                      Access="Public"
+                                      MinSize="500 500"
+                                      MouseFilter="Ignore"/>
+        </Control>
+    </BoxContainer>
+
     <BoxContainer Name="MainContainer"
                   VerticalExpand="True"
                   HorizontalExpand="True"

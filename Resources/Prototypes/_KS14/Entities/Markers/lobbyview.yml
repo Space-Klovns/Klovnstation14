@@ -1,0 +1,15 @@
+- type: entity
+  parent: MarkerBase
+  id: KsLobbyViewMarker
+  name: lobby view marker
+  suffix: Only If You Know What You're Doing
+  components:
+  - type: Eye
+    zoom: 1,1
+    drawFov: false
+  - type: KsLobbyView
+    sizePixels: 4000,4000
+
+  - type: Sprite
+    layers:
+    - state: pink
