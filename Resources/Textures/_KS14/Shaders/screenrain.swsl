@@ -1,0 +1,74 @@
+uniform sampler2D SCREEN_TEXTURE;
+
+uniform lowp int drop_count;
+
+uniform highp vec2[32] drops_pos;
+uniform highp vec2[32] drops_data;
+// x = size
+// y = streak strength (also represents velocity magnitude from CPU gravity)
+
+uniform highp float distortion_strength = 0.32;
+
+void fragment()
+{
+    highp vec2 uv = UV;
+
+    highp vec2 distortion = vec2(0.0);
+
+    for (int i = 0; i < 32; i++)
+    {
+        if (i >= drop_count)
+            break;
+
+        highp vec2 pos = drops_pos[i];
+
+        highp float size = drops_data[i].x;
+        highp float streak = drops_data[i].y;
+
+        highp vec2 d = uv - pos;
+
+        highp float dist = length(d);
+
+        // droplet core
+        highp float drop =
+            1.0 - smoothstep(size * 0.55, size, dist);
+
+        if (drop <= 0.0)
+            continue;
+
+        // gravity-driven vertical bias (IMPORTANT)
+        highp vec2 gravityDir = vec2(0.0, 1.0);
+
+        // combine radial + gravity pull
+        highp vec2 dir =
+            normalize(d + gravityDir * (0.25 + streak));
+
+        // streak elongation based on velocity (CPU-driven gravity curve)
+        highp float stretch =
+            mix(0.6, 3.5, streak);
+
+        highp vec2 smear = vec2(
+            dir.x,
+            dir.y * stretch
+        );
+
+        // distance falloff (prevents whitening)
+        highp float falloff =
+            drop * (1.0 - dist / (size * 2.8));
+
+        distortion += smear * falloff * 0.018;
+    }
+
+    distortion *= distortion_strength;
+
+    highp vec4 col =
+        texture(SCREEN_TEXTURE, uv + distortion);
+
+    // subtle wet highlight (keep restrained)
+    highp float wet =
+        clamp(length(distortion) * 9.0, 0.0, 1.0);
+
+    col.rgb += wet * 0.035;
+
+    COLOR = col;
+}
