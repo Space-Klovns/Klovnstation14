@@ -80,7 +80,7 @@ public sealed class HitscanBasicRaycastSystem : EntitySystem
         };
 
         var attemptEvent = new AttemptHitscanRaycastFiredEvent { Data = data };
-        RaiseLocalEvent(ent, ref attemptEvent);
+        RaiseLocalEvent(ent, ref attemptEvent, broadcast: true /* KS14: Made this broadcasted */);
 
         if (attemptEvent.Cancelled)
             return;
