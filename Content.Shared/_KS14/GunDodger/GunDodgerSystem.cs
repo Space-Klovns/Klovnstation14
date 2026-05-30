@@ -1,4 +1,6 @@
 using System.Numerics;
+using Content.Shared._KS14.DodgingEffect;
+using Content.Shared._KS14.Random.Helpers;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Physics;
@@ -7,22 +9,22 @@ using Content.Shared.Projectiles;
 using Content.Shared.Throwing;
 using Content.Shared.Weapons.Hitscan.Events;
 using Content.Shared.Weapons.Ranged.Systems;
-using Robust.Shared.Network;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Random;
+using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.GunDodger;
 
 public sealed class GunDodgerSystem : EntitySystem
 {
-    [Dependency] private readonly IRobustRandom _robustRandom = default!;
-    [Dependency] private readonly INetManager _netManager = default!;
+    [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
     [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
     [Dependency] private readonly RayCastSystem _rayCastSystem = default!;
     [Dependency] private readonly ThrowingSystem _throwingSystem = default!;
     [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
+    [Dependency] private readonly DodgingEffectSystem _dodgingEffectSystem = default!;
 
     [Dependency] private readonly EntityQuery<GunDodgerComponent> _dodgerQuery = default!;
     [Dependency] private readonly EntityQuery<ProjectileComponent> _projectileQuery = default!;
@@ -97,17 +99,17 @@ public sealed class GunDodgerSystem : EntitySystem
 
         // only dodge perpendicularly to the shooting direction
         _popupSystem.PopupPredicted(Loc.GetString(PopupLocId, ("name", Identity.Name(dodgerEntity.Owner, EntityManager))), dodgerEntity, userUid, type: PopupType.Small);
+        _dodgingEffectSystem.AddEffect(dodgerEntity.Owner, TimeSpan.FromSeconds(0.01d), TimeSpan.FromSeconds(0.7d));
 
-        if (_netManager.IsServer)
-        {
-            // Has to be transformed because LocalNormal IS NOT ACTUALLY LOCAL
-            var invMatrix = _transformSystem.GetWorldMatrix(Transform(dodgerEntity.Owner).ParentUid);
-            localNormal = Vector2.TransformNormal(localNormal, invMatrix);
 
-            // random direction perpendicular to normal
-            var throwDirection = _robustRandom.Prob(0.5f) ? new Vector2(-localNormal.Y, localNormal.X) : new Vector2(localNormal.Y, -localNormal.X);
+        // Has to be transformed because LocalNormal IS NOT ACTUALLY LOCAL
+        var invMatrix = _transformSystem.GetWorldMatrix(Transform(dodgerEntity.Owner).ParentUid);
+        localNormal = Vector2.TransformNormal(localNormal, invMatrix);
 
-            _throwingSystem.TryThrow(dodgerEntity.Owner, throwDirection, baseThrowSpeed: dodgerEntity.Comp.ThrowSpeed, user: userUid, pushbackRatio: 0f, predicted: false);
-        }
+        // equal random direction perpendicular to normal
+        var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(KsSharedRandomExtensions.GetNetId(dodgerEntity.Owner, EntityManager), (int)_gameTiming.CurTick.Value);
+        var throwDirection = (predictedRandom.NextDouble() < 0.5d) ? new Vector2(-localNormal.Y, localNormal.X) : new Vector2(localNormal.Y, -localNormal.X);
+
+        _throwingSystem.TryThrow(dodgerEntity.Owner, throwDirection, baseThrowSpeed: dodgerEntity.Comp.ThrowSpeed, user: userUid, pushbackRatio: 0f, predicted: true);
     }
 }

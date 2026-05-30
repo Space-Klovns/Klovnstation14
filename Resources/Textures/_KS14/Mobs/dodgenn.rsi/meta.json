@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from https://github.com/tgstation/tgstation/ at commits 4f6190e2895e09116663ef282d3ce1d8b35c032e , 8024397cc81c5f47f74cf4279e35728487d0a1a7 , 5a73e8f825ff279e82949b9329783a9e3070e2da , d672aade35db25affc6ed5e1c7aa0b640f118d4c , 4f6190e2895e09116663ef282d3ce1d8b35c032e , and c838ba21dae97db345e0113f99596decd1d66039 . Modified and recolored by Nairodian (github)",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "icon",
+      "directions": 4
+    },
+    {
+      "name": "oof"
+    }
+  ]
+}
