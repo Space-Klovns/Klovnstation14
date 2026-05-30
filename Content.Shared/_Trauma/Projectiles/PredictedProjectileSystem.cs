@@ -274,8 +274,8 @@ public sealed class PredictedProjectileSystem : EntitySystem
             float percentileResistCoeff = 0f;
             if (modifierSet != null)
             {
-                modifierSet.FlatReduction.TryGetValue(type, out var flatReduction));
-                modifierSet.Coefficients.TryGetValue(type, out var percentileResistCoeff);
+                modifierSet.FlatReduction.TryGetValue(type, out flatReduction);
+                modifierSet.Coefficients.TryGetValue(type, out percentileResistCoeff);
             }
             float flatPen = 0f;
             float percentPen = 0f;
@@ -291,11 +291,11 @@ public sealed class PredictedProjectileSystem : EntitySystem
             sum2 += baseDamage;
 
             // sum 3
-            sum3 += baseDamage * (1f - percentileResistCoeff * (1f - percentPen))
+            sum3 += baseDamage * (1f - percentileResistCoeff * (1f - percentPen));
         }
 
-        float mulFlat = (baseDamage + sum1) / sum2;
-        float mulPerc = baseDamage / sum3;
+        float mulFlat = (requiredEffectiveDamage + sum1) / sum2;
+        float mulPerc = requiredEffectiveDamage / sum3;
 
         return Math.Max(mulFlat, mulPerc);
     }
