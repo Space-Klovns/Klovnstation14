@@ -257,7 +257,11 @@ public sealed class PredictedProjectileSystem : EntitySystem
         if (requiredEffectiveDamage <= 0f)
             return 0f;
 
-        float effectivePerUnit = 0f;
+        //Don't know how to name these. I'll try explain in comments what each one is, but I am bad at explaining.
+        //Basically I made equations out of all the damage specifier behaviors and solved for x and these sums are needed.
+        float sum1 = 0f; // sumof(flatdamagereductionperdamagetype*(1-percentilepenetrationperdamagetype) - flatpenetrationperdamagetype)
+        float sum2 = 0f; // sumof(damageperdamagetype)
+        float sum3 = 0f; // sumof(damageperdamagetype*(1-percentiledamagereductionperdamagetype*(1-percentilepentrationperdamagetype)))
 
         foreach (var (type, baseFp) in damage.DamageDict)
         {
@@ -265,55 +269,35 @@ public sealed class PredictedProjectileSystem : EntitySystem
             if (baseDamage <= 0f)
                 continue;
 
-            // If no modifier set exists, BOTH paths are identity.
-            float flatDamage = baseDamage;
-            float percentDamage = baseDamage;
-
-            // -------------------------
-            // FLAT path (ApplyModifierSet behavior)
-            // -------------------------
-            if (modifierSet != null &&
-                modifierSet.FlatReduction.TryGetValue(type, out var flatReduction))
+            // just assign things
+            float flatReduction = 0f;
+            float percentileResistCoeff = 0f;
+            if (modifierSet != null)
             {
-                float flatPen = 0f;
-                float percentPen = 0f;
-
-                damage.FlatPenetration?.TryGetValue(type, out flatPen);
-                damage.PercentilePenetration?.TryGetValue(type, out percentPen);
-
-                if (!damage.disableCrossInteraction)
-                    flatReduction *= 1f - percentPen;
-
-                if (flatReduction > 0f)
-                    flatReduction = MathF.Max(0f, flatReduction - flatPen);
-                else
-                    flatReduction -= flatPen;
-
-                flatDamage = MathF.Max(0f, baseDamage - flatReduction);
+                modifierSet.FlatReduction.TryGetValue(type, out var flatReduction));
+                modifierSet.Coefficients.TryGetValue(type, out var percentileResistCoeff);
             }
+            float flatPen = 0f;
+            float percentPen = 0f;
+            damage.FlatPenetration?.TryGetValue(type, out flatPen);
+            damage.PercentilePenetration?.TryGetValue(type, out percentPen);
 
-            // -------------------------
-            // PERCENT path (ApplyModifierSet behavior)
-            // -------------------------
-            if (modifierSet != null &&
-                modifierSet.Coefficients.TryGetValue(type, out var coeff))
-            {
-                float percentReduction = 1f - coeff;
+            // sum 1
+            if (!damage.disableCrossInteraction)
+                flatReduction *= 1f - percentPen;
+            sum1 += flatReduction - flatPen;
 
-                if (damage.PercentilePenetration?.TryGetValue(type, out var pen) == true)
-                    percentReduction *= 1f - pen;
+            // sum 2
+            sum2 += baseDamage;
 
-                percentDamage = baseDamage * (1f - percentReduction);
-            }
-
-            // EXACT behavior match: take the better mitigation result
-            effectivePerUnit += MathF.Min(flatDamage, percentDamage);
+            // sum 3
+            sum3 += baseDamage * (1f - percentileResistCoeff * (1f - percentPen))
         }
 
-        if (effectivePerUnit <= 0f)
-            return 0f;
+        float mulFlat = (baseDamage + sum1) / sum2;
+        float mulPerc = baseDamage / sum3;
 
-        return requiredEffectiveDamage / effectivePerUnit;
+        return Math.Max(mulFlat, mulPerc);
     }
     //KS14 penetration demoncode end
 }
