@@ -8,7 +8,7 @@ uniform highp vec2[32] drops_data;
 // y = velocity
 
 uniform highp float distortion_strength = 0.25;
-uniform highp float chroma_strength = 0.008;
+uniform highp float chroma_strength = 0.004;
 
 void fragment()
 {
