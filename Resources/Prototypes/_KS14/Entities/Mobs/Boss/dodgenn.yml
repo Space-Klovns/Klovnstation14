@@ -1,0 +1,141 @@
+- type: entity
+  parent: [ BaseSimpleMob, MobCombat, StripableInventoryBase ]
+  id: KsMobDodgenn
+  name: Albert Wesker
+  description: 7 minutes. 7 minutes is all I have to play with you.
+  components:
+  - type: Sprite
+    sprite: _KS14/Mobs/dodgenn.rsi
+    layers:
+    - map: ["enum.DamageStateVisualLayers.Base"]
+      state: icon
+  - type: MeleeWeapon
+    hidden: true
+    altDisarm: true
+    animation: WeaponArcKick
+    soundHit:
+      collection: GenericHit
+    damage:
+      types:
+        Blunt: 15
+  - type: MovementSpeedModifier
+    baseWalkSpeed : 3
+    baseSprintSpeed : 6
+
+  - type: Climbing
+  - type: SlowOnDamage
+    speedModifierThresholds:
+      60: 0.7
+      80: 0.5
+
+  - type: GunDodger
+
+  - type: Butcherable
+    butcheringType: Knife
+    spawned:
+    - id: KsClothingEyesGlassesDodgenn
+      amount: 1
+
+  - type: DamageStateVisuals
+    states:
+      Alive:
+        Base: icon
+      Critical:
+        Base: oof
+      Dead:
+        Base: oof
+
+  - type: JumpAbility
+    action: KsActionDodgennDash
+    canCollide: true
+    jumpDistance: 5
+    punishKnockdown: null
+    hitStaminaDamage: 40
+    collideKnockdown: 0
+    hitKnockdownDuration: 33
+    jumpSound:
+      path: /Audio/Weapons/punchmiss.ogg
+      params:
+        pitch: 0.9
+        volume: -2
+        variation: 0.05
+
+  - type: ComplexInteraction
+  - type: ContainerContainer
+  - type: ComplexShove # KS14: shove rework
+  - type: NpcFactionMember
+    factions:
+    - AllHostile
+
+  - type: Inventory
+    templateId: human
+  - type: Hands
+    hands:
+      right:
+        location: Right
+      left:
+        location: Left
+    sortedHands:
+    - right
+    - left
+
+  - type: Speech
+    speechSounds: Alto
+  - type: DamageForceSay
+  - type: Vocal
+    sounds:
+      Male: MaleHuman
+      Female: FemaleHuman
+      Unsexed: MaleHuman
+  - type: Emoting
+  - type: BodyEmotes
+    soundsId: GeneralBodyEmotes
+  - type: Grammar
+    attributes:
+      proper: true
+
+- type: entity
+  parent: BaseAction
+  id: KsActionDodgennDash
+  name: Dash
+  description: Dash in the direction you are moving.
+  components:
+  - type: Action
+    useDelay: 5
+    icon:
+      sprite: Interface/Actions/jump.rsi
+      state: icon
+  - type: InstantAction
+    event: !type:GravityJumpEvent
+      staminaCost: 10
+
+- type: entity
+  parent: ClothingEyesGlassesSunglasses
+  id: KsClothingEyesGlassesDodgenn
+  name: dodgenn mask
+  description: Gives you the ability to dodge bullets.
+  suffix: Boss Loot
+  components:
+  - type: Sprite
+    sprite: _KS14/Mobs/dodgenn.rsi
+    layers:
+    - state: icon
+      scale: 0.75,0.75
+      color: '#ffffff'
+      shader: Noir
+  - type: ClothingGrantComponent
+    component:
+    - type: GunDodger
+  - type: MovementIgnoreGravity
+    weightless: true
+  - type: FloatingVisuals
+    canFloat: true
+    animationTime: 0.1
+    offset: 0,0.5
+  - type: Clothing
+    sprite: _KS14/Mobs/dodgenn.rsi
+    clothingVisuals:
+      eyes:
+      - state: icon
+        color: '#ffffff'
+        shader: Noir
