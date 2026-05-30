@@ -263,3 +263,26 @@
   - KesslerSyndromeScheduler
   - SpaceTrafficControlEventScheduler
   - BasicRoundstartVariation
+
+- type: gamePreset
+  id: ScenarioCircular
+  alias:
+  - scenario
+  - scenario-circular
+  - circular
+  name: scenario-circular-title
+  description: scenario-circular-description
+  showInVote: true
+  rules:
+  - ScenarioCircular
+
+- type: gamePreset
+  id: ScenarioCanyon
+  alias:
+  - scenario-canyon
+  - canyon
+  name: scenario-canyon-title
+  description: scenario-canyon-description
+  showInVote: true
+  rules:
+  - ScenarioCanyon

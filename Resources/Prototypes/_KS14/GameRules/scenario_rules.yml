@@ -1,0 +1,40 @@
+# Scenario-based game rules with procedurally generated maps
+
+- type: entity
+  id: ScenarioCircular
+  parent: BaseGameRule
+  components:
+  - type: GameRule
+    minPlayers: 0
+  - type: ScenarioRule
+    mapShape: Circle
+    mapSize: 300
+    structures:
+      - proto: SyndicateListeningPost
+        randomLocation: false
+        coords: [0, 0]
+      - proto: SyndicateCrate
+        randomLocation: true
+      - proto: SyndicateCrate
+        randomLocation: true
+
+- type: entity
+  id: ScenarioCanyon
+  parent: BaseGameRule
+  components:
+  - type: GameRule
+    minPlayers: 0
+  - type: ScenarioRule
+    mapShape: Canyon
+    mapSize: 400
+    canyonWidth: 100
+    structures:
+      - proto: SyndicateListeningPost
+        randomLocation: false
+        coords: [200, 0]
+      - proto: SyndicateCrate
+        randomLocation: true
+      - proto: SyndicateCrate
+        randomLocation: true
+      - proto: SyndicateCrate
+        randomLocation: true
