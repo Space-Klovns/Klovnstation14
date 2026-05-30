@@ -2,3 +2,8 @@
   license: "CC0-1.0"
   copyright: "Created by `Fission9` on freesound.org, converted to Mono and .ogg for Klovnstation 14"
   source: "https://freesound.org/people/Fission9/sounds/521820/"
+
+- files: ["rain.ogg"]
+  license: "CC-BY-4.0"
+  copyright: "Taken from `Rain, Moderate, A.wav`, created by `InspectorJ (www.jshaw.co.uk)` on freesound.org, edited for Klovnstation 14"
+  source: "https://freesound.org/people/InspectorJ/sounds/401277/"

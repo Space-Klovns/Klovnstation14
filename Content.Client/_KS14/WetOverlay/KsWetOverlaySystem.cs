@@ -21,9 +21,9 @@ public sealed class KsWetOverlaySystem : EntitySystem
     private void OnDependenciesReady(IDependencyCollection dependencyCollection)
     {
         var overlay = new KsWetOverlay(_prototypeManager.Index(ShaderId).InstanceUnique());
+
         dependencyCollection.InjectDependencies(overlay, oneOff: true);
         _overlayManager.AddOverlay(overlay);
-        overlay.Init();
     }
 
     public override void Shutdown()

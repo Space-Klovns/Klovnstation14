@@ -3,3 +3,5 @@ ks-station-event-nightshift-end-announcement = Attention! As it is now day time,
 
 ks-station-event-nightshift-totalalert-start-announcement = Attention! Attention! Attention! The station is now in a state of total war. Prepare for the worst.
 ks-station-event-nightshift-totalalert-end-announcement = Attention! The station is no longer in a state of total war.
+
+ks-station-event-nightshift-totalalert2-start-announcement = Attention! The Central Command has approved a validhunting order. The passengers are advised to remain in brig during this time. Secoffs, HOS, and CMOs has been instructed to use ESP, ahelp, and validhunt.

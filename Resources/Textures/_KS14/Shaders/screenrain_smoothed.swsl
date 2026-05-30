@@ -7,8 +7,8 @@ uniform highp vec2[32] drops_data;
 // x = size
 // y = velocity
 
-uniform highp float distortion_strength = 0.25;
-uniform highp float chroma_strength = 0.008;
+uniform highp float distortion_strength = 0.4;
+uniform highp float chroma_strength = 0.005;
 
 void fragment()
 {
@@ -27,69 +27,49 @@ void fragment()
         highp vec2 pos = drops_pos[i];
 
         highp float size = drops_data[i].x;
-        highp float vel  = drops_data[i].y;
+        highp float vel = drops_data[i].y;
 
         highp vec2 d = uv - pos;
 
         highp float dist = length(d);
 
-        highp float radius = size * 1.7;
+        highp float radius = size * 1.2;
 
-        // ─────────────────────────────
-        // STABLE LENS MASK (NO WHITEOUT)
-        // ─────────────────────────────
+        // ✔ smooth droplet mask (NO hard inverse-square)
+        highp float drop =
+            exp(- (dist * dist) / (radius * radius));
 
-        highp float t =
-            smoothstep(radius, 0.0, dist);
-
-        if (t <= 0.001)
+        if (drop <= 0.001)
             continue;
 
         // ─────────────────────────────
-        // THICK WATER LENS MODEL
+        // MICRO-LENS (STABLE VERSION)
         // ─────────────────────────────
 
         highp vec2 radial =
             normalize(d + vec2(0.0001));
 
+        // velocity stretch axis
         highp vec2 vertical = vec2(0.0, 1.0);
 
-        // velocity shapes elongation only (NOT strength)
         highp float stretch =
-            mix(1.0, 3, vel);
+            mix(1.0, 2.5, vel);
 
-        highp float t2 = t * t;
-        highp float t3 = t2 * t;
-
-        // smooth bell curve (no singular center spike)
-        highp float core =
-            t2 * (3.0 - 2.5 * t);   // smoothstep-like easing
-
-        // soft rim falloff (no hard band)
-        highp float rim =
-            t3 * (1.0 - t);
-
-        // flatten center response (key fix)
-        highp float centerFlatten =
-            1.0 - smoothstep(0.0, 0.35, dist / radius);
-
-        // final lens shape
+        // ✔ smooth lens bulge (no singularity)
         highp float lens =
-            (core * 0.9) - (rim * 0.4);
+            drop * (1.0 - drop);
 
-        // damp center spike
-        lens *= mix(0.6, 1.0, centerFlatten);
-
-        // anisotropic deformation (streak direction)
+        // radial refraction (center bulge)
         highp vec2 lensOffset =
-            radial * lens * 0.8 +
-            vertical * lens * vel * 0.5;
+            radial * lens * 0.6;
 
-        // accumulate only direction for chroma
+        // vertical smear from velocity
+        lensOffset += vertical * lens * vel * 0.4;
+
         dir_accum += radial * vel;
         dir_weight += vel;
 
-        refracted_uv += lensOffset * distortion_strength * 0.06;
+        refracted_uv += lensOffset * distortion_strength * 0.08;
     }
 
     // ─────────────────────────────
@@ -122,11 +102,11 @@ void fragment()
     highp vec4 col =
         vec4(r, g, b, base.a);
 
-    // very restrained wet highlight (prevents washout)
+    // subtle wet highlight
     highp float wet =
-        clamp(length(refracted_uv - uv) * 6.0, 0.0, 1.0);
+        clamp(length(refracted_uv - uv) * 8.0, 0.0, 1.0);
 
-    col.rgb += wet * 0.025;
+    col.rgb += wet * 0.03;
 
     COLOR = col;
 }
