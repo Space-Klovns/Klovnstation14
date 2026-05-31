@@ -63,9 +63,12 @@ public sealed class GunDodgerSystem : EntitySystem
 
         var userTransformComponent = Transform(args.User);
         var fromPosition = _transformSystem.ToWorldPosition(args.FromCoordinates);
-        var toPosition = _transformSystem.ToWorldPosition(args.ToCoordinates);
 
-        var rayResults = _rayCastSystem.CastRayClosest(userTransformComponent.MapID, fromPosition, toPosition - fromPosition, DefaultQueryFilter);
+        var delta = _transformSystem.ToWorldPosition(args.ToCoordinates) - fromPosition;
+        Vector2Helpers.Normalize(ref delta);
+        delta *= 25f;
+
+        var rayResults = _rayCastSystem.CastRayClosest(userTransformComponent.MapID, fromPosition, delta, DefaultQueryFilter);
         if (rayResults.Results.Count == 0)
             return;
 

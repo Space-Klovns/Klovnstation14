@@ -10,7 +10,10 @@ public sealed class KsMirrorOverlaySystem : EntitySystem
     [Dependency] private readonly IOverlayManager _overlayManager = default!;
     [Dependency] private readonly SystemCollectionHookManager _systemCollectionHookManager = default!;
 
-    private static readonly ProtoId<ShaderPrototype> ShaderId = "KsMirror";
+    private static readonly ProtoId<ShaderPrototype> MirrorShaderId = "KsMirror";
+    private static readonly ProtoId<ShaderPrototype> WhiteShaderId = "KsWhite";
+    private static readonly ProtoId<ShaderPrototype> StencilMaskId = "StencilMask";
+    private static readonly ProtoId<ShaderPrototype> StencilDrawId = "StencilEqualDraw";
 
     public override void Initialize()
     {
@@ -20,7 +23,12 @@ public sealed class KsMirrorOverlaySystem : EntitySystem
 
     private void OnDependenciesReady(IDependencyCollection dependencyCollection)
     {
-        var overlay = new KsMirrorOverlay(_prototypeManager.Index(ShaderId).InstanceUnique());
+        var overlay = new KsMirrorOverlay(
+            _prototypeManager.Index(MirrorShaderId).InstanceUnique(),
+            _prototypeManager.Index(WhiteShaderId).InstanceUnique(),
+            _prototypeManager.Index(StencilMaskId).InstanceUnique(),
+            _prototypeManager.Index(StencilDrawId).InstanceUnique()
+        );
 
         dependencyCollection.InjectDependencies(overlay, oneOff: true);
         _overlayManager.AddOverlay(overlay);

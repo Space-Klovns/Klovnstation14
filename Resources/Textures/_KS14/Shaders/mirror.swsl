@@ -1,42 +1,11 @@
-uniform sampler2D SCREEN_TEXTURE;
-
-uniform highp float reflection_strength = 0.35;
-uniform highp float fade_start = 0.4; // where reflection begins (screen UV Y)
-
 void fragment()
 {
     highp vec2 uv = UV;
 
-    highp vec4 scene = texture(SCREEN_TEXTURE, uv);
+    // flip horizontally
+    uv.x = 1.0 - uv.x;
 
-    // ─────────────────────────────
-    // REFLECTION UV (flip vertically)
-    // ─────────────────────────────
-
-    highp vec2 refl_uv = uv;
-
-    refl_uv.y = 1.0 - uv.y;
-
-    // optional slight horizontal distortion (water-like)
-    refl_uv.x += sin(uv.y * 10.0) * 0.002;
-
-    highp vec4 reflection = texture(SCREEN_TEXTURE, refl_uv);
-
-    // ─────────────────────────────
-    // MASK: only bottom half reflects
-    // ─────────────────────────────
-
-    highp float mask =
-        smoothstep(fade_start, fade_start + 0.2, uv.y);
-
-    mask = 1.0 - mask;
-
-    // ─────────────────────────────
-    // COMPOSITE
-    // ─────────────────────────────
-
-    highp vec4 col =
-        mix(scene, reflection, mask * reflection_strength);
+    highp vec4 col = zTexture(uv);
 
     COLOR = col;
 }

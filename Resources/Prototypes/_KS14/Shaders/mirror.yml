@@ -1,4 +1,6 @@
+
+# Horizontally flips (mirrors) the input texture
 - type: shader
-  id: KsScreenRain
+  id: KsMirror
   kind: source
   path: "/Textures/_KS14/Shaders/mirror.swsl"

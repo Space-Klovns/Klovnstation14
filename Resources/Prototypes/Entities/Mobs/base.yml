@@ -55,6 +55,7 @@
   - type: MovementSpeedModifier
   - type: LagCompensation
   - type: AnimatedEmotes
+  - type: KsMirrorReflectable # KS14: reflective visuals
 
 
 - type: entity

@@ -579,7 +579,7 @@ public abstract partial class SharedDoorSystem : EntitySystem
             if (otherPhysics.Comp.CollisionLayer == (int)CollisionGroup.GlassLayer || otherPhysics.Comp.CollisionLayer == (int)CollisionGroup.GlassAirlockLayer || otherPhysics.Comp.CollisionLayer == (int)CollisionGroup.TableLayer)
                 continue;
 
-            if (otherPhysics.Comp.CollisionLayer == (int)CollisionGroup.AirlockLayer) // KS14: Check for AirlockLayer
+            if (((CollisionGroup)otherPhysics.Comp.CollisionLayer).HasFlag(CollisionGroup.GlassAirlockLayer)) // KS14: Check for AirlockLayer (AirlockLayer is a subset of GlassAirlockLayer)
                 continue;
 
             // Ignore low-passable entities.
