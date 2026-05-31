@@ -1,6 +1,6 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using Content.Client.Graphics;
-using Content.Shared._KS14.Mirror;
 using Content.Shared.Fluids.Components;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
@@ -10,8 +10,20 @@ using Robust.Shared.Graphics.RSI;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Utility;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
+using Color = Robust.Shared.Maths.Color;
+using Content.Shared.Atmos;
+using Content.Shared._KS14.Mirror;
+using System.Linq;
+//using CollectionExtensions = Robust.Shared.Utility.Extensions;
 
 namespace Content.Client._KS14.Mirror;
+
+/*
+    СПАСИ МЕНЯ
+*/
 
 public sealed class KsMirrorOverlay : Overlay
 {
@@ -27,7 +39,7 @@ public sealed class KsMirrorOverlay : Overlay
     [Dependency] private readonly SpriteSystem _spriteSystem = default!;
     [Dependency] private readonly EntityLookupSystem _entityLookupSystem = default!;
 
-    [Dependency] private readonly EntityQuery<PuddleComponent> _reflectorQuery = default!;
+    [Dependency] private readonly EntityQuery<KsMirrorReflectorComponent> _reflectorQuery = default!;
     [Dependency] private readonly EntityQuery<SpriteComponent> _spriteQuery = default!;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpaceEntities;
@@ -36,16 +48,20 @@ public sealed class KsMirrorOverlay : Overlay
     private static readonly Vector2 Vector2Point5 = new(0.5f, 0.5f);
     private static readonly Angle Angle180Deg = Angle.FromDegrees(180d);
 
-    private readonly RefList<TransientReflectDatum> _transientReflectData = [];
-
     private readonly OverlayResourceCache<CachedResources> _resources = new();
 
     public const int OverlayZIndex = (int)Shared.DrawDepth.DrawDepth.HighFloorObjects; // right above puddles, under everything else
     private const LookupFlags OverlayLookupFlags = LookupFlags.Approximate | LookupFlags.Dynamic | LookupFlags.Static | LookupFlags.Uncontained;
     public static readonly Color DrawColor = new(1f, 1f, 1f, a: 0.5f);
 
+    private Image<Rgba32> _transientImage = null!;
+    private readonly RefList<TransientReflectDatum> _transientReflectData = [];
     private readonly HashSet<Entity<SpriteComponent>> _reflectableEntities = [];
-    private readonly HashSet<Entity<PuddleComponent>> _stencilEntities = [];
+    private readonly HashSet<Entity<KsMirrorReflectorComponent>> _stencilEntities = [];
+    /// <summary>
+    ///     Cache of states and their offset.
+    /// </summary>
+    private readonly Dictionary<SpriteStateDatum, float> _textureSpriteOffsetCache = [];
     private List<Entity<MapGridComponent>> _grids = [];
     private List<(Entity<MapGridComponent> Entity, Box2 LocalAABB, Matrix3x2 WorldMatrix)> _gridCache = [];
 
@@ -57,6 +73,11 @@ public sealed class KsMirrorOverlay : Overlay
         _stencilDrawShader = stencilDrawShader;
 
         ZIndex = OverlayZIndex;
+    }
+
+    protected override bool BeforeDraw(in OverlayDrawArgs args)
+    {
+        return _entityManager.EntityQuery<KsMirrorReflectorComponent>().Any();
     }
 
     protected override void Draw(in OverlayDrawArgs args)
@@ -108,14 +129,25 @@ public sealed class KsMirrorOverlay : Overlay
 
             foreach (var entity in _reflectableEntities)
             {
+                var spriteComponent = entity.Comp;
+                if (!spriteComponent.Visible ||
+                    spriteComponent.DrawDepth < OverlayZIndex)
+                    continue;
+
                 if (_reflectorQuery.HasComponent(entity.Owner) ||
                     !transformQuery.TryGetComponent(entity.Owner, out var transformComponent))
                     continue;
 
-                var spriteComponent = entity.Comp;
-                var pixelSize = GetPixelSize(spriteComponent);
-                if (pixelSize == Vector2i.Zero)
-                    continue;
+                var pixelSize = Vector2i.Zero;
+                var animHash = 0;
+                foreach (var layer in spriteComponent.AllLayers)
+                {
+                    if (!layer.Visible)
+                        continue;
+
+                    pixelSize = Vector2i.ComponentMax(pixelSize, layer.PixelSize);
+                    animHash ^= layer.AnimationFrame ^ layer.Rsi?.GetHashCode() ?? layer.RsiState.GetHashCode();
+                }
 
                 var uid = entity.Owner;
 
@@ -126,6 +158,9 @@ public sealed class KsMirrorOverlay : Overlay
                 }
 
                 var worldMatrixRotation = worldMatrix.Rotation();
+                var worldEntRotation = worldMatrixRotation + transformComponent.LocalRotation;
+                animHash ^= (int)worldEntRotation.GetDir();
+
                 worldHandle.RenderInRenderTarget(mirrorTarget,
                     () =>
                     {
@@ -133,7 +168,7 @@ public sealed class KsMirrorOverlay : Overlay
                             uid,
                             pixelSize / Vector2Two,
                             spriteComponent.Scale,
-                            worldMatrixRotation + transformComponent.LocalRotation,
+                            worldEntRotation,
                             eyeRotation: eyeRotation,
                             sprite: spriteComponent,
                             xform: transformComponent,
@@ -141,9 +176,8 @@ public sealed class KsMirrorOverlay : Overlay
                         );
                     }, Color.Transparent);
 
-                var texture = mirrorTarget.Texture;
                 // Scan for first empty row starting from bottom
-                var firstEmptyRowIndex = FindFirstOccupiedRowFromBottom(texture);
+                var firstEmptyRowIndex = FindFirstDistanceFromOccupiedRowFromBottom(mirrorTarget, animHash);
 
                 var sum = transformComponent.LocalPosition;
                 var bounds = Box2.CenteredAround(
@@ -153,13 +187,16 @@ public sealed class KsMirrorOverlay : Overlay
 
                 ref var datum = ref _transientReflectData.AllocAdd();
                 datum.Matrix = worldMatrix;
-                datum.Texture = texture;
+                datum.Texture = mirrorTarget.Texture;
                 datum.Box = new Box2Rotated(bounds, Angle180Deg, new(bounds.Center.X, bounds.Bottom));
             }
         }
 
         if (_transientReflectData.Count == 0)
+        {
+            worldHandle.UseShader(null);
             return;
+        }
 
         var worldToScreenMatrix = viewport.RenderTarget.GetWorldToLocalMatrix(viewport.Eye!, scale);
 
@@ -188,6 +225,7 @@ public sealed class KsMirrorOverlay : Overlay
             }, Color.Transparent);
 
         // render reflections as stencil target
+        worldHandle.UseShader(null);
         worldHandle.RenderInRenderTarget(res.ReflectionTarget!,
             () =>
             {
@@ -211,26 +249,48 @@ public sealed class KsMirrorOverlay : Overlay
         worldHandle.UseShader(null);
     }
 
-    /// <returns>The index (y-coordinate) of the first non-empty row, starting from the bottom.</returns>
-    private static int FindFirstOccupiedRowFromBottom(Texture texture)
+    /// <returns>The index (y-coordinate), div by PixelsPerMeter, of the first non-empty row, starting from the bottom.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private float FindFirstDistanceFromOccupiedRowFromBottom(IRenderTexture renderTexture, int animHash)
     {
-        var width = texture.Size.X;
-        var height = texture.Size.Y;
+        // If i use normal index ([]) on texture it will use.. ~68% of cpu-time when rendering?
+        // CopyPixelsToMemory isn't very good either
+        // So, dict lookup here we go
 
-        for (var y = 0; y < height; y++)
+        var state = new SpriteStateDatum(renderTexture.Texture.Size, animHash);
+        if (!_textureSpriteOffsetCache.TryGetValue(state, out var cachedDist))
         {
-            for (var x = 0; x < width; x++)
-            {
-                var c = texture[x, y];
+            renderTexture.CopyPixelsToMemory<Rgba32>(image => _transientImage = image);
+            if (_transientImage == null)
+                return 0;
 
-                if (c.A <= 0.2f)
-                    return y;
+            var pixelSpan = _transientImage.GetPixelSpan();
+
+            cachedDist = 0f; // 0 is the default
+            var width = _transientImage.Width;
+            var height = _transientImage.Height;
+
+            Rgba32 rgba = default;
+            // Iterate backwards; we are going bottom to top
+            for (var i = pixelSpan.Length - 1; i > -1; i--)
+            {
+                pixelSpan[i].ToRgba32(ref rgba);
+
+                // If bright enough, return the inverse y-coordinate (because we are iterating upwards, not downwards)
+                if (rgba.A > 50)
+                {
+                    cachedDist = (float)(height - i / width) / EyeManager.PixelsPerMeter;
+                    break;
+                }
             }
+
+            _textureSpriteOffsetCache[state] = cachedDist;
         }
 
-        return 0;
+        return cachedDist;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector2i GetPixelSize(SpriteComponent spriteComponent)
     {
         var pixelSize = Vector2i.Zero;
@@ -272,6 +332,11 @@ public sealed class KsMirrorOverlay : Overlay
     }
 
     private record struct TransientReflectDatum(Matrix3x2 Matrix, Texture Texture, Box2Rotated Box);
+    private readonly record struct SpriteStateDatum(Vector2i Size, int Hash) : IEquatable<SpriteStateDatum>
+    {
+        public override int GetHashCode()
+            => HashCode.Combine(Size, Hash);
+    }
 
     private Texture GetLayerTexture(SpriteComponent spriteComponent, SpriteComponent.Layer layer, Angle rotation)
     {
