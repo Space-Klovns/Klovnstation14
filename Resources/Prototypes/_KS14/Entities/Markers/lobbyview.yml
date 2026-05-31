@@ -2,14 +2,25 @@
   parent: MarkerBase
   id: KsLobbyViewMarker
   name: lobby view marker
-  suffix: Only If You Know What You're Doing
+  suffix: NoFOV, Only If You Know What You're Doing
   components:
   - type: Eye
-    zoom: 1,1
+    zoom: 0.3,0.3
     drawFov: false
+  - type: ContentEye
+    maxZoom: 0.3,0.3
+    targetZoom: 0.3,0.3
   - type: KsLobbyView
-    sizePixels: 4000,4000
+    sizePixels: 2000,2000
 
   - type: Sprite
     layers:
     - state: pink
+
+- type: entity
+  parent: KsLobbyViewMarker
+  id: KsLobbyViewMarkerFov
+  suffix: W/FOV, Only If You Know What You're Doing
+  components:
+  - type: Eye
+    drawFov: true
