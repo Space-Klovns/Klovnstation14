@@ -18,7 +18,8 @@ public abstract class KsSharedLobbyViewSystem : EntitySystem
 
         while (eqe.MoveNext(out var uid, out var viewComponent, out var eyeComponent))
         {
-            if (viewComponent.Priority < best.Priority)
+            if (viewComponent.Priority < best.Priority ||
+                Terminating(uid))
                 continue;
 
             best = ((uid, viewComponent, eyeComponent), viewComponent.Priority);
