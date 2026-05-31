@@ -6,6 +6,8 @@
   components:
   - type: Sprite
     sprite: _KS14/Structures/catwalk.rsi
+  - type: Transform
+    noRot: true
 
 ## Iron
 - type: entity
@@ -50,3 +52,10 @@
   components:
   - type: Sprite
     state: iron_smooth
+  - type: ReplaceFloorOnSpawn
+    replaceableTiles:
+    - Plating
+    replacementTiles:
+    - KsPlatingIronSmooth
+    offsets:
+    - 0,0
