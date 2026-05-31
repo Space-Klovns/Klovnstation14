@@ -1,152 +1,140 @@
+import argparse
 from pathlib import Path
 from PIL import Image
 import numpy as np
 import random
-import math
-
-INPUT_DIR = Path(input("Enter input folder:"))
-OUTPUT_DIR = Path(input("Enter output folder:"))
 
 TILE_SIZE = 32
 VARIANTS = 8
 
-def add_blotches(arr):
+
+# -----------------------------
+# subtle luminance noise only
+# -----------------------------
+def add_micro_noise(arr, strength=7.0):
     h, w = arr.shape[:2]
 
-    for _ in range(random.randint(2, 5)):
-        cx = random.uniform(0, w)
-        cy = random.uniform(0, h)
+    noise = np.random.randn(h, w) * strength
 
-        radius = random.uniform(2.5, 8.0)
-        strength = random.uniform(-10, 10)
+    # apply equally to RGB (no chroma shift)
+    for c in range(3):
+        arr[:, :, c] += noise
 
-        y_min = max(0, int(cy - radius))
-        y_max = min(h, int(cy + radius + 1))
-
-        x_min = max(0, int(cx - radius))
-        x_max = min(w, int(cx + radius + 1))
-
-        for y in range(y_min, y_max):
-            for x in range(x_min, x_max):
-                if arr[y, x, 3] == 0:
-                    continue
-
-                dx = x - cx
-                dy = y - cy
-
-                dist = math.sqrt(dx * dx + dy * dy)
-
-                if dist > radius:
-                    continue
-
-                influence = 1.0 - dist / radius
-
-                arr[y, x, :3] = np.clip(
-                    arr[y, x, :3] + strength * influence,
-                    0,
-                    255
-                )
+    np.clip(arr, 0, 255, out=arr)
 
 
-def add_pixel_noise(arr):
+# -----------------------------
+# very mild "compression drift"
+# (block quantization simulation)
+# -----------------------------
+def block_quantize(arr, block=3, intensity=0.1):
     h, w = arr.shape[:2]
 
-    for _ in range(random.randint(15, 40)):
-        x = random.randrange(w)
-        y = random.randrange(h)
+    for by in range(0, h, block):
+        for bx in range(0, w, block):
+            patch = arr[by:by+block, bx:bx+block, :3]
 
-        if arr[y, x, 3] == 0:
-            continue
+            mean = patch.reshape(-1, 3).mean(axis=0)
 
-        delta = random.randint(-8, 8)
-
-        arr[y, x, :3] = np.clip(
-            arr[y, x, :3] + delta,
-            0,
-            255
-        )
+            # blend toward block mean slightly
+            patch[:] = patch * (1.0 - intensity) + mean * intensity
 
 
-def add_scratches(arr):
+# -----------------------------
+# tiny pixel jitter (subtle)
+# -----------------------------
+def micro_shift(arr):
     h, w = arr.shape[:2]
 
-    for _ in range(random.randint(1, 3)):
-        x = random.randrange(w)
-        y = random.randrange(h)
+    shifted = arr.copy()
 
-        length = random.randint(3, 10)
-
-        dx = random.choice((-1, 0, 1))
-        dy = random.choice((-1, 0, 1))
-
-        if dx == 0 and dy == 0:
-            dx = 1
-
-        strength = random.uniform(-12, 12)
-
-        for i in range(length):
-            px = x + dx * i
-            py = y + dy * i
-
-            if not (0 <= px < w and 0 <= py < h):
-                break
-
-            if arr[py, px, 3] == 0:
+    for y in range(h):
+        for x in range(w):
+            if arr[y, x, 3] == 0:
                 continue
 
-            arr[py, px, :3] = np.clip(
-                arr[py, px, :3] + strength,
-                0,
-                255
-            )
+            dx = random.choice([-1, 0, 1])
+            dy = random.choice([-1, 0, 1])
+
+            nx = min(max(x + dx, 0), w - 1)
+            ny = min(max(y + dy, 0), h - 1)
+
+            shifted[y, x] = arr[ny, nx]
+
+    return shifted
 
 
+# -----------------------------
+# variant generator
+# -----------------------------
 def make_variant(base):
-    arr = np.array(base, dtype=np.float32)
+    arr = np.array(base).astype(np.float32)
 
-    add_blotches(arr)
-    add_pixel_noise(arr)
-    add_scratches(arr)
+    # subtle structure-first jitter
+    # if random.random() < 0.5:
+    #     arr = micro_shift(arr)
+
+    # very light compression-like smoothing
+    block_quantize(arr, block=5, intensity=0.11)
+
+    # very subtle luminance noise (main effect)
+    add_micro_noise(arr, strength=1.65)
+
+    np.clip(arr, 0, 255, out=arr)
 
     return Image.fromarray(arr.astype(np.uint8), "RGBA")
 
 
-def process_file(path: Path):
-    image = Image.open(path).convert("RGBA")
+# -----------------------------
+# processing
+# -----------------------------
+def process_file(path: Path, out_dir: Path):
+    img = Image.open(path).convert("RGBA")
 
-    if image.size != (TILE_SIZE, TILE_SIZE):
-        print(f"Skipping {path.name}: expected 32x32, got {image.size}")
+    if img.size != (TILE_SIZE, TILE_SIZE):
+        print(f"Skipping {path.name}: not 32x32")
         return
 
-    sheet = Image.new(
-        "RGBA",
-        (TILE_SIZE * VARIANTS, TILE_SIZE)
-    )
+    sheet = Image.new("RGBA", (TILE_SIZE * VARIANTS, TILE_SIZE))
 
     for i in range(VARIANTS):
-        variant = image.copy() if i == 0 else make_variant(image)
+        if i == 0:
+            variant = img.copy()
+        else:
+            variant = make_variant(img)
 
-        sheet.paste(
-            variant,
-            (i * TILE_SIZE, 0)
-        )
+        sheet.paste(variant, (i * TILE_SIZE, 0))
 
-    output_path = OUTPUT_DIR / path.name
-    sheet.save(output_path)
+    out_path = out_dir / path.name
+    sheet.save(out_path)
 
     print(f"Processed {path.name}")
 
 
+# -----------------------------
+# CLI
+# -----------------------------
 def main():
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    parser = argparse.ArgumentParser()
 
-    for file in INPUT_DIR.iterdir():
+    parser.add_argument("--input", required=True, help="Input folder")
+    parser.add_argument("--output", required=True, help="Output folder")
+
+    args = parser.parse_args()
+
+    in_dir = Path(args.input)
+    out_dir = Path(args.output)
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    for file in in_dir.iterdir():
         if file.suffix.lower() != ".png":
             continue
 
-        process_file(file)
+        process_file(file, out_dir)
 
 
 if __name__ == "__main__":
     random.seed()
+    np.random.seed()
     main()
