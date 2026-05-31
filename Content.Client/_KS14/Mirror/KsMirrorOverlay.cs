@@ -276,7 +276,7 @@ public sealed class KsMirrorOverlay : Overlay
             {
                 pixelSpan[i].ToRgba32(ref rgba);
 
-                // If bright enough, return the inverse y-coordinate (because we are iterating upwards, not downwards)
+                // If bright enough, return the inverse y-coordinate (because we are iterating upwards, not downwards), and in metres
                 if (rgba.A > 50)
                 {
                     cachedDist = (float)(height - i / width) / EyeManager.PixelsPerMeter;
