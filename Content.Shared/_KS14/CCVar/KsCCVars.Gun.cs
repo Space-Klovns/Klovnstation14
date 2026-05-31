@@ -18,5 +18,5 @@ public sealed partial class KsCCVars
     /// </summary>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> GunPenetrationMinShots =
-        CVarDef.Create("klovn.gun.penetration_min_shots", 1f, CVar.SERVER | CVar.REPLICATED);
+        CVarDef.Create("klovn.gun.penetration_min_shots", 2f, CVar.SERVER | CVar.REPLICATED);
 }

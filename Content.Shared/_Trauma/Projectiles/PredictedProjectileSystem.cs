@@ -21,6 +21,7 @@ using Robust.Shared.Physics.Systems; // KS14
 using Robust.Shared.Configuration; // KS14
 using Robust.Shared.Prototypes; // KS14
 using Content.Shared._KS14.CCVar; // KS14
+using Robust.Shared.Log;
 
 namespace Content.Shared._Trauma.Projectiles;
 
@@ -254,6 +255,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
     DamageModifierSet? modifierSet,
     float requiredEffectiveDamage)
     {
+        Logger.Info($"calculating mul. required damage = {requiredEffectiveDamage}");
         if (requiredEffectiveDamage <= 0f)
             return 0f;
 
@@ -296,6 +298,10 @@ public sealed class PredictedProjectileSystem : EntitySystem
 
         float mulFlat = (requiredEffectiveDamage + sum1) / sum2;
         float mulPerc = requiredEffectiveDamage / sum3;
+
+        var totalDamFlat = mulFlat * damage;
+        var totalDamPerc = mulPerc * damage;
+        Logger.Info($"calculated muls. mul flat: {mulFlat} mul perc: {mulPerc} total damage flat {totalDamFlat.GetTotal()} total damage percentile {totalDamPerc.GetTotal()}");
 
         return Math.Max(mulFlat, mulPerc);
     }
