@@ -4,6 +4,6 @@ public static class KsIgnoredComponents
 {
     public static string[] List => [
         "DirectionalSpriteManipulation",
-        "KsWaveDistortionComponent"
+        "KsWaveDistortion"
     ];
 }
