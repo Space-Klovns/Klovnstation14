@@ -1,6 +1,4 @@
 using Content.Server._KS14.NPC.Components;
-using Content.Server.NPC.HTN;
-using Content.Server.NPC.Systems;
 using Content.Shared._KS14.NPC.Systems;
 using Content.Shared.Trigger;
 using Robust.Shared.Map;
@@ -10,8 +8,6 @@ namespace Content.Server._KS14.NPC.Systems;
 public sealed class NpcSensorSystem : SharedNpcSensorSystem
 {
     [Dependency] private readonly EntityLookupSystem _lookupSystem = default!;
-    [Dependency] private readonly NPCSystem _npcSystem = default!;
-    [Dependency] private readonly HTNSystem _htnSystem = default!;
 
     [Dependency] private readonly EntityQuery<NpcSensorsComponent> _sensorsQuery = default!;
 
