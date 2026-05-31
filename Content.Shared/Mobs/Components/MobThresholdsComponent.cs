@@ -47,6 +47,7 @@ public sealed partial class MobThresholdsComponent : Component
     [DataField("allowRevives")]
     public bool AllowRevives;
 
+    // KS14
     [DataField]
     public Dictionary<MobState, FixedPoint2> ThresholdAdjustments = [];
 }
