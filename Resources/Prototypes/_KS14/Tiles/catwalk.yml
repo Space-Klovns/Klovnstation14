@@ -1,0 +1,8 @@
+
+# Goes under KsCatwalkIronSmooth
+- type: tile
+  parent: Plating
+  id: KsPlatingIronSmooth
+  sprite: /Textures/_KS14/Tiles/iron_smooth_below.png
+  footstepSounds:
+    collection: FootstepHull
