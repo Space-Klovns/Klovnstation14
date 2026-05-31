@@ -51,3 +51,7 @@
           min: 1
         reagent: ChloralHydrate
         amount: -10
+
+      # Regen limbs looooll
+      - !type:RegenerateOrgans
+        maxRegenCount: 1
