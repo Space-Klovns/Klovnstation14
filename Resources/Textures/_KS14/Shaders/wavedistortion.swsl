@@ -1,0 +1,27 @@
+// The original version of this source code was ported from
+//     https://github.com/crystallpunk-14/crystall-punk-14/ at commit 5b6108377e40235c768be3ac6ffadb37a085f441
+
+preset raw;
+
+varying highp vec2 Pos;
+varying highp vec4 VtxModulate;
+
+uniform highp float speed = 3.0;
+uniform highp float dis = 10.0;
+uniform highp float offset = 0.0;
+
+void fragment() {
+    // Re-create base mvp
+    COLOR = zTexture(UV) * VtxModulate;
+}
+
+void vertex() {
+    vec2 pos = aPos;
+    pos.x += sin(TIME * speed + offset) * dis * (UV2.y - 1.0);
+    VERTEX = apply_mvp(pos);
+
+    Pos = (VERTEX + 1.0) / 2.0;
+    UV = mix(modifyUV.xy, modifyUV.zw, tCoord);
+    UV2 = tCoord2;
+    VtxModulate = zFromSrgb(modulate);
+}
