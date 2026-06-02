@@ -1,0 +1,15 @@
+- type: gameMap
+  id: TiderfallCanyon
+  mapName: 'Tiderfall (Canyon)'
+  mapPath: /Maps/_KS14/Scenarios/Tiderfall/tiderfallcanyon.yml
+  minPlayers: 0
+  maxPlayers: 30
+  stations:
+    TiderfallCanyon:
+      stationProto: ScenarioTiderfallCanyonGrids
+      components:
+        - type: StationNameSetup
+          mapNameTemplate: 'Tiderfall (you should not see this)'
+        - type: StationJobs
+          availableJobs: #tiders, testing
+            Passenger: [ -1, -1 ] #infinite, not counted

@@ -77,3 +77,11 @@
   components:
   - type: Sprite
     sprite: Structures/Doors/Airlocks/Standard/maint.rsi
+
+- type: entity
+  parent: TelecomServer
+  id: KsScenarioObjectiveSyndie
+  name: syndicate objective
+  description: This is a server that is of paramount importance to the syndicate. Would be a shame if someone broke it!
+  components:
+  - type: ScenarioObjective
