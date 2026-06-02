@@ -29,7 +29,7 @@ public sealed partial class KsZLevelSystem : EntitySystem
     /// <param name="zLevelEntity">Only valid if <see langword="true"/> is returned.</param>
     public bool TryGetStackFromDescendant(Entity<TransformComponent?> entity, [MaybeNullWhen(false)] out Entity<KsZLevelComponent> zLevelEntity, [MaybeNullWhen(false)] out KsZLevelStack stack)
     {
-        DebugTools.Assert(!HasComp<MapGridComponent>(entity), "`TryGetStackFromDescendant` was run on a map entity, did you mean to use TryGetStackFromMap instead?");
+        DebugTools.Assert(!HasComp<MapComponent>(entity), "`TryGetStackFromDescendant` was run on a map entity, did you mean to use TryGetStackFromMap instead?");
 
         if (!EntityManager.TransformQuery.Resolve(ref entity, logMissing: true) ||
             entity.Comp!.MapUid is not { } mapUid ||

@@ -197,7 +197,6 @@ namespace Content.Client.Viewport
                 // as this is ascending, and depth is 0-indexed; top-most one (last) will be 0
                 var depth = _mapsToIterate.Count - 1;
 
-                _zLevelEye.DrawFov = _eye.DrawFov;
                 _zLevelEye.DrawLight = _eye.DrawLight;
                 _zLevelEye.Offset = _eye.Offset;
                 _zLevelEye.Rotation = _eye.Rotation;
@@ -224,11 +223,13 @@ namespace Content.Client.Viewport
 
                     // clearcolor for all maps other than first is none
                     _viewport.ClearColor = null;
+                    _zLevelEye.DrawFov = false;
                 }
 
                 // default clearcolor is black
                 // yes if the very first frame ever is on a zlevel that isnt the deepest one, then yes one frame will unintentionally not clear
                 _viewport.ClearColor = Color.Black;
+                _zLevelEye.DrawFov = _eye.DrawFov;
                 return;
             }
             else
