@@ -1,20 +1,39 @@
 - type: entity
   id: ScenarioTiderfallCanyonGrids
-  abstract: true
+  categories: [ HideSpawnMenu ]
+  parent:
+    - BaseStation
+    - BaseStationNews
+    - BaseStationCargo
+    - BaseStationJobsSpawning
+    - BaseStationRecords
+    - BaseStationArrivals
+    - BaseStationGateway
+    - BaseStationCentcomm
+    - BaseStationEvacuation
+    - BaseStationAlertLevels
+    - BaseStationMagnet
+    - BaseStationExpeditions
+    - BaseStationSalvageJobs
+    - BaseStationSiliconLawAsimov
+    - BaseStationAllEventsEligible
+    - BaseStationNanotrasen
+    - BaseStationDeliveries
   components:
-    - type: GridSpawn
-      groups:
-        listeningpost: !type:GridSpawnGroup
-          maximumDistance: 1
-          paths:
-            - /Maps/_KS14/Grids/Scenarios/Tiderfall/listeningpost.yml
-        wreck: !type:GridSpawnGroup
-          minimumDistance: 80
-          maximumDistance: 80
-          paths:
-            - /Maps/_KS14/Grids/Scenarios/Tiderfall/wreck.yml
-        walls: !type:GridSpawnGroup
-          minimumDistance: 1
-          maximumDistance: 1
-          paths:
-            - /Maps/_KS14/Grids/Scenarios/canyonwalls.yml
+  - type: Transform
+  - type: GridSpawn
+    groups:
+      listeningpost: !type:GridSpawnGroup
+        maximumDistance: 1
+        paths:
+          - /Maps/_KS14/Grids/Scenarios/Tiderfall/listeningpost.yml
+      wreck: !type:GridSpawnGroup
+        minimumDistance: 80
+        maximumDistance: 80
+        paths:
+          - /Maps/_KS14/Grids/Scenarios/Tiderfall/wreck.yml
+      walls: !type:GridSpawnGroup
+        minimumDistance: 1
+        maximumDistance: 1
+        paths:
+          - /Maps/_KS14/Grids/Scenarios/canyonwalls.yml
