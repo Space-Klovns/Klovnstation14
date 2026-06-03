@@ -92,7 +92,7 @@ public sealed class KsAutoZLevelSystem : EntitySystem
 
         RemComp(entity.Owner, entity.Comp);
 
-        if (otherEntity.Comp != null)
+        if (Resolve(otherEntity, ref otherEntity.Comp, logMissing: false))
             RemComp(otherEntity.Owner, otherEntity.Comp);
     }
 }
