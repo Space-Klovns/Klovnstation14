@@ -4,8 +4,8 @@ meta:
   engineVersion: 275.2.0
   forkId: ""
   forkVersion: ""
-  time: 06/02/2026 20:39:59
-  entityCount: 3131
+  time: 06/03/2026 17:20:23
+  entityCount: 3133
 maps:
 - 1
 grids:
@@ -23,9 +23,9 @@ entities:
     components:
     - type: MetaData
       name: Map Entity
-    - type: BecomesStation
-      id: TiderfallCanyon
     - type: Transform
+    - type: BecomesStation
+      id: Tiderfall
     - type: Map
       mapPaused: True
     - type: GridTree
@@ -5074,6 +5074,10 @@ entities:
           Nitrogen: 82.10312
     - type: ExplosionAirtightGrid
     - type: RadiationGridResistance
+    - type: DecalGrid
+      chunkCollection:
+        version: 2
+        nodes: []
 - proto: FloorWaterEntity
   entities:
   - uid: 140
@@ -7111,6 +7115,23 @@ entities:
       anchored: True
       pos: 33.5,29.5
       parent: 1
+- proto: KsGridSpawnerMarkerGeneric
+  entities:
+  - uid: 3132
+    components:
+    - type: Transform
+      pos: -0.5,-0.5
+      parent: 1
+    - type: KsGridSpawner
+      path: /Maps/_KS14/Grids/Scenarios/tiderfall/listeningpost.yml
+  - uid: 3133
+    components:
+    - type: Transform
+      pos: 0.5,0.5
+      parent: 1
+    - type: KsGridSpawner
+      path: /Maps/_KS14/Grids/Scenarios/tiderfall/wreck.yml
+      spawnRange: 80,81
 - proto: WallRock
   entities:
   - uid: 2

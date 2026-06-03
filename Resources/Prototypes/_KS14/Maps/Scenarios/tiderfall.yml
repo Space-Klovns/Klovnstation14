@@ -1,12 +1,12 @@
 - type: gameMap
-  id: TiderfallCanyon
-  mapName: 'Tiderfall (Canyon)'
-  mapPath: /Maps/_KS14/Scenarios/Tiderfall/tiderfallcanyon.yml
+  id: Tiderfall
+  mapName: 'Tiderfall'
+  mapPath: /Maps/_KS14/Scenarios/Tiderfall/tiderfall.yml
   minPlayers: 0
   maxPlayers: 30
   stations:
     TiderfallCanyon:
-      stationProto: ScenarioTiderfallCanyonGrids
+      stationProto: ScenarioTiderfallStationProto
       components:
         - type: StationNameSetup
           mapNameTemplate: 'Tiderfall (you should not see this)'

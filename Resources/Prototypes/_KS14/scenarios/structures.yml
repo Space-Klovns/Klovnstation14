@@ -85,3 +85,13 @@
   description: This is a server that is of paramount importance to the syndicate. Would be a shame if someone broke it!
   components:
   - type: ScenarioObjective
+
+- type: entity
+  parent: MarkerBase
+  id: KsGridSpawnerMarkerGeneric
+  name: grid-spawner marker
+  description: This is for marking where grid spawners are. Add a KsGridSpawner component to this and set the path, and the grid will load here on mapinit.
+  suffix: VV me
+  components:
+  - type: Sprite
+    state: red
