@@ -105,6 +105,6 @@ public sealed class KsZLevelPhysicsSystem : EntitySystem
     public bool TryFall(Entity<TransformComponent?> entity)
     {
         entity.Comp ??= Transform(entity.Owner);
-        return TryFall(entity);
+        return Fall(entity!);
     }
 }
