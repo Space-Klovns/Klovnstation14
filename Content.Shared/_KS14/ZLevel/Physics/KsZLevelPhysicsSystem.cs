@@ -44,7 +44,7 @@ public sealed class KsZLevelPhysicsSystem : EntitySystem
             if (transformComponent.GridUid != args.ChangedGridIndex)
                 continue;
 
-            TryFall((uid, transformComponent), zLevelEntity: _zLevelSystem.GetZLevel((uid, transformComponent)));
+            Fall((uid, transformComponent), zLevelEntity: _zLevelSystem.GetZLevel((uid, transformComponent)));
         }
     }
 
@@ -70,7 +70,7 @@ public sealed class KsZLevelPhysicsSystem : EntitySystem
         TryFall((entity.Owner, Transform(entity)));
     }
 
-    public bool TryFall(Entity<TransformComponent> entity, Entity<KsZLevelComponent>? zLevelEntity = null)
+    public bool Fall(Entity<TransformComponent> entity, Entity<KsZLevelComponent>? zLevelEntity = null)
     {
         if (entity.Comp.MapID == MapId.Nullspace)
             return false;
