@@ -45,7 +45,7 @@ public sealed partial class KsZLevelSystem : EntitySystem
             migratingEntity.Comp.AssociatedStack = newStack;
 
             // look, im lazy OK?
-            migratingEntity.Comp.Node = newStack.Find(entity)!;
+            migratingEntity.Comp.Node = newStack.Find(migratingEntity)!;
             DebugTools.AssertNotNull(migratingEntity.Comp.Node);
         }
     }
