@@ -47,7 +47,7 @@ public sealed class KsAutoZLevelSystem : EntitySystem
             return;
         }
 
-        if (entity.Comp.Map is { } mapPath)
+        if (entity.Comp.MapPath is { } mapPath)
         {
             if (!_mapLoaderSystem.TryLoadMap(mapPath, out var mapEntity, out _, options: DeserializationOptions))
             {
@@ -58,8 +58,7 @@ public sealed class KsAutoZLevelSystem : EntitySystem
                 return;
             }
 
-            var zLevelComponent = EnsureComp<KsZLevelComponent>(mapEntity.Value);
-            LinkWith(entity, (mapEntity.Value, null, zLevelComponent));
+            LinkWith(entity, mapEntity.Value.Owner);
         }
         else
         {
@@ -75,19 +74,25 @@ public sealed class KsAutoZLevelSystem : EntitySystem
         }
     }
 
-    private void LinkWith(Entity<KsAutoZLevelComponent> entity, Entity<KsAutoZLevelComponent?, KsZLevelComponent?> otherEntity)
+    private void LinkWith(Entity<KsAutoZLevelComponent> entity, Entity<KsAutoZLevelComponent?> otherEntity)
     {
-        if (otherEntity.Comp1?.Location == entity.Comp.Location)
+        if (otherEntity.Comp?.Location == entity.Comp.Location)
             Log.Warning($"KsAutoZLevelType of auto z-levels {ToPrettyString(entity.Owner)} and {ToPrettyString(otherEntity.Owner)} is the same! The location of the z-levels relative to each other will be determined by update order.");
 
         if (entity.Comp.Location == KsAutoZLevelType.Above)
-            _zLevelSystem.AddZLevelDirectlyAbove((otherEntity.Owner, otherEntity.Comp2), entity.Owner);
+            _zLevelSystem.AddZLevelDirectlyAbove(
+                (otherEntity.Owner, EnsureComp<KsZLevelComponent>(otherEntity.Owner)),
+                (entity.Owner, EnsureComp<KsZLevelComponent>(entity.Owner))
+            );
         else
-            _zLevelSystem.AddZLevelDirectlyUnder((otherEntity.Owner, otherEntity.Comp2), entity.Owner);
+            _zLevelSystem.AddZLevelDirectlyUnder(
+                (otherEntity.Owner, EnsureComp<KsZLevelComponent>(otherEntity.Owner)),
+                (entity.Owner, EnsureComp<KsZLevelComponent>(entity.Owner))
+            );
 
         RemComp(entity.Owner, entity.Comp);
 
-        if (otherEntity.Comp1 != null)
-            RemComp(otherEntity.Owner, otherEntity.Comp1);
+        if (otherEntity.Comp != null)
+            RemComp(otherEntity.Owner, otherEntity.Comp);
     }
 }

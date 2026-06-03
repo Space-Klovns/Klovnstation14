@@ -1,4 +1,3 @@
-using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
 namespace Content.Server._KS14.ZLevel.Auto;
@@ -29,10 +28,10 @@ public sealed partial class KsAutoZLevelComponent : Component
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite)]
     [DataField]
-    public ResPath? Map = null;
+    public ResPath? MapPath = null;
 }
 
-[Serializable, NetSerializable]
+[Serializable]
 public enum KsAutoZLevelType : byte
 {
     /// <summary>
