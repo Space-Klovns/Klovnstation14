@@ -240,7 +240,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
     }
     // KS14 penetration demoncode start
     /// <summary>
-    /// Remember that wonderful armor system? yeah me too. This is what I need to do to make pen work with it.
+    /// Remember that wonderful armor system? Yeah, me too. This is what I need to do to make pen work with it.
     /// </summary>
     public float CalculateMultiplier(
     DamageSpecifier damage,
@@ -250,13 +250,11 @@ public sealed class PredictedProjectileSystem : EntitySystem
         Logger.Info($"calculating mul. required damage = {requiredEffectiveDamage}");
         if (requiredEffectiveDamage <= 0f)
             return 0f;
+        
+        if (modifierSet == null)
+            return damage.GetTotal().Float() / requiredEffectiveDamage;
 
-        //Don't know how to name these. I'll try explain in comments what each one is, but I am bad at explaining.
-        //Basically I made equations out of all the damage specifier behaviors and solved for x and these sums are needed.
-        float sum1 = 0f; // sumof(flatdamagereductionperdamagetype*(1-percentilepenetrationperdamagetype) - flatpenetrationperdamagetype)
-        float sum2 = 0f; // sumof(damageperdamagetype)
-        float sum3 = 0f; // sumof(damageperdamagetype*(1-percentiledamagereductionperdamagetype*(1-percentilepentrationperdamagetype)))
-
+        var numsPerDamType = Dict<ProtoId<DamageTypePrototype>, (float flatNum, float percNum)>();
         foreach (var (type, baseFp) in damage.DamageDict)
         {
             float baseDamage = baseFp.Float();
@@ -264,28 +262,21 @@ public sealed class PredictedProjectileSystem : EntitySystem
                 continue;
             Logger.Info($"damage got through, type: {type} value: {baseDamage}");
             // just assign things
-            float flatReduction = 0f;
-            float percentileResistCoeff = 0f;
-            if (modifierSet != null)
+            modifierSet.FlatReduction.TryGetValue(type, out var flatReduction);
+            modifierSet.Coefficients.TryGetValue(type, out var percentileResistCoeff);
+            damage.FlatPenetration?.TryGetValue(type, out var flatPen);
+            damage.PercentilePenetration?.TryGetValue(type, out var percentPen);
+
+            numsPerDamType[type] = (GetFlatNum(damage.disableCrossInteraction, flatReduction, percentPen, flatPen), GetPercNum(percentileResistCoeff, percentPen));
+        }
+        var breakpoints = GetBreakPoints(damage, modifierSet);
+        var intervalList = breakpoints.Values.ToList().Distinct().Order();
+        foreach (var intervalBreakPoint in intervalList)
+        {
+            foreach (var (type, baseFp) in damage.DamageDict)
             {
-                modifierSet.FlatReduction.TryGetValue(type, out flatReduction);
-                modifierSet.Coefficients.TryGetValue(type, out percentileResistCoeff);
+                
             }
-            float flatPen = 0f;
-            float percentPen = 0f;
-            damage.FlatPenetration?.TryGetValue(type, out flatPen);
-            damage.PercentilePenetration?.TryGetValue(type, out percentPen);
-
-            // sum 1
-            if (!damage.disableCrossInteraction)
-                flatReduction *= 1f - percentPen;
-            sum1 += flatReduction - flatPen;
-
-            // sum 2
-            sum2 += baseDamage;
-
-            // sum 3
-            sum3 += baseDamage * (1f -(1f - percentileResistCoeff) * (1f - percentPen));
         }
 
         float mulFlat = (requiredEffectiveDamage + sum1) / sum2;
@@ -297,9 +288,9 @@ public sealed class PredictedProjectileSystem : EntitySystem
 
         return Math.Max(mulFlat, mulPerc);
     }
-    private List<float> GetBreakPoints(DamageSpecifier damage, DamageModifierSet modifierSet)
+    private Dictionary<ProtoId<DamageTypePrototype>, float> GetBreakPoints(DamageSpecifier damage, DamageModifierSet modifierSet)
     {
-        List<float> breakpoints = [];
+        Dictionary<ProtoId<DamageTypePrototype>, float> breakpoints = new();
         foreach (var (type, baseFp) in damage.DamageDict)
         {
             float baseDamage = baseFp.Float();
@@ -317,9 +308,19 @@ public sealed class PredictedProjectileSystem : EntitySystem
             float percentPen = 0f;
             if (!damage.disableCrossInteraction)
                 flatReduction *= 1f - percentPen;
-            breakpoints.Append((flatReduction-flatPen)/(baseDamage*(1-(1-percentileResistCoeff)*(1-percentPen))));
+            breakpoints[type] = (flatReduction-flatPen)/(baseDamage*(1-(1-percentileResistCoeff)*(1-percentPen)));
         }
-        return breakpoints.Distinct().Order();
+        return breakpoints;
+    }
+    private float GetFlatNum(bool xInteraction, float flatResist, float percPen, float flatPen)
+    {
+        if (xInteraction == false)
+            return Math.Max(0, flatResist * (1 - percPen) - flatPen);
+        return Math.Max(0, flatResist - flatPen);
+    }
+    private float GetPercNum(float percResist, float percPen)
+    {
+        return 1 - (1 - percResist) * (1 - percPen);
     }
     //KS14 penetration demoncode end
 }
