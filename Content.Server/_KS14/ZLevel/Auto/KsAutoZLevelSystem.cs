@@ -65,7 +65,8 @@ public sealed class KsAutoZLevelSystem : EntitySystem
             var eqe = EntityQueryEnumerator<KsAutoZLevelComponent, MapComponent>();
             while (eqe.MoveNext(out var uid, out var component, out _))
             {
-                if (component.Id != entity.Comp.Id)
+                if (component.Id != entity.Comp.Id ||
+                    uid == entity.Owner)
                     continue;
 
                 LinkWith(entity, uid);

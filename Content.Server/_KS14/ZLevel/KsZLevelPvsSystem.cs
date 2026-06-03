@@ -25,8 +25,40 @@ public sealed class KsZLevelPvsSystem : EntitySystem
         SubscribeLocalEvent<PlayerDetachedEvent>(OnPlayerDetached);
 
         SubscribeLocalEvent<KsZLevelViewerComponent, ComponentShutdown>(OnViewerShutdown);
-
         SubscribeLocalEvent<KsZLevelViewSubscriberComponent, ComponentShutdown>(OnSubscriberShutdown);
+    }
+
+    private void OnPlayerAttached(PlayerAttachedEvent args)
+    {
+        var component = EntityManager.ComponentFactory.GetComponent<KsZLevelViewerComponent>();
+        component.Session = args.Player;
+        component.Active = false;
+        AddComp(args.Entity, component);
+    }
+
+    private void OnPlayerDetached(PlayerDetachedEvent args)
+    {
+        RemComp<KsZLevelViewerComponent>(args.Entity);
+    }
+
+    private void OnViewerShutdown(Entity<KsZLevelViewerComponent> entity, ref ComponentShutdown args)
+    {
+        if (entity.Comp.ViewSubscriberUid == EntityUid.Invalid)
+            return;
+
+        Del(entity.Comp.ViewSubscriberUid);
+    }
+
+    private void OnSubscriberShutdown(Entity<KsZLevelViewSubscriberComponent> entity, ref ComponentShutdown args)
+    {
+        if (Terminating(entity.Owner) ||
+            !TryComp<KsZLevelViewerComponent>(entity.Comp.ViewerUid, out var viewerComponent))
+            return;
+
+        _viewSubscriberSystem.RemoveViewSubscriber(entity.Owner, viewerComponent.Session);
+        viewerComponent.ViewSubscriberUid = EntityUid.Invalid;
+
+        RemComp(entity.Comp.ViewerUid, viewerComponent);
     }
 
     public override void Update(float frameTime)
@@ -44,7 +76,15 @@ public sealed class KsZLevelPvsSystem : EntitySystem
             if (viewerComponent.ViewSubscriberUid == EntityUid.Invalid ||
                 !_zLevelSystem.TryGetZLevel(viewerUid, out var zLevelEntity) ||
                 zLevelEntity.Value.Comp.Node.Previous is not { } previousZLevelNode)
+            {
+                if (viewerComponent.Active)
+                    RemoveActiveViewer((viewerUid, viewerComponent));
+
                 continue;
+            }
+
+            if (!viewerComponent.Active)
+                AddActiveViewer((viewerUid, viewerComponent), viewerComponent.Session);
 
             var position = _transformSystem.GetWorldPosition(viewerTransformComponent);
 
@@ -59,51 +99,26 @@ public sealed class KsZLevelPvsSystem : EntitySystem
         }
     }
 
-    private void OnPlayerAttached(PlayerAttachedEvent args)
+    private void AddActiveViewer(Entity<KsZLevelViewerComponent?> entity, ICommonSession session)
     {
-        AddViewer(args.Entity, args.Player);
-    }
+        entity.Comp ??= EnsureComp<KsZLevelViewerComponent>(entity.Owner);
 
-    private void OnPlayerDetached(PlayerDetachedEvent args)
-    {
-        RemoveViewer(args.Entity);
-    }
-
-    private void OnViewerShutdown(Entity<KsZLevelViewerComponent> entity, ref ComponentShutdown args)
-    {
-        if (entity.Comp.ViewSubscriberUid == EntityUid.Invalid)
-            return;
-
-        Del(entity.Comp.ViewSubscriberUid);
-    }
-
-    private void OnSubscriberShutdown(Entity<KsZLevelViewSubscriberComponent> entity, ref ComponentShutdown args)
-    {
-        if (!TryComp<KsZLevelViewerComponent>(entity.Comp.ViewerUid, out var viewerComponent))
-            return;
-
-        _viewSubscriberSystem.RemoveViewSubscriber(entity.Owner, viewerComponent.Session);
-        viewerComponent.ViewSubscriberUid = EntityUid.Invalid;
-
-        RemComp(entity.Comp.ViewerUid, viewerComponent);
-    }
-
-    private void AddViewer(EntityUid uid, ICommonSession session)
-    {
         var subscriberUid = Spawn(null);
         Transform(subscriberUid).GridTraversal = false; // You know exactly where this is from
         _viewSubscriberSystem.AddViewSubscriber(subscriberUid, session);
 
-        var component = EntityManager.ComponentFactory.GetComponent<KsZLevelViewerComponent>();
-        component.Session = session;
-        component.ViewSubscriberUid = subscriberUid;
-
-        AddComp(uid, component);
+        entity.Comp.Active = true;
+        entity.Comp.ViewSubscriberUid = subscriberUid;
     }
 
-    private void RemoveViewer(EntityUid uid)
+    private void RemoveActiveViewer(Entity<KsZLevelViewerComponent?> entity)
     {
-        // By extension also cleans up viewsubscriber
-        RemComp<KsZLevelViewerComponent>(uid);
+        if (!Resolve(entity, ref entity.Comp, logMissing: false))
+            return;
+
+        entity.Comp.Active = false;
+        Del(entity.Comp.ViewSubscriberUid);
+
+        entity.Comp.ViewSubscriberUid = EntityUid.Invalid;
     }
 }
