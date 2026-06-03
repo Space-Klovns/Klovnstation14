@@ -214,7 +214,7 @@ namespace Content.Client.Viewport
                     _viewport.RenderScreenOverlaysBelow(handle, this, drawBoxGlobal);
 
                     if (depth != 0)
-                        _clyde.BlurRenderTarget(_viewport, _viewport.RenderTarget, _zBlurBuffer, _zLevelEye, 5f);
+                        _clyde.BlurRenderTarget(_viewport, _viewport.RenderTarget, _zBlurBuffer, _zLevelEye, 2.5f);
 
                     handle.DrawingHandleScreen.DrawTextureRect(_viewport.RenderTarget.Texture, drawBox);
                     _viewport.RenderScreenOverlaysAbove(handle, this, drawBoxGlobal);
