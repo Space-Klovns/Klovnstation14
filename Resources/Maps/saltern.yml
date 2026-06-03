@@ -37775,6 +37775,8 @@ entities:
         - FloorSnow
         entities:
         - FloraTreeSnow
+        - FloraTreeConifer
+        - FloraTreeStumpConifer
       - !type:BiomeEntityLayer
         threshold: -0.3
         noise:

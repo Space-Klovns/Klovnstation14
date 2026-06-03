@@ -46,6 +46,10 @@ public sealed partial class MobThresholdsComponent : Component
     /// </summary>
     [DataField("allowRevives")]
     public bool AllowRevives;
+
+    // KS14
+    [DataField]
+    public Dictionary<MobState, FixedPoint2> ThresholdAdjustments = [];
 }
 
 [Serializable, NetSerializable]
@@ -63,13 +67,16 @@ public sealed class MobThresholdsComponentState : ComponentState
 
     public bool AllowRevives;
 
+    public Dictionary<MobState, FixedPoint2> ThresholdAdjustments; // KS14: ThresholdAdjustments
+
     public MobThresholdsComponentState(Dictionary<FixedPoint2, MobState> unsortedThresholds,
         bool triggersAlerts,
         MobState currentThresholdState,
         Dictionary<MobState,
         ProtoId<AlertPrototype>> stateAlertDict,
         bool showOverlays,
-        bool allowRevives)
+        bool allowRevives,
+        Dictionary<MobState, FixedPoint2> thresholdAdjustments /* KS14: ThresholdAdjustments */)
     {
         UnsortedThresholds = unsortedThresholds;
         TriggersAlerts = triggersAlerts;
@@ -77,5 +84,6 @@ public sealed class MobThresholdsComponentState : ComponentState
         StateAlertDict = stateAlertDict;
         ShowOverlays = showOverlays;
         AllowRevives = allowRevives;
+        ThresholdAdjustments = thresholdAdjustments; // KS14: ThresholdAdjustments
     }
 }

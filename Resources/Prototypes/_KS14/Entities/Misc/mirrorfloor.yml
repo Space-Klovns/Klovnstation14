@@ -1,0 +1,24 @@
+- type: entity
+  id: KsFloorMirrorEntity
+  name: reflective floor
+  description: Clean.
+  suffix: Probably Laggy
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Physics
+    bodyType: Static
+    canCollide: false
+  - type: Transform
+    anchored: true
+  - type: Sprite
+    sprite: Decals/Overlays/greyscale.rsi
+    drawdepth: Puddles
+    layers:
+    - sprite: Decals/Overlays/greyscale.rsi
+      state: fulltile_overlay
+      shader: unshaded
+  - type: Tag
+    tags:
+    - HideContextMenu
+  - type: KsMirrorReflector

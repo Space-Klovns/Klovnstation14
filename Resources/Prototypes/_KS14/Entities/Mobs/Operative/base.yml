@@ -1,0 +1,83 @@
+- type: randomHumanoidSettings
+  id: KsBaseOperative
+  abstract: true
+  speciesBlacklist:
+  - Vox
+  - Dwarf
+  components:
+  - type: NpcSensors
+  - type: NoSlip
+  - type: MovementSpeedModifier
+    baseSprintSpeed: 3.375
+    baseWalkSpeed: 1.875
+  - type: RandomHumanoidAppearance
+    randomizeName: false
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      100: Critical
+      101: Dead
+
+  - type: HTN
+    rootTask:
+      task: KsOperativeCombatCompound
+    blackboard:
+      ReloadActDelay: !type:Single
+        0
+      VisionRadius: !type:Single
+        17.5
+      AggroVisionRadius: !type:Single
+        25
+      CampingRange: !type:Single
+        0.5
+      CampingTime: !type:Single
+        25
+      AdvanceTime: !type:Single
+        30
+
+      IdleActTime: !type:Single
+        1
+      NavInteract: !type:Bool
+        true
+      NavPry: !type:Bool
+        false
+
+## Note that when KsBaseEliteOperative is inherited, it is common practice for it to take precedence over any other parents rn
+- type: randomHumanoidSettings
+  parent: KsBaseOperative
+  id: KsBaseEliteOperative
+  abstract: true
+  speciesBlacklist:
+  - Vox
+  - Dwarf
+  components:
+  - type: MovementSpeedModifier
+    baseSprintSpeed: 3.375
+    baseWalkSpeed: 1.875
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      140: Critical
+      150: Dead
+
+  - type: HTN
+    blackboard:
+      ReloadActDelay: !type:Single
+        0
+      VisionRadius: !type:Single
+        20
+      AggroVisionRadius: !type:Single
+        25
+      CampingRange: !type:Single
+        0.45
+      CampingTime: !type:Single
+        10
+      AdvanceTime: !type:Single # Elite ops are generally more aggressive
+        15
+
+      IdleActTime: !type:Single
+        1
+      NavInteract: !type:Bool
+        true
+      NavPry: !type:Bool
+        false

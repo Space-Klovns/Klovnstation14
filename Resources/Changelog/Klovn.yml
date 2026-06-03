@@ -1214,3 +1214,43 @@ Entries:
       message: Fixed fun!
   id: 131
   time: '2026-05-24T16:48:47.0000000+00:00'
+- author: 400lbwarrior
+  changes:
+    - type: Add
+      message: Greensticks now be grinded for uranium and hydrogen peroxide O ALGYX
+  id: 132
+  time: '2026-05-30T08:03:44.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: 7 minutes.
+  id: 133
+  time: '2026-05-30T16:09:36.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: Resprited most tiles.
+  id: 134
+  time: '2026-05-31T17:16:16.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed basilisks shooting beams of ice.
+    - type: Fix
+      message: Fixed some errors regarding organs.
+    - type: Add
+      message: Made trees move around.
+  id: 135
+  time: '2026-05-31T17:19:51.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Cryoxadone (under proper temperature) now regenerates limbs, and all
+        organs for that matter.
+    - type: Add
+      message: All sources of rejuvenation will now regenerate missing organs.
+    - type: Fix
+      message: Fixed klovnide not properly applying adjusted crit/death thresholds.
+  id: 136
+  time: '2026-05-31T19:01:27.0000000+00:00'

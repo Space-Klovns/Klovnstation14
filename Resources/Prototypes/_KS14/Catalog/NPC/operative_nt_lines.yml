@@ -1,0 +1,5 @@
+- type: localizedDataset
+  id: KsOperativeNtSacrifice
+  values:
+    prefix: ks-operative-nt-line-sacrifice-
+    count: 9

@@ -42,6 +42,7 @@ public sealed class KsShockwaveOverlay(ShaderInstance shader) : Overlay
             var tempCoords = args.Viewport.WorldToLocal(worldPosition);
 
             // normalized coords, 0 - 1 plane. This is pure hell, we subtract 1 because fragment calculates from the bottom and local goes from the top of the viewport
+            // TODO fix this
             tempCoords.Y = 1 - tempCoords.Y / args.Viewport.Size.Y;
             tempCoords.X /= args.Viewport.Size.X;
 

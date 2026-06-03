@@ -414,17 +414,23 @@ public abstract partial class SharedGunSystem : EntitySystem
 
             return false;
         }
+        else // KS14:/MNET: default to newNextFire
+            gun.Comp.NextFire = newNextFire;
 
         // MNET Start
         gun.Comp.LastShotWasEmpty = false;
 
         // TODO: explain why this is being done
-        var ammoEv = new GetAmmoCountEvent();
-        RaiseLocalEvent(gun.Owner, ref ammoEv);
+
+        // KS14: answered the 8-month-old todo: this doesn't need to be done and fucks up basilisks by making them shoot infinite death beams
+        //      thus, its all commented now
+
+        // var ammoEv = new GetAmmoCountEvent();
+        // RaiseLocalEvent(gun.Owner, ref ammoEv);
 
         // if we have no ammo then don't update NextFire, so we can do empty-fire effects immediately after running out of ammo, instead of waiting
-        if (ammoEv.Count > 0)
-            gun.Comp.NextFire = newNextFire;
+        // if (ammoEv.Count > 0)
+        //  gun.Comp.NextFire = newNextFire;
 
         // NextFire has been touched regardless so need to dirty the gun.
         DirtyFields(gun!, null, nameof(GunComponent.LastShotWasEmpty), nameof(GunComponent.NextFire));
@@ -448,8 +454,8 @@ public abstract partial class SharedGunSystem : EntitySystem
 
         // Shoot confirmed - sounds also played here in case it's invalid (e.g. cartridge already spent).
         Shoot(gun, ev.Ammo, fromCoordinates, toCoordinates.Value, out var userImpulse, user, throwItems: attemptEv.ThrowItems);
-        var shotEv = new GunShotEvent(user, ev.Ammo);
-        RaiseLocalEvent(gun, ref shotEv);
+        var shotEv = new GunShotEvent(user, ev.Ammo, fromCoordinates, toCoordinates.Value); // KS14: Added fromCoordinates and toCoordinates
+        RaiseLocalEvent(gun, ref shotEv, broadcast: true /* KS14: now broadcasted */);
 
         if (!userImpulse || !TryComp<PhysicsComponent>(user, out var userPhysics))
             return true;
@@ -937,7 +943,7 @@ public record struct AttemptShootEvent(EntityUid User, string? Message, bool Can
 /// </summary>
 /// <param name="User">The user that fired this gun.</param>
 [ByRefEvent]
-public record struct GunShotEvent(EntityUid User, List<(EntityUid? Uid, IShootable Shootable)> Ammo);
+public record struct GunShotEvent(EntityUid User, List<(EntityUid? Uid, IShootable Shootable)> Ammo, EntityCoordinates FromCoordinates /* KS14 Addition */, EntityCoordinates ToCoordinates /* KS14 Addition */);
 
 /// <summary>
 /// Raised on an entity after firing a gun to see if any components or systems would allow this entity to be pushed

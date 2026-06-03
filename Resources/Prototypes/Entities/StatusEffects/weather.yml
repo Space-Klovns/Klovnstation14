@@ -14,14 +14,15 @@
   id: WeatherRain
   components:
   - type: WeatherStatusEffect
+    ksRainDropletMax: 16 # KS14
     sprite:
       sprite: /Textures/Effects/weather.rsi
       state: rain
     sound:
-      collection: Rain
+      path: /Audio/_KS14/Effects/Weather/rain.ogg # KS14: Changed audio
       params:
         loop: true
-        volume: -6
+        volume: -5.8 # KS14: -6 -> -5.8
 
 - type: entity
   parent: WeatherBase
@@ -155,8 +156,8 @@
   components:
   - type: WeatherStatusEffect
     sprite:
-      sprite: /Textures/Effects/weather.rsi
-      state: snowfall_heavy
+      sprite: /Textures/_KS14/Effects/weather.rsi # KS14: `/Textures/Effects/weather.rsi` => `/Textures/_KS14/Effects/weather.rsi`
+      state: snow_storm # KS14: `snowfall_heavy` => `snow_storm`
     sound:
       path: /Audio/Effects/Weather/snowstorm.ogg
       params:
@@ -168,6 +169,7 @@
   id: WeatherStorm
   components:
   - type: WeatherStatusEffect
+    ksRainDropletMax: 40 # KS14
     sprite:
       sprite: /Textures/Effects/weather.rsi
       state: storm

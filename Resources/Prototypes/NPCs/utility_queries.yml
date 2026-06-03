@@ -77,7 +77,7 @@
       curve: !type:BoolCurve
     - !type:TargetDistanceCon
       curve: !type:PresetCurve
-        preset: NearbyGunsDistance # KS14: ANK: TargetDistance -> NearbyGunsDistance
+        preset: TargetDistance
     - !type:TargetAccessibleCon
       curve: !type:BoolCurve
 

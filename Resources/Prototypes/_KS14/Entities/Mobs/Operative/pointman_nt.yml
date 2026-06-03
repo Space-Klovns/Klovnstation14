@@ -6,27 +6,62 @@
   - Syndicate
   - Xeno
   - Zombie
-  - Revolutionary
+  #- Revolutionary
   - Dragon
   - AllHostile
   - Wizard
   - Xenoborg
 
+# Voluntarily-activated (not on death) microbomb implant with a bit more boom.
+- type: entity
+  parent: BaseSubdermalImplant
+  id: KsOperativeNtVoluntaryMicroBombImplant
+  name: suspended tritium-trioxygen ignition implant
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: SubdermalImplant
+    permanent: true
+    implantAction: ActionActivateMicroBomb
+  - type: TriggerOnActivateImplant
+  - type: GibOnTrigger
+    targetUser: true
+    deleteItems: true
+    doGibVisFx: false
+  - type: ExplodeOnTrigger
+  - type: Explosive
+    explosionType: MicroBomb
+    totalIntensity: 175
+    intensitySlope: 8
+    maxIntensity: 175
+    canCreateVacuum: false
+
+- type: entity
+  parent: OrganHumanHead
+  id: KsOrganOperativeNtHead
+  name: faceless head
+  description: Holy shit, what the fuck?! The surface of the face is unusually smooth, except for two small depressions where the eyes would be.
+  components:
+  - type: Sprite
+    sprite: _KS14/Mobs/Species/Partial/OperativeNt/parts.rsi
+  - type: VisualOrgan
+    data:
+      sprite: _KS14/Mobs/Species/Partial/OperativeNt/parts.rsi
+
 ## Base
 - type: randomHumanoidSettings
-  parent: KsBaseOperative
   id: KsBaseOperativeNt
+  abstract: true
   speciesBlacklist:
   - Vox
   - Dwarf
   components:
+  - type: KsFactionCollisionShooter
   - type: NpcFactionMember
     factions:
     - KsNanoTrasenOperative
-  - type: TtsVoice
-    id: en_US-john-medium
+
   - type: NPCRetaliation # NT soldiers don't take kindly to friendly fire
-    attackMemoryLength: 15
+    attackMemoryLength: 45
     warnDuration: 1.75s
   - type: NpcRetaliationWarning
     distanceThresholdSq: 10.24 # 3.2 tiles
@@ -35,21 +70,85 @@
     implants:
     - MindShieldImplant
     - DeathAcidifierImplant
+    - KsOperativeNtVoluntaryMicroBombImplant
   - type: AntagImmune
+
+  - type: HTN
+    rootTask:
+      task: KsOperativeNtWrapperCombatCompound
+
+  # Body
+  - type: InitialBody # KS14: Re-arranged
+    organs:
+    - category: Head # head
+      entity: KsOrganOperativeNtHead
+      children:
+      # - category: Brain
+      #   entity: PotatoAIChip
+      - category: Ears
+        entity: OrganHumanEars
+
+    - category: Torso # torso
+      entity: OrganHumanTorso
+      children:
+      - category: Appendix
+        entity: OrganHumanAppendix
+      - category: Lungs
+        entity: OrganHumanLungs
+      - category: Heart
+        entity: OrganHumanHeart
+      - category: Stomach
+        entity: OrganHumanStomach
+      - category: Liver
+        entity: OrganHumanLiver
+      - category: Kidneys
+        entity: OrganHumanKidneys
+    - category: ArmLeft # arm
+      entity: OrganHumanArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganHumanHandLeft
+    - category: ArmRight # arm
+      entity: OrganHumanArmRight
+      children:
+      - category: HandRight
+        entity: OrganHumanHandRight
+    - category: LegLeft # leg
+      entity: OrganHumanLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganHumanFootLeft
+    - category: LegRight # leg
+      entity: OrganHumanLegRight
+      children:
+      - category: FootRight
+        entity: OrganHumanFootRight
+
+
+- type: randomHumanoidSettings
+  parent: [ KsBaseOperativeNt, KsBaseOperative ]
+  id: KsOperativeNt
+  speciesBlacklist:
+  - Vox
+  - Dwarf
+  components:
+  - type: TtsVoice
+    id: en_US-john-medium
 
 - type: randomHumanoidSettings
   parent: [ KsBaseOperativeNt, KsBaseEliteOperative ]
-  id: KsBaseEliteOperativeNt
+  id: KsEliteOperativeNt
   speciesBlacklist:
   - Vox
   - Dwarf
   components:
   - type: TtsVoice
     id: en_GB-northern_english_male-medium
+##
 
 - type: startingGear
   parent: NanotrasenParamilitaryGear
-  id: KsBaseOperativeNtGear
+  id: KsOperativeNtGear
   equipment:
     mask: ClothingMaskGasSwat
     head: ClothingHeadHatBeretCommand
@@ -72,8 +171,8 @@
     - CombatMedipen
 
 - type: startingGear
-  parent: KsBaseOperativeNtGear
-  id: KsBaseEliteOperativeNtGear
+  parent: KsOperativeNtGear
+  id: KsEliteOperativeNtGear
   equipment:
     #neck: ClothingNeckCloakNanotrasen
     belt: ClothingBeltMilitaryWebbingERT
@@ -104,14 +203,14 @@
     settings: KsOperativeNtArmedPistol
 
 - type: randomHumanoidSettings
-  parent: KsBaseOperativeNt
+  parent: KsOperativeNt
   id: KsOperativeNtArmedPistol
   components:
   - type: Loadout
     prototypes: [ KsOperativeNtPistolGear ]
 
 - type: startingGear
-  parent: KsBaseOperativeNtGear
+  parent: KsOperativeNtGear
   id: KsOperativeNtPistolGear
   inhand:
   - WeaponPistolN1984
@@ -134,14 +233,14 @@
     settings: KsEliteOperativeNtArmedXL8
 
 - type: randomHumanoidSettings
-  parent: KsBaseEliteOperativeNt
+  parent: KsEliteOperativeNt
   id: KsEliteOperativeNtArmedXL8
   components:
   - type: Loadout
     prototypes: [ KsEliteOperativeNtXL8Gear ]
 
 - type: startingGear
-  parent: KsBaseEliteOperativeNtGear
+  parent: KsEliteOperativeNtGear
   id: KsEliteOperativeNtXL8Gear
   inhand:
   - KsWeaponRifleLecterXL8EliteOperative
@@ -217,14 +316,14 @@
     settings: KsEliteOperativeNtArmedMinigun
 
 - type: randomHumanoidSettings
-  parent: KsBaseEliteOperativeNt
+  parent: KsEliteOperativeNt
   id: KsEliteOperativeNtArmedMinigun
   components:
   - type: Loadout
     prototypes: [ KsEliteOperativeNtMinigunGear ]
 
 - type: startingGear
-  parent: KsBaseEliteOperativeNtGear
+  parent: KsEliteOperativeNtGear
   id: KsEliteOperativeNtMinigunGear
   inhand:
   - KsWeaponMinigunEliteOperative

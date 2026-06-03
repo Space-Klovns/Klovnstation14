@@ -318,6 +318,11 @@ public abstract partial class SharedStaminaSystem : EntitySystem
         var oldDamage = component.StaminaDamage;
         component.StaminaDamage = MathF.Max(0f, component.StaminaDamage + value);
 
+        // KS14: stamdmg event start
+        var ksDmgEv = new _KS14.Damage.Events.KsAfterStaminaDamageEvent((uid, component), source, with, component.StaminaDamage - oldDamage);
+        RaiseLocalEvent(uid, ref ksDmgEv);
+        // KS14: stamdmg event end
+
         // Reset the decay cooldown upon taking damage.
         if (oldDamage < component.StaminaDamage)
         {

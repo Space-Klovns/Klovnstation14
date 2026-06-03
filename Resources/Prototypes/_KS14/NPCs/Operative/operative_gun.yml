@@ -8,16 +8,14 @@
       operator: !type:UtilityOperator
         proto: KsNearbyGunTargets
 
+    # LastTargetCoords hasnt been copied yet so do this
+    - !type:HTNCompoundTask
+      task: KsOperativeAnnounceCombatCompound
+
     - !type:HTNPrimitiveTask # copy target coords
       operator: !type:CopyKeyOperator
         originKey: TargetCoordinates
         targetKey: LastTargetCoordinates
-
-    - !type:HTNPrimitiveTask # VOICELINE
-      operator: !type:SpeakOperator
-        cooldown: 5
-        speech: !type:LocalizedSetSpeakOperatorSpeech
-          lineSet: KsOperativeContact
 
     - !type:HTNPrimitiveTask # Set combat time
       operator: !type:SetTimeOperator
@@ -225,3 +223,17 @@
     curve: !type:BoolCurve
   - !type:TargetInLOSCon # InLOSOrCurrent -> InLOS
     curve: !type:BoolCurve
+
+- type: htnCompound
+  id: KsOperativeAnnounceCombatCompound
+  branches:
+  - preconditions:
+    - !type:KeyExistsPrecondition
+      key: LastTargetCoordinates
+      inverted: true
+    tasks:
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:SpeakOperator
+        cooldown: 5
+        speech: !type:LocalizedSetSpeakOperatorSpeech
+          lineSet: KsOperativeContact

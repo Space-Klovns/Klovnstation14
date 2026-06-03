@@ -36,12 +36,27 @@ public sealed class NpcSensorSystem : SharedNpcSensorSystem
         DoDisturbance(coordinates, entity.Comp.Radius);
     }
 
+    public void TryImmediatelyUpdatePlan(EntityUid uid)
+    {
+        // ack
+        // TODO LCDC: TODO ANK2: fix
+        // if (!TryComp<HTNComponent>(uid, out var htnComponent) ||
+        //     !htnComponent.Enabled ||
+        //     htnComponent.Planning ||
+        //     htnComponent.Plan is { })
+        //     return;
+
+        // _npcSystem.WakeNPC(uid, htnComponent);
+        // _htnSystem.Replan(htnComponent);
+    }
+
     public void AddEffect(Entity<NpcSensorsComponent?> entity, string key, object value)
     {
         if (!_sensorsQuery.Resolve(entity.Owner, ref entity.Comp))
             return;
 
         entity.Comp.AggregatedEffects[key] = value;
+        TryImmediatelyUpdatePlan(entity.Owner);
     }
 
     public void AddEffects(Entity<NpcSensorsComponent?> entity, IEnumerable<(string, object)> effects)
@@ -51,6 +66,8 @@ public sealed class NpcSensorSystem : SharedNpcSensorSystem
 
         foreach (var (key, value) in effects)
             entity.Comp.AggregatedEffects[key] = value;
+
+        TryImmediatelyUpdatePlan(entity.Owner);
     }
 
     public void AddEffects(Entity<NpcSensorsComponent?> entity, Dictionary<string, object> effects)
@@ -60,6 +77,8 @@ public sealed class NpcSensorSystem : SharedNpcSensorSystem
 
         foreach (var (key, value) in effects)
             entity.Comp.AggregatedEffects[key] = value;
+
+        TryImmediatelyUpdatePlan(entity.Owner);
     }
 
     public override void DoDisturbance(EntityCoordinates coordinates, float radius, EntityUid? source = null)

@@ -1,3 +1,6 @@
+[![Build & Test Debug](https://github.com/Space-Klovns/Klovnstation14/actions/workflows/build-test-debug.yml/badge.svg)](https://github.com/Space-Klovns/Klovnstation14/actions/workflows/build-test-debug.yml)
+[![YAML Linter](https://github.com/Space-Klovns/Klovnstation14/actions/workflows/yaml-linter.yml/badge.svg)](https://github.com/Space-Klovns/Klovnstation14/actions/workflows/yaml-linter.yml)
+
 Klovnstation 14 _(KS14)_ is a fork of [Space Station 14](https://github.com/space-wizards/space-station-14).
 [Our discord server.](https://discord.gg/rSjZ48VnMx)
 We use the [Robust Toolbox engine](https://github.com/space-wizards/RobustToolbox).

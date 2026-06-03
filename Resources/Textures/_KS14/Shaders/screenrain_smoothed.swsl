@@ -1,0 +1,112 @@
+uniform sampler2D SCREEN_TEXTURE;
+
+uniform lowp int drop_count;
+
+uniform highp vec2[32] drops_pos;
+uniform highp vec2[32] drops_data;
+// x = size
+// y = velocity
+
+uniform highp float distortion_strength = 0.4;
+uniform highp float chroma_strength = 0.005;
+
+void fragment()
+{
+    highp vec2 uv = UV;
+
+    highp vec2 refracted_uv = uv;
+
+    highp vec2 dir_accum = vec2(0.0);
+    highp float dir_weight = 0.0;
+
+    for (int i = 0; i < 32; i++)
+    {
+        if (i >= drop_count)
+            break;
+
+        highp vec2 pos = drops_pos[i];
+
+        highp float size = drops_data[i].x;
+        highp float vel = drops_data[i].y;
+
+        highp vec2 d = uv - pos;
+
+        highp float dist = length(d);
+
+        highp float radius = size * 1.2;
+
+        // ✔ smooth droplet mask (NO hard inverse-square)
+        highp float drop =
+            exp(- (dist * dist) / (radius * radius));
+
+        if (drop <= 0.001)
+            continue;
+
+        // ─────────────────────────────
+        // MICRO-LENS (STABLE VERSION)
+        // ─────────────────────────────
+
+        highp vec2 radial =
+            normalize(d + vec2(0.0001));
+
+        // velocity stretch axis
+        highp vec2 vertical = vec2(0.0, 1.0);
+
+        highp float stretch =
+            mix(1.0, 2.5, vel);
+
+        // ✔ smooth lens bulge (no singularity)
+        highp float lens =
+            drop * (1.0 - drop);
+
+        // radial refraction (center bulge)
+        highp vec2 lensOffset =
+            radial * lens * 0.6;
+
+        // vertical smear from velocity
+        lensOffset += vertical * lens * vel * 0.4;
+
+        dir_accum += radial * vel;
+        dir_weight += vel;
+
+        refracted_uv += lensOffset * distortion_strength * 0.08;
+    }
+
+    // ─────────────────────────────
+    // CHROMATIC ABERRATION (UNCHANGED)
+    // ─────────────────────────────
+
+    highp vec2 dir =
+        (dir_weight > 0.0)
+        ? normalize(dir_accum / dir_weight)
+        : vec2(0.0, 1.0);
+
+    highp float chroma =
+        clamp(dir_weight * 0.15, 0.0, 1.0);
+
+    highp vec2 chromaOffset =
+        dir * chroma * chroma_strength;
+
+    highp vec4 base =
+        texture(SCREEN_TEXTURE, refracted_uv);
+
+    highp float r =
+        texture(SCREEN_TEXTURE, refracted_uv + chromaOffset).r;
+
+    highp float g =
+        texture(SCREEN_TEXTURE, refracted_uv).g;
+
+    highp float b =
+        texture(SCREEN_TEXTURE, refracted_uv - chromaOffset).b;
+
+    highp vec4 col =
+        vec4(r, g, b, base.a);
+
+    // subtle wet highlight
+    highp float wet =
+        clamp(length(refracted_uv - uv) * 8.0, 0.0, 1.0);
+
+    col.rgb += wet * 0.03;
+
+    COLOR = col;
+}

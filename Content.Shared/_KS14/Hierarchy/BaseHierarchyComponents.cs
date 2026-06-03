@@ -9,6 +9,7 @@ public interface IHierarchyComponent
 {
     /// <summary>
     ///     All entities that are parented to or under this entity.
+    ///         This will be null if the element is being terminated and thus should not be accessed.
     /// </summary>
     List<EntityUid> RecursiveChildUids { get; set; }
 
@@ -27,6 +28,7 @@ public interface IHierarchyElementComponent
 
     /// <summary>
     ///     Entities that are only directly parented to this entity, and no further below.
+    ///         This will be null if the element is being terminated and thus should not be accessed.
     /// </summary>
     HashSet<EntityUid> ChildUids { get; set; }
 

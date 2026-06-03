@@ -1,0 +1,61 @@
+
+- type: entity
+  parent: BaseCatwalkUnIconsmoothed
+  id: KsBaseCatwalk
+  abstract: true
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/catwalk.rsi
+  - type: Transform
+    noRot: true
+
+## Iron
+- type: entity
+  parent: KsBaseCatwalk
+  id: KsCatwalkIron
+  name: iron catwalk
+  components:
+  - type: Sprite
+    state: iron
+
+- type: entity
+  parent: KsBaseCatwalk
+  id: KsCatwalkIronWhite
+  name: white iron catwalk
+  components:
+  - type: Sprite
+    state: iron_white
+
+- type: entity
+  parent: KsBaseCatwalk
+  id: KsCatwalkIronDark
+  name: dark iron catwalk
+  components:
+  - type: Sprite
+    state: iron_dark
+
+## Titanium
+
+- type: entity
+  parent: KsBaseCatwalk
+  id: KsCatwalkTitanium
+  name: titanium catwalk
+  components:
+  - type: Sprite
+    state: titanium
+
+## Smoothiron
+- type: entity
+  parent: KsBaseCatwalk
+  id: KsCatwalkIronSmooth
+  name: smooth-iron catwalk
+  components:
+  - type: Sprite
+    state: iron_smooth
+  - type: ReplaceFloorOnSpawn
+    replaceableTiles:
+    - Plating
+    replacementTiles:
+    - KsPlatingIronSmooth
+    offsets:
+    - 0,0

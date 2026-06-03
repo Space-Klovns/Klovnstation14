@@ -1,0 +1,1089 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from https://github.com/tgstation/tgstation/ at commit 54f4501c135c17067a1040d0be178488be348f53",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "noop"
+    },
+    {
+      "name": "plating"
+    },
+    {
+      "name": "floor"
+    },
+    {
+      "name": "floor_edge",
+      "directions": 4
+    },
+    {
+      "name": "floor_half",
+      "directions": 4
+    },
+    {
+      "name": "floor_corner",
+      "directions": 4
+    },
+    {
+      "name": "floor_large"
+    },
+    {
+      "name": "small"
+    },
+    {
+      "name": "diagonal"
+    },
+    {
+      "name": "herringbone"
+    },
+    {
+      "name": "darkfull"
+    },
+    {
+      "name": "dark_edge",
+      "directions": 4
+    },
+    {
+      "name": "dark_half",
+      "directions": 4
+    },
+    {
+      "name": "dark_corner",
+      "directions": 4
+    },
+    {
+      "name": "dark_large"
+    },
+    {
+      "name": "dark_small"
+    },
+    {
+      "name": "dark_diagonal"
+    },
+    {
+      "name": "dark_herringbone"
+    },
+    {
+      "name": "checker",
+      "directions": 4
+    },
+    {
+      "name": "dark",
+      "directions": 8
+    },
+    {
+      "name": "darkcorner",
+      "directions": 4
+    },
+    {
+      "name": "white"
+    },
+    {
+      "name": "white_edge",
+      "directions": 4
+    },
+    {
+      "name": "white_half",
+      "directions": 4
+    },
+    {
+      "name": "white_corner",
+      "directions": 4
+    },
+    {
+      "name": "white_large"
+    },
+    {
+      "name": "white_small"
+    },
+    {
+      "name": "white_diagonal"
+    },
+    {
+      "name": "white_herringbone"
+    },
+    {
+      "name": "cafeteria",
+      "directions": 4
+    },
+    {
+      "name": "whitehall",
+      "directions": 8
+    },
+    {
+      "name": "whitecorner",
+      "directions": 4
+    },
+    {
+      "name": "textured"
+    },
+    {
+      "name": "textured_edge",
+      "directions": 4
+    },
+    {
+      "name": "textured_half",
+      "directions": 4
+    },
+    {
+      "name": "textured_corner",
+      "directions": 4
+    },
+    {
+      "name": "textured_large"
+    },
+    {
+      "name": "textured_dark"
+    },
+    {
+      "name": "textured_dark_edge",
+      "directions": 4
+    },
+    {
+      "name": "textured_dark_half",
+      "directions": 4
+    },
+    {
+      "name": "textured_dark_corner",
+      "directions": 4
+    },
+    {
+      "name": "textured_dark_large"
+    },
+    {
+      "name": "textured_white"
+    },
+    {
+      "name": "textured_white_edge",
+      "directions": 4
+    },
+    {
+      "name": "textured_white_half",
+      "directions": 4
+    },
+    {
+      "name": "textured_white_corner",
+      "directions": 4
+    },
+    {
+      "name": "textured_white_large"
+    },
+    {
+      "name": "smooth"
+    },
+    {
+      "name": "smooth_edge",
+      "directions": 4
+    },
+    {
+      "name": "smooth_half",
+      "directions": 4
+    },
+    {
+      "name": "smooth_corner",
+      "directions": 4
+    },
+    {
+      "name": "smooth_large"
+    },
+    {
+      "name": "plastic"
+    },
+    {
+      "name": "materialfloor"
+    },
+    {
+      "name": "freezer"
+    },
+    {
+      "name": "freezer_edge",
+      "directions": 4
+    },
+    {
+      "name": "freezer_half",
+      "directions": 4
+    },
+    {
+      "name": "freezer_corner",
+      "directions": 4
+    },
+    {
+      "name": "freezer_large"
+    },
+    {
+      "name": "showroomfloor"
+    },
+    {
+      "name": "terracotta"
+    },
+    {
+      "name": "terracotta_small"
+    },
+    {
+      "name": "terracotta_diagonal"
+    },
+    {
+      "name": "terracotta_herringbone"
+    },
+    {
+      "name": "kitchen"
+    },
+    {
+      "name": "kitchen_small"
+    },
+    {
+      "name": "kitchen_diagonal"
+    },
+    {
+      "name": "kitchen_herringbone"
+    },
+    {
+      "name": "sepia"
+    },
+    {
+      "name": "bluespace",
+      "delays": [
+        [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      ]
+    },
+    {
+      "name": "grimy"
+    },
+    {
+      "name": "engine"
+    },
+    {
+      "name": "stairs-old",
+      "directions": 4
+    },
+    {
+      "name": "stairs",
+      "directions": 4
+    },
+    {
+      "name": "stairs-l",
+      "directions": 4
+    },
+    {
+      "name": "stairs-m",
+      "directions": 4
+    },
+    {
+      "name": "stairs-r",
+      "directions": 4
+    },
+    {
+      "name": "regular_hull"
+    },
+    {
+      "name": "wood"
+    },
+    {
+      "name": "wood_parquet"
+    },
+    {
+      "name": "wood_tile"
+    },
+    {
+      "name": "wood_large"
+    },
+    {
+      "name": "eighties"
+    },
+    {
+      "name": "eightiesred"
+    },
+    {
+      "name": "silver"
+    },
+    {
+      "name": "gold",
+      "directions": 4
+    },
+    {
+      "name": "diamond"
+    },
+    {
+      "name": "plasma"
+    },
+    {
+      "name": "uranium"
+    },
+    {
+      "name": "bananium"
+    },
+    {
+      "name": "titanium"
+    },
+    {
+      "name": "titanium_blue"
+    },
+    {
+      "name": "titanium_yellow"
+    },
+    {
+      "name": "titanium_white"
+    },
+    {
+      "name": "titanium_purple"
+    },
+    {
+      "name": "titanium_accessible_north"
+    },
+    {
+      "name": "titanium_accessible_south"
+    },
+    {
+      "name": "titanium_tiled"
+    },
+    {
+      "name": "titanium_tiled_blue"
+    },
+    {
+      "name": "titanium_tiled_yellow"
+    },
+    {
+      "name": "titanium_tiled_white"
+    },
+    {
+      "name": "titanium_tiled_purple"
+    },
+    {
+      "name": "plastitanium"
+    },
+    {
+      "name": "plastitanium_red"
+    },
+    {
+      "name": "noslip"
+    },
+    {
+      "name": "podfloor"
+    },
+    {
+      "name": "podfloor_dark"
+    },
+    {
+      "name": "podfloor_light"
+    },
+    {
+      "name": "clockwork_floor"
+    },
+    {
+      "name": "reebe"
+    },
+    {
+      "name": "reebemap"
+    },
+    {
+      "name": "reebespawn"
+    },
+    {
+      "name": "reebelattice"
+    },
+    {
+      "name": "reebegame"
+    },
+    {
+      "name": "cult"
+    },
+    {
+      "name": "alienplating"
+    },
+    {
+      "name": "alienpod1",
+      "delays": [
+        [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      ]
+    },
+    {
+      "name": "alienpod2",
+      "delays": [
+        [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      ]
+    },
+    {
+      "name": "alienpod3",
+      "delays": [
+        [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      ]
+    },
+    {
+      "name": "alienpod4",
+      "delays": [
+        [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      ]
+    },
+    {
+      "name": "alienpod5",
+      "delays": [
+        [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      ]
+    },
+    {
+      "name": "alienpod6",
+      "delays": [
+        [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      ]
+    },
+    {
+      "name": "alienpod7",
+      "delays": [
+        [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      ]
+    },
+    {
+      "name": "alienpod8",
+      "delays": [
+        [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      ]
+    },
+    {
+      "name": "alienpod9",
+      "delays": [
+        [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      ]
+    },
+    {
+      "name": "grass0"
+    },
+    {
+      "name": "grass1"
+    },
+    {
+      "name": "grass2"
+    },
+    {
+      "name": "grass3"
+    },
+    {
+      "name": "fairygrass0"
+    },
+    {
+      "name": "fairygrass1"
+    },
+    {
+      "name": "fairygrass2"
+    },
+    {
+      "name": "fairygrass3"
+    },
+    {
+      "name": "junglegrass"
+    },
+    {
+      "name": "necro1"
+    },
+    {
+      "name": "necro2",
+      "delays": [
+        [
+          1.5,
+          2,
+          0.5,
+          1
+        ]
+      ]
+    },
+    {
+      "name": "necro3",
+      "delays": [
+        [
+          1,
+          0.5,
+          1,
+          2,
+          1,
+          0.5
+        ]
+      ]
+    },
+    {
+      "name": "hierophant1"
+    },
+    {
+      "name": "hierophant2"
+    },
+    {
+      "name": "lava",
+      "delays": [
+        [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      ]
+    },
+    {
+      "name": "asteroid"
+    },
+    {
+      "name": "asteroid_dug"
+    },
+    {
+      "name": "asteroid0"
+    },
+    {
+      "name": "asteroid1"
+    },
+    {
+      "name": "asteroid2"
+    },
+    {
+      "name": "asteroid3"
+    },
+    {
+      "name": "asteroid4"
+    },
+    {
+      "name": "asteroid5"
+    },
+    {
+      "name": "asteroid6"
+    },
+    {
+      "name": "asteroid7"
+    },
+    {
+      "name": "asteroid8"
+    },
+    {
+      "name": "asteroid9"
+    },
+    {
+      "name": "asteroid10"
+    },
+    {
+      "name": "asteroid11"
+    },
+    {
+      "name": "asteroid12"
+    },
+    {
+      "name": "sand"
+    },
+    {
+      "name": "ironsand1"
+    },
+    {
+      "name": "ironsand2"
+    },
+    {
+      "name": "ironsand3"
+    },
+    {
+      "name": "ironsand4"
+    },
+    {
+      "name": "ironsand5"
+    },
+    {
+      "name": "ironsand6"
+    },
+    {
+      "name": "ironsand7"
+    },
+    {
+      "name": "ironsand8"
+    },
+    {
+      "name": "ironsand9"
+    },
+    {
+      "name": "ironsand10"
+    },
+    {
+      "name": "ironsand11"
+    },
+    {
+      "name": "ironsand12"
+    },
+    {
+      "name": "ironsand13"
+    },
+    {
+      "name": "ironsand14"
+    },
+    {
+      "name": "ironsand15"
+    },
+    {
+      "name": "wasteland"
+    },
+    {
+      "name": "wasteland_dug"
+    },
+    {
+      "name": "wasteland0"
+    },
+    {
+      "name": "wasteland1"
+    },
+    {
+      "name": "wasteland2"
+    },
+    {
+      "name": "wasteland3"
+    },
+    {
+      "name": "wasteland4"
+    },
+    {
+      "name": "wasteland5"
+    },
+    {
+      "name": "wasteland6"
+    },
+    {
+      "name": "wasteland7"
+    },
+    {
+      "name": "wasteland8"
+    },
+    {
+      "name": "wasteland9"
+    },
+    {
+      "name": "wasteland10"
+    },
+    {
+      "name": "wasteland11"
+    },
+    {
+      "name": "wasteland12"
+    },
+    {
+      "name": "riverwater"
+    },
+    {
+      "name": "riverwater_motion",
+      "delays": [
+        [
+          0.1,
+          0.2,
+          0.3,
+          0.2,
+          0.1,
+          0.2,
+          0.3,
+          0.2
+        ]
+      ]
+    },
+    {
+      "name": "deep_riverwater_motion",
+      "delays": [
+        [
+          0.1,
+          0.2,
+          0.3,
+          0.2,
+          0.1,
+          0.2,
+          0.3,
+          0.2
+        ]
+      ]
+    },
+    {
+      "name": "pool_1"
+    },
+    {
+      "name": "pool_2"
+    },
+    {
+      "name": "pool_3"
+    },
+    {
+      "name": "pool_4"
+    },
+    {
+      "name": "dirt"
+    },
+    {
+      "name": "greenerdirt"
+    },
+    {
+      "name": "liquidplasma",
+      "directions": 4,
+      "delays": [
+        [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ]
+      ]
+    },
+    {
+      "name": "rockvault"
+    },
+    {
+      "name": "sandstonevault"
+    },
+    {
+      "name": "alienvault"
+    },
+    {
+      "name": "stone_floor"
+    },
+    {
+      "name": "bus"
+    },
+    {
+      "name": "paperfloor"
+    },
+    {
+      "name": "honk"
+    },
+    {
+      "name": "binary",
+      "delays": [
+        [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ]
+      ]
+    },
+    {
+      "name": "pp_overlay"
+    },
+    {
+      "name": "clockwork_floor_filled"
+    },
+    {
+      "name": "r_plate-0"
+    },
+    {
+      "name": "r_plate-1"
+    },
+    {
+      "name": "r_plate-2"
+    },
+    {
+      "name": "tgmc_emblem",
+      "directions": 8
+    },
+    {
+      "name": "tgmc_center",
+      "directions": 4
+    },
+    {
+      "name": "grass"
+    },
+    {
+      "name": "fairygrass"
+    },
+    {
+      "name": "moon"
+    },
+    {
+      "name": "moon_dug"
+    },
+    {
+      "name": "moon0"
+    },
+    {
+      "name": "moon1"
+    },
+    {
+      "name": "moon2"
+    },
+    {
+      "name": "moon3"
+    },
+    {
+      "name": "moon4"
+    },
+    {
+      "name": "moon5"
+    },
+    {
+      "name": "moon6"
+    },
+    {
+      "name": "moon7"
+    },
+    {
+      "name": "moon8"
+    },
+    {
+      "name": "moon9"
+    },
+    {
+      "name": "moon10"
+    },
+    {
+      "name": "moon11"
+    },
+    {
+      "name": "moon12"
+    },
+    {
+      "name": "bitrunning",
+      "delays": [
+        [
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      ]
+    },
+    {
+      "name": "floor-hostile",
+      "delays": [
+        [
+          0.07,
+          0.07,
+          0.07,
+          0.07
+        ]
+      ]
+    },
+    {
+      "name": "meat"
+    },
+    {
+      "name": "whitefloor-hostile",
+      "delays": [
+        [
+          0.07,
+          0.07,
+          0.07,
+          0.07
+        ]
+      ]
+    },
+    {
+      "name": "tram_blue"
+    },
+    {
+      "name": "mirage",
+      "directions": 4
+    },
+    {
+      "name": "sandmoving",
+      "delays": [
+        [
+          0.01,
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.01
+        ]
+      ]
+    },
+    {
+      "name": "sandmovingfast",
+      "delays": [
+        [
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02
+        ]
+      ]
+    },
+    {
+      "name": "hay"
+    },
+    {
+      "name": "asphalt"
+    },
+    {
+      "name": "insulation"
+    }
+  ]
+}
