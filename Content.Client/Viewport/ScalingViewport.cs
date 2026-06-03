@@ -28,7 +28,7 @@ namespace Content.Client.Viewport
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
 
-        // KS14 START
+        // KS14 START: zlevels
         private Robust.Shared.Graphics.Eye _zLevelEye = new Robust.Shared.Graphics.Eye()
         {
             DrawFov = false,
@@ -38,7 +38,7 @@ namespace Content.Client.Viewport
         private KsZLevelSystem _zLevelSystem = null!;
         private List<EntityUid> _mapsToIterate = [];
         private IRenderTarget _zBlurBuffer = default!;
-        // KS14 END
+        // KS14 END: zlevels
 
         // Internal viewport creation is deferred.
         private IClydeViewport? _viewport;
