@@ -28,17 +28,17 @@ namespace Content.Client.Viewport
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
 
-        [Dependency] private readonly IEyeManager _eyeManager = default!; // KS14
+        // KS14 START
         private Robust.Shared.Graphics.Eye _zLevelEye = new Robust.Shared.Graphics.Eye()
         {
             DrawFov = false,
             DrawLight = false
         };
-        private MapSystem _mapSystem = default!; // KS14
-        private KsZLevelSystem _zLevelSystem = null!; // KS14
-        private Dictionary<EntityUid, IEye> _cachedEyes = []; // KS14; eyes cached per map (uid)
-        private List<EntityUid> _mapsToIterate = []; // KS14
-        private IRenderTarget _zBlurBuffer = default!; // KS14
+        private MapSystem _mapSystem = default!;
+        private KsZLevelSystem _zLevelSystem = null!;
+        private List<EntityUid> _mapsToIterate = [];
+        private IRenderTarget _zBlurBuffer = default!;
+        // KS14 END
 
         // Internal viewport creation is deferred.
         private IClydeViewport? _viewport;
@@ -329,9 +329,8 @@ namespace Content.Client.Viewport
 
             _viewport.Eye = _eye;
 
-            _mapSystem ??= _entityManager.System<MapSystem>();
-
             // KS14 Start
+            _mapSystem ??= _entityManager.System<MapSystem>();
             _zLevelSystem ??= _entityManager.System<KsZLevelSystem>();
             _zBlurBuffer = _clyde
                 .CreateRenderTarget(ViewportSize * renderScale, new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb), sampleParameters: sampleParameters);
