@@ -21,6 +21,7 @@ using Robust.Shared.Physics.Systems; // KS14
 using Robust.Shared.Configuration; // KS14
 using Robust.Shared.Prototypes; // KS14
 using Content.Shared._KS14.CCVar; // KS14
+using Content.Shared.Movement.Components; //KS14
 using Robust.Shared.Log;
 
 namespace Content.Shared._Trauma.Projectiles;
@@ -134,7 +135,8 @@ public sealed class PredictedProjectileSystem : EntitySystem
         var damageRequired = _destructible.DestroyedAt(target);
 
         //KS14 pen start
-        if (comp.PenetrationThreshold > 0) damageRequired /= _gunPenetrationMinShots;
+        bool isAMob = HasComp<MobCollision>(target);
+        if (comp.PenetrationThreshold > 0 && !isAMob) damageRequired /= _gunPenetrationMinShots;
 
         if (!TryComp<DamageableComponent>(target, out var damageable))
             return;
@@ -150,7 +152,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
         var multiplier = FixedPoint2.Zero;
         var maxmultiplier = FixedPoint2.Zero;
         var adjustedDamage = new DamageSpecifier();
-        if (comp.PenetrationThreshold > 0)
+        if (comp.PenetrationThreshold > 0 && !isAMob)
         {
             DamageModifierSetPrototype? targetDamageModifiers = null;
             if (damageable?.DamageModifierSetId != null)
@@ -238,19 +240,9 @@ public sealed class PredictedProjectileSystem : EntitySystem
     }
     // KS14 penetration demoncode start
     /// <summary>
-    /// Calculates the minimum multiplier needed for a projectile to deal
-    /// a desired amount of post-mitigation damage after all DamageSpecifier
-    /// interactions are applied.
-    ///
-    /// This exists because projectile penetration (passing through objects)
-    /// becomes inconsistent once multiple damage types, flat reductions,
-    /// percentile reductions, and penetration values are all interacting.
-    ///
-    /// The function reproduces DamageSpecifier mitigation logic, measures how
-    /// much damage would actually survive armor, then calculates the multiplier
-    /// required to reach the requested final damage amount.
+    /// Remember that wonderful armor system? yeah me too. This is what I need to do to make pen work with it.
     /// </summary>
-    public static float CalculateMultiplier(
+    public float CalculateMultiplier(
     DamageSpecifier damage,
     DamageModifierSet? modifierSet,
     float requiredEffectiveDamage)
@@ -270,7 +262,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
             float baseDamage = baseFp.Float();
             if (baseDamage <= 0f)
                 continue;
-
+            Logger.Info($"damage got through, type: {type} value: {baseDamage}");
             // just assign things
             float flatReduction = 0f;
             float percentileResistCoeff = 0f;
@@ -293,7 +285,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
             sum2 += baseDamage;
 
             // sum 3
-            sum3 += baseDamage * (1f - percentileResistCoeff * (1f - percentPen));
+            sum3 += baseDamage * (1f -(1f - percentileResistCoeff) * (1f - percentPen));
         }
 
         float mulFlat = (requiredEffectiveDamage + sum1) / sum2;
@@ -304,6 +296,30 @@ public sealed class PredictedProjectileSystem : EntitySystem
         Logger.Info($"calculated muls. mul flat: {mulFlat} mul perc: {mulPerc} total damage flat {totalDamFlat.GetTotal()} total damage percentile {totalDamPerc.GetTotal()}");
 
         return Math.Max(mulFlat, mulPerc);
+    }
+    private List<float> GetBreakPoints(DamageSpecifier damage, DamageModifierSet modifierSet)
+    {
+        List<float> breakpoints = [];
+        foreach (var (type, baseFp) in damage.DamageDict)
+        {
+            float baseDamage = baseFp.Float();
+            if (baseDamage <= 0f)
+                continue;
+            // just assign things
+            float flatReduction = 0f;
+            float percentileResistCoeff = 0f;
+            if (modifierSet != null)
+            {
+                modifierSet.FlatReduction.TryGetValue(type, out flatReduction);
+                modifierSet.Coefficients.TryGetValue(type, out percentileResistCoeff);
+            }
+            float flatPen = 0f;
+            float percentPen = 0f;
+            if (!damage.disableCrossInteraction)
+                flatReduction *= 1f - percentPen;
+            breakpoints.Append((flatReduction-flatPen)/(baseDamage*(1-(1-percentileResistCoeff)*(1-percentPen))));
+        }
+        return breakpoints.Distinct().Order();
     }
     //KS14 penetration demoncode end
 }
