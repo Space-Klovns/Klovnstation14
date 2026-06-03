@@ -1,9 +1,10 @@
+using Content.Shared._KS14.ZLevel;
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Utility;
 
-namespace Content.Shared._KS14.ZLevel.Auto;
+namespace Content.Server._KS14.ZLevel.Auto;
 
 public sealed class KsAutoZLevelSystem : EntitySystem
 {
@@ -62,13 +63,13 @@ public sealed class KsAutoZLevelSystem : EntitySystem
         }
         else
         {
-            var eqe = EntityQueryEnumerator<KsAutoZLevelComponent, KsZLevelComponent>();
-            while (eqe.MoveNext(out var uid, out var component, out var zLevelComponent))
+            var eqe = EntityQueryEnumerator<KsAutoZLevelComponent, MapComponent>();
+            while (eqe.MoveNext(out var uid, out var component, out _))
             {
                 if (component.Id != entity.Comp.Id)
                     continue;
 
-                LinkWith(entity, (uid, component, zLevelComponent));
+                LinkWith(entity, uid);
                 break;
             }
         }

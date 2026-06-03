@@ -1,16 +1,15 @@
-using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
-namespace Content.Shared._KS14.ZLevel.Auto;
+namespace Content.Server._KS14.ZLevel.Auto;
 
 // For mapping ig
 /// <summary>
 ///     When a map starts up unpaused/becomes unpaused with this component, will be added above/under
 ///         any other unpaused auto-zlevel-map with the same ID (if any) and the component will then be removed.
 /// </summary>
-[RegisterComponent, NetworkedComponent]
-[Access(typeof(KsZLevelSystem))]
+[RegisterComponent]
+[Access(typeof(KsAutoZLevelSystem))]
 public sealed partial class KsAutoZLevelComponent : Component
 {
     [ViewVariables(VVAccess.ReadWrite)]
