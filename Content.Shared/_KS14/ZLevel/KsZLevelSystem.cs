@@ -14,11 +14,11 @@ namespace Content.Shared._KS14.ZLevel;
     - A z-level can only be part of one stack at once; no two stacks can have the same z-level.
 
     IMPORTANT:
-    - Every z-level entity has a AssociatedStack, pointing to a KsZLevelStack (linkedlist)
-    - Every z-level entity in the same stack will point to the same internal KsZLevelStack object
+    - Every z-level entity has a AssociatedStack, pointing to a LinkedList<Entity<KsZLevelComponent>>
+    - Every z-level entity in the same stack will point to the same internal LinkedList<Entity<KsZLevelComponent>> object
         So:
         two z-levels that seem like theyre in the same stack, with AssociatedStacks that share the exact
-            same values, but point to different KsZLevelStacks, are NOT in the same stack and this should not happen!
+            same values, but point to different LinkedList<Entity<KsZLevelComponent>>s, are NOT in the same stack and this should not happen!
 */
 
 public sealed partial class KsZLevelSystem : EntitySystem
@@ -37,8 +37,17 @@ public sealed partial class KsZLevelSystem : EntitySystem
 
     private void OnInit(Entity<KsZLevelComponent> entity, ref ComponentInit args)
     {
-        entity.Comp.AssociatedStack.AddFirst(entity);
-        entity.Comp.Node = entity.Comp.AssociatedStack.First!;
+        // No data
+        if (entity.Comp.AssociatedStack.Count == 0)
+        {
+            entity.Comp.AssociatedStack.AddFirst(entity);
+            entity.Comp.Node = entity.Comp.AssociatedStack.First!;
+            return;
+        }
+
+        // Inited with data
+        DebugTools.Assert(entity.Comp.AssociatedStack.Contains(entity), "Upon initialising with a non-empty stack, z-level entity was not in its own stack");
+        entity.Comp.Node = entity.Comp.AssociatedStack.Find(entity)!;
     }
 
     private void OnShutdown(Entity<KsZLevelComponent> entity, ref ComponentShutdown args)
@@ -50,9 +59,6 @@ public sealed partial class KsZLevelSystem : EntitySystem
 
         if (entity.Comp.AssociatedStack.Count != 1)
             entity.Comp.AssociatedStack.Remove(entity);
-
-        var ev = new KsZLevelRemoved(entity);
-        RaiseLocalEvent(ref ev);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

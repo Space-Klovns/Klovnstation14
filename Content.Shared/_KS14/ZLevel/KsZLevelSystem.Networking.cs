@@ -23,7 +23,7 @@ public sealed partial class KsZLevelSystem : EntitySystem
         if (args.Current is not KsZLevelComponentState state)
             return;
 
-        var newStack = new KsZLevelStack();
+        var newStack = new LinkedList<Entity<KsZLevelComponent>>();
         foreach (var netid in state.AssociatedStack)
         {
             var uid = GetEntity(netid);
@@ -37,7 +37,7 @@ public sealed partial class KsZLevelSystem : EntitySystem
         // So for this entities stack:
         // As the stack is being totally cloned (replicating from server -> client),
         //      and the z-level system relies on AssociatedStack of z-level entities
-        //      in the same stack pointing to the same KsZLevelStack, we will just migrate every
+        //      in the same stack pointing to the same LinkedList<Entity<KsZLevelComponent>>, we will just migrate every
         //      entity's AssociatedStack to point to the new one
 
         foreach (var migratingEntity in entity.Comp.AssociatedStack)
