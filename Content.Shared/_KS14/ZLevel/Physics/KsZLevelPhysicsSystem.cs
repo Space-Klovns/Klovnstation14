@@ -4,6 +4,7 @@ using Content.Shared.Throwing;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.ZLevel.Physics;
 
@@ -12,6 +13,7 @@ namespace Content.Shared._KS14.ZLevel.Physics;
 /// </summary>
 public sealed class KsZLevelPhysicsSystem : EntitySystem
 {
+    [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly KsZLevelSystem _zLevelSystem = default!;
     [Dependency] private readonly SharedGravitySystem _gravitySystem = default!;
     [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
@@ -50,6 +52,9 @@ public sealed class KsZLevelPhysicsSystem : EntitySystem
 
     private void OnPhysicsParentChanged(Entity<PhysicsComponent> entity, ref EntParentChangedMessage args)
     {
+        if (_gameTiming.ApplyingState)
+            return;
+
         var transformComponent = args.Transform;
         if (entity.Comp.BodyStatus == BodyStatus.InAir ||
             _gravitySystem.IsWeightless(entity.Owner))
@@ -62,12 +67,12 @@ public sealed class KsZLevelPhysicsSystem : EntitySystem
             return;
         }
 
-        TryFall((entity, transformComponent));
+        Fall((entity, transformComponent));
     }
 
     private void OnPhysicsLand(Entity<PhysicsComponent> entity, ref LandEvent args)
     {
-        TryFall((entity.Owner, Transform(entity)));
+        Fall((entity.Owner, Transform(entity)));
     }
 
     public bool Fall(Entity<TransformComponent> entity, Entity<KsZLevelComponent>? zLevelEntity = null)
