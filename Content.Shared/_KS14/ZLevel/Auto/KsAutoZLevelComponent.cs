@@ -1,5 +1,6 @@
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 
 namespace Content.Shared._KS14.ZLevel.Auto;
 
@@ -22,6 +23,14 @@ public sealed partial class KsAutoZLevelComponent : Component
     [ViewVariables(VVAccess.ReadWrite)]
     [DataField]
     public KsAutoZLevelType Location = KsAutoZLevelType.Above;
+
+    /// <summary>
+    ///     Map to optionally load when this entity is eligible for linking, rather than
+    ///         looking for an entity with the same ID.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadWrite)]
+    [DataField]
+    public ResPath? Map = null;
 }
 
 [Serializable, NetSerializable]
