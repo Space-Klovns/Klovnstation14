@@ -7,42 +7,35 @@ namespace Content.Shared._KS14.ZLevel;
 public sealed partial class KsZLevelSystem : EntitySystem
 {
     /// <summary>
-    ///     Gets the z-level stack a map is part of, if any.
-    /// </summary>
-    public bool TryGetStackFromMap(Entity<KsZLevelComponent?> entity, [MaybeNullWhen(false)] out KsZLevelStack stack)
-    {
-        DebugTools.Assert(!HasComp<MapGridComponent>(entity), "`TryGetStackFromMap` was run on a non-map entity, did you mean to use TryGetStackFromDescendant instead?");
-
-        if (!_zLevelQuery.Resolve(ref entity, logMissing: false))
-        {
-            stack = null;
-            return false;
-        }
-
-        stack = entity.Comp!.AssociatedStack;
-        return true;
-    }
-
-    /// <summary>
-    ///     Gets the z-level stack of the map that the entity is on, if any.
+    ///     Tries to get the get the z-level (map) that the entity is on, if any.
     /// </summary>
     /// <param name="zLevelEntity">Only valid if <see langword="true"/> is returned.</param>
-    public bool TryGetStackFromDescendant(Entity<TransformComponent?> entity, [MaybeNullWhen(false)] out Entity<KsZLevelComponent> zLevelEntity, [MaybeNullWhen(false)] out KsZLevelStack stack)
+    public bool TryGetZLevel(Entity<TransformComponent?> entity, [NotNullWhen(true)] out Entity<KsZLevelComponent>? zLevelEntity)
     {
-        DebugTools.Assert(!HasComp<MapComponent>(entity), "`TryGetStackFromDescendant` was run on a map entity, did you mean to use TryGetStackFromMap instead?");
+        DebugTools.Assert(!HasComp<MapComponent>(entity), "`TryGetZLevel` was run on a map entity, however it is only for children of that map entity");
 
         if (!EntityManager.TransformQuery.Resolve(ref entity, logMissing: true) ||
             entity.Comp!.MapUid is not { } mapUid ||
             !_zLevelQuery.TryGetComponent(mapUid, out var zLevelComponent))
         {
-            zLevelEntity = default;
-            stack = null;
+            zLevelEntity = null;
             return false;
         }
 
         zLevelEntity = (mapUid, zLevelComponent);
-        stack = zLevelComponent.AssociatedStack;
         return true;
+    }
+
+    /// <summary>
+    ///     Gets the z-level entity that the entity is on. Will <see langword="throw"/>  if there is none.
+    /// </summary>
+    public Entity<KsZLevelComponent> GetZLevel(Entity<TransformComponent?> entity)
+    {
+        // Throw if necessary
+        var transformComponent = entity.Comp ?? Transform(entity);
+        var mapUid = transformComponent.MapUid;
+
+        return (mapUid!.Value, _zLevelQuery.GetComponent(mapUid.Value));
     }
 
     /// <summary>

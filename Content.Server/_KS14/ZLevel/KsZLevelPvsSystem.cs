@@ -42,8 +42,8 @@ public sealed class KsZLevelPvsSystem : EntitySystem
         while (eqe.MoveNext(out var viewerUid, out var viewerComponent, out var viewerTransformComponent))
         {
             if (viewerComponent.ViewSubscriberUid == EntityUid.Invalid ||
-                !_zLevelSystem.TryGetStackFromDescendant(viewerUid, out var zLevelEntity, out _) ||
-                zLevelEntity.Comp.Node.Previous is not { } previousZLevelNode)
+                !_zLevelSystem.TryGetZLevel(viewerUid, out var zLevelEntity) ||
+                zLevelEntity.Value.Comp.Node.Previous is not { } previousZLevelNode)
                 continue;
 
             var position = _transformSystem.GetWorldPosition(viewerTransformComponent);
