@@ -1254,3 +1254,9 @@ Entries:
       message: Fixed klovnide not properly applying adjusted crit/death thresholds.
   id: 136
   time: '2026-05-31T19:01:27.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Tweak
+      message: Reverts shit prs from apstrimi merges
+  id: 137
+  time: '2026-06-03T16:08:39.0000000+00:00'

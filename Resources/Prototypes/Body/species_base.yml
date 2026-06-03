@@ -153,8 +153,8 @@
   - type: MobPrice
     price: 1500 # Kidnapping a living person and selling them for cred is a good move.
     deathPenalty: 0.01 # However they really ought to be living and intact, otherwise they're worth 100x less.
-  - type: RandomPrice
-    maxRandomPrice: 20000
+  #- type: RandomPrice KS14 removed
+  #  maxRandomPrice: 20000
   - type: Tag
     tags:
     - CanPilot
@@ -233,4 +233,4 @@
         Asphyxiation: -2.75 # KS14: -1 -> -2.75
   - type: FireVisuals
     alternateState: Standing
-  - type: StunVisuals
+  #- type: StunVisuals KS14 - remove stun visuals
