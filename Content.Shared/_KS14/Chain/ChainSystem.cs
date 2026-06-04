@@ -10,6 +10,13 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.Chain;
 
+/*
+    So currently chain edges *also* have chain link components
+
+    I think this was actually unintentional by me but IDK if it breaks anything
+    cause this code just sucks.
+*/
+
 /// <summary>
 ///     If you want to break a chain, remove <see cref="ChainLinkComponent"/>
 ///         from one of the links or delete it.
@@ -22,6 +29,7 @@ public sealed class ChainSystem : EntitySystem
 
     [Dependency] private readonly EntityQuery<ChainLinkComponent> _linkQuery = default!;
     [Dependency] private readonly EntityQuery<ChainEdgeComponent> _edgeQuery = default!;
+    [Dependency] private readonly EntityQuery<JointComponent> _jointQuery = default!;
 
     public override void Initialize()
     {
@@ -74,6 +82,35 @@ public sealed class ChainSystem : EntitySystem
             var linkComponent = _linkQuery.GetComponent(linkUid);
             linkComponent.EdgeUids.Remove(entity.Owner);
         }
+
+        // Now handle edges
+
+        var broken = entity.Comp.Broken;
+        if (entity.Comp.OtherEdgeUid != EntityUid.Invalid)
+        {
+            var otherEdgeComponent = _edgeQuery.GetComponent(entity.Comp.OtherEdgeUid);
+            otherEdgeComponent.OtherEdgeUid = EntityUid.Invalid;
+
+            if (!broken)
+            {
+                var otherBrokenEv = new ChainInitiallyBrokenEvent(entity, otherEdgeComponent);
+                RaiseLocalEvent(entity.Comp.OtherEdgeUid, ref otherBrokenEv);
+
+                otherEdgeComponent.Broken = true;
+                Dirty(entity.Comp.OtherEdgeUid, otherEdgeComponent);
+            }
+        }
+
+        if (broken)
+            return;
+
+        DestroyStretchJointIfAny(entity);
+
+        var ourBrokenEv = new ChainInitiallyBrokenEvent(entity, entity);
+        RaiseLocalEvent(entity.Owner, ref ourBrokenEv);
+
+        entity.Comp.Broken = true;
+        Dirty(entity);
     }
 
     private void OnLinkShutdown(Entity<ChainLinkComponent> entity, ref ComponentShutdown args)
@@ -83,6 +120,8 @@ public sealed class ChainSystem : EntitySystem
 
     private void OnJointRemoved(Entity<ChainLinkComponent> ourEntity, ref JointRemovedEvent args)
     {
+        // This actually handles edges being broken
+
         // if its already being deleted, the chain is already broken
         if (TerminatingOrDeleted(ourEntity.Owner) ||
             ourEntity.Comp.LifeStage > ComponentLifeStage.Running) // after running is stopping
@@ -126,22 +165,16 @@ public sealed class ChainSystem : EntitySystem
         BreakEdges(entity);
     }
 
-    private void TrySafeRemoveJoint(EntityUid uid, string jointId)
-    {
-        if (!TryComp<JointComponent>(uid, out var jointComponent) ||
-            !jointComponent.GetJoints.ContainsKey(jointId))
-            return;
-
-        _jointSystem.RemoveJoint(uid, jointId);
-    }
-
     /// <summary>
     ///     Updates this link for the FORWARDS adjacent link having been broken.
     ///         Assumes the forwards link exists.
     /// </summary>
     private void BreakChainForwards(EntityUid uid, ref ChainSegmentedEvent segmentedEv, bool removeJoints = false)
     {
-        var previousLinkComponent = _linkQuery.GetComponent(uid);
+        // Idk why this is needed but sometimes the comp doesnt exist.
+        if (!_linkQuery.TryGetComponent(uid, out var previousLinkComponent))
+            return;
+
         if (removeJoints && previousLinkComponent.NextLinkJointId is { })
             _jointSystem.RemoveJoint(uid, previousLinkComponent.NextLinkJointId);
 
@@ -151,6 +184,9 @@ public sealed class ChainSystem : EntitySystem
         previousLinkComponent.NextLinkJointId = null;
 
         DirtyField(uid, previousLinkComponent, nameof(previousLinkComponent.NextLinkUid));
+
+        // Incase this is an edge
+        RemComp<ChainEdgeComponent>(uid);
     }
 
     /// <summary>
@@ -159,7 +195,9 @@ public sealed class ChainSystem : EntitySystem
     /// </summary>
     private void BreakChainBackwards(EntityUid uid, ref ChainSegmentedEvent segmentedEv, bool removeJoints = false)
     {
-        var nextLinkComponent = _linkQuery.GetComponent(uid);
+        if (!_linkQuery.TryGetComponent(uid, out var nextLinkComponent))
+            return;
+
         if (removeJoints && nextLinkComponent.PreviousLinkJointId is { })
             _jointSystem.RemoveJoint(uid, nextLinkComponent.PreviousLinkJointId);
 
@@ -169,12 +207,14 @@ public sealed class ChainSystem : EntitySystem
         nextLinkComponent.PreviousLinkJointId = null;
 
         DirtyField(uid, nextLinkComponent, nameof(nextLinkComponent.PreviousLinkUid));
+
+        // Incase this is an edge #2
+        RemComp<ChainEdgeComponent>(uid);
     }
 
     private void BreakEdges(Entity<ChainLinkComponent> entity)
     {
-        var brokenEv = new ChainInitiallyBrokenEvent(entity);
-        foreach (var edgeUid in entity.Comp.EdgeUids)
+        foreach (var edgeUid in entity.Comp.EdgeUids.ToArray())
         {
             if (!_edgeQuery.TryGetComponent(edgeUid, out var edgeComponent)) // sometimes edge component doesnt get its shutdown called before this, so a deleted entity might not be removed from the list of edges yet
                 continue;
@@ -182,9 +222,12 @@ public sealed class ChainSystem : EntitySystem
             // first time the chain was segmented
             if (!edgeComponent.Broken)
             {
+                var brokenEv = new ChainInitiallyBrokenEvent(entity, edgeComponent);
                 RaiseLocalEvent(edgeUid, ref brokenEv);
 
                 edgeComponent.Broken = true;
+                DestroyStretchJointIfAny((edgeUid, edgeComponent));
+
                 Dirty(edgeUid, edgeComponent);
             }
 
@@ -192,20 +235,55 @@ public sealed class ChainSystem : EntitySystem
         }
     }
 
+    private void DestroyStretchJointIfAny(Entity<ChainEdgeComponent> entity)
+    {
+        // TODO KS14 CHAINS: TODO CHAINS: In the future make a new stretch joint for each remaining set of chains
+        // However currently the stretch joint only exists for the chain when its initially added and not broken
+
+        if (entity.Comp.StretchJointId is not { } stretchJointId)
+            return;
+
+        if (_jointQuery.TryGetComponent(entity, out var jointComponent) &&
+            jointComponent.GetJoints.TryGetValue(stretchJointId, out var stretchJoint))
+            _jointSystem.RemoveJoint(stretchJoint);
+        else
+            entity.Comp.StretchJointId = null;
+    }
+
     private void OnAdjacentLinkBroken(EntityUid uid, ref ChainSegmentedEvent ev) => RaiseLocalEvent(uid, ref ev);
 
     /// <summary>
-    ///     Adds joints between two entities.
+    ///     Adds a joint between two entities.
     ///         Returns the joint created.
+    ///
+    ///     Meant for individual chain links.
     /// </summary>
-    public Joint ConnectTwo(EntityUid firstUid, EntityUid secondUid, Vector2 offset)
+    private DistanceJoint ConnectTwoLink(EntityUid firstUid, EntityUid secondUid, Vector2 offset)
     {
-        var joint = _jointSystem.CreateDistanceJoint(firstUid, secondUid, anchorA: offset, anchorB: -offset, id: _gameTiming.CurTime.ToString() + firstUid.ToString());
+        var joint = _jointSystem.CreateDistanceJoint(firstUid, secondUid, anchorA: offset, anchorB: -offset, id: _gameTiming.CurTick.ToString() + firstUid.ToString() + "chain");
 
         joint.CollideConnected = false;
         joint.MinLength = offset.Y * 0.95f;
         joint.Length = joint.MinLength;
         joint.MaxLength = offset.Y;
+
+        return joint;
+    }
+
+    /// <summary>
+    ///     Adds a joint between two entities.
+    ///         Returns the joint created.
+    ///
+    ///     Meant for minimising the jank of entire chains,
+    ///         by making a joint between the first and last link.
+    /// </summary>
+    private DistanceJoint ConnectStretch(EntityUid firstUid, EntityUid secondUid, Vector2 offset, int linkCount)
+    {
+        var joint = _jointSystem.CreateDistanceJoint(firstUid, secondUid, anchorA: offset, anchorB: -offset, id: _gameTiming.CurTick.ToString() + firstUid.ToString() + "chainstretch");
+        joint.MinLength = 0f;
+
+        joint.MaxLength = linkCount * offset.Y;
+        joint.Length = joint.MaxLength;
 
         return joint;
     }
@@ -257,7 +335,7 @@ public sealed class ChainSystem : EntitySystem
                 continue;
             }
 
-            var lastToHereJoint = ConnectTwo(lastEntity.Value, linkUid, offset);
+            var lastToHereJoint = ConnectTwoLink(lastEntity.Value, linkUid, offset);
 
             // form basically a linked list
             linkComponent.PreviousLinkUid = lastEntity;
@@ -278,6 +356,13 @@ public sealed class ChainSystem : EntitySystem
         endUid = entities[entities.Count - 1];
         var endEdgeComponent = AddComp<ChainEdgeComponent>(endUid);
         endEdgeComponent.LinkUids = [.. entities]; // clone the list.. again
+
+        startEdgeComponent.OtherEdgeUid = endUid;
+        endEdgeComponent.OtherEdgeUid = startUid;
+
+        var stretchJoint = ConnectStretch(startUid, endUid, offset, entities.Count + 2);
+        startEdgeComponent.StretchJointId = stretchJoint.ID;
+        endEdgeComponent.StretchJointId = stretchJoint.ID;
 
         return entities;
     }
@@ -308,7 +393,7 @@ public sealed class ChainSystem : EntitySystem
 
         void LastToCurrent(EntityUid currentLinkUid, ChainLinkComponent currentLinkComponent)
         {
-            var lastToHereJoint = ConnectTwo(lastEntity, currentLinkUid, offset);
+            var lastToHereJoint = ConnectTwoLink(lastEntity, currentLinkUid, offset);
 
             // form basically a linked list
             currentLinkComponent.PreviousLinkUid = lastEntity;
@@ -341,6 +426,13 @@ public sealed class ChainSystem : EntitySystem
 
         var endEdgeComponent = AddComp<ChainEdgeComponent>(endUid);
         endEdgeComponent.LinkUids = [.. entities]; // clone the list.. again
+
+        startEdgeComponent.OtherEdgeUid = endUid;
+        endEdgeComponent.OtherEdgeUid = startUid;
+
+        var stretchJoint = ConnectStretch(startUid, endUid, offset, entities.Count);
+        startEdgeComponent.StretchJointId = stretchJoint.ID;
+        endEdgeComponent.StretchJointId = stretchJoint.ID;
 
         return entities;
     }

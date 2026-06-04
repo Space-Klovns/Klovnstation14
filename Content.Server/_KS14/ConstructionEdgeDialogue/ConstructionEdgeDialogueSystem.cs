@@ -78,7 +78,7 @@ public sealed class ConstructionEdgeDialogueSystem : EntitySystem
         {
             Priority = 2,
             Act = () => TryOpenDialogue(entity, userUid, options, currentNode.Name),
-            Text = entity.Comp.Loc
+            Text = Loc.GetString(entity.Comp.Loc)
         });
     }
 

@@ -5,7 +5,7 @@ public sealed partial class ConstructionEdgeDialogueComponent : Component
 {
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
-    public string Loc = "Choose surgery target";
+    public LocId Loc = "Choose surgery target";
 
     [DataField]
     public HashSet<string> NodeNames = [];

@@ -1,0 +1,74 @@
+
+- type: entity
+  parent: PlumbingMachineBase
+  id: KsPlumbingIvPump
+  name: industrial intravenous pump
+  description: A small tank you pour reagents into. Other machines pull from this. Connects in all directions.
+  components:
+  - type: Physics
+    bodyType: Static
+    canCollide: false
+  - type: Fixtures
+    fixtures: {}
+
+  - type: Sprite
+    sprite: _KS14/Structures/Piping/Plumbing/iv_pump.rsi
+    layers:
+    - state: base
+    - state: active_em
+      shader: unshaded
+      visible: false
+      map: [ "active" ]
+    - state: inj_em
+      shader: unshaded
+      map: [ "mode" ]
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.KsPlumbingIvPumpVisuals.Active:
+        active:
+          True: { visible: true }
+          False: { visible: false }
+      enum.KsPlumbingIvPumpVisuals.Injecting:
+        mode:
+          True: { state: inj_em }
+          False: { state: draw_em }
+
+  - type: KsPlumbingIvPump
+    bufferSolutionName: buffer
+    inletNodeName: let
+    mode: Injecting
+    chainInbetweenCount: 15
+
+  - type: PlumbingDevice
+  - type: PlumbingOutlet
+    solutionName: buffer
+    outletNames: [ let ]
+  - type: Plungeable
+  - type: SolutionContainerManager
+    solutions:
+      buffer:
+        maxVol: 100
+        canReact: false
+
+  - type: ExaminableSolution
+    solution: buffer
+  - type: NodeContainer
+    nodes:
+      let:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: South
+
+  - type: StaticPrice
+    price: 175
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:SpillBehavior
+        solution: buffer
+      - !type:DoActsBehavior
+        acts: ["Destruction"]

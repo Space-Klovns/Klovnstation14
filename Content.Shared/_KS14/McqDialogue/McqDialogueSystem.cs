@@ -48,7 +48,7 @@ public sealed class McqDialogueSystem : EntitySystem
     {
         CloseDialogue(entity!);
 
-        var ev = new McqDialogueClosedEvent();
+        var ev = new McqDialogueClosedEvent(args.Actor);
         RaiseLocalEvent(entity.Comp.Source, ref ev);
     }
 
@@ -59,7 +59,7 @@ public sealed class McqDialogueSystem : EntitySystem
 
         CloseDialogue(entity!);
 
-        var ev = new McqDialogueSelectedEvent(args.Id);
+        var ev = new McqDialogueSelectedEvent(args.Actor, args.Id);
         RaiseLocalEvent(entity.Comp.Source, ref ev);
     }
 

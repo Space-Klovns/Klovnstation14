@@ -11,3 +11,17 @@
   collisionMask: MachineMask
   rotation: User
   fx: EffectRCDConstruct0
+
+- type: rcd
+  id: KsPlumbingIvPump
+  category: PlumbingMachines
+  sprite:
+    sprite: _KS14/Structures/Piping/Plumbing/iv_pump.rsi
+    state: base
+  mode: ConstructObject
+  prototype: KsPlumbingIvPump
+  cost: 4
+  delay: 0
+  collisionMask: MachineMask
+  rotation: User
+  fx: EffectRCDConstruct0
