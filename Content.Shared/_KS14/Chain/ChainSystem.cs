@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using Robust.Shared.Collections;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
@@ -12,9 +13,7 @@ namespace Content.Shared._KS14.Chain;
 
 /*
     So currently chain edges *also* have chain link components
-
-    I think this was actually unintentional by me but IDK if it breaks anything
-    cause this code just sucks.
+    This is intentional and it sucks
 */
 
 /// <summary>
@@ -40,6 +39,25 @@ public sealed class ChainSystem : EntitySystem
         SubscribeLocalEvent<ChainLinkComponent, JointRemovedEvent>(OnJointRemoved);
     }
 
+    /// <returns><see cref="ChainEdgeComponent.LinkUids"/>, but without any edges.</returns>
+    public ValueList<EntityUid> GetLinksWithoutEdges(Entity<ChainEdgeComponent?> firstEdgeEntity)
+    {
+        if (!_edgeQuery.Resolve(firstEdgeEntity, ref firstEdgeEntity.Comp))
+            return [];
+
+        var list = new ValueList<EntityUid>();
+        foreach (var linkUid in firstEdgeEntity.Comp.LinkUids)
+        {
+            if (linkUid == firstEdgeEntity.Owner ||
+                linkUid == firstEdgeEntity.Comp.OtherEdgeUid)
+                continue;
+
+            list.Add(linkUid);
+        }
+
+        return list;
+    }
+
     /// <returns>True if this entity is linked to anything.</returns>
     public bool HasAdjacentLink(Entity<ChainLinkComponent?> linkEntity)
     {
@@ -56,7 +74,10 @@ public sealed class ChainSystem : EntitySystem
             return false;
 
         BreakChainFrom(linkEntity!, removeJoints: removeJoints);
-        RemComp(linkEntity, linkEntity.Comp);
+
+        if (linkEntity.Comp.LifeStage < ComponentLifeStage.Stopping)
+            RemComp(linkEntity, linkEntity.Comp);
+
         return true;
     }
 
@@ -82,6 +103,9 @@ public sealed class ChainSystem : EntitySystem
             var linkComponent = _linkQuery.GetComponent(linkUid);
             linkComponent.EdgeUids.Remove(entity.Owner);
         }
+
+        if (!Terminating(entity.Owner))
+            RemComp<ChainLinkComponent>(entity.Owner);
 
         // Now handle edges
 
@@ -161,7 +185,10 @@ public sealed class ChainSystem : EntitySystem
             BreakChainBackwards(directlyNextUid, ref segmentedEv, removeJoints: removeJoints);
 
         // Update chain edges
-        RemComp<ChainEdgeComponent>(entity.Owner);
+        if (_edgeQuery.TryGetComponent(entity.Owner, out var edgeComponent) &&
+            edgeComponent.LifeStage < ComponentLifeStage.Stopping)
+            RemComp(entity.Owner, edgeComponent);
+
         BreakEdges(entity);
     }
 
@@ -171,8 +198,9 @@ public sealed class ChainSystem : EntitySystem
     /// </summary>
     private void BreakChainForwards(EntityUid uid, ref ChainSegmentedEvent segmentedEv, bool removeJoints = false)
     {
-        // Idk why this is needed but sometimes the comp doesnt exist.
-        if (!_linkQuery.TryGetComponent(uid, out var previousLinkComponent))
+        // Idk why this is needed but sometimes the comp doesnt exist. Or is in the wrong lifestage GEEEEEEEEEEEEEEEEEEEEEEEEEEEEEG!
+        if (!_linkQuery.TryGetComponent(uid, out var previousLinkComponent) ||
+            previousLinkComponent.LifeStage > ComponentLifeStage.Stopping)
             return;
 
         if (removeJoints && previousLinkComponent.NextLinkJointId is { })
@@ -186,7 +214,9 @@ public sealed class ChainSystem : EntitySystem
         DirtyField(uid, previousLinkComponent, nameof(previousLinkComponent.NextLinkUid));
 
         // Incase this is an edge
-        RemComp<ChainEdgeComponent>(uid);
+        if (_edgeQuery.TryGetComponent(uid, out var edgeComponent) &&
+            edgeComponent.LifeStage < ComponentLifeStage.Stopping)
+            RemComp(uid, edgeComponent);
     }
 
     /// <summary>
@@ -209,7 +239,9 @@ public sealed class ChainSystem : EntitySystem
         DirtyField(uid, nextLinkComponent, nameof(nextLinkComponent.PreviousLinkUid));
 
         // Incase this is an edge #2
-        RemComp<ChainEdgeComponent>(uid);
+        if (_edgeQuery.TryGetComponent(uid, out var edgeComponent) &&
+            edgeComponent.LifeStage < ComponentLifeStage.Stopping)
+            RemComp(uid, edgeComponent);
     }
 
     private void BreakEdges(Entity<ChainLinkComponent> entity)
@@ -277,6 +309,8 @@ public sealed class ChainSystem : EntitySystem
     ///     Meant for minimising the jank of entire chains,
     ///         by making a joint between the first and last link.
     /// </summary>
+    // This is disabled because two connected joints with the same relay (parent entity)
+    //      will nuke the server and you can't avoid this
     private DistanceJoint ConnectStretch(EntityUid firstUid, EntityUid secondUid, Vector2 offset, int linkCount)
     {
         var joint = _jointSystem.CreateDistanceJoint(firstUid, secondUid, anchorA: offset, anchorB: -offset, id: _gameTiming.CurTick.ToString() + firstUid.ToString() + "chainstretch");
@@ -360,10 +394,6 @@ public sealed class ChainSystem : EntitySystem
         startEdgeComponent.OtherEdgeUid = endUid;
         endEdgeComponent.OtherEdgeUid = startUid;
 
-        var stretchJoint = ConnectStretch(startUid, endUid, offset, entities.Count + 2);
-        startEdgeComponent.StretchJointId = stretchJoint.ID;
-        endEdgeComponent.StretchJointId = stretchJoint.ID;
-
         return entities;
     }
 
@@ -429,10 +459,6 @@ public sealed class ChainSystem : EntitySystem
 
         startEdgeComponent.OtherEdgeUid = endUid;
         endEdgeComponent.OtherEdgeUid = startUid;
-
-        var stretchJoint = ConnectStretch(startUid, endUid, offset, entities.Count);
-        startEdgeComponent.StretchJointId = stretchJoint.ID;
-        endEdgeComponent.StretchJointId = stretchJoint.ID;
 
         return entities;
     }

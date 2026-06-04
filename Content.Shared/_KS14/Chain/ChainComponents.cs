@@ -69,6 +69,7 @@ public sealed partial class ChainEdgeComponent : Component
 
     /// <summary>
     ///     Chain entities that have this listed as an edge.
+    ///         Includes edges, as they are links too. So this list includes this edge too.
     /// </summary>
     [DataField]
     [Access(typeof(ChainSystem))]

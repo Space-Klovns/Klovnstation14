@@ -2,6 +2,7 @@ using Content.Server._Starlight.Plumbing;
 using Content.Server._Starlight.Plumbing.Components;
 using Content.Server._Starlight.Plumbing.EntitySystems;
 using Content.Server._Starlight.Plumbing.Nodes;
+using Content.Server.Audio;
 using Content.Server.NodeContainer.EntitySystems;
 using Content.Shared._KS14.Chain;
 using Content.Shared._KS14.Plumbing.IvPump;
@@ -17,6 +18,7 @@ public sealed class KsPlumbingIvPumpSystem : SharedKsPlumbingIvPumpSystem
     [Dependency] private readonly SharedSolutionContainerSystem _solutionContainerSystem = default!;
     [Dependency] private readonly PlumbingPullSystem _pullSystem = default!;
     [Dependency] private readonly NodeContainerSystem _nodeContainerSystem = default!;
+    [Dependency] private readonly AmbientSoundSystem _ambientSoundSystem = default!;
 
     public override void Initialize()
     {
@@ -32,13 +34,14 @@ public sealed class KsPlumbingIvPumpSystem : SharedKsPlumbingIvPumpSystem
     private void OnChainBroken(Entity<KsPlumbingIvPumpChainStartComponent> entity, ref ChainInitiallyBrokenEvent args)
     {
         // We dont need ts anymore GEG
-        foreach (var linkUid in args.EdgeComponent.LinkUids)
+        foreach (var linkUid in _chainSystem.GetLinksWithoutEdges((entity.Owner, args.EdgeComponent)))
+        {
+            if (Terminating(linkUid))
+                continue;
+
             QueueDel(linkUid);
+        }
 
-        if (args.EdgeComponent.OtherEdgeUid != EntityUid.Invalid)
-            QueueDel(args.EdgeComponent.OtherEdgeUid);
-
-        QueueDel(entity.Owner);
         if (TryComp<KsPlumbingIvPumpComponent>(entity.Comp.PumpUid, out var pumpComponent))
         {
             pumpComponent.ChainStartUid = EntityUid.Invalid;
@@ -47,20 +50,28 @@ public sealed class KsPlumbingIvPumpSystem : SharedKsPlumbingIvPumpSystem
 
             UpdateState(entity.Comp.PumpUid);
         }
+
+        if (entity.Comp.LifeStage < ComponentLifeStage.Stopping)
+            RemComp(entity, entity.Comp);
+
+        if (args.EdgeComponent.LifeStage < ComponentLifeStage.Stopping)
+            RemComp(entity, args.EdgeComponent);
     }
 
     private void OnDeviceUpdate(Entity<KsPlumbingIvPumpComponent> entity, ref PlumbingDeviceUpdateEvent args)
     {
         var patientUid = entity.Comp.PatientUid;
         if (patientUid == EntityUid.Invalid)
-            return;
+            goto endearly;
 
         if (!_solutionContainerSystem.ResolveSolution(entity.Owner, entity.Comp.BufferSolutionName, ref entity.Comp.BufferSolutionEntity, out var bufferSolution))
-            return;
+            goto endearly;
 
         if (!BloodstreamQuery.TryGetComponent(patientUid, out var bloodstreamComponent) ||
             bloodstreamComponent.BloodSolution is not { } bloodSolutionEntity)
-            return;
+            goto endearly;
+
+        _ambientSoundSystem.SetAmbience(entity.Owner, true);
 
         var bloodSolution = bloodSolutionEntity.Comp.Solution;
         switch (entity.Comp.Mode)
@@ -97,6 +108,10 @@ public sealed class KsPlumbingIvPumpSystem : SharedKsPlumbingIvPumpSystem
                 RemComp(entity, entity.Comp);
                 throw new InvalidOperationException($"Tried to update IV pump with invalid mode: {entity.Comp.Mode}");
         }
+
+        return;
+    endearly:
+        _ambientSoundSystem.SetAmbience(entity.Owner, false);
     }
 
     /// <summary>
@@ -126,7 +141,7 @@ public sealed class KsPlumbingIvPumpSystem : SharedKsPlumbingIvPumpSystem
         var targetUid = args.Target;
 
         var ourCoordinates = Transform(entity.Owner).Coordinates;
-        _chainSystem.SpawnChainInbetween("KsWireSegment", ourCoordinates, entity.Comp.ChainInbetweenCount, 0.125f, startUid, targetUid);
+        _chainSystem.SpawnChainInbetween("KsWireSegmentIv", ourCoordinates, entity.Comp.ChainInbetweenCount, 0.125f, startUid, targetUid);
 
         var startComponent = AddComp<KsPlumbingIvPumpChainStartComponent>(startUid);
         startComponent.PumpUid = entity;

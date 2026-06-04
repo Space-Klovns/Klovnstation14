@@ -27,3 +27,8 @@
   license: "CC-BY-NC-SA-3.0"
   copyright: "Taken from https://github.com/goonstation/goonstation at commit 52ddc1831345684a7a8ef6af7c91123d43a1568f"
   source: "https://github.com/goonstation/goonstation/blob/52ddc1831345684a7a8ef6af7c91123d43a1568f/sound/ambience/industrial/MarsFacility_Glitchy.ogg"
+
+- files: ["strpump.ogg"]
+  license: "CC0-1.0"
+  copyright: "Created by `slackwareslacker` on freesound.org, edited and converted to .ogg for Klovnstation 14"
+  source: "https://freesound.org/people/slackwareslacker/sounds/813052/"

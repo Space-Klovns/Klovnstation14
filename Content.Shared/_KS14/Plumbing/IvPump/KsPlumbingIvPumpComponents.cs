@@ -95,6 +95,6 @@ public enum KsPlumbingIvPumpMode : byte
 {
     All = Injecting | Drawing,
 
-    Injecting = 0,
-    Drawing = 1 << 0,
+    Injecting = 1 << 0,
+    Drawing = 1 << 1,
 }

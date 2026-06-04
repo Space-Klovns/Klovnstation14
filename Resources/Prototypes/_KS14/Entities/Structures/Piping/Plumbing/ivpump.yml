@@ -2,8 +2,8 @@
 - type: entity
   parent: PlumbingMachineBase
   id: KsPlumbingIvPump
-  name: industrial intravenous pump
-  description: A small tank you pour reagents into. Other machines pull from this. Connects in all directions.
+  name: plumbing iv pump
+  description: Used for streamlining the process of medicine.
   components:
   - type: Physics
     bodyType: Static
@@ -48,8 +48,14 @@
   - type: SolutionContainerManager
     solutions:
       buffer:
-        maxVol: 100
+        maxVol: 200
         canReact: false
+
+  - type: AmbientSound
+    volume: -6
+    range: 8
+    sound:
+      path: /Audio/Ambience/Objects/flowing_water_open.ogg
 
   - type: ExaminableSolution
     solution: buffer
@@ -72,3 +78,42 @@
         solution: buffer
       - !type:DoActsBehavior
         acts: ["Destruction"]
+
+- type: entity
+  parent: KsPlumbingIvPump
+  id: KsPlumbingIvPumpIndustrial
+  name: industrial intravenous pump
+  description: An industrial-grade.. IV pump? What the fuck?
+  suffix: Industrial
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/Piping/Plumbing/iv_pump.rsi
+    layers:
+    - state: base_indust
+    - state: active_em
+      shader: unshaded
+      visible: false
+      map: [ "active" ]
+    - state: inj_em
+      shader: unshaded
+      map: [ "mode" ]
+    - state: fill_8
+      map: ["enum.SolutionContainerLayers.Fill"]
+  - type: KsPlumbingIvPump
+    transferRate: 10
+  - type: AmbientSound
+    volume: -2
+    range: 10
+    sound:
+      path: /Audio/_KS14/Effects/strpump.ogg
+
+  - type: SolutionContainerVisuals
+    maxFillLevels: 8
+    fillBaseName: fill_
+    solutionName: buffer
+
+  - type: SolutionContainerManager
+    solutions:
+      buffer:
+        maxVol: 500
+        canReact: false
