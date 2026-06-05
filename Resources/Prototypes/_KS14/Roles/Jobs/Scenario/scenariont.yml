@@ -1,0 +1,24 @@
+- type: job
+  id: ScenarioNt
+  name: job-name-scenario-nt
+  description: job-description-scenario-nt
+  playTimeTracker: JobScenarioNt
+  startingGear: ScenarioNtGear
+  icon: "JobIconNanotrasen"
+  supervisors: job-supervisors-nobody
+  canBeAntag: false
+  access:
+  - Maintenance
+  special:
+  - !type:AddComponentSpecial
+    components:
+    - type: ScenarioNt
+
+- type: startingGear #placeholder till rmc vendors, then they'll be butt naked
+  id: ScenarioNtGear
+  equipment:
+    jumpsuit: ClothingUniformJumpsuitColorGrey
+    back: ClothingBackpack
+    shoes: ClothingShoesColorBlack
+    gloves: ClothingHandsGlovesColorBlack
+    id: PassengerPDA

@@ -8,6 +8,9 @@ using Content.Shared.Mobs.Components;
 using Content.Shared.Zombies;
 using Content.Server.RoundEnd;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Spawners;
+using Content.Shared.Destructible;
+using System.Linq;
 
 namespace Content.Server._KS14.GameTicking.Rules;
 
@@ -17,7 +20,7 @@ public sealed partial class ScenarioRuleComponent : Component
 }
 public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
 {
-    [Dependency] private readonly RoundEndSystem _roundEnd = default!;
+    [Dependency] private readonly RoundEndSystem _roundEndSystem = default!;
 
     public override void Initialize()
     {
@@ -34,6 +37,17 @@ public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
         SubscribeLocalEvent<ScenarioNtComponent, MobStateChangedEvent>(OnNtMobstateChanged);
         SubscribeLocalEvent<ScenarioNtComponent, EntityZombifiedEvent>(OnNtZombified);
 
+        SubscribeLocalEvent<ScenarioObjectiveComponent, TimedDespawnEvent>(OnObjDefended);
+        SubscribeLocalEvent<ScenarioObjectiveComponent, DestructionEventArgs>(OnObjDestroyed);
+
+    }
+
+    protected override void AppendRoundEndText(EntityUid uid,
+        ScenarioRuleComponent component,
+        GameRuleComponent gameRule,
+        ref RoundEndTextAppendEvent args)
+    {
+        args.AddLine("this is a scenario and this is a test");
     }
 
     protected override void Added(EntityUid uid, ScenarioRuleComponent component, GameRuleComponent gameRule, GameRuleAddedEvent args)
@@ -74,6 +88,61 @@ public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
     private void OnNtZombified(EntityUid uid, ScenarioNtComponent component, ref EntityZombifiedEvent args)
     {
         RemCompDeferred(uid, component);
+    }
+
+    private void CheckRoundShouldEnd()
+    {
+        // Check if there are syndies still alive
+        // If there are, the round can continue.
+        var syndies = EntityQuery<ScenarioSyndieComponent, MobStateComponent, TransformComponent>(true);
+        var syndiesAlive = syndies
+            .Any(syn => syn.Item2.CurrentState == MobState.Alive && syn.Item1.Running);
+
+        if (syndiesAlive)
+            return; // There are living syndies
+        else
+        {
+            _roundEndSystem.DoRoundEndBehavior(RoundEndBehavior.InstantEnd,
+                TimeSpan.FromMinutes(3), //doesnt matter
+                "comms-console-announcement-title-centcom",
+                "comms-console-announcement-title-centcom",
+                "comms-console-announcement-title-centcom");
+        }
+
+        // Check if there are nanotrasen still alive
+        // If there are, the round can continue.
+        var nanotrasen = EntityQuery<ScenarioNtComponent, MobStateComponent, TransformComponent>(true);
+        var nanotrasenAlive = syndies
+            .Any(nt => nt.Item2.CurrentState == MobState.Alive && nt.Item1.Running);
+
+        if (nanotrasenAlive)
+            return; // There are living nanotrasen
+
+
+        _roundEndSystem.DoRoundEndBehavior(RoundEndBehavior.InstantEnd,
+            TimeSpan.FromMinutes(3), //doesnt matter
+            "comms-console-announcement-title-centcom",
+            "comms-console-announcement-title-centcom",
+            "comms-console-announcement-title-centcom");
+
+    }
+
+    private void OnObjDefended(EntityUid uid, ScenarioObjectiveComponent component, TimedDespawnEvent args)
+    {
+        _roundEndSystem.DoRoundEndBehavior(RoundEndBehavior.InstantEnd,
+            TimeSpan.FromMinutes(3), //doesnt matter
+            "comms-console-announcement-title-centcom",
+            "comms-console-announcement-title-centcom",
+            "comms-console-announcement-title-centcom");
+    }
+
+    private void OnObjDestroyed(EntityUid uid, ScenarioObjectiveComponent component, DestructionEventArgs args)
+    {
+        _roundEndSystem.DoRoundEndBehavior(RoundEndBehavior.InstantEnd,
+            TimeSpan.FromMinutes(3), //doesnt matter
+            "comms-console-announcement-title-centcom",
+            "comms-console-announcement-title-centcom",
+            "comms-console-announcement-title-centcom");
     }
 
     /*private void OnRuleLoadedGrids(EntityUid uid, ScenarioRuleComponent component, ref RuleLoadedGridsEvent args)
@@ -305,14 +374,14 @@ public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
             component.ObjectiveEntities.Clear();
         }
     }*/
-    private void CheckRoundShouldEnd()
+    /*private void CheckRoundShouldEnd()
     {
-        /*var query = QueryActiveRules();
+        var query = QueryActiveRules();
         while (query.MoveNext(out var uid, out _, out var nukeops, out _))
         {
             CheckRoundShouldEnd((uid, nukeops));
-        }*/
-    }
+        }
+    }*/
 
     /*private void CheckRoundShouldEnd(Entity<NukeopsRuleComponent> ent)
     {

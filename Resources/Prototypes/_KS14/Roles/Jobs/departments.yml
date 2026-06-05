@@ -1,0 +1,9 @@
+
+- type: department
+  id: Scenario
+  name: department-Scenario
+  description: department-Scenario-description
+  color: "#ff5100"
+  roles:
+  - ScenarioSyndie
+  - ScenarioNt

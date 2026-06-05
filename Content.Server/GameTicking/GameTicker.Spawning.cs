@@ -309,7 +309,7 @@ namespace Content.Server.GameTicking
                 _chatManager.DispatchServerMessage(player, Loc.GetString("job-greet-crew-shortages"));
             }
 
-            if (!silent && TryComp(station, out MetaDataComponent? metaData))
+            if (!silent && TryComp(station, out MetaDataComponent? metaData) && !HasComp<KsSilenceWelcomeMessageComponent>(station)) //KS, added check for our silencing comps
             {
                 _chatManager.DispatchServerMessage(player,
                     Loc.GetString("job-greet-station-name", ("stationName", metaData.EntityName)));

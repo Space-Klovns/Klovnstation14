@@ -23,6 +23,7 @@ entities:
     components:
     - type: MetaData
       name: Map Entity
+    - type: KsSilenceWelcomeMessage
     - type: Transform
     - type: BecomesStation
       id: Tiderfall
@@ -7131,7 +7132,7 @@ entities:
       parent: 1
     - type: KsGridSpawner
       path: /Maps/_KS14/Grids/Scenarios/tiderfall/wreck.yml
-      spawnRange: 80,81
+      spawnRange: 180,281
 - proto: WallRock
   entities:
   - uid: 2
