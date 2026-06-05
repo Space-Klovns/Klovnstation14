@@ -279,6 +279,11 @@ public sealed partial class BiomeSystem : SharedBiomeSystem
 
         foreach (var aabb in ev.AABBs)
         {
+            // KS14 Start
+            // Just nuke all the decals or whatever
+            _decals.KsRemoveDecalsIntersecting(ev.MapUid, aabb);
+            // KS14 End
+
             for (var x = Math.Floor(aabb.Left); x <= Math.Ceiling(aabb.Right); x++)
             {
                 for (var y = Math.Floor(aabb.Bottom); y <= Math.Ceiling(aabb.Top); y++)

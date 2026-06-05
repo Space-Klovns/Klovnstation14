@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Content.Shared._KS14.ZLevel; // KS14
+using Robust.Client.GameObjects; // KS14
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
@@ -8,6 +10,7 @@ using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components; // KS14
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -24,6 +27,18 @@ namespace Content.Client.Viewport
         [Dependency] private readonly IClyde _clyde = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
+
+        // KS14 START: zlevels
+        private Robust.Shared.Graphics.Eye _zLevelEye = new Robust.Shared.Graphics.Eye()
+        {
+            DrawFov = false,
+            DrawLight = false
+        };
+        private MapSystem _mapSystem = default!;
+        private KsZLevelSystem _zLevelSystem = null!;
+        private List<EntityUid> _mapsToIterate = [];
+        private IRenderTarget _zBlurBuffer = default!;
+        // KS14 END: zlevels
 
         // Internal viewport creation is deferred.
         private IClydeViewport? _viewport;
@@ -150,7 +165,7 @@ namespace Content.Client.Viewport
 
             DebugTools.AssertNotNull(_viewport);
 
-            _viewport!.Render();
+            // KS14: Moved render call here to later
 
             if (_queuedScreenshots.Count != 0)
             {
@@ -169,6 +184,61 @@ namespace Content.Client.Viewport
 
             var drawBox = GetDrawBox();
             var drawBoxGlobal = drawBox.Translated(GlobalPixelPosition);
+
+            // KS14 Start
+            _mapsToIterate.Clear();
+            if (_mapSystem.TryGetMap(_eye?.Position.MapId, out var topMapUid) &&
+                _zLevelSystem.TryGetZLevelsBelow(topMapUid.Value, _mapsToIterate) &&
+                _mapsToIterate.Count != 0)
+            {
+                // TryGetZLevelsBelow doesn't include the map we're on
+                _mapsToIterate.Add(topMapUid.Value);
+
+                // as this is ascending, and depth is 0-indexed; top-most one (last) will be 0
+                var depth = _mapsToIterate.Count - 1;
+
+                _zLevelEye.DrawLight = _eye.DrawLight;
+                _zLevelEye.Offset = _eye.Offset;
+                _zLevelEye.Rotation = _eye.Rotation;
+
+                foreach (var mapUid in _mapsToIterate)
+                {
+                    _zLevelEye.Position = new MapCoordinates(
+                        _eye.Position.Position,
+                        _entityManager.GetComponent<MapComponent>(mapUid).MapId
+                    );
+                    _zLevelEye.Scale = _eye.Scale - new Vector2(0.075f * depth, 0.075f * depth);
+                    _viewport.Eye = _zLevelEye;
+
+                    _viewport.Render();
+                    _viewport.RenderScreenOverlaysBelow(handle, this, drawBoxGlobal);
+
+                    if (depth != 0)
+                        _clyde.BlurRenderTarget(_viewport, _viewport.RenderTarget, _zBlurBuffer, _zLevelEye, 2.5f);
+
+                    handle.DrawingHandleScreen.DrawTextureRect(_viewport.RenderTarget.Texture, drawBox);
+                    _viewport.RenderScreenOverlaysAbove(handle, this, drawBoxGlobal);
+
+                    depth--;
+
+                    // clearcolor for all maps other than first is none
+                    _viewport.ClearColor = null;
+                    _zLevelEye.DrawFov = false;
+                }
+
+                // default clearcolor is black
+                // yes if the very first frame ever is on a zlevel that isnt the deepest one, then yes one frame will unintentionally not clear
+                _viewport.ClearColor = Color.Black;
+                _zLevelEye.DrawFov = _eye.DrawFov;
+                return;
+            }
+            else
+            {
+                _viewport.Eye = _eye;
+                _viewport.Render();
+            }
+            // KS14 End
+
             _viewport.RenderScreenOverlaysBelow(handle, this, drawBoxGlobal);
             handle.DrawingHandleScreen.DrawTextureRect(_viewport.RenderTarget.Texture, drawBox);
             _viewport.RenderScreenOverlaysAbove(handle, this, drawBoxGlobal);
@@ -185,7 +255,7 @@ namespace Content.Client.Viewport
             DebugTools.AssertNotNull(_viewport);
 
             var vpSize = _viewport!.Size;
-            var ourSize = (Vector2) PixelSize;
+            var ourSize = (Vector2)PixelSize;
 
             if (FixedStretchSize == null)
             {
@@ -208,13 +278,13 @@ namespace Content.Client.Viewport
                 // Size
                 var pos = (ourSize - size) / 2;
 
-                return (UIBox2i) UIBox2.FromDimensions(pos, size);
+                return (UIBox2i)UIBox2.FromDimensions(pos, size);
             }
             else
             {
                 // Center only, no scaling.
                 var pos = (ourSize - FixedStretchSize.Value) / 2;
-                return (UIBox2i) UIBox2.FromDimensions(pos, FixedStretchSize.Value);
+                return (UIBox2i)UIBox2.FromDimensions(pos, FixedStretchSize.Value);
             }
         }
 
@@ -224,16 +294,16 @@ namespace Content.Client.Viewport
 
             var vpSizeBase = ViewportSize;
             var ourSize = PixelSize;
-            var (ratioX, ratioY) = ourSize / (Vector2) vpSizeBase;
+            var (ratioX, ratioY) = ourSize / (Vector2)vpSizeBase;
             var ratio = Math.Min(ratioX, ratioY);
             var renderScale = 1;
             switch (_renderScaleMode)
             {
                 case ScalingViewportRenderScaleMode.CeilInt:
-                    renderScale = (int) Math.Ceiling(ratio);
+                    renderScale = (int)Math.Ceiling(ratio);
                     break;
                 case ScalingViewportRenderScaleMode.FloorInt:
-                    renderScale = (int) Math.Floor(ratio);
+                    renderScale = (int)Math.Floor(ratio);
                     break;
                 case ScalingViewportRenderScaleMode.Fixed:
                     renderScale = _fixedRenderScale;
@@ -245,16 +315,26 @@ namespace Content.Client.Viewport
 
             _curRenderScale = renderScale;
 
+            // KS14: moved sampleParameters outside
+            var sampleParameters = new TextureSampleParameters
+            {
+                Filter = StretchMode == ScalingViewportStretchMode.Bilinear,
+            };
+
             _viewport = _clyde.CreateViewport(
                 ViewportSize * renderScale,
-                new TextureSampleParameters
-                {
-                    Filter = StretchMode == ScalingViewportStretchMode.Bilinear,
-                });
+                sampleParameters /* KS14: Moved this outside */);
 
             _viewport.RenderScale = new Vector2(renderScale, renderScale);
 
             _viewport.Eye = _eye;
+
+            // KS14 Start
+            _mapSystem ??= _entityManager.System<MapSystem>();
+            _zLevelSystem ??= _entityManager.System<KsZLevelSystem>();
+            _zBlurBuffer = _clyde
+                .CreateRenderTarget(ViewportSize * renderScale, new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb), sampleParameters: sampleParameters);
+            // KS14 End
         }
 
         protected override void Resized()
@@ -325,7 +405,7 @@ namespace Content.Client.Viewport
             EnsureViewportCreated();
 
             var drawBox = GetDrawBox();
-            var scaleFactor = drawBox.Size / (Vector2) _viewport!.Size;
+            var scaleFactor = drawBox.Size / (Vector2)_viewport!.Size;
 
             if (scaleFactor.X == 0 || scaleFactor.Y == 0)
                 // Basically a nonsense scenario, at least make sure to return something that can be inverted.

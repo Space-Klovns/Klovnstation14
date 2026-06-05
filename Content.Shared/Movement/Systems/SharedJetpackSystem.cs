@@ -2,6 +2,7 @@
 //      which is, `allow jetpacks to stay enabled when on grids and lightly rework jetpack system #37775` on wizden Github
 
 using System.Diagnostics.CodeAnalysis;
+using Content.Shared._KS14.ZLevel.Physics; // KS14
 using Content.Shared.Actions;
 using Content.Shared.Gravity;
 using Content.Shared.Interaction.Events;
@@ -25,6 +26,7 @@ public abstract class SharedJetpackSystem : EntitySystem
     [Dependency] private readonly SharedPopupSystem _popup = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
     [Dependency] private readonly ActionContainerSystem _actionContainer = default!;
+    [Dependency] private readonly KsZLevelPhysicsSystem _zLevelPhysicsSystem = default!; // KS14
 
     private EntityQuery<JetpackUserComponent> _jetpackUserQuery;
     private EntityQuery<ActiveJetpackComponent> _activeJetpackQuery;
@@ -162,6 +164,9 @@ public abstract class SharedJetpackSystem : EntitySystem
         if (TryComp<PhysicsComponent>(user, out var physics))
             _physics.SetBodyStatus(user, physics, BodyStatus.OnGround);
 
+        // KS14 Start
+        _zLevelPhysicsSystem.TryFall(user);
+        // KS14 End
         _movementSpeedModifier.RefreshWeightlessModifiers(user);
     }
 
