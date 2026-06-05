@@ -10,7 +10,8 @@ public sealed class SupplyPodSystem : EntitySystem
     [Dependency] private readonly IOverlayManager _overlayManager = default!;
     [Dependency] private readonly SystemCollectionHookManager _hookManager = default!;
 
-    private static readonly ProtoId<ShaderPrototype> ShaderId = "KsCutout";
+    private static readonly ProtoId<ShaderPrototype> StencilMaskShaderId = "StencilMask";
+    private static readonly ProtoId<ShaderPrototype> StencilDrawShaderId = "StencilDraw";
 
     public override void Initialize()
     {
@@ -21,8 +22,10 @@ public sealed class SupplyPodSystem : EntitySystem
 
     private void OnDependencyAvailable(IDependencyCollection dependencyCollection)
     {
-        var shader = _prototypeManager.Index(ShaderId).InstanceUnique();
-        var overlay = new SupplyPodOverlay(shader);
+        var overlay = new SupplyPodOverlay(
+            _prototypeManager.Index(StencilMaskShaderId).InstanceUnique(),
+            _prototypeManager.Index(StencilDrawShaderId).InstanceUnique()
+        );
 
         dependencyCollection.InjectDependencies(overlay, oneOff: true);
         _overlayManager.AddOverlay(overlay);

@@ -1,0 +1,38 @@
+
+- type: entity
+  name: supply pod
+  description: ACKK
+  id: SupplyPod
+  components:
+  - type: Transform
+    noRot: true
+  - type: Sprite
+    sprite: _KS14/Objects/SupplyPod/supplypods_64x64.rsi
+    drawdepth: LargeObjects
+    layers:
+    - state: pod
+    - state: pod_door
+    - state: default
+
+
+- type: entity
+  name: supply pod
+  description: ACKK
+  suffix: open
+  id: SupplyPodOpen
+  components:
+  - type: Transform
+    noRot: true
+  - type: Sprite
+    sprite: _KS14/Objects/SupplyPod/supplypods_64x64.rsi
+    drawdepth: LargeObjects
+    layers:
+    - state: pod
+  - type: SupplyPod
+  - type: SupplyPodDoorDrawer
+    doorData:
+      sprite: /Textures/_KS14/Objects/SupplyPod/supplypods_64x64.rsi
+      state: pod_door
+    decalData:
+      sprite: /Textures/_KS14/Objects/SupplyPod/supplypods_64x64.rsi
+      state: default

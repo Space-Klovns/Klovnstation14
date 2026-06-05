@@ -1,13 +1,12 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
+using Content.Client.Graphics;
 using Content.Shared._KS14.SupplyPod;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
-using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 
 namespace Content.Client._KS14.SupplyPod;
 
@@ -17,33 +16,35 @@ namespace Content.Client._KS14.SupplyPod;
 
 public sealed class SupplyPodOverlay : Overlay
 {
-    private readonly ShaderInstance _cutoutShader;
+    private readonly ShaderInstance _maskShader;
+    private readonly ShaderInstance _drawShader;
 
     [Dependency] private readonly IEntityManager _entityManager = default!;
     [Dependency] private readonly IResourceCache _resourceCache = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-
+    [Dependency] private readonly IClyde _clyde = default!;
     [Dependency] private readonly TransformSystem _transformSystem = default!;
-    [Dependency] private readonly SpriteSystem _spriteSystem = default!;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpaceEntities;
 
+    public const int ConstZIndex = (int)Shared.DrawDepth.DrawDepth.LargeObjects; // Under ghosts and fire, above mostly everything else
     private const float Scale = 1f;
     private static readonly Matrix3x2 ScaleMatrix = Matrix3Helpers.CreateScale(new Vector2(Scale, Scale));
-
     public static readonly Vector2 HalfNegativeVector2PerPixel = new(-0.5f / EyeManager.PixelsPerMeter, -0.5f / EyeManager.PixelsPerMeter);
 
-    public const int ConstZIndex = (int)Shared.DrawDepth.DrawDepth.LargeObjects; // Under ghosts and fire, above mostly everything else
+    private OverlayResourceCache<OverlayResources> _resources = new();
+    private readonly List<(SupplyPodDoorDrawerComponent, Matrix3x2)> _drawDataCache = new();
 
-    public SupplyPodOverlay(ShaderInstance cutoutShader)
+    public SupplyPodOverlay(ShaderInstance stencilMaskShader, ShaderInstance stencilDrawShader)
     {
-        _cutoutShader = cutoutShader;
+        _maskShader = stencilMaskShader;
+        _drawShader = stencilDrawShader;
+
         ZIndex = ConstZIndex;
     }
 
     protected override bool BeforeDraw(in OverlayDrawArgs args)
     {
-        return _entityManager.EntityQuery<SupplyPodComponent>(includePaused: false).Any();
+        return _entityManager.EntityQuery<SupplyPodDoorDrawerComponent>(includePaused: false).Any();
     }
 
     protected override void Draw(in OverlayDrawArgs args)
@@ -53,60 +54,98 @@ public sealed class SupplyPodOverlay : Overlay
         worldHandle.SetTransform(Matrix3x2.Identity);
 
         var renderTarget = viewport.RenderTarget;
+
+        var resources = _resources.GetForViewport(viewport, static _ => new());
+        var targetSize = viewport.RenderTarget.Size;
+        if (resources.MaskTarget?.Size != targetSize)
+        {
+            resources.MaskTarget?.Dispose();
+            resources.MaskTarget = _clyde.CreateRenderTarget(targetSize, new(RenderTargetColorFormat.Rgba8Srgb), name: "canister-overlay-mask");
+        }
+
         var scale = viewport.RenderScale / (Vector2.One / (renderTarget.Size / (Vector2)viewport.Size));
 
         var invMatrix = renderTarget.GetWorldToLocalMatrix(viewport.Eye!, scale);
-        worldHandle.UseShader(_cutoutShader);
 
-        // All ts does is
-        var eqe = _entityManager.EntityQueryEnumerator<SupplyPodDoorDrawerComponent, TransformComponent>();
-        while (eqe.MoveNext(out var supplyPodComponent, out var transformComponent))
+        worldHandle.RenderInRenderTarget(resources.MaskTarget, () =>
         {
-            if (!TryGetTexture(supplyPodComponent.DoorData, out var doorTexture) ||
-                !TryGetTexture(supplyPodComponent.DecalData, out var decalTexture))
+            worldHandle.UseShader(_maskShader);
+            var eqe = _entityManager.EntityQueryEnumerator<SupplyPodDoorDrawerComponent, TransformComponent>();
+            while (eqe.MoveNext(out var supplyPodComponent, out var transformComponent))
+            {
+                if (!TryGetTexture(supplyPodComponent.DoorData, out var doorTexture))
+                    continue;
+
+                var scaledWorld = Matrix3x2.Multiply(ScaleMatrix, Matrix3Helpers.CreateTranslation(_transformSystem.GetWorldPosition(transformComponent)));
+                var worldMatrix = Matrix3x2.Multiply(Matrix3Helpers.CreateRotation(supplyPodComponent.Rotation), scaledWorld);
+                // Apply the inverse matrix to transform to render target space. otherwise, we would be rendering in worldspace
+                var renderTargetMatrix = Matrix3x2.Multiply(worldMatrix, invMatrix);
+                worldHandle.SetTransform(renderTargetMatrix);
+
+                var offset = HalfNegativeVector2PerPixel * doorTexture.Size;
+                worldHandle.DrawTexture(doorTexture, offset, modulate: Color.Black);
+
+                _drawDataCache.Add((supplyPodComponent, renderTargetMatrix));
+            }
+        }, Color.White);
+
+        if (_drawDataCache.Count == 0)
+            goto end;
+
+        worldHandle.UseShader(_drawShader);
+        foreach (var drawDatum in _drawDataCache)
+        {
+            var component = drawDatum.Item1;
+            if (!TryGetTexture(component.DecalData, out var decalTexture))
                 continue;
 
-            var scaledWorld = Matrix3x2.Multiply(ScaleMatrix, Matrix3Helpers.CreateTranslation(_transformSystem.GetWorldPosition(transformComponent)));
-            var worldMatrix = Matrix3x2.Multiply(Matrix3Helpers.CreateRotation(supplyPodComponent.Rotation), scaledWorld);
-            // Apply the inverse matrix to transform to render target space. otherwise, we would be rendering in worldspace
-            var renderTargetMatrix = Matrix3x2.Multiply(worldMatrix, invMatrix);
-            worldHandle.SetTransform(renderTargetMatrix);
-
-            var offset = HalfNegativeVector2PerPixel * doorTexture.Size;
-
-            // If there are multiple supplypods with different size and non-similar door textures i think this gets fucked
-            _cutoutShader.SetParameter("maskTexture", doorTexture);
-            worldHandle.DrawTexture(decalTexture, offset);
+            worldHandle.DrawTexture(decalTexture, HalfNegativeVector2PerPixel * decalTexture.Size);
         }
 
+        _drawDataCache.Clear();
+    end:
         worldHandle.SetTransform(Matrix3x2.Identity);
         worldHandle.UseShader(null);
     }
 
-    private bool TryGetTexture(PrototypeLayerData? datum, [NotNullWhen(true)] out Texture? texture)
+    private bool TryGetTexture(PrototypeLayerData datum, [NotNullWhen(true)] out Texture? texture)
     {
         if (datum == null ||
-            !TryGetLayerDatum(datum, out var rsi, out var state))
+            !TryGetLayerDatumState(datum, out var state))
         {
             texture = null;
             return false;
         }
 
-        texture = _spriteSystem.GetFrame(new SpriteSpecifier.Rsi(rsi.Path, state.ToString()!), _gameTiming.CurTime);
+        texture = state.Frame0;
         return true;
     }
 
-    private bool TryGetLayerDatum(PrototypeLayerData datum, [NotNullWhen(true)] out RSI? rsi, [NotNullWhen(true)] out RSI.State? state)
+    private bool TryGetLayerDatumState(PrototypeLayerData datum, [NotNullWhen(true)] out RSI.State? state)
     {
         if (!_resourceCache.TryGetResource<RSIResource>(datum.RsiPath!, out var rsiResource) ||
             !rsiResource.RSI.TryGetState(datum.State, out state))
         {
-            rsi = null;
             state = null;
             return false;
         }
 
-        rsi = rsiResource.RSI;
         return true;
+    }
+
+    protected override void DisposeBehavior()
+    {
+        _resources.Dispose();
+        base.DisposeBehavior();
+    }
+
+    private sealed class OverlayResources : IDisposable
+    {
+        public IRenderTexture? MaskTarget;
+
+        public void Dispose()
+        {
+            MaskTarget?.Dispose();
+        }
     }
 }

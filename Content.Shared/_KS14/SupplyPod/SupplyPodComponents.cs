@@ -32,5 +32,5 @@ public sealed partial class SupplyPodDoorDrawerComponent : Component
     ///     Must point to an RSI, not raw texture.
     /// </summary>
     [DataField(required: true), AutoNetworkedField]
-    public PrototypeLayerData? DecalData;
+    public PrototypeLayerData DecalData;
 }

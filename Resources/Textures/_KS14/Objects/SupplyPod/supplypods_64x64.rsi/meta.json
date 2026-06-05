@@ -101,35 +101,6 @@
       "name": "rubble_bg_thin"
     },
     {
-      "name": "gondola",
-      "directions": 4
-    },
-    {
-      "name": "gondola",
-      "directions": 4,
-      "delays": [
-        [
-          0.1,
-          0.1
-        ],
-        [
-          0.1,
-          0.1
-        ],
-        [
-          0.1,
-          0.1
-        ],
-        [
-          0.1,
-          0.1
-        ]
-      ]
-    },
-    {
-      "name": "gondola_open"
-    },
-    {
       "name": "pod_glow_yellow"
     },
     {
@@ -140,12 +111,6 @@
     },
     {
       "name": "pod_glow_green"
-    },
-    {
-      "name": "mask_topfin"
-    },
-    {
-      "name": "mask_bottomfin"
     },
     {
       "name": "invisible-icon"
