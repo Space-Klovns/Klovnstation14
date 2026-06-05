@@ -1,3 +1,4 @@
+using Content.Server.Shuttles.Systems;
 using Robust.Server.GameObjects;
 using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.Random;
@@ -9,6 +10,7 @@ public sealed class KsGridSpawnerSystem : EntitySystem
     [Dependency] private readonly IRobustRandom _robustRandom = default!;
     [Dependency] private readonly MapLoaderSystem _mapLoaderSystem = default!;
     [Dependency] private readonly TransformSystem _transformSystem = default!;
+    [Dependency] private readonly ShuttleSystem _shuttleSystem = default!;
 
     public override void Initialize()
     {
@@ -34,7 +36,9 @@ public sealed class KsGridSpawnerSystem : EntitySystem
             position += _robustRandom.NextAngle().RotateVec(new System.Numerics.Vector2(distance, 0f));
         }
 
-        _mapLoaderSystem.TryLoadGrid(transformComponent.MapID, entity.Comp.Path, out _, offset: position, rot: entity.Comp.Rotation);
+        if (_mapLoaderSystem.TryLoadGrid(transformComponent.MapID, entity.Comp.Path, out var gridEntity, offset: position, rot: entity.Comp.Rotation))
+            _shuttleSystem.Smimsh(gridEntity.Value.Owner, grid: gridEntity.Value.Comp);
+
         RemComp(entity, entity.Comp);
     }
 }
