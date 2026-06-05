@@ -96,3 +96,11 @@ public sealed partial class GravityJumpEvent : InstantActionEvent
     [DataField]
     public float StaminaCost = 0f;
 }
+
+// KS14
+/// <summary>
+///     Raised on the target after it gets hit by
+///         something that was jumping and couldve been hurt.
+/// </summary>
+[ByRefEvent]
+public readonly record struct KsHitByJumpEvent(EntityUid ActorUid);

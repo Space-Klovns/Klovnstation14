@@ -78,6 +78,11 @@ public sealed partial class SharedJumpAbilitySystem : EntitySystem
         else
             entity.Comp.Punish = true;
 
+        // KS14 Start
+        var ksEv = new KsHitByJumpEvent(entity.Owner);
+        RaiseLocalEvent(args.OtherEntity, ref ksEv);
+        // KS14 End
+
         RemCompDeferred<ActiveLeaperComponent>(entity);
     }
 

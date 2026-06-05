@@ -1,6 +1,7 @@
 using Content.Server.NPC.Components;
 using Content.Shared._KS14.Damage.Events;
 using Content.Shared.Interaction.Events;
+using Content.Shared.Movement.Components;
 using Content.Shared.Strip;
 using Content.Shared.Throwing;
 
@@ -13,10 +14,17 @@ public sealed partial class NPCRetaliationSystem : EntitySystem
     private void InitialiseKlovn()
     {
         // This should all warrant retaliation but it didn't, so now it does
+        SubscribeLocalEvent<NPCRetaliationComponent, KsHitByJumpEvent>(KsOnHitByJump);
         SubscribeLocalEvent<NPCRetaliationComponent, ContactInteractionEvent>(KsOnContact); // KS14: ANK: contact should warrant retaliation
         SubscribeLocalEvent<NPCRetaliationComponent, KsAfterStaminaDamageEvent>(KsAfterStaminaDamage);
         SubscribeLocalEvent<NPCRetaliationComponent, KsStrippingStartedEvent>(KsAfterStrippingStarted);
     }
+
+    private void KsOnHitByJump(Entity<NPCRetaliationComponent> ent, ref KsHitByJumpEvent args)
+    {
+        TryRetaliate(ent, args.ActorUid, tryWarn: false);
+    }
+
 
     private void KsOnContact(Entity<NPCRetaliationComponent> ent, ref ContactInteractionEvent args)
     {
