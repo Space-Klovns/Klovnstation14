@@ -17002,26 +17002,6 @@ entities:
     - type: Transform
       pos: -21.5,-77.5
       parent: 2
-- proto: KsOperativeRadioJammer
-  entities:
-  - uid: 988
-    components:
-    - type: Transform
-      pos: 1.5,-77.5
-      parent: 2
-  - uid: 3527
-    components:
-    - type: Transform
-      pos: -2.5,-37.5
-      parent: 2
-  - uid: 3593
-    components:
-    - type: Transform
-      anchored: False
-      pos: -9.4,-12.9
-      parent: 2
-    missingComponents:
-    - Anchorable
 - proto: KsSpawnMobOperativeArmedPistol
   entities:
   - uid: 989
