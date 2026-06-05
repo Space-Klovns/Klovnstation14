@@ -1,0 +1,10 @@
+uniform sampler2D maskTexture;
+
+void fragment()
+{
+    vec4 targetc = zTexture(UV);
+    vec4 maskc = texture(maskTexture, UV);
+
+    targetc.a *= (1.0 - maskc.a);
+    COLOR = targetc;
+}
