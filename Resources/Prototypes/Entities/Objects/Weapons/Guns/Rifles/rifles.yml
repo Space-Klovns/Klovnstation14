@@ -28,8 +28,8 @@
   - type: Gun
     minAngle: 180
     maxAngle: 180
-    angleIncrease: 6
-    angleDecay: 25
+    angleIncrease: 5
+    angleDecay: 40
     fireRate: 6
     selectedMode: FullAuto
     shotsPerBurst: 3
@@ -92,7 +92,7 @@
   - type: Gun
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/rifle2.ogg
-    angleIncrease: 7 # KS14 modified
+    # angleIncrease: 7 # KS14 modified
   - type: ChamberMagazineAmmoProvider
     soundRack:
       path: /Audio/Weapons/Guns/Cock/ltrifle_cock.ogg
@@ -130,6 +130,8 @@
   id: WeaponRifleM90GrenadeLauncher
   description: "An older bullpup carbine model, with an attached underbarrel grenade launcher.\nFeeds from .20 rifle magazines."
   components:
+  - type: Gun
+    angleIncrease: 0
   - type: Sprite
     sprite: Objects/Weapons/Guns/Rifles/carbine.rsi
     layers:
@@ -186,6 +188,7 @@
     sprite: Objects/Weapons/Guns/Rifles/lecter.rsi
   - type: Gun
     fireRate: 4
+    angleIncrease: 2
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/ltrifle.ogg
   - type: ItemSlots
@@ -268,6 +271,7 @@
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/estocshot.ogg
     shotsPerBurst: 3
+    angleIncrease: 0
     selectedMode: Burst
     availableModes:
     - Burst
