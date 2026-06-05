@@ -44,8 +44,8 @@ public sealed class KsPlumbingIvPumpSystem : SharedKsPlumbingIvPumpSystem
 
         if (TryComp<KsPlumbingIvPumpComponent>(entity.Comp.PumpUid, out var pumpComponent))
         {
-            pumpComponent.ChainStartUid = EntityUid.Invalid;
-            pumpComponent.PatientUid = EntityUid.Invalid;
+            pumpComponent.ChainStartUid = null;
+            pumpComponent.PatientUid = null;
             Dirty(entity.Comp.PumpUid, pumpComponent);
 
             UpdateState(entity.Comp.PumpUid);
@@ -61,7 +61,7 @@ public sealed class KsPlumbingIvPumpSystem : SharedKsPlumbingIvPumpSystem
     private void OnDeviceUpdate(Entity<KsPlumbingIvPumpComponent> entity, ref PlumbingDeviceUpdateEvent args)
     {
         var patientUid = entity.Comp.PatientUid;
-        if (patientUid == EntityUid.Invalid)
+        if (patientUid is not { })
             goto endearly;
 
         if (!_solutionContainerSystem.ResolveSolution(entity.Owner, entity.Comp.BufferSolutionName, ref entity.Comp.BufferSolutionEntity, out var bufferSolution))
@@ -134,7 +134,7 @@ public sealed class KsPlumbingIvPumpSystem : SharedKsPlumbingIvPumpSystem
     private void OnDragDropDragged(Entity<KsPlumbingIvPumpComponent> entity, ref DragDropDraggedEvent args)
     {
         if (args.Handled ||
-            entity.Comp.ChainStartUid != EntityUid.Invalid)
+            entity.Comp.ChainStartUid is { })
             return;
 
         var startUid = entity.Owner;

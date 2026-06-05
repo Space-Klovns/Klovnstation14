@@ -20,18 +20,18 @@ public sealed partial class KsPlumbingIvPumpComponent : Component
     public KsPlumbingIvPumpMode Mode = KsPlumbingIvPumpMode.Drawing;
 
     /// <summary>
-    ///     Invalid if the entity doesn't exist.
+    ///     Null if non-existent.
     /// </summary>
     [DataField, ViewVariables(VVAccess.ReadOnly)]
     [AutoNetworkedField]
-    public EntityUid ChainStartUid = EntityUid.Invalid;
+    public EntityUid? ChainStartUid = null;
 
     /// <summary>
-    ///     Invalid if none.
+    ///     Null if non-existent.
     /// </summary>
     [DataField, ViewVariables(VVAccess.ReadOnly)]
     [AutoNetworkedField]
-    public EntityUid PatientUid = EntityUid.Invalid;
+    public EntityUid? PatientUid = null;
 
     [DataField, ViewVariables(VVAccess.ReadWrite)]
     public int ChainInbetweenCount = 5;

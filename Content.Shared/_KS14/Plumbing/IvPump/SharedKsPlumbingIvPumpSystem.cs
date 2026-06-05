@@ -39,7 +39,7 @@ public abstract class SharedKsPlumbingIvPumpSystem : EntitySystem
         if (!Resolve(entity, ref entity.Comp))
             return;
 
-        var active = entity.Comp.ChainStartUid != EntityUid.Invalid;
+        var active = entity.Comp.ChainStartUid is { };
         if (TryComp<PlumbingOutletComponent>(entity.Owner, out var outletComponent))
         {
             outletComponent.Enabled = active;
