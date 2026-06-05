@@ -6,6 +6,7 @@
   # Physics
   - type: Transform
     noRot: true
+    gridTraversal: false # to prevent it looking like shit
   - type: Physics
     bodyType: Static
     canCollide: true

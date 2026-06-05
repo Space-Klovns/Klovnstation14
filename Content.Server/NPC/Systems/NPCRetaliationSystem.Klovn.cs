@@ -25,7 +25,6 @@ public sealed partial class NPCRetaliationSystem : EntitySystem
         TryRetaliate(ent, args.ActorUid, tryWarn: false);
     }
 
-
     private void KsOnContact(Entity<NPCRetaliationComponent> ent, ref ContactInteractionEvent args)
     {
         TryRetaliate(ent, args.Other, tryWarn: true);
