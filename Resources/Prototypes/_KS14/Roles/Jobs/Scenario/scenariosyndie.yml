@@ -1,5 +1,5 @@
 - type: job
-  id: ScenarioSyndie
+  id: ScenarioSyndie #TODO soot: species whitelist to be human only
   name: job-name-scenario-syndie
   description: job-description-scenario-syndie
   playTimeTracker: JobScenarioSyndie

@@ -85,6 +85,8 @@
   description: This is a server that is of paramount importance to the syndicate. Would be a shame if someone broke it!
   components:
   - type: ScenarioObjective
+  - type: TimedDespawn
+    lifetime: 1800
 
 - type: entity
   parent: MarkerBase

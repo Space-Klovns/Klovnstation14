@@ -4,6 +4,8 @@
   name: department-Scenario
   description: department-Scenario-description
   color: "#ff5100"
+  editorHidden: false
+  weight: -40
   roles:
   - ScenarioSyndie
   - ScenarioNt

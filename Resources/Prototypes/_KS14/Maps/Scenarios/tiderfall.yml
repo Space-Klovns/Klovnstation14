@@ -14,3 +14,4 @@
           availableJobs:
             ScenarioSyndie: [ 5, 5 ]
             ScenarioNt: [ 15, 15 ]
+        - type: KsSilenceWelcomeMessage

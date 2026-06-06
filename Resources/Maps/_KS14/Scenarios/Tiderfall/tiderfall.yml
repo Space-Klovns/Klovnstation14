@@ -23,7 +23,6 @@ entities:
     components:
     - type: MetaData
       name: Map Entity
-    - type: KsSilenceWelcomeMessage
     - type: Transform
     - type: BecomesStation
       id: Tiderfall
