@@ -11,7 +11,7 @@ public sealed class SpawnPointSystem : EntitySystem
 {
     [Dependency] private readonly GameTicker _gameTicker = default!;
     [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly StationSystem _stationSystem = default!;
+    //[Dependency] private readonly StationSystem _stationSystem = default!; KS14
     [Dependency] private readonly StationSpawningSystem _stationSpawning = default!;
 
     public override void Initialize()
@@ -37,7 +37,7 @@ public sealed class SpawnPointSystem : EntitySystem
             {
                 possiblePositions.Add(xform.Coordinates);
             }
-            
+
             //KS14 start
             if (_gameTicker.RunLevel == GameRunLevel.InRound && spawnPoint.SpawnType == SpawnPointType.LateJoin && spawnPoint.PickyLatejoin == true &&
                 (args.Job == null || spawnPoint.Job == null || spawnPoint.Job == args.Job))
