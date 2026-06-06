@@ -210,7 +210,7 @@
   name: syndicate rubber stamp
   parent: [RubberStampBase, BaseSyndicateContraband]
   id: RubberStampSyndicate
-  #categories: [ DoNotMap ] KS14
+  categories: [ DoNotMap ] KS14
   components:
   - type: Stamp
     stampedName: stamp-component-stamped-name-syndicate
