@@ -6,3 +6,99 @@
   components:
   - type: BatterySelfRecharger
     autoRechargeRate: 30
+
+- type: entity
+  name: KSLaserGun
+  parent: [WeaponDisablerPractice, BaseSecurityCommandContraband]
+  id: WeaponDisabler
+  description: A self-defense weapon that exhausts organic targets, weakening them until they collapse.
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Battery/disabler.rsi
+    layers:
+      - state: base
+        map: ["enum.GunVisualLayers.Base"]
+      - state: mag-unshaded-0
+        map: ["enum.GunVisualLayers.MagUnshaded"]
+        shader: unshaded
+  - type: Clothing
+    sprite: Objects/Weapons/Guns/Battery/disabler.rsi
+    quickEquip: false
+    slots:
+      - suitStorage
+      - Belt
+  - type: BatteryAmmoProvider
+    proto: BulletDisabler
+    fireCost: 100
+
+- type: entity
+  name: KSEnergyGun
+  parent: [WeaponDisablerPractice, BaseSecurityCommandContraband]
+  id: WeaponDisabler
+  description: A self-defense weapon that exhausts organic targets, weakening them until they collapse.
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Battery/disabler.rsi
+    layers:
+      - state: base
+        map: ["enum.GunVisualLayers.Base"]
+      - state: mag-unshaded-0
+        map: ["enum.GunVisualLayers.MagUnshaded"]
+        shader: unshaded
+  - type: Clothing
+    sprite: Objects/Weapons/Guns/Battery/disabler.rsi
+    quickEquip: false
+    slots:
+      - suitStorage
+      - Belt
+  - type: BatteryAmmoProvider
+    proto: BulletDisabler
+    fireCost: 100
+
+- type: entity
+  name: KSLaserCarbine
+  parent: [WeaponDisablerPractice, BaseSecurityCommandContraband]
+  id: WeaponDisabler
+  description: A self-defense weapon that exhausts organic targets, weakening them until they collapse.
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Battery/disabler.rsi
+    layers:
+      - state: base
+        map: ["enum.GunVisualLayers.Base"]
+      - state: mag-unshaded-0
+        map: ["enum.GunVisualLayers.MagUnshaded"]
+        shader: unshaded
+  - type: Clothing
+    sprite: Objects/Weapons/Guns/Battery/disabler.rsi
+    quickEquip: false
+    slots:
+      - suitStorage
+      - Belt
+  - type: BatteryAmmoProvider
+    proto: BulletDisabler
+    fireCost: 100
+
+- type: entity
+  name: KSX-01MultiPhaseEnergyGun
+  parent: [WeaponDisablerPractice, BaseSecurityCommandContraband]
+  id: WeaponDisabler
+  description: A self-defense weapon that exhausts organic targets, weakening them until they collapse.
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Battery/disabler.rsi
+    layers:
+      - state: base
+        map: ["enum.GunVisualLayers.Base"]
+      - state: mag-unshaded-0
+        map: ["enum.GunVisualLayers.MagUnshaded"]
+        shader: unshaded
+  - type: Clothing
+    sprite: Objects/Weapons/Guns/Battery/disabler.rsi
+    quickEquip: false
+    slots:
+      - suitStorage
+      - Belt
+  - type: BatteryAmmoProvider
+    proto: BulletDisabler
+    fireCost: 100
