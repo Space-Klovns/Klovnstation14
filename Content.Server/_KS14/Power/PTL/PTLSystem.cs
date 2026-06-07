@@ -15,6 +15,9 @@ using Content.Shared.Stacks;
 using Content.Shared.Tag;
 using Content.Shared.Weapons.Ranged;
 using Content.Shared.Weapons.Ranged.Components;
+using Content.Shared.Weapons.Hitscan.Components;
+using Content.Shared.Weapons.Hitscan.Events;
+using Content.Shared.Damage;
 using Content.Shared.Power.Components;
 using Content.Shared.Power;
 using Content.Shared.Power.EntitySystems;
@@ -60,6 +63,21 @@ public sealed partial class PTLSystem : EntitySystem
         SubscribeLocalEvent<PTLComponent, ExaminedEvent>(OnExamine);
         SubscribeLocalEvent<PTLComponent, GotEmaggedEvent>(OnEmagged);
         SubscribeLocalEvent<PTLComponent, ChargeChangedEvent>(OnChargeChanged);
+        SubscribeLocalEvent<HitscanBasicDamageComponent, HitscanTraceEvent>(OnHitscanTrace);
+    }
+
+    private void OnHitscanTrace(EntityUid uid, HitscanBasicDamageComponent component, ref HitscanTraceEvent args)
+    {
+        if (!TryComp<PTLComponent>(args.Gun, out var ptl))
+            return;
+
+        if (!TryComp<BatteryComponent>(args.Gun, out var battery))
+            return;
+
+        var megajoule = 1e6;
+        var charge = _battery.GetCharge((args.Gun, battery)) / megajoule;
+
+        component.Damage = ptl.BaseBeamDamage * (float) charge * ptl.DamageMultiplier;
     }
 
     public override void Update(float frameTime)
@@ -87,7 +105,7 @@ public sealed partial class PTLSystem : EntitySystem
     {
         var megajoule = 1e6;
         var charge = _battery.GetCharge((uid, battery)) / megajoule;
-        
+
         var spesos = (int) (charge * ptl.SpesosMultiplier);
 
         if (charge <= 0 || !double.IsFinite(spesos) || spesos < 0) return;
@@ -163,7 +181,7 @@ public sealed partial class PTLSystem : EntitySystem
     private void OnInteractHand(Entity<PTLComponent> ent, ref InteractHandEvent args)
     {
         ent.Comp.Active = !ent.Comp.Active;
-        
+
         if (ent.Comp.Active)
             EnsureComp<PTLActiveComponent>(ent);
         else
@@ -227,7 +245,7 @@ public sealed partial class PTLSystem : EntitySystem
         component.ReversedFiring = true;
         args.Handled = true;
     }
-    
+
     private void OnChargeChanged(Entity<PTLComponent> ent, ref ChargeChangedEvent args)
     {
         UpdateAppearance(ent, ent.Comp, CompOrNull<BatteryComponent>(ent));
