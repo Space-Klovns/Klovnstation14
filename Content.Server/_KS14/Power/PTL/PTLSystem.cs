@@ -22,6 +22,7 @@ using Content.Shared.Power.Components;
 using Content.Shared.Power;
 using Content.Shared.Power.EntitySystems;
 using Robust.Server.Audio;
+using Robust.Server.GameObjects;
 using Robust.Shared.Audio;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -41,13 +42,12 @@ public sealed partial class PTLSystem : EntitySystem
     [Dependency] private readonly StackSystem _stack = default!;
     [Dependency] private readonly AudioSystem _aud = default!;
     [Dependency] private readonly EmagSystem _emag = default!;
+    [Dependency] private readonly UserInterfaceSystem _ui = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
     [Dependency] private readonly SharedBatterySystem _battery = default!;
     [Dependency] private readonly SharedRadiationSystem _radiation = default!;
 
     private static readonly ProtoId<StackPrototype> _stackCredits = "Credit";
-    private static readonly ProtoId<TagPrototype> _tagScrewdriver = "Screwdriver";
-    private static readonly ProtoId<TagPrototype> _tagMultitool = "Multitool";
 
     private readonly SoundPathSpecifier _soundKaching = new("/Audio/Effects/kaching.ogg");
     private readonly SoundPathSpecifier _soundSparks = new("/Audio/Effects/sparks4.ogg");
@@ -58,12 +58,82 @@ public sealed partial class PTLSystem : EntitySystem
         base.Initialize();
 
         UpdatesAfter.Add(typeof(SmesSystem));
-        SubscribeLocalEvent<PTLComponent, InteractHandEvent>(OnInteractHand);
-        SubscribeLocalEvent<PTLComponent, AfterInteractUsingEvent>(OnAfterInteractUsing);
-        SubscribeLocalEvent<PTLComponent, ExaminedEvent>(OnExamine);
+
+        Subs.BuiEvents<PTLComponent>(PTLUiKey.Key, subs =>
+        {
+            subs.Event<PTLToggleMessage>(OnToggleMessage);
+            subs.Event<PTLSetDelayMessage>(OnSetDelayMessage);
+            subs.Event<PTLWithdrawMessage>(OnWithdrawMessage);
+        });
+
         SubscribeLocalEvent<PTLComponent, GotEmaggedEvent>(OnEmagged);
+        SubscribeLocalEvent<PTLComponent, MapInitEvent>(OnMapInit);
         SubscribeLocalEvent<PTLComponent, ChargeChangedEvent>(OnChargeChanged);
         SubscribeLocalEvent<HitscanBasicDamageComponent, HitscanTraceEvent>(OnHitscanTrace);
+    }
+
+    private void OnMapInit(Entity<PTLComponent> ent, ref MapInitEvent args)
+    {
+        UpdateUiState(ent, ent.Comp);
+    }
+
+    private void OnToggleMessage(Entity<PTLComponent> ent, ref PTLToggleMessage args)
+    {
+        ent.Comp.Active = !ent.Comp.Active;
+
+        if (ent.Comp.Active)
+            EnsureComp<PTLActiveComponent>(ent);
+        else
+            RemComp<PTLActiveComponent>(ent);
+
+        _aud.PlayPvs(_soundPower, ent);
+
+        UpdateAppearance(ent, ent.Comp, CompOrNull<BatteryComponent>(ent));
+        UpdateUiState(ent, ent.Comp);
+        Dirty(ent);
+    }
+
+    private void OnSetDelayMessage(Entity<PTLComponent> ent, ref PTLSetDelayMessage args)
+    {
+        ent.Comp.ShootDelay = Math.Clamp(args.Delay, ent.Comp.ShootDelayThreshold.X, ent.Comp.ShootDelayThreshold.Y);
+        
+        _aud.PlayPvs(_soundSparks, ent);
+        UpdateUiState(ent, ent.Comp);
+        Dirty(ent);
+    }
+
+    private void OnWithdrawMessage(Entity<PTLComponent> ent, ref PTLWithdrawMessage args)
+    {
+        if (ent.Comp.SpesosHeld <= 0)
+            return;
+
+        _stack.SpawnAtPosition((int) ent.Comp.SpesosHeld, _stackCredits, Transform(ent).Coordinates);
+        ent.Comp.SpesosHeld = 0;
+
+        _aud.PlayPvs(_soundKaching, ent);
+        UpdateUiState(ent, ent.Comp);
+        Dirty(ent);
+    }
+
+    private void UpdateUiState(EntityUid uid, PTLComponent ptl)
+    {
+        var currentCharge = 0f;
+        var maxCharge = 0f;
+
+        if (TryComp<BatteryComponent>(uid, out var battery))
+        {
+            currentCharge = _battery.GetCharge((uid, battery));
+            maxCharge = battery.MaxCharge;
+        }
+
+        _ui.SetUiState(uid, PTLUiKey.Key, new PTLBoundUserInterfaceState(
+            ptl.Active, 
+            ptl.SpesosHeld, 
+            ptl.ShootDelay, 
+            ptl.ShootDelayThreshold.X, 
+            ptl.ShootDelayThreshold.Y,
+            currentCharge,
+            maxCharge));
     }
 
     private void OnHitscanTrace(EntityUid uid, HitscanBasicDamageComponent component, ref HitscanTraceEvent args)
@@ -157,6 +227,8 @@ public sealed partial class PTLSystem : EntitySystem
         // The GunSystem also subtracts a small fireCost from the BatteryAmmoProvider, but that is negligible compared to megajoules.
         _battery.UseCharge((uid, battery), (float) (charge * megajoule));
 
+        UpdateUiState(uid, ptl);
+
         // Reset radiation intensity after a scaling delay (min 3s) so it pulses rather than leaks permanently.
         if (charge >= ptl.PowerEvilThreshold)
         {
@@ -178,59 +250,6 @@ public sealed partial class PTLSystem : EntitySystem
         Dirty(uid, ptl);
     }
 
-    private void OnInteractHand(Entity<PTLComponent> ent, ref InteractHandEvent args)
-    {
-        ent.Comp.Active = !ent.Comp.Active;
-
-        if (ent.Comp.Active)
-            EnsureComp<PTLActiveComponent>(ent);
-        else
-            RemComp<PTLActiveComponent>(ent);
-
-        var enloc = ent.Comp.Active ? Loc.GetString("ptl-enabled") : Loc.GetString("ptl-disabled");
-        var enabled = Loc.GetString("ptl-interact-enabled", ("enabled", enloc));
-        _popup.PopupEntity(enabled, ent, Content.Shared.Popups.PopupType.SmallCaution);
-        _aud.PlayPvs(_soundPower, args.User);
-
-        UpdateAppearance(ent, ent.Comp, CompOrNull<BatteryComponent>(ent));
-        Dirty(ent);
-    }
-
-    private void OnAfterInteractUsing(Entity<PTLComponent> ent, ref AfterInteractUsingEvent args)
-    {
-        var held = args.Used;
-
-        if (_tag.HasTag(held, _tagScrewdriver))
-        {
-            var delay = ent.Comp.ShootDelay + 1;
-            if (delay > ent.Comp.ShootDelayThreshold.Y)
-                delay = ent.Comp.ShootDelayThreshold.X;
-            ent.Comp.ShootDelay = delay;
-            _popup.PopupEntity(Loc.GetString("ptl-interact-screwdriver", ("delay", ent.Comp.ShootDelay)), ent);
-            _aud.PlayPvs(_soundSparks, args.User);
-        }
-
-        if (_tag.HasTag(held, _tagMultitool))
-        {
-            _stack.SpawnAtPosition((int) ent.Comp.SpesosHeld, _stackCredits, Transform(args.User).Coordinates);
-            ent.Comp.SpesosHeld = 0;
-            _popup.PopupEntity(Loc.GetString("ptl-interact-spesos"), ent);
-            _aud.PlayPvs(_soundKaching, args.User);
-        }
-
-        Dirty(ent);
-    }
-
-    private void OnExamine(Entity<PTLComponent> ent, ref ExaminedEvent args)
-    {
-        var sb = new StringBuilder();
-        var enloc = ent.Comp.Active ? Loc.GetString("ptl-enabled") : Loc.GetString("ptl-disabled");
-        sb.AppendLine(Loc.GetString("ptl-examine-enabled", ("enabled", enloc)));
-        sb.AppendLine(Loc.GetString("ptl-examine-spesos", ("spesos", ent.Comp.SpesosHeld)));
-        sb.AppendLine(Loc.GetString("ptl-examine-screwdriver"));
-        args.PushMarkup(sb.ToString());
-    }
-
     private void OnEmagged(EntityUid uid, PTLComponent component, ref GotEmaggedEvent args)
     {
         if (!_emag.CompareFlag(args.Type, EmagType.Interaction))
@@ -249,6 +268,7 @@ public sealed partial class PTLSystem : EntitySystem
     private void OnChargeChanged(Entity<PTLComponent> ent, ref ChargeChangedEvent args)
     {
         UpdateAppearance(ent, ent.Comp, CompOrNull<BatteryComponent>(ent));
+        UpdateUiState(ent, ent.Comp);
     }
 
     private void UpdateAppearance(EntityUid uid, PTLComponent ptl, BatteryComponent? battery)

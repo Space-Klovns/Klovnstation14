@@ -1,0 +1,68 @@
+<controls:FancyWindow xmlns="https://spacestation14.io"
+               xmlns:gfx="clr-namespace:Robust.Client.Graphics;assembly=Robust.Client"
+               xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+               Title="{Loc 'ptl-ui-title'}"
+               MinSize="350 300"
+               Resizable="False">
+    <BoxContainer Orientation="Vertical" Margin="10" SeparationOverride="10">
+        
+        <BoxContainer Orientation="Horizontal" SeparationOverride="10">
+            <TextureRect StyleClasses="NTLogoDark" VerticalExpand="True" Stretch="KeepAspectCentered" SetSize="32 32"/>
+            <BoxContainer Orientation="Vertical" SeparationOverride="-4">
+                <Label Text="{Loc 'ptl-ui-title'}" StyleClasses="FontLarge"/>
+                <Label Text="High-Voltage Export Node" StyleClasses="LabelSubText"/>
+            </BoxContainer>
+        </BoxContainer>
+
+        <PanelContainer Margin="0 5 0 0">
+            <PanelContainer.PanelOverride>
+                <gfx:StyleBoxFlat BackgroundColor="#1e222a" BorderThickness="1" BorderColor="#3a4454"/>
+            </PanelContainer.PanelOverride>
+            <BoxContainer Orientation="Vertical" Margin="10" SeparationOverride="5" HorizontalExpand="True">
+                <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
+                    <Label Text="{Loc 'ptl-ui-charge-label'}" StyleClasses="LabelSubText"/>
+                    <Control HorizontalExpand="True"/>
+                    <Label Name="ChargeValueLabel" Text="0.0 MJ / 0.0 MJ (0%)"/>
+                </BoxContainer>
+                <ProgressBar Name="ChargeProgressBar" HorizontalExpand="True" MinHeight="14" MaxValue="1" Value="0"/>
+            </BoxContainer>
+        </PanelContainer>
+
+        <PanelContainer Margin="0 5 0 0">
+            <PanelContainer.PanelOverride>
+                <gfx:StyleBoxFlat BackgroundColor="#202025" BorderThickness="1" BorderColor="#404040"/>
+            </PanelContainer.PanelOverride>
+            <BoxContainer Orientation="Horizontal" Margin="10" HorizontalExpand="True">
+                <Label Text="{Loc 'ptl-ui-status-label'}" VerticalAlignment="Center"/>
+                <Control MinWidth="5"/>
+                <Label Name="StatusLabel" Text="{Loc 'ptl-disabled'}" VerticalAlignment="Center"/>
+                <Control HorizontalExpand="True"/>
+                <Button Name="ToggleButton" Text="{Loc 'ptl-ui-toggle-button'}"/>
+            </BoxContainer>
+        </PanelContainer>
+
+        <BoxContainer Orientation="Vertical" SeparationOverride="5" Margin="5 10">
+            <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
+                <Label Text="{Loc 'ptl-ui-delay-label'}"/>
+                <Control HorizontalExpand="True"/>
+                <Label Name="DelayValueLabel" Text="0.0s"/>
+            </BoxContainer>
+            <Slider Name="DelaySlider" MinValue="2" MaxValue="10" HorizontalExpand="True" Rounded="True"/>
+        </BoxContainer>
+
+        <PanelContainer>
+            <PanelContainer.PanelOverride>
+                <gfx:StyleBoxFlat BackgroundColor="#1a201a" BorderThickness="1" BorderColor="#2a402a"/>
+            </PanelContainer.PanelOverride>
+            <BoxContainer Orientation="Horizontal" Margin="10" HorizontalExpand="True">
+                <BoxContainer Orientation="Vertical">
+                    <Label Text="{Loc 'ptl-ui-spesos-label'}" StyleClasses="LabelSubText"/>
+                    <Label Name="SpesosLabel" Text="0"/>
+                </BoxContainer>
+                <Control HorizontalExpand="True"/>
+                <Button Name="WithdrawButton" Text="{Loc 'ptl-ui-withdraw-button'}" VerticalAlignment="Center"/>
+            </BoxContainer>
+        </PanelContainer>
+
+    </BoxContainer>
+</controls:FancyWindow>

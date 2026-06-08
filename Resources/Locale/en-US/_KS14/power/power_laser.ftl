@@ -1,11 +1,11 @@
-ptl-examine-enabled = The laser is [color=red]{$enabled}[/color].
-ptl-interact-enabled = The laser is now {$enabled}.
+ptl-enabled = ENABLED
+ptl-disabled = DISABLED
 
-ptl-examine-screwdriver = You can use a [color=green]screwdriver[/color] to change it's [color=green]firing frequency[/color].
-ptl-interact-screwdriver = Set firing frequency to {$delay} seconds.
-
-ptl-examine-spesos = It holds [color=yellow]{$spesos} spesos[/color]. Use [color=green]multitool[/color] to collect.
-ptl-interact-spesos = Printing accumulated credits.
-
-ptl-enabled = enabled
-ptl-disabled = disabled
+ptl-ui-title = Power Transmission Laser
+ptl-ui-status-label = Status:
+ptl-ui-toggle-button = Toggle Power
+ptl-ui-delay-label = Firing Delay (sec):
+ptl-ui-delay-value = {$delay}s
+ptl-ui-spesos-label = Accumulated Spesos:
+ptl-ui-withdraw-button = Withdraw
+ptl-ui-charge-label = Core Capacitor:

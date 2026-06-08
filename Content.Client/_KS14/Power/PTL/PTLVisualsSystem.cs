@@ -11,7 +11,7 @@ public sealed partial class PTLVisualsSystem : VisualizerSystem<PTLVisualsCompon
             return;
 
         AppearanceSystem.TryGetData<bool>(uid, PTLVisuals.Active, out var active, args.Component);
-        args.Sprite.LayerSetVisible(PTLVisualLayers.Unpowered, !active);
+        args.Sprite.LayerSetVisible(PTLVisualLayers.Unpowered, active);
 
         if (AppearanceSystem.TryGetData<int>(uid, PTLVisuals.ChargeLevel, out var chargeLevel, args.Component))
         {
