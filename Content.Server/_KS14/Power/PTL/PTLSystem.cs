@@ -1,6 +1,5 @@
 using Content.Shared._KS14.Power.PTL;
 using Content.Shared.Flash;
-using Content.Server.Popups;
 using Content.Server.Power.Components;
 using Content.Server.Power.SMES;
 using Content.Server.Stack;
@@ -12,7 +11,6 @@ using Content.Shared.Interaction;
 using Content.Shared.Radiation.Components;
 using Content.Shared.Radiation.Systems;
 using Content.Shared.Stacks;
-using Content.Shared.Tag;
 using Content.Shared.Weapons.Ranged;
 using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Weapons.Hitscan.Components;
@@ -37,8 +35,6 @@ public sealed partial class PTLSystem : EntitySystem
     [Dependency] private readonly GunSystem _gun = default!;
     [Dependency] private readonly IGameTiming _time = default!;
     [Dependency] private readonly SharedFlashSystem _flash = default!;
-    [Dependency] private readonly TagSystem _tag = default!;
-    [Dependency] private readonly PopupSystem _popup = default!;
     [Dependency] private readonly StackSystem _stack = default!;
     [Dependency] private readonly AudioSystem _aud = default!;
     [Dependency] private readonly EmagSystem _emag = default!;
