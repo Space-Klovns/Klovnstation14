@@ -16,7 +16,7 @@ namespace Content.Shared.Storage.EntitySystems;
 /// <summary>
 /// <see cref="MagnetPickupComponent"/>
 /// </summary>
-public sealed class MagnetPickupSystem : EntitySystem
+public sealed partial class MagnetPickupSystem : EntitySystem // KS14
 {
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly INetManager _net = default!;
@@ -31,6 +31,11 @@ public sealed class MagnetPickupSystem : EntitySystem
     [Dependency] private readonly EntityQuery<PhysicsComponent> _physicsQuery = default!;
 
     private static readonly TimeSpan ScanDelay = TimeSpan.FromSeconds(0.5f); // KS14: changed to 0.5
+
+    /// <summary>
+    /// Reused list of nearby pickup candidates so we can sort them deterministically without allocating every scan.
+    /// </summary>
+    private readonly List<EntityUid> _nearby = []; // KS14
 
 
     public override void Initialize()
@@ -102,7 +107,13 @@ public sealed class MagnetPickupSystem : EntitySystem
             var finalCoords = xform.Coordinates;
             var moverCoords = _transform.GetMoverCoordinates(uid, xform);
 
-            foreach (var near in _lookup.GetEntitiesInRange(uid, comp.Range, LookupFlags.Dynamic | LookupFlags.Sundries))
+            // KS14 START
+            _nearby.Clear();
+            _nearby.AddRange(_lookup.GetEntitiesInRange(uid, comp.Range, LookupFlags.Dynamic | LookupFlags.Sundries));
+            _nearby.Sort((a, b) => GetNetEntity(a).CompareTo(GetNetEntity(b)));
+
+            foreach (var near in _nearby)
+            // KS14 END
             {
                 if (_whitelistSystem.IsWhitelistFail(storage.Whitelist, near))
                     continue;
@@ -121,14 +132,14 @@ public sealed class MagnetPickupSystem : EntitySystem
                 var nearMap = _transform.GetMapCoordinates(near, xform: nearXform);
                 var nearCoords = _transform.ToCoordinates(moverCoords.EntityId, nearMap);
 
-                if (!_storage.Insert(uid, near, out var stacked, storageComp: storage, playSound: !playedSound))
+                if (!_storage.Insert(uid, near, out var stacked, storageComp: storage, playSound: !playedSound)) // KS14
                     continue;
 
                 // Play pickup animation for either the stack entity or the original entity.
                 if (stacked != null)
-                    _storage.PlayPickupAnimation(stacked.Value, nearCoords, finalCoords, nearXform.LocalRotation);
+                    _storage.PlayPickupAnimation(stacked.Value, nearCoords, finalCoords, nearXform.LocalRotation); // KS14
                 else
-                    _storage.PlayPickupAnimation(near, nearCoords, finalCoords, nearXform.LocalRotation);
+                    _storage.PlayPickupAnimation(near, nearCoords, finalCoords, nearXform.LocalRotation); // KS14
 
                 playedSound = true;
             }
