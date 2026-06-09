@@ -20,3 +20,9 @@
 
 - type: Tag
   id: BorgModuleSecurity #Secborgs
+
+- type: Tag
+  id: MagazineLightRifleCaseless
+
+- type: Tag
+  id: CartridgeLightRifleCaseless
