@@ -663,6 +663,19 @@
       Silicon: 5
       Phosphorus: 5
       Water: 2
+      Nitrogen: 2
+      Aluminium: 2
+      Chlorine: 2
+      Fluorine: 2
+      Iodine: 2
+      Lithium: 5
+      Mercury: 5
+      Potassium: 5
+      Radium: 10
+      Sodium: 5
+      Sulfur: 2
+      Zinc: 2
+      WeldingFuel: 5
   - type: Plungeable
   - type: PlumbingOutlet
     solutionName: buffer
