@@ -117,6 +117,12 @@ public sealed class PlumbingReactorRemoveTargetMessage : BoundUserInterfaceMessa
 public sealed class PlumbingReactorClearTargetsMessage : BoundUserInterfaceMessage;
 
 /// <summary>
+///     Message to purge all reagents from the buffer.
+/// </summary>
+[Serializable, NetSerializable]
+public sealed class PlumbingReactorPurgeMessage : BoundUserInterfaceMessage;
+
+/// <summary>
 ///     Message to set the target temperature.
 /// </summary>
 [Serializable, NetSerializable]

@@ -20,6 +20,7 @@ public sealed partial class PlumbingReactorWindow : DefaultWindow
     public event Action<string, FixedPoint2>? OnSetTarget;
     public event Action<string>? OnRemoveTarget;
     public event Action? OnClearTargets;
+    public event Action? OnPurge;
     public event Action<float>? OnSetTemperature;
 
     private bool _enabled = true;
@@ -36,6 +37,8 @@ public sealed partial class PlumbingReactorWindow : DefaultWindow
             UpdateToggleButton();
             OnToggle?.Invoke(_enabled);
         };
+
+        PurgeButton.OnPressed += _ => OnPurge?.Invoke();
 
         SetTemperatureButton.OnPressed += _ =>
         {

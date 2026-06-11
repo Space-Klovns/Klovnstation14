@@ -29,8 +29,9 @@
 
         <!-- Targets list (shows current/target) -->
         <PanelContainer StyleClasses="LowDivider" />
-        <BoxContainer Orientation="Horizontal">
+        <BoxContainer Orientation="Horizontal" SeparationOverride="5">
             <Label Text="{Loc plumbing-reactor-targets}" StyleClasses="LabelHeading" HorizontalExpand="True" />
+            <Button Name="PurgeButton" Text="{Loc plumbing-reactor-purge}" MinWidth="60" />
             <Button Name="ClearTargetsButton" Text="{Loc plumbing-reactor-clear}" MinWidth="60" />
         </BoxContainer>
         <ItemList Name="TargetsList" SelectMode="Single" VerticalExpand="True" MinHeight="100" />

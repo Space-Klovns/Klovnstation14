@@ -19,6 +19,7 @@ plumbing-reactor-reagent-id = Reagent ID
 plumbing-reactor-quantity = Quantity
 plumbing-reactor-add = Add
 plumbing-reactor-targets = Reaction Recipe
+plumbing-reactor-purge = Purge Buffer
 plumbing-reactor-clear = Clear All
 plumbing-reactor-remove-selected = Remove Selected
 plumbing-reactor-output = Output Contents

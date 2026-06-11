@@ -1,5 +1,6 @@
 using Content.Server._Starlight.Plumbing.Components;
 using Content.Server._Starlight.Plumbing.Nodes;
+using Content.Server.Fluids.EntitySystems;
 using Content.Server.NodeContainer.EntitySystems;
 using Content.Server.Popups;
 using Content.Server.Power.EntitySystems;
@@ -40,6 +41,7 @@ public sealed class PlumbingReactorSystem : EntitySystem
     [Dependency] private readonly PowerReceiverSystem _power = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
     [Dependency] private readonly SharedAudioSystem _audio = default!;
+    [Dependency] private readonly PuddleSystem _puddle = default!;
 
     /// <summary>
     ///     Temperature tolerance for considering target reached (in Kelvin).
@@ -65,6 +67,7 @@ public sealed class PlumbingReactorSystem : EntitySystem
         SubscribeLocalEvent<PlumbingReactorComponent, PlumbingReactorSetTargetMessage>(OnSetTarget);
         SubscribeLocalEvent<PlumbingReactorComponent, PlumbingReactorRemoveTargetMessage>(OnRemoveTarget);
         SubscribeLocalEvent<PlumbingReactorComponent, PlumbingReactorClearTargetsMessage>(OnClearTargets);
+        SubscribeLocalEvent<PlumbingReactorComponent, PlumbingReactorPurgeMessage>(OnPurge);
         SubscribeLocalEvent<PlumbingReactorComponent, PlumbingReactorSetTemperatureMessage>(OnSetTemperature);
         SubscribeLocalEvent<PlumbingReactorComponent, BoundUIOpenedEvent>(OnUIOpened);
     }
@@ -259,6 +262,21 @@ public sealed class PlumbingReactorSystem : EntitySystem
     {
         ent.Comp.ReagentTargets.Clear();
         DirtyField(ent, ent.Comp, nameof(PlumbingReactorComponent.ReagentTargets));
+        ClickSound(ent.Owner);
+        UpdateUI(ent);
+    }
+
+    private void OnPurge(Entity<PlumbingReactorComponent> ent, ref PlumbingReactorPurgeMessage args)
+    {
+        if (!_solutionSystem.TryGetSolution(ent.Owner, ent.Comp.BufferSolutionName, out var bufferEnt, out var buffer))
+            return;
+
+        if (buffer.Volume <= 0)
+            return;
+
+        var spillSolution = _solutionSystem.SplitSolution(bufferEnt.Value, buffer.Volume);
+        _puddle.TrySpillAt(ent.Owner, spillSolution, out _);
+
         ClickSound(ent.Owner);
         UpdateUI(ent);
     }
