@@ -9,6 +9,8 @@ plumbing-output-filled = Filled container with {$amount}u from the plumbing netw
 # Reactor UI
 plumbing-reactor-window-title = Plumbing Reactor
 plumbing-reactor-status = Status:
+plumbing-reactor-mixing-mode = Mixer:
+plumbing-reactor-mixing-none = None
 plumbing-reactor-enabled = Enabled
 plumbing-reactor-disabled = Disabled
 plumbing-reactor-temperature = Target Temp:

@@ -651,31 +651,31 @@
           False: { visible: false }
   - type: PlumbingDevice
     updateInterval: 2
-    - type: PlumbingSynthesizer
+  - type: PlumbingSynthesizer
     bufferSolutionName: buffer
     generatableReagents:
-      Iron: 5
-      Carbon: 5
-      Copper: 5
-      Hydrogen: 5
-      Oxygen: 5
-      Sugar: 5
-      Silicon: 5
-      Phosphorus: 5
-      Water: 5
-      Nitrogen: 5
-      Aluminium: 5
-      Chlorine: 5
-      Fluorine: 5
-      Iodine: 5
-      Lithium: 5
-      Mercury: 5
-      Potassium: 5
-      Radium: 5
-      Sodium: 5
-      Sulfur: 5
-      Zinc: 5
-      WeldingFuel: 5
+    - Iron
+    - Carbon
+    - Copper
+    - Hydrogen
+    - Oxygen
+    - Sugar
+    - Silicon
+    - Phosphorus
+    - Water
+    - Nitrogen
+    - Aluminium
+    - Chlorine
+    - Fluorine
+    - Iodine
+    - Lithium
+    - Mercury
+    - Potassium
+    - Radium
+    - Sodium
+    - Sulfur
+    - Zinc
+    - WeldingFuel
   - type: Plungeable
   - type: PlumbingOutlet
     solutionName: buffer

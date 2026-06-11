@@ -21,15 +21,38 @@ public sealed partial class PlumbingReactorWindow : DefaultWindow
     public event Action<string>? OnRemoveTarget;
     public event Action? OnClearTargets;
     public event Action? OnPurge;
+    public event Action<string?>? OnSetMixingMode;
     public event Action<float>? OnSetTemperature;
 
     private bool _enabled = true;
     private string? _selectedTarget;
+    private string? _selectedMixingMode;
+
+    private readonly List<string?> _mixingModes = new()
+    {
+        null,
+        "Stir",
+        "Shake",
+        "Centrifuge",
+        "Electrolysis"
+    };
 
     public PlumbingReactorWindow()
     {
         IoCManager.InjectDependencies(this);
         RobustXamlLoader.Load(this);
+
+        foreach (var mode in _mixingModes)
+        {
+            var label = mode != null ? Loc.GetString($"mixing-verb-{mode.ToLowerInvariant()}") : Loc.GetString("plumbing-reactor-mixing-none");
+            MixingModeOption.AddItem(label);
+        }
+
+        MixingModeOption.OnItemSelected += args =>
+        {
+            var mode = _mixingModes[args.Id];
+            OnSetMixingMode?.Invoke(mode);
+        };
 
         ToggleStatusButton.OnPressed += _ =>
         {
@@ -114,6 +137,14 @@ public sealed partial class PlumbingReactorWindow : DefaultWindow
         _enabled = state.Enabled;
         UpdateToggleButton();
 
+        if (state.SelectedMixingMode != _selectedMixingMode)
+        {
+            _selectedMixingMode = state.SelectedMixingMode;
+            var index = _mixingModes.IndexOf(_selectedMixingMode);
+            if (index != -1)
+                MixingModeOption.SelectId(index);
+        }
+
         // Update temperature display - but don't overwrite if user is editing
         if (!TemperatureInput.HasKeyboardFocus())
             TemperatureInput.Text = state.TargetTemperature.ToString("F1");
@@ -144,6 +175,16 @@ public sealed partial class PlumbingReactorWindow : DefaultWindow
             {
                 Metadata = reagentId,
                 Text = $"{reagentId}: {currentAmount}u / 0u"
+            });
+        }
+
+        // Update output list
+        OutputList.Clear();
+        foreach (var (reagentId, quantity) in state.OutputContents)
+        {
+            OutputList.Add(new ItemList.Item(OutputList)
+            {
+                Text = $"{reagentId}: {quantity}u"
             });
         }
 

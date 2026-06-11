@@ -59,15 +59,14 @@ public sealed partial class PlumbingSynthesizerWindow : DefaultWindow
 
         ReagentSelector.AddItem(Loc.GetString("plumbing-synthesizer-none"), 0);
 
-        var sortedReagents = new List<string>(state.GeneratableReagents.Keys);
+        var sortedReagents = new List<string>(state.GeneratableReagents);
         sortedReagents.Sort();
 
         var idx = 1;
         var selectedIdx = 0;
         foreach (var reagentId in sortedReagents)
         {
-            var powerDrain = state.GeneratableReagents[reagentId];
-            var label = $"{reagentId} ({powerDrain:F1}W/u)";
+            var label = $"{reagentId} ({state.PowerDrainPerUnit:F1}W/u)";
             ReagentSelector.AddItem(label, idx);
             _reagentIndexMap[idx] = reagentId;
 
