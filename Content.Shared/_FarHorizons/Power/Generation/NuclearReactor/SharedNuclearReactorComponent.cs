@@ -11,11 +11,9 @@ public enum NuclearReactorUiKey : byte
 [Serializable, NetSerializable]
 public sealed class NuclearReactorBuiState : BoundUserInterfaceState
 {
-    public double[] TemperatureGrid = new double[NuclearReactorComponent.ReactorGridWidth * NuclearReactorComponent.ReactorGridHeight];
+    public float[] TemperatureGrid = new float[NuclearReactorComponent.ReactorGridWidth * NuclearReactorComponent.ReactorGridHeight];
     public int[] NeutronGrid = new int[NuclearReactorComponent.ReactorGridWidth * NuclearReactorComponent.ReactorGridHeight];
-    public string[] IconGrid = new string[NuclearReactorComponent.ReactorGridWidth * NuclearReactorComponent.ReactorGridHeight];
-    public string[] PartName = new string[NuclearReactorComponent.ReactorGridWidth * NuclearReactorComponent.ReactorGridHeight];
-    public double[] PartInfo = new double[NuclearReactorComponent.ReactorGridWidth * NuclearReactorComponent.ReactorGridHeight * 3];
+    public float[] PartInfo = new float[NuclearReactorComponent.ReactorGridWidth * NuclearReactorComponent.ReactorGridHeight * 3];
 
     public string? ItemName;
 
@@ -24,6 +22,13 @@ public sealed class NuclearReactorBuiState : BoundUserInterfaceState
     public float ReactorTherm = 0;
     public float ControlRodActual = 0;
     public float ControlRodSet = 0;
+}
+
+[Serializable, NetSerializable]
+public sealed class NuclearReactorStaticDataMessage : BoundUserInterfaceMessage
+{
+    public string[] IconGrid = new string[NuclearReactorComponent.ReactorGridWidth * NuclearReactorComponent.ReactorGridHeight];
+    public string[] PartName = new string[NuclearReactorComponent.ReactorGridWidth * NuclearReactorComponent.ReactorGridHeight];
 }
 
 [Serializable, NetSerializable]
