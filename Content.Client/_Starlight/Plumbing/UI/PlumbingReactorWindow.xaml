@@ -33,19 +33,21 @@
         </BoxContainer>
         <ItemList Name="SuggestionList" SelectMode="Single" MinHeight="80" MaxHeight="120" HorizontalExpand="True" Visible="False" />
 
-        <!-- Targets list (shows current/target) -->
+        <!-- Targets list (shows reaction recipe) -->
         <PanelContainer StyleClasses="LowDivider" />
         <BoxContainer Orientation="Horizontal" SeparationOverride="5">
             <Label Text="{Loc plumbing-reactor-targets}" StyleClasses="LabelHeading" HorizontalExpand="True" />
-            <Button Name="PurgeButton" Text="{Loc plumbing-reactor-purge}" MinWidth="60" />
             <Button Name="ClearTargetsButton" Text="{Loc plumbing-reactor-clear}" MinWidth="60" />
         </BoxContainer>
         <ItemList Name="TargetsList" SelectMode="Single" VerticalExpand="True" MinHeight="100" />
         <Button Name="RemoveTargetButton" Text="{Loc plumbing-reactor-remove-selected}" Disabled="True" />
 
-        <!-- Output contents list -->
+        <!-- Internal contents list (Buffer + Output) -->
         <PanelContainer StyleClasses="LowDivider" />
-        <Label Text="{Loc plumbing-reactor-output}" StyleClasses="LabelHeading" />
-        <ItemList Name="OutputList" SelectMode="None" VerticalExpand="True" MinHeight="80" />
+        <BoxContainer Orientation="Horizontal" SeparationOverride="5">
+            <Label Text="{Loc plumbing-reactor-internal-contents}" StyleClasses="LabelHeading" HorizontalExpand="True" />
+            <Button Name="PurgeButton" Text="{Loc plumbing-reactor-purge}" MinWidth="60" />
+        </BoxContainer>
+        <ItemList Name="InternalContentsList" SelectMode="None" VerticalExpand="True" MinHeight="120" />
     </BoxContainer>
 </DefaultWindow>

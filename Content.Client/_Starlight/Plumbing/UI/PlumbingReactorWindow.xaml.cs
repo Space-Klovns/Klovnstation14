@@ -150,11 +150,8 @@ public sealed partial class PlumbingReactorWindow : DefaultWindow
             TemperatureInput.Text = state.TargetTemperature.ToString("F1");
         CurrentTemperatureLabel.Text = $"({state.CurrentTemperature:F1} K)";
 
-        // Update targets list - shows all buffer contents
-        // Target reagents show progress, non-target reagents show 0 target qty
+        // Update targets list - shows current progress for each targeted reagent
         TargetsList.Clear();
-
-        // First add all target reagents
         foreach (var (reagentId, targetQuantity) in state.ReagentTargets)
         {
             var currentAmount = state.BufferContents.GetValueOrDefault(reagentId, FixedPoint2.Zero);
@@ -165,26 +162,24 @@ public sealed partial class PlumbingReactorWindow : DefaultWindow
             });
         }
 
-        // Then add non-target reagents so a player knows to plunger it to remove them
-        foreach (var (reagentId, currentAmount) in state.BufferContents)
-        {
-            if (state.ReagentTargets.ContainsKey(reagentId))
-                continue;
+        // Update internal contents list - merges Buffer (Input) and Output solutions
+        InternalContentsList.Clear();
 
-            TargetsList.Add(new ItemList.Item(TargetsList)
+        // Add Buffer contents (labeled as Input/Reactant)
+        foreach (var (reagentId, quantity) in state.BufferContents)
+        {
+            InternalContentsList.Add(new ItemList.Item(InternalContentsList)
             {
-                Metadata = reagentId,
-                Text = $"{reagentId}: {currentAmount}u / 0u"
+                Text = $"[Input] {reagentId}: {quantity}u"
             });
         }
 
-        // Update output list
-        OutputList.Clear();
+        // Add Output contents (labeled as Output/Product)
         foreach (var (reagentId, quantity) in state.OutputContents)
         {
-            OutputList.Add(new ItemList.Item(OutputList)
+            InternalContentsList.Add(new ItemList.Item(InternalContentsList)
             {
-                Text = $"{reagentId}: {quantity}u"
+                Text = $"[Output] {reagentId}: {quantity}u"
             });
         }
 

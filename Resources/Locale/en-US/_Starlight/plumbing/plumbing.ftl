@@ -6,6 +6,11 @@ plumbing-input-poured = Poured {$amount}u into the plumbing network.
 plumbing-output-empty = The output buffer is empty!
 plumbing-output-filled = Filled container with {$amount}u from the plumbing network.
 
+# Storage UI
+plumbing-storage-window-title = Chemical Storage
+plumbing-storage-volume = Volume:
+plumbing-storage-contents = Current Contents
+
 # Reactor UI
 plumbing-reactor-window-title = Plumbing Reactor
 plumbing-reactor-status = Status:
@@ -21,10 +26,10 @@ plumbing-reactor-reagent-id = Reagent ID
 plumbing-reactor-quantity = Quantity
 plumbing-reactor-add = Add
 plumbing-reactor-targets = Reaction Recipe
-plumbing-reactor-purge = Purge Buffer
-plumbing-reactor-clear = Clear All
+plumbing-reactor-internal-contents = Machine Contents
+plumbing-reactor-purge = Purge All
+plumbing-reactor-clear = Clear Recipe
 plumbing-reactor-remove-selected = Remove Selected
-plumbing-reactor-output = Output Contents
 plumbing-reactor-invalid-reagent = Unknown reagent: {$reagent}
 
 # Filter UI
