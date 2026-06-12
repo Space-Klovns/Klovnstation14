@@ -1,0 +1,65 @@
+- type: entity
+  parent: BaseGasThermoMachine
+  id: GasGrenadeCompressor
+  name: air grenade compressor
+  description: A machine used to refill air grenades with inert gases.
+  components:
+    - type: Sprite
+      sprite: Structures/Piping/Atmospherics/thermomachine.rsi # Placeholder
+      snapCardinals: false
+      granularLayersRendering: true
+      layers:
+        - state: heaterOff
+          map: [ "enum.PowerDeviceVisualLayers.Powered" ]
+        - state: heaterPanelOpen
+          map: ["enum.WiresVisualLayers.MaintenancePanel"]
+        - state: pipe
+          map: [ "enum.PipeVisualLayers.Pipe" ]
+          renderingStrategy: Default
+    - type: GenericVisualizer
+      visuals:
+        enum.PowerDeviceVisuals.Powered:
+          enum.PowerDeviceVisualLayers.Powered:
+            True: { state: heaterOn }
+            False: { state: heaterOff }
+    - type: GasGrenadeCompressor
+    - type: ItemSlots
+      slots:
+        grenade_slot:
+          name: Grenade
+          insertVerbText: Insert Grenade
+          ejectVerbText: Eject Grenade
+          whitelist:
+            tags:
+              - AirGrenade
+    - type: ContainerContainer
+      containers:
+        grenade_slot: !type:ContainerSlot
+    - type: UserInterface
+      interfaces:
+        enum.GasGrenadeCompressorUiKey.Key:
+          type: GasGrenadeCompressorBoundUserInterface
+    - type: ActivatableUI
+      inHandsOnly: false
+      key: enum.GasGrenadeCompressorUiKey.Key
+    - type: ApcPowerReceiver
+      powerLoad: 500
+    - type: Machine
+      board: GasGrenadeCompressorMachineCircuitBoard
+    - type: MaterialStorage
+      storageLimit: 10000
+      materialWhiteList: [Steel]
+
+- type: entity
+  id: GasGrenadeCompressorMachineCircuitBoard
+  parent: BaseMachineCircuitboard
+  name: air grenade compressor machine board
+  description: A machine printed circuit board for an air grenade compressor.
+  components:
+    - type: Sprite
+      state: engineering
+    - type: MachineBoard
+      prototype: GasGrenadeCompressor
+      stackRequirements:
+        Manipulator: 2
+        Cable: 5

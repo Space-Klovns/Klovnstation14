@@ -16,13 +16,13 @@ public sealed partial class ReleaseGasOnTriggerComponent : BaseXOnTriggerCompone
     /// Whether this grenade is active and releasing gas.
     /// Set to true when triggered, which starts gas release.
     /// </summary>
-    [DataField]
+    [DataField, AutoNetworkedField] // KS14
     public bool Active;
 
     /// <summary>
     /// The gas mixture that will be released to the current tile atmosphere when triggered.
     /// </summary>
-    [DataField]
+    [DataField, AutoNetworkedField] // KS14
     public GasMixture Air;
 
     /// <summary>
@@ -30,7 +30,7 @@ public sealed partial class ReleaseGasOnTriggerComponent : BaseXOnTriggerCompone
     /// This is automatically set when the grenade activates.
     /// </summary>
     [DataField(customTypeSerializer: typeof(TimeOffsetSerializer))]
-    [AutoPausedField]
+    [AutoPausedField, AutoNetworkedField] // KS14
     public TimeSpan NextReleaseTime = TimeSpan.Zero;
 
     /// <summary>
@@ -40,13 +40,13 @@ public sealed partial class ReleaseGasOnTriggerComponent : BaseXOnTriggerCompone
     /// <example>If set to 101.325, the grenade will only fill the exposed
     /// atmosphere up to 101.325 kPa.</example>
     /// <remarks>If zero, this limit won't be respected.</remarks>
-    [DataField]
+    [DataField, AutoNetworkedField] // KS14
     public float PressureLimit;
 
     /// <summary>
     /// How often the grenade will release gas.
     /// </summary>
-    [DataField]
+    [DataField, AutoNetworkedField] // KS14
     public TimeSpan ReleaseInterval = TimeSpan.FromSeconds(1);
 
     /// <summary>
@@ -55,7 +55,7 @@ public sealed partial class ReleaseGasOnTriggerComponent : BaseXOnTriggerCompone
     /// released to the current tile atmosphere when triggered.
     /// </summary>
     /// <remarks>If undefined on the prototype, the entire molar amount will be transferred.</remarks>
-    [DataField]
+    [DataField, AutoNetworkedField] // KS14
     public float RemoveFraction = 1;
 
     /// <summary>
@@ -63,7 +63,7 @@ public sealed partial class ReleaseGasOnTriggerComponent : BaseXOnTriggerCompone
     /// Used to calculate the moles released over time.
     /// </summary>
     /// <remarks>Set when the grenade is activated.</remarks>
-    [DataField(readOnly: true)]
+    [DataField(readOnly: true), AutoNetworkedField] // KS14
     public float StartingTotalMoles;
 }
 

@@ -89,8 +89,14 @@
   name: air grenade
   description: A special solid state chemical grenade used for quickly releasing standard air into a spaced area. Fills up to 30 tiles!
   components:
+  - type: Tag
+    tags:
+      - AirGrenade
   - type: Sprite
     sprite: Objects/Weapons/Grenades/airboom.rsi
+    layers:
+    - state: icon
+      map: [ "enum.TriggerVisualLayers.Base" ] # KS14
   - type: EmitSoundOnTrigger
     keysIn:
     - timer
@@ -98,6 +104,8 @@
   - type: TimerTriggerVisuals
     primingSound:
       path: /Audio/Items/smoke_grenade_prime.ogg
+    activeSprite: active # KS14
+    spentSprite: spent # KS14
   - type: TimerTrigger
     delay: 3
   - type: ReleaseGasOnTrigger
@@ -112,12 +120,6 @@
       temperature: 293.15
   - type: StaticPrice
     price: 350
-  - type: GenericVisualizer
-    visuals:
-      enum.ReleaseGasOnTriggerVisuals.Key:
-        enabled:
-          True: { state: active }
-          False: { state: spent }
   - type: RemoveComponentsOnTrigger # should prevent it from being re-triggered
     keysIn:
     - timer
