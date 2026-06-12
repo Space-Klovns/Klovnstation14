@@ -48,7 +48,7 @@
   - type: UserInterface
     interfaces:
       enum.PlumbingStorageUiKey.Key:
-        type: PlumbingStorageBoundUserInterface
+        type: PlumbingStorageBui
   - type: ActivatableUI
     key: enum.PlumbingStorageUiKey.Key
   - type: PhysicalComposition

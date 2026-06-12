@@ -4,12 +4,17 @@ using Robust.Client.UserInterface;
 
 namespace Content.Client._Starlight.Plumbing.UI;
 
+/// <summary>
+///     BUI for plumbing storage (tanks, barrels).
+///     NOTE: Named 'PlumbingStorageBui' instead of 'PlumbingStorageBoundUserInterface' to prevent 
+///     Robust reflection from suffix-matching this against vanilla 'StorageBoundUserInterface'.
+/// </summary>
 [UsedImplicitly]
-public sealed class PlumbingStorageBoundUserInterface : BoundUserInterface
+public sealed class PlumbingStorageBui : BoundUserInterface
 {
     private PlumbingStorageWindow? _window;
 
-    public PlumbingStorageBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
+    public PlumbingStorageBui(EntityUid owner, Enum uiKey) : base(owner, uiKey)
     {
     }
 
@@ -26,7 +31,7 @@ public sealed class PlumbingStorageBoundUserInterface : BoundUserInterface
     {
         base.UpdateState(state);
 
-        if (_window == null || state is not PlumbingStorageBoundUserInterfaceState cast)
+        if (_window == null || state is not PlumbingStorageBuiState cast)
             return;
 
         _window.UpdateState(cast);

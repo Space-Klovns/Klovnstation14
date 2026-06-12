@@ -42,7 +42,7 @@ public sealed class PlumbingStorageSystem : EntitySystem
             contents[reagent.Reagent.Prototype] = reagent.Quantity;
         }
 
-        var state = new PlumbingStorageBoundUserInterfaceState(contents, solution.Volume, solution.MaxVolume);
+        var state = new PlumbingStorageBuiState(contents, solution.Volume, solution.MaxVolume);
         _ui.SetUiState(ent.Owner, PlumbingStorageUiKey.Key, state);
-    }
-}
+        }
+        }

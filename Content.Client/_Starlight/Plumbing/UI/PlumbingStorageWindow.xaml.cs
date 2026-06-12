@@ -14,7 +14,7 @@ public sealed partial class PlumbingStorageWindow : DefaultWindow
         RobustXamlLoader.Load(this);
     }
 
-    public void UpdateState(PlumbingStorageBoundUserInterfaceState state)
+    public void UpdateState(PlumbingStorageBuiState state)
     {
         var ratio = state.MaxVolume > 0 ? (float) state.Volume / (float) state.MaxVolume : 0f;
         VolumeBar.Value = Math.Clamp(ratio, 0f, 1f);
