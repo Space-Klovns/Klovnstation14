@@ -22,11 +22,11 @@ public sealed class ReleaseGasOnTriggerSystem : SharedReleaseGasOnTriggerSystem
 
     private void OnAnalyzed(EntityUid uid, ReleaseGasOnTriggerComponent component, GasAnalyzerScanEvent args) // KS14
     {
-        if (component.Air == null)
-            return;
+        if (component.Air == null) // KS14
+            return; // KS14
 
-        args.GasMixtures ??= new List<(string, GasMixture?)>();
-        args.GasMixtures.Add((Loc.GetString("air-grenade-gas-analyzer-internal-name"), component.Air));
+        args.GasMixtures ??= new List<(string, GasMixture?)>(); // KS14
+        args.GasMixtures.Add((Loc.GetString("air-grenade-gas-analyzer-internal-name"), component.Air)); // KS14
     }
 
     public override void Update(float frameTime)

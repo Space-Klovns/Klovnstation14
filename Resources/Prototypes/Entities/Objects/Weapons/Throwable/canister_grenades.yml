@@ -96,7 +96,10 @@
     sprite: Objects/Weapons/Grenades/airboom.rsi
     layers:
     - state: icon
-      map: [ "enum.TriggerVisualLayers.Base" ] # KS14
+      map: [ "enum.TriggerVisualLayers.Base" ]
+    - state: active
+      map: [ "payload" ]
+      visible: false
   - type: EmitSoundOnTrigger
     keysIn:
     - timer
@@ -104,8 +107,6 @@
   - type: TimerTriggerVisuals
     primingSound:
       path: /Audio/Items/smoke_grenade_prime.ogg
-    activeSprite: active # KS14
-    spentSprite: spent # KS14
   - type: TimerTrigger
     delay: 3
   - type: ReleaseGasOnTrigger
@@ -120,6 +121,16 @@
       temperature: 293.15
   - type: StaticPrice
     price: 350
+  - type: GenericVisualizer
+    visuals:
+      enum.TriggerVisuals.VisualState:
+        payload:
+          Unprimed: { visible: false }
+          Primed: { visible: false }
+      enum.ReleaseGasOnTriggerVisuals.Key:
+        payload:
+          True: { state: active, visible: true }
+          False: { state: spent, visible: true }
   - type: RemoveComponentsOnTrigger # should prevent it from being re-triggered
     keysIn:
     - timer

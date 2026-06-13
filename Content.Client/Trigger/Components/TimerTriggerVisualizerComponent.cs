@@ -40,16 +40,4 @@ public sealed partial class TimerTriggerVisualsComponent : Component
     /// </summary>
     [ViewVariables]
     public Animation PrimingAnimation = default!;
-
-    /// <summary>
-    /// The RSI state used while the device is releasing gas.
-    /// </summary>
-    [DataField] // KS14
-    public string? ActiveSprite; // KS14
-
-    /// <summary>
-    /// The RSI state used when the device is spent.
-    /// </summary>
-    [DataField] // KS14
-    public string? SpentSprite; // KS14
 }
