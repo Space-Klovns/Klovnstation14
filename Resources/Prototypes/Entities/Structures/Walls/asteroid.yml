@@ -34,8 +34,9 @@
       state: rock_asteroid_west
   - type: MiningScannerViewable
   - type: Damageable
-    damageContainer: StructuralInorganic
     damageModifierSet: Rock
+  - type: Injurable
+    damageContainer: StructuralInorganic
   - type: Destructible
     thresholds:
     - trigger:
@@ -835,8 +836,14 @@
       - Pickaxe
       - PlasmaCutter # KS14 - Plasmacutter  
   - type: Damageable
+<<<<<<< HEAD
     damageContainer: StructuralInorganic
     damageModifierSet: Rock # KS14, Metallic -> Rock
+=======
+    damageModifierSet: Metallic
+  - type: Injurable
+    damageContainer: StructuralInorganic
+>>>>>>> upstream/master
   - type: Destructible
     thresholds:
     - trigger:

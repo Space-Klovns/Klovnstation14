@@ -1,7 +1,7 @@
 - type: entity
   name: watcher
   id: MobWatcherBase
-  parent: [ SimpleSpaceMobBase, FlyingMobBase ]
+  parent: [ SimpleSpaceMobBase, FlyingMobBase, BaseSlicingRefinable ]
   abstract: true
   description: It's like it's staring right through you.
   components:
@@ -43,10 +43,17 @@
     thresholds:
       0: Alive
       50: Dead
+<<<<<<< HEAD
   - type: Butcherable
     spawned:
     - id: MaterialDiamond # KS14 change
       amount: 2
+=======
+  - type: ToolRefinable
+    refineResult:
+    - id: DiamondOre1
+      amount: 1
+>>>>>>> upstream/master
   - type: MovementSpeedModifier
     baseWalkSpeed: 1 # KS14 change
     baseSprintSpeed: 3 # KS14 change

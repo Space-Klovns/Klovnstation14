@@ -8,6 +8,7 @@ namespace Content.Server.NPC.HTN.PrimitiveTasks.Operators.Interactions;
 /// </summary>
 public sealed partial class DropOperator : HTNOperator
 {
+<<<<<<< HEAD
     [Dependency] private readonly IEntityManager _entManager = default!;
     [Dependency] private readonly HandsSystem _handsSystem = default!; // KS14: ANK
 
@@ -16,6 +17,9 @@ public sealed partial class DropOperator : HTNOperator
     ///     Normally this fails if nothing is in the hand.
     /// </summary>
     [DataField] public bool SucceedIfHandEmpty = false;
+=======
+    [Dependency] private IEntityManager _entManager = default!;
+>>>>>>> upstream/master
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {

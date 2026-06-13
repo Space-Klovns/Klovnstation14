@@ -10,12 +10,17 @@ using Robust.Server.GameObjects;
 namespace Content.Server.Atmos.EntitySystems;
 
 [UsedImplicitly]
-public sealed class GasMinerSystem : SharedGasMinerSystem
+public sealed partial class GasMinerSystem : SharedGasMinerSystem
 {
+<<<<<<< HEAD
     [Dependency] private readonly AtmosphereSystem _atmosphereSystem = default!;
     [Dependency] private readonly TransformSystem _transformSystem = default!;
     [Dependency] private readonly AppearanceSystem _appearanceSystem = default!; // KS14: Gasminer appearance
     [Dependency] private readonly AmbientSoundSystem _ambientSoundSystem = default!; // KS14: Gasminer sounds
+=======
+    [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
+>>>>>>> upstream/master
 
     public override void Initialize()
     {

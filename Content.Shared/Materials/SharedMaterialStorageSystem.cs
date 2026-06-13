@@ -18,8 +18,9 @@ namespace Content.Shared.Materials;
 /// This handles storing materials and modifying their amounts
 /// <see cref="MaterialStorageComponent"/>
 /// </summary>
-public abstract class SharedMaterialStorageSystem : EntitySystem
+public abstract partial class SharedMaterialStorageSystem : EntitySystem
 {
+<<<<<<< HEAD
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IPrototypeManager _prototype = default!;
@@ -27,6 +28,12 @@ public abstract class SharedMaterialStorageSystem : EntitySystem
     [Dependency] private readonly SharedStackSystem _heap = default!;
     [Dependency] private readonly SharedAudioSystem _audio = default!; // KS14: Added to shared
     [Dependency] private readonly SharedPopupSystem _popup = default!; // KS14: Added to shared
+=======
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
+    [Dependency] private EntityWhitelistSystem _whitelistSystem = default!;
+>>>>>>> upstream/master
 
     /// <summary>
     /// Default volume for a sheet if the material's entity prototype has no material composition.

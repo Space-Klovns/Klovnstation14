@@ -155,14 +155,19 @@
   - !type:EntityTableDunGen
     minCount: 25
     maxCount: 40
+    perDungeon: true
+    ignoreReserved: true
     table: !type:NestedSelector
       tableId: SalvageScrapSpawnerCommon
   - !type:EntityTableDunGen
     minCount: 30
     maxCount: 40
+    perDungeon: true
+    ignoreReserved: true
     table: !type:NestedSelector
       tableId: SalvageScrapSpawnerValuable
   - !type:EntityTableDunGen
+<<<<<<< HEAD
     minCount: 15
     maxCount: 25
     table: !type:NestedSelector
@@ -175,6 +180,19 @@
   - !type:EntityTableDunGen
     minCount: 15
     maxCount: 20
+=======
+    minCount: 30
+    maxCount: 45
+    perDungeon: true
+    ignoreReserved: true
+    table: !type:NestedSelector
+      tableId: SalvageTreasureSpawnerCommon
+  - !type:EntityTableDunGen
+    minCount: 30
+    maxCount: 45
+    perDungeon: true
+    ignoreReserved: true
+>>>>>>> upstream/master
     table: !type:NestedSelector
       tableId: SalvageTreasureSpawnerValuable
   - !type:EntityTableDunGen

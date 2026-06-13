@@ -105,7 +105,27 @@
     - PlushieRainbowCarp
     - PlushieRatvar
     - PlushieNar
+<<<<<<< HEAD
     # KS14 - Removed slop
+=======
+    - PlushieSnake
+    - PlushieArachind
+    - PlushieMoth
+    - PlushieVulp
+    - PlushieHampter
+    - PlushiePenguin
+    - PlushieHuman
+    - PlushieRouny
+    - PlushieBee
+    - PlushieSlime
+    - PlushieGhost
+    - PlushieDiona
+    - PlushieSharkBlue
+    - PlushieVox
+    - PlushieXeno
+    - PlushieSpaceSheep
+    - PlushieSheep
+>>>>>>> upstream/master
     - PlasticBanana
     - RevolverCapGun
     - SnapPopBox

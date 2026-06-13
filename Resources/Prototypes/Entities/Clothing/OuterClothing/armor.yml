@@ -118,10 +118,13 @@
         Piercing: 0.5
         Heat: 0.5
         Caustic: 0.9
+<<<<<<< HEAD
       flatReductions: #KS14 modified
         Piercing: 8.9
   - type: ExplosionResistance
     damageCoefficient: 0.65
+=======
+>>>>>>> upstream/master
   - type: GroupExamine
 
 - type: entity
@@ -197,6 +200,7 @@
         Heat: 0.3
         Radiation: 0.5
         Caustic: 0.5
+<<<<<<< HEAD
       flatReductions: #KS14 modified
         Piercing: 5.7
   - type: ExplosionResistance
@@ -206,6 +210,8 @@
     reflects:
       - Energy
     reflectingInHands: false
+=======
+>>>>>>> upstream/master
   - type: FireProtection
     reduction: 0.85
   - type: StaticPrice
@@ -259,10 +265,13 @@
         Piercing: 0.35
         Heat: 0.35
         Caustic: 0.5
+<<<<<<< HEAD
       flatReductions: #KS14 modified
         Piercing: 11
   - type: ExplosionResistance
     damageCoefficient: 0.35
+=======
+>>>>>>> upstream/master
   - type: StaminaResistance # do not add these to other equipment or mobs, we don't want to microbalance these everywhere
     damageCoefficient: 0.45
   - type: ClothingSpeedModifier
@@ -465,7 +474,7 @@
     sprintModifier: 0.9
   - type: HeldSpeedModifier
   - type: ExplosionResistance
-    damageCoefficient: 0.5
+    damageCoefficient: 0.75
   - type: GroupExamine
   - type: ProtectedFromStepTriggers
     slots: WITHOUT_POCKET
@@ -491,8 +500,13 @@
     walkModifier: 0.9
     sprintModifier: 0.9
   - type: HeldSpeedModifier
+<<<<<<< HEAD
   - type: ExplosionResistance # KS14 modified
     damageCoefficient: 0.9
+=======
+  - type: ExplosionResistance
+    damageCoefficient: 0.6
+>>>>>>> upstream/master
   - type: GroupExamine
   - type: Construction
     graph: BoneArmor

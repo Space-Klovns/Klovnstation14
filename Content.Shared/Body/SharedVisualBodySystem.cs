@@ -12,9 +12,15 @@ namespace Content.Shared.Body;
 /// </summary>
 public abstract partial class SharedVisualBodySystem : EntitySystem
 {
+<<<<<<< HEAD
     [Dependency] private readonly IPrototypeManager _prototype = default!;
     [Dependency] private readonly MarkingManager _marking = default!;
     // KS14: Unused system, removed
+=======
+    [Dependency] private IPrototypeManager _prototype = default!;
+    [Dependency] private MarkingManager _marking = default!;
+    [Dependency] private SharedContainerSystem _container = default!;
+>>>>>>> upstream/master
 
     public override void Initialize()
     {

@@ -17,8 +17,9 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared.Movement.Systems;
 
-public abstract class SharedJetpackSystem : EntitySystem
+public abstract partial class SharedJetpackSystem : EntitySystem
 {
+<<<<<<< HEAD
     [Dependency] private readonly IGameTiming _gameTiming = default!; // KS14
     [Dependency] private readonly MovementSpeedModifierSystem _movementSpeedModifier = default!;
     [Dependency] protected readonly SharedAppearanceSystem Appearance = default!;
@@ -30,6 +31,16 @@ public abstract class SharedJetpackSystem : EntitySystem
 
     private EntityQuery<JetpackUserComponent> _jetpackUserQuery;
     private EntityQuery<ActiveJetpackComponent> _activeJetpackQuery;
+=======
+    [Dependency] private MovementSpeedModifierSystem _movementSpeedModifier = default!;
+    [Dependency] protected SharedAppearanceSystem Appearance = default!;
+    [Dependency] protected SharedContainerSystem Container = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private ActionContainerSystem _actionContainer = default!;
+
+    [Dependency] private EntityQuery<JetpackComponent> _jetpackQuery = default!;
+>>>>>>> upstream/master
 
     public override void Initialize()
     {

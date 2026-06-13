@@ -5,10 +5,28 @@ using Robust.Shared.GameStates;
 
 namespace Content.Server.Hands.Systems
 {
-    public sealed class HandsSystem : SharedHandsSystem
+    public sealed partial class HandsSystem : SharedHandsSystem
     {
+<<<<<<< HEAD
 
         // Trauma - moved query and DropHeldItemsSpread to PredictedHandsSystem
+=======
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] private IRobustRandom _random = default!;
+        [Dependency] private StackSystem _stackSystem = default!;
+        [Dependency] private ActionBlockerSystem _actionBlockerSystem = default!;
+        [Dependency] private SharedTransformSystem _transformSystem = default!;
+        [Dependency] private PullingSystem _pullingSystem = default!;
+        [Dependency] private ThrowingSystem _throwingSystem = default!;
+        [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default!;
+
+        /// <summary>
+        /// Items dropped when the holder falls down will be launched in
+        /// a direction offset by up to this many degrees from the holder's
+        /// movement direction.
+        /// </summary>
+        private const float DropHeldItemsSpread = 45;
+>>>>>>> upstream/master
 
         public override void Initialize()
         {
@@ -20,7 +38,15 @@ namespace Content.Server.Hands.Systems
 
             SubscribeLocalEvent<HandsComponent, BeforeExplodeEvent>(OnExploded);
 
+<<<<<<< HEAD
             // Trauma - moved OnDropHandItems and HandleThrowItem to PredictedHandsSystem
+=======
+            SubscribeLocalEvent<HandsComponent, DropHandItemsEvent>(OnDropHandItems);
+
+            CommandBinds.Builder
+                .Bind(ContentKeyFunctions.ThrowItemInHand, new PointerInputCmdHandler(HandleThrowItem))
+                .Register<HandsSystem>();
+>>>>>>> upstream/master
         }
 
         // Trauma - moved Shutdown to PredictedHandsSystem

@@ -38,9 +38,9 @@
     - map: [ "grinder" ]
       state: "grinder_empty"
   - type: ApcPowerReceiver
-    powerLoad: 0
+    powerLoad: 5
   - type: PowerState
-    idlePowerDraw: 0
+    idlePowerDraw: 5
     workingPowerDraw: 750 # medium power blender
   - type: ItemSlots
     slots:
@@ -78,11 +78,12 @@
       - LargeBeaker
 
 - type: entity
-  parent: Recycler #too different so different parent
+  parent: [SolutionToolGinormous, Recycler] #too different so different parent
   id: ReagentGrinderIndustrial
   name: industrial reagent grinder
   description: An industrial reagent grinder.
   components:
+<<<<<<< HEAD
   - type: Appearance
   # Starlight-start: Plumbing connector visuals
   - type: PlumbingConnectorAppearance
@@ -93,6 +94,8 @@
     solutions:
       output:
         maxVol: 400 #*slaps roof of machine* This baby can fit so much omnizine in it
+=======
+>>>>>>> upstream/master
   - type: MaterialReclaimer
     whitelist:
       components:
@@ -103,7 +106,7 @@
     efficiency: 0.9
     reclaimMaterials: false # Materials have ExtractableComponent, which is whitelisted, so we have to avoid infinite recycling loops
     onlyReclaimDrainable: false
-    solutionContainerId: output
+    solutionContainerId: solution
   - type: Sprite
     sprite: Structures/Machines/recycling.rsi
     layers:
@@ -128,8 +131,9 @@
     - machine_parts
     - machine_board
   - type: DrainableSolution
-    solution: output
+    solution: solution
   - type: ExaminableSolution
+<<<<<<< HEAD
     solution: output
   # Starlight - Plumbing integration
   - type: PlumbingOutlet
@@ -140,3 +144,6 @@
         !type:PlumbingNode
         nodeGroupID: Plumbing
         pipeDirection: Fourway
+=======
+    solution: solution
+>>>>>>> upstream/master

@@ -101,11 +101,16 @@
           tags:
           - Bottle
           - PillCanister
+<<<<<<< HEAD
   - type: SolutionContainerManager
     solutions:
       buffer:
         maxVol: 10000 # Starlight: limited to 10000u for plumbing compatibility and realism
         canReact: false
+=======
+  - type: Solution # Chemmaster is special in how it interacts with reagents. For now.
+    id: buffer
+>>>>>>> upstream/master
   - type: DumpableSolution
     solution: buffer
     # unlimited: true # Starlight-edit: no longer unlimited

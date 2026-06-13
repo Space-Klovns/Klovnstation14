@@ -19,6 +19,7 @@ namespace Content.Server.Power.EntitySystems;
 
 public sealed partial class CableSystem : EntitySystem
 {
+<<<<<<< HEAD
     [Dependency] private readonly ITileDefinitionManager _tileManager = default!;
     [Dependency] private readonly SharedToolSystem _toolSystem = default!;
     [Dependency] private readonly StackSystem _stack = default!;
@@ -30,6 +31,12 @@ public sealed partial class CableSystem : EntitySystem
     private readonly int arcFlashAmount = 2;
     private readonly string arcFlashProto = "ArcFlashLightningStrong";
     //KS14 end
+=======
+    [Dependency] private ITileDefinitionManager _tileManager = default!;
+    [Dependency] private SharedToolSystem _toolSystem = default!;
+    [Dependency] private StackSystem _stack = default!;
+    [Dependency] private ElectrocutionSystem _electrocutionSystem = default!;
+>>>>>>> upstream/master
 
     public override void Initialize()
     {

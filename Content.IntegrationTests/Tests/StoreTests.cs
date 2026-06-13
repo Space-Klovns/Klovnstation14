@@ -3,7 +3,11 @@ using System.Threading;
 using Content.Server.Store.Systems;
 using Content.Server.StoreDiscount.Systems;
 using Content.IntegrationTests.Fixtures;
+<<<<<<< HEAD
 using Content.IntegrationTests.Fixtures.Attributes;
+=======
+using Content.Server.PDA.Ringer;
+>>>>>>> upstream/master
 using Content.Server.Traitor.Uplink;
 using Content.Shared.FixedPoint;
 using Content.Shared.Inventory;
@@ -35,18 +39,6 @@ public sealed class StoreTests : GameTest
 ";
 
     [Test]
-    [Ignore("""
-        This currently causes the client to crash, failing the test.
-        When this is fixed, this test should be removed and StoreDiscountAndRefund
-        should just use the default pair config.
-    """)]
-    public async Task StoreDiscountAndRefundWithClient()
-    {
-        await StoreDiscountAndRefund();
-    }
-
-    [Test]
-    [PairConfig(nameof(PsDisconnected))]
     public async Task StoreDiscountAndRefund()
     {
         var pair = Pair;
@@ -81,7 +73,7 @@ public sealed class StoreTests : GameTest
             var invSystem = entManager.System<InventorySystem>();
             var mindSystem = entManager.System<SharedMindSystem>();
 
-            human = entManager.SpawnEntity("HumanUniformDummy", coordinates);
+            human = entManager.SpawnEntity("MobHuman", coordinates);
             uniform = entManager.SpawnEntity("UniformDummy", coordinates);
             pda = entManager.SpawnEntity("InventoryPdaDummy", coordinates);
 

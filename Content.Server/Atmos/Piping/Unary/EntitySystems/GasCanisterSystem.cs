@@ -15,13 +15,20 @@ using Content.Shared.Popups;
 
 namespace Content.Server.Atmos.Piping.Unary.EntitySystems;
 
-public sealed class GasCanisterSystem : SharedGasCanisterSystem
+public sealed partial class GasCanisterSystem : SharedGasCanisterSystem
 {
+<<<<<<< HEAD
     [Dependency] private readonly AtmosphereSystem _atmos = default!;
     [Dependency] private readonly NodeContainerSystem _nodeContainer = default!;
     [Dependency] private readonly Shared._KS14.Atmos.Piping.Unary.GasCanisterOverlayDataSystem _ksGasCanisterOverlayDataSystem = default!; // KS14
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
     [Dependency] private readonly PopupSystem _popup = default!;
+=======
+    [Dependency] private AtmosphereSystem _atmos = default!;
+    [Dependency] private NodeContainerSystem _nodeContainer = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+>>>>>>> upstream/master
 
     private const float ReleaseArea = 0.05f; // 500cm^2 Number chosen for balance reasons. It's quite large, but so are gas canisters (holding 1.5 cubic meters of gas!)
 

@@ -11,10 +11,10 @@ using Robust.Shared.Player;
 
 namespace Content.Server.Administration.UI
 {
-    public sealed class AdminAnnounceEui : BaseEui
+    public sealed partial class AdminAnnounceEui : BaseEui
     {
-        [Dependency] private readonly IAdminManager _adminManager = default!;
-        [Dependency] private readonly IChatManager _chatManager = default!;
+        [Dependency] private IAdminManager _adminManager = default!;
+        [Dependency] private IChatManager _chatManager = default!;
         private readonly ChatSystem _chatSystem;
 
         public AdminAnnounceEui()

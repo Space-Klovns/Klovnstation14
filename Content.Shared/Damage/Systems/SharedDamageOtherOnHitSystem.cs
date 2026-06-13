@@ -4,10 +4,14 @@ using Content.Shared.Damage.Events;
 
 namespace Content.Shared.Damage.Systems;
 
+<<<<<<< HEAD
 public abstract partial class SharedDamageOtherOnHitSystem : EntitySystem // Trauma - made partial
+=======
+public abstract partial class SharedDamageOtherOnHitSystem : EntitySystem
+>>>>>>> upstream/master
 {
-    [Dependency] private readonly DamageableSystem _damageable = default!;
-    [Dependency] private readonly DamageExamineSystem _damageExamine = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private DamageExamineSystem _damageExamine = default!;
 
     public override void Initialize()
     {

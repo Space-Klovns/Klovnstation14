@@ -14,14 +14,22 @@ namespace Content.Server.Teleportation;
 /// <summary>
 /// This handles creating portals from a hand teleporter.
 /// </summary>
-public sealed class HandTeleporterSystem : EntitySystem
+public sealed partial class HandTeleporterSystem : EntitySystem
 {
+<<<<<<< HEAD
     [Dependency] private readonly _KS14.Speczones.SpeczoneSystem _speczoneSystem = default!; // KS14
     [Dependency] private readonly IAdminLogManager _adminLogger = default!;
     [Dependency] private readonly LinkedEntitySystem _link = default!;
     [Dependency] private readonly AudioSystem _audio = default!;
     [Dependency] private readonly SharedDoAfterSystem _doafter = default!;
     [Dependency] private readonly PopupSystem _popup = default!;
+=======
+    [Dependency] private IAdminLogManager _adminLogger = default!;
+    [Dependency] private LinkedEntitySystem _link = default!;
+    [Dependency] private AudioSystem _audio = default!;
+    [Dependency] private SharedDoAfterSystem _doafter = default!;
+    [Dependency] private PopupSystem _popup = default!;
+>>>>>>> upstream/master
 
     /// <inheritdoc/>
     public override void Initialize()

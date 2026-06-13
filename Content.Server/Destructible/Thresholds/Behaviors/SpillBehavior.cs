@@ -33,6 +33,7 @@ public sealed partial class SpillBehavior : IThresholdBehavior
         var coordinates = system.EntityManager.GetComponent<TransformComponent>(owner).Coordinates;
     }
 
+<<<<<<< HEAD
     /// <summary>
     /// If there is a SpillableComponent on EntityUidowner use it to create a puddle/smear.
     /// Or whatever solution is specified in the behavior itself.
@@ -58,6 +59,14 @@ public sealed partial class SpillBehavior : IThresholdBehavior
         {
             spillableSystem.TrySplashSpillAt(owner, coordinates, behaviorSolution, out _, user: cause);
         }
+=======
+        // Spill the solution that was drained/split
+        // TODO: ??? Top 10 reasons for solution entity prototypes right here bruh.
+        if (Solution != null && solutionContainer.TryGetSolution(owner, Solution, out _, out var solution))
+            puddleSystem.TrySplashSpillAt(owner, coordinates, solution, out _, false, cause);
+        else
+            puddleSystem.TrySplashSpillAt(owner, coordinates, out _, out _, false, cause);
+>>>>>>> upstream/master
     }
 }
 

@@ -3,10 +3,16 @@ using Robust.Client.GameObjects;
 
 namespace Content.Client.Materials;
 
-public sealed class MaterialStorageSystem : SharedMaterialStorageSystem
+public sealed partial class MaterialStorageSystem : SharedMaterialStorageSystem
 {
+<<<<<<< HEAD
     [Dependency] private readonly AppearanceSystem _appearance = default!;
     [Dependency] private readonly SpriteSystem _sprite = default!;
+=======
+    [Dependency] private AppearanceSystem _appearance = default!;
+    [Dependency] private TransformSystem _transform = default!;
+    [Dependency] private SpriteSystem _sprite = default!;
+>>>>>>> upstream/master
 
     public override void Initialize()
     {

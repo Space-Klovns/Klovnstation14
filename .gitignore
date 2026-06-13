@@ -310,5 +310,9 @@ Resources/MapImages
 # Direnv stuff
 .direnv/
 
+<<<<<<< HEAD
 # KS14: C# Dev Kit on VSC uses this
+=======
+# C# Dev Kit cache file
+>>>>>>> upstream/master
 *.lscache

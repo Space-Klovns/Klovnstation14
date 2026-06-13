@@ -9,6 +9,11 @@ namespace Content.Server.Store.Systems;
 
 public sealed partial class StoreSystem
 {
+<<<<<<< HEAD
+=======
+    [Dependency] private IGameTiming _timing = default!;
+
+>>>>>>> upstream/master
     private void InitializeRefund()
     {
         SubscribeLocalEvent<StoreComponent, EntityTerminatingEvent>(OnStoreTerminating);

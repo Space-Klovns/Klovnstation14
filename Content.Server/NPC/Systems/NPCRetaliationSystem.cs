@@ -13,11 +13,18 @@ namespace Content.Server.NPC.Systems;
 /// <summary>
 ///     Handles NPC which become aggressive after being attacked.
 /// </summary>
+<<<<<<< HEAD
 public sealed partial /* KS14: Made partial */ class NPCRetaliationSystem : EntitySystem
 {
     [Dependency] private readonly NpcFactionSystem _npcFaction = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly _KS14.NPC.Systems.NpcRetaliationWarningSystem _retaliationWarningSystem = default!; // KS14
+=======
+public sealed partial class NPCRetaliationSystem : EntitySystem
+{
+    [Dependency] private NpcFactionSystem _npcFaction = default!;
+    [Dependency] private IGameTiming _timing = default!;
+>>>>>>> upstream/master
 
     /// <inheritdoc />
     public override void Initialize()
