@@ -96,7 +96,7 @@
     sprite: Objects/Weapons/Grenades/airboom.rsi
     layers:
     - state: icon
-      map: [ "enum.TriggerVisualLayers.Base" ]
+      map: [ "enum.TriggerVisualLayers.Base" ] # KS14
     - state: active
       map: [ "payload" ]
       visible: false
@@ -121,7 +121,7 @@
       temperature: 293.15
   - type: StaticPrice
     price: 350
-  - type: GenericVisualizer
+  - type: GenericVisualizer # KS14
     visuals:
       enum.TriggerVisuals.VisualState:
         payload:

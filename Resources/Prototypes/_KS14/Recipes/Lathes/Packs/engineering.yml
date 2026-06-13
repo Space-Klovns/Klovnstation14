@@ -2,3 +2,4 @@
   id: KlovnEngineeringBoardsStatic
   recipes:
   - KsAtmosShieldGenCircuitboard
+  - GasGrenadeCompressorMachineCircuitBoard
