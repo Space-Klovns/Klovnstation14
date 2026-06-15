@@ -8,9 +8,9 @@
     autoRechargeRate: 30
 
 - type: entity
-  name: KSLaserGun
+  name: laser gun
   parent: [WeaponDisablerPractice, BaseSecurityCommandContraband]
-  id: WeaponDisabler
+  id: KSLaserGun
   description: A self-defense weapon that exhausts organic targets, weakening them until they collapse.
   components:
   - type: Sprite
@@ -32,9 +32,41 @@
     fireCost: 100
 
 - type: entity
-  name: KSEnergyGun
+  name: energy gun
+  parent: [BaseWeaponBatterySmall, BaseSecurityCommandContraband]
+  id: KSEnergyGun
+  description: A self-defense weapon that exhausts organic targets, weakening them until they collapse.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Guns/Battery/energygun.rsi
+    layers:
+      - state: base
+        map: ["enum.GunVisualLayers.Base"]
+      - state: mag-unshaded-0
+        map: ["enum.GunVisualLayers.MagUnshaded"]
+        shader: unshaded
+  - type: MagazineVisuals
+    magState: mag
+    steps: 4
+    zeroVisible: true
+  - type: Clothing
+    sprite: _KS14/Objects/Weapons/Guns/Battery/energygun.rsi
+    quickEquip: false
+    slots:
+      - suitStorage
+      - Belt
+  - type: BatteryWeaponFireModes
+    fireModes:
+    - proto: BulletLaserWindowPiercing
+      fireCost: 150
+    - proto: BulletDisabler
+      fireCost: 62.5
+      pacifismAllowedMode: true
+
+- type: entity
+  name: laser carbine
   parent: [WeaponDisablerPractice, BaseSecurityCommandContraband]
-  id: WeaponDisabler
+  id: KSLaserCarbine
   description: A self-defense weapon that exhausts organic targets, weakening them until they collapse.
   components:
   - type: Sprite
@@ -56,9 +88,9 @@
     fireCost: 100
 
 - type: entity
-  name: KSLaserCarbine
+  name: X-01 multi-phase energy gun
   parent: [WeaponDisablerPractice, BaseSecurityCommandContraband]
-  id: WeaponDisabler
+  id: KSX-01MultiPhaseEnergyGun
   description: A self-defense weapon that exhausts organic targets, weakening them until they collapse.
   components:
   - type: Sprite
@@ -80,9 +112,9 @@
     fireCost: 100
 
 - type: entity
-  name: KSX-01MultiPhaseEnergyGun
+  name: ion rifle
   parent: [WeaponDisablerPractice, BaseSecurityCommandContraband]
-  id: WeaponDisabler
+  id: KSIonRifle
   description: A self-defense weapon that exhausts organic targets, weakening them until they collapse.
   components:
   - type: Sprite

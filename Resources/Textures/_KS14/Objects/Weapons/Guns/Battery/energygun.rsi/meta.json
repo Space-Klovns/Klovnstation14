@@ -1,0 +1,113 @@
+{
+    "version": 1,
+    "license": "CC-BY-SA-3.0",
+    "copyright": "taken from tg station at commit https://github.com/tgstation/tgstation/blob/832ae532766d491d91db53746d15b4b55be3f2b0",
+    "size": {
+        "x": 32,
+        "y": 32
+    },
+    "states": [
+        {
+            "name": "base"
+        },
+        {
+            "name": "energy_disable"
+        },
+        {
+            "name": "energy_kill"
+        },
+        {
+            "name": "equipped-BELT"
+        },
+        {
+            "name": "equipped-SUITSTORAGE"
+        },
+        {
+            "name": "inhand-left-disable"
+        },
+        {
+            "name": "inhand-left-disable-0"
+        },
+        {
+            "name": "inhand-left-disable-1"
+        },
+        {
+            "name": "inhand-left-disable-2"
+        },
+        {
+            "name": "inhand-left-disable-3"
+        },
+        {
+            "name": "inhand-left-kill"
+        },
+        {
+            "name": "inhand-left-kill-0"
+        },
+        {
+            "name": "inhand-left-kill-1"
+        },
+        {
+            "name": "inhand-left-kill-2"
+        },
+        {
+            "name": "inhand-left-kill-3"
+        },
+        {
+            "name": "inhand-right-disable"
+        },
+        {
+            "name": "inhand-right-disable-0"
+        },
+        {
+            "name": "inhand-right-disable-1"
+        },
+        {
+            "name": "inhand-right-disable-2"
+        },
+        {
+            "name": "inhand-right-disable-3"
+        },
+        {
+            "name": "inhand-right-kill"
+        },
+        {
+            "name": "inhand-right-kill-0"
+        },
+        {
+            "name": "inhand-right-kill-1"
+        },
+        {
+            "name": "inhand-right-kill-2"
+        },
+        {
+            "name": "inhand-right-kill-3"
+        },
+        {
+            "name": "mag-unshaded-0"
+        },
+        {
+            "name": "mag-unshaded-disable-1"
+        },
+        {
+            "name": "mag-unshaded-disable-2"
+        },
+        {
+            "name": "mag-unshaded-disable-3"
+        },
+        {
+            "name": "mag-unshaded-disable-4"
+        },
+        {
+            "name": "mag-unshaded-kill-1"
+        },
+        {
+            "name": "mag-unshaded-kill-2"
+        },
+        {
+            "name": "mag-unshaded-kill-3"
+        },
+        {
+            "name": "mag-unshaded-kill-4"
+        }
+    ]
+}
