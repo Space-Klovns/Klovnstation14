@@ -1,27 +1,50 @@
 - type: entity
-  parent: BaseGasThermoMachine
+  parent: [ BaseMachinePowered, ConstructibleMachine ]
   id: GasGrenadeCompressor
   name: air grenade compressor
   description: A machine used to refill air grenades with inert gases.
   components:
     - type: Sprite
-      sprite: Structures/Piping/Atmospherics/thermomachine.rsi # Placeholder
+      sprite: _KS14/Structures/Machines/compressor.rsi
       snapCardinals: false
+      noRot: true
       granularLayersRendering: true
       layers:
-        - state: heaterOff
-          map: [ "enum.PowerDeviceVisualLayers.Powered" ]
-        - state: heaterPanelOpen
-          map: ["enum.WiresVisualLayers.MaintenancePanel"]
-        - state: pipe
+        - state: pipeUnaryConnectors
+          sprite: Structures/Piping/Atmospherics/pipe.rsi
           map: [ "enum.PipeVisualLayers.Pipe" ]
           renderingStrategy: Default
+        - state: off
+          map: [ "enum.PowerDeviceVisualLayers.Powered" ]
+    - type: Appearance
     - type: GenericVisualizer
       visuals:
         enum.PowerDeviceVisuals.Powered:
           enum.PowerDeviceVisualLayers.Powered:
-            True: { state: heaterOn }
-            False: { state: heaterOff }
+            True: { state: on }
+            False: { state: off }
+    - type: PowerDeviceVisuals
+    - type: EmissiveLayers
+      layers: []
+    - type: AtmosPipeLayers
+      spriteLayersRsiPaths:
+        enum.PipeVisualLayers.Pipe:
+          Primary: Structures/Piping/Atmospherics/pipe.rsi
+          Secondary: Structures/Piping/Atmospherics/pipe_alt1.rsi
+          Tertiary: Structures/Piping/Atmospherics/pipe_alt2.rsi
+    - type: Rotatable
+    - type: AtmosDevice
+    - type: PipeColorVisuals
+    - type: AtmosPipeColor
+    - type: PipeRestrictOverlap
+    - type: NodeContainer
+      nodes:
+        pipe:
+          !type:PipeNode
+          nodeGroupID: Pipe
+          pipeDirection: South
+    - type: Transform
+      noRot: false
     - type: GasGrenadeCompressor
     - type: ItemSlots
       slots:

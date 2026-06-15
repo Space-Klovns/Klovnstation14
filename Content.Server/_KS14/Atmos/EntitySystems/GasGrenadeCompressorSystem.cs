@@ -3,6 +3,7 @@ using Content.Server.Materials;
 using Content.Server.NodeContainer.EntitySystems;
 using Content.Server.NodeContainer.Nodes;
 using Content.Server.Power.EntitySystems;
+using Content.Shared.Power;
 using Content.Shared._KS14.Atmos.Components;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
@@ -53,7 +54,10 @@ public sealed class GasGrenadeCompressorSystem : EntitySystem
 
     private void OnUpdate(EntityUid uid, GasGrenadeCompressorComponent comp, ref AtmosDeviceUpdateEvent args)
     {
-        if (!comp.Enabled || !_power.IsPowered(uid))
+        var powered = _power.IsPowered(uid);
+        _appearance.SetData(uid, PowerDeviceVisuals.Powered, comp.Enabled && powered);
+
+        if (!comp.Enabled || !powered)
         {
             UpdateUserInterface(uid, comp);
             return;
@@ -174,6 +178,7 @@ public sealed class GasGrenadeCompressorSystem : EntitySystem
     private void OnToggle(EntityUid uid, GasGrenadeCompressorComponent comp, GasGrenadeCompressorToggleMessage args)
     {
         comp.Enabled = args.Enabled;
+        _appearance.SetData(uid, PowerDeviceVisuals.Powered, args.Enabled && _power.IsPowered(uid));
         UpdateUserInterface(uid, comp);
     }
 
