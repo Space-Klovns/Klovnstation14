@@ -1,5 +1,5 @@
-using Content.Server.Polymorph.Components;
 using Content.Server.Polymorph.Systems;
+using Content.Shared.Polymorph.Components;
 using Content.Shared.Administration;
 using Robust.Shared.Console;
 
