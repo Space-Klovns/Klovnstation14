@@ -1,3 +1,4 @@
+using Content.Server.Administration.Managers;
 using Content.Server.Atmos.EntitySystems;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Atmos.Piping.Components;
@@ -11,6 +12,7 @@ namespace Content.Server.Atmos.Piping.EntitySystems
     [UsedImplicitly]
     public sealed class AtmosDeviceSystem : EntitySystem
     {
+        [Dependency] private readonly IAdminManager _adminManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly AtmosphereSystem _atmosphereSystem = default!;
 
@@ -37,6 +39,9 @@ namespace Content.Server.Atmos.Piping.EntitySystems
         //KS14 start
         private void OnExamine(Entity<AtmosDeviceComponent> ent, ref ExaminedEvent args)
         {
+            if (!_adminManager.IsAdmin(args.Examiner))
+                return;
+
             if (ent.Comp.JoinedGrid is not { } gridUid || !TryComp<GridAtmosphereComponent>(gridUid, out var gridAtmos))
                 return;
 
