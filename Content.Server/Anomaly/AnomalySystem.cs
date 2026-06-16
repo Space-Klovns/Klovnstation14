@@ -1,5 +1,7 @@
 using Content.Server.Anomaly.Components;
 using Content.Server.Atmos.EntitySystems;
+using Content.Shared._KS14.Anomaly.Components; // KS14
+using Content.Shared._KS14.Anomaly.Prototypes; // KS14
 using Content.Server.Audio;
 using Content.Server.Explosion.EntitySystems;
 using Content.Server.Materials;
@@ -57,6 +59,7 @@ public sealed partial class AnomalySystem : SharedAnomalySystem
         InitializeGenerator();
         InitializeVessel();
         InitializeCommands();
+        InitializeGases(); // KS14
     }
 
     private void OnMapInit(Entity<AnomalyComponent> anomaly, ref MapInitEvent args)
@@ -161,6 +164,13 @@ public sealed partial class AnomalySystem : SharedAnomalySystem
             multiplier *= behavior.EarnPointModifier;
         }
 
+        // KS14 - Start
+        if (TryComp<AnomalyGasConsumerComponent>(anomaly, out var consumer))
+        {
+            multiplier *= consumer.PointMultiplier;
+        }
+        // KS14 - End
+
         var severityValue = 1 / (1 + MathF.Pow(MathF.E, -7 * (component.Severity - 0.5f)));
 
         return (int)((component.MaxPointsPerSecond - component.MinPointsPerSecond) * severityValue * multiplier) + component.MinPointsPerSecond;
@@ -182,13 +192,13 @@ public sealed partial class AnomalySystem : SharedAnomalySystem
             _ => throw new ArgumentOutOfRangeException()
         };
     }
-
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
 
         UpdateGenerator();
         UpdateVessels();
+        UpdateGasConsumption(frameTime); // KS14
     }
 
     #region Behavior
@@ -283,6 +293,16 @@ public sealed partial class AnomalySystem : SharedAnomalySystem
             msg.AddMarkupOrThrow(text);
         }
         msg.PushNewline();
+
+        // KS14 - Start
+        // Anomaly health
+        if (component.IgnoreSecret)
+        {
+            msg.AddMarkupOrThrow(Loc.GetString("anomaly-scanner-health", ("health", (anomalyComp.Health * 100).ToString("F1"))));
+            msg.PushNewline();
+        }
+        // KS14 - End
+
         msg.PushNewline();
 
         //Particles title
@@ -340,6 +360,41 @@ public sealed partial class AnomalySystem : SharedAnomalySystem
         //Behavior
         msg.PushNewline();
         msg.PushNewline();
+
+        // KS14 - Start
+        msg.AddMarkupOrThrow(Loc.GetString("anomaly-scanner-atmosphere-title"));
+        msg.PushNewline();
+
+        if (TryComp<AnomalyGasConsumerComponent>(anomaly, out var consumer) && consumer.ActiveGas != null)
+        {
+            // Try to find localized gas name
+            // Convert PascalCase to kebab-case for localization keys (e.g. CarbonDioxide -> carbon-dioxide)
+            var gasNameStr = consumer.ActiveGas.Value.ToString();
+            var gasId = "";
+            for (var i = 0; i < gasNameStr.Length; i++)
+            {
+                var c = gasNameStr[i];
+                if (i > 0 && char.IsUpper(c))
+                    gasId += "-";
+                gasId += char.ToLower(c);
+            }
+
+            var gasName = Loc.TryGetString($"gas-{gasId}", out var name) ? name : (Loc.TryGetString($"gases-{gasId}", out name) ? name : gasNameStr);
+
+            msg.AddMarkupOrThrow(Loc.GetString("anomaly-scanner-atmosphere-active",
+                ("gas", gasName),
+                ("percent", (consumer.ScalingFactor * 100).ToString("F0"))));
+            msg.PushNewline();
+            msg.PushNewline();
+        }
+        else
+        {
+            msg.AddMarkupOrThrow(Loc.GetString("anomaly-scanner-atmosphere-none"));
+            msg.PushNewline();
+            msg.PushNewline();
+        }
+        // KS14 - End
+
         var behaviorTitle = Loc.GetString("anomaly-behavior-title");
         if (secret != null && secret.Secret.Contains(AnomalySecretData.Behavior) && component.IgnoreSecret)
             behaviorTitle += " " + Loc.GetString("anomaly-secret-admin");

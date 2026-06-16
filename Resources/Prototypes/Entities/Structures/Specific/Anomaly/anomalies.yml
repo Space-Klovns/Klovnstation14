@@ -48,6 +48,7 @@
     sound:
       path: /Audio/Effects/teleport_arrival.ogg
   - type: SecretDataAnomaly
+  - type: AnomalyGasConsumer # KS14
     randomStartSecretMin: 0
     randomStartSecretMax: 2
   - type: DamageOnInteract
@@ -65,6 +66,7 @@
   parent: BaseAnomaly
   suffix: Pyroclastic
   components:
+  - type: AnomalyGasConsumer # KS14
   - type: AmbientSound
     volume: 5
     range: 5
@@ -124,6 +126,7 @@
   parent: BaseAnomaly
   suffix: Gravity
   components:
+  - type: AnomalyGasConsumer # KS14
   - type: Anomaly
     corePrototype: AnomalyCoreGravity
     coreInertPrototype: AnomalyCoreGravityInert
@@ -159,6 +162,7 @@
   parent: BaseAnomaly
   suffix: Electricity
   components:
+  - type: AnomalyGasConsumer # KS14
   - type: Anomaly
     corePrototype: AnomalyCoreElectricity
     coreInertPrototype: AnomalyCoreElectricityInert
@@ -184,6 +188,7 @@
   parent: BaseAnomaly
   suffix: Flesh
   components:
+  - type: AnomalyGasConsumer # KS14
   - type: Anomaly
     corePrototype: AnomalyCoreFlesh
     coreInertPrototype: AnomalyCoreFleshInert
@@ -279,6 +284,7 @@
   parent: BaseAnomaly
   suffix: Bluespace
   components:
+  - type: AnomalyGasConsumer # KS14
   - type: Sprite
     layers:
     - state: anom4
@@ -328,6 +334,7 @@
   parent: BaseAnomaly
   suffix: Ice
   components:
+  - type: AnomalyGasConsumer # KS14
   - type: Sprite
     sprite: Structures/Specific/Anomalies/ice_anom.rsi
     layers:
@@ -385,6 +392,7 @@
   abstract: true
   suffix: Rock
   components:
+  - type: AnomalyGasConsumer # KS14
   - type: Anomaly
     corePrototype: AnomalyCoreRock
     coreInertPrototype: AnomalyCoreRockInert
@@ -774,6 +782,7 @@
   parent: BaseAnomaly
   suffix: Flora
   components:
+  - type: AnomalyGasConsumer # KS14
   - type: Sprite
     drawdepth: Mobs
     sprite: Structures/Specific/Anomalies/flora_anom.rsi
@@ -876,6 +885,7 @@
   parent: BaseAnomaly
   suffix: Liquid
   components:
+  - type: AnomalyGasConsumer # KS14
   - type: Sprite
     sprite: Structures/Specific/Anomalies/liquid_anom.rsi
     layers:
@@ -996,6 +1006,7 @@
   parent: BaseAnomaly
   suffix: Shadow
   components:
+  - type: AnomalyGasConsumer # KS14
   - type: Sprite
     sprite: Structures/Specific/Anomalies/shadow_anom.rsi
     layers:
@@ -1060,6 +1071,7 @@
   parent: BaseAnomaly
   suffix: Tech
   components:
+  - type: AnomalyGasConsumer # KS14
   - type: Sprite
     sprite: Structures/Specific/Anomalies/tech_anom.rsi
     layers:
@@ -1122,6 +1134,7 @@
   parent: BaseAnomaly
   suffix: Santa
   components:
+  - type: AnomalyGasConsumer # KS14
   - type: Sprite
     drawdepth: Mobs
     sprite: Structures/Specific/Anomalies/santa_anom.rsi
