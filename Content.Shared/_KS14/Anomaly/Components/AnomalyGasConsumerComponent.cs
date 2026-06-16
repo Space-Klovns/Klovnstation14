@@ -29,6 +29,12 @@ public sealed partial class AnomalyGasConsumerComponent : Component
     public float ConsumptionRate = 1.0f;
 
     /// <summary>
+    /// Penalty multiplier applied to the secondary gas effect.
+    /// </summary>
+    [DataField("secondaryGasPenalty")]
+    public float SecondaryGasPenalty = 0.5f;
+
+    /// <summary>
     /// How often the anomaly checks the atmosphere (in seconds).
     /// Capped between 0.5 and 2.0 in logic.
     /// </summary>
@@ -38,19 +44,30 @@ public sealed partial class AnomalyGasConsumerComponent : Component
 
     #region Gameplay State
     /// <summary>
-    /// The gas currently affecting the anomaly.
+    /// The primary gas currently affecting the anomaly.
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly), AutoNetworkedField]
-    public Gas? ActiveGas;
+    public Gas? PrimaryGas;
 
     /// <summary>
-    /// The strength of the gas effect (0.0 to 1.0), based on pressure.
+    /// The secondary gas currently affecting the anomaly.
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly), AutoNetworkedField]
-    public float ScalingFactor = 0f;
+    public Gas? SecondaryGas;
 
-    [AutoNetworkedField]
-    public float PointMultiplier = 1f;
+    /// <summary>
+    /// The strength of the primary gas effect (0.0 to 1.0), based on pressure.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly), AutoNetworkedField]
+    public float PrimaryScalingFactor = 0f;
+
+    /// <summary>
+    /// The strength of the secondary gas effect (0.0 to 1.0), based on pressure.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly), AutoNetworkedField]
+    public float SecondaryScalingFactor = 0f;
+
+    [AutoNetworkedField]    public float PointMultiplier = 1f;
 
     [AutoNetworkedField]
     public float PulseFrequencyMultiplier = 1f;

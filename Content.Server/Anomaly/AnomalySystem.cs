@@ -365,26 +365,52 @@ public sealed partial class AnomalySystem : SharedAnomalySystem
         msg.AddMarkupOrThrow(Loc.GetString("anomaly-scanner-atmosphere-title"));
         msg.PushNewline();
 
-        if (TryComp<AnomalyGasConsumerComponent>(anomaly, out var consumer) && consumer.ActiveGas != null)
+        if (TryComp<AnomalyGasConsumerComponent>(anomaly, out var consumer) && consumer.PrimaryGas != null)
         {
-            // Try to find localized gas name
-            // Convert PascalCase to kebab-case for localization keys (e.g. CarbonDioxide -> carbon-dioxide)
-            var gasNameStr = consumer.ActiveGas.Value.ToString();
-            var gasId = "";
-            for (var i = 0; i < gasNameStr.Length; i++)
+            // Primary Gas
+            var pGasNameStr = consumer.PrimaryGas.Value.ToString();
+            var pGasId = "";
+            for (var i = 0; i < pGasNameStr.Length; i++)
             {
-                var c = gasNameStr[i];
-                if (i > 0 && char.IsUpper(c))
-                    gasId += "-";
-                gasId += char.ToLower(c);
+                var c = pGasNameStr[i];
+                if (i > 0 && char.IsUpper(c)) pGasId += "-";
+                pGasId += char.ToLower(c);
+            }
+            var pGasName = Loc.TryGetString($"gas-{pGasId}", out var pName) ? pName : (Loc.TryGetString($"gases-{pGasId}", out pName) ? pName : pGasNameStr);
+
+            msg.AddMarkupOrThrow(Loc.GetString("anomaly-scanner-atmosphere-primary",
+                ("gas", pGasName),
+                ("percent", (consumer.PrimaryScalingFactor * 100).ToString("F0"))));
+            msg.PushNewline();
+
+            // Secondary Gas
+            if (consumer.SecondaryGas != null && consumer.SecondaryScalingFactor > 0)
+            {
+                var sGasNameStr = consumer.SecondaryGas.Value.ToString();
+                var sGasId = "";
+                for (var i = 0; i < sGasNameStr.Length; i++)
+                {
+                    var c = sGasNameStr[i];
+                    if (i > 0 && char.IsUpper(c)) sGasId += "-";
+                    sGasId += char.ToLower(c);
+                }
+                var sGasName = Loc.TryGetString($"gas-{sGasId}", out var sName) ? sName : (Loc.TryGetString($"gases-{sGasId}", out sName) ? sName : sGasNameStr);
+
+                msg.AddMarkupOrThrow(Loc.GetString("anomaly-scanner-atmosphere-secondary",
+                    ("gas", sGasName),
+                    ("percent", (consumer.SecondaryScalingFactor * 100).ToString("F0"))));
+                msg.PushNewline();
             }
 
-            var gasName = Loc.TryGetString($"gas-{gasId}", out var name) ? name : (Loc.TryGetString($"gases-{gasId}", out name) ? name : gasNameStr);
+            if (component.IgnoreSecret)
+            {
+                // Calculate partial pressure for debug (approximate)
+                msg.PushColor(Color.DarkGray);
+                msg.AddText($"[Debug] Moles: {consumer.PointMultiplier:F2}x Pts, {consumer.PulseFrequencyMultiplier:F2}x Freq");
+                msg.Pop();
+                msg.PushNewline();
+            }
 
-            msg.AddMarkupOrThrow(Loc.GetString("anomaly-scanner-atmosphere-active",
-                ("gas", gasName),
-                ("percent", (consumer.ScalingFactor * 100).ToString("F0"))));
-            msg.PushNewline();
             msg.PushNewline();
         }
         else

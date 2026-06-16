@@ -103,7 +103,8 @@ anomaly-behavior-moving = [color=crimson]Coordinate instability was detected.[/c
 # KS14
 anomaly-scanner-atmosphere-title = Atmospheric Influence Analysis:
 anomaly-scanner-atmosphere-none = Current State: [color=gray]No significant atmospheric influence[/color]
-anomaly-scanner-atmosphere-active = Current State: [color=white]{$gas}[/color] [color=gray]({$percent}%)[/color]
+anomaly-scanner-atmosphere-primary = Primary Catalyst: [color=white]{$gas}[/color] [color=gray]({$percent}%)[/color]
+anomaly-scanner-atmosphere-secondary = Secondary Catalyst: [color=white]{$gas}[/color] [color=gray]({$percent}%)[/color]
 
 gorilla-shove-not-disposals = You can only shove this into a disposals unit!
 gorilla-shove-gauntlet-not-active = The gauntlet isn't active!

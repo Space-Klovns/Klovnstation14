@@ -15,7 +15,8 @@ public sealed partial class AnomalySystem
     private sealed class GasConsumerProcessingState
     {
         public float Accumulator;
-        public float LastSentScalingFactor = -1f;
+        public float LastSentPrimaryScaling = -1f;
+        public float LastSentSecondaryScaling = -1f;
     }
 
     private readonly Dictionary<EntityUid, GasConsumerProcessingState> _processingCache = new();
@@ -83,75 +84,114 @@ public sealed partial class AnomalySystem
                 continue;
             }
 
-            // Find dominant gas
-            Gas? dominantGas = null;
-            float maxMoles = 0;
+            // Find dominant top 2 gases
+            Gas? primaryGas = null;
+            float primaryMoles = 0;
+            Gas? secondaryGas = null;
+            float secondaryMoles = 0;
 
             foreach (var gas in _gasValues)
             {
+                if (gas == Gas.Nitrogen)
+                    continue;
+
                 var moles = mixture.GetMoles(gas);
-                if (moles > maxMoles)
+                if (moles <= 0) continue;
+
+                if (moles > primaryMoles)
                 {
-                    maxMoles = moles;
-                    dominantGas = gas;
+                    secondaryGas = primaryGas;
+                    secondaryMoles = primaryMoles;
+                    primaryGas = gas;
+                    primaryMoles = moles;
+                }
+                else if (moles > secondaryMoles)
+                {
+                    secondaryGas = gas;
+                    secondaryMoles = moles;
                 }
             }
 
-            if (dominantGas == null || dominantGas == Gas.Nitrogen)
+            // Calculate primary partial pressure directly from the mixture's total pressure
+            float primaryPressure = primaryMoles > 0 ? mixture.Pressure * (primaryMoles / mixture.TotalMoles) : 0f;
+            float secondaryPressure = secondaryMoles > 0 ? mixture.Pressure * (secondaryMoles / mixture.TotalMoles) : 0f;
+
+            if (primaryGas == null || primaryPressure < consumer.MinPressureThreshold || !_gasEffects.ContainsKey(primaryGas.Value))
             {
                 ResetGasState(uid, consumer, state);
                 continue;
             }
 
-            // Calculate partial pressure directly from the mixture's total pressure
-            var partialPressure = mixture.Pressure * (maxMoles / mixture.TotalMoles);
-
-            if (partialPressure < consumer.MinPressureThreshold)
+            // Process Primary
+            var primaryScaling = Math.Clamp((primaryPressure - consumer.MinPressureThreshold) / (consumer.MaxPressureCap - consumer.MinPressureThreshold), 0f, 1f);
+            var primaryEffect = _gasEffects[primaryGas.Value];
+            
+            // Process Secondary
+            float secondaryScaling = 0f;
+            AnomalyGasEffectPrototype? secondaryEffect = null;
+            if (secondaryGas != null && secondaryPressure >= consumer.MinPressureThreshold && _gasEffects.TryGetValue(secondaryGas.Value, out secondaryEffect))
             {
-                ResetGasState(uid, consumer, state);
-                continue;
+                secondaryScaling = Math.Clamp((secondaryPressure - consumer.MinPressureThreshold) / (consumer.MaxPressureCap - consumer.MinPressureThreshold), 0f, 1f);
             }
 
-            if (!_gasEffects.TryGetValue(dominantGas.Value, out var effect))
-            {
-                ResetGasState(uid, consumer, state);
-                // Log warning for missing non-inert prototypes
-                Log.Warning($"Anomaly {ToPrettyString(uid)} is in {dominantGas.Value} but no AnomalyGasEffectPrototype is defined for it.");
-                continue;
-            }
+            // Calculate total deltas and multipliers
+            float stabDelta = primaryEffect.StabilityModifier * primaryScaling;
+            float sevDelta = primaryEffect.SeverityModifier * primaryScaling;
+            float healthDelta = primaryEffect.HealthModifier * primaryScaling;
+            
+            float ptMult = (primaryEffect.PointMultiplier - 1f) * primaryScaling;
+            float freqMult = (primaryEffect.PulseFrequencyMultiplier - 1f) * primaryScaling;
+            float decBuffer = (primaryEffect.DecayBuffer - 1f) * primaryScaling;
+            float powMult = (primaryEffect.PulsePowerMultiplier - 1f) * primaryScaling;
 
-            // Scaling calculation
-            var scaling = Math.Clamp((partialPressure - consumer.MinPressureThreshold) / (consumer.MaxPressureCap - consumer.MinPressureThreshold), 0f, 1f);
+            if (secondaryEffect != null && secondaryScaling > 0)
+            {
+                float secFactor = secondaryScaling * consumer.SecondaryGasPenalty;
+                stabDelta += secondaryEffect.StabilityModifier * secFactor;
+                sevDelta += secondaryEffect.SeverityModifier * secFactor;
+                healthDelta += secondaryEffect.HealthModifier * secFactor;
+
+                ptMult += (secondaryEffect.PointMultiplier - 1f) * secFactor;
+                freqMult += (secondaryEffect.PulseFrequencyMultiplier - 1f) * secFactor;
+                decBuffer += (secondaryEffect.DecayBuffer - 1f) * secFactor;
+                powMult += (secondaryEffect.PulsePowerMultiplier - 1f) * secFactor;
+            }
 
             // Apply continuous modifiers
-            if (effect.StabilityModifier != 0)
-                ChangeAnomalyStability(uid, effect.StabilityModifier * scaling * elapsed, anomaly);
+            if (stabDelta != 0) ChangeAnomalyStability(uid, stabDelta * elapsed, anomaly);
+            if (sevDelta != 0) ChangeAnomalySeverity(uid, sevDelta * elapsed, anomaly);
+            if (healthDelta != 0) ChangeAnomalyHealth(uid, healthDelta * elapsed, anomaly);
 
-            if (effect.SeverityModifier != 0)
-                ChangeAnomalySeverity(uid, effect.SeverityModifier * scaling * elapsed, anomaly);
-
-            if (effect.HealthModifier != 0)
-                ChangeAnomalyHealth(uid, effect.HealthModifier * scaling * elapsed, anomaly);
-
-            // Update multipliers for shared logic
-            consumer.PointMultiplier = 1f + (effect.PointMultiplier - 1f) * scaling;
-            consumer.PulseFrequencyMultiplier = 1f + (effect.PulseFrequencyMultiplier - 1f) * scaling;
-            consumer.DecayBuffer = 1f + (effect.DecayBuffer - 1f) * scaling;
-            consumer.PulsePowerMultiplier = 1f + (effect.PulsePowerMultiplier - 1f) * scaling;
+            // Update multipliers
+            consumer.PointMultiplier = 1f + ptMult;
+            consumer.PulseFrequencyMultiplier = 1f + freqMult;
+            consumer.DecayBuffer = 1f + decBuffer;
+            consumer.PulsePowerMultiplier = 1f + powMult;
 
             // Consume gas
-            var consumed = consumer.ConsumptionRate * scaling * elapsed;
-            mixture.AdjustMoles(dominantGas.Value, -consumed);
+            var primaryConsumed = consumer.ConsumptionRate * primaryScaling * elapsed;
+            mixture.AdjustMoles(primaryGas.Value, -primaryConsumed);
+
+            if (secondaryEffect != null && secondaryScaling > 0)
+            {
+                var secondaryConsumed = consumer.ConsumptionRate * secondaryScaling * elapsed;
+                mixture.AdjustMoles(secondaryGas!.Value, -secondaryConsumed);
+            }
 
             // Networking threshold check
-            var gasChanged = consumer.ActiveGas != dominantGas;
-            var scalingThresholdMet = Math.Abs(scaling - state.LastSentScalingFactor) >= 0.1f;
+            var gasChanged = consumer.PrimaryGas != primaryGas || consumer.SecondaryGas != secondaryGas;
+            var primaryMet = Math.Abs(primaryScaling - state.LastSentPrimaryScaling) >= 0.1f;
+            var secondaryMet = Math.Abs(secondaryScaling - state.LastSentSecondaryScaling) >= 0.1f;
 
-            if (gasChanged || scalingThresholdMet)
+            if (gasChanged || primaryMet || secondaryMet)
             {
-                consumer.ActiveGas = dominantGas;
-                consumer.ScalingFactor = scaling;
-                state.LastSentScalingFactor = scaling;
+                consumer.PrimaryGas = primaryGas;
+                consumer.SecondaryGas = secondaryGas;
+                consumer.PrimaryScalingFactor = primaryScaling;
+                consumer.SecondaryScalingFactor = secondaryScaling;
+                
+                state.LastSentPrimaryScaling = primaryScaling;
+                state.LastSentSecondaryScaling = secondaryScaling;
                 Dirty(uid, consumer);
             }
         }
@@ -159,12 +199,16 @@ public sealed partial class AnomalySystem
 
     private void ResetGasState(EntityUid uid, AnomalyGasConsumerComponent consumer, GasConsumerProcessingState state)
     {
-        if (consumer.ActiveGas == null && state.LastSentScalingFactor == -1f)
+        if (consumer.PrimaryGas == null && state.LastSentPrimaryScaling == -1f)
             return;
 
-        consumer.ActiveGas = null;
-        consumer.ScalingFactor = 0f;
-        state.LastSentScalingFactor = -1f;
+        consumer.PrimaryGas = null;
+        consumer.SecondaryGas = null;
+        consumer.PrimaryScalingFactor = 0f;
+        consumer.SecondaryScalingFactor = 0f;
+        
+        state.LastSentPrimaryScaling = -1f;
+        state.LastSentSecondaryScaling = -1f;
 
         consumer.PointMultiplier = 1f;
         consumer.PulseFrequencyMultiplier = 1f;
