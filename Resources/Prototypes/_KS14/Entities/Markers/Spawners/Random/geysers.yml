@@ -18,6 +18,7 @@
       - id: KsGeyserCarbonDioxide
       - id: KsGeyserNitrogen
       - id: KsGeyserFresium
-      - id: KsGeyserKlovnide
+      #- id: KsGeyserKlovnide # this is too op as a geyser i think
       - id: KsGeyserZipium
       - id: KsGeyserArtifexium
+      - id: KsGeyserWittel

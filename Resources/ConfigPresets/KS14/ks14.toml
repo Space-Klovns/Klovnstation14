@@ -1,7 +1,7 @@
 
 #### KS14 RELEASE
 
-# This is a base; gameplay-only changes that will be present on the main KS14 server
+# This is a base; gameplay-only (among other things) changes that will be present on the main KS14 server
 
 [game]
 # Changes the name of the server as it appears in the lobby and launcher.
@@ -32,7 +32,7 @@ server_url = "ss14://game.klovnstation.org"
 
 
 ## Release-only changes
-# These are here so that tests have an easier time passing, and its easier to debug shit
+# These are here so that tests have an easier time passing, and its easier to debug shit (because these changes will only be present on release)
 
 [atmos]
 #disable deltap
