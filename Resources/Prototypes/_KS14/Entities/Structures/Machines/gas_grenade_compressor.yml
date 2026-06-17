@@ -10,17 +10,18 @@
       noRot: true
       granularLayersRendering: true
       layers:
-        - state: pipeUnaryConnectors
-          sprite: Structures/Piping/Atmospherics/pipe.rsi
-          map: [ "enum.PipeVisualLayers.Pipe" ]
-          renderingStrategy: Default
-        - state: off
-          map: [ "enum.PowerDeviceVisualLayers.Powered" ]
+      - state: off
+        map: [ "base" ]
+      - state: pipeUnaryConnectors
+        sprite: Structures/Piping/Atmospherics/pipe.rsi
+        map: [ "enum.PipeVisualLayers.Pipe" ]
+        renderingStrategy: Default
+        color: '#ffffff80'
     - type: Appearance
     - type: GenericVisualizer
       visuals:
-        enum.PowerDeviceVisuals.Powered:
-          enum.PowerDeviceVisualLayers.Powered:
+        GasGrenadeCompressorVisuals.Active:
+          base:
             True: { state: on }
             False: { state: off }
     - type: PowerDeviceVisuals

@@ -13,7 +13,6 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Content.Shared.Power.EntitySystems;
 using Robust.Shared.Containers;
-using Robust.Shared.Utility;
 
 namespace Content.Shared._KS14.Atmos.EntitySystems;
 
@@ -38,6 +37,8 @@ public abstract class SharedGasGrenadeCompressorSystem : EntitySystem
     {
         base.Initialize();
 
+        SubscribeLocalEvent<GasGrenadeCompressorComponent, PowerChangedEvent>(OnPowerChanged);
+
         SubscribeLocalEvent<GasGrenadeCompressorComponent, EntInsertedIntoContainerMessage>(OnEntInsertedIntoContainer);
         SubscribeLocalEvent<GasGrenadeCompressorComponent, EntRemovedFromContainerMessage>(OnEntRemovedFromContainer);
 
@@ -48,28 +49,46 @@ public abstract class SharedGasGrenadeCompressorSystem : EntitySystem
         SubscribeLocalEvent<GasGrenadeCompressorComponent, MaterialAmountChangedEvent>(OnMaterialAmountChanged);
     }
 
+    private void OnPowerChanged(Entity<GasGrenadeCompressorComponent> entity, ref PowerChangedEvent args)
+    {
+        var wasActive = entity.Comp.Active;
+
+        entity.Comp.Active = entity.Comp.Enabled && args.Powered;
+        DirtyField(entity!, nameof(entity.Comp.Active));
+
+        if (wasActive != entity.Comp.Active)
+        {
+            _appearanceSystem.SetData(entity.Owner, GasGrenadeCompressorVisuals.Active, entity.Comp.Active);
+            UpdateUserInterface(entity);
+        }
+    }
+
     private void OnEntInsertedIntoContainer(Entity<GasGrenadeCompressorComponent> entity, ref EntInsertedIntoContainerMessage args)
     {
+        if (entity.Comp.InsertedUid is { })
+            return;
+
         if (!_itemSlotsSystem.TryGetSlot(entity.Owner, entity.Comp.SlotName, out var slot)
             || slot.ContainerSlot != args.Container)
             return;
 
-        DebugTools.AssertNull(entity.Comp.InsertedUid, $"Excepted inserted uid to be null, got {ToPrettyString(entity.Comp.InsertedUid)}");
-
         entity.Comp.InsertedUid = args.Entity;
         DirtyField(entity!, nameof(entity.Comp.InsertedUid));
+        UpdateUserInterface(entity);
     }
 
     private void OnEntRemovedFromContainer(Entity<GasGrenadeCompressorComponent> entity, ref EntRemovedFromContainerMessage args)
     {
+        if (entity.Comp.InsertedUid is not { })
+            return;
+
         if (!_itemSlotsSystem.TryGetSlot(entity.Owner, entity.Comp.SlotName, out var slot)
             || slot.ContainerSlot != args.Container)
             return;
 
-        DebugTools.AssertNotNull(entity.Comp.InsertedUid, $"Excepted inserted uid to be not-null, got {ToPrettyString(entity.Comp.InsertedUid)}");
-
         entity.Comp.InsertedUid = null;
         DirtyField(entity!, nameof(entity.Comp.InsertedUid));
+        UpdateUserInterface(entity);
     }
 
     protected void UpdateUserInterface(Entity<GasGrenadeCompressorComponent> entity)
@@ -109,9 +128,12 @@ public abstract class SharedGasGrenadeCompressorSystem : EntitySystem
     private void OnToggle(Entity<GasGrenadeCompressorComponent> entity, ref GasGrenadeCompressorToggleMessage args)
     {
         entity.Comp.Enabled = args.Enabled;
-        DirtyField(entity!, nameof(entity.Comp.Enabled));
+        entity.Comp.Active = args.Enabled && _powerReceiverSystem.IsPowered(entity.Owner);
 
-        _appearanceSystem.SetData(entity.Owner, PowerDeviceVisuals.Powered, args.Enabled && _powerReceiverSystem.IsPowered(entity.Owner));
+        DirtyField(entity!, nameof(entity.Comp.Enabled));
+        DirtyField(entity!, nameof(entity.Comp.Active));
+
+        _appearanceSystem.SetData(entity.Owner, GasGrenadeCompressorVisuals.Active, entity.Comp.Active);
 
         UpdateUserInterface(entity);
     }

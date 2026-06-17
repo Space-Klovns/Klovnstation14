@@ -1,12 +1,9 @@
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.NodeContainer.EntitySystems;
 using Content.Server.NodeContainer.Nodes;
-using Content.Server.Power.EntitySystems;
-using Content.Shared.Power;
 using Content.Shared._KS14.Atmos.Components;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
-using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Emag.Systems;
 using JetBrains.Annotations;
 using Content.Shared._KS14.Atmos.EntitySystems;
@@ -19,8 +16,6 @@ public sealed class GasGrenadeCompressorSystem : SharedGasGrenadeCompressorSyste
 {
     [Dependency] private readonly AtmosphereSystem _atmosphereSystem = default!;
     [Dependency] private readonly NodeContainerSystem _nodeContainerSystem = default!;
-    [Dependency] private readonly PowerReceiverSystem _powerReceiverSystem = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
     [Dependency] private readonly EmagSystem _emagSystem = default!;
 
     public override void Initialize()
@@ -32,15 +27,8 @@ public sealed class GasGrenadeCompressorSystem : SharedGasGrenadeCompressorSyste
 
     private void OnUpdate(Entity<GasGrenadeCompressorComponent> entity, ref AtmosDeviceUpdateEvent args)
     {
-        var powered = _powerReceiverSystem.IsPowered(entity.Owner);
-        var targetPressure = entity.Comp.TargetPressure;
-        _appearanceSystem.SetData(entity.Owner, PowerDeviceVisuals.Powered, entity.Comp.Enabled && powered);
-
-        if (!entity.Comp.Enabled || !powered)
-        {
-            UpdateUserInterface(entity);
+        if (!entity.Comp.Active)
             return;
-        }
 
         if (!_nodeContainerSystem.TryGetNode(entity.Owner, entity.Comp.InletName, out PipeNode? inlet))
             return;
@@ -58,6 +46,7 @@ public sealed class GasGrenadeCompressorSystem : SharedGasGrenadeCompressorSyste
         }
 
         var grenadeAir = releaseComponent.Air;
+        var targetPressure = entity.Comp.TargetPressure;
         if (grenadeAir.Pressure >= targetPressure)
         {
             UpdateUserInterface(entity);

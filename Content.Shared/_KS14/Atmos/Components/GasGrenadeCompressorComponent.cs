@@ -25,6 +25,13 @@ public sealed partial class GasGrenadeCompressorComponent : Component
     [ViewVariables(VVAccess.ReadWrite)]
     public bool Enabled = false;
 
+    /// <summary>
+    ///     Whether it's both enabled and powered.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public bool Active = false;
+
     [DataField(required: true)]
     [ViewVariables(VVAccess.ReadWrite)]
     public ProtoId<MaterialPrototype> Material;
@@ -55,6 +62,12 @@ public sealed partial class GasGrenadeCompressorComponent : Component
         Gas.Zipion,
         Gas.Argon
     };
+}
+
+[Serializable, NetSerializable]
+public enum GasGrenadeCompressorVisuals : byte
+{
+    Active
 }
 
 [Serializable, NetSerializable]
