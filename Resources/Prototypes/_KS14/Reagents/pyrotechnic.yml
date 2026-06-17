@@ -28,7 +28,12 @@
         - !type:ReagentCondition
           reagent: Sorium
           min: 20
-        damage:
-          types:
-            Blunt: 3
-            Piercing: 1
+      - !type:PopupMessage
+        conditions:
+        - !type:ReagentCondition
+          reagent: Sorium
+          min: 20
+        type: Pvs
+        visualType: LargeCaution
+        messages:
+        - sorium-effect-gib
