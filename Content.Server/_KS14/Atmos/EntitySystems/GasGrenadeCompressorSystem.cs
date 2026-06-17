@@ -8,6 +8,7 @@ using Content.Shared.Emag.Systems;
 using JetBrains.Annotations;
 using Content.Shared._KS14.Atmos.EntitySystems;
 using Content.Shared.Atmos.EntitySystems;
+using Content.Shared.Trigger.Components;
 
 namespace Content.Server._KS14.Atmos.EntitySystems;
 
@@ -38,6 +39,9 @@ public sealed class GasGrenadeCompressorSystem : SharedGasGrenadeCompressorSyste
             UpdateUserInterface(entity);
             return;
         }
+
+        if (HasComp<ActiveTimerTriggerComponent>(grenadeUid))
+            return;
 
         if (!ReleaseGasOnTriggerQuery.TryGetComponent(grenadeUid, out var releaseComponent) || releaseComponent.Air == null)
         {
@@ -89,7 +93,7 @@ public sealed class GasGrenadeCompressorSystem : SharedGasGrenadeCompressorSyste
                 var molesMoved = (inlet.Air.GetMoles(gas) / availableMoles) * molesToTransfer;
 
                 removed.SetMoles(gas, molesMoved);
-                inlet.Air.AdjustMoles(gas, 0f);
+                inlet.Air.AdjustMoles(gas, -molesMoved);
             }
         }
         else
