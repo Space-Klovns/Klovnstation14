@@ -13,8 +13,8 @@
       effects:
       - !type:PopupMessage
         type: Local
-        method: PopupEntity
-        probability: 0.5
+        visualType: SmallCaution
+        probability: 0.3
         messages:
         - sorium-effect-pain
       - !type:HealthChange

@@ -35,6 +35,11 @@ namespace Content.Shared.Throwing
         public override void Initialize()
         {
             base.Initialize();
+
+            // KS14 Start
+            SubscribeLocalEvent<ThrownItemComponent, _KS14.RayCollision.KsRayCollisionEvent>(KsOnRayCollision);
+            // KS14 End
+
             SubscribeLocalEvent<ThrownItemComponent, MapInitEvent>(OnMapInit);
             SubscribeLocalEvent<ThrownItemComponent, PhysicsSleepEvent>(OnSleep);
             SubscribeLocalEvent<ThrownItemComponent, StartCollideEvent>(HandleCollision);
@@ -42,6 +47,16 @@ namespace Content.Shared.Throwing
             SubscribeLocalEvent<ThrownItemComponent, ThrownEvent>(ThrowItem);
 
             SubscribeLocalEvent<PullStartedMessage>(HandlePullStarted);
+        }
+
+        private void KsOnRayCollision(Entity<ThrownItemComponent> entity, ref _KS14.RayCollision.KsRayCollisionEvent args)
+        {
+            // Basically prevent noclipping
+
+            ThrowCollideInteraction(entity, entity, args.OtherEntity);
+            _physics.SetLinearVelocity(entity.Owner, System.Numerics.Vector2.Zero);
+
+            StopThrow(entity, entity);
         }
 
         private void OnMapInit(EntityUid uid, ThrownItemComponent component, MapInitEvent args)

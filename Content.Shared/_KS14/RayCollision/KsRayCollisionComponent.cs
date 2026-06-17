@@ -13,4 +13,4 @@ public sealed partial class KsRayCollisionComponent : Component
 }
 
 [ByRefEvent]
-public record struct KsRayCollisionCollidedEvent(Entity<TransformComponent> OurEntity, Entity<TransformComponent> OtherEntity, EntityCoordinates Point);
+public record struct KsRayCollisionEvent(Entity<TransformComponent> OurEntity, Entity<TransformComponent> OtherEntity, EntityCoordinates Point);
