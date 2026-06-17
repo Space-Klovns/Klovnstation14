@@ -83,17 +83,14 @@ public sealed class GasGrenadeCompressorSystem : SharedGasGrenadeCompressorSyste
         if (!_emagSystem.CheckFlag(entity.Owner, EmagType.Interaction))
         {
             removed = new GasMixture(inlet.Air.Volume) { Temperature = inlet.Air.Temperature };
-            var filteredMoles = 0f;
-
             foreach (var gas in entity.Comp.GasWhitelist)
             {
-                var moles = inlet.Air.GetMoles(gas);
+                // ratio of how much this mixture is made up of this gas * max amount we can transfer
+                var molesMoved = (inlet.Air.GetMoles(gas) / availableMoles) * molesToTransfer;
 
-                removed.SetMoles(gas, moles);
-                filteredMoles += moles;
+                removed.SetMoles(gas, molesMoved);
+                inlet.Air.AdjustMoles(gas, 0f);
             }
-
-            removed.Multiply(filteredMoles / molesToTransfer);
         }
         else
             removed = inlet.Air.Remove(molesToTransfer);
