@@ -1,12 +1,12 @@
 - type: entity
-  id: MachinePowerTransmissionLaser
   parent: BaseMachine
+  id: MachinePowerTransmissionLaser
   name: power transmission laser
   description: Sends power over a giant laser beam to an NT power processing facility. Simply plug it in and come back tomorrow for a big stack of cash (that is if you have power running). Also don't step in front of the firing line please.
   placement:
     mode: SnapgridCenter
   components:
-  - type: PTL
+  - type: Ptl
     active: false
     spesosMultiplier: 1.0
     damageMultiplier: 2.0
@@ -17,23 +17,23 @@
   - type: UserInterface
     interfaces:
       enum.Content.Shared._KS14.Power.PTL.PTLUiKey.Key:
-        type: PTLBoundUserInterface
+        type: PtlBoundUserInterface
   - type: ActivatableUI
     key: enum.Content.Shared._KS14.Power.PTL.PTLUiKey.Key
-  - type: PTLVisuals
+  - type: PtlVisuals
   - type: Sprite
     sprite: _KS14/Structures/Machines/PTL/pt_laser.rsi
     layers:
     - state: base
-      map: ["enum.Content.Shared._KS14.Power.PTL.PTLVisualLayers.Base"]
+      map: ["enum.Content.Shared._KS14.Power.PTL.PtlVisualLayers.Base"]
     - state: unpowered
       shader: unshaded
       visible: false
-      map: ["enum.Content.Shared._KS14.Power.PTL.PTLVisualLayers.Unpowered"]
+      map: ["enum.Content.Shared._KS14.Power.PTL.PtlVisualLayers.Unpowered"]
     - state: charge-1
       shader: unshaded
       visible: false
-      map: ["enum.Content.Shared._KS14.Power.PTL.PTLVisualLayers.Charge"]
+      map: ["enum.Content.Shared._KS14.Power.PTL.PtlVisualLayers.Charge"]
   - type: Transform
     anchored: true
     noRot: false

@@ -3,25 +3,23 @@ using Robust.Client.GameObjects;
 
 namespace Content.Client._KS14.Power.PTL;
 
-public sealed partial class PTLVisualsSystem : VisualizerSystem<PTLVisualsComponent>
+public sealed partial class PtlVisualsSystem : VisualizerSystem<PtlVisualsComponent>
 {
-    protected override void OnAppearanceChange(EntityUid uid, PTLVisualsComponent component, ref AppearanceChangeEvent args)
+    protected override void OnAppearanceChange(EntityUid uid, PtlVisualsComponent component, ref AppearanceChangeEvent args)
     {
-        if (args.Sprite == null)
+        if (args.Sprite is not { } spriteComponent)
             return;
 
-        AppearanceSystem.TryGetData<bool>(uid, PTLVisuals.Active, out var active, args.Component);
-        args.Sprite.LayerSetVisible(PTLVisualLayers.Unpowered, active);
+        AppearanceSystem.TryGetData<bool>(uid, PtlVisuals.Active, out var active, args.Component);
+        SpriteSystem.LayerSetVisible((uid, spriteComponent), PtlVisualLayers.Unpowered, active);
 
-        if (AppearanceSystem.TryGetData<int>(uid, PTLVisuals.ChargeLevel, out var chargeLevel, args.Component))
+        if (AppearanceSystem.TryGetData<int>(uid, PtlVisuals.ChargeLevel, out var chargeLevel, args.Component))
         {
             var chargeVisible = active && chargeLevel > 0;
-            args.Sprite.LayerSetVisible(PTLVisualLayers.Charge, chargeVisible);
+            SpriteSystem.LayerSetVisible((uid, spriteComponent), PtlVisualLayers.Charge, chargeVisible);
 
             if (chargeVisible)
-            {
-                args.Sprite.LayerSetState(PTLVisualLayers.Charge, $"{component.ChargePrefix}{chargeLevel}");
-            }
+                SpriteSystem.LayerSetRsiState((uid, spriteComponent), PtlVisualLayers.Charge, $"{component.ChargePrefix}{chargeLevel}");
         }
     }
 }

@@ -1,21 +1,15 @@
 using Content.Shared._KS14.Power.PTL;
 using Content.Shared.Flash;
-using Content.Server.Power.Components;
 using Content.Server.Power.SMES;
 using Content.Server.Stack;
 using Content.Server.Weapons.Ranged.Systems;
-using Content.Shared.Emag.Components;
 using Content.Shared.Emag.Systems;
-using Content.Shared.Examine;
-using Content.Shared.Interaction;
 using Content.Shared.Radiation.Components;
 using Content.Shared.Radiation.Systems;
 using Content.Shared.Stacks;
-using Content.Shared.Weapons.Ranged;
 using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Weapons.Hitscan.Components;
 using Content.Shared.Weapons.Hitscan.Events;
-using Content.Shared.Damage;
 using Content.Shared.Power.Components;
 using Content.Shared.Power;
 using Content.Shared.Power.EntitySystems;
@@ -25,25 +19,23 @@ using Robust.Shared.Audio;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using System.Numerics;
-using System.Text;
-using System;
 
 namespace Content.Server._KS14.Power.PTL;
 
-public sealed partial class PTLSystem : EntitySystem
+public sealed partial class PtlSystem : EntitySystem
 {
-    [Dependency] private readonly GunSystem _gun = default!;
-    [Dependency] private readonly IGameTiming _time = default!;
-    [Dependency] private readonly SharedFlashSystem _flash = default!;
-    [Dependency] private readonly StackSystem _stack = default!;
-    [Dependency] private readonly AudioSystem _aud = default!;
-    [Dependency] private readonly EmagSystem _emag = default!;
-    [Dependency] private readonly UserInterfaceSystem _ui = default!;
+    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private readonly GunSystem _gunSystem = default!;
+    [Dependency] private readonly SharedFlashSystem _flashSystem = default!;
+    [Dependency] private readonly StackSystem _stackSystem = default!;
+    [Dependency] private readonly AudioSystem _audioSystem = default!;
+    [Dependency] private readonly EmagSystem _emagSystem = default!;
+    [Dependency] private readonly UserInterfaceSystem _userInterfaceSystem = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly SharedBatterySystem _battery = default!;
-    [Dependency] private readonly SharedRadiationSystem _radiation = default!;
+    [Dependency] private readonly SharedBatterySystem _batterySystem = default!;
+    [Dependency] private readonly SharedRadiationSystem _radiationSystem = default!;
 
-    private static readonly ProtoId<StackPrototype> _stackCredits = "Credit";
+    private static readonly ProtoId<StackPrototype> StackCredits = "Credit";
 
     private readonly SoundPathSpecifier _soundKaching = new("/Audio/Effects/kaching.ogg");
     private readonly SoundPathSpecifier _soundSparks = new("/Audio/Effects/sparks4.ogg");
@@ -55,225 +47,224 @@ public sealed partial class PTLSystem : EntitySystem
 
         UpdatesAfter.Add(typeof(SmesSystem));
 
-        Subs.BuiEvents<PTLComponent>(PTLUiKey.Key, subs =>
+        Subs.BuiEvents<PtlComponent>(PTLUiKey.Key, subs =>
         {
-            subs.Event<PTLToggleMessage>(OnToggleMessage);
-            subs.Event<PTLSetDelayMessage>(OnSetDelayMessage);
-            subs.Event<PTLWithdrawMessage>(OnWithdrawMessage);
+            subs.Event<PtlToggleMessage>(OnToggleMessage);
+            subs.Event<PtlSetDelayMessage>(OnSetDelayMessage);
+            subs.Event<PtlWithdrawMessage>(OnWithdrawMessage);
         });
 
-        SubscribeLocalEvent<PTLComponent, GotEmaggedEvent>(OnEmagged);
-        SubscribeLocalEvent<PTLComponent, MapInitEvent>(OnMapInit);
-        SubscribeLocalEvent<PTLComponent, ChargeChangedEvent>(OnChargeChanged);
+        SubscribeLocalEvent<PtlComponent, GotEmaggedEvent>(OnEmagged);
+        SubscribeLocalEvent<PtlComponent, MapInitEvent>(OnMapInit);
+        SubscribeLocalEvent<PtlComponent, ChargeChangedEvent>(OnChargeChanged);
         SubscribeLocalEvent<HitscanBasicDamageComponent, HitscanTraceEvent>(OnHitscanTrace);
     }
 
-    private void OnMapInit(Entity<PTLComponent> ent, ref MapInitEvent args)
+    private void OnMapInit(Entity<PtlComponent> entity, ref MapInitEvent args)
     {
-        UpdateUiState(ent, ent.Comp);
+        UpdateUiState(entity);
     }
 
-    private void OnToggleMessage(Entity<PTLComponent> ent, ref PTLToggleMessage args)
+    private void OnToggleMessage(Entity<PtlComponent> entity, ref PtlToggleMessage args)
     {
-        ent.Comp.Active = !ent.Comp.Active;
+        entity.Comp.Active = !entity.Comp.Active;
 
-        if (ent.Comp.Active)
-            EnsureComp<PTLActiveComponent>(ent);
+        if (entity.Comp.Active)
+            EnsureComp<ActivePtlComponent>(entity);
         else
-            RemComp<PTLActiveComponent>(ent);
+            RemComp<ActivePtlComponent>(entity);
 
-        _aud.PlayPvs(_soundPower, ent);
+        _audioSystem.PlayPvs(_soundPower, entity.Owner);
 
-        UpdateAppearance(ent, ent.Comp, CompOrNull<BatteryComponent>(ent));
-        UpdateUiState(ent, ent.Comp);
-        Dirty(ent);
+        UpdateAppearance(entity, CompOrNull<BatteryComponent>(entity));
+        UpdateUiState(entity);
+        Dirty(entity);
     }
 
-    private void OnSetDelayMessage(Entity<PTLComponent> ent, ref PTLSetDelayMessage args)
+    private void OnSetDelayMessage(Entity<PtlComponent> entity, ref PtlSetDelayMessage args)
     {
-        ent.Comp.ShootDelay = Math.Clamp(args.Delay, ent.Comp.ShootDelayThreshold.X, ent.Comp.ShootDelayThreshold.Y);
-        
-        _aud.PlayPvs(_soundSparks, ent);
-        UpdateUiState(ent, ent.Comp);
-        Dirty(ent);
+        entity.Comp.ShootDelay = Math.Clamp(args.Delay, entity.Comp.ShootDelayThreshold.X, entity.Comp.ShootDelayThreshold.Y);
+
+        _audioSystem.PlayPvs(_soundSparks, entity.Owner);
+        UpdateUiState(entity);
+        Dirty(entity);
     }
 
-    private void OnWithdrawMessage(Entity<PTLComponent> ent, ref PTLWithdrawMessage args)
+    private void OnWithdrawMessage(Entity<PtlComponent> entity, ref PtlWithdrawMessage args)
     {
-        if (ent.Comp.SpesosHeld <= 0)
+        if (entity.Comp.SpesosHeld <= 0)
             return;
 
-        _stack.SpawnAtPosition((int) ent.Comp.SpesosHeld, _stackCredits, Transform(ent).Coordinates);
-        ent.Comp.SpesosHeld = 0;
+        _stackSystem.SpawnAtPosition((int)entity.Comp.SpesosHeld, StackCredits, Transform(entity).Coordinates);
+        entity.Comp.SpesosHeld = 0;
 
-        _aud.PlayPvs(_soundKaching, ent);
-        UpdateUiState(ent, ent.Comp);
-        Dirty(ent);
+        _audioSystem.PlayPvs(_soundKaching, entity.Owner);
+        UpdateUiState(entity);
+        Dirty(entity);
     }
 
-    private void UpdateUiState(EntityUid uid, PTLComponent ptl)
+    private void UpdateUiState(Entity<PtlComponent> entity)
     {
         var currentCharge = 0f;
         var maxCharge = 0f;
 
-        if (TryComp<BatteryComponent>(uid, out var battery))
+        if (TryComp<BatteryComponent>(entity, out var battery))
         {
-            currentCharge = _battery.GetCharge((uid, battery));
+            currentCharge = _batterySystem.GetCharge((entity, battery));
             maxCharge = battery.MaxCharge;
         }
 
-        _ui.SetUiState(uid, PTLUiKey.Key, new PTLBoundUserInterfaceState(
-            ptl.Active, 
-            ptl.SpesosHeld, 
-            ptl.ShootDelay, 
-            ptl.ShootDelayThreshold.X, 
-            ptl.ShootDelayThreshold.Y,
+        _userInterfaceSystem.SetUiState(entity.Owner, PTLUiKey.Key, new PtlBoundUserInterfaceState(
+            entity.Comp.Active,
+            entity.Comp.SpesosHeld,
+            entity.Comp.ShootDelay,
+            entity.Comp.ShootDelayThreshold.X,
+            entity.Comp.ShootDelayThreshold.Y,
             currentCharge,
             maxCharge));
     }
 
     private void OnHitscanTrace(EntityUid uid, HitscanBasicDamageComponent component, ref HitscanTraceEvent args)
     {
-        if (!TryComp<PTLComponent>(args.Gun, out var ptl))
+        if (!TryComp<PtlComponent>(args.Gun, out var ptl))
             return;
 
         if (!TryComp<BatteryComponent>(args.Gun, out var battery))
             return;
 
         var megajoule = 1e6;
-        var charge = _battery.GetCharge((args.Gun, battery)) / megajoule;
+        var charge = _batterySystem.GetCharge((args.Gun, battery)) / megajoule;
 
-        component.Damage = ptl.BaseBeamDamage * (float) charge * ptl.DamageMultiplier;
+        component.Damage = ptl.BaseBeamDamage * (float)charge * ptl.DamageMultiplier;
     }
 
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
 
-        var eqe = EntityQueryEnumerator<PTLActiveComponent, PTLComponent, BatteryComponent>();
+        var eqe = EntityQueryEnumerator<ActivePtlComponent, PtlComponent, BatteryComponent>();
 
-        while (eqe.MoveNext(out var uid, out var active, out var ptl, out var battery))
+        while (eqe.MoveNext(out var uid, out _, out var ptlComponent, out var batteryComponent))
         {
-            if (_time.CurTime < ptl.NextShotAt)
+            if (_gameTiming.CurTime < ptlComponent.NextShotAt)
                 continue;
 
-            ptl.NextShotAt = _time.CurTime + TimeSpan.FromSeconds(ptl.ShootDelay);
+            ptlComponent.NextShotAt = _gameTiming.CurTime + TimeSpan.FromSeconds(ptlComponent.ShootDelay);
 
-            if (_battery.GetCharge((uid, battery)) < ptl.MinShootPower)
+            if (_batterySystem.GetCharge((uid, batteryComponent)) < ptlComponent.MinShootPower)
                 continue;
 
-            Shoot(uid, ptl, battery);
-            UpdateAppearance(uid, ptl, battery);
+            Shoot((uid, ptlComponent), batteryComponent);
+            UpdateAppearance((uid, ptlComponent), batteryComponent);
         }
     }
 
-    private void Shoot(EntityUid uid, PTLComponent ptl, BatteryComponent battery)
+    private void Shoot(Entity<PtlComponent> entity, BatteryComponent batteryComponent)
     {
         var megajoule = 1e6;
-        var charge = _battery.GetCharge((uid, battery)) / megajoule;
+        var charge = _batterySystem.GetCharge((entity, batteryComponent)) / megajoule;
 
-        var spesos = (int) (charge * ptl.SpesosMultiplier);
+        var spesos = (int)(charge * entity.Comp.SpesosMultiplier);
 
         if (charge <= 0 || !double.IsFinite(spesos) || spesos < 0) return;
 
-        if (TryComp<GunComponent>(uid, out var gun))
+        if (TryComp<GunComponent>(entity, out var gun))
         {
-            if (!TryComp(uid, out TransformComponent? xform))
+            if (!TryComp(entity, out TransformComponent? xform))
                 return;
 
             var localDirectionVector = Vector2.UnitY * -1f;
-            if (ptl.ReversedFiring)
+            if (entity.Comp.ReversedFiring)
                 localDirectionVector *= -1f;
 
             var directionInParentSpace = xform.LocalRotation.RotateVec(localDirectionVector);
             var targetCoords = xform.Coordinates.Offset(directionInParentSpace);
 
-            var muzzleOffset = ptl.ShootOffset;
-            if (ptl.ReversedFiring)
+            var muzzleOffset = entity.Comp.ShootOffset;
+            if (entity.Comp.ReversedFiring)
                 muzzleOffset *= -1f;
 
             var rotatedMuzzleOffset = xform.LocalRotation.RotateVec(muzzleOffset);
             var muzzleCoords = xform.Coordinates.Offset(rotatedMuzzleOffset);
 
-            _gun.AttemptShoot(uid, (uid, gun), muzzleCoords, targetCoords);
+            _gunSystem.AttemptShoot(entity.Owner, (entity, gun), muzzleCoords, targetCoords);
         }
 
-        if (charge >= ptl.PowerEvilThreshold)
+        if (charge >= entity.Comp.PowerEvilThreshold)
         {
             // Square root scaling makes the intensity increase more gradually
             // e.g., 10MJ = 1.0, 40MJ = 2.0, 90MJ = 3.0, 1000MJ = 10.0
-            var evil = (float) Math.Sqrt(charge / ptl.PowerEvilThreshold);
+            var evil = (float)Math.Sqrt(charge / entity.Comp.PowerEvilThreshold);
 
-            if (TryComp<RadiationSourceComponent>(uid, out var rad))
-                _radiation.SetIntensity((uid, rad), evil);
+            if (TryComp<RadiationSourceComponent>(entity, out var rad))
+                _radiationSystem.SetIntensity((entity, rad), evil);
 
             // Cap the flash duration to a sane maximum of 10 seconds
             var flashTime = Math.Min(evil, 10f);
-            _flash.FlashArea(uid, null, evil, TimeSpan.FromSeconds(flashTime));
+            _flashSystem.FlashArea(entity.Owner, null, evil, TimeSpan.FromSeconds(flashTime));
         }
         else
         {
-            if (TryComp<RadiationSourceComponent>(uid, out var rad))
-                _radiation.SetIntensity((uid, rad), 0f);
+            if (TryComp<RadiationSourceComponent>(entity, out var rad))
+                _radiationSystem.SetIntensity((entity, rad), 0f);
         }
 
-        ptl.SpesosHeld += spesos;
+        entity.Comp.SpesosHeld += spesos;
 
         // Subtract the full charge used for firing from the battery.
         // The GunSystem also subtracts a small fireCost from the BatteryAmmoProvider, but that is negligible compared to megajoules.
-        _battery.UseCharge((uid, battery), (float) (charge * megajoule));
+        _batterySystem.UseCharge((entity, batteryComponent), (float)(charge * megajoule));
 
-        UpdateUiState(uid, ptl);
+        UpdateUiState(entity);
 
         // Reset radiation intensity after a scaling delay (min 3s) so it pulses rather than leaks permanently.
-        if (charge >= ptl.PowerEvilThreshold)
+        if (charge >= entity.Comp.PowerEvilThreshold)
         {
             // evil ranges from 1.0 (at 10MJ) to 10.0 (at 1000MJ)
-            var evil = (float) Math.Sqrt(charge / ptl.PowerEvilThreshold);
-            var pulseTime = 3f * (float) Math.Sqrt(evil);
-            ptl.RadiationResetAt = _time.CurTime + TimeSpan.FromSeconds(pulseTime);
+            var evil = (float)Math.Sqrt(charge / entity.Comp.PowerEvilThreshold);
+            var pulseTime = 3f * (float)Math.Sqrt(evil);
+            entity.Comp.RadiationResetAt = _gameTiming.CurTime + TimeSpan.FromSeconds(pulseTime);
 
-            Robust.Shared.Timing.Timer.Spawn(TimeSpan.FromSeconds(pulseTime), () =>
+            Timer.Spawn(TimeSpan.FromSeconds(pulseTime), () =>
             {
-                if (Exists(uid) && TryComp<PTLComponent>(uid, out var ptlComp) && _time.CurTime >= ptlComp.RadiationResetAt)
+                if (Exists(entity) && TryComp<PtlComponent>(entity.Owner, out var ptlComp) && _gameTiming.CurTime >= ptlComp.RadiationResetAt)
                 {
-                    if (TryComp<RadiationSourceComponent>(uid, out var radSource))
-                        _radiation.SetIntensity((uid, radSource), 0f);
+                    if (TryComp<RadiationSourceComponent>(entity, out var radSource))
+                        _radiationSystem.SetIntensity((entity, radSource), 0f);
                 }
             });
         }
 
-        Dirty(uid, ptl);
+        Dirty(entity);
     }
 
-    private void OnEmagged(EntityUid uid, PTLComponent component, ref GotEmaggedEvent args)
+    private void OnEmagged(Entity<PtlComponent> entity, ref GotEmaggedEvent args)
     {
-        if (!_emag.CompareFlag(args.Type, EmagType.Interaction))
+        if (!_emagSystem.CompareFlag(args.Type, EmagType.Interaction) ||
+            _emagSystem.CheckFlag(entity.Owner, EmagType.Interaction))
             return;
 
-        if (_emag.CheckFlag(uid, EmagType.Interaction))
+        if (entity.Comp.ReversedFiring)
             return;
 
-        if (component.ReversedFiring)
-            return;
-
-        component.ReversedFiring = true;
+        entity.Comp.ReversedFiring = true;
         args.Handled = true;
     }
 
-    private void OnChargeChanged(Entity<PTLComponent> ent, ref ChargeChangedEvent args)
+    private void OnChargeChanged(Entity<PtlComponent> entity, ref ChargeChangedEvent args)
     {
-        UpdateAppearance(ent, ent.Comp, CompOrNull<BatteryComponent>(ent));
-        UpdateUiState(ent, ent.Comp);
+        UpdateAppearance(entity, CompOrNull<BatteryComponent>(entity));
+        UpdateUiState(entity);
     }
 
-    private void UpdateAppearance(EntityUid uid, PTLComponent ptl, BatteryComponent? battery)
+    private void UpdateAppearance(Entity<PtlComponent> entity, BatteryComponent? batteryComponent)
     {
-        if (battery != null)
-        {
-            int chargeLevel = (int)Math.Clamp(Math.Round(_battery.GetCharge((uid, battery)) / battery.MaxCharge * 6), 0, 6);
-            _appearance.SetData(uid, PTLVisuals.ChargeLevel, chargeLevel);
-        }
-        _appearance.SetData(uid, PTLVisuals.Active, ptl.Active);
+        _appearance.SetData(entity.Owner, PtlVisuals.Active, entity.Comp.Active);
+
+        if (batteryComponent is not { })
+            return;
+
+        var chargeLevel = (int)Math.Clamp(Math.Round(_batterySystem.GetCharge((entity, batteryComponent)) / batteryComponent.MaxCharge * 6), 0, 6);
+        _appearance.SetData(entity.Owner, PtlVisuals.ChargeLevel, chargeLevel);
     }
 }

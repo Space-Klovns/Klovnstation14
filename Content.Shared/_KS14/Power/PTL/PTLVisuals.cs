@@ -3,14 +3,14 @@ using Robust.Shared.Serialization;
 namespace Content.Shared._KS14.Power.PTL;
 
 [Serializable, NetSerializable]
-public enum PTLVisuals : byte
+public enum PtlVisuals : byte
 {
     ChargeLevel,
     Active
 }
 
 [Serializable, NetSerializable]
-public enum PTLVisualLayers : byte
+public enum PtlVisualLayers : byte
 {
     Base,
     Unpowered,

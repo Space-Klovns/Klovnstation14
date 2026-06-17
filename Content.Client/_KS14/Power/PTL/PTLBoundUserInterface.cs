@@ -1,32 +1,27 @@
 using Content.Shared._KS14.Power.PTL;
-using Robust.Client.GameObjects;
 using Robust.Client.UserInterface;
 
 namespace Content.Client._KS14.Power.PTL;
 
-public sealed class PTLBoundUserInterface : BoundUserInterface
+public sealed class PtlBoundUserInterface(EntityUid owner, Enum uiKey) : BoundUserInterface(owner, uiKey)
 {
-    private PTLWindow? _window;
-
-    public PTLBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
-    {
-    }
+    private PtlWindow? _window;
 
     protected override void Open()
     {
         base.Open();
 
-        _window = this.CreateWindow<PTLWindow>();
-        _window.OnTogglePressed += () => SendMessage(new PTLToggleMessage());
-        _window.OnWithdrawPressed += () => SendMessage(new PTLWithdrawMessage());
-        _window.OnDelayChanged += (delay) => SendMessage(new PTLSetDelayMessage(delay));
+        _window = this.CreateWindow<PtlWindow>();
+        _window.OnTogglePressed += () => SendMessage(new PtlToggleMessage());
+        _window.OnWithdrawPressed += () => SendMessage(new PtlWithdrawMessage());
+        _window.OnDelayChanged += (delay) => SendMessage(new PtlSetDelayMessage(delay));
     }
 
     protected override void UpdateState(BoundUserInterfaceState state)
     {
         base.UpdateState(state);
 
-        if (state is not PTLBoundUserInterfaceState ptlState)
+        if (state is not PtlBoundUserInterfaceState ptlState)
             return;
 
         _window?.UpdateState(ptlState);
