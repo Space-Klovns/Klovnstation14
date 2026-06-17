@@ -125,7 +125,7 @@ public sealed partial class AnomalySystem
             // Process Primary
             var primaryScaling = Math.Clamp((primaryPressure - consumer.MinPressureThreshold) / (consumer.MaxPressureCap - consumer.MinPressureThreshold), 0f, 1f);
             var primaryEffect = _gasEffects[primaryGas.Value];
-            
+
             // Process Secondary
             float secondaryScaling = 0f;
             AnomalyGasEffectPrototype? secondaryEffect = null;
@@ -138,7 +138,7 @@ public sealed partial class AnomalySystem
             float stabDelta = primaryEffect.StabilityModifier * primaryScaling;
             float sevDelta = primaryEffect.SeverityModifier * primaryScaling;
             float healthDelta = primaryEffect.HealthModifier * primaryScaling;
-            
+
             float ptMult = (primaryEffect.PointMultiplier - 1f) * primaryScaling;
             float freqMult = (primaryEffect.PulseFrequencyMultiplier - 1f) * primaryScaling;
             float decBuffer = (primaryEffect.DecayBuffer - 1f) * primaryScaling;
@@ -189,7 +189,7 @@ public sealed partial class AnomalySystem
                 consumer.SecondaryGas = secondaryGas;
                 consumer.PrimaryScalingFactor = primaryScaling;
                 consumer.SecondaryScalingFactor = secondaryScaling;
-                
+
                 state.LastSentPrimaryScaling = primaryScaling;
                 state.LastSentSecondaryScaling = secondaryScaling;
                 Dirty(uid, consumer);
@@ -206,7 +206,7 @@ public sealed partial class AnomalySystem
         consumer.SecondaryGas = null;
         consumer.PrimaryScalingFactor = 0f;
         consumer.SecondaryScalingFactor = 0f;
-        
+
         state.LastSentPrimaryScaling = -1f;
         state.LastSentSecondaryScaling = -1f;
 

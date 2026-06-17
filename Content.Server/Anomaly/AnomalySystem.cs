@@ -1,7 +1,6 @@
 using Content.Server.Anomaly.Components;
 using Content.Server.Atmos.EntitySystems;
 using Content.Shared._KS14.Anomaly.Components; // KS14
-using Content.Shared._KS14.Anomaly.Prototypes; // KS14
 using Content.Server.Audio;
 using Content.Server.Explosion.EntitySystems;
 using Content.Server.Materials;
@@ -362,7 +361,7 @@ public sealed partial class AnomalySystem : SharedAnomalySystem
         msg.PushNewline();
 
         // KS14 - Start
-        msg.AddMarkupOrThrow(Loc.GetString("anomaly-scanner-atmosphere-title"));
+        msg.AddMarkupOrThrow(Loc.GetString("ks-anomaly-scanner-atmosphere-title"));
         msg.PushNewline();
 
         if (TryComp<AnomalyGasConsumerComponent>(anomaly, out var consumer) && consumer.PrimaryGas != null)
@@ -378,7 +377,7 @@ public sealed partial class AnomalySystem : SharedAnomalySystem
             }
             var pGasName = Loc.TryGetString($"gas-{pGasId}", out var pName) ? pName : (Loc.TryGetString($"gases-{pGasId}", out pName) ? pName : pGasNameStr);
 
-            msg.AddMarkupOrThrow(Loc.GetString("anomaly-scanner-atmosphere-primary",
+            msg.AddMarkupOrThrow(Loc.GetString("ks-anomaly-scanner-atmosphere-primary",
                 ("gas", pGasName),
                 ("percent", (consumer.PrimaryScalingFactor * 100).ToString("F0"))));
             msg.PushNewline();
@@ -396,7 +395,7 @@ public sealed partial class AnomalySystem : SharedAnomalySystem
                 }
                 var sGasName = Loc.TryGetString($"gas-{sGasId}", out var sName) ? sName : (Loc.TryGetString($"gases-{sGasId}", out sName) ? sName : sGasNameStr);
 
-                msg.AddMarkupOrThrow(Loc.GetString("anomaly-scanner-atmosphere-secondary",
+                msg.AddMarkupOrThrow(Loc.GetString("ks-anomaly-scanner-atmosphere-secondary",
                     ("gas", sGasName),
                     ("percent", (consumer.SecondaryScalingFactor * 100).ToString("F0"))));
                 msg.PushNewline();
@@ -415,7 +414,7 @@ public sealed partial class AnomalySystem : SharedAnomalySystem
         }
         else
         {
-            msg.AddMarkupOrThrow(Loc.GetString("anomaly-scanner-atmosphere-none"));
+            msg.AddMarkupOrThrow(Loc.GetString("ks-anomaly-scanner-atmosphere-none"));
             msg.PushNewline();
             msg.PushNewline();
         }

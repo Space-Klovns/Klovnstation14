@@ -22,8 +22,6 @@ anomaly-scanner-stability-high = Current anomaly state: [color=crimson]Growing[/
 anomaly-scanner-stability-unknown = Current anomaly state: [color=red]ERROR[/color]
 anomaly-scanner-point-output = Point output: [color=gray]{$point}[/color]
 anomaly-scanner-point-output-unknown = Point output: [color=red]ERROR[/color]
-# KS14
-anomaly-scanner-health = Current health: [color=gray]{$health}%[/color]
 anomaly-scanner-particle-readout = Particle Reaction Analysis:
 anomaly-scanner-particle-danger = - [color=crimson]Danger type:[/color] {$type}
 anomaly-scanner-particle-unstable = - [color=plum]Unstable type:[/color] {$type}
@@ -99,12 +97,6 @@ anomaly-behavior-inconstancy = [color=crimson]Impermanence has been detected. Pa
 anomaly-behavior-fast = [color=crimson]The pulsation frequency is strongly increased.[/color]
 anomaly-behavior-strenght = [color=crimson]The pulsation power is significantly increased.[/color]
 anomaly-behavior-moving = [color=crimson]Coordinate instability was detected.[/color]
-
-# KS14
-anomaly-scanner-atmosphere-title = Atmospheric Influence Analysis:
-anomaly-scanner-atmosphere-none = Current State: [color=gray]No significant atmospheric influence[/color]
-anomaly-scanner-atmosphere-primary = Primary Catalyst: [color=white]{$gas}[/color] [color=gray]({$percent}%)[/color]
-anomaly-scanner-atmosphere-secondary = Secondary Catalyst: [color=white]{$gas}[/color] [color=gray]({$percent}%)[/color]
 
 gorilla-shove-not-disposals = You can only shove this into a disposals unit!
 gorilla-shove-gauntlet-not-active = The gauntlet isn't active!

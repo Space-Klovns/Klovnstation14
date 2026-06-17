@@ -67,7 +67,7 @@ public sealed partial class AnomalyGasConsumerComponent : Component
     [ViewVariables(VVAccess.ReadOnly), AutoNetworkedField]
     public float SecondaryScalingFactor = 0f;
 
-    [AutoNetworkedField]    public float PointMultiplier = 1f;
+    [AutoNetworkedField] public float PointMultiplier = 1f;
 
     [AutoNetworkedField]
     public float PulseFrequencyMultiplier = 1f;
