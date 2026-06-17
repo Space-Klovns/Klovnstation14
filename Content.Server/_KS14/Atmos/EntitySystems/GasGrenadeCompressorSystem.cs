@@ -77,25 +77,26 @@ public sealed class GasGrenadeCompressorSystem : SharedGasGrenadeCompressorSyste
             return;
         }
 
-        var removed = inlet.Air.Remove(molesToTransfer);
+        GasMixture removed;
 
         // Whitelist check
         if (!_emagSystem.CheckFlag(entity.Owner, EmagType.Interaction))
         {
-            var filteredRemoved = new GasMixture(removed.Volume) { Temperature = removed.Temperature };
+            removed = new GasMixture(inlet.Air.Volume) { Temperature = inlet.Air.Temperature };
+            var filteredMoles = 0f;
+
             foreach (var gas in entity.Comp.GasWhitelist)
             {
-                var moles = removed.GetMoles(gas);
-                if (moles > 0)
-                {
-                    filteredRemoved.SetMoles(gas, moles);
-                    removed.SetMoles(gas, 0);
-                }
+                var moles = inlet.Air.GetMoles(gas);
+
+                removed.SetMoles(gas, moles);
+                filteredMoles += moles;
             }
-            // Put back non-whitelisted gases
-            _atmosphereSystem.Merge(inlet.Air, removed);
-            removed = filteredRemoved;
+
+            removed.Multiply(filteredMoles / molesToTransfer);
         }
+        else
+            removed = inlet.Air.Remove(molesToTransfer);
 
         _atmosphereSystem.Merge(grenadeAir, removed);
         UpdateUserInterface(entity);
