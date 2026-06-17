@@ -1,23 +1,20 @@
+
+# Basic scenario station prototype.
+# It is imperative that this doesn't include `BaseStationEvacuation` unless evac can actually dock to the scenario station; otherwise, tests will fail.
 - type: entity
-  id: ScenarioTiderfallStationProto
-  categories: [ HideSpawnMenu ]
   parent:
-    - BaseStation
-    - BaseStationNews
-    - BaseStationCargo
-    - BaseStationJobsSpawning
-    - BaseStationRecords
-    - BaseStationArrivals
-    - BaseStationGateway
-    - BaseStationCentcomm
-    - BaseStationEvacuation
-    - BaseStationAlertLevels
-    - BaseStationMagnet
-    - BaseStationExpeditions
-    - BaseStationSalvageJobs
-    - BaseStationSiliconLawAsimov
-    - BaseStationAllEventsEligible
-    - BaseStationNanotrasen
-    - BaseStationDeliveries
-  components:
-  - type: Transform
+  - BaseStation
+  - BaseStationNews
+  - BaseStationCargo
+  - BaseStationJobsSpawning
+  - BaseStationRecords
+  - BaseStationGateway
+  - BaseStationCentcomm
+  - BaseStationEvacuation
+  - BaseStationAlertLevels
+  - BaseStationSalvageJobs
+  - BaseStationSiliconLawAsimov
+  - BaseStationAllEventsEligible
+  - BaseStationNanotrasen
+  id: KsBasicStationScenario
+  categories: [ HideSpawnMenu ]

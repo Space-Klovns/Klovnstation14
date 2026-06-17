@@ -1,0 +1,91 @@
+- type: entity
+  parent: [ BaseMachinePowered, ConstructibleMachine ]
+  id: GasGrenadeCompressor
+  name: air grenade compressor
+  description: A machine used to refill air grenades with inert gases.
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/Machines/compressor.rsi
+    snapCardinals: true
+    granularLayersRendering: true
+    layers:
+    - state: off
+      map: [ "base" ]
+    - state: pipeUnaryConnectors
+      sprite: Structures/Piping/Atmospherics/pipe.rsi
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+      renderingStrategy: Default
+      color: '#ffffff80'
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.GasGrenadeCompressorVisuals.Active:
+        base:
+          True: { state: on }
+          False: { state: off }
+  - type: EmissiveLayers
+    layers: []
+  - type: AtmosPipeLayers
+    spriteLayersRsiPaths:
+      enum.PipeVisualLayers.Pipe:
+        Primary: Structures/Piping/Atmospherics/pipe.rsi
+        Secondary: Structures/Piping/Atmospherics/pipe_alt1.rsi
+        Tertiary: Structures/Piping/Atmospherics/pipe_alt2.rsi
+  - type: Rotatable
+  - type: AtmosDevice
+  - type: PipeColorVisuals
+  - type: AtmosPipeColor
+  - type: PipeRestrictOverlap
+  - type: NodeContainer
+    nodes:
+      pipe:
+        !type:PipeNode
+        nodeGroupID: Pipe
+        pipeDirection: South
+  - type: Transform
+    noRot: false
+  - type: GasGrenadeCompressor
+    material: Steel
+    slotName: grenade_slot
+  - type: ItemSlots
+    slots:
+      grenade_slot:
+        name: Grenade # broooo make loc for this TODO KS14: LOC
+        insertVerbText: Insert Grenade
+        ejectVerbText: Eject Grenade
+        whitelist:
+          tags:
+            - AirGrenade
+  - type: ContainerContainer
+    containers:
+      grenade_slot: !type:ContainerSlot
+      machine_board: !type:Container
+      machine_parts: !type:Container
+  - type: UserInterface
+    interfaces:
+      enum.GasGrenadeCompressorUiKey.Key:
+        type: GasGrenadeCompressorBoundUserInterface
+  - type: ActivatableUI
+    inHandsOnly: false
+    key: enum.GasGrenadeCompressorUiKey.Key
+  - type: ApcPowerReceiver
+    powerLoad: 500
+  - type: Machine
+    board: GasGrenadeCompressorMachineCircuitBoard
+  - type: MaterialStorage
+    storageLimit: 10000
+    materialWhiteList: [Steel]
+
+- type: entity
+  id: GasGrenadeCompressorMachineCircuitBoard
+  parent: BaseMachineCircuitboard
+  name: air grenade compressor machine board
+  description: A machine printed circuit board for an air grenade compressor.
+  components:
+  - type: Sprite
+    state: engineering
+  - type: MachineBoard
+    prototype: GasGrenadeCompressor
+    stackRequirements:
+      Manipulator: 2
+      Cable: 5

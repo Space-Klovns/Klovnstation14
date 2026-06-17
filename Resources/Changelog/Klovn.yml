@@ -1282,3 +1282,20 @@ Entries:
       message: Added scenarios.
   id: 140
   time: '2026-06-06T10:17:55.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: >-
+        Added the air grenade compressor, which allows you to fill air grenades
+        with safe-ish (unless emagged) gases. The board for it can be printed
+        roundstart in circuit imprinters.
+    - type: Add
+      message: You can now inspect the contents of air grenades with a gas analyzer.
+  id: 141
+  time: '2026-06-17T14:05:38.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Tweak
+      message: Orebag magnetic pickup is now predicted!
+  id: 142
+  time: '2026-06-17T14:09:13.0000000+00:00'

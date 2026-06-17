@@ -160,7 +160,7 @@
     - type: GasCanisterOverlay # KS14
     - type: EmissiveLayers # KS14
       glowRadius: 1
-      intensity: 0
+      intensity: 0.35
       layers:
       - pressureLight
 
