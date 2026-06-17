@@ -297,7 +297,7 @@ public sealed partial class AnomalySystem : SharedAnomalySystem
         // Anomaly health
         if (component.IgnoreSecret)
         {
-            msg.AddMarkupOrThrow(Loc.GetString("anomaly-scanner-health", ("health", (anomalyComp.Health * 100).ToString("F1"))));
+            msg.AddMarkupOrThrow(Loc.GetString("ks-anomaly-scanner-health", ("health", (anomalyComp.Health * 100).ToString("F1"))));
             msg.PushNewline();
         }
         // KS14 - End
