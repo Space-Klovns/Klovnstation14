@@ -1,6 +1,4 @@
-using Content.Client.Atmos.UI;
 using Content.Shared._KS14.Atmos.Components;
-using Robust.Client.GameObjects;
 
 namespace Content.Client._KS14.Atmos.UI;
 
@@ -8,7 +6,7 @@ public sealed class GasGrenadeCompressorBoundUserInterface : BoundUserInterface
 {
     private GasGrenadeCompressorWindow? _window;
 
-    public GasGrenadeCompressorBoundUserInterface(EntityUid owner, object uiKey) : base(owner, (Enum) uiKey)
+    public GasGrenadeCompressorBoundUserInterface(EntityUid owner, object uiKey) : base(owner, (Enum)uiKey)
     {
     }
 
@@ -20,15 +18,15 @@ public sealed class GasGrenadeCompressorBoundUserInterface : BoundUserInterface
         _window.OnClose += Close;
         _window.OnTargetPressureChanged += pressure =>
         {
-            SendMessage(new GasGrenadeCompressorChangeTargetPressureMessage(pressure));
+            SendPredictedMessage(new GasGrenadeCompressorChangeTargetPressureMessage(pressure));
         };
         _window.OnTogglePressed += enabled =>
         {
-            SendMessage(new GasGrenadeCompressorToggleMessage(enabled));
+            SendPredictedMessage(new GasGrenadeCompressorToggleMessage(enabled));
         };
         _window.OnRearmPressed += () =>
         {
-            SendMessage(new GasGrenadeCompressorRearmMessage());
+            SendPredictedMessage(new GasGrenadeCompressorRearmMessage());
         };
 
         _window.OpenCentered();
@@ -47,9 +45,10 @@ public sealed class GasGrenadeCompressorBoundUserInterface : BoundUserInterface
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        if (disposing)
-        {
-            _window?.Dispose();
-        }
+        if (!disposing)
+            return;
+
+
+        _window?.Dispose();
     }
 }

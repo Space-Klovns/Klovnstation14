@@ -46,10 +46,12 @@
     - type: Transform
       noRot: false
     - type: GasGrenadeCompressor
+      material: Steel
+      slotName: grenade_slot
     - type: ItemSlots
       slots:
         grenade_slot:
-          name: Grenade
+          name: Grenade # broooo make loc for this TODO KS14: LOC
           insertVerbText: Insert Grenade
           ejectVerbText: Eject Grenade
           whitelist:
