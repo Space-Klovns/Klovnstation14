@@ -6,7 +6,7 @@
                MinWidth="250"
                MinHeight="200">
     <BoxContainer Orientation="Vertical"
-            Margin="4">
+                  Margin="4">
         <BoxContainer Orientation="Horizontal">
             <Label Text="{Loc 'gas-grenade-compressor-window-status-label'}"/>
             <Control HorizontalExpand="True"/>
@@ -18,30 +18,29 @@
             <Label Text="{Loc 'gas-grenade-compressor-window-grenade-status-label'}"/>
             <Control HorizontalExpand="True"/>
             <Label Name="GrenadeStatusLabel"
-                    Text="{Loc 'gas-grenade-compressor-window-no-grenade-text'}"/>
+                   Text="{Loc 'gas-grenade-compressor-window-no-grenade-text'}"/>
         </BoxContainer>
 
         <BoxContainer Orientation="Horizontal"
-                Name="GrenadePressureContainer"
-                Visible="False">
+                      Name="GrenadePressureContainer"
+                      Visible="False">
             <Label Text="{Loc 'gas-grenade-compressor-window-grenade-pressure-label'}"/>
             <Control HorizontalExpand="True"/>
             <Label Name="GrenadePressureLabel"
-                    Text="0 kPa"/>
+                   Text="0 kPa"/>
         </BoxContainer>
 
         <BoxContainer Orientation="Horizontal">
             <Label Text="{Loc 'gas-grenade-compressor-window-target-pressure-label'}"/>
             <Control HorizontalExpand="True"/>
             <LineEdit Name="TargetPressureInput"
-                    MinWidth="100"/>
+                      MinWidth="100"/>
         </BoxContainer>
 
         <BoxContainer Orientation="Horizontal">
-            <Label Text="{Loc 'gas-grenade-compressor-window-steel-label'}"/>
+            <Label Text="{Loc 'gas-grenade-compressor-window-steel-label'}"
+                    Name="MatLabel"/>
             <Control HorizontalExpand="True"/>
-            <Label Name="SteelLabel"
-                    Text="0"/>
         </BoxContainer>
 
         <Button Name="RearmButton"

@@ -7,5 +7,5 @@ gas-grenade-compressor-window-no-grenade-text = None
 gas-grenade-compressor-window-grenade-inserted-text = Inserted
 gas-grenade-compressor-window-grenade-pressure-label = Pressure:
 gas-grenade-compressor-window-target-pressure-label = Target Pressure (kPa):
-gas-grenade-compressor-window-steel-label = Steel:
-gas-grenade-compressor-window-rearm-button = Re-arm (1000 Steel)
+gas-grenade-compressor-window-steel-label = Steel (cm³): {$amount}
+gas-grenade-compressor-window-rearm-button = Re-arm (1000cm³ Steel)

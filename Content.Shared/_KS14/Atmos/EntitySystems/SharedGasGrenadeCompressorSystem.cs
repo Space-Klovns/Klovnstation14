@@ -37,6 +37,7 @@ public abstract class SharedGasGrenadeCompressorSystem : EntitySystem
     {
         base.Initialize();
 
+        SubscribeLocalEvent<GasGrenadeCompressorComponent, MapInitEvent>(OnMapInit);
         SubscribeLocalEvent<GasGrenadeCompressorComponent, PowerChangedEvent>(OnPowerChanged);
 
         SubscribeLocalEvent<GasGrenadeCompressorComponent, EntInsertedIntoContainerMessage>(OnEntInsertedIntoContainer);
@@ -47,6 +48,11 @@ public abstract class SharedGasGrenadeCompressorSystem : EntitySystem
         SubscribeLocalEvent<GasGrenadeCompressorComponent, GasGrenadeCompressorRearmMessage>(OnRearm);
         SubscribeLocalEvent<GasGrenadeCompressorComponent, GotEmaggedEvent>(OnEmagged);
         SubscribeLocalEvent<GasGrenadeCompressorComponent, MaterialAmountChangedEvent>(OnMaterialAmountChanged);
+    }
+
+    private void OnMapInit(Entity<GasGrenadeCompressorComponent> entity, ref MapInitEvent args)
+    {
+        UpdateUserInterface(entity);
     }
 
     private void OnPowerChanged(Entity<GasGrenadeCompressorComponent> entity, ref PowerChangedEvent args)

@@ -33,8 +33,7 @@ public sealed partial class GasGrenadeCompressorWindow : DefaultWindow
             ? "gas-grenade-compressor-window-toggle-button-on"
             : "gas-grenade-compressor-window-toggle-button-off");
 
-        // TODO KS14 GKRD: TODO KS14 UI: maybe make it smth other than steel but that's SNCA
-        SteelLabel.Text = state.MaterialAmount.ToString();
+        MatLabel.Text = Loc.GetString("gas-grenade-compressor-window-steel-label", ("amount", state.MaterialAmount));
 
         if (state.HasGrenade)
         {
