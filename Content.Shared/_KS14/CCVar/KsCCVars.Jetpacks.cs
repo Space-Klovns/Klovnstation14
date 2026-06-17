@@ -14,5 +14,5 @@ public sealed partial class KsCCVars
     /// </summary>
     [CVarControl(AdminFlags.Fun)]
     public static readonly CVarDef<bool> JetpacksCanFlyOnGrids =
-        CVarDef.Create("klovn.jetpacks.flyongrids", true, CVar.SERVERONLY);
+        CVarDef.Create("klovn.jetpacks.flyongrids", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 }

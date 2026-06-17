@@ -56,8 +56,8 @@
   id: Wittel
   name: reagent-name-wittel
   desc: reagent-desc-wittel
-  group: Special
   flavor: terrible
+  physicalDesc: reagent-physical-desc-bubbling
   color: "#ffffff"
 
 - type: reagent

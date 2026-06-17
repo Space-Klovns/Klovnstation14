@@ -209,7 +209,7 @@ public abstract class SharedJetpackSystem : EntitySystem
         if (TryComp<GravityComponent>(gridUid, out var gravityComponent))
         {
             if (_canFlyOnGrids)
-                return gravityComponent.Enabled || gravityComponent.Inherent;
+                return !gravityComponent.Enabled;
             else
                 return false;
         }

@@ -22,7 +22,4 @@
     whitelist:
       components:
       - Physics
-  - type: ModifiedMobThresholdsStatusEffect
-    thresholdAdjustments: #additions
-      Critical: 100
-      Dead: 200
+  - type: WeightlessnessStatusEffect

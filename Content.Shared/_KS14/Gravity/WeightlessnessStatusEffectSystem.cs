@@ -35,5 +35,6 @@ public sealed class WeightlessnessStatusEffectSystem : EntitySystem
 
         innerArgs.Handled = true;
         innerArgs.IsWeightless = true;
+        args.Args = innerArgs;
     }
 }
