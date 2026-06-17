@@ -24,7 +24,6 @@
           base:
             True: { state: on }
             False: { state: off }
-    - type: PowerDeviceVisuals
     - type: EmissiveLayers
       layers: []
     - type: AtmosPipeLayers
