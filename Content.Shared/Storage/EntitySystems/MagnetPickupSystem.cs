@@ -132,14 +132,14 @@ public sealed partial class MagnetPickupSystem : EntitySystem // KS14
                 var nearMap = _transform.GetMapCoordinates(near, xform: nearXform);
                 var nearCoords = _transform.ToCoordinates(moverCoords.EntityId, nearMap);
 
-                if (!_storage.Insert(uid, near, out var stacked, storageComp: storage, playSound: !playedSound)) // KS14
+                if (!_storage.Insert(uid, near, out var stacked, storageComp: storage, playSound: !playedSound))
                     continue;
 
                 // Play pickup animation for either the stack entity or the original entity.
                 if (stacked != null)
-                    _storage.PlayPickupAnimation(stacked.Value, nearCoords, finalCoords, nearXform.LocalRotation); // KS14
+                    _storage.PlayPickupAnimation(stacked.Value, nearCoords, finalCoords, nearXform.LocalRotation);
                 else
-                    _storage.PlayPickupAnimation(near, nearCoords, finalCoords, nearXform.LocalRotation); // KS14
+                    _storage.PlayPickupAnimation(near, nearCoords, finalCoords, nearXform.LocalRotation);
 
                 playedSound = true;
             }
