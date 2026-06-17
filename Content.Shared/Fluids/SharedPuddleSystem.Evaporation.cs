@@ -22,15 +22,13 @@ public abstract partial class SharedPuddleSystem
         if (_evaporationQuery.HasComp(uid))
             return;
 
-        if (solution.GetTotalPrototypeQuantity(GetEvaporatingReagents(solution)) > FixedPoint2.Zero)
-        {
-            var evaporation = AddComp<EvaporationComponent>(uid);
-            evaporation.NextTick = _timing.CurTime + EvaporationCooldown;
-            Dirty<EvaporationComponent>((uid, evaporation));
-            return;
-        }
-
-        RemComp<EvaporationComponent>(uid);
+        // KS14 - Start
+        // Always add EvaporationComponent so Evaporin gas can evaporate any puddle,
+        // even if it does not naturally evaporate.
+        var evaporation = AddComp<EvaporationComponent>(uid);
+        evaporation.NextTick = _timing.CurTime + EvaporationCooldown;
+        Dirty<EvaporationComponent>((uid, evaporation));
+        // KS14 - End
     }
 
     private void TickEvaporation()
@@ -52,18 +50,39 @@ public abstract partial class SharedPuddleSystem
             // If we have multiple evaporating reagents in one puddle, just take the average evaporation speed and apply
             // that to all of them.
             var evaporationSpeeds = GetEvaporationSpeeds(puddleSolution);
-            if (evaporationSpeeds.Count == 0)
+
+            // KS14 - Start
+            var baseEvaporationSpeed = evaporationSpeeds.Count > 0 ? evaporationSpeeds.Values.Sum() / evaporationSpeeds.Count : FixedPoint2.Zero;
+            var modifiedSpeed = baseEvaporationSpeed;
+
+            ModifyEvaporationRate((uid, puddle), ref modifiedSpeed);
+
+            if (modifiedSpeed <= FixedPoint2.Zero)
                 continue;
 
-            // Can't use .Average because FixedPoint2
-            var evaporationSpeed = evaporationSpeeds.Values.Sum() / evaporationSpeeds.Count;
-            var reagentProportions = evaporationSpeeds.ToDictionary(kv => kv.Key,
-                kv => puddleSolution.GetTotalPrototypeQuantity(kv.Key) / puddleSolution.Volume);
+            var evaporinForced = modifiedSpeed > baseEvaporationSpeed;
+            Dictionary<ProtoId<ReagentPrototype>, FixedPoint2> reagentProportions;
+
+            if (evaporinForced)
+            {
+                // Evaporin is present: force evaporation of the ENTIRE puddle, regardless of contents.
+                reagentProportions = puddleSolution.Contents.ToDictionary(
+                    r => new ProtoId<ReagentPrototype>(r.Reagent.Prototype), 
+                    r => r.Quantity / puddleSolution.Volume);
+            }
+            else
+            {
+                // Vanilla behavior: only evaporate naturally evaporating reagents.
+                reagentProportions = evaporationSpeeds.ToDictionary(
+                    kv => kv.Key, 
+                    kv => puddleSolution.GetTotalPrototypeQuantity(kv.Key) / puddleSolution.Volume);
+            }
+            // KS14 - End
 
             // Still have to iterate over one-by-one since the full solution could have non-evaporating solutions.
             foreach (var (reagent, factor) in reagentProportions)
             {
-                var reagentTick = evaporation.EvaporationAmount * EvaporationCooldown.TotalSeconds * evaporationSpeed * factor;
+                var reagentTick = evaporation.EvaporationAmount * EvaporationCooldown.TotalSeconds * modifiedSpeed * factor;
                 puddleSolution.SplitSolutionWithOnly(reagentTick, reagent);
             }
 

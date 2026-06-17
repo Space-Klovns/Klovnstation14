@@ -30,9 +30,10 @@ namespace Content.Server.Atmos.Portable
             Gas.Ammonia,
             Gas.NitrousOxide,
             Gas.Frezon,
-            Gas.Zipion
-        };
-
+            Gas.Zipion, // KS14
+            Gas.Argon, // KS14
+            Gas.Evaporin // KS14
+            };
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Enabled = true;
 
