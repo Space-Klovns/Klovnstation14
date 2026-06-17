@@ -59,6 +59,8 @@
   - type: ContainerContainer
     containers:
       grenade_slot: !type:ContainerSlot
+      machine_board: !type:Container
+      machine_parts: !type:Container
   - type: UserInterface
     interfaces:
       enum.GasGrenadeCompressorUiKey.Key:
