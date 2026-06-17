@@ -27,6 +27,5 @@
     entity: KsSoriumEffectGravityPulse
   - !type:PopupMessage
     type: Pvs
-    metod: PopupCoordinates
     messages:
     - sorium-effect-boom
