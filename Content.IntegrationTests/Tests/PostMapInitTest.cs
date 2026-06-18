@@ -368,10 +368,6 @@ namespace Content.IntegrationTests.Tests
                         stationsOnMap.Add(member.Station);
                 }
 
-                // If it's a map without stations (e.g., empty space scenario), don't fail the test
-                if (stationsOnMap.Count == 0)
-                    return; // Using return instead of continue since this is inside an Action lambda
-
                 var sharedStationSystem = entityManager.System<SharedStationSystem>();
 
                 // Test shuttle docking and job spawn points for EVERY station on this map
