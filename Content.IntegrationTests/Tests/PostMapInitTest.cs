@@ -342,9 +342,11 @@ namespace Content.IntegrationTests.Tests
             var shuttleSystem = entityManager.EntitySysManager.GetEntitySystem<ShuttleSystem>(); // KS14
             var cfg = server.ResolveDependency<IConfigurationManager>();
 
-            await server.WaitPost(() =>
+            try
             {
-                MapId mapId;
+                await server.WaitPost(() =>
+                {
+                    MapId mapId;
                 try
                 {
                     var opts = DeserializationOptions.Default with { InitializeMaps = true };
@@ -472,6 +474,12 @@ namespace Content.IntegrationTests.Tests
                     }
                 }
             });
+            }
+            catch (Exception)
+            {
+                pair.Kill();
+                throw;
+            }
         }
 
         [Test]
