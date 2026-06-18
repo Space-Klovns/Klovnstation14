@@ -396,43 +396,46 @@ namespace Content.IntegrationTests.Tests
 
                     if (entManager.HasComponent<StationJobsComponent>(stationUid))
                     {
-                        // Get the grids exclusively belonging to THIS station
                         var stationGrids = entManager.GetComponent<StationDataComponent>(stationUid).Grids;
 
-                        // Test that the map has valid latejoin spawn points or container spawn points
-                        if (!NoSpawnMaps.Contains(mapProto))
-                        {
-                            var lateSpawns = 0;
-                            var stationGridsList = stationGrids.ToList();
-
-                            // Scope latejoin checks to this station's grids, not the global map grids
-                            lateSpawns += GetCountLateSpawn<SpawnPointComponent>(stationGridsList, entManager);
-                            lateSpawns += GetCountLateSpawn<ContainerSpawnPointComponent>(stationGridsList, entManager);
-
-                            Assert.That(lateSpawns, Is.GreaterThan(0), $"Found no latejoin spawn points for station {stationUid} on {mapProto}");
-                        }
-
-                        // Test all availableJobs have spawnPoints
+                        var lateSpawns = 0;
                         var comp = entManager.GetComponent<StationJobsComponent>(stationUid);
                         var jobs = new HashSet<ProtoId<JobPrototype>>(comp.SetupAvailableJobs.Keys);
 
-                        // Scope spawn point checks tightly to grids belonging to THIS station using performant enumerators
+                        // Scope spawn point checks tightly to grids belonging to THIS station using performant flat queries.
                         var spawnQuery = entManager.AllEntityQueryEnumerator<SpawnPointComponent, TransformComponent>();
                         while (spawnQuery.MoveNext(out var spawn, out var xform))
                         {
-                            if (spawn.SpawnType == SpawnPointType.Job && spawn.Job != null && xform.GridUid != null && stationGrids.Contains(xform.GridUid.Value))
-                            {
+                            // Filter the globally queried components to ensure they reside on a grid belonging to the current station.
+                            if (xform.GridUid == null || !stationGrids.Contains(xform.GridUid.Value))
+                                continue;
+
+                            // Track valid late join spawn points.
+                            if (spawn.SpawnType == SpawnPointType.LateJoin)
+                                lateSpawns++;
+
+                            // Remove fulfilled job spawn points from the required jobs hashset.
+                            if (spawn.SpawnType == SpawnPointType.Job && spawn.Job != null)
                                 jobs.Remove(spawn.Job.Value);
-                            }
                         }
 
+                        // We also need to check ContainerSpawnPointComponent, as some jobs spawn inside lockers/containers.
                         var containerSpawnQuery = entManager.AllEntityQueryEnumerator<ContainerSpawnPointComponent, TransformComponent>();
                         while (containerSpawnQuery.MoveNext(out var containerSpawn, out var xform))
                         {
-                            if (containerSpawn.SpawnType is SpawnPointType.Job or SpawnPointType.Unset && containerSpawn.Job != null && xform.GridUid != null && stationGrids.Contains(xform.GridUid.Value))
-                            {
+                            if (xform.GridUid == null || !stationGrids.Contains(xform.GridUid.Value))
+                                continue;
+
+                            if (containerSpawn.SpawnType == SpawnPointType.LateJoin)
+                                lateSpawns++;
+
+                            if ((containerSpawn.SpawnType == SpawnPointType.Job || containerSpawn.SpawnType == SpawnPointType.Unset) && containerSpawn.Job != null)
                                 jobs.Remove(containerSpawn.Job.Value);
-                            }
+                        }
+
+                        if (!NoSpawnMaps.Contains(mapProto))
+                        {
+                            Assert.That(lateSpawns, Is.GreaterThan(0), $"Found no latejoin spawn points for station {stationUid} on {mapProto}");
                         }
 
                         Assert.That(jobs, Is.Empty, $"There are no spawnpoints for {string.Join(", ", jobs)} on station {stationUid} ({mapProto}).");
@@ -451,32 +454,6 @@ namespace Content.IntegrationTests.Tests
                     throw new Exception($"Failed to delete map {mapProto}", ex);
                 }
             });
-        }
-
-
-
-        private static int GetCountLateSpawn<T>(List<EntityUid> gridUids, IEntityManager entManager)
-            where T : ISpawnPoint, IComponent
-        {
-            var resultCount = 0;
-            var queryPoint = entManager.AllEntityQueryEnumerator<T, TransformComponent>();
-#nullable enable
-            while (queryPoint.MoveNext(out T? comp, out var xform))
-            {
-                var spawner = (ISpawnPoint)comp;
-
-                if (spawner.SpawnType is not SpawnPointType.LateJoin
-                || xform.GridUid == null
-                || !gridUids.Contains(xform.GridUid.Value))
-                {
-                    continue;
-                }
-#nullable disable
-                resultCount++;
-                break;
-            }
-
-            return resultCount;
         }
 
         [Test]
