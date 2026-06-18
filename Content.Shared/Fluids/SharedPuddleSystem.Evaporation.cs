@@ -17,17 +17,30 @@ public abstract partial class SharedPuddleSystem
         Dirty(ent);
     }
 
-    private void UpdateEvaporation(EntityUid uid, Solution solution)
+    private void UpdateEvaporation(Entity<PuddleComponent> entity, Solution solution)
     {
-        if (_evaporationQuery.HasComp(uid))
-            return;
-
         // KS14 - Start
-        // Always add EvaporationComponent so Evaporin gas can evaporate any puddle,
-        // even if it does not naturally evaporate.
-        var evaporation = AddComp<EvaporationComponent>(uid);
-        evaporation.NextTick = _timing.CurTime + EvaporationCooldown;
-        Dirty<EvaporationComponent>((uid, evaporation));
+        // Calculate evaporation speed, including dynamic modifications (e.g. Evaporin gas).
+        var speeds = GetEvaporationSpeeds(solution);
+        var baseSpeed = speeds.Count > 0 ? speeds.Values.Sum() / speeds.Count : FixedPoint2.Zero;
+        var modifiedSpeed = baseSpeed;
+
+        ModifyEvaporationRate(entity, ref modifiedSpeed);
+
+        if (modifiedSpeed > FixedPoint2.Zero)
+        {
+            if (!_evaporationQuery.HasComp(entity))
+            {
+                var evaporation = AddComp<EvaporationComponent>(entity);
+                evaporation.NextTick = _timing.CurTime + EvaporationCooldown;
+                Dirty(entity.Owner, evaporation);
+            }
+        }
+        else
+        {
+            if (_evaporationQuery.HasComp(entity))
+                RemComp<EvaporationComponent>(entity);
+        }
         // KS14 - End
     }
 
