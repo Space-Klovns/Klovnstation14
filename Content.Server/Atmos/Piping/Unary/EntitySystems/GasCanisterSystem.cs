@@ -78,10 +78,9 @@ public sealed class GasCanisterSystem : SharedGasCanisterSystem
         if (entity.Comp.SafetyValveOpen)
             return;
 
-        // KS14: Removed safety-valve (geg)
-        // ToggleSafetyValve(entity, open: true);
-        // if (entity.Comp.SafetyAlert != null)
-        //     _popup.PopupEntity(Loc.GetString(entity.Comp.SafetyAlert), entity, PopupType.LargeCaution);
+        ToggleSafetyValve(entity, open: true);
+        if (entity.Comp.SafetyAlert != null)
+            _popup.PopupEntity(Loc.GetString(entity.Comp.SafetyAlert), entity, PopupType.LargeCaution);
     }
 
     private void ToggleSafetyValve(Entity<GasCanisterComponent> entity, bool open)
