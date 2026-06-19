@@ -14,6 +14,7 @@ using Robust.Shared.Physics;
 using Content.Shared._KS14.Atmos.EntitySystems;
 using Content.Shared.Throwing;
 using Content.Server.Administration.Logs;
+using Content.Shared.Database;
 
 namespace Content.Server._KS14.Atmos.EntitySystems;
 
@@ -93,16 +94,23 @@ public sealed class GasPistonSystem : SharedGasPistonSystem
             fraction = 1f;
 
         var damage = (entity.Comp.MaximumDamage - entity.Comp.MinimumDamage) * (FixedPoint2)fraction + entity.Comp.MinimumDamage;
+        var totalDamage = damage.GetTotal();
         var transformComponent = Transform(entity);
 
         var throwVector = transformComponent.LocalRotation.ToWorldVec();
         var throwForce = entity.Comp.MaxThrowForce * fraction;
-
         foreach (var collidingUid in entity.Comp.CollidingUids)
         {
             _damageableSystem.TryChangeDamage(collidingUid, damage, origin: entity.Owner);
             _throwingSystem.TryThrow(collidingUid, throwVector, baseThrowSpeed: throwForce, user: entity.Owner, predicted: false);
+
+            _adminLogManager.Add(LogType.Damaged, $"{ToPrettyString(entity.Owner):user} dealt {totalDamage:total} damageto {ToPrettyString(entity.Owner):target} via piston, power-scale: {fraction}x");
         }
+
+        if (entity.Comp.CollidingUids.Count == 0 &&
+            totalDamage >= 10)
+            _adminLogManager.Add(LogType.Damaged, $"{ToPrettyString(entity.Owner):gas-piston} pushed and damaged {entity.Comp.CollidingUids.Count} entities, power-scale: {fraction}x");
+
 
         _audioSystem.PlayPvs(entity.Comp.Sound, entity.Owner);
         _spriteFlickSystem.TryFlick(entity, entity.Comp.FlickData);
