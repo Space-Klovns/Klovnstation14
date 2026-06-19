@@ -6096,13 +6096,6 @@ entities:
     - type: Transform
       pos: 23.5,-14.5
       parent: 1
-- proto: SheetSteel
-  entities:
-  - uid: 957
-    components:
-    - type: Transform
-      pos: 19.546764,-13.616933
-      parent: 1
 - proto: ShelfBar
   entities:
   - uid: 958
