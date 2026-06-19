@@ -372,11 +372,6 @@ public sealed partial class IngestionSystem : EntitySystem
         {
             beforeEv.Transfer = beforeEv.Solution.Volume;
         }
-
-        if (args.Chug && beforeEv.Solution != null)
-        {
-            beforeEv.Transfer = beforeEv.Solution.Volume;
-        }
         // KS14 - End
 
         var transfer = FixedPoint2.Clamp(beforeEv.Transfer, beforeEv.Min, beforeEv.Max);
