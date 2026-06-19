@@ -8,7 +8,7 @@
             <graphics:StyleBoxFlat BackgroundColor="#162031" BorderColor="#4972A1"
                                    BorderThickness="2" />
         </PanelContainer.PanelOverride>
-        <cc:CMAutomatedVendorButton Name="Button" Access="Public"
+        <Button Name="Button" Access="Public"
                                     ModulateSelfOverride="#00000000" HorizontalExpand="True" />
     </PanelContainer>
 </cc:CMAutomatedVendorPanel>

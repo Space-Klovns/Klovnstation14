@@ -21,7 +21,6 @@ public sealed partial class CMAutomatedVendorPanel : Control
     {
         RobustXamlLoader.Load(this);
 
-        Button.OnDrawModeChanged += UpdateColor;
         UpdateColor();
     }
 

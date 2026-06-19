@@ -147,7 +147,6 @@ public sealed class CMAutomatedVendorBui : BoundUserInterface
             if (sectionControl is not CMAutomatedVendorSection section)
                 continue;
 
-            var any = false;
             foreach (var entriesControl in section.Entries.Children)
             {
                 if (entriesControl is not CMAutomatedVendorEntry entry)
@@ -157,9 +156,6 @@ public sealed class CMAutomatedVendorBui : BoundUserInterface
                     entry.Visible = true;
                 else
                     entry.Visible = entry.Panel.Button.Label.Text?.Contains(args.Text, OrdinalIgnoreCase) ?? false;
-
-                if (entry.Visible)
-                    any = true;
             }
         }
     }
