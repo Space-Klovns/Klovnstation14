@@ -24,8 +24,9 @@ namespace Content.Shared.Atmos.Piping.Unary.Components
             Gas.Ammonia,
             Gas.NitrousOxide,
             Gas.Frezon,
-            Gas.Zipion,
-            Gas.Argon
+            Gas.Zipion, // KS14
+            Gas.Argon, // KS14
+            Gas.Evaporin // KS14
         };
 
         // Presets for 'dumb' air alarm modes

@@ -148,20 +148,20 @@ public abstract class SharedTurbineSystem : EntitySystem
     #region User Interface
     private void OnTurbineFlowRateChanged(EntityUid uid, TurbineComponent turbine, TurbineChangeFlowRateMessage args)
     {
-        turbine.FlowRate = Math.Clamp(args.FlowRate, 0f, turbine.FlowRateMax);
+        turbine.FlowRate = Math.Clamp(args.FlowRate, turbine.FlowRateMin, turbine.FlowRateMax);
         Dirty(uid, turbine);
         UpdateUi((uid, turbine));
         _adminLogger.Add(LogType.AtmosVolumeChanged, LogImpact.Medium,
-            $"{ToPrettyString(args.Actor):player} set the transfer rate on {ToPrettyString(uid):device} to {args.FlowRate}");
+            $"{ToPrettyString(args.Actor):player} set the flow rate on {ToPrettyString(uid):device} to {args.FlowRate}");
     }
 
     private void OnTurbineStatorLoadChanged(EntityUid uid, TurbineComponent turbine, TurbineChangeStatorLoadMessage args)
     {
-        turbine.StatorLoad = Math.Clamp(args.StatorLoad, 1000f, 500000f);
+        turbine.StatorLoad = Math.Clamp(args.StatorLoad, turbine.StatorLoadMin, turbine.StatorLoadMax);
         Dirty(uid, turbine);
         UpdateUi((uid, turbine));
         _adminLogger.Add(LogType.AtmosVolumeChanged, LogImpact.Medium,
-            $"{ToPrettyString(args.Actor):player} set the transfer rate on {ToPrettyString(uid):device} to {args.StatorLoad}");
+            $"{ToPrettyString(args.Actor):player} set the stator load on {ToPrettyString(uid):device} to {args.StatorLoad}");
     }
 
     protected virtual void UpdateUi(Entity<TurbineComponent> entity) { }

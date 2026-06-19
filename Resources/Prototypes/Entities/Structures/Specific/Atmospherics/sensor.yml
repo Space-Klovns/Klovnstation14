@@ -25,8 +25,9 @@
       Ammonia: stationAmmonia
       NitrousOxide: stationNO
       Frezon: danger
-      Zipion: stationZipion
-      Argon: GasArgon
+      Zipion: stationZipion # KS14
+      Argon: GasArgon # KS14
+      Evaporin: stationEvaporin # KS14
   - type: Tag
     tags:
       - AirSensor

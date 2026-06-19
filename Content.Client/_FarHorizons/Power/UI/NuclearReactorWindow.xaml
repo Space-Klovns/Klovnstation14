@@ -11,15 +11,8 @@
 
 				<!--Insert/remove controls-->
 			    <BoxContainer Name="Controls" Orientation="Vertical">
-				    <GridContainer Name="ControlGrid" Columns="3" Margin="2 2 2 2">
-					    <Button Name="XDecrement" Text="-X"/>
-					    <Label Name="XPos" Text="0" StyleClasses="LabelKeyText" />
-					    <Button Name="XIncrement" Text="+X"/>
-					    <Button Name="YDecrement" Text="-Y"/>
-					    <Label Name="YPos" Text="0" StyleClasses="LabelKeyText" />
-					    <Button Name="YIncrement" Text="+Y"/>
-				    </GridContainer>
-				    <Button Name="ItemAction" Text="{Loc comp-nuclear-reactor-ui-insert-button}"/>
+				    <Button Name="InsertButton" Text="{Loc comp-nuclear-reactor-ui-insert-button}" Visible="True" />
+				    <Button Name="ExtractButton" Text="{Loc comp-nuclear-reactor-ui-extract-button}" Visible="False" />
 			    </BoxContainer>
 
 				<!--Target info-->
@@ -55,7 +48,7 @@
             <!--Reactor display-->
             <PanelContainer Name="GridVisuals" StyleClasses="Inset" HorizontalExpand="True" Margin="5 5 5 5">
                 <BoxContainer Orientation="Vertical">
-					<Button Name="ChangeViewButton" Text="{Loc comp-nuclear-reactor-ui-view-change}"/>
+					<OptionButton Name="ViewSelector" HorizontalExpand="True"/>
                     <Label Name="ViewLabel" Text="{Loc comp-nuclear-reactor-ui-view-temp}" StyleClasses="LabelKeyText" />
                     <GridContainer Name="ReactorGrid" Columns="7" VerticalExpand="True" Margin="2 2 2 2">
                     </GridContainer>

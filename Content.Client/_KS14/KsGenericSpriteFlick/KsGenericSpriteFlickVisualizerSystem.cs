@@ -3,6 +3,7 @@ using Content.Shared._KS14.GenericSpriteFlick;
 using Robust.Client.Animations;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
+using Robust.Shared.GameStates;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 
@@ -18,8 +19,34 @@ public sealed class KsGenericSpriteFlickVisualizerSystem : EntitySystem
     {
         base.Initialize();
 
+        SubscribeLocalEvent<KsGenericSpriteFlickFinishStateComponent, ComponentHandleState>(OnFinishStateHandleState);
         SubscribeLocalEvent<KsGenericSpriteFlickComponent, AnimationCompletedEvent>(OnAnimationComplete);
+
         SubscribeAllEvent<KsSpriteFlickEvent>(OnEvent);
+    }
+
+    private void OnFinishStateHandleState(Entity<KsGenericSpriteFlickFinishStateComponent> entity, ref ComponentHandleState args)
+    {
+        if (args.Current is not KsGenericSpriteFlickFinishStateComponentState state)
+            return;
+
+        entity.Comp.FinishStates = state.FinishStates;
+
+        if (!TryComp<AnimationPlayerComponent>(entity.Owner, out var animationPlayerComponent) ||
+            !TryComp<SpriteComponent>(entity.Owner, out var spriteComponent))
+            return;
+
+        foreach (var ((animKey, layerKey), spriteState) in state.FinishStates)
+        {
+            if (_animationPlayerSystem.HasRunningAnimation(animationPlayerComponent, animKey))
+                continue;
+
+            var layerEnumKey = KsEnumHelpers.ParseKey(layerKey, out var isEnum, _reflectionManager);
+            if (isEnum)
+                _spriteSystem.LayerSetRsiState((entity, spriteComponent)!, layerEnumKey!, new RSI.StateId(spriteState));
+            else
+                _spriteSystem.LayerSetRsiState((entity, spriteComponent)!, layerKey, new RSI.StateId(spriteState));
+        }
     }
 
     // Try to reset to next state
@@ -33,9 +60,11 @@ public sealed class KsGenericSpriteFlickVisualizerSystem : EntitySystem
             return;
 
         if (layerObjectKey is Enum layerEnumKey)
-            _spriteSystem.LayerSetRsiState((entity.Owner, spriteComponent), layerEnumKey, state);
+            _spriteSystem.LayerSetRsiState((entity, spriteComponent)!, layerEnumKey, state);
         else if (layerObjectKey is string layerStringKey)
-            _spriteSystem.LayerSetRsiState((entity.Owner, spriteComponent), layerStringKey, state);
+            _spriteSystem.LayerSetRsiState((entity, spriteComponent)!, layerStringKey, state);
+        else
+            throw new ArgumentException($"Param was assignable to neither {typeof(Enum)} nor {typeof(string)}.", nameof(layerObjectKey));
     }
 
     private void OnEvent(KsSpriteFlickEvent args)
@@ -45,7 +74,7 @@ public sealed class KsGenericSpriteFlickVisualizerSystem : EntitySystem
             return;
 
         var parsedLayerKey = (object?)KsEnumHelpers.ParseKey(args.LayerKey, out _, _reflectionManager) ?? args.LayerKey;
-        var animationKey = args.FlickState + args.LayerKey + " ksgenericspriteflick";
+        var animationKey = KsGenericSpriteFlickSystem.GetAnimationId(args.FlickState, args.LayerKey);
 
         if (!TryComp<AnimationPlayerComponent>(uid.Value, out var animationPlayerComponent) ||
             _animationPlayerSystem.HasRunningAnimation(animationPlayerComponent, animationKey))

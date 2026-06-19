@@ -101,8 +101,7 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
         if (availableSpace <= 0)
             return;
 
-        if (!ent.Comp.GeneratableReagents.TryGetValue(ent.Comp.SelectedReagent.Value, out var powerDrain))
-            return;
+        var powerDrain = ent.Comp.PowerDrainPerUnit;
 
         var toGenerate = FixedPoint2.Min(availableSpace, buffer.MaxVolume);
 
@@ -158,7 +157,7 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
         {
             ent.Comp.SelectedReagent = null;
         }
-        else if (ent.Comp.GeneratableReagents.ContainsKey(args.ReagentId))
+        else if (ent.Comp.GeneratableReagents.Contains(args.ReagentId))
         {
             ent.Comp.SelectedReagent = args.ReagentId;
         }
@@ -184,10 +183,10 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
             batteryCharge = _battery.GetChargeLevel(battery.Value.AsNullable());
         }
 
-        var generatableReagents = new Dictionary<string, float>();
-        foreach (var (reagent, drain) in ent.Comp.GeneratableReagents)
+        var generatableReagents = new List<string>();
+        foreach (var reagent in ent.Comp.GeneratableReagents)
         {
-            generatableReagents[reagent.Id] = drain;
+            generatableReagents.Add(reagent.Id);
         }
 
         var bufferContents = new Dictionary<string, FixedPoint2>();
@@ -198,6 +197,7 @@ public sealed class PlumbingSynthesizerSystem : EntitySystem
 
         var state = new PlumbingSynthesizerBoundUserInterfaceState(
             generatableReagents,
+            ent.Comp.PowerDrainPerUnit,
             ent.Comp.SelectedReagent?.Id,
             bufferContents,
             ent.Comp.Enabled,

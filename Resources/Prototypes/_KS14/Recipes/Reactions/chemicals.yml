@@ -29,3 +29,13 @@
     maxTotalIntensity: 250
     intensitySlope: 1
     maxIntensity: 40
+
+- type: reaction
+  id: Gravitum
+  reactants:
+    Wittel:
+      amount: 1
+    Sorium: # I think copying recipes
+      amount: 10
+  products:
+    Gravitum: 1

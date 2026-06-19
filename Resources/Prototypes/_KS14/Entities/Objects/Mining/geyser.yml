@@ -202,3 +202,17 @@
         Quantity: 100
   - type: KsScanDiscoverable
     trueName: artifexium geyser
+
+- type: entity
+  parent: KsGeyserBaseRare
+  id: KsGeyserWittel
+  suffix: Wittel
+  components:
+  - type: SolutionRegeneration
+    solution: buffer
+    generated:
+      reagents:
+      - ReagentId: Wittel
+        Quantity: 100
+  - type: KsScanDiscoverable
+    trueName: wittel geyser

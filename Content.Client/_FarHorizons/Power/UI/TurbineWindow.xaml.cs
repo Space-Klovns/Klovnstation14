@@ -63,7 +63,6 @@ public sealed partial class TurbineWindow : FancyWindow
 
     private EntityUid _entity;
 
-    private bool _suppressSliderEvents;
     #endregion
 
     #region Events
@@ -81,17 +80,27 @@ public sealed partial class TurbineWindow : FancyWindow
         InitRPMMeter();
 
         // Handle flow rate
-        TurbineFlowRateSlider.OnValueChanged += _ =>
+        TurbineFlowRateSetButton.OnPressed += _ =>
         {
-            if (!_suppressSliderEvents)
-                TurbineFlowRateChanged?.Invoke(TurbineFlowRateSlider.Value);
+            if (float.TryParse(TurbineFlowRateInput.Text, out var val))
+                TurbineFlowRateChanged?.Invoke(val);
+        };
+        TurbineFlowRateInput.OnTextEntered += args =>
+        {
+            if (float.TryParse(args.Text, out var val))
+                TurbineFlowRateChanged?.Invoke(val);
         };
 
         // Handle stator load
-        TurbineStatorLoadSlider.OnValueChanged += _ =>
+        TurbineStatorLoadSetButton.OnPressed += _ =>
         {
-            if (!_suppressSliderEvents)
-                TurbineStatorLoadChanged?.Invoke(TurbineStatorLoadSlider.Value);
+            if (float.TryParse(TurbineStatorLoadInput.Text, out var val))
+                TurbineStatorLoadChanged?.Invoke(val);
+        };
+        TurbineStatorLoadInput.OnTextEntered += args =>
+        {
+            if (float.TryParse(args.Text, out var val))
+                TurbineStatorLoadChanged?.Invoke(val);
         };
     }
 
@@ -146,17 +155,17 @@ public sealed partial class TurbineWindow : FancyWindow
         Inputs.Visible = !_lock.IsLocked(_entity);
         LockedMessage.Visible = _lock.IsLocked(_entity);
 
-        _suppressSliderEvents = true;
-        TurbineFlowRateSlider.MaxValue = msg.FlowRateMax;
-        TurbineFlowRateSlider.MinValue = msg.FlowRateMin;
-        TurbineFlowRateSlider.Value = msg.FlowRate;
-
-        TurbineStatorLoadSlider.MaxValue = msg.StatorLoadMax;
-        TurbineStatorLoadSlider.MinValue = msg.StatorLoadMin;
-        TurbineStatorLoadSlider.Value = msg.StatorLoad;
-        _suppressSliderEvents = false;
-
         _speedLevel = ContentHelpers.RoundToNearestLevels(msg.RPM, msg.BestRPM * 1.2, _speedMeter.Length);
+    }
+
+    public void SetFlowRateInput(float value)
+    {
+        TurbineFlowRateInput.Text = Math.Round(value, 2).ToString();
+    }
+
+    public void SetStatorLoadInput(float value)
+    {
+        TurbineStatorLoadInput.Text = Math.Round(value, 2).ToString();
     }
 
     private void UpdateIndicators(TurbineBuiState msg)

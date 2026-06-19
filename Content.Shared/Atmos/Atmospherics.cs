@@ -223,7 +223,7 @@ namespace Content.Shared.Atmos
         /// <summary>
         ///     Total number of gases. Increase this if you want to add more!
         /// </summary>
-        public const int TotalNumberOfGases = 11; // KS14 new gases: zipion, argon
+        public const int TotalNumberOfGases = 12; // KS14 new gases: zipion, argon, evaporin
 
         /// <summary>
         ///     This is the actual length of the gases arrays in mixtures.
@@ -389,5 +389,6 @@ namespace Content.Shared.Atmos
         Frezon = 8,
         Zipion = 9, //KS14
         Argon = 10, //KS14
+        Evaporin = 11, //KS14
     }
 }

@@ -16,6 +16,9 @@
     - Ammonia
     - NitrousOxide
     - Frezon
+    - Zipion # KS14
+    - Argon # KS14
+    - Evaporin # KS14
     #- Helium3 TODO: fusion
     # remove everything except oxygen to maintain oxygen ratio
     overflowGases:
@@ -27,8 +30,11 @@
     - Ammonia
     - NitrousOxide
     - Frezon
-    - Zipion
+    - Zipion # KS14
+    - Argon # KS14
+    - Evaporin # KS14
     #- Helium3 TODO: fusion
+
   - type: AirIntake
   # for intake and filter to work
   - type: AtmosDevice

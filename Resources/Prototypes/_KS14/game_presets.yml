@@ -1,11 +1,11 @@
 - type: gamePreset
   id: Scenario
   alias:
-    - scenario
+  - scenario
   name: scenario-title
   description: scenario-description
   maxPlayers: 30
   showInVote: true
   supportedMaps: ScenarioMapPool
   rules:
-    - Scenario
+  - Scenario

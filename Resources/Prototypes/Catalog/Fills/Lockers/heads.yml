@@ -165,6 +165,7 @@
     - id: RCD
     - id: RPD # Starlight: RPD
     - id: RCDAmmo
+    - id: MachinePowerTransmissionLaserFlatpack # KS14: PTL flatpack
     - id: RubberStampCE
     - id: MetalFoamGrenade
     - id: PlushieLizardJobChiefengineer

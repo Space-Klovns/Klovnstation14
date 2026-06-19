@@ -1,7 +1,8 @@
-using Robust.Shared.Prototypes;
+namespace Content.Server._KS14.GameTicking.Components;
 
+/// <summary>
+///     When added to a station, crew joining will be silent; i.e.,
+///         there will be no latejoin announcement, etc..
+/// </summary>
 [RegisterComponent]
-//do you not want the "welcome aboard" message to be said in chat once you arrive? add this handy comp.
-public sealed partial class KsSilenceWelcomeMessageComponent : Component
-{
-}
+public sealed partial class KsSilenceWelcomeMessageComponent : Component;

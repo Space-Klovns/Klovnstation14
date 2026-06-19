@@ -49,6 +49,7 @@ public sealed partial class MobThresholdsComponent : Component
 
     // KS14
     [DataField]
+    [ViewVariables(VVAccess.ReadOnly)]
     public Dictionary<MobState, FixedPoint2> ThresholdAdjustments = [];
 }
 

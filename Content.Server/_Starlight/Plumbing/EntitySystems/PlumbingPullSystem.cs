@@ -175,7 +175,7 @@ public sealed class PlumbingPullSystem : EntitySystem
                 if (GetOutletSolution(plumbingNode.Owner, outlet) is not { } sourceSoln)
                     continue;
 
-                var available = sourceSoln.Comp.Solution.GetReagentQuantity(new ReagentId(reagentId, null));
+                var available = sourceSoln.Comp.Solution.GetTotalPrototypeQuantity(reagentId);
                 if (available <= 0)
                     continue;
 
@@ -188,15 +188,21 @@ public sealed class PlumbingPullSystem : EntitySystem
                 var toPull = FixedPoint2.Min(available, stillNeeded);
                 toPull = FixedPoint2.Min(toPull, remaining);
 
-                var actualPulled = _solutionSystem.RemoveReagent(sourceSoln, new ReagentId(reagentId, null), toPull);
+                // KS14: Strip DNA/Metadata by pulling by prototype ID and ignoring data tags.
+                // This ensures blood/vomit from different owners can be combined and used in automated recipes.
+                var actualPulled = sourceSoln.Comp.Solution.RemoveReagent(reagentId, toPull, ignoreReagentData: true);
                 if (actualPulled > 0)
                 {
-                    _solutionSystem.TryAddReagent(destination, new ReagentId(reagentId, null), actualPulled, out var actuallyAdded);
+                    _solutionSystem.UpdateChemicals(sourceSoln);
+
+                    // Force the reagent into its generic form (null data) before adding to destination.
+                    var genericReagent = new ReagentId(reagentId, null);
+                    _solutionSystem.TryAddReagent(destination, genericReagent, actualPulled, out var actuallyAdded);
 
                     // Return any excess to source to prevent loss
                     var excess = actualPulled - actuallyAdded;
                     if (excess > 0)
-                        _solutionSystem.TryAddReagent(sourceSoln, new ReagentId(reagentId, null), excess, out _);
+                        _solutionSystem.TryAddReagent(sourceSoln, genericReagent, excess, out _);
 
                     pulled[reagentId] = pulled.GetValueOrDefault(reagentId, FixedPoint2.Zero) + actuallyAdded;
                     stillNeeded -= actuallyAdded;
@@ -273,12 +279,15 @@ public sealed class PlumbingPullSystem : EntitySystem
             var pulled = _solutionSystem.RemoveReagent(sourceSoln, reagent, toPull);
             if (pulled > 0)
             {
-                _solutionSystem.TryAddReagent(destination, reagent, pulled, out var actuallyAdded);
+                // KS14: Strip DNA/Metadata by forcing the reagent into its generic form (null data).
+                // This converts biological material into generic prototypes compatible with automated plumbing.
+                var genericReagent = new ReagentId(reagent.Prototype, null);
+                _solutionSystem.TryAddReagent(destination, genericReagent, pulled, out var actuallyAdded);
 
                 // Return any excess to source to prevent loss
                 var excess = pulled - actuallyAdded;
                 if (excess > 0)
-                    _solutionSystem.TryAddReagent(sourceSoln, reagent, excess, out _);
+                    _solutionSystem.TryAddReagent(sourceSoln, genericReagent, excess, out _);
 
                 totalPulled += actuallyAdded;
                 remaining -= actuallyAdded;

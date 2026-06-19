@@ -51,3 +51,27 @@
           min: 1
         reagent: ChloralHydrate
         amount: -10
+
+- type: reagent
+  id: Wittel
+  name: reagent-name-wittel
+  desc: reagent-desc-wittel
+  flavor: terrible
+  physicalDesc: reagent-physical-desc-bubbling
+  color: "#ffffff"
+
+- type: reagent
+  id: Gravitum
+  name: reagent-name-gravitum
+  desc: reagent-desc-gravitum
+  group: Special
+  flavor: acid
+  physicalDesc: reagent-physical-desc-non-newtonian
+  color: "#ff0000"
+  metabolisms:
+    Bloodstream:
+      effects:
+      - !type:ModifyStatusEffect
+        effectProto: StatusEffectWeightlessnessHumanoid
+        time: 3
+        type: Update

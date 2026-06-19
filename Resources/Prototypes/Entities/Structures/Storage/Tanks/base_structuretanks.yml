@@ -62,6 +62,14 @@
     solutions:
       tank:
         maxVol: 1500
+  - type: PlumbingStorage
+    solutionName: tank
+  - type: UserInterface
+    interfaces:
+      enum.PlumbingStorageUiKey.Key:
+        type: PlumbingStorageBui
+  - type: ActivatableUI
+    key: enum.PlumbingStorageUiKey.Key
   - type: DrainableSolution
     solution: tank
   - type: ReagentTank

@@ -1,4 +1,5 @@
 using Content.Shared.Atmos;
+using Content.Shared.Chemistry.Reaction;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.FixedPoint;
 using Robust.Shared.GameStates;
@@ -58,6 +59,12 @@ public sealed partial class PlumbingReactorComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField]
     public float TargetTemperature = Atmospherics.T20C;
+
+    /// <summary>
+    ///     The current mixing mode for reactions.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public ProtoId<MixingCategoryPrototype>? SelectedMixingMode;
 
     /// <summary>
     ///     Maximum heat transfer rate when powered, in watts.

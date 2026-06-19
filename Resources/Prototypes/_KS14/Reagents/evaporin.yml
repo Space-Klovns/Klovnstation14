@@ -1,0 +1,23 @@
+- type: reagent
+  id: Evaporin
+  name: reagent-name-evaporin
+  desc: reagent-desc-evaporin
+  physicalDesc: reagent-physical-desc-evaporin
+  color: "#e0e0ff"
+  metabolisms:
+    Digestion:
+      effects:
+      - !type:SatiateThirst
+        factor: -8.0 # Extremely dehydrating
+      - !type:EvaporinDehydrationDamage
+        damage:
+          types:
+            Poison: 5.0
+    Bloodstream:
+      effects:
+      - !type:SatiateThirst
+        factor: -8.0
+      - !type:EvaporinDehydrationDamage
+        damage:
+          types:
+            Poison: 5.0

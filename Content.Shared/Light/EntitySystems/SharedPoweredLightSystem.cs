@@ -253,13 +253,15 @@ public abstract class SharedPoweredLightSystem : EntitySystem
         // KS14 start: sparks on light breaking
         if (light.CurrentLit)
         {
+            var coordinates = Transform(uid).Coordinates;
             _sparksSystem.DoSparks(
-                Transform(uid).Coordinates,
+                coordinates,
                 SharedSparksSystem.DefaultSparkPrototype,
                 soundSpecifier: SharedSparksSystem.DefaultSoundSpecifier,
                 maximumSparks: 3,
                 user: user
             );
+            _sparksSystem.ExposeSpark(coordinates, 1600f, 0.6f);
         }
         // KS14 end: sparks on light breaking
 

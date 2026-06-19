@@ -14,7 +14,10 @@ public sealed partial class KsZLevelSystem : EntitySystem
 
     private void OnGetState(Entity<KsZLevelComponent> entity, ref ComponentGetState args)
     {
-        args.State = new KsZLevelComponentState([.. entity.Comp.AssociatedStack.Select(x => GetNetEntity(x.Owner))]);
+        args.State = new KsZLevelComponentState(
+            [.. entity.Comp.AssociatedStack.Select(x => GetNetEntity(x.Owner))],
+            entity.Comp.DepthMultiplier
+        );
     }
 
     // I really don't know why
@@ -22,6 +25,8 @@ public sealed partial class KsZLevelSystem : EntitySystem
     {
         if (args.Current is not KsZLevelComponentState state)
             return;
+
+        entity.Comp.DepthMultiplier = state.DepthMultiplier;
 
         var newStack = new LinkedList<Entity<KsZLevelComponent>>();
         foreach (var netid in state.AssociatedStack)

@@ -1,6 +1,7 @@
+using System.Numerics;
 using Content.Shared.Stacks;
+using Robust.Shared.GameStates;
 using Robust.Shared.Network;
-using Robust.Shared.Physics.Events;
 using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.EntityProcessor.StackProcessor;
@@ -17,12 +18,50 @@ public sealed class KsStackProcessorSystem : EntitySystem
     {
         base.Initialize();
 
+        SubscribeLocalEvent<KsStackProcessorComponent, ComponentGetState>(OnGetState);
+        SubscribeLocalEvent<KsStackProcessorComponent, ComponentHandleState>(OnHandleState);
+
         SubscribeLocalEvent<KsStackProcessorComponent, KsAttemptProcessEntityEvent>(OnAttemptProcess);
         SubscribeLocalEvent<KsStackProcessorComponent, KsStartedProcessingEntityEvent>(OnStartedProcessing);
         SubscribeLocalEvent<KsStackProcessorComponent, KsFinishedProcessingEntityEvent>(OnFinishedProcessing);
         SubscribeLocalEvent<KsStackProcessorComponent, KsEntityRemovedFromActiveProcessorEvent>(OnEntityRemovedFromProcessor);
         SubscribeLocalEvent<KsStackProcessorComponent, KsFinishedProcessingEverythingEvent>(OnFinishedProcessingEverything);
     }
+
+    private void OnGetState(Entity<KsStackProcessorComponent> entity, ref ComponentGetState args)
+    {
+        var newOutputOffsets = new Dictionary<NetEntity, Vector2>();
+        foreach (var (otherUid, otherOffset) in entity.Comp.OutputOffsets)
+        {
+            if (!EntityManager.MetaQuery.TryGetComponent(otherUid, out var otherMetaDataComponent) ||
+                Terminating(otherUid, metaData: otherMetaDataComponent))
+                continue;
+
+            newOutputOffsets[GetNetEntity(otherUid, metadata: otherMetaDataComponent)] = otherOffset;
+        }
+
+        args.State = new KsStackProcessorComponentState { OutputOffsets = newOutputOffsets };
+    }
+
+    private void OnHandleState(Entity<KsStackProcessorComponent> entity, ref ComponentHandleState args)
+    {
+        if (args.Current is not KsStackProcessorComponentState state)
+            return;
+
+        // We need custom handling because the entities sent may not exist on our client (PredictedQueueDel o algo)
+
+        entity.Comp.OutputOffsets.Clear();
+        foreach (var (otherNetId, otherOffset) in state.OutputOffsets)
+        {
+            var otherUid = GetEntity(otherNetId);
+            if (!EntityManager.MetaQuery.TryGetComponent(otherUid, out var otherMetaDataComponent) ||
+                Terminating(otherUid, metaData: otherMetaDataComponent))
+                continue;
+
+            entity.Comp.OutputOffsets[otherUid] = otherOffset;
+        }
+    }
+
 
     private void OnAttemptProcess(Entity<KsStackProcessorComponent> entity, ref KsAttemptProcessEntityEvent args)
     {

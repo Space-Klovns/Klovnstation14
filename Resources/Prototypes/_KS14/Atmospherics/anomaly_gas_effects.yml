@@ -1,0 +1,58 @@
+- type: anomalyGasEffect
+  id: NitrogenEffect
+  gas: Nitrogen
+
+- type: anomalyGasEffect
+  id: PlasmaEffect
+  gas: Plasma
+  stabilityModifier: 0.02
+  pointMultiplier: 1.5
+
+- type: anomalyGasEffect
+  id: TritiumEffect
+  gas: Tritium
+  stabilityModifier: 0.05
+  severityModifier: 0.01
+  pointMultiplier: 2.5
+  pulseFrequencyMultiplier: 1.2
+  pulsePowerMultiplier: 1.5
+
+- type: anomalyGasEffect
+  id: FrezonEffect
+  gas: Frezon
+  stabilityModifier: -0.10
+  severityModifier: -0.07
+  pointMultiplier: 0.8
+  pulseFrequencyMultiplier: 0.8
+  pulsePowerMultiplier: 0.8
+
+- type: anomalyGasEffect
+  id: ArgonEffect
+  gas: Argon
+  stabilityModifier: -0.01
+  decayBuffer: 0.2
+  pointMultiplier: 0.5
+
+- type: anomalyGasEffect
+  id: AmmoniaEffect
+  gas: Ammonia
+  healthModifier: 0.01
+
+- type: anomalyGasEffect
+  id: CarbonDioxideEffect
+  gas: CarbonDioxide
+  healthModifier: -0.02
+  pulseFrequencyMultiplier: 0.5
+
+- type: anomalyGasEffect
+  id: ZipionEffect
+  gas: Zipion
+  stabilityModifier: 0.01
+  pointMultiplier: 1.2
+  pulseFrequencyMultiplier: 1.5
+  pulsePowerMultiplier: 1.2
+
+- type: anomalyGasEffect
+  id: NitrousOxideEffect
+  gas: NitrousOxide
+  pulsePowerMultiplier: 0.5

@@ -6,12 +6,12 @@
   maxPlayers: 20
   stations:
     Tiderfall:
-      stationProto: ScenarioTiderfallStationProto
+      stationProto: KsStationBasicScenario
       components:
-        - type: StationNameSetup
-          mapNameTemplate: 'Tiderfall'
-        - type: StationJobs
-          availableJobs:
-            ScenarioSyndie: [ 5, 5 ]
-            ScenarioNt: [ 15, 15 ]
-        - type: KsSilenceWelcomeMessage
+      - type: StationNameSetup
+        mapNameTemplate: 'Tiderfall'
+      - type: StationJobs
+        availableJobs:
+          ScenarioSyndie: [ 5, 5 ]
+          ScenarioNt: [ 15, 15 ]
+      - type: KsSilenceWelcomeMessage

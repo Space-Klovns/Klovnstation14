@@ -2,10 +2,16 @@
                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                MinSize="400 450" Title="{Loc plumbing-reactor-window-title}">
     <BoxContainer Orientation="Vertical" Margin="5 5 5 5" SeparationOverride="8">
-        <!-- Status toggle -->
-        <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
-            <Label Text="{Loc plumbing-reactor-status}" />
-            <Button Name="ToggleStatusButton" MinWidth="80" />
+        <!-- Status toggle and Mixing Mode -->
+        <BoxContainer Orientation="Horizontal" HorizontalExpand="True" SeparationOverride="10">
+            <BoxContainer Orientation="Horizontal" SeparationOverride="5">
+                <Label Text="{Loc plumbing-reactor-status}" />
+                <Button Name="ToggleStatusButton" MinWidth="80" />
+            </BoxContainer>
+            <BoxContainer Orientation="Horizontal" HorizontalExpand="True" SeparationOverride="5">
+                <Label Text="{Loc plumbing-reactor-mixing-mode}" />
+                <OptionButton Name="MixingModeOption" HorizontalExpand="True" />
+            </BoxContainer>
         </BoxContainer>
 
         <!-- Temperature control -->
@@ -27,13 +33,21 @@
         </BoxContainer>
         <ItemList Name="SuggestionList" SelectMode="Single" MinHeight="80" MaxHeight="120" HorizontalExpand="True" Visible="False" />
 
-        <!-- Targets list (shows current/target) -->
+        <!-- Targets list (shows reaction recipe) -->
         <PanelContainer StyleClasses="LowDivider" />
-        <BoxContainer Orientation="Horizontal">
+        <BoxContainer Orientation="Horizontal" SeparationOverride="5">
             <Label Text="{Loc plumbing-reactor-targets}" StyleClasses="LabelHeading" HorizontalExpand="True" />
             <Button Name="ClearTargetsButton" Text="{Loc plumbing-reactor-clear}" MinWidth="60" />
         </BoxContainer>
         <ItemList Name="TargetsList" SelectMode="Single" VerticalExpand="True" MinHeight="100" />
         <Button Name="RemoveTargetButton" Text="{Loc plumbing-reactor-remove-selected}" Disabled="True" />
+
+        <!-- Internal contents list (Buffer + Output) -->
+        <PanelContainer StyleClasses="LowDivider" />
+        <BoxContainer Orientation="Horizontal" SeparationOverride="5">
+            <Label Text="{Loc plumbing-reactor-internal-contents}" StyleClasses="LabelHeading" HorizontalExpand="True" />
+            <Button Name="PurgeButton" Text="{Loc plumbing-reactor-purge}" MinWidth="60" />
+        </BoxContainer>
+        <ItemList Name="InternalContentsList" SelectMode="None" VerticalExpand="True" MinHeight="120" />
     </BoxContainer>
 </DefaultWindow>

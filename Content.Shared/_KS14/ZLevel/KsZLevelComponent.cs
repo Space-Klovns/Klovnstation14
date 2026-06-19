@@ -14,13 +14,21 @@ public sealed partial class KsZLevelComponent : Component
     // If AssociatedStack isnt empty this will be set automatically in ComponentInit
     [ViewVariables(VVAccess.ReadOnly)]
     public LinkedListNode<Entity<KsZLevelComponent>> Node;
+
+    /// <summary>
+    ///     Purely visual: how 'deep' this z-level appears from the one above it.
+    /// </summary>
+    [DataField]
+    public float DepthMultiplier = 1f;
 }
 
 [Serializable, NetSerializable]
-public sealed class KsZLevelComponentState(NetEntity[] stack) : ComponentState
+public sealed class KsZLevelComponentState(NetEntity[] stack, float depthMultiplier) : ComponentState
 {
     /// <summary>
     ///     LinkedListSerializer won't handle inheritors of LinkedList O ALGO.
     /// </summary>
     public NetEntity[] AssociatedStack = stack;
+
+    public float DepthMultiplier = depthMultiplier;
 }

@@ -23,3 +23,9 @@ entity-effect-guidebook-regenerateorgans-withmax =
             [one] organ
            *[other] organs
     } in the body at once
+
+entity-effect-guidebook-gib =
+    { $chance ->
+        [1] Gibs
+        *[other] gib
+    } the mob.
