@@ -134,7 +134,6 @@ public sealed partial class IngestionSystem : EntitySystem
 
         return ingestionEv.Handled;
     }
-    // KS14 - End
 
     private void OnEdibleInit(Entity<EdibleComponent> entity, ref ComponentInit args)
     {
@@ -373,9 +372,7 @@ public sealed partial class IngestionSystem : EntitySystem
         {
             beforeEv.Transfer = beforeEv.Solution.Volume;
         }
-        // KS14 - End
 
-        // KS14 - Start
         if (args.Chug && beforeEv.Solution != null)
         {
             beforeEv.Transfer = beforeEv.Solution.Volume;
