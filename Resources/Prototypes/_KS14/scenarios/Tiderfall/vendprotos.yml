@@ -8,7 +8,7 @@
   components:
   - type: Sprite
     sprite:  Clothing/Mask/gas.rsi
-    state: "icon"
+    state: icon
   - type: CMVendorBundle
     bundle:
     - ClothingUniformJumpsuitColorGrey
@@ -26,6 +26,7 @@
   components:
   - type: Sprite
     sprite: Clothing/Hands/Gloves/Color/yellow.rsi
+    state: icon
   - type: CMVendorBundle
     bundle:
     - ClothingHandsGlovesColorYellow
@@ -45,6 +46,7 @@
   components:
   - type: Sprite
     sprite: Clothing/Mask/clown.rsi
+    state: icon
   - type: CMVendorBundle
     bundle:
     - ClothingUniformJumpsuitColorRed
@@ -67,10 +69,11 @@
   components:
   - type: Sprite
     sprite: Clothing/Head/Helmets/security.rsi
+    state: icon
   - type: CMVendorBundle
     bundle:
     - ClothingHeadHelmetBasic
-    - ClothingOuterArmorBase
+    - ClothingOuterArmorBasic
     - ClothingBeltSecurityFilled
     - WeaponDisabler
 
@@ -102,6 +105,7 @@
   components:
   - type: Sprite
     sprite: Clothing/Head/Hats/ushanka.rsi
+    state: icon
   - type: CMVendorBundle
     bundle:
     - WeaponPistolMk58
@@ -119,6 +123,7 @@
   components:
   - type: Sprite
     sprite: Clothing/Eyes/Hud/med.rsi
+    state: icon
   - type: CMVendorBundle
     bundle:
     - ClothingEyesHudMedical
@@ -136,6 +141,7 @@
   components:
   - type: Sprite
     sprite: Objects/Weapons/Guns/Shotguns/db_shotgun.rsi
+    state: icon
   - type: CMVendorBundle
     bundle:
     - WeaponShotgunDoubleBarreled
@@ -151,14 +157,14 @@
   components:
   - type: Sprite
     sprite: Clothing/Mask/gassyndicate.rsi
-    state: "icon"
+    state: icon
   - type: CMVendorBundle
     bundle:
     - ClothingUniformJumpsuitOperative
     - ClothingBackpackSyndicate
     - ClothingShoesBootsCombat
     - ClothingMaskGasSyndicate
-    - TiderfallSyndiPDA
+    - TiderfallSyndiePDA
     - ClothingHeadsetAltSyndicate
 
 - type: entity
@@ -169,12 +175,13 @@
   components:
   - type: Sprite
     sprite: Objects/Weapons/Guns/Shotguns/hushpup.rsi
+    state: icon
   - type: CMVendorBundle
     bundle:
     - WeaponShotgunHushpup
     - BoxLethalshot
-    - ClothingHeadHelmetSyndicate
-    - ClothingOuterArmorBase
+    - ClothingHeadHelmetSwatSyndicate
+    - ClothingOuterArmorBasic
     - Machete
     - GrenadeStinger
     - ClothingShoesChameleonNoSlips
@@ -203,18 +210,19 @@
 - type: entity
   id: ScenarioVendorBundleTiderfallSyndieDemolitionist
   name: demolitionist
-  description: Allah is mighty.
+  description: Don't blow yourself up.
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
     sprite: Objects/Specific/Chapel/quran.rsi
+    state: icon
   - type: CMVendorBundle
     bundle:
     - WeaponPistolViper
     - MagazinePistol
-    - GrenadeBlast
-    - GrenadeBlast
-    - GrenadeBlast
+    - ExGrenade
+    - ExGrenade
+    - ExGrenade
     - BibleQuran
 
 - type: entity
@@ -225,10 +233,11 @@
   components:
   - type: Sprite
     sprite: Objects/Weapons/Guns/Snipers/heavy_sniper.rsi
+    state: base
   - type: CMVendorBundle
     bundle:
     - WeaponSniperHristov
-    - BaseMagazineBoxAntiMateriel
+    - MagazineBoxAntiMateriel
     - SmokeGrenade
 
 - type: entity
@@ -239,6 +248,7 @@
   components:
   - type: Sprite
     sprite: Clothing/Eyes/Hud/med.rsi
+    state: icon
   - type: CMVendorBundle
     bundle:
     - ClothingEyesHudMedical

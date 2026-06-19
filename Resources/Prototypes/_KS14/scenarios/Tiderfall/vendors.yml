@@ -8,12 +8,11 @@
   - type: CMAutomatedVendor
     sections:
     - name: Base Gear
-      choices: { CMClass: 1 }
       entries:
       - id: ScenarioVendorBundleTiderfallNtBase
         recommended: true
     - name: Loadout
-      choices: { CMClass: 1 }
+      #choices: { CMClass: 1 }
       entries:
       - id: ScenarioVendorBundleTiderfallNtTider
       - id: ScenarioVendorBundleTiderfallNtClown
@@ -33,12 +32,11 @@
   - type: CMAutomatedVendor
     sections:
     - name: Base Gear
-      choices: { CMClass: 1 }
       entries:
-      - id: ScenarioVendorBundleTiderfallSyndieMelee
+      - id: ScenarioVendorBundleTiderfallSyndieBase
         recommended: true
     - name: Loadout
-      choices: { CMClass: 1 }
+      #choices: { CMClass: 1 }
       entries:
       - id: ScenarioVendorBundleTiderfallSyndieSoldier
       - id: ScenarioVendorBundleTiderfallSyndieInfiltrator
