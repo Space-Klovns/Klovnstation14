@@ -1,7 +1,9 @@
+# Nanotrasen
+
 - type: entity
-  id: ScenarioVendorBundleTiderfallTiderBase
-  name: assistant loadout
-  description: All you need to terrorise your local maintenance tunnel.
+  id: ScenarioVendorBundleTiderfallNtBase
+  name: base clothes
+  description: They kept the gray man down long enough.
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
@@ -13,4 +15,272 @@
     - ClothingBackpack
     - ClothingShoesColorBlack
     - ClothingMaskGas
-    - ChameleonPDA
+    - TiderfallNtPDA
+    - ClothingHeadsetGrey
+
+- type: entity
+  id: ScenarioVendorBundleTiderfallNtTider
+  name: greytider
+  description: All you need to terrorise your local maintenance tunnel.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Clothing/Hands/Gloves/Color/yellow.rsi
+  - type: CMVendorBundle
+    bundle:
+    - ClothingHandsGlovesColorYellow
+    - SpearPlasma
+    - Bola
+    - Bola
+    - ClothingBeltQuiverTiderfall
+    - BowImprovised
+    - FireBomb
+    - FireBomb
+
+- type: entity
+  id: ScenarioVendorBundleTiderfallNtClown
+  name: klovn
+  description: A different kind of clown.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Clothing/Mask/clown.rsi
+  - type: CMVendorBundle
+    bundle:
+    - ClothingUniformJumpsuitColorRed
+    - LauncherCreamPie
+    - FoodPieBananaCream
+    - FoodPieBananaCream
+    - FoodPieBananaCream
+    - FoodPieBananaCream
+    - FoodPieBananaCream
+    - ClothingMaskClown
+    - TrashBananaPeel
+    - TrashBananaPeel
+    - ClothingShoesChameleonNoSlips
+
+- type: entity
+  id: ScenarioVendorBundleTiderfallNtSecurity
+  name: greysec
+  description: Kindly "provided" by the dead security detachment.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Clothing/Head/Helmets/security.rsi
+  - type: CMVendorBundle
+    bundle:
+    - ClothingHeadHelmetBasic
+    - ClothingOuterArmorBase
+    - ClothingBeltSecurityFilled
+    - WeaponDisabler
+
+- type: entity
+  id: ScenarioVendorBundleTiderfallNtMiner
+  name: miner
+  description: This is what you were supposed to be doing after you arrived. Oh well.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Tools/handdrilldiamond.rsi
+    state: handdrill
+  - type: CMVendorBundle
+    bundle:
+    - ClothingOuterExplorerSuit
+    - SeismicCharge
+    - SeismicCharge
+    - MiningDrillDiamond
+    - WeaponProtoKineticAccelerator
+    - PKAUpgradeDamage
+    - PKAUpgradeRange
+    - PKAUpgradeFireRate
+
+- type: entity
+  id: ScenarioVendorBundleTiderfallNtConscript
+  name: conscript
+  description: Our elephant.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Clothing/Head/Hats/ushanka.rsi
+  - type: CMVendorBundle
+    bundle:
+    - WeaponPistolMk58
+    - MagazinePistol
+    - MagazinePistol
+    - GrenadeStinger
+    - Machete
+    - ClothingHeadHatUshanka
+
+- type: entity
+  id: ScenarioVendorBundleTiderfallNtMedic
+  name: greymed
+  description: Stitch your fellow man together.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Clothing/Eyes/Hud/med.rsi
+  - type: CMVendorBundle
+    bundle:
+    - ClothingEyesHudMedical
+    - ClothingBeltMedicalFilled
+    - JetInjector
+    - DefibrillatorCompact
+    - PowerCellHigh
+    - CombatKnife
+
+- type: entity
+  id: ScenarioVendorBundleTiderfallNtBartender
+  name: bartender
+  description: We're serving double-aught proof.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Shotguns/db_shotgun.rsi
+  - type: CMVendorBundle
+    bundle:
+    - WeaponShotgunDoubleBarreled
+    - BoxLethalshot
+
+# Syndicate
+
+- type: entity
+  id: ScenarioVendorBundleTiderfallSyndieBase
+  name: base clothes
+  description: Welcome aboard listening post Mike-458, operative.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Clothing/Mask/gassyndicate.rsi
+    state: "icon"
+  - type: CMVendorBundle
+    bundle:
+    - ClothingUniformJumpsuitOperative
+    - ClothingBackpackSyndicate
+    - ClothingShoesBootsCombat
+    - ClothingMaskGasSyndicate
+    - TiderfallSyndiPDA
+    - ClothingHeadsetAltSyndicate
+
+- type: entity
+  id: ScenarioVendorBundleTiderfallSyndieSoldier
+  name: combat operative
+  description: Third-rate gear. Will have to do.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Shotguns/hushpup.rsi
+  - type: CMVendorBundle
+    bundle:
+    - WeaponShotgunHushpup
+    - BoxLethalshot
+    - ClothingHeadHelmetSyndicate
+    - ClothingOuterArmorBase
+    - Machete
+    - GrenadeStinger
+    - ClothingShoesChameleonNoSlips
+
+- type: entity
+  id: ScenarioVendorBundleTiderfallSyndieInfiltrator
+  name: infiltrator
+  description: Pretend to be with them. Until you aren't.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Pistols/cobra.rsi
+    layers:
+    - state: base
+      map: ["enum.GunVisualLayers.Base"]
+    - state: mag-0
+      map: ["enum.GunVisualLayers.Mag"]
+  - type: CMVendorBundle
+    bundle:
+    - ClothingBackpackChameleonFill
+    - WeaponPistolCobra
+    - MagazinePistolCaselessRifle
+    - MagazinePistolCaselessRifle
+    - PinpointerScenarioNanotrasen
+
+- type: entity
+  id: ScenarioVendorBundleTiderfallSyndieDemolitionist
+  name: demolitionist
+  description: Allah is mighty.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Specific/Chapel/quran.rsi
+  - type: CMVendorBundle
+    bundle:
+    - WeaponPistolViper
+    - MagazinePistol
+    - GrenadeBlast
+    - GrenadeBlast
+    - GrenadeBlast
+    - BibleQuran
+
+- type: entity
+  id: ScenarioVendorBundleTiderfallSyndieSniper
+  name: sniper
+  description: 360 swagscope these fools.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Snipers/heavy_sniper.rsi
+  - type: CMVendorBundle
+    bundle:
+    - WeaponSniperHristov
+    - BaseMagazineBoxAntiMateriel
+    - SmokeGrenade
+
+- type: entity
+  id: ScenarioVendorBundleTiderfallSyndieMedic
+  name: medic
+  description: CLEAR!
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Clothing/Eyes/Hud/med.rsi
+  - type: CMVendorBundle
+    bundle:
+    - ClothingEyesHudMedical
+    - ClothingBeltMedicalFilled
+    - MedkitCombatFilled
+    - JetInjector
+    - DefibrillatorSyndicate
+    - PowerCellHigh
+    - Stimpack
+
+- type: entity
+  id: ScenarioVendorBundleTiderfallSyndieMelee
+  name: liquidator
+  description: Commander Roland smiles upon you.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: /Textures/Objects/Weapons/Melee/e_sword.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - EnergySword
+    - ClothingShoesChameleonNoSlips
+    - ClothingOuterArmorRiot
+    - ClothingHeadHelmetRiot
+    - StimpackMini
+
+- type: entity
+  id: ScenarioVendorBundleTiderfallSyndieEngineer
+  name: combat technician
+  description: Area lockdown initiated.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Tools/Toolboxes/toolbox_syn.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - ToolboxSyndicateTurret
+    - ClothingBeltUtilityEngineering
+    - WelderIndustrial
+    - SheetSteel
+    - SheetRGlass
+    - MaterialWoodPlank
+    - ClothingHeadHatHardhatRed

@@ -7,9 +7,44 @@
     sprite: _Crescent/Structures/syndicatearmory.rsi
   - type: CMAutomatedVendor
     sections:
-    - name: Class Kit
+    - name: Base Gear
       choices: { CMClass: 1 }
       entries:
-      - id: ScenarioVendorBundleTiderfallTiderBase
-        name: base wearables
+      - id: ScenarioVendorBundleTiderfallNtBase
         recommended: true
+    - name: Loadout
+      choices: { CMClass: 1 }
+      entries:
+      - id: ScenarioVendorBundleTiderfallNtTider
+      - id: ScenarioVendorBundleTiderfallNtClown
+      - id: ScenarioVendorBundleTiderfallNtSecurity
+      - id: ScenarioVendorBundleTiderfallNtMiner
+      - id: ScenarioVendorBundleTiderfallNtConscript
+      - id: ScenarioVendorBundleTiderfallNtMedic
+      - id: ScenarioVendorBundleTiderfallNtBartender
+
+- type: entity
+  parent: ColMarTechScenarioBase
+  id: ColMarTechScenarioTiderfallSyndie
+  suffix: Tiderfall, Syndicate
+  components:
+  - type: Sprite
+    sprite: _Crescent/Structures/syndicatearmory.rsi
+  - type: CMAutomatedVendor
+    sections:
+    - name: Base Gear
+      choices: { CMClass: 1 }
+      entries:
+      - id: ScenarioVendorBundleTiderfallSyndieMelee
+        recommended: true
+    - name: Loadout
+      choices: { CMClass: 1 }
+      entries:
+      - id: ScenarioVendorBundleTiderfallSyndieSoldier
+      - id: ScenarioVendorBundleTiderfallSyndieInfiltrator
+      - id: ScenarioVendorBundleTiderfallSyndieDemolitionist
+      - id: ScenarioVendorBundleTiderfallSyndieSniper
+      - id: ScenarioVendorBundleTiderfallSyndieMedic
+      - id: ScenarioVendorBundleTiderfallSyndieMelee
+      - id: ScenarioVendorBundleTiderfallSyndieEngineer
+
