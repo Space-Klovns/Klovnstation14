@@ -1,38 +1,84 @@
 
 - type: entity
-  name: supply pod
-  description: ACKK
   id: SupplyPod
+  name: supply pod
+  description: Sent from orbit, down to you.
+  abstract: true
   components:
   - type: Transform
     noRot: true
   - type: Sprite
     sprite: _KS14/Objects/SupplyPod/supplypods_64x64.rsi
-    drawdepth: LargeObjects
+    drawdepth: Effects
+    offset: 0,0.5
     layers:
     - state: pod
     - state: pod_door
     - state: default
 
+  - type: SupplyPod
+    transitDuration: 1s
+    fallDuration: 1s
+    fallSoundDelay: 0s
+    fallSound: /Audio/_KS14/Weapons/mortar_long_whistle.ogg
+    impactSound: /Audio/Effects/metal_slam2.ogg
 
 - type: entity
-  name: supply pod
-  description: ACKK
-  suffix: open
-  id: SupplyPodOpen
+  id: BaseSupplyPodExplosive
+  abstract: true
   components:
-  - type: Transform
-    noRot: true
+  - type: TriggerOnSupplyPodLanded
+  - type: ExplosionOnTrigger
+    explosionType: Minibomb
+    maxTileIntensity: 600
+    totalIntensity: 600
+    intensitySlope: 35
+    maxTileBreak: 1
+  - type: DeleteOnTrigger
+
+## CRUISE MISSILES: INERT
+
+# nt
+- type: entity
+  parent: SupplyPod
+  id: SupplyPodMissileNtInert
+  name: nanotrasen orbital cruise missile
+  description: Launched from a silo in fuck-off nowhere. This came a long way to ruin the nights of Nanotrasen's enemies.
+  suffix: Inert
+  components:
   - type: Sprite
-    sprite: _KS14/Objects/SupplyPod/supplypods_64x64.rsi
-    drawdepth: LargeObjects
     layers:
-    - state: pod
+    - state: missile
   - type: SupplyPod
-  - type: SupplyPodDoorDrawer
-    doorData:
-      sprite: /Textures/_KS14/Objects/SupplyPod/supplypods_64x64.rsi
-      state: pod_door
-    decalData:
-      sprite: /Textures/_KS14/Objects/SupplyPod/supplypods_64x64.rsi
-      state: default
+    fallDuration: 1s
+    fallSoundDelay: 0s
+    fallSound:
+      path: /Audio/_KS14/Weapons/mortar_long_whistle.ogg
+      params:
+        pitch: 1
+
+# syndie
+- type: entity
+  parent: SupplyPodMissileNtInert
+  id: SupplyPodMissileSyndicateInert
+  name: syndicate orbital cruise missile
+  description: Launched from a silo in fuck-off nowhere. This came a long way to ruin your day.
+  suffix: Inert
+  components:
+  - type: Sprite
+    layers:
+    - state: smissile
+
+## CRUISE MISSILES: ARMED
+
+# nt
+- type: entity
+  parent: [ SupplyPodMissileNtInert, BaseSupplyPodExplosive ]
+  id: SupplyPodMissileNtExplosive
+  suffix: Armed
+
+# syndie
+- type: entity
+  parent: [ SupplyPodMissileSyndicateInert, BaseSupplyPodExplosive ]
+  id: SupplyPodMissileSyndicateExplosive
+  suffix: Armed
