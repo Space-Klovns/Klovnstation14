@@ -128,8 +128,9 @@
           rotationsEnabled: false
           volume: 1
     - type: GasPortable
-    - type: MaxPressureVisuals
-      integrityMask: mask-grey
+    # KS14: Removed MaxPressureVisuals
+    # - type: MaxPressureVisuals
+    #   integrityMask: mask-grey
     - type: GasCanister
       maxIntegrity: 4 # KS14: 15->3
       integrity: 4
