@@ -432,7 +432,7 @@ public sealed partial class IngestionSystem : EntitySystem
     {
         var forceFeed = user != target;
 
-        var doAfterArgs = new DoAfterArgs(EntityManager, user, delay, new EatingDoAfterEvent { Chug = chug }, target, food /* KS14 Addition */)
+        var doAfterArgs = new DoAfterArgs(EntityManager, user, delay, new EatingDoAfterEvent { Chug = chug } /* KS14 Addition */, target, food)
         {
             BreakOnHandChange = false,
             BreakOnMove = forceFeed,
