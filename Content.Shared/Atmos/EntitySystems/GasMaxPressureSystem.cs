@@ -71,9 +71,13 @@ public abstract class GasMaxPressureSystem<T> : EntitySystem where T : IGasMaxPr
     /// Handler for when this atmos device loses integrity due to overpressure
     /// </summary>
     /// <param name="entity">Gas holding atmos device.</param>
+    [MustCallBase] // KS14
     protected virtual void IntegrityLost(Entity<T> entity)
     {
-
+        // KS14 Start
+        var ksEv = new _KS14.Atmos.KsGasMaxPressureAfterIntegrityLostEvent(entity.Comp);
+        RaiseLocalEvent(entity, ref ksEv);
+        // KS14 End
     }
 
     /// <summary>
@@ -96,8 +100,17 @@ public abstract class GasMaxPressureSystem<T> : EntitySystem where T : IGasMaxPr
         var pressure = entity.Comp.Air.Pressure;
 
         // Better mixes mean bigger and faster explosions!
-        if (pressure > entity.Comp.Overpressure * (entity.Comp.Integrity + 1))
+        //if (pressure > entity.Comp.Overpressure * (entity.Comp.Integrity + 1))
+        if (entity.Comp.Integrity <= 0f) // KS14: changed if statement to use purely integrity
         {
+            // KS14 Start
+            var ksEv = new _KS14.Atmos.KsGasMaxPressureAttemptLoseIntegrityEvent(false, entity.Comp);
+            RaiseLocalEvent(entity, ref ksEv);
+
+            if (ksEv.Cancelled)
+                return false;
+            // KS14 End
+
             Atmos.MergeContainingMixture(entity.Owner, entity.Comp.Air, excite: true);
             Audio.PlayPvs(entity.Comp.RuptureSound, Transform(entity).Coordinates, AudioParams.Default.WithVariation(0.125f));
 
@@ -117,10 +130,19 @@ public abstract class GasMaxPressureSystem<T> : EntitySystem where T : IGasMaxPr
         // Device begins to fail.
         if (pressure > entity.Comp.Overpressure)
         {
-            IntegrityLost(entity);
-            entity.Comp.Integrity -= dt;
-            Appearance.SetData(entity.Owner, GasIntegrity.Integrity, entity.Comp.Integrity);
-            Appearance.SetData(entity.Owner, GasIntegrity.MaxIntegrity, entity.Comp.MaxIntegrity);
+            // KS14 Start
+            var ksEv = new _KS14.Atmos.KsGasMaxPressureAttemptLoseIntegrityEvent(false, entity.Comp);
+            RaiseLocalEvent(entity, ref ksEv);
+            // KS14 End
+
+            // KS14: Wrapped in !ksEv.Cancelled
+            if (!ksEv.Cancelled)
+            {
+                IntegrityLost(entity);
+                entity.Comp.Integrity -= dt;
+                Appearance.SetData(entity.Owner, GasIntegrity.Integrity, entity.Comp.Integrity);
+                Appearance.SetData(entity.Owner, GasIntegrity.MaxIntegrity, entity.Comp.MaxIntegrity);
+            }
         }
         else if (entity.Comp.Integrity < entity.Comp.MaxIntegrity)
         {

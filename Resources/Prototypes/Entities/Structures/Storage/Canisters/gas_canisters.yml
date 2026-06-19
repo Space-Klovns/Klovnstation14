@@ -131,8 +131,8 @@
     - type: MaxPressureVisuals
       integrityMask: mask-grey
     - type: GasCanister
-      maxIntegrity: 15 # 5 times stronger than a gas tank
-      integrity: 15
+      maxIntegrity: 4 # KS14: 15->3
+      integrity: 4
       maxReleasePressure: 1013.25
       safetyPressure: 10132.5 # High enough that liquid tanks don't burst immediately, with an extra 33% wiggle room to work with
       overpressure: 20265 # Purposefully high because cans react really fucking fast, may need to redo this value if reactions change!
@@ -157,12 +157,31 @@
       - GasCanisters
     - type: Paintable
       group: Canisters
+    # KS14 Start
     - type: GasCanisterOverlay # KS14
     - type: EmissiveLayers # KS14
       glowRadius: 1
       intensity: 0.35
       layers:
       - pressureLight
+
+    - type: KsGasMaxPressureInterval
+      interval: 3s
+      popupType: MediumCaution
+      popupLocs:
+        0.75: ks-canister-maxpressure-popup-4
+        1.2: ks-canister-maxpressure-popup-3
+        3: ks-canister-maxpressure-popup-2
+        5: ks-canister-maxpressure-popup-1
+    - type: KsGasMaxPressureSound
+      finalOverpressureThreshold: 1.2
+      overpressureSound:
+        collection: KsCanisterHiss
+      finalOverpressureSound:
+        collection: KsCanisterThud
+        params:
+          volume: 5
+    # KS14 End
 
 - type: entity
   parent: GasCanister
