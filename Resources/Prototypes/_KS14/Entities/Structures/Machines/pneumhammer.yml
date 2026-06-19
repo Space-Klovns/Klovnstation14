@@ -34,9 +34,10 @@
   - type: GasPiston
     inletName: pipe
     fixtureId: piston
-    pressureRange: 10,18000
+    pressureRange: 10,96000
     removedGasRatio: 1 # remove all gas
-    throwForce: 20
+    maxThrowForce: 300
+    capped: false # ERM
     minimumDamage:
       types:
         Blunt: 5
@@ -87,3 +88,27 @@
         pipeDirection: North
         volume: 20
   - type: AtmosDevice
+
+  # Construction
+  - type: ContainerContainer
+    containers:
+      machine_board: !type:Container
+      machine_parts: !type:Container
+  - type: Machine
+    board: PneumaticHammerCircuitboard
+
+- type: entity
+  parent: BaseMachineCircuitboard
+  id: PneumaticHammerCircuitboard
+  name: pneumatic hammer machine board
+  description: An electronics board used in the making of the pneumatic hammer.
+  components:
+  - type: Sprite
+    state: engineering
+  - type: MachineBoard
+    prototype: PneumaticHammer
+    stackRequirements:
+      Steel: 4
+      Manipulator: 3
+  - type: StaticPrice
+    price: 60

@@ -71,11 +71,18 @@ public sealed partial class GasPistonComponent : Component, ISerializationHooks
     /// </summary>
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
-    public float ThrowForce;
+    public float MaxThrowForce;
 
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
     public KsSpriteFlickData? FlickData = null;
+
+    /// <summary>
+    ///     Should the power actually be capped?
+    /// </summary>
+    [DataField]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public bool Capped = true;
 
     void ISerializationHooks.AfterDeserialization()
     {

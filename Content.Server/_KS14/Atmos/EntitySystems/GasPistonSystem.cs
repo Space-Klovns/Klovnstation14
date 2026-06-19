@@ -13,6 +13,7 @@ using Content.Server.Atmos.EntitySystems;
 using Robust.Shared.Physics;
 using Content.Shared._KS14.Atmos.EntitySystems;
 using Content.Shared.Throwing;
+using Content.Server.Administration.Logs;
 
 namespace Content.Server._KS14.Atmos.EntitySystems;
 
@@ -20,6 +21,7 @@ namespace Content.Server._KS14.Atmos.EntitySystems;
 
 public sealed class GasPistonSystem : SharedGasPistonSystem
 {
+    [Dependency] private readonly IAdminLogManager _adminLogManager = default!;
     [Dependency] private readonly NodeContainerSystem _nodeContainerSystem = default!;
     [Dependency] private readonly AppearanceSystem _appearanceSystem = default!;
     [Dependency] private readonly KsGenericSpriteFlickSystem _spriteFlickSystem = default!;
@@ -84,17 +86,22 @@ public sealed class GasPistonSystem : SharedGasPistonSystem
         var minPressure = entity.Comp.PressureRange.X;
         var maxPressure = entity.Comp.PressureRange.Y;
 
-        // fraction to max pressure from 0-1
+        // fraction to max pressure from 0-1 if capped
         var fraction = (pressure - minPressure) / (maxPressure - minPressure);
+        if (entity.Comp.Capped &&
+            fraction > 1f)
+            fraction = 1f;
 
         var damage = (entity.Comp.MaximumDamage - entity.Comp.MinimumDamage) * (FixedPoint2)fraction + entity.Comp.MinimumDamage;
         var transformComponent = Transform(entity);
-        var throwVector = transformComponent.LocalRotation.ToVec();
+
+        var throwVector = transformComponent.LocalRotation.ToWorldVec();
+        var throwForce = entity.Comp.MaxThrowForce * fraction;
 
         foreach (var collidingUid in entity.Comp.CollidingUids)
         {
             _damageableSystem.TryChangeDamage(collidingUid, damage, origin: entity.Owner);
-            _throwingSystem.TryThrow(collidingUid, throwVector, baseThrowSpeed: entity.Comp.ThrowForce, user: entity.Owner, predicted: false);
+            _throwingSystem.TryThrow(collidingUid, throwVector, baseThrowSpeed: throwForce, user: entity.Owner, predicted: false);
         }
 
         _audioSystem.PlayPvs(entity.Comp.Sound, entity.Owner);
