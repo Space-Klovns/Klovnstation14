@@ -135,7 +135,7 @@
       maxIntegrity: 4 # KS14: 15->3
       integrity: 4
       maxReleasePressure: 1013.25
-      safetyPressure: 10132.5 # High enough that liquid tanks don't burst immediately, with an extra 33% wiggle room to work with
+      safetyPressure: 220220220220220220 # KS14: Made this a super high value so its kinda unusable; # High enough that liquid tanks don't burst immediately, with an extra 33% wiggle room to work with
       overpressure: 20265 # Purposefully high because cans react really fucking fast, may need to redo this value if reactions change!
       gasTankSlot:
         name: comp-gas-canister-slot-name-gas-tank
