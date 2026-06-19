@@ -32,3 +32,8 @@
   license: "CC0-1.0"
   copyright: "Created by `slackwareslacker` on freesound.org, edited and converted to .ogg for Klovnstation 14"
   source: "https://freesound.org/people/slackwareslacker/sounds/813052/"
+
+- files: ["piston.ogg"]
+  license: "CC0-1.0"
+  copyright: "Created by `typeoo` on freesound.org, edited and converted to .ogg for Klovnstation 14"
+  source: "https://freesound.org/people/typeoo/sounds/521495/"

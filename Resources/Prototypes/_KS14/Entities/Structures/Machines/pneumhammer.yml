@@ -1,0 +1,88 @@
+- type: entity
+  parent: [ BaseMachine, ConstructibleMachine ]
+  id: PneumaticHammer
+  name: pneumatic hammer
+  description: Expensive equipment used to automagically teleports ores from ore wells; tapped ore vents. Well, if you press the power button first that is.
+  components:
+  # Phys
+  - type: Transform
+    noRot: false
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.45,-0.45,0.45,0.45"
+        density: 190
+        mask:
+        - MachineMask
+        layer:
+        - MachineLayer
+      piston:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.25,-1.45,0.25,-0.5"
+        density: 190
+        mask:
+        - MachineMask
+        layer:
+        - MachineLayer
+        hard: false
+
+  # Hammer
+  - type: WiresPanel # gaspiston doesn't let you open panel when its extended, and you need the panel open to decon this
+  - type: GasPiston
+    inletName: pipe
+    fixtureId: piston
+    pressureRange: 10,18000
+    removedGasRatio: 1 # remove all gas
+    minimumDamage:
+      types:
+        Blunt: 5
+    maximumDamage:
+      types:
+        Blunt: 200
+    sound: /Audio/_KS14/Effects/piston.ogg
+    flickData:
+      layerKey: piston
+      flickState: extending
+      finishState: extended
+
+  # Sprite
+  - type: Sprite
+    sprite: _KS14/Structures/Machines/pneumhammer.rsi
+    layers:
+    - state: pipeUnaryConnectors
+      sprite: Structures/Piping/Atmospherics/pipe.rsi
+      map: [ "enum.PipeVisualLayers.Pipe" ]
+      rotation: 180
+    - state: base
+      offset: 0,-0.5
+      map: [ "piston" ]
+  - type: AnimationPlayer
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.GasPistonVisuals.Extended:
+        piston:
+          False: { state: base }
+
+  # Atmos
+  - type: AtmosPipeLayers
+    spriteLayersRsiPaths:
+      enum.PipeVisualLayers.Pipe:
+        Primary: Structures/Piping/Atmospherics/pipe.rsi
+        Secondary: Structures/Piping/Atmospherics/pipe_alt1.rsi
+        Tertiary: Structures/Piping/Atmospherics/pipe_alt2.rsi
+  - type: Rotatable
+  - type: PipeColorVisuals
+  - type: AtmosPipeColor
+  - type: PipeRestrictOverlap
+  - type: NodeContainer
+    nodes:
+      pipe:
+        !type:PipeNode
+        nodeGroupID: Pipe
+        pipeDirection: North
+        volume: 20
+  - type: AtmosDevice
