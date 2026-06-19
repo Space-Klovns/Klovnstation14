@@ -166,7 +166,7 @@
       - pressureLight
 
     - type: KsGasMaxPressureInterval
-      interval: 3s
+      interval: 2.20s
       popupType: MediumCaution
       popupLocs:
         0.75: ks-canister-maxpressure-popup-4
@@ -174,13 +174,16 @@
         3: ks-canister-maxpressure-popup-2
         5: ks-canister-maxpressure-popup-1
     - type: KsGasMaxPressureSound
-      finalOverpressureThreshold: 1.2
+      finalOverpressureThreshold: 0.75
       overpressureSound:
         collection: KsCanisterHiss
+        params:
+          variation: 0.06
       finalOverpressureSound:
         collection: KsCanisterThud
         params:
-          volume: 5
+          volume: 12 # GRIM
+          pitch: 0.85
     # KS14 End
 
 - type: entity
