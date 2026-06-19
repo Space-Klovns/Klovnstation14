@@ -12,11 +12,12 @@
       - id: ScenarioVendorBundleTiderfallNtBase
         recommended: true
     - name: Loadout
-      #choices: { CMClass: 1 }
+      choices: { CMClass: 1 }
       entries:
+      - id: ScenarioVendorBundleTiderfallNtSecurity
+        recommended: true
       - id: ScenarioVendorBundleTiderfallNtTider
       - id: ScenarioVendorBundleTiderfallNtClown
-      - id: ScenarioVendorBundleTiderfallNtSecurity
       - id: ScenarioVendorBundleTiderfallNtMiner
       - id: ScenarioVendorBundleTiderfallNtConscript
       - id: ScenarioVendorBundleTiderfallNtMedic
@@ -36,9 +37,10 @@
       - id: ScenarioVendorBundleTiderfallSyndieBase
         recommended: true
     - name: Loadout
-      #choices: { CMClass: 1 }
+      choices: { CMClass: 1 }
       entries:
       - id: ScenarioVendorBundleTiderfallSyndieSoldier
+        recommended: true
       - id: ScenarioVendorBundleTiderfallSyndieInfiltrator
       - id: ScenarioVendorBundleTiderfallSyndieDemolitionist
       - id: ScenarioVendorBundleTiderfallSyndieSniper
