@@ -278,10 +278,8 @@ public sealed partial class IngestionSystem : EntitySystem
         if (!CanConsume(args.User, entity, args.Ingested, out var solution, out var time))
             return;
 
-        // KS14 - Start
-        if (!_doAfter.TryStartDoAfter(GetEdibleDoAfterArgs(args.User, entity, food, time ?? TimeSpan.Zero, args.Chug)))
+        if (!_doAfter.TryStartDoAfter(GetEdibleDoAfterArgs(args.User, entity, food, time ?? TimeSpan.Zero, args.Chug /* KS14 Addition */)))
             return;
-        // KS14 - End
 
         args.Handled = true;
         var foodSolution = solution.Value.Comp.Solution;
