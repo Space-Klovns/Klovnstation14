@@ -121,8 +121,7 @@ public sealed partial class IngestionSystem : EntitySystem
     /// <param name="ingested">The entity that is trying to be ingested.</param>
     /// <param name="ingest"> When set to true, it tries to ingest. When false, it only checks if we can.</param>
     /// <returns>Returns true if we can ingest the item.</returns>
-    // KS14 - Start
-    private bool AttemptIngest(EntityUid user, EntityUid target, EntityUid ingested, bool ingest, bool chug = false)
+    private bool AttemptIngest(EntityUid user, EntityUid target, EntityUid ingested, bool ingest, bool chug = false /* KS14 Addition */)
     {
         var eatEv = new IngestibleEvent();
         RaiseLocalEvent(ingested, ref eatEv);
@@ -130,7 +129,7 @@ public sealed partial class IngestionSystem : EntitySystem
         if (eatEv.Cancelled)
             return false;
 
-        var ingestionEv = new AttemptIngestEvent(user, ingested, ingest, Chug: chug);
+        var ingestionEv = new AttemptIngestEvent(user, ingested, ingest, Chug: chug /* KS14 Addition */);
         RaiseLocalEvent(target, ref ingestionEv);
 
         return ingestionEv.Handled;
@@ -376,6 +375,13 @@ public sealed partial class IngestionSystem : EntitySystem
         }
         // KS14 - End
 
+        // KS14 - Start
+        if (args.Chug && beforeEv.Solution != null)
+        {
+            beforeEv.Transfer = beforeEv.Solution.Volume;
+        }
+        // KS14 - End
+
         var transfer = FixedPoint2.Clamp(beforeEv.Transfer, beforeEv.Min, beforeEv.Max);
 
         var split = _solutionContainer.SplitSolution(solution.Value, transfer);
@@ -389,9 +395,10 @@ public sealed partial class IngestionSystem : EntitySystem
         _reaction.DoEntityReaction(entity, split, ReactionMethod.Ingestion);
 
         // Everything is good to go item has been successfuly eaten
-        // KS14 - Start
-        var afterEv = new IngestedEvent(args.User, entity, split, forceFed, beforeEv.Transfer >= beforeEv.Max) { Chug = args.Chug };
-        // KS14 - End
+        var afterEv = new IngestedEvent(args.User, entity, split, forceFed, beforeEv.Transfer >= beforeEv.Max)
+        {
+            Chug = args.Chug // KS14: added chug
+        };
         RaiseLocalEvent(food, ref afterEv);
 
         _stomach.TryTransferSolution(stomachToUse.Value.Owner, split, stomachToUse);
@@ -431,13 +438,11 @@ public sealed partial class IngestionSystem : EntitySystem
     /// <param name="food">Food entity we're trying to eat.</param>
     /// <param name="delay">The time delay for our DoAfter</param>
     /// <returns>Returns true if it was able to successfully start the DoAfter</returns>
-    // KS14 - Start
-    private DoAfterArgs GetEdibleDoAfterArgs(EntityUid user, EntityUid target, EntityUid food, TimeSpan delay = default, bool chug = false)
+    private DoAfterArgs GetEdibleDoAfterArgs(EntityUid user, EntityUid target, EntityUid food, TimeSpan delay = default, bool chug = false /* KS14 Addition */)
     {
         var forceFeed = user != target;
 
-        var doAfterArgs = new DoAfterArgs(EntityManager, user, delay, new EatingDoAfterEvent { Chug = chug }, target, food)
-    // KS14 - End
+        var doAfterArgs = new DoAfterArgs(EntityManager, user, delay, new EatingDoAfterEvent { Chug = chug }, target, food /* KS14 Addition */)
         {
             BreakOnHandChange = false,
             BreakOnMove = forceFeed,
@@ -556,10 +561,10 @@ public sealed partial class IngestionSystem : EntitySystem
         if (entity.Owner == user || !args.CanInteract || !args.CanAccess)
             return;
 
+        // KS14 - Start
         if (TryGetIngestionVerb(user, entity, entity.Comp.Edible, out var verb))
             args.Verbs.Add(verb);
 
-        // KS14 - Start
         if (entity.Comp.Edible == Drink && TryGetChugVerb(user, entity, out var chugVerb))
             args.Verbs.Add(chugVerb);
         // KS14 - End
