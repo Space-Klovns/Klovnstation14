@@ -92,7 +92,6 @@ public record struct IsDigestibleEvent()
 /// <summary>
 /// Do After Event for trying to put food solution into stomach entity.
 /// </summary>
-// KS14 - Start
 [Serializable, NetSerializable]
 public sealed partial class EatingDoAfterEvent : SimpleDoAfterEvent
 {
