@@ -4,7 +4,6 @@ using Content.Shared.Verbs;
 
 namespace Content.Shared.Nutrition.EntitySystems;
 
-// // KS14 - Start
 public sealed partial class IngestionSystem
 {
     public bool TryGetChugVerb(EntityUid user, Entity<EdibleComponent> ingested, [NotNullWhen(true)] out AlternativeVerb? verb)
@@ -33,4 +32,3 @@ public sealed partial class IngestionSystem
         return AttemptIngest(user, user, ingested, true, true);
     }
 }
-// // KS14 - End
