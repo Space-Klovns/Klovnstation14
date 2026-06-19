@@ -1,0 +1,39 @@
+- type: reagent
+  parent: BasePyrotechnic
+  id: Sorium
+  name: reagent-name-sorium
+  desc: reagent-desc-sorium
+  physicalDesc: reagent-physical-desc-grainy
+  flavor: bitter
+  color: '#5a64c8'
+  contrabandSeverity: Minor
+  metabolisms:
+    Bloodstream:
+      metabolismRate: 1.0
+      effects:
+      - !type:PopupMessage
+        type: Local
+        visualType: SmallCaution
+        probability: 0.3
+        messages:
+        - sorium-effect-pain
+      - !type:HealthChange
+        damage:
+          types:
+            Blunt: 3
+            Piercing: 1
+
+      - !type:Gib
+        conditions:
+        - !type:ReagentCondition
+          reagent: Sorium
+          min: 20
+      - !type:PopupMessage
+        conditions:
+        - !type:ReagentCondition
+          reagent: Sorium
+          min: 20
+        type: Pvs
+        visualType: LargeCaution
+        messages:
+        - sorium-effect-gib

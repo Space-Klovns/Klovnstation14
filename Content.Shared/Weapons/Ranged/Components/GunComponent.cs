@@ -20,6 +20,10 @@ public sealed partial class GunComponent : Component
     [DataField]
     public SoundSpecifier? SoundGunshot = new SoundPathSpecifier("/Audio/Weapons/Guns/Gunshots/smg.ogg");
 
+    // KS14 Addition
+    [DataField]
+    public _KS14.Farsound.FarSoundData? FarSoundGunshot = null;
+
     /// <summary>
     /// The sound to use when the gun is fired.
     /// <seealso cref="GunRefreshModifiersEvent"/>

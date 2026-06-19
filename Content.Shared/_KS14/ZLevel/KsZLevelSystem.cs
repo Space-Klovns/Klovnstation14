@@ -81,7 +81,7 @@ public sealed partial class KsZLevelSystem : EntitySystem
     /// </summary>
     /// <param name="entitiesBelow">List to operate on.</param>
     /// <returns>True if anything was added to <paramref name="entitiesBelow"/>.</returns>
-    public bool TryGetZLevelsBelow(Entity<KsZLevelComponent?> entity, List<EntityUid> entitiesBelow)
+    public bool TryGetZLevelsBelow(Entity<KsZLevelComponent?> entity, List<Entity<KsZLevelComponent>> entitiesBelow)
     {
         if (!_zLevelQuery.Resolve(ref entity, logMissing: false))
             return false;

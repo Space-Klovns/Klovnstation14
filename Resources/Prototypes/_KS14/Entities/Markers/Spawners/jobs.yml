@@ -1,0 +1,51 @@
+- type: entity
+  id: SpawnPointScenarioSyndie
+  parent: SpawnPointJobBase
+  name: syndicate agent
+  components:
+  - type: SpawnPoint
+    job_id: ScenarioSyndie
+  - type: Sprite
+    layers:
+      - state: green
+      - state: prisoner # TODO SOOT: unfuck this and make it actually look like the base loadout
+
+- type: entity
+  id: SpawnPointScenarioNt
+  parent: SpawnPointJobBase
+  name: nanotrasen agent
+  components:
+  - type: SpawnPoint
+    job_id: ScenarioNt
+  - type: Sprite
+    layers:
+      - state: green
+      - state: prisoner
+
+- type: entity
+  id: SpawnPointScenarioSyndieLatejoin
+  parent: SpawnPointJobBase
+  name: syndicate agent latejoin
+  components:
+  - type: SpawnPoint
+    job_id: ScenarioSyndie
+    spawn_type: LateJoin
+    picky_latejoin: true
+  - type: Sprite
+    layers:
+      - state: green
+      - state: prisoner # TODO SOOT: unfuck this and make it actually look like the base loadout
+
+- type: entity
+  id: SpawnPointScenarioNtLatejoin
+  parent: SpawnPointJobBase
+  name: nanotrasen agent latejoin
+  components:
+  - type: SpawnPoint
+    job_id: ScenarioNt
+    spawn_type: LateJoin
+    picky_latejoin: true
+  - type: Sprite
+    layers:
+      - state: green
+      - state: prisoner

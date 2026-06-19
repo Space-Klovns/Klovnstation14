@@ -214,7 +214,7 @@
   - type: Item
     storedOffset: 0,-2
   - type: Gun
-    fireRate: 6.25 # KS14 modified
+    fireRate: 5 # KS14 modified
     availableModes:
     - SemiAuto
     soundGunshot:

@@ -73,8 +73,7 @@ public sealed class KsZLevelPvsSystem : EntitySystem
         var eqe = EntityQueryEnumerator<KsZLevelViewerComponent, TransformComponent>();
         while (eqe.MoveNext(out var viewerUid, out var viewerComponent, out var viewerTransformComponent))
         {
-            if (viewerComponent.ViewSubscriberUid == EntityUid.Invalid ||
-                !_zLevelSystem.TryGetZLevel(viewerUid, out var zLevelEntity) ||
+            if (!_zLevelSystem.TryGetZLevel(viewerUid, out var zLevelEntity) ||
                 zLevelEntity.Value.Comp.Node.Previous is not { } previousZLevelNode)
             {
                 if (viewerComponent.Active)
@@ -85,6 +84,9 @@ public sealed class KsZLevelPvsSystem : EntitySystem
 
             if (!viewerComponent.Active)
                 AddActiveViewer((viewerUid, viewerComponent), viewerComponent.Session);
+
+            if (viewerComponent.ViewSubscriberUid == EntityUid.Invalid)
+                continue;
 
             var position = _transformSystem.GetWorldPosition(viewerTransformComponent);
 

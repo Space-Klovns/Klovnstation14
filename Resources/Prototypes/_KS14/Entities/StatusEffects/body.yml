@@ -12,3 +12,14 @@
     thresholdAdjustments: #additions
       Critical: 100
       Dead: 200
+
+- type: entity
+  parent: BloodstreamStatusEffectBase
+  id: StatusEffectWeightlessnessHumanoid
+  name: weightlessness
+  components:
+  - type: StatusEffect
+    whitelist:
+      components:
+      - Physics
+  - type: WeightlessnessStatusEffect

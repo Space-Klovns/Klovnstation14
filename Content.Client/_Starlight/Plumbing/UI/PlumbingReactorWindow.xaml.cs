@@ -20,15 +20,39 @@ public sealed partial class PlumbingReactorWindow : DefaultWindow
     public event Action<string, FixedPoint2>? OnSetTarget;
     public event Action<string>? OnRemoveTarget;
     public event Action? OnClearTargets;
+    public event Action? OnPurge;
+    public event Action<string?>? OnSetMixingMode;
     public event Action<float>? OnSetTemperature;
 
     private bool _enabled = true;
     private string? _selectedTarget;
+    private string? _selectedMixingMode;
+
+    private readonly List<string?> _mixingModes = new()
+    {
+        null,
+        "Stir",
+        "Shake",
+        "Centrifuge",
+        "Electrolysis"
+    };
 
     public PlumbingReactorWindow()
     {
         IoCManager.InjectDependencies(this);
         RobustXamlLoader.Load(this);
+
+        foreach (var mode in _mixingModes)
+        {
+            var label = mode != null ? Loc.GetString($"mixing-verb-{mode.ToLowerInvariant()}") : Loc.GetString("plumbing-reactor-mixing-none");
+            MixingModeOption.AddItem(label);
+        }
+
+        MixingModeOption.OnItemSelected += args =>
+        {
+            var mode = _mixingModes[args.Id];
+            OnSetMixingMode?.Invoke(mode);
+        };
 
         ToggleStatusButton.OnPressed += _ =>
         {
@@ -36,6 +60,8 @@ public sealed partial class PlumbingReactorWindow : DefaultWindow
             UpdateToggleButton();
             OnToggle?.Invoke(_enabled);
         };
+
+        PurgeButton.OnPressed += _ => OnPurge?.Invoke();
 
         SetTemperatureButton.OnPressed += _ =>
         {
@@ -111,16 +137,21 @@ public sealed partial class PlumbingReactorWindow : DefaultWindow
         _enabled = state.Enabled;
         UpdateToggleButton();
 
+        if (state.SelectedMixingMode != _selectedMixingMode)
+        {
+            _selectedMixingMode = state.SelectedMixingMode;
+            var index = _mixingModes.IndexOf(_selectedMixingMode);
+            if (index != -1)
+                MixingModeOption.SelectId(index);
+        }
+
         // Update temperature display - but don't overwrite if user is editing
         if (!TemperatureInput.HasKeyboardFocus())
             TemperatureInput.Text = state.TargetTemperature.ToString("F1");
         CurrentTemperatureLabel.Text = $"({state.CurrentTemperature:F1} K)";
 
-        // Update targets list - shows all buffer contents
-        // Target reagents show progress, non-target reagents show 0 target qty
+        // Update targets list - shows current progress for each targeted reagent
         TargetsList.Clear();
-
-        // First add all target reagents
         foreach (var (reagentId, targetQuantity) in state.ReagentTargets)
         {
             var currentAmount = state.BufferContents.GetValueOrDefault(reagentId, FixedPoint2.Zero);
@@ -131,16 +162,24 @@ public sealed partial class PlumbingReactorWindow : DefaultWindow
             });
         }
 
-        // Then add non-target reagents so a player knows to plunger it to remove them
-        foreach (var (reagentId, currentAmount) in state.BufferContents)
-        {
-            if (state.ReagentTargets.ContainsKey(reagentId))
-                continue;
+        // Update internal contents list - merges Buffer (Input) and Output solutions
+        InternalContentsList.Clear();
 
-            TargetsList.Add(new ItemList.Item(TargetsList)
+        // Add Buffer contents (labeled as Input/Reactant)
+        foreach (var (reagentId, quantity) in state.BufferContents)
+        {
+            InternalContentsList.Add(new ItemList.Item(InternalContentsList)
             {
-                Metadata = reagentId,
-                Text = $"{reagentId}: {currentAmount}u / 0u"
+                Text = $"[Input] {reagentId}: {quantity}u"
+            });
+        }
+
+        // Add Output contents (labeled as Output/Product)
+        foreach (var (reagentId, quantity) in state.OutputContents)
+        {
+            InternalContentsList.Add(new ItemList.Item(InternalContentsList)
+            {
+                Text = $"[Output] {reagentId}: {quantity}u"
             });
         }
 

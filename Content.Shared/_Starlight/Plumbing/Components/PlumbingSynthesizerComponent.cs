@@ -27,10 +27,15 @@ public sealed partial class PlumbingSynthesizerComponent : Component
 
     /// <summary>
     ///     Available reagents that can be generated.
-    ///     Key is reagent prototype ID, value is power drain per unit.
     /// </summary>
     [DataField, AutoNetworkedField]
-    public Dictionary<ProtoId<ReagentPrototype>, float> GeneratableReagents = new();
+    public List<ProtoId<ReagentPrototype>> GeneratableReagents = new();
+
+    /// <summary>
+    ///     Power drain per unit of generated reagent.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float PowerDrainPerUnit = 5f;
 
     /// <summary>
     ///     Currently selected reagent to generate. Null if none selected.

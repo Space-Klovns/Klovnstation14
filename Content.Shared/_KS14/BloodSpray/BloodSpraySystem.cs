@@ -113,7 +113,7 @@ public sealed class BloodSpraySystem : EntitySystem
             var hitData = rayResult.Results[0];
 
             // docs for RayHit lie because RayHit.Point isnt the *caller* changing it to local terms, but instead the code constructing it; it is also local to the hit entity's parent(? TODO: confirm that assumption)
-            // tldr `hitData.Point` is local to `hitData.Entity`'s ParentUid
+            // tldr `hitData.Point` is relative to `hitData.Entity`'s ParentUid's ParentUid(???) (map?)
             effectCoordinates = new(targetTransform.ParentUid /* it should just be the hitdatas hit entitys transforms parentuid, but im GIGA LAZY. TODO LCDC FIX ALL THIS SHITT */, hitData.Point);
             localDeltaUnit *= -1; // it should go other way
         }

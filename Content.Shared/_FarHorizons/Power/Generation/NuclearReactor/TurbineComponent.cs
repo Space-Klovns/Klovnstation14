@@ -17,10 +17,32 @@ public sealed partial class TurbineComponent : Component
     public float LastGen = 0;
 
     /// <summary>
+    /// Volume of gas to process per tick for power generation
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float FlowRate = Atmospherics.MaxTransferRate;
+
+    /// <summary>
+    /// Maximum/Minimum volume of gas to process per tick
+    /// </summary>
+    [DataField]
+    public float FlowRateMax = Atmospherics.MaxTransferRate * 5;
+    [DataField]
+    public float FlowRateMin = 0;
+
+    /// <summary>
     /// Watts per revolution
     /// </summary>
     [DataField, AutoNetworkedField]
     public float StatorLoad = 35000;
+
+    /// <summary>
+    /// Max/Min stator load
+    /// </summary>
+    [DataField]
+    public float StatorLoadMax = 500000;
+    [DataField]
+    public float StatorLoadMin = 1000;
 
     /// <summary>
     /// Current RPM of turbine
@@ -39,18 +61,6 @@ public sealed partial class TurbineComponent : Component
     /// </summary>
     [DataField]
     public float BestRPM = 600;
-
-    /// <summary>
-    /// Volume of gas to process per tick for power generation
-    /// </summary>
-    [DataField, AutoNetworkedField]
-    public float FlowRate = Atmospherics.MaxTransferRate;
-
-    /// <summary>
-    /// Maximum volume of gas to process per tick
-    /// </summary>
-    [DataField]
-    public float FlowRateMax = Atmospherics.MaxTransferRate * 5;
 
     /// <summary>
     /// Max/min temperatures

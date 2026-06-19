@@ -36,7 +36,7 @@ namespace Content.Client.Viewport
         };
         private MapSystem _mapSystem = default!;
         private KsZLevelSystem _zLevelSystem = null!;
-        private List<EntityUid> _mapsToIterate = [];
+        private List<Entity<KsZLevelComponent>> _mapsToIterate = [];
         private IRenderTarget _zBlurBuffer = default!;
         // KS14 END: zlevels
 
@@ -192,7 +192,7 @@ namespace Content.Client.Viewport
                 _mapsToIterate.Count != 0)
             {
                 // TryGetZLevelsBelow doesn't include the map we're on
-                _mapsToIterate.Add(topMapUid.Value);
+                _mapsToIterate.Add((topMapUid.Value, null!));
 
                 // as this is ascending, and depth is 0-indexed; top-most one (last) will be 0
                 var depth = _mapsToIterate.Count - 1;
@@ -201,29 +201,33 @@ namespace Content.Client.Viewport
                 _zLevelEye.Offset = _eye.Offset;
                 _zLevelEye.Rotation = _eye.Rotation;
 
-                foreach (var mapUid in _mapsToIterate)
+                foreach (var (mapUid, mapZLevelComponent) in _mapsToIterate)
                 {
+                    // clearcolor for all maps other than first is none
+                    _viewport.ClearColor = null;
+                    // for maps below the highest, never draw FOV. on the highest map, only draw fov if we would for a non-zlevel
+                    _zLevelEye.DrawFov = depth == 0 && _eye.DrawFov;
+
+                    var depthMultiplier = mapZLevelComponent == null ? 0f : mapZLevelComponent.DepthMultiplier;
+
                     _zLevelEye.Position = new MapCoordinates(
                         _eye.Position.Position,
                         _entityManager.GetComponent<MapComponent>(mapUid).MapId
                     );
-                    _zLevelEye.Scale = _eye.Scale - new Vector2(0.075f * depth, 0.075f * depth);
+                    _zLevelEye.Scale = _eye.Scale - new Vector2(0.075f * depth * depthMultiplier, 0.075f * depth * depthMultiplier);
                     _viewport.Eye = _zLevelEye;
 
                     _viewport.Render();
                     _viewport.RenderScreenOverlaysBelow(handle, this, drawBoxGlobal);
 
-                    if (depth != 0)
-                        _clyde.BlurRenderTarget(_viewport, _viewport.RenderTarget, _zBlurBuffer, _zLevelEye, 2.5f);
+                    // This would otherwise draw if not for depthmultiplier being 0 on the top-most map
+                    if (depthMultiplier != 0f)
+                        _clyde.BlurRenderTarget(_viewport, _viewport.RenderTarget, _zBlurBuffer, _zLevelEye, 2.5f * depthMultiplier);
 
                     handle.DrawingHandleScreen.DrawTextureRect(_viewport.RenderTarget.Texture, drawBox);
                     _viewport.RenderScreenOverlaysAbove(handle, this, drawBoxGlobal);
 
                     depth--;
-
-                    // clearcolor for all maps other than first is none
-                    _viewport.ClearColor = null;
-                    _zLevelEye.DrawFov = false;
                 }
 
                 // default clearcolor is black

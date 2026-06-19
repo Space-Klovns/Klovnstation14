@@ -20,9 +20,13 @@ public sealed class PlumbingSynthesizerBoundUserInterfaceState : BoundUserInterf
 {
     /// <summary>
     ///     Available reagents that can be generated.
-    ///     Key is reagent prototype ID, value is power drain per unit.
     /// </summary>
-    public Dictionary<string, float> GeneratableReagents { get; }
+    public List<string> GeneratableReagents { get; }
+
+    /// <summary>
+    ///     Power drain per unit of generated reagent.
+    /// </summary>
+    public float PowerDrainPerUnit { get; }
 
     /// <summary>
     ///     Currently selected reagent ID, or null if none selected.
@@ -45,13 +49,15 @@ public sealed class PlumbingSynthesizerBoundUserInterfaceState : BoundUserInterf
     public float BatteryCharge { get; }
 
     public PlumbingSynthesizerBoundUserInterfaceState(
-        Dictionary<string, float> generatableReagents,
+        List<string> generatableReagents,
+        float powerDrainPerUnit,
         string? selectedReagent,
         Dictionary<string, FixedPoint2> bufferContents,
         bool enabled,
         float batteryCharge)
     {
         GeneratableReagents = generatableReagents;
+        PowerDrainPerUnit = powerDrainPerUnit;
         SelectedReagent = selectedReagent;
         BufferContents = bufferContents;
         Enabled = enabled;

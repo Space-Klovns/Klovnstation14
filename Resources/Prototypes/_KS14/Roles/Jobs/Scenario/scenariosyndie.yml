@@ -1,0 +1,25 @@
+- type: job
+  id: ScenarioSyndie #TODO soot: species whitelist to be human only
+  name: job-name-scenario-syndie
+  description: job-description-scenario-syndie
+  playTimeTracker: JobScenarioSyndie
+  startingGear: ScenarioSyndieGear
+  icon: "JobIconSyndicate"
+  supervisors: job-supervisors-nobody
+  canBeAntag: false
+  access:
+  - SyndicateAgent
+  - Maintenance
+  special:
+  - !type:AddComponentSpecial
+    components:
+    - type: ScenarioSyndie
+
+- type: startingGear
+  id: ScenarioSyndieGear
+  equipment:
+    jumpsuit: ClothingUniformJumpsuitOperative
+    back: ClothingBackpackSyndicate
+    shoes: ClothingShoesBootsCombatFilled
+    gloves: ClothingHandsGlovesColorBlack
+    id: SyndiPDA

@@ -52,6 +52,12 @@ public sealed class TurbineSystem : SharedTurbineSystem
 
         SubscribeLocalEvent<TurbineComponent, ComponentStartup>(OnStartup);
         SubscribeLocalEvent<TurbineComponent, AtmosDeviceUpdateEvent>(OnUpdate);
+        SubscribeLocalEvent<TurbineComponent, BoundUIOpenedEvent>(OnUIOpened);
+    }
+
+    private void OnUIOpened(EntityUid uid, TurbineComponent component, BoundUIOpenedEvent args)
+    {
+        UpdateUI(uid, component);
     }
 
     private void OnStartup(Entity<TurbineComponent> entity, ref ComponentStartup args)
@@ -246,6 +252,8 @@ public sealed class TurbineSystem : SharedTurbineSystem
         // Explode
         if (!comp.Ruined && comp.RPM > comp.BestRPM * 4)
             TearApart((uid, comp));
+
+        UpdateUI(uid, comp);
     }
 
     public void TearApart(Entity<TurbineComponent?> entity, EntityUid? cause = null)
@@ -275,18 +283,16 @@ public sealed class TurbineSystem : SharedTurbineSystem
         }
     }
 
-    public override void Update(float frameTime)
+    protected override void UpdateUi(Entity<TurbineComponent> entity)
     {
-        var query = EntityQueryEnumerator<TurbineComponent>();
-
-        while (query.MoveNext(out var uid, out var turbine))
-        {
-            UpdateUI(uid, turbine);
-        }
+        UpdateUI(entity.Owner, entity.Comp);
     }
 
     private void UpdateUI(EntityUid uid, TurbineComponent turbine)
     {
+        if (!_uiSystem.HasUi(uid, TurbineUiKey.Key))
+            return;
+
         if (!_uiSystem.IsUiOpen(uid, TurbineUiKey.Key))
             return;
 
@@ -301,12 +307,12 @@ public sealed class TurbineSystem : SharedTurbineSystem
                RPM = turbine.RPM,
                BestRPM = turbine.BestRPM,
 
-               FlowRateMin = 0,
+               FlowRateMin = turbine.FlowRateMin,
                FlowRateMax = turbine.FlowRateMax,
                FlowRate = turbine.FlowRate,
 
-               StatorLoadMin = 1000,
-               StatorLoadMax = 500000,
+               StatorLoadMin = turbine.StatorLoadMin,
+               StatorLoadMax = turbine.StatorLoadMax,
                StatorLoad = turbine.StatorLoad,
            });
     }

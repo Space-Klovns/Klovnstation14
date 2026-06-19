@@ -25,3 +25,6 @@ emergency_early_launch_allowed = true
 [explosion]
 # This is how long (seconds) the VISUAL explosion effect stays for after an explosion is done exploding
 persistence = 0.12
+
+[klovn.jetpacks]
+flyongrids = true

@@ -176,6 +176,7 @@
   components:
   - type: Hunger
   - type: Thirst
+  - type: EvaporinMetabolizer # KS14
   - type: Barotrauma
     damage:
       types:

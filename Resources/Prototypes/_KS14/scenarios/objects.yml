@@ -1,0 +1,8 @@
+- type: entity
+  name: pinpointer
+  id: PinpointerScenarioObjective
+  parent: PinpointerBase
+  components:
+  - type: Pinpointer
+    component: ScenarioObjective
+    targetName: objective

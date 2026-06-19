@@ -1,0 +1,10 @@
+- type: gas
+  id: Evaporin
+  name: gases-evaporin
+  abbreviation: gas-evaporin-abbreviation
+  molarHeatCapacity: 40
+  heatCapacityRatio: 1.4
+  molarMass: 60
+  color: '#e0e0ff08' # Translucent light blue/white
+  reagent: Evaporin
+  pricePerMole: 2.5

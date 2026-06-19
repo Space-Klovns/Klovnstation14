@@ -57,6 +57,9 @@ public sealed class TimerTriggerVisualizerSystem : VisualizerSystem<TimerTrigger
                     AnimationSystem.Play((uid, animPlayer), comp.PrimingAnimation, TimerTriggerVisualsComponent.AnimationKey);
                 break;
             case TriggerVisualState.Unprimed:
+                if (AnimationSystem.HasRunningAnimation(uid, animPlayer, TimerTriggerVisualsComponent.AnimationKey)) // KS14
+                    AnimationSystem.Stop(uid, animPlayer, TimerTriggerVisualsComponent.AnimationKey); // KS14
+
                 SpriteSystem.LayerSetRsiState((uid, args.Sprite), TriggerVisualLayers.Base, comp.UnprimedSprite);
                 break;
             default:

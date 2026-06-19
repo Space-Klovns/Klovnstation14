@@ -18,7 +18,9 @@ public sealed partial class GasLeakRuleComponent : Component
         Gas.Tritium,
         Gas.Frezon,
         Gas.WaterVapor, // the fog
-        Gas.Zipion // KS14 zipion
+        Gas.Zipion, // KS14 zipion
+        Gas.Argon, // KS14
+        Gas.Evaporin // KS14
     };
 
     /// <summary>

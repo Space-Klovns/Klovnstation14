@@ -146,7 +146,7 @@ namespace Content.Server.GameTicking
 
             if (jobId != null)
             {
-                var jobs = new List<ProtoId<JobPrototype>> {jobId};
+                var jobs = new List<ProtoId<JobPrototype>> { jobId };
                 var ev = new IsRoleAllowedEvent(player, jobs, null);
                 RaiseLocalEvent(ref ev);
                 if (ev.Cancelled)
@@ -176,6 +176,11 @@ namespace Content.Server.GameTicking
                 else
                     station = stations[0];
             }
+
+            // KS14 Start
+            // if not already silent, make it silent if the welcome message should be silenced
+            silent |= HasComp<_KS14.GameTicking.Components.KsSilenceWelcomeMessageComponent>(station);
+            // KS14 End
 
             if (lateJoin && DisallowLateJoin)
             {

@@ -1,4 +1,5 @@
 using Content.Server.Atmos.EntitySystems;
+using Content.Shared.Atmos; // KS 14
 using Content.Shared.Trigger.Components.Effects;
 using Content.Shared.Trigger.Systems;
 using Robust.Shared.Timing;
@@ -11,6 +12,22 @@ public sealed class ReleaseGasOnTriggerSystem : SharedReleaseGasOnTriggerSystem
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
 
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeLocalEvent<ReleaseGasOnTriggerComponent, GasAnalyzerScanEvent>(OnAnalyzed); // KS14
+    }
+
+    private void OnAnalyzed(EntityUid uid, ReleaseGasOnTriggerComponent component, GasAnalyzerScanEvent args) // KS14
+    {
+        if (component.Air == null) // KS14
+            return; // KS14
+
+        args.GasMixtures ??= new List<(string, GasMixture?)>(); // KS14
+        args.GasMixtures.Add((Loc.GetString("air-grenade-gas-analyzer-internal-name"), component.Air)); // KS14
+    }
 
     public override void Update(float frameTime)
     {

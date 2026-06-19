@@ -67,4 +67,9 @@ public sealed partial class BatteryAmmoProviderComponent : AmmoProviderComponent
     /// </remarks>
     [ViewVariables, AutoNetworkedField]
     public int Capacity;
+    /// <summary>
+    /// Whether the battery charge is examinable.
+    /// </summary>
+    [DataField]
+    public bool Examinable = true; // KS14
 }

@@ -470,7 +470,7 @@ Entries:
     - type: Add
       message: >-
         You can now punch anomalies inside of disposal units. Requires a
-        G.O.R.I.L.L.A. gauntlet. 
+        G.O.R.I.L.L.A. gauntlet.
   id: 60
   time: '2025-12-31T01:08:31.0000000+00:00'
 - author: Gerkada
@@ -728,7 +728,7 @@ Entries:
     - type: Tweak
       message: >-
         Potassium iodine will heal SLIGHT amounts of rad damage aswell as
-        metabolize 50% slower than before. 
+        metabolize 50% slower than before.
   id: 93
   time: '2026-02-14T15:38:49.0000000+00:00'
 - author: LaCumbiaDelCoronavirus
@@ -1013,7 +1013,7 @@ Entries:
     - type: Fix
       message: >-
         Fixed limbs thrown from explosion dismemberment being thrown in exact
-        same direction. 
+        same direction.
     - type: Tweak
       message: >-
         Diving now fullstuns you if you dont hit anything, but doesnt if you hit
@@ -1268,3 +1268,180 @@ Entries:
         patients to start the process.
   id: 138
   time: '2026-06-05T12:25:25.0000000+00:00'
+- author: FrauZj
+  changes:
+    - type: Tweak
+      message: Tweaked rifle recoil
+    - type: Tweak
+      message: Changed speed to be generally faster but with a little bit of inertia.
+  id: 139
+  time: '2026-06-06T09:54:49.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: Added scenarios.
+  id: 140
+  time: '2026-06-06T10:17:55.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: >-
+        Added the air grenade compressor, which allows you to fill air grenades
+        with safe-ish (unless emagged) gases. The board for it can be printed
+        roundstart in circuit imprinters.
+    - type: Add
+      message: You can now inspect the contents of air grenades with a gas analyzer.
+  id: 141
+  time: '2026-06-17T14:05:38.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Tweak
+      message: Orebag magnetic pickup is now predicted!
+  id: 142
+  time: '2026-06-17T14:09:13.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: >-
+        Added Stirring, Shaking, Centrifuging, and Electrolysis modes to the
+        Plumbing Reactor.
+    - type: Add
+      message: >-
+        Added a "Purge All" button to the Plumbing Reactor to clear stuck
+        chemicals.
+    - type: Add
+      message: >-
+        Added a detailed content UI and volume bar to all chemical storage tanks
+        and barrels.
+    - type: Add
+      message: >-
+        Added Nitrogen, Welding Fuel, and multiple base elements to the Chemical
+        Synthesizer.
+    - type: Tweak
+      message: Increased Plumbing Tank capacity to 800u.
+    - type: Tweak
+      message: All Chemical Synthesizer reagents now cost a flat 5W/u.
+    - type: Tweak
+      message: >-
+        The plumbing network now automatically strips DNA and metadata from
+        biological reagents (blood/vomit) to make them usable in automated
+        recipes.
+    - type: Fix
+      message: Fixed the chemical storage progress bar not filling correctly.
+    - type: Fix
+      message: >-
+        Fixed an issue where reactor products appeared to "vanish" (they are now
+        visible in the Machine Contents list).
+  id: 143
+  time: '2026-06-17T15:00:57.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: >-
+        Anomalies now dynamically react to and consume atmospheric gases,
+        altering their point generation, stability, and pulse behavior based on
+        the surrounding mix.
+    - type: Add
+      message: >-
+        The Anomaly Scanner can now detect atmospheric influences, displaying
+        the Primary and Secondary gas catalysts affecting the anomaly.
+    - type: Tweak
+      message: >-
+        Admin anomaly scanners now display the exact Health percentage of an
+        anomaly.
+  id: 144
+  time: '2026-06-17T15:30:01.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: Ported PTL.
+  id: 145
+  time: '2026-06-17T15:45:27.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Tweak
+      message: Improved Turbine and Nuclear Reactor UI.
+    - type: Fix
+      message: Fixed a bug where gas flow rods were destroying neutrons.
+  id: 146
+  time: '2026-06-17T15:46:47.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Added wittel reagent, found in geysers and does nothing by itself.
+    - type: Add
+      message: >-
+        Added sorium reagent. Above a certain temperature, it detonates and
+        violently pushes away everything nearby.
+    - type: Add
+      message: >-
+        Added gravitum reagent, crafted from wittel and sorium. Gravitum, in the
+        bloodstream, makes you weightless.
+    - type: Tweak
+      message: Jetpacks can now fly on grids if there is no gravity.
+  id: 147
+  time: '2026-06-17T21:08:00.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Fix
+      message: >-
+        Fixed `GameMapsLoadableTest` integration test crashing on scenario maps
+        with 0-area root grids (e.g., Tiderfall).
+    - type: Fix
+      message: >-
+        Refactored integration test job spawn validation to be map-scoped,
+        deterministic, and highly performant.
+    - type: Fix
+      message: >-
+        Resolved integration test memory leaks (`OnDirtyDispose` masking real
+        errors) by ensuring proper map teardown in a `try...finally` block.
+  id: 148
+  time: '2026-06-18T21:44:55.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: Added Evaporin gas and liquid reagent.
+    - type: Add
+      message: Added Evaporin synthesis reaction (2 CO2 + 1 Tritium at 500K).
+    - type: Add
+      message: Added Evaporin gas canister and paintable style.
+    - type: Tweak
+      message: Puddles now evaporate significantly faster when exposed to Evaporin gas.
+    - type: Tweak
+      message: >-
+        Inhaling or ingesting Evaporin causes severe dehydration and poison
+        damage when thirsty.
+    - type: Tweak
+      message: >-
+        Air alarms and scrubbers now support filtering Evaporin, Zipion, and
+        Argon by default.
+    - type: Fix
+      message: >-
+        Fixed an issue where mixed puddles (e.g., water and blood) would only
+        partially evaporate.
+  id: 149
+  time: '2026-06-19T14:07:52.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added the pneumatic hammer: an atmos machine that upon receiving gas
+        above a certain pressure, extends a piston to a neighboring tile that
+        deals damage and forms a barrier. The piston is retracted when there is
+        no longer sufficient pressure in the machine. Sprites by IRS (GIGA)
+  id: 150
+  time: '2026-06-19T14:11:46.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: Canisters now rupture more epically, you will know how when you see it.
+    - type: Remove
+      message: Removed safety valve mechanic on canisters
+  id: 151
+  time: '2026-06-19T16:40:26.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: You no longer get forced to stand after you stop being weightless if you are not able to stand.
+  id: 152
+  time: '2026-06-19T16:40:26.0000000+00:00'

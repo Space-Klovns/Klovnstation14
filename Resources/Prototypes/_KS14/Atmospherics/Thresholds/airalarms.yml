@@ -11,3 +11,10 @@
     threshold: 0.01
   upperWarnAround: !type:AlarmThresholdSetting
     threshold: 0.1 # 0.001 / 0.01
+
+- type: alarmThreshold # KS14
+  id: stationEvaporin
+  upperBound: !type:AlarmThresholdSetting
+    threshold: 0.01
+  upperWarnAround: !type:AlarmThresholdSetting
+    threshold: 0.5

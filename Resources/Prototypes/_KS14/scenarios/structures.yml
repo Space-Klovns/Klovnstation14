@@ -1,0 +1,99 @@
+# KS14 Scenario Structures
+# Invincible rock walls and barriers for scenario creation
+
+- type: entity
+  id: RockWallInvincible
+  name: invincible rock wall
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    anchored: true
+  - type: Physics
+    bodyType: Static
+    canCollide: true
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        layer:
+        - WallLayer
+        mask:
+        - MachineMask
+        - MobMask
+  - type: Clickable
+  - type: InteractionOutline
+  - type: Sprite
+    sprite: Structures/Walls/rock.rsi
+    state: rock
+    drawdepth: Walls
+
+- type: entity
+  id: InvisibleBarrier5Min
+  parent: MarkerBase
+  name: invisible barrier
+  suffix: 5 min
+  components:
+  - type: Physics
+    bodyType: Static
+    canCollide: true
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        layer:
+        - WallLayer
+        mask:
+        - MachineMask
+        - MobMask
+  - type: Sprite
+    state: red
+  - type: TimedDespawn
+    lifetime: 300
+
+- type: entity
+  id: InvisibleBarrier10Min
+  suffix: 10 min
+  parent: InvisibleBarrier5Min
+  components:
+  - type: TimedDespawn
+    lifetime: 600
+
+- type: entity
+  id: InvisibleBarrier15Min
+  suffix: 15 min
+  parent: InvisibleBarrier5Min
+  components:
+  - type: TimedDespawn
+    lifetime: 900
+
+- type: entity
+  parent: AirlockSyndicateLocked
+  id: AirlockMaintSyndieLocked
+  components:
+  - type: Sprite
+    sprite: Structures/Doors/Airlocks/Standard/maint.rsi
+
+- type: entity
+  parent: TelecomServer
+  id: KsScenarioObjectiveSyndie
+  name: syndicate objective
+  description: This is a server that is of paramount importance to the syndicate. Would be a shame if someone broke it!
+  components:
+  - type: ScenarioObjective
+  - type: TimedDespawn
+    lifetime: 1800
+
+- type: entity
+  parent: MarkerBase
+  id: KsGridSpawnerMarkerGeneric
+  name: grid-spawner marker
+  description: This is for marking where grid spawners are. Add a KsGridSpawner component to this and set the path, and the grid will load here on mapinit.
+  suffix: VV me
+  components:
+  - type: Sprite
+    state: red

@@ -1,0 +1,17 @@
+- type: entity
+  id: KsSoriumEffectGravityPulse
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: EmitSoundOnTrigger
+    sound:
+      path: /Audio/Effects/Grenades/Supermatter/supermatter_start.ogg
+      params:
+        volume: 5
+  - type: GravityWell
+    maxRange: 3
+    baseRadialAcceleration: -30
+    baseTangentialAcceleration: 0
+    gravPulsePeriod: 0.01
+  - type: TriggerOnSpawn
+  - type: TimedDespawn
+    lifetime: 0.2

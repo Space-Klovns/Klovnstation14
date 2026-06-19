@@ -1,0 +1,119 @@
+- type: entity
+  parent: BaseMachine
+  id: MachinePowerTransmissionLaser
+  name: power transmission laser
+  description: Sends power over a giant laser beam to an NT power processing facility. Simply plug it in and come back tomorrow for a big stack of cash (that is if you have power running). Also don't step in front of the firing line please.
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Ptl
+    active: false
+    spesosMultiplier: 1.0
+    damageMultiplier: 2.0
+    baseBeamDamage:
+      types:
+        Heat: 5
+    shootOffset: 0, -1.5
+  - type: UserInterface
+    interfaces:
+      enum.Content.Shared._KS14.Power.PTL.PTLUiKey.Key:
+        type: PtlBoundUserInterface
+  - type: ActivatableUI
+    key: enum.Content.Shared._KS14.Power.PTL.PTLUiKey.Key
+  - type: PtlVisuals
+  - type: Sprite
+    sprite: _KS14/Structures/Machines/PTL/pt_laser.rsi
+    layers:
+    - state: base
+      map: ["enum.PtlVisualLayers.Base"]
+    - state: unpowered
+      shader: unshaded
+      visible: false
+      map: ["enum.PtlVisualLayers.Unpowered"]
+    - state: charge-1
+      shader: unshaded
+      visible: false
+      map: ["enum.PtlVisualLayers.Charge"]
+  - type: EmissiveLayers
+    glowRadius: 0.65
+    intensity: 4.2
+    layers:
+    - enum.PtlVisualLayers.Unpowered
+    - enum.PtlVisualLayers.Charge
+  - type: Transform
+    anchored: true
+    noRot: false
+  - type: RadiationSource
+    slope: 2.0
+  - type: Appearance
+  - type: PowerNetworkBattery
+    maxChargeRate: 10000000 # 10MW limit to prevent instantly draining the grid
+  - type: Battery
+    netsync: false
+    startingCharge: 0
+    maxCharge: 1000000000 # 1 GJ
+  - type: ExaminableBattery
+  - type: BatteryCharger
+    voltage: High
+    node: input
+  - type: NodeContainer
+    examinable: true
+    nodes:
+      input:
+        !type:CableDeviceNode
+        nodeGroupID: HVPower
+  - type: Damageable
+    damageContainer: StructuralInorganic
+    damageModifierSet: StructuralMetallicStrong
+  - type: BatterySensor
+  - type: Gun
+    showExamineText: false
+    fireRate: 10
+    selectedMode: SemiAuto
+    availableModes:
+    - SemiAuto
+    soundGunshot:
+      path: /Audio/Weapons/Guns/Gunshots/laser_cannon.ogg
+  - type: BatteryAmmoProvider
+    proto: MachinePowerTransmissionLaserHitscan
+    fireCost: 1000
+    examinable: false
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-1.5,-1.5,1.5,1.5"
+        density: 3125
+        mask:
+        - LargeMobMask
+        layer:
+        - WallLayer
+  - type: StationAiWhitelist
+  - type: AmbientSound
+    range: 5
+    sound:
+      path: /Audio/Ambience/Objects/engine_hum.ogg
+
+- type: entity
+  parent: BasicHitscan
+  id: MachinePowerTransmissionLaserHitscan
+  name: power transmission laser ray
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: HitscanBasicDamage
+    damage:
+      types:
+        Heat: 30
+  - type: HitscanBasicVisuals
+    muzzleFlash:
+      sprite: _KS14/Structures/Machines/PTL/pt_beam.rsi
+      state: ptl_beam
+    travelFlash:
+      sprite: _KS14/Structures/Machines/PTL/pt_beam.rsi
+      state: ptl_beam
+    impactFlash:
+      sprite: _KS14/Structures/Machines/PTL/pt_beam.rsi
+      state: ptl_beam

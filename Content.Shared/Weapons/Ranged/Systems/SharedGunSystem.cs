@@ -54,6 +54,7 @@ public abstract partial class SharedGunSystem : EntitySystem
     [Dependency] private readonly SharedHandsSystem _hands = default!;
     [Dependency] private readonly UseDelaySystem _useDelay = default!;
     [Dependency] private readonly _KS14.NPC.Systems.SharedNpcSensorSystem _npcSensorSystem = default!; // KS14: ANK
+    [Dependency] private readonly _KS14.Farsound.FarSoundSystem _farsoundSystem = default!;// KS14
     [Dependency] protected readonly DamageableSystem Damageable = default!;
     [Dependency] protected readonly ExamineSystemShared Examine = default!;
     [Dependency] protected readonly IPrototypeManager ProtoManager = default!;
@@ -250,6 +251,19 @@ public abstract partial class SharedGunSystem : EntitySystem
     }
 
     /// <summary>
+    /// Attempts to shoot at the target coordinates from the specified from coordinates. Resets the shot counter after every shot.
+    /// </summary>
+    public bool AttemptShoot(EntityUid user, Entity<GunComponent> gun, EntityCoordinates fromCoordinates, EntityCoordinates toCoordinates, EntityUid? target = null)
+    {
+        gun.Comp.ShootCoordinates = toCoordinates;
+        gun.Comp.Target = target;
+        var result = AttemptShoot(user, gun, fromCoordinates);
+        gun.Comp.ShotCounter = 0;
+        DirtyField(gun.AsNullable(), nameof(GunComponent.ShotCounter));
+        return result;
+    }
+
+    /// <summary>
     /// Shoots by assuming the gun is the user at default coordinates.
     /// </summary>
     public bool AttemptShoot(Entity<GunComponent> gun)
@@ -261,7 +275,7 @@ public abstract partial class SharedGunSystem : EntitySystem
         return result;
     }
 
-    private bool AttemptShoot(EntityUid user, Entity<GunComponent> gun)
+    private bool AttemptShoot(EntityUid user, Entity<GunComponent> gun, EntityCoordinates? fromCoordinatesOverride = null)
     {
         if (gun.Comp.FireRateModified <= 0f ||
             !_actionBlockerSystem.CanAttack(user))
@@ -355,7 +369,7 @@ public abstract partial class SharedGunSystem : EntitySystem
             return false;
         }
 
-        var fromCoordinates = Transform(user).Coordinates;
+        var fromCoordinates = fromCoordinatesOverride ?? Transform(user).Coordinates;
         // Remove ammo
         var ev = new TakeAmmoEvent(shots, [], fromCoordinates, user);
 
@@ -598,6 +612,7 @@ public abstract partial class SharedGunSystem : EntitySystem
                     PredictedDel(ent);
 
                     Audio.PlayPredicted(gun.Comp.SoundGunshotModified, gun, user);
+                    _farsoundSystem.TryPlayFarSound(gun, gun.Comp.FarSoundGunshot, userUid: user); // KS14
                     _npcSensorSystem.DoDisturbance(fromCoordinates, gun.Comp.SoundGunshotModified?.Params.MaxDistance ?? 0f, source: user); // KS14: ANK: AI sensors
                     break;
                 default:
@@ -643,6 +658,7 @@ public abstract partial class SharedGunSystem : EntitySystem
 
             MuzzleFlash(gun, ammoComp, mapDirection.ToAngle(), user);
             Audio.PlayPredicted(gun.Comp.SoundGunshotModified, gun, user);
+            _farsoundSystem.TryPlayFarSound(gun, gun.Comp.FarSoundGunshot, userUid: user); // KS14
         }
     }
 

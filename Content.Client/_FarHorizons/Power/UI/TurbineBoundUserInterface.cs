@@ -10,7 +10,7 @@ namespace Content.Client._FarHorizons.Power.UI;
 /// Initializes a <see cref="TurbineWindow"/> and updates it when new server messages are received.
 /// </summary>
 [UsedImplicitly]
-public sealed class TurbineBoundUserInterface : BoundUserInterface, IBuiPreTickUpdate
+public sealed class TurbineBoundUserInterface : BoundUserInterface
 {
     [Dependency] private readonly IClientGameTiming _gameTiming = null!;
 
@@ -18,8 +18,6 @@ public sealed class TurbineBoundUserInterface : BoundUserInterface, IBuiPreTickU
     private TurbineWindow? _window;
 
     private BuiPredictionState? _pred;
-    private InputCoalescer<float> _flowRateCoalescer;
-    private InputCoalescer<float> _statorLoadCoalescer;
 
     public TurbineBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
     {
@@ -35,18 +33,30 @@ public sealed class TurbineBoundUserInterface : BoundUserInterface, IBuiPreTickU
         _window = this.CreateWindow<TurbineWindow>();
         _window.SetEntity(Owner);
 
-        _window.TurbineFlowRateChanged += val => _flowRateCoalescer.Set(val);
-        _window.TurbineStatorLoadChanged += val => _statorLoadCoalescer.Set(val);
+        _window.TurbineFlowRateChanged += val =>
+        {
+            _pred.SendMessage(new TurbineChangeFlowRateMessage(val));
+            _window.SetFlowRateInput(val); // Optimistically update input
+        };
+
+        _window.TurbineStatorLoadChanged += val =>
+        {
+            _pred.SendMessage(new TurbineChangeStatorLoadMessage(val));
+            _window.SetStatorLoadInput(val); // Optimistically update input
+        };
+
+        if (EntMan.TryGetComponent(Owner, out TurbineComponent? comp))
+        {
+            _window.SetFlowRateInput(comp.FlowRate);
+            _window.SetStatorLoadInput(comp.StatorLoad);
+        }
+
         Update();
     }
 
-    void IBuiPreTickUpdate.PreTickUpdate()
+    public override void Update()
     {
-        if (_flowRateCoalescer.CheckIsModified(out var flowRateValue))
-            _pred!.SendMessage(new TurbineChangeFlowRateMessage(flowRateValue));
-
-        if (_statorLoadCoalescer.CheckIsModified(out var statorLoadValue))
-            _pred!.SendMessage(new TurbineChangeStatorLoadMessage(statorLoadValue));
+        base.Update();
     }
 
     protected override void UpdateState(BoundUserInterfaceState state)
