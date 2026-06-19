@@ -1,7 +1,5 @@
 using Content.Server.Actions;
-using Content.Server.Humanoid;
 using Content.Server.Inventory;
-using Content.Server.Polymorph.Components;
 using Content.Shared.Body;
 using Content.Shared.Buckle;
 using Content.Shared.Coordinates;
@@ -22,6 +20,7 @@ using Robust.Server.GameObjects;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using Content.Shared.Polymorph.Components;
 
 namespace Content.Server.Polymorph.Systems;
 
@@ -282,6 +281,19 @@ public sealed partial class PolymorphSystem : EntitySystem
         if (configuration.EffectProto != null)
             SpawnAttachedTo(configuration.EffectProto, child.ToCoordinates());
 
+        // KS14: original UID gets sent to a paused map, while Child or new entity's info needs to be sent to the client.
+        if (TryComp<PolymorphedEntityComponent>(child, out var polymorpedEntityComp))
+        {
+            Dirty(child, polymorpedEntityComp);
+        }
+
+        if (TryComp<PolymorphableComponent>(uid, out var polymorableComponent))
+        {
+            polymorableComponent.ChildEntity = GetNetEntity(child);
+            Dirty(uid, polymorableComponent);
+        }
+        // KS14: End
+
         return child;
     }
 
@@ -376,6 +388,13 @@ public sealed partial class PolymorphSystem : EntitySystem
                 ("child", Identity.Entity(parent, EntityManager))),
                 parent);
         QueueDel(uid);
+
+        // KS14: parent is the original entity, and now needs it info updated to client.
+        if (TryComp<PolymorphableComponent>(parent, out var polymorphableComp))
+        {
+            Dirty(parent, polymorphableComp);
+        }
+        // KS14: End
 
         return parent;
     }

@@ -1,6 +1,6 @@
 using Content.Server.Destructible;
-using Content.Server.Polymorph.Components;
 using Content.Server.Popups;
+using Content.Shared.Polymorph.Components;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Body;
 using Content.Shared.Damage.Systems;
