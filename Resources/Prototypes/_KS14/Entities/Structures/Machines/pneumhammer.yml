@@ -36,6 +36,7 @@
     fixtureId: piston
     pressureRange: 10,18000
     removedGasRatio: 1 # remove all gas
+    throwForce: 20
     minimumDamage:
       types:
         Blunt: 5

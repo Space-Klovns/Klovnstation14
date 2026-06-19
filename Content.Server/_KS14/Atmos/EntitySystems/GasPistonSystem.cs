@@ -12,6 +12,7 @@ using Robust.Server.Audio;
 using Content.Server.Atmos.EntitySystems;
 using Robust.Shared.Physics;
 using Content.Shared._KS14.Atmos.EntitySystems;
+using Content.Shared.Throwing;
 
 namespace Content.Server._KS14.Atmos.EntitySystems;
 
@@ -26,6 +27,7 @@ public sealed class GasPistonSystem : SharedGasPistonSystem
     [Dependency] private readonly AudioSystem _audioSystem = default!;
     [Dependency] private readonly AtmosphereSystem _atmosphereSystem = default!;
     [Dependency] private readonly PhysicsSystem _physicsSystem = default!;
+    [Dependency] private readonly ThrowingSystem _throwingSystem = default!;
 
     public override void Initialize()
     {
@@ -86,8 +88,14 @@ public sealed class GasPistonSystem : SharedGasPistonSystem
         var fraction = (pressure - minPressure) / (maxPressure - minPressure);
 
         var damage = (entity.Comp.MaximumDamage - entity.Comp.MinimumDamage) * (FixedPoint2)fraction + entity.Comp.MinimumDamage;
+        var transformComponent = Transform(entity);
+        var throwVector = transformComponent.LocalRotation.ToVec();
+
         foreach (var collidingUid in entity.Comp.CollidingUids)
+        {
             _damageableSystem.TryChangeDamage(collidingUid, damage, origin: entity.Owner);
+            _throwingSystem.TryThrow(collidingUid, throwVector, baseThrowSpeed: entity.Comp.ThrowForce, user: entity.Owner, predicted: false);
+        }
 
         _audioSystem.PlayPvs(entity.Comp.Sound, entity.Owner);
         _spriteFlickSystem.TryFlick(entity, entity.Comp.FlickData);

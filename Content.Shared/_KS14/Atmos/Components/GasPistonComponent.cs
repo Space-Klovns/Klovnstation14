@@ -66,6 +66,13 @@ public sealed partial class GasPistonComponent : Component, ISerializationHooks
     [ViewVariables(VVAccess.ReadWrite)]
     public DamageSpecifier MaximumDamage;
 
+    /// <summary>
+    ///     Throw force relative to zero.
+    /// </summary>
+    [DataField]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public float ThrowForce;
+
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
     public KsSpriteFlickData? FlickData = null;
