@@ -14,4 +14,11 @@ public sealed partial class KsCCVars
     [CVarControl(AdminFlags.Server)]
     public static readonly CVarDef<bool> WordFilterEnabled =
         CVarDef.Create("klovn.ic.wordfilter_enabled", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+    /// <summary>
+    ///     Transforms sets of quotes like `"text"` to curly quotes like `“text”`.
+    /// </summary>
+    [CVarControl(AdminFlags.Server)]
+    public static readonly CVarDef<bool> ChatQuotesEnabled =
+    CVarDef.Create("klovn.ic.quotes", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 }

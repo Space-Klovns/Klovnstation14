@@ -12,7 +12,7 @@ public sealed class WordFilterSystem : EntitySystem
     /// <summary>
     ///     Characters that are totally removed.
     /// </summary>
-    private static readonly char[] UnspacedPunctuation = ['\'', '"', '.', ',', '_'];
+    private static readonly char[] UnspacedPunctuation = ['“', '”', '‘', '‚', '"', '.', ',', '_'];
 
     /// <summary>
     ///     Characters that are replaced with spaces.
