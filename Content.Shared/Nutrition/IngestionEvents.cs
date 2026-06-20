@@ -38,8 +38,9 @@ public record struct EdibleEvent(EntityUid User)
 /// <param name="User">The entity that is trying to feed and therefore raising the event</param>
 /// <param name="Ingested">What are we trying to ingest?</param>
 /// <param name="Ingest">Should we actually try and ingest? Or are we just testing if it's even possible </param>
+
 [ByRefEvent]
-public record struct AttemptIngestEvent(EntityUid User, EntityUid Ingested, bool Ingest, bool Handled = false);
+public record struct AttemptIngestEvent(EntityUid User, EntityUid Ingested, bool Ingest, bool Handled = false, bool Chug = false /* KS14 Addition */);
 
 /// <summary>
 ///     Raised on an entity that is consuming another entity to see if there is anything attached to the entity
@@ -92,7 +93,12 @@ public record struct IsDigestibleEvent()
 /// Do After Event for trying to put food solution into stomach entity.
 /// </summary>
 [Serializable, NetSerializable]
-public sealed partial class EatingDoAfterEvent : SimpleDoAfterEvent;
+public sealed partial class EatingDoAfterEvent : SimpleDoAfterEvent
+{
+    // KS14 addition
+    [DataField]
+    public bool Chug;
+}
 
 /// <summary>
 /// We use this to determine if an entity should abort giving up its reagents at the last minute,
@@ -162,6 +168,9 @@ public record struct IngestedEvent(EntityUid User, EntityUid Target, Solution Sp
 
     // Should we try eating again?
     public bool Repeat;
+
+    // KS14 addition
+    public bool Chug = false;
 }
 
 /// <summary>

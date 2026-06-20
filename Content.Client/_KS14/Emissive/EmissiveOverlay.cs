@@ -130,7 +130,7 @@ public sealed class EmissiveOverlay : Overlay
 
                     var transformComponent = transformQuery.GetComponent(ent);
 
-                    var renderPosition = transformComponent.Coordinates.Position;
+                    var renderPosition = transformComponent.LocalPosition;
                     var spriteRotation = Angle.Zero;
                     if (ent.Comp.UseSpriteTransform)
                     {
@@ -176,7 +176,7 @@ public sealed class EmissiveOverlay : Overlay
 
                             if (noRot) // If its no-rot
                             {
-                                textureRotation = localEyeRotation;
+                                textureRotation = -localEyeRotation;
                                 drawRotation = textureRotation;
                             }
                             else // With rotation

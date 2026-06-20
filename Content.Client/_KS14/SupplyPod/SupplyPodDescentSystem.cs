@@ -11,7 +11,6 @@ public sealed class SupplyPodDescentSystem : EntitySystem
 {
     [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly AnimationPlayerSystem _animationPlayerSystem = default!;
-    [Dependency] private readonly SpriteSystem _spriteSystem = default!;
 
     private const string DescentAnimationKey = "poddescent";
 

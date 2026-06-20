@@ -2,25 +2,8 @@
   abstract: true
   id: BaseSpeciesLayers
   components:
-  # KS14 Start
-  - type: GenericVisualizer
-    visuals:
-      enum.RotationVisuals.RotationState:
-        lowshadow:
-          Vertical: { state: vert, offset: '0,-0.5', rotation: 0 }
-          Horizontal: { state: horz, offset: '0,0', rotation: -90 }
-  # KS14 End
   - type: Sprite
     layers:
-    # KS14 Start
-    # this is drawn under everything obvs
-    - sprite: _KS14/Mobs/mob_shadow.rsi
-      state: vert
-      offset: 0,-0.5
-      color: '#ffffff99'
-      map: ["lowshadow"]
-    # KS14 End
-
     # Torso
     - map: [ "enum.HumanoidVisualLayers.Chest" ]
 
@@ -105,3 +88,25 @@
         type: HumanoidMarkingModifierBoundUserInterface
       enum.StrippingUiKey.Key:
         type: StrippableBoundUserInterface
+  # KS14 Start
+  - type: KsShadow
+    visuals: enum.RotationVisuals.RotationState
+    states:
+      Vertical:
+        sprite: /Textures/_KS14/Mobs/mob_shadow.rsi
+        state: vert
+        color: '#ffffff99'
+        offset: 0,-0.5
+      Horizontal:
+        sprite: /Textures/_KS14/Mobs/mob_shadow.rsi
+        state: horz
+        color: '#ffffff99'
+        offset: 0,0
+
+    # todo get rid of everything below and make it actually work on mapinit
+    sprite:
+      sprite: /Textures/_KS14/Mobs/mob_shadow.rsi
+      state: vert
+    modulate: '#ffffff99'
+    offset: 0,-0.5
+  # KS14 End

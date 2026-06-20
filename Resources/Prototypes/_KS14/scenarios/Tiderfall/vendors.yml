@@ -1,0 +1,53 @@
+- type: entity
+  parent: ColMarTechScenarioBase
+  id: ColMarTechScenarioTiderfallNt
+  suffix: Tiderfall, Nanotrasen
+  components:
+  - type: Sprite
+    sprite: _Crescent/Structures/syndicatearmory.rsi
+  - type: CMAutomatedVendor
+    sections:
+    - name: Base Gear
+      entries:
+      - id: ScenarioVendorBundleTiderfallNtBase
+        recommended: true
+    - name: Loadout
+      choices: { CMClass: 1 }
+      entries:
+      - id: ScenarioVendorBundleTiderfallNtSecurity
+        recommended: true
+      - id: ScenarioVendorBundleTiderfallNtTider
+      - id: ScenarioVendorBundleTiderfallNtClown
+      - id: ScenarioVendorBundleTiderfallNtMiner
+      - id: ScenarioVendorBundleTiderfallNtConscript
+      - id: ScenarioVendorBundleTiderfallNtMedic
+      - id: ScenarioVendorBundleTiderfallNtBartender
+
+- type: entity
+  parent: ColMarTechScenarioBase
+  id: ColMarTechScenarioTiderfallSyndie
+  suffix: Tiderfall, Syndicate
+  components:
+  - type: Sprite
+    sprite: _Crescent/Structures/syndicatearmory.rsi
+  - type: CMAutomatedVendor
+    sections:
+    - name: Base Gear
+      entries:
+      - id: ScenarioVendorBundleTiderfallSyndieBase
+        recommended: true
+    - name: Loadout
+      choices: { CMClass: 1 }
+      entries:
+      - id: ScenarioVendorBundleTiderfallSyndieSoldier
+        recommended: true
+      - id: ScenarioVendorBundleTiderfallSyndieInfiltrator
+      - id: ScenarioVendorBundleTiderfallSyndieDemolitionist
+      - id: ScenarioVendorBundleTiderfallSyndieSniper
+      - id: ScenarioVendorBundleTiderfallSyndieMedic
+      - id: ScenarioVendorBundleTiderfallSyndieMelee
+      - id: ScenarioVendorBundleTiderfallSyndieEngineer
+    - name: Utilities
+      entries:
+      - id: EmpGrenade
+        amount: 2

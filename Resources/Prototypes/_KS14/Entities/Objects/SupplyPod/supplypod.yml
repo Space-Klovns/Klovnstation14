@@ -165,7 +165,7 @@
   name: airstrike flare
   parent: BaseItem
   id: KsFlareSupplyPodMissile
-  description: CAG as fuck!!! Calls in a cruise missile to the location of the flare.
+  description: Calls in a cruise missile to the location of the flare.
   components:
   - type: Sprite
     sprite: Objects/Misc/flare.rsi

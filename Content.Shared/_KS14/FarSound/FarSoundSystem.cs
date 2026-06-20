@@ -8,6 +8,8 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.Farsound;
 
+// did you know pvs entities in range of you are pvs overriden and so is their parents or whatever
+
 public sealed class FarSoundSystem : EntitySystem
 {
     [Dependency] private readonly INetManager _netManager = default!;
@@ -18,24 +20,26 @@ public sealed class FarSoundSystem : EntitySystem
     public Filter GetFilter(EntityUid sourceUid, float minimumRange, float maximumRange)
     {
         var ourMapCoordinates = _transformSystem.GetMapCoordinates(sourceUid);
-        if (_netManager.IsClient)
-        {
-            var localFilter = Filter.Empty();
-            if (_playerManager.LocalEntity is not { } localUid)
-                return localFilter;
 
-            var localMapCoordinates = _transformSystem.GetMapCoordinates(localUid);
-            if (localMapCoordinates.MapId != ourMapCoordinates.MapId)
-                return localFilter;
+        // dreams of prediction
+        // if (_netManager.IsClient)
+        // {
+        //     var localFilter = Filter.Empty();
+        //     if (_playerManager.LocalEntity is not { } localUid)
+        //         return localFilter;
 
-            var distance = (ourMapCoordinates.Position - localMapCoordinates.Position).Length();
-            if (distance < minimumRange ||
-                distance > maximumRange)
-                return localFilter;
+        //     var localMapCoordinates = _transformSystem.GetMapCoordinates(localUid);
+        //     if (localMapCoordinates.MapId != ourMapCoordinates.MapId)
+        //         return localFilter;
 
-            localFilter.AddPlayer(_playerManager.LocalSession!);
-            return localFilter;
-        }
+        //     var distance = (ourMapCoordinates.Position - localMapCoordinates.Position).Length();
+        //     if (distance < minimumRange ||
+        //         distance > maximumRange)
+        //         return localFilter;
+
+        //     localFilter.AddPlayer(_playerManager.LocalSession!);
+        //     return localFilter;
+        // }
 
         var sessions = _playerManager.NetworkedSessions;
         var filter = Filter.Empty();
@@ -84,6 +88,11 @@ public sealed class FarSoundSystem : EntitySystem
 
     public void PlayFarSound(EntityUid sourceUid, FarSoundData data, EntityUid? userUid = null)
     {
+        // fuck i give up on predicting this
+        // this would otherwise require map-coordinates which is unfeasible unless every source of farsounds is magically always in PVS for everybaldi on the map
+        if (_netManager.IsClient)
+            return;
+
         var (filter, audioParams) = GetData(sourceUid, data.Range.X, data.Range.Y, data.Sound.Params);
         if (userUid is { })
             filter.RemovePlayerByAttachedEntity(userUid.Value);

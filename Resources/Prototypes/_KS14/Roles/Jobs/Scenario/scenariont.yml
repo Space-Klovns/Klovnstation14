@@ -13,6 +13,9 @@
   - !type:AddComponentSpecial
     components:
     - type: ScenarioNt
+    - type: NpcFactionMember
+      factions:
+      - NanoTrasen
 
 - type: startingGear #placeholder till rmc vendors, then they'll be butt naked
   id: ScenarioNtGear

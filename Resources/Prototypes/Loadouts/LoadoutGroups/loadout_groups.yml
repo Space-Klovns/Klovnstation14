@@ -410,6 +410,7 @@
   - BibleHonk
   - BibleRatvar
   - BibleNarsie
+  - BibleQuran # KS14 - brought back
 
 - type: loadoutGroup
   id: JanitorHead

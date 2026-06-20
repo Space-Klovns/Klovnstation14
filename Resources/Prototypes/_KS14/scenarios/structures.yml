@@ -97,3 +97,9 @@
   components:
   - type: Sprite
     state: red
+
+- type: entity
+  parent: ColMarTechBase
+  id: ColMarTechScenarioBase
+  name: Scenario automatic vendor
+  description: An automatic vending machine. Looks useful.

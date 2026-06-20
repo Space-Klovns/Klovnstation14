@@ -1442,6 +1442,14 @@ Entries:
 - author: LaCumbiaDelCoronavirus
   changes:
     - type: Fix
-      message: You no longer get forced to stand after you stop being weightless if you are not able to stand.
+      message: >-
+        You no longer get forced to stand after you stop being weightless if you
+        are not able to stand.
   id: 152
   time: '2026-06-19T16:40:26.0000000+00:00'
+- author: Gerkada
+  changes:
+    - type: Add
+      message: Added a chug verb. You can now chug drinks in one go!
+  id: 153
+  time: '2026-06-19T21:27:46.0000000+00:00'

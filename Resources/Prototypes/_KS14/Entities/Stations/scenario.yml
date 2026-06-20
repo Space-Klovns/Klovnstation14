@@ -4,16 +4,8 @@
 - type: entity
   parent:
   - BaseStation
-  - BaseStationNews
-  - BaseStationCargo
   - BaseStationJobsSpawning
   - BaseStationRecords
-  - BaseStationGateway
-  - BaseStationCentcomm
-  - BaseStationAlertLevels
-  - BaseStationSalvageJobs
-  - BaseStationSiliconLawAsimov
-  - BaseStationAllEventsEligible
   - BaseStationNanotrasen
   id: KsStationBasicScenario
   categories: [ HideSpawnMenu ]

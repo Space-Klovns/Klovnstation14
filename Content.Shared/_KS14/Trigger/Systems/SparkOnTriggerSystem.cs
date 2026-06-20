@@ -16,6 +16,10 @@ public sealed class SparkOnTriggerSystem : EntitySystem
 
     private void OnTrigger(Entity<SparkOnTriggerComponent> entity, ref TriggerEvent args)
     {
+        if (args.Key is { } key &&
+            !entity.Comp.KeysIn.Contains(key))
+            return;
+
         var (uid, component) = entity;
         var targetUid = component.TargetUser ? args.User : uid;
         if (!TryComp(targetUid, out TransformComponent? targetTransform))

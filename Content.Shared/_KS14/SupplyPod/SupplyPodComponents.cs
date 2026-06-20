@@ -27,7 +27,7 @@ public sealed partial class SupplyPodComponent : Component
     public float Height = 5f;
 
     /// <summary>
-    ///     Maximum random angle to fall..
+    ///     Maximum random angle to fall at.
     /// </summary>
     [DataField, ViewVariables(VVAccess.ReadWrite)]
     public Angle AngularDeviation;

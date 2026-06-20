@@ -122,6 +122,17 @@
     sprite: Objects/Specific/Chapel/mysteryofthedruids.rsi
 
 - type: entity
+  parent: Bible
+  name: quran # KS14, it is back
+  description: "Prayer carpet not included"
+  id: BibleQuran
+  components:
+  - type: Sprite
+    sprite: Objects/Specific/Chapel/quran.rsi
+  - type: Item
+    sprite: Objects/Specific/Chapel/quran.rsi
+
+- type: entity
   id: BibleCommunistManifesto
   name: communist manifesto
   parent: Bible

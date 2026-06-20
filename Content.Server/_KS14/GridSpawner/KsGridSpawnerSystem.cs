@@ -1,3 +1,4 @@
+using System.Numerics;
 using Content.Server.Shuttles.Systems;
 using Robust.Server.GameObjects;
 using Robust.Shared.EntitySerialization.Systems;
@@ -33,7 +34,9 @@ public sealed class KsGridSpawnerSystem : EntitySystem
             var distance = MathF.Sqrt(
                 _robustRandom.NextFloat(minSq, maxSq));
 
-            position += _robustRandom.NextAngle().RotateVec(new System.Numerics.Vector2(distance, 0f));
+            position += _robustRandom.NextAngle().RotateVec(new Vector2(distance, 0f));
+            // Align grid position with tiles
+            position = new(MathF.Floor(position.X), MathF.Floor(position.Y));
         }
 
         if (_mapLoaderSystem.TryLoadGrid(transformComponent.MapID, entity.Comp.Path, out var gridEntity, offset: position, rot: entity.Comp.Rotation))

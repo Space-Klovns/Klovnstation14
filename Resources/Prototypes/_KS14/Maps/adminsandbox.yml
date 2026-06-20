@@ -1,0 +1,16 @@
+- type: gameMap
+  id: AdminSandbox
+  mapName: 'Tiderfall'
+  mapPath: /Maps/_KS14/adminsandbox.yml
+  minPlayers: 0
+  maxPlayers: 90
+  stations:
+    AdminSandbox:
+      stationProto: KsStationBasicScenario
+      components:
+      - type: StationNameSetup
+        mapNameTemplate: 'AdminSandbox'
+      - type: StationJobs
+        availableJobs:
+          ScenarioNt: [ -1, -1 ]
+      - type: KsSilenceWelcomeMessage

@@ -7124,7 +7124,7 @@ entities:
       parent: 1
     - type: KsGridSpawner
       path: /Maps/_KS14/Grids/Scenarios/tiderfall/listeningpost.yml
-      spawnRange: 0,200
+      spawnRange: 0, 40
   - uid: 3133
     components:
     - type: Transform
@@ -7132,7 +7132,7 @@ entities:
       parent: 1
     - type: KsGridSpawner
       path: /Maps/_KS14/Grids/Scenarios/tiderfall/wreck.yml
-      spawnRange: 180,281
+      spawnRange: 80,150
 - proto: WallRock
   entities:
   - uid: 2

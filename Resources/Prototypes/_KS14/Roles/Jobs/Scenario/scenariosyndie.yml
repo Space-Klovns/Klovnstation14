@@ -14,6 +14,9 @@
   - !type:AddComponentSpecial
     components:
     - type: ScenarioSyndie
+    - type: NpcFactionMember
+      factions:
+      - Syndicate
 
 - type: startingGear
   id: ScenarioSyndieGear
