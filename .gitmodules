@@ -2,3 +2,9 @@
 	path = RobustToolbox
 	url = https://github.com/space-wizards/RobustToolbox.git
 	branch = master
+[submodule "Resources/Prototypes/_KsModule"]
+	path = Resources/Prototypes/_KsModule
+	url = https://github.com/Space-Klovns/Klovnmodule-Resources-Prototypes.git
+[submodule "Resources/Audio/_KsModule"]
+	path = Resources/Audio/_KsModule
+	url = https://github.com/Space-Klovns/Klovnmodule-Resources-Audio.git
