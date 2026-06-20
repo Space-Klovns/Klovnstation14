@@ -1,5 +1,6 @@
 using Content.Shared._KS14.SupplyPod;
 using Robust.Server.Audio;
+using Robust.Shared.Random;
 using Robust.Shared.Timing;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
@@ -10,8 +11,9 @@ namespace Content.Server._KS14.SupplyPod;
 /// </summary>
 public sealed class SupplyPodSystem : SharedSupplyPodSystem
 {
-    [Dependency] private readonly AudioSystem _audioSystem = default!;
     [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private readonly IRobustRandom _robustRandom = default!;
+    [Dependency] private readonly AudioSystem _audioSystem = default!;
 
     public override void Initialize()
     {
@@ -61,9 +63,10 @@ public sealed class SupplyPodSystem : SharedSupplyPodSystem
         var curTime = _gameTiming.CurTime;
 
         var activeComponent = EnsureComp<ActiveSupplyPodComponent>(entity.Owner);
+        activeComponent.DestinationCoordinates = Transform(entity).Coordinates;
         activeComponent.LaunchFinishTime = curTime + entity.Comp.FallDuration;
         activeComponent.FallSoundTime = curTime + entity.Comp.FallSoundDelay;
-        activeComponent.DestinationCoordinates = Transform(entity).Coordinates;
+        activeComponent.Angle = _robustRandom.NextAngle(-entity.Comp.AngularDeviation, entity.Comp.AngularDeviation);
         Dirty(entity.Owner, activeComponent);
     }
 }

@@ -25,6 +25,12 @@ public sealed partial class SupplyPodComponent : Component
     [DataField, ViewVariables(VVAccess.ReadWrite)]
     public float Height = 5f;
 
+    /// <summary>
+    ///     Maximum random angle to fall..
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    public Angle AngularDeviation;
+
     #region Fall data
     /// <summary>
     ///     Amount of time taken to fall down to the ground.
@@ -88,7 +94,7 @@ public sealed partial class ActiveSupplyPodComponent : Component
     /// </summary>
     [DataField, ViewVariables(VVAccess.ReadOnly)]
     [AutoNetworkedField]
-    public Angle Angle = Angle.FromDegrees(15d);
+    public Angle Angle;
 }
 
 [Access(typeof(SharedSupplyPodSystem))]
