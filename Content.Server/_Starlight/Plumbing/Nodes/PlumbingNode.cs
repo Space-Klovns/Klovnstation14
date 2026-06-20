@@ -16,5 +16,5 @@ public partial class PlumbingNode : PipeNode
     ///     The <see cref="IPlumbingNet"/> this plumbing duct is part of.
     /// </summary>
     [ViewVariables]
-    public IPlumbingNet? PlumbingNet => (IPlumbingNet?) NodeGroup;
+    public IPlumbingNet? PlumbingNet => (IPlumbingNet?)NodeGroup;
 }

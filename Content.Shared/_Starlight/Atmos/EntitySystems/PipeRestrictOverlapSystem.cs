@@ -28,8 +28,10 @@ public sealed class PipeRestrictOverlapSystem : EntitySystem
         PipeDirection Direction,
 
         AtmosPipeLayer Layer,
+        Type NodeType /* KS14: plumbing node separation */,
 
-        Angle Rotation = default);
+        Angle Rotation = default
+        );
 
     /// <inheritdoc/>
     public override void Initialize()
@@ -107,10 +109,15 @@ public sealed class PipeRestrictOverlapSystem : EntitySystem
         var entDirsAndLayers = GetAllDirectionsAndLayers(ent).ToList();
         var otherDirsAndLayers = GetAllDirectionsAndLayers(other).ToList();
 
-        foreach (var (dir, layer) in entDirsAndLayers)
+        foreach (var (dir, layer, type /* KS14: plumbing node separation */) in entDirsAndLayers)
         {
-            foreach (var (otherDir, otherLayer) in otherDirsAndLayers)
+            foreach (var (otherDir, otherLayer, otherType /* KS14: plumbing node separation */) in otherDirsAndLayers)
             {
+                // KS14 Start
+                if (type != otherType)
+                    continue;
+                // KS14 End
+
                 if ((dir & otherDir) != 0 && layer == otherLayer)
                     return true;
             }
@@ -118,12 +125,12 @@ public sealed class PipeRestrictOverlapSystem : EntitySystem
 
         return false;
 
-        IEnumerable<(PipeDirection, AtmosPipeLayer)> GetAllDirectionsAndLayers(Entity<NodeContainerComponent, TransformComponent> pipe)
+        IEnumerable<(PipeDirection, AtmosPipeLayer, Type /* KS14: plumbing node separation */)> GetAllDirectionsAndLayers(Entity<NodeContainerComponent, TransformComponent> pipe)
         {
             foreach (var node in pipe.Comp1.Nodes.Values)
             {
                 if (node is IPipeNode pipeNode)
-                    yield return (pipeNode.Direction.RotatePipeDirection(pipe.Comp2.LocalRotation), pipeNode.Layer);
+                    yield return (pipeNode.Direction.RotatePipeDirection(pipe.Comp2.LocalRotation), pipeNode.Layer, node.GetType() /* KS14: plumbing node separation */);
             }
         }
     }
@@ -158,8 +165,13 @@ public sealed class PipeRestrictOverlapSystem : EntitySystem
             var otherXform = Transform(otherEnt);
 
             // Compare against the existing pipe's actual rotated nodes
-            foreach (var (existingDir, existingLayer) in GetPipeNodeData((otherEnt, otherNodeComp, otherXform)))
+            foreach (var (existingDir, existingLayer, existingType /* KS14: plumbing node separation */) in GetPipeNodeData((otherEnt, otherNodeComp, otherXform)))
             {
+                // KS14 Start
+                if (proposed.NodeType != existingType)
+                    continue;
+                // KS14 End
+
                 // Conflict occurs if they share a layer AND any directional bit
                 if (proposed.Layer == existingLayer && (proposedDirAbs & existingDir) != 0)
                     return otherEnt;
@@ -169,7 +181,7 @@ public sealed class PipeRestrictOverlapSystem : EntitySystem
         return null;
     }
 
-    private static IEnumerable<(PipeDirection RotatedDirection, AtmosPipeLayer Layer)> GetPipeNodeData(
+    private static IEnumerable<(PipeDirection RotatedDirection, AtmosPipeLayer Layer, Type NodeType /* KS14: plumbing node separation */)> GetPipeNodeData(
         Entity<NodeContainerComponent, TransformComponent> pipe)
     {
         var rotation = pipe.Comp2.LocalRotation;
@@ -177,7 +189,7 @@ public sealed class PipeRestrictOverlapSystem : EntitySystem
         foreach (var node in pipe.Comp1.Nodes.Values)
         {
             if (node is IPipeNode pipeNode)
-                yield return (pipeNode.Direction.RotatePipeDirection(rotation), pipeNode.Layer);
+                yield return (pipeNode.Direction.RotatePipeDirection(rotation), pipeNode.Layer, node.GetType() /* KS14: plumbing node separation */);
         }
     }
 }

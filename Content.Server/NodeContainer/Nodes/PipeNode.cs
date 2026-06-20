@@ -45,7 +45,7 @@ namespace Content.Server.NodeContainer.Nodes
             _alwaysReachable.Add(pipeNode);
 
             if (NodeGroup != null)
-                IoCManager.Resolve<IEntityManager>().System<NodeGroupSystem>().QueueRemakeGroup((BaseNodeGroup) NodeGroup);
+                IoCManager.Resolve<IEntityManager>().System<NodeGroupSystem>().QueueRemakeGroup((BaseNodeGroup)NodeGroup);
         }
 
         public void RemoveAlwaysReachable(PipeNode pipeNode)
@@ -55,7 +55,7 @@ namespace Content.Server.NodeContainer.Nodes
             _alwaysReachable.Remove(pipeNode);
 
             if (NodeGroup != null)
-                IoCManager.Resolve<IEntityManager>().System<NodeGroupSystem>().QueueRemakeGroup((BaseNodeGroup) NodeGroup);
+                IoCManager.Resolve<IEntityManager>().System<NodeGroupSystem>().QueueRemakeGroup((BaseNodeGroup)NodeGroup);
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace Content.Server.NodeContainer.Nodes
                 _connectionsEnabled = value;
 
                 if (NodeGroup != null)
-                    IoCManager.Resolve<IEntityManager>().System<NodeGroupSystem>().QueueRemakeGroup((BaseNodeGroup) NodeGroup);
+                    IoCManager.Resolve<IEntityManager>().System<NodeGroupSystem>().QueueRemakeGroup((BaseNodeGroup)NodeGroup);
             }
         }
 
@@ -89,7 +89,7 @@ namespace Content.Server.NodeContainer.Nodes
         ///     The <see cref="IPipeNet"/> this pipe is a part of.
         /// </summary>
         [ViewVariables]
-        private IPipeNet? PipeNet => (IPipeNet?) NodeGroup;
+        private IPipeNet? PipeNet => (IPipeNet?)NodeGroup;
 
         /// <summary>
         ///     The gases in this pipe.
@@ -191,7 +191,7 @@ namespace Content.Server.NodeContainer.Nodes
 
             for (var i = 0; i < PipeDirectionHelpers.PipeDirections; i++)
             {
-                var pipeDir = (PipeDirection) (1 << i);
+                var pipeDir = (PipeDirection)(1 << i);
 
                 if (!CurrentPipeDirection.HasDirection(pipeDir))
                     continue;
@@ -243,7 +243,8 @@ namespace Content.Server.NodeContainer.Nodes
 
                 foreach (var node in container.Nodes.Values)
                 {
-                    if (node is PipeNode pipe)
+                    if (node is PipeNode pipe &&
+                        PipeSubtypesCanConnect(pipe) /* KS14: only same direct type can connect (plumbingnodde cant connect with pipenode) */)
                         yield return pipe;
                 }
             }
@@ -252,5 +253,10 @@ namespace Content.Server.NodeContainer.Nodes
         PipeDirection IPipeNode.Direction => OriginalPipeDirection;
         AtmosPipeLayer IPipeNode.Layer => CurrentPipeLayer;
         // Starlight End: RPD
+
+        // KS14 Start
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        public bool PipeSubtypesCanConnect(IPipeNode otherNode) => otherNode.GetType() == GetType();
+        // KS14 End
     }
 }

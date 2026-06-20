@@ -58,3 +58,9 @@ public sealed partial class NightshiftBulbComponent : Component
     [DataField]
     public Color OriginalColor = Color.White;
 }
+
+/// <summary>
+///     Added to lights that should never be affected by nightshift.
+/// </summary>
+[RegisterComponent, Access(typeof(NightshiftRule))]
+public sealed partial class NightshiftExemptComponent : Component;

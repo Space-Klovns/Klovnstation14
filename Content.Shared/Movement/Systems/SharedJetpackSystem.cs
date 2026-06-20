@@ -30,6 +30,7 @@ public abstract class SharedJetpackSystem : EntitySystem
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
     [Dependency] private readonly ActionContainerSystem _actionContainer = default!;
     [Dependency] private readonly KsZLevelPhysicsSystem _zLevelPhysicsSystem = default!; // KS14
+    [Dependency] private readonly SharedGravitySystem _gravitySystem = default!; // KS14
 
     [Dependency] private readonly EntityQuery<JetpackUserComponent> _jetpackUserQuery = default!;
     [Dependency] private readonly EntityQuery<ActiveJetpackComponent> _activeJetpackQuery = default!;
@@ -87,12 +88,12 @@ public abstract class SharedJetpackSystem : EntitySystem
         // while (query.MoveNext(out var uid, out var user))
         // {
         var transform = Transform(userEntity);
-        var gridUid = transform.GridUid;
+        var gridUid = transform.GridUid ?? transform.MapUid; // KS14: Fallback to map
 
         var jetpackUid = userEntity.Comp.Jetpack;
         if (transform.GridUid == gridUid && TryComp<JetpackComponent>(jetpackUid, out var jetpackComponent))
         {
-            var canFly = CanFlyOnGrid(gridUid);
+            var canFly = CanFlyOnGrid(gridUid, userEntity /* KS14: Flyer UID */);
             SetEnabled((jetpackUid, jetpackComponent), jetpackComponent.Enabled, flyIfEnabled: canFly, user: userEntity.Owner);
 
             if (!canFly)
@@ -120,7 +121,7 @@ public abstract class SharedJetpackSystem : EntitySystem
         if (!TryComp<JetpackComponent>(jetpackUid, out var jetpackComponent))
             return;
 
-        var canFly = CanFlyOnGrid(args.Transform.GridUid);
+        var canFly = CanFlyOnGrid(args.Transform.ParentUid /* KS14: Use new ParentUid, not GridUid */, jetpackUser /* KS14: Flyer UID */);
         var jetpackEnabled = jetpackComponent.Enabled;
 
         if (!canFly && jetpackEnabled)
@@ -194,7 +195,7 @@ public abstract class SharedJetpackSystem : EntitySystem
         }
 
         // You can still turn the jetpack on/off when on a grid that doesn't permit flying, you just won't be able to fly!
-        SetEnabled(jetpack, toggled, toggled ? CanFlyOnGrid(Transform(jetpack).GridUid) : false, user);
+        SetEnabled(jetpack, toggled, toggled ? CanFlyOnGrid(Transform(jetpack).GridUid, user /* KS14: Flyer UID */) : false, user);
 
         args.Handled = true;
     }
@@ -203,13 +204,13 @@ public abstract class SharedJetpackSystem : EntitySystem
     /// This should return only whether you can <i>fly</i> with the jetpack, assuming it's turned on etc.
     /// Return value should stay regardless of <see cref="CanEnable"/>.
     /// </remarks>
-    private bool CanFlyOnGrid(EntityUid? gridUid)
+    private bool CanFlyOnGrid(EntityUid? gridUid, EntityUid flyerUid /* KS14: Flyer UID */)
     {
         // KS14 Start
         if (TryComp<GravityComponent>(gridUid, out var gravityComponent))
         {
             if (_canFlyOnGrids)
-                return !gravityComponent.Enabled;
+                return !gravityComponent.Enabled || _gravitySystem.IsWeightless(flyerUid);
             else
                 return false;
         }
