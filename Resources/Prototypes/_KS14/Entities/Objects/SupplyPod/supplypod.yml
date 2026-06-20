@@ -22,6 +22,7 @@
     fallSoundDelay: 0s
     fallSound: /Audio/_KS14/Weapons/mortar_long_whistle.ogg
     impactSound: /Audio/Effects/metal_slam2.ogg
+    height: 14
 
 - type: entity
   id: BaseSupplyPodExplosive
@@ -29,7 +30,7 @@
   components:
   - type: TriggerOnSupplyPodLanded
   - type: ExplosionOnTrigger
-    explosionType: Minibomb
+    explosionType: KsSupplyPodMissile
     maxTileIntensity: 600
     totalIntensity: 600
     intensitySlope: 35
@@ -50,12 +51,13 @@
     layers:
     - state: missile
   - type: SupplyPod
-    fallDuration: 1s
+    height: 40
+    fallDuration: 1.5s
     fallSoundDelay: 0s
     fallSound:
       path: /Audio/_KS14/Weapons/mortar_long_whistle.ogg
       params:
-        pitch: 1
+        pitch: 0.75
 
 # syndie
 - type: entity
@@ -82,3 +84,33 @@
   parent: [ SupplyPodMissileSyndicateInert, BaseSupplyPodExplosive ]
   id: SupplyPodMissileSyndicateExplosive
   suffix: Armed
+
+
+
+- type: explosion
+  id: KsSupplyPodMissile
+  damagePerIntensity:
+    types:
+      Heat: 5
+      Blunt: 7
+      Piercing: 2
+  tileBreakChance: [0, 0.25, 0.6, 1]
+  tileBreakIntensity: [0, 7, 15, 22]
+  tileBreakRerollReduction: 20
+  lightColor: Orange
+  texturePath: /Textures/Effects/fire.rsi
+  fireStates: 3
+  temperature: 3200
+  smallSoundIterationThreshold: 0
+  sound:
+    path: /Audio/_KS14/Effects/tank_explosion_louder.ogg
+    params:
+      pitch: 1
+      maxDistance: 20
+      referenceDistance: 5
+      volume: 1
+  soundFar:
+    path: /Audio/_KS14/Effects/tank_explosion_distant.ogg
+    params:
+      pitch: 0.7
+      volume: -5

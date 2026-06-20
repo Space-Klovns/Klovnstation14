@@ -15,7 +15,6 @@ public sealed class SupplyPodDescentSystem : EntitySystem
     [Dependency] private readonly SpriteSystem _spriteSystem = default!;
 
     private const string DescentAnimationKey = "poddescent";
-    private const float MaxHeight = 13f; // 13 tiles
 
     public override void Initialize()
     {
@@ -39,7 +38,7 @@ public sealed class SupplyPodDescentSystem : EntitySystem
         var countdown = entity.Comp.LaunchFinishTime - _gameTiming.CurTime;
         var countdownSeconds = (float)countdown.TotalSeconds;
 
-        var angledOffset = entity.Comp.Angle.RotateVec(new Vector2(0f, MaxHeight));
+        var angledOffset = entity.Comp.Angle.RotateVec(new Vector2(0f, supplyPodComponent.Height));
         if (TryComp<SpriteComponent>(entity, out var spriteComponent))
             _spriteSystem.SetRotation((entity, spriteComponent), spriteComponent.Rotation + entity.Comp.Angle);
 

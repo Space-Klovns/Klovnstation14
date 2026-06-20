@@ -19,6 +19,12 @@ public sealed partial class SupplyPodComponent : Component
     [DataField(serverOnly: true), ViewVariables(VVAccess.ReadWrite)]
     public TimeSpan TransitDuration = TimeSpan.Zero;
 
+    /// <summary>
+    ///     Height that this starts descent from/ascends to.
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadWrite)]
+    public float Height = 5f;
+
     #region Fall data
     /// <summary>
     ///     Amount of time taken to fall down to the ground.

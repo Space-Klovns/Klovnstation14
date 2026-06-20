@@ -18,7 +18,7 @@
   copyright: "Created by `Kneeling` on freesound.org out of other CC0-1.0 sounds (see source for details), edited and converted to .ogg for Klovnstation 14"
   source: "https://freesound.org/people/Kneeling/sounds/448002/"
 
-- files: ["tank_explosion.ogg"]
+- files: ["tank_explosion.ogg", "tank_explosion_louder.ogg", "tank_explosion_distant.ogg"]
   license: "CC-BY-NC-4.0"
   copyright: "Created by `cydon` on freesound.org, edited and converted to .ogg for Klovnstation 14"
   source: "https://freesound.org/people/cydon/sounds/268557/"
