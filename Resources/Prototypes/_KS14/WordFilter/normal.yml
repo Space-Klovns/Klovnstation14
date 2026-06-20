@@ -21,3 +21,16 @@
   category: Normal
   matcher: (?i)j+a+r+t+y+
   replacement: party
+
+# Geg/kek
+- type: wordFilter
+  id: geg
+  category: Normal
+  matcher: (?i)g+e+g+
+  replacement: lol
+
+- type: wordFilter
+  id: kek
+  category: Normal
+  matcher: (?i)k+e+k+
+  replacement: lol

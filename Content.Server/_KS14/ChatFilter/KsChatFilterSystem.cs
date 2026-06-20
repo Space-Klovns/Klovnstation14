@@ -1,3 +1,4 @@
+using System.Linq;
 using Content.Server.Chat.Managers;
 using Content.Server.Chat.Systems;
 using Content.Shared._KS14.CCVar;
@@ -25,22 +26,34 @@ public sealed class KsChatFilterSystem : EntitySystem
 
     private void OnBeforeMessageSent(ref KsBeforeMessageSent args)
     {
+        if (args.Cancelled)
+            return;
+
         var message = WordFilterSystem.SkeletoniseString(WordFilterSystem.ParseToLatin(args.Message));
+
+        if (_wordFilterSystem.AnyFilterMatches(message, WordFilterCategory.Prohibited))
+        {
+            SendMessage(args.Session, "ks-word-filter-prohibited");
+            args.Cancelled = true;
+            return;
+        }
 
         var originalMessage = message;
         _wordFilterSystem.FilterAndReplaceString(ref message, WordFilterCategory.Normal);
-        _wordFilterSystem.FilterAndReplaceString(ref message, WordFilterCategory.Slur);
 
         if (originalMessage == message)
             return;
 
-        Warn(args.Session);
+        args.Cancelled |= message.Length == 0 ||
+            message.All(char.IsWhiteSpace);
+
+        SendMessage(args.Session, "ks-word-filter-warn");
         args.Message = message;
     }
 
-    private void Warn(ICommonSession session)
+    private void SendMessage(ICommonSession session, LocId locId)
     {
-        var message = Loc.GetString("ks-word-filter-warn");
+        var message = Loc.GetString(locId);
         var wrappedMessage = Loc.GetString("chat-manager-server-wrap-message", ("message", FormattedMessage.EscapeText(message)));
         _chatManager.ChatMessageToOne(ChatChannel.Server, message, wrappedMessage, default, false, session!.Channel, colorOverride: Color.Purple);
     }

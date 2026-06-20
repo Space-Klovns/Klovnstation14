@@ -17,8 +17,11 @@ public sealed partial class WordFilterPrototype : IPrototype, ISerializationHook
     [DataField(required: true)]
     public Regex Matcher = default!;
 
-    [DataField(required: true)]
-    public string Replacement = default!;
+    /// <summary>
+    ///     If null, the replacement is an empty string.
+    /// </summary>
+    [DataField]
+    public string? Replacement = null;
 
     [DataField(required: true)]
     public WordFilterCategory Category;
@@ -28,5 +31,11 @@ public sealed partial class WordFilterPrototype : IPrototype, ISerializationHook
 public enum WordFilterCategory : byte
 {
     Normal,
-    Slur
+    Slur,
+
+    /// <summary>
+    ///     Special case that completely blocks the message from being sent if any of these
+    ///         are matched.
+    /// </summary>
+    Prohibited
 }

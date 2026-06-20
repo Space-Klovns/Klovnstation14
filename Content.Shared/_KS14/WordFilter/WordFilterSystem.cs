@@ -113,7 +113,7 @@ public sealed class WordFilterSystem : EntitySystem
 
         foreach (var filterPrototype in _prototypeManager.EnumeratePrototypes<WordFilterPrototype>())
         {
-            var datum = new WordFilterCacheDatum(filterPrototype.Matcher, filterPrototype.Replacement);
+            var datum = new WordFilterCacheDatum(filterPrototype.Matcher, filterPrototype.Replacement ?? "");
 
             var list = _cache.GetOrNew(filterPrototype.Category);
             list.Add(datum);
@@ -121,7 +121,7 @@ public sealed class WordFilterSystem : EntitySystem
     }
 
     /// <returns>True if any matching wordfilter filtered the string.</returns>
-    public bool IsStringFiltered(string message, WordFilterCategory category)
+    public bool AnyFilterMatches(string message, WordFilterCategory category)
     {
         if (!_cache.TryGetValue(category, out var cacheData))
             return false;
@@ -146,5 +146,6 @@ public sealed class WordFilterSystem : EntitySystem
             message = cacheDatum.Matcher.Replace(message, cacheDatum.Replacement);
     }
 
+    /// <param name="Replacement">May be empty.</param>
     private sealed record class WordFilterCacheDatum(Regex Matcher, string Replacement);
 }
