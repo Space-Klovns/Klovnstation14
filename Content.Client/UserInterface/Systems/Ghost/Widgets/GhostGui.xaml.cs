@@ -42,6 +42,9 @@ public sealed partial class GhostGui : UIWidget
     public TimeSpan? RespawnTime = null;
     public bool AlertedForRespawn = false;
 
+    public void SetRespawnsEnabled(bool value)
+        => GhostRespawnButton.Visible = value;
+
     protected override void FrameUpdate(Robust.Shared.Timing.FrameEventArgs args)
     {
         base.FrameUpdate(args);
@@ -56,7 +59,7 @@ public sealed partial class GhostGui : UIWidget
         var secondsLeft = (RespawnTime.Value - _gameTiming.CurTime).TotalSeconds;
         if (secondsLeft > 0f)
         {
-            GhostRespawnButton.Text = Loc.GetString("ghost-gui-respawn-button-wait", ("seconds", $"{secondsLeft:0.##}"));
+            GhostRespawnButton.Text = Loc.GetString("ghost-gui-respawn-button-wait", ("seconds", $"{secondsLeft:0.#}"));
             GhostRespawnButton.Disabled = true;
         }
         else

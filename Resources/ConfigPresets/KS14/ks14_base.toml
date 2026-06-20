@@ -31,4 +31,4 @@ flyongrids = true
 
 [klovn.ghostrespawn]
 enabled = true
-cooldown_seconds = 300
+cooldown_seconds = 60

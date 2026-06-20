@@ -15,8 +15,8 @@ namespace Content.Server._KS14.GhostRespawn;
 
 public sealed partial class GhostRespawnSystem : EntitySystem
 {
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
     [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+    [Dependency] private readonly IPlayerManager _playerManager = default!;
     [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly GameTicker _gameTicker = default!;
 
@@ -27,12 +27,14 @@ public sealed partial class GhostRespawnSystem : EntitySystem
     // Yea i know sessions arent removed after the entity dies
     private readonly Dictionary<EntityUid, ICommonSession> _trackedDeathEntities = [];
 
+    private bool _enabled;
     private TimeSpan _respawnCooldown;
 
     public override void Initialize()
     {
         base.Initialize();
 
+        _configurationManager.OnValueChanged(KsCCVars.GhostRespawnEnabled, (x) => _enabled = x, invokeImmediately: true);
         _configurationManager.OnValueChanged(KsCCVars.GhostRespawnCooldownSeconds, (x) => _respawnCooldown = TimeSpan.FromSeconds(x), invokeImmediately: true);
 
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestartCleanup);
@@ -52,6 +54,7 @@ public sealed partial class GhostRespawnSystem : EntitySystem
 
     private void OnPlayerDetached(PlayerDetachedEvent args)
     {
+        // you can't just ghost out of it
         if (_respawnTimes.ContainsKey(args.Player) ||
             !TryComp<MobStateComponent>(args.Entity, out var mobStateComponent) ||
             !StateIsEligibleForRespawn(mobStateComponent.CurrentState))
@@ -96,6 +99,9 @@ public sealed partial class GhostRespawnSystem : EntitySystem
 
     private void OnActMessage(GhostRespawnActMessage message, EntitySessionEventArgs args)
     {
+        if (!_enabled)
+            return;
+
         if (!_respawnTimes.TryGetValue(args.SenderSession, out var respawnTime) ||
             _gameTiming.CurTime < respawnTime)
             return;
