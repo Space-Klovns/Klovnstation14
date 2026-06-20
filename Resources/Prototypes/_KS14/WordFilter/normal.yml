@@ -1,0 +1,23 @@
+- type: wordFilter
+  id: doctos
+  category: Normal
+  matcher: (?i)d[o0]+c+t+[o0]+s+
+  replacement: doctor
+
+- type: wordFilter
+  id: oalgo
+  category: Normal
+  matcher: (?i)o al(?:go|nglo|gyx)
+  replacement: or something
+
+- type: wordFilter
+  id: sharty
+  category: Normal
+  matcher: (?i)s+h+a+r+t+y+
+  replacement: party
+
+- type: wordFilter
+  id: jarty
+  category: Normal
+  matcher: (?i)j+a+r+t+y+
+  replacement: party
