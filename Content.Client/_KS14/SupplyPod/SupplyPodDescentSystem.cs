@@ -3,7 +3,6 @@ using Content.Shared._KS14.SupplyPod;
 using Robust.Client.Animations;
 using Robust.Client.GameObjects;
 using Robust.Shared.Animations;
-using Robust.Shared.Audio.Systems;
 using Robust.Shared.Timing;
 
 namespace Content.Client._KS14.SupplyPod;
@@ -39,9 +38,8 @@ public sealed class SupplyPodDescentSystem : EntitySystem
         var countdownSeconds = (float)countdown.TotalSeconds;
 
         var angledOffset = entity.Comp.Angle.RotateVec(new Vector2(0f, supplyPodComponent.Height));
-        if (TryComp<SpriteComponent>(entity, out var spriteComponent))
-            _spriteSystem.SetRotation((entity, spriteComponent), spriteComponent.Rotation + entity.Comp.Angle);
 
+        TryComp<SpriteComponent>(entity, out var spriteComponent);
         var originalColor = spriteComponent?.Color ?? Color.White;
         var arrivalAnimation = new Animation()
         {

@@ -1,5 +1,6 @@
 using Content.Shared._KS14.SupplyPod;
 using Robust.Server.Audio;
+using Robust.Server.GameObjects;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
@@ -14,6 +15,8 @@ public sealed class SupplyPodSystem : SharedSupplyPodSystem
     [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly IRobustRandom _robustRandom = default!;
     [Dependency] private readonly AudioSystem _audioSystem = default!;
+    [Dependency] private readonly TransformSystem _transformSystem = default!;
+    [Dependency] private readonly AppearanceSystem _appearanceSystem = default!;
 
     public override void Initialize()
     {
@@ -54,6 +57,7 @@ public sealed class SupplyPodSystem : SharedSupplyPodSystem
                 activeSupplyPodComponent.DestinationCoordinates
             );
 
+            _appearanceSystem.SetData(uid, SupplyPodVisuals.Landed, true);
             RemComp(uid, activeSupplyPodComponent);
         }
     }
@@ -61,12 +65,16 @@ public sealed class SupplyPodSystem : SharedSupplyPodSystem
     private void OnMapInit(Entity<SupplyPodComponent> entity, ref MapInitEvent args)
     {
         var curTime = _gameTiming.CurTime;
+        var transformComponent = Transform(entity);
 
         var activeComponent = EnsureComp<ActiveSupplyPodComponent>(entity.Owner);
-        activeComponent.DestinationCoordinates = Transform(entity).Coordinates;
+        activeComponent.DestinationCoordinates = transformComponent.Coordinates;
         activeComponent.LaunchFinishTime = curTime + entity.Comp.FallDuration;
         activeComponent.FallSoundTime = curTime + entity.Comp.FallSoundDelay;
         activeComponent.Angle = _robustRandom.NextAngle(-entity.Comp.AngularDeviation, entity.Comp.AngularDeviation);
         Dirty(entity.Owner, activeComponent);
+
+        _transformSystem.SetLocalRotation(entity.Owner, activeComponent.Angle, xform: transformComponent);
+        _appearanceSystem.SetData(entity.Owner, SupplyPodVisuals.Landed, false);
     }
 }
