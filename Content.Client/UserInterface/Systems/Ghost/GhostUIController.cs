@@ -1,4 +1,5 @@
-﻿using Content.Client.Gameplay;
+﻿using Content.Client._KS14.GhostRespawn; // KS14
+using Content.Client.Gameplay;
 using Content.Client.Ghost;
 using Content.Client.UserInterface.Systems.Gameplay;
 using Content.Client.UserInterface.Systems.Ghost.Widgets;
@@ -9,7 +10,7 @@ using Robust.Client.UserInterface.Controllers;
 namespace Content.Client.UserInterface.Systems.Ghost;
 
 // TODO hud refactor BEFORE MERGE fix ghost gui being too far up
-public sealed class GhostUIController : UIController, IOnSystemChanged<GhostSystem>
+public sealed partial /* KS14: partial */ class GhostUIController : UIController, IOnSystemChanged<GhostSystem>, IOnSystemChanged<GhostRespawnSystem> /* KS14 */
 {
     [Dependency] private readonly IEntityNetworkManager _net = default!;
 
@@ -128,6 +129,8 @@ public sealed class GhostUIController : UIController, IOnSystemChanged<GhostSyst
         Gui.TargetWindow.WarpClicked += OnWarpClicked;
         Gui.TargetWindow.OnGhostnadoClicked += OnGhostnadoClicked;
 
+        Gui.RespawnPressed += OnGhostRespawnPressed; // KS14
+
         UpdateGui();
     }
 
@@ -140,6 +143,8 @@ public sealed class GhostUIController : UIController, IOnSystemChanged<GhostSyst
         Gui.ReturnToBodyPressed -= ReturnToBody;
         Gui.GhostRolesPressed -= GhostRolesPressed;
         Gui.TargetWindow.WarpClicked -= OnWarpClicked;
+
+        Gui.RespawnPressed -= OnGhostRespawnPressed; // KS14
 
         Gui.Hide();
     }

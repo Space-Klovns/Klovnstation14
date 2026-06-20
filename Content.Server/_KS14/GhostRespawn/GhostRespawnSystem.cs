@@ -1,0 +1,106 @@
+using System.Runtime.InteropServices;
+using Content.Server.GameTicking;
+using Content.Shared._KS14.CCVar;
+using Content.Shared._KS14.GhostRespawn;
+using Content.Shared.GameTicking;
+using Content.Shared.Mobs;
+using Content.Shared.Mobs.Components;
+using Robust.Server.Player;
+using Robust.Shared.Configuration;
+using Robust.Shared.Enums;
+using Robust.Shared.Player;
+using Robust.Shared.Timing;
+
+namespace Content.Server._KS14.GhostRespawn;
+
+public sealed partial class GhostRespawnSystem : EntitySystem
+{
+    [Dependency] private readonly IPlayerManager _playerManager = default!;
+    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private readonly GameTicker _gameTicker = default!;
+
+    private readonly Dictionary<ICommonSession, TimeSpan> _respawnTimes = [];
+    /// <summary>
+    ///     Entities that are being used to track a players respawn timer.
+    /// </summary>
+    // Yea i know sessions arent removed after the entity dies
+    private readonly Dictionary<EntityUid, ICommonSession> _trackedDeathEntities = [];
+
+    private TimeSpan _respawnCooldown;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        _configurationManager.OnValueChanged(KsCCVars.GhostRespawnCooldownSeconds, (x) => _respawnCooldown = TimeSpan.FromSeconds(x), invokeImmediately: true);
+
+        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestartCleanup);
+
+        SubscribeLocalEvent<PlayerDetachedEvent>(OnPlayerDetached);
+        SubscribeLocalEvent<MobStateChangedEvent>(OnMobStateChanged);
+
+        _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
+        SubscribeNetworkEvent<GhostRespawnActMessage>(OnActMessage);
+    }
+
+    private void OnRoundRestartCleanup(RoundRestartCleanupEvent args)
+    {
+        _respawnTimes.Clear();
+        _trackedDeathEntities.Clear();
+    }
+
+    private void OnPlayerDetached(PlayerDetachedEvent args)
+    {
+        if (_respawnTimes.ContainsKey(args.Player) ||
+            !TryComp<MobStateComponent>(args.Entity, out var mobStateComponent) ||
+            !StateIsEligibleForRespawn(mobStateComponent.CurrentState))
+            return;
+
+        var respawnTime = _gameTiming.CurTime + _respawnCooldown;
+        _respawnTimes[args.Player] = respawnTime;
+        RaiseNetworkEvent(new GhostRespawnTimeMessage(respawnTime), args.Player);
+
+        _trackedDeathEntities[args.Entity] = args.Player;
+    }
+
+    private void OnMobStateChanged(MobStateChangedEvent args)
+    {
+        // If the player has died in their attached body, start the respawn tracker for it.
+
+        if (!_trackedDeathEntities.TryGetValue(args.Target, out var session) ||
+            !StateIsEligibleForRespawn(args.NewMobState))
+            return;
+
+        ref var respawnTime = ref CollectionsMarshal.GetValueRefOrAddDefault(_respawnTimes, session, out var exists);
+        if (exists)
+            return;
+
+        respawnTime = _gameTiming.CurTime + _respawnCooldown;
+        RaiseNetworkEvent(new GhostRespawnTimeMessage(respawnTime), session);
+
+        _trackedDeathEntities[args.Target] = session;
+    }
+
+    private static bool StateIsEligibleForRespawn(MobState state)
+        => state == MobState.Dead;
+
+    private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs args)
+    {
+        if (args.NewStatus != SessionStatus.InGame ||
+            !_respawnTimes.TryGetValue(args.Session, out var time))
+            return;
+
+        RaiseNetworkEvent(new GhostRespawnTimeMessage(time), args.Session);
+    }
+
+    private void OnActMessage(GhostRespawnActMessage message, EntitySessionEventArgs args)
+    {
+        if (!_respawnTimes.TryGetValue(args.SenderSession, out var respawnTime) ||
+            _gameTiming.CurTime < respawnTime)
+            return;
+
+        _respawnTimes.Remove(args.SenderSession);
+        _gameTicker.Respawn(args.SenderSession);
+    }
+}
