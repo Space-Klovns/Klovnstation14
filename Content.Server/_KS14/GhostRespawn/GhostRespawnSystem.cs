@@ -23,6 +23,7 @@ public sealed partial class GhostRespawnSystem : EntitySystem
     private readonly Dictionary<ICommonSession, TimeSpan> _respawnTimes = [];
     /// <summary>
     ///     Entities that are being used to track a players respawn timer.
+    ///         Think of it as their 'original body'.
     /// </summary>
     // Yea i know sessions arent removed after the entity dies
     private readonly Dictionary<EntityUid, ICommonSession> _trackedDeathEntities = [];
@@ -69,20 +70,28 @@ public sealed partial class GhostRespawnSystem : EntitySystem
 
     private void OnMobStateChanged(MobStateChangedEvent args)
     {
-        // If the player has died in their attached body, start the respawn tracker for it.
-
-        if (!_trackedDeathEntities.TryGetValue(args.Target, out var session) ||
-            !StateIsEligibleForRespawn(args.NewMobState))
+        if (!_trackedDeathEntities.TryGetValue(args.Target, out var session))
             return;
 
-        ref var respawnTime = ref CollectionsMarshal.GetValueRefOrAddDefault(_respawnTimes, session, out var exists);
-        if (exists)
-            return;
+        // If the player has died in their original body, start the respawn tracker for it.
+        if (!StateIsEligibleForRespawn(args.NewMobState))
+        {
+            ref var respawnTime = ref CollectionsMarshal.GetValueRefOrAddDefault(_respawnTimes, session, out var exists);
+            if (exists)
+                return;
 
-        respawnTime = _gameTiming.CurTime + _respawnCooldown;
-        RaiseNetworkEvent(new GhostRespawnTimeMessage(respawnTime), session);
+            respawnTime = _gameTiming.CurTime + _respawnCooldown;
+            RaiseNetworkEvent(new GhostRespawnTimeMessage(respawnTime), session);
 
-        _trackedDeathEntities[args.Target] = session;
+            _trackedDeathEntities[args.Target] = session;
+        }
+        else // Otherwise if they are now alive in their original body, cancel respawn.
+        {
+            _respawnTimes.Remove(session);
+            RaiseNetworkEvent(new GhostRespawnTimeMessage(null), session);
+
+            _trackedDeathEntities.Remove(args.Target);
+        }
     }
 
     private static bool StateIsEligibleForRespawn(MobState state)

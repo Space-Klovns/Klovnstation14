@@ -66,6 +66,14 @@ public sealed partial /* KS14: partial */ class GhostUIController : UIController
 
         Gui.Visible = _system?.IsGhost ?? false;
         Gui.Update(_system?.AvailableGhostRoleCount, _system?.Player?.CanReturnToBody);
+
+        // KS14 Start
+        if (_ghostRespawnSystem is { })
+        {
+            OnRespawnTimeUpdated(_ghostRespawnSystem.LocalRespawnTime);
+            OnEnabledUpdated(_ghostRespawnSystem.Enabled);
+        }
+        // KS14 End
     }
 
     private void OnPlayerRemoved(GhostComponent component)

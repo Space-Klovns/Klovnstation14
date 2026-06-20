@@ -9,9 +9,6 @@ public sealed partial class GhostUIController
 
     public void OnSystemLoaded(GhostRespawnSystem system)
     {
-        OnRespawnTimeUpdated(system.LocalRespawnTime);
-        OnEnabledUpdated(system.Enabled);
-
         system.RespawnTimeUpdated += OnRespawnTimeUpdated;
         system.EnabledUpdated += OnEnabledUpdated;
     }
