@@ -23,6 +23,7 @@
     fallSound: /Audio/_KS14/Weapons/mortar_long_whistle.ogg
     impactSound: /Audio/Effects/metal_slam2.ogg
     height: 14
+    angularDeviation: 15
 
 - type: entity
   id: BaseSupplyPodExplosive
@@ -58,6 +59,7 @@
       path: /Audio/_KS14/Weapons/mortar_long_whistle.ogg
       params:
         pitch: 0.75
+    angularDeviation: 20
 
 # syndie
 - type: entity
