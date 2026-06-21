@@ -7,9 +7,9 @@ namespace Content.Shared._KS14.CCVar;
 public sealed partial class KsCCVars
 {
     /// <summary>
-    ///     Is the WORDFILTER... enabled?
+    ///     Is the WORDFILTER... enabled? Serverside.
     ///
-    ///     Changes only really apply when entitysystems start for the first time; i.e., when the server first starts.
+    ///     Changes only apply when entitysystems start for the first time; i.e., when the server first starts.
     /// </summary>
     [CVarControl(AdminFlags.Server)]
     public static readonly CVarDef<bool> WordFilterEnabled =
@@ -21,4 +21,11 @@ public sealed partial class KsCCVars
     [CVarControl(AdminFlags.Server)]
     public static readonly CVarDef<bool> ChatQuotesEnabled =
     CVarDef.Create("klovn.ic.quotes", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+    /// <summary>
+    ///     Whether the clientside slurfilter is enabled.
+    /// </summary>
+    [CVarControl(AdminFlags.Server)]
+    public static readonly CVarDef<bool> SlurFilterEnabled =
+        CVarDef.Create("klovn.ic.slurfilter_enabled", false, CVar.ARCHIVE | CVar.CLIENTONLY);
 }
