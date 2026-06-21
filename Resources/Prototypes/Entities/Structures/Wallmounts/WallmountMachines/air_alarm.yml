@@ -93,9 +93,9 @@
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
   # KS14 Start: /tg/ sprite port
   - type: EmissiveLayers
-    glowRadius: 0.45
-    intensity: 1.5
-    offset: 0.25,-0.8
+    glowRadius: 0.7
+    intensity: 3
+    offset: 0.25,-1.2
     layers:
     - airAlarmState
   - type: DirectionalSpriteManipulation

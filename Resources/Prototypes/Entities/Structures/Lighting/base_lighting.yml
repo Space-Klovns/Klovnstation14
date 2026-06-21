@@ -417,7 +417,6 @@
       types:
         Heat: 1
     popupText: powered-light-component-burn-hand
-  - type: NightshiftExempt # KS14: this doesn't look good with nightshift
 
 - type: entity
   id: PoweredWarmSmallLight

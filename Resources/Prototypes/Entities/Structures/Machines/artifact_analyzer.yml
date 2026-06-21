@@ -80,8 +80,8 @@
           False: { visible: false }
   # KS14: emissive start
   - type: EmissiveLayers
-    glowRadius: 0.1
-    intensity: 0.7
+    glowRadius: 0.75
+    intensity: 1
   # KS14: emissive end
 
 - type: entity

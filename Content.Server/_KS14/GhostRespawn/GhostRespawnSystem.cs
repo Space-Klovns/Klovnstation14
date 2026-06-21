@@ -77,17 +77,19 @@ public sealed partial class GhostRespawnSystem : EntitySystem
     {
         // you can't just ghost out of it
         if (_respawnTimes.ContainsKey(args.Player) ||
-            !TryComp<MobStateComponent>(args.Entity, out var mobStateComponent) ||
-            !IsEligibleForRespawn(args.Entity, mobStateComponent.CurrentState))
+            !TryComp<MobStateComponent>(args.Entity, out var mobStateComponent))
+            return;
+
+        if (!TerminatingOrDeleted(args.Entity))
+            _trackedDeathEntities[args.Entity] = args.Player;
+
+        if (!IsEligibleForRespawn(args.Entity, mobStateComponent.CurrentState))
             return;
 
         var respawnTime = _gameTiming.CurTime + _respawnCooldown + _penalties.GetValueOrDefault(args.Player);
         _respawnTimes[args.Player] = respawnTime;
 
         RaiseNetworkEvent(new GhostRespawnTimeMessage(respawnTime), args.Player);
-
-        if (!TerminatingOrDeleted(args.Entity))
-            _trackedDeathEntities[args.Entity] = args.Player;
     }
 
     private void OnMobStateChanged(MobStateChangedEvent args)
@@ -96,7 +98,7 @@ public sealed partial class GhostRespawnSystem : EntitySystem
             return;
 
         // If the player has died in their original body, start the respawn tracker for it.
-        if (!IsEligibleForRespawn(args.Target, args.NewMobState))
+        if (IsEligibleForRespawn(args.Target, args.NewMobState))
         {
             ref var respawnTime = ref CollectionsMarshal.GetValueRefOrAddDefault(_respawnTimes, session, out var exists);
             if (exists)
