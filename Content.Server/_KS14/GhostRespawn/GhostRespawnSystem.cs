@@ -20,7 +20,13 @@ public sealed partial class GhostRespawnSystem : EntitySystem
     [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly GameTicker _gameTicker = default!;
 
+    /// <summary>
+    ///     Penalty to be added to respawn time for each session.
+    /// </summary>
     private readonly Dictionary<ICommonSession, TimeSpan> _penalties = [];
+    /// <summary>
+    ///     Time at which a session will respawn.
+    /// </summary>
     private readonly Dictionary<ICommonSession, TimeSpan> _respawnTimes = [];
     /// <summary>
     ///     Entities that are being used to track a players respawn timer.
