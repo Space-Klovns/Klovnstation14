@@ -11,7 +11,6 @@
         <!-- KS14: respawn button -->
         <Button Visible="False"
                 Disabled="True"
-                MinSize="100 0"
                 Name="GhostRespawnButton"
                 Text="{Loc ks-ghost-gui-ghost-respawn-button}"/>
     </BoxContainer>
