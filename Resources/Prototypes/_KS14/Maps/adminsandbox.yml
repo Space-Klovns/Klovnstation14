@@ -1,6 +1,6 @@
 - type: gameMap
   id: AdminSandbox
-  mapName: 'Tiderfall'
+  mapName: 'AdminSandbox'
   mapPath: /Maps/_KS14/adminsandbox.yml
   minPlayers: 0
   maxPlayers: 90

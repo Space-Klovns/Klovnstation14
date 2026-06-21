@@ -9,6 +9,9 @@ jobs:
    runs-on: ubuntu-latest
    steps:
     - uses: actions/checkout@v4.2.2
+      with: # KS14
+        persist-credentials: true # KS14: hidden submodules
+        token: ${{ secrets.SECREPO_PAT }} # KS14: hidden submodules
     - name: Setup submodule
       run: |
         git submodule update --init --recursive
