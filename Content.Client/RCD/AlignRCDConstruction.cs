@@ -161,6 +161,8 @@ public sealed class AlignRCDConstruction : PlacementMode
 
         var topRight = spriteBounds.TopRight;
         var arrowOffset = new Vector2(0f, spriteBounds.Height * -0.75f);
+        var eyeRotation = args.Viewport.Eye?.Rotation ?? default;
+        var dontDrawArrow = pManager.EntityManager.HasComponent<_KS14.Rcd.KsRcdPlacementNoHintComponent>(uid);
 
         foreach (var coordinate in locationcollection)
         {
@@ -170,19 +172,20 @@ public sealed class AlignRCDConstruction : PlacementMode
             var worldPos = _transformSystem.ToMapCoordinates(coordinate).Position;
             var worldRot = _transformSystem.GetWorldRotation(coordinate.EntityId) + directionAngle;
 
-            var rot = args.Viewport.Eye?.Rotation ?? default;
             var respectiveColor = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
 
             _spriteSystem.SetColor((uid.Value, spriteComponent), respectiveColor);
-            _spriteSystem.RenderSprite((uid.Value, spriteComponent), args.WorldHandle, rot, worldRot, worldPos);
+            _spriteSystem.RenderSprite((uid.Value, spriteComponent), args.WorldHandle, eyeRotation, worldRot, worldPos);
 
-            if (transformComponent.NoLocalRotation)
+            if (dontDrawArrow ||
+                transformComponent.NoLocalRotation)
                 continue;
 
             // TODO LCDC: Fix chemical beacon somehow being locked to only north/south idk how
 
-            // Just ArrowOffset because the worldhandle matrix is already relative to the sprite (RenderSprite mutated it and didnt reset it)
+            // Just ArrowOffset because the worldhandle matrix is relative to the sprite kinda
             // also -topRight because the above is relative to the top-right of the sprite, not center
+            worldHandle.SetTransform(Matrix3Helpers.CreateTransform(worldPos, -eyeRotation) * spriteComponent.LocalMatrix);
             worldHandle.DrawTexture(arrowTexture, directionAngle.RotateVec(arrowOffset) - topRight, directionAngle, modulate: respectiveColor);
         }
     }

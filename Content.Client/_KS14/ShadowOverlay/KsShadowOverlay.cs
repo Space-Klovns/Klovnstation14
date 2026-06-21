@@ -49,9 +49,8 @@ public sealed class KsShadowOverlay : Overlay
 
         var worldHandle = args.WorldHandle;
         var transformQuery = _entityManager.TransformQuery;
-        var eyeRotation = args.Viewport.Eye?.Rotation ?? Angle.Zero;
+        var eyeRotation = -args.Viewport.Eye?.Rotation ?? Angle.Zero;
 
-        var invMatrix = args.Viewport.GetWorldToLocalMatrix();
         foreach (var grid in _grids)
         {
             var gridInvMatrix = _transformSystem.GetInvWorldMatrix(grid);
@@ -64,7 +63,7 @@ public sealed class KsShadowOverlay : Overlay
                 continue;
 
             var localEyeRotation = eyeRotation - gridInvMatrix.Rotation();
-            var gridMatrix = Matrix3x2.Multiply(_transformSystem.GetWorldMatrix(grid.Owner), invMatrix);
+            var gridMatrix = _transformSystem.GetWorldMatrix(grid.Owner);
             worldHandle.SetTransform(gridMatrix);
 
             foreach (var entity in _entities)
@@ -76,9 +75,7 @@ public sealed class KsShadowOverlay : Overlay
                 var texture = _spriteSystem.Frame0(sprite);
 
                 var position = transformComponent.LocalPosition;
-                var rotation = entity.Comp.Rotation + localEyeRotation;
-
-                var quad = new Box2Rotated(Box2.CenteredAround(position + entity.Comp.Offset, texture.Size / (float)EyeManager.PixelsPerMeter), rotation, position);
+                var quad = new Box2Rotated(box: Box2.CenteredAround(position + entity.Comp.Offset, texture.Size / (float)EyeManager.PixelsPerMeter), localEyeRotation, position);
 
                 worldHandle.DrawTextureRectRegion(
                     texture,

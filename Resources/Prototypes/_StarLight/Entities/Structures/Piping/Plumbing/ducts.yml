@@ -79,6 +79,7 @@
     rpld: true
   - type: StaticPrice
     price: 20
+  - type: KsRcdPlacementNoHint # KS14
 
 # ============================================================================
 # DUCT VARIANTS
