@@ -34,3 +34,17 @@
   category: Normal
   matcher: (?i)k+e+k+
   replacement: lol
+
+# grammar oyyy
+
+- type: wordFilter
+  id: dont
+  category: Normal
+  matcher: (?i)dont
+  replacement: don't
+
+- type: wordFilter
+  id: wouldntshouldnt
+  category: Normal
+  matcher: (?i)ldnt
+  replacement: ldn't

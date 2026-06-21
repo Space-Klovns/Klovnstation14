@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.RegularExpressions;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
@@ -113,7 +114,24 @@ public sealed class WordFilterSystem : EntitySystem
 
         foreach (var filterPrototype in _prototypeManager.EnumeratePrototypes<WordFilterPrototype>())
         {
-            var datum = new WordFilterCacheDatum(filterPrototype.Matcher, filterPrototype.Replacement ?? "");
+            string replacement;
+            string capitalisedReplacement;
+            if (filterPrototype.Replacement is { })
+            {
+                replacement = filterPrototype.Replacement;
+
+                var builder = new StringBuilder(replacement);
+                builder.Remove(0, 1);
+                builder.Insert(0, char.ToUpperInvariant(replacement[0]));
+                capitalisedReplacement = builder.ToString();
+            }
+            else
+            {
+                replacement = "";
+                capitalisedReplacement = "";
+            }
+
+            var datum = new WordFilterCacheDatum(filterPrototype.Matcher, replacement, capitalisedReplacement);
 
             var list = _cache.GetOrNew(filterPrototype.Category);
             list.Add(datum);
@@ -143,9 +161,50 @@ public sealed class WordFilterSystem : EntitySystem
             return;
 
         foreach (var cacheDatum in cacheData)
-            message = cacheDatum.Matcher.Replace(message, cacheDatum.Replacement);
+        {
+            var replacementLength = cacheDatum.Replacement.Length;
+            if (replacementLength == 0)
+            {
+                message = cacheDatum.Matcher.Replace(message, "");
+                continue;
+            }
+
+            var matchIndex = 0;
+            while (cacheDatum.Matcher.Match(message, matchIndex) is { } match &&
+                match.Success)
+            {
+                var matchString = match.Value;
+                var consecutiveUppercase = 0;
+                for (var ix = 0; ix < matchString.Length; ix++)
+                {
+                    var character = matchString[ix];
+                    if (char.IsWhiteSpace(character))
+                        continue;
+
+                    if (!char.IsUpper(character))
+                        break;
+
+                    consecutiveUppercase++;
+                }
+
+                // obsessed string ops
+                string replacement;
+                if (consecutiveUppercase == matchString.Length)
+                    replacement = cacheDatum.Replacement.ToUpperInvariant();
+                else if (consecutiveUppercase == 1)
+                    replacement = cacheDatum.ReplacementCapitalised;
+                else
+                    replacement = cacheDatum.Replacement;
+
+                message = message.Remove(match.Index, match.Length).Insert(match.Index, replacement);
+                matchIndex += match.Index + replacementLength;
+            }
+        }
     }
 
+    // Why does ReplacementCapitalised exist?
+    // Well... [ERRO] res.typecheck: Found reference to[System.Runtime]System.ReadOnlySpan`1 < char > ..ctor in method Content.Shared._KS14.WordFilter.WordFilterSystem.FilterAndReplaceString
     /// <param name="Replacement">May be empty.</param>
-    private sealed record class WordFilterCacheDatum(Regex Matcher, string Replacement);
+    /// <param name="ReplacementCapitalised">May be empty.</param>
+    private sealed record class WordFilterCacheDatum(Regex Matcher, string Replacement, string ReplacementCapitalised);
 }

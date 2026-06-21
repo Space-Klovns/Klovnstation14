@@ -66,7 +66,7 @@ public sealed partial class GhostGui : UIWidget
         var secondsLeft = (RespawnTime.Value - _gameTiming.CurTime).TotalSeconds;
         if (secondsLeft > 0f)
         {
-            GhostRespawnButton.Text = Loc.GetString("ghost-gui-respawn-button-wait", ("seconds", $"{secondsLeft:0.#}"));
+            GhostRespawnButton.Text = Loc.GetString("ghost-gui-respawn-button-wait", ("seconds", $"{secondsLeft:0.00}"));
             GhostRespawnButton.Disabled = true;
         }
         else
