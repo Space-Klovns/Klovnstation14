@@ -53,6 +53,13 @@ public sealed partial class GhostGui : UIWidget
         {
             GhostRespawnButton.Disabled = true;
             GhostRespawnButton.Text = Loc.GetString("ghost-gui-respawn-button-disabled");
+
+            if (AlertedForRespawn)
+            {
+                AlertedForRespawn = false;
+                GhostRespawnButton.StyleClasses.Remove(StyleClass.Negative);
+            }
+
             return;
         }
 
