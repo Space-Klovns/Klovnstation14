@@ -95,18 +95,18 @@
       Vertical:
         sprite: /Textures/_KS14/Mobs/mob_shadow.rsi
         state: vert
-        color: '#ffffff99'
+        color: '#ffffff6e'
         offset: 0,-0.5
       Horizontal:
         sprite: /Textures/_KS14/Mobs/mob_shadow.rsi
         state: horz
-        color: '#ffffff99'
+        color: '#ffffff6e'
         offset: 0,0
 
     # todo get rid of everything below and make it actually work on mapinit
     sprite:
       sprite: /Textures/_KS14/Mobs/mob_shadow.rsi
       state: vert
-    modulate: '#ffffff99'
+    modulate: '#ffffff6e'
     offset: 0,-0.5
   # KS14 End

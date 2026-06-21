@@ -16,6 +16,8 @@ public sealed class KsShadowOverlay : Overlay
     [Dependency] private readonly SpriteSystem _spriteSystem = default!;
     [Dependency] private readonly EntityLookupSystem _entityLookupSystem = default!;
 
+    [Dependency] private readonly EntityQuery<SpriteComponent> _spriteQuery = default!;
+
     public override OverlaySpace Space => OverlaySpace.WorldSpaceEntities;
     private const int ConstZIndex = (int)Shared.DrawDepth.DrawDepth.Mobs;
     private const LookupFlags EntityLookupFlags = LookupFlags.Dynamic | LookupFlags.Static | LookupFlags.Uncontained | LookupFlags.Approximate;
@@ -49,7 +51,7 @@ public sealed class KsShadowOverlay : Overlay
 
         var worldHandle = args.WorldHandle;
         var transformQuery = _entityManager.TransformQuery;
-        var eyeRotation = -args.Viewport.Eye?.Rotation ?? Angle.Zero;
+        var eyeRotation = args.Viewport.Eye?.Rotation ?? Angle.Zero;
 
         foreach (var grid in _grids)
         {
@@ -68,14 +70,15 @@ public sealed class KsShadowOverlay : Overlay
 
             foreach (var entity in _entities)
             {
-                if (entity.Comp.Sprite is not { } sprite)
+                if (entity.Comp.Sprite is not { } sprite ||
+                    !_spriteQuery.TryGetComponent(entity, out var spriteComponent))
                     continue;
 
                 var transformComponent = transformQuery.GetComponent(entity.Owner);
                 var texture = _spriteSystem.Frame0(sprite);
 
                 var position = transformComponent.LocalPosition;
-                var quad = new Box2Rotated(box: Box2.CenteredAround(position + entity.Comp.Offset, texture.Size / (float)EyeManager.PixelsPerMeter), localEyeRotation, position);
+                var quad = new Box2Rotated(box: Box2.CenteredAround(position + entity.Comp.Offset, texture.Size / (float)EyeManager.PixelsPerMeter * spriteComponent.Scale), -localEyeRotation, position);
 
                 worldHandle.DrawTextureRectRegion(
                     texture,
