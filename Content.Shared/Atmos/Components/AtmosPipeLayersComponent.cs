@@ -118,10 +118,5 @@ public enum AtmosPipeLayer
 {
     Primary,
     Secondary,
-    Tertiary,
-
-    // KS14 Addition
-    // BROOOOOOOOOOOO THIS SUCKS
-    // TODO LCDC: TODO PLUMBING:
-    Plumbing
+    Tertiary
 }
