@@ -20,6 +20,7 @@ public sealed partial class GhostRespawnSystem : EntitySystem
     [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly GameTicker _gameTicker = default!;
 
+    private readonly Dictionary<ICommonSession, TimeSpan> _penalties = [];
     private readonly Dictionary<ICommonSession, TimeSpan> _respawnTimes = [];
     /// <summary>
     ///     Entities that are being used to track a players respawn timer.
@@ -30,13 +31,15 @@ public sealed partial class GhostRespawnSystem : EntitySystem
 
     private bool _enabled;
     private TimeSpan _respawnCooldown;
+    private TimeSpan _penaltyTime;
 
     public override void Initialize()
     {
         base.Initialize();
 
-        _configurationManager.OnValueChanged(KsCCVars.GhostRespawnEnabled, (x) => _enabled = x, invokeImmediately: true);
+        _configurationManager.OnValueChanged(KsCCVars.GhostRespawnEnabled, x => _enabled = x, invokeImmediately: true);
         _configurationManager.OnValueChanged(KsCCVars.GhostRespawnCooldownSeconds, OnCooldownChanged, invokeImmediately: true);
+        _configurationManager.OnValueChanged(KsCCVars.GhostRespawnPenaltySeconds, x => _penaltyTime = TimeSpan.FromSeconds(x), invokeImmediately: true);
 
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestartCleanup);
 
@@ -65,6 +68,7 @@ public sealed partial class GhostRespawnSystem : EntitySystem
 
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent args)
     {
+        _penalties.Clear();
         _respawnTimes.Clear();
         _trackedDeathEntities.Clear();
     }
@@ -77,8 +81,9 @@ public sealed partial class GhostRespawnSystem : EntitySystem
             !IsEligibleForRespawn(args.Entity, mobStateComponent.CurrentState))
             return;
 
-        var respawnTime = _gameTiming.CurTime + _respawnCooldown;
+        var respawnTime = _gameTiming.CurTime + _respawnCooldown + _penalties.GetValueOrDefault(args.Player);
         _respawnTimes[args.Player] = respawnTime;
+
         RaiseNetworkEvent(new GhostRespawnTimeMessage(respawnTime), args.Player);
 
         if (!TerminatingOrDeleted(args.Entity))
@@ -97,7 +102,7 @@ public sealed partial class GhostRespawnSystem : EntitySystem
             if (exists)
                 return;
 
-            respawnTime = _gameTiming.CurTime + _respawnCooldown;
+            respawnTime = _gameTiming.CurTime + _respawnCooldown + _penalties.GetValueOrDefault(session);
             RaiseNetworkEvent(new GhostRespawnTimeMessage(respawnTime), session);
 
             if (!TerminatingOrDeleted(args.Target))
@@ -138,6 +143,9 @@ public sealed partial class GhostRespawnSystem : EntitySystem
         if (!_respawnTimes.TryGetValue(args.SenderSession, out var respawnTime) ||
             _gameTiming.CurTime < respawnTime)
             return;
+
+        ref var penalty = ref CollectionsMarshal.GetValueRefOrAddDefault(_penalties, args.SenderSession, out _);
+        penalty += _penaltyTime;
 
         _respawnTimes.Remove(args.SenderSession);
         RaiseNetworkEvent(new GhostRespawnTimeMessage(null), args.SenderSession);
