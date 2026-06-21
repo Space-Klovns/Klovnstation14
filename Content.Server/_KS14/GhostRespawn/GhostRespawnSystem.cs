@@ -36,7 +36,7 @@ public sealed partial class GhostRespawnSystem : EntitySystem
         base.Initialize();
 
         _configurationManager.OnValueChanged(KsCCVars.GhostRespawnEnabled, (x) => _enabled = x, invokeImmediately: true);
-        _configurationManager.OnValueChanged(KsCCVars.GhostRespawnCooldownSeconds, (x) => _respawnCooldown = TimeSpan.FromSeconds(x), invokeImmediately: true);
+        _configurationManager.OnValueChanged(KsCCVars.GhostRespawnCooldownSeconds, OnCooldownChanged, invokeImmediately: true);
 
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestartCleanup);
 
@@ -45,6 +45,22 @@ public sealed partial class GhostRespawnSystem : EntitySystem
 
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         SubscribeNetworkEvent<GhostRespawnActMessage>(OnActMessage);
+    }
+
+    private void OnCooldownChanged(float newValue)
+    {
+        var newTime = TimeSpan.FromSeconds(newValue);
+        var delta = newTime - _respawnCooldown;
+
+        foreach (var session in _respawnTimes.Keys)
+        {
+            ref var respawnTime = ref CollectionsMarshal.GetValueRefOrNullRef(_respawnTimes, session);
+            respawnTime += delta;
+
+            RaiseNetworkEvent(new GhostRespawnTimeMessage(respawnTime), session);
+        }
+
+        _respawnCooldown = newTime;
     }
 
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent args)
@@ -58,14 +74,15 @@ public sealed partial class GhostRespawnSystem : EntitySystem
         // you can't just ghost out of it
         if (_respawnTimes.ContainsKey(args.Player) ||
             !TryComp<MobStateComponent>(args.Entity, out var mobStateComponent) ||
-            !StateIsEligibleForRespawn(mobStateComponent.CurrentState))
+            !IsEligibleForRespawn(args.Entity, mobStateComponent.CurrentState))
             return;
 
         var respawnTime = _gameTiming.CurTime + _respawnCooldown;
         _respawnTimes[args.Player] = respawnTime;
         RaiseNetworkEvent(new GhostRespawnTimeMessage(respawnTime), args.Player);
 
-        _trackedDeathEntities[args.Entity] = args.Player;
+        if (!TerminatingOrDeleted(args.Entity))
+            _trackedDeathEntities[args.Entity] = args.Player;
     }
 
     private void OnMobStateChanged(MobStateChangedEvent args)
@@ -74,7 +91,7 @@ public sealed partial class GhostRespawnSystem : EntitySystem
             return;
 
         // If the player has died in their original body, start the respawn tracker for it.
-        if (!StateIsEligibleForRespawn(args.NewMobState))
+        if (!IsEligibleForRespawn(args.Target, args.NewMobState))
         {
             ref var respawnTime = ref CollectionsMarshal.GetValueRefOrAddDefault(_respawnTimes, session, out var exists);
             if (exists)
@@ -83,19 +100,26 @@ public sealed partial class GhostRespawnSystem : EntitySystem
             respawnTime = _gameTiming.CurTime + _respawnCooldown;
             RaiseNetworkEvent(new GhostRespawnTimeMessage(respawnTime), session);
 
-            _trackedDeathEntities[args.Target] = session;
+            if (!TerminatingOrDeleted(args.Target))
+                _trackedDeathEntities[args.Target] = session;
         }
         else // Otherwise if they are now alive in their original body, cancel respawn.
         {
             _respawnTimes.Remove(session);
             RaiseNetworkEvent(new GhostRespawnTimeMessage(null), session);
 
-            _trackedDeathEntities.Remove(args.Target);
+            if (!TerminatingOrDeleted(args.Target))
+                _trackedDeathEntities.Remove(args.Target);
         }
     }
 
-    private static bool StateIsEligibleForRespawn(MobState state)
-        => state == MobState.Dead;
+    private bool IsEligibleForRespawn(EntityUid uid, MobState state)
+    {
+        if (TerminatingOrDeleted(uid))
+            return true;
+
+        return state == MobState.Dead;
+    }
 
     private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs args)
     {
@@ -116,6 +140,8 @@ public sealed partial class GhostRespawnSystem : EntitySystem
             return;
 
         _respawnTimes.Remove(args.SenderSession);
+        RaiseNetworkEvent(new GhostRespawnTimeMessage(null), args.SenderSession);
+
         _gameTicker.Respawn(args.SenderSession);
     }
 }
