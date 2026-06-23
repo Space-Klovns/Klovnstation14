@@ -24,6 +24,7 @@ jobs:
     - name: Test submodule access
       run: |
         git ls-remote https://github.com/Space-Klovns/Klovnmodule-Resources-Prototypes.git
+
     - name: Checkout Master
       uses: actions/checkout@v7
       with: # KS14: params
