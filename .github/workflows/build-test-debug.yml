@@ -19,11 +19,15 @@ jobs:
 
     steps:
     - name: Checkout Master
-      uses: actions/checkout@v4.2.2
+      uses: actions/checkout@v7
       with: # KS14: params
         fetch-depth: 1 # KS14: made shallow, so its faster
         token: ${{ secrets.SECREPO_PAT }} # KS14: hidden submodules
         submodules: recursive # KS14
+
+    - name: Setup Submodule
+      run: |
+        git submodule update --init --recursive
 
     - name: Pull engine updates
       uses: space-wizards/submodule-dependency@v0.1.5
@@ -34,7 +38,7 @@ jobs:
         git submodule update --init --recursive
 
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v4.1.0
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: 10.0.x
 
