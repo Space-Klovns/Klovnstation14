@@ -20,6 +20,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    permissions: # KS14
+      contents: read
+
     steps:
     - name: Install dependencies
       run: sudo apt-get install -y python3-paramiko python3-lxml
@@ -28,8 +31,8 @@ jobs:
       with: # KS14: params
         fetch-depth: 1 # KS14: made shallow, so its faster
         persist-credentials: false # KS14
-        token: ${{ secrets.SECREPO_PAT }} # KS14: hidden submodules
         submodules: recursive # KS14
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v4.1.0

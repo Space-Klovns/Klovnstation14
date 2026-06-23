@@ -32,13 +32,16 @@ jobs:
     if: github.actor != 'PJBot' && github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
+    permissions: # KS14
+      contents: read
+
     steps:
       - name: Checkout Master
         uses: actions/checkout@v7
         with: # KS14
           submodules: recursive
           persist-credentials: true # KS14: hidden submodules
-          token: ${{ secrets.SECREPO_PAT }} # KS14: hidden submodules
+          token: ${{ secrets.GITHUB_TOKEN }} # KS14: hidden submodules
 
       - name: Pull engine updates
         uses: space-wizards/submodule-dependency@v0.1.5

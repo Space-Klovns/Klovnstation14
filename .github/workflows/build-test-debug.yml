@@ -17,17 +17,17 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    permissions: # KS14
+      contents: read
+
     steps:
-    - name: Debug secret
+    - name: Test submodule access
       run: |
-        echo "Length: ${#TOKEN}"
-      env:
-        TOKEN: ${{ secrets.SECREPO_PAT }}
+        git ls-remote https://github.com/Space-Klovns/Klovnmodule-Resources-Prototypes.git
     - name: Checkout Master
       uses: actions/checkout@v7
       with: # KS14: params
         fetch-depth: 1 # KS14: made shallow, so its faster
-        token: ${{ secrets.SECREPO_PAT }} # KS14: hidden submodules
         submodules: recursive # KS14
 
     - name: Setup Submodule
