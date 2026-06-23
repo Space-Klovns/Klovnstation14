@@ -22,6 +22,9 @@ namespace Content.Shared.Throwing
     /// </summary>
     public sealed class ThrownItemSystem : EntitySystem
     {
+        // KS14 Start
+        [Dependency] private readonly _KS14.RayCollision.KsRayCollisionSystem _ksRayCollision = default!;
+        // KS14 End
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly INetManager _netMan = default!;
         [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
@@ -136,6 +139,10 @@ namespace Content.Shared.Throwing
             if (_netMan.IsServer)
                 RemComp<PredictedThrownItemComponent>(uid);
             // </Trauma>
+
+            // KS14 Start
+            _ksRayCollision.StopChecking(uid); // if not you'll be stuck in eternal raycollision HELL
+            // KS14 End
         }
 
         public void LandComponent(EntityUid uid, ThrownItemComponent thrownItem, PhysicsComponent physics, bool playSound)

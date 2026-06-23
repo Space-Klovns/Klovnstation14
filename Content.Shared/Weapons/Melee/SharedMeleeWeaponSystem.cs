@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
+using Content.Shared._KS14.Random.Helpers; // KS14
 using Content.Shared.ActionBlocker;
 using Content.Shared.Actions.Events;
 using Content.Shared.Administration.Components;
@@ -11,6 +12,7 @@ using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Events;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Database;
+using Content.Shared.Effects; // KS14
 using Content.Shared.FixedPoint;
 using Content.Shared.Hands;
 using Content.Shared.Hands.Components;
@@ -35,6 +37,7 @@ using Robust.Shared.Audio.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components; // KS14
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
@@ -66,6 +69,7 @@ public abstract class SharedMeleeWeaponSystem : EntitySystem
     [Dependency] protected readonly SharedTransformSystem TransformSystem = default!;
     [Dependency] private readonly SharedStaminaSystem _stamina = default!;
     [Dependency] private readonly DamageExamineSystem _damageExamine = default!;
+    [Dependency] private readonly SharedColorFlashEffectSystem _colorFlashEffectSystem = default!; // KS14
     [Dependency] private readonly EntityQuery<DamageableComponent> _damageQuery = default!;
 
     private const int AttackMask = (int)(CollisionGroup.MobMask | CollisionGroup.Opaque);
@@ -867,19 +871,30 @@ public abstract class SharedMeleeWeaponSystem : EntitySystem
             return false;
         }
 
+        // KS14 removal start: remove this
         // Need hands or to be able to be shoved over.
-        if (!TryComp<HandsComponent>(target, out var targetHandsComponent))
-        {
-            if (!TryComp<StatusEffectsComponent>(target, out var status) ||
-                !status.AllowedEffects.Contains("KnockedDown"))
-            {
-                // Notify disarmable
-                if (HasComp<MobStateComponent>(target.Value))
-                    PopupSystem.PopupClient(Loc.GetString("disarm-action-disarmable", ("targetName", target.Value)), target.Value);
+        // if (!TryComp<HandsComponent>(target, out var targetHandsComponent))
+        // {
+        //     if (!TryComp<StatusEffectsComponent>(target, out var status) ||
+        //         !status.AllowedEffects.Contains("KnockedDown"))
+        //     {
+        //         // Notify disarmable
+        //         if (HasComp<MobStateComponent>(target.Value))
+        //             PopupSystem.PopupClient(Loc.GetString("disarm-action-disarmable", ("targetName", target.Value)), target.Value);
 
-                return false;
-            }
-        }
+        //         return false;
+        //     }
+        // }
+        // KS14 removal end
+        // KS14 Start
+        var targetTransformComponent = Transform(target.Value);
+        if (targetTransformComponent.Anchored)
+            return false;
+
+        if (!TryComp<PhysicsComponent>(target, out var physicsComponent) ||
+            physicsComponent.BodyType == BodyType.Static)
+            return false;
+        // KS14 End
 
         if (!InRange(user, target.Value, component.Range, session))
         {
@@ -907,34 +922,65 @@ public abstract class SharedMeleeWeaponSystem : EntitySystem
 
         var chance = CalculateDisarmChance(user, target.Value, inTargetHand, combatMode);
 
-        // At this point we diverge
-        if (_netMan.IsClient)
-        {
-            // Play a sound to give instant feedback; same with playing the animations
-            _meleeSound.PlaySwingSound(user, meleeUid, component);
-            return true;
-        }
+        // KS14 Start
+        var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
+            KsSharedRandomExtensions.GetNetId(user, EntityManager),
+            KsSharedRandomExtensions.GetNetId(target.Value, EntityManager),
+            (int)Timing.CurTick.Value
+        );
 
-        if (_random.Prob(chance))
-        {
+        var prob = predictedRandom.Prob(chance);
+        if (!Timing.IsFirstTimePredicted)
+            return !prob;
+        // KS14 End
+
+        // KS14: don't diverge
+        // At this point we diverge
+        // if (_netMan.IsClient)
+        // {
+        // Play a sound to give instant feedback; same with playing the animations
+        _meleeSound.PlaySwingSound(user, meleeUid, component);
+        //     return true;
+        // }
+
+        // KS14 start: replace random with predicted
+
+        if (prob)
             return false;
-        }
+        // KS14 end
 
         var eventArgs = new DisarmedEvent(target.Value, user, 1 - chance);
         RaiseLocalEvent(target.Value, ref eventArgs);
 
-        // Nothing handled it so abort.
-        if (!eventArgs.Handled)
-        {
-            return false;
-        }
-
+        // KS14 start: Moved interaction, admin logs, and sound here
         Interaction.DoContactInteraction(user, target);
         AdminLogger.Add(LogType.DisarmedAction, $"{ToPrettyString(user):user} used disarm on {ToPrettyString(target):target}");
 
         AdminLogger.Add(LogType.DisarmedAction, $"{ToPrettyString(user):user} used disarm on {ToPrettyString(target):target}");
 
-        _audio.PlayPvs(combatMode.DisarmSuccessSound, target.Value, AudioParams.Default.WithVariation(0.025f).WithVolume(5f));
+        _audio.PlayPredicted/* KS14: use predicted variant */(combatMode.DisarmSuccessSound, target.Value, target /* KS14: added user */, AudioParams.Default.WithVariation(0.025f).WithVolume(5f));
+        // KS14 end
+
+        // Nothing handled it so abort.
+        if (!eventArgs.Handled)
+        {
+            // KS14 Start
+            var transformComponent = Transform(user);
+            var deltaUnit = TransformSystem.GetWorldPosition(targetTransformComponent) - TransformSystem.GetWorldPosition(transformComponent);
+            Vector2Helpers.Normalize(ref deltaUnit);
+
+            _physics.ApplyLinearImpulse(target.Value, deltaUnit * (component.PushForce * physicsComponent.FixturesMass), body: physicsComponent);
+
+            var flashFilter = _netMan.IsClient ? Filter.Local() : Filter.PvsExcept(user, entityManager: EntityManager);
+            // nice you can't use [] initialiser because of sandboxing gg
+            _colorFlashEffectSystem.RaiseEffect(Color.Azure, new() { target.Value }, flashFilter);
+            // KS14 End
+
+            return false;
+        }
+
+        // KS14: Moved interaction, admin logs, and sound up
+
         var targetEnt = Identity.Entity(target.Value, EntityManager);
         var userEnt = Identity.Entity(user, EntityManager);
 
@@ -948,13 +994,13 @@ public abstract class SharedMeleeWeaponSystem : EntitySystem
         var filterOther = Filter.PvsExcept(user, entityManager: EntityManager);
 
         PopupSystem.PopupEntity(msgOther, user, filterOther, true);
-        PopupSystem.PopupEntity(msgUser, target.Value, user);
+        PopupSystem.PopupPredicted/* KS14: use predicted variant */(msgUser, target.Value, user);
 
         if (eventArgs.IsStunned)
         {
 
             PopupSystem.PopupEntity(Loc.GetString("stunned-component-disarm-success-others", ("source", userEnt), ("target", targetEnt)), targetEnt, Filter.PvsExcept(user), true, PopupType.LargeCaution);
-            PopupSystem.PopupCursor(Loc.GetString("stunned-component-disarm-success", ("target", targetEnt)), user, PopupType.Large);
+            PopupSystem.PopupPredictedCursor/* KS14: use predicted variant */(Loc.GetString("stunned-component-disarm-success", ("target", targetEnt)), user, PopupType.Large);
 
             AdminLogger.Add(LogType.DisarmedKnockdown, LogImpact.Medium, $"{ToPrettyString(user):user} knocked down {ToPrettyString(target):target}");
         }

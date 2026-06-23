@@ -167,6 +167,13 @@ public sealed partial class MeleeWeaponComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField]
     public bool MustBeEquippedToUse = false;
+
+    // KS14
+    /// <summary>
+    ///     Consistent push force applied regardless of mass.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float PushForce = 20f;
 }
 
 /// <summary>
