@@ -22,6 +22,7 @@ jobs:
         uses: actions/checkout@v7
 
       # KS14 Start
+      # If we have the secret repo PAT, use it to init submodules. Otherwise don't; it's not available in PRs from forks
       - name: Init submodules (conditional)
         shell: bash
         env:
@@ -30,12 +31,14 @@ jobs:
           set -e
 
           if [ "$HAS_TOKEN" = "true" ]; then
-            echo "Token present → full recursive submodule update"
+            echo "Token present → injecting auth for submodules"
+
+            git config --global url."https://x-access-token:${{ secrets.SECREPO_PAT }}@github.com/".insteadOf "https://github.com/"
 
             git submodule sync --recursive
             git submodule update --init --recursive
           else
-            echo "No token → only updating RobustToolbox"
+            echo "No token → only RobustToolbox"
 
             git submodule sync RobustToolbox
             git submodule update --init RobustToolbox

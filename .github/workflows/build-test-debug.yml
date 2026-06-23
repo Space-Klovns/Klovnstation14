@@ -24,6 +24,7 @@ jobs:
         fetch-depth: 1
 
     # KS14 Start
+    # If we have the secret repo PAT, use it to init submodules. Otherwise don't; it's not available in PRs from forks
     - name: Init submodules (conditional)
       shell: bash
       env:
