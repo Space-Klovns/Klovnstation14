@@ -37,7 +37,7 @@ public sealed class KsZLevelPhysicsSystem : EntitySystem
 
     private void OnWeightlessnessChanged(Entity<KsSuspendedZLevelFallComponent> entity, ref WeightlessnessChangedEvent args)
     {
-        if (!args.Weightless)
+        if (args.Weightless)
             return;
 
         var transformComponent = Transform(entity);
