@@ -21,7 +21,7 @@ jobs:
     - name: Checkout Master
       uses: actions/checkout@v7
       with: # KS14: params
-        fetch-depth: 1 # KS14: made shallow, so its faster
+        fetch-depth: 1
 
     # KS14 Start
     - name: Init submodules (conditional)
