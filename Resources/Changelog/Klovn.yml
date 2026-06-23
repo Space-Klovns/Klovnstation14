@@ -1483,3 +1483,11 @@ Entries:
       message: Added a small shadow under humanoid mobs. It's sovl
   id: 154
   time: '2026-06-21T03:32:58.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: You can now shove anything you want, as long as it isn't bolted down.
+    - type: Fix
+      message: Fixed z-levels sometimes phasing you through reality.
+  id: 155
+  time: '2026-06-23T15:31:01.0000000+00:00'
