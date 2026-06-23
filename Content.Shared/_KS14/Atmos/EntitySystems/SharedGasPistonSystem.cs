@@ -7,7 +7,7 @@ namespace Content.Shared._KS14.Atmos.EntitySystems;
 
 public abstract class SharedGasPistonSystem : EntitySystem
 {
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
+    [Dependency] protected readonly SharedPopupSystem PopupSystem = default!;
 
     public override void Initialize()
     {
@@ -26,7 +26,7 @@ public abstract class SharedGasPistonSystem : EntitySystem
             return;
 
         args.Cancel();
-        _popupSystem.PopupPredicted(Loc.GetString("gas-piston-popup-retractfirst"), entity.Owner, args.User);
+        PopupSystem.PopupPredicted(Loc.GetString("gas-piston-popup-retractfirst"), entity.Owner, args.User);
     }
 
     private void OnAttemptChangePanel(Entity<GasPistonComponent> entity, ref AttemptChangePanelEvent args)
@@ -40,6 +40,6 @@ public abstract class SharedGasPistonSystem : EntitySystem
         args.Cancelled = true;
 
         if (args.User is { } userUid)
-            _popupSystem.PopupPredicted(Loc.GetString("gas-piston-popup-retractfirst"), entity.Owner, userUid);
+            PopupSystem.PopupPredicted(Loc.GetString("gas-piston-popup-retractfirst"), entity.Owner, userUid);
     }
 }
