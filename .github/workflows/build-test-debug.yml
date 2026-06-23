@@ -22,7 +22,6 @@ jobs:
       uses: actions/checkout@v4.2.2
       with: # KS14: params
         fetch-depth: 1 # KS14: made shallow, so its faster
-        persist-credentials: false # KS14
         token: ${{ secrets.SECREPO_PAT }} # KS14: hidden submodules
         submodules: recursive # KS14
 
