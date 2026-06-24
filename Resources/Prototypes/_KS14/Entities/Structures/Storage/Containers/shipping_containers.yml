@@ -26,13 +26,22 @@
     interfaces:
       enum.StorageUiKey.Key:
         type: StorageBoundUserInterface
+
+
   - type: Fixtures
     fixtures:
       fix1:
         shape:
           !type:PhysShapeAabb
-          bounds: "-1.5,0.5,1.5,-0.5"
-        density: 100
+          bounds: "-1.5,-0.5,1.5,-0.2"
+        density: 600
+        layer:
+        - WallLayer
+      fix2:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-1.5,1.2,1.5,1.5"
+        density: 600
         layer:
         - WallLayer
   - type: Damageable
