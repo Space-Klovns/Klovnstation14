@@ -1,4 +1,5 @@
 using System.Numerics;
+using Content.Shared.Atmos.Components;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Collections;
@@ -93,9 +94,16 @@ public sealed class FarSoundSystem : EntitySystem
         if (_netManager.IsClient)
             return;
 
+        // shitcode start
+        var sourceTransformComponent = Transform(sourceUid);
+        if (sourceTransformComponent.MapUid is not { } mapUid ||
+            !HasComp<MapAtmosphereComponent>(mapUid))
+            return;
+        // shitcode end
+
         var (filter, audioParams) = GetData(sourceUid, data.Range.X, data.Range.Y, data.Sound.Params);
-        if (userUid is { })
-            filter.RemovePlayerByAttachedEntity(userUid.Value);
+        // if (userUid is { })
+        //     filter.RemovePlayerByAttachedEntity(userUid.Value);
 
         // Don't record in replay or something
         _audioSystem.PlayEntity(data.Sound, filter, sourceUid, false, audioParams: audioParams);

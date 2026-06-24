@@ -268,6 +268,9 @@
     fireRate: 7.8
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/batrifle.ogg
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/batrifle.ogg
+      range: 15,150
   - type: GunWieldBonus
     minAngle: -20
     maxAngle: -20

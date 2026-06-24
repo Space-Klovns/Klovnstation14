@@ -48,6 +48,11 @@
     fireRate: 15
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/minigun.ogg
+    # KS14: Farsound start
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/minigun.ogg
+      range: 15,130
+    # KS14: Farsound end
   - type: BallisticAmmoProvider
     proto: CartridgeMinigun
     capacity: 1000
