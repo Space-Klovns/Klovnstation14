@@ -1419,6 +1419,7 @@ entities:
     - type: KsGridSpawner
       path: /Maps/_KS14/Scenarios/Nanoplant/raidbase.yml
       spawnRange: 0, 100
+      rotation: 180
 - proto: VehicleTankBodyStatic
   entities:
   - uid: 22

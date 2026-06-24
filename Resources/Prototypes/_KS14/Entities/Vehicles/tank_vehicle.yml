@@ -30,6 +30,8 @@
         - HalfWallLayer
         density: 1500
   - type: SpriteFade
+  - type: Physics
+    bodyType: Static
 
 - type: entity
   parent: BaseStructure
@@ -46,6 +48,8 @@
     - state: tank_turret_0
     - state: ace_autocannon_0
       offset: 0,-1
+  - type: Physics
+    bodyType: Static
 
 - type: entity
   parent: [ BaseMob, BaseStructureDynamic ]

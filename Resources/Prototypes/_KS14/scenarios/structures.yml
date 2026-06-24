@@ -72,6 +72,15 @@
     lifetime: 900
 
 - type: entity
+  parent: HolosignForcefieldDeathmatch
+  id: HolosignForcefieldBarrier5Min
+  name: impenetrable force field
+  suffix: 5 min
+  components:
+  - type: TimedDespawn
+    lifetime: 300
+
+- type: entity
   parent: AirlockSyndicateLocked
   id: AirlockMaintSyndieLocked
   components:
