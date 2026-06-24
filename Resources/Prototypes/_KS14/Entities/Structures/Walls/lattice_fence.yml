@@ -36,6 +36,7 @@
   id: StFenceLatticeStraight
   components:
   - type: Icon
+    sprite: _Stalker/Structures/Walls/lattice_fence.rsi
     state: icon_straight
   - type: Sprite
     state: straight
@@ -50,7 +51,7 @@
         mask:
         - FullTileMask
         layer:
-        - WallLayer
+        - GlassLayer
 
 - type: entity
   parent: StFenceLatticeStraight
@@ -75,18 +76,19 @@
   - type: Sprite
     state: straight_desktop
     offset: 0.5, 0
+    drawdepth: OverMobs
 
   - type: Fixtures
     fixtures:
       fix1:
-        shape:
+        shape: &desktopFixtureShape
           !type:PhysShapeAabb
-          bounds: "-0.10,-0.5,0.10,0.5"
+          bounds: "0.05,-0.5,0.25,0.5" # make it a bit higher, aligned to the sprite
         density: 1100
         mask:
         - FullTileMask
         layer:
-        - WallLayer
+        - GlassLayer
 
 - type: entity
   parent: StFenceLatticeStraightDesktop
@@ -95,3 +97,15 @@
   components:
   - type: Sprite
     state: straight_desktop_windowed
+
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: *desktopFixtureShape
+        density: 980
+        mask:
+        - FullTileMask
+        layer: # basically everything except: InteractImpassable, Impassable, and BulletImpassable
+        - HighImpassable
+        - MidImpassable
+        - LowImpassable
