@@ -22,7 +22,7 @@ entities:
   - uid: 1
     components:
     - type: MetaData
-      name: Map Entity
+      name: Tiderfall Map
     - type: Transform
     - type: BecomesStation
       id: Tiderfall

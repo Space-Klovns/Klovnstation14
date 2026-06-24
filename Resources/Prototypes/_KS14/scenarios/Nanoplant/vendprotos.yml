@@ -1,0 +1,128 @@
+# Nanotrasen
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantNtBase
+  name: base clothes
+  description: They kept the gray man down long enough.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite:  Clothing/Mask/gas.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - ClothingUniformJumpsuitColorGrey
+    - ClothingBackpack
+    - ClothingShoesColorBlack
+    - ClothingMaskGas
+    - NanoplantNtPDA
+    - ClothingHeadsetGrey
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantNtTider
+  name: greytider
+  description: All you need to terrorise your local maintenance tunnel.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Clothing/Hands/Gloves/Color/yellow.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - ClothingHandsGlovesColorYellow
+    - SpearPlasma
+    - Bola
+    - Bola
+    - ClothingBeltQuiverNanoplant
+    - BowImprovised
+    - FireBomb
+    - FireBomb
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantNtClown
+  name: klovn
+  description: A different kind of clown.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Clothing/Mask/clown.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - ClothingUniformJumpsuitColorRed
+    - LauncherCreamPie
+    - FoodPieBananaCream
+    - FoodPieBananaCream
+    - FoodPieBananaCream
+    - FoodPieBananaCream
+    - FoodPieBananaCream
+    - ClothingMaskClown
+    - TrashBananaPeel
+    - TrashBananaPeel
+    - ClothingShoesChameleonNoSlips
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantNtSecurity
+  name: greysec
+  description: Kindly "provided" by the dead security detachment.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Clothing/Head/Helmets/security.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - ClothingHeadHelmetBasic
+    - ClothingOuterArmorBasic
+    - ClothingBeltSecurityFilled
+    - WeaponDisabler
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantNtConscript
+  name: conscript
+  description: Our elephant.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Clothing/Head/Hats/ushanka.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - WeaponPistolMk58
+    - MagazinePistol
+    - MagazinePistol
+    - GrenadeStinger
+    - Machete
+    - ClothingHeadHatUshanka
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantNtMedic
+  name: greymed
+  description: Stitch your fellow man together.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Clothing/Eyes/Hud/med.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - ClothingEyesHudMedical
+    - ClothingBeltMedicalFilled
+    - JetInjector
+    - DefibrillatorCompact
+    - PowerCellHigh
+    - CombatKnife
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantNtBartender
+  name: bartender
+  description: We're serving double-aught proof.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Shotguns/db_shotgun.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - WeaponShotgunDoubleBarreled
+    - BoxLethalshot

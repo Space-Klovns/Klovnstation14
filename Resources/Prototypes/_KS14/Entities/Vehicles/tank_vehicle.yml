@@ -1,6 +1,53 @@
 ### Tank body
 
 - type: entity
+  parent: BaseStructure
+  id: VehicleTankBodyStatic
+  name: tank
+  description: It's been here a while.
+  suffix: Static, Mapping
+  components:
+  # Sprite
+  - type: Sprite
+    sprite: _KS14/Vehicles/tank.rsi
+    drawdepth: LargeObjects
+    layers:
+    - map: ["enum.TankVisualLayers.Base"]
+      state: tank_base
+    - map: ["enum.TankVisualLayers.Armor"]
+      state: ballistic_armor_0
+    - map: ["treads"]
+      state: treads_0
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+            bounds: "-1,-2,1,2"
+        mask:
+        - FullTileMask
+        layer:
+        - HalfWallLayer
+        density: 1500
+  - type: SpriteFade
+
+- type: entity
+  parent: BaseStructure
+  id: VehicleTankTurretStatic
+  name: tank turret
+  description: Look inside, tell me if it's loaded.
+  suffix: Static, Mapping
+  components:
+  # Sprite
+  - type: Sprite
+    sprite: _KS14/Vehicles/tank.rsi
+    drawdepth: Overdoors # necessary for it to appear over tanks
+    layers:
+    - state: tank_turret_0
+    - state: ace_autocannon_0
+      offset: 0,-1
+
+- type: entity
   parent: [ BaseMob, BaseStructureDynamic ]
   id: VehicleTankBody
   name: tank
