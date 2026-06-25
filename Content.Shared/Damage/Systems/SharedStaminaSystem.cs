@@ -147,9 +147,9 @@ public abstract partial class SharedStaminaSystem : EntitySystem
         //     return;
 
         if (TryComp<ComplexShoveComponent>(args.Source, out var sourceComplexShoveComponent) &&
-            _complexShoveSystem.TryGetDeltaUnitSafe(args.Source, uid, out var deltaUnit, out var sourceWorldPosition))
+            _complexShoveSystem.TryGetDeltaUnitSafe(args.Source, uid, out var deltaUnit, out var shovedWorldPosition))
         {
-            if (_complexShoveSystem.TryWallshove((args.Source, null, sourceComplexShoveComponent), (uid, component), sourceWorldPosition.Value, deltaUnit.Value))
+            if (_complexShoveSystem.TryWallshove((args.Source, null, sourceComplexShoveComponent), (uid, component), shovedWorldPosition.Value, deltaUnit.Value))
             {
                 if (!args.Handled)
                     args.PopupPrefix = "disarm-action-shove-collision-";
