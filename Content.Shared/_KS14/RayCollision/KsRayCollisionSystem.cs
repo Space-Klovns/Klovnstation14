@@ -65,6 +65,8 @@ public sealed class KsRayCollisionSystem : EntitySystem
                     queryFilter
                 );
 
+                // No PreventCollideEvent here!
+
                 if (!rayResult.Hit)
                     continue;
 
