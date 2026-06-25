@@ -1,7 +1,8 @@
-using Content.Shared._KS14.Trigger.Components.Effects;
+using Content.Shared._KS14.Sparks;
+using Content.Shared._KS14.Trigger.Components;
 using Content.Shared.Trigger;
 
-namespace Content.Shared._KS14.Sparks;
+namespace Content.Shared._KS14.Trigger.Systems;
 
 public sealed class SparkOnTriggerSystem : EntitySystem
 {
