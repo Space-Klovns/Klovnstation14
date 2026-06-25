@@ -45,6 +45,10 @@ public sealed class KsRayCollisionSystem : EntitySystem
                 continue;
             }
 
+            var translation = newMapCoordinates.Position - lastMapCoordinates.Position;
+            if (MathHelper.CloseTo(translation.LengthSquared(), 0f, tolerance: 0.1f))
+                continue;
+
             foreach (var (_, fixture) in fixturesComponent.Fixtures)
             {
                 if (!fixture.Hard)
@@ -54,8 +58,7 @@ public sealed class KsRayCollisionSystem : EntitySystem
                 queryFilter.MaskBits = fixture.CollisionMask;
                 queryFilter.IsIgnored = (otherUid) => otherUid == uid; // Dont hit ourselves
 
-                var translation = newMapCoordinates.Position - lastMapCoordinates.Position;
-                var rayResult = _rayCastSystem.CastRayClosest(
+                var rayResult = _rayCastSystem.CastRay(
                     transformComponent.MapID,
                     lastMapCoordinates.Position,
                     translation,
