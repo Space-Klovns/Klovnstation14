@@ -37,9 +37,6 @@ public sealed class ThrowingSystem : EntitySystem
     // <Trauma>
     [Dependency] private readonly INetManager _net = default!;
     // </Trauma>
-    // KS14 Start
-    [Dependency] private readonly _KS14.RayCollision.KsRayCollisionSystem _ksRayCollision = default!;
-    // KS14 End
     [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
@@ -199,10 +196,6 @@ public sealed class ThrowingSystem : EntitySystem
         comp.LandTime = comp.ThrownTime + TimeSpan.FromSeconds(flyTime);
         comp.PlayLandSound = playSound;
         AddComp(uid, comp, true);
-
-        // KS14 Start
-        _ksRayCollision.StartChecking(uid);
-        // KS14 End
 
         ThrowingAngleComponent? throwingAngle = null;
 
