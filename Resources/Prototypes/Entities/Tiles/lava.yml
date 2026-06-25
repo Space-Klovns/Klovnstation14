@@ -50,7 +50,7 @@
         layer:
           - SlipLayer
         mask:
-          - LowImpassable # KS14: ItemMask -> LowImpassable
+          - ItemMask
         density: 1000
         hard: false
   - type: Tag

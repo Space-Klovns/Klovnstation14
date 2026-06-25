@@ -87,7 +87,7 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
         {
             UnlinkAndClearFields(entity);
         }
-        else if (!wasPowered && args.Powered && entity.Comp.Enabled) // Should turn back on
+        else if (_netManager.IsServer && !wasPowered && args.Powered && entity.Comp.Enabled) // Should turn back on
         {
             var transformComponent = Transform(entity);
             if (TryUpdateAnchoredPosition(entity, transformComponent) &&

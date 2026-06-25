@@ -26,20 +26,20 @@ public sealed class ComplexShoveSystem : EntitySystem
     private bool IsUidDown(EntityUid uid)
         => HasComp<KnockedDownComponent>(uid) || _mobStateSystem.IsIncapacitated(uid);
 
-    public bool TryGetDeltaUnitSafe(Entity<TransformComponent?> shoverEntity, Entity<TransformComponent?> shovedEntity, [NotNullWhen(true)] out Vector2? deltaUnit, [NotNullWhen(true)] out Vector2? shoverWorldPosition)
+    public bool TryGetDeltaUnitSafe(Entity<TransformComponent?> shoverEntity, Entity<TransformComponent?> shovedEntity, [NotNullWhen(true)] out Vector2? deltaUnit, [NotNullWhen(true)] out Vector2? shovedWorldPosition)
     {
         if (!EntityManager.TransformQuery.Resolve(shoverEntity, ref shoverEntity.Comp) ||
             !EntityManager.TransformQuery.Resolve(shovedEntity, ref shovedEntity.Comp))
         {
             deltaUnit = null;
-            shoverWorldPosition = null;
+            shovedWorldPosition = null;
             return false;
         }
 
-        shoverWorldPosition = _transformSystem.GetWorldPosition(shoverEntity.Comp);
+        shovedWorldPosition = _transformSystem.GetWorldPosition(shovedEntity.Comp);
 
         // trolling is not permitted
-        deltaUnit = _transformSystem.GetWorldPosition(shovedEntity.Comp) - shoverWorldPosition;
+        deltaUnit = shovedWorldPosition - _transformSystem.GetWorldPosition(shoverEntity.Comp);
         if (deltaUnit.Value.LengthSquared() <= float.Epsilon)
             return false;
 
@@ -51,7 +51,7 @@ public sealed class ComplexShoveSystem : EntitySystem
     ///     Assumes that shover and shoved are both on the same map.
     /// </summary>
     /// <returns>Whether wallshove did anything.</returns>
-    public bool TryWallshove(Entity<TransformComponent?, ComplexShoveComponent?> shoverEntity, Entity<StaminaComponent> shovedEntity, Vector2 shoverWorldPosition, Vector2 deltaUnit)
+    public bool TryWallshove(Entity<TransformComponent?, ComplexShoveComponent?> shoverEntity, Entity<StaminaComponent> shovedEntity, Vector2 shovedWorldPosition, Vector2 deltaUnit)
     {
         if (!EntityManager.TransformQuery.Resolve(shoverEntity, ref shoverEntity.Comp1) ||
             !Resolve(shoverEntity, ref shoverEntity.Comp2, logMissing: false))
@@ -59,7 +59,7 @@ public sealed class ComplexShoveSystem : EntitySystem
 
         var rayResult = _rayCastSystem.CastRayClosest(
             _transformSystem.GetMapId((shoverEntity, shoverEntity.Comp1)),
-            shoverWorldPosition,
+            shovedWorldPosition,
             deltaUnit * shoverEntity.Comp2.WallshoveRange,
             new QueryFilter() { LayerBits = 0L, Flags = QueryFlags.Static, MaskBits = shoverEntity.Comp2.WallshoveCollisionMask }
         );
