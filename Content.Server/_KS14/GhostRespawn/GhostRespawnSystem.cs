@@ -74,6 +74,9 @@ public sealed partial class GhostRespawnSystem : EntitySystem
 
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent args)
     {
+        // Reset ghostrespawn time for everyphono
+        RaiseNetworkEvent(new GhostRespawnTimeMessage(null));
+
         _penalties.Clear();
         _respawnTimes.Clear();
         _trackedDeathEntities.Clear();
