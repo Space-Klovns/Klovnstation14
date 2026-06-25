@@ -201,7 +201,7 @@
       map: ["enum.GunVisualLayers.Mag"]
   - type: CMVendorBundle
     bundle:
-    - ClothingBackpackChameleonFill
+    - ClothingBackpackChameleonFillAgent # ..Agent comes with an ID card
     - WeaponPistolCobra
     - MagazinePistolCaselessRifle
     - MagazinePistolCaselessRifle

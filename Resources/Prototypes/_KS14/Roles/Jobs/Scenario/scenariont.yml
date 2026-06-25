@@ -3,7 +3,7 @@
   name: job-name-scenario-nt
   description: job-description-scenario-nt
   playTimeTracker: JobScenarioNt
-  startingGear: ScenarioNtGear
+  startingGear: null # scenario spawns get NOTHING
   icon: "JobIconNanotrasen"
   supervisors: job-supervisors-nobody
   canBeAntag: false
@@ -16,12 +16,3 @@
     - type: NpcFactionMember
       factions:
       - NanoTrasen
-
-- type: startingGear #placeholder till rmc vendors, then they'll be butt naked
-  id: ScenarioNtGear
-  equipment:
-    jumpsuit: ClothingUniformJumpsuitColorGrey
-    back: ClothingBackpack
-    shoes: ClothingShoesColorBlack
-    gloves: ClothingHandsGlovesColorBlack
-    id: PassengerPDA

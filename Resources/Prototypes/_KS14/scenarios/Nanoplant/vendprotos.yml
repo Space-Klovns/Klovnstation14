@@ -7,21 +7,22 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    sprite:  Clothing/Mask/gas.rsi
-    state: icon
+    sprite: Structures/Wallmounts/posters.rsi
+    state: poster2_legit
   - type: CMVendorBundle
     bundle:
-    - ClothingUniformJumpsuitColorGrey
-    - ClothingBackpack
-    - ClothingShoesColorBlack
-    - ClothingMaskGas
-    - NanoplantNtPDA
-    - ClothingHeadsetGrey
+    - ClothingUniformJumpsuitERTSecurity
+    - ClothingBackpackERTSecurity
+    - ClothingShoesBootsLaceup
+    - ClothingMaskGasSecurity
+    - NanoplantNtIdCard
+    - ClothingHeadsetSecurity
+    - ClothingEyesGlassesCommand
 
 - type: entity
-  id: ScenarioVendorBundleNanoplantNtTider
-  name: greytider
-  description: All you need to terrorise your local maintenance tunnel.
+  id: ScenarioVendorBundleNanoplantNtRifleman
+  name: rifleman
+  description: Time-tested loadout.
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
@@ -29,100 +30,45 @@
     state: icon
   - type: CMVendorBundle
     bundle:
-    - ClothingHandsGlovesColorYellow
-    - SpearPlasma
-    - Bola
-    - Bola
-    - ClothingBeltQuiverNanoplant
-    - BowImprovised
-    - FireBomb
-    - FireBomb
+    - ToolboxSyndicateTurret
+    - ClothingBeltUtilityEngineering
+    - WelderIndustrial
+    - SheetSteel
+    - SheetRGlass
+    - MaterialWoodPlank
+    - ClothingHeadHatHardhatRed
 
 - type: entity
-  id: ScenarioVendorBundleNanoplantNtClown
-  name: klovn
-  description: A different kind of clown.
+  id: ScenarioVendorBundleNanoplantNtEngineer
+  name: engineer
+  description: Maintain and fortify the base. Or take the offensive route and lay traps for unsuspecting attackers. Or teammates.
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    sprite: Clothing/Mask/clown.rsi
+    sprite: Clothing/Hands/Gloves/Color/yellow.rsi
     state: icon
   - type: CMVendorBundle
     bundle:
-    - ClothingUniformJumpsuitColorRed
-    - LauncherCreamPie
-    - FoodPieBananaCream
-    - FoodPieBananaCream
-    - FoodPieBananaCream
-    - FoodPieBananaCream
-    - FoodPieBananaCream
-    - ClothingMaskClown
-    - TrashBananaPeel
-    - TrashBananaPeel
-    - ClothingShoesChameleonNoSlips
+    - ToolboxSyndicateTurret
+    - ClothingBeltChiefEngineerFilled
+    - WelderIndustrial
+    - SheetSteel
+    - SheetRGlass
+    - MaterialWoodPlank
+    - ClothingHeadHatHardhatRed
 
 - type: entity
-  id: ScenarioVendorBundleNanoplantNtSecurity
-  name: greysec
-  description: Kindly "provided" by the dead security detachment.
+  id: ScenarioVendorBundleNanoplantNtMarksman
+  name: marksman
+  description: Armed with a scope-equipped XL8 rifle, you can swiftly take out enemies from a distance.
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    sprite: Clothing/Head/Helmets/security.rsi
+    sprite: Objects/Weapons/Guns/Rifles/XL8.rsi
     state: icon
   - type: CMVendorBundle
     bundle:
-    - ClothingHeadHelmetBasic
-    - ClothingOuterArmorBasic
-    - ClothingBeltSecurityFilled
-    - WeaponDisabler
-
-- type: entity
-  id: ScenarioVendorBundleNanoplantNtConscript
-  name: conscript
-  description: Our elephant.
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: Sprite
-    sprite: Clothing/Head/Hats/ushanka.rsi
-    state: icon
-  - type: CMVendorBundle
-    bundle:
-    - WeaponPistolMk58
-    - MagazinePistol
-    - MagazinePistol
-    - GrenadeStinger
-    - Machete
-    - ClothingHeadHatUshanka
-
-- type: entity
-  id: ScenarioVendorBundleNanoplantNtMedic
-  name: greymed
-  description: Stitch your fellow man together.
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: Sprite
-    sprite: Clothing/Eyes/Hud/med.rsi
-    state: icon
-  - type: CMVendorBundle
-    bundle:
-    - ClothingEyesHudMedical
-    - ClothingBeltMedicalFilled
-    - JetInjector
-    - DefibrillatorCompact
-    - PowerCellHigh
-    - CombatKnife
-
-- type: entity
-  id: ScenarioVendorBundleNanoplantNtBartender
-  name: bartender
-  description: We're serving double-aught proof.
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: Sprite
-    sprite: Objects/Weapons/Guns/Shotguns/db_shotgun.rsi
-    state: icon
-  - type: CMVendorBundle
-    bundle:
-    - WeaponShotgunDoubleBarreled
-    - BoxLethalshot
+    - WeaponRifleLecterXL8
+    - MagazineBoxAntiMateriel
+    - SmokeGrenade
+    - SmokeGrenade

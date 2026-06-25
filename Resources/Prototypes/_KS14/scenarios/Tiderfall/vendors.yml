@@ -8,6 +8,7 @@
   - type: CMAutomatedVendor
     sections:
     - name: Base Gear
+      choices: { BaseGear: 1 }
       entries:
       - id: ScenarioVendorBundleTiderfallNtBase
         recommended: true
@@ -33,6 +34,7 @@
   - type: CMAutomatedVendor
     sections:
     - name: Base Gear
+      choices: { BaseGear: 1 }
       entries:
       - id: ScenarioVendorBundleTiderfallSyndieBase
         recommended: true

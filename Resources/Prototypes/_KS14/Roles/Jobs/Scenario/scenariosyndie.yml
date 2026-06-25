@@ -3,7 +3,7 @@
   name: job-name-scenario-syndie
   description: job-description-scenario-syndie
   playTimeTracker: JobScenarioSyndie
-  startingGear: ScenarioSyndieGear
+  startingGear: null # scenario spawns get NOTHING
   icon: "JobIconSyndicate"
   supervisors: job-supervisors-nobody
   canBeAntag: false
@@ -17,12 +17,3 @@
     - type: NpcFactionMember
       factions:
       - Syndicate
-
-- type: startingGear
-  id: ScenarioSyndieGear
-  equipment:
-    jumpsuit: ClothingUniformJumpsuitOperative
-    back: ClothingBackpackSyndicate
-    shoes: ClothingShoesBootsCombatFilled
-    gloves: ClothingHandsGlovesColorBlack
-    id: SyndiPDA

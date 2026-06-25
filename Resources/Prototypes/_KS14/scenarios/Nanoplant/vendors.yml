@@ -6,16 +6,14 @@
   - type: CMAutomatedVendor
     sections:
     - name: Base Gear
+      choices: { BaseGear: 1 }
       entries:
       - id: ScenarioVendorBundleNanoplantNtBase
         recommended: true
     - name: Loadout
       choices: { CMClass: 1 }
       entries:
-      - id: ScenarioVendorBundleNanoplantNtSecurity
+      - id: ScenarioVendorBundleNanoplantNtRifleman
         recommended: true
-      - id: ScenarioVendorBundleNanoplantNtTider
-      - id: ScenarioVendorBundleNanoplantNtClown
-      - id: ScenarioVendorBundleNanoplantNtConscript
-      - id: ScenarioVendorBundleNanoplantNtMedic
-      - id: ScenarioVendorBundleNanoplantNtBartender
+      - id: ScenarioVendorBundleNanoplantNtEngineer
+      - id: ScenarioVendorBundleNanoplantNtMarksman
