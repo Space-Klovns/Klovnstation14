@@ -28,24 +28,6 @@ public sealed partial class CMAutomatedVendorComponent : Component
     [DataField, AutoNetworkedField]
     public Vector2 MaxOffset = new(0.2f, 0.2f);
 
-    [DataField, AutoNetworkedField]
-    public bool Hackable;
-
-    [DataField, AutoNetworkedField]
-    public bool Hacked;
-
-    [DataField, AutoNetworkedField]
-    public int HackSkillLevel = 2;
-
-    [DataField, AutoNetworkedField]
-    public TimeSpan HackDelay = TimeSpan.FromSeconds(10);
-
-    [DataField, AutoNetworkedField]
-    public List<ProtoId<AccessLevelPrototype>> Access = new();
-
-    [DataField, AutoNetworkedField]
-    public bool Scaling = true;
-
     /// <summary>
     ///     If this is a colony vendor, randomize the amount the sections have from 1 and this number.
     ///     If this number is put as -1, the stock will be between 1 and the original amount.

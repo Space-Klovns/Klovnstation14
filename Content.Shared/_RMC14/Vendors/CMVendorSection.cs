@@ -30,12 +30,6 @@ public sealed partial class CMVendorSection
     public int? SharedSpecLimit;
 
     [DataField]
-    public List<ProtoId<JobPrototype>> Jobs = new();
-
-    [DataField]
-    public List<string> Holidays = new();
-
-    [DataField]
     public bool HasBoxes;
 }
 

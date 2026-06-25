@@ -1,35 +1,24 @@
 using System.Numerics;
-using Content.Shared.Access;
-using Content.Shared.Access.Components;
-using Content.Shared.Access.Systems;
-using Content.Shared.Administration.Logs;
 using Content.Shared.Clothing.Components;
-using Content.Shared.Coordinates;
-using Content.Shared.Database;
-using Content.Shared.DoAfter;
-using Content.Shared.Examine;
 using Content.Shared.Hands;
 using Content.Shared.Hands.EntitySystems;
-using Content.Shared.Interaction;
 using Content.Shared.Interaction.Components;
 using Content.Shared.Inventory;
 using Content.Shared.Inventory.Events;
 using Content.Shared.Item;
-using Content.Shared.Mind;
 using Content.Shared.Popups;
-using Content.Shared.Roles;
-using Content.Shared.Roles.Jobs;
 using Content.Shared.UserInterface;
 using Content.Shared.Wall;
 using Robust.Shared.Audio.Systems;
 using Content.Shared.Destructible;
 using Content.Shared.Throwing;
-using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
 using Content.Shared.Storage.EntitySystems;
 using Content.Shared.Storage;
+using Robust.Shared.Containers;
+using Content.Shared._KS14.Random.Helpers;
 
 namespace Content.Shared._RMC14.Vendors;
 
@@ -40,13 +29,12 @@ public abstract class SharedCMAutomatedVendorSystem : EntitySystem
     [Dependency] private readonly SharedHandsSystem _hands = default!;
     [Dependency] private readonly InventorySystem _inventory = default!;
     [Dependency] private readonly SharedStorageSystem _storage = default!;
-    [Dependency] private readonly INetManager _net = default!;
     [Dependency] private readonly IPrototypeManager _prototypes = default!;
     [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly ThrowingSystem _throwingSystem = default!;
+    [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
 
     // TODO RMC14 make this a prototype
     public const string SpecialistPoints = "Specialist";
@@ -73,7 +61,6 @@ public abstract class SharedCMAutomatedVendorSystem : EntitySystem
 
     private void OnMapInit(Entity<CMAutomatedVendorComponent> ent, ref MapInitEvent args)
     {
-        var transform = Transform(ent.Owner);
         _entries.Clear();
         _boxEntries.Clear();
         foreach (var section in ent.Comp.Sections)
@@ -125,9 +112,6 @@ public abstract class SharedCMAutomatedVendorSystem : EntitySystem
 
         if (HasComp<BypassInteractionChecksComponent>(args.User))
             return;
-
-        if (vendor.Comp.Hacked)
-            return;
     }
 
     private void OnVendorDestruction(Entity<CMAutomatedVendorComponent> vendor, ref DestructionEventArgs args)
@@ -147,12 +131,15 @@ public abstract class SharedCMAutomatedVendorSystem : EntitySystem
             for (int i = 0; i < amount; i++)
             {
                 // Create item near the vendor
-                var coords = Transform(vendor).Coordinates;
-                var spawnedItem = Spawn(itemId, coords);
+                var spawnedItem = PredictedSpawnNextToOrDrop(itemId, vendor);
 
                 // Throw in a random direction with a random force
-                var direction = new Vector2(_random.NextFloat(-1, 1), _random.NextFloat(-1, 1));
-                var throwForce = _random.NextFloat(1f, 7f);
+                var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
+                    KsSharedRandomExtensions.GetNetId(vendor.Owner, EntityManager),
+                    (int)_timing.CurTick.Value
+                );
+                var direction = new Vector2(predictedRandom.NextFloat(-1, 1), predictedRandom.NextFloat(-1, 1));
+                var throwForce = predictedRandom.NextFloat(1f, 7f);
                 _throwingSystem.TryThrow(spawnedItem, direction, throwForce);
             }
         }
@@ -184,9 +171,6 @@ public abstract class SharedCMAutomatedVendorSystem : EntitySystem
     protected virtual void OnVendBui(Entity<CMAutomatedVendorComponent> vendor, ref CMVendorVendBuiMsg args)
     {
         _audio.PlayPredicted(vendor.Comp.Sound, vendor, args.Actor);
-
-        if (_net.IsClient)
-            return;
 
         var comp = vendor.Comp;
         var sections = comp.Sections.Count;
@@ -376,9 +360,14 @@ public abstract class SharedCMAutomatedVendorSystem : EntitySystem
         }
         var min = comp.MinOffset;
         var max = comp.MaxOffset;
+        var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
+            KsSharedRandomExtensions.GetNetId(vendor.Owner, EntityManager),
+            (int)_timing.CurTick.Value
+        );
+
         for (var i = 0; i < entry.Spawn; i++)
         {
-            var offset = _random.NextVector2Box(min.X, min.Y, max.X, max.Y);
+            var offset = predictedRandom.NextVector2Box(min.X, min.Y, max.X, max.Y);
             if (entity.TryGetComponent(out CMVendorBundleComponent? bundle, _compFactory))
             {
                 foreach (var bundled in bundle.Bundle)
@@ -402,11 +391,11 @@ public abstract class SharedCMAutomatedVendorSystem : EntitySystem
     private void Vend(EntityUid vendor, EntityUid player, EntProtoId toVend, Vector2 offset, SlotFlags? replaceSlot = null)
     {
 
-            var spawn = SpawnNextToOrDrop(toVend, vendor);
-            AfterVend(spawn, player, vendor, offset, replaceSlot: replaceSlot);
+        var spawn = PredictedSpawnNextToOrDrop(toVend, vendor);
+        AfterVend(spawn, player, offset, replaceSlot: replaceSlot);
     }
 
-    private void AfterVend(EntityUid spawn, EntityUid player, EntityUid vendor, Vector2 offset, bool vended = false, SlotFlags? replaceSlot = null)
+    private void AfterVend(EntityUid spawn, EntityUid player, Vector2 offset, bool vended = false, SlotFlags? replaceSlot = null)
     {
         var recently = EnsureComp<RMCRecentlyVendedComponent>(spawn);
 
@@ -427,44 +416,42 @@ public abstract class SharedCMAutomatedVendorSystem : EntitySystem
         RaiseLocalEvent(player, ref ev);
     }
 
-    private bool Grab(EntityUid player, EntityUid item, SlotFlags? replaceSlot = null)
+    private bool Grab(EntityUid playerUid, EntityUid itemUid, SlotFlags? replaceSlot = null)
     {
-        if (!HasComp<ItemComponent>(item))
+        if (!HasComp<ItemComponent>(itemUid))
             return false;
 
-        if (TryAttachWebbing(player, item))
-            return true;
+        if (!TryComp<InventoryComponent>(playerUid, out var inventoryComponent) ||
+            !TryComp<ClothingComponent>(itemUid, out var clothingComponent))
+            return _hands.TryPickupAnyHand(playerUid, itemUid);
 
-        if (!TryComp(item, out ClothingComponent? clothing))
-            return _hands.TryPickupAnyHand(player, item);
+        var itemToReplaceUid = EntityUid.Invalid;
 
-        if (replaceSlot != null)
+        var slots = _inventory.GetSlotEnumerator(playerUid, clothingComponent.Slots);
+        while (slots.MoveNext(out var slot))
         {
-            EntityUid? itemToReplace = null;
-
-            var slots = _inventory.GetSlotEnumerator(player, replaceSlot.Value);
-            while (slots.MoveNext(out var slot))
+            if (slot.ContainedEntity is { } containedUid)
             {
-                if (slot.ContainedEntity != null)
-                {
-                    itemToReplace = slot.ContainedEntity;
-                    _inventory.TryUnequip(player, slot.ID, true);
-                    break;
-                }
+                if (!_inventory.CanUnequip(playerUid, slot.ID, out _, containerSlot: slot, inventory: inventoryComponent) ||
+                    !_containerSystem.CanRemove(containedUid, slot))
+                    continue;
+
+                itemToReplaceUid = containedUid;
+                _inventory.TryUnequip(playerUid, slot.ID, true, force: true, predicted: true, inventory: inventoryComponent);
             }
 
-            if (itemToReplace != null)
-            {
-                if (HasComp<StorageComponent>(item) && HasComp<StorageComponent>(itemToReplace))
-                    _storage.TransferEntities(itemToReplace.Value, item);
-            }
+            _inventory.TryEquip(playerUid, itemUid, slot.ID, predicted: true, inventory: inventoryComponent, clothing: clothingComponent);
         }
-        return _hands.TryPickupAnyHand(player, item);
-    }
 
-    private bool TryAttachWebbing(EntityUid player, EntityUid item)
-    {
-        return false;
+        // Move any stored items from old thing to new thing
+        if (itemToReplaceUid != EntityUid.Invalid &&
+            TryComp<StorageComponent>(itemToReplaceUid, out var sourceStorageComponent) &&
+            TryComp<StorageComponent>(itemUid, out var targetStorageComponent))
+        {
+            _storage.TransferEntities(itemToReplaceUid, itemUid, sourceComp: sourceStorageComponent, targetComp: targetStorageComponent);
+        }
+
+        return _hands.TryPickupAnyHand(playerUid, itemUid);
     }
 
     public void SetPoints(Entity<CMVendorUserComponent> user, int points)
