@@ -24,6 +24,7 @@ public abstract class SharedWeatherSystem : EntitySystem
 
     [Dependency] private readonly EntityQuery<BlockWeatherComponent> _blockQuery = default!;
     [Dependency] private readonly EntityQuery<WeatherStatusEffectComponent> _weatherQuery = default!;
+    [Dependency] private readonly EntityQuery<ImplicitRoofComponent> _implicitRoofQuery = default!; // KS14
 
     public static readonly TimeSpan StartupTime = TimeSpan.FromSeconds(15);
     public static readonly TimeSpan ShutdownTime = TimeSpan.FromSeconds(15);
@@ -36,13 +37,20 @@ public abstract class SharedWeatherSystem : EntitySystem
         if (!Resolve(ent, ref ent.Comp1))
             return false;
 
+        // KS14 Start
+        if (_implicitRoofQuery.HasComponent(ent))
+            return false;
+        // KS14 End
+
         if (Resolve(ent, ref ent.Comp2, false) && _roof.IsRooved((ent, ent.Comp1, ent.Comp2), tileRef.GridIndices))
             return false;
 
-        var tileDef = (ContentTileDefinition)_tileDefManager[tileRef.Tile.TypeId];
-
-        if (!tileDef.Weather)
-            return false;
+        // KS14 Comment start: rather check for roofs than ths
+        // var tileDef = (ContentTileDefinition)_tileDefManager[tileRef.Tile.TypeId];
+        //
+        // if (!tileDef.Weather)
+        //     return false;
+        // KS14 Comment end
 
         var anchoredEntities = _mapSystem.GetAnchoredEntitiesEnumerator(ent, ent.Comp1, tileRef.GridIndices);
 
