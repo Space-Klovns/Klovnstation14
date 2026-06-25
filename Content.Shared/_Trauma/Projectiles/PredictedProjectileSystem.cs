@@ -17,6 +17,7 @@ using Robust.Shared.Physics.Events;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Physics.Systems; // KS14
+using Content.Shared.Standing; // KS14
 
 namespace Content.Shared._Trauma.Projectiles;
 
@@ -36,6 +37,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
     [Dependency] private readonly SharedGunSystem _gun = default!;
     [Dependency] private readonly SharedProjectileSystem _projectile = default!;
     [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!; // KS14
+    [Dependency] private readonly StandingStateSystem _standingStateSystem = default!; // KS14
 
     private EntityQuery<ProjectileComponent> _query;
     private EntityQuery<PhysicsComponent> _physicsQuery;
@@ -124,9 +126,11 @@ public sealed class PredictedProjectileSystem : EntitySystem
         }
 
         // KS14 Impact start
+        // dont really like this but whatever
         if (_net.IsServer &&
-            ent.Comp2.FixturesMass > float.Epsilon)
-            _physicsSystem.ApplyLinearImpulse(target, ent.Comp2.Momentum * 0.125f);
+            ent.Comp2.FixturesMass > float.Epsilon &&
+            _standingStateSystem.IsDown(target))
+            _physicsSystem.ApplyLinearImpulse(target, ent.Comp2.Momentum * 0.075f);
         // KS14 Impact end
 
         var deleted = Deleted(target);

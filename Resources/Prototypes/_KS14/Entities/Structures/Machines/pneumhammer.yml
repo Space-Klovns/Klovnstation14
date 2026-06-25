@@ -38,6 +38,7 @@
     removedGasRatio: 1 # remove all gas
     maxThrowForce: 300
     capped: false # ERM
+    blockedTileOffset: 0,-1 # when south (0deg rotation)
     minimumDamage:
       types:
         Blunt: 5
@@ -45,6 +46,12 @@
       types:
         Blunt: 200
     sound: /Audio/_KS14/Effects/piston.ogg
+    blockedSound:
+      path: /Audio/Machines/airlock_creaking.ogg
+      params:
+        variation: 0.2
+        volume: -4
+        pitch: 1.1
     flickData:
       layerKey: piston
       flickState: extending

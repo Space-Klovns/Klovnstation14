@@ -97,10 +97,6 @@
           layer:
           - AirlockLayer
     - type: Door
-      # KS14 start
-      performCollisionCheck: false
-      forcedCollisionCheckOnClick: true
-      # KS14 end
       openDrawDepth: WallTops
       closeTimeOne: 0.1
       closeTimeTwo: 0.6

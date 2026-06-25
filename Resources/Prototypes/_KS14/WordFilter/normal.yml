@@ -1,0 +1,50 @@
+- type: wordFilter
+  id: doctos
+  category: Normal
+  matcher: (?i)d[o0]+c+t+[o0]+s+
+  replacement: doctor
+
+- type: wordFilter
+  id: oalgo
+  category: Normal
+  matcher: (?i)o al(?:go|nglo|gyx)
+  replacement: or something
+
+- type: wordFilter
+  id: sharty
+  category: Normal
+  matcher: (?i)s+h+a+r+t+y+
+  replacement: party
+
+- type: wordFilter
+  id: jarty
+  category: Normal
+  matcher: (?i)j+a+r+t+y+
+  replacement: party
+
+# Geg/kek
+- type: wordFilter
+  id: geg
+  category: Normal
+  matcher: (?i)g+e+g+
+  replacement: lol
+
+- type: wordFilter
+  id: kek
+  category: Normal
+  matcher: (?i)k+e+k+
+  replacement: lol
+
+# grammar oyyy
+
+- type: wordFilter
+  id: dont
+  category: Normal
+  matcher: (?i)dont
+  replacement: don't
+
+- type: wordFilter
+  id: wouldntshouldnt
+  category: Normal
+  matcher: (?i)ldnt
+  replacement: ldn't

@@ -53,7 +53,8 @@ public sealed class PredictedHandsSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<HandsComponent, DisarmedEvent>(OnDisarmed, before: new[] { typeof(SharedStunSystem), typeof(SharedStaminaSystem) });
+        // KS14: Commented out DisarmedEvent because no just no (we don't want disarms or something)
+        //SubscribeLocalEvent<HandsComponent, DisarmedEvent>(OnDisarmed, before: new[] { typeof(SharedStunSystem), typeof(SharedStaminaSystem) });
         SubscribeLocalEvent<HandsComponent, DropHandItemsEvent>(OnDropHandItems);
 
         CommandBinds.Builder

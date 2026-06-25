@@ -20,7 +20,8 @@
       shader: unshaded
   # KS14: emissive start
   - type: EmissiveLayers
-    glowRadius: 0.3
+    glowRadius: 1
+    offset: 0,0.8
     layers:
     - enum.PowerDeviceVisualLayers.Powered
   # KS14: emissive end

@@ -1,0 +1,21 @@
+- type: entity
+  parent: ColMarTechScenarioBase
+  id: ColMarTechScenarioNanoplantNt
+  suffix: Nanoplant, Nanotrasen
+  components:
+  - type: CMAutomatedVendor
+    sections:
+    - name: Base Gear
+      entries:
+      - id: ScenarioVendorBundleNanoplantNtBase
+        recommended: true
+    - name: Loadout
+      choices: { CMClass: 1 }
+      entries:
+      - id: ScenarioVendorBundleNanoplantNtSecurity
+        recommended: true
+      - id: ScenarioVendorBundleNanoplantNtTider
+      - id: ScenarioVendorBundleNanoplantNtClown
+      - id: ScenarioVendorBundleNanoplantNtConscript
+      - id: ScenarioVendorBundleNanoplantNtMedic
+      - id: ScenarioVendorBundleNanoplantNtBartender

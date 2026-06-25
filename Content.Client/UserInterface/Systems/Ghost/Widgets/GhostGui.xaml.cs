@@ -9,11 +9,14 @@ namespace Content.Client.UserInterface.Systems.Ghost.Widgets;
 [GenerateTypedNameReferences]
 public sealed partial class GhostGui : UIWidget
 {
+    [Dependency] private readonly Robust.Shared.Timing.IGameTiming _gameTiming = default!; // KS14
+
     public GhostTargetWindow TargetWindow { get; }
 
     public event Action? RequestWarpsPressed;
     public event Action? ReturnToBodyPressed;
     public event Action? GhostRolesPressed;
+    public event Action? RespawnPressed; // KS14: ghostrespawn
     private int _prevNumberRoles;
 
     public GhostGui()
@@ -28,7 +31,58 @@ public sealed partial class GhostGui : UIWidget
         ReturnToBodyButton.OnPressed += _ => ReturnToBodyPressed?.Invoke();
         GhostRolesButton.OnPressed += _ => GhostRolesPressed?.Invoke();
         GhostRolesButton.OnPressed += _ => GhostRolesButton.StyleClasses.Remove(StyleClass.Negative);
+
+        // KS14 Start
+        GhostRespawnButton.OnPressed += _ => RespawnPressed?.Invoke();
+        GhostRespawnButton.OnPressed += _ => GhostRespawnButton.StyleClasses.Remove(StyleClass.Negative);
+        // KS14 End
     }
+
+    // KS14 Start
+    public TimeSpan? RespawnTime = null;
+    public bool AlertedForRespawn = false;
+
+    public void SetRespawnsEnabled(bool value)
+        => GhostRespawnButton.Visible = value;
+
+    protected override void FrameUpdate(Robust.Shared.Timing.FrameEventArgs args)
+    {
+        base.FrameUpdate(args);
+
+        if (RespawnTime == null)
+        {
+            GhostRespawnButton.Disabled = true;
+            GhostRespawnButton.Text = Loc.GetString("ghost-gui-respawn-button-disabled");
+
+            if (AlertedForRespawn)
+            {
+                AlertedForRespawn = false;
+                GhostRespawnButton.StyleClasses.Remove(StyleClass.Negative);
+            }
+
+            return;
+        }
+
+        var secondsLeft = (RespawnTime.Value - _gameTiming.CurTime).TotalSeconds;
+        if (secondsLeft > 0f)
+        {
+            GhostRespawnButton.Text = Loc.GetString("ghost-gui-respawn-button-wait", ("seconds", $"{secondsLeft:0.00}"));
+            GhostRespawnButton.Disabled = true;
+        }
+        else
+        {
+            GhostRespawnButton.Disabled = false;
+            if (AlertedForRespawn)
+                return;
+
+            GhostRespawnButton.Text = Loc.GetString("ghost-gui-respawn-button-now");
+            GhostRespawnButton.StyleClasses.Add(StyleClass.Negative);
+            AlertedForRespawn = true;
+        }
+    }
+
+
+    // KS14 End
 
     public void Hide()
     {

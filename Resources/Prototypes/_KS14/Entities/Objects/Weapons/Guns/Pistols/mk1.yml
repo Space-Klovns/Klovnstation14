@@ -23,6 +23,11 @@
       path: /Audio/Weapons/Guns/Gunshots/mk58.ogg
       params:
         volume: 3
+    # KS14: Farsound start
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
+      range: 15,60
+    # KS14: Farsound end
   - type: Construction
     graph: mk1Graph
     node: mk1

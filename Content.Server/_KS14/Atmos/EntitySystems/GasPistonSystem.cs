@@ -15,6 +15,12 @@ using Content.Shared._KS14.Atmos.EntitySystems;
 using Content.Shared.Throwing;
 using Content.Server.Administration.Logs;
 using Content.Shared.Database;
+using Robust.Shared.Physics.Systems;
+using Content.Shared.Damage.Components;
+using Robust.Shared.Utility;
+using Robust.Shared.Map.Components;
+using System.Numerics;
+using Content.Shared.Popups;
 
 namespace Content.Server._KS14.Atmos.EntitySystems;
 
@@ -31,15 +37,68 @@ public sealed class GasPistonSystem : SharedGasPistonSystem
     [Dependency] private readonly AtmosphereSystem _atmosphereSystem = default!;
     [Dependency] private readonly PhysicsSystem _physicsSystem = default!;
     [Dependency] private readonly ThrowingSystem _throwingSystem = default!;
+    [Dependency] private readonly EntityLookupSystem _entityLookupSystem = default!;
+    [Dependency] private readonly FixtureSystem _fixtureSystem = default!;
+    [Dependency] private readonly TransformSystem _transformSystem = default!;
+    [Dependency] private readonly MapSystem _mapSystem = default!;
+
+    private const LookupFlags InitLookupFlags = LookupFlags.Approximate | LookupFlags.Static | LookupFlags.Dynamic | LookupFlags.Uncontained;
 
     public override void Initialize()
     {
         base.Initialize();
 
-        SubscribeLocalEvent<GasPistonComponent, StartCollideEvent>(OnStartCollide);
-        SubscribeLocalEvent<GasPistonComponent, EndCollideEvent>(OnEndCollide);
-
+        SubscribeLocalEvent<GasPistonComponent, MapInitEvent>(OnMapInit);
         SubscribeLocalEvent<GasPistonComponent, AtmosDeviceUpdateEvent>(OnUpdate);
+    }
+
+    // this horrible approach is taken because startcollideevent and endcollideevent dont like anchored objects
+    private void OnMapInit(Entity<GasPistonComponent> entity, ref MapInitEvent args)
+    {
+        PopulateColliding(entity);
+        entity.Comp.CollidingUids.TrimExcess();
+    }
+
+    private void PopulateColliding(Entity<GasPistonComponent> entity)
+    {
+        if (_fixtureSystem.GetFixtureOrNull(entity.Owner, entity.Comp.FixtureId) is not { } fixture)
+            return;
+
+        var transformComponent = Transform(entity);
+        var (worldPosition, worldRotation) = _transformSystem.GetWorldPositionRotation(transformComponent);
+        var transform = new Transform(worldPosition, worldRotation);
+
+        _entityLookupSystem.GetEntitiesIntersecting(transformComponent.MapID, fixture.Shape, transform, entity.Comp.CollidingUids, flags: InitLookupFlags);
+        entity.Comp.CollidingUids.Remove(entity);
+
+        var remQueue = new RemQueue<EntityUid>();
+        foreach (var otherUid in entity.Comp.CollidingUids)
+        {
+            if (CanCollideWith(fixture.CollisionMask, fixture.CollisionLayer, otherUid))
+                continue;
+
+            remQueue.Add(otherUid);
+        }
+
+        foreach (var removedUid in remQueue)
+            entity.Comp.CollidingUids.Remove(removedUid);
+    }
+
+    private bool CanCollideWith(int fromMask, int fromLayer, EntityUid toUid)
+    {
+        if (!TryComp<FixturesComponent>(toUid, out var fixturesComponent))
+            return false;
+
+        foreach (var (_, fixture) in fixturesComponent.Fixtures)
+        {
+            if ((fromMask & fixture.CollisionLayer) == 0 ||
+                (fromLayer & fixture.CollisionMask) == 0)
+                continue;
+
+            return true;
+        }
+
+        return false;
     }
 
     private void OnStartCollide(Entity<GasPistonComponent> entity, ref StartCollideEvent args)
@@ -81,8 +140,6 @@ public sealed class GasPistonSystem : SharedGasPistonSystem
     /// </summary>
     private void Extend(Entity<GasPistonComponent> entity, GasMixture air)
     {
-        SetExtended(entity, true);
-
         var pressure = air.Pressure;
         var minPressure = entity.Comp.PressureRange.X;
         var maxPressure = entity.Comp.PressureRange.Y;
@@ -99,9 +156,13 @@ public sealed class GasPistonSystem : SharedGasPistonSystem
 
         var throwVector = transformComponent.LocalRotation.ToWorldVec();
         var throwForce = entity.Comp.MaxThrowForce * fraction;
+
+        entity.Comp.CollidingUids.Clear();
+        PopulateColliding(entity);
+
         foreach (var collidingUid in entity.Comp.CollidingUids)
         {
-            _damageableSystem.TryChangeDamage(collidingUid, damage, origin: entity.Owner);
+            _damageableSystem.ChangeDamage(collidingUid, damage, origin: entity.Owner);
             _throwingSystem.TryThrow(collidingUid, throwVector, baseThrowSpeed: throwForce, user: entity.Owner, predicted: false);
 
             _adminLogManager.Add(LogType.Damaged, $"{ToPrettyString(entity.Owner):user} dealt {totalDamage:total} damageto {ToPrettyString(entity.Owner):target} via piston, power-scale: {fraction}x");
@@ -111,9 +172,19 @@ public sealed class GasPistonSystem : SharedGasPistonSystem
             totalDamage >= 10)
             _adminLogManager.Add(LogType.Damaged, $"{ToPrettyString(entity.Owner):gas-piston} pushed and damaged {entity.Comp.CollidingUids.Count} entities, power-scale: {fraction}x");
 
-
-        _audioSystem.PlayPvs(entity.Comp.Sound, entity.Owner);
-        _spriteFlickSystem.TryFlick(entity, entity.Comp.FlickData);
+        var blockedTileOffset = transformComponent.LocalRotation.RotateVec(entity.Comp.BlockedTileOffset);
+        var blockedTileOffsetInteger = new Vector2i((int)MathF.Round(blockedTileOffset.X), (int)MathF.Round(blockedTileOffset.Y));
+        if (AnyAnchoredEntities((entity, transformComponent), blockedTileOffsetInteger))
+        {
+            _audioSystem.PlayPvs(entity.Comp.BlockedSound, entity.Owner);
+            PopupSystem.PopupEntity(Loc.GetString("gas-piston-popup-obstructed"), entity.Owner, type: PopupType.MediumCaution);
+        }
+        else
+        {
+            _spriteFlickSystem.TryFlick(entity, entity.Comp.FlickData);
+            _audioSystem.PlayPvs(entity.Comp.Sound, entity.Owner);
+            SetExtended(entity, true);
+        }
 
         if (entity.Comp.RemovedGasRatio == 0f ||
             _atmosphereSystem.GetContainingMixture(entity.Owner, excite: true) is not { } environmentAir)
@@ -148,5 +219,25 @@ public sealed class GasPistonSystem : SharedGasPistonSystem
             return;
 
         _physicsSystem.SetHard(entity.Owner, fixture, value, manager: fixturesComponent);
+    }
+
+    private bool AnyAnchoredEntities(Entity<TransformComponent> entity, Vector2i tileOffset)
+    {
+        if (entity.Comp.GridUid is not { } gridUid ||
+            !TryComp<MapGridComponent>(gridUid, out var gridComponent))
+            return false;
+
+        var tileIndices = _mapSystem.CoordinatesToTile(gridUid, grid: gridComponent, coords: entity.Comp.Coordinates) + tileOffset;
+        var enumerator = _mapSystem.GetAnchoredEntitiesEnumerator(gridUid, gridComponent, tileIndices);
+
+        while (enumerator.MoveNext(out var otherUid))
+        {
+            if (otherUid == entity.Owner)
+                continue;
+
+            return true;
+        }
+
+        return false;
     }
 }

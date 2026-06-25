@@ -18,7 +18,7 @@
   - type: Anchorable
   - type: Pullable
   - type: Rotatable
-    rotateWhileAnchored: true
+    rotateWhileAnchored: false # KS14: true -> false to prevent rotation while using RCD
   - type: Physics
     bodyType: Static
   - type: Fixtures

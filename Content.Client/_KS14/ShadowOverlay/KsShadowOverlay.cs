@@ -16,6 +16,8 @@ public sealed class KsShadowOverlay : Overlay
     [Dependency] private readonly SpriteSystem _spriteSystem = default!;
     [Dependency] private readonly EntityLookupSystem _entityLookupSystem = default!;
 
+    [Dependency] private readonly EntityQuery<SpriteComponent> _spriteQuery = default!;
+
     public override OverlaySpace Space => OverlaySpace.WorldSpaceEntities;
     private const int ConstZIndex = (int)Shared.DrawDepth.DrawDepth.Mobs;
     private const LookupFlags EntityLookupFlags = LookupFlags.Dynamic | LookupFlags.Static | LookupFlags.Uncontained | LookupFlags.Approximate;
@@ -51,7 +53,6 @@ public sealed class KsShadowOverlay : Overlay
         var transformQuery = _entityManager.TransformQuery;
         var eyeRotation = args.Viewport.Eye?.Rotation ?? Angle.Zero;
 
-        var invMatrix = args.Viewport.GetWorldToLocalMatrix();
         foreach (var grid in _grids)
         {
             var gridInvMatrix = _transformSystem.GetInvWorldMatrix(grid);
@@ -64,21 +65,20 @@ public sealed class KsShadowOverlay : Overlay
                 continue;
 
             var localEyeRotation = eyeRotation - gridInvMatrix.Rotation();
-            var gridMatrix = Matrix3x2.Multiply(_transformSystem.GetWorldMatrix(grid.Owner), invMatrix);
+            var gridMatrix = _transformSystem.GetWorldMatrix(grid.Owner);
             worldHandle.SetTransform(gridMatrix);
 
             foreach (var entity in _entities)
             {
-                if (entity.Comp.Sprite is not { } sprite)
+                if (entity.Comp.Sprite is not { } sprite ||
+                    !_spriteQuery.TryGetComponent(entity, out var spriteComponent))
                     continue;
 
                 var transformComponent = transformQuery.GetComponent(entity.Owner);
                 var texture = _spriteSystem.Frame0(sprite);
 
                 var position = transformComponent.LocalPosition;
-                var rotation = entity.Comp.Rotation + localEyeRotation;
-
-                var quad = new Box2Rotated(Box2.CenteredAround(position + entity.Comp.Offset, texture.Size / (float)EyeManager.PixelsPerMeter), rotation, position);
+                var quad = new Box2Rotated(box: Box2.CenteredAround(position + entity.Comp.Offset * spriteComponent.Scale, texture.Size / (float)EyeManager.PixelsPerMeter * spriteComponent.Scale), -localEyeRotation, position);
 
                 worldHandle.DrawTextureRectRegion(
                     texture,

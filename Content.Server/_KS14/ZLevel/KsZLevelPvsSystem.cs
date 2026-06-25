@@ -70,7 +70,7 @@ public sealed class KsZLevelPvsSystem : EntitySystem
 
         _nextUpdate = _gameTiming.CurTime + UpdateInterval;
 
-        var eqe = EntityQueryEnumerator<KsZLevelViewerComponent, TransformComponent>();
+        var eqe = AllEntityQuery<KsZLevelViewerComponent, TransformComponent>();
         while (eqe.MoveNext(out var viewerUid, out var viewerComponent, out var viewerTransformComponent))
         {
             if (!_zLevelSystem.TryGetZLevel(viewerUid, out var zLevelEntity) ||

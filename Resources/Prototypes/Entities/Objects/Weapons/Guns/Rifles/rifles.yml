@@ -92,6 +92,11 @@
   - type: Gun
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/rifle2.ogg
+    # KS14: Farsound start
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/rifle.ogg
+      range: 15,130
+    # KS14: Farsound end
     # angleIncrease: 7 # KS14 modified
   - type: ChamberMagazineAmmoProvider
     soundRack:
@@ -191,6 +196,11 @@
     angleIncrease: 2
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/ltrifle.ogg
+    # KS14: Farsound start
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/ltrifle.ogg
+      range: 15,130
+    # KS14: Farsound end
   - type: ItemSlots
     slots:
       gun_magazine:
@@ -270,6 +280,11 @@
   - type: Gun
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/estocshot.ogg
+    # KS14: Farsound start
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/estocshot.ogg
+      range: 15,155
+    # KS14: Farsound end
     shotsPerBurst: 3
     angleIncrease: 0
     selectedMode: Burst

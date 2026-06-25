@@ -118,5 +118,5 @@ public enum AtmosPipeLayer
 {
     Primary,
     Secondary,
-    Tertiary,
+    Tertiary
 }

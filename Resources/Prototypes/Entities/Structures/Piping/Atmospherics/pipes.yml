@@ -72,6 +72,7 @@
     fx: EffectRCDDeconstruct2
     rpd: true
   # Starlight End
+  - type: KsRcdPlacementNoHint # KS14
 
 - type: entity
   abstract: true

@@ -28,3 +28,8 @@ persistence = 0.12
 
 [klovn.jetpacks]
 flyongrids = true
+
+[klovn.ghostrespawn]
+enabled = true
+cooldown_seconds = 300
+penalty_seconds = 180

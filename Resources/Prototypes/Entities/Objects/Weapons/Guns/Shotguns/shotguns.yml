@@ -27,6 +27,11 @@
     - SemiAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/shotgun.ogg
+    # KS14: Farsound start
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/rifle.ogg
+      range: 15,130
+    # KS14: Farsound end
     soundEmpty:
       path: /Audio/Weapons/Guns/Empty/empty.ogg
   - type: BallisticAmmoProvider
@@ -82,6 +87,11 @@
     - FullAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/shotgun.ogg
+    # KS14: Farsound start
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/rifle.ogg
+      range: 15,145
+    # KS14: Farsound end
     soundEmpty:
       path: /Audio/Weapons/Guns/Empty/empty.ogg
   - type: ItemSlots
@@ -335,6 +345,9 @@
       params:
         volume: -3
         rolloffFactor: 1.3
+    # KS14: Farsound start
+    farSoundGunshot: null
+    # KS14: Farsound end
     fireRate: 2
   - type: GunSpreadModifier
     spread: 1.2

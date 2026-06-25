@@ -890,6 +890,7 @@ public sealed class RCDSystem : EntitySystem
                                 var proposed = new PipeRestrictOverlapSystem.ProposedPipe(
                                     pipeNode.Direction,
                                     _currentLayer,
+                                    pipeNode.GetType() /* KS14 */,
                                     rotation
                                 );
 

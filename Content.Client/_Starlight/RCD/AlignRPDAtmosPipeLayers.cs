@@ -101,8 +101,69 @@ public sealed class AlignRPDAtmosPipeLayers : PlacementMode
             args.WorldHandle.DrawCircle(worldPosition - gridRotation.RotateVec(new Vector2(multi * GuideOffset, GuideOffset)), GuideRadius, _guideColor);
         }
 
-        base.Render(args);
+        // KS14: replaced render call with InnerRender
+        InnerRender(args, xform);
     }
+
+    // KS14 Start
+    [Dependency] private readonly Robust.Shared.Timing.IGameTiming _gameTiming = default!;
+    private static readonly SpriteSpecifier RotArrowSprite = new SpriteSpecifier.Rsi(new("/Textures/Markers/teg_arrow.rsi"), "arrow");
+
+    // COPIED FROM AlignRCDConstruction FFS
+    private void InnerRender(OverlayDrawArgs args, TransformComponent transformComponent)
+    {
+        var uid = pManager.CurrentPlacementOverlayEntity;
+        if (!pManager.EntityManager.TryGetComponent(uid, out SpriteComponent? spriteComponent) ||
+            !spriteComponent.Visible)
+        {
+            return;
+        }
+
+        var locationcollection = pManager.PlacementType switch
+        {
+            PlacementTypes.None => SingleCoordinate(),
+            PlacementTypes.Line => LineCoordinates(),
+            PlacementTypes.Grid => GridCoordinates(),
+            _ => SingleCoordinate()
+        };
+
+        var directionAngle = pManager.Direction.ToAngle();
+        var worldHandle = args.WorldHandle;
+
+        var arrowTexture = _spriteSystem.GetFrame(RotArrowSprite, _gameTiming.CurTime, loop: true);
+        var spriteBounds = _spriteSystem.GetLocalBounds((uid.Value, spriteComponent));
+
+        var topRight = spriteBounds.TopRight;
+        var arrowOffset = new Vector2(0f, spriteBounds.Height * -0.75f);
+        var eyeRotation = args.Viewport.Eye?.Rotation ?? default;
+        var dontDrawArrow = pManager.EntityManager.HasComponent<_KS14.Rcd.KsRcdPlacementNoHintComponent>(uid);
+
+        foreach (var coordinate in locationcollection)
+        {
+            if (!coordinate.IsValid(pManager.EntityManager))
+                continue;
+
+            var worldPos = _transformSystem.ToMapCoordinates(coordinate).Position;
+            var worldRot = _transformSystem.GetWorldRotation(coordinate.EntityId) + directionAngle;
+
+            var respectiveColor = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
+
+            _spriteSystem.SetColor((uid.Value, spriteComponent), respectiveColor);
+            _spriteSystem.RenderSprite((uid.Value, spriteComponent), args.WorldHandle, eyeRotation, worldRot, worldPos);
+
+            if (dontDrawArrow ||
+                transformComponent.NoLocalRotation)
+                continue;
+
+            // TODO LCDC: Fix chemical beacon somehow being locked to only north/south idk how
+
+            // Just ArrowOffset because the worldhandle matrix is relative to the sprite kinda
+            // also -topRight because the above is relative to the top-right of the sprite, not center
+            worldHandle.SetTransform(Matrix3Helpers.CreateTransform(worldPos, -eyeRotation) * spriteComponent.LocalMatrix);
+            worldHandle.DrawTexture(arrowTexture, directionAngle.RotateVec(arrowOffset) - topRight, directionAngle, modulate: respectiveColor);
+        }
+    }
+    // KS14 End
 
     public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
     {

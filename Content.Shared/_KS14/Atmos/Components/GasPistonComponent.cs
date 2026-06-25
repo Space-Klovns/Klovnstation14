@@ -26,6 +26,21 @@ public sealed partial class GasPistonComponent : Component, ISerializationHooks
     [ViewVariables(VVAccess.ReadWrite)]
     public SoundSpecifier? Sound = null;
 
+    /// <summary>
+    ///     Played when something is obstructing the pistons path.
+    /// </summary>
+    [DataField(serverOnly: true)]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public SoundSpecifier? BlockedSound = null;
+
+    /// <summary>
+    ///     Tile to check for blockage.
+    ///         Rotated by current rotation of the piston.
+    /// </summary>
+    [DataField(serverOnly: true)]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public Vector2i BlockedTileOffset = Vector2i.Zero;
+
     [DataField(required: true)]
     [ViewVariables(VVAccess.ReadWrite)]
     public string InletName;

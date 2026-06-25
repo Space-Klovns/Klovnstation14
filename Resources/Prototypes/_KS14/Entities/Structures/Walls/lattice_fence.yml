@@ -1,0 +1,111 @@
+# KS14: This code isn't actually original to ST14 because we're not allowed to use it or something.
+#     These are kinda meant for scenarios and not for mapping
+
+## Base
+
+- type: entity
+  parent: BaseStructure
+  id: StFenceLatticeBase
+  name: bar fence
+  description: A metal fence made up of bars. Looks like something you'd see in a prison. It seems very robust.
+  suffix: Invincible
+  abstract: true
+  components:
+  - type: Transform
+    anchored: true
+
+  - type: Icon
+    sprite: _Stalker/Structures/Walls/lattice_fence.rsi
+  - type: Sprite
+    sprite: _Stalker/Structures/Walls/lattice_fence.rsi
+    drawdepth: WallTops
+  - type: Damageable
+    damageContainer: Inorganic
+    damageModifierSet: FlimsyMetallic
+
+  - type: InteractionPopup
+    interactSuccessString: fence-rattle-success
+    messagePerceivedByOthers: fence-rattle-success
+    interactSuccessSound:
+      collection: FenceRattle
+
+## Straight
+
+- type: entity
+  parent: StFenceLatticeBase
+  id: StFenceLatticeStraight
+  components:
+  - type: Icon
+    sprite: _Stalker/Structures/Walls/lattice_fence.rsi
+    state: icon_straight
+  - type: Sprite
+    state: straight
+
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.10,-0.5,0.10,0.5"
+        density: 1250
+        mask:
+        - FullTileMask
+        layer:
+        - GlassLayer
+
+- type: entity
+  parent: StFenceLatticeStraight
+  id: StFenceLatticeStraightRusty
+  suffix: Invincible, Rusty
+  components:
+  - type: Icon
+    state: icon_straight_rust
+  - type: Sprite
+    state: straight_rust
+
+## Windowed
+
+- type: entity
+  parent: StFenceLatticeBase
+  id: StFenceLatticeStraightDesktop
+  name: desktop bar fence
+  suffix: Invincible, Desktop
+  components:
+  - type: Icon
+    state: icon_straight # no icon for desktop really
+  - type: Sprite
+    state: straight_desktop
+    offset: 0.5, 0
+    drawdepth: OverMobs
+
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: &desktopFixtureShape
+          !type:PhysShapeAabb
+          bounds: "0.05,-0.5,0.25,0.5" # make it a bit higher, aligned to the sprite
+        density: 1100
+        mask:
+        - FullTileMask
+        layer:
+        - GlassLayer
+
+- type: entity
+  parent: StFenceLatticeStraightDesktop
+  id: StFenceLatticeStraightDesktopWindowed
+  suffix: Invincible, Desktop, Windowed
+  components:
+  - type: Sprite
+    state: straight_desktop_windowed
+
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: *desktopFixtureShape
+        density: 980
+        mask:
+        - FullTileMask
+        layer: # basically everything except: InteractImpassable, Impassable, and BulletImpassable
+        - HighImpassable
+        - MidImpassable
+        - LowImpassable

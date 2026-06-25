@@ -18,6 +18,7 @@ public sealed class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
     [Dependency] private readonly EntityQuery<StationMemberComponent> _stationMemberQuery = default!;
     [Dependency] private readonly EntityQuery<NightshiftBulbComponent> _nightshiftBulbQuery = default!;
     [Dependency] private readonly EntityQuery<NightshiftLightComponent> _nightshiftLightQuery = default!;
+    [Dependency] private readonly EntityQuery<NightshiftExemptBulbComponent> _nightshiftExemptBulbQuery = default!;
 
     public override void Initialize()
     {
@@ -110,6 +111,7 @@ public sealed class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
             // let's not arm the nuke if it isn't on station
             if (_stationMemberQuery.CompOrNull(transformComponent.ParentUid)?.Station != stationUid ||
                 _poweredLightSystem.GetBulb(lightUid, poweredLightComponent) is not { } bulbUid ||
+                _nightshiftExemptBulbQuery.HasComponent(bulbUid) ||
                 !TryComp<LightBulbComponent>(bulbUid, out var bulbComponent) ||
                 bulbComponent.State != LightBulbState.Normal)
                 continue;

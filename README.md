@@ -27,3 +27,10 @@ Most media assets are licensed under [CC-BY-SA 3.0](https://creativecommons.org/
 
 > [!NOTE]
 > Some assets are licensed under the non-commercial [CC-BY-NC-SA 3.0](https://creativecommons.org/licenses/by-nc-sa/3.0/) or similar non-commercial licenses, and will need to be removed if you wish to use this project commercially.
+
+## Development
+
+As the repository contains private submodules, you may need to use this command to update/initialise submodules:
+`git submodule update --init --recursive RobustToolbox`
+instead of the usual:
+`git submodule update --init --recursive`

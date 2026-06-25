@@ -31,6 +31,10 @@ public sealed partial class KsGridSpawnerComponent : Component, ISerializationHo
     [ViewVariables(VVAccess.ReadWrite)]
     public Vector2? SpawnRange;
 
+    [DataField]
+    [ViewVariables(VVAccess.ReadOnly)]
+    public EntityUid? SpawnedGridUid = null;
+
     void ISerializationHooks.AfterDeserialization()
     {
         if (SpawnRange is not { } spawnRange)

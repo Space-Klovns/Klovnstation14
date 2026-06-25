@@ -19,13 +19,31 @@ jobs:
 
     steps:
       - name: Checkout Master
-        uses: actions/checkout@v4.2.2
-        with:
-          submodules: recursive
+        uses: actions/checkout@v7
 
-      - name: Setup Submodule
+      # KS14 Start
+      # If we have the secret repo PAT, use it to init submodules. Otherwise don't; it's not available in PRs from forks
+      - name: Init submodules (conditional)
+        shell: bash
+        env:
+          HAS_TOKEN: ${{ secrets.SECREPO_PAT != '' }}
         run: |
-          git submodule update --init --recursive
+          set -e
+
+          if [ "$HAS_TOKEN" = "true" ]; then
+            echo "Token present → injecting auth for submodules"
+
+            git config --global url."https://x-access-token:${{ secrets.SECREPO_PAT }}@github.com/".insteadOf "https://github.com/"
+
+            git submodule sync --recursive
+            git submodule update --init --recursive
+          else
+            echo "No token → only RobustToolbox"
+
+            git submodule sync RobustToolbox
+            git submodule update --init RobustToolbox
+          fi
+      # KS14 End
 
       - name: Pull engine updates
         uses: space-wizards/submodule-dependency@v0.1.5
@@ -36,7 +54,7 @@ jobs:
           git submodule update --init --recursive
 
       - name: Setup .NET Core
-        uses: actions/setup-dotnet@v4.1.0
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
 
