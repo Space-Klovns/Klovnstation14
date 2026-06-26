@@ -15,11 +15,11 @@
       entries:
       - id: ScenarioVendorBundleNanoplantNtRifleman
         recommended: true
-        replaceSlot: &baseReplaceSlot
+        replaceSlot: &replaceSlots
         - IDCARD
-        - SHOES
+        - FEET
         - GLOVES
       - id: ScenarioVendorBundleNanoplantNtEngineer
-        replaceSlot: *baseReplaceSlot
+        replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleNanoplantNtMarksman
-        replaceSlot: *baseReplaceSlot
+        replaceSlot: *replaceSlots

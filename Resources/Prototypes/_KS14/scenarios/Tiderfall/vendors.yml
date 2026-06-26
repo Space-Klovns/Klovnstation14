@@ -17,21 +17,22 @@
       entries:
       - id: ScenarioVendorBundleTiderfallNtSecurity
         recommended: true
-      - id: ScenarioVendorBundleTiderfallNtTider
-        replaceSlot: &baseReplaceSlot
+        replaceSlot: &replaceSlots
         - IDCARD
-        - SHOES
+        - FEET
         - GLOVES
+      - id: ScenarioVendorBundleTiderfallNtTider
+        replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleTiderfallNtClown
-        replaceSlot: *baseReplaceSlot
+        replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleTiderfallNtMiner
-        replaceSlot: *baseReplaceSlot
+        replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleTiderfallNtConscript
-        replaceSlot: *baseReplaceSlot
+        replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleTiderfallNtMedic
-        replaceSlot: *baseReplaceSlot
+        replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleTiderfallNtBartender
-        replaceSlot: *baseReplaceSlot
+        replaceSlot: *replaceSlots
 
 - type: entity
   parent: ColMarTechScenarioBase
@@ -52,19 +53,19 @@
       entries:
       - id: ScenarioVendorBundleTiderfallSyndieSoldier
         recommended: true
-        replaceSlot: *baseReplaceSlot
+        replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleTiderfallSyndieInfiltrator
-        replaceSlot: *baseReplaceSlot
+        replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleTiderfallSyndieDemolitionist
-        replaceSlot: *baseReplaceSlot
+        replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleTiderfallSyndieSniper
-        replaceSlot: *baseReplaceSlot
+        replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleTiderfallSyndieMedic
-        replaceSlot: *baseReplaceSlot
+        replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleTiderfallSyndieMelee
-        replaceSlot: *baseReplaceSlot
+        replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleTiderfallSyndieEngineer
-        replaceSlot: *baseReplaceSlot
+        replaceSlot: *replaceSlots
     - name: Utilities
       entries:
       - id: EmpGrenade
