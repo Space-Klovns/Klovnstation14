@@ -72,6 +72,7 @@ namespace Content.IntegrationTests.Tests
             {"/Maps/Shuttles/ShuttleEvent/cruiser.yml", ["ShuttleGunPerforator"]},
             {"/Maps/Shuttles/ShuttleEvent/instigator.yml", ["ShuttleGunFriendship"]},
             {"/Maps/_KS14/Grids/Scenarios/tiderfall/listeningpost.yml", ["RubberStampSyndicate"]}, //KS14
+            {"/Maps/_KS14/Scenarios/Nanoplant/raidbase.yml", ["RubberStampSyndicate"]} //KS14
         };
 
         /// <summary>
@@ -347,133 +348,133 @@ namespace Content.IntegrationTests.Tests
                 await server.WaitPost(() =>
                 {
                     MapId mapId;
-                try
-                {
-                    var opts = DeserializationOptions.Default with { InitializeMaps = true };
-                    gameTicker.LoadGameMap(prototypeManager.Index<GameMapPrototype>(mapProto), out mapId, opts); // KS14
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception($"Failed to load map {mapProto}", ex);
-                }
-
-                sharedMapSystem.CreateMap(out var shuttleMap); // KS14
-
-                try
-                {
-                    var grids = mapManager.GetAllGrids(mapId).ToList();
-
-                    // KS14 - Start
-                    // Collect all unique stations that physically exist on our newly loaded map
-                    var stationsOnMap = new HashSet<EntityUid>();
-                    foreach (var grid in grids)
-                    {
-                        if (entityManager.TryGetComponent<StationMemberComponent>(grid.Owner, out var member))
-                            stationsOnMap.Add(member.Station);
-                    }
-
-                    var sharedStationSystem = entityManager.System<SharedStationSystem>();
-
-                    // Test shuttle docking and job spawn points for EVERY station on this map
-                    foreach (var stationUid in stationsOnMap)
-                    {
-                        if (entityManager.TryGetComponent<StationEmergencyShuttleComponent>(stationUid, out var stationEvac))
-                        {
-                            var stationDataEntity = new Entity<StationDataComponent>(stationUid, entityManager.GetComponent<StationDataComponent>(stationUid));
-
-                            // Get the largest grid for this specific station.
-                            var targetGrid = sharedStationSystem.GetLargestGrid(stationDataEntity);
-
-                            Assert.That(targetGrid, Is.Not.Null, $"Station {stationUid} on map {mapProto} has no grids for the docking test.");
-
-                            // Do not attempt to physically dock shuttles to 0-area grids (spawners) as they lack physical colliders
-                            var aabb = entityManager.GetComponent<MapGridComponent>(targetGrid.Value).LocalAABB;
-                            if (aabb.Width > 0 && aabb.Height > 0)
-                            {
-                                var shuttlePath = stationEvac.EmergencyShuttlePath;
-                                Assert.That(mapLoaderSystem.TryLoadGrid(shuttleMap, shuttlePath, out var shuttle), $"Failed to load {shuttlePath}");
-
-                                var shuttleEntity = new Entity<ShuttleComponent>(shuttle!.Value.Owner, entityManager.GetComponent<ShuttleComponent>(shuttle!.Value.Owner));
-
-                                Assert.That(
-                                    shuttleSystem.TryFTLDock(shuttleEntity.Owner,
-                                        shuttleEntity.Comp,
-                                        targetGrid.Value),
-                                    $"Shuttle failed to dock to station {stationUid} on map {mapProto}");
-                            }
-                        }
-
-                        // Skip job spawn validation for scenario maps like Tiderfall
-                        if (entityManager.HasComponent<StationJobsComponent>(stationUid) && mapProto != "Tiderfall")
-                        {
-                            var stationGrids = entityManager.GetComponent<StationDataComponent>(stationUid).Grids;
-
-                            var lateSpawns = 0;
-                            var comp = entityManager.GetComponent<StationJobsComponent>(stationUid);
-                            var jobs = new HashSet<ProtoId<JobPrototype>>(comp.SetupAvailableJobs.Keys);
-
-                            // Scope spawn point checks tightly to grids belonging to THIS station using performant flat queries.
-                            // Instead of recursively searching the map hierarchy which visits thousands of irrelevant entities,
-                            // we directly query only the entities possessing spawn point components, reducing the scope significantly.
-                            var spawnQuery = entityManager.AllEntityQueryEnumerator<SpawnPointComponent, TransformComponent>();
-                            while (spawnQuery.MoveNext(out var uid, out var spawn, out var xform))
-                            {
-                                var spawnEntity = new Entity<SpawnPointComponent>(uid, spawn);
-
-                                // Filter the globally queried components to ensure they reside on a grid belonging to the current station.
-                                if (xform.GridUid == null || !stationGrids.Contains(xform.GridUid.Value))
-                                    continue;
-
-                                // Track valid late join spawn points.
-                                if (spawnEntity.Comp.SpawnType == SpawnPointType.LateJoin)
-                                    lateSpawns++;
-
-                                // Remove fulfilled job spawn points from the required jobs hashset.
-                                if (spawnEntity.Comp.SpawnType == SpawnPointType.Job && spawnEntity.Comp.Job != null)
-                                    jobs.Remove(spawnEntity.Comp.Job.Value);
-                            }
-
-                            // We also need to check ContainerSpawnPointComponent, as some jobs spawn inside lockers/containers (e.g., cryo-pods, survivor lockers).
-                            var containerSpawnQuery = entityManager.AllEntityQueryEnumerator<ContainerSpawnPointComponent, TransformComponent>();
-                            while (containerSpawnQuery.MoveNext(out var uid, out var containerSpawn, out var xform))
-                            {
-                                var containerSpawnEntity = new Entity<ContainerSpawnPointComponent>(uid, containerSpawn);
-
-                                if (xform.GridUid == null || !stationGrids.Contains(xform.GridUid.Value))
-                                    continue;
-
-                                if (containerSpawnEntity.Comp.SpawnType == SpawnPointType.LateJoin)
-                                    lateSpawns++;
-
-                                if ((containerSpawnEntity.Comp.SpawnType == SpawnPointType.Job || containerSpawnEntity.Comp.SpawnType == SpawnPointType.Unset) && containerSpawnEntity.Comp.Job != null)
-                                    jobs.Remove(containerSpawnEntity.Comp.Job.Value);
-                            }
-
-                            if (!NoSpawnMaps.Contains(mapProto))
-                            {
-                                Assert.That(lateSpawns, Is.GreaterThan(0), $"Found no latejoin spawn points for station {stationUid} on {mapProto}");
-                            }
-
-                            Assert.That(jobs, Is.Empty, $"There are no spawnpoints for {string.Join(", ", jobs)} on station {stationUid} ({mapProto}).");
-                        }
-                    }
-                    // KS14 - End
-                }
-                finally
-                {
-                    // Guarantee memory cleanup even if an Assert fails above. Prevents OnDirtyDispose masks.
-                    sharedMapSystem.DeleteMap(shuttleMap); // KS14
-
                     try
                     {
-                        sharedMapSystem.DeleteMap(mapId); // KS14
+                        var opts = DeserializationOptions.Default with { InitializeMaps = true };
+                        gameTicker.LoadGameMap(prototypeManager.Index<GameMapPrototype>(mapProto), out mapId, opts); // KS14
                     }
                     catch (Exception ex)
                     {
-                        throw new Exception($"Failed to delete map {mapProto}", ex);
+                        throw new Exception($"Failed to load map {mapProto}", ex);
                     }
-                }
-            });
+
+                    sharedMapSystem.CreateMap(out var shuttleMap); // KS14
+
+                    try
+                    {
+                        var grids = mapManager.GetAllGrids(mapId).ToList();
+
+                        // KS14 - Start
+                        // Collect all unique stations that physically exist on our newly loaded map
+                        var stationsOnMap = new HashSet<EntityUid>();
+                        foreach (var grid in grids)
+                        {
+                            if (entityManager.TryGetComponent<StationMemberComponent>(grid.Owner, out var member))
+                                stationsOnMap.Add(member.Station);
+                        }
+
+                        var sharedStationSystem = entityManager.System<SharedStationSystem>();
+
+                        // Test shuttle docking and job spawn points for EVERY station on this map
+                        foreach (var stationUid in stationsOnMap)
+                        {
+                            if (entityManager.TryGetComponent<StationEmergencyShuttleComponent>(stationUid, out var stationEvac))
+                            {
+                                var stationDataEntity = new Entity<StationDataComponent>(stationUid, entityManager.GetComponent<StationDataComponent>(stationUid));
+
+                                // Get the largest grid for this specific station.
+                                var targetGrid = sharedStationSystem.GetLargestGrid(stationDataEntity);
+
+                                Assert.That(targetGrid, Is.Not.Null, $"Station {stationUid} on map {mapProto} has no grids for the docking test.");
+
+                                // Do not attempt to physically dock shuttles to 0-area grids (spawners) as they lack physical colliders
+                                var aabb = entityManager.GetComponent<MapGridComponent>(targetGrid.Value).LocalAABB;
+                                if (aabb.Width > 0 && aabb.Height > 0)
+                                {
+                                    var shuttlePath = stationEvac.EmergencyShuttlePath;
+                                    Assert.That(mapLoaderSystem.TryLoadGrid(shuttleMap, shuttlePath, out var shuttle), $"Failed to load {shuttlePath}");
+
+                                    var shuttleEntity = new Entity<ShuttleComponent>(shuttle!.Value.Owner, entityManager.GetComponent<ShuttleComponent>(shuttle!.Value.Owner));
+
+                                    Assert.That(
+                                        shuttleSystem.TryFTLDock(shuttleEntity.Owner,
+                                            shuttleEntity.Comp,
+                                            targetGrid.Value),
+                                        $"Shuttle failed to dock to station {stationUid} on map {mapProto}");
+                                }
+                            }
+
+                            // Skip job spawn validation for scenario maps like Tiderfall
+                            if (entityManager.HasComponent<StationJobsComponent>(stationUid) && mapProto != "Tiderfall")
+                            {
+                                var stationGrids = entityManager.GetComponent<StationDataComponent>(stationUid).Grids;
+
+                                var lateSpawns = 0;
+                                var comp = entityManager.GetComponent<StationJobsComponent>(stationUid);
+                                var jobs = new HashSet<ProtoId<JobPrototype>>(comp.SetupAvailableJobs.Keys);
+
+                                // Scope spawn point checks tightly to grids belonging to THIS station using performant flat queries.
+                                // Instead of recursively searching the map hierarchy which visits thousands of irrelevant entities,
+                                // we directly query only the entities possessing spawn point components, reducing the scope significantly.
+                                var spawnQuery = entityManager.AllEntityQueryEnumerator<SpawnPointComponent, TransformComponent>();
+                                while (spawnQuery.MoveNext(out var uid, out var spawn, out var xform))
+                                {
+                                    var spawnEntity = new Entity<SpawnPointComponent>(uid, spawn);
+
+                                    // Filter the globally queried components to ensure they reside on a grid belonging to the current station.
+                                    if (xform.GridUid == null || !stationGrids.Contains(xform.GridUid.Value))
+                                        continue;
+
+                                    // Track valid late join spawn points.
+                                    if (spawnEntity.Comp.SpawnType == SpawnPointType.LateJoin)
+                                        lateSpawns++;
+
+                                    // Remove fulfilled job spawn points from the required jobs hashset.
+                                    if (spawnEntity.Comp.SpawnType == SpawnPointType.Job && spawnEntity.Comp.Job != null)
+                                        jobs.Remove(spawnEntity.Comp.Job.Value);
+                                }
+
+                                // We also need to check ContainerSpawnPointComponent, as some jobs spawn inside lockers/containers (e.g., cryo-pods, survivor lockers).
+                                var containerSpawnQuery = entityManager.AllEntityQueryEnumerator<ContainerSpawnPointComponent, TransformComponent>();
+                                while (containerSpawnQuery.MoveNext(out var uid, out var containerSpawn, out var xform))
+                                {
+                                    var containerSpawnEntity = new Entity<ContainerSpawnPointComponent>(uid, containerSpawn);
+
+                                    if (xform.GridUid == null || !stationGrids.Contains(xform.GridUid.Value))
+                                        continue;
+
+                                    if (containerSpawnEntity.Comp.SpawnType == SpawnPointType.LateJoin)
+                                        lateSpawns++;
+
+                                    if ((containerSpawnEntity.Comp.SpawnType == SpawnPointType.Job || containerSpawnEntity.Comp.SpawnType == SpawnPointType.Unset) && containerSpawnEntity.Comp.Job != null)
+                                        jobs.Remove(containerSpawnEntity.Comp.Job.Value);
+                                }
+
+                                if (!NoSpawnMaps.Contains(mapProto))
+                                {
+                                    Assert.That(lateSpawns, Is.GreaterThan(0), $"Found no latejoin spawn points for station {stationUid} on {mapProto}");
+                                }
+
+                                Assert.That(jobs, Is.Empty, $"There are no spawnpoints for {string.Join(", ", jobs)} on station {stationUid} ({mapProto}).");
+                            }
+                        }
+                        // KS14 - End
+                    }
+                    finally
+                    {
+                        // Guarantee memory cleanup even if an Assert fails above. Prevents OnDirtyDispose masks.
+                        sharedMapSystem.DeleteMap(shuttleMap); // KS14
+
+                        try
+                        {
+                            sharedMapSystem.DeleteMap(mapId); // KS14
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new Exception($"Failed to delete map {mapProto}", ex);
+                        }
+                    }
+                });
             }
             catch (Exception)
             {
