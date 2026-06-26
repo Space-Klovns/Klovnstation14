@@ -1,17 +1,14 @@
 using Content.Server.GameTicking;
 using Content.Server.GameTicking.Rules;
-using Content.Server.GameTicking.Rules.Components;
 using Content.Shared.GameTicking.Components;
 using Content.Shared._KS14.Scenario.Components;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Zombies;
 using Content.Server.RoundEnd;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Spawners;
 using Content.Shared.Destructible;
 using System.Linq;
-using Content.Shared.Trigger.Systems;
 using Content.Shared.Trigger;
 
 namespace Content.Server._KS14.GameTicking.Rules;
@@ -25,7 +22,6 @@ public sealed partial class ScenarioRuleComponent : Component
 public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
 {
     [Dependency] private readonly RoundEndSystem _roundEndSystem = default!;
-    [Dependency] private readonly TriggerSystem _triggerSystem = default!;
 
     public override void Initialize()
     {
