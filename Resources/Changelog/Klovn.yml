@@ -1511,3 +1511,9 @@ Entries:
       message: Fixed fun!
   id: 157
   time: '2026-06-26T15:25:09.0000000+00:00'
+- author: rumaks-xyz
+  changes:
+    - type: Tweak
+      message: 'Condensers now can output reagents into plumbing machines '
+  id: 158
+  time: '2026-06-26T22:00:04.0000000+00:00'
