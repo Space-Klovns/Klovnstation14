@@ -1,4 +1,5 @@
-- parent: MobSiliconBase
+- type: entity
+  parent: MobSiliconBase
   id: MobWeldbot
   name: weldbot
   description: No substitute for an engineer, but better than nothing.

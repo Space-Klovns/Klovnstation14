@@ -57,8 +57,17 @@ public sealed class KsEntryPoint : GameShared
 
     private void DoPrototypeReplacements(ResPath replacementDirectory)
     {
-        if (!TrySearchDirectory(replacementDirectory, out var sequences))
+        var sequences = new ValueList<(SequenceDataNode, TextReader)>();
+        try
+        {
+            if (!TrySearchDirectory(replacementDirectory, ref sequences))
+                return;
+        }
+        catch (Exception ex)
+        {
+            _sawmill.Error($"Caught exception when trying to search directory {replacementDirectory} for prototype replacements! Processing has been aborted. Exception: {ex}");
             return;
+        }
 
         var modifiedDict = new Dictionary<Type, HashSet<string>>();
 
@@ -88,19 +97,21 @@ public sealed class KsEntryPoint : GameShared
         }
 
         _prototypeManager.ResolveResults();
-        _sawmill.Info($"Replaced {sequences.Count} file(s) worth of prototypes");
+        _sawmill.Debug($"Replaced {sequences.Count} file(s) worth of prototypes");
     }
 
     // its not copypasta its assetflip
     /// <summary>
     ///     MAKE SURE TO DISPOSE THE READER THAT GETS RETURNED!!!!
     /// </summary>
-    private bool TrySearchDirectory(ResPath replacementDirectory, out ValueList<(SequenceDataNode, TextReader)> sequence)
+    private bool TrySearchDirectory(ResPath replacementDirectory, ref ValueList<(SequenceDataNode, TextReader)> sequences)
     {
-        sequence = [];
-
         foreach (var path in _resourceManager.ContentFindFiles(replacementDirectory))
         {
+            // Ignore non-yml files
+            if (path.Extension != "yml")
+                continue;
+
             var stream = _resourceManager.ContentFileRead(path);
 
             // leave open, so that the BaseStream can be used later
@@ -119,7 +130,7 @@ public sealed class KsEntryPoint : GameShared
             var longTermReader = new StreamReader(tempReader.BaseStream, EncodingHelpers.UTF8);
             longTermReader.BaseStream.Seek(0, SeekOrigin.Begin); // reset to origin
 
-            sequence.Add((rootNode, longTermReader));
+            sequences.Add((rootNode, longTermReader));
         }
 
         return true;
