@@ -33,3 +33,7 @@ flyongrids = true
 enabled = true
 cooldown_seconds = 300
 penalty_seconds = 180
+
+[ghost]
+# if in crit, do you immediately die when ghosting?
+kill_crit = true
