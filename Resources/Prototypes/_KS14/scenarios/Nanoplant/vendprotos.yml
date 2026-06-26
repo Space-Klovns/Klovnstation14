@@ -96,7 +96,7 @@
     state: icon
   - type: CMVendorBundle
     bundle:
-    - WeaponSubMachineDrozd
+    - WeaponSubMachineGunDrozd
     - MagazinePistolSubMachineGun
     - MagazinePistolSubMachineGun
     - MagazinePistolSubMachineGun
