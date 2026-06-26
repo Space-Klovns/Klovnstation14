@@ -2432,7 +2432,7 @@ entities:
     - type: Transform
       pos: -10.5,1.5
       parent: 2
-- proto: AirlockMedicalGlassLocked
+- proto: AirlockMedicalGlass
   entities:
   - uid: 131
     components:
