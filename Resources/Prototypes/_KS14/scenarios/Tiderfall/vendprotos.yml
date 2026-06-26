@@ -145,7 +145,8 @@
     state: icon
   - type: CMVendorBundle
     bundle:
-    - WeaponShotgunDoubleBarreled
+    - WeaponShotgunSawn
+    - WeaponShotgunSawn
     - BoxLethalshot
 
 - type: entity
