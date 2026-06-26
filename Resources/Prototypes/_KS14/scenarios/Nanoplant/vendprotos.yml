@@ -56,8 +56,8 @@
     - SheetRGlass
     - KsScenarioNanoplantSeismicChargeShort
     - KsScenarioNanoplantSeismicChargeShort
+    - KsScenarioNanoplantSeismicChargeShort
     - KsFlatpackBallisticTurretNanotrasenDisposable
-    - Multitool
 
 - type: entity
   id: ScenarioVendorBundleNanoplantNtMarksman
