@@ -4,8 +4,8 @@ meta:
   engineVersion: 275.2.0
   forkId: ""
   forkVersion: ""
-  time: 06/25/2026 17:34:57
-  entityCount: 4565
+  time: 06/26/2026 10:02:23
+  entityCount: 4573
 maps: []
 grids:
 - 2
@@ -47,11 +47,11 @@ entities:
     components:
     - type: MetaData
       name: grid
-    - type: BecomesStation
-      id: Nanoplant
     - type: Transform
       pos: -0.546875,-0.23028278
       parent: invalid
+    - type: BecomesStation
+      id: Nanoplant
     - type: MapGrid
       chunks:
         0,0:
@@ -2788,6 +2788,13 @@ entities:
     components:
     - type: Transform
       pos: 12.5,-29.5
+      parent: 2
+    - type: Fixtures
+      fixtures: {}
+  - uid: 2605
+    components:
+    - type: Transform
+      pos: -23.5,-0.5
       parent: 2
     - type: Fixtures
       fixtures: {}
@@ -5840,6 +5847,11 @@ entities:
     components:
     - type: Transform
       pos: -4.5,-23.5
+      parent: 2
+  - uid: 3987
+    components:
+    - type: Transform
+      pos: -23.5,-0.5
       parent: 2
   - uid: 4117
     components:
@@ -10545,6 +10557,36 @@ entities:
     - type: Transform
       pos: -17.5,-6.5
       parent: 2
+  - uid: 3988
+    components:
+    - type: Transform
+      pos: -20.5,-2.5
+      parent: 2
+  - uid: 3989
+    components:
+    - type: Transform
+      pos: -21.5,-2.5
+      parent: 2
+  - uid: 3990
+    components:
+    - type: Transform
+      pos: -22.5,-2.5
+      parent: 2
+  - uid: 3991
+    components:
+    - type: Transform
+      pos: -23.5,-2.5
+      parent: 2
+  - uid: 3992
+    components:
+    - type: Transform
+      pos: -23.5,-1.5
+      parent: 2
+  - uid: 3993
+    components:
+    - type: Transform
+      pos: -23.5,-0.5
+      parent: 2
   - uid: 4043
     components:
     - type: Transform
@@ -12719,7 +12761,7 @@ entities:
       pos: 13.5,0.5
       parent: 2
     - type: Door
-      secondsUntilStateChange: -11429.692
+      secondsUntilStateChange: -11506.562
       state: Opening
 - proto: FenceMetalStraight
   entities:
@@ -18274,8 +18316,6 @@ entities:
     - type: Transform
       pos: -0.5,0.5
       parent: 2
-    missingComponents:
-    - Anchorable
 - proto: LightBulbCrystalRed
   entities:
   - uid: 465
