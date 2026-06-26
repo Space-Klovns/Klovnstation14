@@ -22,9 +22,6 @@ public sealed class KsGhostRespawnTest : GameTest
     [SidedDependency(Side.Server)] private readonly IEntityNetworkManager _serverEntityNetworkManager = default!;
     [SidedDependency(Side.Client)] private readonly IEntityNetworkManager _clientEntityNetworkManager = default!;
 
-    [SidedDependency(Side.Server)] private readonly IEntityManager _serverEntityManager = default!;
-    [SidedDependency(Side.Client)] private readonly IEntityManager _clientEntityManager = default!;
-
     [SidedDependency(Side.Server)] private readonly SharedMindSystem _serverMindSystem = default!;
     [SidedDependency(Side.Server)] private readonly MobStateSystem _serverMobStateSystem = default!;
 
