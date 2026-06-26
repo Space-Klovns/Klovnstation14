@@ -34,7 +34,7 @@
       path: /Audio/Weapons/Guns/Gunshots/lmg.ogg
     # KS14: Farsound start
     farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/lng.ogg
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/lmg.ogg
       range: 15,130
     # KS14: Farsound end
     soundEmpty:
