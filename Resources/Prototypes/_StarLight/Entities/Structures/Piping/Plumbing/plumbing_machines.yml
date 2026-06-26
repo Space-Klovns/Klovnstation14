@@ -373,8 +373,11 @@
   name: plumbing smart fridge
   description: A plumbing-connected smart fridge. Pulls all reagents from the network and stores up to 200u of each. Insert a labeled jug to fill it with the matching reagent.
   components:
+  - type: Transform
+    noRot: true # KS14: no rotation
   - type: Sprite
     sprite: Structures/Machines/smartfridge.rsi
+    noRot: true # KS14: no rotation
     layers:
     - state: smartfridge
       map: ["enum.StorageVisualLayers.Base"]

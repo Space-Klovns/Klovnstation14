@@ -15,11 +15,14 @@
   - type: Sprite
     sprite: Structures/Machines/mixer.rsi
     snapCardinals: false # Starlight-edit: allow non-cardinal rotation for ChemMaster to avoid conflict with 4 direction plumbing connector sprites
+    granularLayersRendering: true # KS14: fix rotation
     layers:
     - state: mixer_empty
+      renderingStrategy: SnapToCardinals # KS14: fix rotation
     - state: mixer_screens
       shader: unshaded
       map: ["enum.PowerDeviceVisualLayers.Powered"]
+      renderingStrategy: SnapToCardinals # KS14: fix rotation
   # Starlight-start: Plumbing connector visuals
   - type: PlumbingConnectorAppearance
     offset: 0.09375
