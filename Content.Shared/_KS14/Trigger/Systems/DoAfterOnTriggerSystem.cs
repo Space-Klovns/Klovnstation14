@@ -61,7 +61,7 @@ public sealed class DoAfterOnTriggerSystem : EntitySystem
         var ev = new DoAfterOnTriggerDoAfterEvent();
         if (!_doAfterSystem.TryStartDoAfter(
             new DoAfterArgs(EntityManager, doerUid, entity.Comp.Duration, ev, entity, target: entity)
-            { BlockDuplicate = entity.Comp.BlockDuplicate, DuplicateCondition = DuplicateConditions.SameTarget | DuplicateConditions.SameEvent }))
+            { BlockDuplicate = entity.Comp.BlockDuplicate, DuplicateCondition = DuplicateConditions.SameTarget | DuplicateConditions.SameEvent, BreakOnDamage = true }))
             return;
 
         entity.Comp.CurrentUserUid = args.User;
