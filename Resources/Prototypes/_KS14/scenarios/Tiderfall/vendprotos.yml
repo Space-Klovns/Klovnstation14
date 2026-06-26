@@ -332,7 +332,7 @@
   components:
   - type: Sprite
     sprite: _KS14/Objects/Misc/fpv_drone.rsi
-    state: icon
+    state: base
   - type: CMVendorBundle
     bundle:
     - ClothingBeltUtilityEngineering
