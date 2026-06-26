@@ -20,6 +20,7 @@
     - ClothingEyesGlassesCommand
     - ClothingOuterArmorBasic
     - ClothingHeadHelmetERTSecurity
+    - ClothingBeltMilitaryWebbingERT
     - Machete
 
 - type: entity
@@ -38,7 +39,6 @@
     - MagazineRifle
     - MagazineRifle
     - MagazineRifle
-    - GrenadeStinger
     - GrenadeStinger
 
 - type: entity
@@ -62,6 +62,8 @@
     - WeaponPistolMk1
     - MagazinePistol
     - MagazinePistol
+    - RCD
+    - RCDAmmo
 
 - type: entity
   id: ScenarioVendorBundleNanoplantNtMarksman
@@ -81,3 +83,49 @@
     - MagazineRifle
     - SmokeGrenade
     - SmokeGrenade
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantNtCounterAssault
+  name: counter assaultee
+  description: Armed with a drozd SMG, its a class made for agressive playstyle.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Rifles/drozd.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - WeaponSubMachineDrozd
+    - MagazinePistolSubMachineGun
+    - MagazinePistolSubMachineGun
+    - MagazinePistolSubMachineGun
+    - MagazinePistolSubMachineGun
+    - TearGasGrenade
+    - TearGasGrenade
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantNtDroneOperator
+  name: drone operator
+  description: Remote fragging work.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Misc/fpv_drone.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - ClothingBeltUtilityEngineering
+    - ClothingHeadHatHardhatYellow
+    - RemoteSignallerAdvanced
+    - RemoteDroneLaptop
+    - RemoteDroneFpv
+    - RemoteDroneFpv
+    - WeaponPistolMk58
+    - MagazinePistol
+    - MagazinePistol
+    - SignalTrigger
+    - SignalTrigger
+    - SheetSteel
+    - CableAPCStack
+    - ExplosivePayload
+    - ExplosivePayload
