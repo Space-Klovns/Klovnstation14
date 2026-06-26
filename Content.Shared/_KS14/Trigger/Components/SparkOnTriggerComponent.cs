@@ -4,7 +4,7 @@ using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 
-namespace Content.Shared._KS14.Trigger.Components.Effects;
+namespace Content.Shared._KS14.Trigger.Components;
 
 // TODO: Hotspot-expose
 /// <summary>
@@ -38,4 +38,3 @@ public sealed partial class SparkOnTriggerComponent : BaseXOnTriggerComponent
     [DataField]
     public SoundSpecifier? SoundSpecifier = null;
 }
-

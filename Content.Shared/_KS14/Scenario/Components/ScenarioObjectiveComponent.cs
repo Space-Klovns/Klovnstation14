@@ -10,4 +10,11 @@ public sealed partial class ScenarioObjectiveComponent : Component
 {
     [DataField("isNt")] //literally what it says on the tin
     public bool isNt = false;
+
+    // ffs
+    /// <summary>
+    ///     Trigger keys to trigger a win.
+    /// </summary>
+    [DataField]
+    public HashSet<string> KeysIn = [];
 }
