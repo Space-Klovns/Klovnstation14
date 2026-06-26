@@ -21,6 +21,9 @@
     - Engineering
     - Command
     - Bluelab
+    - Medical
+    - Security
+    - Brig
   - type: IdCard
     jobIcon: JobIconNanotrasen
     jobTitle: ks-scenario_nanoplant-job-name-nanoplant
