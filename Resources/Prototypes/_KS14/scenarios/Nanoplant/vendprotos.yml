@@ -129,3 +129,22 @@
     - CableAPCStack
     - ExplosivePayload
     - ExplosivePayload
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantNtMedic
+  name: medic
+  description: CLEAR!
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Clothing/Eyes/Hud/med.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - MedtekCartridge
+    - ClothingEyesHudMedical
+    - ClothingBeltMedicalFilled
+    - MedkitCombatFilled
+    - JetInjector
+    - DefibrillatorCompact
+    - PowerCellHigh

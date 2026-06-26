@@ -126,6 +126,7 @@
     state: icon
   - type: CMVendorBundle
     bundle:
+    - MedtekCartridge
     - ClothingEyesHudMedical
     - ClothingBeltMedicalFilled
     - JetInjector
@@ -278,6 +279,7 @@
     state: icon
   - type: CMVendorBundle
     bundle:
+    - MedtekCartridge
     - ClothingEyesHudMedical
     - ClothingBeltMedicalFilled
     - MedkitCombatFilled
