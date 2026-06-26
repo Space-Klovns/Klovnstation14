@@ -404,8 +404,7 @@ namespace Content.IntegrationTests.Tests
                                 }
                             }
 
-                            // Skip job spawn validation for scenario maps like Tiderfall
-                            if (entityManager.HasComponent<StationJobsComponent>(stationUid) && mapProto != "Tiderfall")
+                            if (entityManager.HasComponent<StationJobsComponent>(stationUid))
                             {
                                 var stationGrids = entityManager.GetComponent<StationDataComponent>(stationUid).Grids;
 

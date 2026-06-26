@@ -70,8 +70,8 @@ public sealed partial /* KS14: partial */ class GhostUIController : UIController
         // KS14 Start
         if (_ghostRespawnSystem is { })
         {
-            OnRespawnTimeUpdated(_ghostRespawnSystem.LocalRespawnTime);
-            OnEnabledUpdated(_ghostRespawnSystem.Enabled);
+            OnLocalRespawnTimeUpdated(_ghostRespawnSystem.LocalRespawnTime);
+            OnLocalEnabledUpdated(_ghostRespawnSystem.LocalEnabled);
         }
         // KS14 End
     }

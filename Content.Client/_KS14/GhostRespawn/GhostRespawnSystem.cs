@@ -4,7 +4,7 @@ using Robust.Shared.Configuration;
 
 namespace Content.Client._KS14.GhostRespawn;
 
-public sealed class GhostRespawnSystem : EntitySystem
+public sealed class GhostRespawnSystem : SharedGhostRespawnSystem
 {
     [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
@@ -14,19 +14,19 @@ public sealed class GhostRespawnSystem : EntitySystem
     /// </summary>
     public TimeSpan? LocalRespawnTime { get; private set; }
 
-    public bool Enabled { get; private set; }
+    public bool LocalEnabled { get; private set; }
 
     /// <summary>
     ///     Invoked with the new time that respawn will be allowed at.
     ///         If null, respawn is not allowed.
     /// </summary>
-    public event Action<TimeSpan?>? RespawnTimeUpdated;
+    public event Action<TimeSpan?>? LocalRespawnTimeUpdated;
 
     /// <summary>
     ///     Invoked with the new time that respawn will be allowed at.
     ///         If null, respawn is not allowed.
     /// </summary>
-    public event Action<bool>? EnabledUpdated;
+    public event Action<bool>? LocalEnabledUpdated;
 
     public override void Initialize()
     {
@@ -38,14 +38,14 @@ public sealed class GhostRespawnSystem : EntitySystem
 
     private void OnEnabledChanged(bool enabled)
     {
-        Enabled = enabled;
-        EnabledUpdated?.Invoke(enabled);
+        LocalEnabled = enabled;
+        LocalEnabledUpdated?.Invoke(enabled);
     }
 
     private void OnTimeMessage(GhostRespawnTimeMessage message)
     {
         LocalRespawnTime = message.Time;
-        RespawnTimeUpdated?.Invoke(message.Time);
+        LocalRespawnTimeUpdated?.Invoke(message.Time);
     }
 
     public void RequestRespawn()

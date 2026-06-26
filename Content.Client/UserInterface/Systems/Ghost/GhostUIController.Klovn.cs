@@ -9,17 +9,17 @@ public sealed partial class GhostUIController
 
     public void OnSystemLoaded(GhostRespawnSystem system)
     {
-        system.RespawnTimeUpdated += OnRespawnTimeUpdated;
-        system.EnabledUpdated += OnEnabledUpdated;
+        system.LocalRespawnTimeUpdated += OnLocalRespawnTimeUpdated;
+        system.LocalEnabledUpdated += OnLocalEnabledUpdated;
     }
 
     public void OnSystemUnloaded(GhostRespawnSystem system)
     {
-        system.RespawnTimeUpdated -= OnRespawnTimeUpdated;
-        system.EnabledUpdated -= OnEnabledUpdated;
+        system.LocalRespawnTimeUpdated -= OnLocalRespawnTimeUpdated;
+        system.LocalEnabledUpdated -= OnLocalEnabledUpdated;
     }
 
-    private void OnRespawnTimeUpdated(TimeSpan? time)
+    private void OnLocalRespawnTimeUpdated(TimeSpan? time)
     {
         if (Gui is not { } gui)
             return;
@@ -28,7 +28,7 @@ public sealed partial class GhostUIController
         gui.RespawnTime = time;
     }
 
-    private void OnEnabledUpdated(bool enabled)
+    private void OnLocalEnabledUpdated(bool enabled)
     {
         if (Gui is not { } gui)
             return;

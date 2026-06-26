@@ -1,3 +1,4 @@
+using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 using Content.Server.GameTicking;
 using Content.Server.Mind;
@@ -24,7 +25,7 @@ namespace Content.Server._KS14.GhostRespawn;
         so if you take a ghostrole and die/suicide/whatever in it, your respawn timer will be unaffected.
 */
 
-public sealed partial class GhostRespawnSystem : EntitySystem
+public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
 {
     [Dependency] private readonly IConfigurationManager _configurationManager = default!;
     [Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -70,6 +71,14 @@ public sealed partial class GhostRespawnSystem : EntitySystem
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         SubscribeNetworkEvent<GhostRespawnActMessage>(OnActMessage);
     }
+
+    [Pure]
+    public bool IsSessionPendingRespawn(ICommonSession session)
+        => _respawnTimes.ContainsKey(session);
+
+    [Pure]
+    public bool IsEntityTrackingThisSessionsDeath(EntityUid uid, ICommonSession session)
+        => _trackedDeathEntities.TryGetValue(uid, out var trackedSession) && session == trackedSession;
 
     private void OnCooldownChanged(float newValue)
     {
