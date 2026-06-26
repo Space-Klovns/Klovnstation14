@@ -25,3 +25,15 @@
     jobIcon: JobIconNanotrasen
     jobTitle: ks-scenario_nanoplant-job-name-nanoplant
     canMicrowave: false
+
+- type: entity
+  parent: SeismicCharge
+  id: KsScenarioNanoplantSeismicChargeShort
+  name: unstable seismic charge
+  description: Concussion based explosive designed to kill. It has a very short timer.
+  components:
+  - type: Sprite # TODO LCDC NANOPLANT: proper sprite
+    color: '#962921'
+  - type: TimerTrigger
+    delay: 1
+    delayOptions: [1, 3]

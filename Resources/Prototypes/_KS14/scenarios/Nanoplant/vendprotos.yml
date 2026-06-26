@@ -3,7 +3,7 @@
 - type: entity
   id: ScenarioVendorBundleNanoplantNtBase
   name: base clothes
-  description: They kept the gray man down long enough.
+  description: VIVA NANOTRASEN!
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
@@ -22,26 +22,26 @@
 - type: entity
   id: ScenarioVendorBundleNanoplantNtRifleman
   name: rifleman
-  description: Time-tested loadout.
+  description: Time-tested loadout. Can't go wrong.. until it does.
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    sprite: Clothing/Hands/Gloves/Color/yellow.rsi
+    sprite: Objects/Weapons/Guns/Rifles/lecter.rsi
     state: icon
   - type: CMVendorBundle
     bundle:
-    - ToolboxSyndicateTurret
-    - ClothingBeltUtilityEngineering
-    - WelderIndustrial
-    - SheetSteel
-    - SheetRGlass
-    - MaterialWoodPlank
-    - ClothingHeadHatHardhatRed
+    - WeaponRifleLecter
+    - MagazineRifle
+    - MagazineRifle
+    - MagazineRifle
+    - MagazineRifle
+    - GrenadeStinger
+    - GrenadeStinger
 
 - type: entity
   id: ScenarioVendorBundleNanoplantNtEngineer
   name: engineer
-  description: Maintain and fortify the base. Or take the offensive route and lay traps for unsuspecting attackers. Or teammates.
+  description: Stand your ground and fortify the base, or take the offensive route by laying traps for unsuspecting attackers (and teammates).
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
@@ -56,6 +56,9 @@
     - SheetRGlass
     - MaterialWoodPlank
     - ClothingHeadHatHardhatRed
+    - KsScenarioNanoplantSeismicChargeShort
+    - KsScenarioNanoplantSeismicChargeShort
+    - KsScenarioNanoplantSeismicChargeShort
 
 - type: entity
   id: ScenarioVendorBundleNanoplantNtMarksman
@@ -69,6 +72,9 @@
   - type: CMVendorBundle
     bundle:
     - WeaponRifleLecterXL8
-    - MagazineBoxAntiMateriel
+    - MagazineRifle
+    - MagazineRifle
+    - MagazineRifle
+    - MagazineRifle
     - SmokeGrenade
     - SmokeGrenade

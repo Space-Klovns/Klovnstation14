@@ -1,17 +1,17 @@
 - type: gameMap
-  id: Tiderfall
-  mapName: 'Tiderfall'
-  mapPath: /Maps/_KS14/Scenarios/Tiderfall/tiderfall.yml
-  minPlayers: 0
-  maxPlayers: 20
+  id: Nanoplant
+  mapName: 'Nanoplant'
+  mapPath: /Maps/_KS14/Scenarios/Nanoplant/nanoplant.yml
+  minPlayers: 7
+  maxPlayers: 40
   stations:
-    Tiderfall:
+    Nanoplant:
       stationProto: KsStationBasicScenario
       components:
       - type: StationNameSetup
-        mapNameTemplate: 'Tiderfall'
+        mapNameTemplate: 'Nanoplant'
       - type: StationJobs
         availableJobs:
-          ScenarioSyndie: [ 5, 5 ]
+          ScenarioSyndie: [ 15, 15 ]
           ScenarioNt: [ 15, 15 ]
       - type: KsSilenceWelcomeMessage
