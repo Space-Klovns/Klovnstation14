@@ -10,6 +10,7 @@ using Robust.Shared.Spawners;
 using Content.Shared.Destructible;
 using System.Linq;
 using Content.Shared.Trigger;
+using Content.Shared.GameTicking;
 
 namespace Content.Server._KS14.GameTicking.Rules;
 
@@ -23,24 +24,36 @@ public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
 {
     [Dependency] private readonly RoundEndSystem _roundEndSystem = default!;
 
+    // All active objectives
+    private readonly HashSet<EntityUid> _activeObjectiveUids = [];
+
     public override void Initialize()
     {
         base.Initialize();
 
+        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestartCleanup);
+
         //syndie checks
-        SubscribeLocalEvent<ScenarioSyndieComponent, ComponentRemove>(OnSyndieCompRemove);
+        SubscribeLocalEvent<ScenarioSyndieComponent, ComponentShutdown>(OnSyndieShutdown);
         SubscribeLocalEvent<ScenarioSyndieComponent, MobStateChangedEvent>(OnSyndieMobstateChanged);
         SubscribeLocalEvent<ScenarioSyndieComponent, EntityZombifiedEvent>(OnSyndieZombified);
 
         //NT checks
-        SubscribeLocalEvent<ScenarioNtComponent, ComponentRemove>(OnNtCompRemove);
+        SubscribeLocalEvent<ScenarioNtComponent, ComponentShutdown>(OnNtShutdown);
         SubscribeLocalEvent<ScenarioNtComponent, MobStateChangedEvent>(OnNtMobstateChanged);
         SubscribeLocalEvent<ScenarioNtComponent, EntityZombifiedEvent>(OnNtZombified);
 
+        SubscribeLocalEvent<ScenarioObjectiveComponent, ComponentShutdown>(OnObjectiveShutdown);
         SubscribeLocalEvent<ScenarioObjectiveComponent, TriggerEvent>(OnTriggered);
         SubscribeLocalEvent<ScenarioObjectiveComponent, TimedDespawnEvent>(OnObjDefended);
         SubscribeLocalEvent<ScenarioObjectiveComponent, DestructionEventArgs>(OnObjDestroyed);
 
+    }
+
+    private void OnRoundRestartCleanup(RoundRestartCleanupEvent args)
+    {
+        _activeObjectiveUids.Clear();
+        _activeObjectiveUids.TrimExcess();
     }
 
     protected override void AppendRoundEndText(EntityUid uid,
@@ -63,15 +76,15 @@ public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
         // Map loading and RuleLoadedGridsEvent is handled by LoadMapRuleSystem
     }
 
-    private void OnSyndieCompRemove(EntityUid uid, ScenarioSyndieComponent component, ComponentRemove args)
+    private void OnSyndieShutdown(EntityUid uid, ScenarioSyndieComponent component, ComponentShutdown args)
     {
-        CheckRoundShouldEnd();
+        CheckRoundShouldEndViaDeath();
     }
 
     private void OnSyndieMobstateChanged(EntityUid uid, ScenarioSyndieComponent component, MobStateChangedEvent ev)
     {
         if (ev.NewMobState == MobState.Dead)
-            CheckRoundShouldEnd();
+            CheckRoundShouldEndViaDeath();
     }
 
     private void OnSyndieZombified(EntityUid uid, ScenarioSyndieComponent component, ref EntityZombifiedEvent args)
@@ -79,15 +92,15 @@ public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
         RemCompDeferred(uid, component);
     }
 
-    private void OnNtCompRemove(EntityUid uid, ScenarioNtComponent component, ComponentRemove args)
+    private void OnNtShutdown(EntityUid uid, ScenarioNtComponent component, ComponentShutdown args)
     {
-        CheckRoundShouldEnd();
+        CheckRoundShouldEndViaDeath();
     }
 
     private void OnNtMobstateChanged(EntityUid uid, ScenarioNtComponent component, MobStateChangedEvent ev)
     {
         if (ev.NewMobState == MobState.Dead)
-            CheckRoundShouldEnd();
+            CheckRoundShouldEndViaDeath();
     }
 
     private void OnNtZombified(EntityUid uid, ScenarioNtComponent component, ref EntityZombifiedEvent args)
@@ -118,8 +131,38 @@ public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
     {
         ent.Comp.NtWon = value;
     }
-    private void CheckRoundShouldEnd()
+
+    private bool IsRuleActive()
     {
+        var eqe = QueryActiveRules();
+        while (eqe.MoveNext(out _, out _, out _))
+            return true;
+
+        return false;
+    }
+
+    private void CheckRoundShouldEndViaObjective()
+    {
+        // Do nuffin if the game rule isnt active
+        if (!IsRuleActive())
+            return;
+
+        if (_activeObjectiveUids.Count != 0)
+            return;
+
+        SetWinType(true);
+        _roundEndSystem.DoRoundEndBehavior(RoundEndBehavior.InstantEnd,
+            TimeSpan.FromMinutes(3), //doesnt matter
+            "comms-console-announcement-title-centcom",
+            "comms-console-announcement-title-centcom",
+            "comms-console-announcement-title-centcom");
+    }
+
+    private void CheckRoundShouldEndViaDeath()
+    {
+        if (!IsRuleActive())
+            return;
+
         // Check if there are syndies still alive
         // If there are, the round can continue.
         var syndies = EntityQuery<ScenarioSyndieComponent, MobStateComponent, TransformComponent>(true);
@@ -145,7 +188,6 @@ public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
         if (nanotrasenAlive)
             return; // There are living nanotrasen
 
-
         _roundEndSystem.DoRoundEndBehavior(RoundEndBehavior.InstantEnd,
             TimeSpan.FromMinutes(3), //doesnt matter if its instant i think
             "comms-console-announcement-title-centcom",
@@ -154,32 +196,33 @@ public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
 
     }
 
+    private void OnObjectiveShutdown(Entity<ScenarioObjectiveComponent> entity, ref ComponentShutdown args)
+    {
+        _activeObjectiveUids.Remove(entity);
+        CheckRoundShouldEndViaObjective();
+    }
+
     private void OnTriggered(Entity<ScenarioObjectiveComponent> entity, ref TriggerEvent args)
     {
         if (args.Key is { } key &&
             !entity.Comp.KeysIn.Contains(key))
             return;
 
-        WinThruObjective();
+        CaptureObjective(entity);
     }
 
-    private void OnObjDefended(EntityUid uid, ScenarioObjectiveComponent component, TimedDespawnEvent args)
+    private void OnObjDefended(Entity<ScenarioObjectiveComponent> entity, ref TimedDespawnEvent args)
     {
-        WinThruObjective();
+        CaptureObjective(entity);
     }
 
-    private void OnObjDestroyed(EntityUid uid, ScenarioObjectiveComponent component, DestructionEventArgs args)
+    private void OnObjDestroyed(Entity<ScenarioObjectiveComponent> entity, ref DestructionEventArgs args)
     {
-        WinThruObjective();
+        CaptureObjective(entity);
     }
 
-    private void WinThruObjective()
+    private void CaptureObjective(Entity<ScenarioObjectiveComponent> entity)
     {
-        SetWinType(true);
-        _roundEndSystem.DoRoundEndBehavior(RoundEndBehavior.InstantEnd,
-            TimeSpan.FromMinutes(3), //doesnt matter
-            "comms-console-announcement-title-centcom",
-            "comms-console-announcement-title-centcom",
-            "comms-console-announcement-title-centcom");
+        RemComp(entity, entity.Comp);
     }
 }
