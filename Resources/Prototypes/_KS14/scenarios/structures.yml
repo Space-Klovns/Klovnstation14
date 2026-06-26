@@ -88,14 +88,89 @@
     sprite: Structures/Doors/Airlocks/Standard/maint.rsi
 
 - type: entity
-  parent: TelecomServer
+  parent: BaseStructure
   id: KsScenarioObjectiveSyndie
   name: syndicate objective
   description: This is a server that is of paramount importance to the syndicate. Would be a shame if someone broke it!
   components:
+  - type: Sprite
+    sprite: Structures/Machines/telecomms.rsi
+    snapCardinals: true
+    layers:
+    - state: telecom-nopower
+    - state: telecom-stripe
+    - state: telecom-on
+      shader: unshaded
+      map: ["onstate"]
+    - state: variant-sec
+      shader: unshaded
+      map: ["variant"]
+  - type: Clickable
+  - type: EmissiveLayers
+    glowRadius: 0.5
+    layers:
+    - onstate
+    - variant
   - type: ScenarioObjective
+    keysIn:
+    - win
   - type: TimedDespawn
     lifetime: 1800
+  - type: TriggerOnActivate
+  - type: DoAfterOnTrigger
+    duration: 15s
+    startKeyOut: started
+    cancelledKeyOut: cancelled
+    keyOut: win
+    blockDuplicate: true
+    duplicatePopupLoc: ks-scenario-objective-popup-oneuser
+    cooldown: 5s
+    cooldownPopupLoc: ks-scenario-objective-popup-cooldown
+  - type: DeleteOnTrigger
+    keysIn:
+    - win
+  - type: AnnouncementOnTrigger
+    announcementsPerKey:
+      started:
+        announcementLoc: ks-scenario-objective-announcement-capturestarted
+        colorOverride: Crimson
+        sound:
+          path: /Audio/Effects/Grenades/Supermatter/smbeep.ogg
+          params:
+            pitch: 0.5
+      cancelled:
+        announcementLoc: ks-scenario-objective-announcement-captureended
+        colorOverride: DarkGreen
+        sound:
+          path: /Audio/Misc/cryo_warning.ogg
+          params:
+            pitch: 0.5
+      win:
+        announcementLoc: ks-scenario-objective-announcement-capturewin
+        colorOverride: Cyan
+        sound:
+          path: /Audio/Announcements/war.ogg
+          params:
+            pitch: 0.5
+
+- type: entity
+  parent: KsScenarioObjectiveSyndie
+  id: KsScenarioObjectiveNanotrasen
+  name: nanotrasen objective
+  description: This is a server that is of paramount importance to Nanotrasen. Would be a shame if someone broke it!
+  components:
+  - type: Sprite
+    layers:
+    - state: telecom-nopower
+    - state: telecom-stripe
+    - state: telecom-on
+      shader: unshaded
+      map: ["onstate"]
+    - state: variant-multiple
+      shader: unshaded
+      map: ["variant"]
+  - type: ScenarioObjective
+    isNt: true
 
 - type: entity
   parent: MarkerBase

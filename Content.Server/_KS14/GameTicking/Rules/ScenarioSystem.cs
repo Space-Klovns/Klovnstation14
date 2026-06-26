@@ -11,6 +11,8 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Spawners;
 using Content.Shared.Destructible;
 using System.Linq;
+using Content.Shared.Trigger.Systems;
+using Content.Shared.Trigger;
 
 namespace Content.Server._KS14.GameTicking.Rules;
 
@@ -23,6 +25,7 @@ public sealed partial class ScenarioRuleComponent : Component
 public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
 {
     [Dependency] private readonly RoundEndSystem _roundEndSystem = default!;
+    [Dependency] private readonly TriggerSystem _triggerSystem = default!;
 
     public override void Initialize()
     {
@@ -38,6 +41,7 @@ public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
         SubscribeLocalEvent<ScenarioNtComponent, MobStateChangedEvent>(OnNtMobstateChanged);
         SubscribeLocalEvent<ScenarioNtComponent, EntityZombifiedEvent>(OnNtZombified);
 
+        SubscribeLocalEvent<ScenarioObjectiveComponent, TriggerEvent>(OnTriggered);
         SubscribeLocalEvent<ScenarioObjectiveComponent, TimedDespawnEvent>(OnObjDefended);
         SubscribeLocalEvent<ScenarioObjectiveComponent, DestructionEventArgs>(OnObjDestroyed);
 
@@ -154,17 +158,26 @@ public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
 
     }
 
+    private void OnTriggered(Entity<ScenarioObjectiveComponent> entity, ref TriggerEvent args)
+    {
+        if (args.Key is { } key &&
+            !entity.Comp.KeysIn.Contains(key))
+            return;
+
+        WinThruObjective();
+    }
+
     private void OnObjDefended(EntityUid uid, ScenarioObjectiveComponent component, TimedDespawnEvent args)
     {
-        SetWinType(true);
-        _roundEndSystem.DoRoundEndBehavior(RoundEndBehavior.InstantEnd,
-            TimeSpan.FromMinutes(3), //doesnt matter
-            "comms-console-announcement-title-centcom",
-            "comms-console-announcement-title-centcom",
-            "comms-console-announcement-title-centcom");
+        WinThruObjective();
     }
 
     private void OnObjDestroyed(EntityUid uid, ScenarioObjectiveComponent component, DestructionEventArgs args)
+    {
+        WinThruObjective();
+    }
+
+    private void WinThruObjective()
     {
         SetWinType(true);
         _roundEndSystem.DoRoundEndBehavior(RoundEndBehavior.InstantEnd,
