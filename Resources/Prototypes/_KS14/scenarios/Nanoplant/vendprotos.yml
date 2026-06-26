@@ -59,6 +59,7 @@
     - KsScenarioNanoplantSeismicChargeShort
     - KsScenarioNanoplantSeismicChargeShort
     - KsFlatpackBallisticTurretNanotrasenDisposable
+    - KsFlatpackBallisticTurretNanotrasenDisposable
     - WeaponPistolMk1
     - MagazinePistol
     - MagazinePistol
@@ -148,3 +149,5 @@
     - JetInjector
     - DefibrillatorCompact
     - PowerCellHigh
+    - WeaponRifleLecter
+    - MagazineRifle
