@@ -439,7 +439,7 @@
         - ReagentId: Uranium
           Quantity: 8
         - ReagentId: Radium
-          Quantity: 8
+          Quantity: 2
         - ReagentId: Iron
           Quantity: 4.5
         - ReagentId: Carbon
