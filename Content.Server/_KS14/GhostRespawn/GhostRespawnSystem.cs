@@ -1,10 +1,13 @@
 using System.Runtime.InteropServices;
 using Content.Server.GameTicking;
+using Content.Server.Mind;
+using Content.Server.Popups;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.GhostRespawn;
 using Content.Shared.GameTicking;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
+using Content.Shared.Popups;
 using Robust.Server.Player;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
@@ -13,12 +16,22 @@ using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.GhostRespawn;
 
+/*
+    The reason why the ghost's mind's MindComponent.TimeOfDeath isn't used is because
+        i don't trust it and i think it's a liability.
+
+    Also because the respawn timer is only relative to your *first* 'death' (after your last respawn, if any);
+        so if you take a ghostrole and die/suicide/whatever in it, your respawn timer will be unaffected.
+*/
+
 public sealed partial class GhostRespawnSystem : EntitySystem
 {
     [Dependency] private readonly IConfigurationManager _configurationManager = default!;
     [Dependency] private readonly IPlayerManager _playerManager = default!;
     [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly GameTicker _gameTicker = default!;
+    [Dependency] private readonly MindSystem _mindSystem = default!;
+    [Dependency] private readonly PopupSystem _popupSystem = default!;
 
     /// <summary>
     ///     Penalty to be added to respawn time for each session.
@@ -32,10 +45,11 @@ public sealed partial class GhostRespawnSystem : EntitySystem
     ///     Entities that are being used to track a players respawn timer.
     ///         Think of it as their 'original body'.
     /// </summary>
-    // Yea i know sessions arent removed after the entity dies
+    // Yea i know sessions arent removed after the entity dies but NOBODY CARES
     private readonly Dictionary<EntityUid, ICommonSession> _trackedDeathEntities = [];
 
     private bool _enabled;
+    private bool _alwaysStartTimer;
     private TimeSpan _respawnCooldown;
     private TimeSpan _penaltyTime;
 
@@ -44,6 +58,7 @@ public sealed partial class GhostRespawnSystem : EntitySystem
         base.Initialize();
 
         _configurationManager.OnValueChanged(KsCCVars.GhostRespawnEnabled, x => _enabled = x, invokeImmediately: true);
+        _configurationManager.OnValueChanged(KsCCVars.GhostRespawnAlwaysStartTimer, x => _alwaysStartTimer = x, invokeImmediately: true);
         _configurationManager.OnValueChanged(KsCCVars.GhostRespawnCooldownSeconds, OnCooldownChanged, invokeImmediately: true);
         _configurationManager.OnValueChanged(KsCCVars.GhostRespawnPenaltySeconds, x => _penaltyTime = TimeSpan.FromSeconds(x), invokeImmediately: true);
 
@@ -84,7 +99,6 @@ public sealed partial class GhostRespawnSystem : EntitySystem
 
     private void OnPlayerDetached(PlayerDetachedEvent args)
     {
-        // you can't just ghost out of it
         if (_respawnTimes.ContainsKey(args.Player) ||
             !TryComp<MobStateComponent>(args.Entity, out var mobStateComponent))
             return;
@@ -92,7 +106,9 @@ public sealed partial class GhostRespawnSystem : EntitySystem
         if (!TerminatingOrDeleted(args.Entity))
             _trackedDeathEntities[args.Entity] = args.Player;
 
-        if (!IsEligibleForRespawn(args.Entity, mobStateComponent.CurrentState))
+        // you can't just ghost out of it while alive (well unless the cvar allows it)
+        if (!_alwaysStartTimer &&
+            !IsEligibleForRespawn(args.Entity, mobStateComponent.CurrentState))
             return;
 
         var respawnTime = _gameTiming.CurTime + _respawnCooldown + _penalties.GetValueOrDefault(args.Player);
@@ -103,30 +119,34 @@ public sealed partial class GhostRespawnSystem : EntitySystem
 
     private void OnMobStateChanged(MobStateChangedEvent args)
     {
-        if (!_trackedDeathEntities.TryGetValue(args.Target, out var session))
-            return;
-
         // If the player has died in their original body, start the respawn tracker for it.
         if (IsEligibleForRespawn(args.Target, args.NewMobState))
         {
-            ref var respawnTime = ref CollectionsMarshal.GetValueRefOrAddDefault(_respawnTimes, session, out var exists);
+            if (!_playerManager.TryGetSessionByEntity(args.Target, out var attachedSession))
+                return;
+
+            ref var respawnTime = ref CollectionsMarshal.GetValueRefOrAddDefault(_respawnTimes, attachedSession, out var exists);
             if (exists)
                 return;
 
-            respawnTime = _gameTiming.CurTime + _respawnCooldown + _penalties.GetValueOrDefault(session);
-            RaiseNetworkEvent(new GhostRespawnTimeMessage(respawnTime), session);
+            respawnTime = _gameTiming.CurTime + _respawnCooldown + _penalties.GetValueOrDefault(attachedSession);
+            RaiseNetworkEvent(new GhostRespawnTimeMessage(respawnTime), attachedSession);
 
             if (!TerminatingOrDeleted(args.Target))
-                _trackedDeathEntities[args.Target] = session;
-        }
-        else // Otherwise if they are now alive in their original body, cancel respawn.
-        {
-            _respawnTimes.Remove(session);
-            RaiseNetworkEvent(new GhostRespawnTimeMessage(null), session);
+                _trackedDeathEntities[args.Target] = attachedSession;
 
-            if (!TerminatingOrDeleted(args.Target))
-                _trackedDeathEntities.Remove(args.Target);
+            return;
         }
+
+        // Otherwise if they are now alive in their original body after dying a valid death, cancel respawn.
+        if (!_trackedDeathEntities.TryGetValue(args.Target, out var session))
+            return;
+
+        _respawnTimes.Remove(session);
+        RaiseNetworkEvent(new GhostRespawnTimeMessage(null), session);
+
+        if (!TerminatingOrDeleted(args.Target))
+            _trackedDeathEntities.Remove(args.Target);
     }
 
     private bool IsEligibleForRespawn(EntityUid uid, MobState state)
@@ -154,6 +174,16 @@ public sealed partial class GhostRespawnSystem : EntitySystem
         if (!_respawnTimes.TryGetValue(args.SenderSession, out var respawnTime) ||
             _gameTiming.CurTime < respawnTime)
             return;
+
+        if (_mindSystem.TryGetMind(args.SenderSession, out _, out var mindComponent) &&
+            mindComponent.PreventGhosting)
+        {
+            // Tell them they can't ghost and thus can't respawn
+            if (args.SenderSession.AttachedEntity is { } attachedUid)
+                _popupSystem.PopupEntity("ks-ghost-respawn-popup-ghostingblocked", attachedUid, attachedUid, type: PopupType.MediumCaution);
+
+            return;
+        }
 
         ref var penalty = ref CollectionsMarshal.GetValueRefOrAddDefault(_penalties, args.SenderSession, out _);
         penalty += _penaltyTime;
