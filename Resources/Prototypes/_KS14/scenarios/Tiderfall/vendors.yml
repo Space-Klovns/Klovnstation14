@@ -18,7 +18,10 @@
       - id: ScenarioVendorBundleTiderfallNtSecurity
         recommended: true
       - id: ScenarioVendorBundleTiderfallNtTider
-        replaceSlot: &baseReplaceSlot [ shoes, idcard, gloves ]
+        replaceSlot: &baseReplaceSlot
+        - IDCARD
+        - SHOES
+        - GLOVES
       - id: ScenarioVendorBundleTiderfallNtClown
         replaceSlot: *baseReplaceSlot
       - id: ScenarioVendorBundleTiderfallNtMiner
@@ -49,6 +52,7 @@
       entries:
       - id: ScenarioVendorBundleTiderfallSyndieSoldier
         recommended: true
+        replaceSlot: *baseReplaceSlot
       - id: ScenarioVendorBundleTiderfallSyndieInfiltrator
         replaceSlot: *baseReplaceSlot
       - id: ScenarioVendorBundleTiderfallSyndieDemolitionist
