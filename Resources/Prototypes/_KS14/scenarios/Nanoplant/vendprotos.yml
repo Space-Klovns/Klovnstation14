@@ -92,7 +92,7 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    sprite: Objects/Weapons/Guns/Rifles/drozd.rsi
+    sprite: Objects/Weapons/Guns/SMGs/drozd.rsi
     state: icon
   - type: CMVendorBundle
     bundle:
