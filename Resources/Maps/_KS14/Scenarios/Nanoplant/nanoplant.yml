@@ -24,8 +24,6 @@ entities:
     components:
     - type: MetaData
       name: Nanoplant Map
-    - type: BecomesStation
-      id: Nanoplant
     - type: Transform
     - type: Map
       mapPaused: True

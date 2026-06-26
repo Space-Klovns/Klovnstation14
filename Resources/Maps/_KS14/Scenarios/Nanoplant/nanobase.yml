@@ -47,6 +47,8 @@ entities:
     components:
     - type: MetaData
       name: grid
+    - type: BecomesStation
+      id: Nanoplant
     - type: Transform
       pos: -0.546875,-0.23028278
       parent: invalid

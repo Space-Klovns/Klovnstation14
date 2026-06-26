@@ -29,6 +29,8 @@ entities:
     components:
     - type: MetaData
       name: grid
+    - type: BecomesStation
+      id: Tiderfall
     - type: Transform
       pos: 26.041613,-14.86536
       parent: invalid
