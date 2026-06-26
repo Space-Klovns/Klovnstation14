@@ -126,7 +126,7 @@
     state: icon
   - type: CMVendorBundle
     bundle:
-    - MedtekCartridge
+    - MedTekCartridge
     - ClothingEyesHudMedical
     - ClothingBeltMedicalFilled
     - JetInjector
@@ -168,7 +168,7 @@
     - SignalTrigger
     - SignalTrigger
     - SheetSteel
-    - CableAPCStack10
+    - CableApcStack10
     - ExplosivePayload
     - ExplosivePayload
 
@@ -279,7 +279,7 @@
     state: icon
   - type: CMVendorBundle
     bundle:
-    - MedtekCartridge
+    - MedTekCartridge
     - ClothingEyesHudMedical
     - ClothingBeltMedicalFilled
     - MedkitCombatFilled
@@ -349,7 +349,7 @@
     - SignalTrigger
     - SignalTrigger
     - SheetSteel
-    - CableAPCStack10
+    - CableApcStack10
     - ExplosivePayload
     - ExplosivePayload
     - ExplosivePayload
