@@ -1,0 +1,226 @@
+- type: reaction
+  id: SolidifySteel
+  impact: Low
+  quantized: true
+  reactants:
+    Iron:
+      amount: 9
+    Carbon:
+      amount: 1
+    Fresium:
+      amount: 5
+  effects:
+  - !type:SpawnEntity
+    entity: SheetSteel1
+
+- type: reaction
+  id: SolidifyPlasteel
+  impact: Low
+  quantized: true
+  priority: 1 # higher priority than SolidifySteel and SolidifyPlasma
+  reactants:
+    Plasma:
+      amount: 10
+    Iron:
+      amount: 9
+    Carbon:
+      amount: 1
+    Fresium:
+      amount: 5
+  effects:
+  - !type:SpawnEntity
+    entity: SheetPlasteel1
+
+- type: reaction
+  id: SolidifyBrass
+  impact: Low
+  quantized: true
+  reactants:
+    Zinc:
+      amount: 3.3
+    Copper:
+      amount: 6.7
+    Fresium:
+      amount: 5
+  effects:
+  - !type:SpawnEntity
+    entity: SheetBrass1
+
+- type: reaction
+  id: SolidifyPlasma
+  impact: Low
+  quantized: true
+  reactants:
+    Plasma:
+      amount: 10
+    Fresium:
+      amount: 5
+  effects:
+  - !type:SpawnEntity
+    entity: SheetPlasma1
+
+- type: reaction
+  id: SolidifyUranium
+  impact: Low
+  quantized: true
+  reactants:
+    Uranium:
+      amount: 8
+    Radium:
+      amount: 2
+    Fresium:
+      amount: 5
+  effects:
+  - !type:SpawnEntity
+    entity: SheetUranium1
+
+- type: reaction
+  id: SolidifyGlass
+  impact: Low
+  quantized: true
+  reactants:
+    Silicon:
+      amount: 10
+    Fresium:
+      amount: 5
+  effects:
+  - !type:SpawnEntity
+    entity: SheetGlass1
+
+- type: reaction
+  id: SolidifyRGlass
+  impact: Low
+  quantized: true
+  priority: 1 # higher priority than SolidifyGlass and Kelotane
+  reactants:
+    Silicon:
+      amount: 10
+    Iron:
+      amount: 4.5
+    Carbon:
+      amount: 0.5
+    Fresium:
+      amount: 5
+  effects:
+  - !type:SpawnEntity
+    entity: SheetRGlass1
+
+- type: reaction
+  id: SolidifyPGlass
+  impact: Low
+  quantized: true
+  priority: 1 # higher priority than SolidifyGlass and SolidifyPlasma
+  reactants:
+    Silicon:
+      amount: 10
+    Plasma:
+      amount: 10
+    Fresium:
+      amount: 5
+  effects:
+  - !type:SpawnEntity
+    entity: SheetPGlass1
+
+- type: reaction
+  id: SolidifyRPGlass
+  impact: Low
+  quantized: true
+  priority: 2 # higher priority than SolidifyRGlass and SolidifyPGlass
+  reactants:
+    Silicon:
+      amount: 10
+    Plasma:
+      amount: 10
+    Iron:
+      amount: 4.5
+    Carbon:
+      amount: 0.5
+    Fresium:
+      amount: 5
+  effects:
+  - !type:SpawnEntity
+    entity: SheetRPGlass1
+
+- type: reaction
+  id: SolidifyUGlass
+  impact: Low
+  quantized: true
+  priority: 1 # higher priority than SolidifyGlass and SolidifyUranium
+  reactants:
+    Silicon:
+      amount: 10
+    Uranium:
+      amount: 8
+    Radium:
+      amount: 2
+    Fresium:
+      amount: 5
+  effects:
+  - !type:SpawnEntity
+    entity: SheetUGlass1
+
+- type: reaction
+  id: SolidifyRUGlass
+  impact: Low
+  quantized: true
+  priority: 2 # higher priority than SolidifyRGlass and SolidifyUGlass
+  reactants:
+    Silicon:
+      amount: 10
+    Uranium:
+      amount: 8
+    Radium:
+      amount: 2
+    Iron:
+      amount: 4.5
+    Carbon:
+      amount: 0.5
+    Fresium:
+      amount: 5
+  effects:
+  - !type:SpawnEntity
+    entity: SheetRUGlass1
+
+- type: reaction
+  id: SolidifyClockworkGlass
+  impact: Low
+  quantized: true
+  priority: 1 # higher priority than SolidifyGlass and SolidifyBrass
+  reactants:
+    Silicon:
+      amount: 10
+    Zinc:
+      amount: 3.3
+    Copper:
+      amount: 6.7
+    Fresium:
+      amount: 5
+  effects:
+  - !type:SpawnEntity
+    entity: SheetClockworkGlass1
+
+- type: reaction
+  id: SolidifyGold
+  impact: Low
+  quantized: true
+  reactants:
+    Gold:
+      amount: 10
+    Fresium:
+      amount: 5
+  effects:
+  - !type:SpawnEntity
+    entity: IngotGold1
+
+- type: reaction
+  id: SolidifySilver
+  impact: Low
+  quantized: true
+  reactants:
+    Silver:
+      amount: 10
+    Fresium:
+      amount: 5
+  effects:
+  - !type:SpawnEntity
+    entity: IngotSilver1
