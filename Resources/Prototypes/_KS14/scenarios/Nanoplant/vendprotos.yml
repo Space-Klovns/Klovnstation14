@@ -30,15 +30,15 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    sprite: Objects/Weapons/Guns/Rifles/lecter.rsi
+    sprite: Objects/Weapons/Guns/SMGs/drozd.rsi
     state: icon
   - type: CMVendorBundle
     bundle:
-    - WeaponRifleLecter
-    - MagazineRifle
-    - MagazineRifle
-    - MagazineRifle
-    - MagazineRifle
+    - WeaponSubMachineGunDrozd
+    - MagazinePistolSubMachineGun
+    - MagazinePistolSubMachineGun
+    - MagazinePistolSubMachineGun
+    - MagazinePistolSubMachineGun
     - GrenadeStinger
 
 - type: entity
