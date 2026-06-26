@@ -433,7 +433,7 @@ public abstract class SharedCMAutomatedVendorSystem : EntitySystem
             if (slot.ContainedEntity is { } containedUid &&
                 replaceSlot is { })
             {
-                if (!clothingComponent.Slots.HasFlag(replaceSlot.Value))
+                if ((clothingComponent.Slots & replaceSlot.Value) == 0x0)
                     continue;
 
                 if (!_inventory.CanUnequip(playerUid, slot.ID, out _, containerSlot: slot, inventory: inventoryComponent) ||
