@@ -17,8 +17,6 @@ namespace Content.IntegrationTests.Tests._KS14.GhostRespawn;
 
 public sealed class KsGhostRespawnTest : GameTest
 {
-    private static readonly TimeSpan DefaultCooldown = TimeSpan.FromSeconds(5d);
-
     [SidedDependency(Side.Server)] private readonly IEntityNetworkManager _serverEntityNetworkManager = default!;
     [SidedDependency(Side.Client)] private readonly IEntityNetworkManager _clientEntityNetworkManager = default!;
 

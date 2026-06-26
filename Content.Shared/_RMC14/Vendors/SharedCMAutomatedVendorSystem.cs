@@ -430,16 +430,19 @@ public abstract class SharedCMAutomatedVendorSystem : EntitySystem
         var slots = _inventory.GetSlotEnumerator(playerUid, clothingComponent.Slots);
         while (slots.MoveNext(out var slot))
         {
-            if (slot.ContainedEntity is { } containedUid)
+            if (slot.ContainedEntity is { } containedUid &&
+                replaceSlot is { })
             {
+                if (!clothingComponent.Slots.HasFlag(replaceSlot.Value))
+                    continue;
+
                 if (!_inventory.CanUnequip(playerUid, slot.ID, out _, containerSlot: slot, inventory: inventoryComponent) ||
                     !_containerSystem.CanRemove(containedUid, slot))
                     continue;
 
                 itemToReplaceUid = containedUid;
 
-                // maybe don't uneqip, actually
-                //_inventory.TryUnequip(playerUid, slot.ID, true, force: true, predicted: true, inventory: inventoryComponent);
+                _inventory.TryUnequip(playerUid, slot.ID, true, force: true, predicted: true, inventory: inventoryComponent);
             }
 
             _inventory.TryEquip(playerUid, itemUid, slot.ID, predicted: true, inventory: inventoryComponent, clothing: clothingComponent);
