@@ -13,19 +13,23 @@
     noRot: true
     layers:
       - state: industrial-off
-      - state: industrial-working
-        map: [ "enum.PowerDeviceVisualLayers.Powered" ]
+        map: [ "base" ]
+      - state: industrial-screen
+        map: [ "screen" ]
         shader: unshaded
       - state: industrial-panel
-        map: ["enum.WiresVisualLayers.MaintenancePanel"]
+        map: ["panel"]
   - type: GenericVisualizer
     visuals:
       enum.PowerDeviceVisuals.Powered:
-        enum.PowerDeviceVisualLayers.Powered:
+        base:
+          True: { state: industrial-working }
+          False: { state: industrial-off }
+        screen:
           True: { visible: true }
           False: { visible: false }
       enum.WiresVisuals.MaintenancePanelState:
-        enum.WiresVisualLayers.MaintenancePanel:
+        panel:
           True: { visible: true }
           False: { visible: false }
     # KS14 end
