@@ -72,21 +72,19 @@ public sealed class KsGhostRespawnTest : GameTest
     [EnsureCVar(Side.Server, typeof(KsCCVars), nameof(KsCCVars.GhostRespawnAlwaysStartTimer), false)]
     [EnsureCVar(Side.Server, typeof(KsCCVars), nameof(KsCCVars.GhostRespawnCooldownSeconds), 0f)]
     [EnsureCVar(Side.Server, typeof(KsCCVars), nameof(KsCCVars.GhostRespawnPenaltySeconds), 0f)]
-    public async Task TestRespawning()
+    public async Task TestRespawningDeathReaction()
     {
         var pair = Pair;
-        var server = pair.Server;
-        var client = pair.Client;
 
-        var entityManager = server.ResolveDependency<IServerEntityManager>();
-        var prototypeManager = server.ResolveDependency<IPrototypeManager>();
+        var entityManager = Server.ResolveDependency<IServerEntityManager>();
+        var prototypeManager = Server.ResolveDependency<IPrototypeManager>();
 
         EntityUid uid = default!;
         MobStateComponent mobStateComponent = default!;
         MindContainerComponent mindContainerComponent = default!;
         EntityUid mindUid = default!;
 
-        await server.WaitAssertion(() =>
+        await Server.WaitAssertion(() =>
         {
             uid = entityManager.SpawnEntity("KsGhostRespawnTestEntity", MapCoordinates.Nullspace);
 
@@ -94,7 +92,7 @@ public sealed class KsGhostRespawnTest : GameTest
             _serverMobStateSystem.ChangeMobState(uid, MobState.Alive, component: mobStateComponent);
 
             mindContainerComponent = entityManager.EnsureComponent<MindContainerComponent>(uid);
-            mindUid = _serverMindSystem.CreateMind(client.User);
+            mindUid = _serverMindSystem.CreateMind(Client.User);
 
             _serverMindSystem.TransferTo(mindUid, uid);
         });
@@ -102,7 +100,7 @@ public sealed class KsGhostRespawnTest : GameTest
         await pair.RunTicksSync(5);
 
         // Make sure the player somehow isnt already pending a respawn
-        Assert.That(!_serverGhostRespawnSystem.IsSessionPendingRespawn(client.Session), "Respawn is pending even though it should not be");
+        Assert.That(!_serverGhostRespawnSystem.IsSessionPendingRespawn(Client.Session), "Respawn is pending even though it should not be");
 
         // Kill player and make sure they CAN respawn
         await KillAndAssertRespawnability();
@@ -113,39 +111,10 @@ public sealed class KsGhostRespawnTest : GameTest
         // Kill player again and make sure they CAN respawn
         await KillAndAssertRespawnability();
 
-        // Transfer client to a new body while he can respawn
-        var oldUid = uid;
-        await server.WaitAssertion(() =>
-        {
-            uid = entityManager.SpawnEntity("KsGhostRespawnTestEntity", MapCoordinates.Nullspace);
-
-            mobStateComponent = entityManager.EnsureComponent<MobStateComponent>(uid);
-            _serverMobStateSystem.ChangeMobState(uid, MobState.Alive, component: mobStateComponent);
-
-            mindContainerComponent = entityManager.EnsureComponent<MindContainerComponent>(uid);
-            _serverMindSystem.TransferTo(mindUid, uid);
-        });
-
-        // Test if the client can still respawn after switching bodies and dying in that body
-        await AssertRespawnibility();
-
-        // Kill new body that the player is now in
-        await server.WaitAssertion(() =>
-        {
-            _serverMobStateSystem.ChangeMobState(uid, MobState.Dead, component: mobStateComponent);
-        });
-
-        // Respawn timer shouldn't be affected by anything other revival/respawn after death, not even swapping to a new body and dying in it
-        Assert.That(_serverGhostRespawnSystem.IsEntityTrackingThisSessionsDeath(oldUid, client.Session), "Old entity is no longer tracking death of session after it switched to a new entity, even though it should be");
-
-        await RequestRespawnAndErrorIfFailed();
-
-        // Profit
-
         async Task RequestRespawnAndErrorIfFailed()
         {
             // Client asks to respawn
-            await client.WaitAssertion(() =>
+            await Client.WaitAssertion(() =>
             {
                 var message = new GhostRespawnActMessage();
                 _clientEntityNetworkManager.SendSystemNetworkMessage(message);
@@ -157,7 +126,7 @@ public sealed class KsGhostRespawnTest : GameTest
             using (Assert.EnterMultipleScope())
             {
                 // Make sure the player is NOT pending a respawn
-                Assert.That(!_serverGhostRespawnSystem.IsSessionPendingRespawn(client.Session), "Respawn is pending even though it should NOT be");
+                Assert.That(!_serverGhostRespawnSystem.IsSessionPendingRespawn(Client.Session), "Respawn is pending even though it should NOT be");
 
                 // Make sure respawn time matches this (you are NOT pending a respawn if curtime is at or more than than the respawn time)
                 Assert.That(CGameTiming.CurTime, Is.AtLeast(_clientGhostRespawnSystem.LocalRespawnTime), "Respawn time was less than CurTime, implying that respawn is pending, even though it should NOT be");
@@ -167,7 +136,7 @@ public sealed class KsGhostRespawnTest : GameTest
         async Task KillAndAssertRespawnability()
         {
             // Kill player
-            await server.WaitAssertion(() =>
+            await Server.WaitAssertion(() =>
             {
                 _serverMobStateSystem.ChangeMobState(uid, MobState.Dead, component: mobStateComponent);
             });
@@ -182,7 +151,122 @@ public sealed class KsGhostRespawnTest : GameTest
             using (Assert.EnterMultipleScope())
             {
                 // Make sure the player IS now pending a respawn
-                Assert.That(_serverGhostRespawnSystem.IsSessionPendingRespawn(client.Session), "Respawn is not pending even though it should be");
+                Assert.That(_serverGhostRespawnSystem.IsSessionPendingRespawn(Client.Session), "Respawn is not pending even though it should be");
+
+                // Make sure respawn time matches this (you are pending a respawn if curtime is less than the respawn time)
+                Assert.That(CGameTiming.CurTime, Is.LessThan(_clientGhostRespawnSystem.LocalRespawnTime), "Respawn time was at or after CurTime, implying that respawn is not pending, even though it should be");
+            }
+        }
+    }
+
+    [Test]
+    [EnsureCVar(Side.Server, typeof(KsCCVars), nameof(KsCCVars.GhostRespawnEnabled), true)]
+    [EnsureCVar(Side.Server, typeof(KsCCVars), nameof(KsCCVars.GhostRespawnAlwaysStartTimer), false)]
+    [EnsureCVar(Side.Server, typeof(KsCCVars), nameof(KsCCVars.GhostRespawnCooldownSeconds), 0f)]
+    [EnsureCVar(Side.Server, typeof(KsCCVars), nameof(KsCCVars.GhostRespawnPenaltySeconds), 0f)]
+    public async Task TestRespawningAfterSwitchingMobs()
+    {
+        var pair = Pair;
+
+        var entityManager = Server.ResolveDependency<IServerEntityManager>();
+        var prototypeManager = Server.ResolveDependency<IPrototypeManager>();
+
+        EntityUid uid = default!;
+        MobStateComponent mobStateComponent = default!;
+        MindContainerComponent mindContainerComponent = default!;
+        EntityUid mindUid = default!;
+
+        await Server.WaitAssertion(() =>
+        {
+            uid = entityManager.SpawnEntity("KsGhostRespawnTestEntity", MapCoordinates.Nullspace);
+
+            mobStateComponent = entityManager.EnsureComponent<MobStateComponent>(uid);
+            _serverMobStateSystem.ChangeMobState(uid, MobState.Alive, component: mobStateComponent);
+
+            mindContainerComponent = entityManager.EnsureComponent<MindContainerComponent>(uid);
+            mindUid = _serverMindSystem.CreateMind(Client.User);
+
+            _serverMindSystem.TransferTo(mindUid, uid);
+        });
+
+        await pair.RunTicksSync(5);
+
+        // Make sure the player somehow isnt already pending a respawn
+        Assert.That(!_serverGhostRespawnSystem.IsSessionPendingRespawn(Client.Session), "Respawn is pending even though it should not be");
+
+        // Kill body the player is in now and coincidentally also test if they can respawn
+        await KillAndAssertRespawnability();
+
+        // Transfer client to a new body while he can respawn
+        var oldUid = uid;
+        await Server.WaitAssertion(() =>
+        {
+            uid = entityManager.SpawnEntity("KsGhostRespawnTestEntity", MapCoordinates.Nullspace);
+
+            mobStateComponent = entityManager.EnsureComponent<MobStateComponent>(uid);
+            _serverMobStateSystem.ChangeMobState(uid, MobState.Alive, component: mobStateComponent);
+
+            mindContainerComponent = entityManager.EnsureComponent<MindContainerComponent>(uid);
+            _serverMindSystem.TransferTo(mindUid, uid);
+        });
+
+        // Test if the client can still respawn after switching bodies and dying in that body
+        await AssertRespawnibility();
+
+        // Kill new body that the player is now in
+        await Server.WaitAssertion(() =>
+        {
+            _serverMobStateSystem.ChangeMobState(uid, MobState.Dead, component: mobStateComponent);
+        });
+
+        // Respawn timer shouldn't be affected by anything other revival/respawn after death, not even swapping to a new body and dying in it
+        Assert.That(_serverGhostRespawnSystem.IsEntityTrackingThisSessionsDeath(oldUid, Client.Session), "Old entity is no longer tracking death of session after it switched to a new entity, even though it should be");
+
+        await RequestRespawnAndErrorIfFailed();
+
+        // Profit
+
+        async Task RequestRespawnAndErrorIfFailed()
+        {
+            // Client asks to respawn
+            await Client.WaitAssertion(() =>
+            {
+                var message = new GhostRespawnActMessage();
+                _clientEntityNetworkManager.SendSystemNetworkMessage(message);
+            });
+
+            await pair.RunTicksSync(3);
+
+            // Make sure client can not respawn (after respawning)
+            using (Assert.EnterMultipleScope())
+            {
+                // Make sure the player is NOT pending a respawn
+                Assert.That(!_serverGhostRespawnSystem.IsSessionPendingRespawn(Client.Session), "Respawn is pending even though it should NOT be");
+
+                // Make sure respawn time matches this (you are NOT pending a respawn if curtime is at or more than than the respawn time)
+                Assert.That(CGameTiming.CurTime, Is.AtLeast(_clientGhostRespawnSystem.LocalRespawnTime), "Respawn time was less than CurTime, implying that respawn is pending, even though it should NOT be");
+            }
+        }
+
+        async Task KillAndAssertRespawnability()
+        {
+            // Kill player
+            await Server.WaitAssertion(() =>
+            {
+                _serverMobStateSystem.ChangeMobState(uid, MobState.Dead, component: mobStateComponent);
+            });
+
+            await pair.RunTicksSync(5);
+            await AssertRespawnibility();
+        }
+
+        async Task AssertRespawnibility()
+        {
+            // Make sure they can respawn now that they are dead
+            using (Assert.EnterMultipleScope())
+            {
+                // Make sure the player IS now pending a respawn
+                Assert.That(_serverGhostRespawnSystem.IsSessionPendingRespawn(Client.Session), "Respawn is not pending even though it should be");
 
                 // Make sure respawn time matches this (you are pending a respawn if curtime is less than the respawn time)
                 Assert.That(CGameTiming.CurTime, Is.LessThan(_clientGhostRespawnSystem.LocalRespawnTime), "Respawn time was at or after CurTime, implying that respawn is not pending, even though it should be");
