@@ -18,11 +18,17 @@
       - id: ScenarioVendorBundleTiderfallNtSecurity
         recommended: true
       - id: ScenarioVendorBundleTiderfallNtTider
+        replaceSlot: &baseReplaceSlot [ shoes, idcard, gloves ]
       - id: ScenarioVendorBundleTiderfallNtClown
+        replaceSlot: *baseReplaceSlot
       - id: ScenarioVendorBundleTiderfallNtMiner
+        replaceSlot: *baseReplaceSlot
       - id: ScenarioVendorBundleTiderfallNtConscript
+        replaceSlot: *baseReplaceSlot
       - id: ScenarioVendorBundleTiderfallNtMedic
+        replaceSlot: *baseReplaceSlot
       - id: ScenarioVendorBundleTiderfallNtBartender
+        replaceSlot: *baseReplaceSlot
 
 - type: entity
   parent: ColMarTechScenarioBase
@@ -44,11 +50,17 @@
       - id: ScenarioVendorBundleTiderfallSyndieSoldier
         recommended: true
       - id: ScenarioVendorBundleTiderfallSyndieInfiltrator
+        replaceSlot: *baseReplaceSlot
       - id: ScenarioVendorBundleTiderfallSyndieDemolitionist
+        replaceSlot: *baseReplaceSlot
       - id: ScenarioVendorBundleTiderfallSyndieSniper
+        replaceSlot: *baseReplaceSlot
       - id: ScenarioVendorBundleTiderfallSyndieMedic
+        replaceSlot: *baseReplaceSlot
       - id: ScenarioVendorBundleTiderfallSyndieMelee
+        replaceSlot: *baseReplaceSlot
       - id: ScenarioVendorBundleTiderfallSyndieEngineer
+        replaceSlot: *baseReplaceSlot
     - name: Utilities
       entries:
       - id: EmpGrenade

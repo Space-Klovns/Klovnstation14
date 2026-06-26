@@ -15,5 +15,8 @@
       entries:
       - id: ScenarioVendorBundleNanoplantNtRifleman
         recommended: true
+        replaceSlot: &baseReplaceSlot [ shoes, idcard, gloves ]
       - id: ScenarioVendorBundleNanoplantNtEngineer
+        replaceSlot: *baseReplaceSlot
       - id: ScenarioVendorBundleNanoplantNtMarksman
+        replaceSlot: *baseReplaceSlot
