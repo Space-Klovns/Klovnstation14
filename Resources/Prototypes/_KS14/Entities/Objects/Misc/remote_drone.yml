@@ -77,15 +77,6 @@
     prob: 0
     sound:
       path: /Audio/_KS14/Effects/fpv_drone_flyby.ogg
-  - type: DamageOnHighSpeedImpact
-    damage:
-      types:
-        Blunt: 40
-    minimumSpeed: 3
-    speedDamageFactor: 2
-    soundHit:
-      collection: MetalThud
-    damageCooldown: 0.8
 
   # Cell
   - type: PowerCellDraw
