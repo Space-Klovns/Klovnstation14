@@ -126,6 +126,7 @@
     state: icon
   - type: CMVendorBundle
     bundle:
+    - MedtekCartridge
     - ClothingEyesHudMedical
     - ClothingBeltMedicalFilled
     - JetInjector
@@ -144,8 +145,32 @@
     state: icon
   - type: CMVendorBundle
     bundle:
-    - WeaponShotgunDoubleBarreled
+    - WeaponShotgunSawn
     - BoxLethalshot
+
+- type: entity
+  id: ScenarioVendorBundleTiderfallNtDroneOperator
+  name: drone operator
+  description: Remote fragging work.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Misc/fpv_drone.rsi
+    state: base
+  - type: CMVendorBundle
+    bundle:
+    - Multitool
+    - ClothingHeadHatHardhatYellow
+    - RemoteSignallerAdvanced
+    - RemoteDroneLaptop
+    - RemoteDroneFpv
+    - RemoteDroneFpv
+    - SignalTrigger
+    - SignalTrigger
+    - SheetSteel
+    - CableAPCStack10
+    - ExplosivePayload
+    - ExplosivePayload
 
 # Syndicate
 
@@ -166,6 +191,7 @@
     - ClothingMaskGasSyndicate
     - TiderfallSyndiePDA
     - ClothingHeadsetAltSyndicate
+    - ClothingBeltMilitaryWebbing
 
 - type: entity
   id: ScenarioVendorBundleTiderfallSyndieSoldier
@@ -184,7 +210,6 @@
     - ClothingOuterArmorBasic
     - Machete
     - GrenadeStinger
-    - ClothingShoesChameleonNoSlips
 
 - type: entity
   id: ScenarioVendorBundleTiderfallSyndieInfiltrator
@@ -205,7 +230,9 @@
     - WeaponPistolCobra
     - MagazinePistolCaselessRifle
     - MagazinePistolCaselessRifle
-    - PinpointerScenarioNanotrasen
+    - MagazinePistolCaselessRifle
+    - AccessBreaker
+    - SyndicateJawsOfLife
 
 - type: entity
   id: ScenarioVendorBundleTiderfallSyndieDemolitionist
@@ -220,9 +247,9 @@
     bundle:
     - WeaponPistolViper
     - MagazinePistol
-    - ExGrenade
-    - ExGrenade
-    - ExGrenade
+    - C4
+    - C4
+    - C4
     - BibleQuran
 
 - type: entity
@@ -238,6 +265,7 @@
     bundle:
     - WeaponSniperHristov
     - MagazineBoxAntiMateriel
+    - MagazineBoxAntiMateriel
     - SmokeGrenade
 
 - type: entity
@@ -251,6 +279,7 @@
     state: icon
   - type: CMVendorBundle
     bundle:
+    - MedtekCartridge
     - ClothingEyesHudMedical
     - ClothingBeltMedicalFilled
     - MedkitCombatFilled
@@ -294,3 +323,33 @@
     - SheetRGlass
     - MaterialWoodPlank
     - ClothingHeadHatHardhatRed
+
+- type: entity
+  id: ScenarioVendorBundleTiderfallSyndieDroneOperator
+  name: drone operator
+  description: Remote fragging work.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Misc/fpv_drone.rsi
+    state: base
+  - type: CMVendorBundle
+    bundle:
+    - ClothingBeltUtilityEngineering
+    - ClothingHeadHatHardhatRed
+    - RemoteSignallerAdvanced
+    - RemoteDroneLaptop
+    - RemoteDroneFpv
+    - RemoteDroneFpv
+    - RemoteDroneFpv
+    - WeaponPistolCobra
+    - MagazinePistolCaselessRifle
+    - MagazinePistolCaselessRifle
+    - SignalTrigger
+    - SignalTrigger
+    - SignalTrigger
+    - SheetSteel
+    - CableAPCStack10
+    - ExplosivePayload
+    - ExplosivePayload
+    - ExplosivePayload

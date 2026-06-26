@@ -19,7 +19,14 @@
         - IDCARD
         - FEET
         - GLOVES
+        - BELT
       - id: ScenarioVendorBundleNanoplantNtEngineer
         replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleNanoplantNtMarksman
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleNanoplantNtMedic
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleNanoplantNtDroneOperator
+        replaceSlot: *replaceSlots
+      - id : ScenarioVendorBundleNanoplantNtCounterAssault
         replaceSlot: *replaceSlots
