@@ -146,7 +146,6 @@
   - type: CMVendorBundle
     bundle:
     - WeaponShotgunSawn
-    - WeaponShotgunSawn
     - BoxLethalshot
 
 - type: entity
