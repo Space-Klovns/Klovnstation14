@@ -24,9 +24,7 @@ public sealed partial class GhostUIController
         if (Gui is not { } gui)
             return;
 
-        if (time is not { })
-            gui.AlertedForRespawn = false;
-
+        gui.AlertedForRespawn = false;
         gui.RespawnTime = time;
     }
 
