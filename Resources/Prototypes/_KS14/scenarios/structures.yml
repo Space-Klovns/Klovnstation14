@@ -89,6 +89,20 @@
 
 - type: entity
   parent: BaseStructure
+  id: KsScenarioObjectiveCaptured
+  name: captured objective
+  description: It's inactive now.
+  components:
+  - type: Sprite
+    sprite: Structures/Machines/telecomms.rsi
+    snapCardinals: true
+    layers:
+    - state: telecom-nopower
+    - state: telecom-stripe
+  - type: Clickable
+
+- type: entity
+  parent: BaseStructure
   id: KsScenarioObjectiveSyndie
   name: syndicate objective
   description: This is a server that is of paramount importance to the syndicate. Would be a shame if someone broke it!
@@ -102,7 +116,7 @@
     - state: telecom-on
       shader: unshaded
       map: ["onstate"]
-    - state: variant-sec
+    - state: variant-nokey
       shader: unshaded
       map: ["variant"]
   - type: Clickable
@@ -126,6 +140,15 @@
     duplicatePopupLoc: ks-scenario-objective-popup-oneuser
     cooldown: 5s
     cooldownPopupLoc: ks-scenario-objective-popup-cooldown
+  - type: SparkOnTrigger
+    keysIn:
+    - win
+    countRange: 3,5
+  - type: SpawnOnTrigger
+    proto: KsScenarioObjectiveCaptured
+    predicted: true
+    keysIn:
+    - win
   - type: DeleteOnTrigger
     keysIn:
     - win
@@ -169,8 +192,46 @@
     - state: variant-multiple
       shader: unshaded
       map: ["variant"]
-  - type: ScenarioObjective
-    isNt: true
+
+# spawners
+- type: entity
+  parent: MarkerBase
+  id: KsScenarioObjectiveSyndicateSpawner
+  name: syndicate objective spawner
+  suffix: Scenario
+  components:
+  - type: Sprite
+    sprite: Structures/Machines/telecomms.rsi
+    layers:
+    - state: red
+      sprite: Markers/cross.rsi
+    - state: telecom-nopower
+      color: &halftransparent '#FFFFFF5F'
+    - state: telecom-nopower
+      color: *halftransparent
+    - state: telecom-on
+      color: *halftransparent
+    - state: variant-nokey
+      color: *halftransparent
+
+- type: entity
+  parent: KsScenarioObjectiveSyndicateSpawner
+  id: KsScenarioObjectiveNanotrasenSpawner
+  name: nanotrasen objective spawner
+  suffix: Scenario
+  components:
+  - type: Sprite
+    layers:
+    - state: red
+      sprite: Markers/cross.rsi
+    - state: telecom-nopower
+      color: *halftransparent
+    - state: telecom-nopower
+      color: *halftransparent
+    - state: telecom-on
+      color: *halftransparent
+    - state: variant-multiple
+      color: *halftransparent
 
 - type: entity
   parent: MarkerBase
