@@ -437,7 +437,9 @@ public abstract class SharedCMAutomatedVendorSystem : EntitySystem
                     continue;
 
                 itemToReplaceUid = containedUid;
-                _inventory.TryUnequip(playerUid, slot.ID, true, force: true, predicted: true, inventory: inventoryComponent);
+
+                // maybe don't uneqip, actually
+                //_inventory.TryUnequip(playerUid, slot.ID, true, force: true, predicted: true, inventory: inventoryComponent);
             }
 
             _inventory.TryEquip(playerUid, itemUid, slot.ID, predicted: true, inventory: inventoryComponent, clothing: clothingComponent);
