@@ -18,11 +18,13 @@
     - NanoplantNtIdCard
     - ClothingHeadsetSecurity
     - ClothingEyesGlassesCommand
+    - ClothingOuterArmorBasic
+    - ClothingHeadHelmetERTSecurity
 
 - type: entity
   id: ScenarioVendorBundleNanoplantNtRifleman
   name: rifleman
-  description: Time-tested loadout. Can't go wrong.. until it does.
+  description: Time-tested loadout. Can't go wrong.. until it does. Comes with a lecter, 4 magazines, 2 stingers.
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
@@ -41,7 +43,7 @@
 - type: entity
   id: ScenarioVendorBundleNanoplantNtEngineer
   name: engineer
-  description: Stand your ground and fortify the base, or take the offensive route by laying traps for unsuspecting attackers (and teammates).
+  description: Stand your ground and fortify the base, or take the offensive route by laying traps for unsuspecting attackers (and teammates). Comes with a CE belt, materials, 2 short-fuse seismic charges, a turret flatpack, and multitool.
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
@@ -49,21 +51,18 @@
     state: icon
   - type: CMVendorBundle
     bundle:
-    - ToolboxSyndicateTurret
     - ClothingBeltChiefEngineerFilled
-    - WelderIndustrial
     - SheetSteel
     - SheetRGlass
-    - MaterialWoodPlank
-    - ClothingHeadHatHardhatRed
     - KsScenarioNanoplantSeismicChargeShort
     - KsScenarioNanoplantSeismicChargeShort
-    - KsScenarioNanoplantSeismicChargeShort
+    - KsFlatpackBallisticTurretNanotrasenDisposable
+    - Multitool
 
 - type: entity
   id: ScenarioVendorBundleNanoplantNtMarksman
   name: marksman
-  description: Armed with a scope-equipped XL8 rifle, you can swiftly take out enemies from a distance.
+  description: Armed with a scope-equipped XL8 rifle, you can swiftly take out enemies from a distance. Comes with an XL8, 4 magazines, 2 smoke grenades.
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite

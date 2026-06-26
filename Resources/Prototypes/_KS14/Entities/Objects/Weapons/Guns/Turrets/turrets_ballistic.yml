@@ -1,0 +1,27 @@
+
+
+- type: entity
+  parent: BaseFlatpack
+  id: KsFlatpackBallisticTurretNanotrasenDisposable
+  name: nanotrasen ballistic turret flatpack
+  description: A flatpack used for constructing a disposable, nanotrasen-aligned ballistic turret.
+  components:
+  - type: Item
+    shape:
+    - 0,0,1,1 # 2x2
+  - type: Flatpack
+    entity: KsWeaponTurretNanoTrasenDisposable
+  - type: Sprite
+    layers:
+    - state: solar-assembly-part
+
+
+# cant be deconned cause it comes from a flatpack
+- type: entity
+  parent: BaseWeaponTurretDisposable
+  id: KsWeaponTurretNanoTrasenDisposable
+  suffix: NanoTrasen, Disposable
+  components:
+  - type: NpcFactionMember
+    factions:
+    - NanoTrasen
