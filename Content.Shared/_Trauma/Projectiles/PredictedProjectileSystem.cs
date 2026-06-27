@@ -279,6 +279,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
         {
             foreach (var (type, baseFp) in damage.DamageDict)
             {
+                float baseDamage = baseFp.Float();
 
             }
         }
