@@ -1,0 +1,11 @@
+- type: _sin_boombox_group
+  id: example_group
+  name: 'Game OST'
+  groupSearchTag:
+  - '_sin_boombox_group_groupSearchTag_example_group'
+  groupTag:
+  - 'Game'
+  - 'OST'
+  - 'Soundtrack'
+  - 'игра'
+  - 'саундтрек'
