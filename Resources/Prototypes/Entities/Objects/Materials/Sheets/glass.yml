@@ -385,7 +385,9 @@
         - ReagentId: Silicon
           Quantity: 10
         - ReagentId: Uranium
-          Quantity: 10
+          Quantity: 8
+        - ReagentId: Radium
+          Quantity: 2
         canReact: false
 
 - type: entity
@@ -435,7 +437,9 @@
         - ReagentId: Silicon
           Quantity: 10
         - ReagentId: Uranium
-          Quantity: 10
+          Quantity: 8
+        - ReagentId: Radium
+          Quantity: 2
         - ReagentId: Iron
           Quantity: 4.5
         - ReagentId: Carbon

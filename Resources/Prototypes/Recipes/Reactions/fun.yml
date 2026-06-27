@@ -174,31 +174,32 @@
     - !type:SpawnEntity
       entity: MaterialGunpowder
 
-- type: reaction
-  id: SolidifyGold
-  impact: Low
-  quantized: true
-  reactants:
-    Gold:
-      amount: 10
-    FrostOil:
-      amount: 5
-  effects:
-  - !type:SpawnEntity
-    entity: IngotGold1
-
-- type: reaction
-  id: SolidifySilver
-  impact: Low
-  quantized: true
-  reactants:
-    Silver:
-      amount: 10
-    FrostOil:
-      amount: 5
-  effects:
-  - !type:SpawnEntity
-    entity: IngotSilver1
+# KS14: moved to Resources/Prototypes/_KS14/Recipes/Reactions/solidification.yml
+# - type: reaction
+#   id: SolidifyGold
+#   impact: Low
+#   quantized: true
+#   reactants:
+#     Gold:
+#       amount: 10
+#     FrostOil:
+#       amount: 5
+#   effects:
+#   - !type:SpawnEntity
+#     entity: IngotGold1
+#
+# - type: reaction
+#   id: SolidifySilver
+#   impact: Low
+#   quantized: true
+#   reactants:
+#     Silver:
+#       amount: 10
+#     FrostOil:
+#       amount: 5
+#   effects:
+#   - !type:SpawnEntity
+#     entity: IngotSilver1
 
 - type: reaction
   id: WehHewExplosion

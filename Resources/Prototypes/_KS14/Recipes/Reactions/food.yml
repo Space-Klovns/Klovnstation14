@@ -1,0 +1,12 @@
+- type: reaction
+  id: FrostOilBreakdown
+  source: true
+  requiredMixerCategories:
+  - Centrifuge
+  reactants:
+    FrostOil:
+      amount: 10
+  products:
+    Fat: 6
+    Fresium: 3
+    Protein: 1
