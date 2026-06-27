@@ -24,10 +24,20 @@
     - Medical
     - Security
     - Brig
+    - External
   - type: IdCard
     jobIcon: JobIconNanotrasen
     jobTitle: ks-scenario_nanoplant-job-name-nanoplant
     canMicrowave: false
+
+- type: entity
+  parent: ERTLeaderPDA
+  id: NanoplantNtPDA
+  name: nanoplant pda
+  suffix: Scenario, Nanotrasen
+  components:
+  - type: Pda
+    id: NanoplantNtIdCard
 
 - type: entity
   parent: SeismicCharge
