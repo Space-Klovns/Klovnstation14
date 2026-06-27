@@ -1,0 +1,11 @@
+
+# Basic scenario station prototype.
+# It is imperative that this doesn't include `BaseStationEvacuation` unless evac can actually dock to the scenario station; otherwise, tests will fail.
+- type: entity
+  parent:
+  - BaseStation
+  - BaseStationJobsSpawning
+  - BaseStationRecords
+  - BaseStationNanotrasen
+  id: KsStationBasicScenario
+  categories: [ HideSpawnMenu ]

@@ -1,0 +1,10 @@
+- type: soundCollection
+  id: KsCanisterHiss
+  files:
+  - /Audio/Magic/Cults/ClockCult/steam_whoosh.ogg
+  - /Audio/_KS14/Effects/hiss.ogg
+
+- type: soundCollection
+  id: KsCanisterThud
+  files:
+  - /Audio/_KS14/Effects/canister_thud.ogg

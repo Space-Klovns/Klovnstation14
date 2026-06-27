@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Made for Klovnstation 14",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "base",
+      "directions": 1
+    },
+    {
+      "name": "base_indust",
+      "directions": 1
+    },
+    {
+      "name": "active_em",
+      "directions": 1
+    },
+    {
+      "name": "draw_em",
+      "directions": 1
+    },
+    {
+      "name": "inj_em",
+      "directions": 1
+    },
+    {
+      "name": "fill_1",
+      "directions": 1
+    },
+    {
+      "name": "fill_2",
+      "directions": 1
+    },
+    {
+      "name": "fill_3",
+      "directions": 1
+    },
+    {
+      "name": "fill_4",
+      "directions": 1
+    },
+    {
+      "name": "fill_5",
+      "directions": 1
+    },
+    {
+      "name": "fill_6",
+      "directions": 1
+    },
+    {
+      "name": "fill_7",
+      "directions": 1
+    },
+    {
+      "name": "fill_8",
+      "directions": 1
+    }
+  ]
+}

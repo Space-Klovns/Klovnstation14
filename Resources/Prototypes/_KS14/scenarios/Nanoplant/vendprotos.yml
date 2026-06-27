@@ -1,0 +1,153 @@
+# Nanotrasen
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantNtBase
+  name: base clothes
+  description: VIVA NANOTRASEN!
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Structures/Wallmounts/posters.rsi
+    state: poster2_legit
+  - type: CMVendorBundle
+    bundle:
+    - ClothingUniformJumpsuitERTSecurity
+    - ClothingBackpackERTSecurity
+    - ClothingShoesBootsLaceup
+    - ClothingMaskGasSecurity
+    - NanoplantNtIdCard
+    - ClothingHeadsetSecurity
+    - ClothingEyesGlassesCommand
+    - ClothingOuterArmorBasic
+    - ClothingHeadHelmetERTSecurity
+    - ClothingBeltMilitaryWebbingERT
+    - Machete
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantNtRifleman
+  name: rifleman
+  description: Time-tested loadout. Can't go wrong.. until it does. Comes with a lecter, 4 magazines, 2 stingers.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/SMGs/drozd.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - WeaponSubMachineGunDrozd
+    - MagazinePistolSubMachineGun
+    - MagazinePistolSubMachineGun
+    - MagazinePistolSubMachineGun
+    - MagazinePistolSubMachineGun
+    - GrenadeStinger
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantNtEngineer
+  name: engineer
+  description: Stand your ground and fortify the base, or take the offensive route by laying traps for unsuspecting attackers (and teammates). Comes with a CE belt, materials, 2 short-fuse seismic charges, a turret flatpack, and multitool.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Clothing/Hands/Gloves/Color/yellow.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - ClothingBeltChiefEngineerFilled
+    - SheetSteel
+    - SheetRGlass
+    - KsScenarioNanoplantSeismicChargeShort
+    - KsScenarioNanoplantSeismicChargeShort
+    - KsScenarioNanoplantSeismicChargeShort
+    - KsFlatpackBallisticTurretNanotrasenDisposable
+    - KsFlatpackBallisticTurretNanotrasenDisposable
+    - WeaponPistolMk1
+    - MagazinePistol
+    - MagazinePistol
+    - RCD
+    - RCDAmmo
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantNtMarksman
+  name: marksman
+  description: Armed with a scope-equipped XL8 rifle, you can swiftly take out enemies from a distance. Comes with an XL8, 4 magazines, 2 smoke grenades.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Rifles/XL8.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - WeaponRifleLecterXL8
+    - MagazineRifle
+    - MagazineRifle
+    - MagazineRifle
+    - MagazineRifle
+    - SmokeGrenade
+    - SmokeGrenade
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantNtCounterAssault
+  name: counter assaultee
+  description: Armed with a drozd SMG, its a class made for agressive playstyle.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/SMGs/drozd.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - WeaponSubMachineGunDrozd
+    - MagazinePistolSubMachineGun
+    - MagazinePistolSubMachineGun
+    - MagazinePistolSubMachineGun
+    - MagazinePistolSubMachineGun
+    - TearGasGrenade
+    - TearGasGrenade
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantNtDroneOperator
+  name: drone operator
+  description: Remote fragging work.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Misc/fpv_drone.rsi
+    state: base
+  - type: CMVendorBundle
+    bundle:
+    - ClothingBeltUtilityEngineering
+    - ClothingHeadHatHardhatYellow
+    - RemoteSignallerAdvanced
+    - RemoteDroneLaptop
+    - RemoteDroneFpv
+    - RemoteDroneFpv
+    - WeaponPistolMk58
+    - MagazinePistol
+    - MagazinePistol
+    - SignalTrigger
+    - SignalTrigger
+    - SheetSteel
+    - CableApcStack10
+    - ExplosivePayload
+    - ExplosivePayload
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantNtMedic
+  name: medic
+  description: CLEAR!
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Clothing/Eyes/Hud/med.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - MedTekCartridge
+    - ClothingEyesHudMedical
+    - ClothingBeltMedicalFilled
+    - MedkitCombatFilled
+    - JetInjector
+    - DefibrillatorCompact
+    - PowerCellHigh
+    - WeaponRifleLecter
+    - MagazineRifle

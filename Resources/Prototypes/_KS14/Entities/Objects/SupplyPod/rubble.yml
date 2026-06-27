@@ -1,0 +1,15 @@
+
+- type: entity
+  name: rubble
+  description: ACKK
+  id: SupplyPodRubble
+  components:
+  - type: Transform
+    noRot: true
+  - type: Sprite
+    sprite: _KS14/Objects/SupplyPod/supplypods_64x64.rsi
+    drawdepth: LargeObjects
+    layers:
+    - state: pod
+    - state: pod_door
+    - state: default

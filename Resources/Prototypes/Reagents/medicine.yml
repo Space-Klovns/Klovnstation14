@@ -200,6 +200,13 @@
             Brute: -2
             Burn: -2
             Toxin: -2
+        # KS14 Start: organ regeneration
+        - !type:RegenerateOrgans
+          maxRegenCount: 1
+          conditions:
+          - !type:TemperatureCondition
+            max: 213.0
+        # KS14 End
 
 - type: reagent
   id: Doxarubixadone

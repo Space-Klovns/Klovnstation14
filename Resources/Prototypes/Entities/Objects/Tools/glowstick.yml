@@ -117,6 +117,26 @@
     glowColorLit: "#00FF00"
   - type: PointLight
     color: "#00FF00"
+    # KS14: maints chem stuff
+  - type: Extractable
+    grindableSolutionName: greenGlowstick
+  - type: SolutionContainerManager
+    solutions:
+      greenGlowstick:
+        maxVol: 10
+        reagents:
+        # hydrogen peroxide o algo
+        - ReagentId: Water
+          Quantity: 2
+        - ReagentId: Hydrogen
+          Quantity: 2
+        # just cause... ok?
+        - ReagentId: Chlorine
+          Quantity: 1
+        # cuz its like green or something
+        - ReagentId: Uranium
+          Quantity: 5
+    # KS14: End
 
 # ----------------------------------------------------------------------------
 # THE FOLLOWING ARE ALL DUMMY ENTITIES USED TO TEST THE LIGHT BEHAVIOUR SYSTEM

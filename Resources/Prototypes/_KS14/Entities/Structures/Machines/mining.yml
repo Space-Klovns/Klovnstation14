@@ -131,9 +131,15 @@
           bounds: "-0.45,-0.45,0.45,0.45"
         density: 190
         mask:
-        - MachineMask
+        - Impassable
+        - TableLayer
+        - LowImpassable
         layer:
-        - MachineLayer
+        - Impassable
+        - TableLayer
+        - LowImpassable
+        - BulletImpassable
+        - Opaque
 
   - type: Conveyor
     angle: -90

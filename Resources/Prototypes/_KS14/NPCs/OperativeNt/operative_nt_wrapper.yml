@@ -1,0 +1,35 @@
+# Basically a wrapper for KsOperativeCombatCompound except with a few more things
+
+- type: htnCompound
+  id: KsOperativeNtWrapperCombatCompound
+  branches:
+  ## Forfeit
+  - preconditions:
+    - !type:LogicOrPrecondition
+      conditions:
+      - !type:HandcuffedPrecondition
+        reactOnlyWhenFullyCuffed: true
+
+      - !type:HasStatusEffectPrecondition
+        statusEffect: StatusEffectStunned # SharedStunSystem.StunId
+
+    - !type:HasImplantPrecondition
+      id: KsOperativeNtVoluntaryMicroBombImplant
+    tasks:
+    - !type:HTNPrimitiveTask # VOICELINE
+      operator: !type:SpeakOperator
+        speech: !type:LocalizedSetSpeakOperatorSpeech
+          lineSet: KsOperativeNtSacrifice
+
+    - !type:HTNPrimitiveTask # Static reload act delay
+      operator: !type:StaticWaitOperator
+        key: IdleActTime
+
+    - !type:HTNPrimitiveTask
+      operator: !type:DoActionOperator
+        id: ActionActivateMicroBomb
+
+  ## Combat
+  - tasks:
+    - !type:HTNCompoundTask
+      task: KsOperativeCombatCompound

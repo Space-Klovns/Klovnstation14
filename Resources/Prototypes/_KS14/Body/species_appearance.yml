@@ -8,6 +8,7 @@
     node: start
     deconstructionTarget: null
   - type: ConstructionEdgeDialogue
+    loc: ks-mcqdialogue-surgery
     nodeNames:
     - OpenIncision
     - Saw open ribcage

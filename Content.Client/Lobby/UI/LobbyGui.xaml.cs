@@ -12,12 +12,23 @@ namespace Content.Client.Lobby.UI
     {
         [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
 
+        // KS14: lobbyview addition
+        private readonly Robust.Client.Graphics.FixedEye _lobbyEye = new();
+
         public LobbyGui()
         {
             RobustXamlLoader.Load(this);
             IoCManager.InjectDependencies(this);
             SetAnchorPreset(MainContainer, LayoutPreset.Wide);
             SetAnchorPreset(Background, LayoutPreset.Wide);
+
+            // KS14: lobbyview start
+            SetAnchorPreset(KsViewportContainer, LayoutPreset.Wide);
+            KsViewport.MinSize = new(100, 100);
+            KsViewport.ViewportSize = new(100, 100);
+
+            KsSetCameraView(null);
+            // KS14 end
 
             LobbySong.SetMarkup(Loc.GetString("lobby-state-song-no-song-text"));
 
@@ -26,6 +37,16 @@ namespace Content.Client.Lobby.UI
 
             CollapseButton.OnPressed += _ => TogglePanel(false);
             ExpandButton.OnPressed += _ => TogglePanel(true);
+        }
+
+        // KS14: lobbyview
+        public void KsSetCameraView(Robust.Shared.Graphics.IEye? eye)
+        {
+            var visible = eye != null;
+            KsViewport.Eye = eye ?? _lobbyEye;
+
+            KsViewportContainer.Visible = visible;
+            Background.Visible = !visible;
         }
 
         public void SwitchState(LobbyGuiState state)
@@ -42,8 +63,8 @@ namespace Content.Client.Lobby.UI
                 case LobbyGuiState.CharacterSetup:
                     CharacterSetupState.Visible = true;
 
-                    var actualWidth = (float) UserInterfaceManager.RootControl.PixelWidth;
-                    var setupWidth = (float) LeftSide.PixelWidth;
+                    var actualWidth = (float)UserInterfaceManager.RootControl.PixelWidth;
+                    var setupWidth = (float)LeftSide.PixelWidth;
 
                     if (1 - (setupWidth / actualWidth) > 0.30)
                     {

@@ -147,9 +147,9 @@ public abstract partial class SharedStaminaSystem : EntitySystem
         //     return;
 
         if (TryComp<ComplexShoveComponent>(args.Source, out var sourceComplexShoveComponent) &&
-            _complexShoveSystem.TryGetDeltaUnitSafe(args.Source, uid, out var deltaUnit, out var sourceWorldPosition))
+            _complexShoveSystem.TryGetDeltaUnitSafe(args.Source, uid, out var deltaUnit, out var shovedWorldPosition))
         {
-            if (_complexShoveSystem.TryWallshove((args.Source, null, sourceComplexShoveComponent), (uid, component), sourceWorldPosition.Value, deltaUnit.Value))
+            if (_complexShoveSystem.TryWallshove((args.Source, null, sourceComplexShoveComponent), (uid, component), shovedWorldPosition.Value, deltaUnit.Value))
             {
                 if (!args.Handled)
                     args.PopupPrefix = "disarm-action-shove-collision-";
@@ -317,6 +317,11 @@ public abstract partial class SharedStaminaSystem : EntitySystem
 
         var oldDamage = component.StaminaDamage;
         component.StaminaDamage = MathF.Max(0f, component.StaminaDamage + value);
+
+        // KS14: stamdmg event start
+        var ksDmgEv = new _KS14.Damage.Events.KsAfterStaminaDamageEvent((uid, component), source, with, component.StaminaDamage - oldDamage);
+        RaiseLocalEvent(uid, ref ksDmgEv);
+        // KS14: stamdmg event end
 
         // Reset the decay cooldown upon taking damage.
         if (oldDamage < component.StaminaDamage)

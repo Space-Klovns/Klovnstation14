@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Anomaly.Components;
+using Content.Shared._KS14.Anomaly.Components; // KS14
 using Content.Shared.Anomaly.Prototypes;
 using Content.Shared.Database;
 using Content.Shared.Physics;
@@ -341,7 +342,13 @@ public abstract class SharedAnomalySystem : EntitySystem
             // update it every second to start killing it slowly.
             if (anomaly.Stability < anomaly.DecayThreshold)
             {
-                ChangeAnomalyHealth(ent, anomaly.HealthChangePerSecond * frameTime, anomaly);
+                // KS14 - Start
+                var healthChange = anomaly.HealthChangePerSecond;
+                if (TryComp<AnomalyGasConsumerComponent>(ent, out var consumer))
+                    healthChange *= consumer.DecayBuffer;
+
+                ChangeAnomalyHealth(ent, healthChange * frameTime, anomaly);
+                // KS14 - End
             }
 
             var secondsUntilNextPulse = (anomaly.NextPulseTime - Timing.CurTime).TotalSeconds;

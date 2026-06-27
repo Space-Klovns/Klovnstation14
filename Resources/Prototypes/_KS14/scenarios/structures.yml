@@ -1,0 +1,250 @@
+# KS14 Scenario Structures
+# Invincible rock walls and barriers for scenario creation
+
+- type: entity
+  id: RockWallInvincible
+  name: invincible rock wall
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    anchored: true
+  - type: Physics
+    bodyType: Static
+    canCollide: true
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        layer:
+        - WallLayer
+        mask:
+        - MachineMask
+        - MobMask
+  - type: Clickable
+  - type: InteractionOutline
+  - type: Sprite
+    sprite: Structures/Walls/rock.rsi
+    state: rock
+    drawdepth: Walls
+
+- type: entity
+  id: InvisibleBarrier5Min
+  parent: MarkerBase
+  name: invisible barrier
+  suffix: 5 min
+  components:
+  - type: Physics
+    bodyType: Static
+    canCollide: true
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.5,-0.5,0.5,0.5"
+        layer:
+        - WallLayer
+        mask:
+        - MachineMask
+        - MobMask
+  - type: Sprite
+    state: red
+  - type: TimedDespawn
+    lifetime: 300
+
+- type: entity
+  id: InvisibleBarrier10Min
+  suffix: 10 min
+  parent: InvisibleBarrier5Min
+  components:
+  - type: TimedDespawn
+    lifetime: 600
+
+- type: entity
+  id: InvisibleBarrier15Min
+  suffix: 15 min
+  parent: InvisibleBarrier5Min
+  components:
+  - type: TimedDespawn
+    lifetime: 900
+
+- type: entity
+  parent: HolosignForcefieldDeathmatch
+  id: HolosignForcefieldBarrier5Min
+  name: impenetrable force field
+  suffix: 5 min
+  components:
+  - type: TimedDespawn
+    lifetime: 300
+
+- type: entity
+  parent: AirlockSyndicateLocked
+  id: AirlockMaintSyndieLocked
+  components:
+  - type: Sprite
+    sprite: Structures/Doors/Airlocks/Standard/maint.rsi
+
+- type: entity
+  parent: BaseStructure
+  id: KsScenarioObjectiveCaptured
+  name: captured objective
+  description: It's inactive now.
+  components:
+  - type: Sprite
+    sprite: Structures/Machines/telecomms.rsi
+    snapCardinals: true
+    layers:
+    - state: telecom-nopower
+    - state: telecom-stripe
+  - type: Clickable
+
+- type: entity
+  parent: BaseStructure
+  id: KsScenarioObjectiveSyndie
+  name: syndicate objective
+  description: This is a server that is of paramount importance to the syndicate. Would be a shame if someone broke it!
+  components:
+  - type: Sprite
+    sprite: Structures/Machines/telecomms.rsi
+    snapCardinals: true
+    layers:
+    - state: telecom-nopower
+    - state: telecom-stripe
+    - state: telecom-on
+      shader: unshaded
+      map: ["onstate"]
+    - state: variant-nokey
+      shader: unshaded
+      map: ["variant"]
+  - type: Clickable
+  - type: EmissiveLayers
+    glowRadius: 0.5
+    layers:
+    - onstate
+    - variant
+  - type: ScenarioObjective
+    keysIn:
+    - win
+  - type: TimedDespawn
+    lifetime: 1800
+  - type: TriggerOnActivate
+  - type: DoAfterOnTrigger
+    duration: 15s
+    startKeyOut: started
+    cancelledKeyOut: cancelled
+    keyOut: win
+    blockDuplicate: true
+    duplicatePopupLoc: ks-scenario-objective-popup-oneuser
+    cooldown: 5s
+    cooldownPopupLoc: ks-scenario-objective-popup-cooldown
+  - type: SparkOnTrigger
+    keysIn:
+    - win
+    countRange: 3,5
+  - type: SpawnOnTrigger
+    proto: KsScenarioObjectiveCaptured
+    predicted: true
+    keysIn:
+    - win
+  - type: DeleteOnTrigger
+    keysIn:
+    - win
+  - type: AnnouncementOnTrigger
+    announcementsPerKey:
+      started:
+        announcementLoc: ks-scenario-objective-announcement-capturestarted
+        colorOverride: Crimson
+        sound:
+          path: /Audio/Effects/Grenades/Supermatter/smbeep.ogg
+          params:
+            pitch: 0.5
+      cancelled:
+        announcementLoc: ks-scenario-objective-announcement-captureended
+        colorOverride: DarkGreen
+        sound:
+          path: /Audio/Misc/cryo_warning.ogg
+          params:
+            pitch: 0.5
+      win:
+        announcementLoc: ks-scenario-objective-announcement-capturewin
+        colorOverride: Cyan
+        sound:
+          path: /Audio/Announcements/war.ogg
+          params:
+            pitch: 0.5
+
+- type: entity
+  parent: KsScenarioObjectiveSyndie
+  id: KsScenarioObjectiveNanotrasen
+  name: nanotrasen objective
+  description: This is a server that is of paramount importance to Nanotrasen. Would be a shame if someone broke it!
+  components:
+  - type: Sprite
+    layers:
+    - state: telecom-nopower
+    - state: telecom-stripe
+    - state: telecom-on
+      shader: unshaded
+      map: ["onstate"]
+    - state: variant-multiple
+      shader: unshaded
+      map: ["variant"]
+
+# spawners
+- type: entity
+  parent: MarkerBase
+  id: KsScenarioObjectiveSyndicateSpawner
+  name: syndicate objective spawner
+  suffix: Scenario
+  components:
+  - type: Sprite
+    sprite: Structures/Machines/telecomms.rsi
+    layers:
+    - state: red
+      sprite: Markers/cross.rsi
+    - state: telecom-nopower
+      color: &halftransparent '#FFFFFF5F'
+    - state: telecom-nopower
+      color: *halftransparent
+    - state: telecom-on
+      color: *halftransparent
+    - state: variant-nokey
+      color: *halftransparent
+
+- type: entity
+  parent: KsScenarioObjectiveSyndicateSpawner
+  id: KsScenarioObjectiveNanotrasenSpawner
+  name: nanotrasen objective spawner
+  suffix: Scenario
+  components:
+  - type: Sprite
+    layers:
+    - state: red
+      sprite: Markers/cross.rsi
+    - state: telecom-nopower
+      color: *halftransparent
+    - state: telecom-nopower
+      color: *halftransparent
+    - state: telecom-on
+      color: *halftransparent
+    - state: variant-multiple
+      color: *halftransparent
+
+- type: entity
+  parent: MarkerBase
+  id: KsGridSpawnerMarkerGeneric
+  name: grid-spawner marker
+  description: This is for marking where grid spawners are. Add a KsGridSpawner component to this and set the path, and the grid will load here on mapinit.
+  suffix: VV me
+  components:
+  - type: Sprite
+    state: red
+
+- type: entity
+  parent: ColMarTechBase
+  id: ColMarTechScenarioBase
+  name: Scenario automatic vendor
+  description: An automatic vending machine. Looks useful.

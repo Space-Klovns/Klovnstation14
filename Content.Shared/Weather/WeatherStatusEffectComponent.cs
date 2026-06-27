@@ -37,6 +37,10 @@ public sealed partial class WeatherStatusEffectComponent : Component
     [DataField]
     public SoundSpecifier? Sound;
 
+    // KS14
+    [DataField]
+    public int KsRainDropletMax = 0;
+
     /// <summary>
     /// Client audio stream.
     /// Not used on the server.

@@ -30,6 +30,11 @@
     - SemiAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/revolver.ogg
+    # KS14: Farsound start
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/revolver.ogg
+      range: 15,95
+    # KS14: Farsound end
   - type: UseDelay
     delay: 0.66
   - type: ContainerContainer
@@ -122,6 +127,11 @@
     fireRate: 3
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/mateba.ogg
+    # KS14: Farsound start
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
+      range: 15,90
+    # KS14: Farsound end
   - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
 
 - type: entity
@@ -153,6 +163,11 @@
       path: /Audio/Weapons/Guns/Gunshots/revolver.ogg
       params:
         volume: 2.25
+    # KS14: Farsound start
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/revolver.ogg
+      range: 15,95
+    # KS14: Farsound end
   - type: StaticPrice
     price: 1500 # Botany can shit these out like candy, but let's see how it goes
   - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
@@ -199,4 +214,3 @@
     capacity: 5
     chambers: [ null, null, null, null, null ]
     ammoSlots: [ null, null, null, null, null ]
-

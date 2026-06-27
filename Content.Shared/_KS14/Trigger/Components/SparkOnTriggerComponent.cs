@@ -1,10 +1,11 @@
 using System.Numerics;
+using Content.Shared._KS14.Sparks;
 using Content.Shared.Trigger.Components.Effects;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 
-namespace Content.Shared._KS14.Trigger.Components.Effects;
+namespace Content.Shared._KS14.Trigger.Components;
 
 // TODO: Hotspot-expose
 /// <summary>
@@ -30,12 +31,11 @@ public sealed partial class SparkOnTriggerComponent : BaseXOnTriggerComponent
     ///     Prototype to spawn as sparks.
     /// </summary>
     [DataField]
-    public EntProtoId Prototype = "EffectSparkMoving";
+    public EntProtoId Prototype = SharedSparksSystem.DefaultSparkPrototype;
 
     /// <summary>
     ///     Sound to play upon trigger, at position of sparks.
     /// </summary>
     [DataField]
-    public SoundSpecifier? SoundSpecifier = null;
+    public SoundSpecifier? SoundSpecifier = SharedSparksSystem.DefaultSoundSpecifier;
 }
-

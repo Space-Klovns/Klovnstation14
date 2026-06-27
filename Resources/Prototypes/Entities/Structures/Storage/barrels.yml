@@ -43,6 +43,14 @@
     solutions:
       tank:
         maxVol: 500
+  - type: PlumbingStorage
+    solutionName: tank
+  - type: UserInterface
+    interfaces:
+      enum.PlumbingStorageUiKey.Key:
+        type: PlumbingStorageBui
+  - type: ActivatableUI
+    key: enum.PlumbingStorageUiKey.Key
   - type: PhysicalComposition
     materialComposition:
       Steel: 3000 # 30 sheets, 1 stack

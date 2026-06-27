@@ -77,6 +77,15 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
         SubscribeLocalEvent<NuclearReactorComponent, EntRemovedFromContainerMessage>(OnPartChanged);
         SubscribeLocalEvent<NuclearReactorComponent, ReactorItemActionMessage>(OnItemActionMessage);
         SubscribeLocalEvent<NuclearReactorComponent, ReactorControlRodModifyMessage>(OnControlRodMessage);
+        SubscribeLocalEvent<NuclearReactorComponent, BoundUIOpenedEvent>(OnUIOpened);
+    }
+
+    private void OnUIOpened(Entity<NuclearReactorComponent> ent, ref BoundUIOpenedEvent args)
+    {
+        if (args.UiKey is not NuclearReactorUiKey.Key)
+            return;
+
+        UpdateStaticUI(ent.Owner, ent.Comp);
     }
 
     private void OnPartChanged(EntityUid uid, NuclearReactorComponent component, ContainerModifiedMessage args) => ReactorTryGetSlot(uid, "part_slot", out component.PartSlot!);
@@ -527,11 +536,9 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
 
         var zoff = _gridWidth * _gridHeight;
 
-        var temp = new double[_gridWidth * _gridHeight];
+        var temp = new float[_gridWidth * _gridHeight];
         var neutron = new int[_gridWidth * _gridHeight];
-        var icon = new string[_gridWidth * _gridHeight];
-        var partName = new string[_gridWidth * _gridHeight];
-        var partInfo = new double[_gridWidth * _gridHeight * 3];
+        var partInfo = new float[_gridWidth * _gridHeight * 3];
 
         for (var x = 0; x < _gridWidth; x++)
         {
@@ -543,26 +550,21 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
                     _partSystem.SetProperties(reactorPart, out reactorPart.Properties);
 
                 var pos = (x * _gridWidth) + y;
-                temp[pos] = reactor.TemperatureGrid[x, y];
+                temp[pos] = (float) reactor.TemperatureGrid[x, y];
                 neutron[pos] = reactor.NeutronGrid[x, y];
-                icon[pos] = reactorPart != null ? reactorPart.IconStateInserted : "base";
 
-                partName[pos] = reactorPart != null ? _prototypes.Index(reactorPart.ProtoId).Name : "empty";
-                partInfo[pos] = reactorPart != null ? reactorPart.Properties!.NeutronRadioactivity : 0;
-                partInfo[pos + zoff] = reactorPart != null ? reactorPart.Properties!.Radioactivity : 0;
-                partInfo[pos + (zoff * 2)] = reactorPart != null ? reactorPart.Properties!.FissileIsotopes : 0;
+                partInfo[pos] = reactorPart != null ? (float) reactorPart.Properties!.NeutronRadioactivity : 0;
+                partInfo[pos + zoff] = reactorPart != null ? (float) reactorPart.Properties!.Radioactivity : 0;
+                partInfo[pos + (zoff * 2)] = reactorPart != null ? (float) reactorPart.Properties!.FissileIsotopes : 0;
             }
         }
 
-        // This is transmitting close to 2.3KB of data every tick... ouch
         _uiSystem.SetUiState(uid, NuclearReactorUiKey.Key,
            new NuclearReactorBuiState
            {
                TemperatureGrid = temp,
                NeutronGrid = neutron,
-               IconGrid = icon,
                PartInfo = partInfo,
-               PartName = partName,
                ItemName = reactor.PartSlot.Item != null ? Identity.Name((EntityUid)reactor.PartSlot.Item, _entityManager) : null,
 
                ReactorTemp = reactor.Temperature,
@@ -572,6 +574,33 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
                ControlRodActual = reactor.AvgInsertion,
                ControlRodSet = reactor.ControlRodInsertion,
            });
+    }
+
+    private void UpdateStaticUI(EntityUid uid, NuclearReactorComponent reactor)
+    {
+        if (!_uiSystem.IsUiOpen(uid, NuclearReactorUiKey.Key))
+            return;
+
+        var icon = new string[_gridWidth * _gridHeight];
+        var partName = new string[_gridWidth * _gridHeight];
+
+        for (var x = 0; x < _gridWidth; x++)
+        {
+            for (var y = 0; y < _gridHeight; y++)
+            {
+                var reactorPart = reactor.ComponentGrid[x, y];
+                var pos = (x * _gridWidth) + y;
+                icon[pos] = reactorPart != null ? reactorPart.IconStateInserted : "base";
+                partName[pos] = reactorPart != null ? _prototypes.Index(reactorPart.ProtoId).Name : "empty";
+            }
+        }
+
+        _uiSystem.ServerSendUiMessage(uid, NuclearReactorUiKey.Key,
+            new NuclearReactorStaticDataMessage
+            {
+                IconGrid = icon,
+                PartName = partName,
+            });
     }
 
     private void OnItemActionMessage(Entity<NuclearReactorComponent> ent, ref ReactorItemActionMessage args)
@@ -612,6 +641,7 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
         }
 
         UpdateGridVisual(ent, comp);
+        UpdateStaticUI(ent.Owner, comp);
         UpdateUI(ent.Owner, comp);
     }
 

@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from https://github.com/tgstation/tgstation/ at commit 54f4501c135c17067a1040d0be178488be348f53",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "iron"
+    },
+    {
+      "name": "iron_white"
+    },
+    {
+      "name": "iron_dark"
+    },
+    {
+      "name": "titanium"
+    },
+    {
+      "name": "iron_smooth"
+    }
+  ]
+}

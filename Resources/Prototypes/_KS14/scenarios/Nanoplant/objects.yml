@@ -1,0 +1,42 @@
+
+- type: entity
+  parent: BluelabIDCard
+  id: NanoplantNtIdCard
+  name: nanoplant id card
+  suffix: Scenario, Nanotrasen
+  components:
+  - type: Sprite
+    layers:
+    - state: centcom
+    - state: stripe_top
+      color: "#cb0000"
+    - state: stripe_bottom
+      color: "#830000"
+    - sprite: Interface/Misc/job_icons.rsi
+      offset: -0.09375, 0.0625
+      state: ERTSecurity
+  - type: Access
+    tags:
+    - Maintenance
+    - Engineering
+    - Command
+    - Bluelab
+    - Medical
+    - Security
+    - Brig
+  - type: IdCard
+    jobIcon: JobIconNanotrasen
+    jobTitle: ks-scenario_nanoplant-job-name-nanoplant
+    canMicrowave: false
+
+- type: entity
+  parent: SeismicCharge
+  id: KsScenarioNanoplantSeismicChargeShort
+  name: unstable seismic charge
+  description: Concussion based explosive designed to kill. It has a very short timer.
+  components:
+  - type: Sprite # TODO LCDC NANOPLANT: proper sprite
+    color: '#962921'
+  - type: TimerTrigger
+    delay: 1
+    delayOptions: [1, 3]

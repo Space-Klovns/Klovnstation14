@@ -71,6 +71,8 @@ public sealed class KsEntityProcessorSystem : EntitySystem
 
     private void FinishProcessing(in Entity<KsEntityProcessorComponent, KsActiveEntityProcessorComponent?> processorEntity, EntityUid processedUid)
     {
+        // TODO LCDC: debug this and check if its raised on client, i think it isnt
+
         var ev = new KsFinishedProcessingEntityEvent(processorEntity, processedUid);
         RaiseLocalEvent(processorEntity, ref ev);
     }

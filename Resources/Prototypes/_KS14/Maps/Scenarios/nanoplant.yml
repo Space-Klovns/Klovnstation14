@@ -1,0 +1,17 @@
+- type: gameMap
+  id: Nanoplant
+  mapName: 'Nanoplant'
+  mapPath: /Maps/_KS14/Scenarios/Nanoplant/nanoplant.yml
+  minPlayers: 7
+  maxPlayers: 40
+  stations:
+    Nanoplant:
+      stationProto: KsStationBasicScenario
+      components:
+      - type: StationNameSetup
+        mapNameTemplate: 'Nanoplant'
+      - type: StationJobs
+        availableJobs:
+          ScenarioSyndie: [ 15, 15 ]
+          ScenarioNt: [ 15, 15 ]
+      - type: KsSilenceWelcomeMessage

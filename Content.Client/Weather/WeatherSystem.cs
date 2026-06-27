@@ -135,7 +135,6 @@ public sealed class WeatherSystem : SharedWeatherSystem
             }
 
             var alpha = GetWeatherPercent((uid, status));
-            alpha *= SharedAudioSystem.VolumeToGain(weather.Sound.Params.Volume);
 
             // KS14 Start
             // Try to fade audio linearly to zero past a point
@@ -144,7 +143,22 @@ public sealed class WeatherSystem : SharedWeatherSystem
                 var rest = (MathF.Min(distance, maxX) - ksXCutoff) / (maxX - ksXCutoff);
                 alpha = float.Lerp(alpha, 0f, rest);
             }
+
+            if (alpha == 1f &&
+                playerXform.MapUid is { } mapUid)
+            {
+                if (weather.KsRainDropletMax > 0)
+                {
+                    var wetMapComponent = EnsureComp<Shared._KS14.WetOverlay.KsWetMapComponent>(mapUid);
+                    wetMapComponent.SoftDropletCap = weather.KsRainDropletMax;
+                }
+                else
+                    RemComp<Shared._KS14.WetOverlay.KsWetMapComponent>(mapUid);
+            }
             // KS14 End
+
+
+            alpha *= SharedAudioSystem.VolumeToGain(weather.Sound.Params.Volume); // KS14: Moved multiplier to here
 
             _audio.SetGain(weather.Stream, alpha, audio);
             audio.Occlusion = occlusion;

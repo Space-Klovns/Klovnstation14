@@ -1,8 +1,11 @@
 # TODO move this to tiles once tile smoothing is supported
+
+# KS14: Added base, without iconsmooth and construction
 - type: entity
-  id: Catwalk
+  id: BaseCatwalkUnIconsmoothed
   name: catwalk
   description: A catwalk for easier EVA maneuvering and cable placement.
+  abstract: true
   placement:
     mode: SnapgridCenter
   components:
@@ -14,14 +17,10 @@
   - type: Sprite
     sprite: Structures/catwalk.rsi
     drawdepth: FloorTiles
-  - type: Icon
-    sprite: Structures/catwalk.rsi
-    state: catwalk_preview
+  # KS14: Moved Icon
   - type: Transform
     anchored: true
-  - type: IconSmooth
-    key: catwalk
-    base: catwalk_
+  # KS14: Moved iconsmooth
   - type: FootstepModifier
     footstepSoundCollection:
       collection: FootstepCatwalk
@@ -30,9 +29,7 @@
   - type: Tag
     tags:
       - Catwalk
-  - type: Construction
-    graph: Catwalk
-    node: Catwalk
+  # KS14: Moved construction
   - type: Damageable
     damageContainer: StructuralInorganic
     damageModifierSet: Metallic
@@ -60,3 +57,18 @@
     cost: 2
     delay: 2
     fx: EffectRCDDeconstruct2
+
+# KS14: This just parents off that
+- type: entity
+  parent: BaseCatwalkUnIconsmoothed # KS14
+  id: Catwalk
+  components:
+  - type: Icon
+    sprite: Structures/catwalk.rsi
+    state: catwalk_preview
+  - type: IconSmooth
+    key: catwalk
+    base: catwalk_
+  - type: Construction
+    graph: Catwalk
+    node: Catwalk

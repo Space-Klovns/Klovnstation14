@@ -132,12 +132,18 @@
   storage:
     back:
     - BibleNanoTrasen
-    
+
 - type: loadout
   id: BibleNarsie
   storage:
     back:
     - BibleNarsie
+
+- type: loadout # KS14, brought back
+  id: BibleQuran
+  storage:
+    back:
+    - BibleQuran
 
 - type: loadout
   id: BibleHonk

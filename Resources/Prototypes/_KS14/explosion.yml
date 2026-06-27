@@ -24,3 +24,14 @@
     params:
       volume: -12
       pitch: 0.35
+
+- type: explosion
+  id: Sorium
+  damagePerIntensity:
+    types:
+      Structural: 0
+  tileBreakChance: [0]
+  tileBreakIntensity: [0]
+  tileBreakRerollReduction: 0
+  lightColor: '#00000000' # fully transparent
+  fireColor: '#00000000' # fully transparent

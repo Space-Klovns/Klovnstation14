@@ -1,7 +1,7 @@
 - type: gameMap
   id: Saltern
   mapName: 'Saltern'
-  mapPath: /Maps/saltern.yml
+  mapPath: /Maps/_KS14/saltern_planet.yml # KS14: use planet, which later spawns the saltern station grid
   minPlayers: 0
   maxPlayers: 35
   # KS14: bring saltern back; no longer fallback

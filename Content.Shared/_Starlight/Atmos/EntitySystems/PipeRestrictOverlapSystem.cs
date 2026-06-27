@@ -28,8 +28,10 @@ public sealed class PipeRestrictOverlapSystem : EntitySystem
         PipeDirection Direction,
 
         AtmosPipeLayer Layer,
+        Type NodeType /* KS14: plumbing node separation */,
 
-        Angle Rotation = default);
+        Angle Rotation = default
+        );
 
     /// <inheritdoc/>
     public override void Initialize()
@@ -169,7 +171,7 @@ public sealed class PipeRestrictOverlapSystem : EntitySystem
         return null;
     }
 
-    private static IEnumerable<(PipeDirection RotatedDirection, AtmosPipeLayer Layer)> GetPipeNodeData(
+    private static IEnumerable<(PipeDirection RotatedDirection, AtmosPipeLayer)> GetPipeNodeData(
         Entity<NodeContainerComponent, TransformComponent> pipe)
     {
         var rotation = pipe.Comp2.LocalRotation;

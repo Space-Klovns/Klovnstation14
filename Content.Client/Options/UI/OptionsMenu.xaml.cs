@@ -21,6 +21,7 @@ namespace Content.Client.Options.UI
             Tabs.SetTabTitle(3, Loc.GetString("ui-options-tab-audio"));
             Tabs.SetTabTitle(4, Loc.GetString("ui-options-tab-accessibility"));
             Tabs.SetTabTitle(5, Loc.GetString("ui-options-tab-admin"));
+            Tabs.SetTabTitle(6, Loc.GetString("ks-ui-options-tab-ks")); // KS14
 
             UpdateTabs();
         }
@@ -35,6 +36,7 @@ namespace Content.Client.Options.UI
             AccessibilityTab.Control.ReloadValues();
             AudioTab.Control.ReloadValues();
             AdminOptionsTab.Control.ReloadValues();
+            Ks14Tab.Control.ReloadValues(); // KS14
         }
     }
 }

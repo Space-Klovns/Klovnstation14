@@ -72,7 +72,7 @@ public sealed class OrganSearchSystem : EntitySystem
                 continue;
 
             var otherPartType = GetPartType(organComponent.Category);
-            if (otherPartType == BodyPartType.Other || // because its 0 so hasflag would always return true
+            if (otherPartType == BodyPartType.Other || // because Other is, 0 so hasflag would always return true
                 !partType.HasFlag(otherPartType))
                 continue;
 

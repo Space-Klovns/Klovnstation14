@@ -136,6 +136,7 @@
     tags:
     - LightBulb
     - Trash
+  - type: NightshiftExemptBulb # KS14
 
 - type: entity
   parent: BaseLightbulb
@@ -172,6 +173,7 @@
     tags:
     - LightBulb
     - Trash
+  - type: NightshiftExemptBulb # KS14: this doesn't look good with nightshift
 
 - type: entity
   parent: BaseLightbulb
@@ -189,6 +191,7 @@
     tags:
     - LightBulb
     - Trash
+  - type: NightshiftExemptBulb # KS14
 
 - type: entity
   parent: LightBulb
@@ -230,6 +233,7 @@
     tags:
     - LightBulb
     - Trash
+  - type: NightshiftExemptBulb # KS14: y
 
 - type: entity
   parent: BaseLightTube
@@ -293,6 +297,7 @@
     lightSoftness: 0.5
     BurningTemperature: 350
     PowerUse: 100
+  - type: NightshiftExemptBulb # KS14
 
 - type: entity
   parent: BaseLightTube

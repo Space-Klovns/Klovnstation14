@@ -23,6 +23,7 @@ using Robust.Shared.Prototypes; // KS14
 using Content.Shared._KS14.CCVar; // KS14
 using Content.Shared.Movement.Components; //KS14
 using Robust.Shared.Log;
+using Content.Shared.Standing; // KS14
 
 namespace Content.Shared._Trauma.Projectiles;
 
@@ -44,6 +45,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
     [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!; // KS14
     [Dependency] private readonly IConfigurationManager _config = default!; // KS14
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!; // KS14
+    [Dependency] private readonly StandingStateSystem _standingStateSystem = default!; // KS14
 
     private EntityQuery<ProjectileComponent> _query;
     private EntityQuery<PhysicsComponent> _physicsQuery;
@@ -143,8 +145,10 @@ public sealed class PredictedProjectileSystem : EntitySystem
         //KS14 pen end
 
         // KS14 Impact start
+        // dont really like this but whatever
         if (_net.IsServer &&
-            ent.Comp2.FixturesMass > float.Epsilon)
+            ent.Comp2.FixturesMass > float.Epsilon &&
+            _standingStateSystem.IsDown(target))
             _physicsSystem.ApplyLinearImpulse(target, ent.Comp2.Momentum * _gunImpulse);
         // KS14 Impact end
 
@@ -250,7 +254,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
         Logger.Info($"calculating mul. required damage = {requiredEffectiveDamage}");
         if (requiredEffectiveDamage <= 0f)
             return 0f;
-        
+
         if (modifierSet == null)
             return damage.GetTotal().Float() / requiredEffectiveDamage;
 
@@ -275,7 +279,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
         {
             foreach (var (type, baseFp) in damage.DamageDict)
             {
-                
+
             }
         }
 

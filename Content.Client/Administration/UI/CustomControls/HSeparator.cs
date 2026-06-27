@@ -7,27 +7,30 @@ namespace Content.Client.Administration.UI.CustomControls;
 
 public sealed class HSeparator : Control
 {
-    private static readonly Color SeparatorColor = Color.FromHex("#3D4059");
+    //KS14 - needed for rmc vends
+    private PanelContainer _panel;
 
-    private readonly StyleBoxFlat _styleBox;
+    public static readonly Color DefaultSeparatorColor = Color.FromHex("#3D4059");
 
     public Color Color
     {
-        get => _styleBox.BackgroundColor;
-        set => _styleBox.BackgroundColor = value;
+        get => ((StyleBoxFlat)_panel.PanelOverride!).BackgroundColor;
+        set => ((StyleBoxFlat)_panel.PanelOverride!).BackgroundColor = value;
     }
 
-    public HSeparator(Color color)
+    public HSeparator()
     {
-        _styleBox = new StyleBoxFlat
+        _panel = new PanelContainer
         {
-            BackgroundColor = color,
-            ContentMarginBottomOverride = 2,
-            ContentMarginLeftOverride = 2
+            PanelOverride = new StyleBoxFlat
+            {
+                BackgroundColor = DefaultSeparatorColor,
+                ContentMarginBottomOverride = 2,
+                ContentMarginLeftOverride = 2
+            }
         };
 
-        AddChild(new PanelContainer { PanelOverride = _styleBox });
+        AddChild(_panel);
     }
-
-    public HSeparator() : this(SeparatorColor) { }
+    //KS14 end
 }

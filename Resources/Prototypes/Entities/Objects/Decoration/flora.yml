@@ -38,6 +38,11 @@
   description: Yep, it's a tree.
   abstract: true
   components:
+  # KS14: wave distortion start
+  - type: KsWaveDistortion
+    speed: 1
+    distortion: 5
+  # KS14: wave distortion end
   - type: SpriteFade
   - type: Clickable
   - type: Sprite

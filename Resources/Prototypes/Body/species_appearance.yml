@@ -66,7 +66,6 @@
       sprite: Objects/Misc/handcuffs.rsi
       state: body-overlay-2
       visible: false
-
 - type: entity
   id: BaseSpeciesAppearance
   parent:
@@ -89,3 +88,25 @@
         type: HumanoidMarkingModifierBoundUserInterface
       enum.StrippingUiKey.Key:
         type: StrippableBoundUserInterface
+  # KS14 Start
+  - type: KsShadow
+    visuals: enum.RotationVisuals.RotationState
+    states:
+      Vertical:
+        sprite: /Textures/_KS14/Mobs/mob_shadow.rsi
+        state: vert
+        color: '#ffffff82'
+        offset: 0,-0.5
+      Horizontal:
+        sprite: /Textures/_KS14/Mobs/mob_shadow.rsi
+        state: horz
+        color: '#ffffff82'
+        offset: 0,0
+
+    # todo get rid of everything below and make it actually work on mapinit
+    sprite:
+      sprite: /Textures/_KS14/Mobs/mob_shadow.rsi
+      state: vert
+    modulate: '#ffffff82'
+    offset: 0,-0.5
+  # KS14 End

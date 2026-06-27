@@ -29,78 +29,66 @@
   id: FloorSteel
   parent: BaseStationTile
   name: tiles-steel-floor
-  sprite: /Textures/Tiles/steel.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/floor.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemSteel
 
 - type: tile
   id: FloorSteelCheckerLight
   parent: BaseStationTile
   name: tiles-steel-floor-checker-light
-  sprite: /Textures/Tiles/cafeteria.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/cafeteria.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemSteelCheckerLight
 
 - type: tile
   id: FloorSteelCheckerDark
   parent: BaseStationTile
   name: tiles-steel-floor-checker-dark
-  sprite: /Textures/Tiles/checker_dark.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/checker.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemSteelCheckerDark
 
 - type: tile
   id: FloorSteelMini
   parent: BaseStationTile
   name: tiles-steel-floor-mini
-  sprite: /Textures/Tiles/steel_mini.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/small.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemSteelMini
 
 - type: tile
   id: FloorSteelPavement
   parent: BaseStationTile
   name: tiles-steel-floor-pavement
-  sprite: /Textures/Tiles/steel_pavement.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/floor_pavement.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemSteelPavement
 
 - type: tile
   id: FloorSteelDiagonal
   parent: BaseStationTile
   name: tiles-steel-floor-diagonal
-  sprite: /Textures/Tiles/steel_diagonal.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/diagonal.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemSteelDiagonal
 
 - type: tile
@@ -114,65 +102,55 @@
   id: FloorSteelMono
   parent: BaseStationTile
   name: tiles-steel-floor-mono
-  sprite: /Textures/Tiles/steel_mono.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/floor_large.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemSteelMono
 
 - type: tile
   id: FloorSteelPavementVertical
   parent: BaseStationTile
   name: tiles-steel-floor-pavement-vertical
-  sprite: /Textures/Tiles/steel_pavement_vertical.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/floor_pavement_vertical.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemSteelPavementVertical
 
 - type: tile
   id: FloorSteelHerringbone
   parent: BaseStationTile
   name: tiles-steel-floor-herringbone
-  sprite: /Textures/Tiles/steel_herringbone.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/herringbone.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemSteelHerringbone
 
 - type: tile
   id: FloorSteelDiagonalMini
   parent: BaseStationTile
   name: tiles-steel-floor-diagonal-mini
-  sprite: /Textures/Tiles/steel_diagonal_mini.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/diagonal_small.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemSteelDiagonalMini
 
 - type: tile
   parent: BaseStationTile
   id: FloorSteelSlatsContinuous
   name: tiles-steel-floor-slats-continuous
-  sprite: /Textures/Tiles/steel_slats_continuous.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/floor_slats_continuous.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemSteelSlatsContinuous
   allowRotationMirror: true
 
@@ -180,33 +158,29 @@
   parent: BaseStationTile
   id: FloorSteelVerticalSlatsBordered
   name: tiles-steel-floor-vertical-slats-bordered
-  sprite: /Textures/Tiles/steel_vertical_slats_bordered.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/floor_vertical_slats_bordered.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemSteelVerticalSlatsBordered
 
 - type: tile
   parent: BaseStationTile
   id: FloorSteelHorizontalSlatsBordered
   name: tiles-steel-floor-horizontal-slats-bordered
-  sprite: /Textures/Tiles/steel_horizontal_slats_bordered.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/floor_horizontal_slats_bordered.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemSteelHorizontalSlatsBordered
 
 - type: tile
   id: FloorBrassFilled
   parent: BaseStationTile
   name: tiles-brass-floor-filled
-  sprite: /Textures/Tiles/Misc/clockwork/clockwork_floor_filled.png
+  sprite: /Textures/_KS14/Tiles/Tg/clockwork_floor.png # KS14: Use KS14 version
   footstepSounds:
     collection: FootstepHull
   itemDrop: FloorTileItemBrassFilled
@@ -215,7 +189,7 @@
   id: FloorBrassReebe
   parent: BaseStationTile
   name: tiles-brass-floor-reebe
-  sprite: /Textures/Tiles/Misc/clockwork/reebe.png
+  sprite: /Textures/_KS14/Tiles/Tg/reebe.png # KS14: Use KS14 version
   footstepSounds:
     collection: FootstepHull
   itemDrop: FloorTileItemBrassReebe
@@ -224,26 +198,22 @@
   id: FloorPlastic
   parent: BaseStationTile
   name: tiles-plastic-floor
-  sprite: /Textures/Tiles/plastic.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/plastic.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemSteel
 
 - type: tile
   id: FloorWood
   parent: BaseStationTile
   name: tiles-wood
-  sprite: /Textures/Tiles/wood.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/wood.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepWood
   barestepSounds:
@@ -254,13 +224,11 @@
   id: FloorWhite
   parent: BaseStationTile
   name: tiles-white-floor
-  sprite: /Textures/Tiles/white.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/white.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemWhite
@@ -269,13 +237,11 @@
   id: FloorWhiteMini
   parent: BaseStationTile
   name: tiles-white-floor-mini
-  sprite: /Textures/Tiles/white_mini.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/white_small.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemWhiteMini
@@ -284,13 +250,11 @@
   parent: BaseStationTile
   id: FloorWhiteSlatsContinuous
   name: tiles-white-floor-slats-continuous
-  sprite: /Textures/Tiles/white_slats_continuous.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/white_slats_continuous.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemWhiteSlatsContinuous
   allowRotationMirror: true
 
@@ -298,39 +262,33 @@
   parent: BaseStationTile
   id: FloorWhiteVerticalSlatsBordered
   name: tiles-white-floor-vertical-slats-bordered
-  sprite: /Textures/Tiles/white_vertical_slats_bordered.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/white_vertical_slats_bordered.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemWhiteVerticalSlatsBordered
 
 - type: tile
   parent: BaseStationTile
   id: FloorWhiteHorizontalSlatsBordered
   name: tiles-white-floor-horizontal-slats-bordered
-  sprite: /Textures/Tiles/white_horizontal_slats_bordered.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/white_horizontal_slats_bordered.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemWhiteHorizontalSlatsBordered
 
 - type: tile
   id: FloorWhitePavement
   parent: BaseStationTile
   name: tiles-white-floor-pavement
-  sprite: /Textures/Tiles/white_pavement.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/white_pavement.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemWhitePavement
@@ -339,13 +297,11 @@
   id: FloorWhiteDiagonal
   parent: BaseStationTile
   name: tiles-white-floor-diagonal
-  sprite: /Textures/Tiles/white_diagonal.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/white_diagonal.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemWhiteDiagonal
@@ -363,13 +319,11 @@
   id: FloorWhiteMono
   parent: BaseStationTile
   name: tiles-white-floor-mono
-  sprite: /Textures/Tiles/white_mono.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/white_large.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemWhiteMono
@@ -378,13 +332,11 @@
   id: FloorWhitePavementVertical
   parent: BaseStationTile
   name: tiles-white-floor-pavement-vertical
-  sprite: /Textures/Tiles/white_pavement_vertical.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/white_pavement_vertical.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemWhitePavementVertical
@@ -393,13 +345,11 @@
   id: FloorWhiteHerringbone
   parent: BaseStationTile
   name: tiles-white-floor-herringbone
-  sprite: /Textures/Tiles/white_herringbone.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/white_herringbone.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemWhiteHerringbone
@@ -408,13 +358,11 @@
   id: FloorWhiteDiagonalMini
   parent: BaseStationTile
   name: tiles-white-floor-diagonal-mini
-  sprite: /Textures/Tiles/white_diagonal_mini.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/white_diagonal_small.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemWhiteDiagonalMini
@@ -423,13 +371,11 @@
   id: FloorWhitePlastic
   parent: BaseStationTile
   name: tiles-plastic-white-floor
-  sprite: /Textures/Tiles/white_plastic.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/white.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemWhite
@@ -438,13 +384,11 @@
   id: FloorDark
   parent: BaseStationTile
   name: tiles-dark-floor
-  sprite: /Textures/Tiles/dark.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/darkfull.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemDark
@@ -453,13 +397,11 @@
   id: FloorDarkMini
   parent: BaseStationTile
   name: tiles-dark-floor-mini
-  sprite: /Textures/Tiles/dark_mini.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/dark_small.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemDarkMini
@@ -468,13 +410,11 @@
   parent: BaseStationTile
   id: FloorDarkSlatsContinuous
   name: tiles-dark-floor-slats-continuous
-  sprite: /Textures/Tiles/dark_slats_continuous.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/dark_slats_continuous.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemDarkSlatsContinuous
   allowRotationMirror: true
 
@@ -482,39 +422,33 @@
   parent: BaseStationTile
   id: FloorDarkVerticalSlatsBordered
   name: tiles-dark-floor-vertical-slats-bordered
-  sprite: /Textures/Tiles/dark_vertical_slats_bordered.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/dark_vertical_slats_bordered.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemDarkVerticalSlatsBordered
 
 - type: tile
   parent: BaseStationTile
   id: FloorDarkHorizontalSlatsBordered
   name: tiles-dark-floor-horizontal-slats-bordered
-  sprite: /Textures/Tiles/dark_horizontal_slats_bordered.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/dark_horizontal_slats_bordered.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemDarkHorizontalSlatsBordered
 
 - type: tile
   id: FloorDarkPavement
   parent: BaseStationTile
   name: tiles-dark-floor-pavement
-  sprite: /Textures/Tiles/dark_pavement.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/dark_pavement.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemDarkPavement
@@ -523,13 +457,11 @@
   id: FloorDarkDiagonal
   parent: BaseStationTile
   name: tiles-dark-floor-diagonal
-  sprite: /Textures/Tiles/dark_diagonal.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/dark_diagonal.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemDarkDiagonal
@@ -547,13 +479,11 @@
   id: FloorDarkMono
   parent: BaseStationTile
   name: tiles-dark-floor-mono
-  sprite: /Textures/Tiles/dark_mono.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/dark_large.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemDarkMono
@@ -562,13 +492,11 @@
   id: FloorDarkPavementVertical
   parent: BaseStationTile
   name: tiles-dark-floor-pavement-vertical
-  sprite: /Textures/Tiles/dark_pavement_vertical.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/dark_pavement_vertical.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemDarkPavementVertical
@@ -577,13 +505,11 @@
   id: FloorDarkHerringbone
   parent: BaseStationTile
   name: tiles-dark-floor-herringbone
-  sprite: /Textures/Tiles/dark_herringbone.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/dark_herringbone.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemDarkHerringbone
@@ -592,13 +518,11 @@
   id: FloorDarkDiagonalMini
   parent: BaseStationTile
   name: tiles-dark-floor-diagonal-mini
-  sprite: /Textures/Tiles/dark_diagonal_mini.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/dark_diagonal_small.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemDarkDiagonalMini
@@ -640,7 +564,7 @@
   id: FloorReinforced
   parent: BaseStationTile
   name: tiles-reinforced-floor
-  sprite: /Textures/Tiles/reinforced.png
+  sprite: /Textures/_KS14/Tiles/Tg/engine.png # KS14: Use KS14 version
   footstepSounds:
     collection: FootstepHull
   itemDrop: PartRodMetal1
@@ -731,7 +655,7 @@
   id: FloorMining
   parent: BaseStationTile
   name: tiles-mining-tile
-  sprite: /Textures/Tiles/mining_floor.png
+  sprite: /Textures/_KS14/Tiles/Tg/podfloor.png # KS14: Use KS14 version
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemMining
@@ -740,7 +664,7 @@
   id: FloorMiningDark
   parent: BaseStationTile
   name: tiles-mining-dark-tile
-  sprite: /Textures/Tiles/mining_floor_dark.png
+  sprite: /Textures/_KS14/Tiles/Tg/podfloor_dark.png # KS14: Use KS14 version
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemMiningDark
@@ -749,7 +673,7 @@
   id: FloorMiningLight
   parent: BaseStationTile
   name: tiles-mining-light-tile
-  sprite: /Textures/Tiles/mining_floor_light.png
+  sprite: /Textures/_KS14/Tiles/Tg/podfloor_light.png # KS14: Use KS14 version
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemMiningLight
@@ -759,7 +683,7 @@
   id: FloorFreezer
   parent: BaseStationTile
   name: tiles-freezer
-  sprite: /Textures/Tiles/freezer.png
+  sprite: /Textures/_KS14/Tiles/Tg/freezer.png # KS14: Use KS14 version
   footstepSounds:
     collection: FootstepHull
   itemDrop: FloorTileItemFreezer
@@ -775,7 +699,7 @@
   id: FloorHydro
   parent: BaseStationTile
   name: tiles-hydro-floor
-  sprite: /Textures/Tiles/hydro.png
+  sprite: /Textures/_KS14/Tiles/Tg/smooth.png # KS14: Use KS14 version
   itemDrop: FloorTileItemHydro
 
 - type: tile
@@ -809,7 +733,7 @@
   id: FloorKitchen
   parent: BaseStationTile
   name: tiles-kitchen-floor
-  sprite: /Textures/Tiles/kitchen.png
+  sprite: /Textures/_KS14/Tiles/Tg/kitchen.png # KS14: Use KS14 version
   footstepSounds:
     collection: FootstepTile
   itemDrop: FloorTileItemKitchen
@@ -827,7 +751,7 @@
   id: FloorSteelDamaged
   parent: BaseStationTile
   name: tiles-steel-floor
-  sprite: /Textures/Tiles/steel_damaged.png
+  sprite: /Textures/_KS14/Tiles/Tg/floor_damaged.png # KS14: Use KS14 version
   variants: 5
   placementVariants:
   - 1.0
@@ -1079,91 +1003,77 @@
   id: FloorShuttleWhite
   parent: BaseStationTile
   name: tiles-white-shuttle-floor
-  sprite: /Textures/Tiles/shuttlewhite.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/titanium_white.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemShuttleWhite
 
 - type: tile
   id: FloorShuttleGrey
   parent: BaseStationTile
   name: tiles-grey-shuttle-floor
-  sprite: /Textures/Tiles/shuttlegrey.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/titanium.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemShuttleGrey
 
 - type: tile
   id: FloorShuttleBlack
   parent: BaseStationTile
   name: tiles-black-shuttle-floor
-  sprite: /Textures/Tiles/shuttleblack.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/plastitanium.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemShuttleBlack
 
 - type: tile
   id: FloorShuttleBlue
   parent: BaseStationTile
   name: tiles-blue-shuttle-floor
-  sprite: /Textures/Tiles/shuttleblue.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/titanium_blue.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemShuttleBlue
 
 - type: tile
   id: FloorShuttleOrange
   parent: BaseStationTile
   name: tiles-orange-shuttle-floor
-  sprite: /Textures/Tiles/shuttleorange.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/titanium_yellow.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemShuttleOrange
 
 - type: tile
   id: FloorShuttlePurple
   parent: BaseStationTile
   name: tiles-purple-shuttle-floor
-  sprite: /Textures/Tiles/shuttlepurple.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/titanium_purple.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemShuttlePurple
 
 - type: tile
   id: FloorShuttleRed
   parent: BaseStationTile
   name: tiles-red-shuttle-floor
-  sprite: /Textures/Tiles/shuttlered.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/plastitanium_red.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   itemDrop: FloorTileItemShuttleRed
 
 
@@ -1190,13 +1100,11 @@
   id: FloorGlass
   parent: BaseStationTile
   name: tiles-glass-floor
-  sprite: /Textures/Tiles/glass.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/glass.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepTile
   itemDrop: SheetGlass1
@@ -1205,13 +1113,11 @@
   id: FloorRGlass
   parent: BaseStationTile
   name: tiles-reinforced-glass-floor
-  sprite: /Textures/Tiles/rglass.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/reinf_glass.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepTile
   itemDrop: SheetRGlass1
@@ -1260,19 +1166,11 @@
 - type: tile
   id: FloorAsphalt
   name: tiles-asphalt
-  sprite: /Textures/Tiles/Planet/Concrete/asphalt.png
-  variants: 10
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/asphalt.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   baseTurf: FloorDirt
   isSubfloor: true
   footstepSounds:
@@ -1656,13 +1554,11 @@
   id: FloorWoodTile
   parent: BaseStationTile
   name: tiles-wood2
-  sprite: /Textures/Tiles/wood_tile.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/wood_parquet.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepWood
   barestepSounds:
@@ -1673,7 +1569,7 @@
   id: FloorBrokenWood
   parent: BaseStationTile
   name: tiles-wood3
-  sprite: /Textures/Tiles/wood_broken.png
+  sprite: /Textures/_KS14/Tiles/Tg/wood_broken.png # KS14: Use KS14 version
   variants: 7
   placementVariants:
   - 1.0
@@ -1873,13 +1769,11 @@
   id: FloorWoodLarge
   parent: BaseStationTile
   name: tiles-wood-large
-  sprite: /Textures/Tiles/wood_large.png
-  variants: 4
-  placementVariants:
-  - 1.0
-  - 1.0
-  - 1.0
-  - 1.0
+  sprite: /Textures/_KS14/Tiles/_AUTOGEN/wood_large.png # KS14: Use KS14 version [AUTOGEN]
+  # KS14: AUTOGEN START: Added autogenned variants
+  variants: 8
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
+  # KS14: AUTOGEN END
   footstepSounds:
     collection: FootstepWood
   barestepSounds:

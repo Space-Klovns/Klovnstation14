@@ -1,0 +1,18 @@
+<DefaultWindow xmlns="https://spacestation14.io"
+               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+               MinSize="300 350" Title="{Loc plumbing-storage-window-title}">
+    <BoxContainer Orientation="Vertical" Margin="5 5 5 5" SeparationOverride="8">
+        <!-- Volume progress bar -->
+        <BoxContainer Orientation="Horizontal" SeparationOverride="5">
+            <Label Text="{Loc plumbing-storage-volume}" />
+            <ProgressBar Name="VolumeBar" HorizontalExpand="True" MinHeight="20" MaxValue="1" />
+            <Label Name="VolumeLabel" Text="0/0" />
+        </BoxContainer>
+
+        <PanelContainer StyleClasses="LowDivider" />
+
+        <!-- Contents list -->
+        <Label Text="{Loc plumbing-storage-contents}" StyleClasses="LabelHeading" />
+        <ItemList Name="ContentsList" SelectMode="None" VerticalExpand="True" MinHeight="200" />
+    </BoxContainer>
+</DefaultWindow>

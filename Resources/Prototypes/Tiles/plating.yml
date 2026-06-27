@@ -14,7 +14,7 @@
   id: Plating
   parent: BasePlating
   name: tiles-plating
-  sprite: /Textures/Tiles/plating.png
+  sprite: /Textures/_KS14/Tiles/Tg/plating.png # KS14: Use KS14 version
 
 - type: tile
   id: PlatingRCD
@@ -50,7 +50,7 @@
   id: PlatingDamaged
   parent: BasePlating
   name: tiles-plating
-  sprite: /Textures/Tiles/plating_damaged.png
+  sprite: /Textures/Tiles/plating_damaged.png # KS14 TODO: MAKE DAMAGED VERSION
   variants: 3
   placementVariants:
   - 1.0

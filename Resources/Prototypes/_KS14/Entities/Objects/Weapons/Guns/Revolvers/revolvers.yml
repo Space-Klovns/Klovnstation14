@@ -28,6 +28,11 @@
     - SemiAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/revolver.ogg
+    # KS14: Farsound start
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/revolver.ogg
+      range: 15,95
+    # KS14: Farsound end
   - type: UseDelay
     delay: 0.66
   - type: ContainerContainer

@@ -73,7 +73,7 @@ public sealed class ThrowingSystem : EntitySystem
         // <Trauma>
         bool throwInAir = true,
         bool predicted = true)
-        // </Trauma>
+    // </Trauma>
     {
         var thrownPos = _transform.GetMapCoordinates(uid);
         var mapPos = _transform.ToMapCoordinates(coordinates);
@@ -111,7 +111,7 @@ public sealed class ThrowingSystem : EntitySystem
         // <Trauma>
         bool throwInAir = true,
         bool predicted = true)
-        // </Trauma>
+    // </Trauma>
     {
         if (!_physicsQuery.TryComp(uid, out var physics))
             return;
@@ -156,7 +156,7 @@ public sealed class ThrowingSystem : EntitySystem
         // <Trauma>
         bool throwInAir = true,
         bool predicted = true)
-        // </Trauma>
+    // </Trauma>
     {
         if (baseThrowSpeed <= 0 || direction == Vector2Helpers.Infinity || direction == Vector2Helpers.NaN || direction == Vector2.Zero || friction < 0)
             return;

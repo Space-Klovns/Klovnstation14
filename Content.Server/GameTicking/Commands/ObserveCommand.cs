@@ -24,16 +24,18 @@ namespace Content.Server.GameTicking.Commands
             }
 
             var ticker = _e.System<GameTicker>();
+            var isAdminCommand = args.Length > 0 && args[0].ToLower() == "admin"; // KS14: Moved here
+            var isAdmin = _adminManager.IsAdmin(player); // KS14 addition
 
-            if (ticker.RunLevel == GameRunLevel.PreRoundLobby)
+            if (ticker.RunLevel == GameRunLevel.PreRoundLobby &&
+                !(isAdminCommand && isAdmin) /* KS14: Admins may observe before the game starts */)
             {
                 shell.WriteError("Wait until the round starts.");
                 return;
             }
 
-            var isAdminCommand = args.Length > 0 && args[0].ToLower() == "admin";
 
-            if (!isAdminCommand && _adminManager.IsAdmin(player))
+            if (!isAdminCommand && isAdmin /* KS14: Use isAdmin instead of re-evaluating*/)
             {
                 _adminManager.DeAdmin(player);
             }

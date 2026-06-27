@@ -214,11 +214,16 @@
   - type: Item
     storedOffset: 0,-2
   - type: Gun
-    fireRate: 6.25 # KS14 modified
+    fireRate: 5 # KS14 modified
     availableModes:
     - SemiAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/mk58.ogg
+    # KS14: Farsound start
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
+      range: 15,80
+    # KS14: Farsound end
   - type: StealTarget
     stealGroup: OfficerHandgun
   - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
@@ -248,6 +253,11 @@
     - SemiAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/mk58.ogg
+    # KS14: Farsound start
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
+      range: 15,80
+    # KS14: Farsound end
   - type: ItemSlots
     slots:
       gun_magazine:

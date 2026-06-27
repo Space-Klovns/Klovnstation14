@@ -8,7 +8,7 @@
           operator: !type:UtilityOperator
             proto: NearbyMeleeTargets
 
-        - !type:HTNPrimitiveTask # KS14: KDA # copy target coords
+        - !type:HTNPrimitiveTask # KS14: KDA (comment from the future: wtf does KDA mean) # copy target coords
           operator: !type:CopyKeyOperator
             originKey: TargetCoordinates
             targetKey: LastTargetCoordinates

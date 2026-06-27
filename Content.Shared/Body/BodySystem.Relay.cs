@@ -41,7 +41,7 @@ public sealed partial class BodySystem
     {
         var ev = new BodyRelayedEvent<T>(ent, args);
         // KS14: Use hierarchy instead of container
-        foreach (var organ in ent.Comp.RecursiveChildUids)
+        foreach (var organ in ent.Comp.RecursiveChildUids.ToArray() /* to avoid collection fails */)
         {
             RaiseLocalEvent(organ, ref ev);
         }
@@ -59,7 +59,7 @@ public sealed partial class BodySystem
     {
         var ev = new BodyRelayedEvent<T>(ent, args);
         // KS14: Use hierarchy instead of container
-        foreach (var organ in ent.Comp.RecursiveChildUids)
+        foreach (var organ in ent.Comp.RecursiveChildUids.ToArray() /* to avoid collection fails */)
         {
             RaiseLocalEvent(organ, ref ev);
         }

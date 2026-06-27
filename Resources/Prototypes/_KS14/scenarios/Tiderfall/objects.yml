@@ -1,0 +1,68 @@
+- type: entity
+  parent: AgentIDCard
+  id: TiderfallNtCard
+  name: tiderfall id card
+  suffix: Nanotrasen
+  components:
+  - type: Access
+    tags:
+    - Maintenance
+
+- type: entity
+  parent: AgentIDCard
+  id: TiderfallSyndieCard
+  name: tiderfall id card
+  suffix: Syndie
+  components:
+  - type: ChameleonClothing
+    slot: [idcard]
+    default: SyndicateIDCard
+    requireTag: WhitelistChameleonIdCard
+
+- type: entity
+  parent: ChameleonPDA
+  id: TiderfallNtPDA
+  name: tiderfall PDA
+  suffix: Nanotrasen
+  components:
+  - type: Pda
+    id: TiderfallNtCard
+
+- type: entity
+  parent: ChameleonPDA
+  id: TiderfallSyndiePDA
+  name: tiderfall PDA
+  suffix: Syndie
+  components:
+  - type: Pda
+    id: TiderfallSyndieCard
+  - type: ChameleonClothing
+    slot: [idcard]
+    default: SyndiPDA
+    requireTag: WhitelistChameleonPDA
+
+- type: entity
+  id: ClothingBeltQuiverTiderfall
+  parent: ClothingBeltQuiver
+  suffix: filled
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase: !type:AllSelector
+        children: #yes, x16
+        - id: ArrowImprovisedPlasma
+        - id: ArrowImprovisedPlasma
+        - id: ArrowImprovisedPlasma
+        - id: ArrowImprovisedPlasma
+        - id: ArrowImprovisedPlasma
+        - id: ArrowImprovisedPlasma
+        - id: ArrowImprovisedPlasma
+        - id: ArrowImprovisedPlasma
+        - id: ArrowImprovisedPlasma
+        - id: ArrowImprovisedPlasma
+        - id: ArrowImprovisedPlasma
+        - id: ArrowImprovisedPlasma
+        - id: ArrowImprovisedPlasma
+        - id: ArrowImprovisedPlasma
+        - id: ArrowImprovisedPlasma
+        - id: ArrowImprovisedPlasma

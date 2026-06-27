@@ -1,0 +1,27 @@
+- type: entity
+  parent: BaseItem
+  id: KsMeleeDebugDismember
+  name: bang stick dismemberer
+  suffix: DEBUG
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Melee/debug.rsi
+    state: icon
+  - type: Item
+    size: Tiny
+    sprite: Objects/Weapons/Melee/debug.rsi
+  - type: MeleeWeapon
+    damage:
+      types:
+        Blunt: 5
+  - type: TriggerOnMeleeHit
+    triggerEveryHit: true
+    targetIsUser: true
+  - type: DismemberOnTrigger
+    targetUser: true
+    partType:
+    - Head
+    - Arm
+    - Hand
+    - Leg
+    - Foot

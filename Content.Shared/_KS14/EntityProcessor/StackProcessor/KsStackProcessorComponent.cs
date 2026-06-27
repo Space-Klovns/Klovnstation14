@@ -7,7 +7,6 @@ using Robust.Shared.Serialization;
 namespace Content.Shared._KS14.EntityProcessor.StackProcessor;
 
 [RegisterComponent, NetworkedComponent]
-[AutoGenerateComponentState]
 [Access(typeof(KsStackProcessorSystem))]
 public sealed partial class KsStackProcessorComponent : Component
 {
@@ -33,7 +32,7 @@ public sealed partial class KsStackProcessorComponent : Component
     /// <summary>
     ///     Dict of things that are being processed, and where they will be outputted relative to the processor.
     /// </summary>
-    [DataField, AutoNetworkedField]
+    [DataField]
     [ViewVariables(VVAccess.ReadOnly)]
     public Dictionary<EntityUid, Vector2> OutputOffsets = [];
 
@@ -44,6 +43,12 @@ public sealed partial class KsStackProcessorComponent : Component
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
     public string? AnimationState = null;
+}
+
+[Serializable, NetSerializable]
+public sealed class KsStackProcessorComponentState : ComponentState
+{
+    public Dictionary<NetEntity, Vector2> OutputOffsets = [];
 }
 
 [Serializable, NetSerializable]

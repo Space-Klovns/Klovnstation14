@@ -874,6 +874,12 @@
           amount: 1, 6
         - id: PillBicaridine
           amount: 1, 6
+        - id: PillAmbuzol #KS14, readded
+          weight: 0.75
+          amount: 1, 6
+        - id: PillAmbuzolPlus #KS14, readded
+          weight: 0.75
+          amount: 1, 6
         - id: PillCharcoal
           amount: 1, 6
         - id: PillSpaceDrugs

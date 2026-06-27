@@ -1,0 +1,5 @@
+- type: gameMapPool
+  id: ScenarioMapPool
+  maps:
+  - Tiderfall
+  - Nanoplant

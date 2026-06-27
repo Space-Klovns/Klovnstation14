@@ -157,6 +157,10 @@
     state: base
   - type: PointLight
     enabled: true
+    color: "#FFC99D" # 3800K color temp, KS14 carmine light fixing
+    energy: 0.5
+    radius: 7
+    softness: 1
   - type: PoweredLight
     hasLampOnSpawn: LightTube
   - type: AmbientOnPowered
@@ -444,6 +448,10 @@
     state: base
   - type: PointLight
     enabled: true
+    color: "#FFB475" # 3100K color temp, KS14 carmine light port
+    energy: 0.5
+    radius: 5
+    softness: 1.1
   - type: PoweredLight
     hasLampOnSpawn: LightBulb
   - type: DamageOnInteract

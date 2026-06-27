@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Taken from https://github.com/tgstation/tgstation/ at commit 8b51c71943fc55da9da11b3d86d24cf0a3ed1136",
+  "size": {
+    "x": 64,
+    "y": 64
+  },
+  "states": [
+    {
+      "name": "pod"
+    },
+    {
+      "name": "pod_reverse"
+    },
+    {
+      "name": "pod_door"
+    },
+    {
+      "name": "advpod"
+    },
+    {
+      "name": "advpod_reverse"
+    },
+    {
+      "name": "advpod_door"
+    },
+    {
+      "name": "darkpod"
+    },
+    {
+      "name": "darkpod_reverse"
+    },
+    {
+      "name": "darkpod_door"
+    },
+    {
+      "name": "default"
+    },
+    {
+      "name": "bluespace"
+    },
+    {
+      "name": "centcom"
+    },
+    {
+      "name": "syndicate"
+    },
+    {
+      "name": "cultist"
+    },
+    {
+      "name": "deathsquad"
+    },
+    {
+      "name": "clownpod"
+    },
+    {
+      "name": "clownpod_reverse"
+    },
+    {
+      "name": "clownpod_door"
+    },
+    {
+      "name": "clown"
+    },
+    {
+      "name": "box"
+    },
+    {
+      "name": "box_door"
+    },
+    {
+      "name": "orange"
+    },
+    {
+      "name": "orange_door"
+    },
+    {
+      "name": "missile"
+    },
+    {
+      "name": "smissile"
+    },
+    {
+      "name": "rubble_fg"
+    },
+    {
+      "name": "rubble_bg"
+    },
+    {
+      "name": "rubble_fg_wide"
+    },
+    {
+      "name": "rubble_bg_wide"
+    },
+    {
+      "name": "rubble_fg_thin"
+    },
+    {
+      "name": "rubble_bg_thin"
+    },
+    {
+      "name": "pod_glow_yellow"
+    },
+    {
+      "name": "pod_glow_blue"
+    },
+    {
+      "name": "pod_glow_red"
+    },
+    {
+      "name": "pod_glow_green"
+    },
+    {
+      "name": "invisible-icon"
+    },
+    {
+      "name": "seethrough-icon"
+    }
+  ]
+}

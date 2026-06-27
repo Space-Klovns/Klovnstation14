@@ -33,10 +33,9 @@ namespace Content.Client._KS14.Atmos.UI
             _window.MixerNodePercentageChanged += OnMixerSetPercentagePressed;
         }
 
-        private void OnToggleStatusButtonPressed()
+        private void OnToggleStatusButtonPressed(bool status)
         {
-            if (_window is null) return;
-            SendMessage(new MolarMixerToggleStatusMessage(_window.MixerStatus));
+            SendMessage(new MolarMixerToggleStatusMessage(status));
         }
 
         private void OnMixerOutputMolarFlowPressed(string value)

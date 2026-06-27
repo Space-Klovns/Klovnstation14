@@ -23,6 +23,10 @@ public sealed partial class SpawnPointComponent : Component, ISpawnPoint
     {
         return $"{Job} {SpawnType}";
     }
+
+    //KS14 - Does this latejoin spawnpoint check for your job?
+    [DataField("picky_latejoin")]
+    public bool PickyLatejoin = false;
 }
 
 public enum SpawnPointType

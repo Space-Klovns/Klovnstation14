@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using Robust.Shared.Random;
 
 namespace Content.Shared._KS14.Random.Helpers;
 
@@ -13,7 +14,7 @@ public static class KsSharedRandomExtensions
 
     /// <inheritdoc cref="Shared.Random.Helpers.SharedRandomExtensions.HashCodeCombine(List{int})"/>
     /// <remarks>
-    ///     This is a generic <see cref="IEnumerable{T}"/> variant. 
+    ///     This is a generic <see cref="IEnumerable{T}"/> variant.
     /// </remarks>
     public static int HashCodeCombine(IEnumerable<int> values)
     {
@@ -26,7 +27,7 @@ public static class KsSharedRandomExtensions
 
     /// <inheritdoc cref="Shared.Random.Helpers.SharedRandomExtensions.HashCodeCombine(List{int})"/>
     /// <remarks>
-    ///     This is a generic variadic variant. 
+    ///     This is a generic variadic variant.
     /// </remarks>
     public static int HashCodeCombine(params int[] values)
     {
@@ -39,7 +40,7 @@ public static class KsSharedRandomExtensions
 
     /// <summary>
     ///     This is a generic variadic variant of <see cref="Shared.Random.Helpers.SharedRandomExtensions.HashCodeCombine(List{int})"/>
-    ///         that returns a new <see cref="System.Random"/> whose seed is the hashcode combined from the given values.  
+    ///         that returns a new <see cref="System.Random"/> whose seed is the hashcode combined from the given values.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static System.Random RandomWithHashCodeCombinedSeed(params int[] values)
@@ -109,4 +110,18 @@ public static class KsSharedRandomExtensions
         var length = random.NextSingle() * (maxMagnitude - minMagnitude) + minMagnitude;
         return random.NextUnitVector2() * length;
     }
+
+    /// <summary>
+    ///     Random vector, created from a uniform distribution of x and y coordinates lying inside some box.
+    /// </summary>
+    public static Vector2 NextVector2Box(this System.Random random, float minX, float minY, float maxX, float maxY)
+        => new(random.NextFloat(minX, maxX), random.NextFloat(minY, maxY));
+
+    /// <summary>
+    ///     Random vector, created from a uniform distribution of x and y coordinates lying inside some box.
+    ///     Box will have coordinates starting at [-<paramref name="maxAbsX"/> , -<paramref name="maxAbsY"/>]
+    ///     and ending in [<paramref name="maxAbsX"/> , <paramref name="maxAbsY"/>]
+    /// </summary>
+    public static Vector2 NextVector2Box(this System.Random random, float maxAbsX = 1, float maxAbsY = 1)
+        => random.NextVector2Box(-maxAbsX, -maxAbsY, maxAbsX, maxAbsY);
 }

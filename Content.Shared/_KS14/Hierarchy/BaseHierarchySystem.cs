@@ -1,9 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Containers;
+using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Content.Shared._KS14.Hierarchy;
-
-// TODO: ughh optimise this
 
 public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : EntitySystem
     where THierarchyComp : Component, IHierarchyComponent
@@ -20,6 +20,9 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
     protected EntityQuery<THierarchyComp> HierarchyQuery;
     protected EntityQuery<TElementComp> ElementQuery;
 
+    private static readonly List<EntityUid> EmptyUidList = [];
+    private static readonly HashSet<EntityUid> EmptyUidSet = [];
+
     public override void Initialize()
     {
         base.Initialize();
@@ -33,6 +36,7 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
         SubscribeLocalEvent<THierarchyComp, ComponentInit>(OnHierarchyInit);
         SubscribeLocalEvent<TElementComp, ComponentInit>(OnElementInit);
 
+        // FYI EntityTerminatingEvent is raised before things get detached etc.
         SubscribeLocalEvent<THierarchyComp, EntityTerminatingEvent>(OnHierarchyTerminating);
         SubscribeLocalEvent<THierarchyComp, ComponentShutdown>(OnHierarchyShutdown);
         SubscribeLocalEvent<TElementComp, EntityTerminatingEvent>(OnElementTerminating);
@@ -43,6 +47,41 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
 
         SubscribeLocalEvent<TElementComp, ComponentShutdown>(OnElementShutdown);
     }
+
+    // All of this sucks but eh
+    // TODO LCDC: TODO KS14: TODO HIERARCHY: nuke this shitcode
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool IsHierarchyFlaggedAsTerminating(THierarchyComp hierarchyComponent)
+        => hierarchyComponent.RecursiveChildUids == EmptyUidList;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool IsElementFlaggedAsTerminating(TElementComp elementComponent)
+        => elementComponent.ChildUids == EmptyUidSet;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void FlagHierarchyAsTerminating(THierarchyComp hierarchyComponent)
+    {
+        if (IsHierarchyFlaggedAsTerminating(hierarchyComponent))
+            return;
+
+        hierarchyComponent.RecursiveChildUids.Clear();
+        hierarchyComponent.RecursiveChildUids.TrimExcess();
+
+        hierarchyComponent.RecursiveChildUids = EmptyUidList;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void FlagElementAsTerminating(TElementComp elementComponent)
+    {
+        if (IsElementFlaggedAsTerminating(elementComponent))
+            return;
+
+        elementComponent.ChildUids.Clear();
+        elementComponent.ChildUids.TrimExcess();
+
+        elementComponent.ChildUids = EmptyUidSet;
+    }
+
 
     public bool TryGetHierarchyEntityOfElement(Entity<TElementComp?> elementEntity, [NotNullWhen(true)] out Entity<THierarchyComp>? hierarchyEntity)
     {
@@ -76,7 +115,8 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
 
     private void OnElementRemovedFromHierarchy(Entity<THierarchyComp> parentHierarchyEntity, ref EntRemovedFromContainerMessage args)
     {
-        if (args.Container.ID != ContainerId)
+        if (args.Container.ID != ContainerId ||
+            IsHierarchyFlaggedAsTerminating(parentHierarchyEntity))
             return;
 
         UpdateElementChildrenNewHierarchy((args.Entity, ElementQuery.GetComponent(args.Entity)), null);
@@ -84,12 +124,17 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
 
     private void OnElementRemovedFromElement(Entity<TElementComp> parentElementEntity, ref EntRemovedFromContainerMessage args)
     {
+        // Remember that it is still possible and allowed for elements to be deleted (and thus the children+subchildren of that element) while inside a hierarchy
+
         if (args.Container.ID != ContainerId)
             return;
 
-        RemoveDirectChild(parentElementEntity, args.Entity);
+        if (!IsElementFlaggedAsTerminating(parentElementEntity.Comp))
+            RemoveDirectChild(parentElementEntity, args.Entity);
 
-        if (parentElementEntity.Comp.HierarchyUid != null)
+        if (parentElementEntity.Comp.HierarchyUid is { } hierarchyUid &&
+            HierarchyQuery.TryGetComponent(hierarchyUid, out var hierarchyComponent) &&
+            !IsHierarchyFlaggedAsTerminating(hierarchyComponent))
             UpdateElementChildrenNewHierarchy((args.Entity, ElementQuery.GetComponent(args.Entity)), null);
     }
 
@@ -121,13 +166,13 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
 
     private void OnHierarchyAdd(Entity<THierarchyComp> hierarchyEntity, ref ComponentAdd args)
     {
-        hierarchyEntity.Comp.RecursiveChildUids = [];
+        hierarchyEntity.Comp.RecursiveChildUids ??= [];
     }
 
     private void OnElementAdd(Entity<TElementComp> elementEntity, ref ComponentAdd args)
     {
-        elementEntity.Comp.HierarchyUid = null;
-        elementEntity.Comp.ChildUids = [];
+        elementEntity.Comp.HierarchyUid ??= null;
+        elementEntity.Comp.ChildUids ??= [];
     }
 
     private void OnHierarchyInit(Entity<THierarchyComp> hierarchyEntity, ref ComponentInit args)
@@ -145,8 +190,11 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
         if (elementEntity.Comp.HierarchyUid is not { } hierarchyUid)
             return;
 
-        HierarchyQuery.GetComponent(hierarchyUid).RecursiveChildUids.Remove(elementEntity);
+        var hierarchyComponent = HierarchyQuery.GetComponent(hierarchyUid);
+        if (IsHierarchyFlaggedAsTerminating(hierarchyComponent))
+            return;
 
+        hierarchyComponent.RecursiveChildUids.Remove(elementEntity);
         // Removal from any parent element (if present) is handled by containers and whatnot
     }
 
@@ -154,31 +202,27 @@ public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : Entity
     {
         // IIRC, this is to prevent a tree-update spam as each of the entity's children get detached to nullspace.
         hierarchyEntity.Comp.RecursiveChildUids.Clear();
+        FlagHierarchyAsTerminating(hierarchyEntity);
     }
 
     protected virtual void OnElementTerminating(Entity<TElementComp> elementEntity, ref EntityTerminatingEvent args)
     {
+        FlagElementAsTerminating(elementEntity);
+
+        // Only raise events if the hierarchy also still exists
         if (elementEntity.Comp.HierarchyUid is { } hierarchyUid &&
-            HierarchyQuery.TryGetComponent(hierarchyUid, out var hierarchyComponent)) // because comp may be deleted
+            HierarchyQuery.TryGetComponent(hierarchyUid, out var hierarchyComponent) &&
+            !IsHierarchyFlaggedAsTerminating(hierarchyComponent))
         {
-            if (TerminatingOrDeleted(hierarchyUid))
-            {
-                // skip the rest of RemoveElementFromHierarchy
-                hierarchyComponent.RecursiveChildUids.Remove(elementEntity);
-                elementEntity.Comp.HierarchyUid = null;
-            }
-            else // Raise events
-                RemoveElementFromHierarchy((hierarchyUid, hierarchyComponent), elementEntity);
+            RemoveElementFromHierarchy((hierarchyUid, hierarchyComponent), elementEntity);
         }
-
-        // Same here but raise events if necessary too
-        elementEntity.Comp.ChildUids.Clear();
-
-        // We dont need to do recursive BS here because every child entity is going to be terminated too if the parent is getting terminated
     }
 
     private void OnHierarchyShutdown(Entity<THierarchyComp> hierarchyEntity, ref ComponentShutdown args)
     {
+        if (IsHierarchyFlaggedAsTerminating(hierarchyEntity.Comp))
+            return;
+
         for (var i = hierarchyEntity.Comp.RecursiveChildUids.Count - 1; i > -1; i--)
         {
             var childUid = hierarchyEntity.Comp.RecursiveChildUids[i];

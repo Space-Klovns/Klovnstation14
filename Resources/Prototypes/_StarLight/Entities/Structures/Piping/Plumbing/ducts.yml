@@ -27,7 +27,7 @@
   - type: Sprite
     sprite: _Starlight/Structures/Piping/Plumbing/fluid_ducts.rsi
     drawdepth: ThinPipe
-    visible: false
+    #visible: false # KS14: visible, as subfloorhide is removed
   - type: Appearance
   - type: PipeAppearance
     sprite:
@@ -37,7 +37,7 @@
   - type: AtmosPipeColor
   - type: Clickable
   - type: InteractionOutline
-  - type: SubFloorHide
+  #- type: SubFloorHide # KS14: fluid ducts are on normal tiles now
   - type: CollideOnAnchor
   - type: Anchorable
   - type: Pullable
@@ -79,6 +79,7 @@
     rpld: true
   - type: StaticPrice
     price: 20
+  - type: KsRcdPlacementNoHint # KS14
 
 # ============================================================================
 # DUCT VARIANTS

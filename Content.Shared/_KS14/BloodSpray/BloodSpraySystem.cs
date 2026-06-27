@@ -20,14 +20,14 @@ public sealed class BloodSpraySystem : EntitySystem
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly SharedSolutionContainerSystem _solutionContainerSystem = default!;
-    [Dependency] private readonly SharedDecalSystem _decalSystem = default!; // KS14 Addition
-    [Dependency] private readonly SharedTransformSystem _transformSystem = default!; // KS14 Addition
-    [Dependency] private readonly StainSystem _stainSystem = default!; // KS14 Addition
-    [Dependency] private readonly EntityLookupSystem _lookupSystem = default!; // KS14 Addition
-    [Dependency] private readonly RayCastSystem _rayCastSystem = default!; // KS14 Addition
+    [Dependency] private readonly SharedDecalSystem _decalSystem = default!;
+    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
+    [Dependency] private readonly StainSystem _stainSystem = default!;
+    [Dependency] private readonly EntityLookupSystem _lookupSystem = default!;
+    [Dependency] private readonly RayCastSystem _rayCastSystem = default!;
 
-    private static readonly QueryFilter StaticQueryFilter = new() { LayerBits = 1L, Flags = QueryFlags.Static, MaskBits = (long)CollisionGroup.Impassable };
-    private static readonly Vector2 DecalOffset = Vector2.One / 2; // KS14 Addition; this is related to texture size of the blood splatter.
+    private static readonly QueryFilter StaticQueryFilter = new() { LayerBits = 0L, Flags = QueryFlags.Static, MaskBits = (long)CollisionGroup.Impassable };
+    private static readonly Vector2 DecalOffset = Vector2.One / 2; // this is related to texture size of the blood splatter
 
     private EntityUid RecursivelyGetGridOrMapUid(TransformComponent transformComponent)
     {
@@ -113,7 +113,7 @@ public sealed class BloodSpraySystem : EntitySystem
             var hitData = rayResult.Results[0];
 
             // docs for RayHit lie because RayHit.Point isnt the *caller* changing it to local terms, but instead the code constructing it; it is also local to the hit entity's parent(? TODO: confirm that assumption)
-            // tldr `hitData.Point` is local to `hitData.Entity`'s ParentUid
+            // tldr `hitData.Point` is relative to `hitData.Entity`'s ParentUid's ParentUid(???) (map?)
             effectCoordinates = new(targetTransform.ParentUid /* it should just be the hitdatas hit entitys transforms parentuid, but im GIGA LAZY. TODO LCDC FIX ALL THIS SHITT */, hitData.Point);
             localDeltaUnit *= -1; // it should go other way
         }

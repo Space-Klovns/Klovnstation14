@@ -1,0 +1,119 @@
+
+- type: entity
+  parent: PlumbingMachineBase
+  id: KsPlumbingIvPump
+  name: plumbing iv pump
+  description: Used for streamlining the process of medicine.
+  components:
+  - type: Physics
+    bodyType: Static
+    canCollide: false
+  - type: Fixtures
+    fixtures: {}
+
+  - type: Sprite
+    sprite: _KS14/Structures/Piping/Plumbing/iv_pump.rsi
+    layers:
+    - state: base
+    - state: active_em
+      shader: unshaded
+      visible: false
+      map: [ "active" ]
+    - state: inj_em
+      shader: unshaded
+      map: [ "mode" ]
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.KsPlumbingIvPumpVisuals.Active:
+        active:
+          True: { visible: true }
+          False: { visible: false }
+      enum.KsPlumbingIvPumpVisuals.Injecting:
+        mode:
+          True: { state: inj_em }
+          False: { state: draw_em }
+
+  - type: KsPlumbingIvPump
+    bufferSolutionName: buffer
+    inletNodeName: let
+    mode: Injecting
+    chainInbetweenCount: 15
+
+  - type: PlumbingDevice
+  - type: PlumbingOutlet
+    solutionName: buffer
+    outletNames: [ let ]
+  - type: Plungeable
+  - type: SolutionContainerManager
+    solutions:
+      buffer:
+        maxVol: 200
+        canReact: false
+
+  - type: AmbientSound
+    volume: -6
+    range: 8
+    sound:
+      path: /Audio/Ambience/Objects/flowing_water_open.ogg
+
+  - type: ExaminableSolution
+    solution: buffer
+  - type: NodeContainer
+    nodes:
+      let:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: South
+
+  - type: StaticPrice
+    price: 175
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:SpillBehavior
+        solution: buffer
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+
+- type: entity
+  parent: KsPlumbingIvPump
+  id: KsPlumbingIvPumpIndustrial
+  name: industrial intravenous pump
+  description: An industrial-grade.. IV pump? What the fuck?
+  suffix: Industrial
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/Piping/Plumbing/iv_pump.rsi
+    layers:
+    - state: base_indust
+    - state: active_em
+      shader: unshaded
+      visible: false
+      map: [ "active" ]
+    - state: inj_em
+      shader: unshaded
+      map: [ "mode" ]
+    - state: fill_8
+      map: ["enum.SolutionContainerLayers.Fill"]
+  - type: KsPlumbingIvPump
+    transferRate: 10
+  - type: AmbientSound
+    volume: -2
+    range: 10
+    sound:
+      path: /Audio/_KS14/Effects/strpump.ogg
+
+  - type: SolutionContainerVisuals
+    maxFillLevels: 8
+    fillBaseName: fill_
+    solutionName: buffer
+
+  - type: SolutionContainerManager
+    solutions:
+      buffer:
+        maxVol: 500
+        canReact: false

@@ -22,7 +22,7 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared.Strip;
 
-public abstract class SharedStrippableSystem : EntitySystem
+public abstract partial /* KS14: Made partial */ class SharedStrippableSystem : EntitySystem
 {
     [Dependency] private readonly SharedInteractionSystem _interactionSystem = default!;
 
@@ -218,6 +218,7 @@ public abstract class SharedStrippableSystem : EntitySystem
         var prefix = stealth ? "stealthily " : "";
         _adminLogger.Add(LogType.Stripping, LogImpact.Low, $"{ToPrettyString(user):actor} is trying to {prefix}place the item {ToPrettyString(held):item} in {ToPrettyString(target):target}'s {slot} slot");
 
+        KsRaiseStartStripEvent(target, user); // KS14: strip events
         var doAfterArgs = new DoAfterArgs(EntityManager, user, time, new StrippableDoAfterEvent(true, true, slot), user, target, held)
         {
             Hidden = stealth,
@@ -320,6 +321,7 @@ public abstract class SharedStrippableSystem : EntitySystem
         _adminLogger.Add(LogType.Stripping, LogImpact.Low, $"{ToPrettyString(user):actor} is trying to {prefix}strip the item {ToPrettyString(item):item} from {ToPrettyString(target):target}'s {slot} slot");
 
         _interactionSystem.DoContactInteraction(user, item);
+        KsRaiseStartStripEvent(target, user); // KS14: strip events
 
         var doAfterArgs = new DoAfterArgs(EntityManager, user, time, new StrippableDoAfterEvent(false, true, slot), user, target, item)
         {
@@ -425,6 +427,7 @@ public abstract class SharedStrippableSystem : EntitySystem
         var prefix = stealth ? "stealthily " : "";
         _adminLogger.Add(LogType.Stripping, LogImpact.Low, $"{ToPrettyString(user):actor} is trying to {prefix}place the item {ToPrettyString(held):item} in {ToPrettyString(target):target}'s hands");
 
+        KsRaiseStartStripEvent(target, user); // KS14: strip events
         var doAfterArgs = new DoAfterArgs(EntityManager, user, time, new StrippableDoAfterEvent(true, false, handName), user, target, held)
         {
             Hidden = stealth,
@@ -534,6 +537,7 @@ public abstract class SharedStrippableSystem : EntitySystem
         _adminLogger.Add(LogType.Stripping, LogImpact.Low, $"{ToPrettyString(user):actor} is trying to {prefix}strip the item {ToPrettyString(item):item} from {ToPrettyString(target):target}'s hands");
 
         _interactionSystem.DoContactInteraction(user, item);
+        KsRaiseStartStripEvent(target, user); // KS14: strip events
 
         var doAfterArgs = new DoAfterArgs(EntityManager, user, time, new StrippableDoAfterEvent(false, false, handName), user, target, item)
         {
@@ -584,7 +588,7 @@ public abstract class SharedStrippableSystem : EntitySystem
 
         if (ev.Event.InventoryOrHand)
         {
-            if ( ev.Event.InsertOrRemove && !CanStripInsertInventory((entity.Owner, entity.Comp), args.Target.Value, args.Used.Value, ev.Event.SlotOrHandName) ||
+            if (ev.Event.InsertOrRemove && !CanStripInsertInventory((entity.Owner, entity.Comp), args.Target.Value, args.Used.Value, ev.Event.SlotOrHandName) ||
                 !ev.Event.InsertOrRemove && !CanStripRemoveInventory(entity.Owner, args.Target.Value, args.Used.Value, ev.Event.SlotOrHandName))
             {
                 ev.Cancel();
@@ -592,7 +596,7 @@ public abstract class SharedStrippableSystem : EntitySystem
         }
         else
         {
-            if ( ev.Event.InsertOrRemove && !CanStripInsertHand((entity.Owner, entity.Comp), args.Target.Value, args.Used.Value, ev.Event.SlotOrHandName) ||
+            if (ev.Event.InsertOrRemove && !CanStripInsertHand((entity.Owner, entity.Comp), args.Target.Value, args.Used.Value, ev.Event.SlotOrHandName) ||
                 !ev.Event.InsertOrRemove && !CanStripRemoveHand(entity.Owner, args.Target.Value, args.Used.Value, ev.Event.SlotOrHandName))
             {
                 ev.Cancel();

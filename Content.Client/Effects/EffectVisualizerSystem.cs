@@ -12,6 +12,6 @@ public sealed class EffectVisualizerSystem : EntitySystem
 
     private void OnEffectAnimComplete(EntityUid uid, EffectVisualsComponent component, AnimationCompletedEvent args)
     {
-        QueueDel(uid);
+        PredictedQueueDel(uid); // KS14: use predicted variant of queuedel
     }
 }

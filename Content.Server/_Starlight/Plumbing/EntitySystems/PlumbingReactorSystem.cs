@@ -1,5 +1,6 @@
 using Content.Server._Starlight.Plumbing.Components;
 using Content.Server._Starlight.Plumbing.Nodes;
+using Content.Server.Fluids.EntitySystems;
 using Content.Server.NodeContainer.EntitySystems;
 using Content.Server.Popups;
 using Content.Server.Power.EntitySystems;
@@ -40,6 +41,7 @@ public sealed class PlumbingReactorSystem : EntitySystem
     [Dependency] private readonly PowerReceiverSystem _power = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
     [Dependency] private readonly SharedAudioSystem _audio = default!;
+    [Dependency] private readonly PuddleSystem _puddle = default!;
 
     /// <summary>
     ///     Temperature tolerance for considering target reached (in Kelvin).
@@ -65,6 +67,8 @@ public sealed class PlumbingReactorSystem : EntitySystem
         SubscribeLocalEvent<PlumbingReactorComponent, PlumbingReactorSetTargetMessage>(OnSetTarget);
         SubscribeLocalEvent<PlumbingReactorComponent, PlumbingReactorRemoveTargetMessage>(OnRemoveTarget);
         SubscribeLocalEvent<PlumbingReactorComponent, PlumbingReactorClearTargetsMessage>(OnClearTargets);
+        SubscribeLocalEvent<PlumbingReactorComponent, PlumbingReactorPurgeMessage>(OnPurge);
+        SubscribeLocalEvent<PlumbingReactorComponent, PlumbingReactorSetMixingModeMessage>(OnSetMixingMode);
         SubscribeLocalEvent<PlumbingReactorComponent, PlumbingReactorSetTemperatureMessage>(OnSetTemperature);
         SubscribeLocalEvent<PlumbingReactorComponent, BoundUIOpenedEvent>(OnUIOpened);
     }
@@ -134,7 +138,16 @@ public sealed class PlumbingReactorSystem : EntitySystem
                 return;
             }
 
-            var reactionOccurred = _reactionSystem.FullyReactSolution(bufferEnt.Value);
+            ReactionMixerComponent? mixer = null;
+            if (ent.Comp.SelectedMixingMode != null)
+            {
+                mixer = new ReactionMixerComponent
+                {
+                    ReactionTypes = new List<ProtoId<MixingCategoryPrototype>> { ent.Comp.SelectedMixingMode.Value }
+                };
+            }
+
+            var reactionOccurred = _reactionSystem.FullyReactSolution(bufferEnt.Value, mixer);
 
             var products = new List<(ReagentId Reagent, FixedPoint2 Quantity)>();
             foreach (var reagent in buffer.Contents)
@@ -263,6 +276,50 @@ public sealed class PlumbingReactorSystem : EntitySystem
         UpdateUI(ent);
     }
 
+    private void OnPurge(Entity<PlumbingReactorComponent> ent, ref PlumbingReactorPurgeMessage args)
+    {
+        var spilled = false;
+
+        if (_solutionSystem.TryGetSolution(ent.Owner, ent.Comp.BufferSolutionName, out var bufferEnt, out var buffer) && buffer.Volume > 0)
+        {
+            var spillSolution = _solutionSystem.SplitSolution(bufferEnt.Value, buffer.Volume);
+            _puddle.TrySpillAt(ent.Owner, spillSolution, out _);
+            spilled = true;
+        }
+
+        if (_solutionSystem.TryGetSolution(ent.Owner, ent.Comp.OutputSolutionName, out var outputEnt, out var output) && output.Volume > 0)
+        {
+            var spillSolution = _solutionSystem.SplitSolution(outputEnt.Value, output.Volume);
+            _puddle.TrySpillAt(ent.Owner, spillSolution, out _);
+            spilled = true;
+        }
+
+        if (spilled)
+        {
+            ClickSound(ent.Owner);
+            UpdateUI(ent);
+        }
+    }
+
+    private void OnSetMixingMode(Entity<PlumbingReactorComponent> ent, ref PlumbingReactorSetMixingModeMessage args)
+    {
+        if (args.MixingMode == null)
+        {
+            ent.Comp.SelectedMixingMode = null;
+        }
+        else
+        {
+            if (!_prototypeManager.HasIndex<MixingCategoryPrototype>(args.MixingMode))
+                return;
+
+            ent.Comp.SelectedMixingMode = new ProtoId<MixingCategoryPrototype>(args.MixingMode);
+        }
+
+        DirtyField(ent, ent.Comp, nameof(PlumbingReactorComponent.SelectedMixingMode));
+        ClickSound(ent.Owner);
+        UpdateUI(ent);
+    }
+
     private void OnSetTemperature(Entity<PlumbingReactorComponent> ent, ref PlumbingReactorSetTemperatureMessage args)
     {
         // Clamp to reasonable values 
@@ -312,7 +369,8 @@ public sealed class PlumbingReactorSystem : EntitySystem
             outputContents,
             ent.Comp.Enabled,
             ent.Comp.TargetTemperature,
-            currentTemperature
+            currentTemperature,
+            ent.Comp.SelectedMixingMode?.Id
         );
 
         _ui.SetUiState(ent.Owner, PlumbingReactorUiKey.Key, state);

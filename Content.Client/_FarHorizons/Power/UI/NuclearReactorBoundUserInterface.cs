@@ -34,10 +34,20 @@ public sealed class NuclearReactorBoundUserInterface : BoundUserInterface
 
     protected override void UpdateState(BoundUserInterfaceState state)
     {
-        if (state is not NuclearReactorBuiState reactorState)
-            return;
+        if (state is NuclearReactorBuiState reactorState)
+        {
+            _window?.Update(reactorState);
+        }
+    }
 
-        _window?.Update(reactorState);
+    protected override void ReceiveMessage(BoundUserInterfaceMessage message)
+    {
+        base.ReceiveMessage(message);
+
+        if (message is NuclearReactorStaticDataMessage staticState)
+        {
+            _window?.UpdateStatic(staticState);
+        }
     }
 
     private void OnActionButtonPressed(Vector2d vector)

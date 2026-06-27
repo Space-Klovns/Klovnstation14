@@ -1,0 +1,8 @@
+# Scenario-based game rules with procedurally generated maps
+
+- type: entity
+  id: Scenario
+  parent: BaseGameRule
+  components:
+  - type: GameRule
+    minPlayers: 0

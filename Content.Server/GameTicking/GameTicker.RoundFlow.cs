@@ -225,6 +225,20 @@ namespace Content.Server.GameTicking
 
             mapId = map.Value.Comp.MapId;
             _metaData.SetEntityName(map.Value.Owner, proto.MapName);
+
+            // KS14 Start: dynamically get set of grids that mightve been added during mapinit
+            // e.g., saltern uses this because it randomspawns the station grid (lol)
+            // bleeding edge technology
+            var ksEqe = AllEntityQuery<Robust.Shared.Map.Components.MapGridComponent, TransformComponent>();
+            while (ksEqe.MoveNext(out var uid, out var mapGridComponent, out var transformComponent))
+            {
+                if (transformComponent.MapID != mapId)
+                    continue;
+
+                grids.Add((uid, mapGridComponent));
+            }
+            // KS14 End
+
             var gridUids = grids.Select(x => x.Owner).ToList();
             RaiseLocalEvent(new PostGameMapLoad(proto, mapId, gridUids, stationName));
             return gridUids;

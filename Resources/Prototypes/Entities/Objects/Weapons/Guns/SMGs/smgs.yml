@@ -30,6 +30,11 @@
     - FullAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/smg.ogg
+    # KS14: Farsound start
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/smg.ogg
+      range: 15,100
+    # KS14: Farsound end
     defaultDirection: 1, 0
   - type: ChamberMagazineAmmoProvider
     soundRack:
@@ -83,6 +88,11 @@
     fireRate: 10
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/atreides.ogg
+    # KS14: Farsound start
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/atreides.ogg
+      range: 15,100
+    # KS14: Farsound end
   - type: MagazineVisuals
     magState: mag
     steps: 1
@@ -122,6 +132,11 @@
     - SemiAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/c-20r.ogg
+    # KS14: Farsound start
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
+      range: 15,100
+    # KS14: Farsound end
   - type: ChamberMagazineAmmoProvider
     autoEject: true
   - type: MagazineVisuals
@@ -151,6 +166,11 @@
     - FullAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/c-20r.ogg
+    # KS14: Farsound start
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
+      range: 15,100
+    # KS14: Farsound end
   - type: Sprite
     sprite: Objects/Weapons/Guns/SMGs/c20r.rsi
     layers:

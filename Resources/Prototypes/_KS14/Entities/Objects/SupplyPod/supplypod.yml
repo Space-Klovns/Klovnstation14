@@ -1,0 +1,224 @@
+
+- type: entity
+  id: SupplyPod
+  name: supply pod
+  description: Sent from orbit, down to you.
+  abstract: true
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/SupplyPod/supplypods_64x64.rsi
+    drawdepth: Effects
+    offset: 0,0.5
+    layers:
+    - state: pod
+    - state: pod_door
+    - state: default
+
+  - type: SupplyPod
+    transitDuration: 1s
+    fallDuration: 1s
+    fallSoundDelay: 0s
+    fallSound: /Audio/_KS14/Weapons/mortar_long_whistle.ogg
+    impactSound: /Audio/Effects/metal_slam2.ogg
+    height: 14
+    angularDeviation: 15
+
+- type: entity
+  id: BaseSupplyPodInert
+  abstract: true
+  components:
+  - type: Clickable
+  - type: InteractionOutline
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.SupplyPodVisuals.Landed:
+        rubble_bg:
+          False: { visible: false }
+          True: { visible: true }
+        rubble_fg:
+          False: { visible: false }
+          True: { visible: true }
+
+- type: entity
+  id: BaseSupplyPodExplosive
+  abstract: true
+  components:
+  - type: TriggerOnSupplyPodLanded
+  - type: ExplosionOnTrigger
+    explosionType: KsSupplyPodMissile
+    maxTileIntensity: 600
+    totalIntensity: 600
+    intensitySlope: 35
+    maxTileBreak: 1
+  - type: DeleteOnTrigger
+
+## CRUISE MISSILES: BASE
+
+# nt
+- type: entity
+  parent: SupplyPod
+  id: SupplyPodMissileNtBase
+  name: nanotrasen orbital cruise missile
+  description: Launched from a silo in fuck-off nowhere. This came a long way to ruin the nights of Nanotrasen's enemies.
+  abstract: true
+  components:
+  - type: Sprite
+    offset: 0,0.5
+    layers:
+    - map: ["rubble_bg"]
+      state: rubble_bg_thin
+      visible: false
+    - state: missile
+    - map: ["rubble_fg"]
+      state: rubble_fg_thin
+      visible: false
+  - type: SupplyPod
+    height: 40
+    fallDuration: 1.5s
+    fallSoundDelay: 0s
+    fallSound:
+      path: /Audio/_KS14/Weapons/mortar_long_whistle.ogg
+      params:
+        pitch: 0.75
+    angularDeviation: 15
+
+# syndie
+- type: entity
+  parent: SupplyPodMissileNtBase
+  id: SupplyPodMissileSyndicateBase
+  name: syndicate orbital cruise missile
+  description: Launched from a silo in fuck-off nowhere. This came a long way to ruin your day.
+  abstract: true
+  components:
+  - type: Sprite
+    layers:
+    - map: ["rubble_bg"]
+      state: rubble_bg_thin
+      visible: false
+    - state: smissile
+    - map: ["rubble_fg"]
+      state: rubble_fg_thin
+      visible: false
+
+## CRUISE MISSILES: INERT
+
+# nt
+- type: entity
+  parent: [ SupplyPodMissileNtBase, BaseSupplyPodInert ]
+  id: SupplyPodMissileNtInert
+  suffix: Inert
+
+# syndie
+- type: entity
+  parent: [ SupplyPodMissileSyndicateBase, BaseSupplyPodInert ]
+  id: SupplyPodMissileSyndicateInert
+  suffix: Inert
+
+## CRUISE MISSILES: ARMED
+
+# nt
+- type: entity
+  parent: [ SupplyPodMissileNtBase, BaseSupplyPodExplosive ]
+  id: SupplyPodMissileNtExplosive
+  suffix: Armed
+
+# syndie
+- type: entity
+  parent: [ SupplyPodMissileSyndicateBase, BaseSupplyPodExplosive ]
+  id: SupplyPodMissileSyndicateExplosive
+  suffix: Armed
+
+- type: explosion
+  id: KsSupplyPodMissile
+  damagePerIntensity:
+    types:
+      Heat: 5
+      Blunt: 7
+      Piercing: 2
+  tileBreakChance: [0, 0.25, 0.6, 1]
+  tileBreakIntensity: [0, 7, 15, 22]
+  tileBreakRerollReduction: 20
+  lightColor: Orange
+  texturePath: /Textures/Effects/fire.rsi
+  fireStates: 3
+  temperature: 3200
+  smallSoundIterationThreshold: 0
+  sound:
+    path: /Audio/_KS14/Effects/tank_explosion_louder.ogg
+    params:
+      pitch: 0.85
+      maxDistance: 20
+      referenceDistance: 5
+      volume: 3
+  soundFar:
+    path: /Audio/_KS14/Effects/tank_explosion_distant.ogg
+    params:
+      pitch: 0.7
+      volume: -5
+
+
+
+## Flare
+
+- type: entity
+  name: airstrike flare
+  parent: BaseItem
+  id: KsFlareSupplyPodMissile
+  description: Calls in a cruise missile to the location of the flare.
+  components:
+  - type: Sprite
+    sprite: Objects/Misc/flare.rsi
+    layers:
+      - map: [ enum.ExpendableLightVisualLayers.Base ]
+        state: flare_base
+        color: "#00FF00"
+      - map: [ enum.ExpendableLightVisualLayers.Overlay ]
+        state: flare_unlit
+        color: "#00FF00"
+  - type: Item
+    sprite: Objects/Misc/flare.rsi
+    heldPrefix: unlit
+    size: Tiny
+  - type: PointLight
+    enabled: false
+    color: "#00FF00"
+    radius: 2.0
+    energy: 8
+    netsync: false
+  - type: UseDelay
+    delay: 7.5
+  - type: EmitSoundOnTrigger
+    sound: /Audio/Items/Flare/flare_on.ogg
+  - type: TriggerOnUse
+  - type: TimerTrigger
+    delay: 7.5
+  - type: SpawnOnTrigger
+    keysIn:
+    - timer
+    proto: SupplyPodMissileNtExplosive
+  - type: DeleteOnTrigger
+    keysIn:
+    - timer
+  - type: LightBehaviorOnTrigger
+    behavior: flare
+  - type: LightBehaviour
+    behaviours:
+    - !type:FadeBehaviour
+      id: flare
+      maxDuration: 7.5
+      startValue: 1
+      endValue: 8
+  - type: SparkOnTrigger
+    keysIn:
+    - timer
+    countRange: 5,5
+
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 50
+      behaviors:
+        - !type:DoActsBehavior
+          acts: [ "Destruction" ]

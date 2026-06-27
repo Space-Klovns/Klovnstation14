@@ -22,6 +22,11 @@
     drawdepth: BelowFloor
     layers:
     - state: chasm
+      # KS14 Start
+      # basically make it so light doesn't bounce on the chasm, it should look deep
+      shader: unshaded
+      color: '#000000'
+      # KS14 End
   - type: Icon
     sprite: Tiles/Planet/Chasms/basalt_chasm.rsi
     state: full
@@ -57,7 +62,7 @@
     sprite: Tiles/Planet/Chasms/chromite_chasm.rsi
   - type: Icon
     sprite: Tiles/Planet/Chasms/chromite_chasm.rsi
-    
+
 - type: entity
   parent: FloorChasmEntity
   id: FloorDesertChasm
@@ -67,7 +72,7 @@
     sprite: Tiles/Planet/Chasms/desert_chasm.rsi
   - type: Icon
     sprite: Tiles/Planet/Chasms/desert_chasm.rsi
-    
+
 - type: entity
   parent: FloorChasmEntity
   id: FloorSnowChasm

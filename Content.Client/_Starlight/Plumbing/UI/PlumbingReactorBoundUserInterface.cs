@@ -24,12 +24,24 @@ public sealed class PlumbingReactorBoundUserInterface : BoundUserInterface
         _window.OnSetTarget += OnSetTarget;
         _window.OnRemoveTarget += OnRemoveTarget;
         _window.OnClearTargets += OnClearTargets;
+        _window.OnPurge += OnPurge;
+        _window.OnSetMixingMode += OnSetMixingMode;
         _window.OnSetTemperature += OnSetTemperature;
     }
 
     private void OnToggle(bool enabled)
     {
         SendMessage(new PlumbingReactorToggleMessage(enabled));
+    }
+
+    private void OnPurge()
+    {
+        SendMessage(new PlumbingReactorPurgeMessage());
+    }
+
+    private void OnSetMixingMode(string? mixingMode)
+    {
+        SendMessage(new PlumbingReactorSetMixingModeMessage(mixingMode));
     }
 
     private void OnSetTarget(string reagentId, FixedPoint2 quantity)

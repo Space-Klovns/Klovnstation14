@@ -33,6 +33,13 @@
     - state: pai-off-overlay
       shader: unshaded
       map: ["screen"]
+  # KS14: emissive start
+  - type: EmissiveLayers
+    glowRadius: 0.06
+    intensity: 3
+    layers:
+    - screen
+  # KS14: emissive end
   - type: Input
     context: "human"
   - type: PAI

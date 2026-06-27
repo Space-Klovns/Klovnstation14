@@ -1,0 +1,32 @@
+- type: entity
+  parent: ColMarTechScenarioBase
+  id: ColMarTechScenarioNanoplantNt
+  suffix: Nanoplant, Nanotrasen
+  components:
+  - type: CMAutomatedVendor
+    sections:
+    - name: Base Gear
+      choices: { BaseGear: 1 }
+      entries:
+      - id: ScenarioVendorBundleNanoplantNtBase
+        recommended: true
+    - name: Loadout
+      choices: { CMClass: 1 }
+      entries:
+      - id: ScenarioVendorBundleNanoplantNtRifleman
+        recommended: true
+        replaceSlot: &replaceSlots
+        - IDCARD
+        - FEET
+        - GLOVES
+        - BELT
+      - id: ScenarioVendorBundleNanoplantNtEngineer
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleNanoplantNtMarksman
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleNanoplantNtMedic
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleNanoplantNtDroneOperator
+        replaceSlot: *replaceSlots
+      - id : ScenarioVendorBundleNanoplantNtCounterAssault
+        replaceSlot: *replaceSlots

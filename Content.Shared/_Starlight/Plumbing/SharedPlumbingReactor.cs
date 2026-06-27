@@ -49,13 +49,19 @@ public sealed class PlumbingReactorBoundUserInterfaceState : BoundUserInterfaceS
     /// </summary>
     public float CurrentTemperature { get; }
 
+    /// <summary>
+    ///     The currently selected mixing mode.
+    /// </summary>
+    public string? SelectedMixingMode { get; }
+
     public PlumbingReactorBoundUserInterfaceState(
         Dictionary<string, FixedPoint2> reagentTargets,
         Dictionary<string, FixedPoint2> bufferContents,
         Dictionary<string, FixedPoint2> outputContents,
         bool enabled,
         float targetTemperature,
-        float currentTemperature)
+        float currentTemperature,
+        string? selectedMixingMode)
     {
         ReagentTargets = reagentTargets;
         BufferContents = bufferContents;
@@ -63,6 +69,7 @@ public sealed class PlumbingReactorBoundUserInterfaceState : BoundUserInterfaceS
         Enabled = enabled;
         TargetTemperature = targetTemperature;
         CurrentTemperature = currentTemperature;
+        SelectedMixingMode = selectedMixingMode;
     }
 }
 
@@ -77,6 +84,20 @@ public sealed class PlumbingReactorToggleMessage : BoundUserInterfaceMessage
     public PlumbingReactorToggleMessage(bool enabled)
     {
         Enabled = enabled;
+    }
+}
+
+/// <summary>
+///     Message to set the mixing mode.
+/// </summary>
+[Serializable, NetSerializable]
+public sealed class PlumbingReactorSetMixingModeMessage : BoundUserInterfaceMessage
+{
+    public string? MixingMode { get; }
+
+    public PlumbingReactorSetMixingModeMessage(string? mixingMode)
+    {
+        MixingMode = mixingMode;
     }
 }
 
@@ -115,6 +136,12 @@ public sealed class PlumbingReactorRemoveTargetMessage : BoundUserInterfaceMessa
 /// </summary>
 [Serializable, NetSerializable]
 public sealed class PlumbingReactorClearTargetsMessage : BoundUserInterfaceMessage;
+
+/// <summary>
+///     Message to purge all reagents from the buffer.
+/// </summary>
+[Serializable, NetSerializable]
+public sealed class PlumbingReactorPurgeMessage : BoundUserInterfaceMessage;
 
 /// <summary>
 ///     Message to set the target temperature.

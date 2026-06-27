@@ -25,8 +25,33 @@ jobs:
       run: sudo apt-get install -y python3-paramiko python3-lxml
 
     - uses: actions/checkout@v4.2.2
-      with:
-        submodules: 'recursive'
+      with: # KS14: params
+        fetch-depth: 1 # KS14: made shallow, so its faster
+
+    # KS14 Start
+    # If we have the secret repo PAT, use it to init submodules. Otherwise don't; it's not available in PRs from forks
+    - name: Init submodules (conditional)
+      shell: bash
+      env:
+        HAS_TOKEN: ${{ secrets.SECREPO_PAT != '' }}
+      run: |
+        set -e
+
+        if [ "$HAS_TOKEN" = "true" ]; then
+          echo "Token present → injecting auth for submodules"
+
+          git config --global url."https://x-access-token:${{ secrets.SECREPO_PAT }}@github.com/".insteadOf "https://github.com/"
+
+          git submodule sync --recursive
+          git submodule update --init --recursive
+        else
+          echo "No token → only RobustToolbox"
+
+          git submodule sync RobustToolbox
+          git submodule update --init RobustToolbox
+        fi
+    # KS14 End
+
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v4.1.0
       with:

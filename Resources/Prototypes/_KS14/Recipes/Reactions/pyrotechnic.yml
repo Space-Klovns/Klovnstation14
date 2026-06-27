@@ -1,0 +1,31 @@
+- type: reaction
+  id: Sorium
+  reactants:
+    Carbon:
+      amount: 1
+    Mercury:
+      amount: 1
+    Nitrogen:
+      amount: 1
+    Oxygen:
+      amount: 1
+  products:
+    Sorium: 4
+
+# TODO KS14 CHEM: stabilising agent
+- type: reaction
+  id: SoriumExplosion
+  impact: High
+  priority: 8
+  quantized: true
+  minTemp: 72.2
+  reactants:
+    Sorium:
+      amount: 1
+  effects:
+  - !type:SpawnEntity
+    entity: KsSoriumEffectGravityPulse
+  - !type:PopupMessage
+    type: Pvs
+    messages:
+    - sorium-effect-boom

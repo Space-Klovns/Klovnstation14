@@ -1,0 +1,13 @@
+
+# Makes every RGB value white, alpha is untouched
+- type: shader
+  id: KsWhite
+  kind: source
+  light_mode: unshaded
+  path: "/Textures/_KS14/Shaders/white.swsl"
+
+# Like stencil basically, but much less work
+- type: shader
+  id: KsCutout
+  kind: source
+  path: "/Textures/_KS14/Shaders/cutout.swsl"

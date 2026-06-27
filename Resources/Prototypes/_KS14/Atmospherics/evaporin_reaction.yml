@@ -1,0 +1,9 @@
+- type: gasReaction
+  id: EvaporinSynthesis
+  priority: 500
+  minimumTemperature: 400
+  minimumRequirements:
+    Tritium: 0.1
+    CarbonDioxide: 0.1
+  effects:
+    - !type:EvaporinSynthesisReaction {}

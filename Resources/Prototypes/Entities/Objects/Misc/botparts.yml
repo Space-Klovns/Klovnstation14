@@ -2,7 +2,7 @@
   parent: BaseItem
   id: ProximitySensor
   name: proximity sensor
-  description: Senses moving things in close proximity and sends a signal when active. Can be remotely enabled with a signal, bypassing the timer. #KS14 heavily modified
+  description: Senses moving things in close proximity and sends a signal when active. Can be remotely enabled with a signal, bypassing the timer. Make sure the sensor is unlinked when taking it apart, lest the sensor accidentally trigger itself. #KS14: heavily modified
   components:
   - type: Sprite
     sprite: Objects/Misc/proximity_sensor.rsi
@@ -64,6 +64,28 @@
     port: Trigger
     keysIn:
     - sensor
+  # KS14 Start: destructible
+  - type: Damageable
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 150
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+    - trigger:
+        !type:DamageTrigger
+        damage: 50
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalBreak
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+      - !type:TriggerBehavior # lol
+        keyOut: sensor
+  # KS14 End
 
 - type: entity
   id: PartSilicon

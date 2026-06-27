@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Stalker14, modified for Klovnstation 14",
+  "size": {
+    "x": 32,
+    "y": 32
+  },
+  "states": [
+    {
+      "name": "icon_straight"
+    },
+    {
+      "name": "straight",
+      "directions": 4
+    },
+    {
+      "name": "straight_rust",
+      "directions": 4
+    },
+    {
+      "name": "icon_straight_rust"
+    },
+    {
+      "name": "straight_desktop_windowed",
+      "directions": 4
+    },
+    {
+      "name": "icon_straight_windowed"
+    },
+    {
+      "name": "straight_desktop",
+      "directions": 4
+    }
+  ]
+}

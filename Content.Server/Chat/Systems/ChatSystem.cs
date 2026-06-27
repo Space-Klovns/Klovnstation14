@@ -165,7 +165,7 @@ public sealed partial class ChatSystem : SharedChatSystem
             return;
         }
 
-        if (!CanSendInGame(message, shell, player))
+        if (!CanSendInGame(ref /* KS14: made `ref` */ message, shell, player))
             return;
 
         ignoreActionBlocker = CheckIgnoreSpeechBlocker(source, ignoreActionBlocker);
@@ -195,6 +195,16 @@ public sealed partial class ChatSystem : SharedChatSystem
         // Capitalizing the word I only happens in English, so we check language here
         bool shouldCapitalizeTheWordI = (!CultureInfo.CurrentCulture.IsNeutralCulture && CultureInfo.CurrentCulture.Parent.Name == "en")
             || (CultureInfo.CurrentCulture.IsNeutralCulture && CultureInfo.CurrentCulture.Name == "en");
+
+        // KS14 Start
+        if (player is { })
+        {
+            var ksEv = new KsSanitiseMessageEvent(message, player);
+            RaiseLocalEvent(ref ksEv);
+
+            message = ksEv.Message;
+        }
+        // KS14 End
 
         message = SanitizeInGameICMessage(source, message, out var emoteStr, shouldCapitalize, shouldPunctuate, shouldCapitalizeTheWordI);
 
@@ -243,7 +253,7 @@ public sealed partial class ChatSystem : SharedChatSystem
         ICommonSession? player = null
         )
     {
-        if (!CanSendInGame(message, shell, player))
+        if (!CanSendInGame(ref /* KS14: made `ref` */ message, shell, player))
             return;
 
         if (player != null && _chatManager.HandleRateLimit(player) != RateLimitStatus.Allowed)
@@ -682,7 +692,7 @@ public sealed partial class ChatSystem : SharedChatSystem
     /// <summary>
     ///     Returns true if the given player is 'allowed' to send the given message, false otherwise.
     /// </summary>
-    private bool CanSendInGame(string message, IConsoleShell? shell = null, ICommonSession? player = null)
+    private bool CanSendInGame(ref /* KS14: made `ref` */ string message, IConsoleShell? shell = null, ICommonSession? player = null)
     {
         // Non-players don't have to worry about these restrictions.
         if (player == null)
@@ -702,7 +712,20 @@ public sealed partial class ChatSystem : SharedChatSystem
             return false;
         }
 
-        return !_chatManager.MessageCharacterLimit(player, message);
+        // KS14: moved charlimit check here
+        if (_chatManager.MessageCharacterLimit(player, message))
+            return false;
+
+        // KS14 Start
+        var ksEv = new KsBeforeMessageSentEvent(message, false, player);
+        RaiseLocalEvent(ref ksEv);
+
+        if (ksEv.Cancelled)
+            return false;
+
+        message = ksEv.Message;
+        return true;
+        // KS14 End
     }
 
     // ReSharper disable once InconsistentNaming
@@ -870,3 +893,19 @@ public sealed partial class ChatSystem : SharedChatSystem
 public record ExpandICChatRecipientsEvent(EntityUid Source, float VoiceRange, Dictionary<ICommonSession, ChatSystem.ICChatRecipientData> Recipients)
 {
 }
+
+// KS14 Start
+/// <summary>
+///     Broadcasted to check whether a message can be sent.
+/// </summary>
+[ByRefEvent]
+public record struct KsBeforeMessageSentEvent(string Message, bool Cancelled, ICommonSession Session);
+// KS14 End
+
+// KS14 Start
+/// <summary>
+///     Broadcasted to mutate a message that is being sent IC or something.
+/// </summary>
+[ByRefEvent]
+public record struct KsSanitiseMessageEvent(string Message, ICommonSession Session);
+// KS14 End

@@ -102,6 +102,57 @@
   - type: Lock
     locked: true
 
+- type: entity # KS14
+  parent: GasCanister
+  id: EvaporinCanister
+  name: evaporin canister
+  description: A canister that can contain any type of gas. This one is supposed to contain evaporin. It can be attached to connector ports using a wrench.
+  components:
+  - type: Sprite
+    layers:
+    - state: multi_shader
+      color: "#e0e0ff"
+    - state: double_stripe
+      color: "#ffffff"
+    - state: outline
+      color: "#e0e0ff"
+    - state: window-base
+    - state: paper
+      visible: false
+      map: [ "enum.PaperLabelVisuals.Layer" ]
+      sprite: Structures/Storage/canister.rsi # use upstream sprite
+  - type: GasCanister
+    air:
+      volume: 1500
+      moles:
+        Evaporin: 2769.36
+      temperature: 293.15
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 600
+      behaviors:
+        - !type:DoActsBehavior
+          acts: [ "Destruction" ]
+    - trigger:
+        !type:DamageTrigger
+        damage: 300
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalBreak
+      - !type:SpawnEntitiesBehavior
+        spawn:
+          EvaporinCanisterBroken:
+            min: 1
+            max: 1
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+      - !type:DumpCanisterBehavior
+  - type: Lock
+    locked: true
+
 ## Broken
 
 - type: entity
@@ -133,3 +184,18 @@
       color: "#990685"
     - state: outline_broken
       color: "#00d5ff"
+
+- type: entity # KS14
+  parent: GasCanisterBrokenBase
+  id: EvaporinCanisterBroken
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#e0e0ff"
+    - state: double_stripe_broken
+      color: "#ffffff"
+    - state: outline_broken
+      color: "#e0e0ff"

@@ -2,12 +2,15 @@
 //      which is, `allow jetpacks to stay enabled when on grids and lightly rework jetpack system #37775` on wizden Github
 
 using System.Diagnostics.CodeAnalysis;
+using Content.Shared._KS14.CCVar;
+using Content.Shared._KS14.ZLevel.Physics; // KS14
 using Content.Shared.Actions;
 using Content.Shared.Gravity;
 using Content.Shared.Interaction.Events;
 using Content.Shared.Movement.Components;
 using Content.Shared.Movement.Events;
 using Content.Shared.Popups;
+using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
@@ -19,22 +22,26 @@ namespace Content.Shared.Movement.Systems;
 public abstract class SharedJetpackSystem : EntitySystem
 {
     [Dependency] private readonly IGameTiming _gameTiming = default!; // KS14
+    [Dependency] private readonly IConfigurationManager _configurationManager = default!; // KS14
     [Dependency] private readonly MovementSpeedModifierSystem _movementSpeedModifier = default!;
     [Dependency] protected readonly SharedAppearanceSystem Appearance = default!;
     [Dependency] protected readonly SharedContainerSystem Container = default!;
     [Dependency] private readonly SharedPopupSystem _popup = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
     [Dependency] private readonly ActionContainerSystem _actionContainer = default!;
+    [Dependency] private readonly KsZLevelPhysicsSystem _zLevelPhysicsSystem = default!; // KS14
+    [Dependency] private readonly SharedGravitySystem _gravitySystem = default!; // KS14
 
-    private EntityQuery<JetpackUserComponent> _jetpackUserQuery;
-    private EntityQuery<ActiveJetpackComponent> _activeJetpackQuery;
+    [Dependency] private readonly EntityQuery<JetpackUserComponent> _jetpackUserQuery = default!;
+    [Dependency] private readonly EntityQuery<ActiveJetpackComponent> _activeJetpackQuery = default!;
+
+    private bool _canFlyOnGrids = false; // KS14
 
     public override void Initialize()
     {
         base.Initialize();
 
-        _jetpackUserQuery = GetEntityQuery<JetpackUserComponent>();
-        _activeJetpackQuery = GetEntityQuery<ActiveJetpackComponent>();
+        _configurationManager.OnValueChanged(KsCCVars.JetpacksCanFlyOnGrids, (x) => _canFlyOnGrids = x, invokeImmediately: true); // KS14
 
         SubscribeLocalEvent<JetpackComponent, MapInitEvent>(OnMapInit);
 
@@ -45,7 +52,7 @@ public abstract class SharedJetpackSystem : EntitySystem
         // Grav-related
         SubscribeLocalEvent<JetpackUserComponent, RefreshWeightlessModifiersEvent>(OnJetpackUserWeightlessMovement);
         SubscribeLocalEvent<JetpackUserComponent, CanWeightlessMoveEvent>(OnJetpackUserCanWeightless);
-        SubscribeLocalEvent<GravityChangedEvent>(OnJetpackUserGravityChanged);
+        SubscribeLocalEvent<JetpackUserComponent, WeightlessnessChangedEvent>(OnJetpackUserWeightlessnessChanged); // KS14: Use WeightlessnessChangedEvent instead of GravityChangedEvent
 
         // Restrictions for flying on grids
         SubscribeLocalEvent<JetpackUserComponent, EntParentChangedMessage>(OnJetpackUserEntParentChanged);
@@ -70,26 +77,29 @@ public abstract class SharedJetpackSystem : EntitySystem
     private void OnMapInit(Entity<JetpackComponent> jetpack, ref MapInitEvent args)
         => _actionContainer.EnsureAction(jetpack.Owner, ref jetpack.Comp.ToggleActionEntity, jetpack.Comp.ToggleAction);
 
-    private void OnJetpackUserGravityChanged(ref GravityChangedEvent ev)
+    private void OnJetpackUserWeightlessnessChanged(Entity<JetpackUserComponent> userEntity, ref WeightlessnessChangedEvent ev) // KS14: Use WeightlessnessChangedEvent instead of GravityChangedEvent
     {
-        var gridUid = ev.ChangedGridIndex;
-        var jetpackQuery = GetEntityQuery<JetpackComponent>();
+        // KS14: Entire function changed to account for WeightlessnessChangedEvent being used instead of
+        //      GravityChangedEvent
 
-        var query = EntityQueryEnumerator<JetpackUserComponent>();
-        while (query.MoveNext(out var uid, out var user))
+        // var gridUid = ev.ChangedGridIndex;
+
+        // var query = EntityQueryEnumerator<JetpackUserComponent>();
+        // while (query.MoveNext(out var uid, out var user))
+        // {
+        var transform = Transform(userEntity);
+        var gridUid = transform.GridUid ?? transform.MapUid; // KS14: Fallback to map
+
+        var jetpackUid = userEntity.Comp.Jetpack;
+        if (TryComp<JetpackComponent>(jetpackUid, out var jetpackComponent))
         {
-            var transform = Transform(uid);
+            var canFly = CanFlyOnGrid(gridUid, userEntity /* KS14: Flyer UID */);
+            SetEnabled((jetpackUid, jetpackComponent), jetpackComponent.Enabled, flyIfEnabled: canFly, user: userEntity.Owner);
 
-            var jetpackUid = user.Jetpack;
-            if (transform.GridUid == gridUid && jetpackQuery.TryComp(jetpackUid, out var jetpackComponent))
-            {
-                var canFly = CanFlyOnGrid(gridUid);
-                SetEnabled((jetpackUid, jetpackComponent), jetpackComponent.Enabled, flyIfEnabled: canFly, user: uid);
-
-                if (!canFly)
-                    _popup.PopupClient(Loc.GetString("jetpack-to-grid"), uid, uid);
-            }
+            if (!canFly)
+                _popup.PopupClient(Loc.GetString("jetpack-to-grid"), userEntity.Owner, userEntity.Owner);
         }
+        // }
     }
 
     private void OnJetpackDropped(Entity<JetpackComponent> jetpack, ref DroppedEvent args)
@@ -111,7 +121,7 @@ public abstract class SharedJetpackSystem : EntitySystem
         if (!TryComp<JetpackComponent>(jetpackUid, out var jetpackComponent))
             return;
 
-        var canFly = CanFlyOnGrid(args.Transform.GridUid);
+        var canFly = CanFlyOnGrid(args.Transform.ParentUid /* KS14: Use new ParentUid, not GridUid */, jetpackUser /* KS14: Flyer UID */);
         var jetpackEnabled = jetpackComponent.Enabled;
 
         if (!canFly && jetpackEnabled)
@@ -162,6 +172,9 @@ public abstract class SharedJetpackSystem : EntitySystem
         if (TryComp<PhysicsComponent>(user, out var physics))
             _physics.SetBodyStatus(user, physics, BodyStatus.OnGround);
 
+        // KS14 Start
+        _zLevelPhysicsSystem.TryFall(user);
+        // KS14 End
         _movementSpeedModifier.RefreshWeightlessModifiers(user);
     }
 
@@ -182,7 +195,7 @@ public abstract class SharedJetpackSystem : EntitySystem
         }
 
         // You can still turn the jetpack on/off when on a grid that doesn't permit flying, you just won't be able to fly!
-        SetEnabled(jetpack, toggled, toggled ? CanFlyOnGrid(Transform(jetpack).GridUid) : false, user);
+        SetEnabled(jetpack, toggled, toggled ? CanFlyOnGrid(Transform(jetpack).GridUid, user /* KS14: Flyer UID */) : false, user);
 
         args.Handled = true;
     }
@@ -191,11 +204,21 @@ public abstract class SharedJetpackSystem : EntitySystem
     /// This should return only whether you can <i>fly</i> with the jetpack, assuming it's turned on etc.
     /// Return value should stay regardless of <see cref="CanEnable"/>.
     /// </remarks>
-    private bool CanFlyOnGrid(EntityUid? gridUid)
+    private bool CanFlyOnGrid(EntityUid? gridUid, EntityUid flyerUid /* KS14: Flyer UID */)
     {
+        // KS14 Start
+        if (TryComp<GravityComponent>(gridUid, out var gravityComponent))
+        {
+            if (_canFlyOnGrids)
+                return !gravityComponent.Enabled || _gravitySystem.IsWeightless(flyerUid);
+            else
+                return false;
+        }
+        // KS14 End
+
         // No and no again! Do not attempt to activate the jetpack on a grid with gravity disabled. You will not be the first or the last to try this.
         // https://discord.com/channels/310555209753690112/310555209753690112/1270067921682694234
-        return gridUid == null || !HasComp<GravityComponent>(gridUid);
+        return gridUid == null; // KS14: Moved gravitycomp check earlier
     }
 
     private void OnJetpackGetAction(EntityUid uid, JetpackComponent component, GetItemActionsEvent args)

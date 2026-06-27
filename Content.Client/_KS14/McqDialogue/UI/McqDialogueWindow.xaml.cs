@@ -22,7 +22,7 @@ public sealed partial class McqDialogueWindow : FancyWindow
 
         var button = new Button
         {
-            Text = datum.Text,
+            Text = Loc.GetString(datum.LocId),
             //StyleClasses = { "OpenBoth" }
         };
 

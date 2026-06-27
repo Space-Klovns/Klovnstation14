@@ -69,8 +69,26 @@ public sealed partial class ChainEdgeComponent : Component
 
     /// <summary>
     ///     Chain entities that have this listed as an edge.
+    ///         Includes edges, as they are links too. So this list includes this edge too.
     /// </summary>
     [DataField]
     [Access(typeof(ChainSystem))]
     public List<EntityUid> LinkUids = new();
+
+    /// <summary>
+    ///     The other chain edge.
+    ///         If it doesn't exist (anymore), this will be equal to
+    ///         <see cref="EntityUid.Invalid"/>.
+    /// </summary>
+    [DataField]
+    [Access(typeof(ChainSystem))]
+    public EntityUid OtherEdgeUid = EntityUid.Invalid;
+
+    /// <summary>
+    ///     Joint to the other edge of the chain. Will be null if that link was
+    ///         destroyed or never existed.
+    /// </summary>
+    [DataField]
+    [Access(typeof(ChainSystem), Other = AccessPermissions.Read)]
+    public string? StretchJointId = null;
 }

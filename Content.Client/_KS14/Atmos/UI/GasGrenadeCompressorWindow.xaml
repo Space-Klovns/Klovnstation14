@@ -1,0 +1,50 @@
+<DefaultWindow xmlns="https://spacestation14.io"
+               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+               xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+               x:Class="Content.Client._KS14.Atmos.UI.GasGrenadeCompressorWindow"
+               Title="{Loc 'gas-grenade-compressor-window-title'}"
+               MinWidth="250"
+               MinHeight="200">
+    <BoxContainer Orientation="Vertical"
+                  Margin="4">
+        <BoxContainer Orientation="Horizontal">
+            <Label Text="{Loc 'gas-grenade-compressor-window-status-label'}"/>
+            <Control HorizontalExpand="True"/>
+            <Button Name="ToggleButton"
+                    Text="{Loc 'gas-grenade-compressor-window-toggle-button'}"/>
+        </BoxContainer>
+
+        <BoxContainer Orientation="Horizontal">
+            <Label Text="{Loc 'gas-grenade-compressor-window-grenade-status-label'}"/>
+            <Control HorizontalExpand="True"/>
+            <Label Name="GrenadeStatusLabel"
+                   Text="{Loc 'gas-grenade-compressor-window-no-grenade-text'}"/>
+        </BoxContainer>
+
+        <BoxContainer Orientation="Horizontal"
+                      Name="GrenadePressureContainer"
+                      Visible="False">
+            <Label Text="{Loc 'gas-grenade-compressor-window-grenade-pressure-label'}"/>
+            <Control HorizontalExpand="True"/>
+            <Label Name="GrenadePressureLabel"
+                   Text="0 kPa"/>
+        </BoxContainer>
+
+        <BoxContainer Orientation="Horizontal">
+            <Label Text="{Loc 'gas-grenade-compressor-window-target-pressure-label'}"/>
+            <Control HorizontalExpand="True"/>
+            <LineEdit Name="TargetPressureInput"
+                      MinWidth="100"/>
+        </BoxContainer>
+
+        <BoxContainer Orientation="Horizontal">
+            <Label Text="{Loc 'gas-grenade-compressor-window-steel-label'}"
+                    Name="MatLabel"/>
+            <Control HorizontalExpand="True"/>
+        </BoxContainer>
+
+        <Button Name="RearmButton"
+                Text="{Loc 'gas-grenade-compressor-window-rearm-button'}"
+                Visible="False"/>
+    </BoxContainer>
+</DefaultWindow>

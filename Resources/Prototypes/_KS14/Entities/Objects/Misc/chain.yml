@@ -54,6 +54,12 @@
   - type: Pullable
 
 - type: entity
+  parent: KsWireSegment
+  id: KsWireSegmentIv
+  name: iv tube
+  categories: [ HideSpawnMenu ]
+
+- type: entity
   parent: [ BaseItem, KsBaseWireSegment ]
   id: KsWireStart
   name: wire activator

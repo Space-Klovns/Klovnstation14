@@ -54,3 +54,15 @@
     color: '#db5e56'
     dangerousAlertLevels:
     - green
+
+- type: entity
+  parent: NightshiftTotalAlert
+  id: NightshiftTotalAlert2
+  components:
+  - type: StationEvent
+    startAnnouncement: ks-station-event-nightshift-totalalert2-start-announcement
+    startAudio:
+      path: /Audio/_KS14/Effects/warning_buzzer.ogg
+      params:
+        volume: 2
+        pitch: 0.9

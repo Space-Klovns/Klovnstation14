@@ -1,0 +1,77 @@
+- type: entity
+  parent: ColMarTechScenarioBase
+  id: ColMarTechScenarioTiderfallNt
+  suffix: Tiderfall, Nanotrasen
+  components:
+  - type: Sprite
+    sprite: _Crescent/Structures/syndicatearmory.rsi
+  - type: CMAutomatedVendor
+    sections:
+    - name: Base Gear
+      choices: { BaseGear: 1 }
+      entries:
+      - id: ScenarioVendorBundleTiderfallNtBase
+        recommended: true
+    - name: Loadout
+      choices: { CMClass: 1 }
+      entries:
+      - id: ScenarioVendorBundleTiderfallNtSecurity
+        recommended: true
+        replaceSlot: &replaceSlots
+        - IDCARD
+        - FEET
+        - GLOVES
+        - BELT
+      - id: ScenarioVendorBundleTiderfallNtTider
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleTiderfallNtClown
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleTiderfallNtMiner
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleTiderfallNtConscript
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleTiderfallNtMedic
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleTiderfallNtBartender
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleTiderfallNtDroneOperator
+        replaceSlot: *replaceSlots
+
+- type: entity
+  parent: ColMarTechScenarioBase
+  id: ColMarTechScenarioTiderfallSyndie
+  suffix: Tiderfall, Syndicate
+  components:
+  - type: Sprite
+    sprite: _Crescent/Structures/syndicatearmory.rsi
+  - type: CMAutomatedVendor
+    sections:
+    - name: Base Gear
+      choices: { BaseGear: 1 }
+      entries:
+      - id: ScenarioVendorBundleTiderfallSyndieBase
+        recommended: true
+    - name: Loadout
+      choices: { CMClass: 1 }
+      entries:
+      - id: ScenarioVendorBundleTiderfallSyndieSoldier
+        recommended: true
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleTiderfallSyndieInfiltrator
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleTiderfallSyndieDemolitionist
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleTiderfallSyndieSniper
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleTiderfallSyndieMedic
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleTiderfallSyndieMelee
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleTiderfallSyndieEngineer
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleTiderfallSyndieDroneOperator
+        replaceSlot: *replaceSlots
+    - name: Utilities
+      entries:
+      - id: EmpGrenade
+        amount: 2

@@ -1,4 +1,4 @@
-﻿using Content.Shared.Administration.Logs;
+using Content.Shared.Administration.Logs;
 using Content.Shared.Body;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Systems;
@@ -121,7 +121,7 @@ public sealed partial class IngestionSystem : EntitySystem
     /// <param name="ingested">The entity that is trying to be ingested.</param>
     /// <param name="ingest"> When set to true, it tries to ingest. When false, it only checks if we can.</param>
     /// <returns>Returns true if we can ingest the item.</returns>
-    private bool AttemptIngest(EntityUid user, EntityUid target, EntityUid ingested, bool ingest)
+    private bool AttemptIngest(EntityUid user, EntityUid target, EntityUid ingested, bool ingest, bool chug = false /* KS14 Addition */)
     {
         var eatEv = new IngestibleEvent();
         RaiseLocalEvent(ingested, ref eatEv);
@@ -129,7 +129,7 @@ public sealed partial class IngestionSystem : EntitySystem
         if (eatEv.Cancelled)
             return false;
 
-        var ingestionEv = new AttemptIngestEvent(user, ingested, ingest);
+        var ingestionEv = new AttemptIngestEvent(user, ingested, ingest, Chug: chug /* KS14 Addition */);
         RaiseLocalEvent(target, ref ingestionEv);
 
         return ingestionEv.Handled;
@@ -278,7 +278,7 @@ public sealed partial class IngestionSystem : EntitySystem
         if (!CanConsume(args.User, entity, args.Ingested, out var solution, out var time))
             return;
 
-        if (!_doAfter.TryStartDoAfter(GetEdibleDoAfterArgs(args.User, entity, food, time ?? TimeSpan.Zero)))
+        if (!_doAfter.TryStartDoAfter(GetEdibleDoAfterArgs(args.User, entity, food, time ?? TimeSpan.Zero, args.Chug /* KS14 Addition */)))
             return;
 
         args.Handled = true;
@@ -365,6 +365,13 @@ public sealed partial class IngestionSystem : EntitySystem
             return;
         }
 
+        // KS14 - Start
+        if (args.Chug && beforeEv.Solution != null)
+        {
+            beforeEv.Transfer = beforeEv.Solution.Volume;
+        }
+        // KS14 - End
+
         var transfer = FixedPoint2.Clamp(beforeEv.Transfer, beforeEv.Min, beforeEv.Max);
 
         var split = _solutionContainer.SplitSolution(solution.Value, transfer);
@@ -378,7 +385,10 @@ public sealed partial class IngestionSystem : EntitySystem
         _reaction.DoEntityReaction(entity, split, ReactionMethod.Ingestion);
 
         // Everything is good to go item has been successfuly eaten
-        var afterEv = new IngestedEvent(args.User, entity, split, forceFed, beforeEv.Transfer >= beforeEv.Max);
+        var afterEv = new IngestedEvent(args.User, entity, split, forceFed, beforeEv.Transfer >= beforeEv.Max)
+        {
+            Chug = args.Chug // KS14: added chug
+        };
         RaiseLocalEvent(food, ref afterEv);
 
         _stomach.TryTransferSolution(stomachToUse.Value.Owner, split, stomachToUse);
@@ -418,11 +428,11 @@ public sealed partial class IngestionSystem : EntitySystem
     /// <param name="food">Food entity we're trying to eat.</param>
     /// <param name="delay">The time delay for our DoAfter</param>
     /// <returns>Returns true if it was able to successfully start the DoAfter</returns>
-    private DoAfterArgs GetEdibleDoAfterArgs(EntityUid user, EntityUid target, EntityUid food, TimeSpan delay = default)
+    private DoAfterArgs GetEdibleDoAfterArgs(EntityUid user, EntityUid target, EntityUid food, TimeSpan delay = default, bool chug = false /* KS14 Addition */)
     {
         var forceFeed = user != target;
 
-        var doAfterArgs = new DoAfterArgs(EntityManager, user, delay, new EatingDoAfterEvent(), target, food)
+        var doAfterArgs = new DoAfterArgs(EntityManager, user, delay, new EatingDoAfterEvent { Chug = chug } /* KS14 Addition */, target, food)
         {
             BreakOnHandChange = false,
             BreakOnMove = forceFeed,
@@ -477,10 +487,17 @@ public sealed partial class IngestionSystem : EntitySystem
         }
         else
         {
-            _popup.PopupPredicted(Loc.GetString(edible.Message, ("food", entity.Owner), ("flavors", flavors), ("satiated", args.Satiated)),
-                Loc.GetString(edible.OtherMessage),
-                args.User,
-                args.User);
+            // KS14 - Start
+            var message = args.Chug
+                ? Loc.GetString("edible-chug", ("food", entity.Owner), ("flavors", flavors), ("satiated", args.Satiated))
+                : Loc.GetString(edible.Message, ("food", entity.Owner), ("flavors", flavors), ("satiated", args.Satiated));
+
+            var otherMessage = args.Chug
+                ? Loc.GetString("edible-chug-other", ("user", Identity.Entity(args.User, EntityManager)), ("food", entity.Owner))
+                : Loc.GetString(edible.OtherMessage);
+
+            _popup.PopupPredicted(message, otherMessage, args.User, args.User);
+            // KS14 - End
 
             // log successful voluntary eating
             // TODO: Use correct verb
@@ -534,10 +551,13 @@ public sealed partial class IngestionSystem : EntitySystem
         if (entity.Owner == user || !args.CanInteract || !args.CanAccess)
             return;
 
-        if (!TryGetIngestionVerb(user, entity, entity.Comp.Edible, out var verb))
-            return;
+        // KS14 - Start
+        if (TryGetIngestionVerb(user, entity, entity.Comp.Edible, out var verb))
+            args.Verbs.Add(verb);
 
-        args.Verbs.Add(verb);
+        if (entity.Comp.Edible == Drink && TryGetChugVerb(user, entity, out var chugVerb))
+            args.Verbs.Add(chugVerb);
+        // KS14 - End
     }
 
     private void OnAttemptShake(Entity<EdibleComponent> entity, ref AttemptShakeEvent args)

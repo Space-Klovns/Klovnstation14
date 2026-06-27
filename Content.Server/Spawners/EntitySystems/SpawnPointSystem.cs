@@ -1,8 +1,9 @@
-﻿using Content.Server.GameTicking;
+using Content.Server.GameTicking;
 using Content.Server.Spawners.Components;
 using Content.Server.Station.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Random;
+using Robust.Shared.Log;
 
 namespace Content.Server.Spawners.EntitySystems;
 
@@ -10,7 +11,7 @@ public sealed class SpawnPointSystem : EntitySystem
 {
     [Dependency] private readonly GameTicker _gameTicker = default!;
     [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly StationSystem _stationSystem = default!;
+    //[Dependency] private readonly StationSystem _stationSystem = default!; KS14
     [Dependency] private readonly StationSpawningSystem _stationSpawning = default!;
 
     public override void Initialize()
@@ -27,15 +28,30 @@ public sealed class SpawnPointSystem : EntitySystem
         var points = EntityQueryEnumerator<SpawnPointComponent, TransformComponent>();
         var possiblePositions = new List<EntityCoordinates>();
 
+        bool foundPicky = false; //KS14 - dont spawn on normal latejoins if youve found a picky latejoin
+
         while (points.MoveNext(out var uid, out var spawnPoint, out var xform))
         {
-            if (args.Station != null && _stationSystem.GetOwningStation(uid, xform) != args.Station)
-                continue;
+            //if (args.Station != null && _stationSystem.GetOwningStation(uid, xform) != args.Station) KS14 - disabled this check for scenarios
+            //TODO SOOT or LCDC - check if this is important
+            //    continue;
 
-            if (_gameTicker.RunLevel == GameRunLevel.InRound && spawnPoint.SpawnType == SpawnPointType.LateJoin)
+            //KS14 start
+            if (_gameTicker.RunLevel == GameRunLevel.InRound && spawnPoint.SpawnType == SpawnPointType.LateJoin && spawnPoint.PickyLatejoin == true &&
+                (args.Job == null || spawnPoint.Job == null || spawnPoint.Job == args.Job))
+            {
+                if (foundPicky == false) //incredible demoncode to reset the found positions upon latejoin
+                    possiblePositions = new List<EntityCoordinates>();
+                possiblePositions.Add(xform.Coordinates);
+                foundPicky = true;
+            }
+
+            if (_gameTicker.RunLevel == GameRunLevel.InRound && spawnPoint.SpawnType == SpawnPointType.LateJoin && spawnPoint.PickyLatejoin == false && foundPicky == false)
             {
                 possiblePositions.Add(xform.Coordinates);
             }
+            //KS14 end
+
 
             if (_gameTicker.RunLevel != GameRunLevel.InRound &&
                 spawnPoint.SpawnType == SpawnPointType.Job &&

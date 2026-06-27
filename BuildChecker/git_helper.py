@@ -54,7 +54,7 @@ def update_submodules():
 
     # If the status doesn't match, force VS to reload the solution.
     # status = run_command(["git", "submodule", "status"], capture=True)
-    run_command(["git", "submodule", "update", "--init", "--recursive"])
+    run_command(["git", "submodule", "update", "--init", "--recursive", "RobustToolbox"]) # KS14: specified RT here
     # status2 = run_command(["git", "submodule", "status"], capture=True)
 
     # Something changed.
