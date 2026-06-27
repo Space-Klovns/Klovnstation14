@@ -1,4 +1,3 @@
-using Content.Shared._sin.Audio.Jukebox;
 using Content.Shared.Audio.Jukebox;
 using Robust.Client.Audio;
 using Robust.Client.UserInterface;
@@ -45,9 +44,6 @@ public sealed class JukeboxBoundUserInterface : BoundUserInterface
         _menu.OnSongSelected += SelectSong;
 
         _menu.SetTime += SetTime;
-        _menu.SetVolume += vol => SendMessage(new JukeboxSetVolumeMessage(vol));
-        _menu.OnAutoplayChanged += enabled => SendMessage(new JukeboxSetAutoplayMessage(enabled));
-        _menu.OnQueueChanged += queue => SendMessage(new JukeboxSetQueueMessage(queue));
         PopulateMusic();
         Reload();
     }
@@ -61,9 +57,8 @@ public sealed class JukeboxBoundUserInterface : BoundUserInterface
             return;
 
         _menu.SetAudioStream(jukebox.AudioStream);
-        _menu.SetVolumeSliderValue(jukebox.Volume);
 
-        if (_protoManager.TryIndex(jukebox.SelectedSongId, out var songProto))
+        if (_protoManager.Resolve(jukebox.SelectedSongId, out var songProto))
         {
             var length = EntMan.System<AudioSystem>().GetAudioLength(songProto.Path.Path.ToString());
             _menu.SetSelectedSong(songProto.Name, (float) length.TotalSeconds);
@@ -72,32 +67,35 @@ public sealed class JukeboxBoundUserInterface : BoundUserInterface
         {
             _menu.SetSelectedSong(string.Empty, 0f);
         }
-
-        _menu.SetAutoplayEnabled(jukebox.AutoplayEnabled);
     }
 
     public void PopulateMusic()
     {
         _menu?.Populate(_protoManager.EnumeratePrototypes<JukeboxPrototype>());
-        _menu?.PopulateGroups(_protoManager.EnumeratePrototypes<BoomboxGroupPrototype>());
     }
 
     public void SelectSong(ProtoId<JukeboxPrototype> songid)
     {
         SendMessage(new JukeboxSelectedMessage(songid));
-        // Send queue only if autoplay is enabled — otherwise the first queued track
-        // will play immediately when the user turns on AutoPlay.
-        if (_menu?.AutoplayEnabled == true)
-            _menu?.SendQueueUpdate();
     }
 
     public void SetTime(float time)
     {
-        // Note: we intentionally do NOT do client-side prediction here (setting audioComp.PlaybackPosition).
-        // The audio system recalculates position from AudioStart every frame, so the prediction would get
-        // undone immediately, causing an audible double-seek. The lock timer in JukeboxMenu prevents the
-        // slider from bouncing while we wait for the server to update AudioStart.
-        SendMessage(new JukeboxSetTimeMessage(time));
+        var sentTime = time;
+
+        // You may be wondering, what the fuck is this
+        // Well we want to be able to predict the playback slider change, of which there are many ways to do it
+        // We can't just use SendPredictedMessage because it will reset every tick and audio updates every frame
+        // so it will go BRRRRT
+        // Using ping gets us close enough that it SHOULD, MOST OF THE TIME, fall within the 0.1 second tolerance
+        // that's still on engine so our playback position never gets corrected.
+        if (EntMan.TryGetComponent(Owner, out JukeboxComponent? jukebox) &&
+            EntMan.TryGetComponent(jukebox.AudioStream, out AudioComponent? audioComp))
+        {
+            audioComp.PlaybackPosition = time;
+        }
+
+        SendMessage(new JukeboxSetTimeMessage(sentTime));
     }
 }
 
