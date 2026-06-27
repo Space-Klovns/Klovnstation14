@@ -58,7 +58,7 @@ def check_git_access(repo_url):
 # returns smth like ['RobustToolbox', 'Resources/Prototypes/_KsModule', 'Resources/Audio/_KsModule', 'Resources/_KsModule_ReplacedPrototypes']
 def get_all_submodules():
     result = subprocess.run(
-        ["git", "config", "--file=.gitmodules", "--get-regexp", r"^\^?submodule\..*\.path$"],
+        ["git", "config", "--file=../.gitmodules", "--get-regexp", r"^\^?submodule\..*\.path$"],
         capture_output=True,
         text=True,
         check=True
@@ -70,7 +70,7 @@ def get_submodule_url(target_path):
     gitmodules_path = ".gitmodules"
 
     if not os.path.exists(gitmodules_path):
-        raise FileNotFoundError(".gitmodules file not found.")
+        raise FileNotFoundError("../.gitmodules file not found.")
 
     config = configparser.ConfigParser()
     config.read(gitmodules_path)
