@@ -14,6 +14,10 @@
   name: tiderfall id card
   suffix: Syndie
   components:
+  - type: Access
+    tags:
+    - NuclearOperative
+    - SyndicateAgent
   - type: ChameleonClothing
     slot: [idcard]
     default: SyndicateIDCard
