@@ -8,6 +8,8 @@ import shutil
 import subprocess
 import sys
 import time
+import configparser # KS14
+import threading # KS14
 from pathlib import Path
 from typing import List
 
@@ -37,6 +39,58 @@ def run_command(command: List[str], capture: bool = False) -> subprocess.Complet
 
     return completed
 
+# KS14 Start
+def check_git_access(repo_url):
+    try:
+        # Use git ls-remote to check connectivity and authentication
+        # stdout and stderr are redirected to devnull to suppress console output
+        result = subprocess.run(
+            ["git", "ls-remote", repo_url],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=10, # Prevents hanging on interactive credential prompts
+            check=True
+        )
+        return True
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        return False
+
+# returns smth like ['RobustToolbox', 'Resources/Prototypes/_KsModule', 'Resources/Audio/_KsModule', 'Resources/_KsModule_ReplacedPrototypes']
+def get_all_submodules():
+    result = subprocess.run(
+        ["git", "config", "--file=.gitmodules", "--get-regexp", r"^\^?submodule\..*\.path$"],
+        capture_output=True,
+        text=True,
+        check=True
+    )
+
+    return [line.split()[1] for line in result.stdout.strip().split("\n") if line]
+
+def get_submodule_url(target_path):
+    gitmodules_path = ".gitmodules"
+
+    if not os.path.exists(gitmodules_path):
+        raise FileNotFoundError(".gitmodules file not found.")
+
+    config = configparser.ConfigParser()
+    config.read(gitmodules_path)
+
+    # Search through the sections for the matching path
+    for section in config.sections():
+        if config.has_option(section, "path") and config.get(section, "path") == target_path:
+            return config.get(section, "url")
+
+    return None
+
+def thread_doupdate(repo_path):
+    repo_url = get_submodule_url(repo_path)
+    if (repo_url == None or
+        not check_git_access(repo_url)):
+        return
+
+    run_command(["git", "submodule", "update", "--init", "--recursive", repo_path])
+
+# KS14 End
 
 def update_submodules():
     """
@@ -52,16 +106,12 @@ def update_submodules():
     if shutil.which("git") is None:
         raise FileNotFoundError("git not found in PATH")
 
-    # If the status doesn't match, force VS to reload the solution.
-    # status = run_command(["git", "submodule", "status"], capture=True)
-    run_command(["git", "submodule", "update", "--init", "--recursive", "RobustToolbox"]) # KS14: specified RT here
-    # status2 = run_command(["git", "submodule", "status"], capture=True)
+    # KS14 start: replaced all the logic here with manually checking each repo
 
-    # Something changed.
-    # if status.stdout != status2.stdout:
-    #     print("Git submodules changed. Reloading solution.")
-    #     reset_solution()
+    for submodule_path in get_all_submodules():
+        threading.Thread(target=thread_doupdate, args=(submodule_path))
 
+    # KS14 end
 
 def install_hooks():
     """
@@ -119,5 +169,5 @@ def check_for_zip_download():
 
 if __name__ == '__main__':
     check_for_zip_download()
+    update_submodules() # KS14: moved before hooks
     install_hooks()
-    update_submodules()
