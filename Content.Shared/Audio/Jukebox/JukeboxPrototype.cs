@@ -10,7 +10,7 @@ namespace Content.Shared.Audio.Jukebox;
 public sealed partial class JukeboxPrototype : IPrototype
 {
     [IdDataField]
-    public string ID { get; private set; } = string.Empty;
+    public string ID { get; set; } = string.Empty;
 
     /// <summary>
     /// User friendly name to use in UI.
@@ -20,4 +20,10 @@ public sealed partial class JukeboxPrototype : IPrototype
 
     [DataField(required: true)]
     public SoundPathSpecifier Path = default!;
+
+    /// <summary>
+    /// Additional search tags for the track search UI.
+    /// </summary>
+    [DataField]
+    public List<string> SearchTag = new();
 }
