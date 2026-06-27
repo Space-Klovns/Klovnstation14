@@ -1517,3 +1517,13 @@ Entries:
       message: 'Condensers now can output reagents into plumbing machines '
   id: 158
   time: '2026-06-26T22:00:04.0000000+00:00'
+- author: rumaks-xyz
+  changes:
+    - type: Add
+      message: >-
+        Various materials like steel and glass can now be solidified from their
+        liquid counterparts with 5u fresium
+    - type: Add
+      message: Fresium can now be obtained by centrifuging frost oil
+  id: 159
+  time: '2026-06-27T05:07:02.0000000+00:00'
