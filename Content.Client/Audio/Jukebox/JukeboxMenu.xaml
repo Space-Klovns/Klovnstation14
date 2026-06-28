@@ -31,7 +31,7 @@
                           Margin="3 3 3 0">
                 <LineEdit Name="SearchBar"
                           HorizontalExpand="True"
-                          PlaceHolder="{Loc 'jukebox-menu-search-placeholder'}"/>
+                          PlaceHolder="{Loc 'sin-jukebox-menu-search-placeholder'}"/>
                 <Button Name="ToggleFavoriteButton"
                         Text="{Loc 'sin-jukebox-menu-button-favorite'}"
                         MinWidth="32"
