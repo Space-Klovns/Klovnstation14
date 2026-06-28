@@ -74,7 +74,7 @@ public sealed partial class JukeboxMenu : FancyWindow
 
         // _sin start
         // Load favorites from CVar
-        var saved = _cfg.GetCVar(CCVars.SinJukeboxFavorites);
+        var saved = _cfg.GetCVar(Shared._sin.CCVar.SinCCVars.SinJukeboxFavorites);
         if (!string.IsNullOrWhiteSpace(saved))
         {
             foreach (var id in saved.Split(',', StringSplitOptions.RemoveEmptyEntries))
@@ -196,7 +196,7 @@ public sealed partial class JukeboxMenu : FancyWindow
             _pendingFavoritesRemoval.Add(id);
         }
 
-        _cfg.SetCVar(CCVars.SinJukeboxFavorites, string.Join(",", _favorites));
+        _cfg.SetCVar(Shared._sin.CCVar.SinCCVars.SinJukeboxFavorites, string.Join(",", _favorites));
         // Update only the star prefix of the affected item — avoids scroll reset from a full rebuild.
         RefreshFavoriteStarInList(MusicList, id);
         FilterFavorites(FavoritesSearchBar.Text);

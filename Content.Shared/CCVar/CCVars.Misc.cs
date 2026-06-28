@@ -109,10 +109,4 @@ public sealed partial class CCVars
     /// </summary>
     public static readonly CVarDef<float> PlaytimeMinutesToday =
         CVarDef.Create("playtime.minutes_today", 0f, CVar.CLIENTONLY | CVar.ARCHIVE);
-
-    /// <summary>
-    /// Favorite jukebox/boombox track IDs, stored client-side.
-    /// </summary>
-    public static readonly CVarDef<string> SinJukeboxFavorites =
-        CVarDef.Create("sin_jukebox_favorites", "", CVar.CLIENTONLY | CVar.ARCHIVE);
 }
