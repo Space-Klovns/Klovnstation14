@@ -9,7 +9,7 @@
     - Maintenance
 
 - type: entity
-  parent: AgentIDCard
+  parent: SyndiOperativeIDCard
   id: TiderfallSyndieCard
   name: tiderfall id card
   suffix: Syndie
