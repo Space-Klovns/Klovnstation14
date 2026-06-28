@@ -72,7 +72,11 @@ public sealed class KsGridSpawnerSystem : EntitySystem
             position = new(MathF.Floor(position.X), MathF.Floor(position.Y));
         }
 
-        if (_mapLoaderSystem.TryLoadGrid(transformComponent.MapID, entity.Comp1.Path, out var gridEntity, offset: position, rot: entity.Comp1.Rotation))
+        var rotation = entity.Comp1.Rotation;
+        if (entity.Comp1.RotationRangeDeg is { } rotationRangeDeg)
+            rotation += Angle.FromDegrees(_robustRandom.NextDouble(rotationRangeDeg.X, rotationRangeDeg.Y));
+
+        if (_mapLoaderSystem.TryLoadGrid(transformComponent.MapID, entity.Comp1.Path, out var gridEntity, offset: position, rot: rotation))
             entity.Comp1.SpawnedGridUid = gridEntity;
 
         RemComp(entity, entity.Comp1);

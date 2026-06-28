@@ -213,6 +213,9 @@
       color: *halftransparent
     - state: variant-nokey
       color: *halftransparent
+  - type: KsRandomCollectiveSpawner
+    scope: Grid
+    protoId: KsScenarioObjectiveSyndicate
 
 - type: entity
   parent: KsScenarioObjectiveSyndicateSpawner
@@ -232,6 +235,8 @@
       color: *halftransparent
     - state: variant-multiple
       color: *halftransparent
+  - type: KsRandomCollectiveSpawner
+    protoId: KsScenarioObjectiveNanotrasen
 
 - type: entity
   parent: MarkerBase
