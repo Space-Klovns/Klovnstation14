@@ -135,8 +135,8 @@
   id: WeaponRifleM90GrenadeLauncher
   description: "An older bullpup carbine model, with an attached underbarrel grenade launcher.\nFeeds from .20 rifle magazines."
   components:
-  - type: Gun
-    angleIncrease: 0
+  - type: Gun # KS14 modified
+    angleIncrease: 0 # KS14 modified
   - type: Sprite
     sprite: Objects/Weapons/Guns/Rifles/carbine.rsi
     layers:
@@ -193,7 +193,7 @@
     sprite: Objects/Weapons/Guns/Rifles/lecter.rsi
   - type: Gun
     fireRate: 4
-    angleIncrease: 2
+    angleIncrease: 2 # KS14 modified
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/ltrifle.ogg
     # KS14: Farsound start
@@ -286,7 +286,7 @@
       range: 15,155
     # KS14: Farsound end
     shotsPerBurst: 3
-    angleIncrease: 0
+    angleIncrease: 0 # KS14 modified
     selectedMode: Burst
     availableModes:
     - Burst
