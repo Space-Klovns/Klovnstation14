@@ -67,6 +67,18 @@ public sealed partial class StaminaComponent : Component
     public ProtoId<AlertPrototype> StaminaAlert = "Stamina";
 
     /// <summary>
+    /// This flag indicates whether the value of <see cref="StaminaDamage"/> decreases after the entity exits stamina crit.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool AfterCritical;
+
+    /// <summary>
+    /// This float determines how fast stamina will regenerate after exiting the stamina crit.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float AfterCritDecayMultiplier = 5f;
+
+    /// <summary>
     /// This is how much stamina damage a mob takes when it forces itself to stand up before modifiers
     /// </summary>
     [DataField, AutoNetworkedField]

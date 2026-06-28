@@ -336,14 +336,12 @@ public abstract partial class SharedStaminaSystem : EntitySystem
 
         UpdateStaminaVisuals((uid, component));
 
-        // KS14 change start
         // Checking if the stamina damage has decreased to zero after exiting the stamcrit
-        if (oldDamage > component.StaminaDamage && component.StaminaDamage <= 0f)
+        if (component.AfterCritical && oldDamage > component.StaminaDamage && component.StaminaDamage <= 0f)
         {
+            component.AfterCritical = false; // Since the recovery from the crit has been completed, we are no longer 'after crit'
             _status.TryRemoveStatusEffect(uid, StaminaLow);
         }
-
-        // KS14 change end
 
         if (!component.Critical)
         {
@@ -408,20 +406,16 @@ public abstract partial class SharedStaminaSystem : EntitySystem
             if (nextUpdate > curTime)
                 continue;
 
-            // Handle exiting critical condition and restoring stamina damage KS14: instantly
+            // Handle exiting critical condition and restoring stamina damage
             if (comp.Critical)
                 ExitStamCrit(uid, comp);
 
             comp.NextUpdate += TimeSpan.FromSeconds(1f);
 
-            //KS14 change start
-
             TakeStaminaDamage(
                 uid,
-                -comp.Decay,
+                comp.AfterCritical ? -comp.Decay * comp.AfterCritDecayMultiplier : -comp.Decay, // Recover faster after crit
                 comp);
-
-            //KS14 change end
 
             Dirty(uid, comp);
         }
@@ -456,10 +450,7 @@ public abstract partial class SharedStaminaSystem : EntitySystem
         }
 
         component.Critical = false;
-        //KS14 change start
-        component.StaminaDamage = 0f;
-        // component.AfterCritical = true;  // Set to true to indicate that stamina will be restored after exiting stamcrit
-        //KS14 change end
+        component.AfterCritical = true;  // Set to true to indicate that stamina will be restored after exiting stamcrit
         component.NextUpdate = Timing.CurTime;
 
         UpdateStaminaVisuals((uid, component));
