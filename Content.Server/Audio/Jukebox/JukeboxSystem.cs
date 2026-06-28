@@ -387,7 +387,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
                         var name = comp.CurrentTrackName
                             ?? (_protoManager.TryIndex(comp.SelectedSongId, out var p) ? p.Name : "?");
                         _chat.TrySendInGameICMessage(uid, Loc.GetString("sin-jukebox-chat-playing", ("name", name)),
-                            InGameICChatType.Speak, false, ignoreActionBlocker: true);
+                            InGameICChatType.Speak, true, ignoreActionBlocker: true);
                     }
                 }
 
@@ -398,7 +398,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
                     {
                         comp.NextAnnouncementDelay = 0f;
                         _chat.TrySendInGameICMessage(uid, Loc.GetString("sin-jukebox-chat-nextup-playing", ("name", comp.PendingNextTrackName ?? "??? THIS IS A BUG PLEASE REPORT ME !!!")),
-                            InGameICChatType.Speak, false, ignoreActionBlocker: true);
+                            InGameICChatType.Speak, true, ignoreActionBlocker: true);
                     }
                 }
 
@@ -410,7 +410,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
                     {
                         comp.ChatAccumulator = 0f;
                         _chat.TrySendInGameICMessage(uid, Loc.GetString("sin-jukebox-chat-music"),
-                            InGameICChatType.Speak, false, ignoreActionBlocker: true);
+                            InGameICChatType.Speak, true, ignoreActionBlocker: true);
                     }
                 }
             }
