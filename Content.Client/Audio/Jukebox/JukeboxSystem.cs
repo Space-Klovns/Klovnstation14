@@ -64,7 +64,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
             visualState = JukeboxVisualState.On;
         }
 
-        UpdateAppearance(uid, visualState, component, sprite);
+        UpdateAppearance(uid, visualState, component, sprite); // _sin: use sprite
     }
 
     private void OnAppearanceChange(EntityUid uid, JukeboxComponent component, ref AppearanceChangeEvent args)
@@ -78,25 +78,25 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
             visualState = JukeboxVisualState.On;
         }
 
-        UpdateAppearance(uid, visualState, component, args.Sprite);
+        UpdateAppearance(uid, visualState, component, args.Sprite); // _sin: use sprite
     }
 
-    private void UpdateAppearance(EntityUid uid, JukeboxVisualState visualState, JukeboxComponent component, SpriteComponent sprite)
+    private void UpdateAppearance(EntityUid uid, JukeboxVisualState visualState, JukeboxComponent component, SpriteComponent sprite) // _sin: use sprite
     {
-        SetLayerState(JukeboxVisualLayers.Base, component.OffState, sprite);
+        SetLayerState(JukeboxVisualLayers.Base, component.OffState, sprite); // _sin: use sprite
 
         switch (visualState)
         {
             case JukeboxVisualState.On:
-                SetLayerState(JukeboxVisualLayers.Base, component.OnState, sprite);
+                SetLayerState(JukeboxVisualLayers.Base, component.OnState, sprite); // _sin: use sprite
                 break;
 
             case JukeboxVisualState.Off:
-                SetLayerState(JukeboxVisualLayers.Base, component.OffState, sprite);
+                SetLayerState(JukeboxVisualLayers.Base, component.OffState, sprite); // _sin: use sprite
                 break;
 
             case JukeboxVisualState.Select:
-                PlayAnimation(uid, JukeboxVisualLayers.Base, component.SelectState, 1.0f, sprite);
+                PlayAnimation(uid, JukeboxVisualLayers.Base, component.SelectState, 1.0f, sprite); // _sin: use sprite
                 break;
         }
     }
@@ -109,7 +109,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
         if (!_animationPlayer.HasRunningAnimation(uid, state))
         {
             var animation = GetAnimation(layer, state, animationTime);
-            sprite.LayerSetVisible(layer, true);
+            sprite.LayerSetVisible(layer, true); // _sin
             _animationPlayer.Play(uid, animation, state);
         }
     }
@@ -138,8 +138,10 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
         if (string.IsNullOrEmpty(state))
             return;
 
+        // _sin start
         sprite.LayerSetVisible(layer, true);
         sprite.LayerSetAutoAnimated(layer, true);
         sprite.LayerSetState(layer, state);
+        // _sin end
     }
 }

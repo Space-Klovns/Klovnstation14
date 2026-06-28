@@ -38,6 +38,7 @@ public sealed partial class JukeboxComponent : Component
     [ViewVariables]
     public float SelectAccumulator;
 
+    // _sin start
     [ViewVariables]
     public float ChatAccumulator;
 
@@ -101,6 +102,7 @@ public sealed partial class JukeboxComponent : Component
     /// </summary>
     [ViewVariables]
     public string? PendingNextTrackName;
+    // _sin end
 }
 
 [Serializable, NetSerializable]
@@ -124,6 +126,7 @@ public sealed class JukeboxSetTimeMessage(float songTime) : BoundUserInterfaceMe
     public float SongTime { get; } = songTime;
 }
 
+// _sin start
 [Serializable, NetSerializable]
 public sealed class JukeboxSetVolumeMessage(float volume) : BoundUserInterfaceMessage
 {
@@ -141,6 +144,7 @@ public sealed class JukeboxSetQueueMessage(List<ProtoId<JukeboxPrototype>> queue
 {
     public List<ProtoId<JukeboxPrototype>> Queue { get; } = queue;
 }
+// _sin end
 
 [Serializable, NetSerializable]
 public enum JukeboxVisuals : byte

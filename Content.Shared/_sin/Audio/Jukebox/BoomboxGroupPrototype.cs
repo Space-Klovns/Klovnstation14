@@ -2,6 +2,7 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Shared._sin.Audio.Jukebox;
 
+// _sin start
 /// <summary>
 /// A search group for the boombox/jukebox UI. Tracks whose
 /// SearchTag list contains any matching GroupSearchTag will be
@@ -31,3 +32,4 @@ public sealed partial class BoomboxGroupPrototype : IPrototype
     [DataField]
     public List<string> GroupTag = new();
 }
+// _sin end

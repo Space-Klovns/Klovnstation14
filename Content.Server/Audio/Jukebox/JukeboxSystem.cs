@@ -1,17 +1,16 @@
-using System.Linq;
-using Content.Server.Chat.Systems;
+using System.Linq; // _sin
+using Content.Server.Chat.Systems; // _sin
 using Content.Server.Power.Components;
 using Content.Server.Power.EntitySystems;
 using Content.Shared.Audio.Jukebox;
-using Content.Shared.Chat;
+using Content.Shared.Chat; // _sin
 using Content.Shared.Power;
 using Robust.Server.GameObjects;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Components;
-using Robust.Shared.Audio.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
-using JukeboxComponent = Content.Shared.Audio.Jukebox.JukeboxComponent;
+using JukeboxComponent = Content.Shared.Audio.Jukebox.JukeboxComponent; // _sin
 
 namespace Content.Server.Audio.Jukebox;
 
@@ -20,6 +19,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
 {
     [Dependency] private readonly IPrototypeManager _protoManager = default!;
     [Dependency] private readonly AppearanceSystem _appearanceSystem = default!;
+    // _sin start
     [Dependency] private readonly ChatSystem _chat = default!;
 
     /// <summary>Maximum volume percent accepted from clients. Matches the UI slider cap.</summary>
@@ -42,6 +42,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
     /// <summary>Returns true if the jukebox can accept player input (powered, or has no power component).</summary>
     private bool CanInteract(EntityUid uid)
         => !HasComp<ApcPowerReceiverComponent>(uid) || this.IsPowered(uid, EntityManager);
+    // _sin end
 
     public override void Initialize()
     {
@@ -51,9 +52,11 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
         SubscribeLocalEvent<JukeboxComponent, JukeboxPauseMessage>(OnJukeboxPause);
         SubscribeLocalEvent<JukeboxComponent, JukeboxStopMessage>(OnJukeboxStop);
         SubscribeLocalEvent<JukeboxComponent, JukeboxSetTimeMessage>(OnJukeboxSetTime);
+        // _sin start
         SubscribeLocalEvent<JukeboxComponent, JukeboxSetVolumeMessage>(OnJukeboxSetVolume);
         SubscribeLocalEvent<JukeboxComponent, JukeboxSetAutoplayMessage>(OnJukeboxSetAutoplay);
         SubscribeLocalEvent<JukeboxComponent, JukeboxSetQueueMessage>(OnJukeboxSetQueue);
+        // _sin end
         SubscribeLocalEvent<JukeboxComponent, ComponentInit>(OnComponentInit);
         SubscribeLocalEvent<JukeboxComponent, ComponentShutdown>(OnComponentShutdown);
 
@@ -70,6 +73,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
 
     private void OnJukeboxPlay(EntityUid uid, JukeboxComponent component, ref JukeboxPlayingMessage args)
     {
+        // _sin start: more logic
         if (!CanInteract(uid))
             return;
 
@@ -91,17 +95,21 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
                 AudioParams.Default.WithMaxDistance(10f).WithVolume(VolumePercentToDb(component.Volume)))?.Entity;
             Dirty(uid, component);
         }
+        // _sin end
     }
 
     private void OnJukeboxPause(Entity<JukeboxComponent> ent, ref JukeboxPauseMessage args)
     {
+        // _sin start
         if (!CanInteract(ent.Owner))
             return;
 
         Audio.SetState(ent.Comp.AudioStream, AudioState.Paused);
         ent.Comp.WasPaused = true;
+        // _sin end
     }
 
+    // _sin start: rework logic
     private void OnJukeboxSetTime(EntityUid uid, JukeboxComponent component, JukeboxSetTimeMessage args)
     {
         if (!CanInteract(uid))
@@ -147,13 +155,13 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
                 nextIdx = 0;
             if (_protoManager.TryIndex(component.Queue[nextIdx], out var nextProto))
             {
-                _chat.TrySendInGameICMessage(uid, "Автопроигрывание включено", InGameICChatType.Speak, false, ignoreActionBlocker: true);
-                _chat.TrySendInGameICMessage(uid, $"Следующий трек: {nextProto.Name}", InGameICChatType.Speak, false, ignoreActionBlocker: true);
+                _chat.TrySendInGameICMessage(uid, Loc.GetString("_sin-jukebox-chat-autoplay-enabled"), InGameICChatType.Speak, false, ignoreActionBlocker: true);
+                _chat.TrySendInGameICMessage(uid, Loc.GetString("_sin-jukebox-chat-nextup-idle", ("name", nextProto.Name)), InGameICChatType.Speak, false, ignoreActionBlocker: true);
             }
         }
         else if (!args.Enabled)
         {
-            _chat.TrySendInGameICMessage(uid, "Автопроигрывание выключено", InGameICChatType.Speak, false, ignoreActionBlocker: true);
+            _chat.TrySendInGameICMessage(uid, Loc.GetString("_sin-jukebox-chat-autoplay-disabled"), InGameICChatType.Speak, false, ignoreActionBlocker: true);
         }
 
         Dirty(uid, component);
@@ -187,6 +195,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
 
         Dirty(uid, component);
     }
+    // _sin end
 
     private void OnPowerChanged(Entity<JukeboxComponent> entity, ref PowerChangedEvent args)
     {
@@ -205,6 +214,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
 
     private void Stop(Entity<JukeboxComponent> entity)
     {
+        // _sin start
         Audio.SetState(entity.Comp.AudioStream, AudioState.Stopped);
         entity.Comp.WasPaused = false;
         entity.Comp.PlayingAnnouncementDelay = 0f;
@@ -212,10 +222,12 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
         entity.Comp.CurrentTrackName = null;
         entity.Comp.PendingNextTrackName = null;
         Dirty(entity);
+        // _sin end
     }
 
     private void OnJukeboxSelected(EntityUid uid, JukeboxComponent component, JukeboxSelectedMessage args)
     {
+        // _sin start: more logic
         if (!CanInteract(uid))
             return;
         // Validate the prototype exists before mutating any state.
@@ -260,6 +272,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
         }
 
         Dirty(uid, component);
+        // _sin end
     }
 
     public override void Update(float frameTime)
@@ -280,6 +293,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
                 }
             }
 
+            // _sin start
             // Ранний пропуск: нет аудиострима — нечего отслеживать
             if (comp.AudioStream == null)
             {
@@ -372,7 +386,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
                         comp.PlayingAnnouncementDelay = 0f;
                         var name = comp.CurrentTrackName
                             ?? (_protoManager.TryIndex(comp.SelectedSongId, out var p) ? p.Name : "?");
-                        _chat.TrySendInGameICMessage(uid, $"♫ Играет: {name} ♫",
+                        _chat.TrySendInGameICMessage(uid, Loc.GetString("_sin-jukebox-chat-playing", ("name", name)),
                             InGameICChatType.Speak, false, ignoreActionBlocker: true);
                     }
                 }
@@ -383,7 +397,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
                     if (comp.NextAnnouncementDelay <= 0f)
                     {
                         comp.NextAnnouncementDelay = 0f;
-                        _chat.TrySendInGameICMessage(uid, $"♫ Следующий: {comp.PendingNextTrackName} ♫",
+                        _chat.TrySendInGameICMessage(uid, Loc.GetString("_sin-jukebox-chat-nextup-playing", ("name", comp.PendingNextTrackName ?? "??? THIS IS A BUG PLEASE REPORT ME !!!")),
                             InGameICChatType.Speak, false, ignoreActionBlocker: true);
                     }
                 }
@@ -395,7 +409,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
                     if (comp.ChatAccumulator >= 5f)
                     {
                         comp.ChatAccumulator = 0f;
-                        _chat.TrySendInGameICMessage(uid, "♫♫♫♫",
+                        _chat.TrySendInGameICMessage(uid, Loc.GetString("_sin-jukebox-chat-music"),
                             InGameICChatType.Speak, false, ignoreActionBlocker: true);
                     }
                 }
@@ -415,6 +429,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
             }
 
             comp.WasPlaying = isPlaying;
+            // _sin end
         }
     }
 
@@ -428,6 +443,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
         _appearanceSystem.SetData(uid, JukeboxVisuals.VisualState, state);
     }
 
+
     private void TryUpdateVisualState(EntityUid uid, JukeboxComponent? jukeboxComponent = null)
     {
         if (!Resolve(uid, ref jukeboxComponent))
@@ -440,6 +456,6 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
             finalState = JukeboxVisualState.Off;
         }
 
-        _appearanceSystem.SetData(uid, JukeboxVisuals.VisualState, finalState);
+        _appearanceSystem.SetData(uid, JukeboxVisuals.VisualState, finalState); // _sin
     }
 }

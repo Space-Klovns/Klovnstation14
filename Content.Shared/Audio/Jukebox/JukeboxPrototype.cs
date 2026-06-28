@@ -21,9 +21,11 @@ public sealed partial class JukeboxPrototype : IPrototype
     [DataField(required: true)]
     public SoundPathSpecifier Path = default!;
 
+    // _sin start
     /// <summary>
     /// Additional search tags for the track search UI.
     /// </summary>
     [DataField]
     public List<string> SearchTag = new();
+    // _sin end
 }

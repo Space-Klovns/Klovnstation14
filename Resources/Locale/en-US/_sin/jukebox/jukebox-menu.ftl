@@ -1,0 +1,11 @@
+_sin-jukebox-menu-search-placeholder = Search...
+_sin-jukebox-menu-tab-main = Main
+_sin-jukebox-menu-tab-groups = Groups
+_sin-jukebox-menu-group-search-placeholder = Search groups...
+_sin-jukebox-menu-tab-favorites = Favorites
+_sin-jukebox-menu-favorites-search-placeholder = Search favorites...
+_sin-jukebox-menu-button-favorite = ★
+_sin-jukebox-menu-button-unfavorite = ☆
+_sin-jukebox-menu-button-favorite-tooltip = Add to / remove from favorites
+_sin-jukebox-menu-volume = Volume:
+_sin-jukebox-menu-autoplay = Autoplay
