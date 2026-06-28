@@ -1,10 +1,10 @@
 
 
-_sin-jukebox-chat-autoplay-enabled = Autoplay enabled
-_sin-jukebox-chat-autoplay-disabled = Autoplay disabled
+sin-jukebox-chat-autoplay-enabled = Autoplay enabled
+sin-jukebox-chat-autoplay-disabled = Autoplay disabled
 
-_sin-jukebox-chat-playing = ♫ Playing: {$name} ♫
-_sin-jukebox-chat-music = ♫♫♫♫
+sin-jukebox-chat-playing = ♫ Playing: {$name} ♫
+sin-jukebox-chat-music = ♫♫♫♫
 
-_sin-jukebox-chat-nextup-playing = ♫ Next: {$name} ♫
-_sin-jukebox-chat-nextup-idle = Next: {$name}
+sin-jukebox-chat-nextup-playing = ♫ Next: {$name} ♫
+sin-jukebox-chat-nextup-idle = Next: {$name}

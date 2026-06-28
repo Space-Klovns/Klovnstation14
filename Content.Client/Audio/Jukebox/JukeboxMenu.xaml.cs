@@ -224,12 +224,12 @@ public sealed partial class JukeboxMenu : FancyWindow
     {
         if (id == null)
         {
-            ToggleFavoriteButton.Text = Loc.GetString("_sin-jukebox-menu-button-favorite");
+            ToggleFavoriteButton.Text = Loc.GetString("sin-jukebox-menu-button-favorite");
             return;
         }
         ToggleFavoriteButton.Text = _favorites.Contains(id)
-            ? Loc.GetString("_sin-jukebox-menu-button-unfavorite")
-            : Loc.GetString("_sin-jukebox-menu-button-favorite");
+            ? Loc.GetString("sin-jukebox-menu-button-unfavorite")
+            : Loc.GetString("sin-jukebox-menu-button-favorite");
     }
 
     private void FilterFavorites(string query)
