@@ -4,11 +4,15 @@
   - Box
   - Marathon
   - Packed
+  # KS14 start: ported maps
+  - Mira
+  - Omega
+  # KS14 end
   # KS14 start: restored maps
   - Saltern
-  - Meta
   # KS14 end
   # KS14 start: removed maps
+  # - Meta #RIP
   # - Bagel
   # - Fland
   # - Snowball
