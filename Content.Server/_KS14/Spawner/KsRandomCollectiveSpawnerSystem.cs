@@ -35,13 +35,14 @@ public sealed class KsRandomCollectiveSpawnerSystem : EntitySystem
 
         // linq final boss without being linq
         EnsureComp<KsRandomCollectiveScopeComponent>(scopeUid).Spawners.GetOrNew(entity.Comp.ProtoId).Add(entity);
+        entity.Comp.AttachedScopeUid = scopeUid;
     }
 
     private void OnSpawnerShutdown(Entity<KsRandomCollectiveSpawnerComponent> entity, ref ComponentShutdown args)
     {
-        if (!EntityManager.TransformQuery.TryGetComponent(entity, out var transformComponent) ||
-            GetScope((entity, entity, transformComponent)) is not { } scopeUid ||
-            !TryComp<KsRandomCollectiveScopeComponent>(entity, out var scopeComponent) ||
+        if (entity.Comp.AttachedScopeUid is not { } scopeUid ||
+            TerminatingOrDeleted(scopeUid) ||
+            !TryComp<KsRandomCollectiveScopeComponent>(scopeUid, out var scopeComponent) ||
             !scopeComponent.Spawners.TryGetValue(entity.Comp.ProtoId, out var cache))
             return;
 
