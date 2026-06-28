@@ -450,6 +450,7 @@ public abstract partial class SharedStaminaSystem : EntitySystem
         }
 
         component.Critical = false;
+        component.StaminaDamage = 0; // KS14 change
         component.AfterCritical = true;  // Set to true to indicate that stamina will be restored after exiting stamcrit
         component.NextUpdate = Timing.CurTime;
 
