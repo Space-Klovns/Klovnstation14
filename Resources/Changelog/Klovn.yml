@@ -1551,3 +1551,12 @@ Entries:
       message: heretic
   id: 161
   time: '2026-06-28T14:58:11.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        [SCENARIOS] Objective spawn on Nanoplant is now one of two random
+        places: either main data-center (original spawn), or high-sec room to
+        the far west of the checkpoint.
+  id: 162
+  time: '2026-06-28T16:06:54.0000000+00:00'
