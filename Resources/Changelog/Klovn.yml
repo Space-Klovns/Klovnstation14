@@ -1527,3 +1527,21 @@ Entries:
       message: Fresium can now be obtained by centrifuging frost oil
   id: 159
   time: '2026-06-27T05:07:02.0000000+00:00'
+- author: De
+  changes:
+    - type: Tweak
+      message: Fixed nt rifleman
+    - type: Tweak
+      message: Drones work 4 times longer now
+    - type: Tweak
+      message: Added flare boxes as basekit
+    - type: Tweak
+      message: NT on nanoplant spawns with pdas now
+    - type: Tweak
+      message: Goliath hp 250 -> 125 (5 pka shots)
+    - type: Tweak
+      message: 'all 3x3 boxes are now small '
+    - type: Fix
+      message: doors on nanoplant for synds
+  id: 160
+  time: '2026-06-28T12:58:00.0000000+00:00'
