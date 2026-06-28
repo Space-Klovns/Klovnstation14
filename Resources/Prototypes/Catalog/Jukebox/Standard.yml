@@ -195,3 +195,5 @@
   name: Title 3.ogg
   path:
     path: /Audio/Lobby/title3.ogg
+  searchTag: # _sin: add boombox group
+  - '_sin_boombox_group_groupSearchTag_example_group'
