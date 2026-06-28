@@ -80,7 +80,7 @@
 
   # Cell
   - type: PowerCellDraw
-    drawRate: 2 # ~1.5 min flight time on medium cell (720J), changed to 4 as long
+    drawRate: 2 # ~6 min flight time on medium cell (720J)
     enabled: false
   - type: PowerCellSlot
     cellSlotId: cell_slot
