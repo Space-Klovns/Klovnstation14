@@ -15,13 +15,14 @@
     - ClothingBackpackERTSecurity
     - ClothingShoesBootsLaceup
     - ClothingMaskGasSecurity
-    - NanoplantNtIdCard
+    - NanoplantNtPDA
     - ClothingHeadsetSecurity
     - ClothingEyesGlassesCommand
     - ClothingOuterArmorBasic
     - ClothingHeadHelmetERTSecurity
     - ClothingBeltMilitaryWebbingERT
     - Machete
+    - BoxFlare
 
 - type: entity
   id: ScenarioVendorBundleNanoplantNtRifleman
@@ -34,11 +35,11 @@
     state: icon
   - type: CMVendorBundle
     bundle:
-    - WeaponSubMachineGunDrozd
-    - MagazinePistolSubMachineGun
-    - MagazinePistolSubMachineGun
-    - MagazinePistolSubMachineGun
-    - MagazinePistolSubMachineGun
+    - WeaponRifleLecter
+    - MagazineRifle
+    - MagazineRifle
+    - MagazineRifle
+    - MagazineRifle
     - GrenadeStinger
 
 - type: entity
@@ -101,6 +102,8 @@
     - MagazinePistolSubMachineGun
     - MagazinePistolSubMachineGun
     - MagazinePistolSubMachineGun
+    - DoubleEmergencyOxygenTankFilled
+    - DoubleEmergencyNitrogenTankFilled # idk how to do it per species and frankly idc
     - TearGasGrenade
     - TearGasGrenade
 
@@ -146,7 +149,7 @@
     - ClothingEyesHudMedical
     - ClothingBeltMedicalFilled
     - MedkitCombatFilled
-    - JetInjector
+    - AdvancedJetInjector
     - DefibrillatorCompact
     - PowerCellHigh
     - WeaponRifleLecter
