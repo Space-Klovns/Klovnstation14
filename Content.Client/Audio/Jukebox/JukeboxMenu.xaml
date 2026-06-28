@@ -1,18 +1,129 @@
-<ui:FancyWindow xmlns="https://spacestation14.io" xmlns:ui="clr-namespace:Content.Client.UserInterface.Controls"
-                SetSize="400 500" Title="{Loc 'jukebox-menu-title'}">
-    <BoxContainer Margin="4 0" Orientation="Vertical">
-        <ItemList Name="MusicList" SelectMode="Button" Margin="3 3 3 3"
-        HorizontalExpand="True" VerticalExpand="True" SizeFlagsStretchRatio="8"/>
-        <BoxContainer Orientation="Vertical">
-            <Label Name="SongSelected" Text="{Loc 'jukebox-menu-selectedsong'}" />
-            <Label Name="SongName" Text="---" />
-            <Slider Name="PlaybackSlider" HorizontalExpand="True" />
+<ui:FancyWindow xmlns="https://spacestation14.io"
+                xmlns:ui="clr-namespace:Content.Client.UserInterface.Controls"
+                SetSize="400 560"
+                Title="{Loc 'jukebox-menu-title'}">
+    <BoxContainer Margin="4 0"
+                  Orientation="Vertical">
+        <!-- Tab buttons -->
+        <BoxContainer Orientation="Horizontal"
+                      Margin="3 3 3 0">
+            <Button Name="MainTabButton"
+                    ToggleMode="True"
+                    HorizontalExpand="True"
+                    Text="{Loc 'sin-jukebox-menu-tab-main'}"
+                    Margin="0 0 2 0"/>
+            <Button Name="GroupsTabButton"
+                    ToggleMode="True"
+                    HorizontalExpand="True"
+                    Text="{Loc 'sin-jukebox-menu-tab-groups'}"
+                    Margin="0 0 2 0"/>
+            <Button Name="FavoritesTabButton"
+                    ToggleMode="True"
+                    HorizontalExpand="True"
+                    Text="{Loc 'sin-jukebox-menu-tab-favorites'}"/>
         </BoxContainer>
-        <BoxContainer Orientation="Horizontal" HorizontalExpand="True"
-        VerticalExpand="False" SizeFlagsStretchRatio="1">
-            <Button Name="PlayButton" Text="{Loc 'jukebox-menu-buttonplay'}" />
-            <Button Name="StopButton" Text="{Loc 'jukebox-menu-buttonstop'}" />
-            <Label Name="DurationLabel" Text="00:00 / 00:00" HorizontalAlignment="Right" HorizontalExpand="True"/>
+
+        <!-- Main tab content -->
+        <BoxContainer Name="MainContainer"
+                      Orientation="Vertical"
+                      VerticalExpand="True">
+            <BoxContainer Orientation="Horizontal"
+                          Margin="3 3 3 0">
+                <LineEdit Name="SearchBar"
+                          HorizontalExpand="True"
+                          PlaceHolder="{Loc 'sin-jukebox-menu-search-placeholder'}"/>
+                <Button Name="ToggleFavoriteButton"
+                        Text="{Loc 'sin-jukebox-menu-button-favorite'}"
+                        MinWidth="32"
+                        Margin="2 0 0 0"
+                        ToolTip="{Loc 'sin-jukebox-menu-button-favorite-tooltip'}"/>
+            </BoxContainer>
+            <ItemList Name="MusicList"
+                      SelectMode="Button"
+                      Margin="3 3 3 3"
+                      HorizontalExpand="True"
+                      VerticalExpand="True"/>
+        </BoxContainer>
+
+        <!-- Groups tab content -->
+        <BoxContainer Name="GroupsContainer"
+                      Orientation="Vertical"
+                      VerticalExpand="True"
+                      Visible="False">
+            <LineEdit Name="GroupSearchBar"
+                      Margin="3 3 3 0"
+                      HorizontalExpand="True"
+                      PlaceHolder="{Loc 'sin-jukebox-menu-group-search-placeholder'}"/>
+            <ScrollContainer VerticalExpand="True"
+                             HorizontalExpand="True">
+                <BoxContainer Name="GroupsList"
+                              Orientation="Vertical"
+                              HorizontalExpand="True"
+                              Margin="3 3 3 3"/>
+            </ScrollContainer>
+        </BoxContainer>
+
+        <!-- Favorites tab content -->
+        <BoxContainer Name="FavoritesContainer"
+                      Orientation="Vertical"
+                      VerticalExpand="True"
+                      Visible="False">
+            <BoxContainer Orientation="Horizontal"
+                          Margin="3 3 3 0">
+                <LineEdit Name="FavoritesSearchBar"
+                          HorizontalExpand="True"
+                          PlaceHolder="{Loc 'sin-jukebox-menu-favorites-search-placeholder'}"/>
+                <Button Name="RemoveFavoriteButton"
+                        Text="{Loc 'sin-jukebox-menu-button-unfavorite'}"
+                        MinWidth="32"
+                        Margin="2 0 0 0"
+                        ToolTip="{Loc 'sin-jukebox-menu-button-favorite-tooltip'}"/>
+            </BoxContainer>
+            <ItemList Name="FavoritesList"
+                      SelectMode="Button"
+                      Margin="3 3 3 3"
+                      HorizontalExpand="True"
+                      VerticalExpand="True"/>
+        </BoxContainer>
+
+        <!-- Player controls — always visible regardless of active tab -->
+        <BoxContainer Orientation="Vertical">
+            <Label Name="SongSelected"
+                   Text="{Loc 'jukebox-menu-selectedsong'}"/>
+            <Label Name="SongName"
+                   Text="---"/>
+            <Slider Name="PlaybackSlider"
+                    HorizontalExpand="True"/>
+        </BoxContainer>
+        <BoxContainer Orientation="Horizontal"
+                      HorizontalExpand="True"
+                      VerticalExpand="False">
+            <Button Name="PlayButton"
+                    Text="{Loc 'jukebox-menu-buttonplay'}"/>
+            <Button Name="StopButton"
+                    Text="{Loc 'jukebox-menu-buttonstop'}"/>
+            <Label Name="DurationLabel"
+                   Text="00:00 / 00:00"
+                   HorizontalAlignment="Right"
+                   HorizontalExpand="True"/>
+        </BoxContainer>
+        <BoxContainer Orientation="Horizontal"
+                      Margin="3 2 3 4">
+            <Label Text="{Loc 'sin-jukebox-menu-volume'}"
+                   Margin="0 0 4 0"
+                   VerticalAlignment="Center"/>
+            <Slider Name="VolumeSlider"
+                    HorizontalExpand="True"/>
+            <Label Name="VolumeLabel"
+                   Text="100%"
+                   Margin="6 0 0 0"
+                   VerticalAlignment="Center"
+                   MinWidth="40"/>
+        </BoxContainer>
+        <BoxContainer Orientation="Horizontal"
+                      Margin="3 2 3 4">
+            <CheckBox Name="AutoplayCheckBox"
+                      Text="{Loc 'sin-jukebox-menu-autoplay'}"/>
         </BoxContainer>
     </BoxContainer>
 </ui:FancyWindow>

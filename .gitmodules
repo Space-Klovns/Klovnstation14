@@ -11,3 +11,6 @@
 [submodule "Resources/_KsModule_ReplacedPrototypes"]
 	path = Resources/_KsModule_ReplacedPrototypes
 	url = https://github.com/Space-Klovns/Klovnmodule-Resources-ReplacedPrototypes.git
+[submodule "Resources/Maps/_KsModule"]
+	path = Resources/Maps/_KsModule
+	url = https://github.com/Space-Klovns/Klovnmodule-Resources-Maps.git

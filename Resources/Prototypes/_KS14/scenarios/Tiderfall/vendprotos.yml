@@ -17,6 +17,7 @@
     - ClothingMaskGas
     - TiderfallNtPDA
     - ClothingHeadsetGrey
+    - BoxFlare
 
 - type: entity
   id: ScenarioVendorBundleTiderfallNtTider
@@ -129,7 +130,7 @@
     - MedTekCartridge
     - ClothingEyesHudMedical
     - ClothingBeltMedicalFilled
-    - JetInjector
+    - AdvancedJetInjector
     - DefibrillatorCompact
     - PowerCellHigh
     - CombatKnife
@@ -192,6 +193,7 @@
     - TiderfallSyndiePDA
     - ClothingHeadsetAltSyndicate
     - ClothingBeltMilitaryWebbing
+    - BoxFlare
 
 - type: entity
   id: ScenarioVendorBundleTiderfallSyndieSoldier
@@ -283,7 +285,7 @@
     - ClothingEyesHudMedical
     - ClothingBeltMedicalFilled
     - MedkitCombatFilled
-    - JetInjector
+    - AdvancedJetInjector
     - DefibrillatorSyndicate
     - PowerCellHigh
     - Stimpack
