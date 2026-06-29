@@ -80083,8 +80083,6 @@ entities:
       pos: 54.5,-5.5
       parent: 2
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 12482
   - uid: 3425
@@ -80094,9 +80092,6 @@ entities:
       pos: 56.5,-3.5
       parent: 2
     - type: DeviceNetwork
-      configurators:
-      - invalid
-      - invalid
       deviceLists:
       - 3442
   - uid: 3438
@@ -80106,8 +80101,6 @@ entities:
       pos: 54.5,-3.5
       parent: 2
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 12482
   - uid: 4027
@@ -80117,9 +80110,6 @@ entities:
       pos: 60.5,-3.5
       parent: 2
     - type: DeviceNetwork
-      configurators:
-      - invalid
-      - invalid
       deviceLists:
       - 3442
 - proto: WeaponEnergyTurretAIControlPanel
