@@ -154,11 +154,13 @@ public sealed class WordFilterSystem : EntitySystem
         return false;
     }
 
-    public void FilterAndReplaceString(ref string message, WordFilterCategory category)
+    /// <returns>Whether the message was modified.</returns>
+    public bool FilterAndReplaceString(ref string message, WordFilterCategory category)
     {
         if (!_cache.TryGetValue(category, out var cacheData))
-            return;
+            return false;
 
+        var oldMessage = message;
         foreach (var cacheDatum in cacheData)
         {
             var replacementLength = cacheDatum.Replacement.Length;
@@ -199,6 +201,8 @@ public sealed class WordFilterSystem : EntitySystem
                 matchIndex += match.Index + replacementLength;
             }
         }
+
+        return oldMessage != message;
     }
 
     // Why does ReplacementCapitalised exist?
