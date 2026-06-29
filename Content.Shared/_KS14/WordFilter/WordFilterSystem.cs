@@ -197,8 +197,13 @@ public sealed class WordFilterSystem : EntitySystem
                 else
                     replacement = cacheDatum.Replacement;
 
-                message = message.Remove(match.Index, match.Length).Insert(match.Index, replacement);
-                matchIndex += match.Index + replacementLength;
+                // remove the matched phrase and replace it
+                message =
+                    message[..match.Index] +
+                    replacement +
+                    message[(match.Index + match.Length)..];
+
+                matchIndex = match.Index + replacementLength;
             }
         }
 
