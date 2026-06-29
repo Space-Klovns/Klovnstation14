@@ -4,7 +4,7 @@
   parent: ComputerShuttle
   id: KsComputerShuttleIdLocked
   name: id-locked shuttle console
-  description: Used to pilot a shuttle. This one in specific can be locked with an ID.
+  description: Used to pilot a shuttle. This one in specific can be locked with authorised IDs. If there are no authorised IDs on the console, you can use your ID on it to claim ownership of it.
   components:
   - type: Sprite
     layers:
