@@ -35,12 +35,12 @@ public sealed class KsRandomCollectiveSpawnerSystem : EntitySystem
 
         // linq final boss without being linq
         EnsureComp<KsRandomCollectiveScopeComponent>(scopeUid).Spawners.GetOrNew(entity.Comp.ProtoId).Add(entity);
-        entity.Comp.AttachedScopeUid = scopeUid;
     }
 
     private void OnSpawnerShutdown(Entity<KsRandomCollectiveSpawnerComponent> entity, ref ComponentShutdown args)
     {
-        if (entity.Comp.AttachedScopeUid is not { } scopeUid ||
+        // i would be caching the scope uid here if tests werent crying about it
+        if (GetScope((entity, entity, Transform(entity))) is not { } scopeUid ||
             TerminatingOrDeleted(scopeUid) ||
             !TryComp<KsRandomCollectiveScopeComponent>(scopeUid, out var scopeComponent) ||
             !scopeComponent.Spawners.TryGetValue(entity.Comp.ProtoId, out var cache))

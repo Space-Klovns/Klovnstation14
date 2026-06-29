@@ -21,9 +21,6 @@ public sealed partial class KsRandomCollectiveSpawnerComponent : Component
     /// </summary>
     [DataField, ViewVariables(VVAccess.ReadOnly)]
     public KsRandomCollectiveSpawnScope Scope = KsRandomCollectiveSpawnScope.Grid;
-
-    [DataField, ViewVariables(VVAccess.ReadOnly)]
-    public EntityUid? AttachedScopeUid = null;
 }
 
 public enum KsRandomCollectiveSpawnScope : byte

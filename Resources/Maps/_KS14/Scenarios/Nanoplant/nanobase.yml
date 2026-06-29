@@ -20996,14 +20996,12 @@ entities:
       pos: -0.5,0.5
       parent: 2
     - type: KsRandomCollectiveSpawner
-      attachedScopeUid: 2
   - uid: 3839
     components:
     - type: Transform
       pos: -27.5,-18.5
       parent: 2
     - type: KsRandomCollectiveSpawner
-      attachedScopeUid: 2
 - proto: LightBulbCrystalRed
   entities:
   - uid: 465
