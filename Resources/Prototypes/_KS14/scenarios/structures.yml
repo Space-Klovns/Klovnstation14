@@ -215,7 +215,7 @@
       color: *halftransparent
   - type: KsRandomCollectiveSpawner
     scope: Grid
-    protoId: KsScenarioObjectiveSyndicate
+    protoId: KsScenarioObjectiveSyndie
 
 - type: entity
   parent: KsScenarioObjectiveSyndicateSpawner
