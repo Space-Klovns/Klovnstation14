@@ -5,12 +5,16 @@
 [submodule "Resources/Prototypes/_KsModule"]
 	path = Resources/Prototypes/_KsModule
 	url = https://github.com/Space-Klovns/Klovnmodule-Resources-Prototypes.git
+	branch = main
 [submodule "Resources/Audio/_KsModule"]
 	path = Resources/Audio/_KsModule
 	url = https://github.com/Space-Klovns/Klovnmodule-Resources-Audio.git
+	branch = main
 [submodule "Resources/_KsModule_ReplacedPrototypes"]
 	path = Resources/_KsModule_ReplacedPrototypes
 	url = https://github.com/Space-Klovns/Klovnmodule-Resources-ReplacedPrototypes.git
+	branch = main
 [submodule "Resources/Maps/_KsModule"]
 	path = Resources/Maps/_KsModule
 	url = https://github.com/Space-Klovns/Klovnmodule-Resources-Maps.git
+	branch = main
