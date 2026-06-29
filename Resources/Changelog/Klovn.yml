@@ -1560,3 +1560,12 @@ Entries:
         the far west of the checkpoint.
   id: 162
   time: '2026-06-28T16:06:54.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Remove
+      message: >-
+        Removed maps: Jellyfish, Frezon, Wonderland, Bagel, Meta (meta pending
+        rework), Fland, and Snowball from rotation. The only maps you can roll
+        now are Box, Marathon, Packed, Mira, Omega, and Saltern.
+  id: 163
+  time: '2026-06-28T16:12:22.0000000+00:00'
