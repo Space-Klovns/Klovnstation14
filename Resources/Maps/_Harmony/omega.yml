@@ -40679,8 +40679,6 @@ entities:
       pos: 24.5,12.5
       parent: 2
     - type: DeviceNetwork
-      configurators:
-      - invalid
     - type: DeviceLinkSink
       invokeCounter: 1
   - uid: 7909
@@ -94319,8 +94317,6 @@ entities:
     - type: TwoWayLever
       nextSignalLeft: True
     - type: DeviceNetwork
-      configurators:
-      - invalid
     - type: DeviceLinkSource
       linkedPorts:
         12436:
