@@ -1,0 +1,10 @@
+- type: entity
+  parent: BaseComputerCircuitboard
+  id: KsShuttleConsoleIdLockedCircuitboard
+  name: id-locked shuttle console board
+  description: A computer printed circuit board for an id-locked shuttle console.
+  components:
+  - type: Sprite
+    state: cyborg_ugprade3
+  - type: ComputerBoard
+    prototype: KsComputerShuttleIdLocked

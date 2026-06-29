@@ -1,0 +1,48 @@
+
+
+- type: entity
+  parent: ComputerShuttle
+  id: KsComputerShuttleIdLocked
+  name: id-locked shuttle console
+  description: Used to pilot a shuttle. This one in specific can be locked with an ID.
+  components:
+  - type: Sprite
+    layers:
+    - map: ["computerLayerBody"]
+      state: computer
+    - map: ["computerLayerKeyboard"]
+      state: generic_keyboard
+    - map: ["computerLayerScreen"]
+      state: shuttle
+    - map: ["computerLayerKeys"]
+      state: generic_keys
+    - map: [ "enum.WiresVisualLayers.MaintenancePanel" ]
+      state: generic_panel_open
+    - map: ["enum.LockVisualLayers.Lock"]
+      state: unlocked
+      sprite: _KS14/Structures/Machines/computer_lock.rsi
+      shader: unshaded
+  - type: LockVisuals
+    stateUnlocked: unlocked
+    stateLocked: locked
+  - type: EmissiveLayers # TODO EMISSIVES: adjustable params for individual layers; rn, keyboards emit a bit too much light than i'd like them to
+    glowRadius: 0.15
+    layers:
+    - computerLayerScreen
+    - computerLayerKeys
+    - enum.LockVisualLayers.Lock
+
+  - type: UIRequiresLock
+    userInterfaceKeys:
+    - enum.ShuttleConsoleUiKey.Key
+    accessDeniedSound: /Audio/Machines/buzz-sigh.ogg
+  - type: Lock
+    locked: false
+    useAccess: false
+  - type: Computer
+    board: KsShuttleConsoleIdLockedCircuitboard
+
+  - type: KsIdLock
+    allowClaiming: true
+    claimPopupLoc: ks-popup-shuttle-idlock-claimed
+    toggleLockDeniedPopupLoc: ks-popup-shuttle-idlock-denied-toggle
