@@ -22,6 +22,7 @@ using Robust.Shared.Configuration; // KS14
 using Robust.Shared.Prototypes; // KS14
 using Content.Shared._KS14.CCVar; // KS14
 using Content.Shared.Movement.Components; //KS14
+using System.Linq; //KS14
 using Robust.Shared.Log;
 using Content.Shared.Standing; // KS14
 
@@ -137,7 +138,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
         var damageRequired = _destructible.DestroyedAt(target);
 
         //KS14 pen start
-        bool isAMob = HasComp<MobCollision>(target);
+        bool isAMob = HasComp<MobCollisionComponent>(target);
         if (comp.PenetrationThreshold > 0 && !isAMob) damageRequired /= _gunPenetrationMinShots;
 
         if (!TryComp<DamageableComponent>(target, out var damageable))
@@ -258,7 +259,9 @@ public sealed class PredictedProjectileSystem : EntitySystem
         if (modifierSet == null)
             return damage.GetTotal().Float() / requiredEffectiveDamage;
 
-        var numsPerDamType = Dict<ProtoId<DamageTypePrototype>, (float flatNum, float percNum)>();
+        var multiplier = 0f;
+
+        var numsPerDamType = new Dictionary<ProtoId<DamageTypePrototype>, (float flatNum, float percNum)>();
         foreach (var (type, baseFp) in damage.DamageDict)
         {
             float baseDamage = baseFp.Float();
@@ -268,52 +271,86 @@ public sealed class PredictedProjectileSystem : EntitySystem
             // just assign things
             modifierSet.FlatReduction.TryGetValue(type, out var flatReduction);
             modifierSet.Coefficients.TryGetValue(type, out var percentileResistCoeff);
-            damage.FlatPenetration?.TryGetValue(type, out var flatPen);
-            damage.PercentilePenetration?.TryGetValue(type, out var percentPen);
+            var flatPen = 0f;
+            var percentPen = 0f;
+            damage.FlatPenetration?.TryGetValue(type, out flatPen);
+            damage.PercentilePenetration?.TryGetValue(type, out percentPen);
 
             numsPerDamType[type] = (GetFlatNum(damage.disableCrossInteraction, flatReduction, percentPen, flatPen), GetPercNum(percentileResistCoeff, percentPen));
         }
+
         var breakpoints = GetBreakPoints(damage, modifierSet);
+        var reversed = breakpoints
+        .GroupBy(kvp => kvp.Value)
+        .ToDictionary(
+            g => g.Key,
+            g => g.Select(kvp => kvp.Key).ToList()
+        );
         var intervalList = breakpoints.Values.ToList().Distinct().Order();
+
         foreach (var intervalBreakPoint in intervalList)
         {
+            var flatSum = 0f;
+            var flatDamTypeSum = 0f;
+            var percentileDamTypeSum = 0f;
             foreach (var (type, baseFp) in damage.DamageDict)
             {
                 float baseDamage = baseFp.Float();
-
+                if (breakpoints[type] > intervalBreakPoint)
+                {
+                    flatSum += numsPerDamType[type].Item1;
+                    flatDamTypeSum += baseDamage;
+                }
+                else
+                {
+                    percentileDamTypeSum += baseDamage * numsPerDamType[type].Item2;
+                }
             }
+
+            multiplier = (requiredEffectiveDamage + flatSum) / (flatDamTypeSum + percentileDamTypeSum);
+
+            var didPass = true;
+
+            foreach (var (type, baseFp) in damage.DamageDict)
+            {
+                float baseDamage = baseFp.Float();
+                if (multiplier * baseDamage > breakpoints[type])
+                    didPass = false;
+            }
+
+            if (didPass == true)
+                return multiplier;
         }
 
-        float mulFlat = (requiredEffectiveDamage + sum1) / sum2;
-        float mulPerc = requiredEffectiveDamage / sum3;
-
-        var totalDamFlat = mulFlat * damage;
-        var totalDamPerc = mulPerc * damage;
-        Logger.Info($"calculated muls. mul flat: {mulFlat} mul perc: {mulPerc} total damage flat {totalDamFlat.GetTotal()} total damage percentile {totalDamPerc.GetTotal()}");
-
-        return Math.Max(mulFlat, mulPerc);
+        return multiplier; //if by any chance this shat the bed
     }
     private Dictionary<ProtoId<DamageTypePrototype>, float> GetBreakPoints(DamageSpecifier damage, DamageModifierSet modifierSet)
     {
         Dictionary<ProtoId<DamageTypePrototype>, float> breakpoints = new();
+
         foreach (var (type, baseFp) in damage.DamageDict)
         {
             float baseDamage = baseFp.Float();
             if (baseDamage <= 0f)
                 continue;
-            // just assign things
+
             float flatReduction = 0f;
             float percentileResistCoeff = 0f;
+
             if (modifierSet != null)
             {
                 modifierSet.FlatReduction.TryGetValue(type, out flatReduction);
                 modifierSet.Coefficients.TryGetValue(type, out percentileResistCoeff);
             }
+
             float flatPen = 0f;
             float percentPen = 0f;
+
             if (!damage.disableCrossInteraction)
                 flatReduction *= 1f - percentPen;
-            breakpoints[type] = (flatReduction-flatPen)/(baseDamage*(1-(1-percentileResistCoeff)*(1-percentPen)));
+
+            float breakpoint = (flatReduction - flatPen) / (baseDamage * (1 - (1 - percentileResistCoeff) * (1 - percentPen)));
+            breakpoints[type] = (float)Math.Round(breakpoint, 2);
         }
         return breakpoints;
     }
