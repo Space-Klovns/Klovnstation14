@@ -22,6 +22,20 @@ public sealed class PlayTtsEvent : EntityEventArgs
     }
 }
 
+/// <summary>
+///     Basically how this works is:
+///         If a message is not filtered for any slurs:
+///             It gets DontProcess, which means that
+///             it will always be played for all clients.
+///
+///         If a message is filtered for slurs:
+///             There will be two TTS-es processed, one filtered
+///             (that gets Filtered category) and one unfiltered
+///             (that gets WaitForFiltered).
+///
+///             Clients with slur filter on play the one that was filtered
+///             and ignore the one with WaitForFiltered, and vice versa.
+/// </summary>
 [Serializable, NetSerializable]
 public enum TtsFilteredCategory : byte
 {
