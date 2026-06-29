@@ -6,6 +6,7 @@
         "x": 1284,
         "y": 724
     },
+    "metaAtlas": false,
     "states": [
         {
             "name": "static",
