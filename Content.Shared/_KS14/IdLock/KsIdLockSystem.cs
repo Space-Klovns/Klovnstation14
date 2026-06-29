@@ -131,8 +131,7 @@ public sealed class KsIdLockSystem : EntitySystem
         }
 
         var inheritedCount = otherKeyComponent.AttachedUids.Count - originalAccessCount;
-        if (inheritedCount != 0 &&
-            entity.Comp.InheritPopupLoc is { } inheritPopupLoc)
+        if (entity.Comp.InheritPopupLoc is { } inheritPopupLoc)
             _popupSystem.PopupClient(Loc.GetString(inheritPopupLoc, ("count", inheritedCount)), args.User, args.User);
     }
 }
