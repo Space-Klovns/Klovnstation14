@@ -16,18 +16,23 @@ public sealed class LockVisualizerSystem : VisualizerSystem<LockVisualsComponent
         if (!AppearanceSystem.TryGetData<bool>(uid, LockVisuals.Locked, out var locked, args.Component))
             locked = true;
 
-        var unlockedStateExist = args.Sprite.BaseRSI?.TryGetState(comp.StateUnlocked, out _);
+        // KS14 Start: find the layer
+        if (!SpriteSystem.TryGetLayer((uid, args.Sprite), LockVisualLayers.Lock, out var lockLayer, logMissing: true))
+            return;
+        // KS14 End
+
+        var unlockedStateExist = (lockLayer.RSI ?? args.Sprite.BaseRSI)?/* KS14: use layer RSI, fallback to sprite RSI instead of only using sprite RSI */.TryGetState(comp.StateUnlocked, out _);
 
         if (AppearanceSystem.TryGetData<bool>(uid, StorageVisuals.Open, out var open, args.Component))
         {
-            SpriteSystem.LayerSetVisible((uid, args.Sprite), LockVisualLayers.Lock, !open);
+            SpriteSystem.LayerSetVisible(lockLayer /* KS14: directly specify the layer */, !open);
         }
         else if (!(bool)unlockedStateExist!)
-            SpriteSystem.LayerSetVisible((uid, args.Sprite), LockVisualLayers.Lock, locked);
+            SpriteSystem.LayerSetVisible(lockLayer /* KS14: directly specify the layer */, locked);
 
         if (!open && (bool)unlockedStateExist!)
         {
-            SpriteSystem.LayerSetRsiState((uid, args.Sprite), LockVisualLayers.Lock, locked ? comp.StateLocked : comp.StateUnlocked);
+            SpriteSystem.LayerSetRsiState(lockLayer /* KS14: directly specify the layer */, locked ? comp.StateLocked : comp.StateUnlocked);
         }
     }
 }
