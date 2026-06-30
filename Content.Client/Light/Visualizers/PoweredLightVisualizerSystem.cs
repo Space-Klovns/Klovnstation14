@@ -29,6 +29,15 @@ public sealed class PoweredLightVisualizerSystem : VisualizerSystem<PoweredLight
         if (comp.SpriteStateMap.TryGetValue(state, out var spriteState))
             SpriteSystem.LayerSetRsiState((uid, args.Sprite), PoweredLightLayers.Base, spriteState);
 
+        // KS14 start
+        if (comp.AlsoColorBase &&
+            SpriteSystem.TryGetLayer((uid, args.Sprite), PoweredLightLayers.Base, out var baseLayer, false) &&
+            TryComp<PointLightComponent>(uid, out var lightComponent) /* unnecessary trycomp but who cares */)
+        {
+            SpriteSystem.LayerSetColor(baseLayer, lightComponent.Color);
+        }
+        // KS14 end
+
         if (SpriteSystem.LayerExists((uid, args.Sprite), PoweredLightLayers.Glow))
         {
             if (TryComp<PointLightComponent>(uid, out var light))

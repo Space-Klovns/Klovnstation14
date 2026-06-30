@@ -1,0 +1,74 @@
+- type: entity
+  parent: PoweredSmallLightEmpty
+  id: PoweredLightHazard
+  name: hazard light
+  suffix: Empty, Disabled
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/Wallmounts/Lighting/hazard_light.rsi
+    state: empty
+    layers:
+    - state: base # actual base of the thing
+    - map: ["enum.PoweredLightLayers.Base"]
+      state: off
+    - map: ["enum.PoweredLightLayers.Glow"]
+      state: on # KS14: greyscale lighting textures
+      shader: unshaded
+      color: "#ffe342"
+  - type: PointLight
+    radius: 3.5
+    energy: 0.2
+    softness: 5
+    enabled: false
+    # color: "#ffe342"
+    mask: /Textures/Effects/LightMasks/double_cone.png
+  - type: PoweredLight
+    on: false
+  - type: RotatingLight
+    speed: 360
+  - type: PoweredLightVisuals
+    alsoColorBase: true
+    spriteStateMap:
+      empty: empty
+      off: off
+      on: off # other layer handles this
+      broken: broken
+      burned: burned
+  - type: AmbientOnPowered
+  - type: AmbientSound
+    volume: -9
+    range: 7.5
+    sound:
+      path: /Audio/_KS14/Effects/firealarm.ogg
+
+- type: entity
+  parent: PoweredLightHazard
+  id: PoweredLightHazardYellow
+  suffix: Yellow, Disabled
+  components:
+  - type: PoweredLight
+    hasLampOnSpawn: KsLightBulbHazardYellow
+
+- type: entity
+  parent: PoweredLightHazard
+  id: PoweredLightHazardYellowEnabled
+  name: hazard light
+  suffix: Yellow, Enabled
+  components:
+  - type: PointLight
+    enabled: true
+  - type: PoweredLight
+    hasLampOnSpawn: KsLightBulbHazardYellow
+    on: true
+
+- type: entity
+  parent: BaseLightbulb
+  name: yellow hazard light bulb
+  id: KsLightBulbHazardYellow
+  components:
+  - type: LightBulb
+    color: "#ffe342"
+    node: icon
+    lightEnergy: 1
+    lightRadius: 3.5
+    lightSoftness: 5

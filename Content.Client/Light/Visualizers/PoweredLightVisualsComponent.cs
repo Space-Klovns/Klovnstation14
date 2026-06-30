@@ -57,4 +57,13 @@ public sealed partial class PoweredLightVisualsComponent : Component
     public bool IsBlinking;
 
     #endregion Blinking
+
+    // KS14 Addition
+    /// <summary>
+    ///     True if the 'base' layer of the sprite should also be colored
+    ///         according to the bulb color.
+    /// </summary>
+    [DataField]
+    [ViewVariables(VVAccess.ReadWrite)]
+    public bool AlsoColorBase;
 }
