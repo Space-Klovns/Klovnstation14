@@ -261,32 +261,8 @@ public sealed class PredictedProjectileSystem : EntitySystem
 
         var multiplier = 0f;
 
-        var numsPerDamType = new Dictionary<ProtoId<DamageTypePrototype>, (float flatNum, float percNum)>();
-        foreach (var (type, baseFp) in damage.DamageDict)
-        {
-            float baseDamage = baseFp.Float();
-            if (baseDamage <= 0f)
-                continue;
-            Logger.Info($"damage got through, type: {type} value: {baseDamage}");
-            // just assign things
-            modifierSet.FlatReduction.TryGetValue(type, out var flatReduction);
-            modifierSet.Coefficients.TryGetValue(type, out var percentileResistCoeff);
-            var flatPen = 0f;
-            var percentPen = 0f;
-            damage.FlatPenetration?.TryGetValue(type, out flatPen);
-            damage.PercentilePenetration?.TryGetValue(type, out percentPen);
-
-            numsPerDamType[type] = (GetFlatNum(damage.disableCrossInteraction, flatReduction, percentPen, flatPen), GetPercNum(percentileResistCoeff, percentPen));
-        }
-
-        var breakpoints = GetBreakPoints(damage, modifierSet);
-        var reversed = breakpoints
-        .GroupBy(kvp => kvp.Value)
-        .ToDictionary(
-            g => g.Key,
-            g => g.Select(kvp => kvp.Key).ToList()
-        );
-        var intervalList = breakpoints.Values.ToList().Distinct().Order();
+        var (numsPerDamType, breakpoints, reversed) = PreProcess(damage, modifierSet);
+        var intervalList = reversed.Keys.OrderBy(x => x).ToList();
 
         foreach (var intervalBreakPoint in intervalList)
         {
@@ -324,9 +300,14 @@ public sealed class PredictedProjectileSystem : EntitySystem
 
         return multiplier; //if by any chance this shat the bed
     }
-    private Dictionary<ProtoId<DamageTypePrototype>, float> GetBreakPoints(DamageSpecifier damage, DamageModifierSet modifierSet)
+    private (Dictionary<ProtoId<DamageTypePrototype>, float>,
+    Dictionary<ProtoId<DamageTypePrototype>, (float flatNum, float percNum)>,
+    Dictionary<float, List<ProtoId<DamageTypePrototype>>>
+    ) PreProcess(DamageSpecifier damage, DamageModifierSet modifierSet)
     {
         Dictionary<ProtoId<DamageTypePrototype>, float> breakpoints = new();
+        Dictionary<ProtoId<DamageTypePrototype>, (float flatNum, float percNum)> numsPerDamType = new();
+        Dictionary<float, List<ProtoId<DamageTypePrototype>>> reversed = new();
 
         foreach (var (type, baseFp) in damage.DamageDict)
         {
@@ -346,13 +327,23 @@ public sealed class PredictedProjectileSystem : EntitySystem
             float flatPen = 0f;
             float percentPen = 0f;
 
+            damage.FlatPenetration?.TryGetValue(type, out flatPen);
+            damage.PercentilePenetration?.TryGetValue(type, out percentPen);
+
             if (!damage.disableCrossInteraction)
                 flatReduction *= 1f - percentPen;
 
-            float breakpoint = (flatReduction - flatPen) / (baseDamage * (1 - (1 - percentileResistCoeff) * (1 - percentPen)));
-            breakpoints[type] = (float)Math.Round(breakpoint, 2);
+            numsPerDamType[type] = (GetFlatNum(damage.disableCrossInteraction, flatReduction, percentPen, flatPen), GetPercNum(percentileResistCoeff, percentPen));
+
+            float breakpoint = (float)Math.Round((flatReduction - flatPen) / (baseDamage * (1 - (1 - percentileResistCoeff) * (1 - percentPen))), 2);
+            breakpoints[type] = breakpoint;
+            if (reversed.ContainsKey(breakpoint))
+                reversed[breakpoint].Add(type);
+            else
+                reversed[breakpoint] = new List<ProtoId<DamageTypePrototype>> {type};
+
         }
-        return breakpoints;
+        return (numsPerDamType, breakpoints, reversed);
     }
     private float GetFlatNum(bool xInteraction, float flatResist, float percPen, float flatPen)
     {
