@@ -68,7 +68,6 @@
   components:
   - type: LightBulb
     color: "#ffe342"
-    node: icon
     lightEnergy: 1
     lightRadius: 3.5
     lightSoftness: 5
