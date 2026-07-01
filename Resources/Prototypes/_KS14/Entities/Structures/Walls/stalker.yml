@@ -31,7 +31,7 @@
 - type: entity
   parent: BaseWall
   id: KsWallSolidConcrete
-  name: concrete wall
+  name: warm concrete wall # warm as in the color
   components:
   - type: Sprite
     sprite: _Stalker/Structures/Walls/concrete.rsi
@@ -40,6 +40,23 @@
   - type: IconSmooth
     key: walls
     base: concrete
+  - type: Destructible
+    thresholds: *thresholds
+
+- type: entity
+  parent: BaseWall
+  id: KsWallSolidConcreteGrey
+  name: greyish concrete wall
+  components:
+  - type: Sprite
+    sprite: _Stalker/Structures/Walls/concrete.rsi
+    shader: Noir
+  - type: Icon
+    sprite: _Stalker/Structures/Walls/concrete.rsi
+  - type: IconSmooth
+    key: walls
+    base: concrete
+    shader: Noir
   - type: Destructible
     thresholds: *thresholds
 
