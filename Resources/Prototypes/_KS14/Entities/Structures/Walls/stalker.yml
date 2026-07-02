@@ -43,20 +43,15 @@
   - type: Destructible
     thresholds: *thresholds
 
+# inherits from concrete wall
 - type: entity
-  parent: BaseWall
+  parent: KsWallSolidConcrete
   id: KsWallSolidConcreteGrey
   name: greyish concrete wall
   components:
-  - type: Icon
-    sprite: _Stalker/Structures/Walls/concrete.rsi
-    # TODO LCDC STALKERWALLS: icon shader
+  # TODO LCDC STALKERWALLS: icon shader
   - type: IconSmooth
-    key: walls
-    base: concrete
     shader: Noir
-  - type: Destructible
-    thresholds: *thresholds
 
 - type: entity
   parent: BaseWall
