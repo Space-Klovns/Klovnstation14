@@ -48,11 +48,9 @@
   id: KsWallSolidConcreteGrey
   name: greyish concrete wall
   components:
-  - type: Sprite
-    sprite: _Stalker/Structures/Walls/concrete.rsi
-    shader: Noir
   - type: Icon
     sprite: _Stalker/Structures/Walls/concrete.rsi
+    # TODO LCDC STALKERWALLS: icon shader
   - type: IconSmooth
     key: walls
     base: concrete
