@@ -60,7 +60,7 @@ public sealed partial class KsAdminMusicManager : IPostInjectInit
 
     private void AddAndPlayEntry(KsAdminMusicEntry entry)
     {
-        var playbackPosition = (float)(_gameTiming.RealTime - entry.StartTime).TotalSeconds;
+        var playbackPosition = (float)(_gameTiming.ServerTime /* this is sus */ - entry.StartTime).TotalSeconds;
         if (playbackPosition < 0f)
             playbackPosition = 0f;
 
