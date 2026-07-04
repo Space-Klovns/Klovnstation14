@@ -67,9 +67,11 @@ public sealed class PlayAdminMusicCommand : LocalizedEntityCommands
 
     public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
-        if (args.Length != 1)
-            return CompletionResult.Empty;
-
-        return CompletionResult.FromHintOptions(CompletionHelper.AudioFilePath(args[0], _prototypeManager, _resourceManager), Loc.GetString("cmd-playadminmusic-path-completion"));
+        return args.Length switch
+        {
+            1 => CompletionResult.FromHintOptions(CompletionHelper.AudioFilePath(args[0], _prototypeManager, _resourceManager), Loc.GetString("cmd-playadminmusic-path-completion")),
+            2 => CompletionResult.FromHint(Loc.GetString("cmd-playadminmusic-volume-completion")),
+            _ => CompletionResult.Empty
+        };
     }
 }
