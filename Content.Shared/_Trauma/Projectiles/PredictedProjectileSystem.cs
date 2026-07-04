@@ -23,7 +23,6 @@ using Robust.Shared.Prototypes; // KS14
 using Content.Shared._KS14.CCVar; // KS14
 using Content.Shared.Movement.Components; //KS14
 using System.Linq; //KS14
-using Robust.Shared.Log;
 using Content.Shared.Standing; // KS14
 
 namespace Content.Shared._Trauma.Projectiles;
@@ -170,14 +169,6 @@ public sealed class PredictedProjectileSystem : EntitySystem
 
             if (!IsFinite(multiplierValue) || !IsFinite(maxMultiplierValue))
             {
-                Logger.Error(
-                    "Encountered non-finite penetration multipliers for projectile {Projectile} hitting {Target}: required={Required}, multiplier={Multiplier}, maxMultiplier={MaxMultiplier}",
-                    uid,
-                    target,
-                    damageRequired.Float(),
-                    multiplierValue,
-                    maxMultiplierValue);
-
                 multiplierValue = 0f;
                 maxMultiplierValue = 0f;
             }
@@ -371,7 +362,6 @@ public sealed class PredictedProjectileSystem : EntitySystem
         float previousDamage = EvaluateTotalDamage(previousMultiplier);
         if (!IsFinite(previousDamage))
         {
-            Logger.Error("Encountered non-finite initial damage evaluation while calculating penetration multiplier for damage {Damage} and required {Required}", damage.GetTotal().Float(), requiredEffectiveDamage);
             return 0f;
         }
 
@@ -383,7 +373,6 @@ public sealed class PredictedProjectileSystem : EntitySystem
             float nextDamage = EvaluateTotalDamage(nextMultiplier);
             if (!IsFinite(nextDamage))
             {
-                Logger.Error("Encountered non-finite damage evaluation at breakpoint {Breakpoint} while calculating penetration multiplier for damage {Damage} and required {Required}", nextMultiplier, damage.GetTotal().Float(), requiredEffectiveDamage);
                 break;
             }
 
@@ -410,7 +399,6 @@ public sealed class PredictedProjectileSystem : EntitySystem
         float stepDamage = EvaluateTotalDamage(stepMultiplier);
         if (!IsFinite(stepDamage))
         {
-            Logger.Error("Encountered non-finite damage evaluation at step multiplier {StepMultiplier} while calculating penetration multiplier for damage {Damage} and required {Required}", stepMultiplier, damage.GetTotal().Float(), requiredEffectiveDamage);
             return 0f;
         }
 
