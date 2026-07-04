@@ -4,6 +4,8 @@ using Content.Shared._KS14.AdminMusic;
 using Robust.Server.Audio;
 using Robust.Server.Player;
 using Robust.Shared.Audio;
+using Robust.Shared.Enums;
+using Robust.Shared.GameStates;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
@@ -99,7 +101,8 @@ public sealed class KsAdminMusicManager : IPostInjectInit
 
     private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs args)
     {
-        if (_activeEntries.Count == 0)
+        if (args.NewStatus != SessionStatus.Connected ||
+            _activeEntries.Count == 0)
             return;
 
         SendDataUpdate(args.Session);
