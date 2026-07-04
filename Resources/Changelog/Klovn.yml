@@ -1575,3 +1575,13 @@ Entries:
       message: Changed the Hristov to work differently.
   id: 164
   time: '2026-07-04T09:02:27.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed announcement webhooks never updating.
+    - type: Add
+      message: >-
+        Added admin abuse system for admins to play music for everyone on the
+        server. This can be opted out of by pressing the 'stop playing' button.
+  id: 165
+  time: '2026-07-04T18:29:25.0000000+00:00'
