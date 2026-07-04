@@ -11,21 +11,28 @@ using Content.Shared.Destructible;
 using System.Linq;
 using Content.Shared.Trigger;
 using Content.Shared.GameTicking;
+using Robust.Shared.Prototypes;
+using System.Threading;
 
 namespace Content.Server._KS14.GameTicking.Rules;
 
 [RegisterComponent]
 public sealed partial class ScenarioRuleComponent : Component
 {
-    public bool NtWon = false;
-    public bool ObjectiveVictory = false;
+    public ProtoId<ScenarioFactionPrototype>? WinningFactionId = null;
+
+    public ScenarioWinType WinType;
 }
+
 public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
 {
+    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly RoundEndSystem _roundEndSystem = default!;
 
     // All active objectives
     private readonly HashSet<EntityUid> _activeObjectiveUids = [];
+    private readonly ThreadLocal<HashSet<ProtoId<ScenarioFactionPrototype>>> _uniqueFactionSetLocal = new(() => []);
+
 
     public override void Initialize()
     {
@@ -34,20 +41,14 @@ public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestartCleanup);
 
         //syndie checks
-        SubscribeLocalEvent<ScenarioSyndieComponent, ComponentShutdown>(OnSyndieShutdown);
-        SubscribeLocalEvent<ScenarioSyndieComponent, MobStateChangedEvent>(OnSyndieMobstateChanged);
-        SubscribeLocalEvent<ScenarioSyndieComponent, EntityZombifiedEvent>(OnSyndieZombified);
-
-        //NT checks
-        SubscribeLocalEvent<ScenarioNtComponent, ComponentShutdown>(OnNtShutdown);
-        SubscribeLocalEvent<ScenarioNtComponent, MobStateChangedEvent>(OnNtMobstateChanged);
-        SubscribeLocalEvent<ScenarioNtComponent, EntityZombifiedEvent>(OnNtZombified);
+        SubscribeLocalEvent<ScenarioFactionMemberComponent, ComponentShutdown>(OnMemberShutdown);
+        SubscribeLocalEvent<ScenarioFactionMemberComponent, MobStateChangedEvent>(OnMemberMobStateChanged);
+        SubscribeLocalEvent<ScenarioFactionMemberComponent, EntityZombifiedEvent>(OnMemberZombified);
 
         SubscribeLocalEvent<ScenarioObjectiveComponent, ComponentShutdown>(OnObjectiveShutdown);
         SubscribeLocalEvent<ScenarioObjectiveComponent, TriggerEvent>(OnTriggered);
         SubscribeLocalEvent<ScenarioObjectiveComponent, TimedDespawnEvent>(OnObjDefended);
         SubscribeLocalEvent<ScenarioObjectiveComponent, DestructionEventArgs>(OnObjDestroyed);
-
     }
 
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent args)
@@ -64,8 +65,15 @@ public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
         base.AppendRoundEndText(uid, component, gameRule, ref args);
         //TODO SOOT: unfuck this and make this actually good
         args.AddLine("A skirmish between NT and Syndicate forces has transpired.");
-        args.AddLine($"The victor is {(component.NtWon ? "Nanotrasen" : "The Syndicate")}");
-        args.AddLine($"{(component.ObjectiveVictory ? (component.NtWon ? "Nanotrasen has destroyed the Syndicate objective." : "The Syndicate has destroyed the Nanotrasen objective.") : (component.NtWon ? "Nanotrasen has killed all Syndicate operatives." : "The Syndicate has killed all Nanotrasen agents."))}");
+
+        if (component.WinningFactionId is { } winningFactionId &&
+            _prototypeManager.TryIndex(winningFactionId, out var winningFaction))
+        {
+            args.AddLine(Loc.GetString(winningFaction.VictoryLocId));
+
+            if (winningFaction.WinTypeLocIds.TryGetValue(component.WinType, out var winLoc))
+                args.AddLine(Loc.GetString(winLoc));
+        }
     }
 
     protected override void Added(EntityUid uid, ScenarioRuleComponent component, GameRuleComponent gameRule, GameRuleAddedEvent args)
@@ -76,70 +84,50 @@ public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
         // Map loading and RuleLoadedGridsEvent is handled by LoadMapRuleSystem
     }
 
-    private void OnSyndieShutdown(EntityUid uid, ScenarioSyndieComponent component, ComponentShutdown args)
+    private void OnMemberShutdown(Entity<ScenarioFactionMemberComponent> entity, ref ComponentShutdown args)
     {
         CheckRoundShouldEndViaDeath();
     }
 
-    private void OnSyndieMobstateChanged(EntityUid uid, ScenarioSyndieComponent component, MobStateChangedEvent ev)
+    private void OnMemberMobStateChanged(Entity<ScenarioFactionMemberComponent> entity, ref MobStateChangedEvent ev)
     {
-        if (ev.NewMobState == MobState.Dead)
-            CheckRoundShouldEndViaDeath();
-    }
+        if (ev.NewMobState != MobState.Dead)
+            return;
 
-    private void OnSyndieZombified(EntityUid uid, ScenarioSyndieComponent component, ref EntityZombifiedEvent args)
-    {
-        RemCompDeferred(uid, component);
-    }
-
-    private void OnNtShutdown(EntityUid uid, ScenarioNtComponent component, ComponentShutdown args)
-    {
         CheckRoundShouldEndViaDeath();
     }
 
-    private void OnNtMobstateChanged(EntityUid uid, ScenarioNtComponent component, MobStateChangedEvent ev)
+    private void OnMemberZombified(Entity<ScenarioFactionMemberComponent> entity, ref EntityZombifiedEvent args)
     {
-        if (ev.NewMobState == MobState.Dead)
-            CheckRoundShouldEndViaDeath();
+        RemComp(entity, entity.Comp);
     }
 
-    private void OnNtZombified(EntityUid uid, ScenarioNtComponent component, ref EntityZombifiedEvent args)
-    {
-        RemCompDeferred(uid, component);
-    }
-    private void SetWinType(bool value)
+    private void SetWinType(ScenarioWinType winType)
     {
         var query = QueryActiveRules();
         while (query.MoveNext(out var uid, out _, out var scenario, out _))
-        {
-            SetWinType((uid, scenario), value);
-        }
+            SetWinType((uid, scenario), winType);
     }
-    private void SetWinType(Entity<ScenarioRuleComponent> ent, bool value)
+
+    private static void SetWinType(Entity<ScenarioRuleComponent> ent, ScenarioWinType winType)
     {
-        ent.Comp.ObjectiveVictory = value;
+        ent.Comp.WinType = winType;
     }
-    private void SetWinFaction(bool value)
+
+    private void SetWinFaction(ProtoId<ScenarioFactionPrototype>? factionId)
     {
         var query = QueryActiveRules();
         while (query.MoveNext(out var uid, out _, out var scenario, out _))
-        {
-            SetWinFaction((uid, scenario), value);
-        }
+            SetWinFaction((uid, scenario), factionId);
     }
-    private void SetWinFaction(Entity<ScenarioRuleComponent> ent, bool value)
+
+    private void SetWinFaction(Entity<ScenarioRuleComponent> ent, ProtoId<ScenarioFactionPrototype>? factionId)
     {
-        ent.Comp.NtWon = value;
+        ent.Comp.WinningFactionId = factionId;
     }
 
     private bool IsRuleActive()
-    {
-        var eqe = QueryActiveRules();
-        while (eqe.MoveNext(out _, out _, out _))
-            return true;
-
-        return false;
-    }
+        => EntityQuery<ScenarioRuleComponent>().Any();
 
     private void CheckRoundShouldEndViaObjective()
     {
@@ -150,7 +138,7 @@ public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
         if (_activeObjectiveUids.Count != 0)
             return;
 
-        SetWinType(true);
+        SetWinType(ScenarioWinType.Objective);
         _roundEndSystem.DoRoundEndBehavior(RoundEndBehavior.InstantEnd,
             TimeSpan.FromMinutes(3), //doesnt matter
             "comms-console-announcement-title-centcom",
@@ -163,42 +151,40 @@ public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
         if (!IsRuleActive())
             return;
 
+        // i would like to assume thread safety but no just no
+        var uniqueFactionSet = _uniqueFactionSetLocal.Value!;
+        uniqueFactionSet.Clear();
+
+        ProtoId<ScenarioFactionPrototype>? winningFactionId = null;
+
         // Check if there are syndies still alive
         // If there are, the round can continue.
-        var syndies = EntityQuery<ScenarioSyndieComponent, MobStateComponent, TransformComponent>(true);
-        var syndiesAlive = syndies
-            .Any(syn => syn.Item2.CurrentState == MobState.Alive && syn.Item1.Running);
-
-        if (!syndiesAlive)
+        var query = EntityQuery<ScenarioFactionMemberComponent, MobStateComponent>();
+        foreach (var (memberComponent, mobStateComponent) in query)
         {
-            SetWinFaction(true);
-            _roundEndSystem.DoRoundEndBehavior(RoundEndBehavior.InstantEnd,
-                TimeSpan.FromMinutes(3), //doesnt matter if its instant i think
-                "comms-console-announcement-title-centcom",
-                "comms-console-announcement-title-centcom",
-                "comms-console-announcement-title-centcom");
+            if (mobStateComponent.CurrentState == MobState.Dead)
+                continue;
+
+            // means that there is more than 1 faction alive, round shouldnt end so return
+            if (winningFactionId is { })
+                return;
+
+            winningFactionId = memberComponent.Id;
         }
 
-        // Check if there are nanotrasen still alive
-        // If there are, the round can continue.
-        var nanotrasen = EntityQuery<ScenarioNtComponent, MobStateComponent, TransformComponent>(true);
-        var nanotrasenAlive = syndies
-            .Any(nt => nt.Item2.CurrentState == MobState.Alive && nt.Item1.Running);
-
-        if (nanotrasenAlive)
-            return; // There are living nanotrasen
-
+        SetWinFaction(winningFactionId);
         _roundEndSystem.DoRoundEndBehavior(RoundEndBehavior.InstantEnd,
             TimeSpan.FromMinutes(3), //doesnt matter if its instant i think
             "comms-console-announcement-title-centcom",
             "comms-console-announcement-title-centcom",
             "comms-console-announcement-title-centcom");
-
     }
 
     private void OnObjectiveShutdown(Entity<ScenarioObjectiveComponent> entity, ref ComponentShutdown args)
     {
         _activeObjectiveUids.Remove(entity);
+
+        SetWinFaction(entity.Comp.FactionId);
         CheckRoundShouldEndViaObjective();
     }
 
@@ -223,6 +209,7 @@ public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
 
     private void CaptureObjective(Entity<ScenarioObjectiveComponent> entity)
     {
+        SetWinFaction(entity.Comp.FactionId);
         RemComp(entity, entity.Comp);
     }
 }

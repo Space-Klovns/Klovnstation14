@@ -1,0 +1,60 @@
+- type: job
+  id: ScenarioNt
+  name: job-name-scenario-nt
+  description: job-description-scenario-nt
+  playTimeTracker: JobScenarioNt
+  startingGear: null # scenario spawns get NOTHING
+  icon: "JobIconNanotrasen"
+  supervisors: job-supervisors-nobody
+  canBeAntag: false
+  access:
+  - Maintenance
+  special:
+  - !type:AddComponentSpecial
+    components:
+    - type: ScenarioFactionMember
+      id: Nanotrasen
+    - type: NpcFactionMember
+      factions:
+      - NanoTrasen
+
+- type: job
+  id: ScenarioSyndie #TODO soot: species whitelist to be human only
+  name: job-name-scenario-syndie
+  description: job-description-scenario-syndie
+  playTimeTracker: JobScenarioSyndie
+  startingGear: null # scenario spawns get NOTHING
+  icon: "JobIconSyndicate"
+  supervisors: job-supervisors-nobody
+  canBeAntag: false
+  access:
+  - SyndicateAgent
+  - Maintenance
+  special:
+  - !type:AddComponentSpecial
+    components:
+    - type: ScenarioFactionMember
+      id: Syndicate
+    - type: NpcFactionMember
+      factions:
+      - Syndicate
+
+- type: job
+  id: ScenarioScav
+  name: job-name-scenario-scav
+  description: job-description-scenario-scav
+  playTimeTracker: JobScenarioScav
+  startingGear: null # scenario spawns get NOTHING
+  icon: "JobIconPirate"
+  supervisors: job-supervisors-nobody
+  canBeAntag: false
+  access:
+  - Maintenance
+  special:
+  - !type:AddComponentSpecial
+    components:
+    - type: ScenarioFactionMember
+      id: Scavengers
+    - type: NpcFactionMember
+      factions:
+      - AllHostile

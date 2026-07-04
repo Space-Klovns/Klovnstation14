@@ -6,3 +6,4 @@
   components:
   - type: GameRule
     minPlayers: 0
+  - type: ScenarioRule

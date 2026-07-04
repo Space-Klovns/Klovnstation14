@@ -1,0 +1,30 @@
+
+# Infinite scenarioslop generation
+
+- type: scenarioFaction
+  id: Nanotrasen
+  victoryLocId: scenario-roundend-victory-nt
+  winTypeLocIds:
+    Decimation: scenario-roundend-victory-nt-decimation
+    Objective: scenario-roundend-victory-nt-objective
+
+- type: scenarioFaction
+  id: Syndicate
+  victoryLocId: scenario-roundend-victory-syndie
+  winTypeLocIds:
+    Decimation: scenario-roundend-victory-syndie-decimation
+    Objective: scenario-roundend-victory-syndie-objective
+
+- type: scenarioFaction
+  id: Scavengers
+  victoryLocId: scenario-roundend-victory-scav
+  winTypeLocIds:
+    Decimation: scenario-roundend-victory-scav-decimation
+    Objective: scenario-roundend-victory-scav-objective
+
+- type: scenarioFaction
+  id: Redacted
+  victoryLocId: scenario-roundend-victory-redacted
+  winTypeLocIds:
+    Decimation: scenario-roundend-victory-redacted-decimation
+    Objective: scenario-roundend-victory-redacted-objective

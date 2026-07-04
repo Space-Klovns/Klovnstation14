@@ -126,6 +126,7 @@
     - onstate
     - variant
   - type: ScenarioObjective
+    factionId: Syndicate
     keysIn:
     - win
   - type: TimedDespawn
@@ -182,6 +183,8 @@
   name: nanotrasen objective
   description: This is a server that is of paramount importance to Nanotrasen. Would be a shame if someone broke it!
   components:
+  - type: ScenarioObjective
+    factionId: Nanotrasen
   - type: Sprite
     layers:
     - state: telecom-nopower
