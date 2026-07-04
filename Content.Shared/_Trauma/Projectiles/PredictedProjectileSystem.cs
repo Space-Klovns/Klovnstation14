@@ -165,9 +165,28 @@ public sealed class PredictedProjectileSystem : EntitySystem
                 _prototypeManager.Resolve(damageable.DamageModifierSetId, out targetDamageModifiers);
             }
 
-            multiplier = CalculateMultiplier(ev.Damage, targetDamageModifiers, damageRequired.Float());
-            maxmultiplier = CalculateMultiplier(ev.Damage, targetDamageModifiers, comp.PenetrationThreshold.Float()-comp.PenetrationAmount.Float());
-            adjustedDamage = ev.Damage * FixedPoint2.Min(multiplier, maxmultiplier);
+            var multiplierValue = CalculateMultiplier(ev.Damage, targetDamageModifiers, damageRequired.Float());
+            var maxMultiplierValue = CalculateMultiplier(ev.Damage, targetDamageModifiers, comp.PenetrationThreshold.Float() - comp.PenetrationAmount.Float());
+
+            if (!IsFinite(multiplierValue) || !IsFinite(maxMultiplierValue))
+            {
+                Logger.Error(
+                    "Encountered non-finite penetration multipliers for projectile {Projectile} hitting {Target}: required={Required}, multiplier={Multiplier}, maxMultiplier={MaxMultiplier}",
+                    uid,
+                    target,
+                    damageRequired.Float(),
+                    multiplierValue,
+                    maxMultiplierValue);
+
+                multiplierValue = 0f;
+                maxMultiplierValue = 0f;
+            }
+
+            multiplier = multiplierValue;
+            maxmultiplier = maxMultiplierValue;
+            var quantizedMultiplier = QuantizeMultiplier(multiplierValue);
+            var quantizedMaxMultiplier = QuantizeMultiplier(maxMultiplierValue);
+            adjustedDamage = ev.Damage * FixedPoint2.Min(quantizedMultiplier, quantizedMaxMultiplier);
         }
         // KS14 - demonic penetrationcode end
 
@@ -245,69 +264,35 @@ public sealed class PredictedProjectileSystem : EntitySystem
     }
     // KS14 penetration demoncode start
     /// <summary>
-    /// Remember that wonderful armor system? Yeah, me too. This is what I need to do to make pen work with it.
+    /// Calculates the multiplier needed to reach the requested effective damage.
+    /// This uses the same exact per-damage-type branch logic as the Python reference solver.
     /// </summary>
-    public float CalculateMultiplier(
-    DamageSpecifier damage,
-    DamageModifierSet? modifierSet,
-    float requiredEffectiveDamage)
+    private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
+
+    public static FixedPoint2 QuantizeMultiplier(float multiplier)
     {
-        Logger.Info($"calculating mul. required damage = {requiredEffectiveDamage}");
-        if (requiredEffectiveDamage <= 0f)
+        if (!IsFinite(multiplier) || multiplier <= 0f)
+            return FixedPoint2.Zero;
+
+        return FixedPoint2.NewCeiling(multiplier);
+    }
+
+    public float CalculateMultiplier(
+        DamageSpecifier damage,
+        DamageModifierSet? modifierSet,
+        float requiredEffectiveDamage)
+    {
+        if (!IsFinite(requiredEffectiveDamage) || requiredEffectiveDamage <= 0f)
             return 0f;
 
         if (modifierSet == null)
-            return damage.GetTotal().Float() / requiredEffectiveDamage;
-
-        var multiplier = 0f;
-
-        var (numsPerDamType, breakpoints, reversed) = PreProcess(damage, modifierSet);
-        var intervalList = reversed.Keys.OrderBy(x => x).ToList();
-
-        foreach (var intervalBreakPoint in intervalList)
         {
-            var flatSum = 0f;
-            var flatDamTypeSum = 0f;
-            var percentileDamTypeSum = 0f;
-            foreach (var (type, baseFp) in damage.DamageDict)
-            {
-                float baseDamage = baseFp.Float();
-                if (breakpoints[type] > intervalBreakPoint)
-                {
-                    flatSum += numsPerDamType[type].Item1;
-                    flatDamTypeSum += baseDamage;
-                }
-                else
-                {
-                    percentileDamTypeSum += baseDamage * numsPerDamType[type].Item2;
-                }
-            }
-
-            multiplier = (requiredEffectiveDamage + flatSum) / (flatDamTypeSum + percentileDamTypeSum);
-
-            var didPass = true;
-
-            foreach (var (type, baseFp) in damage.DamageDict)
-            {
-                float baseDamage = baseFp.Float();
-                if (multiplier * baseDamage > breakpoints[type])
-                    didPass = false;
-            }
-
-            if (didPass == true)
-                return multiplier;
+            var totalDamage = damage.GetTotal().Float();
+            return IsFinite(totalDamage) ? totalDamage / requiredEffectiveDamage : 0f;
         }
 
-        return multiplier; //if by any chance this shat the bed
-    }
-    private (Dictionary<ProtoId<DamageTypePrototype>, float>,
-    Dictionary<ProtoId<DamageTypePrototype>, (float flatNum, float percNum)>,
-    Dictionary<float, List<ProtoId<DamageTypePrototype>>>
-    ) PreProcess(DamageSpecifier damage, DamageModifierSet modifierSet)
-    {
-        Dictionary<ProtoId<DamageTypePrototype>, float> breakpoints = new();
-        Dictionary<ProtoId<DamageTypePrototype>, (float flatNum, float percNum)> numsPerDamType = new();
-        Dictionary<float, List<ProtoId<DamageTypePrototype>>> reversed = new();
+        var typeData = new List<(float BaseDamage, float FlatReduction, float PercentileMultiplier, float ZeroThreshold, float SwitchThreshold)>();
+        var breakpoints = new HashSet<float> { 0f };
 
         foreach (var (type, baseFp) in damage.DamageDict)
         {
@@ -333,27 +318,107 @@ public sealed class PredictedProjectileSystem : EntitySystem
             if (!damage.disableCrossInteraction)
                 flatReduction *= 1f - percentPen;
 
-            numsPerDamType[type] = (GetFlatNum(damage.disableCrossInteraction, flatReduction, percentPen, flatPen), GetPercNum(percentileResistCoeff, percentPen));
-
-            float breakpoint = (float)Math.Round((flatReduction - flatPen) / (baseDamage * (1 - (1 - percentileResistCoeff) * (1 - percentPen))), 2);
-            breakpoints[type] = breakpoint;
-            if (reversed.ContainsKey(breakpoint))
-                reversed[breakpoint].Add(type);
+            if (flatReduction > 0f)
+                flatReduction = Math.Max(0f, flatReduction - flatPen);
             else
-                reversed[breakpoint] = new List<ProtoId<DamageTypePrototype>> {type};
+                flatReduction -= flatPen;
 
+            float percentileMultiplier = 1f;
+            if (percentileResistCoeff != 0f)
+                percentileMultiplier = 1f - (1f - percentileResistCoeff) * (1f - percentPen);
+
+            float zeroThreshold = flatReduction > 0f ? flatReduction / baseDamage : 0f;
+            float switchThreshold = flatReduction > 0f && percentileMultiplier < 1f
+                ? flatReduction / (baseDamage * (1f - percentileMultiplier))
+                : float.PositiveInfinity;
+
+            breakpoints.Add(zeroThreshold);
+            if (switchThreshold != float.PositiveInfinity && switchThreshold > 0f)
+                breakpoints.Add(switchThreshold);
+
+            typeData.Add((baseDamage, flatReduction, percentileMultiplier, zeroThreshold, switchThreshold));
         }
-        return (numsPerDamType, breakpoints, reversed);
-    }
-    private float GetFlatNum(bool xInteraction, float flatResist, float percPen, float flatPen)
-    {
-        if (xInteraction == false)
-            return Math.Max(0, flatResist * (1 - percPen) - flatPen);
-        return Math.Max(0, flatResist - flatPen);
-    }
-    private float GetPercNum(float percResist, float percPen)
-    {
-        return 1 - (1 - percResist) * (1 - percPen);
+
+        var sortedBreakpoints = breakpoints
+            .Where(x => x >= 0f && x != float.PositiveInfinity)
+            .OrderBy(x => x)
+            .ToList();
+
+        if (sortedBreakpoints.Count == 0)
+            return 0f;
+
+        float EvaluateTotalDamage(float multiplier)
+        {
+            if (!IsFinite(multiplier))
+                return float.NaN;
+
+            float totalDamage = 0f;
+            foreach (var (baseDamage, flatReduction, percentileMultiplier, _, _) in typeData)
+            {
+                float flatValue = Math.Max(0f, baseDamage * multiplier - flatReduction);
+                float percentileValue = baseDamage * multiplier * percentileMultiplier;
+                float contribution = Math.Min(flatValue, percentileValue);
+                if (!IsFinite(contribution))
+                    return float.NaN;
+
+                totalDamage += contribution;
+            }
+
+            return IsFinite(totalDamage) ? totalDamage : float.NaN;
+        }
+
+        float previousMultiplier = 0f;
+        float previousDamage = EvaluateTotalDamage(previousMultiplier);
+        if (!IsFinite(previousDamage))
+        {
+            Logger.Error("Encountered non-finite initial damage evaluation while calculating penetration multiplier for damage {Damage} and required {Required}", damage.GetTotal().Float(), requiredEffectiveDamage);
+            return 0f;
+        }
+
+        foreach (var nextMultiplier in sortedBreakpoints)
+        {
+            if (nextMultiplier <= previousMultiplier)
+                continue;
+
+            float nextDamage = EvaluateTotalDamage(nextMultiplier);
+            if (!IsFinite(nextDamage))
+            {
+                Logger.Error("Encountered non-finite damage evaluation at breakpoint {Breakpoint} while calculating penetration multiplier for damage {Damage} and required {Required}", nextMultiplier, damage.GetTotal().Float(), requiredEffectiveDamage);
+                break;
+            }
+
+            if (previousDamage >= requiredEffectiveDamage)
+                return previousMultiplier;
+
+            if (requiredEffectiveDamage <= nextDamage)
+            {
+                if (Math.Abs(nextDamage - previousDamage) < 1e-6f)
+                    return nextMultiplier;
+
+                var interpolatedMultiplier = previousMultiplier + (requiredEffectiveDamage - previousDamage) * (nextMultiplier - previousMultiplier) / (nextDamage - previousDamage);
+                return IsFinite(interpolatedMultiplier) ? interpolatedMultiplier : 0f;
+            }
+
+            previousMultiplier = nextMultiplier;
+            previousDamage = nextDamage;
+        }
+
+        if (previousDamage >= requiredEffectiveDamage)
+            return previousMultiplier;
+
+        float stepMultiplier = previousMultiplier + Math.Max(1f, requiredEffectiveDamage);
+        float stepDamage = EvaluateTotalDamage(stepMultiplier);
+        if (!IsFinite(stepDamage))
+        {
+            Logger.Error("Encountered non-finite damage evaluation at step multiplier {StepMultiplier} while calculating penetration multiplier for damage {Damage} and required {Required}", stepMultiplier, damage.GetTotal().Float(), requiredEffectiveDamage);
+            return 0f;
+        }
+
+        if (Math.Abs(stepDamage - previousDamage) < 1e-6f)
+            return previousMultiplier;
+
+        var finalMultiplier = previousMultiplier + (requiredEffectiveDamage - previousDamage) * (stepMultiplier - previousMultiplier) / (stepDamage - previousDamage);
+        return IsFinite(finalMultiplier) ? finalMultiplier : 0f;
     }
     //KS14 penetration demoncode end
 }
