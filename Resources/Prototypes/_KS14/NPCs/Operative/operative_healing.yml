@@ -93,6 +93,7 @@
       operator: !type:SpeakOperator
         speech: !type:LocalizedSetSpeakOperatorSpeech
           lineSet: KsOperativeRetreating
+        cooldownId: voiceline_retreating
     - !type:HTNPrimitiveTask
       operator: !type:UtilityOperator
         proto: KsOperativeRetreatableCampingMarkers # preferably not towards the target

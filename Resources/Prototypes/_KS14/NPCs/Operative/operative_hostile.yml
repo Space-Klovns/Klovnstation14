@@ -37,6 +37,7 @@
       operator: !type:SpeakOperator
         speech: !type:LocalizedSetSpeakOperatorSpeech
           lineSet: KsOperativeHoldingPosition
+        cooldownId: voiceline_holding
 
     - !type:HTNPrimitiveTask
       operator: !type:StaticWaitOperator

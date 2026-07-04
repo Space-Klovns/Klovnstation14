@@ -6,6 +6,7 @@
       operator: !type:SpeakOperator
         speech: !type:LocalizedSetSpeakOperatorSpeech
           lineSet: KsOperativeAdvancing
+        cooldownId: voiceline_advance_or_camp
 
     - !type:HTNPrimitiveTask
       operator: !type:UtilityOperator

@@ -13,6 +13,7 @@
         cooldown: 5
         speech: !type:LocalizedSetSpeakOperatorSpeech
           lineSet: KsOperativeContact
+        cooldownId: voiceline_contact
 
     - !type:HTNPrimitiveTask # copy target coords
       operator: !type:CopyKeyOperator
@@ -140,6 +141,7 @@
       operator: !type:SpeakOperator
         speech: !type:LocalizedSetSpeakOperatorSpeech
           lineSet: KsOperativeOutOfAmmo
+        cooldownId: voiceline_reloading_general
 
 - type: htnCompound
   id: KsOperativeReloadActiveGun
@@ -149,6 +151,7 @@
       operator: !type:SpeakOperator
         speech: !type:LocalizedSetSpeakOperatorSpeech
           lineSet: KsOperativeReloading
+        cooldownId: voiceline_reloading_general
 
     # Look for ammo
     - !type:HTNPrimitiveTask
