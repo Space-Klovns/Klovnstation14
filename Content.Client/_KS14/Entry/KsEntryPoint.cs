@@ -1,3 +1,4 @@
+using Content.Client._KS14.AdminMusic;
 using Content.Client._KS14.IoC;
 using Content.Shared._KS14.IoC;
 using Robust.Client;
@@ -9,6 +10,7 @@ internal sealed class KsEntryPoint : GameClient
 {
     [Dependency] private readonly IBaseClient _baseClient = default!;
     [Dependency] private readonly SystemCollectionHookManager _systemCollectionHookManager = default!;
+    [Dependency] private readonly KsAdminMusicManager _adminMusicManager = default!;
 
     public override void PreInit()
     {
@@ -21,11 +23,20 @@ internal sealed class KsEntryPoint : GameClient
         base.Init();
         Dependencies.BuildGraph();
         Dependencies.InjectDependencies(this);
+
+        _adminMusicManager.Initialise();
     }
 
     public override void PostInit()
     {
         base.Init();
         _baseClient.PlayerJoinedServer += (_, _) => _systemCollectionHookManager.TryInit();
+    }
+
+    public override void Shutdown()
+    {
+        _adminMusicManager.Shutdown();
+
+        base.Shutdown();
     }
 }

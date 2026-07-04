@@ -1,3 +1,4 @@
+using Content.Server._KS14.AdminMusic;
 using Content.Server._KS14.AnnouncementWebhook;
 using Content.Server._KS14.Antag;
 
@@ -11,5 +12,6 @@ internal static class KsServerContentIoC
 
         dependencyCollection.Register<LastRolledAntagManager>();
         dependencyCollection.Register<AnnouncementWebhookManager>();
+        dependencyCollection.Register<KsAdminMusicManager>();
     }
 }

@@ -1,24 +1,34 @@
-<Control xmlns="https://spacestation14.io"
-        MinWidth="300"
-        MaxWidth="500">
+<ui:KsAdminMusicPopup xmlns="https://spacestation14.io"
+                      xmlns:ui="clr-namespace:Content.Client._KS14.AdminMusic.UI"
+                      xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+                      MinWidth="200"
+                      HorizontalAlignment="Left"
+                      Margin="5 0">
     <PanelContainer StyleClasses="BackgroundPanel"/>
-    <BoxContainer Margin="4"
-            Orientation="Vertical">
-        <Label Name="VoteCaller"/>
-        <RichTextLabel Name="VoteTitle"/>
-        <Button Margin="4 4"
-                Name="StopMusicButton"
-                Text="Stop playing"
-                Visible="False"></Button>
-
-        <GridContainer Columns="3"
-                Name="VoteOptionsContainer"/>
-        <BoxContainer Orientation="Horizontal">
-            <ProgressBar Margin="4"
-                    HorizontalExpand="True"
-                    Name="TimeLeftBar"
-                    MinValue="0"
-                    MaxValue="1"/>
+    <controls:StripeBack>
+        <BoxContainer Margin="2"
+                      Orientation="Vertical"
+                      HorizontalExpand="True">
+            <RichTextLabel Name="TitleText"
+                           HorizontalAlignment="Center"
+                           HorizontalExpand="True"
+                           Margin="4 2"/>
+            <BoxContainer Orientation="Horizontal">
+                <ProgressBar Margin="4 0"
+                             HorizontalExpand="True"
+                             Name="TimeLeftBar"
+                             MinValue="0"
+                             MaxValue="1"/>
+                <Slider Name="VolumeSlider"
+                        Margin="4 0"
+                        HorizontalExpand="True"
+                        MinValue="0"
+                        MaxValue="1"
+                        Value="1"/>
+            </BoxContainer>
+            <Button Margin="6 4"
+                    Name="StopMusicButton"
+                    Text="Stop playing"></Button>
         </BoxContainer>
-    </BoxContainer>
-</Control>
+    </controls:StripeBack>
+</ui:KsAdminMusicPopup>
