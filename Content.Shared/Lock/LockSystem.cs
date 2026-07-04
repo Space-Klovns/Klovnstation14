@@ -76,13 +76,13 @@ public sealed class LockSystem : EntitySystem
         // Only attempt an unlock by default on Activate
         if (lockComp.Locked && lockComp.UnlockOnClick)
         {
-            args.Handled = true;
-            TryUnlock(uid, args.User, lockComp);
+            // KS14: args.Handled is no longer always true, but now depends on return. This is done so that <UIRequiresLockComponent,ActivatableUIOpenAttemptEvent> can play funny audio etc. when you have no access
+            args.Handled = TryUnlock(uid, args.User, lockComp);
         }
         else if (!lockComp.Locked && lockComp.LockOnClick)
         {
-            args.Handled = true;
-            TryLock(uid, args.User, lockComp);
+            // KS14: args.Handled is no longer always true, but now depends on return. This is done so that <UIRequiresLockComponent,ActivatableUIOpenAttemptEvent> can play funny audio etc. when you have no access
+            args.Handled = TryLock(uid, args.User, lockComp);
         }
     }
 

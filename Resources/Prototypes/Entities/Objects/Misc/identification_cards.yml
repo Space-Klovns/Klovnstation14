@@ -25,6 +25,11 @@
     - WhitelistChameleonIdCard
   - type: StealTarget
     stealGroup: IDCard
+  # KS14 Start
+  - type: KsIdLockKey
+    inheritable: true
+    inheritPopupLoc: ks-popup-idlock-id-inherited-access
+  # KS14 End
 
 #IDs with layers
 
