@@ -1,3 +1,4 @@
+using Content.Server._KS14.AdminMusic;
 using Content.Server._KS14.AnnouncementWebhook;
 using Content.Server._KS14.Antag;
 using Content.Server._KS14.IoC;
@@ -16,6 +17,7 @@ internal sealed class KsEntryPoint : GameServer
     [Dependency] private readonly LastRolledAntagManager _lastRolledAntagManager = default!;
     [Dependency] private readonly AnnouncementWebhookManager _announcementWebhookManager = default!;
     [Dependency] private readonly SystemCollectionHookManager _systemCollectionHookManager = default!;
+    [Dependency] private readonly KsAdminMusicManager _adminMusicManager = default!;
 
     public override void PreInit()
     {
@@ -41,6 +43,7 @@ internal sealed class KsEntryPoint : GameServer
         _announcementWebhookManager.Initialize();
 
         _systemCollectionHookManager.TryInit();
+        _adminMusicManager.Initialise();
     }
 
     public override void Update(ModUpdateLevel level, FrameEventArgs frameEventArgs)
@@ -49,8 +52,9 @@ internal sealed class KsEntryPoint : GameServer
 
         switch (level)
         {
-            case ModUpdateLevel.FramePostEngine:
+            case ModUpdateLevel.PostEngine:
                 _announcementWebhookManager.Update();
+                _adminMusicManager.Update();
                 break;
         }
     }
