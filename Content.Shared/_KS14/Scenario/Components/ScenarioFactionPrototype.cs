@@ -1,4 +1,5 @@
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.Scenario.Components;
 
@@ -27,6 +28,7 @@ public sealed partial class ScenarioFactionPrototype : IPrototype
     public Dictionary<ScenarioWinType, LocId> WinTypeLocIds = [];
 }
 
+[Serializable, NetSerializable]
 public enum ScenarioWinType : byte
 {
     Decimation,
