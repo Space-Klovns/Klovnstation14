@@ -5,6 +5,6 @@
   description: A computer printed circuit board for an id-locked shuttle console.
   components:
   - type: Sprite
-    state: cyborg_ugprade3
+    state: cyborg_upgrade3
   - type: ComputerBoard
     prototype: KsComputerShuttleIdLocked
