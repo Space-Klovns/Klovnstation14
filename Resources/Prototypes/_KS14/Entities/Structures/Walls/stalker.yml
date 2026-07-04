@@ -1,0 +1,99 @@
+
+# This is just a collection of walls with their textures ported from Stalker14
+# None of these are constructible
+
+
+- type: entity
+  parent: BaseWall
+  id: KsWallSolidBunker
+  name: bunker wall
+  components:
+  - type: Sprite
+    sprite: _Stalker/Structures/Walls/bunker.rsi
+  - type: Icon
+    sprite: _Stalker/Structures/Walls/bunker.rsi
+  - type: IconSmooth
+    key: walls
+    base: bunker
+  - type: Destructible
+    thresholds: &thresholds
+    - trigger:
+        !type:DamageTrigger
+        damage: 200
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalSlam
+    # TODO LCDC STALKERWALLS: more fx for breaking?
+
+- type: entity
+  parent: BaseWall
+  id: KsWallSolidConcrete
+  name: warm concrete wall # warm as in the color
+  components:
+  - type: Sprite
+    sprite: _Stalker/Structures/Walls/concrete.rsi
+  - type: Icon
+    sprite: _Stalker/Structures/Walls/concrete.rsi
+  - type: IconSmooth
+    key: walls
+    base: concrete
+  - type: Destructible
+    thresholds: *thresholds
+
+# inherits from concrete wall
+- type: entity
+  parent: KsWallSolidConcrete
+  id: KsWallSolidConcreteGrey
+  name: greyish concrete wall
+  components:
+  # TODO LCDC STALKERWALLS: icon shader
+  - type: IconSmooth
+    shader: Noir
+
+- type: entity
+  parent: BaseWall
+  id: KsWallSolidDungeon
+  name: dungeon wall
+  components:
+  - type: Sprite
+    sprite: _Stalker/Structures/Walls/dungeon.rsi
+  - type: Icon
+    sprite: _Stalker/Structures/Walls/dungeon.rsi
+  - type: IconSmooth
+    key: walls
+    base: dungeon
+  - type: Destructible
+    thresholds: *thresholds
+
+- type: entity
+  parent: BaseWall
+  id: KsWallSolidPrison
+  name: prison wall
+  components:
+  - type: Sprite
+    sprite: _Stalker/Structures/Walls/prison.rsi
+  - type: Icon
+    sprite: _Stalker/Structures/Walls/prison.rsi
+  - type: IconSmooth
+    key: walls
+    base: prison
+  - type: Destructible
+    thresholds: *thresholds
+
+- type: entity
+  parent: BaseWall
+  id: KsWallSolidVault
+  name: vault wall
+  components:
+  - type: Sprite
+    sprite: _Stalker/Structures/Walls/vault.rsi
+  - type: Icon
+    sprite: _Stalker/Structures/Walls/vault.rsi
+  - type: IconSmooth
+    key: walls
+    base: vault
+  - type: Destructible
+    thresholds: *thresholds

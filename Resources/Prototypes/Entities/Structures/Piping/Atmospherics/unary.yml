@@ -402,20 +402,24 @@
   components:
   - type: Sprite
     sprite: Structures/Piping/Atmospherics/condenser.rsi
-    snapCardinals: true
+    snapCardinals: false # KS14: true->false, plumbing
     granularLayersRendering: true
     layers:
     - state: off
       map: [ "enum.PowerDeviceVisualLayers.Powered" ]
+      renderingStrategy: SnapToCardinals # KS14: plumbing
     - state: panel
       map: ["enum.WiresVisualLayers.MaintenancePanel"]
+      renderingStrategy: SnapToCardinals # KS14: plumbing
     - state: pipe
       map: [ "enum.PipeVisualLayers.Pipe" ]
       renderingStrategy: Default
     - state: fill-1
       map: ["enum.SolutionContainerLayers.Fill"]
+      renderingStrategy: SnapToCardinals # KS14: plumbing
       visible: false
     - state: trans
+      renderingStrategy: SnapToCardinals # KS14: plumbing
   - type: Appearance
   - type: GenericVisualizer
     visuals:
@@ -469,6 +473,12 @@
         !type:PipeNode
         nodeGroupID: Pipe
         pipeDirection: South
+      # KS14: plumbing start
+      outlet:
+        !type:PlumbingNode
+        nodeGroupID: Plumbing
+        pipeDirection: TNorth
+      # KS14: plumbing end
   - type: Transform
     noRot: false
   - type: SolutionContainerManager
@@ -487,3 +497,8 @@
   - type: GuideHelp
     guides:
     - GasCondensing
+  # KS14: plumbing
+  - type: PlumbingConnectorAppearance
+    offset: 0.09375
+  - type: PlumbingOutlet
+    solutionName: tank

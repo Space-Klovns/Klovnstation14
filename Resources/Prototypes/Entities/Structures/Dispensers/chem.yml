@@ -5,19 +5,34 @@
   parent: ReagentDispenserBase
   description: An industrial grade chemical dispenser.
   components:
+    # KS14 start: Chem Dispenser unpowered/wiring panel states
+  - type: Transform
+    noRot: true
   - type: Sprite
     sprite: Structures/dispensers.rsi
-    # Starlight-start: Chem Dispenser unpowered/wiring panel states
+    noRot: true
     layers:
       - state: industrial-off
-      - state: industrial-working
-        visible: false
-        map: [ "enum.PowerDeviceVisualLayers.Powered" ]
+        map: [ "base" ]
+      - state: industrial-screen
+        map: [ "screen" ]
+        shader: unshaded
       - state: industrial-panel
-        map: ["enum.WiresVisualLayers.MaintenancePanel"]
-        visible: false
-    snapCardinals: false # Starlight-edit: allow non-cardinal rotation for chem dispenser to avoid conflict with 4 direction plumbing connector sprites
-    # Starlight-end
+        map: ["panel"]
+  - type: GenericVisualizer
+    visuals:
+      enum.PowerDeviceVisuals.Powered:
+        base:
+          True: { state: industrial-working }
+          False: { state: industrial-off }
+        screen:
+          True: { visible: true }
+          False: { visible: false }
+      enum.WiresVisuals.MaintenancePanelState:
+        panel:
+          True: { visible: true }
+          False: { visible: false }
+    # KS14 end
   - type: Storage
     openOnActivate: false
     whitelist:

@@ -1511,3 +1511,61 @@ Entries:
       message: Fixed fun!
   id: 157
   time: '2026-06-26T15:25:09.0000000+00:00'
+- author: rumaks-xyz
+  changes:
+    - type: Tweak
+      message: 'Condensers now can output reagents into plumbing machines '
+  id: 158
+  time: '2026-06-26T22:00:04.0000000+00:00'
+- author: rumaks-xyz
+  changes:
+    - type: Add
+      message: >-
+        Various materials like steel and glass can now be solidified from their
+        liquid counterparts with 5u fresium
+    - type: Add
+      message: Fresium can now be obtained by centrifuging frost oil
+  id: 159
+  time: '2026-06-27T05:07:02.0000000+00:00'
+- author: De
+  changes:
+    - type: Tweak
+      message: Fixed nt rifleman
+    - type: Tweak
+      message: Drones work 4 times longer now
+    - type: Tweak
+      message: Added flare boxes as basekit
+    - type: Tweak
+      message: NT on nanoplant spawns with pdas now
+    - type: Tweak
+      message: Goliath hp 250 -> 125 (5 pka shots)
+    - type: Tweak
+      message: 'all 3x3 boxes are now small '
+    - type: Fix
+      message: doors on nanoplant for synds
+  id: 160
+  time: '2026-06-28T12:58:00.0000000+00:00'
+- author: FrauZj
+  changes:
+    - type: Add
+      message: heretic
+  id: 161
+  time: '2026-06-28T14:58:11.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        [SCENARIOS] Objective spawn on Nanoplant is now one of two random
+        places: either main data-center (original spawn), or high-sec room to
+        the far west of the checkpoint.
+  id: 162
+  time: '2026-06-28T16:06:54.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Remove
+      message: >-
+        Removed maps: Jellyfish, Frezon, Wonderland, Bagel, Meta (meta pending
+        rework), Fland, and Snowball from rotation. The only maps you can roll
+        now are Box, Marathon, Packed, Mira, Omega, and Saltern.
+  id: 163
+  time: '2026-06-28T16:12:22.0000000+00:00'

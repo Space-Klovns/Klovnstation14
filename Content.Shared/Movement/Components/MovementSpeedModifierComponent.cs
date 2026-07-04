@@ -13,6 +13,7 @@ namespace Content.Shared.Movement.Components
     {
         #region defaults
 
+        //ks14 change start
         // weightless
         public const float DefaultWeightlessFriction = 5f;
         public const float DefaultWeightlessModifier = 0.8f;
@@ -27,6 +28,7 @@ namespace Content.Shared.Movement.Components
         // movement
         public const float DefaultBaseWalkSpeed = 3f;
         public const float DefaultBaseSprintSpeed = 5.5f;
+        //ks14 change end
 
         #endregion
 

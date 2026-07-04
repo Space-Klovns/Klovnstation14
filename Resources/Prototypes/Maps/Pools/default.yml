@@ -1,26 +1,24 @@
 - type: gameMapPool
   id: DefaultMapPool
   maps:
-  - Bagel
   - Box
-  - Fland
   - Marathon
   - Packed
-  - Snowball
-  # KS14 restored maps
+  # KS14 start: ported maps
+  - Mira
+  - Omega
+  # KS14 end
+  # KS14 start: restored maps
   - Saltern
-  - Meta
-  # KS14 removed maps
+  # KS14 end
+  # KS14 start: removed maps
+  # - Meta #RIP
+  # - Bagel
+  # - Fland
+  # - Snowball
   # - Oasis
   # - Plasma
   # - Exo
   # - Reach
-  # KS14 ported Harmony maps
-  - Mira
-  - Omega
-  - Jellyfish
-  # KS14 ported Umbra maps
-  #- Wonderland KS14, removed for being bad
-  # KS14 ported Moff maps
-  #- Frezon KS14, removed for being bad
-  #- Serpentcrest # KS14: FUCK NO
+  #- Serpentcrest # FUCK NO
+  # KS14 end

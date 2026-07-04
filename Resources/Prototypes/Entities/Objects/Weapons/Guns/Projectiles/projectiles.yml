@@ -58,6 +58,7 @@
   - type: Sprite
     noRot: false
     sprite: Objects/Weapons/Guns/Projectiles/projectiles2.rsi
+    drawdepth: OverMobs # KS14
     layers:
     - state: bullet
       shader: unshaded

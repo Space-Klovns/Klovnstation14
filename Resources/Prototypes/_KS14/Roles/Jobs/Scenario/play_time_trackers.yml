@@ -1,0 +1,8 @@
+- type: playTimeTracker
+  id: JobScenarioNt
+
+- type: playTimeTracker
+  id: JobScenarioSyndie
+
+- type: playTimeTracker
+  id: JobScenarioScav

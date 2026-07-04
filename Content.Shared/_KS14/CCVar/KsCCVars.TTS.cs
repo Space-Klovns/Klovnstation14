@@ -18,5 +18,5 @@ public sealed partial class KsCCVars
     /// </summary>
     [CVarControl(AdminFlags.Host)]
     public static readonly CVarDef<string> TtsEndpoint =
-        CVarDef.Create("klovn.tts.endpoint", "fuck", CVar.ARCHIVE | CVar.SERVER);
+        CVarDef.Create("klovn.tts.endpoint", "http://localhost:8000/tts", CVar.ARCHIVE | CVar.SERVER);
 }

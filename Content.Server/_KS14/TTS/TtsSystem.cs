@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.TTS;
+using Content.Shared._KS14.WordFilter;
 using Content.Shared.Chat;
 using Content.Shared.GameTicking;
 using Robust.Shared.Collections;
@@ -24,6 +25,7 @@ public sealed class TtsSystem : SharedTtsSystem
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly IRobustRandom _robustRandom = default!;
     [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private readonly WordFilterSystem _wordFilterSystem = default!;
 
     private readonly HttpClient _httpClient = new();
     private readonly Dictionary<string, byte[]> _cache = new();
@@ -35,7 +37,15 @@ public sealed class TtsSystem : SharedTtsSystem
     private readonly List<ProtoId<TtsVoicePrototype>> _voiceIds = [];
 
     private static readonly TimeSpan BaselineCooldown = TimeSpan.FromSeconds(0.5f);
-    private static readonly TimeSpan CooldownPerChar = TimeSpan.FromSeconds(0.01f);
+    private static readonly TimeSpan CooldownPerChar = TimeSpan.FromSeconds(0.021f);
+
+    /// <summary>
+    ///     Text shorter than this won't be processed.
+    /// </summary>
+    private const int MinTextLength = 1;
+    /// <summary>
+    ///     Text longer than this will be truncated.
+    /// </summary>
     private const int MaxTextLength = 50;
 
     public override void Initialize()
@@ -98,18 +108,35 @@ public sealed class TtsSystem : SharedTtsSystem
 
     public void TrySpeak(EntityUid speakerUid, ProtoId<TtsVoicePrototype> voiceProto, string text)
     {
+        if (text.Length < MinTextLength)
+            return;
+
         if (!_enabled ||
             _timeUntilCooldownFinished.ContainsKey(speakerUid))
             return;
 
+        // trim text
         if (text.Length > MaxTextLength)
             text = text[0..^MaxTextLength];
 
         _timeUntilCooldownFinished[speakerUid] = _gameTiming.CurTime + BaselineCooldown + (CooldownPerChar * text.Length);
-        _ = Speak(speakerUid, voiceProto, text);
+
+        // grimnuke alloc
+        var filteredText = new string(text.ToCharArray());
+
+        // Category for text that is always sent
+        var baseTtsCategory = TtsFilteredCategory.DontProcess;
+
+        if (_wordFilterSystem.FilterAndReplaceString(ref filteredText, WordFilterCategory.Slur))
+        {
+            baseTtsCategory = TtsFilteredCategory.WaitForFiltered;
+            _ = Speak(speakerUid, voiceProto, filteredText, TtsFilteredCategory.Filtered);
+        }
+
+        _ = Speak(speakerUid, voiceProto, text, baseTtsCategory);
     }
 
-    public async Task Speak(EntityUid speakerUid, ProtoId<TtsVoicePrototype> voiceProto, string text)
+    public async Task Speak(EntityUid speakerUid, ProtoId<TtsVoicePrototype> voiceProto, string text, TtsFilteredCategory category)
     {
         if (string.IsNullOrWhiteSpace(text) ||
             !_prototypeManager.TryIndex(voiceProto, out var proto))
@@ -140,7 +167,7 @@ public sealed class TtsSystem : SharedTtsSystem
             }
         }
 
-        RaiseNetworkEvent(new PlayTtsEvent(GetNetEntity(speakerUid), bytes), Filter.Pvs(speakerUid));
+        RaiseNetworkEvent(new PlayTtsEvent(GetNetEntity(speakerUid), bytes, category), Filter.Pvs(speakerUid));
     }
 
     private static string BuildCacheId(TtsVoicePrototype proto, string text)

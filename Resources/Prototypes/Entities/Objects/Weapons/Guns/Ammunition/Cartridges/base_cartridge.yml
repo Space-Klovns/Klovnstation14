@@ -5,6 +5,7 @@
   components:
   - type: Sprite
     drawdepth: Items
+    scale: 0.75,0.75
   - type: Fixtures
     fixtures:
       fix1:

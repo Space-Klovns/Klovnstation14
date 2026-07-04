@@ -1,0 +1,251 @@
+
+### Wooden pallets
+### have you seen any forklifts around? me neither
+# there are pallets with pallet_high sprites but are actually considered 'low'
+# 'high' means the pallets are as tall as or taller than the player/mobs; bullets will hit them
+# 'low' means the opposite; bullets can pass
+
+## Normal pallets
+
+- type: entity
+  parent: BaseStructure
+  id: KsBasePalletWooden
+  name: wooden pallet
+  description: A flat, portable platform used to stack, store, and transport heavy goods.
+  suffix: Medium
+  abstract: true
+  components:
+  - type: Sprite
+    sprite: _Stalker/Objects/Decoration/Other/pallet.rsi
+    snapCardinals: true
+    drawdepth: HighFloorObjects
+  - type: Transform
+    noRot: true
+  - type: Physics
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: &near_full_tile_square "-0.475,-0.475,0.475,0.475"
+        density: 175
+        mask:
+        - MachineMask
+        layer:
+        - HalfWallLayer
+        - BulletImpassable
+  - type: InteractionOutline
+  - type: Damageable
+    damageModifierSet: Wood
+    damageContainer: StructuralInorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 175
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          collection: WoodDestroyHeavy
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+    - trigger:
+        !type:DamageTrigger
+        damage: 130
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+      - !type:PlaySoundBehavior
+        sound:
+          collection: WoodDestroy
+      - !type:SpawnEntitiesBehavior
+        spawn:
+          MaterialWoodPlank:
+            min: 1
+            max: 2
+
+# Base for pallets that have something on them.
+- type: entity
+  parent: KsBasePalletWooden
+  id: KsBasePalletWoodenFilled
+  description: A flat, portable platform used to stack, store, and transport heavy goods. The space on it is occupied.
+  abstract: true
+# todo something here?
+
+- type: entity
+  parent: KsBasePalletWoodenFilled
+  id: KsPalletWooden1
+  components:
+  - type: Sprite
+    state: p1
+
+- type: entity
+  parent: KsBasePalletWoodenFilled
+  id: KsPalletWooden2
+  components:
+  - type: Sprite
+    state: p2
+
+## High pallets, basically the same as normal pallets
+
+# originally these were gonna be climbable but that turns out to be bad
+- type: entity
+  parent: KsBasePalletWoodenFilled
+  id: KsBasePalletWoodenHigh
+  abstract: true
+  suffix: High
+  components:
+  - type: Sprite
+    sprite: _Stalker/Objects/Decoration/Other/pallet_high.rsi
+    offset: &high_sprite_offset 0,0.125 # 4px
+    drawdepth: Mobs
+  - type: SpriteFade
+  - type: Clickable
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: *near_full_tile_square
+        density: 175
+        mask:
+        - MachineMask
+        layer:
+        - WallLayer
+  - type: Destructible # Stronger
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 250
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          collection: WoodDestroyHeavy
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+    - trigger:
+        !type:DamageTrigger
+        damage: 200
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+      - !type:PlaySoundBehavior
+        sound:
+          collection: WoodDestroy
+      - !type:SpawnEntitiesBehavior
+        spawn:
+          MaterialWoodPlank:
+            min: 2
+            max: 2
+
+- type: entity
+  parent: KsBasePalletWoodenHigh
+  id: KsPalletWoodenHigh1
+  components:
+  - type: Sprite
+    state: p1
+
+- type: entity
+  parent: KsBasePalletWoodenHigh
+  id: KsPalletWoodenHigh2
+  components:
+  - type: Sprite
+    state: p2
+
+- type: entity
+  parent: KsBasePalletWoodenHigh
+  id: KsPalletWoodenHigh3
+  components:
+  - type: Sprite
+    state: p3
+
+## Low pallets(?); not much on them if anything
+
+- type: entity
+  parent: KsBasePalletWoodenFilled
+  id: KsBasePalletWoodenLow
+  description: A flat, portable platform used to stack, store, and transport heavy goods. It's practically empty, so it can probably be climbed.
+  abstract: true
+  suffix: Low
+  components:
+  - type: Sprite
+    sprite: _Stalker/Objects/Decoration/Other/pallet_high.rsi # yes
+    drawdepth: WallTops # when this is bordering a wall on the north, the top tip of the sprite would otherwise be under the wall
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: *near_full_tile_square
+        density: 140
+        mask:
+        - ConveyorMask
+        layer:
+        - LowImpassable
+        - BulletImpassable
+  - type: Climbable
+    delay: 0
+  - type: RequireProjectileTarget # you can still shoot it
+
+# ffs
+# these use high sprites but are actually low given the sprites don't go taller than the player
+- type: entity
+  parent: KsBasePalletWoodenLow
+  id: KsPalletWoodenLow1
+  components:
+  - type: Sprite
+    state: p4
+    offset: *high_sprite_offset
+
+- type: entity
+  parent: KsBasePalletWoodenLow
+  id: KsPalletWoodenLow2
+  components:
+  - type: Sprite
+    state: p5
+    offset: *high_sprite_offset
+
+- type: entity
+  parent: KsBasePalletWoodenLow
+  id: KsPalletWoodenLow3
+  components:
+  - type: Sprite
+    state: p6
+    offset: *high_sprite_offset
+
+# on the wall
+- type: entity
+  parent: KsBasePalletWooden
+  id: KsPalletWoodenLowRotated
+  description: A flat, portable platform used to stack, store, and transport heavy goods. It's on it's side.
+  suffix: Rotated on side
+  components:
+  - type: Transform
+    noRot: false
+  - type: Sprite
+    sprite: _Stalker/Objects/Decoration/Other/pallet_low.rsi
+    state: p1
+    snapCardinals: false
+    offset: 0,0.65
+    drawdepth: Mobs
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.4,0.25,0.4,0.5"
+        density: 125
+        mask:
+        - MachineMask
+        layer:
+        - WallLayer
+
+# on the ground
+- type: entity
+  parent: KsBasePalletWoodenLow
+  id: KsPalletWoodenLowGround
+  components:
+  - type: Sprite
+    sprite: _Stalker/Objects/Decoration/Other/pallet_low.rsi
+    state: p2
+  - type: PlaceableSurface

@@ -1,0 +1,46 @@
+{
+    "version": 1,
+    "license": "CC-BY-SA-3.0",
+    "copyright": "Stalker14 CLA",
+    "size": {
+        "x": 32,
+        "y": 32
+    },
+    "states": [
+        {
+            "name": "full"
+        },
+        {
+            "name": "vault0",
+            "directions": 4
+        },
+        {
+            "name": "vault1",
+            "directions": 4
+        },
+        {
+            "name": "vault2",
+            "directions": 4
+        },
+        {
+            "name": "vault3",
+            "directions": 4
+        },
+        {
+            "name": "vault4",
+            "directions": 4
+        },
+        {
+            "name": "vault5",
+            "directions": 4
+        },
+        {
+            "name": "vault6",
+            "directions": 4
+        },
+        {
+            "name": "vault7",
+            "directions": 4
+        }
+    ]
+}

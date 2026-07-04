@@ -66,7 +66,7 @@ public sealed partial class ChatUIController : UIController
     [UISystemDependency] private readonly TransformSystem? _transform = default;
     [UISystemDependency] private readonly MindSystem? _mindSystem = default!;
     [UISystemDependency] private readonly RoleCodewordSystem? _roleCodewordSystem = default!;
-    [UISystemDependency] private readonly Shared._KS14.WordFilter.WordFilterSystem _wordFilterSystem = default!; // KS14
+    [UISystemDependency] private readonly Shared._KS14.WordFilter.WordFilterSystem? _wordFilterSystem = default!; // KS14
 
     private static readonly ProtoId<ColorPalettePrototype> ChatNamePalette = "ChatNames";
     private string[] _chatNameColors = default!;
@@ -827,7 +827,8 @@ public sealed partial class ChatUIController : UIController
     public void ProcessChatMessage(ChatMessage msg, bool speechBubble = true)
     {
         // KS14 Start
-        if (_ksSlurFilterEnabled)
+        if (_ksSlurFilterEnabled &&
+            _wordFilterSystem is { })
         {
             _wordFilterSystem.FilterAndReplaceString(ref msg.Message, Shared._KS14.WordFilter.WordFilterCategory.Slur);
             _wordFilterSystem.FilterAndReplaceString(ref msg.WrappedMessage, Shared._KS14.WordFilter.WordFilterCategory.Slur);

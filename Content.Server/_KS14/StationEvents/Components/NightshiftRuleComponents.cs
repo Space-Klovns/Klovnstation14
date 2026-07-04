@@ -64,3 +64,9 @@ public sealed partial class NightshiftBulbComponent : Component
 /// </summary>
 [RegisterComponent, Access(typeof(NightshiftRule))]
 public sealed partial class NightshiftExemptBulbComponent : Component;
+
+/// <summary>
+///     Added to lights that should never be affected by nightshift.
+/// </summary>
+[RegisterComponent, Access(typeof(NightshiftRule))]
+public sealed partial class NightshiftExemptLightComponent : Component;
