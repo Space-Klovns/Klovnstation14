@@ -12,6 +12,15 @@
     penetrationThreshold: 360
     penetrationDamageTypeRequirement:
     - Structural
+  - type: RemoveCompOnCollide
+    taggedComponents:
+      HristovWindowVentable:
+        - type: Airtight
+        - type: DeltaPressure
+  - type: AddCompOnCollide
+    taggedComponents:
+      HristovWindowVentable:
+        - type: HristovAppearance
   - type: StaminaDamageOnCollide
     damage: 60
 
@@ -33,3 +42,12 @@
     penetrationDamageTypeRequirement:
     - Structural
     ignoreResistances: true
+  - type: RemoveCompOnCollide
+    taggedComponents:
+      HristovWindowVentable:
+        - type: Airtight
+        - type: DeltaPressure
+  - type: AddCompOnCollide
+    taggedComponents:
+      HristovWindowVentable:
+        - type: HristovAppearance

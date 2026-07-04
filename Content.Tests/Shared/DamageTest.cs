@@ -1,3 +1,4 @@
+using Content.Shared._Trauma.Projectiles;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Prototypes;
 using NUnit.Framework;
@@ -147,6 +148,28 @@ namespace Content.Tests.Shared
       Assert.That(!damageSpec.DamageDict.ContainsKey("Slash"));  // Reduction reduced to 0, and removed from specifier
       Assert.That(damageSpec.DamageDict["Radiation"], Is.EqualTo(FixedPoint2.New(65.62)));
       */
+    }
+
+    [Test]
+    public void QuantizeMultiplier_RoundsUpToAvoidUndershootingWindowTargets()
+    {
+      var system = new PredictedProjectileSystem();
+
+      var reinforcedWindowDamage = new DamageSpecifier();
+      reinforcedWindowDamage.DamageDict["Structural"] = FixedPoint2.New(120);
+      var reinforcedWindowModifierSet = new DamageModifierSet
+      {
+        FlatReduction = { ["Structural"] = 10f },
+      };
+      var reinforcedWindowMultiplier = system.CalculateMultiplier(reinforcedWindowDamage, reinforcedWindowModifierSet, 37.5f);
+      var roundedDown = FixedPoint2.New(reinforcedWindowMultiplier);
+      var roundedUp = PredictedProjectileSystem.QuantizeMultiplier(reinforcedWindowMultiplier);
+
+      var roundedDownAdjusted = DamageSpecifier.ApplyModifierSet(reinforcedWindowDamage * roundedDown, reinforcedWindowModifierSet);
+      var roundedUpAdjusted = DamageSpecifier.ApplyModifierSet(reinforcedWindowDamage * roundedUp, reinforcedWindowModifierSet);
+
+      Assert.That(roundedDownAdjusted.GetTotal().Float(), Is.LessThan(37.5f));
+      Assert.That(roundedUpAdjusted.GetTotal().Float(), Is.GreaterThanOrEqualTo(37.5f));
     }
 
     private const string ModifierTestSetId = "ModifierTestSet";

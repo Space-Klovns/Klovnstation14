@@ -27,24 +27,18 @@ public sealed class SignalRattleOnTriggerSystem : EntitySystem
     }
     private void HandleSignalRattleOnTrigger(Entity<SignalRattleOnTriggerComponent> ent, ref TriggerEvent args)
     {
-        Logger.Info($"beginning signal process");
         var target = ent.Comp.TargetUser ? args.User : ent.Owner;
-        Logger.Info($"target: {target}");
         if (target == null)
             return;
-        Logger.Info($"got past target check");
         if (!TryComp<MobStateComponent>(target.Value, out var mobstate))
             return;
-        Logger.Info($"got past mobstate check");
 
         args.Handled = true;
-        Logger.Info($"{mobstate.CurrentState} current mobstate");
 
         if (mobstate.CurrentState == MobState.Critical)
             _deviceLink.InvokePort(ent.Owner, ent.Comp.CritPort);
 
         else if (mobstate.CurrentState == MobState.Dead)
             _deviceLink.InvokePort(ent.Owner, ent.Comp.DeathPort);
-        Logger.Info($"got past death and crit port invocation");
     }
 }

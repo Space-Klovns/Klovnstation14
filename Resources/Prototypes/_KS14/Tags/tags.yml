@@ -22,4 +22,7 @@
   id: BorgModuleSecurity #Secborgs
 
 - type: Tag
+  id: HristovWindowVentable #Hristov rework
+
+- type: Tag
   id: AirGrenade

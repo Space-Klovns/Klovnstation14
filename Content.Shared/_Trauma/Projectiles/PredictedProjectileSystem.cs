@@ -5,6 +5,7 @@ using Content.Shared.Camera;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
+using Content.Shared.Damage.Prototypes; // KS14
 using Content.Shared.Database;
 using Content.Shared.FixedPoint;
 using Content.Shared.Projectiles;
@@ -17,6 +18,11 @@ using Robust.Shared.Physics.Events;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Physics.Systems; // KS14
+using Robust.Shared.Configuration; // KS14
+using Robust.Shared.Prototypes; // KS14
+using Content.Shared._KS14.CCVar; // KS14
+using Content.Shared.Movement.Components; //KS14
+using System.Linq; //KS14
 using Content.Shared.Standing; // KS14
 
 namespace Content.Shared._Trauma.Projectiles;
@@ -37,16 +43,28 @@ public sealed class PredictedProjectileSystem : EntitySystem
     [Dependency] private readonly SharedGunSystem _gun = default!;
     [Dependency] private readonly SharedProjectileSystem _projectile = default!;
     [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!; // KS14
+    [Dependency] private readonly IConfigurationManager _config = default!; // KS14
+    [Dependency] private readonly IPrototypeManager _prototypeManager = default!; // KS14
     [Dependency] private readonly StandingStateSystem _standingStateSystem = default!; // KS14
 
     private EntityQuery<ProjectileComponent> _query;
     private EntityQuery<PhysicsComponent> _physicsQuery;
     private EntityQuery<FixturesComponent> _fixturesQuery;
 
+    /// <summary>
+    /// KS14, impulse cvar <see cref="KsCCVars"/>.
+    /// </summary>
+    private float _gunImpulse = 0f;
+    /// <summary>
+    /// KS14, penetration cvar <see cref="KsCCVars"/>.
+    /// </summary>
+    private float _gunPenetrationMinShots = 1f;
+
     public override void Initialize()
     {
         base.Initialize();
-
+        _config.OnValueChanged(KsCCVars.GunImpulseMultiplier, x => _gunImpulse = x, invokeImmediately: true);
+        _config.OnValueChanged(KsCCVars.GunPenetrationMinShots, x => _gunPenetrationMinShots = x, invokeImmediately: true);
         _query = GetEntityQuery<ProjectileComponent>();
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
         _fixturesQuery = GetEntityQuery<FixturesComponent>();
@@ -117,25 +135,55 @@ public sealed class PredictedProjectileSystem : EntitySystem
 
         var otherName = ToPrettyString(target);
         var damageRequired = _destructible.DestroyedAt(target);
-        var totalDamage = _damageable.GetTotalDamage(target);
 
-        if (TryComp<DamageableComponent>(target, out var damageable))
-        {
-            damageRequired -= totalDamage;
-            damageRequired = FixedPoint2.Max(damageRequired, FixedPoint2.Zero);
-        }
+        //KS14 pen start
+        bool isAMob = HasComp<MobCollisionComponent>(target);
+        if (comp.PenetrationThreshold > 0 && !isAMob) damageRequired /= _gunPenetrationMinShots;
+
+        if (!TryComp<DamageableComponent>(target, out var damageable))
+            return;
+        //KS14 pen end
 
         // KS14 Impact start
         // dont really like this but whatever
         if (_net.IsServer &&
             ent.Comp2.FixturesMass > float.Epsilon &&
             _standingStateSystem.IsDown(target))
-            _physicsSystem.ApplyLinearImpulse(target, ent.Comp2.Momentum * 0.075f);
+            _physicsSystem.ApplyLinearImpulse(target, ent.Comp2.Momentum * _gunImpulse);
         // KS14 Impact end
+
+        // KS14 - demonic penetrationcode start
+        var multiplier = FixedPoint2.Zero;
+        var maxmultiplier = FixedPoint2.Zero;
+        var adjustedDamage = new DamageSpecifier();
+        if (comp.PenetrationThreshold > 0 && !isAMob)
+        {
+            DamageModifierSetPrototype? targetDamageModifiers = null;
+            if (damageable?.DamageModifierSetId != null)
+            {
+                _prototypeManager.Resolve(damageable.DamageModifierSetId, out targetDamageModifiers);
+            }
+
+            var multiplierValue = CalculateMultiplier(ev.Damage, targetDamageModifiers, damageRequired.Float());
+            var maxMultiplierValue = CalculateMultiplier(ev.Damage, targetDamageModifiers, comp.PenetrationThreshold.Float() - comp.PenetrationAmount.Float());
+
+            if (!IsFinite(multiplierValue) || !IsFinite(maxMultiplierValue))
+            {
+                multiplierValue = 0f;
+                maxMultiplierValue = 0f;
+            }
+
+            multiplier = multiplierValue;
+            maxmultiplier = maxMultiplierValue;
+            var quantizedMultiplier = QuantizeMultiplier(multiplierValue);
+            var quantizedMaxMultiplier = QuantizeMultiplier(maxMultiplierValue);
+            adjustedDamage = ev.Damage * FixedPoint2.Min(quantizedMultiplier, quantizedMaxMultiplier);
+        }
+        // KS14 - demonic penetrationcode end
 
         var deleted = Deleted(target);
 
-        if (_damageable.TryChangeDamage((target, damageable), ev.Damage, out var damage, comp.IgnoreResistances, origin: shooter) && Exists(shooter))
+        if (_damageable.TryChangeDamage((target, damageable), !adjustedDamage.Empty ? adjustedDamage : ev.Damage, out var damage, comp.IgnoreResistances, origin: shooter) && Exists(shooter)) //KS14
         {
             if (!deleted && _net.IsServer) // intentionally not predicting so you know if color flashes its 100% a hit
             {
@@ -146,7 +194,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
                 LogImpact.Medium,
                 $"Projectile {ToPrettyString(uid):projectile} shot by {ToPrettyString(shooter):user} hit {otherName:target} and dealt {damage:damage} damage");
 
-            comp.ProjectileSpent = !TryPenetrate((uid, comp), target, damage, damageRequired);
+            comp.ProjectileSpent = !TryPenetrate((uid, comp), target, damage, damageRequired, multiplier); //KS14
         }
         else
         {
@@ -169,7 +217,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
             RaiseLocalEvent(new ImpactEffectEvent(comp.ImpactEffect, GetNetCoordinates(xform.Coordinates)));
         }
     }
-    private bool TryPenetrate(Entity<ProjectileComponent> projectile, EntityUid target, DamageSpecifier damage, FixedPoint2 damageRequired)
+    private bool TryPenetrate(Entity<ProjectileComponent> projectile, EntityUid target, DamageSpecifier damage, FixedPoint2 damageRequired, FixedPoint2 multiplier) //KS14 - added multiplier
     {
         // If penetration is to be considered, we need to do some checks to see if the projectile should stop.
         if (projectile.Comp.PenetrationThreshold == 0)
@@ -188,7 +236,7 @@ public sealed class PredictedProjectileSystem : EntitySystem
         }
 
         // If the object won't be destroyed, it "tanks" the penetration hit.
-        if (damage.GetTotal() < damageRequired)
+        if (FixedPoint2.Abs(damageRequired - damage.GetTotal()) > FixedPoint2.New(1)) //KS14, ugly code accounting for inaccuracies
         {
             return false;
         }
@@ -205,4 +253,160 @@ public sealed class PredictedProjectileSystem : EntitySystem
 
         return true;
     }
+    // KS14 penetration demoncode start
+    /// <summary>
+    /// Calculates the multiplier needed to reach the requested effective damage.
+    /// This uses the same exact per-damage-type branch logic as the Python reference solver.
+    /// </summary>
+    private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
+
+    public static FixedPoint2 QuantizeMultiplier(float multiplier)
+    {
+        if (!IsFinite(multiplier) || multiplier <= 0f)
+            return FixedPoint2.Zero;
+
+        return FixedPoint2.NewCeiling(multiplier);
+    }
+
+    public float CalculateMultiplier(
+        DamageSpecifier damage,
+        DamageModifierSet? modifierSet,
+        float requiredEffectiveDamage)
+    {
+        if (!IsFinite(requiredEffectiveDamage) || requiredEffectiveDamage <= 0f)
+            return 0f;
+
+        if (modifierSet == null)
+        {
+            var totalDamage = damage.GetTotal().Float();
+            return IsFinite(totalDamage) ? totalDamage / requiredEffectiveDamage : 0f;
+        }
+
+        var typeData = new List<(float BaseDamage, float FlatReduction, float PercentileMultiplier, float ZeroThreshold, float SwitchThreshold)>();
+        var breakpoints = new HashSet<float> { 0f };
+
+        foreach (var (type, baseFp) in damage.DamageDict)
+        {
+            float baseDamage = baseFp.Float();
+            if (baseDamage <= 0f)
+                continue;
+
+            float flatReduction = 0f;
+            float percentileResistCoeff = 0f;
+
+            if (modifierSet != null)
+            {
+                modifierSet.FlatReduction.TryGetValue(type, out flatReduction);
+                modifierSet.Coefficients.TryGetValue(type, out percentileResistCoeff);
+            }
+
+            float flatPen = 0f;
+            float percentPen = 0f;
+
+            damage.FlatPenetration?.TryGetValue(type, out flatPen);
+            damage.PercentilePenetration?.TryGetValue(type, out percentPen);
+
+            if (!damage.disableCrossInteraction)
+                flatReduction *= 1f - percentPen;
+
+            if (flatReduction > 0f)
+                flatReduction = Math.Max(0f, flatReduction - flatPen);
+            else
+                flatReduction -= flatPen;
+
+            float percentileMultiplier = 1f;
+            if (percentileResistCoeff != 0f)
+                percentileMultiplier = 1f - (1f - percentileResistCoeff) * (1f - percentPen);
+
+            float zeroThreshold = flatReduction > 0f ? flatReduction / baseDamage : 0f;
+            float switchThreshold = flatReduction > 0f && percentileMultiplier < 1f
+                ? flatReduction / (baseDamage * (1f - percentileMultiplier))
+                : float.PositiveInfinity;
+
+            breakpoints.Add(zeroThreshold);
+            if (switchThreshold != float.PositiveInfinity && switchThreshold > 0f)
+                breakpoints.Add(switchThreshold);
+
+            typeData.Add((baseDamage, flatReduction, percentileMultiplier, zeroThreshold, switchThreshold));
+        }
+
+        var sortedBreakpoints = breakpoints
+            .Where(x => x >= 0f && x != float.PositiveInfinity)
+            .OrderBy(x => x)
+            .ToList();
+
+        if (sortedBreakpoints.Count == 0)
+            return 0f;
+
+        float EvaluateTotalDamage(float multiplier)
+        {
+            if (!IsFinite(multiplier))
+                return float.NaN;
+
+            float totalDamage = 0f;
+            foreach (var (baseDamage, flatReduction, percentileMultiplier, _, _) in typeData)
+            {
+                float flatValue = Math.Max(0f, baseDamage * multiplier - flatReduction);
+                float percentileValue = baseDamage * multiplier * percentileMultiplier;
+                float contribution = Math.Min(flatValue, percentileValue);
+                if (!IsFinite(contribution))
+                    return float.NaN;
+
+                totalDamage += contribution;
+            }
+
+            return IsFinite(totalDamage) ? totalDamage : float.NaN;
+        }
+
+        float previousMultiplier = 0f;
+        float previousDamage = EvaluateTotalDamage(previousMultiplier);
+        if (!IsFinite(previousDamage))
+        {
+            return 0f;
+        }
+
+        foreach (var nextMultiplier in sortedBreakpoints)
+        {
+            if (nextMultiplier <= previousMultiplier)
+                continue;
+
+            float nextDamage = EvaluateTotalDamage(nextMultiplier);
+            if (!IsFinite(nextDamage))
+            {
+                break;
+            }
+
+            if (previousDamage >= requiredEffectiveDamage)
+                return previousMultiplier;
+
+            if (requiredEffectiveDamage <= nextDamage)
+            {
+                if (Math.Abs(nextDamage - previousDamage) < 1e-6f)
+                    return nextMultiplier;
+
+                var interpolatedMultiplier = previousMultiplier + (requiredEffectiveDamage - previousDamage) * (nextMultiplier - previousMultiplier) / (nextDamage - previousDamage);
+                return IsFinite(interpolatedMultiplier) ? interpolatedMultiplier : 0f;
+            }
+
+            previousMultiplier = nextMultiplier;
+            previousDamage = nextDamage;
+        }
+
+        if (previousDamage >= requiredEffectiveDamage)
+            return previousMultiplier;
+
+        float stepMultiplier = previousMultiplier + Math.Max(1f, requiredEffectiveDamage);
+        float stepDamage = EvaluateTotalDamage(stepMultiplier);
+        if (!IsFinite(stepDamage))
+        {
+            return 0f;
+        }
+
+        if (Math.Abs(stepDamage - previousDamage) < 1e-6f)
+            return previousMultiplier;
+
+        var finalMultiplier = previousMultiplier + (requiredEffectiveDamage - previousDamage) * (stepMultiplier - previousMultiplier) / (stepDamage - previousDamage);
+        return IsFinite(finalMultiplier) ? finalMultiplier : 0f;
+    }
+    //KS14 penetration demoncode end
 }

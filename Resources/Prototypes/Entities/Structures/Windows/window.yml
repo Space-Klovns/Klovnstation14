@@ -26,6 +26,7 @@
       - ForceFixRotations
       - Window
       - Directional
+      - HristovWindowVentable # KS14
   - type: Sprite
     drawdepth: WallTops
     sprite: Structures/Windows/window.rsi
