@@ -29,6 +29,9 @@ public sealed class KsAdminMusicEntry(ResPath soundPath, float volume, TimeSpan 
         return true;
     }
 
+    public override bool Equals(object? obj)
+        => obj is KsAdminMusicEntry entry && Equals(entry);
+
     public override int GetHashCode()
         => HashCode.Combine(SoundPath, Volume, StartTime);
 }

@@ -69,7 +69,7 @@ public sealed class KsAdminMusicManager : IPostInjectInit
         _activeEntries.Add(entry);
         SendDataUpdateToAll();
 
-        _entryEndTimes[entry] = _gameTiming.CurTime + audioLength;
+        _entryEndTimes[entry] = _gameTiming.RealTime + audioLength;
     }
 
     public void RemoveEntry(KsAdminMusicEntry entry)
