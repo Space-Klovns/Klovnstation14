@@ -26,7 +26,7 @@ public sealed class PlayAdminMusicCommand : LocalizedEntityCommands
 
         if (args.Length == 2)
         {
-            if (!float.TryParse(args[1], out var volumePercentage) ||
+            if (!float.TryParse(args[1].Trim('%'), out var volumePercentage) ||
                 volumePercentage < 0f ||
                 volumePercentage > 100f)
             {
