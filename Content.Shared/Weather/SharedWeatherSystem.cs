@@ -14,9 +14,9 @@ namespace Content.Shared.Weather;
 
 public abstract partial class SharedWeatherSystem : EntitySystem
 {
-    [Dependency] protected readonly IGameTiming Timing = default!;
-    [Dependency] protected readonly IPrototypeManager ProtoMan = default!;
-    [Dependency] protected readonly SharedAudioSystem Audio = default!;
+    [Dependency] protected IGameTiming Timing = default!;
+    [Dependency] protected IPrototypeManager ProtoMan = default!;
+    [Dependency] protected SharedAudioSystem Audio = default!;
     //[Dependency] private ITileDefinitionManager _tileDefManager = default!; // KS14: commented, as unused
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedRoofSystem _roof = default!;

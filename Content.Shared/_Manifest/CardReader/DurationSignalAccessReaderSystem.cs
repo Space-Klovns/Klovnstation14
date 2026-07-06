@@ -18,7 +18,7 @@ namespace Content.Shared.MNET.CardReader;
 
 public abstract partial class SharedDurationSignalAccessReaderSystem : EntitySystem
 {
-    [Dependency] protected readonly SharedAppearanceSystem AppearanceSystem = default!;
+    [Dependency] protected SharedAppearanceSystem AppearanceSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private TagSystem _tagSystem = default!;
     [Dependency] private SharedPopupSystem _sharedPopupSystem = default!;

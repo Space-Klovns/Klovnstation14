@@ -12,8 +12,8 @@ public abstract partial class SharedGasTileOverlaySystem : EntitySystem
     protected float AccumulatedFrameTime;
     protected bool PvsEnabled;
 
-    [Dependency] protected readonly IPrototypeManager ProtoMan = default!;
-    [Dependency] protected readonly IConfigurationManager ConfMan = default!;
+    [Dependency] protected IPrototypeManager ProtoMan = default!;
+    [Dependency] protected IConfigurationManager ConfMan = default!;
     [Dependency] private SharedAtmosphereSystem _atmosphere = default!;
 
     /// <summary>

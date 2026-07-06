@@ -54,7 +54,7 @@ public abstract partial class SharedStationAiSystem : EntitySystem
     [Dependency] private SharedDoAfterSystem _doAfter = default!;
     [Dependency] private SharedElectrocutionSystem _electrify = default!;
     [Dependency] private SharedEyeSystem _eye = default!;
-    [Dependency] protected readonly SharedMapSystem Maps = default!;
+    [Dependency] protected SharedMapSystem Maps = default!;
     [Dependency] private SharedMindSystem _mind = default!;
     [Dependency] private SharedMoverController _mover = default!;
     [Dependency] private SharedPopupSystem _popup = default!;

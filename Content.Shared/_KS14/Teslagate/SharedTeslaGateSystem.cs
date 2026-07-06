@@ -10,7 +10,7 @@ namespace Content.Shared._KS14.TeslaGate;
 
 public abstract partial class SharedTeslaGateSystem : EntitySystem
 {
-    [Dependency] protected readonly SharedAudioSystem AudioSystem = default!;
+    [Dependency] protected SharedAudioSystem AudioSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
     [Dependency] private SharedPointLightSystem _pointLight = default!;

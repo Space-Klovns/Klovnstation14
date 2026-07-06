@@ -11,9 +11,9 @@ namespace Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
 
 public abstract partial class SharedNuclearReactorSystem : EntitySystem
 {
-    [Dependency] protected readonly SharedAudioSystem AudioSystem = default!;
-    [Dependency] protected readonly SharedAppearanceSystem AppearanceSystem = default!;
-    [Dependency] protected readonly IGameTiming GameTiming = default!;
+    [Dependency] protected SharedAudioSystem AudioSystem = default!;
+    [Dependency] protected SharedAppearanceSystem AppearanceSystem = default!;
+    [Dependency] protected IGameTiming GameTiming = default!;
     [Dependency] private INetManager _netManager = default!;
     [Dependency] private ItemSlotsSystem _slotsSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;

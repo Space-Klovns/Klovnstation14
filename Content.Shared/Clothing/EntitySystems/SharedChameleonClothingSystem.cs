@@ -26,10 +26,10 @@ public abstract partial class SharedChameleonClothingSystem : EntitySystem
     [Dependency] private SharedItemSystem _itemSystem = default!;
     [Dependency] private SharedAppearanceSystem _appearance = default!;
     [Dependency] private TagSystem _tag = default!;
-    [Dependency] protected readonly IGameTiming Timing = default!;
+    [Dependency] protected IGameTiming Timing = default!;
     [Dependency] private LockSystem _lock = default!;
     [Dependency] private IRobustRandom _random = default!;
-    [Dependency] protected readonly SharedUserInterfaceSystem UI = default!;
+    [Dependency] protected SharedUserInterfaceSystem UI = default!;
     [Dependency] private INetManager _net = default!;
 
     private static readonly SlotFlags[] IgnoredSlots =

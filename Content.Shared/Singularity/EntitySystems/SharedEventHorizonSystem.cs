@@ -18,7 +18,7 @@ public abstract partial class SharedEventHorizonSystem : EntitySystem
 
     [Dependency] private FixtureSystem _fixtures = default!;
     [Dependency] private SharedPhysicsSystem _physics = default!;
-    [Dependency] protected readonly IViewVariablesManager Vvm = default!;
+    [Dependency] protected IViewVariablesManager Vvm = default!;
 
     public override void Initialize()
     {

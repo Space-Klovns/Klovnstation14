@@ -16,10 +16,10 @@ public abstract partial class SharedShuttleSystem : EntitySystem
 {
     [Dependency] private IMapManager _mapManager = default!;
     [Dependency] private ItemSlotsSystem _itemSlots = default!;
-    [Dependency] protected readonly FixtureSystem Fixtures = default!;
-    [Dependency] protected readonly SharedMapSystem Maps = default!;
-    [Dependency] protected readonly SharedPhysicsSystem Physics = default!;
-    [Dependency] protected readonly SharedTransformSystem XformSystem = default!;
+    [Dependency] protected FixtureSystem Fixtures = default!;
+    [Dependency] protected SharedMapSystem Maps = default!;
+    [Dependency] protected SharedPhysicsSystem Physics = default!;
+    [Dependency] protected SharedTransformSystem XformSystem = default!;
     [Dependency] private EntityWhitelistSystem _whitelistSystem = default!;
 
     public const float FTLRange = 256f;

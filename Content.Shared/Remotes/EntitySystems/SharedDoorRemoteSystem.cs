@@ -27,7 +27,7 @@ public abstract partial class SharedDoorRemoteSystem : EntitySystem
     [Dependency] private SharedPopupSystem _popup = default!;
     [Dependency] private ISharedAdminLogManager _adminLogger = default!;
     [Dependency] private TagSystem _tagSystem = default!;
-    [Dependency] protected readonly IGameTiming Timing = default!;
+    [Dependency] protected IGameTiming Timing = default!;
 
 
     public override void Initialize()

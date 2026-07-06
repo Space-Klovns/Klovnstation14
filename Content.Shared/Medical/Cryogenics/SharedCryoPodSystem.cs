@@ -36,13 +36,13 @@ namespace Content.Shared.Medical.Cryogenics;
 public abstract partial class SharedCryoPodSystem : EntitySystem
 {
     [Dependency] private ISharedAdminLogManager _adminLogger = default!;
-    [Dependency] protected readonly IGameTiming Timing = default!;
+    [Dependency] protected IGameTiming Timing = default!;
     [Dependency] private ClimbSystem _climb = default!;
     [Dependency] private EmagSystem _emag = default!;
     [Dependency] private ItemSlotsSystem _itemSlots = default!;
     [Dependency] private MobStateSystem _mobState = default!;
     [Dependency] private ReactiveSystem _reactive = default!;
-    [Dependency] protected readonly SharedAppearanceSystem Appearance = default!;
+    [Dependency] protected SharedAppearanceSystem Appearance = default!;
     [Dependency] private SharedBloodstreamSystem _bloodstream = default!;
     [Dependency] private SharedContainerSystem _container = default!;
     [Dependency] private SharedDoAfterSystem _doAfter = default!;
@@ -51,7 +51,7 @@ public abstract partial class SharedCryoPodSystem : EntitySystem
     [Dependency] private SharedPopupSystem _popup = default!;
     [Dependency] private SharedSolutionContainerSystem _solutionContainer = default!;
     [Dependency] private SharedToolSystem _tool = default!;
-    [Dependency] protected readonly SharedUserInterfaceSystem UI = default!;
+    [Dependency] protected SharedUserInterfaceSystem UI = default!;
     [Dependency] private StandingStateSystem _standingState = default!;
 
     [Dependency] private EntityQuery<BloodstreamComponent> _bloodstreamQuery = default!;

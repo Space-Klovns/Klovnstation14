@@ -35,7 +35,7 @@ public abstract partial class SharedStaminaSystem : EntitySystem
     public static readonly EntProtoId StaminaLow = "StatusEffectStaminaLow";
 
     [Dependency] private IConfigurationManager _config = default!;
-    [Dependency] protected readonly IGameTiming Timing = default!;
+    [Dependency] protected IGameTiming Timing = default!;
     [Dependency] private INetManager _net = default!;
     [Dependency] private ISharedAdminLogManager _adminLogger = default!;
     [Dependency] private AlertsSystem _alerts = default!;
@@ -44,7 +44,7 @@ public abstract partial class SharedStaminaSystem : EntitySystem
     [Dependency] private SharedAudioSystem _audio = default!;
     [Dependency] private SharedColorFlashEffectSystem _color = default!;
     [Dependency] private StatusEffectsSystem _status = default!;
-    [Dependency] protected readonly SharedStunSystem StunSystem = default!;
+    [Dependency] protected SharedStunSystem StunSystem = default!;
     [Dependency] private ComplexShoveSystem _complexShoveSystem = default!; // KS14
 
     [Dependency] private EntityQuery<StaminaComponent> _stamQuery = default!;

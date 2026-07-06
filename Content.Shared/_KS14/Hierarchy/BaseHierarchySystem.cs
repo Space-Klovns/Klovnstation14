@@ -9,7 +9,7 @@ public abstract partial class BaseHierarchySystem<THierarchyComp, TElementComp> 
     where THierarchyComp : Component, IHierarchyComponent
     where TElementComp : Component, IHierarchyElementComponent
 {
-    [Dependency] protected readonly SharedContainerSystem ContainerSystem = default!;
+    [Dependency] protected SharedContainerSystem ContainerSystem = default!;
 
     /// <summary>
     ///     Must be set on initialisation.

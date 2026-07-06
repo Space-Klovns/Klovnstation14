@@ -19,8 +19,8 @@ namespace Content.Shared.Xenoarchaeology.Equipment;
 /// </summary>
 public abstract partial class SharedArtifactCrusherSystem : EntitySystem
 {
-    [Dependency] protected readonly SharedAudioSystem AudioSystem = default!;
-    [Dependency] protected readonly SharedContainerSystem ContainerSystem = default!;
+    [Dependency] protected SharedAudioSystem AudioSystem = default!;
+    [Dependency] protected SharedContainerSystem ContainerSystem = default!;
     [Dependency] private SharedAppearanceSystem _appearance = default!;
     [Dependency] private EmagSystem _emag = default!;
     [Dependency] private SharedPowerReceiverSystem _power = default!;

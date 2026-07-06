@@ -28,7 +28,7 @@ public abstract partial class SharedGasGrenadeCompressorSystem : EntitySystem
     [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
     [Dependency] private SharedUserInterfaceSystem _userInterfaceSystem = default!;
 
-    [Dependency] protected readonly EntityQuery<ReleaseGasOnTriggerComponent> ReleaseGasOnTriggerQuery = default!;
+    [Dependency] protected EntityQuery<ReleaseGasOnTriggerComponent> ReleaseGasOnTriggerQuery = default!;
     [Dependency] private EntityQuery<MaterialStorageComponent> _materialStorageQuery = default!;
 
     private static readonly EntProtoId AirGrenadeId = "AirGrenade";

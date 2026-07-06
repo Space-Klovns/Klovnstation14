@@ -7,8 +7,8 @@ namespace Content.Shared.PDA
 {
     public abstract partial class SharedPdaSystem : EntitySystem
     {
-        [Dependency] protected readonly ItemSlotsSystem ItemSlotsSystem = default!;
-        [Dependency] protected readonly SharedAppearanceSystem Appearance = default!;
+        [Dependency] protected ItemSlotsSystem ItemSlotsSystem = default!;
+        [Dependency] protected SharedAppearanceSystem Appearance = default!;
         [Dependency] private SharedJobStatusSystem _jobStatus = default!;
 
         public override void Initialize()

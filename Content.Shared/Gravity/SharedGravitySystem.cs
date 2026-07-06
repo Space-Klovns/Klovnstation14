@@ -14,12 +14,12 @@ namespace Content.Shared.Gravity;
 
 public abstract partial class SharedGravitySystem : EntitySystem
 {
-    [Dependency] protected readonly IGameTiming Timing = default!;
+    [Dependency] protected IGameTiming Timing = default!;
     [Dependency] private AlertsSystem _alerts = default!;
 
     public static readonly ProtoId<AlertPrototype> WeightlessAlert = "Weightless";
 
-    [Dependency] protected readonly EntityQuery<GravityComponent> GravityQuery = default!;
+    [Dependency] protected EntityQuery<GravityComponent> GravityQuery = default!;
     [Dependency] private EntityQuery<GravityAffectedComponent> _weightlessQuery = default!;
     [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default!;
 

@@ -24,12 +24,12 @@ namespace Content.Shared.SprayPainter;
 public abstract partial class SharedSprayPainterSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
-    [Dependency] protected readonly IPrototypeManager Proto = default!;
-    [Dependency] protected readonly ISharedAdminLogManager AdminLogger = default!;
-    [Dependency] protected readonly SharedAppearanceSystem Appearance = default!;
-    [Dependency] protected readonly SharedAudioSystem Audio = default!;
-    [Dependency] protected readonly SharedChargesSystem Charges = default!;
-    [Dependency] protected readonly SharedDoAfterSystem DoAfter = default!;
+    [Dependency] protected IPrototypeManager Proto = default!;
+    [Dependency] protected ISharedAdminLogManager AdminLogger = default!;
+    [Dependency] protected SharedAppearanceSystem Appearance = default!;
+    [Dependency] protected SharedAudioSystem Audio = default!;
+    [Dependency] protected SharedChargesSystem Charges = default!;
+    [Dependency] protected SharedDoAfterSystem DoAfter = default!;
     [Dependency] private SharedPopupSystem _popup = default!;
 
     public override void Initialize()

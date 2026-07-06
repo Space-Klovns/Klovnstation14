@@ -15,7 +15,7 @@ public abstract partial class SharedKsPlumbingIvPumpSystem : EntitySystem
     [Dependency] private SharedPopupSystem _popupSystem = default!;
     [Dependency] private ActionBlockerSystem _actionBlockerSystem = default!;
 
-    [Dependency] protected readonly EntityQuery<BloodstreamComponent> BloodstreamQuery = default!;
+    [Dependency] protected EntityQuery<BloodstreamComponent> BloodstreamQuery = default!;
 
     public override void Initialize()
     {

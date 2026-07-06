@@ -7,7 +7,7 @@ namespace Content.Shared.Audio;
 
 public abstract partial class SharedContentAudioSystem : EntitySystem
 {
-    [Dependency] protected readonly SharedAudioSystem Audio = default!;
+    [Dependency] protected SharedAudioSystem Audio = default!;
 
     /// <summary>
     /// Standard variation to use for sounds.

@@ -24,12 +24,12 @@ namespace Content.Shared.Light.EntitySystems;
 
 public abstract partial class SharedPoweredLightSystem : EntitySystem
 {
-    [Dependency] protected readonly IGameTiming GameTiming = default!;
+    [Dependency] protected IGameTiming GameTiming = default!;
     [Dependency] private DamageOnInteractSystem _damageOnInteractSystem = default!;
     [Dependency] private SharedAmbientSoundSystem _ambientSystem = default!;
     [Dependency] private SharedAppearanceSystem _appearance = default!;
     [Dependency] private SharedAudioSystem _audio = default!;
-    [Dependency] protected readonly SharedContainerSystem ContainerSystem = default!;
+    [Dependency] protected SharedContainerSystem ContainerSystem = default!;
     [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
     [Dependency] private SharedLightBulbSystem _bulbSystem = default!;
     [Dependency] private SharedHandsSystem _handsSystem = default!;

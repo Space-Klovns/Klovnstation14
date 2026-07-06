@@ -21,7 +21,7 @@ public abstract partial class SharedSingularitySystem : EntitySystem
     [Dependency] private SharedEventHorizonSystem _horizons = default!;
     [Dependency] private SharedPhysicsSystem _physics = default!;
     [Dependency] private SharedRadiationSystem _radiation = default!;
-    [Dependency] protected readonly IViewVariablesManager Vvm = default!;
+    [Dependency] protected IViewVariablesManager Vvm = default!;
     #endregion Dependencies
 
     /// <summary>

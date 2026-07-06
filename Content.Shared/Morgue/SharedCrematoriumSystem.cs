@@ -17,10 +17,10 @@ namespace Content.Shared.Morgue;
 
 public abstract partial class SharedCrematoriumSystem : EntitySystem
 {
-    [Dependency] protected readonly SharedEntityStorageSystem EntityStorage = default!;
-    [Dependency] protected readonly SharedPopupSystem Popup = default!;
-    [Dependency] protected readonly StandingStateSystem Standing = default!;
-    [Dependency] protected readonly SharedMindSystem Mind = default!;
+    [Dependency] protected SharedEntityStorageSystem EntityStorage = default!;
+    [Dependency] protected SharedPopupSystem Popup = default!;
+    [Dependency] protected StandingStateSystem Standing = default!;
+    [Dependency] protected SharedMindSystem Mind = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private INetManager _net = default!;
     [Dependency] private SharedAudioSystem _audio = default!;

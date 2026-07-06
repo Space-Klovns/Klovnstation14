@@ -19,11 +19,11 @@ public abstract partial class GasMaxPressureSystem<T> : EntitySystem where T : I
     private float _maxExplosivePower;
 
     [Dependency] private IConfigurationManager _cfg = default!;
-    [Dependency] protected readonly SharedAppearanceSystem Appearance = default!;
-    [Dependency] protected readonly SharedAtmosphereSystem Atmos = default!;
+    [Dependency] protected SharedAppearanceSystem Appearance = default!;
+    [Dependency] protected SharedAtmosphereSystem Atmos = default!;
     [Dependency] private SharedDestructibleSystem _destructible = default!;
     [Dependency] private SharedExplosionSystem _explosions = default!;
-    [Dependency] protected readonly SharedAudioSystem Audio = default!;
+    [Dependency] protected SharedAudioSystem Audio = default!;
 
     /// <inheritdoc/>
     public override void Initialize()

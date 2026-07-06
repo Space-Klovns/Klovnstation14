@@ -20,7 +20,7 @@ public abstract partial class SharedNinjaSuitSystem : EntitySystem
     [Dependency] private ActionContainerSystem _actionContainer = default!;
     [Dependency] private ItemToggleSystem _toggle = default!;
     [Dependency] private SharedAudioSystem _audio = default!;
-    [Dependency] protected readonly SharedPopupSystem Popup = default!;
+    [Dependency] protected SharedPopupSystem Popup = default!;
     [Dependency] private SharedSpaceNinjaSystem _ninja = default!;
     [Dependency] private UseDelaySystem _useDelay = default!;
 
