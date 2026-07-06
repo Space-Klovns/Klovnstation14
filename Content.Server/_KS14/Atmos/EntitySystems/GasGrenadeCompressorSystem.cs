@@ -13,7 +13,7 @@ using Content.Shared.Trigger.Components;
 namespace Content.Server._KS14.Atmos.EntitySystems;
 
 [UsedImplicitly]
-public sealed class GasGrenadeCompressorSystem : SharedGasGrenadeCompressorSystem
+public sealed partial class GasGrenadeCompressorSystem : SharedGasGrenadeCompressorSystem
 {
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
     [Dependency] private NodeContainerSystem _nodeContainerSystem = default!;

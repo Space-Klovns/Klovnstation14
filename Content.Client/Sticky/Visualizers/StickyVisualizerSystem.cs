@@ -3,7 +3,7 @@ using Robust.Client.GameObjects;
 
 namespace Content.Client.Sticky.Visualizers;
 
-public sealed class StickyVisualizerSystem : VisualizerSystem<StickyVisualizerComponent>
+public sealed partial class StickyVisualizerSystem : VisualizerSystem<StickyVisualizerComponent>
 {
     [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
 

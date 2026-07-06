@@ -13,7 +13,7 @@ using Robust.Shared.Timing;
 
 namespace Content.Server.GameTicking.Rules;
 
-public sealed class XenoborgsRuleSystem : GameRuleSystem<XenoborgsRuleComponent>
+public sealed partial class XenoborgsRuleSystem : GameRuleSystem<XenoborgsRuleComponent>
 {
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private AntagSelectionSystem _antag = default!;

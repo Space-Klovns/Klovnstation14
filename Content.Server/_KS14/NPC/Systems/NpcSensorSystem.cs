@@ -5,7 +5,7 @@ using Robust.Shared.Map;
 
 namespace Content.Server._KS14.NPC.Systems;
 
-public sealed class NpcSensorSystem : SharedNpcSensorSystem
+public sealed partial class NpcSensorSystem : SharedNpcSensorSystem
 {
     [Dependency] private EntityLookupSystem _lookupSystem = default!;
 

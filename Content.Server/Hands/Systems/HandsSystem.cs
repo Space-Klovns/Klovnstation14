@@ -5,7 +5,7 @@ using Robust.Shared.GameStates;
 
 namespace Content.Server.Hands.Systems
 {
-    public sealed class HandsSystem : SharedHandsSystem
+    public sealed partial class HandsSystem : SharedHandsSystem
     {
 
         // Trauma - moved query and DropHeldItemsSpread to PredictedHandsSystem

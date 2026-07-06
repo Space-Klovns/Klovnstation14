@@ -6,7 +6,7 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Client.Access.Systems;
 
-public sealed class JobStatusSystem : SharedJobStatusSystem
+public sealed partial class JobStatusSystem : SharedJobStatusSystem
 {
     [Dependency] private ShowJobIconsSystem _showJobIcons = default!;
     [Dependency] private ShowCrewIconsSystem _showCrewIcons = default!;

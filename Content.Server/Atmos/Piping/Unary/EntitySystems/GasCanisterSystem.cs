@@ -15,7 +15,7 @@ using Content.Shared.Popups;
 
 namespace Content.Server.Atmos.Piping.Unary.EntitySystems;
 
-public sealed class GasCanisterSystem : SharedGasCanisterSystem
+public sealed partial class GasCanisterSystem : SharedGasCanisterSystem
 {
     [Dependency] private AtmosphereSystem _atmos = default!;
     [Dependency] private NodeContainerSystem _nodeContainer = default!;

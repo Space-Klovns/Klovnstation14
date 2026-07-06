@@ -4,7 +4,7 @@ using Robust.Shared.Timing;
 
 namespace Content.Server.Sound;
 
-public sealed class EmitSoundSystem : SharedEmitSoundSystem
+public sealed partial class EmitSoundSystem : SharedEmitSoundSystem
 {
     [Dependency] private IGameTiming _timing = default!;
 

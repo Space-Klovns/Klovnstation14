@@ -9,7 +9,7 @@ using Robust.Shared.Player;
 
 namespace Content.Server._KS14.LobbyView;
 
-public sealed class KsLobbyViewSystem : KsSharedLobbyViewSystem
+public sealed partial class KsLobbyViewSystem : KsSharedLobbyViewSystem
 {
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private ViewSubscriberSystem _viewSubscriberSystem = default!;

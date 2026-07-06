@@ -26,7 +26,7 @@ namespace Content.Server._KS14.Atmos.EntitySystems;
 
 // This could use a cooldown MAYBE but AtmosDeviceUpdateEvent works too and im lazy
 
-public sealed class GasPistonSystem : SharedGasPistonSystem
+public sealed partial class GasPistonSystem : SharedGasPistonSystem
 {
     [Dependency] private IAdminLogManager _adminLogManager = default!;
     [Dependency] private NodeContainerSystem _nodeContainerSystem = default!;

@@ -5,7 +5,7 @@ using Robust.Shared.Random; // KS14
 
 namespace Content.Server.Radio.EntitySystems;
 
-public sealed class JammerSystem : SharedJammerSystem
+public sealed partial class JammerSystem : SharedJammerSystem
 {
     [Dependency] private IRobustRandom _robustRandom = default!; // KS14
     [Dependency] private SharedTransformSystem _transform = default!;

@@ -21,7 +21,7 @@ public sealed partial class LoneERTRuleComponent : Component
     public ResPath? Path;
 }
 
-public sealed class LoneERTSystem : GameRuleSystem<LoneERTRuleComponent>
+public sealed partial class LoneERTSystem : GameRuleSystem<LoneERTRuleComponent>
 {
     [Dependency] private MapLoaderSystem _mapLoader = default!;
     [Dependency] private IMapManager _mapManager = default!;

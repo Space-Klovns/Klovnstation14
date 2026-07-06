@@ -6,7 +6,7 @@ using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Content.Client._KS14.SupplyPod;
 
-public sealed class SupplyPodSystem : SharedSupplyPodSystem
+public sealed partial class SupplyPodSystem : SharedSupplyPodSystem
 {
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IOverlayManager _overlayManager = default!;

@@ -4,7 +4,7 @@ using Robust.Client.GameObjects;
 
 namespace Content.Client.Humanoid;
 
-public sealed class HideableHumanoidLayersSystem : SharedHideableHumanoidLayersSystem
+public sealed partial class HideableHumanoidLayersSystem : SharedHideableHumanoidLayersSystem
 {
     [Dependency] private SpriteSystem _sprite = default!;
 

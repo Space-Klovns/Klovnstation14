@@ -6,7 +6,7 @@ using Robust.Client.Graphics;
 namespace Content.Client.MNET.CardReader;
 
 // This is kinda jank and i don't like it but whatever.
-public sealed class DurationSignalAccessReaderSystem : SharedDurationSignalAccessReaderSystem
+public sealed partial class DurationSignalAccessReaderSystem : SharedDurationSignalAccessReaderSystem
 {
     [Dependency] private AnimationPlayerSystem _animationSystem = default!;
     [Dependency] private SpriteSystem _spriteSystem = default!;

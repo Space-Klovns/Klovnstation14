@@ -32,7 +32,7 @@ using Content.Server.Radiation.Systems;
 
 namespace Content.Server._FarHorizons.Power.Generation.FissionGenerator;
 
-public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
+public sealed partial class NuclearReactorSystem : SharedNuclearReactorSystem
 {
     // The great wall of dependencies
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;

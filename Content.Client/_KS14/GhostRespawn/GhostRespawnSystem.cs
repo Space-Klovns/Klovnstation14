@@ -4,7 +4,7 @@ using Robust.Shared.Configuration;
 
 namespace Content.Client._KS14.GhostRespawn;
 
-public sealed class GhostRespawnSystem : SharedGhostRespawnSystem
+public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
 {
     [Dependency] private IConfigurationManager _configurationManager = default!;
 

@@ -3,7 +3,7 @@ using Content.Shared.MNET.CardReader;
 
 namespace Content.Server.MNET.CardReader;
 
-public sealed class DurationSignalAccessReaderSystem : SharedDurationSignalAccessReaderSystem
+public sealed partial class DurationSignalAccessReaderSystem : SharedDurationSignalAccessReaderSystem
 {
     [Dependency] private DeviceLinkSystem _deviceLinkSystem = default!;
 

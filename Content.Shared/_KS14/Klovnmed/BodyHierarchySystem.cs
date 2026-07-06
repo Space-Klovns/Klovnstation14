@@ -8,7 +8,7 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared._KS14.Klovnmed;
 
-public sealed class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, OrganComponent>
+public sealed partial class BodyHierarchySystem : BaseHierarchySystem<BodyComponent, OrganComponent>
 {
     [Dependency] private IGameTiming _gameTiming = default!;
 

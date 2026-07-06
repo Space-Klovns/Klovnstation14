@@ -24,7 +24,7 @@ public sealed partial class ScenarioRuleComponent : Component
     public ScenarioWinType WinType;
 }
 
-public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
+public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
 {
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private RoundEndSystem _roundEndSystem = default!;

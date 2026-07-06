@@ -4,7 +4,7 @@ using Content.Shared._KS14.RemoteDrone;
 
 namespace Content.Server._KS14.FpvDrone;
 
-public sealed class FpvDroneSystem : SharedFpvDroneSystem
+public sealed partial class FpvDroneSystem : SharedFpvDroneSystem
 {
     [Dependency] private SurveillanceCameraMonitorSystem _surveillanceMonitorSystem = default!;
 

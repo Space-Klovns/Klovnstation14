@@ -23,7 +23,7 @@ using Content.Shared.Atmos.Components;
 
 namespace Content.Server._FarHorizons.Power.Generation.FissionGenerator;
 
-public sealed class TurbineSystem : SharedTurbineSystem
+public sealed partial class TurbineSystem : SharedTurbineSystem
 {
     [Dependency] private GunSystem _gun = default!;
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;

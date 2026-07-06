@@ -12,7 +12,7 @@ using Content.Shared.FixedPoint;
 
 namespace Content.Server._KS14.Plumbing.IvPump;
 
-public sealed class KsPlumbingIvPumpSystem : SharedKsPlumbingIvPumpSystem
+public sealed partial class KsPlumbingIvPumpSystem : SharedKsPlumbingIvPumpSystem
 {
     [Dependency] private ChainSystem _chainSystem = default!;
     [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;

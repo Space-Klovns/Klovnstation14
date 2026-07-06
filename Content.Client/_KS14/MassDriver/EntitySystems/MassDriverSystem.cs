@@ -6,7 +6,7 @@ using Robust.Shared.Utility;
 
 namespace Content.Client._KS14.MassDriver.EntitySystems;
 
-public sealed class MassDriverSystem : SharedMassDriverSystem
+public sealed partial class MassDriverSystem : SharedMassDriverSystem
 {
     [Dependency] private SharedUserInterfaceSystem _ui = default!;
 

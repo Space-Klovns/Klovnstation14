@@ -4,7 +4,7 @@ using Robust.Client.GameObjects;
 
 namespace Content.Client.Changeling.Systems;
 
-public sealed class ChangelingIdentitySystem : SharedChangelingIdentitySystem
+public sealed partial class ChangelingIdentitySystem : SharedChangelingIdentitySystem
 {
     [Dependency] private UserInterfaceSystem _ui = default!;
 

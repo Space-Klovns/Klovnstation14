@@ -10,7 +10,7 @@ using Robust.Shared.Network;
 
 namespace Content.Shared.Trigger.Systems;
 
-public sealed class DnaScrambleOnTriggerSystem : XOnTriggerSystem<DnaScrambleOnTriggerComponent>
+public sealed partial class DnaScrambleOnTriggerSystem : XOnTriggerSystem<DnaScrambleOnTriggerComponent>
 {
     [Dependency] private MetaDataSystem _metaData = default!;
     [Dependency] private HumanoidProfileSystem _humanoidProfile = default!;

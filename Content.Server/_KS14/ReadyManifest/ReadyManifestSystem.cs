@@ -13,7 +13,7 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.ReadyManifest;
 
-public sealed class ReadyManifestSystem : SharedReadyManifestSystem
+public sealed partial class ReadyManifestSystem : SharedReadyManifestSystem
 {
     [Dependency] private IConfigurationManager _cfg = default!;
     [Dependency] private IServerPreferencesManager _prefsManager = default!;

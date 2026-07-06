@@ -10,7 +10,7 @@ namespace Content.Server._KS14.SupplyPod;
 /// <summary>
 ///     Kept you waiting, huh?
 /// </summary>
-public sealed class SupplyPodSystem : SharedSupplyPodSystem
+public sealed partial class SupplyPodSystem : SharedSupplyPodSystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;

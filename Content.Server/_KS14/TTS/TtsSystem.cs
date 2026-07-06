@@ -19,7 +19,7 @@ using Robust.Shared.Timing;
 namespace Content.Server._KS14.TTS;
 
 /// <inheritdoc/>
-public sealed class TtsSystem : SharedTtsSystem
+public sealed partial class TtsSystem : SharedTtsSystem
 {
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IPrototypeManager _prototypeManager = default!;
