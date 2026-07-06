@@ -14,11 +14,11 @@ namespace Content.Server._KS14.Plumbing.IvPump;
 
 public sealed class KsPlumbingIvPumpSystem : SharedKsPlumbingIvPumpSystem
 {
-    [Dependency] private readonly ChainSystem _chainSystem = default!;
-    [Dependency] private readonly SharedSolutionContainerSystem _solutionContainerSystem = default!;
-    [Dependency] private readonly PlumbingPullSystem _pullSystem = default!;
-    [Dependency] private readonly NodeContainerSystem _nodeContainerSystem = default!;
-    [Dependency] private readonly AmbientSoundSystem _ambientSoundSystem = default!;
+    [Dependency] private ChainSystem _chainSystem = default!;
+    [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
+    [Dependency] private PlumbingPullSystem _pullSystem = default!;
+    [Dependency] private NodeContainerSystem _nodeContainerSystem = default!;
+    [Dependency] private AmbientSoundSystem _ambientSoundSystem = default!;
 
     public override void Initialize()
     {

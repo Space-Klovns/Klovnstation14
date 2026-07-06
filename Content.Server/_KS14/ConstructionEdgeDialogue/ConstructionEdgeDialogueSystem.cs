@@ -5,10 +5,10 @@ using Content.Shared.Verbs;
 
 namespace Content.Server._KS14.ConstructionEdgeDialogue;
 
-public sealed class ConstructionEdgeDialogueSystem : EntitySystem
+public sealed partial class ConstructionEdgeDialogueSystem : EntitySystem
 {
-    [Dependency] private readonly ConstructionSystem _constructionSystem = default!;
-    [Dependency] private readonly McqDialogueSystem _mcqDialogueSystem = default!;
+    [Dependency] private ConstructionSystem _constructionSystem = default!;
+    [Dependency] private McqDialogueSystem _mcqDialogueSystem = default!;
 
     public override void Initialize()
     {

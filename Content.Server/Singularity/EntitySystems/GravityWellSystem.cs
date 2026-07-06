@@ -21,11 +21,11 @@ namespace Content.Server.Singularity.EntitySystems;
 public sealed class GravityWellSystem : SharedGravityWellSystem
 {
     #region Dependencies
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly IViewVariablesManager _vvManager = default!;
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IViewVariablesManager _vvManager = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
     #endregion Dependencies
 
     /// <summary>
@@ -105,7 +105,7 @@ public sealed class GravityWellSystem : SharedGravityWellSystem
     /// <param name="xform">The transform of the gravity well to make pulse.</param>
     private void Update(EntityUid uid, TimeSpan frameTime, GravityWellComponent? gravWell = null, TransformComponent? xform = null)
     {
-        if(!Resolve(uid, ref gravWell))
+        if (!Resolve(uid, ref gravWell))
             return;
 
         gravWell.NextPulseTime += gravWell.TargetPulsePeriod;
@@ -127,7 +127,7 @@ public sealed class GravityWellSystem : SharedGravityWellSystem
     {
         if (_physicsQuery.TryComp(entity, out var physics))
         {
-            if (physics.CollisionLayer == (int) CollisionGroup.GhostImpassable)
+            if (physics.CollisionLayer == (int)CollisionGroup.GhostImpassable)
                 return false;
         }
 
@@ -218,7 +218,7 @@ public sealed class GravityWellSystem : SharedGravityWellSystem
             if (TryComp<MovedByPressureComponent>(entity, out var movedPressure) && !movedPressure.Enabled) //Ignore magboots users
                 continue;
 
-            if(!CanGravPulseAffect(entity))
+            if (!CanGravPulseAffect(entity))
                 continue;
 
             var displacement = epicenter - _transform.GetWorldPosition(entity);
@@ -255,7 +255,7 @@ public sealed class GravityWellSystem : SharedGravityWellSystem
     /// <param name="gravWell">The state of the gravity well to set the pulse period for.</param>
     public void SetPulsePeriod(EntityUid uid, TimeSpan value, GravityWellComponent? gravWell = null)
     {
-        if(!Resolve(uid, ref gravWell))
+        if (!Resolve(uid, ref gravWell))
             return;
 
         if (MathHelper.CloseTo(gravWell.TargetPulsePeriod.TotalSeconds, value.TotalSeconds))

@@ -11,9 +11,9 @@ namespace Content.Server._KS14.Construction.Completions;
 [DataDefinition]
 public sealed partial class TakeOrgan : IGraphAction
 {
-    [Dependency] private readonly HandsSystem _handsSystem = default!;
-    [Dependency] private readonly BodyHierarchySystem _bodyHierarchySystem = default!;
-    [Dependency] private readonly ContainerSystem _containerSystem = default!;
+    [Dependency] private HandsSystem _handsSystem = default!;
+    [Dependency] private BodyHierarchySystem _bodyHierarchySystem = default!;
+    [Dependency] private ContainerSystem _containerSystem = default!;
 
     [DataField(required: true)]
     public ProtoId<OrganCategoryPrototype> Category = "";

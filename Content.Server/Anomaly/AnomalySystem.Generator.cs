@@ -20,8 +20,8 @@ namespace Content.Server.Anomaly;
 /// </summary>
 public sealed partial class AnomalySystem
 {
-    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
 
     private void InitializeGenerator()
     {
@@ -93,8 +93,8 @@ public sealed partial class AnomalySystem
 
         for (var i = 0; i < 25; i++)
         {
-            var randomX = Random.Next((int) gridBounds.Left, (int) gridBounds.Right);
-            var randomY = Random.Next((int) gridBounds.Bottom, (int)gridBounds.Top);
+            var randomX = Random.Next((int)gridBounds.Left, (int)gridBounds.Right);
+            var randomY = Random.Next((int)gridBounds.Bottom, (int)gridBounds.Top);
 
             var tile = new Vector2i(randomX, randomY);
 
@@ -116,7 +116,7 @@ public sealed partial class AnomalySystem
                     continue;
                 if (body.BodyType != BodyType.Static ||
                     !body.Hard ||
-                    (body.CollisionLayer & (int) CollisionGroup.Impassable) == 0)
+                    (body.CollisionLayer & (int)CollisionGroup.Impassable) == 0)
                     continue;
 
                 valid = false;

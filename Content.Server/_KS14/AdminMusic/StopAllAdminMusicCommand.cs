@@ -7,7 +7,7 @@ namespace Content.Server._KS14.AdminMusic;
 [AdminCommand(AdminFlags.Fun)]
 public sealed class StopAllAdminMusicCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly KsAdminMusicManager _adminMusicManager = default!;
+    [Dependency] private KsAdminMusicManager _adminMusicManager = default!;
 
     public override string Command => "stopalladminmusic";
 

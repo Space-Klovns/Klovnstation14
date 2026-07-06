@@ -17,17 +17,17 @@ using Content.Shared.Power;
 
 namespace Content.Server.Atmos.Portable
 {
-    public sealed class PortableScrubberSystem : EntitySystem
+    public sealed partial class PortableScrubberSystem : EntitySystem
     {
-        [Dependency] private readonly GasVentScrubberSystem _scrubberSystem = default!;
-        [Dependency] private readonly GasCanisterSystem _canisterSystem = default!;
-        [Dependency] private readonly GasPortableSystem _gasPortableSystem = default!;
-        [Dependency] private readonly AtmosphereSystem _atmosphereSystem = default!;
-        [Dependency] private readonly TransformSystem _transformSystem = default!;
-        [Dependency] private readonly IAdminLogManager _adminLogger = default!;
-        [Dependency] private readonly AmbientSoundSystem _ambientSound = default!;
-        [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-        [Dependency] private readonly NodeContainerSystem _nodeContainer = default!;
+        [Dependency] private GasVentScrubberSystem _scrubberSystem = default!;
+        [Dependency] private GasCanisterSystem _canisterSystem = default!;
+        [Dependency] private GasPortableSystem _gasPortableSystem = default!;
+        [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+        [Dependency] private TransformSystem _transformSystem = default!;
+        [Dependency] private IAdminLogManager _adminLogger = default!;
+        [Dependency] private AmbientSoundSystem _ambientSound = default!;
+        [Dependency] private SharedAppearanceSystem _appearance = default!;
+        [Dependency] private NodeContainerSystem _nodeContainer = default!;
 
         public override void Initialize()
         {
@@ -57,7 +57,7 @@ namespace Content.Server.Atmos.Portable
                 && portableNode.ConnectionsEnabled)
             {
                 _atmosphereSystem.React(component.Air, portableNode);
-                if (portableNode.NodeGroup is PipeNet {NodeCount: > 1} net)
+                if (portableNode.NodeGroup is PipeNet { NodeCount: > 1 } net)
                     _canisterSystem.MixContainerWithPipeNet(component.Air, net.Air);
             }
 
@@ -67,7 +67,7 @@ namespace Content.Server.Atmos.Portable
                 return;
             }
 
-            if (args.Grid is not {} grid)
+            if (args.Grid is not { } grid)
                 return;
 
             var position = _transformSystem.GetGridTilePositionOrDefault(uid);

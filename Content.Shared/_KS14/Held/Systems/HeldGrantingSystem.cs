@@ -5,11 +5,11 @@ using Robust.Shared.Serialization.Manager;
 
 namespace Content.Shared._KS14.Held.Systems;
 //TAG SHIT IS UNTESTED HERE BE DRAGONS
-public sealed class HeldGrantingSystem : EntitySystem
+public sealed partial class HeldGrantingSystem : EntitySystem
 {
-    [Dependency] private readonly IComponentFactory _componentFactory = default!;
-    [Dependency] private readonly ISerializationManager _serializationManager = default!;
-    [Dependency] private readonly TagSystem _tagSystem = default!;
+    [Dependency] private IComponentFactory _componentFactory = default!;
+    [Dependency] private ISerializationManager _serializationManager = default!;
+    [Dependency] private TagSystem _tagSystem = default!;
 
     public override void Initialize()
     {

@@ -12,8 +12,8 @@ namespace Content.Server._KS14.NPC.HTN.Preconditions.Math;
 /// </summary>
 public sealed partial class KeyTimePassedPrecondition : HTNPrecondition
 {
-    [Dependency] private readonly IEntityManager _entManager = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private IEntityManager _entManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
 
     [DataField] public bool Invert;
 

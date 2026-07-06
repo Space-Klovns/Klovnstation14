@@ -1,5 +1,5 @@
 namespace Content.Shared.Drowsiness;
 
-public abstract class SharedDrowsinessSystem : EntitySystem
+public abstract partial class SharedDrowsinessSystem : EntitySystem
 {
 }

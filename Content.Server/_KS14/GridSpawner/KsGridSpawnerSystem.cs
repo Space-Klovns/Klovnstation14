@@ -7,12 +7,12 @@ using Robust.Shared.Random;
 
 namespace Content.Server._KS14.GridSpawner;
 
-public sealed class KsGridSpawnerSystem : EntitySystem
+public sealed partial class KsGridSpawnerSystem : EntitySystem
 {
-    [Dependency] private readonly IRobustRandom _robustRandom = default!;
-    [Dependency] private readonly MapLoaderSystem _mapLoaderSystem = default!;
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
-    [Dependency] private readonly ShuttleSystem _shuttleSystem = default!;
+    [Dependency] private IRobustRandom _robustRandom = default!;
+    [Dependency] private MapLoaderSystem _mapLoaderSystem = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
+    [Dependency] private ShuttleSystem _shuttleSystem = default!;
 
     // Gridspawner shouldn't rely on MapInitEvent because rn its used to load saltern
     //      via a gridspawner on its planetmap

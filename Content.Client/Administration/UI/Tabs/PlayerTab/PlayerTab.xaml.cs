@@ -17,9 +17,9 @@ namespace Content.Client.Administration.UI.Tabs.PlayerTab;
 [GenerateTypedNameReferences]
 public sealed partial class PlayerTab : Control
 {
-    [Dependency] private readonly IEntityManager _entManager = default!;
-    [Dependency] private readonly IConfigurationManager _config = default!;
-    [Dependency] private readonly IPlayerManager _playerMan = default!;
+    [Dependency] private IEntityManager _entManager = default!;
+    [Dependency] private IConfigurationManager _config = default!;
+    [Dependency] private IPlayerManager _playerMan = default!;
 
     private const string ArrowUp = "↑";
     private const string ArrowDown = "↓";
@@ -161,7 +161,7 @@ public sealed partial class PlayerTab : Control
 
     private void GenerateButton(ListData data, ListContainerButton button)
     {
-        if (data is not PlayerListData { Info: var player})
+        if (data is not PlayerListData { Info: var player })
             return;
 
         var entry = new PlayerTabEntry(
@@ -185,7 +185,7 @@ public sealed partial class PlayerTab : Control
     /// <returns>Whether <paramref name="filter"/> is contained in <paramref name="listData"/>.FilteringString.</returns>
     private bool DataFilterCondition(string filter, ListData listData)
     {
-        if (listData is not PlayerListData {Info: var info, FilteringString: var playerString})
+        if (listData is not PlayerListData { Info: var info, FilteringString: var playerString })
             return false;
 
         if (!_showDisconnected && !info.Connected)

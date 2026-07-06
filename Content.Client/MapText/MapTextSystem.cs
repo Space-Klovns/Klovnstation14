@@ -13,12 +13,12 @@ namespace Content.Client.MapText;
 /// <inheritdoc/>
 public sealed class MapTextSystem : SharedMapTextSystem
 {
-    [Dependency] private readonly IConfigurationManager _configManager = default!;
-    [Dependency] private readonly IUserInterfaceManager _uiManager = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IOverlayManager _overlayManager = default!;
+    [Dependency] private IConfigurationManager _configManager = default!;
+    [Dependency] private IUserInterfaceManager _uiManager = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private IResourceCache _resourceCache = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IOverlayManager _overlayManager = default!;
 
     private MapTextOverlay _overlay = default!;
 
@@ -70,7 +70,7 @@ public sealed class MapTextSystem : SharedMapTextSystem
             component.CachedText = Loc.GetString("map-text-font-error");
             component.Color = Color.Red;
 
-            if(_prototypeManager.TryIndex<FontPrototype>(SharedMapTextComponent.DefaultFont, out var @default))
+            if (_prototypeManager.TryIndex<FontPrototype>(SharedMapTextComponent.DefaultFont, out var @default))
                 component.CachedFont = new VectorFont(_resourceCache.GetResource<FontResource>(@default.Path), 14);
             return;
         }

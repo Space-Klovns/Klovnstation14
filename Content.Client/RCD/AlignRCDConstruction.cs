@@ -15,14 +15,14 @@ namespace Content.Client.RCD;
 
 public sealed class AlignRCDConstruction : PlacementMode
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private IMapManager _mapManager = default!;
     private readonly SharedMapSystem _mapSystem;
     private readonly HandsSystem _handsSystem;
     private readonly RCDSystem _rcdSystem;
     private readonly SharedTransformSystem _transformSystem;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly IStateManager _stateManager = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IStateManager _stateManager = default!;
 
     private const float SearchBoxSize = 2f;
     private const float PlaceColorBaseAlpha = 0.5f;
@@ -130,7 +130,7 @@ public sealed class AlignRCDConstruction : PlacementMode
     }
 
     // KS14 Start
-    [Dependency] private readonly Robust.Shared.Timing.IGameTiming _gameTiming = default!;
+    [Dependency] private Robust.Shared.Timing.IGameTiming _gameTiming = default!;
     private Robust.Client.GameObjects.SpriteSystem _spriteSystem;
 
     private static readonly Robust.Shared.Utility.SpriteSpecifier RotArrowSprite = new Robust.Shared.Utility.SpriteSpecifier.Rsi(new("/Textures/Markers/teg_arrow.rsi"), "arrow");

@@ -28,19 +28,19 @@ namespace Content.Server._KS14.Atmos.EntitySystems;
 
 public sealed class GasPistonSystem : SharedGasPistonSystem
 {
-    [Dependency] private readonly IAdminLogManager _adminLogManager = default!;
-    [Dependency] private readonly NodeContainerSystem _nodeContainerSystem = default!;
-    [Dependency] private readonly AppearanceSystem _appearanceSystem = default!;
-    [Dependency] private readonly KsGenericSpriteFlickSystem _spriteFlickSystem = default!;
-    [Dependency] private readonly DamageableSystem _damageableSystem = default!;
-    [Dependency] private readonly AudioSystem _audioSystem = default!;
-    [Dependency] private readonly AtmosphereSystem _atmosphereSystem = default!;
-    [Dependency] private readonly PhysicsSystem _physicsSystem = default!;
-    [Dependency] private readonly ThrowingSystem _throwingSystem = default!;
-    [Dependency] private readonly EntityLookupSystem _entityLookupSystem = default!;
-    [Dependency] private readonly FixtureSystem _fixtureSystem = default!;
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
-    [Dependency] private readonly MapSystem _mapSystem = default!;
+    [Dependency] private IAdminLogManager _adminLogManager = default!;
+    [Dependency] private NodeContainerSystem _nodeContainerSystem = default!;
+    [Dependency] private AppearanceSystem _appearanceSystem = default!;
+    [Dependency] private KsGenericSpriteFlickSystem _spriteFlickSystem = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
+    [Dependency] private AudioSystem _audioSystem = default!;
+    [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private PhysicsSystem _physicsSystem = default!;
+    [Dependency] private ThrowingSystem _throwingSystem = default!;
+    [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
+    [Dependency] private FixtureSystem _fixtureSystem = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
+    [Dependency] private MapSystem _mapSystem = default!;
 
     private const LookupFlags InitLookupFlags = LookupFlags.Approximate | LookupFlags.Static | LookupFlags.Dynamic | LookupFlags.Uncontained;
 

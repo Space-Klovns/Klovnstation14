@@ -13,8 +13,8 @@ namespace Content.Client.UserInterface.Controls
     /// </summary>
     public sealed class MainViewport : UIWidget
     {
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly ViewportManager _vpManager = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private ViewportManager _vpManager = default!;
 
         public ScalingViewport Viewport { get; }
 
@@ -129,7 +129,7 @@ namespace Content.Client.UserInterface.Controls
             {
                 var toleranceMargin = i * cfgToleranceMargin;
                 var toleranceClip = i * cfgToleranceClip;
-                var scaled = (Vector2) Viewport.ViewportSize * i;
+                var scaled = (Vector2)Viewport.ViewportSize * i;
                 var (dx, dy) = PixelSize - scaled;
 
                 // The rule for which snap fits is that at LEAST one axis needs to be in the tolerance size wise.

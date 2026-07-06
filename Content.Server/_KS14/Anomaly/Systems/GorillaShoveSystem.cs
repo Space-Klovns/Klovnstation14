@@ -14,14 +14,14 @@ using System.Linq;
 
 namespace Content.Server._KS14.Anomaly.Systems;
 
-public sealed class GorillaShoveSystem : EntitySystem
+public sealed partial class GorillaShoveSystem : EntitySystem
 {
-    [Dependency] private readonly DisposalUnitSystem _disposals = default!;
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
-    [Dependency] private readonly PopupSystem _popup = default!;
-    [Dependency] private readonly ItemSlotsSystem _itemSlots = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private DisposalUnitSystem _disposals = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private PopupSystem _popup = default!;
+    [Dependency] private ItemSlotsSystem _itemSlots = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
 
     public override void Initialize()
     {

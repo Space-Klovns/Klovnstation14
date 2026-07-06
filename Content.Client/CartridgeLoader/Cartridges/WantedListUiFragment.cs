@@ -19,8 +19,8 @@ namespace Content.Client.CartridgeLoader.Cartridges;
 [GenerateTypedNameReferences]
 public sealed partial class WantedListUiFragment : BoxContainer
 {
-    [Dependency] private readonly IEntitySystemManager _entitySystem = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IEntitySystemManager _entitySystem = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
     private readonly SpriteSystem _spriteSystem;
 
     private string? _selectedTargetName;
@@ -84,7 +84,7 @@ public sealed partial class WantedListUiFragment : BoxContainer
         if (data is not StatusListData(var record))
             return;
 
-        FormattedMessage GetLoc(string fluentId, params (string,object)[] args)
+        FormattedMessage GetLoc(string fluentId, params (string, object)[] args)
         {
             var msg = new FormattedMessage();
             var fluent = Loc.GetString(fluentId, args);

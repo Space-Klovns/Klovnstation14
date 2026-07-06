@@ -12,7 +12,7 @@ namespace Content.Client._FarHorizons.Power.UI;
 [UsedImplicitly]
 public sealed class TurbineBoundUserInterface : BoundUserInterface
 {
-    [Dependency] private readonly IClientGameTiming _gameTiming = null!;
+    [Dependency] private IClientGameTiming _gameTiming = null!;
 
     [ViewVariables]
     private TurbineWindow? _window;

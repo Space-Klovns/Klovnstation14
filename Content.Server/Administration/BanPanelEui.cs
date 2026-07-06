@@ -13,12 +13,12 @@ namespace Content.Server.Administration;
 
 public sealed class BanPanelEui : BaseEui
 {
-    [Dependency] private readonly IBanManager _banManager = default!;
-    [Dependency] private readonly IEntityManager _entities = default!;
-    [Dependency] private readonly ILogManager _log = default!;
-    [Dependency] private readonly IPlayerLocator _playerLocator = default!;
-    [Dependency] private readonly IChatManager _chat = default!;
-    [Dependency] private readonly IAdminManager _admins = default!;
+    [Dependency] private IBanManager _banManager = default!;
+    [Dependency] private IEntityManager _entities = default!;
+    [Dependency] private ILogManager _log = default!;
+    [Dependency] private IPlayerLocator _playerLocator = default!;
+    [Dependency] private IChatManager _chat = default!;
+    [Dependency] private IAdminManager _admins = default!;
 
     private readonly ISawmill _sawmill;
 
@@ -92,9 +92,9 @@ public sealed class BanPanelEui : BaseEui
             }
 
             if (hidInt == 0)
-                hidInt = (uint) (ipAddress.AddressFamily == AddressFamily.InterNetworkV6 ? Ipv6_CIDR : Ipv4_CIDR);
+                hidInt = (uint)(ipAddress.AddressFamily == AddressFamily.InterNetworkV6 ? Ipv6_CIDR : Ipv4_CIDR);
 
-            addressRange = (ipAddress, (int) hidInt);
+            addressRange = (ipAddress, (int)hidInt);
         }
 
         var targetUid = ban.Target is not null ? PlayerId : null;

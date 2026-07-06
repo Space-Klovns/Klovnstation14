@@ -20,17 +20,17 @@ namespace Content.Shared._KS14.Klovnmed.Dismemberment;
 ///         all bodyparts will only either be contained in either a Body,
 ///         or another BodyPart.
 /// </summary>
-public sealed class DismembermentSystem : EntitySystem
+public sealed partial class DismembermentSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly ThrowingSystem _throwingSystem = default!;
-    [Dependency] private readonly OrganSearchSystem _organSearchSystem = default!;
-    [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
-    //[Dependency] private readonly KsPopupSystem _ksPopupSystem = default!;
-    [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
-    [Dependency] private readonly SharedChatSystem _chatSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private ThrowingSystem _throwingSystem = default!;
+    [Dependency] private OrganSearchSystem _organSearchSystem = default!;
+    [Dependency] private SharedContainerSystem _containerSystem = default!;
+    //[Dependency] private KsPopupSystem _ksPopupSystem = default!;
+    [Dependency] private MobStateSystem _mobStateSystem = default!;
+    [Dependency] private SharedChatSystem _chatSystem = default!;
 
-    [Dependency] private readonly EntityQuery<BodyComponent> _bodyQuery = default!;
+    [Dependency] private EntityQuery<BodyComponent> _bodyQuery = default!;
     private static readonly ProtoId<EmotePrototype> DismemberEmote = "Scream";
 
     /// <returns>True if, with the given damage, something can be dismembered from the given entity.</returns>

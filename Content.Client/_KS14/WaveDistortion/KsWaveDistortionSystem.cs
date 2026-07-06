@@ -11,12 +11,12 @@ namespace Content.Client._KS14.WaveDistortion;
         https://github.com/crystallpunk-14/crystall-punk-14/ at commit 5b6108377e40235c768be3ac6ffadb37a085f441
 */
 
-public sealed class KsWaveDistortionSystem : EntitySystem
+public sealed partial class KsWaveDistortionSystem : EntitySystem
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IRobustRandom _random = default!;
 
-    [Dependency] private readonly EntityQuery<KsMapWaveDistortionModifierComponent> _modifierQuery = default!;
+    [Dependency] private EntityQuery<KsMapWaveDistortionModifierComponent> _modifierQuery = default!;
 
     private static readonly ProtoId<ShaderPrototype> ShaderId = "KsWaveDistortion";
     private ShaderInstance _shader = default!;

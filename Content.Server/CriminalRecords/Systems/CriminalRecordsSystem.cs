@@ -23,10 +23,10 @@ namespace Content.Server.CriminalRecords.Systems;
 /// </summary>
 public sealed class CriminalRecordsSystem : SharedCriminalRecordsSystem
 {
-    [Dependency] private readonly GameTicker _ticker = default!;
-    [Dependency] private readonly StationRecordsSystem _records = default!;
-    [Dependency] private readonly StationSystem _station = default!;
-    [Dependency] private readonly CartridgeLoaderSystem _cartridge = default!;
+    [Dependency] private GameTicker _ticker = default!;
+    [Dependency] private StationRecordsSystem _records = default!;
+    [Dependency] private StationSystem _station = default!;
+    [Dependency] private CartridgeLoaderSystem _cartridge = default!;
 
     public override void Initialize()
     {
@@ -128,7 +128,7 @@ public sealed class CriminalRecordsSystem : SharedCriminalRecordsSystem
             return false;
 
         var history = record.History[(int)index];
-        record.History.RemoveAt((int) index);
+        record.History.RemoveAt((int)index);
 
         var args = new CriminalHistoryRemovedEvent(history);
         var query = EntityQueryEnumerator<WantedListCartridgeComponent>();

@@ -10,9 +10,9 @@ namespace Content.Shared._Goobstation.Silicon.Bots;
 /// <summary>
 /// Handles emagging Weldbots
 /// </summary>
-public sealed class WeldbotSystem : EntitySystem
+public sealed partial class WeldbotSystem : EntitySystem
 {
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
 
     public DamageSpecifier GetDamageAmount(WeldbotComponent comp)
     {

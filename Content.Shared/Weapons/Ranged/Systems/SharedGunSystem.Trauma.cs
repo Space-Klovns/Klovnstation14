@@ -13,14 +13,14 @@ namespace Content.Shared.Weapons.Ranged.Systems;
 /// </summary>
 public abstract partial class SharedGunSystem
 {
-    [Dependency] private readonly SharedMapSystem _map = default!;
+    [Dependency] private SharedMapSystem _map = default!;
 
     /// <summary>
     /// Get a predicted random instance for an entity, specific to this tick.
     /// </summary>
     private System.Random Random(EntityUid uid)
     {
-        var seed = SharedRandomExtensions.HashCodeCombine((int) Timing.CurTick.Value, GetNetEntity(uid).Id);
+        var seed = SharedRandomExtensions.HashCodeCombine((int)Timing.CurTick.Value, GetNetEntity(uid).Id);
         return new System.Random(seed);
     }
 

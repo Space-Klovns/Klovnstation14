@@ -11,7 +11,7 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 /// </summary>
 public sealed partial class CopyKeyOperator : HTNOperator
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
 
     [DataField(required: true)] public string OriginKey = "Origin";
     [DataField(required: true)] public string TargetKey = "Target";

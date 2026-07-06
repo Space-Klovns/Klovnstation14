@@ -8,13 +8,13 @@ using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Content.Shared._KS14.TeslaGate;
 
-public abstract class SharedTeslaGateSystem : EntitySystem
+public abstract partial class SharedTeslaGateSystem : EntitySystem
 {
     [Dependency] protected readonly SharedAudioSystem AudioSystem = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
-    [Dependency] private readonly SharedPointLightSystem _pointLight = default!;
-    [Dependency] private readonly SharedPowerReceiverSystem _powerReceiverSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
+    [Dependency] private SharedPointLightSystem _pointLight = default!;
+    [Dependency] private SharedPowerReceiverSystem _powerReceiverSystem = default!;
 
     public override void Initialize()
     {

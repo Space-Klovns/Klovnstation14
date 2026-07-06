@@ -13,8 +13,8 @@ namespace Content.Shared.Atmos.Piping.Unary.Systems;
 public abstract class SharedGasCanisterSystem : GasMaxPressureSystem<GasCanisterComponent>
 {
     [Dependency] protected readonly ISharedAdminLogManager AdminLogger = default!;
-    [Dependency] private readonly ItemSlotsSystem _slots = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
+    [Dependency] private ItemSlotsSystem _slots = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
     [Dependency] protected readonly SharedUserInterfaceSystem UI = default!;
 
     public override void Initialize()

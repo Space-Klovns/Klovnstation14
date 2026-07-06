@@ -9,7 +9,7 @@ namespace Content.Server.Chat.Commands
     [AnyCommand]
     internal sealed class WhisperCommand : LocalizedEntityCommands
     {
-        [Dependency] private readonly ChatSystem _chatSystem = default!;
+        [Dependency] private ChatSystem _chatSystem = default!;
         public override string Command => "whisper";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -23,7 +23,7 @@ namespace Content.Server.Chat.Commands
             if (player.Status != SessionStatus.InGame)
                 return;
 
-            if (player.AttachedEntity is not {} playerEntity)
+            if (player.AttachedEntity is not { } playerEntity)
             {
                 shell.WriteError(Loc.GetString($"shell-must-be-attached-to-entity"));
                 return;

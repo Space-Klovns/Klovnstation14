@@ -11,8 +11,8 @@ namespace Content.Client.UserInterface.Systems.Info;
 
 public sealed class CloseAllWindowsUIController : UIController
 {
-    [Dependency] private readonly IInputManager _inputManager = default!;
-    [Dependency] private readonly IUserInterfaceManager _uiManager = default!;
+    [Dependency] private IInputManager _inputManager = default!;
+    [Dependency] private IUserInterfaceManager _uiManager = default!;
 
     public override void Initialize()
     {
@@ -26,9 +26,8 @@ public sealed class CloseAllWindowsUIController : UIController
         {
             if (childControl is BaseWindow)
             {
-                ((BaseWindow) childControl).Close();
+                ((BaseWindow)childControl).Close();
             }
         }
     }
 }
-

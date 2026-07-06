@@ -10,7 +10,7 @@ namespace Content.Client.Access.UI
 {
     public sealed class AccessOverriderBoundUserInterface : BoundUserInterface
     {
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private IPrototypeManager _prototypeManager = default!;
         private readonly SharedAccessOverriderSystem _accessOverriderSystem = default!;
 
         private AccessOverriderWindow? _window;
@@ -41,7 +41,7 @@ namespace Content.Client.Access.UI
             RefreshAccess();
 
             if (State != null)
-                _window?.UpdateState(_prototypeManager, (AccessOverriderBoundUserInterfaceState) State);
+                _window?.UpdateState(_prototypeManager, (AccessOverriderBoundUserInterfaceState)State);
         }
 
         private void RefreshAccess()
@@ -65,7 +65,7 @@ namespace Content.Client.Access.UI
         protected override void UpdateState(BoundUserInterfaceState state)
         {
             base.UpdateState(state);
-            var castState = (AccessOverriderBoundUserInterfaceState) state;
+            var castState = (AccessOverriderBoundUserInterfaceState)state;
             _window?.UpdateState(_prototypeManager, castState);
         }
 

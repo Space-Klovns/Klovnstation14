@@ -13,9 +13,9 @@ namespace Content.Server.Anomaly.Effects;
 
 public sealed class TileAnomalySystem : SharedTileAnomalySystem
 {
-    [Dependency] private readonly SharedAnomalySystem _anomaly = default!;
-    [Dependency] private readonly ITileDefinitionManager _tiledef = default!;
-    [Dependency] private readonly TileSystem _tile = default!;
+    [Dependency] private SharedAnomalySystem _anomaly = default!;
+    [Dependency] private ITileDefinitionManager _tiledef = default!;
+    [Dependency] private TileSystem _tile = default!;
 
     /// <inheritdoc/>
     public override void Initialize()
@@ -90,7 +90,7 @@ public sealed class TileAnomalySystem : SharedTileAnomalySystem
 
         foreach (var tileref in tiles)
         {
-            var tile = (ContentTileDefinition) _tiledef[entry.Floor];
+            var tile = (ContentTileDefinition)_tiledef[entry.Floor];
             _tile.ReplaceTile(tileref, tile);
         }
     }

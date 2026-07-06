@@ -8,7 +8,7 @@ namespace Content.Client.Doors.Electronics;
 
 public sealed class DoorElectronicsBoundUserInterface : BoundUserInterface
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     private DoorElectronicsConfigurationMenu? _window;
 
@@ -54,7 +54,7 @@ public sealed class DoorElectronicsBoundUserInterface : BoundUserInterface
     {
         base.UpdateState(state);
 
-        var castState = (DoorElectronicsConfigurationState) state;
+        var castState = (DoorElectronicsConfigurationState)state;
 
         _window?.UpdateState(castState);
     }

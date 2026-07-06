@@ -14,7 +14,7 @@ namespace Content.Shared.Hands.EntitySystems;
 
 public abstract partial class SharedHandsSystem
 {
-    [Dependency] private readonly TagSystem _tagSystem = default!;
+    [Dependency] private TagSystem _tagSystem = default!;
 
     private static readonly ProtoId<TagPrototype> BypassDropChecksTag = "BypassDropChecks";
 
@@ -77,7 +77,7 @@ public abstract partial class SharedHandsSystem
         if (!ContainerSystem.TryGetContainer(uid, handId, out var container))
             return false;
 
-        if (container.ContainedEntities.FirstOrNull() is not {} held)
+        if (container.ContainedEntities.FirstOrNull() is not { } held)
             return false;
 
         if (!ContainerSystem.CanRemove(held, container))

@@ -48,8 +48,8 @@ namespace Content.Client.Options.UI;
 [GenerateTypedNameReferences]
 public sealed partial class OptionsTabControlRow : Control
 {
-    [Dependency] private readonly ILocalizationManager _loc = default!;
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
+    [Dependency] private ILocalizationManager _loc = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
 
     private ValueList<BaseOption> _options;
 
@@ -388,7 +388,7 @@ public abstract class BaseOptionCVar<TValue> : BaseOption
         // Use different logic for floats so there's some error margin.
         // This check is handled cleanly at compile-time by the JIT.
         if (typeof(TValue) == typeof(float))
-            return MathHelper.CloseToPercent((float) (object) a, (float) (object) b);
+            return MathHelper.CloseToPercent((float)(object)a, (float)(object)b);
 
         return EqualityComparer<TValue>.Default.Equals(a, b);
     }
@@ -594,7 +594,7 @@ public sealed class OptionSliderIntCVar : BaseOptionCVar<int>
 
     protected override int Value
     {
-        get => (int) _slider.Slider.Value;
+        get => (int)_slider.Slider.Value;
         set
         {
             _slider.Slider.Value = value;
@@ -643,7 +643,7 @@ public sealed class OptionSliderIntCVar : BaseOptionCVar<int>
 
     private void UpdateLabelValue()
     {
-        _slider.ValueLabel.Text = _format(this, (int) _slider.Slider.Value);
+        _slider.ValueLabel.Text = _format(this, (int)_slider.Slider.Value);
     }
 }
 
@@ -658,7 +658,7 @@ public sealed class OptionDropDownCVar<T> : BaseOptionCVar<T> where T : notnull
 
     protected override T Value
     {
-        get => (T) _dropDown.Button.SelectedMetadata!;
+        get => (T)_dropDown.Button.SelectedMetadata!;
         set => _dropDown.Button.SelectId(FindValueId(value));
     }
 

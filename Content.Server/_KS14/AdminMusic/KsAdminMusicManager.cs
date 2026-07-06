@@ -14,10 +14,10 @@ namespace Content.Server._KS14.AdminMusic;
 
 public sealed class KsAdminMusicManager : IPostInjectInit
 {
-    [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly IServerNetManager _netManager = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
+    [Dependency] private IEntitySystemManager _entitySystemManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IServerNetManager _netManager = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
     private AudioSystem _audioSystem = default!;
 
     private ISawmill _sawmill = default!;

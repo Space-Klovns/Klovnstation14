@@ -9,10 +9,10 @@ namespace Content.Client._KS14.Lava;
 /// <summary>
 ///     Not my proudest code yet
 /// </summary>
-public sealed class KsLavaSinkingSystem : EntitySystem
+public sealed partial class KsLavaSinkingSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     private static readonly ProtoId<ShaderPrototype> ShaderId = "HorizontalCut";
 

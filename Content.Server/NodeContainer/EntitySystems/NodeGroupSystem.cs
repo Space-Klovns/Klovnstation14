@@ -19,12 +19,12 @@ namespace Content.Server.NodeContainer.EntitySystems
     /// </summary>
     /// <seealso cref="NodeContainerSystem"/>
     [UsedImplicitly]
-    public sealed class NodeGroupSystem : EntitySystem
+    public sealed partial class NodeGroupSystem : EntitySystem
     {
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IAdminManager _adminManager = default!;
-        [Dependency] private readonly INodeGroupFactory _nodeGroupFactory = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IAdminManager _adminManager = default!;
+        [Dependency] private INodeGroupFactory _nodeGroupFactory = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
         private readonly List<int> _visDeletes = new();
         private readonly List<BaseNodeGroup> _visSends = new();
@@ -135,7 +135,7 @@ namespace Content.Server.NodeContainer.EntitySystems
 
             QueueReflood(node);
 
-            InitGroup(node, new List<Node> {node});
+            InitGroup(node, new List<Node> { node });
         }
 
         public override void Update(float frameTime)
@@ -174,7 +174,7 @@ namespace Content.Server.NodeContainer.EntitySystems
                 if (toRemove.NodeGroup == null)
                     continue;
 
-                var group = (BaseNodeGroup) toRemove.NodeGroup;
+                var group = (BaseNodeGroup)toRemove.NodeGroup;
 
                 group.RemoveNode(toRemove);
                 toRemove.NodeGroup = null;
@@ -207,7 +207,7 @@ namespace Content.Server.NodeContainer.EntitySystems
 
                 if (node.NodeGroup?.Remaking == false)
                 {
-                    QueueRemakeGroup((BaseNodeGroup) node.NodeGroup);
+                    QueueRemakeGroup((BaseNodeGroup)node.NodeGroup);
                 }
 
                 // GetCompatibleNodes will involve getting the transform & grid as most connection requirements are
@@ -222,7 +222,7 @@ namespace Content.Server.NodeContainer.EntitySystems
                     {
                         // We are expanding into an existing group,
                         // remake it so that we can treat it uniformly.
-                        var group = (BaseNodeGroup) compatible.NodeGroup;
+                        var group = (BaseNodeGroup)compatible.NodeGroup;
                         QueueRemakeGroup(group);
                     }
 
@@ -299,7 +299,7 @@ namespace Content.Server.NodeContainer.EntitySystems
 
         private BaseNodeGroup InitGroup(Node node, List<Node> groupNodes)
         {
-            var newGroup = (BaseNodeGroup) _nodeGroupFactory.MakeNodeGroup(node.NodeGroupID);
+            var newGroup = (BaseNodeGroup)_nodeGroupFactory.MakeNodeGroup(node.NodeGroupID);
             newGroup.Initialize(node, EntityManager);
             newGroup.NetId = _groupNetIdCounter++;
 

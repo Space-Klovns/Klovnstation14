@@ -3,7 +3,7 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Shared.Speech.EntitySystems;
 
-public abstract class SharedSlurredSystem : EntitySystem
+public abstract partial class SharedSlurredSystem : EntitySystem
 {
     public static readonly EntProtoId Stutter = "StatusEffectSlurred";
 

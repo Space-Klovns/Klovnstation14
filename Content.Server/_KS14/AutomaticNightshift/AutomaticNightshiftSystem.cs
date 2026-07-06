@@ -9,11 +9,11 @@ namespace Content.Server._KS14.AutomaticNightshift;
 
 // This is ass
 
-public sealed class AutomaticNightshiftSystem : EntitySystem
+public sealed partial class AutomaticNightshiftSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly GameTicker _gameTicker = default!;
-    [Dependency] private readonly StationSystem _stationSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private GameTicker _gameTicker = default!;
+    [Dependency] private StationSystem _stationSystem = default!;
 
     private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(15d);
     private TimeSpan _nextUpdate = TimeSpan.MinValue;

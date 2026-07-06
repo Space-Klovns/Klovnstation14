@@ -9,10 +9,10 @@ namespace Content.Shared._KS14.RadarInterest;
 // Shoddy system for getting data for things that should be shown on radar and will probably never locally move
 // TODO LCDC: Handle deletion of interests, currently it does epic fails
 
-public sealed class KsRadarInterestSystem : EntitySystem
+public sealed partial class KsRadarInterestSystem : EntitySystem
 {
-    [Dependency] private readonly INetManager _netManager = default!;
-    [Dependency] private readonly ISharedPlayerManager _playerManager = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private ISharedPlayerManager _playerManager = default!;
 
     /// <summary>
     ///     Networked dictionary of interests, with their respective data+parent+localpos.

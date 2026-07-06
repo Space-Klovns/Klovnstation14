@@ -21,11 +21,11 @@ namespace Content.Server._KS14.TTS;
 /// <inheritdoc/>
 public sealed class TtsSystem : SharedTtsSystem
 {
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IRobustRandom _robustRandom = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly WordFilterSystem _wordFilterSystem = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IRobustRandom _robustRandom = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private WordFilterSystem _wordFilterSystem = default!;
 
     private readonly HttpClient _httpClient = new();
     private readonly Dictionary<string, byte[]> _cache = new();

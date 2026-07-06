@@ -41,10 +41,10 @@ namespace Content.Client.UserInterface.Systems.Actions;
 
 public sealed class ActionUIController : UIController, IOnStateChanged<GameplayState>, IOnSystemChanged<ActionsSystem>
 {
-    [Dependency] private readonly IOverlayManager _overlays = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly IInputManager _input = default!;
+    [Dependency] private IOverlayManager _overlays = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IInputManager _input = default!;
 
     [UISystemDependency] private readonly ActionsSystem? _actionsSystem = default;
     [UISystemDependency] private readonly InteractionOutlineSystem? _interactionOutline = default;
@@ -91,7 +91,7 @@ public sealed class ActionUIController : UIController, IOnStateChanged<GameplayS
 
     private void OnScreenLoad()
     {
-       LoadGui();
+        LoadGui();
     }
 
     private void OnScreenUnload()
@@ -166,7 +166,7 @@ public sealed class ActionUIController : UIController, IOnStateChanged<GameplayS
         if (!EntityManager.TryGetComponent<ActionsComponent>(user, out var comp))
             return false;
 
-        if (_actionsSystem.GetAction(actionId) is not {} action ||
+        if (_actionsSystem.GetAction(actionId) is not { } action ||
             !EntityManager.TryGetComponent<TargetActionComponent>(action, out var target))
         {
             return false;
@@ -234,7 +234,7 @@ public sealed class ActionUIController : UIController, IOnStateChanged<GameplayS
     private void TriggerAction(int index)
     {
         if (!_actions.TryGetValue(index, out var actionId) ||
-            _actionsSystem?.GetAction(actionId) is not {} action)
+            _actionsSystem?.GetAction(actionId) is not { } action)
         {
             return;
         }
@@ -248,7 +248,7 @@ public sealed class ActionUIController : UIController, IOnStateChanged<GameplayS
 
     private void OnActionAdded(EntityUid actionId)
     {
-        if (_actionsSystem?.GetAction(actionId) is not {} action)
+        if (_actionsSystem?.GetAction(actionId) is not { } action)
             return;
 
         // TODO: event
@@ -363,7 +363,7 @@ public sealed class ActionUIController : UIController, IOnStateChanged<GameplayS
                 continue;
             }
 
-            var button = new ActionButton(EntityManager, _spriteSystem, this) {Locked = true};
+            var button = new ActionButton(EntityManager, _spriteSystem, this) { Locked = true };
             button.ActionPressed += OnWindowActionPressed;
             button.ActionUnpressed += OnWindowActionUnPressed;
             button.ActionFocusExited += OnWindowActionFocusExisted;
@@ -462,7 +462,7 @@ public sealed class ActionUIController : UIController, IOnStateChanged<GameplayS
 
     private void DragAction()
     {
-        if (_menuDragHelper.Dragged is not {Action: {} action} dragged)
+        if (_menuDragHelper.Dragged is not { Action: { } action } dragged)
         {
             _menuDragHelper.EndDrag();
             return;
@@ -578,7 +578,7 @@ public sealed class ActionUIController : UIController, IOnStateChanged<GameplayS
 
         _menuDragHelper.EndDrag();
 
-        if (button.Action is not {} action)
+        if (button.Action is not { } action)
             return;
 
         // TODO: make this an event
@@ -601,14 +601,14 @@ public sealed class ActionUIController : UIController, IOnStateChanged<GameplayS
         // TODO ACTIONS
         // The dragging icon shuld be based on the entity's icon style. I.e. if the action has a large icon texture,
         // and a small item/provider sprite, then the dragged icon should be the big texture, not the provider.
-        if (_menuDragHelper.Dragged?.Action is {} action)
+        if (_menuDragHelper.Dragged?.Action is { } action)
         {
             if (EntityManager.TryGetComponent(action.Comp.EntityIcon, out SpriteComponent? sprite)
-                && sprite.Icon?.GetFrame(RsiDirection.South, 0) is {} frame)
+                && sprite.Icon?.GetFrame(RsiDirection.South, 0) is { } frame)
             {
                 _dragShadow.Texture = frame;
             }
-            else if (action.Comp.Icon is {} icon)
+            else if (action.Comp.Icon is { } icon)
             {
                 _dragShadow.Texture = _spriteSystem.Frame0(icon);
             }
@@ -735,7 +735,7 @@ public sealed class ActionUIController : UIController, IOnStateChanged<GameplayS
     public override void FrameUpdate(FrameEventArgs args)
     {
         _menuDragHelper.Update(args.DeltaSeconds);
-        if (_window is {UpdateNeeded: true})
+        if (_window is { UpdateNeeded: true })
             SearchAndDisplay();
     }
 

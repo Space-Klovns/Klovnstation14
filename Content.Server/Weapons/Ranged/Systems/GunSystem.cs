@@ -10,7 +10,7 @@ namespace Content.Server.Weapons.Ranged.Systems;
 
 public sealed partial class GunSystem : SharedGunSystem
 {
-    [Dependency] private readonly PricingSystem _pricing = default!;
+    [Dependency] private PricingSystem _pricing = default!;
 
     public override void Initialize()
     {

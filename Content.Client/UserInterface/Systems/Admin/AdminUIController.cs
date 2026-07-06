@@ -28,11 +28,11 @@ public sealed class AdminUIController : UIController,
     IOnStateEntered<LobbyState>,
     IOnSystemChanged<AdminSystem>
 {
-    [Dependency] private readonly IClientAdminManager _admin = default!;
-    [Dependency] private readonly IClientConGroupController _conGroups = default!;
-    [Dependency] private readonly IClientConsoleHost _conHost = default!;
-    [Dependency] private readonly IInputManager _input = default!;
-    [Dependency] private readonly VerbMenuUIController _verb = default!;
+    [Dependency] private IClientAdminManager _admin = default!;
+    [Dependency] private IClientConGroupController _conGroups = default!;
+    [Dependency] private IClientConsoleHost _conHost = default!;
+    [Dependency] private IInputManager _input = default!;
+    [Dependency] private VerbMenuUIController _verb = default!;
 
     private AdminMenuWindow? _window;
     private MenuButton? AdminButton => UIManager.GetActiveUIWidgetOrNull<MenuBar.Widgets.GameTopMenuBar>()?.AdminButton;
@@ -167,7 +167,7 @@ public sealed class AdminUIController : UIController,
 
     private void Toggle()
     {
-        if (_window is {IsOpen: true})
+        if (_window is { IsOpen: true })
         {
             _window.Close();
         }
@@ -179,7 +179,7 @@ public sealed class AdminUIController : UIController,
 
     private void PlayerTabEntryKeyBindDown(GUIBoundKeyEventArgs args, ListData? data)
     {
-        if (data is not PlayerListData {Info: var info})
+        if (data is not PlayerListData { Info: var info })
             return;
 
         if (info.NetEntity == null)

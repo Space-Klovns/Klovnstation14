@@ -11,8 +11,8 @@ namespace Content.Server._KS14.MassDriver.EntitySystems;
 
 public sealed class MassDriverSystem : SharedMassDriverSystem
 {
-    [Dependency] private readonly SharedUserInterfaceSystem _ui = default!;
-    [Dependency] private readonly PowerReceiverSystem _powerReceiver = default!;
+    [Dependency] private SharedUserInterfaceSystem _ui = default!;
+    [Dependency] private PowerReceiverSystem _powerReceiver = default!;
 
     public override void Initialize()
     {

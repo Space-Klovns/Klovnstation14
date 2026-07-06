@@ -9,10 +9,10 @@ using Content.Shared.Antag;
 
 namespace Content.Shared.Revolutionary;
 
-public abstract class SharedRevolutionarySystem : EntitySystem
+public abstract partial class SharedRevolutionarySystem : EntitySystem
 {
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
-    [Dependency] private readonly SharedStunSystem _sharedStun = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private SharedStunSystem _sharedStun = default!;
 
     public override void Initialize()
     {
@@ -71,7 +71,7 @@ public abstract class SharedRevolutionarySystem : EntitySystem
     private bool CanGetState(ICommonSession? player)
     {
         //Apparently this can be null in replays so I am just returning true.
-        if (player?.AttachedEntity is not {} uid)
+        if (player?.AttachedEntity is not { } uid)
             return true;
 
         if (HasComp<RevolutionaryComponent>(uid) || HasComp<HeadRevolutionaryComponent>(uid))

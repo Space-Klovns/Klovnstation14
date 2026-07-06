@@ -17,12 +17,12 @@ namespace Content.Server.Mind;
 
 public sealed class MindSystem : SharedMindSystem
 {
-    [Dependency] private readonly GameTicker _gameTicker = default!;
-    [Dependency] private readonly IAdminLogManager _adminLogger = default!;
-    [Dependency] private readonly IPlayerManager _players = default!;
-    [Dependency] private readonly GhostSystem _ghosts = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly PvsOverrideSystem _pvsOverride = default!;
+    [Dependency] private GameTicker _gameTicker = default!;
+    [Dependency] private IAdminLogManager _adminLogger = default!;
+    [Dependency] private IPlayerManager _players = default!;
+    [Dependency] private GhostSystem _ghosts = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private PvsOverrideSystem _pvsOverride = default!;
 
     public override void Initialize()
     {
@@ -34,7 +34,7 @@ public sealed class MindSystem : SharedMindSystem
 
     private void OnMindShutdown(EntityUid uid, MindComponent mind, ComponentShutdown args)
     {
-        if (mind.UserId is {} user)
+        if (mind.UserId is { } user)
         {
             UserMinds.Remove(user);
             if (_players.TryGetPlayerData(user, out var data) && data.ContentData() is { } oldData)
@@ -54,7 +54,7 @@ public sealed class MindSystem : SharedMindSystem
             return;
 
         // If the player is currently visiting some other entity, simply attach to that entity.
-        if (mind.VisitingEntity is {Valid: true} visiting
+        if (mind.VisitingEntity is { Valid: true } visiting
             && visiting != uid
             && !Deleted(visiting)
             && !Terminating(visiting))
@@ -191,7 +191,7 @@ public sealed class MindSystem : SharedMindSystem
             {
                 // Happens when transferring to your currently visited entity.
                 if (!_players.TryGetSessionByEntity(entity.Value, out var session) ||
-                    mind.UserId == null || actor.PlayerSession != session )
+                    mind.UserId == null || actor.PlayerSession != session)
                 {
                     throw new ArgumentException("Visit target already has a session.", nameof(entity));
                 }

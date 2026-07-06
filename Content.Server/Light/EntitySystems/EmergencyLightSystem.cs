@@ -17,11 +17,11 @@ namespace Content.Server.Light.EntitySystems;
 
 public sealed class EmergencyLightSystem : SharedEmergencyLightSystem
 {
-    [Dependency] private readonly AmbientSoundSystem _ambient = default!;
-    [Dependency] private readonly BatterySystem _battery = default!;
-    [Dependency] private readonly PointLightSystem _pointLight = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly StationSystem _station = default!;
+    [Dependency] private AmbientSoundSystem _ambient = default!;
+    [Dependency] private BatterySystem _battery = default!;
+    [Dependency] private PointLightSystem _pointLight = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private StationSystem _station = default!;
 
     public override void Initialize()
     {
@@ -185,7 +185,7 @@ public sealed class EmergencyLightSystem : SharedEmergencyLightSystem
 
         if (receiver.Powered && !entity.Comp.ForciblyEnabled) // Green alert
         {
-            receiver.Load = (int) Math.Abs(entity.Comp.Wattage);
+            receiver.Load = (int)Math.Abs(entity.Comp.Wattage);
             TurnOff(entity, details.Color);
             SetState(entity.Owner, entity.Comp, EmergencyLightState.Charging);
         }

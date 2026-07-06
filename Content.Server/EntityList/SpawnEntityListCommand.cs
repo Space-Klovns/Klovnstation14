@@ -9,7 +9,7 @@ namespace Content.Server.EntityList
     [AdminCommand(AdminFlags.Spawn)]
     public sealed class SpawnEntityListCommand : LocalizedEntityCommands
     {
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private IPrototypeManager _prototypeManager = default!;
 
         public override string Command => "spawnentitylist";
 
@@ -27,7 +27,7 @@ namespace Content.Server.EntityList
                 return;
             }
 
-            if (player.AttachedEntity is not {} attached)
+            if (player.AttachedEntity is not { } attached)
             {
                 shell.WriteError(Loc.GetString("shell-only-players-can-run-this-command"));
                 return;

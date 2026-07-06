@@ -7,10 +7,10 @@ using Content.Shared.Clothing.Components;
 
 namespace Content.Shared.Eye.Blinding.Systems
 {
-    public sealed class EyeProtectionSystem : EntitySystem
+    public sealed partial class EyeProtectionSystem : EntitySystem
     {
-        [Dependency] private readonly StatusEffectsSystem _statusEffectsSystem = default!;
-        [Dependency] private readonly BlindableSystem _blindingSystem = default!;
+        [Dependency] private StatusEffectsSystem _statusEffectsSystem = default!;
+        [Dependency] private BlindableSystem _blindingSystem = default!;
 
         public override void Initialize()
         {
@@ -47,7 +47,7 @@ namespace Content.Shared.Eye.Blinding.Systems
             var ev = new GetEyeProtectionEvent();
             RaiseLocalEvent(args.User, ev);
 
-            var time = (float) (component.StatusEffectTime - ev.Protection).TotalSeconds;
+            var time = (float)(component.StatusEffectTime - ev.Protection).TotalSeconds;
             if (time <= 0)
                 return;
 

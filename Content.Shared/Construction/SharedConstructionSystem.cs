@@ -8,8 +8,8 @@ namespace Content.Shared.Construction
 {
     public abstract partial class SharedConstructionSystem : EntitySystem // Trauma - made partial
     {
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly SharedMapSystem _map = default!;
+        [Dependency] private IMapManager _mapManager = default!;
+        [Dependency] private SharedMapSystem _map = default!;
         [Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
         [Dependency] protected readonly SharedTransformSystem TransformSystem = default!;
 

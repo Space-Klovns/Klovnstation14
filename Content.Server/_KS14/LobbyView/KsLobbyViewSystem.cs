@@ -11,8 +11,8 @@ namespace Content.Server._KS14.LobbyView;
 
 public sealed class KsLobbyViewSystem : KsSharedLobbyViewSystem
 {
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-    [Dependency] private readonly ViewSubscriberSystem _viewSubscriberSystem = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private ViewSubscriberSystem _viewSubscriberSystem = default!;
 
     private int _lobbyViewCount = 0;
     private bool _lobbyViewEnabled = false;

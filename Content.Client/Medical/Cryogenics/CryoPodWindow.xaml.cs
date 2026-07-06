@@ -17,8 +17,8 @@ namespace Content.Client.Medical.Cryogenics;
 [GenerateTypedNameReferences]
 public sealed partial class CryoPodWindow : FancyWindow
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
     private readonly SharedAtmosphereSystem _atmosphere = default!;
 
     public event Action? OnEjectPatientPressed;
@@ -194,10 +194,10 @@ public sealed partial class CryoPodWindow : FancyWindow
         var isCooling = (lowestTempRequirement != null && hasPatient
                           && msg.Health.Temperature > lowestTempRequirement);
         var isInjecting = (injectingQuantity > 0);
-        StatusLabel.Text = (!isReady    ? Loc.GetString("cryo-pod-window-status-not-ready") :
-                            isCooling   ? Loc.GetString("cryo-pod-window-status-cooling") :
+        StatusLabel.Text = (!isReady ? Loc.GetString("cryo-pod-window-status-not-ready") :
+                            isCooling ? Loc.GetString("cryo-pod-window-status-cooling") :
                             isInjecting ? Loc.GetString("cryo-pod-window-status-injecting") :
-                            hasPatient  ? Loc.GetString("cryo-pod-window-status-ready-to-inject") :
+                            hasPatient ? Loc.GetString("cryo-pod-window-status-ready-to-inject") :
                                           Loc.GetString("cryo-pod-window-status-ready-for-patient"));
         StatusLabel.FontColorOverride = (isReady ? Color.DeepSkyBlue : Color.Orange);
     }

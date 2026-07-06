@@ -6,7 +6,7 @@ namespace Content.Server.Sound;
 
 public sealed class EmitSoundSystem : SharedEmitSoundSystem
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private IGameTiming _timing = default!;
 
     public override void Update(float frameTime)
     {

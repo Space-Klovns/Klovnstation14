@@ -5,7 +5,7 @@ using Robust.Shared.Audio.Systems;
 
 namespace Content.Shared.Audio;
 
-public abstract class SharedContentAudioSystem : EntitySystem
+public abstract partial class SharedContentAudioSystem : EntitySystem
 {
     [Dependency] protected readonly SharedAudioSystem Audio = default!;
 
@@ -17,7 +17,7 @@ public abstract class SharedContentAudioSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
-        Audio.OcclusionCollisionMask = (int) CollisionGroup.Impassable;
+        Audio.OcclusionCollisionMask = (int)CollisionGroup.Impassable;
     }
 
     protected void SilenceAudio()

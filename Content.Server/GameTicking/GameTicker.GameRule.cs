@@ -18,7 +18,7 @@ public sealed partial class GameTicker
 {
     [ViewVariables] private readonly List<(TimeSpan, string)> _allPreviousGameRules = new();
 
-    [Dependency] private readonly EntityWhitelistSystem _whitelist = null!;
+    [Dependency] private EntityWhitelistSystem _whitelist = null!;
 
     /// <summary>
     ///     A list storing the start times of all game rules that have been started this round.
@@ -415,7 +415,7 @@ public sealed partial class GameTicker
             var ent = AddGameRule(rule);
 
             // Start rule if we're already in the middle of a round
-            if(RunLevel == GameRunLevel.InRound)
+            if (RunLevel == GameRunLevel.InRound)
                 StartGameRule(ent);
 
         }

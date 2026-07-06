@@ -7,10 +7,10 @@ using Content.Shared._KS14.ArcFlash.Components;
 
 namespace Content.Server._KS14.ArcFlash;
 
-public sealed class MindShieldSystem : EntitySystem
+public sealed partial class MindShieldSystem : EntitySystem
 {
-    [Dependency] private readonly ElectrocutionSystem _electrocutionSystem = default!;
-    [Dependency] private readonly LightningSystem _lightning = default!;
+    [Dependency] private ElectrocutionSystem _electrocutionSystem = default!;
+    [Dependency] private LightningSystem _lightning = default!;
     public override void Initialize()
     {
         base.Initialize();

@@ -8,9 +8,9 @@ namespace Content.Server.Objectives.Systems;
 /// <summary>
 /// Handles <see cref="CodeConditionComponent"/> progress and provides API for systems to use.
 /// </summary>
-public sealed class CodeConditionSystem : EntitySystem
+public sealed partial class CodeConditionSystem : EntitySystem
 {
-    [Dependency] private readonly SharedMindSystem _mind = default!;
+    [Dependency] private SharedMindSystem _mind = default!;
 
     public override void Initialize()
     {
@@ -51,7 +51,7 @@ public sealed class CodeConditionSystem : EntitySystem
     /// </summary>
     public void SetCompleted(Entity<MindContainerComponent?> mob, string prototype, bool completed = true)
     {
-        if (_mind.GetMind(mob, mob.Comp) is not {} mindId)
+        if (_mind.GetMind(mob, mob.Comp) is not { } mindId)
             return;
 
         if (!_mind.TryFindObjective(mindId, prototype, out var obj))

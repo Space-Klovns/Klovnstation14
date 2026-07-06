@@ -11,7 +11,7 @@ namespace Content.Client.Access.UI
 {
     public sealed class IdCardConsoleBoundUserInterface : BoundUserInterface
     {
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private IPrototypeManager _prototypeManager = default!;
         private readonly SharedIdCardConsoleSystem _idCardConsoleSystem = default!;
 
         private IdCardConsoleWindow? _window;
@@ -61,7 +61,7 @@ namespace Content.Client.Access.UI
         protected override void UpdateState(BoundUserInterfaceState state)
         {
             base.UpdateState(state);
-            var castState = (IdCardConsoleBoundUserInterfaceState) state;
+            var castState = (IdCardConsoleBoundUserInterfaceState)state;
             _window?.UpdateState(castState);
         }
 

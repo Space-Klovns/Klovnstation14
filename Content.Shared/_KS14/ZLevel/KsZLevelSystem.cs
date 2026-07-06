@@ -23,7 +23,7 @@ namespace Content.Shared._KS14.ZLevel;
 
 public sealed partial class KsZLevelSystem : EntitySystem
 {
-    [Dependency] private readonly EntityQuery<KsZLevelComponent> _zLevelQuery = default!;
+    [Dependency] private EntityQuery<KsZLevelComponent> _zLevelQuery = default!;
 
     public override void Initialize()
     {

@@ -10,7 +10,7 @@ namespace Content.Server._KS14.NPC.HTN.Preconditions;
 /// </summary>
 public sealed partial class HasVirtualMarkerPrecondition : HTNPrecondition
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
 
     [DataField] public bool Invert;
     [DataField(required: true)] public string Id = "Marker";

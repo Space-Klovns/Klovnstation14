@@ -8,9 +8,9 @@ namespace Content.Client._Trauma.Projectiles;
 /// <summary>
 /// Hides the server-spawned projectile when firing a predicted gun.
 /// </summary>
-public sealed class PredictedProjectileSystem : EntitySystem
+public sealed partial class PredictedProjectileSystem : EntitySystem
 {
-    [Dependency] private readonly SpriteSystem _sprite = default!;
+    [Dependency] private SpriteSystem _sprite = default!;
 
     public override void Initialize()
     {

@@ -15,16 +15,16 @@ namespace Content.Shared.Chemistry.EntitySystems;
 /// Allows an entity to transfer solutions with a customizable amount -per click-.
 /// Also provides <see cref="Transfer"/>, <see cref="RefillTransfer"/> and <see cref="DrainTransfer"/> API for other systems.
 /// </summary>
-public sealed class SolutionTransferSystem : EntitySystem
+public sealed partial class SolutionTransferSystem : EntitySystem
 {
-    [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly SharedSolutionContainerSystem _solution = default!;
-    [Dependency] private readonly SharedUserInterfaceSystem _ui = default!;
-    [Dependency] private readonly SharedDoAfterSystem _doAfter = default!;
+    [Dependency] private ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedSolutionContainerSystem _solution = default!;
+    [Dependency] private SharedUserInterfaceSystem _ui = default!;
+    [Dependency] private SharedDoAfterSystem _doAfter = default!;
 
-    [Dependency] private readonly EntityQuery<RefillableSolutionComponent> _refillableQuery = default!;
-    [Dependency] private readonly EntityQuery<DrainableSolutionComponent> _drainableQuery = default!;
+    [Dependency] private EntityQuery<RefillableSolutionComponent> _refillableQuery = default!;
+    [Dependency] private EntityQuery<DrainableSolutionComponent> _drainableQuery = default!;
 
     /// <summary>
     ///     Default transfer amounts for the set-transfer verb.
@@ -103,7 +103,7 @@ public sealed class SolutionTransferSystem : EntitySystem
 
     private void OnAfterInteract(Entity<SolutionTransferComponent> ent, ref AfterInteractEvent args)
     {
-        if (!args.CanReach || args.Target is not {} target)
+        if (!args.CanReach || args.Target is not { } target)
             return;
 
         // We have two cases for interaction:
@@ -124,7 +124,7 @@ public sealed class SolutionTransferSystem : EntitySystem
             args.Handled = true; //If we reach this point, the interaction counts as handled.
 
             var transferAmount = ent.Comp.TransferAmount;
-            if (targetRefillable.MaxRefill is {} maxRefill)
+            if (targetRefillable.MaxRefill is { } maxRefill)
                 transferAmount = FixedPoint2.Min(transferAmount, maxRefill);
 
             var transferData = new SolutionTransferData(args.User, ent.Owner, ownerSoln.Value, target, targetSoln.Value, transferAmount);
@@ -164,7 +164,7 @@ public sealed class SolutionTransferSystem : EntitySystem
             args.Handled = true; //If we reach this point, the interaction counts as handled.
 
             var transferAmount = ent.Comp.TransferAmount; // This is the player-configurable transfer amount of "uid," not the target drainable.
-            if (heldRefillable.MaxRefill is {} maxRefill) // if the receiver has a smaller transfer limit, use that instead
+            if (heldRefillable.MaxRefill is { } maxRefill) // if the receiver has a smaller transfer limit, use that instead
                 transferAmount = FixedPoint2.Min(transferAmount, maxRefill);
 
             var transferData = new SolutionTransferData(args.User, target, targetSoln.Value, ent.Owner, ownerSoln.Value, transferAmount);
@@ -335,7 +335,7 @@ public sealed class SolutionTransferSystem : EntitySystem
 
         // Check if the source is cancelling the transfer
         RaiseLocalEvent(data.SourceEntity, ref transferAttempt);
-        if (transferAttempt.CancelReason is {} reason)
+        if (transferAttempt.CancelReason is { } reason)
         {
             _popup.PopupClient(reason, data.SourceEntity, data.User);
             return false;
@@ -350,7 +350,7 @@ public sealed class SolutionTransferSystem : EntitySystem
 
         // Check if the target is cancelling the transfer
         RaiseLocalEvent(data.TargetEntity, ref transferAttempt);
-        if (transferAttempt.CancelReason is {} targetReason)
+        if (transferAttempt.CancelReason is { } targetReason)
         {
             _popup.PopupClient(targetReason, data.TargetEntity, data.User);
             return false;

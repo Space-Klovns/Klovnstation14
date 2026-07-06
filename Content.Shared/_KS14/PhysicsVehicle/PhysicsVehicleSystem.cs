@@ -12,11 +12,11 @@ namespace Content.Shared._KS14.PhysicsVehicle;
 ///     Handles vehicles that specifically turn left/right (cant move left/right)
 ///         and move forward/backward.
 /// </summary>
-public sealed class PhysicsVehicleSystem : EntitySystem
+public sealed partial class PhysicsVehicleSystem : EntitySystem
 {
-    [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
+    [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
 
-    [Dependency] private readonly EntityQuery<PhysicsComponent> _physicsQuery = default!;
+    [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default!;
 
     public override void Initialize()
     {

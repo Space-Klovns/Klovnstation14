@@ -12,7 +12,7 @@ namespace Content.Client.Clothing.UI;
 [UsedImplicitly]
 public sealed class ChameleonBoundUserInterface : BoundUserInterface
 {
-    [Dependency] private readonly IPrototypeManager _proto = default!;
+    [Dependency] private IPrototypeManager _proto = default!;
     private readonly ChameleonClothingSystem _chameleon;
     private readonly TagSystem _tag;
 
@@ -54,7 +54,8 @@ public sealed class ChameleonBoundUserInterface : BoundUserInterface
                 newTargets.Add(target);
             }
             _menu?.UpdateState(newTargets, st.SelectedId);
-        } else
+        }
+        else
         {
             _menu?.UpdateState(targets, st.SelectedId);
         }

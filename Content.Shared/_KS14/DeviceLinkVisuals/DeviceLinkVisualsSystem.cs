@@ -3,9 +3,9 @@ using Content.Shared.DeviceLinking.Events;
 
 namespace Content.Shared._KS14.DeviceLinkVisuals;
 
-public sealed class DeviceLinkVisualsSystem : EntitySystem
+public sealed partial class DeviceLinkVisualsSystem : EntitySystem
 {
-    [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
+    [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
 
     public override void Initialize()
     {

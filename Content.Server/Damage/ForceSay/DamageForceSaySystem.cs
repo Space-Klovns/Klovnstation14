@@ -15,11 +15,11 @@ using Robust.Shared.Timing;
 namespace Content.Server.Damage.ForceSay;
 
 /// <inheritdoc cref="DamageForceSayComponent"/>
-public sealed class DamageForceSaySystem : EntitySystem
+public sealed partial class DamageForceSaySystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly IPrototypeManager _prototype = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
+    [Dependency] private IRobustRandom _random = default!;
 
     public override void Initialize()
     {
@@ -31,7 +31,7 @@ public sealed class DamageForceSaySystem : EntitySystem
         // need to raise after mobthreshold
         // so that we don't accidentally raise one for damage before one for mobstate
         // (this won't double raise, because of the cooldown)
-        SubscribeLocalEvent<DamageForceSayComponent, DamageChangedEvent>(OnDamageChanged, after: new []{ typeof(MobThresholdSystem)} );
+        SubscribeLocalEvent<DamageForceSayComponent, DamageChangedEvent>(OnDamageChanged, after: new[] { typeof(MobThresholdSystem) });
         SubscribeLocalEvent<DamageForceSayComponent, SleepStateChangedEvent>(OnSleep);
     }
 
@@ -49,7 +49,7 @@ public sealed class DamageForceSaySystem : EntitySystem
         }
     }
 
-    private void TryForceSay(EntityUid uid, DamageForceSayComponent component, bool useSuffix=true)
+    private void TryForceSay(EntityUid uid, DamageForceSayComponent component, bool useSuffix = true)
     {
         if (!TryComp<ActorComponent>(uid, out var actor))
             return;

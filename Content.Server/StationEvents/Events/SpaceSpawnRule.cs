@@ -12,7 +12,7 @@ namespace Content.Server.StationEvents.Events;
 /// </summary>
 public sealed class SpaceSpawnRule : StationEventSystem<SpaceSpawnRuleComponent>
 {
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
 
     public override void Initialize()
     {
@@ -56,7 +56,7 @@ public sealed class SpaceSpawnRule : StationEventSystem<SpaceSpawnRuleComponent>
 
     private void OnSelectLocation(Entity<SpaceSpawnRuleComponent> ent, ref AntagSelectLocationEvent args)
     {
-        if (ent.Comp.Coords is {} coords)
+        if (ent.Comp.Coords is { } coords)
             args.Coordinates.Add(coords);
     }
 }

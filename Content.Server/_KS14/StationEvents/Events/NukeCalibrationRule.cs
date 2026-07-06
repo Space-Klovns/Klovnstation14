@@ -16,11 +16,11 @@ namespace Content.Server._KS14.StationEvents.Events;
 
 public sealed class NukeCalibrationRule : StationEventSystem<NukeCalibrationRuleComponent>
 {
-    [Dependency] private readonly NukeSystem _nukeSystem = default!;
-    [Dependency] private readonly ChatSystem _chatSystem = default!;
-    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
-    [Dependency] private readonly PopupSystem _popups = default!;
-    [Dependency] private readonly TransformSystem _transform = default!;
+    [Dependency] private NukeSystem _nukeSystem = default!;
+    [Dependency] private ChatSystem _chatSystem = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private PopupSystem _popups = default!;
+    [Dependency] private TransformSystem _transform = default!;
 
     protected override void Started(EntityUid uid, NukeCalibrationRuleComponent component, GameRuleComponent gameRule, GameRuleStartedEvent args)
     {

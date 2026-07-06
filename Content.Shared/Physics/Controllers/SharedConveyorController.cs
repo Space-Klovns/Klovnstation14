@@ -19,20 +19,20 @@ namespace Content.Shared.Physics.Controllers;
 public abstract class SharedConveyorController : VirtualController
 {
     [Dependency] protected readonly IMapManager MapManager = default!;
-    [Dependency] private   readonly IParallelManager _parallel = default!;
-    [Dependency] private   readonly CollisionWakeSystem _wake = default!;
+    [Dependency] private readonly IParallelManager _parallel = default!;
+    [Dependency] private readonly CollisionWakeSystem _wake = default!;
     [Dependency] protected readonly EntityLookupSystem Lookup = default!;
-    [Dependency] private   readonly FixtureSystem _fixtures = default!;
-    [Dependency] private   readonly SharedGravitySystem _gravity = default!;
-    [Dependency] private   readonly SharedMoverController _mover = default!;
-    [Dependency] private   readonly SharedStackSystem _stack = default!;
+    [Dependency] private readonly FixtureSystem _fixtures = default!;
+    [Dependency] private readonly SharedGravitySystem _gravity = default!;
+    [Dependency] private readonly SharedMoverController _mover = default!;
+    [Dependency] private readonly SharedStackSystem _stack = default!;
 
     protected const string ConveyorFixture = "conveyor";
 
     private ConveyorJob _job;
 
-    [Dependency] private readonly EntityQuery<ConveyorComponent> _conveyorQuery = default!;
-    [Dependency] private readonly EntityQuery<ConveyedComponent> _conveyedQuery = default!;
+    [Dependency] private EntityQuery<ConveyorComponent> _conveyorQuery = default!;
+    [Dependency] private EntityQuery<ConveyedComponent> _conveyedQuery = default!;
     [Dependency] protected readonly EntityQuery<PhysicsComponent> PhysicsQuery = default!;
     [Dependency] protected readonly EntityQuery<TransformComponent> XformQuery = default!;
 
@@ -56,7 +56,7 @@ public abstract class SharedConveyorController : VirtualController
 
     private void OnConveyedFriction(Entity<ConveyedComponent> ent, ref TileFrictionEvent args)
     {
-        if(!ent.Comp.Conveying)
+        if (!ent.Comp.Conveying)
             return;
 
         // Conveyed entities don't get friction, they just get wishdir applied so will inherently slowdown anyway.

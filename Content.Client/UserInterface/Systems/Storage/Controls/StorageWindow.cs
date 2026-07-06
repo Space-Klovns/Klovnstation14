@@ -23,7 +23,7 @@ namespace Content.Client.UserInterface.Systems.Storage.Controls;
 
 public sealed class StorageWindow : BaseWindow
 {
-    [Dependency] private readonly IEntityManager _entity = default!;
+    [Dependency] private IEntityManager _entity = default!;
     private readonly StorageUIController _storageController;
 
     public EntityUid? StorageEntity;
@@ -415,7 +415,7 @@ public sealed class StorageWindow : BaseWindow
         var height = boundingGrid.Height + 1;
 
         // Build the grid representation
-         if (_pieceGrid.Rows != _pieceGridSize.Y || _pieceGrid.Columns != _pieceGridSize.X)
+        if (_pieceGrid.Rows != _pieceGridSize.Y || _pieceGrid.Columns != _pieceGridSize.X)
         {
             _pieceGrid.Rows = height;
             _pieceGrid.Columns = width;
@@ -663,7 +663,7 @@ public sealed class StorageWindow : BaseWindow
         if (StorageEntity != null)
             origin = _entity.GetComponent<StorageComponent>(StorageEntity.Value).Grid.GetBoundingBox().BottomLeft;
 
-        var textureSize = (Vector2) _emptyTexture!.Size * 2;
+        var textureSize = (Vector2)_emptyTexture!.Size * 2;
         var position = ((UserInterfaceManager.MousePositionScaled.Position
                          - _backgroundGrid.GlobalPosition
                          - ItemGridPiece.GetCenterOffset(entity, location, _entity) * 2

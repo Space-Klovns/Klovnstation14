@@ -21,10 +21,10 @@ namespace Content.Server.GameTicking.Rules;
 /// </summary>
 public sealed class RespawnRuleSystem : GameRuleSystem<RespawnDeadRuleComponent>
 {
-    [Dependency] private readonly IChatManager _chatManager = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly StationSystem _station = default!;
+    [Dependency] private IChatManager _chatManager = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private StationSystem _station = default!;
 
     /// <inheritdoc/>
     public override void Initialize()
@@ -63,7 +63,7 @@ public sealed class RespawnRuleSystem : GameRuleSystem<RespawnDeadRuleComponent>
     private void OnSuicide(SuicideEvent ev)
     {
         if (!TryComp<ActorComponent>(ev.Victim, out var actor))
-           return;
+            return;
 
         var query = EntityQueryEnumerator<RespawnTrackerComponent>();
         while (query.MoveNext(out _, out var respawn))
@@ -82,7 +82,7 @@ public sealed class RespawnRuleSystem : GameRuleSystem<RespawnDeadRuleComponent>
             return;
 
         var query = EntityQueryEnumerator<RespawnDeadRuleComponent, RespawnTrackerComponent, GameRuleComponent>();
-        while (query.MoveNext(out var uid, out var respawnRule, out  var tracker, out var rule))
+        while (query.MoveNext(out var uid, out var respawnRule, out var tracker, out var rule))
         {
             if (!GameTicker.IsGameRuleActive(uid, rule))
                 continue;

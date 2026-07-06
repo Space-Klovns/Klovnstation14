@@ -12,8 +12,8 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 /// </summary>
 public sealed partial class HandleSensorsOperator : HTNOperator
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly EntityQuery<NpcSensorsComponent> _sensorsQuery = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private EntityQuery<NpcSensorsComponent> _sensorsQuery = default!;
 
     public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard, CancellationToken _)
     {

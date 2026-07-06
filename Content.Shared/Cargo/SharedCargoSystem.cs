@@ -9,7 +9,7 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared.Cargo;
 
-public abstract class SharedCargoSystem : EntitySystem
+public abstract partial class SharedCargoSystem : EntitySystem
 {
     [Dependency] protected readonly IGameTiming Timing = default!;
 
@@ -185,7 +185,7 @@ public abstract class SharedCargoSystem : EntitySystem
         UpdateBankAccount(
             ent,
             balanceAdded,
-            new Dictionary<ProtoId<CargoAccountPrototype>, double> { {account, 1} },
+            new Dictionary<ProtoId<CargoAccountPrototype>, double> { { account, 1 } },
             dirty: dirty);
     }
 
@@ -208,7 +208,7 @@ public abstract class SharedCargoSystem : EntitySystem
 
         foreach (var (account, percent) in accountDistribution)
         {
-            var accountBalancedAdded = (int) Math.Round(percent * balanceAdded);
+            var accountBalancedAdded = (int)Math.Round(percent * balanceAdded);
             ent.Comp.Accounts[account] += accountBalancedAdded;
         }
 

@@ -8,7 +8,7 @@ namespace Content.Client._FarHorizons.Power.Generation.FissionGenerator;
 
 public sealed class TurbineSystem : SharedTurbineSystem
 {
-    [Dependency] private readonly UserInterfaceSystem _userInterfaceSystem = default!;
+    [Dependency] private UserInterfaceSystem _userInterfaceSystem = default!;
 
     private static readonly EntProtoId ArrowPrototype = "TurbineFlowArrow";
 

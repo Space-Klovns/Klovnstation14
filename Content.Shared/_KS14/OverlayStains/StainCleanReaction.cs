@@ -6,7 +6,7 @@ namespace Content.Shared._KS14.OverlayStains;
 /// <inheritdoc cref="EntityEffectSystem{T,TEffect}"/>
 public sealed partial class StainCleanEntityEffectSystem : EntityEffectSystem<StainedComponent, StainClean>
 {
-    [Dependency] private readonly StainSystem _stainSystem = default!;
+    [Dependency] private StainSystem _stainSystem = default!;
 
     protected override void Effect(Entity<StainedComponent> entity, ref EntityEffectEvent<StainClean> args)
     {

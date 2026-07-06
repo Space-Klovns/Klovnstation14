@@ -1,6 +1,6 @@
 namespace Content.Shared.Instruments;
 
-public abstract class SharedInstrumentSystem : EntitySystem
+public abstract partial class SharedInstrumentSystem : EntitySystem
 {
     public abstract bool ResolveInstrument(EntityUid uid, ref SharedInstrumentComponent? component);
 

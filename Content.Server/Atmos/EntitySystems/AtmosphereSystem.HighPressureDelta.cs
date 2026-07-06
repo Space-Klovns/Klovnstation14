@@ -15,7 +15,7 @@ namespace Content.Server.Atmos.EntitySystems
 {
     public sealed partial class AtmosphereSystem
     {
-        [Dependency] private readonly ThrowingSystem _throwing = default!;
+        [Dependency] private ThrowingSystem _throwing = default!;
         private static readonly ProtoId<SoundCollectionPrototype> DefaultSpaceWindSounds = "SpaceWind";
 
         private const int SpaceWindSoundCooldownCycles = 75;

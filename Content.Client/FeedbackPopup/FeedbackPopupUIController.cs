@@ -13,9 +13,9 @@ namespace Content.Client.FeedbackPopup;
 [UsedImplicitly]
 public sealed class FeedbackPopupUIController : UIController
 {
-    [Dependency] private readonly ClientFeedbackManager _feedbackManager = null!;
-    [Dependency] private readonly IPrototypeManager _proto = null!;
-    [Dependency] private readonly IUriOpener _uri = null!;
+    [Dependency] private ClientFeedbackManager _feedbackManager = null!;
+    [Dependency] private IPrototypeManager _proto = null!;
+    [Dependency] private IUriOpener _uri = null!;
 
     private FeedbackPopupWindow _window = null!;
 

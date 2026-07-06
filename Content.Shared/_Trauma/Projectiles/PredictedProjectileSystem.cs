@@ -31,21 +31,21 @@ namespace Content.Shared._Trauma.Projectiles;
 /// Handles predicting projectile hits.
 /// This was previously only done serverside.
 /// </summary>
-public sealed class PredictedProjectileSystem : EntitySystem
+public sealed partial class PredictedProjectileSystem : EntitySystem
 {
-    [Dependency] private readonly INetManager _net = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
-    [Dependency] private readonly DamageableSystem _damageable = default!;
-    [Dependency] private readonly SharedCameraRecoilSystem _recoil = default!;
-    [Dependency] private readonly SharedColorFlashEffectSystem _color = default!;
-    [Dependency] private readonly SharedDestructibleSystem _destructible = default!;
-    [Dependency] private readonly SharedGunSystem _gun = default!;
-    [Dependency] private readonly SharedProjectileSystem _projectile = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!; // KS14
-    [Dependency] private readonly IConfigurationManager _config = default!; // KS14
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!; // KS14
-    [Dependency] private readonly StandingStateSystem _standingStateSystem = default!; // KS14
+    [Dependency] private INetManager _net = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private SharedCameraRecoilSystem _recoil = default!;
+    [Dependency] private SharedColorFlashEffectSystem _color = default!;
+    [Dependency] private SharedDestructibleSystem _destructible = default!;
+    [Dependency] private SharedGunSystem _gun = default!;
+    [Dependency] private SharedProjectileSystem _projectile = default!;
+    [Dependency] private SharedPhysicsSystem _physicsSystem = default!; // KS14
+    [Dependency] private IConfigurationManager _config = default!; // KS14
+    [Dependency] private IPrototypeManager _prototypeManager = default!; // KS14
+    [Dependency] private StandingStateSystem _standingStateSystem = default!; // KS14
 
     private EntityQuery<ProjectileComponent> _query;
     private EntityQuery<PhysicsComponent> _physicsQuery;

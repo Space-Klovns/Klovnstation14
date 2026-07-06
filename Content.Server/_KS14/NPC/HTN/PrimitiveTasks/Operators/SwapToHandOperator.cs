@@ -13,10 +13,10 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 /// </summary>
 public sealed partial class SwapToHandOperator : HTNOperator
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly HandsSystem _handsSystem = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private HandsSystem _handsSystem = default!;
 
-    //[Dependency] private readonly EntityQuery<HandsComponent> _handsQuery = default;
+    //[Dependency] private EntityQuery<HandsComponent> _handsQuery = default;
 
     /// <summary>
     ///     Key of ID of the hand.

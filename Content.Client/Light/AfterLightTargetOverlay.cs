@@ -7,11 +7,11 @@ namespace Content.Client.Light;
 /// <summary>
 /// This exists just to copy <see cref="BeforeLightTargetOverlay"/> to the light render target
 /// </summary>
-public sealed class AfterLightTargetOverlay : Overlay
+public sealed partial class AfterLightTargetOverlay : Overlay
 {
     public override OverlaySpace Space => OverlaySpace.BeforeLighting;
 
-    [Dependency] private readonly IOverlayManager _overlay = default!;
+    [Dependency] private IOverlayManager _overlay = default!;
 
     public const int ContentZIndex = LightBlurOverlay.ContentZIndex + 1;
 
@@ -34,7 +34,7 @@ public sealed class AfterLightTargetOverlay : Overlay
         var bounds = args.WorldBounds;
 
         // at 1-1 render scale it's mostly fine but at 4x4 it's way too fkn big
-        var lightScale = viewport.LightRenderTarget.Size / (Vector2) viewport.Size;
+        var lightScale = viewport.LightRenderTarget.Size / (Vector2)viewport.Size;
         var newScale = viewport.RenderScale / (Vector2.One / lightScale);
 
         var localMatrix =

@@ -19,12 +19,12 @@ namespace Content.Server.Power.EntitySystems;
 
 public sealed partial class CableSystem : EntitySystem
 {
-    [Dependency] private readonly ITileDefinitionManager _tileManager = default!;
-    [Dependency] private readonly SharedToolSystem _toolSystem = default!;
-    [Dependency] private readonly StackSystem _stack = default!;
-    [Dependency] private readonly ElectrocutionSystem _electrocutionSystem = default!;
+    [Dependency] private ITileDefinitionManager _tileManager = default!;
+    [Dependency] private SharedToolSystem _toolSystem = default!;
+    [Dependency] private StackSystem _stack = default!;
+    [Dependency] private ElectrocutionSystem _electrocutionSystem = default!;
     //KS14 start
-    [Dependency] private readonly LightningSystem _lightning = default!;
+    [Dependency] private LightningSystem _lightning = default!;
 
     private readonly float arcFlashRange = 4f; //all of this stays here for now
     private readonly int arcFlashAmount = 2;

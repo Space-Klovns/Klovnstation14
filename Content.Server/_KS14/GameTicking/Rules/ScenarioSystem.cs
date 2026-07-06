@@ -26,8 +26,8 @@ public sealed partial class ScenarioRuleComponent : Component
 
 public sealed class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly RoundEndSystem _roundEndSystem = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private RoundEndSystem _roundEndSystem = default!;
 
     // All active objectives
     private readonly HashSet<EntityUid> _activeObjectiveUids = [];

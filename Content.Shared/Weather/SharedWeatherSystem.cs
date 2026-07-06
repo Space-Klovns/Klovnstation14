@@ -12,19 +12,19 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared.Weather;
 
-public abstract class SharedWeatherSystem : EntitySystem
+public abstract partial class SharedWeatherSystem : EntitySystem
 {
     [Dependency] protected readonly IGameTiming Timing = default!;
     [Dependency] protected readonly IPrototypeManager ProtoMan = default!;
     [Dependency] protected readonly SharedAudioSystem Audio = default!;
-    //[Dependency] private readonly ITileDefinitionManager _tileDefManager = default!; // KS14: commented, as unused
-    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
-    [Dependency] private readonly SharedRoofSystem _roof = default!;
-    [Dependency] private readonly StatusEffectsSystem _statusEffects = default!;
+    //[Dependency] private ITileDefinitionManager _tileDefManager = default!; // KS14: commented, as unused
+    [Dependency] private SharedMapSystem _mapSystem = default!;
+    [Dependency] private SharedRoofSystem _roof = default!;
+    [Dependency] private StatusEffectsSystem _statusEffects = default!;
 
-    [Dependency] private readonly EntityQuery<BlockWeatherComponent> _blockQuery = default!;
-    [Dependency] private readonly EntityQuery<WeatherStatusEffectComponent> _weatherQuery = default!;
-    [Dependency] private readonly EntityQuery<ImplicitRoofComponent> _implicitRoofQuery = default!; // KS14
+    [Dependency] private EntityQuery<BlockWeatherComponent> _blockQuery = default!;
+    [Dependency] private EntityQuery<WeatherStatusEffectComponent> _weatherQuery = default!;
+    [Dependency] private EntityQuery<ImplicitRoofComponent> _implicitRoofQuery = default!; // KS14
 
     public static readonly TimeSpan StartupTime = TimeSpan.FromSeconds(15);
     public static readonly TimeSpan ShutdownTime = TimeSpan.FromSeconds(15);

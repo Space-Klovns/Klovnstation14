@@ -7,9 +7,9 @@ namespace Content.Server.Speech.EntitySystems;
 /// <summary>
 /// System that gives the speaker a faux-French accent.
 /// </summary>
-public sealed class FrenchAccentSystem : EntitySystem
+public sealed partial class FrenchAccentSystem : EntitySystem
 {
-    [Dependency] private readonly ReplacementAccentSystem _replacement = default!;
+    [Dependency] private ReplacementAccentSystem _replacement = default!;
 
     private static readonly Regex RegexTh = new(@"th", RegexOptions.IgnoreCase);
     private static readonly Regex RegexStartH = new(@"(?<!\w)h", RegexOptions.IgnoreCase);
@@ -43,9 +43,12 @@ public sealed class FrenchAccentSystem : EntitySystem
             var idxLetter = match.Index + 2;
 
             // If th is alone, just do 'z
-            if (msg.Length <= idxLetter) {
+            if (msg.Length <= idxLetter)
+            {
                 msg = msg.Substring(0, match.Index) + "'" + Z;
-            } else {
+            }
+            else
+            {
                 var c = "aeiouy".Contains(msg.Substring(idxLetter, 1).ToLower()) ? Z : S;
                 msg = msg.Substring(0, match.Index) + "'" + c + msg.Substring(idxLetter);
             }

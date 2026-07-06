@@ -20,18 +20,18 @@ public sealed partial class NestedEffect : EntityEffectBase<NestedEffect>
     public override string? EntityEffectGuidebookText(IPrototypeManager prototype, IEntitySystemManager entSys)
     {
         var proto = prototype.Index(Proto);
-        if (proto.GuidebookText is {} key)
+        if (proto.GuidebookText is { } key)
             return Loc.GetString(key, ("chance", Probability));
 
         _effects.Clear();
         foreach (var effect in proto.Effects)
         {
-            if (effect.EntityEffectGuidebookText(prototype, entSys) is not {} text)
+            if (effect.EntityEffectGuidebookText(prototype, entSys) is not { } text)
                 continue;
 
             // basically GuidebookReagentEffectDescription but independent of reagents and no linq
             _conditions.Clear();
-            if (effect.Conditions is {} conditions)
+            if (effect.Conditions is { } conditions)
             {
                 foreach (var condition in conditions)
                 {
@@ -56,7 +56,7 @@ public sealed partial class NestedEffect : EntityEffectBase<NestedEffect>
 /// </summary>
 public sealed class NestedEffectSystem : EntityEffectSystem<TransformComponent, NestedEffect>
 {
-    [Dependency] private readonly SharedEntityEffectsSystem _effects = default!;
+    [Dependency] private SharedEntityEffectsSystem _effects = default!;
 
     protected override void Effect(Entity<TransformComponent> ent, ref EntityEffectEvent<NestedEffect> args)
     {

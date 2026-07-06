@@ -11,10 +11,10 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared.Wires;
 
-public abstract class SharedWiresSystem : EntitySystem
+public abstract partial class SharedWiresSystem : EntitySystem
 {
     [Dependency] protected readonly ISharedAdminLogManager AdminLogger = default!;
-    [Dependency] private readonly ActivatableUISystem _activatableUI = default!;
+    [Dependency] private ActivatableUISystem _activatableUI = default!;
     [Dependency] protected readonly SharedAppearanceSystem Appearance = default!;
     [Dependency] protected readonly SharedAudioSystem Audio = default!;
     [Dependency] protected readonly SharedToolSystem Tool = default!;
@@ -66,7 +66,7 @@ public abstract class SharedWiresSystem : EntitySystem
                 args.Used,
                 args.User,
                 ent,
-                (float) ent.Comp.OpenDelay.TotalSeconds,
+                (float)ent.Comp.OpenDelay.TotalSeconds,
                 ent.Comp.OpeningTool,
                 new WirePanelDoAfterEvent()))
         {

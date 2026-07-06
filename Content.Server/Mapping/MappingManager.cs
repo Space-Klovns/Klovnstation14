@@ -15,12 +15,12 @@ namespace Content.Server.Mapping;
 public sealed class MappingManager : IPostInjectInit
 {
 #if !FULL_RELEASE
-    [Dependency] private readonly IAdminManager _admin = default!;
-    [Dependency] private readonly ILogManager _log = default!;
-    [Dependency] private readonly IServerNetManager _net = default!;
-    [Dependency] private readonly IPlayerManager _players = default!;
-    [Dependency] private readonly IEntitySystemManager _systems = default!;
-    [Dependency] private readonly IEntityManager _ent = default!;
+    [Dependency] private IAdminManager _admin = default!;
+    [Dependency] private ILogManager _log = default!;
+    [Dependency] private IServerNetManager _net = default!;
+    [Dependency] private IPlayerManager _players = default!;
+    [Dependency] private IEntitySystemManager _systems = default!;
+    [Dependency] private IEntityManager _ent = default!;
 
     private ISawmill _sawmill = default!;
     private ZStdCompressionContext _zstd = default!;
@@ -47,7 +47,7 @@ public sealed class MappingManager : IPostInjectInit
                 !_admin.IsAdmin(session, true) ||
                 !_admin.HasAdminFlag(session, AdminFlags.Host) ||
                 !_ent.TryGetComponent(session.AttachedEntity, out TransformComponent? xform) ||
-                xform.MapUid is not {} mapUid)
+                xform.MapUid is not { } mapUid)
             {
                 return;
             }

@@ -11,9 +11,9 @@ namespace Content.Server.Speech.EntitySystems;
 
 public sealed class SlurredSystem : SharedSlurredSystem
 {
-    [Dependency] private readonly StatusEffectsSystem _status = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private StatusEffectsSystem _status = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private IGameTiming _timing = default!;
 
     /// <summary>
     /// Divisor applied to total seconds used to get the odds of slurred speech occuring.
@@ -42,7 +42,7 @@ public sealed class SlurredSystem : SharedSlurredSystem
             return 0;
 
         // This is a magic number. Why this value? No clue it was made 3 years before I refactored this.
-        var magic = time.Item2 == null ? SlurredModifier : (float) (time.Item2 - _timing.CurTime).Value.TotalSeconds - SlurredThreshold;
+        var magic = time.Item2 == null ? SlurredModifier : (float)(time.Item2 - _timing.CurTime).Value.TotalSeconds - SlurredThreshold;
 
         return Math.Clamp(magic / SlurredModifier, 0f, 1f);
     }
@@ -100,7 +100,7 @@ public sealed class SlurredSystem : SharedSlurredSystem
                 }
             }
 
-            if (!_random.Prob(scale * 3/20))
+            if (!_random.Prob(scale * 3 / 20))
             {
                 sb.Append(character);
                 continue;

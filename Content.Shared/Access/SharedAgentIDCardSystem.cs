@@ -4,7 +4,7 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared.Access.Systems
 {
-    public abstract class SharedAgentIdCardSystem : EntitySystem
+    public abstract partial class SharedAgentIdCardSystem : EntitySystem
     {
         // Just for friending for now
     }

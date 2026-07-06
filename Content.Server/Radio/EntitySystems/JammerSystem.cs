@@ -7,8 +7,8 @@ namespace Content.Server.Radio.EntitySystems;
 
 public sealed class JammerSystem : SharedJammerSystem
 {
-    [Dependency] private readonly IRobustRandom _robustRandom = default!; // KS14
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private IRobustRandom _robustRandom = default!; // KS14
+    [Dependency] private SharedTransformSystem _transform = default!;
 
     private static readonly char[] PossibleGarbleCharacters = ['#', '*', '^', '-'];
 

@@ -13,13 +13,13 @@ using Robust.Shared.Containers;
 
 namespace Content.Shared.Medical.Stethoscope;
 
-public sealed class StethoscopeSystem : EntitySystem
+public sealed partial class StethoscopeSystem : EntitySystem
 {
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly SharedDoAfterSystem _doAfter = default!;
-    [Dependency] private readonly MobStateSystem _mobState = default!;
-    [Dependency] private readonly SharedContainerSystem _container = default!;
-    [Dependency] private readonly DamageableSystem _damageable = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedDoAfterSystem _doAfter = default!;
+    [Dependency] private MobStateSystem _mobState = default!;
+    [Dependency] private SharedContainerSystem _container = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
 
     // The damage type to "listen" for with the stethoscope.
     private const string DamageToListenFor = "Asphyxiation";
@@ -97,8 +97,8 @@ public sealed class StethoscopeSystem : EntitySystem
     {
         // TODO: Add check for respirator component when it gets moved to shared.
         // If the mob is dead or cannot asphyxiation damage, the popup shows nothing.
-        if (!TryComp<MobStateComponent>(target, out var mobState)                        ||
-            _mobState.IsDead(target, mobState)                                           ||
+        if (!TryComp<MobStateComponent>(target, out var mobState) ||
+            _mobState.IsDead(target, mobState) ||
             !_damageable.GetAllDamage(target).DamageDict.TryGetValue(DamageToListenFor, out var asphyxDmg))
         {
             _popup.PopupPredicted(Loc.GetString("stethoscope-nothing"), target, user);
@@ -124,13 +124,13 @@ public sealed class StethoscopeSystem : EntitySystem
 
     private string GetAbsoluteDamageString(FixedPoint2 asphyxDmg)
     {
-        var msg = (int) asphyxDmg switch
+        var msg = (int)asphyxDmg switch
         {
             < 10 => "stethoscope-normal",
             < 30 => "stethoscope-raggedy",
             < 60 => "stethoscope-hyper",
             < 80 => "stethoscope-irregular",
-            _    => "stethoscope-fucked",
+            _ => "stethoscope-fucked",
         };
         return Loc.GetString(msg);
     }

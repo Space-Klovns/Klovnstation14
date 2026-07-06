@@ -385,7 +385,7 @@ public partial class $CLASS$ : Form
 /// &lt;summary&gt;
 /// This handles...
 /// &lt;/summary&gt;
-public sealed class $CLASS$ : EntitySystem {
+public sealed partial class $CLASS$ : EntitySystem {
     /// &lt;inheritdoc/&gt;
     public override void Initialize()
     {
@@ -484,7 +484,7 @@ public partial class $CLASS$ : UserControl
 /// &lt;summary&gt;
 /// This handles...
 /// &lt;/summary&gt;
-public abstract class $CLASS$ : EntitySystem {
+public abstract partial class $CLASS$ : EntitySystem {
     /// &lt;inheritdoc/&gt;
     public override void Initialize()
     {

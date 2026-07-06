@@ -27,19 +27,19 @@ namespace Content.Server.Procedural;
 
 public sealed partial class DungeonSystem : SharedDungeonSystem
 {
-    [Dependency] private readonly IConfigurationManager _configManager = default!;
-    [Dependency] private readonly IConsoleHost _console = default!;
-    [Dependency] private readonly IPrototypeManager _prototype = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly ITileDefinitionManager _tileDefManager = default!;
-    [Dependency] private readonly AnchorableSystem _anchorable = default!;
-    [Dependency] private readonly DecalSystem _decals = default!;
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
-    [Dependency] private readonly TileSystem _tile = default!;
-    [Dependency] private readonly TurfSystem _turf = default!;
-    [Dependency] private readonly MapLoaderSystem _loader = default!;
-    [Dependency] private readonly SharedMapSystem _maps = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private IConfigurationManager _configManager = default!;
+    [Dependency] private IConsoleHost _console = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private ITileDefinitionManager _tileDefManager = default!;
+    [Dependency] private AnchorableSystem _anchorable = default!;
+    [Dependency] private DecalSystem _decals = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private TileSystem _tile = default!;
+    [Dependency] private TurfSystem _turf = default!;
+    [Dependency] private MapLoaderSystem _loader = default!;
+    [Dependency] private SharedMapSystem _maps = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
 
     private readonly List<(Vector2i, Tile)> _tiles = new();
 
@@ -48,8 +48,8 @@ public sealed partial class DungeonSystem : SharedDungeonSystem
 
     private const double DungeonJobTime = 0.005;
 
-    public const int CollisionMask = (int) CollisionGroup.Impassable;
-    public const int CollisionLayer = (int) CollisionGroup.Impassable;
+    public const int CollisionMask = (int)CollisionGroup.Impassable;
+    public const int CollisionLayer = (int)CollisionGroup.Impassable;
 
     private readonly JobQueue _dungeonJobQueue = new(DungeonJobTime);
     private readonly Dictionary<DungeonJob.DungeonJob, CancellationTokenSource> _dungeonJobs = new();
@@ -125,7 +125,7 @@ public sealed partial class DungeonSystem : SharedDungeonSystem
 
         foreach (var proto in rooms.Modified.Values)
         {
-            var roomProto = (DungeonRoomPrototype) proto;
+            var roomProto = (DungeonRoomPrototype)proto;
             var query = AllEntityQuery<DungeonAtlasTemplateComponent>();
 
             while (query.MoveNext(out var uid, out var comp))
@@ -143,7 +143,7 @@ public sealed partial class DungeonSystem : SharedDungeonSystem
 
         foreach (var proto in rooms.Modified.Values)
         {
-            var roomProto = (DungeonRoomPrototype) proto;
+            var roomProto = (DungeonRoomPrototype)proto;
             var query = AllEntityQuery<DungeonAtlasTemplateComponent>();
             var found = false;
 
@@ -177,7 +177,7 @@ public sealed partial class DungeonSystem : SharedDungeonSystem
 
         var opts = new MapLoadOptions
         {
-            DeserializationOptions = DeserializationOptions.Default with {PauseMaps = true},
+            DeserializationOptions = DeserializationOptions.Default with { PauseMaps = true },
             ExpectedCategory = FileCategory.Map
         };
 

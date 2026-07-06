@@ -27,8 +27,8 @@ namespace Content.Client.Verbs.UI
         IOnStateEntered<GameplayState>, IOnStateExited<GameplayState>,
         IOnStateEntered<MappingState>, IOnStateExited<MappingState>
     {
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly ContextMenuUIController _context = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private ContextMenuUIController _context = default!;
 
         [UISystemDependency] private readonly CombatModeSystem _combatMode = default!;
         [UISystemDependency] private readonly VerbSystem _verbSystem = default!;
@@ -83,7 +83,7 @@ namespace Content.Client.Verbs.UI
         /// <param name="popup">
         ///     If this is not null, verbs will be placed into the given popup instead.
         /// </param>
-        public void OpenVerbMenu(EntityUid target, bool force = false, ContextMenuPopup? popup=null)
+        public void OpenVerbMenu(EntityUid target, bool force = false, ContextMenuPopup? popup = null)
         {
             DebugTools.Assert(target.IsValid());
             OpenVerbMenu(EntityManager.GetNetEntity(target), force, popup);
@@ -97,10 +97,10 @@ namespace Content.Client.Verbs.UI
         /// <param name="popup">
         ///     If this is not null, verbs will be placed into the given popup instead.
         /// </param>
-        public void OpenVerbMenu(NetEntity target, bool force = false, ContextMenuPopup? popup=null)
+        public void OpenVerbMenu(NetEntity target, bool force = false, ContextMenuPopup? popup = null)
         {
             DebugTools.Assert(target.IsValid());
-            if (_playerManager.LocalEntity is not {Valid: true} user)
+            if (_playerManager.LocalEntity is not { Valid: true } user)
                 return;
 
             if (!force && _combatMode.IsInCombatMode(user))

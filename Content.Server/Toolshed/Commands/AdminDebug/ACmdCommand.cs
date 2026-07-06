@@ -10,7 +10,7 @@ namespace Content.Server.Toolshed.Commands.AdminDebug;
 [ToolshedCommand, AdminCommand(AdminFlags.Debug)]
 public sealed class ACmdCommand : ToolshedCommand
 {
-    [Dependency] private readonly IAdminManager _adminManager = default!;
+    [Dependency] private IAdminManager _adminManager = default!;
 
     [CommandImplementation("perms")]
     public AdminFlags[]? Perms([PipedArgument] CommandSpec command)
@@ -25,6 +25,6 @@ public sealed class ACmdCommand : ToolshedCommand
     public bool CanInvoke(IInvocationContext ctx, [PipedArgument] CommandSpec command, ICommonSession player)
     {
         // Deliberately discard the error.
-        return ((IPermissionController) _adminManager).CheckInvokable(command, player, out _);
+        return ((IPermissionController)_adminManager).CheckInvokable(command, player, out _);
     }
 }

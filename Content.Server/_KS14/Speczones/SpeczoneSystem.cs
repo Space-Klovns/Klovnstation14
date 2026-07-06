@@ -24,16 +24,16 @@ namespace Content.Server._KS14.Speczones;
 /// <inheritdoc/>
 public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
 {
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-    [Dependency] private readonly IRobustRandom _robustRandom = default!;
-    [Dependency] private readonly IComponentFactory _componentFactory = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly MapSystem _mapSystem = default!;
-    [Dependency] private readonly MapLoaderSystem _mapLoaderSystem = default!;
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
-    [Dependency] private readonly GameTicker _gameTicker = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IRobustRandom _robustRandom = default!;
+    [Dependency] private IComponentFactory _componentFactory = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private MapSystem _mapSystem = default!;
+    [Dependency] private MapLoaderSystem _mapLoaderSystem = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
+    [Dependency] private GameTicker _gameTicker = default!;
 
-    [Dependency] private readonly EntityQuery<SpeczoneComponent> _speczoneQuery = default!;
+    [Dependency] private EntityQuery<SpeczoneComponent> _speczoneQuery = default!;
 
     /// <summary>
     ///     Dictionary of loaded speczones cached by their prototype ID.

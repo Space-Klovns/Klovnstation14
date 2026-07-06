@@ -10,7 +10,7 @@ namespace Content.Client.MachineLinking.UI;
 [GenerateTypedNameReferences]
 public sealed partial class SignalTimerWindow : DefaultWindow
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private IGameTiming _timing = default!;
 
     private const int MaxTextLength = 5;
 
@@ -89,7 +89,7 @@ public sealed partial class SignalTimerWindow : DefaultWindow
 
         foreach (var a in toRemove)
         {
-            CurrentDelayEditMinutes.Text = text.Replace(a.ToString(),"");
+            CurrentDelayEditMinutes.Text = text.Replace(a.ToString(), "");
         }
 
         if (CurrentDelayEditMinutes.Text == "")

@@ -1,6 +1,6 @@
 namespace Content.Shared.Roles.RoleCodeword;
 
-public abstract class SharedRoleCodewordSystem : EntitySystem
+public abstract partial class SharedRoleCodewordSystem : EntitySystem
 {
     public void SetRoleCodewords(Entity<RoleCodewordComponent> ent, string key, List<string> codewords, Color color)
     {

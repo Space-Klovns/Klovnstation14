@@ -23,13 +23,13 @@ namespace Content.Server.Wires;
 
 public sealed class WiresSystem : SharedWiresSystem
 {
-    [Dependency] private readonly IPrototypeManager _protoMan = default!;
-    [Dependency] private readonly SharedDoAfterSystem _doAfter = default!;
-    [Dependency] private readonly HandsSystem _hands = default!;
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
-    [Dependency] private readonly SharedInteractionSystem _interactionSystem = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly ConstructionSystem _construction = default!;
+    [Dependency] private IPrototypeManager _protoMan = default!;
+    [Dependency] private SharedDoAfterSystem _doAfter = default!;
+    [Dependency] private HandsSystem _hands = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private SharedInteractionSystem _interactionSystem = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private ConstructionSystem _construction = default!;
 
     private static readonly ProtoId<ToolQualityPrototype> CuttingQuality = "Cutting";
     private static readonly ProtoId<ToolQualityPrototype> PulsingQuality = "Pulsing";
@@ -186,10 +186,10 @@ public sealed class WiresSystem : SharedWiresSystem
             return null;
 
         List<WireColor> colors =
-            new((WireColor[]) Enum.GetValues(typeof(WireColor)));
+            new((WireColor[])Enum.GetValues(typeof(WireColor)));
 
         List<WireLetter> letters =
-            new((WireLetter[]) Enum.GetValues(typeof(WireLetter)));
+            new((WireLetter[])Enum.GetValues(typeof(WireLetter)));
 
 
         var wireSet = new List<Wire>();
@@ -498,7 +498,7 @@ public sealed class WiresSystem : SharedWiresSystem
             for (var i = 0; i < 4; i++)
             {
                 // Cyrillic Letters
-                data[i] = (char) _random.Next(0x0410, 0x0430);
+                data[i] = (char)_random.Next(0x0410, 0x0430);
             }
         }
         else
@@ -506,14 +506,14 @@ public sealed class WiresSystem : SharedWiresSystem
             for (var i = 0; i < 4; i++)
             {
                 // Letters
-                data[i] = (char) _random.Next(0x41, 0x5B);
+                data[i] = (char)_random.Next(0x41, 0x5B);
             }
         }
 
         for (var i = 5; i < 9; i++)
         {
             // Digits
-            data[i] = (char) _random.Next(0x30, 0x3A);
+            data[i] = (char)_random.Next(0x30, 0x3A);
         }
 
         wires.SerialNumber = new string(data);
@@ -541,7 +541,7 @@ public sealed class WiresSystem : SharedWiresSystem
         var statuses = new List<(int position, object key, object value)>();
         foreach (var (key, value) in wires.Statuses)
         {
-            var valueCast = ((int position, StatusLightData? value)) value;
+            var valueCast = ((int position, StatusLightData? value))value;
             statuses.Add((valueCast.position, key, valueCast.value!));
         }
 
@@ -573,7 +573,7 @@ public sealed class WiresSystem : SharedWiresSystem
     ///     Tries to get all the wires on this entity by the wire action type.
     /// </summary>
     /// <returns>Enumerator of all wires in this entity according to the given type.</returns>
-    public IEnumerable<Wire> TryGetWires<T>(EntityUid uid, WiresComponent? wires = null) where T: IWireAction
+    public IEnumerable<Wire> TryGetWires<T>(EntityUid uid, WiresComponent? wires = null) where T : IWireAction
     {
         if (!Resolve(uid, ref wires))
             yield break;
@@ -786,7 +786,7 @@ public sealed class WiresSystem : SharedWiresSystem
             return false;
         }
 
-        data = (T) result;
+        data = (T)result;
 
         return true;
     }

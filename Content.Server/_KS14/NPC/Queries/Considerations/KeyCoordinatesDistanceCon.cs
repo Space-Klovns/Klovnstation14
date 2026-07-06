@@ -11,7 +11,7 @@ namespace Content.Server._KS14.NPC.Queries.Considerations;
 /// </summary>
 public sealed partial class KeyCoordinatesDistanceCon : UtilityConsideration
 {
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
 
     /// <summary>
     ///     Key of the coordinates to get distance from.

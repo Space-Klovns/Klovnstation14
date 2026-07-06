@@ -30,9 +30,9 @@ namespace Content.Server._KS14.Antag;
 */
 public sealed class LastRolledAntagManager : IPostInjectInit
 {
-    [Dependency] private readonly IServerDbManager _dbManager = default!;
-    [Dependency] private readonly ITaskManager _taskManager = default!;
-    [Dependency] private readonly UserDbDataManager _userDbDataManager = default!;
+    [Dependency] private IServerDbManager _dbManager = default!;
+    [Dependency] private ITaskManager _taskManager = default!;
+    [Dependency] private UserDbDataManager _userDbDataManager = default!;
 
     private readonly List<Task> _pendingSaveTasks = new();
 

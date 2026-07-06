@@ -10,19 +10,19 @@ using Robust.Shared.Timing;
 
 namespace Content.Client._KS14.DodgingEffect;
 
-public sealed class DodgingEffectOverlay : Overlay
+public sealed partial class DodgingEffectOverlay : Overlay
 {
     public override OverlaySpace Space => OverlaySpace.WorldSpaceEntities;
 
-    [Dependency] private readonly EntityManager _entityManager = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly IOverlayManager _overlay = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
-    [Dependency] private readonly EntityLookupSystem _lookupSystem = default!;
-    [Dependency] private readonly SpriteSystem _spriteSystem = default!;
+    [Dependency] private EntityManager _entityManager = default!;
+    [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private IOverlayManager _overlay = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private EntityLookupSystem _lookupSystem = default!;
+    [Dependency] private SpriteSystem _spriteSystem = default!;
 
-    [Dependency] private readonly EntityQuery<SpriteComponent> _spriteQuery = default!;
+    [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
 
     private static readonly Color EffectColor = new(1f, 1f, 1f, a: 1f);
     private static readonly Color EffectColorTransparent = new(0.5f, 0.5f, 0.5f, a: 0f);

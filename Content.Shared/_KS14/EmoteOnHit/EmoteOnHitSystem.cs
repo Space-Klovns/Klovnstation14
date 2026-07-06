@@ -6,11 +6,11 @@ using Robust.Shared.Player;
 
 namespace Content.Shared._KS14.EmoteOnHit;
 
-public sealed class SharedFlipOnHitSystem : EntitySystem
+public sealed partial class SharedFlipOnHitSystem : EntitySystem
 {
-    [Dependency] private readonly ItemToggleSystem _itemToggleSystem = default!;
-    [Dependency] private readonly StandingStateSystem _standingStateSystem = default!;
-    [Dependency] private readonly SharedChatSystem _chatSystem = default!;
+    [Dependency] private ItemToggleSystem _itemToggleSystem = default!;
+    [Dependency] private StandingStateSystem _standingStateSystem = default!;
+    [Dependency] private SharedChatSystem _chatSystem = default!;
 
     public override void Initialize()
     {

@@ -8,7 +8,7 @@ namespace Content.Client._KS14.MassDriver.EntitySystems;
 
 public sealed class MassDriverSystem : SharedMassDriverSystem
 {
-    [Dependency] private readonly SharedUserInterfaceSystem _ui = default!;
+    [Dependency] private SharedUserInterfaceSystem _ui = default!;
 
     public override void Initialize()
     {

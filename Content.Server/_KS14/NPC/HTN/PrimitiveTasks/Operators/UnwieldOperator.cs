@@ -12,10 +12,10 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 /// </summary>
 public sealed partial class UnwieldOperator : HTNOperator
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly WieldableSystem _wieldableSystem = default!;
-    [Dependency] private readonly HandsSystem _handsSystem = default!;
-    [Dependency] private readonly EntityQuery<WieldableComponent> _wieldableQuery = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private WieldableSystem _wieldableSystem = default!;
+    [Dependency] private HandsSystem _handsSystem = default!;
+    [Dependency] private EntityQuery<WieldableComponent> _wieldableQuery = default!;
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
     {

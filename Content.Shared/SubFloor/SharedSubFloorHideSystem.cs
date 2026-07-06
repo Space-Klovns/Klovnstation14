@@ -17,16 +17,16 @@ namespace Content.Shared.SubFloor
     ///     Entity system backing <see cref="SubFloorHideComponent"/>.
     /// </summary>
     [UsedImplicitly]
-    public abstract class SharedSubFloorHideSystem : EntitySystem
+    public abstract partial class SharedSubFloorHideSystem : EntitySystem
     {
-        [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager = default!;
-        [Dependency] private readonly SharedAmbientSoundSystem _ambientSoundSystem = default!;
+        [Dependency] private ITileDefinitionManager _tileDefinitionManager = default!;
+        [Dependency] private SharedAmbientSoundSystem _ambientSoundSystem = default!;
         [Dependency] protected readonly SharedMapSystem Map = default!;
         [Dependency] protected readonly SharedAppearanceSystem Appearance = default!;
-        [Dependency] private readonly SharedVisibilitySystem _visibility = default!;
+        [Dependency] private SharedVisibilitySystem _visibility = default!;
         [Dependency] protected readonly SharedPopupSystem _popup = default!;
 
-        [Dependency] private readonly EntityQuery<SubFloorHideComponent> _hideQuery = default!;
+        [Dependency] private EntityQuery<SubFloorHideComponent> _hideQuery = default!;
 
         public override void Initialize()
         {
@@ -156,7 +156,7 @@ namespace Content.Shared.SubFloor
         private void SetUnderCover(Entity<SubFloorHideComponent> entity, bool value)
         {
             // If it's not undercover or it always has visible layers then normal visibility.
-            _visibility.SetLayer(entity.Owner, value && entity.Comp.VisibleLayers.Count == 0 ? (ushort) VisibilityFlags.Subfloor : (ushort) VisibilityFlags.Normal);
+            _visibility.SetLayer(entity.Owner, value && entity.Comp.VisibleLayers.Count == 0 ? (ushort)VisibilityFlags.Subfloor : (ushort)VisibilityFlags.Normal);
 
             if (entity.Comp.IsUnderCover == value)
                 return;
@@ -167,7 +167,7 @@ namespace Content.Shared.SubFloor
         public bool HasFloorCover(EntityUid gridUid, MapGridComponent grid, Vector2i position)
         {
             // TODO Redo this function. Currently wires on an asteroid are always "below the floor"
-            var tileDef = (ContentTileDefinition) _tileDefinitionManager[Map.GetTileRef(gridUid, grid, position).Tile.TypeId];
+            var tileDef = (ContentTileDefinition)_tileDefinitionManager[Map.GetTileRef(gridUid, grid, position).Tile.TypeId];
             return !tileDef.IsSubFloor;
         }
 

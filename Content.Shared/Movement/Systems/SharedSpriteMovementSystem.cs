@@ -3,7 +3,7 @@ using Content.Shared.Movement.Events;
 
 namespace Content.Shared.Movement.Systems;
 
-public abstract class SharedSpriteMovementSystem : EntitySystem
+public abstract partial class SharedSpriteMovementSystem : EntitySystem
 {
     public override void Initialize()
     {

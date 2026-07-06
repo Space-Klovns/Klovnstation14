@@ -12,13 +12,13 @@ namespace Content.Server.GameTicking.Rules;
 /// <inheritdoc cref="RoundstartStationVariationRuleComponent"/>
 public sealed class RoundstartStationVariationRuleSystem : GameRuleSystem<RoundstartStationVariationRuleComponent>
 {
-    [Dependency] private readonly IRobustRandom _random = default!;
+    [Dependency] private IRobustRandom _random = default!;
 
     public override void Initialize()
     {
         base.Initialize();
 
-        SubscribeLocalEvent<StationPostInitEvent>(OnStationPostInit, after: new []{typeof(ShuttleSystem)});
+        SubscribeLocalEvent<StationPostInitEvent>(OnStationPostInit, after: new[] { typeof(ShuttleSystem) });
     }
 
     protected override void Added(EntityUid uid, RoundstartStationVariationRuleComponent component, GameRuleComponent gameRule, GameRuleAddedEvent args)

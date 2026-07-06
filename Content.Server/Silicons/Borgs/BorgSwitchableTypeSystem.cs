@@ -18,9 +18,9 @@ namespace Content.Server.Silicons.Borgs;
 /// </summary>
 public sealed class BorgSwitchableTypeSystem : SharedBorgSwitchableTypeSystem
 {
-    [Dependency] private readonly BorgSystem _borgSystem = default!;
-    [Dependency] private readonly ServerInventorySystem _inventorySystem = default!;
-    [Dependency] private readonly SiliconLawSystem _siliconLawSystem = default!; //KS14
+    [Dependency] private BorgSystem _borgSystem = default!;
+    [Dependency] private ServerInventorySystem _inventorySystem = default!;
+    [Dependency] private SiliconLawSystem _siliconLawSystem = default!; //KS14
 
     protected override void SelectBorgModule(Entity<BorgSwitchableTypeComponent> ent, ProtoId<BorgTypePrototype> borgType)
     {

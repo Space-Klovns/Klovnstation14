@@ -15,9 +15,9 @@ namespace Content.Server._KS14.Atmos.EntitySystems;
 [UsedImplicitly]
 public sealed class GasGrenadeCompressorSystem : SharedGasGrenadeCompressorSystem
 {
-    [Dependency] private readonly AtmosphereSystem _atmosphereSystem = default!;
-    [Dependency] private readonly NodeContainerSystem _nodeContainerSystem = default!;
-    [Dependency] private readonly EmagSystem _emagSystem = default!;
+    [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private NodeContainerSystem _nodeContainerSystem = default!;
+    [Dependency] private EmagSystem _emagSystem = default!;
 
     public override void Initialize()
     {

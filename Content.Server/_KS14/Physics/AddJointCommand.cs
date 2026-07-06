@@ -14,10 +14,10 @@ namespace Content.Server._KS14.Physics;
 [AdminCommand(AdminFlags.Fun | AdminFlags.Debug)]
 public sealed class AddJointCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly JointSystem _jointSystem = default!;
+    [Dependency] private IReflectionManager _reflectionManager = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private JointSystem _jointSystem = default!;
 
     private bool _areJointsRecognised = false;
 

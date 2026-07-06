@@ -16,17 +16,17 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared.MNET.CardReader;
 
-public abstract class SharedDurationSignalAccessReaderSystem : EntitySystem
+public abstract partial class SharedDurationSignalAccessReaderSystem : EntitySystem
 {
     [Dependency] protected readonly SharedAppearanceSystem AppearanceSystem = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly TagSystem _tagSystem = default!;
-    [Dependency] private readonly SharedPopupSystem _sharedPopupSystem = default!;
-    [Dependency] private readonly SharedDoAfterSystem _doAfterSystem = default!;
-    [Dependency] private readonly SharedDeviceLinkSystem _deviceLinkSystem = default!;
-    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
-    [Dependency] private readonly AccessReaderSystem _accessReaderSystem = default!;
-    [Dependency] private readonly UseDelaySystem _useDelaySystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private TagSystem _tagSystem = default!;
+    [Dependency] private SharedPopupSystem _sharedPopupSystem = default!;
+    [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
+    [Dependency] private SharedDeviceLinkSystem _deviceLinkSystem = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private AccessReaderSystem _accessReaderSystem = default!;
+    [Dependency] private UseDelaySystem _useDelaySystem = default!;
 
     public const string ReaderUseDelayId = "signalAccessReader";
 

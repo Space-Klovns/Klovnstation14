@@ -24,15 +24,15 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared.Follower;
 
-public sealed class FollowerSystem : EntitySystem
+public sealed partial class FollowerSystem : EntitySystem
 {
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly TagSystem _tagSystem = default!;
-    [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
-    [Dependency] private readonly SharedJointSystem _jointSystem = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
-    [Dependency] private readonly INetManager _netMan = default!;
-    [Dependency] private readonly ISharedAdminManager _adminManager = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private TagSystem _tagSystem = default!;
+    [Dependency] private SharedContainerSystem _containerSystem = default!;
+    [Dependency] private SharedJointSystem _jointSystem = default!;
+    [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
+    [Dependency] private INetManager _netMan = default!;
+    [Dependency] private ISharedAdminManager _adminManager = default!;
 
     private static readonly ProtoId<TagPrototype> ForceableFollowTag = "ForceableFollow";
     private static readonly ProtoId<TagPrototype> PreventGhostnadoWarpTag = "NotGhostnadoWarpable";
@@ -122,7 +122,7 @@ public sealed class FollowerSystem : EntitySystem
                 Act = () => StartFollowingEntity(ev.Target, ev.User),
                 Impact = LogImpact.Low,
                 Text = Loc.GetString("verb-follow-me-text"),
-                Icon = new SpriteSpecifier.Texture(new ("/Textures/Interface/VerbIcons/close.svg.192dpi.png")),
+                Icon = new SpriteSpecifier.Texture(new("/Textures/Interface/VerbIcons/close.svg.192dpi.png")),
             };
 
             ev.Verbs.Add(verb);
@@ -142,7 +142,7 @@ public sealed class FollowerSystem : EntitySystem
 
     private void OnGotEquippedHand(EntityUid uid, FollowerComponent component, GotEquippedHandEvent args)
     {
-        StopFollowingEntity(uid, component.Following, deparent:false);
+        StopFollowingEntity(uid, component.Following, deparent: false);
     }
 
     private void OnFollowerTerminating(EntityUid uid, FollowerComponent component, ref EntityTerminatingEvent args)
@@ -295,7 +295,7 @@ public sealed class FollowerSystem : EntitySystem
     ///     Forces all of an entity's followers to stop following it.
     /// </summary>
     public void StopAllFollowers(EntityUid uid,
-        FollowedComponent? followed=null)
+        FollowedComponent? followed = null)
     {
         if (!Resolve(uid, ref followed))
             return;

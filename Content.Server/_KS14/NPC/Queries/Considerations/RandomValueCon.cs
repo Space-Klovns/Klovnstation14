@@ -10,7 +10,7 @@ namespace Content.Server._KS14.NPC.Queries.Considerations;
 /// </summary>
 public sealed partial class RandomValueCon : UtilityConsideration
 {
-    [Dependency] private readonly IRobustRandom _robustRandom = default!;
+    [Dependency] private IRobustRandom _robustRandom = default!;
 
     /// <summary>
     ///     Probability (in percent; 0 - 1) for score to be true.

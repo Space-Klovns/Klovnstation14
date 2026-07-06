@@ -14,7 +14,7 @@ namespace Content.Client.Launcher;
 /// </summary>
 public sealed class ExtendedDisconnectInformationManager
 {
-    [Dependency] private readonly IClientNetManager _clientNetManager = default!;
+    [Dependency] private IClientNetManager _clientNetManager = default!;
 
     private NetDisconnectedArgs? _lastNetDisconnectedArgs = null;
 
@@ -42,4 +42,3 @@ public sealed class ExtendedDisconnectInformationManager
         LastNetDisconnectedArgs = args;
     }
 }
-

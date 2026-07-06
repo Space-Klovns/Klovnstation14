@@ -10,11 +10,11 @@ using Content.Shared.Power.EntitySystems;
 
 namespace Content.Shared.Atmos.EntitySystems;
 
-public abstract class SharedGasPressurePumpSystem : EntitySystem
+public abstract partial class SharedGasPressurePumpSystem : EntitySystem
 {
-    [Dependency] private   readonly ISharedAdminLogManager _adminLogger = default!;
-    [Dependency] private   readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private   readonly SharedPowerReceiverSystem _receiver = default!;
+    [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
+    [Dependency] private readonly SharedPowerReceiverSystem _receiver = default!;
     [Dependency] protected readonly SharedUserInterfaceSystem UserInterfaceSystem = default!;
 
     // TODO: Check enabled for activatableUI

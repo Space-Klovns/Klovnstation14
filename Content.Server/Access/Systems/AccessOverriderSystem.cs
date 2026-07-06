@@ -21,13 +21,13 @@ namespace Content.Server.Access.Systems;
 [UsedImplicitly]
 public sealed class AccessOverriderSystem : SharedAccessOverriderSystem
 {
-    [Dependency] private readonly UserInterfaceSystem _userInterface = default!;
-    [Dependency] private readonly AccessReaderSystem _accessReader = default!;
-    [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
-    [Dependency] private readonly SharedInteractionSystem _interactionSystem = default!;
-    [Dependency] private readonly PopupSystem _popupSystem = default!;
-    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
-    [Dependency] private readonly SharedDoAfterSystem _doAfterSystem = default!;
+    [Dependency] private UserInterfaceSystem _userInterface = default!;
+    [Dependency] private AccessReaderSystem _accessReader = default!;
+    [Dependency] private ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] private SharedInteractionSystem _interactionSystem = default!;
+    [Dependency] private PopupSystem _popupSystem = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
 
     public override void Initialize()
     {
@@ -52,7 +52,7 @@ public sealed class AccessOverriderSystem : SharedAccessOverriderSystem
         if (args.Target == null || !TryComp(args.Target, out AccessReaderComponent? accessReader))
             return;
 
-        if (!_interactionSystem.InRangeUnobstructed(args.User, (EntityUid) args.Target))
+        if (!_interactionSystem.InRangeUnobstructed(args.User, (EntityUid)args.Target))
             return;
 
         var doAfterEventArgs = new DoAfterArgs(EntityManager, args.User, component.DoAfter, new AccessOverriderDoAfterEvent(), uid, target: args.Target, used: uid)

@@ -2,7 +2,7 @@ using Robust.Shared.Map;
 
 namespace Content.Shared._KS14.NPC.Systems;
 
-public abstract class SharedNpcSensorSystem : EntitySystem
+public abstract partial class SharedNpcSensorSystem : EntitySystem
 {
     /// <summary>
     ///     Does nothing on client.

@@ -6,11 +6,11 @@ using Robust.Shared.Utility;
 
 namespace Content.Client._KS14.ShadowOverlay;
 
-public sealed class KsShadowOverlaySystem : EntitySystem
+public sealed partial class KsShadowOverlaySystem : EntitySystem
 {
-    [Dependency] private readonly IOverlayManager _overlayManager = default!;
-    [Dependency] private readonly SystemCollectionHookManager _systemCollectionHookManager = default!;
-    [Dependency] private readonly AppearanceSystem _appearanceSystem = default!;
+    [Dependency] private IOverlayManager _overlayManager = default!;
+    [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;
+    [Dependency] private AppearanceSystem _appearanceSystem = default!;
 
     public override void Initialize()
     {

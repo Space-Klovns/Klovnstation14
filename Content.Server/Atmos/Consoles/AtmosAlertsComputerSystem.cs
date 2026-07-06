@@ -18,14 +18,14 @@ namespace Content.Server.Atmos.Monitor.Systems;
 
 public sealed class AtmosAlertsComputerSystem : SharedAtmosAlertsComputerSystem
 {
-    [Dependency] private readonly UserInterfaceSystem _userInterfaceSystem = default!;
-    [Dependency] private readonly AirAlarmSystem _airAlarmSystem = default!;
-    [Dependency] private readonly AtmosDeviceNetworkSystem _atmosDevNet = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly MapSystem _mapSystem = default!;
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
-    [Dependency] private readonly NavMapSystem _navMapSystem = default!;
-    [Dependency] private readonly DeviceListSystem _deviceListSystem = default!;
+    [Dependency] private UserInterfaceSystem _userInterfaceSystem = default!;
+    [Dependency] private AirAlarmSystem _airAlarmSystem = default!;
+    [Dependency] private AtmosDeviceNetworkSystem _atmosDevNet = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private MapSystem _mapSystem = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
+    [Dependency] private NavMapSystem _navMapSystem = default!;
+    [Dependency] private DeviceListSystem _deviceListSystem = default!;
 
     private const float UpdateTime = 1.0f;
 
@@ -187,7 +187,7 @@ public sealed class AtmosAlertsComputerSystem : SharedAtmosAlertsComputerSystem
 
                 // Update the appearance of the console based on the highest recorded level of alert
                 if (TryComp<AppearanceComponent>(ent, out var entAppearance))
-                    _appearance.SetData(ent, AtmosAlertsComputerVisuals.ComputerLayerScreen, (int) highestAlert, entAppearance);
+                    _appearance.SetData(ent, AtmosAlertsComputerVisuals.ComputerLayerScreen, (int)highestAlert, entAppearance);
 
                 // If the console UI is open, send UI data to each subscribed session
                 UpdateUIState(ent, airAlarmEntries, fireAlarmEntries, entConsole, entXform);
@@ -327,13 +327,13 @@ public sealed class AtmosAlertsComputerSystem : SharedAtmosAlertsComputerSystem
         foreach ((var address, var sensorData) in focusDeviceAirAlarm.SensorData)
         {
             if (sensorData.TemperatureThreshold.CheckThreshold(sensorData.Temperature, out var temperatureState) &&
-                (int) temperatureState > (int) temperatureData.Item2)
+                (int)temperatureState > (int)temperatureData.Item2)
             {
                 temperatureData = (temperatureData.Item1, temperatureState);
             }
 
             if (sensorData.PressureThreshold.CheckThreshold(sensorData.Pressure, out var pressureState) &&
-                (int) pressureState > (int) pressureData.Item2)
+                (int)pressureState > (int)pressureData.Item2)
             {
                 pressureData = (pressureData.Item1, pressureState);
             }
@@ -353,7 +353,7 @@ public sealed class AtmosAlertsComputerSystem : SharedAtmosAlertsComputerSystem
                     }
 
                     if (threshold.CheckThreshold(gasData[gas].Item2, out var gasState) &&
-                        (int) gasState > (int) gasData[gas].Item3)
+                        (int)gasState > (int)gasData[gas].Item3)
                     {
                         gasData[gas] = (gasData[gas].Item1, gasData[gas].Item2, gasState);
                     }

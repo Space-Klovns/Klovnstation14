@@ -22,8 +22,8 @@ namespace Content.Client.Interaction;
 /// <typeparam name="T">thing being dragged and dropped</typeparam>
 public sealed class DragDropHelper<T>
 {
-    [Dependency] private readonly IInputManager _inputManager = default!;
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
+    [Dependency] private IInputManager _inputManager = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
 
     private readonly OnBeginDrag _onBeginDrag;
     private readonly OnEndDrag _onEndDrag;
@@ -123,24 +123,24 @@ public sealed class DragDropHelper<T>
         {
             // check if dragging should begin
             case DragState.MouseDown:
-            {
-                var screenPos = _inputManager.MouseScreenPosition;
-                if ((_mouseDownScreenPos.Position - screenPos.Position).Length() > _deadzone)
                 {
-                    StartDragging();
-                }
+                    var screenPos = _inputManager.MouseScreenPosition;
+                    if ((_mouseDownScreenPos.Position - screenPos.Position).Length() > _deadzone)
+                    {
+                        StartDragging();
+                    }
 
-                break;
-            }
+                    break;
+                }
             case DragState.Dragging:
-            {
-                if (!_onContinueDrag.Invoke(frameTime))
                 {
-                    EndDrag();
-                }
+                    if (!_onContinueDrag.Invoke(frameTime))
+                    {
+                        EndDrag();
+                    }
 
-                break;
-            }
+                    break;
+                }
         }
     }
 }

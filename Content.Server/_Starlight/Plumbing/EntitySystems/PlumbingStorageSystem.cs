@@ -8,10 +8,10 @@ using Robust.Server.GameObjects;
 
 namespace Content.Server._Starlight.Plumbing.EntitySystems;
 
-public sealed class PlumbingStorageSystem : EntitySystem
+public sealed partial class PlumbingStorageSystem : EntitySystem
 {
-    [Dependency] private readonly SharedSolutionContainerSystem _solutionSystem = default!;
-    [Dependency] private readonly UserInterfaceSystem _ui = default!;
+    [Dependency] private SharedSolutionContainerSystem _solutionSystem = default!;
+    [Dependency] private UserInterfaceSystem _ui = default!;
 
     public override void Initialize()
     {
@@ -44,5 +44,5 @@ public sealed class PlumbingStorageSystem : EntitySystem
 
         var state = new PlumbingStorageBuiState(contents, solution.Volume, solution.MaxVolume);
         _ui.SetUiState(ent.Owner, PlumbingStorageUiKey.Key, state);
-        }
-        }
+    }
+}

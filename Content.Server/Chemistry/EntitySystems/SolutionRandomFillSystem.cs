@@ -8,11 +8,11 @@ using Robust.Shared.Random;
 
 namespace Content.Server.Chemistry.EntitySystems;
 
-public sealed class SolutionRandomFillSystem : EntitySystem
+public sealed partial class SolutionRandomFillSystem : EntitySystem
 {
-    [Dependency] private readonly SharedSolutionContainerSystem _solutionsSystem = default!;
-    [Dependency] private readonly IPrototypeManager _proto = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
+    [Dependency] private SharedSolutionContainerSystem _solutionsSystem = default!;
+    [Dependency] private IPrototypeManager _proto = default!;
+    [Dependency] private IRobustRandom _random = default!;
 
     public override void Initialize()
     {
@@ -37,8 +37,8 @@ public sealed class SolutionRandomFillSystem : EntitySystem
             return;
         }
 
-        _solutionsSystem.EnsureSolutionEntity(entity.Owner, entity.Comp.Solution, out var target , pick.quantity);
-        if(target.HasValue)
+        _solutionsSystem.EnsureSolutionEntity(entity.Owner, entity.Comp.Solution, out var target, pick.quantity);
+        if (target.HasValue)
             _solutionsSystem.TryAddReagent(target.Value, reagent, quantity);
     }
 }

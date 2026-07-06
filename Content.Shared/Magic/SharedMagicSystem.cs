@@ -43,32 +43,32 @@ namespace Content.Shared.Magic;
 /// <summary>
 /// Handles learning and using spells (actions)
 /// </summary>
-public abstract class SharedMagicSystem : EntitySystem
+public abstract partial class SharedMagicSystem : EntitySystem
 {
-    [Dependency] private readonly ISerializationManager _seriMan = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly SharedGunSystem _gunSystem = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly INetManager _net = default!;
-    [Dependency] private readonly GibbingSystem _gibbing = default!;
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
-    [Dependency] private readonly SharedDoorSystem _door = default!;
-    [Dependency] private readonly InventorySystem _inventory = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly SharedInteractionSystem _interaction = default!;
-    [Dependency] private readonly LockSystem _lock = default!;
-    [Dependency] private readonly SharedHandsSystem _hands = default!;
-    [Dependency] private readonly TagSystem _tag = default!;
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly SharedMindSystem _mind = default!;
-    [Dependency] private readonly SharedStunSystem _stun = default!;
-    [Dependency] private readonly TurfSystem _turf = default!;
-    [Dependency] private readonly SharedChargesSystem _charges = default!;
-    [Dependency] private readonly ExamineSystemShared _examine= default!;
-    [Dependency] private readonly TargetSystem _target = default!;
+    [Dependency] private ISerializationManager _seriMan = default!;
+    [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private SharedGunSystem _gunSystem = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private INetManager _net = default!;
+    [Dependency] private GibbingSystem _gibbing = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private SharedDoorSystem _door = default!;
+    [Dependency] private InventorySystem _inventory = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedInteractionSystem _interaction = default!;
+    [Dependency] private LockSystem _lock = default!;
+    [Dependency] private SharedHandsSystem _hands = default!;
+    [Dependency] private TagSystem _tag = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedMindSystem _mind = default!;
+    [Dependency] private SharedStunSystem _stun = default!;
+    [Dependency] private TurfSystem _turf = default!;
+    [Dependency] private SharedChargesSystem _charges = default!;
+    [Dependency] private ExamineSystemShared _examine = default!;
+    [Dependency] private TargetSystem _target = default!;
 
     private static readonly ProtoId<TagPrototype> InvalidForGlobalSpawnSpellTag = "InvalidForGlobalSpawnSpell";
 
@@ -149,7 +149,7 @@ public abstract class SharedMagicSystem : EntitySystem
         args.Handled = true;
     }
 
-        /// <summary>
+    /// <summary>
     ///     Gets spawn positions listed on <see cref="InstantSpawnSpellEvent"/>
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
@@ -158,65 +158,65 @@ public abstract class SharedMagicSystem : EntitySystem
         switch (data)
         {
             case TargetCasterPos:
-                return new List<EntityCoordinates>(1) {casterXform.Coordinates};
+                return new List<EntityCoordinates>(1) { casterXform.Coordinates };
             case TargetInFrontSingle:
-            {
-                var directionPos = casterXform.Coordinates.Offset(casterXform.LocalRotation.ToWorldVec().Normalized());
-
-                if (!TryComp<MapGridComponent>(casterXform.GridUid, out var mapGrid))
-                    return new List<EntityCoordinates>();
-                if (!_turf.TryGetTileRef(directionPos, out var tileReference))
-                    return new List<EntityCoordinates>();
-
-                var tileIndex = tileReference.Value.GridIndices;
-                return new List<EntityCoordinates>(1) { _mapSystem.GridTileToLocal(casterXform.GridUid.Value, mapGrid, tileIndex) };
-            }
-            case TargetInFront:
-            {
-                var directionPos = casterXform.Coordinates.Offset(casterXform.LocalRotation.ToWorldVec().Normalized());
-
-                if (!TryComp<MapGridComponent>(casterXform.GridUid, out var mapGrid))
-                    return new List<EntityCoordinates>();
-
-                if (!_turf.TryGetTileRef(directionPos, out var tileReference))
-                    return new List<EntityCoordinates>();
-
-                var tileIndex = tileReference.Value.GridIndices;
-                var coords = _mapSystem.GridTileToLocal(casterXform.GridUid.Value, mapGrid, tileIndex);
-                EntityCoordinates coordsPlus;
-                EntityCoordinates coordsMinus;
-
-                var dir = casterXform.LocalRotation.GetCardinalDir();
-                switch (dir)
                 {
-                    case Direction.North:
-                    case Direction.South:
-                    {
-                        coordsPlus = _mapSystem.GridTileToLocal(casterXform.GridUid.Value, mapGrid, tileIndex + (1, 0));
-                        coordsMinus = _mapSystem.GridTileToLocal(casterXform.GridUid.Value, mapGrid, tileIndex + (-1, 0));
-                        return new List<EntityCoordinates>(3)
-                        {
-                            coords,
-                            coordsPlus,
-                            coordsMinus,
-                        };
-                    }
-                    case Direction.East:
-                    case Direction.West:
-                    {
-                        coordsPlus = _mapSystem.GridTileToLocal(casterXform.GridUid.Value, mapGrid, tileIndex + (0, 1));
-                        coordsMinus = _mapSystem.GridTileToLocal(casterXform.GridUid.Value, mapGrid, tileIndex + (0, -1));
-                        return new List<EntityCoordinates>(3)
-                        {
-                            coords,
-                            coordsPlus,
-                            coordsMinus,
-                        };
-                    }
-                }
+                    var directionPos = casterXform.Coordinates.Offset(casterXform.LocalRotation.ToWorldVec().Normalized());
 
-                return new List<EntityCoordinates>();
-            }
+                    if (!TryComp<MapGridComponent>(casterXform.GridUid, out var mapGrid))
+                        return new List<EntityCoordinates>();
+                    if (!_turf.TryGetTileRef(directionPos, out var tileReference))
+                        return new List<EntityCoordinates>();
+
+                    var tileIndex = tileReference.Value.GridIndices;
+                    return new List<EntityCoordinates>(1) { _mapSystem.GridTileToLocal(casterXform.GridUid.Value, mapGrid, tileIndex) };
+                }
+            case TargetInFront:
+                {
+                    var directionPos = casterXform.Coordinates.Offset(casterXform.LocalRotation.ToWorldVec().Normalized());
+
+                    if (!TryComp<MapGridComponent>(casterXform.GridUid, out var mapGrid))
+                        return new List<EntityCoordinates>();
+
+                    if (!_turf.TryGetTileRef(directionPos, out var tileReference))
+                        return new List<EntityCoordinates>();
+
+                    var tileIndex = tileReference.Value.GridIndices;
+                    var coords = _mapSystem.GridTileToLocal(casterXform.GridUid.Value, mapGrid, tileIndex);
+                    EntityCoordinates coordsPlus;
+                    EntityCoordinates coordsMinus;
+
+                    var dir = casterXform.LocalRotation.GetCardinalDir();
+                    switch (dir)
+                    {
+                        case Direction.North:
+                        case Direction.South:
+                            {
+                                coordsPlus = _mapSystem.GridTileToLocal(casterXform.GridUid.Value, mapGrid, tileIndex + (1, 0));
+                                coordsMinus = _mapSystem.GridTileToLocal(casterXform.GridUid.Value, mapGrid, tileIndex + (-1, 0));
+                                return new List<EntityCoordinates>(3)
+                        {
+                            coords,
+                            coordsPlus,
+                            coordsMinus,
+                        };
+                            }
+                        case Direction.East:
+                        case Direction.West:
+                            {
+                                coordsPlus = _mapSystem.GridTileToLocal(casterXform.GridUid.Value, mapGrid, tileIndex + (0, 1));
+                                coordsMinus = _mapSystem.GridTileToLocal(casterXform.GridUid.Value, mapGrid, tileIndex + (0, -1));
+                                return new List<EntityCoordinates>(3)
+                        {
+                            coords,
+                            coordsPlus,
+                            coordsMinus,
+                        };
+                            }
+                    }
+
+                    return new List<EntityCoordinates>();
+                }
             default:
                 throw new ArgumentOutOfRangeException();
         }

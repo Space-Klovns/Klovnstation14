@@ -12,7 +12,7 @@ namespace Content.Client.UserInterface.Systems.Ghost.Controls.Roles
     [GenerateTypedNameReferences]
     public sealed partial class MakeGhostRoleWindow : DefaultWindow
     {
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private IPrototypeManager _prototypeManager = default!;
         private readonly List<GhostRoleRaffleSettingsPrototype> _rafflePrototypes = [];
 
         private const int RaffleDontRaffleId = -1;
@@ -138,9 +138,9 @@ namespace Content.Client.UserInterface.Systems.Ghost.Controls.Roles
             {
                 raffleSettings = new GhostRoleRaffleSettings()
                 {
-                    InitialDuration = (uint) RaffleInitialDuration.Value,
-                    JoinExtendsDurationBy = (uint) RaffleJoinExtendsDurationBy.Value,
-                    MaxDuration = (uint) RaffleMaxDuration.Value
+                    InitialDuration = (uint)RaffleInitialDuration.Value,
+                    JoinExtendsDurationBy = (uint)RaffleJoinExtendsDurationBy.Value,
+                    MaxDuration = (uint)RaffleMaxDuration.Value
                 };
             }
             else if (_raffleSettingId != RaffleDontRaffleId)

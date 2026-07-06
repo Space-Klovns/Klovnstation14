@@ -9,14 +9,14 @@ namespace Content.Server.AlertLevel.Commands
     [AdminCommand(AdminFlags.Fun)]
     public sealed class SetAlertLevelCommand : LocalizedEntityCommands
     {
-        [Dependency] private readonly AlertLevelSystem _alertLevelSystem = default!;
-        [Dependency] private readonly StationSystem _stationSystem = default!;
+        [Dependency] private AlertLevelSystem _alertLevelSystem = default!;
+        [Dependency] private StationSystem _stationSystem = default!;
 
         public override string Command => "setalertlevel";
 
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
-            var levelNames = new string[] {};
+            var levelNames = new string[] { };
             var player = shell.Player;
             if (player?.AttachedEntity != null)
             {
@@ -78,10 +78,10 @@ namespace Content.Server.AlertLevel.Commands
         private string[] GetStationLevelNames(EntityUid station)
         {
             if (!EntityManager.TryGetComponent<AlertLevelComponent>(station, out var alertLevelComp))
-                return new string[]{};
+                return new string[] { };
 
             if (alertLevelComp.AlertLevels == null)
-                return new string[]{};
+                return new string[] { };
 
             return alertLevelComp.AlertLevels.Levels.Keys.ToArray();
         }

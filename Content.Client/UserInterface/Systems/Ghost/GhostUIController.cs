@@ -12,7 +12,7 @@ namespace Content.Client.UserInterface.Systems.Ghost;
 // TODO hud refactor BEFORE MERGE fix ghost gui being too far up
 public sealed partial /* KS14: partial */ class GhostUIController : UIController, IOnSystemChanged<GhostSystem>, IOnSystemChanged<GhostRespawnSystem> /* KS14 */
 {
-    [Dependency] private readonly IEntityNetworkManager _net = default!;
+    [Dependency] private IEntityNetworkManager _net = default!;
 
     [UISystemDependency] private readonly GhostSystem? _system = default;
 

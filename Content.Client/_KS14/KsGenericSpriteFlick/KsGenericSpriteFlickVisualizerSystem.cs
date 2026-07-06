@@ -9,11 +9,11 @@ using Robust.Shared.Utility;
 
 namespace Content.Client._KS14.GenericSpriteFlick;
 
-public sealed class KsGenericSpriteFlickVisualizerSystem : EntitySystem
+public sealed partial class KsGenericSpriteFlickVisualizerSystem : EntitySystem
 {
-    [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-    [Dependency] private readonly AnimationPlayerSystem _animationPlayerSystem = default!;
-    [Dependency] private readonly SpriteSystem _spriteSystem = default!;
+    [Dependency] private IReflectionManager _reflectionManager = default!;
+    [Dependency] private AnimationPlayerSystem _animationPlayerSystem = default!;
+    [Dependency] private SpriteSystem _spriteSystem = default!;
 
     public override void Initialize()
     {

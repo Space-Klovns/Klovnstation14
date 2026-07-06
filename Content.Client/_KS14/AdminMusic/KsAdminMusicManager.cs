@@ -12,11 +12,11 @@ namespace Content.Client._KS14.AdminMusic;
 
 public sealed partial class KsAdminMusicManager : IPostInjectInit
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly IClientNetManager _netManager = default!;
-    [Dependency] private readonly IAudioManager _audioManager = default!;
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
-    [Dependency] private readonly IBaseClient _client = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IClientNetManager _netManager = default!;
+    [Dependency] private IAudioManager _audioManager = default!;
+    [Dependency] private IResourceCache _resourceCache = default!;
+    [Dependency] private IBaseClient _client = default!;
 
     private ISawmill _sawmill = default!;
 

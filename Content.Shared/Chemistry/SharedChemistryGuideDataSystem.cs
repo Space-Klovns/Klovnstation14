@@ -7,7 +7,7 @@ namespace Content.Shared.Chemistry;
 /// <summary>
 /// This handles the chemistry guidebook and caching it.
 /// </summary>
-public abstract class SharedChemistryGuideDataSystem : EntitySystem
+public abstract partial class SharedChemistryGuideDataSystem : EntitySystem
 {
     [Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
 
@@ -33,7 +33,7 @@ public sealed class ReagentGuideRegistryChangedEvent : EntityEventArgs
 [Serializable, NetSerializable]
 public sealed class ReagentGuideChangeset
 {
-    public Dictionary<string,ReagentGuideEntry> GuideEntries;
+    public Dictionary<string, ReagentGuideEntry> GuideEntries;
 
     public HashSet<string> Removed;
 

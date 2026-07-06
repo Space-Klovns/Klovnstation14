@@ -12,12 +12,12 @@ namespace Content.Server._KS14.Entry;
 
 internal sealed class KsEntryPoint : GameServer
 {
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-    [Dependency] private readonly IComponentFactory _componentFactory = default!;
-    [Dependency] private readonly LastRolledAntagManager _lastRolledAntagManager = default!;
-    [Dependency] private readonly AnnouncementWebhookManager _announcementWebhookManager = default!;
-    [Dependency] private readonly SystemCollectionHookManager _systemCollectionHookManager = default!;
-    [Dependency] private readonly KsAdminMusicManager _adminMusicManager = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IComponentFactory _componentFactory = default!;
+    [Dependency] private LastRolledAntagManager _lastRolledAntagManager = default!;
+    [Dependency] private AnnouncementWebhookManager _announcementWebhookManager = default!;
+    [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;
+    [Dependency] private KsAdminMusicManager _adminMusicManager = default!;
 
     public override void PreInit()
     {

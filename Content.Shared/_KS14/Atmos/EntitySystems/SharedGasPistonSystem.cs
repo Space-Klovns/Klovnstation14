@@ -5,7 +5,7 @@ using Content.Shared.Wires;
 
 namespace Content.Shared._KS14.Atmos.EntitySystems;
 
-public abstract class SharedGasPistonSystem : EntitySystem
+public abstract partial class SharedGasPistonSystem : EntitySystem
 {
     [Dependency] protected readonly SharedPopupSystem PopupSystem = default!;
 

@@ -36,10 +36,10 @@ public sealed class StorageUIController : UIController, IOnSystemChanged<Storage
      * - StorageSystem handles any sim stuff around open windows.
      */
 
-    [Dependency] private readonly IConfigurationManager _configuration = default!;
-    [Dependency] private readonly IInputManager _input = default!;
-    [Dependency] private readonly IPlayerManager _player = default!;
-    [Dependency] private readonly CloseRecentWindowUIController _closeRecentWindowUIController = default!;
+    [Dependency] private IConfigurationManager _configuration = default!;
+    [Dependency] private IInputManager _input = default!;
+    [Dependency] private IPlayerManager _player = default!;
+    [Dependency] private CloseRecentWindowUIController _closeRecentWindowUIController = default!;
     [UISystemDependency] private readonly StorageSystem _storage = default!;
     [UISystemDependency] private readonly UserInterfaceSystem _ui = default!;
 
@@ -253,7 +253,7 @@ public sealed class StorageUIController : UIController, IOnSystemChanged<Storage
         }
         else if (args.Function == ContentKeyFunctions.SaveItemLocation)
         {
-            if (window.StorageEntity is not {} storage)
+            if (window.StorageEntity is not { } storage)
                 return;
 
             EntityManager.RaisePredictiveEvent(new StorageSaveItemLocationEvent(
@@ -423,7 +423,7 @@ public sealed class StorageUIController : UIController, IOnSystemChanged<Storage
             EntityManager);
 
         // I don't know why it divides the position by 2. Hope this helps! -emo
-        LayoutContainer.SetPosition(DraggingGhost, UIManager.MousePositionScaled.Position / 2 - offset );
+        LayoutContainer.SetPosition(DraggingGhost, UIManager.MousePositionScaled.Position / 2 - offset);
     }
 
     private void OnMenuEndDrag()

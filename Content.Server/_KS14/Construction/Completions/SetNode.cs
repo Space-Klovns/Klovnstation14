@@ -10,7 +10,7 @@ namespace Content.Server._KS14.Construction.Completions;
 [DataDefinition]
 public sealed partial class SetNode : IGraphAction
 {
-    [Dependency] private readonly ConstructionSystem _constructionSystem = default!;
+    [Dependency] private ConstructionSystem _constructionSystem = default!;
 
     /// <summary>
     ///     Node ID.

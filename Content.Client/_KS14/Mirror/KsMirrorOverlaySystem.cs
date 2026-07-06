@@ -4,11 +4,11 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Client._KS14.Mirror;
 
-public sealed class KsMirrorOverlaySystem : EntitySystem
+public sealed partial class KsMirrorOverlaySystem : EntitySystem
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IOverlayManager _overlayManager = default!;
-    [Dependency] private readonly SystemCollectionHookManager _systemCollectionHookManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IOverlayManager _overlayManager = default!;
+    [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;
 
     private static readonly ProtoId<ShaderPrototype> MirrorShaderId = "KsMirror";
     private static readonly ProtoId<ShaderPrototype> WhiteShaderId = "KsWhite";

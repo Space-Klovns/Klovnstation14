@@ -18,7 +18,7 @@ namespace Content.Client.Mapping;
 [GenerateTypedNameReferences]
 public sealed partial class MappingScreen : InGameScreen
 {
-    [Dependency] private readonly IPrototypeManager _prototype = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
 
     public DecalPlacementSystem DecalSystem = default!;
 
@@ -129,7 +129,7 @@ public sealed partial class MappingScreen : InGameScreen
             _picker.OpenToLeft();
             _picker.PaletteList.OnItemSelected += args =>
             {
-                var color = ((Color?) args.ItemList.GetSelected().First().Metadata)!.Value;
+                var color = ((Color?)args.ItemList.GetSelected().First().Metadata)!.Value;
                 OnDecalColorPicked(color);
             };
 

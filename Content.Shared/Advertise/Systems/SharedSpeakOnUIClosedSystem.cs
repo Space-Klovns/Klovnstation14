@@ -2,7 +2,7 @@ using SpeakOnUIClosedComponent = Content.Shared.Advertise.Components.SpeakOnUICl
 
 namespace Content.Shared.Advertise.Systems;
 
-public abstract class SharedSpeakOnUIClosedSystem : EntitySystem
+public abstract partial class SharedSpeakOnUIClosedSystem : EntitySystem
 {
     public bool TrySetFlag(Entity<SpeakOnUIClosedComponent?> entity, bool value = true)
     {

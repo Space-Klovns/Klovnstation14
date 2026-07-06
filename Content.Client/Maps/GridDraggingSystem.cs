@@ -13,12 +13,12 @@ namespace Content.Client.Maps;
 /// <inheritdoc />
 public sealed class GridDraggingSystem : SharedGridDraggingSystem
 {
-    [Dependency] private readonly IEyeManager _eyeManager = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly IInputManager _inputManager = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly InputSystem _inputSystem = default!;
-    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
+    [Dependency] private IEyeManager _eyeManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IInputManager _inputManager = default!;
+    [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private InputSystem _inputSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
 
     public bool Enabled { get; set; }
 
@@ -71,7 +71,7 @@ public sealed class GridDraggingSystem : SharedGridDraggingSystem
             RaiseNetworkEvent(new GridDragVelocityRequest()
             {
                 Grid = GetNetEntity(_dragging.Value),
-                LinearVelocity = distance.LengthSquared() > 0f ? (distance / (float) tickTime.TotalSeconds) * 0.25f : Vector2.Zero,
+                LinearVelocity = distance.LengthSquared() > 0f ? (distance / (float)tickTime.TotalSeconds) * 0.25f : Vector2.Zero,
             });
         }
 

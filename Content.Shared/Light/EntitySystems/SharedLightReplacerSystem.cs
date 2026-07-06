@@ -1,5 +1,5 @@
 namespace Content.Shared.Light.EntitySystems;
 
-public abstract class SharedLightReplacerSystem : EntitySystem
+public abstract partial class SharedLightReplacerSystem : EntitySystem
 {
 }

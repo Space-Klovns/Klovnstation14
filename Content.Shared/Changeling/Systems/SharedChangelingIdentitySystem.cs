@@ -9,13 +9,13 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Shared.Changeling.Systems;
 
-public abstract class SharedChangelingIdentitySystem : EntitySystem
+public abstract partial class SharedChangelingIdentitySystem : EntitySystem
 {
-    [Dependency] private readonly INetManager _net = default!;
-    [Dependency] private readonly MetaDataSystem _metaSystem = default!;
-    [Dependency] private readonly SharedCloningSystem _cloningSystem = default!;
-    [Dependency] private readonly SharedMapSystem _map = default!;
-    [Dependency] private readonly SharedPvsOverrideSystem _pvsOverrideSystem = default!;
+    [Dependency] private INetManager _net = default!;
+    [Dependency] private MetaDataSystem _metaSystem = default!;
+    [Dependency] private SharedCloningSystem _cloningSystem = default!;
+    [Dependency] private SharedMapSystem _map = default!;
+    [Dependency] private SharedPvsOverrideSystem _pvsOverrideSystem = default!;
 
     public MapId? PausedMapId;
 

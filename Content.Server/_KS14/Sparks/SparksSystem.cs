@@ -7,8 +7,8 @@ namespace Content.Server._KS14.Sparks;
 
 public sealed class SparksSystem : SharedSparksSystem
 {
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
-    [Dependency] private readonly AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
+    [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
 
     public override void ExposeSpark(EntityCoordinates coordinates, float exposedTemperature, float exposedVolume)
     {

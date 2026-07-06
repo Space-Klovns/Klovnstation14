@@ -6,13 +6,13 @@ using Robust.Shared.Network;
 
 namespace Content.Shared._KS14.Atmos.Piping.Unary;
 
-public sealed class GasCanisterOverlayDataSystem : EntitySystem
+public sealed partial class GasCanisterOverlayDataSystem : EntitySystem
 {
-    [Dependency] private readonly INetManager _netManager = default!;
-    [Dependency] private readonly SharedAtmosphereSystem _atmosphereSystem = default!;
-    [Dependency] private readonly SharedGasTileOverlaySystem _gasTileOverlaySystem = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private SharedAtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private SharedGasTileOverlaySystem _gasTileOverlaySystem = default!;
 
-    [Dependency] private readonly EntityQuery<GasCanisterComponent> _canisterQuery = default!;
+    [Dependency] private EntityQuery<GasCanisterComponent> _canisterQuery = default!;
 
     public override void Initialize()
     {

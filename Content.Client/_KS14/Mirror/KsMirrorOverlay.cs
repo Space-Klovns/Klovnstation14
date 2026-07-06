@@ -25,22 +25,22 @@ namespace Content.Client._KS14.Mirror;
     СПАСИ МЕНЯ
 */
 
-public sealed class KsMirrorOverlay : Overlay
+public sealed partial class KsMirrorOverlay : Overlay
 {
     private readonly ShaderInstance _mirrorShader;
     private readonly ShaderInstance _whiteShader;
     private readonly ShaderInstance _stencilMaskShader;
     private readonly ShaderInstance _stencilDrawShader;
 
-    [Dependency] private readonly IClyde _clyde = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly EntityManager _entityManager = default!;
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
-    [Dependency] private readonly SpriteSystem _spriteSystem = default!;
-    [Dependency] private readonly EntityLookupSystem _entityLookupSystem = default!;
+    [Dependency] private IClyde _clyde = default!;
+    [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private EntityManager _entityManager = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
+    [Dependency] private SpriteSystem _spriteSystem = default!;
+    [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
 
-    [Dependency] private readonly EntityQuery<KsMirrorReflectorComponent> _reflectorQuery = default!;
-    [Dependency] private readonly EntityQuery<SpriteComponent> _spriteQuery = default!;
+    [Dependency] private EntityQuery<KsMirrorReflectorComponent> _reflectorQuery = default!;
+    [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpaceEntities;
 

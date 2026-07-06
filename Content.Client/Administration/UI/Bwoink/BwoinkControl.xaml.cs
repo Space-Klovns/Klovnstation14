@@ -22,10 +22,10 @@ namespace Content.Client.Administration.UI.Bwoink
     [GenerateTypedNameReferences]
     public sealed partial class BwoinkControl : Control
     {
-        [Dependency] private readonly IClientAdminManager _adminManager = default!;
-        [Dependency] private readonly IClientConsoleHost _console = default!;
-        [Dependency] private readonly IUserInterfaceManager _ui = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private IClientAdminManager _adminManager = default!;
+        [Dependency] private IClientConsoleHost _console = default!;
+        [Dependency] private IUserInterfaceManager _ui = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
         public AdminAHelpUIHandler AHelpHelper = default!;
 
         private PlayerInfo? _currentPlayer;
@@ -69,7 +69,7 @@ namespace Content.Client.Administration.UI.Bwoink
                 if (AHelpHelper.TryGetChannel(info.SessionId, out var panel) && panel.Unread > 0)
                 {
                     if (panel.Unread < 11)
-                        sb.Append(new Rune('➀' + (panel.Unread-1)));
+                        sb.Append(new Rune('➀' + (panel.Unread - 1)));
                     else
                         sb.Append(new Rune(0x2639)); // ☹
                     sb.Append(' ');
@@ -249,14 +249,14 @@ namespace Content.Client.Administration.UI.Bwoink
 
         private string FormatTabTitle(ItemList.Item li, PlayerInfo? pl = default)
         {
-            pl ??= (PlayerInfo) li.Metadata!;
+            pl ??= (PlayerInfo)li.Metadata!;
             var sb = new StringBuilder();
             sb.Append(pl.Connected ? '●' : '○');
             sb.Append(' ');
             if (AHelpHelper.TryGetChannel(pl.SessionId, out var panel) && panel.Unread > 0)
             {
                 if (panel.Unread < 11)
-                    sb.Append(new Rune('➀' + (panel.Unread-1)));
+                    sb.Append(new Rune('➀' + (panel.Unread - 1)));
                 else
                     sb.Append(new Rune(0x2639)); // ☹
                 sb.Append(' ');

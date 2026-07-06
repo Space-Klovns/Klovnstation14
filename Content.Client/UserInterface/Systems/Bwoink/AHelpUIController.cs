@@ -31,14 +31,14 @@ using Robust.Shared.Utility;
 namespace Content.Client.UserInterface.Systems.Bwoink;
 
 [UsedImplicitly]
-public sealed class AHelpUIController: UIController, IOnSystemChanged<BwoinkSystem>, IOnStateChanged<GameplayState>, IOnStateChanged<LobbyState>
+public sealed class AHelpUIController : UIController, IOnSystemChanged<BwoinkSystem>, IOnStateChanged<GameplayState>, IOnStateChanged<LobbyState>
 {
-    [Dependency] private readonly IClientAdminManager _adminManager = default!;
-    [Dependency] private readonly IConfigurationManager _config = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly IClyde _clyde = default!;
-    [Dependency] private readonly IUserInterfaceManager _uiManager = default!;
-    [Dependency] private readonly IInputManager _input = default!;
+    [Dependency] private IClientAdminManager _adminManager = default!;
+    [Dependency] private IConfigurationManager _config = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IClyde _clyde = default!;
+    [Dependency] private IUserInterfaceManager _uiManager = default!;
+    [Dependency] private IInputManager _input = default!;
     [UISystemDependency] private readonly AudioSystem _audio = default!;
 
     private BwoinkSystem? _bwoinkSystem;
@@ -180,7 +180,7 @@ public sealed class AHelpUIController: UIController, IOnSystemChanged<BwoinkSyst
         UIHelper.SendMessageAction = (userId, textMessage, playSound, adminOnly) => _bwoinkSystem?.Send(userId, textMessage, playSound, adminOnly);
         UIHelper.InputTextChanged += (channel, text) => _bwoinkSystem?.SendInputTextUpdated(channel, text.Length > 0);
         UIHelper.OnClose += () => { SetAHelpPressed(false); };
-        UIHelper.OnOpen +=  () => { SetAHelpPressed(true); };
+        UIHelper.OnOpen += () => { SetAHelpPressed(true); };
         SetAHelpPressed(UIHelper.IsOpen);
     }
 
@@ -568,9 +568,9 @@ public sealed class UserAHelpUIHandler : IAHelpUIHandler
         _chatPanel.RelayedToDiscordLabel.Visible = relayActive;
         _window = new DefaultWindow()
         {
-            TitleClass="windowTitleAlert",
-            HeaderClass="windowHeaderAlert",
-            Title=Loc.GetString("bwoink-user-title"),
+            TitleClass = "windowTitleAlert",
+            HeaderClass = "windowHeaderAlert",
+            Title = Loc.GetString("bwoink-user-title"),
             MinSize = new Vector2(500, 300),
         };
         _window.OnClose += () => { OnClose?.Invoke(); };
@@ -578,7 +578,7 @@ public sealed class UserAHelpUIHandler : IAHelpUIHandler
         _window.Contents.AddChild(_chatPanel);
 
         var introText = Loc.GetString("bwoink-system-introductory-message");
-        var introMessage = new SharedBwoinkSystem.BwoinkTextMessage( _ownerId, SharedBwoinkSystem.SystemUserId, introText);
+        var introMessage = new SharedBwoinkSystem.BwoinkTextMessage(_ownerId, SharedBwoinkSystem.SystemUserId, introText);
         Receive(introMessage);
     }
 

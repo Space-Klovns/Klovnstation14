@@ -10,7 +10,7 @@ namespace Content.Shared.Xenoarchaeology.Artifact.XAT;
 /// </summary>
 public sealed class XATTimerSystem : BaseQueryUpdateXATSystem<XATTimerComponent>
 {
-    [Dependency] private readonly IRobustRandom _robustRandom = default!;
+    [Dependency] private IRobustRandom _robustRandom = default!;
 
     /// <inheritdoc />
     public override void Initialize()
@@ -57,7 +57,7 @@ public sealed class XATTimerSystem : BaseQueryUpdateXATSystem<XATTimerComponent>
 
         args.PushMarkup(
             Loc.GetString("xenoarch-trigger-examine-timer",
-            ("time", MathF.Ceiling((float) (node.Comp1.NextActivation - Timing.CurTime).TotalSeconds)))
+            ("time", MathF.Ceiling((float)(node.Comp1.NextActivation - Timing.CurTime).TotalSeconds)))
         );
     }
 

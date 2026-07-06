@@ -26,18 +26,18 @@ namespace Content.Server.Administration.Managers;
 
 public sealed partial class BanManager : IBanManager, IPostInjectInit
 {
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Dependency] private readonly IChatManager _chat = default!;
-    [Dependency] private readonly IServerDbManager _db = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly ILocalizationManager _localizationManager = default!;
-    [Dependency] private readonly ILogManager _logManager = default!;
-    [Dependency] private readonly INetManager _netManager = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IEntitySystemManager _systems = default!;
-    [Dependency] private readonly ITaskManager _taskManager = default!;
-    [Dependency] private readonly UserDbDataManager _userDbData = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private IChatManager _chat = default!;
+    [Dependency] private IServerDbManager _db = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private ILocalizationManager _localizationManager = default!;
+    [Dependency] private ILogManager _logManager = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IEntitySystemManager _systems = default!;
+    [Dependency] private ITaskManager _taskManager = default!;
+    [Dependency] private UserDbDataManager _userDbData = default!;
 
     private ISawmill _sawmill = default!;
 
@@ -274,7 +274,7 @@ public sealed partial class BanManager : IBanManager, IPostInjectInit
         ImmutableArray<int> roundIds;
         if (banInfo.RoundIds.Count > 0)
         {
-            roundIds = [..banInfo.RoundIds];
+            roundIds = [.. banInfo.RoundIds];
         }
         else if (_systems.TryGetEntitySystem<GameTicker>(out var ticker) && ticker.RoundId != 0)
         {
@@ -288,9 +288,9 @@ public sealed partial class BanManager : IBanManager, IPostInjectInit
         return (new BanDef(
             null,
             type,
-            [..banInfo.Users.Select(u => u.UserId)],
-            [..banInfo.AddressRanges],
-            [..banInfo.HWIds],
+            [.. banInfo.Users.Select(u => u.UserId)],
+            [.. banInfo.AddressRanges],
+            [.. banInfo.HWIds],
             DateTimeOffset.Now,
             expires,
             roundIds,

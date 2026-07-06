@@ -7,12 +7,12 @@ using Robust.Shared.Reflection;
 
 namespace Content.Client._KS14.DirectionalSpriteManipulation;
 
-public sealed class DirectionalSpriteManipulationSystem : EntitySystem
+public sealed partial class DirectionalSpriteManipulationSystem : EntitySystem
 {
-    [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-    [Dependency] private readonly IEyeManager _eyeManager = default!;
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
-    [Dependency] private readonly SpriteSystem _spriteSystem = default!;
+    [Dependency] private IReflectionManager _reflectionManager = default!;
+    [Dependency] private IEyeManager _eyeManager = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
+    [Dependency] private SpriteSystem _spriteSystem = default!;
 
     public override void Initialize()
     {

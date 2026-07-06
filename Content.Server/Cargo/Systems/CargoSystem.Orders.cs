@@ -24,9 +24,9 @@ namespace Content.Server.Cargo.Systems
 {
     public sealed partial class CargoSystem
     {
-        [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
-        [Dependency] private readonly EmagSystem _emag = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private SharedTransformSystem _transformSystem = default!;
+        [Dependency] private EmagSystem _emag = default!;
+        [Dependency] private IGameTiming _timing = default!;
 
         private void InitializeConsole()
         {
@@ -52,7 +52,7 @@ namespace Content.Server.Cargo.Systems
                 return;
 
             _audio.PlayPvs(ApproveSound, uid);
-            UpdateBankAccount((stationUid.Value, bank), (int) price, component.Account);
+            UpdateBankAccount((stationUid.Value, bank), (int)price, component.Account);
             QueueDel(args.Used);
             args.Handled = true;
         }
@@ -132,7 +132,7 @@ namespace Content.Server.Cargo.Systems
                     continue;
                 bank.NextIncomeTime += bank.IncomeDelay;
 
-                var balanceToAdd = (int) Math.Round(bank.IncreasePerSecond * bank.IncomeDelay.TotalSeconds);
+                var balanceToAdd = (int)Math.Round(bank.IncreasePerSecond * bank.IncomeDelay.TotalSeconds);
                 UpdateBankAccount((uid, bank), balanceToAdd, bank.RevenueDistribution);
             }
         }

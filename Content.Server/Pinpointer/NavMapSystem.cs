@@ -21,13 +21,13 @@ namespace Content.Server.Pinpointer;
 /// </summary>
 public sealed partial class NavMapSystem : SharedNavMapSystem
 {
-    [Dependency] private readonly IAdminLogManager _adminLog = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
-    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly TurfSystem _turfSystem = default!;
+    [Dependency] private IAdminLogManager _adminLog = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private TurfSystem _turfSystem = default!;
 
     public const float CloseDistance = 15f;
     public const float FarDistance = 30f;
@@ -286,7 +286,7 @@ public sealed partial class NavMapSystem : SharedNavMapSystem
                 continue;
 
             var directions = (int)airtight.AirBlockedDirection;
-            tileData |= directions << (int) category;
+            tileData |= directions << (int)category;
         }
 
         // Remove walls that intersect with doors (unless they can both physically fit on the same tile)
@@ -294,7 +294,7 @@ public sealed partial class NavMapSystem : SharedNavMapSystem
         // Is this for blast-doors or something?
 
         // Shift airlock bits over to the wall bits
-        var shiftedAirlockBits = (tileData & AirlockMask) >> ((int) NavMapChunkType.Airlock - (int) NavMapChunkType.Wall);
+        var shiftedAirlockBits = (tileData & AirlockMask) >> ((int)NavMapChunkType.Airlock - (int)NavMapChunkType.Wall);
 
         // And then mask door bits
         tileData &= ~shiftedAirlockBits;

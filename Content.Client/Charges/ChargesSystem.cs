@@ -7,7 +7,7 @@ namespace Content.Client.Charges;
 
 public sealed class ChargesSystem : SharedChargesSystem
 {
-    [Dependency] private readonly ActionsSystem _actions = default!;
+    [Dependency] private ActionsSystem _actions = default!;
 
     private Dictionary<EntityUid, int> _lastCharges = new();
     private Dictionary<EntityUid, int> _tempLastCharges = new();
@@ -25,7 +25,7 @@ public sealed class ChargesSystem : SharedChargesSystem
 
         while (query.MoveNext(out var uid, out var recharge, out var charges))
         {
-            if (_actions.GetAction(uid, false) is not {} action)
+            if (_actions.GetAction(uid, false) is not { } action)
                 continue;
 
             var current = GetCurrentCharges((uid, charges, recharge));

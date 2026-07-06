@@ -9,8 +9,8 @@ namespace Content.Server._KS14.ZLevel;
 [AdminCommand(AdminFlags.Debug)]
 public sealed class KsZLevelAddCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly KsZLevelSystem _zLevelSystem = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private KsZLevelSystem _zLevelSystem = default!;
 
     public override string Command => "zlevel_add";
 

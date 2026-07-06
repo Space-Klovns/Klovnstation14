@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace Content.Shared.Pointing;
 
-public abstract class SharedPointingSystem : EntitySystem
+public abstract partial class SharedPointingSystem : EntitySystem
 {
     protected readonly TimeSpan PointDuration = TimeSpan.FromSeconds(4);
     protected readonly float PointKeyTimeMove = 0.1f;

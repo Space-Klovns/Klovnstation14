@@ -12,11 +12,11 @@ namespace Content.Server._KS14.SupplyPod;
 /// </summary>
 public sealed class SupplyPodSystem : SharedSupplyPodSystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly IRobustRandom _robustRandom = default!;
-    [Dependency] private readonly AudioSystem _audioSystem = default!;
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
-    [Dependency] private readonly AppearanceSystem _appearanceSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IRobustRandom _robustRandom = default!;
+    [Dependency] private AudioSystem _audioSystem = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
+    [Dependency] private AppearanceSystem _appearanceSystem = default!;
 
     public override void Initialize()
     {

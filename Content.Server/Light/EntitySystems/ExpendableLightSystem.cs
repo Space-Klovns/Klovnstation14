@@ -20,15 +20,15 @@ using Robust.Shared.Utility;
 namespace Content.Server.Light.EntitySystems
 {
     [UsedImplicitly]
-    public sealed class ExpendableLightSystem : EntitySystem
+    public sealed partial class ExpendableLightSystem : EntitySystem
     {
-        [Dependency] private readonly SharedItemSystem _item = default!;
-        [Dependency] private readonly ClothingSystem _clothing = default!;
-        [Dependency] private readonly TagSystem _tagSystem = default!;
-        [Dependency] private readonly SharedAudioSystem _audio = default!;
-        [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-        [Dependency] private readonly StackSystem _stackSystem = default!;
-        [Dependency] private readonly NameModifierSystem _nameModifier = default!;
+        [Dependency] private SharedItemSystem _item = default!;
+        [Dependency] private ClothingSystem _clothing = default!;
+        [Dependency] private TagSystem _tagSystem = default!;
+        [Dependency] private SharedAudioSystem _audio = default!;
+        [Dependency] private SharedAppearanceSystem _appearance = default!;
+        [Dependency] private StackSystem _stackSystem = default!;
+        [Dependency] private NameModifierSystem _nameModifier = default!;
 
         private static readonly ProtoId<TagPrototype> TrashTag = "Trash";
 
@@ -234,7 +234,7 @@ namespace Content.Server.Light.EntitySystems
             ActivationVerb verb = new()
             {
                 Text = Loc.GetString("expendable-light-start-verb"),
-                Icon = new SpriteSpecifier.Texture(new ("/Textures/Interface/VerbIcons/light.svg.192dpi.png")),
+                Icon = new SpriteSpecifier.Texture(new("/Textures/Interface/VerbIcons/light.svg.192dpi.png")),
                 Act = () => TryActivate(ent)
             };
             args.Verbs.Add(verb);

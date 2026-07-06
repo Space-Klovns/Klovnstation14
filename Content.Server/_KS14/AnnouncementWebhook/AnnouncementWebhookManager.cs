@@ -20,8 +20,8 @@ namespace Content.Server._KS14.AnnouncementWebhook;
 /// </summary>
 public sealed class AnnouncementWebhookManager
 {
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-    [Dependency] private readonly IChatManager _chatManager = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IChatManager _chatManager = default!;
 
     private ConcurrentQueue<string> _pendingAnnouncements = new();
 

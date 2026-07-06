@@ -5,7 +5,7 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared.PneumaticCannon;
 
-public abstract class SharedPneumaticCannonSystem : EntitySystem
+public abstract partial class SharedPneumaticCannonSystem : EntitySystem
 {
     [Dependency] protected readonly SharedContainerSystem Container = default!;
     [Dependency] protected readonly SharedPopupSystem Popup = default!;

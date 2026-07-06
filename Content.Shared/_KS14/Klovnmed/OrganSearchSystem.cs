@@ -16,9 +16,9 @@ namespace Content.Shared._KS14.Klovnmed;
 ///         all organs will only either be contained in either a Body,
 ///         or another organ.
 /// </summary>
-public sealed class OrganSearchSystem : EntitySystem
+public sealed partial class OrganSearchSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
 
     public static BodyPartType GetPartType(ProtoId<OrganCategoryPrototype>? protoId)
     {

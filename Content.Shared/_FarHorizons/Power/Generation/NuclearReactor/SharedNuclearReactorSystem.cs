@@ -9,14 +9,14 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared._FarHorizons.Power.Generation.FissionGenerator;
 
-public abstract class SharedNuclearReactorSystem : EntitySystem
+public abstract partial class SharedNuclearReactorSystem : EntitySystem
 {
     [Dependency] protected readonly SharedAudioSystem AudioSystem = default!;
     [Dependency] protected readonly SharedAppearanceSystem AppearanceSystem = default!;
     [Dependency] protected readonly IGameTiming GameTiming = default!;
-    [Dependency] private readonly INetManager _netManager = default!;
-    [Dependency] private readonly ItemSlotsSystem _slotsSystem = default!;
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private ItemSlotsSystem _slotsSystem = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
 
     public override void Initialize()
     {

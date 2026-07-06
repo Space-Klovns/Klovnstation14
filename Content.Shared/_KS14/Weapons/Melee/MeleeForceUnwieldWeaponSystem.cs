@@ -12,11 +12,11 @@ namespace Content.Shared._KS14.Weapons.Melee;
 /// Put the component on a weapon and itll be forcibly unwielded when hit on melee.
 /// Target audience: cumbersome weapons like rifles
 /// </summary>
-public sealed class MeleeForceUnwieldWeaponSystem : EntitySystem
+public sealed partial class MeleeForceUnwieldWeaponSystem : EntitySystem
 {
-    [Dependency] private readonly SharedWieldableSystem _wieldable = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
+    [Dependency] private SharedWieldableSystem _wieldable = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private IRobustRandom _random = default!;
 
     public override void Initialize()
     {

@@ -7,9 +7,9 @@ namespace Content.Server._KS14.NPC.Systems;
 
 public sealed class NpcSensorSystem : SharedNpcSensorSystem
 {
-    [Dependency] private readonly EntityLookupSystem _lookupSystem = default!;
+    [Dependency] private EntityLookupSystem _lookupSystem = default!;
 
-    [Dependency] private readonly EntityQuery<NpcSensorsComponent> _sensorsQuery = default!;
+    [Dependency] private EntityQuery<NpcSensorsComponent> _sensorsQuery = default!;
 
     private const string DisturbanceCoordinatesSensorKey = "__Sensor__Disturbance.TargetCoordinates";
 

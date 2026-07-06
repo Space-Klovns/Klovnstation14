@@ -8,7 +8,7 @@ namespace Content.Shared.Defusable;
 /// <remarks>
 /// Most of the logic is in the server
 /// </remarks>
-public abstract class SharedDefusableSystem : EntitySystem
+public abstract partial class SharedDefusableSystem : EntitySystem
 {
 
 }

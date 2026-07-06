@@ -4,10 +4,10 @@ using Robust.Shared.Physics.Events;
 
 namespace Content.Shared._KS14.FactionCollision;
 
-public sealed class KsFactionCollisionSystem : EntitySystem
+public sealed partial class KsFactionCollisionSystem : EntitySystem
 {
-    [Dependency] private readonly EntityQuery<NpcFactionMemberComponent> _factionMemberQuery = default!;
-    [Dependency] private readonly EntityQuery<KsFactionCollisionShooterComponent> _factionCollisionShooterQuery = default!;
+    [Dependency] private EntityQuery<NpcFactionMemberComponent> _factionMemberQuery = default!;
+    [Dependency] private EntityQuery<KsFactionCollisionShooterComponent> _factionCollisionShooterQuery = default!;
 
     public override void Initialize()
     {

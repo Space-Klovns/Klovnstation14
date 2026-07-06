@@ -18,8 +18,8 @@ namespace Content.Client.UserInterface.Systems.Atmos.GasTank;
 public sealed class GasTankWindow
     : BaseWindow
 {
-    [Dependency] private readonly IEntityManager _entManager = default!;
-    [Dependency] private readonly IResourceCache _cache = default!;
+    [Dependency] private IEntityManager _entManager = default!;
+    [Dependency] private IResourceCache _cache = default!;
 
     private readonly RichTextLabel _lblPressure;
     private readonly FloatSpinBox _spbPressure;
@@ -95,7 +95,7 @@ public sealed class GasTankWindow
         _topLabel = new Label
         {
             FontOverride = font,
-           StyleClasses = { StyleClass.LabelKeyText },
+            StyleClasses = { StyleClass.LabelKeyText },
             VerticalAlignment = VAlignment.Center,
             HorizontalExpand = true,
             HorizontalAlignment = HAlignment.Left,
@@ -149,7 +149,7 @@ public sealed class GasTankWindow
 
         //internals
         _lblInternals = new RichTextLabel
-            { MinSize = new Vector2(200, 0), VerticalAlignment = VAlignment.Center };
+        { MinSize = new Vector2(200, 0), VerticalAlignment = VAlignment.Center };
         _btnInternals = new Button { Text = Loc.GetString("gas-tank-window-internals-toggle-button") };
 
         contentContainer.AddChild(

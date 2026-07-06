@@ -4,7 +4,7 @@ using Content.Shared.Speech;
 
 namespace Content.Server.Speech.EntitySystems
 {
-    public sealed class SpanishAccentSystem : EntitySystem
+    public sealed partial class SpanishAccentSystem : EntitySystem
     {
         public override void Initialize()
         {
@@ -58,7 +58,8 @@ namespace Content.Server.Speech.EntitySystems
                 if (toInsert.Length == 0)
                 {
                     msg.Append(s);
-                } else
+                }
+                else
                 {
                     msg.Append(s.Insert(s.Length - s.TrimStart().Length, toInsert.ToString()));
                 }

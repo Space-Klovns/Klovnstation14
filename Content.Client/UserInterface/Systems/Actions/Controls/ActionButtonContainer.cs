@@ -11,8 +11,8 @@ namespace Content.Client.UserInterface.Systems.Actions.Controls;
 [Virtual]
 public class ActionButtonContainer : GridContainer
 {
-    [Dependency] private readonly IEntityManager _entity = default!;
-    [Dependency] private readonly IInputManager _input = default!;
+    [Dependency] private IEntityManager _entity = default!;
+    [Dependency] private IInputManager _input = default!;
 
     public event Action<GUIBoundKeyEventArgs, ActionButton>? ActionPressed;
     public event Action<GUIBoundKeyEventArgs, ActionButton>? ActionUnpressed;
@@ -25,7 +25,7 @@ public class ActionButtonContainer : GridContainer
 
     public ActionButton this[int index]
     {
-        get => (ActionButton) GetChild(index);
+        get => (ActionButton)GetChild(index);
     }
 
     public void SetActionData(ActionsSystem system, params EntityUid?[] actionTypes)
@@ -42,7 +42,7 @@ public class ActionButtonContainer : GridContainer
 
             if (!actionTypes.TryGetValue(i, out var action))
                 action = null;
-            ((ActionButton) GetChild(i)).UpdateData(action, system);
+            ((ActionButton)GetChild(i)).UpdateData(action, system);
         }
 
         for (var i = ChildCount - 1; i >= uniqueCount; i--)
@@ -71,7 +71,7 @@ public class ActionButtonContainer : GridContainer
     {
         foreach (var button in Children)
         {
-            ((ActionButton) button).ClearData();
+            ((ActionButton)button).ClearData();
         }
     }
 

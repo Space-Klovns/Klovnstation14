@@ -6,7 +6,7 @@ namespace Content.Server._KS14.FpvDrone;
 
 public sealed class FpvDroneSystem : SharedFpvDroneSystem
 {
-    [Dependency] private readonly SurveillanceCameraMonitorSystem _surveillanceMonitorSystem = default!;
+    [Dependency] private SurveillanceCameraMonitorSystem _surveillanceMonitorSystem = default!;
 
     protected override void UpdateFpvSurveillance(Entity<FpvDroneComponent> entity)
     {

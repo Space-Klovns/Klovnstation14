@@ -23,9 +23,9 @@ public sealed partial class AnalysisConsoleMenu : FancyWindow
 {
     private static readonly TimeSpan ExtractInfoDisplayForDuration = TimeSpan.FromSeconds(3);
 
-    [Dependency] private readonly IEntityManager _ent = default!;
-    [Dependency] private readonly IResourceCache _resCache = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private IEntityManager _ent = default!;
+    [Dependency] private IResourceCache _resCache = default!;
+    [Dependency] private IGameTiming _timing = default!;
 
     private readonly ArtifactAnalyzerSystem _artifactAnalyzer;
     private readonly XenoArtifactSystem _xenoArtifact;
@@ -188,7 +188,7 @@ public sealed partial class AnalysisConsoleMenu : FancyWindow
 
         LockedValueLabel.SetMarkup(Loc.GetString("analysis-console-info-locked-value", ("state", lockedState)));
 
-        var percent = (float) node.Value.Comp.Durability / node.Value.Comp.MaxDurability;
+        var percent = (float)node.Value.Comp.Durability / node.Value.Comp.MaxDurability;
         var color = percent switch
         {
             >= 0.75f => Color.Lime,
@@ -230,4 +230,3 @@ public sealed partial class AnalysisConsoleMenu : FancyWindow
             ("class", Loc.GetString($"artifact-node-class-{Math.Min(6, predecessorNodes.Count + 1)}"))));
     }
 }
-

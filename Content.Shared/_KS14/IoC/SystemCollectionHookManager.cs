@@ -6,8 +6,8 @@ namespace Content.Shared._KS14.IoC;
 
 public sealed class SystemCollectionHookManager
 {
-    [Dependency] private readonly INetManager _netManager = default!;
-    [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private IEntitySystemManager _entitySystemManager = default!;
     private readonly ISawmill _sawmill = default!;
 
     public SystemCollectionHookManager()

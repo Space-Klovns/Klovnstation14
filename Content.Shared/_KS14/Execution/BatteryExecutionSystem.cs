@@ -10,11 +10,11 @@ namespace Content.Server._KS14.Execution;
 /// <summary>
 /// Server-side handler for GunExecutedEvent on battery-powered weapons.
 /// </summary>
-public sealed class BatteryExecutionSystem : EntitySystem
+public sealed partial class BatteryExecutionSystem : EntitySystem
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly SharedBatterySystem _batterySystem = default!;
-    [Dependency] private readonly IComponentFactory _componentFactory = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private SharedBatterySystem _batterySystem = default!;
+    [Dependency] private IComponentFactory _componentFactory = default!;
 
     public override void Initialize()
     {

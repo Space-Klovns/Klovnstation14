@@ -31,17 +31,17 @@ namespace Content.Shared.Chemistry.EntitySystems;
 /// <seealso cref="InjectorModePrototype"/>
 public sealed partial class InjectorSystem : EntitySystem
 {
-    [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly SharedForensicsSystem _forensics = default!;
-    [Dependency] private readonly SharedDoAfterSystem _doAfter = default!;
-    [Dependency] private readonly OpenableSystem _openable = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly ReactiveSystem _reactiveSystem = default!;
-    [Dependency] private readonly SharedSolutionContainerSystem _solutionContainer = default!;
-    [Dependency] private readonly StandingStateSystem _standingState = default!;
-    [Dependency] private readonly UseDelaySystem _useDelay = default!;
+    [Dependency] private ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedForensicsSystem _forensics = default!;
+    [Dependency] private SharedDoAfterSystem _doAfter = default!;
+    [Dependency] private OpenableSystem _openable = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private ReactiveSystem _reactiveSystem = default!;
+    [Dependency] private SharedSolutionContainerSystem _solutionContainer = default!;
+    [Dependency] private StandingStateSystem _standingState = default!;
+    [Dependency] private UseDelaySystem _useDelay = default!;
 
     public override void Initialize()
     {
@@ -392,45 +392,45 @@ public sealed partial class InjectorSystem : EntitySystem
         {
             // Handle injecting/drawing for solutions
             case InjectorBehavior.Inject:
-            {
-                if (isOpenOrIgnored && _solutionContainer.TryGetInjectableSolution(target, out var injectableSolution, out _))
-                    return TryInject(injector, user, target, injectableSolution.Value, false);
+                {
+                    if (isOpenOrIgnored && _solutionContainer.TryGetInjectableSolution(target, out var injectableSolution, out _))
+                        return TryInject(injector, user, target, injectableSolution.Value, false);
 
-                if (isOpenOrIgnored && _solutionContainer.TryGetRefillableSolution(target, out var refillableSolution, out _))
-                    return TryInject(injector, user, target, refillableSolution.Value, true);
-                break;
-            }
+                    if (isOpenOrIgnored && _solutionContainer.TryGetRefillableSolution(target, out var refillableSolution, out _))
+                        return TryInject(injector, user, target, refillableSolution.Value, true);
+                    break;
+                }
             case InjectorBehavior.Draw:
-            {
-                // Draw from a bloodstream if the target has that
-                if (TryComp<BloodstreamComponent>(target, out var stream) &&
-                    _solutionContainer.ResolveSolution(target, stream.BloodSolutionName, ref stream.BloodSolution))
                 {
-                    return TryDraw(injector, user, (target, stream), stream.BloodSolution.Value);
+                    // Draw from a bloodstream if the target has that
+                    if (TryComp<BloodstreamComponent>(target, out var stream) &&
+                        _solutionContainer.ResolveSolution(target, stream.BloodSolutionName, ref stream.BloodSolution))
+                    {
+                        return TryDraw(injector, user, (target, stream), stream.BloodSolution.Value);
+                    }
+
+                    // Draw from an object (food, beaker, etc)
+                    if (isOpenOrIgnored && _solutionContainer.TryGetDrawableSolution(target, out var drawableSolution, out _))
+                        return TryDraw(injector, user, target, drawableSolution.Value);
+
+                    msg = target == user ? "injector-component-cannot-draw-message-self" : "injector-component-cannot-draw-message";
+                    _popup.PopupClient(Loc.GetString(msg, ("target", Identity.Entity(target, EntityManager))), injector, user);
+                    break;
                 }
-
-                // Draw from an object (food, beaker, etc)
-                if (isOpenOrIgnored && _solutionContainer.TryGetDrawableSolution(target, out var drawableSolution, out _))
-                    return TryDraw(injector, user, target, drawableSolution.Value);
-
-                msg = target == user ? "injector-component-cannot-draw-message-self" : "injector-component-cannot-draw-message";
-                _popup.PopupClient(Loc.GetString(msg, ("target", Identity.Entity(target, EntityManager))), injector, user);
-                break;
-            }
             case InjectorBehavior.Dynamic:
-            {
-                // If it's a mob, inject. We're using injectableSolution so I don't have to code a sole method for injecting into bloodstreams.
-                if (HasComp<BloodstreamComponent>(target)
-                    && _solutionContainer.TryGetInjectableSolution(target, out var injectableSolution, out _))
                 {
-                    return TryInject(injector, user, target, injectableSolution.Value, false);
-                }
+                    // If it's a mob, inject. We're using injectableSolution so I don't have to code a sole method for injecting into bloodstreams.
+                    if (HasComp<BloodstreamComponent>(target)
+                        && _solutionContainer.TryGetInjectableSolution(target, out var injectableSolution, out _))
+                    {
+                        return TryInject(injector, user, target, injectableSolution.Value, false);
+                    }
 
-                // Draw from an object (food, beaker, etc.)
-                if (isOpenOrIgnored && _solutionContainer.TryGetDrawableSolution(target, out var drawableSolution, out _))
-                    return TryDraw(injector, user, target, drawableSolution.Value);
-                break;
-            }
+                    // Draw from an object (food, beaker, etc.)
+                    if (isOpenOrIgnored && _solutionContainer.TryGetDrawableSolution(target, out var drawableSolution, out _))
+                        return TryDraw(injector, user, target, drawableSolution.Value);
+                    break;
+                }
             default:
                 throw new ArgumentOutOfRangeException();
         }

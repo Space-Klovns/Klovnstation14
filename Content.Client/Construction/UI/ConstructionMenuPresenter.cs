@@ -23,14 +23,14 @@ namespace Content.Client.Construction.UI
     /// </summary>
     internal sealed class ConstructionMenuPresenter : IDisposable
     {
-        [Dependency] private readonly EntityManager _entManager = default!;
-        [Dependency] private readonly IEntitySystemManager _systemManager = default!;
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-        [Dependency] private readonly IPlacementManager _placementManager = default!;
-        [Dependency] private readonly IUserInterfaceManager _uiManager = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IClientPreferencesManager _preferencesManager = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private EntityManager _entManager = default!;
+        [Dependency] private IEntitySystemManager _systemManager = default!;
+        [Dependency] private IPrototypeManager _prototypeManager = default!;
+        [Dependency] private IPlacementManager _placementManager = default!;
+        [Dependency] private IUserInterfaceManager _uiManager = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IClientPreferencesManager _preferencesManager = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
         private readonly SpriteSystem _spriteSystem;
         private readonly ISawmill _sawmill;
@@ -436,10 +436,10 @@ namespace Content.Client.Construction.UI
                 }
 
                 _placementManager.BeginPlacing(new PlacementInformation
-                    {
-                        IsTile = false,
-                        PlacementOption = _selected.PlacementMode
-                    },
+                {
+                    IsTile = false,
+                    PlacementOption = _selected.PlacementMode
+                },
                     new ConstructionPlacementHijack(_constructionSystem, _selected));
 
                 UpdateGhostPlacement();
@@ -464,10 +464,10 @@ namespace Content.Client.Construction.UI
             var constructSystem = _systemManager.GetEntitySystem<ConstructionSystem>();
 
             _placementManager.BeginPlacing(new PlacementInformation()
-                {
-                    IsTile = false,
-                    PlacementOption = _selected.PlacementMode,
-                },
+            {
+                IsTile = false,
+                PlacementOption = _selected.PlacementMode,
+            },
                 new ConstructionPlacementHijack(constructSystem, _selected));
 
             _constructionView.BuildButtonPressed = true;

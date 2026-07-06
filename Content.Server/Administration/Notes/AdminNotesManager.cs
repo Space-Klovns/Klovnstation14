@@ -17,12 +17,12 @@ namespace Content.Server.Administration.Notes;
 
 public sealed class AdminNotesManager : IAdminNotesManager, IPostInjectInit
 {
-    [Dependency] private readonly IAdminManager _admins = default!;
-    [Dependency] private readonly IServerDbManager _db = default!;
-    [Dependency] private readonly ILogManager _logManager = default!;
-    [Dependency] private readonly EuiManager _euis = default!;
-    [Dependency] private readonly IEntitySystemManager _systems = default!;
-    [Dependency] private readonly IConfigurationManager _config = default!;
+    [Dependency] private IAdminManager _admins = default!;
+    [Dependency] private IServerDbManager _db = default!;
+    [Dependency] private ILogManager _logManager = default!;
+    [Dependency] private EuiManager _euis = default!;
+    [Dependency] private IEntitySystemManager _systems = default!;
+    [Dependency] private IConfigurationManager _config = default!;
 
     public const string SawmillId = "admin.notes";
 
@@ -75,7 +75,7 @@ public sealed class AdminNotesManager : IAdminNotesManager, IPostInjectInit
         // There's a foreign key constraint in place here. If there's no player record, it will fail.
         // Not like there's much use in adding notes on accounts that have never connected.
         // You can still ban them just fine, which is why we should allow admins to view their bans with the notes panel
-        if (await _db.GetPlayerRecordByUserId((NetUserId) player) is null)
+        if (await _db.GetPlayerRecordByUserId((NetUserId)player) is null)
             return;
 
         var sb = new StringBuilder($"{createdBy.Name} added a");
@@ -144,7 +144,7 @@ public sealed class AdminNotesManager : IAdminNotesManager, IPostInjectInit
 
         var note = new SharedAdminNote(
             noteId,
-            [(NetUserId) player],
+            [(NetUserId)player],
             roundId.HasValue ? [roundId.Value] : [],
             serverName,
             playtime,

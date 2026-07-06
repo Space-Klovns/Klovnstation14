@@ -15,7 +15,7 @@ namespace Content.Server.Salvage;
 
 public sealed partial class SalvageSystem
 {
-    [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
+    [Dependency] private IRuntimeLog _runtimeLog = default!;
 
     private static readonly ProtoId<RadioChannelPrototype> MagnetChannel = "Supply";
 
@@ -204,7 +204,7 @@ public sealed partial class SalvageSystem
             var seed = _random.Next();
 
             // Fuck with the seed to mix wrecks and asteroids.
-            seed = (int) (seed / 10f) * 10;
+            seed = (int)(seed / 10f) * 10;
 
 
             if (i >= data.Comp.OfferCount / 2)

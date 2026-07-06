@@ -15,9 +15,9 @@ namespace Content.Client.Parallax;
 /// </summary>
 public sealed class ParallaxControl : Control
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly IParallaxManager _parallaxManager = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IParallaxManager _parallaxManager = default!;
+    [Dependency] private IRobustRandom _random = default!;
 
     private string _parallaxPrototype = "FastSpace";
 
@@ -26,7 +26,8 @@ public sealed class ParallaxControl : Control
     [ViewVariables(VVAccess.ReadWrite)] public float SpeedY { get; set; } = 0.0f;
     [ViewVariables(VVAccess.ReadWrite)] public float ScaleX { get; set; } = 1.0f;
     [ViewVariables(VVAccess.ReadWrite)] public float ScaleY { get; set; } = 1.0f;
-    [ViewVariables(VVAccess.ReadWrite)] public string ParallaxPrototype
+    [ViewVariables(VVAccess.ReadWrite)]
+    public string ParallaxPrototype
     {
         get => _parallaxPrototype;
         set
@@ -48,7 +49,7 @@ public sealed class ParallaxControl : Control
 
     protected override void Draw(DrawingHandleScreen handle)
     {
-        var currentTime = (float) _timing.RealTime.TotalSeconds;
+        var currentTime = (float)_timing.RealTime.TotalSeconds;
         var offset = Offset + new Vector2(currentTime * SpeedX, currentTime * SpeedY);
 
         foreach (var layer in _parallaxManager.GetParallaxLayers(_parallaxPrototype))
@@ -92,4 +93,3 @@ public sealed class ParallaxControl : Control
         }
     }
 }
-

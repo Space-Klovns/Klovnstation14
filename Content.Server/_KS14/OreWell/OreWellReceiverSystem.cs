@@ -11,15 +11,15 @@ using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.OreWell;
 
-public sealed class OreWellReceiverSystem : EntitySystem
+public sealed partial class OreWellReceiverSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly OreWellSystem _oreWellSystem = default!;
-    [Dependency] private readonly StackSystem _stackSystem = default!;
-    [Dependency] private readonly KsGenericSpriteFlickSystem _spriteFlickSystem = default!;
-    [Dependency] private readonly AudioSystem _audioSystem = default!;
-    [Dependency] private readonly AppearanceSystem _appearanceSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private OreWellSystem _oreWellSystem = default!;
+    [Dependency] private StackSystem _stackSystem = default!;
+    [Dependency] private KsGenericSpriteFlickSystem _spriteFlickSystem = default!;
+    [Dependency] private AudioSystem _audioSystem = default!;
+    [Dependency] private AppearanceSystem _appearanceSystem = default!;
 
     private readonly HashSet<Entity<OreWellReceiverComponent>> _activeEntities = [];
 

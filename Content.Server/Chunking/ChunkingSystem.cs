@@ -16,11 +16,11 @@ namespace Content.Shared.Chunking;
 ///     This system just exists to provide some utility functions for other systems that chunk data that needs to be
 ///     sent to players. In particular, see <see cref="GetChunksForSession"/>.
 /// </summary>
-public sealed class ChunkingSystem : EntitySystem
+public sealed partial class ChunkingSystem : EntitySystem
 {
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
 
     private EntityQuery<TransformComponent> _xformQuery;
 
@@ -48,7 +48,7 @@ public sealed class ChunkingSystem : EntitySystem
         var chunks = viewerPool.Get();
         DebugTools.Assert(chunks.Count == 0);
 
-        if (session.Status != SessionStatus.InGame || session.AttachedEntity is not {} player)
+        if (session.Status != SessionStatus.InGame || session.AttachedEntity is not { } player)
             return chunks;
 
         var enlargement = viewEnlargement ?? chunkSize;
@@ -125,4 +125,3 @@ public sealed class ChunkingSystem : EntitySystem
         }
     }
 }
-

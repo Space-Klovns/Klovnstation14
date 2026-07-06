@@ -6,8 +6,8 @@ namespace Content.Shared.Damage.Systems;
 
 public abstract partial class SharedDamageOtherOnHitSystem : EntitySystem // Trauma - made partial
 {
-    [Dependency] private readonly DamageableSystem _damageable = default!;
-    [Dependency] private readonly DamageExamineSystem _damageExamine = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private DamageExamineSystem _damageExamine = default!;
 
     public override void Initialize()
     {

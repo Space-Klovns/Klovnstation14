@@ -5,7 +5,7 @@ namespace Content.Server.MNET.CardReader;
 
 public sealed class DurationSignalAccessReaderSystem : SharedDurationSignalAccessReaderSystem
 {
-    [Dependency] private readonly DeviceLinkSystem _deviceLinkSystem = default!;
+    [Dependency] private DeviceLinkSystem _deviceLinkSystem = default!;
 
     public override void ReaderFailed(Entity<DurationSignalAccessReaderComponent> reader, EntityUid user)
     {

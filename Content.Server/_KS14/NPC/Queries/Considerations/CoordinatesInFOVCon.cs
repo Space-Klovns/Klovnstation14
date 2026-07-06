@@ -15,7 +15,7 @@ namespace Content.Server._KS14.NPC.Queries.Considerations;
 /// </summary>
 public sealed partial class CoordinatesInFOVCon : UtilityConsideration
 {
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
 
     /// <summary>
     ///     Second set of coordinates, compared with owner coordinates, to determine

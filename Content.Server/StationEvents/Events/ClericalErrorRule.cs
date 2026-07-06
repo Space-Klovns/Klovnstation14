@@ -10,7 +10,7 @@ namespace Content.Server.StationEvents.Events;
 
 public sealed class ClericalErrorRule : StationEventSystem<ClericalErrorRuleComponent>
 {
-    [Dependency] private readonly StationRecordsSystem _stationRecords = default!;
+    [Dependency] private StationRecordsSystem _stationRecords = default!;
 
     protected override void Started(EntityUid uid, ClericalErrorRuleComponent component, GameRuleComponent gameRule, GameRuleStartedEvent args)
     {
@@ -27,8 +27,8 @@ public sealed class ClericalErrorRule : StationEventSystem<ClericalErrorRuleComp
         if (recordCount == 0)
             return;
 
-        var min = (int) Math.Max(1, Math.Round(component.MinToRemove * recordCount));
-        var max = (int) Math.Max(min, Math.Round(component.MaxToRemove * recordCount));
+        var min = (int)Math.Max(1, Math.Round(component.MinToRemove * recordCount));
+        var max = (int)Math.Max(min, Math.Round(component.MaxToRemove * recordCount));
         var toRemove = RobustRandom.Next(min, max);
         var keys = new List<uint>();
         for (var i = 0; i < toRemove; i++)

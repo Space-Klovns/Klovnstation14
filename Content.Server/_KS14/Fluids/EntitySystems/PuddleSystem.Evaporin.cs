@@ -7,7 +7,7 @@ namespace Content.Server.Fluids.EntitySystems;
 
 public sealed partial class PuddleSystem
 {
-    [Dependency] private readonly AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
 
     protected override void ModifyEvaporationRate(Entity<PuddleComponent> puddle, ref FixedPoint2 evaporateRate)
     {

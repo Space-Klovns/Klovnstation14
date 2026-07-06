@@ -21,7 +21,7 @@ namespace Content.Server.Power.Components
     public abstract partial class BaseNetConnectorComponent<TNetType> : Component, IBaseNetConnectorComponent<TNetType>
         where TNetType : class
     {
-        [Dependency] private readonly IEntityManager _entMan = default!;
+        [Dependency] private IEntityManager _entMan = default!;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public Voltage Voltage { get => _voltage; set => SetVoltage(value); }
@@ -62,7 +62,7 @@ namespace Content.Server.Power.Components
             if (_entMan.TryGetComponent(Owner, out NodeContainerComponent? container))
             {
                 var compatibleNet = container.Nodes.Values
-                    .Where(node => (NodeId == null || NodeId == node.Name) && node.NodeGroupID == (NodeGroupID) Voltage)
+                    .Where(node => (NodeId == null || NodeId == node.Name) && node.NodeGroupID == (NodeGroupID)Voltage)
                     .Select(node => node.NodeGroup)
                     .OfType<TNetType>()
                     .FirstOrDefault();

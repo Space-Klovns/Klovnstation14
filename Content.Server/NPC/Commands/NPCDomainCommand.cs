@@ -12,8 +12,8 @@ namespace Content.Server.NPC.Commands;
 [AdminCommand(AdminFlags.Debug)]
 public sealed class NPCDomainCommand : IConsoleCommand
 {
-    [Dependency] private readonly IEntitySystemManager _sysManager = default!;
-    [Dependency] private readonly IPrototypeManager _protoManager = default!;
+    [Dependency] private IEntitySystemManager _sysManager = default!;
+    [Dependency] private IPrototypeManager _protoManager = default!;
 
     public string Command => "npcdomain";
     public string Description => "Lists the domain of a particular HTN compound task";
@@ -35,7 +35,7 @@ public sealed class NPCDomainCommand : IConsoleCommand
 
         var htnSystem = _sysManager.GetEntitySystem<HTNSystem>();
 
-        foreach (var line in htnSystem.GetDomain(new HTNCompoundTask {Task = args[0]}).Split("\n"))
+        foreach (var line in htnSystem.GetDomain(new HTNCompoundTask { Task = args[0] }).Split("\n"))
         {
             shell.WriteLine(line);
         }

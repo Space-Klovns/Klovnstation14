@@ -17,10 +17,10 @@ namespace Content.Server.Audio.Jukebox;
 
 public sealed class JukeboxSystem : SharedJukeboxSystem
 {
-    [Dependency] private readonly IPrototypeManager _protoManager = default!;
-    [Dependency] private readonly AppearanceSystem _appearanceSystem = default!;
+    [Dependency] private IPrototypeManager _protoManager = default!;
+    [Dependency] private AppearanceSystem _appearanceSystem = default!;
     // _sin start
-    [Dependency] private readonly ChatSystem _chat = default!;
+    [Dependency] private ChatSystem _chat = default!;
 
     /// <summary>Maximum volume percent accepted from clients. Matches the UI slider cap.</summary>
     private const float MaxVolumePercent = 200f;

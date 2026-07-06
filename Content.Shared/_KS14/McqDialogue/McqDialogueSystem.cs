@@ -2,9 +2,9 @@ using System.Numerics;
 
 namespace Content.Shared._KS14.McqDialogue;
 
-public sealed class McqDialogueSystem : EntitySystem
+public sealed partial class McqDialogueSystem : EntitySystem
 {
-    [Dependency] private readonly SharedUserInterfaceSystem _userInterfaceSystem = default!;
+    [Dependency] private SharedUserInterfaceSystem _userInterfaceSystem = default!;
 
     public override void Initialize()
     {

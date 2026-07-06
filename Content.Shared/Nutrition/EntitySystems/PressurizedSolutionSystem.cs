@@ -16,16 +16,16 @@ namespace Content.Shared.Nutrition.EntitySystems;
 
 public sealed partial class PressurizedSolutionSystem : EntitySystem
 {
-    [Dependency] private readonly SharedSolutionContainerSystem _solutionContainer = default!;
-    [Dependency] private readonly OpenableSystem _openable = default!;
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly SharedHandsSystem _hands = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly SharedPuddleSystem _puddle = default!;
-    [Dependency] private readonly INetManager _net = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private SharedSolutionContainerSystem _solutionContainer = default!;
+    [Dependency] private OpenableSystem _openable = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedHandsSystem _hands = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedPuddleSystem _puddle = default!;
+    [Dependency] private INetManager _net = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
     public override void Initialize()
     {
         base.Initialize();
@@ -66,7 +66,7 @@ public sealed partial class PressurizedSolutionSystem : EntitySystem
             if (_prototypeManager.TryIndex(reagent.Reagent.Prototype, out ReagentPrototype? reagentProto) && reagentProto != null)
             {
                 // What portion of the solution is this reagent?
-                var proportion = (float) (reagent.Quantity / solution.Volume);
+                var proportion = (float)(reagent.Quantity / solution.Volume);
                 totalFizzability += reagentProto.Fizziness * proportion;
             }
         }
@@ -221,7 +221,7 @@ public sealed partial class PressurizedSolutionSystem : EntitySystem
             return 0;
 
         var currentDuration = entity.Comp.FizzySettleTime - _timing.CurTime;
-        return Easings.InOutCubic((float) Math.Min(currentDuration / entity.Comp.FizzinessMaxDuration, 1));
+        return Easings.InOutCubic((float)Math.Min(currentDuration / entity.Comp.FizzinessMaxDuration, 1));
     }
 
     /// <summary>

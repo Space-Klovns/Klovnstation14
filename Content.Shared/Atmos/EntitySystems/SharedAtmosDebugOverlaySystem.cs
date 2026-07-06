@@ -3,7 +3,7 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared.Atmos.EntitySystems
 {
-    public abstract class SharedAtmosDebugOverlaySystem : EntitySystem
+    public abstract partial class SharedAtmosDebugOverlaySystem : EntitySystem
     {
         // Keep in mind, this system is hilariously unoptimized. The goal here is to provide accurate debug data.
         public const int LocalViewRange = 16;

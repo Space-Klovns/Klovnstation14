@@ -10,9 +10,9 @@ namespace Content.Client.Light.EntitySystems;
 
 public sealed class SunShadowSystem : SharedSunShadowSystem
 {
-    [Dependency] private readonly ClientGameTicker _ticker = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly MetaDataSystem _metadata = default!;
+    [Dependency] private ClientGameTicker _ticker = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private MetaDataSystem _metadata = default!;
 
     public override void Update(float frameTime)
     {
@@ -22,7 +22,7 @@ public sealed class SunShadowSystem : SharedSunShadowSystem
             return;
 
         var mapQuery = AllEntityQuery<SunShadowCycleComponent, SunShadowComponent>();
-        while (mapQuery.MoveNext(out var uid,  out var cycle, out var shadow))
+        while (mapQuery.MoveNext(out var uid, out var cycle, out var shadow))
         {
             if (!cycle.Running || cycle.Directions.Count == 0)
                 continue;
@@ -47,7 +47,7 @@ public sealed class SunShadowSystem : SharedSunShadowSystem
         // So essentially the values are stored as the percentages of the total duration just so it adjusts the speed
         // dynamically and we don't have to manually handle it.
         // It will lerp from each value to the next one with angle and length handled separately
-        var ratio = (float) (time / entity.Comp.Duration.TotalSeconds);
+        var ratio = (float)(time / entity.Comp.Duration.TotalSeconds);
 
         for (var i = entity.Comp.Directions.Count - 1; i >= 0; i--)
         {

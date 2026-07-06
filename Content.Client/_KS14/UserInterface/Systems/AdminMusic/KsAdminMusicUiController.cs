@@ -9,7 +9,7 @@ namespace Content.Client._KS14.UserInterface.Systems.AdminMusic;
 [UsedImplicitly]
 public sealed class KsAdminMusicUiController : UIController
 {
-    [Dependency] private readonly KsAdminMusicManager _adminMusicManager = default!;
+    [Dependency] private KsAdminMusicManager _adminMusicManager = default!;
 
     public override void Initialize()
     {

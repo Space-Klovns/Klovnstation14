@@ -43,18 +43,18 @@ namespace Content.Shared.Weapons.Ranged.Systems;
 
 public abstract partial class SharedGunSystem : EntitySystem
 {
-    [Dependency] private readonly ActionBlockerSystem _actionBlockerSystem = default!;
+    [Dependency] private ActionBlockerSystem _actionBlockerSystem = default!;
     [Dependency] protected readonly IGameTiming Timing = default!;
     [Dependency] protected readonly IMapManager MapManager = default!;
-    [Dependency] private readonly INetManager _netManager = default!;
-    [Dependency] private readonly EntityWhitelistSystem _whitelistSystem = default!;
-    [Dependency] private readonly ItemSlotsSystem _slots = default!;
-    [Dependency] private readonly RechargeBasicEntityAmmoSystem _recharge = default!;
-    [Dependency] private readonly SharedCombatModeSystem _combatMode = default!;
-    [Dependency] private readonly SharedHandsSystem _hands = default!;
-    [Dependency] private readonly UseDelaySystem _useDelay = default!;
-    [Dependency] private readonly _KS14.NPC.Systems.SharedNpcSensorSystem _npcSensorSystem = default!; // KS14: ANK
-    [Dependency] private readonly _KS14.Farsound.FarSoundSystem _farsoundSystem = default!;// KS14
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private EntityWhitelistSystem _whitelistSystem = default!;
+    [Dependency] private ItemSlotsSystem _slots = default!;
+    [Dependency] private RechargeBasicEntityAmmoSystem _recharge = default!;
+    [Dependency] private SharedCombatModeSystem _combatMode = default!;
+    [Dependency] private SharedHandsSystem _hands = default!;
+    [Dependency] private UseDelaySystem _useDelay = default!;
+    [Dependency] private _KS14.NPC.Systems.SharedNpcSensorSystem _npcSensorSystem = default!; // KS14: ANK
+    [Dependency] private _KS14.Farsound.FarSoundSystem _farsoundSystem = default!;// KS14
     [Dependency] protected readonly DamageableSystem Damageable = default!;
     [Dependency] protected readonly ExamineSystemShared Examine = default!;
     [Dependency] protected readonly IPrototypeManager ProtoManager = default!;
