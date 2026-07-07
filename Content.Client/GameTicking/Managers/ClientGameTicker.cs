@@ -16,7 +16,7 @@ using Content.Shared.GameTicking.Prototypes;
 namespace Content.Client.GameTicking.Managers
 {
     [UsedImplicitly]
-    public sealed class ClientGameTicker : SharedGameTicker
+    public sealed partial class ClientGameTicker : SharedGameTicker
     {
         [Dependency] private IStateManager _stateManager = default!;
         [Dependency] private IClientAdminManager _admin = default!;

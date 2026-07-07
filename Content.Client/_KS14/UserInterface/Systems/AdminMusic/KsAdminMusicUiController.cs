@@ -7,7 +7,7 @@ using Robust.Client.UserInterface.Controllers;
 namespace Content.Client._KS14.UserInterface.Systems.AdminMusic;
 
 [UsedImplicitly]
-public sealed class KsAdminMusicUiController : UIController
+public sealed partial class KsAdminMusicUiController : UIController
 {
     [Dependency] private KsAdminMusicManager _adminMusicManager = default!;
 

@@ -7,7 +7,7 @@ using Content.Shared.SurveillanceCamera.Components;
 
 namespace Content.Client.SurveillanceCamera.UI;
 
-public sealed class SurveillanceCameraNavMapControl : NavMapControl
+public sealed partial class SurveillanceCameraNavMapControl : NavMapControl
 {
     [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private IResourceCache _resourceCache = default!;

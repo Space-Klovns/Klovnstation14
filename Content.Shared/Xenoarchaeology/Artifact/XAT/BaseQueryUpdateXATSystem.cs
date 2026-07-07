@@ -6,7 +6,7 @@ namespace Content.Shared.Xenoarchaeology.Artifact.XAT;
 /// Base type for xeno artifact trigger systems, that are relied on updating loop.
 /// </summary>
 /// <typeparam name="T">Type of XAT component that system will work with.</typeparam>
-public abstract class BaseQueryUpdateXATSystem<T> : BaseXATSystem<T> where T : Component
+public abstract partial class BaseQueryUpdateXATSystem<T> : BaseXATSystem<T> where T : Component
 {
     [Dependency] protected EntityQuery<XenoArtifactComponent> _xenoArtifactQuery = default!;
 

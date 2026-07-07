@@ -11,7 +11,7 @@ using InternalsComponent = Content.Shared.Body.Components.InternalsComponent;
 
 namespace Content.Shared.Atmos.EntitySystems;
 
-public abstract class SharedGasTankSystem : GasMaxPressureSystem<GasTankComponent>
+public abstract partial class SharedGasTankSystem : GasMaxPressureSystem<GasTankComponent>
 {
     [Dependency] private SharedActionsSystem _actions = default!;
     [Dependency] private SharedContainerSystem _containers = default!;
