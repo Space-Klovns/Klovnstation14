@@ -33,23 +33,6 @@ public sealed partial class RingerSystem : SharedRingerSystem
     [ViewVariables]
     public readonly HashSet<int> ReservedSerializedRingtones = new();
 
-    public static Note[] AllowedNotes =
-    {
-        Note.C,
-        Note.D,
-        Note.E,
-        Note.F,
-        Note.G,
-        Note.A,
-        Note.B
-    };
-
-    /// <summary>
-    /// Stores the serialized version of any ringtone that can be excluded from new ringtone generations.
-    /// </summary>
-    [ViewVariables]
-    public readonly HashSet<int> ReservedSerializedRingtones = new();
-
     /// <inheritdoc/>
     public override void Initialize()
     {

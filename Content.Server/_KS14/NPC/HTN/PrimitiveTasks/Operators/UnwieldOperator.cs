@@ -29,6 +29,6 @@ public sealed partial class UnwieldOperator : HTNOperator
             !wieldableComponent.Wielded)
             return HTNOperatorStatus.Finished;
 
-        return _wieldableSystem.TryUnwield(weaponUid.Value, wieldableComponent, ownerUid) ? HTNOperatorStatus.Finished : HTNOperatorStatus.Failed;
+        return _wieldableSystem.TryUnwield((weaponUid.Value, wieldableComponent), ownerUid) ? HTNOperatorStatus.Finished : HTNOperatorStatus.Failed;
     }
 }

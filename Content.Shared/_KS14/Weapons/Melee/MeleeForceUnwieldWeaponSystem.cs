@@ -1,9 +1,7 @@
-using Content.Shared._KS14.Weapons.Melee;
 using Content.Shared.Popups;
 using Content.Shared.Weapons.Melee;
 using Content.Shared.Weapons.Melee.Events;
 using Content.Shared.Wieldable;
-using Content.Shared.Wieldable.Components;
 using Robust.Shared.Random;
 
 namespace Content.Shared._KS14.Weapons.Melee;
@@ -47,7 +45,6 @@ public sealed partial class MeleeForceUnwieldWeaponSystem : EntitySystem
         // the weapon grants the MeleeForceUnwieldWeaponComponent to the guy holding it
         // then this subscribes to when this guy gets hit via the component as a proxy
         // then unwields all. since we dont have 3 hands this wont crossinteract badly
-
         var didUnwield = _wieldable.TryUnwieldAll(ent.Owner, force: true);
 
         if (!didUnwield)

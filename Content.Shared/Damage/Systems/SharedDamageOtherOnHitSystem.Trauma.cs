@@ -8,7 +8,6 @@ using Content.Shared.Mobs.Components;
 using Content.Shared.Throwing;
 using Content.Shared.Weapons.Melee.Events;
 using Content.Shared.Weapons.Ranged.Systems;
-using Robust.Shared.Network;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Player;
 
@@ -19,20 +18,13 @@ namespace Content.Shared.Damage.Systems;
 /// </summary>
 public abstract partial class SharedDamageOtherOnHitSystem
 {
-    [Dependency] private INetManager _net = default!;
     [Dependency] private ISharedAdminLogManager _adminLogger = default!;
     [Dependency] private SharedGunSystem _gun = default!;
     [Dependency] private SharedCameraRecoilSystem _recoil = default!;
     [Dependency] private SharedColorFlashEffectSystem _color = default!;
 
-    private List<EntityUid> _target = new(1);
-
-    private EntityQuery<MobStateComponent> _mobQuery;
-
     private void InitializeTrauma()
     {
-        _mobQuery = GetEntityQuery<MobStateComponent>();
-
         SubscribeLocalEvent<DamageOtherOnHitComponent, ThrowDoHitEvent>(OnDoHit);
     }
 
@@ -55,7 +47,7 @@ public abstract partial class SharedDamageOtherOnHitSystem
 
         if (!dmg.Empty)
         {
-            _color.RaiseEffect(Color.Red, [args.Target], Filter.Pvs(args.Target, entityManager: EntityManager));
+            _color.RaiseEffect(Color.Red, new() { args.Target } /* le sandbox */, Filter.Pvs(args.Target, entityManager: EntityManager));
         }
 
         _gun.PlayImpactSound(args.Target, dmg, null, false);

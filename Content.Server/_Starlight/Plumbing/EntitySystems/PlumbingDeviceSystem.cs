@@ -101,7 +101,7 @@ public sealed partial class PlumbingDeviceSystem : EntitySystem
         if (!_tag.HasTag(args.Used, PlungerTag))
             return;
 
-        if (!TryComp<SolutionContainerManagerComponent>(ent.Owner, out var solutionManager))
+        if (!TryComp<SolutionManagerComponent>(ent.Owner, out var solutionManager))
             return;
 
         var totalDrained = FixedPoint2.Zero;

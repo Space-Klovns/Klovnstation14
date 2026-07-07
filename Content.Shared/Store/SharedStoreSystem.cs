@@ -18,7 +18,7 @@ namespace Content.Shared.Store;
 /// </summary>
 public abstract partial class SharedStoreSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] protected IPrototypeManager Proto = default!;
     [Dependency] protected SharedMindSystem Mind = default!;
     [Dependency] protected SharedPopupSystem Popup = default!;
     [Dependency] protected SharedStackSystem Stack = default!;

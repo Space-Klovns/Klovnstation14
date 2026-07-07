@@ -98,13 +98,11 @@ public sealed partial class PlumbingPillPressSystem : EntitySystem
             produced = true;
 
             var item = Spawn(PillPrototypeId, spawnCoords);
-            _solutionSystem.EnsureSolutionEntity(item,
+            _solutionSystem.EnsureSolution(item,
                 SharedChemMaster.PillSolutionName,
-                out var itemSolution,
-                dosage);
+                out var itemSolution);
 
-            if (itemSolution.HasValue)
-                _solutionSystem.TryAddSolution(itemSolution.Value, withdrawal);
+            _solutionSystem.TryAddSolution(itemSolution, withdrawal);
 
             var pill = Comp<PillComponent>(item);
             pill.PillType = ent.Comp.PillType;
