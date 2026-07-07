@@ -11,6 +11,11 @@
   - ERTMedical
   - ERTJanitor
   - CBURN
+  # KS14 Start
+  - ScenarioNt
+  - ScenarioSyndie
+  - ScenarioScav
+  # KS14 End
   blacklist:
     components:
     - AntagImmune

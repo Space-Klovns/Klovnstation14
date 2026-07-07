@@ -18,7 +18,7 @@
     component: ScenarioNt
     targetName: nanotrasen operative
 
-- type: entitydw
+- type: entity
   id: ToolboxSyndicateTurret
   name: deployable syndicate turret
   parent: ToolboxSyndicate
