@@ -1,11 +1,4 @@
 using Content.Shared.Implants.Components;
-<<<<<<< HEAD
-using Content.Shared.Interaction;
-using Content.Shared.Mind;
-using Content.Shared.Popups;
-using Content.Shared.Stacks;
-=======
->>>>>>> parent of 6a8d71d50fd (Reverts for apstrimi (#222))
 using Content.Shared.Store;
 using Content.Shared.Store.Components;
 using Content.Shared.UserInterface;
@@ -15,15 +8,6 @@ namespace Content.Server.Store.Systems;
 
 public sealed partial class StoreSystem : SharedStoreSystem
 {
-<<<<<<< HEAD
-    [Dependency] private IPrototypeManager _proto = default!;
-    [Dependency] private SharedPopupSystem _popup = default!;
-    [Dependency] private IGameTiming _timing = default!;
-    [Dependency] private SharedUserInterfaceSystem _uiSystem = default!;
-    [Dependency] private SharedMindSystem _mind = default!;
-
-=======
->>>>>>> parent of 6a8d71d50fd (Reverts for apstrimi (#222))
     public override void Initialize()
     {
         base.Initialize();
