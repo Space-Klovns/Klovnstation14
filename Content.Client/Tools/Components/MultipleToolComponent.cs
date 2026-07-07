@@ -7,7 +7,7 @@ using Robust.Shared.Timing;
 
 namespace Content.Client.Tools.Components
 {
-    public sealed class MultipleToolStatusControl : Control
+    public sealed partial class MultipleToolStatusControl : Control
     {
         private readonly MultipleToolComponent _parent;
         private readonly RichTextLabel _label;

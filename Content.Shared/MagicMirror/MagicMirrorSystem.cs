@@ -264,7 +264,7 @@ public sealed class MagicMirrorSelectMessage : BoundUserInterfaceMessage
 
 
 [Serializable, NetSerializable]
-public sealed class MagicMirrorUiState : BoundUserInterfaceState
+public sealed partial class MagicMirrorUiState : BoundUserInterfaceState
 {
     public MagicMirrorUiState(Dictionary<ProtoId<OrganCategoryPrototype>, OrganProfileData> profiles,
         Dictionary<ProtoId<OrganCategoryPrototype>, OrganMarkingData> markings,

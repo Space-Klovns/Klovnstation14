@@ -27,7 +27,7 @@ namespace Content.Shared._KS14.Research.Components
     }
 
     [Serializable, NetSerializable]
-    public sealed class ResearchConsoleBoundInterfaceState : BoundUserInterfaceState
+    public sealed partial class ResearchConsoleBoundInterfaceState : BoundUserInterfaceState
     {
         public int Points;
 

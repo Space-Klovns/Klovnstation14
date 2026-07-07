@@ -29,7 +29,7 @@ namespace Content.Client._Starlight.RCD;
 /// <remarks>
 /// This placement mode is not on the engine because it is content specific.
 /// </remarks>
-public sealed class AlignRPDAtmosPipeLayers : PlacementMode
+public sealed partial class AlignRPDAtmosPipeLayers : PlacementMode
 {
     [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private IPrototypeManager _protoManager = default!;

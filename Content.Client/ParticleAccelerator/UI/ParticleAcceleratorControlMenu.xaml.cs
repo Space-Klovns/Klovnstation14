@@ -260,7 +260,7 @@ public sealed partial class ParticleAcceleratorControlMenu : FancyWindow
     }
 }
 
-public sealed class PASegmentControl : Control
+public sealed partial class PASegmentControl : Control
 {
     private static readonly ProtoId<ShaderPrototype> GreyscaleShaderId = "Greyscale";
     private readonly ShaderInstance _greyScaleShader;

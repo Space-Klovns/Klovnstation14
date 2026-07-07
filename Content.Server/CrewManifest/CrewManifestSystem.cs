@@ -250,7 +250,7 @@ public sealed partial class CrewManifestSystem : EntitySystem
 }
 
 [AdminCommand(AdminFlags.Admin)]
-public sealed class CrewManifestCommand : LocalizedEntityCommands
+public sealed partial class CrewManifestCommand : LocalizedEntityCommands
 {
     [Dependency] private CrewManifestSystem _manifestSystem = default!;
 

@@ -8,7 +8,7 @@ using Robust.Shared.Timing;
 
 namespace Content.Client.GPS.UI;
 
-public sealed class HandheldGpsStatusControl : Control
+public sealed partial class HandheldGpsStatusControl : Control
 {
     private readonly Entity<HandheldGPSComponent> _parent;
     private readonly RichTextLabel _label;

@@ -10,7 +10,7 @@ using Robust.Shared.Utility;
 namespace Content.Server._KS14.Speczones;
 
 [AdminCommand(AdminFlags.Debug)]
-public sealed class InsertIntoSpeczoneCommand : LocalizedEntityCommands
+public sealed partial class InsertIntoSpeczoneCommand : LocalizedEntityCommands
 {
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private SpeczoneSystem _speczoneSystem = default!;

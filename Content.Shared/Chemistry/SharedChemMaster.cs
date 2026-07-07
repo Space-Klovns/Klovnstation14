@@ -182,7 +182,7 @@ namespace Content.Shared.Chemistry
     }
 
     [Serializable, NetSerializable]
-    public sealed class ChemMasterBoundUserInterfaceState : BoundUserInterfaceState
+    public sealed partial class ChemMasterBoundUserInterfaceState : BoundUserInterfaceState
     {
         public readonly ContainerInfo? InputContainerInfo;
         public readonly ContainerInfo? OutputContainerInfo;

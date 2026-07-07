@@ -3,7 +3,7 @@
 namespace Content.Shared.CartridgeLoader.Cartridges;
 
 [Serializable, NetSerializable]
-public sealed class NetProbeUiState : BoundUserInterfaceState
+public sealed partial class NetProbeUiState : BoundUserInterfaceState
 {
     /// <summary>
     /// The list of probed network devices

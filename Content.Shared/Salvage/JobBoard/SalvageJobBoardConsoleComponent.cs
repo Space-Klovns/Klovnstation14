@@ -39,7 +39,7 @@ public sealed partial class SalvageJobBoardConsoleComponent : Component
 }
 
 [Serializable, NetSerializable]
-public sealed class SalvageJobBoardConsoleState : BoundUserInterfaceState
+public sealed partial class SalvageJobBoardConsoleState : BoundUserInterfaceState
 {
     public string Title;
     public float Progression;

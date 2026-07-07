@@ -101,7 +101,7 @@ public sealed class CrayonUsedMessage : BoundUserInterfaceMessage
 /// This info is already networked on its own.
 /// </summary>
 [Serializable, NetSerializable]
-public sealed class CrayonBoundUserInterfaceState : BoundUserInterfaceState
+public sealed partial class CrayonBoundUserInterfaceState : BoundUserInterfaceState
 {
     public string Selected;
     /// <summary>

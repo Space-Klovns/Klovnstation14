@@ -10,7 +10,7 @@ using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.Entry;
 
-internal sealed class KsEntryPoint : GameServer
+internal sealed partial class KsEntryPoint : GameServer
 {
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IComponentFactory _componentFactory = default!;

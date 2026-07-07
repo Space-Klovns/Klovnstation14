@@ -3,7 +3,7 @@ using Robust.Client.UserInterface;
 
 namespace Content.Client.ParticleAccelerator.UI
 {
-    public sealed class ParticleAcceleratorBoundUserInterface : BoundUserInterface
+    public sealed partial class ParticleAcceleratorBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
         private ParticleAcceleratorControlMenu? _menu;
@@ -41,7 +41,7 @@ namespace Content.Client.ParticleAccelerator.UI
 
         protected override void UpdateState(BoundUserInterfaceState state)
         {
-            _menu?.DataUpdate((ParticleAcceleratorUIState) state);
+            _menu?.DataUpdate((ParticleAcceleratorUIState)state);
         }
     }
 }

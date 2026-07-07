@@ -5,7 +5,7 @@ using Robust.Shared.Maths;
 
 namespace Content.Client.UserInterface.Controls;
 
-public sealed class HSpacer : Control
+public sealed partial class HSpacer : Control
 {
     public float Spacing { get => MinHeight; set => MinHeight = value; }
     public HSpacer()

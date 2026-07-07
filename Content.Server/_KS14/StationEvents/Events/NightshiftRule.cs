@@ -10,7 +10,7 @@ using Content.Shared.Light.EntitySystems;
 
 namespace Content.Server._KS14.StationEvents.Events;
 
-public sealed class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
+public sealed partial class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
 {
     [Dependency] private PoweredLightSystem _poweredLightSystem = default!;
     [Dependency] private LightBulbSystem _bulbSystem = default!;

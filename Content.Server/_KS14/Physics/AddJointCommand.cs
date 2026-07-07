@@ -12,7 +12,7 @@ using Robust.Shared.Utility;
 namespace Content.Server._KS14.Physics;
 
 [AdminCommand(AdminFlags.Fun | AdminFlags.Debug)]
-public sealed class AddJointCommand : LocalizedEntityCommands
+public sealed partial class AddJointCommand : LocalizedEntityCommands
 {
     [Dependency] private IReflectionManager _reflectionManager = default!;
     [Dependency] private IEntityManager _entityManager = default!;

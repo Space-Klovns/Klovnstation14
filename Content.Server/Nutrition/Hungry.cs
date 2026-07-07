@@ -7,7 +7,7 @@ using Robust.Shared.Console;
 namespace Content.Server.Nutrition;
 
 [AdminCommand(AdminFlags.Debug)]
-public sealed class Hungry : LocalizedEntityCommands
+public sealed partial class Hungry : LocalizedEntityCommands
 {
     public override string Command => "hungry";
 
@@ -20,7 +20,7 @@ public sealed class Hungry : LocalizedEntityCommands
             return;
         }
 
-        if (player.AttachedEntity is not {Valid: true} playerEntity)
+        if (player.AttachedEntity is not { Valid: true } playerEntity)
         {
             shell.WriteError(Loc.GetString("cmd-nutrition-error-entity"));
             return;

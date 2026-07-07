@@ -4,7 +4,7 @@ using Robust.Shared.IoC;
 
 namespace Content.Client.Administration.UI.CustomControls
 {
-    public sealed class UICommandButton : CommandButton
+    public sealed partial class UICommandButton : CommandButton
     {
         public Type? WindowType { get; set; }
         private DefaultWindow? _window;
@@ -13,7 +13,7 @@ namespace Content.Client.Administration.UI.CustomControls
         {
             if (WindowType == null)
                 return;
-            _window = (DefaultWindow) IoCManager.Resolve<IDynamicTypeFactory>().CreateInstance(WindowType);
+            _window = (DefaultWindow)IoCManager.Resolve<IDynamicTypeFactory>().CreateInstance(WindowType);
             _window?.OpenCentered();
         }
     }

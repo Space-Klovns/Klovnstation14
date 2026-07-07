@@ -67,7 +67,7 @@ public struct PowerMonitoringDeviceMetaData
 ///     Data from by the server to the client for the power monitoring console UI
 /// </summary>
 [Serializable, NetSerializable]
-public sealed class PowerMonitoringConsoleBoundInterfaceState : BoundUserInterfaceState
+public sealed partial class PowerMonitoringConsoleBoundInterfaceState : BoundUserInterfaceState
 {
     public double TotalSources;
     public double TotalBatteryUsage;

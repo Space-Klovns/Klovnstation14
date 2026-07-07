@@ -12,7 +12,7 @@ public enum RoboticsConsoleUiKey : byte
 }
 
 [Serializable, NetSerializable]
-public sealed class RoboticsConsoleState : BoundUserInterfaceState
+public sealed partial class RoboticsConsoleState : BoundUserInterfaceState
 {
     /// <summary>
     /// Map of device network addresses to cyborg data.

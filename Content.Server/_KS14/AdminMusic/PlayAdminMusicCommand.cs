@@ -11,7 +11,7 @@ using Robust.Shared.Utility;
 namespace Content.Server._KS14.AdminMusic;
 
 [AdminCommand(AdminFlags.Fun)]
-public sealed class PlayAdminMusicCommand : LocalizedEntityCommands
+public sealed partial class PlayAdminMusicCommand : LocalizedEntityCommands
 {
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IResourceManager _resourceManager = default!;

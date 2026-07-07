@@ -8,7 +8,7 @@ namespace Content.Client.Disposal.Tube
     /// Initializes a <see cref="DisposalRouterWindow"/> and updates it when new server messages are received.
     /// </summary>
     [UsedImplicitly]
-    public sealed class DisposalRouterBoundUserInterface : BoundUserInterface
+    public sealed partial class DisposalRouterBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
         private DisposalRouterWindow? _window;

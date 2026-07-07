@@ -3,7 +3,7 @@ using Robust.Client.UserInterface;
 
 namespace Content.Client.Power;
 
-public sealed class PowerMonitoringConsoleBoundUserInterface : BoundUserInterface
+public sealed partial class PowerMonitoringConsoleBoundUserInterface : BoundUserInterface
 {
     [ViewVariables]
     private PowerMonitoringWindow? _menu;
@@ -23,7 +23,7 @@ public sealed class PowerMonitoringConsoleBoundUserInterface : BoundUserInterfac
     {
         base.UpdateState(state);
 
-        var castState = (PowerMonitoringConsoleBoundInterfaceState) state;
+        var castState = (PowerMonitoringConsoleBoundInterfaceState)state;
 
         EntMan.TryGetComponent<TransformComponent>(Owner, out var xform);
         _menu?.ShowEntites

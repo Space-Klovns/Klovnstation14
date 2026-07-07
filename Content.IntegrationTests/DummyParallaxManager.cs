@@ -5,7 +5,7 @@ using Robust.Shared.Maths;
 
 namespace Content.IntegrationTests
 {
-    public sealed class DummyParallaxManager : IParallaxManager
+    public sealed partial class DummyParallaxManager : IParallaxManager
     {
         public Vector2 ParallaxAnchor { get; set; }
         public bool IsLoaded(string name)

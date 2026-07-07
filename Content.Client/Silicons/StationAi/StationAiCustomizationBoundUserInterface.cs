@@ -3,7 +3,7 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Client.Silicons.StationAi;
 
-public sealed class StationAiCustomizationBoundUserInterface : BoundUserInterface
+public sealed partial class StationAiCustomizationBoundUserInterface : BoundUserInterface
 {
     private StationAiCustomizationMenu? _menu;
 

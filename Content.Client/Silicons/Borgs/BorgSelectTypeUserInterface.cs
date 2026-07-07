@@ -11,7 +11,7 @@ namespace Content.Client.Silicons.Borgs;
 /// <seealso cref="BorgSwitchableTypeComponent"/>
 /// <seealso cref="BorgSwitchableTypeUiKey"/>
 [UsedImplicitly]
-public sealed class BorgSelectTypeUserInterface : BoundUserInterface
+public sealed partial class BorgSelectTypeUserInterface : BoundUserInterface
 {
     [ViewVariables]
     private BorgSelectTypeMenu? _menu;

@@ -22,7 +22,7 @@ public enum GatewayUiKey : byte
 }
 
 [Serializable, NetSerializable]
-public sealed class GatewayBoundUserInterfaceState : BoundUserInterfaceState
+public sealed partial class GatewayBoundUserInterfaceState : BoundUserInterfaceState
 {
     /// <summary>
     /// List of enabled destinations and information about them.

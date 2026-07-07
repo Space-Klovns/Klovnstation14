@@ -7,7 +7,7 @@ using static Content.Shared.Configurable.ConfigurationComponent;
 
 namespace Content.Client.Configurable.UI
 {
-    public sealed class ConfigurationBoundUserInterface : BoundUserInterface
+    public sealed partial class ConfigurationBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
         private ConfigurationMenu? _menu;

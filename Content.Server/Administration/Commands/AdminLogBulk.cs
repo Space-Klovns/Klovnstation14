@@ -9,7 +9,7 @@ namespace Content.Server.Administration.Commands;
 
 #if DEBUG
 [AdminCommand(AdminFlags.Host)]
-public sealed class AdminLogBulk : IConsoleCommand
+public sealed partial class AdminLogBulk : IConsoleCommand
 {
     public string Command => "adminlogbulk";
     public string Description => "Adds debug logs to the database.";
@@ -28,8 +28,8 @@ public sealed class AdminLogBulk : IConsoleCommand
 
         switch (args)
         {
-            case {Length: 1} when int.TryParse(args[0], out amount):
-            case {Length: 2} when int.TryParse(args[0], out amount) &&
+            case { Length: 1 } when int.TryParse(args[0], out amount):
+            case { Length: 2 } when int.TryParse(args[0], out amount) &&
                                   bool.TryParse(args[1], out parallel):
                 break;
             default:

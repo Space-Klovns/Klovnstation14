@@ -14,7 +14,7 @@ using Content.Server._KS14.StationEvents.Components;
 // wizden-april-fools-2025 nuke-calibration -> ks14 port:
 namespace Content.Server._KS14.StationEvents.Events;
 
-public sealed class NukeCalibrationRule : StationEventSystem<NukeCalibrationRuleComponent>
+public sealed partial class NukeCalibrationRule : StationEventSystem<NukeCalibrationRuleComponent>
 {
     [Dependency] private NukeSystem _nukeSystem = default!;
     [Dependency] private ChatSystem _chatSystem = default!;

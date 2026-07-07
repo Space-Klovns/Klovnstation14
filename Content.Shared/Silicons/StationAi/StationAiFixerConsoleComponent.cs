@@ -91,7 +91,7 @@ public sealed partial class StationAiFixerConsoleComponent : Component
 /// Message sent from the server to the client to update the UI of AI Restoration Consoles.
 /// </summary>
 [Serializable, NetSerializable]
-public sealed class StationAiFixerConsoleBoundUserInterfaceState : BoundUserInterfaceState;
+public sealed partial class StationAiFixerConsoleBoundUserInterfaceState : BoundUserInterfaceState;
 
 /// <summary>
 /// Message sent from the client to the server to handle player UI inputs from AI Restoration Consoles.
@@ -141,4 +141,3 @@ public enum StationAiFixerConsoleUiKey
 {
     Key,
 }
-

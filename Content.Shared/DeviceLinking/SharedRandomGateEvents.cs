@@ -3,7 +3,7 @@ using Robust.Shared.Serialization;
 namespace Content.Shared.DeviceLinking;
 
 [Serializable, NetSerializable]
-public sealed class RandomGateBoundUserInterfaceState(float successProbability) : BoundUserInterfaceState
+public sealed partial class RandomGateBoundUserInterfaceState(float successProbability) : BoundUserInterfaceState
 {
     public float SuccessProbability = successProbability;
 }

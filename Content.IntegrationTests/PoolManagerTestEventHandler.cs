@@ -1,7 +1,7 @@
 ﻿namespace Content.IntegrationTests;
 
 [SetUpFixture]
-public sealed class PoolManagerTestEventHandler
+public sealed partial class PoolManagerTestEventHandler
 {
     // This value is completely arbitrary.
     private static TimeSpan MaximumTotalTestingTimeLimit => TimeSpan.FromMinutes(20);

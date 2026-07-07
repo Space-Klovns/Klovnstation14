@@ -7,7 +7,7 @@ using Robust.Shared.Map.Components;
 namespace Content.Server._KS14.ZLevel;
 
 [AdminCommand(AdminFlags.Debug)]
-public sealed class KsZLevelAddCommand : LocalizedEntityCommands
+public sealed partial class KsZLevelAddCommand : LocalizedEntityCommands
 {
     [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private KsZLevelSystem _zLevelSystem = default!;

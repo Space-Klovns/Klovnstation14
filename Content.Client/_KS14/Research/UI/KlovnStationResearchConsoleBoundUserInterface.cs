@@ -10,7 +10,7 @@ using Robust.Shared.Prototypes;
 namespace Content.Client._KS14.Research.UI;
 
 [UsedImplicitly]
-public sealed class KlovnStationResearchConsoleBoundUserInterface : BoundUserInterface
+public sealed partial class KlovnStationResearchConsoleBoundUserInterface : BoundUserInterface
 {
     [ViewVariables]
     private FancyResearchConsoleMenu? _consoleMenu;

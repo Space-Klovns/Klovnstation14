@@ -20,7 +20,7 @@ using Direction = Robust.Shared.Maths.Direction;
 
 namespace Content.Client.UserInterface.Systems.Actions.Controls;
 
-public sealed class ActionButton : Control, IEntityControl
+public sealed partial class ActionButton : Control, IEntityControl
 {
     public const string StyleClassActionHighlightRect = "ActionHighlightRect";
 
@@ -144,7 +144,7 @@ public sealed class ActionButton : Control, IEntityControl
                 _smallItemSpriteView
             }
         });
-        Cooldown = new CooldownGraphic {Visible = false};
+        Cooldown = new CooldownGraphic { Visible = false };
 
         AddChild(Button);
         AddChild(_bigActionIcon);
@@ -219,7 +219,7 @@ public sealed class ActionButton : Control, IEntityControl
 
     private void UpdateItemIcon()
     {
-        if (Action?.Comp is not {EntityIcon: { } entity} ||
+        if (Action?.Comp is not { EntityIcon: { } entity } ||
             !_entities.HasComponent<SpriteComponent>(entity))
         {
             _bigItemSpriteView.Visible = false;
@@ -255,7 +255,7 @@ public sealed class ActionButton : Control, IEntityControl
 
     private void SetActionIcon(Texture? texture)
     {
-        if (Action?.Comp is not {} action || texture == null)
+        if (Action?.Comp is not { } action || texture == null)
         {
             _bigActionIcon.Texture = null;
             _bigActionIcon.Visible = false;
@@ -285,7 +285,7 @@ public sealed class ActionButton : Control, IEntityControl
         UpdateItemIcon();
         UpdateBackground();
 
-        if (Action is not {} action)
+        if (Action is not { } action)
         {
             SetActionIcon(null);
             return;
@@ -296,10 +296,10 @@ public sealed class ActionButton : Control, IEntityControl
         var icon = action.Comp.Icon;
         if (_controller.SelectingTargetFor == action || action.Comp.Toggled)
         {
-            if (action.Comp.IconOn is {} iconOn)
+            if (action.Comp.IconOn is { } iconOn)
                 icon = iconOn;
 
-            if (action.Comp.BackgroundOn is {} background)
+            if (action.Comp.BackgroundOn is { } background)
                 _buttonBackgroundTexture = _spriteSys.Frame0(background);
         }
         else
@@ -357,10 +357,10 @@ public sealed class ActionButton : Control, IEntityControl
         UpdateBackground();
 
         Cooldown.Visible = Action?.Comp.Cooldown != null;
-        if (Action?.Comp is not {} action)
+        if (Action?.Comp is not { } action)
             return;
 
-        if (action.Cooldown is {} cooldown)
+        if (action.Cooldown is { } cooldown)
             Cooldown.FromTime(cooldown.Start, cooldown.End);
 
         if (_toggled != action.Toggled)
@@ -391,7 +391,7 @@ public sealed class ActionButton : Control, IEntityControl
     public void Depress(GUIBoundKeyEventArgs args, bool depress)
     {
         // action can still be toggled if it's allowed to stay selected
-        if (Action?.Comp is not {Enabled: true})
+        if (Action?.Comp is not { Enabled: true })
             return;
 
         _depressed = depress;
@@ -404,7 +404,7 @@ public sealed class ActionButton : Control, IEntityControl
         HighlightRect.Visible = _beingHovered && (Action != null || _controller.IsDragging);
 
         // always show the normal empty button style if no action in this slot
-        if (Action?.Comp is not {} action)
+        if (Action?.Comp is not { } action)
         {
             SetOnlyStylePseudoClass(ContainerButton.StylePseudoClassNormal);
             return;

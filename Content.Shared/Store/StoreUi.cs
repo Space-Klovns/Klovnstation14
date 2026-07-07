@@ -11,7 +11,7 @@ public enum StoreUiKey : byte
 }
 
 [Serializable, NetSerializable]
-public sealed class StoreUpdateState : BoundUserInterfaceState
+public sealed partial class StoreUpdateState : BoundUserInterfaceState
 {
     public readonly HashSet<ListingDataWithCostModifiers> Listings;
 

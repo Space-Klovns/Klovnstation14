@@ -29,7 +29,7 @@ public enum CriminalRecordsConsoleKey : byte
 ///     Other states are erroneous.
 /// </summary>
 [Serializable, NetSerializable]
-public sealed class CriminalRecordsConsoleState : BoundUserInterfaceState
+public sealed partial class CriminalRecordsConsoleState : BoundUserInterfaceState
 {
     /// <summary>
     /// Currently selected crewmember record key.
@@ -116,4 +116,3 @@ public sealed class CriminalRecordSetStatusFilter : BoundUserInterfaceMessage
         FilterStatus = newFilterStatus;
     }
 }
-

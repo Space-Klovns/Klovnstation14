@@ -12,7 +12,7 @@ using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.AdminMusic;
 
-public sealed class KsAdminMusicManager : IPostInjectInit
+public sealed partial class KsAdminMusicManager : IPostInjectInit
 {
     [Dependency] private IEntitySystemManager _entitySystemManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;

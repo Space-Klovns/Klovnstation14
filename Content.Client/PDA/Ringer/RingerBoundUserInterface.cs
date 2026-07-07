@@ -7,7 +7,7 @@ using Robust.Shared.Timing;
 namespace Content.Client.PDA.Ringer
 {
     [UsedImplicitly]
-    public sealed class RingerBoundUserInterface(EntityUid owner, Enum uiKey) : BoundUserInterface(owner, uiKey)
+    public sealed partial class RingerBoundUserInterface(EntityUid owner, Enum uiKey) : BoundUserInterface(owner, uiKey)
     {
         [ViewVariables]
         private RingtoneMenu? _menu;
@@ -94,7 +94,7 @@ namespace Content.Client.PDA.Ringer
             Timer.Spawn(333,
                 () =>
                 {
-                    if (_menu is { Disposed: false, SetRingerButton: { Disposed: false } ringer} )
+                    if (_menu is { Disposed: false, SetRingerButton: { Disposed: false } ringer })
                         ringer.Disabled = false;
                 });
         }

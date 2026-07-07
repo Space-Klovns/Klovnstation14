@@ -6,7 +6,7 @@ using Robust.Shared.ContentPack;
 
 namespace Content.Client._KS14.Entry;
 
-internal sealed class KsEntryPoint : GameClient
+internal sealed partial class KsEntryPoint : GameClient
 {
     [Dependency] private IBaseClient _baseClient = default!;
     [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;

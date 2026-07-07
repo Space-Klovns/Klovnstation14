@@ -28,7 +28,7 @@ namespace Content.Server._KS14.Antag;
         - - the player's data is then removed from the internal cache
         - everything is stored to the DB when the manager shuts down
 */
-public sealed class LastRolledAntagManager : IPostInjectInit
+public sealed partial class LastRolledAntagManager : IPostInjectInit
 {
     [Dependency] private IServerDbManager _dbManager = default!;
     [Dependency] private ITaskManager _taskManager = default!;
