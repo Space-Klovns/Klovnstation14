@@ -113,7 +113,7 @@
       - !type:VomitBehavior
   - type: RadiationReceiver
   - type: Stamina
-  #- type: StunVisuals KS14 - remove stun visuals
+  - type: StunVisuals
   - type: MobState
   - type: MobThresholds
     thresholds:
