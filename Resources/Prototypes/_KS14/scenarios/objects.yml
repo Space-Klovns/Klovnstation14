@@ -18,12 +18,12 @@
     component: ScenarioNt
     targetName: nanotrasen operative
 
-- type: entity
+- type: entitydw
   id: ToolboxSyndicateTurret
   name: deployable syndicate turret
   parent: ToolboxSyndicate
   components:
-  - type: Damageable
+  - type: Injurable
     damageContainer: Inorganic
   - type: Destructible
     thresholds:

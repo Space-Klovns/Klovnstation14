@@ -104,7 +104,7 @@
     - Power
 
   # Damage
-  - type: Damageable
+  - type: Injurable
     damageContainer: StructuralInorganic
   - type: Repairable
   - type: Destructible

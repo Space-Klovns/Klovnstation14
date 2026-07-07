@@ -36,10 +36,9 @@
     boardName: wires-board-name-jukebox
     layoutId: Jukebox
   - type: Damageable
-    damageContainer: Inorganic # _sin: StructuralInorganic -> Inorganic because ????????????????
     damageModifierSet: Metallic
   - type: Injurable
-    damageContainer: StructuralInorganic
+    damageContainer: Inorganic # _sin: StructuralInorganic -> Inorganic because ????????????????
   - type: Destructible
     thresholds:
     - trigger:

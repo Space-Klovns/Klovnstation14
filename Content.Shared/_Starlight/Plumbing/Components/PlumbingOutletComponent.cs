@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Content.Shared.Chemistry.Components;
 using Robust.Shared.GameStates;
 
 namespace Content.Shared._Starlight.Plumbing.Components;
@@ -15,7 +16,7 @@ public sealed partial class PlumbingOutletComponent : Component
     ///     The name of the solution to provide to the network.
     /// </summary>
     [DataField]
-    public string SolutionName = "tank";
+    public string SolutionName = SolutionComponent.DefaultSolutionId;
 
     /// <summary>
     ///     The outlet node names that serve this solution.

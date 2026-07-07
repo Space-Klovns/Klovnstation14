@@ -188,8 +188,9 @@
       - RawMaterial
       - Ingot
   - type: Damageable
-    damageContainer: StructuralInorganic
     damageModifierSet: StructuralMetallicStrong
+  - type: Injurable
+    damageContainer: StructuralInorganic
   - type: Sprite
     color: '#848484'
 
