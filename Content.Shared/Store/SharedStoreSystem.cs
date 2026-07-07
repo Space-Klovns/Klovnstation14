@@ -8,6 +8,7 @@ using Content.Shared.Popups;
 using Content.Shared.Stacks;
 using Content.Shared.Store.Components;
 using Content.Shared.Store.Events;
+using Robust.Shared.Prototypes;
 
 namespace Content.Shared.Store;
 
@@ -17,6 +18,7 @@ namespace Content.Shared.Store;
 /// </summary>
 public abstract partial class SharedStoreSystem : EntitySystem
 {
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] protected SharedMindSystem Mind = default!;
     [Dependency] protected SharedPopupSystem Popup = default!;
     [Dependency] protected SharedStackSystem Stack = default!;
@@ -141,7 +143,7 @@ public abstract partial class SharedStoreSystem : EntitySystem
         entity.Comp.Store = store;
     }
 
-        /// <summary>
+    /// <summary>
     /// Gets the value from an entity's currency component.
     /// Scales with stacks.
     /// </summary>
@@ -249,4 +251,3 @@ public sealed class CurrencyInsertAttemptEvent : CancellableEntityEventArgs
         Store = store;
     }
 }
-

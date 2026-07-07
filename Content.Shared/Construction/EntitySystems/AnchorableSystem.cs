@@ -12,7 +12,6 @@ using Content.Shared.Movement.Pulling.Systems;
 using Content.Shared.Popups;
 using Content.Shared.Station;
 using Content.Shared.Tools.Components;
-using Content.Shared.Whitelist;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Components;
@@ -26,7 +25,6 @@ namespace Content.Shared.Construction.EntitySystems;
 
 public sealed partial class AnchorableSystem : EntitySystem
 {
-    [Dependency] private IMapManager _mapManager = default!;
     [Dependency] private ISharedAdminLogManager _adminLogger = default!;
     [Dependency] private SharedPopupSystem _popup = default!;
     [Dependency] private PullingSystem _pulling = default!;
@@ -157,7 +155,7 @@ public sealed partial class AnchorableSystem : EntitySystem
 
         var xform = Transform(uid);
         if (TryComp<PhysicsComponent>(uid, out var anchorBody) &&
-            !TileFree(xform.Coordinates, anchorBody, component.IgnoreCollisionsWhitelist))
+            !TileFree(xform.Coordinates, anchorBody))
         {
             _popup.PopupClient(Loc.GetString("anchorable-occupied"), uid, args.User);
             return;
@@ -175,7 +173,7 @@ public sealed partial class AnchorableSystem : EntitySystem
         // TODO: Anchoring snaps rn anyway!
         if (component.Snap)
         {
-            var coordinates = xform.Coordinates.SnapToGrid(EntityManager, _mapManager);
+            var coordinates = xform.Coordinates.SnapToGrid(EntityManager);
 
             if (AnyUnstackable(uid, coordinates))
             {
@@ -326,7 +324,7 @@ public sealed partial class AnchorableSystem : EntitySystem
     /// <summary>
     /// Returns true if no hard anchored entities exist on the coordinate tile that would collide with the provided physics body.
     /// </summary>
-    public bool TileFree(EntityCoordinates coordinates, PhysicsComponent anchorBody, EntityWhitelist? ignoreCollisionsWhitelist = null)
+    public bool TileFree(EntityCoordinates coordinates, PhysicsComponent anchorBody)
     {
         // Probably ignore CanCollide on the anchoring body?
         var gridUid = _transformSystem.GetGrid(coordinates);
@@ -335,14 +333,14 @@ public sealed partial class AnchorableSystem : EntitySystem
             return false;
 
         var tileIndices = _map.TileIndicesFor((gridUid.Value, grid), coordinates);
-        return TileFree((gridUid.Value, grid), tileIndices, anchorBody.CollisionLayer, anchorBody.CollisionMask, ignoreCollisionsWhitelist);
+        return TileFree((gridUid.Value, grid), tileIndices, anchorBody.CollisionLayer, anchorBody.CollisionMask);
     }
 
     /// <summary>
     /// Returns true if no hard anchored entities match the collision layer or mask specified.
     /// </summary>
     /// <param name="grid"></param>
-    public bool TileFree(Entity<MapGridComponent> grid, Vector2i gridIndices, int collisionLayer = 0, int collisionMask = 0, EntityWhitelist? ignoreCollisions = null)
+    public bool TileFree(Entity<MapGridComponent> grid, Vector2i gridIndices, int collisionLayer = 0, int collisionMask = 0)
     {
         var enumerator = _map.GetAnchoredEntitiesEnumerator(grid, grid.Comp, gridIndices);
 
@@ -354,9 +352,6 @@ public sealed partial class AnchorableSystem : EntitySystem
             {
                 continue;
             }
-
-            if (_whitelistSystem.IsWhitelistPass(ignoreCollisions, ent!.Value))
-                continue;
 
             if ((body.CollisionMask & collisionLayer) != 0x0 ||
                 (body.CollisionLayer & collisionMask) != 0x0)
