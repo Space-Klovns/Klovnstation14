@@ -7,14 +7,12 @@ using Content.Shared.Actions;
 using Content.Shared.Database;
 using Content.Shared.FixedPoint;
 using Content.Shared.Hands.EntitySystems;
-using Content.Shared.Mind;
 using Content.Shared.Mindshield.Components;
 using Content.Shared.NPC.Systems;
 using Content.Shared.PDA.Ringer;
 using Content.Shared.Store;
 using Content.Shared.Store.Components;
 using Content.Shared.UserInterface;
-using Robust.Server.GameObjects;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
@@ -24,15 +22,13 @@ namespace Content.Server.Store.Systems;
 public sealed partial class StoreSystem
 {
     [Dependency] private IAdminLogManager _admin = default!;
-    [Dependency] private SharedHandsSystem _hands = default!;
-    [Dependency] private ActionsSystem _actions = default!;
     [Dependency] private ActionContainerSystem _actionContainer = default!;
+    [Dependency] private ActionsSystem _actions = default!;
     [Dependency] private ActionUpgradeSystem _actionUpgrade = default!;
-    [Dependency] private SharedMindSystem _mind = default!;
-    [Dependency] private SharedAudioSystem _audio = default!;
-    [Dependency] private StackSystem _stack = default!;
-    [Dependency] private UserInterfaceSystem _ui = default!;
     [Dependency] private NpcFactionSystem _npcFaction = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedHandsSystem _hands = default!;
+    [Dependency] private StackSystem _stack = default!;
 
     private void InitializeUi()
     {
@@ -62,7 +58,7 @@ public sealed partial class StoreSystem
         if (!TryComp<ActorComponent>(user, out var actor))
             return;
 
-        if (!_ui.TryToggleUi(storeEnt, StoreUiKey.Key, actor.PlayerSession))
+        if (!_uiSystem.TryToggleUi(storeEnt, StoreUiKey.Key, actor.PlayerSession))
             return;
 
         UpdateUserInterface(user, storeEnt, component);
@@ -76,7 +72,7 @@ public sealed partial class StoreSystem
         if (!Resolve(uid, ref component))
             return;
 
-        _ui.CloseUi(uid, StoreUiKey.Key);
+        _uiSystem.CloseUi(uid, StoreUiKey.Key);
     }
 
     /// <summary>
@@ -114,7 +110,7 @@ public sealed partial class StoreSystem
         var showFooter = HasComp<RingerUplinkComponent>(store);
 
         var state = new StoreUpdateState(component.LastAvailableListings, allCurrency, showFooter, component.RefundAllowed);
-        _ui.SetUiState(store, StoreUiKey.Key, state);
+        _uiSystem.SetUiState(store, StoreUiKey.Key, state);
     }
 
     private void OnRequestUpdate(EntityUid uid, StoreComponent component, StoreRequestUpdateInterfaceMessage args)

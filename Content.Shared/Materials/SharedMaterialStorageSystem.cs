@@ -24,7 +24,7 @@ public abstract partial class SharedMaterialStorageSystem : EntitySystem
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private IPrototypeManager _prototype = default!;
     [Dependency] private EntityWhitelistSystem _whitelistSystem = default!;
-    [Dependency] private SharedStackSystem _heap = default!;
+    [Dependency] private SharedStackSystem _heap = default!; // KS14
     [Dependency] private SharedAudioSystem _audio = default!; // KS14: Added to shared
     [Dependency] private SharedPopupSystem _popup = default!; // KS14: Added to shared
 

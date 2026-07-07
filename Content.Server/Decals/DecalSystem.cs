@@ -25,7 +25,7 @@ using ChunkIndicesEnumerator = Robust.Shared.Map.Enumerators.ChunkIndicesEnumera
 
 namespace Content.Server.Decals
 {
-    public sealed partial /* KS14 */ class DecalSystem : SharedDecalSystem
+    public sealed partial class DecalSystem : SharedDecalSystem
     {
         [Dependency] private IPlayerManager _playerManager = default!;
         [Dependency] private IAdminManager _adminManager = default!;

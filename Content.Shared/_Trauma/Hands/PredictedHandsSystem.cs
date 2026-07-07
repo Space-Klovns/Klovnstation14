@@ -1,6 +1,5 @@
 using Content.Shared.ActionBlocker;
 using Content.Shared.CombatMode;
-using Content.Shared.Damage.Systems;
 using Content.Shared.Hands.Components;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Input;
@@ -9,9 +8,7 @@ using Content.Shared.Movement.Pulling.Components;
 using Content.Shared.Movement.Pulling.Systems;
 using Content.Shared.Random.Helpers;
 using Content.Shared.Throwing;
-using Content.Shared.Stacks;
 using Content.Shared.Standing;
-using Content.Shared.Stunnable;
 using Robust.Shared.Containers;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Map;

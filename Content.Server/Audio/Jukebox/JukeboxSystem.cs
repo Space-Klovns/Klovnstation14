@@ -14,11 +14,11 @@ using JukeboxComponent = Content.Shared.Audio.Jukebox.JukeboxComponent; // _sin
 
 namespace Content.Server.Audio.Jukebox;
 
-
 public sealed partial class JukeboxSystem : SharedJukeboxSystem
 {
     [Dependency] private IPrototypeManager _protoManager = default!;
     [Dependency] private AppearanceSystem _appearanceSystem = default!;
+
     // _sin start
     [Dependency] private ChatSystem _chat = default!;
 

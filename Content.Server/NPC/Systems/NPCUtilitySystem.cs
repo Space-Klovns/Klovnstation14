@@ -32,11 +32,11 @@ using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Temperature.Components;
+using Content.Shared.Stealth;
+using Content.Shared.Stealth.Components;
 using Content.Shared._KS14.IoC; // KS14: ANK
 using Content.Shared.Containers.ItemSlots; // KS14: ANK
-using Content.Shared.Weapons.Ranged.Systems;
-using Content.Shared.Stealth.Components;
-using Content.Shared.Stealth;
+using Content.Shared.Weapons.Ranged.Systems; // KS14: ANK
 
 namespace Content.Server.NPC.Systems;
 
@@ -62,26 +62,14 @@ public sealed partial class NPCUtilitySystem : EntitySystem
     [Dependency] private MobThresholdSystem _thresholdSystem = default!;
     [Dependency] private TurretTargetSettingsSystem _turretTargetSettings = default!;
     [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private SharedStealthSystem _stealth = default!;
+    [Dependency] private EntityQuery<PuddleComponent> _puddleQuery = default!;
     [Dependency] private SystemCollectionHookManager _collectionHook = default!; // KS14: ANK
     [Dependency] private ItemSlotsSystem _itemSlotsSystem = default!; // KS14: ANK
-    [Dependency] private SharedStealthSystem _stealth = default!;
-
-    private EntityQuery<PuddleComponent> _puddleQuery;
-    private EntityQuery<TransformComponent> _xformQuery;
-
-    private ObjectPool<HashSet<EntityUid>> _entPool =
-        new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>(), 256);
-
-    // Temporary caches.
-    private List<EntityUid> _entityList = new();
-    private HashSet<Entity<IComponent>> _entitySet = new();
-    private List<EntityPrototype.ComponentRegistryEntry> _compTypes = new();
 
     public override void Initialize()
     {
         base.Initialize();
-        _puddleQuery = GetEntityQuery<PuddleComponent>();
-        _xformQuery = GetEntityQuery<TransformComponent>();
 
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded); // KS14: ANK
         _collectionHook.HookAction(InitializeConsiderations);
@@ -99,6 +87,14 @@ public sealed partial class NPCUtilitySystem : EntitySystem
 
     // KS14: ANK
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs obj) => InitializeConsiderations(_collectionHook.DependencyCollection);
+
+    private ObjectPool<HashSet<EntityUid>> _entPool =
+        new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>(), 256);
+
+    // Temporary caches.
+    private List<EntityUid> _entityList = new();
+    private HashSet<Entity<IComponent>> _entitySet = new();
+    private List<EntityPrototype.ComponentRegistryEntry> _compTypes = new();
 
     /// <summary>
     /// Runs the UtilityQueryPrototype and returns the best-matching entities.
@@ -450,7 +446,7 @@ public sealed partial class NPCUtilitySystem : EntitySystem
                     if (compQuery.Components.Count == 0)
                         return;
 
-                    var mapPos = _transform.GetMapCoordinates(owner, xform: _xformQuery.GetComponent(owner));
+                    var mapPos = _transform.GetMapCoordinates(owner, xform: Transform(owner));
                     _compTypes.Clear();
                     var i = -1;
                     EntityPrototype.ComponentRegistryEntry compZero = default!;
@@ -528,7 +524,7 @@ public sealed partial class NPCUtilitySystem : EntitySystem
     private void RecursiveAdd(EntityUid uid, HashSet<EntityUid> entities)
     {
         // TODO: Probably need a recursive struct enumerator on engine.
-        var xform = _xformQuery.GetComponent(uid);
+        var xform = Transform(uid);
         var enumerator = xform.ChildEnumerator;
         entities.Add(uid);
 

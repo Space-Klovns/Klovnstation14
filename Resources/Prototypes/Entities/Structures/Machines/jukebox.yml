@@ -38,6 +38,8 @@
   - type: Damageable
     damageContainer: Inorganic # _sin: StructuralInorganic -> Organic because ????????????????
     damageModifierSet: Metallic
+  - type: Injurable
+    damageContainer: StructuralInorganic
   - type: Destructible
     thresholds:
     - trigger:

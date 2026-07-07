@@ -19,7 +19,7 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Shared.Construction;
 
-public abstract partial class SharedFlatpackSystem : EntitySystem // Trauma - made partial
+public abstract partial class SharedFlatpackSystem : EntitySystem
 {
     [Dependency] private ISharedAdminLogManager _adminLogger = default!;
     [Dependency] private INetManager _net = default!;

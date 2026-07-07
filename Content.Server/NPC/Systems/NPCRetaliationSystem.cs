@@ -13,7 +13,7 @@ namespace Content.Server.NPC.Systems;
 /// <summary>
 ///     Handles NPC which become aggressive after being attacked.
 /// </summary>
-public sealed partial /* KS14: Made partial */ class NPCRetaliationSystem : EntitySystem
+public sealed partial class NPCRetaliationSystem : EntitySystem
 {
     [Dependency] private NpcFactionSystem _npcFaction = default!;
     [Dependency] private IGameTiming _timing = default!;

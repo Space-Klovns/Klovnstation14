@@ -25,6 +25,8 @@
       Glass: 150
   - type: StaticPrice
     price: 85
+  - type: UseDelay
+    delay: 1
   - type: EmitSoundOnPickup # KS14: pickup/drop sounds
     sound:
       path: /Audio/_KS14/Handling/tools/multitool_pickup.ogg

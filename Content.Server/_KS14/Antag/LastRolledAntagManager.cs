@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 
 namespace Content.Server._KS14.Antag;
 
+// TODO LCDC ANTAGPITY: TODO KS14 ANTAGPITY: re-implement this, it's not used anywhere now
+
 /// <summary>
 /// Manages saving and retrieving the last time that a player rolled any antag.
 /// For every query, an internal cache is used rather than querying the DB.

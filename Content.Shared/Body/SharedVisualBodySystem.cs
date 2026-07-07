@@ -14,7 +14,7 @@ public abstract partial class SharedVisualBodySystem : EntitySystem
 {
     [Dependency] private IPrototypeManager _prototype = default!;
     [Dependency] private MarkingManager _marking = default!;
-    // KS14: Unused system, removed
+    //[Dependency] private SharedContainerSystem _container = default!; // KS14: unused; removed
 
     public override void Initialize()
     {

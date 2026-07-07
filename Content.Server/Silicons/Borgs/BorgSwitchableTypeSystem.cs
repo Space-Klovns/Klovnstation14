@@ -6,9 +6,7 @@ using Content.Shared.Silicons.Borgs.Components;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 //KS14 start
-using Robust.Shared.Log;
 using Content.Server.Silicons.Laws;
-using Content.Shared.Silicons.Laws.Components;
 //KS14 end
 
 namespace Content.Server.Silicons.Borgs;

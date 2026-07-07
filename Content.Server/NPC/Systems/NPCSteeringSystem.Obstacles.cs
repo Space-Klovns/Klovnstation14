@@ -1,12 +1,15 @@
-using System.Linq;
+// Trauma/KS14: moved DestructibleComponent to shared
 using Content.Server.NPC.Components;
 using Content.Server.NPC.Pathfinding;
 using Content.Shared.CombatMode;
+using Content.Shared.Destructible;
 using Content.Shared.DoAfter;
+using Content.Shared.Doors.Components;
 using Content.Shared.NPC;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
 using Robust.Shared.Utility;
+using ClimbableComponent = Content.Shared.Climbing.Components.ClimbableComponent;
 using ClimbingComponent = Content.Shared.Climbing.Components.ClimbingComponent;
 
 namespace Content.Server.NPC.Systems;
@@ -32,6 +35,9 @@ public sealed partial class NPCSteeringSystem
      * Also need to make sure it picks nearest obstacle path so it starts smashing in front of it.
      */
 
+    [Dependency] private EntityQuery<DoorComponent> _doorQuery = default!;
+    [Dependency] private EntityQuery<ClimbableComponent> _climbableQuery = default!;
+    [Dependency] private EntityQuery<DestructibleComponent /* Trauma/KS14: moved DestructibleComponent to shared */> _destructibleQuery = default!;
 
     private SteeringObstacleStatus TryHandleFlags(EntityUid uid, NPCSteeringComponent component, PathPoly poly)
     {
@@ -53,128 +59,160 @@ public sealed partial class NPCSteeringSystem
 
         // TODO: Should cache the fact we're doing this somewhere.
         // See https://github.com/space-wizards/space-station-14/issues/11475
-        if ((poly.Data.CollisionLayer & mask) == 0x0 &&
-            (poly.Data.CollisionMask & layer) == 0x0)
-            return SteeringObstacleStatus.Completed;
-
-        var id = component.DoAfterId;
-
-        // Still doing what we were doing before.
-        var doAfterStatus = _doAfter.GetStatus(id);
-
-        switch (doAfterStatus)
+        if ((poly.Data.CollisionLayer & mask) != 0x0 ||
+            (poly.Data.CollisionMask & layer) != 0x0)
         {
-            case DoAfterStatus.Running:
-                return SteeringObstacleStatus.Continuing;
-            case DoAfterStatus.Cancelled:
-                return SteeringObstacleStatus.Failed;
-        }
+            var id = component.DoAfterId;
 
-        if (!TryComp<MapGridComponent>(poly.GraphUid, out var grid))
-            return SteeringObstacleStatus.Completed;
+            // Still doing what we were doing before.
+            var doAfterStatus = _doAfter.GetStatus(id);
 
-        var obstacleEnts = _mapSystem.GetLocalAnchoredEntities(poly.GraphUid, grid, poly.Box).ToHashSet();
-        FilterObstacleEntities((uid, component), mask, layer, obstacleEnts);
-
-        // Nothing actually near us.
-        if (obstacleEnts.Count == 0)
-            return SteeringObstacleStatus.Completed;
-
-        var isDoor = (poly.Data.Flags & PathfindingBreadcrumbFlag.Door) != 0x0;
-        var isAccessRequired = (poly.Data.Flags & PathfindingBreadcrumbFlag.Access) != 0x0;
-        var isClimbable = (poly.Data.Flags & PathfindingBreadcrumbFlag.Climb) != 0x0;
-
-        // Just walk into it stupid
-        if (isDoor)
-        {
-            foreach (var ent in obstacleEnts)
+            switch (doAfterStatus)
             {
-                // Includes checking if we have access:
-                if (!CanHandleDoor((uid, component), poly.Data.Flags, ent, false))
-                    continue;
-
-                // Interacts are bit nicer than bumps, so try interacting regardless
-                _interaction.InteractionActivate(uid, ent);
-
-                return SteeringObstacleStatus.Continuing;
+                case DoAfterStatus.Running:
+                    return SteeringObstacleStatus.Continuing;
+                case DoAfterStatus.Cancelled:
+                    return SteeringObstacleStatus.Failed;
             }
 
-            // Couldn't normal-open the door, and can't pry. Give up.
-            if ((component.Flags & PathFlags.Prying) == 0x0)
-                return SteeringObstacleStatus.Failed;
+            var obstacleEnts = new List<EntityUid>();
 
-            foreach (var ent in obstacleEnts)
+            GetObstacleEntities(poly, mask, layer, obstacleEnts);
+            var isDoor = (poly.Data.Flags & PathfindingBreadcrumbFlag.Door) != 0x0;
+            var isAccessRequired = (poly.Data.Flags & PathfindingBreadcrumbFlag.Access) != 0x0;
+            var isClimbable = (poly.Data.Flags & PathfindingBreadcrumbFlag.Climb) != 0x0;
+
+            // Just walk into it stupid
+            if (isDoor && !isAccessRequired)
             {
-                if (!CanHandleDoor((uid, component), poly.Data.Flags, ent))
-                    continue;
-
-                // Should be able to pry from CanHandleDoor:
-                // TODO: Use the verb.
-                _pryingSystem.TryPry(ent, uid, out id, uid);
-
-                component.DoAfterId = id;
-                return SteeringObstacleStatus.Continuing;
-            }
-        }
-        // Try climbing obstacles
-        else if ((component.Flags & PathFlags.Climbing) != 0x0 && isClimbable)
-        {
-            if (!TryComp<ClimbingComponent>(uid, out var climbing))
-                return SteeringObstacleStatus.Failed;
-
-            if (climbing.IsClimbing)
-                return SteeringObstacleStatus.Completed;
-
-            if (climbing.NextTransition != null)
-                return SteeringObstacleStatus.Continuing;
-
-            // Get the relevant obstacle
-            foreach (var ent in obstacleEnts)
-            {
-                if (CanHandleClimb((uid, climbing), ent, out var climbable) &&
-                    _climb.TryClimb(uid, uid, ent, out id, climbable, climbing))
+                // ... At least if it's not a bump open.
+                foreach (var ent in obstacleEnts)
                 {
-                    component.DoAfterId = id;
+                    if (!_doorQuery.TryGetComponent(ent, out var door))
+                        continue;
+
+                    if (!door.BumpOpen && (component.Flags & PathFlags.Interact) != 0x0)
+                    {
+                        if (door.State != DoorState.Opening)
+                        {
+                            _interaction.InteractionActivate(uid, ent);
+                            return SteeringObstacleStatus.Continuing;
+                        }
+                    }
+                }
+
+                // If we get to here then didn't succeed for reasons.
+            }
+
+            if ((component.Flags & PathFlags.Prying) != 0x0 && isDoor)
+            {
+                // Get the relevant obstacle
+                foreach (var ent in obstacleEnts)
+                {
+                    if (_doorQuery.TryGetComponent(ent, out var door) && door.State != DoorState.Open)
+                    {
+                        // TODO: Use the verb.
+
+                        if (door.State != DoorState.Opening)
+                            _pryingSystem.TryPry(ent, uid, out id, uid);
+
+                        component.DoAfterId = id;
+                        return SteeringObstacleStatus.Continuing;
+                    }
+                }
+
+                if (obstacleEnts.Count == 0)
+                    return SteeringObstacleStatus.Completed;
+            }
+            // Try climbing obstacles
+            else if ((component.Flags & PathFlags.Climbing) != 0x0 && isClimbable)
+            {
+                if (TryComp<ClimbingComponent>(uid, out var climbing))
+                {
+                    if (climbing.IsClimbing)
+                    {
+                        return SteeringObstacleStatus.Completed;
+                    }
+                    else if (climbing.NextTransition != null)
+                    {
+                        return SteeringObstacleStatus.Continuing;
+                    }
+
+                    // Get the relevant obstacle
+                    foreach (var ent in obstacleEnts)
+                    {
+                        if (_climbableQuery.TryGetComponent(ent, out var table) &&
+                            _climb.CanVault(table, uid, uid, out _) &&
+                            _climb.TryClimb(uid, uid, ent, out id, table, climbing))
+                        {
+                            component.DoAfterId = id;
+                            return SteeringObstacleStatus.Continuing;
+                        }
+                    }
+                }
+
+                if (obstacleEnts.Count == 0)
+                    return SteeringObstacleStatus.Completed;
+            }
+            // Try smashing obstacles.
+            else if ((component.Flags & PathFlags.Smashing) != 0x0)
+            {
+                if (_melee.TryGetWeapon(uid, out _, out var meleeWeapon) && meleeWeapon.NextAttack <= _timing.CurTime && TryComp<CombatModeComponent>(uid, out var combatMode))
+                {
+                    _combat.SetInCombatMode(uid, true, combatMode);
+                    // TODO: This is a hack around grilles and windows.
+                    _random.Shuffle(obstacleEnts);
+                    var attackResult = false;
+
+                    foreach (var ent in obstacleEnts)
+                    {
+                        // TODO: Validate we can damage it
+                        if (_destructibleQuery.HasComponent(ent))
+                        {
+                            attackResult = _melee.AttemptLightAttack(uid, uid, meleeWeapon, ent);
+                            break;
+                        }
+                    }
+
+                    _combat.SetInCombatMode(uid, false, combatMode);
+
+                    // Blocked or the likes?
+                    if (!attackResult)
+                        return SteeringObstacleStatus.Failed;
+
+                    if (obstacleEnts.Count == 0)
+                        return SteeringObstacleStatus.Completed;
+
                     return SteeringObstacleStatus.Continuing;
                 }
             }
+
+            return SteeringObstacleStatus.Failed;
         }
-        // Try smashing obstacles.
-        else if ((component.Flags & PathFlags.Smashing) != 0x0)
+
+        return SteeringObstacleStatus.Completed;
+    }
+
+    private void GetObstacleEntities(PathPoly poly, int mask, int layer, List<EntityUid> ents)
+    {
+        // TODO: Can probably re-use this from pathfinding or something
+        if (!TryComp<MapGridComponent>(poly.GraphUid, out var grid))
         {
-            // Check we have a weapon, can (probably) swing it, and have combat mode.
-            if (!_melee.TryGetWeapon(uid, out var weaponUid, out var weaponComp) ||
-                weaponComp.NextAttack > _timing.CurTime ||
-                !TryComp<CombatModeComponent>(uid, out var combatMode))
-                return SteeringObstacleStatus.Failed;
+            return;
+        }
 
-            _combat.SetInCombatMode(uid, true, combatMode);
-
-            // TODO: This is a hack around grilles and windows.
-            var shuffledEnts = obstacleEnts.ToList();
-            _random.Shuffle(shuffledEnts);
-
-            var attackResult = false;
-            foreach (var ent in shuffledEnts)
+        foreach (var ent in _mapSystem.GetLocalAnchoredEntities(poly.GraphUid, grid, poly.Box))
+        {
+            if (!_physicsQuery.TryGetComponent(ent, out var body) ||
+                !body.Hard ||
+                !body.CanCollide ||
+                (body.CollisionMask & layer) == 0x0 && (body.CollisionLayer & mask) == 0x0)
             {
-                // TODO: Validate we can damage it
-                if (!_destructibleQuery.HasComponent(ent))
-                    continue;
-
-                attackResult = _melee.AttemptLightAttack(uid, weaponUid, weaponComp, ent);
-                break;
+                continue;
             }
 
-            _combat.SetInCombatMode(uid, false, combatMode);
-
-            // Blocked or the likes?
-            if (!attackResult)
-                return SteeringObstacleStatus.Failed;
-
-            return SteeringObstacleStatus.Continuing;
+            ents.Add(ent);
         }
-
-        return SteeringObstacleStatus.Failed;
     }
 
     private enum SteeringObstacleStatus : byte

@@ -34,6 +34,7 @@ namespace Content.Shared.Teleportation.Systems;
 /// <seealso cref="PortalComponent"/>
 public abstract partial class SharedPortalSystem : EntitySystem
 {
+    // [Dependency] private IRobustRandom _random = default!; // KS14: removed, as unused
     [Dependency] private INetManager _netMan = default!;
     [Dependency] private EntityLookupSystem _lookup = default!;
     [Dependency] private SharedAudioSystem _audio = default!;

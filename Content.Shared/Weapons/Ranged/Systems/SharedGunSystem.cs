@@ -43,22 +43,22 @@ namespace Content.Shared.Weapons.Ranged.Systems;
 
 public abstract partial class SharedGunSystem : EntitySystem
 {
+    [Dependency] private _KS14.NPC.Systems.SharedNpcSensorSystem _npcSensorSystem = default!; // KS14: ANK
+    [Dependency] private _KS14.Farsound.FarSoundSystem _farsoundSystem = default!;// KS14
     [Dependency] private ActionBlockerSystem _actionBlockerSystem = default!;
-    [Dependency] protected IGameTiming Timing = default!;
-    [Dependency] protected IMapManager MapManager = default!;
-    [Dependency] private INetManager _netManager = default!;
     [Dependency] private EntityWhitelistSystem _whitelistSystem = default!;
+    [Dependency] private INetManager _netManager = default!;
     [Dependency] private ItemSlotsSystem _slots = default!;
     [Dependency] private RechargeBasicEntityAmmoSystem _recharge = default!;
     [Dependency] private SharedCombatModeSystem _combatMode = default!;
     [Dependency] private SharedHandsSystem _hands = default!;
     [Dependency] private UseDelaySystem _useDelay = default!;
-    [Dependency] private _KS14.NPC.Systems.SharedNpcSensorSystem _npcSensorSystem = default!; // KS14: ANK
-    [Dependency] private _KS14.Farsound.FarSoundSystem _farsoundSystem = default!;// KS14
     [Dependency] protected DamageableSystem Damageable = default!;
     [Dependency] protected ExamineSystemShared Examine = default!;
+    [Dependency] protected IGameTiming Timing = default!;
+    [Dependency] protected IMapManager MapManager = default!;
     [Dependency] protected IPrototypeManager ProtoManager = default!;
-    //[Dependency] protected IRobustRandom Random = default!; // Trauma - predicted Random(uid) used instead
+    [Dependency] protected IRobustRandom Random = default!;
     [Dependency] protected ISharedAdminLogManager Logs = default!;
     [Dependency] protected SharedActionsSystem Actions = default!;
     [Dependency] protected SharedAppearanceSystem Appearance = default!;
@@ -584,7 +584,7 @@ public abstract partial class SharedGunSystem : EntitySystem
 
                     // Something like ballistic might want to leave it in the container still
                     if (!cartridge.DeleteOnSpawn && !Containers.IsEntityInContainer(ent!.Value))
-                        EjectCartridge(Random(gun), ent.Value, angle, user: user); // KS14: added user
+                        EjectCartridge(GetRandom(gun), ent.Value, angle, user: user); // KS14: added user
 
                     Dirty(ent!.Value, cartridge);
                     break;

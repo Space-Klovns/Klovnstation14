@@ -4,6 +4,8 @@ using Content.Shared.Implants.Components;
 using Content.Shared.Interaction;
 using Content.Shared.Interaction.Events;
 using Content.Shared.Mobs;
+using Content.Shared.Store;
+using Content.Shared.VoiceMask;
 
 namespace Content.Shared.Implants;
 
@@ -17,6 +19,11 @@ public abstract partial class SharedSubdermalImplantSystem
         SubscribeLocalEvent<ImplantedComponent, TransformSpeakerNameEvent>(RelayToImplantEvent);
         SubscribeLocalEvent<ImplantedComponent, TransformSpeechEvent>(RelayToImplantEvent);
         SubscribeLocalEvent<ImplantedComponent, SeeIdentityAttemptEvent>(RelayToImplantEvent);
+        SubscribeLocalEvent<ImplantedComponent, VoiceMaskToggledEvent>(RelayToImplantEvent);
+
+        // Ref relays, for when you need to write to the event!
+        SubscribeLocalEvent<ImplantedComponent, CurrencyInsertAttemptEvent>(RefRelayToImplantEvent);
+        SubscribeLocalEvent<ImplantedComponent, GetStoreEvent>(RefRelayToImplantEvent);
     }
 
     /// <summary>
@@ -36,6 +43,26 @@ public abstract partial class SharedSubdermalImplantSystem
             RaiseLocalEvent(implant, relayEv);
         }
     }
+
+    /// <summary>
+    /// Relays events from the implanted to the implant.
+    /// </summary>
+    private void RefRelayToImplantEvent<T>(Entity<ImplantedComponent> entity, ref T args) where T : notnull
+    {
+        if (!_container.TryGetContainer(entity, ImplanterComponent.ImplantSlotId, out var implantContainer))
+            return;
+
+        var relayEv = new ImplantRelayEvent<T>(args, entity);
+        foreach (var implant in implantContainer.ContainedEntities)
+        {
+            if (args is HandledEntityEventArgs { Handled: true })
+                return;
+
+            RaiseLocalEvent(implant, relayEv);
+        }
+
+        args = relayEv.Args;
+    }
 }
 
 /// <summary>
@@ -43,13 +70,13 @@ public abstract partial class SharedSubdermalImplantSystem
 /// </summary>
 public sealed class ImplantRelayEvent<T> where T : notnull
 {
-    public readonly T Event;
+    public T Args;
 
     public readonly EntityUid ImplantedEntity;
 
     public ImplantRelayEvent(T ev, EntityUid implantedEntity)
     {
-        Event = ev;
+        Args = ev;
         ImplantedEntity = implantedEntity;
     }
 }

@@ -46,7 +46,7 @@ public sealed partial class NukeSystem : EntitySystem
     [Dependency] private AppearanceSystem _appearance = default!;
     [Dependency] private TurfSystem _turf = default!;
     [Dependency] private IGameTiming _timing = default!;
-    [Dependency] private RoundEndSystem _roundEndSystem = default!;
+    [Dependency] private RoundEndSystem _roundEndSystem = default!; // KS14
 
     /// <summary>
     ///     Used to calculate when the nuke song should start playing for maximum kino with the nuke sfx

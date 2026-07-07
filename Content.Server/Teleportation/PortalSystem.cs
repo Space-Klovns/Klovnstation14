@@ -1,6 +1,5 @@
 using Content.Server.Destructible; // KS14 Addition
 using Content.Shared.Administration.Logs;
-using Content.Shared.Body.Components; // KS14 Addition
 using Content.Shared.Database;
 using Content.Shared.Ghost;
 using Content.Shared.Mind.Components;

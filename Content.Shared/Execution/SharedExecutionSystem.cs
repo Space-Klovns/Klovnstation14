@@ -25,6 +25,7 @@ public sealed partial class SharedExecutionSystem : EntitySystem
     [Dependency] private ActionBlockerSystem _actionBlocker = default!;
     [Dependency] private SharedAudioSystem _audio = default!;
     [Dependency] private SharedDoAfterSystem _doAfter = default!;
+    [Dependency] private MobStateSystem _mobState = default!;
     [Dependency] private SharedPopupSystem _popup = default!;
     [Dependency] private SharedSuicideSystem _suicide = default!;
     [Dependency] private SharedCombatModeSystem _combat = default!;

@@ -18,7 +18,7 @@ public abstract partial class SharedGunSystem
     /// <summary>
     /// Get a predicted random instance for an entity, specific to this tick.
     /// </summary>
-    private System.Random Random(EntityUid uid)
+    private System.Random GetRandom(EntityUid uid)
     {
         var seed = SharedRandomExtensions.HashCodeCombine((int)Timing.CurTick.Value, GetNetEntity(uid).Id);
         return new System.Random(seed);
@@ -84,7 +84,7 @@ public abstract partial class SharedGunSystem
         comp.LastFire = comp.NextFire;
 
         // Convert it so angle can go either side.
-        var random = Random(uid).NextFloat(-0.5f, 0.5f);
+        var random = GetRandom(uid).NextFloat(-0.5f, 0.5f);
 
         var spread = comp.CurrentAngle.Theta * random;
         var angle = new Angle(direction.Theta + comp.CurrentAngle.Theta * random);

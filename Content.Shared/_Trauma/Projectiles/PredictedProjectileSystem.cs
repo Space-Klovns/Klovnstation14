@@ -194,7 +194,7 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
                 LogImpact.Medium,
                 $"Projectile {ToPrettyString(uid):projectile} shot by {ToPrettyString(shooter):user} hit {otherName:target} and dealt {damage:damage} damage");
 
-            comp.ProjectileSpent = !TryPenetrate((uid, comp), target, damage, damageRequired, multiplier); //KS14
+            comp.ProjectileSpent = !TryPenetrate((uid, comp), damage, damageRequired);
         }
         else
         {
@@ -217,7 +217,8 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
             RaiseLocalEvent(new ImpactEffectEvent(comp.ImpactEffect, GetNetCoordinates(xform.Coordinates)));
         }
     }
-    private bool TryPenetrate(Entity<ProjectileComponent> projectile, EntityUid target, DamageSpecifier damage, FixedPoint2 damageRequired, FixedPoint2 multiplier) //KS14 - added multiplier
+
+    private bool TryPenetrate(Entity<ProjectileComponent> projectile, DamageSpecifier damage, FixedPoint2 damageRequired)
     {
         // If penetration is to be considered, we need to do some checks to see if the projectile should stop.
         if (projectile.Comp.PenetrationThreshold == 0)
@@ -228,11 +229,17 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
         {
             foreach (var requiredDamageType in projectile.Comp.PenetrationDamageTypeRequirement)
             {
-                if (damage.DamageDict.Keys.Contains(requiredDamageType))
+                if (damage.DamageDict.ContainsKey(requiredDamageType))
                     continue;
 
                 return false;
             }
+        }
+
+        // If the object won't be destroyed, it "tanks" the penetration hit.
+        if (damage.GetTotal() < damageRequired)
+        {
+            return false;
         }
 
         // If the object won't be destroyed, it "tanks" the penetration hit.
@@ -253,6 +260,7 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
 
         return true;
     }
+
     // KS14 penetration demoncode start
     /// <summary>
     /// Calculates the multiplier needed to reach the requested effective damage.

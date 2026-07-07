@@ -1,9 +1,7 @@
 using Content.Shared.Administration.Logs;
 using Content.Shared.Camera;
 using Content.Shared.Coordinates;
-using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
-using Content.Shared.Damage.Systems;
 using Content.Shared.Database;
 using Content.Shared.Effects;
 using Content.Shared.Mobs.Components;
@@ -43,9 +41,6 @@ public abstract partial class SharedDamageOtherOnHitSystem
         if (TerminatingOrDeleted(args.Target))
             return;
 
-        if (args.Target == args.Component.Thrower) // Goobstation - Mjolnir
-            return;
-
         var dmg = _damageable.ChangeDamage(args.Target, component.Damage * _damageable.UniversalThrownDamageModifier, component.IgnoreResistances, origin: args.Component.Thrower);
 
         // <Goob>
@@ -55,14 +50,12 @@ public abstract partial class SharedDamageOtherOnHitSystem
         // </Goob>
 
         // Log damage only for mobs. Useful for when people throw spears at each other, but also avoids log-spam when explosions send glass shards flying.
-        if (_mobQuery.HasComp(args.Target))
+        if (HasComp<MobStateComponent>(args.Target))
             _adminLogger.Add(LogType.ThrowHit, $"{ToPrettyString(args.Target):target} received {dmg.GetTotal():damage} damage from collision");
 
-        if (!dmg.Empty && _net.IsClient) // prevent double flash
+        if (!dmg.Empty)
         {
-            _target.Clear();
-            _target.Add(args.Target);
-            _color.RaiseEffect(Color.Red, _target, Filter.Pvs(args.Target, entityManager: EntityManager));
+            _color.RaiseEffect(Color.Red, [args.Target], Filter.Pvs(args.Target, entityManager: EntityManager));
         }
 
         _gun.PlayImpactSound(args.Target, dmg, null, false);

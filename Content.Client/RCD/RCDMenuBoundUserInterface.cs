@@ -37,8 +37,6 @@ public sealed partial class RCDMenuBoundUserInterface : BoundUserInterface
             // Starlight end
         };
 
-    private bool IsRpd => EntMan.TryGetComponent<RCDComponent>(Owner, out var rcd) && rcd.IsRpd; // Starlight: RPD
-
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private ISharedPlayerManager _playerManager = default!;
 
