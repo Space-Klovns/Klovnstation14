@@ -61,7 +61,7 @@ public sealed partial class PlayAdminMusicCommand : LocalizedEntityCommands
             return;
         }
 
-        var entry = new KsAdminMusicEntry(path, volume, _gameTiming.CurTime);
+        var entry = new KsAdminMusicEntry(path, volume, _gameTiming.ServerTime);
         _adminMusicManager.AddEntry(entry);
     }
 
