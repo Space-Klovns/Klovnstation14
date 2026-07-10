@@ -189,8 +189,9 @@
   - type: ExaminableDamage
     messages: WindowMessages
   - type: Damageable
-    damageContainer: StructuralInorganic
     damageModifierSet: Metallic
+  - type: Injurable
+    damageContainer: StructuralInorganic
   - type: Destructible
     thresholds:
     - trigger:
