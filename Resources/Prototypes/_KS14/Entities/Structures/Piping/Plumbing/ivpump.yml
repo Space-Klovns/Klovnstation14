@@ -78,6 +78,9 @@
         solution: buffer
       - !type:DoActsBehavior
         acts: ["Destruction"]
+  - type: SolutionManager
+    solutions:
+    - KsSolutionPlumbingBuffer200
 
 - type: entity
   parent: KsPlumbingIvPump
@@ -112,8 +115,6 @@
     fillBaseName: fill_
     solutionName: buffer
 
-  - type: SolutionContainerManager
+  - type: SolutionManager
     solutions:
-      buffer:
-        maxVol: 500
-        canReact: false
+    - KsSolutionPlumbingBuffer500
