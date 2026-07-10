@@ -111,7 +111,7 @@ public sealed partial class KsAdminMusicManager : IPostInjectInit
 
     private void OnRunLevelChanged(object? sender, RunLevelChangedEventArgs args)
     {
-        if (args.NewLevel != ClientRunLevel.Initialize)
+        if (args.NewLevel != ClientRunLevel.Connected)
             return;
 
         foreach (var entry in _activeEntryData.Keys)
