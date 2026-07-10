@@ -10,15 +10,15 @@ namespace Content.Shared._KS14.OverlayStains;
 /// <summary>
 ///     Used for applying stains, visualised via overlays, onto things.
 /// </summary>
-public sealed class StainSystem : EntitySystem
+public sealed partial class StainSystem : EntitySystem
 {
-    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
 
     public EntityQuery<StainedComponent> StainedQuery;
 
     /// <summary>
     ///     Wrapper for a reaction triggered by water, space-cleaner
-    ///         and bleach, that effects <see cref="StainCleanReaction"/>. 
+    ///         and bleach, that effects <see cref="StainCleanReaction"/>.
     /// </summary>
     public ReactiveReagentEffectEntry StainCleanEffectEntry = default!;
 

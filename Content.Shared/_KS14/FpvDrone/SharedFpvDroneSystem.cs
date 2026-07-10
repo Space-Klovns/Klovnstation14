@@ -23,20 +23,20 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared._KS14.FpvDrone;
 
-public abstract class SharedFpvDroneSystem : EntitySystem
+public abstract partial class SharedFpvDroneSystem : EntitySystem
 {
-    [Dependency] private readonly SharedDeviceLinkSystem _deviceLinkSystem = default!;
-    [Dependency] private readonly SharedMoverController _moverController = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
-    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
-    [Dependency] private readonly SharedHandsSystem _handsSystem = default!;
-    [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
-    [Dependency] private readonly PowerCellSystem _powerCellSystem = default!;
-    [Dependency] private readonly RemoteDroneSystem _droneControllerSystem = default!;
-    [Dependency] private readonly ItemSlotsSystem _itemSlotsSystem = default!;
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
-    [Dependency] private readonly INetManager _netManager = default!;
+    [Dependency] private SharedDeviceLinkSystem _deviceLinkSystem = default!;
+    [Dependency] private SharedMoverController _moverController = default!;
+    [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private SharedHandsSystem _handsSystem = default!;
+    [Dependency] private SharedContainerSystem _containerSystem = default!;
+    [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
+    [Dependency] private PowerCellSystem _powerCellSystem = default!;
+    [Dependency] private RemoteDroneSystem _droneControllerSystem = default!;
+    [Dependency] private ItemSlotsSystem _itemSlotsSystem = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private INetManager _netManager = default!;
 
     /// <summary>
     ///     Minimum charge for an FPV to work.

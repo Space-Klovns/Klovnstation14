@@ -5,10 +5,10 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared.DeviceLinking.Systems
 {
-    public sealed class TwoWayLeverSystem : EntitySystem
+    public sealed partial class TwoWayLeverSystem : EntitySystem
     {
-        [Dependency] private readonly SharedDeviceLinkSystem _signalSystem = default!;
-        [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
+        [Dependency] private SharedDeviceLinkSystem _signalSystem = default!;
+        [Dependency] private SharedAppearanceSystem _appearance = default!;
 
         const string _leftToggleImage = "rotate_ccw.svg.192dpi.png";
         const string _rightToggleImage = "rotate_cw.svg.192dpi.png";
@@ -65,7 +65,7 @@ namespace Content.Shared.DeviceLinking.Systems
                 Category = VerbCategory.Lever,
                 Message = disabled ? Loc.GetString("two-way-lever-cant") : null,
                 Disabled = disabled,
-                Icon = new SpriteSpecifier.Texture(new ($"/Textures/Interface/VerbIcons/{_leftToggleImage}")),
+                Icon = new SpriteSpecifier.Texture(new($"/Textures/Interface/VerbIcons/{_leftToggleImage}")),
                 Text = Loc.GetString("two-way-lever-left"),
             };
 
@@ -87,7 +87,7 @@ namespace Content.Shared.DeviceLinking.Systems
                 Category = VerbCategory.Lever,
                 Message = disabled ? Loc.GetString("two-way-lever-cant") : null,
                 Disabled = disabled,
-                Icon = new SpriteSpecifier.Texture(new ($"/Textures/Interface/VerbIcons/{_rightToggleImage}")),
+                Icon = new SpriteSpecifier.Texture(new($"/Textures/Interface/VerbIcons/{_rightToggleImage}")),
                 Text = Loc.GetString("two-way-lever-right"),
             };
 

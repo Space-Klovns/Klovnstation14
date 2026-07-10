@@ -17,7 +17,7 @@ public sealed class SwitchChargingMachineMessage : BoundUserInterfaceMessage
 }
 
 [Serializable, NetSerializable]
-public sealed class PowerChargeState : BoundUserInterfaceState
+public sealed partial class PowerChargeState : BoundUserInterfaceState
 {
     public bool On;
     // 0 -> 255

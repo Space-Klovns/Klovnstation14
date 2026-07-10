@@ -7,7 +7,7 @@ using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 namespace Content.Shared.Salvage.Expeditions;
 
 [Serializable, NetSerializable]
-public sealed class SalvageExpeditionConsoleState : BoundUserInterfaceState
+public sealed partial class SalvageExpeditionConsoleState : BoundUserInterfaceState
 {
     public TimeSpan NextOffer;
     public bool Claimed;
@@ -65,7 +65,7 @@ public sealed partial class SalvageExpeditionDataComponent : Component
     /// <summary>
     /// Nexy time salvage missions are offered.
     /// </summary>
-    [ViewVariables(VVAccess.ReadWrite), DataField("nextOffer", customTypeSerializer:typeof(TimeOffsetSerializer))]
+    [ViewVariables(VVAccess.ReadWrite), DataField("nextOffer", customTypeSerializer: typeof(TimeOffsetSerializer))]
     [AutoPausedField]
     public TimeSpan NextOffer;
 

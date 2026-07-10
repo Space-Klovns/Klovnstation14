@@ -7,7 +7,7 @@ namespace Content.Shared.Points;
 /// <summary>
 /// This handles modifying point counts for <see cref="PointManagerComponent"/>
 /// </summary>
-public abstract class SharedPointSystem : EntitySystem
+public abstract partial class SharedPointSystem : EntitySystem
 {
     /// <summary>
     /// Adds the specified point value to a player.

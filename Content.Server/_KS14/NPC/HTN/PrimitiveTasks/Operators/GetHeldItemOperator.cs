@@ -12,8 +12,8 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 /// </summary>
 public sealed partial class GetActiveHeldItemOperator : HTNOperator
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly HandsSystem _handsSystem = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private HandsSystem _handsSystem = default!;
 
     [DataField(required: true)] public string Key;
 

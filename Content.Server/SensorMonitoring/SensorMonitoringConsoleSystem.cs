@@ -26,11 +26,10 @@ public sealed partial class SensorMonitoringConsoleSystem : EntitySystem
     // Deleting connected devices causes exceptions
     // UI sucks. need a way to make basic dashboards like Grafana, and save them.
 
-    private EntityQuery<DeviceNetworkComponent> _deviceNetworkQuery;
-
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly DeviceNetworkSystem _deviceNetwork = default!;
-    [Dependency] private readonly UserInterfaceSystem _userInterface = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private DeviceNetworkSystem _deviceNetwork = default!;
+    [Dependency] private UserInterfaceSystem _userInterface = default!;
+    [Dependency] private EntityQuery<DeviceNetworkComponent> _deviceNetworkQuery = default!;
 
     public override void Initialize()
     {
@@ -44,8 +43,6 @@ public sealed partial class SensorMonitoringConsoleSystem : EntitySystem
         SubscribeLocalEvent<SensorMonitoringConsoleComponent, ComponentStartup>(ConsoleStartup);
         SubscribeLocalEvent<SensorMonitoringConsoleComponent, DeviceNetworkPacketEvent>(DevicePacketReceived);
         SubscribeLocalEvent<SensorMonitoringConsoleComponent, AtmosDeviceUpdateEvent>(AtmosUpdate);
-
-        _deviceNetworkQuery = GetEntityQuery<DeviceNetworkComponent>();
     }
 
     public override void Update(float frameTime)
@@ -166,18 +163,18 @@ public sealed partial class SensorMonitoringConsoleSystem : EntitySystem
 
                 // @formatter:off
                 WriteSample(component, sensorData, "teg_last_generated", SensorUnit.EnergyJ, tegData.LastGeneration);
-                WriteSample(component, sensorData, "teg_power",          SensorUnit.PowerW,  tegData.PowerOutput);
+                WriteSample(component, sensorData, "teg_power", SensorUnit.PowerW, tegData.PowerOutput);
                 if (component.DebugStreams)
                     WriteSample(component, sensorData, "teg_ramp_pos", SensorUnit.PowerW, tegData.RampPosition);
 
-                WriteSample(component, sensorData, "teg_circ_a_in_pressure",     SensorUnit.PressureKpa,  tegData.CirculatorA.InletPressure);
-                WriteSample(component, sensorData, "teg_circ_a_in_temperature",  SensorUnit.TemperatureK, tegData.CirculatorA.InletTemperature);
-                WriteSample(component, sensorData, "teg_circ_a_out_pressure",    SensorUnit.PressureKpa,  tegData.CirculatorA.OutletPressure);
+                WriteSample(component, sensorData, "teg_circ_a_in_pressure", SensorUnit.PressureKpa, tegData.CirculatorA.InletPressure);
+                WriteSample(component, sensorData, "teg_circ_a_in_temperature", SensorUnit.TemperatureK, tegData.CirculatorA.InletTemperature);
+                WriteSample(component, sensorData, "teg_circ_a_out_pressure", SensorUnit.PressureKpa, tegData.CirculatorA.OutletPressure);
                 WriteSample(component, sensorData, "teg_circ_a_out_temperature", SensorUnit.TemperatureK, tegData.CirculatorA.OutletTemperature);
 
-                WriteSample(component, sensorData, "teg_circ_b_in_pressure",     SensorUnit.PressureKpa,  tegData.CirculatorB.InletPressure);
-                WriteSample(component, sensorData, "teg_circ_b_in_temperature",  SensorUnit.TemperatureK, tegData.CirculatorB.InletTemperature);
-                WriteSample(component, sensorData, "teg_circ_b_out_pressure",    SensorUnit.PressureKpa,  tegData.CirculatorB.OutletPressure);
+                WriteSample(component, sensorData, "teg_circ_b_in_pressure", SensorUnit.PressureKpa, tegData.CirculatorB.InletPressure);
+                WriteSample(component, sensorData, "teg_circ_b_in_temperature", SensorUnit.TemperatureK, tegData.CirculatorB.InletTemperature);
+                WriteSample(component, sensorData, "teg_circ_b_out_pressure", SensorUnit.PressureKpa, tegData.CirculatorB.OutletPressure);
                 WriteSample(component, sensorData, "teg_circ_b_out_temperature", SensorUnit.TemperatureK, tegData.CirculatorB.OutletTemperature);
                 // @formatter:on
                 break;
@@ -190,7 +187,7 @@ public sealed partial class SensorMonitoringConsoleSystem : EntitySystem
                     return;
 
                 // @formatter:off
-                WriteSample(component, sensorData, "atmo_pressure",    SensorUnit.PressureKpa,    atmosData.Pressure);
+                WriteSample(component, sensorData, "atmo_pressure", SensorUnit.PressureKpa, atmosData.Pressure);
                 WriteSample(component, sensorData, "atmo_temperature", SensorUnit.TemperatureK, atmosData.Temperature);
                 // @formatter:on
                 break;
@@ -227,14 +224,14 @@ public sealed partial class SensorMonitoringConsoleSystem : EntitySystem
                     return;
 
                 // @formatter:off
-                WriteSample(component, sensorData, "charge",        SensorUnit.EnergyJ, batteryData.Charge);
-                WriteSample(component, sensorData, "charge_max",    SensorUnit.EnergyJ, batteryData.MaxCharge);
+                WriteSample(component, sensorData, "charge", SensorUnit.EnergyJ, batteryData.Charge);
+                WriteSample(component, sensorData, "charge_max", SensorUnit.EnergyJ, batteryData.MaxCharge);
 
-                WriteSample(component, sensorData, "receiving",     SensorUnit.PowerW,  batteryData.Receiving);
-                WriteSample(component, sensorData, "receiving_max", SensorUnit.PowerW,  batteryData.MaxReceiving);
+                WriteSample(component, sensorData, "receiving", SensorUnit.PowerW, batteryData.Receiving);
+                WriteSample(component, sensorData, "receiving_max", SensorUnit.PowerW, batteryData.MaxReceiving);
 
-                WriteSample(component, sensorData, "supplying",     SensorUnit.PowerW,  batteryData.Supplying);
-                WriteSample(component, sensorData, "supplying_max", SensorUnit.PowerW,  batteryData.MaxSupplying);
+                WriteSample(component, sensorData, "supplying", SensorUnit.PowerW, batteryData.Supplying);
+                WriteSample(component, sensorData, "supplying_max", SensorUnit.PowerW, batteryData.MaxSupplying);
                 // @formatter:on
 
                 break;

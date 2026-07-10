@@ -14,12 +14,12 @@ namespace Content.Server.Xenoarchaeology.Artifact.XAE;
 /// <summary>
 /// System for xeno artifact effect that creates temporary portal between places on station.
 /// </summary>
-public sealed class XAEPortalSystem : BaseXAESystem<XAEPortalComponent>
+public sealed partial class XAEPortalSystem : BaseXAESystem<XAEPortalComponent>
 {
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly LinkedEntitySystem _link = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly SharedContainerSystem _container = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private LinkedEntitySystem _link = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private SharedContainerSystem _container = default!;
 
     /// <inheritdoc />
     protected override void OnActivated(Entity<XAEPortalComponent> ent, ref XenoArtifactNodeActivatedEvent args)
@@ -39,11 +39,11 @@ public sealed class XAEPortalSystem : BaseXAESystem<XAEPortalComponent>
         if (validMinds.Count == 0)
             return;
 
-        if(!TrySpawnNextTo(ent.Comp.PortalProto, args.Artifact, out var firstPortal))
+        if (!TrySpawnNextTo(ent.Comp.PortalProto, args.Artifact, out var firstPortal))
             return;
 
         var target = _random.Pick(validMinds);
-        if(!TrySpawnNextTo(ent.Comp.PortalProto, target, out var secondPortal))
+        if (!TrySpawnNextTo(ent.Comp.PortalProto, target, out var secondPortal))
             return;
 
         // Manual position swapping, because the portal that opens doesn't trigger a collision, and doesn't teleport targets the first time.

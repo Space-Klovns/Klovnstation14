@@ -11,11 +11,11 @@ using Robust.Shared.Network;
 
 namespace Content.Shared._KS14.Signal.SignalSpeaker.EntitySystems;
 
-public abstract class SharedSignalSpeakerSystem : EntitySystem
+public abstract partial class SharedSignalSpeakerSystem : EntitySystem
 {
-    [Dependency] protected readonly SharedUserInterfaceSystem UserInterfaceSystem = default!;
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
-    [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] protected SharedUserInterfaceSystem UserInterfaceSystem = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private ISharedAdminLogManager _adminLogger = default!;
 
     public override void Initialize()
     {

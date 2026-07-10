@@ -6,10 +6,10 @@ using Robust.Shared.Random;
 
 namespace Content.Server.Speech.EntitySystems;
 
-public sealed class GermanAccentSystem : EntitySystem
+public sealed partial class GermanAccentSystem : EntitySystem
 {
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly ReplacementAccentSystem _replacement = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private ReplacementAccentSystem _replacement = default!;
 
     private static readonly Regex RegexTh = new(@"(?<=\s|^)th", RegexOptions.IgnoreCase);
     private static readonly Regex RegexThe = new(@"(?<=\s|^)the(?=\s|$)", RegexOptions.IgnoreCase);
@@ -46,7 +46,7 @@ public sealed class GermanAccentSystem : EntitySystem
         foreach (Match match in RegexTh.Matches(msg))
         {
             // just shift the T over to a Z to preserve capitalization
-            msgBuilder[match.Index] = (char) (msgBuilder[match.Index] + 6);
+            msgBuilder[match.Index] = (char)(msgBuilder[match.Index] + 6);
         }
 
         // Random Umlaut Time! (The joke outweighs the emotional damage this inflicts on actual Germans)

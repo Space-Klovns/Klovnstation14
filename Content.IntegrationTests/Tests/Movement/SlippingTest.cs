@@ -10,7 +10,7 @@ namespace Content.IntegrationTests.Tests.Movement;
 
 public sealed class SlippingTest : MovementTest
 {
-    public sealed class SlipTestSystem : TestListenerSystem<SlipEvent>;
+    public sealed partial class SlipTestSystem : TestListenerSystem<SlipEvent>;
 
     [Test]
     public async Task BananaSlipTest()
@@ -39,4 +39,3 @@ public sealed class SlippingTest : MovementTest
         AssertComp<KnockedDownComponent>(true, Player);
     }
 }
-

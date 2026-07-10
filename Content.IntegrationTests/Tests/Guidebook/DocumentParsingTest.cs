@@ -136,7 +136,7 @@ whitespace before newlines are ignored.
         Assert.That(val, Is.EqualTo(@"<>\>=""=<-_?*3.0//"));
     }
 
-    public sealed class TestControl : Control, IDocumentTag
+    public sealed partial class TestControl : Control, IDocumentTag
     {
         public Dictionary<string, string> Params = default!;
 

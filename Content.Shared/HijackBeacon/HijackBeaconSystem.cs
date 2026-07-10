@@ -13,14 +13,14 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared.HijackBeacon;
 
-public sealed class HijackBeaconSystem : EntitySystem
+public sealed partial class HijackBeaconSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly AnchorableSystem _anchor = default!;
-    [Dependency] private readonly SharedChatSystem _chat = default!;
-    [Dependency] private readonly SharedDoAfterSystem _doAfter = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private AnchorableSystem _anchor = default!;
+    [Dependency] private SharedChatSystem _chat = default!;
+    [Dependency] private SharedDoAfterSystem _doAfter = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
 
     public readonly SoundSpecifier AnnounceSound = new SoundPathSpecifier("/Audio/Misc/notice1.ogg");
     public readonly SoundSpecifier DeactivateSound = new SoundPathSpecifier("/Audio/Misc/notice2.ogg");
@@ -134,20 +134,20 @@ public sealed class HijackBeaconSystem : EntitySystem
 
         switch (ent.Comp.Status)
         {
-           case HijackBeaconStatus.AwaitActivate:
-               args.PushMarkup(Loc.GetString("hijack-beacon-examine-await-activate"));
-               break;
-           case HijackBeaconStatus.Armed:
-               args.PushMarkup(Loc.GetString("defusable-examine-live",
-                   ("name", ent),
-                   ("time", GetRemainingTime(ent.Owner))));
-               break;
-           case HijackBeaconStatus.Cooldown:
-               args.PushMarkup(Loc.GetString("hijack-beacon-examine-await-cooldown"));
-               break;
-           case HijackBeaconStatus.HijackComplete:
-               args.PushMarkup(Loc.GetString("hijack-beacon-examine-await-hijack-complete"));
-               break;
+            case HijackBeaconStatus.AwaitActivate:
+                args.PushMarkup(Loc.GetString("hijack-beacon-examine-await-activate"));
+                break;
+            case HijackBeaconStatus.Armed:
+                args.PushMarkup(Loc.GetString("defusable-examine-live",
+                    ("name", ent),
+                    ("time", GetRemainingTime(ent.Owner))));
+                break;
+            case HijackBeaconStatus.Cooldown:
+                args.PushMarkup(Loc.GetString("hijack-beacon-examine-await-cooldown"));
+                break;
+            case HijackBeaconStatus.HijackComplete:
+                args.PushMarkup(Loc.GetString("hijack-beacon-examine-await-hijack-complete"));
+                break;
         }
     }
 
@@ -323,7 +323,7 @@ public sealed class HijackBeaconSystem : EntitySystem
         if (!Resolve(ent, ref ent.Comp))
             return 69420; // Mature error code
 
-        return (int) (ent.Comp.CompletionTime - _gameTiming.CurTime).TotalSeconds;
+        return (int)(ent.Comp.CompletionTime - _gameTiming.CurTime).TotalSeconds;
     }
 
     #endregion

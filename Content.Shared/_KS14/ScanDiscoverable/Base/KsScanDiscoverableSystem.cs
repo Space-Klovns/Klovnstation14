@@ -5,10 +5,10 @@ using Robust.Shared.Player;
 
 namespace Content.Shared._KS14.ScanDiscoverable.Base;
 
-public sealed class KsScanDiscoverableSystem : EntitySystem
+public sealed partial class KsScanDiscoverableSystem : EntitySystem
 {
-    [Dependency] private readonly MetaDataSystem _metaDataSystem = default!;
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
+    [Dependency] private MetaDataSystem _metaDataSystem = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
 
     public override void Initialize()
     {

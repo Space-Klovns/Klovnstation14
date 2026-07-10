@@ -9,7 +9,7 @@ namespace Content.Shared._KS14.Atmos.Piping.Trinary.Components
     }
 
     [Serializable, NetSerializable]
-    public sealed class MolarMixerBoundUserInterfaceState : BoundUserInterfaceState
+    public sealed partial class MolarMixerBoundUserInterfaceState : BoundUserInterfaceState
     {
         public string MixerLabel { get; }
         public float OutputMolarFlow { get; }

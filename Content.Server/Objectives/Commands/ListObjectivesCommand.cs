@@ -10,10 +10,10 @@ using Robust.Shared.Player;
 namespace Content.Server.Objectives.Commands
 {
     [AdminCommand(AdminFlags.Logs)]
-    public sealed class ListObjectivesCommand : LocalizedCommands
+    public sealed partial class ListObjectivesCommand : LocalizedCommands
     {
-        [Dependency] private readonly IEntityManager _entities = default!;
-        [Dependency] private readonly IPlayerManager _players = default!;
+        [Dependency] private IEntityManager _entities = default!;
+        [Dependency] private IPlayerManager _players = default!;
 
         public override string Command => "lsobjectives";
 
@@ -56,7 +56,7 @@ namespace Content.Server.Objectives.Commands
                 else
                 {
 
-                    var progress = (int) (info.Value.Progress * 100f);
+                    var progress = (int)(info.Value.Progress * 100f);
                     shell.WriteLine($"- [{i}] {objectives[i]} ({info.Value.Title}) ({progress}%)");
                 }
             }

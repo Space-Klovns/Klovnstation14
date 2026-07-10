@@ -29,15 +29,15 @@ namespace Content.Client._Starlight.RCD;
 /// <remarks>
 /// This placement mode is not on the engine because it is content specific.
 /// </remarks>
-public sealed class AlignRPDAtmosPipeLayers : PlacementMode
+public sealed partial class AlignRPDAtmosPipeLayers : PlacementMode
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly IPrototypeManager _protoManager = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly IStateManager _stateManager = default!;
-    [Dependency] private readonly IEyeManager _eyeManager = default!;
-    [Dependency] private readonly IEntityNetworkManager _entityNetwork = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private IPrototypeManager _protoManager = default!;
+    [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IStateManager _stateManager = default!;
+    [Dependency] private IEyeManager _eyeManager = default!;
+    [Dependency] private IEntityNetworkManager _entityNetwork = default!;
 
     private readonly SharedMapSystem _mapSystem;
     private readonly SharedTransformSystem _transformSystem;
@@ -106,7 +106,7 @@ public sealed class AlignRPDAtmosPipeLayers : PlacementMode
     }
 
     // KS14 Start
-    [Dependency] private readonly Robust.Shared.Timing.IGameTiming _gameTiming = default!;
+    [Dependency] private Robust.Shared.Timing.IGameTiming _gameTiming = default!;
     private static readonly SpriteSpecifier RotArrowSprite = new SpriteSpecifier.Rsi(new("/Textures/Markers/teg_arrow.rsi"), "arrow");
 
     // COPIED FROM AlignRCDConstruction FFS

@@ -7,7 +7,7 @@ using Robust.Client.UserInterface;
 namespace Content.Client.UserInterface.Systems.Atmos.GasTank
 {
     [UsedImplicitly]
-    public sealed class GasTankBoundUserInterface : BoundUserInterface
+    public sealed partial class GasTankBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
         private GasTankWindow? _window;

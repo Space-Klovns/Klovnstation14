@@ -116,7 +116,7 @@ public sealed partial class GunSystem
         }
     }
 
-    public sealed class BoxesStatusControl : Control
+    public sealed partial class BoxesStatusControl : Control
     {
         private readonly BatteryBulletRenderer _bullets;
         private readonly Label _ammoCount;

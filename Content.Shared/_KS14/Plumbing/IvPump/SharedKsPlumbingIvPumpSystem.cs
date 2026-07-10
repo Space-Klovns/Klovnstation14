@@ -9,13 +9,13 @@ using Content.Shared.Popups;
 
 namespace Content.Shared._KS14.Plumbing.IvPump;
 
-public abstract class SharedKsPlumbingIvPumpSystem : EntitySystem
+public abstract partial class SharedKsPlumbingIvPumpSystem : EntitySystem
 {
-    [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
-    [Dependency] private readonly ActionBlockerSystem _actionBlockerSystem = default!;
+    [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private ActionBlockerSystem _actionBlockerSystem = default!;
 
-    [Dependency] protected readonly EntityQuery<BloodstreamComponent> BloodstreamQuery = default!;
+    [Dependency] protected EntityQuery<BloodstreamComponent> BloodstreamQuery = default!;
 
     public override void Initialize()
     {

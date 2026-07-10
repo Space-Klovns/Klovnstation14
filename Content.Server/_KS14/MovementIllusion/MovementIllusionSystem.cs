@@ -8,8 +8,8 @@ namespace Content.Server._KS14.MovementIllusion;
 
 public sealed partial class MovementIllusionSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
 
     // TODO LCDC: ON ENGINE UPDATE: FIX THIS
     /*[Dependency]*/

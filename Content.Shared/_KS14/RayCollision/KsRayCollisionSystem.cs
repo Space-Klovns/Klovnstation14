@@ -6,11 +6,11 @@ using Robust.Shared.Physics.Systems;
 
 namespace Content.Shared._KS14.RayCollision;
 
-public sealed class KsRayCollisionSystem : EntitySystem
+public sealed partial class KsRayCollisionSystem : EntitySystem
 {
-    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
-    [Dependency] private readonly RayCastSystem _rayCastSystem = default!;
-    [Dependency] private readonly FixtureSystem _fixtureSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private RayCastSystem _rayCastSystem = default!;
+    [Dependency] private FixtureSystem _fixtureSystem = default!;
 
     public override void Initialize()
     {

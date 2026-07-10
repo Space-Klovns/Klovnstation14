@@ -78,7 +78,7 @@ public enum GasGrenadeCompressorUiKey : byte
 }
 
 [Serializable, NetSerializable]
-public sealed class GasGrenadeCompressorBoundUserInterfaceState(float targetPressure, bool enabled, bool hasGrenade, float grenadePressure, bool isSpent, int materialAmount) : BoundUserInterfaceState, IEquatable<GasGrenadeCompressorBoundUserInterfaceState>
+public sealed partial class GasGrenadeCompressorBoundUserInterfaceState(float targetPressure, bool enabled, bool hasGrenade, float grenadePressure, bool isSpent, int materialAmount) : BoundUserInterfaceState, IEquatable<GasGrenadeCompressorBoundUserInterfaceState>
 {
     public float TargetPressure { get; } = targetPressure;
     public bool Enabled { get; } = enabled;

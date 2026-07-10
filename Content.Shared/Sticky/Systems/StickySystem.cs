@@ -9,15 +9,15 @@ using Robust.Shared.Containers;
 
 namespace Content.Shared.Sticky.Systems;
 
-public sealed class StickySystem : EntitySystem
+public sealed partial class StickySystem : EntitySystem
 {
-    [Dependency] private readonly EntityWhitelistSystem _whitelist = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly SharedContainerSystem _container = default!;
-    [Dependency] private readonly SharedDoAfterSystem _doAfter = default!;
-    [Dependency] private readonly SharedHandsSystem _hands = default!;
-    [Dependency] private readonly SharedInteractionSystem _interaction = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
+    [Dependency] private EntityWhitelistSystem _whitelist = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private SharedContainerSystem _container = default!;
+    [Dependency] private SharedDoAfterSystem _doAfter = default!;
+    [Dependency] private SharedHandsSystem _hands = default!;
+    [Dependency] private SharedInteractionSystem _interaction = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
 
     private const string StickerSlotId = "stickers_container";
 
@@ -32,7 +32,7 @@ public sealed class StickySystem : EntitySystem
 
     private void OnAfterInteract(Entity<StickyComponent> ent, ref AfterInteractEvent args)
     {
-        if (args.Handled || !args.CanReach || args.Target is not {} target)
+        if (args.Handled || !args.CanReach || args.Target is not { } target)
             return;
 
         // try stick object to a clicked target entity
@@ -103,7 +103,7 @@ public sealed class StickySystem : EntitySystem
     private void OnStickyDoAfter(Entity<StickyComponent> ent, ref StickyDoAfterEvent args)
     {
         // target is the surface when sticking/unsticking, it will never be null
-        if (args.Handled || args.Cancelled || args.Args.Target is not {} target)
+        if (args.Handled || args.Cancelled || args.Args.Target is not { } target)
             return;
 
         var user = args.User;
@@ -118,7 +118,7 @@ public sealed class StickySystem : EntitySystem
     private void StartUnsticking(Entity<StickyComponent> ent, EntityUid user)
     {
         var (uid, comp) = ent;
-        if (comp.StuckTo is not {} stuckTo)
+        if (comp.StuckTo is not { } stuckTo)
             return;
 
         var attemptEv = new AttemptEntityUnstickEvent(stuckTo, user);
@@ -182,7 +182,7 @@ public sealed class StickySystem : EntitySystem
     public void UnstickFromEntity(Entity<StickyComponent> ent, EntityUid user)
     {
         var (uid, comp) = ent;
-        if (comp.StuckTo is not {} stuckTo)
+        if (comp.StuckTo is not { } stuckTo)
             return;
 
         var attemptEv = new AttemptEntityUnstickEvent(stuckTo, user);

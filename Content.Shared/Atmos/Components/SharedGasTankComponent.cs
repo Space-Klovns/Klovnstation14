@@ -18,7 +18,7 @@ public sealed class GasTankSetPressureMessage : BoundUserInterfaceMessage
 }
 
 [Serializable, NetSerializable]
-public sealed class GasTankBoundUserInterfaceState : BoundUserInterfaceState
+public sealed partial class GasTankBoundUserInterfaceState : BoundUserInterfaceState
 {
     public float TankPressure;
 }

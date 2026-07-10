@@ -3,7 +3,7 @@ using Content.Shared.UserInterface;
 
 namespace Content.Shared.Power.EntitySystems;
 
-public abstract class SharedActivatableUIRequiresPowerSystem : EntitySystem
+public abstract partial class SharedActivatableUIRequiresPowerSystem : EntitySystem
 {
     public override void Initialize()
     {

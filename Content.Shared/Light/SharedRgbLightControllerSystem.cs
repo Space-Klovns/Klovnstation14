@@ -3,7 +3,7 @@ using Robust.Shared.GameStates;
 
 namespace Content.Shared.Light;
 
-public abstract class SharedRgbLightControllerSystem : EntitySystem
+public abstract partial class SharedRgbLightControllerSystem : EntitySystem
 {
     public override void Initialize()
     {

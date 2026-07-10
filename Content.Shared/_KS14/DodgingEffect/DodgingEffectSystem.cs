@@ -2,9 +2,9 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.DodgingEffect;
 
-public sealed class DodgingEffectSystem : EntitySystem
+public sealed partial class DodgingEffectSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
 
     public override void Update(float frameTime)
     {

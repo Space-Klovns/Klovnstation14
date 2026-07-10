@@ -12,7 +12,7 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 /// </summary>
 public sealed partial class SetTimeOperator : HTNOperator
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
 
     [DataField(required: true)] public string Key = "TimeSince";
 

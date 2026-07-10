@@ -104,13 +104,13 @@ public sealed class MechSoundboardPlayMessage : MechEquipmentUiMessage
 /// trojan horse bui state⠀
 /// </remarks>
 [Serializable, NetSerializable]
-public sealed class MechBoundUiState : BoundUserInterfaceState
+public sealed partial class MechBoundUiState : BoundUserInterfaceState
 {
     public Dictionary<NetEntity, BoundUserInterfaceState> EquipmentStates = new();
 }
 
 [Serializable, NetSerializable]
-public sealed class MechGrabberUiState : BoundUserInterfaceState
+public sealed partial class MechGrabberUiState : BoundUserInterfaceState
 {
     public List<NetEntity> Contents = new();
     public int MaxContents;
@@ -120,7 +120,7 @@ public sealed class MechGrabberUiState : BoundUserInterfaceState
 /// List of sound collection ids to be localized and displayed.
 /// </summary>
 [Serializable, NetSerializable]
-public sealed class MechSoundboardUiState : BoundUserInterfaceState
+public sealed partial class MechSoundboardUiState : BoundUserInterfaceState
 {
     public List<string> Sounds = new();
 }

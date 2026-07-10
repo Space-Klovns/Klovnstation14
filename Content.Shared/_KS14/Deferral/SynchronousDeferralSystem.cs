@@ -11,13 +11,13 @@ namespace Content.Shared._KS14.Deferral;
 ///     This, as by default, updates in-prediction. The static methods on this system can be safely called,
 ///         even when the system is not properly initialised or not updating for any reason;
 ///         deferred operations will still resume on the first tick that they are allowed.
-/// 
+///
 ///     All cached actions are cleared when the system is shut-down.
 /// </remarks>
 // maybe TODO: some support for removing actions that are already queued?
-public sealed class SynchronousDeferralSystem : EntitySystem
+public sealed partial class SynchronousDeferralSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
 
     /// <summary>
     ///     Actions scheduled to run on the next tick.
@@ -27,7 +27,7 @@ public sealed class SynchronousDeferralSystem : EntitySystem
     /// <summary>
     ///     Actions scheduled to run on the first tick
     ///         where <see cref="IGameTiming.CurTime"/>
-    ///         passes the specified <see cref="TimeSpan"/>.  
+    ///         passes the specified <see cref="TimeSpan"/>.
     /// </summary>
     private static Stack<(TimeSpan, Action)> _scheduledActions = new();
 

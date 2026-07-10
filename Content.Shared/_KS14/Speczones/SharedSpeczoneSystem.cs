@@ -13,13 +13,13 @@ namespace Content.Shared._KS14.Speczones;
 ///         a speczone may not exist for any reason and you
 ///         should not assume that a speczone always exists.
 /// </summary>
-public abstract class SharedSpeczoneSystem : EntitySystem
+public abstract partial class SharedSpeczoneSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
-    [Dependency] private readonly SharedSparksSystem _sparksSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private SharedSparksSystem _sparksSystem = default!;
 
-    [Dependency] private readonly EntityQuery<AlwaysAllowedInSpeczoneComponent> _alwaysAllowedQuery = default!;
+    [Dependency] private EntityQuery<AlwaysAllowedInSpeczoneComponent> _alwaysAllowedQuery = default!;
 
     public override void Initialize()
     {

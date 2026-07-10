@@ -8,10 +8,10 @@ namespace Content.Server._KS14.Construction;
 /// <summary>
 ///     AAAAAAAAAAAGGGGGH!!!!!!
 /// </summary>
-public sealed class ConstructionInjectionSystem : EntitySystem
+public sealed partial class ConstructionInjectionSystem : EntitySystem
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly SystemCollectionHookManager _collectionHook = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private SystemCollectionHookManager _collectionHook = default!;
 
     public override void Initialize()
     {

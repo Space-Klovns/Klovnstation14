@@ -11,7 +11,7 @@ namespace Content.Shared.Atmos.Piping.Trinary.Components
     }
 
     [Serializable, NetSerializable]
-    public sealed class GasFilterBoundUserInterfaceState : BoundUserInterfaceState
+    public sealed partial class GasFilterBoundUserInterfaceState : BoundUserInterfaceState
     {
         public string FilterLabel { get; }
         public float TransferRate { get; }

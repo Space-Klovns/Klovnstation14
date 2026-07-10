@@ -1,4 +1,5 @@
 - type: entity
+  parent: SolutionTile
   id: KsGeyserBase
   name: undiscovered geyser
   description: It's a geyser. When scanned, it will conveniently show up on mass scanners.
@@ -62,7 +63,6 @@
   - type: PlumbingDevice
     updateInterval: 2
   - type: PlumbingOutlet
-    solutionName: buffer
   - type: NodeContainer
     nodes:
       outlet:
@@ -72,18 +72,11 @@
 
   # Solution
   - type: SolutionRegeneration
-    solution: buffer
     generated:
       reagents:
       - ReagentId: Water
         Quantity: 100
-  - type: SolutionContainerManager
-    solutions:
-      buffer:
-        maxVol: 100
-        canReact: false
   - type: DrainableSolution
-    solution: buffer
 
   # Geyser
   - type: KsScanDiscoverable
@@ -107,7 +100,6 @@
   suffix: Plasma
   components:
   - type: SolutionRegeneration
-    solution: buffer
     generated:
       reagents:
       - ReagentId: Plasma
@@ -122,7 +114,6 @@
   suffix: CarbonDioxide
   components:
   - type: SolutionRegeneration
-    solution: buffer
     generated:
       reagents:
       - ReagentId: CarbonDioxide
@@ -137,7 +128,6 @@
   suffix: Nitrogen
   components:
   - type: SolutionRegeneration
-    solution: buffer
     generated:
       reagents:
       - ReagentId: Nitrogen
@@ -152,7 +142,6 @@
   suffix: Fresium
   components:
   - type: SolutionRegeneration
-    solution: buffer
     generated:
       reagents:
       - ReagentId: Fresium
@@ -167,7 +156,6 @@
   suffix: Klovnide
   components:
   - type: SolutionRegeneration
-    solution: buffer
     generated:
       reagents:
       - ReagentId: Klovnide
@@ -181,7 +169,6 @@
   suffix: Zipium
   components:
   - type: SolutionRegeneration
-    solution: buffer
     generated:
       reagents:
       - ReagentId: Zipium
@@ -195,7 +182,6 @@
   suffix: Artifexium
   components:
   - type: SolutionRegeneration
-    solution: buffer
     generated:
       reagents:
       - ReagentId: Artifexium
@@ -209,7 +195,6 @@
   suffix: Wittel
   components:
   - type: SolutionRegeneration
-    solution: buffer
     generated:
       reagents:
       - ReagentId: Wittel

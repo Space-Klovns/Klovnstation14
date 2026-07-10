@@ -11,7 +11,7 @@ namespace Content.Shared._KS14.EntityEffects.Effects;
 /// <inheritdoc cref="EntityEffectSystem{T,TEffect}"/>
 public sealed partial class AddReagentToBloodEntityEffectSystem : EntityEffectSystem<BloodstreamComponent, AddReagentToBlood>
 {
-    [Dependency] private readonly SharedBloodstreamSystem _bloodstreamSystem = default!;
+    [Dependency] private SharedBloodstreamSystem _bloodstreamSystem = default!;
 
     protected override void Effect(Entity<BloodstreamComponent> entity, ref EntityEffectEvent<AddReagentToBlood> args)
     {

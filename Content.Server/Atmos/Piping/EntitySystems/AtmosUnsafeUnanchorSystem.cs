@@ -14,11 +14,11 @@ using JetBrains.Annotations;
 namespace Content.Server.Atmos.Piping.EntitySystems
 {
     [UsedImplicitly]
-    public sealed class AtmosUnsafeUnanchorSystem : EntitySystem
+    public sealed partial class AtmosUnsafeUnanchorSystem : EntitySystem
     {
-        [Dependency] private readonly AtmosphereSystem _atmosphere = default!;
-        [Dependency] private readonly NodeGroupSystem _group = default!;
-        [Dependency] private readonly PopupSystem _popup = default!;
+        [Dependency] private AtmosphereSystem _atmosphere = default!;
+        [Dependency] private NodeGroupSystem _group = default!;
+        [Dependency] private PopupSystem _popup = default!;
 
         public override void Initialize()
         {
@@ -32,7 +32,7 @@ namespace Content.Server.Atmos.Piping.EntitySystems
             if (!component.Enabled || !TryComp(uid, out NodeContainerComponent? nodes))
                 return;
 
-            if (_atmosphere.GetContainingMixture(uid, true) is not {} environment)
+            if (_atmosphere.GetContainingMixture(uid, true) is not { } environment)
                 return;
 
             foreach (var node in nodes.Nodes.Values)

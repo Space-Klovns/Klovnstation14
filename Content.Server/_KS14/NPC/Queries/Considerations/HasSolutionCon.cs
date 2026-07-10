@@ -6,7 +6,7 @@ namespace Content.Server._KS14.NPC.Queries.Considerations;
 
 public sealed partial class HasSolutionCon : UtilityConsideration
 {
-    [Dependency] private readonly EntityQuery<SolutionContainerManagerComponent> _solutionContainerQuery = default!;
+    [Dependency] private EntityQuery<SolutionContainerManagerComponent> _solutionContainerQuery = default!;
 
     public override float GetScore(NPCBlackboard blackboard, EntityUid ownerUid, EntityUid targetUid)
     {

@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Content.Shared._KS14.LobbyView;
 
-public abstract class KsSharedLobbyViewSystem : EntitySystem
+public abstract partial class KsSharedLobbyViewSystem : EntitySystem
 {
     /// <summary>
     ///     Gets the best lobby view based on priority.

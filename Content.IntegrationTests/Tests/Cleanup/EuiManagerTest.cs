@@ -6,7 +6,7 @@ using Robust.Server.Player;
 
 namespace Content.IntegrationTests.Tests.Cleanup;
 
-public sealed class EuiManagerTest : GameTest
+public sealed partial class EuiManagerTest : GameTest
 {
     public override PoolSettings PoolSettings => new PoolSettings
     {

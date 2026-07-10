@@ -16,7 +16,7 @@ public enum PlumbingFilterUiKey : byte
 ///     State sent to the client to update the filter UI.
 /// </summary>
 [Serializable, NetSerializable]
-public sealed class PlumbingFilterBoundUserInterfaceState : BoundUserInterfaceState
+public sealed partial class PlumbingFilterBoundUserInterfaceState : BoundUserInterfaceState
 {
     /// <summary>
     ///     The reagent IDs currently being filtered.

@@ -8,15 +8,15 @@ using Robust.Shared.Map.Components;
 
 namespace Content.Client._KS14.ShadowOverlay;
 
-public sealed class KsShadowOverlay : Overlay
+public sealed partial class KsShadowOverlay : Overlay
 {
-    [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly EntityManager _entityManager = default!;
-    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
-    [Dependency] private readonly SpriteSystem _spriteSystem = default!;
-    [Dependency] private readonly EntityLookupSystem _entityLookupSystem = default!;
+    [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private EntityManager _entityManager = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private SpriteSystem _spriteSystem = default!;
+    [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
 
-    [Dependency] private readonly EntityQuery<SpriteComponent> _spriteQuery = default!;
+    [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpaceEntities;
     private const int ConstZIndex = (int)Shared.DrawDepth.DrawDepth.Mobs;

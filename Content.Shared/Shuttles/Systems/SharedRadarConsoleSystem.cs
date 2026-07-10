@@ -2,7 +2,7 @@ using Content.Shared.Shuttles.Components;
 
 namespace Content.Shared.Shuttles.Systems;
 
-public abstract class SharedRadarConsoleSystem : EntitySystem
+public abstract partial class SharedRadarConsoleSystem : EntitySystem
 {
     public const float DefaultMaxRange = 256f;
 

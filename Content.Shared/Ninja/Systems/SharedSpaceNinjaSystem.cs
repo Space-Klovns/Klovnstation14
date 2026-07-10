@@ -9,12 +9,12 @@ namespace Content.Shared.Ninja.Systems;
 /// <summary>
 /// Provides shared ninja API, handles being attacked revealing ninja and stops guns from shooting.
 /// </summary>
-public abstract class SharedSpaceNinjaSystem : EntitySystem
+public abstract partial class SharedSpaceNinjaSystem : EntitySystem
 {
-    [Dependency] protected readonly SharedNinjaSuitSystem Suit = default!;
-    [Dependency] protected readonly SharedPopupSystem Popup = default!;
+    [Dependency] protected SharedNinjaSuitSystem Suit = default!;
+    [Dependency] protected SharedPopupSystem Popup = default!;
 
-    [Dependency] public readonly EntityQuery<SpaceNinjaComponent> NinjaQuery = default!;
+    [Dependency] public EntityQuery<SpaceNinjaComponent> NinjaQuery = default!;
 
     public override void Initialize()
     {
@@ -95,7 +95,7 @@ public abstract class SharedSpaceNinjaSystem : EntitySystem
 
     private void TryRevealNinja(Entity<SpaceNinjaComponent> ent, bool disable)
     {
-        if (ent.Comp.Suit is {} uid && TryComp<NinjaSuitComponent>(ent.Comp.Suit, out var suit))
+        if (ent.Comp.Suit is { } uid && TryComp<NinjaSuitComponent>(ent.Comp.Suit, out var suit))
             Suit.RevealNinja((uid, suit), ent, disable: disable);
     }
 

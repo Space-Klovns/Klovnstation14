@@ -10,7 +10,7 @@ namespace Content.Shared._KS14.Clothing.EntitySystems;
 /// This system is only active on entities that have ClothingRelayEventRequiredComponent,
 /// which is granted by clothing that needs event relaying.
 /// </summary>
-public sealed class RelayEventClothingSystem : EntitySystem
+public sealed partial class RelayEventClothingSystem : EntitySystem
 {
     public override void Initialize()
     {

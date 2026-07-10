@@ -4,7 +4,7 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared.Administration
 {
-    public abstract class SharedBwoinkSystem : EntitySystem
+    public abstract partial class SharedBwoinkSystem : EntitySystem
     {
         // System users
         public static NetUserId SystemUserId { get; } = new NetUserId(Guid.Empty);

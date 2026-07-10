@@ -14,17 +14,17 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.BloodSpray;
 
-public sealed class BloodSpraySystem : EntitySystem
+public sealed partial class BloodSpraySystem : EntitySystem
 {
 
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly SharedSolutionContainerSystem _solutionContainerSystem = default!;
-    [Dependency] private readonly SharedDecalSystem _decalSystem = default!;
-    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
-    [Dependency] private readonly StainSystem _stainSystem = default!;
-    [Dependency] private readonly EntityLookupSystem _lookupSystem = default!;
-    [Dependency] private readonly RayCastSystem _rayCastSystem = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
+    [Dependency] private SharedDecalSystem _decalSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private StainSystem _stainSystem = default!;
+    [Dependency] private EntityLookupSystem _lookupSystem = default!;
+    [Dependency] private RayCastSystem _rayCastSystem = default!;
 
     private static readonly QueryFilter StaticQueryFilter = new() { LayerBits = 0L, Flags = QueryFlags.Static, MaskBits = (long)CollisionGroup.Impassable };
     private static readonly Vector2 DecalOffset = Vector2.One / 2; // this is related to texture size of the blood splatter

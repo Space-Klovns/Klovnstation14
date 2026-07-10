@@ -12,8 +12,8 @@ namespace Content.Server.Explosion.EntitySystems;
 
 public sealed partial class ExplosionSystem
 {
-    [Dependency] private readonly DismembermentSystem _dismembermentSystem = default!;
-    [Dependency] private readonly BloodSpraySystem _bloodSpraySystem = default!;
+    [Dependency] private DismembermentSystem _dismembermentSystem = default!;
+    [Dependency] private BloodSpraySystem _bloodSpraySystem = default!;
 
     private readonly float[] _dismembermentTargetDistanceKeys = [0f, 1.25f, 2.5f, 7.5f]; // should be same length as below
     private readonly BodyPartType[] _dismembermentTargetDistanceValues = [BodyPartType.Leg, BodyPartType.Hand, BodyPartType.Arm, BodyPartType.Head]; // should be same length as above

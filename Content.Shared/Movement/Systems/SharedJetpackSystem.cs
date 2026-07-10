@@ -19,21 +19,21 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared.Movement.Systems;
 
-public abstract class SharedJetpackSystem : EntitySystem
+public abstract partial class SharedJetpackSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!; // KS14
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!; // KS14
-    [Dependency] private readonly MovementSpeedModifierSystem _movementSpeedModifier = default!;
-    [Dependency] protected readonly SharedAppearanceSystem Appearance = default!;
-    [Dependency] protected readonly SharedContainerSystem Container = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-    [Dependency] private readonly ActionContainerSystem _actionContainer = default!;
-    [Dependency] private readonly KsZLevelPhysicsSystem _zLevelPhysicsSystem = default!; // KS14
-    [Dependency] private readonly SharedGravitySystem _gravitySystem = default!; // KS14
+    [Dependency] private IGameTiming _gameTiming = default!; // KS14
+    [Dependency] private IConfigurationManager _configurationManager = default!; // KS14
+    [Dependency] private MovementSpeedModifierSystem _movementSpeedModifier = default!;
+    [Dependency] protected SharedAppearanceSystem Appearance = default!;
+    [Dependency] protected SharedContainerSystem Container = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private ActionContainerSystem _actionContainer = default!;
+    [Dependency] private KsZLevelPhysicsSystem _zLevelPhysicsSystem = default!; // KS14
+    [Dependency] private SharedGravitySystem _gravitySystem = default!; // KS14
 
-    [Dependency] private readonly EntityQuery<JetpackUserComponent> _jetpackUserQuery = default!;
-    [Dependency] private readonly EntityQuery<ActiveJetpackComponent> _activeJetpackQuery = default!;
+    [Dependency] private EntityQuery<JetpackUserComponent> _jetpackUserQuery = default!;
+    [Dependency] private EntityQuery<ActiveJetpackComponent> _activeJetpackQuery = default!;
 
     private bool _canFlyOnGrids = false; // KS14
 

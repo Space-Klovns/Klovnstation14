@@ -6,7 +6,7 @@ using Robust.Client.UserInterface;
 namespace Content.Client.CloningConsole.UI
 {
     [UsedImplicitly]
-    public sealed class CloningConsoleBoundUserInterface : BoundUserInterface
+    public sealed partial class CloningConsoleBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
         private CloningConsoleWindow? _window;
@@ -29,7 +29,7 @@ namespace Content.Client.CloningConsole.UI
         {
             base.UpdateState(state);
 
-            _window?.Populate((CloningConsoleBoundUserInterfaceState) state);
+            _window?.Populate((CloningConsoleBoundUserInterfaceState)state);
         }
     }
 }

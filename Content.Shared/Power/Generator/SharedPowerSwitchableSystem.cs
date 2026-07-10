@@ -8,7 +8,7 @@ namespace Content.Shared.Power.Generator;
 /// Shared logic for power-switchable devices.
 /// </summary>
 /// <seealso cref="PowerSwitchableComponent"/>
-public abstract class SharedPowerSwitchableSystem : EntitySystem
+public abstract partial class SharedPowerSwitchableSystem : EntitySystem
 {
     public override void Initialize()
     {

@@ -56,7 +56,7 @@ public class ComponentQueryBenchmark
         _pair.Server.WaitPost(() =>
         {
             var map = new ResPath(Map);
-            var opts = DeserializationOptions.Default with {InitializeMaps = true};
+            var opts = DeserializationOptions.Default with { InitializeMaps = true };
             if (!_entMan.System<MapLoaderSystem>().TryLoadMap(map, out _, out _, opts))
                 throw new Exception("Map load failed");
         }).GetAwaiter().GetResult();
@@ -259,7 +259,7 @@ public struct QueryBenchEvent
     public int HashCode;
 }
 
-public sealed class QueryBenchSystem : EntitySystem
+public sealed partial class QueryBenchSystem : EntitySystem
 {
     public override void Initialize()
     {

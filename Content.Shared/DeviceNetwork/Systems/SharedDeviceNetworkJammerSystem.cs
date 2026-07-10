@@ -3,7 +3,7 @@ using Content.Shared.DeviceNetwork.Components;
 namespace Content.Shared.DeviceNetwork.Systems;
 
 /// <inheritdoc cref="DeviceNetworkJammerComponent"/>
-public abstract class SharedDeviceNetworkJammerSystem : EntitySystem
+public abstract partial class SharedDeviceNetworkJammerSystem : EntitySystem
 {
     /// <summary>
     /// Sets the range of the jamming effect.

@@ -3,9 +3,9 @@ using Robust.Shared.Utility;
 
 namespace Content.Server._KS14.Spawner;
 
-public sealed class KsRandomCollectiveSpawnerSystem : EntitySystem
+public sealed partial class KsRandomCollectiveSpawnerSystem : EntitySystem
 {
-    [Dependency] private readonly IRobustRandom _robustRandom = default!;
+    [Dependency] private IRobustRandom _robustRandom = default!;
 
     public override void Initialize()
     {

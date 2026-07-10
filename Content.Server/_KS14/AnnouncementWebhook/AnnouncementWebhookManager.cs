@@ -18,10 +18,10 @@ namespace Content.Server._KS14.AnnouncementWebhook;
 ///     Manages listening on a port for HTTP POST requests
 ///         to make ingame server-wide announcements.
 /// </summary>
-public sealed class AnnouncementWebhookManager
+public sealed partial class AnnouncementWebhookManager
 {
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-    [Dependency] private readonly IChatManager _chatManager = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IChatManager _chatManager = default!;
 
     private ConcurrentQueue<string> _pendingAnnouncements = new();
 

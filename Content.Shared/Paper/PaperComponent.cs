@@ -33,7 +33,7 @@ public sealed partial class PaperComponent : Component
     public SoundSpecifier? Sound { get; private set; } = new SoundCollectionSpecifier("PaperScribbles", AudioParams.Default.WithVariation(0.1f));
 
     [Serializable, NetSerializable]
-    public sealed class PaperBoundUserInterfaceState : BoundUserInterfaceState
+    public sealed partial class PaperBoundUserInterfaceState : BoundUserInterfaceState
     {
         public readonly string Text;
         public readonly List<StampDisplayInfo> StampedBy;

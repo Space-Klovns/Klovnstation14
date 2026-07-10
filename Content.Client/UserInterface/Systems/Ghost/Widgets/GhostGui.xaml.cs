@@ -9,7 +9,7 @@ namespace Content.Client.UserInterface.Systems.Ghost.Widgets;
 [GenerateTypedNameReferences]
 public sealed partial class GhostGui : UIWidget
 {
-    [Dependency] private readonly Robust.Shared.Timing.IGameTiming _gameTiming = default!; // KS14
+    [Dependency] private Robust.Shared.Timing.IGameTiming _gameTiming = default!; // KS14
 
     public GhostTargetWindow TargetWindow { get; }
 

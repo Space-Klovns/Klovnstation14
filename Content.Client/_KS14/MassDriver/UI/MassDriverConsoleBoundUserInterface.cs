@@ -5,7 +5,7 @@ using Robust.Client.UserInterface;
 namespace Content.Client._KS14.MassDriver.UI;
 
 [UsedImplicitly]
-public sealed class MassDriverConsoleBoundUserInterface : BoundUserInterface
+public sealed partial class MassDriverConsoleBoundUserInterface : BoundUserInterface
 {
     [ViewVariables]
     private MassDriverConsoleMenu? _menu;

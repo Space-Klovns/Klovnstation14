@@ -5,7 +5,7 @@ using Robust.Shared.Map;
 
 namespace Content.Shared.Fluids.EntitySystems;
 
-public abstract class SharedSpraySystem : EntitySystem
+public abstract partial class SharedSpraySystem : EntitySystem
 {
     public override void Initialize()
     {
@@ -77,4 +77,3 @@ public abstract class SharedSpraySystem : EntitySystem
 }
 
 public sealed partial class SprayLiquidEvent : InstantActionEvent;
-

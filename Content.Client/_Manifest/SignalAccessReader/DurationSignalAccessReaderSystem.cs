@@ -6,10 +6,10 @@ using Robust.Client.Graphics;
 namespace Content.Client.MNET.CardReader;
 
 // This is kinda jank and i don't like it but whatever.
-public sealed class DurationSignalAccessReaderSystem : SharedDurationSignalAccessReaderSystem
+public sealed partial class DurationSignalAccessReaderSystem : SharedDurationSignalAccessReaderSystem
 {
-    [Dependency] private readonly AnimationPlayerSystem _animationSystem = default!;
-    [Dependency] private readonly SpriteSystem _spriteSystem = default!;
+    [Dependency] private AnimationPlayerSystem _animationSystem = default!;
+    [Dependency] private SpriteSystem _spriteSystem = default!;
 
     public override void Initialize()
     {

@@ -4,11 +4,11 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Client._KS14.WetOverlay;
 
-public sealed class KsWetOverlaySystem : EntitySystem
+public sealed partial class KsWetOverlaySystem : EntitySystem
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IOverlayManager _overlayManager = default!;
-    [Dependency] private readonly SystemCollectionHookManager _systemCollectionHookManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IOverlayManager _overlayManager = default!;
+    [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;
 
     private static readonly ProtoId<ShaderPrototype> ShaderId = "KsScreenRain";
 

@@ -17,11 +17,11 @@ using static Robust.Client.UserInterface.Controls.LineEdit;
 namespace Content.Client._RMC14.Vendors;
 
 [UsedImplicitly]
-public sealed class CMAutomatedVendorBui : BoundUserInterface
+public sealed partial class CMAutomatedVendorBui : BoundUserInterface
 {
-    [Dependency] private readonly IPlayerManager _player = default!;
-    [Dependency] private readonly IPrototypeManager _prototype = default!;
-    [Dependency] private readonly IResourceCache _resource = default!;
+    [Dependency] private IPlayerManager _player = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
+    [Dependency] private IResourceCache _resource = default!;
 
     private readonly SharedJobSystem _job;
     private readonly SharedMindSystem _mind;
@@ -110,7 +110,7 @@ public sealed class CMAutomatedVendorBui : BoundUserInterface
                             var linkedEntryIndex = 0;
                             foreach (var vendorEntry in section.Entries)
                             {
-                                if(vendorEntry.Id == linkedEntry)
+                                if (vendorEntry.Id == linkedEntry)
                                     linkedEntryIndexes.Add(linkedEntryIndex);
 
                                 linkedEntryIndex++;
@@ -176,7 +176,7 @@ public sealed class CMAutomatedVendorBui : BoundUserInterface
         for (var sectionIndex = 0; sectionIndex < vendor.Sections.Count; sectionIndex++)
         {
             var section = vendor.Sections[sectionIndex];
-            var uiSection = (CMAutomatedVendorSection) _window.Sections.GetChild(sectionIndex);
+            var uiSection = (CMAutomatedVendorSection)_window.Sections.GetChild(sectionIndex);
             uiSection.Label.SetMessage(GetSectionName(user, section));
 
             var sectionDisabled = false;
@@ -193,7 +193,7 @@ public sealed class CMAutomatedVendorBui : BoundUserInterface
             for (var entryIndex = 0; entryIndex < section.Entries.Count; entryIndex++)
             {
                 var entry = section.Entries[entryIndex];
-                var uiEntry = (CMAutomatedVendorEntry) uiSection.Entries.GetChild(entryIndex);
+                var uiEntry = (CMAutomatedVendorEntry)uiSection.Entries.GetChild(entryIndex);
                 var disabled = sectionDisabled || entry.Amount <= 0;
                 if (section.TakeAll is { } takeAllId)
                 {
@@ -232,7 +232,7 @@ public sealed class CMAutomatedVendorBui : BoundUserInterface
 
             for (var entryIndex = 0; entryIndex < section.Entries.Count; entryIndex++)
             {
-                var uiEntry = (CMAutomatedVendorEntry) uiSection.Entries.GetChild(entryIndex);
+                var uiEntry = (CMAutomatedVendorEntry)uiSection.Entries.GetChild(entryIndex);
                 uiEntry.Amount.Visible = anyAmount;
             }
         }

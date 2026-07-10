@@ -10,11 +10,11 @@ using Robust.Shared.Network;
 namespace Content.Server.Info;
 
 [AdminCommand(AdminFlags.Admin)]
-public sealed class ShowRulesCommand : LocalizedCommands
+public sealed partial class ShowRulesCommand : LocalizedCommands
 {
-    [Dependency] private readonly IConfigurationManager _configuration = default!;
-    [Dependency] private readonly INetManager _net = default!;
-    [Dependency] private readonly IPlayerManager _player = default!;
+    [Dependency] private IConfigurationManager _configuration = default!;
+    [Dependency] private INetManager _net = default!;
+    [Dependency] private IPlayerManager _player = default!;
 
     public override string Command => "showrules";
 
@@ -42,7 +42,7 @@ public sealed class ShowRulesCommand : LocalizedCommands
 
         var coreRules = _configuration.GetCVar(CCVars.RulesFile);
         var message = new SendRulesInformationMessage
-            { PopupTime = seconds, CoreRules = coreRules, ShouldShowRules = true };
+        { PopupTime = seconds, CoreRules = coreRules, ShouldShowRules = true };
         _net.ServerSendMessage(message, player.Channel);
     }
 

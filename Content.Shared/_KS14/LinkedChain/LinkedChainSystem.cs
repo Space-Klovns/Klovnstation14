@@ -9,10 +9,10 @@ namespace Content.Shared._KS14.LinkedChain;
 /// <summary>
 ///     For linkable and triggerable chains.
 /// </summary>
-public sealed class LinkedChainSystem : EntitySystem
+public sealed partial class LinkedChainSystem : EntitySystem
 {
-    [Dependency] private readonly TriggerSystem _triggerSystem = default!;
-    [Dependency] private readonly ChainSystem _chainSystem = default!;
+    [Dependency] private TriggerSystem _triggerSystem = default!;
+    [Dependency] private ChainSystem _chainSystem = default!;
 
     public override void Initialize()
     {

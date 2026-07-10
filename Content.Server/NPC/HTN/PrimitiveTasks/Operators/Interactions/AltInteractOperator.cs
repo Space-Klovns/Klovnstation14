@@ -8,7 +8,7 @@ namespace Content.Server.NPC.HTN.PrimitiveTasks.Operators.Interactions;
 
 public sealed partial class AltInteractOperator : HTNOperator
 {
-    [Dependency] private readonly IEntityManager _entManager = default!;
+    [Dependency] private IEntityManager _entManager = default!;
 
     [DataField("targetKey")]
     public string Key = "Target";
@@ -45,7 +45,7 @@ public sealed partial class AltInteractOperator : HTNOperator
         if (result && doAfter != null && count != doAfter.DoAfters.Count)
         {
             var wait = doAfter.DoAfters.First().Value.Args.Delay;
-            blackboard.SetValue(IdleKey, (float) wait.TotalSeconds + 0.5f);
+            blackboard.SetValue(IdleKey, (float)wait.TotalSeconds + 0.5f);
         }
         else
         {

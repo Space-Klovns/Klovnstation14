@@ -9,7 +9,7 @@ using Robust.Shared.Timing;
 
 namespace Content.Client._Starlight.RCD.Systems;
 
-public sealed class RPDSystem : EntitySystem
+public sealed partial class RPDSystem : EntitySystem
 {
     public override void Initialize()
     {

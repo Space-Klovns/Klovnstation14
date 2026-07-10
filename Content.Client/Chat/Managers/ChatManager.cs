@@ -7,11 +7,11 @@ using Robust.Shared.Utility;
 
 namespace Content.Client.Chat.Managers;
 
-internal sealed class ChatManager : IChatManager
+internal sealed partial class ChatManager : IChatManager
 {
-    [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
-    [Dependency] private readonly IClientAdminManager _adminMgr = default!;
-    [Dependency] private readonly IEntitySystemManager _systems = default!;
+    [Dependency] private IClientConsoleHost _consoleHost = default!;
+    [Dependency] private IClientAdminManager _adminMgr = default!;
+    [Dependency] private IEntitySystemManager _systems = default!;
 
     private ISawmill _sawmill = default!;
 
@@ -63,7 +63,7 @@ internal sealed class ChatManager : IChatManager
                 break;
 
             case ChatSelectChannel.Dead:
-                if (_systems.GetEntitySystemOrNull<GhostSystem>() is {IsGhost: true})
+                if (_systems.GetEntitySystemOrNull<GhostSystem>() is { IsGhost: true })
                     goto case ChatSelectChannel.Local;
 
                 if (_adminMgr.HasFlag(AdminFlags.Admin))

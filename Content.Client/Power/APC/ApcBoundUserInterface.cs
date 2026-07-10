@@ -8,7 +8,7 @@ using Robust.Shared.Player;
 namespace Content.Client.Power.APC
 {
     [UsedImplicitly]
-    public sealed class ApcBoundUserInterface : BoundUserInterface
+    public sealed partial class ApcBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
         private ApcMenu? _menu;
@@ -37,7 +37,7 @@ namespace Content.Client.Power.APC
         {
             base.UpdateState(state);
 
-            var castState = (ApcBoundInterfaceState) state;
+            var castState = (ApcBoundInterfaceState)state;
             _menu?.UpdateState(castState);
         }
 

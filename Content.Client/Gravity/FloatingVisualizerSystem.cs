@@ -7,9 +7,9 @@ using Robust.Shared.Animations;
 namespace Content.Client.Gravity;
 
 /// <inheritdoc/>
-public sealed class FloatingVisualizerSystem : SharedFloatingVisualizerSystem
+public sealed partial class FloatingVisualizerSystem : SharedFloatingVisualizerSystem
 {
-    [Dependency] private readonly AnimationPlayerSystem AnimationSystem = default!;
+    [Dependency] private AnimationPlayerSystem AnimationSystem = default!;
 
     public override void Initialize()
     {
@@ -30,7 +30,7 @@ public sealed class FloatingVisualizerSystem : SharedFloatingVisualizerSystem
         var animation = new Animation
         {
             // We multiply by the number of extra keyframes to make time for them
-            Length = TimeSpan.FromSeconds(animationTime*2),
+            Length = TimeSpan.FromSeconds(animationTime * 2),
             AnimationTracks =
             {
                 new AnimationTrackComponentProperty

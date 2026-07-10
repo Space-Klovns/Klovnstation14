@@ -43,27 +43,27 @@ using Content.Server.NPC.Systems; //KS14
 
 namespace Content.Server.Silicons.StationAi;
 
-public sealed class StationAiSystem : SharedStationAiSystem
+public sealed partial class StationAiSystem : SharedStationAiSystem
 {
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
-    [Dependency] private readonly SharedTransformSystem _xforms = default!;
-    [Dependency] private readonly ContainerSystem _container = default!;
-    [Dependency] private readonly MindSystem _mind = default!;
-    [Dependency] private readonly RoleSystem _roles = default!;
-    [Dependency] private readonly ItemSlotsSystem _slots = default!;
-    [Dependency] private readonly GhostSystem _ghost = default!;
-    [Dependency] private readonly ToggleableGhostRoleSystem _ghostrole = default!;
-    [Dependency] private readonly AlertsSystem _alerts = default!;
-    [Dependency] private readonly DestructibleSystem _destructible = default!;
-    [Dependency] private readonly SharedBatterySystem _battery = default!;
-    [Dependency] private readonly DamageableSystem _damageable = default!;
-    [Dependency] private readonly SharedPopupSystem _popups = default!;
-    [Dependency] private readonly StationSystem _station = default!;
-    [Dependency] private readonly StationJobsSystem _stationJobs = default!;
-    [Dependency] private readonly IPrototypeManager _proto = default!;
-    [Dependency] private readonly MobStateSystem _mobState = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly NPCSystem _npc = default!; //KS14
+    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private SharedTransformSystem _xforms = default!;
+    [Dependency] private ContainerSystem _container = default!;
+    [Dependency] private MindSystem _mind = default!;
+    [Dependency] private RoleSystem _roles = default!;
+    [Dependency] private ItemSlotsSystem _slots = default!;
+    [Dependency] private GhostSystem _ghost = default!;
+    [Dependency] private ToggleableGhostRoleSystem _ghostrole = default!;
+    [Dependency] private AlertsSystem _alerts = default!;
+    [Dependency] private DestructibleSystem _destructible = default!;
+    [Dependency] private SharedBatterySystem _battery = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private SharedPopupSystem _popups = default!;
+    [Dependency] private StationSystem _station = default!;
+    [Dependency] private StationJobsSystem _stationJobs = default!;
+    [Dependency] private IPrototypeManager _proto = default!;
+    [Dependency] private MobStateSystem _mobState = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private NPCSystem _npcSystem = default!; //KS14
 
     private readonly HashSet<Entity<StationAiCoreComponent>> _stationAiCores = new();
 
@@ -366,9 +366,8 @@ public sealed class StationAiSystem : SharedStationAiSystem
 
     private void OnExpandICChatRecipients(ExpandICChatRecipientsEvent ev)
     {
-        var xformQuery = GetEntityQuery<TransformComponent>();
         var sourceXform = Transform(ev.Source);
-        var sourcePos = _xforms.GetWorldPosition(sourceXform, xformQuery);
+        var sourcePos = _xforms.GetWorldPosition(sourceXform);
 
         // This function ensures that chat popups appear on camera views that have connected microphones.
         var query = EntityQueryEnumerator<StationAiCoreComponent, TransformComponent>();
@@ -386,7 +385,7 @@ public sealed class StationAiSystem : SharedStationAiSystem
 
             var range = (xform.MapID != sourceXform.MapID)
                 ? -1
-                : (sourcePos - _xforms.GetWorldPosition(xform, xformQuery)).Length();
+                : (sourcePos - _xforms.GetWorldPosition(xform)).Length();
 
             if (range < 0 || range > ev.VoiceRange)
                 continue;
@@ -491,7 +490,7 @@ public sealed class StationAiSystem : SharedStationAiSystem
     public override void TryMoveBot(EntityUid botUid, EntityCoordinates targetCoordinates)
     {
         // all validation is done in navsystem, we can just straight up pass it like this and our job here is done
-        _npc.SetBlackboard(botUid, NPCBlackboard.FollowTarget, targetCoordinates);
+        _npcSystem.SetBlackboard(botUid, NPCBlackboard.FollowTarget, targetCoordinates);
     }
     //KS14 end
 }

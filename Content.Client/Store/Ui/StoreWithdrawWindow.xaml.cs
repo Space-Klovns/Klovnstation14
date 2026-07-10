@@ -16,7 +16,7 @@ namespace Content.Client.Store.Ui;
 [GenerateTypedNameReferences]
 public sealed partial class StoreWithdrawWindow : DefaultWindow
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     private Dictionary<CurrencyPrototype, FixedPoint2> _validCurrencies = new();
     private HashSet<CurrencyWithdrawButton> _buttons = new();
@@ -55,7 +55,7 @@ public sealed partial class StoreWithdrawWindow : DefaultWindow
                 Id = currency.Key.ID,
                 Amount = currency.Value,
                 MinHeight = 20,
-                Text = Loc.GetString("store-withdraw-button-ui", ("currency",Loc.GetString(currency.Key.DisplayName, ("amount", currency.Value)))),
+                Text = Loc.GetString("store-withdraw-button-ui", ("currency", Loc.GetString(currency.Key.DisplayName, ("amount", currency.Value)))),
                 Disabled = false,
             };
             button.OnPressed += args =>

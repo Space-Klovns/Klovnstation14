@@ -38,7 +38,7 @@ public sealed class McqDialogueDataSelectedMessage(string id) : BoundUserInterfa
 }
 
 [Serializable, NetSerializable]
-public sealed class McqDialogueBoundUserInterfaceState(List<McqDialogueData> dialogueData) : BoundUserInterfaceState
+public sealed partial class McqDialogueBoundUserInterfaceState(List<McqDialogueData> dialogueData) : BoundUserInterfaceState
 {
     public List<McqDialogueData> DialogueData = dialogueData;
 }

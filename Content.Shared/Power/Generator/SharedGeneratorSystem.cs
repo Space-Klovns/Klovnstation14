@@ -4,7 +4,7 @@
 /// This handles small, portable generators that run off a material fuel.
 /// </summary>
 /// <seealso cref="FuelGeneratorComponent"/>
-public abstract class SharedGeneratorSystem : EntitySystem
+public abstract partial class SharedGeneratorSystem : EntitySystem
 {
     /// <summary>
     /// Calculates the expected fuel efficiency based on the optimal and target power levels.

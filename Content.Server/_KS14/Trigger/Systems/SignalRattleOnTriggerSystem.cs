@@ -9,9 +9,9 @@ using Robust.Shared.Log;
 
 namespace Content.Server.Trigger.Systems;
 
-public sealed class SignalRattleOnTriggerSystem : EntitySystem
+public sealed partial class SignalRattleOnTriggerSystem : EntitySystem
 {
-    [Dependency] private readonly DeviceLinkSystem _deviceLink = default!;
+    [Dependency] private DeviceLinkSystem _deviceLink = default!;
 
     public override void Initialize()
     {

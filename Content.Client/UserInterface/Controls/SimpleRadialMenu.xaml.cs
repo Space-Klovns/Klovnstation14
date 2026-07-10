@@ -17,9 +17,9 @@ public sealed partial class SimpleRadialMenu : RadialMenu
 {
     private EntityUid? _attachMenuToEntity;
 
-    [Dependency] private readonly IClyde _clyde = default!;
-    [Dependency] private readonly IEntityManager _entManager = default!;
-    [Dependency] private readonly IInputManager _inputManager = default!;
+    [Dependency] private IClyde _clyde = default!;
+    [Dependency] private IEntityManager _entManager = default!;
+    [Dependency] private IInputManager _inputManager = default!;
 
     public SimpleRadialMenu()
     {
@@ -134,7 +134,7 @@ public sealed partial class SimpleRadialMenu : RadialMenu
             _ => null
         };
 
-        if(imageControl != null)
+        if (imageControl != null)
             button.AddChild(imageControl);
 
         if (model is RadialMenuActionOptionBase actionOption)
@@ -386,4 +386,3 @@ public sealed class SimpleRadialMenuSettings
     /// </summary>
     public bool NoBackground = false;
 }
-

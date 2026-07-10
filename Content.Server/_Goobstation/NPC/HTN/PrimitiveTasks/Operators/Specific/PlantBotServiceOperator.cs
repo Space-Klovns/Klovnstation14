@@ -19,7 +19,7 @@ namespace Content.Server._Goobstation.NPC.HTN.PrimitiveTasks.Operators.Specific;
 
 public sealed partial class PlantbotServiceOperator : HTNOperator
 {
-    [Dependency] private readonly IEntityManager _entMan = default!;
+    [Dependency] private IEntityManager _entMan = default!;
 
     private ChatSystem _chat = default!;
     private SharedAudioSystem _audio = default!;

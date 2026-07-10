@@ -1,3 +1,4 @@
+using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Inventory;
 using Content.Shared.Storage.Components;
 using Content.Shared.Whitelist;
@@ -16,19 +17,19 @@ namespace Content.Shared.Storage.EntitySystems;
 /// <summary>
 /// <see cref="MagnetPickupComponent"/>
 /// </summary>
-public sealed partial class MagnetPickupSystem : EntitySystem // KS14
+public sealed partial class MagnetPickupSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly INetManager _net = default!;
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
-    [Dependency] private readonly InventorySystem _inventory = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly SharedItemSystem _item = default!; //WD ks14 port
-    [Dependency] private readonly ItemToggleSystem _itemToggle = default!; //WD ks14 port
-    [Dependency] private readonly SharedStorageSystem _storage = default!;
-    [Dependency] private readonly EntityWhitelistSystem _whitelistSystem = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private InventorySystem _inventory = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private SharedStorageSystem _storage = default!;
+    [Dependency] private EntityWhitelistSystem _whitelistSystem = default!;
+    [Dependency] private SharedHandsSystem _hands = default!;
+    [Dependency] private SharedItemSystem _item = default!; //WD ks14 port
+    [Dependency] private ItemToggleSystem _itemToggle = default!; //WD ks14 port
 
-    [Dependency] private readonly EntityQuery<PhysicsComponent> _physicsQuery = default!;
+    [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default!;
 
     private static readonly TimeSpan ScanDelay = TimeSpan.FromSeconds(0.5f); // KS14: changed to 0.5
 
@@ -42,6 +43,11 @@ public sealed partial class MagnetPickupSystem : EntitySystem // KS14
     {
         base.Initialize();
         SubscribeLocalEvent<MagnetPickupComponent, MapInitEvent>(OnMagnetMapInit);
+
+        // KS14 start
+        SubscribeLocalEvent<MagnetPickupComponent, ExaminedEvent>(OnExamined);
+        SubscribeLocalEvent<MagnetPickupComponent, ItemToggledEvent>(OnItemToggled);
+        // KS14 end
     }
 
     private void OnMagnetMapInit(EntityUid uid, MagnetPickupComponent component, MapInitEvent args)
@@ -68,11 +74,6 @@ public sealed partial class MagnetPickupSystem : EntitySystem // KS14
     {
         base.Update(frameTime);
 
-        //evil KS14 deprediction hack
-        if (!_net.IsServer)
-            return;
-        //evil KS14 hack end
-
         var query = EntityQueryEnumerator<MagnetPickupComponent, StorageComponent, TransformComponent, MetaDataComponent>();
         var currentTime = _timing.CurTime;
 
@@ -92,17 +93,25 @@ public sealed partial class MagnetPickupSystem : EntitySystem // KS14
             comp.NextScan += ScanDelay;
             Dirty(uid, comp);
 
-            if (!_inventory.TryGetContainingSlot((uid, xform, meta), out var slotDef) && comp.SlotIrrespective == false) //KS14
+            var parentUid = xform.ParentUid;
+
+            if (comp.RequireActiveHand && (!_hands.TryGetActiveItem(parentUid, out var activeItem) || activeItem != uid))
                 continue;
 
-            if (slotDef != null && (slotDef.SlotFlags & comp.SlotFlags) == 0x0 && comp.SlotIrrespective == false) //KS14
-                continue;
+            if (comp.SlotFlags != null &&
+                !comp.SlotIrrespective /* KS14: SlotIrrespective */)
+            {
+                if (!_inventory.TryGetContainingSlot((uid, xform, meta), out var slotDef))
+                    continue;
+
+                if ((slotDef.SlotFlags & comp.SlotFlags) == 0x0)
+                    continue;
+            }
 
             // No space
             if (!_storage.HasSpace((uid, storage)))
                 continue;
 
-            var parentUid = xform.ParentUid;
             var playedSound = false;
             var finalCoords = xform.Coordinates;
             var moverCoords = _transform.GetMoverCoordinates(uid, xform);

@@ -7,7 +7,7 @@ namespace Content.Shared.Tips;
 /// <summary>
 /// Handles periodically displaying gameplay tips to all players ingame.
 /// </summary>
-public abstract class SharedTipsSystem : EntitySystem
+public abstract partial class SharedTipsSystem : EntitySystem
 {
     /// <summary>
     /// Always adds this time to a speech message. This is so really short message stay around for a bit.

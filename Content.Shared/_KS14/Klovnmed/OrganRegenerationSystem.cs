@@ -9,14 +9,14 @@ namespace Content.Shared._KS14.Klovnmed;
 /// <summary>
 ///     Used to regenerate limbs ig.
 /// </summary>
-public sealed class OrganRegenerationSystem : EntitySystem
+public sealed partial class OrganRegenerationSystem : EntitySystem
 {
-    [Dependency] private readonly INetManager _netManager = default!;
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
-    [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private SharedContainerSystem _containerSystem = default!;
 
-    [Dependency] private readonly EntityQuery<InitialBodyComponent> _initialBodyQuery = default!;
-    [Dependency] private readonly EntityQuery<BodyComponent> _bodyQuery = default!;
+    [Dependency] private EntityQuery<InitialBodyComponent> _initialBodyQuery = default!;
+    [Dependency] private EntityQuery<BodyComponent> _bodyQuery = default!;
 
     private static readonly LocId PopupLocId = "ks-klovnmed-organ-regen-popup";
 

@@ -1,6 +1,6 @@
 namespace Content.Shared.Rotation;
 
-public abstract class SharedRotationVisualsSystem : EntitySystem
+public abstract partial class SharedRotationVisualsSystem : EntitySystem
 {
     /// <summary>
     /// Sets the rotation an entity will have when it is "horizontal"

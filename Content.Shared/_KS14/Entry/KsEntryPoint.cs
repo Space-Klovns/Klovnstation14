@@ -12,11 +12,11 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared._KS14.Entry;
 
-public sealed class KsEntryPoint : GameShared
+public sealed partial class KsEntryPoint : GameShared
 {
-    [Dependency] private readonly IResourceManager _resourceManager = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly SystemCollectionHookManager _systemCollectionHookManager = default!;
+    [Dependency] private IResourceManager _resourceManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;
 
     private readonly ResPath[] _replacementDirectories = [
         new("/_KsModule_ReplacedPrototypes/")

@@ -11,11 +11,11 @@ namespace Content.Server.Codewords;
 /// <summary>
 /// Gamerule that provides codewords for other gamerules that rely on them.
 /// </summary>
-public sealed class CodewordSystem : EntitySystem
+public sealed partial class CodewordSystem : EntitySystem
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IAdminLogManager _adminLogger = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IAdminLogManager _adminLogger = default!;
+    [Dependency] private IRobustRandom _random = default!;
 
     public override void Initialize()
     {
@@ -36,7 +36,7 @@ public sealed class CodewordSystem : EntitySystem
     public string[] GetCodewords(ProtoId<CodewordFactionPrototype> faction)
     {
         var query = EntityQueryEnumerator<CodewordManagerComponent>();
-        while (query.MoveNext(out  _, out var manager))
+        while (query.MoveNext(out _, out var manager))
         {
             if (!manager.Codewords.TryGetValue(faction, out var codewordEntity))
                 return GenerateForFaction(faction, ref manager);

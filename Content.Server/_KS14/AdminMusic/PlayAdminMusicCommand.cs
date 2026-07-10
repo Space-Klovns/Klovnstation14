@@ -11,12 +11,12 @@ using Robust.Shared.Utility;
 namespace Content.Server._KS14.AdminMusic;
 
 [AdminCommand(AdminFlags.Fun)]
-public sealed class PlayAdminMusicCommand : LocalizedEntityCommands
+public sealed partial class PlayAdminMusicCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly IResourceManager _resourceManager = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly KsAdminMusicManager _adminMusicManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IResourceManager _resourceManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private KsAdminMusicManager _adminMusicManager = default!;
 
     public override string Command => "playadminmusic";
 

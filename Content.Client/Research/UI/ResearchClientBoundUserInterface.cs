@@ -4,7 +4,7 @@ using Robust.Client.UserInterface;
 
 namespace Content.Client.Research.UI
 {
-    public sealed class ResearchClientBoundUserInterface : BoundUserInterface
+    public sealed partial class ResearchClientBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
         private ResearchClientServerSelectionMenu? _menu;

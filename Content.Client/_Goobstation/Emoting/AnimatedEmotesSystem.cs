@@ -8,7 +8,7 @@ namespace Content.Client._Goobstation.Emoting;
 
 public sealed partial class AnimatedEmotesSystem : EntitySystem
 {
-    [Dependency] private readonly AnimationPlayerSystem _anim = default!;
+    [Dependency] private AnimationPlayerSystem _anim = default!;
 
     public override void Initialize()
     {

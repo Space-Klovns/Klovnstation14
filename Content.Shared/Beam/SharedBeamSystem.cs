@@ -1,6 +1,6 @@
 ﻿namespace Content.Shared.Beam;
 
-public abstract class SharedBeamSystem : EntitySystem
+public abstract partial class SharedBeamSystem : EntitySystem
 {
 
 }

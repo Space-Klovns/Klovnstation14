@@ -15,16 +15,16 @@ namespace Content.Shared._KS14.OreVent;
 
 public sealed partial class OreVentSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly INetManager _netManager = default!;
-    [Dependency] private readonly SharedDoAfterSystem _doAfterSystem = default!;
-    [Dependency] private readonly SharedJitteringSystem _jitteringSystem = default!;
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
-    [Dependency] private readonly SharedExplosionSystem _explosionSystem = default!;
-    [Dependency] private readonly KsScanDiscoverableSystem _discoverableSystem = default!;
-    [Dependency] private readonly SharedOreVentDroneSystem _oreVentDroneSystem = default!;
-    [Dependency] private readonly OreWellSystem _oreWellSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
+    [Dependency] private SharedJitteringSystem _jitteringSystem = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
+    [Dependency] private SharedExplosionSystem _explosionSystem = default!;
+    [Dependency] private KsScanDiscoverableSystem _discoverableSystem = default!;
+    [Dependency] private SharedOreVentDroneSystem _oreVentDroneSystem = default!;
+    [Dependency] private OreWellSystem _oreWellSystem = default!;
 
     public override void Initialize()
     {

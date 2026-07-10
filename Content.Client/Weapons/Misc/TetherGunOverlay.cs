@@ -4,7 +4,7 @@ using Robust.Shared.Enums;
 
 namespace Content.Client.Weapons.Misc;
 
-public sealed class TetherGunOverlay : Overlay
+public sealed partial class TetherGunOverlay : Overlay
 {
     public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowFOV;
 

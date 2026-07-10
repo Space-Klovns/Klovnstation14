@@ -8,7 +8,7 @@ using Robust.Shared.Timing;
 
 namespace Content.Client.Weapons.Ranged;
 
-public sealed class GunSpreadOverlay : Overlay
+public sealed partial class GunSpreadOverlay : Overlay
 {
     public override OverlaySpace Space => OverlaySpace.WorldSpace;
 

@@ -3,11 +3,11 @@ using Robust.Shared.Random;
 
 namespace Content.Server.Procedural;
 
-public sealed class RoomFillSystem : EntitySystem
+public sealed partial class RoomFillSystem : EntitySystem
 {
-    [Dependency] private readonly DungeonSystem _dungeon = default!;
-    [Dependency] private readonly SharedMapSystem _maps = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
+    [Dependency] private DungeonSystem _dungeon = default!;
+    [Dependency] private SharedMapSystem _maps = default!;
+    [Dependency] private IRobustRandom _random = default!;
 
     public override void Initialize()
     {
@@ -29,7 +29,7 @@ public sealed class RoomFillSystem : EntitySystem
                 _dungeon.SpawnRoom(
                     xform.GridUid.Value,
                     mapGrid,
-                    _maps.LocalToTile(xform.GridUid.Value, mapGrid, xform.Coordinates) - new Vector2i(room.Size.X/2,room.Size.Y/2),
+                    _maps.LocalToTile(xform.GridUid.Value, mapGrid, xform.Coordinates) - new Vector2i(room.Size.X / 2, room.Size.Y / 2),
                     room,
                     _random,
                     null,

@@ -1,3 +1,5 @@
+# to make sure new jobs dont roll antag, make sure to add them to BaseAntagSpecifier.jobBlacklist
+
 - type: job
   id: ScenarioNt
   name: job-name-scenario-nt
@@ -6,7 +8,6 @@
   startingGear: null # scenario spawns get NOTHING
   icon: "JobIconNanotrasen"
   supervisors: job-supervisors-nobody
-  canBeAntag: false
   access:
   - Maintenance
   special:
@@ -26,7 +27,6 @@
   startingGear: null # scenario spawns get NOTHING
   icon: "JobIconSyndicate"
   supervisors: job-supervisors-nobody
-  canBeAntag: false
   access:
   - SyndicateAgent
   - Maintenance
@@ -47,7 +47,6 @@
   startingGear: null # scenario spawns get NOTHING
   icon: "JobIconPirate"
   supervisors: job-supervisors-nobody
-  canBeAntag: false
   access:
   - Maintenance
   special:

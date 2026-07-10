@@ -8,9 +8,9 @@ namespace Content.Shared.Weapons.Melee;
 /// <summary>
 /// This handles <see cref="MeleeSoundComponent"/>
 /// </summary>
-public sealed class MeleeSoundSystem : EntitySystem
+public sealed partial class MeleeSoundSystem : EntitySystem
 {
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
 
     public const float DamagePitchVariation = 0.05f;
 
@@ -33,7 +33,7 @@ public sealed class MeleeSoundSystem : EntitySystem
     /// <param name="hitSoundOverride"> A sound can be supplied by the <see cref="MeleeHitEvent"/> itself to override everything else </param>
     public void PlayHitSound(EntityUid targetUid, EntityUid? userUid, string? damageType, SoundSpecifier? hitSoundOverride, MeleeWeaponComponent weaponComponent)
     {
-        var hitSound      = weaponComponent.HitSound;
+        var hitSound = weaponComponent.HitSound;
         var noDamageSound = weaponComponent.NoDamageSound;
 
         var playedSound = false;

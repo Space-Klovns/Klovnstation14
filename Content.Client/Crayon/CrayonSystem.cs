@@ -10,10 +10,10 @@ using Robust.Shared.Timing;
 
 namespace Content.Client.Crayon;
 
-public sealed class CrayonSystem : SharedCrayonSystem
+public sealed partial class CrayonSystem : SharedCrayonSystem
 {
-    [Dependency] private readonly SharedChargesSystem _charges = default!;
-    [Dependency] private readonly EntityManager _entityManager = default!;
+    [Dependency] private SharedChargesSystem _charges = default!;
+    [Dependency] private EntityManager _entityManager = default!;
 
     public override void Initialize()
     {
@@ -43,8 +43,8 @@ public sealed class CrayonSystem : SharedCrayonSystem
             base.FrameUpdate(args);
 
             _label.SetMarkup(Robust.Shared.Localization.Loc.GetString("crayon-drawing-label",
-                ("color",_crayon.Comp.Color),
-                ("state",_crayon.Comp.SelectedState),
+                ("color", _crayon.Comp.Color),
+                ("state", _crayon.Comp.SelectedState),
                 ("charges", _charges.GetCurrentCharges(_crayon.Owner)),
                 ("capacity", _capacity)));
         }

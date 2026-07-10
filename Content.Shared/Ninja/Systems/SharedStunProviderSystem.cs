@@ -6,7 +6,7 @@ namespace Content.Shared.Ninja.Systems;
 /// All interaction logic is implemented serverside.
 /// This is in shared for API and access.
 /// </summary>
-public abstract class SharedStunProviderSystem : EntitySystem
+public abstract partial class SharedStunProviderSystem : EntitySystem
 {
     /// <summary>
     /// Set the battery field on the stun provider.

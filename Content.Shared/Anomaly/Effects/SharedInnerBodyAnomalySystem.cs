@@ -1,5 +1,5 @@
 namespace Content.Shared.Anomaly.Effects;
 
-public abstract class SharedInnerBodyAnomalySystem : EntitySystem
+public abstract partial class SharedInnerBodyAnomalySystem : EntitySystem
 {
 }

@@ -5,10 +5,10 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.EmoteAudioEffect;
 
-public sealed class EmoteAudioEffectSystem : EntitySystem
+public sealed partial class EmoteAudioEffectSystem : EntitySystem
 {
-    [Dependency] private readonly AudioEffectSystem _audioEffectSystem = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private AudioEffectSystem _audioEffectSystem = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     public override void Initialize()
     {

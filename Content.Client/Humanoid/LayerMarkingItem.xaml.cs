@@ -17,7 +17,7 @@ namespace Content.Client.Humanoid;
 [GenerateTypedNameReferences]
 public sealed partial class LayerMarkingItem : BoxContainer, ISearchableControl
 {
-    [Dependency] private readonly IEntityManager _entity = default!;
+    [Dependency] private IEntityManager _entity = default!;
 
     private readonly SpriteSystem _sprite;
 
@@ -79,7 +79,7 @@ public sealed partial class LayerMarkingItem : BoxContainer, ISearchableControl
 
     private void MarkingsChanged(ProtoId<OrganCategoryPrototype> organ, HumanoidVisualLayers layer)
     {
-        if (_organ != organ ||  _layer != layer)
+        if (_organ != organ || _layer != layer)
             return;
 
         UpdateSelection();

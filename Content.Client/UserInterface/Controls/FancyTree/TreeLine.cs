@@ -10,7 +10,7 @@ namespace Content.Client.UserInterface.Controls.FancyTree;
 /// <remarks>
 ///     Ideally this would just be a draw method in <see cref="TreeItem"/>, but sadly the draw override gets called BEFORE children are drawn.
 /// </remarks>
-public sealed class TreeLine : Control
+public sealed partial class TreeLine : Control
 {
     protected override void Draw(DrawingHandleScreen handle)
     {
@@ -23,7 +23,7 @@ public sealed class TreeLine : Control
         if (!parent.Expanded || !parent.Tree.DrawLines || parent.Body.ChildCount == 0)
             return;
 
-        var width = Math.Max(1, (int) (parent.Tree.LineWidth * UIScale));
+        var width = Math.Max(1, (int)(parent.Tree.LineWidth * UIScale));
         var w1 = width / 2;
         var w2 = width - w1;
 
@@ -38,7 +38,7 @@ public sealed class TreeLine : Control
         var buttonSize = parent.Button.PixelSize;
         var y1 = buttonPos.Y + buttonSize.Y;
 
-        var lastItem = (TreeItem) parent.Body.GetChild(parent.Body.ChildCount - 1);
+        var lastItem = (TreeItem)parent.Body.GetChild(parent.Body.ChildCount - 1);
 
         var childPos = lastItem.Button.GlobalPixelPosition - global;
         var y2 = childPos.Y + lastItem.Button.PixelSize.Y / 2;
@@ -48,10 +48,10 @@ public sealed class TreeLine : Control
         handle.DrawRect(rect, parent.Tree.LineColor);
 
         // Horizontal lines
-        var dx = Math.Max(1, (int) (FancyTree.Indentation * UIScale / 2));
+        var dx = Math.Max(1, (int)(FancyTree.Indentation * UIScale / 2));
         foreach (var child in parent.Body.Children)
         {
-            var item = (TreeItem) child;
+            var item = (TreeItem)child;
             var pos = item.Button.GlobalPixelPosition - global;
             var y = pos.Y + item.Button.PixelSize.Y / 2;
             rect = new UIBox2i((x - w1, y - w1), (x + dx, y + w2));

@@ -12,10 +12,10 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.Atmos.EntitySystems;
 
-public sealed class EvaporinGasSystem : EntitySystem
+public sealed partial class EvaporinGasSystem : EntitySystem
 {
-    [Dependency] private readonly ThirstSystem _thirstSystem = default!;
-    [Dependency] private readonly DamageableSystem _damageableSystem = default!;
+    [Dependency] private ThirstSystem _thirstSystem = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
 
     public override void Initialize()
     {

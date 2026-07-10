@@ -6,9 +6,9 @@ namespace Content.Shared._Goobstation.Silicon.Bots;
 /// <summary>
 /// Handles emagging Plantbots
 /// </summary>
-public sealed class PlantbotSystem : EntitySystem
+public sealed partial class PlantbotSystem : EntitySystem
 {
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
 
     public override void Initialize()
     {

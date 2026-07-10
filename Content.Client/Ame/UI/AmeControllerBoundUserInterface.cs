@@ -5,7 +5,7 @@ using Robust.Client.UserInterface;
 namespace Content.Client.Ame.UI
 {
     [UsedImplicitly]
-    public sealed class AmeControllerBoundUserInterface : BoundUserInterface
+    public sealed partial class AmeControllerBoundUserInterface : BoundUserInterface
     {
         private AmeWindow? _window;
 
@@ -32,7 +32,7 @@ namespace Content.Client.Ame.UI
         {
             base.UpdateState(state);
 
-            var castState = (AmeControllerBoundUserInterfaceState) state;
+            var castState = (AmeControllerBoundUserInterfaceState)state;
             _window?.UpdateState(castState); //Update window state
         }
 

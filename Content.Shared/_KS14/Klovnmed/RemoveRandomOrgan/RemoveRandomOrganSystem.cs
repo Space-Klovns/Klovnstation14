@@ -5,9 +5,9 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.Klovnmed.RemoveRandomOrgan;
 
-public sealed class RemoveRandomOrganSystem : EntitySystem
+public sealed partial class RemoveRandomOrganSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
 
     public override void Initialize()
     {

@@ -12,8 +12,8 @@ namespace Content.Client.Administration.UI.Tabs.PlayerTab;
 [GenerateTypedNameReferences]
 public sealed partial class PlayerTabEntry : PanelContainer
 {
-    [Dependency] private readonly IEntityManager _entMan = default!;
-    [Dependency] private readonly IPrototypeManager _prototype = default!;
+    [Dependency] private IEntityManager _entMan = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
 
     public PlayerTabEntry(
         PlayerInfo player,
@@ -79,7 +79,7 @@ public sealed partial class PlayerTabEntry : PanelContainer
         {
             case AdminPlayerTabRoleTypeOption.RoleTypeSubtype:
                 RoleTypeLabel.Text = roletype != subtype
-                    ? roletype + " - " +subtype
+                    ? roletype + " - " + subtype
                     : roletype;
                 break;
             case AdminPlayerTabRoleTypeOption.SubtypeRoleType:

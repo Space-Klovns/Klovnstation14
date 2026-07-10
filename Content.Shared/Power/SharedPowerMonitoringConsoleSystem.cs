@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace Content.Shared.Power;
 
 [UsedImplicitly]
-public abstract class SharedPowerMonitoringConsoleSystem : EntitySystem
+public abstract partial class SharedPowerMonitoringConsoleSystem : EntitySystem
 {
     // Chunk size is limited as we require ChunkSize^2 <= 32 (number of bits in an int)
     public const int ChunkSize = 5;

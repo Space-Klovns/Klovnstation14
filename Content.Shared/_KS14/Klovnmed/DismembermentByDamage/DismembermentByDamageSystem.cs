@@ -9,11 +9,11 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.Klovnmed.DismembermentByDamage;
 
-public sealed class DismembermentByDamageSystem : EntitySystem
+public sealed partial class DismembermentByDamageSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
-    [Dependency] private readonly DismembermentSystem _dismembermentSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private DismembermentSystem _dismembermentSystem = default!;
 
     /// <summary>
     ///     How much of the damage accumulated is lost every second.

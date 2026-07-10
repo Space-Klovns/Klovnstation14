@@ -32,27 +32,27 @@ using Content.Server.Radiation.Systems;
 
 namespace Content.Server._FarHorizons.Power.Generation.FissionGenerator;
 
-public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
+public sealed partial class NuclearReactorSystem : SharedNuclearReactorSystem
 {
     // The great wall of dependencies
-    [Dependency] private readonly AtmosphereSystem _atmosphereSystem = default!;
-    [Dependency] private readonly EntityManager _entityManager = default!;
-    [Dependency] private readonly NodeContainerSystem _nodeContainer = default!;
-    [Dependency] private readonly NodeGroupSystem _nodeGroupSystem = default!;
-    [Dependency] private readonly ReactorPartSystem _partSystem = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly UserInterfaceSystem _uiSystem = null!;
-    [Dependency] private readonly ExplosionSystem _explosionSystem = default!;
-    [Dependency] private readonly RadioSystem _radioSystem = default!;
-    [Dependency] private readonly IPrototypeManager _prototypes = default!;
-    [Dependency] private readonly ChatSystem _chatSystem = default!;
-    [Dependency] private readonly StationSystem _station = default!;
-    [Dependency] private readonly TriggerSystem _triggerSystem = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly IAdminLogManager _adminLog = default!;
-    [Dependency] private readonly AmbientSoundSystem _ambientSoundSystem = default!;
-    [Dependency] private readonly ThrowingSystem _throwingSystem = default!;
-    [Dependency] private readonly RadiationSystem _radiationSystem = default!;
+    [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private EntityManager _entityManager = default!;
+    [Dependency] private NodeContainerSystem _nodeContainer = default!;
+    [Dependency] private NodeGroupSystem _nodeGroupSystem = default!;
+    [Dependency] private ReactorPartSystem _partSystem = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private UserInterfaceSystem _uiSystem = null!;
+    [Dependency] private ExplosionSystem _explosionSystem = default!;
+    [Dependency] private RadioSystem _radioSystem = default!;
+    [Dependency] private IPrototypeManager _prototypes = default!;
+    [Dependency] private ChatSystem _chatSystem = default!;
+    [Dependency] private StationSystem _station = default!;
+    [Dependency] private TriggerSystem _triggerSystem = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private IAdminLogManager _adminLog = default!;
+    [Dependency] private AmbientSoundSystem _ambientSoundSystem = default!;
+    [Dependency] private ThrowingSystem _throwingSystem = default!;
+    [Dependency] private RadiationSystem _radiationSystem = default!;
 
     private static readonly int _gridWidth = NuclearReactorComponent.ReactorGridWidth;
     private static readonly int _gridHeight = NuclearReactorComponent.ReactorGridHeight;
@@ -550,12 +550,12 @@ public sealed class NuclearReactorSystem : SharedNuclearReactorSystem
                     _partSystem.SetProperties(reactorPart, out reactorPart.Properties);
 
                 var pos = (x * _gridWidth) + y;
-                temp[pos] = (float) reactor.TemperatureGrid[x, y];
+                temp[pos] = (float)reactor.TemperatureGrid[x, y];
                 neutron[pos] = reactor.NeutronGrid[x, y];
 
-                partInfo[pos] = reactorPart != null ? (float) reactorPart.Properties!.NeutronRadioactivity : 0;
-                partInfo[pos + zoff] = reactorPart != null ? (float) reactorPart.Properties!.Radioactivity : 0;
-                partInfo[pos + (zoff * 2)] = reactorPart != null ? (float) reactorPart.Properties!.FissileIsotopes : 0;
+                partInfo[pos] = reactorPart != null ? (float)reactorPart.Properties!.NeutronRadioactivity : 0;
+                partInfo[pos + zoff] = reactorPart != null ? (float)reactorPart.Properties!.Radioactivity : 0;
+                partInfo[pos + (zoff * 2)] = reactorPart != null ? (float)reactorPart.Properties!.FissileIsotopes : 0;
             }
         }
 

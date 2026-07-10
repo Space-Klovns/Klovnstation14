@@ -186,8 +186,9 @@
         variation: 0.250
     activatedDamage:
       types:
-        Slash: 12.5
-        Heat: 12.5
+        Slash: 12.5 # KS14: 10 -> 12.5
+        Heat: 12.5 # KS14: 10 -> 12.5
+    deactivatedSecret: true
   - type: ComponentToggler
     components:
     - type: Sharp

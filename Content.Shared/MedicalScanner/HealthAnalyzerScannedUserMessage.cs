@@ -29,7 +29,7 @@ public struct HealthAnalyzerUiState
     public bool? Bleeding;
     public bool? Unrevivable;
 
-    public HealthAnalyzerUiState() {}
+    public HealthAnalyzerUiState() { }
 
     public HealthAnalyzerUiState(NetEntity? targetEntity, float temperature, float bloodLevel, bool? scanMode, bool? bleeding, bool? unrevivable)
     {

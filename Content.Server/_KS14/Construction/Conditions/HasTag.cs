@@ -8,7 +8,7 @@ namespace Content.Server._KS14.Construction.Conditions;
 [DataDefinition]
 public sealed partial class HasTag : IGraphCondition
 {
-    [Dependency] private readonly TagSystem _tagSystem = default!;
+    [Dependency] private TagSystem _tagSystem = default!;
 
     [DataField(required: true)]
     public ProtoId<TagPrototype> Tag = "";

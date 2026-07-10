@@ -8,9 +8,9 @@ namespace Content.Client._KS14.Signal.SignalSpeaker.UI
     /// <summary>
     /// Initializes a <see cref="SignalSpeakerWindow"/> and updates it when new server messages are received.
     /// </summary>
-    public sealed class SignalSpeakerBoundUserInterface : BoundUserInterface
+    public sealed partial class SignalSpeakerBoundUserInterface : BoundUserInterface
     {
-        [Dependency] private readonly IEntityManager _entManager = default!;
+        [Dependency] private IEntityManager _entManager = default!;
 
         [ViewVariables]
         private SignalSpeakerWindow? _window;

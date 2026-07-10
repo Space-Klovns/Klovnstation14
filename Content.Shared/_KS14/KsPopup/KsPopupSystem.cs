@@ -3,9 +3,9 @@ using Robust.Shared.Player;
 
 namespace Content.Shared._KS14.KsPopup;
 
-public sealed class KsPopupSystem : EntitySystem
+public sealed partial class KsPopupSystem : EntitySystem
 {
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
 
     public void PopupTargetAndUser(EntityUid uid, EntityUid userUid, string othersText, string userText, PopupType type = PopupType.Small, bool predicted = true)
     {

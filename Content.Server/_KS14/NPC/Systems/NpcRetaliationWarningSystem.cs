@@ -7,12 +7,12 @@ using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.NPC.Systems;
 
-public sealed class NpcRetaliationWarningSystem : EntitySystem
+public sealed partial class NpcRetaliationWarningSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
-    [Dependency] private readonly NpcSensorSystem _npcSensorSystem = default!;
-    [Dependency] private readonly NPCRetaliationSystem _retaliationSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
+    [Dependency] private NpcSensorSystem _npcSensorSystem = default!;
+    [Dependency] private NPCRetaliationSystem _retaliationSystem = default!;
 
     public const string SensorKey = "__Sensor__WarningRetaliation";
 

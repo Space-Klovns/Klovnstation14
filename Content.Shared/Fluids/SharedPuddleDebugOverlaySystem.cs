@@ -3,7 +3,7 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared.Fluids;
 
-public abstract class SharedPuddleDebugOverlaySystem : EntitySystem
+public abstract partial class SharedPuddleDebugOverlaySystem : EntitySystem
 {
     protected const float LocalViewRange = 16;
     protected TimeSpan? NextTick = null;

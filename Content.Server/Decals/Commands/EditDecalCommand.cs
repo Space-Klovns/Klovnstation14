@@ -7,9 +7,9 @@ using Robust.Shared.Map.Components;
 namespace Content.Server.Decals;
 
 [AdminCommand(AdminFlags.Mapping)]
-public sealed class EditDecalCommand : IConsoleCommand
+public sealed partial class EditDecalCommand : IConsoleCommand
 {
-    [Dependency] private readonly IEntityManager _entManager = default!;
+    [Dependency] private IEntityManager _entManager = default!;
 
     public string Command => "editdecal";
     public string Description => "Edits a decal.";
@@ -52,7 +52,7 @@ Possible modes are:\n
         switch (args[2].ToLower())
         {
             case "position":
-                if(args.Length != 5)
+                if (args.Length != 5)
                 {
                     shell.WriteError("Expected 6 arguments.");
                     return;
@@ -70,7 +70,7 @@ Possible modes are:\n
                 }
                 break;
             case "color":
-                if(args.Length != 4)
+                if (args.Length != 4)
                 {
                     shell.WriteError("Expected 5 arguments.");
                     return;
@@ -88,7 +88,7 @@ Possible modes are:\n
                 }
                 break;
             case "id":
-                if(args.Length != 4)
+                if (args.Length != 4)
                 {
                     shell.WriteError("Expected 5 arguments.");
                     return;
@@ -100,7 +100,7 @@ Possible modes are:\n
                 }
                 break;
             case "rotation":
-                if(args.Length != 4)
+                if (args.Length != 4)
                 {
                     shell.WriteError("Expected 5 arguments.");
                     return;
@@ -118,7 +118,7 @@ Possible modes are:\n
                 }
                 break;
             case "zindex":
-                if(args.Length != 4)
+                if (args.Length != 4)
                 {
                     shell.WriteError("Expected 5 arguments.");
                     return;
@@ -136,7 +136,7 @@ Possible modes are:\n
                 }
                 break;
             case "clean":
-                if(args.Length != 4)
+                if (args.Length != 4)
                 {
                     shell.WriteError("Expected 5 arguments.");
                     return;

@@ -5,12 +5,12 @@ namespace Content.Shared._Starlight.Plumbing;
 
 /// <summary>
 ///     Key for the plumbing storage UI.
-///     
+///
 ///     CRITICAL DESIGN NOTE:
 ///     1. Raw Value: Explicitly set to 100 to avoid underlying byte collision with vanilla StorageUiKey.Key (0).
-///     2. Naming: The BUI class is named 'PlumbingStorageBui' rather than 'PlumbingStorageBoundUserInterface' 
-///        to avoid Robust's LooseGetType reflection collision. Robust uses suffix matching, so 
-///        'PlumbingStorageBoundUserInterface' would be incorrectly returned when 'StorageBoundUserInterface' 
+///     2. Naming: The BUI class is named 'PlumbingStorageBui' rather than 'PlumbingStorageBoundUserInterface'
+///        to avoid Robust's LooseGetType reflection collision. Robust uses suffix matching, so
+///        'PlumbingStorageBoundUserInterface' would be incorrectly returned when 'StorageBoundUserInterface'
 ///        is requested, causing an InvalidCastException in vanilla systems.
 /// </summary>
 [Serializable, NetSerializable]
@@ -20,7 +20,7 @@ public enum PlumbingStorageUiKey : byte
 }
 
 [Serializable, NetSerializable]
-public sealed class PlumbingStorageBuiState : BoundUserInterfaceState
+public sealed partial class PlumbingStorageBuiState : BoundUserInterfaceState
 {
     public Dictionary<string, FixedPoint2> Contents { get; }
     public FixedPoint2 Volume { get; }

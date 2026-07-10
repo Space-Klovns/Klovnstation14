@@ -11,13 +11,13 @@ using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Content.Shared._KS14.RemoteDrone;
 
-public sealed class RemoteDroneSystem : EntitySystem
+public sealed partial class RemoteDroneSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly SharedDeviceLinkSystem _sharedDeviceLinkSystem = default!;
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private SharedDeviceLinkSystem _sharedDeviceLinkSystem = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
 
-    [Dependency] private readonly EntityQuery<RemoteDroneComponent> _droneQuery = default!;
+    [Dependency] private EntityQuery<RemoteDroneComponent> _droneQuery = default!;
 
     public override void Initialize()
     {

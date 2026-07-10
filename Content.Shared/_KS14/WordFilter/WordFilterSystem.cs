@@ -5,9 +5,9 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared._KS14.WordFilter;
 
-public sealed class WordFilterSystem : EntitySystem
+public sealed partial class WordFilterSystem : EntitySystem
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     /// <summary>
     ///     Characters that are totally removed.
