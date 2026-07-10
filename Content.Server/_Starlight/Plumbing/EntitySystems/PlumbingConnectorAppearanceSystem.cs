@@ -146,7 +146,8 @@ public sealed partial class PlumbingConnectorAppearanceSystem : EntitySystem
             connectedDirections |= GetConnectedDirections(node, nodeDir, tile, xform.GridUid.Value, grid);
         }
 
-        var coveredByFloor = HasFloorCover(xform.GridUid.Value, grid, tile);
+        // KS14: Check for CoverableBySubfloor
+        var coveredByFloor = connectorComp.CoverableBySubfloor && HasFloorCover(xform.GridUid.Value, grid, tile);
 
         _appearance.SetData(uid, PlumbingVisuals.NodeDirections, (int)nodeDirections, appearance);
         _appearance.SetData(uid, PlumbingVisuals.ConnectedDirections, (int)connectedDirections, appearance);

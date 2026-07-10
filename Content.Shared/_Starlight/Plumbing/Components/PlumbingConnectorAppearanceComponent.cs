@@ -33,4 +33,8 @@ public sealed partial class PlumbingConnectorAppearanceComponent : Component
     /// </summary>
     [DataField]
     public HashSet<string> MixingInletNames = new();
+
+    // KS14
+    [DataField]
+    public bool CoverableBySubfloor = true;
 }

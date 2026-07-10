@@ -18,8 +18,10 @@
   placement:
     mode: SnapgridCenter
   components:
-  - type: Visibility
-    layer: 1
+  # KS14 start: removed visibilitycomponent (so that it renders on floor)
+  # - type: Visibility
+  #   layer: 1
+  # KS14 end
   - type: Item
     size: Normal
   - type: Transform
