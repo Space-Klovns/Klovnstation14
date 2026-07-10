@@ -8,7 +8,7 @@ namespace Content.Client.Disposal.Tube
     /// Initializes a <see cref="DisposalTaggerWindow"/> and updates it when new server messages are received.
     /// </summary>
     [UsedImplicitly]
-    public sealed class DisposalTaggerBoundUserInterface : BoundUserInterface
+    public sealed partial class DisposalTaggerBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
         private DisposalTaggerWindow? _window;

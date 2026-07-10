@@ -14,15 +14,15 @@ namespace Content.Client._KS14.SupplyPod;
     Please another overlay that just draws entities oh boy
 */
 
-public sealed class SupplyPodOverlay : Overlay
+public sealed partial class SupplyPodOverlay : Overlay
 {
     private readonly ShaderInstance _maskShader;
     private readonly ShaderInstance _drawShader;
 
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
-    [Dependency] private readonly IClyde _clyde = default!;
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private IResourceCache _resourceCache = default!;
+    [Dependency] private IClyde _clyde = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpaceEntities;
 

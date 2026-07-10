@@ -27,7 +27,7 @@ namespace Content.Shared.Atmos.Piping.Binary.Components
         /// <summary>
         ///     Array of bytes with length being
         ///         number of gases that exist.
-        /// 
+        ///
         ///     Used as a percentage (from 0 being empty, 255 being full)
         ///         of gases in the canister.
         /// </summary>
@@ -40,7 +40,7 @@ namespace Content.Shared.Atmos.Piping.Binary.Components
     /// Represents a <see cref="GasCanisterComponent"/> state that can be sent to the client
     /// </summary>
     [Serializable, NetSerializable]
-    public sealed class GasCanisterBoundUserInterfaceState : BoundUserInterfaceState
+    public sealed partial class GasCanisterBoundUserInterfaceState : BoundUserInterfaceState
     {
         public float CanisterPressure { get; }
         public bool PortStatus { get; }

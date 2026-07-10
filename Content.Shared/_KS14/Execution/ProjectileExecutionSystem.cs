@@ -6,7 +6,7 @@ namespace Content.Shared._KS14.Execution;
 /// Handles the GunExecutedEvent for projectile-based ammunition,
 /// such as bullets provided by a revolver (since they provide a projectile and not cartridge, so that the cartridge stays in the revolver.)
 /// </summary>
-public sealed class ProjectileExecutionSystem : EntitySystem
+public sealed partial class ProjectileExecutionSystem : EntitySystem
 {
     public override void Initialize()
     {

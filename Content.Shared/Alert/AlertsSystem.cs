@@ -6,12 +6,12 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared.Alert;
 
-public abstract class AlertsSystem : EntitySystem
+public abstract partial class AlertsSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
-    [Dependency] private readonly EntityQuery<AlertsComponent> _alertsQuery = default!;
+    [Dependency] private EntityQuery<AlertsComponent> _alertsQuery = default!;
     private FrozenDictionary<ProtoId<AlertPrototype>, AlertPrototype> _typeToAlert = default!;
 
     public override void Initialize()
@@ -138,9 +138,9 @@ public abstract class AlertsSystem : EntitySystem
         short? severity = null,
         (TimeSpan, TimeSpan)? cooldown = null,
         bool autoRemove = false,
-        bool showCooldown = true )
+        bool showCooldown = true)
     {
-        ShowAlert(entity, new AlertState { Type = alertType, Severity = severity, Cooldown = cooldown, AutoRemove = autoRemove, ShowCooldown = showCooldown});
+        ShowAlert(entity, new AlertState { Type = alertType, Severity = severity, Cooldown = cooldown, AutoRemove = autoRemove, ShowCooldown = showCooldown });
     }
 
     public void ShowAlert(Entity<AlertsComponent?> entity, AlertState state)
@@ -177,7 +177,7 @@ public abstract class AlertsSystem : EntitySystem
             EnsureComp<AlertAutoRemoveComponent>(entity, out var autoComp);
 
             if (autoComp.AlertKeys.Add(alert.AlertKey))
-                Dirty (entity, autoComp);
+                Dirty(entity, autoComp);
         }
 
         AfterShowAlert((entity, entity.Comp));
@@ -231,7 +231,7 @@ public abstract class AlertsSystem : EntitySystem
     /// </summary>
     public void ClearAlertCategory(Entity<AlertsComponent?> entity, ProtoId<AlertCategoryPrototype> category)
     {
-        if(!_alertsQuery.Resolve(entity, ref entity.Comp, false))
+        if (!_alertsQuery.Resolve(entity, ref entity.Comp, false))
             return;
 
         var key = AlertKey.ForCategory(category);
@@ -382,7 +382,7 @@ public abstract class AlertsSystem : EntitySystem
         clickEvent.User = user;
         clickEvent.AlertId = alert.ID;
 
-        RaiseLocalEvent(user, (object) clickEvent, true);
+        RaiseLocalEvent(user, (object)clickEvent, true);
         return clickEvent.Handled;
     }
 

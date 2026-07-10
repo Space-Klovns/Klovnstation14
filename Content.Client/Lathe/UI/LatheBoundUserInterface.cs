@@ -7,7 +7,7 @@ using Robust.Client.UserInterface;
 namespace Content.Client.Lathe.UI
 {
     [UsedImplicitly]
-    public sealed class LatheBoundUserInterface : BoundUserInterface
+    public sealed partial class LatheBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
         private LatheMenu? _menu;

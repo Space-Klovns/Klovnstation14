@@ -18,9 +18,9 @@ namespace Content.Client.Cargo.UI;
 [GenerateTypedNameReferences]
 public sealed partial class FundingAllocationMenu : FancyWindow
 {
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     private readonly EntityQuery<StationBankAccountComponent> _bankQuery;
 
@@ -63,7 +63,7 @@ public sealed partial class FundingAllocationMenu : FancyWindow
                 return;
             var accounts = EditableAccounts(bank).OrderBy(p => p.Key).Select(p => p.Key).ToList();
             var dicts = new Dictionary<ProtoId<CargoAccountPrototype>, int>();
-            for (var i = 0; i< accounts.Count; i++)
+            for (var i = 0; i < accounts.Count; i++)
             {
                 dicts.Add(accounts[i], _spinBoxes[i].Value);
             }
@@ -102,7 +102,7 @@ public sealed partial class FundingAllocationMenu : FancyWindow
         else
         {
             HelpLabel.Text = Loc.GetString("cargo-funding-alloc-console-label-help-non-adjustible",
-                ("percent", (int) (bank.PrimaryCut * 100)));
+                ("percent", (int)(bank.PrimaryCut * 100)));
         }
 
         foreach (var ctrl in _addedControls)
@@ -162,7 +162,7 @@ public sealed partial class FundingAllocationMenu : FancyWindow
             {
                 HorizontalAlignment = HAlignment.Center,
                 HorizontalExpand = true,
-                Value = (int) (bank.RevenueDistribution[account] * 100),
+                Value = (int)(bank.RevenueDistribution[account] * 100),
                 IsValid = val => val is >= 0 and <= 100,
             };
             box.ValueChanged += _ => UpdateButtonDisabled();
@@ -190,7 +190,7 @@ public sealed partial class FundingAllocationMenu : FancyWindow
         for (var i = 0; i < accounts.Count; i++)
         {
             var percent = _spinBoxes[i].Value;
-            if (percent != (int) Math.Round(bank.RevenueDistribution[accounts[i]] * 100))
+            if (percent != (int)Math.Round(bank.RevenueDistribution[accounts[i]] * 100))
             {
                 differs = true;
                 break;

@@ -13,29 +13,29 @@ using Robust.Shared.Utility;
 
 namespace Content.Client._KS14.OverlayStains;
 
-public sealed class StainOverlay : Overlay
+public sealed partial class StainOverlay : Overlay
 {
     private static readonly ProtoId<ShaderPrototype> UnshadedShader = "unshaded";
     private static readonly ProtoId<ShaderPrototype> StencilMaskShader = "StencilMask";
     private static readonly ProtoId<ShaderPrototype> StencilDrawShader = "StencilDraw";
 
-    [Dependency] private readonly IClyde _clyde = default!;
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private IClyde _clyde = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IMapManager _mapManager = default!;
 
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
-    [Dependency] private readonly SpriteSystem _spriteSystem = default!;
-    [Dependency] private readonly EntityLookupSystem _entityLookupSystem = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
+    [Dependency] private SpriteSystem _spriteSystem = default!;
+    [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
 
     /// <summary>
     ///     Based on <see cref="Shared._KS14.CCVar.KsCCVars.ComplexStainDrawing"/>
     /// </summary>
     public bool ComplexDrawing = false;
 
-    [Dependency] private readonly EntityQuery<TransformComponent> _transformQuery = default!;
-    [Dependency] private readonly EntityQuery<SpriteComponent> _spriteQuery = default!;
+    [Dependency] private EntityQuery<TransformComponent> _transformQuery = default!;
+    [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowFOV;
 

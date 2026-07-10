@@ -6,7 +6,7 @@ using Robust.Client.UserInterface;
 namespace Content.Client.Power.Generator;
 
 [UsedImplicitly]
-public sealed class PortableGeneratorBoundUserInterface : BoundUserInterface
+public sealed partial class PortableGeneratorBoundUserInterface : BoundUserInterface
 {
     private GeneratorWindow? _window;
 

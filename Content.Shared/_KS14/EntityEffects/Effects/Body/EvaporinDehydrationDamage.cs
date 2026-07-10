@@ -18,7 +18,7 @@ public sealed partial class EvaporinDehydrationDamage : EntityEffectBase<Evapori
 
 public sealed partial class EvaporinDehydrationDamageSystem : EntityEffectSystem<ThirstComponent, EvaporinDehydrationDamage>
 {
-    [Dependency] private readonly DamageableSystem _damageableSystem = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
 
     protected override void Effect(Entity<ThirstComponent> entity, ref EntityEffectEvent<EvaporinDehydrationDamage> args)
     {

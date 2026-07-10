@@ -4,7 +4,7 @@ using Robust.Client.UserInterface;
 
 namespace Content.Client.Wires.UI
 {
-    public sealed class WiresBoundUserInterface : BoundUserInterface
+    public sealed partial class WiresBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
         private WiresMenu? _menu;
@@ -23,7 +23,7 @@ namespace Content.Client.Wires.UI
         protected override void UpdateState(BoundUserInterfaceState state)
         {
             base.UpdateState(state);
-            _menu?.Populate((WiresBoundUserInterfaceState) state);
+            _menu?.Populate((WiresBoundUserInterfaceState)state);
         }
 
         public void PerformAction(int id, WiresAction action)

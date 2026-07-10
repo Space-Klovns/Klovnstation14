@@ -3,10 +3,10 @@ using Content.Shared.Eye.Blinding.Systems;
 
 namespace Content.Shared._KS14.Klovnmed.RequiresOrganToSee;
 
-public sealed class RequiresOrganToSeeSystem : EntitySystem
+public sealed partial class RequiresOrganToSeeSystem : EntitySystem
 {
-    [Dependency] private readonly BlindableSystem _blindableSystem = default!;
-    [Dependency] private readonly BodyHierarchySystem _bodyHierarchySystem = default!;
+    [Dependency] private BlindableSystem _blindableSystem = default!;
+    [Dependency] private BodyHierarchySystem _bodyHierarchySystem = default!;
 
     public override void Initialize()
     {

@@ -4,9 +4,9 @@ using Content.Shared.Trigger;
 
 namespace Content.Shared._KS14.Trigger.Systems;
 
-public sealed class AnnouncementOnTriggerSystem : EntitySystem
+public sealed partial class AnnouncementOnTriggerSystem : EntitySystem
 {
-    [Dependency] private readonly SharedChatSystem _chatSystem = default!;
+    [Dependency] private SharedChatSystem _chatSystem = default!;
 
     public override void Initialize()
     {

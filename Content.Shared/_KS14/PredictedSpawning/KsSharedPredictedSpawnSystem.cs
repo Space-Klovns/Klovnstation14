@@ -12,9 +12,9 @@ namespace Content.Shared._KS14.PredictedSpawning;
 /// <summary>
 ///     Contains replacements for <see cref="EntityManager.PredictedSpawn(string?, Robust.Shared.Prototypes.ComponentRegistry?, bool)"/>.
 /// </summary>
-public abstract class KsSharedPredictedSpawnSystem : EntitySystem
+public abstract partial class KsSharedPredictedSpawnSystem : EntitySystem
 {
-    [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
+    [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
 
     private EntityQuery<PhysicsComponent> _physicsQuery = default!;
 

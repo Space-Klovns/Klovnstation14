@@ -14,17 +14,17 @@ using Robust.Shared.Utility;
 
 namespace Content.Client._KS14.WetOverlay;
 
-public sealed class KsWetOverlay(ShaderInstance shader) : Overlay
+public sealed partial class KsWetOverlay(ShaderInstance shader) : Overlay
 {
-    [Dependency] private readonly IRobustRandom _robustRandom = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly EntityManager _entityManager = default!;
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
-    [Dependency] private readonly MapSystem _mapSystem = default!;
-    [Dependency] private readonly WeatherSystem _weatherSystem = default!;
+    [Dependency] private IRobustRandom _robustRandom = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private EntityManager _entityManager = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
+    [Dependency] private MapSystem _mapSystem = default!;
+    [Dependency] private WeatherSystem _weatherSystem = default!;
 
-    [Dependency] private readonly EntityQuery<MapGridComponent> _gridQuery = default!;
-    [Dependency] private readonly EntityQuery<KsWetMapComponent> _wetMapQuery = default!;
+    [Dependency] private EntityQuery<MapGridComponent> _gridQuery = default!;
+    [Dependency] private EntityQuery<KsWetMapComponent> _wetMapQuery = default!;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpace;
     public override bool RequestScreenTexture => true;

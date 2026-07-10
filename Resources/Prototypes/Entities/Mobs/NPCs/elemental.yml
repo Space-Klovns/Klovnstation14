@@ -7,6 +7,7 @@
     groups:
       Acidic: [Touch]
   - type: Damageable
+  - type: Injurable
     damageContainer: Inorganic
   - type: MovementSpeedModifier
     baseWalkSpeed : 2
@@ -39,7 +40,7 @@
         acts: [ "Destruction" ]
   - type: ZombieImmune
   - type: ProtectedFromStepTriggers
-  #- type: StunVisuals KS14 - remove stun visuals
+  # KS14: Removed StunVisuals
 
 - type: entity
   abstract: true
@@ -66,7 +67,7 @@
   - type: NpcFactionMember
     factions:
       - SimpleHostile
-  - type: Damageable
+  - type: Injurable
     damageContainer: StructuralInorganic
 
 - type: entity

@@ -10,11 +10,11 @@ using Content.Shared.Damage.Systems;
 
 namespace Content.Server._KS14.TeslaGate;
 
-public sealed class TeslaGateSystem : SharedTeslaGateSystem
+public sealed partial class TeslaGateSystem : SharedTeslaGateSystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
-    [Dependency] private readonly DamageableSystem _damageableSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
 
     public override void Initialize()
     {

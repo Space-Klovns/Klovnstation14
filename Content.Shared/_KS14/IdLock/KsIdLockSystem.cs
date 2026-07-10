@@ -5,12 +5,12 @@ using Content.Shared.Popups;
 
 namespace Content.Shared._KS14.IdLock;
 
-public sealed class KsIdLockSystem : EntitySystem
+public sealed partial class KsIdLockSystem : EntitySystem
 {
-    [Dependency] private readonly AccessReaderSystem _accessReaderSystem = default!;
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
+    [Dependency] private AccessReaderSystem _accessReaderSystem = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
 
-    [Dependency] private readonly EntityQuery<KsIdLockKeyComponent> _keyQuery = default!;
+    [Dependency] private EntityQuery<KsIdLockKeyComponent> _keyQuery = default!;
 
     public override void Initialize()
     {

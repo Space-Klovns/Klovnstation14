@@ -5,7 +5,7 @@ using Robust.Client.UserInterface;
 namespace Content.Client._Starlight.Plumbing.UI;
 
 [UsedImplicitly]
-public sealed class PlumbingFilterBoundUserInterface : BoundUserInterface
+public sealed partial class PlumbingFilterBoundUserInterface : BoundUserInterface
 {
     private PlumbingFilterWindow? _window;
 

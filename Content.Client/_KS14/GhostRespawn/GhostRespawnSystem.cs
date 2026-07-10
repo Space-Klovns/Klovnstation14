@@ -4,9 +4,9 @@ using Robust.Shared.Configuration;
 
 namespace Content.Client._KS14.GhostRespawn;
 
-public sealed class GhostRespawnSystem : SharedGhostRespawnSystem
+public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
 {
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
 
     /// <summary>
     ///     Respawn time for the local client.

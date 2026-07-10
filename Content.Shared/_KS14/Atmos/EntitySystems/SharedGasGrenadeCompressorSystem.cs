@@ -17,19 +17,19 @@ using Robust.Shared.Containers;
 namespace Content.Shared._KS14.Atmos.EntitySystems;
 
 [UsedImplicitly]
-public abstract class SharedGasGrenadeCompressorSystem : EntitySystem
+public abstract partial class SharedGasGrenadeCompressorSystem : EntitySystem
 {
-    [Dependency] private readonly IComponentFactory _componentFactory = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly ISerializationManager _serializationManager = default!;
-    [Dependency] private readonly SharedPowerReceiverSystem _powerReceiverSystem = default!;
-    [Dependency] private readonly ItemSlotsSystem _itemSlotsSystem = default!;
-    [Dependency] private readonly SharedMaterialStorageSystem _materialStorageSystem = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
-    [Dependency] private readonly SharedUserInterfaceSystem _userInterfaceSystem = default!;
+    [Dependency] private IComponentFactory _componentFactory = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private ISerializationManager _serializationManager = default!;
+    [Dependency] private SharedPowerReceiverSystem _powerReceiverSystem = default!;
+    [Dependency] private ItemSlotsSystem _itemSlotsSystem = default!;
+    [Dependency] private SharedMaterialStorageSystem _materialStorageSystem = default!;
+    [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
+    [Dependency] private SharedUserInterfaceSystem _userInterfaceSystem = default!;
 
-    [Dependency] protected readonly EntityQuery<ReleaseGasOnTriggerComponent> ReleaseGasOnTriggerQuery = default!;
-    [Dependency] private readonly EntityQuery<MaterialStorageComponent> _materialStorageQuery = default!;
+    [Dependency] protected EntityQuery<ReleaseGasOnTriggerComponent> ReleaseGasOnTriggerQuery = default!;
+    [Dependency] private EntityQuery<MaterialStorageComponent> _materialStorageQuery = default!;
 
     private static readonly EntProtoId AirGrenadeId = "AirGrenade";
 

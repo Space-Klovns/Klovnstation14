@@ -2,9 +2,9 @@ using Robust.Client.Graphics;
 
 namespace Content.Client._KS14.Emissive;
 
-public sealed class EmissiveOverlaySystem : EntitySystem
+public sealed partial class EmissiveOverlaySystem : EntitySystem
 {
-    [Dependency] private readonly IOverlayManager _overlayManager = default!;
+    [Dependency] private IOverlayManager _overlayManager = default!;
 
     public override void Initialize()
     {

@@ -11,18 +11,18 @@ namespace Content.Shared._KS14.ZLevel.Physics;
 /// <summary>
 ///     Ting go down
 /// </summary>
-public sealed class KsZLevelPhysicsSystem : EntitySystem
+public sealed partial class KsZLevelPhysicsSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly KsZLevelSystem _zLevelSystem = default!;
-    [Dependency] private readonly SharedGravitySystem _gravitySystem = default!;
-    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
-    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private KsZLevelSystem _zLevelSystem = default!;
+    [Dependency] private SharedGravitySystem _gravitySystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
 
-    [Dependency] private readonly EntityQuery<KsSuspendedZLevelFallComponent> _suspendedFallQuery = default!;
-    [Dependency] private readonly EntityQuery<MapGridComponent> _mapGridQuery = default!;
-    [Dependency] private readonly EntityQuery<MapComponent> _mapQuery = default!;
+    [Dependency] private EntityQuery<KsSuspendedZLevelFallComponent> _suspendedFallQuery = default!;
+    [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
+    [Dependency] private EntityQuery<MapComponent> _mapQuery = default!;
 
     public override void Initialize()
     {

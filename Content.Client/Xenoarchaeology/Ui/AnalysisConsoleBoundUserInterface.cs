@@ -11,7 +11,7 @@ namespace Content.Client.Xenoarchaeology.Ui;
 /// (related to device, connected artifact analyzer, and artifact lying on it).
 /// </summary>
 [UsedImplicitly]
-public sealed class AnalysisConsoleBoundUserInterface(EntityUid owner, Enum uiKey) : BoundUserInterface(owner, uiKey)
+public sealed partial class AnalysisConsoleBoundUserInterface(EntityUid owner, Enum uiKey) : BoundUserInterface(owner, uiKey)
 {
     [ViewVariables]
     private AnalysisConsoleMenu? _consoleMenu;
@@ -56,4 +56,3 @@ public sealed class AnalysisConsoleBoundUserInterface(EntityUid owner, Enum uiKe
         _consoleMenu?.Dispose();
     }
 }
-

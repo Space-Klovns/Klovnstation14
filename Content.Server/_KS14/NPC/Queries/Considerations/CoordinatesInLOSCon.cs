@@ -12,8 +12,8 @@ namespace Content.Server._KS14.NPC.Queries.Considerations;
 /// </summary>
 public sealed partial class CoordinatesInLOSCon : UtilityConsideration
 {
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
-    [Dependency] private readonly ExamineSystem _examineSystem = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
+    [Dependency] private ExamineSystem _examineSystem = default!;
 
     /// <summary>
     ///     Coordinates that must be visible by the target for this to be valid.

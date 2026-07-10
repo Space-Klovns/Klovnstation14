@@ -621,7 +621,7 @@ public sealed partial class NPCSteeringSystem
             return true;
 
         var isAccessRequired = (flags & PathfindingBreadcrumbFlag.Access) != 0x0 &&
-                               !_accessSystem.IsAllowed(ent, doorUid);
+            !_accessReaderSystem.IsAllowed(ent, doorUid);
         var canInteract = (ent.Comp.Flags & PathFlags.Interact) != 0x0 &&
             this.IsPowered(doorUid, EntityManager); // KS14: ANK: check if it's powered first; otherwise, don't
 

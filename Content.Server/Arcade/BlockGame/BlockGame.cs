@@ -7,8 +7,8 @@ namespace Content.Server.Arcade.BlockGame;
 
 public sealed partial class BlockGame
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private IRobustRandom _random = default!;
     private readonly ArcadeSystem _arcadeSystem;
     private readonly UserInterfaceSystem _uiSystem;
 
@@ -50,7 +50,7 @@ public sealed partial class BlockGame
         _uiSystem = _entityManager.System<UserInterfaceSystem>();
 
         _owner = owner;
-        _allBlockGamePieces = (BlockGamePieceType[]) Enum.GetValues(typeof(BlockGamePieceType));
+        _allBlockGamePieces = (BlockGamePieceType[])Enum.GetValues(typeof(BlockGamePieceType));
         _internalNextPiece = GetRandomBlockGamePiece(_random);
         InitializeNewBlock();
     }

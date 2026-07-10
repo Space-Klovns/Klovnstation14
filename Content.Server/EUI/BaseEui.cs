@@ -15,7 +15,7 @@ namespace Content.Server.EUI
     ///     An equivalently named class much exist server side for an EUI to work.
     ///     It will be instantiated, opened and closed automatically.
     /// </remarks>
-    public abstract class BaseEui
+    public abstract partial class BaseEui
     {
         private bool _isStateDirty = false;
 

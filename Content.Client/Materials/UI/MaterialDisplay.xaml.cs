@@ -15,8 +15,8 @@ namespace Content.Client.Materials.UI;
 [GenerateTypedNameReferences]
 public sealed partial class MaterialDisplay : PanelContainer
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IEntityManager _entityManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
 
     private readonly MaterialStorageSystem _materialStorage;
 
@@ -53,8 +53,8 @@ public sealed partial class MaterialDisplay : PanelContainer
         var matProto = _prototypeManager.Index<MaterialPrototype>(Material);
 
         var sheetVolume = _materialStorage.GetSheetVolume(matProto);
-        var sheets = (float) volume / sheetVolume;
-        var maxEjectableSheets = (int) MathF.Floor(sheets);
+        var sheets = (float)volume / sheetVolume;
+        var maxEjectableSheets = (int)MathF.Floor(sheets);
 
         var unit = Loc.GetString(matProto.Unit);
         var amountText = Loc.GetString("lathe-menu-material-amount", ("amount", sheets), ("unit", unit));

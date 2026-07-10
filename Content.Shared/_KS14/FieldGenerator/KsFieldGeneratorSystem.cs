@@ -11,9 +11,9 @@ namespace Content.Shared._KS14.FieldGenerator;
 
 public sealed partial class KsFieldGeneratorSystem : EntitySystem
 {
-    [Dependency] private readonly INetManager _netManager = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
 
     private EntityQuery<KsGeneratedFieldComponent> _fieldQuery;
 

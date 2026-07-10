@@ -8,7 +8,7 @@ using Robust.Shared.Prototypes;
 namespace Content.Client.Research.UI;
 
 [UsedImplicitly]
-public sealed class ResearchConsoleBoundUserInterface : BoundUserInterface
+public sealed partial class ResearchConsoleBoundUserInterface : BoundUserInterface
 {
     [ViewVariables]
     private ResearchConsoleMenu? _consoleMenu;

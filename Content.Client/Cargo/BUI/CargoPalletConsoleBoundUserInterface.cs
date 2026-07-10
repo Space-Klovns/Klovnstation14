@@ -6,7 +6,7 @@ using Robust.Client.UserInterface;
 
 namespace Content.Client.Cargo.BUI;
 
-public sealed class CargoPalletConsoleBoundUserInterface : BoundUserInterface
+public sealed partial class CargoPalletConsoleBoundUserInterface : BoundUserInterface
 {
     [ViewVariables]
     private CargoPalletMenu? _menu;

@@ -9,11 +9,11 @@ using Robust.Shared.Physics.Events;
 
 namespace Content.Server.Singularity.EntitySystems;
 
-public sealed class ContainmentFieldSystem : EntitySystem
+public sealed partial class ContainmentFieldSystem : EntitySystem
 {
-    [Dependency] private readonly ThrowingSystem _throwing = default!;
-    [Dependency] private readonly PopupSystem _popupSystem = default!;
-    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
+    [Dependency] private ThrowingSystem _throwing = default!;
+    [Dependency] private PopupSystem _popupSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
 
     public override void Initialize()
     {
@@ -38,14 +38,14 @@ public sealed class ContainmentFieldSystem : EntitySystem
             var fieldDir = _transformSystem.GetWorldPosition(uid);
             var playerDir = _transformSystem.GetWorldPosition(otherBody);
 
-            _throwing.TryThrow(otherBody, playerDir-fieldDir, baseThrowSpeed: component.ThrowForce,
+            _throwing.TryThrow(otherBody, playerDir - fieldDir, baseThrowSpeed: component.ThrowForce,
                 predicted: false); // Trauma
         }
     }
 
     private void HandleEventHorizon(EntityUid uid, ContainmentFieldComponent component, ref EventHorizonAttemptConsumeEntityEvent args)
     {
-        if(!args.Cancelled && !args.EventHorizon.CanBreachContainment)
+        if (!args.Cancelled && !args.EventHorizon.CanBreachContainment)
             args.Cancelled = true;
     }
 }

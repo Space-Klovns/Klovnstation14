@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 
 namespace Content.Server._KS14.Antag;
 
+// TODO LCDC ANTAGPITY: TODO KS14 ANTAGPITY: re-implement this, it's not used anywhere now
+
 /// <summary>
 /// Manages saving and retrieving the last time that a player rolled any antag.
 /// For every query, an internal cache is used rather than querying the DB.
@@ -28,11 +30,11 @@ namespace Content.Server._KS14.Antag;
         - - the player's data is then removed from the internal cache
         - everything is stored to the DB when the manager shuts down
 */
-public sealed class LastRolledAntagManager : IPostInjectInit
+public sealed partial class LastRolledAntagManager : IPostInjectInit
 {
-    [Dependency] private readonly IServerDbManager _dbManager = default!;
-    [Dependency] private readonly ITaskManager _taskManager = default!;
-    [Dependency] private readonly UserDbDataManager _userDbDataManager = default!;
+    [Dependency] private IServerDbManager _dbManager = default!;
+    [Dependency] private ITaskManager _taskManager = default!;
+    [Dependency] private UserDbDataManager _userDbDataManager = default!;
 
     private readonly List<Task> _pendingSaveTasks = new();
 

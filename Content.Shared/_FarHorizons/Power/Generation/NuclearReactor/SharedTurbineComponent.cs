@@ -9,7 +9,7 @@ public enum TurbineUiKey : byte
 }
 
 [Serializable, NetSerializable]
-public sealed class TurbineBuiState : BoundUserInterfaceState
+public sealed partial class TurbineBuiState : BoundUserInterfaceState
 {
     //Indicator Lights
     public bool Overspeed;

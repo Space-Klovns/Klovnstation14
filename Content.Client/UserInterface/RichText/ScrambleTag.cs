@@ -10,9 +10,9 @@ namespace Content.Client.UserInterface.RichText;
 /// Adds a specified length of random characters that scramble at a set rate.
 /// </summary>
 [UsedImplicitly]
-public sealed class ScrambleTag : IMarkupTagHandler
+public sealed partial class ScrambleTag : IMarkupTagHandler
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private IGameTiming _timing = default!;
 
     private const int MaxScrambleLength = 32;
 
@@ -28,7 +28,7 @@ public sealed class ScrambleTag : IMarkupTagHandler
             !charsParam.TryGetString(out var chars))
             return string.Empty;
 
-        var seed = (int) (_timing.CurTime.TotalMilliseconds / rate);
+        var seed = (int)(_timing.CurTime.TotalMilliseconds / rate);
         var rand = new Random(seed + node.GetHashCode());
         var charOptions = chars.ToCharArray();
         var realLength = MathF.Min(length.Value, MaxScrambleLength);

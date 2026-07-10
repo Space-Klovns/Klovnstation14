@@ -26,14 +26,14 @@ namespace Content.Server._Starlight.Plumbing.EntitySystems;
 ///     Supports optional mixing mode with two ratio-controlled inlets (E/W).
 /// </summary>
 [UsedImplicitly]
-public sealed class PlumbingPillPressSystem : EntitySystem
+public sealed partial class PlumbingPillPressSystem : EntitySystem
 {
-    [Dependency] private readonly SharedSolutionContainerSystem _solutionSystem = default!;
-    [Dependency] private readonly UserInterfaceSystem _ui = default!;
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly PlumbingPullSystem _pullSystem = default!;
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
+    [Dependency] private SharedSolutionContainerSystem _solutionSystem = default!;
+    [Dependency] private UserInterfaceSystem _ui = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private PlumbingPullSystem _pullSystem = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!;
 
     private static readonly EntProtoId PillPrototypeId = "Pill";
     private const int MaxOutputEntitiesOnTile = 30;
@@ -56,7 +56,7 @@ public sealed class PlumbingPillPressSystem : EntitySystem
         SubscribeLocalEvent<PlumbingPillPressComponent, BoundUIOpenedEvent>(OnUIOpened);
     }
 
-private void OnDeviceUpdate(Entity<PlumbingPillPressComponent> ent, ref PlumbingDeviceUpdateEvent args)
+    private void OnDeviceUpdate(Entity<PlumbingPillPressComponent> ent, ref PlumbingDeviceUpdateEvent args)
     {
         if (!ent.Comp.Enabled)
         {
@@ -98,13 +98,11 @@ private void OnDeviceUpdate(Entity<PlumbingPillPressComponent> ent, ref Plumbing
             produced = true;
 
             var item = Spawn(PillPrototypeId, spawnCoords);
-            _solutionSystem.EnsureSolutionEntity(item,
+            _solutionSystem.EnsureSolution(item,
                 SharedChemMaster.PillSolutionName,
-                out var itemSolution,
-                dosage);
+                out var itemSolution);
 
-            if (itemSolution.HasValue)
-                _solutionSystem.TryAddSolution(itemSolution.Value, withdrawal);
+            _solutionSystem.TryAddSolution(itemSolution, withdrawal);
 
             var pill = Comp<PillComponent>(item);
             pill.PillType = ent.Comp.PillType;
@@ -136,7 +134,7 @@ private void OnDeviceUpdate(Entity<PlumbingPillPressComponent> ent, ref Plumbing
             return;
 
         var eastFraction = ent.Comp.InletRatioEast / totalRatio;
-        var eastTarget = FixedPoint2.New((int) MathF.Round(eastFraction * (float) dosage));
+        var eastTarget = FixedPoint2.New((int)MathF.Round(eastFraction * (float)dosage));
         var westTarget = dosage - eastTarget; // Remainder goes to west to avoid rounding loss
 
         if (!_solutionSystem.TryGetSolution(ent.Owner, ent.Comp.StagingEastSolutionName, out var stagingEastEnt, out var stagingEast))

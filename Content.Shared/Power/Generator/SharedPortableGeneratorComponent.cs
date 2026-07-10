@@ -94,7 +94,7 @@ public sealed class PortableGeneratorEjectFuelMessage : BoundUserInterfaceMessag
 /// Contains network state for the portable generator.
 /// </summary>
 [Serializable, NetSerializable]
-public sealed class PortableGeneratorComponentBuiState : BoundUserInterfaceState
+public sealed partial class PortableGeneratorComponentBuiState : BoundUserInterfaceState
 {
     public float RemainingFuel;
     public bool Clogged;

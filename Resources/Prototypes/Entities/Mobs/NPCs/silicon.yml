@@ -9,6 +9,7 @@
     groups:
       Acidic: [Touch]
   - type: Damageable
+  - type: Injurable
     damageContainer: Inorganic
   - type: MovedByPressure
   - type: Physics
@@ -110,7 +111,7 @@
     speechSounds: Pai #couldn't decide if this should be borg or pai sounds so I flipped a coin.
 
 - type: entity
-  parent: MobSiliconBase
+  parent: [MobSiliconBase, SolutionFireExtinguisherMini]
   id: MobFireBot
   name: firebot
   description: A little fire extinguishing bot. He looks rather anxious.
@@ -124,24 +125,7 @@
   - type: HTN
     rootTask:
       task: FirebotCompound
-    blackboard:
-      NavInteract: !type:Bool
-        true
-      NavPry: !type:Bool
-        true
-  - type: Prying #this is gonna be a lot of fun - KS14
-    speedModifier: 1.5
-    useSound:
-      path: /Audio/Items/crowbar.ogg
-  - type: SolutionContainerManager
-    solutions:
-      spray:
-        maxVol: 10
-        reagents:
-        - ReagentId: Water
-          Quantity: 10
   - type: SolutionRegeneration
-    solution: spray
     generated:
       reagents:
         - ReagentId: Water
@@ -166,6 +150,10 @@
   - type: DatasetVocalizer
     dataset: FirebotAd
   - type: ControllableBot #KS14
+  - type: Prying #this is gonna be a lot of fun - KS14
+    speedModifier: 1.5
+    useSound:
+      path: /Audio/Items/crowbar.ogg
 
 - type: entity
   parent: MobSiliconBase
@@ -282,7 +270,7 @@
     canCreateVacuum: false
 
 - type: entity
-  parent: MobSiliconBase
+  parent: [MobSiliconBase, SolutionMopNormal]
   id: MobCleanBot
   name: cleanbot
   description: The creep of automation now threatening space janitors.
@@ -298,43 +286,30 @@
   - type: UseDelay
     delay: 2
   - type: SolutionRegeneration
-    solution: absorbed
     generated:
       reagents:
         - ReagentId: Water
           Quantity: 10
   - type: SolutionPurge
-    solution: absorbed
     preserve:
       - Water
     quantity: 10
-  - type: SolutionContainerManager
-    solutions:
-      absorbed:
-        maxVol: 50
   - type: MovementSpeedModifier
     baseWalkSpeed: 2
     baseSprintSpeed: 3
   - type: HTN
     rootTask:
       task: CleanbotCompound
-    blackboard:
-      NavInteract: !type:Bool
-        true
-      NavPry: !type:Bool
-        true
-  - type: Prying #this is gonna be a lot of fun - KS14
-    speedModifier: 1.5
-    useSound:
-      path: /Audio/Items/crowbar.ogg
-  - type: DrainableSolution
-    solution: drainBuffer
   - type: InteractionPopup
     interactSuccessString: petting-success-cleanbot
     interactFailureString: petting-failure-cleanbot
     interactSuccessSound:
       path: /Audio/Ambience/Objects/periodic_beep.ogg
   - type: ControllableBot #KS14
+  - type: Prying #this is gonna be a lot of fun - KS14
+    speedModifier: 1.5
+    useSound:
+      path: /Audio/Items/crowbar.ogg
 
 - type: entity
   parent:

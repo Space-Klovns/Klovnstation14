@@ -10,11 +10,11 @@ using Robust.Shared.Utility;
 namespace Content.Shared.StatusEffect
 {
     [Obsolete("Migration to Content.Shared.StatusEffectNew.StatusEffectsSystem is required")]
-    public sealed class StatusEffectsSystem : EntitySystem
+    public sealed partial class StatusEffectsSystem : EntitySystem
     {
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly AlertsSystem _alertsSystem = default!;
+        [Dependency] private IPrototypeManager _prototypeManager = default!;
+        [Dependency] private IGameTiming _gameTiming = default!;
+        [Dependency] private AlertsSystem _alertsSystem = default!;
         private List<EntityUid> _toRemove = new();
 
         public override void Initialize()
@@ -138,7 +138,7 @@ namespace Content.Shared.StatusEffect
                 // If they already have the comp, we just won't bother updating anything.
                 if (!HasComp(uid, Factory.GetRegistration(component).Type))
                 {
-                    var newComponent = (Component) Factory.GetComponent(component);
+                    var newComponent = (Component)Factory.GetComponent(component);
                     AddComp(uid, newComponent);
                     status.ActiveEffects[key].RelevantComponent = component;
                 }

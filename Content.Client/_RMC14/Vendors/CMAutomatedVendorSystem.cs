@@ -2,7 +2,7 @@
 
 namespace Content.Client._RMC14.Vendors;
 
-public sealed class CMAutomatedVendorSystem : SharedCMAutomatedVendorSystem
+public sealed partial class CMAutomatedVendorSystem : SharedCMAutomatedVendorSystem
 {
     public override void Initialize()
     {

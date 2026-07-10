@@ -5,7 +5,7 @@ using Robust.Shared.Maths;
 
 namespace Content.Client.Administration.UI.CustomControls;
 
-public sealed class HSeparator : Control
+public sealed partial class HSeparator : Control
 {
     //KS14 - needed for rmc vends
     private PanelContainer _panel;

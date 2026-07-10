@@ -3,7 +3,7 @@ using Robust.Shared.Map;
 
 namespace Content.Client._KS14.Sparks;
 
-public sealed class SparksSystem : SharedSparksSystem
+public sealed partial class SparksSystem : SharedSparksSystem
 {
     public override void ExposeSpark(EntityCoordinates coordinates, float exposedTemperature, float exposedVolume) { }
 }

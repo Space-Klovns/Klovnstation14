@@ -3,7 +3,7 @@ using Robust.Client.UserInterface;
 
 namespace Content.Client.StationRecords;
 
-public sealed class GeneralStationRecordConsoleBoundUserInterface : BoundUserInterface
+public sealed partial class GeneralStationRecordConsoleBoundUserInterface : BoundUserInterface
 {
     [ViewVariables]
     private GeneralStationRecordConsoleWindow? _window = default!;

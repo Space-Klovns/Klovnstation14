@@ -4,11 +4,11 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Client._KS14.Trail;
 
-public sealed class KsTrailOverlaySystem : EntitySystem
+public sealed partial class KsTrailOverlaySystem : EntitySystem
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IOverlayManager _overlayManager = default!;
-    [Dependency] private readonly SystemCollectionHookManager _hookManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IOverlayManager _overlayManager = default!;
+    [Dependency] private SystemCollectionHookManager _hookManager = default!;
 
     private static readonly ProtoId<ShaderPrototype> StencilMaskShaderId = "StencilMask";
     private static readonly ProtoId<ShaderPrototype> StencilDrawShaderId = "StencilDraw";

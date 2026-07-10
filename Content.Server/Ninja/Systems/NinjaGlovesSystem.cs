@@ -9,18 +9,18 @@ namespace Content.Server.Ninja.Systems;
 /// <summary>
 /// Handles the toggle gloves action.
 /// </summary>
-public sealed class NinjaGlovesSystem : SharedNinjaGlovesSystem
+public sealed partial class NinjaGlovesSystem : SharedNinjaGlovesSystem
 {
-    [Dependency] private readonly SharedMindSystem _mind = default!;
-    [Dependency] private readonly SharedObjectivesSystem _objectives = default!;
-    [Dependency] private readonly SpaceNinjaSystem _ninja = default!;
+    [Dependency] private SharedMindSystem _mind = default!;
+    [Dependency] private SharedObjectivesSystem _objectives = default!;
+    [Dependency] private SpaceNinjaSystem _ninja = default!;
 
     protected override void EnableGloves(Entity<NinjaGlovesComponent> ent, Entity<SpaceNinjaComponent> user)
     {
         base.EnableGloves(ent, user);
 
         // can't use abilities if suit is not equipped, this is checked elsewhere but just making sure to satisfy nullability
-        if (user.Comp.Suit is not {} suit)
+        if (user.Comp.Suit is not { } suit)
             return;
 
         if (!_mind.TryGetMind(user, out var mindId, out var mind))
@@ -29,7 +29,7 @@ public sealed class NinjaGlovesSystem : SharedNinjaGlovesSystem
         foreach (var ability in ent.Comp.Abilities)
         {
             // non-objective abilities are added in shared already
-            if (ability.Objective is not {} objId)
+            if (ability.Objective is not { } objId)
                 continue;
 
             // prevent doing an objective multiple times by toggling gloves after doing them

@@ -16,7 +16,7 @@ public enum PlumbingSynthesizerUiKey : byte
 ///     State sent to the client to update the synthesizer UI.
 /// </summary>
 [Serializable, NetSerializable]
-public sealed class PlumbingSynthesizerBoundUserInterfaceState : BoundUserInterfaceState
+public sealed partial class PlumbingSynthesizerBoundUserInterfaceState : BoundUserInterfaceState
 {
     /// <summary>
     ///     Available reagents that can be generated.

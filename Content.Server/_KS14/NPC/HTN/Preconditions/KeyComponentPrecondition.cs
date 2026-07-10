@@ -10,7 +10,7 @@ namespace Content.Server._KS14.NPC.HTN.Preconditions;
 /// </summary>
 public sealed partial class KeyComponentPrecondition : HTNPrecondition
 {
-    [Dependency] private readonly IEntityManager _entManager = default!;
+    [Dependency] private IEntityManager _entManager = default!;
 
     [DataField] public bool Invert;
 

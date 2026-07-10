@@ -5,9 +5,9 @@ using Robust.Shared.Maths;
 
 namespace Content.Client.UserInterface.Controls;
 
-public sealed class VSpacer : Control
+public sealed partial class VSpacer : Control
 {
-    public float Spacing{ get => MinWidth; set => MinWidth = value; }
+    public float Spacing { get => MinWidth; set => MinWidth = value; }
     public VSpacer()
     {
         MinWidth = Spacing;

@@ -24,16 +24,16 @@ namespace Content.Server._KS14.Power.PTL;
 
 public sealed partial class PtlSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly GunSystem _gunSystem = default!;
-    [Dependency] private readonly SharedFlashSystem _flashSystem = default!;
-    [Dependency] private readonly StackSystem _stackSystem = default!;
-    [Dependency] private readonly AudioSystem _audioSystem = default!;
-    [Dependency] private readonly EmagSystem _emagSystem = default!;
-    [Dependency] private readonly UserInterfaceSystem _userInterfaceSystem = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly SharedBatterySystem _batterySystem = default!;
-    [Dependency] private readonly SharedRadiationSystem _radiationSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private GunSystem _gunSystem = default!;
+    [Dependency] private SharedFlashSystem _flashSystem = default!;
+    [Dependency] private StackSystem _stackSystem = default!;
+    [Dependency] private AudioSystem _audioSystem = default!;
+    [Dependency] private EmagSystem _emagSystem = default!;
+    [Dependency] private UserInterfaceSystem _userInterfaceSystem = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private SharedBatterySystem _batterySystem = default!;
+    [Dependency] private SharedRadiationSystem _radiationSystem = default!;
 
     private static readonly ProtoId<StackPrototype> StackCredits = "Credit";
 

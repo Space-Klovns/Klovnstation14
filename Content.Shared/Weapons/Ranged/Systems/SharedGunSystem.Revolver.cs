@@ -282,7 +282,7 @@ public partial class SharedGunSystem
         var mapCoordinates = TransformSystem.GetMapCoordinates(ent);
         var anyEmpty = false;
 
-        var rand = Random(ent.Owner); // Trauma
+        var rand = GetRandom(ent.Owner); // Trauma
         for (var i = 0; i < ent.Comp.Capacity; i++)
         {
             var chamber = ent.Comp.Chambers[i];
@@ -345,7 +345,7 @@ public partial class SharedGunSystem
         Audio.PlayPredicted(component.SoundSpin, revolverUid, user);
         Popup(Loc.GetString("gun-revolver-spun"), revolverUid, user);
 
-        var index = Random(revolverUid).Next(component.Capacity);
+        var index = GetRandom(revolverUid).Next(component.Capacity);
 
         if (component.CurrentIndex == index)
             return;

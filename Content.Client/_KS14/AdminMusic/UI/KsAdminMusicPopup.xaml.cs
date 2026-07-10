@@ -11,7 +11,7 @@ namespace Content.Client._KS14.AdminMusic.UI;
 [GenerateTypedNameReferences]
 public sealed partial class KsAdminMusicPopup : Control
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
 
     private KsAdminMusicEntry _entry = null!;
     private IAudioSource _audioSource = null!;

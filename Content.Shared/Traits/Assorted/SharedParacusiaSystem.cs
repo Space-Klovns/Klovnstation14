@@ -1,5 +1,5 @@
 namespace Content.Shared.Traits.Assorted;
 
-public abstract class SharedParacusiaSystem : EntitySystem
+public abstract partial class SharedParacusiaSystem : EntitySystem
 {
 }

@@ -6,7 +6,7 @@ using Robust.Client.UserInterface;
 namespace Content.Client.Gateway.UI;
 
 [UsedImplicitly]
-public sealed class GatewayBoundUserInterface : BoundUserInterface
+public sealed partial class GatewayBoundUserInterface : BoundUserInterface
 {
     private GatewayWindow? _window;
 

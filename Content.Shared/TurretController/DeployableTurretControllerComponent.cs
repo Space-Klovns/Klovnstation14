@@ -55,7 +55,7 @@ public sealed partial class DeployableTurretControllerComponent : Component
 }
 
 [Serializable, NetSerializable]
-public sealed class DeployableTurretControllerBoundInterfaceState : BoundUserInterfaceState
+public sealed partial class DeployableTurretControllerBoundInterfaceState : BoundUserInterfaceState
 {
     public Dictionary<string, string> TurretStateByAddress;
 

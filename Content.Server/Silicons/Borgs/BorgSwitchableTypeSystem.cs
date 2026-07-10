@@ -6,9 +6,7 @@ using Content.Shared.Silicons.Borgs.Components;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 //KS14 start
-using Robust.Shared.Log;
 using Content.Server.Silicons.Laws;
-using Content.Shared.Silicons.Laws.Components;
 //KS14 end
 
 namespace Content.Server.Silicons.Borgs;
@@ -16,11 +14,11 @@ namespace Content.Server.Silicons.Borgs;
 /// <summary>
 /// Server-side logic for borg type switching. Handles more heavyweight and server-specific switching logic.
 /// </summary>
-public sealed class BorgSwitchableTypeSystem : SharedBorgSwitchableTypeSystem
+public sealed partial class BorgSwitchableTypeSystem : SharedBorgSwitchableTypeSystem
 {
-    [Dependency] private readonly BorgSystem _borgSystem = default!;
-    [Dependency] private readonly ServerInventorySystem _inventorySystem = default!;
-    [Dependency] private readonly SiliconLawSystem _siliconLawSystem = default!; //KS14
+    [Dependency] private BorgSystem _borgSystem = default!;
+    [Dependency] private ServerInventorySystem _inventorySystem = default!;
+    [Dependency] private SiliconLawSystem _siliconLawSystem = default!; //KS14
 
     protected override void SelectBorgModule(Entity<BorgSwitchableTypeComponent> ent, ProtoId<BorgTypePrototype> borgType)
     {

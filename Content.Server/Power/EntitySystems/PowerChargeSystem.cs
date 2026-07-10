@@ -9,12 +9,12 @@ using Robust.Shared.Player;
 
 namespace Content.Server.Power.EntitySystems;
 
-public sealed class PowerChargeSystem : EntitySystem
+public sealed partial class PowerChargeSystem : EntitySystem
 {
-    [Dependency] private readonly IAdminLogManager _adminLogger = default!;
-    [Dependency] private readonly UserInterfaceSystem _uiSystem = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly AmbientSoundSystem _ambientSoundSystem = default!;
+    [Dependency] private IAdminLogManager _adminLogger = default!;
+    [Dependency] private UserInterfaceSystem _uiSystem = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private AmbientSoundSystem _ambientSoundSystem = default!;
 
     public override void Initialize()
     {
@@ -195,7 +195,7 @@ public sealed class PowerChargeSystem : EntitySystem
         else
         {
             var diff = chargeTarget - component.Charge;
-            chargeEta = (short) Math.Abs(diff / chargeRate);
+            chargeEta = (short)Math.Abs(diff / chargeRate);
         }
 
         var status = chargeRate switch
@@ -209,10 +209,10 @@ public sealed class PowerChargeSystem : EntitySystem
 
         var state = new PowerChargeState(
             component.SwitchedOn,
-            (byte) (component.Charge * 255),
+            (byte)(component.Charge * 255),
             status,
-            (short) Math.Round(powerReceiver.PowerReceived),
-            (short) Math.Round(powerReceiver.Load),
+            (short)Math.Round(powerReceiver.PowerReceived),
+            (short)Math.Round(powerReceiver.Load),
             chargeEta
         );
 

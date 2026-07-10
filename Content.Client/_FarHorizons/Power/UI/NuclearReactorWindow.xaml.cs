@@ -22,7 +22,7 @@ namespace Content.Client._FarHorizons.Power.UI;
 [GenerateTypedNameReferences]
 public sealed partial class NuclearReactorWindow : FancyWindow
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
 
     private StyleBoxFlat[,] _reactorGrid;
     private TextureRect[,] _reactorRect = new TextureRect[NuclearReactorComponent.ReactorGridWidth, NuclearReactorComponent.ReactorGridHeight];
@@ -100,12 +100,12 @@ public sealed partial class NuclearReactorWindow : FancyWindow
                 };
                 cell.AddChild(_reactorRect[x, y]);
 
-                var btn = new Button 
-                { 
+                var btn = new Button
+                {
                     MinSize = new Vector2(32, 32),
-                    StyleBoxOverride = new StyleBoxEmpty() 
+                    StyleBoxOverride = new StyleBoxEmpty()
                 };
-                btn.OnPressed += _ => 
+                btn.OnPressed += _ =>
                 {
                     _targetX = localX;
                     _targetY = localY;
@@ -198,7 +198,7 @@ public sealed partial class NuclearReactorWindow : FancyWindow
                             box.BackgroundColor = Color.FromHex("#111111"); // Neutral dark gray for non-fuel
                         else
                             box.BackgroundColor = GetColorSpent(0, 2.5f, _partInfo[x, y, 2]); // Adjusted max down to 2.5
-                        
+
                         ViewLabel.Text = Loc.GetString("comp-nuclear-reactor-ui-view-spent");
                         break;
                 }

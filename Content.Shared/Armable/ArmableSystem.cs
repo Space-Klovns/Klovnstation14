@@ -9,9 +9,9 @@ namespace Content.Shared.Armable;
 /// state. If ItemComponent.Activated is true then the item is considered to be armed and should be able to be
 /// triggered.
 /// </summary>
-public sealed class ArmableSystem : EntitySystem
+public sealed partial class ArmableSystem : EntitySystem
 {
-    [Dependency] private readonly ItemToggleSystem _itemToggle = default!;
+    [Dependency] private ItemToggleSystem _itemToggle = default!;
 
     public override void Initialize()
     {
@@ -37,7 +37,7 @@ public sealed class ArmableSystem : EntitySystem
         else
         {
             if (!string.IsNullOrEmpty(comp.ExamineTextNotArmed))
-                args.PushMarkup(Loc.GetString(comp.ExamineTextNotArmed,("name", uid)));
+                args.PushMarkup(Loc.GetString(comp.ExamineTextNotArmed, ("name", uid)));
         }
     }
 

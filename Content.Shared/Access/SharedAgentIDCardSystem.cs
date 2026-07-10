@@ -4,7 +4,7 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared.Access.Systems
 {
-    public abstract class SharedAgentIdCardSystem : EntitySystem
+    public abstract partial class SharedAgentIdCardSystem : EntitySystem
     {
         // Just for friending for now
     }
@@ -23,7 +23,7 @@ namespace Content.Shared.Access.Systems
     /// Represents an <see cref="AgentIDCardComponent"/> state that can be sent to the client
     /// </summary>
     [Serializable, NetSerializable]
-    public sealed class AgentIDCardBoundUserInterfaceState : BoundUserInterfaceState
+    public sealed partial class AgentIDCardBoundUserInterfaceState : BoundUserInterfaceState
     {
         public string CurrentName { get; }
         public string CurrentJob { get; }

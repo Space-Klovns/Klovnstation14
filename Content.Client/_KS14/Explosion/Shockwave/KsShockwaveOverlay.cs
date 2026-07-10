@@ -12,11 +12,11 @@ namespace Content.Client._KS14.Explosion.Shockwave;
         https://github.com/RMC-14/RMC-14/ at commit 2066df33076c46e67bed4770d7c14ebf107c643b
 */
 
-public sealed class KsShockwaveOverlay(ShaderInstance shader) : Overlay
+public sealed partial class KsShockwaveOverlay(ShaderInstance shader) : Overlay
 {
-    [Dependency] private readonly IEntityManager _entMan = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
+    [Dependency] private IEntityManager _entMan = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpace;
     public override bool RequestScreenTexture => true;

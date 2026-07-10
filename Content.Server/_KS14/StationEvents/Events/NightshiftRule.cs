@@ -10,16 +10,16 @@ using Content.Shared.Light.EntitySystems;
 
 namespace Content.Server._KS14.StationEvents.Events;
 
-public sealed class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
+public sealed partial class NightshiftRule : StationEventSystem<NightshiftRuleComponent>
 {
-    [Dependency] private readonly PoweredLightSystem _poweredLightSystem = default!;
-    [Dependency] private readonly LightBulbSystem _bulbSystem = default!;
+    [Dependency] private PoweredLightSystem _poweredLightSystem = default!;
+    [Dependency] private LightBulbSystem _bulbSystem = default!;
 
-    [Dependency] private readonly EntityQuery<StationMemberComponent> _stationMemberQuery = default!;
-    [Dependency] private readonly EntityQuery<NightshiftBulbComponent> _nightshiftBulbQuery = default!;
-    [Dependency] private readonly EntityQuery<NightshiftLightComponent> _nightshiftLightQuery = default!;
-    [Dependency] private readonly EntityQuery<NightshiftExemptBulbComponent> _nightshiftExemptBulbQuery = default!;
-    [Dependency] private readonly EntityQuery<NightshiftExemptLightComponent> _nightshiftExemptLightQuery = default!;
+    [Dependency] private EntityQuery<StationMemberComponent> _stationMemberQuery = default!;
+    [Dependency] private EntityQuery<NightshiftBulbComponent> _nightshiftBulbQuery = default!;
+    [Dependency] private EntityQuery<NightshiftLightComponent> _nightshiftLightQuery = default!;
+    [Dependency] private EntityQuery<NightshiftExemptBulbComponent> _nightshiftExemptBulbQuery = default!;
+    [Dependency] private EntityQuery<NightshiftExemptLightComponent> _nightshiftExemptLightQuery = default!;
 
     public override void Initialize()
     {

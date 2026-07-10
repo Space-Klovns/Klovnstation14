@@ -26,7 +26,7 @@ public enum ChameleonControllerKey : byte
 }
 
 [Serializable, NetSerializable]
-public sealed class ChameleonControllerBuiState : BoundUserInterfaceState;
+public sealed partial class ChameleonControllerBuiState : BoundUserInterfaceState;
 
 /// <summary>
 ///     Triggered when the user clicks on a job in the menu.

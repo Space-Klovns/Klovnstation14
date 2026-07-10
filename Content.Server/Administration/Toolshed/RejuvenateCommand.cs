@@ -6,7 +6,7 @@ using Robust.Shared.Toolshed.Errors;
 namespace Content.Server.Administration.Toolshed;
 
 [ToolshedCommand, AdminCommand(AdminFlags.Debug)]
-public sealed class RejuvenateCommand : ToolshedCommand
+public sealed partial class RejuvenateCommand : ToolshedCommand
 {
     private RejuvenateSystem? _rejuvenate;
 
@@ -28,7 +28,7 @@ public sealed class RejuvenateCommand : ToolshedCommand
         _rejuvenate ??= GetSys<RejuvenateSystem>();
         if (ExecutingEntity(ctx) is not { } ent)
         {
-            if (ctx.Session is {} session)
+            if (ctx.Session is { } session)
                 ctx.ReportError(new SessionHasNoEntityError(session));
             else
                 ctx.ReportError(new NotForServerConsoleError());

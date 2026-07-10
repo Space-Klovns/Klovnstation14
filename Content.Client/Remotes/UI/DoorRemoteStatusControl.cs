@@ -7,7 +7,7 @@ using Robust.Shared.Timing;
 
 namespace Content.Client.Remotes.UI;
 
-public sealed class DoorRemoteStatusControl(Entity<DoorRemoteComponent> ent) : Control
+public sealed partial class DoorRemoteStatusControl(Entity<DoorRemoteComponent> ent) : Control
 {
     private RichTextLabel? _label;
 

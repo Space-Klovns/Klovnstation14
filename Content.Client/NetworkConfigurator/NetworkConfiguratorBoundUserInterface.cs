@@ -6,7 +6,7 @@ using Robust.Client.UserInterface.Controls;
 
 namespace Content.Client.NetworkConfigurator;
 
-public sealed class NetworkConfiguratorBoundUserInterface : BoundUserInterface
+public sealed partial class NetworkConfiguratorBoundUserInterface : BoundUserInterface
 {
     private readonly NetworkConfiguratorSystem _netConfig;
 

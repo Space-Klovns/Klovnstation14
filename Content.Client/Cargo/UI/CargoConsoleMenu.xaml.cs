@@ -18,7 +18,7 @@ namespace Content.Client.Cargo.UI
     [GenerateTypedNameReferences]
     public sealed partial class CargoConsoleMenu : FancyWindow
     {
-        [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private IGameTiming _timing = default!;
 
         private readonly IEntityManager _entityManager;
         private readonly IPrototypeManager _protoManager;
@@ -84,12 +84,12 @@ namespace Content.Client.Cargo.UI
                     !_entityManager.TryGetComponent<StationBankAccountComponent>(_station, out var bank))
                     return true;
 
-                return val >= 0 && val <= (int) (console.TransferLimit * bank.Accounts[console.Account]);
+                return val >= 0 && val <= (int)(console.TransferLimit * bank.Accounts[console.Account]);
             };
 
             AccountActionButton.OnPressed += _ =>
             {
-                var account = (ProtoId<CargoAccountPrototype>?) ActionOptions.SelectedMetadata;
+                var account = (ProtoId<CargoAccountPrototype>?)ActionOptions.SelectedMetadata;
                 OnAccountAction?.Invoke(account, TransferSpinBox.Value);
             };
 
@@ -316,7 +316,7 @@ namespace Content.Client.Cargo.UI
             var balance = _cargoSystem.GetBalanceFromAccount((_station.Value, bankAccount), orderConsole.Account);
             PointsLabel.Text = Loc.GetString("cargo-console-menu-points-amount", ("amount", balance));
             TransferLimitLabel.Text = Loc.GetString("cargo-console-menu-account-action-transfer-limit",
-                ("limit", (int) (balance * orderConsole.TransferLimit)));
+                ("limit", (int)(balance * orderConsole.TransferLimit)));
 
             UnlimitedNotifier.Visible = orderConsole.TransferUnbounded;
             AccountActionButton.Disabled = TransferSpinBox.Value <= 0 ||

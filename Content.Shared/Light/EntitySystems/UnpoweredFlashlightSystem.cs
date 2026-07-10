@@ -12,18 +12,18 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared.Light.EntitySystems;
 
-public sealed class UnpoweredFlashlightSystem : EntitySystem
+public sealed partial class UnpoweredFlashlightSystem : EntitySystem
 {
     // TODO: Split some of this to ItemTogglePointLight
 
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly SharedActionsSystem _actionsSystem = default!;
-    [Dependency] private readonly ActionContainerSystem _actionContainer = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
-    [Dependency] private readonly SharedPointLightSystem _light = default!;
-    [Dependency] private readonly EmagSystem _emag = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private SharedActionsSystem _actionsSystem = default!;
+    [Dependency] private ActionContainerSystem _actionContainer = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private SharedPointLightSystem _light = default!;
+    [Dependency] private EmagSystem _emag = default!;
 
     public override void Initialize()
     {
@@ -65,7 +65,7 @@ public sealed class UnpoweredFlashlightSystem : EntitySystem
         ActivationVerb verb = new()
         {
             Text = Loc.GetString("toggle-flashlight-verb-get-data-text"),
-            Icon = new SpriteSpecifier.Texture(new ("/Textures/Interface/VerbIcons/light.svg.192dpi.png")),
+            Icon = new SpriteSpecifier.Texture(new("/Textures/Interface/VerbIcons/light.svg.192dpi.png")),
             Act = () => TryToggleLight((uid, component), args.User),
             Priority = -1 // For things like PDA's, Open-UI and other verbs that should be higher priority.
         };

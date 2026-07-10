@@ -8,10 +8,10 @@ using Robust.Shared.Player;
 
 namespace Content.Client.Audio;
 
-public sealed class ClientGlobalSoundSystem : SharedGlobalSoundSystem
+public sealed partial class ClientGlobalSoundSystem : SharedGlobalSoundSystem
 {
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
 
     // Admin music
     private bool _adminAudioEnabled = true;
@@ -64,7 +64,7 @@ public sealed class ClientGlobalSoundSystem : SharedGlobalSoundSystem
 
     private void PlayAdminSound(AdminSoundEvent soundEvent)
     {
-        if(!_adminAudioEnabled) return;
+        if (!_adminAudioEnabled) return;
 
         var stream = _audio.PlayGlobal(soundEvent.Specifier, Filter.Local(), false, soundEvent.AudioParams);
         _adminAudio.Add(stream?.Entity);
@@ -73,7 +73,7 @@ public sealed class ClientGlobalSoundSystem : SharedGlobalSoundSystem
     private void PlayStationEventMusic(StationEventMusicEvent soundEvent)
     {
         // Either the cvar is disabled or it's already playing
-        if(!_eventAudioEnabled || _eventAudio.ContainsKey(soundEvent.Type)) return;
+        if (!_eventAudioEnabled || _eventAudio.ContainsKey(soundEvent.Type)) return;
 
         var stream = _audio.PlayGlobal(soundEvent.Specifier, Filter.Local(), false, soundEvent.AudioParams);
         _eventAudio.Add(soundEvent.Type, stream?.Entity);

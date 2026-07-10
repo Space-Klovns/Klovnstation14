@@ -12,7 +12,7 @@ namespace Content.Shared._KS14.EntityEffects.Effects;
 /// <inheritdoc cref="EntityEffectSystem{T,TEffect}"/>
 public sealed partial class GibEntityEffectSystem : EntityEffectSystem<DestructibleComponent, Gib>
 {
-    [Dependency] private readonly GibbingSystem _gibbingSystem = default!;
+    [Dependency] private GibbingSystem _gibbingSystem = default!;
 
     protected override void Effect(Entity<DestructibleComponent> entity, ref EntityEffectEvent<Gib> args)
     {

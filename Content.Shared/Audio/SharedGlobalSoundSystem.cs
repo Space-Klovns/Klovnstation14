@@ -6,7 +6,7 @@ namespace Content.Shared.Audio;
 /// <summary>
 /// Handles playing audio to all players globally unless disabled by cvar. Some events are grid-specific.
 /// </summary>
-public abstract class SharedGlobalSoundSystem : EntitySystem
+public abstract partial class SharedGlobalSoundSystem : EntitySystem
 {
 }
 
@@ -29,7 +29,7 @@ public class GlobalSoundEvent : EntityEventArgs
 [Serializable, NetSerializable]
 public sealed class AdminSoundEvent : GlobalSoundEvent
 {
-    public AdminSoundEvent(ResolvedSoundSpecifier specifier, AudioParams? audioParams = null) : base(specifier, audioParams){}
+    public AdminSoundEvent(ResolvedSoundSpecifier specifier, AudioParams? audioParams = null) : base(specifier, audioParams) { }
 }
 
 /// <summary>
@@ -38,7 +38,7 @@ public sealed class AdminSoundEvent : GlobalSoundEvent
 [Serializable, NetSerializable]
 public sealed class GameGlobalSoundEvent : GlobalSoundEvent
 {
-    public GameGlobalSoundEvent(ResolvedSoundSpecifier specifier, AudioParams? audioParams = null) : base(specifier, audioParams){}
+    public GameGlobalSoundEvent(ResolvedSoundSpecifier specifier, AudioParams? audioParams = null) : base(specifier, audioParams) { }
 }
 
 public enum StationEventMusicType : byte

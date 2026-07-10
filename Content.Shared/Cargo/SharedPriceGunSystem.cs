@@ -8,7 +8,7 @@ namespace Content.Shared.Cargo.Systems;
 /// <summary>
 ///     The price gun system! If this component is on an entity, you can scan objects (Click or use verb) to see their price.
 /// </summary>
-public abstract class SharedPriceGunSystem : EntitySystem
+public abstract partial class SharedPriceGunSystem : EntitySystem
 {
     public override void Initialize()
     {

@@ -61,7 +61,7 @@ namespace Content.Shared.Research.Components
     }
 
     [Serializable, NetSerializable]
-    public sealed class ResearchClientBoundInterfaceState : BoundUserInterfaceState
+    public sealed partial class ResearchClientBoundInterfaceState : BoundUserInterfaceState
     {
         public int ServerCount;
         public string[] ServerNames;

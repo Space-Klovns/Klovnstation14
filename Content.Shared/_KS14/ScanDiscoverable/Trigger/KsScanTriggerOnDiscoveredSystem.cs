@@ -3,9 +3,9 @@ using Content.Shared.Trigger.Systems;
 
 namespace Content.Shared._KS14.ScanDiscoverable.Trigger;
 
-public sealed class KsScanTriggerOnDiscoveredSystem : EntitySystem
+public sealed partial class KsScanTriggerOnDiscoveredSystem : EntitySystem
 {
-    [Dependency] private readonly TriggerSystem _triggerSystem = default!;
+    [Dependency] private TriggerSystem _triggerSystem = default!;
 
     public override void Initialize()
     {

@@ -5,7 +5,7 @@ namespace Content.Shared.Revenant.EntitySystems;
 /// <summary>
 /// This handles...
 /// </summary>
-public abstract class SharedRevenantOverloadedLightsSystem : EntitySystem
+public abstract partial class SharedRevenantOverloadedLightsSystem : EntitySystem
 {
     public override void Update(float frameTime)
     {

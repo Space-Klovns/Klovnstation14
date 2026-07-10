@@ -34,7 +34,7 @@ public sealed class PlumbingSmartFridgeReagentEntry
 /// BUI state sent to the client containing the current reagent inventory.
 /// </summary>
 [Serializable, NetSerializable]
-public sealed class PlumbingSmartFridgeBoundUserInterfaceState : BoundUserInterfaceState
+public sealed partial class PlumbingSmartFridgeBoundUserInterfaceState : BoundUserInterfaceState
 {
     public List<PlumbingSmartFridgeReagentEntry> Entries;
     public float MaxPerReagent;

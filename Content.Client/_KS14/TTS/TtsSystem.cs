@@ -10,11 +10,11 @@ using Robust.Shared.Configuration;
 namespace Content.Client._KS14.TTS;
 
 /// <inheritdoc/>
-public sealed class TtsSystem : SharedTtsSystem
+public sealed partial class TtsSystem : SharedTtsSystem
 {
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-    [Dependency] private readonly IAudioManager _audioManager = default!;
-    [Dependency] private readonly AudioSystem _audioSystem = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IAudioManager _audioManager = default!;
+    [Dependency] private AudioSystem _audioSystem = default!;
 
     private bool _ttsEnabled = false;
     private bool _slurFilterEnabled = false;

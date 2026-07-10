@@ -6,13 +6,13 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.EntityProcessor.StackProcessor;
 
-public sealed class KsStackProcessorSystem : EntitySystem
+public sealed partial class KsStackProcessorSystem : EntitySystem
 {
-    [Dependency] private readonly INetManager _netManager = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly SharedStackSystem _stackSystem = default!;
-    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private SharedStackSystem _stackSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
 
     public override void Initialize()
     {

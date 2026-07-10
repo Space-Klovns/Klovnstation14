@@ -6,7 +6,7 @@ namespace Content.Shared.Movement.Systems;
 /// <summary>
 /// Applies an occlusion shader for any relevant entities.
 /// </summary>
-public abstract class SharedFloorOcclusionSystem : EntitySystem
+public abstract partial class SharedFloorOcclusionSystem : EntitySystem
 {
     public override void Initialize()
     {

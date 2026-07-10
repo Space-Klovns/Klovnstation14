@@ -19,16 +19,17 @@ namespace Content.Server.Power.EntitySystems;
 
 public sealed partial class CableSystem : EntitySystem
 {
-    [Dependency] private readonly ITileDefinitionManager _tileManager = default!;
-    [Dependency] private readonly SharedToolSystem _toolSystem = default!;
-    [Dependency] private readonly StackSystem _stack = default!;
-    [Dependency] private readonly ElectrocutionSystem _electrocutionSystem = default!;
-    //KS14 start
-    [Dependency] private readonly LightningSystem _lightning = default!;
+    [Dependency] private ITileDefinitionManager _tileManager = default!;
+    [Dependency] private SharedToolSystem _toolSystem = default!;
+    [Dependency] private StackSystem _stack = default!;
+    [Dependency] private ElectrocutionSystem _electrocutionSystem = default!;
 
-    private readonly float arcFlashRange = 4f; //all of this stays here for now
-    private readonly int arcFlashAmount = 2;
-    private readonly string arcFlashProto = "ArcFlashLightningStrong";
+    //KS14 start
+    [Dependency] private LightningSystem _lightning = default!;
+
+    private readonly float _arcFlashRange = 4f; //all of this stays here for now
+    private readonly int _arcFlashAmount = 2;
+    private readonly string _arcFlashProto = "ArcFlashLightningStrong";
     //KS14 end
 
     public override void Initialize()
@@ -69,9 +70,10 @@ public sealed partial class CableSystem : EntitySystem
         // KS start
         ElectrifiedComponent? electrified = null;
         TransformComponent? transform = null;
-        if (Resolve(uid, ref electrified, ref transform, false))
-            if (cable.CableType == CableType.HighVoltage && _electrocutionSystem.IsPowered(uid, electrified, transform))
-                _lightning.ShootRandomLightnings(uid, arcFlashRange, arcFlashAmount, lightningPrototype: arcFlashProto);
+        if (Resolve(uid, ref electrified, ref transform, false) &&
+            cable.CableType == CableType.HighVoltage &&
+            _electrocutionSystem.IsPowered(uid, electrified, transform))
+            _lightning.ShootRandomLightnings(uid, _arcFlashRange, _arcFlashAmount, lightningPrototype: _arcFlashProto);
         // KS end
 
         _adminLogger.Add(LogType.CableCut, LogImpact.High, $"The {ToPrettyString(uid)} at {xform.Coordinates} was cut by {ToPrettyString(args.User)}.");

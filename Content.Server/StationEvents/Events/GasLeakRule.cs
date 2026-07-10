@@ -8,10 +8,10 @@ using Robust.Shared.Timing;
 
 namespace Content.Server.StationEvents.Events
 {
-    internal sealed class GasLeakRule : StationEventSystem<GasLeakRuleComponent>
+    internal sealed partial class GasLeakRule : StationEventSystem<GasLeakRuleComponent>
     {
-        [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] private readonly AtmosphereSystem _atmosphere = default!;
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] private AtmosphereSystem _atmosphere = default!;
 
         protected override void Started(EntityUid uid, GasLeakRuleComponent component, GameRuleComponent gameRule, GameRuleStartedEvent args)
         {
@@ -31,7 +31,7 @@ namespace Content.Server.StationEvents.Events
                 var totalGas = RobustRandom.Next(component.MinimumGas, component.MaximumGas);
                 component.MolesPerSecond = RobustRandom.Next(component.MinimumMolesPerSecond, component.MaximumMolesPerSecond);
 
-                if (gameRule.Delay is {} startAfter)
+                if (gameRule.Delay is { } startAfter)
                     stationEvent.EndTime = _timing.CurTime + TimeSpan.FromSeconds(totalGas / component.MolesPerSecond + startAfter.Next(RobustRandom));
             }
 

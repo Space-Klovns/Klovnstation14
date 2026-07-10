@@ -6,9 +6,9 @@ namespace Content.Shared._KS14.WormWithoutOrgans;
 
 // TODO LCDC: optimise too somehow
 
-public sealed class WormWithoutOrgansSystem : EntitySystem
+public sealed partial class WormWithoutOrgansSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
 
     public override void Initialize()
     {

@@ -5,9 +5,9 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared.DetailExaminable;
 
-public sealed class DetailExaminableSystem : EntitySystem
+public sealed partial class DetailExaminableSystem : EntitySystem
 {
-    [Dependency] private readonly ExamineSystemShared _examine = default!;
+    [Dependency] private ExamineSystemShared _examine = default!;
 
     public override void Initialize()
     {
@@ -37,7 +37,7 @@ public sealed class DetailExaminableSystem : EntitySystem
             Category = VerbCategory.Examine,
             Disabled = !detailsRange,
             Message = detailsRange ? null : Loc.GetString("detail-examinable-verb-disabled"),
-            Icon = new SpriteSpecifier.Texture(new ("/Textures/Interface/VerbIcons/examine.svg.192dpi.png"))
+            Icon = new SpriteSpecifier.Texture(new("/Textures/Interface/VerbIcons/examine.svg.192dpi.png"))
         };
 
         args.Verbs.Add(verb);

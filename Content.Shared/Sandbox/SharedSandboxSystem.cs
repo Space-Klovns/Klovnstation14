@@ -3,9 +3,9 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared.Sandbox
 {
-    public abstract class SharedSandboxSystem : EntitySystem
+    public abstract partial class SharedSandboxSystem : EntitySystem
     {
-        [Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
+        [Dependency] protected IPrototypeManager PrototypeManager = default!;
 
         [Serializable, NetSerializable]
         protected sealed class MsgSandboxStatus : EntityEventArgs
@@ -14,18 +14,18 @@ namespace Content.Shared.Sandbox
         }
 
         [Serializable, NetSerializable]
-        protected sealed class MsgSandboxRespawn : EntityEventArgs {}
+        protected sealed class MsgSandboxRespawn : EntityEventArgs { }
 
         [Serializable, NetSerializable]
-        protected sealed class MsgSandboxGiveAccess : EntityEventArgs {}
+        protected sealed class MsgSandboxGiveAccess : EntityEventArgs { }
 
         [Serializable, NetSerializable]
-        protected sealed class MsgSandboxGiveAghost : EntityEventArgs {}
+        protected sealed class MsgSandboxGiveAghost : EntityEventArgs { }
 
         [Serializable, NetSerializable]
-        protected sealed class MsgSandboxSuicide : EntityEventArgs {}
+        protected sealed class MsgSandboxSuicide : EntityEventArgs { }
 
         [Serializable, NetSerializable]
-        protected sealed class MsgSandboxThermalVision : EntityEventArgs {}
+        protected sealed class MsgSandboxThermalVision : EntityEventArgs { }
     }
 }

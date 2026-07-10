@@ -23,17 +23,17 @@ namespace Content.Server.Guardian
     /// <summary>
     /// A guardian has a host it's attached to that it fights for. A fighting spirit.
     /// </summary>
-    public sealed class GuardianSystem : EntitySystem
+    public sealed partial class GuardianSystem : EntitySystem
     {
-        [Dependency] private readonly SharedDoAfterSystem _doAfterSystem = default!;
-        [Dependency] private readonly PopupSystem _popupSystem = default!;
-        [Dependency] private readonly DamageableSystem _damageSystem = default!;
-        [Dependency] private readonly SharedActionsSystem _actionSystem = default!;
-        [Dependency] private readonly SharedHandsSystem _handsSystem = default!;
-        [Dependency] private readonly SharedAudioSystem _audio = default!;
-        [Dependency] private readonly GibbingSystem _gibbing = default!;
-        [Dependency] private readonly SharedContainerSystem _container = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
+        [Dependency] private PopupSystem _popupSystem = default!;
+        [Dependency] private DamageableSystem _damageSystem = default!;
+        [Dependency] private SharedActionsSystem _actionSystem = default!;
+        [Dependency] private SharedHandsSystem _handsSystem = default!;
+        [Dependency] private SharedAudioSystem _audio = default!;
+        [Dependency] private GibbingSystem _gibbing = default!;
+        [Dependency] private SharedContainerSystem _container = default!;
+        [Dependency] private SharedTransformSystem _transform = default!;
 
         public override void Initialize()
         {
@@ -125,7 +125,7 @@ namespace Content.Server.Guardian
 
         private void OnHostShutdown(EntityUid uid, GuardianHostComponent component, ComponentShutdown args)
         {
-            if (component.HostedGuardian is not {} guardian)
+            if (component.HostedGuardian is not { } guardian)
                 return;
 
             // Ensure held items are dropped before deleting guardian.
@@ -300,8 +300,8 @@ namespace Content.Server.Guardian
         /// </summary>
         private void OnCreatorExamine(EntityUid uid, GuardianCreatorComponent component, ExaminedEvent args)
         {
-           if (component.Used)
-               args.PushMarkup(Loc.GetString("guardian-activator-empty-examine"));
+            if (component.Used)
+                args.PushMarkup(Loc.GetString("guardian-activator-empty-examine"));
         }
 
         /// <summary>
@@ -371,7 +371,7 @@ namespace Content.Server.Guardian
             guardianComponent.GuardianLoose = true;
         }
 
-        private void RetractGuardian(EntityUid host,GuardianHostComponent hostComponent, EntityUid guardian, GuardianComponent guardianComponent)
+        private void RetractGuardian(EntityUid host, GuardianHostComponent hostComponent, EntityUid guardian, GuardianComponent guardianComponent)
         {
             if (!guardianComponent.GuardianLoose)
             {

@@ -9,7 +9,7 @@ using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Content.Client.Light.Components;
 
-public sealed class HandheldLightStatus : Control
+public sealed partial class HandheldLightStatus : Control
 {
     private const float TimerCycle = 1;
 
@@ -43,7 +43,7 @@ public sealed class HandheldLightStatus : Control
 
         for (var i = 0; i < _sections.Length; i++)
         {
-            var panel = new PanelContainer {MinSize = new Vector2(20, 20)};
+            var panel = new PanelContainer { MinSize = new Vector2(20, 20) };
             wrapper.AddChild(panel);
             _sections[i] = panel;
         }

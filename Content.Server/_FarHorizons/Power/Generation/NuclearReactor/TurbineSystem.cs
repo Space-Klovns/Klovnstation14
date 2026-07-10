@@ -23,19 +23,19 @@ using Content.Shared.Atmos.Components;
 
 namespace Content.Server._FarHorizons.Power.Generation.FissionGenerator;
 
-public sealed class TurbineSystem : SharedTurbineSystem
+public sealed partial class TurbineSystem : SharedTurbineSystem
 {
-    [Dependency] private readonly GunSystem _gun = default!;
-    [Dependency] private readonly AtmosphereSystem _atmosphereSystem = default!;
-    [Dependency] private readonly ExplosionSystem _explosion = default!;
-    [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
-    [Dependency] private readonly NodeContainerSystem _nodeContainer = default!;
-    [Dependency] private readonly PopupSystem _popupSystem = default!;
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly UserInterfaceSystem _uiSystem = null!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
-    [Dependency] private readonly NodeGroupSystem _nodeGroupSystem = default!;
+    [Dependency] private GunSystem _gun = default!;
+    [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private ExplosionSystem _explosion = default!;
+    [Dependency] private ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] private NodeContainerSystem _nodeContainer = default!;
+    [Dependency] private PopupSystem _popupSystem = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private UserInterfaceSystem _uiSystem = null!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
+    [Dependency] private NodeGroupSystem _nodeGroupSystem = default!;
 
 
     private readonly List<SoundSpecifier> _damageSoundList = [

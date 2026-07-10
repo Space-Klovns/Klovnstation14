@@ -4,9 +4,9 @@ using Robust.Shared.Map;
 
 namespace Content.Shared.GPS.Systems;
 
-public sealed class HandheldGpsSystem : EntitySystem
+public sealed partial class HandheldGpsSystem : EntitySystem
 {
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
 
     /// <inheritdoc/>
     public override void Initialize()
@@ -27,8 +27,8 @@ public sealed class HandheldGpsSystem : EntitySystem
 
         if (pos.MapId != MapId.Nullspace)
         {
-            var x = (int) pos.Position.X;
-            var y = (int) pos.Position.Y;
+            var x = (int)pos.Position.X;
+            var y = (int)pos.Position.Y;
             posText = $"({x}, {y})";
         }
 

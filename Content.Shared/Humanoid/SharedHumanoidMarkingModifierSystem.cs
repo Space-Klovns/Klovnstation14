@@ -24,7 +24,7 @@ public sealed class HumanoidMarkingModifierMarkingSetMessage : BoundUserInterfac
 }
 
 [Serializable, NetSerializable]
-public sealed class HumanoidMarkingModifierState : BoundUserInterfaceState
+public sealed partial class HumanoidMarkingModifierState : BoundUserInterfaceState
 {
     public HumanoidMarkingModifierState(
         Dictionary<ProtoId<OrganCategoryPrototype>, Dictionary<HumanoidVisualLayers, List<Marking>>> markings,

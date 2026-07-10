@@ -15,15 +15,15 @@ using Robust.Shared.Utility;
 
 namespace Content.Server.GameTicking.Rules;
 
-public sealed class LoadMapRuleSystem : StationEventSystem<LoadMapRuleComponent>
+public sealed partial class LoadMapRuleSystem : StationEventSystem<LoadMapRuleComponent>
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly MapSystem _map = default!;
-    [Dependency] private readonly MapLoaderSystem _mapLoader = default!;
-    [Dependency] private readonly TransformSystem _transform = default!;
-    [Dependency] private readonly GridPreloaderSystem _gridPreloader = default!;
-    [Dependency] private readonly StationSystem _stationSystem = default!; // KS14: LoadGridOnStationMap
-    [Dependency] private readonly ShuttleSystem _shuttleSystem = default!; // KS14: LoadGridOnStationMap
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private MapSystem _map = default!;
+    [Dependency] private MapLoaderSystem _mapLoader = default!;
+    [Dependency] private TransformSystem _transform = default!;
+    [Dependency] private GridPreloaderSystem _gridPreloader = default!;
+    [Dependency] private StationSystem _stationSystem = default!; // KS14: LoadGridOnStationMap
+    [Dependency] private ShuttleSystem _shuttleSystem = default!; // KS14: LoadGridOnStationMap
 
     protected override void Added(EntityUid uid, LoadMapRuleComponent comp, GameRuleComponent rule, GameRuleAddedEvent args)
     {

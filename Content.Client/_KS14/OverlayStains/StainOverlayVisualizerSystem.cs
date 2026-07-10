@@ -6,11 +6,11 @@ using Robust.Shared.Utility;
 
 namespace Content.Client._KS14.OverlayStains;
 
-public sealed class StainOverlayVisualizerSystem : EntitySystem
+public sealed partial class StainOverlayVisualizerSystem : EntitySystem
 {
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-    [Dependency] private readonly IOverlayManager _overlayManager = default!;
-    [Dependency] private readonly SystemCollectionHookManager _systemCollectionHookManager = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IOverlayManager _overlayManager = default!;
+    [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;
 
     private StainOverlay _stainOverlay = default!;
 

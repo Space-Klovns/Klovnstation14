@@ -15,16 +15,16 @@ namespace Content.Shared._KS14.Lava;
 /// <summary>
 ///     Not my proudest code yet
 /// </summary>
-public sealed class KsLavaSystem : EntitySystem
+public sealed partial class KsLavaSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly INetManager _netManager = default!;
-    [Dependency] private readonly IRobustRandom _robustRandom = default!;
-    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
-    [Dependency] private readonly DamageableSystem _damageableSystem = default!;
-    [Dependency] private readonly SharedStunSystem _stunSystem = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
-    [Dependency] private readonly SharedChatSystem _chatSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private IRobustRandom _robustRandom = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
+    [Dependency] private SharedStunSystem _stunSystem = default!;
+    [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
+    [Dependency] private SharedChatSystem _chatSystem = default!;
 
     /// <summary>
     ///     List of occupied lava tiles on each grid or whatever.

@@ -13,10 +13,10 @@ namespace Content.Server.Objectives.Systems;
 /// Handles assinging a target to an objective entity with <see cref="TargetObjectiveComponent"/> using different components.
 /// These can be combined with condition components for objective completions in order to create a variety of objectives.
 /// </summary>
-public sealed class PickObjectiveTargetSystem : EntitySystem
+public sealed partial class PickObjectiveTargetSystem : EntitySystem
 {
-    [Dependency] private readonly TargetObjectiveSystem _objective = default!;
-    [Dependency] private readonly TargetSystem _target = default!;
+    [Dependency] private TargetObjectiveSystem _objective = default!;
+    [Dependency] private TargetSystem _target = default!;
 
     public override void Initialize()
     {
@@ -69,7 +69,7 @@ public sealed class PickObjectiveTargetSystem : EntitySystem
             return;
 
         // couldn't find a target :(
-        if (_target.PickFromPool(ent.Comp.Pool, ent.Comp.Filters, args.MindId) is not {} picked)
+        if (_target.PickFromPool(ent.Comp.Pool, ent.Comp.Filters, args.MindId) is not { } picked)
         {
             args.Cancelled = true;
             return;

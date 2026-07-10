@@ -5,7 +5,7 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared.DeviceNetwork.Systems;
 
-public abstract class SharedNetworkConfiguratorSystem : EntitySystem
+public abstract partial class SharedNetworkConfiguratorSystem : EntitySystem
 {
     public override void Initialize()
     {

@@ -8,8 +8,8 @@ namespace Content.Server._KS14.PipeNodeTeleporter;
 
 public sealed partial class PipeNodeTeleporterSystem : EntitySystem
 {
-    [Dependency] private readonly NodeContainerSystem _nodeContainerSystem = default!;
-    [Dependency] private readonly AppearanceSystem _appearanceSystem = default!;
+    [Dependency] private NodeContainerSystem _nodeContainerSystem = default!;
+    [Dependency] private AppearanceSystem _appearanceSystem = default!;
 
     public override void Initialize()
     {

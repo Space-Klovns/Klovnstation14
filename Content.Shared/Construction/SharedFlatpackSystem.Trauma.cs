@@ -12,22 +12,22 @@ namespace Content.Shared.Construction;
 /// </summary>
 public abstract partial class SharedFlatpackSystem
 {
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly TurfSystem _turf = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private TurfSystem _turf = default!;
 
     public bool IsTileOccupied(Entity<FlatpackComponent> ent, EntityCoordinates coords)
         // unreachable
-        => ent.Comp.Entity is {} id &&
+        => ent.Comp.Entity is { } id &&
             // if the machine has no fixtures it by definition can't occupy a tile, so it will return false
             PrototypeManager.Index(id).TryGetComponent<FixturesComponent>(out var fixtures, Factory) &&
             // unreachable
-            _turf.GetTileRef(coords) is {} tile &&
+            _turf.GetTileRef(coords) is { } tile &&
             // checks that the machine isnt blocked by anything
             _turf.IsTileBlocked(tile, GetMask(fixtures));
 
     private CollisionGroup GetMask(FixturesComponent fixtures)
     {
         var (_, mask) = SharedPhysicsSystem.GetHardCollision(fixtures);
-        return (CollisionGroup) mask;
+        return (CollisionGroup)mask;
     }
 }

@@ -10,7 +10,7 @@ namespace Content.Client.Pinpointer.UI;
 [GenerateTypedNameReferences]
 public sealed partial class StationMapWindow : FancyWindow
 {
-    [Dependency] private readonly IEntityManager _entMan = default!;
+    [Dependency] private IEntityManager _entMan = default!;
 
     private readonly List<StationMapBeaconControl> _buttons = new();
 
@@ -46,7 +46,8 @@ public sealed partial class StationMapWindow : FancyWindow
                 !string.IsNullOrEmpty(button.Label) &&
                 button.Label.Contains(newFilter, StringComparison.OrdinalIgnoreCase)
             );
-        };
+        }
+        ;
     }
 
     public void UpdateBeaconList(EntityUid? mapUid)

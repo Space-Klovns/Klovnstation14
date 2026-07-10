@@ -4,7 +4,7 @@ using Content.Shared._KS14.Research;
 namespace Content.Shared._KS14.Research.Components
 {
     [Serializable, NetSerializable]
-    public sealed class FancyResearchConsoleState : BoundUserInterfaceState
+    public sealed partial class FancyResearchConsoleState : BoundUserInterfaceState
     {
         public int Points;
 

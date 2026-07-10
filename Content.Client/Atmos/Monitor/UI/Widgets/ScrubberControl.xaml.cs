@@ -13,14 +13,14 @@ namespace Content.Client.Atmos.Monitor.UI.Widgets;
 [GenerateTypedNameReferences]
 public sealed partial class ScrubberControl : BoxContainer
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IEntityManager _entMan = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IEntityManager _entMan = default!;
 
     private GasVentScrubberData _data;
     private string _address;
 
     public event Action<string, IAtmosDeviceData>? ScrubberDataChanged;
-	public event Action<IAtmosDeviceData>? ScrubberDataCopied;
+    public event Action<IAtmosDeviceData>? ScrubberDataCopied;
 
     private CheckBox _enabled => CEnableDevice;
     private CollapsibleHeading _addressLabel => CAddress;
@@ -73,14 +73,14 @@ public sealed partial class ScrubberControl : BoxContainer
 
         foreach (var value in Enum.GetValues<ScrubberPumpDirection>())
         {
-            _pumpDirection.AddItem(Loc.GetString($"air-alarm-ui-pump-direction-{value.ToString().ToLower()}"), (int) value);
+            _pumpDirection.AddItem(Loc.GetString($"air-alarm-ui-pump-direction-{value.ToString().ToLower()}"), (int)value);
         }
 
-        _pumpDirection.SelectId((int) _data.PumpDirection);
+        _pumpDirection.SelectId((int)_data.PumpDirection);
         _pumpDirection.OnItemSelected += args =>
         {
             _pumpDirection.SelectId(args.Id);
-            _data.PumpDirection = (ScrubberPumpDirection) args.Id;
+            _data.PumpDirection = (ScrubberPumpDirection)args.Id;
             ScrubberDataChanged?.Invoke(_address, _data);
         };
         _pumpDirection.Disabled = data.AirAlarmPanicWireCut;
@@ -137,7 +137,7 @@ public sealed partial class ScrubberControl : BoxContainer
         _enabled.Pressed = _data.Enabled;
 
         _data.PumpDirection = data.PumpDirection;
-        _pumpDirection.Select((int) _data.PumpDirection);
+        _pumpDirection.Select((int)_data.PumpDirection);
         _pumpDirection.Disabled = data.AirAlarmPanicWireCut;
 
         _data.VolumeRate = data.VolumeRate;

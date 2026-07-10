@@ -38,8 +38,9 @@
 
   # Damage
   - type: Damageable
-    damageContainer: KsOreDrone
     damageModifierSet: null
+  - type: Injurable
+    damageContainer: KsOreDrone
   - type: Destructible
     thresholds:
     - trigger:

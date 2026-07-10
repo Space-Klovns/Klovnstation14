@@ -11,12 +11,12 @@ namespace Content.Shared._KS14.Farsound;
 
 // did you know pvs entities in range of you are pvs overriden and so is their parents or whatever
 
-public sealed class FarSoundSystem : EntitySystem
+public sealed partial class FarSoundSystem : EntitySystem
 {
-    [Dependency] private readonly INetManager _netManager = default!;
-    [Dependency] private readonly ISharedPlayerManager _playerManager = default!;
-    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
-    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private ISharedPlayerManager _playerManager = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
 
     public Filter GetFilter(EntityUid sourceUid, float minimumRange, float maximumRange)
     {

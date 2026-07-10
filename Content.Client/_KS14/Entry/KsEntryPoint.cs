@@ -6,11 +6,11 @@ using Robust.Shared.ContentPack;
 
 namespace Content.Client._KS14.Entry;
 
-internal sealed class KsEntryPoint : GameClient
+internal sealed partial class KsEntryPoint : GameClient
 {
-    [Dependency] private readonly IBaseClient _baseClient = default!;
-    [Dependency] private readonly SystemCollectionHookManager _systemCollectionHookManager = default!;
-    [Dependency] private readonly KsAdminMusicManager _adminMusicManager = default!;
+    [Dependency] private IBaseClient _baseClient = default!;
+    [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;
+    [Dependency] private KsAdminMusicManager _adminMusicManager = default!;
 
     public override void PreInit()
     {

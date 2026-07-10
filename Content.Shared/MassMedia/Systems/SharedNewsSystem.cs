@@ -2,7 +2,7 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared.MassMedia.Systems;
 
-public abstract class SharedNewsSystem : EntitySystem
+public abstract partial class SharedNewsSystem : EntitySystem
 {
     public const int MaxTitleLength = 25;
     public const int MaxContentLength = 2048;

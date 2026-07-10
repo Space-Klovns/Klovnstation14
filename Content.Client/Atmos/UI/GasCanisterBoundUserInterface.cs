@@ -12,7 +12,7 @@ namespace Content.Client.Atmos.UI
     /// Initializes a <see cref="GasCanisterWindow"/> and updates it when new server messages are received.
     /// </summary>
     [UsedImplicitly]
-    public sealed class GasCanisterBoundUserInterface : BoundUserInterface
+    public sealed partial class GasCanisterBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
         private GasCanisterWindow? _window;

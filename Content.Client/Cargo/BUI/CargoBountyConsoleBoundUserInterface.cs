@@ -6,7 +6,7 @@ using Robust.Client.UserInterface;
 namespace Content.Client.Cargo.BUI;
 
 [UsedImplicitly]
-public sealed class CargoBountyConsoleBoundUserInterface : BoundUserInterface
+public sealed partial class CargoBountyConsoleBoundUserInterface : BoundUserInterface
 {
     [ViewVariables]
     private CargoBountyMenu? _menu;

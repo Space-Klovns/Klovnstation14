@@ -39,8 +39,9 @@
     fx: EffectRCDDeconstruct2
     rpld: true
   - type: Damageable
-    damageContainer: StructuralInorganic
     damageModifierSet: Metallic
+  - type: Injurable
+    damageContainer: StructuralInorganic
 
 # =============================================================================
 # Plumbing Tank - stores reagents in the network

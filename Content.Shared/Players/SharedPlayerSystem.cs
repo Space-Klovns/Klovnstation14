@@ -6,7 +6,7 @@ namespace Content.Shared.Players;
 ///     To be used from some systems.
 ///     Otherwise, use <see cref="ISharedPlayerManager"/>
 /// </summary>
-public abstract class SharedPlayerSystem : EntitySystem
+public abstract partial class SharedPlayerSystem : EntitySystem
 {
     public abstract ContentPlayerData? ContentData(ICommonSession? session);
 }

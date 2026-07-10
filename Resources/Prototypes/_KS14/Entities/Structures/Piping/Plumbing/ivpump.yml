@@ -112,7 +112,7 @@
     fillBaseName: fill_
     solutionName: buffer
 
-  - type: SolutionContainerManager
+  - type: SolutionManager
     solutions:
       buffer:
         maxVol: 500

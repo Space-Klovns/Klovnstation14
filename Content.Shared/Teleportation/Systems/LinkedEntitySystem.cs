@@ -9,9 +9,9 @@ namespace Content.Shared.Teleportation.Systems;
 ///     This does not do anything on its own (outside of deleting entities that have 0 links, if that option is true)
 ///     Systems can do whatever they please with the linked entities, such as <see cref="SharedPortalSystem"/>.
 /// </summary>
-public sealed class LinkedEntitySystem : EntitySystem
+public sealed partial class LinkedEntitySystem : EntitySystem
 {
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
 
     /// <inheritdoc/>
     public override void Initialize()
@@ -43,7 +43,7 @@ public sealed class LinkedEntitySystem : EntitySystem
     /// <param name="second">The second entity to link</param>
     /// <param name="deleteOnEmptyLinks">Whether both entities should now delete once their links are removed</param>
     /// <returns>Whether linking was successful (e.g. they weren't already linked)</returns>
-    public bool TryLink(EntityUid first, EntityUid second, bool deleteOnEmptyLinks=false)
+    public bool TryLink(EntityUid first, EntityUid second, bool deleteOnEmptyLinks = false)
     {
         var firstLink = EnsureComp<LinkedEntityComponent>(first);
         var secondLink = EnsureComp<LinkedEntityComponent>(second);
@@ -65,7 +65,7 @@ public sealed class LinkedEntitySystem : EntitySystem
     /// Does a one-way link from source to target.
     /// </summary>
     /// <param name="deleteOnEmptyLinks">Whether both entities should now delete once their links are removed</param>
-    public bool OneWayLink(EntityUid source, EntityUid target, bool deleteOnEmptyLinks=false)
+    public bool OneWayLink(EntityUid source, EntityUid target, bool deleteOnEmptyLinks = false)
     {
         var firstLink = EnsureComp<LinkedEntityComponent>(source);
         firstLink.DeleteOnEmptyLinks = deleteOnEmptyLinks;

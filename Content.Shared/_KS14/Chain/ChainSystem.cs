@@ -20,15 +20,15 @@ namespace Content.Shared._KS14.Chain;
 ///     If you want to break a chain, remove <see cref="ChainLinkComponent"/>
 ///         from one of the links or delete it.
 /// </summary>
-public sealed class ChainSystem : EntitySystem
+public sealed partial class ChainSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly INetManager _netManager = default!;
-    [Dependency] private readonly SharedJointSystem _jointSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private SharedJointSystem _jointSystem = default!;
 
-    [Dependency] private readonly EntityQuery<ChainLinkComponent> _linkQuery = default!;
-    [Dependency] private readonly EntityQuery<ChainEdgeComponent> _edgeQuery = default!;
-    [Dependency] private readonly EntityQuery<JointComponent> _jointQuery = default!;
+    [Dependency] private EntityQuery<ChainLinkComponent> _linkQuery = default!;
+    [Dependency] private EntityQuery<ChainEdgeComponent> _edgeQuery = default!;
+    [Dependency] private EntityQuery<JointComponent> _jointQuery = default!;
 
     public override void Initialize()
     {

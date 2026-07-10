@@ -12,8 +12,8 @@ namespace Content.Shared._KS14.FieldGenerator;
 
 public sealed partial class KsFieldGeneratorSystem : EntitySystem
 {
-    [Dependency] private readonly RayCastSystem _rayCastSystem = default!;
-    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
+    [Dependency] private RayCastSystem _rayCastSystem = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
 
     // Could be a component on the grid but whatever
     // Server-side only IG

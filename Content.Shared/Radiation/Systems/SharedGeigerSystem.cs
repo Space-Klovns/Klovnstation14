@@ -3,7 +3,7 @@ using Content.Shared.Radiation.Components;
 
 namespace Content.Shared.Radiation.Systems;
 
-public abstract class SharedGeigerSystem : EntitySystem
+public abstract partial class SharedGeigerSystem : EntitySystem
 {
     public override void Initialize()
     {

@@ -2,7 +2,7 @@ using Content.Shared.Atmos.Components;
 
 namespace Content.Client.Atmos.Consoles;
 
-public sealed class AtmosMonitoringConsoleBoundUserInterface : BoundUserInterface
+public sealed partial class AtmosMonitoringConsoleBoundUserInterface : BoundUserInterface
 {
     [ViewVariables]
     private AtmosMonitoringConsoleWindow? _menu;

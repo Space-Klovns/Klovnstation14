@@ -2,7 +2,7 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.ReadyManifest;
 
-public abstract class SharedReadyManifestSystem : EntitySystem;
+public abstract partial class SharedReadyManifestSystem : EntitySystem;
 
 /// <summary>
 /// Keeps the data related to a single job for the ready manifest.

@@ -13,7 +13,7 @@ namespace Content.Shared.Trigger.Systems;
 
 public sealed partial class TriggerOnMobstateChangeSystem : TriggerOnXSystem
 {
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
 
     public override void Initialize()
     {
@@ -38,10 +38,10 @@ public sealed partial class TriggerOnMobstateChangeSystem : TriggerOnXSystem
 
     private void OnMobStateRelay(EntityUid uid, TriggerOnMobstateChangeComponent component, ImplantRelayEvent<MobStateChangedEvent> args)
     {
-        if (!component.MobState.Contains(args.Event.NewMobState))
+        if (!component.MobState.Contains(args.Args.NewMobState))
             return;
 
-        Trigger.Trigger(uid, component.TargetMobstateEntity ? args.ImplantedEntity : args.Event.Origin, component.KeyOut);
+        Trigger.Trigger(uid, component.TargetMobstateEntity ? args.ImplantedEntity : args.Args.Origin, component.KeyOut);
     }
 
     // KS14: MOBSTATERELAY Start
@@ -73,13 +73,13 @@ public sealed partial class TriggerOnMobstateChangeSystem : TriggerOnXSystem
 
     private void OnSuicideRelay(EntityUid uid, TriggerOnMobstateChangeComponent component, ImplantRelayEvent<SuicideEvent> args)
     {
-        if (args.Event.Handled)
+        if (args.Args.Handled)
             return;
 
         if (!component.PreventSuicide)
             return;
 
-        _popup.PopupClient(Loc.GetString("suicide-prevented"), args.Event.Victim);
-        args.Event.Handled = true;
+        _popup.PopupClient(Loc.GetString("suicide-prevented"), args.Args.Victim);
+        args.Args.Handled = true;
     }
 }

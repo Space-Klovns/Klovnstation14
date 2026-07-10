@@ -6,12 +6,12 @@ using Robust.Shared.Timing;
 
 namespace Content.Client.Cooldown
 {
-    public sealed class CooldownGraphic : Control
+    public sealed partial class CooldownGraphic : Control
     {
         private static readonly ProtoId<ShaderPrototype> Shader = "CooldownAnimation";
 
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly IPrototypeManager _protoMan = default!;
+        [Dependency] private IGameTiming _gameTiming = default!;
+        [Dependency] private IPrototypeManager _protoMan = default!;
 
         private readonly ShaderInstance _shader;
 
@@ -59,7 +59,7 @@ namespace Content.Client.Cooldown
             var progress = (curTime - start).TotalSeconds / length;
             var ratio = (progress <= 1 ? (1 - progress) : (curTime - end).TotalSeconds * -5);
 
-            Progress = MathHelper.Clamp((float) ratio, -1, 1);
+            Progress = MathHelper.Clamp((float)ratio, -1, 1);
             Visible = ratio > -1f;
         }
     }

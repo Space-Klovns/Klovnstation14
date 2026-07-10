@@ -15,9 +15,9 @@ namespace Content.Shared.EntityEffects;
 /// </summary>
 public sealed partial class SharedEntityEffectsSystem : EntitySystem, IEntityEffectRaiser
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly ISharedAdminLogManager _adminLog = default!;
-    [Dependency] private readonly SharedEntityConditionsSystem _condition = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private ISharedAdminLogManager _adminLog = default!;
+    [Dependency] private SharedEntityConditionsSystem _condition = default!;
 
     public override void Initialize()
     {
@@ -95,7 +95,7 @@ public sealed partial class SharedEntityEffectsSystem : EntitySystem, IEntityEff
 
         // TODO: Replace with proper random prediciton when it exists.
         if (effect.Probability <= 1f && !SharedRandomExtensions.PredictedProb(_timing, effect.Probability, GetNetEntity(target), GetNetEntity(user)))
-                return false;
+            return false;
 
         // See if conditions apply
         if (!_condition.TryConditions(target, effect.Conditions))

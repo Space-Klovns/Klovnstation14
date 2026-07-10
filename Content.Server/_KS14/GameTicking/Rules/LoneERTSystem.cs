@@ -21,12 +21,12 @@ public sealed partial class LoneERTRuleComponent : Component
     public ResPath? Path;
 }
 
-public sealed class LoneERTSystem : GameRuleSystem<LoneERTRuleComponent>
+public sealed partial class LoneERTSystem : GameRuleSystem<LoneERTRuleComponent>
 {
-    [Dependency] private readonly MapLoaderSystem _mapLoader = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly MapSystem _mapSystem = default!;
-    [Dependency] private readonly ChatSystem _chat = default!;
+    [Dependency] private MapLoaderSystem _mapLoader = default!;
+    [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private MapSystem _mapSystem = default!;
+    [Dependency] private ChatSystem _chat = default!;
 
     protected override void Added(EntityUid uid, LoneERTRuleComponent component, GameRuleComponent gameRule, GameRuleAddedEvent args)
     {

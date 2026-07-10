@@ -15,11 +15,11 @@ namespace Content.Server.Administration.Commands;
 /// Possible todo for future, store default values for cvars, and allow resetting to default.
 /// </remarks>
 [AnyCommand]
-public sealed class ChangeCvarCommand : IConsoleCommand
+public sealed partial class ChangeCvarCommand : IConsoleCommand
 {
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-    [Dependency] private readonly IAdminLogManager _adminLogManager = default!;
-    [Dependency] private readonly CVarControlManager _cVarControlManager = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IAdminLogManager _adminLogManager = default!;
+    [Dependency] private CVarControlManager _cVarControlManager = default!;
 
     /// <summary>
     /// Searches the list of cvars for a cvar that matches the search string.
@@ -131,41 +131,41 @@ public sealed class ChangeCvarCommand : IConsoleCommand
                     switch (parsed) // This looks bad, and im not sorry.
                     {
                         case int intVal:
-                        {
-                            if (intVal < (int)control.Min || intVal > (int)control.Max)
                             {
-                                allowed = false;
-                            }
+                                if (intVal < (int)control.Min || intVal > (int)control.Max)
+                                {
+                                    allowed = false;
+                                }
 
-                            break;
-                        }
+                                break;
+                            }
                         case float floatVal:
-                        {
-                            if (floatVal < (float)control.Min || floatVal > (float)control.Max)
                             {
-                                allowed = false;
-                            }
+                                if (floatVal < (float)control.Min || floatVal > (float)control.Max)
+                                {
+                                    allowed = false;
+                                }
 
-                            break;
-                        }
+                                break;
+                            }
                         case long longVal:
-                        {
-                            if (longVal < (long)control.Min || longVal > (long)control.Max)
                             {
-                                allowed = false;
-                            }
+                                if (longVal < (long)control.Min || longVal > (long)control.Max)
+                                {
+                                    allowed = false;
+                                }
 
-                            break;
-                        }
+                                break;
+                            }
                         case ushort ushortVal:
-                        {
-                            if (ushortVal < (ushort)control.Min || ushortVal > (ushort)control.Max)
                             {
-                                allowed = false;
-                            }
+                                if (ushortVal < (ushort)control.Min || ushortVal > (ushort)control.Max)
+                                {
+                                    allowed = false;
+                                }
 
-                            break;
-                        }
+                                break;
+                            }
                     }
                 }
 

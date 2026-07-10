@@ -1,6 +1,7 @@
 using Content.Server.NodeContainer.Nodes;
 using Content.Shared.Atmos;
 using Content.Shared.NodeContainer;
+using Robust.Server.GameObjects;
 using Robust.Shared.Map.Components;
 
 namespace Content.Server._FarHorizons.NodeContainer.Nodes;
@@ -32,6 +33,8 @@ public partial class OffsetPipeNode : PipeNode
     [DataField]
     public int OffsetNorth = 0;
 
+    private MapSystem _mapSystem = default!;
+
     public override IEnumerable<Node> GetReachableNodes(
             Entity<TransformComponent> xform,
             EntityQuery<NodeContainerComponent> nodeQuery,
@@ -43,7 +46,7 @@ public partial class OffsetPipeNode : PipeNode
         if (!xform.Comp.Anchored || grid is not { } gridEnt)
             yield break;
 
-        var pos = gridEnt.Comp.TileIndicesFor(xform.Comp.Coordinates);
+        var pos = (_mapSystem ??= IoCManager.Resolve<IEntityManager>().System<MapSystem>()).TileIndicesFor(grid.Value, xform.Comp.Coordinates);
 
         for (var i = 0; i < PipeDirectionHelpers.PipeDirections; i++)
         {
@@ -52,7 +55,7 @@ public partial class OffsetPipeNode : PipeNode
             if (!CurrentPipeDirection.HasDirection(pipeDir))
                 continue;
 
-            foreach (var pipe in OffsetLinkableNodesInDirection(pos, pipeDir, grid, nodeQuery))
+            foreach (var pipe in OffsetLinkableNodesInDirection(pos, pipeDir, grid.Value, nodeQuery))
             {
                 yield return pipe;
             }
@@ -62,10 +65,10 @@ public partial class OffsetPipeNode : PipeNode
     /// <summary>
     ///     Gets the pipes that can connect to us from entities on the tile or adjacent/distant in a direction.
     /// </summary>
-    private IEnumerable<PipeNode> OffsetLinkableNodesInDirection(Vector2i pos, PipeDirection pipeDir, MapGridComponent grid,
+    private IEnumerable<PipeNode> OffsetLinkableNodesInDirection(Vector2i pos, PipeDirection pipeDir, Entity<MapGridComponent> gridEntity,
         EntityQuery<NodeContainerComponent> nodeQuery)
     {
-        foreach (var pipe in OffsetPipesInDirection(pos, pipeDir, grid, nodeQuery))
+        foreach (var pipe in OffsetPipesInDirection(pos, pipeDir, gridEntity, nodeQuery))
         {
             if (pipe.NodeGroupID == NodeGroupID
                 && pipe.CurrentPipeLayer == CurrentPipeLayer
@@ -79,13 +82,13 @@ public partial class OffsetPipeNode : PipeNode
     /// <summary>
     ///     Gets the pipes from entities on the tile adjacent/distant in a direction.
     /// </summary>
-    protected IEnumerable<PipeNode> OffsetPipesInDirection(Vector2i pos, PipeDirection pipeDir, MapGridComponent grid,
+    protected IEnumerable<PipeNode> OffsetPipesInDirection(Vector2i pos, PipeDirection pipeDir, Entity<MapGridComponent> gridEntity,
         EntityQuery<NodeContainerComponent> nodeQuery)
     {
         var OffsetVector = new Vector2i(OffsetEast, OffsetNorth);
         var offsetPos = pos + OffsetVector.Rotate(OriginalPipeDirection.ToAngle() - pipeDir.ToAngle());
 
-        foreach (var entity in grid.GetAnchoredEntities(offsetPos))
+        foreach (var entity in (_mapSystem ??= IoCManager.Resolve<IEntityManager>().System<MapSystem>()).GetAnchoredEntities(gridEntity, offsetPos))
         {
             if (!nodeQuery.TryGetComponent(entity, out var container))
                 continue;

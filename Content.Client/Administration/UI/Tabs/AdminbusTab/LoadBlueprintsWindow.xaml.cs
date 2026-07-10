@@ -14,8 +14,8 @@ namespace Content.Client.Administration.UI.Tabs.AdminbusTab
     [UsedImplicitly]
     public sealed partial class LoadBlueprintsWindow : DefaultWindow
     {
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
 
         public LoadBlueprintsWindow()
         {
@@ -28,7 +28,7 @@ namespace Content.Client.Administration.UI.Tabs.AdminbusTab
 
             foreach (var mapId in mapSystem.GetAllMapIds())
             {
-                MapOptions.AddItem(mapId.ToString(), (int) mapId);
+                MapOptions.AddItem(mapId.ToString(), (int)mapId);
             }
 
             Reset();
@@ -66,12 +66,12 @@ namespace Content.Client.Administration.UI.Tabs.AdminbusTab
             }
 
             if (currentMap != MapId.Nullspace)
-                MapOptions.Select((int) currentMap);
+                MapOptions.Select((int)currentMap);
 
-            XCoordinate.Value = (int) position.X;
-            YCoordinate.Value = (int) position.Y;
+            XCoordinate.Value = (int)position.X;
+            YCoordinate.Value = (int)position.Y;
 
-            RotationSpin.OverrideValue(Wraparound((int) rotation.Degrees));
+            RotationSpin.OverrideValue(Wraparound((int)rotation.Degrees));
         }
 
         private void OnResetButtonPressed(BaseButton.ButtonEventArgs obj)

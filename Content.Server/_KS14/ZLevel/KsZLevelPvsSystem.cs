@@ -7,12 +7,12 @@ using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.ZLevel;
 
-public sealed class KsZLevelPvsSystem : EntitySystem
+public sealed partial class KsZLevelPvsSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly KsZLevelSystem _zLevelSystem = default!;
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
-    [Dependency] private readonly ViewSubscriberSystem _viewSubscriberSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private KsZLevelSystem _zLevelSystem = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
+    [Dependency] private ViewSubscriberSystem _viewSubscriberSystem = default!;
 
     private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(1d);
     private TimeSpan _nextUpdate = TimeSpan.MinValue;

@@ -6,11 +6,11 @@ using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Content.Client._KS14.SupplyPod;
 
-public sealed class SupplyPodSystem : SharedSupplyPodSystem
+public sealed partial class SupplyPodSystem : SharedSupplyPodSystem
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IOverlayManager _overlayManager = default!;
-    [Dependency] private readonly SystemCollectionHookManager _hookManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IOverlayManager _overlayManager = default!;
+    [Dependency] private SystemCollectionHookManager _hookManager = default!;
 
     private static readonly ProtoId<ShaderPrototype> StencilMaskShaderId = "StencilMask";
     private static readonly ProtoId<ShaderPrototype> StencilDrawShaderId = "StencilDraw";

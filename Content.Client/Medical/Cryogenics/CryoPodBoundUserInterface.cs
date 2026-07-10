@@ -5,7 +5,7 @@ using Robust.Client.UserInterface;
 namespace Content.Client.Medical.Cryogenics;
 
 [UsedImplicitly]
-public sealed class CryoPodBoundUserInterface : BoundUserInterface
+public sealed partial class CryoPodBoundUserInterface : BoundUserInterface
 {
     private CryoPodWindow? _window;
 

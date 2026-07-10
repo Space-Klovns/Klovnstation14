@@ -7,10 +7,10 @@ namespace Content.Shared.Jittering
     /// <summary>
     ///     A system for applying a jitter animation to any entity.
     /// </summary>
-    public abstract class SharedJitteringSystem : EntitySystem
+    public abstract partial class SharedJitteringSystem : EntitySystem
     {
-        [Dependency] protected readonly IGameTiming GameTiming = default!;
-        [Dependency] protected readonly StatusEffectsSystem StatusEffects = default!;
+        [Dependency] protected IGameTiming GameTiming = default!;
+        [Dependency] protected StatusEffectsSystem StatusEffects = default!;
 
         public float MaxAmplitude = 300f;
         public float MinAmplitude = 1f;
@@ -56,7 +56,7 @@ namespace Content.Shared.Jittering
             {
                 var jittering = Comp<JitteringComponent>(uid);
 
-                if(forceValueChange || jittering.Amplitude < amplitude)
+                if (forceValueChange || jittering.Amplitude < amplitude)
                     jittering.Amplitude = amplitude;
 
                 if (forceValueChange || jittering.Frequency < frequency)

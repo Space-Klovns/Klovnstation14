@@ -4,9 +4,9 @@ using Content.Shared.Trigger;
 
 namespace Content.Shared._KS14.Trigger.Systems;
 
-public sealed class SparkOnTriggerSystem : EntitySystem
+public sealed partial class SparkOnTriggerSystem : EntitySystem
 {
-    [Dependency] private readonly SharedSparksSystem _sparksSystem = default!;
+    [Dependency] private SharedSparksSystem _sparksSystem = default!;
 
     public override void Initialize()
     {

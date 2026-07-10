@@ -14,11 +14,11 @@ namespace Content.Server.NPC.HTN.PrimitiveTasks.Operators;
 /// </summary>
 public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdown
 {
-    [Dependency] private readonly IEntityManager _entManager = default!;
+    [Dependency] private IEntityManager _entManager = default!;
     private NPCSteeringSystem _steering = default!;
     private PathfindingSystem _pathfind = default!;
     private SharedTransformSystem _transform = default!;
-    [Dependency] private readonly Interaction.InteractionSystem _interactionSystem = default!; // KS14
+    [Dependency] private Interaction.InteractionSystem _interactionSystem = default!; // KS14
 
     /// <summary>
     /// When to shut the task down.

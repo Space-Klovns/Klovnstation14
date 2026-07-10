@@ -3,7 +3,7 @@
 namespace Content.Shared.CartridgeLoader.Cartridges;
 
 [Serializable, NetSerializable]
-public sealed class LogProbeUiState : BoundUserInterfaceState
+public sealed partial class LogProbeUiState : BoundUserInterfaceState
 {
     /// <summary>
     /// The name of the scanned entity.

@@ -17,8 +17,8 @@ namespace Content.Client.Shuttles.UI;
 [GenerateTypedNameReferences]
 public sealed partial class ShuttleDockControl : BaseShuttleControl
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IMapManager _mapManager = default!;
     private readonly DockingSystem _dockSystem;
     private readonly SharedShuttleSystem _shuttles;
     private readonly SharedTransformSystem _xformSystem;
@@ -128,11 +128,11 @@ public sealed partial class ShuttleDockControl : BaseShuttleControl
 
         if (viewedDockPos != null)
         {
-            viewedDockPos = viewedDockPos.Value + _angle.Value.RotateVec(new Vector2(0f,-0.6f) * MinimapScale);
+            viewedDockPos = viewedDockPos.Value + _angle.Value.RotateVec(new Vector2(0f, -0.6f) * MinimapScale);
         }
 
         var canDockChange = _timing.CurTime > _nextDockChange;
-        var lineOffset = (float) _timing.RealTime.TotalSeconds * 30f;
+        var lineOffset = (float)_timing.RealTime.TotalSeconds * 30f;
 
         foreach (var grid in _grids)
         {

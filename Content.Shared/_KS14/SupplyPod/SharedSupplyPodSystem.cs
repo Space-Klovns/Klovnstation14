@@ -1,6 +1,6 @@
 namespace Content.Shared._KS14.SupplyPod;
 
-public abstract class SharedSupplyPodSystem : EntitySystem
+public abstract partial class SharedSupplyPodSystem : EntitySystem
 {
     public override void Initialize()
     {

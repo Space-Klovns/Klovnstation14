@@ -122,7 +122,7 @@ namespace Content.Shared.Wires
     }
 
     [Serializable, NetSerializable]
-    public sealed class WiresBoundUserInterfaceState : BoundUserInterfaceState
+    public sealed partial class WiresBoundUserInterfaceState : BoundUserInterfaceState
     {
         public string BoardName { get; }
         public string? SerialNumber { get; }

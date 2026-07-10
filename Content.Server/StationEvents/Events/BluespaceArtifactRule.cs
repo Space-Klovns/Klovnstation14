@@ -1,10 +1,10 @@
 using Content.Server.StationEvents.Components;
-﻿using Content.Shared.GameTicking.Components;
+using Content.Shared.GameTicking.Components;
 using Robust.Shared.Random;
 
 namespace Content.Server.StationEvents.Events;
 
-public sealed class BluespaceArtifactRule : StationEventSystem<BluespaceArtifactRuleComponent>
+public sealed partial class BluespaceArtifactRule : StationEventSystem<BluespaceArtifactRuleComponent>
 {
     protected override void Added(EntityUid uid, BluespaceArtifactRuleComponent component, GameRuleComponent gameRule, GameRuleAddedEvent args)
     {

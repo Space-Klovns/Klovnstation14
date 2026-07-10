@@ -7,7 +7,7 @@ namespace Content.Server.NPC.HTN.PrimitiveTasks.Operators.Interactions;
 
 public sealed partial class InteractWithOperator : HTNOperator
 {
-    [Dependency] private readonly IEntityManager _entManager = default!;
+    [Dependency] private IEntityManager _entManager = default!;
     private SharedDoAfterSystem _doAfterSystem = default!;
 
     public override void Initialize(IEntitySystemManager sysManager)
@@ -91,7 +91,7 @@ public sealed partial class InteractWithOperator : HTNOperator
         }
 
         // We shouldn't arrive here if we start a doafter, so fail if we expected a doafter
-        if(ExpectDoAfter)
+        if (ExpectDoAfter)
             return HTNOperatorStatus.Failed;
 
         return HTNOperatorStatus.Finished;

@@ -12,7 +12,7 @@ namespace Content.Client.Options.UI.Tabs;
 [GenerateTypedNameReferences]
 public sealed partial class GraphicsTab : Control
 {
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
 
     public GraphicsTab()
     {
@@ -198,8 +198,8 @@ public sealed partial class GraphicsTab : Control
 
         protected override int Value
         {
-            get => _checkBox.Pressed ? (int) WindowMode.Fullscreen : (int) WindowMode.Windowed;
-            set => _checkBox.Pressed = (value == (int) WindowMode.Fullscreen);
+            get => _checkBox.Pressed ? (int)WindowMode.Fullscreen : (int)WindowMode.Windowed;
+            set => _checkBox.Pressed = (value == (int)WindowMode.Fullscreen);
         }
 
         public OptionFullscreen(

@@ -13,7 +13,7 @@ namespace Content.Client.Atmos.UI
     /// Initializes a <see cref="GasThermomachineWindow"/> and updates it when new server messages are received.
     /// </summary>
     [UsedImplicitly]
-    public sealed class GasThermomachineBoundUserInterface : BoundUserInterface
+    public sealed partial class GasThermomachineBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
         private GasThermomachineWindow? _window;

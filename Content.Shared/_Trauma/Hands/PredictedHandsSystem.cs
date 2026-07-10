@@ -1,6 +1,5 @@
 using Content.Shared.ActionBlocker;
 using Content.Shared.CombatMode;
-using Content.Shared.Damage.Systems;
 using Content.Shared.Hands.Components;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Input;
@@ -9,9 +8,7 @@ using Content.Shared.Movement.Pulling.Components;
 using Content.Shared.Movement.Pulling.Systems;
 using Content.Shared.Random.Helpers;
 using Content.Shared.Throwing;
-using Content.Shared.Stacks;
 using Content.Shared.Standing;
-using Content.Shared.Stunnable;
 using Robust.Shared.Containers;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Map;
@@ -27,17 +24,17 @@ namespace Content.Shared._Trauma.Hands;
 /// <summary>
 /// Predicting hand-related stuff that is serverside for no reason.
 /// </summary>
-public sealed class PredictedHandsSystem : EntitySystem
+public sealed partial class PredictedHandsSystem : EntitySystem
 {
-    [Dependency] private readonly ActionBlockerSystem _actionBlocker = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly PullingSystem _pulling = default!;
-    [Dependency] private readonly SharedContainerSystem _container = default!;
-    [Dependency] private readonly SharedHandsSystem _hands = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly ThrowingSystem _throwing = default!;
+    [Dependency] private ActionBlockerSystem _actionBlocker = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private PullingSystem _pulling = default!;
+    [Dependency] private SharedContainerSystem _container = default!;
+    [Dependency] private SharedHandsSystem _hands = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private ThrowingSystem _throwing = default!;
 
     private EntityQuery<PhysicsComponent> _physicsQuery;
     private EntityQuery<VirtualItemComponent> _virtualQuery;

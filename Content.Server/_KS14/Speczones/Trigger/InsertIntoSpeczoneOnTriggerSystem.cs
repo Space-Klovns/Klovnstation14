@@ -2,9 +2,9 @@ using Content.Shared.Trigger;
 
 namespace Content.Server._KS14.Speczones.Trigger;
 
-public sealed class InsertIntoSpeczoneOnTriggerSystem : EntitySystem
+public sealed partial class InsertIntoSpeczoneOnTriggerSystem : EntitySystem
 {
-    [Dependency] private readonly SpeczoneSystem _speczoneSystem = default!;
+    [Dependency] private SpeczoneSystem _speczoneSystem = default!;
 
     public override void Initialize()
     {
