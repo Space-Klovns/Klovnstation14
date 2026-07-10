@@ -262,6 +262,15 @@ public abstract partial class SharedSolutionContainerSystem : EntitySystem
             return true;
         }
 
+        // KS14 Start
+        if (entProto.TryGetComponent<SolutionManagerComponent>(out var solutionManagerComponent, EntityManager.ComponentFactory) &&
+            solutionManagerComponent.SolutionData.TryGetValue(name, out var ksSolmanSol))
+        {
+            solution = ksSolmanSol;
+            return true;
+        }
+        // KS14 End
+
         if (!TryGetSolutionFill(entProto, out var solutions))
             return false;
 
@@ -311,6 +320,14 @@ public abstract partial class SharedSolutionContainerSystem : EntitySystem
 
     public IEnumerable<(string Id, Solution Solution)> EnumerateSolutions(EntityPrototype entProto)
     {
+        // KS14 Start
+        if (entProto.TryGetComponent<SolutionManagerComponent>(out var solutionManagerComponent, EntityManager.ComponentFactory))
+        {
+            foreach (var solutionPair in solutionManagerComponent.SolutionData)
+                yield return (solutionPair.Key, solutionPair.Value);
+        }
+        // KS14 End
+
         if (!TryGetSolutionFill(entProto, out var solutions))
             yield break;
 
@@ -1081,6 +1098,21 @@ public abstract partial class SharedSolutionContainerSystem : EntitySystem
     private void InitializeManager(Entity<SolutionManagerComponent> entity)
     {
         var container = ContainerSystem.EnsureContainer<Container>(entity.Owner, entity.Comp.Container);
+
+        // KS14 Start
+        foreach (var (ksSolutionId, ksSolution) in entity.Comp.SolutionData)
+        {
+            var ksSolutionUid = EntityManager.CreateEntityUninitialized(null);
+            var ksSolutionComponent = EntityManager.ComponentFactory.GetComponent<SolutionComponent>();
+            ksSolutionComponent.Id = ksSolutionId;
+            ksSolutionComponent.Solution = ksSolution;
+            AddComp(ksSolutionUid, ksSolutionComponent);
+
+            ContainerSystem.Insert(ksSolutionUid, container, force: true);
+            EntityManager.InitializeAndStartEntity(ksSolutionUid);
+            FlagPredicted(ksSolutionUid);
+        }
+        // KS14 End
 
         if (entity.Comp.SolutionEnts == null)
             return;

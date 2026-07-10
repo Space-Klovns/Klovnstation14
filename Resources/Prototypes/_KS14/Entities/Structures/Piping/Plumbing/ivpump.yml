@@ -78,9 +78,13 @@
         solution: buffer
       - !type:DoActsBehavior
         acts: ["Destruction"]
+
   - type: SolutionManager
-    solutions:
-    - KsSolutionPlumbingBuffer200
+    solutions: null
+    solutionData:
+      buffer:
+        maxVol: 200
+        canReact: false
 
 - type: entity
   parent: KsPlumbingIvPump
@@ -116,5 +120,8 @@
     solutionName: buffer
 
   - type: SolutionManager
-    solutions:
-    - KsSolutionPlumbingBuffer500
+    solutions: null
+    solutionData:
+      buffer:
+        maxVol: 500
+        canReact: false

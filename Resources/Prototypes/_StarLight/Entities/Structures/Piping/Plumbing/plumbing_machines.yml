@@ -65,8 +65,9 @@
   - type: Plungeable
   - type: PlumbingOutlet
     solutionName: tank
-  - type: SolutionContainerManager
-    solutions:
+  - type: SolutionManager
+    solutions: null
+    solutionData:
       tank:
         maxVol: 800
         canReact: false
@@ -124,8 +125,9 @@
   - type: Plungeable
   - type: PlumbingOutlet
     solutionName: input
-  - type: SolutionContainerManager
-    solutions:
+  - type: SolutionManager
+    solutions: null
+    solutionData:
       input:
         maxVol: 100
         canReact: false
@@ -181,8 +183,9 @@
   - type: DumpableSolution
     solution: drain
   - type: Plungeable
-  - type: SolutionContainerManager
-    solutions:
+  - type: SolutionManager
+    solutions: null
+    solutionData:
       output:
         maxVol: 100
         canReact: false
@@ -254,8 +257,9 @@
   - type: PlumbingOutput
     solutionName: output
   - type: Plungeable
-  - type: SolutionContainerManager
-    solutions:
+  - type: SolutionManager
+    solutions: null
+    solutionData:
       output:
         maxVol: 100
         canReact: false
@@ -321,8 +325,9 @@
   - type: Plungeable
   - type: PlumbingOutlet
     solutionName: output
-  - type: SolutionContainerManager
-    solutions:
+  - type: SolutionManager
+    solutions: null
+    solutionData:
       buffer:
         maxVol: 100
         canReact: false  # Reactions triggered manually when targets met
@@ -401,8 +406,9 @@
   - type: PlumbingSmartFridge
     solutionName: fridge
     maxPerReagent: 200
-  - type: SolutionContainerManager
-    solutions:
+  - type: SolutionManager
+    solutions: null
+    solutionData:
       fridge:
         maxVol: 50000
         canReact: false
@@ -482,8 +488,9 @@
     solutionName: buffer
     inletNames:
     - inlet
-  - type: SolutionContainerManager
-    solutions:
+  - type: SolutionManager
+    solutions: null
+    solutionData:
       buffer:
         maxVol: 20
         canReact: false
@@ -562,8 +569,9 @@
     outletNames:
     - outletFilter
     - outletPassthrough
-  - type: SolutionContainerManager
-    solutions:
+  - type: SolutionManager
+    solutions: null
+    solutionData:
       buffer:
         maxVol: 40
         canReact: false
@@ -691,8 +699,9 @@
   - type: Plungeable
   - type: PlumbingOutlet
     solutionName: buffer
-  - type: SolutionContainerManager
-    solutions:
+  - type: SolutionManager
+    solutions: null
+    solutionData:
       buffer:
         maxVol: 10
         canReact: false
@@ -780,8 +789,9 @@
     solutionName: drainBuffer
   - type: PlumbingOutlet
     solutionName: drainBuffer
-  - type: SolutionContainerManager
-    solutions:
+  - type: SolutionManager
+    solutions: null
+    solutionData:
       drainBuffer:
         maxVol: 400
   - type: NodeContainer

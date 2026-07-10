@@ -27,11 +27,16 @@ public sealed partial class SolutionManagerComponent : Component
     /// </summary>
     [ViewVariables]
     [Access(typeof(SharedSolutionContainerSystem), Other = AccessPermissions.None)]
-    public Dictionary<string, Entity<SolutionComponent>> Solutions = new ();
+    public Dictionary<string, Entity<SolutionComponent>> Solutions = new();
 
     /// <summary>
     /// A list of solution entities to spawn during <see cref="MapInitEvent"/>.
     /// </summary>
     [DataField("solutions", readOnly: true)]
     public EntProtoId[]? SolutionEnts;
+
+    // KS14 start
+    [DataField(readOnly: true)]
+    public Dictionary<string, Solution> SolutionData = [];
+    // KS14 end
 }
