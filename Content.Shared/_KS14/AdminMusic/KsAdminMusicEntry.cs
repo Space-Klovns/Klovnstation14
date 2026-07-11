@@ -11,7 +11,7 @@ public sealed class KsAdminMusicEntry(ResPath soundPath, float volume, TimeSpan 
     public float Volume = volume;
 
     /// <summary>
-    ///     In-simulation time that this audio started/starts playing
+    ///     Server-time that this audio started/starts playing
     ///         at.
     /// </summary>
     public TimeSpan StartTime = startTime;

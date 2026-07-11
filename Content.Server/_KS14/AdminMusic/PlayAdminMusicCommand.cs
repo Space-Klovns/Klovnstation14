@@ -61,7 +61,7 @@ public sealed partial class PlayAdminMusicCommand : LocalizedEntityCommands
             return;
         }
 
-        var entry = new KsAdminMusicEntry(path, volume, _gameTiming.ServerTime);
+        var entry = new KsAdminMusicEntry(path, volume, _gameTiming.RealTime /* ServerTime is broken and is meant to be RealTime but in reality it isn't and is just 0. */);
         _adminMusicManager.AddEntry(entry);
     }
 
