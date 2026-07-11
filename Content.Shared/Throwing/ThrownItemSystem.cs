@@ -138,10 +138,10 @@ namespace Content.Shared.Throwing
 
             var ev = new StopThrowEvent(thrownItemComponent.Thrower);
             RaiseLocalEvent(uid, ref ev);
-            RemComp<ThrownItemComponent>(uid);
+            RemCompDeferred/*KS14: Deferred, to stop collection modification error in Update()*/<ThrownItemComponent>(uid);
             // <Trauma> - tell clients to stop predicting physics once server finishes the throw
             if (_netMan.IsServer)
-                RemComp<PredictedThrownItemComponent>(uid);
+                RemCompDeferred/*KS14: Deferred*/<PredictedThrownItemComponent>(uid);
             // </Trauma>
 
             // KS14 Start
