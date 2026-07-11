@@ -1,9 +1,10 @@
 ﻿using Content.Client._KS14.GhostRespawn;
 using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.Controllers;
 
 namespace Content.Client.UserInterface.Systems.Ghost;
 
-public sealed partial class GhostUIController
+public sealed partial class GhostUIController : IOnSystemChanged<GhostRespawnSystem>
 {
     [UISystemDependency] private readonly GhostRespawnSystem? _ghostRespawnSystem = default;
 
