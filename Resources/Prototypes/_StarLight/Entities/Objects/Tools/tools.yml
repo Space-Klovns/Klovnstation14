@@ -91,6 +91,7 @@
     isRPLD: true
     availablePrototypes:
     - KsPlumbingTeleporterBeacon # KS14: plumbing teleporters
+    - KsPlumbingIvPump # KS14
     - PlumbingRpldDuctStraight
     - PlumbingRpldDuctBend
     - PlumbingRpldDuctTJunction
