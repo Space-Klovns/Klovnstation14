@@ -4233,7 +4233,7 @@ entities:
     - type: Transform
       pos: 19.53119,-13.603879
       parent: 1
-- proto: ColMarTechScenarioTiderfallSyndie
+- proto: ColMarTechScenarioNanoplantSyndie
   entities:
   - uid: 1036
     components:
