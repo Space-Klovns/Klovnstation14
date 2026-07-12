@@ -50,3 +50,4 @@
   - type: Sprite
     sprite: _Crescent/Structures/hardpoints.rsi
     state: Small
+  - type: Hardpoint

@@ -6,8 +6,8 @@ namespace Content.Shared._KS14.ShipMode.Hardpoint;
 /// <summary>
 ///     A component for hardpoints.
 /// </summary>
-[RegisterComponent, NetworkedComponent]
-public sealed partial class ScenarioObjectiveComponent : Component
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+public sealed partial class HardpointComponent : Component
 {
     /// <summary>
     ///     Rotation, in degrees.
@@ -15,4 +15,10 @@ public sealed partial class ScenarioObjectiveComponent : Component
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
     public float Rotation = 0f;
+
+    /// <summary>
+    ///     The entityuid of the anchored gun, if any
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly), AutoNetworkedField]
+    public EntityUid? anchoring;
 }
