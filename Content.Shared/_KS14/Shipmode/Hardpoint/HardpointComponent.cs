@@ -1,5 +1,6 @@
 using Robust.Shared.Prototypes;
 using Robust.Shared.GameStates;
+using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.ShipMode.Hardpoint;
 
