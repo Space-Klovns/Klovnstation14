@@ -188,9 +188,9 @@
     - Gauze
 
 - type: entity
-  id: ScenarioVendorBundleNanoplantSyndieSoldier
-  name: combat operative
-  description: Third-rate gear. Will have to do.
+  id: ScenarioVendorBundleNanoplantSyndieSoldierHushpup
+  name: combat operative (hushpup)
+  description: Third-rate gear. Will have to do. Comes with a hushpup and a box of buckshot.
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
@@ -200,6 +200,25 @@
     bundle:
     - WeaponShotgunHushpup
     - BoxLethalshot
+    - ClothingHeadHelmetSwatSyndicate
+    - ClothingOuterArmorBasic
+    - Machete
+    - GrenadeStinger
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantSyndieSoldierC20r
+  name: combat operative (c-20r)
+  description: Third-rate gear. Will have to do. Comes with a C-20r and two mags.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/SMGs/c20r.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - WeaponSubMachineGunC20r
+    - MagazinePistolSubMachineGun
+    - MagazinePistolSubMachineGun
     - ClothingHeadHelmetSwatSyndicate
     - ClothingOuterArmorBasic
     - Machete

@@ -48,7 +48,10 @@
     - name: Loadout
       choices: { CMClass: 1 }
       entries:
-      - id: ScenarioVendorBundleNanoplantSyndieSoldier
+      - id: ScenarioVendorBundleNanoplantSyndieSoldierHushpup
+        recommended: true
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleNanoplantSyndieSoldierC20r
         recommended: true
         replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleNanoplantSyndieInfiltrator
