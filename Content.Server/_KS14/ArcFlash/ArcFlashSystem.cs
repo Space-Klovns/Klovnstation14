@@ -7,13 +7,12 @@ using Content.Shared._KS14.ArcFlash.Components;
 
 namespace Content.Server._KS14.ArcFlash;
 
-public sealed class MindShieldSystem : EntitySystem
+public sealed class ArcFlashSystem : EntitySystem
 {
     [Dependency] private readonly ElectrocutionSystem _electrocutionSystem = default!;
     [Dependency] private readonly LightningSystem _lightning = default!;
     public override void Initialize()
     {
-        base.Initialize();
         SubscribeLocalEvent<ArcFlashAnchorableComponent, AnchorStateChangedEvent>(OnAnchorChanged);
         SubscribeLocalEvent<ArcFlashDeconstructableComponent, MachineDeconstructedEvent>(OnDeconstruction);
         SubscribeLocalEvent<ArcFlashDeconstructableComponent, APCDeconstructedEvent>(OnAPCDeconstruction);

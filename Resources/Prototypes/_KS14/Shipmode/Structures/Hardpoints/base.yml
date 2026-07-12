@@ -1,0 +1,52 @@
+- type: entity
+  id: BaseHardpoint
+  parent: BaseMachinePowered
+  name: Hardpoint
+  abstract: true
+  components:
+  - type: Transform
+    noRot: false
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 3500
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalGlassBreak
+  - type: Repairable
+    doAfterDelay: 8
+  - type: Anchorable
+    delay: 10
+  - type: ApcPowerReceiver
+    powerLoad: 5000
+  - type: Appearance
+  - type: Fixtures
+    fixtures:
+      fix1:
+          shape:
+            !type:PhysShapeAabb
+            bounds: "-0.2,-0.2,0.2,0.2"
+          # very not dense to make it easy to pull
+          density: 600
+          mask:
+          - SmallMobMask
+          layer:
+          - MachineLayer
+  - type: CollideOnAnchor
+  placement:
+    mode: SnapgridCenter
+
+- type: entity
+  id: KsHardpointSmall
+  parent: BaseHardpoint
+  name: small hardpoint
+  components:
+  - type: ApcPowerReceiver
+    powerLoad: 500
+  - type: Sprite
+    sprite: _Crescent/Structures/hardpoints.rsi
+    state: Small
