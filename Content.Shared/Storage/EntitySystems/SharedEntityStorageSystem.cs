@@ -225,80 +225,81 @@ public abstract partial class SharedEntityStorageSystem : EntitySystem
         }
     }
 
-    public void OpenStorage(EntityUid uid, EntityStorageComponent? component = null, EntityUid? user = null /* KS14: added param */)
+    public void OpenStorage(Entity<EntityStorageComponent?> target, EntityUid? user = null)
     {
-        if (!Resolve(uid, ref component))
+        if (!Resolve(target, ref target.Comp))
             return;
 
-        if (component.Open)
+        if (target.Comp.Open)
             return;
 
-        var beforeev = new StorageBeforeOpenEvent();
-        RaiseLocalEvent(uid, ref beforeev);
-        component.Open = true;
-        Dirty(uid, component);
-        EmptyContents(uid, component);
-        ModifyComponents(uid, component);
-        // KS14 start: played only on the client before, so nobody but the predicting user heard it
+        var beforeev = new StorageBeforeOpenEvent(user);
+        RaiseLocalEvent(target, ref beforeev);
+        target.Comp.Open = true;
+        Dirty(target);
+        EmptyContents(target, target.Comp);
+        ModifyComponents(target, target.Comp);
+        // KS14 start: PlayLocal only plays to the predicting user, so nobody else heard it
         if (_net.IsServer || user != null)
-            _audio.PlayPredicted(component.OpenSound, uid, user);
+            _audio.PlayPredicted(target.Comp.OpenSound, target, user);
         // KS14 end
-        ReleaseGas(uid, component);
-        var afterev = new StorageAfterOpenEvent();
-        RaiseLocalEvent(uid, ref afterev);
+        ReleaseGas(target, target.Comp);
+        var afterev = new StorageAfterOpenEvent(user);
+        RaiseLocalEvent(target, ref afterev);
     }
 
-    public void CloseStorage(EntityUid uid, EntityStorageComponent? component = null, EntityUid? user = null /* KS14: added param */)
+    public void CloseStorage(Entity<EntityStorageComponent?> target, EntityUid? user = null)
     {
-        if (!Resolve(uid, ref component))
+        if (!Resolve(target, ref target.Comp))
             return;
 
-        if (!component.Open)
+        if (!target.Comp.Open)
             return;
 
         // Prevent the container from closing if it is queued for deletion. This is so that the container-emptying
         // behaviour of DestructionEventArgs is respected. This exists because malicious players were using
         // destructible boxes to delete entities by having two players simultaneously destroy and close the box in
         // the same tick.
-        if (EntityManager.IsQueuedForDeletion(uid))
+        if (EntityManager.IsQueuedForDeletion(target))
             return;
 
-        component.Open = false;
-        Dirty(uid, component);
+        target.Comp.Open = false;
+        Dirty(target);
 
         var entities = _lookup.GetEntitiesInRange(
-            new EntityCoordinates(uid, component.EnteringOffset),
-            component.EnteringRange,
+            new EntityCoordinates(target, target.Comp.EnteringOffset),
+            target.Comp.EnteringRange,
             LookupFlags.Approximate | LookupFlags.Dynamic | LookupFlags.Sundries
         );
 
         // Don't insert the container into itself.
-        entities.Remove(uid);
+        entities.Remove(target);
 
-        var ev = new StorageBeforeCloseEvent(entities, []);
-        RaiseLocalEvent(uid, ref ev);
+        var ev = new StorageBeforeCloseEvent(user, entities, []);
+        RaiseLocalEvent(target, ref ev);
 
         foreach (var entity in ev.Contents)
         {
-            if (!ev.BypassChecks.Contains(entity) && !CanInsert(entity, uid, component))
+            if (!ev.BypassChecks.Contains(entity) && !CanInsert(entity, target, target.Comp))
                 continue;
 
-            if (!AddToContents(entity, uid, component))
+            if (!AddToContents(entity, target, target.Comp))
                 continue;
 
-            if (component.Contents.ContainedEntities.Count >= component.Capacity)
+            if (target.Comp.Contents.ContainedEntities.Count >= target.Comp.Capacity)
                 break;
         }
 
-        TakeGas(uid, component);
-        ModifyComponents(uid, component);
-        // KS14 start: played only on the client before, so nobody but the predicting user heard it
+        TakeGas(target, target.Comp);
+
+        ModifyComponents(target, target.Comp);
+        // KS14 start: PlayLocal only plays to the predicting user, so nobody else heard it
         if (_net.IsServer || user != null)
-            _audio.PlayPredicted(component.CloseSound, uid, user);
+            _audio.PlayPredicted(target.Comp.CloseSound, target, user);
         // KS14 end
 
-        var afterev = new StorageAfterCloseEvent();
-        RaiseLocalEvent(uid, ref afterev);
+        var afterev = new StorageAfterCloseEvent(user);
+        RaiseLocalEvent(target, ref afterev);
     }
 
     public bool Insert(EntityUid toInsert, EntityUid container, EntityStorageComponent? component = null)
@@ -391,7 +392,7 @@ public abstract partial class SharedEntityStorageSystem : EntitySystem
         if (!CanOpen(user, target, silent))
             return false;
 
-        OpenStorage(target, user: user /* KS14: pass user */);
+        OpenStorage(target, user);
         return true;
     }
 
@@ -402,7 +403,7 @@ public abstract partial class SharedEntityStorageSystem : EntitySystem
             return false;
         }
 
-        CloseStorage(target, user: user /* KS14: pass user */);
+        CloseStorage(target, user);
         return true;
     }
 
