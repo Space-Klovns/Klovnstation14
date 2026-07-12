@@ -21,6 +21,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
+using Content.Shared.Mech.Components; // Goobstation
 using SharedGunSystem = Content.Shared.Weapons.Ranged.Systems.SharedGunSystem;
 using TimedDespawnComponent = Robust.Shared.Spawners.TimedDespawnComponent;
 
@@ -164,6 +165,9 @@ public sealed partial class GunSystem : SharedGunSystem
         }
 
         var entity = entityNull.Value;
+
+        if (TryComp<MechPilotComponent>(entity, out var mechPilot)) // Goobstation
+            entity = mechPilot.Mech;
 
         if (!TryGetGun(entity, out var gun))
         {
