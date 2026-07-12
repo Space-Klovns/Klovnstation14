@@ -247,7 +247,7 @@
 - type: entity
   id: JetpackSecurityFilled
   parent: JetpackSecurity
-  # name: security jetpack KS14, naming consistency (thank you upstream)
+  name: security jetpack
   suffix: Filled
   components:
   - type: GasTank
