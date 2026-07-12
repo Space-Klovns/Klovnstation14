@@ -9,11 +9,11 @@ namespace Content.Shared._KS14.Execution;
 /// Handles the GunExecutedEvent for cartridge-based ammunition.
 /// Populates the damage specifier and marks the cartridge as spent.
 /// </summary>
-public sealed class CartridgeExecutionSystem : EntitySystem
+public sealed partial class CartridgeExecutionSystem : EntitySystem
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IComponentFactory _componentFactory = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IComponentFactory _componentFactory = default!;
+    [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
 
     public override void Initialize()
     {

@@ -63,8 +63,9 @@
         !type:CableDeviceNode
         nodeGroupID: HVPower
   - type: Damageable
-    damageContainer: StructuralInorganic
     damageModifierSet: StructuralMetallicStrong
+  - type: Injurable
+    damageContainer: StructuralInorganic
   - type: BatterySensor
   - type: Gun
     showExamineText: false

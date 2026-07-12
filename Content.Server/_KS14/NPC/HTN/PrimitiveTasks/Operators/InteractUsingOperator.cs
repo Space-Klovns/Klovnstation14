@@ -13,10 +13,10 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 /// </summary>
 public sealed partial class InteractUsingOperator : HTNOperator
 {
-    [Dependency] private readonly IEntityManager _entManager = default!;
-    [Dependency] private readonly CombatModeSystem _combatModeSystem = default!;
-    [Dependency] private readonly InteractionSystem _interactionSystem = default!;
-    [Dependency] private readonly HandsSystem _handsSystem = default!;
+    [Dependency] private IEntityManager _entManager = default!;
+    [Dependency] private CombatModeSystem _combatModeSystem = default!;
+    [Dependency] private InteractionSystem _interactionSystem = default!;
+    [Dependency] private HandsSystem _handsSystem = default!;
 
     /// <summary>
     ///     Key that contains the target entity.

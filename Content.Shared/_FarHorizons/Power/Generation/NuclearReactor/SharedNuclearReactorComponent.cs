@@ -9,7 +9,7 @@ public enum NuclearReactorUiKey : byte
 }
 
 [Serializable, NetSerializable]
-public sealed class NuclearReactorBuiState : BoundUserInterfaceState
+public sealed partial class NuclearReactorBuiState : BoundUserInterfaceState
 {
     public float[] TemperatureGrid = new float[NuclearReactorComponent.ReactorGridWidth * NuclearReactorComponent.ReactorGridHeight];
     public int[] NeutronGrid = new int[NuclearReactorComponent.ReactorGridWidth * NuclearReactorComponent.ReactorGridHeight];

@@ -6,7 +6,7 @@ namespace Content.Shared.Machines.EntitySystems;
 /// <summary>
 /// Shared handling of multipart machines.
 /// </summary>
-public abstract class SharedMultipartMachineSystem : EntitySystem
+public abstract partial class SharedMultipartMachineSystem : EntitySystem
 {
     /// <summary>
     /// Returns whether each non-optional part of the machine has a matched entity

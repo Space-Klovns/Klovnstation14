@@ -8,7 +8,7 @@ using Robust.Shared.Toolshed;
 namespace Content.Server.Inventory;
 
 [ToolshedCommand, AdminCommand(AdminFlags.Debug)]
-public sealed class InventoryCommand : ToolshedCommand
+public sealed partial class InventoryCommand : ToolshedCommand
 {
     private InventorySystem? _inventorySystem;
 

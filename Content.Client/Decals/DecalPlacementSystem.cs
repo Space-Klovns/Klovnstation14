@@ -15,16 +15,16 @@ namespace Content.Client.Decals;
 
 // This is shit and basically a half-rewrite of PlacementManager
 // TODO refactor placementmanager so this isnt shit anymore
-public sealed class DecalPlacementSystem : EntitySystem
+public sealed partial class DecalPlacementSystem : EntitySystem
 {
-    [Dependency] private readonly IInputManager _inputManager = default!;
-    [Dependency] private readonly IOverlayManager _overlay = default!;
-    [Dependency] private readonly IPrototypeManager _protoMan = default!;
-    [Dependency] private readonly InputSystem _inputSystem = default!;
-    [Dependency] private readonly MetaDataSystem _metaData = default!;
-    [Dependency] private readonly SharedActionsSystem _actions = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly SpriteSystem _sprite = default!;
+    [Dependency] private IInputManager _inputManager = default!;
+    [Dependency] private IOverlayManager _overlay = default!;
+    [Dependency] private IPrototypeManager _protoMan = default!;
+    [Dependency] private InputSystem _inputSystem = default!;
+    [Dependency] private MetaDataSystem _metaData = default!;
+    [Dependency] private SharedActionsSystem _actions = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private SpriteSystem _sprite = default!;
 
     public static readonly EntProtoId DecalAction = "BaseMappingDecalAction";
 
@@ -62,8 +62,8 @@ public sealed class DecalPlacementSystem : EntitySystem
                 if (_snap)
                 {
                     var newPos = new Vector2(
-                        (float) (MathF.Round(coords.X - 0.5f, MidpointRounding.AwayFromZero) + 0.5),
-                        (float) (MathF.Round(coords.Y - 0.5f, MidpointRounding.AwayFromZero) + 0.5)
+                        (float)(MathF.Round(coords.X - 0.5f, MidpointRounding.AwayFromZero) + 0.5),
+                        (float)(MathF.Round(coords.Y - 0.5f, MidpointRounding.AwayFromZero) + 0.5)
                     );
                     coords = coords.WithPosition(newPos);
                 }
@@ -123,8 +123,8 @@ public sealed class DecalPlacementSystem : EntitySystem
         if (args.Snap)
         {
             var newPos = new Vector2(
-                (float) (MathF.Round(args.Target.X - 0.5f, MidpointRounding.AwayFromZero) + 0.5),
-                (float) (MathF.Round(args.Target.Y - 0.5f, MidpointRounding.AwayFromZero) + 0.5)
+                (float)(MathF.Round(args.Target.X - 0.5f, MidpointRounding.AwayFromZero) + 0.5),
+                (float)(MathF.Round(args.Target.Y - 0.5f, MidpointRounding.AwayFromZero) + 0.5)
             );
             args.Target = args.Target.WithPosition(newPos);
         }
@@ -163,7 +163,7 @@ public sealed class DecalPlacementSystem : EntitySystem
         _actions.SetIcon(ent, decalProto.Sprite);
         _actions.SetIconColor(ent, _decalColor);
 
-        _metaData.SetEntityName(actionId, $"{_decalId} ({_decalColor.ToHex()}, {(int) _decalAngle.Degrees})");
+        _metaData.SetEntityName(actionId, $"{_decalId} ({_decalColor.ToHex()}, {(int)_decalAngle.Degrees})");
 
         ev.Action = actionId;
     }

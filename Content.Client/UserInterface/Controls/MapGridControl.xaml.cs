@@ -17,8 +17,8 @@ namespace Content.Client.UserInterface.Controls;
 [Virtual]
 public partial class MapGridControl : LayoutContainer
 {
-    [Dependency] protected readonly IEntityManager EntManager = default!;
-    [Dependency] protected readonly IGameTiming Timing = default!;
+    [Dependency] protected IEntityManager EntManager = default!;
+    [Dependency] protected IGameTiming Timing = default!;
 
     protected static readonly Color BackingColor = new Color(0.08f, 0.08f, 0.08f);
 
@@ -73,13 +73,13 @@ public partial class MapGridControl : LayoutContainer
     protected Vector2 MidPointVector => new Vector2(MidPoint, MidPoint);
 
     protected int MidPoint => SizeFull / 2;
-    protected int SizeFull => (int) ((UIDisplayRadius + MinimapMargin) * 2 * UIScale);
-    protected int ScaledMinimapRadius => (int) (UIDisplayRadius * UIScale);
+    protected int SizeFull => (int)((UIDisplayRadius + MinimapMargin) * 2 * UIScale);
+    protected int ScaledMinimapRadius => (int)(UIDisplayRadius * UIScale);
     protected float MinimapScale => WorldRange != 0 ? ScaledMinimapRadius / WorldRange : 0f;
 
     public event Action<float>? WorldRangeChanged;
 
-    public MapGridControl() : this(32f, 32f, 32f) {}
+    public MapGridControl() : this(32f, 32f, 32f) { }
 
     public MapGridControl(float minRange, float maxRange, float range)
     {
@@ -183,7 +183,7 @@ public partial class MapGridControl : LayoutContainer
         if (Recentering)
         {
             var frameTime = Timing.FrameTime;
-            var diff = (TargetOffset - Offset) * (float) frameTime.TotalSeconds;
+            var diff = (TargetOffset - Offset) * (float)frameTime.TotalSeconds;
 
             if (Offset.LengthSquared() < RecenterMinimum)
             {
@@ -236,7 +236,7 @@ public partial class MapGridControl : LayoutContainer
             var diff = ActualRadarRange - WorldRange;
             const float lerpRate = 10f;
 
-            WorldRange += (float) Math.Clamp(diff, -lerpRate * MathF.Abs(diff) * Timing.FrameTime.TotalSeconds, lerpRate * MathF.Abs(diff) * Timing.FrameTime.TotalSeconds);
+            WorldRange += (float)Math.Clamp(diff, -lerpRate * MathF.Abs(diff) * Timing.FrameTime.TotalSeconds, lerpRate * MathF.Abs(diff) * Timing.FrameTime.TotalSeconds);
             WorldRangeChanged?.Invoke(WorldRange);
         }
     }

@@ -4,7 +4,7 @@ using ConsoleUIState = Content.Shared.SensorMonitoring.SensorMonitoringConsoleBo
 namespace Content.Shared.SensorMonitoring;
 
 [Serializable, NetSerializable]
-public sealed class SensorMonitoringConsoleBoundInterfaceState : BoundUserInterfaceState
+public sealed partial class SensorMonitoringConsoleBoundInterfaceState : BoundUserInterfaceState
 {
     public TimeSpan RetentionTime;
     public SensorData[] Sensors = Array.Empty<SensorData>();
@@ -84,7 +84,8 @@ public enum SensorUnit : byte
     /// <summary>
     /// A value in the range 0-1.
     /// </summary>
-    /* L + */ Ratio,
+    /* L + */
+    Ratio,
 
     /// <summary>
     /// Power in Watts (W).

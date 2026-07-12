@@ -11,8 +11,8 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 /// </summary>
 public sealed partial class GetDamageOperator : HTNOperator
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly DamageableSystem _damageableSystem = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
 
     [DataField(required: true)] public string Key = "Damage";
 

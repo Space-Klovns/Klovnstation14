@@ -16,18 +16,18 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.GunDodger;
 
-public sealed class GunDodgerSystem : EntitySystem
+public sealed partial class GunDodgerSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
-    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
-    [Dependency] private readonly RayCastSystem _rayCastSystem = default!;
-    [Dependency] private readonly ThrowingSystem _throwingSystem = default!;
-    [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
-    [Dependency] private readonly DodgingEffectSystem _dodgingEffectSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private RayCastSystem _rayCastSystem = default!;
+    [Dependency] private ThrowingSystem _throwingSystem = default!;
+    [Dependency] private MobStateSystem _mobStateSystem = default!;
+    [Dependency] private DodgingEffectSystem _dodgingEffectSystem = default!;
 
-    [Dependency] private readonly EntityQuery<GunDodgerComponent> _dodgerQuery = default!;
-    [Dependency] private readonly EntityQuery<ProjectileComponent> _projectileQuery = default!;
+    [Dependency] private EntityQuery<GunDodgerComponent> _dodgerQuery = default!;
+    [Dependency] private EntityQuery<ProjectileComponent> _projectileQuery = default!;
 
     private static readonly LocId PopupLocId = "gun-dodger-dodge-popup";
 

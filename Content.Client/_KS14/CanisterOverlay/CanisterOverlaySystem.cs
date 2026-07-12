@@ -3,9 +3,9 @@ using Robust.Client.Graphics;
 
 namespace Content.Client._KS14.CanisterOverlay;
 
-public sealed class CanisterOverlaySystem : EntitySystem
+public sealed partial class CanisterOverlaySystem : EntitySystem
 {
-    [Dependency] private readonly IOverlayManager _overlayManager = default!;
+    [Dependency] private IOverlayManager _overlayManager = default!;
 
     /* TODO LCDC KILL THIS VVV */
     private CanisterOverlay _canisterOverlay = null!;

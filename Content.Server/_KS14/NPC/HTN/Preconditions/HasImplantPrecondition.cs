@@ -12,8 +12,8 @@ namespace Content.Server._KS14.NPC.HTN.Preconditions;
 /// </summary>
 public sealed partial class HasImplantPrecondition : HTNPrecondition
 {
-    [Dependency] private readonly IEntityManager _entManager = default!;
-    [Dependency] private readonly ContainerSystem _containerSystem = default!;
+    [Dependency] private IEntityManager _entManager = default!;
+    [Dependency] private ContainerSystem _containerSystem = default!;
 
     [DataField] public bool Invert;
     /// <summary>

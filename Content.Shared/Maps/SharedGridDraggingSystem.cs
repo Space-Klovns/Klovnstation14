@@ -6,7 +6,7 @@ namespace Content.Shared.Maps;
 /// <summary>
 /// Helper system to allow you to move entities with a mouse.
 /// </summary>
-public abstract class SharedGridDraggingSystem : EntitySystem
+public abstract partial class SharedGridDraggingSystem : EntitySystem
 {
     public const string CommandName = "griddrag";
 }

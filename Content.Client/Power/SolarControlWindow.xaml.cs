@@ -28,7 +28,7 @@ namespace Content.Client.Power
         {
             PanelRotation.OnTextEntered += text =>
             {
-                if (!double.TryParse((string?) text.Text, out var value))
+                if (!double.TryParse((string?)text.Text, out var value))
                     return;
 
                 SolarControlConsoleAdjustMessage msg = new()
@@ -45,7 +45,7 @@ namespace Content.Client.Power
 
             PanelVelocity.OnTextEntered += text =>
             {
-                if (!double.TryParse((string?) text.Text, out var value))
+                if (!double.TryParse((string?)text.Text, out var value))
                     return;
 
                 SolarControlConsoleAdjustMessage msg = new()
@@ -81,7 +81,7 @@ namespace Content.Client.Power
         {
             _lastState = scc;
             NotARadar.UpdateState(scc);
-            OutputPower.Text = ((int) MathF.Floor(scc.OutputPower)).ToString();
+            OutputPower.Text = ((int)MathF.Floor(scc.OutputPower)).ToString();
             SunAngle.Text = FormatAngle(scc.TowardsSun);
             UpdateField(PanelRotation, FormatAngle(scc.Rotation));
             UpdateField(PanelVelocity, FormatAngle(scc.AngularVelocity * 60));
@@ -89,11 +89,11 @@ namespace Content.Client.Power
 
     }
 
-    public sealed class SolarControlNotARadar : Control
+    public sealed partial class SolarControlNotARadar : Control
     {
         // This is used for client-side prediction of the panel rotation.
         // This makes the display feel a lot smoother.
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private IGameTiming _gameTiming = default!;
 
         private SolarControlConsoleBoundInterfaceState _lastState = new(0, 0, 0, 0);
 
@@ -101,8 +101,8 @@ namespace Content.Client.Power
 
         public const int StandardSizeFull = 290;
         public const int StandardRadiusCircle = 140;
-        public int SizeFull => (int) (StandardSizeFull * UIScale);
-        public int RadiusCircle => (int) (StandardRadiusCircle * UIScale);
+        public int SizeFull => (int)(StandardSizeFull * UIScale);
+        public int RadiusCircle => (int)(StandardRadiusCircle * UIScale);
 
         public SolarControlNotARadar()
         {

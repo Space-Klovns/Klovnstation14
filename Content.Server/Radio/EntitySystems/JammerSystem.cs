@@ -5,12 +5,14 @@ using Robust.Shared.Random; // KS14
 
 namespace Content.Server.Radio.EntitySystems;
 
-public sealed class JammerSystem : SharedJammerSystem
+public sealed partial class JammerSystem : SharedJammerSystem
 {
-    [Dependency] private readonly IRobustRandom _robustRandom = default!; // KS14
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
+    // KS14 Start
+    [Dependency] private IRobustRandom _robustRandom = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
 
     private static readonly char[] PossibleGarbleCharacters = ['#', '*', '^', '-'];
+    // KS14 End
 
     public override void Initialize()
     {
@@ -20,7 +22,7 @@ public sealed class JammerSystem : SharedJammerSystem
         SubscribeLocalEvent<RadioReceiveAttemptEvent>(OnRadioReceiveAttempt);
     }
 
-    // KS14
+    // KS14 start
     private string GarbleString(string message, float chance)
     {
         var characters = message.ToCharArray();
@@ -34,6 +36,7 @@ public sealed class JammerSystem : SharedJammerSystem
 
         return new string(characters);
     }
+    // KS14 end
 
     private void OnRadioSendAttempt(ref RadioSendAttemptEvent args)
     {

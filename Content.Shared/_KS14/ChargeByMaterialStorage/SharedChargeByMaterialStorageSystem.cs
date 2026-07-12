@@ -7,12 +7,12 @@ using Robust.Shared.Prototypes;
 namespace Content.Shared._KS14.ChargeByMaterialStorage;
 
 /// <summary>
-///     Handles <see cref="ChargeByMaterialStorageComponent"/>. 
+///     Handles <see cref="ChargeByMaterialStorageComponent"/>.
 /// </summary>
-public sealed class SharedChargeByMaterialStorageSystem : EntitySystem
+public sealed partial class SharedChargeByMaterialStorageSystem : EntitySystem
 {
-    [Dependency] private readonly SharedMaterialStorageSystem _materialStorageSystem = default!;
-    [Dependency] private readonly SharedBatterySystem _batterySystem = default!;
+    [Dependency] private SharedMaterialStorageSystem _materialStorageSystem = default!;
+    [Dependency] private SharedBatterySystem _batterySystem = default!;
 
     public override void Initialize()
     {
@@ -42,7 +42,7 @@ public sealed class SharedChargeByMaterialStorageSystem : EntitySystem
     /// <summary>
     ///     Returns amount of all materials contained in the entity
     ///         taking account the <see cref="ChargeByMaterialStorageComponent"/>'s
-    ///         whitelist, if any. 
+    ///         whitelist, if any.
     /// </summary>
     public Dictionary<ProtoId<MaterialPrototype>, int> GetActiveStoredMaterials(Entity<ChargeByMaterialStorageComponent> entity)
     {

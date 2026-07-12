@@ -4,10 +4,10 @@ using Content.Shared.Hands.EntitySystems;
 
 namespace Content.Shared._Goobstation.Silicon.Bots;
 
-public sealed class FillbotSystem : EntitySystem
+public sealed partial class FillbotSystem : EntitySystem
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly SharedDeviceLinkSystem _deviceLink = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private SharedDeviceLinkSystem _deviceLink = default!;
 
     [Dependency] private SharedHandsSystem _sharedHandsSystem = default!;
 

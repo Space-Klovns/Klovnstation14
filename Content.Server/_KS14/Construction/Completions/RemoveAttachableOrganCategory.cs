@@ -8,7 +8,7 @@ namespace Content.Server._KS14.Construction.Completions;
 [DataDefinition]
 public sealed partial class RemoveAttachableOrganCategory : IGraphAction
 {
-    [Dependency] private readonly OrganAttachmentConstructionSystem _organAttachmentConstructionSystem = default!;
+    [Dependency] private OrganAttachmentConstructionSystem _organAttachmentConstructionSystem = default!;
 
     [DataField(required: true)]
     public ProtoId<OrganCategoryPrototype> Category = "";

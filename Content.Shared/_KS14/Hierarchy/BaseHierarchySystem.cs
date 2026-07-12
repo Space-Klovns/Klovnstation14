@@ -5,11 +5,11 @@ using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Content.Shared._KS14.Hierarchy;
 
-public abstract class BaseHierarchySystem<THierarchyComp, TElementComp> : EntitySystem
+public abstract partial class BaseHierarchySystem<THierarchyComp, TElementComp> : EntitySystem
     where THierarchyComp : Component, IHierarchyComponent
     where TElementComp : Component, IHierarchyElementComponent
 {
-    [Dependency] protected readonly SharedContainerSystem ContainerSystem = default!;
+    [Dependency] protected SharedContainerSystem ContainerSystem = default!;
 
     /// <summary>
     ///     Must be set on initialisation.

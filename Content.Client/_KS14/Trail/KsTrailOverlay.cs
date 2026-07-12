@@ -11,12 +11,12 @@ using Robust.Shared.Enums;
 
 namespace Content.Client._KS14.Trail;
 
-public sealed class KsTrailOverlay : Overlay
+public sealed partial class KsTrailOverlay : Overlay
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
-    [Dependency] private readonly IClyde _clyde = default!;
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private IResourceCache _resourceCache = default!;
+    [Dependency] private IClyde _clyde = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpaceEntities;
 

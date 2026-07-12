@@ -6,7 +6,7 @@ using Robust.Client.UserInterface;
 
 namespace Content.Client.Research.UI
 {
-    public sealed class DiskConsoleBoundUserInterface : BoundUserInterface
+    public sealed partial class DiskConsoleBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
         private DiskConsoleMenu? _menu;

@@ -10,7 +10,7 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 /// </summary>
 public sealed partial class EnsureVirtualMarkerOperator : HTNOperator
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
 
     public const string MarkerSet = "Ks_MarkerSet";
     [DataField(required: true)] public string Id = "Marker";

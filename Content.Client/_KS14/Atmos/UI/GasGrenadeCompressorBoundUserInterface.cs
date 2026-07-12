@@ -2,7 +2,7 @@ using Content.Shared._KS14.Atmos.Components;
 
 namespace Content.Client._KS14.Atmos.UI;
 
-public sealed class GasGrenadeCompressorBoundUserInterface : BoundUserInterface
+public sealed partial class GasGrenadeCompressorBoundUserInterface : BoundUserInterface
 {
     private GasGrenadeCompressorWindow? _window;
 

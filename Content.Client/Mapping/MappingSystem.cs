@@ -11,10 +11,10 @@ namespace Content.Client.Mapping;
 
 public sealed partial class MappingSystem : EntitySystem
 {
-    [Dependency] private readonly IPlacementManager _placementMan = default!;
-    [Dependency] private readonly ITileDefinitionManager _tileMan = default!;
-    [Dependency] private readonly MetaDataSystem _metaData = default!;
-    [Dependency] private readonly SharedActionsSystem _actions = default!;
+    [Dependency] private IPlacementManager _placementMan = default!;
+    [Dependency] private ITileDefinitionManager _tileMan = default!;
+    [Dependency] private MetaDataSystem _metaData = default!;
+    [Dependency] private SharedActionsSystem _actions = default!;
 
     public static readonly EntProtoId SpawnAction = "BaseMappingSpawnAction";
     public static readonly EntProtoId EraserAction = "ActionMappingEraser";
@@ -40,7 +40,7 @@ public sealed partial class MappingSystem : EntitySystem
         if (args.Action != null)
             return;
 
-        if (_placementMan.CurrentPermission is {} permission)
+        if (_placementMan.CurrentPermission is { } permission)
         {
             var ev = new StartPlacementActionEvent()
             {
@@ -54,12 +54,12 @@ public sealed partial class MappingSystem : EntitySystem
                 if (_tileMan[_placementMan.CurrentPermission.TileType] is not ContentTileDefinition tileDef)
                     return;
 
-                if (!tileDef.MapAtmosphere && tileDef.Sprite is {} sprite)
+                if (!tileDef.MapAtmosphere && tileDef.Sprite is { } sprite)
                     _actions.SetIcon(action, new SpriteSpecifier.Texture(sprite));
                 ev.TileId = tileDef.ID;
                 _metaData.SetEntityName(action, Loc.GetString(tileDef.Name));
             }
-            else if (permission.EntityType is {} id)
+            else if (permission.EntityType is { } id)
             {
                 _actions.SetIcon(action, new SpriteSpecifier.EntityPrototype(id));
                 _metaData.SetEntityName(action, id);
@@ -85,7 +85,7 @@ public sealed partial class MappingSystem : EntitySystem
         {
             EntityType = args.EntityType,
             IsTile = args.TileId != null,
-            TileType = args.TileId != null ? _tileMan[args.TileId].TileId : (ushort) 0,
+            TileType = args.TileId != null ? _tileMan[args.TileId].TileId : (ushort)0,
             PlacementOption = args.PlacementOption,
         });
 

@@ -17,8 +17,8 @@ namespace Content.Shared.Salvage;
 
 public abstract partial class SharedSalvageSystem : EntitySystem
 {
-    [Dependency] protected readonly IConfigurationManager CfgManager = default!;
-    [Dependency] private readonly IPrototypeManager _proto = default!;
+    [Dependency] protected IConfigurationManager CfgManager = default!;
+    [Dependency] private IPrototypeManager _proto = default!;
 
     /// <summary>
     /// Main loot table for salvage expeditions.
@@ -28,7 +28,7 @@ public abstract partial class SharedSalvageSystem : EntitySystem
     public string GetFTLName(LocalizedDatasetPrototype dataset, int seed)
     {
         var random = new System.Random(seed);
-        return $"{Loc.GetString(dataset.Values[random.Next(dataset.Values.Count)])}-{random.Next(10, 100)}-{(char) (65 + random.Next(26))}";
+        return $"{Loc.GetString(dataset.Values[random.Next(dataset.Values.Count)])}-{random.Next(10, 100)}-{(char)(65 + random.Next(26))}";
     }
 
     public SalvageMission GetMission(SalvageDifficultyPrototype difficulty, int seed)
@@ -111,4 +111,3 @@ public abstract partial class SharedSalvageSystem : EntitySystem
         throw new InvalidOperationException();
     }
 }
-

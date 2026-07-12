@@ -27,7 +27,7 @@ public interface ISharedFeedbackManager
     /// <br/>
     /// Use this if you want to add a popup from a shared or client-side entity system.
     /// </remarks>
-    void Display(List<ProtoId<FeedbackPopupPrototype>>? prototypes) {}
+    void Display(List<ProtoId<FeedbackPopupPrototype>>? prototypes) { }
 
     /// <summary>
     /// Removes the specified popup prototypes from the displayed popups on the client.
@@ -35,7 +35,7 @@ public interface ISharedFeedbackManager
     /// <param name="prototypes">A list of popup prototype IDs to be removed from the displayed prototypes.
     /// If null, all displayed popups will be cleared.</param>
     /// <remarks>This does nothing on the server.</remarks>
-    void Remove(List<ProtoId<FeedbackPopupPrototype>>? prototypes) {}
+    void Remove(List<ProtoId<FeedbackPopupPrototype>>? prototypes) { }
 
     /// <summary>
     /// Sends a list of feedback popup prototypes to a specific entity, identified by its EntityUid.
@@ -56,7 +56,7 @@ public interface ISharedFeedbackManager
     /// <param name="popupPrototypes">A list of feedback popup prototype IDs to send to the session.</param>
     /// <param name="remove">When true, removes the specified prototypes instead of adding them</param>
     /// <remarks>This does nothing on the client.</remarks>
-    void SendToSession(ICommonSession session, List<ProtoId<FeedbackPopupPrototype>> popupPrototypes, bool remove = false) {}
+    void SendToSession(ICommonSession session, List<ProtoId<FeedbackPopupPrototype>> popupPrototypes, bool remove = false) { }
 
     /// <summary>
     /// Sends the specified feedback popup prototypes to all connected client sessions.
@@ -64,27 +64,27 @@ public interface ISharedFeedbackManager
     /// <param name="popupPrototypes">A list of popup prototype IDs to be sent to all connected sessions.</param>
     /// <param name="remove">When true, removes the specified prototypes instead of adding them</param>
     /// <remarks>This does nothing on the client.</remarks>
-    void SendToAllSessions(List<ProtoId<FeedbackPopupPrototype>> popupPrototypes, bool remove = false) {}
+    void SendToAllSessions(List<ProtoId<FeedbackPopupPrototype>> popupPrototypes, bool remove = false) { }
 
     /// <summary>
     /// Opens the feedback popup for a specific session.
     /// </summary>
     /// <param name="session">The session for which the feedback popup should be opened.</param>
     /// <remarks>This does nothing on the client.</remarks>
-    void OpenForSession(ICommonSession session) {}
+    void OpenForSession(ICommonSession session) { }
 
     /// <summary>
     /// Opens the feedback popup for all connected sessions.
     /// </summary>
     /// <remarks>This does nothing on the client.</remarks>
-    void OpenForAllSessions() {}
+    void OpenForAllSessions() { }
 }
 
 /// <inheritdoc cref="ISharedFeedbackManager" />
 public abstract partial class SharedFeedbackManager : ISharedFeedbackManager
 {
-    [Dependency] private readonly IPrototypeManager _proto = null!;
-    [Dependency] protected readonly INetManager NetManager = null!;
+    [Dependency] private IPrototypeManager _proto = null!;
+    [Dependency] protected INetManager NetManager = null!;
 
     public virtual IReadOnlySet<ProtoId<FeedbackPopupPrototype>>? DisplayedPopups => null;
 
@@ -104,10 +104,10 @@ public abstract partial class SharedFeedbackManager : ISharedFeedbackManager
     }
 
     /// <inheritdoc />
-    public virtual void Display(List<ProtoId<FeedbackPopupPrototype>>? prototypes) {}
+    public virtual void Display(List<ProtoId<FeedbackPopupPrototype>>? prototypes) { }
 
     /// <inheritdoc />
-    public virtual void Remove(List<ProtoId<FeedbackPopupPrototype>>? prototypes) {}
+    public virtual void Remove(List<ProtoId<FeedbackPopupPrototype>>? prototypes) { }
 
     /// <inheritdoc />
     public virtual bool Send(EntityUid uid, List<ProtoId<FeedbackPopupPrototype>> popupPrototypes)
@@ -116,16 +116,16 @@ public abstract partial class SharedFeedbackManager : ISharedFeedbackManager
     }
 
     /// <inheritdoc />
-    public virtual void SendToSession(ICommonSession session, List<ProtoId<FeedbackPopupPrototype>> popupPrototypes, bool remove = false) {}
+    public virtual void SendToSession(ICommonSession session, List<ProtoId<FeedbackPopupPrototype>> popupPrototypes, bool remove = false) { }
 
     /// <inheritdoc />
-    public virtual void SendToAllSessions(List<ProtoId<FeedbackPopupPrototype>> popupPrototypes, bool remove = false) {}
+    public virtual void SendToAllSessions(List<ProtoId<FeedbackPopupPrototype>> popupPrototypes, bool remove = false) { }
 
     /// <inheritdoc />
-    public virtual void OpenForSession(ICommonSession session) {}
+    public virtual void OpenForSession(ICommonSession session) { }
 
     /// <inheritdoc />
-    public virtual void OpenForAllSessions() {}
+    public virtual void OpenForAllSessions() { }
 
     /// <summary>
     /// Get a list of feedback prototypes that match the current valid origins.

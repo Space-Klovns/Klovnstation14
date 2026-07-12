@@ -28,7 +28,7 @@ public sealed partial class OreSiloComponent : Component
 }
 
 [Serializable, NetSerializable]
-public sealed class OreSiloBuiState : BoundUserInterfaceState
+public sealed partial class OreSiloBuiState : BoundUserInterfaceState
 {
     public readonly HashSet<(NetEntity, string, string)> Clients;
 

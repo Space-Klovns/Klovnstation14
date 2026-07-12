@@ -8,10 +8,10 @@ namespace Content.Server.Atmos.EntitySystems;
 /// <summary>
 /// Handles gas filtering and intake for <see cref="AirIntakeComponent"/> and <see cref="AirFilterComponent"/>.
 /// </summary>
-public sealed class AirFilterSystem : EntitySystem
+public sealed partial class AirFilterSystem : EntitySystem
 {
-    [Dependency] private readonly AtmosphereSystem _atmosphere = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private AtmosphereSystem _atmosphere = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
 
     public override void Initialize()
     {
@@ -63,7 +63,7 @@ public sealed class AirFilterSystem : EntitySystem
         var gases = oxygen >= filter.TargetOxygen ? filter.Gases : filter.OverflowGases;
 
         GasMixture? destination = null;
-        if (args.Grid is {} grid)
+        if (args.Grid is { } grid)
         {
             var position = _transform.GetGridTilePositionOrDefault(uid);
             destination = _atmosphere.GetTileMixture(grid, args.Map, position, true);

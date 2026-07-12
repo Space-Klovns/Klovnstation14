@@ -6,7 +6,7 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 
 public sealed partial class StaticWaitOperator : HTNOperator
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
 
     [DataField("key", required: true)] public string DelayKey = "Delay";
     [DataField] public string TimerKey = null!;

@@ -4,7 +4,7 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared.Atmos.Consoles;
 
-public abstract class SharedAtmosMonitoringConsoleSystem : EntitySystem
+public abstract partial class SharedAtmosMonitoringConsoleSystem : EntitySystem
 {
     public override void Initialize()
     {

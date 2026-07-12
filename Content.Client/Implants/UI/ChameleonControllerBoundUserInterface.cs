@@ -10,7 +10,7 @@ using Robust.Shared.Prototypes;
 namespace Content.Client.Implants.UI;
 
 [UsedImplicitly]
-public sealed class ChameleonControllerBoundUserInterface : BoundUserInterface
+public sealed partial class ChameleonControllerBoundUserInterface : BoundUserInterface
 {
     private readonly UseDelaySystem _delay;
 
@@ -19,7 +19,7 @@ public sealed class ChameleonControllerBoundUserInterface : BoundUserInterface
 
     public ChameleonControllerBoundUserInterface(EntityUid owner, Enum uiKey) : base(owner, uiKey)
     {
-        _delay =  EntMan.System<UseDelaySystem>();
+        _delay = EntMan.System<UseDelaySystem>();
     }
 
     protected override void Open()

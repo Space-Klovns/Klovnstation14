@@ -16,7 +16,7 @@ public enum PlumbingPillPressUiKey : byte
 ///     State sent to the client to update the pill press UI.
 /// </summary>
 [Serializable, NetSerializable]
-public sealed class PlumbingPillPressBoundUserInterfaceState : BoundUserInterfaceState
+public sealed partial class PlumbingPillPressBoundUserInterfaceState : BoundUserInterfaceState
 {
     public FixedPoint2 BufferVolume { get; }
     public uint Dosage { get; }

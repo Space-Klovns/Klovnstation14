@@ -9,7 +9,7 @@ namespace Content.Shared.Explosion.EntitySystems;
 /// Lets code in shared trigger explosions and handles explosion resistance examining.
 /// All processing is still done clientside.
 /// </summary>
-public abstract class SharedExplosionSystem : EntitySystem
+public abstract partial class SharedExplosionSystem : EntitySystem
 {
     /// <summary>
     ///     The "default" explosion prototype.

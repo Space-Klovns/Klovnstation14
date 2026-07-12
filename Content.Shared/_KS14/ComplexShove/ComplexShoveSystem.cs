@@ -13,14 +13,14 @@ namespace Content.Shared._KS14.ComplexShove;
 /// <summary>
 ///     Handles complex shoving.
 /// </summary>
-public sealed class ComplexShoveSystem : EntitySystem
+public sealed partial class ComplexShoveSystem : EntitySystem
 {
-    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
-    [Dependency] private readonly SharedStaminaSystem _staminaSystem = default!;
-    [Dependency] private readonly SharedStunSystem _stunSystem = default!;
-    [Dependency] private readonly RayCastSystem _rayCastSystem = default!;
-    [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
+    [Dependency] private SharedStaminaSystem _staminaSystem = default!;
+    [Dependency] private SharedStunSystem _stunSystem = default!;
+    [Dependency] private RayCastSystem _rayCastSystem = default!;
+    [Dependency] private MobStateSystem _mobStateSystem = default!;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool IsUidDown(EntityUid uid)

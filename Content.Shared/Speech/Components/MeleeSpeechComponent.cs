@@ -27,7 +27,7 @@ public sealed partial class MeleeSpeechComponent : Component
     [AutoNetworkedField]
     public int MaxBattlecryLength = 12;
 
-    [DataField] public EntProtoId  ConfigureAction = "ActionConfigureMeleeSpeech";
+    [DataField] public EntProtoId ConfigureAction = "ActionConfigureMeleeSpeech";
 
     /// <summary>
     /// The action to open the battlecry UI
@@ -49,7 +49,7 @@ public enum MeleeSpeechUiKey : byte
 /// Represents an <see cref="MeleeSpeechComponent"/> state that can be sent to the client
 /// </summary>
 [Serializable, NetSerializable]
-public sealed class MeleeSpeechBoundUserInterfaceState : BoundUserInterfaceState
+public sealed partial class MeleeSpeechBoundUserInterfaceState : BoundUserInterfaceState
 {
     public string CurrentBattlecry { get; }
     public MeleeSpeechBoundUserInterfaceState(string currentBattlecry)

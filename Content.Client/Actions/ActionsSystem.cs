@@ -24,16 +24,16 @@ using YamlDotNet.RepresentationModel;
 namespace Content.Client.Actions
 {
     [UsedImplicitly]
-    public sealed class ActionsSystem : SharedActionsSystem
+    public sealed partial class ActionsSystem : SharedActionsSystem
     {
         public delegate void OnActionReplaced(EntityUid actionId);
 
-        [Dependency] private readonly SharedChargesSystem _sharedCharges = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IPrototypeManager _proto = default!;
-        [Dependency] private readonly IResourceManager _resources = default!;
-        [Dependency] private readonly MetaDataSystem _metaData = default!;
-        [Dependency] private readonly ISerializationManager _serialization = default!;
+        [Dependency] private SharedChargesSystem _sharedCharges = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IPrototypeManager _proto = default!;
+        [Dependency] private IResourceManager _resources = default!;
+        [Dependency] private MetaDataSystem _metaData = default!;
+        [Dependency] private ISerializationManager _serialization = default!;
 
         public event Action<EntityUid>? OnActionAdded;
         public event Action<EntityUid>? OnActionRemoved;
@@ -103,7 +103,7 @@ namespace Content.Client.Actions
                 if (!comp.Actions.Add(actionId))
                     continue;
 
-                if (GetAction(actionId) is {} action)
+                if (GetAction(actionId) is { } action)
                     _added.Add(action);
             }
 
@@ -262,7 +262,7 @@ namespace Content.Client.Actions
                     SetIcon(actionId, new SpriteSpecifier.EntityPrototype(id));
                     SetEvent(actionId, new StartPlacementActionEvent()
                     {
-                        PlacementOption = "SnapgridCenter",
+                        PlacementOption = proto.PlacementMode,
                         EntityType = id
                     });
                     _metaData.SetEntityName(actionId, proto.Name);
@@ -272,7 +272,7 @@ namespace Content.Client.Actions
                     var id = new ProtoId<ContentTileDefinition>(tileNode.Value);
                     var proto = _proto.Index(id);
                     actionId = Spawn(MappingEntityAction);
-                    if (proto.Sprite is {} sprite)
+                    if (proto.Sprite is { } sprite)
                         SetIcon(actionId, new SpriteSpecifier.Texture(sprite));
                     SetEvent(actionId, new StartPlacementActionEvent()
                     {
@@ -338,7 +338,7 @@ namespace Content.Client.Actions
             if (action.ClientExclusive)
             {
                 // TODO: abstract away from single event or maybe just RaiseLocalEvent?
-                if (comp.Event is {} ev)
+                if (comp.Event is { } ev)
                 {
                     ev.Target = coords;
                     ev.Entity = targetEnt;
@@ -364,7 +364,7 @@ namespace Content.Client.Actions
 
             // let world target component handle it
             var (uid, comp) = ent;
-            if (comp.Event is not {} ev)
+            if (comp.Event is not { } ev)
             {
                 DebugTools.Assert(HasComp<WorldTargetActionComponent>(ent), $"Action {ToPrettyString(ent)} requires WorldTargetActionComponent for entity-world targeting");
                 return;

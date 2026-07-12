@@ -3,7 +3,7 @@ using Robust.Client.UserInterface;
 
 namespace Content.Client.Pinpointer.UI;
 
-public sealed class StationMapBoundUserInterface : BoundUserInterface
+public sealed partial class StationMapBoundUserInterface : BoundUserInterface
 {
     [ViewVariables]
     private StationMapWindow? _window;
@@ -30,7 +30,7 @@ public sealed class StationMapBoundUserInterface : BoundUserInterface
         _window.Title = EntMan.GetComponent<MetaDataComponent>(Owner).EntityName;
 
         string stationName = string.Empty;
-        if(EntMan.TryGetComponent<MetaDataComponent>(gridUid, out var gridMetaData))
+        if (EntMan.TryGetComponent<MetaDataComponent>(gridUid, out var gridMetaData))
         {
             stationName = gridMetaData.EntityName;
         }

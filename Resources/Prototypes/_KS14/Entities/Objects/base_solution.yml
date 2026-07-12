@@ -1,0 +1,23 @@
+
+
+- type: entity
+  parent: Solution
+  id: KsSolutionPlumbingBuffer200
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Solution
+    id: buffer
+    solution:
+      maxVol: 200
+      canReact: false
+
+- type: entity
+  parent: Solution
+  id: KsSolutionPlumbingBuffer500
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Solution
+    id: buffer
+    solution:
+      maxVol: 500
+      canReact: false

@@ -7,9 +7,9 @@ using Robust.Shared.Physics.Events;
 
 namespace Content.Shared.Damage.Systems;
 
-public sealed class RequireProjectileTargetSystem : EntitySystem
+public sealed partial class RequireProjectileTargetSystem : EntitySystem
 {
-    [Dependency] private readonly SharedContainerSystem _container = default!;
+    [Dependency] private SharedContainerSystem _container = default!;
 
     public override void Initialize()
     {
@@ -21,7 +21,7 @@ public sealed class RequireProjectileTargetSystem : EntitySystem
     private void PreventCollide(Entity<RequireProjectileTargetComponent> ent, ref PreventCollideEvent args)
     {
         if (args.Cancelled)
-          return;
+            return;
 
         if (!ent.Comp.Active)
             return;
@@ -41,7 +41,7 @@ public sealed class RequireProjectileTargetSystem : EntitySystem
                 return;
 
             if (!_container.IsEntityOrParentInContainer(shooter.Value))
-               args.Cancelled = true;
+                args.Cancelled = true;
         }
     }
 

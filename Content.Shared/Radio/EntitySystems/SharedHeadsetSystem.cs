@@ -5,7 +5,7 @@ using Content.Shared.Radio.Components;
 
 namespace Content.Shared.Radio.EntitySystems;
 
-public abstract class SharedHeadsetSystem : EntitySystem
+public abstract partial class SharedHeadsetSystem : EntitySystem
 {
     public override void Initialize()
     {

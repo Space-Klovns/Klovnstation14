@@ -14,7 +14,7 @@ namespace Content.Server.NPC.HTN.PrimitiveTasks.Operators;
 /// </summary>
 public sealed partial class UtilityOperator : HTNOperator
 {
-    [Dependency] private readonly IEntityManager _entManager = default!;
+    [Dependency] private IEntityManager _entManager = default!;
 
     [DataField] public string Key = "Target";
 
@@ -26,7 +26,7 @@ public sealed partial class UtilityOperator : HTNOperator
     [DataField("keyCoordinates")]
     public string KeyCoordinates = "TargetCoordinates";
 
-    [DataField("proto", required: true, customTypeSerializer:typeof(PrototypeIdSerializer<UtilityQueryPrototype>))]
+    [DataField("proto", required: true, customTypeSerializer: typeof(PrototypeIdSerializer<UtilityQueryPrototype>))]
     public string Prototype = string.Empty;
 
     public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard,

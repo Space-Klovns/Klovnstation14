@@ -9,9 +9,9 @@ namespace Content.Shared._KS14.Klovnmed.OrganAttachmentConstruction;
 ///     Handles <see cref="OrganAttachmentConstructionComponent"/>, and
 ///         networking the state of current construction node using it.
 /// </summary>
-public abstract class SharedOrganAttachmentConstructionSystem : EntitySystem
+public abstract partial class SharedOrganAttachmentConstructionSystem : EntitySystem
 {
-    [Dependency] private readonly BodyHierarchySystem _bodyHierarchySystem = default!;
+    [Dependency] private BodyHierarchySystem _bodyHierarchySystem = default!;
 
     public override void Initialize()
     {

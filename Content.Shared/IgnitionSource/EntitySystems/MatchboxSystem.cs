@@ -4,15 +4,15 @@ using Content.Shared.IgnitionSource.Components;
 
 namespace Content.Shared.IgnitionSource.EntitySystems;
 
-public sealed class MatchboxSystem : EntitySystem
+public sealed partial class MatchboxSystem : EntitySystem
 {
-    [Dependency] private readonly MatchstickSystem _match = default!;
+    [Dependency] private MatchstickSystem _match = default!;
 
     public override void Initialize()
     {
         base.Initialize();
 
-        SubscribeLocalEvent<MatchboxComponent, InteractUsingEvent>(OnInteractUsing, before: [ typeof(SharedStorageSystem) ]);
+        SubscribeLocalEvent<MatchboxComponent, InteractUsingEvent>(OnInteractUsing, before: [typeof(SharedStorageSystem)]);
     }
 
     private void OnInteractUsing(Entity<MatchboxComponent> ent, ref InteractUsingEvent args)

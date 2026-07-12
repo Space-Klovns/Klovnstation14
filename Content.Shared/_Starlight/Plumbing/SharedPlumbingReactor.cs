@@ -16,7 +16,7 @@ public enum PlumbingReactorUiKey : byte
 ///     State sent to the client to update the reactor UI.
 /// </summary>
 [Serializable, NetSerializable]
-public sealed class PlumbingReactorBoundUserInterfaceState : BoundUserInterfaceState
+public sealed partial class PlumbingReactorBoundUserInterfaceState : BoundUserInterfaceState
 {
     /// <summary>
     ///     The reagent targets the reactor is trying to accumulate.

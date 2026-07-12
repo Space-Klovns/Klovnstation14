@@ -11,8 +11,8 @@ namespace Content.Server.EntityEffects.Effects.Botany;
 
 public sealed partial class PlantMutateChemicalsEntityEffectSystem : EntityEffectSystem<PlantHolderComponent, PlantMutateChemicals>
 {
-    [Dependency] private readonly IPrototypeManager _proto = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
+    [Dependency] private IPrototypeManager _proto = default!;
+    [Dependency] private IRobustRandom _random = default!;
 
     protected override void Effect(Entity<PlantHolderComponent> entity, ref EntityEffectEvent<PlantMutateChemicals> args)
     {
@@ -39,7 +39,7 @@ public sealed partial class PlantMutateChemicalsEntityEffectSystem : EntityEffec
             seedChemQuantity.Inherent = false;
         }
         var potencyDivisor = 100f / seedChemQuantity.Max;
-        seedChemQuantity.PotencyDivisor = (float) potencyDivisor;
+        seedChemQuantity.PotencyDivisor = (float)potencyDivisor;
         chemicals[chemicalId] = seedChemQuantity;
     }
 }

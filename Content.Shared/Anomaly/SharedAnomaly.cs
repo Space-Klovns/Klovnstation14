@@ -98,7 +98,7 @@ public enum AnomalyScannerVisualLayers : byte
 }
 
 [Serializable, NetSerializable]
-public sealed class AnomalyScannerUserInterfaceState : BoundUserInterfaceState
+public sealed partial class AnomalyScannerUserInterfaceState : BoundUserInterfaceState
 {
     public FormattedMessage Message;
 
@@ -118,7 +118,7 @@ public enum AnomalyGeneratorUiKey : byte
 }
 
 [Serializable, NetSerializable]
-public sealed class AnomalyGeneratorUserInterfaceState : BoundUserInterfaceState
+public sealed partial class AnomalyGeneratorUserInterfaceState : BoundUserInterfaceState
 {
     public TimeSpan CooldownEndTime;
 

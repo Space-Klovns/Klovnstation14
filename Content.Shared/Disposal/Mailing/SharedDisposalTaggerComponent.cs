@@ -8,7 +8,7 @@ namespace Content.Shared.Disposal.Components
         public static readonly Regex TagRegex = new("^[a-zA-Z0-9 ]*$", RegexOptions.Compiled);
 
         [Serializable, NetSerializable]
-        public sealed class DisposalTaggerUserInterfaceState : BoundUserInterfaceState
+        public sealed partial class DisposalTaggerUserInterfaceState : BoundUserInterfaceState
         {
             public readonly string Tag;
 

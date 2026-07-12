@@ -2,7 +2,7 @@ using Content.Shared.DeviceNetwork.Components;
 
 namespace Content.Shared.DeviceNetwork.Systems;
 
-public abstract class SharedDeviceNetworkSystem : EntitySystem
+public abstract partial class SharedDeviceNetworkSystem : EntitySystem
 {
     /// <summary>
     /// Sends the given payload as a device network packet to the entity with the given address and frequency.

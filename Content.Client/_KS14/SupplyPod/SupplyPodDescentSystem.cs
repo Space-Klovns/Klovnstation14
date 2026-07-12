@@ -7,10 +7,10 @@ using Robust.Shared.Timing;
 
 namespace Content.Client._KS14.SupplyPod;
 
-public sealed class SupplyPodDescentSystem : EntitySystem
+public sealed partial class SupplyPodDescentSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly AnimationPlayerSystem _animationPlayerSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private AnimationPlayerSystem _animationPlayerSystem = default!;
 
     private const string DescentAnimationKey = "poddescent";
 

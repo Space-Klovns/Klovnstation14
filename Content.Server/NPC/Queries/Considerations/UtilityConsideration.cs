@@ -6,7 +6,7 @@ namespace Content.Server.NPC.Queries.Considerations;
 [ImplicitDataDefinitionForInheritors, MeansImplicitUse]
 public abstract partial class UtilityConsideration
 {
-    [Dependency] protected readonly EntityManager EntityManager = default!; // KS14: ANK
+    [Dependency] protected EntityManager EntityManager = default!; // KS14: ANK
 
     [DataField("curve", required: true)]
     public IUtilityCurve Curve = default!;

@@ -18,8 +18,8 @@ namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 /// </summary>
 public sealed partial class DoActionOperator : HTNOperator
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly ActionsSystem _actionsSystem = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private ActionsSystem _actionsSystem = default!;
 
     /// <summary>
     ///     Ent ID of the action to do.

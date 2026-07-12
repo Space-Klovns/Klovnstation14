@@ -1,6 +1,5 @@
 using Content.Server.Destructible; // KS14 Addition
 using Content.Shared.Administration.Logs;
-using Content.Shared.Body.Components; // KS14 Addition
 using Content.Shared.Database;
 using Content.Shared.Ghost;
 using Content.Shared.Mind.Components;
@@ -10,10 +9,10 @@ using Robust.Shared.Map;
 
 namespace Content.Server.Teleportation;
 
-public sealed class PortalSystem : SharedPortalSystem
+public sealed partial class PortalSystem : SharedPortalSystem
 {
-    [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
-    [Dependency] private readonly DestructibleSystem _destructibleSystem = default!; // KS14 Addition
+    [Dependency] private ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] private DestructibleSystem _destructibleSystem = default!; // KS14 Addition
 
     // TODO Move to shared
     protected override void LogTeleport(EntityUid portal, EntityUid subject, EntityCoordinates source,

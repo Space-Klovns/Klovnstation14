@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Shared.Administration.Logs;
@@ -32,14 +33,14 @@ namespace Content.Shared.Mind;
 
 public abstract partial class SharedMindSystem : EntitySystem
 {
-    [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
-    [Dependency] private readonly EntityWhitelistSystem _whitelist = default!;
-    [Dependency] private readonly MetaDataSystem _metadata = default!;
-    [Dependency] private readonly MobStateSystem _mobState = default!;
-    [Dependency] private readonly SharedObjectivesSystem _objectives = default!;
-    [Dependency] private readonly SharedContainerSystem _container = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-    [Dependency] private readonly SharedPlayerSystem _player = default!;
+    [Dependency] private ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] private EntityWhitelistSystem _whitelist = default!;
+    [Dependency] private MetaDataSystem _metadata = default!;
+    [Dependency] private MobStateSystem _mobState = default!;
+    [Dependency] private SharedObjectivesSystem _objectives = default!;
+    [Dependency] private SharedContainerSystem _container = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private SharedPlayerSystem _player = default!;
 
     [ViewVariables]
     protected readonly Dictionary<NetUserId, EntityUid> UserMinds = new();
@@ -313,7 +314,7 @@ public abstract partial class SharedMindSystem : EntitySystem
         if (mindId == null || !Resolve(mindId.Value, ref mind, false))
             return;
 
-        TransferTo(mindId.Value, null, createGhost:false, mind: mind);
+        TransferTo(mindId.Value, null, createGhost: false, mind: mind);
         SetUserId(mindId.Value, null, mind: mind);
     }
 
@@ -335,9 +336,9 @@ public abstract partial class SharedMindSystem : EntitySystem
     {
     }
 
-    public virtual void ControlMob(EntityUid user, EntityUid target) {}
+    public virtual void ControlMob(EntityUid user, EntityUid target) { }
 
-    public virtual void ControlMob(NetUserId user, EntityUid target) {}
+    public virtual void ControlMob(NetUserId user, EntityUid target) { }
 
     /// <summary>
     /// Tries to create and add an objective from its prototype id.
@@ -467,6 +468,37 @@ public abstract partial class SharedMindSystem : EntitySystem
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Returns an enumerator of the input minds objectives
+    /// </summary>
+    public IEnumerable<EntityUid> EnumerateObjectives(Entity<MindComponent?> mind)
+    {
+        if (!Resolve(mind, ref mind.Comp))
+            yield break;
+
+        foreach (var obj in mind.Comp.Objectives)
+        {
+            yield return obj;
+        }
+    }
+
+    /// <summary>
+    /// Returns an enumerator of objectives with the specified component.
+    /// </summary>
+    public IEnumerable<EntityUid> EnumerateObjectives<T>(Entity<MindComponent?> mind)  where T : IComponent
+    {
+        if (!Resolve(mind, ref mind.Comp))
+            yield break;
+
+        foreach (var obj in mind.Comp.Objectives)
+        {
+            if (!HasComp<T>(obj))
+                continue;
+
+            yield return obj;
+        }
     }
 
     /// <summary>

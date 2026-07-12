@@ -11,7 +11,7 @@ namespace Content.Shared.EntityEffects.Effects.StatusEffects;
 /// <inheritdoc cref="EntityEffectSystem{T,TEffect}"/>
 public sealed partial class ModifyKnockdownEntityEffectSystem : EntityEffectSystem<StandingStateComponent, ModifyKnockdown>
 {
-    [Dependency] private readonly SharedStunSystem _stun = default!;
+    [Dependency] private SharedStunSystem _stun = default!;
 
     protected override void Effect(Entity<StandingStateComponent> entity, ref EntityEffectEvent<ModifyKnockdown> args)
     {
@@ -32,7 +32,7 @@ public sealed partial class ModifyKnockdownEntityEffectSystem : EntityEffectSyst
                     _stun.TryKnockdown(entity.Owner, time, false, drop: args.Effect.Drop);
                 break;
             case StatusEffectMetabolismType.Remove:
-                _stun.AddKnockdownTime(entity.Owner, - time ?? TimeSpan.Zero);
+                _stun.AddKnockdownTime(entity.Owner, -time ?? TimeSpan.Zero);
                 break;
             case StatusEffectMetabolismType.Set:
                 if (args.Effect.Crawling)

@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Content.Client.Disposal.Mailing;
 
-public sealed class MailingUnitBoundUserInterface : BoundUserInterface
+public sealed partial class MailingUnitBoundUserInterface : BoundUserInterface
 {
     [ViewVariables]
     public MailingUnitWindow? MailingUnitWindow;
@@ -71,7 +71,8 @@ public sealed class MailingUnitBoundUserInterface : BoundUserInterface
         //UnitTag.Text = state.Tag;
         MailingUnitWindow.Target.Text = entity.Comp.Target;
 
-        var entries = entity.Comp.TargetList.Select(target => new ItemList.Item(MailingUnitWindow.TargetListContainer) {
+        var entries = entity.Comp.TargetList.Select(target => new ItemList.Item(MailingUnitWindow.TargetListContainer)
+        {
             Text = target,
             Selected = target == entity.Comp.Target
         }).ToList();

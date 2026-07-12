@@ -10,7 +10,7 @@ using Robust.Shared.Toolshed;
 namespace Content.Server.Storage;
 
 [ToolshedCommand, AdminCommand(AdminFlags.Debug)]
-public sealed class StorageCommand : ToolshedCommand
+public sealed partial class StorageCommand : ToolshedCommand
 {
     private SharedStorageSystem? _storage;
     private SharedContainerSystem? _container;

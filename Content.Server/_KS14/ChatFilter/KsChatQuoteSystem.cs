@@ -6,9 +6,9 @@ using Robust.Shared.Configuration;
 namespace Content.Server._KS14.ChatFilter;
 
 /// <inheritdoc cref="KsCCVars.ChatQuotesEnabled"/>
-public sealed class KsChatQuoteSystem : EntitySystem
+public sealed partial class KsChatQuoteSystem : EntitySystem
 {
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
 
     public override void Initialize()
     {

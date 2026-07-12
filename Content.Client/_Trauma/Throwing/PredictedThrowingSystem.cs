@@ -9,9 +9,9 @@ namespace Content.Client._Trauma.Throwing;
 /// <summary>
 /// Lets thrown items and projectiles' physics be predicted.
 /// </summary>
-public sealed class PredictedThrowingSystem : EntitySystem
+public sealed partial class PredictedThrowingSystem : EntitySystem
 {
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
 
     public override void Initialize()
     {

@@ -4,10 +4,10 @@ namespace Content.Shared._KS14.IoC;
 
 // TODO LCDC: somehow make engine PR to make this engine-based or otherwise publicly accessible
 
-public sealed class SystemCollectionHookManager
+public sealed partial class SystemCollectionHookManager
 {
-    [Dependency] private readonly INetManager _netManager = default!;
-    [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private IEntitySystemManager _entitySystemManager = default!;
     private readonly ISawmill _sawmill = default!;
 
     public SystemCollectionHookManager()

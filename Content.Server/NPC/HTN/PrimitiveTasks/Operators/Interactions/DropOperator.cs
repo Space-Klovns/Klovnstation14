@@ -8,8 +8,8 @@ namespace Content.Server.NPC.HTN.PrimitiveTasks.Operators.Interactions;
 /// </summary>
 public sealed partial class DropOperator : HTNOperator
 {
-    [Dependency] private readonly IEntityManager _entManager = default!;
-    [Dependency] private readonly HandsSystem _handsSystem = default!; // KS14: ANK
+    [Dependency] private IEntityManager _entManager = default!;
+    [Dependency] private HandsSystem _handsSystem = default!; // KS14: ANK
 
     // KS14: ANK
     /// <summary>

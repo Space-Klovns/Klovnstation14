@@ -6,7 +6,7 @@ using Robust.Client.UserInterface;
 namespace Content.Client.Teleportation.Ui;
 
 [UsedImplicitly]
-public sealed class TeleportLocationsBoundUserInterface : BoundUserInterface
+public sealed partial class TeleportLocationsBoundUserInterface : BoundUserInterface
 {
     [ViewVariables]
     private TeleportMenu? _menu;

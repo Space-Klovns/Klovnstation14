@@ -7,10 +7,10 @@ using Robust.Client.GameObjects;
 
 namespace Content.Client.Doors;
 
-public sealed class AirlockSystem : SharedAirlockSystem
+public sealed partial class AirlockSystem : SharedAirlockSystem
 {
-    [Dependency] private readonly AppearanceSystem _appearanceSystem = default!;
-    [Dependency] private readonly SpriteSystem _sprite = default!;
+    [Dependency] private AppearanceSystem _appearanceSystem = default!;
+    [Dependency] private SpriteSystem _sprite = default!;
 
     public override void Initialize()
     {
@@ -100,8 +100,8 @@ public sealed class AirlockSystem : SharedAirlockSystem
             emergencyLightsVisible = _appearanceSystem.TryGetData<bool>(uid, DoorVisuals.EmergencyLights, out var eaLights, args.Component) && eaLights;
             unlitVisible =
                     (state == DoorState.Closing
-                ||  state == DoorState.Opening
-                ||  state == DoorState.Denying
+                || state == DoorState.Opening
+                || state == DoorState.Denying
                 || (state == DoorState.Open && comp.OpenUnlitVisible)
                 || (_appearanceSystem.TryGetData<bool>(uid, DoorVisuals.ClosedLights, out var closedLights, args.Component) && closedLights))
                     && !boltedVisible && !emergencyLightsVisible;
@@ -115,9 +115,9 @@ public sealed class AirlockSystem : SharedAirlockSystem
                 (uid, args.Sprite),
                 DoorVisualLayers.BaseEmergencyAccess,
                     emergencyLightsVisible
-                &&  state != DoorState.Open
-                &&  state != DoorState.Opening
-                &&  state != DoorState.Closing
+                && state != DoorState.Open
+                && state != DoorState.Opening
+                && state != DoorState.Closing
                 && !boltedVisible
             );
         }

@@ -27,7 +27,6 @@
       enum.StorageUiKey.Key:
         type: StorageBoundUserInterface
 
-
   - type: Fixtures
     fixtures:
       fix1:
@@ -45,8 +44,9 @@
         layer:
         - WallLayer
   - type: Damageable
-    damageContainer: Inorganic
     damageModifierSet: Metallic
+  - type: Injurable
+    damageContainer: StructuralInorganic
   # - type: Destructible
   #   thresholds:
   #   - trigger:

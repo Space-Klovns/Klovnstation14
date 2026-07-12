@@ -14,13 +14,13 @@ using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 namespace Content.Shared._KS14.Sparks;
 
 // TODO: default soundcollection
-public abstract class SharedSparksSystem : EntitySystem
+public abstract partial class SharedSparksSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
-    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
-    [Dependency] private readonly KsSharedPredictedSpawnSystem _ksPredictedSpawnSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private KsSharedPredictedSpawnSystem _ksPredictedSpawnSystem = default!;
 
     public static readonly EntProtoId DefaultSparkPrototype = "EffectSparkMoving";
     public static readonly SoundSpecifier DefaultSoundSpecifier = new SoundCollectionSpecifier("sparks");

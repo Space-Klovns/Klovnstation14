@@ -9,11 +9,11 @@ using Robust.Shared.Utility;
 
 namespace Content.Server._KS14.ChatFilter;
 
-public sealed class KsChatFilterSystem : EntitySystem
+public sealed partial class KsChatFilterSystem : EntitySystem
 {
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-    [Dependency] private readonly IChatManager _chatManager = default!;
-    [Dependency] private readonly WordFilterSystem _wordFilterSystem = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IChatManager _chatManager = default!;
+    [Dependency] private WordFilterSystem _wordFilterSystem = default!;
 
     public override void Initialize()
     {

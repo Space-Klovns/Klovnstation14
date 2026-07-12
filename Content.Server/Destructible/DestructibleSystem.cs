@@ -1,4 +1,3 @@
-// <Trauma>
 using Content.Shared.Destructible.Thresholds;
 using Content.Shared.Destructible.Thresholds.Behaviors;
 // </Trauma>

@@ -2,7 +2,7 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared.IconSmoothing;
 
-public abstract class SharedRandomIconSmoothSystem : EntitySystem
+public abstract partial class SharedRandomIconSmoothSystem : EntitySystem
 {
 }
 [Serializable, NetSerializable]

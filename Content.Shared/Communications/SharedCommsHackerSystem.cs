@@ -7,7 +7,7 @@ namespace Content.Shared.Communications;
 /// Only exists in shared to provide API and for access.
 /// All logic is serverside.
 /// </summary>
-public abstract class SharedCommsHackerSystem : EntitySystem
+public abstract partial class SharedCommsHackerSystem : EntitySystem
 {
     /// <summary>
     /// Set the threats prototype to choose from when hacking a comms console.

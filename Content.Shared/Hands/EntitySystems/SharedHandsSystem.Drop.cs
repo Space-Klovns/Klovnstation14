@@ -14,7 +14,7 @@ namespace Content.Shared.Hands.EntitySystems;
 
 public abstract partial class SharedHandsSystem
 {
-    [Dependency] private readonly TagSystem _tagSystem = default!;
+    [Dependency] private TagSystem _tagSystem = default!;
 
     private static readonly ProtoId<TagPrototype> BypassDropChecksTag = "BypassDropChecks";
 
@@ -77,7 +77,7 @@ public abstract partial class SharedHandsSystem
         if (!ContainerSystem.TryGetContainer(uid, handId, out var container))
             return false;
 
-        if (container.ContainedEntities.FirstOrNull() is not {} held)
+        if (container.ContainedEntities.FirstOrNull() is not { } held)
             return false;
 
         if (!ContainerSystem.CanRemove(held, container))
@@ -188,6 +188,20 @@ public abstract partial class SharedHandsSystem
         DoDrop(ent, hand, false);
         ContainerSystem.Insert(entity, targetContainer);
         return true;
+    }
+
+    /// <summary>
+    ///     Tries to drop all currently held items.
+    /// </summary>
+    public void DropAll(Entity<HandsComponent?> ent, EntityCoordinates? targetDropLocation = null, bool checkActionBlocker = true, bool doDropInteraction = true)
+    {
+        if (!Resolve(ent, ref ent.Comp, false))
+            return;
+
+        foreach (var hand in EnumerateHands(ent))
+        {
+            TryDrop(ent, hand, targetDropLocation, checkActionBlocker, doDropInteraction);
+        }
     }
 
     /// <summary>

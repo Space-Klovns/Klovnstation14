@@ -11,12 +11,12 @@ using Robust.Shared.Utility;
 namespace Content.Server._KS14.AdminMusic;
 
 [AdminCommand(AdminFlags.Fun)]
-public sealed class PlayAdminMusicCommand : LocalizedEntityCommands
+public sealed partial class PlayAdminMusicCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly IResourceManager _resourceManager = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly KsAdminMusicManager _adminMusicManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IResourceManager _resourceManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private KsAdminMusicManager _adminMusicManager = default!;
 
     public override string Command => "playadminmusic";
 
@@ -61,7 +61,7 @@ public sealed class PlayAdminMusicCommand : LocalizedEntityCommands
             return;
         }
 
-        var entry = new KsAdminMusicEntry(path, volume, _gameTiming.CurTime);
+        var entry = new KsAdminMusicEntry(path, volume, _gameTiming.RealTime /* ServerTime is broken and is meant to be RealTime but in reality it isn't and is just 0. */);
         _adminMusicManager.AddEntry(entry);
     }
 

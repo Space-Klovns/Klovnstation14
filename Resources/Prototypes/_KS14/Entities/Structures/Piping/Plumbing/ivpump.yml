@@ -44,9 +44,14 @@
   - type: PlumbingOutlet
     solutionName: buffer
     outletNames: [ let ]
+  - type: Spillable # Needed for SpilLBehaviour
+    solution: buffer
+  - type: ExaminableSolution
+    solution: buffer
   - type: Plungeable
-  - type: SolutionContainerManager
-    solutions:
+  - type: SolutionManager
+    solutions: null
+    solutionData:
       buffer:
         maxVol: 200
         canReact: false
@@ -57,8 +62,6 @@
     sound:
       path: /Audio/Ambience/Objects/flowing_water_open.ogg
 
-  - type: ExaminableSolution
-    solution: buffer
   - type: NodeContainer
     nodes:
       let:
@@ -78,6 +81,7 @@
         solution: buffer
       - !type:DoActsBehavior
         acts: ["Destruction"]
+
 
 - type: entity
   parent: KsPlumbingIvPump
@@ -112,8 +116,9 @@
     fillBaseName: fill_
     solutionName: buffer
 
-  - type: SolutionContainerManager
-    solutions:
+  - type: SolutionManager
+    solutions: null
+    solutionData:
       buffer:
         maxVol: 500
         canReact: false

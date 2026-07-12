@@ -4,10 +4,10 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.Atmos.EntitySystems;
 
-public sealed class KsGasMaxPressureIntervalSystem : EntitySystem
+public sealed partial class KsGasMaxPressureIntervalSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
 
     public override void Initialize()
     {

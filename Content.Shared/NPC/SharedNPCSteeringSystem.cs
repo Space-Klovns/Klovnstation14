@@ -1,6 +1,6 @@
 namespace Content.Shared.NPC;
 
-public abstract class SharedNPCSteeringSystem : EntitySystem
+public abstract partial class SharedNPCSteeringSystem : EntitySystem
 {
     public const byte InterestDirections = 12;
 

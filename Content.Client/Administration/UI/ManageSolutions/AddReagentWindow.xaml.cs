@@ -15,15 +15,15 @@ namespace Content.Client.Administration.UI.ManageSolutions
     [GenerateTypedNameReferences]
     public sealed partial class AddReagentWindow : DefaultWindow
     {
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-        [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
+        [Dependency] private IPrototypeManager _prototypeManager = default!;
+        [Dependency] private IClientConsoleHost _consoleHost = default!;
 
         private readonly NetEntity _targetEntity;
         private string _targetSolution;
         private ReagentPrototype? _selectedReagent;
 
         // FloatSpinBox does not (yet?) play nice with xaml
-        private FloatSpinBox _quantitySpin = new(1, 2) { Value = 10, HorizontalExpand = true};
+        private FloatSpinBox _quantitySpin = new(1, 2) { Value = 10, HorizontalExpand = true };
 
         public AddReagentWindow(NetEntity targetEntity, string targetSolution)
         {
@@ -62,7 +62,7 @@ namespace Content.Client.Administration.UI.ManageSolutions
 
         private void ReagentListSelected(ItemList.ItemListSelectedEventArgs obj)
         {
-            _selectedReagent = (ReagentPrototype) obj.ItemList[obj.ItemIndex].Metadata!;
+            _selectedReagent = (ReagentPrototype)obj.ItemList[obj.ItemIndex].Metadata!;
             UpdateAddButton();
         }
 

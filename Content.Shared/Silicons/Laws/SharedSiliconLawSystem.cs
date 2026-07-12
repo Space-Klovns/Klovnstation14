@@ -14,10 +14,10 @@ namespace Content.Shared.Silicons.Laws;
 /// </summary>
 public abstract partial class SharedSiliconLawSystem : EntitySystem
 {
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly SharedStunSystem _stunSystem = default!;
-    [Dependency] private readonly EmagSystem _emag = default!;
-    [Dependency] private readonly SharedMindSystem _mind = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedStunSystem _stunSystem = default!;
+    [Dependency] private EmagSystem _emag = default!;
+    [Dependency] private SharedMindSystem _mind = default!;
 
     /// <inheritdoc/>
     public override void Initialize()
@@ -55,7 +55,7 @@ public abstract partial class SharedSiliconLawSystem : EntitySystem
         component.OwnerName = Name(args.UserUid);
 
         NotifyLawsChanged(uid, component.EmaggedSound);
-        if(_mind.TryGetMind(uid, out var mindId, out _))
+        if (_mind.TryGetMind(uid, out var mindId, out _))
             EnsureSubvertedSiliconRole(mindId);
 
         _stunSystem.TryUpdateParalyzeDuration(uid, component.StunTime);

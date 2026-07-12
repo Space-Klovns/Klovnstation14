@@ -8,7 +8,7 @@ namespace Content.Shared._KS14.EntityEffects.Effects;
 /// <inheritdoc cref="EntityEffectSystem{T,TEffect}"/>
 public sealed partial class RegenerateOrgansEntityEffectSystem : EntityEffectSystem<BloodstreamComponent, RegenerateOrgans>
 {
-    [Dependency] private readonly OrganRegenerationSystem _organRegenerationSystem = default!;
+    [Dependency] private OrganRegenerationSystem _organRegenerationSystem = default!;
 
     protected override void Effect(Entity<BloodstreamComponent> entity, ref EntityEffectEvent<RegenerateOrgans> args)
     {

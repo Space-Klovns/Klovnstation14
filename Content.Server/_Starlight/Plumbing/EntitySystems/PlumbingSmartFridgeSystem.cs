@@ -22,12 +22,12 @@ namespace Content.Server._Starlight.Plumbing.EntitySystems;
 ///     stores up to a per-reagent cap, and fills labeled jugs on interaction.
 /// </summary>
 [UsedImplicitly]
-public sealed class PlumbingSmartFridgeSystem : EntitySystem
+public sealed partial class PlumbingSmartFridgeSystem : EntitySystem
 {
-    [Dependency] private readonly SharedSolutionContainerSystem _solutionSystem = default!;
-    [Dependency] private readonly UserInterfaceSystem _uiSystem = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private SharedSolutionContainerSystem _solutionSystem = default!;
+    [Dependency] private UserInterfaceSystem _uiSystem = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     /// <summary>
     /// Cached mapping of label prefix (lowercase) → reagent prototype ID.

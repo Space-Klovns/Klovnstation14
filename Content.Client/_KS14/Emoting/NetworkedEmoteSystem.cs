@@ -9,16 +9,16 @@ namespace Content.Client._KS14.Emoting;
 
 /// <summary>
 ///     Handles <see cref="NetworkedEmoteMessage"/>
-///         on the client, converting it to an <see cref="EmoteEvent"/>.  
+///         on the client, converting it to an <see cref="EmoteEvent"/>.
 ///
 ///     This entire system is only done because player-inputted emotes are (right now)
 ///         only handled on-server and therefore not predicted, so we do this goidafix
 ///         to make server experience consistent with client.
 /// </summary>
-public sealed class NetworkedEmoteSystem : EntitySystem
+public sealed partial class NetworkedEmoteSystem : EntitySystem
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly ChatSystem _chatSystem = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private ChatSystem _chatSystem = default!;
 
     public override void Initialize()
     {

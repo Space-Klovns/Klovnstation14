@@ -6,11 +6,11 @@ namespace Content.Client._Starlight.Plumbing.UI;
 
 /// <summary>
 ///     BUI for plumbing storage (tanks, barrels).
-///     NOTE: Named 'PlumbingStorageBui' instead of 'PlumbingStorageBoundUserInterface' to prevent 
+///     NOTE: Named 'PlumbingStorageBui' instead of 'PlumbingStorageBoundUserInterface' to prevent
 ///     Robust reflection from suffix-matching this against vanilla 'StorageBoundUserInterface'.
 /// </summary>
 [UsedImplicitly]
-public sealed class PlumbingStorageBui : BoundUserInterface
+public sealed partial class PlumbingStorageBui : BoundUserInterface
 {
     private PlumbingStorageWindow? _window;
 

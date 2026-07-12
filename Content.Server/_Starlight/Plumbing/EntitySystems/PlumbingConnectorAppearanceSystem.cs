@@ -15,11 +15,11 @@ namespace Content.Server._Starlight.Plumbing.EntitySystems;
 ///     Server system that sends PlumbingNode directions and connection state to clients.
 ///     Also tracks floor coverage to hide connectors under floor tiles.
 /// </summary>
-public sealed class PlumbingConnectorAppearanceSystem : EntitySystem
+public sealed partial class PlumbingConnectorAppearanceSystem : EntitySystem
 {
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly SharedMapSystem _map = default!;
-    [Dependency] private readonly ITileDefinitionManager _tileDefManager = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private SharedMapSystem _map = default!;
+    [Dependency] private ITileDefinitionManager _tileDefManager = default!;
 
     private static readonly PipeDirection[] CardinalDirections =
     [
@@ -146,7 +146,8 @@ public sealed class PlumbingConnectorAppearanceSystem : EntitySystem
             connectedDirections |= GetConnectedDirections(node, nodeDir, tile, xform.GridUid.Value, grid);
         }
 
-        var coveredByFloor = HasFloorCover(xform.GridUid.Value, grid, tile);
+        // KS14: Check for CoverableBySubfloor
+        var coveredByFloor = connectorComp.CoverableBySubfloor && HasFloorCover(xform.GridUid.Value, grid, tile);
 
         _appearance.SetData(uid, PlumbingVisuals.NodeDirections, (int)nodeDirections, appearance);
         _appearance.SetData(uid, PlumbingVisuals.ConnectedDirections, (int)connectedDirections, appearance);

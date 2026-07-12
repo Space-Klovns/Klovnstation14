@@ -9,7 +9,7 @@ namespace Content.Server.NPC.HTN.Preconditions;
 /// </summary>
 public sealed partial class CanWieldPrecondition : HTNPrecondition
 {
-    [Dependency] private readonly IEntityManager _entManager = default!;
+    [Dependency] private IEntityManager _entManager = default!;
 
     public override bool IsMet(NPCBlackboard blackboard)
     {
@@ -28,6 +28,6 @@ public sealed partial class CanWieldPrecondition : HTNPrecondition
 
         var wieldableSystem = _entManager.System<SharedWieldableSystem>();
 
-        return wieldableSystem.CanWield(heldEntity.Value, wieldable, owner, quiet: true);
+        return wieldableSystem.CanWield((heldEntity.Value, wieldable), owner, quiet: true);
     }
 }

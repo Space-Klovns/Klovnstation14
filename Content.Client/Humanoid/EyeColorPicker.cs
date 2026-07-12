@@ -3,7 +3,7 @@ using Robust.Client.UserInterface.Controls;
 
 namespace Content.Client.Humanoid;
 
-public sealed class EyeColorPicker : Control
+public sealed partial class EyeColorPicker : Control
 {
     public event Action<Color>? OnEyeColorPicked;
 

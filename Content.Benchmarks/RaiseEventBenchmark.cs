@@ -77,7 +77,7 @@ public class RaiseEventBenchmark
         return _sys.CSharpEvent();
     }
 
-    public sealed class BenchSystem : EntitySystem
+    public sealed partial class BenchSystem : EntitySystem
     {
         public Entity<TransformComponent> Ent;
         public Entity<IComponent> Ent2;

@@ -10,13 +10,15 @@ using Robust.Shared.Timing;
 
 namespace Content.Client._KS14.AdminMusic;
 
+// Everything here should be relative to ServerTime
+
 public sealed partial class KsAdminMusicManager : IPostInjectInit
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly IClientNetManager _netManager = default!;
-    [Dependency] private readonly IAudioManager _audioManager = default!;
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
-    [Dependency] private readonly IBaseClient _client = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IClientNetManager _netManager = default!;
+    [Dependency] private IAudioManager _audioManager = default!;
+    [Dependency] private IResourceCache _resourceCache = default!;
+    [Dependency] private IBaseClient _client = default!;
 
     private ISawmill _sawmill = default!;
 
@@ -111,7 +113,7 @@ public sealed partial class KsAdminMusicManager : IPostInjectInit
 
     private void OnRunLevelChanged(object? sender, RunLevelChangedEventArgs args)
     {
-        if (args.NewLevel != ClientRunLevel.Initialize)
+        if (args.NewLevel != ClientRunLevel.Connected) // well obv ServerTime isn't correct when not fully connected
             return;
 
         foreach (var entry in _activeEntryData.Keys)

@@ -6,10 +6,10 @@ using Robust.Shared.Utility;
 
 namespace Content.Server._KS14.ZLevel.Auto;
 
-public sealed class KsAutoZLevelSystem : EntitySystem
+public sealed partial class KsAutoZLevelSystem : EntitySystem
 {
-    [Dependency] private readonly KsZLevelSystem _zLevelSystem = default!;
-    [Dependency] private readonly MapLoaderSystem _mapLoaderSystem = default!;
+    [Dependency] private KsZLevelSystem _zLevelSystem = default!;
+    [Dependency] private MapLoaderSystem _mapLoaderSystem = default!;
 
     private static readonly DeserializationOptions DeserializationOptions = DeserializationOptions.Default with
     {

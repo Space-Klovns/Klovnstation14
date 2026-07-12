@@ -8,14 +8,14 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.Klovnmed.OrganAttachmentOperation;
 
-public sealed class OrganAttachmentOperationSystem : EntitySystem
+public sealed partial class OrganAttachmentOperationSystem : EntitySystem
 {
-    [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
-    [Dependency] private readonly SharedDoAfterSystem _doAfterSystem = default!;
-    [Dependency] private readonly BodyHierarchySystem _bodyHierarchySystem = default!;
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
+    [Dependency] private SharedContainerSystem _containerSystem = default!;
+    [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
+    [Dependency] private BodyHierarchySystem _bodyHierarchySystem = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
 
-    [Dependency] private readonly EntityQuery<OrganComponent> _organQuery = default!;
+    [Dependency] private EntityQuery<OrganComponent> _organQuery = default!;
 
     /// <summary>
     ///     How much of the damage accumulated is lost every second.

@@ -8,10 +8,10 @@ namespace Content.Shared._KS14.InventoryRequiresOrgan;
 
 // TODO LCDC: optimise somehow
 
-public sealed class InventoryRequiresOrganSystem : EntitySystem
+public sealed partial class InventoryRequiresOrganSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly InventorySystem _inventorySystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private InventorySystem _inventorySystem = default!;
 
     public override void Initialize()
     {

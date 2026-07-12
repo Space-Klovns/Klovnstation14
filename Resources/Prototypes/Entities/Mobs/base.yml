@@ -71,6 +71,7 @@
   abstract: true
   components:
   - type: Damageable
+  - type: Injurable
     damageContainer: Biological
   - type: Destructible
     thresholds:
@@ -112,7 +113,7 @@
       - !type:VomitBehavior
   - type: RadiationReceiver
   - type: Stamina
-  #- type: StunVisuals KS14 - remove stun visuals
+  # KS14: Removed StunVisuals
   - type: MobState
   - type: MobThresholds
     thresholds:
@@ -263,7 +264,7 @@
   id: MobBloodstream
   abstract: true
   components:
-  - type: SolutionContainerManager
+  - type: SolutionManager
   - type: InjectableSolution
     solution: bloodstream
   - type: Bloodstream

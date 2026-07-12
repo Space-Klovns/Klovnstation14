@@ -4,7 +4,7 @@ using Robust.Shared.Utility;
 namespace Content.Shared.Thief;
 
 [Serializable, NetSerializable]
-public sealed class ThiefBackpackBoundUserInterfaceState : BoundUserInterfaceState
+public sealed partial class ThiefBackpackBoundUserInterfaceState : BoundUserInterfaceState
 {
     public readonly Dictionary<int, ThiefBackpackSetInfo> Sets;
     public int MaxSelectedSets;

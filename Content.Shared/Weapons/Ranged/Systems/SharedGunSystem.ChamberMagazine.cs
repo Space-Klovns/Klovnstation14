@@ -103,7 +103,7 @@ public abstract partial class SharedGunSystem
         if (TryTakeChamberEntity(uid, out var chamberEnt))
         {
             // <Trauma> - replace shit fake prediction
-            EjectCartridge(Random(uid), chamberEnt.Value, user: user);
+            EjectCartridge(GetRandom(uid), chamberEnt.Value, user: user);
             // </Trauma>
         }
 
@@ -167,7 +167,7 @@ public abstract partial class SharedGunSystem
             if (TryTakeChamberEntity(uid, out var chambered))
             {
                 // <Trauma> - replace shitty fake prediction
-                EjectCartridge(Random(uid), chambered.Value, user: user);
+                EjectCartridge(GetRandom(uid), chambered.Value, user: user);
                 // </Trauma>
 
                 UpdateAmmoCount(uid);

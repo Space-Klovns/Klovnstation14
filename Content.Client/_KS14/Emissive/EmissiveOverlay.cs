@@ -16,18 +16,18 @@ using Robust.Shared.Timing;
 
 namespace Content.Client._KS14.Emissive;
 
-public sealed class EmissiveOverlay : Overlay
+public sealed partial class EmissiveOverlay : Overlay
 {
     private static readonly ProtoId<ShaderPrototype> Shader = "Emissive";
 
     public override OverlaySpace Space => OverlaySpace.BeforeLighting;
 
-    [Dependency] private readonly EntityManager _entityManager = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly IOverlayManager _overlay = default!;
+    [Dependency] private EntityManager _entityManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IReflectionManager _reflectionManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private IOverlayManager _overlay = default!;
 
     private readonly SharedTransformSystem _transformSystem = default!;
     private readonly EntityLookupSystem _lookupSystem = default!;

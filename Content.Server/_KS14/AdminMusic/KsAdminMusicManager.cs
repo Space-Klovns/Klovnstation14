@@ -5,19 +5,20 @@ using Robust.Server.Audio;
 using Robust.Server.Player;
 using Robust.Shared.Audio;
 using Robust.Shared.Enums;
-using Robust.Shared.GameStates;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.AdminMusic;
 
-public sealed class KsAdminMusicManager : IPostInjectInit
+// Everything here should be relative to ServerTime
+
+public sealed partial class KsAdminMusicManager : IPostInjectInit
 {
-    [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly IServerNetManager _netManager = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
+    [Dependency] private IEntitySystemManager _entitySystemManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IServerNetManager _netManager = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
     private AudioSystem _audioSystem = default!;
 
     private ISawmill _sawmill = default!;
@@ -35,11 +36,11 @@ public sealed class KsAdminMusicManager : IPostInjectInit
     public void Update()
     {
         var oldActiveCount = _activeEntries.Count;
-        var curTime = _gameTiming.CurTime;
+        var realTime = _gameTiming.RealTime;
 
         foreach (var (entry, endTime) in _entryEndTimes)
         {
-            if (curTime < endTime)
+            if (realTime < endTime)
                 continue;
 
             RemoveEntryNoUpdate(entry);

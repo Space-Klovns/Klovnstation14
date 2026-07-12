@@ -10,7 +10,7 @@ namespace Content.Client._KS14.Atmos.UI
     /// Initializes a <see cref="MolarMixerWindow"/> and updates it when new server messages are received.
     /// </summary>
     [UsedImplicitly]
-    public sealed class MolarMixerBoundUserInterface : BoundUserInterface
+    public sealed partial class MolarMixerBoundUserInterface : BoundUserInterface
     {
         [ViewVariables]
         private const float MaxMolarFlow = KsAtmospherics.MaxMolarFlow;

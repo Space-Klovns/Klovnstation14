@@ -11,11 +11,11 @@ using Robust.Shared.Random;
 
 namespace Content.Client.Stunnable;
 
-public sealed class StunSystem : SharedStunSystem
+public sealed partial class StunSystem : SharedStunSystem
 {
-    [Dependency] private readonly SharedCombatModeSystem _combat = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly SpriteSystem _spriteSystem = default!;
+    [Dependency] private SharedCombatModeSystem _combat = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private SpriteSystem _spriteSystem = default!;
 
     private readonly int[] _sign = [-1, 1];
 
@@ -33,7 +33,7 @@ public sealed class StunSystem : SharedStunSystem
 
     private bool OnUseSecondary(in PointerInputCmdHandler.PointerInputCmdArgs args)
     {
-        if (args.Session?.AttachedEntity is not {Valid: true} uid)
+        if (args.Session?.AttachedEntity is not { Valid: true } uid)
             return false;
 
         if (args.EntityUid != uid || !HasComp<KnockedDownComponent>(uid) || !_combat.IsInCombatMode(uid))
@@ -112,7 +112,7 @@ public sealed class StunSystem : SharedStunSystem
 
         var breaths = new Vector2(0, breathing * 2) / jitters;
 
-        var length =  1 / frequency;
+        var length = 1 / frequency;
         var frames = length / jitters;
 
         var keyFrames = new List<AnimationTrackProperty.KeyFrame> { new(sprite.Offset, 0f) };
@@ -148,13 +148,13 @@ public sealed class StunSystem : SharedStunSystem
             else if (i < jitters * 3 / 4)
             {
                 keyFrames.Add(
-                    new AnimationTrackProperty.KeyFrame(startOffset + breaths * ( jitters - i * 1.5f ) + offset, frames));
+                    new AnimationTrackProperty.KeyFrame(startOffset + breaths * (jitters - i * 1.5f) + offset, frames));
             }
             // Return to our starting position for breathing, jitter reaches its final position
             else
             {
                 keyFrames.Add(
-                    new AnimationTrackProperty.KeyFrame(startOffset + breaths * ( i - jitters ) + offset, frames));
+                    new AnimationTrackProperty.KeyFrame(startOffset + breaths * (i - jitters) + offset, frames));
             }
         }
 

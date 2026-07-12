@@ -9,7 +9,7 @@ namespace Content.Client.Kitchen.UI
     [GenerateTypedNameReferences]
     public sealed partial class MicrowaveMenu : FancyWindow
     {
-        [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private IGameTiming _timing = default!;
 
         public event Action<BaseButton.ButtonEventArgs, int>? OnCookTimeSelected;
 
@@ -36,7 +36,7 @@ namespace Content.Client.Kitchen.UI
                     Text = (i * 5).ToString(),
                     TextAlign = Label.AlignMode.Center,
                     ToggleMode = true,
-                    CookTime = (uint) (i * 5),
+                    CookTime = (uint)(i * 5),
                     Group = CookTimeButtonGroup,
                     HorizontalExpand = true,
                 };

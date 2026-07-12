@@ -3,9 +3,9 @@ using Robust.Shared.Audio.Systems;
 
 namespace Content.Shared._KS14.ScanDiscoverable.Feedback;
 
-public sealed class KsDiscoveringScannerFeedbackSystem : EntitySystem
+public sealed partial class KsDiscoveringScannerFeedbackSystem : EntitySystem
 {
-    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
 
     public override void Initialize()
     {

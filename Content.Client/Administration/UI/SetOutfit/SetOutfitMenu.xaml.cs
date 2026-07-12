@@ -15,8 +15,8 @@ namespace Content.Client.Administration.UI.SetOutfit
     [GenerateTypedNameReferences]
     public sealed partial class SetOutfitMenu : DefaultWindow
     {
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-        [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
+        [Dependency] private IPrototypeManager _prototypeManager = default!;
+        [Dependency] private IClientConsoleHost _consoleHost = default!;
 
         public NetEntity? TargetEntityId { get; set; }
         private StartingGearPrototype? _selectedOutfit;
@@ -48,7 +48,7 @@ namespace Content.Client.Administration.UI.SetOutfit
 
         private void OutfitListOnOnItemSelected(ItemList.ItemListSelectedEventArgs obj)
         {
-            _selectedOutfit = (StartingGearPrototype) obj.ItemList[obj.ItemIndex].Metadata!;
+            _selectedOutfit = (StartingGearPrototype)obj.ItemList[obj.ItemIndex].Metadata!;
             ConfirmButton.Disabled = false;
         }
 

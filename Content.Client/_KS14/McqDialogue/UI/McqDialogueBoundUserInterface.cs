@@ -3,7 +3,7 @@ using Robust.Client.UserInterface;
 
 namespace Content.Client._KS14.McqDialogue.UI;
 
-public sealed class McqDialogueBoundUserInterface(EntityUid owner, Enum uiKey) : BoundUserInterface(owner, uiKey)
+public sealed partial class McqDialogueBoundUserInterface(EntityUid owner, Enum uiKey) : BoundUserInterface(owner, uiKey)
 {
     [ViewVariables] private McqDialogueWindow? _window;
 

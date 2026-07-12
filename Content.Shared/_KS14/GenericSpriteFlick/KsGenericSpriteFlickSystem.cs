@@ -15,9 +15,9 @@ namespace Content.Shared._KS14.GenericSpriteFlick;
 ///
 ///     TODO LCDC: TODO KS14: Remove all spriteflick finish-state and all uses of it
 /// </summary>
-public sealed class KsGenericSpriteFlickSystem : EntitySystem
+public sealed partial class KsGenericSpriteFlickSystem : EntitySystem
 {
-    [Dependency] private readonly INetManager _netManager = default!;
+    [Dependency] private INetManager _netManager = default!;
 
     public override void Initialize()
     {

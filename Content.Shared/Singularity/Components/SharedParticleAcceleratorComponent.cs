@@ -47,7 +47,7 @@ namespace Content.Shared.Singularity.Components
     }
 
     [NetSerializable, Serializable]
-    public sealed class ParticleAcceleratorUIState : BoundUserInterfaceState
+    public sealed partial class ParticleAcceleratorUIState : BoundUserInterfaceState
     {
         public bool Assembled;
         public bool Enabled;

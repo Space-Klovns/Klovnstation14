@@ -15,13 +15,13 @@ namespace Content.Shared.ItemRecall;
 /// </summary>
 public abstract partial class SharedItemRecallSystem : EntitySystem
 {
-    [Dependency] private readonly ISharedPlayerManager _player = default!;
-    [Dependency] private readonly SharedPvsOverrideSystem _pvs = default!;
-    [Dependency] private readonly SharedActionsSystem _actions = default!;
-    [Dependency] private readonly SharedHandsSystem _hands = default!;
-    [Dependency] private readonly MetaDataSystem _metaData = default!;
-    [Dependency] private readonly SharedPopupSystem _popups = default!;
-    [Dependency] private readonly SharedProjectileSystem _proj = default!;
+    [Dependency] private ISharedPlayerManager _player = default!;
+    [Dependency] private SharedPvsOverrideSystem _pvs = default!;
+    [Dependency] private SharedActionsSystem _actions = default!;
+    [Dependency] private SharedHandsSystem _hands = default!;
+    [Dependency] private MetaDataSystem _metaData = default!;
+    [Dependency] private SharedPopupSystem _popups = default!;
+    [Dependency] private SharedProjectileSystem _proj = default!;
 
     public override void Initialize()
     {
@@ -74,10 +74,10 @@ public abstract partial class SharedItemRecallSystem : EntitySystem
         if (!Resolve(ent.Owner, ref ent.Comp, false))
             return;
 
-        if (_actions.GetAction(ent.Comp.MarkedByAction) is not {} action)
+        if (_actions.GetAction(ent.Comp.MarkedByAction) is not { } action)
             return;
 
-        if (action.Comp.AttachedEntity is not {} user)
+        if (action.Comp.AttachedEntity is not { } user)
             return;
 
         if (TryComp<EmbeddableProjectileComponent>(ent, out var projectile))
@@ -98,10 +98,10 @@ public abstract partial class SharedItemRecallSystem : EntitySystem
 
     private void TryMarkItem(Entity<ItemRecallComponent> ent, EntityUid item)
     {
-        if (_actions.GetAction(ent.Owner) is not {} action)
+        if (_actions.GetAction(ent.Owner) is not { } action)
             return;
 
-        if (action.Comp.AttachedEntity is not {} user)
+        if (action.Comp.AttachedEntity is not { } user)
             return;
 
         AddToPvsOverride(item, user);
@@ -121,7 +121,7 @@ public abstract partial class SharedItemRecallSystem : EntitySystem
         if (!TryComp<RecallMarkerComponent>(item, out var marker))
             return;
 
-        if (_actions.GetAction(marker.MarkedByAction) is not {} action)
+        if (_actions.GetAction(marker.MarkedByAction) is not { } action)
             return;
 
         if (TryComp<ItemRecallComponent>(action, out var itemRecall))
@@ -129,7 +129,7 @@ public abstract partial class SharedItemRecallSystem : EntitySystem
             // For some reason client thinks the station grid owns the action on client and this doesn't work. It doesn't work in PopupEntity(mispredicts) and PopupPredicted either(doesnt show).
             // I don't have the heart to move this code to server because of this small thing.
             // This line will only do something once that is fixed.
-            if (action.Comp.AttachedEntity is {} user)
+            if (action.Comp.AttachedEntity is { } user)
             {
                 _popups.PopupClient(Loc.GetString("item-recall-item-unmark", ("item", item)), user, user, PopupType.MediumCaution);
                 RemoveFromPvsOverride(item, user);
@@ -145,21 +145,21 @@ public abstract partial class SharedItemRecallSystem : EntitySystem
 
     private void UpdateActionAppearance(Entity<ActionComponent, ItemRecallComponent> action)
     {
-        if (action.Comp2.MarkedEntity is {} marked)
+        if (action.Comp2.MarkedEntity is { } marked)
         {
-            if (action.Comp2.WhileMarkedName is {} name)
+            if (action.Comp2.WhileMarkedName is { } name)
                 _metaData.SetEntityName(action, Loc.GetString(name, ("item", marked)));
 
-            if (action.Comp2.WhileMarkedDescription is {} desc)
+            if (action.Comp2.WhileMarkedDescription is { } desc)
                 _metaData.SetEntityDescription(action, Loc.GetString(desc, ("item", marked)));
 
             _actions.SetEntityIcon((action, action), marked);
         }
         else
         {
-            if (action.Comp2.InitialName is {} name)
+            if (action.Comp2.InitialName is { } name)
                 _metaData.SetEntityName(action, name);
-            if (action.Comp2.InitialDescription is {} desc)
+            if (action.Comp2.InitialDescription is { } desc)
                 _metaData.SetEntityDescription(action, desc);
             _actions.SetEntityIcon((action, action), null);
         }

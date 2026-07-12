@@ -12,7 +12,7 @@ namespace Content.Client.Weapons.Melee;
 /// <summary>
 /// Debug overlay showing the arc and range of a melee weapon.
 /// </summary>
-public sealed class MeleeArcOverlay : Overlay
+public sealed partial class MeleeArcOverlay : Overlay
 {
     private readonly IEntityManager _entManager;
     private readonly IEyeManager _eyeManager;

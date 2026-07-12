@@ -18,17 +18,17 @@ using Robust.Shared.Utility;
 
 namespace Content.Server.Salvage.JobBoard;
 
-public sealed class SalvageJobBoardSystem : EntitySystem
+public sealed partial class SalvageJobBoardSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly AudioSystem _audio = default!;
-    [Dependency] private readonly CargoSystem _cargo = default!;
-    [Dependency] private readonly LabelSystem _label = default!;
-    [Dependency] private readonly PaperSystem _paper = default!;
-    [Dependency] private readonly RadioSystem _radio = default!;
-    [Dependency] private readonly StationSystem _station = default!;
-    [Dependency] private readonly UserInterfaceSystem _ui = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private AudioSystem _audio = default!;
+    [Dependency] private CargoSystem _cargo = default!;
+    [Dependency] private LabelSystem _label = default!;
+    [Dependency] private PaperSystem _paper = default!;
+    [Dependency] private RadioSystem _radio = default!;
+    [Dependency] private StationSystem _station = default!;
+    [Dependency] private UserInterfaceSystem _ui = default!;
 
     /// <summary>
     /// Radio channel that unlock messages are broadcast on.
@@ -110,7 +110,7 @@ public sealed class SalvageJobBoardSystem : EntitySystem
             // don't worry abooouuuuut it (it'll be O K !)
             var high = i != ent.Comp.RankThresholds.Count - 1
                 ? ent.Comp.RankThresholds.Keys.ElementAt(i + 1)
-                :  _prototypeManager.EnumeratePrototypes<CargoBountyPrototype>()
+                : _prototypeManager.EnumeratePrototypes<CargoBountyPrototype>()
                 .Count(p => ent.Comp.RankThresholds.Values
                     .Select(r => r.BountyGroup)
                     .Contains(p.Group));
@@ -174,7 +174,7 @@ public sealed class SalvageJobBoardSystem : EntitySystem
             _cargo.UpdateBankAccount(
                 (ent.Owner, stationBankAccount),
                 jobProto.Reward,
-                _cargo.CreateAccountDistribution((ent,  stationBankAccount)));
+                _cargo.CreateAccountDistribution((ent, stationBankAccount)));
         }
 
         // We ranked up!

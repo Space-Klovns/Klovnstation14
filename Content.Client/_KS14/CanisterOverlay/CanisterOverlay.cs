@@ -15,15 +15,15 @@ using Robust.Shared.Utility;
 namespace Content.Client._KS14.CanisterOverlay;
 
 // Obviously does not support any kind of prototype hot-reloading
-public sealed class CanisterOverlay : Overlay
+public sealed partial class CanisterOverlay : Overlay
 {
     private static readonly ProtoId<ShaderPrototype> StencilMaskShader = "StencilMask";
     private static readonly ProtoId<ShaderPrototype> StencilEqualDrawShader = "StencilEqualDraw";
     private static readonly ProtoId<ShaderPrototype> StencilEqualDrawUnshadedShader = "StencilEqualDrawUnshaded";
 
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IClyde _clyde = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IClyde _clyde = default!;
 
     private readonly AtmosphereSystem _atmosphereSystem = default!;
     private readonly TransformSystem _transformSystem = default!;

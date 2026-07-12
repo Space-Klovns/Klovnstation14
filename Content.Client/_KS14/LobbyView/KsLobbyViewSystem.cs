@@ -7,11 +7,11 @@ using Robust.Client.State;
 
 namespace Content.Client._KS14.LobbyView;
 
-public sealed class KsLobbyViewSystem : KsSharedLobbyViewSystem
+public sealed partial class KsLobbyViewSystem : KsSharedLobbyViewSystem
 {
-    [Dependency] private readonly IStateManager _stateManager = default!;
-    [Dependency] private readonly IClyde _clyde = default!;
-    [Dependency] private readonly EyeLerpingSystem _eyeLerpingSystem = default!;
+    [Dependency] private IStateManager _stateManager = default!;
+    [Dependency] private IClyde _clyde = default!;
+    [Dependency] private EyeLerpingSystem _eyeLerpingSystem = default!;
 
     private LobbyState? _lobbyState = null;
     private bool _inLobby = false;

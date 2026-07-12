@@ -27,11 +27,11 @@ namespace Content.Client._KS14.OreVent.Drone;
     -LCDC
 */
 
-public sealed class OreVentDroneSystem : SharedOreVentDroneSystem
+public sealed partial class OreVentDroneSystem : SharedOreVentDroneSystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly SpriteSystem _spriteSystem = default!;
-    [Dependency] private readonly AnimationPlayerSystem _animationPlayerSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private SpriteSystem _spriteSystem = default!;
+    [Dependency] private AnimationPlayerSystem _animationPlayerSystem = default!;
 
 
     // I know, this is horrible. You can't stop me

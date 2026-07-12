@@ -12,11 +12,11 @@ namespace Content.Shared._KS14.OreWell;
 /// <summary>
 ///     1984
 /// </summary>
-public sealed class OreWellSystem : EntitySystem
+public sealed partial class OreWellSystem : EntitySystem
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IRobustRandom _robustRandom = default!;
-    [Dependency] private readonly INetManager _netManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IRobustRandom _robustRandom = default!;
+    [Dependency] private INetManager _netManager = default!;
 
     public override void Initialize()
     {

@@ -3,9 +3,9 @@ using Content.Shared.StatusEffectNew;
 
 namespace Content.Shared._KS14.Gravity;
 
-public sealed class WeightlessnessStatusEffectSystem : EntitySystem
+public sealed partial class WeightlessnessStatusEffectSystem : EntitySystem
 {
-    [Dependency] private readonly SharedGravitySystem _gravitySystem = default!;
+    [Dependency] private SharedGravitySystem _gravitySystem = default!;
 
     public override void Initialize()
     {

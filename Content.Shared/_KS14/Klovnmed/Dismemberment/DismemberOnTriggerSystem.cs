@@ -2,9 +2,9 @@ using Content.Shared.Trigger;
 
 namespace Content.Shared._KS14.Klovnmed.Dismemberment;
 
-public sealed class DismemberOnTriggerSystem : EntitySystem
+public sealed partial class DismemberOnTriggerSystem : EntitySystem
 {
-    [Dependency] private readonly DismembermentSystem _dismembermentSystem = default!;
+    [Dependency] private DismembermentSystem _dismembermentSystem = default!;
 
     public override void Initialize()
     {

@@ -18,8 +18,8 @@ namespace Content.Client.Lathe.UI;
 [GenerateTypedNameReferences]
 public sealed partial class LatheMenu : FancyWindow
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     private readonly SpriteSystem _spriteSystem;
     private readonly LatheSystem _lathe;
@@ -191,11 +191,11 @@ public sealed partial class LatheMenu : FancyWindow
             var sheetVolume = _materialStorage.GetSheetVolume(proto);
 
             var unit = Loc.GetString(proto.Unit);
-            var sheets = adjustedAmount / (float) sheetVolume;
+            var sheets = adjustedAmount / (float)sheetVolume;
 
             var availableAmount = _materialStorage.GetMaterialAmount(Entity, id);
             var missingAmount = Math.Max(0, adjustedAmount - availableAmount);
-            var missingSheets = missingAmount / (float) sheetVolume;
+            var missingSheets = missingAmount / (float)sheetVolume;
 
             var name = Loc.GetString(proto.Name);
 

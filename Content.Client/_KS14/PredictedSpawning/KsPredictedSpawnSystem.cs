@@ -5,7 +5,7 @@ using Robust.Client.Physics;
 namespace Content.Client._KS14.PredictedSpawning;
 
 /// <inheritdoc/>
-public sealed class KsPredictedSpawnSystem : KsSharedPredictedSpawnSystem
+public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSystem
 {
     public override void Initialize()
     {

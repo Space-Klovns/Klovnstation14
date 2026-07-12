@@ -1,6 +1,6 @@
 namespace Content.Shared.Procedural;
 
-public abstract class SharedDungeonSystem : EntitySystem
+public abstract partial class SharedDungeonSystem : EntitySystem
 {
 
 }

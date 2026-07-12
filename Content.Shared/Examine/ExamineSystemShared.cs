@@ -15,13 +15,13 @@ namespace Content.Shared.Examine
 {
     public abstract partial class ExamineSystemShared : EntitySystem
     {
-        [Dependency] private readonly OccluderSystem _occluder = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
-        [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
-        [Dependency] private readonly SharedInteractionSystem _interactionSystem = default!;
-        [Dependency] protected readonly MobStateSystem MobStateSystem = default!;
+        [Dependency] private OccluderSystem _occluder = default!;
+        [Dependency] private SharedTransformSystem _transform = default!;
+        [Dependency] private SharedContainerSystem _containerSystem = default!;
+        [Dependency] private SharedInteractionSystem _interactionSystem = default!;
+        [Dependency] protected MobStateSystem MobStateSystem = default!;
 
-        [Dependency] private readonly EntityQuery<GhostComponent> _ghostQuery = default!;
+        [Dependency] private EntityQuery<GhostComponent> _ghostQuery = default!;
 
         public const float MaxRaycastRange = 100;
 
@@ -268,7 +268,7 @@ namespace Content.Shared.Examine
             //Add an entity description if one is declared
             if (!string.IsNullOrEmpty(metadata.EntityDescription))
             {
-                message.AddText(metadata.EntityDescription);
+                message.AddMarkupOrThrow(metadata.EntityDescription);
                 hasDescription = true;
             }
 
@@ -393,7 +393,7 @@ namespace Content.Shared.Examine
         ///     sort messages the same as well as grouped together properly, even if subscriptions are different.
         ///     You should wrap it in a using() block so popping automatically occurs.
         /// </summary>
-        public ExamineGroupDisposable PushGroup(string groupName, int priority=0)
+        public ExamineGroupDisposable PushGroup(string groupName, int priority = 0)
         {
             // Ensure that other examine events correctly ended their groups.
             DebugTools.Assert(_currentGroupPart == null);
@@ -423,7 +423,7 @@ namespace Content.Shared.Examine
         /// </summary>
         /// <seealso cref="PushMarkup"/>
         /// <seealso cref="PushText"/>
-        public void PushMessage(FormattedMessage message, int priority=0)
+        public void PushMessage(FormattedMessage message, int priority = 0)
         {
             if (message.Nodes.Count == 0)
                 return;
@@ -446,7 +446,7 @@ namespace Content.Shared.Examine
         /// </summary>
         /// <seealso cref="PushText"/>
         /// <seealso cref="PushMessage"/>
-        public void PushMarkup(string markup, int priority=0)
+        public void PushMarkup(string markup, int priority = 0)
         {
             PushMessage(FormattedMessage.FromMarkupOrThrow(markup), priority);
         }
@@ -458,7 +458,7 @@ namespace Content.Shared.Examine
         /// </summary>
         /// <seealso cref="PushMarkup"/>
         /// <seealso cref="PushMessage"/>
-        public void PushText(string text, int priority=0)
+        public void PushText(string text, int priority = 0)
         {
             var msg = new FormattedMessage();
             msg.AddText(text);
@@ -494,7 +494,7 @@ namespace Content.Shared.Examine
         /// </summary>
         /// <seealso cref="AddText"/>
         /// <seealso cref="AddMessage"/>
-        public void AddMarkup(string markup, int priority=0)
+        public void AddMarkup(string markup, int priority = 0)
         {
             AddMessage(FormattedMessage.FromMarkupOrThrow(markup), priority);
         }
@@ -506,7 +506,7 @@ namespace Content.Shared.Examine
         /// </summary>
         /// <seealso cref="AddMarkup"/>
         /// <seealso cref="AddMessage"/>
-        public void AddText(string text, int priority=0)
+        public void AddText(string text, int priority = 0)
         {
             var msg = new FormattedMessage();
             msg.AddText(text);

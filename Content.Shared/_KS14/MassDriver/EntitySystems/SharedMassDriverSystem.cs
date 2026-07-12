@@ -7,13 +7,13 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.MassDriver.EntitySystems;
 
-public abstract class SharedMassDriverSystem : EntitySystem
+public abstract partial class SharedMassDriverSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly ThrowingSystem _throwing = default!;
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly SharedAmbientSoundSystem _audioSystem = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private ThrowingSystem _throwing = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private SharedAmbientSoundSystem _audioSystem = default!;
 
     public override void Initialize()
     {

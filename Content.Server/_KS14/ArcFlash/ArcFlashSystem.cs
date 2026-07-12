@@ -9,8 +9,8 @@ namespace Content.Server._KS14.ArcFlash;
 
 public sealed class ArcFlashSystem : EntitySystem
 {
-    [Dependency] private readonly ElectrocutionSystem _electrocutionSystem = default!;
-    [Dependency] private readonly LightningSystem _lightning = default!;
+    [Dependency] private ElectrocutionSystem _electrocutionSystem = default!;
+    [Dependency] private LightningSystem _lightning = default!;
     public override void Initialize()
     {
         SubscribeLocalEvent<ArcFlashAnchorableComponent, AnchorStateChangedEvent>(OnAnchorChanged);

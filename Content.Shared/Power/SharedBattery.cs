@@ -16,7 +16,7 @@ public enum BatteryUiKey : byte
 /// </summary>
 /// <seealso cref="BatteryUiKey"/>
 [Serializable, NetSerializable]
-public sealed class BatteryBuiState : BoundUserInterfaceState
+public sealed partial class BatteryBuiState : BoundUserInterfaceState
 {
     // These are mostly just regular Pow3r parameters.
 
@@ -79,4 +79,3 @@ public sealed class BatterySetDischargeRateMessage(float rate) : BoundUserInterf
 {
     public float Rate = rate;
 }
-

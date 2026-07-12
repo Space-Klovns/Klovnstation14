@@ -3,7 +3,7 @@ using Robust.Client.UserInterface;
 
 namespace Content.Client._KS14.Power.PTL;
 
-public sealed class PtlBoundUserInterface(EntityUid owner, Enum uiKey) : BoundUserInterface(owner, uiKey)
+public sealed partial class PtlBoundUserInterface(EntityUid owner, Enum uiKey) : BoundUserInterface(owner, uiKey)
 {
     private PtlWindow? _window;
 

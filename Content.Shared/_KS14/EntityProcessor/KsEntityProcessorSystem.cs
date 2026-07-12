@@ -7,10 +7,10 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.EntityProcessor;
 
-public sealed class KsEntityProcessorSystem : EntitySystem
+public sealed partial class KsEntityProcessorSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private SharedContainerSystem _containerSystem = default!;
 
     private const string ContainerId = "object-processor-container";
 
