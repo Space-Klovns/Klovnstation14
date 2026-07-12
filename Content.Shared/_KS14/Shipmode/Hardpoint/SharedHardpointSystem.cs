@@ -14,7 +14,7 @@ namespace Content.Shared._KS14.ShipMode.Hardpoint;
 /// <summary>
 /// This is de facto the hullrot system. Theres very little reason for it not to be said system, because the base functionality has to remain the same.
 /// </summary>
-public partial class SharedHardpointSystem : EntitySystem
+public sealed class SharedHardpointSystem : EntitySystem
 {
     [Dependency] public SharedTransformSystem _transformSystem = default!;
     [Dependency] public EntityLookupSystem _lookupSystem = default!;
