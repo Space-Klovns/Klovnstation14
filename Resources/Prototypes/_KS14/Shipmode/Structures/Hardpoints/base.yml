@@ -48,6 +48,7 @@
   - type: ApcPowerReceiver
     powerLoad: 500
   - type: Sprite
-    sprite: _Crescent/Structures/hardpoints.rsi
+    sprite: _Crescent/Structures/hardpoints.rsi # placeholder
     state: Small
   - type: Hardpoint
+    size: Small

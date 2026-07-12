@@ -219,7 +219,7 @@ namespace Content.Shared.Damage
                         percentileReduction *= multiplier;  //if the enemy reduces 30% of incoming damage, and we punch through half that, that means the result is 15%
                     }
                     newValuePercentile *= (1 - percentileReduction); //if we now reduce 15% of incoming damage, that means the damage needs to be multiplied by .85
-                    // coefficients can also heal you, e.g. cauterizing bleeding
+                    // coefficients can also heal you
                 }
 
                 if (newValueFlat != 0 || newValuePercentile != 0)

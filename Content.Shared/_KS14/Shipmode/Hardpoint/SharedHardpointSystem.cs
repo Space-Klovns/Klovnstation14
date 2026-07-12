@@ -177,6 +177,8 @@ public class SharedHardpointSystem : EntitySystem
                 continue;
             if (hardComp.anchoring is not null)
                 continue;
+            if (hardComp.CompatibleSizes < component.CompatibleSizes)
+                continue;
             AnchorEntityToHardpoint(uid, entity, component, hardComp, gridUid.Value);
             return true;
         }

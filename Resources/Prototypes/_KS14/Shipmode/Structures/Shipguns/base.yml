@@ -84,3 +84,4 @@
     proto: RedShuttleLaser
     fireCost: 150
   - type: ShipGun
+    size: Small
