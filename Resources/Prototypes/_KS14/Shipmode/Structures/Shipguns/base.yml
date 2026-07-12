@@ -1,0 +1,85 @@
+- type: entity
+  id: KsShipGunBase
+  parent: [ BaseStructure, BaseRelaxedAnchoring ]
+  name: shittle gun
+  abstract: true
+  components:
+  - type: Appearance
+  - type: InteractionOutline
+  - type: Anchorable
+  - type: Rotatable
+  - type: ContainerContainer
+  - type: Gun
+    selectedMode: SemiAuto
+    availableModes:
+      - SemiAuto
+  - type: Damageable
+    damageContainer: StructuralInorganic
+    damageModifierSet: Electronic
+  - type: DeviceNetwork
+    deviceNetId: Wireless
+    receiveFrequencyId: BasicDevice
+  - type: WirelessNetworkConnection
+    range: 200
+  - type: DeviceLinkSink
+    ports:
+    - Trigger
+    - Toggle
+    - On
+    - Off
+  - type: AutoShootGun
+  - type: GunSignalControl
+  - type: StaticPrice
+    price: 1500
+
+- type: entity
+  id: KsShipGunDebug
+  parent: [ ShuttleGunBase, ConstructibleMachine]
+  name: debug ship gun
+  description: This is a debug ship gun.
+  categories: [ DoNotMap ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Shipmode/Structures/Shipguns/debug.rsi
+    state: base
+  - type: ContainerContainer
+    containers:
+      machine_board: !type:Container
+      machine_parts: !type:Container
+      cell_slot: !type:ContainerSlot
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 300
+      behaviors:
+        - !type:ChangeConstructionNodeBehavior
+          node: machineFrame
+        - !type:DoActsBehavior
+          acts: ["Destruction"]
+  - type: Gun
+    fireRate: 1
+    soundGunshot:
+      path: /Audio/Weapons/Guns/Gunshots/ship_perforator.ogg
+      params:
+        variation: 0.05
+  - type: MagazineVisuals
+    magState: mag
+    steps: 10
+    zeroVisible: true
+  - type: Machine
+    board: ShuttleGunPerforatorCircuitboard
+  - type: PowerCellSlot
+    cellSlotId: cell_slot
+  - type: ItemSlots
+    slots:
+      cell_slot:
+        name: Magazine
+        insertSound: /Audio/Weapons/Guns/MagIn/batrifle_magin.ogg
+        ejectSound: /Audio/Weapons/Guns/MagOut/batrifle_magout.ogg
+        whitelist:
+          tags:
+            - PowerCage
+  - type: BatteryAmmoProvider
+    proto: RedShuttleLaser
+    fireCost: 150
