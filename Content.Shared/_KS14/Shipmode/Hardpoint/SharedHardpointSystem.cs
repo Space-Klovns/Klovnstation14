@@ -71,7 +71,7 @@ public class SharedHardpointSystem : EntitySystem
             {
                 //_transformSystem.Unanchor(uid); //if it's not / we dont have a hardpoint under it, kick that shit out
                 //play sound effect
-                _popup.PopupPredicted(Loc.GetString("WARNING! This weapon is not mounted on a compatible hardpoint and will not function!"), uid, null);
+                _popup.PopupPredicted(Loc.GetString("shipmode-hardpoint-bad-anchor-warning"), uid, null);
                 return;
             }
         }
