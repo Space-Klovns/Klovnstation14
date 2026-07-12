@@ -19,6 +19,7 @@
         - IDCARD
         - FEET
         - GLOVES
+        - BELT
       - id: ScenarioVendorBundleNanoplantNtEngineer
         replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleNanoplantNtMarksman

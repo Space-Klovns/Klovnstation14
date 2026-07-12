@@ -21,6 +21,7 @@
         - IDCARD
         - FEET
         - GLOVES
+        - BELT
       - id: ScenarioVendorBundleTiderfallNtTider
         replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleTiderfallNtClown

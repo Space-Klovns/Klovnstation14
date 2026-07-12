@@ -15,16 +15,16 @@
     - ClothingBackpackERTSecurity
     - ClothingShoesBootsLaceup
     - ClothingMaskGasSecurity
-    - NanoplantNtPDA
     - ClothingHeadsetSecurity
     - ClothingEyesGlassesCommand
     - ClothingOuterArmorBasic
     - ClothingHeadHelmetERTSecurity
     - ClothingBeltMilitaryWebbingERT
+    - NanoplantNtPDA # intentionally after webbing so it doesnt go on belt
     - ClothingHandsGlovesCombat
     - Machete
-    - FlashlightSeclite
     - Gauze
+    - FlashlightSeclite
 
 - type: entity
   id: ScenarioVendorBundleNanoplantNtRifleman
@@ -120,12 +120,8 @@
     state: base
   - type: CMVendorBundle
     bundle:
-    - ClothingBeltUtilityEngineering
     - ClothingHeadHatHardhatYellow
     - RemoteSignallerAdvanced
-    - RemoteDroneLaptop
-    - RemoteDroneFpv
-    - RemoteDroneFpv
     - WeaponPistolMk58
     - MagazinePistol
     - MagazinePistol
@@ -135,6 +131,10 @@
     - CableApcStack10
     - ExplosivePayload
     - ExplosivePayload
+    - ClothingBeltUtilityEngineering
+    - RemoteDroneLaptop
+    - RemoteDroneFpv
+    - RemoteDroneFpv
 
 - type: entity
   id: ScenarioVendorBundleNanoplantNtMedic
@@ -175,9 +175,9 @@
     - ClothingBackpackSyndicate
     - ClothingShoesBootsCombat
     - ClothingMaskGasSyndicate
-    - TiderfallSyndiePDA
     - ClothingHeadsetAltSyndicate
     - ClothingBeltMilitaryWebbing
+    - TiderfallSyndiePDA # intentionally after webbing so it doesnt go on belt
     - ClothingEyesHudSyndicate # it's about time
     - ClothingHandsGlovesCombat
     - FlashlightSeclite
@@ -325,13 +325,8 @@
     state: base
   - type: CMVendorBundle
     bundle:
-    - ClothingBeltUtilityEngineering
     - ClothingHeadHatHardhatRed
     - RemoteSignallerAdvanced
-    - RemoteDroneLaptop
-    - RemoteDroneFpv
-    - RemoteDroneFpv
-    - RemoteDroneFpv
     - WeaponPistolCobra
     - MagazinePistolCaselessRifle
     - MagazinePistolCaselessRifle
@@ -343,3 +338,8 @@
     - ExplosivePayload
     - ExplosivePayload
     - ExplosivePayload
+    - ClothingBeltUtilityEngineering
+    - RemoteDroneLaptop
+    - RemoteDroneFpv
+    - RemoteDroneFpv
+    - RemoteDroneFpv

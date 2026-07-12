@@ -190,9 +190,9 @@
     - ClothingBackpackSyndicate
     - ClothingShoesBootsCombat
     - ClothingMaskGasSyndicate
-    - TiderfallSyndiePDA
     - ClothingHeadsetAltSyndicate
     - ClothingBeltMilitaryWebbing
+    - TiderfallSyndiePDA # intentionally after webbing so it doesnt go on belt
     - ClothingEyesGlassesCommand # it's about time
     - BoxFlare
 
