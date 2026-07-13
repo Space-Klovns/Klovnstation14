@@ -1,0 +1,21 @@
+{
+    "copyright" : "Sprited by nabegator220 for Klovnstation",
+    "license" : "CC-BY-SA-3.0",
+    "version": 1,
+    "size": {
+        "x": 32,
+        "y": 32
+    },
+    "states": [
+        {
+            "name": "u43",
+            "directions": 4
+        },
+        {
+            "name": "u43-open"
+        },
+        {
+            "name": "u43-broken"
+        }
+    ]
+}
