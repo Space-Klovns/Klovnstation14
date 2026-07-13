@@ -14,7 +14,7 @@
     availableModes:
       - SemiAuto
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/laser3.ogg
+      path: /Audio/Weapons/Guns/Gunshots/laser_cannon.ogg
   - type: BatteryAmmoProvider
     proto: MechLaser
     fireCost: 40
@@ -38,6 +38,11 @@
       - FullAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/shotgun.ogg
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/rifle.ogg
+      range: 15,145
+    soundEmpty:
+      path: /Audio/Weapons/Guns/Empty/empty.ogg
   - type: BatteryAmmoProvider
     proto: PelletShotgunMechSpread
     fireCost: 40
@@ -46,7 +51,7 @@
 
 - type: entity
   id: WeaponMechCombatMachineGun
-  name: Sellsword
+  name: Broadsword
   description: Major Monterey finally found something that spits lead faster and longer than the L6.
   suffix: Mech Weapon, Gun, Combat, Machine gun
   parent: BaseMechWeaponRange
@@ -55,14 +60,43 @@
     sprite: _Crescent/Objects/Specific/Mech/mechaweapons.rsi
     state: rifle
   - type: Gun
-    fireRate: 2
+    fireRate: 8
     selectedMode: FullAuto
     availableModes:
       - FullAuto
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/shotgun.ogg
+      path: /Audio/Weapons/Guns/Gunshots/lmg.ogg
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/lmg.ogg
+      range: 15,130
+    soundEmpty:
+      path: /Audio/Weapons/Guns/Empty/lmg_empty.ogg
   - type: BatteryAmmoProvider
     proto: BulletRifle
     fireCost: 15
+  - type: Appearance
+  - type: AmmoCounter
+
+- type: entity
+  id: WeaponMechCombatGrenadeLauncher
+  name: Bardiche
+  description: A grenade launcher derived from the China Lake series.
+  suffix: Mech Weapon, Gun, Combat, Grenade launcher
+  parent: BaseMechWeaponRange
+  components:
+  - type: Sprite
+    sprite: _Crescent/Objects/Specific/Mech/mechaweapons.rsi
+    state: grenadelauncher
+  - type: Gun
+    fireRate: 0.5
+    projectileSpeed: 25
+    selectedMode: FullAuto
+    availableModes:
+      - FullAuto
+    soundGunshot:
+      path: /Audio/Weapons/Guns/Gunshots/grenade_launcher.ogg
+  - type: BatteryAmmoProvider
+    proto: BulletGrenadeFrag
+    fireCost: 60
   - type: Appearance
   - type: AmmoCounter

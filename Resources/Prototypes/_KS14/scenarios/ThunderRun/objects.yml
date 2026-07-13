@@ -1,0 +1,10 @@
+- type: entity
+  parent: ClothingOuterHardsuitAncientEVA
+  id: ThunderRunClothingOuterSyndiePilotSuit
+  name: syndicate mech pilot suit #TODO SOOT FIX PLACEHOLDER SPRITE
+  description: A bulky, cumbersome suit that allows you to interface with your combat walker.
+  components:
+  - type: ClothingSpeedModifier
+    walkModifier: 0.65
+    sprintModifier: 0.65
+  - type: HeldSpeedModifier

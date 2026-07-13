@@ -22,6 +22,7 @@
     pilotWhitelist:
       components:
         - HumanoidProfile
+        - WearingMechSuit
   - type: MovementSpeedModifier
     baseWalkSpeed: 2.25
     baseSprintSpeed: 3.6
