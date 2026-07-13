@@ -2,7 +2,7 @@
 # Bounding boxes are funky and rotate funny if changed. Update them if you have the patience.
 - type: entity
   parent: Railing
-  id: RailingYellow
+  id: N14RailingYellow
   name: yellow railing
   description: Basic railing meant to protect idiots like you from falling.
   components:
@@ -27,7 +27,7 @@
 
 - type: entity
   parent: RailingCorner
-  id: RailingYellowCorner
+  id: N14RailingYellowCorner
   name: yellow railing
   description: Basic railing meant to protect idiots like you from falling.
   components:
@@ -53,7 +53,7 @@
 
 - type: entity
   parent: Railing
-  id: RailingYellowEnd
+  id: N14RailingYellowEnd
   name: yellow railing
   description: Basic railing meant to protect idiots like you from falling.
   components:

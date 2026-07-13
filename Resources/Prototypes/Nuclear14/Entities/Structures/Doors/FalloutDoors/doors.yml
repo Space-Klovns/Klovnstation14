@@ -1,5 +1,5 @@
 - type: entity
-  id: HandmadeDoor
+  id: N14HandmadeDoor
   name: handmade door
   parent: BaseMaterialDoor
   description: It's a wood door. It looks dirty, and handmade.
@@ -34,7 +34,7 @@
         acts: ["Destruction"]
 
 - type: entity
-  id: HouseDoor
+  id: N14HouseDoor
   name: house door
   parent: WoodDoor
   description: It's a door. I dunno about you, but I think it might be used for houses.
@@ -47,7 +47,7 @@
       map: ["enum.DoorVisualLayers.Base"]
 
 - type: entity
-  id: HouseDoorClean
+  id: N14HouseDoorClean
   name: clean house door
   parent: WoodDoor
   description: The cleanest door known to what remains of mankind.
@@ -60,7 +60,7 @@
       map: ["enum.DoorVisualLayers.Base"]
 
 - type: entity
-  id: RoomDoor
+  id: N14RoomDoor
   name: room door
   parent: WoodDoor
   description: A door used inside pre-war houses that section off rooms.
@@ -73,7 +73,7 @@
       map: ["enum.DoorVisualLayers.Base"]
 
 - type: entity
-  id: RoomDoorDestroyed
+  id: N14RoomDoorDestroyed
   name: destroyed room door
   parent: WoodDoor
   description: A door used inside pre-war houses that section off rooms. Unsuprisingly, it looks like it'll fall apart at any moment.
@@ -86,7 +86,7 @@
       map: ["enum.DoorVisualLayers.Base"]
 
 - type: entity
-  id: GlassDoor
+  id: N14GlassDoor
   name: glass door
   parent: WoodDoor
   description: It's a door with pannels made of clean glass.
@@ -103,7 +103,7 @@
     enabled: false
 
 - type: entity
-  id: GlassDoorDirty
+  id: N14GlassDoorDirty
   name: dirty glass door
   parent: WoodDoor
   description: It's a glass door. You can barely make out what's behind it...
@@ -120,7 +120,7 @@
     enabled: false
 
 - type: entity
-  id: GlassDoorBroken
+  id: N14GlassDoorBroken
   name: broken glass door
   parent: WoodDoor
   description: Shattered, just like your marriage.
@@ -137,7 +137,7 @@
     enabled: false
 
 - type: entity
-  id: StoreDoor
+  id: N14StoreDoor
   name: store door
   parent: WoodDoor
   description: It's a glass door found at pre-war stores. Hey, that rhymes!
@@ -154,7 +154,7 @@
     enabled: false
 
 - type: entity
-  id: StoreDoorDirty
+  id: N14StoreDoorDirty
   name: dirty store door
   parent: WoodDoor
   description: It's a glass door used at pre-war stores. It doesn't seem like it's been washed recently.
@@ -171,7 +171,7 @@
     enabled: false
 
 - type: entity
-  id: SecureDoor
+  id: N14SecureDoor
   name: secure door
   parent: WoodDoor
   description: It's a secure door, made out of wood. Hope you brought you bobby pins.
@@ -184,7 +184,7 @@
       map: ["enum.DoorVisualLayers.Base"]
 
 - type: entity
-  id: SecureDoorMetal
+  id: N14SecureDoorMetal
   name: metal reinforced door
   parent: WoodDoor
   description: It's a door, reinforced with metal. Hope you brought you bobby pins.
@@ -197,7 +197,7 @@
       map: ["enum.DoorVisualLayers.Base"]
 
 - type: entity
-  id: SecureDoorBos
+  id: N14SecureDoorBos
   name: secure brotherhood door
   parent: WoodDoor
   description: It's secure, AND branded! What more could you want?
@@ -210,7 +210,7 @@
       map: ["enum.DoorVisualLayers.Base"]
 
 - type: entity
-  id: CellDoor
+  id: N14CellDoor
   name: cell door
   parent: WoodDoor
   description: A door that bad guys are locked behind.
@@ -227,10 +227,10 @@
     enabled: false
 
 - type: entity
-  id: BarredDoor
+  id: N14BarredDoor
   name: barred door
   parent: WoodDoor
-  description: A regular ol' barred door. 
+  description: A regular ol' barred door.
   components:
   - type: Sprite
     netsync: false
@@ -244,7 +244,7 @@
     enabled: false
 
 - type: entity
-  id: IronDoor
+  id: N14IronDoor
   name: iron door
   parent: BaseMaterialDoor
   description: A door made of iron, secured with another block of iron.
