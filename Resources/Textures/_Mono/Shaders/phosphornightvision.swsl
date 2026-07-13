@@ -1,0 +1,110 @@
+// Night vision fullscreen shader.
+
+uniform sampler2D SCREEN_TEXTURE;
+uniform highp float VIEW_RADIUS;
+uniform highp int CIRCLE_COUNT;
+uniform highp vec3 BASE_COLOR;
+uniform highp float AMPLIFICATION;
+uniform highp float SPACING;
+uniform highp float[3] BLUR_OFFSET;
+uniform highp float[3] BLUR_WEIGHT;
+uniform bool IS_CONE;
+uniform highp float CONE_SLOPE;
+uniform highp float CONE_WIDTH;
+uniform highp float CONE_SOFTNESS;
+//uniform highp float CONE_ROTATION;
+
+// Cone mask.
+// p is in screen-pixel coordinates relative to the cone apex.
+highp float coneMask(
+    highp vec2 p,
+    highp float angle,
+    highp float slope,
+    highp float width,
+    highp float softness
+) {
+    // Rotate so the cone points along +Y in local space.
+    highp float c = cos(-angle);
+    highp float s = sin(-angle);
+    p = mat2(c, -s, s, c) * p;
+
+    // No cone behind the apex.
+    if (p.y < 0.0) {
+        return 0.0;
+    }
+
+    // Cone half-width at this distance.
+    highp float halfWidth = p.y * slope;
+
+    // Distance from the edge of the cone.
+    highp float edgeDist = abs(p.x) - halfWidth;
+
+    // Soft side edges.
+    highp float sideMask = 1.0 - smoothstep(0.0, softness, edgeDist);
+
+    // Soft fade at the end of the cone.
+    highp float endMask = 1.0 - smoothstep(width - softness, width, p.y);
+
+    return clamp(sideMask * endMask, 0.0, 1.0);
+}
+
+void fragment()
+{
+    // Bilinear blur in x and y.
+    // This should probably be implemented in the z-library with a bit more configurability.
+    highp vec4 blurred = zTextureSpec(SCREEN_TEXTURE, UV) * BLUR_WEIGHT[0];
+    for (int i = 1; i < 3; i++) {
+        blurred += zTextureSpec(SCREEN_TEXTURE, (UV + vec2(0.0, BLUR_OFFSET[i] * SCREEN_PIXEL_SIZE.y))) * BLUR_WEIGHT[i];
+        blurred += zTextureSpec(SCREEN_TEXTURE, (UV - vec2(0.0, BLUR_OFFSET[i] * SCREEN_PIXEL_SIZE.y))) * BLUR_WEIGHT[i];
+        blurred += zTextureSpec(SCREEN_TEXTURE, (UV + vec2(BLUR_OFFSET[i] * SCREEN_PIXEL_SIZE.x, 0.0))) * BLUR_WEIGHT[i];
+        blurred += zTextureSpec(SCREEN_TEXTURE, (UV - vec2(BLUR_OFFSET[i] * SCREEN_PIXEL_SIZE.x, 0.0))) * BLUR_WEIGHT[i];
+    }
+
+    // Monochrome the view.
+    highp float gray = zGrayscale(blurred.rgb);
+
+    // Shade it to the phosphor color.
+    highp vec3 colorized = gray * BASE_COLOR * AMPLIFICATION;
+
+    // Re-expand and add the original alpha back.
+    highp vec4 walpha = vec4(vec3(colorized), blurred.a);
+
+    // Screen aspect ratio, needed by the circle generation.
+    highp vec2 aspect = vec2(1.0 / SCREEN_PIXEL_SIZE.x, 1.0 / SCREEN_PIXEL_SIZE.y);
+
+    if (IS_CONE) {
+        // Center cone apex on screen center.
+        highp vec2 apex = FRAGCOORD.xy - (aspect * 0.5);
+
+        highp float cone = coneMask(
+            apex,
+            0,
+            CONE_SLOPE,
+            CONE_WIDTH,
+            CONE_SOFTNESS
+        );
+
+        COLOR = mix(vec4(vec3(0.0), 1.0), walpha, cone);
+    } else {
+        // Set to a high value to ensure it's overwritten in the next step.
+        highp float circle = 10.0;
+
+        // Create the view circles.
+        // If we're even, space offset. Otherwise, center.
+        if (CIRCLE_COUNT % 2 == 0) {
+            for (int i = 0; i < CIRCLE_COUNT; i += 2) {
+                circle = min(circle, zCircleGradient(aspect, FRAGCOORD.xy + vec2(SPACING / 2.0 + float(i) * SPACING, 0.0), 1.0, VIEW_RADIUS, 0.0, 1.0));
+                circle = min(circle, zCircleGradient(aspect, FRAGCOORD.xy - vec2(SPACING / 2.0 + float(i) * SPACING, 0.0), 1.0, VIEW_RADIUS, 0.0, 1.0));
+            }
+        } else {
+            circle = zCircleGradient(aspect, FRAGCOORD.xy, 1.0, VIEW_RADIUS, 0.0, 1.0);
+            for (int i = 1; i < CIRCLE_COUNT; i += 2) {
+                circle = min(circle, zCircleGradient(aspect, FRAGCOORD.xy + vec2(float(i) * SPACING, 0.0), 1.0, VIEW_RADIUS, 0.0, 1.0));
+                circle = min(circle, zCircleGradient(aspect, FRAGCOORD.xy - vec2(float(i) * SPACING, 0.0), 1.0, VIEW_RADIUS, 0.0, 1.0));
+            }
+        }
+
+        // Mix the mask over top of the rendered view.
+        COLOR = mix(walpha, vec4(vec3(0.0), 1.0), circle);
+    }
+}

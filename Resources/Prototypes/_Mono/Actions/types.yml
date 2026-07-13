@@ -1,0 +1,13 @@
+- type: entity
+  id: ActionTogglePhosphorNightVision
+  name: Toggle night vision
+  description: Toggles the night vision on and off.
+  components:
+  - type: Action
+    useDelay: 2
+    itemIconStyle: BigAction
+    icon:
+      sprite: Interface/Actions/devour.rsi
+      state: icon
+  - type: InstantAction
+    event: !type:TogglePhosphorNightVisionEvent {}
