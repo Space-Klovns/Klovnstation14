@@ -1,7 +1,7 @@
 # Base plumbing machine entity - all plumbing machines inherit from this
 - type: entity
-  abstract: true
   id: PlumbingMachineBase
+  abstract: true
   placement:
     mode: SnapgridCenter
   components:

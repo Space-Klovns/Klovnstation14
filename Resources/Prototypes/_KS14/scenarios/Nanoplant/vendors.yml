@@ -30,3 +30,45 @@
         replaceSlot: *replaceSlots
       - id : ScenarioVendorBundleNanoplantNtCounterAssault
         replaceSlot: *replaceSlots
+
+- type: entity
+  parent: ColMarTechScenarioBase
+  id: ColMarTechScenarioNanoplantSyndie
+  suffix: Nanoplant, Syndicate
+  components:
+  - type: Sprite
+    sprite: _Crescent/Structures/syndicatearmory.rsi
+  - type: CMAutomatedVendor
+    sections:
+    - name: Base Gear
+      choices: { BaseGear: 1 }
+      entries:
+      - id: ScenarioVendorBundleNanoplantSyndieBase
+        recommended: true
+    - name: Loadout
+      choices: { CMClass: 1 }
+      entries:
+      - id: ScenarioVendorBundleNanoplantSyndieSoldierHushpup
+        recommended: true
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleNanoplantSyndieSoldierC20r
+        recommended: true
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleNanoplantSyndieInfiltrator
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleNanoplantSyndieDemolitionist
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleNanoplantSyndieSniper
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleNanoplantSyndieMedic
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleNanoplantSyndieMelee
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleNanoplantSyndieEngineer
+        replaceSlot: *replaceSlots
+      - id: ScenarioVendorBundleNanoplantSyndieDroneOperator
+        replaceSlot: *replaceSlots
+    - name: Utilities
+      entries:
+      - id: EmpGrenade
+        amount: 2

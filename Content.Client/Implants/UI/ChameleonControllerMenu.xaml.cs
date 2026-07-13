@@ -71,7 +71,17 @@ public sealed partial class ChameleonControllerMenu : FancyWindow
 
             var outfitButton = CreateOutfitButton(disabled, name, jobIconProto, outfit.ID);
 
-            if (outfit.Job != null && _job.TryGetLowestWeightDepartment(outfit.Job, out var departmentPrototype))
+            // KS14: check for departments too, kinda shitcoded but this is to accomodate for scenario chameleon protos being able to fall under a dept.
+            // KS14 Start
+            // fallback to first and only department in Departments if job isnt available
+            Shared.Roles.DepartmentPrototype? departmentPrototype = null;
+            if ((outfit.Job is not { } ||
+                !_job.TryGetLowestWeightDepartment(outfit.Job, out departmentPrototype)) &&
+                outfit.Departments?.Count == 1)
+                _prototypeManager.TryIndex(outfit.Departments![0], out departmentPrototype);
+            // KS14 End
+
+            if (departmentPrototype is { })
             {
                 if (!departments.ContainsKey(departmentPrototype.Name))
                     departments.Add(departmentPrototype.Name, CreateDepartment(departmentPrototype.Name));

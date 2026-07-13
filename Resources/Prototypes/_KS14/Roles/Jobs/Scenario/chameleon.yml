@@ -1,0 +1,22 @@
+
+
+- type: chameleonOutfit
+  id: ScenarioNanoplantNtChameleon
+  loadoutName: chameleon-outfit-scenario-nanoplant-nt-name
+  name: job-description-scenario-nt
+  icon: "JobIconNanotrasen"
+  departments:
+  - Scenario
+  hasMindShield: true
+  equipment:
+    head: ClothingHeadHelmetERTSecurity
+    eyes: ClothingEyesGlassesCommand
+    ears: ClothingHeadsetSecurity
+    mask: ClothingMaskGasSecurity
+    outerClothing: ClothingOuterArmorBasic
+    jumpsuit: ClothingUniformJumpsuitERTSecurity
+    belt: ClothingBeltMilitaryWebbingERT
+    back: ClothingBackpackERTSecurity
+    gloves: ClothingHandsGlovesCombat
+    shoes: ClothingShoesBootsLaceup
+    id: NanoplantNtPDA

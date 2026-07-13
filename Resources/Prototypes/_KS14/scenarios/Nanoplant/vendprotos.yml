@@ -1,3 +1,7 @@
+
+# Be mindful of the order which things in the bundle are ordered
+# Things later in the list will override earlier things
+
 # Nanotrasen
 
 - type: entity
@@ -15,14 +19,16 @@
     - ClothingBackpackERTSecurity
     - ClothingShoesBootsLaceup
     - ClothingMaskGasSecurity
-    - NanoplantNtPDA
     - ClothingHeadsetSecurity
     - ClothingEyesGlassesCommand
     - ClothingOuterArmorBasic
     - ClothingHeadHelmetERTSecurity
     - ClothingBeltMilitaryWebbingERT
+    - NanoplantNtPDA # intentionally after webbing so it doesnt go on belt
+    - ClothingHandsGlovesCombat
     - Machete
-    - BoxFlare
+    - Gauze
+    - FlashlightSeclite
 
 - type: entity
   id: ScenarioVendorBundleNanoplantNtRifleman
@@ -31,7 +37,7 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
-    sprite: Objects/Weapons/Guns/SMGs/drozd.rsi
+    sprite: Objects/Weapons/Guns/Rifles/lecter.rsi
     state: icon
   - type: CMVendorBundle
     bundle:
@@ -118,12 +124,8 @@
     state: base
   - type: CMVendorBundle
     bundle:
-    - ClothingBeltUtilityEngineering
     - ClothingHeadHatHardhatYellow
     - RemoteSignallerAdvanced
-    - RemoteDroneLaptop
-    - RemoteDroneFpv
-    - RemoteDroneFpv
     - WeaponPistolMk58
     - MagazinePistol
     - MagazinePistol
@@ -133,6 +135,10 @@
     - CableApcStack10
     - ExplosivePayload
     - ExplosivePayload
+    - ClothingBeltUtilityEngineering
+    - RemoteDroneLaptop
+    - RemoteDroneFpv
+    - RemoteDroneFpv
 
 - type: entity
   id: ScenarioVendorBundleNanoplantNtMedic
@@ -154,3 +160,209 @@
     - PowerCellHigh
     - WeaponRifleLecter
     - MagazineRifle
+
+
+### SYNDIE
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantSyndieBase
+  name: base clothes
+  description: Welcome aboard listening post Mike-458, operative.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Clothing/Mask/gassyndicate.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - ClothingUniformJumpsuitOperative
+    - ClothingBackpackSyndicate
+    - ClothingShoesBootsCombat
+    - ClothingMaskGasSyndicate
+    - ClothingHeadsetAltSyndicate
+    - ClothingBeltMilitaryWebbing
+    - TiderfallSyndiePDA # intentionally after webbing so it doesnt go on belt
+    - ClothingEyesHudSyndicate # it's about time
+    - ClothingHandsGlovesCombat
+    - FlashlightSeclite
+    - Gauze
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantSyndieSoldierHushpup
+  name: combat operative (hushpup)
+  description: Third-rate gear. Will have to do. Comes with a hushpup and a box of buckshot.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Shotguns/hushpup.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - WeaponShotgunHushpup
+    - BoxLethalshot
+    - ClothingHeadHelmetSwatSyndicate
+    - ClothingOuterArmorBasic
+    - Machete
+    - GrenadeStinger
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantSyndieSoldierC20r
+  name: combat operative (c-20r)
+  description: Third-rate gear. Will have to do. Comes with a C-20r and two mags.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/SMGs/c20r.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - WeaponSubMachineGunC20r
+    - MagazinePistolSubMachineGun
+    - MagazinePistolSubMachineGun
+    - ClothingHeadHelmetSwatSyndicate
+    - ClothingOuterArmorBasic
+    - Machete
+    - GrenadeStinger
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantSyndieInfiltrator
+  name: infiltrator
+  description: Pretend to be with them. Until you aren't.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Pistols/cobra.rsi
+    layers:
+    - state: base
+      map: ["enum.GunVisualLayers.Base"]
+    - state: mag-0
+      map: ["enum.GunVisualLayers.Mag"]
+  - type: CMVendorBundle
+    bundle:
+    - ClothingBackpackChameleonFillAgent # ..Agent comes with an ID card
+    - WeaponPistolCobra
+    - MagazinePistolCaselessRifle
+    - MagazinePistolCaselessRifle
+    - MagazinePistolCaselessRifle
+    - AccessBreaker
+    - SyndicateJawsOfLife
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantSyndieDemolitionist
+  name: demolitionist
+  description: Don't blow yourself up.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Specific/Chapel/quran.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - WeaponPistolViper
+    - MagazinePistol
+    - C4
+    - C4
+    - C4
+    - BibleQuran
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantSyndieSniper
+  name: sniper
+  description: 360 swagscope these fools.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Guns/Snipers/heavy_sniper.rsi
+    state: base
+  - type: CMVendorBundle
+    bundle:
+    - WeaponSniperHristov
+    - MagazineBoxAntiMateriel
+    - MagazineBoxAntiMateriel
+    - SmokeGrenade
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantSyndieMedic
+  name: medic
+  description: CLEAR!
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Clothing/Eyes/Hud/med.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - MedTekCartridge
+    - ClothingEyesHudSyndicateAgent
+    - ClothingBeltMedicalFilled
+    - MedkitCombatFilled
+    - AdvancedJetInjector
+    - DefibrillatorSyndicate
+    - PowerCellHigh
+    - Stimpack
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantSyndieMelee
+  name: liquidator
+  description: Commander Roland smiles upon you.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: /Textures/Objects/Weapons/Melee/e_sword.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - EnergySword
+    - ClothingShoesChameleonNoSlips
+    - ClothingOuterArmorRiot
+    - ClothingHeadHelmetRiot
+    - StimpackMini
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantSyndieEngineer
+  name: combat technician
+  description: Area lockdown initiated.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: Objects/Tools/Toolboxes/toolbox_syn.rsi
+    state: icon
+  - type: CMVendorBundle
+    bundle:
+    - ToolboxSyndicateTurret
+    - ClothingBeltUtilityEngineering
+    - WelderIndustrial
+    - SheetSteel
+    - SheetRGlass
+    - MaterialWoodPlank
+    - ClothingHeadHatHardhatRed
+
+- type: entity
+  id: ScenarioVendorBundleNanoplantSyndieDroneOperator
+  name: drone operator
+  description: Remote fragging work.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Misc/fpv_drone.rsi
+    state: base
+  - type: CMVendorBundle
+    bundle:
+    - ClothingHeadHatHardhatRed
+    - RemoteSignallerAdvanced
+    - WeaponPistolCobra
+    - MagazinePistolCaselessRifle
+    - MagazinePistolCaselessRifle
+    - SignalTrigger
+    - SignalTrigger
+    - SignalTrigger
+    - SheetSteel
+    - CableApcStack10
+    - ExplosivePayload
+    - ExplosivePayload
+    - ExplosivePayload
+    - ClothingBeltUtilityEngineering
+    - RemoteDroneLaptop
+    - RemoteDroneFpv
+    - RemoteDroneFpv
+    - RemoteDroneFpv

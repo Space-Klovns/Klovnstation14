@@ -1,3 +1,7 @@
+
+# Be mindful of the order which things in the bundle are ordered
+# Things later in the list will override earlier things
+
 # Nanotrasen
 
 - type: entity
@@ -190,9 +194,9 @@
     - ClothingBackpackSyndicate
     - ClothingShoesBootsCombat
     - ClothingMaskGasSyndicate
-    - TiderfallSyndiePDA
     - ClothingHeadsetAltSyndicate
     - ClothingBeltMilitaryWebbing
+    - TiderfallSyndiePDA # intentionally after webbing so it doesnt go on belt
     - ClothingEyesGlassesCommand # it's about time
     - BoxFlare
 
