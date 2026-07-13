@@ -90,9 +90,9 @@
   - type: Gun
     fireRate: 0.5
     projectileSpeed: 25
-    selectedMode: FullAuto
+    selectedMode: SemiAuto
     availableModes:
-      - FullAuto
+      - SemiAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/grenade_launcher.ogg
   - type: BatteryAmmoProvider
