@@ -1585,3 +1585,31 @@ Entries:
         server. This can be opted out of by pressing the 'stop playing' button.
   id: 165
   time: '2026-07-04T18:29:25.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added a chameleon preset for the base outfit of Nanoplant's NT
+        personnel.
+    - type: Add
+      message: Added combat gloves to the loadouts of both sides on Nanoplant.
+    - type: Add
+      message: Added a C-20r class to Nanoplant syndie vendor, alongside the hushpup.
+    - type: Tweak
+      message: >-
+        The doafter for refilling things with ammo is no longer broken when
+        moving about.
+    - type: Fix
+      message: >-
+        Fixed base outfit for Nanoplant NT and Syndie being weird (PDA on belt
+        slot, etc.).
+    - type: Fix
+      message: >-
+        Fixed collisions on IV pump, and fixed it not being in RPED when it was
+        supposed to be.
+    - type: Tweak
+      message: >-
+        Hristov now penetrates airlocks (other than high-sec) and airlock
+        assemblies.
+  id: 166
+  time: '2026-07-13T16:00:00.0000000+00:00'

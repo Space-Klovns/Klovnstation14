@@ -2,14 +2,11 @@
 - type: entity
   parent: PlumbingMachineBase
   id: KsPlumbingIvPump
-  name: plumbing iv pump
+  name: plumbing intravenous pump
   description: Used for streamlining the process of medicine.
   components:
   - type: Physics
     bodyType: Static
-    canCollide: false
-  - type: Fixtures
-    fixtures: {}
 
   - type: Sprite
     sprite: _KS14/Structures/Piping/Plumbing/iv_pump.rsi

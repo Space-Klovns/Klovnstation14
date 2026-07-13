@@ -246,6 +246,23 @@
     entries:
       CottonBurger: NukiePlushie
 
+- type: entity
+  parent: BasePlushie
+  id: PlushieLamp
+  name: lamp plushie
+  description: A light emitting friend!
+  components:
+  - type: Sprite
+    sprite: Objects/Fun/Plushies/lamp.rsi
+    state: icon
+  - type: PointLight
+    radius: 1.5
+    energy: 2
+    netsync: false
+  - type: FoodSequenceElement
+    entries:
+      CottonBurger: LampPlushie
+
 # KS14 - Removed plushies
 
 - type: entity

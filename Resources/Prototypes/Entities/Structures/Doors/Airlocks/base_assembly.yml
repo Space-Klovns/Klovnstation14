@@ -46,5 +46,10 @@
   - type: Construction
     graph: Airlock
     node: assembly
+  # KS14 Start: let this be penned by hristov
+  - type: Tag
+    tags:
+    - HristovWindowVentable
+  # KS14 End
   placement:
     mode: SnapgridCenter
