@@ -67,59 +67,45 @@ public sealed partial class PhosphorNightVisionComponent : Component
     public Color PhosphorColor = new(0f, 1f, 0f, 1f);
 
     /// <summary>
-    /// If the night vision circular goggle effect should be shown.
-    /// </summary>
-    [DataField, AutoNetworkedField]
-    public bool GoggleEffect;
-
-
-    /// <summary>
-    /// How large the goggle radius should be, per circle.
-    /// </summary>
-    [DataField, AutoNetworkedField]
-    public float ViewCircleRadius;
-
-    /// <summary>
-    /// The spacing between goggle view circle centers.
-    /// </summary>
-    [DataField, AutoNetworkedField]
-    public float ViewCircleSpacing;
-
-    /// <summary>
-    /// The number of circles to render. Odd numbers of circles will start from the center.
-    /// Recommended values between one and four.
-    /// </summary>
-    [DataField, AutoNetworkedField]
-    public int ViewCircleCount;
-
-    /// <summary>
     /// The amount of light multiplication the night vision system should apply.
     /// </summary>
     [DataField, AutoNetworkedField]
     public float Amplification = 32f;
 
     /// <summary>
-    /// KS14 - cone
+    /// KS14 - do we draw the phosphor effect?
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool PhosphorEffect = true;
+
+    /// <summary>
+    /// KS14 - does this provide clean full screen vision or just a cone?
     /// </summary>
     [DataField, AutoNetworkedField]
     public bool IsCone = false;
 
     /// <summary>
-    /// KS14 - cone slope
+    /// KS14 - the width of the cone in degrees
     /// </summary>
     [DataField, AutoNetworkedField]
-    public float ConeSlope = 1f;
+    public float ConeAngle = 90f;
 
     /// <summary>
-    /// KS14 - cone width
+    /// KS14 - softness of the edges in degrees - dictates transition smoothness (so we dont get a sharp split between bright and dark)
     /// </summary>
     [DataField, AutoNetworkedField]
-    public float ConeWidth = 4f;
+    public float ConeFeather = 5f;
 
     /// <summary>
-    /// KS14 - cone softness
+    /// KS14 - how far does the cone reach out from the player? measured in screens
     /// </summary>
     [DataField, AutoNetworkedField]
-    public float ConeSoftness = 2f;
+    public float ConeDistance = 0.5f;
+
+    /// <summary>
+    /// KS14 - softness of the transition at the cone's outer radius - measured in screens also
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float ConeDistanceFeather = 0.05f;
 }
 public sealed partial class TogglePhosphorNightVisionEvent : InstantActionEvent;

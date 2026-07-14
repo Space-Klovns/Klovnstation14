@@ -66,12 +66,7 @@
     #phosphorColor: "#00FF00"
     #lightingColor: "#FFFFFF32"
     isCone: true
-    goggleEffect: false
     action: ActionTogglePhosphorNightVision
     phosphorColor: "#00FF00"
     lightingColor: "#FFFFFF32"
     relayOverlay: true
-    # Cone-specific defaults that actually make a visible cone
-    coneSlope: 0.5       # fairly wide
-    coneWidth: 600       # 600 pixels long
-    coneSoftness: 40     # soft edges over 40 px

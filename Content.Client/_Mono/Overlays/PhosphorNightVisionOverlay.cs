@@ -32,26 +32,6 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
     public Color PhosphorColor { get; private set; }
 
     /// <summary>
-    /// If the goggle shader should be rendered.
-    /// </summary>
-    public bool GogglesEnabled { get; private set; }
-
-    /// <summary>
-    /// Radius of each circle in the goggle overlay, in pixels.
-    /// </summary>
-    public float ViewCircleRadius { get; private set; }
-
-    /// <summary>
-    /// Center-to-center spacing of circles.
-    /// </summary>
-    public float ViewCircleSpacing { get; private set; }
-
-    /// <summary>
-    /// Number of circles to render. Odd numbers will place a circle in the center.
-    /// </summary>
-    public int ViewCircleCount { get; private set; }
-
-    /// <summary>
     /// Amplification of the ambient light by the nightvision shader.
     /// </summary>
     /// <remarks>
@@ -60,24 +40,39 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
     public float Amplification { get; private set; }
 
     /// <summary>
-    /// KS14 - cone
+    /// KS14 - do we draw the phosphor effect?
+    /// </summary>
+    public bool PhosphorEffect { get; private set; }
+
+    /// <summary>
+    /// KS14 - do we draw the cone or do we do fullview?
     /// </summary>
     public bool IsCone { get; private set; }
 
     /// <summary>
-    /// KS14 - cone slope
+    /// KS14 - the width of the cone in degrees
     /// </summary>
-    public float ConeSlope { get; private set; }
+    public float ConeAngle { get; private set; }
 
     /// <summary>
-    /// KS14 - cone width
+    /// KS14 - softness of the edges in degrees - dictates transition smoothness (so we dont get a sharp split between bright and dark)
     /// </summary>
-    public float ConeWidth { get; private set; }
+    public float ConeFeather { get; private set; }
 
     /// <summary>
-    /// KS14 - cone softness
+    /// KS14 - how far does the cone reach out from the player? measured in screens
     /// </summary>
-    public float ConeSoftness { get; private set; }
+    public float ConeDistance { get; private set; }
+
+    /// <summary>
+    /// KS14 - softness of the transition at the cone's outer radius - measured in screens also
+    /// </summary>
+    public float ConeDistanceFeather { get; private set; }
+
+    /// <summary>
+    /// KS14 - rotation of the cone in radians
+    /// </summary>
+    public float ViewAngle { get; private set; }
 
     /// <summary>
     /// The space where the night vision fake light is added.
@@ -105,27 +100,26 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
     public void SetParameters(
         Color lightingColor,
         Color phosphorColor,
-        bool gogglesEnabled,
-        float viewCircleRadius,
-        float viewCircleSpacing,
-        int viewCircleCount,
         float amplification,
+        bool phosphorEffect,
         bool isCone,
-        float coneSlope,
-        float coneWidth,
-        float coneSoftness)
+        float coneAngle,
+        float coneFeather,
+        float coneDistance,
+        float coneDistanceFeather
+        //float viewAngle
+        )
     {
-        LightingColor     = lightingColor;
-        PhosphorColor     = phosphorColor;
-        GogglesEnabled    = gogglesEnabled;
-        ViewCircleRadius  = viewCircleRadius;
-        ViewCircleSpacing = viewCircleSpacing;
-        ViewCircleCount   = viewCircleCount;
-        Amplification     = amplification;
-        IsCone            = isCone;
-        ConeSlope         = coneSlope;
-        ConeWidth         = coneWidth;
-        ConeSoftness      = coneSoftness;
+        LightingColor       = lightingColor;
+        PhosphorColor       = phosphorColor;
+        Amplification       = amplification;
+        PhosphorEffect      = phosphorEffect;
+        IsCone              = isCone;
+        ConeAngle           = coneAngle;
+        ConeFeather         = coneFeather;
+        ConeDistance        = coneDistance;
+        ConeDistanceFeather = coneDistanceFeather;
+        //ViewAngle           = viewAngle;
     }
 
     protected override void Draw(in OverlayDrawArgs args)
@@ -142,21 +136,21 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
                 handle.DrawRect(args.WorldBounds, LightingColor);
                 break;
 
-            // Draw the goggle overlays (if enabled)
+            // Draw the phosphor effect and viewcone
             case ShaderSpace:
-                if (!GogglesEnabled)
+                if (!PhosphorEffect)
                     break;
 
                 _phosphorNightVisionShader.SetParameter("SCREEN_TEXTURE", ScreenTexture);
-                _phosphorNightVisionShader.SetParameter("VIEW_RADIUS", ViewCircleRadius);
-                _phosphorNightVisionShader.SetParameter("CIRCLE_COUNT", ViewCircleCount);
                 _phosphorNightVisionShader.SetParameter("BASE_COLOR", new Vector3(PhosphorColor.R, PhosphorColor.G, PhosphorColor.B));
                 _phosphorNightVisionShader.SetParameter("AMPLIFICATION", Amplification);
-                _phosphorNightVisionShader.SetParameter("SPACING", ViewCircleSpacing);
                 _phosphorNightVisionShader.SetParameter("IS_CONE", IsCone);
-                _phosphorNightVisionShader.SetParameter("CONE_SLOPE", ConeSlope);
-                _phosphorNightVisionShader.SetParameter("CONE_WIDTH", ConeWidth);
-                _phosphorNightVisionShader.SetParameter("CONE_SOFTNESS", ConeSoftness);
+                _phosphorNightVisionShader.SetParameter("CONE_ANGLE", ConeAngle);
+                _phosphorNightVisionShader.SetParameter("CONE_FEATHER", ConeFeather);
+                _phosphorNightVisionShader.SetParameter("CONE_DISTANCE", ConeDistance);
+                _phosphorNightVisionShader.SetParameter("CONE_DISTANCE_FEATHER", ConeDistanceFeather);
+                _phosphorNightVisionShader.SetParameter("VIEW_ANGLE", 0f);
+                //ViewAngle);
 
                 // Adjusting these weights is somewhat tricky.
                 // The offset controls the amount of spacing (in px) of the sample - going further out will result in more blur

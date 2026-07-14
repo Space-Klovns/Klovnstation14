@@ -89,15 +89,15 @@ public sealed partial class PhosphorNightVisionSystem : SharedPhosphorNightVisio
         _overlay.SetParameters(
             nvision.LightingColor,
             nvision.PhosphorColor,
-            nvision.GoggleEffect,
-            nvision.ViewCircleRadius,
-            nvision.ViewCircleSpacing,
-            nvision.ViewCircleCount,
             nvision.Amplification,
+            nvision.PhosphorEffect,
             nvision.IsCone,
-            nvision.ConeSlope,
-            nvision.ConeWidth,
-            nvision.ConeSoftness);
+            nvision.ConeAngle,
+            nvision.ConeFeather,
+            nvision.ConeDistance,
+            nvision.ConeDistanceFeather
+            //nvision.ViewAngle
+            );
 
         if (!_overlayMan.HasOverlay<PhosphorNightVisionOverlay>())
             _overlayMan.AddOverlay(_overlay);
