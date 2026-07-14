@@ -4,7 +4,7 @@
 #define HAS_FLOAT_TEXTURES
 #define HAS_SRGB
 #define HAS_UNIFORM_BUFFERS
-#define FRAGMENT_SHADER
+#define VERTEX_SHADER
 
 // -- Utilities Start --
 
@@ -211,130 +211,86 @@ highp float zCircleGradient(highp vec2 ps, highp vec2 coord, highp float maxi, h
 
 // -- Utilities End --
 
-// UV coordinates in texture-space. I.e., (0,0) is the corner of the texture currently being used to draw.
-// When drawing a sprite from a texture atlas, (0,0) is the corner of the atlas, not the specific sprite being drawn.
-varying highp vec2 UV;
+// Vertex position.
+/*layout (location = 0)*/ attribute vec2 aPos;
+// Texture coordinates.
+/*layout (location = 1)*/ attribute vec2 tCoord;
+/*layout (location = 2)*/ attribute vec2 tCoord2;
+// Colour modulation.
+/*layout (location = 3)*/ attribute vec4 modulate;
 
-// UV coordinates in quad-space. I.e., when drawing a sprite from a texture atlas (0,0) is the corner of the sprite
-// currently being drawn.
-varying highp vec2 UV2;
+varying vec2 UV;
+varying vec2 UV2;
+varying vec2 Pos;
+varying vec4 VtxModulate;
 
-// TBH I'm not sure what this is for. I think it is scree  UV coordiantes, i.e., FRAGCOORD.xy * SCREEN_PIXEL_SIZE ?
+// Maybe we should merge these CPU side.
+// idk yet.
+uniform mat3 modelMatrix;
+
+// Allows us to do texture atlassing with texture coordinates 0->1
+// Input texture coordinates get mapped to this range.
+uniform vec4 modifyUV;
 // TODO CLYDE Is this still needed?
-varying highp vec2 Pos;
 
-// Vertex colour modulation. Note that negative values imply that the LIGHTMAP should be ignored. This is used to avoid
-// having to set the texture to a white/blank texture for sprites that have no light shading applied.
-varying highp vec4 VtxModulate;
-
-// The current light map. Unless disabled, this is automatically sampled to create the LIGHT vector, which is then used
-// to modulate the output colour.
-// TODO CLYDE consistent shader variable naming
-uniform sampler2D lightMap;
-
+const ARRAY_HIGHP float PI =  3.14159265359;
+const ARRAY_HIGHP float TAU =  6.28318530718;
 uniform sampler2D SCREEN_TEXTURE;
-uniform ARRAY_HIGHP float VIEW_RADIUS;
-uniform ARRAY_HIGHP int CIRCLE_COUNT;
 uniform ARRAY_HIGHP vec3 BASE_COLOR;
 uniform ARRAY_HIGHP float AMPLIFICATION;
-uniform ARRAY_HIGHP float SPACING;
 uniform ARRAY_HIGHP float BLUR_OFFSET[3];
 uniform ARRAY_HIGHP float BLUR_WEIGHT[3];
 uniform bool IS_CONE;
-uniform ARRAY_HIGHP float CONE_SLOPE;
-uniform ARRAY_HIGHP float CONE_WIDTH;
-uniform ARRAY_HIGHP float CONE_SOFTNESS;
+uniform ARRAY_HIGHP float CONE_ANGLE;
+uniform ARRAY_HIGHP float CONE_FEATHER;
+uniform ARRAY_HIGHP float CONE_DISTANCE;
+uniform ARRAY_HIGHP float CONE_DISTANCE_FEATHER;
+uniform ARRAY_HIGHP float VIEW_ANGLE;
 
 
-ARRAY_HIGHP float coneMask( ARRAY_HIGHP vec2 p,  ARRAY_HIGHP float angle,  ARRAY_HIGHP float slope,  ARRAY_HIGHP float width,  ARRAY_HIGHP float softness) {
- highp float c = cos ( - angle ) ;
- highp float s = sin ( - angle ) ;
- p = mat2 ( c , - s , s , c ) * p ;
- if ( p . y < 0.0 ) return 0.0 ;
- highp float halfWidth = p . y * slope ;
- highp float edgeDist = abs ( p . x ) - halfWidth ;
- highp float sideMask = 1.0 - smoothstep ( 0.0 , softness , edgeDist ) ;
- highp float endMask = 1.0 - smoothstep ( width - softness , width , p . y ) ;
- return clamp ( sideMask * endMask , 0.0 , 1.0 ) ;
+ARRAY_HIGHP float coneMask( ARRAY_HIGHP vec2 fragcoord,  ARRAY_HIGHP vec2 screenSize,  ARRAY_HIGHP float coneAngleDeg,  ARRAY_HIGHP float coneFeatherDeg,  ARRAY_HIGHP float coneDistance,  ARRAY_HIGHP float coneDistanceFeather,  ARRAY_HIGHP float viewAngle) {
+ highp vec2 center = screenSize * 0.5 ;
+ highp vec2 delta = fragcoord - center ;
+ highp float dist = length ( delta ) ;
+ highp float maxDist = coneDistance * min ( screenSize . x , screenSize . y ) ;
+ highp float maxDistFeather = coneDistanceFeather * min ( screenSize . x , screenSize . y ) ;
+ highp float distMask = 1.0 - smoothstep ( maxDist - maxDistFeather , maxDist , dist ) ;
+ viewAngle = - viewAngle highp float angle = atan ( delta . x , delta . y ) + viewAngle ;
+ angle = mod ( angle + PI , TAU ) - PI ;
+ highp float halfCone = radians ( coneAngleDeg ) * 0.5 ;
+ highp float angleMask = 1.0 - smoothstep ( halfCone , halfCone + radians ( coneFeatherDeg ) , abs ( angle ) ) ;
+ return clamp ( distMask * angleMask , 0.0 , 1.0 ) ;
 
 }
 
 
 void main()
 {
-    highp vec4 FRAGCOORD = gl_FragCoord;
+    vec3 transformed = projectionMatrix * viewMatrix * modelMatrix * vec3(aPos, 1.0);
+    vec2 VERTEX = transformed.xy;
 
-    // The output colour. This should get set by the shader code block.
-    // This will get modified by the LIGHT and MODULATE vectors.
-    lowp vec4 COLOR;
+    // [SHADER_CODE]
 
-    // The light colour, usually sampled from the LIGHTMAP
-    lowp vec4 LIGHT;
+    // Pixel snapping to avoid sampling issues on nvidia.
+    VERTEX += 1.0;
+    VERTEX /= SCREEN_PIXEL_SIZE*2.0;
+    VERTEX = floor(VERTEX + 0.5);
+    VERTEX *= SCREEN_PIXEL_SIZE*2.0;
+    VERTEX -= 1.0;
 
-    // Colour modulation vector.
-    highp vec4 MODULATE;
+    gl_Position = vec4(VERTEX, 0.0, 1.0);
+    Pos = (VERTEX + 1.0) / 2.0;
+    UV = mix(modifyUV.xy, modifyUV.zw, tCoord);
+    UV2 = tCoord2;
 
-    // Sample the texture outside of the branch / with uniform control flow.
-    LIGHT = texture2D(lightMap, Pos);
-
-    if (VtxModulate.x < 0.0)
+    // Negative modulation is being used as a hacky way to squeeze in lighting data.
+    // I.e., negative modulation implies we ignore the lighting.
+    if (modulate.x < 0.0)
     {
-        // Negative VtxModulate implies unshaded/no lighting.
-        MODULATE = -1.0 - VtxModulate;
-        LIGHT = vec4(1.0);
+        VtxModulate = -1.0 - zFromSrgb(-1.0 - modulate);
     }
     else
     {
-        MODULATE = VtxModulate;
+        VtxModulate = zFromSrgb(modulate);
     }
-
-    // TODO CLYDE consistent shader variable naming
-    // Requires breaking changes.
-    lowp vec3 lightSample = LIGHT.xyz;
-
-     highp vec4 blurred = zTextureSpec ( SCREEN_TEXTURE , UV ) * BLUR_WEIGHT [ 0 ] ;
- for ( int i = 1 ;
- i < 3 ;
- i ++ ) {
- blurred += zTextureSpec ( SCREEN_TEXTURE , UV + vec2 ( 0.0 , BLUR_OFFSET [ i ] * SCREEN_PIXEL_SIZE . y ) ) * BLUR_WEIGHT [ i ] ;
- blurred += zTextureSpec ( SCREEN_TEXTURE , UV - vec2 ( 0.0 , BLUR_OFFSET [ i ] * SCREEN_PIXEL_SIZE . y ) ) * BLUR_WEIGHT [ i ] ;
- blurred += zTextureSpec ( SCREEN_TEXTURE , UV + vec2 ( BLUR_OFFSET [ i ] * SCREEN_PIXEL_SIZE . x , 0.0 ) ) * BLUR_WEIGHT [ i ] ;
- blurred += zTextureSpec ( SCREEN_TEXTURE , UV - vec2 ( BLUR_OFFSET [ i ] * SCREEN_PIXEL_SIZE . x , 0.0 ) ) * BLUR_WEIGHT [ i ] ;
- }
- highp float gray = zGrayscale ( blurred . rgb ) ;
- highp vec3 colorized = gray * BASE_COLOR * AMPLIFICATION ;
- highp vec4 walpha = vec4 ( colorized , blurred . a ) ;
- highp vec2 screen_size = 1.0 / SCREEN_PIXEL_SIZE ;
- if ( IS_CONE ) {
- highp vec2 apex = screen_size * 0.5 ;
- highp vec2 p = FRAGCOORD . xy - apex ;
- highp float cone = coneMask ( p , 0 , CONE_SLOPE , CONE_WIDTH , CONE_SOFTNESS ) ;
- COLOR = mix ( walpha , vec4 ( vec3 ( 0.0 ) , 1.0 ) , cone ) ;
- }
- else {
- highp float circle = 10.0 ;
- if ( CIRCLE_COUNT % 2 == 0 ) {
- for ( int i = 0 ;
- i < CIRCLE_COUNT ;
- i += 2 ) {
- circle = min ( circle , zCircleGradient ( aspect , FRAGCOORD . xy + vec2 ( SPACING / 2.0 + float ( i ) * SPACING , 0.0 ) , 1.0 , VIEW_RADIUS , 0.0 , 1.0 ) ) ;
- circle = min ( circle , zCircleGradient ( aspect , FRAGCOORD . xy - vec2 ( SPACING / 2.0 + float ( i ) * SPACING , 0.0 ) , 1.0 , VIEW_RADIUS , 0.0 , 1.0 ) ) ;
- }
- }
- else {
- circle = zCircleGradient ( aspect , FRAGCOORD . xy , 1.0 , VIEW_RADIUS , 0.0 , 1.0 ) ;
- for ( int i = 1 ;
- i < CIRCLE_COUNT ;
- i += 2 ) {
- circle = min ( circle , zCircleGradient ( aspect , FRAGCOORD . xy + vec2 ( float ( i ) * SPACING , 0.0 ) , 1.0 , VIEW_RADIUS , 0.0 , 1.0 ) ) ;
- circle = min ( circle , zCircleGradient ( aspect , FRAGCOORD . xy - vec2 ( float ( i ) * SPACING , 0.0 ) , 1.0 , VIEW_RADIUS , 0.0 , 1.0 ) ) ;
- }
- }
- COLOR = mix ( walpha , vec4 ( vec3 ( 0.0 ) , 1.0 ) , circle ) ;
- }
-
-
-    LIGHT.xyz = lightSample;
-
-    gl_FragColor = zAdjustResult(COLOR * MODULATE * LIGHT);
 }

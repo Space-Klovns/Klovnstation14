@@ -70,3 +70,7 @@
     phosphorColor: "#00FF00"
     lightingColor: "#FFFFFF32"
     relayOverlay: true
+  - type: ClothingGrantComponent
+    component:
+      - type: PhosphorNightVisionRecipient
+

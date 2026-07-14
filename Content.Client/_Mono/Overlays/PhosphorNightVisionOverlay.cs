@@ -21,7 +21,7 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
     [Dependency] private IEntityManager _ent = default!;
     [Dependency] private IInputManager _input = default!;
     [Dependency] private IEyeManager _eye = default!;
-    private SharedTransformSystem _xform = default!;
+    private SharedTransformSystem _xform;
     private Entity<EyeComponent, TransformComponent>? _eyeEntity;
 
     private static ProtoId<ShaderPrototype> Shader = "PhosphorNightVision";
@@ -106,6 +106,7 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
     {
         IoCManager.InjectDependencies(this);
         _phosphorNightVisionShader = _prototypeManager.Index(Shader).InstanceUnique();
+        _xform = _ent.System<SharedTransformSystem>();
         ZIndex = -1;
     }
 
@@ -139,7 +140,7 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
         _eyeEntity = null;
 
         // Stolen ES cone code
-        var enumerator = _ent.AllEntityQueryEnumerator<EyeComponent, PhosphorNightVisionComponent, TransformComponent>();
+        var enumerator = _ent.AllEntityQueryEnumerator<EyeComponent, PhosphorNightVisionRecipientComponent, TransformComponent>();
         while (enumerator.MoveNext(out var uid, out var eye, out var viewcone, out var xform))
         {
             if (args.Viewport.Eye != eye.Eye)
@@ -181,7 +182,7 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
                         playerAngle = (float) (mousePos.Position - _xform.GetMapCoordinates(_eyeEntity.Value).Position).ToAngle().Theta + MathHelper.DegreesToRadians(90f);
                 }
 
-                ViewAngle = playerAngle + eyeAngle;
+                ViewAngle = playerAngle + eyeAngle + MathHelper.DegreesToRadians(180f);
 
                 _phosphorNightVisionShader.SetParameter("SCREEN_TEXTURE", ScreenTexture);
                 _phosphorNightVisionShader.SetParameter("BASE_COLOR", new Vector3(PhosphorColor.R, PhosphorColor.G, PhosphorColor.B));
