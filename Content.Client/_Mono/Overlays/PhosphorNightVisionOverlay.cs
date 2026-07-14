@@ -6,8 +6,6 @@ using Content.Shared.MouseRotator;
 using Robust.Client.Input;
 using Content.Shared._Mono.Overlays;
 using Robust.Client.Player;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Enums;
 using Robust.Shared.Map;
 
 namespace Content.Client._Mono.Overlays;
