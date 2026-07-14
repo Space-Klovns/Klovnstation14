@@ -198,9 +198,9 @@
 
 - type: entity
   id: N14SecureDoorBos
-  name: secure brotherhood door
+  name: secure metal door
   parent: WoodDoor
-  description: It's secure, AND branded! What more could you want?
+  description: It's secure, AND metal! What more could you want?
   components:
   - type: Sprite
     netsync: false
