@@ -50,7 +50,7 @@
   id: N14HouseDoorClean
   name: clean house door
   parent: WoodDoor
-  description: The cleanest door known to what remains of mankind.
+  description: The cleanest door known to mankind.
   components:
   - type: Sprite
     netsync: false
@@ -63,7 +63,7 @@
   id: N14RoomDoor
   name: room door
   parent: WoodDoor
-  description: A door used inside pre-war houses that section off rooms.
+  description: A door used inside houses that section off rooms.
   components:
   - type: Sprite
     netsync: false
@@ -76,7 +76,7 @@
   id: N14RoomDoorDestroyed
   name: destroyed room door
   parent: WoodDoor
-  description: A door used inside pre-war houses that section off rooms. Unsuprisingly, it looks like it'll fall apart at any moment.
+  description: A door used inside houses that section off rooms. Unsuprisingly, it looks like it'll fall apart at any moment.
   components:
   - type: Sprite
     netsync: false
@@ -140,7 +140,7 @@
   id: N14StoreDoor
   name: store door
   parent: WoodDoor
-  description: It's a glass door found at pre-war stores. Hey, that rhymes!
+  description: It's a glass door found at stores. Hey, that rhymes!
   components:
   - type: Sprite
     netsync: false
@@ -157,7 +157,7 @@
   id: N14StoreDoorDirty
   name: dirty store door
   parent: WoodDoor
-  description: It's a glass door used at pre-war stores. It doesn't seem like it's been washed recently.
+  description: It's a glass door used at stores. It doesn't seem like it's been washed recently.
   components:
   - type: Sprite
     netsync: false
