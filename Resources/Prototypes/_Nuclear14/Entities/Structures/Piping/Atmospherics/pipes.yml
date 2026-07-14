@@ -6,7 +6,7 @@
     mode: SnapgridCenter
   components:
   - type: Sprite
-    sprite: Nuclear14/Structures/Piping/atmospherics.rsi
+    sprite: _Nuclear14/Structures/Piping/atmospherics.rsi
     drawdepth: ThinPipe
     netsync: false
     visible: false
