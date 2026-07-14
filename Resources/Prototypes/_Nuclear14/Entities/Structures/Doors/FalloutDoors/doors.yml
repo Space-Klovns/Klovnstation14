@@ -6,7 +6,7 @@
   components:
   - type: Sprite
     netsync: false
-    sprite: Nuclear14/Structures/Doors/FalloutDoors/wooddoor.rsi
+    sprite: _Nuclear14/Structures/Doors/FalloutDoors/wooddoor.rsi
     layers:
     - state: closed
       map: ["enum.DoorVisualLayers.Base"]
@@ -41,7 +41,7 @@
   components:
   - type: Sprite
     netsync: false
-    sprite: Nuclear14/Structures/Doors/FalloutDoors/housedoor.rsi
+    sprite: _Nuclear14/Structures/Doors/FalloutDoors/housedoor.rsi
     layers:
     - state: closed
       map: ["enum.DoorVisualLayers.Base"]
@@ -54,7 +54,7 @@
   components:
   - type: Sprite
     netsync: false
-    sprite: Nuclear14/Structures/Doors/FalloutDoors/housecleandoor.rsi
+    sprite: _Nuclear14/Structures/Doors/FalloutDoors/housecleandoor.rsi
     layers:
     - state: closed
       map: ["enum.DoorVisualLayers.Base"]
@@ -67,7 +67,7 @@
   components:
   - type: Sprite
     netsync: false
-    sprite: Nuclear14/Structures/Doors/FalloutDoors/roomdoor.rsi
+    sprite: _Nuclear14/Structures/Doors/FalloutDoors/roomdoor.rsi
     layers:
     - state: closed
       map: ["enum.DoorVisualLayers.Base"]
@@ -80,7 +80,7 @@
   components:
   - type: Sprite
     netsync: false
-    sprite: Nuclear14/Structures/Doors/FalloutDoors/room_ddoor.rsi
+    sprite: _Nuclear14/Structures/Doors/FalloutDoors/room_ddoor.rsi
     layers:
     - state: closed
       map: ["enum.DoorVisualLayers.Base"]
@@ -93,7 +93,7 @@
   components:
   - type: Sprite
     netsync: false
-    sprite: Nuclear14/Structures/Doors/FalloutDoors/glassdoor.rsi
+    sprite: _Nuclear14/Structures/Doors/FalloutDoors/glassdoor.rsi
     layers:
     - state: closed
       map: ["enum.DoorVisualLayers.Base"]
@@ -110,7 +110,7 @@
   components:
   - type: Sprite
     netsync: false
-    sprite: Nuclear14/Structures/Doors/FalloutDoors/dirtyglassdoor.rsi
+    sprite: _Nuclear14/Structures/Doors/FalloutDoors/dirtyglassdoor.rsi
     layers:
     - state: closed
       map: ["enum.DoorVisualLayers.Base"]
@@ -127,7 +127,7 @@
   components:
   - type: Sprite
     netsync: false
-    sprite: Nuclear14/Structures/Doors/FalloutDoors/brokenglassdoor.rsi
+    sprite: _Nuclear14/Structures/Doors/FalloutDoors/brokenglassdoor.rsi
     layers:
     - state: closed
       map: ["enum.DoorVisualLayers.Base"]
@@ -144,7 +144,7 @@
   components:
   - type: Sprite
     netsync: false
-    sprite: Nuclear14/Structures/Doors/FalloutDoors/storedoor.rsi
+    sprite: _Nuclear14/Structures/Doors/FalloutDoors/storedoor.rsi
     layers:
     - state: closed
       map: ["enum.DoorVisualLayers.Base"]
@@ -161,7 +161,7 @@
   components:
   - type: Sprite
     netsync: false
-    sprite: Nuclear14/Structures/Doors/FalloutDoors/dirtystoredoor.rsi
+    sprite: _Nuclear14/Structures/Doors/FalloutDoors/dirtystoredoor.rsi
     layers:
     - state: closed
       map: ["enum.DoorVisualLayers.Base"]
@@ -178,7 +178,7 @@
   components:
   - type: Sprite
     netsync: false
-    sprite: Nuclear14/Structures/Doors/FalloutDoors/securedoor.rsi
+    sprite: _Nuclear14/Structures/Doors/FalloutDoors/securedoor.rsi
     layers:
     - state: closed
       map: ["enum.DoorVisualLayers.Base"]
@@ -191,7 +191,7 @@
   components:
   - type: Sprite
     netsync: false
-    sprite: Nuclear14/Structures/Doors/FalloutDoors/metaldoor.rsi
+    sprite: _Nuclear14/Structures/Doors/FalloutDoors/metaldoor.rsi
     layers:
     - state: closed
       map: ["enum.DoorVisualLayers.Base"]
@@ -204,7 +204,7 @@
   components:
   - type: Sprite
     netsync: false
-    sprite: Nuclear14/Structures/Doors/FalloutDoors/bosdoor.rsi
+    sprite: _Nuclear14/Structures/Doors/FalloutDoors/bosdoor.rsi
     layers:
     - state: closed
       map: ["enum.DoorVisualLayers.Base"]
@@ -217,7 +217,7 @@
   components:
   - type: Sprite
     netsync: false
-    sprite: Nuclear14/Structures/Doors/FalloutDoors/celldoor.rsi
+    sprite: _Nuclear14/Structures/Doors/FalloutDoors/celldoor.rsi
     layers:
     - state: closed
       map: ["enum.DoorVisualLayers.Base"]
@@ -234,7 +234,7 @@
   components:
   - type: Sprite
     netsync: false
-    sprite: Nuclear14/Structures/Doors/FalloutDoors/barreddoor.rsi
+    sprite: _Nuclear14/Structures/Doors/FalloutDoors/barreddoor.rsi
     layers:
     - state: closed
       map: ["enum.DoorVisualLayers.Base"]
@@ -251,7 +251,7 @@
   components:
   - type: Sprite
     netsync: false
-    sprite: Nuclear14/Structures/Doors/FalloutDoors/irondoor.rsi
+    sprite: _Nuclear14/Structures/Doors/FalloutDoors/irondoor.rsi
     layers:
     - state: closed
       map: ["enum.DoorVisualLayers.Base"]

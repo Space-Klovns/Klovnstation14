@@ -5,11 +5,11 @@
   description: No privacy guaranteed.
   components:
   - type: Sprite
-    sprite: Nuclear14/Structures/Doors/Curtains/junkcurtain.rsi
+    sprite: _Nuclear14/Structures/Doors/Curtains/junkcurtain.rsi
     layers:
     - state: closed
       map: ["enum.DoorVisualLayers.Base"]
-      
+
 - type: entity
   parent: N14JunkCurtain
   id: N14JunkCurtainOpen
@@ -22,3 +22,4 @@
     enabled: false
   - type: Physics
     canCollide: false
+

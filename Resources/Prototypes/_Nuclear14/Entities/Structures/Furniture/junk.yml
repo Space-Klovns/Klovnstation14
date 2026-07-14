@@ -5,7 +5,7 @@
     mode: SnapgridCenter
   components:
   - type: Sprite
-    sprite: Nuclear14/Structures/Furniture/junk.rsi
+    sprite: _Nuclear14/Structures/Furniture/junk.rsi
     snapCardinals: true
     netsync: false
   - type: Damageable
@@ -45,7 +45,7 @@
   - type: InteractionOutline
   - type: Clickable
 # No fixture on this base, inherit from further down for fixture
-  
+
 - type: entity
   parent: N14JunkWoodBase
   id: N14JunkMetalBase
@@ -90,16 +90,17 @@
     state: junk_dresser
   - type: Fixtures
     fixtures:
-    - shape:
-        !type:PhysShapeAabb
-        bounds: "-0.45,-0.45,0.45,0.45"
-      density: 60
-      mask:
-      - MachineMask
-      layer:
-      - MidImpassable
-      - LowImpassable
-    
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.45,-0.45,0.45,0.45"
+        density: 60
+        mask:
+        - MachineMask
+        layer:
+        - MidImpassable
+        - LowImpassable
+
 - type: entity
   parent: N14JunkDresser
   id: N14JunkCabinet
@@ -108,7 +109,7 @@
   components:
   - type: Sprite
     state: junk_cabinet
-    
+
 - type: entity
   parent: N14JunkDresser
   id: N14JunkTable
@@ -117,7 +118,7 @@
   components:
   - type: Sprite
     state: junk_table
-    
+
 - type: entity
   parent: N14JunkWoodBase
   id: N14JunkBench
@@ -127,7 +128,7 @@
   - type: Sprite
     state: junk_bench
     noRot: true
-    
+
 # Metal Junk
 - type: entity
   parent: N14JunkMetalBase
@@ -139,16 +140,17 @@
     state: junk_machine
   - type: Fixtures
     fixtures:
-    - shape:
-        !type:PhysShapeAabb
-        bounds: "-0.45,-0.45,0.45,0.45"
-      density: 60
-      mask:
-      - MachineMask
-      layer:
-      - MidImpassable
-      - LowImpassable
-    
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.45,-0.45,0.45,0.45"
+        density: 60
+        mask:
+        - MachineMask
+        layer:
+        - MidImpassable
+        - LowImpassable
+
 - type: entity
   parent: N14JunkMachine
   id: N14JunkMicrowave
@@ -157,7 +159,7 @@
   components:
   - type: Sprite
     state: junk_micro
-    
+
 - type: entity
   parent: N14JunkMachine
   id: N14JunkJukebox
@@ -166,7 +168,7 @@
   components:
   - type: Sprite
     state: junk_jukebox
-    
+
 - type: entity
   parent: N14JunkMetalBase
   id: N14JunkBed1
@@ -175,7 +177,7 @@
   components:
   - type: Sprite
     state: junk_bed1
-    
+
 - type: entity
   parent: N14JunkMetalBase
   id: N14JunkBed2
@@ -184,7 +186,7 @@
   components:
   - type: Sprite
     state: junk_bed2
-    
+
 - type: entity
   parent: N14JunkMachine
   id: N14JunkTV
@@ -193,7 +195,7 @@
   components:
   - type: Sprite
     state: junk_tv
-    
+
 - type: entity
   parent: N14JunkMachine
   id: N14JunkArcade
@@ -202,7 +204,7 @@
   components:
   - type: Sprite
     state: junk_arcade
-    
+
 - type: entity
   parent: N14JunkMetalBase
   id: N14JunkUrinal
@@ -211,7 +213,7 @@
   components:
   - type: Sprite
     state: junk_urinal
-    
+
 - type: entity
   parent: SeatBase
   id: N14JunkToilet
@@ -219,12 +221,12 @@
   description: Once a porcelain throne. Now it's junk.
   components:
   - type: Sprite
-    sprite: Nuclear14/Structures/Furniture/junk.rsi
+    sprite: _Nuclear14/Structures/Furniture/junk.rsi
     state: junk_toilet
   - type: SecretStash
     secretPartName: secret-stash-part-toilet
     noRot: true
-    
+
 - type: entity
   parent: N14JunkMetalBase
   id: N14JunkShower
@@ -234,7 +236,7 @@
   - type: Sprite
     state: junk_shower
     noRot: true
-    
+
 - type: entity
   parent: N14JunkMetalBase
   id: N14JunkSink
@@ -244,7 +246,7 @@
   - type: Sprite
     state: junk_sink
     noRot: true
-    
+
 - type: entity
   parent: Mirror
   id: N14JunkMirror
@@ -252,9 +254,9 @@
   description: Mirror mirror... I hope I don't get bad luck.
   components:
   - type: Sprite
-    sprite: Nuclear14/Structures/Furniture/junk.rsi
+    sprite: _Nuclear14/Structures/Furniture/junk.rsi
     state: junk_mirror
-      
+
 - type: entity
   parent: N14JunkMetalBase
   id: N14JunkClock
