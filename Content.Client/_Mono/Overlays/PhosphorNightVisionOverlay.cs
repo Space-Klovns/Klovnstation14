@@ -2,6 +2,13 @@ using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.Prototypes;
+using Content.Shared.MouseRotator;
+using Robust.Client.Input;
+using Content.Shared._Mono.Overlays;
+using Robust.Client.Player;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Enums;
+using Robust.Shared.Map;
 
 namespace Content.Client._Mono.Overlays;
 
@@ -11,10 +18,15 @@ namespace Content.Client._Mono.Overlays;
 public sealed partial class PhosphorNightVisionOverlay : Overlay
 {
     [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IEntityManager _ent = default!;
+    [Dependency] private IInputManager _input = default!;
+    [Dependency] private IEyeManager _eye = default!;
+    private SharedTransformSystem _xform = default!;
+    private Entity<EyeComponent, TransformComponent>? _eyeEntity;
 
-    private static readonly ProtoId<ShaderPrototype> Shader = "PhosphorNightVision";
+    private static ProtoId<ShaderPrototype> Shader = "PhosphorNightVision";
 
-    private readonly ShaderInstance _phosphorNightVisionShader;
+    private ShaderInstance _phosphorNightVisionShader;
 
 
     /// <summary>
@@ -122,6 +134,24 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
         //ViewAngle           = viewAngle;
     }
 
+    protected override bool BeforeDraw(in OverlayDrawArgs args)
+    {
+        _eyeEntity = null;
+
+        // Stolen ES cone code
+        var enumerator = _ent.AllEntityQueryEnumerator<EyeComponent, PhosphorNightVisionComponent, TransformComponent>();
+        while (enumerator.MoveNext(out var uid, out var eye, out var viewcone, out var xform))
+        {
+            if (args.Viewport.Eye != eye.Eye)
+                continue;
+
+            _eyeEntity = (uid, eye, xform);
+            break;
+        }
+
+        return _eyeEntity != null;
+    }
+
     protected override void Draw(in OverlayDrawArgs args)
     {
         if (ScreenTexture == null)
@@ -141,6 +171,18 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
                 if (!PhosphorEffect)
                     break;
 
+                var eyeAngle = (float) _eyeEntity!.Value.Comp1.Rotation.Theta; //the null check is in beforedraw
+                var playerAngle = (float) _xform.GetWorldRotation(_eyeEntity.Value.Comp2).Theta;
+
+                if (_ent.HasComponent<MouseRotatorComponent>(_eyeEntity))
+                {
+                    var mousePos = _eye.PixelToMap(_input.MouseScreenPosition);
+                    if (mousePos.MapId != MapId.Nullspace)
+                        playerAngle = (float) (mousePos.Position - _xform.GetMapCoordinates(_eyeEntity.Value).Position).ToAngle().Theta + MathHelper.DegreesToRadians(90f);
+                }
+
+                ViewAngle = playerAngle + eyeAngle;
+
                 _phosphorNightVisionShader.SetParameter("SCREEN_TEXTURE", ScreenTexture);
                 _phosphorNightVisionShader.SetParameter("BASE_COLOR", new Vector3(PhosphorColor.R, PhosphorColor.G, PhosphorColor.B));
                 _phosphorNightVisionShader.SetParameter("AMPLIFICATION", Amplification);
@@ -149,7 +191,7 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
                 _phosphorNightVisionShader.SetParameter("CONE_FEATHER", ConeFeather);
                 _phosphorNightVisionShader.SetParameter("CONE_DISTANCE", ConeDistance);
                 _phosphorNightVisionShader.SetParameter("CONE_DISTANCE_FEATHER", ConeDistanceFeather);
-                _phosphorNightVisionShader.SetParameter("VIEW_ANGLE", 0f);
+                _phosphorNightVisionShader.SetParameter("VIEW_ANGLE", ViewAngle);
                 //ViewAngle);
 
                 // Adjusting these weights is somewhat tricky.
@@ -165,6 +207,7 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
                 handle.UseShader(_phosphorNightVisionShader);
                 handle.DrawRect(args.WorldBounds, Color.White);
                 handle.UseShader(null);
+                _eyeEntity = null;
                 break;
         }
     }
