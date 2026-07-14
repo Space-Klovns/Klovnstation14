@@ -7,7 +7,7 @@
     useDelay: 2
     itemIconStyle: BigAction
     icon:
-      sprite: Interface/Actions/devour.rsi
+      sprite: _Mono/Interface/Actions/night_vision.rsi
       state: icon
   - type: InstantAction
     event: !type:TogglePhosphorNightVisionEvent {}
