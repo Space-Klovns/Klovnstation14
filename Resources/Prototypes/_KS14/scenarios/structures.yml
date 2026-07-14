@@ -30,6 +30,8 @@
     sprite: Structures/Walls/rock.rsi
     state: rock
     drawdepth: Walls
+  - type: PlacementReplacement
+    key: walls
 
 - type: entity
   id: InvisibleBarrier5Min
