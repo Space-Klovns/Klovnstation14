@@ -23,6 +23,7 @@
   name: deployable syndicate turret
   parent: ToolboxSyndicate
   components:
+  - type: Damageable
   - type: Injurable
     damageContainer: Inorganic
   - type: Destructible
