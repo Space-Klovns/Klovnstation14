@@ -8,6 +8,7 @@ using Content.Shared.Database;
 using Content.Shared.DoAfter;
 using Content.Shared.Hands.Components;
 using Content.Shared.IdentityManagement;
+using Content.Shared.Movement.Components;
 using Content.Shared.Movement.Events;
 using Content.Shared.Movement.Pulling.Events;
 using Content.Shared.Popups;
@@ -176,16 +177,12 @@ public abstract partial class SharedBuckleSystem
 
     private void OnBuckleUpdateCanMove(EntityUid uid, BuckleComponent component, UpdateCanMoveEvent args)
     {
-        // KS14 start: allow riders to drive the mower through its movement relay.
-        // TODO VEHICLES: replace this exception when buckled riders can use a shared vehicle movement relay.
-        if (component.Buckled &&
-            !(TryComp<Content.Shared.Movement.Components.RelayInputMoverComponent>(uid, out var relay) &&
-              relay.RelayEntity == component.BuckledTo &&
-              HasComp<Content.Shared._KS14.Lawnmower.KsLawnmowerComponent>(relay.RelayEntity)))
-        {
+        // If we're relaying then don't cancel.
+        if (HasComp<RelayInputMoverComponent>(uid))
+            return;
+
+        if (component.Buckled)
             args.Cancel();
-        }
-        // KS14 end
     }
 
     public bool IsBuckled(EntityUid uid, BuckleComponent? component = null)
