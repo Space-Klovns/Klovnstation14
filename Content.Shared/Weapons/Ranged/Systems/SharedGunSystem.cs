@@ -799,6 +799,7 @@ public abstract partial class SharedGunSystem : EntitySystem
         TransformSystem.SetLocalRotation(entity, rand.NextAngle(), xform);
         // </Trauma>
         TransformSystem.SetCoordinates(entity, xform, coordinates);
+        TransformSystem.AttachToGridOrMap(entity, xform);
 
         // decides direction the casing ejects and only when not cycling
         if (angle != null)
