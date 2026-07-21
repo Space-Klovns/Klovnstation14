@@ -19,7 +19,6 @@ public abstract partial class SharedMechSystem
     private void InitializeTrauma()
     {
         SubscribeLocalEvent<MechEquipmentComponent, ShotAttemptedEvent>(OnShotAttempted);
-        SubscribeLocalEvent<MechPilotComponent, EntGotRemovedFromContainerMessage>(OnEntGotRemovedFromContainer);
     }
 
     // TODO: this has no reason to be here
@@ -35,13 +34,6 @@ public abstract partial class SharedMechSystem
         // TODO: this should not be in an attempt event
         var ev = new MechGunFiredEvent();
         RaiseLocalEvent(uid, ref ev);
-    }
-
-    // TODO: this has no reason to be here
-    private void OnEntGotRemovedFromContainer(EntityUid uid, MechPilotComponent component, EntGotRemovedFromContainerMessage args)
-    {
-        // Fixes scram implants or teleports locking the pilot out of being able to move.
-        TryEject(component.Mech, pilot: uid);
     }
 
     private void BlockHands(Entity<HandsComponent?> ent, EntityUid mech)
