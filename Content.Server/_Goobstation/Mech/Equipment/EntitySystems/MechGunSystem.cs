@@ -10,10 +10,8 @@ using Robust.Shared.Random;
 using Content.Shared.Power.Components;
 
 namespace Content.Server.Mech.Equipment.EntitySystems;
-public sealed class MechGunSystem : EntitySystem
+public sealed partial class MechGunSystem : EntitySystem
 {
-    [Dependency] private IRobustRandom _random = default!;
-    [Dependency] private ThrowingSystem _throwing = default!;
     [Dependency] private MechSystem _mech = default!;
     [Dependency] private BatterySystem _battery = default!;
 
