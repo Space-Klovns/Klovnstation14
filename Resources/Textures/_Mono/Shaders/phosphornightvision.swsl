@@ -1,0 +1,95 @@
+uniform sampler2D SCREEN_TEXTURE;
+
+uniform highp vec3 BASE_COLOR;
+uniform highp float AMPLIFICATION;
+uniform highp float[3] BLUR_OFFSET;
+uniform highp float[3] BLUR_WEIGHT;
+uniform bool IS_CONE;
+
+// Cone controls
+uniform highp float CONE_ANGLE;          // Width of the cone in degrees.
+uniform highp float CONE_FEATHER;         // Softness of the side edges in degrees.
+uniform highp float CONE_DISTANCE;         // How far the cone reaches from center (0–1 of screen).
+uniform highp float CONE_DISTANCE_FEATHER; // Soft fade at the cone’s end (0–1 of screen).
+uniform highp float VIEW_ANGLE;            // Rotation of the cone in radians.
+
+const highp float PI = 3.14159265359;
+const highp float TAU = 6.28318530718;
+
+// Cone mask.
+// Returns 1.0 inside the cone, 0.0 outside, with smooth edges.
+highp float coneMask(
+    highp vec2 fragcoord,
+    highp vec2 screenSize,
+    highp float coneAngleDeg,
+    highp float coneFeatherDeg,
+    highp float coneDistance,
+    highp float coneDistanceFeather,
+    highp float viewAngle
+) {
+    highp vec2 center = screenSize * 0.5;
+    highp vec2 delta = fragcoord - center;
+
+    // Distance from screen center in pixels.
+    highp float dist = length(delta);
+    highp float maxDist = coneDistance * min(screenSize.x, screenSize.y);
+    highp float maxDistFeather = coneDistanceFeather * min(screenSize.x, screenSize.y);
+
+    // Radial distance falloff for the cone length.
+    highp float distMask = 1.0 - smoothstep(
+        maxDist - maxDistFeather,
+        maxDist,
+        dist
+    );
+
+    // Angular cone mask centered on viewAngle.
+    highp float angle = atan(delta.x, delta.y) + viewAngle;
+    angle = mod(angle + PI, TAU) - PI;
+
+    highp float halfCone = radians(coneAngleDeg) * 0.5;
+    highp float angleMask = 1.0 - smoothstep(
+        halfCone,
+        halfCone + radians(coneFeatherDeg),
+        abs(angle)
+    );
+
+    return clamp(distMask * angleMask, 0.0, 1.0);
+}
+
+void fragment()
+{
+    // Bilinear blur in x and y.
+    highp vec4 blurred = zTextureSpec(SCREEN_TEXTURE, UV) * BLUR_WEIGHT[0];
+    for (int i = 1; i < 3; i++) {
+        blurred += zTextureSpec(SCREEN_TEXTURE, (UV + vec2(0.0, BLUR_OFFSET[i] * SCREEN_PIXEL_SIZE.y))) * BLUR_WEIGHT[i];
+        blurred += zTextureSpec(SCREEN_TEXTURE, (UV - vec2(0.0, BLUR_OFFSET[i] * SCREEN_PIXEL_SIZE.y))) * BLUR_WEIGHT[i];
+        blurred += zTextureSpec(SCREEN_TEXTURE, (UV + vec2(BLUR_OFFSET[i] * SCREEN_PIXEL_SIZE.x, 0.0))) * BLUR_WEIGHT[i];
+        blurred += zTextureSpec(SCREEN_TEXTURE, (UV - vec2(BLUR_OFFSET[i] * SCREEN_PIXEL_SIZE.x, 0.0))) * BLUR_WEIGHT[i];
+    }
+
+    // Monochrome the view.
+    highp float gray = zGrayscale(blurred.rgb);
+
+    // Shade it to the phosphor color.
+    highp vec3 colorized = gray * BASE_COLOR * AMPLIFICATION;
+
+    // Re-expand and add the original alpha back.
+    highp vec4 walpha = vec4(colorized, blurred.a);
+
+    // Screen size in pixels.
+    highp vec2 screenSize = vec2(1.0 / SCREEN_PIXEL_SIZE.x, 1.0 / SCREEN_PIXEL_SIZE.y);
+
+    if (IS_CONE) {
+        highp float cone = coneMask(
+            FRAGCOORD.xy,
+            screenSize,
+            CONE_ANGLE,
+            CONE_FEATHER,
+            CONE_DISTANCE,
+            CONE_DISTANCE_FEATHER,
+            VIEW_ANGLE
+        );
+
+        COLOR = mix(vec4(vec3(0.0), 1.0), walpha, cone);
+    }
+}
