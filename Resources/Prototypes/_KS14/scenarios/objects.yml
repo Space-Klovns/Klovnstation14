@@ -46,3 +46,23 @@
                 max: 1
   - type: StaticPrice
     price: 1350
+
+- type: entity
+  id: ScenarioNightVisionGogglesBasic
+  name: night vision goggles
+  description: Я не вижу нихуя. A generic, cheap image intensifier.
+  parent: ClothingEyesBase
+  components:
+  - type: Sprite
+    sprite: _KS14/Clothing/Eyes/Goggles/nightvision.rsi
+  - type: Clothing
+    sprite: _KS14/Clothing/Eyes/Goggles/nightvision.rsi
+  - type: PhosphorNightVision
+    isCone: true
+    action: ActionTogglePhosphorNightVision
+    phosphorColor: "#00FF00"
+    lightingColor: "#FFFFFF32"
+    relayOverlay: true
+  - type: ClothingGrantComponent
+    component:
+      - type: PhosphorNightVisionRecipient
