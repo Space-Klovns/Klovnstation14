@@ -17,6 +17,7 @@ using Content.Shared.IdentityManagement.Components;
 using Content.Shared.Implants;
 using Content.Shared.Inventory.Events;
 using Content.Shared.Mobs; // KS14: MOBSTATERELAY
+using Content.Shared._Mono.PhosphorNightVision; // KS14 - better night vision
 using Content.Shared.Movement.Events;
 using Content.Shared.Movement.Systems;
 using Content.Shared.NameModifier.EntitySystems;
@@ -91,6 +92,7 @@ public partial class InventorySystem
         SubscribeLocalEvent<InventoryComponent, GetEyeProtectionEvent>(RelayInventoryEvent);
         SubscribeLocalEvent<InventoryComponent, GetBlurEvent>(RelayInventoryEvent);
         SubscribeLocalEvent<InventoryComponent, SolutionScanEvent>(RelayInventoryEvent);
+        SubscribeLocalEvent<InventoryComponent, RefreshPhosphorNightVisionEvent>(RefRelayInventoryEvent); // KS14
 
         // ComponentActivatedClientSystems
         SubscribeLocalEvent<InventoryComponent, RefreshEquipmentHudEvent<ShowJobIconsComponent>>(RefRelayInventoryEvent);
