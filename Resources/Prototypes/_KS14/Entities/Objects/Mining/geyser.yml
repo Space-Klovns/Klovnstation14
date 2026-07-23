@@ -42,7 +42,7 @@
   - type: SolutionContainerVisuals
     maxFillLevels: 1
     fillBaseName: soup
-    solutionName: buffer
+    solutionName: solution
 
   # Trigger
   - type: KsScanTriggerOnDiscovered
@@ -71,12 +71,12 @@
         pipeDirection: Fourway
 
   # Solution
-  - type: SolutionRegeneration
-    generated:
-      reagents:
-      - ReagentId: Water
-        Quantity: 100
+  - type: Solution
+    solution:
+      maxVol: &volume 1500
+    id: solution
   - type: DrainableSolution
+    solution: solution
 
   # Geyser
   - type: KsScanDiscoverable
@@ -100,11 +100,13 @@
   suffix: Plasma
   components:
   - type: SolutionRegeneration
-    generated:
+    generated: &plasma_sol
       reagents:
       - ReagentId: Plasma
-        Quantity: 100
+        Quantity: *volume
       temperature: 550
+  - type: Solution
+    solution: *plasma_sol
   - type: KsScanDiscoverable
     trueName: plasma geyser
 
@@ -114,11 +116,13 @@
   suffix: CarbonDioxide
   components:
   - type: SolutionRegeneration
-    generated:
+    generated: &co2_sol
       reagents:
       - ReagentId: CarbonDioxide
-        Quantity: 100
+        Quantity: *volume
       temperature: 220
+  - type: Solution
+    solution: *co2_sol
   - type: KsScanDiscoverable
     trueName: liquid carbon dioxide geyser
 
@@ -128,11 +132,12 @@
   suffix: Nitrogen
   components:
   - type: SolutionRegeneration
-    generated:
+    generated: &n2_sol
       reagents:
       - ReagentId: Nitrogen
-        Quantity: 100
+        Quantity: *volume
       temperature: 75
+    solution: *n2_sol
   - type: KsScanDiscoverable
     trueName: liquid nitrogen geyser
 
@@ -142,11 +147,12 @@
   suffix: Fresium
   components:
   - type: SolutionRegeneration
-    generated:
+    generated: &fresium_sol
       reagents:
       - ReagentId: Fresium
-        Quantity: 100
+        Quantity: *volume
       temperature: 42
+    solution: *fresium_sol
   - type: KsScanDiscoverable
     trueName: fresium geyser
 
@@ -156,10 +162,11 @@
   suffix: Klovnide
   components:
   - type: SolutionRegeneration
-    generated:
+    generated: &klovnide_sol
       reagents:
       - ReagentId: Klovnide
-        Quantity: 100
+        Quantity: *volume
+    solution: *klovnide_sol
   - type: KsScanDiscoverable
     trueName: klovnide geyser
 
@@ -169,10 +176,11 @@
   suffix: Zipium
   components:
   - type: SolutionRegeneration
-    generated:
+    generated: &zipium_sol
       reagents:
       - ReagentId: Zipium
-        Quantity: 100
+        Quantity: *volume
+    solution: *zipium_sol
   - type: KsScanDiscoverable
     trueName: zipium geyser
 
@@ -182,10 +190,11 @@
   suffix: Artifexium
   components:
   - type: SolutionRegeneration
-    generated:
+    generated: &artifexium_sol
       reagents:
       - ReagentId: Artifexium
-        Quantity: 100
+        Quantity: *volume
+    solution: *artifexium_sol
   - type: KsScanDiscoverable
     trueName: artifexium geyser
 
@@ -195,9 +204,10 @@
   suffix: Wittel
   components:
   - type: SolutionRegeneration
-    generated:
+    generated: &wittel_sol
       reagents:
       - ReagentId: Wittel
-        Quantity: 100
+        Quantity: *volume
+    solution: *wittel_sol
   - type: KsScanDiscoverable
     trueName: wittel geyser
