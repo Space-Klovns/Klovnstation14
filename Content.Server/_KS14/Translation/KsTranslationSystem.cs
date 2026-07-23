@@ -31,14 +31,14 @@ namespace Content.Server._KS14.Translation;
 ///     <see cref="TryReaderShared"/> per reader to stamp a message id and queue the work, then
 ///     <see cref="EndMessage"/> to apply the per-speaker cooldown. See deepl-translation-implementation.md.
 /// </summary>
-public sealed class KsTranslationSystem : EntitySystem
+public sealed partial class KsTranslationSystem : EntitySystem
 {
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Dependency] private readonly INetConfigurationManager _netCfg = default!;
-    [Dependency] private readonly IServerNetManager _net = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly IPrototypeManager _proto = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private INetConfigurationManager _netCfg = default!;
+    [Dependency] private IServerNetManager _net = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IPrototypeManager _proto = default!;
 
     /// <summary>
     ///     The translation backend. Deliberately NOT a [Dependency] so integration tests can swap in a fake;

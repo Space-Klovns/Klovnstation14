@@ -17,7 +17,7 @@ namespace Content.Client._KS14.Chat;
 [UsedImplicitly]
 public sealed partial class KsTranslatedMarkerTag : IMarkupTagHandler
 {
-    [Dependency] private readonly IUserInterfaceManager _ui = default!;
+    [Dependency] private IUserInterfaceManager _ui = default!;
 
     public const string TagName = "kstranslated";
     public const string IdParam = "id";
