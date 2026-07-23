@@ -162,6 +162,33 @@ public sealed class KsTranslationTests : GameTest
     }
 
     [Test]
+    public async Task CooldownAllowsSameTextCompanion()
+    {
+        var fake = new FakeKsTranslator();
+        await OverrideCVar(Side.Server, KsCCVars.TranslateEnabled, true);
+        await OverrideCVar(Side.Client, KsCCVars.TranslateLanguage, "DE");
+        await Pair.RunTicksSync(10);
+
+        var began = false;
+        await Server.WaitPost(() =>
+        {
+            var sys = Server.System<KsTranslationSystem>();
+            sys.Translator = fake;
+
+            // A local say starts a real call and applies the per-speaker cooldown...
+            var ctx = new KsTranslationContext { SpeakerBase = "EN", Speaker = ServerSession!.UserId, Length = 9, Text = "relay-msg" };
+            sys.TryReader("relay-msg", ctx, ServerSession!.Channel);
+            sys.EndMessage(ctx);
+
+            // ...but the same utterance's radio copy carries identical text, so it must NOT be throttled.
+            began = sys.TryBeginSession(ChatChannel.Radio, "relay-msg", ServerSession!, out _);
+        });
+        await Pair.RunTicksSync(5);
+
+        Assert.That(began, Is.True, "the same-text radio copy of a say must bypass the per-speaker cooldown");
+    }
+
+    [Test]
     public async Task ContextThreadsToTranslator()
     {
         var fake = new FakeKsTranslator();

@@ -54,8 +54,9 @@ public sealed class KsTranslationSystem : EntitySystem
     private readonly Dictionary<string, string> _cache = new();
     // (src|tgt|text) hash -> readers awaiting the single in-flight call for that key (collapses duplicates).
     private readonly Dictionary<string, InFlight> _inFlight = new();
-    // Per-speaker cooldown expiry, drained in Update like TtsSystem.
-    private readonly Dictionary<NetUserId, TimeSpan> _cooldownUntil = new();
+    // Per-speaker cooldown, drained in Update like TtsSystem. Keyed with the last message text so a same-text
+    // companion line (a local say and its radio copy) or a repeat is not throttled, only a new distinct call.
+    private readonly Dictionary<NetUserId, (TimeSpan Until, string Text)> _cooldownUntil = new();
 
     // Rolling per-channel buffer of recent plain lines, joined into the unbilled DeepL "context" hint.
     private readonly Dictionary<ChatChannel, Queue<string>> _channelHistory = new();
@@ -150,9 +151,9 @@ public sealed class KsTranslationSystem : EntitySystem
         if (_cooldownUntil.Count > 0)
         {
             var done = new ValueList<NetUserId>();
-            foreach (var (user, until) in _cooldownUntil)
+            foreach (var (user, cd) in _cooldownUntil)
             {
-                if (until > _timing.CurTime)
+                if (cd.Until > _timing.CurTime)
                     continue;
                 done.Add(user);
             }
@@ -265,12 +266,15 @@ public sealed class KsTranslationSystem : EntitySystem
         if (speakerBase.Length == 0)
             return false;
 
-        if (_cooldownUntil.TryGetValue(speaker, out var until) && until > _timing.CurTime)
+        // One utterance can fan out to several lines (a local say and its radio copy carry the same text), and
+        // the say path sets this cooldown before the radio path begins. Throttle only a NEW distinct message: a
+        // same-text companion or repeat is let through and resolves to a free cache hit.
+        if (_cooldownUntil.TryGetValue(speaker, out var cd) && cd.Until > _timing.CurTime && cd.Text != plain)
             return false;
 
         // Build the context from the buffer as it stands (excludes this line), then record this line for the
         // benefit of the next message on this channel.
-        ctx = new KsTranslationContext { SpeakerBase = speakerBase, Speaker = speaker, Length = len, Context = BuildContext(channel) };
+        ctx = new KsTranslationContext { SpeakerBase = speakerBase, Speaker = speaker, Length = len, Text = plain, Context = BuildContext(channel) };
         AppendContext(channel, plain);
         return true;
     }
@@ -284,7 +288,8 @@ public sealed class KsTranslationSystem : EntitySystem
         if (!ctx.StartedCall)
             return;
 
-        _cooldownUntil[ctx.Speaker] = _timing.CurTime + TimeSpan.FromSeconds(_cooldownBaseline + _cooldownPerChar * ctx.Length);
+        var until = _timing.CurTime + TimeSpan.FromSeconds(_cooldownBaseline + _cooldownPerChar * ctx.Length);
+        _cooldownUntil[ctx.Speaker] = (until, ctx.Text);
     }
 
     #endregion
@@ -474,6 +479,9 @@ public sealed class KsTranslationContext
 
     /// <summary>The plain message length, for the per-character cooldown.</summary>
     public int Length;
+
+    /// <summary>The plain message text, letting a same-text companion line or repeat bypass the cooldown.</summary>
+    public string Text = "";
 
     /// <summary>The unbilled DeepL context hint (setting hint + recent channel lines) for this message.</summary>
     public string Context = "";
