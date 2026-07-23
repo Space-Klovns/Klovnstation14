@@ -137,6 +137,7 @@
       - ReagentId: Nitrogen
         Quantity: *volume
       temperature: 75
+  - type: Solution
     solution: *n2_sol
   - type: KsScanDiscoverable
     trueName: liquid nitrogen geyser
@@ -152,6 +153,7 @@
       - ReagentId: Fresium
         Quantity: *volume
       temperature: 42
+  - type: Solution
     solution: *fresium_sol
   - type: KsScanDiscoverable
     trueName: fresium geyser
@@ -166,6 +168,7 @@
       reagents:
       - ReagentId: Klovnide
         Quantity: *volume
+  - type: Solution
     solution: *klovnide_sol
   - type: KsScanDiscoverable
     trueName: klovnide geyser
@@ -180,6 +183,7 @@
       reagents:
       - ReagentId: Zipium
         Quantity: *volume
+  - type: Solution
     solution: *zipium_sol
   - type: KsScanDiscoverable
     trueName: zipium geyser
@@ -194,6 +198,7 @@
       reagents:
       - ReagentId: Artifexium
         Quantity: *volume
+  - type: Solution
     solution: *artifexium_sol
   - type: KsScanDiscoverable
     trueName: artifexium geyser
@@ -208,6 +213,7 @@
       reagents:
       - ReagentId: Wittel
         Quantity: *volume
+  - type: Solution
     solution: *wittel_sol
   - type: KsScanDiscoverable
     trueName: wittel geyser
