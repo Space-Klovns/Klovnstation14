@@ -1,3 +1,4 @@
+using Content.Server._KS14.Translation; // KS14
 using Content.Server.Administration.Logs;
 using Content.Server.Chat.Systems;
 using Content.Server.Power.Components;
@@ -27,6 +28,7 @@ public sealed partial class RadioSystem : EntitySystem
     [Dependency] private IPrototypeManager _prototype = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private ChatSystem _chat = default!;
+    [Dependency] private KsTranslationSystem _translation = default!; // KS14
     [Dependency] private EntityQuery<TelecomExemptComponent> _exemptQuery = default!;
 
     // set used to prevent radio feedback loops.
@@ -51,7 +53,8 @@ public sealed partial class RadioSystem : EntitySystem
     private void OnIntrinsicReceive(EntityUid uid, IntrinsicRadioReceiverComponent component, ref RadioReceiveEvent args)
     {
         if (TryComp(uid, out ActorComponent? actor))
-            _netMan.ServerSendMessage(args.ChatMsg, actor.PlayerSession.Channel);
+            // KS14: swap in a per-reader translated clone if this reader's language differs from the speaker.
+            _netMan.ServerSendMessage(_translation.ApplyRadioReader(args.ChatMsg, args.Translation, actor.PlayerSession), actor.PlayerSession.Channel);
     }
 
     /// <summary>
@@ -106,7 +109,11 @@ public sealed partial class RadioSystem : EntitySystem
             NetEntity.Invalid,
             null);
         var chatMsg = new MsgChatMessage { Message = chat };
-        var ev = new RadioReceiveEvent(message, messageSource, channel, radioSource, chatMsg);
+
+        // KS14: begin per-reader translation once for the whole broadcast (gating + cooldown are message-level).
+        _translation.TryBeginLocal(ChatChannel.Radio, message, messageSource, out var translation);
+
+        var ev = new RadioReceiveEvent(message, messageSource, channel, radioSource, chatMsg, translation /* KS14 */);
 
         var sendAttemptEv = new RadioSendAttemptEvent(channel, radioSource);
         RaiseLocalEvent(ref sendAttemptEv);
@@ -144,13 +151,17 @@ public sealed partial class RadioSystem : EntitySystem
 
             // KS14 Start
             var sentEv = attemptEv.NewChatMessage is { } newChatMsg ?
-                new RadioReceiveEvent(message, messageSource, channel, radioSource, newChatMsg) :
+                new RadioReceiveEvent(message, messageSource, channel, radioSource, newChatMsg, translation) :
                 ev;
             // KS14 End
 
             // send the message
             RaiseLocalEvent(receiver, ref sentEv);
         }
+
+        // KS14: apply the per-speaker cooldown once, only if some reader actually started a real API call.
+        if (translation is { } endCtx)
+            _translation.EndMessage(endCtx);
 
         if (name != Name(messageSource))
             _adminLogger.Add(LogType.Chat, LogImpact.Low, $"Radio message from {ToPrettyString(messageSource):user} as {name} on {channel.LocalizedName}: {message}");

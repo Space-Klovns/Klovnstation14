@@ -1,3 +1,4 @@
+using Content.Server._KS14.Translation; // KS14
 using Content.Shared.Chat;
 using Content.Shared.Inventory.Events;
 using Content.Shared.Radio;
@@ -12,6 +13,7 @@ public sealed partial class HeadsetSystem : SharedHeadsetSystem
 {
     [Dependency] private INetManager _netMan = default!;
     [Dependency] private RadioSystem _radio = default!;
+    [Dependency] private KsTranslationSystem _translation = default!; // KS14
 
     public override void Initialize()
     {
@@ -110,6 +112,7 @@ public sealed partial class HeadsetSystem : SharedHeadsetSystem
         }
 
         if (TryComp(parent, out ActorComponent? actor))
-            _netMan.ServerSendMessage(args.ChatMsg, actor.PlayerSession.Channel);
+            // KS14: swap in a per-reader translated clone if this reader's language differs from the speaker.
+            _netMan.ServerSendMessage(_translation.ApplyRadioReader(args.ChatMsg, args.Translation, actor.PlayerSession), actor.PlayerSession.Channel);
     }
 }
