@@ -218,7 +218,7 @@
 - type: entity
   parent: KsBasePalletWooden
   id: KsPalletWoodenLowRotated
-  description: A flat, portable platform used to stack, store, and transport heavy goods. It's on it's side.
+  description: A flat, portable platform used to stack, store, and transport heavy goods. It's on its side.
   suffix: Rotated on side
   components:
   - type: Transform
