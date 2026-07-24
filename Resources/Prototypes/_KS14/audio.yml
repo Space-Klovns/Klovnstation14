@@ -1,0 +1,25 @@
+
+- type: soundCollection
+  id: KsAmbienceReebe
+  files:
+  - /Audio/Ambience/ambireebe1.ogg
+  - /Audio/Ambience/ambireebe3.ogg
+
+- type: ambientMusic
+  id: KsReebe
+  sound:
+    params:
+      volume: -5
+    collection: KsAmbienceReebe
+  rules: KsNearReebe
+  priority: 8
+
+- type: rules
+  id: KsNearReebe
+  rules:
+  - !type:NearbyEntitiesRule
+    count: 1
+    whitelist:
+      tags:
+      - KsReebeAmbience
+    range: 8 # ambience marker shows this, change that if you change this

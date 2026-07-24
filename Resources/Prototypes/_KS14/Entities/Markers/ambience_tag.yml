@@ -1,0 +1,13 @@
+
+- type: entity
+  parent: MarkerBase
+  id: KsReebeAmbienceTagMarker
+  name: reebe ambience
+  suffix: Reebe Ambience, 8 tiles
+  components:
+  - type: Sprite
+    layers:
+    - state: red
+  - type: Tag
+    tags:
+    - KsReebeAmbience
