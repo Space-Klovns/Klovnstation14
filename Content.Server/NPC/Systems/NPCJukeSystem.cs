@@ -228,6 +228,7 @@ public sealed partial class NPCJukeSystem : EntitySystem
                     ? 1f
                     : (idealDistance - targetDistance) / idealDistance;
 
+                var anythingDone = false;
                 for (var i = 0; i < SharedNPCSteeringSystem.InterestDirections; i++)
                 {
                     var result = -Vector2.Dot(targetUnitDirection, NPCSteeringSystem.Directions[i]) * weight;
@@ -237,21 +238,25 @@ public sealed partial class NPCJukeSystem : EntitySystem
                     // We shouldn't go somewhere which will lose sight of the target
                     // Assumes tile size is 1f
                     var interestDirection = new Angle(i * SharedNPCSteeringSystem.InterestRadians).ToVec();
-                    var interestPosition = interestDirection + args.WorldPosition;
-                    if (!_examineSystem.InRangeUnOccluded(
-                        new(args.WorldPosition, targetTransformComponent.MapID),
-                        new(interestPosition, targetTransformComponent.MapID),
-                        idealDistance,
-                        null,
-                        ignoreInsideBlocker: true,
-                        entMan: EntityManager))
+                    var interestWorldPosition = interestDirection + args.WorldPosition;
+                    if (!_interactionSystem.InRangeUnobstructed(
+                        new Robust.Shared.Map.MapCoordinates(interestWorldPosition, targetTransformComponent.MapID),
+                        new Robust.Shared.Map.MapCoordinates(targetWorldPosition, targetTransformComponent.MapID),
+                        range: -1f))
                     {
-                        args.Steering.Danger[i] = MathF.Max(args.Steering.Danger[i], result * 0.5f);
                         continue;
                     }
 
+                    // dont short-circuit this
+                    if (!anythingDone)
+                        anythingDone = result > args.Steering.Interest[i];
+
                     args.Steering.Interest[i] = MathF.Max(args.Steering.Interest[i], result);
                 }
+
+                // If no or barely any juking was done, don't cancel seeking
+                if (!anythingDone)
+                    return;
             }
             // KS14: ANK end
 

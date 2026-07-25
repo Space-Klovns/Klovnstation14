@@ -1,4 +1,5 @@
 using Content.Server.Examine;
+using Content.Server.Interaction;
 using Content.Server.Weapons.Ranged.Systems;
 using Content.Shared.Physics;
 using Robust.Shared.Physics;
@@ -8,7 +9,7 @@ namespace Content.Server.NPC.Systems;
 public sealed partial class NPCJukeSystem : EntitySystem
 {
     [Dependency] private GunSystem _gunSystem = default!;
-    [Dependency] private ExamineSystem _examineSystem = default!;
+    [Dependency] private InteractionSystem _interactionSystem = default!;
 
     /// <summary>
     ///     Given a shooter and target distance, and gun, returns the minimum distance to maybe hit the target (depending on the value of <paramref name="k"/>).

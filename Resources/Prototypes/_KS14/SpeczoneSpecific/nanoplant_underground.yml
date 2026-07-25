@@ -1,0 +1,25 @@
+- type: entity
+  parent: MarkerBase
+  id: KsWindowIconsmoother
+  name: iconsmooth marker
+  suffix: KS14, Iconsmooth Marker, Windows
+  components:
+  - type: Sprite
+    layers:
+    - state: blue
+  - type: IconSmooth
+    key: windows
+    mode: NoSprite
+
+- type: entity
+  parent: MarkerBase
+  id: KsWallIconsmoother
+  name: iconsmooth marker
+  suffix: KS14, Iconsmooth Marker, Walls
+  components:
+  - type: Sprite
+    layers:
+    - state: green
+  - type: IconSmooth
+    key: walls
+    mode: NoSprite

@@ -27,6 +27,15 @@ public sealed partial class PhosphorNightVisionSystem : SharedPhosphorNightVisio
         SubscribeLocalEvent<LocalPlayerDetachedEvent>(OnPlayerDetached);
         SubscribeLocalEvent<PhosphorNightVisionComponent, AfterAutoHandleStateEvent>(OnHandleState);
         SubscribeNetworkEvent<RoundRestartCleanupEvent>(OnRoundRestart);
+
+        _overlayMan.AddOverlay(_overlay); // KS14: moved here
+    }
+
+    // KS14: move overlay removal here
+    public override void Shutdown()
+    {
+        _overlayMan.RemoveOverlay(_overlay);
+        base.Shutdown();
     }
 
     private void OnPlayerAttached(LocalPlayerAttachedEvent args)
@@ -95,12 +104,19 @@ public sealed partial class PhosphorNightVisionSystem : SharedPhosphorNightVisio
             nvision.ConeAngle,
             nvision.ConeFeather,
             nvision.ConeDistance,
-            nvision.ConeDistanceFeather
+            nvision.ConeDistanceFeather,
             //nvision.ViewAngle
-            );
+            nvision.WearAnimationDuration
+        );
 
-        if (!_overlayMan.HasOverlay<PhosphorNightVisionOverlay>())
-            _overlayMan.AddOverlay(_overlay);
+        // KS14: moved overlay add to init
+
+        // KS14
+        if (!_overlay.Enabled)
+        {
+            _overlay.Enabled = true;
+            _overlay.SetAnimationTimeNow();
+        }
     }
 
     private void Deactivate(EntityUid? ent)
@@ -108,7 +124,14 @@ public sealed partial class PhosphorNightVisionSystem : SharedPhosphorNightVisio
         if (ent != _player.LocalSession?.AttachedEntity)
             return;
 
-        _overlayMan.RemoveOverlay(_overlay);
+        // KS14: moved overlay removal to shutdown
+
+        // KS14
+        if (_overlay.Enabled)
+        {
+            _overlay.Enabled = false;
+            _overlay.SetAnimationTimeNow();
+        }
     }
 
     protected override void RefreshOverlay(EntityUid target)

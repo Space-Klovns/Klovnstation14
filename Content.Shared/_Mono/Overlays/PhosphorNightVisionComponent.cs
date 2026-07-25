@@ -107,5 +107,9 @@ public sealed partial class PhosphorNightVisionComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField]
     public float ConeDistanceFeather = 0.05f;
+
+    // KS14
+    [DataField]
+    public TimeSpan WearAnimationDuration = TimeSpan.FromSeconds(0.5d);
 }
 public sealed partial class TogglePhosphorNightVisionEvent : InstantActionEvent;
