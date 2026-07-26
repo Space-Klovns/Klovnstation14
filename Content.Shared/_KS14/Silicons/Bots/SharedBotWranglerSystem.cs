@@ -64,7 +64,14 @@ public abstract partial class SharedBotWranglerSystem : EntitySystem
                 return;
             }
 
+            // tell the original user of this bot that someone else selected it
             _popupSystem.PopupEntity(Loc.GetString("ai-bot-someone-else-selected"), args.Target, oldUserUid, PopupType.MediumCaution);
+        }
+
+        if (entity.Comp.MaximumSelected > 0 &&
+            entity.Comp.WrangledBotUids.Count == entity.Comp.MaximumSelected)
+        {
+            _popupSystem.PopupClient(Loc.GetString("ai-bot-selection-too- many"), args.Performer, PopupType.MediumCaution);
         }
 
         activelyWrangledBotComponent.UserUid = entity;

@@ -28,4 +28,4 @@ entity-effect-guidebook-gib =
     { $chance ->
         [1] Gibs
         *[other] gib
-    } the mob.
+    } the mob
