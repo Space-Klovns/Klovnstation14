@@ -63,7 +63,8 @@
     phosphorColor: "#00FF00"
     lightingColor: "#FFFFFF32"
     relayOverlay: true
-    amplification: 30
+    amplification: 15
+    coneAngle: 215
     onSound:
       path: /Audio/_KS14/Effects/nvg_on.ogg
       params: &nvg_sound_params
