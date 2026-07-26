@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using Content.Server.Administration.Logs;
 using Content.Server.Administration.Managers;
+using Content.Server._KS14.Translation; // KS14
 using Content.Server.Chat.Managers;
 using Content.Server.GameTicking;
 using Content.Server.Speech.EntitySystems;
@@ -57,6 +58,7 @@ public sealed partial class ChatSystem : SharedChatSystem
     [Dependency] private SharedAudioSystem _audio = default!;
     [Dependency] private ReplacementAccentSystem _wordreplacement = default!;
     [Dependency] private ExamineSystemShared _examineSystem = default!;
+    [Dependency] private KsTranslationSystem _translation = default!; // KS14
     [Dependency] private EntityQuery<GhostHearingComponent> _ghostHearingQuery = default!;
 
     private bool _loocEnabled = true;
@@ -494,6 +496,11 @@ public sealed partial class ChatSystem : SharedChatSystem
         var wrappedUnknownMessage = Loc.GetString("chat-manager-entity-whisper-unknown-wrap-message",
             ("message", FormattedMessage.EscapeText(obfuscatedMessage)));
 
+        // KS14 Start: per-reader whisper translation. Only the CLEAR variant carries the real message;
+        // the obfuscated/unknown variants are deliberately garbled and must not be translated.
+        KsTranslationContext? translation = null;
+        _translation.TryBeginLocal(ChatChannel.Whisper, message, source, out translation);
+        // KS14 End
 
         foreach (var (session, data) in GetRecipients(source, WhisperMuffledRange))
         {
@@ -507,7 +514,11 @@ public sealed partial class ChatSystem : SharedChatSystem
                 continue; // Won't get logged to chat, and ghosts are too far away to see the pop-up, so we just won't send it to them.
 
             if (data.Range <= WhisperClearRange || data.Observer)
-                _chatManager.ChatMessageToOne(ChatChannel.Whisper, message, wrappedMessage, source, false, session.Channel);
+            {
+                // KS14: clear variant is the only translatable one.
+                int? messageId = translation is { } ctx ? _translation.TryReader(message, ctx, session.Channel) : null;
+                _chatManager.ChatMessageToOne(ChatChannel.Whisper, message, wrappedMessage, source, false, session.Channel, messageId: messageId); // KS14: messageId
+            }
             //If listener is too far, they only hear fragments of the message
             else if (_examineSystem.InRangeUnOccluded(source, listener, WhisperMuffledRange))
                 _chatManager.ChatMessageToOne(ChatChannel.Whisper, obfuscatedMessage, wrappedobfuscatedMessage, source, false, session.Channel);
@@ -515,6 +526,10 @@ public sealed partial class ChatSystem : SharedChatSystem
             else
                 _chatManager.ChatMessageToOne(ChatChannel.Whisper, obfuscatedMessage, wrappedUnknownMessage, source, false, session.Channel);
         }
+
+        // KS14: apply the per-speaker cooldown once, only if a translation was actually started.
+        if (translation is { } endCtx)
+            _translation.EndMessage(endCtx);
 
         _replay.RecordServerMessage(new ChatMessage(ChatChannel.Whisper, message, wrappedMessage, GetNetEntity(source), null, MessageRangeHideChatForReplay(range)));
 
@@ -620,7 +635,20 @@ public sealed partial class ChatSystem : SharedChatSystem
             _adminLogger.Add(LogType.Chat, LogImpact.Low, $"Dead chat from {source}: {message}");
         }
 
-        _chatManager.ChatMessageToMany(ChatChannel.Dead, message, wrappedMessage, source, hideChat, true, clients.ToList(), author: player.UserId);
+        // KS14 Start: per-reader dead-chat translation. Dead chat is one broadcast to the dead-client list;
+        // readers whose language differs from the speaker share one message id and get a targeted swap.
+        var deadClients = clients.ToList();
+        int? messageId = null;
+        if (_translation.TryBeginSession(ChatChannel.Dead, message, player, out var translationCtx))
+        {
+            foreach (var client in deadClients)
+                _translation.TryReaderShared(message, translationCtx, client, ref messageId);
+
+            _translation.EndMessage(translationCtx);
+        }
+        // KS14 End
+
+        _chatManager.ChatMessageToMany(ChatChannel.Dead, message, wrappedMessage, source, hideChat, true, deadClients, author: player.UserId, messageId: messageId); // KS14: messageId
     }
     #endregion
 
@@ -677,14 +705,29 @@ public sealed partial class ChatSystem : SharedChatSystem
     /// </summary>
     private void SendInVoiceRange(ChatChannel channel, string message, string wrappedMessage, EntityUid source, ChatTransmitRange range, NetUserId? author = null)
     {
+        // KS14 Start: per-reader chat translation. Local and LOOC both fan out one message per reader here
+        // and resolve the speaker from the entity they control.
+        KsTranslationContext? translation = null;
+        if (channel is ChatChannel.Local or ChatChannel.LOOC)
+            _translation.TryBeginLocal(channel, message, source, out translation);
+        // KS14 End
+
         foreach (var (session, data) in GetRecipients(source, VoiceRange))
         {
             var entRange = MessageRangeCheck(session, data, range);
             if (entRange == MessageRangeCheckResult.Disallowed)
                 continue;
             var entHideChat = entRange == MessageRangeCheckResult.HideChat;
-            _chatManager.ChatMessageToOne(channel, message, wrappedMessage, source, entHideChat, session.Channel, author: author);
+            // KS14: stamp a message id when this reader will receive a translation swap (skip hidden recipients).
+            int? messageId = translation is { } ctx && !entHideChat
+                ? _translation.TryReader(message, ctx, session.Channel)
+                : null;
+            _chatManager.ChatMessageToOne(channel, message, wrappedMessage, source, entHideChat, session.Channel, author: author, messageId: messageId); // KS14: messageId
         }
+
+        // KS14: apply the per-speaker cooldown once, only if a translation was actually started.
+        if (translation is { } endCtx)
+            _translation.EndMessage(endCtx);
 
         _replay.RecordServerMessage(new ChatMessage(channel, message, wrappedMessage, GetNetEntity(source), null, MessageRangeHideChatForReplay(range)));
     }
