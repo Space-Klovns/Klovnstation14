@@ -2,6 +2,7 @@ using Content.Shared.Actions;
 using Content.Shared.Inventory;
 using Content.Shared.Inventory.Events;
 using Content.Shared._Mono.Overlays;
+using Robust.Shared.Timing;
 
 namespace Content.Shared._Mono.PhosphorNightVision;
 
@@ -11,11 +12,13 @@ namespace Content.Shared._Mono.PhosphorNightVision;
 /// </summary>
 public abstract partial class SharedPhosphorNightVisionSystem : EntitySystem
 {
+    [Dependency] protected IGameTiming GameTiming = default!;
     [Dependency] private SharedActionsSystem _actions = default!;
+
     public override void Initialize()
     {
         SubscribeLocalEvent<PhosphorNightVisionComponent, ComponentStartup>(OnStartup);
-        SubscribeLocalEvent<PhosphorNightVisionComponent, ComponentRemove>(OnRemove);
+        SubscribeLocalEvent<PhosphorNightVisionComponent, ComponentShutdown>(OnShutdown);
         SubscribeLocalEvent<PhosphorNightVisionComponent, GotEquippedEvent>(OnCompEquip);
         SubscribeLocalEvent<PhosphorNightVisionComponent, GotUnequippedEvent>(OnCompUnequip);
         SubscribeLocalEvent<PhosphorNightVisionComponent, InventoryRelayedEvent<RefreshPhosphorNightVisionEvent>>(OnRefreshEquipmentHud);
@@ -32,7 +35,7 @@ public abstract partial class SharedPhosphorNightVisionSystem : EntitySystem
         _actions.AddAction(ent, ref ent.Comp.ActionEntity, ent.Comp.Action);
     }
 
-    private void OnRemove(Entity<PhosphorNightVisionComponent> ent, ref ComponentRemove args)
+    private void OnShutdown(Entity<PhosphorNightVisionComponent> ent, ref ComponentShutdown args)
     {
         if (ent.Comp.RelayOverlay)
             return;
@@ -43,7 +46,8 @@ public abstract partial class SharedPhosphorNightVisionSystem : EntitySystem
 
     private void OnCompEquip(Entity<PhosphorNightVisionComponent> ent, ref GotEquippedEvent args)
     {
-        if (!ent.Comp.RelayOverlay)
+        if (!ent.Comp.RelayOverlay ||
+            !GameTiming.IsFirstTimePredicted)
             return;
 
         RefreshOverlay(args.EquipTarget, activeNvEntity: ent);
@@ -51,11 +55,12 @@ public abstract partial class SharedPhosphorNightVisionSystem : EntitySystem
     }
     private void OnCompUnequip(Entity<PhosphorNightVisionComponent> ent, ref GotUnequippedEvent args)
     {
-        if (!ent.Comp.RelayOverlay)
+        if (!ent.Comp.RelayOverlay ||
+            !GameTiming.IsFirstTimePredicted)
             return;
 
-        ent.Comp.Enabled = false; // mono
-        RefreshOverlay(ent, activeNvEntity: ent);
+        ent.Comp.Enabled = false;
+        RefreshOverlay(args.EquipTarget, activeNvEntity: ent);
     }
     protected virtual void OnRefreshEquipmentHud(Entity<PhosphorNightVisionComponent> ent, ref InventoryRelayedEvent<RefreshPhosphorNightVisionEvent> args)
     {
@@ -97,12 +102,12 @@ public abstract partial class SharedPhosphorNightVisionSystem : EntitySystem
         RefreshOverlay(viewer ?? ent, activeNvEntity: ent!);
     }
 
-    protected virtual void RefreshOverlay(EntityUid entity, Entity<PhosphorNightVisionComponent>? activeNvEntity = null) { }
+    public virtual void RefreshOverlay(EntityUid entity, Entity<PhosphorNightVisionComponent>? activeNvEntity = null) { }
 }
 
 [ByRefEvent]
 public record struct RefreshPhosphorNightVisionEvent() : IInventoryRelayEvent
 {
     public SlotFlags TargetSlots => SlotFlags.WITHOUT_POCKET;
-    public List<Entity<PhosphorNightVisionComponent>> Entities = new();
+    public HashSet<Entity<PhosphorNightVisionComponent>> Entities = new();
 }

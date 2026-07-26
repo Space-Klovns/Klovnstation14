@@ -24,7 +24,7 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
     private Entity<EyeComponent, PhosphorNightVisionRecipientComponent, TransformComponent>? _eyeEntity;
     private float _animationFraction = 0f; // KS14
 
-    private static ProtoId<ShaderPrototype> Shader = "PhosphorNightVision";
+    private static ProtoId<ShaderPrototype> _shader = "PhosphorNightVision";
 
     private ShaderInstance _phosphorNightVisionShader;
 
@@ -50,11 +50,6 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
     /// This value is responsible for ensuring that ambient light blows out the night vision.
     /// </remarks>
     public float Amplification { get; private set; }
-
-    /// <summary>
-    /// KS14 - do we draw the phosphor effect?
-    /// </summary>
-    public bool PhosphorEffect { get; private set; }
 
     /// <summary>
     /// KS14 - do we draw the cone or do we do fullview?
@@ -119,7 +114,7 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
     public PhosphorNightVisionOverlay()
     {
         IoCManager.InjectDependencies(this);
-        _phosphorNightVisionShader = _prototypeManager.Index(Shader).InstanceUnique();
+        _phosphorNightVisionShader = _prototypeManager.Index(_shader).InstanceUnique();
         _xform = _ent.System<SharedTransformSystem>();
         ZIndex = -1;
     }
@@ -128,7 +123,6 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
         Color lightingColor,
         Color phosphorColor,
         float amplification,
-        bool phosphorEffect,
         bool isCone,
         float coneAngle,
         float coneFeather,
@@ -141,7 +135,6 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
         LightingColor = lightingColor;
         PhosphorColor = phosphorColor;
         Amplification = amplification;
-        PhosphorEffect = phosphorEffect;
         IsCone = isCone;
         ConeAngle = coneAngle;
         ConeFeather = coneFeather;
@@ -174,15 +167,28 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
         else
             _animationFraction = -1f;
 
+        var enumerator = _ent.AllEntityQueryEnumerator<EyeComponent, PhosphorNightVisionRecipientComponent, TransformComponent>();
+        while (enumerator.MoveNext(out var uid, out var eyeComponent, out var recipientComponent, out var transformComponent))
+        {
+            if (args.Viewport.Eye != eyeComponent.Eye)
+                continue;
+
+            _eyeEntity = (uid, eyeComponent, recipientComponent, transformComponent);
+            break;
+        }
+
         var handle = args.WorldHandle;
-        var shouldDrawNv = _animationFraction >= -0.5f &&
+
+        var animationInNvPhase = _animationFraction >= -0.5f &&
             _animationFraction < 0.5f;
+        var shouldDrawNv = animationInNvPhase &&
+            _eyeEntity is { };
 
         switch (args.Space)
         {
             // Add light to the scene even if it's completely dark
             case LightSpace:
-                if (!shouldDrawNv)
+                if (!animationInNvPhase)
                     break;
 
                 handle.DrawRect(args.WorldBounds, LightingColor);
@@ -190,9 +196,6 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
 
             // Draw the phosphor effect and viewcone
             case ShaderSpace:
-                if (!PhosphorEffect)
-                    break;
-
                 if (!shouldDrawNv)
                 {
                     // if in standstill states, don't draw shader
@@ -209,19 +212,6 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
 
                     break;
                 }
-
-                var enumerator = _ent.AllEntityQueryEnumerator<EyeComponent, PhosphorNightVisionRecipientComponent, TransformComponent>();
-                while (enumerator.MoveNext(out var uid, out var eyeComponent, out var recipientComponent, out var transformComponent))
-                {
-                    if (args.Viewport.Eye != eyeComponent.Eye)
-                        continue;
-
-                    _eyeEntity = (uid, eyeComponent, recipientComponent, transformComponent);
-                    break;
-                }
-
-                if (_eyeEntity == null)
-                    break;
 
                 var eyeAngle = (float)_eyeEntity!.Value.Comp1.Rotation.Theta; //the null check is in beforedraw
                 var playerAngle = (float)_xform.GetWorldRotation(_eyeEntity.Value.Comp3).Theta;

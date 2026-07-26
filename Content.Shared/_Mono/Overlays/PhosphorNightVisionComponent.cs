@@ -74,12 +74,6 @@ public sealed partial class PhosphorNightVisionComponent : Component
     public float Amplification = 32f;
 
     /// <summary>
-    /// KS14 - do we draw the phosphor effect?
-    /// </summary>
-    [DataField, AutoNetworkedField]
-    public bool PhosphorEffect = true;
-
-    /// <summary>
     /// KS14 - does this provide clean full screen vision or just a cone?
     /// </summary>
     [DataField, AutoNetworkedField]

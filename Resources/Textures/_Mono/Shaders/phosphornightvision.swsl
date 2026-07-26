@@ -1,6 +1,7 @@
 uniform sampler2D SCREEN_TEXTURE;
 
 uniform highp vec3 BASE_COLOR;
+uniform highp vec3 ADDED_LIGHT_COLOR;
 uniform highp float AMPLIFICATION;
 uniform highp float[3] BLUR_OFFSET;
 uniform highp float[3] BLUR_WEIGHT;
@@ -106,7 +107,7 @@ void fragment()
     highp float gray = zGrayscale(blurred.rgb);
 
     // Shade it to the phosphor color.
-    highp vec3 colorized = gray * BASE_COLOR * 16;
+    highp vec3 colorized = gray * BASE_COLOR * AMPLIFICATION;
 
     // Screen size in pixels.
     highp vec2 screenSize = vec2(1.0 / SCREEN_PIXEL_SIZE.x, 1.0 / SCREEN_PIXEL_SIZE.y);
@@ -135,12 +136,10 @@ void fragment()
         // zAdjustResult(LIGHT * MODULATE * COLOR)
         // staticFx * vec4(vec3(0.1 * zGrayscale(LIGHT.rgb) * BASE_COLOR), 1.0)
 
-        sceneNV = mix(vec4(vec3(0.0), 1.0), walpha, cone);
+        sceneNV = mix(vec4(vec3(0.0), 1), walpha, cone);
     } else {
         sceneNV = walpha;
     };
-
-
 
     // --- Plain (non-NV) scene: fully raw passthrough. Must NOT go through
     // zTextureSpec, since that function may apply a color-space decode or
