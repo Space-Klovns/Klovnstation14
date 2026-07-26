@@ -71,7 +71,8 @@ public abstract partial class SharedBotWranglerSystem : EntitySystem
         if (entity.Comp.MaximumSelected > 0 &&
             entity.Comp.WrangledBotUids.Count == entity.Comp.MaximumSelected)
         {
-            _popupSystem.PopupClient(Loc.GetString("ai-bot-selection-too- many"), args.Performer, PopupType.MediumCaution);
+            _popupSystem.PopupClient(Loc.GetString("ai-bot-selection-too-many", ("limit", entity.Comp.MaximumSelected)), args.Performer, PopupType.MediumCaution);
+            return;
         }
 
         activelyWrangledBotComponent.UserUid = entity;
