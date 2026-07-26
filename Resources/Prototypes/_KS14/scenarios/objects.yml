@@ -48,10 +48,10 @@
     price: 1350
 
 - type: entity
+  parent: ClothingEyesBase
   id: ScenarioNightVisionGogglesBasic
   name: night vision goggles
   description: Я не вижу нихуя. A generic, cheap image intensifier.
-  parent: ClothingEyesBase
   components:
   - type: Sprite
     sprite: _KS14/Clothing/Eyes/Goggles/nightvision.rsi
@@ -63,6 +63,32 @@
     phosphorColor: "#00FF00"
     lightingColor: "#FFFFFF32"
     relayOverlay: true
-  - type: ClothingGrantComponent
-    component:
-      - type: PhosphorNightVisionRecipient
+    amplification: 30
+    onSound:
+      path: /Audio/_KS14/Effects/nvg_on.ogg
+      params: &nvg_sound_params
+        volume: -4
+    offSound:
+      path: /Audio/_KS14/Effects/nvg_off.ogg
+      params: *nvg_sound_params
+  - type: WearablePhosphorNightVision
+
+- type: entity
+  parent: ScenarioNightVisionGogglesBasic
+  id: ScenarioNightVisionGogglesBasicWhite
+  name: night vision goggles
+  description: Я не вижу нихуя. A generic, cheap image intensifier. White phosphorus is installed instead of green phosphorus, providing better visual clarity.
+  suffix: White
+  components:
+  - type: Sprite
+    layers:
+    - state: icon
+      shader: Noir # lmfao i can't keep getting away with this shit
+  - type: Clothing
+    clothingVisuals:
+      eyes:
+      - state: equipped-EYES
+        shader: Noir
+  - type: PhosphorNightVision
+    phosphorColor: "#d2e6f5"
+    lightingColor: "#FFFFFF28"

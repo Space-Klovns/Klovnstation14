@@ -20,6 +20,30 @@
     - id: ShippingContainerGorlex
     - id: ShippingContainerGorlexRed
 
+- type: entityTable
+  id: ShippingContainerTableNt
+  table: !type:GroupSelector
+    children:
+    - id: ShippingContainerConarex
+    - id: ShippingContainerDeforest
+    - id: ShippingContainerKahraman
+    - id: ShippingContainerKahramanAlt
+    - id: ShippingContainerNakamura
+    - id: ShippingContainerNanotrasen
+    - id: ShippingContainerNanotrasenHeavy
+
+- type: entityTable
+  id: ShippingContainerSyndie
+  table: !type:GroupSelector
+    children:
+    - id: ShippingContainerKosmologistika
+    - id: ShippingContainerInterdyne
+    - id: ShippingContainerVitezstvi
+    - id: ShippingContainerCybersun
+    - id: ShippingContainerDonkCo
+    - id: ShippingContainerGorlex
+    - id: ShippingContainerGorlexRed
+
 - type: entity
   name: Random Shipping Container Spawner
   suffix: NT+Syndie
@@ -41,3 +65,39 @@
     offset: 0
     table: !type:NestedSelector
       tableId: ShippingContainerTable
+
+- type: entity
+  parent: ShippingContainerSpawner
+  id: ShippingContainerSpawnerNt
+  name: NanoTrasen Shipping Container Spawner
+  suffix: NT
+  components:
+  - type: Sprite
+    layers:
+    - state: red
+      scale: 3,2
+    - sprite: _KS14/Structures/Storage/shipping_containers.rsi
+      state: nanotrasen
+      scale: 0.75, 0.75
+  - type: EntityTableSpawner
+    offset: 0
+    table: !type:NestedSelector
+      tableId: ShippingContainerTableNt
+
+- type: entity
+  parent: ShippingContainerSpawner
+  id: ShippingContainerSpawnerSyndie
+  name: Syndicate Shipping Container Spawner
+  suffix: Syndicate
+  components:
+  - type: Sprite
+    layers:
+    - state: red
+      scale: 3,2
+    - sprite: _KS14/Structures/Storage/shipping_containers.rsi
+      state: gorlex
+      scale: 0.75, 0.75
+  - type: EntityTableSpawner
+    offset: 0
+    table: !type:NestedSelector
+      tableId: ShippingContainerTableSyndie

@@ -1,4 +1,3 @@
-using Content.Client.Overlays;
 using Content.Shared.GameTicking;
 using Content.Shared._Mono.PhosphorNightVision;
 using Content.Shared._Mono.Overlays;
@@ -6,6 +5,8 @@ using Content.Client._Mono.Overlays;
 using Robust.Client.Graphics;
 using Robust.Client.Player;
 using Robust.Shared.Player;
+using System.Linq;
+using Robust.Client.Audio;
 
 namespace Content.Client._Mono.PhosphorNightVision;
 
@@ -14,6 +15,7 @@ public sealed partial class PhosphorNightVisionSystem : SharedPhosphorNightVisio
 {
     [Dependency] private IOverlayManager _overlayMan = default!;
     [Dependency] private IPlayerManager _player = default!;
+    [Dependency] private AudioSystem _audioSystem = default!;
 
     private PhosphorNightVisionOverlay _overlay = default!;
 
@@ -25,8 +27,19 @@ public sealed partial class PhosphorNightVisionSystem : SharedPhosphorNightVisio
 
         SubscribeLocalEvent<LocalPlayerAttachedEvent>(OnPlayerAttached);
         SubscribeLocalEvent<LocalPlayerDetachedEvent>(OnPlayerDetached);
-        SubscribeLocalEvent<PhosphorNightVisionComponent, AfterAutoHandleStateEvent>(OnHandleState);
         SubscribeNetworkEvent<RoundRestartCleanupEvent>(OnRoundRestart);
+
+        SubscribeLocalEvent<PhosphorNightVisionComponent, AfterAutoHandleStateEvent>(OnNvHandleState);
+        SubscribeLocalEvent<PhosphorNightVisionRecipientComponent, AfterAutoHandleStateEvent>(OnRecipientHandleState);
+
+        _overlayMan.AddOverlay(_overlay);
+    }
+
+    // KS14: move overlay removal here
+    public override void Shutdown()
+    {
+        _overlayMan.RemoveOverlay(_overlay);
+        base.Shutdown();
     }
 
     private void OnPlayerAttached(LocalPlayerAttachedEvent args)
@@ -39,11 +52,6 @@ public sealed partial class PhosphorNightVisionSystem : SharedPhosphorNightVisio
         Deactivate(_player.LocalEntity);
     }
 
-    private void OnHandleState(Entity<PhosphorNightVisionComponent> ent, ref AfterAutoHandleStateEvent args)
-    {
-        RefreshOverlay(ent);
-    }
-
     private void OnRoundRestart(RoundRestartCleanupEvent args)
     {
         var localPlayer = _player.LocalSession?.AttachedEntity;
@@ -51,18 +59,34 @@ public sealed partial class PhosphorNightVisionSystem : SharedPhosphorNightVisio
             Deactivate(localPlayer.Value);
     }
 
+
+    private void OnNvHandleState(Entity<PhosphorNightVisionComponent> ent, ref AfterAutoHandleStateEvent args)
+    {
+        RefreshOverlay(ent);
+    }
+
+    // This comp only exists clientside for the owner so its fine
+    private void OnRecipientHandleState(Entity<PhosphorNightVisionRecipientComponent> entity, ref AfterAutoHandleStateEvent args)
+    {
+        Entity<PhosphorNightVisionComponent>? activeNvEntity = null;
+        if (entity.Comp.NightVisionSourceUid is { } sourceUid)
+            activeNvEntity = (sourceUid, Comp<PhosphorNightVisionComponent>(sourceUid));
+
+        RefreshOverlay(entity, activeNvEntity: activeNvEntity);
+    }
+
     /// <summary>
     /// Update the state of the overlay. Add/remove/modify based on <see cref="PhosphorNightVisionComponent"/>s if any.
     /// </summary>
     /// <param name="entity">The entity to have an overlay added/removed from.</param>
     /// <param name="entities">A list of entities with a <see cref="PhosphorNightVisionComponent"/>.</param>
-    private void Update(EntityUid entity, List<Entity<PhosphorNightVisionComponent>> entities)
+    private bool TryUpdate(EntityUid entity, HashSet<Entity<PhosphorNightVisionComponent>> entities)
     {
         if (entity != _player.LocalSession?.AttachedEntity)
-            return;
+            return true;
 
         // Find the component with the lowest noise.
-        PhosphorNightVisionComponent? nvision = null;
+        Entity<PhosphorNightVisionComponent> nvEntity = default;
         foreach (var ent in entities)
         {
             if (!ent.Comp.Enabled)
@@ -71,7 +95,7 @@ public sealed partial class PhosphorNightVisionSystem : SharedPhosphorNightVisio
             if (ent.Comp.RelayOverlay == (ent.Owner == entity))
                 continue;
 
-            nvision = ent.Comp;
+            nvEntity = ent;
 
             // Take the first priority component
             if (ent.Comp.Prioritized)
@@ -79,48 +103,63 @@ public sealed partial class PhosphorNightVisionSystem : SharedPhosphorNightVisio
         }
 
         // There is no active night vision components, so we disable the overlay.
-        if (nvision == null)
-        {
-            Deactivate(entity);
-            return;
-        }
+        if (nvEntity == default)
+            return false;
 
         // Relay all the settings from the component.
         _overlay.SetParameters(
-            nvision.LightingColor,
-            nvision.PhosphorColor,
-            nvision.Amplification,
-            nvision.PhosphorEffect,
-            nvision.IsCone,
-            nvision.ConeAngle,
-            nvision.ConeFeather,
-            nvision.ConeDistance,
-            nvision.ConeDistanceFeather
+            nvEntity.Comp!.LightingColor,
+            nvEntity.Comp.PhosphorColor,
+            nvEntity.Comp.Amplification,
+            nvEntity.Comp.IsCone,
+            nvEntity.Comp.ConeAngle,
+            nvEntity.Comp.ConeFeather,
+            nvEntity.Comp.ConeDistance,
+            nvEntity.Comp.ConeDistanceFeather,
             //nvision.ViewAngle
-            );
+            nvEntity.Comp.WearAnimationDuration
+        );
 
-        if (!_overlayMan.HasOverlay<PhosphorNightVisionOverlay>())
-            _overlayMan.AddOverlay(_overlay);
+        if (_overlay.Enabled)
+            return true;
+
+        _overlay.Enabled = true;
+        _overlay.SetAnimationTimeNow();
+
+        // ffs this sucks
+        _audioSystem.PlayLocal(nvEntity.Comp.OnSound, nvEntity, entity);
+        return true;
     }
 
-    private void Deactivate(EntityUid? ent)
+    private void Deactivate(EntityUid? ent, Entity<PhosphorNightVisionComponent>? activeNvEntity = null)
     {
-        if (ent != _player.LocalSession?.AttachedEntity)
+        if (ent != _player.LocalSession?.AttachedEntity ||
+            !_overlay.Enabled)
             return;
 
-        _overlayMan.RemoveOverlay(_overlay);
+        _overlay.Enabled = false;
+        _overlay.SetAnimationTimeNow();
+
+        // ffs this sucks
+        if (activeNvEntity is { })
+            _audioSystem.PlayLocal(activeNvEntity.Value.Comp.OffSound, activeNvEntity.Value, ent);
     }
 
-    protected override void RefreshOverlay(EntityUid target)
+    public override void RefreshOverlay(EntityUid target, Entity<PhosphorNightVisionComponent>? activeNvEntity = null)
     {
         if (target != _player.LocalSession?.AttachedEntity)
             return;
+
         var ev = new RefreshPhosphorNightVisionEvent();
         RaiseLocalEvent(target, ref ev);
 
-        if (ev.Entities.Count > 0)
-            Update(target, ev.Entities);
-        else
-            Deactivate(target);
+        if (activeNvEntity is { })
+            ev.Entities.Add(activeNvEntity.Value);
+
+        if (ev.Entities.Count == 0 ||
+            !TryUpdate(target, ev.Entities))
+        {
+            Deactivate(target, activeNvEntity: activeNvEntity);
+        }
     }
 }
