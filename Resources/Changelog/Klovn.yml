@@ -1633,3 +1633,13 @@ Entries:
       message: Fixed atmos shield generators crashing the round when deleted.
   id: 169
   time: '2026-07-26T11:52:05.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Night vision visuals have been heavily improved.
+    - type: Add
+      message: Night vision now gets significantly amplified when flashed.
+    - type: Fix
+      message: Fixed insane-level grammar error in the description of rotated pallets.
+  id: 170
+  time: '2026-07-26T12:27:53.0000000+00:00'
