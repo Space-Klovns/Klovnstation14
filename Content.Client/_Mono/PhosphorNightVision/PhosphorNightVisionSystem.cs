@@ -80,10 +80,10 @@ public sealed partial class PhosphorNightVisionSystem : SharedPhosphorNightVisio
     /// </summary>
     /// <param name="entity">The entity to have an overlay added/removed from.</param>
     /// <param name="entities">A list of entities with a <see cref="PhosphorNightVisionComponent"/>.</param>
-    private void Update(EntityUid entity, HashSet<Entity<PhosphorNightVisionComponent>> entities)
+    private bool TryUpdate(EntityUid entity, HashSet<Entity<PhosphorNightVisionComponent>> entities)
     {
         if (entity != _player.LocalSession?.AttachedEntity)
-            return;
+            return true;
 
         // Find the component with the lowest noise.
         Entity<PhosphorNightVisionComponent> nvEntity = default;
@@ -104,10 +104,7 @@ public sealed partial class PhosphorNightVisionSystem : SharedPhosphorNightVisio
 
         // There is no active night vision components, so we disable the overlay.
         if (nvEntity == default)
-        {
-            Deactivate(entity);
-            return;
-        }
+            return false;
 
         // Relay all the settings from the component.
         _overlay.SetParameters(
@@ -124,13 +121,14 @@ public sealed partial class PhosphorNightVisionSystem : SharedPhosphorNightVisio
         );
 
         if (_overlay.Enabled)
-            return;
+            return true;
 
         _overlay.Enabled = true;
         _overlay.SetAnimationTimeNow();
 
         // ffs this sucks
         _audioSystem.PlayLocal(nvEntity.Comp.OnSound, nvEntity, entity);
+        return true;
     }
 
     private void Deactivate(EntityUid? ent, Entity<PhosphorNightVisionComponent>? activeNvEntity = null)
@@ -158,9 +156,10 @@ public sealed partial class PhosphorNightVisionSystem : SharedPhosphorNightVisio
         if (activeNvEntity is { })
             ev.Entities.Add(activeNvEntity.Value);
 
-        if (ev.Entities.Count > 0)
-            Update(target, ev.Entities);
-        else
+        if (ev.Entities.Count == 0 ||
+            !TryUpdate(target, ev.Entities))
+        {
             Deactivate(target, activeNvEntity: activeNvEntity);
+        }
     }
 }

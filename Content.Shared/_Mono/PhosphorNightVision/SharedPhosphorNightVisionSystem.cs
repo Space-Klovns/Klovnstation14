@@ -12,7 +12,7 @@ namespace Content.Shared._Mono.PhosphorNightVision;
 /// </summary>
 public abstract partial class SharedPhosphorNightVisionSystem : EntitySystem
 {
-    [Dependency] protected IGameTiming GameTiming = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedActionsSystem _actions = default!;
 
     public override void Initialize()
@@ -47,7 +47,7 @@ public abstract partial class SharedPhosphorNightVisionSystem : EntitySystem
     private void OnCompEquip(Entity<PhosphorNightVisionComponent> ent, ref GotEquippedEvent args)
     {
         if (!ent.Comp.RelayOverlay ||
-            !GameTiming.IsFirstTimePredicted)
+            !_gameTiming.IsFirstTimePredicted)
             return;
 
         RefreshOverlay(args.EquipTarget, activeNvEntity: ent);
@@ -56,7 +56,7 @@ public abstract partial class SharedPhosphorNightVisionSystem : EntitySystem
     private void OnCompUnequip(Entity<PhosphorNightVisionComponent> ent, ref GotUnequippedEvent args)
     {
         if (!ent.Comp.RelayOverlay ||
-            !GameTiming.IsFirstTimePredicted)
+            !_gameTiming.IsFirstTimePredicted)
             return;
 
         ent.Comp.Enabled = false;
@@ -76,6 +76,9 @@ public abstract partial class SharedPhosphorNightVisionSystem : EntitySystem
 
     private void OnTogglePhosphorNightVisionEvent(TogglePhosphorNightVisionEvent args)
     {
+        if (!_gameTiming.IsFirstTimePredicted)
+            return;
+
         var ent = args.Action.Comp.Container;
 
         if (!TryComp<PhosphorNightVisionComponent>(ent, out var nightVisionComp))
