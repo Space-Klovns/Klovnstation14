@@ -13,6 +13,7 @@ using Content.Shared.Trigger;
 using Content.Shared.GameTicking;
 using Robust.Shared.Prototypes;
 using System.Threading;
+using Robust.Server.GameStates;
 
 namespace Content.Server._KS14.GameTicking.Rules;
 
@@ -28,6 +29,7 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
 {
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private RoundEndSystem _roundEndSystem = default!;
+    [Dependency] private PvsOverrideSystem _pvsOverrideSystem = default!;
 
     // All active objectives
     private readonly HashSet<EntityUid> _activeObjectiveUids = [];
@@ -45,6 +47,7 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
         SubscribeLocalEvent<ScenarioFactionMemberComponent, MobStateChangedEvent>(OnMemberMobStateChanged);
         SubscribeLocalEvent<ScenarioFactionMemberComponent, EntityZombifiedEvent>(OnMemberZombified);
 
+        SubscribeLocalEvent<ScenarioObjectiveComponent, ComponentStartup>(OnObjectiveStartup);
         SubscribeLocalEvent<ScenarioObjectiveComponent, ComponentShutdown>(OnObjectiveShutdown);
         SubscribeLocalEvent<ScenarioObjectiveComponent, TriggerEvent>(OnTriggered);
         SubscribeLocalEvent<ScenarioObjectiveComponent, TimedDespawnEvent>(OnObjDefended);
@@ -180,8 +183,14 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
             "comms-console-announcement-title-centcom");
     }
 
+    private void OnObjectiveStartup(Entity<ScenarioObjectiveComponent> entity, ref ComponentStartup args)
+    {
+        _pvsOverrideSystem.AddGlobalOverride(entity);
+    }
+
     private void OnObjectiveShutdown(Entity<ScenarioObjectiveComponent> entity, ref ComponentShutdown args)
     {
+        _pvsOverrideSystem.RemoveGlobalOverride(entity);
         _activeObjectiveUids.Remove(entity);
 
         SetWinFaction(entity.Comp.FactionId);

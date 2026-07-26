@@ -5,6 +5,7 @@ namespace Content.Shared._KS14.Scenario.Components;
 
 /// <summary>
 ///     This is used for tagging an entity as an objective for scenarios.
+///         These will also be set to be globally pvs overriden; sent to all clients.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
 public sealed partial class ScenarioObjectiveComponent : Component
