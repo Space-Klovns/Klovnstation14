@@ -21,6 +21,9 @@ uniform highp float WIPE_FEATHER = 0.25;   // softness of the top-to-bottom wipe
 const highp float PI = 3.14159265359;
 const highp float TAU = 6.28318530718;
 
+const highp float staticBase = 0.7;
+const highp float staticEnvMul = 2;
+
 // Cone mask.
 // Returns 1.0 inside the cone, 0.0 outside, with smooth edges.
 highp float coneMask(
@@ -103,13 +106,16 @@ void fragment()
     highp float gray = zGrayscale(blurred.rgb);
 
     // Shade it to the phosphor color.
-    highp vec3 colorized = gray * BASE_COLOR * AMPLIFICATION;
-
-    // Re-expand and add the original alpha back.
-    highp vec4 walpha = vec4(colorized, blurred.a);
+    highp vec3 colorized = gray * BASE_COLOR * 16;
 
     // Screen size in pixels.
     highp vec2 screenSize = vec2(1.0 / SCREEN_PIXEL_SIZE.x, 1.0 / SCREEN_PIXEL_SIZE.y);
+
+    lowp float staticBase = zRandom(FRAGCOORD.xy * (SCREEN_PIXEL_SIZE) + vec2(fract(TIME))).x;
+    lowp vec4 staticFx = vec4(vec3(staticBase * staticEnvMul + staticBase), 1.0);
+
+    // Re-expand and add the original alpha back, and add some static.
+    highp vec4 walpha = vec4(colorized, blurred.a) + (staticFx * 0.002 * AMPLIFICATION);
 
     // --- NV-composited scene (cone-masked if applicable) ---
     highp vec4 sceneNV;
@@ -125,10 +131,16 @@ void fragment()
             FREEDOM,
             ZOOM
         );
+
+        // zAdjustResult(LIGHT * MODULATE * COLOR)
+        // staticFx * vec4(vec3(0.1 * zGrayscale(LIGHT.rgb) * BASE_COLOR), 1.0)
+
         sceneNV = mix(vec4(vec3(0.0), 1.0), walpha, cone);
     } else {
         sceneNV = walpha;
-    }
+    };
+
+
 
     // --- Plain (non-NV) scene: fully raw passthrough. Must NOT go through
     // zTextureSpec, since that function may apply a color-space decode or
@@ -148,4 +160,8 @@ void fragment()
     highp float fadeAlpha = 1.0 - smoothstep(wipeLine - f, wipeLine + f, 1.0 - UV.y);
 
     COLOR = mix(sceneBase, vec4(vec3(0.0), 1.0), fadeAlpha);
+
+    // no `* LIGHT`, i guess. it seems like its already applied somewhere up the chain
+    gl_FragColor = zAdjustResult(COLOR * MODULATE);
+    return;
 }

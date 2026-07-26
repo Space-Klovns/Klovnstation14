@@ -1,4 +1,5 @@
 using Content.Shared.Actions;
+using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 
@@ -111,5 +112,19 @@ public sealed partial class PhosphorNightVisionComponent : Component
     // KS14
     [DataField]
     public TimeSpan WearAnimationDuration = TimeSpan.FromSeconds(0.5d);
+
+    // KS14 Start
+    /// <summary>
+    ///     Played locally.
+    /// </summary>
+    [DataField]
+    public SoundSpecifier? OnSound = null;
+
+    /// <summary>
+    ///     Played locally.
+    /// </summary>
+    [DataField]
+    public SoundSpecifier? OffSound = null;
+    // KS14 End
 }
 public sealed partial class TogglePhosphorNightVisionEvent : InstantActionEvent;

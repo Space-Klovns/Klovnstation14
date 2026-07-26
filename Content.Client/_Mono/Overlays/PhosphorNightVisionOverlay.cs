@@ -197,7 +197,7 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
                 {
                     // if in standstill states, don't draw shader
                     if (_animationFraction != 1f &&
-                        _animationFraction != -1f)
+                       _animationFraction != -1f)
                     {
                         _phosphorNightVisionShader.SetParameter("SCREEN_TEXTURE", ScreenTexture);
                         _phosphorNightVisionShader.SetParameter("TIME_FRACTION", _animationFraction);
@@ -252,6 +252,7 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
                 // KS14 end
 
                 _phosphorNightVisionShader.SetParameter("SCREEN_TEXTURE", ScreenTexture);
+                _phosphorNightVisionShader.SetParameter("BASE_COLOR", new Vector3(PhosphorColor.R, PhosphorColor.G, PhosphorColor.B));
                 _phosphorNightVisionShader.SetParameter("AMPLIFICATION", Amplification + extraAmplification /* KS14: extra amplification */);
                 _phosphorNightVisionShader.SetParameter("IS_CONE", IsCone);
                 _phosphorNightVisionShader.SetParameter("CONE_ANGLE", ConeAngle);

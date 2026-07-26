@@ -28,7 +28,7 @@ public abstract partial class SharedPhosphorNightVisionSystem : EntitySystem
         if (ent.Comp.RelayOverlay)
             return;
 
-        RefreshOverlay(ent);
+        RefreshOverlay(ent, activeNvEntity: ent);
         _actions.AddAction(ent, ref ent.Comp.ActionEntity, ent.Comp.Action);
     }
 
@@ -37,7 +37,7 @@ public abstract partial class SharedPhosphorNightVisionSystem : EntitySystem
         if (ent.Comp.RelayOverlay)
             return;
 
-        RefreshOverlay(ent);
+        RefreshOverlay(ent, activeNvEntity: ent);
         _actions.RemoveAction(ent.Owner, ent.Comp.ActionEntity);
     }
 
@@ -46,7 +46,7 @@ public abstract partial class SharedPhosphorNightVisionSystem : EntitySystem
         if (!ent.Comp.RelayOverlay)
             return;
 
-        RefreshOverlay(args.EquipTarget);
+        RefreshOverlay(args.EquipTarget, activeNvEntity: ent);
         _actions.AddAction(args.EquipTarget, ref ent.Comp.ActionEntity, ent.Comp.Action, ent);
     }
     private void OnCompUnequip(Entity<PhosphorNightVisionComponent> ent, ref GotUnequippedEvent args)
@@ -55,7 +55,7 @@ public abstract partial class SharedPhosphorNightVisionSystem : EntitySystem
             return;
 
         ent.Comp.Enabled = false; // mono
-        RefreshOverlay(ent);
+        RefreshOverlay(ent, activeNvEntity: ent);
     }
     protected virtual void OnRefreshEquipmentHud(Entity<PhosphorNightVisionComponent> ent, ref InventoryRelayedEvent<RefreshPhosphorNightVisionEvent> args)
     {
@@ -94,10 +94,10 @@ public abstract partial class SharedPhosphorNightVisionSystem : EntitySystem
         ent.Comp.Enabled = enabled;
         Dirty(ent);
 
-        RefreshOverlay(viewer ?? ent);
+        RefreshOverlay(viewer ?? ent, activeNvEntity: ent!);
     }
 
-    protected virtual void RefreshOverlay(EntityUid entity) { }
+    protected virtual void RefreshOverlay(EntityUid entity, Entity<PhosphorNightVisionComponent>? activeNvEntity = null) { }
 }
 
 [ByRefEvent]
