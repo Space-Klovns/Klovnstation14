@@ -197,7 +197,7 @@ public sealed partial class NPCJukeSystem : EntitySystem
             // KS14: ANK start: ranged juking
             else if (_npcRangedQuery.TryGetComponent(uid, out var rangedCombatComponent))
             {
-                if (!TryComp<TransformComponent>(rangedCombatComponent.Target, out var targetTransformComponent) ||
+                if (!TryComp(rangedCombatComponent.Target, out TransformComponent? targetTransformComponent) ||
                     !_gunSystem.TryGetGun(uid, out var gunEntity))
                     return;
 
