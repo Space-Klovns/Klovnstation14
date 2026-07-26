@@ -186,6 +186,7 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
     private void OnObjectiveStartup(Entity<ScenarioObjectiveComponent> entity, ref ComponentStartup args)
     {
         _pvsOverrideSystem.AddGlobalOverride(entity);
+        _activeObjectiveUids.Add(entity);
     }
 
     private void OnObjectiveShutdown(Entity<ScenarioObjectiveComponent> entity, ref ComponentShutdown args)
