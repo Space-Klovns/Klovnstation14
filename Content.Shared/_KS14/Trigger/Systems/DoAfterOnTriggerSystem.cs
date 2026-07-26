@@ -29,6 +29,11 @@ public sealed partial class DoAfterOnTriggerSystem : EntitySystem
             !entity.Comp.KeysIn.Contains(key))
             return;
 
+        // shitty workaround because for this the doafters wont properly raise events when cancelled after the user gets deleted
+        if (entity.Comp.CurrentUserUid is { } currentMaybeUserUid &&
+            TerminatingOrDeleted(currentMaybeUserUid))
+            entity.Comp.CurrentUserUid = null;
+
         if (entity.Comp.CurrentUserUid is { } currentUserUid &&
             entity.Comp.BlockDuplicate &&
             currentUserUid != args.User)
