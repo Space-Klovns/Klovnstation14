@@ -1627,3 +1627,9 @@ Entries:
       message: Scenario healing changes.
   id: 168
   time: '2026-07-22T14:34:31.0000000+00:00'
+- author: teecoding
+  changes:
+    - type: Fix
+      message: Fixed atmos shield generators crashing the round when deleted.
+  id: 169
+  time: '2026-07-26T11:52:05.0000000+00:00'
