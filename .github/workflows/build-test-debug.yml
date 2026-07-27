@@ -12,10 +12,22 @@ jobs:
   build:
     if: github.actor != 'PJBot' && github.event.pull_request.draft == false
     strategy:
+      fail-fast: false # KS14: one red shard must not cancel its siblings
       matrix:
         os: [ubuntu-latest]
+        # KS14: integration test shards; `rest` is the exact negation of the other two filters, so the
+        # union always covers the whole suite. Edit a positive filter and its negation twin together.
+        shard: [damageable, construction, rest]
+        include:
+          - shard: damageable
+            filter: FullyQualifiedName~Content.IntegrationTests.Tests.Damageable.DamageAllPrototypesTest
+          - shard: construction
+            filter: FullyQualifiedName~Content.IntegrationTests.Tests.Construction
+          - shard: rest
+            filter: FullyQualifiedName!~Content.IntegrationTests.Tests.Damageable.DamageAllPrototypesTest&FullyQualifiedName!~Content.IntegrationTests.Tests.Construction
 
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45 # KS14: bound runaway jobs; keep above the in-process test watchdog so it reports first
 
     steps:
     - name: Checkout Master
@@ -79,6 +91,7 @@ jobs:
         -p:CL_MPCount=3
 
     - name: Run Content.Tests
+      if: matrix.shard == 'rest' # KS14: run once, on the shortest shard
       shell: pwsh # KS14: add NUnit.ConsoleOut=0, NUnit.InternalTraceLevel=Off; to minimise XML OOM disaster
       run: >
         dotnet test
@@ -87,9 +100,8 @@ jobs:
         Content.Tests/Content.Tests.csproj
         -- NUnit.ConsoleOut=0
 
-    - name: Run Content.IntegrationTests
+    - name: Run Content.IntegrationTests (${{ matrix.shard }})
       shell: pwsh # KS14: Rework command to add `ConsoleOut=0`, `InternalTraceLevel=Off`, `TestOutputXml=`, `--logger "console;verbosity=minimal"` to minimise XML disaster
-      # KS14: Added heap hardlimit
       run: |
         $env:DOTNET_gcServer=1
 
@@ -98,12 +110,13 @@ jobs:
           --configuration DebugOpt `
           Content.IntegrationTests/Content.IntegrationTests.csproj `
           --logger "console;verbosity=minimal" `
+          --filter '${{ matrix.filter }}' `
           -- `
+          RunConfiguration.TreatNoTestsAsError=true `
           NUnit.ConsoleOut=0 `
           NUnit.InternalTraceLevel=Off `
           NUnit.MapWarningTo=Failed `
-          NUnit.TestOutputXml= `
-          NUnit.NumberOfTestWorkers=1
+          NUnit.TestOutputXml=
 
     # KS14: Removed test result archival
   ci-success:
