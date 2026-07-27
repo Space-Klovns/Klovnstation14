@@ -30,7 +30,6 @@ public sealed partial class PhosphorNightVisionSystem : SharedPhosphorNightVisio
         SubscribeNetworkEvent<RoundRestartCleanupEvent>(OnRoundRestart);
 
         SubscribeLocalEvent<PhosphorNightVisionComponent, AfterAutoHandleStateEvent>(OnNvHandleState);
-        SubscribeLocalEvent<PhosphorNightVisionRecipientComponent, AfterAutoHandleStateEvent>(OnRecipientHandleState);
 
         _overlayMan.AddOverlay(_overlay);
     }
@@ -63,16 +62,6 @@ public sealed partial class PhosphorNightVisionSystem : SharedPhosphorNightVisio
     private void OnNvHandleState(Entity<PhosphorNightVisionComponent> ent, ref AfterAutoHandleStateEvent args)
     {
         RefreshOverlay(ent);
-    }
-
-    // This comp only exists clientside for the owner so its fine
-    private void OnRecipientHandleState(Entity<PhosphorNightVisionRecipientComponent> entity, ref AfterAutoHandleStateEvent args)
-    {
-        Entity<PhosphorNightVisionComponent>? activeNvEntity = null;
-        if (entity.Comp.NightVisionSourceUid is { } sourceUid)
-            activeNvEntity = (sourceUid, Comp<PhosphorNightVisionComponent>(sourceUid));
-
-        RefreshOverlay(entity, activeNvEntity: activeNvEntity);
     }
 
     /// <summary>
