@@ -226,24 +226,26 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
                 ViewAngle = playerAngle + eyeAngle + MathHelper.DegreesToRadians(180f);
 
                 // KS14 start
-                const float flashAmplification = 1500f; // amplif at start of flash
+                const float flashBrightnessMul = 1500f; // amplif at start of flash
                 const float flashDurationMultiplier = 3f;
 
-                var extraAmplification = 0f;
+                var brightnessMultiplier = 1f;
                 if (_eyeEntity.Value.Comp2.LastFlashTime is { } lastFlashTime &&
                     lastFlashTime <= _gameTiming.CurTime)
                 {
-                    extraAmplification = 1f - (float)((_gameTiming.CurTime - lastFlashTime).TotalSeconds / (_eyeEntity.Value.Comp2.LastFlashDuration.TotalSeconds * flashDurationMultiplier));
-                    if (extraAmplification < 0f)
-                        extraAmplification = 0f;
+                    brightnessMultiplier = 1 - (float)((_gameTiming.CurTime - lastFlashTime).TotalSeconds / (_eyeEntity.Value.Comp2.LastFlashDuration.TotalSeconds * flashDurationMultiplier));
+                    if (brightnessMultiplier < 0f)
+                        brightnessMultiplier = 1f;
                     else
-                        extraAmplification *= flashAmplification;
+                        brightnessMultiplier *= flashBrightnessMul;
                 }
                 // KS14 end
 
                 _phosphorNightVisionShader.SetParameter("SCREEN_TEXTURE", ScreenTexture);
-                _phosphorNightVisionShader.SetParameter("BASE_COLOR", new Vector3(PhosphorColor.R, PhosphorColor.G, PhosphorColor.B));
-                _phosphorNightVisionShader.SetParameter("AMPLIFICATION", Amplification + extraAmplification /* KS14: extra amplification */);
+                _phosphorNightVisionShader.SetParameter("BASE_COLOR", PhosphorColor.RGBA);
+                _phosphorNightVisionShader.SetParameter("ADDED_LIGHT_COLOR", LightingColor.RGBA);
+                _phosphorNightVisionShader.SetParameter("AMPLIFICATION", Amplification);
+                _phosphorNightVisionShader.SetParameter("BRIGHTNESS_MUL", brightnessMultiplier);
                 _phosphorNightVisionShader.SetParameter("IS_CONE", IsCone);
                 _phosphorNightVisionShader.SetParameter("CONE_ANGLE", ConeAngle);
                 _phosphorNightVisionShader.SetParameter("CONE_FEATHER", ConeFeather);

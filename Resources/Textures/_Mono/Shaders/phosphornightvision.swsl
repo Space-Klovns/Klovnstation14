@@ -1,8 +1,9 @@
 uniform sampler2D SCREEN_TEXTURE;
 
-uniform highp vec3 BASE_COLOR;
-uniform highp vec3 ADDED_LIGHT_COLOR;
+uniform highp vec4 BASE_COLOR;
+uniform highp vec4 ADDED_LIGHT_COLOR;
 uniform highp float AMPLIFICATION;
+uniform highp float BRIGHTNESS_MUL;
 uniform highp float[3] BLUR_OFFSET;
 uniform highp float[3] BLUR_WEIGHT;
 uniform bool IS_CONE;
@@ -23,7 +24,8 @@ const highp float PI = 3.14159265359;
 const highp float TAU = 6.28318530718;
 
 const highp float staticBase = 0.7;
-const highp float staticEnvMul = 2;
+const highp float staticMul = 2;
+const highp float staticEnvironmentalFactor = 0.0002;
 
 // Cone mask.
 // Returns 1.0 inside the cone, 0.0 outside, with smooth edges.
@@ -106,17 +108,23 @@ void fragment()
     // Monochrome the view.
     highp float gray = zGrayscale(blurred.rgb);
 
+    // my magnum opus; at a light level of 0, AMPLIFICATION should not affect adjustedAmplification.
+    highp float addedLightGrayscale = zGrayscale(ADDED_LIGHT_COLOR.rgb);
+    // adjustedAmplification is currently a scale from (addedLightGrayscale - AMPLIFICATION)
+    highp float adjustedAmplification = (max(zGrayscale(lightSample) - (addedLightGrayscale * ADDED_LIGHT_COLOR.a), 0.0) * AMPLIFICATION) + addedLightGrayscale;
+    adjustedAmplification *= BRIGHTNESS_MUL;
+
     // Shade it to the phosphor color.
-    highp vec3 colorized = gray * BASE_COLOR * AMPLIFICATION;
+    highp vec3 colorized = gray * BASE_COLOR.rgb * adjustedAmplification;
 
     // Screen size in pixels.
     highp vec2 screenSize = vec2(1.0 / SCREEN_PIXEL_SIZE.x, 1.0 / SCREEN_PIXEL_SIZE.y);
 
     lowp float staticBase = zRandom(FRAGCOORD.xy * (SCREEN_PIXEL_SIZE) + vec2(fract(TIME))).x;
-    lowp vec4 staticFx = vec4(vec3(staticBase * staticEnvMul + staticBase), 1.0);
+    lowp vec4 staticFx = vec4(vec3(staticBase * staticMul + staticBase), 1.0) * BASE_COLOR;
 
     // Re-expand and add the original alpha back, and add some static.
-    highp vec4 walpha = vec4(colorized, blurred.a) + (staticFx * 0.002 * AMPLIFICATION);
+    highp vec4 walpha = vec4(colorized, blurred.a) + (staticFx * staticEnvironmentalFactor * (AMPLIFICATION - (adjustedAmplification / BRIGHTNESS_MUL - addedLightGrayscale)));
 
     // --- NV-composited scene (cone-masked if applicable) ---
     highp vec4 sceneNV;
@@ -134,7 +142,7 @@ void fragment()
         );
 
         // zAdjustResult(LIGHT * MODULATE * COLOR)
-        // staticFx * vec4(vec3(0.1 * zGrayscale(LIGHT.rgb) * BASE_COLOR), 1.0)
+        // staticFx * vec4(vec3(0.1 * zGrayscale(LIGHT.rgb) * BASE_COLOR.rgb), 1.0)
 
         sceneNV = mix(vec4(vec3(0.0), 1), walpha, cone);
     } else {
