@@ -4,14 +4,11 @@ namespace Content.Shared._Mono.Overlays;
 
 /// <summary>
 ///     Added to something that is seeing through NV because of some other entity.
-///         Only sent to the owner.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
 [AutoGenerateComponentState(raiseAfterAutoHandleState: true), AutoGenerateComponentPause]
 public sealed partial class PhosphorNightVisionRecipientComponent : Component
 {
-    public override bool SendOnlyToOwner => true;
-
     /// <summary>
     ///     Last ingame time that the user was flashed. If null, means never.
     /// </summary>
@@ -25,5 +22,5 @@ public sealed partial class PhosphorNightVisionRecipientComponent : Component
     public TimeSpan LastFlashDuration;
 
     [DataField, AutoNetworkedField]
-    public EntityUid? NightVisionSourceUid = null;
+    public HashSet<EntityUid> SourceUids = [];
 }

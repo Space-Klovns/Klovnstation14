@@ -3,10 +3,7 @@
   name: job-name-engineer
   description: job-description-engineer
   playTimeTracker: JobStationEngineer
-  requirements:
-    - !type:DepartmentTimeRequirement
-      department: Engineering
-      time: 2.5h
+  # KS14: Removed role requirements
   startingGear: StationEngineerGear
   icon: "JobIconStationEngineer"
   supervisors: job-supervisors-ce

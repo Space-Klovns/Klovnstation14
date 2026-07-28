@@ -1,8 +1,9 @@
 uniform sampler2D SCREEN_TEXTURE;
 
-uniform highp vec3 BASE_COLOR;
-uniform highp vec3 ADDED_LIGHT_COLOR;
+uniform highp vec4 BASE_COLOR;
+uniform highp vec4 ADDED_LIGHT_COLOR;
 uniform highp float AMPLIFICATION;
+uniform highp float BRIGHTNESS_MUL;
 uniform highp float[3] BLUR_OFFSET;
 uniform highp float[3] BLUR_WEIGHT;
 uniform bool IS_CONE;
@@ -15,6 +16,7 @@ uniform highp float CONE_DISTANCE_FEATHER; // Soft fade at the coneâ€™s end (0â€
 uniform highp float VIEW_ANGLE;            // Rotation of the cone in radians.
 uniform highp float FREEDOM = 0.07; // KS14: Radius of the fade-out of cone, at the same origin as the cone.
 uniform highp vec2 ZOOM; // KS14
+uniform highp vec2 EYE_OFFSET; // KS14
 
 uniform highp float TIME_FRACTION;         // signed time fraction, -1..1 (see spec)
 uniform highp float WIPE_FEATHER = 0.25;   // softness of the top-to-bottom wipe edge, in UV units
@@ -23,29 +25,24 @@ const highp float PI = 3.14159265359;
 const highp float TAU = 6.28318530718;
 
 const highp float staticBase = 0.7;
-const highp float staticEnvMul = 2;
+const highp float staticMul = 2;
+const highp float staticEnvironmentalFactor = 0.0002;
+
+const highp float BASE_LIGHT_MUL = 2; // bruh
 
 // Cone mask.
 // Returns 1.0 inside the cone, 0.0 outside, with smooth edges.
 highp float coneMask(
     highp vec2 fragcoord,
-    highp vec2 screenSize,
-    highp float coneAngleDeg,
-    highp float coneFeatherDeg,
-    highp float coneDistance,
-    highp float coneDistanceFeather,
-    highp float viewAngle,
-
-    highp float freedom,
-    highp vec2 zoom
+    highp vec2 screenSize
 ) {
-    highp vec2 center = screenSize * 0.5;
+    highp vec2 center = screenSize * 0.5 + (EYE_OFFSET * ZOOM * 32); // TODO LCDC: fix this with zoom (like when wielding xl8)
     highp vec2 delta = fragcoord - center;
 
     // Distance from screen center in pixels.
-    highp float dist = length(delta * zoom);
-    highp float maxDist = coneDistance * min(screenSize.x, screenSize.y);
-    highp float maxDistFeather = coneDistanceFeather * min(screenSize.x, screenSize.y);
+    highp float dist = length(delta * ZOOM);
+    highp float maxDist = CONE_DISTANCE * min(screenSize.x, screenSize.y);
+    highp float maxDistFeather = CONE_DISTANCE_FEATHER * min(screenSize.x, screenSize.y);
 
     // Radial distance falloff for the cone length.
     highp float distMask = 1.0 - smoothstep(
@@ -55,14 +52,14 @@ highp float coneMask(
     );
 
     // Direction from center to fragment.
-    highp vec2 dir = (dist > 0.0) ? (delta * zoom) / dist : vec2(0.0, 1.0);
+    highp vec2 dir = (dist > 0.0) ? (delta * ZOOM) / dist : vec2(0.0, 1.0);
 
     // Cone direction.
-    highp vec2 coneDir = vec2(sin(-viewAngle), cos(-viewAngle));
+    highp vec2 coneDir = vec2(sin(-VIEW_ANGLE), cos(-VIEW_ANGLE));
 
     // Precompute these on the CPU if possible.
-    highp float halfCone = radians(coneAngleDeg) * 0.5;
-    highp float featherRad = radians(coneFeatherDeg);
+    highp float halfCone = radians(CONE_ANGLE) * 0.5;
+    highp float featherRad = radians(CONE_FEATHER);
 
     // Angle between fragment direction and cone edge direction.
     highp float angle = acos(clamp(dot(dir, coneDir), -1.0, 1.0));
@@ -82,9 +79,9 @@ highp float coneMask(
     // Smooth over a constant pixel width.
     highp float angleMask = smoothstep(-featherPixels, 0.0, edgePixelDist);
 
-    highp float scaledFreedom = freedom * min(screenSize.x, screenSize.y);
+    highp float scaledFreedom = FREEDOM * min(screenSize.x, screenSize.y);
     highp float freedomMask = 1 - smoothstep(
-        scaledFreedom * coneDistanceFeather,
+        scaledFreedom * CONE_DISTANCE_FEATHER,
         scaledFreedom,
         dist
     );
@@ -106,35 +103,34 @@ void fragment()
     // Monochrome the view.
     highp float gray = zGrayscale(blurred.rgb);
 
+    // my magnum opus; at a light level of 0, AMPLIFICATION should not affect adjustedAmplification.
+    highp float addedLightGrayscale = zGrayscale(ADDED_LIGHT_COLOR.rgb);
+    // adjustedAmplification is currently a scale from (addedLightGrayscale - AMPLIFICATION)
+    highp float adjustedAmplification = (max(zGrayscale(lightSample) - (addedLightGrayscale * ADDED_LIGHT_COLOR.a), 0.0) * AMPLIFICATION) + addedLightGrayscale;
+    adjustedAmplification *= BRIGHTNESS_MUL * BASE_LIGHT_MUL;
+
     // Shade it to the phosphor color.
-    highp vec3 colorized = gray * BASE_COLOR * AMPLIFICATION;
+    highp vec3 colorized = gray * BASE_COLOR.rgb * adjustedAmplification;
 
     // Screen size in pixels.
     highp vec2 screenSize = vec2(1.0 / SCREEN_PIXEL_SIZE.x, 1.0 / SCREEN_PIXEL_SIZE.y);
 
     lowp float staticBase = zRandom(FRAGCOORD.xy * (SCREEN_PIXEL_SIZE) + vec2(fract(TIME))).x;
-    lowp vec4 staticFx = vec4(vec3(staticBase * staticEnvMul + staticBase), 1.0);
+    lowp vec4 staticFx = vec4(vec3(staticBase * staticMul + staticBase), 1.0) * BASE_COLOR;
 
     // Re-expand and add the original alpha back, and add some static.
-    highp vec4 walpha = vec4(colorized, blurred.a) + (staticFx * 0.002 * AMPLIFICATION);
+    highp vec4 walpha = vec4(colorized, blurred.a) + (staticFx * staticEnvironmentalFactor * (AMPLIFICATION - (adjustedAmplification / BRIGHTNESS_MUL - addedLightGrayscale)));
 
     // --- NV-composited scene (cone-masked if applicable) ---
     highp vec4 sceneNV;
     if (IS_CONE) {
         highp float cone = coneMask(
             FRAGCOORD.xy,
-            screenSize,
-            CONE_ANGLE,
-            CONE_FEATHER,
-            CONE_DISTANCE,
-            CONE_DISTANCE_FEATHER,
-            VIEW_ANGLE,
-            FREEDOM,
-            ZOOM
+            screenSize
         );
 
         // zAdjustResult(LIGHT * MODULATE * COLOR)
-        // staticFx * vec4(vec3(0.1 * zGrayscale(LIGHT.rgb) * BASE_COLOR), 1.0)
+        // staticFx * vec4(vec3(0.1 * zGrayscale(LIGHT.rgb) * BASE_COLOR.rgb), 1.0)
 
         sceneNV = mix(vec4(vec3(0.0), 1), walpha, cone);
     } else {

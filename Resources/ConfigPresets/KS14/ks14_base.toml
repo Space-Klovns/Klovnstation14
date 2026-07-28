@@ -3,11 +3,6 @@
 
 # This is a base; gameplay-only changes that will be present on all KS14 builds (debug, release, etc.)
 
-[game]
-# Removes role timers - we keep this until we have proper game time for everyone
-role_timers = false
-role_loadout_timers = false
-
 [ooc]
 enable_during_round = true
 

@@ -11,7 +11,7 @@
     requirement:
       !type:DepartmentTimeRequirement
       department: Security
-      time: 60h
+      time: 15h # KS14: 60h -> 15h
 
 # Head
 - type: loadout

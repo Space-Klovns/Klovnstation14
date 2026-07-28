@@ -1,0 +1,16 @@
+- type: gameMap
+  id: FieldCommander
+  mapName: 'Field Commander [Admin]'
+  mapPath: /Maps/_KS14/Scenarios/field_commander.yml
+  minPlayers: 7
+  maxPlayers: 40
+  stations:
+    FieldCommander:
+      stationProto: KsStationBasicScenario
+      components:
+      - type: StationNameSetup
+        mapNameTemplate: 'FieldCommander'
+      - type: StationJobs
+        availableJobs:
+          ScenarioNt: [ 40, 40 ]
+      - type: KsSilenceWelcomeMessage

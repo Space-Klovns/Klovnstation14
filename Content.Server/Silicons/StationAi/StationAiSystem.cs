@@ -37,9 +37,6 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using static Content.Server.Chat.Systems.ChatSystem;
-using Robust.Shared.Map; //KS14
-using Content.Server.NPC; //KS14
-using Content.Server.NPC.Systems; //KS14
 
 namespace Content.Server.Silicons.StationAi;
 
@@ -63,7 +60,6 @@ public sealed partial class StationAiSystem : SharedStationAiSystem
     [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private MobStateSystem _mobState = default!;
     [Dependency] private SharedAppearanceSystem _appearance = default!;
-    [Dependency] private NPCSystem _npcSystem = default!; //KS14
 
     private readonly HashSet<Entity<StationAiCoreComponent>> _stationAiCores = new();
 
@@ -486,11 +482,4 @@ public sealed partial class StationAiSystem : SharedStationAiSystem
 
         return hashSet;
     }
-    //KS14 start
-    public override void TryMoveBot(EntityUid botUid, EntityCoordinates targetCoordinates)
-    {
-        // all validation is done in navsystem, we can just straight up pass it like this and our job here is done
-        _npcSystem.SetBlackboard(botUid, NPCBlackboard.FollowTarget, targetCoordinates);
-    }
-    //KS14 end
 }

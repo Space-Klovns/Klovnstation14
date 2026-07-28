@@ -20,22 +20,39 @@ public sealed partial class WearablePhosphorNightVisionSystem : EntitySystem
 
     private void OnGotEquipped(Entity<WearablePhosphorNightVisionComponent> entity, ref GotEquippedEvent args)
     {
-        if (_gameTiming.ApplyingState ||
-            HasComp<PhosphorNightVisionRecipientComponent>(args.EquipTarget))
+        if (!_gameTiming.IsFirstTimePredicted)
+            return;
+
+        if (TryComp<PhosphorNightVisionRecipientComponent>(args.EquipTarget, out var existingRecipientComponent))
+        {
+            existingRecipientComponent.SourceUids.Add(entity);
+            _phosphorNightVisionSystem.RefreshOverlay(args.EquipTarget, activeNvEntity: (entity, Comp<PhosphorNightVisionComponent>(entity)));
+
+            return;
+        }
+
+        if (_gameTiming.ApplyingState)
             return;
 
         var recipientComponent = EntityManager.ComponentFactory.GetComponent<PhosphorNightVisionRecipientComponent>();
-        recipientComponent.NightVisionSourceUid = entity;
+        recipientComponent.SourceUids.Add(entity);
 
         AddComp(args.EquipTarget, recipientComponent);
         Dirty(args.EquipTarget, recipientComponent);
-
-        _phosphorNightVisionSystem.RefreshOverlay(args.EquipTarget, activeNvEntity: (entity, Comp<PhosphorNightVisionComponent>(entity)));
     }
 
     private void OnGotUnequipped(Entity<WearablePhosphorNightVisionComponent> entity, ref GotUnequippedEvent args)
     {
-        RemComp<PhosphorNightVisionRecipientComponent>(args.EquipTarget);
+        if (!_gameTiming.IsFirstTimePredicted)
+            return;
+
+        if (TryComp<PhosphorNightVisionRecipientComponent>(args.EquipTarget, out var recipientComponent) &&
+            recipientComponent.SourceUids.Remove(entity) &&
+            recipientComponent.SourceUids.Count == 0)
+        {
+            RemComp(args.EquipTarget, recipientComponent);
+        }
+
         _phosphorNightVisionSystem.RefreshOverlay(args.EquipTarget, activeNvEntity: (entity, Comp<PhosphorNightVisionComponent>(entity)));
     }
 }

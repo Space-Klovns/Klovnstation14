@@ -3,10 +3,7 @@
   name: job-name-salvagespec
   description: job-description-salvagespec
   playTimeTracker: JobSalvageSpecialist
-  requirements:
-    - !type:DepartmentTimeRequirement
-      department: Cargo
-      time: 2.5h
+  # KS14: Removed role requirements
   icon: "JobIconShaftMiner"
   startingGear: SalvageSpecialistGear
   supervisors: job-supervisors-qm
@@ -36,4 +33,3 @@
     outerClothing: ClothingOuterWinterMiner
     neck: ClothingNeckScarfStripedBrown
     gloves: ClothingHandsGlovesColorBlack
-

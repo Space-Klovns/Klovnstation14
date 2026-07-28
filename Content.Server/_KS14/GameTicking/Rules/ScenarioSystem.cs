@@ -13,6 +13,8 @@ using Content.Shared.Trigger;
 using Content.Shared.GameTicking;
 using Robust.Shared.Prototypes;
 using System.Threading;
+using Robust.Server.GameStates;
+using Robust.Shared.Utility;
 
 namespace Content.Server._KS14.GameTicking.Rules;
 
@@ -28,9 +30,10 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
 {
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private RoundEndSystem _roundEndSystem = default!;
+    [Dependency] private PvsOverrideSystem _pvsOverrideSystem = default!;
 
-    // All active objectives
-    private readonly HashSet<EntityUid> _activeObjectiveUids = [];
+    // All active objectives for factions
+    private readonly Dictionary<ProtoId<ScenarioFactionPrototype>, HashSet<EntityUid>> _activeObjectiveUids = [];
     private readonly ThreadLocal<HashSet<ProtoId<ScenarioFactionPrototype>>> _uniqueFactionSetLocal = new(() => []);
 
 
@@ -45,6 +48,7 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
         SubscribeLocalEvent<ScenarioFactionMemberComponent, MobStateChangedEvent>(OnMemberMobStateChanged);
         SubscribeLocalEvent<ScenarioFactionMemberComponent, EntityZombifiedEvent>(OnMemberZombified);
 
+        SubscribeLocalEvent<ScenarioObjectiveComponent, MapInitEvent>(OnObjectiveMapInit);
         SubscribeLocalEvent<ScenarioObjectiveComponent, ComponentShutdown>(OnObjectiveShutdown);
         SubscribeLocalEvent<ScenarioObjectiveComponent, TriggerEvent>(OnTriggered);
         SubscribeLocalEvent<ScenarioObjectiveComponent, TimedDespawnEvent>(OnObjDefended);
@@ -135,10 +139,24 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
         if (!IsRuleActive())
             return;
 
-        if (_activeObjectiveUids.Count != 0)
-            return;
+        // to win, a faction must be the only one with atleast 1 of their objectives remaining
 
+        ProtoId<ScenarioFactionPrototype>? winningFactionId = null;
+        foreach (var (factionId, factionActiveObjectiveUids) in _activeObjectiveUids)
+        {
+            if (factionActiveObjectiveUids.Count == 0)
+                continue;
+
+            // means that there is more than 1 faction with objectives remaining
+            if (winningFactionId is { })
+                return;
+
+            winningFactionId = factionId;
+        }
+
+        SetWinFaction(winningFactionId);
         SetWinType(ScenarioWinType.Objective);
+
         _roundEndSystem.DoRoundEndBehavior(RoundEndBehavior.InstantEnd,
             TimeSpan.FromMinutes(3), //doesnt matter
             "comms-console-announcement-title-centcom",
@@ -180,9 +198,17 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
             "comms-console-announcement-title-centcom");
     }
 
+    private void OnObjectiveMapInit(Entity<ScenarioObjectiveComponent> entity, ref MapInitEvent args)
+    {
+        _pvsOverrideSystem.AddGlobalOverride(entity);
+        _activeObjectiveUids.GetOrNew(entity.Comp.FactionId).Add(entity);
+    }
+
     private void OnObjectiveShutdown(Entity<ScenarioObjectiveComponent> entity, ref ComponentShutdown args)
     {
-        _activeObjectiveUids.Remove(entity);
+        _pvsOverrideSystem.RemoveGlobalOverride(entity);
+        if (_activeObjectiveUids.TryGetValue(entity.Comp.FactionId, out var factionActiveObjectiveUids))
+            factionActiveObjectiveUids.Remove(entity);
 
         SetWinFaction(entity.Comp.FactionId);
         CheckRoundShouldEndViaObjective();
