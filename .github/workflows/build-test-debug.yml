@@ -8,14 +8,35 @@ on:
     types: [ opened, reopened, synchronize, ready_for_review ]
     branches: [ master, staging, stable ]
 
+concurrency: # KS14: a newer commit supersedes a running PR build
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   build:
     if: github.actor != 'PJBot' && github.event.pull_request.draft == false
     strategy:
+      fail-fast: false # KS14: one red shard must not cancel its siblings
       matrix:
         os: [ubuntu-latest]
+        # KS14: integration test shards, sliced with NUnit.Where because VSTest --filter burns ~19 min
+        # per job on this suite before any test runs. Shards are balanced by measured execution time,
+        # not case count. `rest` is the exact negation of the three positive slices, so the union
+        # always covers the whole suite; edit a positive slice and its negation twin together.
+        # TSL gotcha: no backslash escapes in the regexes, a `\.` silently matches zero tests.
+        shard: [prototypes, maps, rounds, rest]
+        include:
+          - shard: prototypes
+            where: "test =~ 'Tests.Damageable.DamageAllPrototypesTest' or test =~ 'IntegrationTests.Tests.Construction'"
+          - shard: maps
+            where: "class == 'Content.IntegrationTests.Tests.PostMapInitTest'"
+          - shard: rounds
+            where: "test =~ 'IntegrationTests.Tests.GameRules.' or test =~ 'IntegrationTests.Tests.EntityTest.'"
+          - shard: rest
+            where: "test !~ 'Tests.Damageable.DamageAllPrototypesTest' and test !~ 'IntegrationTests.Tests.Construction' and class != 'Content.IntegrationTests.Tests.PostMapInitTest' and test !~ 'IntegrationTests.Tests.GameRules.' and test !~ 'IntegrationTests.Tests.EntityTest.'"
 
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45 # KS14: bound runaway jobs; keep above the in-process test watchdog so it reports first
 
     steps:
     - name: Checkout Master
@@ -79,6 +100,7 @@ jobs:
         -p:CL_MPCount=3
 
     - name: Run Content.Tests
+      if: matrix.shard == 'maps' # KS14: run once, on the shortest shard
       shell: pwsh # KS14: add NUnit.ConsoleOut=0, NUnit.InternalTraceLevel=Off; to minimise XML OOM disaster
       run: >
         dotnet test
@@ -87,9 +109,8 @@ jobs:
         Content.Tests/Content.Tests.csproj
         -- NUnit.ConsoleOut=0
 
-    - name: Run Content.IntegrationTests
+    - name: Run Content.IntegrationTests (${{ matrix.shard }})
       shell: pwsh # KS14: Rework command to add `ConsoleOut=0`, `InternalTraceLevel=Off`, `TestOutputXml=`, `--logger "console;verbosity=minimal"` to minimise XML disaster
-      # KS14: Added heap hardlimit
       run: |
         $env:DOTNET_gcServer=1
 
@@ -99,18 +120,25 @@ jobs:
           Content.IntegrationTests/Content.IntegrationTests.csproj `
           --logger "console;verbosity=minimal" `
           -- `
+          RunConfiguration.TreatNoTestsAsError=true `
           NUnit.ConsoleOut=0 `
           NUnit.InternalTraceLevel=Off `
           NUnit.MapWarningTo=Failed `
           NUnit.TestOutputXml= `
-          NUnit.NumberOfTestWorkers=1
+          NUnit.NumberOfTestWorkers=1 `
+          "NUnit.Where=${{ matrix.where }}"
 
     # KS14: Removed test result archival
   ci-success:
     name: Build & Test Debug
+    if: always() # KS14: else a red build leaves this check "skipped", which branch protection counts as passing
     needs:
       - build
     runs-on: ubuntu-latest
     steps:
       - name: CI succeeded
+        if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
         run: exit 0
+      - name: CI failed
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: exit 1

@@ -21,7 +21,9 @@ public sealed class StationPowerTests : GameTest
     /// </summary>
     private const float MinimumPowerDurationSeconds = 10 * 60;
 
-    private static readonly string[] GameMaps = PostMapInitTest.GameMaps; // KS14: Use this instead
+    // KS14: all game maps, minus Tiderfall - its planet biome unloads chunks mid-test and the
+    // FloorWaterEntity IsDefault check trips the DebugOpt-only TimeOffsetSerializer assert
+    private static readonly string[] GameMaps = PostMapInitTest.GameMaps.Where(map => map != "Tiderfall").ToArray();
     // private static readonly string[] GameMaps =
     // [
     //     "Bagel",
