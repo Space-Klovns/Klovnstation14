@@ -33,7 +33,7 @@
     - id: ShippingContainerNanotrasenHeavy
 
 - type: entityTable
-  id: ShippingContainerSyndie
+  id: ShippingContainerTableSyndie
   table: !type:GroupSelector
     children:
     - id: ShippingContainerKosmologistika
