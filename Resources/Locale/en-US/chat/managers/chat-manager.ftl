@@ -22,8 +22,9 @@ chat-manager-server-wrap-message = [bold]{$message}[/bold]
 chat-manager-sender-announcement = Central Command
 chat-manager-sender-announcement-wrap-message = [font size=14][bold]{$sender} Announcement:[/font][font size=12]
                                                 {$message}[/bold][/font]
-chat-manager-entity-say-wrap-message = [BubbleHeader][bold][Name]{$entityName}[/Name][/bold][/BubbleHeader] {$verb}, [font={$fontType} size={$fontSize}]“[BubbleContent]{$message}[/BubbleContent]”[/font]
-chat-manager-entity-say-bold-wrap-message = [BubbleHeader][bold][Name]{$entityName}[/Name][/bold][/BubbleHeader] {$verb}, [font={$fontType} size={$fontSize}]“[BubbleContent][bold]{$message}[/bold][/BubbleContent]”[/font]
+# KS14: fontType quoted; unquoted markup values parse as colors, so non-Default fonts never applied
+chat-manager-entity-say-wrap-message = [BubbleHeader][bold][Name]{$entityName}[/Name][/bold][/BubbleHeader] {$verb}, [font="{$fontType}" size={$fontSize}]“[BubbleContent]{$message}[/BubbleContent]”[/font]
+chat-manager-entity-say-bold-wrap-message = [BubbleHeader][bold][Name]{$entityName}[/Name][/bold][/BubbleHeader] {$verb}, [font="{$fontType}" size={$fontSize}]“[BubbleContent][bold]{$message}[/bold][/BubbleContent]”[/font]
 
 chat-manager-entity-whisper-wrap-message = [font size=11][italic][BubbleHeader][Name]{$entityName}[/Name][/BubbleHeader] whispers,“[BubbleContent]{$message}[/BubbleContent]”[/italic][/font]
 chat-manager-entity-whisper-unknown-wrap-message = [font size=11][italic][BubbleHeader]Someone[/BubbleHeader] whispers, “[BubbleContent]{$message}[/BubbleContent]”[/italic][/font]

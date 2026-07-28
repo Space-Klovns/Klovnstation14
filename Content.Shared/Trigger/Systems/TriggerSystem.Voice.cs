@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Language; // KS14
 using Content.Shared.Trigger.Components.Triggers;
 using Content.Shared.Speech;
 using Content.Shared.Speech.Components;
@@ -41,6 +42,10 @@ public sealed partial class TriggerSystem
         {
             args.PushText(Loc.GetString(component.InspectInitializedLoc.Value, ("keyphrase", component.KeyPhrase)));
         }
+
+        // KS14: the server language system pushes the language and understander-only clear reading.
+        if (component.KsKeyPhraseLanguage != null)
+            RaiseLocalEvent(uid, new KsVoiceTriggerExaminedEvent(args));
     }
 
     private void OnListen(Entity<TriggerOnVoiceComponent> ent, ref ListenEvent args)
@@ -57,7 +62,7 @@ public sealed partial class TriggerSystem
                 return;
 
             if (message.Length >= component.MinLength && message.Length <= component.MaxLength)
-                FinishRecording(ent, args.Source, args.Message);
+                FinishRecording(ent, args.Source, args.Message, args.KsLanguage /* KS14 */);
             else if (message.Length > component.MaxLength)
                 _popup.PopupEntity(Loc.GetString("trigger-on-voice-record-failed-too-long"), ent);
             else if (message.Length < component.MinLength)
@@ -65,6 +70,15 @@ public sealed partial class TriggerSystem
 
             return;
         }
+
+        // KS14 Start: the device recorded sounds; a phrase only matches speech in its recorded
+        // language, compared in scrambled form.
+        if (component.KsKeyPhraseLanguage != args.KsLanguage?.LanguageId)
+            return;
+
+        if (args.KsLanguage != null)
+            message = args.KsLanguage.ObfuscateText(message);
+        // KS14 End
 
         if (!string.IsNullOrWhiteSpace(component.KeyPhrase) && message.IndexOf(component.KeyPhrase, StringComparison.InvariantCultureIgnoreCase) is var index and >= 0)
         {
@@ -168,14 +182,23 @@ public sealed partial class TriggerSystem
     /// <summary>
     /// Stop recording and set the current keyphrase message.
     /// </summary>
-    public void FinishRecording(Entity<TriggerOnVoiceComponent> ent, EntityUid source, string message)
+    public void FinishRecording(Entity<TriggerOnVoiceComponent> ent, EntityUid source, string message, KsUtteranceContext? ksLanguage = null /* KS14 */)
     {
-        ent.Comp.KeyPhrase = message;
+        // KS14 Start: store the scrambled sound; the clear text stays in a server-only field.
+        ent.Comp.KeyPhrase = ksLanguage?.ObfuscateText(message) ?? message;
+        ent.Comp.KsKeyPhraseLanguage = ksLanguage?.LanguageId;
+        ent.Comp.KsKeyPhraseClear = ksLanguage != null ? message : null;
+        // KS14 End
         ent.Comp.IsRecording = false;
         Dirty(ent);
 
         _adminLogger.Add(LogType.Trigger, LogImpact.Low,
                 $"A voice-trigger on {ToPrettyString(ent):entity} has recorded a new keyphrase: '{ent.Comp.KeyPhrase}'. Recorded from {ToPrettyString(source):speaker}");
+
+        // KS14: the log above is scrambled; give admins the clear text.
+        if (ksLanguage != null)
+            _adminLogger.Add(LogType.Trigger, LogImpact.Low,
+                $"The keyphrase on {ToPrettyString(ent):entity} was spoken in {ksLanguage.LanguageId}; clear text: '{message}'");
 
         _popup.PopupEntity(Loc.GetString("trigger-on-voice-recorded", ("keyphrase", ent.Comp.KeyPhrase)), ent);
     }
@@ -186,6 +209,8 @@ public sealed partial class TriggerSystem
     public void ClearRecording(Entity<TriggerOnVoiceComponent> ent)
     {
         ent.Comp.KeyPhrase = null;
+        ent.Comp.KsKeyPhraseLanguage = null; // KS14
+        ent.Comp.KsKeyPhraseClear = null; // KS14
         ent.Comp.IsRecording = false;
         Dirty(ent);
         RemComp<ActiveListenerComponent>(ent);
@@ -200,6 +225,8 @@ public sealed partial class TriggerSystem
             return;
 
         ent.Comp.KeyPhrase = Loc.GetString(ent.Comp.DefaultKeyPhrase);
+        ent.Comp.KsKeyPhraseLanguage = null; // KS14
+        ent.Comp.KsKeyPhraseClear = null; // KS14
         ent.Comp.IsRecording = false;
         Dirty(ent);
         UpdateListening(ent);

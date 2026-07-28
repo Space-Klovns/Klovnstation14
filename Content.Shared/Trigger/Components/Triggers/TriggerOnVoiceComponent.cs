@@ -1,4 +1,6 @@
+using Content.Shared._KS14.Language; // KS14
 using Robust.Shared.GameStates;
+using Robust.Shared.Prototypes; // KS14
 
 namespace Content.Shared.Trigger.Components.Triggers;
 
@@ -104,4 +106,20 @@ public sealed partial class TriggerOnVoiceComponent : BaseTriggerOnXComponent
     /// </summary>
     [DataField, AutoNetworkedField]
     public LocId? InspectInitializedLoc = "trigger-on-voice-examine";
+
+    // KS14 Start
+    /// <summary>
+    ///     Language the key phrase was recorded in. When set, <see cref="KeyPhrase"/> holds the
+    ///     scrambled sound and matching requires the same language.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public ProtoId<KsLanguagePrototype>? KsKeyPhraseLanguage;
+
+    /// <summary>
+    ///     Clear text of an exotic-language key phrase. Deliberately not networked; understanders
+    ///     read it via server examine.
+    /// </summary>
+    [DataField]
+    public string? KsKeyPhraseClear;
+    // KS14 End
 }

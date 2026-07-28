@@ -17,6 +17,8 @@
     components:
     - type: MimePowers
     - type: FrenchAccent
+    - type: KsLanguageGrant # KS14: mimes understand Klovnish perfectly. They will never speak it.
+      understands: [ KsLangKlovnish ] # KS14
 
 - type: startingGear
   id: MimeGear
