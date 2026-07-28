@@ -82,22 +82,47 @@ public sealed partial class NPCSteeringSystem
             var isAccessRequired = (poly.Data.Flags & PathfindingBreadcrumbFlag.Access) != 0x0;
             var isClimbable = (poly.Data.Flags & PathfindingBreadcrumbFlag.Climb) != 0x0;
 
+            // KS14: ANK: improved door logic to check for access
             // Just walk into it stupid
-            if (isDoor && !isAccessRequired)
+            if (isDoor)
             {
-                // ... At least if it's not a bump open.
-                foreach (var ent in obstacleEnts)
+                if (!isAccessRequired)
                 {
-                    if (!_doorQuery.TryGetComponent(ent, out var door))
-                        continue;
-
-                    if (!door.BumpOpen && (component.Flags & PathFlags.Interact) != 0x0)
+                    // ... At least if it's not a bump open.
+                    foreach (var ent in obstacleEnts)
                     {
-                        if (door.State != DoorState.Opening)
+                        if (!_doorQuery.TryGetComponent(ent, out var door))
+                            continue;
+
+                        if (!door.BumpOpen && (component.Flags & PathFlags.Interact) != 0x0)
                         {
-                            _interaction.InteractionActivate(uid, ent);
+                            if (door.State != DoorState.Opening)
+                            {
+                                _interaction.InteractionActivate(uid, ent);
+                                return SteeringObstacleStatus.Continuing;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var obstacleUid in obstacleEnts)
+                    {
+                        if (!_doorQuery.TryGetComponent(obstacleUid, out var doorComponent))
+                            continue;
+
+                        if (doorComponent.State == DoorState.Opening ||
+                            doorComponent.State == DoorState.Open)
+                        {
                             return SteeringObstacleStatus.Continuing;
                         }
+
+                        if (!(doorComponent.ClickOpen || doorComponent.BumpOpen) || !component.Flags.HasFlag(PathFlags.Interact) ||
+                            !_accessReaderSystem.IsAllowed(uid, obstacleUid))
+                            continue;
+
+                        _interaction.InteractionActivate(uid, obstacleUid);
+                        return SteeringObstacleStatus.Continuing;
                     }
                 }
 

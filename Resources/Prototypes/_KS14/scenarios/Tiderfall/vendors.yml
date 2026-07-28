@@ -30,12 +30,18 @@
         replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleTiderfallNtConscript
         replaceSlot: *replaceSlots
-      - id: ScenarioVendorBundleTiderfallNtMedic
-        replaceSlot: *replaceSlots
+      #- id: ScenarioVendorBundleTiderfallNtMedic
+      #  replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleTiderfallNtBartender
         replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleTiderfallNtDroneOperator
         replaceSlot: *replaceSlots
+    - name: Utilities
+      entries:
+      - id: DefibrillatorCompact
+        amount: 2
+      - id: ScenarioNightVisionGogglesBasic
+        amount: 1
 
 - type: entity
   parent: ColMarTechScenarioBase
@@ -63,8 +69,8 @@
         replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleTiderfallSyndieSniper
         replaceSlot: *replaceSlots
-      - id: ScenarioVendorBundleTiderfallSyndieMedic
-        replaceSlot: *replaceSlots
+      #- id: ScenarioVendorBundleTiderfallSyndieMedic
+      #  replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleTiderfallSyndieMelee
         replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleTiderfallSyndieEngineer
@@ -75,3 +81,7 @@
       entries:
       - id: EmpGrenade
         amount: 2
+      - id: DefibrillatorCompact
+        amount: 2
+      - id: ScenarioNightVisionGogglesBasic
+        amount: 1

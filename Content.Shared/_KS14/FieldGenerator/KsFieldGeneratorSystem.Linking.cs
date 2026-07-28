@@ -44,7 +44,10 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
 
         foreach (var fieldUid in fieldUids)
         {
-            var fieldComponent = _fieldQuery.GetComponent(fieldUid);
+            // Fields can already be deleted when this runs during entity flushes.
+            if (!_fieldQuery.TryGetComponent(fieldUid, out var fieldComponent))
+                continue;
+
             fieldComponent.GeneratorUids.Clear();
 
             PredictedQueueDel(fieldUid);
@@ -57,10 +60,12 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
     {
         ClearFields(entity);
 
+        // The linked generator may already be deleted (notably while a map full of
+        //     generators is being flushed), so never assume the component still exists.
         linkedUid ??= entity.Comp.LinkedGeneratorUid;
-        if (linkedUid is { })
+        if (linkedUid is { } &&
+            TryComp<KsFieldGeneratorComponent>(linkedUid.Value, out var linkedGeneratorComponent))
         {
-            var linkedGeneratorComponent = Comp<KsFieldGeneratorComponent>(linkedUid.Value);
             linkedGeneratorComponent.LinkedGeneratorUid = null;
             DirtyField(linkedUid.Value, linkedGeneratorComponent, nameof(linkedGeneratorComponent.LinkedGeneratorUid));
 
@@ -130,7 +135,12 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
 
     public bool TryLinkGenerators(Entity<KsFieldGeneratorComponent, TransformComponent> firstGeneratorEntity, Entity<KsFieldGeneratorComponent?, TransformComponent?> secondGeneratorEntity, in ValueList<Vector2i> tiles, Entity<MapGridComponent> gridEntity)
     {
+        // Only two currently unlinked generators may link. LinkGenerators overwrites
+        //     LinkedGeneratorUid on both sides, so linking an already-linked generator
+        //     would orphan its old partner with a stale one-way reference.
         if (!Resolve(secondGeneratorEntity.Owner, ref secondGeneratorEntity.Comp1) ||
+            firstGeneratorEntity.Comp1.LinkedGeneratorUid is { } ||
+            secondGeneratorEntity.Comp1.LinkedGeneratorUid is { } ||
             !secondGeneratorEntity.Comp1.Enabled ||
             !CanGeneratorWork(secondGeneratorEntity!, transformComponent: secondGeneratorEntity.Comp2))
             return false;

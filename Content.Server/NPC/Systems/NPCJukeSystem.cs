@@ -194,6 +194,71 @@ public sealed partial class NPCJukeSystem : EntitySystem
                     args.Steering.Interest[i] = MathF.Max(args.Steering.Interest[i], result);
                 }
             }
+            // KS14: ANK start: ranged juking
+            else if (_npcRangedQuery.TryGetComponent(uid, out var rangedCombatComponent))
+            {
+                if (!TryComp(rangedCombatComponent.Target, out TransformComponent? targetTransformComponent) ||
+                    !_gunSystem.TryGetGun(uid, out var gunEntity))
+                    return;
+
+                var targetWorldPosition = _transform.GetWorldPosition(rangedCombatComponent.Target);
+
+                // If we get whacky boss mobs might need nearestpos that's more of a PITA
+                // so will just use this for now.
+                var targetOffset = targetWorldPosition - args.WorldPosition;
+                if (targetOffset == Vector2.Zero)
+                    targetOffset = _random.NextVector2();
+
+                // If they're moving away then pursue anyway.
+                // If just hit then always back up a bit.
+                if (_physicsQuery.TryGetComponent(rangedCombatComponent.Target, out var targetPhysics) &&
+                    Vector2.Dot(targetPhysics.LinearVelocity, targetOffset) > 0f)
+                    return;
+
+                var idealDistance = GetDesiredFiringDistance(rangedCombatComponent.Target, gunEntity.Comp.MaxAngle, 1.8f) * 4.5f;
+                if (idealDistance == 0f)
+                    return;
+
+                var targetDistance = targetOffset.Length();
+                targetOffset = args.OffsetRotation.RotateVec(targetOffset);
+
+                // this is just targetOffset.Normalized() but without calculating Length again
+                var targetUnitDirection = new Vector2(targetOffset.X / targetDistance, targetOffset.Y / targetDistance);
+                var weight = targetDistance <= args.Steering.Radius
+                    ? 1f
+                    : (idealDistance - targetDistance) / idealDistance;
+
+                var anythingDone = false;
+                for (var i = 0; i < SharedNPCSteeringSystem.InterestDirections; i++)
+                {
+                    var result = -Vector2.Dot(targetUnitDirection, NPCSteeringSystem.Directions[i]) * weight;
+                    if (result < 0f)
+                        continue;
+
+                    // We shouldn't go somewhere which will lose sight of the target
+                    // Assumes tile size is 1f
+                    var interestDirection = new Angle(i * SharedNPCSteeringSystem.InterestRadians).ToVec();
+                    var interestWorldPosition = interestDirection + args.WorldPosition;
+                    if (!_interactionSystem.InRangeUnobstructed(
+                        new Robust.Shared.Map.MapCoordinates(interestWorldPosition, targetTransformComponent.MapID),
+                        new Robust.Shared.Map.MapCoordinates(targetWorldPosition, targetTransformComponent.MapID),
+                        range: -1f))
+                    {
+                        continue;
+                    }
+
+                    // dont short-circuit this
+                    if (!anythingDone)
+                        anythingDone = result > args.Steering.Interest[i];
+
+                    args.Steering.Interest[i] = MathF.Max(args.Steering.Interest[i], result);
+                }
+
+                // If no or barely any juking was done, don't cancel seeking
+                if (!anythingDone)
+                    return;
+            }
+            // KS14: ANK end
 
             args.Steering.CanSeek = false;
         }

@@ -23,6 +23,8 @@ using Content.Shared.Decals;
 using Content.Shared.Input;
 using Content.Shared.Radio;
 using Content.Shared.Roles.RoleCodeword;
+using Content.Client._KS14.Chat; // KS14
+using Content.Shared._KS14.Chat; // KS14
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
@@ -154,6 +156,18 @@ public sealed partial class ChatUIController : UIController
     // TODO add a cap for this for non-replays
     public readonly List<(GameTick Tick, ChatMessage Msg)> History = new();
 
+    // KS14: original (pre-translation) plain text keyed by MessageId, for the hover-to-reveal marker.
+    // Kept in lockstep with History: entries are pruned when their message leaves History (see
+    // OnDeleteChatMessagesBy), so it never outlives its chat lines.
+    private readonly Dictionary<int, string> _translationOriginals = new();
+
+    // KS14: translation swaps that arrived before their original message; applied when the original lands.
+    // Normally drains almost immediately in ProcessChatMessage; capped so undelivered originals cannot leak.
+    private readonly Dictionary<int, string> _pendingTranslations = new();
+
+    // KS14: overflow cap for _pendingTranslations (see OnReplaceChatMessage).
+    private const int MaxPendingTranslations = 512;
+
     // Maintains which channels a client should be able to filter (for showing in the chatbox)
     // and select (for attempting to send on).
     // This may not always actually match with what the server will actually allow them to
@@ -185,6 +199,7 @@ public sealed partial class ChatUIController : UIController
         _state.OnStateChanged += StateChanged;
         _net.RegisterNetMessage<MsgChatMessage>(OnChatMessage);
         _net.RegisterNetMessage<MsgDeleteChatMessagesBy>(OnDeleteChatMessagesBy);
+        _net.RegisterNetMessage<MsgReplaceChatMessage>(OnReplaceChatMessage); // KS14
         SubscribeNetworkEvent<DamageForceSayEvent>(OnDamageForceSay);
         _config.OnValueChanged(CCVars.ChatEnableColorName, (value) => { _chatNameColorsEnabled = value; });
         _chatNameColorsEnabled = _config.GetCVar(CCVars.ChatEnableColorName);
@@ -868,6 +883,10 @@ public sealed partial class ChatUIController : UIController
             History.Add((_timing.CurTick, msg));
             MessageAdded?.Invoke(msg);
 
+            // KS14: apply a translation swap that arrived before this message did (unordered net messages).
+            if (msg.MessageId is { } ksMid && _pendingTranslations.Remove(ksMid, out var ksPending))
+                TryApplyTranslation(ksMid, ksPending);
+
             if (!msg.Read)
             {
                 _sawmill.Debug($"Message filtered: {msg.Channel}: {msg.Message}");
@@ -918,9 +937,97 @@ public sealed partial class ChatUIController : UIController
         // Usages of the erase admin verb should be rare enough that this does not matter.
         // Otherwise the client would need to know that one entity has multiple author players,
         // or the server would need to track when and which entities a player sent messages as.
-        History.RemoveAll(h => h.Msg.SenderKey == msg.Key || msg.Entities.Contains(h.Msg.SenderEntity));
+        // KS14 Start: prune the translation caches for removed messages so they don't outlive their History rows.
+        History.RemoveAll(h =>
+        {
+            if (h.Msg.SenderKey != msg.Key && !msg.Entities.Contains(h.Msg.SenderEntity))
+                return false;
+
+            if (h.Msg.MessageId is { } mid)
+            {
+                _translationOriginals.Remove(mid);
+                _pendingTranslations.Remove(mid);
+            }
+
+            return true;
+        });
+        // KS14 End
         Repopulate();
     }
+
+    // KS14 Start: swap a delivered chat line in place with its translation.
+    public void OnReplaceChatMessage(MsgReplaceChatMessage msg)
+    {
+        // The original and the swap are two independent (unordered) net messages, so the swap can arrive
+        // first. If the target isn't in History yet, buffer it and apply it when the original lands.
+        if (TryApplyTranslation(msg.MessageId, msg.Message))
+            return;
+
+        // Overflow means originals stopped draining the buffer (never delivered); drop the stale entries
+        // rather than leak. In normal play this never trips: the buffer holds at most a handful.
+        if (_pendingTranslations.Count >= MaxPendingTranslations)
+            _pendingTranslations.Clear();
+
+        _pendingTranslations[msg.MessageId] = msg.Message;
+    }
+
+    // KS14: attempt to swap the History entry for messageId; returns true if it was found (whether or not
+    // the text could be cleanly rebuilt), false if the message hasn't been added to History yet.
+    private bool TryApplyTranslation(int messageId, string translated)
+    {
+        if (_translationOriginals.ContainsKey(messageId))
+            return true; // already applied
+
+        for (var i = 0; i < History.Count; i++)
+        {
+            var stored = History[i].Msg;
+            if (stored.MessageId != messageId)
+                continue;
+
+            // KS14: DeepL translates the raw (uncensored) text, so censor the translation here on the
+            // client the same way the original line already was, otherwise a reader with the slur filter
+            // on would see slurs leak back in through translated lines.
+            if (_ksSlurFilterEnabled && _wordFilterSystem is { })
+                _wordFilterSystem.FilterAndReplaceString(ref translated, Shared._KS14.WordFilter.WordFilterCategory.Slur);
+
+            // Rebuild the wrapped line so client-side highlights/codewords survive: replace the escaped
+            // original span with the escaped translation, then prepend a hover marker.
+            var escapedOriginal = FormattedMessage.EscapeText(stored.Message);
+            var idx = stored.WrappedMessage.LastIndexOf(escapedOriginal, StringComparison.Ordinal);
+            if (idx < 0)
+                // A client highlight/codeword split the message span, so we can't cleanly swap it. Leave the
+                // line untranslated (and unmarked) rather than show a misleading marker over original text.
+                return true;
+
+            _translationOriginals[messageId] = stored.Message;
+            var rebuilt = stored.WrappedMessage[..idx]
+                + FormattedMessage.EscapeText(translated)
+                + stored.WrappedMessage[(idx + escapedOriginal.Length)..];
+            rebuilt = $"[{KsTranslatedMarkerTag.TagName} {KsTranslatedMarkerTag.IdParam}={messageId}]{rebuilt}";
+
+            stored.Message = translated;
+            stored.WrappedMessage = rebuilt;
+            // KS14: re-render only this one line, not the whole history. A full Repopulate() here is
+            // O(History) markup-parse + relayout per swap, and History is uncapped over a round.
+            ReplaceMessage(i);
+            return true;
+        }
+
+        return false; // not in History yet
+    }
+
+    // KS14: reveal the original (pre-translation) text for a translated line, used by the hover marker tag.
+    public bool TryGetTranslationOriginal(int messageId, out string? original)
+        => _translationOriginals.TryGetValue(messageId, out original);
+
+    private void ReplaceMessage(int historyIndex)
+    {
+        foreach (var chat in _chats)
+        {
+            chat.ReplaceLine(historyIndex);
+        }
+    }
+    // KS14 End
 
     public void RegisterChat(ChatBox chat)
     {

@@ -8,7 +8,7 @@
       time: 2h #2 hrs, klovn
     - !type:DepartmentTimeRequirement
       department: Security
-      time: 10h
+      time: 3h # KS14: 10h -> 3h
       inverted: true # stop playing intern if you're good at security!
   startingGear: SecurityCadetGear
   icon: "JobIconSecurityCadet"

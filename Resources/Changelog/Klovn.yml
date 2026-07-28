@@ -1613,3 +1613,33 @@ Entries:
         assemblies.
   id: 166
   time: '2026-07-13T16:00:00.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: Phosphor night vision.
+  id: 167
+  time: '2026-07-22T13:55:54.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: NVGs added to scenarios
+    - type: Tweak
+      message: Scenario healing changes.
+  id: 168
+  time: '2026-07-22T14:34:31.0000000+00:00'
+- author: teecoding
+  changes:
+    - type: Fix
+      message: Fixed atmos shield generators crashing the round when deleted.
+  id: 169
+  time: '2026-07-26T11:52:05.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Night vision visuals have been heavily improved.
+    - type: Add
+      message: Night vision now gets significantly amplified when flashed.
+    - type: Fix
+      message: Fixed insane-level grammar error in the description of rotated pallets.
+  id: 170
+  time: '2026-07-26T12:27:53.0000000+00:00'
