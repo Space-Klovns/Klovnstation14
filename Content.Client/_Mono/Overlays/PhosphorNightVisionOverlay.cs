@@ -116,7 +116,7 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
         IoCManager.InjectDependencies(this);
         _phosphorNightVisionShader = _prototypeManager.Index(_shader).InstanceUnique();
         _xform = _ent.System<SharedTransformSystem>();
-        ZIndex = -1;
+        ZIndex = -220; // ez?
     }
 
     public void SetParameters(
@@ -243,20 +243,21 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
 
                 _phosphorNightVisionShader.SetParameter("SCREEN_TEXTURE", ScreenTexture);
                 _phosphorNightVisionShader.SetParameter("BASE_COLOR", PhosphorColor.RGBA);
-                _phosphorNightVisionShader.SetParameter("ADDED_LIGHT_COLOR", LightingColor.RGBA);
                 _phosphorNightVisionShader.SetParameter("AMPLIFICATION", Amplification);
-                _phosphorNightVisionShader.SetParameter("BRIGHTNESS_MUL", brightnessMultiplier);
                 _phosphorNightVisionShader.SetParameter("IS_CONE", IsCone);
                 _phosphorNightVisionShader.SetParameter("CONE_ANGLE", ConeAngle);
                 _phosphorNightVisionShader.SetParameter("CONE_FEATHER", ConeFeather);
                 _phosphorNightVisionShader.SetParameter("CONE_DISTANCE", ConeDistance);
                 _phosphorNightVisionShader.SetParameter("CONE_DISTANCE_FEATHER", ConeDistanceFeather);
                 _phosphorNightVisionShader.SetParameter("VIEW_ANGLE", ViewAngle);
-                _phosphorNightVisionShader.SetParameter("TIME_FRACTION", _animationFraction); // KS14
                 //ViewAngle);
 
                 // KS14 start
+                _phosphorNightVisionShader.SetParameter("ADDED_LIGHT_COLOR", LightingColor.RGBA);
+                _phosphorNightVisionShader.SetParameter("BRIGHTNESS_MUL", brightnessMultiplier);
+                _phosphorNightVisionShader.SetParameter("TIME_FRACTION", _animationFraction);
                 _phosphorNightVisionShader.SetParameter("ZOOM", _eyeEntity!.Value.Comp1.Zoom);
+                _phosphorNightVisionShader.SetParameter("EYE_OFFSET", _eyeEntity!.Value.Comp1.Offset); // KS14
                 // KS14 end
 
                 // Adjusting these weights is somewhat tricky.

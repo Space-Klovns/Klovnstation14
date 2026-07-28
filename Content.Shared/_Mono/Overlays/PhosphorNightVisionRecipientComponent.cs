@@ -22,5 +22,5 @@ public sealed partial class PhosphorNightVisionRecipientComponent : Component
     public TimeSpan LastFlashDuration;
 
     [DataField, AutoNetworkedField]
-    public EntityUid? NightVisionSourceUid = null;
+    public HashSet<EntityUid> SourceUids = [];
 }
