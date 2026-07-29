@@ -7,7 +7,7 @@ using Content.Shared._KS14.ArcFlash.Components;
 
 namespace Content.Server._KS14.ArcFlash;
 
-public sealed partial class MindShieldSystem : EntitySystem
+public sealed partial class ArcFlashSystem : EntitySystem
 {
     [Dependency] private ElectrocutionSystem _electrocutionSystem = default!;
     [Dependency] private LightningSystem _lightning = default!;
