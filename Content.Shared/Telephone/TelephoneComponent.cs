@@ -1,4 +1,5 @@
 using Content.Shared.Chat;
+using Content.Shared._KS14.Language; // KS14
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
@@ -181,13 +182,13 @@ public record struct TelephoneCallEndedEvent();
 /// Raised when a chat message is sent by a telephone to another
 /// </summary>
 [ByRefEvent]
-public readonly record struct TelephoneMessageSentEvent(string Message, MsgChatMessage ChatMsg, EntityUid MessageSource);
+public readonly record struct TelephoneMessageSentEvent(string Message, MsgChatMessage ChatMsg, EntityUid MessageSource, KsUtteranceContext? KsLanguage = null /* KS14 */);
 
 /// <summary>
 /// Raised when a chat message is received by a telephone from another
 /// </summary>
 [ByRefEvent]
-public readonly record struct TelephoneMessageReceivedEvent(string Message, MsgChatMessage ChatMsg, EntityUid MessageSource, Entity<TelephoneComponent> TelephoneSource);
+public readonly record struct TelephoneMessageReceivedEvent(string Message, MsgChatMessage ChatMsg, EntityUid MessageSource, Entity<TelephoneComponent> TelephoneSource, KsUtteranceContext? KsLanguage = null /* KS14 */);
 
 #endregion
 

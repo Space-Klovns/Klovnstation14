@@ -95,6 +95,10 @@ public sealed partial class TtsSystem : SharedTtsSystem
 
     private void OnSpoke(EntitySpokeEvent args)
     {
+        // No TTS for exotic speech: the audio goes to all of PVS and would voice the clear text.
+        if (args.KsLanguage != null)
+            return;
+
         var component = EnsureComp<TtsVoiceComponent>(args.Source);
         component.Id ??= _robustRandom.Pick(_voiceIds); // lol
 

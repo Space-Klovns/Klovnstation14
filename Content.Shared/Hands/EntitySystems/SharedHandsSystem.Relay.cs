@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Language; // KS14
 using Content.Shared.Atmos;
 using Content.Shared.Camera;
 using Content.Shared.Cuffs;
@@ -22,6 +23,7 @@ public abstract partial class SharedHandsSystem
         SubscribeLocalEvent<HandsComponent, ProjectileReflectAttemptEvent>(RefRelayEvent);
         SubscribeLocalEvent<HandsComponent, HitScanReflectAttemptEvent>(RefRelayEvent);
         SubscribeLocalEvent<HandsComponent, WieldAttemptEvent>(RefRelayEvent);
+        SubscribeLocalEvent<HandsComponent, KsRefreshLanguagesEvent>(RefRelayEvent); // KS14
         SubscribeLocalEvent<HandsComponent, UnwieldAttemptEvent>(RefRelayEvent);
         SubscribeLocalEvent<HandsComponent, TargetHandcuffedEvent>(RefRelayEvent);
     }
