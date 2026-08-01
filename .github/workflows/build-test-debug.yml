@@ -8,9 +8,9 @@ on:
     types: [ opened, reopened, synchronize, ready_for_review ]
     branches: [ master, staging, stable ]
 
-concurrency: # KS14: a newer commit supersedes a running PR build
+concurrency: # KS14: a newer commit supersedes a running build on the same branch/pr
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: true
 
 jobs:
   build:
