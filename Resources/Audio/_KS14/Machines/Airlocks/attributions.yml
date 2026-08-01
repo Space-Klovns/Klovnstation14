@@ -1,0 +1,8 @@
+
+# I think this is an old bay12 audio but i CBA to find where it's from
+- files:
+  - close_force.ogg
+  - open_force.ogg
+  license: "CC-BY-SA-3.0"
+  copyright: "Taken from https://github.com/HaloSpaceStation/HaloSpaceStation13/ at commit 01e36bf28a6c273398822639d5bdf0c52435c5d8"
+  source: "https://github.com/HaloSpaceStation/HaloSpaceStation13/blob/01e36bf28a6c273398822639d5bdf0c52435c5d8/sound/machines/"
