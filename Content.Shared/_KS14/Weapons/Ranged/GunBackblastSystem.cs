@@ -1,9 +1,11 @@
 using System.Linq;
 using System.Numerics;
 using Content.Shared.Damage.Systems;
+using Content.Shared.Interaction;
 using Content.Shared.Projectiles;
 using Content.Shared.Stunnable;
 using Content.Shared.Weapons.Ranged.Systems;
+using Robust.Shared.Map;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 
@@ -15,6 +17,7 @@ public sealed partial class GunBackblastSystem : EntitySystem
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
+    [Dependency] private SharedInteractionSystem _interactionSystem = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
 
     public override void Initialize()
@@ -42,7 +45,10 @@ public sealed partial class GunBackblastSystem : EntitySystem
                 otherUid == entity.Owner ||
                 HasComp<ProjectileComponent>(otherUid) ||
                 args.Ammo.Any(x => x.Uid == otherUid) ||
-                !IsInCone(fromWorldPosition, otherUid, sectorDirection, halfField, out var toDirectionUnitVector))
+                !IsInCone(fromWorldPosition, otherUid, sectorDirection, halfField, out var toWorldPosition, out var toDirectionUnitVector))
+                continue;
+
+            if (!_interactionSystem.InRangeUnobstructed(new MapCoordinates(fromWorldPosition, gunTransform.MapID), new MapCoordinates(toWorldPosition, gunTransform.MapID), range: -1))
                 continue;
 
             if (TryComp<PhysicsComponent>(otherUid, out var physicsComponent))
@@ -53,10 +59,9 @@ public sealed partial class GunBackblastSystem : EntitySystem
         }
     }
 
-    private bool IsInCone(Vector2 fromWorldPosition, EntityUid otherUid, Vector2 sectorUnitDirection, Angle halfField, out Vector2 toDirectionUnitVector)
+    private bool IsInCone(Vector2 fromWorldPosition, EntityUid otherUid, Vector2 sectorUnitDirection, Angle halfField, out Vector2 toWorldPosition, out Vector2 toDirectionUnitVector)
     {
-        var toWorldPosition = _transformSystem.GetWorldPosition(otherUid);
-
+        toWorldPosition = _transformSystem.GetWorldPosition(otherUid);
         toDirectionUnitVector = toWorldPosition - fromWorldPosition;
         Vector2Helpers.Normalize(ref toDirectionUnitVector);
 
