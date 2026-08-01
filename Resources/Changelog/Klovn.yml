@@ -1669,3 +1669,19 @@ Entries:
         datalinked sector chart.
   id: 172
   time: '2026-08-01T13:36:14.0000000+00:00'
+- author: teecoding
+  changes:
+    - type: Add
+      message: >-
+        In-character languages. Vox, dwarves, clowns and syndicate agents can
+        speak languages others hear as gibberish.
+    - type: Add
+      message: >-
+        Language menu on L to switch your spoken language, plus language traits
+        in character creation.
+    - type: Tweak
+      message: >-
+        Parrots and voice triggers record speech in the language it was spoken
+        in.
+  id: 173
+  time: '2026-08-01T13:41:55.0000000+00:00'
