@@ -1,3 +1,4 @@
+using Content.Server._KS14.Language; // KS14
 using Content.Server._KS14.Translation; // KS14
 using Content.Shared.Chat;
 using Content.Shared.Inventory.Events;
@@ -14,6 +15,7 @@ public sealed partial class HeadsetSystem : SharedHeadsetSystem
     [Dependency] private INetManager _netMan = default!;
     [Dependency] private RadioSystem _radio = default!;
     [Dependency] private KsTranslationSystem _translation = default!; // KS14
+    [Dependency] private KsLanguageSystem _ksLanguage = default!; // KS14
 
     public override void Initialize()
     {
@@ -50,7 +52,7 @@ public sealed partial class HeadsetSystem : SharedHeadsetSystem
             && TryComp(component.Headset, out EncryptionKeyHolderComponent? keys)
             && keys.Channels.Contains(args.Channel.ID))
         {
-            _radio.SendRadioMessage(uid, args.Message, args.Channel, component.Headset);
+            _radio.SendRadioMessage(uid, args.Message, args.Channel, component.Headset, ksLanguage: args.KsLanguage /* KS14 */);
             args.Channel = null; // prevent duplicate messages from other listeners.
         }
     }
@@ -112,7 +114,6 @@ public sealed partial class HeadsetSystem : SharedHeadsetSystem
         }
 
         if (TryComp(parent, out ActorComponent? actor))
-            // KS14: swap in a per-reader translated clone if this reader's language differs from the speaker.
-            _netMan.ServerSendMessage(_translation.ApplyRadioReader(args.ChatMsg, args.Translation, actor.PlayerSession), actor.PlayerSession.Channel);
+            _netMan.ServerSendMessage(_ksLanguage.ApplyListener(args.ChatMsg, args.KsLanguage, args.KsObfuscatedChatMsg, args.Translation, actor.PlayerSession), actor.PlayerSession.Channel); // KS14
     }
 }

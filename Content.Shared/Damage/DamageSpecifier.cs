@@ -1,5 +1,4 @@
 using System.Linq;
-using System.Collections.Generic; //KS14
 using System.Text.Json.Serialization;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;
@@ -7,8 +6,6 @@ using Content.Shared.FixedPoint;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 using Robust.Shared.Serialization;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Dictionary;
 
 namespace Content.Shared.Damage
 {
@@ -27,37 +24,6 @@ namespace Content.Shared.Damage
         /// </summary>
         [DataField("types")]
         public Dictionary<ProtoId<DamageTypePrototype>, FixedPoint2> DamageDict { get; set; } = new();
-
-        /// <summary>
-        ///     KS14 addition
-        ///     This is just a way for you to specify that a projectile/whatever gets through the percentile reduction given by armor.
-        ///     It works via a percentile system - 0 is no AP, 1 is full AP.
-        ///     If you go over 1 or under -1 the system will make stupid mistakes, please do not do it
-        ///     I removed the clamp because I trust the sanity of my contribs and I can squeeze some minimal perf out by removing it
-        ///     Why -1? Because you can set it to -1 to make armor twice as effective against it - could be fun for hollow points!
-        /// </summary>
-
-        [DataField("percentilePenetration", customTypeSerializer: typeof(PrototypeIdDictionarySerializer<float, DamageTypePrototype>))]
-        public Dictionary<string, float>? PercentilePenetration;
-
-        /// <summary>
-        ///     KS14
-        ///     This is just a way for you to specify that a projectile/whatever ignores some flat reduction given by armor.
-        ///     It works by subtracting these reductions from the armor's reductions, of course that can't go below zero.
-        ///     If you set this to a negative number it actually adds to the flat resistances - could be useful for something.
-        /// </summary>
-
-        [DataField("flatPenetration", customTypeSerializer: typeof(PrototypeIdDictionarySerializer<float, DamageTypePrototype>))]
-        public Dictionary<string, float>? FlatPenetration;
-
-        /// <summary>
-        ///     KS14
-        ///     Right now percentile damage penetration applies to flat damage resistances
-        ///     If an armor has 10 flat slash resistance but you have 40% slash ap then it decreases that resist to 6 slash
-        ///     This is so its more intuitive (having percentile ap ruins everyone). You can however disable it
-        /// </summary>
-        [DataField("disableCrossInteraction")]
-        public bool disableCrossInteraction = false;
 
         /// <summary>
         ///     Returns a sum of the damage values.
@@ -174,8 +140,8 @@ namespace Content.Shared.Damage
             //KS14 START
 
             // Capture nullable AP dictionaries into locals to satisfy nullable analysis and avoid repeated lookups.
-            var percentilePenDict = damageSpec.PercentilePenetration ?? new Dictionary<string, float>();
-            var flatPenDict = damageSpec.FlatPenetration ?? new Dictionary<string, float>();
+            var percentilePenDict = damageSpec.PercentilePenetration ?? new();
+            var flatPenDict = damageSpec.FlatPenetration ?? new();
 
             foreach (var (key, value) in damageSpec.DamageDict)
             {
@@ -193,7 +159,7 @@ namespace Content.Shared.Damage
 
                 if (modifierSet.FlatReduction.TryGetValue(key, out var reduction))
                 {
-                    if (!damageSpec.disableCrossInteraction && percentilePenDict.TryGetValue(key, out var percentileDecreaseOfFlatRes)) // If you have 40% pierce pen it makes every flat resist only 60% of its former status - this is done to be more intuitive as per _uranium's request - KS14
+                    if (!damageSpec.DisableCrossInteraction && percentilePenDict.TryGetValue(key, out var percentileDecreaseOfFlatRes)) // If you have 40% pierce pen it makes every flat resist only 60% of its former status - this is done to be more intuitive as per _uranium's request - KS14
                     {
                         var multiplier = 1 - percentileDecreaseOfFlatRes;
                         reduction *= multiplier;

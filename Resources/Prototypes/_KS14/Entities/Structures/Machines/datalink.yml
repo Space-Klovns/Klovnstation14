@@ -1,0 +1,179 @@
+- type: entity
+  parent: [BaseMachinePowered, ConstructibleMachine]
+  id: KsMachineDatalinkTransmitter
+  name: datalink transmitter
+  description: Broadcasts everything this grid's sensors know on a tunable frequency. Anyone listening on the same channel hears it - allies and enemies alike.
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    noRot: false
+  - type: Physics
+    bodyType: Static
+  - type: Machine
+    board: KsMachineDatalinkTransmitterCircuitboard
+  - type: Sprite
+    # TODO KS14: real art
+    sprite: Structures/Machines/telecomms.rsi
+    drawdepth: Overdoors
+    layers:
+    - state: telecom-on
+  - type: Appearance
+  - type: ApcPowerReceiver
+    powerLoad: 200
+  - type: KsDatalinkTransmitter
+    maxRange: 768
+  # Cosmetic for datalink, but kept consistent with the sensor arrays so the whole rack
+  #   can be lined up on the hull.
+  - type: Rotatable
+    rotateWhileAnchored: true
+  - type: ActivatableUI
+    key: enum.KsDatalinkTransmitterUiKey.Key
+  - type: UserInterface
+    interfaces:
+      enum.KsDatalinkTransmitterUiKey.Key:
+        type: KsDatalinkTransmitterBoundUserInterface
+
+- type: entity
+  parent: BaseMachineCircuitboard
+  id: KsMachineDatalinkTransmitterCircuitboard
+  name: datalink transmitter machine board
+  description: An electronics board used in datalink transmitters.
+  components:
+  - type: Sprite
+    state: engineering
+  - type: MachineBoard
+    prototype: KsMachineDatalinkTransmitter
+    stackRequirements:
+      Steel: 5
+      Manipulator: 2
+
+- type: latheRecipe
+  parent: [BaseGoldCircuitboardRecipe, BaseEngineeringMachineRecipeCategory]
+  id: KsMachineDatalinkTransmitterCircuitboard
+  result: KsMachineDatalinkTransmitterCircuitboard
+
+# Mapping-only public beacon: announces its own grid on EVERY datalink channel,
+# sector-wide, for stations and other public landmarks. No console, so nothing to
+# tune and nobody can silence it from a UI. Runs on the grid's power and can be
+# destroyed or deconstructed like any machine; for a landmark that must never go
+# dark, use KsMachineDatalinkPublicBeaconPermanent. Not craftable: its board builds
+# a plain transmitter, so it only exists where a mapper places it.
+- type: entity
+  parent: [BaseMachinePowered, ConstructibleMachine]
+  id: KsMachineDatalinkPublicBeacon
+  suffix: public, powered, destroyable
+  name: public datalink beacon
+  description: A public navigation beacon. It announces this grid's position on every datalink channel across the whole sector, so anyone listening can see it. Meant for stations and public landmarks.
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    noRot: false
+  - type: Physics
+    bodyType: Static
+  - type: Machine
+    board: KsMachineDatalinkTransmitterCircuitboard
+  - type: Sprite
+    # TODO KS14: real art
+    sprite: Structures/Machines/telecomms.rsi
+    drawdepth: Overdoors
+    layers:
+    - state: telecom-on
+  - type: Appearance
+  - type: ApcPowerReceiver
+    powerLoad: 200
+  - type: KsDatalinkTransmitter
+    broadcastAllFrequencies: true
+    unlimitedRange: true
+    # Reach is unconditional, so power is flat flavour, not a range dial.
+    basePowerDraw: 200
+    maxPowerDraw: 200
+
+# Indestructible, power-independent public beacon: for landmarks (stations, ruins,
+# nav buoys) that must stay visible no matter what. Differences from the powered
+# beacon above, each a plain YAML choice a mapper can flip:
+#   - parented off BaseMachine, not BaseMachinePowered, so it has NO ApcPowerReceiver
+#     -> needs no power at all (an entity with no receiver reads as powered); and no
+#     Construction -> it cannot be deconstructed into a frame.
+#   - Godmode -> immune to all damage and destruction (drop this line to let it be
+#     destroyed).
+#   - ignorePower on the transmitter -> belt-and-braces "emit even with no power",
+#     so it keeps working even if a mapper later bolts an APC onto it.
+# Only deleting the grid itself silences it.
+- type: entity
+  parent: BaseMachine
+  id: KsMachineDatalinkPublicBeaconPermanent
+  suffix: public, indestructible, unpowered
+  name: public datalink beacon
+  description: A permanently-running public navigation beacon. It announces this grid's position on every datalink channel across the whole sector, so anyone listening can see it - and nothing short of deleting the grid will silence it.
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    noRot: false
+  - type: Sprite
+    # TODO KS14: real art
+    sprite: Structures/Machines/telecomms.rsi
+    drawdepth: Overdoors
+    layers:
+    - state: telecom-on
+  - type: Appearance
+  - type: Godmode
+  - type: KsDatalinkTransmitter
+    broadcastAllFrequencies: true
+    unlimitedRange: true
+    ignorePower: true
+
+- type: entity
+  parent: [BaseMachinePowered, ConstructibleMachine]
+  id: KsMachineDatalinkReceiver
+  name: datalink receiver
+  description: Listens on a tunable frequency and folds whatever it hears into this grid's sensor picture - an easy way to borrow another grid's eyes, if you can guess their channel.
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    noRot: false
+  - type: Physics
+    bodyType: Static
+  - type: Machine
+    board: KsMachineDatalinkReceiverCircuitboard
+  - type: Sprite
+    # TODO KS14: real art
+    sprite: Structures/Machines/telecomms.rsi
+    drawdepth: Overdoors
+    layers:
+    - state: telecom-on
+  - type: Appearance
+  - type: ApcPowerReceiver
+    powerLoad: 500
+  - type: KsDatalinkReceiver
+  # Orientable in place like the shuttle console, matching the transmitter.
+  - type: Rotatable
+    rotateWhileAnchored: true
+  - type: ActivatableUI
+    key: enum.KsDatalinkReceiverUiKey.Key
+  - type: UserInterface
+    interfaces:
+      enum.KsDatalinkReceiverUiKey.Key:
+        type: KsDatalinkReceiverBoundUserInterface
+
+- type: entity
+  parent: BaseMachineCircuitboard
+  id: KsMachineDatalinkReceiverCircuitboard
+  name: datalink receiver machine board
+  description: An electronics board used in datalink receivers.
+  components:
+  - type: Sprite
+    state: engineering
+  - type: MachineBoard
+    prototype: KsMachineDatalinkReceiver
+    stackRequirements:
+      Steel: 5
+      Manipulator: 1
+
+- type: latheRecipe
+  parent: [BaseGoldCircuitboardRecipe, BaseEngineeringMachineRecipeCategory]
+  id: KsMachineDatalinkReceiverCircuitboard
+  result: KsMachineDatalinkReceiverCircuitboard

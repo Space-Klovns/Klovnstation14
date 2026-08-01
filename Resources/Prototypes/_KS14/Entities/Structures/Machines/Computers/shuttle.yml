@@ -2,6 +2,33 @@
 
 - type: entity
   parent: ComputerShuttle
+  id: KsComputerShuttle
+  name: shuttle console
+  description: Used to pilot a shuttle.
+  components:
+  # Sensor console: swaps the shuttle-console interface for the fork one so the
+  #   nav radar renders the sensor contact picture (fog of war) instead of the
+  #   vanilla draw-every-grid view. See KsSensorConsoleBoundUserInterface.
+  # The marker is what tells the server to attach the sensor picture to this
+  #   console's nav state; without it a console is a plain vanilla one.
+  - type: KsSensorConsole
+  - type: UserInterface
+    interfaces:
+      enum.ShuttleConsoleUiKey.Key:
+        type: KsSensorConsoleBoundUserInterface
+      enum.WiresUiKey.Key:
+        type: WiresBoundUserInterface
+  # Lets the nav scope zoom out to 512m (vanilla caps at 256) so the whole sensor
+  #   picture, which reaches past 256m, fits on screen. This maxRange only drives the
+  #   client zoom clamp; sensor detection ranges are set on the sensor machines.
+  - type: RadarConsole
+    maxRange: 512
+  # Own board so deconstructing gives back a fork console, not the vanilla one.
+  - type: Computer
+    board: KsShuttleConsoleCircuitboard
+
+- type: entity
+  parent: KsComputerShuttle
   id: KsComputerShuttleIdLocked
   name: id-locked shuttle console
   description: Used to pilot a shuttle. This one in specific can be locked with authorised IDs. If there are no authorised IDs on the console, you can use your ID on it to claim ownership of it.
@@ -46,3 +73,24 @@
     allowClaiming: true
     claimPopupLoc: ks-popup-shuttle-idlock-claimed
     toggleLockDeniedPopupLoc: ks-popup-shuttle-idlock-denied-toggle
+
+# Fork variant of the syndicate shuttle console. Works exactly like KsComputerShuttle:
+#   the picture is its own grid's sensors.
+- type: entity
+  parent: ComputerShuttleSyndie
+  id: KsComputerShuttleSyndie
+  name: syndicate shuttle console
+  description: Used to pilot a syndicate shuttle.
+  components:
+  - type: KsSensorConsole
+  - type: UserInterface
+    interfaces:
+      enum.ShuttleConsoleUiKey.Key:
+        type: KsSensorConsoleBoundUserInterface
+      enum.WiresUiKey.Key:
+        type: WiresBoundUserInterface
+  # Uniform 512m zoom-out across every KS console (the vanilla syndie one caps at 384).
+  - type: RadarConsole
+    maxRange: 512
+  - type: Computer
+    board: KsSyndicateShuttleConsoleCircuitboard

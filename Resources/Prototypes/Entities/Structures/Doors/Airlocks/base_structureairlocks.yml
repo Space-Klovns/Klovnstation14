@@ -60,6 +60,17 @@
     - enum.DoorVisualLayers.BaseEmergencyAccess
     - enum.DoorVisualLayers.BaseEmagging
   # KS14: emissive end
+  # KS14: prysound start
+  - type: DoorPrySound
+    openSound:
+      path: /Audio/_KS14/Machines/Airlocks/open_force.ogg
+      params:
+        volume: -4
+    closeSound:
+      path: /Audio/_KS14/Machines/Airlocks/close_force.ogg
+      params:
+        volume: -4
+  # KS14: prysound end
   - type: AnimationPlayer
   - type: Physics
   - type: Fixtures
@@ -91,6 +102,7 @@
       path: /Audio/Machines/airlock_close.ogg
     denySound:
       path: /Audio/Machines/airlock_deny.ogg
+    playSoundsWhenPrying: false # KS14
   - type: ContainerContainer
     containers:
       board: !type:Container

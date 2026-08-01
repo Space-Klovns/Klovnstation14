@@ -1,6 +1,7 @@
 using Content.Shared.Radio.EntitySystems;
 using Content.Shared.Radio.Components;
 using Content.Shared.Chat; // KS14
+using Content.Shared.Radio; // KS14
 using Robust.Shared.Random; // KS14
 
 namespace Content.Server.Radio.EntitySystems;
@@ -36,6 +37,28 @@ public sealed partial class JammerSystem : SharedJammerSystem
 
         return new string(characters);
     }
+
+    private MsgChatMessage BuildGarbleSubstitute(RadioChannelPrototype channel, string garbledMessage)
+    {
+        var wrappedMessage = Loc.GetString("chat-radio-message-wrap",
+            ("color", channel.Color),
+            ("fontType", "Default"),
+            ("fontSize", 12),
+            ("verb", Loc.GetString("chat-speech-verb-default")),
+            ("channel", $"\\[{channel.LocalizedName}\\]"),
+            ("name", "unknown interference"),
+            ("message", garbledMessage));
+
+        return new MsgChatMessage
+        {
+            Message = new ChatMessage(
+                ChatChannel.Radio,
+                garbledMessage,
+                wrappedMessage,
+                NetEntity.Invalid,
+                null),
+        };
+    }
     // KS14 end
 
     private void OnRadioSendAttempt(ref RadioSendAttemptEvent args)
@@ -58,25 +81,11 @@ public sealed partial class JammerSystem : SharedJammerSystem
                 radioJammerComponent.OnlyGarbleReceivedMessages)
             {
                 var oldMessage = args.OriginalChatMessage.Message.Message;
-                var garbledMessage = GarbleString(oldMessage, radioJammerComponent.GarbleStrength);
+                args.NewChatMessage = BuildGarbleSubstitute(args.Channel, GarbleString(oldMessage, radioJammerComponent.GarbleStrength));
 
-                var newWrappedMessage = Loc.GetString("chat-radio-message-wrap",
-                    ("color", args.Channel.Color),
-                    ("fontType", "Default"),
-                    ("fontSize", 12),
-                    ("verb", Loc.GetString("chat-speech-verb-default")),
-                    ("channel", $"\\[{args.Channel.LocalizedName}\\]"),
-                    ("name", "unknown interference"),
-                    ("message", garbledMessage));
-
-                var newChat = new ChatMessage(
-                    ChatChannel.Radio,
-                    garbledMessage,
-                    newWrappedMessage,
-                    NetEntity.Invalid,
-                    null);
-
-                args.NewChatMessage = new MsgChatMessage { Message = newChat };
+                // Non-understanders never get clear-derived text; garble the scrambled clone.
+                if (args.KsObfuscatedMessage is { } scrambled)
+                    args.KsNewObfuscatedChatMessage = BuildGarbleSubstitute(args.Channel, GarbleString(scrambled, radioJammerComponent.GarbleStrength));
 
                 return;
             }
