@@ -116,7 +116,6 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
         IoCManager.InjectDependencies(this);
         _phosphorNightVisionShader = _prototypeManager.Index(_shader).InstanceUnique();
         _xform = _ent.System<SharedTransformSystem>();
-        ZIndex = -220; // ez?
     }
 
     public void SetParameters(
