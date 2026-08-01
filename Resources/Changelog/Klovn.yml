@@ -1643,3 +1643,15 @@ Entries:
       message: Fixed insane-level grammar error in the description of rotated pallets.
   id: 170
   time: '2026-07-26T12:27:53.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added backblast to rocket launchers. Don't stand behind someone with an
+        RPG in their hands.
+    - type: Add
+      message: Added simple muzzle effects.
+    - type: Fix
+      message: Fixes NVGs having broken light amplification.
+  id: 171
+  time: '2026-08-01T12:19:06.0000000+00:00'
