@@ -1655,3 +1655,17 @@ Entries:
       message: Fixes NVGs having broken light amplification.
   id: 171
   time: '2026-08-01T12:19:06.0000000+00:00'
+- author: teecoding
+  changes:
+    - type: Add
+      message: >-
+        Ships can now mount sensor arrays: visual search, IRST, radar, ELINT,
+        RWR, jammers and datalinks. Detection is no longer free - emitting
+        reveals you.
+    - type: Add
+      message: >-
+        A new sensor console with RADAR, MAP, ESM and DOCK screens: fog-of-war
+        contacts, bearing plots, threat warnings, signal analysis and a
+        datalinked sector chart.
+  id: 172
+  time: '2026-08-01T13:36:14.0000000+00:00'
