@@ -48,3 +48,8 @@
   - type: EmitSoundOnDrop # KS14: pickup/drop sounds
     sound:
       collection: SyringeDrop
+  # STDA14 start
+  - type: CartridgeAmmo
+    proto: BulletFoam # fack
+    detachedMuzzleFlash: StdaMuzzleSmokeEffect
+  # STDA14 end

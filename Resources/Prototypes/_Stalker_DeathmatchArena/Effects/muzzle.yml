@@ -1,0 +1,42 @@
+- type: entity
+  id: StdaMuzzleSmokeEffect
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: TimedDespawn
+    lifetime: 0.55
+  - type: Sprite
+    sprite: _Stalker_DeathmatchArena/muzzle_smoke.rsi
+    drawdepth: BelowMobs
+    layers:
+    - state: muzzle_bullet
+      offset: 1.52, 0
+      rotation: -90
+      color: '#a0a0a066'
+      scale: 1, 1.5
+  - type: EffectVisuals
+  - type: AnimationPlayer
+  - type: Tag
+    tags:
+      - HideContextMenu
+
+- type: entity
+  parent: StdaMuzzleSmokeEffect
+  id: StdaMuzzleSmokeEffectRpg
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: TimedDespawn
+    lifetime: 2
+  - type: Sprite
+    drawdepth: BelowMobs
+    layers:
+    - state: muzzle_bullet
+      offset: 1.52, 0
+      rotation: -90
+      color: '#a0a0a066'
+      scale: 1, 1.5
+    # second one
+    - state: muzzle_bullet
+      offset: -1.7, 0
+      rotation: 90
+      color: '#ffffff'
+      scale: 1.25, 2
