@@ -3,3 +3,13 @@
   recipes:
   - KsAtmosShieldGenCircuitboard
   - GasGrenadeCompressorMachineCircuitBoard
+  - KsMachineVisualSearchCircuitboard
+  - KsMachineIrstCircuitboard
+  - KsMachineRadarCircuitboard
+  - KsMachineElintCircuitboard
+  - KsMachineRwrCircuitboard
+  - KsMachineJammerCircuitboard
+  - KsMachineDatalinkTransmitterCircuitboard
+  - KsMachineDatalinkReceiverCircuitboard
+  - KsShuttleConsoleCircuitboard
+  - KsSyndicateShuttleConsoleCircuitboard

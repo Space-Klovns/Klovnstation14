@@ -63,6 +63,8 @@
   id: BaseWall
   components:
   - type: Occluder # Breaks on diagonal walls
+  - type: KsThermalSource # KS14: exterior walls radiate heat; summed by IRST sensors into a grid's thermal signature
+  - type: KsRadarSource # KS14: exterior walls reflect radar; summed by active radar into a grid's radar cross-section
 
 - type: entity
   abstract: true
