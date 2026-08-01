@@ -137,6 +137,18 @@
     steps: 2
     zeroVisible: false
   - type: Appearance
+  # KS14 Start
+  - type: GunBackblast
+    directionOffset: 180
+    radius: 1.5
+    effectField: 160
+    damage:
+      types:
+        Heat: 40
+        Blunt: 35
+    pushForce: 950
+    knockdownTime: 2s
+  # KS14 End
 
 - type: entity
   name: multiple rocket launcher
