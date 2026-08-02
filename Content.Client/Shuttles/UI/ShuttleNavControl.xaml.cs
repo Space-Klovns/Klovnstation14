@@ -168,7 +168,7 @@ public sealed partial class ShuttleNavControl : BaseShuttleControl
             var ourGridToView = ourGridToShuttle * shuttleToView;
             var color = _shuttles.GetIFFColor(ourGridId.Value, self: true);
 
-            KsDrawInterests(handle, ourGridToView, new Box2(mapPos.Position - MaxRadarRangeVector, mapPos.Position + MaxRadarRangeVector), (ourGridId.Value, ourGrid)); // KS14
+            KsDrawInterests(handle, ourGridToView, (ourGridId.Value, ourGrid)); // KS14
 
             // KS14: Moved fixture query to only encompass this
             if (fixturesQuery.HasComponent(ourGridId.Value))
@@ -300,15 +300,17 @@ public sealed partial class ShuttleNavControl : BaseShuttleControl
     }
 
     // KS14
-    private void KsDrawInterests(DrawingHandleScreen handle, Matrix3x2 curGridToViewMatrix, Box2 viewAABB, Entity<MapGridComponent> gridEntity)
+    private void KsDrawInterests(DrawingHandleScreen handle, Matrix3x2 curGridToViewMatrix, Entity<MapGridComponent> gridEntity)
     {
         foreach (var (_, interest) in _ksRadarInterestSystem.StaticInterests)
         {
             if (gridEntity.Owner != interest.Item2)
                 continue;
 
+            // Control pixels, so the cull box is the control: the old test compared
+            // pixels to a world-metres box.
             var interestPosition = Vector2.Transform(interest.Item3, curGridToViewMatrix);
-            if (!viewAABB.Contains(interestPosition))
+            if (!new UIBox2(Vector2.Zero, PixelSize).Contains(interestPosition))
                 continue;
 
             handle.DrawCircle(interestPosition, 5, Color.ToSrgb(Color.DarkGoldenrod), true);

@@ -90,12 +90,36 @@ public sealed partial class KsRadarControl : BaseShuttleControl
 
     private List<KsSensorContactState>? _ksContacts;
     private List<KsSensorRegionState>? _ksSensorRegions;
+    private List<KsLifeSignState>? _ksLifeSigns;
     private bool _ksJammed;
     private readonly HashSet<NetEntity> _ksLiveContacts = new();
     private readonly HashSet<NetEntity> _ksRealDrawn = new();
     private readonly List<(Vector2 ScreenPos, KsSensorContactState Contact)> _ksContactHits = new();
+
+    /// <summary>Draw scratch: this push's contacts by grid, for anchoring aboard life-sign dots.</summary>
+    private readonly Dictionary<NetEntity, KsSensorContactState> _ksContactsByGrid = new();
     private Vector2? _ksMousePos;
-    private List<KsSensorIntelPrototype>? _ksIntelRoster;
+    private List<(KsSensorIntelPrototype Proto, string Label)>? _ksIntelRoster;
+
+    /// <summary>Readout lines per contact, composed once per push: labels and values only change when a state lands, so composing in Draw was per-frame churn for identical text.</summary>
+    private readonly Dictionary<NetEntity, List<(KsContactDetail Detail, bool HasValue, string Text)>> _ksRosterLines = new();
+
+    /// <summary>
+    ///     Coords+range memo keyed on the printed integers (range also moves with own
+    ///         ship), so the Fluent format only runs when a digit ticks. Cleared per push.
+    /// </summary>
+    private readonly Dictionary<NetEntity, (string X, string Y, string R, string Text)> _ksPosRangeCache = new();
+
+    // Session-constant strings, resolved once instead of per frame.
+    private readonly string _ksUnknownText = Loc.GetString("ks-sensor-contact-unknown");
+    private readonly string _ksLiveText = Loc.GetString("ks-sensor-contact-live");
+    private readonly string _ksJammedText = Loc.GetString("ks-sensor-jammed");
+
+    /// <summary>Per-frame scratch for the coverage-fan vertices, sliced by BuildVerts' returned count.</summary>
+    private Vector2[] _ksRegionVerts = Array.Empty<Vector2>();
+
+    /// <summary>Per-frame scratch for the batched life-sign dot triangles, one chunk's worth.</summary>
+    private readonly Vector2[] _ksLifeSignVerts = new Vector2[KsLifeSignChunkVerts];
 
     /// <summary>Liveness edge detector driving the contact ping and the ghost fade.</summary>
     private readonly KsContactTransitions _ksTransitions = new();
@@ -215,8 +239,11 @@ public sealed partial class KsRadarControl : BaseShuttleControl
         // sensor picture (no coverage) reads back as the old all-null/false defaults.
         _ksContacts = state.KsSensorNav?.Contacts;
         _ksSensorRegions = state.KsSensorNav?.Regions;
+        _ksLifeSigns = state.KsSensorNav?.LifeSigns;
         _ksJammed = state.KsSensorNav?.Jammed ?? false;
         _ksTransitions.Update(_ksContacts, _timing.CurTime);
+        KsRebuildRosterLines();
+        _ksPosRangeCache.Clear();
         _ksLiveContacts.Clear();
         if (_ksContacts != null)
         {
@@ -271,7 +298,7 @@ public sealed partial class KsRadarControl : BaseShuttleControl
             var ourGridToView = ourGridToShuttle * shuttleToView;
             var color = _shuttles.GetIFFColor(ourGridId.Value, self: true);
 
-            KsDrawInterests(handle, ourGridToView, new Box2(mapPos.Position - MaxRadarRangeVector, mapPos.Position + MaxRadarRangeVector), (ourGridId.Value, ourGrid));
+            KsDrawInterests(handle, ourGridToView, (ourGridId.Value, ourGrid));
 
             // Coverage fans, under the hull and contacts.
             KsDrawSensorRegions(handle, ourGridToView, worldToShuttle * shuttleToView, EntManager.GetNetEntity(ourGridId.Value));
@@ -347,6 +374,7 @@ public sealed partial class KsRadarControl : BaseShuttleControl
         // Contact layer and hover tooltip on top of everything. mapPos.Position is the
         // radar's own centre in world space, used to label each contact's range.
         KsDrawContacts(handle, worldToShuttle * shuttleToView, mapPos.Position);
+        KsDrawLifeSigns(handle, worldToShuttle * shuttleToView);
         KsDrawContactTooltip(handle, mapPos.Position);
     }
 
@@ -374,10 +402,19 @@ public sealed partial class KsRadarControl : BaseShuttleControl
         // instead of stepping on the sensor cadence.
         var estPos = contact.EstimatedPosition(curTime);
         var range = (estPos - ownWorldPos).Length();
-        return Loc.GetString("ks-sensor-contact-pos-range",
-            ("x", $"{estPos.X:0}"),
-            ("y", $"{estPos.Y:0}"),
-            ("range", $"{range:0}"));
+
+        var x = $"{estPos.X:0}";
+        var y = $"{estPos.Y:0}";
+        var r = $"{range:0}";
+        if (_ksPosRangeCache.TryGetValue(contact.Grid, out var cached)
+            && cached.X == x && cached.Y == y && cached.R == r)
+        {
+            return cached.Text;
+        }
+
+        var text = Loc.GetString("ks-sensor-contact-pos-range", ("x", x), ("y", y), ("range", r));
+        _ksPosRangeCache[contact.Grid] = (x, y, r, text);
+        return text;
     }
 
     /// <summary>
@@ -519,6 +556,92 @@ public sealed partial class KsRadarControl : BaseShuttleControl
         }
     }
 
+    private const int KsDotSegments = 64;
+
+    /// <summary>Unit ring matching the engine DrawCircle tessellation exactly (64 segments, closed, fan pivots on a RIM vertex), so batched dots stay pixel-identical.</summary>
+    private static readonly Vector2[] KsDotRing = KsBuildDotRing();
+
+    /// <summary>
+    ///     10 whole dots (63 real triangles each) per draw call: the engine stackallocs
+    ///         per span vertex and its batch buffer caps near 64k, so one unbounded
+    ///         span could blow the render thread over a crowded station.
+    /// </summary>
+    private const int KsLifeSignChunkVerts = (KsDotSegments - 1) * 3 * 10;
+
+    private static Vector2[] KsBuildDotRing()
+    {
+        var ring = new Vector2[KsDotSegments + 1];
+        for (var i = 0; i <= KsDotSegments; i++)
+        {
+            var angle = i / (float) KsDotSegments * MathHelper.TwoPi;
+            ring[i] = new Vector2(MathF.Sin(angle), MathF.Cos(angle));
+        }
+
+        return ring;
+    }
+
+    /// <summary>
+    ///     One dot per live creature: aboard dots ride their contact's dead-reckoned
+    ///         hull, floaters sit at their swept world position. Off-view signs are
+    ///         culled outright - they are detail, not contacts, so nothing pins to
+    ///         the rim.
+    /// </summary>
+    private void KsDrawLifeSigns(DrawingHandleScreen handle, Matrix3x2 worldToView)
+    {
+        if (_ksLifeSigns == null || _ksLifeSigns.Count == 0)
+            return;
+
+        var curTime = _timing.CurTime;
+
+        _ksContactsByGrid.Clear();
+        if (_ksContacts != null)
+        {
+            foreach (var contact in _ksContacts)
+                _ksContactsByGrid[contact.Grid] = contact;
+        }
+
+        const float radius = 1.5f;
+        var count = 0;
+
+        foreach (var sign in _ksLifeSigns)
+        {
+            Vector2 worldPos;
+            if (sign.Grid is { } gridNet)
+            {
+                if (!_ksContactsByGrid.TryGetValue(gridNet, out var contact))
+                    continue;
+
+                worldPos = contact.EstimatedPosition(curTime) + contact.Rotation.RotateVec(sign.Position);
+            }
+            else
+            {
+                worldPos = sign.Position;
+            }
+
+            var pos = Vector2.Transform(worldPos, worldToView);
+            if (KsClampToRim(pos, out _))
+                continue;
+
+            var pivot = pos + KsDotRing[0] * radius;
+            for (var i = 1; i < KsDotRing.Length - 1; i++)
+            {
+                _ksLifeSignVerts[count++] = pivot;
+                _ksLifeSignVerts[count++] = pos + KsDotRing[i] * radius;
+                _ksLifeSignVerts[count++] = pos + KsDotRing[i + 1] * radius;
+            }
+
+            // Chunk is a whole number of dots, so a full buffer lands exactly here.
+            if (count == KsLifeSignChunkVerts)
+            {
+                handle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, _ksLifeSignVerts, KsHud.LifeSign);
+                count = 0;
+            }
+        }
+
+        if (count > 0)
+            handle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, _ksLifeSignVerts.AsSpan(0, count), KsHud.LifeSign);
+    }
+
     /// <summary>
     ///     The contact's colour this frame: the tier colour riding the phosphor afterglow
     ///         while live, or the memory-ghost tone, reached through a short fade when the
@@ -633,7 +756,7 @@ public sealed partial class KsRadarControl : BaseShuttleControl
         if (!showName && !showCoords)
             return;
 
-        var name = showName ? contact.Name ?? Loc.GetString("ks-sensor-contact-unknown") : string.Empty;
+        var name = showName ? contact.Name ?? _ksUnknownText : string.Empty;
         var coords = showCoords ? KsContactPosRange(contact, ownWorldPos, curTime) : string.Empty;
 
         var nameDim = showName ? handle.GetDimensions(_ksFont, name, 0.7f) : Vector2.Zero;
@@ -779,7 +902,7 @@ public sealed partial class KsRadarControl : BaseShuttleControl
         var lines = new List<(string Text, float Scale, float Alpha)>();
 
         if (KsReadoutDetail >= KsHud.NameDetail)
-            lines.Add((contact.Name ?? Loc.GetString("ks-sensor-contact-unknown"), 0.7f, 1f));
+            lines.Add((contact.Name ?? _ksUnknownText, 0.7f, 1f));
 
         // The bearing IS this contact's position line, so it answers to the same level.
         if (KsReadoutDetail >= KsHud.PositionDetail)
@@ -850,8 +973,7 @@ public sealed partial class KsRadarControl : BaseShuttleControl
     /// <summary>
     ///     Draws a contact's text readout as a left-aligned stack starting at
     ///         <paramref name="anchor"/> (the contact's upper-right corner): name,
-    ///         coordinates + range, memory age and the readout roster (every label, its
-    ///         value where a sensor resolved one, else a dimmed blank slot).
+    ///         coordinates + range, memory age and the readout roster.
     ///         <paramref name="intelOnly"/> draws only the roster, for a live contact
     ///         whose real hull is on screen.
     /// </summary>
@@ -863,7 +985,7 @@ public sealed partial class KsRadarControl : BaseShuttleControl
         {
             if (KsReadoutDetail >= KsHud.NameDetail)
             {
-                handle.DrawString(_ksFont, line, contact.Name ?? Loc.GetString("ks-sensor-contact-unknown"), 0.7f, color);
+                handle.DrawString(_ksFont, line, contact.Name ?? _ksUnknownText, 0.7f, color);
                 line += new Vector2(0f, 11f);
             }
 
@@ -881,57 +1003,80 @@ public sealed partial class KsRadarControl : BaseShuttleControl
             }
         }
 
-        // The full roster, not only detected lines: the labels are a fixed panel, so a
-        // quantity no sensor of ours resolved reads as a dimmed blank slot rather than
-        // dropping its row and shifting the stack.
-        foreach (var intelProto in KsIntelRoster())
+        // The detail toggle is live between pushes, so its gate stays here.
+        if (!_ksRosterLines.TryGetValue(contact.Grid, out var roster))
+            return;
+
+        foreach (var (detail, hasValue, text) in roster)
         {
-            // Each readout declares the lowest detail level it survives at, so cutting
-            // the plot back is a YAML decision per quantity, not a hardcoded shortlist.
-            if (KsReadoutDetail < intelProto.Detail)
+            if (KsReadoutDetail < detail)
                 continue;
 
-            string? value = null;
-            foreach (var (intelId, v) in contact.Intel)
-            {
-                if (intelId.Id == intelProto.ID)
-                {
-                    value = v;
-                    break;
-                }
-            }
-
-            // A readout may opt out of the always-on roster; then it appears only when
-            // a value is actually present.
-            if (value == null && !intelProto.AlwaysShowLabel)
-                continue;
-
-            var shown = value ?? Loc.GetString("ks-sensor-intel-no-value");
-            // An unresolved value is dimmer, so the panel shows what is known apart
-            // from what is merely listed.
-            var alpha = value != null ? KsHud.ReadoutDetailAlpha : KsHud.ReadoutUnresolvedAlpha;
-            handle.DrawString(_ksFont, line, $"{Loc.GetString(intelProto.Label)}: {shown}", 0.6f, color.WithAlpha(alpha));
+            var alpha = hasValue ? KsHud.ReadoutDetailAlpha : KsHud.ReadoutUnresolvedAlpha;
+            handle.DrawString(_ksFont, line, text, 0.6f, color.WithAlpha(alpha));
             line += new Vector2(0f, 10f);
         }
     }
 
     /// <summary>
-    ///     The fixed roster of readout labels drawn on every contact panel, ordered
-    ///         exactly as the server orders a contact's own readouts (by Order, then id).
-    ///         Cached: the prototype set does not change mid round and rebuilding it per
-    ///         contact per frame would allocate inside the draw loop.
+    ///     The full roster, not only detected lines: labels are a fixed panel, so an
+    ///         unresolved quantity reads as a dimmed blank slot instead of dropping its
+    ///         row and shifting the stack; AlwaysShowLabel off means value-only.
     /// </summary>
-    private List<KsSensorIntelPrototype> KsIntelRoster()
+    private void KsRebuildRosterLines()
+    {
+        _ksRosterLines.Clear();
+
+        if (_ksContacts == null)
+            return;
+
+        var noValue = Loc.GetString("ks-sensor-intel-no-value");
+
+        foreach (var contact in _ksContacts)
+        {
+            List<(KsContactDetail Detail, bool HasValue, string Text)>? lines = null;
+
+            foreach (var (proto, label) in KsIntelRoster())
+            {
+                string? value = null;
+                foreach (var (intelId, v) in contact.Intel)
+                {
+                    if (intelId.Id == proto.ID)
+                    {
+                        value = v;
+                        break;
+                    }
+                }
+
+                if (value == null && !proto.AlwaysShowLabel)
+                    continue;
+
+                lines ??= new();
+                lines.Add((proto.Detail, value != null, $"{label}: {value ?? noValue}"));
+            }
+
+            if (lines != null)
+                _ksRosterLines[contact.Grid] = lines;
+        }
+    }
+
+    /// <summary>
+    ///     The fixed roster of readout labels drawn on every contact panel, ordered
+    ///         exactly as the server orders a contact's own readouts (by Order, then id),
+    ///         each with its localized label. Cached: the prototype set and its labels do
+    ///         not change mid round.
+    /// </summary>
+    private List<(KsSensorIntelPrototype Proto, string Label)> KsIntelRoster()
     {
         if (_ksIntelRoster != null)
             return _ksIntelRoster;
 
-        _ksIntelRoster = new List<KsSensorIntelPrototype>();
+        _ksIntelRoster = new List<(KsSensorIntelPrototype, string)>();
         foreach (var proto in _protoManager.EnumeratePrototypes<KsSensorIntelPrototype>())
-            _ksIntelRoster.Add(proto);
+            _ksIntelRoster.Add((proto, Loc.GetString(proto.Label)));
 
         _ksIntelRoster.Sort((a, b) =>
-            a.Order != b.Order ? a.Order.CompareTo(b.Order) : string.CompareOrdinal(a.ID, b.ID));
+            a.Proto.Order != b.Proto.Order ? a.Proto.Order.CompareTo(b.Proto.Order) : string.CompareOrdinal(a.Proto.ID, b.Proto.ID));
 
         return _ksIntelRoster;
     }
@@ -969,9 +1114,9 @@ public sealed partial class KsRadarControl : BaseShuttleControl
 
         var lines = new List<(string Text, Color Color)>
         {
-            (best.Name ?? Loc.GetString("ks-sensor-contact-unknown"), KsHud.TooltipText),
+            (best.Name ?? _ksUnknownText, KsHud.TooltipText),
             best.Live
-                ? (Loc.GetString("ks-sensor-contact-live"), KsHud.Live)
+                ? (_ksLiveText, KsHud.Live)
                 : (Loc.GetString("ks-sensor-contact-last-seen", ("seconds", (int)Math.Max(0, (curTime - best.LastSeen).TotalSeconds))), KsHud.Memory),
             (whereLine, KsHud.TooltipDetail),
         };
@@ -1054,14 +1199,14 @@ public sealed partial class KsRadarControl : BaseShuttleControl
                     : KsHud.ConePulse.Eval(_timing.CurTime.TotalSeconds)
                 : 1f;
 
-            var verts = KsRegionDraw.BuildVerts(region, gridToView, worldToView);
+            var count = KsRegionDraw.BuildVerts(region, gridToView, worldToView, ref _ksRegionVerts);
 
             // verts[0] is the apex: the fan fills the star-shaped cone in Filled mode,
             // and the boundary stroke skips the apex.
             if (mode == KsCoverageDisplayMode.Filled)
-                handle.DrawPrimitives(DrawPrimitiveTopology.TriangleFan, verts, tint.WithAlpha(KsHud.ConeFillAlpha * pulse));
+                handle.DrawPrimitives(DrawPrimitiveTopology.TriangleFan, _ksRegionVerts.AsSpan(0, count), tint.WithAlpha(KsHud.ConeFillAlpha * pulse));
 
-            handle.DrawPrimitives(DrawPrimitiveTopology.LineStrip, verts.AsSpan(1), tint.WithAlpha(KsHud.ConeLineAlpha * pulse));
+            handle.DrawPrimitives(DrawPrimitiveTopology.LineStrip, _ksRegionVerts.AsSpan(1, count - 1), tint.WithAlpha(KsHud.ConeLineAlpha * pulse));
         }
     }
 
@@ -1121,7 +1266,7 @@ public sealed partial class KsRadarControl : BaseShuttleControl
         if (!_ksJammed)
             return;
 
-        var text = Loc.GetString("ks-sensor-jammed");
+        var text = _ksJammedText;
         var scale = KsHud.JammedTextScale;
         var dims = handle.GetDimensions(_ksFont, text, scale);
         var pos = new Vector2((PixelSize.X - dims.X) / 2f, 6f * UIScale);
@@ -1132,15 +1277,17 @@ public sealed partial class KsRadarControl : BaseShuttleControl
         handle.DrawString(_ksFont, pos, text, scale, KsHud.JammedColor.WithAlpha(Math.Clamp(pulse, 0f, 1f)));
     }
 
-    private void KsDrawInterests(DrawingHandleScreen handle, Matrix3x2 curGridToViewMatrix, Box2 viewAABB, Entity<MapGridComponent> gridEntity)
+    private void KsDrawInterests(DrawingHandleScreen handle, Matrix3x2 curGridToViewMatrix, Entity<MapGridComponent> gridEntity)
     {
         foreach (var (_, interest) in _radarInterestSystem.StaticInterests)
         {
             if (gridEntity.Owner != interest.Item2)
                 continue;
 
+            // Control pixels, so the cull box is the control: the old test compared
+            // pixels to a world-metres box.
             var interestPosition = Vector2.Transform(interest.Item3, curGridToViewMatrix);
-            if (!viewAABB.Contains(interestPosition))
+            if (!new UIBox2(Vector2.Zero, PixelSize).Contains(interestPosition))
                 continue;
 
             handle.DrawCircle(interestPosition, 5, Color.ToSrgb(KsHud.Interest), true);

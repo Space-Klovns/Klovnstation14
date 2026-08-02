@@ -40,6 +40,7 @@
   selfPosition: "#00FF00"
   offGrid: "#00FFFF"
   interest: "#B8860B"
+  lifeSign: "#FFB347"
 
   # Coverage cone. Alphas are scaled by the emitting pulse (radar/jammer) or by 1
   # for a passive fan (visual/IRST), which holds steady.

@@ -55,6 +55,12 @@ public readonly record struct KsSensorDetection(
 public record struct KsSensorSweepEvent(Entity<KsSensorComponent> Sensor)
 {
     public readonly List<KsSensorDetection> Detections = [];
+
+    /// <summary>Aboard life signs by target grid, centre-of-mass-relative local offsets (the frame the client dead-reckons in). Null for sensors without life-sign resolution.</summary>
+    public Dictionary<EntityUid, List<Vector2>>? LifeSigns;
+
+    /// <summary>Free-floating life signs by creature (co-mounted sensors dedupe), world positions.</summary>
+    public Dictionary<EntityUid, Vector2>? LifeSignFloaters;
 }
 
 /// <summary>
@@ -129,6 +135,9 @@ public record struct KsCollectNavContactsEvent(EntityUid? Grid)
 
     /// <summary>The grid's emission log (oldest first), or null when it is empty. See <see cref="KsSensorNavState.EmissionLog"/>.</summary>
     public List<KsEmissionLogEntry>? EmissionLog;
+
+    /// <summary>This sweep's life-sign blips, or null when there are none. See <see cref="KsSensorNavState.LifeSigns"/>.</summary>
+    public List<KsLifeSignState>? LifeSigns;
 }
 
 /// <summary>

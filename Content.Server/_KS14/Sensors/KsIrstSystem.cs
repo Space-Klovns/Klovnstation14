@@ -1,5 +1,7 @@
 using System.Numerics;
 using Content.Shared._KS14.Sensors;
+using Content.Shared.Mobs;
+using Content.Shared.Mobs.Components;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
 
@@ -34,6 +36,9 @@ public sealed partial class KsIrstSystem : KsLosSensorSystem
     ///         through them. The sensor's own grid is never added, so it still blocks.
     /// </summary>
     private readonly HashSet<EntityUid> _transparentGrids = new();
+
+    /// <summary>Sweep scratch: detected grids, with what frames their life signs grid-locally.</summary>
+    private readonly Dictionary<EntityUid, (Matrix3x2 InvMatrix, Vector2 LocalCenter)> _lifeSignFrames = new();
 
     public override void Initialize()
     {
@@ -90,6 +95,8 @@ public sealed partial class KsIrstSystem : KsLosSensorSystem
 
         // A target's per-signature effective range only ever shrinks inside this broadphase box.
         BuildTransparentSet(mapId, sensorPos, maxRange, ownGrid ?? default, PerceptionFloor(ent.Comp, maxRange));
+
+        _lifeSignFrames.Clear();
 
         foreach (var grid in Grids)
         {
@@ -150,6 +157,52 @@ public sealed partial class KsIrstSystem : KsLosSensorSystem
                 physics.LocalCenter,
                 MetaData(gridUid).EntityName,
                 intel));
+
+            _lifeSignFrames[gridUid] = (XformSystem.GetInvWorldMatrix(gridUid), physics.LocalCenter);
+        }
+
+        CollectLifeSigns(mapId, sensorPos, maxRange, ownGrid ?? default, ref args);
+    }
+
+    /// <summary>
+    ///     Aboard a detected grid the hull track is the resolution: no per-creature
+    ///         ray, offsets grid-local so dots ride the dead-reckoned contact. A
+    ///         free-floater is a point source: full range, no taper, same occluder LOS
+    ///         as a grid. Cold hulls and junk grids conceal their riders.
+    /// </summary>
+    private void CollectLifeSigns(MapId mapId, Vector2 sensorPos, float maxRange, EntityUid ownGrid, ref KsSensorSweepEvent args)
+    {
+        var rangeSq = maxRange * maxRange;
+
+        var query = AllEntityQuery<MobStateComponent, TransformComponent>();
+        while (query.MoveNext(out var uid, out var mob, out var xform))
+        {
+            if (mob.CurrentState == MobState.Dead || xform.MapID != mapId)
+                continue;
+
+            if (xform.GridUid is { } mobGrid)
+            {
+                if (!_lifeSignFrames.TryGetValue(mobGrid, out var frame))
+                    continue;
+
+                var offset = Vector2.Transform(XformSystem.GetWorldPosition(xform), frame.InvMatrix) - frame.LocalCenter;
+                args.LifeSigns ??= new();
+                if (!args.LifeSigns.TryGetValue(mobGrid, out var offsets))
+                    args.LifeSigns[mobGrid] = offsets = new();
+                offsets.Add(offset);
+                continue;
+            }
+
+            var worldPos = XformSystem.GetWorldPosition(xform);
+            if ((worldPos - sensorPos).LengthSquared() > rangeSq)
+                continue;
+
+            // No target grid to ignore: a floater occludes nothing, not even itself.
+            if (!HasLos(mapId, sensorPos, worldPos, default, ownGrid, _transparentGrids))
+                continue;
+
+            args.LifeSignFloaters ??= new();
+            args.LifeSignFloaters.TryAdd(uid, worldPos);
         }
     }
 

@@ -41,6 +41,24 @@ public sealed partial class KsSensorContactPoolComponent : Component
     /// </summary>
     [ViewVariables]
     public List<KsEmissionLogEntry> EmissionLog = new();
+
+    /// <summary>
+    ///     Aboard life-sign offsets by tracked grid (centre-of-mass-relative, local).
+    ///         Sweep scratch, wiped every tick: never expired, never relayed.
+    /// </summary>
+    [ViewVariables]
+    public Dictionary<EntityUid, List<Vector2>> LifeSigns = new();
+
+    /// <summary>Free-floating life signs this sweep, keyed by creature (dedupes co-mounted IRSTs); values are world positions. Sweep scratch like <see cref="LifeSigns"/>.</summary>
+    [ViewVariables]
+    public Dictionary<EntityUid, Vector2> LifeSignFloaters = new();
+
+    /// <summary>
+    ///     Map the scratch was swept on: a console refresh can land between a mid-tick
+    ///         map change (FTL) and the next sweep's wipe. Mirrors <see cref="KsContactRecord.MapId"/>.
+    /// </summary>
+    [ViewVariables]
+    public MapId LifeSignsMapId = MapId.Nullspace;
 }
 
 /// <summary>Server-side record of one known contact; positional data always holds the freshest knowledge across all sources.</summary>

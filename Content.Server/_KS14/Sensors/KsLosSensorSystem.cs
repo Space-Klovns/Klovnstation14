@@ -90,17 +90,24 @@ public abstract partial class KsLosSensorSystem : EntitySystem
     }
 
     /// <summary>
-    ///     The single-hit ray cast returns the first hit in traversal order, not the
-    ///         nearest, so we collect every hit and take the minimum. The ray bleeds through
-    ///         <paramref name="transparent"/> grids (save <paramref name="ownGrid"/>)
-    ///         exactly as detection does.
+    ///     The single-hit cast returns the first hit in traversal order, not the
+    ///         nearest - but it terminates the walk where the list overload drags the
+    ///         whole corridor. So: probe to bound the ray, then collect within that
+    ///         bound and take the minimum (the nearest hit cannot lie past the probe's).
+    ///         Bleeds through <paramref name="transparent"/> grids exactly as detection does.
     /// </summary>
     private float CastReach(MapId mapId, Vector2 origin, Vector2 dir, float range, EntityUid ownGrid = default, HashSet<EntityUid>? transparent = null)
     {
-        _hits.Clear();
-        Occluder.IntersectRay(_hits, mapId, new Ray(origin, dir), range, new LosIgnoreState(EntityUid.Invalid, ownGrid, transparent), LosIgnore);
+        var ray = new Ray(origin, dir);
+        var state = new LosIgnoreState(EntityUid.Invalid, ownGrid, transparent);
 
-        var reach = range;
+        if (Occluder.IntersectRay(mapId, ray, range, state, LosIgnore) is not { } first)
+            return range;
+
+        _hits.Clear();
+        Occluder.IntersectRay(_hits, mapId, ray, first.Distance, state, LosIgnore);
+
+        var reach = first.Distance;
         foreach (var hit in _hits)
         {
             if (hit.Distance < reach)
