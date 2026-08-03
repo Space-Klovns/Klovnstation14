@@ -1,4 +1,6 @@
 using Content.Server.Antag;
+using Content.Server.Antag.Components; //KS14
+using Content.Server._KS14.GameTicking.Rules.Components; //KS14
 using Content.Server.GameTicking;
 using Content.Server.GameTicking.Rules.Components;
 using Content.Server.Zombies;
@@ -29,6 +31,8 @@ public sealed partial class AdminVerbSystem
     private static readonly EntProtoId DefaultRevsRule = "Revolutionary";
     private static readonly EntProtoId DefaultThiefRule = "Thief";
     private static readonly EntProtoId DefaultChangelingRule = "Changeling";
+    // KS14
+    private static readonly EntProtoId DefaultAnchorlessRule = "Anchorless"; //KS14
     private static readonly EntProtoId ParadoxCloneRuleId = "ParadoxCloneSpawn";
     private static readonly EntProtoId DefaultWizardRule = "Wizard";
     private static readonly EntProtoId DefaultNinjaRule = "NinjaSpawn";
@@ -170,6 +174,23 @@ public sealed partial class AdminVerbSystem
             Message = string.Join(": ", changelingName, Loc.GetString("admin-verb-make-changeling")),
         };
         args.Verbs.Add(changeling);
+
+        // KS14 start
+        var anchorlessName = Loc.GetString("admin-verb-text-make-anchorless");
+        Verb anchorless = new()
+        {
+            Text = anchorlessName,
+            Category = VerbCategory.Antag,
+            Icon = new SpriteSpecifier.Rsi(new ResPath("/Textures/Interface/Misc/job_icons.rsi"), "Syndicate"),
+            Act = () =>
+            {
+                _antag.ForceMakeAntag<AnchorlessRuleComponent>(targetPlayer, DefaultAnchorlessRule);
+            },
+            Impact = LogImpact.High,
+            Message = string.Join(": ", anchorlessName, Loc.GetString("admin-verb-make-anchorless")),
+        };
+        args.Verbs.Add(anchorless);
+        // KS14 end
 
         var paradoxCloneName = Loc.GetString("admin-verb-text-make-paradox-clone");
         Verb paradox = new()

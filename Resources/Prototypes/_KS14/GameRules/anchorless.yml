@@ -1,0 +1,14 @@
+# KS14
+- type: entity
+  id: Anchorless
+  parent: [BaseGameRule, BaseRoundstartAntagRule]
+  components:
+  - type: GameRule
+    minPlayers: 5
+  - type: AntagSelection
+    antags:
+    - !type:LinearAntagCount
+      proto: Anchorless
+      range:
+        min: 1
+        max: 3

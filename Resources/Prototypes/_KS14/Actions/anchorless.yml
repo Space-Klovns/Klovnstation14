@@ -1,0 +1,43 @@
+# KS14
+- type: entity
+  id: ActionAnchorlessCommunion
+  name: Communion
+  description: Share the identities you have learned with another Anchorless.
+  components:
+  - type: Action
+    priority: 1
+    itemIconStyle: BigAction
+    icon:
+      sprite: Interface/Actions/changeling.rsi
+      state: armblade
+  - type: TargetAction
+  - type: EntityTargetAction
+    event: !type:AnchorlessCommunionActionEvent
+
+- type: entity
+  id: ActionAnchorlessTransform
+  name: Transform
+  description: Assume the appearance of one of the identities you have learned.
+  components:
+  - type: Action
+    priority: 1
+    itemIconStyle: BigAction
+    icon:
+      sprite: Interface/Actions/changeling.rsi
+      state: armblade
+  - type: InstantAction
+    event: !type:AnchorlessTransformActionEvent
+
+- type: entity
+  parent: BaseAction
+  id: ActionAnchorlessVoiceMimic #KS14 - same as the ling but separate for completeness and whatnot
+  name: Voice Mimicry
+  description: Model your vocal cords to imitate the voice of someone else.
+  components:
+  - type: Action
+    itemIconStyle: BigAction
+    icon:
+      sprite: Interface/Actions/changeling2.rsi
+      state: mimicry
+  - type: InstantAction
+    event: !type:VoiceMaskSetNameEvent

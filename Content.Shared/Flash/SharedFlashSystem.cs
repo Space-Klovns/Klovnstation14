@@ -169,6 +169,7 @@ public abstract partial class SharedFlashSystem : EntitySystem
     /// <param name="displayPopup">Whether or not to show a popup to the target player.</param>
     /// <param name="melee">Was this flash caused by a melee attack? Used for checking for revolutionary conversion.</param>
     /// <param name="stunDuration">The time the target will be stunned. If null the target will be slowed down instead.</param>
+    /// <param name="flashOverride"> KS14 addition - should this event pierce all flash protection? </param>
     public void Flash(
         EntityUid target,
         EntityUid? user,
@@ -177,7 +178,8 @@ public abstract partial class SharedFlashSystem : EntitySystem
         float slowTo,
         bool displayPopup = true,
         bool melee = false,
-        TimeSpan? stunDuration = null)
+        TimeSpan? stunDuration = null,
+        bool flashOverride = false)
     {
         var attempt = new FlashAttemptEvent(target, user, used);
         RaiseLocalEvent(target, ref attempt, true);
@@ -186,7 +188,7 @@ public abstract partial class SharedFlashSystem : EntitySystem
             return;
 
         // don't paralyze, slowdown or convert to rev if the target is immune to flashes
-        if (!_statusEffectsSystem.TryAddStatusEffect<FlashedComponent>(target, FlashedKey, flashDuration, true))
+        if (!_statusEffectsSystem.TryAddStatusEffect<FlashedComponent>(target, FlashedKey, flashDuration, true) && !flashOverride) // KS14 - added forcible flashing events
             return;
 
         if (stunDuration != null)
