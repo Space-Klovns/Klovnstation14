@@ -81,7 +81,7 @@
       uiKey: enum.GasCanisterUiKey.Key
     - type: BatterySelfRecharger
       autoRechargeRate: 1000
-      autoRechargePauseTime: 3s
+      autoRechargePauseTime: 10s
     - type: Battery
       maxCharge: 30000
       startingCharge: 30000
