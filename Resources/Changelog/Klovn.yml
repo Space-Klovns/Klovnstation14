@@ -1703,3 +1703,13 @@ Entries:
       message: Radar interest markers now show on maps far from the origin.
   id: 175
   time: '2026-08-04T13:54:06.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added shielding to canisters: this delays the explosion of canisters,
+        while depleting an internal (self-recharging) battery.
+    - type: Fix
+      message: Fixed some mispredicts involving sparks.
+  id: 176
+  time: '2026-08-04T20:49:06.0000000+00:00'
