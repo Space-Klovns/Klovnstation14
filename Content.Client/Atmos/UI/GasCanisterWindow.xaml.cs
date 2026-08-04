@@ -36,6 +36,8 @@ namespace Content.Client.Atmos.UI
             ReleasePressureSlider.OnKeyBindUp += OnReleasePressureSliderReleased;
             ReleasePressureSlider.OnValueChanged += OnReleasePressureSliderChanged;
             ReleasePressure.OnValueChanged += OnReleasePressureChanged;
+
+            ShieldToggleButton.OnPressed += _ => ShieldToggleButtonPressed?.Invoke(); // KS14
         }
 
         private void OnReleasePressureChanged(FloatSpinBox.FloatSpinBoxEventArgs args)
@@ -110,7 +112,7 @@ namespace Content.Client.Atmos.UI
             if (MathHelper.CloseTo(pressure, ReleasePressure.Value))
                 return;
 
-            if(!ReleasePressureSlider.Grabbed)
+            if (!ReleasePressureSlider.Grabbed)
                 ReleasePressureSlider.SetValueWithoutEvent(pressure);
             ReleasePressure.Value = pressure;
         }
