@@ -1691,3 +1691,15 @@ Entries:
       message: Backblast from rocket launchers is now properly obstructed by objects.
   id: 174
   time: '2026-08-01T15:22:27.0000000+00:00'
+- author: teecoding
+  changes:
+    - type: Add
+      message: >-
+        IRST sensors now show life-sign blips for live creatures aboard tracked
+        hulls and adrift in space.
+    - type: Fix
+      message: Fixed FPS drops while using the shuttle sensor console.
+    - type: Fix
+      message: Radar interest markers now show on maps far from the origin.
+  id: 175
+  time: '2026-08-04T13:54:06.0000000+00:00'
