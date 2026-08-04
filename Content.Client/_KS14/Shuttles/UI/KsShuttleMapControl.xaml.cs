@@ -320,6 +320,9 @@ public sealed partial class KsShuttleMapControl : BaseShuttleControl
         }
     }
 
+    /// <summary>Per-frame scratch for the cone vertices, sliced by BuildVerts' returned count.</summary>
+    private Vector2[] _ksConeVerts = Array.Empty<Vector2>();
+
     /// <summary>
     ///     The network's coverage cones, own and datalink-relayed alike: every apex
     ///         arrives framed against the console's grid, so one matrix chain places
@@ -348,11 +351,11 @@ public sealed partial class KsShuttleMapControl : BaseShuttleControl
                     : KsHud.ConePulse.Eval(_timing.CurTime.TotalSeconds)
                 : 1f;
 
-            var verts = KsRegionDraw.BuildVerts(region, gridToView, worldToView);
+            var count = KsRegionDraw.BuildVerts(region, gridToView, worldToView, ref _ksConeVerts);
 
             // verts[0] is the apex: the fan fills the cone, the stroked boundary skips it.
-            handle.DrawPrimitives(DrawPrimitiveTopology.TriangleFan, verts, tint.WithAlpha(KsHud.ConeFillAlpha * pulse));
-            handle.DrawPrimitives(DrawPrimitiveTopology.LineStrip, verts.AsSpan(1), tint.WithAlpha(KsHud.ConeLineAlpha * pulse));
+            handle.DrawPrimitives(DrawPrimitiveTopology.TriangleFan, _ksConeVerts.AsSpan(0, count), tint.WithAlpha(KsHud.ConeFillAlpha * pulse));
+            handle.DrawPrimitives(DrawPrimitiveTopology.LineStrip, _ksConeVerts.AsSpan(1, count - 1), tint.WithAlpha(KsHud.ConeLineAlpha * pulse));
         }
     }
 

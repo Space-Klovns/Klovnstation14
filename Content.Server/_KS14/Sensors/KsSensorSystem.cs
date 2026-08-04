@@ -91,6 +91,22 @@ public sealed partial class KsSensorSystem : EntitySystem
     /// </summary>
     private readonly Dictionary<EntityUid, HashSet<EntityUid>> _coverageLinks = new();
 
+    /// <summary>Last tick's links: forming/dying links redraw the picture while mutating no pool, and a receiver losing its LAST ally needs one push to clear the cone.</summary>
+    private readonly Dictionary<EntityUid, HashSet<EntityUid>> _lastCoverageLinks = new();
+
+    /// <summary>
+    ///     Relaying allies' poses as of the last change-mark: relayed cones are
+    ///         console-frame snapshots, so a moving ally must re-push its receivers.
+    ///         Measured against the last MARK so a slow drift still accumulates.
+    /// </summary>
+    private readonly Dictionary<EntityUid, (Vector2 Pos, Angle Yaw)> _lastLinkPose = new();
+
+    private readonly HashSet<EntityUid> _linkSourceScratch = new();
+    private readonly List<EntityUid> _poseEvictScratch = new();
+
+    /// <summary>Squared metres of ally drift that forces a receiver push; a parked grid moves exactly zero.</summary>
+    private const float LinkMoveEpsilonSq = 0.01f * 0.01f;
+
     /// <summary>
     ///     Per-tick cache of computed sensor coverage regions, so several
     ///         consoles on one grid share the (occluder-ray) work each push.
@@ -246,6 +262,9 @@ public sealed partial class KsSensorSystem : EntitySystem
 
         RunSweeps(curTime);
         RunDatalink(curTime);
+        // Outside RunDatalink: its no-transmitters early return must still let a
+        // dead network push its receivers one last clear.
+        MarkCoverageLinkChanges();
         RunExpiry(curTime);
 
         // Push fresh pictures to whoever is watching, but only if anything actually
@@ -257,11 +276,6 @@ public sealed partial class KsSensorSystem : EntitySystem
             anyChanged |= pool.Changed;
             pool.Changed = false;
         }
-
-        // Relayed coverage moves with the ALLY's hull, which mutates no pool: a
-        // linked network must keep pushing every tick or a quiet sector would
-        // freeze the allies' cones at their old console-local offsets.
-        anyChanged |= _coverageLinks.Count > 0;
 
         // These changes mutate no contact pool, so without folding the flag in here the
         // change-gated push would miss them and the console would show stale feedback
@@ -346,6 +360,19 @@ public sealed partial class KsSensorSystem : EntitySystem
 
     private void RunSweeps(TimeSpan curTime)
     {
+        // Life signs are sweep-fresh: wipe up front so a sweep that resolves nothing
+        // reads back as nothing, marking Changed so an emptied picture pushes once.
+        var lifeQuery = EntityQueryEnumerator<KsSensorContactPoolComponent>();
+        while (lifeQuery.MoveNext(out _, out var lifePool))
+        {
+            if (lifePool.LifeSigns.Count == 0 && lifePool.LifeSignFloaters.Count == 0)
+                continue;
+
+            lifePool.LifeSigns.Clear();
+            lifePool.LifeSignFloaters.Clear();
+            lifePool.Changed = true;
+        }
+
         var query = EntityQueryEnumerator<KsSensorComponent, TransformComponent>();
         while (query.MoveNext(out var uid, out var sensor, out var xform))
         {
@@ -361,10 +388,18 @@ public sealed partial class KsSensorSystem : EntitySystem
             var ev = new KsSensorSweepEvent((uid, sensor));
             RaiseLocalEvent(uid, ref ev);
 
-            if (ev.Detections.Count == 0)
+            var hasLifeSigns = ev.LifeSigns is { Count: > 0 } || ev.LifeSignFloaters is { Count: > 0 };
+            if (ev.Detections.Count == 0 && !hasLifeSigns)
                 continue;
 
             var pool = EnsureComp<KsSensorContactPoolComponent>(gridUid);
+
+            if (hasLifeSigns)
+                MergeLifeSigns(pool, ev.LifeSigns, ev.LifeSignFloaters, xform.MapID);
+
+            if (ev.Detections.Count == 0)
+                continue;
+
             var sensorName = Name(uid);
             var gridName = Name(gridUid);
             var mapId = xform.MapID;
@@ -480,6 +515,25 @@ public sealed partial class KsSensorSystem : EntitySystem
         }
 
         return false;
+    }
+
+    /// <summary>Co-tracking IRSTs report the same everyone-aboard list, so the first writer wins; floaters union by creature since lines of sight differ.</summary>
+    private static void MergeLifeSigns(KsSensorContactPoolComponent pool, Dictionary<EntityUid, List<Vector2>>? aboard, Dictionary<EntityUid, Vector2>? floaters, MapId mapId)
+    {
+        if (aboard != null)
+        {
+            foreach (var (grid, offsets) in aboard)
+                pool.LifeSigns.TryAdd(grid, offsets);
+        }
+
+        if (floaters != null)
+        {
+            foreach (var (creature, pos) in floaters)
+                pool.LifeSignFloaters.TryAdd(creature, pos);
+        }
+
+        pool.LifeSignsMapId = mapId;
+        pool.Changed = true;
     }
 
     private void MergeDetection(KsSensorContactPoolComponent pool, KsSensorDetection detection, KsSourceRecord source, MapId mapId)
@@ -686,6 +740,72 @@ public sealed partial class KsSensorSystem : EntitySystem
             if (heard > 0)
                 _heardTransmitters[rxUid] = heard;
         }
+    }
+
+    /// <summary>
+    ///     Marks receiver pools changed for network-picture changes no pool records;
+    ///         replaces blanket-pushing every console while any link existed anywhere.
+    /// </summary>
+    private void MarkCoverageLinkChanges()
+    {
+        foreach (var (rxGrid, allies) in _coverageLinks)
+        {
+            if (!_lastCoverageLinks.TryGetValue(rxGrid, out var old) || !old.SetEquals(allies))
+                MarkPoolChanged(rxGrid);
+        }
+
+        foreach (var rxGrid in _lastCoverageLinks.Keys)
+        {
+            if (!_coverageLinks.ContainsKey(rxGrid))
+                MarkPoolChanged(rxGrid);
+        }
+
+        _lastCoverageLinks.Clear();
+        _linkSourceScratch.Clear();
+        foreach (var (rxGrid, allies) in _coverageLinks)
+        {
+            _lastCoverageLinks[rxGrid] = new HashSet<EntityUid>(allies);
+            _linkSourceScratch.UnionWith(allies);
+        }
+
+        // Drop dead sources' bases so a returning ally starts fresh.
+        _poseEvictScratch.Clear();
+        foreach (var txGrid in _lastLinkPose.Keys)
+        {
+            if (!_linkSourceScratch.Contains(txGrid))
+                _poseEvictScratch.Add(txGrid);
+        }
+
+        foreach (var txGrid in _poseEvictScratch)
+            _lastLinkPose.Remove(txGrid);
+
+        foreach (var txGrid in _linkSourceScratch)
+        {
+            var (pos, rot) = _transform.GetWorldPositionRotation(txGrid);
+            if (_lastLinkPose.TryGetValue(txGrid, out var last))
+            {
+                if ((pos - last.Pos).LengthSquared() < LinkMoveEpsilonSq
+                    && Math.Abs(Angle.ShortestDistance(last.Yaw, rot).Theta) < YawPushEpsilon)
+                {
+                    continue;
+                }
+
+                foreach (var (rxGrid, allies) in _coverageLinks)
+                {
+                    if (allies.Contains(txGrid))
+                        MarkPoolChanged(rxGrid);
+                }
+            }
+            // A NEW source needs no mark (the link diff above covered it), only a base.
+
+            _lastLinkPose[txGrid] = (pos, rot);
+        }
+    }
+
+    private void MarkPoolChanged(EntityUid gridUid)
+    {
+        if (TryComp<KsSensorContactPoolComponent>(gridUid, out var pool))
+            pool.Changed = true;
     }
 
     /// <summary>
@@ -1157,6 +1277,12 @@ public sealed partial class KsSensorSystem : EntitySystem
             // ring mutates every tick.
             if (pool.EmissionLog.Count > 0)
                 ev.EmissionLog = new List<KsEmissionLogEntry>(pool.EmissionLog);
+
+            if ((pool.LifeSigns.Count > 0 || pool.LifeSignFloaters.Count > 0)
+                && pool.LifeSignsMapId == Transform(gridUid).MapID)
+            {
+                ev.LifeSigns = BuildLifeSignStates(pool, ev.Contacts);
+            }
         }
 
         ev.Regions = BuildSensorRegions(gridUid);
@@ -1170,6 +1296,41 @@ public sealed partial class KsSensorSystem : EntitySystem
         // Emission truth, not the toggles: an unpowered radar left switched on
         // reports RadarActive without actually deafening the ELINT.
         ev.ElintDeaf = ev.HasElint && IsGridEmitting(gridUid);
+    }
+
+    /// <summary>
+    ///     The wire carries bare positions, never identity. Aboard dots ship only for
+    ///         Exact-quality contacts the snapshot carries: gating client-side would
+    ///         let a modified client read the crew layout of a withheld hull.
+    /// </summary>
+    private List<KsLifeSignState>? BuildLifeSignStates(KsSensorContactPoolComponent pool, List<KsSensorContactState>? contacts)
+    {
+        var states = new List<KsLifeSignState>();
+
+        if (pool.LifeSigns.Count > 0 && contacts != null)
+        {
+            var shown = new HashSet<NetEntity>(contacts.Count);
+            foreach (var contact in contacts)
+            {
+                if (contact.Quality == KsPositionQuality.Exact)
+                    shown.Add(contact.Grid);
+            }
+
+            foreach (var (grid, offsets) in pool.LifeSigns)
+            {
+                // TargetNet, not GetNetEntity: the grid may have died since the sweep.
+                if (!pool.Contacts.TryGetValue(grid, out var record) || !shown.Contains(record.TargetNet))
+                    continue;
+
+                foreach (var offset in offsets)
+                    states.Add(new KsLifeSignState(record.TargetNet, offset));
+            }
+        }
+
+        foreach (var pos in pool.LifeSignFloaters.Values)
+            states.Add(new KsLifeSignState(null, pos));
+
+        return states.Count > 0 ? states : null;
     }
 
     /// <summary>

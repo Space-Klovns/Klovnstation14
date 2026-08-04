@@ -53,6 +53,13 @@ public sealed partial class KsEsmScreen : BoxContainer
     /// <summary>Postures by descending severity; the first met one shows.</summary>
     private readonly List<KsPosturePrototype> _postures;
 
+    // Session-constant strings, resolved once instead of per frame.
+    private readonly string _liveText = Loc.GetString("ks-elint-roster-live");
+    private readonly string _memoryText = Loc.GetString("ks-elint-roster-memory");
+    private readonly string _rwrNoValueText = Loc.GetString("ks-rwr-field-no-value");
+    private readonly string _elintNoValueText = Loc.GetString("ks-elint-field-no-value");
+    private readonly string _selectedNoneText = Loc.GetString("ks-elint-selected-none");
+
     private EntityUid? _shuttleEntity;
 
     private bool _hasElint;
@@ -65,8 +72,22 @@ public sealed partial class KsEsmScreen : BoxContainer
     /// </summary>
     private List<(KsSensorContactState Contact, KsThreatChannelPrototype? Channel)> _roster = new();
 
-    /// <summary>Roster rows, kept for the per-frame relative-bearing refresh and channel-rate blink.</summary>
-    private readonly List<(Button Row, KsSensorContactState Contact, KsThreatChannelPrototype? Channel)> _rosterRows = new();
+    /// <summary>
+    ///     Rows are remade every push, so chip/status resolve once at rebuild; between
+    ///         pushes only the bearing digits change and the frame pass skips
+    ///         unchanged rows entirely (a Text write invalidates layout).
+    /// </summary>
+    private readonly List<RosterRow> _rosterRows = new();
+
+    private sealed class RosterRow
+    {
+        public Button Button = default!;
+        public KsSensorContactState Contact = default!;
+        public KsThreatChannelPrototype? Channel;
+        public string Chip = string.Empty;
+        public string Status = string.Empty;
+        public string? LastDigits;
+    }
 
     /// <summary>Lit channel-counter rows, kept for the channel-rate blink.</summary>
     private readonly List<(Label Row, KsThreatChannelPrototype Channel)> _litChannelRows = new();
@@ -82,6 +103,12 @@ public sealed partial class KsEsmScreen : BoxContainer
     private readonly List<(int Index, KsSensorContactState Contact)> _plotFixes = new();
 
     private NetEntity? _selected;
+
+    /// <summary>Resolved on push/selection; FrameUpdate reads it every frame.</summary>
+    private KsSensorContactState? _selectedContact;
+
+    /// <summary>Push-constant, gates CEASE.</summary>
+    private bool _anyFocused;
 
     /// <summary>The posture the hosting window's ESM tab button should flash; null with no RWR receiver or nothing illuminating.</summary>
     public KsPosturePrototype? AlertPosture { get; private set; }
@@ -196,6 +223,9 @@ public sealed partial class KsEsmScreen : BoxContainer
         if (_selected != null && _roster.All(t => t.Contact.Grid != _selected))
             _selected = null;
 
+        _selectedContact = SelectedContact();
+        _anyFocused = _roster.Any(t => t.Contact.Focused);
+
         RwrChip.Visible = !_hasRwr;
         ChannelList.Visible = _hasRwr;
         PostureGrid.Visible = _hasRwr;
@@ -227,8 +257,9 @@ public sealed partial class KsEsmScreen : BoxContainer
     {
         _selected = grid;
         Plot.Selected = grid;
+        _selectedContact = SelectedContact();
         // A fresh selection starts its counter at the pushed value, no easing-in.
-        _analysisShown = SelectedContact()?.AnalysisProgress ?? 0f;
+        _analysisShown = _selectedContact?.AnalysisProgress ?? 0f;
         RebuildRoster();
         RefreshSelected();
     }
@@ -316,14 +347,27 @@ public sealed partial class KsEsmScreen : BoxContainer
             return;
         }
 
+        var own = OwnWorldPosition();
+        var rotation = OwnRotation();
+
         foreach (var (contact, channel) in _roster)
         {
+            var chip = channel != null
+                ? Loc.GetString(channel.Label)
+                : ClassLabel(contact);
+
+            // LIVE is the EMISSION, not the hull track: an ally's relay can keep the
+            // track alive after the emitter went silent. Dimming stays on track liveness.
+            var status = contact.EmitterLive ? _liveText : _memoryText;
+
+            var digits = RelativeBearingDigits(contact, own, rotation);
+
             var row = new Button
             {
                 StyleClasses = { KsInstrumentSheetlet.StyleClassAction },
                 HorizontalExpand = true,
                 Margin = new Thickness(0, 0, 0, 2),
-                Text = RosterRowText(contact, channel),
+                Text = RosterRowText(contact, chip, digits, status),
             };
             KsInstrumentSheetlet.MakeInstrument(row);
 
@@ -332,7 +376,15 @@ public sealed partial class KsEsmScreen : BoxContainer
             var grid = contact.Grid;
             row.OnPressed += _ => Select(grid);
             RosterList.AddChild(row);
-            _rosterRows.Add((row, contact, channel));
+            _rosterRows.Add(new RosterRow
+            {
+                Button = row,
+                Contact = contact,
+                Channel = channel,
+                Chip = chip,
+                Status = status,
+                LastDigits = digits,
+            });
         }
     }
 
@@ -341,27 +393,13 @@ public sealed partial class KsEsmScreen : BoxContainer
     ///         threat under an RWR fit, else the heard classification), the RELATIVE
     ///         bearing matching the BOW-up plot, and the LIVE/MEM emission status.
     /// </summary>
-    private string RosterRowText(KsSensorContactState contact, KsThreatChannelPrototype? channel)
+    private string RosterRowText(KsSensorContactState contact, string chip, string? digits, string status)
     {
-        return RosterRowText(contact, channel, OwnWorldPosition(), OwnRotation());
-    }
+        var bearing = digits != null
+            ? Loc.GetString("ks-rwr-threat-bearing", ("deg", digits))
+            : _rwrNoValueText;
 
-    private string RosterRowText(KsSensorContactState contact, KsThreatChannelPrototype? channel, Vector2? own, Angle rotation)
-    {
-        var chip = channel != null
-            ? Loc.GetString(channel.Label)
-            : ClassLabel(contact);
-
-        // LIVE means the EMISSION, not the hull track: an ally's relay can keep the
-        // track alive long after the emitter went silent, and a row claiming LIVE
-        // while the log says silent reads as a haunted receiver. The chip, log,
-        // threat stack and posture all key on EmitterLive already; row dimming
-        // stays on track liveness.
-        var status = contact.EmitterLive
-            ? Loc.GetString("ks-elint-roster-live")
-            : Loc.GetString("ks-elint-roster-memory");
-
-        return $"{contact.Designation,-6} {chip,-7} {RelativeBearingLabel(contact, own, rotation),4} {status,4}";
+        return $"{contact.Designation,-6} {chip,-7} {bearing,4} {status,4}";
     }
 
     /// <summary>
@@ -390,22 +428,11 @@ public sealed partial class KsEsmScreen : BoxContainer
     }
 
     /// <summary>
-    ///     The RELATIVE bearing shown on a roster row (000 = bow, matching the
-    ///         BOW-up plot): the strobe's direction for a bearing track, the
-    ///         direction toward the known position for a fix, a placeholder for a
-    ///         roster-only relay track.
+    ///     Relative bearing (000 = bow) as bare digits, null for a roster-only relay
+    ///         track: pure math, so the frame pass can compare before any Fluent
+    ///         lookup. Own position/rotation arrive pre-fetched, once per list.
     /// </summary>
-    private string RelativeBearingLabel(KsSensorContactState contact)
-    {
-        return RelativeBearingLabel(contact, OwnWorldPosition(), OwnRotation());
-    }
-
-    /// <summary>
-    ///     As <see cref="RelativeBearingLabel(KsSensorContactState)"/> with the own
-    ///         position/rotation pre-fetched: the per-frame roster refresh reads
-    ///         them once for the whole list instead of per row.
-    /// </summary>
-    private string RelativeBearingLabel(KsSensorContactState contact, Vector2? own, Angle rotation)
+    private string? RelativeBearingDigits(KsSensorContactState contact, Vector2? own, Angle rotation)
     {
         Angle? dir = null;
 
@@ -421,10 +448,9 @@ public sealed partial class KsEsmScreen : BoxContainer
         }
 
         if (dir is not { } d)
-            return Loc.GetString("ks-rwr-field-no-value");
+            return null;
 
-        var deg = KsBearingPlot.CompassDegrees(d - rotation);
-        return Loc.GetString("ks-rwr-threat-bearing", ("deg", $"{deg:000}"));
+        return $"{KsBearingPlot.CompassDegrees(d - rotation):000}";
     }
 
     /// <summary>
@@ -450,7 +476,7 @@ public sealed partial class KsEsmScreen : BoxContainer
 
         return deg is { } d
             ? Loc.GetString("ks-sensor-contact-bearing", ("deg", $"{d:000}"))
-            : Loc.GetString("ks-elint-field-no-value");
+            : _elintNoValueText;
     }
 
     private void RebuildChannels()
@@ -493,13 +519,13 @@ public sealed partial class KsEsmScreen : BoxContainer
 
         var posture = KsThreatEval.PickPosture(_postures, threatCount, litPriority);
 
-        PostureValue.Text = posture != null ? Loc.GetString(posture.Label) : Loc.GetString("ks-rwr-field-no-value");
+        PostureValue.Text = posture != null ? Loc.GetString(posture.Label) : _rwrNoValueText;
         PostureValue.FontColorOverride = posture?.Color ?? palette.TextDim;
 
         var priorityChannel = _litChannelRows.Count > 0
             ? _litChannelRows.MaxBy(r => r.Channel.Priority).Channel
             : null;
-        PriorityValue.Text = priorityChannel != null ? Loc.GetString(priorityChannel.Label) : Loc.GetString("ks-rwr-field-no-value");
+        PriorityValue.Text = priorityChannel != null ? Loc.GetString(priorityChannel.Label) : _rwrNoValueText;
         PriorityValue.FontColorOverride = priorityChannel?.Color ?? palette.TextDim;
 
         // The tab-alert only escalates: an unthreatened posture (the always-met
@@ -525,49 +551,53 @@ public sealed partial class KsEsmScreen : BoxContainer
         return Vector2.Transform(body.LocalCenter, worldMatrix);
     }
 
+    /// <summary>The Text setter invalidates layout even for identical text, and this runs per frame.</summary>
+    private static void SetText(Label label, string? text)
+    {
+        if (label.Text != text)
+            label.Text = text;
+    }
+
     private void RefreshSelected()
     {
         if (!_hasElint)
             return;
 
         var palette = Palette;
-        var contact = SelectedContact();
+        var contact = _selectedContact;
 
         FocusButton.Disabled = contact == null || contact.Focused;
-        CeaseButton.Disabled = _roster.All(t => !t.Contact.Focused);
+        CeaseButton.Disabled = !_anyFocused;
 
         if (contact == null)
         {
-            var none = Loc.GetString("ks-elint-selected-none");
-            DesigValue.Text = none;
-            ClassValue.Text = "";
-            BandValue.Text = "";
-            PatternValue.Text = "";
-            SignalValue.Text = "";
-            BearingValue.Text = "";
-            LastValue.Text = "";
-            AnalysisValue.Text = "";
+            SetText(DesigValue, _selectedNoneText);
+            SetText(ClassValue, "");
+            SetText(BandValue, "");
+            SetText(PatternValue, "");
+            SetText(SignalValue, "");
+            SetText(BearingValue, "");
+            SetText(LastValue, "");
+            SetText(AnalysisValue, "");
             DesigValue.FontColorOverride = palette.TextDim;
             return;
         }
 
-        var noValue = Loc.GetString("ks-elint-field-no-value");
-
-        DesigValue.Text = contact.Name != null ? $"{contact.Designation} {contact.Name}" : contact.Designation;
+        SetText(DesigValue, contact.Name != null ? $"{contact.Designation} {contact.Name}" : contact.Designation);
         DesigValue.FontColorOverride = contact.Live ? palette.Text : palette.TextDim;
-        ClassValue.Text = ClassLabel(contact);
-        BandValue.Text = contact.Band is { } band && _protoManager.TryIndex(band, out var bandProto)
+        SetText(ClassValue, ClassLabel(contact));
+        SetText(BandValue, contact.Band is { } band && _protoManager.TryIndex(band, out var bandProto)
             ? Loc.GetString(bandProto.Label)
-            : Loc.GetString("ks-emitter-band-unknown");
-        PatternValue.Text = contact.Pattern switch
+            : Loc.GetString("ks-emitter-band-unknown"));
+        SetText(PatternValue, contact.Pattern switch
         {
             KsEmissionPattern.Continuous => Loc.GetString("ks-emitter-pattern-continuous"),
             _ => Loc.GetString("ks-emitter-pattern-unknown"),
-        };
+        });
 
-        SignalValue.Text = contact.SignalStrength is { } signal
+        SetText(SignalValue, contact.SignalStrength is { } signal
             ? Loc.GetString("ks-elint-field-signal-value", ("percent", (int) MathF.Round(signal * 100f)))
-            : noValue;
+            : _elintNoValueText);
 
         // A fixed contact outranks any bearing-quality wording: closing in and
         // earning a position must read as the upgrade it is, not as STABLE
@@ -580,19 +610,19 @@ public sealed partial class KsEsmScreen : BoxContainer
                 KsBearingStability.Drifting => Loc.GetString("ks-sensor-stability-drifting"),
                 _ => Loc.GetString("ks-sensor-stability-unknown"),
             };
-        BearingValue.Text = Loc.GetString("ks-elint-field-bearing-value",
+        SetText(BearingValue, Loc.GetString("ks-elint-field-bearing-value",
             ("deg", CompassBearingLabel(contact)),
-            ("stability", stability));
+            ("stability", stability)));
 
         var age = (_timing.CurTime - contact.LastSeen).TotalSeconds;
-        LastValue.Text = age < 1.5
+        SetText(LastValue, age < 1.5
             ? Loc.GetString("ks-elint-field-last-seen-now")
-            : Loc.GetString("ks-elint-field-last-seen-value", ("seconds", (int) age));
+            : Loc.GetString("ks-elint-field-last-seen-value", ("seconds", (int) age)));
         LastValue.FontColorOverride = contact.Live ? palette.Good : palette.TextDim;
 
-        AnalysisValue.Text = contact.Focused
+        SetText(AnalysisValue, contact.Focused
             ? Loc.GetString("ks-elint-field-analysis-value", ("percent", (int) MathF.Round(_analysisShown * 100f)))
-            : Loc.GetString("ks-elint-field-analysis-idle");
+            : Loc.GetString("ks-elint-field-analysis-idle"));
         AnalysisValue.FontColorOverride = contact.Focused && contact.AnalysisProgress >= 1f ? palette.Good : palette.Text;
     }
 
@@ -618,24 +648,24 @@ public sealed partial class KsEsmScreen : BoxContainer
         var reduced = _cfg.GetCVar(KsCCVars.HudReducedMotion);
         var now = _timing.CurTime.TotalSeconds;
 
-        // Per-channel threat strobe on live threats (higher priority = faster),
-        // riding on top of the selection dim; the relative bearings re-read every
-        // frame so they turn with the hull like the plot does. The Text setter
-        // invalidates layout, so only a changed line is written back (the roster
-        // can hold every emitter ever designated, memory never expires).
+        // Threat strobe rides on the selection dim; bearings re-read per frame so
+        // rows turn with the hull.
         var rosterOwn = OwnWorldPosition();
         var rosterRotation = OwnRotation();
-        foreach (var (row, contact, channel) in _rosterRows)
+        foreach (var row in _rosterRows)
         {
-            var text = RosterRowText(contact, channel, rosterOwn, rosterRotation);
-            if (row.Text != text)
-                row.Text = text;
+            var digits = RelativeBearingDigits(row.Contact, rosterOwn, rosterRotation);
+            if (digits != row.LastDigits)
+            {
+                row.LastDigits = digits;
+                row.Button.Text = RosterRowText(row.Contact, row.Chip, digits, row.Status);
+            }
 
-            var tint = contact.Grid == _selected ? 1f : 0.75f;
-            var v = _hasRwr && contact.EmitterLive
-                ? Hud.ThreatStrobe.Eval(now, reduced, channel?.BlinkHz ?? 1f)
+            var tint = row.Contact.Grid == _selected ? 1f : 0.75f;
+            var v = _hasRwr && row.Contact.EmitterLive
+                ? Hud.ThreatStrobe.Eval(now, reduced, row.Channel?.BlinkHz ?? 1f)
                 : 1f;
-            row.Modulate = new Color(tint * v, tint * v, tint * v);
+            row.Button.Modulate = new Color(tint * v, tint * v, tint * v);
         }
 
         foreach (var (row, channel) in _litChannelRows)
@@ -654,8 +684,8 @@ public sealed partial class KsEsmScreen : BoxContainer
 
         // Ease the displayed ANALYSIS counter toward the pushed progress;
         // reduce-motion snaps it.
-        var target = SelectedContact()?.AnalysisProgress ?? 0f;
-        _analysisShown = _cfg.GetCVar(KsCCVars.HudReducedMotion)
+        var target = _selectedContact?.AnalysisProgress ?? 0f;
+        _analysisShown = reduced
             ? target
             : _analysisShown + (target - _analysisShown) * Math.Clamp(args.DeltaSeconds * 6f, 0f, 1f);
         if (MathF.Abs(target - _analysisShown) < 0.005f)

@@ -116,6 +116,7 @@ public sealed partial class KsSensorConsoleSystem : EntitySystem
             ElintDeaf = collectEv.ElintDeaf,
             HasRwr = collectEv.HasRwr,
             EmissionLog = collectEv.EmissionLog,
+            LifeSigns = collectEv.LifeSigns,
         };
     }
 }

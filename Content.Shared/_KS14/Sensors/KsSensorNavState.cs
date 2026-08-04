@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.Sensors;
@@ -75,7 +76,21 @@ public sealed class KsSensorNavState
     ///         leak emitters the grid has not actually heard. Null when the log is empty.
     /// </summary>
     public List<KsEmissionLogEntry>? EmissionLog;
+
+    /// <summary>
+    ///     Life-sign blips from the grid's own IRSTs, strictly sweep-fresh: a track
+    ///         going ghost drops its crew dots the same push. Null when none.
+    /// </summary>
+    public List<KsLifeSignState>? LifeSigns;
 }
+
+/// <summary>
+///     One life-sign blip. <see cref="Grid"/> set: a centre-of-mass-relative offset
+///         in that contact's local frame (rides the dead-reckoned hull); null: a
+///         world position. Never carries identity.
+/// </summary>
+[Serializable, NetSerializable]
+public readonly record struct KsLifeSignState(NetEntity? Grid, Vector2 Position);
 
 [Serializable, NetSerializable]
 public enum KsEmissionLogKind : byte

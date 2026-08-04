@@ -126,6 +126,7 @@ jobs:
           NUnit.MapWarningTo=Failed `
           NUnit.TestOutputXml= `
           NUnit.NumberOfTestWorkers=1 `
+          NUnit.AssemblySelectLimit=100000 `
           "NUnit.Where=${{ matrix.where }}"
 
     # KS14: Removed test result archival
