@@ -13,6 +13,15 @@ public sealed partial class BatteryShieldingSystem : SharedBatteryShieldingSyste
         SubscribeLocalEvent<BatteryShieldingComponent, AfterAutoHandleStateEvent>(OnAfterAutoHandleState);
     }
 
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        var eqe = EntityQueryEnumerator<ActiveBatteryShieldingComponent, BatteryShieldingComponent>();
+        while (eqe.MoveNext(out var uid, out _, out var batteryShieldingComponent))
+            UpdateUi((uid, batteryShieldingComponent));
+    }
+
     private void OnAfterAutoHandleState(Entity<BatteryShieldingComponent> ent, ref AfterAutoHandleStateEvent args)
     {
         UpdateUi(ent);
