@@ -2,8 +2,8 @@ using Content.Shared._KS14.Atmos;
 using Content.Shared._KS14.Sparks;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Atmos.Components;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Database;
-using Content.Shared.Destructible;
 using Content.Shared.Emag.Systems;
 using Content.Shared.Popups;
 using Content.Shared.Power.EntitySystems;
@@ -20,9 +20,9 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
     [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
     [Dependency] private SharedSparksSystem _sparksSystem = default!;
-    [Dependency] private SharedDestructibleSystem _destructibleSystem = default!;
     [Dependency] private SharedAudioSystem _audioSystem = default!;
     [Dependency] private EmagSystem _emagSystem = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
 
     public override void Initialize()
     {
@@ -46,9 +46,12 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
             if (_gameTiming.CurTime < btfoingComponent.BtfoTime)
                 continue;
 
+            btfoingComponent.BtfoTime = TimeSpan.MaxValue;
+            Dirty(uid, btfoingComponent);
+
+            // TODO LCDC: fix this being spammed by prediction(?)
             _audioSystem.PlayPredicted(shieldingComponent.EmagImplosionSound, Transform(uid).Coordinates, user: btfoingComponent.UserUid);
-            _destructibleSystem.DestroyEntity(uid);
-            PredictedQueueDel(uid);
+            _damageableSystem.ChangeDamage(uid, shieldingComponent.EmagImplosionDamage, ignoreResistances: true, origin: btfoingComponent.UserUid);
         }
     }
 
@@ -139,6 +142,8 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
             if (HasComp<BtfoingBatteryShieldingComponent>(entity))
                 return;
 
+            _adminLogManager.Add(LogType.Explosion, $"{ToPrettyString(entity.Owner)} is exploding after being emagged and having its battery shielding turned on");
+
             if (entity.Comp.EmagMalfunctionPopupLoc is { } malfPopupLoc)
                 _popupSystem.PopupPredicted(Loc.GetString(malfPopupLoc), entity.Owner, recipient: userUid, type: PopupType.LargeCaution);
 
@@ -147,7 +152,6 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
             var btfoingComponent = AddComp<BtfoingBatteryShieldingComponent>(entity);
             btfoingComponent.BtfoTime = _gameTiming.CurTime + entity.Comp.EmagMalfunctionDuration;
             btfoingComponent.UserUid = userUid;
-
             return;
         }
 

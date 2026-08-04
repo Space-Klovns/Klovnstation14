@@ -1,3 +1,4 @@
+using Content.Shared.Damage;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
@@ -59,6 +60,9 @@ public sealed partial class BatteryShieldingComponent : Component
         "/Audio/Effects/singularity_collapse.ogg",
         AudioParams.Default
     );
+
+    [DataField]
+    public DamageSpecifier EmagImplosionDamage = new();
 
     /// <summary>
     ///     Popup for when the shield is under load.

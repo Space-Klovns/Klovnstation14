@@ -75,6 +75,9 @@
       failPopupLoc: gas-canister-shielding-popup-fail
       emagMalfunctionPopupLoc: gas-canister-shielding-popup-emag-malfunction
       emagMalfunctionDuration: 3s
+      emagImplosionDamage:
+        types:
+          Blunt: 350 # trigger destruction behaviour
       uiKey: enum.GasCanisterUiKey.Key
     - type: BatterySelfRecharger
       autoRechargeRate: 1000
