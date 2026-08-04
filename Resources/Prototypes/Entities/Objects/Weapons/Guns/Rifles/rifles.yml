@@ -12,7 +12,7 @@
     unwieldOnUse: false
   - type: GunWieldBonus
     minAngle: -180
-    maxAngle: -140
+    maxAngle: -168
   - type: Sprite
   - type: Item
     size: Huge

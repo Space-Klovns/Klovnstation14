@@ -31,6 +31,7 @@ namespace Content.Client.Atmos.UI
             _window.ReleaseValveOpenButtonPressed += OnReleaseValveOpenPressed;
             _window.ReleasePressureSet += OnReleasePressureSet;
             _window.TankEjectButtonPressed += OnTankEjectPressed;
+            _window.ShieldToggleButtonPressed += OnToggleShieldingPressed; // KS14
         }
 
         private void OnTankEjectPressed()
