@@ -1,4 +1,5 @@
 using Content.Shared._KS14.Sensors.Prototypes;
+using Content.Shared.Guidebook;
 using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.Sensors;
@@ -36,6 +37,7 @@ public sealed partial class KsDatalinkTransmitterComponent : Component
     /// <summary>Hard range cap at 100% power. Ignored entirely when <see cref="UnlimitedRange"/> is set.</summary>
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
+    [GuidebookData]
     public float MaxRange = 768f;
 
     /// <summary>
@@ -91,6 +93,7 @@ public sealed partial class KsDatalinkTransmitterComponent : Component
     ///         loop/echo insurance for relay chains.
     /// </summary>
     [DataField]
+    [GuidebookData]
     public int HopLimit = 4;
 
     /// <summary>

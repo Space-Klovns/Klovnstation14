@@ -1,4 +1,5 @@
 using Content.Shared._KS14.Sensors.Prototypes;
+using Content.Shared.Guidebook;
 using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.Sensors;
@@ -35,6 +36,7 @@ public sealed partial class KsJammerComponent : Component
     /// </summary>
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
+    [GuidebookData]
     public float JammingPower = 192f;
 
     /// <summary>
@@ -43,6 +45,7 @@ public sealed partial class KsJammerComponent : Component
     /// </summary>
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
+    [GuidebookData]
     public float HalfAngle = 45f;
 
     /// <summary>

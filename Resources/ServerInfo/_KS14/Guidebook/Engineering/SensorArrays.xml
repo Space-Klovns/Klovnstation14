@@ -1,0 +1,82 @@
+<Document>
+  # Sensor Arrays
+  Arrays are ordinary machines. Print the board at a circuit imprinter, build a machine frame, feed it the parts it asks for and slot the board in.
+
+  <Box>
+    <GuideEntityEmbed Entity="CircuitImprinter"/>
+    <GuideEntityEmbed Entity="SheetSteel" Caption=""/>
+    <GuideEntityEmbed Entity="SheetGlass" Caption=""/>
+    <GuideEntityEmbed Entity="MicroManipulatorStockPart" Caption=""/>
+  </Box>
+
+  ## Mounting and power
+  An array only works while it is anchored and powered, and most of them are hungry. Wire them properly, or the first time you switch everything on you will brown out the ship.
+
+  Passive arrays can sit anywhere inside the hull. The radar, the warning receiver and the jammer need a real hull aperture, which means the tile they are anchored on must have at least one open, tile-less neighbour.
+
+  Examine an array to find out what it thinks of its situation. It will tell you whether it is tracking normally, switched off, unpowered, or unable to see space.
+
+  ## Optical search array
+  <Box>
+    <GuideEntityEmbed Entity="KsMachineVisualSearch"/>
+  </Box>
+  Short ranged and completely honest. It looks at space and picks out hulls, out to [color=orange][protodata="KsMachineVisualSearch" comp="KsSensor" member="MaxRange" format="N0"/] metres[/color].
+
+  Because it looks, it can be blocked. Your own hull, another ship or a chunk of terrain in the way all cast a shadow, and the console draws its coverage so you can see the gaps.
+
+  It is the only array that reads a ship's name, and it hands you SIZE, MASS and TOP SPEED. If you build one array, build this one.
+
+  ## IRST array
+  <Box>
+    <GuideEntityEmbed Entity="KsMachineIrst"/>
+  </Box>
+  Infrared search and track. It hunts the heat bleeding off a hull, and it reaches [color=orange][protodata="KsMachineIrst" comp="KsSensor" member="MaxRange" format="N0"/] metres[/color], far past the naked eye.
+
+  What it reads is a ship's SIGNATURE, which comes from exposed exterior hull. A big ship with a lot of outside walls glows. A small one, or one built to run cold, gets close before anything shows up.
+
+  Like the optical array it is passive, so nobody can tell you are using it. It is also blocked by anything solid in the way.
+
+  ## Radar array
+  <Box>
+    <GuideEntityEmbed Entity="KsMachineRadar"/>
+  </Box>
+  Active radar. It floods space with pulses and reads the echoes, out to [color=orange][protodata="KsMachineRadar" comp="KsSensor" member="MaxRange" format="N0"/] metres[/color], in the dark and through the cold. Nothing else you can build sees that far.
+
+  The catch is that a radar is a torch in a dark room. Its beam carries [color=orange][protodata="KsMachineRadar" comp="KsRadar" member="ConeRangeFactor" format="0.#"/] times[/color] as far as it can actually resolve, and every ELINT array inside that reach hears you. A jammer can blind it, too.
+
+  Radar is therefore a switch, not a fitting. Turn it on from the shuttle console when you need to see, and turn it off when you would rather not be seen. It reads RCS, which is how well a hull reflects, and is unrelated to how hot the hull runs.
+
+  ## ELINT array
+  <Box>
+    <GuideEntityEmbed Entity="KsMachineElint"/>
+  </Box>
+  Electronic intelligence. It emits nothing whatsoever. It simply listens for other people's radars and jammers and tells you which direction they are coming from.
+
+  It gives you a bearing, not a position, and it reads back the RADAR RANGE of what it hears, so you learn how far the other ship can see before it gets to use that against you.
+
+  There are two ways to turn a bearing into a real fix. Have an ally on your datalink listen to the same emitter from a different angle and let the bearings cross, or select the emitter on the console and run a signal analysis, which takes [color=orange][protodata="KsMachineElint" comp="KsElint" member="AnalysisTime" format="N0"/] seconds[/color] of uninterrupted listening and peels out the emitter's size, mass and top speed along the way.
+
+  One warning: an ELINT array goes deaf while your own ship is emitting. If your radar or your jammer is on, your ELINT is useless.
+
+  ## Radar warning receiver
+  <Box>
+    <GuideEntityEmbed Entity="KsMachineRwr"/>
+  </Box>
+  The cheap one, and the one nobody should fly without. It does not search for anything. It only reports emissions that are actually falling on your hull: a radar beam painting you, a jam wedge washing over you.
+
+  Its bearings are crude and it will never triangulate. What it gives you is the one thing that matters in the moment, which is that somebody out there is pointing something at you, and roughly where they are standing.
+
+  Unlike the ELINT array it keeps warning you while your own radar is running.
+
+  ## Jammer array
+  <Box>
+    <GuideEntityEmbed Entity="KsMachineJammer"/>
+  </Box>
+  Not a sensor. It detects nothing and produces no contacts. It floods a wedge in front of itself with noise and blinds the radar of every ship caught in the wedge.
+
+  The wedge points wherever the machine is facing, so rotate the machine to aim it. It covers [color=orange][protodata="KsMachineJammer" comp="KsJammer" member="HalfAngle" format="N0"/] degrees[/color] either side of that facing, reaches [color=orange][protodata="KsMachineJammer" comp="KsJammer" member="JammingPower" format="N0"/] metres[/color], and does not care about walls or terrain. It has no rear coverage at all, which is the only reason it does not blind your own fleet outright.
+
+  It is not a magic shield. A jammed ship that closes to within [color=orange][protodata="KsMachineRadar" comp="KsRadar" member="BurnThroughFactor" format="P0"/][/color] of your reach burns through the noise and sees normally again. It can also just borrow an unjammed ally's picture over the datalink. And while it does not show up as a contact, every ELINT array in the sector hears it plainly and knows exactly what it is listening to.
+
+  It also blinds friendly radars, and it is by far the biggest power draw on this list. Aim it, and switch it off when you are done.
+</Document>
