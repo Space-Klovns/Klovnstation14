@@ -14,11 +14,11 @@ namespace Content.Client._KS14.LobbyTransition;
 public sealed partial class LobbyTransitionOverlay : Overlay
 {
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IClyde _clyde = default!;
 
     public override OverlaySpace Space => OverlaySpace.ScreenSpace;
     public Texture? ArtTexture = null;
     public TimeSpan TransitionFinishTime = TimeSpan.MinValue;
-    public float UiScale = 1f;
 
     private TimeSpan _curTime;
 
@@ -33,10 +33,11 @@ public sealed partial class LobbyTransitionOverlay : Overlay
         var modulate = new Color(1f, 1f, 1f, a: alpha);
 
         // draw according to StretchMode.KeepAspectCovered
-        var pixelSize = (Vector2i)(args.Viewport.Size * UiScale);
+        var pixelSize = _clyde.EnumerateMonitors();
         var pixelSizeBox = new UIBox2i(Vector2i.Zero, pixelSize);
 
-        var subRegion = CalcClipSubRegion(ArtTexture!.Size, GetDrawDimensions(pixelSize), pixelSizeBox);
+        var dima = GetDrawDimensions(pixelSize);
+        var subRegion = CalcClipSubRegion(ArtTexture!.Size, dima, pixelSizeBox);
         args.ScreenHandle.DrawTextureRectRegion(ArtTexture!, pixelSizeBox, subRegion, modulate: modulate);
     }
 

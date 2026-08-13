@@ -32,7 +32,6 @@ public sealed partial class LobbyTransitionSystem : EntitySystem
     {
         base.Initialize();
 
-        _configurationManager.OnValueChanged(CVars.DisplayUIScale, OnUiScaleChanged, invokeImmediately: true);
         _stateManager.OnStateChanged += OnStateChanged;
         _systemCollectionHookManager.HookAction(OnHook);
     }
@@ -45,14 +44,6 @@ public sealed partial class LobbyTransitionSystem : EntitySystem
             return;
 
         _overlay.ArtTexture = null;
-    }
-
-    private void OnUiScaleChanged(float newUiScale)
-    {
-        if (_overlay is not { })
-            return;
-
-        _overlay.UiScale = newUiScale;
     }
 
     private void OnStateChanged(StateChangedEventArgs args)
