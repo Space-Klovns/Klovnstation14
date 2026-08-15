@@ -17,7 +17,7 @@ internal sealed partial class KsEntryPoint : GameClient
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IResourceManager _resourceManager = default!;
     [Dependency] private IBaseClient _baseClient = default!;
-    [Dependency] private ISawmill _sawmill = default!;
+    [Dependency] private ILogManager _logManager = default!;
     [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;
     [Dependency] private KsAdminMusicManager _adminMusicManager = default!;
 
@@ -41,7 +41,7 @@ internal sealed partial class KsEntryPoint : GameClient
     // LCDC FUTURE: Remove this if configpresets gets to client on upstream
     private void LoadConfigPresets()
     {
-        // KS14: Changed logic to always include `KS14/ks14_base`
+        var sawmill = _logManager.GetSawmill("configpreset");
         var presets = _configurationManager.GetCVar(CCVars.ConfigPresets).Split(',').ToList();
         presets.Add("KS14/ks14_base");
 
@@ -53,12 +53,12 @@ internal sealed partial class KsEntryPoint : GameClient
             var path = $"{ConfigPresetsDir}{preset}.toml";
             if (!_resourceManager.TryContentFileRead(path, out var file))
             {
-                _sawmill.Error("Unable to load config preset {Preset}!", path);
+                sawmill.Error("Unable to load config preset {Preset}!", path);
                 continue;
             }
 
             _configurationManager.LoadDefaultsFromTomlStream(file);
-            _sawmill.Info("Loaded config preset: {Preset}", path);
+            sawmill.Info("Loaded config preset: {Preset}", path);
         }
     }
 
