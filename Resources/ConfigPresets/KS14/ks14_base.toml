@@ -34,7 +34,5 @@ penalty_seconds = 180
 kill_crit = true
 
 [control]
-# let storage ui be moved
-static_storage_ui = false
 # up to 2 storage uis open at once
 storage_limit = 2
