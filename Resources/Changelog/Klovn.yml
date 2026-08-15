@@ -1739,3 +1739,9 @@ Entries:
       message: Made the spread on lecter a bit less abhorrent.
   id: 180
   time: '2026-08-15T21:12:03.0000000+00:00'
+- author: d
+  changes:
+    - type: Tweak
+      message: Stamina damage now recovers instantly after fullstun (again)!
+  id: 181
+  time: '2026-08-15T22:24:45.0000000+00:00'
