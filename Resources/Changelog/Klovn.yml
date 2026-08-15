@@ -1643,3 +1643,105 @@ Entries:
       message: Fixed insane-level grammar error in the description of rotated pallets.
   id: 170
   time: '2026-07-26T12:27:53.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added backblast to rocket launchers. Don't stand behind someone with an
+        RPG in their hands.
+    - type: Add
+      message: Added simple muzzle effects.
+    - type: Fix
+      message: Fixes NVGs having broken light amplification.
+  id: 171
+  time: '2026-08-01T12:19:06.0000000+00:00'
+- author: teecoding
+  changes:
+    - type: Add
+      message: >-
+        Ships can now mount sensor arrays: visual search, IRST, radar, ELINT,
+        RWR, jammers and datalinks. Detection is no longer free - emitting
+        reveals you.
+    - type: Add
+      message: >-
+        A new sensor console with RADAR, MAP, ESM and DOCK screens: fog-of-war
+        contacts, bearing plots, threat warnings, signal analysis and a
+        datalinked sector chart.
+  id: 172
+  time: '2026-08-01T13:36:14.0000000+00:00'
+- author: teecoding
+  changes:
+    - type: Add
+      message: >-
+        In-character languages. Vox, dwarves, clowns and syndicate agents can
+        speak languages others hear as gibberish.
+    - type: Add
+      message: >-
+        Language menu on L to switch your spoken language, plus language traits
+        in character creation.
+    - type: Tweak
+      message: >-
+        Parrots and voice triggers record speech in the language it was spoken
+        in.
+  id: 173
+  time: '2026-08-01T13:41:55.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Backblast from rocket launchers is now properly obstructed by objects.
+  id: 174
+  time: '2026-08-01T15:22:27.0000000+00:00'
+- author: teecoding
+  changes:
+    - type: Add
+      message: >-
+        IRST sensors now show life-sign blips for live creatures aboard tracked
+        hulls and adrift in space.
+    - type: Fix
+      message: Fixed FPS drops while using the shuttle sensor console.
+    - type: Fix
+      message: Radar interest markers now show on maps far from the origin.
+  id: 175
+  time: '2026-08-04T13:54:06.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added shielding to canisters: this delays the explosion of canisters,
+        while depleting an internal (self-recharging) battery.
+    - type: Fix
+      message: Fixed some mispredicts involving sparks.
+  id: 176
+  time: '2026-08-04T20:49:06.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: Syndies Aren't The Only Things Getting FF'd
+  id: 177
+  time: '2026-08-15T18:45:24.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Lobby art now fades-out when spawning instead of abruptly disappearing.
+  id: 178
+  time: '2026-08-15T20:24:32.0000000+00:00'
+- author: teecoding
+  changes:
+    - type: Add
+      message: >-
+        Added guidebook entries for sensors, sensor arrays, datalink and the
+        shuttle console
+  id: 179
+  time: '2026-08-15T20:26:08.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: Made the spread on lecter a bit less abhorrent.
+  id: 180
+  time: '2026-08-15T21:12:03.0000000+00:00'
+- author: d
+  changes:
+    - type: Tweak
+      message: Stamina damage now recovers instantly after fullstun (again)!
+  id: 181
+  time: '2026-08-15T22:24:45.0000000+00:00'

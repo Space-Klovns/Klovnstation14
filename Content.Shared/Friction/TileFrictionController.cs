@@ -114,7 +114,15 @@ namespace Content.Shared.Friction
                      * Block movement shouldn't be added and removed frivolously so it should be reliable to use this
                      * as a check for brains and such which have input mover purely for ghosting behavior.
                      */
-                    DebugTools.Assert(!_moverQuery.HasComp(uid) || _blockMoverQuery.HasComp(uid),
+                    /*
+                     * KS14: Kinematic is a legal body type for an input mover, it's what A-ghosts use to
+                     * ignore physics, and SharedMoverController.HandleMobMovement's twin assert says so
+                     * explicitly. Such a ghost reaches here whenever anything stops it using mob movement
+                     * while it still carries velocity, most easily by sitting down at a shuttle console,
+                     * which cancels CanMove. Only Dynamic and Static input movers are actually a bug.
+                     */
+                    DebugTools.Assert(body.BodyType == BodyType.Kinematic // KS14
+                        || !_moverQuery.HasComp(uid) || _blockMoverQuery.HasComp(uid),
                         $"Input mover: {ToPrettyString(uid)} in TileFrictionController is not the correct BodyType, BodyType found: {body.BodyType}, expected: KinematicController.");
                     continue;
                 }

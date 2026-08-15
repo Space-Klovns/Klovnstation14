@@ -1,0 +1,190 @@
+# Client-side colour and animation theme for the sensor radar HUD. The client
+# indexes the "Default" prototype; add more only if a console is wired to pick a
+# different one.
+#
+# Colours accept hex ("#RRGGBB" or "#RRGGBBAA") or engine colour names.
+# A pulse is Base + Amplitude * sin(t * Speed): speed is blink rate, base its
+# mid-point brightness, amplitude its swing. Keep amplitude <= base to stay >= 0.
+- type: ksSensorHud
+  id: Default
+
+  # Contact + cone colour per sensor tier. Precedence when several sensors see one
+  # target follows the KsSensorType order (visual beats IRST beats radar ...).
+  contactColors:
+    VisualSearch: "#C0C0C0"
+    IRST: "#FF4040"
+    Radar: "#40C040"
+    Elint: "#FF9020"
+    Rwr: "#C0A060"
+    Jammer: "#C050F0"
+  fallback: "#FFC000"
+  ally: "#00FA9A"
+
+  # Memory ghost (a stale, no-longer-tracked contact): dimmed brightness + alpha.
+  dimFactor: 0.65
+  dimAlpha: 0.7
+
+  # Per-contact readout + hover tooltip. Secondary readout lines (coords/range,
+  # last-seen, resolved intel values) draw at readoutDetailAlpha; an always-on
+  # roster slot with no resolved value dims to readoutUnresolvedAlpha.
+  live: "#FFC000"
+  memory: "#8A8A8A"
+  readoutDetailAlpha: 0.8
+  readoutUnresolvedAlpha: 0.45
+  tooltipText: "#FFFFFF"
+  tooltipDetail: "#D3D3D3"
+  tooltipBackground: "#080C10EB"
+  tooltipBorder: "#4A5A6A"
+
+  # Map markers.
+  selfPosition: "#00FF00"
+  offGrid: "#00FFFF"
+  interest: "#B8860B"
+  lifeSign: "#FFB347"
+
+  # Coverage cone. Alphas are scaled by the emitting pulse (radar/jammer) or by 1
+  # for a passive fan (visual/IRST), which holds steady.
+  coneFillAlpha: 0.07
+  coneLineAlpha: 0.45
+  conePulse:
+    speed: 3.2
+    base: 0.55
+    amplitude: 0.45
+
+  # "JAMMED" alarm text.
+  jammedColor: "#FF3030"
+  jammedTextScale: 1.4
+  jammedPulse:
+    speed: 6.0
+    base: 0.6
+    amplitude: 0.4
+
+  # Per-screen instrument palettes for the KS console shell. Screens not listed
+  # fall back to a stock amber palette.
+  screens:
+    shell:
+      accent: "#C8A030"
+      accentDim: "#6A5518"
+      background: "#0C0A06"
+      text: "#E8C860"
+      textDim: "#8A7430"
+      warning: "#FF3030"
+      good: "#40FF80"
+    # The merged electronic-support tab keeps the ELINT survey amber; the threat
+    # side gets its heat from the per-channel colours, not the chrome.
+    esm:
+      accent: "#E8A030"
+      accentDim: "#7A5A1C"
+      background: "#0E0A04"
+      text: "#FFD860"
+      textDim: "#907830"
+      warning: "#FF3030"
+      good: "#40FF80"
+    # Contacts, cones, beacons and pinged objects keep their own colours; this
+    # palette only tints the chart backing, rings and side-panel chrome.
+    map:
+      accent: "#C8A030"
+      accentDim: "#6A5518"
+      background: "#0C0A06"
+      text: "#E8C860"
+      textDim: "#8A7430"
+      warning: "#FF3030"
+      good: "#40FF80"
+    # Phosphor-green, distinct from the amber survey instruments. Contact/cone tints
+    # stay per-tier from contactColors; this palette only themes the chrome (rings,
+    # panels, readouts) around them.
+    radar:
+      accent: "#38B048"
+      accentDim: "#1E5A28"
+      background: "#060A06"
+      text: "#70E080"
+      textDim: "#357040"
+      warning: "#FF3030"
+      good: "#40FF80"
+    # Cool blue-grey, visually apart from the sensor instruments.
+    dock:
+      accent: "#5090B8"
+      accentDim: "#2A4A60"
+      background: "#060A0C"
+      text: "#90C8E8"
+      textDim: "#3E6880"
+      warning: "#FF3030"
+      good: "#40FF80"
+
+  # Instrument-shell chrome: window bezel, title bar, tab strip (three brightness
+  # tiers, pressed > unpressed > disabled) and screen action buttons. Unlike the
+  # screen palettes above, these are baked into the global stylesheet at client
+  # start, so editing them needs a client restart, not just a prototype reload.
+  chrome:
+    windowBackground: "#0C0A06"
+    windowBorder: "#C8A030"
+    titleBackground: "#141008"
+    titleText: "#E8C860"
+    tabBackground: "#141008"
+    tabBorder: "#6A5518"
+    tabText: "#8A7430"
+    tabPressedBackground: "#2A2008"
+    tabPressedBorder: "#C8A030"
+    tabPressedText: "#FFD860"
+    tabDisabledBackground: "#0E0B05"
+    tabDisabledBorder: "#3A2E0C"
+    tabDisabledText: "#4A3A10"
+    actionBackground: "#100D06"
+    actionBorder: "#6A5518"
+    actionPressedBackground: "#241C08"
+    actionPressedBorder: "#C8A030"
+    actionDisabledBackground: "#0B0904"
+    actionDisabledBorder: "#352A0C"
+    actionDisabledText: "#4A3A10"
+
+  # Instrument animations. Each is individually toggleable (enabled: false), and
+  # the klovn.hud.reduced_motion client cvar freezes all of them at once.
+  # Pulse/Blink/Sweep speeds are in Hz; Decay speed is the falloff rate in 1/s.
+  wedgeShimmer:
+    curve: Pulse
+    speed: 0.7
+    base: 0.45
+    amplitude: 0.55
+  focusReticle:
+    curve: Sweep
+    speed: 0.25
+  logFlash:
+    curve: Decay
+    speed: 1.2
+    base: 1.0
+    amplitude: 1.5
+  tabFlicker:
+    curve: Blink
+    speed: 30
+    base: 0.4
+    amplitude: 0.6
+  tabFlickerDuration: 0.12
+  # RWR threat strobe: curve and brightness here, the RATE per channel
+  # (ksThreatChannel blinkHz, where higher-priority channels blink faster).
+  threatStrobe:
+    curve: Blink
+    speed: 1
+    base: 0.35
+    amplitude: 0.65
+  # Phosphor afterglow: a live contact's brightness against seconds since its last
+  # sweep refresh. Fresh paints flash to base+amplitude and settle back to base.
+  afterglow:
+    curve: Decay
+    speed: 1.6
+    base: 1.0
+    amplitude: 0.6
+  # Seconds a stale contact fades from live colour to the memory-ghost tone (0 = snap).
+  ghostFadeSeconds: 1.5
+  # Contact ping: the expanding ring on first detection / live-again. Seconds per
+  # ping (0 disables) and its starting alpha.
+  pingSeconds: 0.8
+  pingAlpha: 0.9
+  # Shell power-on: a blink riding a rising envelope over bootDuration seconds.
+  boot:
+    curve: Blink
+    speed: 24
+    base: 0.3
+    amplitude: 0.7
+  bootDuration: 0.7
+  # Range rings the RADAR plot spreads across its current display range.
+  rangeRingCount: 4

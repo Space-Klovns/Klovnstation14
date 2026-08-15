@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using Content.Server.Administration.Logs;
 using Content.Server.Administration.Managers;
+using Content.Server._KS14.Language; // KS14
 using Content.Server._KS14.Translation; // KS14
 using Content.Server.Chat.Managers;
 using Content.Server.GameTicking;
@@ -22,6 +23,7 @@ using Content.Shared.Players;
 using Content.Shared.Players.RateLimiting;
 using Content.Shared.Radio;
 using Content.Shared.Station.Components;
+using Content.Shared._KS14.Language; // KS14
 using Robust.Server.Player;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
@@ -59,6 +61,7 @@ public sealed partial class ChatSystem : SharedChatSystem
     [Dependency] private ReplacementAccentSystem _wordreplacement = default!;
     [Dependency] private ExamineSystemShared _examineSystem = default!;
     [Dependency] private KsTranslationSystem _translation = default!; // KS14
+    [Dependency] private KsLanguageSystem _ksLanguage = default!; // KS14
     [Dependency] private EntityQuery<GhostHearingComponent> _ghostHearingQuery = default!;
 
     private bool _loocEnabled = true;
@@ -132,9 +135,10 @@ public sealed partial class ChatSystem : SharedChatSystem
         ICommonSession? player = null,
         string? nameOverride = null,
         bool checkRadioPrefix = true,
-        bool ignoreActionBlocker = false)
+        bool ignoreActionBlocker = false,
+        ProtoId<KsLanguagePrototype>? ksLanguageOverride = null /* KS14 */)
     {
-        TrySendInGameICMessage(source, message, desiredType, hideChat ? ChatTransmitRange.HideChat : ChatTransmitRange.Normal, hideLog, shell, player, nameOverride, checkRadioPrefix, ignoreActionBlocker);
+        TrySendInGameICMessage(source, message, desiredType, hideChat ? ChatTransmitRange.HideChat : ChatTransmitRange.Normal, hideLog, shell, player, nameOverride, checkRadioPrefix, ignoreActionBlocker, ksLanguageOverride /* KS14 */);
     }
 
     /// <inheritdoc />
@@ -148,7 +152,8 @@ public sealed partial class ChatSystem : SharedChatSystem
         ICommonSession? player = null,
         string? nameOverride = null,
         bool checkRadioPrefix = true,
-        bool ignoreActionBlocker = false
+        bool ignoreActionBlocker = false,
+        ProtoId<KsLanguagePrototype>? ksLanguageOverride = null /* KS14 */
         )
     {
         if (HasComp<GhostComponent>(source))
@@ -225,7 +230,7 @@ public sealed partial class ChatSystem : SharedChatSystem
         {
             if (TryProcessRadioMessage(source, message, out var modMessage, out var channel))
             {
-                SendEntityWhisper(source, modMessage, range, channel, nameOverride, hideLog, ignoreActionBlocker);
+                SendEntityWhisper(source, modMessage, range, channel, nameOverride, hideLog, ignoreActionBlocker, ksLanguageOverride /* KS14 */);
                 return;
             }
         }
@@ -234,10 +239,10 @@ public sealed partial class ChatSystem : SharedChatSystem
         switch (desiredType)
         {
             case InGameICChatType.Speak:
-                SendEntitySpeak(source, message, range, nameOverride, hideLog, ignoreActionBlocker);
+                SendEntitySpeak(source, message, range, nameOverride, hideLog, ignoreActionBlocker, ksLanguageOverride /* KS14 */);
                 break;
             case InGameICChatType.Whisper:
-                SendEntityWhisper(source, message, range, null, nameOverride, hideLog, ignoreActionBlocker);
+                SendEntityWhisper(source, message, range, null, nameOverride, hideLog, ignoreActionBlocker, ksLanguageOverride /* KS14 */);
                 break;
             case InGameICChatType.Emote:
                 SendEntityEmote(source, message, range, nameOverride, hideLog: hideLog, ignoreActionBlocker: ignoreActionBlocker);
@@ -386,7 +391,8 @@ public sealed partial class ChatSystem : SharedChatSystem
         ChatTransmitRange range,
         string? nameOverride,
         bool hideLog = false,
-        bool ignoreActionBlocker = false
+        bool ignoreActionBlocker = false,
+        ProtoId<KsLanguagePrototype>? ksLanguageOverride = null /* KS14 */
         )
     {
         if (!_actionBlocker.CanSpeak(source) && !ignoreActionBlocker)
@@ -417,16 +423,45 @@ public sealed partial class ChatSystem : SharedChatSystem
 
         name = FormattedMessage.EscapeText(name);
 
-        var wrappedMessage = Loc.GetString(speech.Bold ? "chat-manager-entity-say-bold-wrap-message" : "chat-manager-entity-say-wrap-message",
-            ("entityName", name),
-            ("verb", Loc.GetString(_random.Pick(speech.SpeechVerbStrings))),
-            ("fontType", speech.FontId),
-            ("fontSize", speech.FontSize),
-            ("message", FormattedMessage.EscapeText(message)));
+        var verb = Loc.GetString(_random.Pick(speech.SpeechVerbStrings)); // KS14: hoisted, shared by both variants
+        var wrapKey = speech.Bold ? "chat-manager-entity-say-bold-wrap-message" : "chat-manager-entity-say-wrap-message"; // KS14
 
-        SendInVoiceRange(ChatChannel.Local, message, wrappedMessage, source, range);
+        // KS14 Start: one utterance context per message; SendInVoiceRange picks per recipient.
+        string wrappedMessage;
+        string? ksObfuscated = null;
+        string? ksWrappedObfuscated = null;
+        if (_ksLanguage.TryStartUtterance(source, message, out var ksLanguage, ksLanguageOverride))
+        {
+            var (fontId, fontSize) = _ksLanguage.ResolveFont(ksLanguage, speech);
+            wrappedMessage = Loc.GetString(wrapKey,
+                ("entityName", name),
+                ("verb", verb),
+                ("fontType", fontId),
+                ("fontSize", fontSize),
+                ("message", _ksLanguage.StyleMessage(ksLanguage, FormattedMessage.EscapeText(message))));
 
-        var ev = new EntitySpokeEvent(source, message, null, null);
+            ksObfuscated = ksLanguage.Obfuscated;
+            ksWrappedObfuscated = Loc.GetString(wrapKey,
+                ("entityName", name),
+                ("verb", verb),
+                ("fontType", fontId),
+                ("fontSize", fontSize),
+                ("message", _ksLanguage.StyleMessage(ksLanguage, FormattedMessage.EscapeText(ksObfuscated))));
+        }
+        else
+        {
+            wrappedMessage = Loc.GetString(wrapKey,
+                ("entityName", name),
+                ("verb", verb),
+                ("fontType", speech.FontId),
+                ("fontSize", speech.FontSize),
+                ("message", FormattedMessage.EscapeText(message)));
+        }
+        // KS14 End
+
+        SendInVoiceRange(ChatChannel.Local, message, wrappedMessage, source, range, ksLanguage: ksLanguage, ksObfuscated: ksObfuscated, ksWrappedObfuscated: ksWrappedObfuscated /* KS14 */);
+
+        var ev = new EntitySpokeEvent(source, message, null, null, ksLanguage /* KS14 */);
         RaiseLocalEvent(source, ev, true);
 
         // To avoid logging any messages sent by entities that are not players, like vendors, cloning, etc.
@@ -459,7 +494,8 @@ public sealed partial class ChatSystem : SharedChatSystem
         RadioChannelPrototype? channel,
         string? nameOverride,
         bool hideLog = false,
-        bool ignoreActionBlocker = false
+        bool ignoreActionBlocker = false,
+        ProtoId<KsLanguagePrototype>? ksLanguageOverride = null /* KS14 */
         )
     {
         if (!_actionBlocker.CanSpeak(source) && !ignoreActionBlocker)
@@ -496,8 +532,30 @@ public sealed partial class ChatSystem : SharedChatSystem
         var wrappedUnknownMessage = Loc.GetString("chat-manager-entity-whisper-unknown-wrap-message",
             ("message", FormattedMessage.EscapeText(obfuscatedMessage)));
 
-        // KS14 Start: per-reader whisper translation. Only the CLEAR variant carries the real message;
-        // the obfuscated/unknown variants are deliberately garbled and must not be translated.
+        // KS14 Start: whisper variants; distance fuzz stacks on top of the scramble for far tiers.
+        string? ksScrambled = null;
+        string? ksScrambledMuffled = null;
+        string? ksWrappedScrambled = null;
+        string? ksWrappedScrambledObf = null;
+        string? ksWrappedScrambledUnknown = null;
+        if (_ksLanguage.TryStartUtterance(source, message, out var ksLanguage, ksLanguageOverride))
+        {
+            // Language visual identity on the clear whisper.
+            wrappedMessage = Loc.GetString("chat-manager-entity-whisper-wrap-message",
+                ("entityName", name), ("message", _ksLanguage.StyleMessage(ksLanguage, FormattedMessage.EscapeText(message))));
+
+            ksScrambled = ksLanguage.Obfuscated;
+            ksScrambledMuffled = ObfuscateMessageReadability(ksScrambled, 0.2f);
+            ksWrappedScrambled = Loc.GetString("chat-manager-entity-whisper-wrap-message",
+                ("entityName", name), ("message", _ksLanguage.StyleMessage(ksLanguage, FormattedMessage.EscapeText(ksScrambled))));
+            ksWrappedScrambledObf = Loc.GetString("chat-manager-entity-whisper-wrap-message",
+                ("entityName", nameIdentity), ("message", _ksLanguage.StyleMessage(ksLanguage, FormattedMessage.EscapeText(ksScrambledMuffled))));
+            ksWrappedScrambledUnknown = Loc.GetString("chat-manager-entity-whisper-unknown-wrap-message",
+                ("message", _ksLanguage.StyleMessage(ksLanguage, FormattedMessage.EscapeText(ksScrambledMuffled))));
+        }
+        // KS14 End
+
+        // KS14 Start: per-reader translation; only the clear variant is translatable.
         KsTranslationContext? translation = null;
         _translation.TryBeginLocal(ChatChannel.Whisper, message, source, out translation);
         // KS14 End
@@ -513,18 +571,27 @@ public sealed partial class ChatSystem : SharedChatSystem
             if (MessageRangeCheck(session, data, range) != MessageRangeCheckResult.Full)
                 continue; // Won't get logged to chat, and ghosts are too far away to see the pop-up, so we just won't send it to them.
 
+            var ksUnderstands = ksLanguage == null || _ksLanguage.Understands(listener, ksLanguage); // KS14
+
             if (data.Range <= WhisperClearRange || data.Observer)
             {
-                // KS14: clear variant is the only translatable one.
-                int? messageId = translation is { } ctx ? _translation.TryReader(message, ctx, session.Channel) : null;
+                // KS14 Start: scrambled deliveries never carry a translation id.
+                if (!ksUnderstands)
+                {
+                    _chatManager.ChatMessageToOne(ChatChannel.Whisper, ksScrambled!, ksWrappedScrambled!, source, false, session.Channel);
+                    continue;
+                }
+                // KS14 End
+
+                int? messageId = translation is { } ctx ? _translation.TryReader(message, ctx, session.Channel) : null; // KS14
                 _chatManager.ChatMessageToOne(ChatChannel.Whisper, message, wrappedMessage, source, false, session.Channel, messageId: messageId); // KS14: messageId
             }
             //If listener is too far, they only hear fragments of the message
             else if (_examineSystem.InRangeUnOccluded(source, listener, WhisperMuffledRange))
-                _chatManager.ChatMessageToOne(ChatChannel.Whisper, obfuscatedMessage, wrappedobfuscatedMessage, source, false, session.Channel);
+                _chatManager.ChatMessageToOne(ChatChannel.Whisper, ksUnderstands ? obfuscatedMessage : ksScrambledMuffled!, ksUnderstands ? wrappedobfuscatedMessage : ksWrappedScrambledObf!, source, false, session.Channel); // KS14
             //If listener is too far and has no line of sight, they can't identify the whisperer's identity
             else
-                _chatManager.ChatMessageToOne(ChatChannel.Whisper, obfuscatedMessage, wrappedUnknownMessage, source, false, session.Channel);
+                _chatManager.ChatMessageToOne(ChatChannel.Whisper, ksUnderstands ? obfuscatedMessage : ksScrambledMuffled!, ksUnderstands ? wrappedUnknownMessage : ksWrappedScrambledUnknown!, source, false, session.Channel); // KS14
         }
 
         // KS14: apply the per-speaker cooldown once, only if a translation was actually started.
@@ -533,7 +600,7 @@ public sealed partial class ChatSystem : SharedChatSystem
 
         _replay.RecordServerMessage(new ChatMessage(ChatChannel.Whisper, message, wrappedMessage, GetNetEntity(source), null, MessageRangeHideChatForReplay(range)));
 
-        var ev = new EntitySpokeEvent(source, message, channel, obfuscatedMessage);
+        var ev = new EntitySpokeEvent(source, message, channel, obfuscatedMessage, ksLanguage /* KS14 */);
         RaiseLocalEvent(source, ev, true);
         if (!hideLog)
             if (originalMessage == message)
@@ -703,7 +770,7 @@ public sealed partial class ChatSystem : SharedChatSystem
     /// <summary>
     ///     Sends a chat message to the given players in range of the source entity.
     /// </summary>
-    private void SendInVoiceRange(ChatChannel channel, string message, string wrappedMessage, EntityUid source, ChatTransmitRange range, NetUserId? author = null)
+    private void SendInVoiceRange(ChatChannel channel, string message, string wrappedMessage, EntityUid source, ChatTransmitRange range, NetUserId? author = null, KsUtteranceContext? ksLanguage = null /* KS14 */, string? ksObfuscated = null /* KS14 */, string? ksWrappedObfuscated = null /* KS14 */)
     {
         // KS14 Start: per-reader chat translation. Local and LOOC both fan out one message per reader here
         // and resolve the speaker from the entity they control.
@@ -718,6 +785,18 @@ public sealed partial class ChatSystem : SharedChatSystem
             if (entRange == MessageRangeCheckResult.Disallowed)
                 continue;
             var entHideChat = entRange == MessageRangeCheckResult.HideChat;
+
+            // KS14 Start: non-understanders get the scrambled variant and never a translation
+            // swap. Only Local is language-gated.
+            if (ksLanguage != null && channel == ChatChannel.Local
+                && session.AttachedEntity is { } ksListener
+                && !_ksLanguage.Understands(ksListener, ksLanguage))
+            {
+                _chatManager.ChatMessageToOne(channel, ksObfuscated!, ksWrappedObfuscated!, source, entHideChat, session.Channel, author: author);
+                continue;
+            }
+            // KS14 End
+
             // KS14: stamp a message id when this reader will receive a translation swap (skip hidden recipients).
             int? messageId = translation is { } ctx && !entHideChat
                 ? _translation.TryReader(message, ctx, session.Channel)

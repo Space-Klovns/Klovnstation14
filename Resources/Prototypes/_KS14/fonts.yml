@@ -1,0 +1,4 @@
+# These font files ship with the base game but have no vanilla prototype; [font=] markup needs one.
+- type: font
+  id: KsRobotoMono
+  path: /Fonts/RobotoMono/RobotoMono-Regular.ttf

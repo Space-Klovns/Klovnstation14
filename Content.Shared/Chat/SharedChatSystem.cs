@@ -4,6 +4,7 @@ using Content.Shared.ActionBlocker;
 using Content.Shared.Chat.Prototypes;
 using Content.Shared.Popups;
 using Content.Shared.Radio;
+using Content.Shared._KS14.Language; // KS14
 using Content.Shared.Speech;
 using Content.Shared.Whitelist;
 using Robust.Shared.Audio;
@@ -351,7 +352,8 @@ public abstract partial class SharedChatSystem : EntitySystem
         ICommonSession? player = null,
         string? nameOverride = null,
         bool checkRadioPrefix = true,
-        bool ignoreActionBlocker = false)
+        bool ignoreActionBlocker = false,
+        ProtoId<KsLanguagePrototype>? ksLanguageOverride = null /* KS14 */)
     { }
 
     /// <summary>
@@ -376,7 +378,8 @@ public abstract partial class SharedChatSystem : EntitySystem
         ICommonSession? player = null,
         string? nameOverride = null,
         bool checkRadioPrefix = true,
-        bool ignoreActionBlocker = false
+        bool ignoreActionBlocker = false,
+        ProtoId<KsLanguagePrototype>? ksLanguageOverride = null /* KS14 */
         )
     { }
 

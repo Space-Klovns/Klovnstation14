@@ -1,0 +1,39 @@
+﻿{
+    "version": 1,
+    "license": "CC0-1.0",
+    "copyright": "Taken from https://unity.com/blog/engine-platform/free-vfx-image-sequences-flipbooks, modified for ST-DA (and by extension, KS14)",
+    "size": {
+        "x": 32,
+        "y": 64
+    },
+    "states": [
+        {
+            "name": "muzzle_bullet",
+            "delays":
+            [
+                [
+                    0.0275,
+                    0.0275,
+                    0.0275,
+                    0.0275,
+                    0.0275,
+                    0.0275,
+                    0.0275,
+                    0.0275,
+                    0.0275,
+                    0.0275,
+                    0.0275,
+                    0.0275,
+                    0.0275,
+                    0.0275,
+                    0.0275,
+                    0.0275,
+                    0.0275,
+                    0.0275,
+                    0.0275,
+                    0.0275
+                ]
+            ]
+        }
+    ]
+}

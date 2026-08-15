@@ -1,0 +1,56 @@
+- type: ksSensorIntel
+  id: KsIntelHeat
+  label: ks-sensor-intel-heat-label
+  metric: Heat
+  valueFormat: ks-sensor-intel-heat-value
+  order: 5
+
+- type: ksSensorIntel
+  id: KsIntelRcs
+  label: ks-sensor-intel-rcs-label
+  metric: RadarCrossSection
+  valueFormat: ks-sensor-intel-rcs-value
+  order: 6
+
+# ELINT fills this directly from a located emitter (the emitting radar's own MaxRange);
+# no grid crawler computes it. Off the always-on roster so it shows only on emitter
+# contacts, not as a blank slot on every ship.
+- type: ksSensorIntel
+  id: KsIntelEmitterRange
+  label: ks-sensor-intel-emitter-range-label
+  metric: EmitterRange
+  valueFormat: ks-sensor-intel-emitter-range-value
+  order: 40
+  alwaysShowLabel: false
+
+# Size is the one readout that survives the BASIC detail level: hull class is what
+# an operator scanning a crowded plot actually needs beside the name.
+- type: ksSensorIntel
+  id: KsIntelSize
+  label: ks-sensor-intel-size-label
+  metric: Area
+  detail: Basic
+  order: 10
+  thresholds:
+  - below: 200
+    label: ks-sensor-intel-size-small
+  - below: 1200
+    label: ks-sensor-intel-size-medium
+  - below: 5000
+    label: ks-sensor-intel-size-large
+  - label: ks-sensor-intel-size-massive
+
+- type: ksSensorIntel
+  id: KsIntelMass
+  label: ks-sensor-intel-mass-label
+  metric: Mass
+  valueFormat: ks-sensor-intel-mass-value
+  order: 20
+
+- type: ksSensorIntel
+  id: KsIntelTopSpeed
+  label: ks-sensor-intel-topspeed-label
+  metric: TopSpeed
+  valueFormat: ks-sensor-intel-topspeed-value
+  noneLabel: ks-sensor-intel-topspeed-none
+  order: 30
