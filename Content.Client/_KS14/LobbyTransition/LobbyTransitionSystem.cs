@@ -54,9 +54,11 @@ public sealed partial class LobbyTransitionSystem : EntitySystem
             !_prototypeManager.TryIndex(_gameTicker.LobbyBackground, out var backgroundProto))
             return;
 
-        _transitionFinishTime = _gameTiming.CurTime + TransitionDuration;
+        var startTime = _gameTiming.CurTime;
+        _transitionFinishTime = startTime + TransitionDuration;
 
         _overlay.ArtTexture = _resourceCache.GetResource<TextureResource>(backgroundProto.Background);
+        _overlay.TransitionStartTime = startTime;
         _overlay.TransitionFinishTime = _transitionFinishTime;
     }
 

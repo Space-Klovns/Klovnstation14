@@ -18,6 +18,7 @@ public sealed partial class LobbyTransitionOverlay : Overlay
 
     public override OverlaySpace Space => OverlaySpace.ScreenSpace;
     public Texture? ArtTexture = null;
+    public TimeSpan TransitionStartTime = TimeSpan.MinValue;
     public TimeSpan TransitionFinishTime = TimeSpan.MinValue;
 
     private TimeSpan _curTime;
@@ -29,11 +30,13 @@ public sealed partial class LobbyTransitionOverlay : Overlay
     protected override void Draw(in OverlayDrawArgs args)
     {
         // fade-out
-        var alpha = 1f - (float)(_curTime.TotalSeconds / TransitionFinishTime.TotalSeconds);
+        var elapsed = (_curTime - TransitionStartTime).TotalSeconds;
+        var duration = (TransitionFinishTime - TransitionStartTime).TotalSeconds;
+        var alpha = Math.Clamp(1f - (float)(elapsed / duration), 0f, 1f);
         var modulate = new Color(1f, 1f, 1f, a: alpha);
 
         // draw according to StretchMode.KeepAspectCovered
-        var pixelSize = _clyde.EnumerateMonitors();
+        var pixelSize = _clyde.ScreenSize;
         var pixelSizeBox = new UIBox2i(Vector2i.Zero, pixelSize);
 
         var dima = GetDrawDimensions(pixelSize);
@@ -51,9 +54,12 @@ public sealed partial class LobbyTransitionOverlay : Overlay
 
     private UIBox2 GetDrawDimensions(Vector2i pixelSize)
     {
-        var (scaleX, scaleY) = pixelSize / ArtTexture!.Size;
+        // ArtTexture.Size is a Vector2i; dividing Vector2i by Vector2i truncates to integers,
+        // so convert to Vector2 first to get a proper floating-point scale factor.
+        var texSize = (Vector2)ArtTexture!.Size;
+        var (scaleX, scaleY) = pixelSize / texSize;
         var scale = Math.Max(scaleX, scaleY);
-        var texDrawSize = ArtTexture!.Size * scale;
+        var texDrawSize = texSize * scale;
         var offset = (pixelSize - texDrawSize) / 2f;
         return UIBox2.FromDimensions(offset, texDrawSize);
     }
