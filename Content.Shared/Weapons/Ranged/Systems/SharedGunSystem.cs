@@ -168,7 +168,7 @@ public abstract partial class SharedGunSystem : EntitySystem
 
         gun.Comp.ShootCoordinates = GetCoordinates(msg.Coordinates);
         gun.Comp.Target = GetEntity(msg.Target);
-        AttemptShoot(user.Value, gun);
+        AttemptShoot(user.Value, gun, clientShootTime: msg.ShootTime /* KS14 */);
         if (msg.Continuous)
             gun.Comp.ShotCounter = 0;
     }
@@ -275,7 +275,7 @@ public abstract partial class SharedGunSystem : EntitySystem
         return result;
     }
 
-    private bool AttemptShoot(EntityUid user, Entity<GunComponent> gun, EntityCoordinates? fromCoordinatesOverride = null)
+    private bool AttemptShoot(EntityUid user, Entity<GunComponent> gun, EntityCoordinates? fromCoordinatesOverride = null, TimeSpan? clientShootTime = null /* KS14 */)
     {
         if (gun.Comp.FireRateModified <= 0f ||
             !_actionBlockerSystem.CanAttack(user))
@@ -467,7 +467,7 @@ public abstract partial class SharedGunSystem : EntitySystem
         }
 
         // Shoot confirmed - sounds also played here in case it's invalid (e.g. cartridge already spent).
-        Shoot(gun, ev.Ammo, fromCoordinates, toCoordinates.Value, out var userImpulse, user, throwItems: attemptEv.ThrowItems);
+        Shoot(gun, ev.Ammo, fromCoordinates, toCoordinates.Value, out var userImpulse, user, throwItems: attemptEv.ThrowItems, clientShootTime: clientShootTime /* KS14 */);
         var shotEv = new GunShotEvent(user, ev.Ammo, fromCoordinates, toCoordinates.Value); // KS14: Added fromCoordinates and toCoordinates
         RaiseLocalEvent(gun, ref shotEv, broadcast: true /* KS14: now broadcasted */);
 
@@ -505,7 +505,8 @@ public abstract partial class SharedGunSystem : EntitySystem
         EntityCoordinates toCoordinates,
         out bool userImpulse,
         EntityUid? user = null,
-        bool throwItems = false)
+        bool throwItems = false,
+        TimeSpan? clientShootTime = null /* KS14 */)
     {
         userImpulse = false;
 
@@ -550,7 +551,7 @@ public abstract partial class SharedGunSystem : EntitySystem
             // pneumatic cannon doesn't shoot bullets it just throws them, ignore ammo handling
             if (throwItems && ent != null)
             {
-                ShootOrThrow(ent.Value, mapDirection, gunVelocity, gun, gun.Owner, user);
+                ShootOrThrow(ent.Value, mapDirection, gunVelocity, gun, gun.Owner, user, clientShootTime: clientShootTime /* KS14 */);
                 shotProjectiles.Add(ent.Value); // Goobstation
                 continue;
             }
@@ -640,19 +641,19 @@ public abstract partial class SharedGunSystem : EntitySystem
                 var angles = LinearSpread(mapAngle - spreadEvent.Spread / 2,
                     mapAngle + spreadEvent.Spread / 2, ammoSpreadComp.Count);
 
-                ShootOrThrow(ammoEnt, angles[0].ToVec(), gunVelocity, gun, gun, user);
+                ShootOrThrow(ammoEnt, angles[0].ToVec(), gunVelocity, gun, gun, user, clientShootTime: clientShootTime /* KS14 */);
                 shotProjectiles.Add(ammoEnt);
 
                 for (var i = 1; i < ammoSpreadComp.Count; i++)
                 {
                     var newuid = PredictedSpawnAtPosition(ammoSpreadComp.Proto, fromEnt);
-                    ShootOrThrow(newuid, angles[i].ToVec(), gunVelocity, gun, gun, user);
+                    ShootOrThrow(newuid, angles[i].ToVec(), gunVelocity, gun, gun, user, clientShootTime: clientShootTime /* KS14 */);
                     shotProjectiles.Add(newuid);
                 }
             }
             else
             {
-                ShootOrThrow(ammoEnt, mapDirection, gunVelocity, gun, gun, user);
+                ShootOrThrow(ammoEnt, mapDirection, gunVelocity, gun, gun, user, clientShootTime: clientShootTime /* KS14 */);
                 shotProjectiles.Add(ammoEnt);
             }
 
@@ -662,7 +663,7 @@ public abstract partial class SharedGunSystem : EntitySystem
         }
     }
 
-    public void ShootProjectile(EntityUid uid, Vector2 direction, Vector2 gunVelocity, EntityUid? gunUid, EntityUid? user = null, float speed = ProjectileSpeed)
+    public void ShootProjectile(EntityUid uid, Vector2 direction, Vector2 gunVelocity, EntityUid? gunUid, EntityUid? user = null, float speed = ProjectileSpeed, TimeSpan? clientShootTime = null /* KS14 */)
     {
         var physics = EnsureComp<PhysicsComponent>(uid);
         Physics.SetBodyStatus(uid, physics, BodyStatus.InAir);
@@ -684,7 +685,7 @@ public abstract partial class SharedGunSystem : EntitySystem
 
         if (user is { } userUid)
         {
-            var ev = new PlayerShotProjectileEvent(uid, userUid);
+            var ev = new PlayerShotProjectileEvent(uid, userUid, clientShootTime /* KS14 */);
             RaiseLocalEvent(ref ev);
         }
         // </Trauma>

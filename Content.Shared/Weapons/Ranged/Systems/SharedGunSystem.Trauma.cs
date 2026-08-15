@@ -32,7 +32,7 @@ public abstract partial class SharedGunSystem
     {
     }
 
-    private void ShootOrThrow(EntityUid uid, Vector2 mapDirection, Vector2 gunVelocity, GunComponent gun, EntityUid gunUid, EntityUid? user, Vector2? targetCoordinates = null) // Goobstation
+    private void ShootOrThrow(EntityUid uid, Vector2 mapDirection, Vector2 gunVelocity, GunComponent gun, EntityUid gunUid, EntityUid? user, Vector2? targetCoordinates = null, TimeSpan? clientShootTime = null /* KS14 */) // Goobstation
     {
         if (gun.Target is { } target && !TerminatingOrDeleted(target))
         {
@@ -50,7 +50,7 @@ public abstract partial class SharedGunSystem
             return;
         }
 
-        ShootProjectile(uid, mapDirection, gunVelocity, gunUid, user, gun.ProjectileSpeedModified);
+        ShootProjectile(uid, mapDirection, gunVelocity, gunUid, user, gun.ProjectileSpeedModified, clientShootTime: clientShootTime /* KS14 */);
     }
 
     /// <summary>
