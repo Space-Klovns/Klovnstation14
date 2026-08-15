@@ -1,29 +1,35 @@
 - type: lobbyBackground
   id: 198HNK
-  background: /Textures/LobbyScreens/198hnk.png
+  background: /Textures/_KS14/LobbyScreens/198hnk.png
   title: lobby-state-background-198hnk-title
   artist: lobby-state-background-198hnk-artist
 
 - type: lobbyBackground
   id: EngiPower
-  background: /Textures/LobbyScreens/engiwherespower.png
+  background: /Textures/_KS14/LobbyScreens/engiwherespower.png
   title: lobby-state-background-engiwherespower-title
   artist: lobby-state-background-engiwherespower-artist
 
 - type: lobbyBackground
   id: FuckTiders
-  background: /Textures/LobbyScreens/fucktiders.png
+  background: /Textures/_KS14/LobbyScreens/fucktiders.png
   title: lobby-state-background-fucktiders-title
   artist: lobby-state-background-fucktiders-artist
 
 - type: lobbyBackground
   id: Middlestation
-  background: /Textures/LobbyScreens/middlestation.png
+  background: /Textures/_KS14/LobbyScreens/middlestation.png
   title: lobby-state-background-middlestation-title
   artist: lobby-state-background-middlestation-artist
 
 - type: lobbyBackground
   id: Smartguy
-  background: /Textures/LobbyScreens/smartguy.png
+  background: /Textures/_KS14/LobbyScreens/smartguy.png
   title: lobby-state-background-smartguy-title
   artist: lobby-state-background-smartguy-artist
+
+- type: lobbyBackground
+  id: NanoplantCenter
+  background: /Textures/_KS14/LobbyScreens/nanoplantcenter.png
+  title: lobby-state-background-nanoplantcenter-title
+  artist: lobby-state-background-nanoplantcenter-artist

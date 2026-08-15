@@ -1713,3 +1713,9 @@ Entries:
       message: Fixed some mispredicts involving sparks.
   id: 176
   time: '2026-08-04T20:49:06.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: Syndies Aren't The Only Things Getting FF'd
+  id: 177
+  time: '2026-08-15T18:45:24.0000000+00:00'
