@@ -12,7 +12,7 @@
     unwieldOnUse: false
   - type: GunWieldBonus
     minAngle: -180
-    maxAngle: -168
+    maxAngle: -174.8 # KS14: ??? -> -174.8
   - type: Sprite
   - type: Item
     size: Huge
@@ -198,7 +198,7 @@
     sprite: Objects/Weapons/Guns/Rifles/lecter.rsi
   - type: Gun
     fireRate: 4
-    angleIncrease: 2 # KS14 modified
+    angleIncrease: 1 # KS14 modified
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/ltrifle.ogg
     # KS14: Farsound start
