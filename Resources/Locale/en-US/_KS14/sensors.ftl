@@ -136,7 +136,7 @@ ks-esm-panel-threat = WARNING RECEIVER
 ks-esm-panel-selected = SIGNAL ANALYSIS
 ks-esm-panel-log = EMISSION LOG
 
-ks-esm-chip-no-rwr = NO RWR RECEIVER
+ks-esm-chip-no-rwr = NO RADAR WARNING RECEIVER
 ks-esm-chip-no-elint = NO ELINT ARRAY
 ks-esm-chip-elint-deaf = ELINT DEAF - OWN EMISSIONS
 ks-esm-roster-offline = NO ESM RECEIVERS
