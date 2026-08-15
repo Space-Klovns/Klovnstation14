@@ -8,10 +8,9 @@
   - type: MechAir
   - type: Vehicle
     canAttack: true
-  - type: VehicleHandBlocker
-    blockedHands: 2
   - type: ContainerVehicle
     containerId: "mech-pilot-slot"
+  - type: ContainerVehicleEntry
   - type: AirFilter
     # everything except oxygen and nitrogen and zipion
     gases:
@@ -155,6 +154,8 @@
     operatorWhitelist:
       components:
         - HumanoidProfile
+  - type: VehicleHandBlocker
+    blockedHands: 2
   - type: MeleeWeapon
     hidden: true
     animation: WeaponArcFist #KS14 - the wizden animation is dogshit
@@ -211,6 +212,8 @@
     operatorWhitelist:
       components:
       - HumanoidProfile
+  - type: VehicleHandBlocker
+    blockedHands: 2
 
 - type: entity
   parent: MechHonker
@@ -248,6 +251,7 @@
       tags:
       - SmallMech
   - type: Vehicle
+    requiresHands: false
     transferDamageModifier:
       coefficients:
         Blunt: 0.2
@@ -318,6 +322,7 @@
     maxEquipmentAmount: 0
     airtight: true
   - type: Vehicle
+    requiresHands: false
     transferDamageModifier:
       coefficients:
         Blunt: 0.1
