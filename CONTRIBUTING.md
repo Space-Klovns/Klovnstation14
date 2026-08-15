@@ -4,7 +4,7 @@ Follow this guide to know our coding conventions.
 
 ## 1. Project lineage
 
-Klovnstation 14 is an English-direction fork of SS14. The chain:
+Klovnstation 14 is a fork of SS14. The chain:
 
 - [space-wizards/space-station-14](https://github.com/space-wizards/space-station-14) - upstream, vanilla SS14.
 - **Klovnstation 14** - this repo - a modded downstream.
@@ -90,12 +90,9 @@ Klovnstation 14 follows upstream Space Wizards' Den coding standards. Read and a
 - [SS14 pull-request guidelines](https://docs.spacestation14.com/en/general-development/codebase-info/pull-request-guidelines.html) - PR hygiene (separate PRs for features / bug fixes / refactors, test in-game, no web edits, no force-push after reviews).
 - [SS14 style guide](https://docs.spacestation14.com/en/general-development/codebase-info/style-guide.html) - C# formatting.
 
-Local rules on top of upstream:
-
-- `.editorconfig` enforces 4-space indent, 120-char line limit, trim trailing whitespace, no CRLF (matches upstream).
-- Klovnstation 14 adds no new stylistic rules in v1. Propose changes via Discord before adding rules.
-
 **One exception to upstream.** SS14's `codebase-organization` says "game-code folders live directly under `Content.Client/Shared/Server`." Klovnstation 14 overrides for **new fork code only**: new code goes under `_KS14/` per section 2. Upstream files edited in place still follow upstream layout and carry `// KS14:` markers per section 3.
+
+Local rules on top of upstream:
 
 ### Casting/Coercion and Code Clarity (C#)
 
