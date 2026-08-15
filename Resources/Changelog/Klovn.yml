@@ -1719,3 +1719,17 @@ Entries:
       message: Syndies Aren't The Only Things Getting FF'd
   id: 177
   time: '2026-08-15T18:45:24.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Lobby art now fades-out when spawning instead of abruptly disappearing.
+  id: 178
+  time: '2026-08-15T20:24:32.0000000+00:00'
+- author: teecoding
+  changes:
+    - type: Add
+      message: >-
+        Added guidebook entries for sensors, sensor arrays, datalink and the
+        shuttle console
+  id: 179
+  time: '2026-08-15T20:26:08.0000000+00:00'
