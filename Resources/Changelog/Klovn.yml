@@ -1761,3 +1761,9 @@ Entries:
       message: Bullets are now 220% more laggy.
   id: 183
   time: '2026-08-16T10:48:42.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Turrets can now be EMPed to be temporarily disabled.
+  id: 184
+  time: '2026-08-16T11:14:42.0000000+00:00'
