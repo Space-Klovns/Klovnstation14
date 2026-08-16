@@ -1,165 +1,197 @@
-using System.Numerics;
 using Content.Server.Movement.Components;
 using Content.Server.Movement.Systems;
 using Content.Shared._Trauma.Projectiles;
 using Content.Shared.Projectiles;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
+using Robust.Shared.Spawners;
 using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.Projectiles;
 
 /// <summary>
-/// Rewinds nearby <see cref="LagCompensationComponent"/> entities to where they were when the shooter's
-/// client actually fired, and credits an immediate hit via <see cref="PredictedProjectileSystem.DoHit"/>
-/// if the shot would have connected back then. Only covers physical projectiles; hitscan has its own path.
+/// Compensates physical projectiles for network lag by spawning a temporary, invisible physics "ghost"
+/// at each nearby <see cref="LagCompensationComponent"/> entity's rewound position - where they actually
+/// were when the shooter's client fired. The ghost carries a copy of the target's hitbox and, via
+/// <see cref="PreventCollideEvent"/>, only ever collides with the one projectile it was spawned for; when
+/// real physics lands that collision, the hit is redirected onto the real target via
+/// <see cref="PredictedProjectileSystem.DoHit"/>. Travel time, obstruction by walls, and hitting the
+/// closest thing first all fall out of normal physics simulation instead of being reimplemented by hand.
+/// Only covers physical projectiles; hitscan has its own path.
 /// </summary>
 public sealed partial class LagCompProjectileSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private PredictedProjectileSystem _projectile = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
-    [Dependency] private RayCastSystem _rayCastSystem = default!;
     [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private FixtureSystem _fixtures = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
 
     [Dependency] private EntityQuery<LagCompensationComponent> _lagCompensationQuery = default;
     [Dependency] private EntityQuery<TransformComponent> _xformQuery = default;
     [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default;
     [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default;
 
+    private const string GhostFixtureId = "lag-compensation-ghost";
+
     // Generous upper bound on mob hitbox radii, padding the broadphase lookup so a target whose center sits
-    // just past the catch-up distance isn't missed even though its hitbox still overlaps that point.
+    // just past the max dodge distance isn't missed even though its hitbox still overlaps that point.
     private const float MaxHitboxRadius = 1f;
 
-    // Caps the catch-up window to how far a mob could plausibly have dodged, not how far the projectile
-    // could have flown. DoHit() resolves synchronously at spawn, so anything found within the window reads
-    // as an instant hit - sizing it off a fast weapon's own speed would let it reach across half a room.
+    // How far a mob could plausibly have moved during the lag window - this bounds the search, not the
+    // projectile's own speed. A ghost is only ever worth spawning within dodging range of the muzzle;
+    // real physics (travel time, obstruction) takes care of everything from there.
     // Base sprint speed (see MovementSpeedModifierComponent.DefaultBaseSprintSpeed); ignores speed buffs.
     private const float MaxCompensationSpeed = 5.5f;
+
+    // Safety net in case a ghost is somehow never resolved by a collision or projectile cleanup.
+    private const float GhostLifetime = 2f;
 
     public override void Initialize()
     {
         base.Initialize();
 
         SubscribeLocalEvent<PlayerShotProjectileEvent>(OnShotProjectile);
+
+        SubscribeLocalEvent<LagCompensationGhostComponent, PreventCollideEvent>(OnGhostPreventCollide);
+        SubscribeLocalEvent<LagCompensationGhostComponent, StartCollideEvent>(OnGhostStartCollide);
+
+        SubscribeLocalEvent<LagCompensatingProjectileComponent, PreventCollideEvent>(OnProjectilePreventCollide);
+        SubscribeLocalEvent<LagCompensatingProjectileComponent, ProjectileHitEvent>(OnProjectileHit);
+        SubscribeLocalEvent<LagCompensatingProjectileComponent, EntityTerminatingEvent>(OnProjectileTerminating);
     }
 
     private void OnShotProjectile(ref PlayerShotProjectileEvent args)
     {
+        var projectileUid = args.Projectile;
+        var shooterUid = args.User;
+
         if (args.ClientShootTime is not { } clientShootTime)
             return;
 
-        if (!_lagCompensationQuery.HasComp(args.User))
+        if (!_lagCompensationQuery.HasComp(shooterUid))
             return;
 
-        if (!_physicsQuery.TryComp(args.Projectile, out var projectileBody) ||
-            !_fixturesQuery.TryComp(args.Projectile, out var projectileFixtures) ||
-            !projectileFixtures.Fixtures.TryGetValue(SharedProjectileSystem.ProjectileFixture, out var projectileFixture) ||
-            !_xformQuery.TryComp(args.Projectile, out var projectileXform))
+        if (!_physicsQuery.TryComp(projectileUid, out var projectilePhysicsComponent) ||
+            !_xformQuery.TryComp(projectileUid, out var projectileTransformComponent))
         {
             return;
         }
 
-        var speed = projectileBody.LinearVelocity.Length();
-        if (speed <= 0f)
+        var projectileSpeed = projectilePhysicsComponent.LinearVelocity.Length();
+        if (projectileSpeed <= 0f)
             return;
 
         // Clamp to how far LagCompensationComponent actually keeps history, and never rewind past "now".
-        var curTime = _timing.CurTime;
-        var earliestTime = curTime - LagCompensationSystem.BufferTime;
-        var sentTicks = Math.Clamp(clientShootTime.Ticks, earliestTime.Ticks, curTime.Ticks);
+        var currentTime = _timing.CurTime;
+        var earliestTime = currentTime - LagCompensationSystem.BufferTime;
+        var sentTicks = Math.Clamp(clientShootTime.Ticks, earliestTime.Ticks, currentTime.Ticks);
         var sentTime = TimeSpan.FromTicks(sentTicks);
 
-        var lagSeconds = (float)(curTime - sentTime).TotalSeconds;
+        var lagSeconds = (float)(currentTime - sentTime).TotalSeconds;
         if (lagSeconds <= 0f)
             return;
 
-        var origin = _transform.GetMapCoordinates(projectileXform);
-        if (origin.MapId == MapId.Nullspace)
+        var projectileOrigin = _transform.GetMapCoordinates(projectileTransformComponent);
+        if (projectileOrigin.MapId == MapId.Nullspace)
             return;
 
-        var direction = projectileBody.LinearVelocity / speed;
-
         // How far the target could plausibly have moved during the lag window - not how far the projectile
-        // could have flown, or a fast weapon would compensate hits far past where any dodge could reach.
-        var catchUpDistance = Math.Min(speed, MaxCompensationSpeed) * lagSeconds;
+        // could have flown, since that's what actually determines how far a dodge could have carried them.
+        var maxDodgeDistance = Math.Min(projectileSpeed, MaxCompensationSpeed) * lagSeconds;
 
-        var target = TryFindCompensatedTarget(args.Projectile, args.User, projectileBody, projectileFixture,
-            origin, direction, catchUpDistance, sentTime);
-
-        if (target is { } targetUid)
-            _projectile.DoHit(args.Projectile, targetUid);
+        SpawnCompensationGhosts(projectileUid, shooterUid, projectileOrigin, maxDodgeDistance, sentTime);
     }
 
     /// <summary>
-    /// Walks nearby lag-compensated entities back to <paramref name="sentTime"/> and returns the closest one
-    /// (along the shot's path) whose rewound position was actually in the way, if any.
+    /// Spawns a rewound ghost for every nearby <see cref="LagCompensationComponent"/> entity that could
+    /// plausibly have been dodging this shot, and registers each with the projectile so it's cleaned up
+    /// once the shot resolves.
     /// </summary>
-    private EntityUid? TryFindCompensatedTarget(
-        EntityUid projectile,
-        EntityUid shooter,
-        PhysicsComponent projectileBody,
-        Fixture projectileFixture,
-        MapCoordinates origin,
-        Vector2 direction,
-        float catchUpDistance,
+    private void SpawnCompensationGhosts(
+        EntityUid projectileUid,
+        EntityUid shooterUid,
+        MapCoordinates projectileOrigin,
+        float maxDodgeDistance,
         TimeSpan sentTime)
     {
-        var candidates = _lookup.GetEntitiesInRange<LagCompensationComponent>(origin, catchUpDistance + MaxHitboxRadius);
-
-        EntityUid? bestUid = null;
-        var bestAlong = float.MaxValue;
+        var candidates = _lookup.GetEntitiesInRange<LagCompensationComponent>(projectileOrigin, maxDodgeDistance + MaxHitboxRadius);
 
         foreach (var candidate in candidates)
         {
-            var uid = candidate.Owner;
+            var targetUid = candidate.Owner;
 
-            if (uid == shooter || uid == projectile)
+            if (targetUid == shooterUid || targetUid == projectileUid)
                 continue;
 
-            if (!_xformQuery.TryComp(uid, out var xform) || xform.MapID != origin.MapId)
+            if (!_xformQuery.TryComp(targetUid, out var targetTransformComponent) || targetTransformComponent.MapID != projectileOrigin.MapId)
                 continue;
 
-            if (!_fixturesQuery.TryComp(uid, out var fixtures) || FindHardFixture(fixtures) is not { } fixture)
-                continue;
-
-            var radius = fixture.Shape.Radius;
-
-            // Already touching the muzzle right now: normal physics is about to hit them on its own, so
-            // stepping in here too would credit the same shot twice.
-            var currentMap = _transform.GetMapCoordinates(xform);
-            if (currentMap.MapId == origin.MapId &&
-                Vector2.DistanceSquared(currentMap.Position, origin.Position) <= radius * radius)
+            if (!_fixturesQuery.TryComp(targetUid, out var targetFixturesComponent) ||
+                FindHardFixture(targetFixturesComponent) is not { } targetFixture ||
+                targetFixture.Shape is not PhysShapeCircle targetShape)
             {
+                // Every mob hitbox in this game is a circle; skip anything unexpected rather than guess a shape.
                 continue;
             }
 
-            var rewoundCoordinates = GetCompensatedCoordinates((uid, candidate.Comp, xform), sentTime);
-            var rewoundMap = _transform.ToMapCoordinates(rewoundCoordinates);
+            var rewoundCoordinates = GetCompensatedCoordinates((targetUid, candidate.Comp, targetTransformComponent), sentTime);
+            var rewoundMapCoordinates = _transform.ToMapCoordinates(rewoundCoordinates);
 
-            if (rewoundMap.MapId != origin.MapId ||
-                !TryGetPathHit(origin.Position, direction, catchUpDistance, rewoundMap.Position, radius, out var along) ||
-                along >= bestAlong)
-            {
+            if (rewoundMapCoordinates.MapId != projectileOrigin.MapId)
                 continue;
-            }
 
-            if (!_physicsQuery.TryComp(uid, out var body) ||
-                !CanCollide(projectile, projectileBody, projectileFixture, uid, body, fixture) ||
-                IsPathObstructed(origin.MapId, origin.Position, rewoundMap.Position, uid, projectileFixture.CollisionMask, projectile, shooter))
-            {
-                continue;
-            }
-
-            bestUid = uid;
-            bestAlong = along;
+            SpawnGhost(projectileUid, targetUid, targetFixture, targetShape, rewoundCoordinates);
         }
+    }
 
-        return bestUid;
+    /// <summary>
+    /// Spawns a static, invisible physics proxy at <paramref name="coordinates"/> carrying a copy of
+    /// <paramref name="targetShape"/>, and ties it to <paramref name="projectileUid"/>.
+    /// </summary>
+    private void SpawnGhost(EntityUid projectileUid, EntityUid targetUid, Fixture targetFixture, PhysShapeCircle targetShape, EntityCoordinates coordinates)
+    {
+        var ghostUid = Spawn(null, coordinates);
+
+        var ghostTransformComponent = Transform(ghostUid);
+        ghostTransformComponent.GridTraversal = false;
+
+        var ghostPhysicsComponent = AddComp<PhysicsComponent>(ghostUid);
+        var ghostFixturesComponent = EnsureComp<FixturesComponent>(ghostUid);
+
+        // Not hard: a physical push-apart response is meaningless for a body that's deleted the instant it's
+        // touched, and PredictedProjectileSystem's own OnStartCollide only processes hard fixtures - keeping
+        // this soft means that generic handler leaves the ghost alone and OnGhostStartCollide is the only
+        // thing that ever reacts to it.
+        var ghostShape = new PhysShapeCircle(targetShape.Radius, targetShape.Position);
+        _fixtures.TryCreateFixture(
+            ghostUid,
+            ghostShape,
+            GhostFixtureId,
+            hard: false,
+            collisionLayer: targetFixture.CollisionLayer,
+            collisionMask: targetFixture.CollisionMask,
+            manager: ghostFixturesComponent,
+            body: ghostPhysicsComponent);
+
+        _physics.WakeBody(ghostUid, body: ghostPhysicsComponent);
+
+        var ghostComponent = AddComp<LagCompensationGhostComponent>(ghostUid);
+        ghostComponent.Projectile = projectileUid;
+        ghostComponent.Target = targetUid;
+
+        var despawnComponent = EnsureComp<TimedDespawnComponent>(ghostUid);
+        despawnComponent.Lifetime = GhostLifetime;
+
+        var projectileComponent = EnsureComp<LagCompensatingProjectileComponent>(projectileUid);
+        projectileComponent.Ghosts.Add(ghostUid);
+        projectileComponent.IgnoredRealTargets.Add(targetUid);
     }
 
     /// <summary>
@@ -168,14 +200,14 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     /// </summary>
     private static EntityCoordinates GetCompensatedCoordinates(Entity<LagCompensationComponent, TransformComponent> entity, TimeSpan targetTime)
     {
-        var (_, lagComp, xform) = entity;
+        var (_, lagCompensationComponent, targetTransformComponent) = entity;
 
-        if (lagComp.Positions.Count == 0)
-            return xform.Coordinates;
+        if (lagCompensationComponent.Positions.Count == 0)
+            return targetTransformComponent.Coordinates;
 
-        var coordinates = xform.Coordinates;
+        var coordinates = targetTransformComponent.Coordinates;
 
-        foreach (var (time, position, _) in lagComp.Positions)
+        foreach (var (time, position, _) in lagCompensationComponent.Positions)
         {
             coordinates = position;
 
@@ -186,9 +218,9 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
         return coordinates;
     }
 
-    private static Fixture? FindHardFixture(FixturesComponent fixtures)
+    private static Fixture? FindHardFixture(FixturesComponent fixturesComponent)
     {
-        foreach (var fixture in fixtures.Fixtures.Values)
+        foreach (var fixture in fixturesComponent.Fixtures.Values)
         {
             if (fixture.Hard)
                 return fixture;
@@ -198,43 +230,110 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     }
 
     /// <summary>
-    /// Checks whether <paramref name="point"/> lies within <paramref name="radius"/> of the segment from
-    /// <paramref name="origin"/> to <paramref name="origin"/> + <paramref name="direction"/> * <paramref name="maxDistance"/>.
+    /// Ghosts only ever collide with the one projectile they were spawned for.
     /// </summary>
-    private static bool TryGetPathHit(Vector2 origin, Vector2 direction, float maxDistance, Vector2 point, float radius, out float along)
+    private void OnGhostPreventCollide(Entity<LagCompensationGhostComponent> ghost, ref PreventCollideEvent args)
     {
-        along = Math.Clamp(Vector2.Dot(point - origin, direction), 0f, maxDistance);
-        var closest = origin + direction * along;
-        return Vector2.DistanceSquared(point, closest) <= radius * radius;
+        if (args.Cancelled)
+            return;
+
+        if (args.OtherEntity != ghost.Comp.Projectile)
+            args.Cancelled = true;
     }
 
     /// <summary>
-    /// Re-raises the same <see cref="PreventCollideEvent"/> the physics engine would, since we're forcing a
-    /// hit without going through its normal contact pipeline. Lets faction/dodge/etc. rules still apply.
+    /// A projectile never collides with the real entity behind a ghost it's already carrying - the ghost
+    /// is the one deciding whether that target gets hit.
     /// </summary>
-    private bool CanCollide(
-        EntityUid projectile, PhysicsComponent projectileBody, Fixture projectileFixture,
-        EntityUid target, PhysicsComponent targetBody, Fixture targetFixture)
+    private void OnProjectilePreventCollide(Entity<LagCompensatingProjectileComponent> projectile, ref PreventCollideEvent args)
     {
-        var ev = new PreventCollideEvent(projectile, target, projectileBody, targetBody, projectileFixture, targetFixture);
-        RaiseLocalEvent(projectile, ref ev);
-        if (ev.Cancelled)
-            return false;
+        if (args.Cancelled)
+            return;
 
-        ev = new PreventCollideEvent(target, projectile, targetBody, projectileBody, targetFixture, projectileFixture);
-        RaiseLocalEvent(target, ref ev);
-        return !ev.Cancelled;
+        if (projectile.Comp.IgnoredRealTargets.Contains(args.OtherEntity))
+            args.Cancelled = true;
     }
 
-    private bool IsPathObstructed(MapId mapId, Vector2 origin, Vector2 targetPosition, EntityUid target, int collisionMask, EntityUid projectile, EntityUid shooter)
+    /// <summary>
+    /// The ghost caught the projectile: resolve this candidate (win or lose) and, if it wins, redirect
+    /// the hit onto the real target.
+    /// </summary>
+    private void OnGhostStartCollide(Entity<LagCompensationGhostComponent> ghost, ref StartCollideEvent args)
     {
-        var filter = new QueryFilter
-        {
-            MaskBits = collisionMask,
-            IsIgnored = uid => uid == projectile || uid == shooter,
-        };
+        if (args.OtherEntity != ghost.Comp.Projectile || args.OtherFixtureId != SharedProjectileSystem.ProjectileFixture)
+            return;
 
-        var result = _rayCastSystem.CastRayClosest(mapId, origin, targetPosition - origin, filter);
-        return result.Hit && result.Results[0].Entity != target;
+        var projectileUid = ghost.Comp.Projectile;
+        var targetUid = ghost.Comp.Target;
+
+        RemoveGhost(projectileUid, ghost);
+
+        if (TerminatingOrDeleted(targetUid) || TerminatingOrDeleted(projectileUid) || !CanReallyCollide(projectileUid, targetUid))
+            return;
+
+        _projectile.DoHit(projectileUid, targetUid);
+    }
+
+    /// <summary>
+    /// The shot resolved - whether against a ghost or a real, un-ghosted target - so every remaining
+    /// ghost from this shot is stale.
+    /// </summary>
+    private void OnProjectileHit(Entity<LagCompensatingProjectileComponent> projectile, ref ProjectileHitEvent args)
+    {
+        CleanupGhosts(projectile);
+    }
+
+    private void OnProjectileTerminating(Entity<LagCompensatingProjectileComponent> projectile, ref EntityTerminatingEvent args)
+    {
+        CleanupGhosts(projectile);
+    }
+
+    /// <summary>
+    /// Re-raises the same <see cref="PreventCollideEvent"/> the physics engine would for a direct
+    /// projectile/target collision, since the ghost stood in for the target instead. Lets faction/dodge/
+    /// require-target/etc. rules still apply to the redirected hit.
+    /// </summary>
+    private bool CanReallyCollide(EntityUid projectileUid, EntityUid targetUid)
+    {
+        if (!_physicsQuery.TryComp(projectileUid, out var projectilePhysicsComponent) ||
+            !_fixturesQuery.TryComp(projectileUid, out var projectileFixturesComponent) ||
+            !projectileFixturesComponent.Fixtures.TryGetValue(SharedProjectileSystem.ProjectileFixture, out var projectileFixture) ||
+            !_physicsQuery.TryComp(targetUid, out var targetPhysicsComponent) ||
+            !_fixturesQuery.TryComp(targetUid, out var targetFixturesComponent) ||
+            FindHardFixture(targetFixturesComponent) is not { } targetFixture)
+        {
+            return false;
+        }
+
+        var preventCollideEvent = new PreventCollideEvent(projectileUid, targetUid, projectilePhysicsComponent, targetPhysicsComponent, projectileFixture, targetFixture);
+        RaiseLocalEvent(projectileUid, ref preventCollideEvent);
+        if (preventCollideEvent.Cancelled)
+            return false;
+
+        preventCollideEvent = new PreventCollideEvent(targetUid, projectileUid, targetPhysicsComponent, projectilePhysicsComponent, targetFixture, projectileFixture);
+        RaiseLocalEvent(targetUid, ref preventCollideEvent);
+        return !preventCollideEvent.Cancelled;
+    }
+
+    private void RemoveGhost(EntityUid projectileUid, Entity<LagCompensationGhostComponent> ghost)
+    {
+        if (TryComp<LagCompensatingProjectileComponent>(projectileUid, out var projectileComponent))
+        {
+            projectileComponent.Ghosts.Remove(ghost.Owner);
+            projectileComponent.IgnoredRealTargets.Remove(ghost.Comp.Target);
+        }
+
+        QueueDel(ghost.Owner);
+    }
+
+    private void CleanupGhosts(Entity<LagCompensatingProjectileComponent> projectile)
+    {
+        foreach (var ghostUid in projectile.Comp.Ghosts)
+        {
+            QueueDel(ghostUid);
+        }
+
+        projectile.Comp.Ghosts.Clear();
+        projectile.Comp.IgnoredRealTargets.Clear();
     }
 }
