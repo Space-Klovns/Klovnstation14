@@ -2,10 +2,13 @@ using System.Linq;
 using System.Numerics;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Interaction;
+using Content.Shared.Maps;
 using Content.Shared.Projectiles;
 using Content.Shared.Stunnable;
+using Content.Shared.SubFloor;
 using Content.Shared.Weapons.Ranged.Systems;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 
@@ -13,12 +16,16 @@ namespace Content.Shared._KS14.Weapons.Ranged;
 
 public sealed partial class GunBackblastSystem : EntitySystem
 {
-    [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
     [Dependency] private SharedInteractionSystem _interactionSystem = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
+    [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
+    [Dependency] private TileSystem _tileSystem = default!;
+
+    [Dependency] private EntityQuery<SubFloorHideComponent> _subFloorHideQuery = default!;
 
     public override void Initialize()
     {
@@ -39,6 +46,9 @@ public sealed partial class GunBackblastSystem : EntitySystem
         var sectorDirection = ((_transformSystem.ToWorldPosition(args.ToCoordinates) - fromWorldPosition).ToWorldAngle() + entity.Comp.DirectionOffset).ToWorldVec();
         var halfField = entity.Comp.EffectField / 2d;
 
+        var gridUid = _transformSystem.GetGrid(args.FromCoordinates);
+        TryComp<MapGridComponent>(gridUid, out var mapGridComponent);
+
         foreach (var otherUid in uidsInRange)
         {
             if (otherUid == args.User ||
@@ -50,6 +60,13 @@ public sealed partial class GunBackblastSystem : EntitySystem
 
             if (!_interactionSystem.InRangeUnobstructed(new MapCoordinates(fromWorldPosition, gunTransform.MapID), new MapCoordinates(toWorldPosition, gunTransform.MapID), range: -1))
                 continue;
+
+            if (mapGridComponent is { } &&
+                _subFloorHideQuery.TryGetComponent(otherUid, out var subFloorHideComponent) &&
+                _mapSystem.TryGetTileRef(gridUid!.Value, mapGridComponent!, toWorldPosition, out var tileRef))
+            {
+                _tileSystem.PryTile(tileRef);
+            }
 
             if (TryComp<PhysicsComponent>(otherUid, out var physicsComponent))
                 _physicsSystem.ApplyLinearImpulse(otherUid, toDirectionUnitVector * entity.Comp.PushForce, body: physicsComponent);
