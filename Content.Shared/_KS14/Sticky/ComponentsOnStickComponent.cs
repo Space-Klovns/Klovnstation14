@@ -18,7 +18,7 @@ public sealed partial class ComponentsOnStickComponent : Component
     public bool RequiresOccluder = true;
 
     [DataField(required: true), ViewVariables]
-    public ComponentRegistry Components;
+    public ComponentRegistry Components = default!;
 
     /// <summary>
     ///     Whether the components are already added

@@ -19,7 +19,7 @@
     stuckOffset: 0,-0.25 # KS14
   # KS14 Start
   - type: ComponentsOnStick
-    requireOccluder: true
+    requiresOccluder: true
     components:
     - type: WallMount
       arc: 80
