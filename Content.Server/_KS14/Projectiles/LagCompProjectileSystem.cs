@@ -84,6 +84,9 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
         var projectileUid = args.Projectile;
         var shooterUid = args.User;
 
+        // traumastation compat - iirc only used to hide the server-side projectile from the client
+        RaiseNetworkEvent(new ShotPredictedProjectileEvent(GetNetEntity(projectileUid)), shooterUid);
+
         if (!_lagCompensationQuery.HasComp(shooterUid))
             return;
 

@@ -7,7 +7,7 @@ namespace Content.Shared._Trauma.Projectiles;
 /// Used to hide the server-spawned one.
 /// </summary>
 [Serializable, NetSerializable]
-public sealed class ShotPredictedProjectileEvent : EntityEventArgs
+public sealed class ShotPredictedProjectileEvent(NetEntity projectile) : EntityEventArgs
 {
-    public NetEntity Projectile;
+    public NetEntity Projectile = projectile;
 }
