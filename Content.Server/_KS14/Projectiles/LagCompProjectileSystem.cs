@@ -63,6 +63,12 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     {
         base.Initialize();
 
+        // Ghosts are re-rewound in our own Update() by teleporting their transform every tick. If that ran
+        // after the physics step instead of before it, each ghost's fresh position wouldn't take effect until
+        // the *following* tick's broadphase/contact pass - a permanent one-tick lag behind where it should be,
+        // which is significant against a fast-moving target and a direct contributor to missed hits.
+        UpdatesBefore.Add(typeof(SharedPhysicsSystem));
+
         SubscribeLocalEvent<PlayerShotProjectileEvent>(OnShotProjectile);
 
         SubscribeLocalEvent<LagCompensationGhostComponent, PreventCollideEvent>(OnGhostPreventCollide);
