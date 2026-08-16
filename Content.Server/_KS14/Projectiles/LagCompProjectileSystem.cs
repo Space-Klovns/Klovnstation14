@@ -12,6 +12,7 @@ using Robust.Server.Player;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Spawners;
 using Robust.Shared.Timing;
+using System.Numerics;
 
 namespace Content.Server._KS14.Projectiles;
 
@@ -23,6 +24,8 @@ namespace Content.Server._KS14.Projectiles;
 /// real physics lands that collision, the hit is redirected onto the real target via
 /// <see cref="PredictedProjectileSystem.DoHit"/>. Travel time, obstruction by walls, and hitting the
 /// closest thing first all fall out of normal physics simulation instead of being reimplemented by hand.
+/// Each ghost is re-rewound every tick so it stays a constant lag-duration behind its real target instead
+/// of staying frozen at the position it was spawned at, keeping it accurate for the whole projectile flight.
 /// Only covers physical projectiles; hitscan has its own path.
 /// </summary>
 public sealed partial class LagCompProjectileSystem : EntitySystem
@@ -102,12 +105,10 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
         // out at or below zero for ordinary connections, which silently disabled compensation entirely.
         // Ping is the same (server-trusted, if coarse) estimate LagCompensationSystem's own melee/hitscan
         // rewind already relies on for exactly this reason.
-        var currentTime = _timing.CurTime;
         var lagDuration = TimeSpan.FromMilliseconds(shooterSession.Ping * 1.5); // Use 1.5 due to the trip buffer.
         if (lagDuration > LagCompensationSystem.BufferTime)
             lagDuration = LagCompensationSystem.BufferTime;
 
-        var sentTime = currentTime - lagDuration;
         var lagSeconds = (float)lagDuration.TotalSeconds;
         if (lagSeconds <= 0f)
             return;
@@ -119,23 +120,84 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
         // How far the target could plausibly have moved during the lag window - not how far the projectile
         // could have flown, since that's what actually determines how far a dodge could have carried them.
         var maxDodgeDistance = Math.Min(projectileSpeed, MaxCompensationSpeed) * lagSeconds;
+        var projectileDirection = projectilePhysicsComponent.LinearVelocity / projectileSpeed;
 
-        SpawnCompensationGhosts(projectileUid, shooterUid, projectileOrigin, maxDodgeDistance, sentTime);
+        SpawnCompensationGhosts(projectileUid, shooterUid, projectileOrigin, projectileDirection, projectileSpeed, maxDodgeDistance, lagDuration);
+    }
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        var currentTime = _timing.CurTime;
+        var enumerator = EntityQueryEnumerator<LagCompensationGhostComponent, TransformComponent>();
+
+        while (enumerator.MoveNext(out var ghostUid, out var ghostComponent, out var ghostTransformComponent))
+        {
+            UpdateGhostPosition((ghostUid, ghostComponent), ghostTransformComponent, currentTime);
+        }
     }
 
     /// <summary>
-    /// Spawns a rewound ghost for every nearby <see cref="LagCompensationComponent"/> entity that could
-    /// plausibly have been dodging this shot, and registers each with the projectile so it's cleaned up
-    /// once the shot resolves.
+    /// Re-rewinds a live ghost to stay <see cref="LagCompensationGhostComponent.LagDuration"/> behind its
+    /// real target's recorded position, instead of leaving it frozen at its spawn-time snapshot. Keeps the
+    /// ghost accurate across the projectile's whole flight, however long that takes.
+    /// </summary>
+    private void UpdateGhostPosition(Entity<LagCompensationGhostComponent> ghost, TransformComponent ghostTransformComponent, TimeSpan currentTime)
+    {
+        var targetUid = ghost.Comp.Target;
+
+        if (TerminatingOrDeleted(targetUid) ||
+            !_lagCompensationQuery.TryComp(targetUid, out var targetLagCompensationComponent) ||
+            !_xformQuery.TryComp(targetUid, out var targetTransformComponent))
+        {
+            RemoveGhost(ghost.Comp.Projectile, ghost);
+            return;
+        }
+
+        var rewoundTime = currentTime - ghost.Comp.LagDuration;
+        var rewoundCoordinates = GetCompensatedCoordinates((targetUid, targetLagCompensationComponent, targetTransformComponent), rewoundTime);
+        var rewoundMapCoordinates = _transform.ToMapCoordinates(rewoundCoordinates);
+
+        // Target hopped maps since the ghost was spawned - leave the ghost where it last validly was rather
+        // than snapping it across maps into whatever entity happens to occupy those coordinates there.
+        if (rewoundMapCoordinates.MapId != ghostTransformComponent.MapID)
+            return;
+
+        _transform.SetCoordinates(ghost.Owner, ghostTransformComponent, rewoundCoordinates);
+    }
+
+    /// <summary>
+    /// Spawns a rewound ghost for every <see cref="LagCompensationComponent"/> entity near the projectile's
+    /// whole flight path - not just its muzzle point - that could plausibly have been dodging this shot, and
+    /// registers each with the projectile so it's cleaned up once the shot resolves.
     /// </summary>
     private void SpawnCompensationGhosts(
         EntityUid projectileUid,
         EntityUid shooterUid,
         MapCoordinates projectileOrigin,
+        Vector2 projectileDirection,
+        float projectileSpeed,
         float maxDodgeDistance,
-        TimeSpan sentTime)
+        TimeSpan lagDuration)
     {
-        var candidates = _lookup.GetEntitiesInRange<LagCompensationComponent>(projectileOrigin, maxDodgeDistance + MaxHitboxRadius);
+        // Ghosts never outlive GhostLifetime, so a candidate further down the trajectory than the projectile
+        // could travel in that time isn't worth spawning one for - its ghost would time out before the
+        // projectile could ever reach it.
+        var maxTravelDistance = projectileSpeed * GhostLifetime;
+        var halfWidth = maxDodgeDistance + MaxHitboxRadius;
+
+        // A rectangle hugging the projectile's entire flight path rather than a circle around its muzzle -
+        // a dodging target could plausibly be anywhere near the trajectory line, not only near where the gun
+        // was fired from. Local space: +X is straight down the trajectory, starting at the muzzle (X = 0), so
+        // nothing behind the shooter is ever included.
+        var localBounds = new Box2(0f, -halfWidth, maxTravelDistance, halfWidth);
+        var searchBounds = new Box2Rotated(localBounds, projectileDirection.ToAngle(), projectileOrigin.Position);
+
+        var candidates = new HashSet<Entity<LagCompensationComponent>>();
+        _lookup.GetEntitiesIntersecting(projectileOrigin.MapId, searchBounds, candidates);
+
+        var sentTime = _timing.CurTime - lagDuration;
 
         foreach (var candidate in candidates)
         {
@@ -161,15 +223,17 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
             if (rewoundMapCoordinates.MapId != projectileOrigin.MapId)
                 continue;
 
-            SpawnGhost(projectileUid, targetUid, targetFixture, targetShape, rewoundCoordinates);
+            SpawnGhost(projectileUid, targetUid, targetFixture, targetShape, rewoundCoordinates, lagDuration);
         }
     }
 
     /// <summary>
-    /// Spawns a static, invisible physics proxy at <paramref name="coordinates"/> carrying a copy of
-    /// <paramref name="targetShape"/>, and ties it to <paramref name="projectileUid"/>.
+    /// Spawns an invisible physics proxy at <paramref name="coordinates"/> carrying a copy of
+    /// <paramref name="targetShape"/>, and ties it to <paramref name="projectileUid"/>. Kept in sync with
+    /// its real target every tick afterward by <see cref="UpdateGhostPosition"/> - this is just its initial
+    /// position.
     /// </summary>
-    private void SpawnGhost(EntityUid projectileUid, EntityUid targetUid, Fixture targetFixture, PhysShapeCircle targetShape, EntityCoordinates coordinates)
+    private void SpawnGhost(EntityUid projectileUid, EntityUid targetUid, Fixture targetFixture, PhysShapeCircle targetShape, EntityCoordinates coordinates, TimeSpan lagDuration)
     {
         var ghostUid = Spawn(null, coordinates);
 
@@ -199,6 +263,7 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
         var ghostComponent = AddComp<LagCompensationGhostComponent>(ghostUid);
         ghostComponent.Projectile = projectileUid;
         ghostComponent.Target = targetUid;
+        ghostComponent.LagDuration = lagDuration;
 
         var despawnComponent = EnsureComp<TimedDespawnComponent>(ghostUid);
         despawnComponent.Lifetime = GhostLifetime;
