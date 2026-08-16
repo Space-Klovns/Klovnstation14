@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Numerics;
+using Content.Shared._KS14.Random.Helpers;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Interaction;
 using Content.Shared.Maps;
@@ -11,11 +12,13 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
+using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.Weapons.Ranged;
 
 public sealed partial class GunBackblastSystem : EntitySystem
 {
+    [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
@@ -49,6 +52,20 @@ public sealed partial class GunBackblastSystem : EntitySystem
         var gridUid = _transformSystem.GetGrid(args.FromCoordinates);
         TryComp<MapGridComponent>(gridUid, out var mapGridComponent);
 
+        var affectedTiles = new HashSet<TileRef>();
+        if (mapGridComponent is { })
+        {
+            var predictedRandom = KsSharedRandomExtensions.HashCodeCombine(
+                (int)_gameTiming.CurTick.Value,
+                KsSharedRandomExtensions.GetNetId(entity.Owner, EntityManager),
+                (int)args.ToCoordinates.X,
+                (int)args.ToCoordinates.Y
+            );
+
+            // random tile break logic here
+            // use GunBackblastComponent.TilebreakChance
+        }
+
         foreach (var otherUid in uidsInRange)
         {
             if (otherUid == args.User ||
@@ -63,7 +80,8 @@ public sealed partial class GunBackblastSystem : EntitySystem
 
             if (mapGridComponent is { } &&
                 _subFloorHideQuery.TryGetComponent(otherUid, out var subFloorHideComponent) &&
-                _mapSystem.TryGetTileRef(gridUid!.Value, mapGridComponent!, toWorldPosition, out var tileRef))
+                _mapSystem.TryGetTileRef(gridUid!.Value, mapGridComponent!, toWorldPosition, out var tileRef) &&
+                !affectedTiles.Contains(tileRef))
             {
                 _tileSystem.PryTile(tileRef);
             }
