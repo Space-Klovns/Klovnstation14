@@ -189,13 +189,26 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
 
         // A rectangle hugging the projectile's entire flight path rather than a circle around its muzzle -
         // a dodging target could plausibly be anywhere near the trajectory line, not only near where the gun
-        // was fired from. Local space: +X is straight down the trajectory, starting at the muzzle (X = 0), so
-        // nothing behind the shooter is ever included.
-        var localBounds = new Box2(0f, -halfWidth, maxTravelDistance, halfWidth);
-        var searchBounds = new Box2Rotated(localBounds, projectileDirection.ToAngle(), projectileOrigin.Position);
+        // was fired from. Box2Rotated rotates its Box's corners *around* Origin, so the box itself has to be
+        // built in world space starting at the muzzle, not at local (0,0) - otherwise the whole rectangle
+        // rotates into empty space nowhere near the projectile. Straight down the trajectory (+X after
+        // rotation) starts exactly at the muzzle, so nothing behind the shooter is ever included.
+        var muzzlePosition = projectileOrigin.Position;
+        var localBounds = new Box2(
+            muzzlePosition.X,
+            muzzlePosition.Y - halfWidth,
+            muzzlePosition.X + maxTravelDistance,
+            muzzlePosition.Y + halfWidth);
+        var searchBounds = new Box2Rotated(localBounds, projectileDirection.ToAngle(), muzzlePosition);
+
+        // Dynamic/Static cover every mob hitbox; Sundries (non-collidable bodies), Sensors (non-hard
+        // fixtures), and Contained (recursing into container contents) are all irrelevant for a hard mob
+        // hitbox and just add search cost. Approximate skips the tighter per-fixture polygon check in favour
+        // of broadphase AABBs, which is fine here since every downstream check re-validates precisely anyway.
+        const LookupFlags candidateFlags = LookupFlags.Dynamic | LookupFlags.Static | LookupFlags.Approximate;
 
         var candidates = new HashSet<Entity<LagCompensationComponent>>();
-        _lookup.GetEntitiesIntersecting(projectileOrigin.MapId, searchBounds, candidates);
+        _lookup.GetEntitiesIntersecting(projectileOrigin.MapId, searchBounds, candidates, candidateFlags);
 
         var sentTime = _timing.CurTime - lagDuration;
 
