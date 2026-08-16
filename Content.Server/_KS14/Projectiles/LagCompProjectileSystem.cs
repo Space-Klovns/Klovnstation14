@@ -8,6 +8,7 @@ using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
+using Robust.Server.Player;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Spawners;
 using Robust.Shared.Timing;
@@ -27,6 +28,7 @@ namespace Content.Server._KS14.Projectiles;
 public sealed partial class LagCompProjectileSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private PredictedProjectileSystem _projectile = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
     [Dependency] private EntityLookupSystem _lookup = default!;
@@ -42,8 +44,9 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
 
     // Generous upper bound on mob hitbox radii, padding the broadphase lookup so a target whose center sits
     // just past the max dodge distance isn't missed even though its hitbox still overlaps that point.
-    private const float MaxHitboxRadius = 1f;
+    private const float MaxHitboxRadius = 2.5f;
 
+    // TODO LCDC: use movement speed instead
     // How far a mob could plausibly have moved during the lag window - this bounds the search, not the
     // projectile's own speed. A ghost is only ever worth spawning within dodging range of the muzzle;
     // real physics (travel time, obstruction) takes care of everything from there.
@@ -51,7 +54,7 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     private const float MaxCompensationSpeed = 5.5f;
 
     // Safety net in case a ghost is somehow never resolved by a collision or projectile cleanup.
-    private const float GhostLifetime = 2f;
+    private const float GhostLifetime = 7f;
 
     public override void Initialize()
     {
@@ -72,10 +75,13 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
         var projectileUid = args.Projectile;
         var shooterUid = args.User;
 
-        if (args.ClientShootTime is not { } clientShootTime)
+        if (!_lagCompensationQuery.HasComp(shooterUid))
             return;
 
-        if (!_lagCompensationQuery.HasComp(shooterUid))
+        // Only a real player's shot needs compensating - NPCs/turrets simulate entirely server-side already,
+        // so there's no client round trip to correct for. This also gives us that player's session, which is
+        // the only server-trusted source of latency we have (see the CurTime comment below).
+        if (!_playerManager.TryGetSessionByEntity(shooterUid, out var shooterSession))
             return;
 
         if (!_physicsQuery.TryComp(projectileUid, out var projectilePhysicsComponent) ||
@@ -88,13 +94,21 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
         if (projectileSpeed <= 0f)
             return;
 
-        // Clamp to how far LagCompensationComponent actually keeps history, and never rewind past "now".
+        // IMPORTANT: a client-sent IGameTiming.CurTime is NOT comparable to the server's. RobustToolbox
+        // deliberately runs the client's tick counter (and thus CurTime) ahead of the server's last-confirmed
+        // tick, by a margin derived from that same client's ping, purely so predicted input arrives roughly
+        // when the server needs it - it is not a synchronized wall clock. Diffing a client-reported CurTime
+        // against server CurTime therefore doesn't measure this shot's actual one-way lag; it usually comes
+        // out at or below zero for ordinary connections, which silently disabled compensation entirely.
+        // Ping is the same (server-trusted, if coarse) estimate LagCompensationSystem's own melee/hitscan
+        // rewind already relies on for exactly this reason.
         var currentTime = _timing.CurTime;
-        var earliestTime = currentTime - LagCompensationSystem.BufferTime;
-        var sentTicks = Math.Clamp(clientShootTime.Ticks, earliestTime.Ticks, currentTime.Ticks);
-        var sentTime = TimeSpan.FromTicks(sentTicks);
+        var lagDuration = TimeSpan.FromMilliseconds(shooterSession.Ping * 1.5); // Use 1.5 due to the trip buffer.
+        if (lagDuration > LagCompensationSystem.BufferTime)
+            lagDuration = LagCompensationSystem.BufferTime;
 
-        var lagSeconds = (float)(currentTime - sentTime).TotalSeconds;
+        var sentTime = currentTime - lagDuration;
+        var lagSeconds = (float)lagDuration.TotalSeconds;
         if (lagSeconds <= 0f)
             return;
 

@@ -29,10 +29,4 @@ public sealed class RequestShootEvent : EntityEventArgs
     /// If true, the gun will continue firing until a stop event is sent from the client.
     /// </summary>
     public bool Continuous;
-
-    // KS14 addition
-    /// <summary>
-    ///     Client-side simulation-time that this shot was requested at.
-    /// </summary>
-    public TimeSpan ShootTime;
 }
