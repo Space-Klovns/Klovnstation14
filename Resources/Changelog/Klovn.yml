@@ -1753,3 +1753,11 @@ Entries:
       message: Fixed KS14 config preset not working on client.
   id: 182
   time: '2026-08-16T10:20:51.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: Bullets should now be lag compensated much better.
+    - type: Add
+      message: Bullets are now 220% more laggy.
+  id: 183
+  time: '2026-08-16T10:48:42.0000000+00:00'
