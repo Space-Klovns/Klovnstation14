@@ -1,0 +1,105 @@
+# In-character languages. Names and descriptions in Locale/en-US/_KS14/language/language.ftl.
+
+# The station default; entities without language components implicitly know exactly this.
+- type: ksLanguage
+  id: KsLangCommon
+  sortOrder: 0
+  obfuscation: !type:KsCannedObfuscation
+    lines:
+    - ks-language-obfuscation-incomprehensible
+
+- type: ksLanguage
+  id: KsLangVox
+  color: "#ba8ee0"
+  fontId: KsRobotoMono
+  sortOrder: 10
+  obfuscation: !type:KsSyllableObfuscation
+    minSyllables: 1
+    maxSyllables: 3
+    syllables:
+    - ya
+    - yip
+    - kri
+    - skre
+    - ka
+    - chi
+    - ri
+    - ack
+    - ki'i
+    - hi
+    - kra
+    - ss
+    - ree
+    - ax
+    - quil
+
+- type: ksLanguage
+  id: KsLangDwarvish
+  color: "#c98a4b"
+  fontId: DefaultBold
+  sortOrder: 10
+  obfuscation: !type:KsSyllableObfuscation
+    minSyllables: 1
+    maxSyllables: 3
+    syllables:
+    - khaz
+    - dum
+    - bar
+    - uk
+    - gol
+    - thra
+    - mor
+    - grum
+    - din
+    - bal
+    - dur
+    - rok
+    - gim
+    - nar
+    - zad
+    - kar
+
+- type: ksLanguage
+  id: KsLangKlovnish
+  color: "#ff66cc"
+  fontId: BoxRound
+  sortOrder: 20
+  obfuscation: !type:KsSyllableObfuscation
+    minSyllables: 1
+    maxSyllables: 2
+    syllables:
+    - honk
+    - hjonk
+    - honka
+    - bwaap
+    - breep
+    - hoonk
+    - wee
+    - boing
+    - prr
+    - paff
+    - nk
+
+- type: ksLanguage
+  id: KsLangSyndicate
+  color: "#a4243b"
+  fontId: Monospace
+  sortOrder: 30
+  obfuscation: !type:KsSyllableObfuscation
+    minSyllables: 2
+    maxSyllables: 4
+    syllables:
+    - kt
+    - vash
+    - dra
+    - zek
+    - mir
+    - ok
+    - sa
+    - vek
+    - tal
+    - gor
+    - nov
+    - chik
+    - ur
+    - pol

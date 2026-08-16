@@ -1,0 +1,36 @@
+# Character-creation language picks; one shared point budget forces a choice.
+
+- type: traitCategory
+  id: KsLanguages
+  name: trait-category-ks-languages
+  maxTraitPoints: 2
+
+- type: trait
+  id: KsTraitLangVox
+  name: ks-trait-lang-vox-name
+  description: ks-trait-lang-vox-description
+  category: KsLanguages
+  cost: 1
+  specials:
+  - !type:KsLanguageAddSpecial
+    speaks: [ KsLangVox ]
+
+- type: trait
+  id: KsTraitLangDwarvish
+  name: ks-trait-lang-dwarvish-name
+  description: ks-trait-lang-dwarvish-description
+  category: KsLanguages
+  cost: 1
+  specials:
+  - !type:KsLanguageAddSpecial
+    speaks: [ KsLangDwarvish ]
+
+- type: trait
+  id: KsTraitLangKlovnish
+  name: ks-trait-lang-klovnish-name
+  description: ks-trait-lang-klovnish-description
+  category: KsLanguages
+  cost: 1
+  specials:
+  - !type:KsLanguageAddSpecial
+    speaks: [ KsLangKlovnish ]

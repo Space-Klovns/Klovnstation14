@@ -47,3 +47,8 @@
   license: "CC-BY-4.0"
   copyright: "Created by `theplax` on freesound.org, edited and converted to .ogg for Klovnstation 14"
   source: "https://freesound.org/people/theplax/sounds/609721/"
+
+- files: ["nvg_on.ogg", "nvg_off.ogg"]
+  license: "Custom"
+  copyright: "Spliced from two sounds by `Syna-Max` on freesound.org (CC-BY-NC-4.0) and `hotpin7` on freesound.org (CC0-1.0) respectively"
+  source: "https://freesound.org/" # https://freesound.org/people/Syna-Max/sounds/60345/, https://freesound.org/people/hotpin7/sounds/818509/

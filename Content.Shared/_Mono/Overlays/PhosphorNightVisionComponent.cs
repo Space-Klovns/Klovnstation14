@@ -1,4 +1,5 @@
 using Content.Shared.Actions;
+using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 
@@ -73,12 +74,6 @@ public sealed partial class PhosphorNightVisionComponent : Component
     public float Amplification = 32f;
 
     /// <summary>
-    /// KS14 - do we draw the phosphor effect?
-    /// </summary>
-    [DataField, AutoNetworkedField]
-    public bool PhosphorEffect = true;
-
-    /// <summary>
     /// KS14 - does this provide clean full screen vision or just a cone?
     /// </summary>
     [DataField, AutoNetworkedField]
@@ -107,5 +102,23 @@ public sealed partial class PhosphorNightVisionComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField]
     public float ConeDistanceFeather = 0.05f;
+
+    // KS14
+    [DataField]
+    public TimeSpan WearAnimationDuration = TimeSpan.FromSeconds(0.5d);
+
+    // KS14 Start
+    /// <summary>
+    ///     Played locally.
+    /// </summary>
+    [DataField]
+    public SoundSpecifier? OnSound = null;
+
+    /// <summary>
+    ///     Played locally.
+    /// </summary>
+    [DataField]
+    public SoundSpecifier? OffSound = null;
+    // KS14 End
 }
 public sealed partial class TogglePhosphorNightVisionEvent : InstantActionEvent;

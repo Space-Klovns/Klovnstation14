@@ -196,7 +196,7 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
         // KS14: ANK: end
 
         // Just keep moving in the background and let the other tasks handle it.
-        if (ShutdownState == HTNPlanState.PlanFinished && steering.Status == SteeringStatus.Moving)
+        if ((ShutdownState == HTNPlanState.PlanFinished || ShutdownState == HTNPlanState.Never /* KS14: ANK: include Never */) && steering.Status == SteeringStatus.Moving)
         {
             return HTNOperatorStatus.Finished;
         }

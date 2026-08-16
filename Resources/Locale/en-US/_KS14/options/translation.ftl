@@ -1,0 +1,16 @@
+ks-ui-options-translate-language = Chat translation (DeepL)
+ks-ui-options-translate-language-off = Off
+ks-ui-options-translate-language-en-us = English (US)
+ks-ui-options-translate-language-en-gb = English (UK)
+ks-ui-options-translate-language-de = German
+ks-ui-options-translate-language-ru = Russian
+ks-ui-options-translate-language-fr = French
+ks-ui-options-translate-language-es = Spanish
+ks-ui-options-translate-language-pt-br = Portuguese (Brazil)
+ks-ui-options-translate-language-it = Italian
+ks-ui-options-translate-language-pl = Polish
+ks-ui-options-translate-language-nl = Dutch
+ks-ui-options-translate-language-uk = Ukrainian
+ks-ui-options-translate-language-ja = Japanese
+ks-ui-options-translate-language-ko = Korean
+ks-ui-options-translate-language-zh-hans = Chinese (Simplified)

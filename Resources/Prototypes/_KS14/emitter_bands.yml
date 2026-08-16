@@ -1,0 +1,17 @@
+# Frequency bands emitters (radars, jammers) transmit on. Identification intel
+# only: band-matched jamming and receiver band limits are not implemented, so
+# adding a band here changes nothing but the ELINT readout.
+- type: ksEmitterBand
+  id: KsBandLow
+  label: ks-emitter-band-low
+  sortOrder: 0
+
+- type: ksEmitterBand
+  id: KsBandMid
+  label: ks-emitter-band-mid
+  sortOrder: 1
+
+- type: ksEmitterBand
+  id: KsBandHigh
+  label: ks-emitter-band-high
+  sortOrder: 2

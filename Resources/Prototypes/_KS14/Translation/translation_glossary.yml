@@ -1,0 +1,41 @@
+# KS14 chat-translation glossary.
+#
+# Each entry below is ONE directional (source -> target) dictionary. They are compiled at runtime into a
+# single DeepL multilingual glossary and applied automatically to any translation whose (source, target)
+# pair matches. Source/target are BASE language codes ("EN", "DE", ...); a base target covers its regional
+# variants (target "DE" also serves "DE" readers, target "EN" serves "EN-US"/"EN-GB").
+#
+# A glossary forces EXACT substitutions, so the safest and most useful content is setting jargon and proper
+# nouns mapped to THEMSELVES, which keeps them verbatim instead of letting DeepL translate them literally.
+# Add real cross-language terms only if a fluent speaker can supply them. Not every language pair supports
+# DeepL glossaries; an unsupported pair makes the whole glossary fall back to none, so keep to common pairs.
+
+- type: ksTranslationGlossary
+  id: KS14JargonEnToDe
+  source: EN
+  target: DE
+  entries:
+    greytide: greytide
+    greyshirt: greyshirt
+    honk: honk
+    singulo: singulo
+    cargonia: cargonia
+    syndie: syndie
+    antag: antag
+    validhunt: validhunt
+    metagrudge: metagrudge
+
+- type: ksTranslationGlossary
+  id: KS14JargonEnToFr
+  source: EN
+  target: FR
+  entries:
+    greytide: greytide
+    greyshirt: greyshirt
+    honk: honk
+    singulo: singulo
+    cargonia: cargonia
+    syndie: syndie
+    antag: antag
+    validhunt: validhunt
+    metagrudge: metagrudge

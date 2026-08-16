@@ -1627,3 +1627,89 @@ Entries:
       message: Scenario healing changes.
   id: 168
   time: '2026-07-22T14:34:31.0000000+00:00'
+- author: teecoding
+  changes:
+    - type: Fix
+      message: Fixed atmos shield generators crashing the round when deleted.
+  id: 169
+  time: '2026-07-26T11:52:05.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Night vision visuals have been heavily improved.
+    - type: Add
+      message: Night vision now gets significantly amplified when flashed.
+    - type: Fix
+      message: Fixed insane-level grammar error in the description of rotated pallets.
+  id: 170
+  time: '2026-07-26T12:27:53.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added backblast to rocket launchers. Don't stand behind someone with an
+        RPG in their hands.
+    - type: Add
+      message: Added simple muzzle effects.
+    - type: Fix
+      message: Fixes NVGs having broken light amplification.
+  id: 171
+  time: '2026-08-01T12:19:06.0000000+00:00'
+- author: teecoding
+  changes:
+    - type: Add
+      message: >-
+        Ships can now mount sensor arrays: visual search, IRST, radar, ELINT,
+        RWR, jammers and datalinks. Detection is no longer free - emitting
+        reveals you.
+    - type: Add
+      message: >-
+        A new sensor console with RADAR, MAP, ESM and DOCK screens: fog-of-war
+        contacts, bearing plots, threat warnings, signal analysis and a
+        datalinked sector chart.
+  id: 172
+  time: '2026-08-01T13:36:14.0000000+00:00'
+- author: teecoding
+  changes:
+    - type: Add
+      message: >-
+        In-character languages. Vox, dwarves, clowns and syndicate agents can
+        speak languages others hear as gibberish.
+    - type: Add
+      message: >-
+        Language menu on L to switch your spoken language, plus language traits
+        in character creation.
+    - type: Tweak
+      message: >-
+        Parrots and voice triggers record speech in the language it was spoken
+        in.
+  id: 173
+  time: '2026-08-01T13:41:55.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Backblast from rocket launchers is now properly obstructed by objects.
+  id: 174
+  time: '2026-08-01T15:22:27.0000000+00:00'
+- author: teecoding
+  changes:
+    - type: Add
+      message: >-
+        IRST sensors now show life-sign blips for live creatures aboard tracked
+        hulls and adrift in space.
+    - type: Fix
+      message: Fixed FPS drops while using the shuttle sensor console.
+    - type: Fix
+      message: Radar interest markers now show on maps far from the origin.
+  id: 175
+  time: '2026-08-04T13:54:06.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added shielding to canisters: this delays the explosion of canisters,
+        while depleting an internal (self-recharging) battery.
+    - type: Fix
+      message: Fixed some mispredicts involving sparks.
+  id: 176
+  time: '2026-08-04T20:49:06.0000000+00:00'

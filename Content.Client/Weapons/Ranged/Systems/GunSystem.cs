@@ -274,33 +274,21 @@ public sealed partial class GunSystem : SharedGunSystem
             track.Offset = Vector2.UnitX / 2f;
         }
 
+        // STDA14: Separated muzzle animation code into GunSystem.Stda14.DoMuzzleEffect
         var lifetime = 0.4f;
 
-        if (TryComp<TimedDespawnComponent>(gunUid, out var despawn))
+        // STDA14 start
+        DoMuzzleEffect(gunUid, ent, lifetime);
+        if (message.DetachedPrototype is { } detachedPrototype)
         {
-            lifetime = despawn.Lifetime;
+            var detachedEnt = SpawnAtPosition(detachedPrototype, coordinates);
+            TransformSystem.SetWorldRotationNoLerp(detachedEnt, message.Angle);
+
+            DoMuzzleEffect(gunUid, detachedEnt, lifetime);
         }
+        // STDA14 end
 
-        var anim = new Animation()
-        {
-            Length = TimeSpan.FromSeconds(lifetime),
-            AnimationTracks =
-            {
-                new AnimationTrackComponentProperty
-                {
-                    ComponentType = typeof(SpriteComponent),
-                    Property = nameof(SpriteComponent.Color),
-                    InterpolationMode = AnimationInterpolationMode.Linear,
-                    KeyFrames =
-                    {
-                        new AnimationTrackProperty.KeyFrame(Color.White.WithAlpha(1f), 0),
-                        new AnimationTrackProperty.KeyFrame(Color.White.WithAlpha(0f), lifetime)
-                    }
-                }
-            }
-        };
 
-        _animPlayer.Play(ent, anim, "muzzle-flash");
         if (!TryComp(gunUid, out PointLightComponent? light))
         {
             light = Factory.GetComponent<PointLightComponent>();

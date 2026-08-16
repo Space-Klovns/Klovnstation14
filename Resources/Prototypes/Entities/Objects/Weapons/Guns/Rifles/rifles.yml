@@ -12,7 +12,7 @@
     unwieldOnUse: false
   - type: GunWieldBonus
     minAngle: -180
-    maxAngle: -140
+    maxAngle: -168
   - type: Sprite
   - type: Item
     size: Huge
@@ -40,6 +40,11 @@
       - SemiAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/batrifle.ogg
+    # KS14: Farsound start
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/batrifle.ogg
+      range: 15,130
+    # KS14: Farsound end
   - type: ChamberMagazineAmmoProvider
     soundRack:
       path: /Audio/Weapons/Guns/Cock/sf_rifle_cock.ogg

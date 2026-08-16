@@ -200,12 +200,14 @@ public abstract partial class SharedFlashSystem : EntitySystem
                 ("user", Identity.Entity(user.Value, EntityManager))), target, target);
         }
 
-        var ev = new AfterFlashedEvent(target, user, used, melee);
+        var ev = new AfterFlashedEvent(target, user, used, melee, flashDuration /* KS14: Add FlashDuration */);
         RaiseLocalEvent(target, ref ev);
 
-        if (user != null)
+        if (user != null &&
+            user != target /* KS14: check if this is the same ent as the target; don't raise the event twice on the target */)
             RaiseLocalEvent(user.Value, ref ev);
-        if (used != null)
+        if (used != null &&
+            used != target /* KS14: ditto */)
             RaiseLocalEvent(used.Value, ref ev);
     }
 

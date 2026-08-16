@@ -1,5 +1,6 @@
 using Content.Server.Chat.Systems;
 using Content.Shared.Chat;
+using Content.Shared._KS14.Language; // KS14
 using Content.Shared.Speech;
 using Content.Shared.Speech.Components;
 
@@ -20,10 +21,10 @@ public sealed partial class ListeningSystem : EntitySystem
 
     private void OnSpeak(EntitySpokeEvent ev)
     {
-        PingListeners(ev.Source, ev.Message, ev.ObfuscatedMessage);
+        PingListeners(ev.Source, ev.Message, ev.ObfuscatedMessage, ev.KsLanguage /* KS14 */);
     }
 
-    public void PingListeners(EntityUid source, string message, string? obfuscatedMessage)
+    public void PingListeners(EntityUid source, string message, string? obfuscatedMessage, KsUtteranceContext? ksLanguage = null /* KS14 */)
     {
         // TODO whispering / audio volume? Microphone sensitivity?
         // for now, whispering just arbitrarily reduces the listener's max range.
@@ -32,8 +33,8 @@ public sealed partial class ListeningSystem : EntitySystem
         var sourcePos = _xforms.GetWorldPosition(sourceXform);
 
         var attemptEv = new ListenAttemptEvent(source);
-        var ev = new ListenEvent(message, source);
-        var obfuscatedEv = obfuscatedMessage == null ? null : new ListenEvent(obfuscatedMessage, source);
+        var ev = new ListenEvent(message, source, ksLanguage /* KS14 */);
+        var obfuscatedEv = obfuscatedMessage == null ? null : new ListenEvent(obfuscatedMessage, source, ksLanguage /* KS14 */);
         var query = EntityQueryEnumerator<ActiveListenerComponent, TransformComponent>();
 
         while (query.MoveNext(out var listenerUid, out var listener, out var xform))

@@ -1,0 +1,75 @@
+<ksui:KsBaseWindow xmlns="https://spacestation14.io"
+            xmlns:ksui="clr-namespace:Content.Client._KS14.Shuttles.UI"
+            MouseFilter="Stop"
+            SetSize="960 762"
+            MinSize="960 762">
+    <!-- The instrument bezel: the whole window IS the instrument, no stock chrome. -->
+    <PanelContainer Name="Bezel"/>
+    <BoxContainer Orientation="Vertical" Margin="2">
+        <!-- Custom title bar: VT323 title + chrome buttons. -->
+        <PanelContainer Name="TitleBar">
+            <BoxContainer Orientation="Horizontal" HorizontalExpand="True" Margin="8 2 4 2">
+                <Label Name="TitleLabel"
+                       StyleClasses="KsInstrumentTitle"
+                       HorizontalExpand="True"
+                       VAlign="Center"
+                       Text="{Loc 'ks-instrument-window-title'}"/>
+                <Button Name="PopChromeButton"
+                        StyleClasses="KsInstrumentAction"
+                        VerticalAlignment="Center"
+                        Margin="0 0 4 0"
+                        ToolTip="{Loc 'ks-instrument-window-pop-hint'}"
+                        Text="{Loc 'ks-instrument-window-pop'}"/>
+                <Button Name="CloseChromeButton"
+                        StyleClasses="KsInstrumentAction"
+                        VerticalAlignment="Center"
+                        Text="{Loc 'ks-instrument-window-close'}"/>
+            </BoxContainer>
+        </PanelContainer>
+        <!-- Instrument tab strip: RADAR // MAP // ESM // DOCK -->
+        <BoxContainer Name="TabStrip"
+                      Orientation="Horizontal"
+                      HorizontalAlignment="Stretch"
+                      Margin="8 6 8 4">
+            <Button Name="RadarTabButton"
+                    StyleClasses="KsInstrumentTab"
+                    ToggleMode="True"
+                    Text="{Loc 'ks-instrument-tab-radar'}"/>
+            <Label Name="Sep1" StyleClasses="KsInstrumentStrong" Text="{Loc 'ks-instrument-tab-separator'}" Margin="6 0 6 0"/>
+            <Button Name="MapTabButton"
+                    StyleClasses="KsInstrumentTab"
+                    ToggleMode="True"
+                    Text="{Loc 'ks-instrument-tab-map'}"/>
+            <Label Name="Sep2" StyleClasses="KsInstrumentStrong" Text="{Loc 'ks-instrument-tab-separator'}" Margin="6 0 6 0"/>
+            <Button Name="EsmTabButton"
+                    StyleClasses="KsInstrumentTab"
+                    ToggleMode="True"
+                    Text="{Loc 'ks-instrument-tab-esm'}"/>
+            <Label Name="Sep3" StyleClasses="KsInstrumentStrong" Text="{Loc 'ks-instrument-tab-separator'}" Margin="6 0 6 0"/>
+            <Button Name="DockTabButton"
+                    StyleClasses="KsInstrumentTab"
+                    ToggleMode="True"
+                    Text="{Loc 'ks-instrument-tab-dock'}"/>
+        </BoxContainer>
+        <BoxContainer Name="Contents"
+                      HorizontalAlignment="Stretch"
+                      VerticalExpand="True"
+                      Margin="5">
+            <ksui:KsNavScreen Name="RadarContainer" Visible="False"/>
+            <ksui:KsMapScreen Name="MapContainer" Visible="False"/>
+            <ksui:KsEsmScreen Name="EsmContainer" Visible="False"/>
+            <ksui:KsDockScreen Name="DockContainer" Visible="False"/>
+        </BoxContainer>
+        <PanelContainer Name="StatusStrip" Margin="8 2 8 6">
+            <BoxContainer Orientation="Horizontal" HorizontalExpand="True" Margin="6 2 6 2">
+                <Label Name="StatusLabel"
+                       StyleClasses="KsInstrumentSmall"
+                       HorizontalExpand="True"/>
+                <Label Name="JammedLabel"
+                       StyleClasses="KsInstrumentSmall"
+                       Visible="False"
+                       Text="{Loc 'ks-instrument-status-jammed'}"/>
+            </BoxContainer>
+        </PanelContainer>
+    </BoxContainer>
+</ksui:KsBaseWindow>

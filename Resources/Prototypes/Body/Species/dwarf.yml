@@ -76,6 +76,9 @@
   id: MobDwarf
   name: Urist McHands the Dwarf
   components:
+  - type: KsLanguageKnowledge # KS14
+    speaks: [ KsLangCommon, KsLangDwarvish ] # KS14
+    understands: [ KsLangCommon, KsLangDwarvish ] # KS14
   - type: Fixtures
     fixtures: # TODO: This needs a second fixture just for mob collisions.
       fix1:

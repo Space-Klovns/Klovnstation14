@@ -1,0 +1,32 @@
+
+- type: entity
+  parent: [ BaseWeaponLauncher, BaseMajorContraband ]
+  id: KsWeaponLauncherRocketAt4
+  name: AT-4
+  description: A single-used anti-tank rocket launcher.
+  components:
+  - type: Sprite
+    sprite: _Battlefield14/Objects/Weapons/Guns/Launchers/AT4.rsi
+    layers:
+    - state: base
+      map: ["enum.GunVisualLayers.Base"]
+  - type: Clothing
+    sprite: _Battlefield14/Objects/Weapons/Guns/Launchers/AT4.rsi
+  - type: Gun
+    fireRate: 0.5
+    soundGunshot:
+      path: /Audio/Weapons/Guns/Gunshots/rpgfire.ogg
+  - type: BasicEntityAmmoProvider
+    proto: CartridgeRocket
+    capacity: 1
+  - type: GunBackblast
+    directionOffset: 180
+    radius: 1.5
+    effectField: 160
+    damage:
+      types:
+        Heat: 40
+        Blunt: 35
+    pushForce: 1000
+    knockdownTime: 3s
+  - type: AmmoCounter

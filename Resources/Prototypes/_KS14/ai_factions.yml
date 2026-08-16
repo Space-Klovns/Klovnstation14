@@ -1,0 +1,13 @@
+# They are neutral to NanoTrasen faction, not necessarily friendly
+- type: npcFaction
+  id: KsNanoTrasenOperative
+  hostile:
+  - SimpleHostile
+  - Syndicate
+  - Xeno
+  - Zombie
+  #- Revolutionary
+  - Dragon
+  - AllHostile
+  - Wizard
+  - Xenoborg
