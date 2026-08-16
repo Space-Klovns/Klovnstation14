@@ -16,7 +16,7 @@
 - type: gameMap
   id: Dev
   mapName: Dev
-  mapPath: /Maps/_KS14/Test/klovndev.yml # KS14
+  mapPath: /Maps/Test/_KS14/klovndev.yml # KS14, intentionally in Test/_KS14 and not the other way around
   minPlayers: 0
   stations:
     Dev:
