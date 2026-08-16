@@ -1775,3 +1775,11 @@ Entries:
         tree (WTF) (SCIENCE WQN)
   id: 185
   time: '2026-08-16T11:16:04.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: >-
+        C-4, seismic charges, etc. now become wallmounts when planted and aren't
+        visible from the side opposite from which they were planted on.
+  id: 186
+  time: '2026-08-16T13:15:12.0000000+00:00'
