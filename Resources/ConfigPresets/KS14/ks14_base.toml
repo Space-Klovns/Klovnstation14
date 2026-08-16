@@ -37,6 +37,6 @@ kill_crit = true
 # up to 2 storage uis open at once
 storage_limit = 2
 
-[klovn]
+[klovn.gun]
 # originally 0.125
-gun.impulse_multiplier = 0.09375
+impulse_multiplier = 0.09375
