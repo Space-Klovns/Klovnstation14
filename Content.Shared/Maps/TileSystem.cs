@@ -263,13 +263,22 @@ public sealed partial class TileSystem : EntitySystem
         var gridUid = tileRef.GridUid;
         var mapGrid = Comp<MapGridComponent>(gridUid);
 
+        // KS14 start
+        var predictedRandom = _KS14.Random.Helpers.KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
+            (int)_timing.CurTick.Value,
+            _KS14.Random.Helpers.KsSharedRandomExtensions.GetNetId(tileRef.GridUid, EntityManager),
+            tileRef.GridIndices.X,
+            tileRef.GridIndices.Y
+        );
+        // KS14 end
+
         const float margin = 0.1f;
         var bounds = mapGrid.TileSize - margin * 2;
         var indices = tileRef.GridIndices;
         var coordinates = _maps.GridTileToLocal(gridUid, mapGrid, indices)
             .Offset(new Vector2(
-                (_robustRandom.NextFloat() - 0.5f) * bounds,
-                (_robustRandom.NextFloat() - 0.5f) * bounds));
+                (predictedRandom/* KS14: predictedRandom instead of IRobustRandom */.NextFloat() - 0.5f) * bounds,
+                (predictedRandom/* KS14: predictedRandom instead of IRobustRandom */.NextFloat() - 0.5f) * bounds));
 
         var historyComp = EnsureComp<TileHistoryComponent>(gridUid);
         ProtoId<ContentTileDefinition> previousTileId;
@@ -307,8 +316,8 @@ public sealed partial class TileSystem : EntitySystem
         if (spawnItem)
         {
             //Actually spawn the relevant tile item at the right position and give it some random offset.
-            var tileItem = Spawn(tileDef.ItemDropPrototypeName, coordinates);
-            Transform(tileItem).LocalRotation = _robustRandom.NextDouble() * Math.Tau;
+            var tileItem = PredictedSpawnAttachedTo/* KS14: predicted */(tileDef.ItemDropPrototypeName, coordinates);
+            Transform(tileItem).LocalRotation = predictedRandom/* KS14: predictedRandom instead of IRobustRandom */.NextDouble() * Math.Tau;
         }
 
         //Destroy any decals on the tile

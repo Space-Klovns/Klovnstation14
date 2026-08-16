@@ -56,5 +56,5 @@
   # KS14 start
   - type: PhosphorNightVisionGlow
     duration: 5.5s
-    scale: 1
+    scale: 1.5
   # KS14 end

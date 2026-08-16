@@ -22,11 +22,12 @@
   - type: GunBackblast
     directionOffset: 180
     radius: 1.5
-    effectField: 160
+    effectField: 100
     damage:
       types:
         Heat: 40
         Blunt: 35
     pushForce: 1000
     knockdownTime: 3s
+    tilebreakChance: 0.8
   - type: AmmoCounter

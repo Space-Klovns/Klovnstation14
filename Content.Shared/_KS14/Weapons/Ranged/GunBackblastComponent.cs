@@ -59,5 +59,5 @@ public sealed partial class GunBackblastComponent : Component
     ///     From 0 - 1: the chance for tiles in the AOE to break.
     /// </summary>
     [DataField]
-    public float TilebreakChance = 0f;
+    public float TilebreakChance = 0.5f;
 }
