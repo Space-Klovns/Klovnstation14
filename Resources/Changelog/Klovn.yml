@@ -1767,3 +1767,11 @@ Entries:
       message: Turrets can now be EMPed to be temporarily disabled.
   id: 184
   time: '2026-08-16T11:14:42.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Fixed R&D tech tree UI dragging the window when you tried to drag the
+        tree (WTF) (SCIENCE WQN)
+  id: 185
+  time: '2026-08-16T11:16:04.0000000+00:00'
