@@ -65,11 +65,13 @@
     openSound:
       path: /Audio/_KS14/Machines/Airlocks/open_force.ogg
       params:
-        volume: -4
+        volume: -2.5
+        variation: 0.05
     closeSound:
       path: /Audio/_KS14/Machines/Airlocks/close_force.ogg
       params:
-        volume: -4
+        volume: -2.5
+        variation: 0.05
   # KS14: prysound end
   - type: AnimationPlayer
   - type: Physics
