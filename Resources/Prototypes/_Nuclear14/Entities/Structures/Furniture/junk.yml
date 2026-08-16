@@ -10,7 +10,6 @@
     netsync: false
   - type: Damageable
     damageModifierSet: Wood
-    damageContainer: Inorganic
   - type: Destructible
     thresholds:
     - trigger:
@@ -25,7 +24,7 @@
       behaviors:
       - !type:PlaySoundBehavior
         sound:
-          path: /Audio/Effects/woodhit.ogg
+          collection: WoodDestroy
       - !type:SpawnEntitiesBehavior
         spawn:
           MaterialWoodPlank:
@@ -67,7 +66,7 @@
       behaviors:
       - !type:PlaySoundBehavior
         sound:
-          path: /Audio/Effects/metalbreak.ogg
+          collection: MetalBreak
       - !type:SpawnEntitiesBehavior
         spawn:
           SheetSteel1:
@@ -224,8 +223,7 @@
     sprite: _Nuclear14/Structures/Furniture/junk.rsi
     state: junk_toilet
   - type: SecretStash
-    secretPartName: secret-stash-part-toilet
-    noRot: true
+    secretStashName: secret-stash-toilet
 
 - type: entity
   parent: N14JunkMetalBase
