@@ -162,6 +162,8 @@ public sealed partial class StickySystem : EntitySystem
         if (!_container.Insert(uid, container))
             return;
 
+        RotateAndMove(ent, user); // KS14
+
         // show message to user
         if (comp.StickPopupSuccess != null)
         {
