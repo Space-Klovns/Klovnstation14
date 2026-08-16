@@ -1745,3 +1745,11 @@ Entries:
       message: Stamina damage now recovers instantly after fullstun (again)!
   id: 181
   time: '2026-08-15T22:24:45.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: you can have up to two storage UIs open.
+    - type: Fix
+      message: Fixed KS14 config preset not working on client.
+  id: 182
+  time: '2026-08-16T10:20:51.0000000+00:00'
