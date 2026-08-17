@@ -5,8 +5,8 @@ using Content.Client._Mono.Overlays;
 using Robust.Client.Graphics;
 using Robust.Client.Player;
 using Robust.Shared.Player;
-using System.Linq;
 using Robust.Client.Audio;
+using Content.Shared._KS14.IoC;
 
 namespace Content.Client._Mono.PhosphorNightVision;
 
@@ -16,6 +16,7 @@ public sealed partial class PhosphorNightVisionSystem : SharedPhosphorNightVisio
     [Dependency] private IOverlayManager _overlayMan = default!;
     [Dependency] private IPlayerManager _player = default!;
     [Dependency] private AudioSystem _audioSystem = default!;
+    [Dependency] private SystemCollectionHookManager _collectionHookManager = default!;
 
     private PhosphorNightVisionOverlay _overlay = default!;
 
@@ -31,7 +32,13 @@ public sealed partial class PhosphorNightVisionSystem : SharedPhosphorNightVisio
 
         SubscribeLocalEvent<PhosphorNightVisionComponent, AfterAutoHandleStateEvent>(OnNvHandleState);
 
-        _overlayMan.AddOverlay(_overlay);
+        _collectionHookManager.HookAction(collection =>
+        {
+            collection.InjectDependencies(_overlay);
+            _overlay.Initialise();
+
+            _overlayMan.AddOverlay(_overlay);
+        });
     }
 
     // KS14: move overlay removal here

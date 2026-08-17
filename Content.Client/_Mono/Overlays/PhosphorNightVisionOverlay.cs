@@ -1,4 +1,3 @@
-using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.Prototypes;
@@ -6,7 +5,9 @@ using Content.Shared.MouseRotator;
 using Robust.Client.Input;
 using Content.Shared._Mono.Overlays;
 using Robust.Shared.Map;
-using Robust.Shared.Timing; // KS14
+using Robust.Shared.Timing;
+using Robust.Client.GameObjects;
+using Content.Shared._KS14.PhosphorNightVision;
 
 namespace Content.Client._Mono.Overlays;
 
@@ -15,18 +16,25 @@ namespace Content.Client._Mono.Overlays;
 /// </summary>
 public sealed partial class PhosphorNightVisionOverlay : Overlay
 {
-    [Dependency] private IGameTiming _gameTiming = default!; // KS14
+    [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IPrototypeManager _prototypeManager = default!;
-    [Dependency] private IEntityManager _ent = default!;
-    [Dependency] private IInputManager _input = default!;
-    [Dependency] private IEyeManager _eye = default!;
-    private SharedTransformSystem _xform;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private IInputManager _inputManager = default!;
+    [Dependency] private IEyeManager _eyeManager = default!;
+
+    [Dependency] private SpriteSystem _spriteSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+
     private Entity<EyeComponent, PhosphorNightVisionRecipientComponent, TransformComponent>? _eyeEntity;
-    private float _animationFraction = 0f; // KS14
+    private float _animationFraction = 0f;
 
-    private static ProtoId<ShaderPrototype> _shader = "PhosphorNightVision";
+    private static readonly ProtoId<ShaderPrototype> NightVisionShaderId = "PhosphorNightVision";
+    private static readonly ProtoId<ShaderPrototype> FlatShaderId = "KsFlatColour";
 
-    private ShaderInstance _phosphorNightVisionShader;
+    private ShaderInstance _nightVisionShader = default!;
+
+    private ShaderPrototype _flatShaderPrototype = default!;
+    private List<ShaderInstance> _flatShaderCache = [];
 
 
     /// <summary>
@@ -111,11 +119,10 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
     public override OverlaySpace Space => LightSpace | ShaderSpace;
     public override bool RequestScreenTexture => true;
 
-    public PhosphorNightVisionOverlay()
+    public void Initialise()
     {
-        IoCManager.InjectDependencies(this);
-        _phosphorNightVisionShader = _prototypeManager.Index(_shader).InstanceUnique();
-        _xform = _ent.System<SharedTransformSystem>();
+        _nightVisionShader = _prototypeManager.Index(NightVisionShaderId).InstanceUnique();
+        _flatShaderPrototype = _prototypeManager.Index(FlatShaderId);
     }
 
     public void SetParameters(
@@ -154,10 +161,11 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
         if (ScreenTexture == null)
             return;
 
+        var curTime = _gameTiming.CurTime;
         if (AnimationTime is { } animationTime &&
-            _gameTiming.CurTime > animationTime)
+            curTime > animationTime)
         {
-            _animationFraction = (float)((_gameTiming.CurTime - animationTime).TotalSeconds / AnimationDuration.TotalSeconds);
+            _animationFraction = (float)((curTime - animationTime).TotalSeconds / AnimationDuration.TotalSeconds);
             _animationFraction = MathF.Min(_animationFraction, 1f);
 
             if (Enabled)
@@ -166,7 +174,7 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
         else
             _animationFraction = -1f;
 
-        var enumerator = _ent.AllEntityQueryEnumerator<EyeComponent, PhosphorNightVisionRecipientComponent, TransformComponent>();
+        var enumerator = _entityManager.AllEntityQueryEnumerator<EyeComponent, PhosphorNightVisionRecipientComponent, TransformComponent>();
         while (enumerator.MoveNext(out var uid, out var eyeComponent, out var recipientComponent, out var transformComponent))
         {
             if (args.Viewport.Eye != eyeComponent.Eye)
@@ -191,6 +199,52 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
                     break;
 
                 handle.DrawRect(args.WorldBounds, LightingColor);
+
+                var eqe = _entityManager.EntityQueryEnumerator<PhosphorNightVisionGlowComponent, SpriteComponent, TransformComponent>();
+                var index = 0;
+
+                while (eqe.MoveNext(out var glowUid, out var glowComponent, out var spriteComponent, out var transformComponent))
+                {
+                    // No containers please
+                    if (transformComponent.ParentUid != transformComponent.GridUid &&
+                        transformComponent.ParentUid != transformComponent.MapUid)
+                        continue;
+
+                    if (curTime < glowComponent.StartTime)
+                        continue;
+
+                    var delta = curTime - glowComponent.StartTime;
+                    if (delta > glowComponent.Duration)
+                        continue;
+
+                    ShaderInstance flatShader;
+                    if (index++ + 1 >= _flatShaderCache.Count)
+                    {
+                        flatShader = _flatShaderPrototype.InstanceUnique();
+                        _flatShaderCache.Add(flatShader);
+                    }
+                    else
+                        flatShader = _flatShaderCache[index];
+
+                    var intensity = glowComponent.Scale * (float)(1d - delta / glowComponent.Duration);
+
+                    handle.UseShader(flatShader);
+                    flatShader.SetParameter("FLAT", LightingColor.RGBA * intensity);
+
+                    var (worldPosition, worldRotation) = _transformSystem.GetWorldPositionRotation(transformComponent);
+                    _spriteSystem.RenderSprite((glowUid, spriteComponent), handle, args.Viewport.Eye!.Rotation, worldRotation, worldPosition);
+                }
+
+                if (index < _flatShaderCache.Count)
+                {
+                    _flatShaderCache.RemoveRange(index, _flatShaderCache.Count - index);
+
+                    // actually maybe don't trim for sake of perf
+                    //_flatShaderCache.TrimExcess();
+                }
+
+                handle.UseShader(null);
+
                 break;
 
             // Draw the phosphor effect and viewcone
@@ -201,10 +255,10 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
                     if (_animationFraction != 1f &&
                        _animationFraction != -1f)
                     {
-                        _phosphorNightVisionShader.SetParameter("SCREEN_TEXTURE", ScreenTexture);
-                        _phosphorNightVisionShader.SetParameter("TIME_FRACTION", _animationFraction);
+                        _nightVisionShader.SetParameter("SCREEN_TEXTURE", ScreenTexture);
+                        _nightVisionShader.SetParameter("TIME_FRACTION", _animationFraction);
 
-                        handle.UseShader(_phosphorNightVisionShader);
+                        handle.UseShader(_nightVisionShader);
                         handle.DrawRect(args.WorldBounds, Color.White);
                         handle.UseShader(null);
                     }
@@ -213,63 +267,59 @@ public sealed partial class PhosphorNightVisionOverlay : Overlay
                 }
 
                 var eyeAngle = (float)_eyeEntity!.Value.Comp1.Rotation.Theta; //the null check is in beforedraw
-                var playerAngle = (float)_xform.GetWorldRotation(_eyeEntity.Value.Comp3).Theta;
+                var playerAngle = (float)_transformSystem.GetWorldRotation(_eyeEntity.Value.Comp3).Theta;
 
-                if (_ent.HasComponent<MouseRotatorComponent>(_eyeEntity))
+                if (_entityManager.HasComponent<MouseRotatorComponent>(_eyeEntity))
                 {
-                    var mousePos = _eye.PixelToMap(_input.MouseScreenPosition);
+                    var mousePos = _eyeManager.PixelToMap(_inputManager.MouseScreenPosition);
                     if (mousePos.MapId != MapId.Nullspace)
-                        playerAngle = (float)(mousePos.Position - _xform.GetMapCoordinates(_eyeEntity.Value).Position).ToAngle().Theta + MathHelper.DegreesToRadians(90f);
+                        playerAngle = (float)(mousePos.Position - _transformSystem.GetMapCoordinates(_eyeEntity.Value).Position).ToAngle().Theta + MathHelper.DegreesToRadians(90f);
                 }
 
                 ViewAngle = playerAngle + eyeAngle + MathHelper.DegreesToRadians(180f);
 
-                // KS14 start
-                const float flashBrightnessMul = 1500f; // amplif at start of flash
-                const float flashDurationMultiplier = 3f;
-
                 var brightnessMultiplier = 1f;
                 if (_eyeEntity.Value.Comp2.LastFlashTime is { } lastFlashTime &&
-                    lastFlashTime <= _gameTiming.CurTime)
+                    lastFlashTime <= curTime)
                 {
-                    brightnessMultiplier = 1 - (float)((_gameTiming.CurTime - lastFlashTime).TotalSeconds / (_eyeEntity.Value.Comp2.LastFlashDuration.TotalSeconds * flashDurationMultiplier));
+                    const float flashBrightnessMul = 1500f; // amplif at start of flash
+                    const float flashDurationMultiplier = 3f;
+
+                    brightnessMultiplier = 1 - (float)((curTime - lastFlashTime).TotalSeconds / (_eyeEntity.Value.Comp2.LastFlashDuration.TotalSeconds * flashDurationMultiplier));
                     if (brightnessMultiplier < 0f)
                         brightnessMultiplier = 1f;
                     else
                         brightnessMultiplier *= flashBrightnessMul;
                 }
-                // KS14 end
 
-                _phosphorNightVisionShader.SetParameter("SCREEN_TEXTURE", ScreenTexture);
-                _phosphorNightVisionShader.SetParameter("BASE_COLOR", PhosphorColor.RGBA);
-                _phosphorNightVisionShader.SetParameter("AMPLIFICATION", Amplification);
-                _phosphorNightVisionShader.SetParameter("IS_CONE", IsCone);
-                _phosphorNightVisionShader.SetParameter("CONE_ANGLE", ConeAngle);
-                _phosphorNightVisionShader.SetParameter("CONE_FEATHER", ConeFeather);
-                _phosphorNightVisionShader.SetParameter("CONE_DISTANCE", ConeDistance);
-                _phosphorNightVisionShader.SetParameter("CONE_DISTANCE_FEATHER", ConeDistanceFeather);
-                _phosphorNightVisionShader.SetParameter("VIEW_ANGLE", ViewAngle);
+                _nightVisionShader.SetParameter("SCREEN_TEXTURE", ScreenTexture);
+                _nightVisionShader.SetParameter("BASE_COLOR", PhosphorColor.RGBA);
+                _nightVisionShader.SetParameter("AMPLIFICATION", Amplification);
+                _nightVisionShader.SetParameter("IS_CONE", IsCone);
+                _nightVisionShader.SetParameter("CONE_ANGLE", ConeAngle);
+                _nightVisionShader.SetParameter("CONE_FEATHER", ConeFeather);
+                _nightVisionShader.SetParameter("CONE_DISTANCE", ConeDistance);
+                _nightVisionShader.SetParameter("CONE_DISTANCE_FEATHER", ConeDistanceFeather);
+                _nightVisionShader.SetParameter("VIEW_ANGLE", ViewAngle);
                 //ViewAngle);
 
-                // KS14 start
-                _phosphorNightVisionShader.SetParameter("ADDED_LIGHT_COLOR", LightingColor.RGBA);
-                _phosphorNightVisionShader.SetParameter("BRIGHTNESS_MUL", brightnessMultiplier);
-                _phosphorNightVisionShader.SetParameter("TIME_FRACTION", _animationFraction);
-                _phosphorNightVisionShader.SetParameter("ZOOM", _eyeEntity!.Value.Comp1.Zoom);
-                _phosphorNightVisionShader.SetParameter("EYE_OFFSET", _eyeEntity!.Value.Comp1.Offset); // KS14
-                // KS14 end
+                _nightVisionShader.SetParameter("ADDED_LIGHT_COLOR", LightingColor.RGBA);
+                _nightVisionShader.SetParameter("BRIGHTNESS_MUL", brightnessMultiplier);
+                _nightVisionShader.SetParameter("TIME_FRACTION", _animationFraction);
+                _nightVisionShader.SetParameter("ZOOM", _eyeEntity!.Value.Comp1.Zoom);
+                _nightVisionShader.SetParameter("EYE_OFFSET", _eyeEntity!.Value.Comp1.Offset);
 
                 // Adjusting these weights is somewhat tricky.
                 // The offset controls the amount of spacing (in px) of the sample - going further out will result in more blur
                 // but also artifacting as you're losing information.
-                _phosphorNightVisionShader.SetParameter("BLUR_OFFSET", [0.0f, 1.3846153846f, 3.2307692308f]);
+                _nightVisionShader.SetParameter("BLUR_OFFSET", [0.0f, 1.3846153846f, 3.2307692308f]);
 
                 // Adjusting the weights towards the outside will increase the blurring effect, but will also cause artifacts.
                 // weight[0] + 2*weight[1] + 2*weight[2] must equal one.
                 // Set weight[0] to 1 and others to zero to remove the blur entirely.
-                _phosphorNightVisionShader.SetParameter("BLUR_WEIGHT", [0.2270270270f, 0.3162162162f, 0.0702702703f]);
+                _nightVisionShader.SetParameter("BLUR_WEIGHT", [0.2270270270f, 0.3162162162f, 0.0702702703f]);
 
-                handle.UseShader(_phosphorNightVisionShader);
+                handle.UseShader(_nightVisionShader);
                 handle.DrawRect(args.WorldBounds, Color.White);
                 handle.UseShader(null);
                 _eyeEntity = null;
