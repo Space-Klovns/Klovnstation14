@@ -1783,3 +1783,15 @@ Entries:
         visible from the side opposite from which they were planted on.
   id: 186
   time: '2026-08-16T13:15:12.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Some things like freshly spent bullet casings will now glow under NV.
+    - type: Add
+      message: >-
+        Backblast from rocket launchers now breaks tiles, and doesn't magically
+        break things that are hidden by floortiles.
+    - type: Tweak
+      message: Knockback from guns is a bit weaker now.
+  id: 187
+  time: '2026-08-17T13:04:56.0000000+00:00'
