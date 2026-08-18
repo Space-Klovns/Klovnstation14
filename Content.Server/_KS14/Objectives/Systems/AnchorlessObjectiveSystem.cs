@@ -1,10 +1,10 @@
-using Content.Server.Objectives.Components;
+using Content.Server._KS14.Objectives.Components;
 using Content.Shared._KS14.Anchorless.Components;
 using Content.Shared.Humanoid;
 using Content.Shared.Mind.Components;
 using Content.Shared.Objectives.Components;
 
-namespace Content.Server.Objectives.Systems;
+namespace Content.Server._KS14.Objectives.Systems;
 
 /// <summary>
 /// Calculates the Anchorless conversion objective from the currently active crew.

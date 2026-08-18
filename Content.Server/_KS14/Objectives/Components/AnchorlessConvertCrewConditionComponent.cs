@@ -1,6 +1,6 @@
-using Content.Server.Objectives.Systems;
+using Content.Server._KS14.Objectives.Systems;
 
-namespace Content.Server.Objectives.Components;
+namespace Content.Server._KS14.Objectives.Components;
 
 /// <summary>
 /// Requires the Anchorless hive to comprise the configured fraction of the crew.
