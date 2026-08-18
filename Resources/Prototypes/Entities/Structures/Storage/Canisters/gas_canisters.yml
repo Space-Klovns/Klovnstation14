@@ -65,6 +65,27 @@
             Invoice:
               sprite: Structures/Storage/canister.rsi
               state: invoice
+      # KS14 Start
+        enum.BatteryShieldingVisuals.Active:
+          shielding:
+            False: { visible: false }
+            True: { state: shielding, visible: true, shader: unshaded }
+    - type: BatteryShielding
+      falterPopupLoc: gas-canister-shielding-popup-falter
+      failPopupLoc: gas-canister-shielding-popup-fail
+      emagMalfunctionPopupLoc: gas-canister-shielding-popup-emag-malfunction
+      emagMalfunctionDuration: 3s
+      emagImplosionDamage:
+        types:
+          Blunt: 350 # trigger destruction behaviour
+      uiKey: enum.GasCanisterUiKey.Key
+    - type: BatterySelfRecharger
+      autoRechargeRate: 1000
+      autoRechargePauseTime: 10s
+    - type: Battery
+      maxCharge: 30000
+      startingCharge: 30000
+      # KS14 End
     - type: ActivatableUI
       key: enum.GasCanisterUiKey.Key
     - type: UIRequiresLock
@@ -96,7 +117,7 @@
                   max: 1
             - !type:DoActsBehavior
               acts: [ "Destruction" ]
-            - !type:DumpCanisterBehavior
+            # KS14: Merged DumpCanisterBehavior into using DestructionEventArgs
     - type: Damageable
       damageModifierSet: Metallic
     - type: Injurable
@@ -166,6 +187,7 @@
       intensity: 0.35
       layers:
       - pressureLight
+      - shielding
 
     - type: KsGasMaxPressureInterval
       interval: 2.20s

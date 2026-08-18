@@ -1,4 +1,5 @@
 using Content.Shared._KS14.Atmos.Components;
+using Content.Shared._KS14.BatteryShielding;
 using Content.Shared.Popups;
 using Robust.Shared.Timing;
 
@@ -13,7 +14,7 @@ public sealed partial class KsGasMaxPressureIntervalSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<KsGasMaxPressureIntervalComponent, KsGasMaxPressureAttemptLoseIntegrityEvent>(OnAttemptLoseIntegrity);
+        SubscribeLocalEvent<KsGasMaxPressureIntervalComponent, KsGasMaxPressureAttemptLoseIntegrityEvent>(OnAttemptLoseIntegrity, after: [typeof(SharedBatteryShieldingSystem)]);
     }
 
     private void OnAttemptLoseIntegrity(Entity<KsGasMaxPressureIntervalComponent> entity, ref KsGasMaxPressureAttemptLoseIntegrityEvent args)

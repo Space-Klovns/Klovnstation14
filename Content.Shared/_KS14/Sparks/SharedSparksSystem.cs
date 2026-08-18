@@ -97,7 +97,9 @@ public abstract partial class SharedSparksSystem : EntitySystem
         var spark = _ksPredictedSpawnSystem.PredictedSpawn(sparkPrototype, user: user);
         random ??= KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(
             (int)_gameTiming.CurTick.Value,
-            KsSharedRandomExtensions.GetNetId(spark, EntityManager),
+            KsSharedRandomExtensions.GetNetId(coordinates.EntityId, EntityManager),
+            (int)coordinates.X,
+            (int)coordinates.Y,
             user != null ? KsSharedRandomExtensions.GetNetId(user.Value, EntityManager) : 0
         );
 

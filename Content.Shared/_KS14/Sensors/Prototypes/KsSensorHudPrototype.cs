@@ -334,6 +334,10 @@ public sealed partial class KsSensorHudPrototype : IPrototype
     [DataField]
     public Color Interest = Color.DarkGoldenrod;
 
+    /// <summary>The IRST life-sign dot.</summary>
+    [DataField]
+    public Color LifeSign = Color.FromHex("#FFB347");
+
     /// <summary>Fill alpha of a filled coverage cone, further scaled by the emitting pulse.</summary>
     [DataField]
     public float ConeFillAlpha = 0.07f;

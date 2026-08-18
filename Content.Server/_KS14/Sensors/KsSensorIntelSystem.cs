@@ -36,16 +36,12 @@ public sealed partial class KsSensorIntelSystem : EntitySystem
     private readonly Dictionary<EntityUid, float> _thrustCache = new();
     private GameTick _thrustCacheTick = GameTick.Zero;
 
-    // Both signatures are summed over EVERY exterior wall in the game, so the same
-    // one-pass-per-tick cache as thrust: an IRST sweep asks for many grids' signatures
-    // each tick and the HEAT readout asks again.
-    // They share one build because they share the expensive half: heat and radar
-    // cross-section are independent per-wall values, but the exposed-sides count that
-    // scales both is the same 8 tile lookups, and in practice the same walls carry both
-    // components.
+    // Per-grid totals, recomputed only when the grid's skin geometry changes: the old
+    // per-tick crawl re-walked every wall in the game (~2ms, station-size-unbounded).
+    // One shared build: heat and RCS differ per wall but share the 8-tile exposure count.
     private readonly Dictionary<EntityUid, float> _thermalCache = new();
     private readonly Dictionary<EntityUid, float> _radarCache = new();
-    private GameTick _signatureCacheTick = GameTick.Zero;
+    private readonly HashSet<EntityUid> _dirtySignatureGrids = new();
 
     /// <summary>
     ///     The eight surrounding tiles (four faces + four corners) checked for space
@@ -69,6 +65,56 @@ public sealed partial class KsSensorIntelSystem : EntitySystem
         _gridQuery = GetEntityQuery<MapGridComponent>();
         _thermalSourceQuery = GetEntityQuery<KsThermalSourceComponent>();
         _radarSourceQuery = GetEntityQuery<KsRadarSourceComponent>();
+
+        // The full geometry-change surface: walls entering/leaving the hull, and tile
+        // changes (exposure counts space TILES, so wall placement alone never changes
+        // a neighbour's). Signature values never mutate at runtime.
+        SubscribeLocalEvent<KsThermalSourceComponent, ComponentStartup>(OnThermalSourceLifecycle);
+        SubscribeLocalEvent<KsThermalSourceComponent, ComponentShutdown>(OnThermalSourceLifecycle);
+        SubscribeLocalEvent<KsThermalSourceComponent, AnchorStateChangedEvent>(OnThermalSourceAnchor);
+        SubscribeLocalEvent<KsThermalSourceComponent, ReAnchorEvent>(OnThermalSourceReAnchor);
+        SubscribeLocalEvent<KsRadarSourceComponent, ComponentStartup>(OnRadarSourceLifecycle);
+        SubscribeLocalEvent<KsRadarSourceComponent, ComponentShutdown>(OnRadarSourceLifecycle);
+        SubscribeLocalEvent<KsRadarSourceComponent, AnchorStateChangedEvent>(OnRadarSourceAnchor);
+        SubscribeLocalEvent<KsRadarSourceComponent, ReAnchorEvent>(OnRadarSourceReAnchor);
+        SubscribeLocalEvent<MapGridComponent, TileChangedEvent>(OnGridTileChanged);
+        // Not <MapGridComponent, ComponentShutdown>: lifecycle events allow one
+        // handler per component type game-wide, and the map system owns that one.
+        SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoval);
+    }
+
+    private void OnThermalSourceLifecycle(EntityUid uid, KsThermalSourceComponent comp, ComponentStartup args) => DirtySignatureGrid(uid);
+    private void OnThermalSourceLifecycle(EntityUid uid, KsThermalSourceComponent comp, ComponentShutdown args) => DirtySignatureGrid(uid);
+    private void OnThermalSourceAnchor(EntityUid uid, KsThermalSourceComponent comp, ref AnchorStateChangedEvent args) => DirtySignatureGrid(uid);
+    private void OnRadarSourceLifecycle(EntityUid uid, KsRadarSourceComponent comp, ComponentStartup args) => DirtySignatureGrid(uid);
+    private void OnRadarSourceLifecycle(EntityUid uid, KsRadarSourceComponent comp, ComponentShutdown args) => DirtySignatureGrid(uid);
+    private void OnRadarSourceAnchor(EntityUid uid, KsRadarSourceComponent comp, ref AnchorStateChangedEvent args) => DirtySignatureGrid(uid);
+
+    private void OnThermalSourceReAnchor(EntityUid uid, KsThermalSourceComponent comp, ref ReAnchorEvent args)
+    {
+        _dirtySignatureGrids.Add(args.OldGrid);
+        _dirtySignatureGrids.Add(args.Grid);
+    }
+
+    private void OnRadarSourceReAnchor(EntityUid uid, KsRadarSourceComponent comp, ref ReAnchorEvent args)
+    {
+        _dirtySignatureGrids.Add(args.OldGrid);
+        _dirtySignatureGrids.Add(args.Grid);
+    }
+
+    private void OnGridTileChanged(EntityUid uid, MapGridComponent comp, ref TileChangedEvent args) => _dirtySignatureGrids.Add(uid);
+
+    private void OnGridRemoval(GridRemovalEvent args)
+    {
+        _thermalCache.Remove(args.EntityUid);
+        _radarCache.Remove(args.EntityUid);
+        _dirtySignatureGrids.Remove(args.EntityUid);
+    }
+
+    private void DirtySignatureGrid(EntityUid wallUid)
+    {
+        if (Transform(wallUid).GridUid is { } grid)
+            _dirtySignatureGrids.Add(grid);
     }
 
     /// <summary>
@@ -77,11 +123,10 @@ public sealed partial class KsSensorIntelSystem : EntitySystem
     ///         neighbor tile). Interior walls are shielded and add nothing, so a boxed-in
     ///         hull runs colder than a sprawling one. This is what IRST detects and the HEAT
     ///         readout reports.
-    ///     Cached once per tick across all grids, so it costs nothing when nothing asks.
     /// </summary>
     public float GetThermalSignature(EntityUid grid)
     {
-        if (_signatureCacheTick != _timing.CurTick)
+        if (_dirtySignatureGrids.Count > 0)
             BuildSignatureCaches();
 
         return _thermalCache.GetValueOrDefault(grid);
@@ -96,27 +141,31 @@ public sealed partial class KsSensorIntelSystem : EntitySystem
     /// </summary>
     public float GetRadarSignature(EntityUid grid)
     {
-        if (_signatureCacheTick != _timing.CurTick)
+        if (_dirtySignatureGrids.Count > 0)
             BuildSignatureCaches();
 
         return _radarCache.GetValueOrDefault(grid);
     }
 
     /// <summary>
-    ///     Rebuilds both signature caches in one crawl of the game's exterior walls. Walls
-    ///         carrying both components (every stock wall does) are counted once into both
-    ///         caches; the second loop exists only so a wall carrying just one of the two is
-    ///         still summed, and it does no tile work for walls the first loop covered.
+    ///     Still one pass over all walls even though only dirty grids recompute:
+    ///         enumeration is cheap, the 8 tile lookups are not. The second loop only
+    ///         catches walls carrying just one of the two components.
     /// </summary>
     private void BuildSignatureCaches()
     {
-        _signatureCacheTick = _timing.CurTick;
-        _thermalCache.Clear();
-        _radarCache.Clear();
+        foreach (var grid in _dirtySignatureGrids)
+        {
+            _thermalCache.Remove(grid);
+            _radarCache.Remove(grid);
+        }
 
         var thermalQuery = AllEntityQuery<KsThermalSourceComponent, TransformComponent>();
         while (thermalQuery.MoveNext(out var uid, out var source, out var xform))
         {
+            if (xform.GridUid is not { } dirtyGrid || !_dirtySignatureGrids.Contains(dirtyGrid))
+                continue;
+
             var exposed = CountExposedSides(xform, out var gridUid);
             if (exposed == 0)
                 continue;
@@ -133,12 +182,17 @@ public sealed partial class KsSensorIntelSystem : EntitySystem
             if (_thermalSourceQuery.HasComponent(uid))
                 continue;
 
+            if (xform.GridUid is not { } dirtyGrid || !_dirtySignatureGrids.Contains(dirtyGrid))
+                continue;
+
             var exposed = CountExposedSides(xform, out var gridUid);
             if (exposed == 0)
                 continue;
 
             _radarCache[gridUid] = _radarCache.GetValueOrDefault(gridUid) + source.Signature * exposed;
         }
+
+        _dirtySignatureGrids.Clear();
     }
 
     /// <summary>

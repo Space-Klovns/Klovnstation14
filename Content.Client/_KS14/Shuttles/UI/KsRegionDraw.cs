@@ -1,10 +1,11 @@
 using System.Numerics;
 using Content.Shared._KS14.Sensors;
+using Robust.Shared.Utility;
 
 namespace Content.Client._KS14.Shuttles.UI;
 
 /// <summary>
-///     Builds a coverage region's screen-space vertex array: the apex through the
+///     Builds a coverage region's screen-space vertices: the apex through the
 ///         grid matrix (it rides the ship), and the boundary either as world-oriented
 ///         offsets from the apex (a sensor fan, see
 ///         <see cref="KsSensorRegionState.WorldOffsets"/>) or through the same grid
@@ -14,20 +15,26 @@ namespace Content.Client._KS14.Shuttles.UI;
 /// </summary>
 public static class KsRegionDraw
 {
-    public static Vector2[] BuildVerts(KsSensorRegionState region, Matrix3x2 gridToView, Matrix3x2 worldToView)
+    /// <summary>
+    ///     Fills caller-owned scratch and returns the count (a fresh array per region
+    ///         per frame was pure churn); slice draws by the count, the tail may be stale.
+    /// </summary>
+    public static int BuildVerts(KsSensorRegionState region, Matrix3x2 gridToView, Matrix3x2 worldToView, ref Vector2[] into)
     {
-        var verts = new Vector2[region.Points.Count];
-        var apexView = Vector2.Transform(region.Points[0], gridToView);
-        verts[0] = apexView;
+        var count = region.Points.Count;
+        Extensions.EnsureLength(ref into, count);
 
-        for (var i = 1; i < verts.Length; i++)
+        var apexView = Vector2.Transform(region.Points[0], gridToView);
+        into[0] = apexView;
+
+        for (var i = 1; i < count; i++)
         {
-            verts[i] = region.WorldOffsets
+            into[i] = region.WorldOffsets
                 ? apexView + Vector2.TransformNormal(region.Points[i], worldToView)
                 : Vector2.Transform(region.Points[i], gridToView);
         }
 
-        return verts;
+        return count;
     }
 
     // A between-push ease of these polygons was tried and removed: eased cones read
