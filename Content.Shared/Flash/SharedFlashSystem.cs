@@ -179,9 +179,9 @@ public abstract partial class SharedFlashSystem : EntitySystem
         bool displayPopup = true,
         bool melee = false,
         TimeSpan? stunDuration = null,
-        bool flashOverride = false)
+        bool flashOverride = false) //KS14 addition to allow forcing flashesb
     {
-        var attempt = new FlashAttemptEvent(target, user, used);
+        var attempt = new FlashAttemptEvent(target, user, used, FlashOverride: flashOverride); //KS14 - flash override
         RaiseLocalEvent(target, ref attempt, true);
 
         if (attempt.Cancelled)
@@ -272,13 +272,13 @@ public abstract partial class SharedFlashSystem : EntitySystem
     private void OnPermanentBlindnessFlashAttempt(Entity<PermanentBlindnessComponent> ent, ref FlashAttemptEvent args)
     {
         // check for total blindness
-        if (ent.Comp.Blindness == 0)
+        if (ent.Comp.Blindness == 0 && !args.FlashOverride) //KS14 - flash override
             args.Cancelled = true;
     }
 
     private void OnFlashImmunityFlashAttempt(Entity<FlashImmunityComponent> ent, ref FlashAttemptEvent args)
     {
-        if (TryComp<MaskComponent>(ent, out var mask) && mask.IsToggled)
+        if (TryComp<MaskComponent>(ent, out var mask) && mask.IsToggled || args.FlashOverride) //KS14 - flash override
             return;
 
         if (ent.Comp.Enabled)

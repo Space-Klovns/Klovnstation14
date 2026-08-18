@@ -5,6 +5,8 @@
   antagonist: true
   setPreference: true
   objective: roles-antag-anchorless-objective
+  briefing:
+    text: anchorless-role-greeting
   requirements:
   - !type:OverallPlaytimeRequirement
     time: 1h
@@ -19,12 +21,21 @@
     - AntagImmune
   components:
   - type: Anchorless
-  - type: AnchorlessIdentity
-  - type: AnchorlessCommunion
+  - type: VoiceMask
+    action: ActionAnchorlessVoiceMimic
+    isInnate: true
+    changeIDName: false
+    accentHide: false
+    titleText: changeling-voice-mimic-window-title
   - type: ActionGrant
     actions:
     - ActionAnchorlessCommunion
     - ActionAnchorlessTransform
-    - ActionAnchorlessVoiceMimic
+    - ActionAnchorlessConvert
+    - ActionAnchorlessHorror
+  - type: IntrinsicRadioReceiver
+  - type: IntrinsicRadioTransmitter
+    channels:
+    - Anchorless
   mindRoles:
   - MindRoleAnchorless

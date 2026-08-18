@@ -5,7 +5,12 @@
   components:
   - type: GameRule
     minPlayers: 5
+  - type: AnchorlessRule
+  - type: AntagObjectives
+    objectives:
+    - AnchorlessConvertCrewObjective
   - type: AntagSelection
+    agentName: anchorless-round-end-agent-name
     antags:
     - !type:LinearAntagCount
       proto: Anchorless

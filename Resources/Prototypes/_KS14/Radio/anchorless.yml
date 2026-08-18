@@ -1,0 +1,7 @@
+- type: radioChannel
+  id: Anchorless
+  name: chat-radio-anchorless
+  keycode: 'h'
+  frequency: 1999
+  color: '#B04EB5'
+  longRange: true

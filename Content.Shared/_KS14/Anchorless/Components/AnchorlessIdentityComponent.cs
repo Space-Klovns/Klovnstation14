@@ -1,32 +1,25 @@
 using System.Linq;
 using Content.Shared.Actions;
+using Content.Shared.Cloning;
+using Content.Shared.Roles;
 using Robust.Shared.GameStates;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 
 namespace Content.Shared._KS14.Anchorless.Components;
 
 /// <summary>
 /// Stores the identities remembered by an Anchorless player.
 /// </summary>
-[RegisterComponent, NetworkedComponent]
-public sealed partial class AnchorlessIdentityComponent : Component
-{
-    [DataField]
-    public List<AnchorlessIdentityData> LearnedIdentities = new();
-
-    [DataField]
-    public int CurrentIdentityIndex = 0;
-}
-
-[Serializable, NetSerializable]
 [DataDefinition]
 public sealed partial class AnchorlessIdentityData
 {
     [DataField]
-    public NetEntity? StoredIdentity;
+    public EntityUid? StoredIdentity;
 
     [DataField]
-    public NetEntity? OriginalEntity;
+    public EntityUid? OriginalEntity;
 
     [DataField]
     public string OriginalName = "Unnamed";
@@ -35,7 +28,42 @@ public sealed partial class AnchorlessIdentityData
     public bool Starting = false;
 }
 
+/// <summary>Network representation of an Anchorless identity.</summary>
+[Serializable, NetSerializable]
+public sealed class AnchorlessIdentityComponentState(
+    List<AnchorlessNetworkedIdentityData> learnedIdentities,
+    NetEntity? currentIdentity,
+    ProtoId<CloningSettingsPrototype> identityCloningSettings,
+    bool horrorForm,
+    ResPath horrorSprite,
+    string horrorSpriteState) : ComponentState
+{
+    public List<AnchorlessNetworkedIdentityData> LearnedIdentities = learnedIdentities;
+    public NetEntity? CurrentIdentity = currentIdentity;
+    public ProtoId<CloningSettingsPrototype> IdentityCloningSettings = identityCloningSettings;
+    public bool HorrorForm = horrorForm;
+    public ResPath HorrorSprite = horrorSprite;
+    public string HorrorSpriteState = horrorSpriteState;
+}
+
+[Serializable, NetSerializable]
+public sealed class AnchorlessNetworkedIdentityData
+{
+    public NetEntity? StoredIdentity;
+    public NetEntity? OriginalEntity;
+    public string OriginalName = "Unnamed";
+    public bool Starting;
+}
+
 public sealed partial class AnchorlessTransformActionEvent : InstantActionEvent;
+public sealed partial class AnchorlessHorrorActionEvent : InstantActionEvent;
+public sealed partial class AnchorlessConvertActionEvent : EntityTargetActionEvent;
+
+/// <summary>Raised after a crew member has been successfully remade as Anchorless.</summary>
+public sealed class AnchorlessConvertedEvent(EntityUid converted) : EntityEventArgs
+{
+    public EntityUid Converted = converted;
+}
 
 public static class AnchorlessIdentityHelper
 {
@@ -45,7 +73,9 @@ public static class AnchorlessIdentityHelper
 
         foreach (var item in first.Concat(second))
         {
-            if (merged.Any(existing => existing.OriginalName == item.OriginalName))
+            if (merged.Any(existing =>
+                    item.OriginalEntity != null && existing.OriginalEntity == item.OriginalEntity ||
+                    item.OriginalEntity == null && existing.OriginalEntity == null && existing.OriginalName == item.OriginalName))
                 continue;
 
             merged.Add(new AnchorlessIdentityData

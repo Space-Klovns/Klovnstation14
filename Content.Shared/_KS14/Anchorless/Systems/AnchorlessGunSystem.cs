@@ -19,6 +19,6 @@ public sealed partial class AnchorlessGunSystem : EntitySystem
         // we don't cancel shooting the gun, we just make it impossible for the anchorless to use guns effectively
         _flash.Flash(ent.Owner, null, null, ent.Comp.GunFlashDuration, ent.Comp.GunFlashSlowdown, false, false, null, true);
 
-        _popup.PopupEntity(Loc.GetString("anchorless-gun-flash-message"), ent, ent);
+        _popup.PopupPredicted(Loc.GetString("anchorless-gun-flash-message"), ent, ent);
     }
 }
