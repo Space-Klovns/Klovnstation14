@@ -1,6 +1,7 @@
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
+using System.Numerics;
 using Content.Shared.Cloning;
 
 namespace Content.Shared._KS14.Anchorless.Components;
@@ -39,6 +40,8 @@ public sealed partial class AnchorlessComponent : Component
     [DataField]
     public EntityUid? HorrorArmbladeAction;
 
+    [DataField]
+    public Vector2 HorrorScale = new Vector2(0.5f, 0.5f);
     public override bool SendOnlyToOwner => true;
 }
 

@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Numerics;
 using Content.Shared._KS14.Anchorless.Components;
 using Content.Shared._KS14.Anchorless.Systems;
 using Content.Shared.Movement.Components;
@@ -57,6 +58,9 @@ public sealed class AnchorlessIdentitySystem : SharedAnchorlessIdentitySystem
 
             var layer = _sprite.AddLayer((ent, sprite),
                 new SpriteSpecifier.Rsi(ent.Comp.HorrorSprite, ent.Comp.HorrorSpriteState));
+
+             _sprite.LayerSetScale((ent, sprite), layer, ent.Comp.HorrorScale);
+
             _sprite.LayerMapSet((ent, sprite), HorrorVisualLayer.Key, layer);
             return;
         }

@@ -16,6 +16,10 @@
   id: Anchorless
   prefRoles:
   - Anchorless
+  briefing:
+    text: anchorless-role-greeting
+    color: Red
+    sound: /Audio/Ambience/Antag/changeling_start.ogg
   blacklist:
     components:
     - AntagImmune
