@@ -1412,9 +1412,8 @@
     - map: [ "mask" ]
     - map: [ "head" ]
   - type: Hands
-    activeHandId: Hand
-    hands:
-      Hand:
+    startingHands:
+      hand_left:
         location: Left
   - type: ComplexInteraction
   - type: CreamPied
@@ -3904,8 +3903,7 @@
             sprite: Mobs/Pets/displacements.rsi
             state: corgi_head_displacement
   - type: Hands # HANDS!
-    activeHandId: Right
-    hands:
+    startingHands: # KS14: hands -> startingHands, activeHandId dropped, per upstream#43545
       Right:
         location: Right
       Left:
