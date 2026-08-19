@@ -1,8 +1,6 @@
 anchorless-communion-message = You commune with your fellow Anchorless, sharing all your remembered identities.
 anchorless-devour-message = Your tendrils consume the dying prey and remake it in the image of the Anchorless.
 anchorless-devoured-message = The horror from Saturn's clouds fills your mind. You are Anchorless now.
-objective-anchorless-convert-crew-name = Convert 60% of the crew.
-objective-anchorless-convert-crew-description = Spread the horror from Saturn's clouds until at least 60% of the crew are Anchorless.
 anchorless-transform-message = You transform into { $identity }.
 anchorless-gun-flash-message = The gunshot overwhelms your senses!
 chat-radio-anchorless = Anchorless Hive
