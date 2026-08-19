@@ -396,7 +396,8 @@ public sealed class ListContainerButton : ContainerButton, IEntityControl
         AddStyleClass(StyleClassButton);
         Data = data;
         Index = index;
-        StyleBoxOverride = new StyleBoxFlat(Color.White);
+        // KS14: list entries without a stylesheet class must not flash to the stock white backing when selected.
+        StyleBoxOverride = new StyleBoxFlat(Color.FromHex("#7A3038"));
         // AddChild(Background = new PanelContainer
         // {
         //     HorizontalExpand = true,

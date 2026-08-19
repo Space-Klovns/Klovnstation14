@@ -2,9 +2,10 @@
     xmlns="https://spacestation14.io"
     xmlns:gfx="clr-namespace:Robust.Client.Graphics;assembly=Robust.Client"
     xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
-    MinSize="540 390"
-    SetSize="995 600">
+    MinSize="540 500"
+    SetSize="995 700">
 
+    <!-- KS14: increase the initial window height so the console content fits without manual resizing. -->
     <!-- Main Container -->
     <BoxContainer Orientation="Vertical"
         VerticalExpand="True">
@@ -174,14 +175,15 @@
                   <RichTextLabel Name="TransferLimitLabel" Margin="0 0 15 0"/>
                   <RichTextLabel Name="UnlimitedNotifier" Text="{Loc 'cargo-console-menu-account-action-transfer-limit-unlimited-notifier'}"/>
               </BoxContainer>
-              <BoxContainer Orientation="Horizontal">
-                  <RichTextLabel Text="{Loc 'cargo-console-menu-account-action-select'}" Margin="0 0 10 0"/>
-                  <OptionButton Name="ActionOptions"/>
+              <!-- KS14: arrange the transfer form as a single readable column. -->
+              <BoxContainer Orientation="Vertical" Margin="0 0 0 8">
+                  <RichTextLabel Text="{Loc 'cargo-console-menu-account-action-select'}"/>
+                  <OptionButton Name="ActionOptions" HorizontalExpand="True"/>
               </BoxContainer>
               <Control MinHeight="5"/>
-              <BoxContainer Orientation="Horizontal">
+              <BoxContainer Orientation="Vertical">
                   <RichTextLabel Name="AmountText" Text="{ Loc 'cargo-console-menu-account-action-amount'}"/>
-                  <SpinBox Name="TransferSpinBox" MinWidth="100" Value="10"/>
+                  <SpinBox Name="TransferSpinBox" HorizontalExpand="True" Value="10"/>
               </BoxContainer>
               <Control MinHeight="15"/>
               <BoxContainer HorizontalAlignment="Center">
