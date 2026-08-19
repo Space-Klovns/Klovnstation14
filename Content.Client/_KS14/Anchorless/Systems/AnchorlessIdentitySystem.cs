@@ -10,7 +10,7 @@ using Robust.Shared.Utility;
 
 namespace Content.Client._KS14.Anchorless.Systems;
 
-public sealed class AnchorlessIdentitySystem : SharedAnchorlessIdentitySystem
+public sealed partial class AnchorlessIdentitySystem : SharedAnchorlessIdentitySystem
 {
     [Dependency] private MovementSpeedModifierSystem _movement = default!;
     [Dependency] private SpriteSystem _sprite = default!;
