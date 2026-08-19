@@ -43,7 +43,8 @@ public sealed class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
         var boldFont = ResCache.GetFont("/Fonts/_KS14/BaronUI/FontStack-Bold.ttf", 12);
         var button1 = MakeBox("button_1.png", 10, 10);
         var button2 = MakeBox("button_2.png", 8, 8);
-        var buttonBase = MakeBox("button_2.png", 8, 8);
+        // KS14: use the lighter shared button chrome for the general UI treatment.
+        var buttonBase = MakeBox("button_3.png", 8, 8);
         var button3 = MakeBox("button_3.png", 8, 8);
         var button4 = MakeBox("button_4.png", 16, 16);
         var button5 = MakeBox("button_5.png", 12, 12);
