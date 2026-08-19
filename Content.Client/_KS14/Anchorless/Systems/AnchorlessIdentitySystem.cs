@@ -14,26 +14,28 @@ public sealed partial class AnchorlessIdentitySystem : SharedAnchorlessIdentityS
 {
     [Dependency] private MovementSpeedModifierSystem _movement = default!;
     [Dependency] private SpriteSystem _sprite = default!;
+
     private readonly Dictionary<EntityUid, List<bool>> _hiddenLayers = new();
+    
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeLocalEvent<AnchorlessComponent, ComponentHandleState>(OnHandleState);
+        SubscribeLocalEvent<KsAnchorlessAntagComponent, ComponentHandleState>(OnHandleState);
     }
 
-    private void OnHandleState(Entity<AnchorlessComponent> ent, ref ComponentHandleState args)
+    private void OnHandleState(Entity<KsAnchorlessAntagComponent> ent, ref ComponentHandleState args)
     {
         if (args.Current is not AnchorlessIdentityComponentState state)
             return;
 
         ent.Comp.LearnedIdentities = state.LearnedIdentities.Select(identity => new AnchorlessIdentityData
         {
-            StoredIdentity = EnsureEntity<AnchorlessComponent>(identity.StoredIdentity, ent),
-            OriginalEntity = EnsureEntity<AnchorlessComponent>(identity.OriginalEntity, ent),
+            StoredIdentity = EnsureEntity<KsAnchorlessAntagComponent>(identity.StoredIdentity, ent),
+            OriginalEntity = EnsureEntity<KsAnchorlessAntagComponent>(identity.OriginalEntity, ent),
             OriginalName = identity.OriginalName,
             Starting = identity.Starting,
         }).ToList();
-        ent.Comp.CurrentIdentity = EnsureEntity<AnchorlessComponent>(state.CurrentIdentity, ent);
+        ent.Comp.CurrentIdentity = EnsureEntity<KsAnchorlessAntagComponent>(state.CurrentIdentity, ent);
         ent.Comp.IdentityCloningSettings = state.IdentityCloningSettings;
         ent.Comp.HorrorForm = state.HorrorForm;
         ent.Comp.HorrorSprite = state.HorrorSprite;
@@ -42,7 +44,7 @@ public sealed partial class AnchorlessIdentitySystem : SharedAnchorlessIdentityS
         UpdateHorrorVisual(ent);
     }
 
-    private void UpdateHorrorVisual(Entity<AnchorlessComponent> ent)
+    private void UpdateHorrorVisual(Entity<KsAnchorlessAntagComponent> ent)
     {
         if (!TryComp<SpriteComponent>(ent, out var sprite))
             return;

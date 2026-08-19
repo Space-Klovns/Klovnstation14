@@ -1,4 +1,5 @@
 using Content.Server._KS14.Objectives.Components;
+using Content.Server._KS14.Anchorless.Systems;
 using Content.Shared._KS14.Anchorless.Components;
 using Content.Shared.Humanoid;
 using Content.Shared.Mind.Components;
@@ -25,7 +26,7 @@ public sealed partial class AnchorlessObjectiveSystem : EntitySystem
         ent.Comp.RequiredConversions = (int) Math.Ceiling(GetCrewCount() * ent.Comp.RequiredFraction);
     }
 
-    private void OnConverted(AnchorlessConvertedEvent args)
+    private void OnConverted(ref AnchorlessConvertedEvent args)
     {
         if (!TryComp<MindContainerComponent>(args.Converted, out var mind) || mind.Mind == null)
             return;

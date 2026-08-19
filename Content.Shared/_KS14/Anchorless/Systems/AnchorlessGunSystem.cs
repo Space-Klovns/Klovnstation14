@@ -12,9 +12,9 @@ public sealed partial class AnchorlessGunSystem : EntitySystem
 
     public override void Initialize()
     {
-        SubscribeLocalEvent<AnchorlessComponent, SelfBeforeGunShotEvent>(BeforeGunShotEvent);
+        SubscribeLocalEvent<KsAnchorlessAntagComponent, SelfBeforeGunShotEvent>(BeforeGunShotEvent);
     }
-    private void BeforeGunShotEvent(Entity<AnchorlessComponent> ent, ref SelfBeforeGunShotEvent args)
+    private void BeforeGunShotEvent(Entity<KsAnchorlessAntagComponent> ent, ref SelfBeforeGunShotEvent args)
     {
         // we don't cancel shooting the gun, we just make it impossible for the anchorless to use guns effectively
         _flash.Flash(ent.Owner, null, null, ent.Comp.GunFlashDuration, ent.Comp.GunFlashSlowdown, false, false, null, true);

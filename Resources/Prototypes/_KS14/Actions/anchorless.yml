@@ -1,4 +1,3 @@
-# KS14
 - type: entity
   id: ActionAnchorlessCommunion
   name: Communion
@@ -67,7 +66,7 @@
 
 - type: entity
   parent: BaseAction
-  id: ActionAnchorlessVoiceMimic #KS14 - same as the ling but separate for completeness and whatnot
+  id: ActionAnchorlessVoiceMimic
   name: Voice Mimicry
   description: Model your vocal cords to imitate the voice of someone else.
   components:

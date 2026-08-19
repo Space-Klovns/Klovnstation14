@@ -59,12 +59,6 @@ public sealed partial class AnchorlessTransformActionEvent : InstantActionEvent;
 public sealed partial class AnchorlessHorrorActionEvent : InstantActionEvent;
 public sealed partial class AnchorlessConvertActionEvent : EntityTargetActionEvent;
 
-/// <summary>Raised after a crew member has been successfully remade as Anchorless.</summary>
-public sealed class AnchorlessConvertedEvent(EntityUid converted) : EntityEventArgs
-{
-    public EntityUid Converted = converted;
-}
-
 public static class AnchorlessIdentityHelper
 {
     public static List<AnchorlessIdentityData> MergeIdentityData(IEnumerable<AnchorlessIdentityData> first, IEnumerable<AnchorlessIdentityData> second)

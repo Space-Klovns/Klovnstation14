@@ -17,10 +17,10 @@ public sealed partial class AnchorlessHorrorSystem : EntitySystem
 
     public override void Initialize()
     {
-        SubscribeLocalEvent<AnchorlessComponent, AnchorlessHorrorActionEvent>(OnHorror);
+        SubscribeLocalEvent<KsAnchorlessAntagComponent, AnchorlessHorrorActionEvent>(OnHorror);
     }
 
-    private void OnHorror(Entity<AnchorlessComponent> ent, ref AnchorlessHorrorActionEvent args)
+    private void OnHorror(Entity<KsAnchorlessAntagComponent> ent, ref AnchorlessHorrorActionEvent args)
     {
         if (args.Handled)
             return;
@@ -47,7 +47,7 @@ public sealed partial class AnchorlessHorrorSystem : EntitySystem
         Dirty(ent);
     }
 
-    private void RemoveArmblade(Entity<AnchorlessComponent> ent)
+    private void RemoveArmblade(Entity<KsAnchorlessAntagComponent> ent)
     {
         if (ent.Comp.HorrorArmbladeAction is not { } action)
             return;

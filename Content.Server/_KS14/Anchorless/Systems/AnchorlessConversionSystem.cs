@@ -24,12 +24,12 @@ public sealed partial class AnchorlessConversionSystem : EntitySystem
 
     public override void Initialize()
     {
-        SubscribeLocalEvent<AnchorlessComponent, AnchorlessConvertActionEvent>(OnConvert);
+        SubscribeLocalEvent<KsAnchorlessAntagComponent, AnchorlessConvertActionEvent>(OnConvert);
     }
 
-    private void OnConvert(Entity<AnchorlessComponent> ent, ref AnchorlessConvertActionEvent args)
+    private void OnConvert(Entity<KsAnchorlessAntagComponent> ent, ref AnchorlessConvertActionEvent args)
     {
-        if (args.Handled || HasComp<AnchorlessComponent>(args.Target) ||
+        if (args.Handled || HasComp<KsAnchorlessAntagComponent>(args.Target) ||
             (!_mobState.IsCritical(args.Target) && !_mobState.IsDead(args.Target)) ||
             !_mind.TryGetMind(args.Target, out _, out var mind) ||
             !_players.TryGetSessionById(mind.UserId, out var session))
@@ -41,8 +41,13 @@ public sealed partial class AnchorlessConversionSystem : EntitySystem
         _damage.ClearAllDamage(args.Target);
         _mobState.ChangeMobState(args.Target, MobState.Alive);
         _antags.ForceMakeAntag<AnchorlessRuleComponent>(session, "Anchorless");
-        RaiseLocalEvent(new AnchorlessConvertedEvent(args.Target));
+        var convertedEvent = new AnchorlessConvertedEvent(args.Target);
+        RaiseLocalEvent(ref convertedEvent);
         _popup.PopupEntity(Loc.GetString("anchorless-devour-message"), ent.Owner, ent.Owner, PopupType.Medium);
         _popup.PopupEntity(Loc.GetString("anchorless-devoured-message"), args.Target, args.Target, PopupType.Medium);
     }
 }
+
+/// <summary>Raised after a crew member has been successfully remade as Anchorless.</summary>
+[ByRefEvent]
+public record struct AnchorlessConvertedEvent(EntityUid Converted);

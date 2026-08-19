@@ -7,7 +7,7 @@ using Content.Shared.Cloning;
 namespace Content.Shared._KS14.Anchorless.Components;
 
 [RegisterComponent, NetworkedComponent]
-public sealed partial class AnchorlessComponent : Component
+public sealed partial class KsAnchorlessAntagComponent : Component
 {
     [DataField]
     public TimeSpan GunFlashDuration = TimeSpan.FromSeconds(1);

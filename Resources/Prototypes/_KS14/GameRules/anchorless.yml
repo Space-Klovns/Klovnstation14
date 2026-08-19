@@ -1,4 +1,3 @@
-# KS14
 - type: entity
   id: Anchorless
   parent: [BaseGameRule, BaseRoundstartAntagRule]

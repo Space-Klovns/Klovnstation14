@@ -34,16 +34,16 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
 
     public override void Initialize()
     {
-        SubscribeLocalEvent<AnchorlessComponent, MapInitEvent>(OnMapInit);
-        SubscribeLocalEvent<AnchorlessComponent, ComponentShutdown>(OnShutdown);
-        SubscribeLocalEvent<AnchorlessComponent, PlayerAttachedEvent>(OnPlayerAttached);
-        SubscribeLocalEvent<AnchorlessComponent, PlayerDetachedEvent>(OnPlayerDetached);
-        SubscribeLocalEvent<AnchorlessComponent, AnchorlessTransformActionEvent>(OnTransform);
-        SubscribeLocalEvent<AnchorlessComponent, AnchorlessCommunionActionEvent>(OnCommunion);
-        SubscribeLocalEvent<AnchorlessComponent, AnchorlessTransformIdentitySelectMessage>(OnTransformSelected);
+        SubscribeLocalEvent<KsAnchorlessAntagComponent, MapInitEvent>(OnMapInit);
+        SubscribeLocalEvent<KsAnchorlessAntagComponent, ComponentShutdown>(OnShutdown);
+        SubscribeLocalEvent<KsAnchorlessAntagComponent, PlayerAttachedEvent>(OnPlayerAttached);
+        SubscribeLocalEvent<KsAnchorlessAntagComponent, PlayerDetachedEvent>(OnPlayerDetached);
+        SubscribeLocalEvent<KsAnchorlessAntagComponent, AnchorlessTransformActionEvent>(OnTransform);
+        SubscribeLocalEvent<KsAnchorlessAntagComponent, AnchorlessCommunionActionEvent>(OnCommunion);
+        SubscribeLocalEvent<KsAnchorlessAntagComponent, AnchorlessTransformIdentitySelectMessage>(OnTransformSelected);
     }
 
-    private void OnMapInit(Entity<AnchorlessComponent> ent, ref MapInitEvent args)
+    private void OnMapInit(Entity<KsAnchorlessAntagComponent> ent, ref MapInitEvent args)
     {
         var ui = EnsureComp<UserInterfaceComponent>(ent);
         _ui.SetUi((ent, ui), AnchorlessTransformUiKey.Key, new InterfaceData("AnchorlessTransformBoundUserInterface"));
@@ -60,7 +60,7 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
         Dirty(ent);
     }
 
-    private void OnShutdown(Entity<AnchorlessComponent> ent, ref ComponentShutdown args)
+    private void OnShutdown(Entity<KsAnchorlessAntagComponent> ent, ref ComponentShutdown args)
     {
         if (TryComp<ActorComponent>(ent, out var actor))
             RemovePvsOverrides(ent, actor.PlayerSession);
@@ -72,27 +72,27 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
             QueueDel(data.StoredIdentity);
     }
 
-    private void OnPlayerAttached(Entity<AnchorlessComponent> ent, ref PlayerAttachedEvent args)
+    private void OnPlayerAttached(Entity<KsAnchorlessAntagComponent> ent, ref PlayerAttachedEvent args)
     {
         foreach (var data in ent.Comp.LearnedIdentities)
             if (data.StoredIdentity != null)
                 _pvs.AddSessionOverride(data.StoredIdentity.Value, args.Player);
     }
 
-    private void OnPlayerDetached(Entity<AnchorlessComponent> ent, ref PlayerDetachedEvent args)
+    private void OnPlayerDetached(Entity<KsAnchorlessAntagComponent> ent, ref PlayerDetachedEvent args)
         => RemovePvsOverrides(ent, args.Player);
 
-    private void RemovePvsOverrides(Entity<AnchorlessComponent> ent, Robust.Shared.Player.ICommonSession session)
+    private void RemovePvsOverrides(Entity<KsAnchorlessAntagComponent> ent, Robust.Shared.Player.ICommonSession session)
     {
         foreach (var data in ent.Comp.LearnedIdentities)
             if (data.StoredIdentity != null)
                 _pvs.RemoveSessionOverride(data.StoredIdentity.Value, session);
     }
 
-    private void OnCommunion(Entity<AnchorlessComponent> ent, ref AnchorlessCommunionActionEvent args)
+    private void OnCommunion(Entity<KsAnchorlessAntagComponent> ent, ref AnchorlessCommunionActionEvent args)
     {
-        if (args.Handled || !TryComp<AnchorlessComponent>(ent, out var self) ||
-            !TryComp<AnchorlessComponent>(args.Target, out var other))
+        if (args.Handled || !TryComp<KsAnchorlessAntagComponent>(ent, out var self) ||
+            !TryComp<KsAnchorlessAntagComponent>(args.Target, out var other))
             return;
 
         args.Handled = true;
@@ -106,7 +106,7 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
         LearnMissing((args.Target, other), memories);
     }
 
-    private void OnTransform(Entity<AnchorlessComponent> ent, ref AnchorlessTransformActionEvent args)
+    private void OnTransform(Entity<KsAnchorlessAntagComponent> ent, ref AnchorlessTransformActionEvent args)
     {
         if (args.Handled || !TryComp<UserInterfaceComponent>(ent, out var ui))
             return;
@@ -116,7 +116,7 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
             _ui.OpenUi((ent, ui), AnchorlessTransformUiKey.Key, args.Performer);
     }
 
-    private void OnTransformSelected(Entity<AnchorlessComponent> ent, ref AnchorlessTransformIdentitySelectMessage args)
+    private void OnTransformSelected(Entity<KsAnchorlessAntagComponent> ent, ref AnchorlessTransformIdentitySelectMessage args)
     {
         if (!TryGetEntity(args.TargetIdentity, out var target) || ent.Comp.CurrentIdentity == target)
             return;
@@ -131,7 +131,7 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
     /// Applies an Anchorless stored identity using the same visual-body and component cloning path
     /// as every other Anchorless transformation. Inventory is deliberately not cloned.
     /// </summary>
-    public void TransformInto(Entity<AnchorlessComponent> ent, EntityUid target)
+    public void TransformInto(Entity<KsAnchorlessAntagComponent> ent, EntityUid target)
     {
         _visualBody.CopyAppearanceFrom(target, ent.Owner);
         _cloning.CloneComponents(target, ent.Owner, ent.Comp.IdentityCloningSettings);
@@ -141,7 +141,7 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
         Dirty(ent);
     }
 
-    private void LearnMissing(Entity<AnchorlessComponent> recipient, IEnumerable<AnchorlessIdentityData> memories)
+    private void LearnMissing(Entity<KsAnchorlessAntagComponent> recipient, IEnumerable<AnchorlessIdentityData> memories)
     {
         foreach (var memory in memories)
         {
@@ -153,7 +153,7 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
     }
 
     /// <summary>Preserve a new identity, optionally retaining the original person's identity key.</summary>
-    public EntityUid? GrantIdentity(Entity<AnchorlessComponent> recipient, EntityUid source,
+    public EntityUid? GrantIdentity(Entity<KsAnchorlessAntagComponent> recipient, EntityUid source,
         EntityUid? original = null, string? originalName = null, bool starting = false)
     {
         if (_net.IsClient)
@@ -183,7 +183,7 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
         return clone;
     }
 
-    private bool HasOriginal(Entity<AnchorlessComponent> ent, EntityUid? original, string name)
+    private bool HasOriginal(Entity<KsAnchorlessAntagComponent> ent, EntityUid? original, string name)
         => ent.Comp.LearnedIdentities.Any(x => original != null && x.OriginalEntity == original || original == null && x.OriginalEntity == null && x.OriginalName == name);
 
     private void EnsurePausedMap()
@@ -197,7 +197,7 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
         _pausedMap = id;
     }
 
-    public bool TryGetDataFromStoredIdentity(Entity<AnchorlessComponent> ent, EntityUid stored,
+    public bool TryGetDataFromStoredIdentity(Entity<KsAnchorlessAntagComponent> ent, EntityUid stored,
         [NotNullWhen(true)] out AnchorlessIdentityData? data)
     {
         data = ent.Comp.LearnedIdentities.FirstOrDefault(x => x.StoredIdentity == stored);

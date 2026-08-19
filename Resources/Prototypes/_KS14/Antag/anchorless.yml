@@ -1,4 +1,3 @@
-# KS14
 - type: antag
   id: Anchorless
   name: roles-antag-anchorless-name
@@ -24,7 +23,7 @@
     components:
     - AntagImmune
   components:
-  - type: Anchorless
+  - type: KsAnchorlessAntag
   - type: VoiceMask
     action: ActionAnchorlessVoiceMimic
     isInnate: true

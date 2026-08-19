@@ -8,7 +8,7 @@
     difficulty: 1
   - type: RoleRequirement
     roles:
-    - MindRoleAnchorless
+    - Anchorless
 
 - type: entity
   parent: BaseAnchorlessObjective

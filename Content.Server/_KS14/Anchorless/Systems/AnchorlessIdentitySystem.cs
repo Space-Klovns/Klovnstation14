@@ -10,10 +10,10 @@ public sealed class AnchorlessIdentitySystem : SharedAnchorlessIdentitySystem
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeLocalEvent<AnchorlessComponent, ComponentGetState>(OnGetState);
+        SubscribeLocalEvent<KsAnchorlessAntagComponent, ComponentGetState>(OnGetState);
     }
 
-    private void OnGetState(Entity<AnchorlessComponent> ent, ref ComponentGetState args)
+    private void OnGetState(Entity<KsAnchorlessAntagComponent> ent, ref ComponentGetState args)
     {
         var identities = ent.Comp.LearnedIdentities.Select(identity => new AnchorlessNetworkedIdentityData
         {

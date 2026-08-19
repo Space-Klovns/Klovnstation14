@@ -23,7 +23,7 @@ public sealed class AnchorlessTransformBoundUserInterface(EntityUid owner, Enum 
 
     public override void Update()
     {
-        if (_menu == null || !EntMan.TryGetComponent<AnchorlessComponent>(Owner, out var identity))
+        if (_menu == null || !EntMan.TryGetComponent<KsAnchorlessAntagComponent>(Owner, out var identity))
             return;
 
         var buttons = new List<RadialMenuOptionBase>();
