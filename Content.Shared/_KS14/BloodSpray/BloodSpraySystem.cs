@@ -11,6 +11,7 @@ using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Content.Shared._KS14.BloodSpray;
 
@@ -28,6 +29,22 @@ public sealed partial class BloodSpraySystem : EntitySystem
 
     private static readonly QueryFilter StaticQueryFilter = new() { LayerBits = 0L, Flags = QueryFlags.Static, MaskBits = (long)CollisionGroup.Impassable };
     private static readonly Vector2 DecalOffset = Vector2.One / 2; // this is related to texture size of the blood splatter
+
+    private static readonly ProtoId<DecalPrototype>[] DecalIds =
+    {
+        "splatter",
+        "KsSplatter1",
+        "KsSplatter2",
+        "KsSplatter3"
+    };
+
+    private static readonly SpriteSpecifier.Rsi[] Textures =
+    {
+        new(new ResPath("/Textures/Effects/crayondecals.rsi"), "splatter"),
+        new(new ResPath("/Textures/Fluids/splatter.rsi"), "splatter-0"),
+        new(new ResPath("/Textures/Fluids/splatter.rsi"), "splatter-1"),
+        new(new ResPath("/Textures/Fluids/splatter.rsi"), "splatter-2")
+    };
 
     private EntityUid RecursivelyGetGridOrMapUid(TransformComponent transformComponent)
     {
@@ -129,7 +146,7 @@ public sealed partial class BloodSpraySystem : EntitySystem
 
             accumulatedVariation += cachedVariations[intpower];
             _decalSystem.TryAddDecal(
-                "splatter",
+                predictedRandom.Pick(DecalIds),
                 effectCoordinates.WithPosition(effectCoordinates.Position + accumulatedVariation - DecalOffset + localDeltaUnit * power),
                 out _,
                 color: bloodColor,
@@ -145,6 +162,6 @@ public sealed partial class BloodSpraySystem : EntitySystem
         // TODO: delete todo because i fixed it
 
         foreach (var intersectingUid in _lookupSystem.GetEntitiesInRange(effectCoordinates, 0.1f, LookupFlags.Static))
-            _stainSystem.ApplyStain(intersectingUid, effectCoordinates, bloodColor, predictedRandom.NextFloat(), predictedRandom.NextFloat(0.35f, 0.5f));
+            _stainSystem.ApplyStain(intersectingUid, effectCoordinates, bloodColor, predictedRandom.NextFloat(), predictedRandom.NextFloat(0.35f, 0.5f), texture: predictedRandom.Pick(Textures));
     }
 }

@@ -9,6 +9,7 @@
     snap:
     - Wall
   components:
+  - type: Stainable # KS14: stains
   - type: Anchorable
     flags:
     - Anchorable

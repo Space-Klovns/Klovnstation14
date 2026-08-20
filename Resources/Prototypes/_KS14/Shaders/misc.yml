@@ -4,7 +4,18 @@
   id: KsWhite
   kind: source
   light_mode: unshaded
-  path: "/Textures/_KS14/Shaders/white.swsl"
+  path: "/Textures/_KS14/Shaders/flatcolour.swsl"
+  params:
+    FLAT: '#FFFFFF'
+
+# Makes every RGB value black, alpha is untouched
+- type: shader
+  id: KsBlack
+  kind: source
+  light_mode: unshaded
+  path: "/Textures/_KS14/Shaders/flatcolour.swsl"
+  params:
+    FLAT: '#000000'
 
 # Makes every RGB value a specific color, alpha is untouched
 - type: shader
