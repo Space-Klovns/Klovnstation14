@@ -107,3 +107,22 @@
   - type: Wires
     boardName: wires-board-name-computer
     layoutId: ComputerAi
+
+- type: entity
+  parent: BaseComputer
+  id: BaseComputerExecutor
+  components:
+  - type: ActivatableUI
+    key: enum.ExecutorUiKey.Key
+  - type: UserInterface
+    interfaces:
+        enum.ExecutorUiKey.Key:
+          type: ExecutorBoundUserInterface
+        enum.WiresUiKey.Key:
+          type: WiresBoundUserInterface
+  - type: Executor
+    modules:
+    - BaseModule
+    - LatheModule
+  - type: PacketReceiver
+    frequency: LatheFrequency

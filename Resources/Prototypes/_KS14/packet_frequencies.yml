@@ -1,0 +1,4 @@
+- type: packetFrequency
+  id: LatheFrequency
+  minFrequency: 350
+  maxFrequency: 650
