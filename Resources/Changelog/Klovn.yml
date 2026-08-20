@@ -1801,3 +1801,9 @@ Entries:
       message: Fixed wall stains not working.
   id: 188
   time: '2026-08-20T09:46:52.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Tweak
+      message: Baron UI port from project Carmine
+  id: 189
+  time: '2026-08-20T11:35:06.0000000+00:00'
