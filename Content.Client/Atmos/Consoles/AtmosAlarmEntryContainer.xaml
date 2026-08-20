@@ -4,20 +4,12 @@
          xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
          Orientation="Vertical" HorizontalExpand ="True" Margin="0 0 0 3">
 
-    <!-- Device selection button -->
-    <Button Name="FocusButton" HorizontalExpand="True" SetHeight="32" Margin="12 0 0 0" StyleClasses="OpenBoth" Access="Public">
+    <!-- KS14: use shared Baron button chrome for the alarm-state expander. -->
+    <Button Name="FocusButton" HorizontalExpand="True" SetHeight="32" StyleClasses="OpenBoth" Access="Public">
         <BoxContainer HorizontalExpand="True" VerticalExpand="True" Orientation="Horizontal">
-
-            <!-- Alarm state -->
-            <TextureRect Stretch="Keep" HorizontalAlignment="Left" Margin="-20 -2 0 0" ModulateSelfOverride="#25252a" TexturePath="/Textures/Interface/AtmosMonitoring/status_bg.png">
-                <BoxContainer VerticalExpand="True" HorizontalExpand="True" Orientation="Horizontal" Margin="8 0">
-                    <TextureRect Name="ArrowTexture" VerticalAlignment="Center" SetSize="12 12" Stretch="KeepAspectCentered" Margin="3 0" TexturePath="/Textures/Interface/Nano/triangle_right.png"></TextureRect>
-                    <Label Name="AlarmStateLabel" HorizontalExpand="True" HorizontalAlignment="Center" FontColorOverride="#5A5A5A" Text="{Loc 'atmos-alerts-window-invalid-state'}"></Label>
-                </BoxContainer>
-            </TextureRect>
-
-            <!-- Alarm name -->
-            <Label Name="AlarmNameLabel" Text="???" HorizontalExpand="True" HorizontalAlignment="Center" Margin="5 0"></Label>
+            <TextureRect Name="ArrowTexture" VerticalAlignment="Center" SetSize="12 12" Stretch="KeepAspectCentered" Margin="3 0" TexturePath="/Textures/Interface/Nano/triangle_right.png" />
+            <Label Name="AlarmStateLabel" HorizontalExpand="True" HorizontalAlignment="Center" Text="{Loc 'atmos-alerts-window-invalid-state'}" />
+            <Label Name="AlarmNameLabel" Text="???" HorizontalExpand="True" HorizontalAlignment="Center" Margin="5 0" />
         </BoxContainer>
     </Button>
 

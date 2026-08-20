@@ -37,8 +37,7 @@ namespace Content.Client.UserInterface.Controls
         public Label OffStateLabel { get; }
         public Label OnStateLabel { get; }
 
-        // I tried to find a way not to have five textures here, but the other
-        // options were worse.
+        // KS14: Legacy texture properties remain for API compatibility; only the checkbox indicator is rendered.
         public TextureRect TrackFill { get; }
         public TextureRect TrackOutline { get; }
         public TextureRect ThumbFill { get; }
@@ -49,10 +48,12 @@ namespace Content.Client.UserInterface.Controls
         {
             ToggleMode = true;
 
+            // KS14: A SwitchButton is rendered as the same single checkbox texture as CheckBox.
             TrackFill = new TextureRect
             {
                 StyleClasses = { StyleClassTrackFill },
                 VerticalAlignment = VAlignment.Center,
+                Visible = false,
             };
 
             TrackOutline = new TextureRect
@@ -65,18 +66,21 @@ namespace Content.Client.UserInterface.Controls
             {
                 StyleClasses = { StyleClassThumbFill },
                 VerticalAlignment = VAlignment.Center,
+                Visible = false,
             };
 
             ThumbOutline = new TextureRect
             {
                 StyleClasses = { StyleClassThumbOutline },
                 VerticalAlignment = VAlignment.Center,
+                Visible = false,
             };
 
             Symbol = new TextureRect
             {
                 StyleClasses = { StyleClassSymbol },
                 VerticalAlignment = VAlignment.Center,
+                Visible = false,
             };
 
             Label = new Label();
@@ -93,12 +97,9 @@ namespace Content.Client.UserInterface.Controls
 
             Label.HorizontalExpand = true;
 
+            //KS14: removes a bunch of children
             AddChild(Label);
-            AddChild(TrackFill);
             AddChild(TrackOutline);
-            AddChild(ThumbFill);
-            AddChild(ThumbOutline);
-            AddChild(Symbol);
             AddChild(OffStateLabel);
             AddChild(OnStateLabel);
         }
@@ -147,11 +148,8 @@ namespace Content.Client.UserInterface.Controls
             if (relevantChangeMade)
             {
                 Label.RemoveStyleClass("dummy");
-                TrackFill.RemoveStyleClass("dummy");
+                // KS14: Only the visible checkbox indicator needs its styles refreshed.
                 TrackOutline.RemoveStyleClass("dummy");
-                ThumbFill.RemoveStyleClass("dummy");
-                ThumbOutline.RemoveStyleClass("dummy");
-                Symbol.RemoveStyleClass("dummy");
                 OffStateLabel.RemoveStyleClass("dummy");
                 OnStateLabel.RemoveStyleClass("dummy");
             }
@@ -295,17 +293,8 @@ namespace Content.Client.UserInterface.Controls
             Label?.Arrange(mainLabelTargetBox);
 
             var iconTargetBox = new UIBox2(iconPosition, 0, iconPosition + TrackOutline.DesiredSize.X, finalSize.Y);
-            TrackFill.Arrange(iconTargetBox);
+            // KS14: The legacy switch layers are not part of the visual tree.
             TrackOutline.Arrange(iconTargetBox);
-            Symbol.Arrange(iconTargetBox);
-
-            ThumbOutline.Measure(TrackOutline.DesiredSize); // didn't measure in MeasureOverride, don't need its size there
-            var thumbLeft = iconTargetBox.Left;
-            if (Pressed)
-                thumbLeft = iconTargetBox.Right - ThumbOutline.DesiredSize.X;
-            var thumbTargetBox = new UIBox2(thumbLeft, 0, thumbLeft + ThumbOutline.DesiredSize.X, finalSize.Y);
-            ThumbFill.Arrange(thumbTargetBox);
-            ThumbOutline.Arrange(thumbTargetBox);
 
             var stateLabelsTargetBox = new UIBox2(stateLabelPosition, 0, finalSize.X, finalSize.Y);
             OffStateLabel?.Arrange(stateLabelsTargetBox);
