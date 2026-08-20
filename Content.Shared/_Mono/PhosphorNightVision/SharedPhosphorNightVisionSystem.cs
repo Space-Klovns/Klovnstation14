@@ -3,6 +3,7 @@ using Content.Shared.Inventory;
 using Content.Shared.Inventory.Events;
 using Content.Shared._Mono.Overlays;
 using Robust.Shared.Timing;
+using Content.Shared._KS14.PhosphorNightVision;
 
 namespace Content.Shared._Mono.PhosphorNightVision;
 
@@ -17,6 +18,8 @@ public abstract partial class SharedPhosphorNightVisionSystem : EntitySystem
 
     public override void Initialize()
     {
+        SubscribeLocalEvent<PhosphorNightVisionGlowComponent, ComponentStartup>(OnGlowStartup);
+
         SubscribeLocalEvent<PhosphorNightVisionComponent, ComponentStartup>(OnStartup);
         SubscribeLocalEvent<PhosphorNightVisionComponent, ComponentShutdown>(OnShutdown);
         SubscribeLocalEvent<PhosphorNightVisionComponent, GotEquippedEvent>(OnCompEquip);
@@ -24,6 +27,12 @@ public abstract partial class SharedPhosphorNightVisionSystem : EntitySystem
         SubscribeLocalEvent<PhosphorNightVisionComponent, InventoryRelayedEvent<RefreshPhosphorNightVisionEvent>>(OnRefreshEquipmentHud);
         SubscribeLocalEvent<PhosphorNightVisionComponent, RefreshPhosphorNightVisionEvent>(OnRefreshComponentHud);
         SubscribeLocalEvent<TogglePhosphorNightVisionEvent>(OnTogglePhosphorNightVisionEvent);
+    }
+
+    private void OnGlowStartup(Entity<PhosphorNightVisionGlowComponent> entity, ref ComponentStartup args)
+    {
+        entity.Comp.StartTime = _gameTiming.CurTime;
+        Dirty(entity);
     }
 
     private void OnStartup(Entity<PhosphorNightVisionComponent> ent, ref ComponentStartup args)

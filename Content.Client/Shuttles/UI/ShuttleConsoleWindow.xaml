@@ -2,8 +2,9 @@
                       xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
                       xmlns:ui="clr-namespace:Content.Client.Shuttles.UI"
                       Title="{Loc 'shuttle-console-window-title'}"
-                      SetSize="960 762"
-                      MinSize="960 762">
+                      SetSize="960 820"
+                      MinSize="960 820">
+    <!-- KS14: add vertical room for shuttle-console controls at the default size. -->
     <BoxContainer Orientation="Vertical">
         <!-- Top row mode buttons -->
         <BoxContainer Name="ModeButtons"

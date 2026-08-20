@@ -1,4 +1,5 @@
 using Content.Shared._KS14.Sensors.Prototypes;
+using Content.Shared.Guidebook;
 using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.Sensors;
@@ -22,6 +23,7 @@ public sealed partial class KsSensorComponent : Component
     /// <summary>Maximum detection range in meters/tiles.</summary>
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
+    [GuidebookData]
     public float MaxRange = 160f;
 
     /// <summary>
@@ -221,6 +223,7 @@ public sealed partial class KsRadarComponent : Component
     /// </summary>
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
+    [GuidebookData]
     public float ConeRangeFactor = 2f;
 
     /// <summary>
@@ -233,6 +236,7 @@ public sealed partial class KsRadarComponent : Component
     /// </summary>
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
+    [GuidebookData]
     public float BurnThroughFactor = 0.5f;
 
     /// <summary>
@@ -291,6 +295,7 @@ public sealed partial class KsElintComponent : Component
     /// </summary>
     [DataField]
     [ViewVariables(VVAccess.ReadWrite)]
+    [GuidebookData]
     public float AnalysisTime = 30f;
 
     /// <summary>

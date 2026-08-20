@@ -66,7 +66,7 @@ public sealed class KsSensorNavState
 
     /// <summary>
     ///     Gates the ESM tab's warning side (threat channels, posture, the tab-alert
-    ///         flash), which degrades to a "NO RWR RECEIVER" chip without a receiver.
+    ///         flash), which degrades to a "NO RADAR WARNING RECEIVER" chip without a receiver.
     /// </summary>
     public bool HasRwr;
 

@@ -20,6 +20,7 @@ using Robust.Shared.Input;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Content.Shared.Mech.Components; // Goobstation
 using SharedGunSystem = Content.Shared.Weapons.Ranged.Systems.SharedGunSystem;
@@ -211,7 +212,7 @@ public sealed partial class GunSystem : SharedGunSystem
             Target = target,
             Coordinates = GetNetCoordinates(coordinates),
             Gun = GetNetEntity(gun),
-            Continuous = _cfg.GetCVar(CCVars.ControlHoldToAttackRanged),
+            Continuous = _cfg.GetCVar(CCVars.ControlHoldToAttackRanged)
         });
     }
 

@@ -4,7 +4,7 @@
   group: Biological
   desc: reagent-desc-blood
   flavor: metallic
-  color: "#800000"
+  color: "#500000" # KS14: #800000 -> #500000
   metamorphicSprite:
     sprite: Objects/Consumable/Drinks/bloodglass.rsi
     state: icon_empty

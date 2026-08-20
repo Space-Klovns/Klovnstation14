@@ -2,3 +2,27 @@
   id: ArcFlash
   name: guide-entry-arcflash
   text: "/ServerInfo/_KS14/Guidebook/Engineering/ArcFlash.xml"
+
+- type: guideEntry # KS14
+  id: Sensors
+  name: guide-entry-sensors
+  text: "/ServerInfo/_KS14/Guidebook/Engineering/Sensors.xml"
+  children:
+  - SensorArrays
+  - Datalink
+  - ShuttleConsole
+
+- type: guideEntry # KS14
+  id: SensorArrays
+  name: guide-entry-sensor-arrays
+  text: "/ServerInfo/_KS14/Guidebook/Engineering/SensorArrays.xml"
+
+- type: guideEntry # KS14
+  id: Datalink
+  name: guide-entry-datalink
+  text: "/ServerInfo/_KS14/Guidebook/Engineering/Datalink.xml"
+
+- type: guideEntry # KS14
+  id: ShuttleConsole
+  name: guide-entry-shuttle-console
+  text: "/ServerInfo/_KS14/Guidebook/Engineering/ShuttleConsole.xml"

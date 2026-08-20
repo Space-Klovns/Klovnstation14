@@ -46,6 +46,8 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip3 install --ignore-installed --user pillow jsonschema
+
+      # KS14: use validate_rsis.py from KS14
       - name: Validate RSIs
         run: |
-          python3 RobustToolbox/Schemas/validate_rsis.py Resources/
+          python3 Tools/_KS14/validate_rsis.py Resources/

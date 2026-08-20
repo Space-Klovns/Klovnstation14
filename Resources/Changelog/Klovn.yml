@@ -1713,3 +1713,97 @@ Entries:
       message: Fixed some mispredicts involving sparks.
   id: 176
   time: '2026-08-04T20:49:06.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: Syndies Aren't The Only Things Getting FF'd
+  id: 177
+  time: '2026-08-15T18:45:24.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Lobby art now fades-out when spawning instead of abruptly disappearing.
+  id: 178
+  time: '2026-08-15T20:24:32.0000000+00:00'
+- author: teecoding
+  changes:
+    - type: Add
+      message: >-
+        Added guidebook entries for sensors, sensor arrays, datalink and the
+        shuttle console
+  id: 179
+  time: '2026-08-15T20:26:08.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: Made the spread on lecter a bit less abhorrent.
+  id: 180
+  time: '2026-08-15T21:12:03.0000000+00:00'
+- author: d
+  changes:
+    - type: Tweak
+      message: Stamina damage now recovers instantly after fullstun (again)!
+  id: 181
+  time: '2026-08-15T22:24:45.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: you can have up to two storage UIs open.
+    - type: Fix
+      message: Fixed KS14 config preset not working on client.
+  id: 182
+  time: '2026-08-16T10:20:51.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: Bullets should now be lag compensated much better.
+    - type: Add
+      message: Bullets are now 220% more laggy.
+  id: 183
+  time: '2026-08-16T10:48:42.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Turrets can now be EMPed to be temporarily disabled.
+  id: 184
+  time: '2026-08-16T11:14:42.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Fixed R&D tech tree UI dragging the window when you tried to drag the
+        tree (WTF) (SCIENCE WQN)
+  id: 185
+  time: '2026-08-16T11:16:04.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: >-
+        C-4, seismic charges, etc. now become wallmounts when planted and aren't
+        visible from the side opposite from which they were planted on.
+  id: 186
+  time: '2026-08-16T13:15:12.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Some things like freshly spent bullet casings will now glow under NV.
+    - type: Add
+      message: >-
+        Backblast from rocket launchers now breaks tiles, and doesn't magically
+        break things that are hidden by floortiles.
+    - type: Tweak
+      message: Knockback from guns is a bit weaker now.
+  id: 187
+  time: '2026-08-17T13:04:56.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed wall stains not working.
+  id: 188
+  time: '2026-08-20T09:46:52.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Tweak
+      message: Baron UI port from project Carmine
+  id: 189
+  time: '2026-08-20T11:35:06.0000000+00:00'

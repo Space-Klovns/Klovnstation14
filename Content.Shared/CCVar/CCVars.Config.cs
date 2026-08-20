@@ -16,7 +16,7 @@ public sealed partial class CCVars
     ///     Only the file name (without extension) must be given for this variable.
     /// </remarks>
     public static readonly CVarDef<string> ConfigPresets =
-        CVarDef.Create("config.presets", "", CVar.SERVERONLY);
+        CVarDef.Create("config.presets", "", CVar.REPLICATED | CVar.SERVER /* KS14: SERVERONLY -> REPLICATED | SERVER */);
 
     /// <summary>
     ///     Whether to load the preset development CVars.

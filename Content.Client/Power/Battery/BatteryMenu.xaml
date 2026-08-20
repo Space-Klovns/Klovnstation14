@@ -1,8 +1,10 @@
+<!-- KS14: grow the containing window with the storage pane so its wider content cannot overlap the left panes. -->
 <controls:FancyWindow xmlns="https://spacestation14.io"
                       xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                       xmlns:gfx="clr-namespace:Robust.Client.Graphics;assembly=Robust.Client"
-                      SetSize="650 330"
+                      SetSize="800 350"
+                      MinSize="800 350"
                       Resizable="False">
     <BoxContainer Orientation="Vertical">
         <!-- Top row: main content -->
@@ -111,7 +113,8 @@
             </BoxContainer>
 
             <!-- Right pane: storage -->
-            <PanelContainer Name="Storage" StyleClasses="BackgroundPanelDark" HorizontalExpand="True">
+            <!-- KS14: reserve room for storage values inside the wider Baron panel frame. -->
+            <PanelContainer Name="Storage" StyleClasses="BackgroundPanelDark" HorizontalExpand="True" MinWidth="250">
                 <BoxContainer Orientation="Vertical">
                     <Label Text="{Loc 'battery-menu-storage-header'}" StyleClasses="LabelKeyText" />
                     <GridContainer Columns="2">

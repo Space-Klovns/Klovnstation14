@@ -771,6 +771,14 @@ public abstract partial class SharedGunSystem : EntitySystem
             // KS14: Predicted
             Audio.PlayPredicted(cartridge.EjectSound, entity, user: user, AudioParams.Default.WithVariation(SharedContentAudioSystem.DefaultVariation).WithVolume(-1f));
         }
+
+        // KS14 start
+        if (TryComp<_KS14.PhosphorNightVision.PhosphorNightVisionGlowComponent>(entity, out var glowComponent))
+        {
+            glowComponent.StartTime = Timing.CurTime;
+            Dirty(entity, glowComponent);
+        }
+        // KS14 end
     }
 
     protected IShootable EnsureShootable(EntityUid uid)
