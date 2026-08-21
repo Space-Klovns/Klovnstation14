@@ -1,0 +1,38 @@
+- type: entity
+  id: MechU43
+  parent: BaseMech
+  name: U-43 combat walker
+  description: A paradroppable, jet-insertable Syndicate combat walker.
+  components:
+  - type: Sprite
+    drawdepth: Mobs
+    noRot: true
+    sprite: _KS14/Objects/Specific/Mech/mecha.rsi
+    layers:
+    - map: [ "enum.MechVisualLayers.Base" ]
+      state: u43
+  - type: FootstepModifier
+    footstepSoundCollection:
+      path: /Audio/Mecha/sound_mecha_powerloader_step.ogg
+  - type: Mech
+    baseState: u43
+    openState: u43-open
+    brokenState: u43-broken
+    mechToPilotDamageMultiplier: 0.25
+    pilotWhitelist:
+      components:
+        - HumanoidProfile
+        - WearingMechSuit
+  - type: MovementSpeedModifier
+    baseWalkSpeed: 2.25
+    baseSprintSpeed: 3.6
+
+- type: entity
+  id: MechU43Battery
+  parent: MechU43
+  suffix: Battery
+  components:
+  - type: ContainerFill
+    containers:
+      mech-battery-slot:
+      - PowerCellHigh

@@ -2,6 +2,8 @@
 using Content.Shared.Weapons.Hitscan.Events;
 using Content.Shared._Trauma.Projectiles;
 // </Trauma>
+using Content.Shared.Mech.Components; // Goobstation
+using Content.Shared.Item; // Goobstation
 using System.Numerics;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Actions;
@@ -156,36 +158,49 @@ public abstract partial class SharedGunSystem : EntitySystem
     {
         var user = args.SenderSession.AttachedEntity;
 
+        // KS14 ghetto mech port start
         if (user == null ||
-            !_combatMode.IsInCombatMode(user) ||
-            !TryGetGun(user.Value, out var gun))
-        {
-            return;
-        }
-
-        if (gun.Owner != GetEntity(msg.Gun))
+            !_combatMode.IsInCombatMode(user))
             return;
 
-        gun.Comp.ShootCoordinates = GetCoordinates(msg.Coordinates);
-        gun.Comp.Target = GetEntity(msg.Target);
-        AttemptShoot(user.Value, gun);
+        if (TryComp<MechPilotComponent>(user.Value, out var mechPilot))
+            user = mechPilot.Mech;
+
+        if (!TryGetGun(user.Value, out var userGun) ||
+            HasComp<ItemComponent>(user))
+            return;
+
+        if (userGun.Owner != GetEntity(msg.Gun))
+            return;
+        // KS14 ghetto mech port end
+        // TODO: once mlgguns come out nuke this entire file and start from scratch
+
+        userGun.Comp.ShootCoordinates = GetCoordinates(msg.Coordinates);
+        userGun.Comp.Target = GetEntity(msg.Target);
+        AttemptShoot(user.Value, userGun);
         if (msg.Continuous)
-            gun.Comp.ShotCounter = 0;
+            userGun.Comp.ShotCounter = 0;
     }
 
     private void OnStopShootRequest(RequestStopShootEvent ev, EntitySessionEventArgs args)
     {
         var gunUid = GetEntity(ev.Gun);
 
-        if (args.SenderSession.AttachedEntity == null ||
-            !TryComp<GunComponent>(gunUid, out var gun) ||
-            !TryGetGun(args.SenderSession.AttachedEntity.Value, out var userGun))
-        {
-            return;
-        }
+        // KS14 ghettomechs
+        var user = args.SenderSession.AttachedEntity;
 
-        if (userGun != (gunUid, gun))
+        if (user == null)
             return;
+
+        if (TryComp<MechPilotComponent>(user.Value, out var mechPilot))
+            user = mechPilot.Mech;
+
+        if (!TryGetGun(user.Value, out var userGun))
+            return;
+
+        if (userGun.Owner != gunUid)
+            return;
+        // KS14 ghettomechs
 
         StopShooting(userGun);
     }
@@ -207,6 +222,14 @@ public abstract partial class SharedGunSystem : EntitySystem
     public bool TryGetGun(EntityUid entity, out Entity<GunComponent> gun)
     {
         gun = default;
+
+        if (TryComp<MechComponent>(entity, out var mech) &&
+            mech.CurrentSelectedEquipment.HasValue &&
+            TryComp<GunComponent>(mech.CurrentSelectedEquipment.Value, out var mechGun))
+        {
+            gun = (mech.CurrentSelectedEquipment.Value, mechGun);
+            return true;
+        }
 
         if (_hands.GetActiveItem(entity) is { } held &&
             TryComp(held, out GunComponent? gunComp))
