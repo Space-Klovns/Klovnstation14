@@ -1,0 +1,79 @@
+- type: entity
+  id: ActionAnchorlessCommunion
+  name: Communion
+  description: Share the identities you have learned with another Anchorless.
+  components:
+  - type: Action
+    priority: 1
+    itemIconStyle: BigAction
+    icon:
+      sprite: Interface/Actions/changeling2.rsi
+      state: flesh_clothing
+  - type: TargetAction
+  - type: EntityTargetAction
+    event: !type:AnchorlessCommunionActionEvent
+
+- type: entity
+  id: ActionAnchorlessTransform
+  name: Transform
+  description: Assume the appearance of one of the identities you have learned.
+  components:
+  - type: Action
+    priority: 1
+    itemIconStyle: BigAction
+    icon:
+      sprite: Interface/Actions/changeling.rsi
+      state: transform
+  - type: InstantAction
+    event: !type:AnchorlessTransformActionEvent
+
+- type: entity
+  id: ActionAnchorlessConvert
+  name: Convert
+  description: Return a critical or dead person to life as an Anchorless.
+  components:
+  - type: Action
+    itemIconStyle: BigAction
+    icon: { sprite : Interface/Actions/changeling.rsi, state: "devour" }
+    iconOn: { sprite : Interface/Actions/changeling.rsi, state: "devour_on" }
+  - type: TargetAction
+  - type: EntityTargetAction
+    canTargetSelf: false
+    whitelist:
+      components:
+      - MobState
+      - HumanoidProfile
+    event: !type:AnchorlessConvertActionEvent
+
+- type: entity
+  id: ActionAnchorlessHorror
+  name: Horror Form
+  description: Unmoor your body and reveal the horror beneath.
+  components:
+  - type: Action
+    itemIconStyle: BigAction
+    icon:
+      sprite: Interface/Actions/changeling2.rsi
+      state: flesh_clothing_alt
+  - type: InstantAction
+    event: !type:AnchorlessHorrorActionEvent
+
+- type: entity
+  parent: ActionRetractableItemArmBlade
+  id: ActionAnchorlessHorrorArmblade
+  name: Horror Armblade
+  description: An inseparable armblade formed from your horror body.
+
+- type: entity
+  parent: BaseAction
+  id: ActionAnchorlessVoiceMimic
+  name: Voice Mimicry
+  description: Model your vocal cords to imitate the voice of someone else.
+  components:
+  - type: Action
+    itemIconStyle: BigAction
+    icon:
+      sprite: Interface/Actions/changeling2.rsi
+      state: mimicry
+  - type: InstantAction
+    event: !type:VoiceMaskSetNameEvent

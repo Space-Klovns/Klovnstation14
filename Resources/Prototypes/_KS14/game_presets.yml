@@ -9,3 +9,15 @@
   supportedMaps: ScenarioMapPool
   rules:
   - Scenario
+
+- type: gamePreset
+  id: Anchorless
+  alias:
+  - anchorless
+  name: anchorless-title
+  description: anchorless-description
+  showInVote: false
+  rules:
+  - Anchorless
+  - BasicStationEventScheduler
+  - BasicRoundstartVariation
