@@ -27,18 +27,19 @@
           - !type:MaxRuleOccurenceCondition
           - !type:PlayerCountCondition
             min: 20
-        - id: Revolutionary
-          weight: 5
-          conditions:
-          - !type:HasBudgetCondition
-          - !type:MaxRuleOccurenceCondition
-        - id: Zombie
-          weight: 5
-          conditions:
-          - !type:HasBudgetCondition
-          - !type:MaxRuleOccurenceCondition
-          - !type:PlayerCountCondition
-            min: 20
+        # KS14: Revolutionaries and Zombies are derotated from Dynamic roundstart selection.
+        # - id: Revolutionary
+        #   weight: 5
+        #   conditions:
+        #   - !type:HasBudgetCondition
+        #   - !type:MaxRuleOccurenceCondition
+        # - id: Zombie
+        #   weight: 5
+        #   conditions:
+        #   - !type:HasBudgetCondition
+        #   - !type:MaxRuleOccurenceCondition
+        #   - !type:PlayerCountCondition
+        #     min: 20
         - id: Wizard
           weight: 5
           conditions:

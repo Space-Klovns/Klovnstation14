@@ -1,0 +1,9 @@
+- type: factionIcon
+  id: AnchorlessFaction
+  priority: 11
+  showTo:
+    components:
+    - KsAnchorlessAntag
+  icon:
+    sprite: /Textures/Interface/Misc/job_icons.rsi
+    state: DeathSquad

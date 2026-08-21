@@ -22,6 +22,7 @@
     - AntagImmune
   components:
   - type: KsAnchorlessAntag
+  - type: AnchorlessFaction
   - type: VoiceMask
     action: ActionAnchorlessVoiceMimic
     isInnate: true
@@ -35,6 +36,9 @@
     - ActionAnchorlessConvert
     - ActionAnchorlessHorror
   - type: IntrinsicRadioReceiver
+  - type: ActiveRadio
+    channels:
+    - Anchorless
   - type: IntrinsicRadioTransmitter
     channels:
     - Anchorless
