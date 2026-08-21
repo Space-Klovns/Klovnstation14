@@ -697,7 +697,7 @@
     - Sulfur
     - Zinc
     - WeldingFuel
-    - Ethanol # Klovn
+    - Ethanol # KS14
   - type: Plungeable
   - type: PlumbingOutlet
     solutionName: buffer
