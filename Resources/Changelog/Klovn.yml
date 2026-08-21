@@ -1821,3 +1821,9 @@ Entries:
       message: Added a way to test if someone is the Anchorless.
   id: 191
   time: '2026-08-21T16:24:54.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: Combat mech (scenario only)
+  id: 192
+  time: '2026-08-21T21:55:53.0000000+00:00'
