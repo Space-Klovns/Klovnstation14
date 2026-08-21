@@ -169,6 +169,7 @@ public abstract partial class SharedFlashSystem : EntitySystem
     /// <param name="displayPopup">Whether or not to show a popup to the target player.</param>
     /// <param name="melee">Was this flash caused by a melee attack? Used for checking for revolutionary conversion.</param>
     /// <param name="stunDuration">The time the target will be stunned. If null the target will be slowed down instead.</param>
+    /// <param name="flashOverride"> KS14 addition - should this event pierce all flash protection? </param>
     public void Flash(
         EntityUid target,
         EntityUid? user,
@@ -177,16 +178,17 @@ public abstract partial class SharedFlashSystem : EntitySystem
         float slowTo,
         bool displayPopup = true,
         bool melee = false,
-        TimeSpan? stunDuration = null)
+        TimeSpan? stunDuration = null,
+        bool flashOverride = false) //KS14 addition to allow forcing flashesb
     {
-        var attempt = new FlashAttemptEvent(target, user, used);
+        var attempt = new FlashAttemptEvent(target, user, used, FlashOverride: flashOverride); //KS14 - flash override
         RaiseLocalEvent(target, ref attempt, true);
 
         if (attempt.Cancelled)
             return;
 
         // don't paralyze, slowdown or convert to rev if the target is immune to flashes
-        if (!_statusEffectsSystem.TryAddStatusEffect<FlashedComponent>(target, FlashedKey, flashDuration, true))
+        if (!_statusEffectsSystem.TryAddStatusEffect<FlashedComponent>(target, FlashedKey, flashDuration, true) && !flashOverride) // KS14 - added forcible flashing events
             return;
 
         if (stunDuration != null)
@@ -270,13 +272,13 @@ public abstract partial class SharedFlashSystem : EntitySystem
     private void OnPermanentBlindnessFlashAttempt(Entity<PermanentBlindnessComponent> ent, ref FlashAttemptEvent args)
     {
         // check for total blindness
-        if (ent.Comp.Blindness == 0)
+        if (ent.Comp.Blindness == 0 && !args.FlashOverride) //KS14 - flash override
             args.Cancelled = true;
     }
 
     private void OnFlashImmunityFlashAttempt(Entity<FlashImmunityComponent> ent, ref FlashAttemptEvent args)
     {
-        if (TryComp<MaskComponent>(ent, out var mask) && mask.IsToggled)
+        if (TryComp<MaskComponent>(ent, out var mask) && mask.IsToggled || args.FlashOverride) //KS14 - flash override
             return;
 
         if (ent.Comp.Enabled)

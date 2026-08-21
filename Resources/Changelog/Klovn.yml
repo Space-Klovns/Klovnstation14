@@ -1807,3 +1807,9 @@ Entries:
       message: Baron UI port from project Carmine
   id: 189
   time: '2026-08-20T11:35:06.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: Added the Anchorless, a shapeshifting horror from the clouds of Saturn.
+  id: 190
+  time: '2026-08-21T13:16:41.0000000+00:00'

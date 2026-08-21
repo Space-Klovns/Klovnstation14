@@ -1,0 +1,24 @@
+- type: entity
+  abstract: true
+  parent: BaseObjective
+  id: BaseAnchorlessObjective
+  components:
+  - type: Objective
+    issuer: objective-issuer-anchorless
+    difficulty: 1
+  - type: RoleRequirement
+    roles:
+    - KsAnchorlessAntag
+
+- type: entity
+  parent: BaseAnchorlessObjective
+  id: AnchorlessConvertCrewObjective
+  name: Convert 60% of the crew.
+  description: Assimilate your "fellow man" until at least 60% of the crew are Anchorless.
+  components:
+  - type: Objective
+    icon:
+      sprite: Mobs/Aliens/paradox_clone.rsi
+      state: preview
+  - type: AnchorlessConvertCrewCondition
+    requiredFraction: 0.6

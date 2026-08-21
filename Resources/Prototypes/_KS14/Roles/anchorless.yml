@@ -1,0 +1,7 @@
+- type: entity
+  parent: BaseMindRoleAntag
+  id: MindRoleAnchorless
+  name: Anchorless Role
+  components:
+  - type: MindRole
+    antagPrototype: Anchorless
