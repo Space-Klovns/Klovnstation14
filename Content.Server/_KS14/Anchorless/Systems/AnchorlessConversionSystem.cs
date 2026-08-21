@@ -42,7 +42,7 @@ public sealed partial class AnchorlessConversionSystem : EntitySystem
         _audio.PlayPvs(new SoundCollectionSpecifier("ChangelingDevourWindup", AudioParams.Default.WithMaxDistance(6)), ent);
         _popup.PopupEntity(Loc.GetString("anchorless-convert-begin-message"), ent.Owner, PopupType.LargeCaution);
 
-        _doAfter.TryStartDoAfter(new DoAfterArgs(EntityManager, ent.Owner, TimeSpan.FromSeconds(10),
+        _doAfter.TryStartDoAfter(new DoAfterArgs(EntityManager, ent.Owner, ent.Comp.ConversionTimespan,
             new AnchorlessConvertDoAfterEvent(), ent.Owner, target: args.Target, used: ent.Owner)
         {
             BreakOnMove = true,
