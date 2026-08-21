@@ -8,7 +8,7 @@
     difficulty: 1
   - type: RoleRequirement
     roles:
-    - KsAnchorlessAntag
+    - AnchorlessRole
 
 - type: entity
   parent: BaseAnchorlessObjective

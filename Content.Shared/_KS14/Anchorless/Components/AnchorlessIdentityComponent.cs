@@ -1,6 +1,7 @@
 using System.Linq;
 using Content.Shared.Actions;
 using Content.Shared.Cloning;
+using Content.Shared.DoAfter;
 using Content.Shared.Roles;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
@@ -58,6 +59,10 @@ public sealed class AnchorlessNetworkedIdentityData
 public sealed partial class AnchorlessTransformActionEvent : InstantActionEvent;
 public sealed partial class AnchorlessHorrorActionEvent : InstantActionEvent;
 public sealed partial class AnchorlessConvertActionEvent : EntityTargetActionEvent;
+
+/// <summary>Completes an Anchorless conversion after its visible ritual has finished.</summary>
+[Serializable, NetSerializable]
+public sealed partial class AnchorlessConvertDoAfterEvent : SimpleDoAfterEvent;
 
 public static class AnchorlessIdentityHelper
 {
