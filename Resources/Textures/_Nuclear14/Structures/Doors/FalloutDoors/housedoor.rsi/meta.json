@@ -8,6 +8,9 @@
     },
     "states": [
         {
+            "name": "house_padlock"
+        },
+        {
             "name": "closed",
             "directions": 1,
             "delays": [

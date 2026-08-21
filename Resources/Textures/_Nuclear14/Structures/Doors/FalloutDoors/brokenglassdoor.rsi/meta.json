@@ -8,6 +8,9 @@
     },
     "states": [
         {
+            "name": "brokenglass_padlock"
+        },
+        {
             "name": "closed",
             "directions": 1,
             "delays": [

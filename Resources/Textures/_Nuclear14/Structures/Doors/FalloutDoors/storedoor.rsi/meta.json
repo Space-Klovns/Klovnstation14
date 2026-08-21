@@ -8,6 +8,12 @@
     },
     "states": [
         {
+            "name": "storechain"
+        },
+        {
+            "name": "store_padlock"
+        },
+        {
             "name": "closed",
             "directions": 1,
             "delays": [

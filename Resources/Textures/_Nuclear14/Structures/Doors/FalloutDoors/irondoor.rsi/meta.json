@@ -8,6 +8,9 @@
     },
     "states": [
         {
+            "name": "iron_padlock"
+        },
+        {
             "name": "closed",
             "directions": 1,
             "delays": [
