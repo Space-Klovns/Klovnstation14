@@ -185,6 +185,8 @@ public sealed class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
             E<TextureButton>()
                 .Class(FancyWindow.StyleClassWindowHelpButton)
                 .Prop(TextureButton.StylePropertyTexture, helpIcon),
+            // Emotes and LOOC deliberately use the vanilla transparent speech-bubble panel.
+            E<PanelContainer>().Class("speechBox", "emoteBox").Panel(new StyleBoxEmpty()),
             // Only the otherwise-unclassified fancy-bubble wrapper is transparent; its inner speech panels retain vanilla styling.
             E<PanelContainer>().Class(SpeechBubble.StyleClassOuterPanel).Panel(new StyleBoxEmpty()),
             E<VScrollBar>().Prop(ScrollBar.StylePropertyGrabber, scrollIdle),
