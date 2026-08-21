@@ -10,6 +10,11 @@ public abstract partial class SharedSupplyPodSystem : EntitySystem
 
     private void OnActiveShutdown(Entity<ActiveSupplyPodComponent> entity, ref ComponentShutdown args)
     {
+        // ComponentShutdown also fires while the pod itself is being deleted. In that case,
+        // spawning the landing payload would attach it to an entity that is terminating.
+        if (Comp<MetaDataComponent>(entity).EntityLifeStage >= EntityLifeStage.Terminating)
+            return;
+
         var ev = new SupplyPodLandedEvent();
         RaiseLocalEvent(entity, ev);
     }

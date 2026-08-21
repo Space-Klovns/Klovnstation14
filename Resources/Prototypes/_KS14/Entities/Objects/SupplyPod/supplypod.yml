@@ -129,6 +129,18 @@
   id: SupplyPodMissileSyndicateExplosive
   suffix: Armed
 
+- type: entity
+  parent: SupplyPodMissileSyndicateInert
+  id: SupplyPodMechU43
+  name: U-43 combat walker supply pod
+  suffix: Scenario
+  description: A Syndicate drop pod containing a U-43 combat walker.
+  components:
+  - type: TriggerOnSupplyPodLanded
+  - type: SpawnOnTrigger
+    proto: MechU43Battery
+  - type: DeleteOnTrigger
+
 - type: explosion
   id: KsSupplyPodMissile
   damagePerIntensity:
