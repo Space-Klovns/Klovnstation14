@@ -67,13 +67,14 @@ Forms:
       return;
   // KS14 end
   ```
-- **Removing multi-line block** - `// KS14 start: reason` opens, `// KS14 end` closes:
+- **Removing multi-line block** - `// KS14: reason` before a multiline comment-block:
   ```csharp
-  /* // KS14 start: not necessary
+  // KS14: unnecesssary
+  /*
   doThing();
   doOtherThing();
   doMoreThings();
-  // KS14 end */
+  */
   ```
 - **Added `using`** - trailing `// KS14`:
   ```csharp
