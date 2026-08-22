@@ -5,12 +5,17 @@ namespace Content.Shared._KS14.NPC;
 
 /// <summary>
 /// Sent server -> the toggling client only, telling it whether it is now subscribed to
-/// <see cref="TacticalPositionDebugDataMessage"/>s.
+/// <see cref="TacticalPositionDebugDataMessage"/>s, and whether that subscription is scoped to a single entity.
 /// </summary>
 [Serializable, NetSerializable]
 public sealed class TacticalPositionDebugStateMessage : EntityEventArgs
 {
     public bool Enabled;
+
+    /// <summary>
+    /// Null = subscribed to every entity; otherwise scoped to this one entity only.
+    /// </summary>
+    public NetEntity? Target;
 }
 
 /// <summary>

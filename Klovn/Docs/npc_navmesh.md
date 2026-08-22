@@ -136,12 +136,21 @@ Run the `ks_tacticalposdebug` console command (`[AdminCommand(AdminFlags.Debug)]
 overlay of the dynamic phase: every scored candidate (colored red-to-green by score), the chosen
 candidate (yellow outline), and live reservation-table claims (orange clearance-radius circles).
 
-This is deliberately lazy: `NpcTacticalPositionDebugSystem.AnyDebugging` gates whether
+Run it bare (`ks_tacticalposdebug`) to track every NPC using the query, or pass an entity ID
+(`ks_tacticalposdebug 1234`, tab-completable against entities with `HTNComponent`) to scope the
+overlay to just that one NPC. Running the command again with the same scope (no argument twice, or
+the same entity twice) turns it back off; passing a different entity switches the scope instead of
+disabling. The shell output always states the resulting scope ("tracking all entities" /
+"tracking <entity> only" / "disabled").
+
+This is deliberately lazy: `NpcTacticalPositionDebugSystem.IsTracking(owner)` gates whether
 `TacticalPositionOperator` does any of the extra work needed to report a debug frame (recording
 every candidate's coordinates/score, snapshotting the claim table via
-`NpcTacticalPositionClaimSystem.GetAllClaimsForDebug`). While nobody has the overlay toggled on,
-none of that bookkeeping happens - only the actual candidate scoring the NPCs need to function is
-ever computed. The command toggles a `HashSet<ICommonSession>` server-side
-(`NpcTacticalPositionDebugSystem`); frames are only broadcast to sessions in that set, and get
-pruned client-side after ~2 seconds of no update (`Content.Client/_KS14/NPC/TacticalPositionDebugSystem.cs`,
-`TacticalPositionDebugOverlay.cs`).
+`NpcTacticalPositionClaimSystem.GetAllClaimsForDebug`) for that particular NPC. While nobody is
+tracking a given NPC - either because no one has the overlay toggled on at all, or because every
+subscriber is scoped to a *different* entity - none of that bookkeeping happens for it; only the
+actual candidate scoring the NPCs need to function is ever computed. The command tracks a
+`Dictionary<ICommonSession, EntityUid?>` server-side (`NpcTacticalPositionDebugSystem`, null value
+= tracking everything); frames are only broadcast to sessions whose scope matches the reporting
+NPC, and get pruned client-side after ~2 seconds of no update
+(`Content.Client/_KS14/NPC/TacticalPositionDebugSystem.cs`, `TacticalPositionDebugOverlay.cs`).

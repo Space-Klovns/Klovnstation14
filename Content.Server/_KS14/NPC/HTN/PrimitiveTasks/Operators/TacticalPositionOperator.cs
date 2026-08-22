@@ -156,7 +156,7 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
         // Lazy: the debug candidate list is only allocated/populated while a debug overlay is actually
         // subscribed - see NpcTacticalPositionDebugSystem. Every NPC replanning this task every tick would
         // otherwise pay for a debug payload nobody is looking at.
-        var debugCandidates = _npcTacticalPositionDebugSystem.AnyDebugging
+        var debugCandidates = _npcTacticalPositionDebugSystem.IsTracking(owner)
             ? new List<TacticalPositionDebugCandidate>(candidates.Count)
             : null;
 

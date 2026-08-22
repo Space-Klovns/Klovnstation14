@@ -8,20 +8,23 @@ namespace Content.Server._KS14.NPC.Systems;
 
 /// <summary>
 /// Tracks which player sessions have <see cref="Content.Server._KS14.NPC.Commands.TacticalPositionDebugCommand"/>
-/// toggled on, and lets <see cref="Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.TacticalPositionOperator"/>
-/// push debug frames (candidate scores, the chosen candidate, live claims) to them.
+/// toggled on - either for every NPC using the tactical position query, or scoped to a single tracked entity -
+/// and lets <see cref="Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.TacticalPositionOperator"/> push
+/// debug frames (candidate scores, the chosen candidate, live claims) to them.
 ///
-/// Deliberately lazy: <see cref="AnyDebugging"/> is the gate the operator checks before doing any of the
-/// extra bookkeeping (recording every candidate's score, snapshotting the claim table) needed to build a
-/// debug frame - none of that work happens while nobody is watching.
+/// Deliberately lazy: <see cref="IsTracking"/> is the gate the operator checks, per-owner, before doing any of
+/// the extra bookkeeping (recording every candidate's score, snapshotting the claim table) needed to build a
+/// debug frame - none of that work happens for an NPC nobody is watching, including when every subscriber is
+/// scoped to a different single entity.
 /// </summary>
 public sealed partial class NpcTacticalPositionDebugSystem : EntitySystem
 {
     [Dependency] private IPlayerManager _playerManager = default!;
 
-    private readonly HashSet<ICommonSession> _debuggingSessions = new();
-
-    public bool AnyDebugging => _debuggingSessions.Count > 0;
+    /// <summary>
+    /// Null value = tracking every entity; a concrete value = scoped to that one entity only.
+    /// </summary>
+    private readonly Dictionary<ICommonSession, EntityUid?> _debuggingSessions = new();
 
     public override void Initialize()
     {
@@ -37,23 +40,48 @@ public sealed partial class NpcTacticalPositionDebugSystem : EntitySystem
     }
 
     /// <summary>
-    /// Flips debugging on/off for <paramref name="session"/> and returns the new state.
+    /// Returns true if any subscribed session would receive a debug frame for <paramref name="owner"/> -
+    /// either tracking everything, or scoped specifically to it. Callers should skip building a debug frame
+    /// entirely when this is false.
     /// </summary>
-    public bool Toggle(ICommonSession session)
+    public bool IsTracking(EntityUid owner)
     {
-        var enabled = !_debuggingSessions.Remove(session);
+        foreach (var target in _debuggingSessions.Values)
+        {
+            if (target is null || target == owner)
+                return true;
+        }
 
-        if (enabled)
-            _debuggingSessions.Add(session);
-
-        RaiseNetworkEvent(new TacticalPositionDebugStateMessage { Enabled = enabled }, session.Channel);
-        return enabled;
+        return false;
     }
 
     /// <summary>
-    /// Broadcasts one debug frame to every subscribed session. Only call this when <see cref="AnyDebugging"/>
-    /// is true - callers are expected to skip building the (potentially sizeable) candidate list entirely
-    /// otherwise.
+    /// Toggles debugging for <paramref name="session"/>. If <paramref name="target"/> matches the session's
+    /// current scope (both null, or the same entity), debugging is turned off; otherwise the session is
+    /// (re)subscribed scoped to <paramref name="target"/> (null = every entity). Returns the resulting state.
+    /// </summary>
+    public (bool Enabled, EntityUid? Target) Toggle(ICommonSession session, EntityUid? target)
+    {
+        if (_debuggingSessions.TryGetValue(session, out var currentTarget) && currentTarget == target)
+        {
+            _debuggingSessions.Remove(session);
+            RaiseNetworkEvent(new TacticalPositionDebugStateMessage { Enabled = false }, session.Channel);
+            return (false, target);
+        }
+
+        _debuggingSessions[session] = target;
+        RaiseNetworkEvent(new TacticalPositionDebugStateMessage
+        {
+            Enabled = true,
+            Target = target is { } uid ? GetNetEntity(uid) : null,
+        }, session.Channel);
+        return (true, target);
+    }
+
+    /// <summary>
+    /// Broadcasts one debug frame to every subscribed session tracking <paramref name="owner"/> (either
+    /// untargeted, or scoped to it specifically). Only call this when <see cref="IsTracking"/> for that owner
+    /// is true - callers are expected to skip building the (potentially sizeable) candidate list otherwise.
     /// </summary>
     public void SendDebugFrame(
         EntityUid owner,
@@ -64,16 +92,21 @@ public sealed partial class NpcTacticalPositionDebugSystem : EntitySystem
         if (_debuggingSessions.Count == 0)
             return;
 
-        var message = new TacticalPositionDebugDataMessage
-        {
-            Owner = GetNetEntity(owner),
-            Candidates = candidates,
-            Chosen = chosen is { } coordinates ? GetNetCoordinates(coordinates) : null,
-            Claims = new List<TacticalPositionDebugClaim>(claims),
-        };
+        TacticalPositionDebugDataMessage? message = null;
 
-        foreach (var session in _debuggingSessions)
+        foreach (var (session, target) in _debuggingSessions)
         {
+            if (target is { } specificTarget && specificTarget != owner)
+                continue;
+
+            message ??= new TacticalPositionDebugDataMessage
+            {
+                Owner = GetNetEntity(owner),
+                Candidates = candidates,
+                Chosen = chosen is { } coordinates ? GetNetCoordinates(coordinates) : null,
+                Claims = new List<TacticalPositionDebugClaim>(claims),
+            };
+
             RaiseNetworkEvent(message, session.Channel);
         }
     }
