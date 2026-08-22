@@ -1,7 +1,5 @@
-using Content.Shared._KS14.NPC;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
-using Robust.Shared.Maths;
 
 namespace Content.Client._KS14.NPC;
 
@@ -9,24 +7,16 @@ namespace Content.Client._KS14.NPC;
 /// Draws the most recent tactical position debug frame per NPC: every scored candidate (colored red-to-green
 /// by score), the chosen candidate (highlighted), and live claim-table entries (clearance-radius circles).
 /// </summary>
-public sealed class TacticalPositionDebugOverlay : Overlay
+public sealed partial class TacticalPositionDebugOverlay : Overlay
 {
-    private readonly TacticalPositionDebugSystem _system;
-    private readonly IEntityManager _entityManager;
-    private readonly SharedTransformSystem _transformSystem;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private TacticalPositionDebugSystem _system = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
     private const float CandidateRadius = 0.12f;
     private const float ChosenRadius = 0.2f;
-
-    public TacticalPositionDebugOverlay(TacticalPositionDebugSystem system, IEntityManager entityManager, IEyeManager eyeManager)
-    {
-        _system = system;
-        _entityManager = entityManager;
-        _eyeManager = eyeManager;
-        _transformSystem = entityManager.System<SharedTransformSystem>();
-    }
 
     protected override void Draw(in OverlayDrawArgs args)
     {
