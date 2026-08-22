@@ -4,6 +4,11 @@ namespace Content.Shared._KS14.IoC;
 
 // TODO LCDC: somehow make engine PR to make this engine-based or otherwise publicly accessible
 
+/// <summary>
+///     Class that helps you retrieve <see cref="IEntitySystemManager.DependencyCollection"/>, which
+///         lets you resolve <see cref="EntityQuery<>>"/> and <see cref="EntitySystem"/>, unlike
+///         the <see cref="IDependencyCollection"/> used by <see cref="IoCManager"/>.
+/// </summary>
 public sealed partial class SystemCollectionHookManager
 {
     [Dependency] private INetManager _netManager = default!;
