@@ -42,14 +42,24 @@ namespace Content.<project>._KS14.<Feature>.<Sub>;
 When you edit **or add** a file **outside** `_KS14/` (anywhere in upstream SS14 / other forks / `_Manifest` / `_sin` / etc. trees), mark Klovnstation 14 provenance inline:
 
 - **Edits to existing upstream files** - mark every logical change inline (see forms below).
-- **Method/member additions to classes** - make the class partial (with KS14 comment)
+- **Method/member additions to classes** - make the class partial (with KS14 comment) and add it in a same-folder file with the name template of `*.Klovn.Feature.cs`.
 - **New files added outside `_KS14/`** - put `// KS14: added in this fork` (or `# KS14: added in this fork` for YAML / FTL / shell) header on first line. Prefer `_KS14/`; only use this when extending an upstream tree is genuinely the right home (e.g. filling translation gaps in `Resources/Locale/en-US/_Goobstation/`).
 
 Both forms make Klovnstation 14 modifications easy to spot during upstream merges. As a precedent, for example, making a value swap (`KS14: 100 -> 50`) and changing it later on should be, say, `KS14: 100 -> 30`; the original upstream value must be preserved in the comment. These forms can also be modified for other forks (e.g. use `Goobstation` instead of `KS14` when modifying code as part of a port from Gobstation) when necessary.
 
 Forms:
 
-- **Changing single line** - `// KS14: short reason`:
+- **Specific change** - `/* KS14: concise statement of the change done */` after the change:
+  ```csharp
+  internal /* KS14: public -> internal */ sealed partial /* KS14: made partial */ class OldClass
+  {
+    public void Main(int nuParam /* KS14: added param */, int oldParam)
+    {
+        PredictedSpawn/* KS14: made predicted */(entityId);
+    }
+  }
+  ```
+- **Adding single line or making multiple changes to one** - `// KS14: short reason`:
   ```csharp
   public bool Inverted; // KS14: if true, Species list is a blacklist
   ```
@@ -57,7 +67,7 @@ Forms:
   ```csharp
   /* public bool Inverted; */ // KS14: if true, Species list is a blacklist
   ```
-- **C# Value swap** - `// KS14: OLD -> NEW, reason (optional)`:
+- **C# Value swap** - `// KS14: OLD -> NEW, reason (optional)` - follow form for a specific change if the value being changed is not at the end of the line (excluding semicolon):
   ```csharp
   public const int MaxPlayers = 50; // KS14: 100 -> 50, too high
   ```
@@ -71,16 +81,6 @@ Forms:
   if (ShouldReturnEarlyNow())
       return;
   // KS14 end
-  ```
-- **Specific change** - `/* KS14: concise statement of the change done */` after the change:
-  ```csharp
-  public sealed partial /* KS14: made partial */ class OldClass
-  {
-    public void Main(int nuParam /* KS14: added param */, int oldParam)
-    {
-        PredictedSpawn/* KS14: made predicted */(entityId);
-    }
-  }
   ```
 - **Removing multi-line block** - `// KS14: reason` before a multiline comment-block:
   ```csharp
@@ -107,6 +107,26 @@ Same rule with `#` comments: `# KS14:` / `# End KS14`.
   - type: HealthAnalyzer
     scanDelay: 0.8 # KS14: 1.2 -> 0.8
 ```
+
+### File structure
+
+New additions (be it in Resources, Content, or anything) should generally try to mimic upstream organisation.
+
+Two examples for C# and YAML respectively - treat * as a placeholder:
+#### C#
+Addition: A new system for announcements.
+Upstream: `Content.Server/Announcements/*`
+Klovnstation 14: `Content.Server/_KS14/Announcements/*`
+
+Exceptions: Do not follow the `*/Components`, `*/Systems`, `*/[Specified Category]`, etc. pattern for small additions - these are for large or large-in-full-scope pieces of work.
+
+#### YAML
+Addition: New species
+Upstream: `Resources/Prototypes/Body/Species/*`
+Klovnstation 14: `Resources/_KS14/Prototypes/Body/Species/*`
+
+Exceptions: For Klovnstation 14 changes, you are encouraged to split generalised files into a folder with more specialised files, e.g. `shaders.yml` becomes `Shaders/misc.yml`.
+Especially notable exception: The KS14-specific dev map is at `Maps/Test/_KS14/klovndev.yml` instead of the existing `Maps/_KS14/Test/klovndev.yml`, because the former gives it more leeway in integration tests. Things like this are allowed as they reduce codebase divergence (you would otherwise need to tweak integration tests)
 
 ## 4. Code style and upstream SS14 standards
 
@@ -137,14 +157,14 @@ float myFloat = GetMyInt();
 
 ### Verbosity (C#)
 
-Use verbose names for variables, even if existing code uses archaic names - `xform` should be `transform`, etc.. For example:
+Use verbose names for members/variables/dependencies etc., also if existing code uses archaic names - `xform` should be `transform`, etc.. For example:
 BAD:
 ```csharp
-TransformSystem _xform
+[Dependency] TransformSystem _xform
 ```
 GOOD:
 ```csharp
-TransformSystem _transformSystem
+[Dependency] TransformSystem _transformSystem
 ```
 
 BAD:
@@ -163,4 +183,25 @@ SpriteComponent sprite
 GOOD:
 ```csharp
 SpriteComponent spriteComponent
+```
+
+Methods and members with [DataField] are given a bit of leeway - e.g., Prototype can shorted to Proto.
+
+### New source-gen code standards (C#)
+
+With new engine versions such as the one this codebase is on, automatically-injected dependencies using the [Dependency] attribute (specifically only those in EntitySystem inheritors and some very few exceptions) must now be writable, and their owner classes must be partial.
+
+OLD ENTITYSYSTEM/ETC.:
+```csharp
+public sealed class MySystem : EntitySystem
+{
+    [Dependency] private readonly EntityLookupSystem _entityLookupSystem = default!;
+}
+```
+NEW:
+```csharp
+public sealed partial class MySystem : EntitySystem
+{
+    [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
+}
 ```
