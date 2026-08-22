@@ -37,6 +37,9 @@ namespace Content.Client.UserInterface.Controls
         public Label OffStateLabel { get; }
         public Label OnStateLabel { get; }
 
+        // Upstream UI retained for mergeability:
+        // I tried to find a way not to have five textures here, but the other
+        // options were worse.
         // KS14: Legacy texture properties remain for API compatibility; only the checkbox indicator is rendered.
         public TextureRect TrackFill { get; }
         public TextureRect TrackOutline { get; }
@@ -97,7 +100,8 @@ namespace Content.Client.UserInterface.Controls
 
             Label.HorizontalExpand = true;
 
-            //KS14: removes a bunch of children
+            // KS14: the legacy switch layers are intentionally not added as children.
+            // Upstream UI retained for mergeability: AddChild(TrackFill); AddChild(ThumbFill); AddChild(ThumbOutline); AddChild(Symbol);
             AddChild(Label);
             AddChild(TrackOutline);
             AddChild(OffStateLabel);
@@ -148,6 +152,7 @@ namespace Content.Client.UserInterface.Controls
             if (relevantChangeMade)
             {
                 Label.RemoveStyleClass("dummy");
+                // Upstream UI retained for mergeability: TrackFill.RemoveStyleClass("dummy"); ThumbFill.RemoveStyleClass("dummy"); ThumbOutline.RemoveStyleClass("dummy"); Symbol.RemoveStyleClass("dummy");
                 // KS14: Only the visible checkbox indicator needs its styles refreshed.
                 TrackOutline.RemoveStyleClass("dummy");
                 OffStateLabel.RemoveStyleClass("dummy");
@@ -294,6 +299,7 @@ namespace Content.Client.UserInterface.Controls
 
             var iconTargetBox = new UIBox2(iconPosition, 0, iconPosition + TrackOutline.DesiredSize.X, finalSize.Y);
             // KS14: The legacy switch layers are not part of the visual tree.
+            // Upstream UI retained for mergeability: TrackFill.Arrange(iconTargetBox); Symbol.Arrange(iconTargetBox); ThumbOutline.Measure(TrackOutline.DesiredSize); var thumbLeft = iconTargetBox.Left; if (Pressed) thumbLeft = iconTargetBox.Right - ThumbOutline.DesiredSize.X; var thumbTargetBox = new UIBox2(thumbLeft, 0, thumbLeft + ThumbOutline.DesiredSize.X, finalSize.Y); ThumbFill.Arrange(thumbTargetBox); ThumbOutline.Arrange(thumbTargetBox);
             TrackOutline.Arrange(iconTargetBox);
 
             var stateLabelsTargetBox = new UIBox2(stateLabelPosition, 0, finalSize.X, finalSize.Y);
