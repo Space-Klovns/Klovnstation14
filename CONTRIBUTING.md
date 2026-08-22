@@ -42,9 +42,10 @@ namespace Content.<project>._KS14.<Feature>.<Sub>;
 When you edit **or add** a file **outside** `_KS14/` (anywhere in upstream SS14 / other forks / `_Manifest` / `_sin` / etc. trees), mark Klovnstation 14 provenance inline:
 
 - **Edits to existing upstream files** - mark every logical change inline (see forms below).
+- **Method/member additions to classes** - make the class partial (with KS14 comment)
 - **New files added outside `_KS14/`** - put `// KS14: added in this fork` (or `# KS14: added in this fork` for YAML / FTL / shell) header on first line. Prefer `_KS14/`; only use this when extending an upstream tree is genuinely the right home (e.g. filling translation gaps in `Resources/Locale/en-US/_Goobstation/`).
 
-Both forms make Klovnstation 14 modifications easy to spot during upstream merges. As a precedent, for example, making a value swap (`KS14: 100 -> 50`) and changing it later on should be, say, `KS14: 100 -> 30`; the original upstream value must be preserved in the comment.
+Both forms make Klovnstation 14 modifications easy to spot during upstream merges. As a precedent, for example, making a value swap (`KS14: 100 -> 50`) and changing it later on should be, say, `KS14: 100 -> 30`; the original upstream value must be preserved in the comment. These forms can also be modified for other forks (e.g. use `Goobstation` instead of `KS14` when modifying code as part of a port from Gobstation) when necessary.
 
 Forms:
 
@@ -56,9 +57,13 @@ Forms:
   ```csharp
   /* public bool Inverted; */ // KS14: if true, Species list is a blacklist
   ```
-- **Value swap** - `// KS14: OLD -> NEW`:
+- **C# Value swap** - `// KS14: OLD -> NEW, reason (optional)`:
   ```csharp
-  public const int MaxPlayers = 100; // KS14: 100 -> 50
+  public const int MaxPlayers = 50; // KS14: 100 -> 50, too high
+  ```
+- **YML Value swap** - `# KS14: OLD -> NEW, reason (optional)`:
+  ```csharp
+  myValue: 50 // KS14: 100 -> 50, too high
   ```
 - **Adding/changing multi-line block** - `// KS14 start: reason` opens, `// KS14 end` closes:
   ```csharp
@@ -67,13 +72,24 @@ Forms:
       return;
   // KS14 end
   ```
-- **Removing multi-line block** - `// KS14 start: reason` opens, `// KS14 end` closes:
+- **Specific change** - `/* KS14: concise statement of the change done */` after the change:
   ```csharp
-  /* // KS14 start: not necessary
+  public sealed partial /* KS14: made partial */ class OldClass
+  {
+    public void Main(int nuParam /* KS14: added param */, int oldParam)
+    {
+        PredictedSpawn/* KS14: made predicted */(entityId);
+    }
+  }
+  ```
+- **Removing multi-line block** - `// KS14: reason` before a multiline comment-block:
+  ```csharp
+  // KS14: unnecesssary
+  /*
   doThing();
   doOtherThing();
   doMoreThings();
-  // KS14 end */
+  */
   ```
 - **Added `using`** - trailing `// KS14`:
   ```csharp
@@ -102,7 +118,7 @@ Klovnstation 14 follows upstream Space Wizards' Den coding standards. Read and a
 - [SS14 pull-request guidelines](https://docs.spacestation14.com/en/general-development/codebase-info/pull-request-guidelines.html) - PR hygiene (separate PRs for features / bug fixes / refactors, test in-game, no web edits, no force-push after reviews).
 - [SS14 style guide](https://docs.spacestation14.com/en/general-development/codebase-info/style-guide.html) - C# formatting.
 
-**One exception to upstream.** SS14's `codebase-organization` says "game-code folders live directly under `Content.Client/Shared/Server`." Klovnstation 14 overrides for **new fork code only**: new code goes under `_KS14/` per section 2. Upstream files edited in place still follow upstream layout and carry `// KS14:` markers per section 3.
+**One exception to upstream.** SS14's `codebase-organization` says "game-code folders live directly under `Content.Client/Shared/Server`." Klovnstation 14 overrides for **new fork code only**: new code goes under `_KS14/` per section 2. Upstream files edited in place still follow upstream layout and carry `// KS14:` markers per section 3. You do not need to modify existing code just to make it follow conventions, ONLY IF modifying the code will not diverge it from its original
 
 Local rules on top of upstream:
 
