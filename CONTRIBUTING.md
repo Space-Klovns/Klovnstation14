@@ -44,7 +44,7 @@ When you edit **or add** a file **outside** `_KS14/` (anywhere in upstream SS14 
 - **Edits to existing upstream files** - mark every logical change inline (see forms below).
 - **New files added outside `_KS14/`** - put `// KS14: added in this fork` (or `# KS14: added in this fork` for YAML / FTL / shell) header on first line. Prefer `_KS14/`; only use this when extending an upstream tree is genuinely the right home (e.g. filling translation gaps in `Resources/Locale/en-US/_Goobstation/`).
 
-Both forms make Klovnstation 14 modifications easy to spot during upstream merges. As a precedent, for example, making a value swap (`KS14: 100 -> 50`) and changing it later on should be, say, `KS14: 100 -> 30`; the original upstream value must be preserved in the comment.
+Both forms make Klovnstation 14 modifications easy to spot during upstream merges. As a precedent, for example, making a value swap (`KS14: 100 -> 50`) and changing it later on should be, say, `KS14: 100 -> 30`; the original upstream value must be preserved in the comment. These forms can also be modified for other forks (e.g. use `Goobstation` instead of `KS14` when modifying code as part of a port from Gobstation) when necessary.
 
 Forms:
 
@@ -103,7 +103,7 @@ Klovnstation 14 follows upstream Space Wizards' Den coding standards. Read and a
 - [SS14 pull-request guidelines](https://docs.spacestation14.com/en/general-development/codebase-info/pull-request-guidelines.html) - PR hygiene (separate PRs for features / bug fixes / refactors, test in-game, no web edits, no force-push after reviews).
 - [SS14 style guide](https://docs.spacestation14.com/en/general-development/codebase-info/style-guide.html) - C# formatting.
 
-**One exception to upstream.** SS14's `codebase-organization` says "game-code folders live directly under `Content.Client/Shared/Server`." Klovnstation 14 overrides for **new fork code only**: new code goes under `_KS14/` per section 2. Upstream files edited in place still follow upstream layout and carry `// KS14:` markers per section 3.
+**One exception to upstream.** SS14's `codebase-organization` says "game-code folders live directly under `Content.Client/Shared/Server`." Klovnstation 14 overrides for **new fork code only**: new code goes under `_KS14/` per section 2. Upstream files edited in place still follow upstream layout and carry `// KS14:` markers per section 3. You do not need to modify existing code just to make it follow conventions, ONLY IF modifying the code will not diverge it from its original
 
 Local rules on top of upstream:
 
