@@ -184,6 +184,7 @@
       key_slots: !type:Container
       machine_board: !type:Container
       machine_parts: !type:Container
+  - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
 - type: entity
   parent: TelecomServer
