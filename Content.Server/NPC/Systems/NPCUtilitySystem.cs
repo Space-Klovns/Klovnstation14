@@ -169,7 +169,7 @@ public sealed partial class NPCUtilitySystem : EntitySystem
         return result;
     }
 
-    private float GetScore(IUtilityCurve curve, float conScore)
+    internal /* KS14: private -> internal, reused by TacticalPositionOperator */ float GetScore(IUtilityCurve curve, float conScore)
     {
         // KS14: ANK: the entire point of HighScore and LowScore instead of concrete 1f and 0f is so that some bool curves can be lenient instead of being binary fails (a false would be able to heavily discourage some utility target, but not outright eliminate it)
 
@@ -420,7 +420,7 @@ public sealed partial class NPCUtilitySystem : EntitySystem
         }
     }
 
-    private float GetAdjustedScore(float score, int considerations)
+    internal /* KS14: private -> internal, reused by TacticalPositionOperator */ float GetAdjustedScore(float score, int considerations)
     {
         /*
         * Now using the geometric mean
