@@ -1813,3 +1813,23 @@ Entries:
       message: Added the Anchorless, a shapeshifting horror from the clouds of Saturn.
   id: 190
   time: '2026-08-21T13:16:41.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Fix
+      message: Fixed many things about the Anchorless.
+    - type: Add
+      message: Added a way to test if someone is the Anchorless.
+  id: 191
+  time: '2026-08-21T16:24:54.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: Combat mech (scenario only)
+  id: 192
+  time: '2026-08-21T21:55:53.0000000+00:00'
+- author: ResomiDumbass
+  changes:
+    - type: Add
+      message: Added ethanol to the chem plumbing synthesiser machine
+  id: 193
+  time: '2026-08-21T22:26:39.0000000+00:00'

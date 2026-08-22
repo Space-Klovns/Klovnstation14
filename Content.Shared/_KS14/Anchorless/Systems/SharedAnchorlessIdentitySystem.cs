@@ -2,7 +2,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Shared._KS14.Anchorless.Components;
 using Content.Shared.Body;
+using Content.Shared.Body.Systems;
 using Content.Shared.Cloning;
+using Content.Shared.Chemistry.Components;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Interaction;
 using Content.Shared.Popups;
@@ -20,6 +22,7 @@ namespace Content.Shared._KS14.Anchorless.Systems;
 public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
 {
     [Dependency] private INetManager _net = default!;
+    [Dependency] private SharedBloodstreamSystem _bloodstream = default!;
     [Dependency] private MetaDataSystem _meta = default!;
     [Dependency] private SharedCloningSystem _cloning = default!;
     [Dependency] private SharedMapSystem _map = default!;
@@ -34,6 +37,7 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
 
     public override void Initialize()
     {
+        SubscribeLocalEvent<KsAnchorlessAntagComponent, ComponentStartup>(OnStartup);
         SubscribeLocalEvent<KsAnchorlessAntagComponent, MapInitEvent>(OnMapInit);
         SubscribeLocalEvent<KsAnchorlessAntagComponent, ComponentShutdown>(OnShutdown);
         SubscribeLocalEvent<KsAnchorlessAntagComponent, PlayerAttachedEvent>(OnPlayerAttached);
@@ -43,6 +47,11 @@ public abstract partial class SharedAnchorlessIdentitySystem : EntitySystem
         SubscribeLocalEvent<KsAnchorlessAntagComponent, AnchorlessTransformIdentitySelectMessage>(OnTransformSelected);
     }
 
+    private void OnStartup(Entity<KsAnchorlessAntagComponent> ent, ref ComponentStartup args)
+    {
+        if (_net.IsServer)
+            _bloodstream.ChangeBloodReagents(ent.Owner, new Solution([new("AnchorlessBlood", 600)]));
+    }
     private void OnMapInit(Entity<KsAnchorlessAntagComponent> ent, ref MapInitEvent args)
     {
         var ui = EnsureComp<UserInterfaceComponent>(ent);

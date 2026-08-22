@@ -697,6 +697,7 @@
     - Sulfur
     - Zinc
     - WeldingFuel
+    - Ethanol # KS14
   - type: Plungeable
   - type: PlumbingOutlet
     solutionName: buffer

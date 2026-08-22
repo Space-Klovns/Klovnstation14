@@ -16,7 +16,7 @@
   - anchorless
   name: anchorless-title
   description: anchorless-description
-  showInVote: false
+  showInVote: true
   rules:
   - Anchorless
   - BasicStationEventScheduler
