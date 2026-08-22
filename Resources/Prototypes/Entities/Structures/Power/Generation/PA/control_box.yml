@@ -71,7 +71,6 @@
         ghostProto: ParticleAcceleratorEmitterStarboard
         graph: ParticleAcceleratorEmitterStarboard
         expectedNode: completed
-  - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
 # Unfinished
 

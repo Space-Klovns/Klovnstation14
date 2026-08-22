@@ -99,7 +99,6 @@
   - type: GuideHelp
     guides:
     - PortableScrubber
-  - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
 - type: entity
   id: SpaceHeater

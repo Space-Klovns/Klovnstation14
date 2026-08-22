@@ -92,7 +92,6 @@
         paper_label: !type:ContainerSlot
     - type: StaticPrice
       price: 250
-    - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
 - type: entity
   parent: BaseStorageItem

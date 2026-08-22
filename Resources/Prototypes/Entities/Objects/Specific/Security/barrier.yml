@@ -75,4 +75,3 @@
     color: red
   - type: StaticPrice
     price: 200
-  - type: StationAiWhitelist #KS14: New items whitelisted for AI
