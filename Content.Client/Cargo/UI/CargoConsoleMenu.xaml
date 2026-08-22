@@ -6,6 +6,7 @@
     SetSize="995 700">
 
     <!-- KS14: increase the initial window height so the console content fits without manual resizing. -->
+    <!-- Upstream dimensions retained for mergeability: MinSize="540 390" SetSize="995 600". -->
     <!-- Main Container -->
     <BoxContainer Orientation="Vertical"
         VerticalExpand="True">
@@ -176,6 +177,10 @@
                   <RichTextLabel Name="UnlimitedNotifier" Text="{Loc 'cargo-console-menu-account-action-transfer-limit-unlimited-notifier'}"/>
               </BoxContainer>
               <!-- KS14: arrange the transfer form as a single readable column. -->
+              <!-- Upstream UI retained for mergeability:
+              <BoxContainer Orientation="Horizontal"><RichTextLabel Text="{Loc 'cargo-console-menu-account-action-select'}" Margin="0 0 10 0"/><OptionButton Name="ActionOptions"/></BoxContainer>
+              <BoxContainer Orientation="Horizontal"><SpinBox Name="TransferSpinBox" MinWidth="100" Value="10"/></BoxContainer>
+              -->
               <BoxContainer Orientation="Vertical" Margin="0 0 0 8">
                   <RichTextLabel Text="{Loc 'cargo-console-menu-account-action-select'}"/>
                   <OptionButton Name="ActionOptions" HorizontalExpand="True"/>

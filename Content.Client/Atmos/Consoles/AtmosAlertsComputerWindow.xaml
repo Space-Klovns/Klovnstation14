@@ -26,6 +26,7 @@
 
                 <!-- Nav map legend -->
                 <!-- KS14: reserve extra space below the legend to keep it clear of the window frame. -->
+                <!-- Upstream UI retained for mergeability: <BoxContainer Orientation="Horizontal" Margin="0 10 0 10"> -->
                 <BoxContainer Orientation="Horizontal" Margin="0 10 0 30">
                     <Label Text="{Loc 'atmos-alerts-window-label-alert-types'}"
                            Margin="20 0 5 0"/>

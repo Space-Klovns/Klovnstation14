@@ -5,6 +5,19 @@
          Orientation="Vertical" HorizontalExpand ="True" Margin="0 0 0 3">
 
     <!-- KS14: use shared Baron button chrome for the alarm-state expander. -->
+    <!-- Upstream UI retained for mergeability:
+    <Button Name="FocusButton" HorizontalExpand="True" SetHeight="32" Margin="12 0 0 0" StyleClasses="OpenBoth" Access="Public">
+        <BoxContainer HorizontalExpand="True" VerticalExpand="True" Orientation="Horizontal">
+            <TextureRect Stretch="Keep" HorizontalAlignment="Left" Margin="-20 -2 0 0" ModulateSelfOverride="#25252a" TexturePath="/Textures/Interface/AtmosMonitoring/status_bg.png">
+                <BoxContainer VerticalExpand="True" HorizontalExpand="True" Orientation="Horizontal" Margin="8 0">
+                    <TextureRect Name="ArrowTexture" VerticalAlignment="Center" SetSize="12 12" Stretch="KeepAspectCentered" Margin="3 0" TexturePath="/Textures/Interface/Nano/triangle_right.png"></TextureRect>
+                    <Label Name="AlarmStateLabel" HorizontalExpand="True" HorizontalAlignment="Center" FontColorOverride="#5A5A5A" Text="{Loc 'atmos-alerts-window-invalid-state'}"></Label>
+                </BoxContainer>
+            </TextureRect>
+            <Label Name="AlarmNameLabel" Text="???" HorizontalExpand="True" HorizontalAlignment="Center" Margin="5 0"></Label>
+        </BoxContainer>
+    </Button>
+    -->
     <Button Name="FocusButton" HorizontalExpand="True" SetHeight="32" StyleClasses="OpenBoth" Access="Public">
         <BoxContainer HorizontalExpand="True" VerticalExpand="True" Orientation="Horizontal">
             <TextureRect Name="ArrowTexture" VerticalAlignment="Center" SetSize="12 12" Stretch="KeepAspectCentered" Margin="3 0" TexturePath="/Textures/Interface/Nano/triangle_right.png" />
