@@ -48,20 +48,32 @@ Both forms make Klovnstation 14 modifications easy to spot during upstream merge
 
 Forms:
 
-- **Single line** - `// KS14: short reason`:
+- **Changing single line** - `// KS14: short reason`:
   ```csharp
   public bool Inverted; // KS14: if true, Species list is a blacklist
+  ```
+- **Removing single line** - `/* old code wrapped in comment * // KS14: removed: short reason why`:
+  ```csharp
+  /* public bool Inverted; */ // KS14: if true, Species list is a blacklist
   ```
 - **Value swap** - `// KS14: OLD -> NEW`:
   ```csharp
   public const int MaxPlayers = 100; // KS14: 100 -> 50
   ```
-- **Multi-line block** - `// KS14 start: reason` opens, `// KS14 end` closes:
+- **Adding/changing multi-line block** - `// KS14 start: reason` opens, `// KS14 end` closes:
   ```csharp
   // KS14 start: check if we should return early
   if (ShouldReturnEarlyNow())
       return;
   // KS14 end
+  ```
+- **Removing multi-line block** - `// KS14 start: reason` opens, `// KS14 end` closes:
+  ```csharp
+  /* // KS14 start: not necessary
+  doThing();
+  doOtherThing();
+  doMoreThings();
+  // KS14 end */
   ```
 - **Added `using`** - trailing `// KS14`:
   ```csharp
@@ -105,4 +117,34 @@ var myFloat = (float)GetMyInt();
 DO NOT:
 ```csharp
 float myFloat = GetMyInt();
+```
+
+### Verbosity (C#)
+
+Use verbose names for variables, even if existing code uses archaic names - `xform` should be `transform`, etc.. For example:
+BAD:
+```csharp
+TransformSystem _xform
+```
+GOOD:
+```csharp
+TransformSystem _transformSystem
+```
+
+BAD:
+```csharp
+PhysicsComponent body
+```
+GOOD:
+```csharp
+PhysicsComponent physicsComponent
+```
+
+BAD:
+```csharp
+SpriteComponent sprite
+```
+GOOD:
+```csharp
+SpriteComponent spriteComponent
 ```
