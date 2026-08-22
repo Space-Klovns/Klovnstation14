@@ -1,0 +1,37 @@
+
+- type: entity
+  name: laser bolt
+  id: BulletLaserSmall
+  parent: BaseBullet
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Fixtures
+    fixtures:
+      projectile:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-0.67,-0.3,0.67,0.3"
+        hard: false
+        mask:
+        - Opaque
+        - Impassable
+        - BulletImpassable
+      fly-by: *flybyfixture
+  - type: Projectile
+    impactEffect: BulletImpactEffectOrangeDisabler
+    damage:
+      types:
+        Heat: 10
+
+- type: entity
+  name: laser bolt
+  id: BulletLaserBig
+  parent: BaseBullet
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Projectile
+    impactEffect: BulletImpactEffectOrangeDisabler
+    damage:
+      types:
+        Heat: 30
+
