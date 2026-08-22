@@ -1,3 +1,4 @@
+using Content.Server._KS14.NPC.Components;
 using Robust.Shared.Map;
 using Robust.Shared.Timing;
 
@@ -5,40 +6,32 @@ namespace Content.Server._KS14.NPC.Systems;
 
 /// <summary>
 /// Reservation table preventing NPCs using <see cref="Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.TacticalPositionOperator"/>
-/// from converging on the same dynamically-picked camping/retreat/advance position.
-///
-/// NOT thread-safe: every read/write happens from main-thread HTN callbacks (Plan/ConditionalShutdown/TaskShutdown)
-/// or this system's own Update - never from PathfindingSystem's parallel path-processing.
+/// from converging on the same dynamically-picked camping/retreat/advance position. Backed by
+/// <see cref="NpcTacticalPositionClaimComponent"/> rather than a system-owned lookup table: a claim is then
+/// entity-lifetime-bound for free (deleting the owning NPC removes its claim automatically, no leak to sweep),
+/// and reading every live claim reuses the same query enumerator every other NPC subsystem iterates with.
 /// </summary>
 public sealed partial class NpcTacticalPositionClaimSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
-    private readonly Dictionary<EntityUid, TacticalClaim> _claims = new();
-
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
 
         var now = _gameTiming.CurTime;
-        List<EntityUid>? expired = null;
+        var query = EntityQueryEnumerator<NpcTacticalPositionClaimComponent>();
 
-        foreach (var (owner, claim) in _claims)
+        // Removing the current entity's own component mid-iteration is safe here: RemComp marks it Deleted
+        // rather than mutating the backing dictionary, so the enumerator just skips it on the next MoveNext.
+        // Same pattern as NPCPerceptionSystem.RecentlyInjected.cs's TTL sweep.
+        while (query.MoveNext(out var uid, out var claim))
         {
             if (now < claim.ExpiresAt)
                 continue;
 
-            expired ??= new List<EntityUid>();
-            expired.Add(owner);
-        }
-
-        if (expired == null)
-            return;
-
-        foreach (var owner in expired)
-        {
-            _claims.Remove(owner);
+            RemComp<NpcTacticalPositionClaimComponent>(uid);
         }
     }
 
@@ -47,7 +40,10 @@ public sealed partial class NpcTacticalPositionClaimSystem : EntitySystem
     /// </summary>
     public void Claim(EntityUid owner, EntityCoordinates coordinates, TimeSpan ttl, float clearanceRadius)
     {
-        _claims[owner] = new TacticalClaim(owner, coordinates, _gameTiming.CurTime + ttl, clearanceRadius);
+        var claim = EnsureComp<NpcTacticalPositionClaimComponent>(owner);
+        claim.Coordinates = coordinates;
+        claim.ExpiresAt = _gameTiming.CurTime + ttl;
+        claim.ClearanceRadius = clearanceRadius;
     }
 
     /// <summary>
@@ -57,7 +53,7 @@ public sealed partial class NpcTacticalPositionClaimSystem : EntitySystem
     /// </summary>
     public void ReleaseClaim(EntityUid owner)
     {
-        _claims.Remove(owner);
+        RemComp<NpcTacticalPositionClaimComponent>(owner);
     }
 
     /// <summary>
@@ -67,13 +63,11 @@ public sealed partial class NpcTacticalPositionClaimSystem : EntitySystem
     /// </summary>
     public float GetClaimPenalty(EntityCoordinates candidate, float clearanceRadius)
     {
-        if (_claims.Count == 0)
-            return 1f;
-
         var candidateMap = _transformSystem.ToMapCoordinates(candidate);
         var penalty = 1f;
 
-        foreach (var claim in _claims.Values)
+        var query = EntityQueryEnumerator<NpcTacticalPositionClaimComponent>();
+        while (query.MoveNext(out _, out var claim))
         {
             var claimMap = _transformSystem.ToMapCoordinates(claim.Coordinates);
 
@@ -102,15 +96,14 @@ public sealed partial class NpcTacticalPositionClaimSystem : EntitySystem
     /// </summary>
     public List<(EntityCoordinates Coordinates, float ClearanceRadius)> GetAllClaimsForDebug()
     {
-        var claims = new List<(EntityCoordinates, float)>(_claims.Count);
+        var claims = new List<(EntityCoordinates, float)>();
+        var query = EntityQueryEnumerator<NpcTacticalPositionClaimComponent>();
 
-        foreach (var claim in _claims.Values)
+        while (query.MoveNext(out _, out var claim))
         {
             claims.Add((claim.Coordinates, claim.ClearanceRadius));
         }
 
         return claims;
     }
-
-    private readonly record struct TacticalClaim(EntityUid Owner, EntityCoordinates Coordinates, TimeSpan ExpiresAt, float ClearanceRadius);
 }
