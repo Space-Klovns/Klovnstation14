@@ -115,6 +115,7 @@
     requirePower: true
     highVoltageNode: input
     mediumVoltageNode: ame
+  - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
 - type: entity
   categories: [ HideSpawnMenu ]

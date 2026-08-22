@@ -35,3 +35,4 @@
   - type: SeedExtractor
   - type: Machine
     board: SeedExtractorMachineCircuitboard
+  - type: StationAiWhitelist #KS14: New items whitelisted for AI

@@ -24,6 +24,7 @@
         - TabletopMachineLayer
   - type: ApcPowerReceiver
     powerLoad: 300
+  - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
 - type: entity
   parent: BaseHeaterMachine
