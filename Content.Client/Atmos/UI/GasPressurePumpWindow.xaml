@@ -1,7 +1,9 @@
 <controls:FancyWindow xmlns="https://spacestation14.io"
             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
             xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
-            SetSize="340 110" MinSize="340 110" Title="Pressure Pump">
+            SetSize="340 160" MinSize="340 160" Title="Pressure Pump">
+    <!-- KS14: increase the window height so the pump controls remain above the Baron frame. -->
+    <!-- KS14 upstream dimensions retained for mergeability: SetSize="340 110" MinSize="340 110". -->
     <BoxContainer Orientation="Vertical" Margin="5 5 5 5" SeparationOverride="10">
         <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
             <controls:SwitchButton

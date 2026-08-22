@@ -1,5 +1,6 @@
 using Content.Client.Resources;
 using Content.Client.Stylesheets;
+using Content.Client.Stylesheets.Fonts;
 using Content.Client.Chat.UI;
 using Content.Client.UserInterface.Controls;
 using Content.Client.UserInterface.Screens;
@@ -35,6 +36,7 @@ public sealed class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
     public const string PanelScreen2 = "KsBaronPanelScreen2";
     public const string PanelScreenClean = "KsBaronPanelScreenClean";
     public const string SidebarButton = "KsBaronSidebarButton";
+    public const string DefaultFont = "KsBaronDefaultFont";
 
     private static readonly ResPath TextureRoot = new("/Textures/_KS14/Interface/BaronUI");
 
@@ -139,6 +141,8 @@ public sealed class KsBaronUiSheetlet : Sheetlet<PalettedStylesheet>
             E<MenuButton>().Class(SidebarButton).PseudoHovered().Box(buttonBase).Modulate(Color.FromHex("#F5F5F5")),
             E<MenuButton>().Class(SidebarButton).PseudoPressed().Box(buttonBase).Modulate(Color.FromHex("#D8D8D8")),
             E<MenuButton>().Class(SidebarButton).PseudoDisabled().Box(buttonBase).Modulate(Color.FromHex("#999999")),
+            // KS14: use the base font for player-list labels whose unread and antagonist glyphs are not in Baron fonts.
+            E<Label>().Class(DefaultFont).Font(sheet.BaseFont.GetFont(12)),
             E<ContainerButton>().Class(ButtonStyle1).Box(button1),
             E<ContainerButton>().Class(ButtonStyle2).Box(button2),
             E<ContainerButton>().Class(ButtonStyle3).Box(button3),
