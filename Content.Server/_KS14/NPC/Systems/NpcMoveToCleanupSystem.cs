@@ -23,31 +23,31 @@ public sealed partial class NpcMoveToCleanupSystem : EntitySystem
 
         var query = EntityQueryEnumerator<NpcPendingMoveCleanupComponent, HTNComponent>();
 
-        while (query.MoveNext(out var uid, out var cleanup, out var htn))
+        while (query.MoveNext(out var uid, out var cleanupComponent, out var htnComponent))
         {
             if (!TryComp<NPCSteeringComponent>(uid, out var steering))
             {
-                Finish(uid, cleanup, htn, unregister: false);
+                Finish(uid, cleanupComponent, htnComponent, unregister: false);
                 continue;
             }
 
-            if (!steering.Coordinates.Equals(cleanup.Coordinates))
+            if (!steering.Coordinates.Equals(cleanupComponent.Coordinates))
             {
                 // Something else re-registered steering over ours - leave it alone, just clean up our keys.
-                Finish(uid, cleanup, htn, unregister: false);
+                Finish(uid, cleanupComponent, htnComponent, unregister: false);
                 continue;
             }
 
             if (steering.Status == SteeringStatus.Moving)
                 continue;
 
-            Finish(uid, cleanup, htn, unregister: true);
+            Finish(uid, cleanupComponent, htnComponent, unregister: true);
         }
     }
 
-    private void Finish(EntityUid uid, NpcPendingMoveCleanupComponent cleanup, HTNComponent htn, bool unregister)
+    private void Finish(EntityUid uid, NpcPendingMoveCleanupComponent cleanup, HTNComponent htnComponent, bool unregister)
     {
-        var blackboard = htn.Blackboard;
+        var blackboard = htnComponent.Blackboard;
         blackboard.Remove<PathResultEvent>(cleanup.PathfindKey);
 
         if (cleanup.RemoveKeyOnFinish)
