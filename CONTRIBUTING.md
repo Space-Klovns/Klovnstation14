@@ -1,19 +1,24 @@
 # Contributing to Klovnstation 14
 
-Follow this guide to know our coding conventions.
+Coding conventions for this repo. Written for coding agents first, humans second — precise over chatty, examples over prose.
+
+**Quick reference:**
+- New code → `Content.<project>/_KS14/<Feature>/...` (see §2).
+- Editing or adding a file *outside* `_KS14/` → mark it with `// KS14:` / `# KS14:` (see §3).
+- Otherwise follow upstream SS14 conventions, plus the local rules in §4.
 
 ## 1. Project lineage
 
-Klovnstation 14 is a fork of SS14. The chain:
+Klovnstation 14 is a fork of SS14:
 
-- [space-wizards/space-station-14](https://github.com/space-wizards/space-station-14) - upstream, vanilla SS14.
-- **Klovnstation 14** - this repo - a modded downstream.
+- [space-wizards/space-station-14](https://github.com/space-wizards/space-station-14) — upstream, vanilla SS14.
+- **Klovnstation 14** — this repo, a modded downstream.
 
-We merge from `space-wizards/space-station-14` regularly. PRs contain both upstream ports and Klovnstation 14-specific work; conventions below make them easy to tell apart.
+We merge from upstream regularly. PRs mix upstream ports with Klovnstation 14-specific work; the conventions below keep the two easy to tell apart during those merges.
 
 ## 2. The `_KS14/` rule
 
-**New Klovnstation 14 code lives under a `_KS14/` folder.** Applies to every project tree where one exists:
+**New Klovnstation 14 code lives under a `_KS14/` folder**, in every project tree that has one:
 
 - `Content.Server/_KS14/`
 - `Content.Client/_KS14/`
@@ -27,11 +32,27 @@ We merge from `space-wizards/space-station-14` regularly. PRs contain both upstr
 - `Resources/ServerInfo/_KS14/`
 - `Resources/ConfigPresets/_KS14/`
 
-Inside `_KS14/`, mirror upstream feature-driven layout (`_KS14/Atmos/Components/...`, `_KS14/Cargo/Systems/...`) rather than grouping by type.
+Inside `_KS14/`, mirror upstream's feature-driven layout (`_KS14/Atmos/Components/...`, `_KS14/Cargo/Systems/...`) — group by feature, not by type.
+
+### File structure examples
+
+Treat `*` as a placeholder.
+
+**C#** — a new system for announcements:
+- Upstream would put it at `Content.Server/Announcements/*`.
+- Here it's `Content.Server/_KS14/Announcements/*`.
+- Deviation when possible: skip the `*/Components`, `*/Systems`, `*/[Category]` split for small additions — that's for large, full-scope pieces of work only.
+
+**YAML** — a new species:
+- Upstream would put it at `Resources/Prototypes/Body/Species/*`.
+- Here it's `Resources/Prototypes/_KS14/Body/Species/*`.
+- Deviation when possible: feature-scoped, not type-scoped files. Split a generic file into a folder of specific ones, e.g. `shaders.yml` → `Shaders/misc.yml`.
+
+**Notable exception**: the dev map lives at `Maps/Test/_KS14/klovndev.yml`, not `Maps/_KS14/Test/klovndev.yml`, because that gives it more leeway in integration tests. Exceptions like this — that reduce codebase divergence and avoid tweaking integration tests — are allowed.
 
 ### Namespace (C#)
 
-File at `Content.<project>/_KS14/<Feature>/<Sub>/File.cs` declares:
+A file at `Content.<project>/_KS14/<Feature>/<Sub>/File.cs` declares:
 
 ```csharp
 namespace Content.<project>._KS14.<Feature>.<Sub>;
@@ -39,66 +60,66 @@ namespace Content.<project>._KS14.<Feature>.<Sub>;
 
 ## 3. Upstream edits: the `// KS14:` marker
 
-When you edit **or add** a file **outside** `_KS14/` (anywhere in upstream SS14 / other forks / `_Manifest` / `_sin` / etc. trees), mark Klovnstation 14 provenance inline:
+When you edit **or add** a file **outside** `_KS14/` (anywhere in upstream SS14 / other forks / `_Manifest` / `_sin` / etc.), mark Klovnstation 14's provenance inline:
 
-- **Edits to existing upstream files** - mark every logical change inline (see forms below).
-- **Method/member additions to classes** - make the class partial (with KS14 comment) and add it in a same-folder file with the name template of `*.Klovn.Feature.cs`.
-- **New files added outside `_KS14/`** - put `// KS14: added in this fork` (or `# KS14: added in this fork` for YAML / FTL / shell) header on first line. Prefer `_KS14/`; only use this when extending an upstream tree is genuinely the right home (e.g. filling translation gaps in `Resources/Locale/en-US/_Goobstation/`).
+- **Edits to an existing upstream file** — mark every logical change inline (forms below).
+- **Adding methods/members to an existing class** — make the class partial (comment why), and add the members in a same-folder file named `*.Klovn.Feature.cs`.
+- **New files added OUTSIDE `_KS14/`** — first-line header `// KS14: added in this fork` (`# KS14: added in this fork` for YAML/FTL/shell). Prefer `_KS14/`; only do this when extending an upstream tree is genuinely the right home (e.g. filling translation gaps in `Resources/Locale/en-US/_Goobstation/`).
 
-Both forms make Klovnstation 14 modifications easy to spot during upstream merges. As a precedent, for example, making a value swap (`KS14: 100 -> 50`) and changing it later on should be, say, `KS14: 100 -> 30`; the original upstream value must be preserved in the comment. These forms can also be modified for other forks (e.g. use `Goobstation` instead of `KS14` when modifying code as part of a port from Gobstation) when necessary.
+Both forms make our changes easy to spot on the next upstream merge. Always preserve the original upstream value in the comment: swap `100 -> 50` today, and a later change to that same line becomes `100 -> 30` (not `50 -> 30`). Swap `KS14` for another fork's tag (e.g. `Goobstation`) when porting from that fork instead of writing net-new code.
 
 Forms:
 
-- **Specific change** - `/* KS14: concise statement of the change done */` after the change:
+- **Specific change** — `/* KS14: concise statement */` right after the change:
   ```csharp
   internal /* KS14: public -> internal */ sealed partial /* KS14: made partial */ class OldClass
   {
-    public void Main(int nuParam /* KS14: added param */, int oldParam)
-    {
-        PredictedSpawn/* KS14: made predicted */(entityId);
-    }
+      public void Main(int nuParam /* KS14: added param */, int oldParam)
+      {
+          PredictedSpawn/* KS14: made predicted */(entityId);
+      }
   }
   ```
-- **Adding single line or making multiple changes to one** - `// KS14: short reason`:
+- **Adding a line, or several changes on one line** — trailing `// KS14: short reason`:
   ```csharp
   public bool Inverted; // KS14: if true, Species list is a blacklist
   ```
-- **Removing single line** - `/* old code wrapped in comment * // KS14: removed: short reason why`:
+- **Removing a single line** — comment it out, reason after:
   ```csharp
-  /* public bool Inverted; */ // KS14: if true, Species list is a blacklist
+  /* public bool Inverted; */ // KS14: removed, if true Species list was a blacklist
   ```
-- **C# Value swap** - `// KS14: OLD -> NEW, reason (optional)` - follow form for a specific change if the value being changed is not at the end of the line (excluding semicolon):
+- **C# value swap** — `// KS14: OLD -> NEW, reason (optional)` (use the specific-change form instead if the value isn't at the end of the line, excluding the semicolon):
   ```csharp
   public const int MaxPlayers = 50; // KS14: 100 -> 50, too high
   ```
-- **YML Value swap** - `# KS14: OLD -> NEW, reason (optional)`:
-  ```csharp
-  myValue: 50 // KS14: 100 -> 50, too high
+- **YAML value swap** — same, with `#`:
+  ```yaml
+  myValue: 50 # KS14: 100 -> 50, too high
   ```
-- **Adding/changing multi-line block** - `// KS14 start: reason` opens, `// KS14 end` closes:
+- **Adding/changing a multi-line block** — `// KS14 start: reason` ... `// KS14 end`:
   ```csharp
   // KS14 start: check if we should return early
   if (ShouldReturnEarlyNow())
       return;
   // KS14 end
   ```
-- **Removing multi-line block** - `// KS14: reason` before a multiline comment-block:
+- **Removing a multi-line block** — `// KS14: reason` before the commented-out block:
   ```csharp
-  // KS14: unnecesssary
+  // KS14: unnecessary
   /*
   doThing();
   doOtherThing();
   doMoreThings();
   */
   ```
-- **Added `using`** - trailing `// KS14`:
+- **Added `using`** — trailing `// KS14`:
   ```csharp
   using Content.Shared._KS14.NewFeature; // KS14
   ```
 
 ### YAML and Fluent (`.ftl`) edits
 
-Same rule with `#` comments: `# KS14:` / `# End KS14`.
+Same rules, `#` comments: `# KS14: ...`.
 
 ```yaml
 - type: entity
@@ -108,98 +129,45 @@ Same rule with `#` comments: `# KS14:` / `# End KS14`.
     scanDelay: 0.8 # KS14: 1.2 -> 0.8
 ```
 
-### File structure
-
-New additions (be it in Resources, Content, or anything) should generally try to mimic upstream organisation.
-
-Two examples for C# and YAML respectively - treat * as a placeholder:
-#### C#
-Addition: A new system for announcements.
-Upstream: `Content.Server/Announcements/*`
-Klovnstation 14: `Content.Server/_KS14/Announcements/*`
-
-Exceptions: Do not follow the `*/Components`, `*/Systems`, `*/[Specified Category]`, etc. pattern for small additions - these are for large or large-in-full-scope pieces of work.
-
-#### YAML
-Addition: New species
-Upstream: `Resources/Prototypes/Body/Species/*`
-Klovnstation 14: `Resources/_KS14/Prototypes/Body/Species/*`
-
-Exceptions: For Klovnstation 14 changes, you are encouraged to split generalised files into a folder with more specialised files, e.g. `shaders.yml` becomes `Shaders/misc.yml`.
-Especially notable exception: The KS14-specific dev map is at `Maps/Test/_KS14/klovndev.yml` instead of the existing `Maps/_KS14/Test/klovndev.yml`, because the former gives it more leeway in integration tests. Things like this are allowed as they reduce codebase divergence (you would otherwise need to tweak integration tests)
-
 ## 4. Code style and upstream SS14 standards
 
 Klovnstation 14 follows upstream Space Wizards' Den coding standards. Read and apply before any PR touching C# or YAML:
 
-- [SS14 codebase info](https://docs.spacestation14.com/en/general-development/codebase-info.html) - landing page for full conventions tree.
-- [SS14 conventions](https://docs.spacestation14.com/en/general-development/codebase-info/conventions.html) - naming, comments, ECS rules (components hold *only* data; systems hold logic; events are struct `[ByRefEvent]`s named `...Event` with `OnXEvent` handlers), XAML/UI, performance, `TimeSpan` / field-deltas, YAML conventions, localization, in-/out-of-simulation split. Primary document.
-- [SS14 codebase organization](https://docs.spacestation14.com/en/general-development/codebase-info/codebase-organization.html) - project split (Client / Shared / Server), file layout, prototype organization (`base.yml` + per-type files; no `misc/` folders).
-- [SS14 pull-request guidelines](https://docs.spacestation14.com/en/general-development/codebase-info/pull-request-guidelines.html) - PR hygiene (separate PRs for features / bug fixes / refactors, test in-game, no web edits, no force-push after reviews).
-- [SS14 style guide](https://docs.spacestation14.com/en/general-development/codebase-info/style-guide.html) - C# formatting.
+- [Codebase info](https://docs.spacestation14.com/en/general-development/codebase-info.html) — landing page for the full conventions tree.
+- [Conventions](https://docs.spacestation14.com/en/general-development/codebase-info/conventions.html) — naming, comments, ECS rules (components hold *only* data; systems hold logic; events are struct `[ByRefEvent]`s named `...Event` with `OnXEvent` handlers), XAML/UI, performance, `TimeSpan`/field-deltas, YAML, localization, in-/out-of-simulation split. Primary document.
+- [Codebase organization](https://docs.spacestation14.com/en/general-development/codebase-info/codebase-organization.html) — project split (Client/Shared/Server), file layout, prototype organization (`base.yml` + per-type files, no `misc/` folders).
+- [Pull-request guidelines](https://docs.spacestation14.com/en/general-development/codebase-info/pull-request-guidelines.html) — separate PRs per feature/bug fix/refactor, test in-game, no web edits, no force-push after reviews.
+- [Style guide](https://docs.spacestation14.com/en/general-development/codebase-info/style-guide.html) — C# formatting.
 
-**One exception to upstream.** SS14's `codebase-organization` says "game-code folders live directly under `Content.Client/Shared/Server`." Klovnstation 14 overrides for **new fork code only**: new code goes under `_KS14/` per section 2. Upstream files edited in place still follow upstream layout and carry `// KS14:` markers per section 3. You do not need to modify existing code just to make it follow conventions, ONLY IF modifying the code will not diverge it from its original
+**One exception to upstream**: `codebase-organization` says game-code folders live directly under `Content.Client/Shared/Server`. We override this for **new fork code only** — new code goes under `_KS14/` per §2. Upstream files edited in place keep their upstream layout and carry `// KS14:` markers per §3. Don't touch existing code just to bring it into convention unless you're already changing it for another reason.
 
-Local rules on top of upstream:
+### Local rules on top of upstream
 
-### Casting/Coercion and Code Clarity (C#)
-
-When defining a variable and casting the value, always use an explicit cast using the target type wrapped in parentheses.
-DO THIS:
+**Casting/coercion (C#)** — always cast explicitly with the target type in parentheses:
 ```csharp
-var myFloat = (float)GetMyInt();
+var myFloat = (float)GetMyInt();       // do this
+float myFloat = GetMyInt();            // not this
 ```
 
-DO NOT:
+**Verbosity (C#)** — use verbose names, even where existing code is archaic (`xform` → `transform`):
 ```csharp
-float myFloat = GetMyInt();
+[Dependency] TransformSystem _transformSystem;   // not '_xform'
+PhysicsComponent physicsComponent;               // not 'body'
+SpriteComponent spriteComponent;                 // not 'sprite'
 ```
+Members with `[DataField]` get some leeway (`Prototype` → `Proto` is fine).
 
-### Verbosity (C#)
+**`Ks` prefix (IDs & type names)** — when a new prototype ID or type name could plausibly collide with an upstream name (present or future), prefix it with `Ks`: `KsCCVars` (a fork-only cvars class, deliberately not inheriting upstream `CCVars`), `KsBlack`, `KsCatwalkIron` (colors and structure variants — generic vocabulary upstream already uses or could use). Skip the prefix when the name is already distinctive enough not to collide — `Anchorless`, `ArcFlash`, `ComplexShove` — the `_KS14/` folder already marks provenance there. This is a judgment call, not a mechanical rule: ask "would upstream plausibly ship something under this exact name?" If yes, prefix it.
 
-Use verbose names for members/variables/dependencies etc., also if existing code uses archaic names - `xform` should be `transform`, etc.. For example:
-BAD:
+**Source-gen `[Dependency]` fields (C#)** — on current engine versions, injected `[Dependency]` fields on `EntitySystem` (and the few other injectable types) must be writable, and their owning class must be `partial`:
 ```csharp
-[Dependency] TransformSystem _xform
-```
-GOOD:
-```csharp
-[Dependency] TransformSystem _transformSystem
-```
-
-BAD:
-```csharp
-PhysicsComponent body
-```
-GOOD:
-```csharp
-PhysicsComponent physicsComponent
-```
-
-BAD:
-```csharp
-SpriteComponent sprite
-```
-GOOD:
-```csharp
-SpriteComponent spriteComponent
-```
-
-Methods and members with [DataField] are given a bit of leeway - e.g., Prototype can shorted to Proto.
-
-### New source-gen code standards (C#)
-
-With new engine versions such as the one this codebase is on, automatically-injected dependencies using the [Dependency] attribute (specifically only those in EntitySystem inheritors and some very few exceptions) must now be writable, and their owner classes must be partial.
-
-OLD ENTITYSYSTEM/ETC.:
-```csharp
+// old
 public sealed class MySystem : EntitySystem
 {
     [Dependency] private readonly EntityLookupSystem _entityLookupSystem = default!;
 }
-```
-NEW:
-```csharp
+
+// current
 public sealed partial class MySystem : EntitySystem
 {
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
