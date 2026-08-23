@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using Content.Server.Administration.Managers;
+using Content.Server._KS14.NPC.Pathfinding; // KS14
 using Content.Shared.Destructible; // Trauma - destructible moved to shared
 using Content.Server.NPC.Systems;
 using Content.Shared.Access.Components;
@@ -126,6 +127,11 @@ namespace Content.Server.NPC.Pathfinding
                         case BFSPathRequest bfs:
                             results[i] = UpdateBFSPath(_random, bfs);
                             break;
+                        // KS14 start: dispatch for tactical position candidate enumeration
+                        case TacticalPathRequest tactical:
+                            results[i] = UpdateTacticalPath(tactical);
+                            break;
+                        // KS14 end
                         default:
                             throw new NotImplementedException();
                     }

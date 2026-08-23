@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Content.Server._KS14.NPC.Components;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.Pathfinding;
 using Content.Server.NPC.Systems;
@@ -175,6 +176,19 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
             }
 
             comp.CurrentPath = new Queue<PathPoly>(result.Path);
+        }
+
+        // KS14: ANK: Never means ConditionalShutdown will never run via the HTN task/plan lifecycle (that's
+        // the point - the movement survives task/plan transitions), so nothing would otherwise remove
+        // TargetKey/PathfindKey or unregister steering once we actually arrive. NpcMoveToCleanupSystem
+        // watches for the steering we just registered to stop and finishes that cleanup itself.
+        if (ShutdownState == HTNPlanState.Never)
+        {
+            var cleanup = _entManager.EnsureComponent<NpcPendingMoveCleanupComponent>(uid);
+            cleanup.TargetKey = TargetKey;
+            cleanup.PathfindKey = PathfindKey;
+            cleanup.RemoveKeyOnFinish = RemoveKeyOnFinish;
+            cleanup.Coordinates = targetCoordinates;
         }
     }
 
