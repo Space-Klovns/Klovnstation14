@@ -31,12 +31,12 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
 {
     [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
-    private PathfindingSystem _pathfindingSystem = default!;
-    private NPCUtilitySystem _npcUtilitySystem = default!;
-    private NpcTacticalPositionClaimSystem _npcTacticalPositionClaimSystem = default!;
-    private NpcTacticalPositionDebugSystem _npcTacticalPositionDebugSystem = default!;
-    private ExamineSystem _examineSystem = default!;
-    private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private PathfindingSystem _pathfindingSystem = default!;
+    [Dependency] private NPCUtilitySystem _npcUtilitySystem = default!;
+    [Dependency] private NpcTacticalPositionClaimSystem _npcTacticalPositionClaimSystem = default!;
+    [Dependency] private NpcTacticalPositionDebugSystem _npcTacticalPositionDebugSystem = default!;
+    [Dependency] private ExamineSystem _examineSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
 
     /// <summary>
     /// Marker-phase utility query to try first (e.g. an existing ComponentQuery against NpcCampingSpot).
@@ -105,17 +105,6 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
 
     /// <inheritdoc/>
     public HTNPlanState ShutdownState => HTNPlanState.TaskFinished;
-
-    public override void Initialize(IEntitySystemManager sysManager)
-    {
-        base.Initialize(sysManager);
-        _pathfindingSystem = sysManager.GetEntitySystem<PathfindingSystem>();
-        _npcUtilitySystem = sysManager.GetEntitySystem<NPCUtilitySystem>();
-        _npcTacticalPositionClaimSystem = sysManager.GetEntitySystem<NpcTacticalPositionClaimSystem>();
-        _npcTacticalPositionDebugSystem = sysManager.GetEntitySystem<NpcTacticalPositionDebugSystem>();
-        _examineSystem = sysManager.GetEntitySystem<ExamineSystem>();
-        _transformSystem = sysManager.GetEntitySystem<SharedTransformSystem>();
-    }
 
     public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(
         NPCBlackboard blackboard, CancellationToken cancelToken)

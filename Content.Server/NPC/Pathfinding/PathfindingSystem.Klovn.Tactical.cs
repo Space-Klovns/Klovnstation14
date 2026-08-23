@@ -92,9 +92,14 @@ public sealed partial class PathfindingSystem
 
         request.Frontier.Add((0.0f, startNode));
         request.CostSoFar[startNode] = 0.0f;
+        request.DistanceSoFar[startNode] = 0.0f;
         var count = 0;
 
-        while (request.Frontier.Count > 0 && count < NodeLimit && request.CostSoFar.Count < request.MaxCandidates)
+        // Gated by NodeLimit alone, not MaxCandidates - capping expansion by the requested candidate count
+        // would let a single large room exhaust the budget on its own floor tiles before the frontier ever
+        // dequeues (and expands past) a farther doorway, making anything beyond it unreachable even though
+        // it's well within ExpansionRange. MaxCandidates instead truncates the materialized list below.
+        while (request.Frontier.Count > 0 && count < NodeLimit)
         {
             if (count % 20 == 0 && count > 0 && request.Stopwatch.Elapsed > PathTime)
             {
@@ -114,15 +119,19 @@ public sealed partial class PathfindingSystem
                     continue;
                 }
 
-                var gScore = request.CostSoFar[currentNode] + tileCost;
+                // Raw spatial distance, independent of tileCost's door/smash/climb weighting - a door adds a
+                // large additive modifier to tileCost (see GetTileCost) so that costlier routes are deprioritized
+                // by the priority queue, but that same weighting must not be mistaken for physical distance, or
+                // any candidate past a door (even one the NPC can freely open) would get cut off as if it were
+                // far away.
+                var distance = request.DistanceSoFar[currentNode] + OctileDistance(currentNode, neighbor);
 
-                // Candidates further than ExpansionRange are excluded entirely rather than just capped -
-                // unlike GetRandomPath's BFS, tactical candidates are scored by distance-from-reference so
-                // an unbounded flood would waste time enumerating positions no consideration curve wants.
-                if (gScore > request.ExpansionRange)
+                if (distance > request.ExpansionRange)
                 {
                     continue;
                 }
+
+                var gScore = request.CostSoFar[currentNode] + tileCost;
 
                 if (request.CostSoFar.TryGetValue(neighbor, out var nextValue) && gScore >= nextValue)
                 {
@@ -130,6 +139,7 @@ public sealed partial class PathfindingSystem
                 }
 
                 request.CostSoFar[neighbor] = gScore;
+                request.DistanceSoFar[neighbor] = distance;
                 request.Frontier.Add((gScore, neighbor));
             }
         }

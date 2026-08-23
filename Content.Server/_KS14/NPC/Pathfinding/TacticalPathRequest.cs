@@ -24,6 +24,14 @@ public sealed class TacticalPathRequest : PathRequest
 
     public readonly List<PathPoly> Candidates = new();
 
+    /// <summary>
+    /// Raw octile distance accumulated from <see cref="PathRequest.Start"/>, separate from
+    /// <see cref="PathRequest.CostSoFar"/>'s door/smash/climb-weighted traversal cost - used to cap flood
+    /// expansion by actual spatial range instead of cutting candidates off early just because a door or other
+    /// costly tile sits between them and the start.
+    /// </summary>
+    public readonly Dictionary<PathPoly, float> DistanceSoFar = new();
+
     public TacticalPathRequest(
         EntityCoordinates start,
         float expansionRange,
