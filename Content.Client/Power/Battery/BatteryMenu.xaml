@@ -1,4 +1,5 @@
 <!-- KS14: grow the containing window with the storage pane so its wider content cannot overlap the left panes. -->
+<!-- Upstream dimensions retained for mergeability: SetSize="650 330". -->
 <controls:FancyWindow xmlns="https://spacestation14.io"
                       xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -114,6 +115,7 @@
 
             <!-- Right pane: storage -->
             <!-- KS14: reserve room for storage values inside the wider Baron panel frame. -->
+            <!-- Upstream UI retained for mergeability: <PanelContainer Name="Storage" StyleClasses="BackgroundPanelDark" HorizontalExpand="True"> -->
             <PanelContainer Name="Storage" StyleClasses="BackgroundPanelDark" HorizontalExpand="True" MinWidth="250">
                 <BoxContainer Orientation="Vertical">
                     <Label Text="{Loc 'battery-menu-storage-header'}" StyleClasses="LabelKeyText" />

@@ -1833,3 +1833,9 @@ Entries:
       message: Added ethanol to the chem plumbing synthesiser machine
   id: 193
   time: '2026-08-21T22:26:39.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Fix
+      message: Fixed many UI issues.
+  id: 194
+  time: '2026-08-22T23:19:15.0000000+00:00'
