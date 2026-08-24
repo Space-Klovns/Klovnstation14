@@ -83,7 +83,7 @@
     angleIncrease: 2
     selectedMode: FullAuto
     fireRate: 5
-    projectileSpeed: 10
+    projectileSpeed: 20
     availableModes:
     - FullAuto
     - Burst
