@@ -61,7 +61,7 @@
     children:
     - !type:NestedSelector
       tableId: LockerFillCaptainNoLaser
-    - id: WeaponAntiqueLaser
+    - id: WeaponAntiqueLaserProjectile #KS14 change also dont look at who edited this code before me
 
 # Hardsuit table, used for suit storage as well
 - type: entityTable
