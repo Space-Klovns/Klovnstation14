@@ -321,7 +321,8 @@
   id: LockerFillHeadOfSecurityNoHardsuit
   table: !type:AllSelector
     children:
-    - id: WeaponEnergyShotgun
+    # - id: WeaponEnergyShotgun #KS14: less of it in game so fights dont end in picosecond
+    - id: WeaponEnergyMagnum
     - id: BoxEncryptionKeySecurity
     - id: CigarGoldCase
       prob: 0.50

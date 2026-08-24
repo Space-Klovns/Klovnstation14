@@ -87,14 +87,15 @@
       components:
       - MobMover
       - Item
-  - type: UseDelay
-    delay: 10
-  - type: UseDelayOnMeleeHit
+  # - type: UseDelay #KS14 change
+  #   delay: 10
+  # - type: UseDelayOnMeleeHit
   - type: MeleeWeapon
     wideAnimationRotation: -135
     damage:
       types:
         Blunt: 5
+        Shock: 5
         Structural: 5
     soundHit:
       path: /Audio/Effects/radpulse5.ogg
@@ -104,6 +105,7 @@
     damage:
       types:
         Blunt: 15
+        Shock: 5
         Structural: 15
   - type: Item
     size: Ginormous
