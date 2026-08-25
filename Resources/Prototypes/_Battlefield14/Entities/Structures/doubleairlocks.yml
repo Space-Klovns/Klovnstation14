@@ -255,7 +255,6 @@
   - type: Wires
     layoutId: AirlockCommand
 
-
 - type: entity
   parent: AirlockDoubleGlass
   id: AirlockDoubleGlassLockedCommand
