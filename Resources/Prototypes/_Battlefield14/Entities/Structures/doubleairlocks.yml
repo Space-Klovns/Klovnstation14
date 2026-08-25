@@ -116,7 +116,7 @@
     receiveFrequencyId: BasicDevice
   - type: WirelessNetworkConnection
     range: 200
-  - type: NoSignalOnLink # Mono
+#  - type: NoSignalOnLink # Mono
   - type: DeviceLinkSink
     ports:
       - Open
@@ -131,8 +131,6 @@
       DoorStatus: false
   - type: SoundOnOverload
   - type: SpawnOnOverload
-  - type: ArmorThickness # BF14
-    thickness: 5
   - type: UserInterface
     interfaces:
       enum.AiUi.Key:
@@ -189,10 +187,6 @@
     - Airlocks
     - WirePanels
     - Networking
-  # Mono
-  - type: ShipRepairable
-    repairTime: 6
-    repairCost: 6
   placement:
     mode: SnapgridCenter
 
