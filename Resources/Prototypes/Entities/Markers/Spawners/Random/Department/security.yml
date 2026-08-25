@@ -88,7 +88,7 @@
         - WeaponPistolMk58
         - WeaponRifleLecter
         - WeaponSubMachineGunDrozd
-        - WeaponLaserCarbineProjectile
+        - WeaponLaserCarbineProjectile #KS14 change
         - WeaponShotgunKammerer
       chance: 0.95
       offset: 0.0
@@ -115,7 +115,7 @@
         - WeaponPistolMk58
         - WeaponRifleLecter
         - WeaponSubMachineGunDrozd
-        - WeaponLaserCarbineProjectile
+        - WeaponLaserCarbineProjectile #KS14 change
         - WeaponShotgunKammerer
       chance: 0.95
       offset: 0.0
