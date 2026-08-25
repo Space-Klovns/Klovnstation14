@@ -1,7 +1,8 @@
 - type: entity
   parent: BaseGrenade
-  id: KsGrenadeChemical
+  id: KsBaseGrenadeChemical
   name: chemical grenade round
+  abstract: true
   components:
   - type: CartridgeAmmo
     proto: KsBulletGrenadeChemical
@@ -23,6 +24,16 @@
 
   - type: Sprite
     sprite: _KS14/Objects/Weapons/Guns/Ammunition/Explosives/chem_nade.rsi
+
+
+- type: entity
+  parent: KsBaseGrenadeChemical
+  id: KsGrenadeChemical
+  components:
+  - type: Construction
+    graph: KsGrenadeChemical
+    node: finished
+  - type: Sprite
     layers:
     - state: empty
       map: [ "enum.AmmoVisualLayers.Base", "base" ]

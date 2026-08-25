@@ -85,6 +85,12 @@
       BeakerSlotB: !type:ContainerSlot
   - type: StaticPrice
     price: 60
+  # KS14 start
+  - type: Tag
+    tags:
+    - Payload
+    - ChemicalPayload
+  # KS14 end
 
 - type: entity
   name: flash payload

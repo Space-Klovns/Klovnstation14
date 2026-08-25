@@ -1,0 +1,7 @@
+- type: construction
+  id: KsGrenadeChemical
+  graph: KsGrenadeChemical
+  startNode: start
+  targetNode: finished
+  category: construction-category-weapons
+  objectType: Item
