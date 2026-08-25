@@ -14,9 +14,9 @@
       params:
         volume: 5
   - type: Sprite
-    sprite: Objects/Weapons/Guns/Projectiles/projectiles_tg.rsi
+    sprite: _KS14/Objects/Weapons/Guns/Projectiles/carbine_laser.rsi
     layers:
-    - state: heavylaser
+    - state: icon
       shader: unshaded
   - type: Physics
   - type: Fixtures

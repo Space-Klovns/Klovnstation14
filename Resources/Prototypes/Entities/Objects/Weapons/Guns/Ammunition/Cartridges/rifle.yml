@@ -10,7 +10,8 @@
   - type: CartridgeAmmo
     proto: BulletRifle
   - type: Sprite
-    sprite: Objects/Weapons/Guns/Ammunition/Casings/ammo_casing.rsi
+    # sprite: Objects/Weapons/Guns/Ammunition/Casings/ammo_casing.rsi
+    sprite: _KS14/Objects/Weapons/Guns/Ammunition/Casings/223lr.rsi
     layers:
     - state: base
       map: ["enum.AmmoVisualLayers.Base"]
