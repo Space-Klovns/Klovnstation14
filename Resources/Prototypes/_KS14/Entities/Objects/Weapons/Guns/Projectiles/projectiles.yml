@@ -34,7 +34,7 @@
     impactEffect: BulletImpactEffectOrangeDisabler
     damage:
       types:
-        Heat: 0
+        Heat: 1
 
 - type: entity
   name: laser bolt

@@ -55,7 +55,7 @@
   - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
 
 - type: entity
-  name: laser carbine
+  name: practice laser carbine
   parent: [BaseWeaponBatterySmall, BaseSecurityContraband]
   id: WeaponLaserCarbineProjectilePractice
   description: Practice version of a carbine that's been favoured by Nanotrasen Security for being cheap and easy to use.
