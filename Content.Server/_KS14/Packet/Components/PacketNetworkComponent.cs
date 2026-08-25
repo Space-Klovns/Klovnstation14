@@ -8,7 +8,7 @@ namespace Content.Server._KS14.Packet.Components;
 /// Packet will be delivered only if both address and frequency match with the sender's packet.
 /// </summary>
 [RegisterComponent]
-public sealed partial class PacketReceiverComponent : Component
+public sealed partial class PacketNetworkComponent : Component
 {
 
     /// <summary>
@@ -19,10 +19,16 @@ public sealed partial class PacketReceiverComponent : Component
     [DataField(required: true)]
     public ProtoId<PacketFrequencyPrototype> Frequency;
 
+    [DataField]
+    public List<ProtoId<PacketFrequencyPrototype>>? ListeningFrequencies = [];
+
     /// <summary>
     /// Each device has different address, even if frequency is not the same.
     /// Assigned randomly upon entity initialization
     /// </summary>
     [DataField]
     public string Address = "0x000000";
+
+    [DataField]
+    public string? AddressNetwork;
 }

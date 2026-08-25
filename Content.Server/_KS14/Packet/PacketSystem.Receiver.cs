@@ -5,7 +5,7 @@ using Robust.Shared.Prototypes;
 namespace Content.Server._KS14.Packet;
 
 /// <summary>
-/// Handles <see cref="PacketReceiverComponent"/> logic - Getting receivers, randomizing frequencies, etc.
+/// Handles <see cref="PacketNetworkComponent"/> logic - Getting receivers, randomizing frequencies, etc.
 /// </summary>
 public sealed partial class PacketSystem
 {
@@ -13,25 +13,29 @@ public sealed partial class PacketSystem
     /// Stores all packet receivers.
     /// String value is address.
     /// </summary>
-    private Dictionary<string, Entity<PacketReceiverComponent>> _packetEntities = new();
+    private Dictionary<string, Entity<PacketNetworkComponent>> _packetEntities = new();
 
-    private void SetupAddress(Entity<PacketReceiverComponent> entity)
+    private void SetupAddress(Entity<PacketNetworkComponent> entity)
+    {
+        entity.Comp.Address =  GenerateAddress();
+        _packetEntities.Add(entity.Comp.Address, entity);
+    }
+
+    private string GenerateAddress()
     {
         var value = _random.Next((int) Math.Pow(16, 6));
-        entity.Comp.Address = "0x" + value.ToString("X");
+        var address = "0x" + value.ToString("X");
 
-        if (_packetEntities.ContainsKey(entity.Comp.Address))
+        if (_packetEntities.ContainsKey(address))
         {
-            SetupAddress(entity); // There is 1/10³⁵⁰⁰⁰⁰⁰ chance that this causes stack overflow btw.
-            return;
+            return GenerateAddress(); // There is 1/10³⁵⁰⁰⁰⁰⁰ chance that this causes stack overflow btw.
         }
-
-        _packetEntities.Add(entity.Comp.Address, entity);
+        return address;
     }
 
     private void RandomizeFrequencies()
     {
-        var protoEnum = _protoMan.EnumeratePrototypes<PacketFrequencyPrototype>();
+        var protoEnum = _prototypeManager.EnumeratePrototypes<PacketFrequencyPrototype>();
 
         foreach (var freqProto in protoEnum)
         {
@@ -39,12 +43,12 @@ public sealed partial class PacketSystem
         }
     }
 
-    public bool TryGetReceiver(string address, out Entity<PacketReceiverComponent> receiver)
+    public bool TryGetReceiver(string address, out Entity<PacketNetworkComponent> receiver)
     {
         return _packetEntities.TryGetValue(address, out receiver) && Exists(receiver);
     }
 
-    public bool TryGetReceiver(int freq, string address, out Entity<PacketReceiverComponent> receiver)
+    public bool TryGetReceiver(int freq, string address, out Entity<PacketNetworkComponent> receiver)
     {
 
         return _packetEntities.TryGetValue(address, out receiver) && Exists(receiver) && GetFrequency(receiver.Comp.Frequency) == freq;
@@ -52,6 +56,6 @@ public sealed partial class PacketSystem
 
     public int GetFrequency(ProtoId<PacketFrequencyPrototype> freqProto)
     {
-        return _protoMan.Index(freqProto).Frequency;
+        return _prototypeManager.Index(freqProto).Frequency;
     }
 }

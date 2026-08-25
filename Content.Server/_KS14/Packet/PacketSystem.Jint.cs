@@ -78,7 +78,7 @@ public sealed partial class PacketSystem
     {
         var engine = EnsureEngine(executor);
 
-        if (TryComp<PacketReceiverComponent>(executor, out var receiver))
+        if (TryComp<PacketNetworkComponent>(executor, out var receiver))
         {
             engine.SetValue("SELF_FREQ", GetFrequency(receiver.Frequency));
             engine.SetValue("SELF_ADD", receiver.Address);

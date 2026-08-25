@@ -32,7 +32,7 @@ public sealed partial class PacketSystem
 
         foreach (var module in modules)
         {
-            object[] args = [EntityManager, _protoMan, this];
+            object[] args = [EntityManager, _prototypeManager, this];
 
             if (Activator.CreateInstance(module, args) is not Module moduleInstance)
                 continue;

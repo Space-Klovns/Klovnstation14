@@ -18,13 +18,17 @@ public sealed class LathePrintMethod : ModuleMethod
 
         var latheSys = latheModule.LatheSystem;
         var protoMan = latheModule.PrototypeManager;
+        var packetSys = latheModule.PacketSystem;
 
         if (!protoMan.TryIndex<LatheRecipePrototype>(item, out var recipe) ||
-            !latheModule.PacketSystem.TryGetReceiver(frequency, address, out var receiver))
+            !packetSys.TryGetReceiver(frequency, address, out var receiver))
             return;
 
-        latheSys.TryAddToQueue(receiver, recipe, quantity);
-        latheSys.TryStartProducing(receiver);
+        packetSys.WrapSystemCall(() =>
+        {
+            latheSys.TryAddToQueue(receiver, recipe, quantity);
+            latheSys.TryStartProducing(receiver);
+        });
 
         await Task.Delay(recipe.CompleteTime * quantity);
     }

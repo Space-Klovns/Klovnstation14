@@ -1,9 +1,14 @@
 using Content.Server._KS14.Packet.Components;
+using Content.Server.Chat.Systems;
 using Content.Server.GameTicking.Events;
+using Content.Server.Popups;
 using Content.Shared._KS14.Packets.BUI;
 using Content.Shared.GameTicking;
+using Content.Shared.Interaction;
 using Content.Shared.Interaction.Events;
 using Content.Shared.Paper;
+using Content.Shared.Popups;
+using Jint;
 using Robust.Server.GameObjects;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
@@ -15,21 +20,29 @@ namespace Content.Server._KS14.Packet;
 /// </summary>
 public sealed partial class PacketSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _protoMan = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private UserInterfaceSystem _userInterfaceSystem = default!;
+    [Dependency] private PopupSystem _popupSystem = default!;
+
+    internal int _mainThreadId;
 
     public override void Initialize()
     {
+        _mainThreadId = Environment.CurrentManagedThreadId;
+
         InitializeModules();
 
         SubscribeLocalEvent<ExecutorComponent, BoundUIOpenedEvent>(SubscribeUpdateUiState);
         SubscribeLocalEvent<ExecutorComponent, SaveExecutorCommandMessage>(OnSave);
         SubscribeLocalEvent<ExecutorComponent, StartExecutionMessage>(OnExecute);
 
+        SubscribeLocalEvent<PacketNetworkConfiguratorComponent, AfterInteractEvent>(OnNetworkInteract);
+        SubscribeLocalEvent<PacketNetworkConfiguratorComponent, UseInHandEvent>(OnNetworkActivate);
+
         SubscribeLocalEvent<ExecuteOnInteractComponent, UseInHandEvent>(OnUse);
 
-        SubscribeLocalEvent<PacketReceiverComponent, ComponentInit>(OnPacketInit);
+        SubscribeLocalEvent<PacketNetworkComponent, ComponentInit>(OnPacketInit);
 
         SubscribeLocalEvent<RoundStartingEvent>(OnRoundStart);
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnCleanup);
@@ -37,6 +50,7 @@ public sealed partial class PacketSystem : EntitySystem
 
     public override void Update(float frameTime)
     {
+        UpdateSystemCalls();
         foreach (var (uid, _) in _executorEntities)
         {
             if (uid.Comp.Log == string.Empty)
@@ -62,6 +76,24 @@ public sealed partial class PacketSystem : EntitySystem
         ExecuteCommand(ent.Comp.Command, ent);
     }
 
+    private void OnNetworkInteract(Entity<PacketNetworkConfiguratorComponent> ent, ref AfterInteractEvent ev)
+    {
+        if (!TryComp<PacketNetworkComponent>(ev.Target, out var receiver)
+            || ent.Comp.Addresses.Contains(receiver.Address))
+            return;
+
+        _popupSystem.PopupEntity(receiver.Address, ev.User, ev.User, PopupType.Medium);
+        ent.Comp.Addresses.Add(receiver.Address);
+    }
+
+    private void OnNetworkActivate(Entity<PacketNetworkConfiguratorComponent> ent, ref UseInHandEvent ev)
+    {
+        if (ent.Comp.Frequency == null)
+            return;
+
+        _popupSystem.PopupEntity(CreateNetwork([..ent.Comp.Addresses], GetFrequency(ent.Comp.Frequency.Value)), ev.User, ev.User, PopupType.LargeCaution);
+    }
+
     private void UpdateUiState(Entity<ExecutorComponent> ent)
     {
         var maxStatements = ent.Comp.MaximumExecutionStatements;
@@ -76,7 +108,7 @@ public sealed partial class PacketSystem : EntitySystem
         RandomizeFrequencies();
     }
 
-    private void OnPacketInit(Entity<PacketReceiverComponent> ent, ref ComponentInit ev)
+    private void OnPacketInit(Entity<PacketNetworkComponent> ent, ref ComponentInit ev)
     {
         SetupAddress(ent);
     }
