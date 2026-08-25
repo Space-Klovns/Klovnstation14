@@ -11,15 +11,40 @@ import time
 import configparser # KS14
 import threading # KS14
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
-SOLUTION_PATH = Path("..") / "SpaceStation14.slnx"
+def get_repo_root() -> Path:
+    """
+    Dynamically resolves the root of the git repository.
+    Falls back to the script's parent directory if not run inside a git repo
+    (e.g. a .zip download), which check_for_zip_download() reports properly.
+    """
+    result = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        text=True
+    )
+
+    if result.returncode != 0:
+        return Path(__file__).resolve().parent.parent
+
+    return Path(result.stdout.strip())
+
+
+REPO_ROOT = get_repo_root()
+BUILD_CHECKER_DIR = Path(__file__).resolve().parent
+SOLUTION_PATH = REPO_ROOT / "SpaceStation14.slnx"
+GITMODULES_PATH = REPO_ROOT / ".gitmodules"
+DISABLE_SUBMODULE_AUTOUPDATE_PATH = BUILD_CHECKER_DIR / "DISABLE_SUBMODULE_AUTOUPDATE"
+INSTALLED_HOOKS_VERSION_PATH = BUILD_CHECKER_DIR / "INSTALLED_HOOKS_VERSION"
+HOOKS_SOURCE_DIR = BUILD_CHECKER_DIR / "hooks"
 # If this doesn't match the saved version we overwrite them all.
 CURRENT_HOOKS_VERSION = "4"
 QUIET = len(sys.argv) == 2 and sys.argv[1] == "--quiet"
 
 
-def run_command(command: List[str], capture: bool = False) -> subprocess.CompletedProcess:
+def run_command(command: List[str], capture: bool = False, cwd: Optional[Path] = None) -> subprocess.CompletedProcess:
     """
     Runs a command with pretty output.
     """
@@ -30,9 +55,9 @@ def run_command(command: List[str], capture: bool = False) -> subprocess.Complet
     sys.stdout.flush()
 
     if capture:
-        completed = subprocess.run(command, stdout=subprocess.PIPE, text=True)
+        completed = subprocess.run(command, stdout=subprocess.PIPE, text=True, cwd=cwd)
     else:
-        completed = subprocess.run(command)
+        completed = subprocess.run(command, cwd=cwd)
 
     if completed.returncode != 0:
         print("Error: command exited with code {}!".format(completed.returncode))
@@ -41,6 +66,11 @@ def run_command(command: List[str], capture: bool = False) -> subprocess.Complet
 
 # KS14 Start
 def check_git_access(repo_url):
+    """
+    Checks whether the current credentials can reach the given submodule URL.
+    Talks to the remote URL directly, so this works even for submodules that
+    haven't been initialised/cloned locally yet.
+    """
     try:
         # Use git ls-remote to check connectivity and authentication
         # stdout and stderr are redirected to devnull to suppress console output
@@ -58,7 +88,7 @@ def check_git_access(repo_url):
 # returns smth like ['RobustToolbox', 'Resources/Prototypes/_KsModule', 'Resources/Audio/_KsModule', 'Resources/_KsModule_ReplacedPrototypes']
 def get_all_submodules():
     result = subprocess.run(
-        ["git", "config", "--file=../.gitmodules", "--get-regexp", r"^\^?submodule\..*\.path$"],
+        ["git", "config", "--file={}".format(GITMODULES_PATH), "--get-regexp", r"^\^?submodule\..*\.path$"],
         capture_output=True,
         text=True,
         check=True
@@ -67,13 +97,11 @@ def get_all_submodules():
     return [line.split()[1] for line in result.stdout.strip().split("\n") if line]
 
 def get_submodule_url(target_path):
-    gitmodules_path = ".gitmodules"
-
-    if not os.path.exists(gitmodules_path):
-        raise FileNotFoundError("../.gitmodules file not found.")
+    if not GITMODULES_PATH.is_file():
+        raise FileNotFoundError("{} file not found.".format(GITMODULES_PATH))
 
     config = configparser.ConfigParser()
-    config.read(gitmodules_path)
+    config.read(GITMODULES_PATH)
 
     # Search through the sections for the matching path
     for section in config.sections():
@@ -83,12 +111,16 @@ def get_submodule_url(target_path):
     return None
 
 def thread_doupdate(repo_path):
+    # repo_path is relative to REPO_ROOT (as recorded in .gitmodules), which is
+    # what get_submodule_url expects to match against. This lookup works even
+    # if the submodule hasn't been initialised/cloned yet, since it reads
+    # straight from .gitmodules instead of the local submodule git config.
     repo_url = get_submodule_url(repo_path)
     if (repo_url == None or
         not check_git_access(repo_url)):
         return
 
-    run_command(["git", "submodule", "update", "--init", "--recursive", repo_path])
+    run_command(["git", "submodule", "update", "--init", "--recursive", repo_path], cwd=REPO_ROOT)
 
 # KS14 End
 
@@ -100,7 +132,7 @@ def update_submodules():
     if 'GITHUB_ACTIONS' in os.environ:
         return
 
-    if os.path.isfile("DISABLE_SUBMODULE_AUTOUPDATE"):
+    if DISABLE_SUBMODULE_AUTOUPDATE_PATH.is_file():
         return
 
     if shutil.which("git") is None:
@@ -109,7 +141,7 @@ def update_submodules():
     # KS14 start: replaced all the logic here with manually checking each repo
 
     for submodule_path in get_all_submodules():
-        threading.Thread(target=thread_doupdate, args=(submodule_path))
+        thread_doupdate(submodule_path)
 
     # KS14 end
 
@@ -119,8 +151,8 @@ def install_hooks():
     """
 
     # Read version file.
-    if os.path.isfile("INSTALLED_HOOKS_VERSION"):
-        with open("INSTALLED_HOOKS_VERSION", "r") as f:
+    if INSTALLED_HOOKS_VERSION_PATH.is_file():
+        with open(INSTALLED_HOOKS_VERSION_PATH, "r") as f:
             if f.read() == CURRENT_HOOKS_VERSION:
                 if not QUIET:
                     print("No hooks change detected.")
@@ -128,8 +160,11 @@ def install_hooks():
 
     print("Hooks need updating.")
 
-    hooks_target_dir = Path(run_command(["git", "rev-parse", "--git-path", "hooks"], True).stdout.strip())
-    hooks_source_dir = Path("hooks")
+    hooks_target_dir = Path(run_command(["git", "rev-parse", "--git-path", "hooks"], True, cwd=REPO_ROOT).stdout.strip())
+    hooks_source_dir = HOOKS_SOURCE_DIR
+
+    if not hooks_target_dir.is_absolute():
+        hooks_target_dir = REPO_ROOT / hooks_target_dir
 
     # Clear entire tree since we need to kill deleted files too.
     for filename in os.listdir(hooks_target_dir):
@@ -139,7 +174,7 @@ def install_hooks():
         print("Copying hook {}".format(filename))
         shutil.copy2(hooks_source_dir / filename, hooks_target_dir / filename)
 
-    with open("INSTALLED_HOOKS_VERSION", "w") as f:
+    with open(INSTALLED_HOOKS_VERSION_PATH, "w") as f:
         f.write(CURRENT_HOOKS_VERSION)
 
 
