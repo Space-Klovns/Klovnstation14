@@ -303,7 +303,7 @@
       fly-by: *flybyfixture
   - type: Ammo
   - type: StaminaDamageOnCollide
-    damage: 20
+    damage: 20 # KS14 change
   - type: Projectile
     impactEffect: BulletImpactEffectDisabler
     damage:
