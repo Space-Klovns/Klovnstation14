@@ -165,6 +165,8 @@
         orGroup: Guns
       - id: WeaponLaserCarbineProjectile
         orGroup: Guns
+      - id: WeaponLaserCarbineProjectilePractice
+        orGroup: Guns
       - id: KSWeaponLauncherRocketAt4
         orGroup: Guns
   - type: SpeakOnAction

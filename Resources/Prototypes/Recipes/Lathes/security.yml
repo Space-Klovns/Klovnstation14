@@ -209,8 +209,8 @@
 
 - type: latheRecipe
   parent: BaseWeaponRecipePractice
-  id: WeaponLaserCarbinePractice
-  result: WeaponLaserCarbinePractice
+  id: WeaponLaserCarbineProjectilePractice #KS14: changed to projectile
+  result: WeaponLaserCarbineProjectilePractice
   materials:
     Steel: 1800
     Glass: 400
@@ -219,8 +219,8 @@
 # Long Guns
 - type: latheRecipe
   parent: BaseWeaponRecipeLong
-  id: WeaponLaserCarbine
-  result: WeaponLaserCarbine
+  id: WeaponLaserCarbineProjectile #KS14: changed to projectile
+  result: WeaponLaserCarbineProjectile
   materials:
     Steel: 2000
     Glass: 800

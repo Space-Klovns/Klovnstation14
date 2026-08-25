@@ -332,5 +332,5 @@
   id: FillGunSafeLaserCarbine
   table: !type:AllSelector
     children:
-    - id: WeaponLaserCarbine
+    - id: WeaponLaserCarbineProjectile
       amount: 3
