@@ -589,15 +589,15 @@ public abstract partial class SharedGunSystem : EntitySystem
                         CreateAndFireProjectiles(uid, cartridge);
                         _npcSensorSystem.DoDisturbance(fromCoordinates, gun.Comp.SoundGunshotModified?.Params.MaxDistance ?? 0f, source: user); // KS14: ANK: AI sensors
 
-                        RaiseLocalEvent(ent!.Value, new AmmoShotEvent()
+                        RaiseLocalEvent(gun /* KS14: use gun UID instead of the actual ammo UID*/, new AmmoShotEvent()
                         {
                             FiredProjectiles = shotProjectiles,
                         });
 
-                        SetCartridgeSpent(ent.Value, cartridge, true);
+                        SetCartridgeSpent(ent! /* KS14: null suppressed due to above */.Value, cartridge, true);
 
                         if (cartridge.DeleteOnSpawn)
-                            PredictedDel(ent.Value);
+                            PredictedQueueDel/* KS14: made queued */(ent.Value);
                     }
                     else
                     {
@@ -632,7 +632,7 @@ public abstract partial class SharedGunSystem : EntitySystem
                         Target = gun.Comp.Target,
                     };
                     RaiseLocalEvent(ent.Value, ref hitscanEv);
-                    PredictedDel(ent);
+                    PredictedQueueDel/* KS14: made queued */(ent);
 
                     Audio.PlayPredicted(gun.Comp.SoundGunshotModified, gun, user);
                     _farsoundSystem.TryPlayFarSound(gun, gun.Comp.FarSoundGunshot, userUid: user); // KS14
@@ -652,6 +652,20 @@ public abstract partial class SharedGunSystem : EntitySystem
         {
             FiredProjectiles = shotProjectiles,
         });
+
+        // KS14 start: KsAmmoUsedEvent
+        if (shotProjectiles.Count > 0)
+        {
+            var ammoUsedEv = new _KS14.Weapons.Ranged.KsAmmoUsedEvent(shotProjectiles, user);
+            foreach (var (firedAmmoUid, _) in ammo)
+            {
+                if (firedAmmoUid is not { })
+                    continue;
+
+                RaiseLocalEvent(firedAmmoUid.Value, ref ammoUsedEv);
+            }
+        }
+        // KS14 end
 
         void CreateAndFireProjectiles(EntityUid ammoEnt, AmmoComponent ammoComp)
         {
