@@ -6,7 +6,7 @@ namespace Content.Server.Payload.EntitySystems;
 
 public sealed partial class PayloadSystem : EntitySystem
 {
-    [Dependency] private PuddleSystem _puddleSystem = default!; // KS14
+    [Dependency] private PuddleSystem _puddleSystem = default!;
 
     private bool TryGetBeakerSolution(EntityUid? beaker, out Entity<SolutionComponent>? soln, out Solution? solution)
     {
@@ -38,6 +38,6 @@ public sealed partial class PayloadSystem : EntitySystem
             return;
 
         var spilled = _solutionContainerSystem.SplitSolution(soln, soln.Comp.Solution.Volume);
-        _puddleSystem.TrySpillAt(entity.Owner, spilled, out _);
+        _puddleSystem.TrySplashSpillAt(entity, Transform(entity.Owner).Coordinates, spilled, out _);
     }
 }

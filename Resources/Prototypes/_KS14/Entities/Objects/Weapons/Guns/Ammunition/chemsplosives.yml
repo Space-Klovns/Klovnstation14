@@ -2,6 +2,7 @@
   parent: BaseGrenade
   id: KsBaseGrenadeChemical
   name: chemical grenade round
+  description: A grenade round that releases chemicals on impact.
   abstract: true
   components:
   - type: CartridgeAmmo
@@ -24,11 +25,24 @@
 
   - type: Sprite
     sprite: _KS14/Objects/Weapons/Guns/Ammunition/Explosives/chem_nade.rsi
-
+    layers:
+    - state: full
+      map: ["base"]
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.AmmoVisuals.Spent:
+        base:
+          False: { sprite: _KS14/Objects/Weapons/Guns/Ammunition/Explosives/chem_nade.rsi, state: full }
+          True: { sprite: Objects/Weapons/Guns/Ammunition/Explosives/explosives.rsi, state: spent }
+        stripe:
+          False: { visible: true }
+          True: { visible: false }
 
 - type: entity
   parent: KsBaseGrenadeChemical
   id: KsGrenadeChemical
+  description: A grenade round with a chemical payload fitted on the tip.
   components:
   - type: Construction
     graph: KsGrenadeChemical
@@ -36,8 +50,7 @@
   - type: Sprite
     layers:
     - state: empty
-      map: [ "enum.AmmoVisualLayers.Base", "base" ]
-  - type: Appearance
+      map: ["enum.AmmoVisualLayers.Base", "base"]
   - type: GenericVisualizer
     visuals:
       enum.ChemicalPayloadVisuals.Slots:
@@ -53,3 +66,58 @@
         spent:
           False: { visible: false }
           True: { visible: true, sprite: Objects/Weapons/Guns/Ammunition/Explosives/explosives.rsi, state: spent }
+
+
+## Incendiary
+
+- type: entity
+  parent: Beaker
+  id: KsGrenadeChemicalBeakerA
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Phosphorus
+        Quantity: 40
+      - ReagentId: Plasma
+        Quantity: 40
+      maxVol: 80
+      temperature: 800
+
+- type: entity
+  parent: Beaker
+  id: KsGrenadeChemicalBeakerB
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Klovnide
+        Quantity: 2
+      - ReagentId: SulfuricAcid
+        Quantity: 40
+      - ReagentId: ChlorineTrifluoride
+        Quantity: 18
+      temperature: 800
+
+- type: entity
+  parent: KsBaseGrenadeChemical
+  id: KsGrenadeChemicalPresetIncendiary
+  description: A grenade round that releases chemicals on impact. An orange stripe on the tip denotes an incendiary payload.
+  suffix: Preset, Incendiary
+  components:
+  - type: Sprite
+    layers:
+    - state: full
+      map: ["base"]
+    - state: stripe
+      color: '#d6651fcc'
+      map: ["stripe"]
+  - type: ChemicalPayload
+    beakerSlotA:
+      locked: true
+      startingItem: KsGrenadeChemicalBeakerA
+    beakerSlotB:
+      locked: true
+      startingItem: KsGrenadeChemicalBeakerB
