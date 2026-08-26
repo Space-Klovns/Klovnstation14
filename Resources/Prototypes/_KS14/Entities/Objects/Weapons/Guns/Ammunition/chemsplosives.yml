@@ -39,6 +39,7 @@
           False: { visible: true }
           True: { visible: false }
 
+# Constructible grenade round
 - type: entity
   parent: KsBaseGrenadeChemical
   id: KsGrenadeChemical
@@ -68,11 +69,11 @@
           True: { visible: true, sprite: Objects/Weapons/Guns/Ammunition/Explosives/explosives.rsi, state: spent }
 
 
-## Incendiary
+### Incendiary
 
 - type: entity
   parent: Beaker
-  id: KsGrenadeChemicalBeakerA
+  id: KsGrenadeChemicalPresetIncendiaryBeakerA
   categories: [ HideSpawnMenu ]
   components:
   - type: Solution
@@ -81,13 +82,13 @@
       - ReagentId: Phosphorus
         Quantity: 40
       - ReagentId: Plasma
-        Quantity: 40
-      maxVol: 80
+        Quantity: 42
+      maxVol: 82
       temperature: 800
 
 - type: entity
   parent: Beaker
-  id: KsGrenadeChemicalBeakerB
+  id: KsGrenadeChemicalPresetIncendiaryBeakerB
   categories: [ HideSpawnMenu ]
   components:
   - type: Solution
@@ -99,7 +100,8 @@
         Quantity: 40
       - ReagentId: ChlorineTrifluoride
         Quantity: 18
-      temperature: 800
+      maxVol: 80
+      temperature: 300
 
 - type: entity
   parent: KsBaseGrenadeChemical
@@ -117,7 +119,115 @@
   - type: ChemicalPayload
     beakerSlotA:
       locked: true
-      startingItem: KsGrenadeChemicalBeakerA
+      startingItem: KsGrenadeChemicalPresetIncendiaryBeakerA
     beakerSlotB:
       locked: true
-      startingItem: KsGrenadeChemicalBeakerB
+      startingItem: KsGrenadeChemicalPresetIncendiaryBeakerB
+
+### Cryogenic
+
+- type: entity
+  parent: Beaker
+  id: KsGrenadeChemicalPresetCryogenicBeakerA
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Fresium
+        Quantity: 45
+      - ReagentId: Ice
+        Quantity: 15
+      maxVol: 80
+      temperature: 72
+
+- type: entity
+  parent: Beaker
+  id: KsGrenadeChemicalPresetCryogenicBeakerB
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Water
+        Quantity: 45
+      - ReagentId: Ice
+        Quantity: 15
+      maxVol: 80
+      temperature: 72
+
+- type: entity
+  parent: KsBaseGrenadeChemical
+  id: KsGrenadeChemicalPresetCryogenic
+  description: A grenade round that releases chemicals on impact. A deep blue stripe on the tip denotes a cryogenic payload.
+  suffix: Preset, Cryogenic
+  components:
+  - type: Sprite
+    layers:
+    - state: full
+      map: ["base"]
+    - state: stripe
+      color: '#3248d6cc'
+      map: ["stripe"]
+  - type: ChemicalPayload
+    beakerSlotA:
+      locked: true
+      startingItem: KsGrenadeChemicalPresetCryogenicBeakerA
+    beakerSlotB:
+      locked: true
+      startingItem: KsGrenadeChemicalPresetCryogenicBeakerB
+
+### Toxic
+
+- type: entity
+  parent: Beaker
+  id: KsGrenadeChemicalPresetToxicBeakerA
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Water
+        Quantity: 35
+      - ReagentId: ChloralHydrate
+        Quantity: 5
+      - ReagentId: Nocturine
+        Quantity: 10
+      - ReagentId: Hemorrhinol
+        Quantity: 10
+      maxVol: 80
+
+- type: entity
+  parent: Beaker
+  id: KsGrenadeChemicalPresetToxicBeakerB
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Fluorosurfactant
+        Quantity: 35
+      - ReagentId: Toxin
+        Quantity: 25
+      maxVol: 80
+
+- type: entity
+  parent: KsBaseGrenadeChemical
+  id: KsGrenadeChemicalPresetToxic
+  description: A grenade round that releases chemicals on impact. A pink stripe on the tip denotes a toxic payload.
+  suffix: Preset, Toxic
+  components:
+  - type: Sprite
+    layers:
+    - state: full
+      map: ["base"]
+    - state: stripe
+      color: '#d632d6cc'
+      map: ["stripe"]
+  - type: ChemicalPayload
+    beakerSlotA:
+      locked: true
+      startingItem: KsGrenadeChemicalPresetToxicBeakerA
+    beakerSlotB:
+      locked: true
+      startingItem: KsGrenadeChemicalPresetToxicBeakerB
