@@ -8,7 +8,6 @@
   - type: CartridgeAmmo
     proto: KsBulletGrenadeChemical
   - type: ChemicalPayloadAmmo
-    spill: false
   - type: ChemicalPayload
     spill: true
     beakerSlotA: &slotDef
