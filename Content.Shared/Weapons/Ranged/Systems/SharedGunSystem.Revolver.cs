@@ -398,7 +398,7 @@ public partial class SharedGunSystem
                     continue;
 
                 // Mark cartridge as spent and if it's caseless delete from the chamber slot.
-                SetCartridgeSpent(ammoEnt.Value, cartridge, true);
+                /* SetCartridgeSpent(ammoEnt.Value, cartridge, true); */ // KS14: no just no
                 /* var spawned = PredictedSpawnAtPosition(cartridge.Prototype, args.Coordinates); // Trauma - predicted this shit */ // KS14: don't spawn anything
                 args.Ammo.Add((ammoEnt, cartridge)); // KS14: don't give us a fucking bullet, we asked for the AMMO
 
