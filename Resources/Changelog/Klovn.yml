@@ -1845,3 +1845,24 @@ Entries:
       message: The Operative AI has been improved.
   id: 195
   time: '2026-08-23T10:40:55.0000000+00:00'
+- author: some obsessed discord user
+  changes:
+    - type: Tweak
+      message: >-
+        Ammonia + oxygen reactions now release heat and can ignite hotspots,
+        instead of just quietly converting into nitrous oxide and water vapor.
+        Ammonia is also now treated as a fuel.
+  id: 196
+  time: '2026-08-26T12:00:19.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added chemical grenade rounds, craftable with a chemical payload and one
+        brass sheet. They can be fired from any grenade launcher, and will
+        trigger the chemical payload contained within upon impact. Sprites by
+        chinese kuz or something
+    - type: Fix
+      message: Potentially fixed some bugs with revolvers.
+  id: 197
+  time: '2026-08-26T13:35:56.0000000+00:00'
