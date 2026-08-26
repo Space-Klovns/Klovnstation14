@@ -1854,3 +1854,15 @@ Entries:
         Ammonia is also now treated as a fuel.
   id: 196
   time: '2026-08-26T12:00:19.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added chemical grenade rounds, craftable with a chemical payload and one
+        brass sheet. They can be fired from any grenade launcher, and will
+        trigger the chemical payload contained within upon impact. Sprites by
+        chinese kuz or something
+    - type: Fix
+      message: Potentially fixed some bugs with revolvers.
+  id: 197
+  time: '2026-08-26T13:35:56.0000000+00:00'
