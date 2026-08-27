@@ -303,7 +303,7 @@
       fly-by: *flybyfixture
   - type: Ammo
   - type: StaminaDamageOnCollide
-    damage: 33
+    damage: 20 # KS14 change
   - type: Projectile
     impactEffect: BulletImpactEffectDisabler
     damage:
@@ -1308,16 +1308,19 @@
       types:
         Heat: 13
 
-- type: entity
-  name: wide laser barrage
-  id: BulletLaserSpread
-  categories: [ HideSpawnMenu ]
-  parent: BulletLaser
-  components:
-  - type: ProjectileSpread
-    proto: BulletLaser
-    count: 5 #65 heat damage if you hit all your shots, but wide spread
-    spread: 30
+# KS start
+# - type: entity
+#   name: wide laser barrage
+#   id: BulletLaserSpread
+#   categories: [ HideSpawnMenu ]
+#   parent: BulletLaser
+#   components:
+#   - type: ProjectileSpread
+#     proto: BulletLaser
+#     count: 5 #65 heat damage if you hit all your shots, but wide spread
+#     spread: 30
+# removed due to being useless
+# KS end
 
 - type: entity
   name: lethal laser barrage
@@ -1327,7 +1330,7 @@
   components:
   - type: ProjectileSpread
     proto: BulletLaser
-    count: 4 #52 heat damage if you hit all your shots, but narrower spread
+    count: 4 #44 heat damage if you hit all your shots, but narrower spread
     spread: 10
 
 - type: entity

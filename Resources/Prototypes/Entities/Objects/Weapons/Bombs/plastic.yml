@@ -33,8 +33,6 @@
         !type:DamageTrigger
         damage: 50
       behaviors:
-      - !type:DoActsBehavior
-        acts: ["Destruction"]
       - !type:ExplodeBehavior
   - type: StickyVisualizer
   - type: Appearance

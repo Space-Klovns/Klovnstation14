@@ -28,12 +28,12 @@
   - type: RandomTimerTrigger
     min: 0
     max: 15
-  - type: Explosive # Weak explosion in a very small radius. Ignites surrounding entities.
+  - type: Explosive # KS14: buffing crew explosions
     explosionType: FireBomb
-    totalIntensity: 25
-    intensitySlope: 5
-    maxIntensity: 3
-    canCreateVacuum: false
+    totalIntensity: 35
+    intensitySlope: 7
+    maxIntensity: 5
+    canCreateVacuum: true
   - type: ExplodeOnTrigger
     keysIn:
     - timer

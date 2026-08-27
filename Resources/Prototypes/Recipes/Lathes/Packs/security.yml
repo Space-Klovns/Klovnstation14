@@ -21,7 +21,7 @@
   - MagazineBoxPistolPractice
   - MagazineBoxRiflePractice
   - WeaponDisablerPractice
-  - WeaponLaserCarbinePractice
+  - WeaponLaserCarbineProjectilePractice #KS14: changed to projectile
   - MagazineLightRiflePractice
   - MagazineRiflePractice
   - MagazinePistolPractice
@@ -131,7 +131,7 @@
   - Truncheon
   - WeaponAdvancedLaser
   - WeaponLaserCannon
-  - WeaponLaserCarbine
+  - WeaponLaserCarbineProjectile #KS14: changed to projectile
   - WeaponXrayCannon
   - WeaponTemperatureGun
 
