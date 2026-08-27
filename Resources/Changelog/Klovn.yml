@@ -1866,3 +1866,46 @@ Entries:
       message: Potentially fixed some bugs with revolvers.
   id: 197
   time: '2026-08-26T13:35:56.0000000+00:00'
+- author: FrauzJ
+  changes:
+    - type: Tweak
+      message: >-
+        Welders can now be used as cauterisers and any knife can be used for
+        incision in surgery.
+    - type: Tweak
+      message: Removed wide shot on eshotty.
+    - type: Tweak
+      message: Nerfed eshotty damage for all pallets on connect from 52->44.
+    - type: Tweak
+      message: Payload stacking is back.
+    - type: Tweak
+      message: Signal timer is instant again.
+    - type: Tweak
+      message: Mjolnir slight damage buff and now should not have cooldowns.
+    - type: Tweak
+      message: Drozd is now back to burst/semi auto.
+    - type: Tweak
+      message: >-
+        Nerfed smg mags to be 40->30 capacity again (will likely make nukie ones
+        bigger later).
+    - type: Tweak
+      message: Nerfed disabler 33->20 stamina damage (from 4 to 5 shots to stun)
+    - type: Tweak
+      message: >-
+        L6 mag capacity 100->50. Made L6 much more accurate. Can be now fired
+        one-handed with its old recoil. You can now buy mags for it in nukie
+        uplink. Borg's L6 stays the same.
+    - type: Tweak
+      message: >-
+        Reworked laser carbine. It is now a fast firing one handed weapon with
+        full auto and burst fire modes.
+    - type: Tweak
+      message: >-
+        Reworked antique and retro lasers. They are now projectile based
+        weapons.
+    - type: Fix
+      message: Fixed recoil accumulating after it fully decayed.
+    - type: Fix
+      message: Fixed atmos on Box and Packed.
+  id: 198
+  time: '2026-08-27T16:40:17.0000000+00:00'
