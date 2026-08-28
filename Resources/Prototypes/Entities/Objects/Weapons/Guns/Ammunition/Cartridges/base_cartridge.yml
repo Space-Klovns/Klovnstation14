@@ -18,14 +18,14 @@
         restitution: 0.3  # fite me
         friction: 0.2
   - type: Damageable
-    damageModifierSet: StrongMetallic # We only want explosions breaking them (for the most part)
+    damageModifierSet: FlimsyMetallic # ks14
   - type: Injurable
     damageContainer: StructuralInorganic
   - type: Destructible
     thresholds:
     - trigger:
         !type:DamageTrigger
-        damage: 75
+        damage: 5
       behaviors:
       - !type:DoActsBehavior
         acts: [ "Destruction" ]
