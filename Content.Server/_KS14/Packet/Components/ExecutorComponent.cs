@@ -1,3 +1,7 @@
+using Content.Shared.DeviceLinking;
+using Jint.Native;
+using Robust.Shared.Prototypes;
+
 namespace Content.Server._KS14.Packet.Components;
 
 /// <summary>
@@ -20,4 +24,16 @@ public sealed partial class ExecutorComponent : Component
 
     [DataField]
     public int MaximumExecutionStatements = 250000;
+
+    [DataField]
+    public string SignalPortNaming = "ExecutorPort";
+
+    [DataField]
+    public int PortCount = 5;
+
+    [DataField]
+    public Dictionary<ProtoId<SinkPortPrototype>, JsValue> ListeningPorts = [];
+
+    [DataField]
+    public bool DebugState = false;
 }

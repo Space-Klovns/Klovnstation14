@@ -26,14 +26,18 @@ public sealed partial class PacketSystem
         options.MaxStatements(25);
     });
 
-    public async void ExecuteCommand(string command, Entity<ExecutorComponent> executor)
+    public void ExecuteCommand(string command, Entity<ExecutorComponent> executor)
     {
+        executor.Comp.ListeningPorts.Clear(); // Dispose ports to init them again.
+        if (TryComp<PacketNetworkComponent>(executor, out var receiver))
+            ReloadFrequencies((executor, receiver));
+
         var engine = EnsureEngine(executor);
         var token = EnsureToken(engine);
 
         try
         {
-            await engine.ExecuteAsync(command);
+            engine.ExecuteAsync(command);
         }
         catch (Exception e)
         {
@@ -46,19 +50,21 @@ public sealed partial class PacketSystem
         if (_executorEntities.TryGetValue(executor, out var exEngine))
             return exEngine;
 
-        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var cts = new CancellationTokenSource(TimeSpan.FromMinutes(3));
         var engine = new Engine(options =>
         {
             options.MaxStatements(executor.Comp.MaximumExecutionStatements);
             options.LimitMemory(executor.Comp.MemoryAllocation);
             options.ExperimentalFeatures = ExperimentalFeature.TaskInterop;
-            options.Constraints.PromiseTimeout = TimeSpan.FromSeconds(10);
+            options.Constraints.PromiseTimeout = TimeSpan.FromMinutes(3);
         });
 
         _engineCts.Add(engine, cts);
         _executorEntities.Add(executor, engine);
+        InitializeModules(executor);
         SetConstants(executor);
         LoadMethods(executor);
+        InitializePorts(executor);
 
         return engine;
     }

@@ -124,5 +124,6 @@
     modules:
     - BaseModule
     - LatheModule
-  - type: PacketReceiver
+    - NetworkModule
+  - type: PacketNetwork
     frequency: LatheFrequency

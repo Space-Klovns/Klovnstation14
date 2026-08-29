@@ -13,5 +13,14 @@ public sealed partial class PacketNetworkConfiguratorComponent : Component
     public List<String> Addresses = new();
 
     [DataField]
-    public ProtoId<PacketFrequencyPrototype>? Frequency;
+    public int Frequency;
+
+    [DataField]
+    public ConfiguratorMode Mode = ConfiguratorMode.Probe;
+}
+
+public enum ConfiguratorMode
+{
+    Probe,
+    Save
 }

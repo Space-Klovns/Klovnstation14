@@ -20,4 +20,7 @@ public sealed partial class PacketFrequencyPrototype : IPrototype
 
     [DataField]
     public int Frequency;
+
+    [DataField]
+    public List<ProtoId<PacketFrequencyPrototype>> ListeningFrequencies = [];
 }

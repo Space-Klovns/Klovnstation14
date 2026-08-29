@@ -16,7 +16,7 @@ public sealed partial class PacketSystem
     /// </summary>
     private Dictionary<string, PacketNetwork> _networks = new();
 
-    private string CreateNetwork(string[] addresses, int frequency)
+    public string CreateNetwork(string[] addresses, int frequency)
     {
         var networkAddress = GenerateAddress();
         var entAddresses = new List<string>();

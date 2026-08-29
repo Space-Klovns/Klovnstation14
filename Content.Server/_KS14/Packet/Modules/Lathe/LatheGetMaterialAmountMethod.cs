@@ -11,15 +11,24 @@ public sealed class LatheGetMaterialAmountMethod : ModuleMethod
 
     private int Func(int frequency, string address, string material)
     {
-        if (Module is not LatheModule latheModule)
+        if (Module is not LatheModule module)
             return 0;
 
-        var matSys = latheModule.MaterialStorageSystem;
-        var protoMan = latheModule.PrototypeManager;
+        var matSys = module.MaterialStorageSystem;
+        var packetSys = module.PacketSystem;
+        var protoMan = module.PrototypeManager;
 
-        if (!latheModule.PacketSystem.TryGetReceiver(frequency, address, out var receiver)
-            || !protoMan.TryIndex<MaterialPrototype>(material, out var materialProto))
+        if (!protoMan.TryIndex<MaterialPrototype>(material, out var materialProto))
+        {
+            module.Log(LogState.Error, "executor-log-invalid-material");
             return 0;
+        }
+
+        if (!packetSys.TryGetReceiver((module.Executor.Owner, module.Executor.Comp2), frequency, address, out var receiver))
+        {
+            module.Log(LogState.Error, "executor-log-no-device");
+            return 0;
+        }
 
         return matSys.GetMaterialAmount(receiver, materialProto);
     }

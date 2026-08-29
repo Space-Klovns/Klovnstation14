@@ -13,11 +13,14 @@ public sealed class GetNetworkMethod : ModuleMethod
 
     private string[] Func(string address)
     {
-        if (Module is not BaseModule module)
+        if (Module is not NetworkModule module)
             return [];
 
         if (!module.PacketSystem.TryGetNetwork(address, out var network))
+        {
+            module.Log(LogState.Error, "executor-log-no-network");
             return [];
+        }
 
         return network.Addresses;
     }

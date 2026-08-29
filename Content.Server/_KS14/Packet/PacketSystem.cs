@@ -1,8 +1,10 @@
 using Content.Server._KS14.Packet.Components;
 using Content.Server.Chat.Systems;
+using Content.Server.DeviceLinking.Systems;
 using Content.Server.GameTicking.Events;
 using Content.Server.Popups;
 using Content.Shared._KS14.Packets.BUI;
+using Content.Shared.DeviceLinking.Events;
 using Content.Shared.GameTicking;
 using Content.Shared.Interaction;
 using Content.Shared.Interaction.Events;
@@ -24,28 +26,25 @@ public sealed partial class PacketSystem : EntitySystem
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private UserInterfaceSystem _userInterfaceSystem = default!;
     [Dependency] private PopupSystem _popupSystem = default!;
+    [Dependency] private DeviceLinkSystem _deviceLinkSystem = default!;
 
     internal int _mainThreadId;
 
     public override void Initialize()
     {
         _mainThreadId = Environment.CurrentManagedThreadId;
-
-        InitializeModules();
+        PreInitJint();
 
         SubscribeLocalEvent<ExecutorComponent, BoundUIOpenedEvent>(SubscribeUpdateUiState);
         SubscribeLocalEvent<ExecutorComponent, SaveExecutorCommandMessage>(OnSave);
         SubscribeLocalEvent<ExecutorComponent, StartExecutionMessage>(OnExecute);
-
-        SubscribeLocalEvent<PacketNetworkConfiguratorComponent, AfterInteractEvent>(OnNetworkInteract);
-        SubscribeLocalEvent<PacketNetworkConfiguratorComponent, UseInHandEvent>(OnNetworkActivate);
-
-        SubscribeLocalEvent<ExecuteOnInteractComponent, UseInHandEvent>(OnUse);
+        SubscribeLocalEvent<ExecutorComponent, SignalReceivedEvent>(OnExecutorSignal);
 
         SubscribeLocalEvent<PacketNetworkComponent, ComponentInit>(OnPacketInit);
 
         SubscribeLocalEvent<RoundStartingEvent>(OnRoundStart);
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnCleanup);
+
     }
 
     public override void Update(float frameTime)
@@ -66,32 +65,22 @@ public sealed partial class PacketSystem : EntitySystem
         UpdateUiState(ent);
     }
 
-    private void OnSave(Entity<ExecutorComponent> ent, ref SaveExecutorCommandMessage args)
+    private void OnSave(Entity<ExecutorComponent> ent, ref SaveExecutorCommandMessage ev)
     {
-        ent.Comp.Command = args.Command;
+        ent.Comp.Command = ev.Command;
     }
 
-    private void OnExecute(Entity<ExecutorComponent> ent, ref StartExecutionMessage args)
+    private void OnExecute(Entity<ExecutorComponent> ent, ref StartExecutionMessage ev)
     {
         ExecuteCommand(ent.Comp.Command, ent);
     }
 
-    private void OnNetworkInteract(Entity<PacketNetworkConfiguratorComponent> ent, ref AfterInteractEvent ev)
+    private void OnExecutorSignal(Entity<ExecutorComponent> ent, ref SignalReceivedEvent ev)
     {
-        if (!TryComp<PacketNetworkComponent>(ev.Target, out var receiver)
-            || ent.Comp.Addresses.Contains(receiver.Address))
+        if (!ent.Comp.ListeningPorts.ContainsKey(ev.Port))
             return;
 
-        _popupSystem.PopupEntity(receiver.Address, ev.User, ev.User, PopupType.Medium);
-        ent.Comp.Addresses.Add(receiver.Address);
-    }
-
-    private void OnNetworkActivate(Entity<PacketNetworkConfiguratorComponent> ent, ref UseInHandEvent ev)
-    {
-        if (ent.Comp.Frequency == null)
-            return;
-
-        _popupSystem.PopupEntity(CreateNetwork([..ent.Comp.Addresses], GetFrequency(ent.Comp.Frequency.Value)), ev.User, ev.User, PopupType.LargeCaution);
+        OnSignal(ev.Port, ent);
     }
 
     private void UpdateUiState(Entity<ExecutorComponent> ent)
@@ -111,18 +100,10 @@ public sealed partial class PacketSystem : EntitySystem
     private void OnPacketInit(Entity<PacketNetworkComponent> ent, ref ComponentInit ev)
     {
         SetupAddress(ent);
+        ReloadFrequencies(ent);
     }
 
-    private void OnUse(Entity<ExecuteOnInteractComponent> ent, ref UseInHandEvent args)
-    {
-        if (!TryComp<PaperComponent>(ent, out var paper) ||
-            !TryComp<ExecutorComponent>(ent, out var executor))
-            return;
-
-        ExecuteCommand(paper.Content, (ent.Owner, executor));
-    }
-
-    private void OnCleanup(RoundRestartCleanupEvent args)
+    private void OnCleanup(RoundRestartCleanupEvent ev)
     {
         Dispose();
     }
@@ -131,5 +112,10 @@ public sealed partial class PacketSystem : EntitySystem
     {
         _packetEntities.Clear();
         _executorEntities.Clear();
+        _methods.Clear();
+        _modules.Clear();
+        _engineCts.Clear();
+        _frequencies.Clear();
+        _networks.Clear();
     }
 }

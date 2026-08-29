@@ -12,67 +12,98 @@ public sealed partial class PacketSystem
     /// <summary>
     ///
     /// </summary>
-    private Dictionary<string, Module> _modules = new();
+    private Dictionary<Entity<ExecutorComponent>, Dictionary<string, Module>> _modules = new();
 
     /// <summary>
     ///
     /// </summary>
-    private Dictionary<string, List<ModuleMethod>> _methods = new();
+    private Dictionary<Entity<ExecutorComponent>, Dictionary<string, List<ModuleMethod>>> _methods = new();
 
-    private void InitializeModules()
+    private List<Type> _moduleTypes = [];
+    private List<Type> _methodTypes = [];
+
+    private void PreInitJint()
     {
-        var moduleType = typeof(Module);
-
-        var modules = AppDomain.CurrentDomain.GetAssemblies()
+        _moduleTypes = AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(assembly => assembly.GetTypes())
-            .Where(type => moduleType.IsAssignableFrom(type)
+            .Where(type => typeof(Module).IsAssignableFrom(type)
                            && type.IsClass
                            && !type.IsAbstract)
             .ToList();
 
-        foreach (var module in modules)
-        {
-            object[] args = [EntityManager, _prototypeManager, this];
+        _methodTypes = AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(assembly => assembly.GetTypes())
+            .Where(type => typeof(ModuleMethod).IsAssignableFrom(type)
+                           && type.IsClass
+                           && !type.IsAbstract)
+            .ToList();
+    }
 
+    private void InitializeModules(Entity<ExecutorComponent> ent)
+    {
+        Dictionary<string, Module> modDict = [];
+
+        foreach (var module in _moduleTypes)
+        {
+            if (!ent.Comp.Modules.Contains(module.Name))
+                continue;
+
+            object[] args = [EntityManager, _prototypeManager, this];
             if (Activator.CreateInstance(module, args) is not Module moduleInstance)
                 continue;
 
-            _modules.Add(moduleInstance.ModuleId, moduleInstance);
-        }
+            moduleInstance.Executor = ent;
+            if (TryComp<PacketNetworkComponent>(moduleInstance.Executor, out var packetNetwork))
+                moduleInstance.Executor.Comp2 = packetNetwork;
 
-        InitializeMethods();
+            modDict.Add(moduleInstance.ModuleId, moduleInstance);
+        }
+        _modules.Add(ent, modDict);
+
+        InitializeMethods(ent);
     }
 
-    private void InitializeMethods()
+    private void InitializeMethods(Entity<ExecutorComponent> ent)
     {
-        var methodType = typeof(ModuleMethod);
+        Dictionary<string, List<ModuleMethod>> methodDict = [];
 
-        var methods = AppDomain.CurrentDomain.GetAssemblies()
-            .SelectMany(assembly => assembly.GetTypes())
-            .Where(type => methodType.IsAssignableFrom(type)
-                           && type.IsClass
-                           && !type.IsAbstract)
-            .ToList();
-
-        foreach (var method in methods)
+        foreach (var method in _methodTypes)
         {
-            if (Attribute.GetCustomAttribute(method, typeof(ModuleMethodAttribute)) is not ModuleMethodAttribute methodData)
+            if (Attribute.GetCustomAttribute(method, typeof(ModuleMethodAttribute)) is not ModuleMethodAttribute methodData
+                || !ent.Comp.Modules.Contains($"{methodData.Method}"))
                 continue;
 
-            if (!TryGetModule($"{methodData.Method}", out var module)
+            if (!TryGetModule(ent, $"{methodData.Method}", out var module)
                 || Activator.CreateInstance(method, module) is not ModuleMethod methodInstance)
                 continue;
 
-            if (!_methods.ContainsKey($"{methodData.Method}"))
-                _methods.Add($"{methodData.Method}", [methodInstance]);
+            if (!methodDict.ContainsKey($"{methodData.Method}"))
+                methodDict.Add($"{methodData.Method}", [methodInstance]);
             else
-                _methods[$"{methodData.Method}"].Add(methodInstance);
+                methodDict[$"{methodData.Method}"].Add(methodInstance);
         }
+
+        _methods.Add(ent, methodDict);
     }
 
-    public bool TryGetModule(string moduleName, [NotNullWhen(returnValue: true)] out Module? module)
+    public bool TryGetModule(Entity<ExecutorComponent> ent, string moduleName, [NotNullWhen(returnValue: true)] out Module? module)
     {
-        return _modules.TryGetValue(moduleName, out module);
+        module = null;
+
+        if (!_modules.TryGetValue(ent, out var moduleDict))
+            return false;
+
+        return moduleDict.TryGetValue(moduleName, out module);
+    }
+
+    public bool TryGetMethods(Entity<ExecutorComponent> ent, string moduleName, [NotNullWhen(returnValue: true)] out List<ModuleMethod>? methods)
+    {
+        methods = [];
+
+        if (!_methods.TryGetValue(ent, out var moduleDict))
+            return false;
+
+        return moduleDict.TryGetValue(moduleName, out methods);
     }
 
     public void LoadMethods(Entity<ExecutorComponent> ent)
@@ -81,8 +112,8 @@ public sealed partial class PacketSystem
 
         foreach (var moduleName in ent.Comp.Modules)
         {
-            if (!_methods.TryGetValue(moduleName, out var methods))
-                continue;
+            if (!TryGetMethods(ent, moduleName, out var methods))
+                return;
 
             foreach (var method in methods)
             {

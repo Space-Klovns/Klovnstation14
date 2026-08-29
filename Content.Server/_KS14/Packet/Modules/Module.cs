@@ -1,3 +1,4 @@
+using Content.Server._KS14.Packet.Components;
 using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.Packet;
@@ -12,6 +13,8 @@ public abstract class Module
 
     public LocId ModuleName = "packets-module-default";
 
+    public Entity<ExecutorComponent, PacketNetworkComponent?> Executor;
+
     public EntityManager EntityManager;
 
     public IPrototypeManager PrototypeManager;
@@ -24,4 +27,42 @@ public abstract class Module
         PrototypeManager = protoMan;
         PacketSystem = packet;
     }
+
+    #region Log system.
+
+    public void Log(LogState state, object msg)
+    {
+        var stringState = "";
+
+        switch (state)
+        {
+            case LogState.Info:
+                stringState = "[@]: ";
+                break;
+            case LogState.Warning:
+                stringState = "[?]: ";
+                break;
+            case LogState.Error:
+                stringState = "[!]: ";
+                break;
+            case LogState.Debug:
+                stringState = "[>]: ";
+                break;
+        }
+
+        if (state == LogState.Debug && !Executor.Comp1.DebugState)
+            return;
+
+        Executor.Comp1.Log += stringState + Loc.GetString(msg.ToString() ?? "executor-log-invalid") + "\n";
+    }
+
 }
+
+public enum LogState
+{
+    Info,
+    Warning,
+    Error,
+    Debug
+}
+    #endregion

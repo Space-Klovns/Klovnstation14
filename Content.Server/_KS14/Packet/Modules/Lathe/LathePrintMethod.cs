@@ -13,16 +13,24 @@ public sealed class LathePrintMethod : ModuleMethod
 
     private async Task Func(int frequency, string address, string item, int quantity)
     {
-        if (Module is not LatheModule latheModule)
+        if (Module is not LatheModule module)
             return;
 
-        var latheSys = latheModule.LatheSystem;
-        var protoMan = latheModule.PrototypeManager;
-        var packetSys = latheModule.PacketSystem;
+        var latheSys = module.LatheSystem;
+        var protoMan = module.PrototypeManager;
+        var packetSys = module.PacketSystem;
 
-        if (!protoMan.TryIndex<LatheRecipePrototype>(item, out var recipe) ||
-            !packetSys.TryGetReceiver(frequency, address, out var receiver))
+        if (!protoMan.TryIndex<LatheRecipePrototype>(item, out var recipe))
+        {
+            module.Log(LogState.Error, "executor-log-invalid-lathe-recipe");
             return;
+        }
+
+        if (!packetSys.TryGetReceiver((module.Executor.Owner, module.Executor.Comp2), frequency, address, out var receiver))
+        {
+            module.Log(LogState.Error, "executor-log-no-device");
+            return;
+        }
 
         packetSys.WrapSystemCall(() =>
         {

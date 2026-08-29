@@ -1,6 +1,8 @@
+using System.Linq;
 using Content.Server._KS14.Packet.Components;
 using Content.Server._KS14.Packet.Prototypes;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Utility;
 
 namespace Content.Server._KS14.Packet;
 
@@ -14,11 +16,23 @@ public sealed partial class PacketSystem
     /// String value is address.
     /// </summary>
     private Dictionary<string, Entity<PacketNetworkComponent>> _packetEntities = new();
+    private Dictionary<ProtoId<PacketFrequencyPrototype>, int> _frequencies = new();
 
     private void SetupAddress(Entity<PacketNetworkComponent> entity)
     {
         entity.Comp.Address =  GenerateAddress();
         _packetEntities.Add(entity.Comp.Address, entity);
+    }
+
+    private void ReloadFrequencies(Entity<PacketNetworkComponent> entity)
+    {
+        entity.Comp.ListeningFrequencies.Clear();
+        var freq = _prototypeManager.Index(entity.Comp.Frequency);
+
+        foreach (var listFreq in freq.ListeningFrequencies)
+        {
+            entity.Comp.ListeningFrequencies.Add(listFreq);
+        }
     }
 
     private string GenerateAddress()
@@ -40,6 +54,7 @@ public sealed partial class PacketSystem
         foreach (var freqProto in protoEnum)
         {
             freqProto.Frequency = _random.Next(freqProto.MinimalFrequency, freqProto.MaximalFrequency);
+            _frequencies.Add(freqProto, freqProto.Frequency);
         }
     }
 
@@ -54,8 +69,26 @@ public sealed partial class PacketSystem
         return _packetEntities.TryGetValue(address, out receiver) && Exists(receiver) && GetFrequency(receiver.Comp.Frequency) == freq;
     }
 
+    public bool TryGetReceiver(Entity<PacketNetworkComponent?> sender, int freq, string address, out Entity<PacketNetworkComponent> receiver)
+    {
+        if (!(_packetEntities.TryGetValue(address, out receiver) && Exists(receiver) && GetFrequency(receiver.Comp.Frequency) == freq))
+            return false;
+
+        return ValidateReceiver(receiver, sender);
+    }
+
+    public bool ValidateReceiver(Entity<PacketNetworkComponent> receiver, Entity<PacketNetworkComponent?> sender)
+    {
+        return sender.Comp is { } && receiver.Comp.ListeningFrequencies.Contains(sender.Comp.Frequency);
+    }
+
     public int GetFrequency(ProtoId<PacketFrequencyPrototype> freqProto)
     {
-        return _prototypeManager.Index(freqProto).Frequency;
+        return _frequencies.TryGetValue(freqProto, out var freq) ? freq : 0;
+    }
+
+    public ProtoId<PacketFrequencyPrototype> GetFrequency(int freqProto)
+    {
+        return _frequencies.FirstOrDefault(key => key.Value == freqProto).Key;
     }
 }

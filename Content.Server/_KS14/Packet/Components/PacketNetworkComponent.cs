@@ -20,7 +20,10 @@ public sealed partial class PacketNetworkComponent : Component
     public ProtoId<PacketFrequencyPrototype> Frequency;
 
     [DataField]
-    public List<ProtoId<PacketFrequencyPrototype>>? ListeningFrequencies = [];
+    public List<ProtoId<PacketFrequencyPrototype>> ListeningFrequencies = [];
+
+    [DataField]
+    public bool IsGlobal = false;
 
     /// <summary>
     /// Each device has different address, even if frequency is not the same.

@@ -9,18 +9,14 @@ public sealed class LogMethod : ModuleMethod
 {
     public override Module? Module { get; set; }
 
-    public override Action<int, string, object> ModuleExec { get; }
+    public override Action<object> ModuleExec { get; }
 
-    private void Func(int frequency, string address, object obj)
+    private void Func(object obj)
     {
         if (Module is not BaseModule module)
             return;
 
-        if (!module.PacketSystem.TryGetReceiver(frequency, address, out var receiver)
-            || !module.EntityManager.TryGetComponent<ExecutorComponent>(receiver, out var entity))
-            return;
-
-        entity.Log += obj+"\n";
+        module.Log(LogState.Info, obj);
     }
 
     public LogMethod(Module? module) : base(module)
