@@ -12340,7 +12340,7 @@ entities:
     - type: Transform
       pos: 12.371853,10.605072
       parent: 588
-- proto: WeaponLaserCarbinePractice
+- proto: WeaponLaserCarbineProjectilePractice
   entities:
   - uid: 931
     components:

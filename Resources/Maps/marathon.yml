@@ -148090,7 +148090,7 @@ entities:
       - 23827
       - 23828
       - 23829
-- proto: WeaponLaserCarbine
+- proto: WeaponLaserCarbineProjectile
   entities:
   - uid: 2560
     components:
@@ -148122,7 +148122,7 @@ entities:
     - type: Transform
       pos: -39.541534,54.49542
       parent: 30
-- proto: WeaponLaserCarbinePractice
+- proto: WeaponLaserCarbineProjectilePractice
   entities:
   - uid: 22315
     components:

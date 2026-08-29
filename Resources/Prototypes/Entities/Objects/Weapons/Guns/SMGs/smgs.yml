@@ -216,8 +216,8 @@
       minAngle: -19
       maxAngle: -16
     - type: Gun
-      minAngle: 21
-      maxAngle: 32
+      minAngle: 19
+      maxAngle: 29
       fireRate: 7 # KS14 change
       burstFireRate: 18
       soundGunshot:
@@ -225,7 +225,7 @@
       selectedMode: Burst
       availableModes:
       - Burst
-      - FullAuto
+      #- FullAuto # KS14: removed fullauto once again
       - SemiAuto
       shotsPerBurst: 3
       burstCooldown: 0.375

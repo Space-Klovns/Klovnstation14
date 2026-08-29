@@ -1,0 +1,232 @@
+- type: entity
+  parent: BaseGrenade
+  id: KsBaseGrenadeChemical
+  name: chemical grenade round
+  description: A grenade round that releases chemicals on impact.
+  abstract: true
+  components:
+  - type: CartridgeAmmo
+    proto: KsBulletGrenadeChemical
+  - type: ChemicalPayloadAmmo
+  - type: ChemicalPayload
+    spill: true
+    beakerSlotA: &slotDef
+      whitelist:
+        components:
+        - FitsInDispenser
+      swap: false
+    beakerSlotB: *slotDef
+  - type: ItemSlots
+  - type: ContainerContainer
+    containers:
+      BeakerSlotA: !type:ContainerSlot
+      BeakerSlotB: !type:ContainerSlot
+
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Guns/Ammunition/Explosives/chem_nade.rsi
+    layers:
+    - state: full
+      map: ["base"]
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.AmmoVisuals.Spent:
+        base:
+          False: { sprite: _KS14/Objects/Weapons/Guns/Ammunition/Explosives/chem_nade.rsi, state: full }
+          True: { sprite: Objects/Weapons/Guns/Ammunition/Explosives/explosives.rsi, state: spent }
+        stripe:
+          False: { visible: true }
+          True: { visible: false }
+
+# Constructible grenade round
+- type: entity
+  parent: KsBaseGrenadeChemical
+  id: KsGrenadeChemical
+  description: A grenade round with a chemical payload fitted on the tip.
+  components:
+  - type: Construction
+    graph: KsGrenadeChemical
+    node: finished
+  - type: Sprite
+    layers:
+    - state: empty
+      map: ["enum.AmmoVisualLayers.Base", "base"]
+  - type: GenericVisualizer
+    visuals:
+      enum.ChemicalPayloadVisuals.Slots:
+        base:
+          None: { state: empty }
+          Left: { state: left }
+          Right: { state: right }
+          Both: { state: armed }
+      enum.AmmoVisuals.Spent:
+        base:
+          False: { visible: true }
+          True: { visible: false }
+        spent:
+          False: { visible: false }
+          True: { visible: true, sprite: Objects/Weapons/Guns/Ammunition/Explosives/explosives.rsi, state: spent }
+
+
+### Incendiary
+
+- type: entity
+  parent: Beaker
+  id: KsGrenadeChemicalPresetIncendiaryBeakerA
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Phosphorus
+        Quantity: 40
+      - ReagentId: Plasma
+        Quantity: 42
+      maxVol: 82
+      temperature: 800
+
+- type: entity
+  parent: Beaker
+  id: KsGrenadeChemicalPresetIncendiaryBeakerB
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Klovnide
+        Quantity: 2
+      - ReagentId: SulfuricAcid
+        Quantity: 40
+      - ReagentId: ChlorineTrifluoride
+        Quantity: 18
+      maxVol: 80
+      temperature: 300
+
+- type: entity
+  parent: KsBaseGrenadeChemical
+  id: KsGrenadeChemicalPresetIncendiary
+  description: A grenade round that releases chemicals on impact. An orange stripe on the tip denotes an incendiary payload.
+  suffix: Preset, Incendiary
+  components:
+  - type: Sprite
+    layers:
+    - state: full
+      map: ["base"]
+    - state: stripe
+      color: '#d6651fcc'
+      map: ["stripe"]
+  - type: ChemicalPayload
+    beakerSlotA:
+      locked: true
+      startingItem: KsGrenadeChemicalPresetIncendiaryBeakerA
+    beakerSlotB:
+      locked: true
+      startingItem: KsGrenadeChemicalPresetIncendiaryBeakerB
+
+### Cryogenic
+
+- type: entity
+  parent: Beaker
+  id: KsGrenadeChemicalPresetCryogenicBeakerA
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Fresium
+        Quantity: 45
+      - ReagentId: Ice
+        Quantity: 15
+      maxVol: 80
+      temperature: 72
+
+- type: entity
+  parent: Beaker
+  id: KsGrenadeChemicalPresetCryogenicBeakerB
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Water
+        Quantity: 45
+      - ReagentId: Ice
+        Quantity: 15
+      maxVol: 80
+      temperature: 72
+
+- type: entity
+  parent: KsBaseGrenadeChemical
+  id: KsGrenadeChemicalPresetCryogenic
+  description: A grenade round that releases chemicals on impact. A deep blue stripe on the tip denotes a cryogenic payload.
+  suffix: Preset, Cryogenic
+  components:
+  - type: Sprite
+    layers:
+    - state: full
+      map: ["base"]
+    - state: stripe
+      color: '#3248d6cc'
+      map: ["stripe"]
+  - type: ChemicalPayload
+    beakerSlotA:
+      locked: true
+      startingItem: KsGrenadeChemicalPresetCryogenicBeakerA
+    beakerSlotB:
+      locked: true
+      startingItem: KsGrenadeChemicalPresetCryogenicBeakerB
+
+### Toxic
+
+- type: entity
+  parent: Beaker
+  id: KsGrenadeChemicalPresetToxicBeakerA
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Water
+        Quantity: 35
+      - ReagentId: ChloralHydrate
+        Quantity: 5
+      - ReagentId: Nocturine
+        Quantity: 10
+      - ReagentId: Hemorrhinol
+        Quantity: 10
+      maxVol: 80
+
+- type: entity
+  parent: Beaker
+  id: KsGrenadeChemicalPresetToxicBeakerB
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: Fluorosurfactant
+        Quantity: 35
+      - ReagentId: Toxin
+        Quantity: 25
+      maxVol: 80
+
+- type: entity
+  parent: KsBaseGrenadeChemical
+  id: KsGrenadeChemicalPresetToxic
+  description: A grenade round that releases chemicals on impact. A pink stripe on the tip denotes a toxic payload.
+  suffix: Preset, Toxic
+  components:
+  - type: Sprite
+    layers:
+    - state: full
+      map: ["base"]
+    - state: stripe
+      color: '#d632d6cc'
+      map: ["stripe"]
+  - type: ChemicalPayload
+    beakerSlotA:
+      locked: true
+      startingItem: KsGrenadeChemicalPresetToxicBeakerA
+    beakerSlotB:
+      locked: true
+      startingItem: KsGrenadeChemicalPresetToxicBeakerB

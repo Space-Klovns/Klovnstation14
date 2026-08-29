@@ -5,6 +5,7 @@ Installs git hooks, updates them, updates submodules, that kind of thing.
 
 import os
 import shutil
+import stat # KS14: needed to force +x on copied hooks for linux/mac compat
 import subprocess
 import sys
 import time
@@ -172,7 +173,17 @@ def install_hooks():
 
     for filename in os.listdir(hooks_source_dir):
         print("Copying hook {}".format(filename))
-        shutil.copy2(hooks_source_dir / filename, hooks_target_dir / filename)
+        target_hook = hooks_target_dir / filename
+        shutil.copy2(hooks_source_dir / filename, target_hook)
+
+        # KS14 start: git only honours file permissions on posix, and the
+        # source file's executable bit isn't guaranteed to survive checkout
+        # (core.fileMode=false, tarball/zip extraction, etc). Force it so
+        # hooks actually run on linux/mac.
+        if os.name != "nt":
+            current_mode = os.stat(target_hook).st_mode
+            os.chmod(target_hook, current_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        # KS14 end
 
     with open(INSTALLED_HOOKS_VERSION_PATH, "w") as f:
         f.write(CURRENT_HOOKS_VERSION)
