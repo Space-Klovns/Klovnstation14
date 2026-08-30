@@ -28,16 +28,8 @@ public sealed class LatheGetStoredMaterials : ModuleMethod
             return [];
         }
 
-        if (Environment.CurrentManagedThreadId == packetSys._mainThreadId)
-            return matSys.GetStoredMaterials(receiver.Owner);
-
-        packetSys.WrapSystemCall(async void () =>
-        {
-            await _channel.Writer.WriteAsync(matSys.GetStoredMaterials(receiver.Owner));
-        });
-
-        var rVal = (Dictionary<ProtoId<MaterialPrototype>, int>)await _channel.Reader.ReadAsync();
-        return rVal;
+        return await packetSys.TryWrapSystemCall(() => matSys.GetStoredMaterials(receiver.Owner),
+            _channel);
     }
 
     public LatheGetStoredMaterials(Module? module) : base(module)

@@ -25,7 +25,7 @@ public sealed class SendSignalMethod : ModuleMethod
             return;
         }
 
-        module.DeviceLinkSystem.InvokePort(receiver, portId);
+        packetSys.TryWrapSystemCall(() => module.DeviceLinkSystem.InvokePort(receiver, portId));
     }
 
     public SendSignalMethod(Module? module) : base(module)

@@ -33,17 +33,8 @@ public sealed class LatheCanPrintMethod : ModuleMethod
             return false;
         }
 
-        if (Environment.CurrentManagedThreadId == packetSys._mainThreadId)
-            return latheSys.CanProduce(receiver, recipe, quantity);
-
-        packetSys.WrapSystemCall(async void () =>
-        {
-            await _channel.Writer.WriteAsync(latheSys.CanProduce(receiver, recipe, quantity));
-        });
-
-        var rVal = await _channel.Reader.ReadAsync();
-
-        return (bool)rVal;
+        return await packetSys.TryWrapSystemCall(() =>  latheSys.CanProduce(receiver, recipe, quantity),
+            _channel);
     }
 
     public LatheCanPrintMethod(Module? module) : base(module)

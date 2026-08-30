@@ -32,7 +32,7 @@ public sealed class LathePrintMethod : ModuleMethod
             return;
         }
 
-        packetSys.WrapSystemCall(() =>
+        packetSys.TryWrapSystemCall(() =>
         {
             latheSys.TryAddToQueue(receiver, recipe, quantity);
             latheSys.TryStartProducing(receiver);

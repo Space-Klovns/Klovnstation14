@@ -11,7 +11,7 @@ public abstract class ModuleMethod
 
     public abstract object ModuleExec { get; }
 
-    public Channel<Object> _channel = Channel.CreateUnbounded<object>();
+    protected Channel<object> _channel = Channel.CreateUnbounded<object>();
 
     public ModuleMethod(Module? module) { }
 }

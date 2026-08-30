@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Content.Server._KS14.Packet.Lathe;
 using Content.Shared.Materials;
 
@@ -7,9 +8,9 @@ namespace Content.Server._KS14.Packet.Modules.Lathe;
 public sealed class LatheGetMaterialAmountMethod : ModuleMethod
 {
     public override Module? Module { get; set; }
-    public override Func<int, string, string, int> ModuleExec { get; }
+    public override Func<int, string, string, Task<int>> ModuleExec { get; }
 
-    private int Func(int frequency, string address, string material)
+    private async Task<int> Func(int frequency, string address, string material)
     {
         if (Module is not LatheModule module)
             return 0;
@@ -30,7 +31,8 @@ public sealed class LatheGetMaterialAmountMethod : ModuleMethod
             return 0;
         }
 
-        return matSys.GetMaterialAmount(receiver, materialProto);
+        return await packetSys.TryWrapSystemCall(() =>  matSys.GetMaterialAmount(receiver, materialProto),
+            _channel);
     }
 
     public LatheGetMaterialAmountMethod(Module? module) : base(module)
