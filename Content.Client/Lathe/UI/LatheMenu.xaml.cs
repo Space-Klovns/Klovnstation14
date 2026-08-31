@@ -83,7 +83,7 @@ public sealed partial class LatheMenu : FancyWindow
             {
                 ServerListButton.Visible = false;
             }
-            
+
             AmountLineEdit.SetText(latheComponent.DefaultProductionAmount.ToString());
         }
 
