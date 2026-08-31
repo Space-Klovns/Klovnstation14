@@ -5,7 +5,7 @@ namespace Content.Server._KS14.Packet;
 
 public abstract class ModuleMethod
 {
-    public abstract Module? Module { get; set; }
+    public abstract PacketModule? Module { get; set; }
 
     public string Id = "method";
 
@@ -13,5 +13,5 @@ public abstract class ModuleMethod
 
     public Channel<object> Channel { get; protected set; } = System.Threading.Channels.Channel.CreateUnbounded<object>();
 
-    public ModuleMethod(Module? module) { }
+    public ModuleMethod(PacketModule? module) { }
 }

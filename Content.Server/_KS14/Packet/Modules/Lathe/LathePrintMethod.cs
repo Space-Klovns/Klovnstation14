@@ -4,16 +4,16 @@ using Content.Shared.Research.Prototypes;
 
 namespace Content.Server._KS14.Packet.Modules.Lathe;
 
-[ModuleMethod("LatheModule")]
+[ModuleMethod("LathePacketModule")]
 public sealed class LathePrintMethod : ModuleMethod
 {
-    public override Module? Module { get; set; }
+    public override PacketModule? Module { get; set; }
 
     public override Func<int, string, string, int, Task> ModuleExec { get; }
 
     private async Task Func(int frequency, string address, string item, int quantity)
     {
-        if (Module is not LatheModule module)
+        if (Module is not LathePacketModule module)
             return;
 
         var latheSys = module.LatheSystem;
@@ -41,7 +41,7 @@ public sealed class LathePrintMethod : ModuleMethod
         await Task.Delay(recipe.CompleteTime * quantity);
     }
 
-    public LathePrintMethod(Module? module) : base(module)
+    public LathePrintMethod(PacketModule? module) : base(module)
     {
         Id = "lathe_print";
         Module = module;

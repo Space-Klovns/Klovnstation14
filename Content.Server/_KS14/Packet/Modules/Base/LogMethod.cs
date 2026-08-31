@@ -4,22 +4,22 @@ using Content.Shared.Research.Prototypes;
 
 namespace Content.Server._KS14.Packet.Modules.Base;
 
-[ModuleMethod("BaseModule")]
+[ModuleMethod("BasePacketModule")]
 public sealed class LogMethod : ModuleMethod
 {
-    public override Module? Module { get; set; }
+    public override PacketModule? Module { get; set; }
 
     public override Action<object> ModuleExec { get; }
 
     private void Func(object obj)
     {
-        if (Module is not BaseModule module)
+        if (Module is not BasePacketModule module)
             return;
 
         module.Log(LogState.Info, obj);
     }
 
-    public LogMethod(Module? module) : base(module)
+    public LogMethod(PacketModule? module) : base(module)
     {
         Id = "log";
         Module = module;

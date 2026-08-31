@@ -3,10 +3,10 @@ using Content.Server._KS14.Packet.Base;
 
 namespace Content.Server._KS14.Packet.Modules.Base;
 
-[ModuleMethod("NetworkModule")]
+[ModuleMethod("NetworkPacketModule")]
 public sealed class ReceiveDataMethod : ModuleMethod
 {
-    public override Module? Module { get; set; }
+    public override PacketModule? Module { get; set; }
 
     public override Func<Task<object>> ModuleExec { get; }
 
@@ -15,7 +15,7 @@ public sealed class ReceiveDataMethod : ModuleMethod
         return await Channel.Reader.ReadAsync();
     }
 
-    public ReceiveDataMethod(Module? module) : base(module)
+    public ReceiveDataMethod(PacketModule? module) : base(module)
     {
         Id = "data_receive";
         Module = module;

@@ -13,7 +13,7 @@ public sealed partial class PacketSystem
     /// <summary>
     ///
     /// </summary>
-    private Dictionary<Entity<ExecutorComponent>, Dictionary<string, Module>> _modules = new();
+    private Dictionary<Entity<ExecutorComponent>, Dictionary<string, PacketModule>> _modules = new();
 
     /// <summary>
     ///
@@ -27,7 +27,7 @@ public sealed partial class PacketSystem
     {
         _moduleTypes = AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(assembly => assembly.GetTypes())
-            .Where(type => typeof(Module).IsAssignableFrom(type)
+            .Where(type => typeof(PacketModule).IsAssignableFrom(type)
                            && type.IsClass
                            && !type.IsAbstract)
             .ToList();
@@ -42,7 +42,7 @@ public sealed partial class PacketSystem
 
     private void InitializeModules(Entity<ExecutorComponent> ent)
     {
-        Dictionary<string, Module> modDict = [];
+        Dictionary<string, PacketModule> modDict = [];
 
         foreach (var module in _moduleTypes)
         {
@@ -50,7 +50,7 @@ public sealed partial class PacketSystem
                 continue;
 
             object[] args = [EntityManager, _prototypeManager, this];
-            if (Activator.CreateInstance(module, args) is not Module moduleInstance)
+            if (Activator.CreateInstance(module, args) is not PacketModule moduleInstance)
                 continue;
 
             moduleInstance.Executor = ent;
@@ -87,7 +87,7 @@ public sealed partial class PacketSystem
         _methods.Add(ent, methodDict);
     }
 
-    public bool TryGetModule(Entity<ExecutorComponent> ent, string moduleName, [NotNullWhen(returnValue: true)] out Module? module)
+    public bool TryGetModule(Entity<ExecutorComponent> ent, string moduleName, [NotNullWhen(returnValue: true)] out PacketModule? module)
     {
         module = null;
 
@@ -142,7 +142,7 @@ public sealed partial class PacketSystem
     private void ReloadModules(Entity<ExecutorComponent> ent, ItemSlotsComponent slotsComponent)
     {
         DisposeModules(ent);
-        ent.Comp.Modules.Add("BaseModule"); // Basic firmware.
+        ent.Comp.Modules.Add("BasePacketModule"); // Basic firmware.
 
         foreach (var moduleSlot in slotsComponent.Slots.Values)
         {

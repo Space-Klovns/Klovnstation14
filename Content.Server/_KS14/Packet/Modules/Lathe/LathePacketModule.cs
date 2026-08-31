@@ -4,14 +4,14 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.Packet.Lathe;
 
-public sealed class LatheModule : Module
+public sealed class LathePacketModule : PacketModule
 {
     public LatheSystem LatheSystem;
     public MaterialStorageSystem MaterialStorageSystem;
 
-    public LatheModule(EntityManager manager, PrototypeManager protoMan, PacketSystem packet) : base(manager, protoMan, packet)
+    public LathePacketModule(EntityManager manager, PrototypeManager protoMan, PacketSystem packet) : base(manager, protoMan, packet)
     {
-        ModuleId = "LatheModule";
+        ModuleId = "LathePacketModule";
 
         LatheSystem = manager.System<LatheSystem>();
         MaterialStorageSystem = manager.System<MaterialStorageSystem>();

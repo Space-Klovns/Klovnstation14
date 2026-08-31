@@ -5,15 +5,15 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.Packet.Modules.Lathe;
 
-[ModuleMethod("LatheModule")]
+[ModuleMethod("LathePacketModule")]
 public sealed class LatheGetStoredMaterials : ModuleMethod
 {
-    public override Module? Module { get; set; }
+    public override PacketModule? Module { get; set; }
     public override Func<int, string, Task<Dictionary<ProtoId<MaterialPrototype>, int>>> ModuleExec { get; }
 
     private async Task<Dictionary<ProtoId<MaterialPrototype>, int>> Func(int frequency, string address)
     {
-        if (Module is not LatheModule module)
+        if (Module is not LathePacketModule module)
             return [];
 
         var matSys = module.MaterialStorageSystem;
@@ -32,7 +32,7 @@ public sealed class LatheGetStoredMaterials : ModuleMethod
             Channel);
     }
 
-    public LatheGetStoredMaterials(Module? module) : base(module)
+    public LatheGetStoredMaterials(PacketModule? module) : base(module)
     {
         Id = "lathe_get_stored_materials";
         Module = module;

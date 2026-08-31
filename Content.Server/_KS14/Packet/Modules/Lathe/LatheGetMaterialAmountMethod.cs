@@ -4,15 +4,15 @@ using Content.Shared.Materials;
 
 namespace Content.Server._KS14.Packet.Modules.Lathe;
 
-[ModuleMethod("LatheModule")]
+[ModuleMethod("LathePacketModule")]
 public sealed class LatheGetMaterialAmountMethod : ModuleMethod
 {
-    public override Module? Module { get; set; }
+    public override PacketModule? Module { get; set; }
     public override Func<int, string, string, Task<int>> ModuleExec { get; }
 
     private async Task<int> Func(int frequency, string address, string material)
     {
-        if (Module is not LatheModule module)
+        if (Module is not LathePacketModule module)
             return 0;
 
         var matSys = module.MaterialStorageSystem;
@@ -35,7 +35,7 @@ public sealed class LatheGetMaterialAmountMethod : ModuleMethod
             Channel);
     }
 
-    public LatheGetMaterialAmountMethod(Module? module) : base(module)
+    public LatheGetMaterialAmountMethod(PacketModule? module) : base(module)
     {
         Id = "lathe_get_material_amount";
         Module = module;

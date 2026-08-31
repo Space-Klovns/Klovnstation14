@@ -5,16 +5,16 @@ using Jint;
 
 namespace Content.Server._KS14.Packet.Modules.Base;
 
-[ModuleMethod("BaseModule")]
+[ModuleMethod("BasePacketModule")]
 public sealed class FrequencyMethod : ModuleMethod
 {
-    public override Module? Module { get; set; }
+    public override PacketModule? Module { get; set; }
 
     public override Action<int, string> ModuleExec { get; }
 
     private void Func(int confFreq, string operation)
     {
-        if (Module is not BaseModule module)
+        if (Module is not BasePacketModule module)
             return;
 
         if (Module.Executor.Comp2 is not { } receiver)
@@ -31,7 +31,7 @@ public sealed class FrequencyMethod : ModuleMethod
         }
     }
 
-    public FrequencyMethod(Module? module) : base(module)
+    public FrequencyMethod(PacketModule? module) : base(module)
     {
         Id = "frequency";
         Module = module;

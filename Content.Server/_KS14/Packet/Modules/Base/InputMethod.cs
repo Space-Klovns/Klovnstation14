@@ -3,22 +3,22 @@ using Content.Server._KS14.Packet.Base;
 
 namespace Content.Server._KS14.Packet.Modules.Base;
 
-[ModuleMethod("BaseModule")]
+[ModuleMethod("BasePacketModule")]
 public sealed class InputMethod : ModuleMethod
 {
-    public override Module? Module { get; set; }
+    public override PacketModule? Module { get; set; }
 
     public override Func<Task<string>> ModuleExec { get; }
 
     private async Task<string> Func()
     {
-        if (Module is not BaseModule module)
+        if (Module is not BasePacketModule module)
             return "";
 
         return (string) await Channel.Reader.ReadAsync();
     }
 
-    public InputMethod(Module? module) : base(module)
+    public InputMethod(PacketModule? module) : base(module)
     {
         Id = "input";
         Module = module;

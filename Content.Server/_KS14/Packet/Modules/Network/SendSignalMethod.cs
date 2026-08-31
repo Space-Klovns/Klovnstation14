@@ -5,16 +5,16 @@ using Content.Shared.Research.Prototypes;
 
 namespace Content.Server._KS14.Packet.Modules.Base;
 
-[ModuleMethod("NetworkModule")]
+[ModuleMethod("NetworkPacketModule")]
 public sealed class SendSignalMethod : ModuleMethod
 {
-    public override Module? Module { get; set; }
+    public override PacketModule? Module { get; set; }
 
     public override Action<int, string, string> ModuleExec { get; }
 
     private void Func(int frequency, string address, string portId)
     {
-        if (Module is not NetworkModule module)
+        if (Module is not NetworkPacketModule module)
             return;
 
         var packetSys = module.PacketSystem;
@@ -28,7 +28,7 @@ public sealed class SendSignalMethod : ModuleMethod
         packetSys.TryWrapSystemCall(() => module.DeviceLinkSystem.InvokePort(receiver, portId));
     }
 
-    public SendSignalMethod(Module? module) : base(module)
+    public SendSignalMethod(PacketModule? module) : base(module)
     {
         Id = "listen";
         Module = module;

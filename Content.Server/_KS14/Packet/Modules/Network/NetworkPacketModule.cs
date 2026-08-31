@@ -4,13 +4,13 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.Packet.Base;
 
-public sealed class NetworkModule : Module
+public sealed class NetworkPacketModule : PacketModule
 {
     public SharedDeviceLinkSystem DeviceLinkSystem;
 
-    public NetworkModule(EntityManager manager, PrototypeManager protoMan, PacketSystem packet) : base(manager, protoMan, packet)
+    public NetworkPacketModule(EntityManager manager, PrototypeManager protoMan, PacketSystem packet) : base(manager, protoMan, packet)
     {
-        ModuleId = "NetworkModule";
+        ModuleId = "NetworkPacketModule";
         DeviceLinkSystem = manager.System<SharedDeviceLinkSystem>();
     }
 }

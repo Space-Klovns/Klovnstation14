@@ -5,16 +5,16 @@ using Content.Shared.Research.Prototypes;
 
 namespace Content.Server._KS14.Packet.Modules.Base;
 
-[ModuleMethod("NetworkModule")]
+[ModuleMethod("NetworkPacketModule")]
 public sealed class SinkListenMethod : ModuleMethod
 {
-    public override Module? Module { get; set; }
+    public override PacketModule? Module { get; set; }
 
     public override Action<int, string> ModuleExec { get; }
 
     private void Func(int portId, string funcName)
     {
-        if (Module is not NetworkModule module)
+        if (Module is not NetworkPacketModule module)
             return;
 
         if (!module.PrototypeManager.TryIndex<SinkPortPrototype>(module.Executor.Comp1.SignalPortNaming + portId, out var port))
@@ -26,7 +26,7 @@ public sealed class SinkListenMethod : ModuleMethod
         module.PacketSystem.RegisterSignalMethod(port, funcName, module.Executor);
     }
 
-    public SinkListenMethod(Module? module) : base(module)
+    public SinkListenMethod(PacketModule? module) : base(module)
     {
         Id = "listen";
         Module = module;

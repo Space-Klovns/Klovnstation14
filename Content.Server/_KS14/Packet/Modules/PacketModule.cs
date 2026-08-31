@@ -7,7 +7,7 @@ namespace Content.Server._KS14.Packet;
 /// Modules. They contain methods for specific machinery (i.e Lathes).
 /// Fully hardcoded.
 /// </summary>
-public abstract class Module
+public abstract class PacketModule
 {
     public string ModuleId = "Default";
 
@@ -21,7 +21,7 @@ public abstract class Module
 
     public PacketSystem PacketSystem;
 
-    public Module(EntityManager manager, IPrototypeManager protoMan, PacketSystem packet)
+    public PacketModule(EntityManager manager, IPrototypeManager protoMan, PacketSystem packet)
     {
         EntityManager = manager;
         PrototypeManager = protoMan;

@@ -6,15 +6,15 @@ using Content.Shared.Research.Prototypes;
 
 namespace Content.Server._KS14.Packet.Modules.Lathe;
 
-[ModuleMethod("LatheModule")]
+[ModuleMethod("LathePacketModule")]
 public sealed class LatheCanPrintMethod : ModuleMethod
 {
-    public override Module? Module { get; set; }
+    public override PacketModule? Module { get; set; }
     public override Func<int, string, string, int, Task<bool>> ModuleExec { get; }
 
     private async Task<bool> Func(int frequency, string address, string item, int quantity)
     {
-        if (Module is not LatheModule module)
+        if (Module is not LathePacketModule module)
             return false;
 
         var latheSys = module.LatheSystem;
@@ -37,7 +37,7 @@ public sealed class LatheCanPrintMethod : ModuleMethod
             Channel);
     }
 
-    public LatheCanPrintMethod(Module? module) : base(module)
+    public LatheCanPrintMethod(PacketModule? module) : base(module)
     {
         Id = "lathe_can_print";
         Module = module;
