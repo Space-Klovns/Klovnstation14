@@ -34,7 +34,7 @@ public sealed class LatheCanPrintMethod : ModuleMethod
         }
 
         return await packetSys.TryWrapSystemCall(() =>  latheSys.CanProduce(receiver, recipe, quantity),
-            _channel);
+            Channel);
     }
 
     public LatheCanPrintMethod(Module? module) : base(module)

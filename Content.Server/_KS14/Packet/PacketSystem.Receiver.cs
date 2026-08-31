@@ -2,7 +2,6 @@ using System.Linq;
 using Content.Server._KS14.Packet.Components;
 using Content.Server._KS14.Packet.Prototypes;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Utility;
 
 namespace Content.Server._KS14.Packet;
 

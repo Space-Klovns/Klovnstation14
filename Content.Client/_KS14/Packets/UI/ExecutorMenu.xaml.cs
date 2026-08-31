@@ -13,12 +13,14 @@ public sealed partial class ExecutorMenu : FancyWindow
 {
     public event Action? OnExecutionButton;
     public event Action? OnSaveButton;
+    public event Action? OnLoadButton;
     public ExecutorMenu()
     {
         RobustXamlLoader.Load(this);
 
         ExecuteButton.OnPressed += _ => OnExecutionButton?.Invoke();
         SaveButton.OnPressed += _ => OnSaveButton?.Invoke();
+        LoadButton.OnPressed += _ => OnLoadButton?.Invoke();
     }
 
     public void UpdateState(ExecutorBoundUserInterfaceState state)

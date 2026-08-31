@@ -11,6 +11,7 @@
             </PanelContainer.PanelOverride>
             <Button Name="ExecuteButton" SetSize="60, 30" Margin="5 0 0 0" HorizontalAlignment="Left" Text="EXEC"></Button>
             <Button Name="SaveButton" SetSize="60, 30" Text="SAVE"></Button>
+            <Button Name="LoadButton" SetSize="60, 30" Margin="-5 0 0 0" HorizontalAlignment="Right" Text="LOAD"></Button>
         </PanelContainer>
         <PanelContainer Name="Data" SetSize="200, 350" VerticalAlignment="Top" Margin="-15 0 0 0">
             <PanelContainer.PanelOverride>

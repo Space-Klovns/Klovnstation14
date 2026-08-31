@@ -1,17 +1,10 @@
-using System.Threading.Channels;
 using Content.Server._KS14.Packet.Components;
-using Content.Server.Chat.Systems;
 using Content.Server.DeviceLinking.Systems;
 using Content.Server.GameTicking.Events;
-using Content.Server.Popups;
 using Content.Shared._KS14.Packets.BUI;
+using Content.Shared.Containers.ItemSlots;
 using Content.Shared.DeviceLinking.Events;
 using Content.Shared.GameTicking;
-using Content.Shared.Interaction;
-using Content.Shared.Interaction.Events;
-using Content.Shared.Paper;
-using Content.Shared.Popups;
-using Jint;
 using Robust.Server.GameObjects;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
@@ -26,10 +19,9 @@ public sealed partial class PacketSystem : EntitySystem
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private UserInterfaceSystem _userInterfaceSystem = default!;
-    [Dependency] private PopupSystem _popupSystem = default!;
     [Dependency] private DeviceLinkSystem _deviceLinkSystem = default!;
 
-    internal int _mainThreadId;
+    private int _mainThreadId;
 
     public override void Initialize()
     {
@@ -39,6 +31,8 @@ public sealed partial class PacketSystem : EntitySystem
         SubscribeLocalEvent<ExecutorComponent, BoundUIOpenedEvent>(SubscribeUpdateUiState);
         SubscribeLocalEvent<ExecutorComponent, SaveExecutorCommandMessage>(OnSave);
         SubscribeLocalEvent<ExecutorComponent, StartExecutionMessage>(OnExecute);
+        SubscribeLocalEvent<ExecutorComponent, ReloadModulesMessage>(OnModuleReload);
+
         SubscribeLocalEvent<ExecutorComponent, SignalReceivedEvent>(OnExecutorSignal);
 
         SubscribeLocalEvent<PacketNetworkComponent, ComponentInit>(OnPacketInit);
@@ -74,6 +68,14 @@ public sealed partial class PacketSystem : EntitySystem
     private void OnExecute(Entity<ExecutorComponent> ent, ref StartExecutionMessage ev)
     {
         ExecuteCommand(ent.Comp.Command, ent);
+    }
+
+    private void OnModuleReload(Entity<ExecutorComponent> ent, ref ReloadModulesMessage ev)
+    {
+        if (!TryComp<ItemSlotsComponent>(ent, out var slotComponent))
+            return;
+
+        ReloadModules(ent, slotComponent);
     }
 
     private void OnExecutorSignal(Entity<ExecutorComponent> ent, ref SignalReceivedEvent ev)

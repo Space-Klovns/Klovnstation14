@@ -32,7 +32,7 @@ public sealed class LatheGetMaterialAmountMethod : ModuleMethod
         }
 
         return await packetSys.TryWrapSystemCall(() =>  matSys.GetMaterialAmount(receiver, materialProto),
-            _channel);
+            Channel);
     }
 
     public LatheGetMaterialAmountMethod(Module? module) : base(module)

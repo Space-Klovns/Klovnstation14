@@ -49,6 +49,9 @@ namespace Content.Shared._KS14.Packets.BUI
     }
 
     [Serializable, NetSerializable]
+    public sealed class ReloadModulesMessage : BoundUserInterfaceMessage;
+
+    [Serializable, NetSerializable]
     public sealed class ExecutorBoundUserInterfaceState : BoundUserInterfaceState
     {
         public int MaxStatements;

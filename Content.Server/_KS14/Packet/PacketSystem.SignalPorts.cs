@@ -13,10 +13,7 @@ public sealed partial class PacketSystem
         for (var i = 0; i < ent.Comp.PortCount; i++)
         {
             if (!_prototypeManager.TryIndex<SinkPortPrototype>(ent.Comp.SignalPortNaming + i, out var port))
-            {
-                Logger.Info("couldnt," + ent.Comp.SignalPortNaming + i);
                 continue;
-            }
 
             ports.Add(port);
         }

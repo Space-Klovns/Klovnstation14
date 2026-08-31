@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Server._KS14.Packet.Components;
+using Content.Shared.Containers.ItemSlots;
 
 namespace Content.Server._KS14.Packet;
 
@@ -106,6 +107,22 @@ public sealed partial class PacketSystem
         return moduleDict.TryGetValue(moduleName, out methods);
     }
 
+    public bool TryFindMethod(List<ModuleMethod> methods, Type methodType, [NotNullWhen(returnValue: true)] out ModuleMethod? foundMethod)
+    {
+        foundMethod = null;
+
+        foreach (var method in methods)
+        {
+            if (method.GetType() != methodType)
+                continue;
+
+            foundMethod = method;
+            return true;
+        }
+
+        return false;
+    }
+
     public void LoadMethods(Entity<ExecutorComponent> ent)
     {
         var engine = EnsureEngine(ent);
@@ -120,5 +137,28 @@ public sealed partial class PacketSystem
                 engine.SetValue(method.Id, method.ModuleExec);
             }
         }
+    }
+
+    private void ReloadModules(Entity<ExecutorComponent> ent, ItemSlotsComponent slotsComponent)
+    {
+        DisposeModules(ent);
+        ent.Comp.Modules.Add("BaseModule"); // Basic firmware.
+
+        foreach (var moduleSlot in slotsComponent.Slots.Values)
+        {
+            if (!TryComp<ExecutorModuleComponent>(moduleSlot.Item, out var moduleName))
+                return;
+
+            ent.Comp.Modules.Add(moduleName.ModuleName);
+        }
+
+        InitializeModules(ent);
+    }
+
+    private void DisposeModules(Entity<ExecutorComponent> ent)
+    {
+        ent.Comp.Modules.Clear();
+        _modules.Remove(ent);
+        _methods.Remove(ent);
     }
 }

@@ -29,7 +29,7 @@ public sealed class LatheGetStoredMaterials : ModuleMethod
         }
 
         return await packetSys.TryWrapSystemCall(() => matSys.GetStoredMaterials(receiver.Owner),
-            _channel);
+            Channel);
     }
 
     public LatheGetStoredMaterials(Module? module) : base(module)

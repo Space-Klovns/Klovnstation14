@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Content.Server._KS14.Packet.Components;
-using Content.Server._KS14.Packet.Prototypes;
-using Robust.Shared.Prototypes;
+using Content.Server._KS14.Packet.Modules.Base;
 
 namespace Content.Server._KS14.Packet;
 
@@ -39,4 +38,18 @@ public sealed partial class PacketSystem
     {
         return _networks.TryGetValue(address, out network);
     }
+
+    #region Data
+
+    public void SendData(object data, EntityUid receiver, ExecutorComponent? executorComponent = null)
+    {
+        if (!Resolve(receiver, ref executorComponent)
+            || !TryGetMethods((receiver, executorComponent), "NetworkModule", out var methods)
+            || !TryFindMethod(methods, typeof(ReceiveDataMethod),  out var method))
+            return;
+
+        method.Channel.Writer.WriteAsync(data);
+    }
+
+    #endregion
 }

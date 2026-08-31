@@ -21,6 +21,7 @@ namespace Content.Client._KS14.Packets.UI
 
             _menu.OnExecutionButton += OnExecute;
             _menu.OnSaveButton += OnSave;
+            _menu.OnLoadButton += OnLoad;
         }
 
         protected override void Dispose(bool disposing)
@@ -37,6 +38,11 @@ namespace Content.Client._KS14.Packets.UI
         private void OnExecute()
         {
             SendMessage(new StartExecutionMessage());
+        }
+
+        private void OnLoad()
+        {
+            SendMessage(new ReloadModulesMessage());
         }
 
         protected override void UpdateState(BoundUserInterfaceState state)

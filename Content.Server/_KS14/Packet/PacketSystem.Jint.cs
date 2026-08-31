@@ -33,7 +33,7 @@ public sealed partial class PacketSystem
             ReloadFrequencies((executor, receiver));
 
         var engine = EnsureEngine(executor);
-        var token = EnsureToken(engine);
+        EnsureToken(engine);
 
         try
         {
