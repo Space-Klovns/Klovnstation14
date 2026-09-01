@@ -43,9 +43,14 @@ public sealed partial class PacketSystem
 
     public void SendData(object data, EntityUid receiver, ExecutorComponent? executorComponent = null)
     {
+        SendData(data, receiver, typeof(ReceiveDataMethod), executorComponent);
+    }
+
+    public void SendData(object data, EntityUid receiver, Type methodType, ExecutorComponent? executorComponent = null)
+    {
         if (!Resolve(receiver, ref executorComponent)
             || !TryGetMethods((receiver, executorComponent), "NetworkPacketModule", out var methods)
-            || !TryFindMethod(methods, typeof(ReceiveDataMethod),  out var method))
+            || !TryFindMethod(methods, methodType,  out var method))
             return;
 
         method.Channel.Writer.WriteAsync(data);

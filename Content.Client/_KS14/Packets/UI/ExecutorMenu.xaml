@@ -11,7 +11,9 @@
             </PanelContainer.PanelOverride>
             <Button Name="ExecuteButton" SetSize="60, 30" Margin="5 0 0 0" HorizontalAlignment="Left" Text="EXEC"></Button>
             <Button Name="SaveButton" SetSize="60, 30" Text="SAVE"></Button>
-            <Button Name="LoadButton" SetSize="60, 30" Margin="-5 0 0 0" HorizontalAlignment="Right" Text="LOAD"></Button>
+            <Button Name="LoadButton" SetSize="60, 30" Margin="-5 0 0 0" HorizontalAlignment="Right" Text="UPDT"></Button>
+            <Button Name="TerminateButton" SetSize="60, 30" Text="KILL" VerticalAlignment="Bottom" HorizontalAlignment="Left"></Button>
+            <Button Name="SendInputButton" SetSize="60, 30" Text="SEND" VerticalAlignment="Bottom" HorizontalAlignment="Right"></Button>
         </PanelContainer>
         <PanelContainer Name="Data" SetSize="200, 350" VerticalAlignment="Top" Margin="-15 0 0 0">
             <PanelContainer.PanelOverride>
@@ -33,12 +35,15 @@
             <gfx:StyleBoxFlat BackgroundColor="#000000" />
         </PanelContainer.PanelOverride>
         <PanelContainer SetSize="350, 550" Name="OutputContainer">
-            <Label Name="ExecutorLog" Text="" VerticalAlignment="Top" Access="Public"></Label>
+            <Label Name="ExecutorLog" Text="" ClipText="True" VerticalAlignment="Top" Access="Public"></Label>
         </PanelContainer>
     </PanelContainer>
     <PanelContainer Name="StandartInput" SetSize="1085, 60" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="15 10 15 10">
         <PanelContainer.PanelOverride>
             <gfx:StyleBoxFlat BackgroundColor="#000000" />
         </PanelContainer.PanelOverride>
+        <PanelContainer SetSize="1085, 60" Name="InputContainer">
+            <TextEdit Name="DataInput" Access="Public" />
+        </PanelContainer>
     </PanelContainer>
 </controls:FancyWindow>

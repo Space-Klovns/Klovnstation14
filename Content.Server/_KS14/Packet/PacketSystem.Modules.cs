@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Server._KS14.Packet.Components;
 using Content.Shared.Containers.ItemSlots;
+using Content.Shared.DeviceLinking;
 
 namespace Content.Server._KS14.Packet;
 
@@ -139,9 +140,9 @@ public sealed partial class PacketSystem
         }
     }
 
-    private void ReloadModules(Entity<ExecutorComponent> ent, ItemSlotsComponent slotsComponent)
+    private void ReloadEngine(Entity<ExecutorComponent> ent, ItemSlotsComponent slotsComponent)
     {
-        DisposeModules(ent);
+        DisposeEngine(ent);
         ent.Comp.Modules.Add("BasePacketModule"); // Basic firmware.
 
         foreach (var moduleSlot in slotsComponent.Slots.Values)
@@ -152,13 +153,20 @@ public sealed partial class PacketSystem
             ent.Comp.Modules.Add(moduleName.ModuleName);
         }
 
-        InitializeModules(ent);
+        EnsureEngine(ent);
     }
 
-    private void DisposeModules(Entity<ExecutorComponent> ent)
+    private void DisposeEngine(Entity<ExecutorComponent> ent)
     {
         ent.Comp.Modules.Clear();
+        RemComp<DeviceLinkSinkComponent>(ent);
         _modules.Remove(ent);
         _methods.Remove(ent);
+
+        if (!_executorEntities.Remove(ent, out var engine))
+            return;
+
+        _engineCts.Remove(engine);
+        engine.Dispose();
     }
 }

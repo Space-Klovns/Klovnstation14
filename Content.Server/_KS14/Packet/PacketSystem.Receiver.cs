@@ -76,6 +76,34 @@ public sealed partial class PacketSystem
         return ValidateReceiver(receiver, sender);
     }
 
+    public bool TryRandomReceiver(Entity<ExecutorComponent> sender,
+        int freq,
+        int range,
+        out Entity<PacketNetworkComponent> receiver)
+    {
+        var xform = Transform(sender);
+        var closeEntities = new List<Entity<PacketNetworkComponent>>();
+
+        foreach (var packetEntity in _packetEntities.Values)
+        {
+            var packetTransform = Transform(packetEntity);
+
+            if (xform.Coordinates.TryDistance(EntityManager, packetTransform.Coordinates, out var distance)
+                && distance <= range
+                && GetFrequency(packetEntity.Comp.Frequency) == freq)
+                closeEntities.Add(packetEntity);
+        }
+
+        if (closeEntities.Count <= 0)
+        {
+            receiver = default;
+            return false;
+        }
+
+        receiver = closeEntities[_random.Next(closeEntities.Count)];
+        return true;
+    }
+
     public bool ValidateReceiver(Entity<PacketNetworkComponent> receiver, Entity<PacketNetworkComponent?> sender)
     {
         return sender.Comp is { } && receiver.Comp.ListeningFrequencies.Contains(sender.Comp.Frequency);

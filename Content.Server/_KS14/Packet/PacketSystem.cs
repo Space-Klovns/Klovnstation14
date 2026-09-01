@@ -1,4 +1,5 @@
 using Content.Server._KS14.Packet.Components;
+using Content.Server._KS14.Packet.Modules.Base;
 using Content.Server.DeviceLinking.Systems;
 using Content.Server.GameTicking.Events;
 using Content.Shared._KS14.Packets.BUI;
@@ -6,6 +7,7 @@ using Content.Shared.Containers.ItemSlots;
 using Content.Shared.DeviceLinking.Events;
 using Content.Shared.GameTicking;
 using Robust.Server.GameObjects;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 
@@ -20,6 +22,7 @@ public sealed partial class PacketSystem : EntitySystem
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private UserInterfaceSystem _userInterfaceSystem = default!;
     [Dependency] private DeviceLinkSystem _deviceLinkSystem = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
 
     private int _mainThreadId;
 
@@ -32,6 +35,8 @@ public sealed partial class PacketSystem : EntitySystem
         SubscribeLocalEvent<ExecutorComponent, SaveExecutorCommandMessage>(OnSave);
         SubscribeLocalEvent<ExecutorComponent, StartExecutionMessage>(OnExecute);
         SubscribeLocalEvent<ExecutorComponent, ReloadModulesMessage>(OnModuleReload);
+        SubscribeLocalEvent<ExecutorComponent, TerminateExecutorMessage>(OnTerminate);
+        SubscribeLocalEvent<ExecutorComponent, InputExecutorMessage>(OnInput);
 
         SubscribeLocalEvent<ExecutorComponent, SignalReceivedEvent>(OnExecutorSignal);
 
@@ -47,6 +52,8 @@ public sealed partial class PacketSystem : EntitySystem
         UpdateSystemCalls();
         foreach (var (uid, _) in _executorEntities)
         {
+            uid.Comp.CurrentCooldown -= TimeSpan.FromSeconds(frameTime);
+
             if (uid.Comp.Log == string.Empty)
                 continue;
 
@@ -67,7 +74,14 @@ public sealed partial class PacketSystem : EntitySystem
 
     private void OnExecute(Entity<ExecutorComponent> ent, ref StartExecutionMessage ev)
     {
-        ExecuteCommand(ent.Comp.Command, ent);
+        if (ent.Comp.CurrentCooldown != TimeSpan.Zero)
+        {
+            _audioSystem.PlayEntity(ent.Comp.ExecutionFailSound, ev.Actor, ent);
+            return;
+        }
+
+        TryExecute(ent.Comp.Command, ent, ev.Actor);
+        ent.Comp.CurrentCooldown += ent.Comp.ExecutionCooldown;
     }
 
     private void OnModuleReload(Entity<ExecutorComponent> ent, ref ReloadModulesMessage ev)
@@ -75,7 +89,17 @@ public sealed partial class PacketSystem : EntitySystem
         if (!TryComp<ItemSlotsComponent>(ent, out var slotComponent))
             return;
 
-        ReloadModules(ent, slotComponent);
+        ReloadEngine(ent, slotComponent);
+    }
+
+    private void OnTerminate(Entity<ExecutorComponent> ent, ref TerminateExecutorMessage ev)
+    {
+        Cancel(ent);
+    }
+
+    private void OnInput(Entity<ExecutorComponent> ent, ref InputExecutorMessage ev)
+    {
+        SendData(ev.Input, ent, typeof(InputMethod), ent.Comp);
     }
 
     private void OnExecutorSignal(Entity<ExecutorComponent> ent, ref SignalReceivedEvent ev)

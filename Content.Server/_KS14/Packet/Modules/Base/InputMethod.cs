@@ -12,9 +12,6 @@ public sealed class InputMethod : ModuleMethod
 
     private async Task<string> Func()
     {
-        if (Module is not BasePacketModule module)
-            return "";
-
         return (string) await Channel.Reader.ReadAsync();
     }
 

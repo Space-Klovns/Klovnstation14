@@ -22,6 +22,8 @@ namespace Content.Client._KS14.Packets.UI
             _menu.OnExecutionButton += OnExecute;
             _menu.OnSaveButton += OnSave;
             _menu.OnLoadButton += OnLoad;
+            _menu.OnTerminateButton += OnTerminate;
+            _menu.OnSendInputButton += OnSendInput;
         }
 
         protected override void Dispose(bool disposing)
@@ -43,6 +45,16 @@ namespace Content.Client._KS14.Packets.UI
         private void OnLoad()
         {
             SendMessage(new ReloadModulesMessage());
+        }
+
+        private void OnTerminate()
+        {
+            SendMessage(new TerminateExecutorMessage());
+        }
+
+        private void OnSendInput()
+        {
+            SendMessage(new InputExecutorMessage(Rope.Collapse(_menu?.DataInput.TextRope ?? Rope.Leaf.Empty)));
         }
 
         protected override void UpdateState(BoundUserInterfaceState state)

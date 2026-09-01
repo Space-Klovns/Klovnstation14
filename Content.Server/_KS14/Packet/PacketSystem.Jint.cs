@@ -26,14 +26,29 @@ public sealed partial class PacketSystem
         options.MaxStatements(25);
     });
 
-    public void ExecuteCommand(string command, Entity<ExecutorComponent> executor)
+    public void TryExecute(string command, Entity<ExecutorComponent> executor, EntityUid actor)
+    {
+        if (executor.Comp.CurrentCooldown != TimeSpan.Zero)
+        {
+            _audioSystem.PlayEntity(executor.Comp.ExecutionFailSound,actor, executor);
+            return;
+        }
+
+        if (command.Length >= executor.Comp.MaxCommandLength)
+            return;
+
+        ExecuteCommand(command, executor);
+
+        executor.Comp.CurrentCooldown += executor.Comp.ExecutionCooldown;
+    }
+
+    private void ExecuteCommand(string command, Entity<ExecutorComponent> executor)
     {
         executor.Comp.ListeningPorts.Clear(); // Dispose ports to init them again.
         if (TryComp<PacketNetworkComponent>(executor, out var receiver))
             ReloadFrequencies((executor, receiver));
 
         var engine = EnsureEngine(executor);
-        EnsureToken(engine);
 
         try
         {
@@ -45,7 +60,15 @@ public sealed partial class PacketSystem
         }
     }
 
-    public Engine EnsureEngine(Entity<ExecutorComponent> executor)
+    private void Cancel(Entity<ExecutorComponent> executor)
+    {
+        var engine = EnsureEngine(executor);
+        var cts = EnsureToken(engine);
+
+        cts.Cancel();
+    }
+
+    private Engine EnsureEngine(Entity<ExecutorComponent> executor)
     {
         if (_executorEntities.TryGetValue(executor, out var exEngine))
             return exEngine;
@@ -69,7 +92,7 @@ public sealed partial class PacketSystem
         return engine;
     }
 
-    public CancellationTokenSource EnsureToken(Engine engine)
+    private CancellationTokenSource EnsureToken(Engine engine)
     {
         if (_engineCts.TryGetValue(engine, out var cts))
             return cts;

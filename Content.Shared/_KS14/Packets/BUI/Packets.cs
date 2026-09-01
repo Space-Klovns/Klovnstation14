@@ -49,6 +49,20 @@ namespace Content.Shared._KS14.Packets.BUI
     }
 
     [Serializable, NetSerializable]
+    public sealed class InputExecutorMessage : BoundUserInterfaceMessage
+    {
+        public string Input;
+
+        public InputExecutorMessage(string input)
+        {
+            Input = input;
+        }
+    }
+
+    [Serializable, NetSerializable]
+    public sealed class TerminateExecutorMessage : BoundUserInterfaceMessage;
+
+    [Serializable, NetSerializable]
     public sealed class ReloadModulesMessage : BoundUserInterfaceMessage;
 
     [Serializable, NetSerializable]
