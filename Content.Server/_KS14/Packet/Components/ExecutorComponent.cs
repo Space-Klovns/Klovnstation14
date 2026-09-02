@@ -36,6 +36,8 @@ public sealed partial class ExecutorComponent : Component
     /// </summary>
     [DataField]
     public TimeSpan ExecutionCooldown = TimeSpan.FromSeconds(5);
+
+    [DataField]
     public TimeSpan CurrentCooldown = TimeSpan.Zero;
 
     /// <summary>

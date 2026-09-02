@@ -35,7 +35,10 @@ public sealed partial class PacketSystem
     public void TryWrapSystemCall(Action action)
     {
         if (Environment.CurrentManagedThreadId == _mainThreadId)
+        {
             action.Invoke();
+            return;
+        }
 
         WrapSystemCall(action);
     }

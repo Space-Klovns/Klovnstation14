@@ -42,6 +42,8 @@ public sealed partial class PacketSystem : EntitySystem
 
         SubscribeLocalEvent<PacketNetworkComponent, ComponentInit>(OnPacketInit);
 
+        SubscribeLocalEvent<FrequenciesPaperComponent, ComponentInit>(OnFrequencyPaperInit);
+
         SubscribeLocalEvent<RoundStartingEvent>(OnRoundStart);
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnCleanup);
 
@@ -74,14 +76,7 @@ public sealed partial class PacketSystem : EntitySystem
 
     private void OnExecute(Entity<ExecutorComponent> ent, ref StartExecutionMessage ev)
     {
-        if (ent.Comp.CurrentCooldown != TimeSpan.Zero)
-        {
-            _audioSystem.PlayEntity(ent.Comp.ExecutionFailSound, ev.Actor, ent);
-            return;
-        }
-
         TryExecute(ent.Comp.Command, ent, ev.Actor);
-        ent.Comp.CurrentCooldown += ent.Comp.ExecutionCooldown;
     }
 
     private void OnModuleReload(Entity<ExecutorComponent> ent, ref ReloadModulesMessage ev)
@@ -99,7 +94,7 @@ public sealed partial class PacketSystem : EntitySystem
 
     private void OnInput(Entity<ExecutorComponent> ent, ref InputExecutorMessage ev)
     {
-        SendData(ev.Input, ent, typeof(InputMethod), ent.Comp);
+        SendData(ev.Input, ent, typeof(InputMethod), "BasePacketModule", ent.Comp);
     }
 
     private void OnExecutorSignal(Entity<ExecutorComponent> ent, ref SignalReceivedEvent ev)
@@ -128,6 +123,11 @@ public sealed partial class PacketSystem : EntitySystem
     {
         SetupAddress(ent);
         ReloadFrequencies(ent);
+    }
+
+    private void OnFrequencyPaperInit(Entity<FrequenciesPaperComponent> ent, ref ComponentInit ev)
+    {
+        GenerateFrequenciesPaper(ent);
     }
 
     private void OnCleanup(RoundRestartCleanupEvent ev)

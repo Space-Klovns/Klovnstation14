@@ -58,6 +58,8 @@ public sealed partial class PacketSystem
             if (TryComp<PacketNetworkComponent>(moduleInstance.Executor, out var packetNetwork))
                 moduleInstance.Executor.Comp2 = packetNetwork;
 
+            Logger.Info(module.Name);
+
             modDict.Add(moduleInstance.ModuleId, moduleInstance);
         }
         _modules.Add(ent, modDict);
@@ -83,6 +85,8 @@ public sealed partial class PacketSystem
                 methodDict.Add($"{methodData.Method}", [methodInstance]);
             else
                 methodDict[$"{methodData.Method}"].Add(methodInstance);
+
+            Logger.Info(method.Name);
         }
 
         _methods.Add(ent, methodDict);
@@ -142,6 +146,7 @@ public sealed partial class PacketSystem
 
     private void ReloadEngine(Entity<ExecutorComponent> ent, ItemSlotsComponent slotsComponent)
     {
+        Logger.Info("Reaload");
         DisposeEngine(ent);
         ent.Comp.Modules.Add("BasePacketModule"); // Basic firmware.
 

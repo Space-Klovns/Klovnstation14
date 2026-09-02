@@ -28,7 +28,7 @@ public sealed partial class PacketSystem
 
     public void TryExecute(string command, Entity<ExecutorComponent> executor, EntityUid actor)
     {
-        if (executor.Comp.CurrentCooldown != TimeSpan.Zero)
+        if (executor.Comp.CurrentCooldown > TimeSpan.Zero)
         {
             _audioSystem.PlayEntity(executor.Comp.ExecutionFailSound,actor, executor);
             return;
@@ -36,6 +36,8 @@ public sealed partial class PacketSystem
 
         if (command.Length >= executor.Comp.MaxCommandLength)
             return;
+
+        Logger.Info("Execute!");
 
         ExecuteCommand(command, executor);
 
@@ -73,13 +75,13 @@ public sealed partial class PacketSystem
         if (_executorEntities.TryGetValue(executor, out var exEngine))
             return exEngine;
 
-        var cts = new CancellationTokenSource(TimeSpan.FromMinutes(3));
+        var cts = new CancellationTokenSource();
         var engine = new Engine(options =>
         {
             options.MaxStatements(executor.Comp.MaximumExecutionStatements);
             options.LimitMemory(executor.Comp.MemoryAllocation);
             options.ExperimentalFeatures = ExperimentalFeature.TaskInterop;
-            options.Constraints.PromiseTimeout = TimeSpan.FromMinutes(3);
+            options.Constraints.PromiseTimeout = TimeSpan.FromSeconds(40);
         });
 
         _engineCts.Add(engine, cts);

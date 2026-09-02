@@ -22,10 +22,10 @@ public sealed class FrequencyMethod : ModuleMethod
 
         switch (operation)
         {
-            case "allow":
+            case "ALLOW":
                 receiver.ListeningFrequencies.Add(module.PacketSystem.GetFrequency(confFreq));
                 break;
-            case "deny":
+            case "DENY":
                 receiver.ListeningFrequencies.Remove(module.PacketSystem.GetFrequency(confFreq));
                 break;
         }

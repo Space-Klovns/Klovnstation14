@@ -1,6 +1,8 @@
 using System.Linq;
+using System.Text;
 using Content.Server._KS14.Packet.Components;
 using Content.Server._KS14.Packet.Prototypes;
+using Content.Shared.Paper;
 using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.Packet;
@@ -21,6 +23,23 @@ public sealed partial class PacketSystem
     {
         entity.Comp.Address =  GenerateAddress();
         _packetEntities.Add(entity.Comp.Address, entity);
+    }
+
+    private void GenerateFrequenciesPaper(Entity<FrequenciesPaperComponent> paper)
+    {
+        if (!TryComp<PaperComponent>(paper, out var paperComponent))
+            return;
+
+        StringBuilder builder = new();
+
+        builder.Append(Loc.GetString("packet-frequencies-paper-label"));
+
+        foreach (var freq in _frequencies)
+        {
+            builder.Append(freq.Key.Id + ": "  + freq.Value + "\n");
+        }
+
+        paperComponent.Content = builder.ToString();
     }
 
     private void ReloadFrequencies(Entity<PacketNetworkComponent> entity)

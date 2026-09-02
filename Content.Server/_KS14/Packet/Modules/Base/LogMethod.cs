@@ -16,7 +16,7 @@ public sealed class LogMethod : ModuleMethod
         if (Module is not BasePacketModule module)
             return;
 
-        module.Log(LogState.Info, obj);
+        module.PacketSystem.TryWrapSystemCall(() => module.Log(LogState.Info, obj));
     }
 
     public LogMethod(PacketModule? module) : base(module)

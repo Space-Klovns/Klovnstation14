@@ -122,8 +122,9 @@
           type: WiresBoundUserInterface
   - type: Executor
     modules:
-    - BaseModule
-    - LatheModule
-    - NetworkModule
+    - BasePacketModule
+    - LathePacketModule
+    - NetworkPacketModule
+    - FaxPacketModule
   - type: PacketNetwork
     frequency: LatheFrequency

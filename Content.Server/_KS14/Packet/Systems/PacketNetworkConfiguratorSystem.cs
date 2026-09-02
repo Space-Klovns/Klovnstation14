@@ -29,7 +29,17 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
         SubscribeLocalEvent<PacketNetworkConfiguratorComponent, UseInHandEvent>(OnUse);
         SubscribeLocalEvent<PacketNetworkConfiguratorComponent, AfterInteractEvent>(OnInteract);
         SubscribeLocalEvent<PacketNetworkConfiguratorComponent, GetVerbsEvent<AlternativeVerb>>(OnAltInteract);
-        SubscribeLocalEvent<PacketNetworkConfiguratorComponent, GetVerbsEvent<AlternativeVerb>>(OnAltInteractExecutor);
+        SubscribeLocalEvent<ExecutorComponent, GetVerbsEvent<AlternativeVerb>>(OnExecutorInteract);
+    }
+
+    private void SwitchMode(Entity<PacketNetworkConfiguratorComponent> ent, EntityUid user)
+    {
+        ent.Comp.Mode = 1 - ent.Comp.Mode;
+
+        if (ent.Comp.Mode == ConfiguratorMode.Probe)
+            _sharedPopupSystem.PopupEntity(Loc.GetString("packet-configurator-switch-probe"), ent, user);
+        else
+            _sharedPopupSystem.PopupEntity(Loc.GetString("packet-configurator-switch-save"), ent, user);
     }
 
     private void OnUse(Entity<PacketNetworkConfiguratorComponent> ent, ref UseInHandEvent ev)
@@ -48,7 +58,7 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
 
         if (TryComp<PaperComponent>(target, out var paper))
         {
-            TryReadPaper(ent, paper);
+            TryReadPaper(ent, paper, ev.User);
             return;
         }
 
@@ -62,33 +72,35 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
             OnSaveInteract(ent, (target, packetNetwork), ev.User);
     }
 
+    private void OnExecutorInteract(Entity<ExecutorComponent> ent, ref GetVerbsEvent<AlternativeVerb> ev)
+    {
+        if (!ev.CanAccess || !ev.CanInteract)
+            return;
+
+        var user = ev.User;
+
+        var executorVerb = new AlternativeVerb()
+        {
+            Text = Loc.GetString("packet-configurator-open-executor"),
+            Icon = new SpriteSpecifier.Texture(new ResPath("/Textures/Interface/VerbIcons/in.svg.192dpi.png")),
+            Act = () => { _userInterfaceSystem.TryOpenUi(ent.Owner, ExecutorUiKey.Key, user); }
+        };
+
+        ev.Verbs.Add(executorVerb);
+    }
+
     private void OnAltInteract(Entity<PacketNetworkConfiguratorComponent> ent, ref GetVerbsEvent<AlternativeVerb> ev)
     {
-        if (ev.Target == ent.Owner)
+        if (!ev.CanAccess || !ev.CanInteract)
             return;
+
+        var user = ev.User;
 
         var verb = new AlternativeVerb()
         {
             Text = Loc.GetString("packet-configurator-switch-mode"),
             Icon = new SpriteSpecifier.Texture(new ResPath("/Textures/Interface/VerbIcons/in.svg.192dpi.png")),
-            Act = () => { ent.Comp.Mode = 1 - ent.Comp.Mode; }
-        };
-
-        ev.Verbs.Add(verb);
-    }
-    private void OnAltInteractExecutor(Entity<PacketNetworkConfiguratorComponent> ent, ref GetVerbsEvent<AlternativeVerb> ev)
-    {
-        var target = ev.Target;
-        var user = ev.User;
-
-        if (!HasComp<ExecutorComponent>(target))
-            return;
-
-        var verb = new AlternativeVerb()
-        {
-            Text = Loc.GetString("packet-configurator-open-executor"),
-            Icon = new SpriteSpecifier.Texture(new ResPath("/Textures/Interface/VerbIcons/in.svg.192dpi.png")),
-            Act = () => { _userInterfaceSystem.TryOpenUi(target, ExecutorUiKey.Key, user); }
+            Act = () => { SwitchMode(ent, user); }
         };
 
         ev.Verbs.Add(verb);
@@ -97,7 +109,7 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
     private void OnProbeInteract(Entity<PacketNetworkConfiguratorComponent> ent, Entity<PacketNetworkComponent> target)
     {
         _chatSystem.TrySendInGameICMessage(ent,
-            Loc.GetString("packet-configurator-probe-address", ("address", target.Comp.Address)),
+            Loc.GetString("packet-configurator-probe-address", ("address", target.Comp.Address), ("network", target.Comp.AddressNetwork ?? "NULL")),
             InGameICChatType.Whisper,
             false);
     }
@@ -108,11 +120,12 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
         ent.Comp.Addresses.Add(target.Comp.Address);
     }
 
-    private void TryReadPaper(Entity<PacketNetworkConfiguratorComponent> ent, PaperComponent paper)
+    private void TryReadPaper(Entity<PacketNetworkConfiguratorComponent> ent, PaperComponent paper, EntityUid user)
     {
         if (!int.TryParse(paper.Content, out var freq))
             return;
 
+        _sharedPopupSystem.PopupEntity(Loc.GetString("packet-configurator-frequency-save"), ent, user);
         ent.Comp.Frequency = freq;
     }
 }

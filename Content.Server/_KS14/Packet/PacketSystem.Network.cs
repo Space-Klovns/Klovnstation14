@@ -25,9 +25,15 @@ public sealed partial class PacketSystem
             if (!TryGetReceiver(frequency, address, out var receiver))
                 continue;
 
+            if (receiver.Comp.AddressNetwork != null)
+                continue;
+
             receiver.Comp.AddressNetwork = networkAddress;
             entAddresses.Add(receiver.Comp.Address);
         }
+
+        if (entAddresses.Count == 0)
+            return "NULL";
 
         _networks.Add(networkAddress, new PacketNetwork(frequency, entAddresses.ToArray()));
 
@@ -43,13 +49,13 @@ public sealed partial class PacketSystem
 
     public void SendData(object data, EntityUid receiver, ExecutorComponent? executorComponent = null)
     {
-        SendData(data, receiver, typeof(ReceiveDataMethod), executorComponent);
+        SendData(data, receiver, typeof(ReceiveDataMethod), "NetworkPacketModule", executorComponent);
     }
 
-    public void SendData(object data, EntityUid receiver, Type methodType, ExecutorComponent? executorComponent = null)
+    public void SendData(object data, EntityUid receiver, Type methodType, string moduleName, ExecutorComponent? executorComponent = null)
     {
         if (!Resolve(receiver, ref executorComponent)
-            || !TryGetMethods((receiver, executorComponent), "NetworkPacketModule", out var methods)
+            || !TryGetMethods((receiver, executorComponent), moduleName, out var methods)
             || !TryFindMethod(methods, methodType,  out var method))
             return;
 

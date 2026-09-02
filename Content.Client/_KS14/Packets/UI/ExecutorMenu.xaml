@@ -42,7 +42,7 @@
         <PanelContainer.PanelOverride>
             <gfx:StyleBoxFlat BackgroundColor="#000000" />
         </PanelContainer.PanelOverride>
-        <PanelContainer SetSize="1085, 60" Name="InputContainer">
+        <PanelContainer SetSize="1085, 60" Name="StandartInputContainer">
             <TextEdit Name="DataInput" Access="Public" />
         </PanelContainer>
     </PanelContainer>

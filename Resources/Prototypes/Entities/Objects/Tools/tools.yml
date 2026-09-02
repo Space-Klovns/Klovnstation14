@@ -272,6 +272,32 @@
       sound:
         path: /Audio/_KS14/Handling/tools/multitool_drop.ogg
 
+- type: entity
+  name: fsf network configurator
+  parent: BaseItem
+  id: paNetworkConfigurator
+  description: A tool for linking devices together. Has two modes, a list mode for mass linking devices and a linking mode for advanced device linking.
+  components:
+    - type: EmitSoundOnLand
+      sound:
+        path: /Audio/Items/multitool_drop.ogg
+    - type: Sprite
+      sprite: Objects/Tools/network_configurator.rsi
+      layers:
+        - state: icon
+        - state: mode-link
+          map: ["enum.NetworkConfiguratorLayers.ModeLight"]
+          shader: unshaded
+    - type: Item
+      size: Small
+    - type: Clothing
+      sprite: Objects/Tools/network_configurator.rsi
+      quickEquip: false
+      slots:
+        - Belt
+    - type: PacketNetworkConfigurator
+
+
 #Power tools
 #Later on these should switch probably switch damage when changing the tool behavior.
 - type: entity
