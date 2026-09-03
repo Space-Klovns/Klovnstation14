@@ -65,9 +65,13 @@ public sealed partial class KsMirrorOverlay : Overlay
     private readonly Dictionary<SpriteStateDatum, float> _textureSpriteOffsetCache = [];
 
     /// <summary>
-    ///     States whose pixel readback has been requested but hasn't completed yet, so we don't queue the same one every frame.
+    ///     States whose pixel readback is in flight, mapped to the <see cref="_drawCount"/> it was requested on - so we
+    ///     don't queue the same readback every frame, and so one that never comes back doesn't wedge that state at zero.
     /// </summary>
-    private readonly HashSet<SpriteStateDatum> _pendingSpriteOffsetStates = [];
+    private readonly Dictionary<SpriteStateDatum, int> _pendingSpriteOffsetStates = [];
+
+    private int _drawCount;
+    private const int PendingReadbackRetryDraws = 60;
     private List<Entity<MapGridComponent>> _grids = [];
     private List<(Entity<MapGridComponent> Entity, Box2 LocalAABB, Matrix3x2 WorldMatrix)> _gridCache = [];
 
@@ -106,6 +110,7 @@ public sealed partial class KsMirrorOverlay : Overlay
         var worldHandle = args.WorldHandle;
         var renderHandle = args.RenderHandle;
 
+        _drawCount++;
         var eyeRotation = args.Viewport.Eye?.Rotation ?? new();
         var worldBounds = args.WorldBounds;
 
@@ -199,19 +204,25 @@ public sealed partial class KsMirrorOverlay : Overlay
                 var size = (Vector2)pixelSize / EyeManager.PixelsPerMeter; // cast, otherwise this is an integer division and sprites that aren't a whole number of tiles get squashed
                 var halfHeight = size.Y / 2f;
 
-                // The render target holds the sprite the way it appears on screen, but the quad is drawn through the
-                // grid's matrix - so the grid's rotation has to be cancelled out of both the quad's angle and the
-                // directions we offset it along, otherwise reflections on a rotated grid come out rotated by that same
-                // amount. Eye rotation isn't compensated for here; DrawEntity already applies it to the render target.
-                var quadRotation = Angle180Deg - gridRotation;
-                var screenUp = (-gridRotation).RotateVec(Vector2.UnitY) /* grid-local direction that points up on screen */;
+                // Everything below is in grid-local space and has to undo what the pipeline adds on the way to the
+                // screen - the grid's matrix, then the eye's, i.e. localEyeRotation. Same idiom as EmissiveOverlay and
+                // KsShadowOverlay, which counter-rotate by -localEyeRotation to keep a texture screen-aligned.
+                var localEyeRotation = eyeRotation + gridRotation;
+                var screenUp = (-localEyeRotation).RotateVec(Vector2.UnitY) /* grid-local direction that points up on screen */;
+
+                // DrawEntity applies the eye rotation with the opposite sign to the real viewport (see the "Maaaaybe
+                // this is meant to have a minus sign" in Clyde.RenderHandle.DrawEntity), so the sprite is baked into
+                // the render target at worldRotation - eyeRotation while the real one is on screen at
+                // worldRotation + eyeRotation. Add the eye rotation back twice to make up the difference.
+                var eyeRotationCorrection = new Angle(eyeRotation.Theta * 2d);
+                var quadRotation = Angle180Deg - localEyeRotation + eyeRotationCorrection;
 
                 // Mirror around the sprite's bottom edge, raised by the empty space the sprite leaves below itself, so
                 // the reflection looks mirrored from the true sprite with no blank space inbetween.
                 var pivot = position + screenUp * (emptyBottomDistance - halfHeight);
-                // Grid-local +Y, *not* screenUp: rotating this by quadRotation about the pivot is what lands the
-                // reflection screen-below the pivot.
-                var bounds = Box2.CenteredAround(pivot + new Vector2(0f, halfHeight), size);
+                // Box2Rotated spins the whole AABB about the pivot, so the box has to sit where quadRotation will
+                // throw it screen-below the pivot - which is the inverse of everything but the 180 degree flip.
+                var bounds = Box2.CenteredAround(pivot + (-eyeRotationCorrection).RotateVec(new Vector2(0f, halfHeight)), size);
 
                 ref var datum = ref _transientReflectData.AllocAdd();
                 datum.Matrix = worldMatrix;
@@ -306,8 +317,11 @@ public sealed partial class KsMirrorOverlay : Overlay
             return cachedDistance;
 
         // Readback already queued for this state, don't queue a second one; 0 until it lands.
-        if (!_pendingSpriteOffsetStates.Add(state))
+        if (_pendingSpriteOffsetStates.TryGetValue(state, out var queuedOnDraw) &&
+            _drawCount - queuedOnDraw < PendingReadbackRetryDraws)
             return 0f;
+
+        _pendingSpriteOffsetStates[state] = _drawCount;
 
         // The pixels are snapshotted now, but handed to us later - so everything the callback needs must be captured.
         renderTexture.CopyPixelsToMemory<Rgba32>(image =>
