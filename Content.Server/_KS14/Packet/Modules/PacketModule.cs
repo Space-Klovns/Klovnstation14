@@ -1,7 +1,7 @@
 using Content.Server._KS14.Packet.Components;
 using Robust.Shared.Prototypes;
 
-namespace Content.Server._KS14.Packet;
+namespace Content.Server._KS14.Packet.Modules;
 
 /// <summary>
 /// Modules. They contain methods for specific machinery (i.e Lathes).
@@ -9,16 +9,16 @@ namespace Content.Server._KS14.Packet;
 /// </summary>
 public abstract class PacketModule
 {
-    public string ModuleId = "Default";
-
-    public LocId ModuleName = "packets-module-default";
-
+    /// <summary>
+    /// Executor assigned to this module.
+    /// </summary>
     public Entity<ExecutorComponent, PacketNetworkComponent?> Executor;
 
+    /// <summary>
+    /// Crucial dependencies that are used globally
+    /// </summary>
     public EntityManager EntityManager;
-
     public IPrototypeManager PrototypeManager;
-
     public PacketSystem PacketSystem;
 
     public PacketModule(EntityManager manager, IPrototypeManager protoMan, PacketSystem packet)

@@ -1,8 +1,10 @@
 using System.Threading.Channels;
-using Content.Server._KS14.Packet.Components;
 
-namespace Content.Server._KS14.Packet;
+namespace Content.Server._KS14.Packet.Modules;
 
+/// <summary>
+/// Used for properly loading methods into JINT engine, while also handling dependencies and async operations
+/// </summary>
 public abstract class ModuleMethod
 {
     public abstract PacketModule? Module { get; set; }

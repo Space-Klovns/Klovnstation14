@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using Content.Server._KS14.Packet.Lathe;
 using Content.Shared.Materials;
 
 namespace Content.Server._KS14.Packet.Modules.Lathe;

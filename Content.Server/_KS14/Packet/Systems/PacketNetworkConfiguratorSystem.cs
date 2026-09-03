@@ -7,14 +7,13 @@ using Content.Shared.Interaction.Events;
 using Content.Shared.Paper;
 using Content.Shared.Popups;
 using Content.Shared.Verbs;
-using NetCord;
 using Robust.Server.GameObjects;
 using Robust.Shared.Utility;
 
 namespace Content.Server._KS14.Packet.Systems;
 
 /// <summary>
-/// This handles...
+/// This handles all operations with packet network and executors through packet network configurator
 /// </summary>
 public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
 {
@@ -36,21 +35,61 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
     {
         ent.Comp.Mode = 1 - ent.Comp.Mode;
 
-        if (ent.Comp.Mode == ConfiguratorMode.Probe)
-            _sharedPopupSystem.PopupEntity(Loc.GetString("packet-configurator-switch-probe"), ent, user);
-        else
-            _sharedPopupSystem.PopupEntity(Loc.GetString("packet-configurator-switch-save"), ent, user);
+        _sharedPopupSystem.PopupEntity(ent.Comp.Mode == ConfiguratorMode.Probe
+                ? Loc.GetString("packet-configurator-switch-probe")
+                : Loc.GetString("packet-configurator-switch-save"),
+            ent,
+            user);
     }
 
+    /// <summary>
+    /// Creates network if:
+    /// It has saved devices
+    /// All saved devices have same frequency
+    /// </summary>
+    /// <param name="ent"></param>
+    /// <param name="ev"></param>
     private void OnUse(Entity<PacketNetworkConfiguratorComponent> ent, ref UseInHandEvent ev)
     {
+        if (ent.Comp.Addresses.Count == 0)
+            return;
+
+        var check = true;
+
+        foreach (var addr in ent.Comp.Addresses)
+        {
+            if(!_packetSystem.TryGetReceiver(addr, out var receiver))
+                continue;
+
+            if (_packetSystem.GetFrequency(receiver.Comp.Frequency) != ent.Comp.Frequency)
+            {
+                check = false;
+                _sharedPopupSystem.PopupEntity(Loc.GetString("packet-configurator-network-fail"), ent, ev.User);
+                break;
+            }
+        }
+
+        if (!check)
+        {
+            ent.Comp.Addresses.Clear();
+            return;
+        }
+
         _chatSystem.TrySendInGameICMessage(ent,
             _packetSystem.CreateNetwork([..ent.Comp.Addresses],
             ent.Comp.Frequency),
             InGameICChatType.Whisper,
             false);
+
+        ent.Comp.Addresses.Clear();
     }
 
+    /// <summary>
+    /// Upon interacting with paper - tries to read frequency from it.
+    /// Interacting with packet network device will either probe it (show address and network) or save it.
+    /// </summary>
+    /// <param name="ent"></param>
+    /// <param name="ev"></param>
     private void OnInteract(Entity<PacketNetworkConfiguratorComponent> ent, ref AfterInteractEvent ev)
     {
         if (ev.Target is not { } target)
@@ -72,6 +111,11 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
             OnSaveInteract(ent, (target, packetNetwork), ev.User);
     }
 
+    /// <summary>
+    /// This is used for opening executor UIs on supported machinery (i.e lathes). Used for advanced automation.
+    /// </summary>
+    /// <param name="ent"></param>
+    /// <param name="ev"></param>
     private void OnExecutorInteract(Entity<ExecutorComponent> ent, ref GetVerbsEvent<AlternativeVerb> ev)
     {
         if (!ev.CanAccess || !ev.CanInteract)
@@ -89,6 +133,11 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
         ev.Verbs.Add(executorVerb);
     }
 
+    /// <summary>
+    /// Switches mode on alt interact.
+    /// </summary>
+    /// <param name="ent"></param>
+    /// <param name="ev"></param>
     private void OnAltInteract(Entity<PacketNetworkConfiguratorComponent> ent, ref GetVerbsEvent<AlternativeVerb> ev)
     {
         if (!ev.CanAccess || !ev.CanInteract)

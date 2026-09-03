@@ -50,23 +50,42 @@ public sealed partial class ExecutorComponent : Component
     /// Sound that will be played if execution attempt fails (Due to cooldown or code being too long).
     /// </summary>
     [DataField]
-    public SoundSpecifier? ExecutionFailSound = null;
+    public SoundSpecifier? ExecutionFailSound;
 
+
+    /// <summary>
+    /// Maximum amount of memory that can be used each execution.
+    /// </summary>
     [DataField]
     public int MemoryAllocation = 1024 * 1024; // 1MB
 
+    /// <summary>
+    /// Maximum amount of statements per execution
+    /// </summary>
     [DataField]
     public int MaximumExecutionStatements = 250000;
 
+    /// <summary>
+    /// Name for sink ports. You should create prototypes for those based on PortCount (SignalPortNaming+PortNumber)
+    /// </summary>
     [DataField]
     public string SignalPortNaming = "ExecutorPort";
 
+    /// <summary>
+    /// How much sink ports can executor use?
+    /// </summary>
     [DataField]
     public int PortCount = 5;
 
+    /// <summary>
+    /// Ports that executor currently listens to. Contains JS function.
+    /// </summary>
     [DataField]
     public Dictionary<ProtoId<SinkPortPrototype>, JsValue> ListeningPorts = [];
 
+    /// <summary>
+    /// This is responsible for debug logging (<see cref="PacketModule"/> & other future features.
+    /// </summary>
     [DataField]
-    public bool DebugState = false;
+    public bool DebugState;
 }

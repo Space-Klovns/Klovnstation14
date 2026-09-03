@@ -2,7 +2,7 @@ using Content.Server.Lathe;
 using Content.Server.Materials;
 using Robust.Shared.Prototypes;
 
-namespace Content.Server._KS14.Packet.Lathe;
+namespace Content.Server._KS14.Packet.Modules.Lathe;
 
 public sealed class LathePacketModule : PacketModule
 {
@@ -11,8 +11,6 @@ public sealed class LathePacketModule : PacketModule
 
     public LathePacketModule(EntityManager manager, PrototypeManager protoMan, PacketSystem packet) : base(manager, protoMan, packet)
     {
-        ModuleId = "LathePacketModule";
-
         LatheSystem = manager.System<LatheSystem>();
         MaterialStorageSystem = manager.System<MaterialStorageSystem>();
     }

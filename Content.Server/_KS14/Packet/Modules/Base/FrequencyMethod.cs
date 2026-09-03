@@ -1,10 +1,9 @@
-using Content.Server._KS14.Packet.Base;
-using Content.Server._KS14.Packet.Components;
-using Content.Shared.Research.Prototypes;
-using Jint;
-
 namespace Content.Server._KS14.Packet.Modules.Base;
 
+/// <summary>
+/// This method is responsible for managing which frequencies allow or deny
+/// You wont be able to detect this device if you send network message with denied frequency
+/// </summary>
 [ModuleMethod("BasePacketModule")]
 public sealed class FrequencyMethod : ModuleMethod
 {

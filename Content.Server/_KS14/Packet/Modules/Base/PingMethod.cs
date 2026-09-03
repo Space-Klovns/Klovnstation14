@@ -1,12 +1,11 @@
-using System.Threading.Channels;
 using System.Threading.Tasks;
-using Content.Server._KS14.Packet.Base;
-using Content.Server._KS14.Packet.Lathe;
-using Content.Shared.Materials;
-using Content.Shared.Research.Prototypes;
 
-namespace Content.Server._KS14.Packet.Modules.Lathe;
+namespace Content.Server._KS14.Packet.Modules.Base;
 
+/// <summary>
+/// Upon execution - tries to get random receiver in range of 10 meters, then returns it's address.
+/// Can be used to either detect addresses or bruteforce frequencies.
+/// </summary>
 [ModuleMethod("BasePacketModule")]
 public sealed class PingMethod : ModuleMethod
 {

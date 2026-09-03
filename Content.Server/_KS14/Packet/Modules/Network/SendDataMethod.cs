@@ -1,6 +1,4 @@
-using Content.Server._KS14.Packet.Base;
-
-namespace Content.Server._KS14.Packet.Modules.Base;
+namespace Content.Server._KS14.Packet.Modules.Network;
 
 [ModuleMethod("NetworkPacketModule")]
 public sealed class SendDataMethod : ModuleMethod

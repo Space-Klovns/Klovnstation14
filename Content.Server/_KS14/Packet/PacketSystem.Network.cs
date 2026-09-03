@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Content.Server._KS14.Packet.Components;
 using Content.Server._KS14.Packet.Modules.Base;
+using Content.Server._KS14.Packet.Modules.Network;
 
 namespace Content.Server._KS14.Packet;
 

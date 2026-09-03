@@ -1,8 +1,7 @@
-using Content.Server.DeviceLinking.Systems;
 using Content.Shared.DeviceLinking;
 using Robust.Shared.Prototypes;
 
-namespace Content.Server._KS14.Packet.Base;
+namespace Content.Server._KS14.Packet.Modules.Network;
 
 public sealed class NetworkPacketModule : PacketModule
 {
@@ -10,7 +9,6 @@ public sealed class NetworkPacketModule : PacketModule
 
     public NetworkPacketModule(EntityManager manager, PrototypeManager protoMan, PacketSystem packet) : base(manager, protoMan, packet)
     {
-        ModuleId = "NetworkPacketModule";
         DeviceLinkSystem = manager.System<SharedDeviceLinkSystem>();
     }
 }

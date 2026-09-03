@@ -1,12 +1,7 @@
-using System.Threading.Channels;
-using System.Threading.Tasks;
-using Content.Server._KS14.Packet.Lathe;
 using Content.Shared.Fax;
 using Content.Shared.Fax.Components;
-using Content.Shared.Materials;
-using Content.Shared.Research.Prototypes;
 
-namespace Content.Server._KS14.Packet.Modules.Lathe;
+namespace Content.Server._KS14.Packet.Modules.Fax;
 
 [ModuleMethod("FaxPacketModule")]
 public sealed class FaxPrintMethod : ModuleMethod

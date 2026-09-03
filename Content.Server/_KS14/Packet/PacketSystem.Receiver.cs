@@ -71,7 +71,7 @@ public sealed partial class PacketSystem
 
         foreach (var freqProto in protoEnum)
         {
-            freqProto.Frequency = _random.Next(freqProto.MinimalFrequency, freqProto.MaximalFrequency);
+            freqProto.Frequency = _random.Next(freqProto.MinimalFrequency, freqProto.MaximumFrequency);
             _frequencies.Add(freqProto, freqProto.Frequency);
         }
     }
@@ -125,7 +125,17 @@ public sealed partial class PacketSystem
 
     public bool ValidateReceiver(Entity<PacketNetworkComponent> receiver, Entity<PacketNetworkComponent?> sender)
     {
-        return sender.Comp is { } && receiver.Comp.ListeningFrequencies.Contains(sender.Comp.Frequency);
+        if (sender.Comp == null
+            || receiver.Comp.ListeningFrequencies.Contains(sender.Comp.Frequency))
+            return false;
+
+        if (receiver.Comp.IsGlobal)
+            return true;
+
+        var receiverTransform = Transform(receiver);
+        var senderTransform = Transform(sender);
+
+        return receiverTransform.GridUid == senderTransform.GridUid;
     }
 
     public int GetFrequency(ProtoId<PacketFrequencyPrototype> freqProto)

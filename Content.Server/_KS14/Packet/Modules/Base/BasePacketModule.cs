@@ -1,11 +1,10 @@
 using Robust.Shared.Prototypes;
 
-namespace Content.Server._KS14.Packet.Base;
+namespace Content.Server._KS14.Packet.Modules.Base;
 
-public sealed class BasePacketModule : PacketModule
-{
-    public BasePacketModule(EntityManager manager, PrototypeManager protoMan, PacketSystem packet) : base(manager, protoMan, packet)
-    {
-        ModuleId = "BasePacketModule";
-    }
-}
+/// <summary>
+/// Basic firmware of every executor.
+/// Contains critically important methods.
+/// </summary>
+public sealed class BasePacketModule(EntityManager manager, PrototypeManager protoMan, PacketSystem packet)
+    : PacketModule(manager, protoMan, packet);

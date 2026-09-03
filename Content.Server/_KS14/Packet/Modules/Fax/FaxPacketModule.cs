@@ -3,7 +3,7 @@ using Content.Server.Lathe;
 using Content.Server.Materials;
 using Robust.Shared.Prototypes;
 
-namespace Content.Server._KS14.Packet.Lathe;
+namespace Content.Server._KS14.Packet.Modules.Fax;
 
 public sealed class FaxPacketModule : PacketModule
 {
@@ -11,7 +11,6 @@ public sealed class FaxPacketModule : PacketModule
 
     public FaxPacketModule(EntityManager manager, PrototypeManager protoMan, PacketSystem packet) : base(manager, protoMan, packet)
     {
-        ModuleId = "FaxPacketModule";
         FaxSystem = manager.System<FaxSystem>();
     }
 }

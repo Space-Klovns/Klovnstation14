@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Server._KS14.Packet.Components;
+using Content.Server._KS14.Packet.Modules;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.DeviceLinking;
 
@@ -58,9 +59,7 @@ public sealed partial class PacketSystem
             if (TryComp<PacketNetworkComponent>(moduleInstance.Executor, out var packetNetwork))
                 moduleInstance.Executor.Comp2 = packetNetwork;
 
-            Logger.Info(module.Name);
-
-            modDict.Add(moduleInstance.ModuleId, moduleInstance);
+            modDict.Add(module.Name, moduleInstance);
         }
         _modules.Add(ent, modDict);
 
@@ -85,8 +84,6 @@ public sealed partial class PacketSystem
                 methodDict.Add($"{methodData.Method}", [methodInstance]);
             else
                 methodDict[$"{methodData.Method}"].Add(methodInstance);
-
-            Logger.Info(method.Name);
         }
 
         _methods.Add(ent, methodDict);
@@ -126,52 +123,5 @@ public sealed partial class PacketSystem
         }
 
         return false;
-    }
-
-    public void LoadMethods(Entity<ExecutorComponent> ent)
-    {
-        var engine = EnsureEngine(ent);
-
-        foreach (var moduleName in ent.Comp.Modules)
-        {
-            if (!TryGetMethods(ent, moduleName, out var methods))
-                return;
-
-            foreach (var method in methods)
-            {
-                engine.SetValue(method.Id, method.ModuleExec);
-            }
-        }
-    }
-
-    private void ReloadEngine(Entity<ExecutorComponent> ent, ItemSlotsComponent slotsComponent)
-    {
-        Logger.Info("Reaload");
-        DisposeEngine(ent);
-        ent.Comp.Modules.Add("BasePacketModule"); // Basic firmware.
-
-        foreach (var moduleSlot in slotsComponent.Slots.Values)
-        {
-            if (!TryComp<ExecutorModuleComponent>(moduleSlot.Item, out var moduleName))
-                return;
-
-            ent.Comp.Modules.Add(moduleName.ModuleName);
-        }
-
-        EnsureEngine(ent);
-    }
-
-    private void DisposeEngine(Entity<ExecutorComponent> ent)
-    {
-        ent.Comp.Modules.Clear();
-        RemComp<DeviceLinkSinkComponent>(ent);
-        _modules.Remove(ent);
-        _methods.Remove(ent);
-
-        if (!_executorEntities.Remove(ent, out var engine))
-            return;
-
-        _engineCts.Remove(engine);
-        engine.Dispose();
     }
 }

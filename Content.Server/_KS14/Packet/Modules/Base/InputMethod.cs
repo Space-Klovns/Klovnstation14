@@ -1,8 +1,11 @@
 using System.Threading.Tasks;
-using Content.Server._KS14.Packet.Base;
 
 namespace Content.Server._KS14.Packet.Modules.Base;
 
+/// <summary>
+/// Awaits "SEND" command from executor.
+/// Use this only for direct input from executor. In any other cases - use data methods.
+/// </summary>
 [ModuleMethod("BasePacketModule")]
 public sealed class InputMethod : ModuleMethod
 {

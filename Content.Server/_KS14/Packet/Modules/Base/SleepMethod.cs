@@ -1,6 +1,4 @@
 using System.Threading.Tasks;
-using Content.Server._KS14.Packet.Base;
-using Content.Shared.Research.Prototypes;
 
 namespace Content.Server._KS14.Packet.Modules.Base;
 

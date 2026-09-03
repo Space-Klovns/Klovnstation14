@@ -1,11 +1,14 @@
 using System.Threading;
 using Content.Server._KS14.Packet.Components;
+using Content.Shared.Containers.ItemSlots;
+using Content.Shared.DeviceLinking;
 using Jint;
 
 namespace Content.Server._KS14.Packet;
 
 /// <summary>
-/// This handles...
+/// This handles most of JINT operations (since some are handled in Modules subclass).
+/// Responsible for execution and engine initialization
 /// </summary>
 public sealed partial class PacketSystem
 {
@@ -15,33 +18,29 @@ public sealed partial class PacketSystem
     /// Packets use their own engine.
     /// </summary>
     private Dictionary<Entity<ExecutorComponent>, Engine> _executorEntities = new();
-
     private Dictionary<Engine, CancellationTokenSource> _engineCts = new();
 
     /// <summary>
-    /// Engine that is used by all packets. Extremely weak compared to executors, having 25 statements limit.
+    /// Tries to execute current code. ACcounts for cooldownw and max command length.
     /// </summary>
-    private Engine _packetEngine = new(options =>
-    {
-        options.MaxStatements(25);
-    });
-
-    public void TryExecute(string command, Entity<ExecutorComponent> executor, EntityUid actor)
+    /// <param name="command"></param>
+    /// <param name="executor"></param>
+    /// <param name="actor"></param>
+    public bool TryExecute(string command, Entity<ExecutorComponent> executor, EntityUid actor)
     {
         if (executor.Comp.CurrentCooldown > TimeSpan.Zero)
         {
             _audioSystem.PlayEntity(executor.Comp.ExecutionFailSound,actor, executor);
-            return;
+            return false;
         }
 
         if (command.Length >= executor.Comp.MaxCommandLength)
-            return;
-
-        Logger.Info("Execute!");
+            return false;
 
         ExecuteCommand(command, executor);
-
         executor.Comp.CurrentCooldown += executor.Comp.ExecutionCooldown;
+
+        return true;
     }
 
     private void ExecuteCommand(string command, Entity<ExecutorComponent> executor)
@@ -113,6 +112,53 @@ public sealed partial class PacketSystem
         {
             engine.SetValue("SELF_FREQ", GetFrequency(receiver.Frequency));
             engine.SetValue("SELF_ADD", receiver.Address);
+        }
+    }
+
+    private void ReloadEngine(Entity<ExecutorComponent> ent, ItemSlotsComponent slotsComponent)
+    {
+        Logger.Info("Reaload");
+        DisposeEngine(ent);
+        ent.Comp.Modules.Add("BasePacketModule"); // Basic firmware.
+
+        foreach (var moduleSlot in slotsComponent.Slots.Values)
+        {
+            if (!TryComp<ExecutorModuleComponent>(moduleSlot.Item, out var moduleName))
+                return;
+
+            ent.Comp.Modules.Add(moduleName.ModuleName);
+        }
+
+        EnsureEngine(ent);
+    }
+
+    private void DisposeEngine(Entity<ExecutorComponent> ent)
+    {
+        ent.Comp.Modules.Clear();
+        RemComp<DeviceLinkSinkComponent>(ent);
+        _modules.Remove(ent);
+        _methods.Remove(ent);
+
+        if (!_executorEntities.Remove(ent, out var engine))
+            return;
+
+        _engineCts.Remove(engine);
+        engine.Dispose();
+    }
+
+    public void LoadMethods(Entity<ExecutorComponent> ent)
+    {
+        var engine = EnsureEngine(ent);
+
+        foreach (var moduleName in ent.Comp.Modules)
+        {
+            if (!TryGetMethods(ent, moduleName, out var methods))
+                return;
+
+            foreach (var method in methods)
+            {
+                engine.SetValue(method.Id, method.ModuleExec);
+            }
         }
     }
 }

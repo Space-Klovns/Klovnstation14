@@ -49,12 +49,17 @@ public sealed partial class PacketSystem : EntitySystem
 
     }
 
+    /// <summary>
+    /// Processes system call queue, execution cooldowns and logging.
+    /// </summary>
+    /// <param name="frameTime"></param>
     public override void Update(float frameTime)
     {
         UpdateSystemCalls();
         foreach (var (uid, _) in _executorEntities)
         {
-            uid.Comp.CurrentCooldown -= TimeSpan.FromSeconds(frameTime);
+            if (uid.Comp.CurrentCooldown > TimeSpan.Zero)
+                uid.Comp.CurrentCooldown -= TimeSpan.FromSeconds(frameTime);
 
             if (uid.Comp.Log == string.Empty)
                 continue;
@@ -69,16 +74,31 @@ public sealed partial class PacketSystem : EntitySystem
         UpdateUiState(ent);
     }
 
+    /// <summary>
+    /// On "SAVE" message - receives code from client and loads it into executor's component.
+    /// </summary>
+    /// <param name="ent"></param>
+    /// <param name="ev"></param>
     private void OnSave(Entity<ExecutorComponent> ent, ref SaveExecutorCommandMessage ev)
     {
         ent.Comp.Command = ev.Command;
     }
 
+    /// <summary>
+    /// Tries to execute code when "EXEC" message is sent.
+    /// </summary>
+    /// <param name="ent"></param>
+    /// <param name="ev"></param>
     private void OnExecute(Entity<ExecutorComponent> ent, ref StartExecutionMessage ev)
     {
         TryExecute(ent.Comp.Command, ent, ev.Actor);
     }
 
+    /// <summary>
+    /// on "LOAD" message - Re-creates engine instance with new module set.
+    /// </summary>
+    /// <param name="ent"></param>
+    /// <param name="ev"></param>
     private void OnModuleReload(Entity<ExecutorComponent> ent, ref ReloadModulesMessage ev)
     {
         if (!TryComp<ItemSlotsComponent>(ent, out var slotComponent))
@@ -87,16 +107,31 @@ public sealed partial class PacketSystem : EntitySystem
         ReloadEngine(ent, slotComponent);
     }
 
+    /// <summary>
+    /// On "KILL" message - Kills all scripts that are currently running.
+    /// </summary>
+    /// <param name="ent"></param>
+    /// <param name="ev"></param>
     private void OnTerminate(Entity<ExecutorComponent> ent, ref TerminateExecutorMessage ev)
     {
         Cancel(ent);
     }
 
+    /// <summary>
+    /// On "SEND" message - Send data from client in input method channel.
+    /// </summary>
+    /// <param name="ent"></param>
+    /// <param name="ev"></param>
     private void OnInput(Entity<ExecutorComponent> ent, ref InputExecutorMessage ev)
     {
         SendData(ev.Input, ent, typeof(InputMethod), "BasePacketModule", ent.Comp);
     }
 
+    /// <summary>
+    /// Processes signals that are registered through SinkListenMethod.
+    /// </summary>
+    /// <param name="ent"></param>
+    /// <param name="ev"></param>
     private void OnExecutorSignal(Entity<ExecutorComponent> ent, ref SignalReceivedEvent ev)
     {
         if (!ent.Comp.ListeningPorts.ContainsKey(ev.Port))
