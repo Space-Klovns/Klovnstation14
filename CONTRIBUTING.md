@@ -157,6 +157,18 @@ SpriteComponent spriteComponent;                 // not 'sprite'
 ```
 Members with `[DataField]` get some leeway (`Prototype` → `Proto` is fine).
 
+**Acronym casing (C#, YAML)** — acronyms/initialisms are not exempt from PascalCase/camelCase, in C# identifiers and YAML prototype IDs alike: `RCDSystem` → `RcdSystem`, `id: MarkerNPCCamping` → `id: MarkerNpcCamping`. Applies to new names only — don't rename existing upstream identifiers just to fix this.
+
+**Braces (C#)** — omit braces on single-statement `if`/`else`/`for`/`foreach`/`while`/`using` bodies where possible:
+```csharp
+if (args.Cancelled)
+    return;
+
+foreach (var entity in entities)
+    entity.DoThing();
+```
+Keep braces once a body needs more than one statement, or for readability in deeply nested/ambiguous chains.
+
 **`Ks` prefix (IDs & type names)** — when a new prototype ID or type name could plausibly collide with an upstream name (present or future), prefix it with `Ks`: `KsCCVars` (a fork-only cvars class, deliberately not inheriting upstream `CCVars`), `KsBlack`, `KsCatwalkIron` (colors and structure variants — generic vocabulary upstream already uses or could use). Skip the prefix when the name is already distinctive enough not to collide — `Anchorless`, `ArcFlash`, `ComplexShove` — the `_KS14/` folder already marks provenance there. This is a judgment call, not a mechanical rule: ask "would upstream plausibly ship something under this exact name?" If yes, prefix it.
 
 **Source-gen `[Dependency]` fields (C#)** — on current engine versions, injected `[Dependency]` fields on `EntitySystem` (and the few other injectable types) must be writable, and their owning class must be `partial`:
