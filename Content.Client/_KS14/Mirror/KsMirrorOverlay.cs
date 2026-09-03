@@ -1,7 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Content.Client.Graphics;
-using Content.Shared.Fluids.Components;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Utility;
@@ -14,7 +13,6 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 using Color = Robust.Shared.Maths.Color;
-using Content.Shared.Atmos;
 using Content.Shared._KS14.Mirror;
 using System.Linq;
 //using CollectionExtensions = Robust.Shared.Utility.Extensions;
@@ -25,6 +23,9 @@ namespace Content.Client._KS14.Mirror;
     СПАСИ МЕНЯ
 */
 
+/// <summary>
+///     Renders things reflecting off the ground.
+/// </summary>
 public sealed partial class KsMirrorOverlay : Overlay
 {
     private readonly ShaderInstance _mirrorShader;
@@ -54,14 +55,19 @@ public sealed partial class KsMirrorOverlay : Overlay
     private const LookupFlags OverlayLookupFlags = LookupFlags.Approximate | LookupFlags.Dynamic | LookupFlags.Static | LookupFlags.Uncontained;
     public static readonly Color DrawColor = new(1f, 1f, 1f, a: 0.5f);
 
-    private Image<Rgba32> _transientImage = null!;
     private readonly RefList<TransientReflectDatum> _transientReflectData = [];
     private readonly HashSet<Entity<SpriteComponent>> _reflectableEntities = [];
     private readonly HashSet<Entity<KsMirrorReflectorComponent>> _stencilEntities = [];
+
     /// <summary>
-    ///     Cache of states and their offset.
+    ///     Cache of states and their offset, in metres. Populated asynchronously; see <see cref="FindFirstDistanceFromOccupiedRowFromBottom"/>.
     /// </summary>
     private readonly Dictionary<SpriteStateDatum, float> _textureSpriteOffsetCache = [];
+
+    /// <summary>
+    ///     States whose pixel readback has been requested but hasn't completed yet, so we don't queue the same one every frame.
+    /// </summary>
+    private readonly HashSet<SpriteStateDatum> _pendingSpriteOffsetStates = [];
     private List<Entity<MapGridComponent>> _grids = [];
     private List<(Entity<MapGridComponent> Entity, Box2 LocalAABB, Matrix3x2 WorldMatrix)> _gridCache = [];
 
@@ -117,7 +123,7 @@ public sealed partial class KsMirrorOverlay : Overlay
 
         foreach (var grid in _grids)
         {
-            var (_, _, worldMatrix, invWorldMatrix) = _transformSystem.GetWorldPositionRotationMatrixWithInv(grid);
+            var (_, gridRotation, worldMatrix, invWorldMatrix) = _transformSystem.GetWorldPositionRotationMatrixWithInv(grid);
             var gridBounds = invWorldMatrix.TransformBox(worldBounds) /* world bounds -> grid bounds */;
 
             _gridCache.Add((grid, gridBounds, worldMatrix));
@@ -139,14 +145,23 @@ public sealed partial class KsMirrorOverlay : Overlay
                     continue;
 
                 var pixelSize = Vector2i.Zero;
-                var animHash = 0;
+                // Identifies what the sprite currently looks like, so the measured bottom gap can be cached per
+                // appearance. HashCode rather than XOR: XOR is order-insensitive and self-cancelling, so two layers
+                // that hashed the same (very common - several layers off one RSI) used to annihilate each other.
+                var animHashCode = new HashCode();
                 foreach (var layer in spriteComponent.AllLayers)
                 {
                     if (!layer.Visible)
                         continue;
 
                     pixelSize = Vector2i.ComponentMax(pixelSize, layer.PixelSize);
-                    animHash ^= layer.AnimationFrame ^ layer.Rsi?.GetHashCode() ?? layer.RsiState.GetHashCode();
+
+                    animHashCode.Add(layer.ActualRsi); // ActualRsi, not Rsi - the latter is null whenever the layer inherits the sprite's BaseRSI
+                    animHashCode.Add(layer.RsiState.Name);
+                    animHashCode.Add(layer.AnimationFrame);
+                    animHashCode.Add(layer.Texture);
+                    animHashCode.Add(layer.Rotation);
+                    animHashCode.Add(layer.Scale);
                 }
 
                 var uid = entity.Owner;
@@ -157,9 +172,10 @@ public sealed partial class KsMirrorOverlay : Overlay
                     mirrorTargetDict[uid] = mirrorTarget;
                 }
 
-                var worldMatrixRotation = worldMatrix.Rotation();
-                var worldEntRotation = worldMatrixRotation + transformComponent.LocalRotation;
-                animHash ^= (int)worldEntRotation.GetDir();
+                var worldEntRotation = gridRotation + transformComponent.LocalRotation;
+                animHashCode.Add(worldEntRotation.GetDir());
+                animHashCode.Add(spriteComponent.Scale);
+                var animHash = animHashCode.ToHashCode();
 
                 worldHandle.RenderInRenderTarget(mirrorTarget,
                     () =>
@@ -176,19 +192,31 @@ public sealed partial class KsMirrorOverlay : Overlay
                         );
                     }, Color.Transparent);
 
-                // Scan for first empty row starting from bottom
-                var firstEmptyRowIndex = FindFirstDistanceFromOccupiedRowFromBottom(mirrorTarget, animHash);
+                // How much empty space the sprite leaves at the bottom of its render target, in metres.
+                var emptyBottomDistance = FindFirstDistanceFromOccupiedRowFromBottom(mirrorTarget, animHash);
 
-                var sum = transformComponent.LocalPosition;
-                var bounds = Box2.CenteredAround(
-                    sum + new Vector2(0f, (float)firstEmptyRowIndex / EyeManager.PixelsPerMeter),
-                    pixelSize / EyeManager.PixelsPerMeter
-                );
+                var position = transformComponent.LocalPosition;
+                var size = (Vector2)pixelSize / EyeManager.PixelsPerMeter; // cast, otherwise this is an integer division and sprites that aren't a whole number of tiles get squashed
+                var halfHeight = size.Y / 2f;
+
+                // The render target holds the sprite the way it appears on screen, but the quad is drawn through the
+                // grid's matrix - so the grid's rotation has to be cancelled out of both the quad's angle and the
+                // directions we offset it along, otherwise reflections on a rotated grid come out rotated by that same
+                // amount. Eye rotation isn't compensated for here; DrawEntity already applies it to the render target.
+                var quadRotation = Angle180Deg - gridRotation;
+                var screenUp = (-gridRotation).RotateVec(Vector2.UnitY) /* grid-local direction that points up on screen */;
+
+                // Mirror around the sprite's bottom edge, raised by the empty space the sprite leaves below itself, so
+                // the reflection looks mirrored from the true sprite with no blank space inbetween.
+                var pivot = position + screenUp * (emptyBottomDistance - halfHeight);
+                // Grid-local +Y, *not* screenUp: rotating this by quadRotation about the pivot is what lands the
+                // reflection screen-below the pivot.
+                var bounds = Box2.CenteredAround(pivot + new Vector2(0f, halfHeight), size);
 
                 ref var datum = ref _transientReflectData.AllocAdd();
                 datum.Matrix = worldMatrix;
                 datum.Texture = mirrorTarget.Texture;
-                datum.Box = new Box2Rotated(bounds, Angle180Deg, new(bounds.Center.X, bounds.Bottom));
+                datum.Box = new Box2Rotated(bounds, quadRotation, pivot);
             }
         }
 
@@ -249,47 +277,75 @@ public sealed partial class KsMirrorOverlay : Overlay
         worldHandle.UseShader(null);
     }
 
-    /// <returns>The index (y-coordinate), div by PixelsPerMeter, of the first non-empty row, starting from the bottom.</returns>
+    /// <summary>
+    ///     Measures how much empty space a sprite leaves below itself inside <paramref name="renderTexture"/>,
+    ///     i.e. the gap between the lowest non-transparent pixel row and the bottom edge of the texture.
+    ///     The reflection is mirrored around the bottom edge of that texture, so this gap has to be subtracted
+    ///     from the reflection's position, otherwise the reflection floats away from the sprite's feet.
+    /// </summary>
+    /// <remarks>
+    ///     Reading the pixels back from the GPU is expensive (indexing the texture directly costs ~68% of render
+    ///     time, CopyPixelsToMemory ~30%), so results are cached per
+    ///     <see cref="SpriteStateDatum"/> and looked up from a dictionary on subsequent frames.
+    ///
+    ///     Note that the readback is <b>asynchronous</b> on any GPU that supports PBOs + fence sync (i.e. nearly all
+    ///     of them): the callback runs some frames later, off the back of Clyde's transfer queue. So the first few
+    ///     frames a given state is seen we return 0 (no offset) and only fill the cache once the pixels actually
+    ///     arrive. Reading a field that the callback writes into (as this used to do) just reads whatever unrelated
+    ///     sprite's readback happened to finish last, which is why some sprites got a nonsense offset baked into the
+    ///     cache forever.
+    /// </remarks>
+    /// <returns>The distance from the bottom of the texture to the lowest non-transparent row, in metres.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private float FindFirstDistanceFromOccupiedRowFromBottom(IRenderTexture renderTexture, int animHash)
     {
-        // If i use normal index ([]) on texture it will use.. ~68% of cpu-time when rendering?
-        // CopyPixelsToMemory isn't very good either
-        // So, dict lookup here we go
+        var renderTextureTextureSize = renderTexture.Texture.Size;
+        var state = new SpriteStateDatum(renderTextureTextureSize, HashCode.Combine(renderTextureTextureSize, animHash));
 
-        var state = new SpriteStateDatum(renderTexture.Texture.Size, animHash);
-        if (!_textureSpriteOffsetCache.TryGetValue(state, out var cachedDist))
+        if (_textureSpriteOffsetCache.TryGetValue(state, out var cachedDistance))
+            return cachedDistance;
+
+        // Readback already queued for this state, don't queue a second one; 0 until it lands.
+        if (!_pendingSpriteOffsetStates.Add(state))
+            return 0f;
+
+        // The pixels are snapshotted now, but handed to us later - so everything the callback needs must be captured.
+        renderTexture.CopyPixelsToMemory<Rgba32>(image =>
         {
-            renderTexture.CopyPixelsToMemory<Rgba32>(image => _transientImage = image);
-            if (_transientImage == null)
-                return 0;
+            _pendingSpriteOffsetStates.Remove(state);
+            _textureSpriteOffsetCache[state] = MeasureEmptyRowsBelowSprite(image);
+            image.Dispose();
+        });
 
-            var pixelSpan = _transientImage.GetPixelSpan();
-
-            cachedDist = 0f; // 0 is the default
-            var width = _transientImage.Width;
-            var height = _transientImage.Height;
-
-            Rgba32 rgba = default;
-            // Iterate backwards; we are going bottom to top
-            for (var i = pixelSpan.Length - 1; i > -1; i--)
-            {
-                pixelSpan[i].ToRgba32(ref rgba);
-
-                // If bright enough, return the inverse y-coordinate (because we are iterating upwards, not downwards), and in metres
-                if (rgba.A > 50)
-                {
-                    cachedDist = (float)(height - i / width) / EyeManager.PixelsPerMeter;
-                    break;
-                }
-            }
-
-            _textureSpriteOffsetCache[state] = cachedDist;
-        }
-
-        return cachedDist;
+        return 0f;
     }
 
+    /// <returns>The number of fully transparent pixel rows below the sprite in <paramref name="image"/>, in metres.</returns>
+    private static float MeasureEmptyRowsBelowSprite(Image<Rgba32> image)
+    {
+        var pixelSpan = image.GetPixelSpan();
+        var width = image.Width;
+        var height = image.Height;
+
+        if (width <= 0 || height <= 0)
+            return 0f;
+
+        // Rows are stored top to bottom, so walk the buffer backwards to go bottom to top.
+        for (var i = pixelSpan.Length - 1; i > -1; i--)
+        {
+            // Not bright enough to count as part of the sprite.
+            if (pixelSpan[i].A <= 50)
+                continue;
+
+            var occupiedRowIndex = i / width;
+            // -1 because a sprite sitting on the very last row (index height - 1) has nothing below it.
+            return (float)(height - 1 - occupiedRowIndex) / EyeManager.PixelsPerMeter;
+        }
+
+        return 0f;
+    }
+
+    // dont remove, maybe used in future
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector2i GetPixelSize(SpriteComponent spriteComponent)
     {
@@ -332,10 +388,12 @@ public sealed partial class KsMirrorOverlay : Overlay
     }
 
     private record struct TransientReflectDatum(Matrix3x2 Matrix, Texture Texture, Box2Rotated Box);
+
+    /// <param name="Hash">Some esoteric random hash combined with <see cref="Size"/>.</param>
     private readonly record struct SpriteStateDatum(Vector2i Size, int Hash) : IEquatable<SpriteStateDatum>
     {
-        public override int GetHashCode()
-            => HashCode.Combine(Size, Hash);
+        // Hash is already combined with Size
+        public override int GetHashCode() => Hash;
     }
 
     private Texture GetLayerTexture(SpriteComponent spriteComponent, SpriteComponent.Layer layer, Angle rotation)
