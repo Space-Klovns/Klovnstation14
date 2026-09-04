@@ -1,7 +1,7 @@
 using Content.Shared._KS14.IoC;
 using Robust.Client.Graphics;
 
-namespace Content.Client._KS14.DodgingEffect;
+namespace Content.Client._KS14.CloneLocalVisuals;
 
 public sealed partial class CloneLocalVisualsOverlaySystem : EntitySystem
 {
@@ -16,7 +16,7 @@ public sealed partial class CloneLocalVisualsOverlaySystem : EntitySystem
 
     private void OnDependenciesReady(IDependencyCollection dependencyCollection)
     {
-        var overlay = new DodgingEffectOverlay();
+        var overlay = new CloneLocalVisualsOverlay();
 
         dependencyCollection.InjectDependencies(overlay, oneOff: true);
         _overlayManager.AddOverlay(overlay);
@@ -25,6 +25,6 @@ public sealed partial class CloneLocalVisualsOverlaySystem : EntitySystem
     public override void Shutdown()
     {
         base.Shutdown();
-        _overlayManager.RemoveOverlay<DodgingEffectOverlay>();
+        _overlayManager.RemoveOverlay<CloneLocalVisualsOverlay>();
     }
 }

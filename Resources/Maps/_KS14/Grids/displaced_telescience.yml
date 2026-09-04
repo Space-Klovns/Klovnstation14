@@ -1884,7 +1884,7 @@ entities:
       pos: 2.5000086,-1.333174
       parent: 1
     - type: InsertIntoSpeczoneOnTrigger
-      speczoneId: bluelab
+      speczoneId: nanoplant_basement
       targetUser: true
       keysIn:
       - trigger
@@ -1930,7 +1930,7 @@ entities:
       offset: 0,0.05
     - type: AmbientSound
       volume: 0
-      range: 10
+      range: 3
       sound: !type:SoundPathSpecifier
         params:
           variation: null
@@ -1938,10 +1938,10 @@ entities:
           loop: False
           referenceDistance: 1
           rolloffFactor: 1
-          maxDistance: 10
+          maxDistance: 3
           pitch: 1
           volume: 0
-        path: /Audio/Ambience/ambiruin5.ogg
+        path: /Audio/_KS14/Effects/firealarm_distant.ogg
     - type: RadiationSource
       slope: 0.7
       intensity: 4.5
@@ -2782,6 +2782,20 @@ entities:
     - type: Transform
       pos: 2.5,-1.5
       parent: 1
+    - type: AmbientSound
+      volume: 0
+      range: 10
+      sound: !type:SoundPathSpecifier
+        params:
+          variation: null
+          playOffsetSeconds: 0
+          loop: False
+          referenceDistance: 1
+          rolloffFactor: 1
+          maxDistance: 10
+          pitch: 1
+          volume: 0
+        path: /Audio/Ambience/ambiruin5.ogg
     missingComponents:
     - DeviceLinkSink
     - CargoTelepad

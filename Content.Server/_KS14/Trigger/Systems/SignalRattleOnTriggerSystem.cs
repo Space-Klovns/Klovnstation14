@@ -3,11 +3,8 @@ using Content.Shared.Trigger;
 using Content.Shared._KS14.Trigger.Components;
 using Content.Shared.Mobs;
 using Content.Server.DeviceLinking.Systems;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Utility;
-using Robust.Shared.Log;
 
-namespace Content.Server.Trigger.Systems;
+namespace Content.Server._KS14.Trigger.Systems;
 
 public sealed partial class SignalRattleOnTriggerSystem : EntitySystem
 {

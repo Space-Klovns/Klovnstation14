@@ -73,6 +73,10 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
     [DataField]
     public bool RequireLosForRangeCheck;
 
+    // KS14
+    [DataField]
+    public bool WeAreAtTargetCoordsAfterSuccessfullyPlanning = true;
+
     private const string MovementCancelToken = "MovementCancelToken";
 
     public override void Initialize(IEntitySystemManager sysManager)
@@ -114,18 +118,23 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
         // KS14: ANK: end
         {
             // In range
-            return (true, new Dictionary<string, object>()
-            {
-                {NPCBlackboard.OwnerCoordinates, blackboard.GetValueOrDefault<EntityCoordinates>(NPCBlackboard.OwnerCoordinates, _entManager)}
-            });
+            // KS14 start: only report OwnerCoordinates as an effect when WeAreAtTargetCoordsAfterSuccessfullyPlanning,
+            // since other tasks in the plan may rely on OwnerCoordinates not being set as if we'd reached the target
+            var inRangeEffects = new Dictionary<string, object>();
+            if (WeAreAtTargetCoordsAfterSuccessfullyPlanning)
+                inRangeEffects[NPCBlackboard.OwnerCoordinates] = blackboard.GetValueOrDefault<EntityCoordinates>(NPCBlackboard.OwnerCoordinates, _entManager);
+            return (true, inRangeEffects);
+            // KS14 end
         }
 
         if (!PathfindInPlanning)
         {
-            return (true, new Dictionary<string, object>()
-            {
-                {NPCBlackboard.OwnerCoordinates, targetCoordinates}
-            });
+            // KS14 start: only report OwnerCoordinates as an effect when WeAreAtTargetCoordsAfterSuccessfullyPlanning
+            var noPathfindEffects = new Dictionary<string, object>();
+            if (WeAreAtTargetCoordsAfterSuccessfullyPlanning)
+                noPathfindEffects[NPCBlackboard.OwnerCoordinates] = targetCoordinates;
+            return (true, noPathfindEffects);
+            // KS14 end
         }
 
         var path = await _pathfind.GetPath(
@@ -141,12 +150,16 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
             return (false, null);
         }
 
-        return (true, new Dictionary<string, object>()
+        // KS14 start: only report OwnerCoordinates as an effect when WeAreAtTargetCoordsAfterSuccessfullyPlanning
+        var pathEffects = new Dictionary<string, object>
         {
-            {NPCBlackboard.OwnerCoordinates, targetCoordinates},
             {PathfindKey, path}
-        });
+        };
+        if (WeAreAtTargetCoordsAfterSuccessfullyPlanning)
+            pathEffects[NPCBlackboard.OwnerCoordinates] = targetCoordinates;
 
+        return (true, pathEffects);
+        // KS14 end
     }
 
     // Given steering is complicated we'll hand it off to a dedicated system rather than this singleton operator.
