@@ -15,6 +15,7 @@ public abstract partial class UtilityConsideration
     /// <summary>
     ///     Called when prototypes are reloaded, or this is initialised.
     /// </summary>
+    [MustCallBase]
     public virtual void Initialise(IDependencyCollection dependencyCollection) => dependencyCollection.InjectDependencies(this, oneOff: true); // AccessViolationException if not oneOff
 
     // KS14: ANK

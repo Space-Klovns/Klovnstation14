@@ -13,6 +13,7 @@ public abstract partial class HTNOperator
     /// <summary>
     /// Called once whenever prototypes reload. Typically used to inject dependencies.
     /// </summary>
+    [MustCallBase] // KS14
     public virtual void Initialize(IEntitySystemManager sysManager)
     {
         sysManager.DependencyCollection.InjectDependencies(this, oneOff: true); // KS14: ANK: use injectdependencies with system collection, so that entity systems are injected
