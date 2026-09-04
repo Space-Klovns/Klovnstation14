@@ -17,10 +17,16 @@
           !type:PhysShapeAabb
           bounds: "-0.5,-0.5,0.5,0.5"
         hard: false
+        # layer:
+        # - LowImpassable
+        # - MidImpassable
+        # mask:
+        # - LowImpassable
+        # - MidImpassable
         layer:
-        - MidImpassable
+        - SlipLayer
         mask:
-        - MidImpassable
+        - ItemMask
   # The RSI is 32x48 greyscale, so it is offset quarter a tile up and modulated with the chemfire's colour.
   #     The matching `over` half is drawn above the effects layer by ChemicalFireOverlay.
   - type: Sprite
@@ -35,3 +41,6 @@
   - type: Tag
     tags:
     - HideContextMenu
+
+  - type: EmitSoundOnSpawn
+    sound: /Audio/_KS14/Effects/fire_puff.ogg

@@ -21,10 +21,10 @@ public sealed partial class ChemicalFireVisualsSystem : EntitySystem
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private SharedChemicalFireSystem _chemicalFireSystem = default!;
 
-    private EntityQuery<ChemicalFireComponent> _chemicalFireQuery = default!;
-    private EntityQuery<ChemicalFireGridComponent> _chemicalFireGridQuery = default!;
-    private EntityQuery<SpriteComponent> _spriteQuery = default!;
-    private EntityQuery<TransformComponent> _transformQuery = default!;
+    [Dependency] private EntityQuery<ChemicalFireComponent> _chemicalFireQuery = default!;
+    [Dependency] private EntityQuery<ChemicalFireGridComponent> _chemicalFireGridQuery = default!;
+    [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
+    [Dependency] private EntityQuery<TransformComponent> _transformQuery = default!;
 
     private readonly Queue<EntityUid> _dirtyFires = new();
     private int _generation;
@@ -51,11 +51,6 @@ public sealed partial class ChemicalFireVisualsSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
-
-        _chemicalFireQuery = GetEntityQuery<ChemicalFireComponent>();
-        _chemicalFireGridQuery = GetEntityQuery<ChemicalFireGridComponent>();
-        _spriteQuery = GetEntityQuery<SpriteComponent>();
-        _transformQuery = GetEntityQuery<TransformComponent>();
 
         SubscribeLocalEvent<ChemicalFireComponent, AfterAutoHandleStateEvent>(OnAfterAutoHandleState);
         SubscribeLocalEvent<ChemicalFireTileChangedEvent>(OnTileChanged);

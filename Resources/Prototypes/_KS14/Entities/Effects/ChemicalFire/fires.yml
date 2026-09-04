@@ -8,10 +8,22 @@
     duration: 10
     temperature: 1500
     exposedVolume: 50
+  - type: StepTrigger
+    requiredTriggeredSpeed: 0
+    intersectRatio: 0.1
+    blacklist:
+      tags:
+      - Catwalk
+  - type: TileEntityEffect
+    effects:
+    - !type:Flammable
+      multiplier: 3.75
+      multiplierOnExisting: 0.75
+    - !type:Ignite
 
 # Plasma-fed: eats the tile's plasma and goes out the moment there is none left.
 - type: entity
-  parent: BaseChemicalFire
+  parent: ChemicalFire
   id: ChemicalFirePlasma
   name: plasma fire
   components:
@@ -27,7 +39,7 @@
 
 # Short, cold-ish flare. Shares no connection key with the others, so it stacks on their tiles.
 - type: entity
-  parent: BaseChemicalFire
+  parent: ChemicalFire
   id: ChemicalFireFrost
   name: frost fire
   components:

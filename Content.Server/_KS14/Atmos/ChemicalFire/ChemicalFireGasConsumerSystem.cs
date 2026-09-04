@@ -12,13 +12,11 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
     [Dependency] private ChemicalFireSystem _chemicalFireSystem = default!;
 
-    private EntityQuery<ChemicalFireComponent> _chemicalFireQuery = default!;
+    [Dependency] private EntityQuery<ChemicalFireComponent> _chemicalFireQuery = default!;
 
     public override void Initialize()
     {
         base.Initialize();
-
-        _chemicalFireQuery = GetEntityQuery<ChemicalFireComponent>();
 
         SubscribeLocalEvent<ChemicalFireGasConsumerComponent, ChemicalFireHeatTileEvent>(OnHeatTile);
     }
