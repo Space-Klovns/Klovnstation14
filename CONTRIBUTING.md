@@ -139,6 +139,34 @@ Klovnstation 14 follows upstream Space Wizards' Den coding standards. Read and a
 - [Pull-request guidelines](https://docs.spacestation14.com/en/general-development/codebase-info/pull-request-guidelines.html) — separate PRs per feature/bug fix/refactor, test in-game, no web edits, no force-push after reviews.
 - [Style guide](https://docs.spacestation14.com/en/general-development/codebase-info/style-guide.html) — C# formatting.
 
+### YAML prototype essentials
+
+Summarised from the upstream conventions doc — that page stays the authority; this is the part you'll reach for constantly.
+
+**Field order** in an entity prototype: `type` → `abstract` → `parent` → `id` → `categories` → `name` → `suffix` → `description` → `components`, then the rest.
+
+```yaml
+- type: entity
+  abstract: true            # omit entirely when not abstract
+  parent: BaseStructure
+  id: KsCatwalkIron
+  categories: [ HideSpawnMenu ]
+  name: catwalk
+  suffix: Iron
+  description: A metal walkway.
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/catwalk.rsi
+  - type: KsCatwalkIconsmoother
+```
+
+- **Casing** — prototype IDs and component names are `PascalCase`; every other field, and prototype *type* names, are `camelCase`. Never use `prefix.Something` as an ID. Locale IDs are `kebab-case`, no capitals, specific enough not to clash (`antag-traitor-user-was-traitor-message`).
+- **Components** — `- type:` entries take no extra indent under `components:`, and no blank lines between them. Generalized/engine components near the top, specific ones near the bottom.
+- **Spacing** — exactly one blank line between prototypes.
+- **Lists** — inline (`[ A, B ]`) for `categories` and multi-`parent`; block lists for everything else.
+- **Text** — no quotes on `name`/`description` unless punctuation demands it, then single quotes. Every player-facing string is localized.
+- **Abstract prototypes** — no textures in them. Use `suffix` to separate spawn-menu variants instead of baking the distinction into `name`.
+
 **One exception to upstream**: `codebase-organization` says game-code folders live directly under `Content.Client/Shared/Server`. We override this for **new fork code only** — new code goes under `_KS14/` per §2. Upstream files edited in place keep their upstream layout and carry `// KS14:` markers per §3. Don't touch existing code just to bring it into convention unless you're already changing it for another reason.
 
 ### Local rules on top of upstream
@@ -156,6 +184,17 @@ PhysicsComponent physicsComponent;               // not 'body'
 SpriteComponent spriteComponent;                 // not 'sprite'
 ```
 Members with `[DataField]` get some leeway (`Prototype` → `Proto` is fine).
+
+**Names imply type (C#)** — a descriptively-named variable, parameter or member carries its type in its suffix:
+```csharp
+EntityUid targetUid;                          // EntityUid            → '...Uid'
+Entity<StickyComponent> stuckEntity;          // Entity<T>            → '...Entity'
+NetEntity massDriverNetEntity;                // NetEntity            → '...NetEntity'
+TransformComponent userTransformComponent;    // a component          → '...Component'
+```
+This earns its keep when one thing exists in several forms in the same scope — `projectileUid` sitting next to `Entity<LagCompensatingProjectileComponent> projectile` reads unambiguously.
+
+Exceptions, all conventional: the primary subject of a handler or method may stay bare — `entity`, `ent`, `uid` — and a locally-built event is just `ev`. As soon as a second thing of the same kind enters scope, go back to suffixes.
 
 **`Ks` prefix (IDs & type names)** — when a new prototype ID or type name could plausibly collide with an upstream name (present or future), prefix it with `Ks`: `KsCCVars` (a fork-only cvars class, deliberately not inheriting upstream `CCVars`), `KsBlack`, `KsCatwalkIron` (colors and structure variants — generic vocabulary upstream already uses or could use). Skip the prefix when the name is already distinctive enough not to collide — `Anchorless`, `ArcFlash`, `ComplexShove` — the `_KS14/` folder already marks provenance there. This is a judgment call, not a mechanical rule: ask "would upstream plausibly ship something under this exact name?" If yes, prefix it.
 
