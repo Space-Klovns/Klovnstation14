@@ -66,6 +66,14 @@ public sealed partial class ChemicalFireComponent : Component
     public float EmissionRange = 0.25f;
 
     /// <summary>
+    ///     Whether putting the tile's fire out - an extinguisher, a water grenade, anything else that ends up
+    ///         calling <c>AtmosphereSystem.HotspotExtinguish</c> - also puts this chemfire out.
+    ///     Chemfires that are meant to burn through a dousing (thermite, welding fuel and the like) turn it off.
+    /// </summary>
+    [DataField]
+    public bool Extinguishable = true;
+
+    /// <summary>
     ///     Chemfires sharing a connection key smooth into each other laterally, and may not share a tile.
     ///         Null falls back to the entity's prototype id, so distinct prototypes are distinct by default.
     /// </summary>

@@ -3,7 +3,6 @@ using Content.Shared._KS14.Atmos.ChemicalFire;
 using Content.Shared._KS14.Random.Helpers;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
-using Robust.Shared.GameStates;
 
 namespace Content.Client._KS14.Atmos.ChemicalFire;
 
