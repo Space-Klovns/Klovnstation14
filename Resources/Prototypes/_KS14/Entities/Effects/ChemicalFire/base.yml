@@ -21,14 +21,17 @@
         - MidImpassable
         mask:
         - MidImpassable
-  # The RSI is 32x48 greyscale, so it is offset half a tile up and modulated with the chemfire's colour.
+  # The RSI is 32x48 greyscale, so it is offset quarter a tile up and modulated with the chemfire's colour.
   #     The matching `over` half is drawn above the effects layer by ChemicalFireOverlay.
   - type: Sprite
     sprite: _KS14/Effects/Fire/chemfire.rsi
     drawdepth: Objects
     snapCardinals: true
-    offset: 0,0.5
+    offset: 0,0.25
     layers:
     - state: white_under-1
       map: ["enum.ChemicalFireVisualLayers.Under"]
       shader: unshaded
+  - type: Tag
+    tags:
+    - HideContextMenu

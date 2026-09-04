@@ -19,6 +19,12 @@ public sealed partial class ChemicalFireGasConsumerComponent : Component
     public Dictionary<Gas, float> Gases = [];
 
     /// <summary>
+    ///     Produces moles per second by this chemfire.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public Dictionary<Gas, float>? ProducedGases = null;
+
+    /// <summary>
     ///     Whether the chemfire dies early once none of its <see cref="Gases"/> are left on the tile.
     /// </summary>
     [DataField, AutoNetworkedField]

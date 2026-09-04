@@ -40,6 +40,12 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
             consumedAnything = true;
         }
 
+        if (entity.Comp.ProducedGases is { } producedGases)
+        {
+            foreach (var (gas, molesPerSecond) in producedGases)
+                mixture.AdjustMoles(gas, molesPerSecond * args.Seconds);
+        }
+
         if (consumedAnything ||
             !entity.Comp.ExtinguishWhenDepleted ||
             !_chemicalFireQuery.TryGetComponent(entity.Owner, out var fireComponent))
