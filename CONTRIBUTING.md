@@ -68,7 +68,7 @@ When you edit **or add** a file **outside** `_KS14/` (anywhere in upstream SS14 
 
 Both forms make our changes easy to spot on the next upstream merge. Always preserve the original upstream value in the comment: swap `100 -> 50` today, and a later change to that same line becomes `100 -> 30` (not `50 -> 30`). Swap `KS14` for another fork's tag (e.g. `Goobstation`) when porting from that fork instead of writing net-new code.
 
-Forms:
+Forms, ordered so that they take precedence over those before them:
 
 - **Specific change** — `/* KS14: concise statement */` right after the change:
   ```csharp
@@ -79,14 +79,6 @@ Forms:
           PredictedSpawn/* KS14: made predicted */(entityId);
       }
   }
-  ```
-- **Adding a line, or several changes on one line** — trailing `// KS14: short reason`:
-  ```csharp
-  public bool Inverted; // KS14: if true, Species list is a blacklist
-  ```
-- **Removing a single line** — comment it out, reason after:
-  ```csharp
-  /* public bool Inverted; */ // KS14: removed, if true Species list was a blacklist
   ```
 - **C# value swap** — `// KS14: OLD -> NEW, reason (optional)` (use the specific-change form instead if the value isn't at the end of the line, excluding the semicolon):
   ```csharp
@@ -111,6 +103,14 @@ Forms:
   doOtherThing();
   doMoreThings();
   */
+  ```
+- **Adding a line, or several changes on one line** — trailing `// KS14: short reason`:
+  ```csharp
+  public bool Inverted; // KS14: if true, Species list is a blacklist
+  ```
+- **Removing a single line** — comment it out, reason after:
+  ```csharp
+  /* public bool Inverted; */ // KS14: removed, if true Species list was a blacklist
   ```
 - **Added `using`** — trailing `// KS14`:
   ```csharp
@@ -156,18 +156,6 @@ PhysicsComponent physicsComponent;               // not 'body'
 SpriteComponent spriteComponent;                 // not 'sprite'
 ```
 Members with `[DataField]` get some leeway (`Prototype` → `Proto` is fine).
-
-**Acronym casing (C#, YAML)** — acronyms/initialisms are not exempt from PascalCase/camelCase, in C# identifiers and YAML prototype IDs alike: `RCDSystem` → `RcdSystem`, `id: MarkerNPCCamping` → `id: MarkerNpcCamping`. Applies to new names only — don't rename existing upstream identifiers just to fix this.
-
-**Braces (C#)** — omit braces on single-statement `if`/`else`/`for`/`foreach`/`while`/`using` bodies where possible:
-```csharp
-if (args.Cancelled)
-    return;
-
-foreach (var entity in entities)
-    entity.DoThing();
-```
-Keep braces once a body needs more than one statement, or for readability in deeply nested/ambiguous chains.
 
 **`Ks` prefix (IDs & type names)** — when a new prototype ID or type name could plausibly collide with an upstream name (present or future), prefix it with `Ks`: `KsCCVars` (a fork-only cvars class, deliberately not inheriting upstream `CCVars`), `KsBlack`, `KsCatwalkIron` (colors and structure variants — generic vocabulary upstream already uses or could use). Skip the prefix when the name is already distinctive enough not to collide — `Anchorless`, `ArcFlash`, `ComplexShove` — the `_KS14/` folder already marks provenance there. This is a judgment call, not a mechanical rule: ask "would upstream plausibly ship something under this exact name?" If yes, prefix it.
 
