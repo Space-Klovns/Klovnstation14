@@ -1,0 +1,38 @@
+# A plain, hot chemfire. Burns whatever the tile has to offer and does not feed on anything itself.
+- type: entity
+  parent: BaseChemicalFire
+  id: ChemicalFire
+  components:
+  - type: ChemicalFire
+    color: "#FF9030"
+    duration: 10
+    temperature: 1500
+    exposedVolume: 50
+
+# Plasma-fed: eats the tile's plasma and goes out the moment there is none left.
+- type: entity
+  parent: BaseChemicalFire
+  id: ChemicalFirePlasma
+  name: plasma fire
+  components:
+  - type: ChemicalFire
+    color: "#B040FF"
+    duration: 20
+    temperature: 2500
+    exposedVolume: 75
+    emissionRange: 0.4
+  - type: ChemicalFireGasConsumer
+    gases:
+      Plasma: 0.5
+
+# Short, cold-ish flare. Shares no connection key with the others, so it stacks on their tiles.
+- type: entity
+  parent: BaseChemicalFire
+  id: ChemicalFireFrost
+  name: frost fire
+  components:
+  - type: ChemicalFire
+    color: "#50D0FF"
+    duration: 6
+    temperature: 700
+    exposedVolume: 25
