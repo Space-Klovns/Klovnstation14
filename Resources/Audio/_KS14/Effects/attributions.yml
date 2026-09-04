@@ -55,5 +55,5 @@
 
 - files: ["fire_puff.ogg"]
   license: "CC0-1.0"
-  copyright: "Taken from https://github.com/tgstation/tgstation at commit 795f93622e10d8d12064a3e449322d519bc4b8ba"
+  copyright: "Taken from https://github.com/tgstation/tgstation at commit 795f93622e10d8d12064a3e449322d519bc4b8ba, converted from STEREO to MONO for Klovnstation 14"
   source: "https://github.com/tgstation/tgstation/blob/795f93622e10d8d12064a3e449322d519bc4b8ba/sound/effects/fire_puff.ogg"
