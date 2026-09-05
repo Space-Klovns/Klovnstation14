@@ -1102,6 +1102,10 @@ public abstract partial class SharedSolutionContainerSystem : EntitySystem
         // KS14 Start
         foreach (var (ksSolutionId, ksSolution) in entity.Comp.SolutionData)
         {
+            // FUCK
+            if (entity.Comp.Solutions.TryGetValue(ksSolutionId, out var existingSolutionEntity))
+                PredictedDel(existingSolutionEntity.Owner);
+
             var ksSolutionUid = EntityManager.CreateEntityUninitialized(null);
             var ksSolutionComponent = EntityManager.ComponentFactory.GetComponent<SolutionComponent>();
             ksSolutionComponent.Id = ksSolutionId;
