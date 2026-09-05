@@ -1,6 +1,7 @@
 using Content.Server.Atmos;
 using Content.Server.Atmos.EntitySystems;
 using Content.Shared._KS14.Atmos.ChemicalFire;
+using Content.Shared.Atmos;
 
 namespace Content.Server._KS14.Atmos.ChemicalFire;
 
@@ -58,6 +59,8 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
     /// </remarks>
     private void OnHeatTile(Entity<ChemicalFireComponent> entity, ref ChemicalFireHeatTileEvent args)
     {
+        HeatTileAir(entity, ref args);
+
         _atmosphereSystem.HotspotExpose(
             args.GridUid,
             args.Tile,
@@ -66,5 +69,35 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
             sparkSourceUid: entity.Owner,
             soh: true
         );
+    }
+
+    /// <summary>
+    ///     Warms the air on the chemfire's tile directly, independently of whether there is anything on it to
+    ///         set alight.
+    /// </summary>
+    /// <remarks>
+    ///     Capped at <see cref="ChemicalFireComponent.Temperature"/>: a chemfire is a heat source at its own
+    ///         temperature, not an unbounded energy pump, so a cool one must not be able to cook a room simply
+    ///         by burning for long enough.
+    /// </remarks>
+    private void HeatTileAir(Entity<ChemicalFireComponent> entity, ref ChemicalFireHeatTileEvent args)
+    {
+        if (entity.Comp.HeatPower <= 0f)
+            return;
+
+        var mixture = _atmosphereSystem.GetTileMixture((args.GridUid, null, null), null, args.Tile, excite: true);
+        if (mixture is null || mixture.Immutable || mixture.Temperature >= entity.Comp.Temperature)
+            return;
+
+        var heatCapacity = _atmosphereSystem.GetHeatCapacity(mixture, applyScaling: true);
+        if (heatCapacity < Atmospherics.MinimumHeatCapacity)
+            return;
+
+        var energy = MathF.Min(
+            entity.Comp.HeatPower * args.Seconds,
+            (entity.Comp.Temperature - mixture.Temperature) * heatCapacity
+        );
+
+        _atmosphereSystem.AddHeat(mixture, energy);
     }
 }

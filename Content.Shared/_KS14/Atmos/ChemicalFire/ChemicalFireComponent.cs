@@ -34,8 +34,9 @@ public sealed partial class ChemicalFireComponent : Component
     public Color Color = Color.White;
 
     /// <summary>
-    ///     Temperature the tile's hotspot is exposed to. Must exceed
-    ///         <see cref="Shared.Atmos.Atmospherics.PlasmaMinimumBurnTemperature"/> to ignite anything.
+    ///     How hot the chemfire itself burns. Doubles as the temperature the tile's hotspot is exposed to -
+    ///         which must exceed <see cref="Shared.Atmos.Atmospherics.PlasmaMinimumBurnTemperature"/> to ignite
+    ///         anything - and as the ceiling <see cref="HeatPower"/> may warm the tile's air to.
     /// </summary>
     [DataField, AutoNetworkedField]
     public float Temperature = 1500f;
@@ -45,6 +46,15 @@ public sealed partial class ChemicalFireComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField]
     public float ExposedVolume = 50f;
+
+    /// <summary>
+    ///     Thermal energy, in joules per second, poured into the air of the tile the chemfire sits on.
+    ///     Igniting the tile only ever does anything to a mixture that is already both fuel and oxidiser, so
+    ///         this is what makes a chemfire heat a room it has nothing to set alight in. It never pushes the
+    ///         air past <see cref="Temperature"/>, however long the chemfire burns. Zero to not heat at all.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float HeatPower = 50_000f;
 
     /// <summary>
     ///     How often <see cref="ChemicalFireHeatTileEvent"/> is raised on this chemfire.

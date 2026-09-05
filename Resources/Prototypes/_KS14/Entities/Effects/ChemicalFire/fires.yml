@@ -8,6 +8,7 @@
     duration: 10
     temperature: 1500
     exposedVolume: 50
+    heatPower: 50000
   - type: AlwaysHot
   - type: StepTrigger
     requiredTriggeredSpeed: 0
