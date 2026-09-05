@@ -1,0 +1,35 @@
+### Sprite variants
+
+- type: entity
+  parent: SupplyPodCargoBase
+  id: SupplyPodCargoBaseSyndicate
+  name: syndicate cargo pod
+  description: A pod. From somewhere. There's probably something inside! It has the markings of the Syndicate..
+  components:
+  - type: Sprite
+    layers:
+    - map: ["rubble_bg"]
+      state: rubble_bg
+      visible: false
+    - state: darkpod
+    - state: darkpod_door
+      map: ["door1"]
+    - state: syndicate
+      map: ["door2"]
+    - map: ["rubble_fg"]
+      state: rubble_fg
+      visible: false
+
+- type: entity
+  parent: SupplyPodCargoBaseSyndicate
+  id: SupplyPodCargoSyndicateU43
+  name: U-43 combat walker cargo pod
+  suffix: Scenario
+  description: A Syndicate drop pod containing a U-43 combat walker.
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:AllSelector
+        children:
+        - id: MechU43Battery
+        - id: WelderMini

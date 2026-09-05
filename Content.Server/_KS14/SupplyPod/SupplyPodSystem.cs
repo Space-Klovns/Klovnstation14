@@ -90,6 +90,9 @@ public sealed partial class SupplyPodSystem : SharedSupplyPodSystem
 
             _appearanceSystem.SetData(uid, SupplyPodVisuals.Landed, true);
 
+            supplyPodComponent.Landed = true;
+            Dirty(uid, supplyPodComponent);
+
             ReleaseTrail(supplyPodComponent);
 
             RemComp(uid, activeSupplyPodComponent);
@@ -110,6 +113,9 @@ public sealed partial class SupplyPodSystem : SharedSupplyPodSystem
 
         _transformSystem.SetLocalRotation(entity.Owner, activeComponent.Angle, xform: transformComponent);
         _appearanceSystem.SetData(entity.Owner, SupplyPodVisuals.Landed, false);
+
+        entity.Comp.Landed = false;
+        Dirty(entity);
 
         SpawnTrail(entity, activeComponent, transformComponent, curTime);
     }

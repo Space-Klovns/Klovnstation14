@@ -18,11 +18,10 @@ public sealed partial class SupplyPodDescentSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<ActiveSupplyPodComponent, ComponentStartup>(OnActiveStartup);
         SubscribeLocalEvent<ActiveSupplyPodComponent, AnimationCompletedEvent>(OnAnimationCompleted);
     }
 
-    private void OnActiveStartup(Entity<ActiveSupplyPodComponent> entity, ref ComponentStartup args)
+    public void DoStartup(Entity<ActiveSupplyPodComponent> entity)
     {
         // should never happen but whatever
         if (_animationPlayerSystem.HasRunningAnimation(entity.Owner, DescentAnimationKey))

@@ -19,7 +19,7 @@ public abstract partial class SharedSupplyPodSystem : EntitySystem
         args.Cancelled = true;
     }
 
-    private void OnActiveStartup(Entity<ActiveSupplyPodComponent> entity, ref ComponentStartup args)
+    protected virtual void OnActiveStartup(Entity<ActiveSupplyPodComponent> entity, ref ComponentStartup args)
     {
         var ev = new SupplyPodLaunchedEvent();
         RaiseLocalEvent(entity, ev);

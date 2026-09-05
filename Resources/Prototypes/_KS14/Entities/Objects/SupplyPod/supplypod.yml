@@ -24,6 +24,9 @@
     height: 14
     angularDeviation: 15
     trailProto: KsSupplyPodTrail
+  - type: SupplyPodDrawDepth
+    transitDrawDepth: Effects
+    landedDrawDepth: LargeObjects
 
 - type: entity
   id: BaseSupplyPodInert
@@ -83,7 +86,7 @@
           radius: 0.5
         density: 1200
         mask:
-        - MachineMask
+        - MobMask
         layer:
         - MachineLayer
   - type: SupplyPod
@@ -95,7 +98,7 @@
       path: /Audio/_KS14/Weapons/mortar_long_whistle.ogg
       params:
         pitch: 0.5
-    trailProto: KsSupplyPodTrailSlow
+    trailProto: KsSupplyPodTrail
   - type: Lock
     locked: true
     useAccess: false
@@ -155,6 +158,7 @@
   - type: TimerTrigger
     examinable: false
     beepSound: null
+    popup: null
   - type: RandomTimerTrigger
     min: 1
     max: 2
@@ -247,18 +251,6 @@
   id: SupplyPodMissileSyndicateExplosive
   suffix: Armed
 
-- type: entity
-  parent: SupplyPodMissileSyndicateInert
-  id: SupplyPodMechU43
-  name: U-43 combat walker supply pod
-  suffix: Scenario
-  description: A Syndicate drop pod containing a U-43 combat walker.
-  components:
-  - type: TriggerOnSupplyPodLanded
-  - type: SpawnOnTrigger
-    proto: MechU43Battery
-  - type: DeleteOnTrigger
-
 - type: explosion
   id: KsSupplyPodMissile
   damagePerIntensity:
@@ -286,8 +278,6 @@
     params:
       pitch: 0.7
       volume: -5
-
-
 
 ## Flare
 

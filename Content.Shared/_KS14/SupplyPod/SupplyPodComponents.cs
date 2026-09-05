@@ -8,18 +8,21 @@ namespace Content.Shared._KS14.SupplyPod;
 
 [Access(typeof(SharedSupplyPodSystem))]
 [RegisterComponent, NetworkedComponent]
-[AutoGenerateComponentState]
+[AutoGenerateComponentState(true)]
 public sealed partial class SupplyPodComponent : Component
 {
-    /// <summary>
-    ///     Is it open, if theres a door?
-    /// </summary>
-    [DataField, ViewVariables(VVAccess.ReadOnly)]
-    [AutoNetworkedField]
-    public bool Open = false;
-
     [DataField(serverOnly: true), ViewVariables(VVAccess.ReadWrite)]
     public TimeSpan TransitDuration = TimeSpan.Zero;
+
+    /// <summary>
+    ///     Whether this pod has finished its descent. Unlike <see cref="ActiveSupplyPodComponent"/>,
+    ///         which only announces its own addition and removal to clients that happen to be watching,
+    ///         this survives the pod being out of PVS for the whole flight - so late viewers still see
+    ///         the pod in the state it is actually in.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    [AutoNetworkedField]
+    public bool Landed;
 
     /// <summary>
     ///     Height that this starts descent from/ascends to.

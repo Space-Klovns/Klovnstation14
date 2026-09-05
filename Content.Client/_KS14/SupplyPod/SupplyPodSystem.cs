@@ -11,6 +11,7 @@ public sealed partial class SupplyPodSystem : SharedSupplyPodSystem
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IOverlayManager _overlayManager = default!;
     [Dependency] private SystemCollectionHookManager _hookManager = default!;
+    [Dependency] private SupplyPodDescentSystem _supplyPodDescentSystem = default!;
 
     private static readonly ProtoId<ShaderPrototype> StencilMaskShaderId = "StencilMask";
     private static readonly ProtoId<ShaderPrototype> StencilDrawShaderId = "StencilDraw";
@@ -20,6 +21,12 @@ public sealed partial class SupplyPodSystem : SharedSupplyPodSystem
         base.Initialize();
 
         _hookManager.HookAction(OnDependencyAvailable);
+    }
+
+    protected override void OnActiveStartup(Entity<ActiveSupplyPodComponent> entity, ref ComponentStartup args)
+    {
+        base.OnActiveStartup(entity, ref args);
+        _supplyPodDescentSystem.DoStartup(entity);
     }
 
     private void OnDependencyAvailable(IDependencyCollection dependencyCollection)
