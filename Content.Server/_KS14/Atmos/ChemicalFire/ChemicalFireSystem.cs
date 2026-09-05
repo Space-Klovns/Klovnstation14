@@ -113,7 +113,9 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
         gridUid = default;
         tile = entity.Comp.LocalTile;
 
-        if (entity.Comp.LocalGridUid is not { } fireGridUid)
+        // A grid on its way out takes its broadphase with it before its children shut down, so there is
+        //     neither anything left to look the tile up with nor anyone left on it to tell.
+        if (entity.Comp.LocalGridUid is not { } fireGridUid || TerminatingOrDeleted(fireGridUid))
             return false;
 
         gridUid = fireGridUid;

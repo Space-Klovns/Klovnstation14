@@ -1,4 +1,5 @@
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Tests.Helpers;
 using Content.Server.Atmos.EntitySystems;
 using Content.Shared._KS14.Atmos.ChemicalFire;
 using Content.Shared.Atmos.Components;
@@ -403,6 +404,73 @@ public sealed class ChemicalFireTest : GameTest
         {
             Assert.That(entityManager.GetComponent<FlammableComponent>(flammableUid).OnFire,
                 "A chemfire spawning on top of a flammable did not set it alight.");
+        });
+    }
+
+    /// <summary>
+    ///     The other half of <see cref="TestChemicalFireIgnitesFlammableOnItsTile"/>: a chemfire burning out has
+    ///         to tell its tile that the fire is over.
+    /// </summary>
+    /// <remarks>
+    ///     Deleting an entity detaches it to nullspace before shutting its components down, so a chemfire loses
+    ///         the tile it was registered on partway through dying. The shutdown hook has to still know where it
+    ///         was burning, or the extinguish is silently dropped.
+    /// </remarks>
+    [Test]
+    public async Task TestExpiringChemicalFireExtinguishesItsTile()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+
+        var entityManager = server.EntMan;
+        var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
+        var listenerSystem = entityManager.System<ChemicalFireEventListenerSystem>();
+
+        var testMap = await pair.CreateTestMap();
+        var gridUid = testMap.Grid.Owner;
+
+        var flammableUid = EntityUid.Invalid;
+        Entity<ChemicalFireComponent>? fire = null;
+
+        await server.WaitAssertion(() =>
+        {
+            listenerSystem.Clear();
+
+            entityManager.EnsureComponent<GridAtmosphereComponent>(gridUid);
+
+            flammableUid = entityManager.SpawnEntity(FlammableProto, new EntityCoordinates(gridUid, 0.5f, 0.5f));
+            entityManager.EnsureComponent<TestListenerComponent>(flammableUid);
+
+            fire = chemicalFireSystem.SpawnChemicalFire(BriefFireProto, (gridUid, null), FireTile);
+            Assert.That(fire, Is.Not.Null, "Chemfire failed to spawn.");
+        });
+
+        await server.WaitRunTicks(1);
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(listenerSystem.GetTileFireEventCount(flammableUid), Is.EqualTo(1),
+                    "Chemfire did not announce itself to the tile exactly once.");
+
+                Assert.That(listenerSystem.GetTileExtinguishEventCount(flammableUid), Is.Zero,
+                    "Chemfire announced its tile as extinguished while still burning.");
+            }
+        });
+
+        await server.WaitRunTicks(TicksPerSecond * 2);
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(entityManager.EntityExists(fire!.Value.Owner), Is.False,
+                    "Chemfire did not expire.");
+
+                Assert.That(listenerSystem.GetTileExtinguishEventCount(flammableUid), Is.EqualTo(1),
+                    "Chemfire expiring did not extinguish its tile exactly once.");
+            }
         });
     }
 

@@ -251,6 +251,12 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         if (!entity.Comp.Running)
             return;
 
+        // Deleting an entity detaches it to nullspace before shutting its components down, so handling that
+        //     detach here would forget the tile the fire is on before BeforeFireShutdown ever gets to see it.
+        //     The shutdown unregisters the fire itself, so there is nothing to do for a dying one.
+        if (TerminatingOrDeleted(entity.Owner))
+            return;
+
         UnregisterFire(entity);
         RegisterFire(entity, args.Transform);
     }
