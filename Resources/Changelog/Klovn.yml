@@ -1909,3 +1909,15 @@ Entries:
       message: Fixed atmos on Box and Packed.
   id: 198
   time: '2026-08-27T16:40:17.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added chemical fires: fires on tiles caused by some things burning.
+        Namely, all pyrotechnics can cause tiles to burn when spilled above a
+        certain temperature. Namely, thermite burns the strongest. These can be
+        detected with fire sensors, or through the heat they emit.
+    - type: Add
+      message: Explosions now heat up solutions.
+  id: 199
+  time: '2026-09-05T15:40:28.0000000+00:00'
