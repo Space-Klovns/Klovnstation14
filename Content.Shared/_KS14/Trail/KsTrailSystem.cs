@@ -76,6 +76,20 @@ public sealed partial class KsTrailSystem : EntitySystem
         if (tailFadeTiles > 0 && index > length - tailFadeTiles)
             alpha *= (float)(length - index + 1) / (tailFadeTiles + 1);
 
+        // Proportional tail fade: bleed the back of the trail out over a stretch that scales with
+        // the trail, hiding wherever it actually stops rather than just softening the last tile.
+        var tailFadeStartFraction = Math.Clamp(trailComponent.TailFadeStartFraction, 0f, 1f);
+        if (tailFadeStartFraction < 1f)
+        {
+            // Tile 1 sits at the head, tile 'length' at the tail. A one-tile trail is all head.
+            var positionFraction = length > 1
+                ? (float)(index - 1) / (length - 1)
+                : 0f;
+
+            if (positionFraction > tailFadeStartFraction)
+                alpha *= 1f - (positionFraction - tailFadeStartFraction) / (1f - tailFadeStartFraction);
+        }
+
         return alpha;
     }
 

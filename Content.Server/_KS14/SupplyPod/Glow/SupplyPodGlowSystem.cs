@@ -30,6 +30,10 @@ public sealed partial class SupplyPodGlowSystem : EntitySystem
 
     private void OnLaunched(Entity<SupplyPodGlowComponent> entity, ref SupplyPodLaunchedEvent args)
     {
+        // A pod on the way up is not burning anything - the glow belongs to the descent.
+        if (args.Ascending)
+            return;
+
         if (entity.Comp.GlowEntity is not null)
             return;
 

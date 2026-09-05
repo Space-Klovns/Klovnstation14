@@ -12,6 +12,7 @@
       visible: false
       map: ["rubble_bg"]
     - state: darkpod
+      map: ["pod"]
     - state: darkpod_door
       map: ["door"]
     - map: ["paint_displacement"]
@@ -21,6 +22,40 @@
     - state: rubble_fg
       visible: false
       map: ["rubble_fg"]
+  # GenericVisualizer's visuals dictionary replaces the parent's outright rather than merging
+  # into it, so a variant that wants its own reversed states has to restate the whole set.
+  - type: GenericVisualizer
+    visuals:
+      enum.SupplyPodVisuals.Landed:
+        rubble_bfg:
+          False: { visible: false }
+          True: { visible: true }
+        rubble_fg:
+          False: { visible: false }
+          True: { visible: true }
+      enum.SupplyPodVisuals.Reversed:
+        pod:
+          False: { state: darkpod }
+          True: { state: darkpod_reverse }
+      enum.StorageVisuals.Open:
+        door:
+          True: { visible: false }
+          False: { visible: true }
+        paint_displacement:
+          True:
+            sprite: _KS14/Objects/SupplyPod/displacement.rsi
+            state: open
+            copyToShaderParameters:
+              layerKey: paint
+              parameterTexture: displacementMap
+              parameterUV: displacementUV
+          False:
+            sprite: _KS14/Objects/SupplyPod/displacement.rsi
+            state: closed
+            copyToShaderParameters:
+              layerKey: paint
+              parameterTexture: displacementMap
+              parameterUV: displacementUV
 
 - type: entity
   parent: SupplyPodCargoBase
@@ -34,6 +69,7 @@
       visible: false
       map: ["rubble_bg"]
     - state: advpod
+      map: ["pod"]
     - state: advpod_door
       map: ["door"]
     - map: ["paint_displacement"]
@@ -43,6 +79,40 @@
     - state: rubble_fg
       visible: false
       map: ["rubble_fg"]
+  # GenericVisualizer's visuals dictionary replaces the parent's outright rather than merging
+  # into it, so a variant that wants its own reversed states has to restate the whole set.
+  - type: GenericVisualizer
+    visuals:
+      enum.SupplyPodVisuals.Landed:
+        rubble_bfg:
+          False: { visible: false }
+          True: { visible: true }
+        rubble_fg:
+          False: { visible: false }
+          True: { visible: true }
+      enum.SupplyPodVisuals.Reversed:
+        pod:
+          False: { state: advpod }
+          True: { state: advpod_reverse }
+      enum.StorageVisuals.Open:
+        door:
+          True: { visible: false }
+          False: { visible: true }
+        paint_displacement:
+          True:
+            sprite: _KS14/Objects/SupplyPod/displacement.rsi
+            state: open
+            copyToShaderParameters:
+              layerKey: paint
+              parameterTexture: displacementMap
+              parameterUV: displacementUV
+          False:
+            sprite: _KS14/Objects/SupplyPod/displacement.rsi
+            state: closed
+            copyToShaderParameters:
+              layerKey: paint
+              parameterTexture: displacementMap
+              parameterUV: displacementUV
   - type: SupplyPodGlow
     glowProto: KsSupplyPodGlowBlue
 

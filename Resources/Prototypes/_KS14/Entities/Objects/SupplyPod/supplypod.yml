@@ -15,7 +15,6 @@
     - state: default
 
   - type: SupplyPod
-    transitDuration: 1s
     fallDuration: 1s
     fallSoundDelay: 0s
     fallSound: /Audio/_KS14/Weapons/mortar_long_whistle.ogg
@@ -70,6 +69,7 @@
       visible: false
       map: ["rubble_bg"]
     - state: pod
+      map: ["pod"]
     - state: pod_door
       map: ["door"]
     - map: ["paint_displacement"]
@@ -100,6 +100,9 @@
       path: /Audio/_KS14/Weapons/mortar_long_whistle.ogg
       params:
         pitch: 0.5
+    launchDuration: 2s
+    launchSound:
+      path: /Audio/_KS14/Effects/mass_driver_launching.ogg
     trailProto: KsSupplyPodTrail
   - type: SupplyPodGlow
     glowProto: KsSupplyPodGlowRed
@@ -119,6 +122,10 @@
         rubble_fg:
           False: { visible: false }
           True: { visible: true }
+      enum.SupplyPodVisuals.Reversed:
+        pod:
+          False: { state: pod }
+          True: { state: pod_reverse }
       enum.StorageVisuals.Open:
         door:
           True: { visible: false }
@@ -156,7 +163,7 @@
           collection: MetalBreak
 
   - type: EntityStorage
-    masksToRemove: 0
+    #masksToRemove: 0
     openOnMove: false
   - type: PlaceableSurface
     isPlaceable: false # defaults to closed.

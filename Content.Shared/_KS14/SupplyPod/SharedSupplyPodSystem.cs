@@ -21,15 +21,29 @@ public abstract partial class SharedSupplyPodSystem : EntitySystem
 
     protected virtual void OnActiveStartup(Entity<ActiveSupplyPodComponent> entity, ref ComponentStartup args)
     {
-        var ev = new SupplyPodLaunchedEvent();
-        RaiseLocalEvent(entity, ev);
+        RaiseLaunched(entity.Owner, entity.Comp.Ascending);
     }
 
-    private void OnActiveShutdown(Entity<ActiveSupplyPodComponent> entity, ref ComponentShutdown args)
+    /// <summary>
+    ///     A launched pod turns around mid-air and starts its descent on the same component, so
+    ///         component startup does not cover every leg - the server raises the second one itself.
+    /// </summary>
+    protected void RaiseLaunched(EntityUid podUid, bool ascending)
+    {
+        var ev = new SupplyPodLaunchedEvent(ascending);
+        RaiseLocalEvent(podUid, ev);
+    }
+
+    protected virtual void OnActiveShutdown(Entity<ActiveSupplyPodComponent> entity, ref ComponentShutdown args)
     {
         // ComponentShutdown also fires while the pod itself is being deleted. In that case,
         // spawning the landing payload would attach it to an entity that is terminating.
         if (Comp<MetaDataComponent>(entity).EntityLifeStage >= EntityLifeStage.Terminating)
+            return;
+
+        // A pod that is still on its way up never landed. The ascent leg hands over to the descent
+        // leg on the same component, so this only catches the component being torn off mid-flight.
+        if (entity.Comp.Ascending)
             return;
 
         var ev = new SupplyPodLandedEvent();
@@ -38,9 +52,12 @@ public abstract partial class SharedSupplyPodSystem : EntitySystem
 }
 
 /// <summary>
-///     Raised by-value on a supply pod when it lands.
+///     Raised by-value on a supply pod when it starts flying, for each leg of its trip.
 /// </summary>
-public record struct SupplyPodLaunchedEvent;
+/// <param name="Ascending">
+///     Whether the pod is rising away from the ground rather than falling towards it.
+/// </param>
+public record struct SupplyPodLaunchedEvent(bool Ascending);
 
 /// <summary>
 ///     Raised by-value on a supply pod when it lands.

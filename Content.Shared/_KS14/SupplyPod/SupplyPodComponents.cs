@@ -11,9 +11,6 @@ namespace Content.Shared._KS14.SupplyPod;
 [AutoGenerateComponentState(true)]
 public sealed partial class SupplyPodComponent : Component
 {
-    [DataField(serverOnly: true), ViewVariables(VVAccess.ReadWrite)]
-    public TimeSpan TransitDuration = TimeSpan.Zero;
-
     /// <summary>
     ///     Whether this pod has finished its descent. Unlike <see cref="ActiveSupplyPodComponent"/>,
     ///         which only announces its own addition and removal to clients that happen to be watching,
@@ -63,6 +60,24 @@ public sealed partial class SupplyPodComponent : Component
     public SoundSpecifier? ImpactSound = null;
     #endregion
 
+    #region Launch data
+    /// <summary>
+    ///     Amount of time taken to rise back up to <see cref="Height"/> when launched
+    ///         from the ground. tgstation's second half of a reverse pod's trip.
+    /// </summary>
+    [DataField]
+    public TimeSpan LaunchDuration = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    ///     Sound to be played where the pod stood when it is launched, if any.
+    /// </summary>
+    /// <remarks>
+    ///     tgstation's <c>leavingSound</c>.
+    /// </remarks>
+    [DataField]
+    public SoundSpecifier? LaunchSound = null;
+    #endregion
+
     #region Trail
     /// <summary>
     ///     Trail entity spawned along the descent path, if any. Must carry a KsTrailComponent.
@@ -90,7 +105,7 @@ public sealed partial class SupplyPodComponent : Component
 ///     Added to supply pods when they are in transit, removed afterwards.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
-[AutoGenerateComponentState, AutoGenerateComponentPause]
+[AutoGenerateComponentState(true), AutoGenerateComponentPause]
 public sealed partial class ActiveSupplyPodComponent : Component
 {
     /// <summary>
@@ -122,6 +137,48 @@ public sealed partial class ActiveSupplyPodComponent : Component
     [DataField, ViewVariables(VVAccess.ReadOnly)]
     [AutoNetworkedField]
     public Angle Angle;
+
+    /// <summary>
+    ///     Whether the pod is rising away from the ground rather than falling towards it. The
+    ///         client plays the descent animation backwards for these.
+    /// </summary>
+    [DataField, ViewVariables(VVAccess.ReadOnly)]
+    [AutoNetworkedField]
+    public bool Ascending;
+
+    /// <summary>
+    ///     Where an ascending pod comes back down. Server-side bookkeeping only - the descent leg
+    ///         writes it into <see cref="DestinationCoordinates"/> when it starts.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public EntityCoordinates? DropoffCoordinates;
+
+    /// <summary>
+    ///     <see cref="LaunchFinishTime"/> that the client is currently animating towards. Client-side
+    ///         bookkeeping only; a pod flips from ascent to descent without the component ever being
+    ///         removed, so this is what tells the client its animation is for the previous leg.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public TimeSpan? AnimatedFinishTime;
+
+    /// <summary>
+    ///     The sprite colour the pod had before any flight animation touched it. Client-side
+    ///         bookkeeping only; the animation writes the sprite colour directly, so an ascent
+    ///         leaves it fully transparent and the descent that follows cannot read the real colour
+    ///         off the sprite any more.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public Color? OriginalColor;
+}
+
+/// <summary>
+///     Marks a supply pod that was spawned sitting on the ground, waiting to be launched, rather
+///         than dropped in from orbit. tgstation's reversing pod between its two legs.
+/// </summary>
+[Access(typeof(SharedSupplyPodSystem))]
+[RegisterComponent]
+public sealed partial class UnlaunchedSupplyPodComponent : Component
+{
 }
 
 [Access(typeof(SharedSupplyPodSystem))]
@@ -151,5 +208,10 @@ public enum SupplyPodVisuals : byte
     /// <summary>
     ///     Boolean
     /// </summary>
-    Landed
+    Landed,
+
+    /// <summary>
+    ///     Boolean
+    /// </summary>
+    Reversed
 }
