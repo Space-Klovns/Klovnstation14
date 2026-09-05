@@ -409,6 +409,52 @@ public sealed class ChemicalFireTest : GameTest
     }
 
     /// <summary>
+    ///     A chemfire keeps announcing itself for as long as it burns, so walking into one that is already
+    ///         going has to set you alight just as being caught by a fresh one does.
+    /// </summary>
+    [Test]
+    public async Task TestChemicalFireIgnitesFlammableArrivingOnItsTile()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+
+        var entityManager = server.EntMan;
+        var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
+
+        var testMap = await pair.CreateTestMap();
+        var gridUid = testMap.Grid.Owner;
+
+        await server.WaitAssertion(() =>
+        {
+            entityManager.EnsureComponent<GridAtmosphereComponent>(gridUid);
+
+            Assert.That(chemicalFireSystem.SpawnChemicalFire(FireProto, (gridUid, null), FireTile), Is.Not.Null,
+                "Chemfire failed to spawn.");
+        });
+
+        // Long enough that the chemfire's own startup announcement is well in the past.
+        await server.WaitRunTicks(TicksPerSecond);
+
+        var flammableUid = EntityUid.Invalid;
+
+        await server.WaitAssertion(() =>
+        {
+            flammableUid = entityManager.SpawnEntity(FlammableProto, new EntityCoordinates(gridUid, 0.5f, 0.5f));
+
+            Assert.That(entityManager.GetComponent<FlammableComponent>(flammableUid).OnFire, Is.False,
+                "Test flammable spawned already alight.");
+        });
+
+        await server.WaitRunTicks(TicksPerSecond);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entityManager.GetComponent<FlammableComponent>(flammableUid).OnFire,
+                "A flammable arriving on a tile a chemfire was already burning was never set alight.");
+        });
+    }
+
+    /// <summary>
     ///     The other half of <see cref="TestChemicalFireIgnitesFlammableOnItsTile"/>: a chemfire burning out has
     ///         to tell its tile that the fire is over.
     /// </summary>
@@ -480,12 +526,11 @@ public sealed class ChemicalFireTest : GameTest
     #region Arbitration
 
     /// <summary>
-    ///     Two fires on one tile still make one fire as far as anything standing on it is concerned: the
-    ///         chemfire outranks the hotspot, so the hotspot stops announcing itself for as long as the
-    ///         chemfire is there.
+    ///     A hotspot and a chemfire on one tile both burn what is standing on it: neither of them stops
+    ///         announcing itself just because the other is there.
     /// </summary>
     [Test]
-    public async Task TestChemicalFireSilencesTheHotspotOnItsTile()
+    public async Task TestHotspotAndChemicalFireBothBurnTheirTile()
     {
         var pair = Pair;
         var server = pair.Server;
@@ -500,6 +545,7 @@ public sealed class ChemicalFireTest : GameTest
 
         var bystanderUid = EntityUid.Invalid;
         var hotspotFireEventCount = 0;
+        var chemicalFireEventCount = 0;
 
         await server.WaitAssertion(() =>
         {
@@ -539,8 +585,10 @@ public sealed class ChemicalFireTest : GameTest
             Assert.That(chemicalFireSystem.SpawnChemicalFire(FireProto, (gridUid, null), FireTile), Is.Not.Null,
                 "Chemfire failed to spawn.");
 
-            // The chemfire announces itself as it starts, which is the last event the tile should see.
-            hotspotFireEventCount = listenerSystem.GetTileFireEventCount(bystanderUid);
+            chemicalFireEventCount = listenerSystem.GetTileFireEventCount(bystanderUid);
+
+            Assert.That(chemicalFireEventCount, Is.GreaterThan(hotspotFireEventCount),
+                "Chemfire did not announce itself on a tile that was already burning.");
         });
 
         await server.WaitRunTicks(TicksPerSecond);
@@ -550,10 +598,10 @@ public sealed class ChemicalFireTest : GameTest
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(atmosphereSystem.HasGasHotspot((gridUid, null), FireTile),
-                    "Test tile stopped burning, so the hotspot had nothing left to suppress.");
+                    "Test tile stopped burning, so there was only ever one fire on it.");
 
-                Assert.That(listenerSystem.GetTileFireEventCount(bystanderUid), Is.EqualTo(hotspotFireEventCount),
-                    "The hotspot kept announcing itself while a chemfire was holding its tile.");
+                Assert.That(listenerSystem.GetTileFireEventCount(bystanderUid), Is.GreaterThan(chemicalFireEventCount),
+                    "The hotspot went quiet once a chemfire joined it on the tile.");
             }
         });
     }

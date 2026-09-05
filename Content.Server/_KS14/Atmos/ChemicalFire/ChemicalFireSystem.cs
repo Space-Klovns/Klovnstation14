@@ -22,7 +22,7 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
         SubscribeLocalEvent<ChemicalFireComponent, ChemicalFireHeatTileEvent>(OnHeatTile);
 
         SubscribeLocalEvent<ChemicalFireGridComponent, AtmosphereSystem.IsHotspotActiveMethodEvent>(OnGridIsHotspotActive);
-        SubscribeLocalEvent<ChemicalFireGridComponent, KsGetTileFireSourceEvent>(OnGridGetTileFireSource);
+        SubscribeLocalEvent<ChemicalFireGridComponent, KsGetTileFireSourcesEvent>(OnGridGetTileFireSources);
         SubscribeLocalEvent<ChemicalFireGridComponent, KsExtinguishTileFireSourcesEvent>(OnGridExtinguishTileFireSources);
     }
 
@@ -45,11 +45,11 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
     }
 
     /// <summary>
-    ///     Answers <see cref="KsTileFireSystem"/> with a chemfire's claim on the tile it sits on.
+    ///     Answers <see cref="KsTileFireSystem"/> with the chemfires burning a tile.
     /// </summary>
-    private void OnGridGetTileFireSource(Entity<ChemicalFireGridComponent> entity, ref KsGetTileFireSourceEvent args)
+    private void OnGridGetTileFireSources(Entity<ChemicalFireGridComponent> entity, ref KsGetTileFireSourcesEvent args)
     {
-        if (GetTileChemicalFires((entity.Owner, entity.Comp), args.Tile) is not { } tileData)
+        if (args.AnySources || GetTileChemicalFires((entity.Owner, entity.Comp), args.Tile) is not { } tileData)
             return;
 
         foreach (var fire in tileData.Fires.Values)
@@ -57,7 +57,7 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
             if (fire.Owner == args.IgnoredSourceUid)
                 continue;
 
-            args.Report(KsTileFireSourcePriority.ChemicalFire);
+            args.Report();
             return;
         }
     }
@@ -83,19 +83,17 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
     /// <summary>
     ///     Tells everything standing on the tile that it is now on fire, the same way a hotspot does.
     /// </summary>
+    /// <remarks>
+    ///     Only the first of these; <see cref="OnHeatTile"/> repeats it for as long as the chemfire burns.
+    ///     Done here as well so that a chemfire sets its tile alight the moment it appears, rather than
+    ///         waiting out a whole <see cref="ChemicalFireComponent.HeatInterval"/> first.
+    /// </remarks>
     protected override void AfterFireStartup(Entity<ChemicalFireComponent> entity)
     {
         if (entity.Comp.LocalGridUid is not { } gridUid)
             return;
 
-        _tileFireSystem.RaiseTileFire(
-            gridUid,
-            entity.Comp.LocalTile,
-            entity.Owner,
-            KsTileFireSourcePriority.ChemicalFire,
-            entity.Comp.Temperature,
-            entity.Comp.ExposedVolume
-        );
+        _tileFireSystem.RaiseTileFire(gridUid, entity.Comp.LocalTile, entity.Comp.Temperature, entity.Comp.ExposedVolume);
     }
 
     /// <summary>
@@ -104,7 +102,7 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
     /// <remarks>
     ///     Runs while the chemfire is still registered on its tile, so that
     ///         <see cref="KsTileFireSystem.RaiseTileExtinguish"/> can tell it apart from whatever else may
-    ///         still be burning there.
+    ///         still be burning there - a tile is only announced as out once the last fire on it goes out.
     /// </remarks>
     protected override void BeforeFireShutdown(Entity<ChemicalFireComponent> entity)
     {
@@ -118,10 +116,15 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
     ///     <see cref="AtmosphereSystem.HotspotExpose"/> already no-ops unless the tile's mixture is both
     ///         oxidiser and fuel, which is exactly "ignite any fuel gases given an oxidiser is present" -
     ///         so no gas checks are needed here.
+    ///     The tile is announced as burning on every heat tick rather than only at startup, matching how a
+    ///         hotspot announces itself once per atmos cycle: whatever walks onto a burning tile has to catch
+    ///         fire too, and a chemfire sharing a tile with a cooler fire has to keep setting the pace.
     /// </remarks>
     private void OnHeatTile(Entity<ChemicalFireComponent> entity, ref ChemicalFireHeatTileEvent args)
     {
         HeatTileAir(entity, ref args);
+
+        _tileFireSystem.RaiseTileFire(args.GridUid, args.Tile, entity.Comp.Temperature, entity.Comp.ExposedVolume);
 
         _atmosphereSystem.HotspotExpose(
             args.GridUid,
