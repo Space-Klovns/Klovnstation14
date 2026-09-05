@@ -70,10 +70,20 @@
       state: rubble_bg
       visible: false
     - state: pod
-    - state: pod_door
-      map: ["door1"]
-    - state: default
-      map: ["door2"]
+    - map: ["door"]
+      state: pod_door
+    # Displacement map for the paint layer below, mimicking DisplacementMapSystem: this layer is never drawn itself,
+    # it just feeds its texture into the paint layer's DisplacedDraw shader.
+    - map: ["paint_displacement"]
+      sprite: _KS14/Objects/SupplyPod/displacement.rsi
+      state: open
+      copyToShaderParameters:
+        layerKey: paint
+        parameterTexture: displacementMap
+        parameterUV: displacementUV
+    - map: ["paint"]
+      state: default
+      shader: DisplacedDraw
     - map: ["rubble_fg"]
       state: rubble_fg
       visible: false
@@ -116,12 +126,12 @@
           False: { visible: false }
           True: { visible: true }
       enum.StorageVisuals.Open:
-        door1:
+        door:
           True: { visible: false }
           False: { visible: true }
-        door2:
-          True: { visible: false }
-          False: { visible: true }
+        paint_displacement:
+          True: { state: open }
+          False: { state: closed }
 
   - type: Damageable
     damageModifierSet: Metallic
@@ -163,14 +173,17 @@
     min: 1
     max: 2
   - type: EntityStorageOnTrigger
-    keysIn:
-    - timer
+    keysIn: [timer]
     mode: Open
     force: true
     silent: true
+  - type: AddComponentsOnTrigger
+    keysIn: [timer]
+    components:
+    - type: TimedDespawn
+      lifetime: 30
   - type: RemoveComponentsOnTrigger
-    keysIn:
-    - timer
+    keysIn: [timer]
     triggerOnce: true
     components:
     - type: Lock

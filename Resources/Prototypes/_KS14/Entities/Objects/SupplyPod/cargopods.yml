@@ -13,9 +13,13 @@
       visible: false
     - state: darkpod
     - state: darkpod_door
-      map: ["door1"]
+      map: ["door"]
     - state: syndicate
-      map: ["door2"]
+      map: ["paint"]
+    - sprite: _KS14/Objects/SupplyPod/displacement.rsi
+      state: door
+      map: ["paint_displacement"]
+      visible: false
     - map: ["rubble_fg"]
       state: rubble_fg
       visible: false
