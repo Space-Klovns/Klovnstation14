@@ -4,5 +4,5 @@ namespace Content.Shared.Fluids.Components;
 public sealed partial class PuddleComponent : Component
 {
     [DataField(serverOnly: true), AutoPausedField]
-    public TimeSpan LastTileEffectUpdate = TimeSpan.MaxValue;
+    public TimeSpan LastTileEffectUpdate = TimeSpan.Zero;
 }
