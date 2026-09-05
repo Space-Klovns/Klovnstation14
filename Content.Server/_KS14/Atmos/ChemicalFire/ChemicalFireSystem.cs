@@ -102,7 +102,11 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
     /// </summary>
     /// <remarks>
     ///     A hotspot raises both of these events itself, every cycle it burns for, so a chemfire sitting in one
-    ///         has nothing to announce - it would only double up every effect hanging off them.
+    ///         has nothing to announce.
+    ///     The check matters most on the way out: a chemfire that lit a gas fire and then burned out would
+    ///         otherwise raise <see cref="TileExtinguishEvent"/> while the hotspot it started is still going,
+    ///         and the hotspot would raise it a second time once it too went out. One fire ending must not read
+    ///         as two.
     /// </remarks>
     private bool TryGetUnburningTile(Entity<ChemicalFireComponent> entity, out EntityUid gridUid, out Vector2i tile)
     {

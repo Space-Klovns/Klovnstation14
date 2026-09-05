@@ -51,8 +51,16 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
     ///         prototype that shares the connection key replaces the existing one outright. Chemfires with
     ///         differing connection keys stack freely on one tile.
     /// </remarks>
+    /// <param name="duration">
+    ///     Overrides the prototype's <see cref="ChemicalFireComponent.Duration"/>, on a fire that is spawned and
+    ///         on one that is refreshed in place alike. Null keeps whatever the prototype says.
+    /// </param>
     /// <returns>The chemfire now occupying the tile, or null if it could not be placed.</returns>
-    public Entity<ChemicalFireComponent>? SpawnChemicalFire(EntProtoId prototypeId, Entity<MapGridComponent?> grid, Vector2i tile)
+    public Entity<ChemicalFireComponent>? SpawnChemicalFire(
+        EntProtoId prototypeId,
+        Entity<MapGridComponent?> grid,
+        Vector2i tile,
+        TimeSpan? duration = null)
     {
         if (!_mapGridQuery.Resolve(grid.Owner, ref grid.Comp, false) ||
             !TryGetPrototypeChemicalFire(prototypeId, out var prototypeComponent))
@@ -65,7 +73,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
             // Same prototype: the caller is re-applying an effect, so just retune the existing fire in place.
             if (Prototype(existingFire.Owner)?.ID == prototypeId.Id)
             {
-                RefreshFromPrototype(existingFire, prototypeComponent);
+                RefreshFromPrototype(existingFire, prototypeComponent, duration);
                 return existingFire;
             }
 
@@ -88,23 +96,31 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         if (!transformComponent.Anchored)
             _transformSystem.AnchorEntity((fireUid, transformComponent), (grid.Owner, grid.Comp), tile);
 
+        if (duration is { } overrideDuration)
+            SetDuration((fireUid, fireComponent), overrideDuration);
+
         return (fireUid, fireComponent);
     }
 
-    /// <inheritdoc cref="SpawnChemicalFire(EntProtoId, Entity{MapGridComponent?}, Vector2i)"/>
-    public Entity<ChemicalFireComponent>? SpawnChemicalFire(EntProtoId prototypeId, EntityCoordinates coordinates)
+    /// <inheritdoc cref="SpawnChemicalFire(EntProtoId, Entity{MapGridComponent?}, Vector2i, TimeSpan?)"/>
+    public Entity<ChemicalFireComponent>? SpawnChemicalFire(EntProtoId prototypeId, EntityCoordinates coordinates, TimeSpan? duration = null)
     {
         var gridUid = _transformSystem.GetGrid(coordinates);
         if (gridUid is not { } validGridUid ||
             !_mapGridQuery.TryGetComponent(validGridUid, out var mapGridComponent))
             return null;
 
-        return SpawnChemicalFire(prototypeId, (validGridUid, mapGridComponent), _mapSystem.CoordinatesToTile(validGridUid, mapGridComponent, coordinates));
+        return SpawnChemicalFire(
+            prototypeId,
+            (validGridUid, mapGridComponent),
+            _mapSystem.CoordinatesToTile(validGridUid, mapGridComponent, coordinates),
+            duration
+        );
     }
 
-    /// <inheritdoc cref="SpawnChemicalFire(EntProtoId, Entity{MapGridComponent?}, Vector2i)"/>
-    public Entity<ChemicalFireComponent>? SpawnChemicalFire(EntProtoId prototypeId, TileRef tileRef)
-        => SpawnChemicalFire(prototypeId, (tileRef.GridUid, _mapGridQuery.GetComponent(tileRef.GridUid)), tileRef.GridIndices);
+    /// <inheritdoc cref="SpawnChemicalFire(EntProtoId, Entity{MapGridComponent?}, Vector2i, TimeSpan?)"/>
+    public Entity<ChemicalFireComponent>? SpawnChemicalFire(EntProtoId prototypeId, TileRef tileRef, TimeSpan? duration = null)
+        => SpawnChemicalFire(prototypeId, (tileRef.GridUid, _mapGridQuery.GetComponent(tileRef.GridUid)), tileRef.GridIndices, duration);
 
     /// <summary>
     ///     Looks up the chemfire holding <paramref name="connectionKey"/> on a tile. O(1), no entity lookup.
@@ -132,6 +148,17 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
             return null;
 
         return tileData;
+    }
+
+    /// <summary>
+    ///     Sets how long a chemfire burns for, restarting its lifetime from now.
+    /// </summary>
+    public void SetDuration(Entity<ChemicalFireComponent> fire, TimeSpan duration)
+    {
+        fire.Comp.Duration = duration;
+        fire.Comp.EndTime = _gameTiming.CurTime + duration;
+
+        Dirty(fire);
     }
 
     /// <summary>
@@ -233,12 +260,12 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
     ///         its lifetime. Fields are copied by hand rather than reflected over, since this runs on
     ///         every re-application.
     /// </summary>
-    private void RefreshFromPrototype(Entity<ChemicalFireComponent> fire, ChemicalFireComponent prototypeComponent)
+    private void RefreshFromPrototype(Entity<ChemicalFireComponent> fire, ChemicalFireComponent prototypeComponent, TimeSpan? duration = null)
     {
         var component = fire.Comp;
         var curTime = _gameTiming.CurTime;
 
-        component.Duration = prototypeComponent.Duration;
+        component.Duration = duration ?? prototypeComponent.Duration;
         component.Color = prototypeComponent.Color;
         component.Temperature = prototypeComponent.Temperature;
         component.ExposedVolume = prototypeComponent.ExposedVolume;
