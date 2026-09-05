@@ -5,10 +5,10 @@
   components:
   - type: ChemicalFire
     color: "#FF9030"
-    duration: 4
+    duration: 6.5
     temperature: 1500
     exposedVolume: 50
-    heatPower: 8000
+    heatPower: 7000
   - type: AlwaysHot
   - type: StepTrigger
     requiredTriggeredSpeed: 0
@@ -66,7 +66,6 @@
     color: "#ffc291"
     duration: 7
     temperature: 2900
-    exposedVolume: 50
-    heatPower: 35000
+    heatPower: 12000
   - type: SparkOnTrigger
   - type: TriggerOnSpawn

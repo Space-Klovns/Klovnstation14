@@ -1,4 +1,6 @@
+using Content.Shared._KS14.Fluids.Components;
 using Content.Shared._KS14.TileEffects;
+using Content.Shared.FixedPoint;
 using Content.Shared.Fluids.Components;
 using Robust.Shared.Timing;
 
@@ -32,8 +34,8 @@ public sealed partial class PuddleSystem
 
         _nextTileEffectUpdate = curTime + TileEffectUpdateInterval;
 
-        var eqe = EntityQueryEnumerator<PuddleComponent>();
-        while (eqe.MoveNext(out var uid, out var puddleComponent))
+        var eqe = EntityQueryEnumerator<TileEffectPuddleComponent, PuddleComponent>();
+        while (eqe.MoveNext(out var uid, out _, out var puddleComponent))
             TryUpdateTileEffects((uid, puddleComponent), curTime);
     }
 
@@ -52,10 +54,16 @@ public sealed partial class PuddleSystem
 
         var solution = solutionEntity.Comp.Solution;
         var scale = careAboutTime ? (float)deltaTime.TotalSeconds : 1f;
-
         if (!_tileEffectSystem.TryUpdateTileEffects(entity.Owner, null, solution, scale: scale))
             return;
 
+        if (solution.Volume == FixedPoint2.Zero)
+        {
+            QueueDel(entity);
+            return;
+        }
+
+        _solutionContainerSystem.UpdateChemicals(solutionEntity);
         entity.Comp.LastTileEffectUpdate = curTime;
         Dirty(solutionEntity);
     }

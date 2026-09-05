@@ -10,7 +10,7 @@
       minimum: 400
     effects:
     - !type:ChemicalFireTileEffect
-      removed: 1
+      removed: 1.5
   # KS14 end
   reactiveEffects:
     Flammable:
@@ -38,7 +38,7 @@
   tileEffects:
   - !type:ChemicalFireTileEffect
     id: ChemicalFireThermite
-    removed: 1.5
+    removed: 1
   # KS14 end
   tileReactions:
   - !type:FlammableTileReaction
@@ -192,7 +192,7 @@
       minimum: 300
     effects:
     - !type:ChemicalFireTileEffect
-      removed: 0.6
+      removed: 1.2
   # KS14 end
   tileReactions:
   - !type:FlammableTileReaction {}
