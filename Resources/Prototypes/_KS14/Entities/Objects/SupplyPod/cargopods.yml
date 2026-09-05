@@ -15,12 +15,38 @@
     - state: darkpod_door
       map: ["door"]
     - map: ["paint_displacement"]
-    - state: default
+    - state: syndicate
       shader: DisplacedDraw
       map: ["paint"]
     - state: rubble_fg
       visible: false
       map: ["rubble_fg"]
+
+- type: entity
+  parent: SupplyPodCargoBase
+  id: SupplyPodCargoBaseAdvanced
+  name: advanced cargo pod
+  description: A pod. From somewhere. There's probably something !COOL! inside!
+  components:
+  - type: Sprite
+    layers:
+    - state: rubble_bg
+      visible: false
+      map: ["rubble_bg"]
+    - state: advpod
+    - state: advpod_door
+      map: ["door"]
+    - map: ["paint_displacement"]
+    - state: bluespace
+      shader: DisplacedDraw
+      map: ["paint"]
+    - state: rubble_fg
+      visible: false
+      map: ["rubble_fg"]
+  - type: SupplyPodGlow
+    glowProto: KsSupplyPodGlowBlue
+
+### Container variants
 
 - type: entity
   parent: SupplyPodCargoBaseSyndicate

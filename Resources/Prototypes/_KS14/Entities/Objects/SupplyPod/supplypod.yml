@@ -101,6 +101,8 @@
       params:
         pitch: 0.5
     trailProto: KsSupplyPodTrail
+  - type: SupplyPodGlow
+    glowProto: KsSupplyPodGlowRed
   - type: Lock
     locked: true
     useAccess: false

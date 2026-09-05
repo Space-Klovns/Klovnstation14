@@ -1,0 +1,50 @@
+- type: entity
+  abstract: true
+  id: KsBaseSupplyPodGlow
+  name: engine glow
+  description: The burning wash of something coming in far too fast.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite
+    sprite: /Textures/_KS14/Objects/SupplyPod/supplypods_64x64.rsi
+    offset: 0,0.5
+    # The pod falls at Effects, so the glow has to clear it outright or the pod's opaque sprite
+    # eats it for the whole descent. Ghosts is simply the next depth up.
+    drawdepth: Ghosts
+  - type: KsSpriteFadeOut
+    fadeDuration: 2.5s
+    # Once it's burning out it has no business drawing over the wreck it came from - the pod
+    # settles at LargeObjects, so this drops just under that.
+    fadeDrawDepth: LargeObjects
+
+- type: entity
+  parent: KsBaseSupplyPodGlow
+  id: KsSupplyPodGlowYellow
+  suffix: Yellow
+  components:
+  - type: Sprite
+    state: pod_glow_yellow
+
+- type: entity
+  parent: KsBaseSupplyPodGlow
+  id: KsSupplyPodGlowBlue
+  suffix: Blue
+  components:
+  - type: Sprite
+    state: pod_glow_blue
+
+- type: entity
+  parent: KsBaseSupplyPodGlow
+  id: KsSupplyPodGlowRed
+  suffix: Red
+  components:
+  - type: Sprite
+    state: pod_glow_red
+
+- type: entity
+  parent: KsBaseSupplyPodGlow
+  id: KsSupplyPodGlowGreen
+  suffix: Green
+  components:
+  - type: Sprite
+    state: pod_glow_green
