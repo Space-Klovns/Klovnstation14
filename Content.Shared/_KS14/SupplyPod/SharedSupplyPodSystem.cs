@@ -9,12 +9,20 @@ public abstract partial class SharedSupplyPodSystem : EntitySystem
         base.Initialize();
 
         SubscribeLocalEvent<ActiveSupplyPodComponent, PreventCollideEvent>(OnPreventCollide);
+
+        SubscribeLocalEvent<ActiveSupplyPodComponent, ComponentStartup>(OnActiveStartup);
         SubscribeLocalEvent<ActiveSupplyPodComponent, ComponentShutdown>(OnActiveShutdown);
     }
 
     private void OnPreventCollide(Entity<ActiveSupplyPodComponent> entity, ref PreventCollideEvent args)
     {
         args.Cancelled = true;
+    }
+
+    private void OnActiveStartup(Entity<ActiveSupplyPodComponent> entity, ref ComponentStartup args)
+    {
+        var ev = new SupplyPodLaunchedEvent();
+        RaiseLocalEvent(entity, ev);
     }
 
     private void OnActiveShutdown(Entity<ActiveSupplyPodComponent> entity, ref ComponentShutdown args)
@@ -28,6 +36,11 @@ public abstract partial class SharedSupplyPodSystem : EntitySystem
         RaiseLocalEvent(entity, ev);
     }
 }
+
+/// <summary>
+///     Raised by-value on a supply pod when it lands.
+/// </summary>
+public record struct SupplyPodLaunchedEvent;
 
 /// <summary>
 ///     Raised by-value on a supply pod when it lands.
