@@ -173,7 +173,6 @@
 
   - type: TriggerOnSupplyPodLanded
   - type: SparkOnTrigger
-    predicted: false
   - type: TimedDespawn
     lifetime: 30
   - type: SpawnOnDespawn
