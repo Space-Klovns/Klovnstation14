@@ -8,6 +8,7 @@
     duration: 10
     temperature: 1500
     exposedVolume: 50
+  - type: AlwaysHot
   - type: StepTrigger
     requiredTriggeredSpeed: 0
     intersectRatio: 0.1
@@ -20,6 +21,11 @@
       multiplier: 3.75
       multiplierOnExisting: 0.75
     - !type:Ignite
+  - type: ChemicalFireGasConsumer
+    gases:
+      Oxygen: 2
+    producedGasRatios:
+      CarbonDioxide: 2
 
 # Plasma-fed: eats the tile's plasma and goes out the moment there is none left.
 - type: entity
@@ -48,3 +54,16 @@
     duration: 6
     temperature: 700
     exposedVolume: 25
+
+- type: entity
+  parent: ChemicalFire
+  id: ChemicalFireThermite
+  name: thermite fire
+  components:
+  - type: ChemicalFire
+    color: "#ffc291"
+    duration: 7
+    temperature: 2900
+    exposedVolume: 50
+  - type: SparkOnTrigger
+  - type: TriggerOnSpawn

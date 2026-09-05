@@ -1,4 +1,4 @@
-using Content.Shared.Atmos;
+﻿using Content.Shared.Atmos;
 using Robust.Shared.GameStates;
 
 namespace Content.Shared._KS14.Atmos.ChemicalFire;
@@ -19,10 +19,11 @@ public sealed partial class ChemicalFireGasConsumerComponent : Component
     public Dictionary<Gas, float> Gases = [];
 
     /// <summary>
-    ///     Produces moles per second by this chemfire.
+    ///     Gases this chemfire produces, as relative shares of whatever it actually consumed - the total moles
+    ///         produced always equal the total moles taken off the tile, so only the ratio between entries matters.
     /// </summary>
     [DataField, AutoNetworkedField]
-    public Dictionary<Gas, float>? ProducedGases = null;
+    public Dictionary<Gas, float>? ProducedGasRatios = null;
 
     /// <summary>
     ///     Whether the chemfire dies early once none of its <see cref="Gases"/> are left on the tile.

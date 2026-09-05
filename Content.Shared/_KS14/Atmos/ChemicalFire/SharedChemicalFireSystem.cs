@@ -102,6 +102,10 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         return SpawnChemicalFire(prototypeId, (validGridUid, mapGridComponent), _mapSystem.CoordinatesToTile(validGridUid, mapGridComponent, coordinates));
     }
 
+    /// <inheritdoc cref="SpawnChemicalFire(EntProtoId, Entity{MapGridComponent?}, Vector2i)"/>
+    public Entity<ChemicalFireComponent>? SpawnChemicalFire(EntProtoId prototypeId, TileRef tileRef)
+        => SpawnChemicalFire(prototypeId, (tileRef.GridUid, _mapGridQuery.GetComponent(tileRef.GridUid)), tileRef.GridIndices);
+
     /// <summary>
     ///     Looks up the chemfire holding <paramref name="connectionKey"/> on a tile. O(1), no entity lookup.
     /// </summary>

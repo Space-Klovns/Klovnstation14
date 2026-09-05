@@ -1,4 +1,4 @@
-using Content.Server.Atmos.EntitySystems;
+﻿using Content.Server.Atmos.EntitySystems;
 using Content.Shared._KS14.Atmos.ChemicalFire;
 
 namespace Content.Server._KS14.Atmos.ChemicalFire;
@@ -27,24 +27,34 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
         if (mixture is null || mixture.Immutable)
             return;
 
-        var consumedAnything = false;
+        var consumedAmount = 0f;
         foreach (var (gas, molesPerSecond) in entity.Comp.Gases)
         {
             var available = mixture.GetMoles(gas);
             if (available <= 0f)
                 continue;
 
-            mixture.AdjustMoles(gas, -MathF.Min(available, molesPerSecond * args.Seconds));
-            consumedAnything = true;
+            var gasConsumedAmount = MathF.Min(available, molesPerSecond * args.Seconds);
+            mixture.AdjustMoles(gas, -gasConsumedAmount);
+
+            consumedAmount += gasConsumedAmount;
         }
 
-        if (entity.Comp.ProducedGases is { } producedGases)
+        // Production is a ratio, not an absolute rate - we only ever put back exactly as many moles as we took.
+        if (consumedAmount > 0f && entity.Comp.ProducedGasRatios is { } producedGasRatios)
         {
-            foreach (var (gas, molesPerSecond) in producedGases)
-                mixture.AdjustMoles(gas, molesPerSecond * args.Seconds);
+            var totalRatio = 0f;
+            foreach (var ratio in producedGasRatios.Values)
+                totalRatio += ratio;
+
+            if (totalRatio > 0f)
+            {
+                foreach (var (gas, ratio) in producedGasRatios)
+                    mixture.AdjustMoles(gas, consumedAmount * (ratio / totalRatio));
+            }
         }
 
-        if (consumedAnything ||
+        if (consumedAmount == 0f ||
             !entity.Comp.ExtinguishWhenDepleted ||
             !_chemicalFireQuery.TryGetComponent(entity.Owner, out var fireComponent))
             return;

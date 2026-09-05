@@ -2,6 +2,16 @@
   id: BasePyrotechnic
   group: Pyrotechnic
   abstract: true
+  # KS14 start
+  tileEffects:
+  - !type:LogicAndTileEffect
+    conditions:
+    - !type:CheckTemperatureTileEffect
+      minimum: 400
+    effects:
+    - !type:ChemicalFireTileEffect
+      removed: 1
+  # KS14 end
   reactiveEffects:
     Flammable:
       methods: [ Touch ]
@@ -24,6 +34,12 @@
   color: "#757245"
   boilingPoint: 2977.0 # Aluminum oxide
   meltingPoint: 2030.0
+  # KS14 start
+  tileEffects:
+  - !type:ChemicalFireTileEffect
+    id: ChemicalFireThermite
+    removed: 1.5
+  # KS14 end
   tileReactions:
   - !type:FlammableTileReaction
     temperatureMultiplier: 2
@@ -75,6 +91,12 @@
   contrabandSeverity: Major
   flavor: bitter
   color: "#D4872A"
+  # KS14 start
+  tileEffects:
+  - !type:ChemicalFireTileEffect
+    id: ChemicalFire
+    removed: 1
+  # KS14 end
   metabolisms:
     Bloodstream:
       effects:
