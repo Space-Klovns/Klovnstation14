@@ -48,7 +48,8 @@ public sealed partial class ESWallMountVisibilityOverlay : Overlay
             if (!_ent.TryGetComponent<SpriteComponent>(uid, out var sprite))
                 continue;
 
-            if (!args.Viewport.Eye.DrawFov)
+            if (!args.Viewport.Eye.DrawFov ||
+                !args.Viewport.Eye.DrawLight /* KS14 */)
             {
                 _sprite.SetColor((uid, sprite), sprite.Color.WithAlpha(entry.Component.OriginalAlpha));
                 _sprite.SetVisible((uid, sprite), true);
