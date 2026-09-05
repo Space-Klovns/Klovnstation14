@@ -13,7 +13,6 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Spawners; // KS14
 
 namespace Content.IntegrationTests.Tests
 {
@@ -247,6 +246,12 @@ namespace Content.IntegrationTests.Tests
 
                 // makes an announcement on mapInit.
                 "AnnounceOnSpawn",
+
+                // KS14 start: throws off short-lived effects the instant it spawns - sparks, for one - which
+                //     outlive the three ticks this test waits, but clean themselves up long before they are
+                //     the entity leak this test is looking for.
+                "TriggerOnSpawn",
+                // KS14 end
             };
 
             Assert.That(server.CfgMan.GetCVar(CVars.NetPVS), Is.False);
@@ -273,18 +278,8 @@ namespace Content.IntegrationTests.Tests
             await pair.RunTicksSync(3);
 
             // We consider only non-audio entities, as some entities will just play sounds when they spawn.
-            // KS14 start: and only entities that are not already scheduled to clean themselves up, as some
-            //     entities throw off short-lived effects when they spawn - sparks, for one. Those outlive the
-            //     three ticks this test waits, but a TimedDespawn is by definition not an entity leak, which is
-            //     the only thing this test is looking for. The prototypes themselves are exempted just above
-            //     for the same reason.
-            int Count(IEntityManager ent) => ent.EntityCount - ent.Count<AudioComponent>() - ent.Count<TimedDespawnComponent>();
-            IEnumerable<EntityUid> Entities(IEntityManager entMan) => entMan.GetEntities().Where(e => !entMan.HasComponent<AudioComponent>(e) && !entMan.HasComponent<TimedDespawnComponent>(e));
-            // KS14 end
-            /* KS14: replaced by the above
             int Count(IEntityManager ent) => ent.EntityCount - ent.Count<AudioComponent>();
             IEnumerable<EntityUid> Entities(IEntityManager entMan) => entMan.GetEntities().Where(e => !entMan.HasComponent<AudioComponent>(e));
-            */
 
             await Assert.MultipleAsync(async () =>
             {
