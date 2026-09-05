@@ -195,10 +195,29 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         Dirty(entity.Owner, tileEmissionComponent);
 
         RegisterFire(entity);
+
+        AfterFireStartup(entity);
     }
 
     private void OnShutdown(Entity<ChemicalFireComponent> entity, ref ComponentShutdown args)
-        => UnregisterFire(entity);
+    {
+        BeforeFireShutdown(entity);
+
+        UnregisterFire(entity);
+    }
+
+    /// <summary>
+    ///     Runs once a chemfire is alive and registered on its tile.
+    ///     Nothing to do in shared or on the client; the server uses it to announce the new fire to whatever is
+    ///         standing in it.
+    /// </summary>
+    protected virtual void AfterFireStartup(Entity<ChemicalFireComponent> entity) { }
+
+    /// <inheritdoc cref="AfterFireStartup"/>
+    /// <remarks>
+    ///     Runs while the chemfire is still registered on its tile, so the tile is still resolvable from it.
+    /// </remarks>
+    protected virtual void BeforeFireShutdown(Entity<ChemicalFireComponent> entity) { }
 
     private void OnEntParentChanged(Entity<ChemicalFireComponent> entity, ref EntParentChangedMessage args)
     {
