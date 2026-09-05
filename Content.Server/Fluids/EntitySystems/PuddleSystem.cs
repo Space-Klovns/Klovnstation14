@@ -53,6 +53,8 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
 
         SubscribeLocalEvent<PuddleComponent, SpreadNeighborsEvent>(OnPuddleSpread);
         SubscribeLocalEvent<PuddleComponent, SlipEvent>(OnPuddleSlip);
+
+        InitialiseKlovn(); // KS14
     }
 
     // TODO: This can be predicted once https://github.com/space-wizards/RobustToolbox/pull/5849 is merged
@@ -541,10 +543,14 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
 
         var coords = _map.GridTileToLocal(gridId, mapGrid, tileRef.GridIndices);
         puddleUid = Spawn("Puddle", coords);
-        EnsureComp<PuddleComponent>(puddleUid);
+        var puddleComponent = /* KS14: store puddle component */EnsureComp<PuddleComponent>(puddleUid);
         if (TryAddSolution(puddleUid, solution, sound))
         {
             EnsureComp<ActiveEdgeSpreaderComponent>(puddleUid);
+
+            // KS14 start
+            TryUpdateTileEffects((puddleUid, puddleComponent), _gameTiming.CurTime, careAboutTime: false);
+            // KS14 end
         }
 
         return true;

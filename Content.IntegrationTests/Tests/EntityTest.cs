@@ -246,6 +246,12 @@ namespace Content.IntegrationTests.Tests
 
                 // makes an announcement on mapInit.
                 "AnnounceOnSpawn",
+
+                // KS14 start: throws off short-lived effects the instant it spawns - sparks, for one - which
+                //     outlive the three ticks this test waits, but clean themselves up long before they are
+                //     the entity leak this test is looking for.
+                "TriggerOnSpawn",
+                // KS14 end
             };
 
             Assert.That(server.CfgMan.GetCVar(CVars.NetPVS), Is.False);

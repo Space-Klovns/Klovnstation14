@@ -1,0 +1,6 @@
+# Chemfires are only ever created through ChemicalFireSystem.SpawnChemicalFire, so they have no business
+#     showing up in the spawn menu. ChemicalFireComponent implies this category.
+- type: entityCategory
+  id: ChemicalFire
+  name: entity-category-name-chemical-fire
+  hideSpawnMenu: true
