@@ -33,17 +33,27 @@ public sealed partial class CloneLocalVisualsOverlay : Overlay
 
     protected override void Draw(in OverlayDrawArgs args)
     {
-        var uid = _playerManager.LocalEntity!.Value;
-        if (!_entityManager.TryGetComponent<SpriteComponent>(uid, out var spriteComponent))
+        var referenceUid = _playerManager.LocalEntity!.Value;
+        if (!_entityManager.TryGetComponent<SpriteComponent>(referenceUid, out var referenceSpriteComponent))
             return;
 
         var eyeRotation = args.Viewport.Eye?.Rotation ?? default;
 
-        var eqe = _entityManager.EntityQueryEnumerator<CloneLocalVisualsComponent, TransformComponent>();
-        while (eqe.MoveNext(out _, out _, out var transformComponent))
+        var (oldOffset, oldRotation, oldColor) = (referenceSpriteComponent.Offset, referenceSpriteComponent.Rotation, referenceSpriteComponent.Color);
+        var eqe = _entityManager.EntityQueryEnumerator<CloneLocalVisualsComponent, TransformComponent, SpriteComponent>();
+
+        while (eqe.MoveNext(out _, out _, out var transformComponent, out var spriteComponent))
         {
+            _spriteSystem.SetOffset((referenceUid, referenceSpriteComponent), spriteComponent.Offset);
+            _spriteSystem.SetRotation((referenceUid, referenceSpriteComponent), spriteComponent.Rotation);
+            _spriteSystem.SetColor((referenceUid, referenceSpriteComponent), spriteComponent.Color);
+
             var (worldPosition, worldRotation) = _transformSystem.GetWorldPositionRotation(transformComponent);
-            _spriteSystem.RenderSprite((uid, spriteComponent), args.WorldHandle, eyeRotation, worldRotation, worldPosition);
+            _spriteSystem.RenderSprite((referenceUid, referenceSpriteComponent), args.WorldHandle, eyeRotation, worldRotation, worldPosition);
         }
+
+        _spriteSystem.SetOffset((referenceUid, referenceSpriteComponent), oldOffset);
+        _spriteSystem.SetRotation((referenceUid, referenceSpriteComponent), oldRotation);
+        _spriteSystem.SetColor((referenceUid, referenceSpriteComponent), oldColor);
     }
 }
