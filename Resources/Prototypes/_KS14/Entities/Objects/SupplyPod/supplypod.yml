@@ -66,27 +66,19 @@
   - type: Sprite
     offset: 0,0.5
     layers:
-    - map: ["rubble_bg"]
-      state: rubble_bg
+    - state: rubble_bg
       visible: false
+      map: ["rubble_bg"]
     - state: pod
-    - map: ["door"]
-      state: pod_door
-    # Displacement map for the paint layer below, mimicking DisplacementMapSystem: this layer is never drawn itself,
-    # it just feeds its texture into the paint layer's DisplacedDraw shader.
+    - state: pod_door
+      map: ["door"]
     - map: ["paint_displacement"]
-      sprite: _KS14/Objects/SupplyPod/displacement.rsi
-      state: open
-      copyToShaderParameters:
-        layerKey: paint
-        parameterTexture: displacementMap
-        parameterUV: displacementUV
-    - map: ["paint"]
-      state: default
+    - state: default
       shader: DisplacedDraw
-    - map: ["rubble_fg"]
-      state: rubble_fg
+      map: ["paint"]
+    - state: rubble_fg
       visible: false
+      map: ["rubble_fg"]
   - type: Physics
     bodyType: Static
   - type: Fixtures
@@ -129,9 +121,21 @@
         door:
           True: { visible: false }
           False: { visible: true }
-        paint_displacement:
-          True: { state: open }
-          False: { state: closed }
+        paint_displacement: # BROOOO # TODO LCDC: make this not overwrite the existing copytoshaderparameters or whatever
+          True:
+            sprite: _KS14/Objects/SupplyPod/displacement.rsi
+            state: open
+            copyToShaderParameters:
+              layerKey: paint
+              parameterTexture: displacementMap
+              parameterUV: displacementUV
+          False:
+            sprite: _KS14/Objects/SupplyPod/displacement.rsi
+            state: closed
+            copyToShaderParameters:
+              layerKey: paint
+              parameterTexture: displacementMap
+              parameterUV: displacementUV
 
   - type: Damageable
     damageModifierSet: Metallic

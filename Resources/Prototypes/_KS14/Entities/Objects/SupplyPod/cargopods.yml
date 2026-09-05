@@ -8,21 +8,19 @@
   components:
   - type: Sprite
     layers:
-    - map: ["rubble_bg"]
-      state: rubble_bg
+    - state: rubble_bg
       visible: false
+      map: ["rubble_bg"]
     - state: darkpod
     - state: darkpod_door
       map: ["door"]
-    - state: syndicate
+    - map: ["paint_displacement"]
+    - state: default
+      shader: DisplacedDraw
       map: ["paint"]
-    - sprite: _KS14/Objects/SupplyPod/displacement.rsi
-      state: door
-      map: ["paint_displacement"]
+    - state: rubble_fg
       visible: false
-    - map: ["rubble_fg"]
-      state: rubble_fg
-      visible: false
+      map: ["rubble_fg"]
 
 - type: entity
   parent: SupplyPodCargoBaseSyndicate
