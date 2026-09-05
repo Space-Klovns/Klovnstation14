@@ -12,6 +12,16 @@ public sealed partial class PuddleSystem
     private static readonly TimeSpan TileEffectUpdateInterval = TimeSpan.FromSeconds(0.5d);
     private static TimeSpan _nextTileEffectUpdate = TimeSpan.MinValue;
 
+    private void InitialiseKlovn()
+    {
+        SubscribeLocalEvent<PuddleComponent, MapInitEvent>(OnPuddleMapInit);
+    }
+
+    private void OnPuddleMapInit(Entity<PuddleComponent> entity, ref MapInitEvent args)
+    {
+        entity.Comp.LastTileEffectUpdate = _gameTiming.CurTime;
+    }
+
     public override void Update(float frameTime)
     {
         base.Update(frameTime);

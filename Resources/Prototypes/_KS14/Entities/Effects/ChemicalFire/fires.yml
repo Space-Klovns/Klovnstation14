@@ -5,10 +5,10 @@
   components:
   - type: ChemicalFire
     color: "#FF9030"
-    duration: 10
+    duration: 4
     temperature: 1500
     exposedVolume: 50
-    heatPower: 50000
+    heatPower: 8000
   - type: AlwaysHot
   - type: StepTrigger
     requiredTriggeredSpeed: 0
@@ -24,9 +24,10 @@
     - !type:Ignite
   - type: ChemicalFireGasConsumer
     gases:
-      Oxygen: 2
+      Oxygen: 3
     producedGasRatios:
-      CarbonDioxide: 2
+      CarbonDioxide: 2.92
+      WaterVapor: 0.08
 
 # Plasma-fed: eats the tile's plasma and goes out the moment there is none left.
 - type: entity
@@ -66,5 +67,6 @@
     duration: 7
     temperature: 2900
     exposedVolume: 50
+    heatPower: 35000
   - type: SparkOnTrigger
   - type: TriggerOnSpawn

@@ -54,7 +54,7 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
             }
         }
 
-        if (consumedAmount == 0f ||
+        if (consumedAmount != 0f ||
             !entity.Comp.ExtinguishWhenDepleted ||
             !_chemicalFireQuery.TryGetComponent(entity.Owner, out var fireComponent))
             return;

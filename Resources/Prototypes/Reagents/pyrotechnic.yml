@@ -184,6 +184,16 @@
   boilingPoint: -84.7 # Acetylene. Close enough.
   meltingPoint: -80.7
   friction: 0.4
+  # KS14 start
+  tileEffects:
+  - !type:LogicAndTileEffect
+    conditions:
+    - !type:CheckTemperatureTileEffect
+      minimum: 300
+    effects:
+    - !type:ChemicalFireTileEffect
+      removed: 0.6
+  # KS14 end
   tileReactions:
   - !type:FlammableTileReaction {}
   metabolisms:
