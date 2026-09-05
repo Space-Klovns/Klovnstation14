@@ -1,0 +1,31 @@
+- type: entity
+  id: KsSupplyPodTrail
+  name: smoke trail
+  description: The scar a pod leaves in the air behind it.
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: KsTrail
+    startSprite:
+      sprite: /Textures/_KS14/Objects/SupplyPod/supplypods_32x32.rsi
+      state: smoke_start
+    sprite:
+      sprite: /Textures/_KS14/Objects/SupplyPod/supplypods_32x32.rsi
+      state: smoke
+    tailFadeTiles: 3
+    blurScale: 5
+    # Matches the pod's own alpha fade-in (countdown * 0.5) in SupplyPodDescentSystem, so the
+    # smoke materialises with the pod instead of ahead of it.
+    revealFadeInFraction: 0.5
+  - type: KsTrailFade
+    alphaDuration: 2s
+    blurDuration: 1.5s
+    startBlur: 0
+    endBlur: 150
+
+- type: entity
+  parent: KsSupplyPodTrail
+  id: KsSupplyPodTrailSlow
+  components:
+  - type: KsTrailFade
+    alphaDuration: 8s
+    blurDuration: 3.5s

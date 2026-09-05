@@ -19,9 +19,11 @@
     fallDuration: 1s
     fallSoundDelay: 0s
     fallSound: /Audio/_KS14/Weapons/mortar_long_whistle.ogg
-    impactSound: /Audio/Effects/metal_slam2.ogg
+    impactSound:
+      collection: MetalSlam
     height: 14
     angularDeviation: 15
+    trailProto: KsSupplyPodTrail
 
 - type: entity
   id: BaseSupplyPodInert
@@ -33,12 +35,9 @@
   - type: GenericVisualizer
     visuals:
       enum.SupplyPodVisuals.Landed:
-        rubble_bg:
-          False: { visible: false }
-          True: { visible: true }
         rubble_fg:
           False: { visible: false }
-          True: { visible: true }
+          True: { visible: true, state: rubble_fg_thin }
 
 - type: entity
   id: BaseSupplyPodExplosive
@@ -53,7 +52,113 @@
     maxTileBreak: 1
   - type: DeleteOnTrigger
 
-## CRUISE MISSILES: BASE
+### ACTUAL CARGO PODS
+
+- type: entity
+  parent: [ SupplyPod, BaseSupplyPodInert ]
+  id: SupplyPodCargoBase
+  name: cargo pod
+  description: A pod. From somewhere. There's probably something inside!
+  components:
+  - type: Sprite
+    offset: 0,0.5
+    layers:
+    - map: ["rubble_bg"]
+      state: rubble_bg
+      visible: false
+    - state: pod
+    - state: pod_door
+      map: ["door1"]
+    - state: default
+      map: ["door2"]
+    - map: ["rubble_fg"]
+      state: rubble_fg
+      visible: false
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeCircle
+          radius: 0.5
+        density: 1200
+        mask:
+        - MachineMask
+        layer:
+        - MachineLayer
+  - type: SupplyPod
+    height: 40
+    fallDuration: 2s
+    fallSoundDelay: 0s
+    angularDeviation: 4
+    fallSound:
+      path: /Audio/_KS14/Weapons/mortar_long_whistle.ogg
+      params:
+        pitch: 0.5
+    trailProto: KsSupplyPodTrailSlow
+  - type: Lock
+    locked: false
+    useAccess: false
+  - type: GenericVisualizer
+    visuals:
+      enum.SupplyPodVisuals.Landed:
+        rubble_bfg:
+          False: { visible: false }
+          True: { visible: true }
+        rubble_fg:
+          False: { visible: false }
+          True: { visible: true }
+      enum.StorageVisuals.Open:
+        door1:
+          True: { visible: false }
+          False: { visible: true }
+        door2:
+          True: { visible: false }
+          False: { visible: true }
+
+  - type: Damageable
+    damageModifierSet: Metallic
+  - type: Injurable
+    damageContainer: StructuralInorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 150
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalBreak
+
+  - type: EntityStorage
+    masksToRemove: 0
+    openOnMove: false
+  - type: PlaceableSurface
+    isPlaceable: false # defaults to closed.
+  - type: ContainerContainer
+    containers:
+      entity_storage: !type:Container
+
+  - type: TriggerOnSupplyPodLanded
+  - type: SparkOnTrigger
+    predicted: false
+  - type: TimedDespawn
+    lifetime: 30
+  - type: SpawnOnDespawn
+    prototype: AdminInstantEffectBluespace # TODO LCDC: spawn sparks here
+  - type: TimerTrigger
+    examinable: false
+    beepSound: null
+  - type: RandomTimerTrigger
+    min: 1
+    max: 3
+  - type: ExplodeOnTrigger
+    keysIn:
+    - timer
+
+### CRUISE MISSILES: BASE
 
 # nt
 - type: entity

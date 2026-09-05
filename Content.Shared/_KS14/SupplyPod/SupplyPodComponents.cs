@@ -1,6 +1,7 @@
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.SupplyPod;
@@ -57,6 +58,28 @@ public sealed partial class SupplyPodComponent : Component
     #region Impact data
     [DataField]
     public SoundSpecifier? ImpactSound = null;
+    #endregion
+
+    #region Trail
+    /// <summary>
+    ///     Trail entity spawned along the descent path, if any. Must carry a KsTrailComponent.
+    /// </summary>
+    [DataField]
+    public EntProtoId? TrailProto = null;
+
+    /// <summary>
+    ///     How long the trail lingers after the pod lands. The pod itself is usually deleted
+    ///         on impact, so the trail outlives it as its own entity.
+    /// </summary>
+    [DataField]
+    public TimeSpan TrailLingerDuration = TimeSpan.FromSeconds(3.5);
+
+    /// <summary>
+    ///     The spawned trail. Server-side bookkeeping only - the client finds trails through
+    ///         their own component.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public EntityUid? TrailEntity = null;
     #endregion
 }
 

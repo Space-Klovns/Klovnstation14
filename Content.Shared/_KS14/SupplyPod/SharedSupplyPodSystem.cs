@@ -1,3 +1,5 @@
+using Robust.Shared.Physics.Events;
+
 namespace Content.Shared._KS14.SupplyPod;
 
 public abstract partial class SharedSupplyPodSystem : EntitySystem
@@ -5,7 +7,14 @@ public abstract partial class SharedSupplyPodSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
+
+        SubscribeLocalEvent<ActiveSupplyPodComponent, PreventCollideEvent>(OnPreventCollide);
         SubscribeLocalEvent<ActiveSupplyPodComponent, ComponentShutdown>(OnActiveShutdown);
+    }
+
+    private void OnPreventCollide(Entity<ActiveSupplyPodComponent> entity, ref PreventCollideEvent args)
+    {
+        args.Cancelled = true;
     }
 
     private void OnActiveShutdown(Entity<ActiveSupplyPodComponent> entity, ref ComponentShutdown args)
