@@ -3,6 +3,10 @@
   abstract: true
   name: chemical fire
   description: Get out of it.
+  # A chemfire is a transient effect that a system puts on a tile and takes back off it, so there is nothing
+  #     to be gained from writing one into a map file - and its TileEmission is added on spawn, which the map
+  #     save test rightly objects to on anything that could be saved.
+  save: false
   placement:
     mode: SnapgridCenter
   components:
