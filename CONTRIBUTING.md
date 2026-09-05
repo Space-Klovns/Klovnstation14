@@ -191,6 +191,7 @@ EntityUid targetUid;                          // EntityUid            → '...Ui
 Entity<StickyComponent> stuckEntity;          // Entity<T>            → '...Entity'
 NetEntity massDriverNetEntity;                // NetEntity            → '...NetEntity'
 TransformComponent userTransformComponent;    // a component          → '...Component'
+EntityQuery<SpriteComponent> _spriteQuery;    // EntityQuery<T>       → '...Query'
 ```
 This earns its keep when one thing exists in several forms in the same scope — `projectileUid` sitting next to `Entity<LagCompensatingProjectileComponent> projectile` reads unambiguously.
 
@@ -211,4 +212,19 @@ public sealed partial class MySystem : EntitySystem
 {
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
 }
+```
+
+**Inject `EntityQuery<T>`, don't `GetEntityQuery<T>()` (C#)** — the collection that injects into `EntitySystem`s (`IEntitySystemManager.DependencyCollection`) resolves `EntityQuery<T>` and `EntitySystem` as well, unlike the default `IoCManager` one. So declare queries as dependencies:
+```csharp
+[Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;   // not GetEntityQuery<SpriteComponent>() in Initialize
+```
+Fall back to `GetEntityQuery<T>()` only where injection genuinely isn't available.
+
+Classes that aren't systems (overlays, UI, managers) can opt into the same collection through `SystemCollectionHookManager` — it hands you a collection that already has every loaded system and query:
+```csharp
+[Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;
+
+// ...then, once the collection exists:
+_systemCollectionHookManager.HookAction(dependencyCollection =>
+    dependencyCollection.InjectDependencies(overlay, oneOff: true));
 ```
