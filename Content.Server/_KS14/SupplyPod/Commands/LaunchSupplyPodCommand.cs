@@ -16,20 +16,20 @@ public sealed partial class LaunchSupplyPodCommand : LocalizedEntityCommands
     [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private SupplyPodSystem _supplyPodSystem = default!;
 
-    public override string Command => "launchsupplypod";
+    public override string Command => "ks_launchsupplypod";
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length is not (1 or 2))
         {
-            shell.WriteError(Loc.GetString("cmd-launchsupplypod-invalid-args"));
+            shell.WriteError(Loc.GetString("cmd-ks_launchsupplypod-invalid-args"));
             return;
         }
 
         if (!NetEntity.TryParse(args[0], out var podNetEntity)
             || !_entityManager.TryGetEntity(podNetEntity, out var podUid))
         {
-            shell.WriteError(Loc.GetString("cmd-launchsupplypod-invalid-uid", ("uid", args[0])));
+            shell.WriteError(Loc.GetString("cmd-ks_launchsupplypod-invalid-uid", ("uid", args[0])));
             return;
         }
 
@@ -39,7 +39,7 @@ public sealed partial class LaunchSupplyPodCommand : LocalizedEntityCommands
             if (!NetEntity.TryParse(args[1], out var dropoffNetEntity)
                 || !_entityManager.TryGetEntity(dropoffNetEntity, out var dropoffUid))
             {
-                shell.WriteError(Loc.GetString("cmd-launchsupplypod-invalid-uid", ("uid", args[1])));
+                shell.WriteError(Loc.GetString("cmd-ks_launchsupplypod-invalid-uid", ("uid", args[1])));
                 return;
             }
 
@@ -48,11 +48,11 @@ public sealed partial class LaunchSupplyPodCommand : LocalizedEntityCommands
 
         if (!_supplyPodSystem.TryLaunchPod(podUid.Value, dropoffCoordinates))
         {
-            shell.WriteError(Loc.GetString("cmd-launchsupplypod-not-launchable", ("uid", args[0])));
+            shell.WriteError(Loc.GetString("cmd-ks_launchsupplypod-not-launchable", ("uid", args[0])));
             return;
         }
 
-        shell.WriteLine(Loc.GetString("cmd-launchsupplypod-launched", ("uid", args[0])));
+        shell.WriteLine(Loc.GetString("cmd-ks_launchsupplypod-launched", ("uid", args[0])));
     }
 
     public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
@@ -61,10 +61,10 @@ public sealed partial class LaunchSupplyPodCommand : LocalizedEntityCommands
         {
             1 => CompletionResult.FromHintOptions(
                 CompletionHelper.Components<UnlaunchedSupplyPodComponent>(args[0], _entityManager),
-                Loc.GetString("cmd-launchsupplypod-pod-completion")),
+                Loc.GetString("cmd-ks_launchsupplypod-pod-completion")),
             2 => CompletionResult.FromHintOptions(
                 CompletionHelper.NetEntities(args[1], _entityManager),
-                Loc.GetString("cmd-launchsupplypod-dropoff-completion")),
+                Loc.GetString("cmd-ks_launchsupplypod-dropoff-completion")),
             _ => CompletionResult.Empty
         };
     }

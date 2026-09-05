@@ -19,20 +19,20 @@ public sealed partial class SpawnUnlaunchedSupplyPodCommand : LocalizedEntityCom
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private SupplyPodSystem _supplyPodSystem = default!;
 
-    public override string Command => "spawnunlaunchedpod";
+    public override string Command => "ks_spawnunlaunchedpod";
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length is not (1 or 2))
         {
-            shell.WriteError(Loc.GetString("cmd-spawnunlaunchedpod-invalid-args"));
+            shell.WriteError(Loc.GetString("cmd-ks_spawnunlaunchedpod-invalid-args"));
             return;
         }
 
         if (!_prototypeManager.TryIndex<EntityPrototype>(args[0], out var entityPrototype)
             || !entityPrototype.Components.ContainsKey(SupplyPodComponentName))
         {
-            shell.WriteError(Loc.GetString("cmd-spawnunlaunchedpod-invalid-proto", ("proto", args[0])));
+            shell.WriteError(Loc.GetString("cmd-ks_spawnunlaunchedpod-invalid-proto", ("proto", args[0])));
             return;
         }
 
@@ -43,21 +43,21 @@ public sealed partial class SpawnUnlaunchedSupplyPodCommand : LocalizedEntityCom
             if (!NetEntity.TryParse(args[1], out var locationNetEntity)
                 || !_entityManager.TryGetEntity(locationNetEntity, out locationUid))
             {
-                shell.WriteError(Loc.GetString("cmd-spawnunlaunchedpod-invalid-uid", ("uid", args[1])));
+                shell.WriteError(Loc.GetString("cmd-ks_spawnunlaunchedpod-invalid-uid", ("uid", args[1])));
                 return;
             }
         }
 
         if (locationUid is not { } targetUid || !_entityManager.EntityExists(targetUid))
         {
-            shell.WriteError(Loc.GetString("cmd-spawnunlaunchedpod-no-location"));
+            shell.WriteError(Loc.GetString("cmd-ks_spawnunlaunchedpod-no-location"));
             return;
         }
 
         var podUid = _supplyPodSystem.SpawnUnlaunchedPod(args[0], _entityManager.GetComponent<TransformComponent>(targetUid).Coordinates);
 
         shell.WriteLine(Loc.GetString(
-            "cmd-spawnunlaunchedpod-spawned",
+            "cmd-ks_spawnunlaunchedpod-spawned",
             ("uid", _entityManager.GetNetEntity(podUid))
         ));
     }
@@ -73,10 +73,10 @@ public sealed partial class SpawnUnlaunchedSupplyPodCommand : LocalizedEntityCom
                     .Where(entityPrototype => !entityPrototype.Abstract && entityPrototype.Components.ContainsKey(SupplyPodComponentName))
                     .Select(entityPrototype => entityPrototype.ID)
                     .Order(),
-                Loc.GetString("cmd-spawnunlaunchedpod-proto-completion")),
+                Loc.GetString("cmd-ks_spawnunlaunchedpod-proto-completion")),
             2 => CompletionResult.FromHintOptions(
                 CompletionHelper.NetEntities(args[1], _entityManager),
-                Loc.GetString("cmd-spawnunlaunchedpod-uid-completion")),
+                Loc.GetString("cmd-ks_spawnunlaunchedpod-uid-completion")),
             _ => CompletionResult.Empty
         };
     }

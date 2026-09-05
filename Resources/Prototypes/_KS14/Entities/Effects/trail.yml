@@ -11,17 +11,17 @@
     sprite:
       sprite: /Textures/_KS14/Objects/SupplyPod/supplypods_32x32.rsi
       state: smoke
-    tailFadeTiles: 3
+    tailFadeTiles: 40
     blurScale: 5
     # Matches the pod's own alpha fade-in (countdown * 0.5) in SupplyPodDescentSystem, so the
     # smoke materialises with the pod instead of ahead of it.
     revealFadeInFraction: 0.5
+    blur: &startingBlur 25
   - type: KsTrailFade
     alphaDuration: 2s
     blurDuration: 1.5s
-    startBlur: 0
+    startBlur: *startingBlur
     endBlur: 150
-    tailFadeStartFraction: 0.7
 
 - type: entity
   parent: KsSupplyPodTrail

@@ -111,18 +111,5 @@ public sealed partial class KsTrailComponent : Component
     /// </summary>
     [DataField]
     public int TailFadeTiles = 0;
-
-    /// <summary>
-    ///     Point along the trail, as a fraction from head (0) to tail (1), where alpha starts
-    ///         ramping linearly down to nothing at the tail. 1 leaves the trail alone.
-    /// </summary>
-    /// <remarks>
-    ///     Unlike <see cref="TailFadeTiles"/>, which softens the last few tiles regardless of how
-    ///         long the trail is, this scales with the trail - a long trail fades over a long
-    ///         stretch. Use it to bleed the whole back half out rather than to hide a hard edge;
-    ///         the two multiply if both are set.
-    /// </remarks>
-    [DataField]
-    public float TailFadeStartFraction = 1f;
     #endregion
 }

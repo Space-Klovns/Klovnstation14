@@ -230,6 +230,8 @@
       params:
         pitch: 0.75
     angularDeviation: 15
+  - type: SupplyPodDrawDepth # its funny
+    landedDrawDepth: OverMobs
 
 # syndie
 - type: entity
