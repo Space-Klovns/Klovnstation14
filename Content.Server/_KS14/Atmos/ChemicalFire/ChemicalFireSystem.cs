@@ -1,8 +1,8 @@
-using Content.Server.Atmos;
+using System.Linq;
+using Content.Server._KS14.Atmos.TileFire;
 using Content.Server.Atmos.EntitySystems;
 using Content.Shared._KS14.Atmos.ChemicalFire;
 using Content.Shared.Atmos;
-using Robust.Shared.Map;
 
 namespace Content.Server._KS14.Atmos.ChemicalFire;
 
@@ -13,20 +13,17 @@ namespace Content.Server._KS14.Atmos.ChemicalFire;
 public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
 {
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
-    [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
-
-    [Dependency] private EntityQuery<ChemicalFireComponent> _fireQuery = default!;
-
-    /// <summary>Scratch set for the entities standing on a chemfire's tile.</summary>
-    private readonly HashSet<EntityUid> _tileEntities = [];
+    [Dependency] private KsTileFireSystem _tileFireSystem = default!;
 
     public override void Initialize()
     {
         base.Initialize();
 
         SubscribeLocalEvent<ChemicalFireComponent, ChemicalFireHeatTileEvent>(OnHeatTile);
-        SubscribeLocalEvent<ChemicalFireComponent, TileExtinguishEvent>(OnTileExtinguish);
+
         SubscribeLocalEvent<ChemicalFireGridComponent, AtmosphereSystem.IsHotspotActiveMethodEvent>(OnGridIsHotspotActive);
+        SubscribeLocalEvent<ChemicalFireGridComponent, KsGetTileFireSourceEvent>(OnGridGetTileFireSource);
+        SubscribeLocalEvent<ChemicalFireGridComponent, KsExtinguishTileFireSourcesEvent>(OnGridExtinguishTileFireSources);
     }
 
     /// <summary>
@@ -34,8 +31,8 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
     /// </summary>
     /// <remarks>
     ///     Tile reactions gate on this before they do anything - <c>ExtinguishTileReaction</c> would otherwise
-    ///         bail out and never reach <see cref="OnTileExtinguish"/>, leaving extinguishers useless against a
-    ///         chemfire burning in an atmosphere with nothing flammable in it.
+    ///         bail out and never reach <see cref="AtmosphereSystem.HotspotExtinguish"/>, leaving extinguishers
+    ///         useless against a chemfire burning in an atmosphere with nothing flammable in it.
     ///     Deliberately runs even once the event is handled, since it only ever raises the answer.
     /// </remarks>
     private void OnGridIsHotspotActive(Entity<ChemicalFireGridComponent> entity, ref AtmosphereSystem.IsHotspotActiveMethodEvent args)
@@ -47,16 +44,40 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
         args.Handled = true;
     }
 
-    /// <remarks>
-    ///     Raised on every entity on the tile by <c>AtmosphereSystem.HotspotExtinguish</c>, which is where the
-    ///         water an extinguisher sprays ends up.
-    /// </remarks>
-    private void OnTileExtinguish(Entity<ChemicalFireComponent> entity, ref TileExtinguishEvent args)
+    /// <summary>
+    ///     Answers <see cref="KsTileFireSystem"/> with a chemfire's claim on the tile it sits on.
+    /// </summary>
+    private void OnGridGetTileFireSource(Entity<ChemicalFireGridComponent> entity, ref KsGetTileFireSourceEvent args)
     {
-        if (!entity.Comp.Extinguishable)
+        if (GetTileChemicalFires((entity.Owner, entity.Comp), args.Tile) is not { } tileData)
             return;
 
-        ExtinguishChemicalFire(entity);
+        foreach (var fire in tileData.Fires.Values)
+        {
+            if (fire.Owner == args.IgnoredSourceUid)
+                continue;
+
+            args.Report(KsTileFireSourcePriority.ChemicalFire);
+            return;
+        }
+    }
+
+    /// <summary>
+    ///     Douses the chemfires on a tile, which is how an extinguisher reaches them.
+    /// </summary>
+    private void OnGridExtinguishTileFireSources(Entity<ChemicalFireGridComponent> entity, ref KsExtinguishTileFireSourcesEvent args)
+    {
+        if (GetTileChemicalFires((entity.Owner, entity.Comp), args.Tile) is not { } tileData)
+            return;
+
+        // Copied, since a chemfire may deregister itself as it goes out.
+        foreach (var fire in tileData.Fires.Values.ToArray())
+        {
+            if (!fire.Comp.Extinguishable)
+                continue;
+
+            ExtinguishChemicalFire(fire);
+        }
     }
 
     /// <summary>
@@ -64,80 +85,33 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
     /// </summary>
     protected override void AfterFireStartup(Entity<ChemicalFireComponent> entity)
     {
-        if (!TryGetUnburningTile(entity, out var gridUid, out var tile))
+        if (entity.Comp.LocalGridUid is not { } gridUid)
             return;
 
-        var tileFireEvent = new TileFireEvent(entity.Comp.Temperature, entity.Comp.ExposedVolume);
-
-        foreach (var bystanderUid in GetTileBystanders(gridUid, tile))
-            RaiseLocalEvent(bystanderUid, ref tileFireEvent);
+        _tileFireSystem.RaiseTileFire(
+            gridUid,
+            entity.Comp.LocalTile,
+            entity.Owner,
+            KsTileFireSourcePriority.ChemicalFire,
+            entity.Comp.Temperature,
+            entity.Comp.ExposedVolume
+        );
     }
 
     /// <summary>
-    ///     The other half of <see cref="AfterFireStartup"/>: the tile has stopped burning.
+    ///     The other half of <see cref="AfterFireStartup"/>: this chemfire has stopped burning the tile.
     /// </summary>
+    /// <remarks>
+    ///     Runs while the chemfire is still registered on its tile, so that
+    ///         <see cref="KsTileFireSystem.RaiseTileExtinguish"/> can tell it apart from whatever else may
+    ///         still be burning there.
+    /// </remarks>
     protected override void BeforeFireShutdown(Entity<ChemicalFireComponent> entity)
     {
-        if (!TryGetUnburningTile(entity, out var gridUid, out var tile))
+        if (entity.Comp.LocalGridUid is not { } gridUid)
             return;
 
-        // Another chemfire is still holding the tile, so it has not stopped burning at all.
-        if (GetTileChemicalFires((gridUid, null), tile) is { } tileData)
-        {
-            foreach (var otherFire in tileData.Fires.Values)
-            {
-                if (otherFire.Owner != entity.Owner)
-                    return;
-            }
-        }
-
-        var tileExtinguishEvent = new TileExtinguishEvent();
-
-        foreach (var bystanderUid in GetTileBystanders(gridUid, tile))
-            RaiseLocalEvent(bystanderUid, tileExtinguishEvent);
-    }
-
-    /// <summary>
-    ///     Resolves the chemfire's tile, unless atmospherics is already burning a gas fire on it.
-    /// </summary>
-    /// <remarks>
-    ///     A hotspot raises both of these events itself, every cycle it burns for, so a chemfire sitting in one
-    ///         has nothing to announce.
-    ///     The check matters most on the way out: a chemfire that lit a gas fire and then burned out would
-    ///         otherwise raise <see cref="TileExtinguishEvent"/> while the hotspot it started is still going,
-    ///         and the hotspot would raise it a second time once it too went out. One fire ending must not read
-    ///         as two.
-    /// </remarks>
-    private bool TryGetUnburningTile(Entity<ChemicalFireComponent> entity, out EntityUid gridUid, out Vector2i tile)
-    {
-        gridUid = default;
-        tile = entity.Comp.LocalTile;
-
-        // A grid on its way out takes its broadphase with it before its children shut down, so there is
-        //     neither anything left to look the tile up with nor anyone left on it to tell.
-        if (entity.Comp.LocalGridUid is not { } fireGridUid || TerminatingOrDeleted(fireGridUid))
-            return false;
-
-        gridUid = fireGridUid;
-
-        return !_atmosphereSystem.HasGasHotspot((gridUid, null), tile);
-    }
-
-    /// <summary>
-    ///     Everything standing on a tile that a fire on it should be announced to.
-    /// </summary>
-    /// <remarks>
-    ///     Unenlarged, matching how a hotspot picks out what it is burning. Chemfires are dropped: they are the
-    ///         fire rather than something caught in it, and one handing another a
-    ///         <see cref="TileExtinguishEvent"/> would put it out.
-    /// </remarks>
-    private HashSet<EntityUid> GetTileBystanders(EntityUid gridUid, Vector2i tile)
-    {
-        _tileEntities.Clear();
-        _entityLookupSystem.GetLocalEntitiesIntersecting(gridUid, tile, _tileEntities, enlargement: 0f);
-        _tileEntities.RemoveWhere(uid => _fireQuery.HasComponent(uid));
-
-        return _tileEntities;
+        _tileFireSystem.RaiseTileExtinguish(gridUid, entity.Comp.LocalTile, entity.Owner);
     }
 
     /// <remarks>

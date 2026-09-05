@@ -1,6 +1,7 @@
 using System.Globalization;
 using Content.Server.Atmos.Components;
 using Content.Server.Decals;
+using Content.Server._KS14.Atmos.TileFire; // KS14
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Atmos.Reactions;
@@ -275,6 +276,17 @@ public sealed partial class AtmosphereSystem
             Merge(tile.Air, affected);
         }
 
+        // KS14 start: a hotspot is only one of the things that can burn a tile, so the announcement goes
+        //     through the arbiter rather than straight out - a stronger fire on the tile speaks for it instead.
+        _ksTileFireSystem.RaiseTileFire(
+            tile.GridIndex,
+            tile.GridIndices,
+            sourceUid: tile.GridIndex,
+            KsTileFireSourcePriority.Hotspot,
+            tile.Hotspot.Temperature,
+            tile.Hotspot.Volume);
+        // KS14 end
+        /* KS14: replaced by the above
         var fireEvent = new TileFireEvent(tile.Hotspot.Temperature, tile.Hotspot.Volume);
         _entSet.Clear();
         _lookup.GetLocalEntitiesIntersecting(tile.GridIndex, tile.GridIndices, _entSet, 0f);
@@ -283,5 +295,6 @@ public sealed partial class AtmosphereSystem
         {
             RaiseLocalEvent(entity, ref fireEvent);
         }
+        */
     }
 }

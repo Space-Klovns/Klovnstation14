@@ -1,10 +1,17 @@
 // KS14: added in this fork
+using Content.Server._KS14.Atmos.TileFire;
 using Content.Shared.Atmos.Components;
 
 namespace Content.Server.Atmos.EntitySystems;
 
 public sealed partial class AtmosphereSystem
 {
+    /// <summary>
+    ///     Arbitrates the tile fire events raised for hotspots, so that a fire of another kind burning the same
+    ///         tile is not announced twice over. See <see cref="KsTileFireSystem"/>.
+    /// </summary>
+    [Dependency] private KsTileFireSystem _ksTileFireSystem = default!;
+
     /// <summary>
     ///     Whether atmospherics is running an actual gas fire on a tile.
     /// </summary>

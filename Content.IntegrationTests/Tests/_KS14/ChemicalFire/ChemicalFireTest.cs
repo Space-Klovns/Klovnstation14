@@ -2,6 +2,7 @@ using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Tests.Helpers;
 using Content.Server.Atmos.EntitySystems;
 using Content.Shared._KS14.Atmos.ChemicalFire;
+using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.FixedPoint;
@@ -476,6 +477,149 @@ public sealed class ChemicalFireTest : GameTest
 
     #endregion
 
+    #region Arbitration
+
+    /// <summary>
+    ///     Two fires on one tile still make one fire as far as anything standing on it is concerned: the
+    ///         chemfire outranks the hotspot, so the hotspot stops announcing itself for as long as the
+    ///         chemfire is there.
+    /// </summary>
+    [Test]
+    public async Task TestChemicalFireSilencesTheHotspotOnItsTile()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+
+        var entityManager = server.EntMan;
+        var atmosphereSystem = entityManager.System<AtmosphereSystem>();
+        var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
+        var listenerSystem = entityManager.System<ChemicalFireEventListenerSystem>();
+
+        var testMap = await pair.CreateTestMap();
+        var gridUid = testMap.Grid.Owner;
+
+        var bystanderUid = EntityUid.Invalid;
+        var hotspotFireEventCount = 0;
+
+        await server.WaitAssertion(() =>
+        {
+            listenerSystem.Clear();
+
+            // The test map's single tile is open to space, so its air has to be replaced with something that
+            //     will actually hold a fire.
+            atmosphereSystem.SetMapAtmosphere(testMap.MapUid, space: false, BurnableMixture());
+            entityManager.EnsureComponent<GridAtmosphereComponent>(gridUid);
+
+            bystanderUid = entityManager.SpawnEntity(FlammableProto, new EntityCoordinates(gridUid, 0.5f, 0.5f));
+            entityManager.EnsureComponent<TestListenerComponent>(bystanderUid);
+        });
+
+        await server.WaitRunTicks(TicksPerSecond);
+
+        await server.WaitAssertion(() =>
+        {
+            atmosphereSystem.HotspotExpose(gridUid, FireTile, 5000f, 50f, soh: true);
+        });
+
+        await server.WaitRunTicks(TicksPerSecond);
+
+        await server.WaitAssertion(() =>
+        {
+            hotspotFireEventCount = listenerSystem.GetTileFireEventCount(bystanderUid);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(atmosphereSystem.HasGasHotspot((gridUid, null), FireTile),
+                    "Test tile failed to catch fire.");
+
+                Assert.That(hotspotFireEventCount, Is.GreaterThan(0),
+                    "A burning tile announced no fire at all.");
+            }
+
+            Assert.That(chemicalFireSystem.SpawnChemicalFire(FireProto, (gridUid, null), FireTile), Is.Not.Null,
+                "Chemfire failed to spawn.");
+
+            // The chemfire announces itself as it starts, which is the last event the tile should see.
+            hotspotFireEventCount = listenerSystem.GetTileFireEventCount(bystanderUid);
+        });
+
+        await server.WaitRunTicks(TicksPerSecond);
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(atmosphereSystem.HasGasHotspot((gridUid, null), FireTile),
+                    "Test tile stopped burning, so the hotspot had nothing left to suppress.");
+
+                Assert.That(listenerSystem.GetTileFireEventCount(bystanderUid), Is.EqualTo(hotspotFireEventCount),
+                    "The hotspot kept announcing itself while a chemfire was holding its tile.");
+            }
+        });
+    }
+
+    /// <summary>
+    ///     The same arbitration on the way out: a chemfire burning out on a tile that is still alight must not
+    ///         report the fire as over, or the hotspot going out later would report it a second time.
+    /// </summary>
+    [Test]
+    public async Task TestChemicalFireExpiringOverAHotspotStaysQuiet()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+
+        var entityManager = server.EntMan;
+        var atmosphereSystem = entityManager.System<AtmosphereSystem>();
+        var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
+        var listenerSystem = entityManager.System<ChemicalFireEventListenerSystem>();
+
+        var testMap = await pair.CreateTestMap();
+        var gridUid = testMap.Grid.Owner;
+
+        var bystanderUid = EntityUid.Invalid;
+        Entity<ChemicalFireComponent>? fire = null;
+
+        await server.WaitAssertion(() =>
+        {
+            listenerSystem.Clear();
+
+            atmosphereSystem.SetMapAtmosphere(testMap.MapUid, space: false, BurnableMixture());
+            entityManager.EnsureComponent<GridAtmosphereComponent>(gridUid);
+
+            bystanderUid = entityManager.SpawnEntity(FlammableProto, new EntityCoordinates(gridUid, 0.5f, 0.5f));
+            entityManager.EnsureComponent<TestListenerComponent>(bystanderUid);
+        });
+
+        await server.WaitRunTicks(TicksPerSecond);
+
+        await server.WaitAssertion(() =>
+        {
+            atmosphereSystem.HotspotExpose(gridUid, FireTile, 5000f, 50f, soh: true);
+
+            fire = chemicalFireSystem.SpawnChemicalFire(BriefFireProto, (gridUid, null), FireTile);
+            Assert.That(fire, Is.Not.Null, "Chemfire failed to spawn.");
+        });
+
+        await server.WaitRunTicks(TicksPerSecond * 2);
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(entityManager.EntityExists(fire!.Value.Owner), Is.False,
+                    "Chemfire did not expire.");
+
+                Assert.That(atmosphereSystem.HasGasHotspot((gridUid, null), FireTile),
+                    "Test tile stopped burning, so the chemfire had nothing to defer to.");
+
+                Assert.That(listenerSystem.GetTileExtinguishEventCount(bystanderUid), Is.Zero,
+                    "Chemfire reported its tile as out while the tile was still on fire.");
+            }
+        });
+    }
+
+    #endregion
+
     #region Extinguishing
 
     /// <summary>
@@ -586,6 +730,17 @@ public sealed class ChemicalFireTest : GameTest
     }
 
     #endregion
+
+    /// <summary>Plasma and oxygen, hot enough to keep a hotspot going for the length of a test.</summary>
+    private static GasMixture BurnableMixture()
+    {
+        var mixture = new GasMixture(Atmospherics.CellVolume) { Temperature = Atmospherics.T20C };
+
+        mixture.SetMoles(Gas.Oxygen, 500f);
+        mixture.SetMoles(Gas.Plasma, 500f);
+
+        return mixture;
+    }
 
     private static int GetTileFireCount(SharedChemicalFireSystem chemicalFireSystem, EntityUid gridUid)
         => chemicalFireSystem.GetTileChemicalFires((gridUid, null), FireTile)?.Fires.Count ?? 0;
