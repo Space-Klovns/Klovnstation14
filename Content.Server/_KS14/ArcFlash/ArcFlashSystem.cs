@@ -1,8 +1,11 @@
 using Content.Shared.Electrocution;
 using Content.Shared.Construction;
+using Content.Shared.NodeContainer;
 using Content.Shared._KS14.Construction;
 using Content.Server.Electrocution;
 using Content.Server.Lightning;
+using Content.Server.NodeContainer.EntitySystems;
+using Content.Server.Power.NodeGroups;
 using Content.Shared._KS14.ArcFlash.Components;
 using Content.Shared._KS14.ArcFlash;
 using Content.Shared._KS14.Power;
@@ -29,6 +32,28 @@ public sealed partial class ArcFlashSystem : SharedArcFlashSystem
     {
         base.OnAttemptCutCable(entity, ref args);
 
+        if (!IsCablePowered(entity))
+            return;
+
+        DoLightning((entity, entity));
+    }
+
+    /// <summary>
+    ///     Point-in-time check for whether an entity's node container currently has a node
+    ///         with live current flowing through its power net (HV/MV/APC).
+    /// </summary>
+    public bool IsCablePowered(EntityUid uid)
+    {
+        if (!TryComp<NodeContainerComponent>(uid, out var nodeContainerComponent))
+            return false;
+
+        foreach (var node in nodeContainerComponent.Nodes.Values)
+        {
+            if (node.NodeGroup is IBasePowerNet { NetworkNode.LastCombinedMaxSupply: > 0 })
+                return true;
+        }
+
+        return false;
     }
 
     private void OnAnchorChanged(Entity<ArcFlashAnchorableComponent> entity, ref AnchorStateChangedEvent args)

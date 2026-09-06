@@ -52,12 +52,12 @@ public sealed partial class CableSystem : EntitySystem
         if (_electrocutionSystem.TryDoElectrifiedAct(uid, args.User))
             return;
 
-        // KS start
+        // KS14 start: attemptcutcable
         var attemptEv = new Shared._KS14.Power.AttemptCutCableEvent(cable.CableType, args.User, false);
         RaiseLocalEvent(uid, ref attemptEv);
         if (attemptEv.Cancelled)
             return;
-        // KS end
+        // KS14 end
 
         _adminLogger.Add(LogType.CableCut, LogImpact.High, $"The {ToPrettyString(uid)} at {xform.Coordinates} was cut by {ToPrettyString(args.User)}.");
 
