@@ -6,4 +6,12 @@
     Tritium: 0.1
     CarbonDioxide: 0.1
   effects:
-    - !type:EvaporinSynthesisReaction {}
+  - !type:EvaporinSynthesisReaction { }
+
+- type: gasReaction
+  id: EvaporinEvaporation
+  priority: 501
+  minimumRequirements:
+    Evaporin: 0.1
+  effects:
+  - !type:UpdatePuddleEvaporationReaction { }

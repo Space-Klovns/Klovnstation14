@@ -15,7 +15,7 @@ public sealed partial class PuddleSystem
     ///     Kept up to date by <see cref="OnPuddleCacheStartup"/>, <see cref="OnPuddleCacheShutdown"/>
     ///     and <see cref="OnPuddleCacheMove"/>.
     /// </summary>
-    private readonly Dictionary<EntityUid, Dictionary<Vector2i, HashSet<EntityUid>>> _gridPuddleCache = new();
+    private readonly Dictionary<EntityUid, Dictionary<Vector2i, HashSet<Entity<PuddleComponent>>>> _gridPuddleCache = new();
 
     /// <summary>
     ///     Where every cached puddle currently is, so that a moved or removed puddle can be pulled out of the tile it
@@ -56,9 +56,10 @@ public sealed partial class PuddleSystem
     /// </summary>
     private void UpdatePuddleCache(EntityUid puddleUid, TransformComponent? transformComponent = null)
     {
-        if (!Resolve(puddleUid, ref transformComponent, logMissing: false)
-            || transformComponent.GridUid is not { } gridUid
-            || !_transform.TryGetGridTilePosition((puddleUid, transformComponent), out var indices))
+        if (!Resolve(puddleUid, ref transformComponent, logMissing: false) ||
+            transformComponent.GridUid is not { } gridUid ||
+            !_puddleQuery.TryGetComponent(puddleUid, out var puddleComponent) ||
+            !_transform.TryGetGridTilePosition((puddleUid, transformComponent), out var indices))
         {
             RemovePuddleFromCache(puddleUid);
             return;
@@ -74,17 +75,17 @@ public sealed partial class PuddleSystem
 
         if (!_gridPuddleCache.TryGetValue(gridUid, out var tilePuddles))
         {
-            tilePuddles = new();
+            tilePuddles = [];
             _gridPuddleCache[gridUid] = tilePuddles;
         }
 
         if (!tilePuddles.TryGetValue(indices, out var puddleUids))
         {
-            puddleUids = new();
+            puddleUids = [];
             tilePuddles[indices] = puddleUids;
         }
 
-        puddleUids.Add(puddleUid);
+        puddleUids.Add((puddleUid, puddleComponent));
         _puddleCacheLocations[puddleUid] = (gridUid, indices);
     }
 
@@ -101,7 +102,7 @@ public sealed partial class PuddleSystem
 
         if (tilePuddles.TryGetValue(location.Indices, out var puddleUids))
         {
-            puddleUids.Remove(puddleUid);
+            puddleUids.Remove((puddleUid, default! /* comp is irrelevant here, only uid is used for the hashcode */));
 
             if (puddleUids.Count == 0)
                 tilePuddles.Remove(location.Indices);
@@ -121,42 +122,51 @@ public sealed partial class PuddleSystem
     ///     The returned set is the cache's own storage - do not hold onto it across anything that could spawn or
     ///     delete a puddle.
     /// </remarks>
-    public bool TryGetCachedPuddles(EntityUid gridUid, Vector2i indices, [NotNullWhen(true)] out IReadOnlySet<EntityUid>? puddleUids)
+    public bool TryGetCachedPuddles(EntityUid gridUid, Vector2i indices, [NotNullWhen(true)] out IReadOnlySet<Entity<PuddleComponent>>? puddleEntities)
     {
-        puddleUids = null;
+        puddleEntities = null;
 
-        if (!_gridPuddleCache.TryGetValue(gridUid, out var tilePuddles)
-            || !tilePuddles.TryGetValue(indices, out var tilePuddleUids))
+        if (!_gridPuddleCache.TryGetValue(gridUid, out var tilePuddles) ||
+            !tilePuddles.TryGetValue(indices, out var tilePuddleEntities))
         {
             return false;
         }
 
-        puddleUids = tilePuddleUids;
+        puddleEntities = tilePuddleEntities;
         return true;
     }
 
     /// <inheritdoc cref="TryGetCachedPuddles(EntityUid, Vector2i, out IReadOnlySet{EntityUid}?)"/>
-    public bool TryGetCachedPuddles(TileRef tileRef, [NotNullWhen(true)] out IReadOnlySet<EntityUid>? puddleUids)
-        => TryGetCachedPuddles(tileRef.GridUid, tileRef.GridIndices, out puddleUids);
+    public bool TryGetCachedPuddles(TileRef tileRef, [NotNullWhen(true)] out IReadOnlySet<Entity<PuddleComponent>>? puddleEntities)
+        => TryGetCachedPuddles(tileRef.GridUid, tileRef.GridIndices, out puddleEntities);
 
     /// <summary>
     ///     Gets a puddle on a tile, if there is one. If a tile somehow holds several puddles, which one you get is
     ///     arbitrary.
     /// </summary>
-    public bool TryGetCachedPuddle(EntityUid gridUid, Vector2i indices, out EntityUid puddleUid)
+    public bool TryGetCachedPuddle(EntityUid gridUid, Vector2i indices, out Entity<PuddleComponent> puddleEntity)
     {
-        puddleUid = EntityUid.Invalid;
+        puddleEntity = (EntityUid.Invalid, default!);
 
-        if (!TryGetCachedPuddles(gridUid, indices, out var puddleUids))
+        if (!TryGetCachedPuddles(gridUid, indices, out var puddleEntities))
             return false;
 
-        puddleUid = puddleUids.First();
+        puddleEntity = puddleEntities.First();
         return true;
     }
 
     /// <inheritdoc cref="TryGetCachedPuddle(EntityUid, Vector2i, out EntityUid)"/>
+    public bool TryGetCachedPuddle(TileRef tileRef, out Entity<PuddleComponent> puddleEntity)
+        => TryGetCachedPuddle(tileRef.GridUid, tileRef.GridIndices, out puddleEntity);
+
+    /// <inheritdoc cref="TryGetCachedPuddle(EntityUid, Vector2i, out EntityUid)"/>
     public bool TryGetCachedPuddle(TileRef tileRef, out EntityUid puddleUid)
-        => TryGetCachedPuddle(tileRef.GridUid, tileRef.GridIndices, out puddleUid);
+    {
+        var result = TryGetCachedPuddle(tileRef.GridUid, tileRef.GridIndices, out var puddleEntity);
+        puddleUid = puddleEntity.Owner;
+
+        return result;
+    }
 
     /// <summary>
     ///     Whether a tile has any puddle on it.
@@ -175,14 +185,14 @@ public sealed partial class PuddleSystem
     ///     The returned dictionary is the cache's own storage - do not mutate it, and do not hold onto it across
     ///     anything that could spawn or delete a puddle.
     /// </remarks>
-    public bool TryGetCachedGridPuddles(EntityUid gridUid, [NotNullWhen(true)] out IReadOnlyDictionary<Vector2i, HashSet<EntityUid>>? tilePuddles)
+    public bool TryGetCachedGridPuddles(EntityUid gridUid, [NotNullWhen(true)] out IReadOnlyDictionary<Vector2i, HashSet<Entity<PuddleComponent>>>? tilePuddleEntities)
     {
-        tilePuddles = null;
+        tilePuddleEntities = null;
 
         if (!_gridPuddleCache.TryGetValue(gridUid, out var gridTilePuddles))
             return false;
 
-        tilePuddles = gridTilePuddles;
+        tilePuddleEntities = gridTilePuddles;
         return true;
     }
 

@@ -12,7 +12,6 @@ public sealed partial class AtmosphereSystem
     private void InitialiseKlovnReactions()
     {
         _systemCollectionHookManager.HookAction(KsUpdateGasReactionPrototypes);
-        SubscribeLocalEvent<PrototypesReloadedEventArgs>(KsOnPrototypesReloaded);
     }
 
     private void KsUpdateGasReactionPrototypes(IDependencyCollection dependencyCollection)
@@ -30,5 +29,9 @@ public sealed partial class AtmosphereSystem
             return;
 
         KsUpdateGasReactionPrototypes(_systemCollectionHookManager.DependencyCollection);
+
+        // KS14: reload replaces GasReactionPrototype instances outright (PrototypeManager.ReloadPrototypes),
+        // so _gasReactions must be recaptured or it keeps iterating orphaned, un-injected prototypes
+        RefreshGasReactionsCache();
     }
 }

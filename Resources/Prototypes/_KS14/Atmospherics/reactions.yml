@@ -1,17 +1,10 @@
 - type: gasReaction
-  id: zipionFormation
+  id: ZipionFormation
   priority: 2
   maximumTemperature: 200
   minimumRequirements:
-  - 0     # oxygen
-  - 0     # nitrogen
-  - 0     # carbon dioxide
-  - 1     # plasma
-  - 0     # tritium
-  - 9     # vapor
-  - 0     # miasma
-  - 0     # n2o
-  - 0     # frezon
+    Plasma: 1
+    WaterVapor: 9
   effects:
   - !type:ZipionFormationReaction {}
 - type: gasReaction

@@ -17,7 +17,7 @@ public abstract partial class SharedPuddleSystem
         Dirty(ent);
     }
 
-    private void UpdateEvaporation(Entity<PuddleComponent> entity, Solution solution)
+    public /* KS14: private -> public */ void UpdateEvaporation(Entity<PuddleComponent> entity, Solution solution)
     {
         // KS14 - Start
         // Calculate evaporation speed, including dynamic modifications (e.g. Evaporin gas).
