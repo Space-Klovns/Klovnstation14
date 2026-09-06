@@ -5,7 +5,7 @@
   description: 7 minutes. 7 minutes is all I have to play with you.
   components:
   - type: Sprite
-    sprite: _KS14/Mobs/dodgenn.rsi
+    sprite: _KS14/Mobs/Boss/dodgenn.rsi
     layers:
     - map: ["enum.DamageStateVisualLayers.Base"]
       state: icon
@@ -117,7 +117,7 @@
   suffix: Boss Loot
   components:
   - type: Sprite
-    sprite: _KS14/Mobs/dodgenn.rsi
+    sprite: _KS14/Mobs/Boss/dodgenn.rsi
     layers:
     - state: icon
       scale: 0.75,0.75
@@ -133,7 +133,7 @@
     animationTime: 0.1
     offset: 0,0.5
   - type: Clothing
-    sprite: _KS14/Mobs/dodgenn.rsi
+    sprite: _KS14/Mobs/Boss/dodgenn.rsi
     clothingVisuals:
       eyes:
       - state: icon

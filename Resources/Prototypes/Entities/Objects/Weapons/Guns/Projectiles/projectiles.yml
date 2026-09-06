@@ -542,7 +542,7 @@
   components:
   - type: Reflective
     reflective:
-      - NonEnergy
+      - Kinetic #KS14 change, added kinetic projectile type for reflective
   - type: Sprite
     noRot: false
     sprite: Objects/Weapons/Guns/Projectiles/magic.rsi
@@ -596,7 +596,7 @@
   components:
   - type: Reflective
     reflective:
-    - NonEnergy
+      - Kinetic #KS14 change, added kinetic projectile type for reflective
   - type: Sprite
     noRot: false
     sprite: Objects/Weapons/Guns/Projectiles/magic.rsi
