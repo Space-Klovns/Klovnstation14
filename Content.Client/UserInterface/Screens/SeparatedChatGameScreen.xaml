@@ -14,6 +14,7 @@
     VerticalAlignment="Bottom"
     HorizontalAlignment="Center">
     <!-- KS14: the stock hard-coded StyleBoxFlat was removed in favor of the namespaced Baron panel below. -->
+    <!-- Upstream namespace retained for mergeability: xmlns:graphics="clr-namespace:Robust.Client.Graphics;assembly=Robust.Client" -->
     <SplitContainer Name="ScreenContainer" HorizontalExpand="True" VerticalExpand="True" SplitWidth="0" StretchDirection="TopLeft">
         <LayoutContainer Name="ViewportContainer" HorizontalExpand="True" VerticalExpand="True">
             <controls:MainViewport Name="MainViewport"/>
@@ -27,6 +28,7 @@
             <alerts:AlertsUI Name="Alerts" Access="Protected" />
         </LayoutContainer>
         <!-- KS14: Baron sidebar panel. -->
+        <!-- Upstream UI retained for mergeability: <PanelContainer Name="SeparatedChatPanel" MinWidth="300"><PanelContainer.PanelOverride><graphics:StyleBoxFlat BackgroundColor="#2B2C3B" /></PanelContainer.PanelOverride> -->
         <PanelContainer Name="SeparatedChatPanel" MinWidth="300" StyleClasses="KsBaronPanelDark1">
 
             <BoxContainer Orientation="Vertical" HorizontalExpand="True" SeparationOverride="10" Margin="10">

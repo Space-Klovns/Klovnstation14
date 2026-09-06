@@ -12,7 +12,7 @@ public sealed partial class TriggerSystem
 {
     private void InitializeProximity()
     {
-        SubscribeLocalEvent<TriggerOnProximityComponent, StartCollideEvent>(OnProximityStartCollide);
+        SubscribeLocalEvent<TriggerOnProximityComponent, StartCollideEvent>(OnProximityStartCollide, before: [typeof(Projectiles.SharedProjectileSystem), typeof(_Trauma.Projectiles.PredictedProjectileSystem)] /* KS14: added before */);
         SubscribeLocalEvent<TriggerOnProximityComponent, EndCollideEvent>(OnProximityEndCollide);
         SubscribeLocalEvent<TriggerOnProximityComponent, MapInitEvent>(OnMapInit);
         // Shouldn't need re-anchoring.
@@ -224,7 +224,7 @@ public sealed partial class TriggerSystem
             var triggerSpeed = trigger.TriggerSpeed;
 
             // Check for anything colliding and moving fast enough, relative to us.
-            foreach (var (collidingUid, collidingPhysics) in colliding) 
+            foreach (var (collidingUid, collidingPhysics) in colliding)
             {
                 if (TerminatingOrDeleted(collidingUid))
                     continue;

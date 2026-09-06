@@ -50,30 +50,6 @@ public sealed partial class JumpAbilityComponent : Component
     [DataField, AutoNetworkedField]
     public TimeSpan CollideKnockdown = TimeSpan.FromSeconds(3);
 
-    // KS14 addition
-    /// <summary>
-    /// The duration of the knockdown after finishing a jump, when <see cref="KnockdownOnFinish"/>
-    /// is true.
-    ///
-    /// Not applied after a collision with something that gets knocked down, if <see cref="CanCollide"/> is true or this is null.
-    /// </summary>
-    [DataField]
-    public TimeSpan? PunishKnockdown = TimeSpan.FromSeconds(1);
-
-    // KS14 addition
-    /// <summary>
-    /// Damage dealt to hit entities if <see cref="CanCollide"/> is true.
-    /// </summary>
-    [DataField, AutoNetworkedField]
-    public float HitStaminaDamage = 60f;
-
-    // KS14 addition
-    /// <summary>
-    /// Knockdown duration dealt to hit entities if <see cref="CanCollide"/> is true.
-    /// </summary>
-    [DataField, AutoNetworkedField]
-    public TimeSpan? HitKnockdownDuration = null;
-
     /// <summary>
     /// This gets played whenever the jump action is used.
     /// </summary>
@@ -87,20 +63,12 @@ public sealed partial class JumpAbilityComponent : Component
     public LocId? JumpFailedPopup = "jump-ability-failure";
 }
 
-public sealed partial class GravityJumpEvent : InstantActionEvent
+public sealed partial class GravityJumpEvent : InstantActionEvent, IKsGravityJumpEvent // KS14: inherit IKsGravityJumpEvent
 {
     // KS14 addition
     /// <summary>
     /// Amount of stamina taken when doing this action.
     /// </summary>
     [DataField]
-    public float StaminaCost = 0f;
+    public float StaminaCost { get; set; } // KS14: use property
 }
-
-// KS14
-/// <summary>
-///     Raised on the target after it gets hit by
-///         something that was jumping and couldve been hurt.
-/// </summary>
-[ByRefEvent]
-public readonly record struct KsHitByJumpEvent(EntityUid ActorUid);

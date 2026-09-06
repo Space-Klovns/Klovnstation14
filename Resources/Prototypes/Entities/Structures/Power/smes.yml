@@ -113,6 +113,7 @@
       - PowerStorage
       - VoltageNetworks
       - Power
+    - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
     # Interface
     - type: BatteryInterface

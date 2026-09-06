@@ -1293,7 +1293,7 @@
       stealGroup: SalvageExpeditionsComputerCircuitboard
 
 - type: entity
-  parent: BaseComputer
+  parent: BaseComputerAiAccess #KS14
   id: ComputerSurveillanceCameraMonitor
   name: camera monitor
   description: A surveillance camera monitor. You're watching them. Maybe.
@@ -1332,7 +1332,7 @@
           type: WiresBoundUserInterface
 
 - type: entity
-  parent: BaseComputer
+  parent: BaseComputerAiAccess #KS14
   id: ComputerSurveillanceWirelessCameraMonitor
   name: wireless camera monitor
   description: A wireless surveillance camera monitor. You're watching them. Maybe.

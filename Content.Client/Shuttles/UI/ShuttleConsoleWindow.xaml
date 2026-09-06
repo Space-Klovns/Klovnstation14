@@ -5,6 +5,7 @@
                       SetSize="960 820"
                       MinSize="960 820">
     <!-- KS14: add vertical room for shuttle-console controls at the default size. -->
+    <!-- Upstream dimensions retained for mergeability: SetSize="960 762" MinSize="960 762". -->
     <BoxContainer Orientation="Vertical">
         <!-- Top row mode buttons -->
         <BoxContainer Name="ModeButtons"

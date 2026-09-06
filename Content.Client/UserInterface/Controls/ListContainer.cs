@@ -397,6 +397,7 @@ public sealed class ListContainerButton : ContainerButton, IEntityControl
         Data = data;
         Index = index;
         // KS14: list entries without a stylesheet class must not flash to the stock white backing when selected.
+        // Upstream UI retained for mergeability: StyleBoxOverride = new StyleBoxFlat(Color.White);
         StyleBoxOverride = new StyleBoxFlat(Color.FromHex("#7A3038"));
         // AddChild(Background = new PanelContainer
         // {

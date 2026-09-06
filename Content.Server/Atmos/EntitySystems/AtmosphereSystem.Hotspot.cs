@@ -275,6 +275,11 @@ public sealed partial class AtmosphereSystem
             Merge(tile.Air, affected);
         }
 
+        // KS14 start: a hotspot is only one of the things that can burn a tile, so announcing it goes through
+        //     the one place that raises these events for every kind of fire.
+        _ksTileFireSystem.RaiseTileFire(tile.GridIndex, tile.GridIndices, tile.Hotspot.Temperature, tile.Hotspot.Volume);
+        // KS14 end
+        /* KS14: replaced by the above
         var fireEvent = new TileFireEvent(tile.Hotspot.Temperature, tile.Hotspot.Volume);
         _entSet.Clear();
         _lookup.GetLocalEntitiesIntersecting(tile.GridIndex, tile.GridIndices, _entSet, 0f);
@@ -283,5 +288,6 @@ public sealed partial class AtmosphereSystem
         {
             RaiseLocalEvent(entity, ref fireEvent);
         }
+        */
     }
 }

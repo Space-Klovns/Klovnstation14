@@ -84,7 +84,7 @@
     whitelist:
       tags:
         - CartridgePistol
-    capacity: 40 #KS14 modified
+    capacity: 30 #KS14 modified
   - type: Item
     size: Small
   - type: ContainerContainer
@@ -281,7 +281,7 @@
   parent: BaseMagazinePistolSubMachineGun
   id: MagazinePistolSubMachineGun
   name: SMG magazine (.35 auto)
-  description: 40-round double-stack magazine for submachine guns. Intended to hold general-purpose kinetic ammunition. #KS14 modified
+  description: 30-round double-stack magazine for submachine guns. Intended to hold general-purpose kinetic ammunition. #KS14 modified
   components:
   - type: BallisticAmmoProvider
     proto: CartridgePistol
@@ -305,7 +305,7 @@
   id: MagazinePistolSubMachineGunEmpty
   name: SMG magazine (.35 auto any)
   suffix: empty
-  description: 40-round double-stack magazine for submachine guns. #KS14 modified
+  description: 30-round double-stack magazine for submachine guns. #KS14 modified
   components:
   - type: BallisticAmmoProvider
     proto: null
@@ -326,7 +326,7 @@
   parent: BaseMagazinePistolSubMachineGun
   id: MagazinePistolSubMachineGunPractice
   name: SMG magazine (.35 auto practice)
-  description: 40-round double-stack magazine for submachine guns. Intended to hold harmless practice ammunition. #KS14 modified
+  description: 30-round double-stack magazine for submachine guns. Intended to hold harmless practice ammunition. #KS14 modified
   components:
   - type: BallisticAmmoProvider
     proto: CartridgePistolPractice
@@ -353,7 +353,7 @@
   parent: BaseMagazinePistolSubMachineGun
   id: MagazinePistolSubMachineGunUranium
   name: SMG magazine (.35 auto uranium)
-  description: 40-round double-stack magazine for submachine guns. Intended to hold exotic uranium-core ammunition. #KS14 modified
+  description: 30-round double-stack magazine for submachine guns. Intended to hold exotic uranium-core ammunition. #KS14 modified
   components:
   - type: BallisticAmmoProvider
     proto: CartridgePistolUranium
@@ -380,7 +380,7 @@
   parent: BaseMagazinePistolSubMachineGun
   id: MagazinePistolSubMachineGunIncendiary
   name: SMG magazine (.35 auto incendiary)
-  description: 40-round double-stack magazine for submachine guns. Intended to hold self-igniting incendiary ammunition. #KS14 modified
+  description: 30-round double-stack magazine for submachine guns. Intended to hold self-igniting incendiary ammunition. #KS14 modified
   components:
   - type: BallisticAmmoProvider
     proto: CartridgePistolIncendiary

@@ -4,6 +4,7 @@
             MinSize="300 220"
                       Title="{Loc 'cargo-pallet-console-menu-title'}">
     <!-- KS14: increase the sale console height so all controls fit on open. -->
+    <!-- Upstream dimensions retained for mergeability: SetSize="300 150" MinSize="300 150". -->
     <BoxContainer Orientation="Vertical" Margin="5">
         <BoxContainer Orientation="Horizontal">
             <Label Text="{Loc 'cargo-pallet-menu-appraisal-label'}"

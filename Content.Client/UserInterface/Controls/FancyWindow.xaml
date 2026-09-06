@@ -8,8 +8,10 @@
     <BoxContainer Orientation="Vertical">
         <Control>
             <!-- KS14 -->
+            <!-- Upstream UI retained for mergeability: <PanelContainer StyleClasses="WindowHeadingBackground" Name="WindowHeader" /> -->
             <PanelContainer StyleClasses="KsBaronPanelGrey1" Name="WindowHeader" />
             <!-- KS14 -->
+            <!-- Upstream UI retained for mergeability: <BoxContainer Margin="4 2 4 0" Orientation="Horizontal"> -->
             <BoxContainer Margin="15 15 15 28" Orientation="Horizontal">
                 <Label Name="WindowTitle"
                        HorizontalExpand="True" VAlign="Center" StyleClasses="FancyWindowTitle" ClipText="true" />
@@ -19,6 +21,7 @@
             </BoxContainer>
         </Control>
         <!-- KS14: removes the stock divider for the Baron window frame. -->
+        <!-- Upstream UI retained for mergeability: <PanelContainer StyleClasses="LowDivider" /> -->
         <Control Access="Public" Name="ContentsContainer" StyleClasses="WindowContentsContainer" RectClipContent="True" VerticalExpand="true" />
     </BoxContainer>
 </controls:FancyWindow>

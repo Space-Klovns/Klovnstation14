@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Content.Client.IoC;
 using Content.Client.Parallax.Managers;
+using Content.IntegrationTests.Tests._KS14.ChemicalFire; // KS14
 using Content.IntegrationTests.Tests.Destructible;
 using Content.IntegrationTests.Tests.DeviceNetwork;
 using Content.Server.GameTicking;
@@ -121,6 +122,7 @@ public sealed partial class TestPair : RobustIntegrationTest.TestPair
             var entSysMan = IoCManager.Resolve<IEntitySystemManager>();
             entSysMan.LoadExtraSystemType<DeviceNetworkTestSystem>();
             entSysMan.LoadExtraSystemType<TestDestructibleListenerSystem>();
+            entSysMan.LoadExtraSystemType<ChemicalFireEventListenerSystem>(); // KS14
         };
         return opts;
     }

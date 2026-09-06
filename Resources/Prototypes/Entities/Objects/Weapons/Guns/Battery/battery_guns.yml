@@ -19,7 +19,7 @@
     availableModes:
     - SemiAuto
     soundGunshot:
-      path: /Audio/Weapons/Guns/Gunshots/laser.ogg
+      collection: EnergyShot #KS14 change, moved to collection
   - type: Battery
     maxCharge: 1000
     startingCharge: 1000
@@ -211,11 +211,16 @@
     - state: mag-unshaded-4
       map: ["enum.GunVisualLayers.MagUnshaded"]
       shader: unshaded
+  - type: Gun #KS14 change
+    minAngle: 15 # little bigger than antique
+    maxAngle: 30
+    angleIncrease: 2
+    projectileSpeed: 25
   - type: Item
     storedOffset: 0,-5
   - type: BatteryAmmoProvider
-    proto: RedMediumLaser
-    fireCost: 62.5
+    proto: BulletLaserBig #KS14 change
+    fireCost: 100
   - type: MagazineVisuals
     magState: mag
     steps: 5

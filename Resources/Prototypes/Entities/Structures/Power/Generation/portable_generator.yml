@@ -32,6 +32,7 @@
             - MachineMask
           layer:
             - MachineLayer
+    - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
     # Visuals
     - type: Appearance
