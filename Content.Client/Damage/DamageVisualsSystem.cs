@@ -364,7 +364,7 @@ public sealed partial class DamageVisualsSystem : VisualizerSystem<DamageVisuals
             || !TryComp(uid, out DamageableComponent? damageComponent))
             return;
 
-        if (damageVisComp.TargetLayers != null && damageVisComp.DamageOverlayGroups != null)
+        if (damageVisComp.TargetLayers != null && (damageVisComp.DamageOverlayGroups != null || damageVisComp.DamageOverlay != null /* KS14: trackAllDamage overlays reserve layers too, they were never refreshed */))
             UpdateDisabledLayers(uid, spriteComponent, component, damageVisComp);
 
         if (damageVisComp.Overlay && damageVisComp.DamageOverlayGroups != null && damageVisComp.TargetLayers == null)
@@ -400,19 +400,33 @@ public sealed partial class DamageVisualsSystem : VisualizerSystem<DamageVisuals
     /// </summary>
     private void UpdateDisabledLayers(EntityUid uid, SpriteComponent spriteComponent, AppearanceComponent component, DamageVisualsComponent damageVisComp)
     {
+        var forcefullyHiddenLayerMapKeys = KsGetForcefullyHiddenLayerMapKeys(uid, damageVisComp); // KS14: layers whose limb is gone
+
         foreach (var layer in damageVisComp.TargetLayerMapKeys)
         {
             // I assume this gets set by something like body system if limbs are missing???
             // TODO is this actually used by anything anywhere?
             AppearanceSystem.TryGetData(uid, layer, out bool disabled, component);
 
-            if (damageVisComp.DisabledLayers[layer] == disabled)
+            disabled |= forcefullyHiddenLayerMapKeys?.Contains(layer) ?? false; // KS14
+
+            // KS14: was DisabledLayers[layer], which throws on setups that never reserved layers
+            if (!damageVisComp.DisabledLayers.TryGetValue(layer, out var wasDisabled) || wasDisabled == disabled)
                 continue;
 
             damageVisComp.DisabledLayers[layer] = disabled;
             if (damageVisComp.TrackAllDamage)
             {
-                SpriteSystem.LayerSetVisible((uid, spriteComponent), $"{layer}trackDamage", !disabled);
+                // KS14: was LayerSetVisible, which un-hid layers holding a stale state, or no damage at all
+                KsSetDamageLayerDisabled(
+                    (uid, spriteComponent),
+                    damageVisComp,
+                    layer,
+                    $"{layer}trackDamage",
+                    damageGroup: null,
+                    damageVisComp.LastDamageThreshold,
+                    disabled);
+
                 continue;
             }
 
@@ -421,7 +435,15 @@ public sealed partial class DamageVisualsSystem : VisualizerSystem<DamageVisuals
 
             foreach (var damageGroup in damageVisComp.DamageOverlayGroups.Keys)
             {
-                SpriteSystem.LayerSetVisible((uid, spriteComponent), $"{layer}{damageGroup}", !disabled);
+                // KS14: was LayerSetVisible, see above
+                KsSetDamageLayerDisabled(
+                    (uid, spriteComponent),
+                    damageVisComp,
+                    layer,
+                    $"{layer}{damageGroup}",
+                    damageGroup,
+                    damageVisComp.LastThresholdPerGroup.GetValueOrDefault(damageGroup),
+                    disabled);
             }
         }
     }
