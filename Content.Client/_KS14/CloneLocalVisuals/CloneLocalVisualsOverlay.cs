@@ -1,9 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using Content.Client.Graphics;
 using Content.Shared._KS14.CloneLocalVisuals;
 using Content.Shared.DisplacementMap;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
+using Robust.Client.Placement;
 using Robust.Client.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.Graphics;
@@ -22,6 +24,7 @@ public sealed partial class CloneLocalVisualsOverlay : Overlay
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IClyde _clyde = default!;
+    [Dependency] private IPlacementManager _placementManager = default!;
     [Dependency] private SpriteSystem _spriteSystem = default!;
     [Dependency] private TransformSystem _transformSystem = default!;
 
@@ -32,9 +35,9 @@ public sealed partial class CloneLocalVisualsOverlay : Overlay
 
     /// <summary>
     ///     The displacementSize the shader prototypes in Resources/Prototypes/Shaders/displacement.yml declare. It is
-    ///     the range the maps encode their offsets over, not anything resolution specific, but the shader spends it in
-    ///     texels of whatever texture it samples - so it has to grow with the render target the same way
-    ///     <see cref="GetViewportScale"/> does.
+    ///     the range the maps encode their offsets over, measured in texels of the sprite at its native resolution.
+    ///     The shader spends it in texels of whatever texture it samples, and ours is the size of the viewport rather
+    ///     than of a sprite sheet, so it has to be scaled by <see cref="GetViewportScale"/> before being handed over.
     /// </summary>
     private const float DisplacementSize = 127f;
 
@@ -49,12 +52,14 @@ public sealed partial class CloneLocalVisualsOverlay : Overlay
     private readonly List<EntityUid> _undrawnCloneUids = new();
 
     /// <summary>
-    ///     Scratch target the reference sprite is composited into before being displaced, sized to fit that sprite.
-    ///     One target is enough for every clone drawn in a frame: they all composite the same sprite, and
+    ///     Scratch targets the reference sprite is composited into before being displaced, one per viewport.
+    /// </summary>
+    /// <remarks>
+    ///     One target per viewport is enough for every clone drawn in a frame: they all composite the same sprite, and
     ///     <see cref="DrawingHandleBase.RenderInRenderTarget"/> flushes the render queue before it rebinds, so the
     ///     previous clone's draw has already consumed the contents by the time the next one overwrites them.
-    /// </summary>
-    private IRenderTexture? _renderTexture;
+    /// </remarks>
+    private readonly OverlayResourceCache<CachedRenderTexture> _renderTextures = new();
 
     public CloneLocalVisualsOverlay()
     {
@@ -76,16 +81,25 @@ public sealed partial class CloneLocalVisualsOverlay : Overlay
         if (!_entityManager.TryGetComponent<SpriteComponent>(referenceUid, out var referenceSpriteComponent))
             return;
 
+        // Everything below works in the viewport's own screen space, which an eyeless viewport does not have.
+        if (args.Viewport.Eye is not { } eye)
+            return;
+
         var referenceEntity = new Entity<SpriteComponent>(referenceUid, referenceSpriteComponent);
-        var eyeRotation = args.Viewport.Eye?.Rotation ?? default;
-
-        // Copied out of the args because RenderInRenderTarget takes a closure, which cannot capture an 'in' parameter.
-        var worldHandle = args.WorldHandle;
-        var renderHandle = args.RenderHandle;
-
-        var viewportScale = GetViewportScale(args.Viewport);
 
         var (oldOffset, oldRotation, oldColor) = (referenceSpriteComponent.Offset, referenceSpriteComponent.Rotation, referenceSpriteComponent.Color);
+
+        // Everything RenderInRenderTarget's closure needs, copied out of the args because a closure cannot capture
+        // an 'in' parameter. The reference sprite's original alpha is carried along because the clones tint it, and
+        // reading it back off the component afterwards would compound every clone's alpha into the next one's.
+        var context = new CloneDrawContext(
+            args.Viewport,
+            args.WorldHandle,
+            args.RenderHandle,
+            referenceEntity,
+            eye.Rotation,
+            GetViewportScale(args.Viewport),
+            oldColor.A);
 
         _drawnCloneUids.Clear();
 
@@ -94,81 +108,22 @@ public sealed partial class CloneLocalVisualsOverlay : Overlay
         {
             _drawnCloneUids.Add(cloneUid);
 
-            _spriteSystem.SetOffset(referenceEntity.AsNullable(), spriteComponent.Offset);
-            _spriteSystem.SetRotation(referenceEntity.AsNullable(), spriteComponent.Rotation);
-            _spriteSystem.SetColor(referenceEntity.AsNullable(), spriteComponent.Color.WithAlpha(spriteComponent.Color.A * referenceSpriteComponent.Color.A));
+            // Clones off this map have no position here to draw at. That is mostly clones in nullspace - the entity
+            // spawn menu keeps preview entities there, and so does the placement ghost - which would otherwise all
+            // pile onto the origin of whatever map the viewport happens to be showing. The placement ghost is drawn
+            // further down instead, where the position it is actually being previewed at is known.
+            if (transformComponent.MapID != args.MapId)
+                continue;
 
             var (worldPosition, worldRotation) = _transformSystem.GetWorldPositionRotation(transformComponent);
 
-            // The same on-screen angle RenderSprite derives its RSI directions from.
-            var angle = (worldRotation + eyeRotation).Reduced().FlipPositive();
-
-            var displacementShaderInstance = GetDisplacementShader(cloneUid, cloneVisualsComponent, referenceSpriteComponent, angle, viewportScale);
-
-            // Nothing to displace, so skip the whole render target detour and composite straight into the world.
-            if (displacementShaderInstance is null)
-            {
-                _spriteSystem.RenderSprite(referenceEntity, worldHandle, eyeRotation, worldRotation, worldPosition);
-                continue;
-            }
-
-            if (!TryEnsureRenderTexture(referenceSpriteComponent, viewportScale, out var renderTexture))
-                continue;
-
-            // The displacement has to be applied to the finished sprite rather than while it is being drawn: a shader
-            // set on the drawing handle only survives until the first layer that carries a shader of its own, because
-            // SpriteSystem.RenderLayer resets the handle back to no shader after drawing such a layer. Compositing the
-            // whole sprite into a render target first turns it into a single texture, so one draw covers every layer.
-            //
-            // The eye rotation is folded into the world rotation instead of being handed to DrawEntity as one: it
-            // applies the eye rotation to its view with the opposite sign to the real viewport (see the "Maaaaybe
-            // this is meant to have a minus sign" in Clyde.RenderHandle.DrawEntity), so passing it would bake the
-            // sprite in at 'worldRotation - eyeRotation' and leave the quad to rotate the difference back out. The
-            // sprite would end up facing the right way, but the target's pixel grid would be rotated away from the
-            // sprite it holds, resampling every pixel twice and visibly skewing the result.
-            //
-            // With a zero eye rotation and 'worldRotation + eyeRotation' as the world rotation, RenderSprite picks
-            // the same RSI direction and cardinal snapping as it would on screen, and the entity matrix it builds
-            // already carries the sprite's final on-screen orientation - so the sprite is rasterised once, square to
-            // the target's own pixels.
-
-            // The sprite's own scale is kept out of the target and applied to the quad instead. Sprites like the
-            // dwarf ones are scaled non-uniformly (1 by 0.5), and baking that in would rasterise the sprite onto
-            // pixels that are not square - mixels - which the displacement shader then reads as though they were,
-            // stretching every offset it makes along the squashed axis.
-            var spriteScale = referenceSpriteComponent.Scale;
-            _spriteSystem.SetScale(referenceEntity.AsNullable(), Vector2.One);
-
-            var renderTextureSize = renderTexture.Size;
-            worldHandle.RenderInRenderTarget(renderTexture,
-                () => renderHandle.DrawEntity(
-                    referenceUid,
-                    (Vector2)renderTextureSize / 2f,
-                    new Vector2(viewportScale, viewportScale),
-                    worldRotation + eyeRotation,
-                    overrideDirection: referenceSpriteComponent.EnableDirectionOverride ? referenceSpriteComponent.DirectionOverride : null,
-                    sprite: referenceSpriteComponent
-                ),
-                Color.Transparent);
-
-            // RenderInRenderTarget runs its action then and there, so the sprite is free again already.
-            _spriteSystem.SetScale(referenceEntity.AsNullable(), spriteScale);
-
-            // The target now holds the sprite exactly as it belongs on screen, so the quad has to be screen aligned
-            // for its pixels to land on screen pixels. Counter-rotating by the eye rotation cancels the one the eye's
-            // view matrix adds, the same way RenderSprite keeps a NoRotation sprite upright.
-            worldHandle.UseShader(displacementShaderInstance);
-            worldHandle.SetTransform(GetQuadMatrix(referenceSpriteComponent, worldPosition, eyeRotation, angle, spriteScale));
-
-            // Undoes the scale the target was rendered at, so the quad still covers the sprite's true world size and
-            // the target's pixels land on screen pixels one for one. Cast, otherwise this is an integer division and
-            // sprites that aren't a whole number of tiles get squashed.
-            var quadSize = (Vector2)renderTextureSize / (EyeManager.PixelsPerMeter * viewportScale);
-            worldHandle.DrawTextureRect(renderTexture.Texture, Box2.CenteredAround(Vector2.Zero, quadSize));
+            DrawClone(context, cloneUid, cloneVisualsComponent, spriteComponent, worldPosition, worldRotation);
         }
 
-        worldHandle.SetTransform(Matrix3x2.Identity);
-        worldHandle.UseShader(null);
+        DrawPlacementGhostClones(context);
+
+        context.WorldHandle.SetTransform(Matrix3x2.Identity);
+        context.WorldHandle.UseShader(null);
 
         _spriteSystem.SetOffset(referenceEntity.AsNullable(), oldOffset);
         _spriteSystem.SetRotation(referenceEntity.AsNullable(), oldRotation);
@@ -178,20 +133,186 @@ public sealed partial class CloneLocalVisualsOverlay : Overlay
     }
 
     /// <summary>
+    ///     Draws the clone the entity placement ghost would have, at every position the ghost is being previewed at.
+    /// </summary>
+    /// <remarks>
+    ///     The ghost is a real entity built from the prototype being placed, so it carries the clone's components -
+    ///     but it is parked in nullspace and drawn by <see cref="PlacementMode.Render"/> at coordinates worked out
+    ///     from the cursor, so the entity query above cannot place it. This mirrors that method's own loop.
+    /// </remarks>
+    private void DrawPlacementGhostClones(CloneDrawContext context)
+    {
+        if (_placementManager is not PlacementManager
+            {
+                IsActive: true,
+                Eraser: false,
+                CurrentMode: { } placementMode,
+                CurrentPlacementOverlayEntity: { } ghostUid,
+            } placementManager)
+        {
+            return;
+        }
+
+        if (!_entityManager.TryGetComponent<CloneLocalVisualsComponent>(ghostUid, out var cloneVisualsComponent))
+            return;
+
+        if (!_entityManager.TryGetComponent<SpriteComponent>(ghostUid, out var ghostSpriteComponent) || !ghostSpriteComponent.Visible)
+            return;
+
+        var placementCoordinates = placementManager.PlacementType switch
+        {
+            PlacementManager.PlacementTypes.Line => placementMode.LineCoordinates(),
+            PlacementManager.PlacementTypes.Grid => placementMode.GridCoordinates(),
+            _ => placementMode.SingleCoordinate(),
+        };
+
+        var directionAngle = placementManager.Direction.ToAngle();
+
+        foreach (var coordinates in placementCoordinates)
+        {
+            if (!coordinates.IsValid(_entityManager))
+                return;
+
+            var worldPosition = _transformSystem.ToMapCoordinates(coordinates).Position;
+            var worldRotation = _transformSystem.GetWorldRotation(coordinates.EntityId) + directionAngle;
+
+            DrawClone(context, ghostUid, cloneVisualsComponent, ghostSpriteComponent, worldPosition, worldRotation);
+        }
+    }
+
+    /// <summary>
+    ///     Draws the reference sprite once, dressed up as the given clone.
+    /// </summary>
+    private void DrawClone(
+        CloneDrawContext context,
+        EntityUid cloneUid,
+        CloneLocalVisualsComponent cloneVisualsComponent,
+        SpriteComponent cloneSpriteComponent,
+        Vector2 worldPosition,
+        Angle worldRotation
+    )
+    {
+        var referenceEntity = context.ReferenceEntity;
+        var referenceSpriteComponent = referenceEntity.Comp;
+
+        _spriteSystem.SetOffset(referenceEntity.AsNullable(), cloneSpriteComponent.Offset);
+        _spriteSystem.SetRotation(referenceEntity.AsNullable(), cloneSpriteComponent.Rotation);
+        _spriteSystem.SetColor(referenceEntity.AsNullable(), cloneSpriteComponent.Color.WithAlpha(cloneSpriteComponent.Color.A * context.ReferenceAlpha));
+
+        // The same on-screen angle RenderSprite derives its RSI directions from.
+        var angle = (worldRotation + context.EyeRotation).Reduced().FlipPositive();
+
+        // Nothing to displace, so skip the whole render target detour and composite straight into the world.
+        if (!TryGetDisplacementTexture(cloneVisualsComponent, referenceSpriteComponent, angle, out var displacementData, out var displacementTexture))
+        {
+            _spriteSystem.RenderSprite(referenceEntity, context.WorldHandle, context.EyeRotation, worldRotation, worldPosition);
+            return;
+        }
+
+        var pixelSize = GetSpritePixelSize(referenceSpriteComponent);
+        if (pixelSize.X <= 0 || pixelSize.Y <= 0)
+            return;
+
+        // The displacement has to be applied to the finished sprite rather than while it is being drawn: a shader
+        // set on the drawing handle only survives until the first layer that carries a shader of its own, because
+        // SpriteSystem.RenderLayer resets the handle back to no shader after drawing such a layer. Compositing the
+        // whole sprite into a render target first turns it into a single texture, so one draw covers every layer.
+        //
+        // The target is the size of the viewport and the sprite goes into it at the very screen position it occupies
+        // in the viewport, rather than into a small target of its own. The lighting the engine applies while the
+        // sprite is drawn samples the light map at the fragment's position within the current render target, so a
+        // small target would smear the whole viewport's lighting across the sprite. At viewport size that sampling
+        // is identical to the real one, and the sprite comes out lit exactly like the one it copies.
+        var renderTexture = GetRenderTexture(context.Viewport);
+
+        // The sprite's own scale is kept out of the target and applied to the quad instead. Sprites like the
+        // dwarf ones are scaled non-uniformly (1 by 0.5), and baking that in would rasterise the sprite onto
+        // pixels that are not square - mixels - which the displacement shader then reads as though they were,
+        // stretching every offset it makes along the squashed axis.
+        var spriteScale = referenceSpriteComponent.Scale;
+        if (spriteScale != Vector2.One)
+            _spriteSystem.SetScale(referenceEntity.AsNullable(), Vector2.One);
+
+        // Top down pixels into the render target, which is exactly the viewport's own screen space.
+        var screenPosition = context.Viewport.WorldToLocal(worldPosition);
+
+        var referenceUid = referenceEntity.Owner;
+        var renderHandle = context.RenderHandle;
+        var viewportScale = context.ViewportScale;
+
+        // The eye rotation is folded into the world rotation instead of being handed to DrawEntity as one: it
+        // applies the eye rotation to its view with the opposite sign to the real viewport (see the "Maaaaybe
+        // this is meant to have a minus sign" in Clyde.RenderHandle.DrawEntity), so passing it would bake the
+        // sprite in at 'worldRotation - eyeRotation' and leave the quad to rotate the difference back out. The
+        // sprite would end up facing the right way, but the target's pixel grid would be rotated away from the
+        // sprite it holds, resampling every pixel twice and visibly skewing the result.
+        //
+        // With a zero eye rotation and 'worldRotation + eyeRotation' as the world rotation, RenderSprite picks
+        // the same RSI direction and cardinal snapping as it would on screen, and the entity matrix it builds
+        // already carries the sprite's final on-screen orientation - so the sprite is rasterised once, square to
+        // the target's own pixels.
+        var drawRotation = worldRotation + context.EyeRotation;
+
+        context.WorldHandle.RenderInRenderTarget(renderTexture,
+            () => renderHandle.DrawEntity(
+                referenceUid,
+                screenPosition,
+                new Vector2(viewportScale, viewportScale),
+                drawRotation,
+                overrideDirection: referenceSpriteComponent.EnableDirectionOverride ? referenceSpriteComponent.DirectionOverride : null,
+                sprite: referenceSpriteComponent
+            ),
+            Color.Transparent);
+
+        // RenderInRenderTarget runs its action then and there, so the sprite is free again already.
+        if (spriteScale != Vector2.One)
+            _spriteSystem.SetScale(referenceEntity.AsNullable(), spriteScale);
+
+        // Where the sprite's offset carries it, in screen aligned world metres. RenderSprite rotates the sprite's
+        // frame by the eye rotation plus the entity rotation it drew with, which cancels out to nothing for a
+        // NoRotation sprite and comes to the on-screen angle otherwise - the offset rides along with that.
+        var spriteRotation = referenceSpriteComponent.NoRotation
+            ? Angle.Zero
+            : angle - (referenceSpriteComponent.SnapCardinals ? angle.RoundToCardinalAngle() : Angle.Zero);
+
+        var screenOffset = spriteRotation.RotateVec(referenceSpriteComponent.Offset);
+
+        // The slice of the target the sprite landed in. Selecting it rather than drawing the whole target keeps the
+        // displacement map spread across the sprite the way it is when the engine applies one as a sprite layer:
+        // the shader spreads it over the quad it is drawing, so that quad has to be the sprite and nothing else.
+        var regionCentre = screenPosition + new Vector2(screenOffset.X, -screenOffset.Y) * EyeManager.PixelsPerMeter * viewportScale;
+        var regionHalfSize = (Vector2)pixelSize * viewportScale / 2f;
+        var subRegion = new UIBox2(regionCentre - regionHalfSize, regionCentre + regionHalfSize);
+
+        var shaderInstance = GetDisplacementShader(cloneUid, displacementData, displacementTexture, viewportScale);
+        context.WorldHandle.UseShader(shaderInstance);
+        context.WorldHandle.SetTransform(GetQuadMatrix(referenceSpriteComponent, worldPosition, context.EyeRotation, spriteRotation, screenOffset, spriteScale));
+
+        // The sprite's native size, because the target holds it at native proportions and the quad matrix is what
+        // puts the sprite's scale back. Cast, otherwise this is an integer division and sprites that aren't a whole
+        // number of tiles get squashed.
+        var quadSize = (Vector2)pixelSize / EyeManager.PixelsPerMeter;
+        context.WorldHandle.DrawTextureRectRegion(renderTexture.Texture, Box2.CenteredAround(Vector2.Zero, quadSize), subRegion: subRegion);
+    }
+
+    /// <summary>
     ///     Builds the transform the composited sprite is drawn back into the world with: screen aligned, at the
-    ///     clone's position, carrying the sprite scale that was kept out of the render target.
+    ///     clone's position, carrying the sprite offset and the sprite scale that were kept out of the render target.
     /// </summary>
     private static Matrix3x2 GetQuadMatrix(
         SpriteComponent referenceSpriteComponent,
         Vector2 worldPosition,
         Angle eyeRotation,
-        Angle angle,
+        Angle spriteRotation,
+        Vector2 screenOffset,
         Vector2 spriteScale
     )
     {
         // The target is screen aligned, so counter-rotating by the eye rotation cancels the one the eye's view
-        // matrix adds and lands the target's pixels on screen pixels.
-        var quadMatrix = Matrix3Helpers.CreateTransform(worldPosition, -eyeRotation);
+        // matrix adds and lands the target's pixels on screen pixels. The offset is already screen aligned too, and
+        // sits outside the scale below because LocalMatrix likewise applies it after the sprite's own scale.
+        var quadMatrix = Matrix3x2.CreateTranslation(screenOffset)
+            * Matrix3Helpers.CreateTransform(worldPosition, -eyeRotation);
 
         if (spriteScale == Vector2.One)
             return quadMatrix;
@@ -200,17 +321,29 @@ public sealed partial class CloneLocalVisualsOverlay : Overlay
         // frame the sprite had before any of that rotation - otherwise a scaled sprite that is also rotated (a mob
         // lying down is rotated a quarter turn) gets squashed along the wrong axis. Rotating back out of the
         // orientation the target baked in, scaling there, and rotating back into it puts it in that frame.
-        var cardinal = referenceSpriteComponent is { NoRotation: false, SnapCardinals: true }
-            ? angle.RoundToCardinalAngle()
-            : Angle.Zero;
-
-        var bakedRotation = referenceSpriteComponent.Rotation
-            + (referenceSpriteComponent.NoRotation ? Angle.Zero : angle - cardinal);
+        var bakedRotation = referenceSpriteComponent.Rotation + spriteRotation;
 
         return Matrix3Helpers.CreateRotation(-bakedRotation.Theta)
             * Matrix3Helpers.CreateScale(spriteScale)
             * Matrix3Helpers.CreateRotation(bakedRotation.Theta)
             * quadMatrix;
+    }
+
+    /// <summary>
+    ///     The size of the box the sprite's layers fit in, in texels at the sprite's native resolution.
+    /// </summary>
+    private static Vector2i GetSpritePixelSize(SpriteComponent referenceSpriteComponent)
+    {
+        var pixelSize = Vector2i.Zero;
+        foreach (var spriteLayer in referenceSpriteComponent.AllLayers)
+        {
+            if (!spriteLayer.Visible)
+                continue;
+
+            pixelSize = Vector2i.ComponentMax(pixelSize, spriteLayer.PixelSize);
+        }
+
+        return pixelSize;
     }
 
     /// <summary>
@@ -233,73 +366,42 @@ public sealed partial class CloneLocalVisualsOverlay : Overlay
         eye.GetViewMatrix(out var viewMatrix, viewport.RenderScale);
         var scale = new Vector2(viewMatrix.M11, viewMatrix.M12).Length();
 
-        // A degenerate eye would divide the quad size by zero further down.
+        // A degenerate eye would leave the sprite and the displacement at a nonsense magnitude.
         return float.IsFinite(scale) && scale > 0f ? scale : 1f;
     }
 
     /// <summary>
-    ///     Makes sure <see cref="_renderTexture"/> exists and is large enough to hold the whole reference sprite at
-    ///     the resolution the viewport draws at, recreating it whenever either of those changes.
+    ///     Fetches this viewport's scratch target, creating it if it does not exist yet and replacing it whenever the
+    ///     viewport is resized.
     /// </summary>
-    /// <returns>False if the sprite has no visible layers, in which case there is nothing to draw at all.</returns>
-    private bool TryEnsureRenderTexture(SpriteComponent referenceSpriteComponent, float viewportScale, [NotNullWhen(true)] out IRenderTexture? renderTexture)
+    private IRenderTexture GetRenderTexture(IClydeViewport viewport)
     {
-        renderTexture = null;
+        var cached = _renderTextures.GetForViewport(viewport, static _ => new CachedRenderTexture());
 
-        var pixelSize = Vector2i.Zero;
-        foreach (var spriteLayer in referenceSpriteComponent.AllLayers)
+        if (cached.RenderTexture?.Size != viewport.Size)
         {
-            if (!spriteLayer.Visible)
-                continue;
-
-            pixelSize = Vector2i.ComponentMax(pixelSize, spriteLayer.PixelSize);
-        }
-
-        // Deliberately without the sprite's own scale: that is applied to the quad instead, so the target always
-        // holds the sprite at its native proportions. See GetQuadMatrix.
-        var requiredSize = new Vector2i(
-            (int)MathF.Ceiling(pixelSize.X * viewportScale),
-            (int)MathF.Ceiling(pixelSize.Y * viewportScale));
-
-        if (requiredSize.X <= 0 || requiredSize.Y <= 0)
-            return false;
-
-        if (_renderTexture?.Size != requiredSize)
-        {
-            _renderTexture?.Dispose();
-            _renderTexture = _clyde.CreateRenderTarget(
-                requiredSize,
+            cached.RenderTexture?.Dispose();
+            cached.RenderTexture = _clyde.CreateRenderTarget(
+                viewport.Size,
                 new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb),
                 name: "clone-local-visuals-target"
             );
         }
 
-        renderTexture = _renderTexture;
-        return true;
+        return cached.RenderTexture;
     }
 
     /// <summary>
     ///     Fetches (creating it if needed) the shader instance that displaces this clone's sprite, with its
     ///     displacement map parameters set for the current frame.
     /// </summary>
-    /// <returns>Null if this clone has no usable displacement map, in which case it draws undisplaced.</returns>
-    private ShaderInstance? GetDisplacementShader(
+    private ShaderInstance GetDisplacementShader(
         EntityUid cloneUid,
-        CloneLocalVisualsComponent cloneVisualsComponent,
-        SpriteComponent referenceSpriteComponent,
-        Angle angle,
+        DisplacementData displacementData,
+        Texture displacementTexture,
         float viewportScale
     )
     {
-        if (cloneVisualsComponent.Displacement is not { } displacementData)
-            return null;
-
-        if (displacementData.ShaderOverride is null)
-            return null;
-
-        if (!TryGetDisplacementTexture(displacementData, referenceSpriteComponent, angle, out var displacementTexture))
-            return null;
-
         if (!_displacementShaders.TryGetValue(cloneUid, out var shaderInstance))
         {
             // Deliberately the unshaded variant, even though ShaderOverride is what decides whether this clone is
@@ -313,8 +415,8 @@ public sealed partial class CloneLocalVisualsOverlay : Overlay
         shaderInstance.SetParameter(DisplacementMapParameter, sourceTexture);
         shaderInstance.SetParameter(DisplacementUvParameter, displacementUv);
 
-        // The offsets are spent in texels of the render target, which is that much larger than the sprite's own
-        // resolution, so without this the displacement would shrink as the viewport is zoomed in.
+        // The offsets are spent in texels of the render target, which holds the sprite at the viewport's resolution
+        // rather than the sprite's own, so without this the displacement would shrink as the viewport is zoomed in.
         shaderInstance.SetParameter(DisplacementSizeParameter, DisplacementSize * viewportScale);
 
         return shaderInstance;
@@ -323,16 +425,25 @@ public sealed partial class CloneLocalVisualsOverlay : Overlay
     /// <summary>
     ///     Resolves the displacement map's texture for the current animation frame and direction.
     /// </summary>
+    /// <returns>False if this clone has no usable displacement map, in which case it draws undisplaced.</returns>
     private bool TryGetDisplacementTexture(
-        DisplacementData displacementData,
+        CloneLocalVisualsComponent cloneVisualsComponent,
         SpriteComponent referenceSpriteComponent,
         Angle angle,
+        [NotNullWhen(true)] out DisplacementData? displacementData,
         [NotNullWhen(true)] out Texture? texture
     )
     {
+        displacementData = null;
         texture = null;
 
-        if (GetSizeMap(displacementData, referenceSpriteComponent) is not { } layerData)
+        if (cloneVisualsComponent.Displacement is not { } data)
+            return false;
+
+        if (data.ShaderOverride is null)
+            return false;
+
+        if (GetSizeMap(data, referenceSpriteComponent) is not { } layerData)
             return false;
 
         if (layerData.RsiPath is { } rsiPath && layerData.State is { } stateId)
@@ -340,6 +451,7 @@ public sealed partial class CloneLocalVisualsOverlay : Overlay
             var state = _spriteSystem.GetState(new SpriteSpecifier.Rsi(new ResPath(rsiPath), stateId));
             var direction = SpriteComponent.Layer.GetDirection(state.RsiDirections, angle);
 
+            displacementData = data;
             texture = state.GetFrame(direction, GetAnimationFrame(state));
             return true;
         }
@@ -347,6 +459,7 @@ public sealed partial class CloneLocalVisualsOverlay : Overlay
         if (layerData.TexturePath is not { } texturePath)
             return false;
 
+        displacementData = data;
         texture = _spriteSystem.GetTexture(new SpriteSpecifier.Texture(new ResPath(texturePath)));
         return true;
     }
@@ -433,7 +546,29 @@ public sealed partial class CloneLocalVisualsOverlay : Overlay
 
         _displacementShaders.Clear();
 
-        _renderTexture?.Dispose();
-        _renderTexture = null;
+        _renderTextures.Dispose();
+    }
+
+    /// <summary>
+    ///     Everything about the frame being drawn that every clone in it shares.
+    /// </summary>
+    private readonly record struct CloneDrawContext(
+        IClydeViewport Viewport,
+        DrawingHandleWorld WorldHandle,
+        IRenderHandle RenderHandle,
+        Entity<SpriteComponent> ReferenceEntity,
+        Angle EyeRotation,
+        float ViewportScale,
+        float ReferenceAlpha
+    );
+
+    private sealed class CachedRenderTexture : IDisposable
+    {
+        public IRenderTexture? RenderTexture;
+
+        public void Dispose()
+        {
+            RenderTexture?.Dispose();
+        }
     }
 }

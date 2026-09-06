@@ -9,7 +9,5 @@ public static class KsIgnoredComponents
         "KsRcdPlacementNoHint",
         "KsAlwaysDisplaced",
         "SupplyPodDrawDepth"
-        // KsSpriteFadeOut and KsTrailFade are shared, networked and EnsureComp'd by server systems,
-        //     so the server registers them for real - ignoring them here throws on startup.
     ];
 }

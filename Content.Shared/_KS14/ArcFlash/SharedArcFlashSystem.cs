@@ -12,8 +12,8 @@ public abstract class SharedArcFlashSystem : EntitySystem
         SubscribeLocalEvent<ArcFlashCableComponent, AttemptCutCableEvent>(OnAttemptCutCable);
     }
 
-    private void OnAttemptCutCable(Entity<ArcFlashCableComponent> entity, ref AttemptCutCableEvent args)
+    protected virtual void OnAttemptCutCable(Entity<ArcFlashCableComponent> entity, ref AttemptCutCableEvent args)
     {
-
+        args.Cancelled = true;
     }
 }

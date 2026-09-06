@@ -5,20 +5,32 @@ using Content.Server.Electrocution;
 using Content.Server.Lightning;
 using Content.Shared._KS14.ArcFlash.Components;
 using Content.Shared._KS14.ArcFlash;
+using Content.Shared._KS14.Power;
 
 namespace Content.Server._KS14.ArcFlash;
 
-public sealed partial class MindShieldSystem : SharedArcFlashSystem
+public sealed partial class ArcFlashSystem : SharedArcFlashSystem
 {
     [Dependency] private ElectrocutionSystem _electrocutionSystem = default!;
     [Dependency] private LightningSystem _lightning = default!;
+
     public override void Initialize()
     {
         base.Initialize();
+
+
+
         SubscribeLocalEvent<ArcFlashAnchorableComponent, AnchorStateChangedEvent>(OnAnchorChanged);
         SubscribeLocalEvent<ArcFlashDeconstructableComponent, MachineDeconstructedEvent>(OnDeconstruction);
         SubscribeLocalEvent<ArcFlashDeconstructableComponent, APCDeconstructedEvent>(OnAPCDeconstruction);
     }
+
+    protected override void OnAttemptCutCable(Entity<ArcFlashCableComponent> entity, ref AttemptCutCableEvent args)
+    {
+        base.OnAttemptCutCable(entity, ref args);
+
+    }
+
     private void OnAnchorChanged(Entity<ArcFlashAnchorableComponent> entity, ref AnchorStateChangedEvent args)
     {
         if (args.Anchored)

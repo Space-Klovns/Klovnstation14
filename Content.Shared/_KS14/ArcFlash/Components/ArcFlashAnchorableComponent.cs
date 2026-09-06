@@ -7,5 +7,5 @@ namespace Content.Shared._KS14.ArcFlash.Components;
 /// usually results in the damage of the building alongside the person who did it - substations can to blow up
 /// this can be rectified in code if it proves to be a problem in the gameplay
 /// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+[RegisterComponent, NetworkedComponent]
 public sealed partial class ArcFlashAnchorableComponent : BaseArcFlashImpactComponent;
