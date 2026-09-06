@@ -22,10 +22,7 @@ public abstract partial class SharedPuddleSystem
         // KS14 - Start
         // Calculate evaporation speed, including dynamic modifications (e.g. Evaporin gas).
         var speeds = GetEvaporationSpeeds(solution);
-        var baseSpeed = speeds.Count > 0 ? speeds.Values.Sum() / speeds.Count : FixedPoint2.Zero;
-        var modifiedSpeed = baseSpeed;
-
-        ModifyEvaporationRate(entity, ref modifiedSpeed);
+        var modifiedSpeed = GetModifiedEvaporationRate(entity, speeds.Count > 0 ? speeds.Values.Sum() / speeds.Count : FixedPoint2.Zero);
 
         if (modifiedSpeed > FixedPoint2.Zero)
         {
@@ -66,9 +63,7 @@ public abstract partial class SharedPuddleSystem
 
             // KS14 - Start
             var baseEvaporationSpeed = evaporationSpeeds.Count > 0 ? evaporationSpeeds.Values.Sum() / evaporationSpeeds.Count : FixedPoint2.Zero;
-            var modifiedSpeed = baseEvaporationSpeed;
-
-            ModifyEvaporationRate((uid, puddle), ref modifiedSpeed);
+            var modifiedSpeed = GetModifiedEvaporationRate((uid, puddle), baseEvaporationSpeed);
 
             if (modifiedSpeed <= FixedPoint2.Zero)
                 continue;
