@@ -1,8 +1,8 @@
+#nullable enable
 using System.Linq;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.PipeNodeTeleporter;
 using Content.Server.DeviceNetwork.Systems;
-using Content.Server.NodeContainer;
 using Content.Server.NodeContainer.EntitySystems;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.DeviceNetwork.Components;
@@ -238,7 +238,7 @@ public sealed class PipeNodeTeleporterTest : GameTest
             ? BeaconNodeName
             : RecipientNodeName;
 
-        if (!nodeContainerSystem.TryGetNode(uid, nodeName, out Node? node) || node.NodeGroup == null)
+        if (!nodeContainerSystem.TryGetNode<Node>(uid, nodeName, out var node) || node.NodeGroup == null)
             return false;
 
         if (!entityMan.TryGetComponent<NodeContainerComponent>(otherUid, out var otherNodeContainerComponent))
