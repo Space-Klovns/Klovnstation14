@@ -229,11 +229,11 @@
 
 - type: wireLayout
   id: APC
-  dummyWires: 3 #KS 14, change when properly implimenting powered wires for apcs
+  dummyWires: 3
   wires:
   - !type:AccessWireAction
   - !type:AiInteractWireAction
-  #- !type:PowerWireAction
-  #- !type:PowerWireAction
-  #KS14 comments, not properly implimented, does NOT properly turn off ui, tried ActivatableUIRequiresPower
-  # but it wasnt giving me full functionality of - apc ui turning off when wires were out of power
+  # KS14 start: leave power wires disabled until they properly disable the APC UI
+  # - !type:PowerWireAction
+  # - !type:PowerWireAction
+  # KS14 end

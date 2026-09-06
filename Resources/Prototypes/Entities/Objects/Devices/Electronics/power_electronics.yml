@@ -16,7 +16,8 @@
         Silicon: 20
     - type: StaticPrice
       price: 34
-    - type: AccessReader #KS14 START
+    # KS14 start: add door-electronics configuration to APC electronics
+    - type: AccessReader
     - type: DoorElectronics
     - type: ActivatableUI
       key: enum.DoorElectronicsConfigurationUiKey.Key
@@ -26,7 +27,8 @@
     - type: UserInterface
       interfaces:
         enum.DoorElectronicsConfigurationUiKey.Key:
-          type: DoorElectronicsBoundUserInterface #KS14 END
+          type: DoorElectronicsBoundUserInterface
+    # KS14 end
 
 # Wallmount Substation
 - type: entity
@@ -94,11 +96,3 @@
     - type: Tag
       tags:
         - SolarTrackerElectronics
-
-- type: entity #ks14 start, these should be moved to their own file, this is proof of concept FOR NOWWWWWW, i dont care to fix, your job
-  id: APCElectronicsEngineering
-  parent: APCElectronics
-  suffix: Engineering, Locked, Standard
-  components:
-  - type: AccessReader
-    access: [["Engineering"]] #ks14 end
