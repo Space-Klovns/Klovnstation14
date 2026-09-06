@@ -16,6 +16,17 @@
         Silicon: 20
     - type: StaticPrice
       price: 34
+    - type: AccessReader #KS14 START
+    - type: DoorElectronics
+    - type: ActivatableUI
+      key: enum.DoorElectronicsConfigurationUiKey.Key
+      requiredItems:
+        tags:
+        - DoorElectronicsConfigurator
+    - type: UserInterface
+      interfaces:
+        enum.DoorElectronicsConfigurationUiKey.Key:
+          type: DoorElectronicsBoundUserInterface #KS14 END
 
 # Wallmount Substation
 - type: entity
@@ -83,3 +94,11 @@
     - type: Tag
       tags:
         - SolarTrackerElectronics
+
+- type: entity
+  id: APCElectronicsEngineering
+  parent: APCElectronics
+  suffix: Engineering, Locked, Standard
+  components:
+  - type: AccessReader
+    access: [["Engineering"]]

@@ -20,8 +20,11 @@
     color: "#3db83b"
     castShadows: false
     netsync: false
+  - type: ContainerFill #KS14 START
+    containers:
+      board: [ APCElectronicsEngineering ]
   - type: AccessReader
-    access: [["Engineering"]]
+    containerAccessProvider: board #Was 'access: [["Engineering"]]' #KS14 END
   - type: Sprite
     drawdepth: WallMountedItems
     sprite: Structures/Power/apc.rsi
@@ -116,9 +119,14 @@
   - type: ActivatableUI
     inHandsOnly: false
     key: enum.ApcUiKey.Key
+  - type: ContainerContainer #KS14
+    containers:
+      board: !type:Container
   - type: Construction
     graph: APC
     node: apc
+    containers: #KS14
+    - board
   - type: PowerNetworkBattery
     maxSupply: 10000
     maxChargeRate: 5000
@@ -273,3 +281,12 @@
     startingCharge: 50000
   - type: AccessReader
     access: [["Xenoborg"]]
+
+- type: entity #KS14 start
+  parent: APCBasic
+  id: APCBasicAccessless
+  suffix: No access, Basic, 50kJ
+  components:
+  - type: ContainerFill
+    containers:
+      board: [ APCElectronics ] #KS14 end
