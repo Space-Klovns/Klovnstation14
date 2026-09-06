@@ -19,7 +19,7 @@
     - sprite: Clothing/Mask/gassyndicate.rsi
       state: equipped-MASK
     - sprite: Clothing/Ears/Headsets/syndicate.rsi
-      state: equipped-EARS
+      state: alt-equipped-EARS
     - sprite: Clothing/Belt/militarywebbing.rsi
       state: equipped-BELT
     - sprite: Clothing/Eyes/Hud/synd.rsi
@@ -84,7 +84,7 @@
     - sprite: Clothing/Mask/gassyndicate.rsi
       state: equipped-MASK
     - sprite: Clothing/Ears/Headsets/syndicate.rsi
-      state: equipped-EARS
+      state: alt-equipped-EARS
     - sprite: Clothing/Belt/militarywebbing.rsi
       state: equipped-BELT
     - sprite: Clothing/Eyes/Hud/synd.rsi
