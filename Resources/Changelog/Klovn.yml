@@ -1957,3 +1957,16 @@ Entries:
       message: MV wires now arcflash.
   id: 202
   time: '2026-09-06T15:53:12.0000000+00:00'
+- author: deusmaldierpr
+  changes:
+    - type: Add
+      message: >-
+        You can now change apc electronic accesses, which means you can make
+        specific access apcs or accessless apcs (without having to cut the
+        access wire)
+    - type: Tweak
+      message: >-
+        You now need to cut all apc wires before deconstructing them (this
+        practically changes nothing
+  id: 203
+  time: '2026-09-06T16:28:52.0000000+00:00'
