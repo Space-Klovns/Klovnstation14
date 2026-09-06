@@ -1,15 +1,15 @@
-# - type: utilityQuery
-#   id: ColossusTargets
-#   query:
-#     - !type:NearbyHostilesQuery
-#   considerations:
-#     - !type:TargetIsAliveCon
-#       curve: !type:BoolCurve
-#     - !type:TargetDistanceCon
-#       curve: !type:PresetCurve
-#         preset: TargetDistance
-#     - !type:TargetInLOSOrCurrentCon
-#       curve: !type:BoolCurve
+- type: utilityQuery
+  id: ColossusTargets
+  query:
+    - !type:NearbyHostilesQuery
+  considerations:
+    - !type:TargetIsAliveCon
+      curve: !type:BoolCurve
+    - !type:TargetDistanceCon
+      curve: !type:PresetCurve
+        preset: TargetDistance
+    - !type:TargetInLOSOrCurrentCon
+      curve: !type:BoolCurve
 # doesnt work yet
 
 # Main compound
