@@ -563,6 +563,10 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
     /// </summary>
     public bool TryGetPuddle(TileRef tile, out EntityUid puddleUid)
     {
+        return TryGetCachedPuddle(tile, out puddleUid); // KS14: the puddle tile cache already knows this
+
+        // KS14: replaced by the puddle tile cache, enumerating every anchored entity on the tile is wasteful
+        /*
         puddleUid = EntityUid.Invalid;
 
         if (!TryComp<MapGridComponent>(tile.GridUid, out var grid))
@@ -579,5 +583,6 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
         }
 
         return false;
+        */
     }
 }

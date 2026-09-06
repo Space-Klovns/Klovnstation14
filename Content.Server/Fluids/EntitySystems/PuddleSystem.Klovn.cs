@@ -16,6 +16,8 @@ public sealed partial class PuddleSystem
 
     private void InitialiseKlovn()
     {
+        InitialisePuddleTileCache();
+
         SubscribeLocalEvent<PuddleComponent, MapInitEvent>(OnPuddleMapInit);
     }
 
