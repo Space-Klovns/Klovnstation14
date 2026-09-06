@@ -5,6 +5,7 @@ Coding conventions for this repo. Written for coding agents first, humans second
 **Quick reference:**
 - New code → `Content.<project>/_KS14/<Feature>/...` (see §2).
 - Editing or adding a file *outside* `_KS14/` → mark it with `// KS14:` / `# KS14:` (see §3).
+- **Marking a change on a single line → `/* KS14: ... */` sitting at the change itself**, not a trailing `//` at the end of the line (see §3).
 - Otherwise follow upstream SS14 conventions, plus the local rules in §4.
 
 ## 1. Project lineage
@@ -68,9 +69,20 @@ When you edit **or add** a file **outside** `_KS14/` (anywhere in upstream SS14 
 
 Both forms make our changes easy to spot on the next upstream merge. Always preserve the original upstream value in the comment: swap `100 -> 50` today, and a later change to that same line becomes `100 -> 30` (not `50 -> 30`). Swap `KS14` for another fork's tag (e.g. `Goobstation`) when porting from that fork instead of writing net-new code.
 
+**Put the marker where the change is.** `/* KS14: ... */` is the default for anything that happens on a single line, because it points at the exact token that moved. A trailing `// KS14:` says only "something on this line changed" — on a line with several things, the next person merging upstream has to diff to find out which. Reach for a trailing `//` only when the marker genuinely cannot sit at the change site: a whole added line, or a value swap where the marker would land mid-expression and wreck the line.
+
+```csharp
+// do this - the marker is attached to what actually changed
+IgnoredCategories = ["Spawner", "Debug", "KsTrail" /* KS14: added */];
+handle.Draw(texture, bounds, alpha/* KS14: added arg */);
+
+// not this - which part of the line is ours?
+IgnoredCategories = ["Spawner", "Debug", "KsTrail"]; // KS14: added KsTrail
+```
+
 Forms, ordered so that they take precedence over those before them:
 
-- **Specific change** — `/* KS14: concise statement */` right after the change:
+- **Specific change (the default for single-line edits)** — `/* KS14: concise statement */` right after the change:
   ```csharp
   internal /* KS14: public -> internal */ sealed partial /* KS14: made partial */ class OldClass
   {
@@ -80,7 +92,7 @@ Forms, ordered so that they take precedence over those before them:
       }
   }
   ```
-- **C# value swap** — `// KS14: OLD -> NEW, reason (optional)` (use the specific-change form instead if the value isn't at the end of the line, excluding the semicolon):
+- **C# value swap** — `// KS14: OLD -> NEW, reason (optional)`, but only when the swapped value is the whole, unambiguous tail of the line (excluding the semicolon). If it's one part of something bigger — an element of a collection literal, one argument of several — the specific-change form wins:
   ```csharp
   public const int MaxPlayers = 50; // KS14: 100 -> 50, too high
   ```
