@@ -52,6 +52,7 @@ public sealed partial class AnchorlessHorrorSystem : EntitySystem
         }
 
         Dirty(ent);
+        RaiseLocalEvent(ent, new AnchorlessHorrorFormChangedEvent());
     }
 
     private void RemoveArmblade(Entity<KsAnchorlessAntagComponent> ent)
