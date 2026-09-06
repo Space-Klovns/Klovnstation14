@@ -13,12 +13,18 @@
     damageContainer: Inorganic
   - type: Destructible
     thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 50
+    - trigger: #KS14: payload stacking is back
+        !type:DamageTypeTrigger
+        damageType: Blunt
+        damage: 25
       behaviors:
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
+      - !type:ExplodeBehavior
+    # - trigger: # KS14 change, nade stacking is back
+    #     !type:DamageTrigger
+    #     damage: 50
+    #   behaviors:
+    #   - !type:DoActsBehavior
+    #     acts: [ "Destruction" ]
   - type: EmitSoundOnPickup # KS14: pickup/drop sounds
     sound:
       path: /Audio/_KS14/Handling/component_pickup.ogg
@@ -41,14 +47,14 @@
     intensitySlope: 3
     totalIntensity: 120 # about a ~4 tile radius
   - type: ExplodeOnTrigger
-  - type: Destructible
-    thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 50
-      behaviors:
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
+  # - type: Destructible # KS14 change, nade stacking is back
+  #   thresholds:
+  #   - trigger:
+  #       !type:DamageTrigger
+  #       damage: 50
+  #     behaviors:
+  #     - !type:DoActsBehavior
+  #       acts: [ "Destruction" ]
 
 - type: entity
   name: chemical payload
@@ -85,6 +91,12 @@
       BeakerSlotB: !type:ContainerSlot
   - type: StaticPrice
     price: 60
+  # KS14 start
+  - type: Tag
+    tags:
+    - Payload
+    - ChemicalPayload
+  # KS14 end
 
 - type: entity
   name: flash payload

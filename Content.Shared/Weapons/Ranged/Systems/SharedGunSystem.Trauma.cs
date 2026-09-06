@@ -81,7 +81,7 @@ public abstract partial class SharedGunSystem
         var timeSinceLastFire = (curTime - comp.LastFire).TotalSeconds;
         var newTheta = MathHelper.Clamp(comp.CurrentAngle.Theta + comp.AngleIncreaseModified.Theta - comp.AngleDecayModified.Theta * timeSinceLastFire, comp.MinAngleModified.Theta, comp.MaxAngleModified.Theta);
         comp.CurrentAngle = new Angle(newTheta);
-        comp.LastFire = comp.NextFire;
+        comp.LastFire = curTime;
 
         // Convert it so angle can go either side.
         var random = GetRandom(uid).NextFloat(-0.5f, 0.5f);

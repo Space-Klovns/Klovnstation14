@@ -182104,7 +182104,7 @@ entities:
       devices:
       - 203
       - 269
-- proto: WeaponLaserCarbine
+- proto: WeaponLaserCarbineProjectile
   entities:
   - uid: 26291
     components:
@@ -182113,7 +182113,7 @@ entities:
     - type: Physics
       canCollide: False
     - type: InsideEntityStorage
-- proto: WeaponLaserCarbinePractice
+- proto: WeaponLaserCarbineProjectilePractice
   entities:
   - uid: 5107
     components:

@@ -160,6 +160,15 @@
         orGroup: Guns
       - id: RevolverCapGunFake
         orGroup: Guns
+      # KS14 guns
+      - id: WeaponAntiqueLaserProjectile
+        orGroup: Guns
+      - id: WeaponLaserCarbineProjectile
+        orGroup: Guns
+      - id: WeaponLaserCarbineProjectilePractice
+        orGroup: Guns
+      - id: KsWeaponLauncherRocketAt4
+        orGroup: Guns
   - type: SpeakOnAction
     sentence: action-speech-spell-summon-guns
 

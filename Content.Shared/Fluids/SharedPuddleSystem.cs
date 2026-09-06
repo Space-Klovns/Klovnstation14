@@ -76,6 +76,7 @@ public abstract partial class SharedPuddleSystem : EntitySystem
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
 
         CacheStandsout();
+        KsOnReagentsReloaded(); // KS14
         InitializeSpillable();
     }
 
@@ -99,7 +100,10 @@ public abstract partial class SharedPuddleSystem : EntitySystem
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs ev)
     {
         if (ev.WasModified<ReagentPrototype>())
+        {
             CacheStandsout();
+            KsOnReagentsReloaded(); // KS14
+        }
     }
 
     /// <summary>
@@ -126,6 +130,7 @@ public abstract partial class SharedPuddleSystem : EntitySystem
         }
 
         _deletionQueue.Remove(entity);
+        UpdateTileEffects(entity, args.Solution.Comp.Solution); // K1S4
         UpdateSlip((entity, entity.Comp), args.Solution.Comp.Solution);
         UpdateSlow(entity, args.Solution.Comp.Solution);
         UpdateEvaporation(entity, args.Solution.Comp.Solution);
