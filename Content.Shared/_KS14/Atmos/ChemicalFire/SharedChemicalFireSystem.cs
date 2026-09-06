@@ -1,4 +1,5 @@
 using Content.Shared._KS14.PredictedSpawning;
+using Content.Shared.Atmos;
 using Content.Shared.Light.Components;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -55,7 +56,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
     ///     Overrides the prototype's <see cref="ChemicalFireComponent.Duration"/>, on a fire that is spawned and
     ///         on one that is refreshed in place alike. Null keeps whatever the prototype says.
     /// </param>
-    /// <returns>The chemfire now occupying the tile, or null if it could not be placed.</returns>
+    /// <returns>Either the chemfire now occupying the tile, the chemfire already occupying it, or null if no chemfire could not be placed.</returns>
     public Entity<ChemicalFireComponent>? SpawnChemicalFire(
         EntProtoId prototypeId,
         Entity<MapGridComponent?> grid,
@@ -64,6 +65,9 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
     {
         if (!_mapGridQuery.Resolve(grid.Owner, ref grid.Comp, false) ||
             !TryGetPrototypeChemicalFire(prototypeId, out var prototypeComponent))
+            return null;
+
+        if (!CanSustain(prototypeId, grid, tile))
             return null;
 
         var connectionKey = GetConnectionKey(prototypeComponent, prototypeId);
@@ -200,7 +204,8 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
             if (fireComponent.LocalGridUid is not { } gridUid)
                 continue;
 
-            var heatEvent = new ChemicalFireHeatTileEvent(gridUid, fireComponent.LocalTile, (float)fireComponent.HeatInterval.TotalSeconds);
+            var mixture = ResolveTileMixture(gridUid, fireComponent.LocalTile);
+            var heatEvent = new ChemicalFireHeatTileEvent(gridUid, fireComponent.LocalTile, (float)fireComponent.HeatInterval.TotalSeconds, mixture);
             RaiseLocalEvent(uid, ref heatEvent);
         }
     }
@@ -245,6 +250,20 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
     ///     Runs while the chemfire is still registered on its tile, so the tile is still resolvable from it.
     /// </remarks>
     protected virtual void BeforeFireShutdown(Entity<ChemicalFireComponent> entity) { }
+
+    /// <summary>
+    ///     Resolves the tile's gas mixture for a heat tick. Atmos doesn't exist client-side, so this is a
+    ///         no-op in shared - the server override does the real lookup.
+    /// </summary>
+    protected virtual GasMixture? ResolveTileMixture(EntityUid gridUid, Vector2i tile) => null;
+
+    /// <summary>
+    ///     Whether a chemfire of this prototype could survive being placed on this tile right now. Shared has
+    ///         no atmos data to check against, so this is permissive by default; the server override raises
+    ///         <see cref="ChemicalFireCanSustainEvent"/> against a template instance of the prototype to find
+    ///         out for real.
+    /// </summary>
+    protected virtual bool CanSustain(EntProtoId prototypeId, Entity<MapGridComponent?> grid, Vector2i tile) => true;
 
     private void OnEntParentChanged(Entity<ChemicalFireComponent> entity, ref EntParentChangedMessage args)
     {

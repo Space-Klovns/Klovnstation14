@@ -1306,7 +1306,7 @@
     impactEffect: BulletImpactEffectOrangeDisabler
     damage:
       types:
-        Heat: 13
+        Heat: 9 # KS14: 13 -> 9
 
 # KS start
 # - type: entity
@@ -1330,7 +1330,7 @@
   components:
   - type: ProjectileSpread
     proto: BulletLaser
-    count: 4 #44 heat damage if you hit all your shots, but narrower spread
+    count: 4 #36 heat damage if you hit all your shots, but narrower spread
     spread: 10
 
 - type: entity

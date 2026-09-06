@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Tests.Helpers;
 using Content.Server.Atmos.EntitySystems;
 using Content.Shared._KS14.Atmos.ChemicalFire;
+using Content.Shared._KS14.Sparks;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Content.Shared.Chemistry.Components;
@@ -10,6 +12,7 @@ using Content.Shared.Fluids;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
 
 namespace Content.IntegrationTests.Tests._KS14.ChemicalFire;
 
@@ -67,6 +70,25 @@ public sealed class ChemicalFireTest : GameTest
     connectionKey: KsTestChemicalFire
 
 - type: entity
+  parent: KsTestChemicalFire
+  id: KsTestChemicalFireGasFed
+  components:
+  - type: ChemicalFire
+    color: '#B040FF'
+  - type: ChemicalFireGasConsumer
+    gases:
+      Plasma: 0.5
+
+# Combines the gas requirement above with thermite's own spawn-on-init spark, so a sustain check against it
+#     exercises the exact hazard the template singleton's construction has to avoid.
+- type: entity
+  parent: KsTestChemicalFireGasFed
+  id: KsTestChemicalFireGasFedSparking
+  components:
+  - type: SparkOnTrigger
+  - type: TriggerOnSpawn
+
+- type: entity
   id: KsTestFlammable
   name: test flammable
   components:
@@ -97,6 +119,8 @@ public sealed class ChemicalFireTest : GameTest
     private const string BriefFireProto = "KsTestChemicalFireBrief";
     private const string StackingFireProto = "KsTestChemicalFireStacking";
     private const string SharedKeyFireProto = "KsTestChemicalFireSharedKey";
+    private const string GasFedFireProto = "KsTestChemicalFireGasFed";
+    private const string GasFedSparkingFireProto = "KsTestChemicalFireGasFedSparking";
     private const string FlammableProto = "KsTestFlammable";
 
     private const string WaterReagent = "Water";
@@ -779,6 +803,243 @@ public sealed class ChemicalFireTest : GameTest
 
     #endregion
 
+    #region Sustainability
+
+    /// <summary>
+    ///     A chemfire with a <see cref="ChemicalFireGasConsumerComponent"/> requirement must not spawn onto a
+    ///         tile with none of its gas - it would just self-extinguish on its first heat tick anyway.
+    /// </summary>
+    [Test]
+    public async Task TestChemicalFireWithGasConsumerRefusesToSpawnWithoutItsGas()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+
+        var entityManager = server.EntMan;
+        var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
+
+        var testMap = await pair.CreateTestMap();
+        var gridUid = testMap.Grid.Owner;
+
+        await server.WaitAssertion(() =>
+        {
+            // A real (if empty) atmosphere, so the sustain check sees "no plasma" rather than "no atmosphere".
+            entityManager.EnsureComponent<GridAtmosphereComponent>(gridUid);
+
+            Assert.That(chemicalFireSystem.SpawnChemicalFire(GasFedFireProto, (gridUid, null), FireTile), Is.Null,
+                "Gas-fed chemfire spawned onto a tile with none of its gas.");
+
+            Assert.That(GetTileFireCount(chemicalFireSystem, gridUid), Is.Zero,
+                "A refused chemfire still ended up registered on the tile.");
+        });
+    }
+
+    [Test]
+    public async Task TestChemicalFireWithGasConsumerSpawnsWithItsGasPresent()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+
+        var entityManager = server.EntMan;
+        var atmosphereSystem = entityManager.System<AtmosphereSystem>();
+        var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
+
+        var testMap = await pair.CreateTestMap();
+        var gridUid = testMap.Grid.Owner;
+
+        await server.WaitAssertion(() =>
+        {
+            atmosphereSystem.SetMapAtmosphere(testMap.MapUid, space: false, BurnableMixture());
+            entityManager.EnsureComponent<GridAtmosphereComponent>(gridUid);
+        });
+
+        // Lets atmos build the grid's own per-tile air from the map atmosphere before the sustain check reads it.
+        await server.WaitRunTicks(TicksPerSecond);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(chemicalFireSystem.SpawnChemicalFire(GasFedFireProto, (gridUid, null), FireTile), Is.Not.Null,
+                "Gas-fed chemfire failed to spawn despite its gas being present.");
+        });
+    }
+
+    [Test]
+    public async Task TestChemicalFireWithoutGasConsumerIgnoresAtmosphere()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+
+        var entityManager = server.EntMan;
+        var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
+
+        var testMap = await pair.CreateTestMap();
+        var gridUid = testMap.Grid.Owner;
+
+        await server.WaitAssertion(() =>
+        {
+            // Deliberately no GridAtmosphereComponent at all - FireProto has no gas consumer, so it must not care.
+            Assert.That(chemicalFireSystem.SpawnChemicalFire(FireProto, (gridUid, null), FireTile), Is.Not.Null,
+                "A chemfire with no gas requirement was refused on a tile with no atmosphere at all.");
+        });
+    }
+
+    /// <summary>
+    ///     The sustain check's paused, nullspace "template" singleton must never behave like a real chemfire:
+    ///         never map-inited (guarded separately by
+    ///         <see cref="TestSustainCheckNeverTriggersSpawnEffects"/>), never registered onto a grid, and
+    ///         immune to <see cref="SharedChemicalFireSystem.Update"/> reaping it via its own very real
+    ///         <see cref="ChemicalFireComponent.Duration"/>.
+    /// </summary>
+    [Test]
+    public async Task TestSustainCheckTemplateSingletonIsInert()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+
+        var entityManager = server.EntMan;
+        var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
+
+        var testMap = await pair.CreateTestMap();
+        var gridUid = testMap.Grid.Owner;
+
+        var templateUid = EntityUid.Invalid;
+
+        await server.WaitAssertion(() =>
+        {
+            entityManager.EnsureComponent<GridAtmosphereComponent>(gridUid);
+
+            Assert.That(chemicalFireSystem.SpawnChemicalFire(GasFedFireProto, (gridUid, null), FireTile), Is.Null,
+                "Gas-fed chemfire spawned onto a tile with none of its gas.");
+
+            templateUid = FindTemplateFire(entityManager, GasFedFireProto);
+            Assert.That(templateUid, Is.Not.EqualTo(EntityUid.Invalid),
+                "Sustain check did not create its template singleton.");
+
+            var metaDataComponent = entityManager.GetComponent<MetaDataComponent>(templateUid);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(metaDataComponent.EntityLifeStage, Is.EqualTo(EntityLifeStage.Initialized),
+                    "Template singleton was map-inited, risking spawn-on-init side effects.");
+
+                Assert.That(metaDataComponent.EntityPaused,
+                    "Template singleton was not paused.");
+
+                Assert.That(entityManager.GetComponent<TransformComponent>(templateUid).GridUid, Is.Null,
+                    "Template singleton ended up attached to a real grid.");
+            }
+
+            Assert.That(chemicalFireSystem.GetTileChemicalFires((gridUid, null), FireTile), Is.Null,
+                "Template singleton leaked into the real tile's chemfire cache.");
+        });
+
+        await server.WaitRunTicks(TicksPerSecond * 2);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entityManager.EntityExists(templateUid),
+                "Template singleton was reaped by SharedChemicalFireSystem.Update despite being paused.");
+        });
+    }
+
+    /// <summary>
+    ///     The specific hazard the template singleton's construction guards against: a prototype carrying
+    ///         <c>TriggerOnSpawn</c> (thermite's own spark, in production) must not fire its spawn-on-init
+    ///         effects just because a sustain check lazily created a template instance of it.
+    /// </summary>
+    [Test]
+    public async Task TestSustainCheckNeverTriggersSpawnEffects()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+
+        var entityManager = server.EntMan;
+        var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
+
+        var testMap = await pair.CreateTestMap();
+        var gridUid = testMap.Grid.Owner;
+
+        await server.WaitAssertion(() =>
+        {
+            entityManager.EnsureComponent<GridAtmosphereComponent>(gridUid);
+
+            Assert.That(chemicalFireSystem.SpawnChemicalFire(GasFedSparkingFireProto, (gridUid, null), FireTile), Is.Null,
+                "Sparking gas-fed chemfire spawned onto a tile with none of its gas.");
+
+            Assert.That(FindTemplateFire(entityManager, GasFedSparkingFireProto), Is.Not.EqualTo(EntityUid.Invalid),
+                "Sustain check did not create its template singleton.");
+        });
+
+        // Sparks fly outward and only despawn later, so give any that spawned a moment to exist.
+        await server.WaitRunTicks(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(AnyEntityOfPrototype(entityManager, SharedSparksSystem.DefaultSparkPrototype), Is.False,
+                "A sustain check against a TriggerOnSpawn/SparkOnTrigger prototype spawned a real spark.");
+        });
+    }
+
+    /// <summary>
+    ///     Reloading prototypes must drop every cached template singleton, so a later sustain check rebuilds
+    ///         against fresh data rather than reusing a stale entity.
+    /// </summary>
+    [Test]
+    public async Task TestPrototypeReloadClearsTemplateSingletons()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+
+        var entityManager = server.EntMan;
+        var chemicalFireSystem = entityManager.System<SharedChemicalFireSystem>();
+        var prototypeManager = server.ResolveDependency<IPrototypeManager>();
+
+        var testMap = await pair.CreateTestMap();
+        var gridUid = testMap.Grid.Owner;
+
+        var firstTemplateUid = EntityUid.Invalid;
+
+        await server.WaitAssertion(() =>
+        {
+            entityManager.EnsureComponent<GridAtmosphereComponent>(gridUid);
+
+            Assert.That(chemicalFireSystem.SpawnChemicalFire(GasFedFireProto, (gridUid, null), FireTile), Is.Null,
+                "Gas-fed chemfire spawned onto a tile with none of its gas.");
+
+            firstTemplateUid = FindTemplateFire(entityManager, GasFedFireProto);
+            Assert.That(firstTemplateUid, Is.Not.EqualTo(EntityUid.Invalid),
+                "Sustain check did not create its template singleton.");
+        });
+
+        await server.WaitAssertion(() =>
+        {
+            var modified = new Dictionary<Type, HashSet<string>> { [typeof(EntityPrototype)] = [GasFedFireProto] };
+            prototypeManager.ReloadPrototypes(modified);
+        });
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entityManager.EntityExists(firstTemplateUid), Is.False,
+                "Prototype reload did not delete the cached template singleton.");
+
+            Assert.That(chemicalFireSystem.SpawnChemicalFire(GasFedFireProto, (gridUid, null), FireTile), Is.Null,
+                "Gas-fed chemfire spawned onto a tile with none of its gas, after a prototype reload.");
+
+            var secondTemplateUid = FindTemplateFire(entityManager, GasFedFireProto);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(secondTemplateUid, Is.Not.EqualTo(EntityUid.Invalid),
+                    "Sustain check did not rebuild its template singleton after a prototype reload.");
+
+                Assert.That(secondTemplateUid, Is.Not.EqualTo(firstTemplateUid),
+                    "Sustain check reused the stale template singleton's entity after a prototype reload.");
+            }
+        });
+    }
+
+    #endregion
+
     /// <summary>Plasma and oxygen, hot enough to keep a hotspot going for the length of a test.</summary>
     private static GasMixture BurnableMixture()
     {
@@ -792,4 +1053,32 @@ public sealed class ChemicalFireTest : GameTest
 
     private static int GetTileFireCount(SharedChemicalFireSystem chemicalFireSystem, EntityUid gridUid)
         => chemicalFireSystem.GetTileChemicalFires((gridUid, null), FireTile)?.Fires.Count ?? 0;
+
+    /// <summary>
+    ///     Finds a sustain check's template singleton by prototype id - the only entity anywhere carrying a
+    ///         <see cref="ChemicalFireComponent"/> for a prototype whose spawn was refused, since a refused
+    ///         spawn never creates a real one.
+    /// </summary>
+    private static EntityUid FindTemplateFire(IEntityManager entityManager, string prototypeId)
+    {
+        var enumerator = entityManager.AllEntityQueryEnumerator<ChemicalFireComponent>();
+        while (enumerator.MoveNext(out var uid, out _))
+        {
+            if (entityManager.GetComponent<MetaDataComponent>(uid).EntityPrototype?.ID == prototypeId)
+                return uid;
+        }
+
+        return EntityUid.Invalid;
+    }
+
+    private static bool AnyEntityOfPrototype(IEntityManager entityManager, string prototypeId)
+    {
+        foreach (var uid in entityManager.GetEntities())
+        {
+            if (entityManager.GetComponent<MetaDataComponent>(uid).EntityPrototype?.ID == prototypeId)
+                return true;
+        }
+
+        return false;
+    }
 }

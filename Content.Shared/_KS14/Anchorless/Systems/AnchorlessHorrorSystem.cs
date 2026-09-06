@@ -7,7 +7,7 @@ using Robust.Shared.Prototypes;
 namespace Content.Shared._KS14.Anchorless.Systems;
 
 /// <summary>
-/// Horror form is a first-class form state. It never creates a hidden mob or a second body.
+///     Horror form is a first-class form state. It never creates a hidden mob or a second body.
 /// </summary>
 public sealed partial class AnchorlessHorrorSystem : EntitySystem
 {
