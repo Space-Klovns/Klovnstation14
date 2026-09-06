@@ -1,0 +1,38 @@
+# KS14: added in this fork
+- type: entity
+  parent: ClothingOuterBase
+  id: KsClothingOuterIvDrip
+  name: IV drip
+  description: A wearable intravenous drip with a configurable pump.
+  components:
+  - type: Sprite
+    sprite: Objects/Specific/Medical/healthanalyzer.rsi
+    state: icon
+  - type: IvDrip
+    solutionName: ivDrip
+    injectionEnabled: false
+    injectionAmount: 1
+    injectionInterval: 1
+    canSetInjectionAmount: true
+    canSetInjectionInterval: true
+    spillOnWearerAttacked: true
+    spillAmount: 5
+  - type: SolutionManager
+    solutions: null
+    solutionData:
+      ivDrip:
+        maxVol: 200
+  - type: DrawableSolution
+    solution: ivDrip
+  - type: RefillableSolution
+    solution: ivDrip
+  - type: DrainableSolution
+    solution: ivDrip
+  - type: ExaminableSolution
+    solution: ivDrip
+  - type: UserInterface
+    interfaces:
+      enum.IvDripUiKey.Key:
+        type: IvDripBoundUserInterface
+  - type: ActivatableUI
+    key: enum.IvDripUiKey.Key

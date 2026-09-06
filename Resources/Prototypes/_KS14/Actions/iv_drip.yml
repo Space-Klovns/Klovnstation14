@@ -1,0 +1,11 @@
+# KS14: added in this fork
+- type: entity
+  parent: BaseToggleAction
+  id: ActionToggleIvDrip
+  name: Toggle IV drip
+  description: Enable or disable intravenous injection.
+  components:
+  - type: Action
+    icon: Interface/Actions/overloadlight.png
+  - type: InstantAction
+    event: !type:ToggleIvDripActionEvent
