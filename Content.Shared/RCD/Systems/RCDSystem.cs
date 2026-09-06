@@ -890,8 +890,9 @@ public sealed partial class RCDSystem : EntitySystem
                             {
                                 var proposed = new PipeRestrictOverlapSystem.ProposedPipe(
                                     pipeNode.Direction,
-                                    _currentLayer,
-                                    pipeNode.GetType() /* KS14 */,
+                                    // KS14: only atmospherics pipes can be layered, everything else sits on its own layer
+                                    pipeNode.Kind == PipeNodeKind.Atmospherics ? _currentLayer : pipeNode.Layer,
+                                    pipeNode.Kind /* KS14: plumbing node separation */,
                                     rotation
                                 );
 

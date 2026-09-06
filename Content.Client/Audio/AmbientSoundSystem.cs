@@ -34,6 +34,8 @@ public sealed partial class AmbientSoundSystem : SharedAmbientSoundSystem
     protected override void QueueUpdate(EntityUid uid, AmbientSoundComponent ambience)
         => _treeSys.QueueTreeUpdate(uid, ambience);
 
+    private float _minAmbFxVolume = 0f; // KS14
+
     private AmbientSoundOverlay? _overlay;
     private int _maxAmbientCount;
     private bool _overlayEnabled;
@@ -96,6 +98,8 @@ public sealed partial class AmbientSoundSystem : SharedAmbientSoundSystem
         UpdatesOutsidePrediction = true;
         UpdatesAfter.Add(typeof(AmbientSoundTreeSystem));
 
+        _cfg.OnValueChanged(Shared._KS14.CCVar.KsCCVars.MinAmbientEffectsVolume, x => _minAmbFxVolume = x * ContentAudioSystem.AmbienceMultiplier, invokeImmediately: true); // KS14
+
         Subs.CVar(_cfg, CCVars.AmbientCooldown, SetCooldown, true);
         Subs.CVar(_cfg, CCVars.MaxAmbientSources, SetAmbientCount, true);
         Subs.CVar(_cfg, CCVars.AmbientRange, SetAmbientRange, true);
@@ -116,6 +120,7 @@ public sealed partial class AmbientSoundSystem : SharedAmbientSoundSystem
 
     private void SetAmbienceGain(float value)
     {
+        value = MathF.Max(_minAmbFxVolume, value); // KS14
         _ambienceVolume = SharedAudioSystem.GainToVolume(value);
 
         foreach (var (ent, values) in _playingSounds)

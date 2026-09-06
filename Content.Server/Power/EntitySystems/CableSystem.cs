@@ -1,16 +1,9 @@
-using Content.Server.Administration.Logs;
 using Content.Server.Electrocution;
 using Content.Server.Power.Components;
 using Content.Server.Stack;
 using Content.Shared.Database;
 using Content.Shared.DoAfter;
 using Content.Shared.Interaction;
-//KS14 start
-using Content.Server.Lightning;
-using Content.Shared.Power;
-using Content.Shared.Wires;
-using Content.Shared.Electrocution;
-//KS14 end
 using Robust.Shared.Map;
 using CableCuttingFinishedEvent = Content.Shared.Tools.Systems.CableCuttingFinishedEvent;
 using SharedToolSystem = Content.Shared.Tools.Systems.SharedToolSystem;
@@ -23,14 +16,6 @@ public sealed partial class CableSystem : EntitySystem
     [Dependency] private SharedToolSystem _toolSystem = default!;
     [Dependency] private StackSystem _stack = default!;
     [Dependency] private ElectrocutionSystem _electrocutionSystem = default!;
-
-    //KS14 start
-    [Dependency] private LightningSystem _lightning = default!;
-
-    private readonly float _arcFlashRange = 4f; //all of this stays here for now
-    private readonly int _arcFlashAmount = 2;
-    private readonly string _arcFlashProto = "ArcFlashLightningStrong";
-    //KS14 end
 
     public override void Initialize()
     {
@@ -67,14 +52,12 @@ public sealed partial class CableSystem : EntitySystem
         if (_electrocutionSystem.TryDoElectrifiedAct(uid, args.User))
             return;
 
-        // KS start
-        ElectrifiedComponent? electrified = null;
-        TransformComponent? transform = null;
-        if (Resolve(uid, ref electrified, ref transform, false) &&
-            cable.CableType == CableType.HighVoltage &&
-            _electrocutionSystem.IsPowered(uid, electrified, transform))
-            _lightning.ShootRandomLightnings(uid, _arcFlashRange, _arcFlashAmount, lightningPrototype: _arcFlashProto);
-        // KS end
+        // KS14 start: attemptcutcable
+        var attemptEv = new Shared._KS14.Power.AttemptCutCableEvent(cable.CableType, args.User, false);
+        RaiseLocalEvent(uid, ref attemptEv);
+        if (attemptEv.Cancelled)
+            return;
+        // KS14 end
 
         _adminLogger.Add(LogType.CableCut, LogImpact.High, $"The {ToPrettyString(uid)} at {xform.Coordinates} was cut by {ToPrettyString(args.User)}.");
 

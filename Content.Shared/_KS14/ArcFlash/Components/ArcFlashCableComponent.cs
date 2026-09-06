@@ -6,5 +6,12 @@ namespace Content.Shared._KS14.ArcFlash.Components;
 /// Rule of thumb, this has to be a machine buildable like other machines, or it has to be an APC (very niche)
 /// It relies on construction graph nodes to raise events
 /// </summary>
-[RegisterComponent, NetworkedComponent]
-public sealed partial class ArcFlashDeconstructableComponent : BaseArcFlashImpactComponent;
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+public sealed partial class ArcFlashCableComponent : BaseArcFlashImpactComponent
+{
+    /// <summary>
+    ///     Whether the cable is powered.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool Powered = false;
+}

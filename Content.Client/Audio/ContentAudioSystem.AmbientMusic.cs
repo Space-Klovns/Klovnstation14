@@ -33,6 +33,7 @@ public sealed partial class ContentAudioSystem
     private readonly TimeSpan _minAmbienceTime = TimeSpan.FromSeconds(15); // KS14: 30 -> 15
     private readonly TimeSpan _maxAmbienceTime = TimeSpan.FromSeconds(45); // KS14: 60 -> 45
 
+    private float _minAmbMusicVolume = 0f; // KS14
     private const float AmbientMusicFadeTime = 16f; // KS14: 10 -> 16
     private static float _volumeSlider;
 
@@ -61,6 +62,8 @@ public sealed partial class ContentAudioSystem
         Subs.CVar(_configManager, CCVars.AmbientMusicVolume, AmbienceCVarChanged, true);
         _sawmill = _logManager.GetSawmill("audio.ambience");
 
+        _configManager.OnValueChanged(Shared._KS14.CCVar.KsCCVars.MinAmbientMusicVolume, x => _minAmbMusicVolume = x * AmbientMusicMultiplier, invokeImmediately: true); // KS14
+
         // Reset audio
         _nextAudio = TimeSpan.MaxValue;
 
@@ -73,6 +76,7 @@ public sealed partial class ContentAudioSystem
 
     private void AmbienceCVarChanged(float obj)
     {
+        obj = MathF.Max(_minAmbMusicVolume, obj); // KS14
         _volumeSlider = SharedAudioSystem.GainToVolume(obj);
 
         if (_ambientMusicStream != null && _musicProto != null)
