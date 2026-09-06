@@ -66,18 +66,18 @@
       range: 200
     - type: DeviceLinkSink
     - type: TriggerOnSignal
-      keyOut: startTimer
-    - type: TimerTrigger
-      keysIn:
-      - startTimer
-      # use the default trigger key so it can activate any inserted payload
-      keyOut: trigger
-      delay: 3
-      initialBeepDelay: 0
-      beepSound:
-        path: /Audio/Machines/Nuke/general_beep.ogg
-        params:
-          volume: -2
+    #   keyOut: startTimer #KS14 change, instant signallers are back
+    # - type: TimerTrigger
+    #   keysIn:
+    #   - startTimer
+    #   # use the default trigger key so it can activate any inserted payload
+    #   keyOut: trigger
+    #   delay: 3
+    #   initialBeepDelay: 0
+    #   beepSound:
+    #     path: /Audio/Machines/Nuke/general_beep.ogg
+    #     params:
+    #       volume: -2
 
 - type: entity
   parent: BaseItem

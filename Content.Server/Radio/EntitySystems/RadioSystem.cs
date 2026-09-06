@@ -1,8 +1,11 @@
+using Content.Server._KS14.Language; // KS14
+using Content.Server._KS14.Translation; // KS14
 using Content.Server.Administration.Logs;
 using Content.Server.Chat.Systems;
 using Content.Server.Power.Components;
 using Content.Shared.Chat;
 using Content.Shared.Database;
+using Content.Shared._KS14.Language; // KS14
 using Content.Shared.Radio;
 using Content.Shared.Radio.Components;
 using Content.Shared.Speech;
@@ -27,6 +30,8 @@ public sealed partial class RadioSystem : EntitySystem
     [Dependency] private IPrototypeManager _prototype = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private ChatSystem _chat = default!;
+    [Dependency] private KsTranslationSystem _translation = default!; // KS14
+    [Dependency] private KsLanguageSystem _ksLanguage = default!; // KS14
     [Dependency] private EntityQuery<TelecomExemptComponent> _exemptQuery = default!;
 
     // set used to prevent radio feedback loops.
@@ -43,7 +48,7 @@ public sealed partial class RadioSystem : EntitySystem
     {
         if (args.Channel != null && component.Channels.Contains(args.Channel.ID))
         {
-            SendRadioMessage(uid, args.Message, args.Channel, uid);
+            SendRadioMessage(uid, args.Message, args.Channel, uid, ksLanguage: args.KsLanguage /* KS14 */);
             args.Channel = null; // prevent duplicate messages from other listeners.
         }
     }
@@ -51,15 +56,15 @@ public sealed partial class RadioSystem : EntitySystem
     private void OnIntrinsicReceive(EntityUid uid, IntrinsicRadioReceiverComponent component, ref RadioReceiveEvent args)
     {
         if (TryComp(uid, out ActorComponent? actor))
-            _netMan.ServerSendMessage(args.ChatMsg, actor.PlayerSession.Channel);
+            _netMan.ServerSendMessage(_ksLanguage.ApplyListener(args.ChatMsg, args.KsLanguage, args.KsObfuscatedChatMsg, args.Translation, actor.PlayerSession), actor.PlayerSession.Channel); // KS14
     }
 
     /// <summary>
     /// Send radio message to all active radio listeners
     /// </summary>
-    public void SendRadioMessage(EntityUid messageSource, string message, ProtoId<RadioChannelPrototype> channel, EntityUid radioSource, bool escapeMarkup = true)
+    public void SendRadioMessage(EntityUid messageSource, string message, ProtoId<RadioChannelPrototype> channel, EntityUid radioSource, bool escapeMarkup = true, KsUtteranceContext? ksLanguage = null /* KS14 */)
     {
-        SendRadioMessage(messageSource, message, _prototype.Index(channel), radioSource, escapeMarkup: escapeMarkup);
+        SendRadioMessage(messageSource, message, _prototype.Index(channel), radioSource, escapeMarkup: escapeMarkup, ksLanguage: ksLanguage /* KS14 */);
     }
 
     /// <summary>
@@ -67,11 +72,23 @@ public sealed partial class RadioSystem : EntitySystem
     /// </summary>
     /// <param name="messageSource">Entity that spoke the message</param>
     /// <param name="radioSource">Entity that picked up the message and will send it, e.g. headset</param>
-    public void SendRadioMessage(EntityUid messageSource, string message, RadioChannelPrototype channel, EntityUid radioSource, bool escapeMarkup = true)
+    public void SendRadioMessage(EntityUid messageSource, string message, RadioChannelPrototype channel, EntityUid radioSource, bool escapeMarkup = true, KsUtteranceContext? ksLanguage = null /* KS14 */)
     {
         // TODO if radios ever garble / modify messages, feedback-prevention needs to be handled better than this.
         if (!_messages.Add(message))
             return;
+
+        // KS14 Start: resolve the language if the caller didn't thread one, so device-fed
+        // microphones can't launder exotic speech onto radio clear.
+        if (ksLanguage == null)
+            _ksLanguage.TryStartUtterance(messageSource, message, out ksLanguage);
+
+        if (ksLanguage != null && !ksLanguage.Language.AllowRadio)
+        {
+            _messages.Remove(message);
+            return;
+        }
+        // KS14 End
 
         var evt = new TransformSpeakerNameEvent(messageSource, MetaData(messageSource).EntityName);
         RaiseLocalEvent(messageSource, evt);
@@ -89,11 +106,22 @@ public sealed partial class RadioSystem : EntitySystem
             ? FormattedMessage.EscapeText(message)
             : message;
 
-        var wrappedMessage = Loc.GetString(speech.Bold ? "chat-radio-message-wrap-bold" : "chat-radio-message-wrap",
+        var verb = Loc.GetString(_random.Pick(speech.SpeechVerbStrings)); // KS14: hoisted, shared by both variants
+        var radioWrapKey = speech.Bold ? "chat-radio-message-wrap-bold" : "chat-radio-message-wrap"; // KS14: hoisted, shared by both variants
+
+        // KS14 Start: language visual identity on the clear line.
+        var (fontId, fontSize) = ksLanguage != null
+            ? _ksLanguage.ResolveFont(ksLanguage, speech)
+            : (speech.FontId, speech.FontSize);
+        if (ksLanguage != null)
+            content = _ksLanguage.StyleMessage(ksLanguage, content);
+        // KS14 End
+
+        var wrappedMessage = Loc.GetString(radioWrapKey, // KS14
             ("color", channel.Color),
-            ("fontType", speech.FontId),
-            ("fontSize", speech.FontSize),
-            ("verb", Loc.GetString(_random.Pick(speech.SpeechVerbStrings))),
+            ("fontType", fontId), // KS14
+            ("fontSize", fontSize), // KS14
+            ("verb", verb), // KS14
             ("channel", $"\\[{channel.LocalizedName}\\]"),
             ("name", name),
             ("message", content));
@@ -106,7 +134,32 @@ public sealed partial class RadioSystem : EntitySystem
             NetEntity.Invalid,
             null);
         var chatMsg = new MsgChatMessage { Message = chat };
-        var ev = new RadioReceiveEvent(message, messageSource, channel, radioSource, chatMsg);
+
+        // KS14 Start: scramble the text actually broadcast; a microphone may relay a fuzzed variant.
+        MsgChatMessage? ksObfuscatedChatMsg = null;
+        if (ksLanguage != null)
+        {
+            var scrambled = ksLanguage.ObfuscateText(message);
+            var wrappedScrambled = Loc.GetString(radioWrapKey,
+                ("color", channel.Color),
+                ("fontType", fontId),
+                ("fontSize", fontSize),
+                ("verb", verb),
+                ("channel", $"\\[{channel.LocalizedName}\\]"),
+                ("name", name),
+                ("message", _ksLanguage.StyleMessage(ksLanguage, FormattedMessage.EscapeText(scrambled))));
+
+            ksObfuscatedChatMsg = new MsgChatMessage
+            {
+                Message = new ChatMessage(ChatChannel.Radio, scrambled, wrappedScrambled, NetEntity.Invalid, null),
+            };
+        }
+        // KS14 End
+
+        // KS14: begin per-reader translation once for the whole broadcast (gating + cooldown are message-level).
+        _translation.TryBeginLocal(ChatChannel.Radio, message, messageSource, out var translation);
+
+        var ev = new RadioReceiveEvent(message, messageSource, channel, radioSource, chatMsg, translation /* KS14 */, ksLanguage /* KS14 */, ksObfuscatedChatMsg /* KS14 */);
 
         var sendAttemptEv = new RadioSendAttemptEvent(channel, radioSource);
         RaiseLocalEvent(ref sendAttemptEv);
@@ -136,21 +189,25 @@ public sealed partial class RadioSystem : EntitySystem
                 continue;
 
             // check if message can be sent to specific receiver
-            var attemptEv = new RadioReceiveAttemptEvent(channel, radioSource, receiver, chatMsg /* KS14 */);
+            var attemptEv = new RadioReceiveAttemptEvent(channel, radioSource, receiver, chatMsg /* KS14 */, ksObfuscatedChatMsg?.Message.Message /* KS14 */);
             RaiseLocalEvent(ref attemptEv);
             RaiseLocalEvent(receiver, ref attemptEv);
             if (attemptEv.Cancelled)
                 continue;
 
-            // KS14 Start
+            // KS14 Start: jam substitution swaps in the jammer-built clones.
             var sentEv = attemptEv.NewChatMessage is { } newChatMsg ?
-                new RadioReceiveEvent(message, messageSource, channel, radioSource, newChatMsg) :
+                new RadioReceiveEvent(message, messageSource, channel, radioSource, newChatMsg, translation, ksLanguage, attemptEv.KsNewObfuscatedChatMessage) :
                 ev;
             // KS14 End
 
             // send the message
             RaiseLocalEvent(receiver, ref sentEv);
         }
+
+        // KS14: apply the per-speaker cooldown once, only if some reader actually started a real API call.
+        if (translation is { } endCtx)
+            _translation.EndMessage(endCtx);
 
         if (name != Name(messageSource))
             _adminLogger.Add(LogType.Chat, LogImpact.Low, $"Radio message from {ToPrettyString(messageSource):user} as {name} on {channel.LocalizedName}: {message}");

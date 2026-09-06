@@ -314,7 +314,7 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
             damage.FlatPenetration?.TryGetValue(type, out flatPen);
             damage.PercentilePenetration?.TryGetValue(type, out percentPen);
 
-            if (!damage.disableCrossInteraction)
+            if (!damage.DisableCrossInteraction)
                 flatReduction *= 1f - percentPen;
 
             if (flatReduction > 0f)

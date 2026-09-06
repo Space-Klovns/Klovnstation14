@@ -1,0 +1,29 @@
+- type: entity
+  parent: BaseBulletTrigger
+  id: KsBulletGrenadeChemical
+  name: chemical grenade bullet
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: Sprite # re-used sprite geg
+    sprite: Objects/Weapons/Guns/Projectiles/projectiles2.rsi
+    layers:
+    - state: cleanade
+
+  - type: ChemicalPayload
+    spill: true
+    beakerSlotA: &slotDef
+      whitelist:
+        components:
+        - FitsInDispenser
+      swap: false
+      #locked: true
+    beakerSlotB: *slotDef
+  - type: ItemSlots
+  - type: ContainerContainer
+    containers:
+      BeakerSlotA: !type:ContainerSlot
+      BeakerSlotB: !type:ContainerSlot
+
+  - type: Projectile
+    deleteOnCollide: false
+  - type: DeleteOnTrigger

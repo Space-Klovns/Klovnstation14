@@ -1,0 +1,298 @@
+# Shared shell for the five sensor/emitter machines below. Each child only adds its
+#   Machine board link, power draw and KsSensor/KsIrst/KsRadar/KsElint/KsJammer behavior.
+- type: entity
+  parent: [BaseMachinePowered, ConstructibleMachine]
+  id: BaseKsSensorMachine
+  abstract: true
+  placement:
+    mode: SnapgridCenter
+  components:
+  - type: Transform
+    noRot: false
+  # The machine base is fixed-rotation by default. Cosmetic here, but kept uniform across
+  #   the arrays so any of them can be lined up on the hull.
+  - type: Rotatable
+    rotateWhileAnchored: true
+  - type: Physics
+    bodyType: Static
+  - type: Sprite
+    # TODO KS14: real art
+    sprite: Structures/Machines/rndpointsource.rsi
+    drawdepth: Overdoors
+    layers:
+    - state: rndpointsource
+  - type: Appearance
+
+# Shared shell for the five sensor/emitter machine boards below. Each child only adds its
+#   MachineBoard prototype reference.
+- type: entity
+  parent: BaseMachineCircuitboard
+  id: BaseKsSensorCircuitboard
+  abstract: true
+  components:
+  - type: Sprite
+    state: engineering
+  - type: MachineBoard
+    stackRequirements:
+      Steel: 5
+      Glass: 3
+      Manipulator: 2
+
+- type: entity
+  parent: BaseKsSensorMachine
+  id: KsMachineVisualSearch
+  name: optical search array
+  description: A gimballed optics mast that picks out ships against the black by eye alone. Short-ranged but reliable.
+  components:
+  - type: Machine
+    board: KsMachineVisualSearchCircuitboard
+  - type: ApcPowerReceiver
+    powerLoad: 1500
+  - type: KsSensor
+    sensorType: VisualSearch
+    maxRange: 64
+    renderMode: Outline
+    providesName: true
+    requireExternalMount: false # interior mounting is deliberate for passive arrays
+    intel:
+    - KsIntelSize
+    - KsIntelMass
+    - KsIntelTopSpeed
+  - type: KsVisualSearch
+
+- type: entity
+  parent: BaseKsSensorCircuitboard
+  id: KsMachineVisualSearchCircuitboard
+  name: optical search array machine board
+  description: An electronics board used in optical search arrays.
+  components:
+  - type: MachineBoard
+    prototype: KsMachineVisualSearch
+
+- type: latheRecipe
+  parent: [BaseGoldCircuitboardRecipe, BaseEngineeringMachineRecipeCategory]
+  id: KsMachineVisualSearchCircuitboard
+  result: KsMachineVisualSearchCircuitboard
+
+- type: entity
+  parent: BaseKsSensorMachine
+  id: KsMachineIrst
+  name: IRST array
+  description: An infrared search and track mast. It hunts ships by the heat bleeding off their hull, seeing far past the naked eye, though a cold or well-shielded target slips right past it.
+  components:
+  - type: Machine
+    board: KsMachineIrstCircuitboard
+  - type: ApcPowerReceiver
+    powerLoad: 2500
+  - type: KsSensor
+    sensorType: IRST
+    maxRange: 256
+    # Hull outline like the visual sensor, in the red IRST tier colour; the
+    # shape-obscuring blur was removed to keep rendering simple.
+    renderMode: Outline
+    providesName: false
+    requireExternalMount: false # interior mounting is deliberate for passive arrays
+    intel:
+    - KsIntelHeat
+  - type: KsIrst
+    minDetectable: 10
+    minDetectableAtMaxRange: 80
+    # The taper hits zero range at signature minDetectableAtMaxRange - maxRange/factor,
+    #   so keep factor <= maxRange / (minDetectableAtMaxRange - minDetectable) or that
+    #   becomes the real floor and minDetectable turns into dead config: hulls above the
+    #   declared floor would be invisible at ANY range while the 64-tile optical array
+    #   still tracks them, reading as a blank SIGNATURE under a cone drawn right over
+    #   the target. At 2.5 the floor holds out to 81 tiles, past the optical array.
+    factor: 2.5
+
+- type: entity
+  parent: BaseKsSensorCircuitboard
+  id: KsMachineIrstCircuitboard
+  name: IRST array machine board
+  description: An electronics board used in IRST arrays.
+  components:
+  - type: MachineBoard
+    prototype: KsMachineIrst
+
+- type: latheRecipe
+  parent: [BaseGoldCircuitboardRecipe, BaseEngineeringMachineRecipeCategory]
+  id: KsMachineIrstCircuitboard
+  result: KsMachineIrstCircuitboard
+
+- type: entity
+  parent: BaseKsSensorMachine
+  id: KsMachineRadar
+  name: radar array
+  description: An active radar mast. It floods the black with pulses and reads the echoes, seeing far and clearly even through cold and dark, but every sweep is a beacon that enemy ELINT can home in on from twice as far as the radar can resolve.
+  components:
+  - type: Machine
+    board: KsMachineRadarCircuitboard
+  - type: ApcPowerReceiver
+    powerLoad: 3000
+  - type: KsSensor
+    sensorType: Radar
+    maxRange: 384
+    renderMode: Outline
+    providesName: false
+    # Active emitter, so it keeps the default requireExternalMount: true (a real hull
+    #   aperture), unlike the passive arrays above.
+    intel:
+    - KsIntelRcs
+  - type: KsRadar
+    minDetectable: 10
+    minDetectableAtMaxRange: 80
+    # Same taper constraint as the IRST array; at 4.5 the declared floor still returns
+    #   out to 69 tiles, past the optical array, so no hull is optically tracked while
+    #   reading a blank CROSS SECTION.
+    factor: 4.5
+    coneRangeFactor: 2
+    burnThroughFactor: 0.5
+    # Identification intel ELINT reads back about this set. Pure flavor for now.
+    band: KsBandMid
+
+- type: entity
+  parent: BaseKsSensorCircuitboard
+  id: KsMachineRadarCircuitboard
+  name: radar array machine board
+  description: An electronics board used in radar arrays.
+  components:
+  - type: MachineBoard
+    prototype: KsMachineRadar
+
+- type: latheRecipe
+  parent: [BaseGoldCircuitboardRecipe, BaseEngineeringMachineRecipeCategory]
+  id: KsMachineRadarCircuitboard
+  result: KsMachineRadarCircuitboard
+
+- type: entity
+  parent: BaseKsSensorMachine
+  id: KsMachineElint
+  name: ELINT array
+  description: An electronic-intelligence mast. It emits nothing; it only listens for active radars and jammers and reads back the direction their emissions come from. Cross its bearings with a datalinked ally's to fix an emitter. It runs deaf while your own ship is emitting.
+  components:
+  - type: Machine
+    board: KsMachineElintCircuitboard
+  - type: ApcPowerReceiver
+    powerLoad: 1500
+  - type: KsSensor
+    sensorType: Elint
+    maxRange: 64
+    renderMode: Blip
+    providesName: false
+    requireExternalMount: false # interior mounting is deliberate for passive arrays
+    revealVelocity: false
+    revealSilhouette: false
+    showCoverage: false
+    # A passive listener hears a direction, not a range: contacts are bearing
+    # strobes, upgraded to a fix only by datalink triangulation.
+    resolvesPosition: Bearing
+    bearingAccuracy: 4
+    triangulateMinBaseline: 10
+    intel:
+    - KsIntelEmitterRange
+  - type: KsElint
+    ignoreFraction: 0
+    # Focus analysis: designate one heard emitter and listen. Stages unlock
+    # classification intel; a completed analysis resolves the emitter Exact while
+    # its track stays live.
+    analysisTime: 30
+    analysisStages:
+    - progress: 0.35
+      unlocks:
+      - KsIntelSize
+    - progress: 0.7
+      unlocks:
+      - KsIntelMass
+      - KsIntelTopSpeed
+
+- type: entity
+  parent: BaseKsSensorCircuitboard
+  id: KsMachineElintCircuitboard
+  name: ELINT array machine board
+  description: An electronics board used in ELINT arrays.
+  components:
+  - type: MachineBoard
+    prototype: KsMachineElint
+
+- type: latheRecipe
+  parent: [BaseGoldCircuitboardRecipe, BaseEngineeringMachineRecipeCategory]
+  id: KsMachineElintCircuitboard
+  result: KsMachineElintCircuitboard
+
+- type: entity
+  parent: BaseKsSensorMachine
+  id: KsMachineRwr
+  name: radar warning receiver
+  description: A cheap warning antenna. It hears only emissions that actually illuminate the ship - a radar beam painting the hull, a jam wedge washing over it - and reads back the direction they come from. Unlike an ELINT mast it keeps warning even while your own ship is emitting.
+  components:
+  - type: Machine
+    board: KsMachineRwrCircuitboard
+  - type: ApcPowerReceiver
+    powerLoad: 500
+  - type: KsSensor
+    sensorType: Rwr
+    # Inert for an RWR: hearing is bounded by the EMITTER's reach (you hear
+    # whatever paints you), never by the receiver's own range figure.
+    maxRange: 64
+    renderMode: Blip
+    providesName: false
+    # An antenna, not a mast: unlike the passive arrays above it needs a real
+    # hull aperture despite emitting nothing (the cheap tier's mounting trade).
+    revealVelocity: false
+    revealSilhouette: false
+    showCoverage: false
+    resolvesPosition: Bearing
+    # Crude direction finding, and it NEVER triangulates (0 = never): a bare
+    # warning bearing is the RWR's niche, crossing bearings into a fix is the
+    # ELINT array's job.
+    bearingAccuracy: 15
+    triangulateMinBaseline: 0
+  - type: KsRwr
+
+- type: entity
+  parent: BaseKsSensorCircuitboard
+  id: KsMachineRwrCircuitboard
+  name: radar warning receiver machine board
+  description: An electronics board used in radar warning receivers.
+  components:
+  - type: MachineBoard
+    prototype: KsMachineRwr
+
+- type: latheRecipe
+  parent: [BaseGoldCircuitboardRecipe, BaseEngineeringMachineRecipeCategory]
+  id: KsMachineRwrCircuitboard
+  result: KsMachineRwrCircuitboard
+
+- type: entity
+  parent: BaseKsSensorMachine
+  id: KsMachineJammer
+  name: jammer array
+  description: A radar jammer. It floods a wedge ahead of the mount with noise, blinding every radar-emitting ship caught in it, friend or foe, until they close to burn-through range. It emits nothing a sensor reads as a contact, but ELINT hears it plainly as a jammer.
+  components:
+  - type: Machine
+    board: KsMachineJammerCircuitboard
+  - type: ApcPowerReceiver
+    powerLoad: 4000
+  # Rotatable (inherited from the base) is load-bearing here, unlike on the other arrays:
+  #   the jam cone faces the mount's rotation, so that is how the crew aim the wedge.
+  # Active emitter, so it keeps the default requireExternalMount: true (a real hull
+  #   aperture), unlike the passive arrays above.
+  - type: KsJammer
+    jammingPower: 192
+    halfAngle: 45
+    # A broadband noise flood sits low: identification intel ELINT reads back.
+    band: KsBandLow
+
+- type: entity
+  parent: BaseKsSensorCircuitboard
+  id: KsMachineJammerCircuitboard
+  name: jammer array machine board
+  description: An electronics board used in jammer arrays.
+  components:
+  - type: MachineBoard
+    prototype: KsMachineJammer
+
+- type: latheRecipe
+  parent: [BaseGoldCircuitboardRecipe, BaseEngineeringMachineRecipeCategory]
+  id: KsMachineJammerCircuitboard
+  result: KsMachineJammerCircuitboard

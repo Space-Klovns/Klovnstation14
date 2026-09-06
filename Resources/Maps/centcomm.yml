@@ -62018,7 +62018,7 @@ entities:
     - type: Transform
       pos: 15.528074,28.602638
       parent: 1668
-- proto: WeaponLaserCarbine
+- proto: WeaponLaserCarbineProjectile
   entities:
   - uid: 2390
     components:
@@ -62035,7 +62035,7 @@ entities:
     - type: Transform
       pos: 14.512449,28.453339
       parent: 1668
-- proto: WeaponLaserCarbinePractice
+- proto: WeaponLaserCarbineProjectilePractice
   entities:
   - uid: 9961
     components:

@@ -14,6 +14,9 @@ namespace Content.Client.Chat.UI
 {
     public abstract partial class SpeechBubble : Control
     {
+        // KS14: identifies the unstyled outer panel of a fancy speech bubble so only it can be transparent.
+        public const string StyleClassOuterPanel = "ks14-speech-bubble-outer";
+
         [Dependency] private IGameTiming _timing = default!;
         [Dependency] private IEyeManager _eyeManager = default!;
         [Dependency] private IEntityManager _entityManager = default!;
@@ -297,6 +300,8 @@ namespace Content.Client.Chat.UI
 
             var panel = new PanelContainer
             {
+                // KS14: preserve the inner speech-box textures while styling the outer wrapper separately.
+                StyleClasses = { StyleClassOuterPanel },
                 Children = { mainPanel, headerPanel }
             };
 

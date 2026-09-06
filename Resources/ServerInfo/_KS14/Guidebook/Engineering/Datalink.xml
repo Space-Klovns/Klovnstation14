@@ -1,0 +1,41 @@
+<Document>
+  # Datalink
+  Every console on your ship already shares your ship's sensor picture. You do not have to wire anything up for that; if an array on the hull finds something, every console aboard knows about it.
+
+  The datalink is how that picture leaves the ship. It is two machines, and they work like a pair of walkie-talkies.
+
+  <Box>
+    <GuideEntityEmbed Entity="KsMachineDatalinkTransmitter"/>
+    <GuideEntityEmbed Entity="KsMachineDatalinkReceiver"/>
+  </Box>
+
+  ## Transmitter
+  The transmitter broadcasts everything your ship knows, live tracks and old ghosts alike, on a frequency of your choosing. Click it to open the tuner.
+
+  There are two settings. The [bold]frequency[/bold] is a channel number, and both ends of a link have to agree on it. The [bold]transmit power[/bold] slider trades reach against your APC: at full power it carries [color=orange][protodata="KsMachineDatalinkTransmitter" comp="KsDatalinkTransmitter" member="MaxRange" format="N0"/] metres[/color] and eats a serious amount of electricity, and at low power it is cheap and quiet. The window shows the effective range as you drag it.
+
+  A transmitter always includes a report of your own ship in the broadcast, with its name, position, outline and stats. Anyone listening on your channel sees you, whether or not your sensors ever found them.
+
+  ## Receiver
+  The receiver is passive. Tune it to a frequency and everything it hears gets folded into your ship's picture as if your own arrays had found it. Its window shows how many links it is currently hearing, which is a quick way to check that a channel is live.
+
+  A receiver on its own is a perfectly good fit for a ship that would rather stay quiet. You get the whole network's eyes and give away nothing.
+
+  ## Nobody is encrypting anything
+  There is no key, no handshake and no friend-or-foe check. A frequency is just a number, and the tuner does not have all that many of them.
+
+  Anyone who guesses your channel hears your entire picture, learns where your ship is, and learns where everything you have found is. It also means you can do exactly that to somebody else. If you want a channel to stay yours, agree on it in person and change it when a ship goes missing.
+
+  Learning someone's frequency takes physical access to their machine, so a captured or abandoned hull is worth examining before you scuttle it.
+
+  ## What a network buys you
+  Contacts are passed on down a chain of ships, up to [color=orange][protodata="KsMachineDatalinkTransmitter" comp="KsDatalinkTransmitter" member="HopLimit" format="N0"/] relays[/color] deep, and a contact's readout tells you how many hops it travelled. A picture from the far end of a chain is still a picture, but whoever found it may have moved on since.
+
+  Two things are worth building a network for on their own:
+
+  - [bold]Jamming does not stop it.[/bold] A jammer blinds radar. It does nothing to a cable of ones and zeroes coming from an ally who is standing outside the wedge. If your radar goes dark, an ally's picture is your picture.
+  - [bold]Bearings cross into fixes.[/bold] Two ships on the same network, both hearing the same emitter from sufficiently different angles, turn two useless directions into one exact position. That is the whole reason to fly ELINT in pairs.
+
+  ## Public beacons
+  Stations and other landmarks carry beacons that announce themselves on every channel across the whole sector. You do not have to tune to them and you cannot silence them; a receiver alone is enough to always know where home is.
+</Document>

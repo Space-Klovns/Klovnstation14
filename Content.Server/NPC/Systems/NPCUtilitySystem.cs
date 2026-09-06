@@ -169,14 +169,16 @@ public sealed partial class NPCUtilitySystem : EntitySystem
         return result;
     }
 
-    private float GetScore(IUtilityCurve curve, float conScore)
+    internal /* KS14: private -> internal, reused by TacticalPositionOperator */ float GetScore(IUtilityCurve curve, float conScore)
     {
+        // KS14: ANK: the entire point of HighScore and LowScore instead of concrete 1f and 0f is so that some bool curves can be lenient instead of being binary fails (a false would be able to heavily discourage some utility target, but not outright eliminate it)
+
         switch (curve)
         {
-            case BoolCurve:
-                return conScore > 0f ? 1f : 0f;
-            case InverseBoolCurve:
-                return conScore.Equals(0f) ? 1f : 0f;
+            case BoolCurve boolCurve /* KS14: ANK: Defined */:
+                return conScore > 0f ? boolCurve.HighScore : boolCurve.LowScore; // KS14: ANK: Use LowScore and HighScore instead of 1f and 0f
+            case InverseBoolCurve inverseBoolCurve /* KS14: ANK: Defined */:
+                return conScore.Equals(0f) ? inverseBoolCurve.HighScore : inverseBoolCurve.LowScore; // KS14: ANK: Use LowScore and HighScore instead of 1f and 0f
             case PresetCurve presetCurve:
                 return GetScore(_proto.Index<UtilityCurvePresetPrototype>(presetCurve.Preset).Curve, conScore);
             case QuadraticCurve quadraticCurve:
@@ -418,7 +420,7 @@ public sealed partial class NPCUtilitySystem : EntitySystem
         }
     }
 
-    private float GetAdjustedScore(float score, int considerations)
+    internal /* KS14: private -> internal, reused by TacticalPositionOperator */ float GetAdjustedScore(float score, int considerations)
     {
         /*
         * Now using the geometric mean

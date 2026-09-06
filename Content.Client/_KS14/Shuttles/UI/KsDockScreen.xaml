@@ -1,0 +1,28 @@
+<controls:BoxContainer Visible="False"
+               HorizontalExpand="True"
+               xmlns:controls="https://spacestation14.io"
+               xmlns:ksui="clr-namespace:Content.Client._KS14.Shuttles.UI">
+    <ksui:KsInstrumentPanel Name="PlotPanel"
+                            HorizontalExpand="True"
+                            VerticalExpand="True"
+                            Margin="5 4 5 5">
+        <ksui:KsShuttleDockControl Name="DockingControl"
+                           MouseFilter="Stop"
+                           VerticalAlignment="Stretch"
+                           VerticalExpand="True"
+                           HorizontalExpand="True"/>
+    </ksui:KsInstrumentPanel>
+    <controls:BoxContainer Name="RightDisplayDock"
+                           MinWidth="256"
+                           MaxWidth="256"
+                           Margin="0 4 5 5"
+                           Orientation="Vertical">
+        <ksui:KsInstrumentPanel Name="PortsPanel"
+                                VerticalExpand="True">
+            <controls:ScrollContainer VerticalExpand="True" HScrollEnabled="False"
+                                      ReturnMeasure="True">
+                <controls:BoxContainer Name="DockPorts" Orientation="Vertical" HorizontalExpand="True"/>
+            </controls:ScrollContainer>
+        </ksui:KsInstrumentPanel>
+    </controls:BoxContainer>
+</controls:BoxContainer>

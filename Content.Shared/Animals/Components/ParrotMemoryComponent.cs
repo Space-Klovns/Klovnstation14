@@ -1,6 +1,8 @@
+using Content.Shared._KS14.Language; // KS14
 using Content.Shared.Animals.Systems;
 using Robust.Shared.GameStates;
 using Robust.Shared.Network;
+using Robust.Shared.Prototypes; // KS14
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
@@ -58,4 +60,4 @@ public sealed partial class ParrotMemoryComponent : Component
 }
 
 [Serializable, NetSerializable]
-public record struct SpeechMemory(NetUserId? NetUserId, string Message);
+public record struct SpeechMemory(NetUserId? NetUserId, string Message, ProtoId<KsLanguagePrototype>? KsLanguage = null /* KS14 */);

@@ -8,6 +8,7 @@
     snap:
     - Window
   components:
+  - type: Stainable # KS14: stains
   - type: Anchorable
     flags:
     - Anchorable
@@ -140,6 +141,7 @@
     snap:
     - Window
   components:
+  - type: Stainable # KS14: stains
   # ES START
   # - type: WallMount
   #  arc: 360

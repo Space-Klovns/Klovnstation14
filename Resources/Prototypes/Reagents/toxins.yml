@@ -19,6 +19,10 @@
         damage:
           types:
             Poison: 4
+      # KS14 start
+      - !type:Jitter
+        frequency: 2
+      # KS14 end
 
 - type: reagent
   id: CarpoToxin

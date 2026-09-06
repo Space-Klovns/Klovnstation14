@@ -1,3 +1,4 @@
+using Content.Server._KS14.Sensors; // KS14
 using Content.Server.Power.EntitySystems;
 using Content.Server.Shuttles.Components;
 using Content.Server.Shuttles.Events;
@@ -141,12 +142,17 @@ public sealed partial class ShuttleConsoleSystem : SharedShuttleConsoleSystem
         }
 
         RemovePilot(args.Actor);
+
+        // KS14: re-push the state so sensor contacts get scrubbed from the
+        // stored BUI state once the last viewer is gone.
+        KsRefreshConsole(uid);
     }
 
     private void OnConsoleUIOpenAttempt(EntityUid uid, ShuttleConsoleComponent component,
         AfterActivatableUIOpenEvent args)
     {
         TryPilot(args.User, uid);
+        KsRefreshConsole(uid); // KS14
     }
 
     private void OnConsoleAnchorChange(EntityUid uid, ShuttleConsoleComponent component,
@@ -396,11 +402,17 @@ public sealed partial class ShuttleConsoleSystem : SharedShuttleConsoleSystem
         if (!Resolve(entity, ref entity.Comp1, ref entity.Comp2))
             return new NavInterfaceState(SharedRadarConsoleSystem.DefaultMaxRange, GetNetCoordinates(coordinates), angle, docks);
 
-        return new NavInterfaceState(
+        var state = new NavInterfaceState(
             entity.Comp1.MaxRange,
             GetNetCoordinates(coordinates),
             angle,
             docks);
+
+        // KS14: let the sensor framework attach the console grid's contact picture.
+        var ksNavEv = new KsNavStateBuiltEvent(entity.Owner, state);
+        RaiseLocalEvent(ref ksNavEv);
+
+        return state;
     }
 
     /// <summary>

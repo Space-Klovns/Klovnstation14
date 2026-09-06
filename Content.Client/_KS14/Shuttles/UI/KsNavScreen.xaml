@@ -1,0 +1,90 @@
+<controls:BoxContainer Visible="False"
+              HorizontalExpand="True"
+              xmlns:controls="https://spacestation14.io"
+              xmlns:ksui="clr-namespace:Content.Client._KS14.Shuttles.UI">
+    <ksui:KsInstrumentPanel Name="PlotPanel"
+                            HorizontalExpand="True"
+                            VerticalExpand="True"
+                            Margin="5 4 5 5">
+        <ksui:KsRadarControl Name="NavRadar"
+                             MouseFilter="Stop"
+                             VerticalAlignment="Stretch"
+                             VerticalExpand="True"
+                             HorizontalExpand="True"/>
+    </ksui:KsInstrumentPanel>
+    <controls:BoxContainer Name="RightDisplayNav"
+                  Orientation="Vertical"
+                  MinWidth="256"
+                  MaxWidth="256"
+                  Margin="0 4 5 5">
+        <ksui:KsInstrumentPanel Name="ShipPanel" Margin="0 0 0 4">
+            <controls:GridContainer Columns="2" HorizontalExpand="True" Name="ReadonlyDisplay">
+                <controls:Label StyleClasses="KsInstrumentText" Text="{controls:Loc 'ks-radar-field-position'}"/>
+                <controls:Label Name="GridPosition" StyleClasses="KsInstrumentStrong" HorizontalExpand="True" Align="Right"/>
+                <controls:Label StyleClasses="KsInstrumentText" Text="{controls:Loc 'ks-radar-field-orientation'}"/>
+                <controls:Label Name="GridOrientation" StyleClasses="KsInstrumentStrong" HorizontalExpand="True" Align="Right"/>
+                <controls:Label StyleClasses="KsInstrumentText" Text="{controls:Loc 'ks-radar-field-linear-velocity'}"/>
+                <controls:Label Name="GridLinearVelocity" StyleClasses="KsInstrumentStrong" HorizontalExpand="True" Align="Right"/>
+                <controls:Label StyleClasses="KsInstrumentText" Text="{controls:Loc 'ks-radar-field-angular-velocity'}"/>
+                <controls:Label Name="GridAngularVelocity" StyleClasses="KsInstrumentStrong" HorizontalExpand="True" Align="Right"/>
+            </controls:GridContainer>
+        </ksui:KsInstrumentPanel>
+        <ksui:KsInstrumentPanel Name="StatusPanel" Margin="0 0 0 4">
+            <controls:GridContainer Columns="2" HorizontalExpand="True">
+                <controls:Label StyleClasses="KsInstrumentText" Text="{controls:Loc 'ks-radar-field-posture'}"/>
+                <controls:Label Name="PostureValue" StyleClasses="KsInstrumentStrong" HorizontalExpand="True" Align="Right"/>
+                <controls:Label StyleClasses="KsInstrumentText" Text="{controls:Loc 'ks-radar-field-threats'}"/>
+                <controls:Label Name="ThreatsValue" StyleClasses="KsInstrumentStrong" HorizontalExpand="True" Align="Right"/>
+                <controls:Label StyleClasses="KsInstrumentText" Text="{controls:Loc 'ks-radar-field-contacts'}"/>
+                <controls:Label Name="ContactsValue" StyleClasses="KsInstrumentStrong" HorizontalExpand="True" Align="Right"/>
+                <controls:Label StyleClasses="KsInstrumentText" Text="{controls:Loc 'ks-radar-field-emitters'}"/>
+                <controls:Label Name="EmittersValue" StyleClasses="KsInstrumentStrong" HorizontalExpand="True" Align="Right"/>
+            </controls:GridContainer>
+        </ksui:KsInstrumentPanel>
+        <ksui:KsInstrumentPanel Name="EmissionsPanel" Margin="0 0 0 4">
+            <controls:BoxContainer Orientation="Vertical" HorizontalExpand="True">
+                <!-- On == emitting. Only shown when the grid mounts a radar. -->
+                <controls:Button Name="RadarEmitToggle"
+                        StyleClasses="KsInstrumentAction"
+                        TextAlign="Center"
+                        Margin="0 0 0 2"
+                        Visible="False"/>
+                <!-- Only shown when the grid mounts a jammer. -->
+                <controls:Button Name="JammerEmitToggle"
+                        StyleClasses="KsInstrumentAction"
+                        TextAlign="Center"
+                        Visible="False"/>
+            </controls:BoxContainer>
+        </ksui:KsInstrumentPanel>
+        <ksui:KsInstrumentPanel Name="DisplayPanel">
+            <controls:BoxContainer Orientation="Vertical" HorizontalExpand="True">
+                <controls:Button Name="DockToggle"
+                        StyleClasses="KsInstrumentAction"
+                        Text="{controls:Loc 'shuttle-console-dock-toggle'}"
+                        TextAlign="Center"
+                        Margin="0 0 0 2"
+                        ToggleMode="True"/>
+                <!-- Per-type cone display (label + mode set in code, cycles off/outline/filled) -->
+                <controls:Button Name="SensorCoverageVisualToggle"
+                        StyleClasses="KsInstrumentAction"
+                        Margin="0 0 0 2"
+                        TextAlign="Center"/>
+                <controls:Button Name="SensorCoverageIrstToggle"
+                        StyleClasses="KsInstrumentAction"
+                        Margin="0 0 0 2"
+                        TextAlign="Center"/>
+                <controls:Button Name="SensorCoverageRadarToggle"
+                        StyleClasses="KsInstrumentAction"
+                        Margin="0 0 0 2"
+                        TextAlign="Center"/>
+                <controls:Button Name="SensorCoverageJammerToggle"
+                        StyleClasses="KsInstrumentAction"
+                        Margin="0 0 0 2"
+                        TextAlign="Center"/>
+                <controls:Button Name="SensorInfoToggle"
+                        StyleClasses="KsInstrumentAction"
+                        TextAlign="Center"/>
+            </controls:BoxContainer>
+        </ksui:KsInstrumentPanel>
+    </controls:BoxContainer>
+</controls:BoxContainer>

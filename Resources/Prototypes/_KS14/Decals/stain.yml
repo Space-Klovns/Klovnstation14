@@ -1,0 +1,28 @@
+
+- type: decal
+  id: BaseKsSplatter
+  defaultCleanable: true
+  defaultCustomColor: true
+  defaultSnap: false
+  abstract: true
+
+- type: decal
+  parent: BaseKsSplatter
+  id: KsSplatter1
+  sprite:
+    sprite: Fluids/splatter.rsi
+    state: splatter-0
+
+- type: decal
+  parent: BaseKsSplatter
+  id: KsSplatter2
+  sprite:
+    sprite: Fluids/splatter.rsi
+    state: splatter-1
+
+- type: decal
+  parent: BaseKsSplatter
+  id: KsSplatter3
+  sprite:
+    sprite: Fluids/splatter.rsi
+    state: splatter-2

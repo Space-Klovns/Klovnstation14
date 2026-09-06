@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Language; // KS14
 using Content.Shared.Chat;
 using Content.Shared.IdentityManagement.Components;
 using Content.Shared.Implants.Components;
@@ -22,6 +23,7 @@ public abstract partial class SharedSubdermalImplantSystem
         // Ref relays, for when you need to write to the event!
         SubscribeLocalEvent<ImplantedComponent, CurrencyInsertAttemptEvent>(RefRelayToImplantEvent);
         SubscribeLocalEvent<ImplantedComponent, GetStoreEvent>(RefRelayToImplantEvent);
+        SubscribeLocalEvent<ImplantedComponent, KsRefreshLanguagesEvent>(RefRelayToImplantEvent); // KS14
     }
 
     /// <summary>

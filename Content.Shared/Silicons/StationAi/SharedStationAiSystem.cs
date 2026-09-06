@@ -83,7 +83,6 @@ public abstract partial class SharedStationAiSystem : EntitySystem
         base.Initialize();
 
         InitializeAirlock();
-        InitializeBot();
         InitializeHeld();
         InitializeLight();
         InitializeCustomization();

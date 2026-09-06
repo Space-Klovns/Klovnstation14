@@ -8,6 +8,11 @@
   startingGear: null # scenario spawns get NOTHING
   icon: "JobIconNanotrasen"
   supervisors: job-supervisors-nobody
+  requirements: &speciesReq
+  - !type:SpeciesRequirement
+    species:
+    - Human
+    - Dwarf
   access:
   - Maintenance
   special:
@@ -27,6 +32,7 @@
   startingGear: null # scenario spawns get NOTHING
   icon: "JobIconSyndicate"
   supervisors: job-supervisors-nobody
+  requirements: *speciesReq
   access:
   - SyndicateAgent
   - Maintenance
@@ -47,6 +53,7 @@
   startingGear: null # scenario spawns get NOTHING
   icon: "JobIconPirate"
   supervisors: job-supervisors-nobody
+  requirements: *speciesReq
   access:
   - Maintenance
   special:

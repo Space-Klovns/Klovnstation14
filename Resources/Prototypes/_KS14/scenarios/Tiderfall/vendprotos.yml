@@ -22,6 +22,7 @@
     - TiderfallNtPDA
     - ClothingHeadsetGrey
     - BoxFlare
+    - MedkitCombatFilled
 
 - type: entity
   id: ScenarioVendorBundleTiderfallNtTider
@@ -199,6 +200,7 @@
     - TiderfallSyndiePDA # intentionally after webbing so it doesnt go on belt
     - ClothingEyesGlassesCommand # it's about time
     - BoxFlare
+    - MedkitCombatFilled
 
 - type: entity
   id: ScenarioVendorBundleTiderfallSyndieSoldier
@@ -276,7 +278,7 @@
     - SmokeGrenade
 
 - type: entity
-  id: ScenarioVendorBundleTiderfallSyndieMedic
+  id: ScenarioVendorBundleTiderfallSyndieMedic #deprecated, everyone gets meds
   name: medic
   description: CLEAR!
   categories: [ HideSpawnMenu ]

@@ -589,7 +589,7 @@ public abstract partial class SharedActionsSystem : EntitySystem
 
         UpdateAction(action);
 
-        var performed = new ActionPerformedEvent(performer);
+        var performed = new ActionPerformedEvent(performer, ev /* KS14: also give them the action event. Copy it though */, predicted /* KS14 */);
         RaiseLocalEvent(action, ref performed);
     }
     #endregion

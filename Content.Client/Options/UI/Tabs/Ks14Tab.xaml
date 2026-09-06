@@ -10,6 +10,8 @@
                           VerticalExpand="True">
                 <CheckBox Name="SlurFilterEnabled"
                           Text="{Loc 'ks-ui-options-slurfilter'}"/>
+                <ui:OptionDropDown Name="DropDownTranslateLanguage"
+                                   Title="{Loc 'ks-ui-options-translate-language'}"/>
             </BoxContainer>
         </ScrollContainer>
         <ui:OptionsTabControlRow Name="Control"

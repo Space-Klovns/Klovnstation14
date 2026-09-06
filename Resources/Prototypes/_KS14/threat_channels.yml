@@ -1,0 +1,47 @@
+# RWR threat channels and defensive postures. Purely client-side grouping of
+# the emitter contacts the warning receiver hears: the server sends contacts,
+# never channels, so adding a channel or retuning a posture touches no code.
+#
+# A contact joins the highest-priority channel matching its emitter class and
+# band (empty bands = any).
+- type: ksThreatChannel
+  id: KsThreatSearch
+  label: ks-threat-channel-search
+  class: Radar
+  priority: 10
+  color: "#40C040"
+  blinkHz: 0.8
+
+- type: ksThreatChannel
+  id: KsThreatJam
+  label: ks-threat-channel-jam
+  class: Jammer
+  priority: 30
+  color: "#C050F0"
+  blinkHz: 1.6
+
+# Postures: the highest-order posture whose threshold is met shows. CALM is the
+# zero-threat base so the readout always resolves. DANGER also escalates off any
+# single channel of priority 50+, a slot reserved for fire-control emitters that
+# do not ship yet.
+- type: ksPosture
+  id: KsPostureCalm
+  label: ks-posture-calm
+  order: 0
+  minThreats: 0
+  color: "#40FF80"
+
+- type: ksPosture
+  id: KsPostureCaution
+  label: ks-posture-caution
+  order: 10
+  minThreats: 1
+  color: "#FFC000"
+
+- type: ksPosture
+  id: KsPostureDanger
+  label: ks-posture-danger
+  order: 20
+  minThreats: 3
+  minChannelPriority: 50
+  color: "#FF3030"

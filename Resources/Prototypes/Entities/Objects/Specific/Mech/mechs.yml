@@ -141,6 +141,7 @@
         - HumanoidProfile
   - type: MeleeWeapon
     hidden: true
+    animation: WeaponArcFist #KS14 - the wizden animation is dogshit
     attackRate: 1
     damage:
       types:

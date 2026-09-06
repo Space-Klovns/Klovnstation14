@@ -215,7 +215,7 @@ namespace Content.Client.Viewport
                         _entityManager.GetComponent<MapComponent>(mapUid).MapId
                     );
                     _zLevelEye.Scale = _eye.Scale - new Vector2(0.075f * depth * depthMultiplier, 0.075f * depth * depthMultiplier);
-                    _viewport.Eye = _zLevelEye;
+                    _viewport.Eye = depth == 0 ? _eye : _zLevelEye;
 
                     _viewport.Render();
                     _viewport.RenderScreenOverlaysBelow(handle, this, drawBoxGlobal);

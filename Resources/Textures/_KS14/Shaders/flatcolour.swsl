@@ -1,0 +1,9 @@
+
+// color that this will be
+uniform highp vec4 FLAT;
+
+void fragment()
+{
+    highp vec4 col = zTexture(UV);
+    COLOR = vec4(FLAT.rgb, col.a);
+}

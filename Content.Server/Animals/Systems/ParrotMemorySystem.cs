@@ -1,5 +1,6 @@
 using Content.Server.Administration.Logs;
 using Content.Server.Administration.Managers;
+using Content.Shared._KS14.Language; // KS14
 using Content.Server.Administration.Systems;
 using Content.Server.Animals.Components;
 using Content.Server.Mind;
@@ -14,6 +15,7 @@ using Content.Shared.Speech;
 using Content.Shared.Speech.Components;
 using Content.Shared.Whitelist;
 using Robust.Shared.Network;
+using Robust.Shared.Prototypes; // KS14
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -62,8 +64,8 @@ public sealed partial class ParrotMemorySystem : SharedParrotMemorySystem
 
     private void OnListen(Entity<ParrotListenerComponent> entity, ref ListenEvent args)
     {
-
-        TryLearn(entity.Owner, args.Message, args.Source);
+        // KS14: learned with the language tag; replay speaks that language, so gating applies.
+        TryLearn(entity.Owner, args.Message, args.Source, args.KsLanguage?.LanguageId /* KS14 */);
     }
 
     private void OnHeadsetReceive(Entity<ParrotListenerComponent> entity, ref HeadsetRadioReceiveRelayEvent args)
@@ -71,7 +73,7 @@ public sealed partial class ParrotMemorySystem : SharedParrotMemorySystem
         var message = args.RelayedEvent.Message;
         var source = args.RelayedEvent.MessageSource;
 
-        TryLearn(entity.Owner, message, source);
+        TryLearn(entity.Owner, message, source, args.RelayedEvent.KsLanguage?.LanguageId /* KS14 */);
     }
 
     /// <summary>
@@ -92,6 +94,7 @@ public sealed partial class ParrotMemorySystem : SharedParrotMemorySystem
         var memory = _random.Pick(entity.Comp.SpeechMemories);
 
         args.Message = memory.Message;
+        args.KsLanguage = memory.KsLanguage; // KS14
         args.Handled = true;
     }
 
@@ -102,7 +105,7 @@ public sealed partial class ParrotMemorySystem : SharedParrotMemorySystem
     /// <param name="entity">Entity learning a new word</param>
     /// <param name="incomingMessage">Message to learn</param>
     /// <param name="source">Source EntityUid of the message</param>
-    public void TryLearn(Entity<ParrotMemoryComponent?, ParrotListenerComponent?> entity, string incomingMessage, EntityUid source)
+    public void TryLearn(Entity<ParrotMemoryComponent?, ParrotListenerComponent?> entity, string incomingMessage, EntityUid source, ProtoId<KsLanguagePrototype>? ksLanguage = null /* KS14 */)
     {
         if (!Resolve(entity, ref entity.Comp1, ref entity.Comp2))
             return;
@@ -142,7 +145,7 @@ public sealed partial class ParrotMemorySystem : SharedParrotMemorySystem
             return;
 
         // actually commit this message to memory
-        Learn((entity, entity.Comp1), message, source);
+        Learn((entity, entity.Comp1), message, source, ksLanguage /* KS14 */);
     }
 
     /// <summary>
@@ -151,7 +154,7 @@ public sealed partial class ParrotMemorySystem : SharedParrotMemorySystem
     /// <param name="entity">Entity learning a new word</param>
     /// <param name="message">Message to learn</param>
     /// <param name="source">Source EntityUid of the message</param>
-    private void Learn(Entity<ParrotMemoryComponent> entity, string message, EntityUid source)
+    private void Learn(Entity<ParrotMemoryComponent> entity, string message, EntityUid source, ProtoId<KsLanguagePrototype>? ksLanguage = null /* KS14 */)
     {
         // log a low-priority chat type log to the admin logger
         // specifies what message was learnt by what entity, and who taught the message to that entity
@@ -163,7 +166,7 @@ public sealed partial class ParrotMemorySystem : SharedParrotMemorySystem
             sourceNetUserId = mind.UserId;
         }
 
-        var newMemory = new SpeechMemory(sourceNetUserId, message);
+        var newMemory = new SpeechMemory(sourceNetUserId, message, ksLanguage /* KS14 */);
 
         // add a new message if there is space in the memory
         if (entity.Comp.SpeechMemories.Count < entity.Comp.MaxSpeechMemory)

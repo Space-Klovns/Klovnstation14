@@ -54,6 +54,7 @@
   - type: PowerState
     idlePowerDraw: 150
     workingPowerDraw: 1000
+  - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
 # a lathe that can be sped up with space lube / slowed down with glue
 - type: entity
@@ -588,6 +589,7 @@
     emagStaticPacks:
     - BioGenEmagStatic
     - HostileCubesStatic
+  - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
 - type: entity
   parent: BaseLathe
@@ -621,6 +623,7 @@
       staticPacks:
       - OreSmelting
       - RGlassSmelting
+    - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
 - type: entity
   parent: OreProcessor

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "license": "Custom",
+  "copyright": "Made by the WillyBillyGilly and JoeHammad for the BF14 Project. All rights reserved. Do not modify, publish, use, relicense, or edit without permission from JoeHammad or Willy.",
+  "size": {
+    "x": 58,
+    "y": 58
+  },
+  "states": [
+    {
+      "name": "equipped-BACKPACK",
+      "directions": 4
+    },
+    {
+      "name": "equipped-SUITSTORAGE",
+      "directions": 4
+    }
+  ]
+}

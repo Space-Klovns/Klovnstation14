@@ -1,0 +1,73 @@
+<controls:BoxContainer Visible="False"
+       HorizontalExpand="True"
+       xmlns:controls="https://spacestation14.io"
+       xmlns:ksui="clr-namespace:Content.Client._KS14.Shuttles.UI">
+    <ksui:KsInstrumentPanel Name="ChartPanel"
+                            HorizontalExpand="True"
+                            VerticalExpand="True"
+                            Margin="5 4 5 5">
+        <ksui:KsShuttleMapControl Name="MapRadar"
+                         MouseFilter="Stop"
+                         HorizontalExpand="True"
+                         VerticalExpand="True"
+                         VerticalAlignment="Stretch"/>
+    </ksui:KsInstrumentPanel>
+    <controls:BoxContainer Name="RightDisplayMap"
+                  MinWidth="256"
+                  MaxWidth="256"
+                  Margin="0 4 5 5"
+                  Orientation="Vertical"
+                  VerticalExpand="True">
+        <ksui:KsInstrumentPanel Name="FtlPanel"
+                                Margin="0 0 0 4">
+            <controls:BoxContainer Orientation="Vertical" HorizontalExpand="True">
+                <controls:Label Name="MapFTLState"
+                                StyleClasses="KsInstrumentStrong"
+                                Text="{controls:Loc 'shuttle-console-ftl-state-Available'}"
+                                HorizontalAlignment="Center"/>
+                <controls:ProgressBar Name="FTLBar" HorizontalExpand="True"
+                                      Margin="0 4 0 4"
+                                      MinValue="0.0"
+                                      MaxValue="1.0"
+                                      Value="1.0"/>
+                <controls:Button Name="MapFTLButton"
+                                 StyleClasses="KsInstrumentAction"
+                                 ToggleMode="True"
+                                 Text="{controls:Loc 'shuttle-console-ftl-button'}"
+                                 TextAlign="Center"/>
+            </controls:BoxContainer>
+        </ksui:KsInstrumentPanel>
+        <ksui:KsInstrumentPanel Name="SettingsPanel"
+                                Margin="0 0 0 4">
+            <controls:BoxContainer Orientation="Vertical" HorizontalExpand="True">
+                <controls:Button Name="MapBeaconsButton"
+                                 StyleClasses="KsInstrumentAction"
+                                 Margin="0 0 0 2"
+                                 Text="{controls:Loc 'shuttle-console-map-beacons'}"
+                                 TextAlign="Center"
+                                 ToggleMode="True"
+                                 Pressed="True"/>
+                <controls:Button Name="MapSensorsButton"
+                                 StyleClasses="KsInstrumentAction"
+                                 Margin="0 0 0 2"
+                                 ToolTip="{controls:Loc 'ks-map-sensors-hint'}"
+                                 Text="{controls:Loc 'ks-map-sensors-button'}"
+                                 TextAlign="Center"
+                                 ToggleMode="True"/>
+                <controls:Button Name="MapRebuildButton"
+                        StyleClasses="KsInstrumentAction"
+                        Text="{controls:Loc 'shuttle-console-map-rebuild'}"
+                        TextAlign="Center"/>
+            </controls:BoxContainer>
+        </ksui:KsInstrumentPanel>
+        <ksui:KsInstrumentPanel Name="ObjectsPanel"
+                                VerticalExpand="True">
+            <controls:ScrollContainer VerticalExpand="True" HScrollEnabled="False"
+                             ReturnMeasure="True">
+                <controls:BoxContainer Name="HyperspaceDestinations"
+                              Orientation="Vertical"
+                              VerticalExpand="True"/>
+            </controls:ScrollContainer>
+        </ksui:KsInstrumentPanel>
+    </controls:BoxContainer>
+</controls:BoxContainer>

@@ -165,7 +165,15 @@ public sealed partial class StorageUIController : UIController, IOnSystemChanged
             {
                 window.Open(pos);
             }
-            // Open at the default position.
+            // KS14 Start: fixing non-static storage ui to open at same place as static
+            // Open at the same default position that a static storage window would use:
+            // centered horizontally above the hotbar.
+            else if (GetStaticDefaultPosition(window) is { } defaultPos)
+            {
+                window.Open(defaultPos);
+            }
+            // Fall back to the old default position if the hotbar isn't available.
+            // KS14 End
             else
             {
                 window.OpenCenteredLeft();
@@ -175,6 +183,25 @@ public sealed partial class StorageUIController : UIController, IOnSystemChanged
         _ui.RegisterControl(sBui, window);
         return window;
     }
+
+    // KS14 Start: fixing non-static storage ui to open at same place as static
+    /// Computes the top-left position for a non-static window so that it appears
+    /// centered above the hotbar, matching where a static storage window shows up.
+    private Vector2? GetStaticDefaultPosition(StorageWindow window)
+    {
+        var hotbar = UIManager.GetActiveUIWidgetOrNull<HotbarGui>();
+        if (hotbar == null)
+            return null;
+
+        window.Measure(Vector2Helpers.Infinity);
+
+        const float margin = 10f;
+        var centerX = hotbar.GlobalPosition.X + hotbar.Width / 2f;
+        var topY = hotbar.GlobalPosition.Y;
+
+        return new Vector2(centerX - window.DesiredSize.X / 2f, topY - window.DesiredSize.Y - margin);
+    }
+    // KS14 End
 
     public void OnSystemLoaded(StorageSystem system)
     {

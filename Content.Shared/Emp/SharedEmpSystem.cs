@@ -51,9 +51,9 @@ public abstract partial class SharedEmpSystem : EntitySystem
         {
             TryEmpEffects(uid, energyConsumption, duration, user);
         }
-        // TODO: replace with PredictedSpawn once it works with animated sprites
-        if (_net.IsServer)
-            Spawn(EmpPulseEffectPrototype, mapCoordinates);
+
+        // KS14: use _ksPredictedSpawnSystem and make it predicted
+        _ksPredictedSpawnSystem.PredictedSpawn(EmpPulseEffectPrototype, mapCoordinates);
 
         var coordinates = _transform.ToCoordinates(mapCoordinates);
         _audio.PlayPredicted(EmpSound, coordinates, user);
@@ -76,9 +76,9 @@ public abstract partial class SharedEmpSystem : EntitySystem
         {
             TryEmpEffects(uid, energyConsumption, duration, user);
         }
-        // TODO: replace with PredictedSpawn once it works with animated sprites
-        if (_net.IsServer)
-            Spawn(EmpPulseEffectPrototype, coordinates);
+
+        // KS14: use _ksPredictedSpawnSystem and make it predicted
+        _ksPredictedSpawnSystem.PredictedSpawnAttachedTo(EmpPulseEffectPrototype, coordinates);
 
         if (predicted)
             _audio.PlayPredicted(EmpSound, coordinates, user);
@@ -124,9 +124,9 @@ public abstract partial class SharedEmpSystem : EntitySystem
         var ev = new EmpPulseEvent(energyConsumption * strMultiplier, false, false, duration * durMultiplier, user);
         RaiseLocalEvent(uid, ref ev);
 
-        // TODO: replace with PredictedSpawn once it works with animated sprites
-        if (ev.Affected && _net.IsServer)
-            Spawn(EmpDisabledEffectPrototype, Transform(uid).Coordinates);
+        // KS14: use _ksPredictedSpawnSystem and make it predicted
+        if (ev.Affected)
+            _ksPredictedSpawnSystem.PredictedSpawnAttachedTo(EmpPulseEffectPrototype, Transform(uid).Coordinates);
 
         if (!ev.Disabled)
             return ev.Affected;

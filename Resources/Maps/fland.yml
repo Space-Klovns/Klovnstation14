@@ -225017,7 +225017,7 @@ entities:
     - type: DeviceList
       devices:
       - 35723
-- proto: WeaponLaserCarbine
+- proto: WeaponLaserCarbineProjectile
   entities:
   - uid: 9119
     components:
@@ -225059,7 +225059,7 @@ entities:
     - type: Transform
       pos: 19.525389,9.215346
       parent: 13329
-- proto: WeaponLaserCarbinePractice
+- proto: WeaponLaserCarbineProjectilePractice
   entities:
   - uid: 10258
     components:

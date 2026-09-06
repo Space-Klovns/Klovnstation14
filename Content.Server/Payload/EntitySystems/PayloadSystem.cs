@@ -34,13 +34,13 @@ public sealed partial class PayloadSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<PayloadCaseComponent, TriggerEvent>(OnCaseTriggered);
-        SubscribeLocalEvent<PayloadTriggerComponent, TriggerEvent>(OnTriggerTriggered);
+        SubscribeLocalEvent<PayloadCaseComponent, TriggerEvent>(OnCaseTriggered, before: [typeof(Shared.Trigger.Systems.TriggerSystem)] /* KS14: before triggers */);
+        SubscribeLocalEvent<PayloadTriggerComponent, TriggerEvent>(OnTriggerTriggered, before: [typeof(Shared.Trigger.Systems.TriggerSystem)] /* KS14: before triggers */);
         SubscribeLocalEvent<PayloadCaseComponent, ContainerIsInsertingAttemptEvent>(OnInsertAttempt);
         SubscribeLocalEvent<PayloadCaseComponent, EntInsertedIntoContainerMessage>(OnEntityInserted);
         SubscribeLocalEvent<PayloadCaseComponent, EntRemovedFromContainerMessage>(OnEntityRemoved);
         SubscribeLocalEvent<PayloadCaseComponent, ExaminedEvent>(OnExamined);
-        SubscribeLocalEvent<ChemicalPayloadComponent, TriggerEvent>(HandleChemicalPayloadTrigger);
+        SubscribeLocalEvent<ChemicalPayloadComponent, TriggerEvent>(HandleChemicalPayloadTrigger, before: [typeof(Shared.Trigger.Systems.TriggerSystem)] /* KS14: before triggers */);
     }
 
     public IEnumerable<EntityUid> GetAllPayloads(EntityUid uid)
@@ -161,33 +161,38 @@ public sealed partial class PayloadSystem : EntitySystem
         if (args.Key != null && !entity.Comp.KeysIn.Contains(args.Key))
             return;
 
-        if (entity.Comp.BeakerSlotA.Item is not EntityUid beakerA
-            || entity.Comp.BeakerSlotB.Item is not EntityUid beakerB
-            || !TryComp(beakerA, out FitsInDispenserComponent? compA)
-            || !TryComp(beakerB, out FitsInDispenserComponent? compB)
-            || !_solutionContainerSystem.TryGetSolution(beakerA, compA.Solution, out var solnA, out var solutionA)
-            || !_solutionContainerSystem.TryGetSolution(beakerB, compB.Solution, out var solnB, out var solutionB)
-            || solutionA.Volume == 0
-            || solutionB.Volume == 0)
+        // KS14 start: split the combined beaker lookup so a single filled beaker can also trigger (was one big && chain requiring both)
+        var hasA = TryGetBeakerSolution(entity.Comp.BeakerSlotA.Item, out var solnA, out var solutionA);
+        var hasB = TryGetBeakerSolution(entity.Comp.BeakerSlotB.Item, out var solnB, out var solutionB);
+
+        if (!hasA && !hasB)
+            return;
+
+        if (!hasA || !hasB)
         {
+            HandleSingleBeakerChemicalPayload(entity, (hasA ? solnA : solnB)!.Value);
+            args.Handled = true;
             return;
         }
+        // KS14 end
 
-        var solStringA = SharedSolutionContainerSystem.ToPrettyString(solutionA);
-        var solStringB = SharedSolutionContainerSystem.ToPrettyString(solutionB);
+        var solStringA = SharedSolutionContainerSystem.ToPrettyString(solutionA!);
+        var solStringB = SharedSolutionContainerSystem.ToPrettyString(solutionB!);
 
         _adminLogger.Add(LogType.ChemicalReaction,
             $"Chemical bomb payload {ToPrettyString(entity.Owner):payload} at {_transform.GetMapCoordinates(entity.Owner):location} is combining two solutions: {solStringA:solutionA} and {solStringB:solutionB}");
 
-        solutionA.MaxVolume += solutionB.MaxVolume;
-        _solutionContainerSystem.TryAddSolution(solnA.Value, solutionB);
-        _solutionContainerSystem.RemoveAllSolution(solnB.Value);
+        solutionA!.MaxVolume += solutionB!.MaxVolume;
+        _solutionContainerSystem.TryAddSolution(solnA!.Value, solutionB);
+        _solutionContainerSystem.RemoveAllSolution(solnB!.Value);
 
         // The grenade might be a dud. Redistribute solution:
         var tmpSol = _solutionContainerSystem.SplitSolution(solnA.Value, solutionA.Volume * solutionB.MaxVolume / solutionA.MaxVolume);
         _solutionContainerSystem.TryAddSolution(solnB.Value, tmpSol);
         solutionA.MaxVolume -= solutionB.MaxVolume;
         _solutionContainerSystem.UpdateChemicals(solnA.Value);
+
+        TrySpillChemicalPayload(entity, solnA.Value); // KS14: spill combined solution if enabled
 
         args.Handled = true;
     }

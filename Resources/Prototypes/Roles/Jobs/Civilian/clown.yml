@@ -3,10 +3,7 @@
   name: job-name-clown
   description: job-description-clown
   playTimeTracker: JobClown
-  requirements:
-  - !type:RoleTimeRequirement
-    role: JobPassenger
-    time: 220 #klovn, 220
+  # KS14: Removed role requirements
   startingGear: ClownGear
   icon: "JobIconClown"
   supervisors: job-supervisors-hop
@@ -16,6 +13,9 @@
   special:
   - !type:AddComponentSpecial
     components:
+    - type: KsLanguageGrant # KS14
+      speaks: [ KsLangKlovnish ] # KS14
+      understands: [ KsLangKlovnish ] # KS14
     - type: Clumsy
       gunShootFailDamage:
         types: #literally just picked semi random valus. i tested this once and tweaked it.

@@ -2,6 +2,8 @@
 using Content.Shared.Weapons.Hitscan.Events;
 using Content.Shared._Trauma.Projectiles;
 // </Trauma>
+using Content.Shared.Mech.Components; // Goobstation
+using Content.Shared.Item; // Goobstation
 using System.Numerics;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Actions;
@@ -156,36 +158,49 @@ public abstract partial class SharedGunSystem : EntitySystem
     {
         var user = args.SenderSession.AttachedEntity;
 
+        // KS14 ghetto mech port start
         if (user == null ||
-            !_combatMode.IsInCombatMode(user) ||
-            !TryGetGun(user.Value, out var gun))
-        {
-            return;
-        }
-
-        if (gun.Owner != GetEntity(msg.Gun))
+            !_combatMode.IsInCombatMode(user))
             return;
 
-        gun.Comp.ShootCoordinates = GetCoordinates(msg.Coordinates);
-        gun.Comp.Target = GetEntity(msg.Target);
-        AttemptShoot(user.Value, gun);
+        if (TryComp<MechPilotComponent>(user.Value, out var mechPilot))
+            user = mechPilot.Mech;
+
+        if (!TryGetGun(user.Value, out var userGun) ||
+            HasComp<ItemComponent>(user))
+            return;
+
+        if (userGun.Owner != GetEntity(msg.Gun))
+            return;
+        // KS14 ghetto mech port end
+        // TODO: once mlgguns come out nuke this entire file and start from scratch
+
+        userGun.Comp.ShootCoordinates = GetCoordinates(msg.Coordinates);
+        userGun.Comp.Target = GetEntity(msg.Target);
+        AttemptShoot(user.Value, userGun);
         if (msg.Continuous)
-            gun.Comp.ShotCounter = 0;
+            userGun.Comp.ShotCounter = 0;
     }
 
     private void OnStopShootRequest(RequestStopShootEvent ev, EntitySessionEventArgs args)
     {
         var gunUid = GetEntity(ev.Gun);
 
-        if (args.SenderSession.AttachedEntity == null ||
-            !TryComp<GunComponent>(gunUid, out var gun) ||
-            !TryGetGun(args.SenderSession.AttachedEntity.Value, out var userGun))
-        {
-            return;
-        }
+        // KS14 ghettomechs
+        var user = args.SenderSession.AttachedEntity;
 
-        if (userGun != (gunUid, gun))
+        if (user == null)
             return;
+
+        if (TryComp<MechPilotComponent>(user.Value, out var mechPilot))
+            user = mechPilot.Mech;
+
+        if (!TryGetGun(user.Value, out var userGun))
+            return;
+
+        if (userGun.Owner != gunUid)
+            return;
+        // KS14 ghettomechs
 
         StopShooting(userGun);
     }
@@ -207,6 +222,14 @@ public abstract partial class SharedGunSystem : EntitySystem
     public bool TryGetGun(EntityUid entity, out Entity<GunComponent> gun)
     {
         gun = default;
+
+        if (TryComp<MechComponent>(entity, out var mech) &&
+            mech.CurrentSelectedEquipment.HasValue &&
+            TryComp<GunComponent>(mech.CurrentSelectedEquipment.Value, out var mechGun))
+        {
+            gun = (mech.CurrentSelectedEquipment.Value, mechGun);
+            return true;
+        }
 
         if (_hands.GetActiveItem(entity) is { } held &&
             TryComp(held, out GunComponent? gunComp))
@@ -566,15 +589,15 @@ public abstract partial class SharedGunSystem : EntitySystem
                         CreateAndFireProjectiles(uid, cartridge);
                         _npcSensorSystem.DoDisturbance(fromCoordinates, gun.Comp.SoundGunshotModified?.Params.MaxDistance ?? 0f, source: user); // KS14: ANK: AI sensors
 
-                        RaiseLocalEvent(ent!.Value, new AmmoShotEvent()
+                        RaiseLocalEvent(gun /* KS14: use gun UID instead of the actual ammo UID*/, new AmmoShotEvent()
                         {
                             FiredProjectiles = shotProjectiles,
                         });
 
-                        SetCartridgeSpent(ent.Value, cartridge, true);
+                        SetCartridgeSpent(ent! /* KS14: null suppressed due to above */.Value, cartridge, true);
 
                         if (cartridge.DeleteOnSpawn)
-                            PredictedDel(ent.Value);
+                            PredictedQueueDel/* KS14: made queued */(ent.Value);
                     }
                     else
                     {
@@ -609,7 +632,7 @@ public abstract partial class SharedGunSystem : EntitySystem
                         Target = gun.Comp.Target,
                     };
                     RaiseLocalEvent(ent.Value, ref hitscanEv);
-                    PredictedDel(ent);
+                    PredictedQueueDel/* KS14: made queued */(ent);
 
                     Audio.PlayPredicted(gun.Comp.SoundGunshotModified, gun, user);
                     _farsoundSystem.TryPlayFarSound(gun, gun.Comp.FarSoundGunshot, userUid: user); // KS14
@@ -629,6 +652,20 @@ public abstract partial class SharedGunSystem : EntitySystem
         {
             FiredProjectiles = shotProjectiles,
         });
+
+        // KS14 start: KsAmmoUsedEvent
+        if (shotProjectiles.Count > 0)
+        {
+            var ammoUsedEv = new _KS14.Weapons.Ranged.KsAmmoUsedEvent(shotProjectiles, user);
+            foreach (var (firedAmmoUid, _) in ammo)
+            {
+                if (firedAmmoUid is not { })
+                    continue;
+
+                RaiseLocalEvent(firedAmmoUid.Value, ref ammoUsedEv);
+            }
+        }
+        // KS14 end
 
         void CreateAndFireProjectiles(EntityUid ammoEnt, AmmoComponent ammoComp)
         {
@@ -748,6 +785,14 @@ public abstract partial class SharedGunSystem : EntitySystem
             // KS14: Predicted
             Audio.PlayPredicted(cartridge.EjectSound, entity, user: user, AudioParams.Default.WithVariation(SharedContentAudioSystem.DefaultVariation).WithVolume(-1f));
         }
+
+        // KS14 start
+        if (TryComp<_KS14.PhosphorNightVision.PhosphorNightVisionGlowComponent>(entity, out var glowComponent))
+        {
+            glowComponent.StartTime = Timing.CurTime;
+            Dirty(entity, glowComponent);
+        }
+        // KS14 end
     }
 
     protected IShootable EnsureShootable(EntityUid uid)
@@ -779,7 +824,7 @@ public abstract partial class SharedGunSystem : EntitySystem
         if (sprite == null)
             return;
 
-        var ev = new MuzzleFlashEvent(GetNetEntity(gun), sprite, worldAngle);
+        var ev = new MuzzleFlashEvent(GetNetEntity(gun), sprite, component.DetachedMuzzleFlash /* STDA14 */, worldAngle);
         CreateEffect(gun, ev, user);
     }
 

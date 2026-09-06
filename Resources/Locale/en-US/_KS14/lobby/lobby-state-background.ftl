@@ -12,3 +12,6 @@ lobby-state-background-middlestation-artist = Sempiel
 
 lobby-state-background-smartguy-title = Smart guy
 lobby-state-background-smartguy-artist = Sempiel
+
+lobby-state-background-nanoplantcenter-title = Nanoplant Center
+lobby-state-background-nanoplantcenter-artist = М8Л8ТХmhe

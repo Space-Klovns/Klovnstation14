@@ -194,6 +194,9 @@
   id: MobVox
   name: Urist McVox
   components:
+  - type: KsLanguageKnowledge # KS14
+    speaks: [ KsLangCommon, KsLangVox ] # KS14
+    understands: [ KsLangCommon, KsLangVox ] # KS14
   - type: Damageable
     damageModifierSet: Vox
   - type: Speech

@@ -1,0 +1,102 @@
+<controls:BoxContainer Visible="False"
+              HorizontalExpand="True"
+              xmlns:controls="https://spacestation14.io"
+              xmlns:ksui="clr-namespace:Content.Client._KS14.Shuttles.UI">
+    <ksui:KsInstrumentPanel Name="PlotPanel"
+                            HorizontalExpand="True"
+                            VerticalExpand="True"
+                            Margin="5 4 5 5">
+        <ksui:KsBearingPlot Name="Plot"/>
+    </ksui:KsInstrumentPanel>
+    <controls:BoxContainer Orientation="Vertical"
+                  MinWidth="300"
+                  MaxWidth="300"
+                  Margin="0 4 5 5">
+        <ksui:KsInstrumentPanel Name="RosterPanel"
+                                VerticalExpand="True"
+                                Margin="0 0 0 4">
+            <controls:BoxContainer Orientation="Vertical"
+                          HorizontalExpand="True"
+                          VerticalExpand="True">
+                <controls:Label Name="ElintDeafChip"
+                       StyleClasses="KsInstrumentStrong"
+                       HorizontalAlignment="Center"
+                       Visible="False"
+                       Text="{controls:Loc 'ks-esm-chip-elint-deaf'}"/>
+                <controls:ScrollContainer HScrollEnabled="False"
+                                 VerticalExpand="True"
+                                 HorizontalExpand="True">
+                    <controls:BoxContainer Name="RosterList"
+                                  Orientation="Vertical"
+                                  HorizontalExpand="True"/>
+                </controls:ScrollContainer>
+            </controls:BoxContainer>
+        </ksui:KsInstrumentPanel>
+        <ksui:KsInstrumentPanel Name="ThreatPanel"
+                                Margin="0 0 0 4">
+            <controls:BoxContainer Orientation="Vertical" HorizontalExpand="True">
+                <controls:Label Name="RwrChip"
+                       StyleClasses="KsInstrumentStrong"
+                       HorizontalAlignment="Center"
+                       Visible="False"
+                       Text="{controls:Loc 'ks-esm-chip-no-rwr'}"/>
+                <controls:BoxContainer Name="ChannelList"
+                              Orientation="Vertical"
+                              HorizontalExpand="True"/>
+                <controls:GridContainer Name="PostureGrid" Columns="2" HorizontalExpand="True">
+                    <controls:Label StyleClasses="KsInstrumentText" Text="{controls:Loc 'ks-rwr-field-posture'}"/>
+                    <controls:Label Name="PostureValue" StyleClasses="KsInstrumentStrong" HorizontalExpand="True" Align="Right"/>
+                    <controls:Label StyleClasses="KsInstrumentText" Text="{controls:Loc 'ks-rwr-field-priority'}"/>
+                    <controls:Label Name="PriorityValue" StyleClasses="KsInstrumentStrong" HorizontalExpand="True" Align="Right"/>
+                </controls:GridContainer>
+            </controls:BoxContainer>
+        </ksui:KsInstrumentPanel>
+        <ksui:KsInstrumentPanel Name="SelectedPanel"
+                                Margin="0 0 0 4">
+            <controls:BoxContainer Orientation="Vertical" HorizontalExpand="True">
+                <controls:Label Name="ElintChip"
+                       StyleClasses="KsInstrumentStrong"
+                       HorizontalAlignment="Center"
+                       Visible="False"
+                       Text="{controls:Loc 'ks-esm-chip-no-elint'}"/>
+                <controls:GridContainer Name="SelectedGrid" Columns="2" HorizontalExpand="True">
+                    <controls:Label StyleClasses="KsInstrumentText" Text="{controls:Loc 'ks-elint-field-designation'}"/>
+                    <controls:Label Name="DesigValue" StyleClasses="KsInstrumentStrong" HorizontalExpand="True" Align="Right"/>
+                    <controls:Label StyleClasses="KsInstrumentText" Text="{controls:Loc 'ks-elint-field-classification'}"/>
+                    <controls:Label Name="ClassValue" StyleClasses="KsInstrumentStrong" HorizontalExpand="True" Align="Right"/>
+                    <controls:Label StyleClasses="KsInstrumentText" Text="{controls:Loc 'ks-elint-field-band'}"/>
+                    <controls:Label Name="BandValue" StyleClasses="KsInstrumentStrong" HorizontalExpand="True" Align="Right"/>
+                    <controls:Label StyleClasses="KsInstrumentText" Text="{controls:Loc 'ks-elint-field-pattern'}"/>
+                    <controls:Label Name="PatternValue" StyleClasses="KsInstrumentStrong" HorizontalExpand="True" Align="Right"/>
+                    <controls:Label StyleClasses="KsInstrumentText" Text="{controls:Loc 'ks-elint-field-signal'}"/>
+                    <controls:Label Name="SignalValue" StyleClasses="KsInstrumentStrong" HorizontalExpand="True" Align="Right"/>
+                    <controls:Label StyleClasses="KsInstrumentText" Text="{controls:Loc 'ks-elint-field-stability'}"/>
+                    <controls:Label Name="BearingValue" StyleClasses="KsInstrumentStrong" HorizontalExpand="True" Align="Right"/>
+                    <controls:Label StyleClasses="KsInstrumentText" Text="{controls:Loc 'ks-elint-field-last-seen'}"/>
+                    <controls:Label Name="LastValue" StyleClasses="KsInstrumentStrong" HorizontalExpand="True" Align="Right"/>
+                    <controls:Label StyleClasses="KsInstrumentText" Text="{controls:Loc 'ks-elint-field-analysis'}"/>
+                    <controls:Label Name="AnalysisValue" StyleClasses="KsInstrumentStrong" HorizontalExpand="True" Align="Right"/>
+                </controls:GridContainer>
+                <controls:BoxContainer Name="FocusRow" Orientation="Horizontal" HorizontalExpand="True" Margin="0 6 0 0">
+                    <controls:Button Name="FocusButton"
+                            StyleClasses="KsInstrumentAction"
+                            Text="{controls:Loc 'ks-elint-focus-button'}"
+                            HorizontalExpand="True"
+                            Margin="0 0 4 0"/>
+                    <controls:Button Name="CeaseButton"
+                            StyleClasses="KsInstrumentAction"
+                            Text="{controls:Loc 'ks-elint-clear-focus-button'}"
+                            HorizontalExpand="True"/>
+                </controls:BoxContainer>
+            </controls:BoxContainer>
+        </ksui:KsInstrumentPanel>
+        <ksui:KsInstrumentPanel Name="LogPanel"
+                                MinHeight="150">
+            <controls:ScrollContainer HScrollEnabled="False"
+                             VerticalExpand="True"
+                             HorizontalExpand="True">
+                <ksui:KsEmissionLogList Name="LogList"/>
+            </controls:ScrollContainer>
+        </ksui:KsInstrumentPanel>
+    </controls:BoxContainer>
+</controls:BoxContainer>

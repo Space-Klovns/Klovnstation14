@@ -116,6 +116,13 @@ namespace Content.Client.Sandbox
 
             // Try copy tile.
 
+            // KS14: the copy keybind can fire from a UI root with no viewport under the
+            // cursor (e.g. a popped-out instrument window), which carries invalid
+            // coordinates; there is no tile to copy there, so bail before the
+            // coordinate conversion logs an error.
+            if (!coords.IsValid(EntityManager))
+                return false;
+
             if (!_map.TryFindGridAt(_transform.ToMapCoordinates(coords), out var gridUid, out var grid) || !_mapSystem.TryGetTileRef(gridUid, grid, coords, out var tileRef))
                 return false;
 

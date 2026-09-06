@@ -1,0 +1,12 @@
+- type: entity
+  parent: MarkerBase
+  id: KsMarkerNpcCamping
+  name: camping marker
+  suffix: KS14, NPC Camping Spot Marker
+  components:
+  - type: Transform
+    anchored: false
+  - type: Sprite
+    layers:
+    - state: blue
+  - type: NpcCampingSpot

@@ -1,0 +1,57 @@
+<Document>
+  # Shuttle Console
+  The shuttle console is where the sensor picture actually lives. It is still the thing you fly the ship with, but it now has four faces, listed across the top of the window as RADAR // MAP // ESM // DOCK.
+
+  <Box>
+    <GuideEntityEmbed Entity="KsComputerShuttle"/>
+    <GuideEntityEmbed Entity="KsComputerShuttleIdLocked"/>
+  </Box>
+
+  Two buttons sit in the corner of the window. [bold]POP[/bold] moves the whole suite into its own window so you can keep it open next to the game, and closing that window brings it back. [bold]X[/bold] closes the console. The console also remembers which face you left it on.
+
+  Along the top edge is a status strip that is readable from across the room:
+  - [bold]CON[/bold] is how many contacts your ship is holding.
+  - [bold]EMT[/bold] is how many emitters are being heard.
+  - [bold]RDR[/bold] and [bold]JAM[/bold] are your own radar and jammer. Three dashes mean you have not built one.
+  - [bold]! JAMMED ![/bold] means somebody is jamming you right now.
+
+  ## RADAR
+  The flying face. The plot in the middle is your ship and everything around it; the panels down the right side are the numbers.
+
+  [bold]SHIP[/bold] is your position, heading, velocity and turn rate. [bold]STATUS[/bold] is the short version of how much trouble you are in: posture (CALM, CAUTION or DANGER), how many things are illuminating you, how many contacts you hold and how many emitters you hear.
+
+  [bold]EMISSIONS[/bold] holds the two switches that give you away. The radar button toggles between quiet and emitting, and only appears if your ship has a radar. The jammer button does the same for a jammer. You cannot run both at once; switching one on silences the other. Neither is a fitting you can forget about, both are decisions.
+
+  [bold]DISPLAY[/bold] is presentation only and changes nothing about what your ship can actually see:
+  - Docking ports on or off, as before.
+  - One cone button per array type. Each cycles OFF, OUTLINE and FILLED, and shows you where that kind of array is actually looking. Use it to find the blind spot your own hull is making.
+  - Contact info cycles OFF, BASIC and FULL. BASIC keeps names and the most important line; FULL adds coordinates, range, age and every readout your arrays resolved. Turn it down when the plot gets crowded.
+
+  The cones on this face are your own ship's. An enemy's coverage is never drawn for you, and yours is never drawn for them.
+
+  ## MAP
+  The sector chart and the FTL controls. It works the way it always has, with one addition: the [bold]SENSORS[/bold] button overlays the coverage of your whole datalink network, allied arrays included, along with its live contacts.
+
+  Allies stay charted whether the overlay is on or off, so you can turn it off for a clean jump plan without losing track of your own fleet.
+
+  ## ESM
+  Electronic support. This is the listening face, and it is fed by the ELINT array and the warning receiver. If you own neither, the screen says so and does nothing useful.
+
+  [bold]BEARING PLOT[/bold] is drawn bow-up, so a strobe pointing at the top of the dial is a strobe dead ahead. Turn the ship and watch the lines swing.
+
+  [bold]EMITTERS[/bold] is the roster of everything you have ever heard. Each gets a designation like E-001 which is shared across your whole datalink network, so you and your allies are talking about the same contact. LIVE means it is emitting right now; MEM means it has gone quiet.
+
+  [bold]WARNING RECEIVER[/bold] is the panel that will keep you alive. It only lists emissions actually falling on your hull, grouped as SEARCH or JAM, with the posture on top. The ESM tab button itself flashes in the posture colour, so you get the warning even while you are looking at another face.
+
+  [bold]SIGNAL ANALYSIS[/bold] describes whichever emitter you have selected: its class, its band, how strong the signal is, whether the bearing is holding steady or drifting, and how long ago it was last heard. [bold]FOCUS[/bold] starts a patient analysis of it that peels out the ship's size, mass and top speed as it runs and, if the emitter keeps talking to the end, resolves it into an exact position. [bold]CEASE[/bold] stops. Focus is a commitment; you get one at a time.
+
+  [bold]EMISSION LOG[/bold] is the timestamped history of what appeared, what went quiet and when you were jammed. It is the honest record of an engagement, and worth reading after one.
+
+  ## DOCK
+  Unchanged in how it works, just rebuilt to match the rest of the suite. Pick a port, line up, dock.
+
+  ## When it all goes dark
+  If [bold]! JAMMED ![/bold] appears, your radar has stopped producing anything new. Contacts held by another array or arriving over the datalink carry on as normal, so the picture only really collapses if radar was all you had.
+
+  You have three answers. Close the distance until you burn through the noise, get out of the wedge, since a jammer has no rear coverage at all, or ask an ally outside it to feed you their picture over the [textlink="datalink" link="Datalink"].
+</Document>

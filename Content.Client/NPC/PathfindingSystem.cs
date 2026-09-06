@@ -398,6 +398,16 @@ namespace Content.Client.NPC
                                 color = Color.Orange;
                             }
 
+                            // KS14: ANK start
+                            if (crumb.Data.Flags.HasFlag(PathfindingBreadcrumbFlag.Door))
+                            {
+                                if (crumb.Data.Flags.HasFlag(PathfindingBreadcrumbFlag.Access))
+                                    color = Color.Purple;
+                                else
+                                    color = Color.Aquamarine;
+                            }
+                            // KS14: ANK end
+
                             var coordinate = _system.GetCoordinate(chunk.Key, crumb.Coordinates);
                             worldHandle.DrawRect(new Box2(coordinate - edgeVec, coordinate + edgeVec), color.WithAlpha(0.25f));
                         }

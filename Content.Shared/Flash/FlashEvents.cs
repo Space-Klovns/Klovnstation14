@@ -7,7 +7,7 @@ namespace Content.Shared.Flash;
 /// Raised on the target hit by the flash and their inventory items.
 /// </summary>
 [ByRefEvent]
-public record struct FlashAttemptEvent(EntityUid Target, EntityUid? User, EntityUid? Used, bool Cancelled = false) : IInventoryRelayEvent
+public record struct FlashAttemptEvent(EntityUid Target, EntityUid? User, EntityUid? Used, bool Cancelled = false, bool FlashOverride = false) : IInventoryRelayEvent //KS14 - flash override
 {
     SlotFlags IInventoryRelayEvent.TargetSlots => SlotFlags.HEAD | SlotFlags.EYES | SlotFlags.MASK;
 }
@@ -18,7 +18,7 @@ public record struct FlashAttemptEvent(EntityUid Target, EntityUid? User, Entity
 /// The Melee parameter is used to check for rev conversion.
 /// </summary>
 [ByRefEvent]
-public record struct AfterFlashedEvent(EntityUid Target, EntityUid? User, EntityUid? Used, bool Melee);
+public record struct AfterFlashedEvent(EntityUid Target, EntityUid? User, EntityUid? Used, bool Melee, TimeSpan FlashDuration /* KS14: Add FlashDuration */);
 
 /// <summary>
 /// Raised once on the flash entity when it was used, regardless of the flashed status being applied or not.

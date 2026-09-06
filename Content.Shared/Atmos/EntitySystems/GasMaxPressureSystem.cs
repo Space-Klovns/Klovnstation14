@@ -104,7 +104,7 @@ public abstract partial class GasMaxPressureSystem<T> : EntitySystem where T : I
         if (entity.Comp.Integrity <= 0f) // KS14: changed if statement to use purely integrity
         {
             // KS14 Start
-            var ksEv = new _KS14.Atmos.KsGasMaxPressureAttemptLoseIntegrityEvent(false, entity.Comp);
+            var ksEv = new _KS14.Atmos.KsGasMaxPressureAttemptLoseIntegrityEvent(false, entity.Comp, dt);
             RaiseLocalEvent(entity, ref ksEv);
 
             if (ksEv.Cancelled)
@@ -131,7 +131,7 @@ public abstract partial class GasMaxPressureSystem<T> : EntitySystem where T : I
         if (pressure > entity.Comp.Overpressure)
         {
             // KS14 Start
-            var ksEv = new _KS14.Atmos.KsGasMaxPressureAttemptLoseIntegrityEvent(false, entity.Comp);
+            var ksEv = new _KS14.Atmos.KsGasMaxPressureAttemptLoseIntegrityEvent(false, entity.Comp, dt);
             RaiseLocalEvent(entity, ref ksEv);
             // KS14 End
 

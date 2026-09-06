@@ -175,12 +175,14 @@ public sealed partial class AtmosAlarmEntryContainer : BoxContainer
 
     public void SetAsFocus()
     {
+        // KS14: retain the selected-state color after replacing the legacy expander chrome.
         FocusButton.AddStyleClass(StyleNano.StyleClassButtonColorGreen);
         ArrowTexture.TexturePath = "/Textures/Interface/Nano/inverted_triangle.svg.png";
     }
 
     public void RemoveAsFocus()
     {
+        // KS14: restore the shared button's default appearance when its dropdown closes.
         FocusButton.RemoveStyleClass(StyleNano.StyleClassButtonColorGreen);
         ArrowTexture.TexturePath = "/Textures/Interface/Nano/triangle_right.png";
         FocusContainer.Visible = false;

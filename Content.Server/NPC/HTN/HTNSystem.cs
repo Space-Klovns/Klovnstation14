@@ -23,7 +23,6 @@ public sealed partial class HTNSystem : EntitySystem
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private NPCSystem _npc = default!;
     [Dependency] private NPCUtilitySystem _utility = default!;
-    [Dependency] private SystemCollectionHookManager _collectionHook = default!; // KS14: ANK
 
     private readonly JobQueue _planQueue = new(0.004);
 
@@ -205,6 +204,11 @@ public sealed partial class HTNSystem : EntitySystem
 
             if (!comp.Enabled)
                 continue;
+
+            // KS14 Start
+            if (!AttemptWork(uid))
+                continue;
+            // KS14 End
 
             if (comp.PlanningJob != null)
             {

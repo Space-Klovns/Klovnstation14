@@ -1,0 +1,34 @@
+<controls:FancyWindow xmlns="https://spacestation14.io"
+               xmlns:gfx="clr-namespace:Robust.Client.Graphics;assembly=Robust.Client"
+               xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+               Title="{Loc 'ks-datalink-receiver-ui-title'}"
+               MinSize="330 230"
+               Resizable="False">
+    <BoxContainer Orientation="Vertical" Margin="10" SeparationOverride="10">
+
+        <PanelContainer>
+            <PanelContainer.PanelOverride>
+                <gfx:StyleBoxFlat BackgroundColor="#202025" BorderThickness="1" BorderColor="#404040"/>
+            </PanelContainer.PanelOverride>
+            <BoxContainer Orientation="Horizontal" Margin="10" HorizontalExpand="True">
+                <Label Text="{Loc 'ks-datalink-ui-status-label'}" VerticalAlignment="Center"/>
+                <Control MinWidth="5"/>
+                <Label Name="StatusLabel" Text="{Loc 'ks-datalink-ui-status-off'}" VerticalAlignment="Center"/>
+                <Control HorizontalExpand="True"/>
+                <Button Name="ToggleButton" Text="{Loc 'ks-datalink-ui-toggle-button'}"/>
+            </BoxContainer>
+        </PanelContainer>
+
+        <BoxContainer Orientation="Vertical" SeparationOverride="5" Margin="5 5">
+            <Label Text="{Loc 'ks-datalink-ui-frequency-label'}"/>
+            <BoxContainer Name="FrequencyBox" Orientation="Horizontal" HorizontalExpand="True"/>
+        </BoxContainer>
+
+        <BoxContainer Orientation="Horizontal" HorizontalExpand="True" Margin="5 5">
+            <Label Text="{Loc 'ks-datalink-ui-heard-label'}"/>
+            <Control HorizontalExpand="True"/>
+            <Label Name="HeardValueLabel" Text="0"/>
+        </BoxContainer>
+
+    </BoxContainer>
+</controls:FancyWindow>

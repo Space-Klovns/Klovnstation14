@@ -1,0 +1,208 @@
+using Content.Shared._KS14.Atmos;
+using Content.Shared._KS14.Sparks;
+using Content.Shared.Administration.Logs;
+using Content.Shared.Atmos.Components;
+using Content.Shared.Damage.Systems;
+using Content.Shared.Database;
+using Content.Shared.Emag.Systems;
+using Content.Shared.Popups;
+using Content.Shared.Power;
+using Content.Shared.Power.Components;
+using Content.Shared.Power.EntitySystems;
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Timing;
+
+namespace Content.Shared._KS14.BatteryShielding;
+
+public abstract partial class SharedBatteryShieldingSystem : EntitySystem
+{
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private ISharedAdminLogManager _adminLogManager = default!;
+    [Dependency] private SharedBatterySystem _batterySystem = default!;
+    [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private SharedSparksSystem _sparksSystem = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private EmagSystem _emagSystem = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        SubscribeLocalEvent<BatteryShieldingComponent, BatteryStateChangedEvent>(OnBatteryStateChanged);
+        SubscribeLocalEvent<BatteryShieldingComponent, ChargeChangedEvent>(OnChargeChanged);
+
+        SubscribeLocalEvent<BatteryShieldingComponent, GotEmaggedEvent>(OnGotEmagged);
+        SubscribeLocalEvent<BatteryShieldingComponent, BatteryShieldingToggleMessage>(OnToggleMessage);
+        SubscribeLocalEvent<BatteryShieldingComponent, KsGasMaxPressureAttemptLoseIntegrityEvent>(OnGasMaxPressureAttemptLoseIntegrity);
+    }
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        if (!_gameTiming.IsFirstTimePredicted)
+            return;
+
+        var btfoEqe = EntityQueryEnumerator<BtfoingBatteryShieldingComponent, BatteryShieldingComponent>();
+        while (btfoEqe.MoveNext(out var uid, out var btfoingComponent, out var shieldingComponent))
+        {
+            if (_gameTiming.CurTime < btfoingComponent.BtfoTime)
+                continue;
+
+            btfoingComponent.BtfoTime = TimeSpan.MaxValue;
+            Dirty(uid, btfoingComponent);
+
+            // TODO LCDC: fix this being spammed by prediction(?)
+            _audioSystem.PlayPredicted(shieldingComponent.EmagImplosionSound, Transform(uid).Coordinates, user: btfoingComponent.UserUid);
+            _damageableSystem.ChangeDamage(uid, shieldingComponent.EmagImplosionDamage, ignoreResistances: true, origin: btfoingComponent.UserUid);
+        }
+    }
+
+    // This assumes immutability of BatterySelfRecharger.............................................
+    private void OnBatteryStateChanged(Entity<BatteryShieldingComponent> entity, ref BatteryStateChangedEvent args)
+    {
+        if (!TryComp<BatterySelfRechargerComponent>(entity, out var rechargerComponent))
+        {
+            RemComp<ActiveBatteryShieldingComponent>(entity);
+            return;
+        }
+
+        // basically: the batterystate where nothing ever happens
+        var stableState = BatteryState.Neither;
+        if (rechargerComponent.AutoRechargeRate > 0f)
+            stableState = BatteryState.Full;
+        else if (rechargerComponent.AutoRechargeRate < 0f)
+            stableState = BatteryState.Empty;
+
+        // start doing every-frame UI updates until the battery is full, for autorecharger
+        if (args.NewState == stableState)
+            RemComp<ActiveBatteryShieldingComponent>(entity);
+        else
+            EnsureComp<ActiveBatteryShieldingComponent>(entity);
+    }
+
+    private void OnChargeChanged(Entity<BatteryShieldingComponent> entity, ref ChargeChangedEvent args)
+    {
+        if (MetaData(entity).EntityLifeStage != EntityLifeStage.MapInitialized)
+            return;
+
+        entity.Comp.DischargeRate = args.Delta < 0f ? -args.Delta : 0f;
+        Dirty(entity);
+
+        if (args.CurrentChargeRate == 0f ||
+            args.CurrentCharge == args.MaxCharge)
+            RemComp<ActiveBatteryShieldingComponent>(entity);
+        else
+            EnsureComp<ActiveBatteryShieldingComponent>(entity);
+
+        UpdateUi(entity);
+        if (args.CurrentCharge >= entity.Comp.DischargeRate ||
+            !entity.Comp.Enabled)
+            return;
+
+        Disable(entity, adminReason: "No more power is available");
+
+        if (entity.Comp.FailPopupLoc is { } failPopupLocId)
+            _popupSystem.PopupEntity(Loc.GetString(failPopupLocId), entity, type: PopupType.LargeCaution);
+
+        var coordinates = Transform(entity).Coordinates;
+        _sparksSystem.DoSpark(coordinates, SharedSparksSystem.DefaultSparkPrototype, soundSpecifier: SharedSparksSystem.DefaultSoundSpecifier);
+        _sparksSystem.ExposeSpark(coordinates, exposedTemperature: 2500f, exposedVolume: 10f);
+    }
+
+    private void OnGotEmagged(Entity<BatteryShieldingComponent> entity, ref GotEmaggedEvent args)
+    {
+        if (!_emagSystem.CompareFlag(args.Type, EmagType.Interaction) ||
+            _emagSystem.CheckFlag(entity.Owner, EmagType.Interaction))
+            return;
+
+        args.Handled = true;
+        args.Repeatable = false;
+
+        if (!entity.Comp.Enabled)
+            return;
+
+        Disable(entity);
+
+        var coordinates = Transform(entity).Coordinates;
+        _sparksSystem.DoSpark(coordinates, SharedSparksSystem.DefaultSparkPrototype, soundSpecifier: SharedSparksSystem.DefaultSoundSpecifier, user: args.UserUid);
+        _sparksSystem.ExposeSpark(coordinates, exposedTemperature: 2500f, exposedVolume: 10f);
+    }
+
+    private void OnToggleMessage(Entity<BatteryShieldingComponent> entity, ref BatteryShieldingToggleMessage args)
+    {
+        if (entity.Comp.Enabled)
+            Disable(entity);
+        else
+        {
+            if (_batterySystem.GetCharge(entity.Owner) <
+                entity.Comp.DischargeRate)
+                return;
+
+            Enable(entity, userUid: args.Actor);
+        }
+    }
+
+    private void OnGasMaxPressureAttemptLoseIntegrity(Entity<BatteryShieldingComponent> entity, ref KsGasMaxPressureAttemptLoseIntegrityEvent args)
+    {
+        if (args.Cancelled ||
+            !entity.Comp.Enabled)
+            return;
+
+        var useRate = GetActiveEnergyUseRate(entity, args.Component);
+        if (!_batterySystem.TryUseCharge(entity.Owner, useRate * args.DeltaTime))
+            return;
+
+        if (entity.Comp.FalterPopupLoc is { } falterPopupLocId)
+            _popupSystem.PopupEntity(Loc.GetString(falterPopupLocId), entity, type: PopupType.SmallCaution);
+
+        args.Cancelled = true;
+    }
+
+    /// <returns>Amount of charge used in one second.</returns>
+    private static float GetActiveEnergyUseRate(BatteryShieldingComponent shieldingComponent, IGasMaxPressureHolder gasComponent)
+        => shieldingComponent.ChargeUseRateMultiplier * MathF.Log10(MathF.Max(1f, gasComponent.Air.Pressure - gasComponent.Overpressure));
+
+    public void Disable(Entity<BatteryShieldingComponent> entity, string? adminReason = null)
+    {
+        entity.Comp.Enabled = false;
+        Dirty(entity);
+
+        _appearanceSystem.SetData(entity, BatteryShieldingVisuals.Active, false);
+        UpdateUi(entity);
+
+        if (entity.Comp.RaiseAdminLogs)
+            _adminLogManager.Add(LogType.AtmosPowerChanged, LogImpact.Medium, $"Battery-shielded entity {ToPrettyString(entity)} is disabled {(adminReason == null ? "for unknown reason" : "for reason: " + adminReason)}");
+    }
+
+    public void Enable(Entity<BatteryShieldingComponent> entity, EntityUid? userUid = null)
+    {
+        if (_emagSystem.CheckFlag(entity.Owner, EmagType.Interaction))
+        {
+            if (HasComp<BtfoingBatteryShieldingComponent>(entity))
+                return;
+
+            _adminLogManager.Add(LogType.Explosion, $"{ToPrettyString(entity.Owner)} is exploding after being emagged and having its battery shielding turned on");
+
+            if (entity.Comp.EmagMalfunctionPopupLoc is { } malfPopupLoc)
+                _popupSystem.PopupPredicted(Loc.GetString(malfPopupLoc), entity.Owner, recipient: userUid, type: PopupType.LargeCaution);
+
+            _audioSystem.PlayPredicted(entity.Comp.EmagMalfunctionSound, entity.Owner, user: userUid);
+
+            var btfoingComponent = AddComp<BtfoingBatteryShieldingComponent>(entity);
+            btfoingComponent.BtfoTime = _gameTiming.CurTime + entity.Comp.EmagMalfunctionDuration;
+            btfoingComponent.UserUid = userUid;
+            return;
+        }
+
+        entity.Comp.Enabled = true;
+        Dirty(entity);
+
+        _appearanceSystem.SetData(entity, BatteryShieldingVisuals.Active, true);
+        UpdateUi(entity);
+    }
+
+    protected virtual void UpdateUi(Entity<BatteryShieldingComponent> entity) { }
+}

@@ -320,6 +320,10 @@ public sealed partial class DoorComponent : Component
 
     [DataField(customTypeSerializer: typeof(ConstantSerializer<DrawDepthTag>))]
     public int ClosedDrawDepth = (int)DrawDepth.DrawDepth.Doors;
+
+    // KS14
+    [DataField]
+    public bool PlaySoundsWhenPrying = true;
 }
 
 [Serializable, NetSerializable]

@@ -8,6 +8,7 @@
   - Atmospherics
   - Plumbing # Starlight
   - ShuttleCraft
+  - Sensors # KS14
   - Networking
 
 - type: guideEntry

@@ -6,3 +6,113 @@
   components:
   - type: BatterySelfRecharger
     autoRechargeRate: 30
+
+- type: entity
+  name: antique laser pistol
+  parent: [BaseWeaponBatterySmall, BaseGrandTheftContraband]
+  id: WeaponAntiqueLaserProjectile
+  description: This is an antique laser pistol. All craftsmanship is of the highest quality. It is decorated with a mahogany grip and chrome filigree. The object menaces with spikes of energy. On the item is an image of a captain and a clown. The clown is dead. The captain is striking a heroic pose.
+  components:
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Guns/Battery/antiquelaser.rsi
+    layers:
+    - state: base
+      map: ["enum.GunVisualLayers.Base"]
+    - state: mag-unshaded-4
+      map: ["enum.GunVisualLayers.MagUnshaded"]
+      shader: unshaded
+  - type: Clothing
+    sprite: _KS14/Objects/Weapons/Guns/Battery/antiquelaser.rsi
+  - type: BatteryAmmoProvider
+    proto: BulletLaserBig
+    fireCost: 100
+  - type: BatterySelfRecharger
+    autoRechargeRate: 40
+  - type: MagazineVisuals
+    magState: mag
+    steps: 5
+    zeroVisible: true
+  - type: Appearance
+  - type: Tag
+    tags:
+    - HighRiskItem
+    - Sidearm
+    - WeaponAntiqueLaser
+    - LaserWeapon
+  - type: StaticPrice
+    price: 750
+  - type: Gun
+    minAngle: 6
+    maxAngle: 20
+    angleIncrease: 5
+    projectileSpeed: 25
+  - type: StealTarget
+    stealGroup: WeaponAntiqueLaser
+  - type: SentienceTarget # I hope this is only the captain's gun
+    flavorKind: station-event-random-sentience-flavor-inanimate
+    weight: 0.0002 # 5,000 times less likely than 1 regular animal
+    # not putting a BlockMovement component here cause that's funny.
+  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
+
+- type: entity
+  name: practice laser carbine
+  parent: [BaseWeaponBatterySmall, BaseSecurityContraband]
+  id: WeaponLaserCarbineProjectilePractice
+  description: Practice version of a carbine that's been favoured by Nanotrasen Security for being cheap and easy to use.
+  components:
+  - type: Item
+    size: Large
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Guns/Battery/lasercarbine.rsi
+    layers:
+    - state: base
+      map: ["enum.GunVisualLayers.Base"]
+    - state: mag-unshaded-4
+      map: ["enum.GunVisualLayers.MagUnshaded"]
+      shader: unshaded
+  - type: MagazineVisuals
+    magState: mag
+    steps: 5
+    zeroVisible: false
+  - type: Appearance
+  - type: Clothing
+    sprite: _KS14/Objects/Weapons/Guns/Battery/lasercarbine.rsi
+  - type: Gun
+    minAngle: 10
+    maxAngle: 25
+    angleIncrease: 2
+    selectedMode: FullAuto
+    fireRate: 5
+    projectileSpeed: 20
+    availableModes:
+    - FullAuto
+    - Burst
+    burstFireRate: 10
+    shotsPerBurst: 3
+    burstCooldown: 0.25
+  - type: BatteryAmmoProvider
+    proto: BulletLaserSmallPractice
+    fireCost: 30
+  - type: StaticPrice
+    price: 67
+  - type: Tag
+    tags:
+    - LaserWeapon
+  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_pickup1.ogg
+  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_drop1.ogg
+
+
+- type: entity
+  name: laser carbine
+  parent: [  WeaponLaserCarbineProjectilePractice]
+  id: WeaponLaserCarbineProjectile
+  description: Favoured by Nanotrasen Security for being cheap and easy to use.
+  components:
+    - type: BatteryAmmoProvider
+      proto: BulletLaserSmall
+      fireCost: 30
+    - type: GunExecutionWhitelist # Goob->KS14 port: gun execution

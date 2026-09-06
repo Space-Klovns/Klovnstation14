@@ -10,13 +10,15 @@ public sealed class MuzzleFlashEvent : EntityEventArgs
 {
     public NetEntity Uid;
     public string Prototype;
+    public string? DetachedPrototype; // STDA14
 
     public Angle Angle;
 
-    public MuzzleFlashEvent(NetEntity uid, string prototype, Angle angle)
+    public MuzzleFlashEvent(NetEntity uid, string prototype, string? detachedPrototype /* STDA14 */, Angle angle)
     {
         Uid = uid;
         Prototype = prototype;
+        DetachedPrototype = detachedPrototype; // STDA14
         Angle = angle;
     }
 }

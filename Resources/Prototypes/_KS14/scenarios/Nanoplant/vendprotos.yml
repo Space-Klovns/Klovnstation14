@@ -29,6 +29,7 @@
     - Machete
     - Gauze
     - FlashlightSeclite
+    - MedkitCombatFilled
 
 - type: entity
   id: ScenarioVendorBundleNanoplantNtRifleman
@@ -94,8 +95,8 @@
 
 - type: entity
   id: ScenarioVendorBundleNanoplantNtCounterAssault
-  name: counter assaultee
-  description: Armed with a drozd SMG, its a class made for agressive playstyle.
+  name: shock trooper
+  description: Nobody ever defended anything successfully, there is only attack and attack and attack some more.
   categories: [ HideSpawnMenu ]
   components:
   - type: Sprite
@@ -141,7 +142,7 @@
     - RemoteDroneFpv
 
 - type: entity
-  id: ScenarioVendorBundleNanoplantNtMedic
+  id: ScenarioVendorBundleNanoplantNtMedic #medic roles are deprecated, everyone gets a combat medkit now
   name: medic
   description: CLEAR!
   categories: [ HideSpawnMenu ]
@@ -186,6 +187,7 @@
     - ClothingHandsGlovesCombat
     - FlashlightSeclite
     - Gauze
+    - MedkitCombatFilled
 
 - type: entity
   id: ScenarioVendorBundleNanoplantSyndieSoldierHushpup

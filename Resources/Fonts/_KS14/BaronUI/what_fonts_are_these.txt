@@ -1,0 +1,6 @@
+ok so due to how the stupid notosansfontfamily structure works these have to be named this way, but arent actually all the same font
+
+bold - /04B_11/04B_11.ttf
+bolditalic - /04B_09/04B_09.ttf
+italic - /04B_03/04B_03.ttf //nothing fits here honestly.
+regular - /04B_03/04B_03.ttf

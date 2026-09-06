@@ -6,7 +6,7 @@ namespace Content.Shared._KS14.Atmos;
 ///     Raised on something to process whether it should lose integrity or not.
 /// </summary>
 [ByRefEvent]
-public record struct KsGasMaxPressureAttemptLoseIntegrityEvent(bool Cancelled, IGasMaxPressureHolder Component);
+public record struct KsGasMaxPressureAttemptLoseIntegrityEvent(bool Cancelled, IGasMaxPressureHolder Component, float DeltaTime);
 
 [ByRefEvent]
 public record struct KsGasMaxPressureAfterIntegrityLostEvent(IGasMaxPressureHolder Component);

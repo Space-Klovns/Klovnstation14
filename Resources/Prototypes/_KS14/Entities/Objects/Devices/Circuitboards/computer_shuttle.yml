@@ -1,5 +1,27 @@
 - type: entity
   parent: BaseComputerCircuitboard
+  id: KsShuttleConsoleCircuitboard
+  name: shuttle console board
+  description: A computer printed circuit board for a shuttle console with a sensor suite.
+  components:
+  - type: Sprite
+    state: cpu_supply
+  - type: ComputerBoard
+    prototype: KsComputerShuttle
+
+- type: entity
+  parent: [ BaseComputerCircuitboard, BaseSyndicateContraband ]
+  id: KsSyndicateShuttleConsoleCircuitboard
+  name: syndicate shuttle console board
+  description: A computer printed circuit board for a syndicate shuttle console with a sensor suite.
+  components:
+  - type: Sprite
+    state: cpu_syndicate
+  - type: ComputerBoard
+    prototype: KsComputerShuttleSyndie
+
+- type: entity
+  parent: BaseComputerCircuitboard
   id: KsShuttleConsoleIdLockedCircuitboard
   name: id-locked shuttle console board
   description: A computer printed circuit board for an id-locked shuttle console.
@@ -8,3 +30,13 @@
     state: cyborg_upgrade3
   - type: ComputerBoard
     prototype: KsComputerShuttleIdLocked
+
+- type: latheRecipe
+  parent: [ BaseGoldCircuitboardRecipe, BaseSupplyComputerRecipeCategory ]
+  id: KsShuttleConsoleCircuitboard
+  result: KsShuttleConsoleCircuitboard
+
+- type: latheRecipe
+  parent: [ BaseGoldCircuitboardRecipe, BaseSupplyComputerRecipeCategory ]
+  id: KsSyndicateShuttleConsoleCircuitboard
+  result: KsSyndicateShuttleConsoleCircuitboard

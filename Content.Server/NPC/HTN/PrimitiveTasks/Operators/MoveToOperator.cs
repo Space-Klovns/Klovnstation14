@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Content.Server._KS14.NPC.Components;
 using Content.Server.NPC.Components;
 using Content.Server.NPC.Pathfinding;
 using Content.Server.NPC.Systems;
@@ -72,6 +73,10 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
     [DataField]
     public bool RequireLosForRangeCheck;
 
+    // KS14
+    [DataField]
+    public bool WeAreAtTargetCoordsAfterSuccessfullyPlanning = true;
+
     private const string MovementCancelToken = "MovementCancelToken";
 
     public override void Initialize(IEntitySystemManager sysManager)
@@ -113,18 +118,23 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
         // KS14: ANK: end
         {
             // In range
-            return (true, new Dictionary<string, object>()
-            {
-                {NPCBlackboard.OwnerCoordinates, blackboard.GetValueOrDefault<EntityCoordinates>(NPCBlackboard.OwnerCoordinates, _entManager)}
-            });
+            // KS14 start: only report OwnerCoordinates as an effect when WeAreAtTargetCoordsAfterSuccessfullyPlanning,
+            // since other tasks in the plan may rely on OwnerCoordinates not being set as if we'd reached the target
+            var inRangeEffects = new Dictionary<string, object>();
+            if (WeAreAtTargetCoordsAfterSuccessfullyPlanning)
+                inRangeEffects[NPCBlackboard.OwnerCoordinates] = blackboard.GetValueOrDefault<EntityCoordinates>(NPCBlackboard.OwnerCoordinates, _entManager);
+            return (true, inRangeEffects);
+            // KS14 end
         }
 
         if (!PathfindInPlanning)
         {
-            return (true, new Dictionary<string, object>()
-            {
-                {NPCBlackboard.OwnerCoordinates, targetCoordinates}
-            });
+            // KS14 start: only report OwnerCoordinates as an effect when WeAreAtTargetCoordsAfterSuccessfullyPlanning
+            var noPathfindEffects = new Dictionary<string, object>();
+            if (WeAreAtTargetCoordsAfterSuccessfullyPlanning)
+                noPathfindEffects[NPCBlackboard.OwnerCoordinates] = targetCoordinates;
+            return (true, noPathfindEffects);
+            // KS14 end
         }
 
         var path = await _pathfind.GetPath(
@@ -140,12 +150,16 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
             return (false, null);
         }
 
-        return (true, new Dictionary<string, object>()
+        // KS14 start: only report OwnerCoordinates as an effect when WeAreAtTargetCoordsAfterSuccessfullyPlanning
+        var pathEffects = new Dictionary<string, object>
         {
-            {NPCBlackboard.OwnerCoordinates, targetCoordinates},
             {PathfindKey, path}
-        });
+        };
+        if (WeAreAtTargetCoordsAfterSuccessfullyPlanning)
+            pathEffects[NPCBlackboard.OwnerCoordinates] = targetCoordinates;
 
+        return (true, pathEffects);
+        // KS14 end
     }
 
     // Given steering is complicated we'll hand it off to a dedicated system rather than this singleton operator.
@@ -176,6 +190,19 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
 
             comp.CurrentPath = new Queue<PathPoly>(result.Path);
         }
+
+        // KS14: ANK: Never means ConditionalShutdown will never run via the HTN task/plan lifecycle (that's
+        // the point - the movement survives task/plan transitions), so nothing would otherwise remove
+        // TargetKey/PathfindKey or unregister steering once we actually arrive. NpcMoveToCleanupSystem
+        // watches for the steering we just registered to stop and finishes that cleanup itself.
+        if (ShutdownState == HTNPlanState.Never)
+        {
+            var cleanup = _entManager.EnsureComponent<NpcPendingMoveCleanupComponent>(uid);
+            cleanup.TargetKey = TargetKey;
+            cleanup.PathfindKey = PathfindKey;
+            cleanup.RemoveKeyOnFinish = RemoveKeyOnFinish;
+            cleanup.Coordinates = targetCoordinates;
+        }
     }
 
     public override HTNOperatorStatus Update(NPCBlackboard blackboard, float frameTime)
@@ -196,7 +223,7 @@ public sealed partial class MoveToOperator : HTNOperator, IHtnConditionalShutdow
         // KS14: ANK: end
 
         // Just keep moving in the background and let the other tasks handle it.
-        if (ShutdownState == HTNPlanState.PlanFinished && steering.Status == SteeringStatus.Moving)
+        if ((ShutdownState == HTNPlanState.PlanFinished || ShutdownState == HTNPlanState.Never /* KS14: ANK: include Never */) && steering.Status == SteeringStatus.Moving)
         {
             return HTNOperatorStatus.Finished;
         }

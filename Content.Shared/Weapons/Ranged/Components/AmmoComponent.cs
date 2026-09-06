@@ -14,6 +14,11 @@ public partial class AmmoComponent : Component, IShootable
 
     [DataField]
     public EntProtoId? MuzzleFlash = "MuzzleFlashEffect";
+
+    // STDA addition start
+    [DataField]
+    public EntProtoId? DetachedMuzzleFlash = null;
+    // STDA addition end
 }
 
 /// <summary>

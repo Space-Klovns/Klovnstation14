@@ -4,6 +4,11 @@ namespace Content.Shared._KS14.IoC;
 
 // TODO LCDC: somehow make engine PR to make this engine-based or otherwise publicly accessible
 
+/// <summary>
+///     Class that helps you retrieve <see cref="IEntitySystemManager.DependencyCollection"/>, which, upon being used to inject
+///         into a class, will resolve <see cref="EntityQuery<>>"/> and <see cref="EntitySystem"/>, unlike
+///         the <see cref="IDependencyCollection"/> used by the default <see cref="IoCManager"/>.
+/// </summary>
 public sealed partial class SystemCollectionHookManager
 {
     [Dependency] private INetManager _netManager = default!;
@@ -15,7 +20,10 @@ public sealed partial class SystemCollectionHookManager
         _sawmill = Logger.GetSawmill("sys.collectionhook.man");
     }
 
-    /// <inheritdoc cref="EntitySystemManager.DependencyCollection"/>
+    /// <summary>
+    ///     Dependency collection that contains all loaded systems and component queries,
+    ///         unlike that of <see cref="IoCManager"/>.
+    /// </summary>
     [Access(Other = AccessPermissions.ReadExecute)]
     public IDependencyCollection DependencyCollection => _entitySystemManager.DependencyCollection;
     private Action<IDependencyCollection>? _onSystemCollectionAvailable = null;
@@ -71,6 +79,7 @@ public sealed partial class SystemCollectionHookManager
     }
 
     /// <inheritdoc cref="HookAction(Action)"/>
+    /// <param name="act">Is given <see cref="SystemCollectionHookManager.DependencyCollection"/>: a dependency collection that already contains all loaded systems and component queries.</param>
     public void HookAction(Action<IDependencyCollection> act)
     {
         if (IsProperlyInitialised())

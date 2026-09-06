@@ -24,12 +24,18 @@
         replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleNanoplantNtMarksman
         replaceSlot: *replaceSlots
-      - id: ScenarioVendorBundleNanoplantNtMedic
-        replaceSlot: *replaceSlots
+      #- id: ScenarioVendorBundleNanoplantNtMedic
+      #  replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleNanoplantNtDroneOperator
         replaceSlot: *replaceSlots
       - id : ScenarioVendorBundleNanoplantNtCounterAssault
         replaceSlot: *replaceSlots
+    - name: Utilities
+      entries:
+      - id: DefibrillatorCompact
+        amount: 2
+      - id: ScenarioNightVisionGogglesBasic
+        amount: 1
 
 - type: entity
   parent: ColMarTechScenarioBase
@@ -60,8 +66,8 @@
         replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleNanoplantSyndieSniper
         replaceSlot: *replaceSlots
-      - id: ScenarioVendorBundleNanoplantSyndieMedic
-        replaceSlot: *replaceSlots
+      #- id: ScenarioVendorBundleNanoplantSyndieMedic
+      #  replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleNanoplantSyndieMelee
         replaceSlot: *replaceSlots
       - id: ScenarioVendorBundleNanoplantSyndieEngineer
@@ -72,3 +78,8 @@
       entries:
       - id: EmpGrenade
         amount: 2
+      - id: DefibrillatorCompact
+        amount: 2
+      - id: ScenarioNightVisionGogglesBasic
+        amount: 1
+

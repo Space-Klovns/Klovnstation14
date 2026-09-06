@@ -38,6 +38,13 @@ namespace Content.Shared.Chat
         public string? AudioPath;
         public float AudioVolume;
 
+        // KS14 Start: per-message id used to target a later translation swap (MsgReplaceChatMessage). Null on
+        // vanilla/untranslated messages. Serialized so the client can locate the History entry to swap.
+        // Note: adding a serialized field to ChatMessage is a version-breaking change that invalidates
+        // replays recorded on the pre-change build (NetSerializer is positional). Fine for lockstep SS14.
+        public int? MessageId;
+        // KS14 End
+
         [NonSerialized]
         public bool Read;
 

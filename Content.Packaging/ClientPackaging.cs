@@ -88,11 +88,17 @@ public static class ClientPackaging
                 "Content.Shared.Database" },
             cancel: cancel);
 
-        await RobustClientPackaging.WriteClientResources(
-            contentDir,
-            inputPass,
-            SharedPackaging.AdditionalIgnoredResources,
-            cancel);
+        // KS14 Start: proper packaging while not ignoring configpresets
+        var ignoreSet = RobustClientPackaging.ClientIgnoredResources
+            .Union(RobustSharedPackaging.SharedIgnoredResources)
+            .Union(SharedPackaging.AdditionalIgnoredResources)
+            .ToHashSet();
+
+        // dont ignore ConfigPresets ffs BROOOOOO
+        ignoreSet.Remove("ConfigPresets");
+
+        await RobustSharedPackaging.DoResourceCopy(Path.Combine(contentDir, "Resources"), inputPass, ignoreSet, cancel: cancel);
+        // KS14 End
 
         inputPass.InjectFinished();
     }

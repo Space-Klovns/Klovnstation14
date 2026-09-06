@@ -1,3 +1,4 @@
+using Content.Shared._KS14.Sensors; // KS14
 using Robust.Shared.Map;
 using Robust.Shared.Serialization;
 
@@ -21,6 +22,8 @@ public sealed class NavInterfaceState
     public Dictionary<NetEntity, List<DockingPortState>> Docks;
 
     public bool RotateWithEntity = true;
+
+    public KsSensorNavState? KsSensorNav; // KS14
 
     public NavInterfaceState(
         float maxRange,

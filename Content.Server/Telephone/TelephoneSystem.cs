@@ -4,6 +4,7 @@ using Content.Server.Chat.Systems;
 using Content.Server.Interaction;
 using Content.Server.Power.EntitySystems;
 using Content.Shared.Chat;
+using Content.Shared._KS14.Language; // KS14
 using Content.Shared.Database;
 using Content.Shared.Labels.Components;
 using Content.Shared.Mind.Components;
@@ -88,7 +89,7 @@ public sealed partial class TelephoneSystem : SharedTelephoneSystem
         if (!_recentChatMessages.Add((args.Source, args.Message, entity)))
             return;
 
-        SendTelephoneMessage(args.Source, args.Message, entity);
+        SendTelephoneMessage(args.Source, args.Message, entity, ksLanguage: args.KsLanguage /* KS14 */);
     }
 
     private void OnTelephoneMessageReceived(Entity<TelephoneComponent> entity, ref TelephoneMessageReceivedEvent args)
@@ -116,7 +117,8 @@ public sealed partial class TelephoneSystem : SharedTelephoneSystem
         var range = args.TelephoneSource.Comp.LinkedTelephones.Count > 1 ? ChatTransmitRange.HideChat : ChatTransmitRange.GhostRangeLimit;
         var volume = entity.Comp.SpeakerVolume == TelephoneVolume.Speak ? InGameICChatType.Speak : InGameICChatType.Whisper;
 
-        _chat.TrySendInGameICMessage(speaker, args.Message, volume, range, nameOverride: name, checkRadioPrefix: false);
+        // KS14: thread the language or the re-emission launders exotic speech into clear chat.
+        _chat.TrySendInGameICMessage(speaker, args.Message, volume, range, nameOverride: name, checkRadioPrefix: false, ksLanguageOverride: args.KsLanguage?.LanguageId /* KS14 */);
     }
 
     #endregion
@@ -352,7 +354,7 @@ public sealed partial class TelephoneSystem : SharedTelephoneSystem
         SetTelephoneMicrophoneState(entity, false);
     }
 
-    private void SendTelephoneMessage(EntityUid messageSource, string message, Entity<TelephoneComponent> source, bool escapeMarkup = true)
+    private void SendTelephoneMessage(EntityUid messageSource, string message, Entity<TelephoneComponent> source, bool escapeMarkup = true, KsUtteranceContext? ksLanguage = null /* KS14 */)
     {
         // This method assumes that you've already checked that this
         // telephone is able to transmit messages and that it can
@@ -391,11 +393,11 @@ public sealed partial class TelephoneSystem : SharedTelephoneSystem
 
         var chatMsg = new MsgChatMessage { Message = chat };
 
-        var evSentMessage = new TelephoneMessageSentEvent(message, chatMsg, messageSource);
+        var evSentMessage = new TelephoneMessageSentEvent(message, chatMsg, messageSource, ksLanguage /* KS14 */);
         RaiseLocalEvent(source, ref evSentMessage);
         source.Comp.StateStartTime = _timing.CurTime;
 
-        var evReceivedMessage = new TelephoneMessageReceivedEvent(message, chatMsg, messageSource, source);
+        var evReceivedMessage = new TelephoneMessageReceivedEvent(message, chatMsg, messageSource, source, ksLanguage /* KS14 */);
 
         foreach (var receiverUid in source.Comp.LinkedTelephones)
         {

@@ -8,7 +8,7 @@
   requirements:
   - !type:RoleTimeRequirement
     role: JobBorg
-    time: 5h
+    time: 2h # KS14: 5h -> 2h
   weight: 10
   icon: JobIconStationAi
   supervisors: job-supervisors-rd
@@ -23,7 +23,7 @@
   playTimeTracker: JobBorg
   requirements:
     - !type:OverallPlaytimeRequirement
-      time: 10h
+      time: 2h # KS14: 10h -> 2h
   icon: JobIconBorg
   supervisors: job-supervisors-rd
   jobEntity: PlayerBorgBattery

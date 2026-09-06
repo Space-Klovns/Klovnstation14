@@ -25,6 +25,7 @@
   - type: Tool
     qualities:
       - Slicing
+      - Incision  # KS14: so it works for surgery
     useSound:
       path: /Audio/Items/Culinary/chop.ogg
 

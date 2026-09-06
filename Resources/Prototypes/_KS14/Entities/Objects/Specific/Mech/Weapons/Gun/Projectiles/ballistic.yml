@@ -1,0 +1,21 @@
+- type: entity
+  parent: BaseBullet
+  id: PelletShotgunMech
+  categories: [ HideSpawnMenu ]
+  name: pellet (.775)
+  components:
+  - type: Projectile
+    damage:
+      types:
+        Piercing: 18 # KS14
+        Structural: 15
+
+- type: entity
+  parent: PelletShotgunMech
+  id: PelletShotgunMechSpread
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: ProjectileSpread
+    proto: PelletShotgunMech
+    count: 6
+    spread: 12

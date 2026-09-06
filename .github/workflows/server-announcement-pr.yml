@@ -1,21 +1,26 @@
 name: Server Announcement on PR status update
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, reopened, closed]
+
+permissions: {}
 
 jobs:
   notify-server:
     runs-on: ubuntu-latest
     steps:
     - name: Send PR notification
+      env:
+        PR_TITLE: ${{ github.event.pull_request.title }}
+        PR_AUTHOR: ${{ github.event.pull_request.user.login }}
       run: |
         PR_NUMBER="${{ github.event.pull_request.number }}"
 
         # Build and send JSON
         JSON_PAYLOAD=$null
         PREFIX="(Space-Klovns/Klovnstation14) PR #${PR_NUMBER}"
-        SUFFIX="${{ github.event.pull_request.title }} by ${{ github.event.pull_request.user.login }}"
+        SUFFIX="$PR_TITLE by $PR_AUTHOR"
         MESSAGE="FUCK"
 
         if [[ "${{ github.event.action }}" == "closed" ]]; then

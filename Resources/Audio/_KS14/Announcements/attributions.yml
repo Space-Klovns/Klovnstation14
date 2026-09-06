@@ -2,3 +2,8 @@
   license: CC-BY-SA-3.0
   copyright: Created by tgstation taken from commit 436ba869ebcd0b60b63973fb7562f447ee655205
   source: "https://github.com/tgstation/tgstation/commit/436ba869ebcd0b60b63973fb7562f447ee655205"
+
+- files: ["fieldcommander.ogg"]
+  license: Custom
+  copyright: "Created for Klovnstation with sounds from freesound.org by https://freesound.org/people/stib/ (CC0-1.0) and https://freesound.org/people/theplax/ (CC-BY-4.0) respectively"
+  source: "https://freesound.org/"

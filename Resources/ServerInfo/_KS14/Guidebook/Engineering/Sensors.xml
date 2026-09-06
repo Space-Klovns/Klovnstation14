@@ -1,0 +1,52 @@
+<Document>
+  # Sensors
+  Your ship does not see another ship because it is nearby. It sees it because a machine on your hull found it and reported it to your console.
+
+  <Box>
+    <GuideEntityEmbed Entity="KsMachineIrst"/>
+    <GuideEntityEmbed Entity="KsMachineDatalinkTransmitter"/>
+    <GuideEntityEmbed Entity="KsComputerShuttle"/>
+  </Box>
+
+  Three things do the work, and each has its own page:
+  - [textlink="Sensor arrays" link="SensorArrays"] search space and produce contacts.
+  - The [textlink="datalink" link="Datalink"] trades contacts with other ships.
+  - The [textlink="shuttle console" link="ShuttleConsole"] draws everything your ship knows.
+
+  A ship with no arrays and no datalink sees nothing at all, and an empty screen is exactly what that looks like. It is not a broken console. It is a blind ship.
+
+  ## Contacts
+  A contact is one thing your ship has found. Your own ship always sits in the middle of the plot; everything else is drawn around it.
+
+  Contacts come in two states. A [bold]live[/bold] contact is being tracked right now and draws brightly. When the track is lost the contact does not vanish, it dims into a [bold]memory ghost[/bold] and stays at the last known spot.
+
+  Ghosts never expire on their own. They are cleared when one of your arrays gets a clear look at that spot and confirms it is empty. Anything that moves therefore leaves stale ghosts behind it, so treat a dim contact as a rumour and a bright one as a target.
+
+  Small drifting junk is filtered out, so an empty plot really is empty of anything worth worrying about.
+
+  ## Reading the colours
+  A contact is coloured by the kind of array holding the track. If several arrays see it at once, the more trustworthy one wins.
+
+  - [color=#C0C0C0]Silver[/color] is the optical array. It saw the hull with its own eyes.
+  - [color=#FF4040]Red[/color] is IRST. It found the heat coming off a hull.
+  - [color=#40C040]Green[/color] is radar. It bounced a pulse off something.
+  - [color=#FF9020]Orange[/color] is ELINT. It heard a radar emitting somewhere out there.
+  - [color=#C0A060]Tan[/color] is the warning receiver. Something is illuminating your ship right now.
+  - [color=#C050F0]Violet[/color] is a jammer that has been located.
+  - [color=#00FA9A]Spring green[/color] is a ship announcing itself over the datalink. That is almost always a friend.
+
+  ## Readouts
+  Each contact carries whatever your arrays managed to work out about it. Hover it on the plot for the full picture, or use the contact info button to keep the lines on screen.
+
+  Different arrays learn different things: SIZE, MASS and TOP SPEED come from the optical array, SIGNATURE from IRST, RCS from radar, RADAR RANGE from ELINT. The more kinds of array you run, the fuller the readout.
+
+  A readout line showing [bold]---[/bold] means nothing you own has resolved that value yet.
+
+  ## Bearings
+  Some contacts have no position at all. Listening equipment hears a direction, not a distance, so it draws a thin wedge pointing away from your ship instead of a marker sitting somewhere.
+
+  A bearing is still useful. Point the bow down it, or get a second ship on your datalink to listen from a different angle and let the two lines cross into a real fix.
+
+  ## Where to start
+  If you are fitting out a ship for the first time, build an [textlink="optical search array" link="SensorArrays"] and a warning receiver. The optical array tells you who is out there and the warning receiver tells you when somebody is looking at you. Everything else is refinement.
+</Document>

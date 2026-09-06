@@ -29,6 +29,7 @@
     - Supply
   - type: IgnoreUIRange
   - type: StationAiHeld
+  - type: BotWrangler # KS14
   - type: StationAiOverlay
   - type: ShowElectrocutionHUD
   - type: ActionGrant

@@ -120,6 +120,43 @@ public partial class ChatBox : UIWidget
         Contents.AddMessage(formatted, tagsAllowed: null);
     }
 
+    // KS14: re-render only the one already-rendered line for History[historyIndex] in place, instead of a
+    // full Repopulate(). Used by the translation swap; keeps per-swap work O(1) markup-parse + relayout.
+    public void ReplaceLine(int historyIndex)
+    {
+        var history = _controller.History;
+        if (historyIndex < 0 || historyIndex >= history.Count)
+            return;
+
+        var msg = history[historyIndex].Item2;
+
+        // This box only renders channels whose filter is active; if this one is filtered out there is no
+        // entry here to replace (a later Repopulate on re-enable picks up the mutated History text).
+        if (!ChatInput.FilterButton.Popup.IsActive(msg.Channel))
+            return;
+
+        // Entries mirror the IsActive-filtered History in order, so History[i] does not map 1:1 to entry i.
+        // Count the visible entries at/after this one from the tail (swaps target recent lines, so it is a
+        // short scan) to find its entry index.
+        var entryIndex = Contents.EntryCount;
+        for (var i = history.Count - 1; i > historyIndex; i--)
+        {
+            if (ChatInput.FilterButton.Popup.IsActive(history[i].Item2.Channel))
+                entryIndex--;
+        }
+        entryIndex--; // step onto this message's own entry
+
+        if (entryIndex < 0 || entryIndex >= Contents.EntryCount)
+            return; // mapping desynced somehow; the next full Repopulate reconciles it
+
+        var color = msg.MessageColorOverride ?? msg.Channel.TextColor();
+        var formatted = new FormattedMessage(3);
+        formatted.PushColor(color);
+        formatted.AddMarkupOrThrow(msg.WrappedMessage);
+        formatted.Pop();
+        Contents.SetMessage(entryIndex, formatted, tagsAllowed: null);
+    }
+
     public void Focus(ChatSelectChannel? channel = null)
     {
         var input = ChatInput.Input;

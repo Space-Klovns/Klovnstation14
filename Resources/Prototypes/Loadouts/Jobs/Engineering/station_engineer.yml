@@ -16,7 +16,7 @@
     requirement:
       !type:DepartmentTimeRequirement
       department: Engineering
-      time: 60h
+      time: 15h # KS14: 60h -> 15h
 
 # Head
 - type: startingGear

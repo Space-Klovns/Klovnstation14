@@ -13,6 +13,8 @@
       sprite: _KS14/Interface/Actions/actions_ai.rsi
       state: select_bot
   - type: TargetAction
+    range: -1
+    checkCanAccess: false
   - type: EntityTargetAction
     whitelist:
       components:
@@ -37,4 +39,3 @@
     checkCanAccess: false
   - type: WorldTargetAction
     event: !type:MoveControlledBotToPositionEvent
-

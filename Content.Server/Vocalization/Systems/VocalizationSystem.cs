@@ -1,8 +1,10 @@
 using Content.Server.Chat.Systems;
 using Content.Server.Power.Components;
 using Content.Server.Vocalization.Components;
+using Content.Shared._KS14.Language; // KS14
 using Content.Shared.ActionBlocker;
 using Content.Shared.Chat;
+using Robust.Shared.Prototypes; // KS14
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
 
@@ -64,13 +66,13 @@ public sealed partial class VocalizationSystem : EntitySystem
         if (tryVocalizeEvent.Message is not { } message)
             return;
 
-        Speak(entity, message);
+        Speak(entity, message, tryVocalizeEvent.KsLanguage /* KS14 */);
     }
 
     /// <summary>
     /// Actually say something.
     /// </summary>
-    private void Speak(Entity<VocalizerComponent> entity, string message)
+    private void Speak(Entity<VocalizerComponent> entity, string message, ProtoId<KsLanguagePrototype>? ksLanguage = null /* KS14 */)
     {
         // raise a VocalizeEvent
         // this can be handled by other systems to speak using a method other than local chat
@@ -87,7 +89,7 @@ public sealed partial class VocalizationSystem : EntitySystem
             return;
 
         // send the message
-        _chat.TrySendInGameICMessage(entity, message, InGameICChatType.Speak, entity.Comp.HideChat ? ChatTransmitRange.HideChat : ChatTransmitRange.Normal);
+        _chat.TrySendInGameICMessage(entity, message, InGameICChatType.Speak, entity.Comp.HideChat ? ChatTransmitRange.HideChat : ChatTransmitRange.Normal, ksLanguageOverride: ksLanguage /* KS14 */);
     }
 
     public override void Update(float frameTime)
@@ -126,7 +128,7 @@ public sealed partial class VocalizationSystem : EntitySystem
 /// <param name="Message">Message to send, this is null when the event is just fired and should be set by a system</param>
 /// <param name="Handled">Whether the message was handled by a system</param>
 [ByRefEvent]
-public record struct TryVocalizeEvent(string? Message = null, bool Handled = false, bool Cancelled = false);
+public record struct TryVocalizeEvent(string? Message = null, bool Handled = false, bool Cancelled = false, ProtoId<KsLanguagePrototype>? KsLanguage = null /* KS14 */);
 
 /// <summary>
 /// Fired when the entity wants to vocalize and has a message. Allows for interception by other systems if the

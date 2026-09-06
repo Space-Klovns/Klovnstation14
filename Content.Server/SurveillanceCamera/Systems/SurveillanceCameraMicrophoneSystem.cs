@@ -1,4 +1,5 @@
 using Content.Server.Chat.Systems;
+using Content.Shared._KS14.Language; // KS14
 using Content.Shared.Speech;
 using Content.Shared.Speech.Components;
 using Content.Shared.SurveillanceCamera.Components;
@@ -70,7 +71,7 @@ public sealed partial class SurveillanceCameraMicrophoneSystem : EntitySystem
         if (!TryComp(uid, out SurveillanceCameraComponent? camera))
             return;
 
-        var ev = new SurveillanceCameraSpeechSendEvent(args.Source, args.Message);
+        var ev = new SurveillanceCameraSpeechSendEvent(args.Source, args.Message, args.KsLanguage /* KS14 */);
 
         foreach (var monitor in camera.ActiveMonitors)
         {
@@ -99,10 +100,12 @@ public sealed class SurveillanceCameraSpeechSendEvent : EntityEventArgs
 {
     public EntityUid Speaker { get; }
     public string Message { get; }
+    public KsUtteranceContext? KsLanguage { get; } // KS14
 
-    public SurveillanceCameraSpeechSendEvent(EntityUid speaker, string message)
+    public SurveillanceCameraSpeechSendEvent(EntityUid speaker, string message, KsUtteranceContext? ksLanguage = null /* KS14 */)
     {
         Speaker = speaker;
         Message = message;
+        KsLanguage = ksLanguage; // KS14
     }
 }

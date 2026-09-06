@@ -29,6 +29,14 @@ public sealed partial class UtilityOperator : HTNOperator
     [DataField("proto", required: true, customTypeSerializer: typeof(PrototypeIdSerializer<UtilityQueryPrototype>))]
     public string Prototype = string.Empty;
 
+    // KS14: ANK: start
+    /// <summary>
+    ///     If true, the plan is invalidated if there is no highest result (given <see cref="ReturnType"/> is <see cref="ReturnTypeResult.Highest"/>).
+    ///         Otherwise, the plan will succeed however no target will be added to the blackboard.
+    /// </summary>
+    [DataField] public bool InvalidatePlanOnNoHighest = true;
+    // KS14: ANK: end
+
     public override async Task<(bool Valid, Dictionary<string, object>? Effects)> Plan(NPCBlackboard blackboard,
         CancellationToken cancelToken)
     {
@@ -42,7 +50,7 @@ public sealed partial class UtilityOperator : HTNOperator
 
                 if (!target.IsValid())
                 {
-                    return (false, new Dictionary<string, object>());
+                    return (!InvalidatePlanOnNoHighest /* KS14: ANK: InvalidatePlanOnNoHighest */, new Dictionary<string, object>());
                 }
 
                 effects = new Dictionary<string, object>()
