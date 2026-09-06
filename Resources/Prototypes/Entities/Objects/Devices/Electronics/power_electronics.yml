@@ -95,10 +95,10 @@
       tags:
         - SolarTrackerElectronics
 
-- type: entity
+- type: entity #ks14 start, these should be moved to their own file, this is proof of concept FOR NOWWWWWW, i dont care to fix, your job
   id: APCElectronicsEngineering
   parent: APCElectronics
   suffix: Engineering, Locked, Standard
   components:
   - type: AccessReader
-    access: [["Engineering"]]
+    access: [["Engineering"]] #ks14 end
