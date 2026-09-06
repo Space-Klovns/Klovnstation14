@@ -15,7 +15,7 @@
     state: poster2_legit
   - type: CMVendorBundle
     bundle:
-    - ClothingUniformJumpsuitERTSecurity
+    - ClothingUniformJumpsuitColorBlue
     - ClothingBackpackERTSecurity
     - ClothingShoesBootsLaceup
     - ClothingMaskGasSecurity

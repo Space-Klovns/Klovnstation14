@@ -16,7 +16,7 @@ public sealed partial class KsAnchorlessAntagComponent : Component
     public TimeSpan ConversionTimespan = TimeSpan.FromSeconds(10);
 
     [DataField]
-    public float GunFlashSlowdown = 0.7f;
+    public float GunFlashSlowdown = 0.1f;
 
     [DataField]
     public float HeatMultiplier = 2f;
