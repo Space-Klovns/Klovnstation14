@@ -1933,3 +1933,19 @@ Entries:
         occlude vision.
   id: 200
   time: '2026-09-06T12:01:23.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Tweak
+      message: The anchorless are now slowed down when they shoot.
+    - type: Tweak
+      message: Nerfed armblade damage.
+    - type: Tweak
+      message: Scenario jobs are now human only.
+    - type: Tweak
+      message: Nanoplant ERT now wear blue jumpsuits.
+    - type: Fix
+      message: Anchorless objective system.
+    - type: Fix
+      message: Anchorless horror form shows on all machines now.
+  id: 201
+  time: '2026-09-06T15:20:34.0000000+00:00'
