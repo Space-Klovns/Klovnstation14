@@ -1,4 +1,5 @@
 using Robust.Shared.GameStates;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
 namespace Content.Shared._KS14.Trail;
@@ -14,6 +15,7 @@ namespace Content.Shared._KS14.Trail;
 /// </remarks>
 [RegisterComponent, NetworkedComponent]
 [AutoGenerateComponentState, AutoGenerateComponentPause]
+[EntityCategory("KsTrail")]
 public sealed partial class KsTrailComponent : Component
 {
     /// <summary>

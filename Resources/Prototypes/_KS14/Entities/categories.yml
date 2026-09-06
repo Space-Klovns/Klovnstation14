@@ -1,0 +1,8 @@
+# Applied automatically to anything carrying KsTrailComponent, via EntityCategoryAttribute.
+# Trails are detached effects: they are spawned by something else and deliberately outlive it,
+# so entity-accounting tests have to be told to leave them out of their totals.
+- type: entityCategory
+  id: KsTrail
+  name: entity-category-name-ks-trail
+  description: entity-category-desc-ks-trail
+  hideSpawnMenu: true

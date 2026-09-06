@@ -217,6 +217,7 @@
       state: rubble_bg_thin
       visible: false
     - state: missile
+      map: ["missile"]
     - map: ["rubble_fg"]
       state: rubble_fg_thin
       visible: false
@@ -231,6 +232,13 @@
     angularDeviation: 15
   - type: SupplyPodDrawDepth # its funny
     landedDrawDepth: OverMobs
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.SupplyPodVisuals.Reversed:
+        missile:
+          True: { rotation: 180 }
+          False: { rotation: 0 }
 
 # syndie
 - type: entity
