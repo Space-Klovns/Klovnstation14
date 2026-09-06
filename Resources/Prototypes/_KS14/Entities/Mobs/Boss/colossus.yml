@@ -6,6 +6,7 @@
   - MobCombat
   description: A monstrous creature protected by heavy shielding.
   components:
+  - type: AnimationPlayer
   - type: RotationVisuals
     defaultRotation: 90
     horizontalRotation: 90
