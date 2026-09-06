@@ -16,6 +16,19 @@
         Silicon: 20
     - type: StaticPrice
       price: 34
+    # KS14 start: add door-electronics configuration to APC electronics
+    - type: AccessReader
+    - type: DoorElectronics
+    - type: ActivatableUI
+      key: enum.DoorElectronicsConfigurationUiKey.Key
+      requiredItems:
+        tags:
+        - DoorElectronicsConfigurator
+    - type: UserInterface
+      interfaces:
+        enum.DoorElectronicsConfigurationUiKey.Key:
+          type: DoorElectronicsBoundUserInterface
+    # KS14 end
 
 # Wallmount Substation
 - type: entity
