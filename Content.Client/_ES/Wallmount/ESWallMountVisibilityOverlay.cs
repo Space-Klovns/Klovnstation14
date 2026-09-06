@@ -63,6 +63,15 @@ public sealed partial class ESWallMountVisibilityOverlay : Overlay
             if (wallmount.Arc >= Math.Tau)
                 continue;
 
+            // KS14 start: a wallmount on something you can see straight through has no hidden side to speak of
+            if (!_arcVisibilitySystem.IsOnOccludedTile(xform))
+            {
+                _sprite.SetColor((uid, sprite), sprite.Color.WithAlpha(entry.Component.OriginalAlpha));
+                _sprite.SetVisible((uid, sprite), true);
+                continue;
+            }
+            // KS14 end
+
             var (pos, rot) = _xform.GetWorldPositionRotation(xform);
 
             // KS14 start: fade out towards the edges of the arc instead of just popping in and out

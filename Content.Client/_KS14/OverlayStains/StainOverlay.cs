@@ -189,11 +189,14 @@ public sealed partial class StainOverlay : Overlay
             var scaledWorld = Matrix3x2.Multiply(ScaleMatrix, worldMatrix);
             worldHandle.SetTransform(scaledWorld);
 
+            // stains on something you can see straight through, like a window, have no hidden side to fade out
+            var fadeEntityStains = fadeStains && _arcVisibilitySystem.IsOnOccludedTile(transformComponent);
+
             foreach (var stain in stainedComponent.Stains)
             {
                 var color = stain.Color;
 
-                if (fadeStains)
+                if (fadeEntityStains)
                 {
                     if (!_arcVisibilitySystem.TryGetArcAlpha(eyeState, worldPosition, stainRotation, stain.Direction, _stainArc, stain.Color.A, out var alpha))
                         continue;
