@@ -1,17 +1,10 @@
 #region base
 - type: entity
+  parent: Airlock
   id: AirlockDouble
-  parent: BaseStructure
   name: double airlock
   description: It opens, doubly, it closes, and maybe crushes you.. Doubly.
   components:
-  - type: StationAiWhitelist
-  - type: MeleeSound
-    soundGroups:
-      Brute:
-        path:
-          "/Audio/Weapons/smash.ogg"
-  - type: InteractionOutline
   - type: Sprite
     sprite: _Battlefield14/Structures/Doors/Airlocks/Double/basic.rsi
     snapCardinals: false
@@ -50,8 +43,6 @@
       visible: false
       map: ["enum.ElectrifiedLayers.Sparks"]
       offset: 0.5, 0
-  - type: AnimationPlayer
-  - type: Physics
   - type: Fixtures
     fixtures:
       fix1:
@@ -63,44 +54,15 @@
         - FullTileMask
         layer:
         - AirlockLayer
-  - type: LayerChangeOnWeld
-    unWeldedLayer: AirlockLayer
-    weldedLayer: WallLayer
-  - type: ContainerFill
-    containers:
-      board: [ DoorElectronics ]
-  - type: AccessReader
-    containerAccessProvider: board
   - type: Door
     crushDamage:
       types:
-        Blunt: 15
-    openSound:
-      path: /Audio/Machines/airlock_open.ogg
-    closeSound:
-      path: /Audio/Machines/airlock_close.ogg
-    denySound:
-      path: /Audio/Machines/airlock_deny.ogg
-  - type: ContainerContainer
-    containers:
-      board: !type:Container
-  - type: Weldable
-    fuel: 5
-    time: 3
-  - type: Airlock
-  - type: NavMapDoor
-  - type: DoorBolt
-  - type: Appearance
-  - type: GenericVisualizer
-    visuals:
-      enum.ElectrifiedVisuals.ShowSparks:
-        enum.ElectrifiedLayers.Sparks:
-          True: { visible: True }
-          False: { visible: False }
-  - type: WiresVisuals
-  - type: ElectrocutionHUDVisuals
+        Blunt: 30 # well like, its presumably double the force
+  - type: Weldable # arbitrary values
+    fuel: 10
+    time: 6
   - type: ApcPowerReceiver
-    powerLoad: 20
+    powerLoad: 40
   - type: ExtensionCableReceiver
   - type: Electrified
     enabled: false
@@ -114,9 +76,6 @@
   - type: DeviceNetwork
     deviceNetId: Wireless
     receiveFrequencyId: BasicDevice
-  - type: WirelessNetworkConnection
-    range: 200
-#  - type: NoSignalOnLink # Mono
   - type: DeviceLinkSink
     ports:
       - Open
@@ -143,35 +102,6 @@
     resistance: 3
   - type: Occluder
     boundingBox: "-0.5,-0.5,1.5,0.5"
-  - type: Damageable
-    damageContainer: StructuralInorganic
-    damageModifierSet: StrongMetallic
-  - type: RCDDeconstructable
-    cost: 6
-    delay: 8
-    fx: EffectRCDDeconstruct8
-  - type: Destructible
-    thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 500
-      behaviors:
-      - !type:DoActsBehavior
-        acts: ["Destruction"]
-      # TODO this should go to the broken node first
-      - !type:PlaySoundBehavior
-        sound:
-          collection: MetalSlam
-  - type: Construction
-    graph: Airlock
-    node: airlock
-    containers:
-    - board
-  - type: PlacementReplacement
-    key: walls
-#  - type: PaintableAirlock
-#    group: Standard
-#    department: Civilian
   - type: StaticPrice
     price: 150
   - type: LightningTarget
@@ -193,8 +123,8 @@
 #region glass
 
 - type: entity
+  parent: [AirlockDouble, AirlockGlass]
   id: AirlockDoubleGlass
-  parent: AirlockDouble
   name: double glass airlock
   components:
   - type: MeleeSound
