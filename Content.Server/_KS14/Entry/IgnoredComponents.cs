@@ -8,6 +8,8 @@ public static class KsIgnoredComponents
         "KsShadow",
         "KsRcdPlacementNoHint",
         "KsAlwaysDisplaced",
-        "SupplyPodDrawDepth"
+        "SupplyPodDrawDepth",
+        "KsSpriteFadeOut",
+        "KsTrailFade"
     ];
 }
