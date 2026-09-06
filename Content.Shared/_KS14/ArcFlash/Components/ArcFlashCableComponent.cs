@@ -7,4 +7,4 @@ namespace Content.Shared._KS14.ArcFlash.Components;
 /// It relies on construction graph nodes to raise events
 /// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
-public sealed partial class ArcFlashDeconstructableComponent : BaseArcFlashImpactComponent;
+public sealed partial class ArcFlashCableComponent : BaseArcFlashImpactComponent;
