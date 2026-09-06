@@ -14,10 +14,10 @@ public sealed partial class NPCAngerModifierSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeLocalEvent<NPCAngerModifierComponent, DamageChangedEvent>(OnDamageChanged);
+        SubscribeLocalEvent<NpcAngerModifierComponent, DamageChangedEvent>(OnDamageChanged);
     }
 
-    private void OnDamageChanged(EntityUid uid, NPCAngerModifierComponent component, DamageChangedEvent args)
+    private void OnDamageChanged(EntityUid uid, NpcAngerModifierComponent component, DamageChangedEvent args)
     {
         if (!TryComp<DamageableComponent>(uid, out var damageable))
             return;
@@ -32,7 +32,7 @@ public sealed partial class NPCAngerModifierSystem : EntitySystem
 
     public float GetAngerModifier(EntityUid uid)
     {
-        if (TryComp<NPCAngerModifierComponent>(uid, out var anger))
+        if (TryComp<NpcAngerModifierComponent>(uid, out var anger))
             return anger.AngerModifier;
 
         return 0f;

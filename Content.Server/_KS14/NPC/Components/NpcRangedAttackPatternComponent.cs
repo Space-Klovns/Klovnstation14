@@ -1,8 +1,10 @@
+using Content.Shared._KS14.GenericSpriteFlick;
 using Robust.Shared.Audio;
+using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.NPC.Components;
 
-public enum NPCRangedType
+public enum NpcRangedType
 {
     Single,
     Spiral,
@@ -22,44 +24,42 @@ public enum NPCRangedType
 /// Component that defines an NPC attack pattern
 /// </summary>
 [RegisterComponent]
-public sealed partial class NPCRangedComponent : Component
+[EntityCategory("NpcAttackPattern")]
+public sealed partial class NpcRangedAttackPatternComponent : Component
 {
-    [DataField("attackType")]
-    public NPCRangedType AttackType { get; set; } = NPCRangedType.Single;
+    [DataField]
+    public NpcRangedType AttackType { get; set; } = NpcRangedType.Single;
 
-    [DataField("projectile")]
+    [DataField]
     public string Projectile { get; set; } = "BaseNPCProjectile";
 
-    [DataField("shots")]
+    [DataField]
     public int Shots { get; set; } = 1;
 
-    [DataField("degreesPerShot")]
+    [DataField]
     public float DegreesPerShot { get; set; } = 15f;
 
-    [DataField("rotationOffset")]
+    [DataField]
     public float RotationOffset { get; set; } = 0f;
 
-    [DataField("spread")]
+    [DataField]
     public float Spread { get; set; } = 45f;
 
-    [DataField("speed")]
+    [DataField]
     public float Speed { get; set; } = 2;
 
-    [DataField("sound")]
+    [DataField]
     public SoundSpecifier? Sound { get; set; }
 
-    [DataField("telegraph")]
-    public bool Telegraph { get; set; } = false;
+    [DataField]
+    public KsSpriteFlickData? TelegraphSpriteFlickData { get; set; } = null;
 
-    [DataField("telegraphSpriteState")]
-    public string TelegraphSpriteState { get; set; } = "attack";
-
-    [DataField("cooldown")]
+    [DataField]
     public float Cooldown { get; set; } = 2f;
 
-    [DataField("shotDelay")]
+    [DataField]
     public float ShotDelay { get; set; } = 0.1f;
 
-    [DataField("burstCount")]
+    [DataField]
     public int BurstCount { get; set; } = 1;
 }

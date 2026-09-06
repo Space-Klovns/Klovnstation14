@@ -3,10 +3,11 @@
   id: ColossusDirectionalAttack
   parent: RangedCardinalDirections
   components:
-  - type: NPCRanged
+  - type: NpcRangedAttackPattern
     projectile: ColossusDeathBolt
-    telegraph: true
-    telegraphSpriteState: attack
+    telegraphSpriteFlickData:
+      layerKey: base
+      flickState: attack
     sound:
       path: /Audio/_KS14/Effects/Magic/ratvar_attack.ogg
     burstCount: 45
@@ -19,7 +20,7 @@
   id: ColossusShotgunAttack
   parent: RangedShotgun
   components:
-  - type: NPCRanged
+  - type: NpcRangedAttackPattern
     projectile: ColossusDeathBolt
     sound:
       path: /Audio/_KS14/Effects/Magic/invoke_general.ogg
@@ -34,10 +35,11 @@
   id: ColossusSpiralAttack
   parent: RangedSpiral
   components:
-  - type: NPCRanged
+  - type: NpcRangedAttackPattern
     projectile: ColossusDeathBolt
-    telegraph: true
-    telegraphSpriteState: attack
+    telegraphSpriteFlickData:
+      layerKey: base
+      flickState: attack
     sound:
       path: /Audio/_KS14/Effects/Magic/narsie_attack.ogg
     burstCount: 512
@@ -51,10 +53,11 @@
   id: ColossusRandomAoeAttack
   parent: RangedRandomAoe
   components:
-  - type: NPCRanged
+  - type: NpcRangedAttackPattern
     projectile: ColossusDeathBolt
-    telegraph: true
-    telegraphSpriteState: attack
+    telegraphSpriteFlickData:
+      layerKey: base
+      flickState: attack
     sound:
       path: /Audio/_KS14/Effects/Magic/narsie_attack.ogg
     burstCount: 256
@@ -67,10 +70,11 @@
   id: ColossusEnragedSpiralAttack
   parent: RangedDoubleSpiral
   components:
-  - type: NPCRanged
+  - type: NpcRangedAttackPattern
     projectile: ColossusDeathBolt
-    telegraph: true
-    telegraphSpriteState: attack
+    telegraphSpriteFlickData:
+      layerKey: base
+      flickState: attack
     sound:
       path: /Audio/_KS14/Effects/Magic/narsie_attack.ogg
     burstCount: 2056

@@ -4,8 +4,8 @@ using Content.Shared.Weapons.Ranged.Systems;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Timing;
 using System.Numerics;
-using Content.Shared._KS14.NPC.Events;
 using Robust.Shared.Player;
+using Content.Shared._KS14.GenericSpriteFlick;
 
 namespace Content.Server._KS14.NPC.Systems;
 
@@ -19,16 +19,17 @@ public sealed partial class NPCCombatRangedPatternSystem : EntitySystem
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private SharedGunSystem _gunSystem = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private KsGenericSpriteFlickSystem _genericSpriteFlickSystem = default!;
 
     private readonly Dictionary<EntityUid, NPCRangedState> _activeAttacks = new();
 
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeLocalEvent<NPCRangedHolderComponent, ComponentShutdown>(OnHolderShutdown);
+        SubscribeLocalEvent<NpcRangedAttackPatternHolderComponent, ComponentShutdown>(OnHolderShutdown);
     }
 
-    private void OnHolderShutdown(EntityUid uid, NPCRangedHolderComponent component, ComponentShutdown args)
+    private void OnHolderShutdown(EntityUid uid, NpcRangedAttackPatternHolderComponent component, ComponentShutdown args)
     {
         // Clean up any active attacks when the holder is removed
         if (_activeAttacks.ContainsKey(uid))
@@ -93,13 +94,6 @@ public sealed partial class NPCCombatRangedPatternSystem : EntitySystem
         if (!Exists(owner) || Deleted(owner))
             return;
 
-        // Reset telegraph if needed
-        if (state.Attack.Telegraph)
-        {
-            var resetEv = new NPCRangedTelegraphNetworkEvent(GetNetEntity(owner), "base");
-            RaiseNetworkEvent(resetEv, Filter.Pvs(owner));
-        }
-
         // Clean up attack entity
         if (Exists(state.AttackEntity) && !Deleted(state.AttackEntity))
         {
@@ -107,7 +101,7 @@ public sealed partial class NPCCombatRangedPatternSystem : EntitySystem
         }
 
         // Set cooldown
-        if (TryComp<NPCRangedHolderComponent>(owner, out var holder))
+        if (TryComp<NpcRangedAttackPatternHolderComponent>(owner, out var holder))
         {
             var currentTime = (float)_timing.CurTime.TotalSeconds;
             holder.Cooldowns[state.AttackId] = currentTime + state.Attack.Cooldown;
@@ -117,7 +111,7 @@ public sealed partial class NPCCombatRangedPatternSystem : EntitySystem
 
     public float GetCooldownEndTime(EntityUid owner, string attackId)
     {
-        if (!TryComp<NPCRangedHolderComponent>(owner, out var holder))
+        if (!TryComp<NpcRangedAttackPatternHolderComponent>(owner, out var holder))
             return 0f;
 
         if (holder.Cooldowns.TryGetValue(attackId, out var cooldownEnd))
@@ -142,7 +136,7 @@ public sealed partial class NPCCombatRangedPatternSystem : EntitySystem
         if (!Exists(owner))
             return false;
 
-        if (!TryComp<NPCRangedHolderComponent>(owner, out var holder))
+        if (!TryComp<NpcRangedAttackPatternHolderComponent>(owner, out var holder))
             return false;
 
         if (!holder.Attacks.TryGetValue(attackId, out var attackProtoId))
@@ -159,18 +153,15 @@ public sealed partial class NPCCombatRangedPatternSystem : EntitySystem
             return false;
 
         var attackEnt = Spawn(attackProtoId, Transform(owner).Coordinates);
-        if (!TryComp<NPCRangedComponent>(attackEnt, out var attack))
+        if (!TryComp<NpcRangedAttackPatternComponent>(attackEnt, out var attack))
         {
             Del(attackEnt);
             return false;
         }
 
         // Show telegraph if enabled
-        if (attack.Telegraph)
-        {
-            var ev = new NPCRangedTelegraphNetworkEvent(GetNetEntity(owner), attack.TelegraphSpriteState);
-            RaiseNetworkEvent(ev, Filter.Pvs(owner));
-        }
+        if (attack.TelegraphSpriteFlickData is { } spriteFlickData)
+            _genericSpriteFlickSystem.Flick(owner, spriteFlickData);
 
         // Play sound
         if (attack.Sound != null)
@@ -201,40 +192,40 @@ public sealed partial class NPCCombatRangedPatternSystem : EntitySystem
     {
         switch (state.Attack.AttackType)
         {
-            case NPCRangedType.Single:
+            case NpcRangedType.Single:
                 ExecuteSinglePattern(state);
                 break;
-            case NPCRangedType.Spiral:
+            case NpcRangedType.Spiral:
                 ExecuteSpiralPattern(state);
                 break;
-            case NPCRangedType.DoubleSpiral:
+            case NpcRangedType.DoubleSpiral:
                 ExecuteDoubleSpiralPattern(state);
                 break;
-            case NPCRangedType.Shotgun:
+            case NpcRangedType.Shotgun:
                 ExecuteShotgunPattern(state);
                 break;
-            case NPCRangedType.CardinalDirections:
+            case NpcRangedType.CardinalDirections:
                 ExecuteDirectionalPattern(state, false);
                 break;
-            case NPCRangedType.DiagonalDirections:
+            case NpcRangedType.DiagonalDirections:
                 ExecuteDirectionalPattern(state, true);
                 break;
-            case NPCRangedType.AllDirections:
+            case NpcRangedType.AllDirections:
                 ExecuteAllDirectionsPattern(state);
                 break;
-            case NPCRangedType.RandomAoe:
+            case NpcRangedType.RandomAoe:
                 ExecuteRandomAoePattern(state);
                 break;
-            case NPCRangedType.Cone:
+            case NpcRangedType.Cone:
                 ExecuteConePattern(state);
                 break;
-            case NPCRangedType.Wave:
+            case NpcRangedType.Wave:
                 ExecuteWavePattern(state);
                 break;
-            case NPCRangedType.TargetedBurst:
+            case NpcRangedType.TargetedBurst:
                 ExecuteTargetedBurstPattern(state);
                 break;
-            case NPCRangedType.RapidFire:
+            case NpcRangedType.RapidFire:
                 ExecuteRapidFirePattern(state);
                 break;
         }
@@ -398,7 +389,7 @@ public sealed partial class NPCCombatRangedPatternSystem : EntitySystem
         SpawnProjectile(state.Owner, state.Attack, direction);
     }
 
-    private void SpawnProjectile(EntityUid owner, NPCRangedComponent attack, Vector2 direction)
+    private void SpawnProjectile(EntityUid owner, NpcRangedAttackPatternComponent attack, Vector2 direction)
     {
         var coordinates = Transform(owner).Coordinates;
         var projectile = Spawn(attack.Projectile, coordinates);
@@ -443,7 +434,7 @@ public sealed class NPCRangedState
 {
     public EntityUid Owner;
     public EntityUid AttackEntity;
-    public NPCRangedComponent Attack = null!;
+    public NpcRangedAttackPatternComponent Attack = null!;
     public EntityUid? Target;
     public int CurrentShot = 0;
     public float CurrentAngle = 0f;

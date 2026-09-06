@@ -9,10 +9,10 @@
   - type: RotationVisuals
     defaultRotation: 90
     horizontalRotation: 90
-  - type: NPCAngerModifier
+  - type: NpcAngerModifier
     maxAnger: 20
     damagePerAnger: 40
-  - type: NPCRangedHolder
+  - type: NpcRangedAttackPatternHolder
     attacks:
       spiral: ColossusSpiralAttack
       enragedSpiral: ColossusEnragedSpiralAttack
@@ -45,7 +45,7 @@
   - type: Sprite
     sprite: _KS14/Mobs/Boss/colossus.rsi
     layers:
-    - map: [ "enum.DamageStateVisualLayers.Base" ]
+    - map: ["base"]
       state: base
   - type: DamageStateVisuals
     states:

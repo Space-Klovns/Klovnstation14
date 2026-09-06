@@ -21,7 +21,7 @@ public sealed partial class ProbabilityPrecondition : HTNPrecondition
         if (UseAngerModifier)
         {
             var owner = blackboard.GetValue<EntityUid>(NPCBlackboard.Owner);
-            if (_entMan.TryGetComponent<NPCAngerModifierComponent>(owner, out var anger))
+            if (_entMan.TryGetComponent<NpcAngerModifierComponent>(owner, out var anger))
             {
                 finalProbability += anger.AngerModifier;
             }

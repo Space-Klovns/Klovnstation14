@@ -5,14 +5,14 @@ namespace Content.Server._KS14.NPC.Components;
 /// Higher anger increases the chance of using attacks that have it set in their HTN.
 /// </summary>
 [RegisterComponent]
-public sealed partial class NPCAngerModifierComponent : Component
+public sealed partial class NpcAngerModifierComponent : Component
 {
-    [DataField("angerModifier")]
+    [DataField]
     public float AngerModifier { get; set; } = 0f;
 
-    [DataField("maxAnger")]
+    [DataField]
     public float MaxAnger { get; set; } = 20f;
 
-    [DataField("damagePerAnger")]
+    [DataField]
     public float DamagePerAnger { get; set; } = 40f;
 }
