@@ -90,7 +90,10 @@ public sealed partial class StainSystem : EntitySystem
     ///     Adds a stain to an entity with an existing <see cref="StainedComponent"/> and
     ///         does necessary logic to handle doing so.
     /// </summary>
-    public void AddOffsetStain(in Entity<StainedComponent> entity, in Vector2 offset, in Color color, float rotationScale = 0f, SpriteSpecifier? texture = null)
+    /// <param name="direction">
+    ///     Side of the entity the stain is on, rounded to a cardinal. Defaults to the side <paramref name="offset"/> points at.
+    /// </param>
+    public void AddOffsetStain(in Entity<StainedComponent> entity, in Vector2 offset, in Color color, float rotationScale = 0f, SpriteSpecifier? texture = null, Angle? direction = null)
     {
         if (!_stainableQuery.HasComponent(entity))
             return;
@@ -103,6 +106,7 @@ public sealed partial class StainSystem : EntitySystem
             Texture = texture ?? DefaultStainTexture,
             Offset = offset,
             Rotation = rotationScale,
+            Direction = (direction ?? GetOffsetDirection(offset)).RoundToCardinalAngle(),
             Color = color,
         });
 
@@ -123,20 +127,20 @@ public sealed partial class StainSystem : EntitySystem
     ///     Applies a stain to an entity, with a specified position offset from the center of
     ///         the entity.
     /// </summary>
-    public void ApplyOffsetStain(Entity<StainedComponent?> entity, in Vector2 offset, in Color color, float rotationScale = 0f, SpriteSpecifier? texture = null)
+    public void ApplyOffsetStain(Entity<StainedComponent?> entity, in Vector2 offset, in Color color, float rotationScale = 0f, SpriteSpecifier? texture = null, Angle? direction = null)
     {
         if (!_stainableQuery.HasComponent(entity))
             return;
 
         EnsureStainedComponent(entity.Owner, ref entity.Comp);
-        AddOffsetStain(entity!, offset, color, rotationScale, texture);
+        AddOffsetStain(entity!, offset, color, rotationScale, texture, direction);
     }
 
     /// <summary>
     ///     Applies a stain to an entity, coming from some <see cref="EntityCoordinates"/>.
     /// </summary>
     /// <param name="offset">Offset to apply to source position.</param>
-    public void ApplyStain(Entity<TransformComponent?, StainedComponent?> entity, in EntityCoordinates sourceCoordinates, in Color color, float rotationScale = 0f, float coefficient = 1f, SpriteSpecifier? texture = null)
+    public void ApplyStain(Entity<TransformComponent?, StainedComponent?> entity, in EntityCoordinates sourceCoordinates, in Color color, float rotationScale = 0f, float coefficient = 1f, SpriteSpecifier? texture = null, Angle? direction = null)
     {
         if (!_stainableQuery.HasComponent(entity))
             return;
@@ -155,6 +159,12 @@ public sealed partial class StainSystem : EntitySystem
             sourceRelativeToEntityPosition = entity.Comp1.LocalPosition - Vector2.Transform(sourceWorldPosition, _transformSystem.GetInvWorldMatrix(entity.Comp1!.ParentUid));
         }
 
-        AddOffsetStain((entity, entity.Comp2), sourceRelativeToEntityPosition.Normalized() * -coefficient, color, rotationScale, texture);
+        AddOffsetStain((entity, entity.Comp2), sourceRelativeToEntityPosition.Normalized() * -coefficient, color, rotationScale, texture, direction);
     }
+
+    /// <summary>
+    ///     Direction a stain with the given offset faces; the stain sits on the side of the entity its offset points at.
+    /// </summary>
+    private static Angle GetOffsetDirection(in Vector2 offset)
+        => offset.IsLengthZero() ? Angle.Zero : offset.ToWorldAngle();
 }
