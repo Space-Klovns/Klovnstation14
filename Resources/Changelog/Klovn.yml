@@ -1921,3 +1921,15 @@ Entries:
       message: Explosions now heat up solutions.
   id: 199
   time: '2026-09-05T15:40:28.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Stains on walls now act like wallmounts - you can't see them on the
+        other side of the wall.
+    - type: Fix
+      message: >-
+        Wallmounts are now visible when mounted on something that doesn't
+        occlude vision.
+  id: 200
+  time: '2026-09-06T12:01:23.0000000+00:00'
