@@ -1949,3 +1949,11 @@ Entries:
       message: Anchorless horror form shows on all machines now.
   id: 201
   time: '2026-09-06T15:20:34.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed chem bluespace recipients/beacons not working.
+    - type: Tweak
+      message: MV wires now arcflash.
+  id: 202
+  time: '2026-09-06T15:53:12.0000000+00:00'
