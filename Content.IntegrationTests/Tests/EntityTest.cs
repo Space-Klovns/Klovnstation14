@@ -20,7 +20,7 @@ namespace Content.IntegrationTests.Tests
     [TestOf(typeof(EntityUid))]
     public sealed class EntityTest : GameTest
     {
-        private static readonly HashSet<ProtoId<EntityCategoryPrototype>> IgnoredCategories = ["Spawner", "Debug"];
+        private static readonly HashSet<ProtoId<EntityCategoryPrototype>> IgnoredCategories = ["Spawner", "Debug", "KsTrail" /* KS14: added, detached effects that outlive whatever spawned them */];
 
         public override PoolSettings PoolSettings => new()
         {
@@ -277,9 +277,29 @@ namespace Content.IntegrationTests.Tests
 
             await pair.RunTicksSync(3);
 
+            // KS14 start: entities in an ignored category are deliberately detached from whatever
+            // spawned them and outlive it - a supply pod's smoke trail hangs around after the pod
+            // is gone on purpose - so they must be left out of the totals, not merely skipped as
+            // prototypes to spawn.
+            static bool IsIgnoredCategory(IEntityManager entMan, EntityUid uid)
+            {
+                if (!entMan.TryGetComponent<MetaDataComponent>(uid, out var metaDataComponent)
+                    || metaDataComponent.EntityPrototype is not { } entityPrototype)
+                    return false;
+
+                foreach (var category in entityPrototype.Categories)
+                {
+                    if (IgnoredCategories.Contains(category.ID))
+                        return true;
+                }
+
+                return false;
+            }
+            // KS14 end
+
             // We consider only non-audio entities, as some entities will just play sounds when they spawn.
-            int Count(IEntityManager ent) => ent.EntityCount - ent.Count<AudioComponent>();
-            IEnumerable<EntityUid> Entities(IEntityManager entMan) => entMan.GetEntities().Where(e => !entMan.HasComponent<AudioComponent>(e));
+            int Count(IEntityManager ent) => Entities(ent).Count()/* KS14: ent.EntityCount - ent.Count<AudioComponent>() -> this, so it agrees with the filtering in Entities */;
+            IEnumerable<EntityUid> Entities(IEntityManager entMan) => entMan.GetEntities().Where(e => !entMan.HasComponent<AudioComponent>(e) && !IsIgnoredCategory(entMan, e)/* KS14: added check */);
 
             await Assert.MultipleAsync(async () =>
             {

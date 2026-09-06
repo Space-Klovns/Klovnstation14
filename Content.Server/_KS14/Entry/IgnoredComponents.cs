@@ -7,6 +7,7 @@ public static class KsIgnoredComponents
         "KsWaveDistortion",
         "KsShadow",
         "KsRcdPlacementNoHint",
-        "KsAlwaysDisplaced"
+        "KsAlwaysDisplaced",
+        "SupplyPodDrawDepth"
     ];
 }
