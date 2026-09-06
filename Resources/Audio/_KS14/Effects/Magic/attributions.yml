@@ -1,0 +1,6 @@
+
+
+- files: ["invoke_general.ogg", "narsie_attack.ogg", "ratvar_attack.ogg"]
+  license: "CC-BY-SA-3.0"
+  copyright: "Taken from https://github.com/tgstation/tgstation at commit 436ba869ebcd0b60b63973fb7562f447ee655205"
+  source: "https://github.com/tgstation/tgstation/blob/436ba869ebcd0b60b63973fb7562f447ee655205/sound/effects/magic/clockwork/"

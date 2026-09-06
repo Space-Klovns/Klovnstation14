@@ -1,7 +1,7 @@
 {
     "version": 1,
-    "license": null,
-    "copyright": null,
+    "license": "CC-BY-SA-3.0",
+    "copyright": "Taken from https://github.com/tgstation/tgstation/ at commit 4bfd079071fab3b94d6b0f9c00221729e4737378",
     "size": {
         "x": 96,
         "y": 96
