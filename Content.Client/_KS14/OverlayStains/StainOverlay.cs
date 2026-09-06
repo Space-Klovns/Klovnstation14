@@ -1,10 +1,13 @@
 using System.Linq;
 using System.Numerics;
 using Content.Client.Graphics;
+using Content.Client._KS14.ArcVisibility;
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.OverlayStains;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
+using Robust.Shared.Configuration;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Prototypes;
@@ -23,15 +26,22 @@ public sealed partial class StainOverlay : Overlay
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
 
     [Dependency] private TransformSystem _transformSystem = default!;
     [Dependency] private SpriteSystem _spriteSystem = default!;
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
+    [Dependency] private ArcVisibilitySystem _arcVisibilitySystem = default!;
 
     /// <summary>
     ///     Based on <see cref="Shared._KS14.CCVar.KsCCVars.ComplexStainDrawing"/>
     /// </summary>
     public bool ComplexDrawing = false;
+
+    /// <summary>
+    ///     Arc a stain is visible within, based on <see cref="Shared._KS14.CCVar.KsCCVars.StainArcDegrees"/>.
+    /// </summary>
+    private Angle _stainArc = Angle.FromDegrees(180d);
 
     [Dependency] private EntityQuery<TransformComponent> _transformQuery = default!;
     [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
@@ -63,6 +73,8 @@ public sealed partial class StainOverlay : Overlay
         _blackShader = _prototypeManager.Index(BlackShaderId).Instance();
         _stencilMaskShader = _prototypeManager.Index(StencilMaskShaderId).Instance();
         _stencilEqualDrawShader = _prototypeManager.Index(StencilEqualDrawShaderId).Instance();
+
+        _configurationManager.OnValueChanged(KsCCVars.StainArcDegrees, (arcDegrees) => _stainArc = Angle.FromDegrees(arcDegrees), invokeImmediately: true);
     }
 
     protected override bool BeforeDraw(in OverlayDrawArgs args)
@@ -156,6 +168,12 @@ public sealed partial class StainOverlay : Overlay
         // Only draw stains where the stencil was set above, i.e. on top of walls.
         worldHandle.UseShader(_stencilEqualDrawShader);
 
+        // stains sit on the same surfaces directional wallmounts do, so they fade with the eye the same way.
+        // with FOV or lighting off you can see everything anyway, so there is nothing to hide and we skip it entirely
+        var eyeState = default(ArcVisibilityEyeState);
+        var fadeStains = viewport.Eye is { DrawFov: true, DrawLight: true }
+            && _arcVisibilitySystem.TryGetEyeState(viewport, out eyeState);
+
         var stainedEnumerator = _entityManager.EntityQueryEnumerator<StainedComponent, TransformComponent>();
         while (stainedEnumerator.MoveNext(out var uid, out var stainedComponent, out var transformComponent))
         {
@@ -163,13 +181,29 @@ public sealed partial class StainOverlay : Overlay
                 continue;
 
             var (worldPosition, worldRotation) = _transformSystem.GetWorldPositionRotation(transformComponent);
-            var worldMatrix = Matrix3Helpers.CreateTransform(worldPosition, worldRotation - transformComponent.LocalRotation);
+
+            // stains are placed in the frame of whatever the entity is on, so they do not turn with the entity itself
+            var stainRotation = worldRotation - transformComponent.LocalRotation;
+            var worldMatrix = Matrix3Helpers.CreateTransform(worldPosition, stainRotation);
 
             var scaledWorld = Matrix3x2.Multiply(ScaleMatrix, worldMatrix);
             worldHandle.SetTransform(scaledWorld);
 
+            // stains on something you can see straight through, like a window, have no hidden side to fade out
+            var fadeEntityStains = fadeStains && _arcVisibilitySystem.IsOnOccludedTile(transformComponent);
+
             foreach (var stain in stainedComponent.Stains)
             {
+                var color = stain.Color;
+
+                if (fadeEntityStains)
+                {
+                    if (!_arcVisibilitySystem.TryGetArcAlpha(eyeState, worldPosition, stainRotation, stain.Direction, _stainArc, stain.Color.A, out var alpha))
+                        continue;
+
+                    color = stain.Color.WithAlpha(alpha);
+                }
+
                 var texture = _spriteSystem.GetFrame(stain.Texture, realTime);
                 var halfTextureWidth = texture.Width / DblPixelsPerMeter;
                 var halfTextureHeight = texture.Height / DblPixelsPerMeter;
@@ -177,7 +211,7 @@ public sealed partial class StainOverlay : Overlay
                 worldHandle.DrawTexture(
                     texture,
                     new Vector2(stain.Offset.X - halfTextureWidth, stain.Offset.Y - halfTextureHeight),
-                    angle: new Angle(stain.Rotation * MathF.Tau), modulate: stain.Color
+                    angle: new Angle(stain.Rotation * MathF.Tau), modulate: color
                 );
             }
         }
