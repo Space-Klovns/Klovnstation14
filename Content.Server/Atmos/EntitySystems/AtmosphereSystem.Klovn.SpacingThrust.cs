@@ -146,11 +146,14 @@ public sealed partial class AtmosphereSystem
     ///         as 2:1. Billing the moved mass directly turns that solver artifact into a standing force: a perfectly
     ///         square grid with the same mixture on every tile drifts south-west forever.</para>
     ///
-    ///     <para>The archived mixtures are the state the whole cycle is solved against, and for the tile being
-    ///         processed they are snapshotted before any of its four shares, so the flux they imply is the same in
-    ///         every direction and symmetric geometry cancels. What is left over is the order the tiles themselves
-    ///         are archived in, which is worth about 1% of the vented impulse and points somewhere different every
-    ///         run rather than accumulating - see <c>KsSpacingThrustTest</c>.</para>
+    ///     <para>The archived mixtures are snapshotted before any of a tile's four shares, so the flux they imply is
+    ///         the same in every direction and the bulk of that bias goes away. What survives is the bias in the
+    ///         simulation itself: LINDA's share order leaves the grid genuinely lopsided while it is venting, and
+    ///         since tiles are archived at whatever moment they are first touched, the archives do not agree on a
+    ///         single instant either. That is worth about 1% of the vented impulse - see <c>KsSpacingThrustTest</c> -
+    ///         and no billing scheme can take it out, because the gas really did leave unevenly. Measuring the live
+    ///         mixtures from one consistent snapshot instead was tried and came out twice as lopsided, for exactly
+    ///         that reason.</para>
     ///
     ///     <para>The cost of all this is that the figure billed is the flux LINDA intends over the cycle rather
     ///         than the mass it ends up moving, which runs a little high. The two differ only by the solver's own

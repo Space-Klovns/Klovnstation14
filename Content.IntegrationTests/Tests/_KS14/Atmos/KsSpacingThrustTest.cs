@@ -22,10 +22,17 @@ public sealed class KsSpacingThrustTest : GameTest
 {
     /// <summary>
     ///     Fraction of the impulse the escaping gas carried that a symmetric grid is allowed to end up with.
-    ///     A square measures about 1% in practice, and picks a different direction every run - what is left is
-    ///     the order tiles happen to be archived in, not a bias with a direction of its own.
     /// </summary>
-    private const float SymmetryTolerance = 0.05f;
+    /// <remarks>
+    ///     A square measures 1.1% with monstermos and 1.3% without. That is not billing error and no billing
+    ///     scheme removes it: <c>Share</c> works off live moles, so a tile's northward share is drawn from a
+    ///     fuller mixture than its westward one, and the grid is genuinely lopsided for as long as it is venting.
+    ///     Pricing every boundary off one consistent snapshot of that state was tried and measured 2.0%, worse,
+    ///     since it sees the whole accumulated lopsidedness instead of averaging over it.
+    ///     Feeding <c>Share</c> the archived moles the way /tg/'s LINDA does takes this to 0.45%, but that is a
+    ///     change to the solver every grid in the game runs on, not to this feature.
+    /// </remarks>
+    private const float SymmetryTolerance = 0.02f;
 
     private AtmosphereSystem _atmosphereSystem = default!;
     private SharedMapSystem _mapSystem = default!;
