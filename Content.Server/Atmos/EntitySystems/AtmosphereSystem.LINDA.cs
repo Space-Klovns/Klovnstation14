@@ -82,6 +82,12 @@ namespace Content.Server.Atmos.EntitySystems
                 {
                     var difference = Share(tile, enemyTile, adjacentTileLength);
 
+                    // KS14 start: gas that crosses the grid boundary shoves the grid the other way.
+                    // Exactly one of the two tiles being a map tile means this share left (or entered) the grid.
+                    if (KsSpacingThrust && tile.MapAtmosphere != enemyTile.MapAtmosphere)
+                        KsConsiderLindaSpacingThrust(ent.Owner, tile, enemyTile, direction);
+                    // KS14 end
+
                     // Monstermos already handles this, so let's not handle it ourselves.
                     if (!MonstermosEqualization)
                     {
@@ -236,6 +242,11 @@ namespace Content.Server.Atmos.EntitySystems
             var heatCapacitySharerToThis = 0f;
             var movedMoles = 0f;
             var absMovedMoles = 0f;
+            // KS14 start: mass bookkeeping for spacing thrust, see AtmosphereSystem.Klovn.SpacingThrust.cs.
+            // Both are in grams, since that is the unit GasMolarMasses is in.
+            var ksMassMoved = 0f;
+            var ksAbsMassMoved = 0f;
+            // KS14 end
 
             for (var i = 0; i < Atmospherics.TotalNumberOfGases; i++)
             {
@@ -263,9 +274,21 @@ namespace Content.Server.Atmos.EntitySystems
                     sharer.Moles[i] += delta;
                 movedMoles += delta;
                 absMovedMoles += MathF.Abs(delta);
+                // KS14 start: track the mass, not just the amount, of what moved.
+                var ksGasMass = delta * GasMolarMasses[i];
+                ksMassMoved += ksGasMass;
+                ksAbsMassMoved += MathF.Abs(ksGasMass);
+                // KS14 end
             }
 
             tileReceiver.LastShare = absMovedMoles;
+
+            // KS14 start: handed to KsConsiderLindaSpacingThrust by whoever called us, if this share crossed the
+            // grid boundary. Set before the early returns below, since gas escapes through those too.
+            _ksShareMassMoved = ksMassMoved;
+            _ksShareAbsMassMoved = ksAbsMassMoved;
+            _ksShareAbsMolesMoved = absMovedMoles;
+            // KS14 end
 
             if (absTemperatureDelta > Atmospherics.MinimumTemperatureDeltaToConsider)
             {

@@ -65,6 +65,7 @@ public sealed partial class AtmosphereSystem : SharedAtmosphereSystem
         InitializeCVars();
         InitializeGridAtmosphere();
         InitializeMap();
+        InitializeKsSpacingThrust(); // KS14
 
         SubscribeLocalEvent<TileChangedEvent>(OnTileChanged);
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
