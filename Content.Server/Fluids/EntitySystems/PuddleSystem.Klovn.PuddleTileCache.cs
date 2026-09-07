@@ -23,6 +23,24 @@ public sealed partial class PuddleSystem
     /// </summary>
     private readonly Dictionary<EntityUid, (EntityUid GridUid, Vector2i Indices)> _puddleCacheLocations = new();
 
+    /// <summary>
+    ///     Compares cached puddles by their <see cref="Entity{T}.Owner"/> alone.
+    /// </summary>
+    /// <remarks>
+    ///     <see cref="Entity{T}"/> is a record struct, so its generated equality compares the component too, even
+    ///     though its hashcode is the uid's - without this, removing a puddle by uid alone silently does nothing.
+    /// </remarks>
+    private sealed class PuddleEntityUidComparer : IEqualityComparer<Entity<PuddleComponent>>
+    {
+        public static readonly PuddleEntityUidComparer Instance = new();
+
+        public bool Equals(Entity<PuddleComponent> x, Entity<PuddleComponent> y)
+            => x.Owner == y.Owner;
+
+        public int GetHashCode(Entity<PuddleComponent> entity)
+            => entity.Owner.GetHashCode();
+    }
+
     private void InitialisePuddleTileCache()
     {
         SubscribeLocalEvent<PuddleComponent, ComponentStartup>(OnPuddleCacheStartup);
@@ -81,7 +99,7 @@ public sealed partial class PuddleSystem
 
         if (!tilePuddles.TryGetValue(indices, out var puddleUids))
         {
-            puddleUids = [];
+            puddleUids = new(PuddleEntityUidComparer.Instance);
             tilePuddles[indices] = puddleUids;
         }
 
@@ -102,7 +120,7 @@ public sealed partial class PuddleSystem
 
         if (tilePuddles.TryGetValue(location.Indices, out var puddleUids))
         {
-            puddleUids.Remove((puddleUid, default! /* comp is irrelevant here, only uid is used for the hashcode */));
+            puddleUids.Remove((puddleUid, default! /* comp is irrelevant, PuddleEntityUidComparer only looks at the uid */));
 
             if (puddleUids.Count == 0)
                 tilePuddles.Remove(location.Indices);

@@ -30,6 +30,7 @@ public sealed partial class UpdatePuddleEvaporationReaction : IGasReactionEffect
 
         var evaporatingComponent = _entityManager.EnsureComponent<AtmosEvaporatingPuddleComponent>(puddleEntity);
         evaporatingComponent.EvaporationAmount = FixedPoint2.Max(evaporatingComponent.EvaporationAmount, UnitsPerMole * mixture.GetMoles(Gas));
+        _entityManager.Dirty(puddleEntity, evaporatingComponent);
 
         _puddleSystem.UpdateEvaporation(puddleEntity, puddleEntity.Comp.Solution!.Value.Comp.Solution /* bro wtf */);
         return ReactionResult.Reacting;
