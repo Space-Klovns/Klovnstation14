@@ -215,7 +215,7 @@ public sealed class PipeNodeTeleporterTest : GameTest
         var testMap = await pair.CreateTestMap();
 
         var entityMan = server.EntMan;
-        var mapMan = server.MapMan;
+        var mapSystem = server.System<SharedMapSystem>();
         var mapSys = entityMan.System<SharedMapSystem>();
 
         EntityUid beacon = default;
@@ -225,8 +225,8 @@ public sealed class PipeNodeTeleporterTest : GameTest
 
         await server.WaitAssertion(() =>
         {
-            Entity<MapGridComponent> beaconGrid = mapMan.CreateGridEntity(testMap.MapId);
-            var recipientGrid = separateGrids ? mapMan.CreateGridEntity(testMap.MapId) : beaconGrid;
+            Entity<MapGridComponent> beaconGrid = mapSystem.CreateGridEntity(testMap.MapId);
+            var recipientGrid = separateGrids ? mapSystem.CreateGridEntity(testMap.MapId) : beaconGrid;
 
             for (var x = 0; x <= 5; ++x)
             {
