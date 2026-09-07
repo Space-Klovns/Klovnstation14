@@ -10,7 +10,7 @@
       minimum: 400
     effects:
     - !type:ChemicalFireTileEffect
-      removed: 1.5
+      removed: 1.65
   # KS14 end
   reactiveEffects:
     Flammable:
@@ -38,7 +38,7 @@
   tileEffects:
   - !type:ChemicalFireTileEffect
     id: ChemicalFireThermite
-    removed: 1
+    removed: 3.5 # its giga hot
   # KS14 end
   tileReactions:
   - !type:FlammableTileReaction
@@ -61,6 +61,17 @@
   contrabandSeverity: Major
   flavor: bitter
   color: "#FA00AF"
+  # KS14 start
+  tileEffects:
+  - !type:LogicAndTileEffect
+    conditions:
+    - !type:CheckTemperatureTileEffect
+      minimum: 300
+    effects:
+    - !type:ChemicalFireTileEffect
+      removed: 2
+      durationScale: 0.8
+  # KS14 end
   tileReactions:
   - !type:FlammableTileReaction
     temperatureMultiplier: 5
@@ -192,7 +203,8 @@
       minimum: 300
     effects:
     - !type:ChemicalFireTileEffect
-      removed: 1.2
+      removed: 2
+      durationScale: 2
   # KS14 end
   tileReactions:
   - !type:FlammableTileReaction {}

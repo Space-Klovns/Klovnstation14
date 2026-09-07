@@ -147,11 +147,7 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
     /// </remarks>
     private void HeatTileAir(Entity<ChemicalFireComponent> entity, ref ChemicalFireHeatTileEvent args)
     {
-        if (entity.Comp.HeatPower <= 0f)
-            return;
-
-        var mixture = _atmosphereSystem.GetTileMixture((args.GridUid, null, null), null, args.Tile, excite: true);
-        if (mixture is null || mixture.Immutable || mixture.Temperature >= entity.Comp.Temperature)
+        if (entity.Comp.HeatPower <= 0f || args.Mixture is not { } mixture || mixture.Immutable || mixture.Temperature >= entity.Comp.Temperature)
             return;
 
         var heatCapacity = _atmosphereSystem.GetHeatCapacity(mixture, applyScaling: true);
@@ -165,4 +161,7 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
 
         _atmosphereSystem.AddHeat(mixture, energy);
     }
+
+    protected override GasMixture? ResolveTileMixture(EntityUid gridUid, Vector2i tile, bool excite)
+        => _atmosphereSystem.GetTileMixture((gridUid, null, null), null, tile, excite);
 }

@@ -19,7 +19,7 @@
   - type: TileEntityEffect
     effects:
     - !type:Flammable
-      multiplier: 3.75
+      multiplier: 1.25
       multiplierOnExisting: 0.75
     - !type:Ignite
   - type: ChemicalFireGasConsumer

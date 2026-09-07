@@ -16,6 +16,8 @@ public sealed partial class PuddleSystem
 
     private void InitialiseKlovn()
     {
+        InitialisePuddleTileCache();
+
         SubscribeLocalEvent<PuddleComponent, MapInitEvent>(OnPuddleMapInit);
     }
 
@@ -44,7 +46,7 @@ public sealed partial class PuddleSystem
         if (entity.Comp.Solution is not { } solutionEntity)
             return;
 
-        TimeSpan deltaTime = TimeSpan.Zero;
+        var deltaTime = TimeSpan.Zero;
         if (careAboutTime)
         {
             deltaTime = curTime - entity.Comp.LastTileEffectUpdate;
@@ -54,6 +56,8 @@ public sealed partial class PuddleSystem
 
         var solution = solutionEntity.Comp.Solution;
         var scale = careAboutTime ? (float)deltaTime.TotalSeconds : 1f;
+        entity.Comp.LastTileEffectUpdate = curTime;
+
         if (!_tileEffectSystem.TryUpdateTileEffects(entity.Owner, null, solution, scale: scale))
             return;
 
@@ -64,7 +68,6 @@ public sealed partial class PuddleSystem
         }
 
         _solutionContainerSystem.UpdateChemicals(solutionEntity);
-        entity.Comp.LastTileEffectUpdate = curTime;
         Dirty(solutionEntity);
     }
 }

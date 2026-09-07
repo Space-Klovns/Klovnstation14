@@ -91,6 +91,8 @@ public sealed partial class AtmosphereSystem : SharedAtmosphereSystem
     {
         if (ev.WasModified<DecalPrototype>())
             CacheDecals();
+
+        KsOnPrototypesReloaded(ev); // KS14
     }
 
     public override void Update(float frameTime)

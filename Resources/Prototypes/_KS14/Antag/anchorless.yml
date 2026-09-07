@@ -22,6 +22,9 @@
     - AntagImmune
   components:
   - type: KsAnchorlessAntag
+    heatMultiplier: 1.4
+    gunFlashSlowdown: 0.1
+    conversionDuration: 10s
   - type: AnchorlessFaction
   - type: VoiceMask
     action: ActionAnchorlessVoiceMimic

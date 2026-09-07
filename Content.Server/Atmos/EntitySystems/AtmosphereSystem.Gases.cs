@@ -23,10 +23,19 @@ namespace Content.Server.Atmos.EntitySystems
         public override void InitializeGases()
         {
             base.InitializeGases();
+            InitialiseKlovnReactions(); // KS14
 
+            RefreshGasReactionsCache(); // KS14: extracted so it can also be called on reload, see KsOnPrototypesReloaded
+        }
+
+        // KS14 start: also invoked when GasReactionPrototype is reloaded, so _gasReactions doesn't keep
+        // pointing at prototype instances the prototype manager has already replaced
+        private void RefreshGasReactionsCache()
+        {
             _gasReactions = _protoMan.EnumeratePrototypes<GasReactionPrototype>().ToArray();
             Array.Sort(_gasReactions, (a, b) => b.Priority.CompareTo(a.Priority));
         }
+        // KS14 end
 
         public override float GetMass(GasMixture mix)
         {

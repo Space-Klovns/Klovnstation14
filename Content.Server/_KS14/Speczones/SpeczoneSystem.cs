@@ -264,10 +264,14 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     /// <param name="id">Prototype ID of the speczone being queried for.</param>
     /// <param name="speczoneEntity">Null when this method returns false.</param>
     /// <returns>True if the specified speczone was found, false otherwise.</returns>
-    public bool TryGetSpeczoneEntity(string id, [MaybeNullWhen(false)] out Entity<SpeczoneComponent> speczoneEntity)
+    public bool TryGetSpeczoneEntity(ProtoId<SpeczonePrototype> id, [MaybeNullWhen(false)] out Entity<SpeczoneComponent> speczoneEntity)
         => _speczones.TryGetValue(id, out speczoneEntity);
 
-    /// <returns>An enumerator of the <see cref="EntityUid"/>s of every existing speczone.</returns>
-    public IEnumerator<EntityUid> GetSpeczoneUidEnumerator()
-        => _speczoneUids.GetEnumerator();
+    /// <summary>
+    ///     Not the wisest idea to modify speczones while iterating this if you don't copy this
+    ///         into something else (you risk modifying the collection the return value relies on)
+    /// </summary>
+    /// <returns>An immutable collection of speczone entities.</returns>
+    public Dictionary<string, Entity<SpeczoneComponent>>.KeyCollection GetSpeczoneEntities()
+        => _speczones.Keys;
 }

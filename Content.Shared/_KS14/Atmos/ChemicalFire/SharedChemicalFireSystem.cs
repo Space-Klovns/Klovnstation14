@@ -1,4 +1,5 @@
 using Content.Shared._KS14.PredictedSpawning;
+using Content.Shared.Atmos;
 using Content.Shared.Light.Components;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -21,12 +22,22 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
     [Dependency] private IComponentFactory _componentFactory = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private MetaDataSystem _metaDataSystem = default!;
     [Dependency] private KsSharedPredictedSpawnSystem _predictedSpawnSystem = default!;
 
     [Dependency] private EntityQuery<ChemicalFireComponent> _chemicalFireQuery = default!;
     [Dependency] private EntityQuery<ChemicalFireGridComponent> _chemicalFireGridQuery = default!;
     [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
     [Dependency] private EntityQuery<TransformComponent> _transformQuery = default!;
+
+    /// <summary>
+    ///     One paused, never-map-inited singleton per chemfire prototype that's been sustain-checked so far,
+    ///         kept in nullspace purely to raise <see cref="ChemicalFireCanSustainEvent"/> against - see
+    ///         <see cref="CanSustain"/>. Built identically on client and server (chemfires are predicted, so
+    ///         both sides need to be able to ask the same question), even though only the server can answer it
+    ///         with real atmos data - see <see cref="ResolveTileMixture"/>. Cleared out on prototype reload.
+    /// </summary>
+    private readonly Dictionary<EntProtoId, EntityUid> _templateFires = new();
 
     public override void Initialize()
     {
@@ -36,7 +47,23 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         SubscribeLocalEvent<ChemicalFireComponent, ComponentShutdown>(OnShutdown);
         SubscribeLocalEvent<ChemicalFireComponent, EntParentChangedMessage>(OnEntParentChanged);
 
+        SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
+
         InitialiseNetworking();
+    }
+
+    /// <summary>
+    ///     Drops every cached template singleton so the next sustain check rebuilds it against fresh data.
+    /// </summary>
+    private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
+    {
+        if (!args.WasModified<EntityPrototype>())
+            return;
+
+        foreach (var templateUid in _templateFires.Values)
+            Del(templateUid);
+
+        _templateFires.Clear();
     }
 
     #region Public API
@@ -55,7 +82,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
     ///     Overrides the prototype's <see cref="ChemicalFireComponent.Duration"/>, on a fire that is spawned and
     ///         on one that is refreshed in place alike. Null keeps whatever the prototype says.
     /// </param>
-    /// <returns>The chemfire now occupying the tile, or null if it could not be placed.</returns>
+    /// <returns>Either the chemfire now occupying the tile, the chemfire already occupying it, or null if no chemfire could not be placed.</returns>
     public Entity<ChemicalFireComponent>? SpawnChemicalFire(
         EntProtoId prototypeId,
         Entity<MapGridComponent?> grid,
@@ -64,6 +91,9 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
     {
         if (!_mapGridQuery.Resolve(grid.Owner, ref grid.Comp, false) ||
             !TryGetPrototypeChemicalFire(prototypeId, out var prototypeComponent))
+            return null;
+
+        if (!CanSustain(prototypeId, grid, tile))
             return null;
 
         var connectionKey = GetConnectionKey(prototypeComponent, prototypeId);
@@ -200,7 +230,8 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
             if (fireComponent.LocalGridUid is not { } gridUid)
                 continue;
 
-            var heatEvent = new ChemicalFireHeatTileEvent(gridUid, fireComponent.LocalTile, (float)fireComponent.HeatInterval.TotalSeconds);
+            var mixture = ResolveTileMixture(gridUid, fireComponent.LocalTile, excite: true);
+            var heatEvent = new ChemicalFireHeatTileEvent(gridUid, fireComponent.LocalTile, (float)fireComponent.HeatInterval.TotalSeconds, mixture);
             RaiseLocalEvent(uid, ref heatEvent);
         }
     }
@@ -245,6 +276,66 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
     ///     Runs while the chemfire is still registered on its tile, so the tile is still resolvable from it.
     /// </remarks>
     protected virtual void BeforeFireShutdown(Entity<ChemicalFireComponent> entity) { }
+
+    /// <summary>
+    ///     Resolves a tile's gas mixture, for a heat tick or a sustain check alike. Atmos doesn't exist
+    ///         client-side, so we use an estimate on the client and a real lookup on the server.
+    /// </summary>
+    /// <param name="excite">
+    ///     Whether the lookup should wake the tile up for atmos processing - true for an actual heat tick,
+    ///         false for a sustain check probing whether a fire could survive there, which should not have
+    ///         side effects of its own.
+    /// </param>
+    protected abstract GasMixture? ResolveTileMixture(EntityUid gridUid, Vector2i tile, bool excite);
+
+    /// <summary>
+    ///     Whether a chemfire of this prototype could survive being placed on this tile right now. Raises
+    ///         <see cref="ChemicalFireCanSustainEvent"/> against the prototype's template singleton - see that
+    ///         type's remarks for what a "template singleton" is and why it has to be built the way it is.
+    ///     Runs identically client and server side, since chemfires spawn through prediction; the client just
+    ///         has no <see cref="GasMixture"/> to hand the event (<see cref="ResolveTileMixture"/> is a no-op
+    ///         there), so any veto that needs real atmos data effectively only bites once the server confirms
+    ///         or corrects the prediction.
+    /// </summary>
+    private bool CanSustain(EntProtoId prototypeId, Entity<MapGridComponent?> grid, Vector2i tile)
+    {
+        if (!ResolveTemplateFire(prototypeId, out var templateUid))
+            return true; // No ChemicalFireComponent to speak of - SpawnChemicalFire's own check already covers this.
+
+        var mixture = ResolveTileMixture(grid.Owner, tile, excite: false);
+        var ev = new ChemicalFireCanSustainEvent(grid.Owner, tile, mixture);
+        RaiseLocalEvent(templateUid, ref ev);
+
+        return ev.CanSustain;
+    }
+
+    /// <summary>
+    ///     Gets or lazily creates the paused, nullspace singleton chemfire used to answer sustain checks for a
+    ///         prototype. Never map-inited - <see cref="EntityManager.InitializeAndStartEntity"/> is called
+    ///         with <c>doMapInit: false</c> - because a real spawn's <c>MapInitEvent</c> could trigger
+    ///         spawn-on-init effects a prototype might carry (e.g. thermite's spark), and pausing the entity
+    ///         does not prevent that; it only has to run <c>ComponentStartup</c> to be fully queryable.
+    /// </summary>
+    private bool ResolveTemplateFire(EntProtoId prototypeId, out EntityUid templateUid)
+    {
+        if (_templateFires.TryGetValue(prototypeId, out templateUid) && Exists(templateUid))
+            return true;
+
+        if (!_prototypeManager.TryIndex<EntityPrototype>(prototypeId, out var entityPrototype) ||
+            !entityPrototype.TryGetComponent(out ChemicalFireComponent? _, _componentFactory))
+        {
+            templateUid = default;
+            return false;
+        }
+
+        templateUid = EntityManager.CreateEntityUninitialized(prototypeId, MapCoordinates.Nullspace);
+        EntityManager.InitializeAndStartEntity(templateUid, doMapInit: false);
+
+        _metaDataSystem.SetEntityPaused(templateUid, true);
+
+        _templateFires[prototypeId] = templateUid;
+        return true;
+    }
 
     private void OnEntParentChanged(Entity<ChemicalFireComponent> entity, ref EntParentChangedMessage args)
     {
