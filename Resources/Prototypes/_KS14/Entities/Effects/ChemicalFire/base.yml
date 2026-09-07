@@ -52,3 +52,17 @@
       params:
         volume: -1
         variation: 0.3
+
+  - type: AlwaysHot
+  - type: StepTrigger
+    requiredTriggeredSpeed: 0
+    intersectRatio: 0.1
+    blacklist:
+      tags:
+      - Catwalk
+  - type: TileEntityEffect
+    effects:
+    - !type:Flammable
+      multiplier: 1.25
+      multiplierOnExisting: 0.75
+    - !type:Ignite

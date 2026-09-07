@@ -1,0 +1,17 @@
+
+- type: entity
+  parent: BaseChemicalFire
+  id: ChemicalFireSuspendedKlovnideTrioxide
+  components:
+  - type: ChemicalFire
+    color: "#ff418d"
+    duration: 5
+    temperature: 3200
+    exposedVolume: 50
+    heatPower: 3000 # insanely weak
+  - type: TileEntityEffect
+    effects:
+    - !type:Flammable
+      multiplier: 4
+      multiplierOnExisting: 0.75
+    - !type:Ignite
