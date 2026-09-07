@@ -25,7 +25,7 @@ public sealed partial class StainOverlay : Overlay
     [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
-    [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private IConfigurationManager _configurationManager = default!;
 
     [Dependency] private TransformSystem _transformSystem = default!;
@@ -116,7 +116,7 @@ public sealed partial class StainOverlay : Overlay
             () =>
             {
                 _grids.Clear();
-                _mapManager.FindGridsIntersecting(mapId, worldBounds, ref _grids);
+                _mapSystem.FindGridsIntersecting(mapId, worldBounds, ref _grids);
 
                 foreach (var grid in _grids)
                 {

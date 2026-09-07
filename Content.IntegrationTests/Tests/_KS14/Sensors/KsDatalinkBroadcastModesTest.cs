@@ -99,7 +99,6 @@ public sealed class KsDatalinkBroadcastModesTest : GameTest
 
         var map = await pair.CreateTestMap();
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -111,9 +110,9 @@ public sealed class KsDatalinkBroadcastModesTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridBeacon = mapManager.CreateGridEntity(map.MapId);
-            gridNormal = mapManager.CreateGridEntity(map.MapId);
-            gridRx = mapManager.CreateGridEntity(map.MapId);
+            gridBeacon = mapSystem.CreateGridEntity(map.MapId);
+            gridNormal = mapSystem.CreateGridEntity(map.MapId);
+            gridRx = mapSystem.CreateGridEntity(map.MapId);
 
             mapSystem.SetTiles(gridBeacon.Owner, gridBeacon.Comp, BuildTiles());
             mapSystem.SetTiles(gridNormal.Owner, gridNormal.Comp, BuildTiles());
@@ -162,7 +161,6 @@ public sealed class KsDatalinkBroadcastModesTest : GameTest
 
         var map = await pair.CreateTestMap();
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -174,9 +172,9 @@ public sealed class KsDatalinkBroadcastModesTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridBeacon = mapManager.CreateGridEntity(map.MapId);
-            gridNormal = mapManager.CreateGridEntity(map.MapId);
-            gridRx = mapManager.CreateGridEntity(map.MapId);
+            gridBeacon = mapSystem.CreateGridEntity(map.MapId);
+            gridNormal = mapSystem.CreateGridEntity(map.MapId);
+            gridRx = mapSystem.CreateGridEntity(map.MapId);
 
             mapSystem.SetTiles(gridBeacon.Owner, gridBeacon.Comp, BuildTiles());
             mapSystem.SetTiles(gridNormal.Owner, gridNormal.Comp, BuildTiles());
@@ -225,7 +223,6 @@ public sealed class KsDatalinkBroadcastModesTest : GameTest
 
         var map = await pair.CreateTestMap();
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -237,9 +234,9 @@ public sealed class KsDatalinkBroadcastModesTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridBeacon = mapManager.CreateGridEntity(map.MapId);
-            gridNormal = mapManager.CreateGridEntity(map.MapId);
-            gridRx = mapManager.CreateGridEntity(map.MapId);
+            gridBeacon = mapSystem.CreateGridEntity(map.MapId);
+            gridNormal = mapSystem.CreateGridEntity(map.MapId);
+            gridRx = mapSystem.CreateGridEntity(map.MapId);
 
             mapSystem.SetTiles(gridBeacon.Owner, gridBeacon.Comp, BuildTiles());
             mapSystem.SetTiles(gridNormal.Owner, gridNormal.Comp, BuildTiles());

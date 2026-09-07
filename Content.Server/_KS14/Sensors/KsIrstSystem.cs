@@ -56,7 +56,7 @@ public sealed partial class KsIrstSystem : KsLosSensorSystem
     private void BuildTransparentSet(MapId mapId, Vector2 sensorPos, float maxRange, EntityUid ownGrid, float minDetectable)
     {
         Grids.Clear();
-        MapManager.FindGridsIntersecting(
+        MapSystem.FindGridsIntersecting(
             mapId,
             new Box2(sensorPos - new Vector2(maxRange), sensorPos + new Vector2(maxRange)),
             ref Grids,
