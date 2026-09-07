@@ -19,9 +19,6 @@ public sealed partial class KsAnchorlessAntagComponent : Component
     public float GunFlashSlowdown;
 
     [DataField]
-    public float HeatMultiplier = 1f;
-
-    [DataField]
     public List<AnchorlessIdentityData> LearnedIdentities = new();
 
     [DataField]

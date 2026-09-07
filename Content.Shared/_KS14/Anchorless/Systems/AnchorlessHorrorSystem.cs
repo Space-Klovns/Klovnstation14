@@ -1,5 +1,4 @@
 using Content.Shared._KS14.Anchorless.Components;
-using Content.Shared.Damage.Systems;
 using Content.Shared.Actions;
 using Content.Shared.RetractableItemAction;
 using Robust.Shared.Prototypes;
@@ -19,13 +18,6 @@ public sealed partial class AnchorlessHorrorSystem : EntitySystem
     public override void Initialize()
     {
         SubscribeLocalEvent<KsAnchorlessAntagComponent, AnchorlessHorrorActionEvent>(OnHorror);
-        SubscribeLocalEvent<KsAnchorlessAntagComponent, DamageModifyEvent>(OnDamageModify);
-    }
-
-    private void OnDamageModify(Entity<KsAnchorlessAntagComponent> ent, ref DamageModifyEvent args)
-    {
-        if (args.Damage.DamageDict.TryGetValue("Heat", out var heat))
-            args.Damage.DamageDict["Heat"] = heat * ent.Comp.HeatMultiplier;
     }
     private void OnHorror(Entity<KsAnchorlessAntagComponent> ent, ref AnchorlessHorrorActionEvent args)
     {

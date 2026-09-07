@@ -1,0 +1,4 @@
+- type: damageModifierSet
+  id: Anchorless
+  coefficients:
+    Heat: 1.6
