@@ -41,8 +41,8 @@
     - LaserWeapon
   - type: StaticPrice
     price: 750
-  - type: Gun #KS14 change
-    minAngle: 1 # little bigger than antique
+  - type: Gun
+    minAngle: 1
     maxAngle: 25
     angleIncrease: 8
     projectileSpeed: 25
@@ -82,6 +82,7 @@
     minAngle: 5
     maxAngle: 35
     angleIncrease: 5
+    angleDecay: 20
     selectedMode: FullAuto
     fireRate: 5
     projectileSpeed: 20
@@ -90,7 +91,6 @@
     - Burst
     burstFireRate: 10
     shotsPerBurst: 3
-    angleDecay: 20
     burstCooldown: 0.25
   - type: BatteryAmmoProvider
     proto: BulletLaserSmallPractice
