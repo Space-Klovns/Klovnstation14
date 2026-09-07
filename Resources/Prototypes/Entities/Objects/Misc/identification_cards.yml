@@ -717,12 +717,8 @@
     - sprite: *icon-rsi
       offset: *icon-offset
       state: Botanist
-  - type: Access
-    tags:
-    - Hydroponics
-    - Research
-    - Service
-    - Maintenance
+  - type: PresetIdCard
+    job: Botanist
 
 - type: entity
   parent: IDCardStandard
