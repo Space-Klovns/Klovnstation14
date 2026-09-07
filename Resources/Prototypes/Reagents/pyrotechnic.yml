@@ -61,6 +61,17 @@
   contrabandSeverity: Major
   flavor: bitter
   color: "#FA00AF"
+  # KS14 start
+  tileEffects:
+  - !type:LogicAndTileEffect
+    conditions:
+    - !type:CheckTemperatureTileEffect
+      minimum: 300
+    effects:
+    - !type:ChemicalFireTileEffect
+      removed: 2
+      durationScale: 0.8
+  # KS14 end
   tileReactions:
   - !type:FlammableTileReaction
     temperatureMultiplier: 5
@@ -193,6 +204,7 @@
     effects:
     - !type:ChemicalFireTileEffect
       removed: 2
+      durationScale: 2
   # KS14 end
   tileReactions:
   - !type:FlammableTileReaction {}
