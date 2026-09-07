@@ -16,9 +16,13 @@ public sealed partial class ChemicalFireTileEffect : KsTileEffect
 
     public override bool Execute(TileRef tileRef, float scale, ref KsTileEffectReagentData reagentData)
     {
-        _chemicalFireSystem.SpawnChemicalFire(Id, tileRef);
-        reagentData.RemovedVolume += Removed * scale;
+        var nowExists = _chemicalFireSystem.SpawnChemicalFire(Id, tileRef).HasValue;
 
+        // fail and don't consume anything if no chemfire could be created
+        if (!nowExists)
+            return false;
+
+        reagentData.RemovedVolume += Removed * scale;
         return true;
     }
 }

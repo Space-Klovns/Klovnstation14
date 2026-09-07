@@ -3,9 +3,6 @@ using Content.Server._KS14.Atmos.TileFire;
 using Content.Server.Atmos.EntitySystems;
 using Content.Shared._KS14.Atmos.ChemicalFire;
 using Content.Shared.Atmos;
-using Robust.Shared.Map;
-using Robust.Shared.Map.Components;
-using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.Atmos.ChemicalFire;
 
@@ -17,16 +14,6 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
 {
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
     [Dependency] private KsTileFireSystem _tileFireSystem = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
-    [Dependency] private IComponentFactory _componentFactory = default!;
-    [Dependency] private MetaDataSystem _metaDataSystem = default!;
-
-    /// <summary>
-    ///     One paused, never-map-inited singleton per chemfire prototype that's been sustain-checked so far,
-    ///         kept in nullspace purely to raise <see cref="ChemicalFireCanSustainEvent"/> against - see
-    ///         <see cref="CanSustain"/>. Cleared out on prototype reload.
-    /// </summary>
-    private readonly Dictionary<string, EntityUid> _templateFires = new();
 
     public override void Initialize()
     {
@@ -37,22 +24,6 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
         SubscribeLocalEvent<ChemicalFireGridComponent, AtmosphereSystem.IsHotspotActiveMethodEvent>(OnGridIsHotspotActive);
         SubscribeLocalEvent<ChemicalFireGridComponent, KsGetTileFireSourcesEvent>(OnGridGetTileFireSources);
         SubscribeLocalEvent<ChemicalFireGridComponent, KsExtinguishTileFireSourcesEvent>(OnGridExtinguishTileFireSources);
-
-        SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
-    }
-
-    /// <summary>
-    ///     Drops every cached template singleton so the next sustain check rebuilds it against fresh data.
-    /// </summary>
-    private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
-    {
-        if (!args.WasModified<EntityPrototype>())
-            return;
-
-        foreach (var templateUid in _templateFires.Values)
-            Del(templateUid);
-
-        _templateFires.Clear();
     }
 
     /// <summary>
@@ -191,54 +162,6 @@ public sealed partial class ChemicalFireSystem : SharedChemicalFireSystem
         _atmosphereSystem.AddHeat(mixture, energy);
     }
 
-    protected override GasMixture? ResolveTileMixture(EntityUid gridUid, Vector2i tile)
-        => GetMixture(gridUid, tile, excite: true);
-
-    private GasMixture? GetMixture(EntityUid gridUid, Vector2i tile, bool excite)
+    protected override GasMixture? ResolveTileMixture(EntityUid gridUid, Vector2i tile, bool excite)
         => _atmosphereSystem.GetTileMixture((gridUid, null, null), null, tile, excite);
-
-    /// <summary>
-    ///     Raises <see cref="ChemicalFireCanSustainEvent"/> against the prototype's template singleton to find
-    ///         out whether it could actually survive on this tile - see the type's remarks for what "template
-    ///         singleton" means and why it has to be built the way it is.
-    /// </summary>
-    protected override bool CanSustain(EntProtoId prototypeId, Entity<MapGridComponent?> grid, Vector2i tile)
-    {
-        if (!TryGetTemplateFire(prototypeId, out var templateUid))
-            return true; // No ChemicalFireComponent to speak of - SpawnChemicalFire's own check already covers this.
-
-        var mixture = GetMixture(grid.Owner, tile, excite: false);
-        var ev = new ChemicalFireCanSustainEvent(grid.Owner, tile, mixture);
-        RaiseLocalEvent(templateUid, ref ev);
-
-        return ev.CanSustain;
-    }
-
-    /// <summary>
-    ///     Gets or lazily creates the paused, nullspace singleton chemfire used to answer sustain checks for a
-    ///         prototype. Never map-inited - <see cref="EntityManager.InitializeAndStartEntity"/> is called
-    ///         with <c>doMapInit: false</c> - because a real spawn's <c>MapInitEvent</c> could trigger
-    ///         spawn-on-init effects a prototype might carry (e.g. thermite's spark), and pausing the entity
-    ///         does not prevent that; it only has to run <c>ComponentStartup</c> to be fully queryable.
-    /// </summary>
-    private bool TryGetTemplateFire(EntProtoId prototypeId, out EntityUid templateUid)
-    {
-        if (_templateFires.TryGetValue(prototypeId.Id, out templateUid) && Exists(templateUid))
-            return true;
-
-        if (!_prototypeManager.TryIndex<EntityPrototype>(prototypeId, out var entityPrototype) ||
-            !entityPrototype.TryGetComponent(out ChemicalFireComponent? _, _componentFactory))
-        {
-            templateUid = default;
-            return false;
-        }
-
-        templateUid = EntityManager.CreateEntityUninitialized(prototypeId, MapCoordinates.Nullspace);
-        EntityManager.InitializeAndStartEntity(templateUid, doMapInit: false);
-
-        _metaDataSystem.SetEntityPaused(templateUid, true);
-
-        _templateFires[prototypeId.Id] = templateUid;
-        return true;
-    }
 }

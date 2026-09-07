@@ -1,16 +1,17 @@
-﻿using Content.Shared._KS14.Atmos.ChemicalFire;
 using Content.Shared.Atmos;
 
-namespace Content.Server._KS14.Atmos.ChemicalFire;
+namespace Content.Shared._KS14.Atmos.ChemicalFire;
 
 /// <summary>
 ///     Burns gas off the tile a chemfire occupies, hanging off the same
-///         <see cref="ChemicalFireHeatTileEvent"/> that drives the ignition.
+///         <see cref="ChemicalFireHeatTileEvent"/> that drives the ignition. Runs on both client and server -
+///         the gas mixture itself only ever exists server-side, so <see cref="OnHeatTile"/> is a no-op on the
+///         client, but <see cref="OnCanSustain"/> still needs to be reachable there since chemfires spawn
+///         through prediction.
 /// </summary>
 public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
 {
-    [Dependency] private ChemicalFireSystem _chemicalFireSystem = default!;
-
+    [Dependency] private SharedChemicalFireSystem _chemicalFireSystem = default!;
     [Dependency] private EntityQuery<ChemicalFireComponent> _chemicalFireQuery = default!;
 
     public override void Initialize()
@@ -27,9 +28,18 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
     ///         "extinguish only once every gas hit zero" condition in <see cref="OnHeatTile"/> so the two can't
     ///         drift apart.
     /// </summary>
+    /// <remarks>
+    ///     A missing mixture is treated as "unknown", not "no gas" - this is what happens on the client, which
+    ///         has no atmos data to check against; it predicts optimistically and lets the server's own answer
+    ///         correct it if it turns out to be wrong. An immutable mixture (space) is real data, so that still
+    ///         vetoes.
+    /// </remarks>
     private void OnCanSustain(Entity<ChemicalFireGasConsumerComponent> entity, ref ChemicalFireCanSustainEvent args)
     {
-        if (args.Mixture is not { } mixture || mixture.Immutable)
+        if (args.Mixture is not { } mixture)
+            return;
+
+        if (mixture.Immutable)
         {
             args.Deny();
             return;

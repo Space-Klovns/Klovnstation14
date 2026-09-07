@@ -211,6 +211,15 @@ Exceptions, all conventional: the primary subject of a handler or method may sta
 
 **`Ks` prefix (IDs & type names)** — when a new prototype ID or type name could plausibly collide with an upstream name (present or future), prefix it with `Ks`: `KsCCVars` (a fork-only cvars class, deliberately not inheriting upstream `CCVars`), `KsBlack`, `KsCatwalkIron` (colors and structure variants — generic vocabulary upstream already uses or could use). Skip the prefix when the name is already distinctive enough not to collide — `Anchorless`, `ArcFlash`, `ComplexShove` — the `_KS14/` folder already marks provenance there. This is a judgment call, not a mechanical rule: ask "would upstream plausibly ship something under this exact name?" If yes, prefix it.
 
+**`TryGet`/`Resolve`/`Ensure` naming (C#)** — `TryGet...` implies a pure lookup: it either finds the thing or it doesn't, with no side effects either way. If a "`TryGet`" actually creates the thing when it's missing, name it `Resolve...` or `Ensure...` instead — whichever reads better for the case — not `TryGet...`:
+```csharp
+// misleading - this can create a new entity as a side effect, which "TryGet" doesn't promise
+private bool TryGetTemplateFire(EntProtoId prototypeId, out EntityUid templateUid)
+
+// do this instead
+private bool ResolveTemplateFire(EntProtoId prototypeId, out EntityUid templateUid)
+```
+
 **Source-gen `[Dependency]` fields (C#)** — on current engine versions, injected `[Dependency]` fields on `EntitySystem` (and the few other injectable types) must be writable, and their owning class must be `partial`:
 ```csharp
 // old
