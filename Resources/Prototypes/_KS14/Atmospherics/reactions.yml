@@ -24,3 +24,14 @@
     Argon: 80
   effects:
   - !type:ArgonAbsorptionReaction {}
+
+- type: gasReaction
+  id: GeneralEvaporation
+  priority: 1000
+  minimumTemperature: 600
+  effects:
+  - !type:UpdatePuddleEvaporationReaction
+    unitsPerMole: 5
+    joulesPerScale: 100000
+    scalingMinimumTemperature: 600
+    maximumScale: 10
