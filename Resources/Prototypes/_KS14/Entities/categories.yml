@@ -12,3 +12,8 @@
   id: ChemicalFire
   name: entity-category-name-chemical-fire
   hideSpawnMenu: true
+
+- type: entityCategory
+  id: NpcAttackPattern
+  name: entity-category-name-chemical-fire
+  hideSpawnMenu: true

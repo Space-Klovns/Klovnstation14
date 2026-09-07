@@ -20,8 +20,13 @@
     color: "#3db83b"
     castShadows: false
     netsync: false
+  # KS14 start: access: [["Engineering"]] -> electronics board
+  - type: ContainerFill
+    containers:
+      board: [ KsAPCElectronicsEngineering ]
   - type: AccessReader
-    access: [["Engineering"]]
+    containerAccessProvider: board
+  # KS14 end
   - type: Sprite
     drawdepth: WallMountedItems
     sprite: Structures/Power/apc.rsi
@@ -116,9 +121,16 @@
   - type: ActivatableUI
     inHandsOnly: false
     key: enum.ApcUiKey.Key
+  # KS14 start: add electronics board container for construction
+  - type: ContainerContainer
+    containers:
+      board: !type:Container
   - type: Construction
     graph: APC
     node: apc
+    containers:
+    - board
+  # KS14 end
   - type: PowerNetworkBattery
     maxSupply: 10000
     maxChargeRate: 5000
