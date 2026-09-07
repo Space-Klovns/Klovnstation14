@@ -28,7 +28,6 @@
         mask:
         - Opaque
         - Impassable
-        - BulletImpassable
   - type: Ammo
   - type: Projectile
     impactEffect: BulletImpactEffectOrangeDisabler
@@ -78,11 +77,10 @@
       projectile:
         shape:
           !type:PhysShapeAabb
-          bounds: "-0.2,-0.4,0.2,0.4"
+          bounds: "-0.2,-0.3,0.2,0.3"
         hard: false
         mask:
         - Opaque
         - Impassable
-        - BulletImpassable
   - type: Ammo
 

@@ -211,11 +211,14 @@
     - state: mag-unshaded-4
       map: ["enum.GunVisualLayers.MagUnshaded"]
       shader: unshaded
-  - type: Gun #KS14 change
-    minAngle: 15 # little bigger than antique
-    maxAngle: 30
-    angleIncrease: 2
+  # KS14 start: retro laser blaster gun stats, not present upstream
+  - type: Gun
+    minAngle: 1
+    maxAngle: 25
+    angleIncrease: 8
     projectileSpeed: 25
+    angleDecay: 10
+  # KS14 end
   - type: Item
     storedOffset: 0,-5
   - type: BatteryAmmoProvider
