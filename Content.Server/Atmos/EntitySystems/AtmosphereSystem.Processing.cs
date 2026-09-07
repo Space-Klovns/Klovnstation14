@@ -819,9 +819,6 @@ namespace Content.Server.Atmos.EntitySystems
                     break;
             }
 
-            // KS14: apply a whole tick's worth of leaked-gas recoil in one impulse.
-            KsFlushSpacingThrust(ent, mapAtmosphere);
-
             atmosphere.UpdateCounter++;
 
             return AtmosphereProcessingCompletionState.Finished;

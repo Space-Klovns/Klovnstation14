@@ -1,14 +1,13 @@
 // KS14: added in this fork
 using System.Numerics;
 using System.Runtime.InteropServices;
-using Content.Server.Atmos.Components;
 using Content.Shared._KS14.CCVar;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
+using Content.Shared.GameTicking;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
-using Robust.Shared.Utility;
 
 namespace Content.Server.Atmos.EntitySystems;
 
@@ -30,12 +29,20 @@ namespace Content.Server.Atmos.EntitySystems;
 ///         pushes the grid towards the hole, exactly as the unbalanced pressure on the opposite hull would, and
 ///         a grid whose interior is in equilibrium with the map exchanges gas both ways and nets out to nothing.
 ///         See <see cref="MapAtmosphereComponent.KsGridThrustModifier"/> for the per-map opt-out.</para>
+///
+///     <para>Impulses are not handed to the body as they are worked out. Atmospherics is happy to empty a whole
+///         room in a single monstermos pass, which would be a jolt rather than a shove, so each grid gets a
+///         reservoir of owed momentum that drains at a fixed rate. Nothing is ever capped or thrown away on the
+///         way through - see <see cref="UpdateKsSpacingThrust"/> - so the total impulse the grid receives is the
+///         total the escaping gas took with it, just spread over a second or so instead of a single tick.</para>
 /// </remarks>
 public sealed partial class AtmosphereSystem
 {
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
     [Dependency] private EntityQuery<PhysicsComponent> _ksPhysicsQuery = default!;
+    [Dependency] private EntityQuery<MapGridComponent> _ksGridQuery = default!;
+    [Dependency] private EntityQuery<TransformComponent> _ksTransformQuery = default!;
 
     /// <summary>
     ///     Whether gas leaving a grid pushes that grid around. See the class remarks.
@@ -43,93 +50,166 @@ public sealed partial class AtmosphereSystem
     public bool KsSpacingThrust { get; private set; }
 
     /// <summary>
-    ///     Scales every impulse produced by <see cref="KsSpacingThrust"/>. 1 is the physical value.
+    ///     Scales every impulse produced by <see cref="KsSpacingThrust"/>. 1 is the impulse the gas really carries,
+    ///     which is far too much against a grid's physics mass - see <see cref="KsCCVars.AtmosSpacingThrustMultiplier"/>.
     /// </summary>
     public float KsSpacingThrustMultiplier { get; private set; }
 
     /// <summary>
-    ///     Grid-local impulse per grid, accumulated over an atmos tick and flushed in one go by
-    ///     <see cref="KsFlushSpacingThrust"/>. Grids are only present here on ticks where they actually leaked.
+    ///     Time constant of the reservoir drain, in seconds. See <see cref="UpdateKsSpacingThrust"/>.
+    /// </summary>
+    public float KsSpacingThrustSmoothing { get; private set; }
+
+    /// <summary>
+    ///     Momentum owed to each grid for the gas it has lost, in grid-local space. Grids appear here when they
+    ///     start leaking and stay until <see cref="UpdateKsSpacingThrust"/> has paid the whole reservoir out.
     /// </summary>
     private readonly Dictionary<EntityUid, KsSpacingThrustAccumulator> _ksSpacingThrustAccumulators = new();
 
     /// <summary>
-    ///     Unit vectors for each <see cref="AtmosDirection"/> index, in grid-local space.
+    ///     Scratch list of the grids in <see cref="_ksSpacingThrustAccumulators"/>, so the reservoir can be drained
+    ///     without enumerating the dictionary we are removing from.
     /// </summary>
-    private static readonly Vector2[] KsAtmosDirectionVectors =
-    [
-        new(0f, 1f),  // North
-        new(0f, -1f), // South
-        new(1f, 0f),  // East
-        new(-1f, 0f), // West
-    ];
+    private readonly List<EntityUid> _ksSpacingThrustGrids = new();
 
     /// <summary>
-    ///     Impulses below this magnitude, in newton-seconds, are dropped rather than applied.
-    ///     Keeps a station from being nudged by rounding error on the thousands of boundary tiles it has.
+    ///     When a reservoir has less than this much left in it, in newton-seconds, it is paid out in full and
+    ///     closed rather than chased down an asymptote forever. Also the smallest slice worth waking a body for:
+    ///     anything under it is held back for the next frame instead, never discarded.
     /// </summary>
     private const float KsMinimumSpacingImpulse = 0.01f;
-
-    /// <summary>
-    ///     Net mass moved by the last <see cref="Share"/> call, in grams.
-    ///     Positive means the gas left the receiver towards the sharer.
-    /// </summary>
-    private float _ksShareMassMoved;
-
-    /// <summary>
-    ///     Total mass moved by the last <see cref="Share"/> call in either direction, in grams.
-    ///     Divided by <see cref="_ksShareAbsMolesMoved"/> this gives the mean molar mass of the moved gas.
-    /// </summary>
-    private float _ksShareAbsMassMoved;
-
-    /// <summary>
-    ///     Total moles moved by the last <see cref="Share"/> call in either direction.
-    /// </summary>
-    private float _ksShareAbsMolesMoved;
 
     private void InitializeKsSpacingThrust()
     {
         Subs.CVar(_cfg, KsCCVars.AtmosSpacingThrust, value => KsSpacingThrust = value, true);
         Subs.CVar(_cfg, KsCCVars.AtmosSpacingThrustMultiplier, value => KsSpacingThrustMultiplier = value, true);
+        Subs.CVar(_cfg, KsCCVars.AtmosSpacingThrustSmoothing, value => KsSpacingThrustSmoothing = value, true);
+
+        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnKsRoundRestartCleanup);
+    }
+
+    /// <summary>
+    ///     Drops every outstanding reservoir when the round ends.
+    /// </summary>
+    /// <remarks>
+    ///     Reservoirs are keyed by <see cref="EntityUid"/> rather than held on a component, and uids are recycled
+    ///     between rounds, so anything left here would be paid out to whichever entity inherits the uid next round.
+    /// </remarks>
+    private void OnKsRoundRestartCleanup(RoundRestartCleanupEvent ev)
+    {
+        _ksSpacingThrustAccumulators.Clear();
+        _ksSpacingThrustAccumulators.TrimExcess();
+
+        _ksSpacingThrustGrids.Clear();
+        _ksSpacingThrustGrids.TrimExcess();
+    }
+
+    /// <summary>
+    ///     How many grids are currently owed an impulse. For tests.
+    /// </summary>
+    public int KsSpacingThrustGridCount => _ksSpacingThrustAccumulators.Count;
+
+    /// <summary>
+    ///     The impulse a grid has not been handed yet, in grid-local space. For tests.
+    /// </summary>
+    /// <param name="gridUid">The grid to look up.</param>
+    /// <param name="linearImpulse">Outstanding linear impulse, in newton-seconds.</param>
+    /// <param name="angularImpulseAboutOrigin">
+    ///     Outstanding angular impulse about the grid's origin, in newton-second-tiles.
+    /// </param>
+    /// <returns>False if the grid is owed nothing.</returns>
+    public bool TryGetKsSpacingThrust(EntityUid gridUid, out Vector2 linearImpulse, out float angularImpulseAboutOrigin)
+    {
+        if (!_ksSpacingThrustAccumulators.TryGetValue(gridUid, out var accumulator))
+        {
+            linearImpulse = Vector2.Zero;
+            angularImpulseAboutOrigin = 0f;
+            return false;
+        }
+
+        linearImpulse = accumulator.LinearImpulse;
+        angularImpulseAboutOrigin = accumulator.AngularImpulseAboutOrigin;
+        return true;
     }
 
     /// <summary>
     ///     Accumulates the reaction impulse from a LINDA share that crossed the grid boundary.
-    ///     Reads the mass bookkeeping <see cref="Share"/> left behind, so it must be called immediately after it.
+    ///     Must be called immediately after the <see cref="Share"/> that crossed it.
     /// </summary>
+    /// <remarks>
+    ///     <para>The flux billed here is worked out from the two tiles' <em>archived</em> mixtures rather than from
+    ///         what <see cref="Share"/> actually moved, which matters more than it sounds.</para>
+    ///
+    ///     <para><see cref="ProcessCell"/> walks a tile's neighbours in a fixed order - north, south, east, west -
+    ///         and each share it makes changes the mixture the next one is solved against. The gas that leaves
+    ///         northward is therefore always drawn from a fuller tile than the gas that leaves westward, by as much
+    ///         as 2:1. Billing the moved mass directly turns that solver artifact into a standing force: a perfectly
+    ///         square grid with the same mixture on every tile drifts south-west forever.</para>
+    ///
+    ///     <para>The archived mixtures are the state the whole cycle is solved against, and for the tile being
+    ///         processed they are snapshotted before any of its four shares, so the flux they imply is the same in
+    ///         every direction and symmetric geometry cancels. What is left over is the order the tiles themselves
+    ///         are archived in, which is worth about 1% of the vented impulse and points somewhere different every
+    ///         run rather than accumulating - see <c>KsSpacingThrustTest</c>.</para>
+    ///
+    ///     <para>The cost of all this is that the figure billed is the flux LINDA intends over the cycle rather
+    ///         than the mass it ends up moving, which runs a little high. The two differ only by the solver's own
+    ///         within-cycle ordering, and <see cref="KsSpacingThrustMultiplier"/> is the knob for magnitude.</para>
+    /// </remarks>
     /// <param name="gridUid">The grid that owns both tiles.</param>
     /// <param name="tile">The tile that was shared from, i.e. the receiver passed to <see cref="Share"/>.</param>
     /// <param name="enemyTile">The tile that was shared with. Exactly one of the two is a map tile.</param>
     /// <param name="direction">The direction pointing from <paramref name="tile"/> to <paramref name="enemyTile"/>.</param>
+    /// <param name="atmosAdjacentTurfs">
+    ///     The neighbour count <see cref="Share"/> divided by, i.e. the same value it was passed.
+    /// </param>
     private void KsConsiderLindaSpacingThrust(
         EntityUid gridUid,
         TileAtmosphere tile,
         TileAtmosphere enemyTile,
-        AtmosDirection direction)
+        AtmosDirection direction,
+        int atmosAdjacentTurfs)
     {
-        var massMovedGrams = _ksShareMassMoved;
-
-        if (_ksShareAbsMolesMoved <= 0f)
+        if (tile.AirArchived is not { } receiverArchived || enemyTile.AirArchived is not { } sharerArchived)
             return;
 
-        // Which way the gas actually went. `direction` points from the receiver to the sharer.
+        var molesMoved = 0f;
+        var massMovedGrams = 0f;
+        var absMassMovedGrams = 0f;
+
+        for (var i = 0; i < Atmospherics.TotalNumberOfGases; i++)
+        {
+            // Share's own expression, against the archived mixtures. Positive means the gas goes receiver -> sharer.
+            var delta = (receiverArchived.Moles[i] - sharerArchived.Moles[i]) / (atmosAdjacentTurfs + 1);
+            if (MathF.Abs(delta) < Atmospherics.GasMinMoles)
+                continue;
+
+            var deltaGrams = delta * GasMolarMasses[i];
+
+            molesMoved += MathF.Abs(delta);
+            massMovedGrams += deltaGrams;
+            absMassMovedGrams += MathF.Abs(deltaGrams);
+        }
+
+        if (molesMoved <= 0f)
+            return;
+
+        // Which way the gas went on net. `direction` points from the receiver to the sharer.
         var outward = massMovedGrams > 0f;
         var flowDirection = outward ? direction : direction.GetOpposite();
 
-        // The escaping gas leaves at the temperature of whichever mixture it came out of. Archived values are used
-        // for the same reason LINDA uses them: they are the state the share was actually solved against.
-        var sourceTile = outward ? tile : enemyTile;
-        var temperature = sourceTile.AirArchived?.Temperature ?? sourceTile.Air?.Temperature ?? 0f;
+        // The escaping gas leaves at the temperature of whichever mixture it came out of.
+        var sourceArchived = outward ? receiverArchived : sharerArchived;
 
         // Torque is taken about the tile that belongs to the grid, not the map tile hanging off its edge.
         var gridTile = tile.MapAtmosphere ? enemyTile : tile;
 
         KsAccumulateSpacingThrust(gridUid,
             gridTile.GridIndices,
-            KsAtmosDirectionVectors[flowDirection.ToIndex()],
+            flowDirection.CardinalToVec(),
             MathF.Abs(massMovedGrams) * 0.001f,
-            _ksShareAbsMassMoved / _ksShareAbsMolesMoved * 0.001f,
-            temperature);
+            absMassMovedGrams / molesMoved * 0.001f,
+            sourceArchived.Temperature);
     }
 
     /// <summary>
@@ -155,15 +235,15 @@ public sealed partial class AtmosphereSystem
 
         KsAccumulateSpacingThrust(gridUid,
             tile.GridIndices,
-            KsAtmosDirectionVectors[direction.ToIndex()],
+            direction.CardinalToVec(),
             moles * molarMass,
             molarMass,
             air.Temperature);
     }
 
     /// <summary>
-    ///     Converts a quantity of gas that has left (or entered) the grid into an impulse and stores it against
-    ///     the grid until the end of the atmos tick.
+    ///     Converts a quantity of gas that has left (or entered) the grid into an impulse and adds it to what
+    ///     the grid is owed. <see cref="UpdateKsSpacingThrust"/> pays that out over the following frames.
     /// </summary>
     /// <param name="gridUid">The grid to push.</param>
     /// <param name="tileIndices">The tile the gas crossed the boundary at. Used for torque.</param>
@@ -192,52 +272,138 @@ public sealed partial class AtmosphereSystem
 
         accumulator.LinearImpulse += impulse;
 
-        // Taken about the grid's origin here; the shift to the centre of mass happens on flush, where we know it.
+        // Taken about the grid's origin here; the shift to the centre of mass happens on payout, where we know it.
         var tileCentre = new Vector2(tileIndices.X + 0.5f, tileIndices.Y + 0.5f);
         accumulator.AngularImpulseAboutOrigin += Vector2Helpers.Cross(tileCentre, impulse);
     }
 
     /// <summary>
-    ///     Applies everything <see cref="KsAccumulateSpacingThrust"/> gathered over this atmos tick to the grid's
-    ///     body, as a single impulse. Called once per grid per atmos tick.
+    ///     Pays out the momentum owed to every leaking grid, a slice at a time.
     /// </summary>
-    /// <param name="ent">The grid whose atmosphere just finished a tick.</param>
-    /// <param name="mapAtmosphere">The atmosphere of the map the grid is on, if it has one.</param>
-    private void KsFlushSpacingThrust(
-        Entity<GridAtmosphereComponent, GasTileOverlayComponent, MapGridComponent, TransformComponent> ent,
-        Entity<MapAtmosphereComponent?> mapAtmosphere)
+    /// <remarks>
+    ///     <para>The reservoir drains exponentially: each frame hands over the fraction
+    ///         <c>1 - e^(-dt / tau)</c> of what is left, so a breach arrives as a shove that builds and fades
+    ///         rather than as a single-frame jolt. tau is <see cref="KsSpacingThrustSmoothing"/>.</para>
+    ///
+    ///     <para>Every path through here either applies a slice or leaves it in the reservoir for the next frame -
+    ///         nothing is capped, clamped or rounded away - so a grid ends up with exactly the impulse its escaping
+    ///         gas carried off, no matter how the frames fall. The one exception is a grid that cannot be pushed
+    ///         at all (see below), whose reservoir is dropped rather than paid.</para>
+    ///
+    ///     <para>Note that spreading an impulse over time does change the work it does, since the same impulse
+    ///         applied at a different velocity transfers different kinetic energy. That is inherent to smoothing,
+    ///         and the smoothed version is the more physical of the two anyway: it is monstermos emptying an
+    ///         entire room in a single pass that is the unphysical part, not the ramp.</para>
+    /// </remarks>
+    /// <param name="frameTime">Seconds since the last call.</param>
+    private void UpdateKsSpacingThrust(float frameTime)
     {
-        if (!_ksSpacingThrustAccumulators.Remove(ent.Owner, out var accumulator))
+        if (_ksSpacingThrustAccumulators.Count == 0)
             return;
 
-        var modifier = mapAtmosphere.Comp?.KsGridThrustModifier ?? 1f;
-        if (modifier == 0f)
+        // The reservoir is closed by removal, so it cannot be the thing we enumerate.
+        _ksSpacingThrustGrids.Clear();
+        _ksSpacingThrustGrids.AddRange(_ksSpacingThrustAccumulators.Keys);
+
+        foreach (var gridUid in _ksSpacingThrustGrids)
+        {
+            KsDrainSpacingThrust(gridUid, frameTime);
+        }
+    }
+
+    /// <summary>
+    ///     Hands one grid its slice of the momentum it is owed. See <see cref="UpdateKsSpacingThrust"/>.
+    /// </summary>
+    /// <param name="gridUid">The grid to pay.</param>
+    /// <param name="frameTime">Seconds since the last call.</param>
+    private void KsDrainSpacingThrust(EntityUid gridUid, float frameTime)
+    {
+        ref var accumulator = ref CollectionsMarshal.GetValueRefOrNullRef(_ksSpacingThrustAccumulators, gridUid);
+        if (System.Runtime.CompilerServices.Unsafe.IsNullRef(ref accumulator)) // Importing CompilerServices here would make [Dependency] ambiguous.
             return;
 
-        // Anchored and static grids are held in place by something other than their own inertia, so venting does
-        // nothing to them. Applying an impulse to a non-dynamic body would be silently discarded anyway.
-        if (!_ksPhysicsQuery.TryComp(ent.Owner, out var physicsComponent)
+        // Anchored and static grids are held in place by something other than their own inertia, and a map can opt
+        // out of having its grids shoved around at all. Either way there is nobody to pay, so close the reservoir.
+        if (!_ksPhysicsQuery.TryComp(gridUid, out var physicsComponent)
+            || !_ksGridQuery.TryComp(gridUid, out var mapGridComponent)
+            || !_ksTransformQuery.TryComp(gridUid, out var transformComponent)
             || physicsComponent.BodyType != BodyType.Dynamic)
+        {
+            _ksSpacingThrustAccumulators.Remove(gridUid);
             return;
+        }
 
-        var linearImpulse = accumulator.LinearImpulse * modifier;
+        var modifier = KsGetMapThrustModifier(transformComponent);
+        if (modifier == 0f)
+        {
+            _ksSpacingThrustAccumulators.Remove(gridUid);
+            return;
+        }
 
-        // Shift the torque from the grid's origin to its centre of mass, which is what the body actually spins about.
-        // Tile indices are in tiles, so scale them up to metres first.
-        var angularImpulse = (accumulator.AngularImpulseAboutOrigin * ent.Comp3.TileSize * modifier)
+        // How long this reservoir has gone unpaid, counting the frames below where the slice was too small to be
+        // worth handing over. Draining against that rather than against frameTime is what keeps those frames from
+        // slowing the ramp down - and what stops a reservoir too small to ever clear the threshold from stalling.
+        accumulator.UnpaidTime += frameTime;
+
+        // A tau of zero or less disables the ramp and pays each reservoir out the moment it is filled.
+        var fraction = KsSpacingThrustSmoothing <= 0f
+            ? 1f
+            : 1f - MathF.Exp(-accumulator.UnpaidTime / KsSpacingThrustSmoothing);
+
+        var releasedLinear = accumulator.LinearImpulse * fraction;
+        var releasedAngular = accumulator.AngularImpulseAboutOrigin * fraction;
+
+        var remainingLinear = accumulator.LinearImpulse - releasedLinear;
+        var remainingAngular = accumulator.AngularImpulseAboutOrigin - releasedAngular;
+
+        if (remainingLinear.LengthSquared() < KsMinimumSpacingImpulse * KsMinimumSpacingImpulse
+            && MathF.Abs(remainingAngular) < KsMinimumSpacingImpulse)
+        {
+            // The dregs. Hand them over in one go so the reservoir actually closes instead of halving forever.
+            releasedLinear += remainingLinear;
+            releasedAngular += remainingAngular;
+            _ksSpacingThrustAccumulators.Remove(gridUid);
+        }
+        else if (releasedLinear.LengthSquared() < KsMinimumSpacingImpulse * KsMinimumSpacingImpulse
+                 && MathF.Abs(releasedAngular) < KsMinimumSpacingImpulse)
+        {
+            // Too small a slice to be worth waking a body for. Leave it in the reservoir and try again next frame
+            // with a bigger one, since UnpaidTime - and with it the fraction - carries on growing.
+            return;
+        }
+        else
+        {
+            accumulator.LinearImpulse = remainingLinear;
+            accumulator.AngularImpulseAboutOrigin = remainingAngular;
+            accumulator.UnpaidTime = 0f;
+        }
+
+        var linearImpulse = releasedLinear * modifier;
+
+        // Shift the torque from the grid's origin to its centre of mass, which is what the body actually spins
+        // about. Tile indices are in tiles, so scale them up to metres first.
+        var angularImpulse = releasedAngular * mapGridComponent.TileSize * modifier
                              - Vector2Helpers.Cross(physicsComponent.LocalCenter, linearImpulse);
 
-        // A station has thousands of tiles on its boundary, all of them trading rounding error with the map every
-        // tick. That should not add up to a shove.
-        if (linearImpulse.LengthSquared() < KsMinimumSpacingImpulse * KsMinimumSpacingImpulse
-            && MathF.Abs(angularImpulse) < KsMinimumSpacingImpulse)
-            return;
+        // The reservoir is grid-local, the physics system wants world space.
+        var worldRotation = _transformSystem.GetWorldRotation(transformComponent);
 
-        // The accumulator is grid-local, the physics system wants world space.
-        var worldRotation = _transformSystem.GetWorldRotation(ent.Comp4);
+        _physics.ApplyLinearImpulse(gridUid, worldRotation.RotateVec(linearImpulse), body: physicsComponent);
+        _physics.ApplyAngularImpulse(gridUid, angularImpulse, body: physicsComponent);
+    }
 
-        _physics.ApplyLinearImpulse(ent.Owner, worldRotation.RotateVec(linearImpulse), body: physicsComponent);
-        _physics.ApplyAngularImpulse(ent.Owner, angularImpulse, body: physicsComponent);
+    /// <summary>
+    ///     The <see cref="MapAtmosphereComponent.KsGridThrustModifier"/> of the map a grid is on, or 1 if that map
+    ///     has no atmosphere of its own. Zero for a grid that is not on a map at all.
+    /// </summary>
+    private float KsGetMapThrustModifier(TransformComponent transformComponent)
+    {
+        if (transformComponent.MapUid is not { } mapUid)
+            return 0f;
+
+        return _mapAtmosQuery.TryComp(mapUid, out var mapAtmosphereComponent)
+            ? mapAtmosphereComponent.KsGridThrustModifier
+            : 1f;
     }
 
     /// <summary>
@@ -258,19 +424,27 @@ public sealed partial class AtmosphereSystem
     }
 
     /// <summary>
-    ///     Per-grid running total of the impulse owed to a grid for the gas it has lost (or gained) this atmos tick.
+    ///     The momentum still owed to a grid for the gas it has lost (or gained). Filled by
+    ///     <see cref="KsAccumulateSpacingThrust"/>, drained by <see cref="KsDrainSpacingThrust"/>.
     ///     Both members are in grid-local space.
     /// </summary>
     private struct KsSpacingThrustAccumulator
     {
         /// <summary>
-        ///     Total impulse, in newton-seconds.
+        ///     Outstanding impulse, in newton-seconds.
         /// </summary>
         public Vector2 LinearImpulse;
 
         /// <summary>
-        ///     Total angular impulse about the grid's *origin* (not its centre of mass), in newton-second-tiles.
+        ///     Outstanding angular impulse about the grid's *origin* (not its centre of mass), in
+        ///     newton-second-tiles.
         /// </summary>
         public float AngularImpulseAboutOrigin;
+
+        /// <summary>
+        ///     Seconds since this reservoir last paid anything out. The drain works against this rather than
+        ///     against a single frame, so frames skipped for being too small to bother with are not lost time.
+        /// </summary>
+        public float UnpaidTime;
     }
 }

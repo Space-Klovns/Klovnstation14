@@ -27,7 +27,7 @@ namespace Content.Shared.Atmos
         All = North | South | East | West,  // 15
     }
 
-    public static class AtmosDirectionHelpers
+    public static partial /* KS14: made partial, see AtmosDirection.Klovn.cs */ class AtmosDirectionHelpers
     {
         public static AtmosDirection GetOpposite(this AtmosDirection direction)
         {

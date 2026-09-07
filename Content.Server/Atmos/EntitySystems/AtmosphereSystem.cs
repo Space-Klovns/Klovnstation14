@@ -100,6 +100,7 @@ public sealed partial class AtmosphereSystem : SharedAtmosphereSystem
 
         UpdateProcessing(frameTime);
         UpdateHighPressure(frameTime);
+        UpdateKsSpacingThrust(frameTime); // KS14
 
         _exposedTimer += frameTime;
 
