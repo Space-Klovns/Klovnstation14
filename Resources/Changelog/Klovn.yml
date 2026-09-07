@@ -1992,3 +1992,17 @@ Entries:
         alot of interesting things..
   id: 206
   time: '2026-09-07T17:21:44.0000000+00:00'
+- author: FrauZj
+  changes:
+    - type: Tweak
+      message: Disabler 4 shots to stun noe
+    - type: Tweak
+      message: Disabler smg is 10 shots to stun noe (im too lazy to make it less dyi)
+    - type: Tweak
+      message: >-
+        Recoil decay on all guns (projectile laser guns in specific) have been
+        adjusted to be little faster.
+    - type: Fix
+      message: Laser projectiles now go thru windows
+  id: 207
+  time: '2026-09-07T17:45:21.0000000+00:00'
