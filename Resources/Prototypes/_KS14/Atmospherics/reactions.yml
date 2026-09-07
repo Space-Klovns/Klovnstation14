@@ -32,6 +32,6 @@
   effects:
   - !type:UpdatePuddleEvaporationReaction
     unitsPerMole: 5
-    joulesPerScale: 100000
+    joulesPerBonusUnitPerMole: 100000
     scalingMinimumTemperature: 600
-    maximumScale: 10
+    maximumUnitsPerMole: 10
