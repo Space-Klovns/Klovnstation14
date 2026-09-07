@@ -1,4 +1,4 @@
-using Content.Server.Atmos.Components;
+﻿using Content.Server.Atmos.Components;
 using Content.Shared.Atmos;
 using Content.Shared.Atmos.Components;
 using Robust.Shared.Map.Components;
@@ -81,6 +81,12 @@ namespace Content.Server.Atmos.EntitySystems
                 if (shouldShareAir)
                 {
                     var difference = Share(tile, enemyTile, adjacentTileLength);
+
+                    // KS14 start: gas that crosses the grid boundary shoves the grid the other way.
+                    // Exactly one of the two tiles being a map tile means this share left (or entered) the grid.
+                    if (KsSpacingThrust && tile.MapAtmosphere != enemyTile.MapAtmosphere)
+                        KsConsiderLindaSpacingThrust(ent.Owner, tile, enemyTile, direction, adjacentTileLength);
+                    // KS14 end
 
                     // Monstermos already handles this, so let's not handle it ourselves.
                     if (!MonstermosEqualization)

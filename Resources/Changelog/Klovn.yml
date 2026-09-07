@@ -1984,3 +1984,11 @@ Entries:
       message: Bicaridine no longer makes you high as fuhhhhh
   id: 205
   time: '2026-09-07T12:15:16.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Air being spaced by grids now actually moves the grid. This can lead to
+        alot of interesting things..
+  id: 206
+  time: '2026-09-07T17:21:44.0000000+00:00'
