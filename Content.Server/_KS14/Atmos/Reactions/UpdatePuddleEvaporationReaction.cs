@@ -40,7 +40,7 @@ public sealed partial class UpdatePuddleEvaporationReaction : IGasReactionEffect
     ///     Note that this is the heat-scaled energy (see atmos.heat_scale), matching the energy that
     ///     gasReaction's minimumEnergy gate is checked against.
     /// </remarks>
-    [DataField] public float? JoulesPerBonusUnitPerMole = null;
+    [DataField("joulesPerScale")] public float? JoulesPerBonusUnitPerMole = null;
 
     /// <summary>
     ///     Temperature the scaling measures excess energy from, in kelvin.
@@ -60,7 +60,7 @@ public sealed partial class UpdatePuddleEvaporationReaction : IGasReactionEffect
     /// <summary>
     ///     Cap on the scaled units per mole, so a fusion-hot tile doesn't flash an ocean in one atmos tick.
     /// </summary>
-    [DataField] public FixedPoint2 MaximumUnitsPerMole = FixedPoint2.MaxValue;
+    [DataField("maximumScale")] public FixedPoint2 MaximumUnitsPerMole = FixedPoint2.MaxValue;
 
     public ReactionResult React(GasMixture mixture, IGasMixtureHolder? holder, AtmosphereSystem atmosphereSystem, float heatScale)
     {
