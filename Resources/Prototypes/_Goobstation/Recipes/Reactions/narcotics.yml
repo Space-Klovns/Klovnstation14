@@ -1,0 +1,17 @@
+- type: reaction
+  id: Fentanyl
+  minTemp: 410
+  maxTemp: 420 # no lavabeaker for the lazy chemist. I'm not lazy... :{
+  reactants:
+    Desoxyephedrine:
+      amount: 2
+    Impedrezene:
+      amount: 3
+#    FourteenLoko: KS14, removed loko slop from the recipe
+#      amount: 1
+    Bleach:
+      amount: 1
+  products:
+    Fentanyl: 1
+    VentCrud: 1
+    SpaceGlue: 2
