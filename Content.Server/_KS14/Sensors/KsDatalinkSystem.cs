@@ -49,14 +49,6 @@ public sealed partial class KsDatalinkSystem : EntitySystem
             subs.Event<KsDatalinkToggleMessage>(OnReceiverToggle);
             subs.Event<KsDatalinkSetFrequencyMessage>(OnReceiverSetFrequency);
         });
-
-        SubscribeLocalEvent<KsDatalinkTransmitterComponent, MapInitEvent>(OnTransmitterMapInit);
-
-        SubscribeLocalEvent<KsDatalinkTransmitterComponent, PowerChangedEvent>(OnTransmitterPowerChanged);
-        SubscribeLocalEvent<KsDatalinkReceiverComponent, PowerChangedEvent>(OnReceiverPowerChanged);
-
-        SubscribeLocalEvent<KsDatalinkTransmitterComponent, ExaminedEvent>(OnTransmitterExamine);
-        SubscribeLocalEvent<KsDatalinkReceiverComponent, ExaminedEvent>(OnReceiverExamine);
     }
 
     public override void Update(float frameTime)
@@ -87,6 +79,7 @@ public sealed partial class KsDatalinkSystem : EntitySystem
 
     #region Transmitter
 
+    [SubscribeLocalEvent]
     private void OnTransmitterMapInit(Entity<KsDatalinkTransmitterComponent> entity, ref MapInitEvent args)
     {
         // Sync the APC load with the component's actual settings from the start, or a
@@ -118,11 +111,13 @@ public sealed partial class KsDatalinkSystem : EntitySystem
         UpdateTransmitterUi(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnTransmitterPowerChanged(Entity<KsDatalinkTransmitterComponent> entity, ref PowerChangedEvent args)
     {
         UpdateTransmitterUi(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnTransmitterExamine(EntityUid uid, KsDatalinkTransmitterComponent comp, ExaminedEvent args)
     {
         args.PushMarkup(Loc.GetString("ks-datalink-examine-frequency", ("frequency", comp.Frequency)));
@@ -171,11 +166,13 @@ public sealed partial class KsDatalinkSystem : EntitySystem
         UpdateReceiverUi(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnReceiverPowerChanged(Entity<KsDatalinkReceiverComponent> entity, ref PowerChangedEvent args)
     {
         UpdateReceiverUi(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnReceiverExamine(EntityUid uid, KsDatalinkReceiverComponent comp, ExaminedEvent args)
     {
         args.PushMarkup(Loc.GetString("ks-datalink-examine-frequency", ("frequency", comp.Frequency)));

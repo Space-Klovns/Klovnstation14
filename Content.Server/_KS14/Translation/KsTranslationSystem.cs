@@ -89,9 +89,6 @@ public sealed partial class KsTranslationSystem : EntitySystem
         _net.RegisterNetMessage<MsgReplaceChatMessage>();
 
         Translator = new DeepLTranslator(_cfg);
-
-        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnCleanup);
-        SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
         RebuildGlossary();
 
         _cfg.OnValueChanged(KsCCVars.TranslateEnabled, v => _enabled = v, invokeImmediately: true);
@@ -111,6 +108,7 @@ public sealed partial class KsTranslationSystem : EntitySystem
         (Translator as IDisposable)?.Dispose();
     }
 
+    [SubscribeLocalEvent]
     private void OnCleanup(RoundRestartCleanupEvent ev)
     {
         _cooldownUntil.Clear();
@@ -118,6 +116,7 @@ public sealed partial class KsTranslationSystem : EntitySystem
         // Cache/budget intentionally persist across rounds (budget is a billing-period concept).
     }
 
+    [SubscribeLocalEvent]
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs ev)
     {
         if (ev.WasModified<KsTranslationGlossaryPrototype>())

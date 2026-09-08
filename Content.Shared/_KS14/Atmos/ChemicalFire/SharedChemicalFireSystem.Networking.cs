@@ -13,10 +13,9 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
 
     private void InitialiseNetworking()
     {
-        SubscribeLocalEvent<ChemicalFireGridComponent, ComponentGetState>(OnGridGetState);
-        SubscribeLocalEvent<ChemicalFireGridComponent, ComponentHandleState>(OnGridHandleState);
     }
 
+    [SubscribeLocalEvent]
     private void OnGridGetState(Entity<ChemicalFireGridComponent> entity, ref ComponentGetState args)
     {
         var tiles = new Dictionary<Vector2i, TileChemicalFireData<NetEntity>>(entity.Comp.Tiles.Count);
@@ -44,6 +43,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         args.State = new ChemicalFireGridComponentState(tiles);
     }
 
+    [SubscribeLocalEvent]
     private void OnGridHandleState(Entity<ChemicalFireGridComponent> entity, ref ComponentHandleState args)
     {
         if (args.Current is not ChemicalFireGridComponentState state)

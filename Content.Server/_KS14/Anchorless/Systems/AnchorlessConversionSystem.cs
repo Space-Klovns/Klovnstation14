@@ -27,12 +27,7 @@ public sealed partial class AnchorlessConversionSystem : EntitySystem
     [Dependency] private ISharedPlayerManager _players = default!;
     [Dependency] private SharedPopupSystem _popup = default!;
 
-    public override void Initialize()
-    {
-        SubscribeLocalEvent<KsAnchorlessAntagComponent, AnchorlessConvertActionEvent>(OnConvert);
-        SubscribeLocalEvent<KsAnchorlessAntagComponent, AnchorlessConvertDoAfterEvent>(OnConvertDoAfter);
-    }
-
+    [SubscribeLocalEvent]
     private void OnConvert(Entity<KsAnchorlessAntagComponent> ent, ref AnchorlessConvertActionEvent args)
     {
         if (args.Handled || !CanConvert(args.Target))
@@ -52,6 +47,7 @@ public sealed partial class AnchorlessConversionSystem : EntitySystem
         });
     }
 
+    [SubscribeLocalEvent]
     private void OnConvertDoAfter(Entity<KsAnchorlessAntagComponent> ent, ref AnchorlessConvertDoAfterEvent args)
     {
         args.Handled = true;

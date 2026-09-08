@@ -20,14 +20,7 @@ public sealed partial class OrganRegenerationSystem : EntitySystem
 
     private static readonly LocId PopupLocId = "ks-klovnmed-organ-regen-popup";
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        // thievery
-        SubscribeLocalEvent<InitialBodyComponent, RejuvenateEvent>(OnRejuvenate);
-    }
-
+    [SubscribeLocalEvent]
     private void OnRejuvenate(Entity<InitialBodyComponent> entity, ref RejuvenateEvent args)
     {
         RegenerateForBody(entity!);

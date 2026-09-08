@@ -9,15 +9,9 @@ public sealed partial class OreVentSystem : EntitySystem
 {
     private void InitialiseTapping()
     {
-
-        SubscribeLocalEvent<OreVentComponent, MapInitEvent>(OnMapInit);
-
-        SubscribeLocalEvent<OreVentComponent, OreVentTappingDoAfterEvent>(OnOreVentTappingDoAfter);
-        SubscribeLocalEvent<OreVentComponent, DoAfterAttemptEvent<OreVentTappingDoAfterEvent>>(OnOreVentTappingDoAfterAttempt);
-
-        SubscribeLocalEvent<OreVentComponent, OreVentDroneDestroyedEvent>(OnDroneDestroyed);
     }
 
+    [SubscribeLocalEvent]
     private void OnMapInit(Entity<OreVentComponent> entity, ref MapInitEvent args)
     {
         if (!entity.Comp.Tapped)
@@ -27,7 +21,7 @@ public sealed partial class OreVentSystem : EntitySystem
         _oreWellSystem.GenerateOreWellWithSettings(entity.Owner, entity.Comp.OreWellSettingId);
     }
 
-
+    [SubscribeLocalEvent]
     private void OnOreVentTappingDoAfter(Entity<OreVentComponent> entity, ref OreVentTappingDoAfterEvent args)
     {
         if (args.Cancelled)
@@ -43,6 +37,7 @@ public sealed partial class OreVentSystem : EntitySystem
         SucceedTapping(entity.Owner);
     }
 
+    [SubscribeLocalEvent]
     private void OnOreVentTappingDoAfterAttempt(Entity<OreVentComponent> entity, ref DoAfterAttemptEvent<OreVentTappingDoAfterEvent> args)
     {
         if (args.Cancelled ||
@@ -53,6 +48,7 @@ public sealed partial class OreVentSystem : EntitySystem
         args.Cancel();
     }
 
+    [SubscribeLocalEvent]
     private void OnDroneDestroyed(Entity<OreVentComponent> entity, ref OreVentDroneDestroyedEvent args)
     {
         if (!entity.Comp.BeingTapped)

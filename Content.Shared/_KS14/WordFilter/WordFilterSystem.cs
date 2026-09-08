@@ -91,10 +91,10 @@ public sealed partial class WordFilterSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
         UpdateCache();
     }
 
+    [SubscribeLocalEvent]
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
     {
         if (!args.WasModified<WordFilterPrototype>())

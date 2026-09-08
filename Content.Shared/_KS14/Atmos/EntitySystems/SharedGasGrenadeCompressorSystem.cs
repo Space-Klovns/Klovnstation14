@@ -33,28 +33,13 @@ public abstract partial class SharedGasGrenadeCompressorSystem : EntitySystem
 
     private static readonly EntProtoId AirGrenadeId = "AirGrenade";
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<GasGrenadeCompressorComponent, MapInitEvent>(OnMapInit);
-        SubscribeLocalEvent<GasGrenadeCompressorComponent, PowerChangedEvent>(OnPowerChanged);
-
-        SubscribeLocalEvent<GasGrenadeCompressorComponent, EntInsertedIntoContainerMessage>(OnEntInsertedIntoContainer);
-        SubscribeLocalEvent<GasGrenadeCompressorComponent, EntRemovedFromContainerMessage>(OnEntRemovedFromContainer);
-
-        SubscribeLocalEvent<GasGrenadeCompressorComponent, GasGrenadeCompressorChangeTargetPressureMessage>(OnChangeTargetPressure);
-        SubscribeLocalEvent<GasGrenadeCompressorComponent, GasGrenadeCompressorToggleMessage>(OnToggle);
-        SubscribeLocalEvent<GasGrenadeCompressorComponent, GasGrenadeCompressorRearmMessage>(OnRearm);
-        SubscribeLocalEvent<GasGrenadeCompressorComponent, GotEmaggedEvent>(OnEmagged);
-        SubscribeLocalEvent<GasGrenadeCompressorComponent, MaterialAmountChangedEvent>(OnMaterialAmountChanged);
-    }
-
+    [SubscribeLocalEvent]
     private void OnMapInit(Entity<GasGrenadeCompressorComponent> entity, ref MapInitEvent args)
     {
         UpdateUserInterface(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnPowerChanged(Entity<GasGrenadeCompressorComponent> entity, ref PowerChangedEvent args)
     {
         var wasActive = entity.Comp.Active;
@@ -69,6 +54,7 @@ public abstract partial class SharedGasGrenadeCompressorSystem : EntitySystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnEntInsertedIntoContainer(Entity<GasGrenadeCompressorComponent> entity, ref EntInsertedIntoContainerMessage args)
     {
         if (entity.Comp.InsertedUid is { })
@@ -83,6 +69,7 @@ public abstract partial class SharedGasGrenadeCompressorSystem : EntitySystem
         UpdateUserInterface(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnEntRemovedFromContainer(Entity<GasGrenadeCompressorComponent> entity, ref EntRemovedFromContainerMessage args)
     {
         if (entity.Comp.InsertedUid is not { })
@@ -123,6 +110,7 @@ public abstract partial class SharedGasGrenadeCompressorSystem : EntitySystem
         _userInterfaceSystem.SetUiState((entity.Owner, userInterfaceComponent), GasGrenadeCompressorUiKey.Key, state);
     }
 
+    [SubscribeLocalEvent]
     private void OnChangeTargetPressure(Entity<GasGrenadeCompressorComponent> entity, ref GasGrenadeCompressorChangeTargetPressureMessage args)
     {
         entity.Comp.TargetPressure = Math.Clamp(args.TargetPressure, 0, entity.Comp.MaxTargetPressure);
@@ -131,6 +119,7 @@ public abstract partial class SharedGasGrenadeCompressorSystem : EntitySystem
         UpdateUserInterface(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnToggle(Entity<GasGrenadeCompressorComponent> entity, ref GasGrenadeCompressorToggleMessage args)
     {
         entity.Comp.Enabled = args.Enabled;
@@ -144,6 +133,7 @@ public abstract partial class SharedGasGrenadeCompressorSystem : EntitySystem
         UpdateUserInterface(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnRearm(Entity<GasGrenadeCompressorComponent> entity, ref GasGrenadeCompressorRearmMessage args)
     {
         if (!_itemSlotsSystem.TryGetSlot(entity.Owner, entity.Comp.SlotName, out var slot) || slot.Item is not { } grenadeUid)
@@ -254,11 +244,13 @@ public abstract partial class SharedGasGrenadeCompressorSystem : EntitySystem
         UpdateUserInterface(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnEmagged(Entity<GasGrenadeCompressorComponent> entity, ref GotEmaggedEvent args)
     {
         args.Handled = true;
     }
 
+    [SubscribeLocalEvent]
     private void OnMaterialAmountChanged(Entity<GasGrenadeCompressorComponent> entity, ref MaterialAmountChangedEvent args)
     {
         UpdateUserInterface(entity);

@@ -22,15 +22,6 @@ public sealed partial class OrganAttachmentOperationSystem : EntitySystem
     /// </summary>
     public static readonly TimeSpan ReattachmentDuration = TimeSpan.FromSeconds(3d);
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<OrganAttachmentOperationComponent, InteractUsingEvent>(OnInteractUsing, before: [typeof(Nutrition.EntitySystems.IngestionSystem)]);
-        SubscribeLocalEvent<OrganAttachmentOperationComponent, DoAfterAttemptEvent<OrganAttachmentDoAfterEvent>>(OnDoAfterAttempt);
-        SubscribeLocalEvent<OrganAttachmentOperationComponent, OrganAttachmentDoAfterEvent>(OnDoAfter);
-    }
-
     private bool RaiseCanAttachOrganCancelled(Entity<OrganAttachmentOperationComponent?> entity, ProtoId<OrganCategoryPrototype> category)
     {
         Resolve(entity.Owner, ref entity.Comp, logMissing: false);
@@ -55,6 +46,7 @@ public sealed partial class OrganAttachmentOperationSystem : EntitySystem
         return addedCategories;
     }
 
+    [SubscribeLocalEvent(before: [typeof(Nutrition.EntitySystems.IngestionSystem)])]
     private void OnInteractUsing(Entity<OrganAttachmentOperationComponent> entity, ref InteractUsingEvent args)
     {
         if (args.Handled)
@@ -97,6 +89,7 @@ public sealed partial class OrganAttachmentOperationSystem : EntitySystem
         });
     }
 
+    [SubscribeLocalEvent]
     private void OnDoAfterAttempt(Entity<OrganAttachmentOperationComponent> entity, ref DoAfterAttemptEvent<OrganAttachmentDoAfterEvent> args)
     {
         if (args.Event is not { } innerEvent ||
@@ -117,6 +110,7 @@ public sealed partial class OrganAttachmentOperationSystem : EntitySystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnDoAfter(Entity<OrganAttachmentOperationComponent> entity, ref OrganAttachmentDoAfterEvent args)
     {
         if (args.Cancelled)

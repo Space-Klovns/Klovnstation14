@@ -19,13 +19,7 @@ public sealed partial class KsGenericSpriteFlickSystem : EntitySystem
 {
     [Dependency] private INetManager _netManager = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsGenericSpriteFlickFinishStateComponent, ComponentGetState>(OnFinishStateGetState);
-    }
-
+    [SubscribeLocalEvent]
     private void OnFinishStateGetState(Entity<KsGenericSpriteFlickFinishStateComponent> entity, ref ComponentGetState args)
     {
         var state = new KsGenericSpriteFlickFinishStateComponentState(entity.Comp.FinishStates);

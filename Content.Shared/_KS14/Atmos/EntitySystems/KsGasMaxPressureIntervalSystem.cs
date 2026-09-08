@@ -10,13 +10,7 @@ public sealed partial class KsGasMaxPressureIntervalSystem : EntitySystem
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsGasMaxPressureIntervalComponent, KsGasMaxPressureAttemptLoseIntegrityEvent>(OnAttemptLoseIntegrity, after: [typeof(SharedBatteryShieldingSystem)]);
-    }
-
+    [SubscribeLocalEvent(after: [typeof(SharedBatteryShieldingSystem)])]
     private void OnAttemptLoseIntegrity(Entity<KsGasMaxPressureIntervalComponent> entity, ref KsGasMaxPressureAttemptLoseIntegrityEvent args)
     {
         if (args.Cancelled)

@@ -26,18 +26,16 @@ public sealed partial class KsWaveDistortionSystem : EntitySystem
         base.Initialize();
 
         _shader = _prototypeManager.Index(ShaderId).InstanceUnique();
-
-        SubscribeLocalEvent<KsWaveDistortionComponent, ComponentStartup>(OnStartup);
-        SubscribeLocalEvent<KsWaveDistortionComponent, ComponentShutdown>(OnShutdown);
-        SubscribeLocalEvent<KsWaveDistortionComponent, BeforePostShaderRenderEvent>(OnBeforeShaderPost);
     }
 
+    [SubscribeLocalEvent]
     private void OnStartup(Entity<KsWaveDistortionComponent> entity, ref ComponentStartup args)
     {
         entity.Comp.Offset = _random.NextFloat(0, 1000);
         SetShader(entity.Owner, true);
     }
 
+    [SubscribeLocalEvent]
     private void OnShutdown(Entity<KsWaveDistortionComponent> entity, ref ComponentShutdown args)
     {
         SetShader(entity.Owner, false);
@@ -53,6 +51,7 @@ public sealed partial class KsWaveDistortionSystem : EntitySystem
         entity.Comp.RaiseShaderEvent = enabled;
     }
 
+    [SubscribeLocalEvent]
     private void OnBeforeShaderPost(Entity<KsWaveDistortionComponent> entity, ref BeforePostShaderRenderEvent args)
     {
         var speedModifier = 1f;

@@ -21,19 +21,7 @@ public sealed partial class NightshiftRule : StationEventSystem<NightshiftRuleCo
     [Dependency] private EntityQuery<NightshiftExemptBulbComponent> _nightshiftExemptBulbQuery = default!;
     [Dependency] private EntityQuery<NightshiftExemptLightComponent> _nightshiftExemptLightQuery = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<NightshiftLightComponent, EntRemovedFromContainerMessage>(OnRemoved, before: [typeof(SharedPoweredLightSystem)]);
-        SubscribeLocalEvent<NightshiftLightComponent, EntInsertedIntoContainerMessage>(OnInserted, before: [typeof(SharedPoweredLightSystem)]);
-
-        SubscribeLocalEvent<AlertLevelChangedEvent>(OnAlertLevelChanged);
-
-        SubscribeLocalEvent<NightshiftLightComponent, ComponentShutdown>(OnNightshiftLightShutdown);
-        SubscribeLocalEvent<NightshiftBulbComponent, ComponentShutdown>(OnNightshiftBulbShutdown);
-    }
-
+    [SubscribeLocalEvent(before: [typeof(SharedPoweredLightSystem)])]
     private void OnRemoved(Entity<NightshiftLightComponent> light, ref EntRemovedFromContainerMessage args)
     {
         if (args.Container.ID != SharedPoweredLightSystem.LightBulbContainer)
@@ -42,6 +30,7 @@ public sealed partial class NightshiftRule : StationEventSystem<NightshiftRuleCo
         RemComp<NightshiftBulbComponent>(args.Entity);
     }
 
+    [SubscribeLocalEvent(before: [typeof(SharedPoweredLightSystem)])]
     private void OnInserted(Entity<NightshiftLightComponent> light, ref EntInsertedIntoContainerMessage args)
     {
         if (args.Container.ID != SharedPoweredLightSystem.LightBulbContainer)
@@ -57,6 +46,7 @@ public sealed partial class NightshiftRule : StationEventSystem<NightshiftRuleCo
         _bulbSystem.SetColor(args.Entity, ruleComponent.Color);
     }
 
+    [SubscribeLocalEvent]
     private void OnAlertLevelChanged(AlertLevelChangedEvent args)
     {
         var ruleQuery = EntityQueryEnumerator<NightshiftRuleComponent>();
@@ -75,6 +65,7 @@ public sealed partial class NightshiftRule : StationEventSystem<NightshiftRuleCo
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnNightshiftLightShutdown(Entity<NightshiftLightComponent> entity, ref ComponentShutdown args)
     {
         if (entity.Comp.OwningRuleUid is not { })
@@ -88,6 +79,7 @@ public sealed partial class NightshiftRule : StationEventSystem<NightshiftRuleCo
             RemComp<NightshiftBulbComponent>(bulbUid);
     }
 
+    [SubscribeLocalEvent]
     private void OnNightshiftBulbShutdown(Entity<NightshiftBulbComponent> entity, ref ComponentShutdown args)
     {
         if (entity.Comp.OwningRuleUid is not { })

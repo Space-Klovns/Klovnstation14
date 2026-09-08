@@ -23,23 +23,6 @@ public sealed partial class RemoteDroneSystem : EntitySystem
     {
         base.Initialize();
 
-        //// Ports
-        SubscribeLocalEvent<RemoteDroneComponent, LinkAttemptEvent>(OnDroneLinkAttempt);
-        SubscribeLocalEvent<RemoteDroneControllerComponent, LinkAttemptEvent>(OnControllerLinkAttempt);
-        SubscribeLocalEvent<RemoteDroneControllerComponent, NewLinkEvent>(OnControllerLinked);
-        SubscribeLocalEvent<RemoteDroneControllerComponent, PortDisconnectedEvent>(OnControllerUnlinked);
-
-        //// Startup
-        SubscribeLocalEvent<RemoteDroneControllerComponent, ComponentStartup>(OnControllerStartup);
-        SubscribeLocalEvent<RemoteDroneComponent, ComponentStartup>(OnDroneStartup);
-
-        //// Shutdown
-        SubscribeLocalEvent<RemoteDroneControllerComponent, ComponentShutdown>(OnControllerShutdown);
-        SubscribeLocalEvent<RemoteDroneComponent, ComponentShutdown>(OnDroneShutdown);
-
-        //// UI
-        SubscribeLocalEvent<RemoteDroneControllerComponent, ActivatableUIOpenAttemptEvent>(OnInterfaceOpenedAttempt);
-        SubscribeLocalEvent<RemoteDroneControllerComponent, AfterActivatableUIOpenEvent>(OnInterfaceOpened);
         Subs.BuiEvents<RemoteDroneControllerComponent>(SurveillanceCameraMonitorUiKey.Key, subs =>
         {
             subs.Event<BoundUIClosedEvent>(OnInterfaceClosed);
@@ -48,6 +31,7 @@ public sealed partial class RemoteDroneSystem : EntitySystem
 
     #region Events
 
+    [SubscribeLocalEvent]
     private void OnInterfaceOpenedAttempt(Entity<RemoteDroneControllerComponent> entity, ref ActivatableUIOpenAttemptEvent args)
     {
         if (entity.Comp.Controlling)
@@ -78,6 +62,7 @@ public sealed partial class RemoteDroneSystem : EntitySystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnInterfaceOpened(Entity<RemoteDroneControllerComponent> entity, ref AfterActivatableUIOpenEvent args)
     {
         if (!_gameTiming.IsFirstTimePredicted)
@@ -102,6 +87,7 @@ public sealed partial class RemoteDroneSystem : EntitySystem
     }
 
     // Drones can only link to drone controllers
+    [SubscribeLocalEvent]
     private void OnDroneLinkAttempt(Entity<RemoteDroneComponent> entity, ref LinkAttemptEvent args)
     {
         if (args.SinkPort != entity.Comp.SinkPort.ToString())
@@ -114,6 +100,7 @@ public sealed partial class RemoteDroneSystem : EntitySystem
     }
 
     // this might break if this event becomes pure
+    [SubscribeLocalEvent]
     private void OnControllerLinkAttempt(Entity<RemoteDroneControllerComponent> entity, ref LinkAttemptEvent args)
     {
         if (args.SourcePort != entity.Comp.SourcePort.ToString())
@@ -129,6 +116,7 @@ public sealed partial class RemoteDroneSystem : EntitySystem
         Dirty(args.Sink, droneComponent);
     }
 
+    [SubscribeLocalEvent]
     private void OnControllerLinked(Entity<RemoteDroneControllerComponent> entity, ref NewLinkEvent args)
     {
         if (args.SourcePort != entity.Comp.SourcePort.ToString())
@@ -147,6 +135,7 @@ public sealed partial class RemoteDroneSystem : EntitySystem
         Dirty(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnControllerUnlinked(Entity<RemoteDroneControllerComponent> entity, ref PortDisconnectedEvent args)
     {
         if (args.Port != entity.Comp.SourcePort.ToString())
@@ -177,16 +166,19 @@ public sealed partial class RemoteDroneSystem : EntitySystem
         controllerEntity.Comp.LinkedDroneUid = null;
     }
 
+    [SubscribeLocalEvent]
     private void OnControllerStartup(Entity<RemoteDroneControllerComponent> entity, ref ComponentStartup args)
     {
         _sharedDeviceLinkSystem.EnsureSourcePorts(entity, entity.Comp.SourcePort);
     }
 
+    [SubscribeLocalEvent]
     private void OnDroneStartup(Entity<RemoteDroneComponent> entity, ref ComponentStartup args)
     {
         _sharedDeviceLinkSystem.EnsureSinkPorts(entity, entity.Comp.SinkPort);
     }
 
+    [SubscribeLocalEvent]
     private void OnControllerShutdown(Entity<RemoteDroneControllerComponent> entity, ref ComponentShutdown args)
     {
         if (entity.Comp.LinkedDroneUid is not { } linkedDroneUid)
@@ -195,6 +187,7 @@ public sealed partial class RemoteDroneSystem : EntitySystem
         TryHandleUnlink(entity, linkedDroneUid);
     }
 
+    [SubscribeLocalEvent]
     private void OnDroneShutdown(Entity<RemoteDroneComponent> entity, ref ComponentShutdown args)
     {
         if (entity.Comp.LinkedControllerUid is not { } linkedControllerUid)

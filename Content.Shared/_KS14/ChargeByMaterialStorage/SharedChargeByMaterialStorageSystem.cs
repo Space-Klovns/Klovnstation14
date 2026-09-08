@@ -14,18 +14,7 @@ public sealed partial class SharedChargeByMaterialStorageSystem : EntitySystem
     [Dependency] private SharedMaterialStorageSystem _materialStorageSystem = default!;
     [Dependency] private SharedBatterySystem _batterySystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<ChargeByMaterialStorageComponent, ComponentStartup>(OnStartup);
-        // Necessary as batterysystem updates charge of batteries to starting value at mapinit, and we depend on that, so make it be after
-        SubscribeLocalEvent<ChargeByMaterialStorageComponent, MapInitEvent>(OnMapInit, after: new[] { typeof(SharedBatterySystem) });
-
-        SubscribeLocalEvent<ChargeByMaterialStorageComponent, ChargeChangedEvent>(OnChargeChanged);
-        SubscribeLocalEvent<ChargeByMaterialStorageComponent, MaterialAmountChangedEvent>(OnMaterialAmountChanged);
-    }
-
+    [SubscribeLocalEvent]
     private void OnChargeChanged(Entity<ChargeByMaterialStorageComponent> entity, ref ChargeChangedEvent args)
     {
         if (!entity.Comp.AdjustStorageLimitAccordingToBatteryCharge)
@@ -66,11 +55,14 @@ public sealed partial class SharedChargeByMaterialStorageSystem : EntitySystem
         return activeStoredMaterials;
     }
 
+    [SubscribeLocalEvent]
     private void OnStartup(Entity<ChargeByMaterialStorageComponent> entity, ref ComponentStartup args)
     {
         entity.Comp.CachedStoredMaterials = GetActiveStoredMaterials(entity);
     }
 
+    // Necessary as batterysystem updates charge of batteries to starting value at mapinit, and we depend on that, so make it be after
+    [SubscribeLocalEvent(after: [typeof(SharedBatterySystem)])]
     private void OnMapInit(Entity<ChargeByMaterialStorageComponent> entity, ref MapInitEvent args)
     {
         if (!entity.Comp.AdjustStorageLimitAccordingToBatteryCharge ||
@@ -83,6 +75,7 @@ public sealed partial class SharedChargeByMaterialStorageSystem : EntitySystem
     }
 
     // Top 10 dictionary allocation spams of all time
+    [SubscribeLocalEvent]
     private void OnMaterialAmountChanged(Entity<ChargeByMaterialStorageComponent> entity, ref MaterialAmountChangedEvent args)
     {
         var activeStoredMaterials = GetActiveStoredMaterials(entity);

@@ -7,26 +7,19 @@ public sealed partial class DeviceLinkVisualsSystem : EntitySystem
 {
     [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<DeviceLinkVisualsComponent, NewLinkEvent>(OnConnected);
-        SubscribeLocalEvent<DeviceLinkVisualsComponent, PortDisconnectedEvent>(OnDisconnected);
-
-        SubscribeLocalEvent<DeviceLinkVisualsComponent, MapInitEvent>(OnMapInit);
-    }
-
+    [SubscribeLocalEvent]
     private void OnConnected(Entity<DeviceLinkVisualsComponent> entity, ref NewLinkEvent args)
     {
         _appearanceSystem.SetData(entity.Owner, DeviceLinkVisuals.Connected, true);
     }
 
+    [SubscribeLocalEvent]
     private void OnDisconnected(Entity<DeviceLinkVisualsComponent> entity, ref PortDisconnectedEvent args)
     {
         Update(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnMapInit(Entity<DeviceLinkVisualsComponent> entity, ref MapInitEvent args)
     {
         Update(entity);

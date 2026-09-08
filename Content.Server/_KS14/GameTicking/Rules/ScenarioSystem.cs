@@ -36,25 +36,7 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
     private readonly Dictionary<ProtoId<ScenarioFactionPrototype>, HashSet<EntityUid>> _activeObjectiveUids = [];
     private readonly ThreadLocal<HashSet<ProtoId<ScenarioFactionPrototype>>> _uniqueFactionSetLocal = new(() => []);
 
-
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestartCleanup);
-
-        //syndie checks
-        SubscribeLocalEvent<ScenarioFactionMemberComponent, ComponentShutdown>(OnMemberShutdown);
-        SubscribeLocalEvent<ScenarioFactionMemberComponent, MobStateChangedEvent>(OnMemberMobStateChanged);
-        SubscribeLocalEvent<ScenarioFactionMemberComponent, EntityZombifiedEvent>(OnMemberZombified);
-
-        SubscribeLocalEvent<ScenarioObjectiveComponent, MapInitEvent>(OnObjectiveMapInit);
-        SubscribeLocalEvent<ScenarioObjectiveComponent, ComponentShutdown>(OnObjectiveShutdown);
-        SubscribeLocalEvent<ScenarioObjectiveComponent, TriggerEvent>(OnTriggered);
-        SubscribeLocalEvent<ScenarioObjectiveComponent, TimedDespawnEvent>(OnObjDefended);
-        SubscribeLocalEvent<ScenarioObjectiveComponent, DestructionEventArgs>(OnObjDestroyed);
-    }
-
+    [SubscribeLocalEvent]
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent args)
     {
         _activeObjectiveUids.Clear();
@@ -88,11 +70,13 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
         // Map loading and RuleLoadedGridsEvent is handled by LoadMapRuleSystem
     }
 
+    [SubscribeLocalEvent]
     private void OnMemberShutdown(Entity<ScenarioFactionMemberComponent> entity, ref ComponentShutdown args)
     {
         CheckRoundShouldEndViaDeath();
     }
 
+    [SubscribeLocalEvent]
     private void OnMemberMobStateChanged(Entity<ScenarioFactionMemberComponent> entity, ref MobStateChangedEvent ev)
     {
         if (ev.NewMobState != MobState.Dead)
@@ -101,6 +85,7 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
         CheckRoundShouldEndViaDeath();
     }
 
+    [SubscribeLocalEvent]
     private void OnMemberZombified(Entity<ScenarioFactionMemberComponent> entity, ref EntityZombifiedEvent args)
     {
         RemComp(entity, entity.Comp);
@@ -198,12 +183,14 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
             "comms-console-announcement-title-centcom");
     }
 
+    [SubscribeLocalEvent]
     private void OnObjectiveMapInit(Entity<ScenarioObjectiveComponent> entity, ref MapInitEvent args)
     {
         _pvsOverrideSystem.AddGlobalOverride(entity);
         _activeObjectiveUids.GetOrNew(entity.Comp.FactionId).Add(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnObjectiveShutdown(Entity<ScenarioObjectiveComponent> entity, ref ComponentShutdown args)
     {
         _pvsOverrideSystem.RemoveGlobalOverride(entity);
@@ -214,6 +201,7 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
         CheckRoundShouldEndViaObjective();
     }
 
+    [SubscribeLocalEvent]
     private void OnTriggered(Entity<ScenarioObjectiveComponent> entity, ref TriggerEvent args)
     {
         if (args.Key is { } key &&
@@ -223,11 +211,13 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
         CaptureObjective(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnObjDefended(Entity<ScenarioObjectiveComponent> entity, ref TimedDespawnEvent args)
     {
         CaptureObjective(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnObjDestroyed(Entity<ScenarioObjectiveComponent> entity, ref DestructionEventArgs args)
     {
         CaptureObjective(entity);

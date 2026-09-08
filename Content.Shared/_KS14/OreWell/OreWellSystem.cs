@@ -18,16 +18,10 @@ public sealed partial class OreWellSystem : EntitySystem
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private INetManager _netManager = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<ActiveOreWellComponent, ExaminedEvent>(OnExamined);
-    }
-
     private static float Quantize(float value)
         => MathF.Floor(value * 100f + 0.5f) / 100f;
 
+    [SubscribeLocalEvent]
     private void OnExamined(Entity<ActiveOreWellComponent> entity, ref ExaminedEvent args)
     {
         if (!args.IsInDetailsRange)

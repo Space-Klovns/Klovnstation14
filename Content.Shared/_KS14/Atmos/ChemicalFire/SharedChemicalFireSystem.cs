@@ -43,18 +43,13 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<ChemicalFireComponent, ComponentStartup>(OnStartup);
-        SubscribeLocalEvent<ChemicalFireComponent, ComponentShutdown>(OnShutdown);
-        SubscribeLocalEvent<ChemicalFireComponent, EntParentChangedMessage>(OnEntParentChanged);
-
-        SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
-
         InitialiseNetworking();
     }
 
     /// <summary>
     ///     Drops every cached template singleton so the next sustain check rebuilds it against fresh data.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
     {
         if (!args.WasModified<EntityPrototype>())
@@ -236,6 +231,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnStartup(Entity<ChemicalFireComponent> entity, ref ComponentStartup args)
     {
         var curTime = _gameTiming.CurTime;
@@ -257,6 +253,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         AfterFireStartup(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnShutdown(Entity<ChemicalFireComponent> entity, ref ComponentShutdown args)
     {
         BeforeFireShutdown(entity);
@@ -337,6 +334,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         return true;
     }
 
+    [SubscribeLocalEvent]
     private void OnEntParentChanged(Entity<ChemicalFireComponent> entity, ref EntParentChangedMessage args)
     {
         if (!entity.Comp.Running)

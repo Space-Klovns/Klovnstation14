@@ -8,16 +8,16 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
 {
     private void SetupRelocation()
     {
-        SubscribeLocalEvent<RelocateOnEnteringSpeczoneComponent, ComponentStartup>(OnRelocatableStartup);
-        SubscribeLocalEvent<RelocateOnEnteringSpeczoneComponent, EntParentChangedMessage>(OnRelocatableEntParentChanged);
     }
 
+    [SubscribeLocalEvent]
     private void OnRelocatableStartup(Entity<RelocateOnEnteringSpeczoneComponent> entity, ref ComponentStartup args)
     {
         if (CheckEntityIsInSpeczone(entity, out _))
             _transformSystem.SetCoordinates(entity.Owner, _gameTicker.GetObserverSpawnPoint());
     }
 
+    [SubscribeLocalEvent]
     private void OnRelocatableEntParentChanged(Entity<RelocateOnEnteringSpeczoneComponent> entity, ref EntParentChangedMessage args)
     {
         if (CheckEntityIsInSpeczone(entity, out _))

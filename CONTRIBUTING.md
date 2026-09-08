@@ -249,3 +249,44 @@ Classes that aren't systems (overlays, UI, managers) can opt into the same colle
 _systemCollectionHookManager.HookAction(dependencyCollection =>
     dependencyCollection.InjectDependencies(overlay, oneOff: true));
 ```
+
+**Subscribe with `[SubscribeLocalEvent]`, not a call in `Initialize` (C#)** — the engine generates the subscription from an attribute on the handler, inferring the event (and component) from the handler's signature. The class must be `partial`, because the generator emits an `AutoSubscriptions()` override into it:
+```csharp
+// old
+public override void Initialize()
+{
+    base.Initialize();
+
+    SubscribeLocalEvent<KsTrailComponent, ComponentStartup>(OnStartup);
+}
+
+private void OnStartup(Entity<KsTrailComponent> entity, ref ComponentStartup args) { }
+
+// current
+[SubscribeLocalEvent]
+private void OnStartup(Entity<KsTrailComponent> entity, ref ComponentStartup args) { }
+```
+`[SubscribeNetworkEvent]` and `[EventSubscription]` (the latter for `SubscribeAllEvent`) work the same way. Ordering goes in the attribute rather than in a separate call: `[SubscribeLocalEvent(after: [typeof(SharedGunSystem)])]`.
+
+Once every subscription in an `Initialize` has moved to an attribute, delete the override — an `Initialize` left holding nothing but `base.Initialize();` is dead code.
+
+The attribute cannot express every subscription. Keep the explicit call in `Initialize` when:
+- the subscription is conditional — inside an `if`, a loop, or an `#if`;
+- the handler is a lambda rather than a named method;
+- the handler is generic, `virtual` or `abstract`, or a type argument comes from the containing class's own type parameters (`BaseHierarchySystem` subscribes on `THierarchyComp`, so it stays as-is);
+- one handler serves several subscriptions — a method has one signature, so it gets one attribute and one event type (`KsSensorSystem.OnEmitterAddedOrRemoved` covers both `ComponentStartup` and `ComponentShutdown`);
+- the handler's parameter is a *base* of the event actually subscribed to, since the attribute would subscribe to the base type instead.
+
+`RA0058` flags every call that can be converted and ships a code fixer, so bulk conversion is a tooling job, not a manual one:
+```sh
+# RA0058 is Info severity, so raise it in .editorconfig first, then put .editorconfig back -
+# leaving it raised turns the not-yet-converted calls elsewhere in the repo into Release build errors.
+dotnet format analyzers Content.Shared/Content.Shared.csproj --diagnostics RA0058 --severity info --include Content.Shared/_KS14/
+```
+`RA0056` is the error you get when the containing class isn't `partial`, and `RA0054` when the handler's signature doesn't match a subscribable delegate.
+
+The generator only runs in projects that import it. `Content.Client`, `Content.Server` and `Content.Shared` each carry `<Import Project="..\RobustToolbox\MSBuild\Robust.EntitySystemSubscriptionsGenerator.targets" />` for exactly this reason — without it the attribute still compiles, nothing is generated, and **every converted subscription silently stops firing** with no build error to point at it. Any other project that wants attribute subscriptions needs the same import.
+
+**`IMapManager` is gone (C#)** — engine 280 removed it; everything it did lives on `SharedMapSystem`, which injects like any other system. Most methods kept their names (`CreateGridEntity`, `FindGridsIntersecting`, `TryFindGridAt`, `GetAllGrids`); `SetMapPaused` became `SetPaused`.
+
+**Engine version** — this fork tracks a pinned `RobustToolbox` submodule, currently v288.0.0. When bumping it, read [RELEASE-NOTES.md](https://github.com/space-wizards/RobustToolbox/blob/master/RELEASE-NOTES.md) for every intervening version and check whether upstream SS14 already shipped the content-side fix — porting their commit is cheaper and keeps future merges clean. Build `-c Release`, not `Debug`/`DebugOpt`: `MSBuild/Content.props` only sets `TreatWarningsAsErrors` for `Release`, so it is the only configuration that reproduces what CI fails on.

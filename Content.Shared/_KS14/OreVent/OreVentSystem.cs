@@ -30,13 +30,9 @@ public sealed partial class OreVentSystem : EntitySystem
     {
         base.Initialize();
         InitialiseTapping();
-
-        SubscribeLocalEvent<OreVentComponent, InteractUsingEvent>(OnInteractUsing);
-
-        SubscribeLocalEvent<OreVentComponent, OreVentPreExtractionDoAfterEvent>(OnPreExtractionDoAfter);
-        SubscribeLocalEvent<OreVentComponent, DoAfterAttemptEvent<OreVentPreExtractionDoAfterEvent>>(OnAttemptPreExtractionDoAfter);
     }
 
+    [SubscribeLocalEvent]
     private void OnInteractUsing(Entity<OreVentComponent> entity, ref InteractUsingEvent args)
     {
         if (args.Handled ||
@@ -89,6 +85,7 @@ public sealed partial class OreVentSystem : EntitySystem
                 Loc.GetString("ks-specific-orevent-startingextraction-others", ("vent", entity.Owner), ("user", Identity.Name(args.User, EntityManager, viewer: null))), entity, Filter.PvsExcept(args.User), true, type: PopupType.MediumCaution);
     }
 
+    [SubscribeLocalEvent]
     private void OnAttemptPreExtractionDoAfter(Entity<OreVentComponent> entity, ref DoAfterAttemptEvent<OreVentPreExtractionDoAfterEvent> args)
     {
         if (args.Cancelled)
@@ -102,6 +99,7 @@ public sealed partial class OreVentSystem : EntitySystem
         args.Cancel();
     }
 
+    [SubscribeLocalEvent]
     private void OnPreExtractionDoAfter(Entity<OreVentComponent> entity, ref OreVentPreExtractionDoAfterEvent args)
     {
         if (args.Cancelled)

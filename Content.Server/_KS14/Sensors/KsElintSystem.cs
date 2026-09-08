@@ -32,13 +32,6 @@ public sealed partial class KsElintSystem : KsEmissionListenerSystem
     [Dependency] private KsSensorSystem _sensors = default!;
     [Dependency] private KsSensorIntelSystem _intel = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsElintComponent, KsSensorSweepEvent>(OnSweep);
-    }
-
     /// <summary>
     ///     Points every ELINT array on the grid at one designated emitter for focus
     ///         analysis (null clears): one focused emitter per grid, mirroring the
@@ -61,6 +54,7 @@ public sealed partial class KsElintSystem : KsEmissionListenerSystem
         _sensors.ForceConsolePush();
     }
 
+    [SubscribeLocalEvent]
     private void OnSweep(Entity<KsElintComponent> ent, ref KsSensorSweepEvent args)
     {
         var xform = Transform(args.Sensor);

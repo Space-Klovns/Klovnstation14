@@ -8,11 +8,7 @@ namespace Content.Server._KS14.Anchorless.Systems;
 /// </summary>
 public sealed partial class AnchorlessHorrorVisualSystem : EntitySystem
 {
-    public override void Initialize()
-    {
-        SubscribeLocalEvent<KsAnchorlessAntagComponent, AnchorlessHorrorFormChangedEvent>(OnHorrorFormChanged);
-    }
-
+    [SubscribeLocalEvent]
     private void OnHorrorFormChanged(Entity<KsAnchorlessAntagComponent> ent, ref AnchorlessHorrorFormChangedEvent args)
     {
         var visual = EnsureComp<AnchorlessHorrorVisualComponent>(ent);

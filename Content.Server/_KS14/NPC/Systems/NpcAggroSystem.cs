@@ -8,14 +8,9 @@ namespace Content.Server._KS14.NPC.Systems;
 /// in as Target and sets the Aggroed flag. Proximity aggro is handled
 /// separately by RangedBossTargeting.
 /// </summary>
-public sealed class NpcAggroSystem : EntitySystem
+public sealed partial class NpcAggroSystem : EntitySystem
 {
-    public override void Initialize()
-    {
-        base.Initialize();
-        SubscribeLocalEvent<NpcAggroComponent, DamageChangedEvent>(OnDamaged);
-    }
-
+    [SubscribeLocalEvent]
     private void OnDamaged(EntityUid uid, NpcAggroComponent comp, DamageChangedEvent args)
     {
         if (!args.DamageIncreased || args.DamageDelta is not { } delta || delta.GetTotal() <= 0)

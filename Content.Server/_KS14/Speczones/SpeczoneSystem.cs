@@ -58,24 +58,19 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
 
         _configurationManager.OnValueChanged(KsCCVars.SpeczonesEnabled, x => _loadSpeczones = x, invokeImmediately: true);
 
-        SubscribeLocalEvent<SpeczoneComponent, ComponentShutdown>(OnSpeczoneShutdown);
-        SubscribeLocalEvent<SpeczoneEntryComponent, ComponentShutdown>(OnSpeczoneEntryShutdown);
-
-        SubscribeLocalEvent<RoundStartingEvent>(OnRoundStarting, after: [typeof(SystemCollectionHookManager)]);
-        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundCleanup);
-        SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
-
         SetupRelocation();
     }
 
     protected override bool HasSpeczoneComponent(EntityUid uid) => HasComp<SpeczoneComponent>(uid);
 
+    [SubscribeLocalEvent]
     private void OnSpeczoneShutdown(Entity<SpeczoneComponent> entity, ref ComponentShutdown args)
     {
         _speczones.Remove(entity.Comp.PrototypeId);
         _speczoneUids.Remove(entity.Owner);
     }
 
+    [SubscribeLocalEvent]
     private void OnSpeczoneEntryShutdown(Entity<SpeczoneEntryComponent> entity, ref ComponentShutdown args)
     {
         var entityTransform = Transform(entity.Owner);
@@ -86,6 +81,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
         mapSpeczoneComponent.EntryMarkers.Remove((entity.Owner, entityTransform));
     }
 
+    [SubscribeLocalEvent(after: [typeof(SystemCollectionHookManager)])]
     private void OnRoundStarting(RoundStartingEvent args)
     {
         if (!_loadSpeczones)
@@ -109,12 +105,14 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
             _mapSystem.InitializeMap(speczoneEntity.Owner, unpause: false);
     }
 
+    [SubscribeLocalEvent]
     private void OnRoundCleanup(RoundRestartCleanupEvent args)
     {
         _speczones.Clear();
         _speczoneUids.Clear();
     }
 
+    [SubscribeLocalEvent]
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
     {
         if (!args.TryGetModified<SpeczonePrototype>(out var modifiedZones))

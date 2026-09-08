@@ -159,27 +159,6 @@ public sealed partial class KsSensorSystem : EntitySystem
 
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
         _gridQuery = GetEntityQuery<MapGridComponent>();
-
-        SubscribeLocalEvent<KsCollectNavContactsEvent>(OnCollectNavContacts);
-
-        SubscribeLocalEvent<KsSensorComponent, ExaminedEvent>(OnSensorExamined);
-
-        // Push a full picture the moment a radar console UI opens, and scrub the
-        // stored (PVS-replicated) BUI state when the last viewer leaves. The shuttle
-        // console equivalents live as KS14-marked lines in ShuttleConsoleSystem's own
-        // handlers: the engine allows only one subscriber per (component, event) pair
-        // and it already holds them.
-        SubscribeLocalEvent<RadarConsoleComponent, BoundUIOpenedEvent>(OnRadarConsoleUiOpened);
-        SubscribeLocalEvent<RadarConsoleComponent, BoundUIClosedEvent>(OnRadarConsoleUiClosed);
-
-        // Everything below changes what a console draws while mutating no contact pool, so
-        // without a forced push the change-gated refresh never fires and the picture
-        // latches. On a ship with nothing in its pool (a raider alone in a sector) it
-        // latches forever. Rotation matters because the jam wedge follows the mount
-        // (ThrusterSystem subscribes MoveEvent for the same reason). Mounting, unmounting,
-        // powering and unpowering an emitter change the toggles' visibility and ON/OFF
-        // labels the same way.
-        SubscribeLocalEvent<KsJammerComponent, MoveEvent>(OnJammerMoved);
         SubscribeLocalEvent<KsJammerComponent, PowerChangedEvent>(OnEmitterPowerChanged);
         SubscribeLocalEvent<KsJammerComponent, AnchorStateChangedEvent>(OnEmitterAnchorChanged);
         SubscribeLocalEvent<KsJammerComponent, ComponentStartup>(OnEmitterAddedOrRemoved);
@@ -190,6 +169,14 @@ public sealed partial class KsSensorSystem : EntitySystem
         SubscribeLocalEvent<KsSensorComponent, ComponentShutdown>(OnEmitterAddedOrRemoved);
     }
 
+    // Everything below changes what a console draws while mutating no contact pool, so
+    // without a forced push the change-gated refresh never fires and the picture
+    // latches. On a ship with nothing in its pool (a raider alone in a sector) it
+    // latches forever. Rotation matters because the jam wedge follows the mount
+    // (ThrusterSystem subscribes MoveEvent for the same reason). Mounting, unmounting,
+    // powering and unpowering an emitter change the toggles' visibility and ON/OFF
+    // labels the same way.
+    [SubscribeLocalEvent]
     private void OnJammerMoved(Entity<KsJammerComponent> ent, ref MoveEvent args)
     {
         // Only rotation reshapes the wedge relative to the grid. Translation of the whole
@@ -214,16 +201,24 @@ public sealed partial class KsSensorSystem : EntitySystem
         _forceConsolePush = true;
     }
 
+    // Push a full picture the moment a radar console UI opens, and scrub the
+    // stored (PVS-replicated) BUI state when the last viewer leaves. The shuttle
+    // console equivalents live as KS14-marked lines in ShuttleConsoleSystem's own
+    // handlers: the engine allows only one subscriber per (component, event) pair
+    // and it already holds them.
+    [SubscribeLocalEvent]
     private void OnRadarConsoleUiOpened(EntityUid uid, RadarConsoleComponent component, BoundUIOpenedEvent args)
     {
         _radarConsole.KsRefreshConsole(uid, component);
     }
 
+    [SubscribeLocalEvent]
     private void OnRadarConsoleUiClosed(EntityUid uid, RadarConsoleComponent component, BoundUIClosedEvent args)
     {
         _radarConsole.KsRefreshConsole(uid, component);
     }
 
+    [SubscribeLocalEvent]
     private void OnSensorExamined(EntityUid uid, KsSensorComponent component, ExaminedEvent args)
     {
         string status;
@@ -1262,6 +1257,7 @@ public sealed partial class KsSensorSystem : EntitySystem
 
     #region Console snapshots
 
+    [SubscribeLocalEvent]
     private void OnCollectNavContacts(ref KsCollectNavContactsEvent ev)
     {
         if (ev.Grid is not { } gridUid)

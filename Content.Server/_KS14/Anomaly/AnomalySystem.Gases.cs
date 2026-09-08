@@ -25,12 +25,11 @@ public sealed partial class AnomalySystem
 
     private void InitializeGases()
     {
-        SubscribeLocalEvent<AnomalyGasConsumerComponent, ComponentShutdown>(OnGasConsumerShutdown);
-        SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
         _gasValues = Enum.GetValues<Gas>();
         CacheGasEffects();
     }
 
+    [SubscribeLocalEvent]
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
     {
         if (args.WasModified<AnomalyGasEffectPrototype>())
@@ -46,6 +45,7 @@ public sealed partial class AnomalySystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnGasConsumerShutdown(EntityUid uid, AnomalyGasConsumerComponent component, ComponentShutdown args)
     {
         _processingCache.Remove(uid);

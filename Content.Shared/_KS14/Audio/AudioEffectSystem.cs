@@ -53,7 +53,6 @@ public sealed partial class AudioEffectSystem : EntitySystem
 
         // You can't keep references to this past round-end so it must be cleaned up.
         SubscribeNetworkEvent<RoundRestartCleanupEvent>(_ => Cleanup()); // its not raised on client
-        SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypeReload);
     }
 
     public override void Shutdown()
@@ -62,6 +61,7 @@ public sealed partial class AudioEffectSystem : EntitySystem
         Cleanup();
     }
 
+    [SubscribeLocalEvent]
     private void OnPrototypeReload(PrototypesReloadedEventArgs args)
     {
         if (!args.WasModified<AudioPresetPrototype>())

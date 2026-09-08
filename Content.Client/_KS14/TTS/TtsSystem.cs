@@ -26,8 +26,6 @@ public sealed partial class TtsSystem : SharedTtsSystem
 
         _configurationManager.OnValueChanged(KsCCVars.TtsEnabled, (x) => _ttsEnabled = x, invokeImmediately: true);
         _configurationManager.OnValueChanged(KsCCVars.SlurFilterEnabled, (x) => _slurFilterEnabled = x, invokeImmediately: true);
-
-        SubscribeNetworkEvent<PlayTtsEvent>(OnPlayTts);
     }
 
     public override void Update(float frameTime)
@@ -49,6 +47,7 @@ public sealed partial class TtsSystem : SharedTtsSystem
         }
     }
 
+    [SubscribeNetworkEvent]
     private async void OnPlayTts(PlayTtsEvent args)
     {
         if (!_ttsEnabled ||

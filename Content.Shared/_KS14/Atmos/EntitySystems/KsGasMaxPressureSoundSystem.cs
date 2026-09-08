@@ -7,13 +7,7 @@ public sealed partial class KsGasMaxPressureSoundSystem : EntitySystem
 {
     [Dependency] private SharedAudioSystem _audioSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsGasMaxPressureSoundComponent, KsGasMaxPressureAfterIntegrityLostEvent>(OnAfterLoseIntegrity);
-    }
-
+    [SubscribeLocalEvent]
     private void OnAfterLoseIntegrity(Entity<KsGasMaxPressureSoundComponent> entity, ref KsGasMaxPressureAfterIntegrityLostEvent args)
     {
         _audioSystem.PlayPvs(entity.Comp.OverpressureSound, entity.Owner);

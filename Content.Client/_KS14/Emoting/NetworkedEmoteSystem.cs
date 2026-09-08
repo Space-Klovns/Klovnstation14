@@ -20,13 +20,7 @@ public sealed partial class NetworkedEmoteSystem : EntitySystem
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private ChatSystem _chatSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeNetworkEvent<NetworkedEmoteMessage>(OnNetworkedEmoteMessage);
-    }
-
+    [SubscribeNetworkEvent]
     private void OnNetworkedEmoteMessage(NetworkedEmoteMessage args)
     {
         if (!_prototypeManager.TryIndex(args.EmoteId, out var emotePrototype))

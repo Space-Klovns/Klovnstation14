@@ -17,17 +17,7 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
     private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(1d);
     private TimeSpan _nextUpdate = TimeSpan.MinValue;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<PlayerAttachedEvent>(OnPlayerAttached);
-        SubscribeLocalEvent<PlayerDetachedEvent>(OnPlayerDetached);
-
-        SubscribeLocalEvent<KsZLevelViewerComponent, ComponentShutdown>(OnViewerShutdown);
-        SubscribeLocalEvent<KsZLevelViewSubscriberComponent, ComponentShutdown>(OnSubscriberShutdown);
-    }
-
+    [SubscribeLocalEvent]
     private void OnPlayerAttached(PlayerAttachedEvent args)
     {
         var component = EntityManager.ComponentFactory.GetComponent<KsZLevelViewerComponent>();
@@ -36,11 +26,13 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
         AddComp(args.Entity, component);
     }
 
+    [SubscribeLocalEvent]
     private void OnPlayerDetached(PlayerDetachedEvent args)
     {
         RemComp<KsZLevelViewerComponent>(args.Entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnViewerShutdown(Entity<KsZLevelViewerComponent> entity, ref ComponentShutdown args)
     {
         if (entity.Comp.ViewSubscriberUid == EntityUid.Invalid)
@@ -49,6 +41,7 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
         Del(entity.Comp.ViewSubscriberUid);
     }
 
+    [SubscribeLocalEvent]
     private void OnSubscriberShutdown(Entity<KsZLevelViewSubscriberComponent> entity, ref ComponentShutdown args)
     {
         if (Terminating(entity.Owner) ||

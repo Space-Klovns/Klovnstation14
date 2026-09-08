@@ -21,7 +21,6 @@ public sealed partial class KsTileEffectSystem : EntitySystem
         base.Initialize();
 
         _systemCollectionHookManager.HookAction(OnAction);
-        SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
     }
 
     private void ReloadReagents(IDependencyCollection dependencyCollection)
@@ -36,6 +35,7 @@ public sealed partial class KsTileEffectSystem : EntitySystem
     private void OnAction(IDependencyCollection dependencyCollection)
         => ReloadReagents(dependencyCollection);
 
+    [SubscribeLocalEvent]
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
     {
         if (!args.Modified.Contains(typeof(ReagentPrototype)))

@@ -11,11 +11,7 @@ public sealed partial class AnchorlessFactionIconSystem : EntitySystem
     private static readonly ProtoId<FactionIconPrototype> AnchorlessFactionIcon = "AnchorlessFaction";
     [Dependency] private IPrototypeManager _prototype = default!;
 
-    public override void Initialize()
-    {
-        SubscribeLocalEvent<AnchorlessFactionComponent, GetStatusIconsEvent>(OnGetStatusIcons);
-    }
-
+    [SubscribeLocalEvent]
     private void OnGetStatusIcons(Entity<AnchorlessFactionComponent> ent, ref GetStatusIconsEvent args)
     {
         if (_prototype.TryIndex(AnchorlessFactionIcon, out var icon))

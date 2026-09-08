@@ -17,17 +17,6 @@ public sealed partial class ArcFlashSystem : SharedArcFlashSystem
     [Dependency] private ElectrocutionSystem _electrocutionSystem = default!;
     [Dependency] private LightningSystem _lightning = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-
-
-        SubscribeLocalEvent<ArcFlashAnchorableComponent, AnchorStateChangedEvent>(OnAnchorChanged);
-        SubscribeLocalEvent<ArcFlashDeconstructableComponent, MachineDeconstructedEvent>(OnDeconstruction);
-        SubscribeLocalEvent<ArcFlashDeconstructableComponent, APCDeconstructedEvent>(OnAPCDeconstruction);
-    }
-
     protected override void OnAttemptCutCable(Entity<ArcFlashCableComponent> entity, ref AttemptCutCableEvent args)
     {
         base.OnAttemptCutCable(entity, ref args);
@@ -56,6 +45,7 @@ public sealed partial class ArcFlashSystem : SharedArcFlashSystem
         return false;
     }
 
+    [SubscribeLocalEvent]
     private void OnAnchorChanged(Entity<ArcFlashAnchorableComponent> entity, ref AnchorStateChangedEvent args)
     {
         if (args.Anchored)
@@ -69,11 +59,15 @@ public sealed partial class ArcFlashSystem : SharedArcFlashSystem
 
         DoLightning((entity, entity));
     }
+
+    [SubscribeLocalEvent]
     private void OnDeconstruction(Entity<ArcFlashDeconstructableComponent> entity, ref MachineDeconstructedEvent args)
     {
         //there is no way for us to check battery status anyway
         DoLightning((entity, entity));
     }
+
+    [SubscribeLocalEvent]
     private void OnAPCDeconstruction(Entity<ArcFlashDeconstructableComponent> entity, ref APCDeconstructedEvent args)
     {
         //there is no way for us to check battery status anyway
