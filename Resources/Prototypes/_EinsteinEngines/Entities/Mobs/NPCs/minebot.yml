@@ -45,7 +45,7 @@
     enabled: false
     radius: 3.5
     softness: 2
-    mask: /Textures/Effects/LightMasks/cone.png
+    lightMask: ConeSingle # KS14: mask: /Textures/Effects/LightMasks/cone.png -> lightMask, engine 288 removed the mask datafield
     autoRot: true
   - type: UseDelay
     delay: 0.65
