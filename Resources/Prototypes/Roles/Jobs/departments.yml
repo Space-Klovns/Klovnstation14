@@ -16,7 +16,7 @@
   weight: -10
   roles:
   - Bartender
-  - Botanist
+  - Botanist #KS14: Joint job Civilian/Science
   - Chaplain
   - Chef
   - Clown
@@ -120,6 +120,7 @@
   - ResearchDirector
   - Scientist
   - ResearchAssistant
+  - Botanist #KS14: Joint job Civilian/Science
 
 - type: department
   id: Silicon

@@ -1,0 +1,35 @@
+- type: entity
+  parent: CleanerDispenser
+  id: PlantbegoneDispenser
+  name: plantbgone dispenser
+  description: Wallmount Plant-B-Gone dispenser.
+  components:
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: PlantBGone
+        Quantity: 960
+
+- type: entity
+  parent: CleanerDispenser
+  id: PestkillerDispenser
+  name: pestkiller dispenser
+  description: Wallmount Pest Killer dispenser.
+  components:
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: PestKiller
+        Quantity: 960
+
+- type: entity
+  parent: CleanerDispenser
+  id: RobustharvestDispenser
+  name: robustharvest dispenser
+  description: Wallmount Robust Harvest dispenser.
+  components:
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: RobustHarvest
+        Quantity: 960

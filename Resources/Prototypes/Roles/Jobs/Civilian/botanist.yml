@@ -10,6 +10,7 @@
   - Service
   - Maintenance
   - Hydroponics
+  - Research #KS14: Joint job Civilian/Science
   extendedAccess:
   - Kitchen
   - Bar
@@ -23,7 +24,7 @@
   equipment:
     shoes: ClothingShoesColorBrown
     id: BotanistPDA
-    ears: ClothingHeadsetService
+    ears: ClothingHeadsetBotany #KS14: Botany Headset
     belt: ClothingBeltPlantFilled
   #storage:
     #back:
