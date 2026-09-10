@@ -16,6 +16,7 @@ namespace Content.Shared._KS14.Medical.IvDrip;
 public sealed partial class SharedIvDripSystem : EntitySystem
 {
     [Dependency] private SharedActionsSystem _actionsSystem = default!;
+    [Dependency] private IvDripUiSystem _ivDripUiSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private ReactiveSystem _reactiveSystem = default!;
     [Dependency] private SharedPuddleSystem _puddleSystem = default!;
@@ -53,6 +54,7 @@ public sealed partial class SharedIvDripSystem : EntitySystem
 
         ivDripComponent.InjectionEnabled = !ivDripComponent.InjectionEnabled;
         _actionsSystem.SetToggled((args.Action.Owner, (ActionComponent?) args.Action.Comp), ivDripComponent.InjectionEnabled);
+        _ivDripUiSystem.UpdateUserInterface((ivDripUid, ivDripComponent));
         Dirty(ivDripUid, ivDripComponent);
         args.Handled = true;
     }

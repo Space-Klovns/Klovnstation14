@@ -6,6 +6,6 @@
   description: Enable or disable intravenous injection.
   components:
   - type: Action
-    icon: Interface/Actions/overloadlight.png
+    icon: Objects/Specific/Chemistry/syringe.rsi/syringe_base0.png
   - type: InstantAction
     event: !type:ToggleIvDripActionEvent

@@ -117,5 +117,4 @@ public sealed class IvDripSetIntervalMessage(float interval) : BoundUserInterfac
     public float Interval = interval;
 }
 
-[Serializable, NetSerializable]
 public sealed partial class ToggleIvDripActionEvent : InstantActionEvent;

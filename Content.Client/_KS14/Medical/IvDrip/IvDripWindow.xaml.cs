@@ -18,7 +18,7 @@ public sealed partial class IvDripWindow : FancyWindow
         RobustXamlLoader.Load(this);
         EnabledCheckBox.OnToggled += args => OnEnabledChanged?.Invoke(args.Pressed);
         AmountSlider.OnReleased += _ => OnAmountChanged?.Invoke(FixedPoint2.New(AmountSlider.Value));
-        IntervalSlider.OnReleased += _ => OnIntervalChanged?.Invoke(IntervalSlider.Value);
+        IntervalSlider.OnReleased += _ => OnIntervalChanged?.Invoke(NormalizeInterval(IntervalSlider.Value));
         AmountInput.OnTextEntered += args => SubmitAmount(args.Text);
         AmountInput.OnFocusExit += args => SubmitAmount(args.Text);
         IntervalInput.OnTextEntered += args => SubmitInterval(args.Text);
@@ -41,8 +41,8 @@ public sealed partial class IvDripWindow : FancyWindow
         IntervalSlider.MinValue = state.MinimumInjectionInterval;
         IntervalSlider.MaxValue = state.MaximumInjectionInterval;
         IntervalSlider.SetValueWithoutEvent(state.InjectionInterval);
-        IntervalInput.Text = state.InjectionInterval.ToString(CultureInfo.InvariantCulture);
-        IntervalLabel.Text = $"Rate: {state.InjectionInterval:F1} s";
+        IntervalInput.Text = state.InjectionInterval.ToString("F2", CultureInfo.InvariantCulture);
+        IntervalLabel.Text = $"Rate: {state.InjectionInterval:F2} s";
     }
 
     private void SubmitAmount(string text)
@@ -54,6 +54,9 @@ public sealed partial class IvDripWindow : FancyWindow
     private void SubmitInterval(string text)
     {
         if (float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var interval))
-            OnIntervalChanged?.Invoke(interval);
+            OnIntervalChanged?.Invoke(NormalizeInterval(interval));
     }
+
+    private static float NormalizeInterval(float interval) =>
+        (float) Math.Round(interval, 2, MidpointRounding.AwayFromZero);
 }

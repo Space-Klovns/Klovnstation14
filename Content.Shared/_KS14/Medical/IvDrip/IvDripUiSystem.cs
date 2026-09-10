@@ -1,4 +1,3 @@
-using Content.Shared.Chemistry.Components.SolutionManager;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.FixedPoint;
 using Content.Shared.UserInterface;
@@ -15,7 +14,7 @@ public sealed partial class IvDripUiSystem : EntitySystem
 
     public override void Initialize()
     {
-        SubscribeLocalEvent<SolutionChangedEvent>(OnSolutionChanged);
+        SubscribeLocalEvent<IvDripComponent, SolutionChangedEvent>(OnSolutionChanged);
 
         Subs.BuiEvents<IvDripComponent>(IvDripUiKey.Key, subs =>
         {
@@ -26,13 +25,9 @@ public sealed partial class IvDripUiSystem : EntitySystem
         });
     }
 
-    private void OnSolutionChanged(ref SolutionChangedEvent args)
+    private void OnSolutionChanged(Entity<IvDripComponent> entity, ref SolutionChangedEvent args)
     {
-        if (!TryComp<ContainedSolutionComponent>(args.Solution, out var containedSolutionComponent) ||
-            !TryComp<IvDripComponent>(containedSolutionComponent.Container, out var ivDripComponent))
-            return;
-
-        UpdateUserInterface((containedSolutionComponent.Container, ivDripComponent));
+        UpdateUserInterface(entity);
     }
 
     private void OnBoundUiOpened(Entity<IvDripComponent> entity, ref BoundUIOpenedEvent args)
@@ -62,12 +57,13 @@ public sealed partial class IvDripUiSystem : EntitySystem
         if (!entity.Comp.CanSetInjectionInterval)
             return;
 
-        entity.Comp.InjectionInterval = Math.Clamp(args.Interval, entity.Comp.MinimumInjectionInterval, entity.Comp.MaximumInjectionInterval);
+        entity.Comp.InjectionInterval = Math.Clamp((float) Math.Round(args.Interval, 2, MidpointRounding.AwayFromZero),
+            entity.Comp.MinimumInjectionInterval, entity.Comp.MaximumInjectionInterval);
         Dirty(entity);
         UpdateUserInterface(entity);
     }
 
-    private void UpdateUserInterface(Entity<IvDripComponent> entity)
+    public void UpdateUserInterface(Entity<IvDripComponent> entity)
     {
         var solutionVolume = FixedPoint2.Zero;
         var solutionMaxVolume = FixedPoint2.Zero;
