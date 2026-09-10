@@ -19,6 +19,13 @@ mapping-pick-tooltip = Hold {$key}
 
 mapping-flip-tooltip = Flip sides
 
+# KS14 start: port supported mapping toolbar actions from upstream PR #34302
+mapping-fixgridatmos-tooltip = Add atmosphere to the grid
+mapping-remove-grid-tooltip = Remove grid
+mapping-move-grid-tooltip = Move grid
+mapping-grid-vv-tooltip = View grid variables
+# KS14 end
+
 mapping-hide-left-side-tooltip = Show/hide left list
 mapping-hide-right-side-tooltip = Show/hide right list
 

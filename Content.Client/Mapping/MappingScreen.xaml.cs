@@ -105,9 +105,13 @@ public sealed partial class MappingScreen : InGameScreen
 
         Pick.Texture.TexturePath = "/Textures/Interface/eyedropper.svg.png";
         // KS14 start: configure split mapping panes, pane toggles, and mutually exclusive erase tools
-        Flip.Texture.TexturePath = "/Textures/_KS14/Mapping/VerbIcons/rotate_cw.svg.192dpi.png";
+        Flip.Texture.TexturePath = "/Textures/Interface/VerbIcons/rotate_cw.svg.192dpi.png";
         HideLeftSide.Texture.TexturePath = "/Textures/_KS14/Mapping/VerbIcons/caret-left-solid.svg.192dpi.png";
         HideRightSide.Texture.TexturePath = "/Textures/_KS14/Mapping/VerbIcons/caret-right-solid.svg.192dpi.png";
+        FixGridAtmos.Texture.TexturePath = "/Textures/Interface/VerbIcons/light.svg.192dpi.png"; // KS14: upstream PR #34302 port
+        RemoveGrid.Texture.TexturePath = "/Textures/Interface/VerbIcons/delete_transparent.svg.192dpi.png"; // KS14: upstream PR #34302 port
+        MoveGrid.Texture.TexturePath = "/Textures/Interface/VerbIcons/point.svg.192dpi.png"; // KS14: upstream PR #34302 port
+        GridVV.Texture.TexturePath = "/Textures/Interface/VerbIcons/vv.svg.192dpi.png"; // KS14: upstream PR #34302 port
 
         Flip.OnPressed += _ => FlipSides();
         HideLeftSide.OnPressed += OnToggleLeftContainer;
@@ -128,7 +132,7 @@ public sealed partial class MappingScreen : InGameScreen
 
         if (SpawnContainer.GetPositionInParent() == 0)
         {
-            Flip.Texture.TexturePath = "/Textures/_KS14/Mapping/VerbIcons/rotate_cw.svg.192dpi.png";
+            Flip.Texture.TexturePath = "/Textures/Interface/VerbIcons/rotate_cw.svg.192dpi.png";
 
             HideLeftSide.OnPressed -= OnToggleRightContainer;
             HideLeftSide.OnPressed += OnToggleLeftContainer;
@@ -141,7 +145,7 @@ public sealed partial class MappingScreen : InGameScreen
         }
         else
         {
-            Flip.Texture.TexturePath = "/Textures/_KS14/Mapping/VerbIcons/rotate_ccw.svg.192dpi.png";
+            Flip.Texture.TexturePath = "/Textures/Interface/VerbIcons/rotate_ccw.svg.192dpi.png";
 
             HideLeftSide.OnPressed -= OnToggleLeftContainer;
             HideLeftSide.OnPressed += OnToggleRightContainer;
@@ -333,6 +337,10 @@ public sealed partial class MappingScreen : InGameScreen
         EraseEntityButton.Pressed = EraseEntityButton == except;
         EraseDecalButton.Pressed = EraseDecalButton == except;
         EraseTileButton.Pressed = EraseTileButton == except;
+        FixGridAtmos.Pressed = FixGridAtmos == except; // KS14: upstream PR #34302 port
+        RemoveGrid.Pressed = RemoveGrid == except; // KS14: upstream PR #34302 port
+        MoveGrid.Pressed = MoveGrid == except; // KS14: upstream PR #34302 port
+        GridVV.Pressed = GridVV == except; // KS14: upstream PR #34302 port
         // KS14 end
     }
 }

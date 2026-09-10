@@ -4,6 +4,7 @@ using Content.Client.Administration.Managers;
 using Content.Client.ContextMenu.UI;
 using Content.Client.Decals;
 using Content.Client.Gameplay;
+using Content.Client.Maps; // KS14
 using Content.Client.UserInterface.Controls;
 using Content.Client.UserInterface.Systems.Gameplay;
 using Content.Client.Verbs;
@@ -11,6 +12,7 @@ using Content.Shared.Administration;
 using Content.Shared.Decals;
 using Content.Shared.Input;
 using Content.Shared.Maps;
+using Robust.Client.Console; // KS14
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
@@ -40,6 +42,7 @@ namespace Content.Client.Mapping;
 public sealed partial class MappingState : GameplayStateBase
 {
     [Dependency] private IClientAdminManager _admin = default!;
+    [Dependency] private IClientConsoleHost _consoleHost = default!; // KS14: upstream PR #34302 port
     [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private IEntityNetworkManager _entityNetwork = default!;
     [Dependency] private IInputManager _input = default!;
@@ -131,6 +134,12 @@ public sealed partial class MappingState : GameplayStateBase
         Screen.EraseEntityButton.OnToggled += OnEraseEntityPressed;
         Screen.EraseTileButton.OnToggled += OnEraseTilePressed; // KS14: mapping editor overhaul port
         Screen.EraseDecalButton.OnToggled += OnEraseDecalPressed;
+        // KS14 start: port supported mapping toolbar actions from upstream PR #34302
+        Screen.FixGridAtmos.OnPressed += OnFixGridAtmosPressed;
+        Screen.RemoveGrid.OnPressed += OnRemoveGridPressed;
+        Screen.MoveGrid.OnPressed += OnMoveGridPressed;
+        Screen.GridVV.OnPressed += OnGridVVPressed;
+        // KS14 end
         _placement.PlacementChanged += OnPlacementChanged;
         _mapping.OnFavoritePrototypesLoaded += OnFavoritesLoaded; // KS14: mapping editor overhaul port
 
@@ -144,6 +153,7 @@ public sealed partial class MappingState : GameplayStateBase
             .Bind(ContentKeyFunctions.MappingCancelEraseDecal, new PointerInputCmdHandler(HandleCancelEraseDecal, outsidePrediction: true))
             .Bind(ContentKeyFunctions.MappingOpenContextMenu, new PointerInputCmdHandler(HandleOpenContextMenu, outsidePrediction: true))
             .Bind(ContentKeyFunctions.MouseMiddle, new PointerInputCmdHandler(HandleMouseMiddle, outsidePrediction: true)) // KS14: mapping editor overhaul port
+            .Bind(Robust.Shared.Input.EngineKeyFunctions.Use, new PointerInputCmdHandler(HandleUse, outsidePrediction: true)) // KS14: upstream PR #34302 port
             .Register<MappingState>();
 
         _overlays.AddOverlay(new MappingOverlay(this));
@@ -175,6 +185,12 @@ public sealed partial class MappingState : GameplayStateBase
         Screen.EraseEntityButton.OnToggled -= OnEraseEntityPressed;
         Screen.EraseTileButton.OnToggled -= OnEraseTilePressed; // KS14: mapping editor overhaul port
         Screen.EraseDecalButton.OnToggled -= OnEraseDecalPressed;
+        // KS14 start: port supported mapping toolbar actions from upstream PR #34302
+        Screen.FixGridAtmos.OnPressed -= OnFixGridAtmosPressed;
+        Screen.RemoveGrid.OnPressed -= OnRemoveGridPressed;
+        Screen.MoveGrid.OnPressed -= OnMoveGridPressed;
+        Screen.GridVV.OnPressed -= OnGridVVPressed;
+        // KS14 end
         _placement.PlacementChanged -= OnPlacementChanged;
         _prototypeManager.PrototypesReloaded -= OnPrototypesReloaded;
         _mapping.OnFavoritePrototypesLoaded -= OnFavoritesLoaded; // KS14: mapping editor overhaul port
@@ -840,6 +856,35 @@ public sealed partial class MappingState : GameplayStateBase
             Meta.State = CursorState.None;
         }
     }
+    // KS14 start: port supported mapping toolbar actions from upstream PR #34302
+    private void OnFixGridAtmosPressed(ButtonEventArgs args)
+    {
+        if (args.Button.Pressed)
+            Screen.UnPressActionsExcept(Screen.FixGridAtmos);
+    }
+
+    private void OnRemoveGridPressed(ButtonEventArgs args)
+    {
+        if (args.Button.Pressed)
+            Screen.UnPressActionsExcept(Screen.RemoveGrid);
+    }
+
+    private void OnMoveGridPressed(ButtonEventArgs args)
+    {
+        if (args.Button.Pressed)
+            Screen.UnPressActionsExcept(Screen.MoveGrid);
+
+        var gridDraggingSystem = _entityManager.System<GridDraggingSystem>();
+        if (args.Button.Pressed != gridDraggingSystem.Enabled)
+            _consoleHost.ExecuteCommand("griddrag");
+    }
+
+    private void OnGridVVPressed(ButtonEventArgs args)
+    {
+        if (args.Button.Pressed)
+            Screen.UnPressActionsExcept(Screen.GridVV);
+    }
+    // KS14 end
     #endregion
 
     #region Mapping Actions
@@ -1033,6 +1078,40 @@ public sealed partial class MappingState : GameplayStateBase
         return true;
     }
 
+    // KS14 start: port supported mapping toolbar actions from upstream PR #34302
+    private bool HandleUse(in PointerInputCmdArgs args)
+    {
+        if (Screen.FixGridAtmos.Pressed)
+        {
+            Screen.FixGridAtmos.Pressed = false;
+            if (GetHoveredGrid() is { } gridEntity)
+                _consoleHost.ExecuteCommand($"fixgridatmos {_entityManager.GetNetEntity(gridEntity.Owner).Id}");
+
+            return true;
+        }
+
+        if (Screen.RemoveGrid.Pressed)
+        {
+            Screen.RemoveGrid.Pressed = false;
+            if (GetHoveredGrid() is { } gridEntity)
+                _consoleHost.ExecuteCommand($"rmgrid {_entityManager.GetNetEntity(gridEntity.Owner).Id}");
+
+            return true;
+        }
+
+        if (Screen.GridVV.Pressed)
+        {
+            Screen.GridVV.Pressed = false;
+            if (GetHoveredGrid() is { } gridEntity)
+                _consoleHost.ExecuteCommand($"vv {_entityManager.GetNetEntity(gridEntity.Owner).Id}");
+
+            return true;
+        }
+
+        return false;
+    }
+
+    // KS14 end
     private bool HandleMouseMiddle(in PointerInputCmdArgs args) // KS14: mapping editor overhaul port
     {
         if (_decal.GetActiveDecal() is { Decal: not null }) // KS14: mapping editor overhaul port
