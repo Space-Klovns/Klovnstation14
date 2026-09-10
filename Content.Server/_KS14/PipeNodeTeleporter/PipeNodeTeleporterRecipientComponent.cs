@@ -9,6 +9,10 @@ public sealed partial class PipeNodeTeleporterRecipientComponent : Component
     [DataField(readOnly: true)]
     public string NodeName = "tele_rec";
 
-    [DataField]
+    /// <summary>
+    ///     Beacons this recipient is currently linked to.
+    ///     Rebuilt from the device list on map init, so it is deliberately not a datafield.
+    /// </summary>
+    [ViewVariables]
     public HashSet<EntityUid> LinkedBeaconUids = [];
 }

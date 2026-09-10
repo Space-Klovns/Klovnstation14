@@ -1909,3 +1909,78 @@ Entries:
       message: Fixed atmos on Box and Packed.
   id: 198
   time: '2026-08-27T16:40:17.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added chemical fires: fires on tiles caused by some things burning.
+        Namely, all pyrotechnics can cause tiles to burn when spilled above a
+        certain temperature. Namely, thermite burns the strongest. These can be
+        detected with fire sensors, or through the heat they emit.
+    - type: Add
+      message: Explosions now heat up solutions.
+  id: 199
+  time: '2026-09-05T15:40:28.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Stains on walls now act like wallmounts - you can't see them on the
+        other side of the wall.
+    - type: Fix
+      message: >-
+        Wallmounts are now visible when mounted on something that doesn't
+        occlude vision.
+  id: 200
+  time: '2026-09-06T12:01:23.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Tweak
+      message: The anchorless are now slowed down when they shoot.
+    - type: Tweak
+      message: Nerfed armblade damage.
+    - type: Tweak
+      message: Scenario jobs are now human only.
+    - type: Tweak
+      message: Nanoplant ERT now wear blue jumpsuits.
+    - type: Fix
+      message: Anchorless objective system.
+    - type: Fix
+      message: Anchorless horror form shows on all machines now.
+  id: 201
+  time: '2026-09-06T15:20:34.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed chem bluespace recipients/beacons not working.
+    - type: Tweak
+      message: MV wires now arcflash.
+  id: 202
+  time: '2026-09-06T15:53:12.0000000+00:00'
+- author: deusmaldierpr
+  changes:
+    - type: Add
+      message: >-
+        You can now change apc electronic accesses, which means you can make
+        specific access apcs or accessless apcs (without having to cut the
+        access wire)
+    - type: Tweak
+      message: >-
+        You now need to cut all apc wires before deconstructing them (this
+        practically changes nothing
+  id: 203
+  time: '2026-09-06T16:28:52.0000000+00:00'
+- author: Dececece
+  changes:
+    - type: Add
+      message: Colossus (for now lootless and shitmin spawn only).
+  id: 204
+  time: '2026-09-06T16:35:07.0000000+00:00'
+- author: ResomiDumbass
+  changes:
+    - type: Add
+      message: Fentanyl for the fent God
+    - type: Tweak
+      message: Bicaridine no longer makes you high as fuhhhhh
+  id: 205
+  time: '2026-09-07T12:15:16.0000000+00:00'

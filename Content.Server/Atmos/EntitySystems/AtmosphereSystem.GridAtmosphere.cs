@@ -246,6 +246,11 @@ public sealed partial class AtmosphereSystem
         tile.Hotspot = new Hotspot();
         args.Handled = true;
 
+        // KS14 start: puts out every other kind of fire on the tile too, and leaves announcing the tile as
+        //     out to whichever of them is the last to stop burning.
+        _ksTileFireSystem.ExtinguishTile(uid, args.Tile, sourceUid: uid);
+        // KS14 end
+        /* KS14: replaced by the above
         var fireEvent = new TileExtinguishEvent();
         _entSet.Clear(); // sus
         _lookup.GetLocalEntitiesIntersecting(tile.GridIndex, tile.GridIndices, _entSet, 0f);
@@ -254,6 +259,7 @@ public sealed partial class AtmosphereSystem
         {
             RaiseLocalEvent(entity, fireEvent);
         }
+        */
 
         //var ev = new InvalidateTileMethodEvent(uid, args.Tile);
         //GridInvalidateTile(uid, component, ref ev);

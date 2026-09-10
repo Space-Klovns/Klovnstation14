@@ -6,15 +6,5 @@ namespace Content.Shared._KS14.ArcFlash.Components;
 /// Rule of thumb, this has to be a machine buildable like other machines, or it has to be an APC (very niche)
 /// It relies on construction graph nodes to raise events
 /// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
-public sealed partial class ArcFlashDeconstructableComponent : Component
-{
-    [DataField, AutoNetworkedField]
-    public float lightningRange = 4f;
-
-    [DataField, AutoNetworkedField]
-    public int lightningAmount = 1;
-
-    [DataField, AutoNetworkedField]
-    public string lightningPrototype = "ArcFlashLightningStrong";
-}
+[RegisterComponent, NetworkedComponent]
+public sealed partial class ArcFlashDeconstructableComponent : BaseArcFlashImpactComponent;

@@ -233,3 +233,7 @@
   wires:
   - !type:AccessWireAction
   - !type:AiInteractWireAction
+  # KS14 start: leave power wires disabled until they properly disable the APC UI
+  # - !type:PowerWireAction
+  # - !type:PowerWireAction
+  # KS14 end

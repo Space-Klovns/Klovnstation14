@@ -128,7 +128,7 @@ public sealed partial class ElectrocutionSystem : SharedElectrocutionSystem
         }
     }
 
-    public bool IsPowered(EntityUid uid, ElectrifiedComponent electrified, TransformComponent transform) //KS14 - changed to public so it could be used
+    public /* KS14: made public */ bool IsPowered(EntityUid uid, ElectrifiedComponent electrified, TransformComponent transform)
     {
         if (!electrified.Enabled)
             return false;

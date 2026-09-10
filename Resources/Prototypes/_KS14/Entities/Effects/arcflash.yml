@@ -1,7 +1,7 @@
 - type: entity
-  name: arc flash
-  id: ArcFlashLightningWeak
   parent: BaseLightning
+  id: ArcFlashLightningWeak
+  name: arc flash
   categories: [ HideSpawnMenu ]
   components:
     - type: Sprite
@@ -25,13 +25,19 @@
       castShadows: false
 
 - type: entity
-  name: arc flash
-  id: ArcFlashLightningStrong
   parent: ArcFlashLightningWeak
+  id: ArcFlashLightningMedium
+  categories: [ HideSpawnMenu ]
+  components:
+    - type: Electrified
+      shockDamage: 55
+
+- type: entity
+  parent: ArcFlashLightningWeak
+  id: ArcFlashLightningStrong
   categories: [ HideSpawnMenu ]
   components:
     - type: Electrified
       requirePower: false
       isArcFlash: true
-      shockDamage: 60
-
+      shockDamage: 75

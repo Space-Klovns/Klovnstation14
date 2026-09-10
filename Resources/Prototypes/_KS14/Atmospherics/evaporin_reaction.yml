@@ -6,4 +6,20 @@
     Tritium: 0.1
     CarbonDioxide: 0.1
   effects:
-    - !type:EvaporinSynthesisReaction {}
+  - !type:EvaporinSynthesisReaction { }
+
+- type: gasReaction
+  id: EvaporinEvaporation
+  priority: 501
+  minimumRequirements:
+    Evaporin: 0.1
+  effects:
+  - !type:UpdatePuddleEvaporationReaction
+    gas: Evaporin
+    unitsPerMole: 2
+    # Works fine at room temperature, but gets linearly stronger with the tile's thermal energy past it.
+    # A standard-pressure tile of air holds roughly 360 J/K after heat scaling, so that's about
+    # +1u/mol per 110K over room temp, on top of the flat 2u/mol.
+    scalingMinimumTemperature: 293.15
+    joulesPerBonusUnitPerMole: 40000
+    maximumUnitsPerMole: 20

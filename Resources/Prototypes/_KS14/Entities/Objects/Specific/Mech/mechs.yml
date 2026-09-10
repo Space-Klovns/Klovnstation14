@@ -5,7 +5,7 @@
   description: A paradroppable, jet-insertable Syndicate combat walker.
   components:
   - type: Sprite
-    drawdepth: Mobs
+    drawdepth: OverMobs
     noRot: true
     sprite: _KS14/Objects/Specific/Mech/mecha.rsi
     layers:

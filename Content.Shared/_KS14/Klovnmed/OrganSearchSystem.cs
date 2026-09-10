@@ -28,7 +28,7 @@ public sealed partial class OrganSearchSystem : EntitySystem
         // fml
 
         if (protoId == "Torso")
-            return BodyPartType.Head;
+            return BodyPartType.Torso;
 
         if (protoId == "Head")
             return BodyPartType.Head;

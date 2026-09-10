@@ -1,5 +1,5 @@
-using System.Numerics;
 using Content.Client._ES.Wallmount.Systems;
+using Content.Client._KS14.ArcVisibility; // KS14
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
@@ -17,8 +17,7 @@ public sealed partial class ESWallMountVisibilityOverlay : Overlay
     private readonly TransformSystem _xform;
     private readonly SpriteSystem _sprite;
     private readonly ESWallMountTreeSystem _tree;
-
-    private const float Feather = 0.65f; // KS14
+    private readonly ArcVisibilitySystem _arcVisibilitySystem; // KS14
 
     public ESWallMountVisibilityOverlay()
     {
@@ -27,6 +26,7 @@ public sealed partial class ESWallMountVisibilityOverlay : Overlay
         _xform = _ent.EntitySysManager.GetEntitySystem<TransformSystem>();
         _sprite = _ent.EntitySysManager.GetEntitySystem<SpriteSystem>();
         _tree = _ent.EntitySysManager.GetEntitySystem<ESWallMountTreeSystem>();
+        _arcVisibilitySystem = _ent.EntitySysManager.GetEntitySystem<ArcVisibilitySystem>(); // KS14
     }
 
     // b4 entities so we can modify their visibility and such
@@ -37,7 +37,10 @@ public sealed partial class ESWallMountVisibilityOverlay : Overlay
         if (args.Viewport.Eye == null)
             return;
 
-        var matrix = args.Viewport.GetWorldToLocalMatrix();
+        // KS14: the screen-space math this used to do inline lives in ArcVisibilitySystem now, so stains can share it
+        if (!_arcVisibilitySystem.TryGetEyeState(args.Viewport, out var eyeState))
+            return;
+
         var entities = _tree.QueryAabb(args.MapId, args.WorldBounds);
 
         foreach (var entry in entities)
@@ -48,7 +51,8 @@ public sealed partial class ESWallMountVisibilityOverlay : Overlay
             if (!_ent.TryGetComponent<SpriteComponent>(uid, out var sprite))
                 continue;
 
-            if (!args.Viewport.Eye.DrawFov)
+            if (!args.Viewport.Eye.DrawFov ||
+                !args.Viewport.Eye.DrawLight /* KS14 */)
             {
                 _sprite.SetColor((uid, sprite), sprite.Color.WithAlpha(entry.Component.OriginalAlpha));
                 _sprite.SetVisible((uid, sprite), true);
@@ -59,31 +63,27 @@ public sealed partial class ESWallMountVisibilityOverlay : Overlay
             if (wallmount.Arc >= Math.Tau)
                 continue;
 
+            // KS14 start: a wallmount on something you can see straight through has no hidden side to speak of
+            if (!_arcVisibilitySystem.IsOnOccludedTile(xform))
+            {
+                _sprite.SetColor((uid, sprite), sprite.Color.WithAlpha(entry.Component.OriginalAlpha));
+                _sprite.SetVisible((uid, sprite), true);
+                continue;
+            }
+            // KS14 end
+
             var (pos, rot) = _xform.GetWorldPositionRotation(xform);
 
-            // we figure out which wallmounts should be visible based on their direction & rotation adjusted for eye rotation
-            // + their position relative to the viewport center's screencoords (the four quadrants surrounding them)
-            var wallmountScreenRotation = rot + args.Viewport.Eye.Rotation + wallmount.Direction;
-
-            var entityScreenPos = Vector2.Transform(pos, matrix);
-            var eyeScreenPos = Vector2.Transform(args.Viewport.Eye.Position.Position, matrix); // there is surely a better way to get this value from somewhere
-            var dist = (entityScreenPos - eyeScreenPos);
-
-            // measure how much the wallmount angle is 'facing' the viewport center
-            // if its < 90deg then it should be visible
-            // i have no fucking idea why i need to flip x, genuinely
-            // but it fixes the math. it worked fine vertically
-            var distAngle = (dist with { X = -dist.X }).ToWorldAngle();
-            var angleBetween = Angle.ShortestDistance(distAngle, wallmountScreenRotation);
-            var visible = angleBetween > -MathHelper.PiOver2 && angleBetween < MathHelper.PiOver2;
-            //Log.Info($"wallmount {Name(uid)} screenrot {wallmountScreenRotation.Degrees} distangle {distAngle.Degrees} anglebetween {angleBetween.Degrees}");
-
-            // KS14 start
-            var z = Math.Abs((float)angleBetween.Theta) / MathHelper.PiOver2;
-            var d = z < Feather;
-            var r = d ? 0f : z - Feather;
-            var x = d ? 0f : entry.Component.OriginalAlpha / Feather;
-            var alpha = float.Lerp(entry.Component.OriginalAlpha, 0f - x, Math.Min(r, 1f));
+            // KS14 start: fade out towards the edges of the arc instead of just popping in and out
+            var visible = _arcVisibilitySystem.TryGetArcAlpha(
+                eyeState,
+                pos,
+                rot,
+                wallmount.Direction,
+                wallmount.Arc,
+                entry.Component.OriginalAlpha,
+                out var alpha
+            );
 
             if (visible)
             {

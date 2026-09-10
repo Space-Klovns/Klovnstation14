@@ -15,13 +15,17 @@
     - state: default
 
   - type: SupplyPod
-    transitDuration: 1s
     fallDuration: 1s
     fallSoundDelay: 0s
     fallSound: /Audio/_KS14/Weapons/mortar_long_whistle.ogg
-    impactSound: /Audio/Effects/metal_slam2.ogg
+    impactSound:
+      collection: MetalSlam
     height: 14
     angularDeviation: 15
+    trailProto: KsSupplyPodTrail
+  - type: SupplyPodDrawDepth
+    transitDrawDepth: Effects
+    landedDrawDepth: LargeObjects
 
 - type: entity
   id: BaseSupplyPodInert
@@ -33,12 +37,9 @@
   - type: GenericVisualizer
     visuals:
       enum.SupplyPodVisuals.Landed:
-        rubble_bg:
-          False: { visible: false }
-          True: { visible: true }
         rubble_fg:
           False: { visible: false }
-          True: { visible: true }
+          True: { visible: true, state: rubble_fg_thin }
 
 - type: entity
   id: BaseSupplyPodExplosive
@@ -53,7 +54,153 @@
     maxTileBreak: 1
   - type: DeleteOnTrigger
 
-## CRUISE MISSILES: BASE
+### ACTUAL CARGO PODS
+
+- type: entity
+  parent: [ SupplyPod, BaseSupplyPodInert ]
+  id: SupplyPodCargoBase
+  name: cargo pod
+  description: A pod. From somewhere. There's probably something inside!
+  components:
+  - type: Sprite
+    offset: 0,0.5
+    layers:
+    - state: rubble_bg
+      visible: false
+      map: ["rubble_bg"]
+    - state: pod
+      map: ["pod"]
+    - state: pod_door
+      map: ["door"]
+    - map: ["paint_displacement"]
+    - state: default
+      shader: DisplacedDraw
+      map: ["paint"]
+    - state: rubble_fg
+      visible: false
+      map: ["rubble_fg"]
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape: !type:PhysShapeCircle
+          radius: 0.5
+        density: 1200
+        mask:
+        - MobMask
+        layer:
+        - MachineLayer
+  - type: SupplyPod
+    height: 40
+    fallDuration: 2s
+    fallSoundDelay: 0s
+    angularDeviation: 4
+    fallSound:
+      path: /Audio/_KS14/Weapons/mortar_long_whistle.ogg
+      params:
+        pitch: 0.5
+    launchDuration: 2s
+    launchSound:
+      path: /Audio/_KS14/Effects/mass_driver_launching.ogg
+    trailProto: KsSupplyPodTrail
+  - type: SupplyPodGlow
+    glowProto: KsSupplyPodGlowRed
+  - type: Lock
+    locked: true
+    useAccess: false
+    showLockVerbs: false
+    unlockOnClick: false
+    lockOnClick: false
+    allowRepeatedLocking: false
+  - type: GenericVisualizer
+    visuals:
+      enum.SupplyPodVisuals.Landed:
+        rubble_bfg:
+          False: { visible: false }
+          True: { visible: true }
+        rubble_fg:
+          False: { visible: false }
+          True: { visible: true }
+      enum.SupplyPodVisuals.Reversed:
+        pod:
+          False: { state: pod }
+          True: { state: pod_reverse }
+      enum.StorageVisuals.Open:
+        door:
+          True: { visible: false }
+          False: { visible: true }
+        paint_displacement: # BROOOO # TODO LCDC: make this not overwrite the existing copytoshaderparameters or whatever
+          True:
+            sprite: _KS14/Objects/SupplyPod/displacement.rsi
+            state: open
+            copyToShaderParameters:
+              layerKey: paint
+              parameterTexture: displacementMap
+              parameterUV: displacementUV
+          False:
+            sprite: _KS14/Objects/SupplyPod/displacement.rsi
+            state: closed
+            copyToShaderParameters:
+              layerKey: paint
+              parameterTexture: displacementMap
+              parameterUV: displacementUV
+
+  - type: Damageable
+    damageModifierSet: Metallic
+  - type: Injurable
+    damageContainer: StructuralInorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 150
+      behaviors:
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+      - !type:PlaySoundBehavior
+        sound:
+          collection: MetalBreak
+
+  - type: EntityStorage
+    #masksToRemove: 0
+    openOnMove: false
+  - type: PlaceableSurface
+    isPlaceable: false # defaults to closed.
+  - type: ContainerContainer
+    containers:
+      entity_storage: !type:Container
+
+  - type: TriggerOnSupplyPodLanded
+  - type: SparkOnTrigger
+  - type: TimedDespawn
+    lifetime: 30
+  - type: SpawnOnDespawn
+    prototype: AdminInstantEffectBluespace # TODO LCDC: spawn sparks here
+  - type: TimerTrigger
+    examinable: false
+    beepSound: null
+    popup: null
+  - type: RandomTimerTrigger
+    min: 1
+    max: 2
+  - type: EntityStorageOnTrigger
+    keysIn: [timer]
+    mode: Open
+    force: true
+    silent: true
+  - type: AddComponentsOnTrigger
+    keysIn: [timer]
+    components:
+    - type: TimedDespawn
+      lifetime: 30
+  - type: RemoveComponentsOnTrigger
+    keysIn: [timer]
+    triggerOnce: true
+    components:
+    - type: Lock
+
+### CRUISE MISSILES: BASE
 
 # nt
 - type: entity
@@ -70,6 +217,7 @@
       state: rubble_bg_thin
       visible: false
     - state: missile
+      map: ["missile"]
     - map: ["rubble_fg"]
       state: rubble_fg_thin
       visible: false
@@ -82,6 +230,15 @@
       params:
         pitch: 0.75
     angularDeviation: 15
+  - type: SupplyPodDrawDepth # its funny
+    landedDrawDepth: OverMobs
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.SupplyPodVisuals.Reversed:
+        missile:
+          True: { rotation: 180 }
+          False: { rotation: 0 }
 
 # syndie
 - type: entity
@@ -129,18 +286,6 @@
   id: SupplyPodMissileSyndicateExplosive
   suffix: Armed
 
-- type: entity
-  parent: SupplyPodMissileSyndicateInert
-  id: SupplyPodMechU43
-  name: U-43 combat walker supply pod
-  suffix: Scenario
-  description: A Syndicate drop pod containing a U-43 combat walker.
-  components:
-  - type: TriggerOnSupplyPodLanded
-  - type: SpawnOnTrigger
-    proto: MechU43Battery
-  - type: DeleteOnTrigger
-
 - type: explosion
   id: KsSupplyPodMissile
   damagePerIntensity:
@@ -168,8 +313,6 @@
     params:
       pitch: 0.7
       volume: -5
-
-
 
 ## Flare
 

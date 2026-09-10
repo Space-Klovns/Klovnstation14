@@ -16,9 +16,9 @@
     wideAnimationRotation: 90
     attackRate: 1
     damage:
-      types: # ks14 buffs
-        Slash: 19
-        Piercing: 19
+      types: # ks14 adjustments, jesus fucking christ 20 anchorless having 38 combined damage arm blades is a disaster
+        Slash: 13
+        Piercing: 13
         Structural: 20
   - type: Item
     size: Normal

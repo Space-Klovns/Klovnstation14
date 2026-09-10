@@ -232,5 +232,6 @@ public partial class PlumbingNode : Node, IRotatableNode, IPipeNode
     // Starlight Start: RPD
     PipeDirection IPipeNode.Direction => OriginalPipeDirection;
     AtmosPipeLayer IPipeNode.Layer => AtmosPipeLayer.Primary;
+    PipeNodeKind IPipeNode.Kind => PipeNodeKind.Plumbing;
     // Starlight End: RPD
 }

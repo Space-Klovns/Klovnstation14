@@ -79,11 +79,13 @@
     solution:
       reagents:
       - ReagentId: Phosphorus
-        Quantity: 40
+        Quantity: 2
       - ReagentId: Plasma
-        Quantity: 42
-      maxVol: 82
-      temperature: 800
+        Quantity: 2
+      - ReagentId: WeldingFuel
+        Quantity: 350
+      maxVol: 354
+      temperature: 400
 
 - type: entity
   parent: Beaker
@@ -93,14 +95,12 @@
   - type: Solution
     solution:
       reagents:
-      - ReagentId: Klovnide
-        Quantity: 2
       - ReagentId: SulfuricAcid
-        Quantity: 40
-      - ReagentId: ChlorineTrifluoride
-        Quantity: 18
+        Quantity: 2
+      - ReagentId: Thermite
+        Quantity: 78
       maxVol: 80
-      temperature: 300
+      temperature: 400
 
 - type: entity
   parent: KsBaseGrenadeChemical

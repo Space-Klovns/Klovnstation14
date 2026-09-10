@@ -29,3 +29,8 @@
   id: KsCutout
   kind: source
   path: "/Textures/_KS14/Shaders/cutout.swsl"
+
+- type: shader
+  id: KsCameraStatic
+  kind: source
+  path: "/Textures/_KS14/Shaders/camera_static.swsl"

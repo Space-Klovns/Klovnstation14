@@ -14,7 +14,7 @@
     ears: ClothingHeadsetSecurity
     mask: ClothingMaskGasSecurity
     outerClothing: ClothingOuterArmorBasic
-    jumpsuit: ClothingUniformJumpsuitERTSecurity
+    jumpsuit: ClothingUniformJumpsuitColorBlue
     belt: ClothingBeltMilitaryWebbingERT
     back: ClothingBackpackERTSecurity
     gloves: ClothingHandsGlovesCombat

@@ -2,6 +2,16 @@
   id: BasePyrotechnic
   group: Pyrotechnic
   abstract: true
+  # KS14 start
+  tileEffects:
+  - !type:LogicAndTileEffect
+    conditions:
+    - !type:CheckTemperatureTileEffect
+      minimum: 400
+    effects:
+    - !type:ChemicalFireTileEffect
+      removed: 1.65
+  # KS14 end
   reactiveEffects:
     Flammable:
       methods: [ Touch ]
@@ -24,6 +34,12 @@
   color: "#757245"
   boilingPoint: 2977.0 # Aluminum oxide
   meltingPoint: 2030.0
+  # KS14 start
+  tileEffects:
+  - !type:ChemicalFireTileEffect
+    id: ChemicalFireThermite
+    removed: 3.5 # its giga hot
+  # KS14 end
   tileReactions:
   - !type:FlammableTileReaction
     temperatureMultiplier: 2
@@ -45,6 +61,17 @@
   contrabandSeverity: Major
   flavor: bitter
   color: "#FA00AF"
+  # KS14 start
+  tileEffects:
+  - !type:LogicAndTileEffect
+    conditions:
+    - !type:CheckTemperatureTileEffect
+      minimum: 300
+    effects:
+    - !type:ChemicalFireTileEffect
+      removed: 2
+      durationScale: 0.8
+  # KS14 end
   tileReactions:
   - !type:FlammableTileReaction
     temperatureMultiplier: 5
@@ -75,6 +102,12 @@
   contrabandSeverity: Major
   flavor: bitter
   color: "#D4872A"
+  # KS14 start
+  tileEffects:
+  - !type:ChemicalFireTileEffect
+    id: ChemicalFire
+    removed: 1
+  # KS14 end
   metabolisms:
     Bloodstream:
       effects:
@@ -162,6 +195,17 @@
   boilingPoint: -84.7 # Acetylene. Close enough.
   meltingPoint: -80.7
   friction: 0.4
+  # KS14 start
+  tileEffects:
+  - !type:LogicAndTileEffect
+    conditions:
+    - !type:CheckTemperatureTileEffect
+      minimum: 300
+    effects:
+    - !type:ChemicalFireTileEffect
+      removed: 2
+      durationScale: 2
+  # KS14 end
   tileReactions:
   - !type:FlammableTileReaction {}
   metabolisms:

@@ -17,15 +17,12 @@ public abstract partial class SharedPuddleSystem
         Dirty(ent);
     }
 
-    private void UpdateEvaporation(Entity<PuddleComponent> entity, Solution solution)
+    public /* KS14: private -> public */ void UpdateEvaporation(Entity<PuddleComponent> entity, Solution solution)
     {
         // KS14 - Start
         // Calculate evaporation speed, including dynamic modifications (e.g. Evaporin gas).
         var speeds = GetEvaporationSpeeds(solution);
-        var baseSpeed = speeds.Count > 0 ? speeds.Values.Sum() / speeds.Count : FixedPoint2.Zero;
-        var modifiedSpeed = baseSpeed;
-
-        ModifyEvaporationRate(entity, ref modifiedSpeed);
+        var modifiedSpeed = GetModifiedEvaporationRate(entity, speeds.Count > 0 ? speeds.Values.Sum() / speeds.Count : FixedPoint2.Zero);
 
         if (modifiedSpeed > FixedPoint2.Zero)
         {
@@ -38,8 +35,8 @@ public abstract partial class SharedPuddleSystem
         }
         else
         {
-            if (_evaporationQuery.HasComp(entity))
-                RemComp<EvaporationComponent>(entity);
+            if (_evaporationQuery.TryGetComponent(entity, out var evaporationComponent))
+                RemComp(entity, evaporationComponent);
         }
         // KS14 - End
     }
@@ -66,9 +63,7 @@ public abstract partial class SharedPuddleSystem
 
             // KS14 - Start
             var baseEvaporationSpeed = evaporationSpeeds.Count > 0 ? evaporationSpeeds.Values.Sum() / evaporationSpeeds.Count : FixedPoint2.Zero;
-            var modifiedSpeed = baseEvaporationSpeed;
-
-            ModifyEvaporationRate((uid, puddle), ref modifiedSpeed);
+            var modifiedSpeed = GetModifiedEvaporationRate((uid, puddle), baseEvaporationSpeed);
 
             if (modifiedSpeed <= FixedPoint2.Zero)
                 continue;
@@ -80,14 +75,14 @@ public abstract partial class SharedPuddleSystem
             {
                 // Evaporin is present: force evaporation of the ENTIRE puddle, regardless of contents.
                 reagentProportions = puddleSolution.Contents.ToDictionary(
-                    r => new ProtoId<ReagentPrototype>(r.Reagent.Prototype), 
+                    r => new ProtoId<ReagentPrototype>(r.Reagent.Prototype),
                     r => r.Quantity / puddleSolution.Volume);
             }
             else
             {
                 // Vanilla behavior: only evaporate naturally evaporating reagents.
                 reagentProportions = evaporationSpeeds.ToDictionary(
-                    kv => kv.Key, 
+                    kv => kv.Key,
                     kv => puddleSolution.GetTotalPrototypeQuantity(kv.Key) / puddleSolution.Volume);
             }
             // KS14 - End
@@ -105,6 +100,7 @@ public abstract partial class SharedPuddleSystem
                 // Spawn a *sparkle*
                 if (_net.IsServer) // TODO: Change this once we have entity spawn prediction V2
                     SpawnAttachedTo(evaporation.EvaporationEffect, Transform(uid).Coordinates);
+
                 PredictedQueueDel(uid);
             }
 

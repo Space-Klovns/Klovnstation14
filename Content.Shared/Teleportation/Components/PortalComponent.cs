@@ -67,12 +67,12 @@ public sealed partial class PortalComponent : Component
     /// and portal-user are telefragged, or if only the portal-user is telefragged.
     /// </summary>
     [DataField, AutoNetworkedField, ViewVariables(VVAccess.ReadWrite)]
-    public bool FragIntersectingEntities = true;
+    public bool FragIntersectingEntities = false;
 
     // KS14 Addition
     /// <summary>
     /// Does this portal telefrag anything that goes through it, if the target tile is full?
     /// </summary>
     [DataField, AutoNetworkedField, ViewVariables(VVAccess.ReadWrite)]
-    public bool FragOnTargetTileOccupied = true;
+    public bool FragOnTargetTileOccupied = false;
 }

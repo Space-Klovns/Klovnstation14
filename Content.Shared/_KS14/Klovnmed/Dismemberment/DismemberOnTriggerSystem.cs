@@ -18,12 +18,12 @@ public sealed partial class DismemberOnTriggerSystem : EntitySystem
         if ((entity.Comp.TargetUser ? args.User : entity.Owner) is not { } targetUid)
             return;
 
-        // TODO LCDC: on upstream merge handle TriggerEvent.Predicted
         args.Handled |= _dismembermentSystem.TryDismemberRandomBodyPartOfType(
             targetUid,
             entity.Comp.PartType,
             out _,
-            throwSpeed: entity.Comp.ThrowSpeed
+            throwSpeed: entity.Comp.ThrowSpeed,
+            cause: args.Predicted ? args.User : null
         );
     }
 }
