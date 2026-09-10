@@ -14,43 +14,83 @@ namespace Content.Client.Mapping;
 public sealed partial class MappingPrototypeList : Control
 {
     private (int start, int end) _lastIndices;
-    private readonly List<MappingPrototype> _prototypes = new();
+    private readonly List<MappingPrototype> _allPrototypes = new(); // KS14: mapping editor overhaul port
     private readonly List<Texture> _insertTextures = new();
     private readonly List<MappingPrototype> _search = new();
 
     public MappingSpawnButton? Selected;
+// KS14 start: mapping editor overhaul port
+    public MappingPrototype FavoritesPrototype;
+    private MappingSpawnButton? _favoriteList;
+
+    /// <summary>
+    ///     if true, elements with no children will be grouped into a grid
+    /// </summary>
+    public bool Gallery { get; set; }
+
+    /// <summary>
+    ///     A color that applies to all textures in the list
+    /// </summary>
+    public Color? TexturesModulate { get; set; }
+
+    // KS14 end
     public Action<IPrototype, List<Texture>>? GetPrototypeData;
-    public event Action<MappingSpawnButton, IPrototype?>? SelectionChanged;
-    public event Action<MappingSpawnButton, ButtonToggledEventArgs>? CollapseToggled;
+    // KS14 start: mapping editor overhaul port
+    public event Action<MappingPrototypeList, MappingSpawnButton, IPrototype?>? SelectionChanged;
+    public event Action<MappingPrototype>? FavoriteChanged;
+    // KS14 end
 
     public MappingPrototypeList()
     {
         RobustXamlLoader.Load(this);
+        FavoritesPrototype = new MappingPrototype(null, Loc.GetString("mapping-favorite")); // KS14: mapping editor overhaul port
 
         MeasureButton.Measure(Vector2Helpers.Infinity);
 
         ScrollContainer.OnScrolled += UpdateSearch;
+        // KS14 start: mapping editor overhaul port
+        CollapseAllButton.OnPressed += OnCollapseAll;
+        SearchBar.OnTextChanged += OnSearch;
+        ClearSearchButton.OnPressed += _ => SearchBar.SetText(string.Empty, true);
+        // KS14 end
         OnResized += UpdateSearch;
+        // KS14 start: mapping editor overhaul port
+
+        CollapseAllButton.Texture.TexturePath = "/Textures/_KS14/Mapping/VerbIcons/collapse.svg.192dpi.png";
+        ClearSearchButton.Texture.TexturePath = "/Textures/_KS14/Mapping/VerbIcons/xmark-solid.svg.192dpi.png";
+        // KS14 end
     }
 
-    public void UpdateVisible(List<MappingPrototype> prototypes)
+    public void UpdateVisible(List<MappingPrototype> prototypes, List<MappingPrototype> allPrototypes) // KS14: mapping editor overhaul port
     {
-        _prototypes.Clear();
-
-        PrototypeList.RemoveAllChildren();
-
-        _prototypes.AddRange(prototypes);
+        // KS14 start: mapping editor overhaul port
+        _allPrototypes.Clear();
+        PrototypeList.DisposeAllChildren();
+        _allPrototypes.AddRange(allPrototypes);
+        // KS14 end
 
         Selected = null;
         ScrollContainer.SetScrollValue(new Vector2(0, 0));
 
-        foreach (var prototype in _prototypes)
+        // KS14 start: mapping editor overhaul port
+        _favoriteList = Insert(PrototypeList, FavoritesPrototype, false, false);
+        _favoriteList.CollapseButtonWrapper.Visible = true;
+        _favoriteList.CollapseButton.Visible = true;
+        _favoriteList.FavoriteButton.Visible = false;
+        _favoriteList.CollapseButton.OnToggled += _ => ToggleCollapse(_favoriteList);
+        // KS14 end
+
+        foreach (var prototype in prototypes) //KS14 modified
+
         {
-            Insert(PrototypeList, prototype, true);
+        // KS14 start: mapping editor overhaul port
+            var insertedButton = Insert(PrototypeList, prototype, true, false);
+            insertedButton.FavoriteButton.Visible = false;
+        // KS14 end
         }
     }
 
-    public MappingSpawnButton Insert(Container list, MappingPrototype mapping, bool includeChildren)
+    private MappingSpawnButton Insert(Container list, MappingPrototype mapping, bool includeChildren, bool galleryLayout) // KS14: mapping editor overhaul port
     {
         var prototype = mapping.Prototype;
 
@@ -61,15 +101,15 @@ public sealed partial class MappingPrototypeList : Control
 
         var button = new MappingSpawnButton { Prototype = mapping };
         button.Label.Text = mapping.Name;
+        button.Button.ToolTip = button.Label.Text; // KS14: mapping editor overhaul port
 
         if (_insertTextures.Count > 0)
         {
-            button.Texture.Textures.AddRange(_insertTextures);
-            button.Texture.InvalidateMeasure();
-        }
-        else
-        {
-            button.Texture.Visible = false;
+        // KS14 start: mapping editor overhaul port
+            button.SetTextures(_insertTextures);
+            if (TexturesModulate is { } modulate)
+                button.Texture.Modulate = modulate;
+        // KS14 end
         }
 
         if (prototype != null && button.Prototype == Selected?.Prototype)
@@ -80,15 +120,27 @@ public sealed partial class MappingPrototypeList : Control
 
         list.AddChild(button);
 
-        button.Button.OnToggled += _ => SelectionChanged?.Invoke(button, prototype);
+        // KS14 start: mapping editor overhaul port
+        button.Button.OnToggled += _ => SelectionChanged?.Invoke(this, button, prototype);
+        button.FavoriteButton.OnToggled += _ => OnFavoriteToggle(button);
+        FavoriteChanged += proto =>
+        {
+            if (proto == button.Prototype)
+                button.ToggleFavorite(proto.Favorite);
+        };
+        // KS14 end
 
         if (includeChildren && mapping.Children?.Count > 0)
         {
             button.CollapseButton.Visible = true;
-            button.CollapseButton.OnToggled += args => CollapseToggled?.Invoke(button, args);
+            button.CollapseButton.OnToggled += _ => ToggleCollapse(button); // KS14: mapping editor overhaul port
         }
         else
         {
+        // KS14 start: mapping editor overhaul port
+            if (galleryLayout)
+                button.Gallery();
+        // KS14 end
             button.CollapseButtonWrapper.Visible = false;
             button.CollapseButton.Visible = false;
         }
@@ -96,10 +148,10 @@ public sealed partial class MappingPrototypeList : Control
         return button;
     }
 
-    public void Search(List<MappingPrototype> prototypes)
+    private void Search(List<MappingPrototype> prototypes) // KS14: mapping editor overhaul port
     {
         _search.Clear();
-        SearchList.RemoveAllChildren();
+        SearchList.DisposeAllChildren(); // KS14: mapping editor overhaul port
         _lastIndices = (0, -1);
 
         _search.AddRange(prototypes);
@@ -158,13 +210,129 @@ public sealed partial class MappingPrototypeList : Control
         // insert buttons that can now be seen, from the start
         for (var i = Math.Min(prevStart - 1, endIndex); i >= startIndex; i--)
         {
-            Insert(SearchList, _search[i], false).SetPositionInParent(0);
+            Insert(SearchList, _search[i], false, false).SetPositionInParent(0); // KS14: mapping editor overhaul port
         }
 
         // insert buttons that can now be seen, from the end
         for (var i = Math.Max(prevEnd + 1, startIndex); i <= endIndex; i++)
         {
-            Insert(SearchList, _search[i], false);
+
+            Insert(SearchList, _search[i], false, false); //KS14 modified
         }
+    }
+
+    // KS14 start: mapping editor overhaul port
+    private void OnCollapseAll(ButtonEventArgs args)
+    {
+        foreach (var child in PrototypeList.Children)
+        {
+            if (child is not MappingSpawnButton button)
+                continue;
+
+            button.Collapse();
+        }
+
+        ScrollContainer.SetScrollValue(Vector2.Zero);
+    }
+
+    public void ToggleCollapse(MappingSpawnButton button)
+    {
+        if (!button.CollapseButton.Pressed)
+        {
+            button.Collapse();
+            return;
+        }
+
+        if (button.Prototype?.Children == null)
+            return;
+
+        button.UnCollapse();
+        foreach (var child in button.Prototype.Children)
+        {
+            if (child.Children == null && Gallery)
+                Insert(button.ChildrenPrototypesGallery, child, false, true);
+            else
+                Insert(button.ChildrenPrototypes, child, true, false);
+        }
+    }
+
+    private void OnSearch(LineEdit.LineEditEventArgs args)
+    {
+        if (string.IsNullOrEmpty(args.Text))
+        {
+            PrototypeList.Visible = true;
+            SearchList.Visible = false;
+            return;
+        }
+
+        var matches = new List<MappingPrototype>();
+        foreach (var prototype in _allPrototypes)
+        {
+            if (prototype.Prototype != null &&
+                (prototype.Name.Contains(args.Text, StringComparison.OrdinalIgnoreCase) ||
+                prototype.Prototype.ID.Contains(args.Text, StringComparison.OrdinalIgnoreCase)))
+                matches.Add(prototype);
+        }
+
+        matches.Sort(static (a, b) =>
+            string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase));
+
+        PrototypeList.Visible = false;
+        SearchList.Visible = true;
+        Search(matches);
+    }
+
+    private void OnFavoriteToggle(MappingSpawnButton button)
+    {
+        if (button.Prototype is not { } prototype || _favoriteList == null)
+            return;
+
+        FavoritesPrototype.Children ??= [];
+        if (button.FavoriteButton.Pressed)
+        {
+            if (prototype.Favorite)
+                return;
+
+            if (!FavoritesPrototype.Children.Contains(prototype))
+                FavoritesPrototype.Children.Add(prototype);
+
+            if (_favoriteList.CollapseButton.Pressed)
+            {
+                prototype.Favorite = true;
+                var insertedButton =
+                    prototype.Children == null && Gallery
+                        ? Insert(_favoriteList.ChildrenPrototypesGallery, prototype, false, true)
+                        : Insert(_favoriteList.ChildrenPrototypes, prototype, true, false);
+
+                insertedButton.ToggleFavorite(true);
+            }
+        }
+        else
+        {
+            if (!prototype.Favorite)
+                return;
+
+            FavoritesPrototype.Children.Remove(prototype);
+            if (_favoriteList.CollapseButton.Pressed)
+            {
+                var lists = new List<Container> { _favoriteList.ChildrenPrototypes, _favoriteList.ChildrenPrototypesGallery };
+                foreach (var list in lists)
+                {
+                    foreach (var child in list.Children)
+                    {
+                        if (child is not MappingSpawnButton childButton
+                            || childButton.Prototype != prototype)
+                            continue;
+
+                        list.RemoveChild(childButton);
+                        break;
+                    }
+                }
+            }
+        }
+
+        prototype.Favorite = button.FavoriteButton.Pressed;
+        FavoriteChanged?.Invoke(prototype);
+// KS14 end
     }
 }

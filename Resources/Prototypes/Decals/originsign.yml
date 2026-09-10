@@ -1,5 +1,12 @@
-﻿- type: decal
+# KS14 start: mapping editor overhaul port
+- type: decal
+  id: OriginStationSign
+  abstract: true
+
+- type: decal
+# KS14 end
   id: OriginStationSign1
+  parent: OriginStationSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/originsign.rsi
@@ -7,6 +14,7 @@
 
 - type: decal
   id: OriginStationSign2
+  parent: OriginStationSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/originsign.rsi
@@ -14,6 +22,7 @@
 
 - type: decal
   id: OriginStationSign3
+  parent: OriginStationSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/originsign.rsi
@@ -21,6 +30,7 @@
 
 - type: decal
   id: OriginStationSign4
+  parent: OriginStationSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/originsign.rsi
@@ -28,6 +38,7 @@
 
 - type: decal
   id: OriginStationSign5
+  parent: OriginStationSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/originsign.rsi
@@ -35,6 +46,7 @@
 
 - type: decal
   id: OriginStationSign6
+  parent: OriginStationSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/originsign.rsi
@@ -42,6 +54,7 @@
 
 - type: decal
   id: OriginStationSign7
+  parent: OriginStationSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/originsign.rsi
@@ -50,6 +63,7 @@
 
 - type: decal
   id: OriginStationSign8
+  parent: OriginStationSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/originsign.rsi
@@ -57,6 +71,7 @@
 
 - type: decal
   id: OriginStationSign9
+  parent: OriginStationSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/originsign.rsi
@@ -64,6 +79,7 @@
 
 - type: decal
   id: OriginStationSign10
+  parent: OriginStationSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/originsign.rsi
@@ -71,6 +87,7 @@
 
 - type: decal
   id: OriginStationSign11
+  parent: OriginStationSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/originsign.rsi
@@ -78,6 +95,7 @@
 
 - type: decal
   id: OriginStationSign12
+  parent: OriginStationSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/originsign.rsi
@@ -85,8 +103,10 @@
 
 - type: decal
   id: OriginStationSign13
+  parent: OriginStationSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/originsign.rsi
+# KS14 start: mapping editor overhaul port
+# KS14 end
     state: origin13
-

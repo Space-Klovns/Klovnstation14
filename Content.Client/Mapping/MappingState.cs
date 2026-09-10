@@ -21,26 +21,25 @@ using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Enums;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components; // KS14
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Timing;
+// using static System.StringComparison; // KS14: removed
+// using static Robust.Client.UserInterface.Controls.LineEdit; // KS14: removed
 using Robust.Shared.Utility;
-using static System.StringComparison;
 using static Robust.Client.UserInterface.Controls.BaseButton;
-using static Robust.Client.UserInterface.Controls.LineEdit;
 using static Robust.Client.UserInterface.Controls.OptionButton;
 using static Robust.Shared.Input.Binding.PointerInputCmdHandler;
+using Vector2 = System.Numerics.Vector2; // KS14
 
 namespace Content.Client.Mapping;
 
 public sealed partial class MappingState : GameplayStateBase
 {
-#if !FULL_RELEASE
     [Dependency] private IClientAdminManager _admin = default!;
-#endif
-
     [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private IEntityNetworkManager _entityNetwork = default!;
     [Dependency] private IInputManager _input = default!;
@@ -52,6 +51,7 @@ public sealed partial class MappingState : GameplayStateBase
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IResourceCache _resources = default!;
     [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private ILocalizationManager _localization = default!; // KS14: mapping editor overhaul port
 
     private EntityMenuUIController _entityMenuController = default!;
 
@@ -59,23 +59,31 @@ public sealed partial class MappingState : GameplayStateBase
     private SpriteSystem _sprite = default!;
     private TransformSystem _transform = default!;
     private VerbSystem _verbs = default!;
+// KS14 start: mapping editor overhaul port
+    private MapSystem _map = default!;
+
+    // 1 off in case something else uses these colors since we use them to compare
+    private static readonly Color PickColor = new(1, 255, 0);
+    private static readonly Color DeleteColor = new(255, 1, 0);
+    private static readonly Color EraseDecalColor = Color.Red.WithAlpha(0.2f);
+// KS14 end
 
     private readonly ISawmill _sawmill;
     private readonly GameplayStateLoadController _loadController;
     private bool _setup;
-    private readonly List<MappingPrototype> _allPrototypes = new();
+    private readonly Dictionary<Type, List<MappingPrototype>> _allPrototypes = new(); // KS14: mapping editor overhaul port
     private readonly Dictionary<IPrototype, MappingPrototype> _allPrototypesDict = new();
     private readonly Dictionary<Type, Dictionary<string, MappingPrototype>> _idDict = new();
-    private readonly List<MappingPrototype> _prototypes = new();
     private (TimeSpan At, MappingSpawnButton Button)? _lastClicked;
-    private Control? _scrollTo;
-    private bool _updatePlacement;
-    private bool _updateEraseDecal;
+// KS14 start: mapping editor overhaul port
+    private (Control, MappingPrototypeList)? _scrollTo;
+    private bool _tileErase;
+// KS14 end
 
-    private MappingScreen Screen => (MappingScreen)UserInterfaceManager.ActiveScreen!;
+    private MappingScreen Screen => (MappingScreen) UserInterfaceManager.ActiveScreen!; // KS14: mapping editor overhaul port
     private MainViewport Viewport => UserInterfaceManager.ActiveScreen!.GetWidget<MainViewport>()!;
 
-    public CursorState State { get; set; }
+    public CursorMeta Meta { get; } // KS14: mapping editor overhaul port
 
     public MappingState()
     {
@@ -83,6 +91,8 @@ public sealed partial class MappingState : GameplayStateBase
 
         _sawmill = _log.GetSawmill("mapping");
         _loadController = UserInterfaceManager.GetUIController<GameplayStateLoadController>();
+
+        Meta = new CursorMeta(); // KS14
     }
 
     protected override void Startup()
@@ -102,21 +112,27 @@ public sealed partial class MappingState : GameplayStateBase
         context.AddFunction(ContentKeyFunctions.MappingRemoveDecal);
         context.AddFunction(ContentKeyFunctions.MappingCancelEraseDecal);
         context.AddFunction(ContentKeyFunctions.MappingOpenContextMenu);
+        context.AddFunction(ContentKeyFunctions.MouseMiddle); // KS14: mapping editor overhaul port
 
         Screen.DecalSystem = _decal;
-        Screen.Prototypes.SearchBar.OnTextChanged += OnSearch;
-        Screen.Prototypes.CollapseAllButton.OnPressed += OnCollapseAll;
-        Screen.Prototypes.ClearSearchButton.OnPressed += OnClearSearch;
-        Screen.Prototypes.GetPrototypeData += OnGetData;
-        Screen.Prototypes.SelectionChanged += OnSelected;
-        Screen.Prototypes.CollapseToggled += OnCollapseToggled;
+// KS14 start: mapping editor overhaul port
+
+        Screen.Entities.GetPrototypeData += OnGetData;
+        Screen.Entities.SelectionChanged += OnSelected;
+        Screen.Tiles.GetPrototypeData += OnGetData;
+        Screen.Tiles.SelectionChanged += OnSelected;
+        Screen.Decals.GetPrototypeData += OnGetData;
+        Screen.Decals.SelectionChanged += OnSelected;
+
+// KS14 end
         Screen.Pick.OnPressed += OnPickPressed;
-        Screen.Delete.OnPressed += OnDeletePressed;
         Screen.EntityReplaceButton.OnToggled += OnEntityReplacePressed;
         Screen.EntityPlacementMode.OnItemSelected += OnEntityPlacementSelected;
         Screen.EraseEntityButton.OnToggled += OnEraseEntityPressed;
+        Screen.EraseTileButton.OnToggled += OnEraseTilePressed; // KS14: mapping editor overhaul port
         Screen.EraseDecalButton.OnToggled += OnEraseDecalPressed;
         _placement.PlacementChanged += OnPlacementChanged;
+        _mapping.OnFavoritePrototypesLoaded += OnFavoritesLoaded; // KS14: mapping editor overhaul port
 
         CommandBinds.Builder
             .Bind(ContentKeyFunctions.MappingUnselect, new PointerInputCmdHandler(HandleMappingUnselect, outsidePrediction: true))
@@ -127,56 +143,41 @@ public sealed partial class MappingState : GameplayStateBase
             .Bind(ContentKeyFunctions.MappingRemoveDecal, new PointerInputCmdHandler(HandleEditorCancelPlace, outsidePrediction: true))
             .Bind(ContentKeyFunctions.MappingCancelEraseDecal, new PointerInputCmdHandler(HandleCancelEraseDecal, outsidePrediction: true))
             .Bind(ContentKeyFunctions.MappingOpenContextMenu, new PointerInputCmdHandler(HandleOpenContextMenu, outsidePrediction: true))
+            .Bind(ContentKeyFunctions.MouseMiddle, new PointerInputCmdHandler(HandleMouseMiddle, outsidePrediction: true)) // KS14: mapping editor overhaul port
             .Register<MappingState>();
 
         _overlays.AddOverlay(new MappingOverlay(this));
 
         _prototypeManager.PrototypesReloaded += OnPrototypesReloaded;
 
-        Screen.Prototypes.UpdateVisible(_prototypes);
-    }
-
-    private void OnPrototypesReloaded(PrototypesReloadedEventArgs obj)
-    {
-        if (!obj.WasModified<EntityPrototype>() &&
-            !obj.WasModified<ContentTileDefinition>() &&
-            !obj.WasModified<DecalPrototype>())
-        {
-            return;
-        }
-
+        _mapping.LoadFavorites(); // KS14: mapping editor overhaul port
         ReloadPrototypes();
-    }
-
-    private bool HandleOpenContextMenu(in PointerInputCmdArgs args)
-    {
-        Deselect();
-
-        var coords = _transform.ToMapCoordinates(args.Coordinates);
-        if (_verbs.TryGetEntityMenuEntities(coords, out var entities))
-            _entityMenuController.OpenRootMenu(entities);
-
-        return true;
+        UpdateLocale(); // KS14: mapping editor overhaul port
     }
 
     protected override void Shutdown()
     {
+        SaveFavorites(); // KS14: mapping editor overhaul port
         CommandBinds.Unregister<MappingState>();
 
-        Screen.Prototypes.SearchBar.OnTextChanged -= OnSearch;
-        Screen.Prototypes.CollapseAllButton.OnPressed -= OnCollapseAll;
-        Screen.Prototypes.ClearSearchButton.OnPressed -= OnClearSearch;
-        Screen.Prototypes.GetPrototypeData -= OnGetData;
-        Screen.Prototypes.SelectionChanged -= OnSelected;
-        Screen.Prototypes.CollapseToggled -= OnCollapseToggled;
+// KS14 start: mapping editor overhaul port
+        Screen.Entities.GetPrototypeData -= OnGetData;
+        Screen.Entities.SelectionChanged -= OnSelected;
+        Screen.Tiles.GetPrototypeData -= OnGetData;
+        Screen.Tiles.SelectionChanged -= OnSelected;
+        Screen.Decals.GetPrototypeData -= OnGetData;
+        Screen.Decals.SelectionChanged -= OnSelected;
+
+// KS14 end
         Screen.Pick.OnPressed -= OnPickPressed;
-        Screen.Delete.OnPressed -= OnDeletePressed;
         Screen.EntityReplaceButton.OnToggled -= OnEntityReplacePressed;
         Screen.EntityPlacementMode.OnItemSelected -= OnEntityPlacementSelected;
         Screen.EraseEntityButton.OnToggled -= OnEraseEntityPressed;
+        Screen.EraseTileButton.OnToggled -= OnEraseTilePressed; // KS14: mapping editor overhaul port
         Screen.EraseDecalButton.OnToggled -= OnEraseDecalPressed;
         _placement.PlacementChanged -= OnPlacementChanged;
         _prototypeManager.PrototypesReloaded -= OnPrototypesReloaded;
+        _mapping.OnFavoritePrototypesLoaded -= OnFavoritesLoaded; // KS14: mapping editor overhaul port
 
         UserInterfaceManager.ClearWindows();
         _loadController.UnloadScreen();
@@ -210,26 +211,51 @@ public sealed partial class MappingState : GameplayStateBase
         _sprite = _entityManager.System<SpriteSystem>();
         _transform = _entityManager.System<TransformSystem>();
         _verbs = _entityManager.System<VerbSystem>();
-        ReloadPrototypes();
+        _map = _entityManager.System<MapSystem>(); // KS14: mapping editor overhaul port
+    }
+
+    private void UpdateLocale() // KS14: mapping editor overhaul port
+    {
+// KS14 start: mapping editor overhaul port
+        if (_input.TryGetKeyBinding(ContentKeyFunctions.MappingEnablePick, out var enablePickBinding))
+            Screen.Pick.ToolTip = Loc.GetString("mapping-pick-tooltip", ("key", enablePickBinding.GetKeyString()));
+// KS14 end
+
+// KS14 start: mapping editor overhaul port
+        if (_input.TryGetKeyBinding(ContentKeyFunctions.MappingEnableDelete, out var enableDeleteBinding))
+            Screen.EraseEntityButton.ToolTip = Loc.GetString("mapping-erase-entity-tooltip", ("key", enableDeleteBinding.GetKeyString()));
+    }
+
+    private void SaveFavorites()
+    {
+        Screen.Entities.FavoritesPrototype.Children ??= new List<MappingPrototype>();
+        Screen.Tiles.FavoritesPrototype.Children ??= new List<MappingPrototype>();
+        Screen.Decals.FavoritesPrototype.Children ??= new List<MappingPrototype>();
+
+        var children = Screen.Entities.FavoritesPrototype.Children
+            .Union(Screen.Tiles.FavoritesPrototype.Children)
+            .Union(Screen.Decals.FavoritesPrototype.Children)
+            .ToList();
+
+        _mapping.SaveFavorites(children);
     }
 
     private void ReloadPrototypes()
     {
-        var entities = new MappingPrototype(null, Loc.GetString("mapping-entities")) { Children = new List<MappingPrototype>() };
-        _prototypes.Add(entities);
-
+// KS14 end
         var mappings = new Dictionary<string, MappingPrototype>();
+        var entities = new MappingPrototype(null, Loc.GetString("mapping-entities")) { Children = new List<MappingPrototype>() }; // KS14: mapping editor overhaul port
         foreach (var entity in _prototypeManager.EnumeratePrototypes<EntityPrototype>())
         {
-            Register(entity, entity.ID, entities);
+// KS14 start: mapping editor overhaul port
+            if (!entity.HideSpawnMenu)
+                Register(entity, entity.ID, entities);
+// KS14 end
         }
 
         Sort(mappings, entities);
         mappings.Clear();
-
         var tiles = new MappingPrototype(null, Loc.GetString("mapping-tiles")) { Children = new List<MappingPrototype>() };
-        _prototypes.Add(tiles);
-
         foreach (var tile in _prototypeManager.EnumeratePrototypes<ContentTileDefinition>())
         {
             Register(tile, tile.ID, tiles);
@@ -237,41 +263,35 @@ public sealed partial class MappingState : GameplayStateBase
 
         Sort(mappings, tiles);
         mappings.Clear();
-
         var decals = new MappingPrototype(null, Loc.GetString("mapping-decals")) { Children = new List<MappingPrototype>() };
-        _prototypes.Add(decals);
-
         foreach (var decal in _prototypeManager.EnumeratePrototypes<DecalPrototype>())
         {
-            Register(decal, decal.ID, decals);
+// KS14 start: mapping editor overhaul port
+            if (decal.ShowMenu)
+                Register(decal, decal.ID, decals);
+// KS14 end
         }
 
         Sort(mappings, decals);
         mappings.Clear();
-    }
 
-    private void Sort(Dictionary<string, MappingPrototype> prototypes, MappingPrototype topLevel)
-    {
-        static int Compare(MappingPrototype a, MappingPrototype b)
-        {
-            return string.Compare(a.Name, b.Name, OrdinalIgnoreCase);
-        }
+// KS14 start: mapping editor overhaul port
+        Screen.Entities.UpdateVisible(
+            new List<MappingPrototype> { entities },
+            _allPrototypes.GetOrNew(typeof(EntityPrototype)));
+// KS14 end
 
-        topLevel.Children ??= new List<MappingPrototype>();
+// KS14 start: mapping editor overhaul port
+        Screen.Tiles.UpdateVisible(
+            new List<MappingPrototype> { tiles },
+            _allPrototypes.GetOrNew(typeof(ContentTileDefinition)));
+// KS14 end
 
-        foreach (var prototype in prototypes.Values)
-        {
-            if (prototype.Parents == null && prototype != topLevel)
-            {
-                prototype.Parents = new List<MappingPrototype> { topLevel };
-                topLevel.Children.Add(prototype);
-            }
-
-            prototype.Parents?.Sort(Compare);
-            prototype.Children?.Sort(Compare);
-        }
-
-        topLevel.Children.Sort(Compare);
+// KS14 start: mapping editor overhaul port
+        Screen.Decals.UpdateVisible(
+            new List<MappingPrototype> { decals },
+            _allPrototypes.GetOrNew(typeof(DecalPrototype)));
+// KS14 end
     }
 
     private MappingPrototype? Register<T>(T? prototype, string id, MappingPrototype topLevel) where T : class, IPrototype, IInheritingPrototype
@@ -309,7 +329,7 @@ public sealed partial class MappingState : GameplayStateBase
                     name = $"{name} [{suffix.Value}]";
 
                 mapping = new MappingPrototype(prototype, name);
-                _allPrototypes.Add(mapping);
+                _allPrototypes.GetOrNew(typeof(T)).Add(mapping); // KS14: mapping editor overhaul port
                 ids.Add(id, mapping);
 
                 if (node.TryGet("parent", out ValueDataNode? parentValue))
@@ -360,13 +380,19 @@ public sealed partial class MappingState : GameplayStateBase
             else
             {
                 var entity = prototype as EntityPrototype;
-                var name = entity?.Name ?? prototype.ID;
+// KS14 start: mapping editor overhaul port
+                var tile = prototype as ContentTileDefinition;
+                var name = entity?.Name ?? tile?.Name ?? prototype.ID;
+
+                if (tile != null && _localization.TryGetString(tile.Name, out var locName))
+                    name = locName;
+// KS14 end
 
                 if (!string.IsNullOrWhiteSpace(entity?.EditorSuffix))
                     name = $"{name} [{entity.EditorSuffix}]";
 
                 mapping = new MappingPrototype(prototype, name);
-                _allPrototypes.Add(mapping);
+                _allPrototypes.GetOrNew(typeof(T)).Add(mapping); // KS14: mapping editor overhaul port
                 _allPrototypesDict.Add(prototype, mapping);
                 ids.Add(prototype.ID, mapping);
             }
@@ -397,9 +423,150 @@ public sealed partial class MappingState : GameplayStateBase
         }
     }
 
+    // KS14 start: maintain per-category selections, erase mode, and persisted mapping favorites
+    private void Sort(Dictionary<string, MappingPrototype> prototypes, MappingPrototype topLevel)
+    {
+        static int Compare(MappingPrototype a, MappingPrototype b)
+        {
+            return string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase);
+        }
+        topLevel.Children ??= new List<MappingPrototype>();
+
+        foreach (var prototype in prototypes.Values)
+        {
+            if (prototype.Parents == null && prototype != topLevel)
+            {
+                prototype.Parents = new List<MappingPrototype> { topLevel };
+                topLevel.Children.Add(prototype);
+            }
+
+            prototype.Parents?.Sort(Compare);
+            prototype.Children?.Sort(Compare);
+        }
+
+        topLevel.Children.Sort(Compare);
+    }
+
+    private void Deselect()
+    {
+        if (Screen.Entities.Selected is { } entitySelected)
+        {
+            entitySelected.Button.Pressed = false;
+            Screen.Entities.Selected = null;
+
+            if (entitySelected.Prototype?.Prototype is EntityPrototype)
+                _placement.Clear();
+        }
+
+        if (Screen.Tiles.Selected is { } tileSelected)
+        {
+            tileSelected.Button.Pressed = false;
+            Screen.Tiles.Selected = null;
+
+            if (tileSelected.Prototype?.Prototype is ContentTileDefinition)
+                _placement.Clear();
+        }
+        if (Screen.Decals.Selected is { } decalSelected)
+        {
+            decalSelected.Button.Pressed = false;
+            Screen.Decals.Selected = null;
+            if (decalSelected.Prototype?.Prototype is DecalPrototype)
+                _decal.SetActive(false);
+        }
+    }
+
+    private void EnableEntityEraser()
+    {
+        if (_placement.Eraser)
+            return;
+
+        Deselect();
+        _placement.Clear();
+        _placement.ToggleEraser();
+        Screen.UnPressActionsExcept(Screen.EraseEntityButton);
+        Screen.EntityPlacementMode.Disabled = true;
+
+        Meta.State = CursorState.Entity;
+        Meta.Color = DeleteColor;
+    }
+
+    private void DisableEntityEraser()
+    {
+        if (!_placement.Eraser)
+            return;
+
+        _placement.ToggleEraser();
+        Meta.State = CursorState.None;
+        Screen.EntityPlacementMode.Disabled = false;
+    }
+
+    #region On Event
+    private void OnPrototypesReloaded(PrototypesReloadedEventArgs obj)
+    {
+        if (!obj.WasModified<EntityPrototype>() &&
+            !obj.WasModified<ContentTileDefinition>() &&
+            !obj.WasModified<DecalPrototype>())
+        {
+            return;
+        }
+        SaveFavorites();
+        ReloadPrototypes();
+    }
+
     private void OnPlacementChanged(object? sender, EventArgs e)
     {
-        _updatePlacement = true;
+        if (!_placement.IsActive && _decal.GetActiveDecal().Decal == null)
+            Deselect();
+
+        Screen.EraseEntityButton.Pressed = _placement.Eraser;
+        Screen.EntityPlacementMode.Disabled = _placement.Eraser;
+    }
+
+    private void OnFavoritesLoaded(List<IPrototype> prototypes)
+    {
+        Screen.Entities.FavoritesPrototype.Children = new List<MappingPrototype>();
+        Screen.Decals.FavoritesPrototype.Children = new List<MappingPrototype>();
+        Screen.Tiles.FavoritesPrototype.Children = new List<MappingPrototype>();
+
+        foreach (var prototype in prototypes)
+        {
+            switch (prototype)
+            {
+                case EntityPrototype entityPrototype:
+                {
+                    if (_idDict.GetOrNew(typeof(EntityPrototype)).TryGetValue(entityPrototype.ID, out var entity))
+                    {
+                        Screen.Entities.FavoritesPrototype.Children.Add(entity);
+                        entity.Parents ??= new List<MappingPrototype>();
+                        entity.Parents.Add(Screen.Entities.FavoritesPrototype);
+                        entity.Favorite = true;
+                    }
+                    break;
+                }
+                case DecalPrototype decalPrototype:
+                {
+                    if (_idDict.GetOrNew(typeof(DecalPrototype)).TryGetValue(decalPrototype.ID, out var decal))
+                    {
+                        Screen.Decals.FavoritesPrototype.Children.Add(decal);
+                        decal.Parents ??= new List<MappingPrototype>();
+                        decal.Parents.Add(Screen.Decals.FavoritesPrototype);
+                        decal.Favorite = true;
+                    }
+                    break;
+                }
+                case ContentTileDefinition tileDefinition:
+                {
+                    if (_idDict.GetOrNew(typeof(ContentTileDefinition)).TryGetValue(tileDefinition.ID, out var tile))
+                    {
+                        Screen.Tiles.FavoritesPrototype.Children.Add(tile);
+                        tile.Parents ??= new List<MappingPrototype>();
+                        tile.Parents.Add(Screen.Tiles.FavoritesPrototype);
+                        tile.Favorite = true;
+                    }
+                    break;
+                }
+            }
+        }
     }
 
     protected override void OnKeyBindStateChanged(ViewportBoundKeyEventArgs args)
@@ -408,56 +575,17 @@ public sealed partial class MappingState : GameplayStateBase
             base.OnKeyBindStateChanged(new ViewportBoundKeyEventArgs(args.KeyEventArgs, Viewport.Viewport));
         else
             base.OnKeyBindStateChanged(args);
+
+        UpdateLocale();
     }
-
-    private void OnSearch(LineEditEventArgs args)
-    {
-        if (string.IsNullOrEmpty(args.Text))
-        {
-            Screen.Prototypes.PrototypeList.Visible = true;
-            Screen.Prototypes.SearchList.Visible = false;
-            return;
-        }
-
-        var matches = new List<MappingPrototype>();
-        foreach (var prototype in _allPrototypes)
-        {
-            if (prototype.Name.Contains(args.Text, OrdinalIgnoreCase))
-                matches.Add(prototype);
-        }
-
-        matches.Sort(static (a, b) => string.Compare(a.Name, b.Name, OrdinalIgnoreCase));
-
-        Screen.Prototypes.PrototypeList.Visible = false;
-        Screen.Prototypes.SearchList.Visible = true;
-        Screen.Prototypes.Search(matches);
-    }
-
-    private void OnCollapseAll(ButtonEventArgs args)
-    {
-        foreach (var child in Screen.Prototypes.PrototypeList.Children)
-        {
-            if (child is not MappingSpawnButton button)
-                continue;
-
-            Collapse(button);
-        }
-
-        Screen.Prototypes.ScrollContainer.SetScrollValue(new Vector2(0, 0));
-    }
-
-    private void OnClearSearch(ButtonEventArgs obj)
-    {
-        Screen.Prototypes.SearchBar.Text = string.Empty;
-        OnSearch(new LineEditEventArgs(Screen.Prototypes.SearchBar, string.Empty));
-    }
+    // KS14 end
 
     private void OnGetData(IPrototype prototype, List<Texture> textures)
     {
         switch (prototype)
         {
             case EntityPrototype entity:
-                textures.AddRange(_sprite.GetPrototypeTextures(entity).Select(t => t.Default));
+                textures.AddRange(SpriteComponent.GetPrototypeTextures(entity, _resources).Select(t => t.Default)); // KS14: mapping editor overhaul port
                 break;
             case DecalPrototype decal:
                 textures.Add(_sprite.Frame0(decal.Sprite));
@@ -469,7 +597,7 @@ public sealed partial class MappingState : GameplayStateBase
         }
     }
 
-    private void OnSelected(MappingPrototype mapping)
+    private void OnSelected(MappingPrototypeList list, MappingPrototype mapping) // KS14: mapping editor overhaul port
     {
         if (mapping.Prototype == null)
             return;
@@ -487,7 +615,7 @@ public sealed partial class MappingState : GameplayStateBase
         _lastClicked = null;
 
         Control? last = null;
-        var children = Screen.Prototypes.PrototypeList.Children;
+        var children = list.PrototypeList.Children.ToList(); // KS14: mapping editor overhaul port
         foreach (var prototype in chain)
         {
             foreach (var child in children)
@@ -495,20 +623,26 @@ public sealed partial class MappingState : GameplayStateBase
                 if (child is MappingSpawnButton button &&
                     button.Prototype == prototype)
                 {
-                    UnCollapse(button);
-                    OnSelected(button, prototype.Prototype);
-                    children = button.ChildrenPrototypes.Children;
+// KS14 start: mapping editor overhaul port
+                    button.CollapseButton.Pressed = true;
+                    list.ToggleCollapse(button);
+                    OnSelected(list, button, prototype.Prototype);
+                    children = button.ChildrenPrototypes.Children.ToList();
+                    children.AddRange(button.ChildrenPrototypesGallery.Children);
+// KS14 end
                     last = child;
                     break;
                 }
             }
         }
 
-        if (last != null && Screen.Prototypes.PrototypeList.Visible)
-            _scrollTo = last;
+// KS14 start: mapping editor overhaul port
+        if (last != null && list.PrototypeList.Visible)
+            _scrollTo = (last, list);
+// KS14 end
     }
 
-    private void OnSelected(MappingSpawnButton button, IPrototype? prototype)
+    private void OnSelected(MappingPrototypeList list, MappingSpawnButton button, IPrototype? prototype) // KS14: mapping editor overhaul port
     {
         var time = _timing.CurTime;
         if (prototype is DecalPrototype)
@@ -517,16 +651,27 @@ public sealed partial class MappingState : GameplayStateBase
         // Double-click functionality if it's collapsible.
         if (_lastClicked is { } lastClicked &&
             lastClicked.Button == button &&
-            lastClicked.At > time - TimeSpan.FromSeconds(0.333) &&
-            string.IsNullOrEmpty(Screen.Prototypes.SearchBar.Text) &&
-            button.CollapseButton.Visible)
+// KS14 start: mapping editor overhaul port
+            lastClicked.At > time - TimeSpan.FromSeconds(0.333))
         {
-            button.CollapseButton.Pressed = !button.CollapseButton.Pressed;
-            ToggleCollapse(button);
-            button.Button.Pressed = true;
-            Screen.Prototypes.Selected = button;
-            _lastClicked = null;
-            return;
+            if (button.CollapseButton.Visible && string.IsNullOrEmpty(list.SearchBar.Text))
+            {
+                button.CollapseButton.Pressed = !button.CollapseButton.Pressed;
+                list.ToggleCollapse(button);
+                button.Button.Pressed = true;
+                list.Selected = button;
+                _lastClicked = null;
+                return;
+            }
+
+            if (button.Parent == list.SearchList && button.Prototype != null)
+            {
+                list.SearchBar.SetText(string.Empty, true);
+                OnSelected(list, button.Prototype);
+                _lastClicked = null;
+                return;
+            }
+// KS14 end
         }
 
         // Toggle if it's the same button (at least if we just unclicked it).
@@ -542,107 +687,73 @@ public sealed partial class MappingState : GameplayStateBase
         if (button.Prototype == null)
             return;
 
-        if (Screen.Prototypes.Selected is { } oldButton &&
+        if (list.Selected is { } oldButton && // KS14: mapping editor overhaul port
             oldButton != button)
         {
             Deselect();
         }
 
-        Screen.EntityContainer.Visible = false;
-        Screen.DecalContainer.Visible = false;
+// KS14 start: mapping editor overhaul port
+        Meta.State = CursorState.None;
+        Screen.UnPressActionsExcept(new Control());
+// KS14 end
 
         switch (prototype)
         {
             case EntityPrototype entity:
+// KS14 start: mapping editor overhaul port
+            {
+                var placementId = Screen.EntityPlacementMode.SelectedId;
+
+                var placement = new PlacementInformation
+// KS14 end
                 {
-                    var placementId = Screen.EntityPlacementMode.SelectedId;
+// KS14 start: mapping editor overhaul port
+                    PlacementOption = placementId > 0 ? EntitySpawnWindow.InitOpts[placementId] : entity.PlacementMode,
+                    EntityType = entity.ID,
+                    IsTile = false
+                };
+// KS14 end
 
-                    var placement = new PlacementInformation
-                    {
-                        PlacementOption = placementId > 0 ? EntitySpawnWindow.InitOpts[placementId] : entity.PlacementMode,
-                        EntityType = entity.ID,
-                        IsTile = false
-                    };
-
-                    Screen.EntityContainer.Visible = true;
-                    _decal.SetActive(false);
-                    _placement.BeginPlacing(placement);
-                    break;
-                }
+// KS14 start: mapping editor overhaul port
+                _decal.SetActive(false);
+                _placement.BeginPlacing(placement);
+                break;
+            }
+// KS14 end
             case DecalPrototype decal:
                 _placement.Clear();
 
                 _decal.SetActive(true);
-                _decal.UpdateDecalInfo(decal.ID, Color.White, 0, true, 0, false);
-                Screen.DecalContainer.Visible = true;
+                Screen.SelectDecal(decal.ID); // KS14: mapping editor overhaul port
                 break;
             case ContentTileDefinition tile:
+// KS14 start: mapping editor overhaul port
+            {
+                var placement = new PlacementInformation
+// KS14 end
                 {
-                    var placement = new PlacementInformation
-                    {
-                        PlacementOption = "AlignTileAny",
-                        TileType = tile.TileId,
-                        IsTile = true
-                    };
+// KS14 start: mapping editor overhaul port
+                    PlacementOption = "AlignTileAny",
+                    TileType = tile.TileId,
+                    IsTile = true
+                };
+// KS14 end
 
-                    _decal.SetActive(false);
-                    _placement.BeginPlacing(placement);
-                    break;
-                }
+// KS14 start: mapping editor overhaul port
+                _decal.SetActive(false);
+                _placement.BeginPlacing(placement);
+                break;
+            }
+// KS14 end
             default:
                 _placement.Clear();
                 break;
         }
 
-        Screen.Prototypes.Selected = button;
+        list.Selected = button; // KS14: mapping editor overhaul port
 
         button.Button.Pressed = true;
-    }
-
-    private void Deselect()
-    {
-        if (Screen.Prototypes.Selected is { } selected)
-        {
-            selected.Button.Pressed = false;
-            Screen.Prototypes.Selected = null;
-
-            if (selected.Prototype?.Prototype is DecalPrototype)
-            {
-                _decal.SetActive(false);
-                Screen.DecalContainer.Visible = false;
-            }
-
-            if (selected.Prototype?.Prototype is EntityPrototype)
-            {
-                _placement.Clear();
-            }
-
-            if (selected.Prototype?.Prototype is ContentTileDefinition)
-            {
-                _placement.Clear();
-            }
-        }
-    }
-
-    private void OnCollapseToggled(MappingSpawnButton button, ButtonToggledEventArgs args)
-    {
-        ToggleCollapse(button);
-    }
-
-    private void OnPickPressed(ButtonEventArgs args)
-    {
-        if (args.Button.Pressed)
-            EnablePick();
-        else
-            DisablePick();
-    }
-
-    private void OnDeletePressed(ButtonEventArgs obj)
-    {
-        if (obj.Button.Pressed)
-            EnableDelete();
-        else
-            DisableDelete();
     }
 
     private void OnEntityReplacePressed(ButtonToggledEventArgs args)
@@ -675,70 +786,117 @@ public sealed partial class MappingState : GameplayStateBase
             return;
 
         if (args.Button.Pressed)
-            EnableEraser();
+            EnableEntityEraser(); // KS14: mapping editor overhaul port
         else
-            DisableEraser();
+            DisableEntityEraser(); // KS14: mapping editor overhaul port
     }
 
-    private void OnEraseDecalPressed(ButtonToggledEventArgs args)
+    private void OnEraseTilePressed(ButtonEventArgs args) // KS14: mapping editor overhaul port
     {
+        Meta.State = CursorState.None; // KS14: mapping editor overhaul port
         _placement.Clear();
         Deselect();
-        Screen.EraseEntityButton.Pressed = false;
-        _updatePlacement = true;
-        _updateEraseDecal = args.Pressed;
-    }
 
-    private void EnableEraser()
-    {
-        if (_placement.Eraser)
+// KS14 start: mapping editor overhaul port
+        if (!args.Button.Pressed)
+        {
+            Screen.EntityPlacementMode.Disabled = false;
+            _tileErase = false;
+// KS14 end
             return;
+        } // KS14: mapping editor overhaul port
 
-        _placement.Clear();
-        _placement.ToggleEraser();
+// KS14 start: mapping editor overhaul port
+        _placement.BeginPlacing(new PlacementInformation
+        {
+            PlacementOption = "AlignTileAny",
+            TileType = 0,
+            Range = 400,
+            IsTile = true,
+        });
+
+        Screen.UnPressActionsExcept(Screen.EraseTileButton);
+        _tileErase = true;
+// KS14 end
         Screen.EntityPlacementMode.Disabled = true;
-        Screen.EraseDecalButton.Pressed = false;
-        Deselect();
     }
 
-    private void DisableEraser()
+    private void OnEraseDecalPressed(ButtonToggledEventArgs args) // KS14: mapping editor overhaul port
     {
-        if (!_placement.Eraser)
-            return;
+// KS14 start: mapping editor overhaul port
+        if (args.Button.Pressed)
+        {
+            Meta.State = CursorState.Tile;
+            Meta.Color = EraseDecalColor;
+// KS14 end
 
-        _placement.ToggleEraser();
-        Screen.EntityPlacementMode.Disabled = false;
+// KS14 start: mapping editor overhaul port
+            Screen.UnPressActionsExcept(Screen.EraseDecalButton);
+            _placement.Clear();
+            Deselect();
+        }
+        else
+        {
+            Meta.State = CursorState.None;
+        }
+    }
+    #endregion
+
+    #region Mapping Actions
+    private void OnPickPressed(ButtonEventArgs args)
+    {
+        if (args.Button.Pressed)
+            EnablePick();
+        else
+            DisablePick();
+// KS14 end
     }
 
     private void EnablePick()
     {
+        Deselect(); // KS14: mapping editor overhaul port
         Screen.UnPressActionsExcept(Screen.Pick);
-        State = CursorState.Pick;
+// KS14 start: mapping editor overhaul port
+        Meta.State = CursorState.EntityOrTile;
+        Meta.Color = PickColor;
+        Meta.SecondColor = PickColor.WithAlpha(0.2f);
+// KS14 end
     }
 
     private void DisablePick()
     {
         Screen.Pick.Pressed = false;
-        State = CursorState.None;
+        Meta.State = CursorState.None; // KS14: mapping editor overhaul port
     }
+    #endregion // KS14: mapping editor overhaul port
 
-    private void EnableDelete()
+// KS14 start: mapping editor overhaul port
+    #region Handle Bindings
+    private bool HandleOpenContextMenu(in PointerInputCmdArgs args)
+// KS14 end
     {
-        Screen.UnPressActionsExcept(Screen.Delete);
-        State = CursorState.Delete;
-        EnableEraser();
-    }
+        Deselect(); // KS14: mapping editor overhaul port
 
-    private void DisableDelete()
-    {
-        Screen.Delete.Pressed = false;
-        State = CursorState.None;
-        DisableEraser();
+// KS14 start: mapping editor overhaul port
+        var coords = _transform.ToMapCoordinates(args.Coordinates);
+        if (_verbs.TryGetEntityMenuEntities(coords, out var entities))
+            _entityMenuController.OpenRootMenu(entities);
+
+        return true;
+// KS14 end
     }
 
     private bool HandleMappingUnselect(in PointerInputCmdArgs args)
     {
-        if (Screen.Prototypes.Selected is not { Prototype.Prototype: DecalPrototype })
+// KS14 start: mapping editor overhaul port
+        if (_placement.Eraser)
+            _placement.ToggleEraser();
+
+        Screen.UnPressActionsExcept(new Control());
+        Meta.State = CursorState.None;
+
+        if (Screen.Decals.Selected is not { Prototype.Prototype: DecalPrototype })
+// KS14 end
             return false;
 
         Deselect();
@@ -749,13 +907,12 @@ public sealed partial class MappingState : GameplayStateBase
     {
 #if FULL_RELEASE
         return false;
-#else
+#endif // KS14: mapping editor overhaul port
         if (!_admin.IsAdmin(true) || !_admin.HasFlag(AdminFlags.Host))
             return false;
 
         SaveMap();
         return true;
-#endif
     }
 
     private bool HandleEnablePick(ICommonSession? session, EntityCoordinates coords, EntityUid uid)
@@ -772,57 +929,89 @@ public sealed partial class MappingState : GameplayStateBase
 
     private bool HandleEnableDelete(ICommonSession? session, EntityCoordinates coords, EntityUid uid)
     {
-        EnableDelete();
+// KS14 start: mapping editor overhaul port
+        Screen.EraseEntityButton.Pressed = true;
+        EnableEntityEraser();
+// KS14 end
         return true;
     }
 
     private bool HandleDisableDelete(ICommonSession? session, EntityCoordinates coords, EntityUid uid)
     {
-        DisableDelete();
+// KS14 start: mapping editor overhaul port
+        Screen.EraseEntityButton.Pressed = false;
+        DisableEntityEraser();
+// KS14 end
         return true;
     }
 
     private bool HandlePick(ICommonSession? session, EntityCoordinates coords, EntityUid uid)
     {
-        if (State != CursorState.Pick)
-            return false;
-
         MappingPrototype? button = null;
 
-        // Try and get tile under it
-        // TODO: Separate mode for decals.
-        if (!uid.IsValid())
+        if (Screen.Pick.Pressed) // KS14: mapping editor overhaul port
         {
-            var mapPos = _transform.ToMapCoordinates(coords);
-
-            if (_mapMan.TryFindGridAt(mapPos, out var gridUid, out var grid) &&
-                _entityManager.System<SharedMapSystem>().TryGetTileRef(gridUid, grid, coords, out var tileRef) &&
-                _allPrototypesDict.TryGetValue(_entityManager.System<TurfSystem>().GetContentTileDefinition(tileRef), out button))
+            if (!uid.IsValid()) // KS14: mapping editor overhaul port
             {
-                OnSelected(button);
-                return true;
+// KS14 start: mapping editor overhaul port
+                var mapPos = _transform.ToMapCoordinates(coords);
+
+                if (_mapMan.TryFindGridAt(mapPos, out var gridUid, out var grid) &&
+                    _entityManager.System<SharedMapSystem>().TryGetTileRef(gridUid, grid, coords, out var tileRef) &&
+                    _allPrototypesDict.TryGetValue(_entityManager.System<TurfSystem>().GetContentTileDefinition(tileRef), out button))
+                {
+                    switch (button.Prototype)
+                    {
+                        case EntityPrototype:
+                        {
+                            OnSelected(Screen.Entities, button);
+                            break;
+                        }
+                        case ContentTileDefinition:
+                        {
+                            OnSelected(Screen.Tiles, button);
+                            break;
+                        }
+                    }
+
+                    return true;
+                }
+// KS14 end
             }
         }
-
-        if (button == null)
+        else // KS14: mapping editor overhaul port
         {
-            if (uid == EntityUid.Invalid ||
-                _entityManager.GetComponentOrNull<MetaDataComponent>(uid) is not { EntityPrototype: { } prototype } ||
-                !_allPrototypesDict.TryGetValue(prototype, out button))
-            {
-                // we always block other input handlers if pick mode is enabled
-                // this makes you not accidentally place something in space because you
-                // miss-clicked while holding down the pick hotkey
-                return true;
-            }
+// KS14 start: mapping editor overhaul port
+            return false;
+        }
+// KS14 end
 
-            // Selected an entity
-            OnSelected(button);
+// KS14 start: mapping editor overhaul port
+        if (button != null)
+            return false;
+// KS14 end
 
-            // Match rotation
-            _placement.Direction = _entityManager.GetComponent<TransformComponent>(uid).LocalRotation.GetDir();
+// KS14 start: mapping editor overhaul port
+        if (uid == EntityUid.Invalid ||
+            _entityManager.GetComponentOrNull<MetaDataComponent>(uid) is not
+                { EntityPrototype: { } prototype } ||
+            !_allPrototypesDict.TryGetValue(prototype, out button))
+        {
+            // we always block other input handlers if pick mode is enabled
+            // this makes you not accidentally place something in space because you
+            // miss-clicked while holding down the pick hotkey
+            return true;
+// KS14 end
         }
 
+// KS14 start: mapping editor overhaul port
+        // Selected an entity
+        OnSelected(Screen.Entities, button);
+
+        // Match rotation
+        _placement.Direction = _entityManager.GetComponent<TransformComponent>(uid).LocalRotation.GetDir();
+
+// KS14 end
         return true;
     }
 
@@ -844,52 +1033,44 @@ public sealed partial class MappingState : GameplayStateBase
         return true;
     }
 
-    private async void SaveMap()
+    private bool HandleMouseMiddle(in PointerInputCmdArgs args) // KS14: mapping editor overhaul port
     {
-        await _mapping.SaveMap();
-    }
-
-    private void ToggleCollapse(MappingSpawnButton button)
-    {
-        if (button.CollapseButton.Pressed)
+        if (_decal.GetActiveDecal() is { Decal: not null }) // KS14: mapping editor overhaul port
         {
-            if (button.Prototype?.Children != null)
-            {
-                foreach (var child in button.Prototype.Children)
-                {
-                    Screen.Prototypes.Insert(button.ChildrenPrototypes, child, true);
-                }
-            }
-
-            button.CollapseButton.Label.Text = "▼";
+// KS14 start: mapping editor overhaul port
+            Screen.ChangeDecalRotation(90f);
+            return true;
+// KS14 end
         }
-        else
+// KS14 start: mapping editor overhaul port
+
+        return false;
+// KS14 end
+    }
+    #endregion // KS14: mapping editor overhaul port
+
+    private async void SaveMap() // KS14: mapping editor overhaul port
+    {
+        await _mapping.SaveMap(); // KS14: mapping editor overhaul port
+    }
+
+    public EntityUid? GetHoveredEntity() // KS14: mapping editor overhaul port
+    {
+// KS14 start: mapping editor overhaul port
+        if (UserInterfaceManager.CurrentlyHovered is not IViewportControl viewport ||
+            _input.MouseScreenPosition is not { IsValid: true } position)
         {
-            button.ChildrenPrototypes.RemoveAllChildren();
-            button.CollapseButton.Label.Text = "▶";
+            return null;
         }
+// KS14 end
+
+// KS14 start: mapping editor overhaul port
+        var mapPos = viewport.PixelToMap(position.Position);
+        return GetClickedEntity(mapPos);
+// KS14 end
     }
 
-    private void Collapse(MappingSpawnButton button)
-    {
-        if (!button.CollapseButton.Pressed)
-            return;
-
-        button.CollapseButton.Pressed = false;
-        ToggleCollapse(button);
-    }
-
-
-    private void UnCollapse(MappingSpawnButton button)
-    {
-        if (button.CollapseButton.Pressed)
-            return;
-
-        button.CollapseButton.Pressed = true;
-        ToggleCollapse(button);
-    }
-
-    public EntityUid? GetHoveredEntity()
+    public Entity<MapGridComponent>? GetHoveredGrid() // KS14: mapping editor overhaul port
     {
         if (UserInterfaceManager.CurrentlyHovered is not IViewportControl viewport ||
             _input.MouseScreenPosition is not { IsValid: true } position)
@@ -898,43 +1079,98 @@ public sealed partial class MappingState : GameplayStateBase
         }
 
         var mapPos = viewport.PixelToMap(position.Position);
-        return GetClickedEntity(mapPos);
+// KS14 start: mapping editor overhaul port
+        if (_mapMan.TryFindGridAt(mapPos, out var gridUid, out var grid))
+        {
+            return new Entity<MapGridComponent>(gridUid, grid);
+        }
+
+        return null;
+// KS14 end
+    }
+
+    public Box2Rotated? GetHoveredTileBox2() // KS14: mapping editor overhaul port
+    {
+// KS14 start: mapping editor overhaul port
+        if (UserInterfaceManager.CurrentlyHovered is not IViewportControl viewport ||
+            _input.MouseScreenPosition is not { IsValid: true } coords)
+// KS14 end
+        {
+// KS14 start: mapping editor overhaul port
+            return null;
+        }
+// KS14 end
+
+// KS14 start: mapping editor overhaul port
+        if (GetHoveredGrid() is not { } grid)
+            return null;
+
+        if (!_entityManager.TryGetComponent<TransformComponent>(grid, out var xform))
+            return null;
+// KS14 end
+
+// KS14 start: mapping editor overhaul port
+        var mapCoords = viewport.PixelToMap(coords.Position);
+        var tileSize = grid.Comp.TileSize;
+        var tileDimensions = new Vector2(tileSize, tileSize);
+        var tileRef = _map.GetTileRef(grid, mapCoords);
+        var worldCoord = _map.LocalToWorld(grid.Owner, grid.Comp, tileRef.GridIndices);
+        var box = Box2.FromDimensions(worldCoord, tileDimensions);
+
+        return new Box2Rotated(box, xform.LocalRotation, box.BottomLeft);
     }
 
     public override void FrameUpdate(FrameEventArgs e)
     {
-        if (_updatePlacement)
+        if (!Screen.EraseTileButton.Pressed && _tileErase)
         {
-            _updatePlacement = false;
-
-            if (!_placement.IsActive && _decal.GetActiveDecal().Decal == null)
-                Deselect();
-
-            Screen.EraseEntityButton.Pressed = _placement.Eraser;
-            Screen.EraseDecalButton.Pressed = _updateEraseDecal;
-            Screen.EntityPlacementMode.Disabled = _placement.Eraser;
+            _placement.Clear();
+            _tileErase = false;
+// KS14 end
         }
 
         if (_scrollTo is not { } scrollTo)
             return;
 
+// KS14 start: mapping editor overhaul port
+        var (control, list) = scrollTo;
+
+// KS14 end
         // this is not ideal but we wait until the control's height is computed to use
         // its position to scroll to
-        if (scrollTo.Height > 0 && Screen.Prototypes.PrototypeList.Visible)
+        if (control.Height > 0 && list.PrototypeList.Visible) // KS14: mapping editor overhaul port
         {
-            var y = scrollTo.GlobalPosition.Y - Screen.Prototypes.ScrollContainer.Height / 2 + scrollTo.Height;
-            var scroll = Screen.Prototypes.ScrollContainer;
+// KS14 start: mapping editor overhaul port
+            var y = control.GlobalPosition.Y - list.ScrollContainer.Height / 2 + control.Height - list.GlobalPosition.Y;
+            var scroll = list.ScrollContainer;
+// KS14 end
             scroll.SetScrollValue(scroll.GetScrollValue() + new Vector2(0, y));
             _scrollTo = null;
         }
     }
 
-
-    // TODO this doesn't handle pressing down multiple state hotkeys at the moment
     public enum CursorState
     {
         None,
-        Pick,
-        Delete
+// KS14 start: mapping editor overhaul port
+        Tile,
+        Entity,
+        EntityOrTile,
+    }
+
+    public sealed partial class CursorMeta
+    {
+        /// <summary>
+        ///     Defines how the overlay will be rendered
+        /// </summary>
+        public CursorState State = CursorState.None;
+
+        /// <summary>
+        ///     Color with which the mapping overlay will be drawn
+        /// </summary>
+        public Color Color = Color.White;
+
+        public Color? SecondColor;
+// KS14 end
     }
 }

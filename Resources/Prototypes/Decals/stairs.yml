@@ -1,170 +1,204 @@
 #TODO: Remove all of these when possible, apparently decals aren't possible to just remove right now without causing mapper issues.
 #Please do not make any of these into the new entity stairs unless you want to make new sprites for them.
 
+# KS14 start: mapping editor overhaul port
+- type: decal
+  id: Deprecated
+  abstract: true
+
+# KS14 end
 - type: decal
   id: StairsMaterialE
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsMaterialN
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsMaterialS
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsMaterialW
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsE
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsN
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsS
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsW
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsLE
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsLN
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsLS
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsLW
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsME
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsMN
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsMS
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsMW
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsRE
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsRN
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsRS
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsRW
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsStoneE
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsStoneN
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsStoneS
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsStoneW
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsWoodE
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsWoodN
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsWoodS
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
     state: deprecated
 
 - type: decal
   id: StairsWoodW
+  parent: Deprecated # KS14: added parent
   sprite:
     sprite: deprecated.rsi
-    state: deprecated
+    state: deprecated # KS14: added

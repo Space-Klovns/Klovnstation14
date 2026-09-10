@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq; // KS14
 using System.Numerics;
 using Content.Client.Decals;
 using Content.Client.Decals.UI;
@@ -25,7 +25,11 @@ public sealed partial class MappingScreen : InGameScreen
     private PaletteColorPicker? _picker;
 
     private ProtoId<DecalPrototype>? _id;
-    private Color _decalColor = Color.White;
+    // KS14 start: add decal rotation and optional color controls
+    private readonly FloatSpinBox _rotationSpinBox;
+    public Color DecalColor { get; private set; } = Color.White;
+    private bool _decalEnableColor;
+    // KS14 end
     private float _decalRotation;
     private bool _decalSnap;
     private int _decalZIndex;
@@ -35,8 +39,6 @@ public sealed partial class MappingScreen : InGameScreen
 
     public override ChatBox ChatBox => GetWidget<ChatBox>()!;
 
-    public event Func<MappingSpawnButton, bool>? IsDecalVisible;
-
     public MappingScreen()
     {
         RobustXamlLoader.Load(this);
@@ -44,25 +46,24 @@ public sealed partial class MappingScreen : InGameScreen
 
         AutoscaleMaxResolution = new Vector2i(1080, 770);
 
-        SetAnchorPreset(ScreenContainer, LayoutPreset.Wide);
+
+        SetAnchorPreset(LeftContainer, LayoutPreset.Wide);
         SetAnchorPreset(ViewportContainer, LayoutPreset.Wide);
         SetAnchorPreset(SpawnContainer, LayoutPreset.Wide);
         SetAnchorPreset(MainViewport, LayoutPreset.Wide);
         SetAnchorAndMarginPreset(Hotbar, LayoutPreset.BottomWide, margin: 5);
         SetAnchorAndMarginPreset(Actions, LayoutPreset.TopWide, margin: 5);
+        LeftContainer.OnSplitResizeFinished += () => OnChatResized?.Invoke(new Vector2(LeftContainer.SplitFraction, 0)); // KS14
 
-        ScreenContainer.OnSplitResizeFinished += () =>
-            OnChatResized?.Invoke(new Vector2(ScreenContainer.SplitFraction, 0));
-
-        var rotationSpinBox = new FloatSpinBox(90.0f, 0)
+        _rotationSpinBox = new FloatSpinBox(90.0f, 0) // KS14
         {
             HorizontalExpand = true
         };
-        DecalSpinBoxContainer.AddChild(rotationSpinBox);
+        DecalSpinBoxContainer.AddChild(_rotationSpinBox); // KS14
 
         DecalColorPicker.OnColorChanged += OnDecalColorPicked;
         DecalPickerOpen.OnPressed += OnDecalPickerOpenPressed;
-        rotationSpinBox.OnValueChanged += args =>
+        _rotationSpinBox.OnValueChanged += args => // KS14
         {
             _decalRotation = args.Value;
             UpdateDecal();
@@ -73,6 +74,14 @@ public sealed partial class MappingScreen : InGameScreen
             if (_id is { } id)
                 SelectDecal(id);
         };
+        // KS14 start
+        DecalEnableColor.OnToggled += args =>
+        {
+            _decalEnableColor = args.Pressed;
+            UpdateDecal();
+            RefreshDecalList();
+        };
+        // KS14 end
         DecalEnableSnap.OnToggled += args =>
         {
             _decalSnap = args.Pressed;
@@ -95,30 +104,95 @@ public sealed partial class MappingScreen : InGameScreen
         }
 
         Pick.Texture.TexturePath = "/Textures/Interface/eyedropper.svg.png";
-        Delete.Texture.TexturePath = "/Textures/Interface/eraser.svg.png";
-        Flip.Texture.TexturePath = "/Textures/Interface/VerbIcons/rotate_cw.svg.192dpi.png";
-        Flip.OnPressed += args => FlipSides();
+        // KS14 start: configure split mapping panes, pane toggles, and mutually exclusive erase tools
+        Flip.Texture.TexturePath = "/Textures/_KS14/Mapping/VerbIcons/rotate_cw.svg.192dpi.png";
+        HideLeftSide.Texture.TexturePath = "/Textures/_KS14/Mapping/VerbIcons/caret-left-solid.svg.192dpi.png";
+        HideRightSide.Texture.TexturePath = "/Textures/_KS14/Mapping/VerbIcons/caret-right-solid.svg.192dpi.png";
+
+        Flip.OnPressed += _ => FlipSides();
+        HideLeftSide.OnPressed += OnToggleLeftContainer;
+        HideRightSide.OnPressed += OnToggleRightContainer;
+
+        var eraseGroup = new ButtonGroup();
+        EraseDecalButton.Group = eraseGroup;
+        EraseTileButton.Group = eraseGroup;
+        EraseEntityButton.Group = eraseGroup;
+        // KS14 end
     }
 
-    public void FlipSides()
+    // KS14 start: add pane flipping and visibility-toggle behavior
+    private void FlipSides()
     {
-        ScreenContainer.Flip();
+        LeftContainer.Flip();
+        RightContainer.Flip();
 
         if (SpawnContainer.GetPositionInParent() == 0)
         {
-            Flip.Texture.TexturePath = "/Textures/Interface/VerbIcons/rotate_cw.svg.192dpi.png";
+            Flip.Texture.TexturePath = "/Textures/_KS14/Mapping/VerbIcons/rotate_cw.svg.192dpi.png";
+
+            HideLeftSide.OnPressed -= OnToggleRightContainer;
+            HideLeftSide.OnPressed += OnToggleLeftContainer;
+
+            HideRightSide.OnPressed -= OnToggleLeftContainer;
+            HideRightSide.OnPressed += OnToggleRightContainer;
+
+            SetToggleButtonTexture(HideLeftSide, SpawnContainer);
+            SetToggleButtonTexture(HideRightSide, RightSpawnContainer);
         }
         else
         {
-            Flip.Texture.TexturePath = "/Textures/Interface/VerbIcons/rotate_ccw.svg.192dpi.png";
+            Flip.Texture.TexturePath = "/Textures/_KS14/Mapping/VerbIcons/rotate_ccw.svg.192dpi.png";
+
+            HideLeftSide.OnPressed -= OnToggleLeftContainer;
+            HideLeftSide.OnPressed += OnToggleRightContainer;
+
+            HideRightSide.OnPressed -= OnToggleRightContainer;
+            HideRightSide.OnPressed += OnToggleLeftContainer;
+
+            SetToggleButtonTexture(HideLeftSide, RightSpawnContainer);
+            SetToggleButtonTexture(HideRightSide, SpawnContainer);
         }
     }
 
+    private void OnToggleLeftContainer(ButtonEventArgs args)
+    {
+        SpawnContainer.Visible = !SpawnContainer.Visible;
+
+        if (args.Button is MappingActionsButton button)
+            SetToggleButtonTexture(button, SpawnContainer);
+    }
+
+    private void OnToggleRightContainer(ButtonEventArgs args)
+    {
+        RightSpawnContainer.Visible = !RightSpawnContainer.Visible;
+
+        if (args.Button is MappingActionsButton button)
+            SetToggleButtonTexture(button, RightSpawnContainer);
+    }
+
+    private static void SetToggleButtonTexture(MappingActionsButton button, BoxContainer container)
+    {
+        if (container.GetPositionInParent() == 0)
+        {
+            button.Texture.TexturePath = container.Visible
+                ? "/Textures/_KS14/Mapping/VerbIcons/caret-left-solid.svg.192dpi.png"
+                : "/Textures/_KS14/Mapping/VerbIcons/caret-right-solid.svg.192dpi.png";
+        }
+        else
+        {
+            button.Texture.TexturePath = container.Visible
+                ? "/Textures/_KS14/Mapping/VerbIcons/caret-right-solid.svg.192dpi.png"
+                : "/Textures/_KS14/Mapping/VerbIcons/caret-left-solid.svg.192dpi.png";
+        }
+    }
+
+    // KS14 end
     private void OnDecalColorPicked(Color color)
     {
-        _decalColor = color;
+        DecalColor = color; // KS14
         DecalColorPicker.Color = color;
         UpdateDecal();
+        RefreshDecalList(); // KS14
     }
 
     private void OnDecalPickerOpenPressed(ButtonEventArgs obj)
@@ -147,7 +221,7 @@ public sealed partial class MappingScreen : InGameScreen
         if (_id is not { } id)
             return;
 
-        DecalSystem.UpdateDecalInfo(id, _decalColor, _decalRotation, _decalSnap, _decalZIndex, _decalCleanable);
+        DecalSystem.UpdateDecalInfo(id, _decalEnableColor ? DecalColor : Color.White, _decalRotation, _decalSnap, _decalZIndex, _decalCleanable); // KS14
     }
 
     public void SelectDecal(string decalId)
@@ -159,45 +233,92 @@ public sealed partial class MappingScreen : InGameScreen
 
         if (_decalAuto)
         {
-            _decalColor = Color.White;
+            _decalEnableColor = decal.DefaultCustomColor; // KS14
             _decalCleanable = decal.DefaultCleanable;
             _decalSnap = decal.DefaultSnap;
 
-            DecalColorPicker.Color = _decalColor;
+            DecalColorPicker.Color = DecalColor; // KS14
             DecalEnableCleanable.Pressed = _decalCleanable;
             DecalEnableSnap.Pressed = _decalSnap;
+            DecalEnableColor.Pressed = _decalEnableColor; // KS14
         }
 
         UpdateDecal();
-        RefreshList();
+        RefreshDecalList();
     }
 
-    private void RefreshList()
+    //KS14 start
+    public void SelectDecal(Decal decal)
     {
-        foreach (var control in Prototypes.Children)
+        if (!_decalAuto)
+            return;
+
+        _id = decal.Id;
+        _decalCleanable = decal.Cleanable;
+
+        if (decal.Color is { } color)
+            DecalColor = color;
+        else
+            _decalEnableColor = false;
+
+        DecalColorPicker.Color = DecalColor;
+        DecalEnableCleanable.Pressed = _decalCleanable;
+        DecalEnableSnap.Pressed = _decalSnap;
+        DecalEnableColor.Pressed = _decalEnableColor;
+
+        UpdateDecal();
+        RefreshDecalList();
+    }
+    public void ChangeDecalRotation(float rotation)
+    {
+
+        _decalRotation += rotation;
+
+        if (_decalRotation > 360)
+            _decalRotation = 0;
+        if (_decalRotation < 0)
+            _decalRotation = 360;
+
+        _rotationSpinBox.Value = _decalRotation;
+        UpdateDecal();
+    }
+
+    private void RefreshDecalList()
+    {
+        Decals.TexturesModulate = _decalEnableColor ? DecalColor : Color.White;
+        var children = Decals.PrototypeList.Children.ToList().Union(Decals.SearchList.Children);
+        foreach (var control in children)
+
         {
-            if (control is not MappingSpawnButton button ||
-                button.Prototype?.Prototype is not DecalPrototype)
-            {
+            if (control is not MappingSpawnButton button)
                 continue;
-            }
 
-            foreach (var child in button.Children)
-            {
-                if (child is not MappingSpawnButton { Prototype.Prototype: DecalPrototype } childButton)
-                {
-                    continue;
-                }
-
-                childButton.Texture.Modulate = _decalColor;
-                childButton.Visible = IsDecalVisible?.Invoke(childButton) ?? true;
-            }
+            RefreshDecalButton(button);
         }
     }
 
+    private void RefreshDecalButton(MappingSpawnButton button)
+    {
+        var children =
+            button.ChildrenPrototypes.Children.ToList().Union(button.ChildrenPrototypesGallery.Children);
+
+        foreach (var control in children)
+        {
+            if (control is not MappingSpawnButton { } childButton)
+                continue;
+
+            if (childButton.Texture.Visible)
+                childButton.Texture.Modulate = _decalEnableColor ? DecalColor : Color.White;
+
+            RefreshDecalButton(childButton);
+        }
+    }
+
+    // KS14 end
+
     public override void SetChatSize(Vector2 size)
     {
-        ScreenContainer.ResizeMode = SplitContainer.SplitResizeMode.RespectChildrenMinSize;
+        LeftContainer.ResizeMode = SplitContainer.SplitResizeMode.RespectChildrenMinSize; // KS14
     }
 
     public void UnPressActionsExcept(Control except)
@@ -207,6 +328,11 @@ public sealed partial class MappingScreen : InGameScreen
         Grab.Pressed = Grab == except;
         Move.Pressed = Move == except;
         Pick.Pressed = Pick == except;
-        Delete.Pressed = Delete == except;
+
+        // KS14 start
+        EraseEntityButton.Pressed = EraseEntityButton == except;
+        EraseDecalButton.Pressed = EraseDecalButton == except;
+        EraseTileButton.Pressed = EraseTileButton == except;
+        // KS14 end
     }
 }
