@@ -1,4 +1,5 @@
 using Content.Shared.Actions;
+using Content.Shared.DeviceLinking; // KS14
 using Content.Shared.FixedPoint;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
@@ -17,6 +18,15 @@ public sealed partial class IvDripComponent : Component
 
     [DataField, AutoNetworkedField]
     public bool InjectionEnabled;
+
+    [DataField]
+    public ProtoId<SinkPortPrototype> TogglePort = "Toggle";
+
+    [DataField]
+    public ProtoId<SinkPortPrototype> OnPort = "On";
+
+    [DataField]
+    public ProtoId<SinkPortPrototype> OffPort = "Off";
 
     [DataField]
     public EntProtoId ToggleAction = "ActionToggleIvDrip";

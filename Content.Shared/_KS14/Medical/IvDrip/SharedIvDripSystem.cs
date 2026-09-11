@@ -3,6 +3,8 @@ using Content.Shared.Actions.Components;
 using Content.Shared.Chemistry;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Damage.Systems;
+using Content.Shared.DeviceLinking; // KS14
+using Content.Shared.DeviceLinking.Events; // KS14
 using Content.Shared.FixedPoint;
 using Content.Shared.Fluids;
 using Content.Shared.Inventory.Events;
@@ -16,6 +18,7 @@ namespace Content.Shared._KS14.Medical.IvDrip;
 public sealed partial class SharedIvDripSystem : EntitySystem
 {
     [Dependency] private SharedActionsSystem _actionsSystem = default!;
+    [Dependency] private SharedDeviceLinkSystem _deviceLinkSystem = default!; // KS14
     [Dependency] private IvDripUiSystem _ivDripUiSystem = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private ReactiveSystem _reactiveSystem = default!;
@@ -24,6 +27,8 @@ public sealed partial class SharedIvDripSystem : EntitySystem
 
     public override void Initialize()
     {
+        SubscribeLocalEvent<IvDripComponent, ComponentStartup>(OnComponentStartup); // KS14: create signal ports
+        SubscribeLocalEvent<IvDripComponent, SignalReceivedEvent>(OnSignalReceived); // KS14: control injection by signal
         SubscribeLocalEvent<IvDripComponent, GotEquippedEvent>(OnGotEquipped);
         SubscribeLocalEvent<ToggleIvDripActionEvent>(OnToggleAction);
         SubscribeLocalEvent<IvDripComponent, GotUnequippedEvent>(OnGotUnequipped);
@@ -52,11 +57,34 @@ public sealed partial class SharedIvDripSystem : EntitySystem
             !TryComp<IvDripComponent>(ivDripUid, out var ivDripComponent) || ivDripComponent.Wearer != args.Performer)
             return;
 
-        ivDripComponent.InjectionEnabled = !ivDripComponent.InjectionEnabled;
-        _actionsSystem.SetToggled((args.Action.Owner, (ActionComponent?) args.Action.Comp), ivDripComponent.InjectionEnabled);
-        _ivDripUiSystem.UpdateUserInterface((ivDripUid, ivDripComponent));
-        Dirty(ivDripUid, ivDripComponent);
+        SetInjectionEnabled((ivDripUid, ivDripComponent), !ivDripComponent.InjectionEnabled);
         args.Handled = true;
+    }
+
+    private void OnComponentStartup(Entity<IvDripComponent> entity, ref ComponentStartup args)
+    {
+        _deviceLinkSystem.EnsureSinkPorts(entity, entity.Comp.TogglePort, entity.Comp.OnPort, entity.Comp.OffPort);
+    }
+
+    private void OnSignalReceived(Entity<IvDripComponent> entity, ref SignalReceivedEvent args)
+    {
+        if (args.Port == entity.Comp.TogglePort)
+            SetInjectionEnabled(entity, !entity.Comp.InjectionEnabled);
+        else if (args.Port == entity.Comp.OnPort)
+            SetInjectionEnabled(entity, true);
+        else if (args.Port == entity.Comp.OffPort)
+            SetInjectionEnabled(entity, false);
+    }
+
+    private void SetInjectionEnabled(Entity<IvDripComponent> entity, bool enabled)
+    {
+        if (entity.Comp.InjectionEnabled == enabled)
+            return;
+
+        entity.Comp.InjectionEnabled = enabled;
+        _actionsSystem.SetToggled(entity.Comp.ToggleActionEntity, enabled);
+        _ivDripUiSystem.UpdateUserInterface(entity);
+        Dirty(entity);
     }
 
     public override void Update(float frameTime)
