@@ -1,40 +1,42 @@
 using System.IO;
-using System.Linq; // KS14
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Content.Shared.Decals; // KS14
+using Content.Shared.Decals;
 using Content.Shared.Mapping;
-using Content.Shared._KS14.Mapping; // KS14
-using Content.Shared.Maps; // KS14
+using Content.Shared._KS14.Mapping;
+using Content.Shared.Maps;
 using Robust.Client.UserInterface;
 using Robust.Shared.Network;
-using Robust.Shared.Prototypes; // KS14
+using Robust.Shared.Prototypes;
 
+// ============================================================================
+// KS14 DISCLAIMER: This vanilla file has been heavily modified by KS14 mapping.
+// ============================================================================
 namespace Content.Client.Mapping;
 
 public sealed partial class MappingManager : IPostInjectInit
 {
     [Dependency] private IFileDialogManager _file = default!;
     [Dependency] private IClientNetManager _net = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!; // KS14: mapping editor overhaul port
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     private Stream? _saveStream;
     private MappingMapDataMessage? _mapData;
-        // KS14 start: mapping editor favorites
     private List<IPrototype>? _favoritePrototypes;
 
     public event Action<List<IPrototype>>? OnFavoritePrototypesLoaded;
-        // KS14 end
+
+    private partial void InitializeGridScreenshotExport();
 
     public void PostInject()
     {
         _net.RegisterNetMessage<MappingSaveMapMessage>();
         _net.RegisterNetMessage<MappingSaveMapErrorMessage>(OnSaveError);
         _net.RegisterNetMessage<MappingMapDataMessage>(OnMapData);
-        // KS14 start: mapping editor favorites
         _net.RegisterNetMessage<MappingFavoritesDataMessage>(OnFavoritesData);
         _net.RegisterNetMessage<MappingFavoritesSaveMessage>();
-        // KS14 end
+        InitializeGridScreenshotExport();
     }
 
     private void OnSaveError(MappingSaveMapErrorMessage message)
@@ -57,8 +59,6 @@ public sealed partial class MappingManager : IPostInjectInit
         _saveStream = null;
         _mapData = null;
     }
-
-        // KS14 start: mapping editor favorites
     private void OnFavoritesData(MappingFavoritesDataMessage message)
     {
         _favoritePrototypes = new List<IPrototype>();
@@ -75,8 +75,6 @@ public sealed partial class MappingManager : IPostInjectInit
 
         OnFavoritePrototypesLoaded?.Invoke(_favoritePrototypes);
     }
-
-        // KS14 end
     public async Task SaveMap()
     {
         if (_saveStream != null)
@@ -100,7 +98,6 @@ public sealed partial class MappingManager : IPostInjectInit
 
         _saveStream = stream;
     }
-        // KS14 start: mapping editor favorites
 
     public void SaveFavorites(List<MappingPrototype> prototypes)
     {
@@ -120,5 +117,4 @@ public sealed partial class MappingManager : IPostInjectInit
         var request = new MappingFavoritesLoadMessage();
         _net.ClientSendMessage(request);
     }
-        // KS14 end
 }

@@ -1,23 +1,26 @@
 using System.IO;
-using System.Linq; // KS14
+using System.Linq;
 using Content.Server.Administration.Managers;
 using Content.Shared.Administration;
 using Content.Shared.Mapping;
-using Content.Shared._KS14.Mapping; // KS14
+using Content.Shared._KS14.Mapping;
 using Robust.Server.Player;
-using Robust.Shared.ContentPack; // KS14
-using Robust.Shared.EntitySerialization; // KS14
+using Robust.Shared.ContentPack;
+using Robust.Shared.EntitySerialization;
 using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.Network;
-using Robust.Shared.Prototypes; // KS14
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
-using Robust.Shared.Serialization.Manager; // KS14
-using Robust.Shared.Serialization.Markdown; // KS14
-using Robust.Shared.Serialization.Markdown.Mapping; // KS14
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
+// ============================================================================
+// KS14 DISCLAIMER: This vanilla file has been heavily modified by KS14 mapping.
+// ============================================================================
 namespace Content.Server.Mapping;
 
 public sealed partial class MappingManager : IPostInjectInit
@@ -27,26 +30,24 @@ public sealed partial class MappingManager : IPostInjectInit
     [Dependency] private IServerNetManager _net = default!;
     [Dependency] private IPlayerManager _players = default!;
     [Dependency] private IEntitySystemManager _systems = default!;
-    // KS14 start: mapping editor favorites
     [Dependency] private ISerializationManager _serialization = default!;
     [Dependency] private IResourceManager _resourceMan = default!;
-    // KS14 end
     [Dependency] private IEntityManager _ent = default!;
 
     private ISawmill _sawmill = default!;
     private ZStdCompressionContext _zstd = default!;
 
-    private const string FavoritesPath = "/mapping_editor_favorites.yml"; // KS14: mapping editor favorites
+    private const string FavoritesPath = "/mapping_editor_favorites.yml";
+    private partial void InitializeGridScreenshotExport();
+
     public void PostInject()
     {
-    // KS14 start: mapping editor favorites
         _net.RegisterNetMessage<MappingFavoritesSaveMessage>(OnMappingFavoritesSave);
         _net.RegisterNetMessage<MappingFavoritesLoadMessage>(OnMappingFavoritesLoad);
         _net.RegisterNetMessage<MappingFavoritesDataMessage>();
+        InitializeGridScreenshotExport();
 
         _sawmill = _log.GetSawmill("mapping");
-
-    // KS14 end
 #if !FULL_RELEASE
         _net.RegisterNetMessage<MappingSaveMapMessage>(OnMappingSaveMap);
         _net.RegisterNetMessage<MappingSaveMapErrorMessage>();
@@ -92,7 +93,6 @@ public sealed partial class MappingManager : IPostInjectInit
         }
 #endif
     }
-    // KS14 start: mapping editor favorites
 
     private void OnMappingFavoritesSave(MappingFavoritesSaveMessage message)
     {
@@ -134,5 +134,4 @@ public sealed partial class MappingManager : IPostInjectInit
             _sawmill.Error("Failed to load user favorite objects: " + e);
         }
     }
-    // KS14 end
 }

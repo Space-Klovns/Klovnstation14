@@ -1,3 +1,6 @@
+<!-- ============================================================================
+     KS14 DISCLAIMER: This vanilla mapping UI has been heavily modified by KS14.
+     ============================================================================ -->
 <mapping:MappingScreen
     xmlns="https://spacestation14.io"
     xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
@@ -62,7 +65,6 @@
                         <mapping:MappingActionsButton Name="Pick" Access="Public" />
                         <mapping:MappingActionsButton Name="Flip" Access="Public" ToggleMode="False"
                                                       ToolTip="{Loc 'mapping-flip-tooltip'}" />
-                        <!-- KS14 start: port supported mapping toolbar actions from upstream PR #34302 -->
                         <mapping:MappingActionsButton Name="FixGridAtmos" Access="Public"
                                                       ToolTip="{Loc 'mapping-fixgridatmos-tooltip'}" />
                         <mapping:MappingActionsButton Name="RemoveGrid" Access="Public"
@@ -71,7 +73,8 @@
                                                       ToolTip="{Loc 'mapping-move-grid-tooltip'}" />
                         <mapping:MappingActionsButton Name="GridVV" Access="Public"
                                                       ToolTip="{Loc 'mapping-grid-vv-tooltip'}" />
-                        <!-- KS14 end -->
+                        <mapping:MappingActionsButton Name="GridScreenshot" Access="Public"
+                                                      ToolTip="{Loc 'mapping-grid-screenshot-tooltip'}" />
                         <BoxContainer HorizontalExpand="True" />
                         <mapping:MappingActionsButton Name="HideRightSide" Access="Public" ToggleMode="False"
                                                       ToolTip="{Loc 'mapping-hide-right-side-tooltip'}" SetWidth="24"

@@ -1,4 +1,7 @@
-using System.Linq; // KS14
+// ============================================================================
+// KS14 DISCLAIMER: This vanilla mapping screen has been heavily modified by KS14.
+// ============================================================================
+using System.Linq;
 using System.Numerics;
 using Content.Client.Decals;
 using Content.Client.Decals.UI;
@@ -25,11 +28,9 @@ public sealed partial class MappingScreen : InGameScreen
     private PaletteColorPicker? _picker;
 
     private ProtoId<DecalPrototype>? _id;
-    // KS14 start: add decal rotation and optional color controls
     private readonly FloatSpinBox _rotationSpinBox;
     public Color DecalColor { get; private set; } = Color.White;
     private bool _decalEnableColor;
-    // KS14 end
     private float _decalRotation;
     private bool _decalSnap;
     private int _decalZIndex;
@@ -53,17 +54,17 @@ public sealed partial class MappingScreen : InGameScreen
         SetAnchorPreset(MainViewport, LayoutPreset.Wide);
         SetAnchorAndMarginPreset(Hotbar, LayoutPreset.BottomWide, margin: 5);
         SetAnchorAndMarginPreset(Actions, LayoutPreset.TopWide, margin: 5);
-        LeftContainer.OnSplitResizeFinished += () => OnChatResized?.Invoke(new Vector2(LeftContainer.SplitFraction, 0)); // KS14
+        LeftContainer.OnSplitResizeFinished += () => OnChatResized?.Invoke(new Vector2(LeftContainer.SplitFraction, 0));
 
-        _rotationSpinBox = new FloatSpinBox(90.0f, 0) // KS14
+        _rotationSpinBox = new FloatSpinBox(90.0f, 0)
         {
             HorizontalExpand = true
         };
-        DecalSpinBoxContainer.AddChild(_rotationSpinBox); // KS14
+        DecalSpinBoxContainer.AddChild(_rotationSpinBox);
 
         DecalColorPicker.OnColorChanged += OnDecalColorPicked;
         DecalPickerOpen.OnPressed += OnDecalPickerOpenPressed;
-        _rotationSpinBox.OnValueChanged += args => // KS14
+        _rotationSpinBox.OnValueChanged += args =>
         {
             _decalRotation = args.Value;
             UpdateDecal();
@@ -74,14 +75,12 @@ public sealed partial class MappingScreen : InGameScreen
             if (_id is { } id)
                 SelectDecal(id);
         };
-        // KS14 start
         DecalEnableColor.OnToggled += args =>
         {
             _decalEnableColor = args.Pressed;
             UpdateDecal();
             RefreshDecalList();
         };
-        // KS14 end
         DecalEnableSnap.OnToggled += args =>
         {
             _decalSnap = args.Pressed;
@@ -104,14 +103,14 @@ public sealed partial class MappingScreen : InGameScreen
         }
 
         Pick.Texture.TexturePath = "/Textures/Interface/eyedropper.svg.png";
-        // KS14 start: configure split mapping panes, pane toggles, and mutually exclusive erase tools
         Flip.Texture.TexturePath = "/Textures/Interface/VerbIcons/rotate_cw.svg.192dpi.png";
         HideLeftSide.Texture.TexturePath = "/Textures/_KS14/Mapping/VerbIcons/caret-left-solid.svg.192dpi.png";
         HideRightSide.Texture.TexturePath = "/Textures/_KS14/Mapping/VerbIcons/caret-right-solid.svg.192dpi.png";
-        FixGridAtmos.Texture.TexturePath = "/Textures/Interface/VerbIcons/light.svg.192dpi.png"; // KS14: upstream PR #34302 port
-        RemoveGrid.Texture.TexturePath = "/Textures/Interface/VerbIcons/delete_transparent.svg.192dpi.png"; // KS14: upstream PR #34302 port
-        MoveGrid.Texture.TexturePath = "/Textures/Interface/VerbIcons/point.svg.192dpi.png"; // KS14: upstream PR #34302 port
-        GridVV.Texture.TexturePath = "/Textures/Interface/VerbIcons/vv.svg.192dpi.png"; // KS14: upstream PR #34302 port
+        FixGridAtmos.Texture.TexturePath = "/Textures/Interface/VerbIcons/light.svg.192dpi.png";
+        RemoveGrid.Texture.TexturePath = "/Textures/Interface/VerbIcons/delete_transparent.svg.192dpi.png";
+        MoveGrid.Texture.TexturePath = "/Textures/Interface/VerbIcons/point.svg.192dpi.png";
+        GridVV.Texture.TexturePath = "/Textures/Interface/VerbIcons/vv.svg.192dpi.png";
+        GridScreenshot.Texture.TexturePath = "/Textures/Interface/VerbIcons/eject.svg.192dpi.png";
 
         Flip.OnPressed += _ => FlipSides();
         HideLeftSide.OnPressed += OnToggleLeftContainer;
@@ -121,10 +120,7 @@ public sealed partial class MappingScreen : InGameScreen
         EraseDecalButton.Group = eraseGroup;
         EraseTileButton.Group = eraseGroup;
         EraseEntityButton.Group = eraseGroup;
-        // KS14 end
     }
-
-    // KS14 start: add pane flipping and visibility-toggle behavior
     private void FlipSides()
     {
         LeftContainer.Flip();
@@ -189,14 +185,12 @@ public sealed partial class MappingScreen : InGameScreen
                 : "/Textures/_KS14/Mapping/VerbIcons/caret-left-solid.svg.192dpi.png";
         }
     }
-
-    // KS14 end
     private void OnDecalColorPicked(Color color)
     {
-        DecalColor = color; // KS14
+        DecalColor = color;
         DecalColorPicker.Color = color;
         UpdateDecal();
-        RefreshDecalList(); // KS14
+        RefreshDecalList();
     }
 
     private void OnDecalPickerOpenPressed(ButtonEventArgs obj)
@@ -225,7 +219,7 @@ public sealed partial class MappingScreen : InGameScreen
         if (_id is not { } id)
             return;
 
-        DecalSystem.UpdateDecalInfo(id, _decalEnableColor ? DecalColor : Color.White, _decalRotation, _decalSnap, _decalZIndex, _decalCleanable); // KS14
+        DecalSystem.UpdateDecalInfo(id, _decalEnableColor ? DecalColor : Color.White, _decalRotation, _decalSnap, _decalZIndex, _decalCleanable);
     }
 
     public void SelectDecal(string decalId)
@@ -237,21 +231,19 @@ public sealed partial class MappingScreen : InGameScreen
 
         if (_decalAuto)
         {
-            _decalEnableColor = decal.DefaultCustomColor; // KS14
+            _decalEnableColor = decal.DefaultCustomColor;
             _decalCleanable = decal.DefaultCleanable;
             _decalSnap = decal.DefaultSnap;
 
-            DecalColorPicker.Color = DecalColor; // KS14
+            DecalColorPicker.Color = DecalColor;
             DecalEnableCleanable.Pressed = _decalCleanable;
             DecalEnableSnap.Pressed = _decalSnap;
-            DecalEnableColor.Pressed = _decalEnableColor; // KS14
+            DecalEnableColor.Pressed = _decalEnableColor;
         }
 
         UpdateDecal();
         RefreshDecalList();
     }
-
-    //KS14 start
     public void SelectDecal(Decal decal)
     {
         if (!_decalAuto)
@@ -318,11 +310,9 @@ public sealed partial class MappingScreen : InGameScreen
         }
     }
 
-    // KS14 end
-
     public override void SetChatSize(Vector2 size)
     {
-        LeftContainer.ResizeMode = SplitContainer.SplitResizeMode.RespectChildrenMinSize; // KS14
+        LeftContainer.ResizeMode = SplitContainer.SplitResizeMode.RespectChildrenMinSize;
     }
 
     public void UnPressActionsExcept(Control except)
@@ -332,15 +322,12 @@ public sealed partial class MappingScreen : InGameScreen
         Grab.Pressed = Grab == except;
         Move.Pressed = Move == except;
         Pick.Pressed = Pick == except;
-
-        // KS14 start
         EraseEntityButton.Pressed = EraseEntityButton == except;
         EraseDecalButton.Pressed = EraseDecalButton == except;
         EraseTileButton.Pressed = EraseTileButton == except;
-        FixGridAtmos.Pressed = FixGridAtmos == except; // KS14: upstream PR #34302 port
-        RemoveGrid.Pressed = RemoveGrid == except; // KS14: upstream PR #34302 port
-        MoveGrid.Pressed = MoveGrid == except; // KS14: upstream PR #34302 port
-        GridVV.Pressed = GridVV == except; // KS14: upstream PR #34302 port
-        // KS14 end
+        FixGridAtmos.Pressed = FixGridAtmos == except;
+        RemoveGrid.Pressed = RemoveGrid == except;
+        MoveGrid.Pressed = MoveGrid == except;
+        GridVV.Pressed = GridVV == except;
     }
 }

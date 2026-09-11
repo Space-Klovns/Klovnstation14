@@ -1,10 +1,13 @@
+// ============================================================================
+// KS14 DISCLAIMER: This vanilla mapping state has been heavily modified by KS14.
+// ============================================================================
 using System.Linq;
 using System.Numerics;
 using Content.Client.Administration.Managers;
 using Content.Client.ContextMenu.UI;
 using Content.Client.Decals;
 using Content.Client.Gameplay;
-using Content.Client.Maps; // KS14
+using Content.Client.Maps;
 using Content.Client.UserInterface.Controls;
 using Content.Client.UserInterface.Systems.Gameplay;
 using Content.Client.Verbs;
@@ -12,7 +15,7 @@ using Content.Shared.Administration;
 using Content.Shared.Decals;
 using Content.Shared.Input;
 using Content.Shared.Maps;
-using Robust.Client.Console; // KS14
+using Robust.Client.Console;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
@@ -23,26 +26,26 @@ using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Enums;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Map;
-using Robust.Shared.Map.Components; // KS14
+using Robust.Shared.Map.Components;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Timing;
-// using static System.StringComparison; // KS14: removed
-// using static Robust.Client.UserInterface.Controls.LineEdit; // KS14: removed
+// using static System.StringComparison;
+// using static Robust.Client.UserInterface.Controls.LineEdit;
 using Robust.Shared.Utility;
 using static Robust.Client.UserInterface.Controls.BaseButton;
 using static Robust.Client.UserInterface.Controls.OptionButton;
 using static Robust.Shared.Input.Binding.PointerInputCmdHandler;
-using Vector2 = System.Numerics.Vector2; // KS14
+using Vector2 = System.Numerics.Vector2;
 
 namespace Content.Client.Mapping;
 
 public sealed partial class MappingState : GameplayStateBase
 {
     [Dependency] private IClientAdminManager _admin = default!;
-    [Dependency] private IClientConsoleHost _consoleHost = default!; // KS14: upstream PR #34302 port
+    [Dependency] private IClientConsoleHost _consoleHost = default!;
     [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private IEntityNetworkManager _entityNetwork = default!;
     [Dependency] private IInputManager _input = default!;
@@ -54,7 +57,7 @@ public sealed partial class MappingState : GameplayStateBase
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IResourceCache _resources = default!;
     [Dependency] private IGameTiming _timing = default!;
-    [Dependency] private ILocalizationManager _localization = default!; // KS14: mapping editor overhaul port
+    [Dependency] private ILocalizationManager _localization = default!;
 
     private EntityMenuUIController _entityMenuController = default!;
 
@@ -62,31 +65,27 @@ public sealed partial class MappingState : GameplayStateBase
     private SpriteSystem _sprite = default!;
     private TransformSystem _transform = default!;
     private VerbSystem _verbs = default!;
-// KS14 start: mapping editor overhaul port
     private MapSystem _map = default!;
 
     // 1 off in case something else uses these colors since we use them to compare
     private static readonly Color PickColor = new(1, 255, 0);
     private static readonly Color DeleteColor = new(255, 1, 0);
     private static readonly Color EraseDecalColor = Color.Red.WithAlpha(0.2f);
-// KS14 end
 
     private readonly ISawmill _sawmill;
     private readonly GameplayStateLoadController _loadController;
     private bool _setup;
-    private readonly Dictionary<Type, List<MappingPrototype>> _allPrototypes = new(); // KS14: mapping editor overhaul port
+    private readonly Dictionary<Type, List<MappingPrototype>> _allPrototypes = new();
     private readonly Dictionary<IPrototype, MappingPrototype> _allPrototypesDict = new();
     private readonly Dictionary<Type, Dictionary<string, MappingPrototype>> _idDict = new();
     private (TimeSpan At, MappingSpawnButton Button)? _lastClicked;
-// KS14 start: mapping editor overhaul port
     private (Control, MappingPrototypeList)? _scrollTo;
     private bool _tileErase;
-// KS14 end
 
-    private MappingScreen Screen => (MappingScreen) UserInterfaceManager.ActiveScreen!; // KS14: mapping editor overhaul port
+    private MappingScreen Screen => (MappingScreen) UserInterfaceManager.ActiveScreen!;
     private MainViewport Viewport => UserInterfaceManager.ActiveScreen!.GetWidget<MainViewport>()!;
 
-    public CursorMeta Meta { get; } // KS14: mapping editor overhaul port
+    public CursorMeta Meta { get; }
 
     public MappingState()
     {
@@ -95,7 +94,7 @@ public sealed partial class MappingState : GameplayStateBase
         _sawmill = _log.GetSawmill("mapping");
         _loadController = UserInterfaceManager.GetUIController<GameplayStateLoadController>();
 
-        Meta = new CursorMeta(); // KS14
+        Meta = new CursorMeta();
     }
 
     protected override void Startup()
@@ -115,10 +114,9 @@ public sealed partial class MappingState : GameplayStateBase
         context.AddFunction(ContentKeyFunctions.MappingRemoveDecal);
         context.AddFunction(ContentKeyFunctions.MappingCancelEraseDecal);
         context.AddFunction(ContentKeyFunctions.MappingOpenContextMenu);
-        context.AddFunction(ContentKeyFunctions.MouseMiddle); // KS14: mapping editor overhaul port
+        context.AddFunction(ContentKeyFunctions.MouseMiddle);
 
         Screen.DecalSystem = _decal;
-// KS14 start: mapping editor overhaul port
 
         Screen.Entities.GetPrototypeData += OnGetData;
         Screen.Entities.SelectionChanged += OnSelected;
@@ -126,22 +124,19 @@ public sealed partial class MappingState : GameplayStateBase
         Screen.Tiles.SelectionChanged += OnSelected;
         Screen.Decals.GetPrototypeData += OnGetData;
         Screen.Decals.SelectionChanged += OnSelected;
-
-// KS14 end
         Screen.Pick.OnPressed += OnPickPressed;
         Screen.EntityReplaceButton.OnToggled += OnEntityReplacePressed;
         Screen.EntityPlacementMode.OnItemSelected += OnEntityPlacementSelected;
         Screen.EraseEntityButton.OnToggled += OnEraseEntityPressed;
-        Screen.EraseTileButton.OnToggled += OnEraseTilePressed; // KS14: mapping editor overhaul port
+        Screen.EraseTileButton.OnToggled += OnEraseTilePressed;
         Screen.EraseDecalButton.OnToggled += OnEraseDecalPressed;
-        // KS14 start: port supported mapping toolbar actions from upstream PR #34302
         Screen.FixGridAtmos.OnPressed += OnFixGridAtmosPressed;
         Screen.RemoveGrid.OnPressed += OnRemoveGridPressed;
         Screen.MoveGrid.OnPressed += OnMoveGridPressed;
         Screen.GridVV.OnPressed += OnGridVVPressed;
-        // KS14 end
+        Screen.GridScreenshot.OnPressed += OnGridScreenshotPressed;
         _placement.PlacementChanged += OnPlacementChanged;
-        _mapping.OnFavoritePrototypesLoaded += OnFavoritesLoaded; // KS14: mapping editor overhaul port
+        _mapping.OnFavoritePrototypesLoaded += OnFavoritesLoaded;
 
         CommandBinds.Builder
             .Bind(ContentKeyFunctions.MappingUnselect, new PointerInputCmdHandler(HandleMappingUnselect, outsidePrediction: true))
@@ -152,48 +147,43 @@ public sealed partial class MappingState : GameplayStateBase
             .Bind(ContentKeyFunctions.MappingRemoveDecal, new PointerInputCmdHandler(HandleEditorCancelPlace, outsidePrediction: true))
             .Bind(ContentKeyFunctions.MappingCancelEraseDecal, new PointerInputCmdHandler(HandleCancelEraseDecal, outsidePrediction: true))
             .Bind(ContentKeyFunctions.MappingOpenContextMenu, new PointerInputCmdHandler(HandleOpenContextMenu, outsidePrediction: true))
-            .Bind(ContentKeyFunctions.MouseMiddle, new PointerInputCmdHandler(HandleMouseMiddle, outsidePrediction: true)) // KS14: mapping editor overhaul port
-            .Bind(Robust.Shared.Input.EngineKeyFunctions.Use, new PointerInputCmdHandler(HandleUse, outsidePrediction: true)) // KS14: upstream PR #34302 port
+            .Bind(ContentKeyFunctions.MouseMiddle, new PointerInputCmdHandler(HandleMouseMiddle, outsidePrediction: true))
+            .Bind(Robust.Shared.Input.EngineKeyFunctions.Use, new PointerInputCmdHandler(HandleUse, outsidePrediction: true))
             .Register<MappingState>();
 
         _overlays.AddOverlay(new MappingOverlay(this));
 
         _prototypeManager.PrototypesReloaded += OnPrototypesReloaded;
 
-        _mapping.LoadFavorites(); // KS14: mapping editor overhaul port
+        _mapping.LoadFavorites();
         ReloadPrototypes();
-        UpdateLocale(); // KS14: mapping editor overhaul port
+        UpdateLocale();
     }
 
     protected override void Shutdown()
     {
-        SaveFavorites(); // KS14: mapping editor overhaul port
+        SaveFavorites();
         CommandBinds.Unregister<MappingState>();
-
-// KS14 start: mapping editor overhaul port
         Screen.Entities.GetPrototypeData -= OnGetData;
         Screen.Entities.SelectionChanged -= OnSelected;
         Screen.Tiles.GetPrototypeData -= OnGetData;
         Screen.Tiles.SelectionChanged -= OnSelected;
         Screen.Decals.GetPrototypeData -= OnGetData;
         Screen.Decals.SelectionChanged -= OnSelected;
-
-// KS14 end
         Screen.Pick.OnPressed -= OnPickPressed;
         Screen.EntityReplaceButton.OnToggled -= OnEntityReplacePressed;
         Screen.EntityPlacementMode.OnItemSelected -= OnEntityPlacementSelected;
         Screen.EraseEntityButton.OnToggled -= OnEraseEntityPressed;
-        Screen.EraseTileButton.OnToggled -= OnEraseTilePressed; // KS14: mapping editor overhaul port
+        Screen.EraseTileButton.OnToggled -= OnEraseTilePressed;
         Screen.EraseDecalButton.OnToggled -= OnEraseDecalPressed;
-        // KS14 start: port supported mapping toolbar actions from upstream PR #34302
         Screen.FixGridAtmos.OnPressed -= OnFixGridAtmosPressed;
         Screen.RemoveGrid.OnPressed -= OnRemoveGridPressed;
         Screen.MoveGrid.OnPressed -= OnMoveGridPressed;
         Screen.GridVV.OnPressed -= OnGridVVPressed;
-        // KS14 end
+        Screen.GridScreenshot.OnPressed -= OnGridScreenshotPressed;
         _placement.PlacementChanged -= OnPlacementChanged;
         _prototypeManager.PrototypesReloaded -= OnPrototypesReloaded;
-        _mapping.OnFavoritePrototypesLoaded -= OnFavoritesLoaded; // KS14: mapping editor overhaul port
+        _mapping.OnFavoritePrototypesLoaded -= OnFavoritesLoaded;
 
         UserInterfaceManager.ClearWindows();
         _loadController.UnloadScreen();
@@ -227,17 +217,13 @@ public sealed partial class MappingState : GameplayStateBase
         _sprite = _entityManager.System<SpriteSystem>();
         _transform = _entityManager.System<TransformSystem>();
         _verbs = _entityManager.System<VerbSystem>();
-        _map = _entityManager.System<MapSystem>(); // KS14: mapping editor overhaul port
+        _map = _entityManager.System<MapSystem>();
     }
 
-    private void UpdateLocale() // KS14: mapping editor overhaul port
+    private void UpdateLocale()
     {
-// KS14 start: mapping editor overhaul port
         if (_input.TryGetKeyBinding(ContentKeyFunctions.MappingEnablePick, out var enablePickBinding))
             Screen.Pick.ToolTip = Loc.GetString("mapping-pick-tooltip", ("key", enablePickBinding.GetKeyString()));
-// KS14 end
-
-// KS14 start: mapping editor overhaul port
         if (_input.TryGetKeyBinding(ContentKeyFunctions.MappingEnableDelete, out var enableDeleteBinding))
             Screen.EraseEntityButton.ToolTip = Loc.GetString("mapping-erase-entity-tooltip", ("key", enableDeleteBinding.GetKeyString()));
     }
@@ -258,15 +244,12 @@ public sealed partial class MappingState : GameplayStateBase
 
     private void ReloadPrototypes()
     {
-// KS14 end
         var mappings = new Dictionary<string, MappingPrototype>();
-        var entities = new MappingPrototype(null, Loc.GetString("mapping-entities")) { Children = new List<MappingPrototype>() }; // KS14: mapping editor overhaul port
+        var entities = new MappingPrototype(null, Loc.GetString("mapping-entities")) { Children = new List<MappingPrototype>() };
         foreach (var entity in _prototypeManager.EnumeratePrototypes<EntityPrototype>())
         {
-// KS14 start: mapping editor overhaul port
             if (!entity.HideSpawnMenu)
                 Register(entity, entity.ID, entities);
-// KS14 end
         }
 
         Sort(mappings, entities);
@@ -282,32 +265,21 @@ public sealed partial class MappingState : GameplayStateBase
         var decals = new MappingPrototype(null, Loc.GetString("mapping-decals")) { Children = new List<MappingPrototype>() };
         foreach (var decal in _prototypeManager.EnumeratePrototypes<DecalPrototype>())
         {
-// KS14 start: mapping editor overhaul port
             if (decal.ShowMenu)
                 Register(decal, decal.ID, decals);
-// KS14 end
         }
 
         Sort(mappings, decals);
         mappings.Clear();
-
-// KS14 start: mapping editor overhaul port
         Screen.Entities.UpdateVisible(
             new List<MappingPrototype> { entities },
             _allPrototypes.GetOrNew(typeof(EntityPrototype)));
-// KS14 end
-
-// KS14 start: mapping editor overhaul port
         Screen.Tiles.UpdateVisible(
             new List<MappingPrototype> { tiles },
             _allPrototypes.GetOrNew(typeof(ContentTileDefinition)));
-// KS14 end
-
-// KS14 start: mapping editor overhaul port
         Screen.Decals.UpdateVisible(
             new List<MappingPrototype> { decals },
             _allPrototypes.GetOrNew(typeof(DecalPrototype)));
-// KS14 end
     }
 
     private MappingPrototype? Register<T>(T? prototype, string id, MappingPrototype topLevel) where T : class, IPrototype, IInheritingPrototype
@@ -345,7 +317,7 @@ public sealed partial class MappingState : GameplayStateBase
                     name = $"{name} [{suffix.Value}]";
 
                 mapping = new MappingPrototype(prototype, name);
-                _allPrototypes.GetOrNew(typeof(T)).Add(mapping); // KS14: mapping editor overhaul port
+                _allPrototypes.GetOrNew(typeof(T)).Add(mapping);
                 ids.Add(id, mapping);
 
                 if (node.TryGet("parent", out ValueDataNode? parentValue))
@@ -396,19 +368,17 @@ public sealed partial class MappingState : GameplayStateBase
             else
             {
                 var entity = prototype as EntityPrototype;
-// KS14 start: mapping editor overhaul port
                 var tile = prototype as ContentTileDefinition;
                 var name = entity?.Name ?? tile?.Name ?? prototype.ID;
 
                 if (tile != null && _localization.TryGetString(tile.Name, out var locName))
                     name = locName;
-// KS14 end
 
                 if (!string.IsNullOrWhiteSpace(entity?.EditorSuffix))
                     name = $"{name} [{entity.EditorSuffix}]";
 
                 mapping = new MappingPrototype(prototype, name);
-                _allPrototypes.GetOrNew(typeof(T)).Add(mapping); // KS14: mapping editor overhaul port
+                _allPrototypes.GetOrNew(typeof(T)).Add(mapping);
                 _allPrototypesDict.Add(prototype, mapping);
                 ids.Add(prototype.ID, mapping);
             }
@@ -438,8 +408,6 @@ public sealed partial class MappingState : GameplayStateBase
             return mapping;
         }
     }
-
-    // KS14 start: maintain per-category selections, erase mode, and persisted mapping favorites
     private void Sort(Dictionary<string, MappingPrototype> prototypes, MappingPrototype topLevel)
     {
         static int Compare(MappingPrototype a, MappingPrototype b)
@@ -594,14 +562,13 @@ public sealed partial class MappingState : GameplayStateBase
 
         UpdateLocale();
     }
-    // KS14 end
 
     private void OnGetData(IPrototype prototype, List<Texture> textures)
     {
         switch (prototype)
         {
             case EntityPrototype entity:
-                textures.AddRange(SpriteComponent.GetPrototypeTextures(entity, _resources).Select(t => t.Default)); // KS14: mapping editor overhaul port
+                textures.AddRange(SpriteComponent.GetPrototypeTextures(entity, _resources).Select(t => t.Default));
                 break;
             case DecalPrototype decal:
                 textures.Add(_sprite.Frame0(decal.Sprite));
@@ -613,7 +580,7 @@ public sealed partial class MappingState : GameplayStateBase
         }
     }
 
-    private void OnSelected(MappingPrototypeList list, MappingPrototype mapping) // KS14: mapping editor overhaul port
+    private void OnSelected(MappingPrototypeList list, MappingPrototype mapping)
     {
         if (mapping.Prototype == null)
             return;
@@ -631,7 +598,7 @@ public sealed partial class MappingState : GameplayStateBase
         _lastClicked = null;
 
         Control? last = null;
-        var children = list.PrototypeList.Children.ToList(); // KS14: mapping editor overhaul port
+        var children = list.PrototypeList.Children.ToList();
         foreach (var prototype in chain)
         {
             foreach (var child in children)
@@ -639,26 +606,21 @@ public sealed partial class MappingState : GameplayStateBase
                 if (child is MappingSpawnButton button &&
                     button.Prototype == prototype)
                 {
-// KS14 start: mapping editor overhaul port
                     button.CollapseButton.Pressed = true;
                     list.ToggleCollapse(button);
                     OnSelected(list, button, prototype.Prototype);
                     children = button.ChildrenPrototypes.Children.ToList();
                     children.AddRange(button.ChildrenPrototypesGallery.Children);
-// KS14 end
                     last = child;
                     break;
                 }
             }
         }
-
-// KS14 start: mapping editor overhaul port
         if (last != null && list.PrototypeList.Visible)
             _scrollTo = (last, list);
-// KS14 end
     }
 
-    private void OnSelected(MappingPrototypeList list, MappingSpawnButton button, IPrototype? prototype) // KS14: mapping editor overhaul port
+    private void OnSelected(MappingPrototypeList list, MappingSpawnButton button, IPrototype? prototype)
     {
         var time = _timing.CurTime;
         if (prototype is DecalPrototype)
@@ -667,7 +629,6 @@ public sealed partial class MappingState : GameplayStateBase
         // Double-click functionality if it's collapsible.
         if (_lastClicked is { } lastClicked &&
             lastClicked.Button == button &&
-// KS14 start: mapping editor overhaul port
             lastClicked.At > time - TimeSpan.FromSeconds(0.333))
         {
             if (button.CollapseButton.Visible && string.IsNullOrEmpty(list.SearchBar.Text))
@@ -687,7 +648,6 @@ public sealed partial class MappingState : GameplayStateBase
                 _lastClicked = null;
                 return;
             }
-// KS14 end
         }
 
         // Toggle if it's the same button (at least if we just unclicked it).
@@ -703,71 +663,54 @@ public sealed partial class MappingState : GameplayStateBase
         if (button.Prototype == null)
             return;
 
-        if (list.Selected is { } oldButton && // KS14: mapping editor overhaul port
+        if (list.Selected is { } oldButton &&
             oldButton != button)
         {
             Deselect();
         }
-
-// KS14 start: mapping editor overhaul port
         Meta.State = CursorState.None;
         Screen.UnPressActionsExcept(new Control());
-// KS14 end
 
         switch (prototype)
         {
             case EntityPrototype entity:
-// KS14 start: mapping editor overhaul port
             {
                 var placementId = Screen.EntityPlacementMode.SelectedId;
 
                 var placement = new PlacementInformation
-// KS14 end
                 {
-// KS14 start: mapping editor overhaul port
                     PlacementOption = placementId > 0 ? EntitySpawnWindow.InitOpts[placementId] : entity.PlacementMode,
                     EntityType = entity.ID,
                     IsTile = false
                 };
-// KS14 end
-
-// KS14 start: mapping editor overhaul port
                 _decal.SetActive(false);
                 _placement.BeginPlacing(placement);
                 break;
             }
-// KS14 end
             case DecalPrototype decal:
                 _placement.Clear();
 
                 _decal.SetActive(true);
-                Screen.SelectDecal(decal.ID); // KS14: mapping editor overhaul port
+                Screen.SelectDecal(decal.ID);
                 break;
             case ContentTileDefinition tile:
-// KS14 start: mapping editor overhaul port
             {
                 var placement = new PlacementInformation
-// KS14 end
                 {
-// KS14 start: mapping editor overhaul port
                     PlacementOption = "AlignTileAny",
                     TileType = tile.TileId,
                     IsTile = true
                 };
-// KS14 end
-
-// KS14 start: mapping editor overhaul port
                 _decal.SetActive(false);
                 _placement.BeginPlacing(placement);
                 break;
             }
-// KS14 end
             default:
                 _placement.Clear();
                 break;
         }
 
-        list.Selected = button; // KS14: mapping editor overhaul port
+        list.Selected = button;
 
         button.Button.Pressed = true;
     }
@@ -802,27 +745,22 @@ public sealed partial class MappingState : GameplayStateBase
             return;
 
         if (args.Button.Pressed)
-            EnableEntityEraser(); // KS14: mapping editor overhaul port
+            EnableEntityEraser();
         else
-            DisableEntityEraser(); // KS14: mapping editor overhaul port
+            DisableEntityEraser();
     }
 
-    private void OnEraseTilePressed(ButtonEventArgs args) // KS14: mapping editor overhaul port
+    private void OnEraseTilePressed(ButtonEventArgs args)
     {
-        Meta.State = CursorState.None; // KS14: mapping editor overhaul port
+        Meta.State = CursorState.None;
         _placement.Clear();
         Deselect();
-
-// KS14 start: mapping editor overhaul port
         if (!args.Button.Pressed)
         {
             Screen.EntityPlacementMode.Disabled = false;
             _tileErase = false;
-// KS14 end
             return;
-        } // KS14: mapping editor overhaul port
-
-// KS14 start: mapping editor overhaul port
+        }
         _placement.BeginPlacing(new PlacementInformation
         {
             PlacementOption = "AlignTileAny",
@@ -833,20 +771,15 @@ public sealed partial class MappingState : GameplayStateBase
 
         Screen.UnPressActionsExcept(Screen.EraseTileButton);
         _tileErase = true;
-// KS14 end
         Screen.EntityPlacementMode.Disabled = true;
     }
 
-    private void OnEraseDecalPressed(ButtonToggledEventArgs args) // KS14: mapping editor overhaul port
+    private void OnEraseDecalPressed(ButtonToggledEventArgs args)
     {
-// KS14 start: mapping editor overhaul port
         if (args.Button.Pressed)
         {
             Meta.State = CursorState.Tile;
             Meta.Color = EraseDecalColor;
-// KS14 end
-
-// KS14 start: mapping editor overhaul port
             Screen.UnPressActionsExcept(Screen.EraseDecalButton);
             _placement.Clear();
             Deselect();
@@ -856,7 +789,6 @@ public sealed partial class MappingState : GameplayStateBase
             Meta.State = CursorState.None;
         }
     }
-    // KS14 start: port supported mapping toolbar actions from upstream PR #34302
     private void OnFixGridAtmosPressed(ButtonEventArgs args)
     {
         if (args.Button.Pressed)
@@ -884,7 +816,12 @@ public sealed partial class MappingState : GameplayStateBase
         if (args.Button.Pressed)
             Screen.UnPressActionsExcept(Screen.GridVV);
     }
-    // KS14 end
+
+    private void OnGridScreenshotPressed(ButtonEventArgs args)
+    {
+        if (args.Button.Pressed)
+            Screen.UnPressActionsExcept(Screen.GridScreenshot);
+    }
     #endregion
 
     #region Mapping Actions
@@ -894,46 +831,36 @@ public sealed partial class MappingState : GameplayStateBase
             EnablePick();
         else
             DisablePick();
-// KS14 end
     }
 
     private void EnablePick()
     {
-        Deselect(); // KS14: mapping editor overhaul port
+        Deselect();
         Screen.UnPressActionsExcept(Screen.Pick);
-// KS14 start: mapping editor overhaul port
         Meta.State = CursorState.EntityOrTile;
         Meta.Color = PickColor;
         Meta.SecondColor = PickColor.WithAlpha(0.2f);
-// KS14 end
     }
 
     private void DisablePick()
     {
         Screen.Pick.Pressed = false;
-        Meta.State = CursorState.None; // KS14: mapping editor overhaul port
+        Meta.State = CursorState.None;
     }
-    #endregion // KS14: mapping editor overhaul port
-
-// KS14 start: mapping editor overhaul port
+    #endregion
     #region Handle Bindings
     private bool HandleOpenContextMenu(in PointerInputCmdArgs args)
-// KS14 end
     {
-        Deselect(); // KS14: mapping editor overhaul port
-
-// KS14 start: mapping editor overhaul port
+        Deselect();
         var coords = _transform.ToMapCoordinates(args.Coordinates);
         if (_verbs.TryGetEntityMenuEntities(coords, out var entities))
             _entityMenuController.OpenRootMenu(entities);
 
         return true;
-// KS14 end
     }
 
     private bool HandleMappingUnselect(in PointerInputCmdArgs args)
     {
-// KS14 start: mapping editor overhaul port
         if (_placement.Eraser)
             _placement.ToggleEraser();
 
@@ -941,7 +868,6 @@ public sealed partial class MappingState : GameplayStateBase
         Meta.State = CursorState.None;
 
         if (Screen.Decals.Selected is not { Prototype.Prototype: DecalPrototype })
-// KS14 end
             return false;
 
         Deselect();
@@ -952,7 +878,7 @@ public sealed partial class MappingState : GameplayStateBase
     {
 #if FULL_RELEASE
         return false;
-#endif // KS14: mapping editor overhaul port
+#endif
         if (!_admin.IsAdmin(true) || !_admin.HasFlag(AdminFlags.Host))
             return false;
 
@@ -974,19 +900,15 @@ public sealed partial class MappingState : GameplayStateBase
 
     private bool HandleEnableDelete(ICommonSession? session, EntityCoordinates coords, EntityUid uid)
     {
-// KS14 start: mapping editor overhaul port
         Screen.EraseEntityButton.Pressed = true;
         EnableEntityEraser();
-// KS14 end
         return true;
     }
 
     private bool HandleDisableDelete(ICommonSession? session, EntityCoordinates coords, EntityUid uid)
     {
-// KS14 start: mapping editor overhaul port
         Screen.EraseEntityButton.Pressed = false;
         DisableEntityEraser();
-// KS14 end
         return true;
     }
 
@@ -994,11 +916,10 @@ public sealed partial class MappingState : GameplayStateBase
     {
         MappingPrototype? button = null;
 
-        if (Screen.Pick.Pressed) // KS14: mapping editor overhaul port
+        if (Screen.Pick.Pressed)
         {
-            if (!uid.IsValid()) // KS14: mapping editor overhaul port
+            if (!uid.IsValid())
             {
-// KS14 start: mapping editor overhaul port
                 var mapPos = _transform.ToMapCoordinates(coords);
 
                 if (_mapMan.TryFindGridAt(mapPos, out var gridUid, out var grid) &&
@@ -1021,22 +942,14 @@ public sealed partial class MappingState : GameplayStateBase
 
                     return true;
                 }
-// KS14 end
             }
         }
-        else // KS14: mapping editor overhaul port
+        else
         {
-// KS14 start: mapping editor overhaul port
             return false;
         }
-// KS14 end
-
-// KS14 start: mapping editor overhaul port
         if (button != null)
             return false;
-// KS14 end
-
-// KS14 start: mapping editor overhaul port
         if (uid == EntityUid.Invalid ||
             _entityManager.GetComponentOrNull<MetaDataComponent>(uid) is not
                 { EntityPrototype: { } prototype } ||
@@ -1046,17 +959,12 @@ public sealed partial class MappingState : GameplayStateBase
             // this makes you not accidentally place something in space because you
             // miss-clicked while holding down the pick hotkey
             return true;
-// KS14 end
         }
-
-// KS14 start: mapping editor overhaul port
         // Selected an entity
         OnSelected(Screen.Entities, button);
 
         // Match rotation
         _placement.Direction = _entityManager.GetComponent<TransformComponent>(uid).LocalRotation.GetDir();
-
-// KS14 end
         return true;
     }
 
@@ -1077,8 +985,6 @@ public sealed partial class MappingState : GameplayStateBase
         Screen.EraseDecalButton.Pressed = false;
         return true;
     }
-
-    // KS14 start: port supported mapping toolbar actions from upstream PR #34302
     private bool HandleUse(in PointerInputCmdArgs args)
     {
         if (Screen.FixGridAtmos.Pressed)
@@ -1099,6 +1005,14 @@ public sealed partial class MappingState : GameplayStateBase
             return true;
         }
 
+        if (Screen.GridScreenshot.Pressed)
+        {
+            Screen.GridScreenshot.Pressed = false;
+            if (GetHoveredGrid() is { } gridEntity)
+                ExportGridScreenshot(gridEntity);
+
+            return true;
+        }
         if (Screen.GridVV.Pressed)
         {
             Screen.GridVV.Pressed = false;
@@ -1110,46 +1024,52 @@ public sealed partial class MappingState : GameplayStateBase
 
         return false;
     }
-
-    // KS14 end
-    private bool HandleMouseMiddle(in PointerInputCmdArgs args) // KS14: mapping editor overhaul port
+    private async void ExportGridScreenshot(Entity<MapGridComponent> grid)
     {
-        if (_decal.GetActiveDecal() is { Decal: not null }) // KS14: mapping editor overhaul port
+        Screen.GridScreenshot.Disabled = true;
+        try
         {
-// KS14 start: mapping editor overhaul port
+            await _mapping.ExportGridScreenshot(grid);
+        }
+        catch (Exception exception)
+        {
+            _sawmill.Error($"Failed to export grid {grid.Owner} as PNG: {exception}");
+        }
+        finally
+        {
+            if (UserInterfaceManager.ActiveScreen is MappingScreen screen)
+                screen.GridScreenshot.Disabled = false;
+        }
+    }
+    private bool HandleMouseMiddle(in PointerInputCmdArgs args)
+    {
+        if (_decal.GetActiveDecal() is { Decal: not null })
+        {
             Screen.ChangeDecalRotation(90f);
             return true;
-// KS14 end
         }
-// KS14 start: mapping editor overhaul port
 
         return false;
-// KS14 end
     }
-    #endregion // KS14: mapping editor overhaul port
+    #endregion
 
-    private async void SaveMap() // KS14: mapping editor overhaul port
+    private async void SaveMap()
     {
-        await _mapping.SaveMap(); // KS14: mapping editor overhaul port
+        await _mapping.SaveMap();
     }
 
-    public EntityUid? GetHoveredEntity() // KS14: mapping editor overhaul port
+    public EntityUid? GetHoveredEntity()
     {
-// KS14 start: mapping editor overhaul port
         if (UserInterfaceManager.CurrentlyHovered is not IViewportControl viewport ||
             _input.MouseScreenPosition is not { IsValid: true } position)
         {
             return null;
         }
-// KS14 end
-
-// KS14 start: mapping editor overhaul port
         var mapPos = viewport.PixelToMap(position.Position);
         return GetClickedEntity(mapPos);
-// KS14 end
     }
 
-    public Entity<MapGridComponent>? GetHoveredGrid() // KS14: mapping editor overhaul port
+    public Entity<MapGridComponent>? GetHoveredGrid()
     {
         if (UserInterfaceManager.CurrentlyHovered is not IViewportControl viewport ||
             _input.MouseScreenPosition is not { IsValid: true } position)
@@ -1158,37 +1078,26 @@ public sealed partial class MappingState : GameplayStateBase
         }
 
         var mapPos = viewport.PixelToMap(position.Position);
-// KS14 start: mapping editor overhaul port
         if (_mapMan.TryFindGridAt(mapPos, out var gridUid, out var grid))
         {
             return new Entity<MapGridComponent>(gridUid, grid);
         }
 
         return null;
-// KS14 end
     }
 
-    public Box2Rotated? GetHoveredTileBox2() // KS14: mapping editor overhaul port
+    public Box2Rotated? GetHoveredTileBox2()
     {
-// KS14 start: mapping editor overhaul port
         if (UserInterfaceManager.CurrentlyHovered is not IViewportControl viewport ||
             _input.MouseScreenPosition is not { IsValid: true } coords)
-// KS14 end
         {
-// KS14 start: mapping editor overhaul port
             return null;
         }
-// KS14 end
-
-// KS14 start: mapping editor overhaul port
         if (GetHoveredGrid() is not { } grid)
             return null;
 
         if (!_entityManager.TryGetComponent<TransformComponent>(grid, out var xform))
             return null;
-// KS14 end
-
-// KS14 start: mapping editor overhaul port
         var mapCoords = viewport.PixelToMap(coords.Position);
         var tileSize = grid.Comp.TileSize;
         var tileDimensions = new Vector2(tileSize, tileSize);
@@ -1205,24 +1114,17 @@ public sealed partial class MappingState : GameplayStateBase
         {
             _placement.Clear();
             _tileErase = false;
-// KS14 end
         }
 
         if (_scrollTo is not { } scrollTo)
             return;
-
-// KS14 start: mapping editor overhaul port
         var (control, list) = scrollTo;
-
-// KS14 end
         // this is not ideal but we wait until the control's height is computed to use
         // its position to scroll to
-        if (control.Height > 0 && list.PrototypeList.Visible) // KS14: mapping editor overhaul port
+        if (control.Height > 0 && list.PrototypeList.Visible)
         {
-// KS14 start: mapping editor overhaul port
             var y = control.GlobalPosition.Y - list.ScrollContainer.Height / 2 + control.Height - list.GlobalPosition.Y;
             var scroll = list.ScrollContainer;
-// KS14 end
             scroll.SetScrollValue(scroll.GetScrollValue() + new Vector2(0, y));
             _scrollTo = null;
         }
@@ -1231,7 +1133,6 @@ public sealed partial class MappingState : GameplayStateBase
     public enum CursorState
     {
         None,
-// KS14 start: mapping editor overhaul port
         Tile,
         Entity,
         EntityOrTile,
@@ -1250,6 +1151,5 @@ public sealed partial class MappingState : GameplayStateBase
         public Color Color = Color.White;
 
         public Color? SecondColor;
-// KS14 end
     }
 }
