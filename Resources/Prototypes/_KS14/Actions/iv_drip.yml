@@ -1,4 +1,3 @@
-# KS14: added in this fork
 - type: entity
   parent: BaseToggleAction
   id: ActionToggleIvDrip

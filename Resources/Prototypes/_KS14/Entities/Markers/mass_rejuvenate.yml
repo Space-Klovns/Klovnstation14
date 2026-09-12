@@ -1,0 +1,39 @@
+- type: entity
+  parent: MarkerBase
+  id: KsMassRejuvenatePlayers2
+  name: mass rejuvenate marker
+  suffix: Players, 2 tiles
+  components:
+  - type: MassRejuvenateMarker
+    radius: 2
+    playerControlledOnly: true
+
+- type: entity
+  parent: MarkerBase
+  id: KsMassRejuvenateAll2
+  name: mass rejuvenate marker
+  suffix: All entities, 2 tiles
+  components:
+  - type: MassRejuvenateMarker
+    radius: 2
+    playerControlledOnly: false
+
+- type: entity
+  parent: MarkerBase
+  id: KsMassRejuvenatePlayers4
+  name: mass rejuvenate marker
+  suffix: Players, 4 tiles
+  components:
+  - type: MassRejuvenateMarker
+    radius: 4
+    playerControlledOnly: true
+
+- type: entity
+  parent: MarkerBase
+  id: KsMassRejuvenateAll4
+  name: mass rejuvenate marker
+  suffix: All entities, 4 tiles
+  components:
+  - type: MassRejuvenateMarker
+    radius: 4
+    playerControlledOnly: false
