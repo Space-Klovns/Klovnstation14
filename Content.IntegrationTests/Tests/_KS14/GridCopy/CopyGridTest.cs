@@ -33,7 +33,6 @@ public sealed class CopyGridTest : GameTest
         var map = await pair.CreateTestMap();
 
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var gridCopy = entManager.System<GridCopySystem>();
@@ -47,7 +46,7 @@ public sealed class CopyGridTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            grid = mapManager.CreateGridEntity(map.MapId);
+            grid = mapSystem.CreateGridEntity(map.MapId);
             mapSystem.SetTiles(grid.Owner, grid.Comp, SquareTiles(4));
             xformSystem.SetLocalPosition(grid.Owner, new Vector2(100f, 50f));
 
@@ -87,7 +86,6 @@ public sealed class CopyGridTest : GameTest
         var map = await pair.CreateTestMap();
 
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var gridCopy = entManager.System<GridCopySystem>();
@@ -101,7 +99,7 @@ public sealed class CopyGridTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            grid = mapManager.CreateGridEntity(map.MapId);
+            grid = mapSystem.CreateGridEntity(map.MapId);
             mapSystem.SetTiles(grid.Owner, grid.Comp, SquareTiles(4));
             // Far from the map origin: a map-origin pivot would fling the copy ~200 tiles away.
             xformSystem.SetLocalPosition(grid.Owner, new Vector2(200f, 0f));
@@ -141,7 +139,6 @@ public sealed class CopyGridTest : GameTest
 
         var entManager = server.ResolveDependency<IEntityManager>();
         var conHost = server.ResolveDependency<IConsoleHost>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -151,7 +148,7 @@ public sealed class CopyGridTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            grid = mapManager.CreateGridEntity(map.MapId);
+            grid = mapSystem.CreateGridEntity(map.MapId);
             mapSystem.SetTiles(grid.Owner, grid.Comp, SquareTiles(4));
             // Away from the origin, so absolute and relative placement cannot coincide.
             xformSystem.SetLocalPosition(grid.Owner, new Vector2(100f, 50f));
@@ -188,7 +185,6 @@ public sealed class CopyGridTest : GameTest
         var map = await pair.CreateTestMap();
 
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var mindSystem = entManager.System<Content.Server.Mind.MindSystem>();
@@ -204,7 +200,7 @@ public sealed class CopyGridTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            grid = mapManager.CreateGridEntity(map.MapId);
+            grid = mapSystem.CreateGridEntity(map.MapId);
             mapSystem.SetTiles(grid.Owner, grid.Comp, SquareTiles(4));
 
             var mob = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, new Vector2(0.5f, 0.5f)));

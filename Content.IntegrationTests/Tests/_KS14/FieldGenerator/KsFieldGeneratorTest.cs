@@ -37,7 +37,7 @@ public sealed class KsFieldGeneratorTest : GameTest
         var testMap = await pair.CreateTestMap();
 
         var entityMan = server.EntMan;
-        var mapMan = server.MapMan;
+        var mapSystem = server.System<SharedMapSystem>();
         var mapSys = entityMan.System<SharedMapSystem>();
         var transformSys = entityMan.System<SharedTransformSystem>();
 
@@ -48,7 +48,7 @@ public sealed class KsFieldGeneratorTest : GameTest
 
         await server.WaitAssertion(() =>
         {
-            grid = mapMan.CreateGridEntity(testMap.MapId);
+            grid = mapSystem.CreateGridEntity(testMap.MapId);
 
             for (var y = 0; y <= 2; ++y)
             {
@@ -140,7 +140,7 @@ public sealed class KsFieldGeneratorTest : GameTest
         var testMap = await pair.CreateTestMap();
 
         var entityMan = server.EntMan;
-        var mapMan = server.MapMan;
+        var mapSystem = server.System<SharedMapSystem>();
         var mapSys = entityMan.System<SharedMapSystem>();
 
         Entity<MapGridComponent> grid = default;
@@ -149,7 +149,7 @@ public sealed class KsFieldGeneratorTest : GameTest
 
         await server.WaitAssertion(() =>
         {
-            grid = mapMan.CreateGridEntity(testMap.MapId);
+            grid = mapSystem.CreateGridEntity(testMap.MapId);
             mapSys.SetTile(grid, grid, Vector2i.Zero, new Tile(1));
             mapSys.SetTile(grid, grid, new Vector2i(1, 0), new Tile(1));
 

@@ -76,7 +76,7 @@ public sealed partial class KsVisualSearchSystem : KsLosSensorSystem
         var ownGrid = sensorXform.GridUid;
 
         Grids.Clear();
-        MapManager.FindGridsIntersecting(
+        MapSystem.FindGridsIntersecting(
             mapId,
             new Box2(sensorPos - new Vector2(range), sensorPos + new Vector2(range)),
             ref Grids,

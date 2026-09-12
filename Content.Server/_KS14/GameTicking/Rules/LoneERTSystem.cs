@@ -24,7 +24,6 @@ public sealed partial class LoneERTRuleComponent : Component
 public sealed partial class LoneERTSystem : GameRuleSystem<LoneERTRuleComponent>
 {
     [Dependency] private MapLoaderSystem _mapLoader = default!;
-    [Dependency] private IMapManager _mapManager = default!;
     [Dependency] private MapSystem _mapSystem = default!;
     [Dependency] private ChatSystem _chat = default!;
 
@@ -53,7 +52,7 @@ public sealed partial class LoneERTSystem : GameRuleSystem<LoneERTRuleComponent>
                     _mapSystem.InitializeMap(mapId);
 
                     // Unpause (Time)
-                    _mapManager.SetMapPaused(mapId, false);
+                    _mapSystem.SetPaused(mapId, false);
 
                     Log.Info($"LoneERT Map {mapId} initialized and unpaused.");
 

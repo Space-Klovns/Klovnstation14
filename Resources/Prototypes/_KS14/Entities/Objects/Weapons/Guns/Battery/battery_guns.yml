@@ -42,10 +42,11 @@
   - type: StaticPrice
     price: 750
   - type: Gun
-    minAngle: 6
-    maxAngle: 20
-    angleIncrease: 5
+    minAngle: 1
+    maxAngle: 25
+    angleIncrease: 8
     projectileSpeed: 25
+    angleDecay: 10
   - type: StealTarget
     stealGroup: WeaponAntiqueLaser
   - type: SentienceTarget # I hope this is only the captain's gun
@@ -78,9 +79,10 @@
   - type: Clothing
     sprite: _KS14/Objects/Weapons/Guns/Battery/lasercarbine.rsi
   - type: Gun
-    minAngle: 10
-    maxAngle: 25
-    angleIncrease: 2
+    minAngle: 5
+    maxAngle: 35
+    angleIncrease: 5
+    angleDecay: 20
     selectedMode: FullAuto
     fireRate: 5
     projectileSpeed: 20

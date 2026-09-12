@@ -10,7 +10,7 @@ namespace Content.Client._KS14.ShadowOverlay;
 
 public sealed partial class KsShadowOverlay : Overlay
 {
-    [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private EntityManager _entityManager = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private SpriteSystem _spriteSystem = default!;
@@ -45,7 +45,7 @@ public sealed partial class KsShadowOverlay : Overlay
 
         _grids.Clear();
         // doesnt work off grids, intentional
-        _mapManager.FindGridsIntersecting(args.MapId, bounds, ref _grids, approx: true);
+        _mapSystem.FindGridsIntersecting(args.MapId, bounds, ref _grids, approx: true);
         if (_grids.Count == 0)
             return;
 

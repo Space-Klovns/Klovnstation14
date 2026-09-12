@@ -27,7 +27,6 @@ namespace Content.Server.Atmos.EntitySystems;
 [UsedImplicitly]
 public sealed partial class AtmosphereSystem : SharedAtmosphereSystem
 {
-    [Dependency] private IMapManager _mapManager = default!;
     [Dependency] private ITileDefinitionManager _tileDefinitionManager = default!;
     [Dependency] private IAdminLogManager _adminLog = default!;
     [Dependency] private IParallelManager _parallel = default!;
@@ -65,6 +64,7 @@ public sealed partial class AtmosphereSystem : SharedAtmosphereSystem
         InitializeCVars();
         InitializeGridAtmosphere();
         InitializeMap();
+        InitializeKsSpacingThrust(); // KS14
 
         SubscribeLocalEvent<TileChangedEvent>(OnTileChanged);
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
@@ -101,6 +101,7 @@ public sealed partial class AtmosphereSystem : SharedAtmosphereSystem
 
         UpdateProcessing(frameTime);
         UpdateHighPressure(frameTime);
+        UpdateKsSpacingThrust(frameTime); // KS14
 
         _exposedTimer += frameTime;
 

@@ -102,7 +102,6 @@ public sealed class KsSensorSourceLifecycleTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -120,8 +119,8 @@ public sealed class KsSensorSourceLifecycleTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridV = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridT = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridV = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridT = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // Inside the ELINT's hearing reach AND the visual co-tracker's range.
             xformSystem.SetLocalPosition(gridT.Owner, new Vector2(40f, 0f));
@@ -193,7 +192,6 @@ public sealed class KsSensorSourceLifecycleTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var timing = server.ResolveDependency<IGameTiming>();
@@ -208,9 +206,9 @@ public sealed class KsSensorSourceLifecycleTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridV = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridT = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridA = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridV = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridT = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // The ally sees the target; the viewer only listens to the ally.
             xformSystem.SetLocalPosition(gridT.Owner, new Vector2(50f, 0f));
@@ -282,11 +280,10 @@ public sealed class KsSensorSourceLifecycleTest : GameTest
 
     private static Entity<MapGridComponent> MakeShipGrid(
         IEntityManager entManager,
-        IMapManager mapManager,
         SharedMapSystem mapSystem,
         MapId mapId)
     {
-        var grid = mapManager.CreateGridEntity(mapId);
+        var grid = mapSystem.CreateGridEntity(mapId);
 
         var tiles = new List<(Vector2i, Tile)>();
         for (var x = 0; x < 8; x++)

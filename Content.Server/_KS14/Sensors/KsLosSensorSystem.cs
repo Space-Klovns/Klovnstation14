@@ -19,7 +19,7 @@ namespace Content.Server._KS14.Sensors;
 /// </summary>
 public abstract partial class KsLosSensorSystem : EntitySystem
 {
-    [Dependency] protected IMapManager MapManager = default!;
+    [Dependency] protected SharedMapSystem MapSystem = default!;
     [Dependency] protected SharedTransformSystem XformSystem = default!;
     [Dependency] protected OccluderSystem Occluder = default!;
 

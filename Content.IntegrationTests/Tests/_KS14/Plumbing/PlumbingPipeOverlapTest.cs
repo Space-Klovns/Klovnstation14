@@ -148,7 +148,7 @@ public sealed class PlumbingPipeOverlapTest : GameTest
         var testMap = await pair.CreateTestMap();
 
         var entityMan = server.EntMan;
-        var mapMan = server.MapMan;
+        var mapSystem = server.System<SharedMapSystem>();
         var mapSys = entityMan.System<SharedMapSystem>();
 
         EntityUid gridUid = default;
@@ -156,7 +156,7 @@ public sealed class PlumbingPipeOverlapTest : GameTest
 
         await server.WaitAssertion(() =>
         {
-            Entity<MapGridComponent> grid = mapMan.CreateGridEntity(testMap.MapId);
+            Entity<MapGridComponent> grid = mapSystem.CreateGridEntity(testMap.MapId);
             gridUid = grid.Owner;
 
             mapSys.SetTile(grid, grid, Vector2i.Zero, new Tile(1));

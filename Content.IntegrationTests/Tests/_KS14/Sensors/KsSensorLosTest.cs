@@ -71,7 +71,6 @@ public sealed class KsSensorLosTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -85,10 +84,10 @@ public sealed class KsSensorLosTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = mapManager.CreateGridEntity(map.MapId);
+            gridA = mapSystem.CreateGridEntity(map.MapId);
             AddShipTiles(mapSystem, gridA);
-            gridBehind = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridOpen = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridBehind = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridOpen = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // Move the targets FIRST: fresh grids all overlap at the origin, so
             // the sensor must be mounted only once grid A sits there alone or it
@@ -129,7 +128,6 @@ public sealed class KsSensorLosTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -143,10 +141,10 @@ public sealed class KsSensorLosTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = mapManager.CreateGridEntity(map.MapId);
+            gridA = mapSystem.CreateGridEntity(map.MapId);
             AddShipTiles(mapSystem, gridA);
-            gridPartial = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridHidden = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridPartial = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridHidden = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // Position the targets first so grid A sits alone at the origin when
             // the sensor is mounted (fresh grids all overlap at the origin).
@@ -194,7 +192,6 @@ public sealed class KsSensorLosTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -209,11 +206,11 @@ public sealed class KsSensorLosTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = mapManager.CreateGridEntity(map.MapId);
+            gridA = mapSystem.CreateGridEntity(map.MapId);
             AddShipTiles(mapSystem, gridA);
-            gridBlocker = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridBlocked = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridClear = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridBlocker = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridBlocked = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridClear = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // Position every grid first so grid A sits alone at the origin for
             // the sensor and gridBlocker sits alone where its wall goes (fresh
@@ -256,7 +253,7 @@ public sealed class KsSensorLosTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
+        var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var visualSearch = entManager.System<KsVisualSearchSystem>();
 
@@ -269,7 +266,7 @@ public sealed class KsSensorLosTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = mapManager.CreateGridEntity(map.MapId);
+            gridA = mapSystem.CreateGridEntity(map.MapId);
             sensor = entManager.SpawnEntity(Sensor, new EntityCoordinates(gridA.Owner, Vector2.Zero));
 
             // Wall straight ahead (+X) at x=3; every other direction is open.
@@ -311,7 +308,6 @@ public sealed class KsSensorLosTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -327,8 +323,8 @@ public sealed class KsSensorLosTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = mapManager.CreateGridEntity(map.MapId);
-            gridB = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridA = mapSystem.CreateGridEntity(map.MapId);
+            gridB = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // Grid A needs tiles under the console: anchoring requires a real tile.
             AddShipTiles(mapSystem, gridA);
@@ -384,7 +380,6 @@ public sealed class KsSensorLosTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -401,7 +396,7 @@ public sealed class KsSensorLosTest : GameTest
 
             // A lone grid: nothing to detect, no datalink, so no contact pool ever
             // changes and only the yaw hook can push after the picture settles.
-            gridA = mapManager.CreateGridEntity(map.MapId);
+            gridA = mapSystem.CreateGridEntity(map.MapId);
             AddShipTiles(mapSystem, gridA);
 
             sensor = entManager.SpawnEntity(Sensor, new EntityCoordinates(gridA.Owner, new Vector2(0.5f, 0.5f)));
@@ -471,11 +466,10 @@ public sealed class KsSensorLosTest : GameTest
     /// <summary>Big enough to clear the &lt;10 mass junk filter so it is a valid sensor target.</summary>
     private static Entity<MapGridComponent> MakeShipGrid(
         IEntityManager entManager,
-        IMapManager mapManager,
         SharedMapSystem mapSystem,
         MapId mapId)
     {
-        var grid = mapManager.CreateGridEntity(mapId);
+        var grid = mapSystem.CreateGridEntity(mapId);
         AddShipTiles(mapSystem, grid);
         return grid;
     }
