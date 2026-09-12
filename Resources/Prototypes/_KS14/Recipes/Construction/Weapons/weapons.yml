@@ -1,7 +1,0 @@
-- type: construction
-  id: EnergyShieldRepair
-  graph: EnergyShieldRepair
-  startNode: start
-  targetNode: fixedEshield
-  category: construction-category-weapons
-  objectType: Item

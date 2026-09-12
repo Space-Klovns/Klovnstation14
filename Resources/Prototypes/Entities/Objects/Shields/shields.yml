@@ -474,9 +474,6 @@
           visible: false
           shader: unshaded
           map: [ "shield" ]
-    - type: Construction
-      graph: EnergyShieldRepair
-      node: fixedEshield
     - type: Item
       size: Small
       sprite: Objects/Weapons/Melee/e_shield.rsi
@@ -523,30 +520,13 @@
     - type: Damageable
     - type: Injurable
       damageContainer: Shield
-    - type: ExaminableDamage
-      messages: EnergyShieldMessages
-    - type: Destructible
-      thresholds:
-        - trigger:
-            !type:DamageTrigger
-            damage: 200
-          behaviors:
-            - !type:DoActsBehavior
-              acts: [ "Destruction" ]
-        - trigger:
-            !type:DamageTrigger
-            damage: 130
-          behaviors:
-            - !type:DoActsBehavior
-              acts: [ "Destruction" ]
-            - !type:PlaySoundBehavior
-              sound:
-                collection: GlassBreak
-            - !type:SpawnEntitiesBehavior
-              spawn:
-                BrokenEnergyShield:
-                  min: 1
-                  max: 1
+    - type: Battery # KS14: added rechargeable energy shield
+      maxCharge: 100 # KS14: energy shield health
+      startingCharge: 100
+    - type: BatterySelfRecharger # KS14: added rechargeable energy shield
+      autoRechargeRate: 3
+    - type: RechargeableEnergyShield # KS14: added rechargeable energy shield
+    - type: ExaminableBattery # KS14: display current charge on examine
     - type: StaticPrice
       price: 350
 
@@ -554,7 +534,7 @@
   name: broken energy shield
   parent: BaseItem
   id: BrokenEnergyShield
-  description: The energy shield is broken, but you can fix it with a new high capacity power cell.
+  description: Something inside is burned out, it is no longer functional. # KS14: reverted repair description
   components:
     - type: Sprite
       sprite: Objects/Weapons/Melee/e_shield.rsi
@@ -563,9 +543,6 @@
       sprite: Objects/Weapons/Melee/e_shield.rsi
       size: Small
       heldPrefix: eshield
-    - type: Tag
-      tags:
-        - BrokenEnergyShield
 
 - type: entity
   name: telescopic shield

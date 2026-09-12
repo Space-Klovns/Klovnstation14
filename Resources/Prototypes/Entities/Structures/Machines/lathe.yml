@@ -489,6 +489,7 @@
     - MedicalClothingStatic
     - EmptyMedkitsStatic
     - SurgeryStatic
+    - KlovnMedicalDevicesStatic # KS14: wearable medical device recipes
     dynamicPacks:
     - Chemistry
   - type: Machine

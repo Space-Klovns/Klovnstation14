@@ -1,8 +1,8 @@
-﻿using Robust.Client.GameObjects;
+using Robust.Client.GameObjects; // KS14
+// using Robust.Client.Input; // KS14: removed
+// using Robust.Client.Player; // KS14: removed
+// using Robust.Client.UserInterface; // KS14: removed
 using Robust.Client.Graphics;
-using Robust.Client.Input;
-using Robust.Client.Player;
-using Robust.Client.UserInterface;
 using Robust.Shared.Enums;
 using Robust.Shared.Prototypes;
 using static Content.Client.Mapping.MappingState;
@@ -11,17 +11,10 @@ namespace Content.Client.Mapping;
 
 public sealed partial class MappingOverlay : Overlay
 {
-    private static readonly ProtoId<ShaderPrototype> UnshadedShader = "unshaded";
-
+    private static readonly ProtoId<ShaderPrototype> UnshadedShader = "unshaded"; // KS14: mapping editor overhaul port
     [Dependency] private IEntityManager _entities = default!;
-    [Dependency] private IPlayerManager _player = default!;
+    /* [Dependency] private IPlayerManager _player = default!; */ // KS14: removed
     [Dependency] private IPrototypeManager _prototypes = default!;
-
-    private readonly SpriteSystem _sprite;
-
-    // 1 off in case something else uses these colors since we use them to compare
-    private static readonly Color PickColor = new(1, 255, 0);
-    private static readonly Color DeleteColor = new(255, 1, 0);
 
     private readonly Dictionary<EntityUid, Color> _oldColors = new();
 
@@ -34,55 +27,64 @@ public sealed partial class MappingOverlay : Overlay
     {
         IoCManager.InjectDependencies(this);
 
-        _sprite = _entities.System<SpriteSystem>();
-
         _state = state;
-        _shader = _prototypes.Index(UnshadedShader).Instance();
+        _shader = _prototypes.Index(UnshadedShader).Instance(); // KS14: mapping editor overhaul port
     }
 
     protected override void Draw(in OverlayDrawArgs args)
     {
         foreach (var (id, color) in _oldColors)
         {
-            if (!_entities.TryGetComponent(id, out SpriteComponent? sprite))
-                continue;
-
-            if (sprite.Color == DeleteColor || sprite.Color == PickColor)
-                _sprite.SetColor((id, sprite), color);
+// KS14 start: mapping editor overhaul port
+            if (_entities.TryGetComponent(id, out SpriteComponent? sprite))
+                sprite.Color = color;
+// KS14 end
         }
 
         _oldColors.Clear();
 
-        if (_player.LocalEntity == null)
-            return;
-
         var handle = args.WorldHandle;
         handle.UseShader(_shader);
 
-        switch (_state.State)
+        switch (_state.Meta.State) // KS14: mapping editor overhaul port
         {
-            case CursorState.Pick:
-                {
-                    if (_state.GetHoveredEntity() is { } entity &&
-                        _entities.TryGetComponent(entity, out SpriteComponent? sprite))
-                    {
-                        _oldColors[entity] = sprite.Color;
-                        _sprite.SetColor((entity, sprite), PickColor);
-                    }
+            // KS14 start: mapping editor overhaul port
+            case CursorState.Tile:
+            {
+                if (_state.GetHoveredTileBox2() is { } box)
+                    args.WorldHandle.DrawRect(box, _state.Meta.Color);
 
-                    break;
-                }
-            case CursorState.Delete:
-                {
-                    if (_state.GetHoveredEntity() is { } entity &&
-                        _entities.TryGetComponent(entity, out SpriteComponent? sprite))
-                    {
-                        _oldColors[entity] = sprite.Color;
-                        _sprite.SetColor((entity, sprite), DeleteColor);
-                    }
+                break;
+            }
+            // KS14 end
+            case CursorState.Entity: // KS14: mapping editor overhaul port
+            {
+                if (_state.GetHoveredEntity() is { } entity &&
+                    _entities.TryGetComponent(entity, out SpriteComponent? sprite))
 
-                    break;
+                {
+                    _oldColors[entity] = sprite.Color;
+                    sprite.Color = _state.Meta.Color; // KS14: mapping editor overhaul port
                 }
+
+                break;
+            }
+            case CursorState.EntityOrTile:
+            {
+                if (_state.GetHoveredEntity() is { } entity &&
+                    _entities.TryGetComponent(entity, out SpriteComponent? sprite))
+                {
+                    _oldColors[entity] = sprite.Color;
+                    sprite.Color = _state.Meta.Color; // KS14: mapping editor overhaul port
+                }
+                // KS14 start: mapping editor overhaul port
+                else if (_state.GetHoveredTileBox2() is { } box) // KS14: mapping editor overhaul port
+                {
+                    args.WorldHandle.DrawRect(box, _state.Meta.SecondColor ?? _state.Meta.Color); // KS14: mapping editor overhaul port
+                }
+                // KS14 end
+                break;
+            }
         }
 
         handle.UseShader(null);

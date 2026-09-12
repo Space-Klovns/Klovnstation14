@@ -1,5 +1,12 @@
-﻿- type: decal
+# KS14 start: mapping editor overhaul port
+- type: decal
+  id: SpaceStationSign
+  abstract: true
+
+- type: decal
+# KS14 end
   id: SpaceStationSign1
+  parent: SpaceStationSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/ss14sign.rsi
@@ -7,6 +14,7 @@
 
 - type: decal
   id: SpaceStationSign2
+  parent: SpaceStationSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/ss14sign.rsi
@@ -14,6 +22,7 @@
 
 - type: decal
   id: SpaceStationSign3
+  parent: SpaceStationSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/ss14sign.rsi
@@ -21,6 +30,7 @@
 
 - type: decal
   id: SpaceStationSign4
+  parent: SpaceStationSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/ss14sign.rsi
@@ -28,6 +38,7 @@
 
 - type: decal
   id: SpaceStationSign5
+  parent: SpaceStationSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/ss14sign.rsi
@@ -35,6 +46,7 @@
 
 - type: decal
   id: SpaceStationSign6
+  parent: SpaceStationSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/ss14sign.rsi
@@ -42,9 +54,10 @@
 
 - type: decal
   id: SpaceStationSign7
+  parent: SpaceStationSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/ss14sign.rsi
+# KS14 start: mapping editor overhaul port
+# KS14 end
     state: ss14sign7
-
-
