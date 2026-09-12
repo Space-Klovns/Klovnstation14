@@ -221,7 +221,7 @@ namespace Content.Client.Inventory
             // +16 vertically from the BoxContainer margin
             // +27 vertically from the window header
             var horizontalMenuSize = Math.Max(200, Math.Max(_handCount, _inventoryDimensions.X + 1) * (SlotControl.DefaultButtonSize + ButtonSeparation) + 20);
-            var verticalMenuSize = Math.Max(200, (_inventoryDimensions.Y + (_handCount > 0 ? 2 : 1)) * (SlotControl.DefaultButtonSize + ButtonSeparation) + 53);
+            var verticalMenuSize = Math.Max(200, (_inventoryDimensions.Y + (_handCount > 0 ? 2 : 1)) * (SlotControl.DefaultButtonSize + ButtonSeparation) + 103); // KS14: 53 -> 103, ensure the stripping menu fully fits its controls
             verticalMenuSize += 25 * _strippingMenu.ButtonContainer.Children.Count();
             _strippingMenu.SetSize = new Vector2(horizontalMenuSize, verticalMenuSize);
         }
