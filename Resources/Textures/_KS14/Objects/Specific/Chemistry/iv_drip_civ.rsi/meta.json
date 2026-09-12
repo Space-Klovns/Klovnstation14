@@ -67,6 +67,10 @@
     },
     {
       "name": "base6"
+    },
+    {
+        "name": "equipped-NECK",
+        "directions": 4
     }
   ]
 }

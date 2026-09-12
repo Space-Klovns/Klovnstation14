@@ -1,9 +1,21 @@
 - type: entity
-  parent: ClothingNeckBase
+  parent: BaseItem
   id: KsClothingOuterIvDrip
   name: IV drip
   description: A wearable intravenous drip with a configurable pump.
   components:
+  - type: Tag
+    tags:
+    - ClothMade
+    - Recyclable
+    - WhitelistChameleon
+  - type: Item
+    size: Small
+  - type: Clothing
+    sprite: _KS14/Objects/Specific/Chemistry/iv_drip_civ.rsi
+    quickEquip: true
+    slots:
+    - neck
   - type: Sprite
     sprite: _KS14/Objects/Specific/Chemistry/iv_drip_civ.rsi
     layers:
