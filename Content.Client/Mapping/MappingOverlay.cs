@@ -11,6 +11,7 @@ namespace Content.Client.Mapping;
 
 public sealed partial class MappingOverlay : Overlay
 {
+    private static readonly ProtoId<ShaderPrototype> UnshadedShader = "unshaded"; // KS14: mapping editor overhaul port
     [Dependency] private IEntityManager _entities = default!;
     /* [Dependency] private IPlayerManager _player = default!; */ // KS14: removed
     [Dependency] private IPrototypeManager _prototypes = default!;
@@ -27,7 +28,7 @@ public sealed partial class MappingOverlay : Overlay
         IoCManager.InjectDependencies(this);
 
         _state = state;
-        _shader = _prototypes.Index<ShaderPrototype>("unshaded").Instance(); // KS14: mapping editor overhaul port
+        _shader = _prototypes.Index(UnshadedShader).Instance(); // KS14: mapping editor overhaul port
     }
 
     protected override void Draw(in OverlayDrawArgs args)
