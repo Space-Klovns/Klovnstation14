@@ -35,7 +35,9 @@ public sealed partial class MappingManager : IPostInjectInit
     [Dependency] private IEntityManager _ent = default!;
 
     private ISawmill _sawmill = default!;
+#if !FULL_RELEASE // KS14: mapping export only exists in non-release builds
     private ZStdCompressionContext _zstd = default!;
+#endif
 
     private const string FavoritesPath = "/mapping_editor_favorites.yml";
     private partial void InitializeGridScreenshotExport();
