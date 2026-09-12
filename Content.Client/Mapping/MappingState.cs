@@ -879,12 +879,13 @@ public sealed partial class MappingState : GameplayStateBase
     {
 #if FULL_RELEASE
         return false;
-#endif
+#else // KS14: prevent unreachable non-release save implementation in FULL_RELEASE builds
         if (!_admin.IsAdmin(true) || !_admin.HasFlag(AdminFlags.Host))
             return false;
 
         SaveMap();
         return true;
+#endif
     }
 
     private bool HandleEnablePick(ICommonSession? session, EntityCoordinates coords, EntityUid uid)
