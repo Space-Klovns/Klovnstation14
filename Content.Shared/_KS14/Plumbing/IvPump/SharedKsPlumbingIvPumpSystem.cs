@@ -17,18 +17,7 @@ public abstract partial class SharedKsPlumbingIvPumpSystem : EntitySystem
 
     [Dependency] protected EntityQuery<BloodstreamComponent> BloodstreamQuery = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsPlumbingIvPumpComponent, ExaminedEvent>(OnExamined);
-
-        SubscribeLocalEvent<KsPlumbingIvPumpComponent, CanDragEvent>(OnCanDrag);
-        SubscribeLocalEvent<KsPlumbingIvPumpComponent, CanDropDraggedEvent>(OnCanDropDragged);
-
-        SubscribeLocalEvent<KsPlumbingIvPumpComponent, ActivateInWorldEvent>(OnActivateInWorld);
-    }
-
+    [SubscribeLocalEvent]
     private void OnExamined(Entity<KsPlumbingIvPumpComponent> entity, ref ExaminedEvent args)
     {
         args.PushMarkup(Loc.GetString("ks-plumbing-ivpump-examined", ("mode", entity.Comp.Mode.ToString())), priority: 5);
@@ -75,11 +64,13 @@ public abstract partial class SharedKsPlumbingIvPumpSystem : EntitySystem
         UpdateState(entity!);
     }
 
+    [SubscribeLocalEvent]
     private void OnCanDrag(Entity<KsPlumbingIvPumpComponent> entity, ref CanDragEvent args)
     {
         args.Handled = true;
     }
 
+    [SubscribeLocalEvent]
     private void OnCanDropDragged(Entity<KsPlumbingIvPumpComponent> entity, ref CanDropDraggedEvent args)
     {
         args.Handled = true;
@@ -94,6 +85,7 @@ public abstract partial class SharedKsPlumbingIvPumpSystem : EntitySystem
             _actionBlockerSystem.CanComplexInteract(args.User);
     }
 
+    [SubscribeLocalEvent]
     private void OnActivateInWorld(Entity<KsPlumbingIvPumpComponent> entity, ref ActivateInWorldEvent args)
     {
         if (!args.Complex ||

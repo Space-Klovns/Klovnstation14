@@ -8,13 +8,7 @@ namespace Content.Shared._KS14.Execution;
 /// </summary>
 public sealed partial class ProjectileExecutionSystem : EntitySystem
 {
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<ProjectileComponent, GunExecutedEvent>(OnProjectileExecuted);
-    }
-
+    [SubscribeLocalEvent]
     private void OnProjectileExecuted(Entity<ProjectileComponent> entity, ref GunExecutedEvent args)
     {
         args.Damage = entity.Comp.Damage;

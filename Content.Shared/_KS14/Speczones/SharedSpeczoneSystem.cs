@@ -21,14 +21,6 @@ public abstract partial class SharedSpeczoneSystem : EntitySystem
 
     [Dependency] private EntityQuery<AlwaysAllowedInSpeczoneComponent> _alwaysAllowedQuery = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<AttemptGeneralSpeczoneInterferableEvent>(OnAttemptInterfere);
-        SubscribeLocalEvent<BlockShootingInSpeczoneComponent, ShotAttemptedEvent>(OnAttemptShoot);
-    }
-
     /// <summary>
     ///     Helper for raising AttemptGeneralSpeczoneInterferableEvent
     /// </summary>
@@ -100,11 +92,13 @@ public abstract partial class SharedSpeczoneSystem : EntitySystem
         return true;
     }
 
+    [SubscribeLocalEvent]
     private void OnAttemptInterfere(ref AttemptGeneralSpeczoneInterferableEvent args)
     {
         args.Cancelled |= TryInterfereUse(args.Uid, user: args.User, predictEffects: args.Predicted);
     }
 
+    [SubscribeLocalEvent]
     private void OnAttemptShoot(Entity<BlockShootingInSpeczoneComponent> entity, ref ShotAttemptedEvent args)
     {
         if (TryInterfereUse(entity.Owner, user: args.User, predictEffects: true))

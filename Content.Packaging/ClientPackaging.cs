@@ -94,8 +94,15 @@ public static class ClientPackaging
             .Union(SharedPackaging.AdditionalIgnoredResources)
             .ToHashSet();
 
+        // KS14: server_config.toml lives in ConfigPresets as of upstream #44790, and DoResourceCopy
+        // only filters the top level of Resources/ - once a directory is copied, CopyDirIntoZip takes
+        // the whole subtree unfiltered. Un-ignoring ConfigPresets would ship the server config inside
+        // every client build. Re-enabling this means client-side presets stop working in packaged
+        // builds again, so move server_config.toml out of ConfigPresets first.
+        /*
         // dont ignore ConfigPresets ffs BROOOOOO
         ignoreSet.Remove("ConfigPresets");
+        */
 
         await RobustSharedPackaging.DoResourceCopy(Path.Combine(contentDir, "Resources"), inputPass, ignoreSet, cancel: cancel);
         // KS14 End

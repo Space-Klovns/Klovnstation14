@@ -65,45 +65,44 @@ public sealed partial class KsSensorIntelSystem : EntitySystem
         _gridQuery = GetEntityQuery<MapGridComponent>();
         _thermalSourceQuery = GetEntityQuery<KsThermalSourceComponent>();
         _radarSourceQuery = GetEntityQuery<KsRadarSourceComponent>();
-
-        // The full geometry-change surface: walls entering/leaving the hull, and tile
-        // changes (exposure counts space TILES, so wall placement alone never changes
-        // a neighbour's). Signature values never mutate at runtime.
-        SubscribeLocalEvent<KsThermalSourceComponent, ComponentStartup>(OnThermalSourceLifecycle);
-        SubscribeLocalEvent<KsThermalSourceComponent, ComponentShutdown>(OnThermalSourceLifecycle);
-        SubscribeLocalEvent<KsThermalSourceComponent, AnchorStateChangedEvent>(OnThermalSourceAnchor);
-        SubscribeLocalEvent<KsThermalSourceComponent, ReAnchorEvent>(OnThermalSourceReAnchor);
-        SubscribeLocalEvent<KsRadarSourceComponent, ComponentStartup>(OnRadarSourceLifecycle);
-        SubscribeLocalEvent<KsRadarSourceComponent, ComponentShutdown>(OnRadarSourceLifecycle);
-        SubscribeLocalEvent<KsRadarSourceComponent, AnchorStateChangedEvent>(OnRadarSourceAnchor);
-        SubscribeLocalEvent<KsRadarSourceComponent, ReAnchorEvent>(OnRadarSourceReAnchor);
-        SubscribeLocalEvent<MapGridComponent, TileChangedEvent>(OnGridTileChanged);
-        // Not <MapGridComponent, ComponentShutdown>: lifecycle events allow one
-        // handler per component type game-wide, and the map system owns that one.
-        SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoval);
     }
 
+    // The full geometry-change surface: walls entering/leaving the hull, and tile
+    // changes (exposure counts space TILES, so wall placement alone never changes
+    // a neighbour's). Signature values never mutate at runtime.
+    [SubscribeLocalEvent]
     private void OnThermalSourceLifecycle(EntityUid uid, KsThermalSourceComponent comp, ComponentStartup args) => DirtySignatureGrid(uid);
+    [SubscribeLocalEvent]
     private void OnThermalSourceLifecycle(EntityUid uid, KsThermalSourceComponent comp, ComponentShutdown args) => DirtySignatureGrid(uid);
+    [SubscribeLocalEvent]
     private void OnThermalSourceAnchor(EntityUid uid, KsThermalSourceComponent comp, ref AnchorStateChangedEvent args) => DirtySignatureGrid(uid);
+    [SubscribeLocalEvent]
     private void OnRadarSourceLifecycle(EntityUid uid, KsRadarSourceComponent comp, ComponentStartup args) => DirtySignatureGrid(uid);
+    [SubscribeLocalEvent]
     private void OnRadarSourceLifecycle(EntityUid uid, KsRadarSourceComponent comp, ComponentShutdown args) => DirtySignatureGrid(uid);
+    [SubscribeLocalEvent]
     private void OnRadarSourceAnchor(EntityUid uid, KsRadarSourceComponent comp, ref AnchorStateChangedEvent args) => DirtySignatureGrid(uid);
 
+    [SubscribeLocalEvent]
     private void OnThermalSourceReAnchor(EntityUid uid, KsThermalSourceComponent comp, ref ReAnchorEvent args)
     {
         _dirtySignatureGrids.Add(args.OldGrid);
         _dirtySignatureGrids.Add(args.Grid);
     }
 
+    [SubscribeLocalEvent]
     private void OnRadarSourceReAnchor(EntityUid uid, KsRadarSourceComponent comp, ref ReAnchorEvent args)
     {
         _dirtySignatureGrids.Add(args.OldGrid);
         _dirtySignatureGrids.Add(args.Grid);
     }
 
+    [SubscribeLocalEvent]
     private void OnGridTileChanged(EntityUid uid, MapGridComponent comp, ref TileChangedEvent args) => _dirtySignatureGrids.Add(uid);
 
+    // Not <MapGridComponent, ComponentShutdown>: lifecycle events allow one
+    // handler per component type game-wide, and the map system owns that one.
+    [SubscribeLocalEvent]
     private void OnGridRemoval(GridRemovalEvent args)
     {
         _thermalCache.Remove(args.EntityUid);

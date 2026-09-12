@@ -26,18 +26,6 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
     [Dependency] private EmagSystem _emagSystem = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<BatteryShieldingComponent, BatteryStateChangedEvent>(OnBatteryStateChanged);
-        SubscribeLocalEvent<BatteryShieldingComponent, ChargeChangedEvent>(OnChargeChanged);
-
-        SubscribeLocalEvent<BatteryShieldingComponent, GotEmaggedEvent>(OnGotEmagged);
-        SubscribeLocalEvent<BatteryShieldingComponent, BatteryShieldingToggleMessage>(OnToggleMessage);
-        SubscribeLocalEvent<BatteryShieldingComponent, KsGasMaxPressureAttemptLoseIntegrityEvent>(OnGasMaxPressureAttemptLoseIntegrity);
-    }
-
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
@@ -61,6 +49,7 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
     }
 
     // This assumes immutability of BatterySelfRecharger.............................................
+    [SubscribeLocalEvent]
     private void OnBatteryStateChanged(Entity<BatteryShieldingComponent> entity, ref BatteryStateChangedEvent args)
     {
         if (!TryComp<BatterySelfRechargerComponent>(entity, out var rechargerComponent))
@@ -83,6 +72,7 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
             EnsureComp<ActiveBatteryShieldingComponent>(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnChargeChanged(Entity<BatteryShieldingComponent> entity, ref ChargeChangedEvent args)
     {
         if (MetaData(entity).EntityLifeStage != EntityLifeStage.MapInitialized)
@@ -112,6 +102,7 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
         _sparksSystem.ExposeSpark(coordinates, exposedTemperature: 2500f, exposedVolume: 10f);
     }
 
+    [SubscribeLocalEvent]
     private void OnGotEmagged(Entity<BatteryShieldingComponent> entity, ref GotEmaggedEvent args)
     {
         if (!_emagSystem.CompareFlag(args.Type, EmagType.Interaction) ||
@@ -131,6 +122,7 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
         _sparksSystem.ExposeSpark(coordinates, exposedTemperature: 2500f, exposedVolume: 10f);
     }
 
+    [SubscribeLocalEvent]
     private void OnToggleMessage(Entity<BatteryShieldingComponent> entity, ref BatteryShieldingToggleMessage args)
     {
         if (entity.Comp.Enabled)
@@ -145,6 +137,7 @@ public abstract partial class SharedBatteryShieldingSystem : EntitySystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnGasMaxPressureAttemptLoseIntegrity(Entity<BatteryShieldingComponent> entity, ref KsGasMaxPressureAttemptLoseIntegrityEvent args)
     {
         if (args.Cancelled ||

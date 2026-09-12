@@ -23,12 +23,7 @@ public sealed partial class NPCCombatRangedPatternSystem : EntitySystem
 
     private readonly Dictionary<EntityUid, NPCRangedState> _activeAttacks = new();
 
-    public override void Initialize()
-    {
-        base.Initialize();
-        SubscribeLocalEvent<NpcRangedAttackPatternHolderComponent, ComponentShutdown>(OnHolderShutdown);
-    }
-
+    [SubscribeLocalEvent]
     private void OnHolderShutdown(EntityUid uid, NpcRangedAttackPatternHolderComponent component, ComponentShutdown args)
     {
         // Clean up any active attacks when the holder is removed

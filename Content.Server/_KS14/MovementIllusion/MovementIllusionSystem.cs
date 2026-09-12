@@ -31,8 +31,6 @@ public sealed partial class MovementIllusionSystem : EntitySystem
         _illMapQuery = GetEntityQuery<MovementIllusionMapComponent>();
         _illFocusQuery = GetEntityQuery<MovementIllusionFocusComponent>();
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
-
-        SubscribeLocalEvent<EntParentChangedMessage>(OnParentChanged);
     }
 
     public override void Update(float frameTime)
@@ -58,6 +56,7 @@ public sealed partial class MovementIllusionSystem : EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)] // The server can handle it
+    [SubscribeLocalEvent]
     private void OnParentChanged(ref EntParentChangedMessage args)
     {
         if (args.Transform.MapUid is not { } mapUid ||

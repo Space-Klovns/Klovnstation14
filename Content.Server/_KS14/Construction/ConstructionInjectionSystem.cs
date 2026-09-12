@@ -17,7 +17,6 @@ public sealed partial class ConstructionInjectionSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypeLoad);
         _collectionHook.HookAction(OnLoad);
     }
 
@@ -52,6 +51,7 @@ public sealed partial class ConstructionInjectionSystem : EntitySystem
             act.Initialize(EntityManager.EntitySysManager);
     }
 
+    [SubscribeLocalEvent]
     private void OnPrototypeLoad(PrototypesReloadedEventArgs obj)
     {
         OnLoad();

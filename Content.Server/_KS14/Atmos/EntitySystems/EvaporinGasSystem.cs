@@ -12,12 +12,7 @@ public sealed partial class EvaporinGasSystem : EntitySystem
     [Dependency] private ThirstSystem _thirstSystem = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-        SubscribeLocalEvent<EvaporinMetabolizerComponent, InhaledGasEvent>(OnGasInhaled);
-    }
-
+    [SubscribeLocalEvent]
     private void OnGasInhaled(Entity<EvaporinMetabolizerComponent> ent, ref InhaledGasEvent args)
     {
         var moles = args.Gas.GetMoles(Gas.Evaporin);

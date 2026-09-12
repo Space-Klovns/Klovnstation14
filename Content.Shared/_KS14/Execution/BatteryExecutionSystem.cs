@@ -16,13 +16,8 @@ public sealed partial class BatteryExecutionSystem : EntitySystem
     [Dependency] private SharedBatterySystem _batterySystem = default!;
     [Dependency] private IComponentFactory _componentFactory = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-        // We subscribe on the weapon, not the battery, because the damage info is on the weapon's provider.
-        SubscribeLocalEvent<BatteryAmmoProviderComponent, GunExecutedEvent>(OnBatteryAmmoProviderExecuted);
-    }
-
+    // We subscribe on the weapon, not the battery, because the damage info is on the weapon's provider.
+    [SubscribeLocalEvent]
     private void OnBatteryAmmoProviderExecuted(Entity<BatteryAmmoProviderComponent> entity, ref GunExecutedEvent args)
     {
         // Default to cancelled

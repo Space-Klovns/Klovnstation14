@@ -50,16 +50,13 @@ public sealed partial class TtsSystem : SharedTtsSystem
 
     public override void Initialize()
     {
-        SubscribeLocalEvent<EntitySpokeEvent>(OnSpoke);
-        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnCleanup);
-        SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
-
         ReloadVoices();
 
         _configurationManager.OnValueChanged(KsCCVars.TtsEndpoint, (x) => _ttsEndpoint = x, invokeImmediately: true);
         _configurationManager.OnValueChanged(KsCCVars.TtsEnabled, (x) => _enabled = x, invokeImmediately: true);
     }
 
+    [SubscribeLocalEvent]
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
     {
         if (!args.Modified.Contains(typeof(TtsVoicePrototype)))
@@ -93,6 +90,7 @@ public sealed partial class TtsSystem : SharedTtsSystem
             _timeUntilCooldownFinished.Remove(uid);
     }
 
+    [SubscribeLocalEvent]
     private void OnSpoke(EntitySpokeEvent args)
     {
         // No TTS for exotic speech: the audio goes to all of PVS and would voice the clear text.
@@ -105,6 +103,7 @@ public sealed partial class TtsSystem : SharedTtsSystem
         TrySpeak(args.Source, component.Id.Value, args.Message);
     }
 
+    [SubscribeLocalEvent]
     private void OnCleanup(RoundRestartCleanupEvent args)
     {
         _timeUntilCooldownFinished.Clear();

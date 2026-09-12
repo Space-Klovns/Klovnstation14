@@ -12,13 +12,7 @@ public sealed partial class SharedFlipOnHitSystem : EntitySystem
     [Dependency] private StandingStateSystem _standingStateSystem = default!;
     [Dependency] private SharedChatSystem _chatSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<EmoteOnHitComponent, MeleeHitEvent>(OnHit);
-    }
-
+    [SubscribeLocalEvent]
     private void OnHit(Entity<EmoteOnHitComponent> entity, ref MeleeHitEvent args)
     {
         if (args.HitEntities.Count == 0 ||

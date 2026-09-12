@@ -13,14 +13,6 @@ public sealed partial class InventoryRequiresOrganSystem : EntitySystem
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private InventorySystem _inventorySystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<InventoryRequiresOrganComponent, IsEquippingTargetAttemptEvent>(OnTargetEquippingAttempt);
-        SubscribeLocalEvent<InventoryRequiresOrganComponent, OrganRemovedFromEvent>(OnOrganRemoved);
-    }
-
     /// <returns>True if the inventory slot can continue being active.</returns>
     public static bool ShouldDisableSlot(List<ProtoId<OrganCategoryPrototype>> requiredCategories, Dictionary<ProtoId<OrganCategoryPrototype>, Entity<OrganComponent>> presentOrganCategoryCounts)
     {
@@ -38,6 +30,7 @@ public sealed partial class InventoryRequiresOrganSystem : EntitySystem
         return missingCategories == requiredCategories.Count;
     }
 
+    [SubscribeLocalEvent]
     private void OnTargetEquippingAttempt(Entity<InventoryRequiresOrganComponent> entity, ref IsEquippingTargetAttemptEvent args)
     {
         if (!entity.Comp.Categories.TryGetValue(args.Slot, out var requiredCategories))
@@ -56,6 +49,7 @@ public sealed partial class InventoryRequiresOrganSystem : EntitySystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnOrganRemoved(Entity<InventoryRequiresOrganComponent> entity, ref OrganRemovedFromEvent args)
     {
         if (_gameTiming.ApplyingState)

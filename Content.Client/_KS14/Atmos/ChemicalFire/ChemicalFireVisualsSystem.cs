@@ -51,9 +51,6 @@ public sealed partial class ChemicalFireVisualsSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<ChemicalFireComponent, AfterAutoHandleStateEvent>(OnAfterAutoHandleState);
-        SubscribeLocalEvent<ChemicalFireTileChangedEvent>(OnTileChanged);
-
         UpdatesOutsidePrediction = true;
     }
 
@@ -89,6 +86,7 @@ public sealed partial class ChemicalFireVisualsSystem : EntitySystem
             _dirtyFires.Enqueue(uid);
     }
 
+    [SubscribeLocalEvent]
     private void OnAfterAutoHandleState(Entity<ChemicalFireComponent> entity, ref AfterAutoHandleStateEvent args)
         => _dirtyFires.Enqueue(entity.Owner);
 
@@ -96,6 +94,7 @@ public sealed partial class ChemicalFireVisualsSystem : EntitySystem
     ///     A tile changing affects the chemfires standing on it and the ones directly beside it, since those
     ///         are what the <c>-west</c>/<c>-east</c>/<c>-full</c> states describe.
     /// </remarks>
+    [SubscribeLocalEvent]
     private void OnTileChanged(ref ChemicalFireTileChangedEvent args)
     {
         if (!_chemicalFireGridQuery.TryGetComponent(args.GridUid, out var gridComponent))

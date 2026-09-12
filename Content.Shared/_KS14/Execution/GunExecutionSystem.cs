@@ -44,11 +44,11 @@ public sealed partial class SharedGunExecutionSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<GunComponent, GetVerbsEvent<UtilityVerb>>(OnGetInteractionVerbsGun);
         SubscribeLocalEvent<GunComponent, ExecutionDoAfterEvent>(OnDoafterGun);
 
     }
 
+    [SubscribeLocalEvent]
     private void OnGetInteractionVerbsGun(EntityUid uid, GunComponent component, GetVerbsEvent<UtilityVerb> args)
     {
         if (args.Hands == null || args.Using == null || !args.CanAccess || !args.CanInteract)

@@ -15,14 +15,7 @@ public sealed partial class DoAfterOnTriggerSystem : EntitySystem
     [Dependency] private TriggerSystem _triggerSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<DoAfterOnTriggerComponent, TriggerEvent>(OnTrigger);
-        SubscribeLocalEvent<DoAfterOnTriggerComponent, DoAfterOnTriggerDoAfterEvent>(OnDoAfter);
-    }
-
+    [SubscribeLocalEvent]
     private void OnTrigger(Entity<DoAfterOnTriggerComponent> entity, ref TriggerEvent args)
     {
         if (args.Key is { } key &&
@@ -82,6 +75,7 @@ public sealed partial class DoAfterOnTriggerSystem : EntitySystem
         args.Predicted = true;
     }
 
+    [SubscribeLocalEvent]
     private void OnDoAfter(Entity<DoAfterOnTriggerComponent> entity, ref DoAfterOnTriggerDoAfterEvent args)
     {
         entity.Comp.CurrentUserUid = null;

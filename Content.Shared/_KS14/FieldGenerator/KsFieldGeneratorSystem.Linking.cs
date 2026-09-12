@@ -32,8 +32,6 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
             SubscribeLocalEvent<KsFieldGeneratorComponent, AnchorStateChangedEvent>(OnAnchorStateChanged);
             SubscribeLocalEvent<KsFieldGeneratorComponent, ReAnchorEvent>(OnReAnchor);
         }
-
-        SubscribeLocalEvent<KsFieldGeneratorComponent, ComponentShutdown>(OnShutdown);
     }
 
     private void ClearFields(Entity<KsFieldGeneratorComponent> entity)
@@ -247,6 +245,7 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
         return true;
     }
 
+    [SubscribeLocalEvent]
     private void OnShutdown(Entity<KsFieldGeneratorComponent> entity, ref ComponentShutdown args)
     {
         var transformComponent = Transform(entity);

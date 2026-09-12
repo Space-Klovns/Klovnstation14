@@ -6,13 +6,7 @@ public sealed partial class DismemberOnTriggerSystem : EntitySystem
 {
     [Dependency] private DismembermentSystem _dismembermentSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<DismemberOnTriggerComponent, TriggerEvent>(OnTrigger);
-    }
-
+    [SubscribeLocalEvent]
     private void OnTrigger(Entity<DismemberOnTriggerComponent> entity, ref TriggerEvent args)
     {
         if ((entity.Comp.TargetUser ? args.User : entity.Owner) is not { } targetUid)

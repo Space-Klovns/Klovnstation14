@@ -16,21 +16,13 @@ public sealed partial class KsLavaSinkingSystem : EntitySystem
 
     private static readonly ProtoId<ShaderPrototype> ShaderId = "HorizontalCut";
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsLavaSinkingComponent, ComponentStartup>(OnStartup);
-        SubscribeLocalEvent<KsLavaSinkingComponent, ComponentShutdown>(OnShutdown);
-
-        SubscribeLocalEvent<KsLavaSinkingComponent, BeforePostShaderRenderEvent>(OnShaderRender);
-    }
-
+    [SubscribeLocalEvent]
     private void OnStartup(Entity<KsLavaSinkingComponent> entity, ref ComponentStartup args)
     {
         SetShaderEnabled(entity, true);
     }
 
+    [SubscribeLocalEvent]
     private void OnShutdown(Entity<KsLavaSinkingComponent> entity, ref ComponentShutdown args)
     {
         SetShaderEnabled(entity, false);
@@ -46,6 +38,7 @@ public sealed partial class KsLavaSinkingSystem : EntitySystem
         spriteComponent.RaiseShaderEvent = enabled;
     }
 
+    [SubscribeLocalEvent]
     private void OnShaderRender(Entity<KsLavaSinkingComponent> entity, ref BeforePostShaderRenderEvent args)
     {
         var time = (float)((entity.Comp.SinkTime - _gameTiming.CurTime) / (entity.Comp.SinkTime - entity.Comp.StartTime));

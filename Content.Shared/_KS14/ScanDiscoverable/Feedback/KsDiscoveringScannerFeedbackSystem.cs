@@ -7,13 +7,7 @@ public sealed partial class KsDiscoveringScannerFeedbackSystem : EntitySystem
 {
     [Dependency] private SharedAudioSystem _audioSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsDiscoveringScannerFeedbackComponent, KsAfterScanDiscoveringEvent>(OnDiscover);
-    }
-
+    [SubscribeLocalEvent]
     private void OnDiscover(Entity<KsDiscoveringScannerFeedbackComponent> entity, ref KsAfterScanDiscoveringEvent args)
     {
         if (entity.Owner != args.InteractUsingEvent.Used)

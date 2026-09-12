@@ -24,17 +24,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
     [Dependency] private EntityQuery<MapComponent> _mapQuery = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsSuspendedZLevelFallComponent, WeightlessnessChangedEvent>(OnWeightlessnessChanged);
-
-        SubscribeLocalEvent<PhysicsComponent, EntParentChangedMessage>(OnPhysicsParentChanged,
-            after: [typeof(Shared.Movement.Systems.SharedJetpackSystem)]); // So that you dont fall when using a jetpack
-        SubscribeLocalEvent<PhysicsComponent, LandEvent>(OnPhysicsLand);
-    }
-
+    [SubscribeLocalEvent]
     private void OnWeightlessnessChanged(Entity<KsSuspendedZLevelFallComponent> entity, ref WeightlessnessChangedEvent args)
     {
         if (args.Weightless)
@@ -44,6 +34,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         Fall((entity.Owner, transformComponent), zLevelEntity: _zLevelSystem.GetZLevel((entity.Owner, transformComponent)));
     }
 
+    [SubscribeLocalEvent(after: [typeof(Shared.Movement.Systems.SharedJetpackSystem)])]
     private void OnPhysicsParentChanged(Entity<PhysicsComponent> entity, ref EntParentChangedMessage args)
     {
         if (_gameTiming.ApplyingState)
@@ -64,6 +55,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         Fall((entity, transformComponent));
     }
 
+    [SubscribeLocalEvent]
     private void OnPhysicsLand(Entity<PhysicsComponent> entity, ref LandEvent args)
     {
         Fall((entity.Owner, Transform(entity)));

@@ -16,13 +16,7 @@ public sealed partial class MeleeForceUnwieldWeaponSystem : EntitySystem
     [Dependency] private SharedPopupSystem _popup = default!;
     [Dependency] private IRobustRandom _random = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<MeleeForceUnwieldWeaponComponent, AttackedEvent>(OnAttacked);
-    }
-
+    [SubscribeLocalEvent]
     private void OnAttacked(Entity<MeleeForceUnwieldWeaponComponent> ent, ref AttackedEvent args)
     {
         // Only trigger if hit by a melee weapon

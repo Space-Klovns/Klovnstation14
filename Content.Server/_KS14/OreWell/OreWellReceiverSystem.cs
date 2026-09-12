@@ -26,17 +26,6 @@ public sealed partial class OreWellReceiverSystem : EntitySystem
     private static readonly TimeSpan Interval = TimeSpan.FromSeconds(30d);
     private TimeSpan _nextUpdate = TimeSpan.MinValue;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<OreWellReceiverComponent, ActivateInWorldEvent>(OnActivateInWorld);
-
-        SubscribeLocalEvent<OreWellReceiverComponent, PowerChangedEvent>(OnPowerChanged);
-        SubscribeLocalEvent<OreWellReceiverComponent, ComponentShutdown>(OnShutdown);
-        SubscribeLocalEvent<OreWellReceiverComponent, EntityPausedEvent>(OnPaused);
-    }
-
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
@@ -119,6 +108,7 @@ public sealed partial class OreWellReceiverSystem : EntitySystem
         _appearanceSystem.SetData(entity.Owner, OreWellReceiverVisuals.Active, active);
     }
 
+    [SubscribeLocalEvent]
     private void OnActivateInWorld(Entity<OreWellReceiverComponent> entity, ref ActivateInWorldEvent args)
     {
         if (args.Handled)
@@ -130,6 +120,7 @@ public sealed partial class OreWellReceiverSystem : EntitySystem
             SetActive(entity, entity.Comp.Enabled);
     }
 
+    [SubscribeLocalEvent]
     private void OnPowerChanged(Entity<OreWellReceiverComponent> entity, ref PowerChangedEvent args)
     {
         if (entity.Comp.Powered == args.Powered)
@@ -144,11 +135,13 @@ public sealed partial class OreWellReceiverSystem : EntitySystem
             SetActive(entity, false);
     }
 
+    [SubscribeLocalEvent]
     private void OnShutdown(Entity<OreWellReceiverComponent> entity, ref ComponentShutdown args)
     {
         SetActive(entity, false);
     }
 
+    [SubscribeLocalEvent]
     private void OnPaused(Entity<OreWellReceiverComponent> entity, ref EntityPausedEvent args)
     {
         SetActive(entity, false);

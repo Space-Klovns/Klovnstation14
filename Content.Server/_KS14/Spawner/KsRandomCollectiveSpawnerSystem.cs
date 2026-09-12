@@ -7,15 +7,6 @@ public sealed partial class KsRandomCollectiveSpawnerSystem : EntitySystem
 {
     [Dependency] private IRobustRandom _robustRandom = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsRandomCollectiveSpawnerComponent, ComponentStartup>(OnSpawnerStartup);
-        SubscribeLocalEvent<KsRandomCollectiveSpawnerComponent, ComponentShutdown>(OnSpawnerShutdown);
-        SubscribeLocalEvent<KsRandomCollectiveScopeComponent, MapInitEvent>(OnScopeMapInit);
-    }
-
     private EntityUid? GetScope(Entity<KsRandomCollectiveSpawnerComponent, TransformComponent> entity)
     {
         var scopeUid = entity.Comp1.Scope switch
@@ -28,6 +19,7 @@ public sealed partial class KsRandomCollectiveSpawnerSystem : EntitySystem
         return scopeUid;
     }
 
+    [SubscribeLocalEvent]
     private void OnSpawnerStartup(Entity<KsRandomCollectiveSpawnerComponent> entity, ref ComponentStartup args)
     {
         if (GetScope((entity, entity, Transform(entity))) is not { } scopeUid)
@@ -37,6 +29,7 @@ public sealed partial class KsRandomCollectiveSpawnerSystem : EntitySystem
         EnsureComp<KsRandomCollectiveScopeComponent>(scopeUid).Spawners.GetOrNew(entity.Comp.ProtoId).Add(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnSpawnerShutdown(Entity<KsRandomCollectiveSpawnerComponent> entity, ref ComponentShutdown args)
     {
         // i would be caching the scope uid here if tests werent crying about it
@@ -49,6 +42,7 @@ public sealed partial class KsRandomCollectiveSpawnerSystem : EntitySystem
         cache.Remove(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnScopeMapInit(Entity<KsRandomCollectiveScopeComponent> entity, ref MapInitEvent args)
     {
         if (entity.Comp.Spawners.Count == 0)

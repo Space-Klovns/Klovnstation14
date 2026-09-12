@@ -44,15 +44,8 @@ public sealed partial class GasPistonSystem : SharedGasPistonSystem
 
     private const LookupFlags InitLookupFlags = LookupFlags.Approximate | LookupFlags.Static | LookupFlags.Dynamic | LookupFlags.Uncontained;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<GasPistonComponent, MapInitEvent>(OnMapInit);
-        SubscribeLocalEvent<GasPistonComponent, AtmosDeviceUpdateEvent>(OnUpdate);
-    }
-
     // this horrible approach is taken because startcollideevent and endcollideevent dont like anchored objects
+    [SubscribeLocalEvent]
     private void OnMapInit(Entity<GasPistonComponent> entity, ref MapInitEvent args)
     {
         PopulateColliding(entity);
@@ -117,6 +110,7 @@ public sealed partial class GasPistonSystem : SharedGasPistonSystem
         entity.Comp.CollidingUids.Remove(args.OtherEntity);
     }
 
+    [SubscribeLocalEvent]
     private void OnUpdate(Entity<GasPistonComponent> entity, ref AtmosDeviceUpdateEvent args)
     {
         if (!_nodeContainerSystem.TryGetNode(entity.Owner, entity.Comp.InletName, out PipeNode? inlet))

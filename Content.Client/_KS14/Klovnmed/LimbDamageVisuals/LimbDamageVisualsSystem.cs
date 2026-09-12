@@ -12,19 +12,7 @@ public sealed partial class LimbDamageVisualsSystem : EntitySystem
     [Dependency] private DamageVisualsSystem _damageVisualsSystem = default!;
     [Dependency] private EntityQuery<BodyComponent> _bodyQuery = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<LimbDamageVisualsComponent, ComponentStartup>(OnStartup);
-        SubscribeLocalEvent<LimbDamageVisualsComponent, ComponentShutdown>(OnShutdown);
-
-        SubscribeLocalEvent<LimbDamageVisualsComponent, OrganInsertedIntoEvent>(OnOrganInsertedInto);
-        SubscribeLocalEvent<LimbDamageVisualsComponent, OrganRemovedFromEvent>(OnOrganRemovedFrom);
-
-        SubscribeLocalEvent<LimbDamageVisualsComponent, KsGetDamageVisualsEvent>(OnGetDamageVisuals);
-    }
-
+    [SubscribeLocalEvent]
     private void OnStartup(Entity<LimbDamageVisualsComponent> entity, ref ComponentStartup args)
         => _damageVisualsSystem.TryForceUpdateLayers(entity.Owner);
 
@@ -32,15 +20,19 @@ public sealed partial class LimbDamageVisualsSystem : EntitySystem
     ///     <see cref="OnGetDamageVisuals"/> ignores a component that is shutting down, so this shows
     ///     every layer we were hiding again.
     /// </remarks>
+    [SubscribeLocalEvent]
     private void OnShutdown(Entity<LimbDamageVisualsComponent> entity, ref ComponentShutdown args)
         => _damageVisualsSystem.TryForceUpdateLayers(entity.Owner);
 
+    [SubscribeLocalEvent]
     private void OnOrganInsertedInto(Entity<LimbDamageVisualsComponent> entity, ref OrganInsertedIntoEvent args)
         => _damageVisualsSystem.TryForceUpdateLayers(entity.Owner);
 
+    [SubscribeLocalEvent]
     private void OnOrganRemovedFrom(Entity<LimbDamageVisualsComponent> entity, ref OrganRemovedFromEvent args)
         => _damageVisualsSystem.TryForceUpdateLayers(entity.Owner);
 
+    [SubscribeLocalEvent]
     private void OnGetDamageVisuals(Entity<LimbDamageVisualsComponent> entity, ref KsGetDamageVisualsEvent args)
     {
         // Nothing should stay hidden on our behalf once we are going away.

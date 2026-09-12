@@ -16,14 +16,6 @@ public sealed partial class TeslaGateSystem : SharedTeslaGateSystem
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<TeslaGateComponent, StartCollideEvent>(OnGateStartCollide);
-        SubscribeLocalEvent<AlertLevelChangedEvent>(OnAlertLevelChanged);
-    }
-
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
@@ -113,12 +105,14 @@ public sealed partial class TeslaGateSystem : SharedTeslaGateSystem
         Zap(otherEntity, teslaGateComponent.ShockDamage);
     }
 
+    [SubscribeLocalEvent]
     private void OnGateStartCollide(Entity<TeslaGateComponent> teslaGate, ref StartCollideEvent args)
     {
         if (teslaGate.Comp.CurrentlyShocking)
             CollideAct(teslaGate, args.OtherEntity);
     }
 
+    [SubscribeLocalEvent]
     private void OnAlertLevelChanged(AlertLevelChangedEvent alertEvent)
     {
         if (!TryComp<AlertLevelComponent>(alertEvent.Station, out var _))
