@@ -1,15 +1,14 @@
-// KS14: added in this fork
 using System.Collections.Generic;
 using Content.Shared.Storage.Components;
-using Robust.Shared.Network; // KS14
+using Robust.Shared.Network;
 
 namespace Content.Shared.Storage.EntitySystems;
 
 public abstract partial class SharedStorageSystem
 {
-    [Dependency] private INetManager _netManager = default!; // KS14: only the server evicts storage windows
+    [Dependency] private INetManager _netManager = default!;
 
-    // KS14: preserves the order in which each actor opened storage windows.
+    // preserves the order in which each actor opened storage windows.
     private readonly Dictionary<EntityUid, LinkedList<EntityUid>> _openStorageWindows = [];
 
     private void AddOpenStorageWindow(EntityUid actor, EntityUid storage)

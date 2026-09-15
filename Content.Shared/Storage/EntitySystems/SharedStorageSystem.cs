@@ -871,7 +871,7 @@ public abstract partial class SharedStorageSystem : EntitySystem
             _nestedCheck ||
             args.Message is not OpenBoundInterfaceMessage)
             return;
-
+        // KS14 start - eviction behavior
         if (_netManager.IsClient)
         {
             if (!MakeRoomForStorageWindow(args.Target, args.Actor))
@@ -882,6 +882,7 @@ public abstract partial class SharedStorageSystem : EntitySystem
 
         if (!MakeRoomForStorageWindow(args.Target, args.Actor)) /* KS14: evict oldest storage window at limit */
             args.Cancel();
+        // KS14 end
     }
 
     private void OnEntInserted(Entity<StorageComponent> entity, ref EntInsertedIntoContainerMessage args)

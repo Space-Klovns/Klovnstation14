@@ -20,12 +20,15 @@ public sealed partial class StorageSystem : SharedStorageSystem
     private Dictionary<EntityUid, ItemStorageLocation> _oldStoredItems = new();
 
     private List<(StorageBoundUserInterface Bui, bool Value)> _queuedBuis = new();
+
+    // KS14 start
     private readonly Dictionary<EntityUid, Vector2> _replacementPositions = [];
 
     public Vector2? TakeReplacementPosition(EntityUid storage)
     {
         return _replacementPositions.Remove(storage, out var position) ? position : null;
     }
+    // KS14 end
 
     public override void Initialize()
     {
