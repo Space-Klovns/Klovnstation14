@@ -87,6 +87,7 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
         var gameplayStateLoad = UIManager.GetUIController<GameplayStateLoadController>();
         gameplayStateLoad.OnScreenLoad += OnScreenLoad;
         gameplayStateLoad.OnScreenUnload += OnScreenUnload;
+        InitializeActionConfigurationPersistence(); // KS14: persist action slots and folders in player data
     }
 
     private void OnScreenLoad()
@@ -239,6 +240,9 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
             return;
         }
 
+        if (TryActivateFolderAction(action.Owner)) /* KS14: folder navigation is client-side */
+            return;
+
         // TODO: probably should have a clientside event raised for flexibility
         if (EntityManager.TryGetComponent<TargetActionComponent>(action, out var target))
             ToggleTargeting((action, action, target));
@@ -256,10 +260,14 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
         if (action.Comp.Toggled && EntityManager.TryGetComponent<TargetActionComponent>(actionId, out var target))
             StartTargeting((action, action, target));
 
-        if (_actions.Contains(action))
+        if (TryApplyPendingActionConfiguration()) // KS14: late provider actions return to their saved position
+        {
+            RefreshActionBar();
             return;
+        }
 
-        _actions.Add(action);
+        AddActionToRoot(action); // KS14: newly granted actions belong at folder level zero
+        SaveActionConfigurationAfterChange(); // KS14: persist late grants after an edited layout is finalized
     }
 
     private void OnActionRemoved(EntityUid actionId)
@@ -270,15 +278,15 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
         if (actionId == SelectingTargetFor)
             StopTargeting();
 
-        _actions.RemoveAll(x => x == actionId);
+        RemoveActionFromFolders(actionId); // KS14: remove revoked actions from root and folders
     }
 
     private void OnActionsUpdated()
     {
         QueueWindowUpdate();
 
-        if (_actionsSystem != null)
-            _container?.SetActionData(_actionsSystem, _actions.ToArray());
+        TryApplyPendingActionConfiguration(); // KS14: action components can resolve after the action-set link
+        RefreshActionBar(); // KS14: preserve folder navigation entries
     }
 
     private void ActionButtonPressed(ButtonEventArgs args)
@@ -456,8 +464,13 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
             }
         }
 
+        SyncOpenActionFolder(); // KS14: persist edits made within the open folder
+
         if (updateSlots)
-            _container?.SetActionData(_actionsSystem, _actions.ToArray());
+        {
+            RefreshActionBar(); // KS14: route rendering through folder-aware path
+            SaveActionConfigurationAfterChange(); // KS14: commit user action-bar edits immediately
+        }
     }
 
     private void DragAction()
@@ -470,6 +483,14 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
 
         EntityUid? swapAction = null;
         var currentlyHovered = UIManager.MouseGetControl(_input.MouseScreenPosition);
+        if (currentlyHovered is ActionButton targetButton &&
+            (TryAddActionToFolder(dragged, targetButton) ||
+             TryCreateActionFolder(dragged, targetButton))) /* KS14: dropping onto an action or folder groups it */
+        {
+            _menuDragHelper.EndDrag();
+            return;
+        }
+
         if (currentlyHovered is ActionButton button)
         {
             swapAction = button.Action;
@@ -479,8 +500,8 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
         if (dragged.Parent is ActionButtonContainer)
             SetAction(dragged, swapAction, false);
 
-        if (_actionsSystem != null)
-            _container?.SetActionData(_actionsSystem, _actions.ToArray());
+        RefreshActionBar(); // KS14: include client-only folder entries
+        SaveActionConfigurationAfterChange(); // KS14: commit the completed drag layout immediately
 
         _menuDragHelper.EndDrag();
     }
@@ -532,6 +553,12 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
     {
         if (args.Function == EngineKeyFunctions.UIRightClick)
         {
+            if (TryHandleFolderRightClick(button)) /* KS14: back is immutable; root folders remove normally */
+            {
+                args.Handle();
+                return;
+            }
+
             SetAction(button, null);
             args.Handle();
             return;
@@ -546,6 +573,9 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
     private void HandleActionPressed(GUIBoundKeyEventArgs args, ActionButton button)
     {
         args.Handle();
+        if (IsFolderAction(button)) /* KS14: folders and back cannot be dragged */
+            return;
+
         if (button.Action != null)
         {
             _menuDragHelper.MouseDown(button);
@@ -579,6 +609,9 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
         _menuDragHelper.EndDrag();
 
         if (button.Action is not { } action)
+            return;
+
+        if (TryActivateFolderAction(action.Owner)) /* KS14: enter folders or return to root */
             return;
 
         // TODO: make this an event
@@ -702,13 +735,14 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
         if (_actionsSystem == null)
             return;
 
+        ResetActionFolders(); // KS14: loaded assignments replace transient folders
         _actions.Clear();
         foreach (var assign in assignments)
         {
             _actions.Add(assign.ActionId);
         }
 
-        _container?.SetActionData(_actionsSystem, _actions.ToArray());
+        RefreshActionBar(); // KS14: route rendering through folder-aware path
     }
 
     public void RemoveActionContainer()
@@ -744,13 +778,17 @@ public sealed partial class ActionUIController : UIController, IOnStateChanged<G
         if (_actionsSystem == null)
             return;
 
+        ResetActionFolders(); // KS14: folders belong to the currently linked action set
         LoadDefaultActions();
-        _container?.SetActionData(_actionsSystem, _actions.ToArray());
+        BeginLinkedActionConfiguration(); // KS14: restore stable action and folder assignments
+        RefreshActionBar(); // KS14: route rendering through folder-aware path
         QueueWindowUpdate();
     }
 
     private void OnComponentUnlinked()
     {
+        EndLinkedActionConfiguration(); // KS14: save before discarding the linked action set
+        ResetActionFolders(); // KS14: discard folders tied to the previous action set
         _container?.ClearActionData();
         QueueWindowUpdate();
         StopTargeting();

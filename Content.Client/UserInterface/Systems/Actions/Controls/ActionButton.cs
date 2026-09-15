@@ -287,12 +287,16 @@ public sealed partial class ActionButton : Control, IEntityControl
 
         if (Action is not { } action)
         {
+            HideKsFolderIcon(); // KS14: clear client-only folder visuals
             SetActionIcon(null);
             return;
         }
 
         _controller ??= UserInterfaceManager.GetUIController<ActionUIController>();
         _spriteSys ??= _entities.System<SpriteSystem>();
+        if (TryUpdateKsFolderIcon(action.Owner)) /* KS14: folders render layered previews; Back uses its normal icon */
+            return;
+
         var icon = action.Comp.Icon;
         if (_controller.SelectingTargetFor == action || action.Comp.Toggled)
         {

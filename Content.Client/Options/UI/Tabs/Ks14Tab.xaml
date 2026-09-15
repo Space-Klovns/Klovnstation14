@@ -1,4 +1,4 @@
-﻿<tabs:Ks14Tab xmlns="https://spacestation14.io"
+<tabs:Ks14Tab xmlns="https://spacestation14.io"
               xmlns:tabs="clr-namespace:Content.Client.Options.UI.Tabs"
               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
               xmlns:ui="clr-namespace:Content.Client.Options.UI">
@@ -10,6 +10,10 @@
                           VerticalExpand="True">
                 <CheckBox Name="SlurFilterEnabled"
                           Text="{Loc 'ks-ui-options-slurfilter'}"/>
+                <CheckBox Name="ActionFoldersEnabled"
+                          Text="{Loc 'ks-ui-options-action-folders'}"/>
+                <CheckBox Name="ActionLayoutPersistenceEnabled"
+                          Text="{Loc 'ks-ui-options-action-layout-persistence'}"/>
                 <ui:OptionDropDown Name="DropDownTranslateLanguage"
                                    Title="{Loc 'ks-ui-options-translate-language'}"/>
             </BoxContainer>

@@ -1,4 +1,5 @@
 using System.Linq;
+using Content.Client._KS14.Actions; // KS14
 using Content.Client.Actions;
 using Content.Shared.Input;
 using Robust.Client.Input;
@@ -30,7 +31,8 @@ public partial class ActionButtonContainer : GridContainer
 
     public void SetActionData(ActionsSystem system, params EntityUid?[] actionTypes)
     {
-        var uniqueCount = Math.Min(system.GetClientActions().Count(), actionTypes.Length + 1);
+        var virtualActionCount = actionTypes.Count(actionUid => actionUid is { } uid && _entity.HasComponent<KsActionFolderComponent>(uid)); // KS14: include folders and Back in capacity
+        var uniqueCount = Math.Min(system.GetClientActions().Count() + virtualActionCount, actionTypes.Length + 1); // KS14: virtual entries do not exist in the server action set
         var keys = ContentKeyFunctions.GetHotbarBoundKeys();
 
         for (var i = 0; i < uniqueCount; i++)
