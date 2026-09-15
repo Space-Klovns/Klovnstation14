@@ -302,6 +302,7 @@ public abstract partial class SharedStorageSystem : EntitySystem
 
     private void OnBoundUIClosed(EntityUid uid, StorageComponent storageComp, BoundUIClosedEvent args)
     {
+        RemoveOpenStorageWindow(args.Actor, uid); // KS14: track storage window open order
         CloseNestedInterfaces(uid, args.Actor, storageComp);
 
         // If UI is closed for everyone
@@ -527,6 +528,10 @@ public abstract partial class SharedStorageSystem : EntitySystem
     }
 
     protected virtual void HideStorageWindow(EntityUid uid, EntityUid actor)
+    {
+    }
+
+    protected virtual void PrepareStorageWindowReplacement(EntityUid oldStorage, EntityUid newStorage, EntityUid actor)
     {
     }
 
@@ -855,6 +860,7 @@ public abstract partial class SharedStorageSystem : EntitySystem
 
     private void OnBoundUIOpen(Entity<StorageComponent> ent, ref BoundUIOpenedEvent args)
     {
+        AddOpenStorageWindow(args.Actor, ent.Owner); // KS14: track storage window open order
         UpdateAppearance((ent.Owner, ent.Comp, null));
     }
 
@@ -866,33 +872,16 @@ public abstract partial class SharedStorageSystem : EntitySystem
             args.Message is not OpenBoundInterfaceMessage)
             return;
 
-        var uid = args.Target;
-        var actor = args.Actor;
-        var count = 0;
-
-        if (_userQuery.TryComp(actor, out var userComp))
+        if (_netManager.IsClient)
         {
-            foreach (var (ui, keys) in userComp.OpenInterfaces)
-            {
-                if (ui == uid)
-                    continue;
+            if (!MakeRoomForStorageWindow(args.Target, args.Actor))
+                args.Cancel(); // KS14: reject only when the client cannot predict a replacement
 
-                foreach (var key in keys)
-                {
-                    if (key is not StorageComponent.StorageUiKey)
-                        continue;
-
-                    count++;
-
-                    if (count >= _openStorageLimit)
-                    {
-                        args.Cancel();
-                    }
-
-                    break;
-                }
-            }
+            return;
         }
+
+        if (!MakeRoomForStorageWindow(args.Target, args.Actor)) /* KS14: evict oldest storage window at limit */
+            args.Cancel();
     }
 
     private void OnEntInserted(Entity<StorageComponent> entity, ref EntInsertedIntoContainerMessage args)

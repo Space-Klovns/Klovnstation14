@@ -91,7 +91,7 @@ public sealed partial class StorageUIController : UIController, IOnSystemChanged
         StaticStorageUIEnabled = obj;
     }
 
-    public StorageWindow CreateStorageWindow(StorageBoundUserInterface sBui)
+    public StorageWindow CreateStorageWindow(StorageBoundUserInterface sBui, Vector2? replacementPosition /* KS14: position of a predicted replacement */)
     {
         var window = new StorageWindow();
         window.MouseFilter = Control.MouseFilterMode.Pass;
@@ -155,7 +155,11 @@ public sealed partial class StorageUIController : UIController, IOnSystemChanged
         else
         {
             // Open at parent position if it's open.
-            if (_ui.TryGetOpenUi<StorageBoundUserInterface>(EntityManager.GetComponent<TransformComponent>(sBui.Owner).ParentUid,
+            if (replacementPosition is { } position /* KS14: use replaced window position */)
+            {
+                window.Open(position);
+            }
+            else if (_ui.TryGetOpenUi<StorageBoundUserInterface>(EntityManager.GetComponent<TransformComponent>(sBui.Owner).ParentUid,
                     StorageComponent.StorageUiKey.Key, out var bui) && bui.Position != null)
             {
                 window.Open(bui.Position.Value);

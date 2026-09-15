@@ -20,6 +20,12 @@ public sealed partial class StorageSystem : SharedStorageSystem
     private Dictionary<EntityUid, ItemStorageLocation> _oldStoredItems = new();
 
     private List<(StorageBoundUserInterface Bui, bool Value)> _queuedBuis = new();
+    private readonly Dictionary<EntityUid, Vector2> _replacementPositions = [];
+
+    public Vector2? TakeReplacementPosition(EntityUid storage)
+    {
+        return _replacementPositions.Remove(storage, out var position) ? position : null;
+    }
 
     public override void Initialize()
     {
@@ -100,6 +106,17 @@ public sealed partial class StorageSystem : SharedStorageSystem
         {
             _queuedBuis.Add((storageBui, false));
         }
+    }
+
+    protected override void PrepareStorageWindowReplacement(EntityUid oldStorage, EntityUid newStorage, EntityUid actor)
+    {
+        if (!UI.TryGetOpenUi<StorageBoundUserInterface>(oldStorage, StorageComponent.StorageUiKey.Key, out var storageBui))
+            return;
+
+        if (storageBui.Position is { } position)
+            _replacementPositions[newStorage] = position;
+
+        storageBui.Hide();
     }
 
     protected override void ShowStorageWindow(EntityUid uid, EntityUid actor)
