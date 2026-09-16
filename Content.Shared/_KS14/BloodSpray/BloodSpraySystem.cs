@@ -17,7 +17,6 @@ namespace Content.Shared._KS14.BloodSpray;
 
 public sealed partial class BloodSpraySystem : EntitySystem
 {
-
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
