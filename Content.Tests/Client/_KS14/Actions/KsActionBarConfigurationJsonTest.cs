@@ -44,6 +44,7 @@ public sealed class KsActionBarConfigurationJsonTest
             Assert.That(restored.Version, Is.EqualTo(KsActionBarConfiguration.CurrentVersion));
             Assert.That(restored.Entries, Has.Count.EqualTo(2));
             Assert.That(restored.Entries[0].Action?.ActionPrototype, Is.EqualTo("ActionStand"));
+            Assert.That(restored.Entries[0].Action?.ProviderPrototype, Is.Null);
             Assert.That(restored.Entries[1].Folder, Has.Count.EqualTo(2));
             Assert.That(restored.Entries[1].Folder?[0].ProviderPrototype, Is.EqualTo("HandheldPDA"));
             Assert.That(restored.Entries[1].Folder?[1].ActionPrototype, Is.EqualTo("ActionOpenStorage"));
@@ -60,10 +61,19 @@ public sealed class KsActionBarConfigurationJsonTest
     }
 
     [Test]
-    public void InnateIdentityIgnoresTransientProvider()
+    public void IntrinsicIdentityDoesNotMatchProvidedIdentity()
     {
         var saved = Identity("ActionScream", null, 0);
-        var current = Identity("ActionScream", "TransientPlayerProvider", 0);
+        var current = Identity("ActionScream", "ClothingMaskClown", 0);
+
+        Assert.That(KsActionBarIdentity.MatchesSaved(saved, current), Is.False);
+    }
+
+    [Test]
+    public void BlankProviderMatchesIntrinsicIdentity()
+    {
+        var saved = Identity("ActionScream", string.Empty, 0);
+        var current = Identity("ActionScream", null, 0);
 
         Assert.That(KsActionBarIdentity.MatchesSaved(saved, current), Is.True);
     }
@@ -76,7 +86,7 @@ public sealed class KsActionBarConfigurationJsonTest
 
         Assert.That(KsActionBarIdentity.MatchesSaved(saved, current), Is.False);
     }
-    private static KsSavedActionIdentity Identity(string action, string? provider, int occurrence)
+    private static KsSavedActionIdentity Identity(string action, string provider, int occurrence)
     {
         return new KsSavedActionIdentity
         {

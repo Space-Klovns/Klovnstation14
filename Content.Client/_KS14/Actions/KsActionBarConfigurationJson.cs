@@ -119,10 +119,10 @@ public static class KsActionBarConfigurationJson
     {
         builder.Append("{ \"actionPrototype\": ");
         AppendJsonString(builder, identity.ActionPrototype);
-        if (identity.ProviderPrototype != null)
+        if (KsActionBarIdentity.NormalizeProvider(identity.ProviderPrototype) is { } providerPrototype)
         {
             builder.Append(", \"providerPrototype\": ");
-            AppendJsonString(builder, identity.ProviderPrototype);
+            AppendJsonString(builder, providerPrototype);
         }
 
         builder.Append(", \"occurrence\": ").Append(identity.Occurrence).Append(" }");
@@ -188,7 +188,7 @@ public static class KsActionBarConfigurationJson
 
         TryGetScalar(mapping, "providerPrototype", out var providerPrototype);
         identity.ActionPrototype = actionPrototype;
-        identity.ProviderPrototype = providerPrototype;
+        identity.ProviderPrototype = KsActionBarIdentity.NormalizeProvider(providerPrototype);
         identity.Occurrence = occurrence;
         return true;
     }

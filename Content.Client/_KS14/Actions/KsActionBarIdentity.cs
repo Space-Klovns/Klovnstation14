@@ -9,6 +9,11 @@ internal static class KsActionBarIdentity
     {
         return saved.ActionPrototype == current.ActionPrototype &&
                saved.Occurrence == current.Occurrence &&
-               (saved.ProviderPrototype == null || saved.ProviderPrototype == current.ProviderPrototype);
+               NormalizeProvider(saved.ProviderPrototype) == NormalizeProvider(current.ProviderPrototype);
+    }
+
+    public static string? NormalizeProvider(string? providerPrototype)
+    {
+        return string.IsNullOrWhiteSpace(providerPrototype) ? null : providerPrototype;
     }
 }

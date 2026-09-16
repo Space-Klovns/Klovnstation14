@@ -25,7 +25,6 @@ public sealed partial class ActionUIController
     private HashSet<ActionPersistenceKey>? _lastAppliedActionIdentities;
     private HashSet<EntityUid>? _lastAppliedActionUids;
 
-
     private readonly record struct ActionPersistenceKey(
         string ActionPrototype,
         string? ProviderPrototype,
@@ -195,6 +194,7 @@ public sealed partial class ActionUIController
 
         return true;
     }
+
     private void ApplyActionConfiguration(KsActionBarConfiguration configuration)
     {
         if (_actionsSystem == null)
@@ -265,7 +265,7 @@ public sealed partial class ActionUIController
         HashSet<EntityUid> assigned,
         out EntityUid actionUid)
     {
-        // Prefer the exact provider-qualified identity whenever it exists.
+        // Provider identity is part of the key so an earlier item action cannot occupy an intrinsic action's slot.
         foreach (var (uid, identity) in current)
         {
             if (!assigned.Contains(uid) && ToKey(identity) == ToKey(saved))
@@ -273,21 +273,6 @@ public sealed partial class ActionUIController
                 assigned.Add(uid);
                 actionUid = uid;
                 return true;
-            }
-        }
-
-        // Innate actions were saved without a provider. During their late grant the replicated Container can
-        // temporarily look like an external provider, so fall back to their action prototype and occurrence.
-        if (saved.ProviderPrototype == null)
-        {
-            foreach (var (uid, identity) in current)
-            {
-                if (!assigned.Contains(uid) && KsActionBarIdentity.MatchesSaved(saved, identity))
-                {
-                    assigned.Add(uid);
-                    actionUid = uid;
-                    return true;
-                }
             }
         }
 
@@ -344,7 +329,7 @@ public sealed partial class ActionUIController
     {
         return new ActionPersistenceKey(
             identity.ActionPrototype,
-            identity.ProviderPrototype,
+            KsActionBarIdentity.NormalizeProvider(identity.ProviderPrototype),
             identity.Occurrence);
     }
 }
