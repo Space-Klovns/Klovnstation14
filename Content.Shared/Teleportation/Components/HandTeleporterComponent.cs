@@ -3,7 +3,6 @@ using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 
 namespace Content.Shared.Teleportation.Components;
 
@@ -32,11 +31,11 @@ public sealed partial class HandTeleporterComponent : Component
     [DataField]
     public bool AllowPortalsOnDifferentMaps;
 
-    [DataField("firstPortalPrototype", customTypeSerializer: typeof(PrototypeIdSerializer<EntityPrototype>))]
-    public string FirstPortalPrototype = "PortalRed";
+    [DataField]
+    public EntProtoId FirstPortalPrototype = "PortalRed";
 
-    [DataField("secondPortalPrototype", customTypeSerializer: typeof(PrototypeIdSerializer<EntityPrototype>))]
-    public string SecondPortalPrototype = "PortalBlue";
+    [DataField]
+    public EntProtoId SecondPortalPrototype = "PortalBlue";
 
     [DataField("newPortalSound")]
     public SoundSpecifier NewPortalSound =
@@ -45,17 +44,15 @@ public sealed partial class HandTeleporterComponent : Component
             Params = AudioParams.Default.WithVolume(-2f)
         };
 
-    [DataField("clearPortalsSound")]
+    [DataField]
     public SoundSpecifier ClearPortalsSound = new SoundPathSpecifier("/Audio/Machines/button.ogg");
 
     /// <summary>
     ///     Delay for creating the portals in seconds.
     /// </summary>
-    [DataField("portalCreationDelay")]
+    [DataField]
     public float PortalCreationDelay = 1.0f;
 }
 
 [Serializable, NetSerializable]
-public sealed partial class TeleporterDoAfterEvent : SimpleDoAfterEvent
-{
-}
+public sealed partial class TeleporterDoAfterEvent : SimpleDoAfterEvent;

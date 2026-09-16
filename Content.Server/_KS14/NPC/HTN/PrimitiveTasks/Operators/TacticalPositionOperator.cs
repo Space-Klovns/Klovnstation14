@@ -15,7 +15,7 @@ using Content.Server.NPC.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Random;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
+using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 
@@ -42,8 +42,8 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     /// Marker-phase utility query to try first (e.g. an existing ComponentQuery against NpcCampingSpot).
     /// Null/omitted skips the marker phase entirely and always uses the dynamic algorithm.
     /// </summary>
-    [DataField("markerProto", customTypeSerializer: typeof(PrototypeIdSerializer<UtilityQueryPrototype>))]
-    public string? MarkerPrototype;
+    [DataField("markerProto")]
+    public ProtoId<UtilityQueryPrototype>? MarkerPrototype;
 
     [DataField] public string Key = "TacticalTarget";
 
