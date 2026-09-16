@@ -1,0 +1,179 @@
+- type: tile
+  id: KsTileOrbitalLightSteelClean
+  parent: BaseStationTile
+  name: ks-tile-orbital-light-steel-clean
+  sprite: /Textures/_KS14/Tiles/Orbital/light_steel_clean.png
+  variants: 4
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0 ]
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  id: KsTileOrbitalLightSteelSlightlyGrimy
+  parent: BaseStationTile
+  name: ks-tile-orbital-light-steel-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/Orbital/light_steel_slightly_grimy.png
+  variants: 4
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0 ]
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  id: KsTileOrbitalLightSteelVeryGrimy
+  parent: BaseStationTile
+  name: ks-tile-orbital-light-steel-very-grimy
+  sprite: /Textures/_KS14/Tiles/Orbital/light_steel_very_grimy.png
+  variants: 4
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0 ]
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  id: KsTileOrbitalLightSteelDamaged
+  parent: BaseStationTile
+  name: ks-tile-orbital-light-steel-damaged
+  sprite: /Textures/_KS14/Tiles/Orbital/light_steel_damaged.png
+  variants: 4
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0 ]
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  id: KsTileOrbitalBaseSteelClean
+  parent: BaseStationTile
+  name: ks-tile-orbital-base-steel-clean
+  sprite: /Textures/_KS14/Tiles/Orbital/base_steel_clean.png
+  variants: 4
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0 ]
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  id: KsTileOrbitalBaseSteelSlightlyGrimy
+  parent: BaseStationTile
+  name: ks-tile-orbital-base-steel-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/Orbital/base_steel_slightly_grimy.png
+  variants: 4
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0 ]
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  id: KsTileOrbitalBaseSteelVeryGrimy
+  parent: BaseStationTile
+  name: ks-tile-orbital-base-steel-very-grimy
+  sprite: /Textures/_KS14/Tiles/Orbital/base_steel_very_grimy.png
+  variants: 4
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0 ]
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  id: KsTileOrbitalBaseSteelDamaged
+  parent: BaseStationTile
+  name: ks-tile-orbital-base-steel-damaged
+  sprite: /Textures/_KS14/Tiles/Orbital/base_steel_damaged.png
+  variants: 4
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0 ]
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  id: KsTileOrbitalDarkSteelClean
+  parent: BaseStationTile
+  name: ks-tile-orbital-dark-steel-clean
+  sprite: /Textures/_KS14/Tiles/Orbital/dark_steel_clean.png
+  variants: 4
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0 ]
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  id: KsTileOrbitalDarkSteelSlightlyGrimy
+  parent: BaseStationTile
+  name: ks-tile-orbital-dark-steel-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/Orbital/dark_steel_slightly_grimy.png
+  variants: 4
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0 ]
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  id: KsTileOrbitalDarkSteelVeryGrimy
+  parent: BaseStationTile
+  name: ks-tile-orbital-dark-steel-very-grimy
+  sprite: /Textures/_KS14/Tiles/Orbital/dark_steel_very_grimy.png
+  variants: 4
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0 ]
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  id: KsTileOrbitalDarkSteelDamaged
+  parent: BaseStationTile
+  name: ks-tile-orbital-dark-steel-damaged
+  sprite: /Textures/_KS14/Tiles/Orbital/dark_steel_damaged.png
+  variants: 4
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0 ]
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  id: KsTileOrbitalTechmaintSlightlyGrimy
+  parent: BaseStationTile
+  name: ks-tile-orbital-techmaint-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/Orbital/techmaint_slightly_grimy.png
+  variants: 4
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0 ]
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  id: KsTileOrbitalTechmaintVeryGrimy
+  parent: BaseStationTile
+  name: ks-tile-orbital-techmaint-very-grimy
+  sprite: /Textures/_KS14/Tiles/Orbital/techmaint_very_grimy.png
+  variants: 4
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0 ]
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  id: KsTileOrbitalTechmaintDamaged
+  parent: BaseStationTile
+  name: ks-tile-orbital-techmaint-damaged
+  sprite: /Textures/_KS14/Tiles/Orbital/techmaint_damaged.png
+  variants: 4
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0 ]
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  id: KsTileOrbitalTechmaintTwoSlightlyGrimy
+  parent: BaseStationTile
+  name: ks-tile-orbital-techmaint-two-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/Orbital/techmaint_2_slightly_grimy.png
+  variants: 4
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0 ]
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  id: KsTileOrbitalTechmaintTwoVeryGrimy
+  parent: BaseStationTile
+  name: ks-tile-orbital-techmaint-two-very-grimy
+  sprite: /Textures/_KS14/Tiles/Orbital/techmaint_2_very_grimy.png
+  variants: 4
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0 ]
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  id: KsTileOrbitalTechmaintTwoDamaged
+  parent: BaseStationTile
+  name: ks-tile-orbital-techmaint-two-damaged
+  sprite: /Textures/_KS14/Tiles/Orbital/techmaint_2_damaged.png
+  variants: 4
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0 ]
+  footstepSounds:
+    collection: FootstepHull
