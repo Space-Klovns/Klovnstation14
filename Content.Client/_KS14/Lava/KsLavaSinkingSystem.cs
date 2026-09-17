@@ -46,6 +46,7 @@ public sealed partial class KsLavaSinkingSystem : EntitySystem
             new SpriteComponent.PostShaderArgs(KsPostShaderIds.LavaSinking, shaderInstance)
             {
                 RaiseShaderEvent = true,
+                Before = KsPostShaderIds.BeforeOutlines,
             });
     }
 

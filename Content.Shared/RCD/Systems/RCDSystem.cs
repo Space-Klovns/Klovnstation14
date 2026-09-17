@@ -247,7 +247,7 @@ public sealed partial class RCDSystem : EntitySystem
             return;
 
         // KS14 Start
-        if (_speczoneSystem.AttemptInterfere(uid, user: args.User, predicted: true))
+        if (_speczoneSystem.AttemptInterfere(uid, userUid: args.User, predicted: true))
             return;
         // KS14 End
 
