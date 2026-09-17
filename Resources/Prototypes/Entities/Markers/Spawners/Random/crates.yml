@@ -43,7 +43,10 @@
   id: LowValueFunCrateTable
   table: !type:GroupSelector
     children:
-    # KS14 - Removed slop
+    - id: CrateFunPlushie
+      weight: 2
+    - id: CrateFunLizardPlushieBulk
+    - id: CrateFunSharkPlushieBulk
     - id: CrateCandles
     - id: CrateFunArtSupplies
     - id: CrateFunFoamGuns
@@ -216,7 +219,6 @@
         - id: CrateEngineeringTeslaGroundingRod
         - id: CrateEngineeringParticleAccelerator
         - id: CrateRCD
-        - id: CrateRPD # Starlight: RPD
         - id: CrateEngineeringGear
     offset: 0.0
 

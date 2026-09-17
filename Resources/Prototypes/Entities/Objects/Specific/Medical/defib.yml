@@ -40,12 +40,6 @@
     - type: GuideHelp
       guides:
       - MedicalDoctor
-    - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-      sound:
-        path: /Audio/_KS14/Handling/component_pickup.ogg
-    - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-      sound:
-        path: /Audio/_KS14/Handling/component_drop.ogg
 
 - type: entity
   id: Defibrillator
@@ -121,8 +115,7 @@
   - type: MeleeWeapon
     damage:
       types:
-        Blunt: 10
-        Shock: 8
+        Blunt: 8
   - type: ItemToggleMeleeWeapon
     activatedSoundOnHit:
       path: /Audio/Items/Defib/defib_zap.ogg

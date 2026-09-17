@@ -1,0 +1,16 @@
+- requirements: !Remove
+  - role: JobChemist
+    time: 2h
+  - role: JobMedicalDoctor
+    time: 3h
+  type: !PartialOnly job
+  id: ChiefMedicalOfficer
+- equipment:
+    belt: ClothingBeltMedicalFilled
+  type: !PartialOnly startingGear
+  id: CMOGear
+- equipment:
+    belt: ClothingBeltMedical
+  type: !PartialOnly chameleonOutfit
+  id: ChiefMedicalOfficerChameleonOutfit
+...

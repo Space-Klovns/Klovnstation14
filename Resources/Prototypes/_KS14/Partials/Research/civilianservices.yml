@@ -1,0 +1,94 @@
+- position: -3,4
+  technologyPrerequisites:
+  - AdvancedEntertainment
+  type: !PartialOnly technology
+  id: Hydroponics
+- position: 0,4
+  technologyPrerequisites:
+  - AdvancedEntertainment
+  - RipleyAPLU
+  type: !PartialOnly technology
+  id: CritterMechs
+- position: 1,4
+  technologyPrerequisites:
+  - AdvancedEntertainment
+  type: !PartialOnly technology
+  id: AudioVisualCommunication
+- recipeUnlocks: !Remove
+  - ComputerTelevisionCircuitboard
+  - SynthesizerInstrument
+  - DawInstrumentMachineCircuitboard
+  - MassMediaCircuitboard
+  - JukeboxCircuitBoard
+  - Boombox
+  position: 0,2
+  type: !PartialOnly technology
+  id: AdvancedEntertainment
+- position: -3,5
+  technologyPrerequisites:
+  - Hydroponics
+  type: !PartialOnly technology
+  id: MeatManipulation
+- position: 1,5
+  technologyPrerequisites:
+  - AudioVisualCommunication
+  type: !PartialOnly technology
+  id: FauxAstroTiles
+- position: 3,5
+  technologyPrerequisites:
+  - Hydroponics
+  type: !PartialOnly technology
+  id: BiochemicalStasis
+- position: -1, 4
+  technologyPrerequisites:
+  - AdvancedEntertainment
+  - BasicRobotics
+  type: !PartialOnly technology
+  id: MechanizedTreatment
+- position: -1,6
+  technologyPrerequisites:
+  - MechanizedTreatment
+  type: !PartialOnly technology
+  id: AdvancedCleaning
+- position: 0,6
+  technologyPrerequisites:
+  - PushHorn
+  - RipleyAPLU
+  type: !PartialOnly technology
+  id: HONKMech
+- position: -1,7
+  technologyPrerequisites:
+  - AdvancedCleaning
+  type: !PartialOnly technology
+  id: AdvancedSpray
+- position: 1,8
+  technologyPrerequisites:
+  - MeatManipulation
+  - FauxAstroTiles
+  type: !PartialOnly technology
+  id: BluespaceCargoTransport
+- position: 0,5
+  technologyPrerequisites:
+  - CritterMechs
+  type: !PartialOnly technology
+  id: PushHorn
+- position: 1,9
+  technologyPrerequisites:
+  - BluespaceCargoTransport
+  type: !PartialOnly technology
+  id: QuantumFiberWeaving
+- recipeUnlocks: !Remove
+  - BluespaceBeaker
+  - SyringeBluespace
+  - KsPlumbingTeleporterRecipientCircuitboard
+  position: 2,6
+  technologyPrerequisites:
+  - BiochemicalStasis
+  type: !PartialOnly technology
+  id: BluespaceChemistry
+- position: 2,7
+  technologyPrerequisites:
+  - BluespaceChemistry
+  type: !PartialOnly technology
+  id: LauncherSyringe
+...

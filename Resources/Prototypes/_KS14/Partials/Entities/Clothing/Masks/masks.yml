@@ -1,0 +1,30 @@
+- components:
+  - type: EmoteAudioEffect
+    emoteCategory: Vocal
+    presetId: MuffledMask
+  type: !PartialOnly entity
+  id: ClothingMaskGas
+- components:
+  - type: TriggerOnMobstateChange
+    mobState: [Dead]
+    keyOut: death
+  - type: EmitSoundOnTrigger
+    keysIn: [death]
+    sound:
+      path: "/Audio/_KS14/Effects/Hailer/sec_death.ogg"
+      params:
+        volume: 4
+        variation: 0.1
+  type: !PartialOnly entity
+  id: ClothingMaskGasSecurity
+- components:
+  - type: Appearance
+  type: !PartialOnly entity
+  id: ClothingMaskClownBase
+- parent: !Remove [BaseClothingMaskClownUnfoldable, BaseFoldable]
+  components:
+  - type: Tag
+  - type: HideLayerClothing
+  type: !PartialOnly entity
+  id: ClothingMaskClown
+...

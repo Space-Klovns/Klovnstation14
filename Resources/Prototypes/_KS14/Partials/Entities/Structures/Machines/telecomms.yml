@@ -1,0 +1,9 @@
+- components:
+  - sound:
+      path: /Audio/Ambience/Objects/server_fans.ogg
+      collection: !Remove ''
+    type: AmbientSound
+  - type: StationAiWhitelist
+  type: !PartialOnly entity
+  id: TelecomServer
+...

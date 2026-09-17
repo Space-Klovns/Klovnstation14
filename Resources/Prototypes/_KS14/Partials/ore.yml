@@ -1,0 +1,4 @@
+- maxOreYield: 2
+  type: !PartialOnly ore
+  id: OreSalt
+...

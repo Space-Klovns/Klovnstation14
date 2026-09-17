@@ -1,0 +1,6 @@
+- requirements: !Remove
+  - department: Security
+    time: 3h
+  type: !PartialOnly job
+  id: SecurityOfficer
+...

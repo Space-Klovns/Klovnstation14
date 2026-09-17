@@ -21,7 +21,7 @@
   - MagazineBoxPistolPractice
   - MagazineBoxRiflePractice
   - WeaponDisablerPractice
-  - WeaponLaserCarbineProjectilePractice #KS14: changed to projectile
+  - WeaponLaserCarbinePractice
   - MagazineLightRiflePractice
   - MagazineRiflePractice
   - MagazinePistolPractice
@@ -94,7 +94,6 @@
   - GrenadeEMP
   - GrenadeFlash
   - MagazineGrenadeEmpty
-  - ClusterBang
 
 # Shared between secfab and emagged protolathe
 - type: latheRecipePack
@@ -131,7 +130,7 @@
   - Truncheon
   - WeaponAdvancedLaser
   - WeaponLaserCannon
-  - WeaponLaserCarbineProjectile #KS14: changed to projectile
+  - WeaponLaserCarbine
   - WeaponXrayCannon
   - WeaponTemperatureGun
 

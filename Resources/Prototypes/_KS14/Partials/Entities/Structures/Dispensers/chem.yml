@@ -1,0 +1,33 @@
+- components:
+  - type: Transform
+    noRot: true
+  - noRot: true
+    layers:
+    - state: industrial-off
+      map: ["base"]
+    - state: industrial-screen
+      map: ["screen"]
+      shader: unshaded
+    - state: industrial-panel
+      map: ["panel"]
+    state: !Remove ''
+    snapCardinals: !Remove ''
+    type: Sprite
+  - type: GenericVisualizer
+    visuals:
+      enum.PowerDeviceVisuals.Powered:
+        base:
+          True: {state: industrial-working}
+          False: {state: industrial-off}
+        screen:
+          True: {visible: true}
+          False: {visible: false}
+      enum.WiresVisuals.MaintenancePanelState:
+        panel:
+          True: {visible: true}
+          False: {visible: false}
+  - type: StationAiWhitelist
+  - type: AmbientMusicMarkerMedical
+  type: !PartialOnly entity
+  id: ChemDispenserEmpty
+...

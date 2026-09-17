@@ -11,16 +11,6 @@
     Metabolites:
       effects:
       - !type:SatiateHunger
-      #klovnstart
-      - !type:EvenHealthChange
-        damage:
-          Brute: -0.2 #30 nutriment will heal 12 dmg/group, this will help make up for small, consistent damage, and make service more valued
-          Burn: -0.2
-      - !type:ModifyBleed #makes bleeding healable outside of med WOW....
-        amount: -0.8
-      - !type:ModifyBloodLevel
-        amount: 1.5
-      #klovnend
   plantMetabolism:
   - !type:PlantAdjustNutrition
     amount: 1.5
@@ -40,7 +30,7 @@
     Metabolites: #This makes it not compete with medicines, a large bonus for something that can heal
       effects:
       - !type:EvenHealthChange
-        #probability: 0.5 # KS14: No probability
+        probability: 0.5
         damage:
           Brute: -0.5
           Burn: -0.5
@@ -68,11 +58,11 @@
     Metabolites:
       effects:
       - !type:EvenHealthChange
-        #probability: 0.5 # KS14: No probability
+        probability: 0.5
         damage:
           Brute: -0.4
       - !type:ModifyBloodLevel
-        amount: 2 # weaker than iron but pretty good all things considered, klovn, was 1
+        amount: 1 # weaker than iron but pretty good all things considered
       - !type:SatiateHunger
   pricePerUnit: 3
 

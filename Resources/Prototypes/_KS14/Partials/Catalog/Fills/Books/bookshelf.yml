@@ -1,0 +1,31 @@
+- table:
+    children: !Remove
+    - id: BookRandomStory
+      amount:
+        range: 0, 4
+    - rolls:
+        range: 0, 2
+      tableId: RandomGuidebookTable
+    - rolls:
+        range: 0, 4
+      tableId: RandomHandwrittenBookTable
+  type: !PartialOnly entityTable
+  id: BookshelfEntityTable
+- table:
+    children: !Remove
+    - id: BookBartendersManual
+    - id: BookChemicalCompendium
+    - id: BookEngineersHandbook
+    - id: BookHowToCookForFortySpaceman
+    - id: BookHowToKeepStationClean
+    - id: BookHowToRockAndStone
+    - id: BookHowToSurvive
+    - id: BookLeafLoversSecret
+    - id: BookMedicalReferenceBook
+    - id: BookScientistsGuidebook
+    - id: BookSecurity
+    - id: BookSpaceEncyclopedia
+    - id: BookTheBookOfControl
+  type: !PartialOnly entityTable
+  id: RandomGuidebookTable
+...

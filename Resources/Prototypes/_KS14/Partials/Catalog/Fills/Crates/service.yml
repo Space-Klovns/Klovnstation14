@@ -1,0 +1,21 @@
+- components:
+  - containers:
+      entity_storage:
+        children: !Remove
+        - id: BookSpaceEncyclopedia
+        - id: BookTheBookOfControl
+        - id: BookBartendersManual
+        - id: BookHowToCookForFortySpaceman
+        - id: BookLeafLoversSecret
+        - id: BookEngineersHandbook
+        - id: BookScientistsGuidebook
+        - id: BookSecurity
+        - id: BookHowToKeepStationClean
+        - id: BookHowToRockAndStone
+        - id: BookMedicalReferenceBook
+        - id: BookHowToSurvive
+        - id: BookChemicalCompendium
+    type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: CrateServiceGuidebooks
+...

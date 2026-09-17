@@ -1,0 +1,17 @@
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_pickup1.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_drop1.ogg
+  type: !PartialOnly entity
+  id: BaseWeaponHeavyMachineGun
+- components:
+  - farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/minigun.ogg
+      range: 15,130
+    type: Gun
+  type: !PartialOnly entity
+  id: WeaponMinigun
+...

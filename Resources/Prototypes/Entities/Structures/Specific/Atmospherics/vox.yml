@@ -15,7 +15,6 @@
       Ammonia: stationAmmonia
       NitrousOxide: stationNO
       Frezon: danger
-      Zipion: stationZipion # KS14
 
 - type: entity
   parent: [AirSensorVoxBase, AirSensor]
@@ -40,9 +39,6 @@
     - Ammonia
     - NitrousOxide
     - Frezon
-    - Zipion # KS14
-    - Argon # KS14
-    - Evaporin # KS14
 
 # use this to prevent overriding filters with hardcoded defaults
 - type: entity

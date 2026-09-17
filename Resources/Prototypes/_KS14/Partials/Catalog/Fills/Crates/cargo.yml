@@ -1,0 +1,67 @@
+- components:
+  - containers:
+      entity_storage:
+        children: !Remove
+        - tableId: LotteryCashEntityTable
+        - tableId: LotteryJunkEntityTable
+        - tableId: LotteryCanistersEntityTable
+        - tableId: LotteryWeaponsEntityTable
+        - tableId: LotteryClothingEntityTable
+        - tableId: LotterySwagEntityTable
+        - tableId: LotteryUsefulEntityTable
+        - tableId: LotteryNotUsefulEntityTable
+    type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: CrateCargoGambling
+- table:
+    children: !Remove
+    - id: ClothingUniformJumpsuitFamilyGuy
+      weight: 5
+    - id: ClothingOuterHardsuitCBURN
+      weight: 0.1
+    - id: ClothingOuterHardsuitSanta
+      weight: 0.1
+    - id: ClothingBackpackERTClown
+      weight: 0.1
+    - id: ClothingNeckCloakAdmin
+    - id: ClothingOuterFlannelBlue
+    - id: ClothingHeadHelmetBone
+    - id: ClothingOuterSuitCarp
+    - id: ClothingHeadHatCatEars
+    - id: ClothingHeadHatDogEars
+    - id: ClothingOuterArmorReflective
+    - id: ClothingUniformJumpskirtSyndieFormalDress
+    - id: ClothingNeckCloakNanotrasen
+    - id: ClothingUniformJumpsuitNanotrasen
+    - id: ClothingShoesSnakeskinBoots
+    - id: ClothingOuterCoatSpaceAsshole
+    - id: ClothingUniformJumpsuitHawaiYellow
+    - id: ClothingHeadSafari
+    - id: ClothingMaskGasMerc
+    - id: ClothingHeadHatCardborg
+      prob: 0.01
+    - id: ClothingUniformJumpskirtOfLife
+  type: !PartialOnly entityTable
+  id: LotteryClothingEntityTable
+- table:
+    children: !Remove
+    - id: ClothingNeckBling
+    - id: ClothingShoesBling
+    - id: IngotGold1
+    - id: IngotGold
+      weight: 0.1
+    - id: GoldOre1
+    - id: GoldOre
+      weight: 0.1
+    - id: DrinkGoldenCup
+    - id: ToolboxGoldFilled
+      weight: 0.1
+    - id: ClothingEyesGlassesGar
+    - id: ClothingEyesGlassesGarGiga
+    - id: ClothingEyesGlassesGarOrange
+    - id: ClothingHeadHatChameleon
+    - id: ClothingBeltChampion
+      prob: 0.01
+  type: !PartialOnly entityTable
+  id: LotterySwagEntityTable
+...

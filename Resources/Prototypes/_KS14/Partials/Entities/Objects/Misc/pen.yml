@@ -1,0 +1,12 @@
+- components:
+  - damage:
+      types:
+        Piercing: 18
+    type: MeleeWeapon
+  - type: DamageOtherOnHit
+    damage:
+      types:
+        Piercing: 30
+  type: !PartialOnly entity
+  id: BaseAdvancedPen
+...

@@ -94,12 +94,6 @@
   - type: StaticPrice
     price: 30
   - type: DnaSubstanceTrace
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/beaker_pickup.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/beaker_place.ogg
 
 - type: entity
   parent: [SolutionBeaker, SolutionSmall, BaseItem]
@@ -379,12 +373,6 @@
     tags:
     - Dropper
   - type: PhysicalComposition
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      collection: SyringePickup
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      collection: SyringeDrop
 
 - type: entity
   parent: Dropper
@@ -444,12 +432,6 @@
   - type: Tag
     tags:
     - Syringe
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      collection: SyringePickup
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      collection: SyringeDrop
 
 - type: entity
   parent: BaseSyringe
@@ -655,15 +637,9 @@
     quickInsert: true
     areaInsert: true
     areaInsertRadius: 1
-    storageInsertSound: /Audio/_KS14/Handling/pill_bottle_place.ogg
+    storageInsertSound: /Audio/Effects/pill_insert.ogg
     storageRemoveSound: /Audio/Effects/pill_remove.ogg
     whitelist:
       tags:
       - Pill
   - type: Dumpable
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/pill_bottle_pickup.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/pill_bottle_place.ogg

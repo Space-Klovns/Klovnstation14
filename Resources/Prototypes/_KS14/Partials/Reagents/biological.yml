@@ -1,0 +1,4 @@
+- color: "#500000"
+  type: !PartialOnly reagent
+  id: Blood
+...

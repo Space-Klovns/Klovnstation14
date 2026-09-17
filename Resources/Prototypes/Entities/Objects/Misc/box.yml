@@ -9,7 +9,7 @@
     sprite: Objects/Storage/boxes.rsi
     size: Large
     shape:
-    - 0,0,1,1 # KS14: 0,0,2,2 -> 0,0,1,1
+    - 0,0,2,2
   - type: Storage
     maxItemSize: Small
     grid:
@@ -19,12 +19,6 @@
       storagebase: !type:Container
   - type: StaticPrice
     price: 10
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/materials/cardboard_pick_up.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/materials/cardboard_drop.ogg
 
 - type: entity
   abstract: true

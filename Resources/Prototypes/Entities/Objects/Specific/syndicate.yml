@@ -1,3 +1,4 @@
+
 - type: entity
   name: telecrystal
   parent: [BaseItem, BaseSyndicateContraband]
@@ -20,7 +21,7 @@
     price: 200
   - type: Currency
     price:
-      Telecrystal: 3
+      Telecrystal: 1
 
 - type: entity
   parent: Telecrystal
@@ -51,7 +52,7 @@
   parent: [BaseItem, StorePresetUplink, BaseSyndicateContraband]
   id: BaseUplinkRadio
   name: syndicate uplink
-  description: Suspicious looking old radio... #KS14 - grammar improvement :fortune:
+  description: Suspiciously looking old radio...
   suffix: Empty
   components:
   - type: Sprite
@@ -71,50 +72,50 @@
     balance:
       Telecrystal: 0
 
-- type: entity # KS14: x3'd tc price
+- type: entity
   parent: BaseUplinkRadio
   id: BaseUplinkRadio20TC
-  suffix: 60 TC
+  suffix: 20 TC
+  components:
+  - type: Store
+    balance:
+      Telecrystal: 20
+
+- type: entity
+  parent: BaseUplinkRadio
+  id: BaseUplinkRadio25TC
+  suffix: 25 TC
+  components:
+  - type: Store
+    balance:
+      Telecrystal: 25
+
+#this uplink MUST be used for nukeops, as it has the tag for filtering the listing.
+- type: entity
+  parent: BaseUplinkRadio
+  id: BaseUplinkRadio40TC
+  suffix: 40 TC, NukeOps
+  components:
+  - type: Store
+    balance:
+      Telecrystal: 40
+  - type: Tag
+    tags:
+    - NukeOpsUplink
+
+- type: entity
+  parent: BaseUplinkRadio
+  id: BaseUplinkRadio60TC
+  suffix: 60 TC, LoneOps
   components:
   - type: Store
     balance:
       Telecrystal: 60
-
-- type: entity # KS14: x3'd tc price
-  parent: BaseUplinkRadio
-  id: BaseUplinkRadio25TC
-  suffix: 75 TC
-  components:
-  - type: Store
-    balance:
-      Telecrystal: 75
-
-#this uplink MUST be used for nukeops, as it has the tag for filtering the listing.
-- type: entity # KS14: x3'd tc price
-  parent: BaseUplinkRadio
-  id: BaseUplinkRadio40TC
-  suffix: 120 TC, NukeOps
-  components:
-  - type: Store
-    balance:
-      Telecrystal: 120
   - type: Tag
     tags:
     - NukeOpsUplink
 
-- type: entity # KS14: x3'd tc price
-  parent: BaseUplinkRadio
-  id: BaseUplinkRadio60TC
-  suffix: 180 TC, LoneOps
-  components:
-  - type: Store
-    balance:
-      Telecrystal: 180
-  - type: Tag
-    tags:
-    - NukeOpsUplink
-
-- type: entity # KS14: x3'd tc price
+- type: entity
   parent: BaseUplinkRadio
   id: BaseUplinkRadioDebug
   suffix: DEBUG

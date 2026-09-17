@@ -1,0 +1,21 @@
+- description: Apply crowbar. Stand clear of firelock during operation.
+  components:
+  - type: EmissiveLayers
+    glowRadius: 0.4
+    intensity: 1.2
+    useSpriteTransform: false
+    layers:
+    - enum.DoorVisualLayers.BaseUnlit
+    - enum.FirelockVisualLayersPressure.Base
+    - enum.FirelockVisualLayersTemperature.Base
+  - type: ESInteractionIgnoreAnchoredInTile
+  - type: WallMount
+  type: !PartialOnly entity
+  id: BaseFirelock
+- components:
+  - performCollisionCheck: true
+    forcedCollisionCheckOnClick: null
+    type: Door
+  type: !PartialOnly entity
+  id: FirelockEdge
+...

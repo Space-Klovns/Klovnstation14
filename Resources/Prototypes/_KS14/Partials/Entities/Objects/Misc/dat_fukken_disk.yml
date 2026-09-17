@@ -1,0 +1,27 @@
+- components:
+  - blacklist:
+      tags:
+      - GhostOnlyWarp
+    type: WarpPoint
+  - tags: !Remove
+    - HighRiskItem
+    - GhostOnlyWarp
+    type: Tag
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/disk_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/disk_drop.ogg
+  type: !PartialOnly entity
+  id: NukeDisk
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/disk_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/disk_drop.ogg
+  type: !PartialOnly entity
+  id: NukeDiskFake
+...

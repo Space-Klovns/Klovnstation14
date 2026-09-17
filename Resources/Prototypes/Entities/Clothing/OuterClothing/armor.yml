@@ -17,12 +17,10 @@
   - type: Armor #Based on /tg/ but slightly compensated to fit the fact that armor stacks in SS14.
     modifiers:
       coefficients:
-        Blunt: 0.7
-        Slash: 0.7
-        Piercing: 0.7
-        Heat: 0.85
-      flatReductions: #KS14 modified
-        Piercing: 5.7
+        Blunt: 0.70
+        Slash: 0.70
+        Piercing: 0.70 #Can save you, but bullets will still hurt. Will take about 10 shots from a Viper before critting, as opposed to 7 while unarmored and 16~ with a bulletproof vest.
+        Heat: 0.80
   - type: ExplosionResistance
     damageCoefficient: 0.90
 
@@ -61,12 +59,10 @@
   - type: Armor
     modifiers:
       coefficients:
-        Blunt: 0.85
-        Slash: 0.85
+        Blunt: 0.9
+        Slash: 0.9
         Piercing: 0.4
         Heat: 0.9
-      flatReductions: #KS14 modified
-        Piercing: 10.3
   - type: ExplosionResistance
     damageCoefficient: 0.80
 
@@ -86,9 +82,9 @@
         Blunt: 0.9
         Slash: 0.9
         Piercing: 0.9
-        Heat: 0.4
+        Heat: 0.4 # this technically means it protects against fires pretty well? -heat is just for lasers and stuff, not atmos temperature
   - type: Reflect
-    reflectProb: 0.8
+    reflectProb: 1
     reflects:
       - Energy
     reflectingInHands: false
@@ -115,13 +111,9 @@
       coefficients:
         Blunt: 0.5
         Slash: 0.5
-        Piercing: 0.5
+        Piercing: 0.6
         Heat: 0.5
         Caustic: 0.9
-      flatReductions: #KS14 modified
-        Piercing: 8.9
-  - type: ExplosionResistance
-    damageCoefficient: 0.65
   - type: GroupExamine
 
 - type: entity
@@ -163,14 +155,10 @@
   - type: Armor
     modifiers:
       coefficients:
-        Blunt: 0.8
-        Slash: 0.8
+        Blunt: 0.6 #ballistic plates = better protection
+        Slash: 0.6
         Piercing: 0.3
         Heat: 0.9
-      flatReductions: #KS14 modified
-        Piercing: 11.6
-  - type: ExplosionResistance # KS14 modified
-    damageCoefficient: 0.9
   - type: StaticPrice
     price: 1500
 
@@ -191,21 +179,12 @@
   - type: Armor
     modifiers:
       coefficients:
-        Blunt: 0.7
-        Slash: 0.7
+        Blunt: 0.5
+        Slash: 0.5
         Piercing: 0.7
         Heat: 0.3
         Radiation: 0.5
         Caustic: 0.5
-      flatReductions: #KS14 modified
-        Piercing: 5.7
-  - type: ExplosionResistance
-    damageCoefficient: 0.5
-  - type: Reflect
-    reflectProb: 0.3
-    reflects:
-      - Energy
-    reflectingInHands: false
   - type: FireProtection
     reduction: 0.85
   - type: StaticPrice
@@ -227,12 +206,8 @@
       coefficients:
         Blunt: 0.7 #slightly better overall protection but slightly worse than bulletproof armor against bullets seems sensible
         Slash: 0.7
-        Piercing: 0.4
+        Piercing: 0.5
         Heat: 0.9
-      flatReductions: #KS14 modified
-        Piercing: 10.3
-  - type: ExplosionResistance
-    damageCoefficient: 0.9
 
 
 # Armor covering multiple body parts including limbs
@@ -259,10 +234,6 @@
         Piercing: 0.35
         Heat: 0.35
         Caustic: 0.5
-      flatReductions: #KS14 modified
-        Piercing: 11
-  - type: ExplosionResistance
-    damageCoefficient: 0.35
   - type: StaminaResistance # do not add these to other equipment or mobs, we don't want to microbalance these everywhere
     damageCoefficient: 0.45
   - type: ClothingSpeedModifier
@@ -316,9 +287,6 @@
     autoRechargeRate: 2
   - type: Item
     size: Normal
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 - type: entity
   parent: [ClothingOuterBaseLarge, AllowSuitStorageClothing, BaseSecurityContraband]
@@ -332,17 +300,12 @@
     sprite: Clothing/OuterClothing/Armor/riot.rsi
   - type: Armor
     modifiers:
-      coefficients: # KS14 modified
-        Blunt: 0.45
-        Slash: 0.45
-        Piercing: 0.65
-        Heat: 0.6
-        Caustic: 0.5
-      flatReductions: #KS14 modified
-        Piercing: 6.6
-  - type: ClothingSpeedModifier # KS14 modified
-    walkModifier: 1
-    sprintModifier: 1
+      coefficients:
+        Blunt: 0.4
+        Slash: 0.4
+        Piercing: 0.7
+        Heat: 0.9
+        Caustic: 0.9
   - type: ExplosionResistance
     damageCoefficient: 0.9
   - type: GroupExamine
@@ -364,11 +327,6 @@
         Slash: 0.5
         Piercing: 0.5
         Heat: 0.5
-      flatReductions: #KS14 modified
-        Piercing: 8.9
-  - type: ClothingSpeedModifier # KS14 modified
-    walkModifier: 1
-    sprintModifier: 1
   - type: GroupExamine
 
 - type: entity
@@ -390,8 +348,6 @@
         Heat: 0.5
         Radiation: 0
         Caustic: 0.75
-      flatReductions: #KS14 modified
-        Piercing: 12.9
   - type: GroupExamine
   - type: ProtectedFromStepTriggers
     slots: WITHOUT_POCKET
@@ -455,17 +411,15 @@
       coefficients:
         Blunt: 0.5
         Slash: 0.5
-        Piercing: 0.35
+        Piercing: 0.5
         Heat: 0.9
         Radiation: 0.8
-      flatReductions: #KS14 modified
-        Piercing: 11
   - type: ClothingSpeedModifier
-    walkModifier: 0.9
-    sprintModifier: 0.9
+    walkModifier: 0.65
+    sprintModifier: 0.65
   - type: HeldSpeedModifier
   - type: ExplosionResistance
-    damageCoefficient: 0.5
+    damageCoefficient: 0.75
   - type: GroupExamine
   - type: ProtectedFromStepTriggers
     slots: WITHOUT_POCKET
@@ -482,17 +436,16 @@
     sprite: Clothing/OuterClothing/Armor/bone_armor.rsi
   - type: Armor
     modifiers:
-      coefficients: # KS14 modified
-        Blunt: 0.75
-        Slash: 0.55
-        Piercing: 0.55
-        Heat: 0.55
-  - type: ClothingSpeedModifier # KS14 modified
-    walkModifier: 0.9
-    sprintModifier: 0.9
+      coefficients:
+        Blunt: 0.6
+        Slash: 0.8
+        Piercing: 0.4
+  - type: ClothingSpeedModifier
+    walkModifier: 0.8
+    sprintModifier: 0.8
   - type: HeldSpeedModifier
-  - type: ExplosionResistance # KS14 modified
-    damageCoefficient: 0.9
+  - type: ExplosionResistance
+    damageCoefficient: 0.6
   - type: GroupExamine
   - type: Construction
     graph: BoneArmor
@@ -515,10 +468,8 @@
       coefficients:
         Blunt: 0.5
         Slash: 0.5
-        Piercing: 0.5
+        Piercing: 0.6
         Heat: 0.5
-      flatReductions: #KS14 modified
-        Piercing: 8.9
   - type: GroupExamine
   - type: ProtectedFromStepTriggers
     slots: WITHOUT_POCKET

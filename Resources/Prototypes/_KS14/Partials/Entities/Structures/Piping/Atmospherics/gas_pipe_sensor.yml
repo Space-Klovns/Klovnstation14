@@ -1,0 +1,9 @@
+- components:
+  - type: EmissiveLayers
+    glowRadius: 1
+    offset: 0,0.8
+    layers:
+    - enum.PowerDeviceVisualLayers.Powered
+  type: !PartialOnly entity
+  id: GasPipeSensor
+...

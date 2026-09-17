@@ -1,0 +1,54 @@
+- parent: BaseUngatherableAsteroidRock
+  components:
+  - type: SoundOnGather
+  - type: Gatherable
+    toolWhitelist:
+      tags:
+      - PlasmaCutter
+  - type: Transform
+  - type: IconSmooth
+  - type: SmoothEdge
+  - type: Icon
+  - type: Sprite
+  - type: MiningScannerViewable
+  - type: Damageable
+  - type: Injurable
+  - type: Destructible
+  - type: Fixtures
+  name: !Remove ''
+  description: !Remove ''
+  type: !PartialOnly entity
+  id: AsteroidRock
+- parent: !Remove [BaseRockGibtonite, BaseUngatherableAsteroidRock]
+  type: !PartialOnly entity
+  id: AsteroidRockGibtonite
+- parent: BaseUngatherableIronRock
+  components:
+  - type: SoundOnGather
+  - type: Gatherable
+    toolWhitelist:
+      tags:
+      - PlasmaCutter
+  - type: IconSmooth
+  - type: Icon
+  - type: SmoothEdge
+  - type: Sprite
+  name: !Remove ''
+  suffix: !Remove ''
+  description: !Remove ''
+  type: !PartialOnly entity
+  id: IronRock
+- parent: !Remove [BaseRockGibtonite, BaseUngatherableIronRock]
+  type: !PartialOnly entity
+  id: IronRockGibtonite
+- components:
+  - toolWhitelist:
+      tags: !Remove
+      - Pickaxe
+      - PlasmaCutter
+    type: Gatherable
+  - damageModifierSet: Rock
+    type: Damageable
+  type: !PartialOnly entity
+  id: WallRock
+...

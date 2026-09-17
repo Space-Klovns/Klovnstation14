@@ -1,0 +1,15 @@
+- components:
+  - type: AccessReader
+  - type: DoorElectronics
+  - type: ActivatableUI
+    key: enum.DoorElectronicsConfigurationUiKey.Key
+    requiredItems:
+      tags:
+      - DoorElectronicsConfigurator
+  - type: UserInterface
+    interfaces:
+      enum.DoorElectronicsConfigurationUiKey.Key:
+        type: DoorElectronicsBoundUserInterface
+  type: !PartialOnly entity
+  id: APCElectronics
+...

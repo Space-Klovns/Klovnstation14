@@ -3,7 +3,7 @@
   categories: [ HideSpawnMenu ]
   components:
   - type: TimedDespawn
-    lifetime: 0.2 # KS14
+    lifetime: 0.4
   - type: Sprite
     drawdepth: BelowMobs
     layers:
@@ -58,7 +58,6 @@
   - type: Sprite
     noRot: false
     sprite: Objects/Weapons/Guns/Projectiles/projectiles2.rsi
-    drawdepth: OverMobs # KS14
     layers:
     - state: bullet
       shader: unshaded
@@ -78,7 +77,7 @@
         - BulletImpassable
       fly-by: &flybyfixture
         shape: !type:PhysShapeCircle
-          radius: 3.5
+          radius: 1.5
         layer:
         - Impassable
         - MidImpassable
@@ -167,8 +166,7 @@
     damage:
       types:
         Piercing: 11 # 20% decrease
-      percentilePenetration: #KS14 - nuarmor
-        Piercing: 1 #100% of armor ignored
+    ignoreResistances: true
 
 - type: entity
   id: BaseBulletUranium
@@ -234,11 +232,11 @@
     lifetime: 0.170 # Very short range
   - type: StunOnCollide
     stunAmount: 0
-    knockdownAmount: 0.0 # Enough to subdue and follow up with a stun baton
+    knockdownAmount: 2.5 # Enough to subdue and follow up with a stun baton
     drop: false #Ranged KD and item drop are too strong in one package
     slowdownAmount: 2.5
-    walkSpeedModifier: 0.8
-    sprintSpeedModifier: 0.8
+    walkSpeedModifier: 0.5
+    sprintSpeedModifier: 0.5
 
 - type: entity
   parent: BulletTaser
@@ -303,7 +301,7 @@
       fly-by: *flybyfixture
   - type: Ammo
   - type: StaminaDamageOnCollide
-    damage: 26 # KS14: 33 -> 26
+    damage: 33
   - type: Projectile
     impactEffect: BulletImpactEffectDisabler
     damage:
@@ -427,11 +425,11 @@
     impactEffect: BulletImpactEffectDisabler
     damage:
       types:
-        Cold: 7
+        Cold: 0
   - type: TimedDespawn
     lifetime: 3
-  # - type: ChangeTemperatureOnCollide
-  #   heat: -5000
+  - type: ChangeTemperatureOnCollide
+    heat: -50000
 
 - type: entity
   name: freezing bolt
@@ -472,9 +470,9 @@
     impactEffect: BulletImpactEffectOrangeDisabler
     damage:
       types:
-        Heat: 7
-  # - type: ChangeTemperatureOnCollide
-  #   heat: 50000
+        Heat: 0
+  - type: ChangeTemperatureOnCollide
+    heat: 50000
 
 - type: entity
   name: scorching bolt
@@ -527,11 +525,11 @@
     impactEffect: BulletImpactEffectDisabler
     damage:
       types:
-        Cold: 10
+        Cold: 5
   - type: TimedDespawn
     lifetime: 3
-  # - type: ChangeTemperatureOnCollide
-  #   heat: -50000
+  - type: ChangeTemperatureOnCollide
+    heat: -50000
 
 - type: entity
   id: BulletKinetic
@@ -542,7 +540,7 @@
   components:
   - type: Reflective
     reflective:
-      - Kinetic #KS14 change, added kinetic projectile type for reflective
+      - NonEnergy
   - type: Sprite
     noRot: false
     sprite: Objects/Weapons/Guns/Projectiles/magic.rsi
@@ -553,7 +551,7 @@
     impactEffect: BulletImpactEffectKinetic
     damage:
       types:
-        Blunt: 25
+        Blunt: 15
         Structural: 30
   # Short lifespan
   - type: TimedDespawn
@@ -596,7 +594,7 @@
   components:
   - type: Reflective
     reflective:
-      - Kinetic #KS14 change, added kinetic projectile type for reflective
+    - NonEnergy
   - type: Sprite
     noRot: false
     sprite: Objects/Weapons/Guns/Projectiles/magic.rsi
@@ -610,8 +608,8 @@
         - MobState
     damage:
       types:
-        Blunt: 20
-        Slash: 5
+        Blunt: 18
+        Slash: 4
   - type: Projectile
     impactEffect: BulletImpactEffectKinetic
     damage:
@@ -620,6 +618,21 @@
   # Short lifespan
   - type: TimedDespawn
     lifetime: 0.4
+
+  # Deals less damage, glaive has better HP recovery
+- type: entity
+  id: BulletChargeGlaive
+  name: leech bolt
+  parent: BulletCharge
+  components:
+  - type: DamageMarkerOnCollide
+    whitelist:
+      components:
+        - MobState
+    damage:
+      types:
+        Blunt: 1
+        Slash: 5
 
 - type: entity
   parent: BaseBullet
@@ -1151,7 +1164,7 @@
       fly-by: *flybyfixture
   - type: Ammo
   - type: StaminaDamageOnCollide
-    damage: 11 # KS14: 15 -> 11
+    damage: 15
   - type: Projectile
     impactEffect: BulletImpactEffectDisabler
     damage:
@@ -1306,21 +1319,18 @@
     impactEffect: BulletImpactEffectOrangeDisabler
     damage:
       types:
-        Heat: 9 # KS14: 13 -> 9
+        Heat: 13
 
-# KS start
-# - type: entity
-#   name: wide laser barrage
-#   id: BulletLaserSpread
-#   categories: [ HideSpawnMenu ]
-#   parent: BulletLaser
-#   components:
-#   - type: ProjectileSpread
-#     proto: BulletLaser
-#     count: 5 #65 heat damage if you hit all your shots, but wide spread
-#     spread: 30
-# removed due to being useless
-# KS end
+- type: entity
+  name: wide laser barrage
+  id: BulletLaserSpread
+  categories: [ HideSpawnMenu ]
+  parent: BulletLaser
+  components:
+  - type: ProjectileSpread
+    proto: BulletLaser
+    count: 5 #65 heat damage if you hit all your shots, but wide spread
+    spread: 30
 
 - type: entity
   name: lethal laser barrage
@@ -1330,7 +1340,7 @@
   components:
   - type: ProjectileSpread
     proto: BulletLaser
-    count: 4 #36 heat damage if you hit all your shots, but narrower spread
+    count: 4 #52 heat damage if you hit all your shots, but narrower spread
     spread: 10
 
 - type: entity
@@ -1382,7 +1392,7 @@
     impactEffect: BulletImpactEffectOrangeDisabler
     damage:
       types:
-        Heat: 30
+        Heat: 20
   - type: Fixtures
     fixtures:
       projectile:

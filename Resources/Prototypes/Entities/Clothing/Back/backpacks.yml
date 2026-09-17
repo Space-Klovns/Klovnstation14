@@ -27,19 +27,13 @@
         type: StorageBoundUserInterface
   # to prevent bag open/honk spam
   - type: UseDelay
-    delay: 0.1
+    delay: 0.5
   - type: ExplosionResistance
     damageCoefficient: 0.9
   - type: Tag
     tags:
     - WhitelistChameleon
     - Backpack
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/backpack/backpack_pickup1.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/backpack/backpack_drop1.ogg
 
 - type: entity
   parent: ClothingBackpack

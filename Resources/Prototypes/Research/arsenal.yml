@@ -13,7 +13,6 @@
   - WeaponProtoKineticAccelerator
   - ShuttleGunKineticCircuitboard
   # These are roundstart but not replenishable for salvage
-  position: 1,0 # Goobstation R&D Console rework
 
 - type: technology
   id: DraconicMunitions
@@ -36,28 +35,18 @@
   - MagazineBoxMagnumIncendiary
   - MagazineBoxLightRifleIncendiary
   - MagazineBoxRifleIncendiary
-  # Goobstation R&D Console rework start
-  position: 2,2
-  technologyPrerequisites:
-  - SalvageWeapons
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: WeaponizedLaserManipulation
   name: research-technology-weaponized-laser-manipulation
   icon:
-    sprite: _KS14/Objects/Weapons/Guns/Battery/lasercarbine.rsi #KS14: changed to projectile
+    sprite: Objects/Weapons/Guns/Battery/laser_gun.rsi
     state: icon
   discipline: Arsenal
   tier: 1
   cost: 7500
   recipeUnlocks:
-  - WeaponLaserCarbineProjectile #KS14: changed to projectile
-  # Goobstation R&D Console rework start
-  position: 4,0
-  technologyPrerequisites:
-  - SalvageWeapons
-  # Goobstation R&D Console rework end
+  - WeaponLaserCarbine
 
 - type: technology
   id: NonlethalAmmunition
@@ -73,11 +62,6 @@
   - BoxShellTranquilizer
   - BoxBeanbag
   - WeaponDisabler
-  # Goobstation R&D Console rework start
-  position: 2,3
-  technologyPrerequisites:
-  - SalvageWeapons
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: UraniumMunitions
@@ -99,11 +83,6 @@
   - MagazineBoxLightRifleUranium
   - MagazineBoxRifleUranium
   - BoxShotgunUranium
-  # Goobstation R&D Console rework start
-  position: 3,2
-  technologyPrerequisites:
-  - DraconicMunitions
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: AdvancedRiotControl
@@ -119,11 +98,6 @@
   - TelescopicShield
   - HoloprojectorSecurity
   - WeaponDisablerSMG
-  # Goobstation R&D Console rework start
-  position: 3,3
-  technologyPrerequisites:
-  - NonlethalAmmunition
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: ExplosiveTechnology
@@ -144,10 +118,6 @@
   - ChemicalPayload
   - CableDetStack1
   - EmptyDetonator
-  - ClusterBang
-  position: 3,4
-  technologyPrerequisites:
-  - NonlethalAmmunition
 
 - type: technology
   id: SpecialMeans
@@ -160,11 +130,6 @@
   cost: 5000
   recipeUnlocks:
   - ClothingBackpackElectropack
-  # Goobstation R&D Console rework start
-  position: 4,3
-  technologyPrerequisites:
-  - AdvancedRiotControl
-  # Goobstation R&D Console rework end
 
 # Tier 2
 
@@ -179,11 +144,6 @@
   cost: 10000
   recipeUnlocks:
   - WeaponLaserCannon
-  # Goobstation R&D Console rework start
-  position: 5,0
-  technologyPrerequisites:
-  - WeaponizedLaserManipulation
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: WaveParticleHarnessing
@@ -196,11 +156,6 @@
   cost: 10000
   recipeUnlocks:
   - WeaponXrayCannon
-  # Goobstation R&D Console rework start
-  technologyPrerequisites:
-  - WeaponizedLaserManipulation
-  position: 5,1
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: KineticModifications
@@ -215,7 +170,6 @@
   - PKAUpgradeDamage
   - PKAUpgradeRange
   - PKAUpgradeFireRate
-  position: 5,2
 
 - type: technology
   id: BasicShuttleArmament
@@ -238,8 +192,6 @@
   - ShuttleGunFriendshipCircuitboard
   technologyPrerequisites:
   - SalvageWeapons
-  - Shuttlecraft  # Goobstation R&D Console rework
-  position: 2,-4  # Goobstation R&D Console rework
 
 - type: technology
   id: DualWieldingTechnology
@@ -252,7 +204,6 @@
   cost: 10000
   recipeUnlocks:
   - ClothingBackpackHarmpack
-  position: 5, 3 # Goobstation R&D Console rework
 
 # Tier 3
 
@@ -268,11 +219,6 @@
   recipeUnlocks:
   - WeaponAdvancedLaser
   - PortableRecharger
-  # Goobstation R&D Console rework start
-  position: 6,0
-  technologyPrerequisites:
-  - ConcentratedLaserWeaponry
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: ThermalWeaponry
@@ -285,9 +231,6 @@
   cost: 15000
   recipeUnlocks:
   - WeaponTemperatureGun
-  position: 5,3
-  technologyPrerequisites:
-  - ConcentratedLaserWeaponry
 
 - type: technology
   id: AdvancedShuttleWeapon
@@ -302,6 +245,5 @@
   - GrenadeEMP
   - PowerCageHigh
   - ShuttleGunDusterCircuitboard
-  position: 3,-4
   technologyPrerequisites:
   - BasicShuttleArmament

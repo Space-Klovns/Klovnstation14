@@ -1,0 +1,9 @@
+- components:
+  - layers: !Remove
+    - state: chasm
+      shader: unshaded
+      color: '#000000'
+    type: Sprite
+  type: !PartialOnly entity
+  id: FloorChasmEntity
+...

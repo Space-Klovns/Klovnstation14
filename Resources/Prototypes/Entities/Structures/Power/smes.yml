@@ -30,14 +30,6 @@
           shader: unshaded
         - map: [ "enum.WiresVisualLayers.MaintenancePanel" ]
           state: smes-open
-    # KS14: emissive start
-    - type: EmissiveLayers
-      glowRadius: 0.3
-      layers:
-      - enum.SmesVisualLayers.Charge
-      - enum.SmesVisualLayers.Input
-      - enum.SmesVisualLayers.Output
-    # KS14: emissive end
     - type: Smes
     - type: Appearance
     - type: Battery
@@ -77,8 +69,8 @@
       supplyRampTolerance: 5000
       supplyRampRate: 1000
     - type: PointLight
-      radius: 0.3 # KS14: Changed to 0.3
-      energy: 0.3 # KS14: Changed to 0.3
+      radius: 1.2
+      energy: 3.0
       color: "#c9c042"
       castShadows: false
     - type: WiresPanel
@@ -106,14 +98,11 @@
       sendBroadcastAttemptEvent: true
       examinableAddress: true
     - type: WiredNetworkConnection
-    - type: ArcFlashAnchorable #KS14 - heads up for yaml warriors - this REQUIRES an electrifiedcomponent to be present also like it is here
-    - type: ArcFlashDeconstructable #KS14
     - type: GuideHelp
       guides:
       - PowerStorage
       - VoltageNetworks
       - Power
-    - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
     # Interface
     - type: BatteryInterface

@@ -14,20 +14,11 @@
   - type: CartridgeAmmo
     proto: BulletRocket
     deleteOnSpawn: true
-  # KS14 start
-    detachedMuzzleFlash: StdaMuzzleSmokeEffectRpg
-  # KS14 end
   - type: Sprite
     sprite: Objects/Weapons/Guns/Ammunition/Explosives/explosives.rsi
     state: rpg
   - type: StaticPrice
     price: 20
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/component_pickup.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/component_drop.ogg
 
 - type: entity
   parent: [BaseItem, BaseMajorContraband]
@@ -48,12 +39,6 @@
       state: frag
     - type: StaticPrice
       price: 20
-    - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-      sound:
-        path: /Audio/_KS14/Handling/component_pickup.ogg
-    - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-      sound:
-        path: /Audio/_KS14/Handling/component_drop.ogg
 
 # Grenades
 
@@ -69,12 +54,6 @@
   - type: Item
     size: Small
   - type: Sprite
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/grenade/grenade_pick_up.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/grenade/grenade_drop.ogg
 
 - type: entity
   parent: BaseGrenade
@@ -192,12 +171,6 @@
   - type: Item
     size: Small
   - type: Sprite
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/grenade/grenade_pick_up.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/grenade/grenade_drop.ogg
 
 - type: entity
   parent: BaseCannonBall

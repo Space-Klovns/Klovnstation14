@@ -61,16 +61,6 @@
       map: ["enum.DoorVisualLayers.BaseEmagging"]
       shader: unshaded
       visible: false
-    # KS14: emissive start
-    - type: EmissiveLayers
-      glowRadius: 0.4
-      intensity: 4
-      layers:
-      - enum.DoorVisualLayers.BaseUnlit
-      - enum.DoorVisualLayers.BaseBolted
-      - enum.DoorVisualLayers.BaseEmergencyAccess
-      - enum.DoorVisualLayers.BaseEmagging
-    # KS14: emissive end
   - type: AnimationPlayer
   - type: ApcPowerReceiver
   - type: ExtensionCableReceiver
@@ -104,12 +94,6 @@
     fx: EffectRCDDeconstruct8
   - type: Destructible
     thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 400
-      behaviors: #excess damage (nuke?). avoid computational cost of spawning entities.
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
     - trigger:
         !type:DamageTrigger
         damage: 200
@@ -188,9 +172,8 @@
   - type: PryUnpowered
   - type: Tag
     tags:
-    - Directional # KS14: Directional anchoring or w/e
-    - DoorRemoteWhitelist
-    # This tag is used by door remotes to allow or not a door remote to normally be able to interact with a door
+      - DoorRemoteWhitelist
+      # This tag is used by door remotes to allow or not a door remote to normally be able to interact with a door
 
 - type: entity
   id: BaseSecureWindoor
@@ -238,12 +221,6 @@
     thresholds:
     - trigger:
         !type:DamageTrigger
-        damage: 600
-      behaviors: #excess damage (nuke?). avoid computational cost of spawning entities.
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
-    - trigger:
-        !type:DamageTrigger
         damage: 400
       behaviors:
       - !type:SpawnEntitiesBehavior
@@ -263,7 +240,6 @@
     price: 350
   - type: Tag
     tags:
-      - Directional
       - SecureWindoor
       # This tag is used to nagivate the Airlock construction graph. It's needed because the construction graph is shared between Airlock, AirlockGlass, and HighSecDoor
       - DoorRemoteWhitelist
@@ -312,12 +288,6 @@
       visible: false
   - type: Destructible
     thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 480
-      behaviors:
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
     - trigger:
         !type:DamageTrigger
         damage: 240
@@ -384,12 +354,6 @@
     thresholds:
     - trigger:
         !type:DamageTrigger
-        damage: 800
-      behaviors:
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
-    - trigger:
-        !type:DamageTrigger
         damage: 530
       behaviors:
       - !type:SpawnEntitiesBehavior
@@ -411,7 +375,6 @@
     resistance: 4
   - type: Tag
     tags:
-      - Directional
       - SecurePlasmaWindoor
       # This tag is used to nagivate the Airlock construction graph. It's needed because the construction graph is shared between Airlock, AirlockGlass, and HighSecDoor
       - DoorRemoteWhitelist
@@ -460,12 +423,6 @@
       visible: false
   - type: Destructible
     thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 400
-      behaviors:
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
     - trigger:
         !type:DamageTrigger
         damage: 240
@@ -532,12 +489,6 @@
     thresholds:
     - trigger:
         !type:DamageTrigger
-        damage: 1200
-      behaviors:
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
-    - trigger:
-        !type:DamageTrigger
         damage: 400
       behaviors:
       - !type:SpawnEntitiesBehavior
@@ -559,7 +510,6 @@
     resistance: 5
   - type: Tag
     tags:
-      - Directional
       - SecureUraniumWindoor
       # This tag is used to nagivate the Airlock construction graph. It's needed because the construction graph is shared between Airlock, AirlockGlass, and HighSecDoor
       - DoorRemoteWhitelist

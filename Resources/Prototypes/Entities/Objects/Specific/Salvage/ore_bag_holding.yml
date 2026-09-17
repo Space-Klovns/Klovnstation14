@@ -14,7 +14,6 @@
   - type: Storage
     grid:
     - 0,0,19,9
-    areaInsertRadius: 5 # KS14 change
 
 - type: entity
   parent: OreBagOfHolding

@@ -1,0 +1,10 @@
+- startingInventory:
+    ClothingOuterArmorHazardous: 3
+  emaggedInventory:
+    ExGrenade: 1
+    EmpGrenade: 1
+    SmokeGrenade: 3
+    WeaponPistolViper: 1
+  type: !PartialOnly vendingMachineInventory
+  id: SecTechInventory
+...

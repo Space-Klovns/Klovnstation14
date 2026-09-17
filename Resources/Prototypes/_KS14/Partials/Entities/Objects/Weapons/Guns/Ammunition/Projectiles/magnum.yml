@@ -1,0 +1,33 @@
+- components:
+  - damage:
+      types:
+        Piercing: 40
+    type: Projectile
+  type: !PartialOnly entity
+  id: BulletMagnum
+- components:
+  - damage:
+      types:
+        Piercing: 20
+        Heat: 20
+    type: Projectile
+  type: !PartialOnly entity
+  id: BulletMagnumIncendiary
+- components:
+  - damage:
+      types:
+        Piercing: 30
+      percentilePenetration:
+        Piercing: 1
+    ignoreResistances: !Remove ''
+    type: Projectile
+  type: !PartialOnly entity
+  id: BulletMagnumAP
+- components:
+  - damage:
+      types:
+        Radiation: 20
+    type: Projectile
+  type: !PartialOnly entity
+  id: BulletMagnumUranium
+...

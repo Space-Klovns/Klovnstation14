@@ -11,7 +11,7 @@
     damage:
       types:
         Piercing: 40
-        Structural: 30
+        Structural: 15
 
 
 - type: entity
@@ -40,8 +40,8 @@
   - type: Projectile
     damage:
       types:
-        Piercing: 14 # KS14
-        Structural: 10
+        Piercing: 10
+        Structural: 15
 
 - type: entity
   parent: PelletShotgun
@@ -51,7 +51,7 @@
   - type: ProjectileSpread
     proto: PelletShotgun
     count: 6
-    spread: 12
+    spread: 15
 
 - type: entity
   parent: BaseBulletIncendiary
@@ -62,8 +62,8 @@
   - type: Projectile
     damage:
       types:
-        Piercing: 8 #KS14 modified
-        Heat: 4
+        Piercing: 7
+        Heat: 3
   - type: IgnitionSource
     ignited: true
 
@@ -75,7 +75,7 @@
   - type: ProjectileSpread
     proto: PelletShotgunIncendiary
     count: 6
-    spread: 12
+    spread: 15
 
 - type: entity
   parent: BaseBulletPractice
@@ -96,7 +96,7 @@
   - type: ProjectileSpread
     proto: PelletShotgunPractice
     count: 6
-    spread: 12
+    spread: 15
 
 - type: entity
   parent: BaseBullet
@@ -112,7 +112,7 @@
   - type: Projectile
     damage:
       types:
-        Piercing: 5
+        Piercing: 3
         Slash: 3
 
 - type: entity
@@ -123,7 +123,7 @@
   - type: ProjectileSpread
     proto: PelletShotgunImprovised
     count: 10
-    spread: 25 #KS14
+    spread: 45
 
 - type: entity
   parent: [SolutionAmmo, SolutionToolVeryTiny, BaseBulletPractice]
@@ -195,10 +195,8 @@
   - type: Projectile
     damage:
       types:
-        Radiation: 6 #KS14 modified
-        Piercing: 6
-      flatPenetration:
-        Piercing: 6
+        Radiation: 5
+        Piercing: 5
 
 - type: entity
   parent: PelletShotgunUranium
@@ -255,7 +253,7 @@
     deleteOnCollide: false
     damage:
       types:
-        Slash: 30
+        Slash: 25
 
 - type: entity
   parent: PelletGlass

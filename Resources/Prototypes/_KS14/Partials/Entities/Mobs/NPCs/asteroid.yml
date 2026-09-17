@@ -1,0 +1,42 @@
+- parent: !Remove [BaseMobAsteroid, MobBloodstream]
+  components:
+  - thresholds:
+      125: Dead
+      150: !Remove ''
+    type: MobThresholds
+  - blackboard:
+      VisionRadius: !type:Single 4
+      AggroVisionRadius: !type:Single 6
+    type: HTN
+  - type: Butcherable
+    spawned:
+    - id: FoodMeatGoliath
+      amount: 3
+    - id: MaterialGoliathHide1
+      amount: 3
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobGoliath
+- parent: !Remove [BaseMobAsteroid, FlyingMobBase]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodHivelordRemains
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobHivelord
+- parent: !Remove [BaseMobAsteroid, MobBloodstream]
+  components:
+  - thresholds:
+      75: Dead
+      45: !Remove ''
+    type: MobThresholds
+  - type: Butcherable
+    spawned:
+    - id: DiamondOre1
+      amount: 1
+      maxAmount: 3
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobBasilisk
+...

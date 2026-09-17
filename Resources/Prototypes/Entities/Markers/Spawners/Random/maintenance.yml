@@ -29,7 +29,8 @@
       - id: ClothingHeadHelmetCosmonaut
       - id: ClothingHeadHelmetBasic
       - id: ClothingShoeSlippersDuck
-      # KS14 - Removed slop
+      - id: ClothingUnderSocksBee
+      - id: ClothingUnderSocksCoder
       - id: ClothingHeadHatSquid
       # Animal Masks
       - !type:GroupSelector
@@ -97,13 +98,24 @@
       - id: TravelCamera
       - id: ClothingNeckCloakHerald
       - id: ClothingHeadHelmetTemplar
-      # KS14 - Removed clokes
+      # Cloaks
+      - !type:GroupSelector
+        children:
+        - id: ClothingNeckCloakTrans
+        - id: ClothingNeckCloakAdmin
+        - id: ClothingNeckCloakMoth
+        - id: ClothingNeckCloakVoid
+        - id: ClothingNeckCloakGoliathCloak
+        - id: ClothingNeckCloakAce
+        - id: ClothingNeckCloakAro
+        - id: ClothingNeckCloakAroace
+        - id: ClothingNeckCloakBi
+        - id: ClothingNeckCloakIntersex
+        - id: ClothingNeckCloakLesbian
+        - id: ClothingNeckCloakGay
+        - id: ClothingNeckCloakEnby
+        - id: ClothingNeckCloakPan
       - id: ToyFigurineSkeleton
-      - id: Basketball
-      - id: Football
-      - id: TennisBall
-      - id: BalloonNT
-      - id: BalloonCorgi
       - id: MysteryFigureBox
       # Cult
       - !type:AllSelector
@@ -125,7 +137,27 @@
       - id: ClothingUniformJumpsuitPirate
       - id: ClothingShoesBootsCowboyFancy
       - id: ClothingHeadHatCowboyBountyHunter
-      # KS14 - Removed pins
+      # Pins
+      - !type:GroupSelector
+        children:
+        - id: ClothingNeckLGBTPin
+        - id: ClothingNeckAllyPin
+        - id: ClothingNeckAromanticPin
+        - id: ClothingNeckAsexualPin
+        - id: ClothingNeckAroacePin
+        - id: ClothingNeckBisexualPin
+        - id: ClothingNeckGayPin
+        - id: ClothingNeckIntersexPin
+        - id: ClothingNeckLesbianPin
+        - id: ClothingNeckNonBinaryPin
+        - id: ClothingNeckPansexualPin
+        - id: ClothingNeckPluralPin
+        - id: ClothingNeckOmnisexualPin
+        - id: ClothingNeckGenderqueerPin
+        - id: ClothingNeckGenderfluidPin
+        - id: ClothingNeckTransPin
+        - id: ClothingNeckAutismPin
+        - id: ClothingNeckGoldAutismPin
     # Rare Group
     - !type:GroupSelector
       weight: 2
@@ -291,13 +323,13 @@
       weight: 95
       children:
       - id: Machete
+      - id: Claymore
       - id: BaseBallBat
       - id: CombatKnife
       - id: Spear
       - id: RifleStock
       - id: ModularReceiver
       - id: HydroponicsToolScythe
-
     # Rare Group
     - !type:GroupSelector
       weight: 5
@@ -320,8 +352,6 @@
       - id: Bola
       - id: SurvivalKnife
       - id: ScalpelShiv
-      - id: Claymore #KS14 rebalance
-      - id: PistolBarrel #KS14
       - id: Shiv
       - id: SawImprov
       - id: HydroponicsToolMiniHoe
@@ -343,7 +373,7 @@
   - type: EntityTableSpawner
     table: !type:NestedSelector
       tableId: MaintWeaponTable
-      prob: 0.8 #ks14, was 0.6 #220 65
+      prob: 0.6
 
 - type: entity
   name: Maint Loot Spawner

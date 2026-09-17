@@ -1,0 +1,155 @@
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 180
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 160
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          SheetSteel:
+            min: 2
+            max: 2
+          SheetGlass:
+            min: 2
+            max: 2
+    type: Destructible
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/shield/plastic_shield_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/shield/plastic_shield_drop.ogg
+  type: !PartialOnly entity
+  id: BaseShield
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 60
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 30
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: WoodDestroy
+      - spawn:
+          MaterialWoodPlank:
+            min: 5
+            max: 5
+    type: Destructible
+  type: !PartialOnly entity
+  id: WoodenBuckler
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 25
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 10
+      behaviors:
+      - acts: ["Destruction"]
+      - sound: /Audio/Items/Toys/ToyFall2.ogg
+      - spawn:
+          MaterialCardboard:
+            min: 2
+            max: 4
+    type: Destructible
+  type: !PartialOnly entity
+  id: CardShield
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 40
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 20
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          SheetSteel:
+            min: 1
+            max: 2
+    type: Destructible
+  type: !PartialOnly entity
+  id: MakeshiftShield
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 40
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 20
+      behaviors:
+      - acts: ["Destruction"]
+      - spawn:
+          MaterialWebSilk:
+            min: 1
+            max: 1
+      - sound:
+          collection: WoodDestroy
+    type: Destructible
+  type: !PartialOnly entity
+  id: WebShield
+- components:
+  - type: Construction
+    graph: EnergyShieldRepair
+    node: fixedEshield
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 130
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: GlassBreak
+      - spawn:
+          BrokenEnergyShield:
+            min: 1
+            max: 1
+    type: Destructible
+  type: !PartialOnly entity
+  id: EnergyShield
+- description: The energy shield is broken, but you can fix it with a new high capacity power cell.
+  components:
+  - type: Tag
+    tags:
+    - BrokenEnergyShield
+  type: !PartialOnly entity
+  id: BrokenEnergyShield
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 70
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalGlassBreak
+      - spawn:
+          SheetSteel:
+            min: 1
+            max: 1
+          SheetGlass:
+            min: 2
+            max: 2
+    type: Destructible
+  type: !PartialOnly entity
+  id: TelescopicShield
+...

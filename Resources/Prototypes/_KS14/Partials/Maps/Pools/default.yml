@@ -1,0 +1,10 @@
+- maps: !Remove
+  - Box
+  - Marathon
+  - Packed
+  - Mira
+  - Omega
+  - Saltern
+  type: !PartialOnly gameMapPool
+  id: DefaultMapPool
+...

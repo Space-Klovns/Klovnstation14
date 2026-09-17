@@ -1,0 +1,35 @@
+- type: entity
+  parent: ClothingBackpackDuffelSyndicateBundle
+  id: ClothingBackpackDuffelZombieBundleSyndicate
+  name: syndicate zombie bundle
+  description: "An all-in-one kit for unleashing the undead upon a station. Safety not guaranteed."
+  components:
+  - type: StorageFill
+    contents:
+    - id: SyringeRomerol
+    - id: PillAmbuzol
+      amount: 2
+- type: entity
+  parent: ClothingBackpackDuffelSyndicateMedicalBundle
+  id: ClothingBackpackDuffelNukieMedicalBundleFilled
+  name: medical bundle
+  description: "All you need to get your comrades back in the fight."
+  components:
+  - type: EntityTableContainerFill
+    containers:
+      storagebase:
+        children:
+        - id: DefibrillatorSyndicate
+        - id: MedkitCombatFilled
+          amount: 4
+        - id: Tourniquet
+          amount: 4
+        - id: CombatMedipen
+          amount: 4
+        - id: PunctAutoInjector
+          amount: 4
+        - id: PyraAutoInjector
+          amount: 4
+        - id: AirlossAutoInjector
+          amount: 4
+...

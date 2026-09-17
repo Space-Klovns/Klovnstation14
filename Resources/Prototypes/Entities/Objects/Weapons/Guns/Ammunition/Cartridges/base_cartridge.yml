@@ -5,7 +5,6 @@
   components:
   - type: Sprite
     drawdepth: Items
-    scale: 0.75,0.75
   - type: Fixtures
     fixtures:
       fix1:
@@ -18,14 +17,14 @@
         restitution: 0.3  # fite me
         friction: 0.2
   - type: Damageable
-    damageModifierSet: FlimsyMetallic # KS14 - Changed from strong to flimsy metallic to reduce overly high resistaces
+    damageModifierSet: StrongMetallic # We only want explosions breaking them (for the most part)
   - type: Injurable
     damageContainer: StructuralInorganic
   - type: Destructible
     thresholds:
     - trigger:
         !type:DamageTrigger
-        damage: 5 # KS14 - Changed from 75 to 5 to make it easier to destroy cartridges
+        damage: 75
       behaviors:
       - !type:DoActsBehavior
         acts: [ "Destruction" ]
@@ -42,19 +41,3 @@
         volume: -1
   - type: StaticPrice
     price: 1
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      collection: SyringePickup
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      collection: SyringeDrop
-  # STDA14 start
-  - type: CartridgeAmmo
-    proto: BulletFoam # fack
-    detachedMuzzleFlash: StdaMuzzleSmokeEffect
-  # STDA14 end
-  # KS14 start
-  - type: PhosphorNightVisionGlow
-    duration: 5.5s
-    scale: 1.5
-  # KS14 end

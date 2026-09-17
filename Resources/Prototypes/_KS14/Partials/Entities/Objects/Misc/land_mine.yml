@@ -1,0 +1,8 @@
+- components:
+  - type: EmissiveLayers
+    glowRadius: 1
+    layers:
+    - enum.ToggleableVisuals.Layer
+  type: !PartialOnly entity
+  id: BaseLandMine
+...

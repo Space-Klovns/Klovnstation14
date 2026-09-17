@@ -3,7 +3,10 @@
   name: job-name-doctor
   description: job-description-doctor
   playTimeTracker: JobMedicalDoctor
-  # KS14: Removed role requirements
+  requirements:
+    - !type:DepartmentTimeRequirement
+      department: Medical
+      time: 2.5h
   startingGear: DoctorGear
   icon: "JobIconMedicalDoctor"
   supervisors: job-supervisors-cmo
@@ -21,7 +24,6 @@
   id: DoctorGear
   equipment:
     ears: ClothingHeadsetMedical
-    belt: ClothingBeltMedicalFilled #ks14
 
 - type: chameleonOutfit
   id: MedicalDoctorChameleonOutfit
@@ -33,4 +35,3 @@
     neck: ClothingNeckStethoscope
     outerClothing: ClothingOuterCoatLab
     gloves: ClothingHandsGlovesLatex
-    belt: ClothingBeltMedical #KS14

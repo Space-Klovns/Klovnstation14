@@ -1,0 +1,21 @@
+- components:
+  - damage:
+      types:
+        Blunt: 15
+    type: MeleeWeapon
+  type: !PartialOnly entity
+  id: Sledgehammer
+- components:
+  - damage:
+      types:
+        Shock: 5
+    type: MeleeWeapon
+  - damage:
+      types:
+        Shock: 5
+    type: IncreaseDamageOnWield
+  - type: UseDelay
+  - type: UseDelayOnMeleeHit
+  type: !PartialOnly entity
+  id: SingularityHammer
+...

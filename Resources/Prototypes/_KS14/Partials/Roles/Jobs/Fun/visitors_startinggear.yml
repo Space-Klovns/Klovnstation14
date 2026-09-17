@@ -1,0 +1,16 @@
+- equipment:
+    pocket1: FoodSnackEnergy
+    pocket2: !Remove ''
+  type: !PartialOnly startingGear
+  id: VisitorChaplain
+- equipment:
+    pocket1: DrinkCoconutWaterCarton
+    pocket2: !Remove ''
+  type: !PartialOnly startingGear
+  id: VisitorChaplainAlt
+- inhand: !Remove
+  - SynthesizerInstrument
+  - Boombox
+  type: !PartialOnly startingGear
+  id: VisitorMusicianFancyAltB
+...

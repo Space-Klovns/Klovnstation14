@@ -1,0 +1,22 @@
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/ammobox_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/ammobox_drop.ogg
+  type: !PartialOnly entity
+  id: BaseMagazineBoxRifle
+- components:
+  - layers: !Remove
+    - state: base-b
+      map: ["enum.GunVisualLayers.Base"]
+    - state: magb-1
+      map: ["enum.GunVisualLayers.Mag"]
+    type: Sprite
+  - magState: magb
+    type: MagazineVisuals
+  suffix: !Remove ''
+  type: !PartialOnly entity
+  id: MagazineBoxRifleBig
+...

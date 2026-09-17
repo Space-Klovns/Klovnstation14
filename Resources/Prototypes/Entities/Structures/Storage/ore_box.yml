@@ -1,4 +1,4 @@
-﻿- type: entity
+- type: entity
   id: OreBox
   name: ore box
   description: A large storage container for holding unprocessed ores.
@@ -14,12 +14,6 @@
     damageContainer: StructuralInorganic
   - type: Destructible
     thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 150
-      behaviors:
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
     - trigger:
         !type:DamageTrigger
         damage: 100
@@ -79,24 +73,3 @@
         - MachineMask
         layer:
         - MachineLayer
-
-  # KS14 Start: magnetic ore boxes
-  - type: MagnetPickup
-    slotIrrespective: true
-  - type: ItemToggle
-    activated: false
-    onActivate: true
-    onUse: false
-    soundActivate:
-      collection: sparks
-      params:
-        variation: 0.250
-        volume: -7
-    soundDeactivate:
-      collection: sparks
-      params:
-        variation: 0.250
-        volume: -7
-    popupActivate: ks-specific-orebox-itemtoggle-activated
-    popupDeactivate: ks-specific-orebox-itemtoggle-deactivated
-  # KS14 End

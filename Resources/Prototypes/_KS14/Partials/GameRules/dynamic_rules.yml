@@ -1,0 +1,76 @@
+- components:
+  - table:
+      children: !Remove
+      - conditions:
+        - max: 1
+        children:
+        - id: Traitor
+          weight: 60
+          conditions:
+          - !type:HasBudgetCondition ''
+          - !type:MaxRuleOccurenceCondition ''
+        - id: Nukeops
+          weight: 25
+          conditions:
+          - !type:HasBudgetCondition ''
+          - !type:MaxRuleOccurenceCondition ''
+          - min: 20
+        - id: Wizard
+          weight: 5
+          conditions:
+          - !type:HasBudgetCondition ''
+          - !type:MaxRuleOccurenceCondition ''
+          - min: 10
+      - conditions:
+        - max: 1
+        children:
+        - id: Thief
+          prob: 0.5
+          conditions:
+          - !type:HasBudgetCondition ''
+          - !type:MaxRuleOccurenceCondition ''
+      - conditions:
+        - min: 300
+        children:
+        - id: SleeperAgents
+          weight: 15
+          conditions:
+          - !type:HasBudgetCondition ''
+          - !type:MaxRuleOccurenceCondition ''
+          - min: 900
+        - id: DragonSpawn
+          weight: 15
+          conditions:
+          - !type:HasBudgetCondition ''
+          - !type:MaxRuleOccurenceCondition ''
+          - min: 900
+        - id: NinjaSpawn
+          weight: 20
+          conditions:
+          - !type:HasBudgetCondition ''
+          - !type:MaxRuleOccurenceCondition ''
+          - min: 900
+        - id: ParadoxCloneSpawn
+          weight: 25
+          conditions:
+          - !type:HasBudgetCondition ''
+          - max: 2
+          - min: 600
+        - id: ZombieOutbreak
+          weight: 2.5
+          conditions:
+          - !type:HasBudgetCondition ''
+          - !type:MaxRuleOccurenceCondition ''
+          - min: 20
+          - min: 2700
+        - id: LoneOpsSpawn
+          weight: 5
+          conditions:
+          - !type:HasBudgetCondition ''
+          - !type:MaxRuleOccurenceCondition ''
+          - min: 20
+          - min: 2100
+    type: DynamicRule
+  type: !PartialOnly entity
+  id: DynamicRule
+...

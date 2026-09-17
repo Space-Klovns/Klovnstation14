@@ -1,0 +1,99 @@
+- components:
+  - qualities: !Remove
+    - Cutting
+    type: Tool
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/tools/wirecutter_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/tools/wirecutter_drop.ogg
+  type: !PartialOnly entity
+  id: Wirecutter
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/tools/screwdriver_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/tools/screwdriver_drop.ogg
+  type: !PartialOnly entity
+  id: Screwdriver
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/tools/wrench_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/tools/wrench_drop.ogg
+  type: !PartialOnly entity
+  id: Wrench
+- components:
+  - layers: !Remove
+    - state: icon
+    - state: green-unlit
+      shader: unshaded
+      map: ["screen"]
+    type: Sprite
+  - type: EmissiveLayers
+    glowRadius: 0.1
+    layers:
+    - screen
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/tools/multitool_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/tools/multitool_drop.ogg
+  type: !PartialOnly entity
+  id: Multitool
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/tools/multitool_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/tools/multitool_drop.ogg
+  type: !PartialOnly entity
+  id: NetworkConfigurator
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/tools/rpd_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/tools/rpd_drop.ogg
+  type: !PartialOnly entity
+  id: PowerDrill
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/tools/rcd_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/tools/rcd_drop.ogg
+  type: !PartialOnly entity
+  id: RCD
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/tools/crowbar_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/tools/crowbar_drop.ogg
+  type: !PartialOnly entity
+  id: Omnitool
+- components:
+  - damage:
+      types:
+        Blunt: 17
+    type: MeleeWeapon
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/tools/crowbar_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/tools/crowbar_drop.ogg
+  type: !PartialOnly entity
+  id: Shovel
+...

@@ -1,0 +1,38 @@
+- parent: BaseStructure
+  components:
+  - canCollide: true
+    type: Physics
+  - fixtures:
+      fix1:
+        shape:
+          bounds: "-0.5,-0.5,0.5,0.5"
+          radius: !Remove ''
+        mask: !Remove
+        - FullTileMask
+        layer:
+        - MachineLayer
+    type: Fixtures
+  - noRot: true
+    sprite: _KS14/Structures/Piping/Atmospherics/miners.rsi
+    layers:
+    - state: miner
+      map: ["base"]
+    state: !Remove ''
+    type: Sprite
+  - type: AmbientSound
+    enabled: false
+    volume: -12
+    range: 4.5
+    sound:
+      path: /Audio/_KS14/Ambience/Objects/wind_plant_hum.ogg
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.GasMinerVisuals.State:
+        base:
+          Disabled: {state: "miner"}
+          Idle: {state: "miner"}
+          Working: {state: "on"}
+  type: !PartialOnly entity
+  id: GasMinerBase
+...

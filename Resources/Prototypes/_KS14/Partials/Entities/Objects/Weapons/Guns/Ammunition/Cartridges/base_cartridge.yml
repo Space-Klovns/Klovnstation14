@@ -1,0 +1,26 @@
+- components:
+  - scale: 0.75,0.75
+    type: Sprite
+  - damageModifierSet: FlimsyMetallic
+    type: Damageable
+  - thresholds: !Remove
+    - trigger:
+        damage: 5
+      behaviors:
+      - acts: ["Destruction"]
+    type: Destructible
+  - type: EmitSoundOnPickup
+    sound:
+      collection: SyringePickup
+  - type: EmitSoundOnDrop
+    sound:
+      collection: SyringeDrop
+  - type: CartridgeAmmo
+    proto: BulletFoam
+    detachedMuzzleFlash: StdaMuzzleSmokeEffect
+  - type: PhosphorNightVisionGlow
+    duration: 5.5s
+    scale: 1.5
+  type: !PartialOnly entity
+  id: BaseCartridge
+...

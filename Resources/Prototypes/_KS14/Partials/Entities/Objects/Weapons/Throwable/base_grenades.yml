@@ -1,0 +1,36 @@
+- components:
+  - fixtures:
+      fix1:
+        restitution: 0.92
+        friction: 1.1
+    type: Fixtures
+  type: !PartialOnly entity
+  id: GrenadeBase
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 10
+      behaviors:
+      - !type:TimerStartBehavior ''
+    - trigger:
+        damage: 45
+      behaviors:
+      - keyOut: timer
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: VolatileGrenadeBase
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 10
+      behaviors:
+      - !type:TimerStartBehavior ''
+    - trigger:
+        damage: 45
+      behaviors:
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: FragileGrenadeBase
+...

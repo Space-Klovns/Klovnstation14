@@ -1,0 +1,75 @@
+- parent: BaseItem
+  components:
+  - type: HeldGrantComponent
+    component:
+    - type: MeleeForceUnwieldWeapon
+  - type: Wieldable
+    unwieldOnUse: false
+  - type: GunWieldBonus
+    minAngle: -180
+    maxAngle: -174.8
+  - minAngle: 180
+    maxAngle: 180
+    angleIncrease: 5
+    angleDecay: 40
+    fireRate: 6
+    shotsPerBurst: 3
+    burstFireRate: 15
+    availableModes: !Remove
+    - FullAuto
+    - Burst
+    - SemiAuto
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/batrifle.ogg
+      range: 15,130
+    type: Gun
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_pickup1.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_drop1.ogg
+  type: !PartialOnly entity
+  id: BaseWeaponRifle
+- components:
+  - type: GunExecutionWhitelist
+  - type: UnrestrictedExecution
+  - farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/rifle.ogg
+      range: 15,130
+    type: Gun
+  type: !PartialOnly entity
+  id: WeaponRifleAk
+- components:
+  - type: Gun
+    angleIncrease: 0
+  type: !PartialOnly entity
+  id: WeaponRifleM90GrenadeLauncher
+- components:
+  - type: GunExecutionWhitelist
+  - type: UnrestrictedExecution
+  - fireRate: 4
+    angleIncrease: 1
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/ltrifle.ogg
+      range: 15,130
+    type: Gun
+  type: !PartialOnly entity
+  id: WeaponRifleLecter
+- components:
+  - type: GunExecutionWhitelist
+  - type: Gun
+  type: !PartialOnly entity
+  id: WeaponRifleLecterXL8
+- components:
+  - type: GunExecutionWhitelist
+  - type: UnrestrictedExecution
+  - farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/estocshot.ogg
+      range: 15,155
+    angleIncrease: 0
+    type: Gun
+  - type: SpeedModifiedOnWield
+  type: !PartialOnly entity
+  id: WeaponRifleEstoc
+...

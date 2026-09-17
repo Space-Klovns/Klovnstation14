@@ -1,0 +1,176 @@
+- parent: ProduceBase
+  components:
+  - type: Log
+    spawnedPrototype: SheetPaper1
+    spawnCount: 2
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: Papercane
+- parent: ProduceBase
+  components:
+  - type: Log
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: Log
+- parent: ProduceBase
+  components:
+  - type: Log
+    spawnedPrototype: SheetSteel1
+    spawnCount: 1
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: SteelLog
+- parent: FoodProduceBase
+  components:
+  - type: Butcherable
+    butcheringType: Knife
+    spawned:
+    - id: TrashBananaPeel
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: FoodBanana
+- parent: FoodProduceBase
+  components:
+  - type: Butcherable
+    butcheringType: Knife
+    spawned:
+    - id: TrashMimanaPeel
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: FoodMimana
+- components:
+  - slipData:
+      stunTime: 1.5
+      knockdownTime: 1.5
+    type: Slippery
+  type: !PartialOnly entity
+  id: TrashBananaPeel
+- parent: FoodProduceBase
+  components:
+  - type: SliceableFood
+    count: 5
+    slice: FoodPineappleSlice
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: FoodPineapple
+- parent: FoodProduceBase
+  components:
+  - type: Butcherable
+    butcheringType: Knife
+    spawned:
+    - id: FoodCornTrash
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: FoodCorn
+- parent: FoodProduceBase
+  components:
+  - type: SliceableFood
+    count: 5
+    slice: FoodOnionSlice
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: FoodOnion
+- parent: FoodProduceBase
+  components:
+  - type: SliceableFood
+    count: 5
+    slice: FoodOnionRedSlice
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: FoodOnionRed
+- parent: !Remove [FoodProduceBase, BaseSyndicateContraband]
+  components:
+  - type: Butcherable
+    butcheringType: Knife
+    spawned:
+    - id: WeaponRevolverPython
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: FoodGatfruit
+- parent: FoodProduceBase
+  components:
+  - type: Butcherable
+    butcheringType: Knife
+    spawned:
+    - id: RevolverCapGun
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: FoodRealCapfruit
+- parent: FoodRealCapfruit
+  components:
+  - type: Butcherable
+    butcheringType: Knife
+    spawned:
+    - id: RevolverCapGunFake
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: FoodFakeCapfruit
+- parent: !Remove [FoodProduceBase, ItemHeftyBase]
+  components:
+  - type: SliceableFood
+    count: 4
+    slice: FoodWatermelonSlice
+  - type: Butcherable
+    butcheringType: Knife
+    spawned:
+    - id: ClothingHeadHatWatermelon
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: FoodWatermelon
+- parent: !Remove [FoodProduceBase, ItemHeftyBase]
+  components:
+  - type: SliceableFood
+    count: 4
+    slice: FoodHolymelonSlice
+  - type: Butcherable
+    butcheringType: Knife
+    spawned:
+    - id: ClothingHeadHatHolyWatermelon
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: FoodHolymelon
+- parent: FoodProduceBase
+  components:
+  - type: Butcherable
+    butcheringType: Knife
+    spawned:
+    - id: FoodBungoPit
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: FoodBungo
+- parent: FoodProduceBase
+  components:
+  - type: Butcherable
+    butcheringType: Knife
+    spawned:
+    - id: CarvedPumpkin
+    - id: PumpkinSeeds
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: FoodPumpkin
+- parent: FoodProduceBase
+  components:
+  - type: Log
+    spawnedPrototype: MaterialCotton1
+    spawnCount: 2
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: CottonBol
+- parent: FoodProduceBase
+  components:
+  - type: Log
+    spawnedPrototype: MaterialPyrotton1
+    spawnCount: 2
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: PyrottonBol
+- parent: FoodProduceBase
+  components:
+  - type: Butcherable
+    butcheringType: Knife
+    spawned:
+    - id: TrashCherryPit
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: FoodCherry
+...

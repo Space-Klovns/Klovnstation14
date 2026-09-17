@@ -1,0 +1,11 @@
+- components:
+  - type: Sharp
+  - damage:
+      types:
+        Slash: 13
+        Piercing: 13
+    type: MeleeWeapon
+  - type: Tool
+  type: !PartialOnly entity
+  id: ArmBlade
+...

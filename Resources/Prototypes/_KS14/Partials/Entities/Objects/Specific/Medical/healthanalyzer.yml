@@ -1,0 +1,21 @@
+- components:
+  - layers: !Remove
+    - state: icon
+    - state: analyzer
+      shader: unshaded
+      map: ["unlit"]
+    type: Sprite
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/component_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/component_drop.ogg
+  - type: EmissiveLayers
+    glowRadius: 0
+    intensity: 0.01
+    layers:
+    - unlit
+  type: !PartialOnly entity
+  id: HandheldHealthAnalyzer
+...

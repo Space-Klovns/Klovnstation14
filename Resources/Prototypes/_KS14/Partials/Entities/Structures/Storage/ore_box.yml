@@ -1,0 +1,37 @@
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 150
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 100
+      behaviors:
+      - !type:EmptyAllContainersBehaviour ''
+      - spawn:
+          MaterialWoodPlank1:
+            min: 3
+            max: 5
+      - acts: ["Destruction"]
+    type: Destructible
+  - type: MagnetPickup
+    slotIrrespective: true
+  - type: ItemToggle
+    activated: false
+    onActivate: true
+    onUse: false
+    soundActivate:
+      collection: sparks
+      params:
+        variation: 0.250
+        volume: -7
+    soundDeactivate:
+      collection: sparks
+      params:
+        variation: 0.250
+        volume: -7
+    popupActivate: ks-specific-orebox-itemtoggle-activated
+    popupDeactivate: ks-specific-orebox-itemtoggle-deactivated
+  type: !PartialOnly entity
+  id: OreBox
+...

@@ -1,0 +1,12 @@
+- components:
+  - powerLoad: 15000
+    type: ApcPowerReceiver
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/materials/metal_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/materials/metal_drop.ogg
+  type: !PartialOnly entity
+  id: SingularityBeacon
+...

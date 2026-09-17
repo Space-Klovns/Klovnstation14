@@ -1,0 +1,50 @@
+- components:
+  - type: BotWrangler
+  - actions: !Remove
+    - ActionJumpToCore
+    - ActionAIViewLaws
+    - ActionSelectControlledBot
+    - ActionMoveControlledBot
+    type: ActionGrant
+  type: !PartialOnly entity
+  id: AiHeld
+- components:
+  - type: Tag
+    tags:
+    - GhostOnlyWarp
+  type: !PartialOnly entity
+  id: AiHolder
+- components:
+  - blacklist:
+      tags:
+      - GhostOnlyWarp
+    type: WarpPoint
+  type: !PartialOnly entity
+  id: PlayerStationAiEmpty
+- components:
+  - laws: Asimov
+    type: SiliconLawProvider
+  - type: IonStormTarget
+  type: !PartialOnly entity
+  id: StationAiBrain
+- components:
+  - type: Tag
+    tags:
+    - GhostOnlyWarp
+  - blacklist:
+      tags:
+      - GhostOnlyWarp
+    type: WarpPoint
+  type: !PartialOnly entity
+  id: StationAiHolo
+- components:
+  - type: Tag
+    tags:
+    - GhostOnlyWarp
+  - blacklist:
+      tags:
+      - GhostOnlyWarp
+    type: WarpPoint
+  type: !PartialOnly entity
+  id: StationAiHoloLocal
+...

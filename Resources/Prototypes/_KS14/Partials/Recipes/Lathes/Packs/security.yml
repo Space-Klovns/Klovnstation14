@@ -1,0 +1,37 @@
+- recipes: !Remove
+  - BoxShotgunPractice
+  - MagazineBoxLightRiflePractice
+  - MagazineBoxMagnumPractice
+  - MagazineBoxPistolPractice
+  - MagazineBoxRiflePractice
+  - WeaponDisablerPractice
+  - WeaponLaserCarbineProjectilePractice
+  - MagazineLightRiflePractice
+  - MagazineRiflePractice
+  - MagazinePistolPractice
+  - SpeedLoaderMagnumPractice
+  - MagazinePistolSubMachineGunPractice
+  - WeaponFlareGunSecurity
+  type: !PartialOnly latheRecipePack
+  id: SecurityPracticeStatic
+- recipes: !Remove
+  - CableDetStack1
+  - EmptyDetonator
+  - ExplosivePayload
+  - GrenadeBlast
+  - GrenadeEMP
+  - GrenadeFlash
+  - MagazineGrenadeEmpty
+  - ClusterBang
+  type: !PartialOnly latheRecipePack
+  id: SecurityExplosives
+- recipes: !Remove
+  - Truncheon
+  - WeaponAdvancedLaser
+  - WeaponLaserCannon
+  - WeaponLaserCarbineProjectile
+  - WeaponXrayCannon
+  - WeaponTemperatureGun
+  type: !PartialOnly latheRecipePack
+  id: SecurityWeapons
+...

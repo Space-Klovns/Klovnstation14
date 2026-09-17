@@ -1,0 +1,25 @@
+- components:
+  - type: Tag
+    tags:
+    - AirGrenade
+  - layers:
+    - state: icon
+      map: ["enum.TriggerVisualLayers.Base"]
+    - state: active
+      map: ["payload"]
+      visible: false
+    type: Sprite
+  - visuals:
+      enum.TriggerVisuals.VisualState:
+        payload:
+          Unprimed: {visible: false}
+          Primed: {visible: false}
+      enum.ReleaseGasOnTriggerVisuals.Key:
+        payload:
+          True: {state: active, visible: true}
+          False: {state: spent, visible: true}
+        enabled: !Remove ''
+    type: GenericVisualizer
+  type: !PartialOnly entity
+  id: AirGrenade
+...

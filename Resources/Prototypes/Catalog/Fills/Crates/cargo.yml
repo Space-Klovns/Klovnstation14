@@ -47,7 +47,8 @@
           tableId: LotteryClothingEntityTable
         - !type:NestedSelector
           tableId: LotterySwagEntityTable
-        # KS14: Removed slop
+        - !type:NestedSelector
+          tableId: LotteryPlushiesEntityTable
         - !type:NestedSelector
           tableId: LotteryUsefulEntityTable
         - !type:NestedSelector
@@ -157,9 +158,7 @@
     - id: ClothingHeadSafari
     - id: ClothingMaskGasMerc
     - id: ClothingHeadHatCardborg
-      prob: 0.01
-      # orGroup: Clothes
-    # KS14: Removed slop
+    - id: ClothingUnderSocksCoder
     - id: ClothingUniformJumpskirtOfLife
 
 - type: entityTable
@@ -182,10 +181,27 @@
     - id: ClothingEyesGlassesGarOrange
     - id: ClothingHeadHatChameleon
     - id: ClothingBeltChampion
-      prob: 0.01
-      # orGroup: Swag
-    #plushies
-    # KS14: Removed slop plushies
+
+- type: entityTable
+  id: LotteryPlushiesEntityTable
+  table: !type:GroupSelector
+    children:
+    - id: PlushieRGBee
+    - id: PlushieGhost
+    - id: PlushieHampter
+    - id: PlushieGhostRevenant
+    - id: PlushiePenguin
+    - id: PlushieHuman
+    - id: PlushieLizard
+    - id: PlushieRouny
+    - id: PlushieLamp
+    - id: PlushieSharkBlue
+    - id: PlushieMoth
+    - id: PlushieVulp
+    - id: PlushieArachind
+    - id: PlushieLizardJobMultiweh # the exceedingly rare multiweh!
+    - id: PlushieThrongler #hehe
+      weight: 0.05
 
 - type: entityTable
   id: LotteryUsefulEntityTable

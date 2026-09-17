@@ -96,10 +96,7 @@
     entities:
     - SalvageSpawnerTreasure
     - SalvageSpawnerTreasure
-    - SalvageSpawnerEquipment # KS14 - Readded this
-    - SalvageSpawnerEquipment # KS14 - Readded this
     - SalvageSpawnerTreasureValuable
-    - SalvageSpawnerEquipmentValuable # KS14 - Readded this
   - !type:BiomeEntityLayer
     allowedTiles:
     - FloorSteel

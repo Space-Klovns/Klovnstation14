@@ -49,12 +49,6 @@
         Blunt: 10
     soundHit:
       collection: MetalThud
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/rcd_pickup.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/rcd_drop.ogg
 
 - type: entity
   name: syndicate jaws of death

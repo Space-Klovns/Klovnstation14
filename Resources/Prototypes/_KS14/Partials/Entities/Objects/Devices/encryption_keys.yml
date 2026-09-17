@@ -1,0 +1,10 @@
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/id_card/id_card_pickup1.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/id_card/id_card_drop1.ogg
+  type: !PartialOnly entity
+  id: EncryptionKey
+...

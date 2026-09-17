@@ -1,0 +1,34 @@
+- components:
+  - layers: !Remove
+    - state: base
+    - state: unshaded
+      shader: unshaded
+      map: ["enum.PowerDeviceVisualLayers.Powered"]
+    - state: panel
+      map: ["enum.WiresVisualLayers.MaintenancePanel"]
+    - state: firing
+      shader: unshaded
+      visible: false
+      map: ["enum.EmitterVisualLayers.Lights"]
+    - state: locked
+      visible: false
+      map: ["enum.LockVisualLayers.Lock"]
+    type: Sprite
+  - type: EmissiveLayers
+    glowRadius: 0.25
+    intensity: 3
+    layers:
+    - enum.PowerDeviceVisualLayers.Powered
+    - enum.EmitterVisualLayers.Lights
+    - enum.LockVisualLayers.Lock
+  type: !PartialOnly entity
+  id: MachineAPE
+- components:
+  - alwaysFade: !Remove ''
+    type: SpriteFade
+  - type: EmissiveLayers
+    glowRadius: 0.05
+    intensity: 1.7
+  type: !PartialOnly entity
+  id: MachineAnomalyGenerator
+...

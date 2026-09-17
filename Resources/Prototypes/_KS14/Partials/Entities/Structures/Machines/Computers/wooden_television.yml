@@ -1,0 +1,16 @@
+- components:
+  - layers: !Remove
+    - map: ["computerLayerBody"]
+      state: television
+    - map: ["computerLayerScreen"]
+      state: detective_television
+      shader: unshaded
+    type: Sprite
+  - type: EmissiveLayers
+    glowRadius: 0
+    intensity: 0.5
+    layers:
+    - computerLayerScreen
+  type: !PartialOnly entity
+  id: ComputerTelevision
+...

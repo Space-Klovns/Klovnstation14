@@ -1,0 +1,83 @@
+- table:
+    children: !Remove
+    - tableId: LockerFillCaptainNoLaser
+    - id: WeaponAntiqueLaserProjectile
+  type: !PartialOnly entityTable
+  id: LockerFillCaptainLaser
+- table:
+    children: !Remove
+    - id: AccessConfigurator
+    - id: BoxEncryptionKeyEngineering
+    - id: CigarCase
+      prob: 0.15
+    - id: ClothingBeltChiefEngineerFilled
+    - id: ClothingEyesGlassesMeson
+    - id: ClothingHandsGlovesColorYellow
+    - id: ClothingHeadsetAltEngineering
+    - id: DoorRemoteEngineering
+    - id: BoxCECircuitboards
+    - id: RCD
+    - id: RPD
+    - id: RCDAmmo
+    - id: MachinePowerTransmissionLaserFlatpack
+    - id: RubberStampCE
+    - id: MetalFoamGrenade
+    - id: PlushieLizardJobChiefengineer
+      prob: 0.02
+  type: !PartialOnly entityTable
+  id: LockerFillChiefEngineerNoHardsuit
+- table:
+    children: !Remove
+    - id: ClothingEyesHudMedical
+    - id: ClothingBeltMedicalFilled
+    - id: HandheldCrewMonitor
+    - id: Hypospray
+    - id: MedTekCartridge
+    - id: CloningConsoleComputerCircuitboard
+    - id: CloningPodMachineCircuitboard
+    - id: MedicalScannerMachineCircuitboard
+    - id: RubberStampCMO
+    - id: ClothingHeadsetAltMedical
+    - id: DoorRemoteMedical
+    - id: BoxEncryptionKeyMedical
+    - id: BoxCMOCircuitboards
+  type: !PartialOnly entityTable
+  id: LockerFillChiefMedicalOfficerNoHardsuit
+- table:
+    children: !Remove
+    - id: Intellicard
+    - id: BoxEncryptionKeyScience
+    - id: BoxRDCircuitboards
+    - id: ClothingBeltUtilityFilled
+    - id: ClothingHeadsetAltScience
+    - id: DoorRemoteResearch
+    - id: HandTeleporter
+    - id: RubberStampRd
+    - id: ClothingOuterSuitArc
+    - id: AnomalyLocator
+  type: !PartialOnly entityTable
+  id: LockerFillResearchDirectorNoHardsuit
+- table:
+    children: !Remove
+    - id: WeaponEnergyMagnum
+    - id: BoxEncryptionKeySecurity
+    - id: CigarGoldCase
+      prob: 0.50
+    - id: ClothingBeltSecurityFilled
+    - id: ClothingEyesGlassesSecurity
+    - id: ClothingHeadsetAltSecurity
+    - id: ClothingOuterCoatHoSTrench
+    - id: ClothingShoesBootsJack
+    - id: FlashlightSeclite
+    - id: DoorRemoteSecurity
+    - id: HoloprojectorSecurity
+    - id: RubberStampHos
+    - id: BoxHoSCircuitboards
+    - id: WeaponDisabler
+    - id: WantedListCartridge
+    - id: DrinkHosFlask
+    - id: PlushieLizardJobHeadofsecurity
+      prob: 0.02
+  type: !PartialOnly entityTable
+  id: LockerFillHeadOfSecurityNoHardsuit
+...

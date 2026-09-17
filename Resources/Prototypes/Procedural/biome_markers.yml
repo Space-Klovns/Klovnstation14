@@ -7,20 +7,20 @@
 - type: biomeMarkerLayer
   id: WatchersLavaland
   prototype: MobWatcherLavaland
-  minGroupSize: 1 # KS14 change
-  maxGroupSize: 2 # KS14 change
+  minGroupSize: 3
+  maxGroupSize: 3
 
 - type: biomeMarkerLayer
   id: WatchersIcewing
   prototype: MobWatcherIcewing
-  minGroupSize: 1 # KS14 change
-  maxGroupSize: 2 # KS14 change
+  minGroupSize: 3
+  maxGroupSize: 3
 
 - type: biomeMarkerLayer
   id: WatchersMagmawing
   prototype: MobWatcherMagmawing
-  minGroupSize: 1 # KS14 change
-  maxGroupSize: 2 # KS14 change
+  minGroupSize: 3
+  maxGroupSize: 3
 
 - type: biomeMarkerLayer
   id: Cows
@@ -65,17 +65,3 @@
 #- type: biomeMarkerLayer
 #  id: Experiment
 #  proto: DungeonMarkerExperiment
-
-
-# KS14 additions
-- type: biomeMarkerLayer
-  id: Goliath
-  prototype: MobGoliath
-  minGroupSize: 1
-  maxGroupSize: 2
-
-- type: biomeMarkerLayer
-  id: Basilisk
-  prototype: MobBasilisk
-  minGroupSize: 1
-  maxGroupSize: 2

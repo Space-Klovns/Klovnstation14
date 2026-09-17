@@ -1,4 +1,4 @@
-﻿- type: entity
+- type: entity
   name: gas analyzer
   parent: BaseItem
   id: GasAnalyzer
@@ -38,9 +38,3 @@
     - PipeNetworks
     - Pipes
     - GasCanisters
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gas_analyzer/gas_analyzer_pickup.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gas_analyzer/gas_analyzer_drop.ogg

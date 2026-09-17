@@ -1,0 +1,52 @@
+- components:
+  - type: KsWaveDistortion
+    speed: 1
+    distortion: 5
+  - thresholds: !Remove
+    - trigger:
+        damage: 400
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 50
+      behaviors:
+      - sound:
+          path: /Audio/Effects/tree_fell.ogg
+          params:
+            volume: 5
+            variation: 0.05
+      - acts: ["Destruction"]
+      - spawn:
+          Log:
+            min: 2
+            max: 8
+    type: Destructible
+  type: !PartialOnly entity
+  id: BaseTree
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 400
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 25
+      behaviors:
+      - sound:
+          path: /Audio/Effects/tree_fell.ogg
+          params:
+            volume: 5
+            variation: 0.05
+      - acts: ["Destruction"]
+      - spawn:
+          Log:
+            min: 0
+            max: 1
+      - spawn:
+          MobLuminousObject:
+            min: 0
+            max: 1
+    type: Destructible
+  type: !PartialOnly entity
+  id: LightTree
+...

@@ -1,0 +1,18 @@
+- components:
+  - type: EmissiveLayers
+    glowRadius: 0.75
+    intensity: 1.5
+    layers:
+    - enum.EffectLayers.Unshaded
+  type: !PartialOnly entity
+  id: BulletImpactEffect
+- parent: BulletImpactEffect
+  type: !PartialOnly entity
+  id: BulletImpactEffectDisabler
+- parent: BulletImpactEffect
+  type: !PartialOnly entity
+  id: BulletImpactEffectOrangeDisabler
+- parent: BulletImpactEffect
+  type: !PartialOnly entity
+  id: BulletImpactEffectKinetic
+...

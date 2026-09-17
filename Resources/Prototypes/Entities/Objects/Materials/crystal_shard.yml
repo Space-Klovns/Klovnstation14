@@ -5,7 +5,9 @@
   name: crystal shard
   description:  A small piece of crystal.
   components:
-  - type: Sharp
+  - type: Tool
+    qualities:
+    - Slicing
   - type: Execution
     doAfterDuration: 4.0
   - type: Sprite
@@ -30,12 +32,6 @@
     damageModifierSet: Glass
   - type: StaticPrice
     price: 50
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/materials/glass_pick_up.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/materials/glass_drop.ogg
 
 - type: entity
   parent: ShardCrystalBase

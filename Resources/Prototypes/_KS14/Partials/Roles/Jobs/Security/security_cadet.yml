@@ -1,0 +1,8 @@
+- requirements: !Remove
+  - time: 2h
+  - department: Security
+    time: 3h
+    inverted: true
+  type: !PartialOnly job
+  id: SecurityCadet
+...

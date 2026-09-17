@@ -11,7 +11,6 @@
   lightColor: Orange
   texturePath: /Textures/Effects/fire.rsi
   fireStates: 3
-  fireStacks: 2.5 # KS14
   temperature: 800
 
 - type: explosion
@@ -133,5 +132,5 @@
   lightColor: Orange
   texturePath: /Textures/Effects/fire.rsi
   fireStates: 3
-  fireStacks: 4 # KS14: 2 -> 4
+  fireStacks: 2
   temperature: 1500

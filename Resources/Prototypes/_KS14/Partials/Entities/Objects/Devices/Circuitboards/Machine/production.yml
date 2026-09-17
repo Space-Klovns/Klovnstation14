@@ -1,0 +1,9 @@
+- name: flatpacker machine board
+  type: !PartialOnly entity
+  id: FlatpackerMachineCircuitboard
+- components:
+  - prototype: GravityGeneratorMini
+    type: MachineBoard
+  type: !PartialOnly entity
+  id: MiniGravityGeneratorCircuitboard
+...

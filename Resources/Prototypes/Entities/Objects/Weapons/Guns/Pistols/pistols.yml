@@ -68,12 +68,6 @@
   - type: Appearance
   - type: StaticPrice
     price: 500
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gun/ballistics/pistol/pistol_pickup1.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gun/ballistics/pistol/pistol_drop1.ogg
 
 - type: entity
   name: viper
@@ -108,7 +102,6 @@
       gun_chamber: !type:ContainerSlot
   - type: StaticPrice
     price: 1000
-  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
 
 - type: entity
   name: echis
@@ -195,7 +188,7 @@
       gun_chamber: !type:ContainerSlot
   - type: StaticPrice
     price: 1500
-  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
+
 - type: entity
   name: mk 58
   parent: [BaseWeaponPistol, BaseSecurityContraband]
@@ -214,19 +207,13 @@
   - type: Item
     storedOffset: 0,-2
   - type: Gun
-    fireRate: 5 # KS14 modified
+    fireRate: 5
     availableModes:
     - SemiAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/mk58.ogg
-    # KS14: Farsound start
-    farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
-      range: 15,80
-    # KS14: Farsound end
   - type: StealTarget
     stealGroup: OfficerHandgun
-  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
 
 - type: entity
   name: N1984
@@ -253,11 +240,6 @@
     - SemiAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/mk58.ogg
-    # KS14: Farsound start
-    farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
-      range: 15,80
-    # KS14: Farsound end
   - type: ItemSlots
     slots:
       gun_magazine:
@@ -276,4 +258,3 @@
         whitelist:
           tags:
             - CartridgeMagnum
-  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution

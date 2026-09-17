@@ -1,0 +1,858 @@
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 9
+  type: !PartialOnly listing
+  id: UplinkPistolViper
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkPistolCobra
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkRifleMosin
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 12
+  cost:
+    Telecrystal: 24
+  type: !PartialOnly listing
+  id: UplinkEsword
+- discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkEnergyDagger
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 15
+  type: !PartialOnly listing
+  id: UplinkEnergyCrossbow
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkThrowingKnivesKit
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 12
+  cost:
+    Telecrystal: 18
+  type: !PartialOnly listing
+  id: UplinkGlovesNorthStar
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 9
+  cost:
+    Telecrystal: 18
+  conditions: !Remove ''
+  type: !PartialOnly listing
+  id: UplinkEshield
+- discountCategory: !Remove ''
+  type: !PartialOnly listing
+  id: uplinkRiggedBoxingGloves
+- discountDownTo:
+    Telecrystal: 18
+  cost:
+    Telecrystal: 36
+  type: !PartialOnly listing
+  id: UplinkSniperBundle
+- discountDownTo:
+    Telecrystal: 24
+  cost:
+    Telecrystal: 30
+  type: !PartialOnly listing
+  id: UplinkHushpup
+- discountDownTo:
+    Telecrystal: 30
+  cost:
+    Telecrystal: 42
+  discountCategory: !Remove ''
+  type: !PartialOnly listing
+  id: UplinkC20R
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 30
+  cost:
+    Telecrystal: 51
+  type: !PartialOnly listing
+  id: UplinkC20RBundle
+- discountDownTo:
+    Telecrystal: 30
+  cost:
+    Telecrystal: 42
+  discountCategory: !Remove ''
+  type: !PartialOnly listing
+  id: UplinkBulldog
+- discountCategory: !Remove ''
+  type: !PartialOnly listing
+  id: UplinkBulldogBundle
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 33
+  cost:
+    Telecrystal: 54
+  type: !PartialOnly listing
+  id: UplinkEstocBundle
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 60
+  cost:
+    Telecrystal: 75
+  type: !PartialOnly listing
+  id: UplinkGrenadeLauncherBundle
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 72
+  cost:
+    Telecrystal: 90
+  type: !PartialOnly listing
+  id: UplinkL6SawBundle
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 12
+  conditions: !Remove ''
+  type: !PartialOnly listing
+  id: UplinkExplosiveGrenade
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkSmokeGrenade
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 9
+  cost:
+    Telecrystal: 18
+  type: !PartialOnly listing
+  id: UplinkSyndieMiniBomb
+- discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkSingularityGrenade
+- discountDownTo:
+    Telecrystal: 9
+  cost:
+    Telecrystal: 15
+  type: !PartialOnly listing
+  id: UplinkGrenadePenguin
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 8
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkC4
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 18
+  cost:
+    Telecrystal: 36
+  type: !PartialOnly listing
+  id: UplinkGrenadierRig
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 35
+  cost:
+    Telecrystal: 50
+  type: !PartialOnly listing
+  id: UplinkC4Bundle
+- discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkEmpGrenade
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkExplodingPen
+- cost:
+    Telecrystal: 33
+  type: !PartialOnly listing
+  id: UplinkSyndicateBomb
+- cost:
+    Telecrystal: 33
+  type: !PartialOnly listing
+  id: UplinkSyndicateBombNukie
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkGrenadeShrapnel
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkGrenadeIncendiary
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkPistol9mmMagazine
+- cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkMagazinePistolSubMachineGun
+- cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkMagazineShotgunPellet
+- cost:
+    Telecrystal: 9
+  type: !PartialOnly listing
+  id: UplinkMagazineShotgunSlug
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkMagazinePistolCaselessRifle
+- cost:
+    Telecrystal: 9
+  type: !PartialOnly listing
+  id: UplinkMosinAmmo
+- cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkEstocAmmo
+- cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkHristovAmmo
+- cost:
+    Telecrystal: 45
+  type: !PartialOnly listing
+  id: UplinkAmmoBundle
+- discountDownTo:
+    Telecrystal: 12
+  cost:
+    Telecrystal: 18
+  type: !PartialOnly listing
+  id: UplinkHypopen
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkHypoDart
+- discountDownTo:
+    Telecrystal: 9
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkChemistryKitBundle
+- cost:
+    Telecrystal: 120
+  type: !PartialOnly listing
+  id: UplinkZombieBundle
+- discountDownTo:
+    Telecrystal: 9
+  cost:
+    Telecrystal: 18
+  type: !PartialOnly listing
+  id: UplinkNocturineChemistryBottle
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkCombatMedkit
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkCombatMedipen
+- discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkStimpack
+- discountDownTo:
+    Telecrystal: 9
+  cost:
+    Telecrystal: 15
+  type: !PartialOnly listing
+  id: UplinkStimkit
+- cost:
+    Telecrystal: 8
+  type: !PartialOnly listing
+  id: UplinkCigarettes
+- productEntity: ClothingBackpackDuffelNukieMedicalBundleFilled
+  discountDownTo:
+    Telecrystal: 48
+  cost:
+    Telecrystal: 72
+  type: !PartialOnly listing
+  id: UplinkMedsBundle
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkSyndicateIDCard
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 9
+  type: !PartialOnly listing
+  id: UplinkAgentIDCard
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 15
+  type: !PartialOnly listing
+  id: UplinkStealthBox
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 9
+  type: !PartialOnly listing
+  id: UplinkChameleonProjector
+- discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkHeadsetEncryptionKey
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkBinaryTranslatorKey
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkCyberpen
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkDecoyDisk
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkBribe
+- discountCategory: usualDiscounts
+  discountDownTo:
+    Telecrystal: 9
+  cost:
+    Telecrystal: 18
+  categories: !Remove
+  - UplinkDeception
+  type: !PartialOnly listing
+  id: UplinkDecoyKit
+- discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkSyndicateBombFake
+- discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkSyndicateBombFakeNukie
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkAccessBreaker
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 9
+  cost:
+    Telecrystal: 15
+  type: !PartialOnly listing
+  id: UplinkEmag
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 9
+  type: !PartialOnly listing
+  id: UplinkRadioJammer
+- discountDownTo:
+    Telecrystal: 9
+  cost:
+    Telecrystal: 15
+  type: !PartialOnly listing
+  id: UplinkSyndicateWeaponModule
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 12
+  conditions: !Remove ''
+  type: !PartialOnly listing
+  id: UplinkDisposableTurret
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkSyndicateMartyrModule
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkSoapSyndie
+- discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkSlipocalypseClusterSoap
+- discountDownTo:
+    Telecrystal: 2
+  cost:
+    Telecrystal: 4
+  type: !PartialOnly listing
+  id: UplinkToolbox
+- discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkSyndicateJawsOfLife
+- discountDownTo:
+    Telecrystal: 12
+  cost:
+    Telecrystal: 24
+  type: !PartialOnly listing
+  id: UplinkPowerSink
+- discountDownTo:
+    Telecrystal: 30
+  cost:
+    Telecrystal: 42
+  type: !PartialOnly listing
+  id: UplinkSyndimovCircuitKit
+- discountDownTo:
+    Telecrystal: 60
+  cost:
+    Telecrystal: 72
+  type: !PartialOnly listing
+  id: UplinkAntimovCircuitBoard
+- cost:
+    Telecrystal: 60
+  type: !PartialOnly listing
+  id: UplinkSurplusBundle
+- cost:
+    Telecrystal: 120
+  type: !PartialOnly listing
+  id: UplinkStarterKit
+- discountDownTo:
+    Telecrystal: 12
+  cost:
+    Telecrystal: 36
+  type: !PartialOnly listing
+  id: UplinkSingarityBeacon
+- cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkCameraBug
+- discountDownTo:
+    Telecrystal: 24
+  cost:
+    Telecrystal: 42
+  type: !PartialOnly listing
+  id: UplinkHoloparaKit
+- discountDownTo:
+    Telecrystal: 21
+  cost:
+    Telecrystal: 42
+  type: !PartialOnly listing
+  id: UplinkReinforcementRadioSyndicate
+- cost:
+    Telecrystal: 90
+  type: !PartialOnly listing
+  id: UplinkReinforcementRadioSyndicateNukeops
+- cost:
+    Telecrystal: 195
+  type: !PartialOnly listing
+  id: UplinkReinforcementRadioSyndicateCyborgAssault
+- discountDownTo:
+    Telecrystal: 12
+  cost:
+    Telecrystal: 18
+  type: !PartialOnly listing
+  id: UplinkReinforcementRadioSyndicateAncestor
+- discountDownTo:
+    Telecrystal: 12
+  cost:
+    Telecrystal: 18
+  type: !PartialOnly listing
+  id: UplinkReinforcementRadioSyndicateAncestorNukeops
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkCarpDehydrated
+- discountDownTo:
+    Telecrystal: 9
+  cost:
+    Telecrystal: 18
+  type: !PartialOnly listing
+  id: UplinkMobCatMicrobomb
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkSyndicatePersonalAI
+- discountDownTo:
+    Telecrystal: 12
+  cost:
+    Telecrystal: 24
+  type: !PartialOnly listing
+  id: UplinkStorageImplanter
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 9
+  cost:
+    Telecrystal: 15
+  type: !PartialOnly listing
+  id: UplinkFreedomImplanter
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 12
+  cost:
+    Telecrystal: 18
+  type: !PartialOnly listing
+  id: UplinkScramImplanter
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 15
+  type: !PartialOnly listing
+  id: UplinkDnaScramblerImplant
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkEmpImplanter
+- discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkRadioImplanter
+- cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkMicroBombImplanter
+- cost:
+    Telecrystal: 39
+  type: !PartialOnly listing
+  id: UplinkMacroBombImplanter
+- cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkDeathAcidifierImplanter
+- discountCategory: usualDiscounts
+  discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkUplinkImplanter
+- cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkDeathRattle
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkFakeMindshield
+- discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkVoiceMaskImplant
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkJetpack
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkChestRig
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkChameleon
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkClothingNoSlipsShoes
+- cost:
+    Telecrystal: 9
+  type: !PartialOnly listing
+  id: UplinkClothingOuterVestWeb
+- discountDownTo:
+    Telecrystal: 9
+  cost:
+    Telecrystal: 15
+  type: !PartialOnly listing
+  id: UplinkClothingOuterVestWebElite
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkClothingShoesBootsMagSyndie
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkEVASyndie
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkHardsuitCarp
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 12
+  cost:
+    Telecrystal: 24
+  type: !PartialOnly listing
+  id: UplinkHardsuitSyndie
+- cost:
+    Telecrystal: 24
+  type: !PartialOnly listing
+  id: UplinkClothingOuterArmorRaid
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 21
+  cost:
+    Telecrystal: 30
+  conditions: !Remove ''
+  type: !PartialOnly listing
+  id: UplinkHardsuitSyndieElite
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 24
+  cost:
+    Telecrystal: 36
+  conditions: !Remove ''
+  type: !PartialOnly listing
+  id: UplinkClothingOuterHardsuitJuggernaut
+- cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkClothingEyesHudSyndicate
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkBackpackSyndicate
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkBarberScissors
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkSnackBox
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkClothingConductingGloves
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkRevolverCapGun
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkSyndicateStamp
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkOutlawHat
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkOutlawGlasses
+- cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkCostumePyjama
+- cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkCostumeClown
+- cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkCarpSuitBundle
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkOperativeSuit
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkOperativeSkirt
+- cost:
+    Telecrystal: 60
+  type: !PartialOnly listing
+  id: UplinkBalloon
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkScarfSyndieRed
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkScarfSyndieGreen
+- discountDownTo:
+    Telecrystal: 9
+  cost:
+    Telecrystal: 18
+  type: !PartialOnly listing
+  id: uplinkGatfruitSeeds
+- discountDownTo:
+    Telecrystal: 24
+  cost:
+    Telecrystal: 60
+  type: !PartialOnly listing
+  id: uplinkHolyHandGrenade
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 12
+  conditions: !Remove
+  - whitelist:
+    - Mime
+    - Clown
+    - Passenger
+  type: !PartialOnly listing
+  id: uplinkRevolverCapGunFake
+- discountDownTo:
+    Telecrystal: 9
+  cost:
+    Telecrystal: 18
+  type: !PartialOnly listing
+  id: UplinkClusterBananaPeel
+- discountDownTo:
+    Telecrystal: 18
+  cost:
+    Telecrystal: 36
+  type: !PartialOnly listing
+  id: UplinkHoloclownKit
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 9
+  conditions: !Remove
+  - whitelist:
+    - Chef
+    - Botanist
+    - Clown
+    - Mime
+    - Passenger
+  type: !PartialOnly listing
+  id: uplinkHotPotato
+- discountDownTo:
+    Telecrystal: 0
+  cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkChimpUpgradeKit
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 12
+  conditions: !Remove
+  - whitelist:
+    - Janitor
+  type: !PartialOnly listing
+  id: uplinkProximityMine
+- cost:
+    Telecrystal: 15
+  discountCategory: !Remove ''
+  discountDownTo: !Remove ''
+  type: !PartialOnly listing
+  id: UplinkSyndicateSpongeBox
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 9
+  type: !PartialOnly listing
+  id: UplinkCaneBlade
+- discountDownTo:
+    Telecrystal: 6
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkCombatBakery
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkContrabandLighter
+- cost:
+    Telecrystal: 3
+  type: !PartialOnly listing
+  id: UplinkSmugglerSatchel
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 9
+  cost:
+    Telecrystal: 12
+  type: !PartialOnly listing
+  id: UplinkAcolyteArmor
+- discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  type: !PartialOnly listing
+  id: UplinkSawAdvanced
+- discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 30
+  cost:
+    Telecrystal: 45
+  type: !PartialOnly listing
+  id: uplinkBriefcaseGun
+- conditions: !Remove
+  - stock: 1
+  - whitelist:
+      components:
+      - HijackTradeStationCondition
+  type: !PartialOnly listing
+  id: uplinkHijackBeacon
+...

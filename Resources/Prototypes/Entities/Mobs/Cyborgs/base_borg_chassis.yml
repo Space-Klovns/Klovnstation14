@@ -82,7 +82,7 @@
   - type: EmagSiliconLaw
     stunTime: 5
   - type: SiliconLawProvider
-    laws: Asimov
+    laws: Crewsimov
   - type: Inventory
     templateId: borg
   - type: Hands
@@ -106,7 +106,7 @@
     damageValue: -10 # 10 seconds to repair from crit
     doAfterDelay: 1
     fuelCost: 0.5
-    allowSelfRepair: true # KS14 - Allow selfrepair
+    allowSelfRepair: false
   - type: BorgChassis
   - type: LockingWhitelist
     blacklist:
@@ -145,10 +145,10 @@
     speechVerb: Robotic
     speechSounds: Borg
   - type: Vocal
-    sounds:
-      Unsexed: UnisexSilicon
+    emoteSounds: UnisexSilicon
     wilhelmProbability: 0
   - type: DamagedSiliconAccent
+    damageAtMaxCorruption: 300
   - type: UnblockableSpeech
   - type: FootstepModifier
     footstepSoundCollection:
@@ -170,6 +170,7 @@
   - type: Injurable
     damageContainer: Silicon
   - type: Destructible
+    generateOverkillThreshold: false
     thresholds:
     - trigger:
         !type:DamageTrigger
@@ -187,13 +188,15 @@
       - !type:PlaySoundBehavior
         sound:
           collection: MetalBreak
-      - !type:EmptyContainersBehaviour
-        containers:
-        - borg_brain
-        - borg_module
-        - cell_slot
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
+      - !type:GibBehavior
+      - !type:SpawnEntitiesBehavior
+        spawn:
+          ScrapGlass:
+            min: 1
+            max: 1
+          SheetSteel:
+            min: 10
+            max: 20
   - type: HandheldLight
     toggleOnInteract: false
     wattage: 0.2
@@ -237,7 +240,6 @@
     - CanPilot
     - SiliconEmotes
     - Unimplantable
-    - SiliconMob
   - type: Emoting
   - type: GuideHelp
     guides:
@@ -369,8 +371,7 @@
     allowedEmotes:
     - Laugh
   - type: Vocal
-    sounds:
-      Unsexed: UnisexSiliconSyndicate
+    emoteSounds: UnisexSiliconSyndicate
   - type: PointLight
     color: "#dd200b"
   - type: BypassLock
@@ -430,8 +431,7 @@
     allowedEmotes:
     - Laugh
   - type: Vocal
-    sounds:
-      Unsexed: UnisexSiliconSyndicate
+    emoteSounds: UnisexSiliconSyndicate
   - type: PointLight
     color: "#dd200b"
   - type: BypassLock
@@ -485,8 +485,7 @@
     allowedEmotes:
     - Laugh
   - type: Vocal
-    sounds:
-      Unsexed: UnisexSiliconXenoborg
+    emoteSounds: UnisexSiliconXenoborg
     wilhelmProbability: 0
   - type: DamagedSiliconAccent
   - type: UnblockableSpeech

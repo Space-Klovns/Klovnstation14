@@ -1,0 +1,11 @@
+- type: biomeMarkerLayer
+  id: Goliath
+  prototype: MobGoliath
+  minGroupSize: 1
+  maxGroupSize: 2
+- type: biomeMarkerLayer
+  id: Basilisk
+  prototype: MobBasilisk
+  minGroupSize: 1
+  maxGroupSize: 2
+...

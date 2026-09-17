@@ -1,0 +1,16 @@
+- jobBlacklist: !Remove
+  - CentralCommandOfficial
+  - DeathSquad
+  - ERTLeader
+  - ERTChaplain
+  - ERTEngineer
+  - ERTSecurity
+  - ERTMedical
+  - ERTJanitor
+  - CBURN
+  - ScenarioNt
+  - ScenarioSyndie
+  - ScenarioScav
+  type: !PartialOnly antagSpecifier
+  id: BaseAntagSpecifier
+...

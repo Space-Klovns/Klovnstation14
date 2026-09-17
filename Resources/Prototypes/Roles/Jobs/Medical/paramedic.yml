@@ -3,7 +3,10 @@
   name: job-name-paramedic
   description: job-description-paramedic
   playTimeTracker: JobParamedic
-  # KS14: Removed role requirements
+  requirements:
+  - !type:DepartmentTimeRequirement
+    department: Medical
+    time: 2.5h
   startingGear: ParamedicGear
   icon: "JobIconParamedic"
   supervisors: job-supervisors-cmo
@@ -18,7 +21,6 @@
   equipment:
     id: ParamedicPDA
     ears: ClothingHeadsetMedical
-    belt: ClothingBeltMedicalEMTFilled #ks14
 
 - type: chameleonOutfit
   id: ParamedicChameleonOutfit
@@ -30,4 +32,3 @@
     neck: ClothingNeckStethoscope
     outerClothing: ClothingOuterCoatParamedicWB
     gloves: ClothingHandsGlovesLatex
-    belt: ClothingBeltMedicalEMT #ks14

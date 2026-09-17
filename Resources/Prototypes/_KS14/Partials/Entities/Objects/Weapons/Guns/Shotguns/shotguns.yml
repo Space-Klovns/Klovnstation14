@@ -1,0 +1,51 @@
+- components:
+  - farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/rifle.ogg
+      range: 15,130
+    type: Gun
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/shotgun/shotgun_pickup1.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/shotgun/shotgun_drop1.ogg
+  - type: CustomSpriteAmmoCounter
+  type: !PartialOnly entity
+  id: BaseWeaponShotgun
+- components:
+  - type: GunExecutionWhitelist
+  - farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/rifle.ogg
+      range: 15,145
+    type: Gun
+  - type: CustomSpriteAmmoCounter
+  type: !PartialOnly entity
+  id: WeaponShotgunBulldog
+- components:
+  - type: GunExecutionWhitelist
+  - type: GunExecutionOrganRemoval
+    removedCategory: Head
+  type: !PartialOnly entity
+  id: WeaponShotgunDoubleBarreled
+- components:
+  - type: GunExecutionWhitelist
+  - type: GunExecutionOrganRemoval
+    removedCategory: Head
+  type: !PartialOnly entity
+  id: WeaponShotgunEnforcer
+- components:
+  - type: GunExecutionWhitelist
+  - type: GunExecutionOrganRemoval
+    removedCategory: Head
+  type: !PartialOnly entity
+  id: WeaponShotgunKammerer
+- components:
+  - type: GunExecutionWhitelist
+  type: !PartialOnly entity
+  id: WeaponShotgunSawn
+- components:
+  - farSoundGunshot: null
+    type: Gun
+  type: !PartialOnly entity
+  id: WeaponShotgunHushpup
+...

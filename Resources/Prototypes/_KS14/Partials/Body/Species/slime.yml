@@ -1,0 +1,51 @@
+- components:
+  - organs:
+    - category: Head
+      entity: OrganSlimePersonHead
+    - category: Torso
+      entity: OrganSlimePersonTorso
+      children:
+      - category: Brain
+        entity: OrganSlimePersonCore
+      - category: Lungs
+        entity: OrganSlimePersonLungs
+    - category: ArmLeft
+      entity: OrganSlimePersonArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganSlimePersonHandLeft
+    - category: ArmRight
+      entity: OrganSlimePersonArmRight
+      children:
+      - category: HandRight
+        entity: OrganSlimePersonHandRight
+    - category: LegLeft
+      entity: OrganSlimePersonLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganSlimePersonFootLeft
+    - category: LegRight
+      entity: OrganSlimePersonLegRight
+      children:
+      - category: FootRight
+        entity: OrganSlimePersonFootRight
+    type: InitialBody
+  type: !PartialOnly entity
+  id: AppearanceSlimePerson
+- components:
+  - sounds:
+      Male: MaleSlime
+      Female: FemaleSlime
+      Unsexed: MaleSlime
+    emoteSounds: !Remove ''
+    type: Vocal
+  - butcheringType: Spike
+    type: Butcherable
+  - requiredOrganCategory: null
+    type: Respirator
+  type: !PartialOnly entity
+  id: MobSlimePerson
+- parent: OrganBase
+  type: !PartialOnly entity
+  id: OrganSlimePerson
+...

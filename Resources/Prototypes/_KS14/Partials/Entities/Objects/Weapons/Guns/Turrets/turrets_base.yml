@@ -1,0 +1,23 @@
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalGlassBreak
+    - trigger:
+        damage: 300
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalGlassBreak
+      - spawn:
+          SheetSteel1:
+            min: 3
+            max: 5
+    type: Destructible
+  - type: EmpAffectedNpc
+  type: !PartialOnly entity
+  id: BaseWeaponTurret
+...

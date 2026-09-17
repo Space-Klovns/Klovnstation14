@@ -28,6 +28,7 @@
   - type: Tool
     qualities:
       - Cutting
+      - Shearing
     useSound:
       path: /Audio/Items/wirecutter.ogg
   - type: RandomSprite
@@ -43,12 +44,6 @@
       Steel: 100
   - type: StaticPrice
     price: 30
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/wirecutter_pickup.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/wirecutter_drop.ogg
 
 - type: entity
   name: screwdriver
@@ -93,12 +88,6 @@
       Steel: 100
   - type: StaticPrice
     price: 30
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/screwdriver_pickup.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/screwdriver_drop.ogg
 
 - type: entity
   name: wrench
@@ -141,12 +130,6 @@
   - type: GuideHelp
     guides:
     - Construction
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/wrench_pickup.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/wrench_drop.ogg
 
 - type: entity
   name: multitool
@@ -163,13 +146,6 @@
     - state: icon
     - state: green-unlit
       shader: unshaded
-      map: ["screen"] # KS14
-  # KS14: emissive start
-  - type: EmissiveLayers
-    glowRadius: 0.1
-    layers:
-    - screen
-  # KS14: emissive end
   - type: Item
     size: Small
   - type: Clothing
@@ -208,12 +184,6 @@
     - WirePanels
     - Airlocks
     - InspectingPower
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/multitool_pickup.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/multitool_drop.ogg
 
 - type: entity
   name: network configurator
@@ -265,12 +235,6 @@
     - type: GuideHelp
       guides:
       - Networking
-    - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-      sound:
-        path: /Audio/_KS14/Handling/tools/multitool_pickup.ogg
-    - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-      sound:
-        path: /Audio/_KS14/Handling/tools/multitool_drop.ogg
 
 #Power tools
 #Later on these should switch probably switch damage when changing the tool behavior.
@@ -327,12 +291,6 @@
         Piercing: 10
     soundHit:
       path: "/Audio/Items/drill_hit.ogg"
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/rpd_pickup.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/rpd_drop.ogg
 
 - type: entity
   id: RCD
@@ -386,12 +344,6 @@
   - type: ActivatableUI
     inHandsOnly: true
     key: enum.RcdUiKey.Key
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/rcd_pickup.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/rcd_drop.ogg
 
 - type: entity
   id: RCDEmpty
@@ -507,12 +459,6 @@
           state: omnitool-pulsing
         changeSound:
           path: /Audio/Items/change_drill.ogg
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/crowbar_pickup.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/crowbar_drop.ogg
 
 #Other
 - type: entity
@@ -528,7 +474,7 @@
     wideAnimationRotation: 45
     damage:
       types:
-        Blunt: 17
+        Blunt: 14
     soundHit:
       collection: MetalThud
   - type: Item
@@ -541,12 +487,6 @@
   - type: StaticPrice
     price: 25
   - type: Shovel
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/crowbar_pickup.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/crowbar_drop.ogg
 
 - type: entity
   parent: BaseItem

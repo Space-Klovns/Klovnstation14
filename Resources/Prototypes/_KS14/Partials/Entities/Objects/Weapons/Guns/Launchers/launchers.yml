@@ -1,0 +1,25 @@
+- parent: [WeaponLauncherHydra]
+  type: !PartialOnly entity
+  id: WeaponLauncherHydraLethal
+- components:
+  - type: GunBackblast
+    directionOffset: 180
+    radius: 1.5
+    effectField: 160
+    damage:
+      types:
+        Heat: 40
+        Blunt: 35
+    pushForce: 950
+    knockdownTime: 2s
+  type: !PartialOnly entity
+  id: WeaponLauncherRocket
+- components:
+  - type: BlockShootingInSpeczone
+  - fireRate: 0.5
+    type: Gun
+  - delay: 1.5
+    type: UseDelay
+  type: !PartialOnly entity
+  id: WeaponGrapplingGun
+...

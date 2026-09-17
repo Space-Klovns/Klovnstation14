@@ -1,4 +1,4 @@
-﻿- type: tile
+- type: tile
   id: BasePlating
   abstract: true
   friction: 1.5
@@ -14,7 +14,7 @@
   id: Plating
   parent: BasePlating
   name: tiles-plating
-  sprite: /Textures/_KS14/Tiles/Tg/plating.png # KS14: Use KS14 version
+  sprite: /Textures/Tiles/plating.png
 
 - type: tile
   id: PlatingRCD
@@ -50,7 +50,7 @@
   id: PlatingDamaged
   parent: BasePlating
   name: tiles-plating
-  sprite: /Textures/Tiles/plating_damaged.png # KS14 TODO: MAKE DAMAGED VERSION
+  sprite: /Textures/Tiles/plating_damaged.png
   variants: 3
   placementVariants:
   - 1.0

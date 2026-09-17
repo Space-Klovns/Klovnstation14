@@ -1,0 +1,14 @@
+- groups: !Remove
+  - GroupTankHarness
+  - ClownHead
+  - ClownMask
+  - ClownJumpsuit
+  - ClownBackpack
+  - ClownOuterClothing
+  - ClownShoes
+  - Glasses
+  - SurvivalClown
+  - Trinkets
+  type: !PartialOnly roleLoadout
+  id: JobClown
+...

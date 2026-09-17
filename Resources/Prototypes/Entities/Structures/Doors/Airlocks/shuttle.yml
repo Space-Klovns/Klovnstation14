@@ -1,4 +1,4 @@
-﻿- type: entity
+- type: entity
   parent: AirlockRCDResistant
   id: AirlockShuttle
   suffix: Docking
@@ -79,7 +79,6 @@
   - type: Tag
     tags:
       - ForceNoFixRotations
-      - HristovWindowVentable # KS14: let this be penned by hristov
   - type: Construction
     graph: AirlockShuttle
     node: airlock

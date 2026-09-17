@@ -2,7 +2,6 @@
   id: Dragon
   hostile:
   - NanoTrasen
-  - KsNanoTrasenOperative # KS14: nanotrasen specops
   - Syndicate
   - Xeno
   - PetsNT
@@ -39,7 +38,6 @@
   id: PetsNT
   friendly:
   - NanoTrasen
-  - KsNanoTrasenOperative # KS14: nanotrasen specops
   hostile:
   - Mouse
   - SimpleHostile
@@ -52,7 +50,6 @@
   id: SimpleHostile
   hostile:
   - NanoTrasen
-  - KsNanoTrasenOperative # KS14: nanotrasen specops
   - Syndicate
   - Passive
   - PetsNT
@@ -71,7 +68,6 @@
   id: Syndicate
   hostile:
   - NanoTrasen
-  - KsNanoTrasenOperative # KS14: nanotrasen specops
   - SimpleHostile
   - Xeno
   - PetsNT
@@ -85,7 +81,6 @@
   id: Xeno
   hostile:
   - NanoTrasen
-  - KsNanoTrasenOperative # KS14: nanotrasen specops
   - Syndicate
   - Passive
   - PetsNT
@@ -100,7 +95,6 @@
   id: Zombie
   hostile:
   - NanoTrasen
-  - KsNanoTrasenOperative # KS14: nanotrasen specops
   - SimpleNeutral
   - SimpleHostile
   - Syndicate
@@ -116,7 +110,6 @@
   id: Revolutionary
   hostile:
   - NanoTrasen
-  - KsNanoTrasenOperative # KS14: nanotrasen specops
   - Zombie
   - SimpleHostile
   - Dragon
@@ -128,7 +121,6 @@
   id: AllHostile
   hostile:
   - NanoTrasen
-  - KsNanoTrasenOperative # KS14: nanotrasen specops
   - Dragon
   - Mouse
   - Passive
@@ -146,7 +138,6 @@
   id: Wizard
   hostile:
   - NanoTrasen
-  - KsNanoTrasenOperative # KS14: nanotrasen specops
   - Dragon
   - Mouse
   - Passive
@@ -165,7 +156,6 @@
   hostile:
   # they have brains
   - NanoTrasen
-  - KsNanoTrasenOperative # KS14: nanotrasen specops
   - Syndicate
   - Zombie
   - Revolutionary

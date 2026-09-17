@@ -1,0 +1,163 @@
+- table:
+    children: !Remove
+    - weight: 75
+      children:
+      - weight: 5
+        tableId: AllToysTable
+      - children:
+        - id: Lighter
+        - id: CigCartonBlue
+      - children:
+        - id: ClothingEyesGlassesGar
+        - id: ClothingEyesGlassesGarOrange
+        - id: ClothingEyesGlassesGarGiga
+      - id: Wristwatch
+        weight: 0.5
+      - id: ClothingHeadHatCake
+      - id: ClothingHeadHatSkub
+      - id: ClothingHeadHatCone
+      - id: ClothingNeckBling
+      - id: ClothingHeadHelmetCosmonaut
+      - id: ClothingHeadHelmetBasic
+      - id: ClothingShoeSlippersDuck
+      - id: ClothingHeadHatSquid
+      - children:
+        - id: ClothingMaskRat
+        - id: ClothingMaskFox
+        - id: ClothingMaskBee
+        - id: ClothingMaskBear
+        - id: ClothingMaskRaven
+        - id: ClothingMaskJackal
+        - id: ClothingMaskBat
+      - id: ClothingBeltSuspendersRed
+      - id: ClothingBeltSuspendersBlack
+      - id: ClothingEyesEyepatch
+      - id: ClothingEyesGlasses
+      - id: ClothingHandsGlovesLatex
+      - id: ClothingHandsGlovesFingerless
+      - id: ClothingHandsGlovesColorBlack
+      - id: ClothingHeadHatBeret
+      - id: ClothingHeadHatBowlerHat
+      - id: ClothingHeadHatFedoraBrown
+        weight: 0.5
+      - id: ClothingHeadHatFedoraGrey
+        weight: 0.5
+      - id: ClothingHeadHatFez
+      - id: ClothingHeadHatPaper
+      - id: ClothingHeadHatPirate
+      - id: ClothingMaskSterile
+      - id: ClothingMultipleHeadphones
+      - id: ClothingNeckTieRed
+      - id: ClothingOuterCoatGentle
+      - children:
+        - id: ClothingOuterCoatJensen
+        - id: ClothingEyesGlassesJensen
+      - id: ClothingOuterCoatLab
+      - children:
+        - id: ClothingOuterCoatPirate
+        - id: ClothingHeadHatPirateTricord
+      - id: ClothingHeadHatTophat
+      - id: ClothingOuterHoodieBlack
+        weight: 0.5
+      - id: ClothingOuterHoodieGrey
+        weight: 0.5
+      - children:
+        - id: ClothingOuterFlannelRed
+        - id: ClothingOuterFlannelBlue
+        - id: ClothingOuterFlannelGreen
+      - id: ClothingOuterVestHazard
+      - id: ClothingShoesBootsJack
+      - id: ClothingShoesHighheelBoots
+      - id: ClothingShoesBootsLaceup
+      - id: ClothingShoesLeather
+      - id: ClothingShoesBootsSalvage
+      - id: ClothingShoesBootsWork
+      - id: ClothingShoesTourist
+      - id: ClothingUniformJumpsuitLoungewear
+      - id: ClothingHeadHatCowboyRed
+    - weight: 23
+      children:
+      - id: TravelCamera
+      - id: ClothingNeckCloakHerald
+      - id: ClothingHeadHelmetTemplar
+      - id: ToyFigurineSkeleton
+      - id: Basketball
+      - id: Football
+      - id: TennisBall
+      - id: BalloonNT
+      - id: BalloonCorgi
+      - id: MysteryFigureBox
+      - children:
+        - id: ClothingOuterRobesCult
+        - id: ClothingShoesCult
+      - id: ClothingHandsGlovesMercFingerless
+      - id: ClothingHandsGlovesNitrile
+      - id: ClothingHandsGlovesPowerglove
+      - id: ClothingHeadHatAnimalHeadslime
+      - id: ClothingHeadHatBeretMerc
+      - id: ClothingHeadHatOutlawHat
+      - id: ClothingHeadHatUshanka
+      - id: ClothingHeadHatBunny
+      - id: ClothingMaskNeckGaiter
+      - id: ClothingNeckScarfStripedZebra
+      - id: ClothingOuterGhostSheet
+      - id: ClothingUniformJumpsuitAncient
+      - id: ClothingUniformJumpsuitPirate
+      - id: ClothingShoesBootsCowboyFancy
+      - id: ClothingHeadHatCowboyBountyHunter
+    - weight: 2
+      children:
+      - id: DrinkMugDog
+      - id: CigarGold
+      - id: ClothingUniformJumpsuitFamilyGuy
+      - id: WristwatchGold
+      - id: RubberStampGreytide
+      - id: MysteryLighterBox
+  type: !PartialOnly entityTable
+  id: MaintFluffTable
+- table:
+    children: !Remove
+    - weight: 95
+      children:
+      - id: Machete
+      - id: BaseBallBat
+      - id: CombatKnife
+      - id: Spear
+      - id: RifleStock
+      - id: ModularReceiver
+      - id: HydroponicsToolScythe
+    - weight: 5
+      children:
+      - id: Lighter
+      - id: Matchbox
+      - id: ClothingEyesBlindfold
+      - id: ClothingMaskMuzzle
+      - id: ClothingMaskGasSecurity
+      - id: ShardGlass
+        weight: 2
+      - id: Syringe
+      - id: Mousetrap
+      - weight: 2
+        children:
+        - id: Brutepack1
+        - id: Ointment1
+        - id: Gauze1
+      - id: Bola
+      - id: SurvivalKnife
+      - id: ScalpelShiv
+      - id: Claymore
+      - id: PistolBarrel
+      - id: Shiv
+      - id: SawImprov
+      - id: HydroponicsToolMiniHoe
+      - id: ClothingHandsKnuckleDusters
+      - tableId: AllToyWeaponsTable
+  type: !PartialOnly entityTable
+  id: MaintWeaponTable
+- components:
+  - table:
+      prob: 0.8
+    type: EntityTableSpawner
+  type: !PartialOnly entity
+  id: MaintenanceWeaponSpawner
+...

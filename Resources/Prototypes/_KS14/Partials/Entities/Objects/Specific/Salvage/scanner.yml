@@ -1,0 +1,18 @@
+- description: A scanner that checks surrounding rock for useful minerals. It must be in your hand or pocket to work. Might be able to provide info about some things you encounter outside.
+  components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/component_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/component_drop.ogg
+  - type: KsDiscoveringScanner
+  - type: KsDiscoveringScannerFeedback
+    useSoundSpecifier:
+      path: /Audio/Machines/twobeep.ogg
+      params:
+        pitch: 2
+        volume: 3
+  type: !PartialOnly entity
+  id: MineralScannerUnpowered
+...

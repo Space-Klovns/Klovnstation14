@@ -1,0 +1,7 @@
+- components:
+  - type: Tag
+    tags:
+    - HristovWindowVentable
+  type: !PartialOnly entity
+  id: AirlockAssembly
+...

@@ -1,0 +1,10 @@
+- components:
+  - modifiers:
+      flatReductions:
+        Piercing: 7.4
+    type: Armor
+  - type: ExplosionResistance
+    damageCoefficient: 0.9
+  type: !PartialOnly entity
+  id: ClothingOuterArmorHoS
+...

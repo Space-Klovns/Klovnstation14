@@ -24,12 +24,6 @@
       path: /Audio/Weapons/Guns/Empty/lmg_empty.ogg
   - type: StaticPrice
     price: 500
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_pickup1.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_drop1.ogg
   # No chamber because HMG may want its own
 
 - type: entity
@@ -48,11 +42,6 @@
     fireRate: 15
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/minigun.ogg
-    # KS14: Farsound start
-    farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/minigun.ogg
-      range: 15,130
-    # KS14: Farsound end
   - type: BallisticAmmoProvider
     proto: CartridgeMinigun
     capacity: 1000

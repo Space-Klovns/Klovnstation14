@@ -1,0 +1,104 @@
+- components:
+  - type: Sharp
+  - damage:
+      types:
+        Piercing: 15
+    type: MeleeWeapon
+  - damage:
+      types:
+        Piercing: 19
+    type: DamageOtherOnHit
+  - damage:
+      types:
+        Piercing: 5
+    type: IncreaseDamageOnWield
+  - thresholds: !Remove
+    - trigger:
+        damage: 30
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 20
+      behaviors:
+      - sound:
+          collection: GlassBreak
+          params:
+            volume: -4
+      - spawn:
+          PartRodMetal1:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+    type: Destructible
+  - type: Tool
+  type: !PartialOnly entity
+  id: Spear
+- components:
+  - damage:
+      types:
+        Piercing: 19
+    type: MeleeWeapon
+  - damage:
+      types:
+        Piercing: 23
+    type: DamageOtherOnHit
+  type: !PartialOnly entity
+  id: SpearReinforced
+- components:
+  - damage:
+      types:
+        Piercing: 23
+    type: MeleeWeapon
+  - damage:
+      types:
+        Piercing: 27
+    type: DamageOtherOnHit
+  type: !PartialOnly entity
+  id: SpearPlasma
+- components:
+  - damage:
+      types:
+        Piercing: 14.5
+        Radiation: 12.5
+    type: MeleeWeapon
+  - damage:
+      types:
+        Piercing: 16
+        Radiation: 15
+    type: DamageOtherOnHit
+  type: !PartialOnly entity
+  id: SpearUranium
+- parent: SpearReinforced
+  components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 30
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 20
+      behaviors:
+      - sound:
+          collection: GlassBreak
+          params:
+            volume: -4
+      - spawn:
+          MaterialBones1:
+            min: 1
+            max: 2
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: SpearBone
+- components:
+  - damage:
+      types:
+        Piercing: 23
+    type: MeleeWeapon
+  - damage:
+      types:
+        Piercing: 27
+    type: DamageOtherOnHit
+  type: !PartialOnly entity
+  id: SpearSharkMinnow
+...

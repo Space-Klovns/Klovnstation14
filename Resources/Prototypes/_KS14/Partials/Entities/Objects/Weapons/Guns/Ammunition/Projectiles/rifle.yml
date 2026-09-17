@@ -1,0 +1,31 @@
+- components:
+  - damage:
+      types:
+        Piercing: 20
+      percentilePenetration:
+        Piercing: 0.15
+    type: Projectile
+  type: !PartialOnly entity
+  id: BulletRifle
+- components:
+  - damage:
+      types:
+        Piercing: 13
+        Heat: 7
+      percentilePenetration:
+        Piercing: 0.15
+    type: Projectile
+  type: !PartialOnly entity
+  id: BulletRifleIncendiary
+- components:
+  - damage:
+      types:
+        Piercing: 13
+      percentilePenetration:
+        Piercing: 0.15
+      flatPenetration:
+        Piercing: 7
+    type: Projectile
+  type: !PartialOnly entity
+  id: BulletRifleUranium
+...

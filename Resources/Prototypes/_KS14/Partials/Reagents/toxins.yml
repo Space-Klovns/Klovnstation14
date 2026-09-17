@@ -1,0 +1,10 @@
+- metabolisms:
+    Bloodstream:
+      effects: !Remove
+      - damage:
+          types:
+            Poison: 4
+      - frequency: 2
+  type: !PartialOnly reagent
+  id: Toxin
+...

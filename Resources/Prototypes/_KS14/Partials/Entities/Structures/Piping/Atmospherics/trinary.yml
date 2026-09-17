@@ -1,0 +1,35 @@
+- components:
+  - type: StationAiWhitelist
+  type: !PartialOnly entity
+  id: GasTrinaryBase
+- components:
+  - layers: !Remove
+    - sprite: Structures/Piping/Atmospherics/pipe.rsi
+      state: pipeTrinaryConnectors
+      map: ["enum.PipeVisualLayers.Pipe"]
+    - state: gasFilterF
+      map: ["enum.SubfloorLayers.FirstLayer", "enabled"]
+    - type: AtmosPipeLayers
+      alternativePrototypes:
+        Primary: GasFilterFlipped
+        Secondary: GasFilterFlippedAlt1
+        Tertiary: GasFilterFlippedAlt2
+    type: Sprite
+  type: !PartialOnly entity
+  id: GasFilterFlipped
+- components:
+  - layers: !Remove
+    - sprite: Structures/Piping/Atmospherics/pipe.rsi
+      state: pipeTrinaryConnectors
+      map: ["enum.PipeVisualLayers.Pipe"]
+    - state: gasMixerF
+      map: ["enum.SubfloorLayers.FirstLayer", "enabled"]
+    - type: AtmosPipeLayers
+      alternativePrototypes:
+        Primary: GasMixerFlipped
+        Secondary: GasMixerFlippedAlt1
+        Tertiary: GasMixerFlippedAlt2
+    type: Sprite
+  type: !PartialOnly entity
+  id: GasMixerFlipped
+...

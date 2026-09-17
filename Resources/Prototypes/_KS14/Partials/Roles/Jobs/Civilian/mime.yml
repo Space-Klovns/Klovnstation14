@@ -1,0 +1,10 @@
+- special: !Remove
+  - components:
+    - type: MimePowers
+    - type: FrenchAccent
+    - type: KsLanguageGrant
+      understands: [KsLangKlovnish]
+  requirements: !Remove ''
+  type: !PartialOnly job
+  id: Mime
+...

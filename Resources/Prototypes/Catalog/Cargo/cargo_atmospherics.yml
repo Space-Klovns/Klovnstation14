@@ -81,7 +81,7 @@
 #- type: cargoProduct
 #  id: AtmosphericsWaterVapor
 #  icon:
-#    sprite: _KS14/Structures/Storage/canister.rsi
+#    sprite: Structures/Storage/canister.rsi
 #    state: water_vapor
 #  product: WaterVaporCanister
 #  cost: 2600
@@ -101,7 +101,7 @@
 #- type: cargoProduct
 #  id: AtmosphericsTritium
 #  icon:
-#    sprite: _KS14/Structures/Storage/canister.rsi
+#    sprite: Structures/Storage/canister.rsi
 #    state: green
 #  product: TritiumCanister
 #  cost: 15500

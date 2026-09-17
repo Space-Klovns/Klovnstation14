@@ -1,0 +1,69 @@
+- components:
+  - farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/smg.ogg
+      range: 15,100
+    type: Gun
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/smg/smg_pickup1.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/smg/smg_drop1.ogg
+  type: !PartialOnly entity
+  id: BaseWeaponSubMachineGun
+- components:
+  - type: GunExecutionWhitelist
+  - farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/atreides.ogg
+      range: 15,100
+    type: Gun
+  type: !PartialOnly entity
+  id: WeaponSubMachineGunAtreides
+- components:
+  - type: GunExecutionWhitelist
+  - minAngle: 2
+    maxAngle: 16
+    selectedMode: FullAuto
+    burstFireRate: 8
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
+      range: 15,100
+    type: Gun
+  - type: Clothing
+  - type: Wieldable
+  - type: GunWieldBonus
+  type: !PartialOnly entity
+  id: WeaponSubMachineGunC20r
+- description: A C-20r submachine gun for use by cyborgs. Creates .35 caliber ammo on the fly from an internal ammo fabricator, which slowly self-charges.
+  components:
+  - selectedMode: FullAuto
+    availableModes: !Remove
+    - FullAuto
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
+      range: 15,100
+    burstFireRate: !Remove ''
+    type: Gun
+  type: !PartialOnly entity
+  id: WeaponSubMachineGunC20rROW
+- components:
+  - minAngle: 19
+    maxAngle: 29
+    fireRate: 7
+    availableModes: !Remove
+    - Burst
+    - SemiAuto
+    type: Gun
+  - type: GunExecutionWhitelist
+  type: !PartialOnly entity
+  id: WeaponSubMachineGunDrozd
+- components:
+  - type: GunExecutionWhitelist
+  - type: EmissiveLayers
+    glowRadius: 0.35
+    layers:
+    - enum.GunVisualLayers.BaseUnshaded
+    - enum.GunVisualLayers.MagUnshaded
+  type: !PartialOnly entity
+  id: WeaponSubMachineGunWt550
+...

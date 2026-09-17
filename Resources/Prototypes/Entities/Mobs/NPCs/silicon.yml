@@ -24,9 +24,9 @@
   - type: Pullable
   - type: Tag
     tags:
+    - DoorBumpOpener
     - SiliconEmotes
     - Unimplantable
-    - SiliconMob
   - type: MobState
     allowedStates:
       - Alive
@@ -45,8 +45,7 @@
   - type: TypingIndicator
     proto: robot
   - type: Vocal
-    sounds:
-      Unsexed: UnisexSilicon
+    emoteSounds: UnisexSilicon
   - type: Emoting
   - type: ZombieImmune
   - type: ProtectedFromStepTriggers
@@ -103,6 +102,7 @@
     - Robotics
   - type: Tag
     tags:
+    - DoorBumpOpener
     - SiliconEmotes
     - Bot
     - Unimplantable
@@ -149,11 +149,6 @@
   - type: Vocalizer
   - type: DatasetVocalizer
     dataset: FirebotAd
-  - type: ControllableBot #KS14
-  - type: Prying #this is gonna be a lot of fun - KS14
-    speedModifier: 1.5
-    useSound:
-      path: /Audio/Items/crowbar.ogg
 
 - type: entity
   parent: MobSiliconBase
@@ -173,16 +168,7 @@
     state: honkbot
   - type: HTN
     rootTask:
-      task: BasicBotCompound
-    blackboard:
-      NavInteract: !type:Bool
-        true
-      NavPry: !type:Bool
-        true
-  - type: Prying #this is gonna be a lot of fun - KS14
-    speedModifier: 1.5
-    useSound:
-      path: /Audio/Items/crowbar.ogg
+      task: HonkbotCompound
   - type: Slippery
     slipData:
       launchForwardsMultiplier: 2
@@ -226,7 +212,6 @@
       path: /Audio/Items/bikehorn.ogg
       params:
         variation: 0.125
-  - type: ControllableBot #KS14
 
 - type: entity
   parent: MobHonkBot
@@ -259,8 +244,7 @@
       params:
         variation: 0.125
   - type: Vocal
-    sounds:
-      Unsexed: Cluwne
+    emoteSounds: Cluwne
   - type: ExplodeOnTrigger
   - type: Explosive
     explosionType: Default
@@ -305,18 +289,12 @@
     interactFailureString: petting-failure-cleanbot
     interactSuccessSound:
       path: /Audio/Ambience/Objects/periodic_beep.ogg
-  - type: ControllableBot #KS14
-  - type: Prying #this is gonna be a lot of fun - KS14
-    speedModifier: 1.5
-    useSound:
-      path: /Audio/Items/crowbar.ogg
 
 - type: entity
   parent:
   - MobSiliconBase
   - ShowMedicalIcons
   - StripableInventoryBase
-  - BaseRelaxedAnchoring
   id: MobMedibot
   name: medibot
   description: No substitute for a doctor, but better than nothing.
@@ -345,15 +323,6 @@
   - type: HTN
     rootTask:
       task: MedibotCompound
-    blackboard:
-      NavInteract: !type:Bool
-        true
-      NavPry: !type:Bool
-        true
-  - type: Prying #this is gonna be a lot of fun - KS14
-    speedModifier: 1.5
-    useSound:
-      path: /Audio/Items/crowbar.ogg
   - type: Construction
     graph: MediBot
     node: bot
@@ -369,7 +338,6 @@
   - type: Inventory
     templateId: medibot
   - type: DoAfter
-  - type: ControllableBot #KS14
 
 - type: entity
   parent:
@@ -401,19 +369,6 @@
     interactFailureString: petting-failure-mimebot
   - type: Inventory
     templateId: head
-  - type: HTN
-    rootTask:
-      task: BasicBotCompound
-    blackboard:
-      NavInteract: !type:Bool
-        true
-      NavPry: !type:Bool
-        true
-  - type: Prying #this is gonna be a lot of fun - KS14
-    speedModifier: 1.5
-    useSound:
-      path: /Audio/Items/crowbar.ogg
-  - type: ControllableBot #KS14
 
 - type: entity
   parent: MobSiliconBase
@@ -474,6 +429,7 @@
       collection: FootstepBorg
   - type: Tag
     tags:
+    - DoorBumpOpener
     - FootstepSound
     - SiliconEmotes
     - Bot
@@ -484,19 +440,6 @@
     - Supply
   - type: Puller
     needsHands: false
-  - type: HTN
-    rootTask:
-      task: BasicBotCompound
-    blackboard:
-      NavInteract: !type:Bool
-        true
-      NavPry: !type:Bool
-        true
-  - type: Prying #this is gonna be a lot of fun - KS14
-    speedModifier: 1.5
-    useSound:
-      path: /Audio/Items/crowbar.ogg
-  - type: ControllableBot #KS14
 
 - type: entity
   parent: [ MobSiliconBase, MobCombat ]
@@ -528,17 +471,7 @@
   - type: HTN
     rootTask:
       task: HugBotCompound
-    blackboard:
-      NavInteract: !type:Bool
-        true
-      NavPry: !type:Bool
-        true
-  - type: Prying #this is gonna be a lot of fun - KS14
-    speedModifier: 1.5
-    useSound:
-      path: /Audio/Items/crowbar.ogg
   - type: InteractionPopup
     interactSuccessString: hugging-success-generic
     interactSuccessSound: /Audio/Effects/thudswoosh.ogg
     messagePerceivedByOthers: hugging-success-generic-others
-  - type: ControllableBot #KS14

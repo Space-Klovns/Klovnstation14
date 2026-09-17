@@ -1,0 +1,18 @@
+- components:
+  - type: KsIdLockKey
+    inheritable: true
+    inheritPopupLoc: ks-popup-idlock-id-inherited-access
+  type: !PartialOnly entity
+  id: IDCardStandard
+- components:
+  - tags: !Remove
+    - CentralCommand
+    - NuclearOperative
+    - SyndicateAgent
+    - Wizard
+    - Xenoborg
+    - Bluelab
+    type: Access
+  type: !PartialOnly entity
+  id: UniversalIDCard
+...

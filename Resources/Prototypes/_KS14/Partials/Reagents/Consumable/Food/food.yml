@@ -1,0 +1,31 @@
+- metabolisms:
+    Metabolites:
+      effects: !Remove
+      - !type:SatiateHunger ''
+      - damage:
+          Brute: -0.2
+          Burn: -0.2
+      - amount: -0.8
+      - amount: 1.5
+  type: !PartialOnly reagent
+  id: Nutriment
+- metabolisms:
+    Metabolites:
+      effects: !Remove
+      - damage:
+          Brute: -0.5
+          Burn: -0.5
+      - amount: -0.25
+      - !type:SatiateHunger ''
+  type: !PartialOnly reagent
+  id: Vitamin
+- metabolisms:
+    Metabolites:
+      effects: !Remove
+      - damage:
+          Brute: -0.4
+      - amount: 2
+      - !type:SatiateHunger ''
+  type: !PartialOnly reagent
+  id: Protein
+...

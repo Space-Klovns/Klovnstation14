@@ -1,0 +1,13 @@
+- effects: !Remove
+  - requirement:
+      role: JobAtmosphericTechnician
+      time: 6h
+  - requirement:
+      role: JobStationEngineer
+      time: 6h
+  - requirement:
+      department: Engineering
+      time: 15h
+  type: !PartialOnly loadoutEffectGroup
+  id: SeniorEngineering
+...

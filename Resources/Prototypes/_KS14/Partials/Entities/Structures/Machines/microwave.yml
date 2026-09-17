@@ -1,0 +1,9 @@
+- components:
+  - type: EmissiveLayers
+    glowRadius: 0.35
+    layers:
+    - enum.MicrowaveVisualizerLayers.BaseUnlit
+  - type: StationAiWhitelist
+  type: !PartialOnly entity
+  id: KitchenMicrowave
+...

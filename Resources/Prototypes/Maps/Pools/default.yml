@@ -1,24 +1,15 @@
 - type: gameMapPool
   id: DefaultMapPool
   maps:
+  - Bagel
   - Box
+  - Elkridge
+  - Fland
   - Marathon
+  - Oasis
   - Packed
-  # KS14 start: ported maps
-  - Mira
-  - Omega
-  # KS14 end
-  # KS14 start: restored maps
-  - Saltern
-  # KS14 end
-  # KS14 start: removed maps
-  # - Meta #RIP
-  # - Bagel
-  # - Fland
-  # - Snowball
-  # - Oasis
-  # - Plasma
-  # - Exo
-  # - Reach
-  #- Serpentcrest # FUCK NO
-  # KS14 end
+  - Plasma
+  - Reach
+  - Exo
+  - Snowball
+  - Serpentcrest

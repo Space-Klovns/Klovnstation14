@@ -1,0 +1,19 @@
+- components:
+  - type: Extractable
+    grindableSolutionName: greenGlowstick
+  - type: SolutionContainerManager
+    solutions:
+      greenGlowstick:
+        maxVol: 10
+        reagents:
+        - ReagentId: Water
+          Quantity: 2
+        - ReagentId: Hydrogen
+          Quantity: 2
+        - ReagentId: Chlorine
+          Quantity: 1
+        - ReagentId: Uranium
+          Quantity: 5
+  type: !PartialOnly entity
+  id: GlowstickGreen
+...

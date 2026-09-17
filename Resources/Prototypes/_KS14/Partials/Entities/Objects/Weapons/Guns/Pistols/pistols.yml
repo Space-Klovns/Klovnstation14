@@ -1,0 +1,34 @@
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/pistol/pistol_pickup1.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/pistol/pistol_drop1.ogg
+  type: !PartialOnly entity
+  id: BaseWeaponPistol
+- components:
+  - type: GunExecutionWhitelist
+  type: !PartialOnly entity
+  id: WeaponPistolViper
+- components:
+  - type: GunExecutionWhitelist
+  type: !PartialOnly entity
+  id: WeaponPistolCobra
+- components:
+  - farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
+      range: 15,80
+    type: Gun
+  - type: GunExecutionWhitelist
+  type: !PartialOnly entity
+  id: WeaponPistolMk58
+- components:
+  - farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
+      range: 15,80
+    type: Gun
+  - type: GunExecutionWhitelist
+  type: !PartialOnly entity
+  id: WeaponPistolN1984
+...

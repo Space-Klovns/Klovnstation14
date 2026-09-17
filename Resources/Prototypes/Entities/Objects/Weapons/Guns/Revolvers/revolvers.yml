@@ -30,11 +30,6 @@
     - SemiAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/revolver.ogg
-    # KS14: Farsound start
-    farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/revolver.ogg
-      range: 15,95
-    # KS14: Farsound end
   - type: UseDelay
     delay: 0.66
   - type: ContainerContainer
@@ -55,12 +50,6 @@
       path: /Audio/Weapons/Guns/MagIn/revolver_magin.ogg
   - type: StaticPrice
     price: 500
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gun/ballistics/pistol/pistol_pickup1.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gun/ballistics/pistol/pistol_drop1.ogg
 
 - type: entity
   name: Deckard
@@ -89,7 +78,6 @@
   - type: Appearance
   - type: StaticPrice
     price: 1500
-  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
 
 - type: entity
   name: Inspector
@@ -109,7 +97,6 @@
     ammoSlots: [ null, null, null, null, null, null ]
   - type: StealTarget
     stealGroup: OfficerHandgun
-  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
 
 - type: entity
   name: Mateba
@@ -127,12 +114,6 @@
     fireRate: 3
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/mateba.ogg
-    # KS14: Farsound start
-    farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
-      range: 15,90
-    # KS14: Farsound end
-  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
 
 - type: entity
   parent: WeaponRevolverMateba
@@ -163,14 +144,8 @@
       path: /Audio/Weapons/Guns/Gunshots/revolver.ogg
       params:
         volume: 2.25
-    # KS14: Farsound start
-    farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/revolver.ogg
-      range: 15,95
-    # KS14: Farsound end
   - type: StaticPrice
     price: 1500 # Botany can shit these out like candy, but let's see how it goes
-  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
 
 - type: entity
   parent: WeaponRevolverPython
@@ -202,7 +177,6 @@
     capacity: 5
     chambers: [ True, True, True, True, True ]
     ammoSlots: [ null, null, null, null, null ]
-  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
 
 - type: entity
   parent: WeaponRevolverPirate
@@ -214,3 +188,4 @@
     capacity: 5
     chambers: [ null, null, null, null, null ]
     ammoSlots: [ null, null, null, null, null ]
+

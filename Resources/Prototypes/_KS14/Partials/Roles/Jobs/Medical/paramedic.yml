@@ -1,0 +1,12 @@
+- requirements: !Remove ''
+  type: !PartialOnly job
+  id: Paramedic
+- equipment:
+    belt: ClothingBeltMedicalEMTFilled
+  type: !PartialOnly startingGear
+  id: ParamedicGear
+- equipment:
+    belt: ClothingBeltMedicalEMT
+  type: !PartialOnly chameleonOutfit
+  id: ParamedicChameleonOutfit
+...

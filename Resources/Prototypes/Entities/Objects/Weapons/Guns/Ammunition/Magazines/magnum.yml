@@ -13,12 +13,6 @@
       tags:
         - CartridgeMagnum
     capacity: 7
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gun/ballistics/magazine/magazine_pickup1.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gun/ballistics/magazine/magazine_drop1.ogg
 
 - type: entity
   parent: BaseMagazineMagnum

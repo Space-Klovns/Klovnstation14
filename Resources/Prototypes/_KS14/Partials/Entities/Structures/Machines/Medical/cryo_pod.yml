@@ -1,0 +1,6 @@
+- components:
+  - type: StationAiWhitelist
+  - type: AmbientMusicMarkerMedical
+  type: !PartialOnly entity
+  id: CryoPod
+...

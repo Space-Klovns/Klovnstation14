@@ -40,7 +40,7 @@
         acts: [ "Destruction" ]
   - type: ZombieImmune
   - type: ProtectedFromStepTriggers
-  # KS14: Removed StunVisuals
+  - type: StunVisuals
 
 - type: entity
   abstract: true

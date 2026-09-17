@@ -1,0 +1,15 @@
+- type: entity
+  parent: BaseAction
+  id: ActionGravityDive
+  name: Dive
+  description: Dive forwards.
+  components:
+  - type: Action
+    useDelay: 12
+    icon:
+      sprite: Interface/Actions/jump.rsi
+      state: icon
+  - type: InstantAction
+    event:
+      staminaCost: 65.220
+...

@@ -14,15 +14,14 @@
   id: WeatherRain
   components:
   - type: WeatherStatusEffect
-    ksRainDropletMax: 16 # KS14
     sprite:
       sprite: /Textures/Effects/weather.rsi
       state: rain
     sound:
-      path: /Audio/_KS14/Effects/Weather/rain.ogg # KS14: Changed audio
+      collection: Rain
       params:
         loop: true
-        volume: -5.8 # KS14: -6 -> -5.8
+        volume: -6
 
 - type: entity
   parent: WeatherBase
@@ -33,7 +32,7 @@
       sprite: /Textures/Effects/weather.rsi
       state: ashfall
     sound:
-      path: /Audio/_KS14/Effects/Weather/polar_wind.ogg # KS14: Changed audio
+      path: /Audio/Effects/Weather/snowstorm_weak.ogg
       params:
         loop: true
         volume: -6
@@ -47,7 +46,7 @@
       sprite: /Textures/Effects/weather.rsi
       state: ashfall_light
     sound:
-      path: /Audio/_KS14/Effects/Weather/polar_wind.ogg # KS14: Changed audio
+      path: /Audio/Effects/Weather/snowstorm_weak.ogg
       params:
         loop: true
         volume: -6
@@ -75,7 +74,7 @@
       sprite: /Textures/Effects/weather.rsi
       state: fallout
     sound:
-      path: /Audio/_KS14/Effects/Weather/polar_wind.ogg # KS14: Changed audio
+      path: /Audio/Effects/Weather/snowstorm_weak.ogg
       params:
         loop: true
         volume: -6
@@ -103,7 +102,7 @@
       sprite: /Textures/Effects/weather.rsi
       state: sandstorm
     sound:
-      path: /Audio/_KS14/Effects/Weather/polar_wind.ogg # KS14: Changed audio
+      path: /Audio/Effects/Weather/snowstorm_weak.ogg
       params:
         loop: true
         volume: -6
@@ -131,7 +130,7 @@
       sprite: /Textures/Effects/weather.rsi
       state: snowfall_light
     sound:
-      path: /Audio/_KS14/Effects/Weather/polar_wind.ogg # KS14: Changed audio
+      path: /Audio/Effects/Weather/snowstorm_weak.ogg
       params:
         loop: true
         volume: -6
@@ -145,7 +144,7 @@
       sprite: /Textures/Effects/weather.rsi
       state: snowfall_med
     sound:
-      path: /Audio/_KS14/Effects/Weather/polar_wind.ogg # KS14: Changed audio
+      path: /Audio/Effects/Weather/snowstorm_weak.ogg
       params:
         loop: true
         volume: -6
@@ -156,8 +155,8 @@
   components:
   - type: WeatherStatusEffect
     sprite:
-      sprite: /Textures/_KS14/Effects/weather.rsi # KS14: `/Textures/Effects/weather.rsi` => `/Textures/_KS14/Effects/weather.rsi`
-      state: snow_storm # KS14: `snowfall_heavy` => `snow_storm`
+      sprite: /Textures/Effects/weather.rsi
+      state: snowfall_heavy
     sound:
       path: /Audio/Effects/Weather/snowstorm.ogg
       params:
@@ -169,7 +168,6 @@
   id: WeatherStorm
   components:
   - type: WeatherStatusEffect
-    ksRainDropletMax: 40 # KS14
     sprite:
       sprite: /Textures/Effects/weather.rsi
       state: storm

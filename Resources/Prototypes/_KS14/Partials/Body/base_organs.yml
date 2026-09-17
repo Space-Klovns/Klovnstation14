@@ -1,0 +1,92 @@
+- parent: [BaseItem, KsBaseBodyEntityHidesContents]
+  type: !PartialOnly entity
+  id: OrganBase
+- parent: [KsBaseSublimb, OrganBase]
+  components:
+  - layers:
+    - state: l_arm
+      offset: -0.2,0
+    state: !Remove ''
+    type: Sprite
+  - type: OrganAttachmentOperation
+    baseOrganCategories:
+    - HandLeft
+  type: !PartialOnly entity
+  id: OrganBaseArmLeft
+- parent: [KsBaseSublimb, OrganBase]
+  components:
+  - layers:
+    - state: r_arm
+      offset: 0.2,0
+    state: !Remove ''
+    type: Sprite
+  - type: OrganAttachmentOperation
+    baseOrganCategories:
+    - HandRight
+  type: !PartialOnly entity
+  id: OrganBaseArmRight
+- components:
+  - layers:
+    - state: l_hand
+      offset: 0.2,0
+    state: !Remove ''
+    type: Sprite
+  type: !PartialOnly entity
+  id: OrganBaseHandLeft
+- components:
+  - layers:
+    - state: r_hand
+      offset: 0.2,0
+    state: !Remove ''
+    type: Sprite
+  type: !PartialOnly entity
+  id: OrganBaseHandRight
+- parent: [KsBaseSublimb, OrganBase]
+  components:
+  - type: OrganAttachmentOperation
+    baseOrganCategories:
+    - FootLeft
+  type: !PartialOnly entity
+  id: OrganBaseLegLeft
+- parent: [KsBaseSublimb, OrganBase]
+  components:
+  - type: OrganAttachmentOperation
+    baseOrganCategories:
+    - FootRight
+  type: !PartialOnly entity
+  id: OrganBaseLegRight
+- parent: [KsBaseOrganSquishy, OrganBase]
+  components:
+  - type: Solution
+  type: !PartialOnly entity
+  id: OrganBaseBrain
+- parent: [KsBaseOrganSquishy, OrganBase]
+  type: !PartialOnly entity
+  id: OrganBaseTongue
+- parent: [KsBaseOrganSquishy, OrganBase]
+  type: !PartialOnly entity
+  id: OrganBaseAppendix
+- parent: [KsBaseOrganSquishy, OrganBase]
+  components:
+  - stopAutoUpdate: true
+    type: Metabolizer
+  type: !PartialOnly entity
+  id: OrganBaseLungs
+- parent: [KsBaseOrganSquishy, OrganBase]
+  type: !PartialOnly entity
+  id: OrganBaseStomach
+- parent: [KsBaseOrganSquishy, OrganBase]
+  type: !PartialOnly entity
+  id: OrganBaseLiver
+- parent: [KsBaseOrganSquishy, OrganBase]
+  type: !PartialOnly entity
+  id: OrganBaseKidneys
+- components:
+  - layers:
+    - state: head_m
+      offset: 0,-0.3
+    state: !Remove ''
+    type: Sprite
+  type: !PartialOnly entity
+  id: OrganBaseHeadSexed
+...

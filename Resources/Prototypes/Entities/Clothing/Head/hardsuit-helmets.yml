@@ -70,9 +70,6 @@
   - type: Tag
     tags:
     - WhitelistChameleon
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #Engineering Hardsuit
 - type: entity
@@ -134,9 +131,6 @@
   - type: Tag
     tags:
     - WhitelistChameleon
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #Spationaut Hardsuit
 - type: entity
@@ -321,9 +315,6 @@
   - type: Tag
     tags:
     - WhitelistChameleon
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #Brigmedic Hardsuit
 - type: entity
@@ -350,9 +341,6 @@
   - type: PressureProtection
     highPressureMultiplier: 0.6
     lowPressureMultiplier: 1000
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #Warden's Hardsuit
 - type: entity
@@ -377,9 +365,6 @@
         Slash: 0.9
         Piercing: 0.9
         Heat: 0.9
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #Captain's Hardsuit
 - type: entity
@@ -398,9 +383,6 @@
   - type: Tag
     tags:
     - WhitelistChameleon
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #Chief Engineer's Hardsuit
 - type: entity
@@ -464,9 +446,6 @@
   - type: Tag
     tags:
     - WhitelistChameleon
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #Chief Medical Officer's Hardsuit
 - type: entity
@@ -487,9 +466,6 @@
   - type: Tag
     tags:
     - WhitelistChameleon
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #Research Director's Hardsuit
 - type: entity
@@ -510,9 +486,6 @@
   - type: Tag
     tags:
     - WhitelistChameleon
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #Head of Security's hardsuit
 - type: entity
@@ -537,9 +510,6 @@
         Slash: 0.9
         Piercing: 0.9
         Heat: 0.9
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #Luxury Mining Hardsuit
 - type: entity
@@ -587,9 +557,6 @@
   - type: Tag
     tags:
     - WhitelistChameleon
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #Blood-red Medic Hardsuit
 - type: entity
@@ -614,9 +581,6 @@
         Slash: 0.9
         Piercing: 0.9
         Heat: 0.9
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #Syndicate Elite Hardsuit
 - type: entity
@@ -649,9 +613,6 @@
   - type: Tag
     tags:
     - WhitelistChameleon
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #Syndicate Commander Hardsuit
 - type: entity
@@ -679,9 +640,6 @@
   - type: Tag
     tags:
     - WhitelistChameleon
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #Cybersun Juggernaut Hardsuit
 - type: entity
@@ -707,9 +665,6 @@
   - type: Tag
     tags:
     - WhitelistChameleon
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #Wizard Hardsuit
 - type: entity
@@ -737,9 +692,6 @@
   - type: Tag
     tags:
     - WhitelistChameleon
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #Organic Space Suit
 - type: entity
@@ -822,9 +774,6 @@
         Slash: 0.9
         Piercing: 0.9
         Heat: 0.9
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #CENTCOMM / ERT HARDSUITS
 #ERT Leader Hardsuit
@@ -982,9 +931,6 @@
         Heat: 0.9
   - type: ZombificationResistance
     zombificationResistanceCoefficient: 0.75
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #Deathsquad Hardsuit
 - type: entity
@@ -1012,9 +958,6 @@
         Heat: 0.80
         Radiation: 0.80
         Caustic: 0.95
-  - type: ClothingGrantComponent # KS14 - arc flash
-    component:
-    - type: ArcFlashInsulated
 
 #MISC. HARDSUITS
 #Clown Hardsuit

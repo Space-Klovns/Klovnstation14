@@ -1,0 +1,7 @@
+- styles:
+    zipion: ZipionCanister
+    argon: ArgonCanister
+    evaporin: EvaporinCanister
+  type: !PartialOnly paintableGroup
+  id: Canisters
+...

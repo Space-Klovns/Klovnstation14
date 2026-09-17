@@ -1,0 +1,5 @@
+- equipment:
+    neck: !Remove ''
+  type: !PartialOnly chameleonOutfit
+  id: WizardChameleonOutfit
+...

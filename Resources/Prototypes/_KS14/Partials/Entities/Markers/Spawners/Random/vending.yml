@@ -1,0 +1,10 @@
+- table:
+    children: !Remove
+    - id: VendingMachineClothing
+      weight: 4
+    - id: VendingMachineWinter
+      weight: 4
+    - id: VendingMachineTheater
+  type: !PartialOnly entityTable
+  id: ClothingVendorTable
+...

@@ -78,7 +78,6 @@
     - Pacified
     - Flashed
     - Adrenaline
-    - StatusEffectSafeCritHumanoid # KS14: Ports upstream https://github.com/space-wizards/space-station-14/pull/41930
   - type: Identity
   - type: IdExaminable
   - type: Internals
@@ -92,8 +91,6 @@
   - type: Buckle
   - type: CombatMode
     canDisarm: true
-    disarmFailChance: 0 # KS14: shove rework
-  - type: ComplexShove # KS14: shove rework
   - type: MeleeWeapon
     soundHit:
       collection: Punch
@@ -139,10 +136,7 @@
     speechSounds: Alto
   - type: DamageForceSay
   - type: Vocal
-    sounds:
-      Male: MaleHuman
-      Female: FemaleHuman
-      Unsexed: MaleHuman
+    emoteSounds: MaleHuman
   - type: Emoting
   - type: BodyEmotes
     soundsId: GeneralBodyEmotes
@@ -169,13 +163,11 @@
   - MobAtmosStandard
   - MobFlammable
   - BaseSpeciesMob
-  - MobLeaper # KS14 Change
   id: BaseSpeciesMobOrganic
   save: false
   components:
   - type: Hunger
   - type: Thirst
-  - type: EvaporinMetabolizer # KS14
   - type: Barotrauma
     damage:
       types:
@@ -219,18 +211,16 @@
     thermalRegulationTemperatureThreshold: 2
   - type: Perishable
   - type: Butcherable
-    butcheringType: Spike
     spawned:
     - id: FoodMeat
       amount: 5
   - type: Respirator
-    requiredOrganCategory: Head # KS14: Klovnmed, you generally need a head to breathe
     damage:
       types:
-        Asphyxiation: 4 # KS14: 1 -> 4
+        Asphyxiation: 1.0
     damageRecovery:
       types:
-        Asphyxiation: -2.75 # KS14: -1 -> -2.75
+        Asphyxiation: -1.0
   - type: FireVisuals
     alternateState: Standing
-  # KS14: Removed StunVisuals
+  - type: StunVisuals

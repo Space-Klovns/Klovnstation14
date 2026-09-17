@@ -1,11 +1,7 @@
-﻿
-## KS14 README: As part of plushie removal, I didn't remove anything here. Instead, I just made everything inaccessible in char setup and everywhere else.
-## Otherwise there would be huge merge conflict bait.
-
 # This base is created so we don't have to define the different sprite path for each plushie job.
 - type: entity
   abstract: true
-  parent: BaseItem # KS14: Changed to parent off BaseItem since we righteously and rightfully nuked PlushieLizard
+  parent: PlushieLizard
   id: BasePlushieLizardJob
   components:
   - type: Sprite
@@ -208,22 +204,21 @@
   components:
   - type: Sprite
     state: mime
-  # KS14: this causes testfails so who cares
-  # - type: EmitSoundOnUse
-  #   sound: null # mime is silent...
-  # - type: EmitSoundOnLand
-  #   sound: null
-  # - type: EmitSoundOnActivate
-  #   sound: null
-  # - type: EmitSoundOnTrigger
-  #   sound: null
-  # - type: EmitSoundOnCollide
-  #   sound: null
-  # - type: Edible
-  #   useSound: null
-  # - type: MeleeWeapon
-  #   wideAnimationRotation: 180
-  #   soundHit: null
+  - type: EmitSoundOnUse
+    sound: null # mime is silent...
+  - type: EmitSoundOnLand
+    sound: null
+  - type: EmitSoundOnActivate
+    sound: null
+  - type: EmitSoundOnTrigger
+    sound: null
+  - type: EmitSoundOnCollide
+    sound: null
+  - type: Edible
+    useSound: null
+  - type: MeleeWeapon
+    wideAnimationRotation: 180
+    soundHit: null
 
 - type: entity
   parent: BasePlushieLizardJob

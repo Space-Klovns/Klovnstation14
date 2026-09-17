@@ -1,0 +1,37 @@
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 100
+      behaviors:
+      - spawn:
+          SheetSteel1:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+    type: Destructible
+  - type: StationAiWhitelist
+  - type: AmbientMusicMarkerEngineering
+  type: !PartialOnly entity
+  id: AmeController
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 100
+      behaviors:
+      - spawn:
+          SheetSteel1:
+            min: 1
+            max: 2
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: AmeShielding
+...

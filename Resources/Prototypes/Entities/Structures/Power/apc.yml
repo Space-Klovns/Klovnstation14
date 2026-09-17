@@ -2,7 +2,7 @@
   parent: BaseWallmount
   categories: [ HideSpawnMenu ]
   id: BaseAPC
-  name: area power receiver # KS14: "APC" -> "area power receiver"
+  name: APC
   description: A control terminal for the area's electrical systems.
   placement:
     mode: SnapgridCenter
@@ -15,22 +15,16 @@
     sound:
       path: /Audio/Ambience/Objects/hdd_buzz.ogg
   - type: PointLight
-    radius: 0 # KS14: 0
-    energy: 0 # KS14: 0
+    radius: 1.5
+    energy: 3.0
     color: "#3db83b"
     castShadows: false
     netsync: false
-  # KS14 start: access: [["Engineering"]] -> electronics board
-  - type: ContainerFill
-    containers:
-      board: [ KsAPCElectronicsEngineering ]
   - type: AccessReader
-    containerAccessProvider: board
-  # KS14 end
+    access: [["Engineering"]]
   - type: Sprite
     drawdepth: WallMountedItems
     sprite: Structures/Power/apc.rsi
-    noRot: true
     layers:
     - state: base
     - state: panel
@@ -92,25 +86,6 @@
     voltage: Apc
   - type: Apc
     voltage: Apc
-  # KS14: /tg/ parity start
-    onReceiveMessageSound:
-      path: /Audio/_KS14/Machines/Terminal/terminal_on.ogg
-      params:
-        volume: 1
-    offSound:
-      path: /Audio/_KS14/Machines/Terminal/terminal_off.ogg
-      params:
-        volume: 1
-  # KS14 /tg/ parity end
-  # KS14: emissive start
-  - type: EmissiveLayers
-    glowRadius: 0
-    intensity: 0.8
-    offset: 0, -0.7
-    useSpriteTransform: false
-    layers:
-    - enum.ApcVisualLayers.ChargeState
-  # KS14: emissive end
   - type: ExtensionCableProvider
   - type: UserInterface
     interfaces:
@@ -121,16 +96,9 @@
   - type: ActivatableUI
     inHandsOnly: false
     key: enum.ApcUiKey.Key
-  # KS14 start: add electronics board container for construction
-  - type: ContainerContainer
-    containers:
-      board: !type:Container
   - type: Construction
     graph: APC
     node: apc
-    containers:
-    - board
-  # KS14 end
   - type: PowerNetworkBattery
     maxSupply: 10000
     maxChargeRate: 5000
@@ -149,15 +117,6 @@
     damageContainer: StructuralInorganic
   - type: Destructible
     thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 200
-      behaviors: #excess damage, don't spawn entities.
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
-      - !type:PlaySoundBehavior
-        sound:
-          collection: MetalGlassBreak
     - trigger:
         !type:DamageTrigger
         damage: 50
@@ -184,11 +143,11 @@
     priority: 1
   - type: StaticPrice
     price: 500
+  - type: PowerGridCheckNotify
   - type: GuideHelp
     guides:
     - VoltageNetworks
     - Power
-  - type: ArcFlashDeconstructable #KS14
 
 # APC under construction
 - type: entity
@@ -208,12 +167,6 @@
     node: apcFrame
   - type: Destructible
     thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 200
-      behaviors: #excess damage, don't spawn entities.
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
     - trigger:
         !type:DamageTrigger
         damage: 50

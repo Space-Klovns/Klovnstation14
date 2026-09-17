@@ -131,59 +131,28 @@
         32:
           sprite: Mobs/Species/Vox/displacement.rsi
           state: hand_r
-  - type: InitialBody # KS14: Re-arranged
+  - type: InitialBody
     organs:
-    - category: Head # head
-      entity: OrganVoxHead
-      children:
-      - category: Brain
-        entity: OrganVoxBrain
-      - category: Eyes
-        entity: OrganVoxEyes
-      - category: Ears
-        entity: OrganVoxEars
-      - category: Tongue
-        entity: OrganVoxTongue
-
-    - category: Torso # torso
-      entity: OrganVoxTorso
-      children:
-      - category: Appendix
-        entity: OrganVoxAppendix
-      - category: Lungs
-        entity: OrganVoxLungs
-      - category: Heart
-        entity: OrganVoxHeart
-      - category: Stomach
-        entity: OrganVoxStomach
-      - category: Liver
-        entity: OrganVoxLiver
-      - category: Kidneys
-        entity: OrganVoxKidneys
-
-    - category: ArmLeft # arm
-      entity: OrganVoxArmLeft
-      children:
-      - category: HandLeft
-        entity: OrganVoxHandLeft
-
-    - category: ArmRight # arm
-      entity: OrganVoxArmRight
-      children:
-      - category: HandRight
-        entity: OrganVoxHandRight
-
-    - category: LegLeft # leg
-      entity: OrganVoxLegLeft
-      children:
-      - category: FootLeft
-        entity: OrganVoxFootLeft
-
-    - category: LegRight # leg
-      entity: OrganVoxLegRight
-      children:
-      - category: FootRight
-        entity: OrganVoxFootRight
+      Torso: OrganVoxTorso
+      Head: OrganVoxHead
+      ArmLeft: OrganVoxArmLeft
+      ArmRight: OrganVoxArmRight
+      HandRight: OrganVoxHandRight
+      HandLeft: OrganVoxHandLeft
+      LegLeft: OrganVoxLegLeft
+      LegRight: OrganVoxLegRight
+      FootLeft: OrganVoxFootLeft
+      FootRight: OrganVoxFootRight
+      Brain: OrganVoxBrain
+      Eyes: OrganVoxEyes
+      Tongue: OrganVoxTongue
+      Appendix: OrganVoxAppendix
+      Ears: OrganVoxEars
+      Lungs: OrganVoxLungs
+      Heart: OrganVoxHeart
+      Stomach: OrganVoxStomach
+      Liver: OrganVoxLiver
+      Kidneys: OrganVoxKidneys
   - type: HumanoidProfile
     species: Vox
 
@@ -194,9 +163,6 @@
   id: MobVox
   name: Urist McVox
   components:
-  - type: KsLanguageKnowledge # KS14
-    speaks: [ KsLangCommon, KsLangVox ] # KS14
-    understands: [ KsLangCommon, KsLangVox ] # KS14
   - type: Damageable
     damageModifierSet: Vox
   - type: Speech
@@ -210,12 +176,8 @@
       sprite: Effects/creampie.rsi
       state: creampie_vox
   - type: Vocal
-    sounds:
-      Male: UnisexVox
-      Female: UnisexVox
-      Unsexed: UnisexVox
+    emoteSounds: UnisexVox
   - type: Butcherable
-    butcheringType: Spike
     spawned:
     - id: FoodMeatChicken
       amount: 5
@@ -293,7 +255,7 @@
   - type: Wagging
 
 - type: entity
-  parent: OrganBase
+  parent: OrganBaseOrganic
   id: OrganVox
   abstract: true
   suffix: Vox

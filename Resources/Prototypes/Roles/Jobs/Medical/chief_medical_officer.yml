@@ -8,13 +8,13 @@
   requirements:
     - !type:RoleTimeRequirement
       role: JobChemist
-      time: 2h #2 hrs, klovn
+      time: 2.5h
     - !type:RoleTimeRequirement
       role: JobMedicalDoctor
-      time: 3h #3 hrs, klovn
-#    - !type:DepartmentTimeRequirement, klovn, redundant
-#      department: Medical
-#      time: 10h #10 hrs
+      time: 5h
+    - !type:DepartmentTimeRequirement
+      department: Medical
+      time: 10h
   weight: 10
   startingGear: CMOGear
   icon: "JobIconChiefMedicalOfficer"
@@ -39,7 +39,6 @@
   equipment:
     id: CMOPDA
     ears: ClothingHeadsetCMO
-    belt: ClothingBeltMedicalFilled #ks14
   storage:
     back:
     - Flash
@@ -55,4 +54,3 @@
     neck: ClothingCloakCmo
     outerClothing: ClothingOuterCoatLabCmo
     gloves: ClothingHandsGlovesNitrile
-    belt: ClothingBeltMedical #KS14

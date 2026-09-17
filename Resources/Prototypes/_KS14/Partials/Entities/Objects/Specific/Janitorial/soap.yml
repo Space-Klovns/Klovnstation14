@@ -1,0 +1,36 @@
+- components:
+  - slipData:
+      stunTime: 1.5
+      knockdownTime: 1.5
+    type: Slippery
+  type: !PartialOnly entity
+  id: BaseSoap
+- components:
+  - slipData:
+      stunTime: 3
+    type: Slippery
+  type: !PartialOnly entity
+  id: SoapSyndie
+- components:
+  - slipData:
+      stunTime: 1.5
+      knockdownTime: 1.5
+    type: Slippery
+  type: !PartialOnly entity
+  id: SoapletSyndie
+- components:
+  - type: Slippery
+    slipData:
+      stunTime: 1.5
+      knockdownTime: 1.5
+  - type: StepTrigger
+  type: !PartialOnly entity
+  id: SoapHomemade
+- components:
+  - slipData:
+      stunTime: 5
+      knockdownTime: 5
+    type: Slippery
+  type: !PartialOnly entity
+  id: SoapOmega
+...

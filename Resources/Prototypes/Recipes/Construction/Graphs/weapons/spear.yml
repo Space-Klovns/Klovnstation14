@@ -118,12 +118,12 @@
             message: "Construction"
             impact: High
           steps:
-            - material: Bones #KS14 - only bones
+            - material: Bones
               amount: 4
               doAfter: 2
-            #- material: WebSilk
-            #  amount: 1
-            #  doAfter: 1
+            - material: WebSilk
+              amount: 1
+              doAfter: 1
     - node: spear
       entity: SpearBone
 

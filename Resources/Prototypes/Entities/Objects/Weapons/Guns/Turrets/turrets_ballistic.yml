@@ -7,21 +7,17 @@
     factions:
     - Syndicate
 
-# KS14 Start: move base
 - type: entity
   parent: BaseWeaponBallisticTurret
-  id: BaseWeaponTurretDisposable
+  id: WeaponTurretSyndicateDisposable
   name: disposable ballistic turret
-  abstract: true
+  suffix: Syndicate, Disposable
   components:
+  - type: NpcFactionMember
+    factions:
+    - Syndicate
   - type: Destructible
     thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 600
-      behaviors:
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
     - trigger:
         !type:DamageTrigger
         damage: 100
@@ -38,6 +34,10 @@
   - type: BallisticAmmoProvider
     proto: CartridgePistol
     capacity: 50
+  - type: Construction
+    deconstructionTarget: null
+    graph: WeaponTurretSyndicateDisposable
+    node: disposableTurret
   - type: Repairable
     qualityNeeded: "Anchoring"
     doAfterDelay: 3
@@ -49,21 +49,6 @@
     intensitySlope: 1.5
     totalIntensity: 30
     canCreateVacuum: false
-# KS14 End
-
-- type: entity
-  parent: BaseWeaponTurretDisposable # KS14: change parent, use base instead
-  id: WeaponTurretSyndicateDisposable
-  name: disposable ballistic turret
-  suffix: Syndicate, Disposable
-  components:
-  - type: NpcFactionMember
-    factions:
-    - Syndicate
-  - type: Construction
-    deconstructionTarget: null
-    graph: WeaponTurretSyndicateDisposable
-    node: disposableTurret
 
 - type: entity
   parent: BaseWeaponBallisticTurret

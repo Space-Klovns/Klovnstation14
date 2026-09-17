@@ -1,0 +1,251 @@
+- components:
+  - layers: !Remove
+    - state: rbase
+      map: ["enum.StorageVisualLayers.Base"]
+    - state: unlocked
+      shader: Emissive
+    - state: closed
+      map: ["enum.StorageVisualLayers.Door"]
+    - state: locked
+      map: ["enum.LockVisualLayers.Lock"]
+      shader: Emissive
+    type: Sprite
+  type: !PartialOnly entity
+  id: ShelfBaseReinforced
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - sound:
+          collection: WoodDestroyHeavy
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 60
+      behaviors:
+      - sound:
+          collection: WoodDestroyHeavy
+      - spawn:
+          MaterialWoodPlank1:
+            min: 1
+            max: 3
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: ShelfWood
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 120
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          SheetSteel1:
+            min: 2
+            max: 4
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: ShelfMetal
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 100
+      behaviors:
+      - sound:
+          collection: WindowShatter
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 50
+      behaviors:
+      - sound:
+          collection: WindowShatter
+      - spawn:
+          ShardGlass:
+            min: 0
+            max: 2
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: ShelfGlass
+- components:
+  - layers: !Remove
+    - state: rbase
+      map: ["enum.StorageVisualLayers.Base"]
+    - state: closed
+      map: ["enum.StorageVisualLayers.Door"]
+    - state: locked
+      map: ["enum.LockVisualLayers.Lock"]
+      shader: Emissive
+    type: Sprite
+  - thresholds: !Remove
+    - trigger:
+        damage: 400
+      behaviors:
+      - sound:
+          collection: WoodDestroyHeavy
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 215
+      behaviors:
+      - sound:
+          collection: WoodDestroyHeavy
+      - spawn:
+          MaterialWoodPlank:
+            min: 2
+            max: 5
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: ShelfRWood
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 900
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 450
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          SheetPlasteel1:
+            min: 2
+            max: 3
+          ShardGlass:
+            min: 1
+            max: 2
+          PartRodMetal1:
+            min: 1
+            max: 2
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: ShelfRMetal
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 500
+      behaviors:
+      - sound:
+          collection: WindowShatter
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 250
+      behaviors:
+      - sound:
+          collection: WindowShatter
+      - spawn:
+          SheetPlastic1:
+            min: 1
+            max: 3
+          ShardGlass:
+            min: 1
+            max: 2
+          PartRodMetal1:
+            min: 0
+            max: 1
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: ShelfRGlass
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - sound:
+          collection: WoodDestroyHeavy
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 100
+      behaviors:
+      - sound:
+          collection: WoodDestroyHeavy
+      - spawn:
+          MaterialWoodPlank1:
+            min: 1
+            max: 4
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: ShelfBar
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 300
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 150
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          SheetSteel1:
+            min: 1
+            max: 4
+          MaterialWoodPlank1:
+            min: 0
+            max: 1
+          PartRodMetal1:
+            min: 0
+            max: 2
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: ShelfKitchen
+- components:
+  - layers: !Remove
+    - state: base
+      map: ["enum.StorageVisualLayers.Base"]
+    - state: unlocked
+      shader: Emissive
+    - state: chem-0
+    - map: ["enum.StorageFillLayers.Fill"]
+    - state: closed
+      map: ["enum.StorageVisualLayers.Door"]
+    - state: locked
+      map: ["enum.LockVisualLayers.Lock"]
+      shader: Emissive
+    type: Sprite
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 330
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          SheetPlasteel1:
+            min: 1
+            max: 2
+          SheetPlastic1:
+            min: 1
+            max: 2
+          ShardGlass:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+    type: Destructible
+  - type: AmbientMusicMarkerMedical
+  type: !PartialOnly entity
+  id: ShelfChemistry
+...

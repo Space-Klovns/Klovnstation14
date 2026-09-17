@@ -1,0 +1,34 @@
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_pickup1.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_drop1.ogg
+  type: !PartialOnly entity
+  id: BaseWeaponSniper
+- components:
+  - type: Sharp
+    butcherDelayModifier: 2
+  - type: Tool
+  type: !PartialOnly entity
+  id: WeaponSniperMosin
+- components:
+  - farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/sniper.ogg
+      range: 15,200
+    type: Gun
+  - type: CustomSpriteAmmoCounter
+  - type: SpeedModifiedOnWield
+  type: !PartialOnly entity
+  id: WeaponSniperHristov
+- components:
+  - type: Sharp
+  - type: Tool
+  type: !PartialOnly entity
+  id: Musket
+- components:
+  - type: GunExecutionWhitelist
+  type: !PartialOnly entity
+  id: WeaponPistolFlintlock
+...

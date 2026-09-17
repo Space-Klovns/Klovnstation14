@@ -1,0 +1,6 @@
+- requirements: !Remove
+  - department: Engineering
+    time: 1h
+  type: !PartialOnly job
+  id: AtmosphericTechnician
+...

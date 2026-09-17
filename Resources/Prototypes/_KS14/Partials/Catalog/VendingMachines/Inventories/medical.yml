@@ -1,0 +1,11 @@
+- startingInventory:
+    ChemistryBottleEpinephrine: 2
+  type: !PartialOnly vendingMachineInventory
+  id: NanoMedInventory
+- startingInventory:
+    ChemistryBottleEpinephrine: 3
+    ClothingBeltMedicalFilled: !Remove ''
+    ClothingBeltMedicalEMTFilled: !Remove ''
+  type: !PartialOnly vendingMachineInventory
+  id: NanoMedPlusInventory
+...

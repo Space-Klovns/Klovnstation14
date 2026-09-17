@@ -1,0 +1,9 @@
+- children: !Remove
+  - MedicalDoctor
+  - Chemist
+  - Cloning
+  - Cryogenics
+  - Surgery
+  type: !PartialOnly guideEntry
+  id: Medical
+...

@@ -39,15 +39,6 @@
     thresholds:
     - trigger:
         !type:DamageTrigger
-        damage: 600
-      behaviors:
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
-      - !type:PlaySoundBehavior
-        sound:
-          collection: MetalGlassBreak
-    - trigger:
-        !type:DamageTrigger
         damage: 300
        # TODO: Construction graph
       behaviors:
@@ -69,7 +60,6 @@
         3.141
       SoundTargetInLOS: !type:SoundPathSpecifier
         path: /Audio/Effects/double_beep.ogg
-  - type: EmpAffectedNpc # KS14 addition
   - type: MouseRotator
     angleTolerance: 5
     rotationSpeed: 180

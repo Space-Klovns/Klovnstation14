@@ -54,8 +54,6 @@
   - type: MobMover
   - type: MovementSpeedModifier
   - type: LagCompensation
-  - type: AnimatedEmotes
-
 
 - type: entity
   save: false
@@ -113,7 +111,7 @@
       - !type:VomitBehavior
   - type: RadiationReceiver
   - type: Stamina
-  # KS14: Removed StunVisuals
+  - type: StunVisuals
   - type: MobState
   - type: MobThresholds
     thresholds:
@@ -274,3 +272,14 @@
     bloodlossHealDamage:
       types:
         Bloodloss: -1
+
+# Used for mobs that should slightly see in the dark
+- type: entity
+  save: false
+  id: MobNightVision
+  abstract: true
+  components:
+  - type: NightVision
+    prioritized: false
+    relayOverlay: false # In case default value ever changes
+    lightingColor: '#FFFFFF15' # Basically makes it impossible for things to be "Pitch black" but can still be dark.

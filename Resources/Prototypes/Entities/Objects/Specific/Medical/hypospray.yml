@@ -1,7 +1,7 @@
 - type: entity
   abstract: true
   parent: [SolutionHypospraySmall, BaseItem]
-  id: BaseHypospray
+  id: BaseHypoInjector
   components:
   - type: Injector
     solutionName: hypospray
@@ -10,14 +10,21 @@
     allowedModes:
     - HyposprayDynamicMode
     - HyposprayInjectMode
-  - type: Spillable
-    solution: hypospray
   - type: ExaminableSolution
     solution: hypospray
     exactVolume: true
   - type: UseDelay
     delay: 0.5
   - type: Appearance
+
+- type: entity
+  abstract: true
+  parent: BaseHypoInjector
+  id: BaseHypospray
+  components:
+  - type: Spillable
+    solution: hypospray
+    spillWhenThrown: false
 
 - type: entity
   abstract: true
@@ -66,12 +73,6 @@
     maxFillLevels: 6
     fillBaseName: hypo_fill
     solutionName: hypospray
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/component_pickup.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/component_drop.ogg
 
 - type: entity
   parent: [BaseHypospray, BaseSyndicateContraband]
@@ -188,7 +189,7 @@
     delay: 0.0
 
 - type: entity
-  parent: BaseHypospray # I plan to resize medipens to 1x2 eventually:tm:
+  parent: BaseHypoInjector # I plan to resize medipens to 1x2 eventually:tm:
   id: ChemicalMedipen
   name: chemical medipen
   description: A single-dose, non-refillable medipen.
@@ -237,7 +238,6 @@
   name: emergency medipen
   description: A single-dose, non-refillable medipen containing epinephrine and tranexamic acid, used to temporarily stabilize patients in critical condition and buy time for them to recieve proper medical treatment. Beware of overdose.
   components:
-  - type: NpcHealingItem # KS14: ANK
   - type: Sprite
     sprite: Objects/Specific/Medical/medipen.rsi
     layers:
@@ -296,7 +296,6 @@
   name: brute auto-injector
   description: A single-dose, non-refillable medipen containing bicaridine and tranexamic acid, used to quickly and easily treat simple physical injuries. Commonly used as a combat medicine.
   components:
-  - type: NpcHealingItem # KS14: ANK
   - type: Item
     inhandVisuals:
       left:
@@ -402,7 +401,6 @@
   name: puncturase auto-injector
   description: A single-dose, non-refillable medipen containing puncturase and tranexamic acid, used to quickly and easily treat puncture wounds. Commonly used as a combat medicine.
   components:
-  - type: NpcHealingItem # KS14: ANK
   - type: Item
     inhandVisuals:
       left:
@@ -624,7 +622,6 @@
   name: combat medipen
   description: A single-dose, non-refillable medipen containing a chemical cocktail that treats most forms of damage.
   components:
-  - type: NpcHealingItem # KS14: ANK
   - type: Item
     inhandVisuals:
       left:
@@ -663,6 +660,7 @@
   components:
   - type: RefillableSolution
     solution: hypospray
+    refillTime: 0.75
     maxRefill: 5
   - type: ExaminableSolution
     solution: hypospray

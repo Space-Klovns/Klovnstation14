@@ -1,0 +1,59 @@
+- components:
+  - type: Stainable
+  - type: ESInteractionIgnoreAnchoredInTile
+  - tags: !Remove
+    - ForceFixRotations
+    - Window
+    - Directional
+    - HristovWindowVentable
+    type: Tag
+  - thresholds: !Remove
+    - trigger:
+        damage: 150
+      behaviors:
+      - sound:
+          collection: WindowShatter
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 50
+      behaviors:
+      - sound:
+          collection: WindowShatter
+      - spawn:
+          ShardGlass:
+            min: 1
+            max: 2
+      - acts: ["Destruction"]
+    type: Destructible
+  - type: WallMount
+  type: !PartialOnly entity
+  id: Window
+- components:
+  - type: Stainable
+  - type: ESInteractionIgnoreAnchoredInTile
+  - tags: !Remove
+    - Window
+    - Directional
+    type: Tag
+  - thresholds: !Remove
+    - trigger:
+        damage: 50
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: WindowShatter
+    - trigger:
+        damage: 25
+      behaviors:
+      - sound:
+          collection: WindowShatter
+      - spawn:
+          ShardGlass:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+    type: Destructible
+  - type: WallMount
+  type: !PartialOnly entity
+  id: WindowDirectional
+...

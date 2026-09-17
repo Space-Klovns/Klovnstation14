@@ -1,0 +1,21 @@
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/ammobox_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/ammobox_drop.ogg
+  type: !PartialOnly entity
+  id: BoxDonkSoftBase
+- components:
+  - layers: !Remove
+    - state: capbase
+      map: ["enum.GunVisualLayers.Base"]
+    - state: mag-1
+      map: ["enum.GunVisualLayers.Mag"]
+    - state: cap
+    type: Sprite
+  - type: MagazineVisuals
+  type: !PartialOnly entity
+  id: BoxCartridgeCap
+...

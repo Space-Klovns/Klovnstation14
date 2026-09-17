@@ -1,0 +1,25 @@
+- branches: !Remove
+  - tasks:
+    - operator:
+        proto: NearbyGunTargets
+    - operator:
+        shutdownState: PlanFinished
+        pathfindInPlanning: true
+        removeKeyOnFinish: false
+        targetKey: TargetCoordinates
+        pathfindKey: TargetPathfind
+        stopOnLineOfSight: true
+        rangeKey: RangedRange
+    - operator:
+        jukeType: Away
+    - preconditions:
+      - key: Target
+      operator:
+        targetKey: Target
+      services:
+      - id: RangedService
+        proto: NearbyGunTargets
+        key: Target
+  type: !PartialOnly htnCompound
+  id: GunCombatCompound
+...

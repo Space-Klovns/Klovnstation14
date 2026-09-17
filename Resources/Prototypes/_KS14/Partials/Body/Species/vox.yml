@@ -1,0 +1,69 @@
+- components:
+  - organs:
+    - category: Head
+      entity: OrganVoxHead
+      children:
+      - category: Brain
+        entity: OrganVoxBrain
+      - category: Eyes
+        entity: OrganVoxEyes
+      - category: Ears
+        entity: OrganVoxEars
+      - category: Tongue
+        entity: OrganVoxTongue
+    - category: Torso
+      entity: OrganVoxTorso
+      children:
+      - category: Appendix
+        entity: OrganVoxAppendix
+      - category: Lungs
+        entity: OrganVoxLungs
+      - category: Heart
+        entity: OrganVoxHeart
+      - category: Stomach
+        entity: OrganVoxStomach
+      - category: Liver
+        entity: OrganVoxLiver
+      - category: Kidneys
+        entity: OrganVoxKidneys
+    - category: ArmLeft
+      entity: OrganVoxArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganVoxHandLeft
+    - category: ArmRight
+      entity: OrganVoxArmRight
+      children:
+      - category: HandRight
+        entity: OrganVoxHandRight
+    - category: LegLeft
+      entity: OrganVoxLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganVoxFootLeft
+    - category: LegRight
+      entity: OrganVoxLegRight
+      children:
+      - category: FootRight
+        entity: OrganVoxFootRight
+    type: InitialBody
+  type: !PartialOnly entity
+  id: AppearanceVox
+- components:
+  - type: KsLanguageKnowledge
+    speaks: [KsLangCommon, KsLangVox]
+    understands: [KsLangCommon, KsLangVox]
+  - sounds:
+      Male: UnisexVox
+      Female: UnisexVox
+      Unsexed: UnisexVox
+    emoteSounds: !Remove ''
+    type: Vocal
+  - butcheringType: Spike
+    type: Butcherable
+  type: !PartialOnly entity
+  id: MobVox
+- parent: OrganBase
+  type: !PartialOnly entity
+  id: OrganVox
+...

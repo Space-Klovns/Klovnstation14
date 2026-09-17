@@ -66,8 +66,6 @@
     - id: PosterContrabandExoAcid
     - id: PosterContrabandExoRun
     - id: PosterContrabandExoChomp
-    - id: PosterContrabandKlovnRedFOSS #KS14
-    - id: PosterContrabandKlovnEgg #KS14
 
 - type: entityTable
   id: LegitPosterTable
@@ -125,7 +123,6 @@
     - id: PosterLegitTyrone
     - id: PosterLegitHelio
     - id: PosterLegitBotanyFear
-    - id: PosterLegitKlovnXFixit #KS14
 
 - type: entity
   parent: MarkerBase

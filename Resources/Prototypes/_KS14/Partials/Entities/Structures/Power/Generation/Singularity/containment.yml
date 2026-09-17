@@ -1,0 +1,5 @@
+- components:
+  - type: StationAiWhitelist
+  type: !PartialOnly entity
+  id: ContainmentFieldGenerator
+...

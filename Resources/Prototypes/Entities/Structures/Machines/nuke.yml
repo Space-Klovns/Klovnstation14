@@ -22,13 +22,6 @@
     - state: nukefestive
       map: ["christmas"]
       visible: false
-  # KS14: emissive start
-  - type: EmissiveLayers
-    glowRadius: 0.25
-    intensity: 7
-    layers:
-    - enum.NukeVisualLayers.Unlit
-  # KS14: emissive end
   - type: Appearance
   - type: HolidayVisuals
     holidays:
@@ -114,15 +107,9 @@
       Nuke: !type:ContainerSlot
   - type: StealTarget
     stealGroup: NuclearBomb
-  - type: Tag
-    tags:
-    - GhostOnlyWarp
   - type: WarpPoint
     follow: true
     location: nuclear bomb
-    blacklist:
-      tags:
-      - GhostOnlyWarp
   - type: FTLSmashImmune
 
 - type: entity

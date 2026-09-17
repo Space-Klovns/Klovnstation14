@@ -54,19 +54,7 @@
     - type: Sprite
       sprite: Objects/Power/powersink.rsi
       state: powersink
-    - type: Tag
-      tags:
-      - GhostOnlyWarp
     - type: WarpPoint
       location: powersink
-      blacklist:
-        tags:
-        - GhostOnlyWarp
     - type: StaticPrice
       price: 3000
-    - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-      sound:
-        path: /Audio/_KS14/Handling/materials/metal_pick_up.ogg
-    - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-      sound:
-        path: /Audio/_KS14/Handling/materials/metal_drop.ogg

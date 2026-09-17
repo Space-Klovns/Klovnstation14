@@ -15,16 +15,8 @@
   - type: Tag
     tags:
       - HideContextMenu
-  # KS14 Start: emissives
-  - type: EmissiveLayers
-    glowRadius: 0.75
-    intensity: 1.5
-    layers:
-    - enum.EffectLayers.Unshaded
-  # KS14 End
 
 - type: entity
-  parent: BulletImpactEffect # KS14: Inherit from BulletImpactEffect
   id: BulletImpactEffectDisabler
   categories: [ HideSpawnMenu ]
   components:
@@ -43,7 +35,6 @@
         - HideContextMenu
 
 - type: entity
-  parent: BulletImpactEffect # KS14: Inherit from BulletImpactEffect
   id: BulletImpactEffectOrangeDisabler
   categories: [ HideSpawnMenu ]
   components:
@@ -63,7 +54,6 @@
     - HideContextMenu
 
 - type: entity
-  parent: BulletImpactEffect # KS14: Inherit from BulletImpactEffect
   id: BulletImpactEffectKinetic
   categories: [ HideSpawnMenu ]
   components:

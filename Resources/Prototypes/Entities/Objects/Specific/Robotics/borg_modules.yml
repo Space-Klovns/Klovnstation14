@@ -40,12 +40,6 @@
     guides:
     - Cyborgs
     - Robotics
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/component_pickup.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/component_drop.ogg
 
 - type: entity
   id: BaseProviderBorgModule
@@ -789,7 +783,6 @@
   - type: ItemBorgModule
     hands:
     - item: RCDRecharging
-    - item: RPDRecharging # Starlight: RPD
     - item: BorgFireExtinguisher
     - item: BorgHandheldGPSBasic
     - item: GasAnalyzer

@@ -1,3 +1,5 @@
+# When adding new soaps, also add them to id: AllSoapsTable
+
 - type: entity
   abstract: true
   parent: [SolutionSoapBase, BaseItem]
@@ -18,9 +20,6 @@
     sprite: Objects/Specific/Janitorial/soap.rsi
     storedRotation: -90
   - type: Slippery
-    slipData: # KS14 - stuntime matches knockdowntime
-      stunTime: 1.5
-      knockdownTime: 1.5
   - type: StepTrigger
     intersectRatio: 0.2
   - type: CollisionWake
@@ -140,8 +139,7 @@
     fillBaseName: syndie-
   - type: Slippery
     staminaDamage: 50
-    slipData: # KS14 - stuntime matches knockdowntime
-      stunTime: 3
+    slipData:
       knockdownTime: 3
       launchForwardsMultiplier: 3
   - type: Item
@@ -177,9 +175,6 @@
     layers:
     - state: syndie-soaplet
   - type: Slippery
-    slipData: # KS14 - stuntime matches knockdowntime
-      stunTime: 1.5
-      knockdownTime: 1.5
   - type: StepTrigger
     intersectRatio: 0.04
   - type: TriggerOnStepTrigger
@@ -224,11 +219,6 @@
       map: ["enum.SolutionContainerLayers.Fill"]
   - type: SolutionContainerVisuals
     fillBaseName: gibs-
-  - type: Slippery
-    slipData: # KS14 - stuntime matches knockdowntime
-      stunTime: 1.5
-      knockdownTime: 1.5
-  - type: StepTrigger
   - type: Item
     heldPrefix: gibs
   - type: FlavorProfile
@@ -252,9 +242,8 @@
     fillBaseName: omega-
   - type: Slippery
     staminaDamage: 50
-    slipData: # KS14 - stuntime matches knockdowntime
-      stunTime: 5
-      knockdownTime: 5
+    slipData:
+      knockdownTime: 5.0
       launchForwardsMultiplier: 3.0
   - type: Item
     heldPrefix: omega

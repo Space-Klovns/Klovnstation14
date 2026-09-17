@@ -61,7 +61,7 @@
   - type: EntityTableContainerFill
     containers:
       entity_storage:
-        id: WeaponLaserCarbineProjectile #KS14: changed to projectile
+        id: WeaponLaserCarbine
         amount: 3
 
 - type: entity

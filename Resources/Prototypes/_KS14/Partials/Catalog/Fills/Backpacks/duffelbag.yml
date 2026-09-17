@@ -1,0 +1,47 @@
+- components:
+  - type: StorageFill
+    contents:
+    - id: ClothingOuterSuitCarp
+    - id: PlushieCarp
+      amount: 6
+  - type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: ClothingBackpackDuffelSyndicateCarpSuit
+- description: Contains 3 pairs of syndicate pyjamas and a nuke plushie for the ultimate sleepover.
+  components:
+  - type: StorageFill
+    contents:
+    - id: ClothingUniformJumpsuitPyjamaSyndicateRed
+    - id: ClothingUniformJumpsuitPyjamaSyndicateBlack
+    - id: ClothingUniformJumpsuitPyjamaSyndicatePink
+    - id: ClothingHeadPyjamaSyndicateRed
+    - id: ClothingHeadPyjamaSyndicateBlack
+    - id: ClothingHeadPyjamaSyndicatePink
+    - id: ClothingShoesSlippers
+      amount: 3
+    - id: BedsheetSyndie
+      amount: 3
+    - id: PlushieNuke
+  - type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: ClothingBackpackDuffelSyndicatePyjamaBundle
+- components:
+  - type: StorageFill
+    contents:
+    - id: DefibrillatorSyndicate
+    - id: MedkitCombatFilled
+      amount: 2
+    - id: Tourniquet
+      amount: 2
+    - id: CombatMedipen
+      amount: 2
+    - id: PunctAutoInjector
+      amount: 2
+    - id: PyraAutoInjector
+      amount: 2
+    - id: AirlossAutoInjector
+      amount: 2
+  - type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: ClothingBackpackDuffelSyndicateMedicalBundleFilled
+...

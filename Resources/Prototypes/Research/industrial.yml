@@ -15,11 +15,6 @@
   - OreProcessorIndustrialMachineCircuitboard
   - ClothingMaskWeldingGas
   - ClothingShoesBootsJump
-  # Goobstation R&D Console rework start
-  position: 0,-1
-  technologyPrerequisites:
-  - SpaceScanning
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: SpaceScanning
@@ -33,30 +28,6 @@
   recipeUnlocks:
   - RadarConsoleCircuitboard
   - HandHeldMassScanner
-  # Goobstation R&D Console rework start
-  position: 0,-3
-  technologyPrerequisites:
-  - PowerGeneration
-  # Goobstation R&D Console rework end
-
-- type: technology
-  id: IndustrialNuclearGeneration
-  name: research-technology-industrial-nuclear-generation
-  icon:
-    sprite: _FarHorizons/Structures/Power/Generation/FissionGenerator/nuclear_reactor.rsi
-    state: reactor
-  discipline: Industrial
-  tier: 2
-  cost: 12500
-  recipeUnlocks:
-  - CerenkiteFuelRod
-  - UraniumFuelRod
-  - ReactorControlRod
-  - ReactorGasChannel
-  - ReactorHeatExchanger
-  position: -1,-4
-  technologyPrerequisites:
-  - PowerGeneration
 
 - type: technology
   id: AdvancedPowercells
@@ -71,29 +42,18 @@
   - PowerCellHigh
   - TurboItemRechargerCircuitboard
   - SMESAdvancedMachineCircuitboard
-  # Goobstation R&D Console rework start
-  position: 0,-6
-  technologyPrerequisites:
-  - IndustrialEngineering
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: MechanicalCompression
   name: research-technology-mechanical-compression
-  icon: # KS14: /tg/ sprite port
-    sprite: _KS14/Structures/Machines/flatpacker.rsi
+  icon:
+    sprite: Structures/Machines/flatpacker.rsi
     state: base
   discipline: Industrial
   tier: 1
   cost: 10000
   recipeUnlocks:
   - FlatpackerMachineCircuitboard
-  - MaterialSiloMachineCircuitboard
-  # Goobstation R&D Console rework start
-  position: 0,-4
-  technologyPrerequisites:
-  - SpaceScanning
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: IndustrialEngineering
@@ -109,11 +69,6 @@
   - ProtolatheHyperConvectionMachineCircuitboard
   - CircuitImprinterHyperConvectionMachineCircuitboard
   - SheetifierMachineCircuitboard
-  # Goobstation R&D Console rework start
-  position: 0,-5
-  technologyPrerequisites:
-  - MechanicalCompression
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: PowerGeneration
@@ -131,7 +86,6 @@
   - SolarControlComputerCircuitboard
   - SolarTrackerElectronics
   - EmitterCircuitboard
-  position: 0,-2
 
 - type: technology
   id: AtmosphericTech
@@ -145,11 +99,6 @@
   recipeUnlocks:
   - ThermomachineFreezerMachineCircuitBoard
   - GasRecyclerMachineCircuitboard
-  # Goobstation R&D Console rework start
-  position: -2,-4
-  technologyPrerequisites:
-  - SpaceScanning
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: RipleyAPLU
@@ -169,11 +118,6 @@
   - RipleyCentralElectronics
   - RipleyPeripheralsElectronics
   - MechEquipmentGrabber
-  # Goobstation R&D Console rework start
-  position: 2,-1
-  technologyPrerequisites:
-  - SalvageEquipment
-  # Goobstation R&D Console rework end
 
 # Tier 2
 
@@ -191,11 +135,6 @@
   - ThrusterMachineCircuitboard
   - GyroscopeMachineCircuitboard
   - MiniGravityGeneratorCircuitboard
-  # Goobstation R&D Console rework start
-  position: 1,-4
-  technologyPrerequisites:
-  - MechanicalCompression
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: AdvancedAtmospherics
@@ -212,9 +151,6 @@
   - HolofanProjector
   technologyPrerequisites:
   - AtmosphericTech
-  # Goobstation R&D Console rework start
-  position: -2,-5
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: AdvancedToolsTechnology
@@ -232,33 +168,37 @@
     - BorgModuleAdvancedTool
     - Fulton
     - FultonBeacon
-  # Goobstation R&D Console rework start
-  position: 1,-5
-  technologyPrerequisites:
-  - Shuttlecraft
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: MassExcavation
   name: research-technology-excavation
-  icon: # KS14
-    sprite: _KS14/Objects/Weapons/Guns/Battery/advplasmacutter.rsi
-    state: icon
+  icon:
+    sprite: Objects/Tools/handdrilldiamond.rsi
+    state: handdrill
   discipline: Industrial
   tier: 2
   cost: 12500
   recipeUnlocks:
     - OreBagOfHolding
-    - WeaponAdvancedPlasmaCutter # KS14, replaced diamond mining drill with adv. plasmacutter
+    - MiningDrillDiamond
     - AdvancedMineralScannerEmpty
     - BorgModuleAdvancedMining
-  # Goobstation R&D Console rework start
-  position: 3,-1
-  technologyPrerequisites:
-  - RipleyAPLU
-  # Goobstation R&D Console rework end
 
 # Tier 3
+
+- type: technology
+  id: BluespaceStorage
+  name: research-technology-bluespace-storage
+  icon:
+    sprite: Clothing/Back/Backpacks/holding.rsi
+    state: holding
+  discipline: Industrial
+  tier: 3
+  cost: 15000
+  recipeUnlocks:
+  - ClothingBackpackHolding
+  - ClothingBackpackSatchelHolding
+  - ClothingBackpackDuffelHolding
 
 - type: technology
   id: OptimizedMicrogalvanism
@@ -274,24 +214,3 @@
   - PowerCellHyper
   technologyPrerequisites:
   - AdvancedPowercells
-  - AdvancedToolsTechnology
-  position: 1,-6
-
-- type: technology
-  id: BluespaceStorage
-  name: research-technology-bluespace-storage
-  icon:
-    sprite: Clothing/Back/Backpacks/holding.rsi
-    state: holding
-  discipline: Industrial
-  tier: 3
-  cost: 15000
-  recipeUnlocks:
-  - ClothingBackpackHolding
-  - ClothingBackpackSatchelHolding
-  - ClothingBackpackDuffelHolding
-  # Goobstation R&D Console rework start
-  position: 1,-7
-  technologyPrerequisites:
-  - OptimizedMicrogalvanism
-  # Goobstation R&D Console rework end

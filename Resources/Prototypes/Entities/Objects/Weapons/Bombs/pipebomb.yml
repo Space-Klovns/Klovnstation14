@@ -22,23 +22,17 @@
   - type: ExplodeOnTrigger
     keysIn:
     - timer
-  - type: Explosive # KS14: buffing crew explosions
+  - type: Explosive # Weak explosion in a very small radius. Doesn't break underplating.
     explosionType: Default
-    totalIntensity: 67
+    totalIntensity: 50
     intensitySlope: 5
-    maxIntensity: 8
-    canCreateVacuum: true
+    maxIntensity: 6
+    canCreateVacuum: false
   - type: Appearance
   - type: TimerTriggerVisuals
   - type: Construction
     graph: PipeBomb
     node: pipebomb
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/grenade/grenade_pick_up.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/grenade/grenade_drop.ogg
 
 - type: entity
   parent: [ BaseItem, BaseMinorContraband ]

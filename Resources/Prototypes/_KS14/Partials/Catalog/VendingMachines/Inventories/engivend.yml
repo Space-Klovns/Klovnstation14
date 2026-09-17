@@ -1,0 +1,8 @@
+- startingInventory:
+    ClothingOuterSuitArc: 3
+    ClothingBeltUtility: 3
+  emaggedInventory:
+    ToolboxSyndicateFilled: 1
+  type: !PartialOnly vendingMachineInventory
+  id: EngiVendInventory
+...

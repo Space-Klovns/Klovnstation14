@@ -1,0 +1,30 @@
+- components:
+  - unwieldOnUse: true
+    type: Wieldable
+  - minAngle: -10
+    type: GunWieldBonus
+  - minAngle: 11
+    maxAngle: 28
+    angleIncrease: 2
+    soundGunshot:
+      path: /Audio/_KS14/Weapons/Guns/Gunshots/lmg.ogg
+    farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/lmg.ogg
+      range: 15,130
+    angleDecay: !Remove ''
+    type: Gun
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_pickup1.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_drop1.ogg
+  type: !PartialOnly entity
+  id: BaseWeaponLightMachineGun
+- components:
+  - type: SpeedModifiedOnWield
+    walkModifier: 0.9
+    sprintModifier: 0.9
+  type: !PartialOnly entity
+  id: WeaponLightMachineGunL6
+...

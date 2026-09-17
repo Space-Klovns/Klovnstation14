@@ -1,0 +1,76 @@
+- components:
+  - modifiers:
+      flatReductions:
+        Blunt: 1
+        Slash: 1
+        Piercing: 1
+        Heat: 1
+    type: Armor
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/helmet/helmet_pickup1.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/helmet/helmet_drop1.ogg
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetArmoredBase
+- components:
+  - modifiers:
+      flatReductions:
+        Blunt: 1.5
+        Slash: 1.5
+        Piercing: 1.5
+        Heat: 1.5
+        Radiation: 1.5
+        Caustic: 1.5
+    type: Armor
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetSwat
+- components:
+  - modifiers:
+      flatReductions:
+        Blunt: 1.5
+        Slash: 1.5
+        Piercing: 1
+    type: Armor
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetRiot
+- components:
+  - modifiers:
+      flatReductions:
+        Blunt: 1
+        Slash: 1.5
+        Piercing: 1
+        Heat: 1
+    type: Armor
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetCult
+- components:
+  - modifiers:
+      coefficients:
+        Blunt: 0.8
+        Slash: 0.8
+        Piercing: 0.8
+        Heat: !Remove ''
+      flatReductions:
+        Blunt: 1
+        Slash: 1
+        Piercing: 1
+    type: Armor
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetLing
+- components:
+  - modifiers:
+      flatReductions:
+        Blunt: 1.5
+        Slash: 1.5
+        Piercing: 1.5
+        Heat: 1.5
+    type: Armor
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetRaid
+- components:
+  - type: IdentityBlocker
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetBone
+...

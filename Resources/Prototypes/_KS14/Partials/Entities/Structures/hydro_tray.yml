@@ -1,0 +1,6 @@
+- parent: !Remove [hydroponicsSoil, SmallConstructibleMachine, BaseRelaxedAnchoring]
+  components:
+  - type: StationAiWhitelist
+  type: !PartialOnly entity
+  id: hydroponicsTray
+...

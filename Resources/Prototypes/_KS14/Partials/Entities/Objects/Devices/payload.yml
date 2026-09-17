@@ -1,0 +1,28 @@
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damageType: Blunt
+        damage: 25
+      behaviors:
+      - !type:ExplodeBehavior ''
+    type: Destructible
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/component_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/component_drop.ogg
+  type: !PartialOnly entity
+  id: BasePayload
+- components:
+  - type: Destructible
+  type: !PartialOnly entity
+  id: ExplosivePayload
+- components:
+  - type: Tag
+    tags:
+    - Payload
+    - ChemicalPayload
+  type: !PartialOnly entity
+  id: ChemicalPayload
+...

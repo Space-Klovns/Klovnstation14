@@ -1,0 +1,9 @@
+- components:
+  - energy: 0.3
+    type: PointLight
+  - type: EmissiveLayers
+    glowRadius: 0.75
+    intensity: 1
+  type: !PartialOnly entity
+  id: MachineArtifactAnalyzer
+...

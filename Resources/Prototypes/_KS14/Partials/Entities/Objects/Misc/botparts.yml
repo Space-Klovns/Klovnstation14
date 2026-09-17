@@ -1,0 +1,73 @@
+- description: Senses moving things in close proximity and sends a signal when active. Can be remotely enabled with a signal, bypassing the timer. Make sure the sensor is unlinked when taking it apart, lest the sensor accidentally trigger itself.
+  components:
+  - type: DeviceNetwork
+    deviceNetId: Wireless
+    receiveFrequencyId: BasicDevice
+  - type: WirelessNetworkConnection
+    range: 50
+  - type: TriggerOnUse
+    keyOut: trigger
+  - type: TimerTrigger
+    keysIn:
+    - trigger
+    keyOut: toggle
+    delay: 3
+    delayOptions: [3, 5, 10, 15, 30, 45, 60]
+    initialBeepDelay: 0
+    beepSound:
+      path: /Audio/Machines/quickbeep.ogg
+      params:
+        volume: -3
+  - type: TriggerOnProximity
+    enabled: false
+    cooldown: 1
+    triggerSpeed: 1.5
+    shape:
+      radius: 3
+    repeating: true
+    examinable: true
+    keyOut: sensor
+    enablingKeysIn:
+    - enable
+    togglingKeysIn:
+    - toggle
+  - type: EmitSoundOnTrigger
+    keysIn:
+    - sensor
+    sound:
+      path: /Audio/Effects/double_beep.ogg
+      params:
+        volume: -1.5
+  - type: DeviceLinkSink
+    ports:
+    - On
+  - type: TriggerOnSignal
+    port: On
+    keyOut: enable
+  - type: DeviceLinkSource
+    ports:
+    - Trigger
+  - type: SignalOnTrigger
+    port: Trigger
+    keysIn:
+    - sensor
+  - type: Damageable
+    damageModifierSet: Electronic
+  - type: Injurable
+    damageContainer: StructuralInorganic
+  - type: Destructible
+    thresholds:
+    - trigger:
+        damage: 150
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 50
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - acts: ["Destruction"]
+      - keyOut: sensor
+  type: !PartialOnly entity
+  id: ProximitySensor
+...

@@ -1,0 +1,39 @@
+- table:
+    children: !Remove
+    - id: NukeCalibration
+    - id: AnomalySpawn
+    - id: BluespaceArtifact
+    - id: BluespaceLocker
+    - id: BreakerFlip
+    - id: BureaucraticError
+    - id: ClericalError
+    - id: CockroachMigration
+    - id: GasLeak
+    - id: GreytideVirus
+    - id: IonStorm
+    - id: KudzuGrowth
+    - id: MassHallucinations
+    - id: MimicVendorRule
+    - id: MouseMigration
+    - id: PowerGridCheck
+    - id: RandomSentience
+    - id: SlimesSpawnHorde
+    - id: SolarFlare
+    - id: SnakeSpawnHorde
+    - id: SpiderClownSpawnHorde
+    - id: SpiderSpawnHorde
+    - id: VentClog
+  type: !PartialOnly entityTable
+  id: BasicCalmEventsTable
+- table:
+    children: !Remove
+    - id: DragonSpawn
+    - id: ParadoxCloneSpawn
+    - id: SleeperAgents
+    - id: ZombieOutbreak
+    - id: LoneOpsSpawn
+    - id: WizardSpawn
+    - tableId: DerelictBorgEventTable
+  type: !PartialOnly entityTable
+  id: ModerateAntagEventsTable
+...

@@ -1,0 +1,23 @@
+- components:
+  - type: Sharp
+  - damage:
+      types:
+        Blunt: 7
+        Slash: 13
+    type: MeleeWeapon
+  - qualities: !Remove
+    - Prying
+    type: Tool
+  - type: IgniteOnMeleeHit
+  type: !PartialOnly entity
+  id: FireAxe
+- components:
+  - damage:
+      types:
+        Blunt: 15
+        Slash: 15
+        Structural: 10
+    type: MeleeWeapon
+  type: !PartialOnly entity
+  id: FireAxeFlaming
+...

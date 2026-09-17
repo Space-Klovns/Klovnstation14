@@ -1,0 +1,33 @@
+- components:
+  - gases: !Remove
+    - CarbonDioxide
+    - Plasma
+    - Tritium
+    - WaterVapor
+    - Ammonia
+    - NitrousOxide
+    - Frezon
+    - Zipion
+    - Argon
+    - Evaporin
+    overflowGases: !Remove
+    - Nitrogen
+    - CarbonDioxide
+    - Plasma
+    - Tritium
+    - WaterVapor
+    - Ammonia
+    - NitrousOxide
+    - Frezon
+    - Zipion
+    - Argon
+    - Evaporin
+    type: AirFilter
+  type: !PartialOnly entity
+  id: BaseMech
+- components:
+  - animation: WeaponArcFist
+    type: MeleeWeapon
+  type: !PartialOnly entity
+  id: MechRipley
+...

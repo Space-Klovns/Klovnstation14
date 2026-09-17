@@ -1,0 +1,97 @@
+- components:
+  - type: StationAiWhitelist
+  type: !PartialOnly entity
+  id: BaseLathe
+- components:
+  - staticPacks: !Remove
+    - ToolsStatic
+    - PartsStatic
+    - AtmosStatic
+    - CablesStatic
+    - PaperworkStatic
+    - TowelsStatic
+    - CargoStatic
+    - MaterialsStatic
+    - BasicChemistryStatic
+    - RollerBedsStatic
+    - LightsStatic
+    - ServiceStatic
+    - PowerCellsStatic
+    - ElectronicsStatic
+    - KlovnSignalStatic
+    type: Lathe
+  - emagStaticPacks: !Remove
+    - SecurityAmmoStatic
+    - KlovnEmagStatic
+    - SyndicateAmmoStatic
+    type: EmagLatheRecipes
+  type: !PartialOnly entity
+  id: Autolathe
+- components:
+  - dynamicPacks: !Remove
+    - AdvancedTools
+    - ScienceEquipment
+    - ScienceExplosives
+    - ScienceClothing
+    - PowerCells
+    - ScienceWeapons
+    - Mining
+    - AtmosTools
+    - EngineeringWeapons
+    - ReactorPartsBasic
+    - Chemistry
+    - Janitor
+    - Instruments
+    - Equipment
+    type: Lathe
+  type: !PartialOnly entity
+  id: Protolathe
+- components:
+  - staticPacks: !Remove
+    - ScienceBoardsStatic
+    - ServiceBoardsStatic
+    - CargoBoardsStatic
+    - MedicalBoardsStatic
+    - EngineeringBoardsStatic
+    - KlovnEngineeringBoardsStatic
+    dynamicPacks: !Remove
+    - EngineeringBoards
+    - CargoBoards
+    - MedicalBoards
+    - KlovnMedicalBoards
+    - ServiceBoards
+    - ScienceBoards
+    - CameraBoards
+    - MechBoards
+    - ShuttleBoards
+    type: Lathe
+  type: !PartialOnly entity
+  id: CircuitImprinter
+- components:
+  - staticPacks: !Remove
+    - SecurityEquipmentStatic
+    - SecurityPracticeStatic
+    - SecurityAmmoStatic
+    - SecurityWeaponsStatic
+    - KlovnSecurityStatic
+    type: Lathe
+  type: !PartialOnly entity
+  id: SecurityTechFab
+- components:
+  - type: AmbientMusicMarkerMedical
+  type: !PartialOnly entity
+  id: MedicalTechFab
+- components:
+  - staticPacks: !Remove
+    - BioGenIngredientsStatic
+    - BioGenMaterialsStatic
+    - KsBioGenBodypartsStatic
+    type: Lathe
+  - type: StationAiWhitelist
+  type: !PartialOnly entity
+  id: Biogenerator
+- components:
+  - type: StationAiWhitelist
+  type: !PartialOnly entity
+  id: OreProcessor
+...

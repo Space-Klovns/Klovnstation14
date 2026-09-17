@@ -1,0 +1,5 @@
+- contrabandInventory:
+    SeismicCharge: 2
+  type: !PartialOnly vendingMachineInventory
+  id: SalvageEquipmentInventory
+...

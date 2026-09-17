@@ -2,93 +2,16 @@
   parent: BaseItem
   id: ProximitySensor
   name: proximity sensor
-  description: Senses moving things in close proximity and sends a signal when active. Can be remotely enabled with a signal, bypassing the timer. Make sure the sensor is unlinked when taking it apart, lest the sensor accidentally trigger itself. #KS14: heavily modified
+  description: Senses things in close proximity.
   components:
   - type: Sprite
     sprite: Objects/Misc/proximity_sensor.rsi
     state: icon
   - type: Tag
     tags:
-    - ProximitySensor
+      - ProximitySensor
   - type: StaticPrice
     price: 40
-  - type: DeviceNetwork
-    deviceNetId: Wireless
-    receiveFrequencyId: BasicDevice
-  - type: WirelessNetworkConnection
-    range: 50
-  - type: TriggerOnUse
-    keyOut: trigger
-  - type: TimerTrigger
-    keysIn:
-    - trigger
-    keyOut: toggle # TODO: add an accompanying popup for proxsensor being toggled, when `PopupOnTrigger` gets added.
-    delay: 3 # borrowed from timertrigger
-    delayOptions: [3, 5, 10, 15, 30, 45, 60]
-    initialBeepDelay: 0
-    beepSound:
-      path: /Audio/Machines/quickbeep.ogg
-      params:
-        volume: -3
-  - type: TriggerOnProximity
-    enabled: false
-    cooldown: 1
-    triggerSpeed: 1.5
-    shape:
-      !type:PhysShapeCircle
-        radius: 3
-    repeating: true
-    examinable: true
-    keyOut: sensor
-    enablingKeysIn:
-    - enable
-    togglingKeysIn:
-    - toggle
-  - type: EmitSoundOnTrigger
-    keysIn:
-    - sensor
-    sound:
-      path: /Audio/Effects/double_beep.ogg
-      params:
-        volume: -1.5
-  - type: DeviceLinkSink
-    ports:
-    - On
-  - type: TriggerOnSignal
-    port: On
-    keyOut: enable
-  - type: DeviceLinkSource
-    ports:
-    - Trigger
-  - type: SignalOnTrigger
-    port: Trigger
-    keysIn:
-    - sensor
-  # KS14 Start: destructible
-  - type: Damageable
-    damageModifierSet: Electronic
-  - type: Injurable
-    damageContainer: StructuralInorganic
-  - type: Destructible
-    thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 150
-      behaviors:
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
-    - trigger:
-        !type:DamageTrigger
-        damage: 50
-      behaviors:
-      - !type:PlaySoundBehavior
-        sound:
-          collection: MetalBreak
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
-      - !type:TriggerBehavior # lol
-        keyOut: sensor
-  # KS14 End
 
 - type: entity
   id: PartSilicon

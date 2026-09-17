@@ -28,12 +28,12 @@
   - type: RandomTimerTrigger
     min: 0
     max: 15
-  - type: Explosive # KS14: buffing crew explosions
+  - type: Explosive # Weak explosion in a very small radius. Ignites surrounding entities.
     explosionType: FireBomb
-    totalIntensity: 35
-    intensitySlope: 7
-    maxIntensity: 5
-    canCreateVacuum: true
+    totalIntensity: 25
+    intensitySlope: 5
+    maxIntensity: 3
+    canCreateVacuum: false
   - type: ExplodeOnTrigger
     keysIn:
     - timer
@@ -56,12 +56,6 @@
   - type: Construction
     graph: FireBomb
     node: firebomb
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/grenade/grenade_pick_up.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/grenade/grenade_drop.ogg
 
 # has igniter but no fuel or wires
 - type: entity
@@ -91,12 +85,6 @@
     tags:
     - Trash
     # no DrinkCan, prevent using it to make another ied
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/grenade/grenade_pick_up.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/grenade/grenade_drop.ogg
 
 - type: entity
   parent: FireBombEmpty

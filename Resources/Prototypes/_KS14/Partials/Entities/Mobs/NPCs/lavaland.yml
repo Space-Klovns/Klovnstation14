@@ -1,0 +1,13 @@
+- parent: !Remove [SimpleSpaceMobBase, FlyingMobBase]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: MaterialDiamond1
+      amount: 2
+  - baseWalkSpeed: 1
+    baseSprintSpeed: 3
+    type: MovementSpeedModifier
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobWatcherBase
+...

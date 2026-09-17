@@ -1,0 +1,68 @@
+- components:
+  - damage:
+      types:
+        Structural: 30
+    type: Projectile
+  type: !PartialOnly entity
+  id: PelletShotgunSlug
+- components:
+  - damage:
+      types:
+        Piercing: 14
+        Structural: 10
+    type: Projectile
+  type: !PartialOnly entity
+  id: PelletShotgun
+- components:
+  - spread: 12
+    type: ProjectileSpread
+  type: !PartialOnly entity
+  id: PelletShotgunSpread
+- components:
+  - damage:
+      types:
+        Piercing: 8
+        Heat: 4
+    type: Projectile
+  type: !PartialOnly entity
+  id: PelletShotgunIncendiary
+- components:
+  - spread: 12
+    type: ProjectileSpread
+  type: !PartialOnly entity
+  id: PelletShotgunIncendiarySpread
+- components:
+  - spread: 12
+    type: ProjectileSpread
+  type: !PartialOnly entity
+  id: PelletShotgunPracticeSpread
+- components:
+  - damage:
+      types:
+        Piercing: 5
+    type: Projectile
+  type: !PartialOnly entity
+  id: PelletShotgunImprovised
+- components:
+  - spread: 25
+    type: ProjectileSpread
+  type: !PartialOnly entity
+  id: PelletShotgunImprovisedSpread
+- components:
+  - damage:
+      types:
+        Radiation: 6
+        Piercing: 6
+      flatPenetration:
+        Piercing: 6
+    type: Projectile
+  type: !PartialOnly entity
+  id: PelletShotgunUranium
+- components:
+  - damage:
+      types:
+        Slash: 30
+    type: Projectile
+  type: !PartialOnly entity
+  id: PelletGlass
+...

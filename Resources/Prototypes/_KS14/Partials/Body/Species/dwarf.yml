@@ -1,0 +1,85 @@
+- components:
+  - femaleDisplacements:
+      jumpsuit:
+        sizeMaps:
+          32:
+            sprite: Mobs/Species/Human/displacement.rsi
+            state: jumpsuit-female
+    displacements: !Remove ''
+    type: Inventory
+  - organs:
+    - category: Head
+      entity: OrganHumanHead
+      children:
+      - category: Brain
+        entity: OrganHumanBrain
+      - category: Eyes
+        entity: OrganHumanEyes
+      - category: Ears
+        entity: OrganHumanEars
+      - category: Tongue
+        entity: OrganHumanTongue
+    - category: Torso
+      entity: OrganHumanTorso
+      children:
+      - category: Appendix
+        entity: OrganHumanAppendix
+      - category: Lungs
+        entity: OrganHumanLungs
+      - category: Heart
+        entity: OrganDwarfHeart
+      - category: Stomach
+        entity: OrganDwarfStomach
+      - category: Liver
+        entity: OrganHumanLiver
+      - category: Kidneys
+        entity: OrganHumanKidneys
+    - category: ArmLeft
+      entity: OrganHumanArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganHumanHandLeft
+    - category: ArmRight
+      entity: OrganHumanArmRight
+      children:
+      - category: HandRight
+        entity: OrganHumanHandRight
+    - category: LegLeft
+      entity: OrganHumanLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganHumanFootLeft
+    - category: LegRight
+      entity: OrganHumanLegRight
+      children:
+      - category: FootRight
+        entity: OrganHumanFootRight
+    type: InitialBody
+  - type: ScaleVisuals
+    scale: 1, 0.8
+  - type: Hands
+  type: !PartialOnly entity
+  id: AppearanceDwarf
+- components:
+  - type: KsLanguageKnowledge
+    speaks: [KsLangCommon, KsLangDwarvish]
+    understands: [KsLangCommon, KsLangDwarvish]
+  - sounds:
+      Male: UnisexDwarf
+      Female: FemaleDwarf
+      Unsexed: UnisexDwarf
+    emoteSounds: !Remove ''
+    type: Vocal
+  - type: CreamPied
+  - type: Damageable
+  - type: Flammable
+  - type: InnerBodyAnomalyVisuals
+  type: !PartialOnly entity
+  id: MobDwarf
+- parent: OrganBase
+  type: !PartialOnly entity
+  id: OrganDwarf
+- parent: !Remove ''
+  type: !PartialOnly entity
+  id: OrganDwarfMetabolizer
+...

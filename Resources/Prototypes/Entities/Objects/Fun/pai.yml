@@ -33,13 +33,6 @@
     - state: pai-off-overlay
       shader: unshaded
       map: ["screen"]
-  # KS14: emissive start
-  - type: EmissiveLayers
-    glowRadius: 0.06
-    intensity: 3
-    layers:
-    - screen
-  # KS14: emissive end
   - type: Input
     context: "human"
   - type: PAI
@@ -104,18 +97,10 @@
         - SecretStash
         - WrappedParcel
   - type: Vocal
-    sounds:
-      Unsexed: UnisexSilicon
+    emoteSounds: UnisexSilicon
   - type: Tag
     tags:
     - SiliconEmotes
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/id_card/id_card_pickup1.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/id_card/id_card_drop1.ogg
-
 
 - type: entity
   parent: [ PersonalAI, BaseSyndicateContraband]
@@ -153,8 +138,7 @@
   - type: StaticPrice
     price: 500
   - type: Vocal
-    sounds:
-      Unsexed: UnisexSiliconSyndicate
+    emoteSounds: UnisexSiliconSyndicate
 
 - type: entity
   parent: PersonalAI

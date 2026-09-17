@@ -1,0 +1,34 @@
+- components:
+  - gasThresholdPrototypes:
+      Zipion: stationZipion
+      Argon: GasArgon
+      Evaporin: stationEvaporin
+    type: AtmosMonitor
+  - type: Tag
+    tags:
+    - AirSensor
+    - ForceFixRotations
+  - type: EmissiveLayers
+    glowRadius: 0.3
+    intensity: 1
+    useSpriteTransform: false
+    layers:
+    - enum.PowerDeviceVisualLayers.Powered
+  type: !PartialOnly entity
+  id: AirSensorBase
+- parent: [AirSensorBase, AirSensorBaseVisuals]
+  components:
+  - type: RCDDeconstructable
+    cost: 2
+    delay: 2
+    fx: EffectRCDDeconstruct2
+    rpd: true
+  - type: Appearance
+  - type: Sprite
+  - type: GenericVisualizer
+  type: !PartialOnly entity
+  id: AirSensor
+- parent: [BaseItem, BaseRelaxedAnchoring]
+  type: !PartialOnly entity
+  id: AirSensorAssembly
+...

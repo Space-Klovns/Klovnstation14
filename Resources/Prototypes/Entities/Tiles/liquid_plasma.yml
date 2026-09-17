@@ -54,11 +54,3 @@
   - type: Tag
     tags:
     - HideContextMenu
-  # KS14: lava rework: start
-  - type: KsLava
-    damage:
-      types:
-        Heat: 20
-    knockdownDuration: 1.2
-    sinkDuration: 2.5
-  # KS14: lava rework: end

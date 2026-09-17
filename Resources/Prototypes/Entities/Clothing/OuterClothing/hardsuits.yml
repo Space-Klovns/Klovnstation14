@@ -94,9 +94,9 @@
   - type: Armor
     modifiers:
       coefficients:
-        Blunt: 0.8
-        Slash: 0.8
-        Piercing: 0.8
+        Blunt: 0.9
+        Slash: 0.9
+        Piercing: 0.9
         Radiation: 0.3 #salv is supposed to have radiation hazards in the future
         Caustic: 0.8
   - type: ClothingSpeedModifier
@@ -131,14 +131,11 @@
     modifiers:
       coefficients:
         Blunt: 0.7
-        Slash: 0.7
-        Piercing: 0.6
-        Heat: 0.9
-        Cold: 0.7
-        Radiation: 0.4
+        Slash: 0.6
+        Piercing: 0.7
+        Heat: 0.7
+        Radiation: 0.3
         Caustic: 0.7
-      flatReductions: #KS14 modified
-        Piercing: 7.4
   - type: ClothingSpeedModifier
     walkModifier: 0.75
     sprintModifier: 0.75
@@ -165,16 +162,15 @@
     highPressureMultiplier: 0.5
     lowPressureMultiplier: 1000
   - type: ExplosionResistance
-    damageCoefficient: 0.3
+    damageCoefficient: 0.5
   - type: Armor
     modifiers:
       coefficients:
-        Blunt: 0.6
-        Slash: 0.6
-        Piercing: 0.6
+        Blunt: 0.7
+        Slash: 0.7
+        Piercing: 0.5
         Heat: 0.7 #Goliath hide gets grilled instead of you
-        Cold: 0.7
-        Radiation: 0.1
+        Radiation: 0.3
         Caustic: 0.8
   - type: ClothingSpeedModifier
     walkModifier: 0.8
@@ -210,14 +206,11 @@
   - type: Armor
     modifiers:
       coefficients:
-        Blunt: 0.3
-        Slash: 0.4
+        Blunt: 0.6
+        Slash: 0.6
         Piercing: 0.5
         Heat: 0.3
-        Cold: 0.3
         Radiation: 0.1
-      flatReductions: #KS14 modified
-        Piercing: 8.9
   - type: ExplosionResistance
     damageCoefficient: 0.2
   - type: TemperatureProtection
@@ -241,7 +234,7 @@
     highPressureMultiplier: 0.5
     lowPressureMultiplier: 1000
   - type: ExplosionResistance
-    damageCoefficient: 0.4
+    damageCoefficient: 0.5
   - type: Armor
     modifiers:
       coefficients:
@@ -250,8 +243,6 @@
         Piercing: 0.6
         Heat: 0.8
         Caustic: 0.7
-      flatReductions: #KS14 modified
-        Piercing: 7.4
   - type: ClothingSpeedModifier
     walkModifier: 0.75
     sprintModifier: 0.75
@@ -280,15 +271,12 @@
   - type: Armor
     modifiers:
       coefficients:
-        Blunt: 0.85
-        Slash: 0.85
+        Blunt: 0.8
+        Slash: 0.8
         Piercing: 0.7
-        Heat: 0.85
-        Radiation: 0.4
-        Caustic: 0.4
   - type: ClothingSpeedModifier
-    walkModifier: 0.85
-    sprintModifier: 0.85
+    walkModifier: 0.65
+    sprintModifier: 0.65
   - type: HeldSpeedModifier
   - type: ToggleableClothing
     clothingPrototype: ClothingHeadHelmetHardsuitBrigmedic
@@ -308,19 +296,18 @@
     highPressureMultiplier: 0.5
     lowPressureMultiplier: 1000
   - type: ExplosionResistance
-    damageCoefficient: 0.4
+    damageCoefficient: 0.5
   - type: Armor
     modifiers:
       coefficients:
-        Blunt: 0.45
-        Slash: 0.45
-        Piercing: 0.35
+        Blunt: 0.4
+        Slash: 0.5
+        Piercing: 0.6
+        Heat: 0.8
         Caustic: 0.7
-      flatReductions: #KS14 modified
-        Piercing: 11
   - type: ClothingSpeedModifier
-    walkModifier: 0.75
-    sprintModifier: 0.75
+    walkModifier: 0.7
+    sprintModifier: 0.7
   - type: HeldSpeedModifier
   - type: ToggleableClothing
     clothingPrototype: ClothingHeadHelmetHardsuitWarden
@@ -340,21 +327,19 @@
     highPressureMultiplier: 0.02
     lowPressureMultiplier: 1000
   - type: ExplosionResistance
-    damageCoefficient: 0.5
+    damageCoefficient: 0.7
   - type: Armor
     modifiers:
-      coefficients: # KS14 modified
-        Blunt: 0.65
-        Slash: 0.65
-        Piercing: 0.60
-        Heat: 0.6
+      coefficients:
+        Blunt: 0.8
+        Slash: 0.8
+        Piercing: 0.6
+        Heat: 0.5
         Radiation: 0.5
         Caustic: 0.6
-      flatReductions: #KS14 modified
-        Piercing: 7.4
-  - type: ClothingSpeedModifier # KS14 modified
-    walkModifier: 0.85
-    sprintModifier: 0.85
+  - type: ClothingSpeedModifier
+    walkModifier: 0.8
+    sprintModifier: 0.8
   - type: HeldSpeedModifier
   - type: ToggleableClothing
     clothingPrototype: ClothingHeadHelmetHardsuitCap
@@ -384,9 +369,9 @@
   - type: Armor
     modifiers:
       coefficients:
-        Blunt: 0.9
-        Slash: 0.9
-        Piercing: 0.9
+        Blunt: 0.8
+        Slash: 0.8
+        Piercing: 0.8
         Heat: 0.4
         Radiation: 0.0
         Caustic: 0.7
@@ -418,13 +403,9 @@
   - type: Armor
     modifiers:
       coefficients:
-        Blunt: 0.9
-        Slash: 0.9
-        Piercing: 0.9
-        Heat: 0.8
         Caustic: 0.1
   - type: ZombificationResistance
-    zombificationResistanceCoefficient: 0 # KS14 - y not lets make cmo only one truly resistable
+    zombificationResistanceCoefficient: 0.4
   - type: ClothingSpeedModifier
     walkModifier: 0.95
     sprintModifier: 0.95
@@ -454,15 +435,13 @@
     modifiers:
       coefficients:
         Blunt: 0.6
-        Slash: 0.9
+        Slash: 0.8
         Piercing: 0.9
         Heat: 0.3
-        Radiation: 0.01
+        Radiation: 0.1
         Caustic: 0.2
   - type: ExplosionResistance
     damageCoefficient: 0.1
-  - type: ZombificationResistance
-    zombificationResistanceCoefficient: 0.2
   - type: ClothingSpeedModifier
     walkModifier: 0.75
     sprintModifier: 0.75
@@ -502,14 +481,12 @@
   - type: Armor
     modifiers:
       coefficients:
-        Blunt: 0.4
-        Slash: 0.4
+        Blunt: 0.6
+        Slash: 0.5
         Piercing: 0.5
-        Radiation: 0.5
         Heat: 0.8
-        Caustic: 0.5
-      flatReductions: #KS14 modified
-        Piercing: 8.9
+        Radiation: 0.5
+        Caustic: 0.6
   - type: ClothingSpeedModifier
     walkModifier: 0.8
     sprintModifier: 0.8
@@ -537,15 +514,12 @@
   - type: Armor
     modifiers:
       coefficients:
-        Blunt: 0.8
+        Blunt: 0.9
         Slash: 0.8
-        Piercing: 0.7
+        Piercing: 0.9
         Heat: 0.9
-        Cold: 0.9
         Radiation: 0.5
         Caustic: 0.8
-      flatReductions: #KS14 modified
-        Piercing: 5.7
   - type: ClothingSpeedModifier
     walkModifier: 0.9
     sprintModifier: 0.9
@@ -579,13 +553,10 @@
       coefficients:
         Blunt: 0.5
         Slash: 0.5
-        Piercing: 0.45
+        Piercing: 0.5
         Heat: 0.5
-        Cold: 0.8
         Radiation: 0.5
         Caustic: 0.5
-      flatReductions: #KS14 modified
-        Piercing: 9.6
   - type: ClothingSpeedModifier
     walkModifier: 0.9
     sprintModifier: 0.9
@@ -637,7 +608,7 @@
     heatingCoefficient: 0.001
     coolingCoefficient: 0.001
   - type: ExplosionResistance
-    damageCoefficient: 0.2
+    damageCoefficient: 0.3
   - type: FireProtection
     reduction: 0.8
   - type: StaminaResistance # do not add these to other equipment or mobs, we don't want to microbalance these everywhere
@@ -647,24 +618,22 @@
       coefficients:
         Blunt: 0.6
         Slash: 0.6
-        Piercing: 0.55
+        Piercing: 0.6
         Heat: 0.2
-        Cold: 0.2
         Radiation: 0.01
-        Caustic: 0.4
-      flatReductions: #KS14 modified
-        Piercing: 8.1
+        Caustic: 0.5
   - type: Item
     size: Huge
+  - type: ClothingSpeedModifier
+    walkModifier: 0.9
+    sprintModifier: 0.9
+  - type: HeldSpeedModifier
   - type: ToggleableClothing
     clothingPrototype: ClothingHeadHelmetHardsuitSyndieElite
   - type: Tag
     tags:
     - Hardsuit
     - WhitelistChameleon
-  - type: ClothingSpeedModifier
-    walkModifier: 1
-    sprintModifier: 1
 
 #Syndicate Commander Hardsuit
 - type: entity
@@ -689,13 +658,10 @@
       coefficients:
         Blunt: 0.4
         Slash: 0.4
-        Piercing: 0.35
+        Piercing: 0.3
         Heat: 0.5
-        Cold: 0.5
         Radiation: 0.25
         Caustic: 0.4
-      flatReductions: #KS14 modified
-        Piercing: 11
   - type: ClothingSpeedModifier
     walkModifier: 0.9
     sprintModifier: 0.9
@@ -722,10 +688,7 @@
   - type: PressureProtection
     highPressureMultiplier: 0.2
     lowPressureMultiplier: 1000
-  - type: ExplosionResistance
-    damageCoefficient: 0.3
-  - type: StaminaResistance #KS14 - added a little bit so he wont get stamspammed to shit
-    damageCoefficient: 0.85
+  # - type: StaminaResistance # Should not have stamina resistance, this is purely so people know it was not forgotten.
   - type: Armor
     modifiers:
       coefficients:
@@ -766,17 +729,15 @@
   - type: Armor
     modifiers:
       coefficients:
-        Blunt: 0.5
-        Slash: 0.5
-        Piercing: 0.6
-        Heat: 0.6
-        Radiation: 0.05
-        Caustic: 0.1
-      flatReductions: #KS14 modified
-        Piercing: 7.4
+        Blunt: 0.6
+        Slash: 0.6
+        Piercing: 0.4
+        Heat: 0.25
+        Radiation: 0.25
+        Caustic: 0.75
   - type: ClothingSpeedModifier
-    walkModifier: 0.85
-    sprintModifier: 0.85
+    walkModifier: 0.8
+    sprintModifier: 0.8
   - type: HeldSpeedModifier
   - type: ToggleableClothing
     clothingPrototype: ClothingHeadHelmetHardsuitWizard
@@ -872,11 +833,9 @@
       coefficients:
         Blunt: 0.7
         Slash: 0.8
-        Piercing: 0.5
+        Piercing: 0.85
         Heat: 0.4
         Caustic: 0.75
-      flatReductions: #KS14 modified
-        Piercing: 8.9
   - type: ClothingSpeedModifier
     walkModifier: 0.8
     sprintModifier: 0.8
@@ -1009,8 +968,6 @@
         Heat: 0.1
         Radiation: 0.1
         Caustic: 0.1
-      flatReductions: #KS14 modified
-        Piercing: 14
   - type: ClothingSpeedModifier
     walkModifier: 1.0
     sprintModifier: 1.0
@@ -1040,16 +997,14 @@
   - type: Armor
     modifiers:
       coefficients:
-        Blunt: 0.5 # KS, zeds deal blunt aswell
-        Slash: 0.5 # KS, zeds deal blunt and slash dumbass :fortune:
-        Piercing: 0.55
-        Heat: 0.35 # KS14, changes heat cold shock and caustic because its overtuned for what CBURN is
-        Cold: 0.35 # KS14
-        Shock: 0.35 # KS14
+        Blunt: 0.7
+        Slash: 0.7
+        Piercing: 0.6
+        Heat: 0.1
+        Cold: 0.1
+        Shock: 0.1
         Radiation: 0.1
-        Caustic: 0.5 # KS14
-      flatReductions: #KS14 modified
-        Piercing: 8.1
+        Caustic: 0.1
   - type: ZombificationResistance
     zombificationResistanceCoefficient: 0.25
   - type: ClothingSpeedModifier
@@ -1081,7 +1036,7 @@
       coefficients:
         Blunt: 0.9
         Slash: 0.9
-        Piercing: 0.8
+        Piercing: 0.9
         Caustic: 0.8
   - type: ClothingSpeedModifier
     walkModifier: 0.9
@@ -1131,10 +1086,8 @@
       coefficients:
         Blunt: 0.85
         Slash: 0.9
-        Piercing: 0.7
+        Piercing: 0.85
         Caustic: 0.8
-      flatReductions: #KS14 modified
-        Piercing: 5.7
   - type: ClothingSpeedModifier
     walkModifier: 0.9
     sprintModifier: 0.9

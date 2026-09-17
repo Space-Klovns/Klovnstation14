@@ -36,12 +36,6 @@
     interfaces:
       enum.DoorRemoteUiKey.Key:
         type: DoorRemoteBoundUserInterface
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/multitool_pickup.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/multitool_drop.ogg
 
 - type: entity
   parent: DoorRemoteDefault
@@ -238,7 +232,6 @@
     - SyndicateAgent
     - Wizard
     - Xenoborg
-    - Bluelab # KS14
 
 - type: entity
   parent: [DoorRemoteCanEletrifyDoors, BaseXenoborgContraband]

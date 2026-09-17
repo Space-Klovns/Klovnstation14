@@ -1,0 +1,55 @@
+- components:
+  - organs:
+    - category: Head
+      entity: OrganHumanHead
+      children:
+      - category: Brain
+        entity: OrganHumanBrain
+      - category: Eyes
+        entity: OrganHumanEyes
+      - category: Ears
+        entity: OrganHumanEars
+      - category: Tongue
+        entity: OrganHumanTongue
+    - category: Torso
+      entity: OrganHumanTorso
+      children:
+      - category: Appendix
+        entity: OrganHumanAppendix
+      - category: Lungs
+        entity: OrganHumanLungs
+      - category: Heart
+        entity: OrganHumanHeart
+      - category: Stomach
+        entity: OrganHumanStomach
+      - category: Liver
+        entity: OrganHumanLiver
+      - category: Kidneys
+        entity: OrganHumanKidneys
+    - category: ArmLeft
+      entity: OrganHumanArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganHumanHandLeft
+    - category: ArmRight
+      entity: OrganHumanArmRight
+      children:
+      - category: HandRight
+        entity: OrganHumanHandRight
+    - category: LegLeft
+      entity: OrganHumanLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganHumanFootLeft
+    - category: LegRight
+      entity: OrganHumanLegRight
+      children:
+      - category: FootRight
+        entity: OrganHumanFootRight
+    type: InitialBody
+  type: !PartialOnly entity
+  id: AppearanceHuman
+- parent: OrganBase
+  type: !PartialOnly entity
+  id: OrganHuman
+...

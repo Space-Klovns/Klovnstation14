@@ -1,0 +1,357 @@
+- components:
+  - type: Stainable
+  type: !PartialOnly entity
+  id: BaseStructureWall
+- components:
+  - type: KsThermalSource
+  - type: KsRadarSource
+  type: !PartialOnly entity
+  id: BaseWall
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 300
+      behaviors:
+      - sound:
+          collection: MetalSlam
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 150
+      behaviors:
+      - sound:
+          collection: MetalSlam
+      - node: girder
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: WallGold
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 300
+      behaviors:
+      - sound:
+          collection: MetalSlam
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 150
+      behaviors:
+      - sound:
+          collection: MetalSlam
+      - node: girder
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: WallPlasma
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 300
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalSlam
+    - trigger:
+        damage: 150
+      behaviors:
+      - sound:
+          collection: MetalSlam
+      - node: girder
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: WallPlastic
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalSlam
+    - trigger:
+        damage: 400
+      behaviors:
+      - sound:
+          collection: MetalSlam
+      - node: girder
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: WallReinforced
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 500
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalSlam
+    - trigger:
+        damage: 350
+      behaviors:
+      - sound:
+          collection: MetalSlam
+      - node: girder
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: WallReinforcedRust
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalSlam
+    - trigger:
+        damage: 300
+      behaviors:
+      - node: girder
+      - sound:
+          collection: MetalSlam
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: WallReinforcedDiagonal
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 300
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalSlam
+    - trigger:
+        damage: 150
+      behaviors:
+      - sound:
+          collection: MetalSlam
+      - node: girder
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: WallSilver
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalSlam
+    - trigger:
+        damage: 300
+      behaviors:
+      - node: girder
+      - sound:
+          collection: MetalSlam
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: WallShuttleDiagonal
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalSlam
+    - trigger:
+        damage: 400
+      behaviors:
+      - sound:
+          collection: MetalSlam
+      - node: girder
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: WallShuttle
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 400
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalSlam
+    - trigger:
+        damage: 200
+      behaviors:
+      - sound:
+          collection: MetalSlam
+      - node: girder
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: WallSolid
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 400
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalSlam
+    - trigger:
+        damage: 200
+      behaviors:
+      - node: girder
+      - sound:
+          collection: MetalSlam
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: WallSolidDiagonal
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 300
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalSlam
+    - trigger:
+        damage: 150
+      behaviors:
+      - sound:
+          collection: MetalSlam
+      - node: girder
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: WallSolidRust
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 400
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalSlam
+    - trigger:
+        damage: 200
+      behaviors:
+      - sound:
+          collection: MetalSlam
+      - node: girder
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: WallSolidChitin
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalSlam
+    - trigger:
+        damage: 400
+      behaviors:
+      - sound:
+          collection: MetalSlam
+      - node: girder
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: WallReinforcedChitin
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 300
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalSlam
+    - trigger:
+        damage: 150
+      behaviors:
+      - sound:
+          collection: MetalSlam
+      - node: girder
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: WallUranium
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 300
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: WoodDestroyHeavy
+    - trigger:
+        damage: 150
+      behaviors:
+      - sound:
+          collection: WoodDestroyHeavy
+      - node: Barricade
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: WallWood
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 100
+      behaviors:
+      - sound:
+          collection: WoodDestroy
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 30
+      behaviors:
+      - acts: ["Destruction"]
+      - spawn:
+          MaterialWebSilk:
+            min: 1
+            max: 1
+      - sound:
+          collection: WoodDestroy
+    type: Destructible
+  type: !PartialOnly entity
+  id: WallWeb
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalSlam
+    - trigger:
+        damage: 300
+      behaviors:
+      - spawn:
+          Girder:
+            min: 1
+            max: 1
+      - sound:
+          collection: MetalSlam
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: WallMiningDiagonal
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 80
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 40
+      behaviors:
+      - spawn:
+          MaterialCardboard:
+            min: 1
+            max: 2
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: Cardwall
+...

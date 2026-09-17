@@ -21,12 +21,6 @@
     thresholds:
     - trigger:
         !type:DamageTrigger
-        damage: 80
-      behaviors:
-      - !type:DoActsBehavior
-        acts: ["Destruction"]
-    - trigger:
-        !type:DamageTrigger
         damage: 40
       behaviors:
       - !type:EmptyAllContainersBehaviour
@@ -37,13 +31,6 @@
           collection: MetalBreak
   - type: StaticPrice
     price: 75
-  - type: StationAiWhitelist #KS14: New items whitelisted for AI
-  # KS14: emissive start
-  - type: EmissiveLayers
-    glowRadius: 0.85
-    layers:
-    - enum.PowerChargerVisualLayers.Light
-  # KS14: emissive end
 
 - type: entity
   abstract: true

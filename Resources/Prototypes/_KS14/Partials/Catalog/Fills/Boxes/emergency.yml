@@ -1,0 +1,19 @@
+- parent: BoxCardboardSmallOutsideBigInside
+  type: !PartialOnly entity
+  id: BoxSurvival
+- parent: BoxCardboardSmallOutsideBigInside
+  type: !PartialOnly entity
+  id: BoxSurvivalEngineering
+- parent: BoxCardboardSmallOutsideBigInside
+  type: !PartialOnly entity
+  id: BoxSurvivalSecurity
+- parent: BoxCardboardSmallOutsideBigInside
+  type: !PartialOnly entity
+  id: BoxSurvivalMedical
+- parent: BoxCardboardSmallOutsideBigInside
+  type: !PartialOnly entity
+  id: BoxHug
+- parent: BoxCardboardSmallOutsideBigInside
+  type: !PartialOnly entity
+  id: BoxSurvivalSyndicate
+...

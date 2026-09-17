@@ -3,7 +3,10 @@
   name: job-name-chemist
   description: job-description-chemist
   playTimeTracker: JobChemist
-  # KS14: Removed role requirements
+  requirements:
+    - !type:DepartmentTimeRequirement
+      department: Medical
+      time: 5h
   startingGear: ChemistGear
   icon: "JobIconChemist"
   supervisors: job-supervisors-cmo

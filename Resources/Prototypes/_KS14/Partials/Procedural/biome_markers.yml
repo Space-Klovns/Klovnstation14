@@ -1,0 +1,13 @@
+- minGroupSize: 1
+  maxGroupSize: 2
+  type: !PartialOnly biomeMarkerLayer
+  id: WatchersLavaland
+- minGroupSize: 1
+  maxGroupSize: 2
+  type: !PartialOnly biomeMarkerLayer
+  id: WatchersIcewing
+- minGroupSize: 1
+  maxGroupSize: 2
+  type: !PartialOnly biomeMarkerLayer
+  id: WatchersMagmawing
+...

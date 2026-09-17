@@ -1,0 +1,30 @@
+- children: !Remove
+  - Construction
+  - Power
+  - Atmospherics
+  - Plumbing
+  - ShuttleCraft
+  - Sensors
+  - Networking
+  type: !PartialOnly guideEntry
+  id: Engineering
+- children: !Remove
+  - Generators
+  - InspectingPower
+  - PowerStorage
+  - Ramping
+  - VoltageNetworks
+  - ArcFlash
+  type: !PartialOnly guideEntry
+  id: Power
+- children: !Remove
+  - PortableGenerator
+  - AME
+  - SingularityTeslaEngine
+  - NuclearReactor
+  - TEG
+  - RTG
+  - SolarPanels
+  type: !PartialOnly guideEntry
+  id: Generators
+...

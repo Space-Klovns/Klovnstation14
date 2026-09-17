@@ -1,0 +1,8 @@
+- components:
+  - type: EmissiveLayers
+    glowRadius: 1
+    layers:
+    - enum.ExpendableLightVisualLayers.Glow
+  type: !PartialOnly entity
+  id: Flare
+...

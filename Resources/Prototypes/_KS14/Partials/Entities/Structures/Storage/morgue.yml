@@ -1,0 +1,22 @@
+- parent: BaseRelaxedAnchoring
+  components:
+  - fixtures:
+      fix1:
+        layer: !Remove
+        - HalfWallLayer
+    type: Fixtures
+  - type: RequireProjectileTarget
+  type: !PartialOnly entity
+  id: Morgue
+- components:
+  - type: EmissiveLayers
+    glowRadius: 0.35
+    intensity: 3
+    layers:
+    - enum.CrematoriumVisualLayers.LightContent
+    - enum.CrematoriumVisualLayers.LightBurning
+  - type: StationAiWhitelist
+  - type: RequireProjectileTarget
+  type: !PartialOnly entity
+  id: Crematorium
+...

@@ -1,0 +1,19 @@
+- type: technology
+  id: IndustrialNuclearGeneration
+  name: research-technology-industrial-nuclear-generation
+  icon:
+    sprite: _FarHorizons/Structures/Power/Generation/FissionGenerator/nuclear_reactor.rsi
+    state: reactor
+  discipline: Industrial
+  tier: 2
+  cost: 12500
+  recipeUnlocks:
+  - CerenkiteFuelRod
+  - UraniumFuelRod
+  - ReactorControlRod
+  - ReactorGasChannel
+  - ReactorHeatExchanger
+  position: -1,-4
+  technologyPrerequisites:
+  - PowerGeneration
+...

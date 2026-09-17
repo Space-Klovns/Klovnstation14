@@ -104,10 +104,10 @@
     wideAnimationRotation: -135
     damage:
       types:
-        Blunt: 25
+        Blunt: 20
     soundHit:
       collection: MetalThud
-    bluntStaminaDamageFactor: 1.2
+    bluntStaminaDamageFactor: 1.5
   - type: Item
     size: Normal
   - type: Tag
@@ -157,7 +157,7 @@
       size: Small
       sprite: Objects/Weapons/Melee/flash.rsi
     - type: UseDelay
-      delay: 1 # has to be the same as the FlashingTime datafield in FlashComponent
+      delay: 4 # has to be the same as the FlashingTime datafield in FlashComponent
     - type: UseDelayOnMeleeHit
     - type: StaticPrice
       price: 40
@@ -197,8 +197,6 @@
         path: /Audio/Weapons/flash.ogg
     - type: FlashOnTrigger
       range: 3
-    - type: Physics #KS14
-      sleepingAllowed: false # should be inverse of whether the proximity trigger starts enabled
     - type: TriggerOnProximity
       enabled: true
       cooldown: 5

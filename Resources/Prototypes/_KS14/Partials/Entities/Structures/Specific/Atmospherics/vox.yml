@@ -1,0 +1,23 @@
+- components:
+  - gasThresholdPrototypes:
+      Zipion: stationZipion
+    type: AtmosMonitor
+  type: !PartialOnly entity
+  id: AirSensorVoxBase
+- components:
+  - filterGases: !Remove
+    - Oxygen
+    - CarbonDioxide
+    - Plasma
+    - Tritium
+    - WaterVapor
+    - Ammonia
+    - NitrousOxide
+    - Frezon
+    - Zipion
+    - Argon
+    - Evaporin
+    type: GasVentScrubber
+  type: !PartialOnly entity
+  id: GasVentScrubberVox
+...

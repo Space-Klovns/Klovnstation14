@@ -808,14 +808,6 @@
   id: ClothingHeadHatWizardBase
   components:
   - type: WizardClothes
-  - type: Armor # KS14 Change - armor for base wizhat
-    modifiers:
-      coefficients:
-        Blunt: 0.9
-        Slash: 0.9
-        Piercing: 0.9
-        Heat: 0.9
-        Caustic: 0.9
 
 - type: entity
   parent: ClothingHeadHatWizardBase
@@ -1472,9 +1464,9 @@
       behaviors:
       - !type:SpawnEntitiesBehavior
         spawn:
-            Ash:
-              min: 1
-              max: 1
+          Ash:
+            min: 1
+            max: 1
       - !type:DoActsBehavior
         acts: [ "Destruction" ]
 

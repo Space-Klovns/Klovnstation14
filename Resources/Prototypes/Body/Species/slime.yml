@@ -56,42 +56,20 @@
           32:
             sprite: Mobs/Species/Human/displacement.rsi
             state: jumpsuit-female
-  - type: InitialBody # KS14: Re-arranged
+  - type: InitialBody
     organs:
-    - category: Head # head
-      entity: OrganSlimePersonHead
-
-    - category: Torso # torso
-      entity: OrganSlimePersonTorso
-      children:
-      - category: Brain
-        entity: OrganSlimePersonCore
-      - category: Lungs
-        entity: OrganSlimePersonLungs
-
-    - category: ArmLeft # arm
-      entity: OrganSlimePersonArmLeft
-      children:
-      - category: HandLeft
-        entity: OrganSlimePersonHandLeft
-
-    - category: ArmRight # arm
-      entity: OrganSlimePersonArmRight
-      children:
-      - category: HandRight
-        entity: OrganSlimePersonHandRight
-
-    - category: LegLeft # leg
-      entity: OrganSlimePersonLegLeft
-      children:
-      - category: FootLeft
-        entity: OrganSlimePersonFootLeft
-
-    - category: LegRight # leg
-      entity: OrganSlimePersonLegRight
-      children:
-      - category: FootRight
-        entity: OrganSlimePersonFootRight
+      Torso: OrganSlimePersonTorso
+      Head: OrganSlimePersonHead
+      ArmLeft: OrganSlimePersonArmLeft
+      ArmRight: OrganSlimePersonArmRight
+      HandRight: OrganSlimePersonHandRight
+      HandLeft: OrganSlimePersonHandLeft
+      LegLeft: OrganSlimePersonLegLeft
+      LegRight: OrganSlimePersonLegRight
+      FootLeft: OrganSlimePersonFootLeft
+      FootRight: OrganSlimePersonFootRight
+      Brain: OrganSlimePersonCore
+      Lungs: OrganSlimePersonLungs
   - type: HumanoidProfile
     species: SlimePerson
 
@@ -130,10 +108,7 @@
   - type: TypingIndicator
     proto: slime
   - type: Vocal
-    sounds:
-      Male: MaleSlime
-      Female: FemaleSlime
-      Unsexed: MaleSlime
+    emoteSounds: MaleSlime
   - type: Damageable
     damageModifierSet: Slime
   - type: PassiveDamage # Around 8 damage a minute healed
@@ -184,12 +159,10 @@
         messages: [ "slime-hurt-by-water-popup" ]
         probability: 0.25
   - type: Butcherable
-    butcheringType: Spike
     spawned:
     - id: FoodMeatSlime
       amount: 5
   - type: Respirator
-    requiredOrganCategory: null # KS14: Klovnmed, slimes dont need a head to breathe unlike default mobs
     damage:
       types:
         Asphyxiation: 0.2
@@ -199,7 +172,7 @@
     maxSaturation: 15
 
 - type: entity
-  parent: OrganBase
+  parent: OrganBaseOrganic
   id: OrganSlimePerson
   abstract: true
   suffix: slime person

@@ -1,0 +1,85 @@
+- components:
+  - type: Sharp
+  - qualities: !Remove
+    - Slicing
+    - Incision
+    type: Tool
+  type: !PartialOnly entity
+  id: BaseKnife
+- components:
+  - damage:
+      types:
+        Slash: 16
+    type: MeleeWeapon
+  type: !PartialOnly entity
+  id: ButchCleaver
+- components:
+  - damage:
+      types:
+        Slash: 14.6
+    type: MeleeWeapon
+  - damage:
+      types:
+        Slash: 15
+    type: DamageOtherOnHit
+  type: !PartialOnly entity
+  id: CombatKnife
+- components:
+  - damage:
+      types:
+        Slash: 22
+    type: MeleeWeapon
+  - type: DamageOtherOnHit
+    damage:
+      types:
+        Slash: 18
+  type: !PartialOnly entity
+  id: KukriKnife
+- components:
+  - damage:
+      types:
+        Slash: 6.8
+    type: MeleeWeapon
+  type: !PartialOnly entity
+  id: Shiv
+- components:
+  - damage:
+      types:
+        Slash: 8.7
+    type: MeleeWeapon
+  type: !PartialOnly entity
+  id: ReinforcedShiv
+- components:
+  - damage:
+      types:
+        Slash: 11.3
+    type: MeleeWeapon
+  type: !PartialOnly entity
+  id: PlasmaShiv
+- components:
+  - damage:
+      types:
+        Slash: 8.7
+        Radiation: 5.1
+    type: MeleeWeapon
+  type: !PartialOnly entity
+  id: UraniumShiv
+- components:
+  - damage:
+      types:
+        Slash: 8
+    type: MeleeWeapon
+  - damage:
+      types:
+        Slash: 15
+        Piercing: 20
+    type: DamageOtherOnHit
+  type: !PartialOnly entity
+  id: ThrowingKnife
+- components:
+  - components:
+    - type: Sharp
+    type: ComponentToggler
+  type: !PartialOnly entity
+  id: UtilityKnife
+...

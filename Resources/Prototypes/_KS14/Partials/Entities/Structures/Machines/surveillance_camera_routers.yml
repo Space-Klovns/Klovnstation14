@@ -1,0 +1,39 @@
+- components:
+  - layers: !Remove
+    - state: server-nopower
+    - state: server-on
+      shader: unshaded
+      sprite: _KS14/Structures/Machines/server.rsi
+      map: ["enum.PowerDeviceVisualLayers.Powered"]
+    - state: server_o
+      map: ["enum.WiresVisualLayers.MaintenancePanel"]
+    type: Sprite
+  - type: EmissiveLayers
+    intensity: 3
+  - sound:
+      path: /Audio/Ambience/Objects/server_fans.ogg
+      collection: !Remove ''
+    type: AmbientSound
+  - type: StationAiWhitelist
+  type: !PartialOnly entity
+  id: SurveillanceCameraRouterBase
+- components:
+  - snapCardinals: true
+    layers: !Remove
+    - state: server-nopower
+    - state: server-on
+      shader: unshaded
+      sprite: _KS14/Structures/Machines/server.rsi
+      map: ["enum.PowerDeviceVisualLayers.Powered"]
+    - state: server_o
+      map: ["enum.WiresVisualLayers.MaintenancePanel"]
+    type: Sprite
+  - type: EmissiveLayers
+    intensity: 3
+  - sound:
+      path: /Audio/Ambience/Objects/server_fans.ogg
+      collection: !Remove ''
+    type: AmbientSound
+  type: !PartialOnly entity
+  id: SurveillanceCameraWirelessRouterBase
+...

@@ -1,0 +1,31 @@
+- components:
+  - prototypes: !Remove
+    - RiotShield
+    - RiotBulletShield
+    - RiotLaserShield
+    - ClothingHeadHelmetBasic
+    - ClothingHeadHelmetRiot
+    - ClothingOuterArmorBasic
+    - ClothingOuterArmorRiot
+    - ClothingOuterArmorBulletproof
+    - WeaponDisabler
+    - WeaponPistolMk58
+    - WeaponRifleLecter
+    - WeaponSubMachineGunDrozd
+    - WeaponLaserCarbineProjectile
+    - WeaponShotgunKammerer
+    type: RandomSpawner
+  type: !PartialOnly entity
+  id: LootSpawnerArmory
+- components:
+  - prototypes: !Remove
+    - WeaponDisabler
+    - WeaponPistolMk58
+    - WeaponRifleLecter
+    - WeaponSubMachineGunDrozd
+    - WeaponLaserCarbineProjectile
+    - WeaponShotgunKammerer
+    type: RandomSpawner
+  type: !PartialOnly entity
+  id: LootSpawnerArmoryGunsOnly
+...

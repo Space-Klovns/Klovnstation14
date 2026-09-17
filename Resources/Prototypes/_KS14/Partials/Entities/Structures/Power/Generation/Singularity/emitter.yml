@@ -1,0 +1,27 @@
+- components:
+  - type: EmissiveLayers
+    glowRadius: 0.3
+    intensity: 2.2
+    layers:
+    - enum.EmitterVisualLayers.Lights
+    - enum.LockVisualLayers.Lock
+  - thresholds: !Remove
+    - trigger:
+        damage: 400
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 200
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          SheetSteel1:
+            min: 5
+            max: 5
+      - acts: ["Destruction"]
+    type: Destructible
+  - type: StationAiWhitelist
+  type: !PartialOnly entity
+  id: Emitter
+...

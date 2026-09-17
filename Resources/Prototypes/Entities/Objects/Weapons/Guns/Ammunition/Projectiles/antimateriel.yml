@@ -7,47 +7,10 @@
   - type: Projectile
     damage:
       types:
-        Piercing: 80
-        Structural: 120
+        Piercing: 75
+        Structural: 226
     penetrationThreshold: 360
     penetrationDamageTypeRequirement:
     - Structural
-  - type: RemoveCompOnCollide
-    taggedComponents:
-      HristovWindowVentable:
-      - type: Airtight
-      - type: DeltaPressure
-  - type: AddCompOnCollide
-    taggedComponents:
-      HristovWindowVentable:
-      - type: HristovAppearance
   - type: StaminaDamageOnCollide
     damage: 60
-
-############################
-#KS14 additions
-
-- type: entity
-  categories: [ HideSpawnMenu ]
-  parent: BaseBullet
-  id: BulletAntiMaterielAP
-  name: bullet (.60 anti-materiel)
-  components:
-  - type: Projectile
-    damage:
-      types:
-        Piercing: 50
-        Structural: 300
-    penetrationThreshold: 360
-    penetrationDamageTypeRequirement:
-    - Structural
-    ignoreResistances: true
-  - type: RemoveCompOnCollide
-    taggedComponents:
-      HristovWindowVentable:
-      - type: Airtight
-      - type: DeltaPressure
-  - type: AddCompOnCollide
-    taggedComponents:
-      HristovWindowVentable:
-      - type: HristovAppearance

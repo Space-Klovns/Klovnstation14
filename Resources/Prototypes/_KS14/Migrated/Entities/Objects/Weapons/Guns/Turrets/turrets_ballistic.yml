@@ -1,0 +1,38 @@
+- type: entity
+  parent: BaseWeaponBallisticTurret
+  id: BaseWeaponTurretDisposable
+  name: disposable ballistic turret
+  abstract: true
+  components:
+  - type: Destructible
+    thresholds:
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+      - !type:TriggerBehavior ''
+  - type: Gun
+    fireRate: 2
+    selectedMode: FullAuto
+    availableModes:
+    - FullAuto
+    soundGunshot: /Audio/Weapons/Guns/Gunshots/gun_sentry.ogg
+  - type: BallisticAmmoProvider
+    proto: CartridgePistol
+    capacity: 50
+  - type: Repairable
+    qualityNeeded: "Anchoring"
+    doAfterDelay: 3
+  - type: TriggerOnEmptyGunshot
+  - type: ExplodeOnTrigger
+  - type: Explosive
+    explosionType: Default
+    maxIntensity: 10
+    intensitySlope: 1.5
+    totalIntensity: 30
+    canCreateVacuum: false
+...

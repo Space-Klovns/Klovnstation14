@@ -1,4 +1,4 @@
-﻿- type: gas
+- type: gas
   id: Oxygen
   name: gas-oxygen
   abbreviation: gas-oxygen-abbreviation
@@ -91,7 +91,6 @@
   color: '#56941E'
   reagent: Ammonia
   pricePerMole: 0.15
-  isFuel: true # KS14
 
 - type: gas
   id: NitrousOxide

@@ -1,0 +1,19 @@
+- components:
+  - damage:
+      types:
+        Blunt: 25
+    bluntStaminaDamageFactor: 1.2
+    type: MeleeWeapon
+  type: !PartialOnly entity
+  id: Truncheon
+- components:
+  - delay: 1
+    type: UseDelay
+  type: !PartialOnly entity
+  id: Flash
+- components:
+  - type: Physics
+    sleepingAllowed: false
+  type: !PartialOnly entity
+  id: PortableFlasher
+...

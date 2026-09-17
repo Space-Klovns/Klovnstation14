@@ -1,0 +1,4 @@
+- sprite: /Textures/_KS14/Tiles/Tg/plating.png
+  type: !PartialOnly tile
+  id: Plating
+...

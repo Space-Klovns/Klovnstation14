@@ -5,10 +5,10 @@
   playTimeTracker: JobSecurityCadet
   requirements:
     - !type:OverallPlaytimeRequirement
-      time: 2h #2 hrs, klovn
+      time: 10h
     - !type:DepartmentTimeRequirement
       department: Security
-      time: 3h # KS14: 10h -> 3h
+      time: 10h
       inverted: true # stop playing intern if you're good at security!
   startingGear: SecurityCadetGear
   icon: "JobIconSecurityCadet"

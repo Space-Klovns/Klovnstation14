@@ -1,6 +1,6 @@
 - type: entity
   abstract: true
-  parent: [ BaseStructure, BaseRelaxedAnchoring ]
+  parent: BaseStructure
   id: BaseMachine
   components:
   - type: Animateable
@@ -30,12 +30,6 @@
     thresholds:
     - trigger:
         !type:DamageTrigger
-        damage: 200
-      behaviors:
-        - !type:DoActsBehavior
-          acts: [ "Destruction" ]
-    - trigger:
-        !type:DamageTrigger
         damage: 100
       behaviors:
       - !type:DoActsBehavior
@@ -54,31 +48,11 @@
   - type: ExtensionCableReceiver
   - type: LightningTarget
     priority: 1
-  # KS14: emissive start
-  - type: EmissiveLayers
-    glowRadius: 0.3
-    layers:
-    - enum.PowerDeviceVisualLayers.Powered
-  # KS14: emissive end
 
 - type: entity
   abstract: true
-  parent: BaseRelaxedAnchoring
   id: ConstructibleMachine
   components:
-  - type: Physics
-    bodyType: Static
-  - type: Fixtures
-    fixtures:
-      fix1:
-        shape:
-          !type:PhysShapeAabb
-          bounds: "-0.45,-0.45,0.45,0.45"
-        density: 190
-        mask:
-        - MachineMask
-        layer:
-        - MachineLayer
   - type: Animateable
   - type: Machine
   - type: ContainerContainer

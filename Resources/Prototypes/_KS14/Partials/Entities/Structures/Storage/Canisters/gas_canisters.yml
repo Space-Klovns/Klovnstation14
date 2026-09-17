@@ -1,0 +1,644 @@
+- components:
+  - sprite: _KS14/Structures/Storage/canister.rsi
+    layers: !Remove
+    - state: multi_shader
+      color: "#6B6B80"
+    - state: outline
+      color: "#6B6B80"
+    - state: window-base
+    - state: paper
+      visible: false
+      map: ["enum.PaperLabelVisuals.Layer"]
+      sprite: Structures/Storage/canister.rsi
+    type: Sprite
+  - visuals:
+      enum.GasCanisterVisuals.PressureState:
+        pressureLight:
+          0:
+            state: can-0
+          1:
+            state: can-1
+          2:
+            state: can-2
+          3:
+            state: can-3
+      enum.PaperLabelVisuals.LabelType:
+        enum.PaperLabelVisuals.Layer:
+          Paper:
+            sprite: Structures/Storage/canister.rsi
+          Bounty:
+            sprite: Structures/Storage/canister.rsi
+          CaptainsPaper:
+            sprite: Structures/Storage/canister.rsi
+          Invoice:
+            sprite: Structures/Storage/canister.rsi
+      enum.BatteryShieldingVisuals.Active:
+        shielding:
+          False: {visible: false}
+          True: {state: shielding, visible: true, shader: unshaded}
+      enum.LockVisuals.Locked: !Remove ''
+    type: GenericVisualizer
+  - type: BatteryShielding
+    falterPopupLoc: gas-canister-shielding-popup-falter
+    failPopupLoc: gas-canister-shielding-popup-fail
+    emagMalfunctionPopupLoc: gas-canister-shielding-popup-emag-malfunction
+    emagMalfunctionDuration: 3s
+    emagImplosionDamage:
+      types:
+        Blunt: 350
+    uiKey: enum.GasCanisterUiKey.Key
+  - type: BatterySelfRecharger
+    autoRechargeRate: 1000
+    autoRechargePauseTime: 10s
+  - type: Battery
+    maxCharge: 30000
+    startingCharge: 30000
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 300
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          GasCanisterBrokenBase:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+    type: Destructible
+  - maxIntegrity: 4
+    integrity: 4
+    safetyPressure: 220220220220220220
+    type: GasCanister
+  - type: GasCanisterOverlay
+  - type: EmissiveLayers
+    glowRadius: 1
+    intensity: 0.35
+    layers:
+    - pressureLight
+    - shielding
+  - type: KsGasMaxPressureInterval
+    interval: 2.20s
+    popupType: MediumCaution
+    popupLocs:
+      0.75: ks-canister-maxpressure-popup-4
+      1.2: ks-canister-maxpressure-popup-3
+      3: ks-canister-maxpressure-popup-2
+      5: ks-canister-maxpressure-popup-1
+  - type: KsGasMaxPressureSound
+    finalOverpressureThreshold: 0.75
+    overpressureSound:
+      collection: KsCanisterHiss
+      params:
+        variation: 0.06
+    finalOverpressureSound:
+      collection: KsCanisterThud
+      params:
+        volume: 12
+        pitch: 0.85
+  - type: MaxPressureVisuals
+  - type: Lock
+  type: !PartialOnly entity
+  id: GasCanister
+- components:
+  - layers: !Remove
+    - state: multi_shader
+      color: "#787878"
+    - state: outline
+      color: "#787878"
+    - state: window-base
+    - state: paper
+      visible: false
+      map: ["enum.PaperLabelVisuals.Layer"]
+      sprite: Structures/Storage/canister.rsi
+    type: Sprite
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 300
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          StorageCanisterBroken:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+      - !type:DumpCanisterBehavior ''
+    type: Destructible
+  - type: MaxPressureVisuals
+  type: !PartialOnly entity
+  id: StorageCanister
+- components:
+  - layers: !Remove
+    - state: multi_shader
+      color: "#C6C0B5"
+    - state: outline
+      color: "#C6C0B5"
+    - state: window-base
+    - state: paper
+      visible: false
+      map: ["enum.PaperLabelVisuals.Layer"]
+      sprite: Structures/Storage/canister.rsi
+    sprite: !Remove ''
+    type: Sprite
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 300
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          AirCanisterBroken:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+      - !type:DumpCanisterBehavior ''
+    type: Destructible
+  - type: MaxPressureVisuals
+  type: !PartialOnly entity
+  id: AirCanister
+- components:
+  - layers: !Remove
+    - state: multi_shader
+      color: "#2786E5"
+    - state: stripe
+      color: "#E8FEFE"
+    - state: outline
+      color: "#2786E5"
+    - state: window-base
+    - state: paper
+      visible: false
+      map: ["enum.PaperLabelVisuals.Layer"]
+      sprite: Structures/Storage/canister.rsi
+    type: Sprite
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 300
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          OxygenCanisterBroken:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+      - !type:DumpCanisterBehavior ''
+    type: Destructible
+  - type: MaxPressureVisuals
+  type: !PartialOnly entity
+  id: OxygenCanister
+- components:
+  - layers: !Remove
+    - state: multi_shader
+      color: "#E9FF5C"
+    - state: double_stripe
+      color: "#F4FCE8"
+    - state: outline
+      color: "#E9FF5C"
+    - state: window-base
+    - state: paper
+      visible: false
+      map: ["enum.PaperLabelVisuals.Layer"]
+      sprite: Structures/Storage/canister.rsi
+    type: Sprite
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 300
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          NitrogenCanisterBroken:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+      - !type:DumpCanisterBehavior ''
+    type: Destructible
+  - type: MaxPressureVisuals
+  type: !PartialOnly entity
+  id: NitrogenCanister
+- components:
+  - layers: !Remove
+    - state: multi_shader
+      color: "#4E4C48"
+    - state: double_stripe
+      color: "#EAEAEA"
+    - state: outline
+      color: "#4E4C48"
+    - state: window-base
+    - state: paper
+      visible: false
+      map: ["enum.PaperLabelVisuals.Layer"]
+      sprite: Structures/Storage/canister.rsi
+    type: Sprite
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 300
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          CarbonDioxideCanisterBroken:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+      - !type:DumpCanisterBehavior ''
+    type: Destructible
+  - type: MaxPressureVisuals
+  type: !PartialOnly entity
+  id: CarbonDioxideCanister
+- components:
+  - layers: !Remove
+    - state: multi_shader
+      color: "#F62800"
+    - state: hazard_stripes
+      color: "#000000"
+    - state: outline
+      color: "#F62800"
+    - state: window-base
+    - state: paper
+      visible: false
+      map: ["enum.PaperLabelVisuals.Layer"]
+      sprite: Structures/Storage/canister.rsi
+    type: Sprite
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 300
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          PlasmaCanisterBroken:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+      - !type:DumpCanisterBehavior ''
+    type: Destructible
+  - type: MaxPressureVisuals
+  type: !PartialOnly entity
+  id: PlasmaCanister
+- components:
+  - layers: !Remove
+    - state: multi_shader
+      color: "#3FCD40"
+    - state: hazard_stripes
+      color: "#000000"
+    - state: outline
+      color: "#3FCD40"
+    - state: window-base
+    - state: paper
+      visible: false
+      map: ["enum.PaperLabelVisuals.Layer"]
+      sprite: Structures/Storage/canister.rsi
+    type: Sprite
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 300
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          TritiumCanisterBroken:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+      - !type:DumpCanisterBehavior ''
+    type: Destructible
+  - type: MaxPressureVisuals
+  type: !PartialOnly entity
+  id: TritiumCanister
+- components:
+  - layers: !Remove
+    - state: multi_shader
+      color: "#4C4E4D"
+    - state: double_stripe
+      color: "#F7D5D3"
+    - state: outline
+      color: "#4C4E4D"
+    - state: window-base
+    - state: paper
+      visible: false
+      map: ["enum.PaperLabelVisuals.Layer"]
+      sprite: Structures/Storage/canister.rsi
+    type: Sprite
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 300
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          WaterVaporCanisterBroken:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+      - !type:DumpCanisterBehavior ''
+    type: Destructible
+  - type: MaxPressureVisuals
+  type: !PartialOnly entity
+  id: WaterVaporCanister
+- components:
+  - layers: !Remove
+    - state: multi_shader
+      color: "#009823"
+    - state: double_stripe
+      color: "#F7D5D3"
+    - state: outline
+      color: "#009823"
+    - state: window-base
+    - state: paper
+      visible: false
+      map: ["enum.PaperLabelVisuals.Layer"]
+      sprite: Structures/Storage/canister.rsi
+    type: Sprite
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 300
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          AmmoniaCanisterBroken:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+      - !type:DumpCanisterBehavior ''
+    type: Destructible
+  - type: MaxPressureVisuals
+  type: !PartialOnly entity
+  id: AmmoniaCanister
+- components:
+  - layers: !Remove
+    - state: multi_shader
+      color: "#C63E3B"
+    - state: double_stripe
+      color: "#F7D5D3"
+    - state: outline
+      color: "#C63E3B"
+    - state: window-base
+    - state: paper
+      visible: false
+      map: ["enum.PaperLabelVisuals.Layer"]
+      sprite: Structures/Storage/canister.rsi
+    type: Sprite
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 300
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          NitrousOxideCanisterBroken:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+      - !type:DumpCanisterBehavior ''
+    type: Destructible
+  - type: MaxPressureVisuals
+  type: !PartialOnly entity
+  id: NitrousOxideCanister
+- components:
+  - layers: !Remove
+    - state: multi_shader
+      color: "#6696EE"
+    - state: double_stripe
+      color: "#FEFB30"
+    - state: outline
+      color: "#6696EE"
+    - state: window-base
+    - state: paper
+      visible: false
+      map: ["enum.PaperLabelVisuals.Layer"]
+      sprite: Structures/Storage/canister.rsi
+    type: Sprite
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 300
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          FrezonCanisterBroken:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+      - !type:DumpCanisterBehavior ''
+    type: Destructible
+  - type: MaxPressureVisuals
+  type: !PartialOnly entity
+  id: FrezonCanister
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 100
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          SheetPlasteel1:
+            min: 1
+            max: 2
+      - acts: ["Destruction"]
+    type: Destructible
+  - sprite: _KS14/Structures/Storage/canister.rsi
+    layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#787878"
+    - state: outline_broken
+      color: "#787878"
+    state: !Remove ''
+    type: Sprite
+  type: !PartialOnly entity
+  id: GasCanisterBrokenBase
+- components:
+  - layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#787878"
+    - state: outline_broken
+      color: "#787878"
+    state: !Remove ''
+    type: Sprite
+  type: !PartialOnly entity
+  id: StorageCanisterBroken
+- components:
+  - layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#C6C0B5"
+    - state: outline_broken
+      color: "#C6C0B5"
+    state: !Remove ''
+    type: Sprite
+  type: !PartialOnly entity
+  id: AirCanisterBroken
+- components:
+  - layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#2786E5"
+    - state: stripe_broken
+      color: "#E8FEFE"
+    - state: outline_broken
+      color: "#2786E5"
+    state: !Remove ''
+    type: Sprite
+  type: !PartialOnly entity
+  id: OxygenCanisterBroken
+- components:
+  - layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#E9FF5C"
+    - state: double_stripe_broken
+      color: "#F4FCE8"
+    - state: outline_broken
+      color: "#E9FF5C"
+    state: !Remove ''
+    type: Sprite
+  type: !PartialOnly entity
+  id: NitrogenCanisterBroken
+- components:
+  - layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#4E4C48"
+    - state: double_stripe_broken
+      color: "#EAEAEA"
+    - state: outline_broken
+      color: "#4E4C48"
+    state: !Remove ''
+    type: Sprite
+  type: !PartialOnly entity
+  id: CarbonDioxideCanisterBroken
+- components:
+  - layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#F62800"
+    - state: hazard_stripes_broken
+      color: "#000000"
+    - state: outline_broken
+      color: "#F62800"
+    state: !Remove ''
+    type: Sprite
+  type: !PartialOnly entity
+  id: PlasmaCanisterBroken
+- components:
+  - layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#3FCD40"
+    - state: hazard_stripes_broken
+      color: "#000000"
+    - state: outline_broken
+      color: "#3FCD40"
+    state: !Remove ''
+    type: Sprite
+  type: !PartialOnly entity
+  id: TritiumCanisterBroken
+- components:
+  - layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#4C4E4D"
+    - state: double_stripe_broken
+      color: "#F7D5D3"
+    - state: outline_broken
+      color: "#4C4E4D"
+    state: !Remove ''
+    type: Sprite
+  type: !PartialOnly entity
+  id: WaterVaporCanisterBroken
+- components:
+  - layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#009823"
+    - state: double_stripe_broken
+      color: "#F7D5D3"
+    - state: outline_broken
+      color: "#009823"
+    state: !Remove ''
+    type: Sprite
+  type: !PartialOnly entity
+  id: AmmoniaCanisterBroken
+- components:
+  - layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#C63E3B"
+    - state: double_stripe_broken
+      color: "#F7D5D3"
+    - state: outline_broken
+      color: "#C63E3B"
+    state: !Remove ''
+    type: Sprite
+  type: !PartialOnly entity
+  id: NitrousOxideCanisterBroken
+- components:
+  - layers:
+    - state: window-base_broken
+    - state: multi_shader_broken
+      color: "#6696EE"
+    - state: double_stripe_broken
+      color: "#FEFB30"
+    - state: outline_broken
+      color: "#6696EE"
+    state: !Remove ''
+    type: Sprite
+  type: !PartialOnly entity
+  id: FrezonCanisterBroken
+...

@@ -1,0 +1,47 @@
+- table:
+    children: !Remove
+    - id: CrateCandles
+    - id: CrateFunArtSupplies
+    - id: CrateFunFoamGuns
+      weight: 0.01
+  type: !PartialOnly entityTable
+  id: LowValueFunCrateTable
+- components:
+  - table:
+      children: !Remove
+      - weight: 8
+        prob: 0.9
+        children:
+        - id: CrateEngineering
+        - id: CrateElectrical
+        - id: CrateEngineeringElectricalSupplies
+        - id: CrateRCDAmmo
+        - id: CrateEngineeringCableLV
+        - id: CrateEngineeringCableMV
+        - id: CrateEngineeringCableHV
+        - id: CrateEngineeringCableBulk
+        - id: CrateEngineeringSingularityContainment
+        - id: CrateEngineeringSingularityCollector
+        - id: CrateEngineeringTeslaCoil
+        - id: CrateEngineeringSingularityEmitter
+        - id: CrateEngineeringGyroscope
+        - id: CrateEngineeringThruster
+        - id: CrateEngineeringToolbox
+        - id: CrateEngineeringShuttle
+        - id: CrateEngineeringSolar
+        - id: CrateEngineeringJetpack
+        - id: CrateEmergencyRadiation
+        - id: CrateRadiation
+      - weight: 2
+        children:
+        - id: CrateEngineeringSingularityGenerator
+        - id: CrateEngineeringTeslaGenerator
+        - id: CrateEngineeringTeslaGroundingRod
+        - id: CrateEngineeringParticleAccelerator
+        - id: CrateRCD
+        - id: CrateRPD
+        - id: CrateEngineeringGear
+    type: EntityTableSpawner
+  type: !PartialOnly entity
+  id: LootSpawnerRandomCrateEngineering
+...

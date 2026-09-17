@@ -1,0 +1,6 @@
+- type: loadout
+  id: BibleQuran
+  storage:
+    back:
+    - BibleQuran
+...

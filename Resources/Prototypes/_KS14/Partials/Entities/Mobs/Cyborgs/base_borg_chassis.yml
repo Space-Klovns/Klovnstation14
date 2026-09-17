@@ -1,0 +1,63 @@
+- components:
+  - laws: Asimov
+    type: SiliconLawProvider
+  - allowSelfRepair: true
+    type: Repairable
+  - sounds:
+      Unsexed: UnisexSilicon
+    emoteSounds: !Remove ''
+    type: Vocal
+  - damageAtMaxCorruption: !Remove ''
+    type: DamagedSiliconAccent
+  - thresholds: !Remove
+    - trigger:
+        damage: 75
+      behaviors:
+      - sound:
+          path: /Audio/Machines/warning_buzzer.ogg
+          params:
+            volume: 5
+    - trigger:
+        damage: 300
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - containers:
+        - borg_brain
+        - borg_module
+        - cell_slot
+      - acts: ["Destruction"]
+    generateOverkillThreshold: !Remove ''
+    type: Destructible
+  - tags: !Remove
+    - DoorBumpOpener
+    - FootstepSound
+    - CanPilot
+    - SiliconEmotes
+    - Unimplantable
+    - SiliconMob
+    type: Tag
+  type: !PartialOnly entity
+  id: BaseBorgChassisNotIonStormable
+- components:
+  - sounds:
+      Unsexed: UnisexSiliconSyndicate
+    emoteSounds: !Remove ''
+    type: Vocal
+  type: !PartialOnly entity
+  id: BaseBorgChassisSyndicate
+- components:
+  - sounds:
+      Unsexed: UnisexSiliconSyndicate
+    emoteSounds: !Remove ''
+    type: Vocal
+  type: !PartialOnly entity
+  id: BaseBorgChassisSyndicateDerelict
+- components:
+  - sounds:
+      Unsexed: UnisexSiliconXenoborg
+    emoteSounds: !Remove ''
+    type: Vocal
+  type: !PartialOnly entity
+  id: BaseXenoborgChassis
+...

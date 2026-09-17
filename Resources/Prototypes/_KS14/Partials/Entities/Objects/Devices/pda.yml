@@ -1,0 +1,184 @@
+- components:
+  - containers:
+      program-container: !type:Container ''
+      preinstalled-program-container: !Remove ''
+      removable-program-container: !Remove ''
+    type: ContainerContainer
+  - radius: 3
+    falloff: 25
+    energy: 0.7
+    softness: 12
+    curveFactor: 2
+    mask: /Textures/Effects/LightMasks/cone.png
+    type: PointLight
+  - preinstalled:
+    - CrewManifestCartridge
+    - NotekeeperCartridge
+    - NanoTaskCartridge
+    - NewsReaderCartridge
+    type: CartridgeLoader
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/component_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/component_drop.ogg
+  - type: StationAiWhitelist
+  - type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: BasePDA
+- components:
+  - type: CartridgeLoader
+    preinstalled:
+    - CrewManifestCartridge
+    - NotekeeperCartridge
+    - NanoTaskCartridge
+    - NewsReaderCartridge
+    - WantedListCartridge
+  - type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: BaseSecurityPDA
+- components:
+  - type: CartridgeLoader
+    uiKey: enum.PdaUiKey.Key
+    preinstalled:
+    - CrewManifestCartridge
+    - NotekeeperCartridge
+    - NanoTaskCartridge
+    - NewsReaderCartridge
+    - MedTekCartridge
+  - type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: BaseMedicalPDA
+- components:
+  - preinstalled:
+    - CrewManifestCartridge
+    - NewsReaderCartridge
+    type: CartridgeLoader
+  - type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: MimePDA
+- components:
+  - type: CartridgeLoader
+    preinstalled:
+    - CrewManifestCartridge
+    - NotekeeperCartridge
+    - NanoTaskCartridge
+    - NewsReaderCartridge
+    - AstroNavCartridge
+  - type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: QuartermasterPDA
+- components:
+  - type: CartridgeLoader
+    uiKey: enum.PdaUiKey.Key
+    preinstalled:
+    - CrewManifestCartridge
+    - NotekeeperCartridge
+    - NanoTaskCartridge
+    - NewsReaderCartridge
+    - AstroNavCartridge
+  - type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: SalvagePDA
+- components:
+  - type: CartridgeLoader
+    preinstalled:
+    - CrewManifestCartridge
+    - NotekeeperCartridge
+    - NanoTaskCartridge
+    - NewsReaderCartridge
+    - WantedListCartridge
+    - LogProbeCartridge
+  - type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: HoSPDA
+- components:
+  - type: CartridgeLoader
+    uiKey: enum.PdaUiKey.Key
+    preinstalled:
+    - CrewManifestCartridge
+    - NotekeeperCartridge
+    - NanoTaskCartridge
+    - NewsReaderCartridge
+    - MedTekCartridge
+    - WantedListCartridge
+    - LogProbeCartridge
+    - AstroNavCartridge
+  - type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: CentcomPDA
+- components:
+  - uiKey: enum.PdaUiKey.Key
+    preinstalled:
+    - CrewManifestCartridge
+    - NotekeeperCartridge
+    - NanoTaskCartridge
+    - NewsReaderCartridge
+    - LogProbeCartridge
+    - WantedListCartridge
+    - MedTekCartridge
+    - AstroNavCartridge
+    type: CartridgeLoader
+  - type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: AdminPDA
+- components:
+  - type: CartridgeLoader
+    uiKey: enum.PdaUiKey.Key
+    preinstalled:
+    - NotekeeperCartridge
+    - NanoTaskCartridge
+  - type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: SyndiPDA
+- components:
+  - type: CartridgeLoader
+    uiKey: enum.PdaUiKey.Key
+    preinstalled:
+    - NotekeeperCartridge
+    - NanoTaskCartridge
+    - MedTekCartridge
+  - type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: SyndiCorpsmanPDA
+- components:
+  - type: CartridgeLoader
+    uiKey: enum.PdaUiKey.Key
+    preinstalled:
+    - CrewManifestCartridge
+    - NotekeeperCartridge
+    - NanoTaskCartridge
+    - NewsReaderCartridge
+    - MedTekCartridge
+    - WantedListCartridge
+    - LogProbeCartridge
+    - AstroNavCartridge
+  - type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: ERTLeaderPDA
+- components:
+  - type: CartridgeLoader
+    preinstalled:
+    - CrewManifestCartridge
+    - NotekeeperCartridge
+    - NanoTaskCartridge
+    - NewsReaderCartridge
+    - WantedListCartridge
+    - LogProbeCartridge
+  - type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: DetectivePDA
+- components:
+  - type: CartridgeLoader
+    preinstalled:
+    - CrewManifestCartridge
+    - NotekeeperCartridge
+    - NanoTaskCartridge
+    - NewsReaderCartridge
+    - WantedListCartridge
+    - MedTekCartridge
+  - type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: BrigmedicPDA
+...

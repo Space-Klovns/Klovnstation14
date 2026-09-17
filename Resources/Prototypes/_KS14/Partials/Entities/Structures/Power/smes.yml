@@ -1,0 +1,16 @@
+- components:
+  - type: EmissiveLayers
+    glowRadius: 0.3
+    layers:
+    - enum.SmesVisualLayers.Charge
+    - enum.SmesVisualLayers.Input
+    - enum.SmesVisualLayers.Output
+  - radius: 0.3
+    energy: 0.3
+    type: PointLight
+  - type: ArcFlashAnchorable
+  - type: ArcFlashDeconstructable
+  - type: StationAiWhitelist
+  type: !PartialOnly entity
+  id: BaseSMES
+...

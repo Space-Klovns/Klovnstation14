@@ -1,4 +1,4 @@
-﻿- type: entity
+- type: entity
   abstract: true
   parent: [ BaseItem, BaseMagicalContraband ]
   id: BaseSpellbook
@@ -18,12 +18,6 @@
     - type: Tag
       tags:
       - Spellbook
-    - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-      sound:
-        path: /Audio/_KS14/Handling/book_pickup.ogg
-    - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-      sound:
-        path: /Audio/_KS14/Handling/book_drop.ogg
 
 # For the Wizard antagonist
 # Do not add discounts or price inflation

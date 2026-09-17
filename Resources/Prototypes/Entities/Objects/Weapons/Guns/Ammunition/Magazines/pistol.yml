@@ -12,7 +12,7 @@
     whitelist:
       tags:
         - CartridgePistol
-    capacity: 14 #KS14 modified
+    capacity: 10
   - type: Item
     size: Small
   - type: ContainerContainer
@@ -30,12 +30,6 @@
     steps: 6
     zeroVisible: false
   - type: Appearance
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gun/ballistics/magazine/magazine_pickup1.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gun/ballistics/magazine/magazine_drop1.ogg
 
 - type: entity
   abstract: true
@@ -51,7 +45,7 @@
     whitelist:
       tags:
         - CartridgePistol
-    capacity: 19 #KS14 modified
+    capacity: 15
   - type: Item
     size: Small
   - type: ContainerContainer
@@ -84,7 +78,7 @@
     whitelist:
       tags:
         - CartridgePistol
-    capacity: 30 #KS14 modified
+    capacity: 30
   - type: Item
     size: Small
   - type: ContainerContainer
@@ -107,7 +101,7 @@
   parent: [ BaseItem, BaseSecurityContraband ]
   id: MagazinePistolSubMachineGunTopMounted
   name: WT550 magazine (.35 auto top-mounted)
-  description: Unconventional 40-round top feeding magazine for the WT550 SMG. Intended to hold general-purpose kinetic ammunition. #KS14 modified
+  description: Unconventional 30-round top feeding magazine for the WT550 SMG. Intended to hold general-purpose kinetic ammunition.
   components:
   - type: Item
     storedRotation: 90
@@ -128,12 +122,6 @@
       - state: mag-unshaded-1
         map: ["enum.GunVisualLayers.MagUnshaded"]
         shader: unshaded
-  # KS14: emissive start
-  - type: EmissiveLayers
-    glowRadius: 0.15
-    layers:
-    - enum.GunVisualLayers.MagUnshaded
-  # KS14: emissive end
   - type: MagazineVisuals
     magState: mag
     steps: 6
@@ -148,7 +136,7 @@
   id: MagazinePistolSubMachineGunTopMountedEmpty
   name: WT550 magazine (.35 auto top-mounted any)
   suffix: empty
-  description: Unconventional 40-round top feeding magazine for the WT550 SMG.
+  description: Unconventional 30-round top feeding magazine for the WT550 SMG.
   components:
   - type: BallisticAmmoProvider
     proto: null
@@ -157,7 +145,7 @@
   parent: BaseMagazinePistol
   id: MagazinePistol
   name: pistol magazine (.35 auto)
-  description: 14-round double-stack magazine for pistols. Intended to hold general-purpose kinetic ammunition. #KS14 modified
+  description: 10-round single-stack magazine for pistols. Intended to hold general-purpose kinetic ammunition.
   components:
   - type: BallisticAmmoProvider
     proto: CartridgePistol
@@ -179,7 +167,7 @@
   id: MagazinePistolEmpty
   name: pistol magazine (.35 auto any)
   suffix: empty
-  description: 14-round double-stack magazine for pistols. # KS14 modified
+  description: 10-round single-stack magazine for pistols.
   components:
   - type: BallisticAmmoProvider
     proto: null
@@ -200,7 +188,7 @@
   parent: MagazinePistol
   id: MagazinePistolIncendiary
   name: pistol magazine (.35 auto incendiary)
-  description: 14-round double-stack magazine for pistols. Intended to hold self-igniting incendiary ammunition. #KS14 modified
+  description: 10-round single-stack magazine for pistols. Intended to hold self-igniting incendiary ammunition.
   components:
   - type: BallisticAmmoProvider
     proto: CartridgePistolIncendiary
@@ -227,7 +215,7 @@
   parent: BaseMagazinePistol
   id: MagazinePistolPractice
   name: pistol magazine (.35 auto practice)
-  description: 14-round double-stack magazine for pistols. Intended to hold harmless practice ammunition. #KS14 modified
+  description: 10-round single-stack magazine for pistols. Intended to hold harmless practice ammunition.
   components:
   - type: BallisticAmmoProvider
     proto: CartridgePistolPractice
@@ -254,7 +242,7 @@
   parent: BaseMagazinePistol
   id: MagazinePistolUranium
   name: pistol magazine (.35 auto uranium)
-  description: 14-round double-stack magazine for pistols. Intended to hold exotic uranium-core ammunition. #KS14 modified
+  description: 10-round single-stack magazine for pistols. Intended to hold exotic uranium-core ammunition.
   components:
   - type: BallisticAmmoProvider
     proto: CartridgePistolUranium
@@ -281,7 +269,7 @@
   parent: BaseMagazinePistolSubMachineGun
   id: MagazinePistolSubMachineGun
   name: SMG magazine (.35 auto)
-  description: 30-round double-stack magazine for submachine guns. Intended to hold general-purpose kinetic ammunition. #KS14 modified
+  description: 30-round double-stack magazine for submachine guns. Intended to hold general-purpose kinetic ammunition.
   components:
   - type: BallisticAmmoProvider
     proto: CartridgePistol
@@ -305,7 +293,7 @@
   id: MagazinePistolSubMachineGunEmpty
   name: SMG magazine (.35 auto any)
   suffix: empty
-  description: 30-round double-stack magazine for submachine guns. #KS14 modified
+  description: 30-round double-stack magazine for submachine guns.
   components:
   - type: BallisticAmmoProvider
     proto: null
@@ -326,7 +314,7 @@
   parent: BaseMagazinePistolSubMachineGun
   id: MagazinePistolSubMachineGunPractice
   name: SMG magazine (.35 auto practice)
-  description: 30-round double-stack magazine for submachine guns. Intended to hold harmless practice ammunition. #KS14 modified
+  description: 30-round double-stack magazine for submachine guns. Intended to hold harmless practice ammunition.
   components:
   - type: BallisticAmmoProvider
     proto: CartridgePistolPractice
@@ -353,7 +341,7 @@
   parent: BaseMagazinePistolSubMachineGun
   id: MagazinePistolSubMachineGunUranium
   name: SMG magazine (.35 auto uranium)
-  description: 30-round double-stack magazine for submachine guns. Intended to hold exotic uranium-core ammunition. #KS14 modified
+  description: 30-round double-stack magazine for submachine guns. Intended to hold exotic uranium-core ammunition.
   components:
   - type: BallisticAmmoProvider
     proto: CartridgePistolUranium
@@ -380,7 +368,7 @@
   parent: BaseMagazinePistolSubMachineGun
   id: MagazinePistolSubMachineGunIncendiary
   name: SMG magazine (.35 auto incendiary)
-  description: 30-round double-stack magazine for submachine guns. Intended to hold self-igniting incendiary ammunition. #KS14 modified
+  description: 30-round double-stack magazine for submachine guns. Intended to hold self-igniting incendiary ammunition.
   components:
   - type: BallisticAmmoProvider
     proto: CartridgePistolIncendiary
@@ -408,7 +396,7 @@
   id: MagazinePistolHighCapacityEmpty
   name: machine pistol magazine (.35 auto any)
   suffix: empty
-  description: Custom 19-round double-stack magazine for the Viper pistol. #KS14 modified
+  description: Custom 15-round double-stack magazine for the Viper pistol.
   components:
   - type: BallisticAmmoProvider
     proto: null
@@ -429,7 +417,7 @@
   parent: BaseMagazinePistolHighCapacity
   id: MagazinePistolHighCapacity
   name: machine pistol magazine (.35 auto)
-  description: Custom 19-round double-stack magazine for the Viper pistol. Intended to hold general-purpose kinetic ammunition. #KS14 modified
+  description: Custom 15-round double-stack magazine for the Viper pistol. Intended to hold general-purpose kinetic ammunition.
   components:
   - type: BallisticAmmoProvider
     proto: CartridgePistol
@@ -450,7 +438,7 @@
   parent: BaseMagazinePistolHighCapacity
   id: MagazinePistolHighCapacityPractice
   name: machine pistol magazine (.35 auto practice)
-  description: Custom 19-round double-stack magazine for the Viper pistol. Intended to hold harmless practice ammunition. #KS14 modified
+  description: Custom 15-round double-stack magazine for the Viper pistol. Intended to hold harmless practice ammunition.
   components:
   - type: BallisticAmmoProvider
     proto: CartridgePistolPractice

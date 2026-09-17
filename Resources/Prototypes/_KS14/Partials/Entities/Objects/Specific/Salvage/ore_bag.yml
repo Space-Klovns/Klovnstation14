@@ -1,0 +1,24 @@
+- components:
+  - slotIrrespective: true
+    type: MagnetPickup
+  - size: Small
+    type: Item
+  - type: ItemToggle
+    soundActivate:
+      collection: sparks
+      params:
+        variation: 0.250
+    soundDeactivate:
+      collection: sparks
+      params:
+        variation: 0.250
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.ToggleableVisuals.Enabled:
+        enum.ToggleableVisuals.Layer:
+          True: {state: orebag_on}
+          False: {state: orebag_off}
+  type: !PartialOnly entity
+  id: OreBag
+...

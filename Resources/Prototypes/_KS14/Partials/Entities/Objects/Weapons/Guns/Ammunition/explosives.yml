@@ -1,0 +1,39 @@
+- components:
+  - detachedMuzzleFlash: StdaMuzzleSmokeEffectRpg
+    type: CartridgeAmmo
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/component_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/component_drop.ogg
+  type: !PartialOnly entity
+  id: CartridgeRocket
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/component_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/component_drop.ogg
+  type: !PartialOnly entity
+  id: CartridgeRocketSlow
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/grenade/grenade_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/grenade/grenade_drop.ogg
+  type: !PartialOnly entity
+  id: BaseGrenade
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/grenade/grenade_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/grenade/grenade_drop.ogg
+  type: !PartialOnly entity
+  id: BaseCannonBall
+...

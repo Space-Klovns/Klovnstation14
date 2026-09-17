@@ -1,0 +1,18 @@
+- components:
+  - damage:
+      types:
+        Piercing: 80
+        Structural: 120
+    type: Projectile
+  - type: RemoveCompOnCollide
+    taggedComponents:
+      HristovWindowVentable:
+      - type: Airtight
+      - type: DeltaPressure
+  - type: AddCompOnCollide
+    taggedComponents:
+      HristovWindowVentable:
+      - type: HristovAppearance
+  type: !PartialOnly entity
+  id: BulletAntiMateriel
+...

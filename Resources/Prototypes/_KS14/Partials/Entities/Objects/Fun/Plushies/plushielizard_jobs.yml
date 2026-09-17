@@ -1,0 +1,14 @@
+- parent: BaseItem
+  type: !PartialOnly entity
+  id: BasePlushieLizardJob
+- components:
+  - type: EmitSoundOnUse
+  - type: EmitSoundOnLand
+  - type: EmitSoundOnActivate
+  - type: EmitSoundOnTrigger
+  - type: EmitSoundOnCollide
+  - type: Edible
+  - type: MeleeWeapon
+  type: !PartialOnly entity
+  id: PlushieLizardJobMime
+...

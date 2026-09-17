@@ -8,7 +8,8 @@
   - FlowerWreath
   - Hairflower
   - Headphones
-  # KS14 - Removed slop
+  - PlushieLizard
+  - PlushieSpaceLizard
   - ThreeCandles
   - Lighter
   - CigPackGreen
@@ -17,8 +18,27 @@
   - CigPackBlack
   - CigarCase
   - CigarGold
-  # KS14 - Removed pins
-  - ClothingNeckRaiderPin #KS14
+  - BoxFolderBaseThreePapers
+  - BoxFolderPlasticClipboardThreePapers
+  - BoxFolderClipboardThreePapers
+  - ClothingNeckLGBTPin
+  - ClothingNeckAllyPin
+  - ClothingNeckAromanticPin
+  - ClothingNeckAsexualPin
+  - ClothingNeckAroacePin
+  - ClothingNeckBisexualPin
+  - ClothingNeckGayPin
+  - ClothingNeckIntersexPin
+  - ClothingNeckLesbianPin
+  - ClothingNeckNonBinaryPin
+  - ClothingNeckPansexualPin
+  - ClothingNeckPluralPin
+  - ClothingNeckOmnisexualPin
+  - ClothingNeckGenderqueerPin
+  - ClothingNeckGenderfluidPin
+  - ClothingNeckTransPin
+  - ClothingNeckAutismPin
+  - ClothingNeckGoldAutismPin
   - OffsetCane
   - OffsetCaneWood
   - OffsetCaneClown
@@ -181,7 +201,6 @@
   - AncientJumpsuit
   - RainbowJumpsuit
   - RainbowJumpskirt
-  - Juggaloshirt
 
 - type: loadoutGroup
   id: PassengerFace
@@ -410,7 +429,6 @@
   - BibleHonk
   - BibleRatvar
   - BibleNarsie
-  - BibleQuran # KS14 - brought back
 
 - type: loadoutGroup
   id: JanitorHead
@@ -504,7 +522,6 @@
   - ClownSkirt
   - JesterSuit
   - JesterAltSuit
-  - Juggaloshirt
 
 - type: loadoutGroup
   id: ClownBackpack
@@ -539,7 +556,12 @@
   - EmergencyOxygenClown
   - LoadoutSpeciesVoxNitrogen
 
-# KS14: Removed flower water pin, and thus entirety of clown trinkets
+- type: loadoutGroup
+  id: ClownJobTrinkets
+  name: loadout-group-jobtrinkets
+  minLimit: 0
+  loadouts:
+  - FlowerWaterClown
 
 - type: loadoutGroup
   id: MimeHead

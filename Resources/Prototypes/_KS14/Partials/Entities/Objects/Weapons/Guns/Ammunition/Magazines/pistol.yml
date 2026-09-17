@@ -1,0 +1,52 @@
+- components:
+  - capacity: 14
+    type: BallisticAmmoProvider
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/magazine/magazine_pickup1.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/magazine/magazine_drop1.ogg
+  type: !PartialOnly entity
+  id: BaseMagazinePistol
+- components:
+  - capacity: 19
+    type: BallisticAmmoProvider
+  type: !PartialOnly entity
+  id: BaseMagazinePistolHighCapacity
+- description: Unconventional 40-round top feeding magazine for the WT550 SMG. Intended to hold general-purpose kinetic ammunition.
+  components:
+  - type: EmissiveLayers
+    glowRadius: 0.15
+    layers:
+    - enum.GunVisualLayers.MagUnshaded
+  type: !PartialOnly entity
+  id: MagazinePistolSubMachineGunTopMounted
+- description: Unconventional 40-round top feeding magazine for the WT550 SMG.
+  type: !PartialOnly entity
+  id: MagazinePistolSubMachineGunTopMountedEmpty
+- description: 14-round double-stack magazine for pistols. Intended to hold general-purpose kinetic ammunition.
+  type: !PartialOnly entity
+  id: MagazinePistol
+- description: 14-round double-stack magazine for pistols.
+  type: !PartialOnly entity
+  id: MagazinePistolEmpty
+- description: 14-round double-stack magazine for pistols. Intended to hold self-igniting incendiary ammunition.
+  type: !PartialOnly entity
+  id: MagazinePistolIncendiary
+- description: 14-round double-stack magazine for pistols. Intended to hold harmless practice ammunition.
+  type: !PartialOnly entity
+  id: MagazinePistolPractice
+- description: 14-round double-stack magazine for pistols. Intended to hold exotic uranium-core ammunition.
+  type: !PartialOnly entity
+  id: MagazinePistolUranium
+- description: Custom 19-round double-stack magazine for the Viper pistol.
+  type: !PartialOnly entity
+  id: MagazinePistolHighCapacityEmpty
+- description: Custom 19-round double-stack magazine for the Viper pistol. Intended to hold general-purpose kinetic ammunition.
+  type: !PartialOnly entity
+  id: MagazinePistolHighCapacity
+- description: Custom 19-round double-stack magazine for the Viper pistol. Intended to hold harmless practice ammunition.
+  type: !PartialOnly entity
+  id: MagazinePistolHighCapacityPractice
+...

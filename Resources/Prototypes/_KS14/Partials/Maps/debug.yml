@@ -1,0 +1,4 @@
+- mapPath: /Maps/Test/_KS14/klovndev.yml
+  type: !PartialOnly gameMap
+  id: Dev
+...

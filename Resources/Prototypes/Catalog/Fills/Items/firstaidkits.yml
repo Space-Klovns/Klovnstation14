@@ -12,7 +12,6 @@
         - id: Ointment
         - id: Gauze
         - id: PillCanisterTricordrazine
-        - id: PillCanisterIron #ks14
       # see https://github.com/tgstation/blob/master/code/game/objects/items/storage/firstaid.dm for example contents
 
 - type: entity
@@ -39,7 +38,6 @@
       storagebase: !type:AllSelector
         children:
         - id: Brutepack
-          amount: 2 #ks14
         - id: Gauze
         - id: PillCanisterIron
         - id: PillCanisterCopper

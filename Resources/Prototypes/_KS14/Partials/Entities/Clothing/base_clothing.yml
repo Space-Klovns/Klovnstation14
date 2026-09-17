@@ -1,0 +1,10 @@
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      collection: ClothPickup
+  - type: EmitSoundOnDrop
+    sound:
+      collection: ClothDrop
+  type: !PartialOnly entity
+  id: Clothing
+...

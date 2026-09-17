@@ -26,12 +26,6 @@
   - type: GuideHelp
     guides:
     - Radio
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      collection: HeadsetPickup
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/headset/headset_drop1.ogg
 
 - type: entity
   parent: ClothingHeadset

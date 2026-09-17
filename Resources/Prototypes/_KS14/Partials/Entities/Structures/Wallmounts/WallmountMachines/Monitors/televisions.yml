@@ -1,0 +1,46 @@
+- components:
+  - layers: !Remove
+    - map: ["computerLayerBody"]
+      state: television_wall
+    - map: ["computerLayerScreen"]
+      state: television_wallscreen
+      shader: unshaded
+    type: Sprite
+  - type: EmissiveLayers
+    glowRadius: 0.05
+    layers:
+    - computerLayerScreen
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalGlassBreak
+          params:
+            volume: -4
+    type: Destructible
+  type: !PartialOnly entity
+  id: WallmountTelevision
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 20
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 15
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalGlassBreak
+          params:
+            volume: -4
+    type: Destructible
+  type: !PartialOnly entity
+  id: WallmountTelevisionFrame
+...

@@ -1,0 +1,50 @@
+- components:
+  - type: EmissiveLayers
+    glowRadius: 0
+    intensity: -1
+  type: !PartialOnly entity
+  id: BaseGasThermoMachine
+- components:
+  - snapCardinals: false
+    layers: !Remove
+    - state: off
+      map: ["enum.PowerDeviceVisualLayers.Powered"]
+      renderingStrategy: SnapToCardinals
+    - state: panel
+      map: ["enum.WiresVisualLayers.MaintenancePanel"]
+      renderingStrategy: SnapToCardinals
+    - state: pipe
+      map: ["enum.PipeVisualLayers.Pipe"]
+      renderingStrategy: Default
+    - state: fill-1
+      map: ["enum.SolutionContainerLayers.Fill"]
+      renderingStrategy: SnapToCardinals
+      visible: false
+    - state: trans
+      renderingStrategy: SnapToCardinals
+    type: Sprite
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+      - solution: tank
+      - sound:
+          collection: MetalBreak
+    type: Destructible
+  - nodes:
+      outlet:
+        nodeGroupID: Plumbing
+        pipeDirection: TNorth
+    type: NodeContainer
+  - type: PlumbingConnectorAppearance
+    offset: 0.09375
+  - type: PlumbingOutlet
+    solutionName: tank
+  type: !PartialOnly entity
+  id: BaseGasCondenser
+...

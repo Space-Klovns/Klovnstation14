@@ -1,0 +1,7 @@
+- weight: 25
+  type: !PartialOnly discountCategory
+  id: rareDiscounts
+- weight: 75
+  type: !PartialOnly discountCategory
+  id: usualDiscounts
+...

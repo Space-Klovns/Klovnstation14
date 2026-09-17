@@ -1,0 +1,13 @@
+- effects: !Remove
+  - requirement:
+      role: JobChemist
+      time: 6h
+  - requirement:
+      role: JobMedicalDoctor
+      time: 6h
+  - requirement:
+      department: Medical
+      time: 15h
+  type: !PartialOnly loadoutEffectGroup
+  id: SeniorPhysician
+...

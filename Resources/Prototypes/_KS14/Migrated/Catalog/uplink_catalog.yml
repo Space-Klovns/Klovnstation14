@@ -1,0 +1,208 @@
+- type: listing
+  id: UplinkRevolverPython
+  name: uplink-revolver-python-name
+  description: uplink-revolver-python-desc
+  productEntity: WeaponRevolverPythonAP
+  discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 18
+  cost:
+    Telecrystal: 36
+  categories:
+  - UplinkWeaponry
+- type: listing
+  id: UplinkDoubleEsword
+  name: uplink-esword-double-name
+  description: uplink-esword-double-desc
+  icon: {sprite: /Textures/Objects/Weapons/Melee/e_sword_double.rsi, state: icon}
+  discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 45
+  productEntity: EnergySwordDouble
+  cost:
+    Telecrystal: 54
+  categories:
+  - UplinkWeaponry
+- type: listing
+  id: UplinkExplosiveGrenadeFlash
+  name: uplink-flash-grenade-name
+  description: uplink-flash-grenade-desc
+  productEntity: GrenadeFlashBang
+  cost:
+    Telecrystal: 3
+  categories:
+  - UplinkExplosives
+- type: listing
+  id: UplinkWhiteholeGrenade
+  name: uplink-whitehole-grenade-name
+  description: uplink-whitehole-grenade-desc
+  productEntity: WhiteholeGrenade
+  discountCategory: usualDiscounts
+  discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  categories:
+  - UplinkDisruption
+- type: listing
+  id: UplinkClusterGrenade
+  name: uplink-cluster-grenade-name
+  description: uplink-cluster-grenade-desc
+  productEntity: ClusterGrenade
+  discountCategory: usualDiscounts
+  discountDownTo:
+    Telecrystal: 15
+  cost:
+    Telecrystal: 24
+  categories:
+  - UplinkExplosives
+- type: listing
+  id: UplinkEmpKit
+  name: uplink-emp-kit-name
+  description: uplink-emp-kit-desc
+  productEntity: ElectricalDisruptionKit
+  discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 12
+  cost:
+    Telecrystal: 18
+  categories:
+  - UplinkExplosives
+- type: listing
+  id: UplinkSpeedLoaderMagnumAP
+  name: uplink-speedloader-magnum-name
+  description: uplink-speedloader-magnu-desc
+  icon: {sprite: /Textures/Objects/Weapons/Guns/Ammunition/SpeedLoaders/Magnum/magnum_speed_loader.rsi, state: icon}
+  productEntity: SpeedLoaderMagnumAP
+  cost:
+    Telecrystal: 9
+  categories:
+  - UplinkAmmo
+- type: listing
+  id: UplinkL6BoxMags
+  name: uplink-boxmags-name
+  description: uplink-boxmags-desc
+  productEntity: MagazineLightRifleBox
+  cost:
+    Telecrystal: 8
+  categories:
+  - UplinkAmmo
+  conditions:
+  - whitelist:
+      tags:
+      - NukeOpsUplink
+  - blacklist:
+      components:
+      - SurplusBundle
+- type: listing
+  id: UplinkZombieBundleSyndicate
+  name: uplink-zombie-bundle-name
+  description: uplink-zombie-bundle-syndicate-desc
+  icon: {sprite: /Textures/Structures/Wallmounts/signs.rsi, state: bio}
+  productEntity: ClothingBackpackDuffelZombieBundleSyndicate
+  cost:
+    Telecrystal: 75
+  categories:
+  - UplinkChemicals
+  conditions:
+  - blacklist:
+      tags:
+      - NukeOpsUplink
+- type: listing
+  id: UplinkUltrabrightLantern
+  name: uplink-ultrabright-lantern-name
+  description: uplink-ultrabright-lantern-desc
+  productEntity: LanternFlash
+  discountCategory: usualDiscounts
+  discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  categories:
+  - UplinkDeception
+- type: listing
+  id: UplinkSuperSurplusBundle
+  name: uplink-super-surplus-bundle-name
+  description: uplink-super-surplus-bundle-desc
+  productEntity: CrateSyndicateSuperSurplusBundle
+  cost:
+    Telecrystal: 120
+  categories:
+  - UplinkDisruption
+  conditions:
+  - blacklist:
+      tags:
+      - NukeOpsUplink
+  - blacklist:
+      components:
+      - SurplusBundle
+- type: listing
+  id: UplinkVoiceMask
+  name: uplink-voice-mask-name
+  description: uplink-voice-mask-desc
+  productEntity: ClothingMaskGasVoiceChameleon
+  discountCategory: usualDiscounts
+  discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  categories:
+  - UplinkWearables
+- type: listing
+  id: UplinkHolster
+  name: uplink-holster-name
+  description: uplink-holster-desc
+  productEntity: ClothingBeltSyndieHolster
+  cost:
+    Telecrystal: 3
+  categories:
+  - UplinkWearables
+- type: listing
+  id: uplinkNecronomicon
+  name: uplink-necronomicon-name
+  description: uplink-necronomicon-desc
+  productEntity: BibleNecronomicon
+  discountCategory: usualDiscounts
+  discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  categories:
+  - UplinkJob
+  conditions:
+  - whitelist:
+    - Chaplain
+- type: listing
+  id: uplinkBananaPeelExplosive
+  name: uplink-banana-peel-explosive-name
+  description: uplink-banana-peel-explosive-desc
+  icon: {sprite: Objects/Specific/Hydroponics/banana.rsi, state: peel}
+  productEntity: TrashBananaPeelExplosiveUnarmed
+  discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 3
+  cost:
+    Telecrystal: 6
+  categories:
+  - UplinkJob
+  conditions:
+  - whitelist:
+    - Clown
+- type: listing
+  id: UplinkSyndieMedsBundle
+  name: uplink-meds-bundle-name
+  description: uplink-meds-bundle-desc
+  productEntity: ClothingBackpackDuffelSyndicateMedicalBundleFilled
+  discountCategory: rareDiscounts
+  discountDownTo:
+    Telecrystal: 36
+  cost:
+    Telecrystal: 54
+  categories:
+  - UplinkJob
+  conditions:
+  - whitelist:
+    - MedicalDoctor
+    - Chemist
+    - Paramedic
+...

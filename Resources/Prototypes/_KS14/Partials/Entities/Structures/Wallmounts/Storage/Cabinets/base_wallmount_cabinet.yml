@@ -1,0 +1,9 @@
+- components:
+  - type: StationAiWhitelist
+  type: !PartialOnly entity
+  id: BaseWallmountCabinet
+- components:
+  - type: StationAiWhitelist
+  type: !PartialOnly entity
+  id: BaseWallmountCabinetGlass
+...

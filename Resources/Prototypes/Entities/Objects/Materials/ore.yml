@@ -328,15 +328,13 @@
   - type: PhysicalComposition
     materialComposition:
       RawSalt: 100
-  - type: Extractable
-    grindableSolutionName: saltore
-  - type: SolutionContainerManager
-    solutions: # KS14: Ports upstream https://github.com/space-wizards/space-station-14/pull/41930
-      saltore:
-        reagents:
-        - ReagentId: SpaceSalt
-          Quantity: 10
-        # mayb add iodine?
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: TableSalt
+        Quantity: 9.99
+      - ReagentId: Iodine
+        Quantity: 0.01
   - type: Item
     heldPrefix: salt
 

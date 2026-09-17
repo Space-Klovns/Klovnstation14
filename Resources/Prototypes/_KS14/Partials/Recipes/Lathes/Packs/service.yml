@@ -1,0 +1,7 @@
+- recipes: !Remove
+  - SynthesizerInstrument
+  - PushHorn
+  - Boombox
+  type: !PartialOnly latheRecipePack
+  id: Instruments
+...

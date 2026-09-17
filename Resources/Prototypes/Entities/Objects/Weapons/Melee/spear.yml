@@ -4,6 +4,9 @@
   id: Spear
   description: Definition of a Classic. Keeping murder affordable since 200,000 BCE.
   components:
+  - type: Tool
+    qualities:
+    - Slicing
   - type: EmbeddableProjectile
     offset: -0.15,0.0
   - type: ThrowingAngle
@@ -27,7 +30,6 @@
         - ItemMask
         restitution: 0.3
         friction: 0.2
-  - type: Sharp
   - type: Sprite
     sprite: Objects/Weapons/Melee/spear.rsi
     layers:
@@ -39,7 +41,7 @@
     wideAnimationRotation: -135
     damage:
       types:
-        Piercing: 15
+        Piercing: 12
     angle: 0
     animation: WeaponArcThrust
     soundHit:
@@ -47,7 +49,7 @@
   - type: DamageOtherOnHit
     damage:
       types:
-        Piercing: 19
+        Piercing: 15
   - type: Item
     size: Ginormous
   - type: Clothing
@@ -73,18 +75,12 @@
   - type: IncreaseDamageOnWield
     damage:
       types:
-        Piercing: 5
+        Piercing: 4
   - type: Damageable
   - type: Injurable
     damageContainer: Inorganic
   - type: Destructible
     thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 30 #excess damage avoids cost of spawning entities.
-      behaviors:
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
     - trigger:
         !type:DamageTrigger
         damage: 20
@@ -127,11 +123,11 @@
     wideAnimationRotation: -135
     damage:
       types:
-        Piercing: 19
+        Piercing: 15
   - type: DamageOtherOnHit
     damage:
       types:
-        Piercing: 23
+        Piercing: 18
   - type: Construction
     graph: SpearReinforced
 
@@ -147,11 +143,11 @@
     wideAnimationRotation: -135
     damage:
       types:
-        Piercing: 23
+        Piercing: 18
   - type: DamageOtherOnHit
     damage:
       types:
-        Piercing: 27
+        Piercing: 21
   - type: Construction
     graph: SpearPlasma
 
@@ -167,19 +163,19 @@
     wideAnimationRotation: -135
     damage:
       types:
-        Piercing: 14.5
-        Radiation: 12.5
+        Piercing: 10
+        Radiation: 8
   - type: DamageOtherOnHit
     damage:
       types:
-        Piercing: 16
-        Radiation: 15
+        Piercing: 12
+        Radiation: 9
   - type: Construction
     graph: SpearUranium
 
 - type: entity
   name: bone spear
-  parent: SpearReinforced #KS14 buff
+  parent: Spear
   id: SpearBone
   description: A spear made of bones.
   components:
@@ -189,12 +185,6 @@
     graph: SpearBone
   - type: Destructible
     thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 30 #excess damage avoids cost of spawning entities.
-      behaviors:
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
     - trigger:
         !type:DamageTrigger
         damage: 20
@@ -224,10 +214,10 @@
     wideAnimationRotation: -135
     damage:
       types:
-        Piercing: 23 #same as plasma spear
+        Piercing: 18 #same as plasma spear
   - type: DamageOtherOnHit
     damage:
       types:
-        Piercing: 27 #throw dmg enough to two-shot carp
+        Piercing: 25 #throw dmg enough to two-shot carp
   - type: Construction
     graph: SpearSharkMinnow

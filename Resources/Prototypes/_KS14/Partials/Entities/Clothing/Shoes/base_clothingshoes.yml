@@ -1,0 +1,20 @@
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/shoes/sneakers_pickup1.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/shoes/sneakers_drop1.ogg
+  type: !PartialOnly entity
+  id: ClothingShoesBase
+- parent: ClothingShoesBase
+  components:
+  - type: Butcherable
+    butcheringType: Knife
+    spawned:
+    - id: MaterialCloth1
+      amount: 1
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: ClothingShoesBaseButcherable
+...

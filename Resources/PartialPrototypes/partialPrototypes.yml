@@ -1,0 +1,3 @@
+# Klovnstation partial-prototype load order.
+# Keep fork overrides after vanilla prototypes so they merge onto upstream IDs.
+- /Prototypes/_KS14/Partials/

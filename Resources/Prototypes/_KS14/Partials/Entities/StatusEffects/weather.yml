@@ -1,0 +1,59 @@
+- components:
+  - ksRainDropletMax: 16
+    sound:
+      path: /Audio/_KS14/Effects/Weather/rain.ogg
+      params:
+        volume: -5.8
+      collection: !Remove ''
+    type: WeatherStatusEffect
+  type: !PartialOnly entity
+  id: WeatherRain
+- components:
+  - sound:
+      path: /Audio/_KS14/Effects/Weather/polar_wind.ogg
+    type: WeatherStatusEffect
+  type: !PartialOnly entity
+  id: WeatherAshfall
+- components:
+  - sound:
+      path: /Audio/_KS14/Effects/Weather/polar_wind.ogg
+    type: WeatherStatusEffect
+  type: !PartialOnly entity
+  id: WeatherAshfallLight
+- components:
+  - sound:
+      path: /Audio/_KS14/Effects/Weather/polar_wind.ogg
+    type: WeatherStatusEffect
+  type: !PartialOnly entity
+  id: WeatherFallout
+- components:
+  - sound:
+      path: /Audio/_KS14/Effects/Weather/polar_wind.ogg
+    type: WeatherStatusEffect
+  type: !PartialOnly entity
+  id: WeatherSandstorm
+- components:
+  - sound:
+      path: /Audio/_KS14/Effects/Weather/polar_wind.ogg
+    type: WeatherStatusEffect
+  type: !PartialOnly entity
+  id: WeatherSnowfallLight
+- components:
+  - sound:
+      path: /Audio/_KS14/Effects/Weather/polar_wind.ogg
+    type: WeatherStatusEffect
+  type: !PartialOnly entity
+  id: WeatherSnowfallMedium
+- components:
+  - sprite:
+      sprite: /Textures/_KS14/Effects/weather.rsi
+      state: snow_storm
+    type: WeatherStatusEffect
+  type: !PartialOnly entity
+  id: WeatherSnowfallHeavy
+- components:
+  - ksRainDropletMax: 40
+    type: WeatherStatusEffect
+  type: !PartialOnly entity
+  id: WeatherStorm
+...

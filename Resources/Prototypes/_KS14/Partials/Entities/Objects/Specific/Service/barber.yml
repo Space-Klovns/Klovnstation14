@@ -1,0 +1,11 @@
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/tools/wirecutter_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/tools/wirecutter_drop.ogg
+  - type: Tool
+  type: !PartialOnly entity
+  id: BarberScissors
+...

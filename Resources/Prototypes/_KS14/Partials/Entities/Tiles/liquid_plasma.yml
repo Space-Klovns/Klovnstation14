@@ -1,0 +1,10 @@
+- components:
+  - type: KsLava
+    damage:
+      types:
+        Heat: 20
+    knockdownDuration: 1.2
+    sinkDuration: 2.5
+  type: !PartialOnly entity
+  id: FloorLiquidPlasmaEntity
+...

@@ -1,0 +1,63 @@
+- components:
+  - type: GorillaDisposal
+  - randomStartSecretMin: !Remove ''
+    randomStartSecretMax: !Remove ''
+    type: SecretDataAnomaly
+  - type: AnomalyGasConsumer
+    randomStartSecretMin: 0
+    randomStartSecretMax: 2
+  type: !PartialOnly entity
+  id: BaseAnomaly
+- components:
+  - type: AnomalyGasConsumer
+  type: !PartialOnly entity
+  id: AnomalyPyroclastic
+- components:
+  - type: AnomalyGasConsumer
+  type: !PartialOnly entity
+  id: AnomalyGravity
+- components:
+  - type: AnomalyGasConsumer
+  type: !PartialOnly entity
+  id: AnomalyElectricity
+- components:
+  - type: AnomalyGasConsumer
+  type: !PartialOnly entity
+  id: AnomalyFlesh
+- components:
+  - type: AnomalyGasConsumer
+  type: !PartialOnly entity
+  id: AnomalyBluespace
+- components:
+  - type: AnomalyGasConsumer
+  type: !PartialOnly entity
+  id: AnomalyIce
+- components:
+  - type: AnomalyGasConsumer
+  type: !PartialOnly entity
+  id: AnomalyRockBase
+- components:
+  - type: AnomalyGasConsumer
+  type: !PartialOnly entity
+  id: AnomalyFlora
+- components:
+  - type: GorillaDisposal
+  type: !PartialOnly entity
+  id: AnomalyFloraBulb
+- components:
+  - type: AnomalyGasConsumer
+  type: !PartialOnly entity
+  id: AnomalyLiquid
+- components:
+  - type: AnomalyGasConsumer
+  type: !PartialOnly entity
+  id: AnomalyShadow
+- components:
+  - type: AnomalyGasConsumer
+  type: !PartialOnly entity
+  id: AnomalyTech
+- components:
+  - type: AnomalyGasConsumer
+  type: !PartialOnly entity
+  id: AnomalySanta
+...

@@ -1,0 +1,6 @@
+- components:
+  - sprite: _KS14/Objects/Weapons/Guns/Ammunition/Casings/76239.rsi
+    type: Sprite
+  type: !PartialOnly entity
+  id: BaseCartridgeLightRifle
+...

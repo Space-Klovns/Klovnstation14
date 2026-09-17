@@ -1,0 +1,4 @@
+- requirements: !Remove ''
+  type: !PartialOnly job
+  id: Chef
+...

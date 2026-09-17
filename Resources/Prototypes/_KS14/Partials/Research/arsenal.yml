@@ -1,0 +1,89 @@
+- position: 1,0
+  type: !PartialOnly technology
+  id: SalvageWeapons
+- position: 2,2
+  technologyPrerequisites:
+  - SalvageWeapons
+  type: !PartialOnly technology
+  id: DraconicMunitions
+- icon:
+    sprite: _KS14/Objects/Weapons/Guns/Battery/lasercarbine.rsi
+  recipeUnlocks: !Remove
+  - WeaponLaserCarbineProjectile
+  position: 4,0
+  technologyPrerequisites:
+  - SalvageWeapons
+  type: !PartialOnly technology
+  id: WeaponizedLaserManipulation
+- position: 2,3
+  technologyPrerequisites:
+  - SalvageWeapons
+  type: !PartialOnly technology
+  id: NonlethalAmmunition
+- position: 3,2
+  technologyPrerequisites:
+  - DraconicMunitions
+  type: !PartialOnly technology
+  id: UraniumMunitions
+- position: 3,3
+  technologyPrerequisites:
+  - NonlethalAmmunition
+  type: !PartialOnly technology
+  id: AdvancedRiotControl
+- recipeUnlocks: !Remove
+  - SignallerAdvanced
+  - SignalTrigger
+  - VoiceTrigger
+  - TimerTrigger
+  - FlashPayload
+  - ExplosivePayload
+  - ChemicalPayload
+  - CableDetStack1
+  - EmptyDetonator
+  - ClusterBang
+  position: 3,4
+  technologyPrerequisites:
+  - NonlethalAmmunition
+  type: !PartialOnly technology
+  id: ExplosiveTechnology
+- position: 4,3
+  technologyPrerequisites:
+  - AdvancedRiotControl
+  type: !PartialOnly technology
+  id: SpecialMeans
+- position: 5,0
+  technologyPrerequisites:
+  - WeaponizedLaserManipulation
+  type: !PartialOnly technology
+  id: ConcentratedLaserWeaponry
+- technologyPrerequisites:
+  - WeaponizedLaserManipulation
+  position: 5,1
+  type: !PartialOnly technology
+  id: WaveParticleHarnessing
+- position: 5,2
+  type: !PartialOnly technology
+  id: KineticModifications
+- technologyPrerequisites: !Remove
+  - SalvageWeapons
+  - Shuttlecraft
+  position: 2,-4
+  type: !PartialOnly technology
+  id: BasicShuttleArmament
+- position: 5, 3
+  type: !PartialOnly technology
+  id: DualWieldingTechnology
+- position: 6,0
+  technologyPrerequisites:
+  - ConcentratedLaserWeaponry
+  type: !PartialOnly technology
+  id: PortableMicrofusionWeaponry
+- position: 5,3
+  technologyPrerequisites:
+  - ConcentratedLaserWeaponry
+  type: !PartialOnly technology
+  id: ThermalWeaponry
+- position: 3,-4
+  type: !PartialOnly technology
+  id: AdvancedShuttleWeapon
+...

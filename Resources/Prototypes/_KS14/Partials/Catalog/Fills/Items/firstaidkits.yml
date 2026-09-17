@@ -1,0 +1,25 @@
+- components:
+  - containers:
+      storagebase:
+        children: !Remove
+        - id: Brutepack
+        - id: Ointment
+        - id: Gauze
+        - id: PillCanisterTricordrazine
+        - id: PillCanisterIron
+    type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: MedkitFilled
+- components:
+  - containers:
+      storagebase:
+        children: !Remove
+        - id: Brutepack
+          amount: 2
+        - id: Gauze
+        - id: PillCanisterIron
+        - id: PillCanisterCopper
+    type: EntityTableContainerFill
+  type: !PartialOnly entity
+  id: MedkitBruteFilled
+...

@@ -19,12 +19,6 @@
   - type: Tag
     tags:
     - ChemDispensable
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/beaker_pickup.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/beaker_place.ogg
 
 - type: entity
   parent: Jug

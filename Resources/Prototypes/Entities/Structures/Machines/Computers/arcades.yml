@@ -97,7 +97,11 @@
     - GunpetInstrument
     - BirdToyInstrument
     - MysteryFigureBox
-    # KS14 - Removed slop
+    - PlushieHampter
+    - PlushieLizard
+    - PlushieRainbowLizard
+    - PlushieAtmosian
+    - PlushieSpaceLizard
     - PlushieNuke
     - PlushieCarp
     - PlushieMagicarp
@@ -105,7 +109,23 @@
     - PlushieRainbowCarp
     - PlushieRatvar
     - PlushieNar
-    # KS14 - Removed slop
+    - PlushieSnake
+    - PlushieArachind
+    - PlushieMoth
+    - PlushieVulp
+    - PlushieHampter
+    - PlushiePenguin
+    - PlushieHuman
+    - PlushieRouny
+    - PlushieBee
+    - PlushieSlime
+    - PlushieGhost
+    - PlushieDiona
+    - PlushieSharkBlue
+    - PlushieVox
+    - PlushieXeno
+    - PlushieSpaceSheep
+    - PlushieSheep
     - PlasticBanana
     - RevolverCapGun
     - SnapPopBox

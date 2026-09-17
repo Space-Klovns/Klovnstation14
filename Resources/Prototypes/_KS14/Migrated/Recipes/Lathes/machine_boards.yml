@@ -1,0 +1,13 @@
+- type: latheRecipe
+  parent: [BaseCircuitboardRecipe, BaseEngineeringMachineRecipeCategory]
+  id: GasGrenadeCompressorMachineCircuitBoard
+  result: GasGrenadeCompressorMachineCircuitBoard
+- type: latheRecipe
+  parent: [BaseGoldCircuitboardRecipe, BaseGeneralMachineRecipeCategory]
+  id: MaterialSiloMachineCircuitboard
+  result: MaterialSiloMachineCircuitboard
+- type: latheRecipe
+  parent: [BaseCircuitboardRecipe, BaseGeneralMachineRecipeCategory]
+  id: MassDriverCircuitboard
+  result: MassDriverCircuitboard
+...

@@ -7,7 +7,7 @@
   - type: Mech
   - type: MechAir
   - type: AirFilter
-    # everything except oxygen and nitrogen and zipion
+    # everything except oxygen and nitrogen
     gases:
     - CarbonDioxide
     - Plasma
@@ -16,9 +16,6 @@
     - Ammonia
     - NitrousOxide
     - Frezon
-    - Zipion # KS14
-    - Argon # KS14
-    - Evaporin # KS14
     #- Helium3 TODO: fusion
     # remove everything except oxygen to maintain oxygen ratio
     overflowGases:
@@ -30,11 +27,7 @@
     - Ammonia
     - NitrousOxide
     - Frezon
-    - Zipion # KS14
-    - Argon # KS14
-    - Evaporin # KS14
     #- Helium3 TODO: fusion
-
   - type: AirIntake
   # for intake and filter to work
   - type: AtmosDevice
@@ -141,7 +134,6 @@
         - HumanoidProfile
   - type: MeleeWeapon
     hidden: true
-    animation: WeaponArcFist #KS14 - the wizden animation is dogshit
     attackRate: 1
     damage:
       types:

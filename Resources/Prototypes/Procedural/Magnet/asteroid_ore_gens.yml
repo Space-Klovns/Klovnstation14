@@ -41,8 +41,8 @@
   replacement: AsteroidRock
   entity: AsteroidRockSalt
   count: 3
-  minGroupSize: 2 # KS14: Ports upstream https://github.com/space-wizards/space-station-14/pull/41930
-  maxGroupSize: 4 # KS14: Ports upstream https://github.com/space-wizards/space-station-14/pull/41930
+  minGroupSize: 5
+  maxGroupSize: 7
 
 - type: oreDunGen
   id: OreGold
@@ -91,3 +91,5 @@
   count: 5
   minGroupSize: 1
   maxGroupSize: 2
+
+

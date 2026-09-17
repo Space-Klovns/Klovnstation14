@@ -13,11 +13,6 @@
   - SeedExtractorMachineCircuitboard
   - HydroponicsTrayMachineCircuitboard
   - ReagentGrinderIndustrialMachineCircuitboard
-  # Goobstation R&D Console rework start
-  position: -3,4
-  technologyPrerequisites:
-  - AdvancedEntertainment
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: CritterMechs
@@ -38,12 +33,6 @@
   - HamtrPeripheralsElectronics
   - MechEquipmentGrabberSmall
   - VimHarness
-  # Goobstation R&D Console rework start
-  position: 0,4
-  technologyPrerequisites:
-  - AdvancedEntertainment
-  - RipleyAPLU
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: AudioVisualCommunication
@@ -63,11 +52,6 @@
   - SurveillanceWirelessCameraMonitorCircuitboard
   - TelecomServerCircuitboard
   - HolopadMachineCircuitboard
-  # Goobstation R&D Console rework start
-  position: 1,4
-  technologyPrerequisites:
-  - AdvancedEntertainment
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: AdvancedEntertainment
@@ -84,8 +68,6 @@
     - DawInstrumentMachineCircuitboard
     - MassMediaCircuitboard
     - JukeboxCircuitBoard
-    - Boombox #KS14
-  position: 0,2
 
 - type: technology
   id: MeatManipulation
@@ -100,11 +82,6 @@
   - FatExtractorMachineCircuitboard
   - BiofabricatorMachineCircuitboard
   - BiomassReclaimerMachineCircuitboard
-  # Goobstation R&D Console rework start
-  position: -3,5
-  technologyPrerequisites:
-  - Hydroponics
-  # Goobstation R&D Console rework end
 
 # Tier 2
 
@@ -130,11 +107,6 @@
   - FauxTileDesertAstroSand
   - FauxTileAstroIronsand
   - FauxTileAstroIronsandBorderless
-  # Goobstation R&D Console rework start
-  position: 1,5
-  technologyPrerequisites:
-  - AudioVisualCommunication
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: BiochemicalStasis
@@ -150,11 +122,6 @@
   - CryoPodMachineCircuitboard
   - CryostasisBeaker
   - SyringeCryostasis
-  # Goobstation R&D Console rework start
-  position: 3,5
-  technologyPrerequisites:
-  - Hydroponics
-  # Goobstation R&D Console rework end
 
 - type: technology # Merge with other T2 medical research if possible!
   id: MechanizedTreatment
@@ -168,12 +135,6 @@
   recipeUnlocks:
   - BorgModuleAdvancedTopical
   - AdvancedJetInjector
-# Goobstation R&D Console rework start
-  position: -1, 4
-  technologyPrerequisites:
-  - AdvancedEntertainment
-  - BasicRobotics
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: AdvancedCleaning
@@ -188,11 +149,6 @@
   - AdvMopItem
   - MegaSprayBottle
   - BorgModuleAdvancedCleaning
-  # Goobstation R&D Console rework start
-  position: -1,6
-  technologyPrerequisites:
-  - MechanizedTreatment
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: HONKMech
@@ -213,12 +169,6 @@
   - HonkerPeripheralsElectronics
   - HonkerTargetingElectronics
   - MechEquipmentHorn
-  # Goobstation R&D Console rework start
-  position: 0,6
-  technologyPrerequisites:
-  - PushHorn
-  - RipleyAPLU
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: AdvancedSpray
@@ -232,11 +182,6 @@
   recipeUnlocks:
   - WeaponSprayNozzle
   - ClothingBackpackWaterTank
-  # Goobstation R&D Console rework start
-  position: -1,7
-  technologyPrerequisites:
-  - AdvancedCleaning
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: BluespaceCargoTransport
@@ -249,12 +194,6 @@
   cost: 15000
   recipeUnlocks:
   - CargoTelepadMachineCircuitboard
-  # Goobstation R&D Console rework start
-  position: 1,8
-  technologyPrerequisites:
-  - MeatManipulation
-  - FauxAstroTiles
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: PushHorn
@@ -268,11 +207,6 @@
   recipeUnlocks:
   - PushHorn
   - BorgModuleAdvancedClowning
-  # Goobstation R&D Console rework start
-  position: 0,5
-  technologyPrerequisites:
-  - CritterMechs
-  # Goobstation R&D Console rework end
 
 # Tier 3
 
@@ -287,11 +221,6 @@
   cost: 10000
   recipeUnlocks:
   - ClothingShoesBootsSpeed
-  # Goobstation R&D Console rework start
-  position: 1,9
-  technologyPrerequisites:
-  - BluespaceCargoTransport
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: BluespaceChemistry
@@ -305,12 +234,6 @@
   recipeUnlocks:
   - BluespaceBeaker
   - SyringeBluespace
-  - KsPlumbingTeleporterRecipientCircuitboard # KS14: plumbing teleporters
-  # Goobstation R&D Console rework start
-  position: 2,6
-  technologyPrerequisites:
-  - BiochemicalStasis
-  # Goobstation R&D Console rework end
 
 - type: technology
   id: LauncherSyringe
@@ -324,8 +247,3 @@
   recipeUnlocks:
   - LauncherSyringe
   - MiniSyringe
-  # Goobstation R&D Console rework start
-  position: 2,7
-  technologyPrerequisites:
-  - BluespaceChemistry
-  # Goobstation R&D Console rework end

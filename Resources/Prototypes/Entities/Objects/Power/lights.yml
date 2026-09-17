@@ -28,12 +28,6 @@
     thresholds:
     - trigger:
         !type:DamageTrigger
-        damage: 100
-      behaviors: #excess damage (nuke?). avoid computational cost of spawning entities.
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
-    - trigger:
-        !type:DamageTrigger
         damage: 5
       behaviors:
       - !type:PlaySoundBehavior
@@ -70,12 +64,6 @@
   - type: ToolRefinable
     refineResult:
     - id: SheetGlass1
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/materials/glass_pick_up.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/materials/glass_drop.ogg
 
 - type: entity
   parent: BaseLightbulb
@@ -88,12 +76,6 @@
     bulb: Tube
   - type: Destructible
     thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 100
-      behaviors: #excess damage (nuke?). avoid computational cost of spawning entities.
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
     - trigger:
         !type:DamageTrigger
         damage: 5
@@ -129,15 +111,14 @@
   components:
   - type: LightBulb
     bulb: Bulb
-    color: "#FFB475" # 3100K color temp
-    lightEnergy: 0.5
-    lightRadius: 5
+    color: "#FFD1A3" # 4000K color temp
+    lightEnergy: 1.0
+    lightRadius: 6
     lightSoftness: 1.1
   - type: Tag
     tags:
     - LightBulb
     - Trash
-  - type: NightshiftExemptBulb # KS14
 
 - type: entity
   parent: BaseLightbulb
@@ -148,8 +129,8 @@
   - type: LightBulb
     bulb: Bulb
     color: "#EEEEFF"
-    lightEnergy: 0.8 #was 1, klovn
-    lightRadius: 7 #was 8
+    lightEnergy: 1
+    lightRadius: 8
     lightSoftness: 1
     BurningTemperature: 350 #LEDs are colder than incandescent bulbs
     PowerUse: 6 #LEDs are more power efficient than incandescent bulbs
@@ -167,14 +148,13 @@
   - type: LightBulb
     bulb: Bulb
     color: "#ba473f"
-    lightEnergy: 0.4 #klovn, was 0.5
-    lightRadius: 4 #was 5
+    lightEnergy: 0.5
+    lightRadius: 5
     lightSoftness: 3
   - type: Tag
     tags:
     - LightBulb
     - Trash
-  - type: NightshiftExemptBulb # KS14: this doesn't look good with nightshift
 
 - type: entity
   parent: BaseLightbulb
@@ -185,14 +165,13 @@
   - type: LightBulb
     bulb: Bulb
     color: "#ff9833" # 2200k color temp
-    lightEnergy: 0.8 #klovn, was 1
-    lightRadius: 5 #was 6
+    lightEnergy: 1
+    lightRadius: 6
     lightSoftness: 3
   - type: Tag
     tags:
     - LightBulb
     - Trash
-  - type: NightshiftExemptBulb # KS14
 
 - type: entity
   parent: LightBulb
@@ -203,8 +182,8 @@
   - type: LightBulb
     bulb: Bulb
     color: "#FFD1A3" # 4000K color temp
-    lightEnergy: 0.25 # old incandescents just arent as bright, klovn, was 0.3
-    lightRadius: 5 #was 6
+    lightEnergy: 0.3 # old incandescents just arent as bright
+    lightRadius: 6
     lightSoftness: 1.1
 
 - type: entity
@@ -227,14 +206,13 @@
   - type: LightBulb
     bulb: Bulb
     color: "#CCFF60"
-    lightEnergy: 0.35 #klovn, was 0.45
-    lightRadius: 1.2 #was 1.5
+    lightEnergy: 0.45
+    lightRadius: 1.5
     lightSoftness: 3
   - type: Tag
     tags:
     - LightBulb
     - Trash
-  - type: NightshiftExemptBulb # KS14: y
 
 - type: entity
   parent: BaseLightTube
@@ -243,10 +221,11 @@
   description: A light fixture.
   components:
   - type: LightBulb
-    color: "#FFC99D" # 3800K color temp
-    lightEnergy: 0.5
-    lightRadius: 7
+    color: "#FFE4CE" # 5000K color temp
+    lightEnergy: 0.8
+    lightRadius: 10
     lightSoftness: 1
+    PowerUse: 25
 
 - type: entity
   parent: LightTube
@@ -256,8 +235,8 @@
   components:
   - type: LightBulb
     color: "#FFDABB" # old fluorescents are yellower-4500K temp
-    lightEnergy: 0.4 #klovn, was 0.5
-    lightRadius: 8 #was 10
+    lightEnergy: 0.5
+    lightRadius: 10
     lightSoftness: 1
     PowerUse: 10
 
@@ -279,8 +258,8 @@
   components:
   - type: LightBulb
     color: "#EEEEFF"
-    lightEnergy: 0.8 #klovn, was 1
-    lightRadius: 12.5 #was 15
+    lightEnergy: 1
+    lightRadius: 15
     lightSoftness: 0.9
     BurningTemperature: 350
     PowerUse: 12
@@ -293,12 +272,11 @@
   components:
   - type: LightBulb
     color: "#B4FCF0"
-    lightEnergy: 4 #klovn, was 4.5
-    lightRadius: 10.5 #was 12
+    lightEnergy: 4.5
+    lightRadius: 12
     lightSoftness: 0.5
     BurningTemperature: 350
     PowerUse: 100
-  - type: NightshiftExemptBulb # KS14
 
 - type: entity
   parent: BaseLightTube
@@ -308,8 +286,8 @@
   components:
   - type: LightBulb
     color: "#FFAF38"
-    lightEnergy: 3.5 #klovn, was 4
-    lightRadius: 8 #was 10
+    lightEnergy: 4
+    lightRadius: 10
     lightSoftness: 0.5
     BurningTemperature: 350
     PowerUse: 100
@@ -322,8 +300,8 @@
   abstract: true
   components:
   - type: LightBulb
-    lightEnergy: 2.5 #klovn, was 3
-    lightRadius: 6.5 #was 8
+    lightEnergy: 3
+    lightRadius: 8
     lightSoftness: 0.5
     BurningTemperature: 350
     PowerUse: 60
@@ -411,8 +389,8 @@
   components:
   - type: LightBulb
     color: "#363636"
-    lightEnergy: 0.8 #klovn, was 1
-    lightRadius: 6.5 #was 8
+    lightEnergy: 1
+    lightRadius: 8
   - type: Construction
     graph: BlackLight
     node: icon
@@ -461,8 +439,8 @@
   components:
   - type: LightBulb
     color: "#47f8ff"
-    lightEnergy: 0.8 #klovn, was 1
-    lightRadius: 4.5 # klovn, was 6
+    lightEnergy: 1
+    lightRadius: 6
     lightSoftness: 0.5
     BurningTemperature: 350
     PowerUse: 60
@@ -551,8 +529,8 @@
   components:
   - type: LightBulb
     color: "#363636"
-    lightEnergy: 0.8 #‚klovn was 1
-    lightRadius: 6.5 #klovn, was 8
+    lightEnergy: 1
+    lightRadius: 8
   - type: Construction
     graph: BlackLightBulb
     node: icon

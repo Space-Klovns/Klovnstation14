@@ -1,6 +1,6 @@
 - type: entity
   abstract: true
-  parent: [ BaseItem, BaseRelaxedAnchoring ]
+  parent: BaseItem
   id: GasPipeSansLayers
   name: gas pipe
   description: Holds gas.
@@ -21,6 +21,7 @@
   - type: CollideOnAnchor
   - type: Anchorable
   - type: Rotatable
+    increment: 90
   - type: Destructible
     thresholds:
     - trigger: # for nukes
@@ -65,15 +66,7 @@
     canCollide: false
     bodyType: static
   - type: StaticPrice
-    price: 30 # Starlight
-  # Starlight Start: RPD
-  - type: RCDDeconstructable
-    cost: 1
-    delay: 2
-    fx: EffectRCDDeconstruct2
-    rpd: true
-  # Starlight End
-  - type: KsRcdPlacementNoHint # KS14
+    price: 30
 
 - type: entity
   abstract: true
@@ -412,3 +405,6 @@
     navMapBlip: GasPipeManifold
     showAbsentConnections: false
   - type: AtmosDevice
+  - type: Tag
+    tags:
+    - Unstackable

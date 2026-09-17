@@ -30,7 +30,6 @@
     supplyRampTolerance: 5000
     supplyRampRate: 1000
   - type: StationInfiniteBatteryTarget
-  - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
   # Interface
   - type: BatteryInterface
@@ -88,36 +87,21 @@
     - state: substation
     - state: screen
       shader: unshaded
-      map: ["screen"] # KS14
     - state: full
       shader: unshaded
-      map: ["screen2"] # KS14
   - type: Battery
     maxCharge: 2500000
     startingCharge: 0
   - type: PointLight
-    radius: 0.3 # KS14: Set to 0.3
-    energy: 0.3 # KS14: Set to 0.3
+    radius: 1.5
+    energy: 1
     color: "#ff6900"
     castShadows: false
-  # KS14: emissive start
-  - type: EmissiveLayers
-    glowRadius: 0.3
-    layers:
-    - screen
-    - screen2
-  # KS14: emissive end
   - type: PowerMonitoringDevice
     sprite: Structures/Power/substation.rsi
     state: substation_static
   - type: Destructible
     thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 200
-      behaviors:
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
     - trigger:
         !type:DamageTrigger
         damage: 100
@@ -156,8 +140,6 @@
     requirePower: true
     highVoltageNode: input
     mediumVoltageNode: output
-  - type: ArcFlashAnchorable #KS14 - heads up for yaml warriors - this REQUIRES an electrifiedcomponent to be present also like it is here
-  - type: ArcFlashDeconstructable #KS14
 
 # Compact Wall Substation Base
 - type: entity
@@ -207,12 +189,6 @@
     state: substation_wall_static
   - type: Destructible
     thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 200
-      behaviors:
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
     - trigger:
         !type:DamageTrigger
         damage: 100

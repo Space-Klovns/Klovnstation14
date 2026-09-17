@@ -135,17 +135,9 @@
       visible: false
       map: ["enum.EmitterVisualLayers.Lights"]
     - state: locked
+      shader: unshaded
       visible: false
       map: ["enum.LockVisualLayers.Lock"]
-  # KS14: emissive start
-  - type: EmissiveLayers
-    glowRadius: 0.25
-    intensity: 3
-    layers:
-    - enum.PowerDeviceVisualLayers.Powered
-    - enum.EmitterVisualLayers.Lights
-    - enum.LockVisualLayers.Lock
-  # KS14: emissive end
   - type: Transform
     noRot: false
   - type: Fixtures
@@ -236,6 +228,7 @@
   components:
   - type: StationAiWhitelist
   - type: SpriteFade
+    alwaysFade: true
   - type: Sprite
     sprite: Structures/Machines/Anomaly/anomaly_generator.rsi
     offset: 0,1
@@ -337,8 +330,3 @@
   - type: GuideHelp
     guides:
     - AnomalousResearch
-  # KS14: emissive start
-  - type: EmissiveLayers
-    glowRadius: 0.05
-    intensity: 1.7
-  # KS14: emissive end

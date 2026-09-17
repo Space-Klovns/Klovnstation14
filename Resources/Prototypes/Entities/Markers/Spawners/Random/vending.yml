@@ -43,7 +43,7 @@
       weight: 4
     - id: VendingMachineWinter
       weight: 4
-    # KS14: Removed 'ide vendor
+    - id: VendingMachinePride
     - id: VendingMachineTheater
 
 - type: entity

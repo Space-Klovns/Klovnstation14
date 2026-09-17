@@ -37,13 +37,6 @@
       state: generic_keys
     - map: [ "enum.WiresVisualLayers.MaintenancePanel" ]
       state: generic_panel_open
-  # KS14: emissive start
-  - type: EmissiveLayers # TODO EMISSIVES: adjustable params for individual layers; rn, keyboards emit a bit too much light than i'd like them to
-    glowRadius: 0.15
-    layers:
-    - computerLayerScreen
-    - computerLayerKeys
-  # KS14: emissive end
   - type: Appearance
   - type: GenericVisualizer
     visuals:

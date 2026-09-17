@@ -175,7 +175,6 @@
   groups:
   - GroupTankHarness
   - ClownHead
-  - ClownMask
   - ClownJumpsuit
   - ClownBackpack
   - ClownOuterClothing
@@ -183,7 +182,7 @@
   - Glasses
   - SurvivalClown
   - Trinkets
-  # KS14: Removed slop loadout
+  - ClownJobTrinkets
 
 - type: roleLoadout
   id: JobMime

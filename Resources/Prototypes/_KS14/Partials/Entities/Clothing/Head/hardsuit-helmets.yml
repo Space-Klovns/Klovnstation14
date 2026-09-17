@@ -1,0 +1,115 @@
+- components:
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetHardsuitAtmos
+- components:
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetHardsuitEngineering
+- components:
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetHardsuitSecurity
+- components:
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetHardsuitBrigmedic
+- components:
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetHardsuitWarden
+- components:
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetHardsuitCap
+- components:
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetHardsuitEngineeringWhite
+- components:
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetHardsuitMedical
+- components:
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetHardsuitRd
+- components:
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetHardsuitSecurityRed
+- components:
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetHardsuitSyndie
+- components:
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetHardsuitSyndieMedic
+- components:
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetHardsuitSyndieElite
+- components:
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetHardsuitSyndieCommander
+- components:
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetHardsuitCybersun
+- components:
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetHardsuitWizard
+- components:
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetHardsuitPirateCap
+- components:
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetCBURN
+- components:
+  - type: ClothingGrantComponent
+    component:
+    - type: ArcFlashInsulated
+  type: !PartialOnly entity
+  id: ClothingHeadHelmetHardsuitDeathsquad
+...

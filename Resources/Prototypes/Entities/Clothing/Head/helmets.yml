@@ -26,17 +26,6 @@
         Slash: 0.9
         Piercing: 0.9
         Heat: 0.9
-      flatReductions: # KS14 modified
-        Blunt: 1
-        Slash: 1
-        Piercing: 1
-        Heat: 1
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/helmet/helmet_pickup1.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/helmet/helmet_drop1.ogg
 
 #Basic Helmet (Security Helmet)
 - type: entity
@@ -92,13 +81,6 @@
         Heat: 0.80
         Radiation: 0.80
         Caustic: 0.95
-      flatReductions: # KS14 modified
-        Blunt: 1.5
-        Slash: 1.5
-        Piercing: 1.5
-        Heat: 1.5
-        Radiation: 1.5
-        Caustic: 1.5
   - type: ExplosionResistance
     damageCoefficient: 0.75
   - type: HideLayerClothing
@@ -139,10 +121,6 @@
         Blunt: 0.8
         Slash: 0.8
         Piercing: 0.95
-      flatReductions: # KS14 modified
-        Blunt: 1.5
-        Slash: 1.5
-        Piercing: 1
   - type: HideLayerClothing
     layers:
       Hair: HEAD
@@ -207,11 +185,6 @@
         Slash: 0.8
         Piercing: 0.9
         Heat: 0.9
-      flatReductions: # KS14 modified
-        Blunt: 1
-        Slash: 1.5
-        Piercing: 1
-        Heat: 1
   - type: HideLayerClothing
     layers:
       Hair: HEAD
@@ -361,14 +334,11 @@
     sprite: Clothing/Head/Helmets/linghelmet.rsi
   - type: Armor #admeme item so it should be fine being overpowered while helmets are still intentionally kneecapped.
     modifiers:
-      coefficients: # KS14 modified
-        Blunt: 0.8
-        Slash: 0.8
-        Piercing: 0.8
-      flatReductions: # KS14 modified
-        Blunt: 1
-        Slash: 1
-        Piercing: 1
+      coefficients:
+        Blunt: 0.5
+        Slash: 0.5
+        Piercing: 0.5
+        Heat: 0.9
   - type: HideLayerClothing
     layers:
       Hair: HEAD
@@ -466,11 +436,6 @@
         Slash: 0.85
         Piercing: 0.85
         Heat: 0.85
-      flatReductions: # KS14 modified
-        Blunt: 1.5
-        Slash: 1.5
-        Piercing: 1.5
-        Heat: 1.5
   - type: HideLayerClothing
     layers:
       Hair: HEAD
@@ -483,7 +448,6 @@
   name: bone helmet
   description: Cool-looking helmet made of skull of your enemies.
   components:
-  - type: IdentityBlocker #KS14 modified
   - type: Sprite
     sprite: Clothing/Head/Helmets/bone_helmet.rsi
   - type: Clothing

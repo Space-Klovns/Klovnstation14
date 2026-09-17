@@ -1,0 +1,13 @@
+- components:
+  - type: EmissiveLayers
+    glowRadius: 0.3
+    intensity: 2.5
+    offset: 0,0
+    layers:
+    - enum.DoorVisualLayers.BaseUnlit
+    - enum.DoorVisualLayers.BaseBolted
+    - enum.DoorVisualLayers.BaseEmergencyAccess
+    - enum.DoorVisualLayers.BaseEmagging
+  type: !PartialOnly entity
+  id: AirlockExternal
+...

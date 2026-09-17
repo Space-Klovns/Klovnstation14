@@ -141,7 +141,30 @@ Same rules, `#` comments: `# KS14: ...`.
     scanDelay: 0.8 # KS14: 1.2 -> 0.8
 ```
 
-## 4. Code style and upstream SS14 standards
+## 4. Partial prototypes: downstream YAML overrides
+
+**Overwriting a vanilla prototype file is a last resort.** It creates a standing merge conflict with upstream and makes even a small fork change difficult to review. When a Klovnstation change only changes, adds, or removes data on an existing upstream prototype, keep the upstream file byte-for-byte unchanged and express the change as a partial prototype instead.
+
+Put **every** Klovnstation partial prototype under `Resources/Prototypes/_KS14/Partials/`. Mirror the upstream prototype's feature path beneath that directory, so a partial for `Entities/Structures/Doors/Airlocks/external.yml` belongs in `Resources/Prototypes/_KS14/Partials/Entities/Structures/Doors/Airlocks/external.yml`. Do not scatter partials among regular `_KS14` prototypes.
+
+The partial-prototype loader is configured in `Resources/PartialPrototypes/partialPrototypes.yml`; add the `_KS14/Partials` directory there at the Klovnstation load-order position. Files in that directory merge into an already-loaded prototype with the same `type` and `id`. A partial therefore contains only the fields being changed, not a copy of the upstream prototype:
+
+```yaml
+# Resources/Prototypes/_KS14/Partials/Entities/Structures/Doors/Airlocks/external.yml
+- type: !PartialOnly entity
+  id: AirlockAssemblyExternal
+  components:
+  - type: Sprite
+    sprite: _KS14/Structures/Doors/Airlocks/external.rsi
+```
+
+Use `!PartialOnly` on the `type` for an override of an upstream prototype. It makes the partial a no-op when the upstream ID no longer exists, which avoids accidentally recreating removed vanilla content. Use an ordinary `type` only when creating a real new prototype; that belongs in the regular `_KS14` prototype tree, not `Partials`.
+
+Partials merge mappings and append sequence entries. Set a scalar directly to replace it; add mapping keys normally. To remove data, use `!Remove`: `key: !Remove` removes a mapping key, `- !Remove Value` removes a matching sequence item, and `- !Remove type: ComponentName` removes a component. `!Index:<n>` inserts a sequence item at a particular position. Keep a partial narrowly scoped to the Klovnstation delta, retain the relevant `# KS14:` provenance comment in the partial, and never copy surrounding upstream fields merely for context.
+
+Only overwrite a vanilla YAML file when a partial cannot represent the needed change (for example, a loader-level concern that is not a prototype merge). Document why at the edit with `# KS14:` and prefer opening an engine/content issue first. After moving a change, restore the vanilla file exactly to the applicable upstream version and verify that the resulting loaded prototype has the same intended Klovnstation behavior.
+
+## 5. Code style and upstream SS14 standards
 
 Klovnstation 14 follows upstream Space Wizards' Den coding standards. Read and apply before any PR touching C# or YAML:
 

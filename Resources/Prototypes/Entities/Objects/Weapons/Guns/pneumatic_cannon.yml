@@ -61,12 +61,6 @@
       storagebase: !type:Container
         ents: []
       gas_tank: !type:ContainerSlot
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_pickup1.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gun/ballistics/rifle/rifle_drop1.ogg
 
 - type: entity
   parent: BaseStorageItem
@@ -182,9 +176,6 @@
     containers:
       storagebase: !type:Container
         ents: []
-  - type: Tag # KS14 - Syringegun tag
-    tags:
-    - SyringeGun
 
 # shoots bullets instead of throwing them, no other changes
 - type: entity

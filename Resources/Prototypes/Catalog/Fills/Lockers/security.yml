@@ -38,6 +38,7 @@
     - id: RubberStampWarden
     - id: DoorRemoteArmory
     - id: HoloprojectorSecurity
+    - id: BookSpaceLaw
     - id: ClothingBackpackElectropack
       amount: 2
     - id: RemoteSignaller
@@ -87,7 +88,13 @@
       prob: 0.1
     - id: HoloprojectorSecurity
       prob: 0.6
-    # KS14: Removed slop plushies and spacelaw
+    - id: BookSpaceLaw
+      prob: 0.5
+    - id: PlushieLizardJobSecuritycadet
+      prob: 0.02
+    - id: PlushieLizardJobSecurityofficer
+      prob: 0.02
+
 - type: entity
   id: LockerBrigmedicFilled
   suffix: Brigmedic, Filled
@@ -332,5 +339,5 @@
   id: FillGunSafeLaserCarbine
   table: !type:AllSelector
     children:
-    - id: WeaponLaserCarbineProjectile #KS14 change
+    - id: WeaponLaserCarbine
       amount: 3

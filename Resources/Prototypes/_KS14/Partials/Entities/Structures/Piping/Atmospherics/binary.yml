@@ -1,0 +1,25 @@
+- components:
+  - type: StationAiWhitelist
+  type: !PartialOnly entity
+  id: GasBinaryBase
+- components:
+  - type: Rotatable
+  type: !PartialOnly entity
+  id: GasPressurePump
+- components:
+  - type: Rotatable
+  type: !PartialOnly entity
+  id: GasVolumePump
+- components:
+  - type: Rotatable
+  type: !PartialOnly entity
+  id: GasPressureRegulator
+- components:
+  - type: Rotatable
+  type: !PartialOnly entity
+  id: GasRecycler
+- components:
+  - type: Rotatable
+  type: !PartialOnly entity
+  id: HeatExchanger
+...

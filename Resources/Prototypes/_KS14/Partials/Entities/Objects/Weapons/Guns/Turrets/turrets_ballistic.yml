@@ -1,0 +1,12 @@
+- parent: BaseWeaponTurretDisposable
+  components:
+  - type: Destructible
+  - type: Gun
+  - type: BallisticAmmoProvider
+  - type: Repairable
+  - type: TriggerOnEmptyGunshot
+  - type: ExplodeOnTrigger
+  - type: Explosive
+  type: !PartialOnly entity
+  id: WeaponTurretSyndicateDisposable
+...

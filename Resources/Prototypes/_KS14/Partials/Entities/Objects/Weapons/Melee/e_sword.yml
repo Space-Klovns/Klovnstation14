@@ -1,0 +1,60 @@
+- components:
+  - components:
+    - type: Sharp
+    - type: Tool
+    type: ComponentToggler
+  - activatedDamage:
+      types:
+        Slash: 18.5
+        Heat: 18.5
+    type: ItemToggleMeleeWeapon
+  type: !PartialOnly entity
+  id: BaseMeleeWeaponEnergy
+- components:
+  - activatedDamage:
+      types:
+        Slash: 12.5
+        Heat: 12.5
+    type: ItemToggleMeleeWeapon
+  - components:
+    - type: Sharp
+    - type: Tool
+    type: ComponentToggler
+  type: !PartialOnly entity
+  id: EnergyDaggerLoud
+- components:
+  - activatedDamage:
+      types:
+        Slash: 12.5
+        Heat: 12.5
+    type: ItemToggleMeleeWeapon
+  - components:
+    - type: Sharp
+    - type: Tool
+    type: ComponentToggler
+  type: !PartialOnly entity
+  id: EnergyDagger
+- components:
+  - activatedDamage:
+      types:
+        Slash: 13
+        Heat: 15
+    type: ItemToggleMeleeWeapon
+  type: !PartialOnly entity
+  id: EnergyCutlass
+- components:
+  - activatedDamage:
+      types:
+        Slash: 14.5
+        Heat: 14.5
+    type: ItemToggleMeleeWeapon
+  - components:
+    - type: Sharp
+    - type: Tool
+    type: ComponentToggler
+  - type: EmoteOnHit
+    emote: Flip
+    requireStanding: true
+  type: !PartialOnly entity
+  id: EnergySwordDouble
+...

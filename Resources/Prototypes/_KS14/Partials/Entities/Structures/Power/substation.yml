@@ -1,0 +1,65 @@
+- components:
+  - type: StationAiWhitelist
+  type: !PartialOnly entity
+  id: CoreSubstation
+- components:
+  - layers: !Remove
+    - state: substation
+    - state: screen
+      shader: unshaded
+      map: ["screen"]
+    - state: full
+      shader: unshaded
+      map: ["screen2"]
+    type: Sprite
+  - radius: 0.3
+    energy: 0.3
+    type: PointLight
+  - type: EmissiveLayers
+    glowRadius: 0.3
+    layers:
+    - screen
+    - screen2
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalGlassBreak
+      - !type:ExplodeBehavior ''
+      - spawn:
+          MachineFrameDestroyed:
+            min: 1
+            max: 1
+      - gasMixture:
+          volume: 1000
+          moles:
+            CarbonDioxide: 340.5701689
+          temperature: 373.15
+    type: Destructible
+  - type: ArcFlashAnchorable
+  - type: ArcFlashDeconstructable
+  type: !PartialOnly entity
+  id: BaseSubstation
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+      - !type:ExplodeBehavior ''
+      - sound:
+          collection: MetalGlassBreak
+    type: Destructible
+  type: !PartialOnly entity
+  id: BaseSubstationWall
+...

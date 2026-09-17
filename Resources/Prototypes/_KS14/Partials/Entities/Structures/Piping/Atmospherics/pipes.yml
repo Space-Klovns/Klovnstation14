@@ -1,0 +1,17 @@
+- parent: [BaseItem, BaseRelaxedAnchoring]
+  components:
+  - increment: !Remove ''
+    type: Rotatable
+  - type: RCDDeconstructable
+    cost: 1
+    delay: 2
+    fx: EffectRCDDeconstruct2
+    rpd: true
+  - type: KsRcdPlacementNoHint
+  type: !PartialOnly entity
+  id: GasPipeSansLayers
+- components:
+  - type: Tag
+  type: !PartialOnly entity
+  id: GasPipeManifold
+...

@@ -1,5 +1,3 @@
-# TODO KS14: Add 'end' railings
-
 - type: entity
   parent: BaseStructure
   id: BaseRailing
@@ -8,21 +6,10 @@
   description: Basic railing meant to protect idiots like you from falling.
   components:
   - type: Sprite
-    drawdepth: OverMobs
-    sprite: _KS14/Structures/railings.rsi # KS14: /tg/ sprite port
+    drawdepth: SmallObjects
+    sprite: Structures/Walls/railing.rsi
   - type: Icon
-    sprite: _KS14/Structures/railings.rsi # KS14: /tg/ sprite port
-  - type: DirectionalSpriteManipulation # KS14: /tg/ sprite port
-    data:
-      railing: # don't change this key; everything inheriting BaseRailing must define a layer mapped to "railing"
-        South:
-          offset: 0, 0.25
-        West:
-          offset: -0.25, 0
-        North:
-          offset: 0, -0.25
-        East:
-          offset: 0.25, 0
+    sprite: Structures/Walls/railing.rsi
   - type: Physics
     bodyType: Static
   - type: InteractionOutline
@@ -38,26 +25,21 @@
     cost: 2
     delay: 2
     fx: EffectRCDDeconstruct2
-  - type: Tag
-    tags:
-    - Directional
 
 - type: entity
   parent: BaseRailing
   id: Railing
   components:
   - type: Sprite
-    layers: # KS14: /tg/ sprite port
-    - state: straight
-      map: ["railing"] # don't change this; see DirectionalSpriteManipulationComponent on BaseRailing
+    state: side
   - type: Icon
-    state: straight # KS14: /tg/ sprite port
+    state: side
   - type: Fixtures
     fixtures:
       fix1:
         shape:
           !type:PhysShapeAabb
-          bounds: "-0.49,-0.49,0.49,-0.36"
+          bounds: "-0.49,-0.49,0.49,-0.25"
         density: 1000
         mask:
         - TableMask
@@ -65,12 +47,6 @@
         - TableLayer
   - type: Destructible
     thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 100
-      behaviors:
-        - !type:DoActsBehavior
-          acts: [ "Destruction" ]
     - trigger:
         !type:DamageTrigger
         damage: 20
@@ -95,17 +71,15 @@
   id: RailingCorner
   components:
   - type: Sprite
-    layers:  # KS14: /tg/ sprite port
-    - state: turn
-      map: ["railing"] # don't change this; see DirectionalSpriteManipulationComponent on BaseRailing
+    state: corner
   - type: Icon
-    state: turn # KS14: /tg/ sprite port
+    state: corner
   - type: Fixtures
     fixtures:
       fix1:
         shape:
           !type:PhysShapeAabb
-          bounds: "-0.49,-0.49,0.49,-0.36"
+          bounds: "-0.49,-0.49,0.49,-0.25"
         density: 1000
         mask:
         - TableMask
@@ -114,7 +88,7 @@
       fix2:
         shape:
           !type:PhysShapeAabb
-          bounds: "0.49,0.49,0.36,-0.49"
+          bounds: "0.25,-0.49,0.49,0.49"
         density: 1000
         mask:
         - TableMask
@@ -122,12 +96,6 @@
         - TableLayer
   - type: Destructible
     thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 100
-      behaviors:
-        - !type:DoActsBehavior
-          acts: [ "Destruction" ]
     - trigger:
         !type:DamageTrigger
         damage: 20
@@ -152,17 +120,15 @@
   id: RailingCornerSmall
   components:
   - type: Sprite
-    layers:  # KS14: /tg/ sprite port
-    - state: corner
-      map: ["railing"] # don't change this; see DirectionalSpriteManipulationComponent on BaseRailing
+    state: corner_small
   - type: Icon
-    state: corner # KS14: /tg/ sprite port
+    state: corner_small
   - type: Fixtures
     fixtures:
       fix1:
         shape:
           !type:PhysShapeAabb
-          bounds: "-0.49,0.49,-0.36,0.36"
+          bounds: "-0.49,0.25,-0.25,0.49"
         density: 1000
         mask:
         - TableMask
@@ -170,12 +136,6 @@
         - TableLayer
   - type: Destructible
     thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 100
-      behaviors:
-        - !type:DoActsBehavior
-          acts: [ "Destruction" ]
     - trigger:
         !type:DamageTrigger
         damage: 20
@@ -200,17 +160,15 @@
   id: RailingRound
   components:
   - type: Sprite
-    layers:  # KS14: /tg/ sprite port
-    - state: round
-      map: ["railing"] # don't change this; see DirectionalSpriteManipulationComponent on BaseRailing
+    state: round
   - type: Icon
-    state: round # KS14: /tg/ sprite port
+    state: round
   - type: Fixtures
     fixtures:
       fix1:
         shape:
           !type:PhysShapeAabb
-          bounds: "-0.49,-0.49,0.49,-0.36"
+          bounds: "-0.49,-0.49,0.49,-0.25"
         density: 1000
         mask:
           - TableMask
@@ -219,7 +177,7 @@
       fix2:
         shape:
           !type:PhysShapeAabb
-          bounds: "-0.49,-0.49,-0.36,0.49"
+          bounds: "-0.49,-0.49,-0.25,0.49"
         density: 1000
         mask:
           - TableMask
@@ -228,7 +186,7 @@
       fix3:
         shape:
           !type:PhysShapeAabb
-          bounds: "0.36,-0.49,0.49,0.49"
+          bounds: "0.25,-0.49,0.49,0.49"
         density: 1000
         mask:
           - TableMask
@@ -236,12 +194,6 @@
           - TableLayer
   - type: Destructible
     thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 100
-      behaviors:
-        - !type:DoActsBehavior
-          acts: [ "Destruction" ]
     - trigger:
         !type:DamageTrigger
         damage: 20

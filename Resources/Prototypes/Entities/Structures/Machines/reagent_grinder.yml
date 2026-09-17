@@ -38,9 +38,9 @@
     - map: [ "grinder" ]
       state: "grinder_empty"
   - type: ApcPowerReceiver
-    powerLoad: 0
+    powerLoad: 5
   - type: PowerState
-    idlePowerDraw: 0
+    idlePowerDraw: 5
     workingPowerDraw: 750 # medium power blender
   - type: ItemSlots
     slots:
@@ -56,7 +56,6 @@
       inputContainer: !type:Container
       machine_board: !type:Container
       machine_parts: !type:Container
-  - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
 - type: entity
   id: KitchenReagentGrinderBeaker
@@ -122,16 +121,3 @@
     solution: solution
   - type: ExaminableSolution
     solution: solution
-  # Starlight-start: Plumbing connector visuals, plumbing integration
-  - type: PlumbingOutlet
-    solutionName: output
-  - type: NodeContainer
-    nodes:
-      outlet:
-        !type:PlumbingNode
-        nodeGroupID: Plumbing
-        pipeDirection: Fourway
-  - type: PlumbingConnectorAppearance
-    offset: 0.09375
-  - type: AtmosPipeColor
-  # Starlight-end

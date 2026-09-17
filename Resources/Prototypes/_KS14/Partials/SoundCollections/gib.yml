@@ -1,0 +1,9 @@
+- files: !Remove
+  - /Audio/_KS14/Effects/Flesh/flesh_break1.ogg
+  - /Audio/_KS14/Effects/Flesh/flesh_break2.ogg
+  - /Audio/_KS14/Effects/Flesh/flesh_tear1.ogg
+  - /Audio/_KS14/Effects/Flesh/flesh_tear2.ogg
+  - /Audio/_KS14/Effects/Flesh/flesh_tear3.ogg
+  type: !PartialOnly soundCollection
+  id: gib
+...

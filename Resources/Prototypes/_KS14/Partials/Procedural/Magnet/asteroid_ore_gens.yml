@@ -1,0 +1,5 @@
+- minGroupSize: 2
+  maxGroupSize: 4
+  type: !PartialOnly oreDunGen
+  id: OreSalt
+...

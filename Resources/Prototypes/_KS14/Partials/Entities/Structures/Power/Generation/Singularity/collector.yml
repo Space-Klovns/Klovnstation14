@@ -1,0 +1,10 @@
+- parent: BaseRelaxedAnchoring
+  components:
+  - type: EmissiveLayers
+    glowRadius: 0.3
+    intensity: 3
+    layers:
+    - pressureLight
+  type: !PartialOnly entity
+  id: RadiationCollector
+...

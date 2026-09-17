@@ -141,7 +141,7 @@
     range: 5
     enabled: false
     sound:
-      path: /Audio/Ambience/Objects/server_fans.ogg
+      collection: ServerFans
   - type: WiresVisuals
   - type: Physics
     bodyType: Static
@@ -184,7 +184,6 @@
       key_slots: !type:Container
       machine_board: !type:Container
       machine_parts: !type:Container
-  - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
 - type: entity
   parent: TelecomServer

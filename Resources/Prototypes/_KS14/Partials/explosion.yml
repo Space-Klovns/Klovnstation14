@@ -1,0 +1,7 @@
+- fireStacks: 2.5
+  type: !PartialOnly explosion
+  id: Default
+- fireStacks: 4
+  type: !PartialOnly explosion
+  id: FireBomb
+...

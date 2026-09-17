@@ -1,0 +1,45 @@
+- components:
+  - allowed: !Remove
+    - Electrocution
+    - RatvarianLanguage
+    - PressureImmunity
+    - Muted
+    - Pacified
+    - Flashed
+    - Adrenaline
+    - StatusEffectSafeCritHumanoid
+    type: StatusEffects
+  - disarmFailChance: 0
+    type: CombatMode
+  - type: ComplexShove
+  - sounds:
+      Male: MaleHuman
+      Female: FemaleHuman
+      Unsexed: MaleHuman
+    emoteSounds: !Remove ''
+    type: Vocal
+  type: !PartialOnly entity
+  id: BaseSpeciesMob
+- parent: !Remove
+  - MobBloodstream
+  - MobRespirator
+  - MobAtmosStandard
+  - MobFlammable
+  - BaseSpeciesMob
+  - MobLeaper
+  components:
+  - type: EvaporinMetabolizer
+  - butcheringType: Spike
+    type: Butcherable
+  - requiredOrganCategory: Head
+    damage:
+      types:
+        Asphyxiation: 4
+    damageRecovery:
+      types:
+        Asphyxiation: -2.75
+    type: Respirator
+  - type: StunVisuals
+  type: !PartialOnly entity
+  id: BaseSpeciesMobOrganic
+...

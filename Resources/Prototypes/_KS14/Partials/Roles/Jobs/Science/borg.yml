@@ -1,0 +1,10 @@
+- requirements: !Remove
+  - role: JobBorg
+    time: 2h
+  type: !PartialOnly job
+  id: StationAi
+- requirements: !Remove
+  - time: 2h
+  type: !PartialOnly job
+  id: Borg
+...

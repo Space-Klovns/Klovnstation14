@@ -1,0 +1,19 @@
+- parent: BaseCatwalkUnIconsmoothed
+  components:
+  - type: Anchorable
+  - type: Clickable
+  - type: Sprite
+  - type: Transform
+  - type: FootstepModifier
+  - type: Tag
+  - type: Damageable
+  - type: Injurable
+  - type: Destructible
+  - type: TrayScanReveal
+  - type: RCDDeconstructable
+  name: !Remove ''
+  description: !Remove ''
+  placement: !Remove ''
+  type: !PartialOnly entity
+  id: Catwalk
+...

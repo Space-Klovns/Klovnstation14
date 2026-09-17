@@ -1,0 +1,64 @@
+- components:
+  - organs:
+    - category: Head
+      entity: OrganArachnidHead
+      children:
+      - category: Brain
+        entity: OrganArachnidBrain
+      - category: Eyes
+        entity: OrganArachnidEyes
+      - category: Ears
+        entity: OrganArachnidEars
+      - category: Tongue
+        entity: OrganArachnidTongue
+    - category: Torso
+      entity: OrganArachnidTorso
+      children:
+      - category: Appendix
+        entity: OrganArachnidAppendix
+      - category: Lungs
+        entity: OrganArachnidLungs
+      - category: Heart
+        entity: OrganArachnidHeart
+      - category: Stomach
+        entity: OrganArachnidStomach
+      - category: Liver
+        entity: OrganArachnidLiver
+      - category: Kidneys
+        entity: OrganArachnidKidneys
+    - category: ArmLeft
+      entity: OrganArachnidArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganArachnidHandLeft
+    - category: ArmRight
+      entity: OrganArachnidArmRight
+      children:
+      - category: HandRight
+        entity: OrganArachnidHandRight
+    - category: LegLeft
+      entity: OrganArachnidLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganArachnidFootLeft
+    - category: LegRight
+      entity: OrganArachnidLegRight
+      children:
+      - category: FootRight
+        entity: OrganArachnidFootRight
+    type: InitialBody
+  type: !PartialOnly entity
+  id: AppearanceArachnid
+- components:
+  - sounds:
+      Male: UnisexArachnid
+      Female: UnisexArachnid
+      Unsexed: UnisexArachnid
+    emoteSounds: !Remove ''
+    type: Vocal
+  type: !PartialOnly entity
+  id: MobArachnid
+- parent: OrganBase
+  type: !PartialOnly entity
+  id: OrganArachnid
+...

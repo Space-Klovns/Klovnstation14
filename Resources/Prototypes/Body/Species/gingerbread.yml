@@ -11,59 +11,28 @@
           32:
             sprite: Mobs/Species/Human/displacement.rsi
             state: jumpsuit-female
-  - type: InitialBody # KS14: Re-arranged
+  - type: InitialBody
     organs:
-    - category: Head # head
-      entity: OrganGingerbreadHead
-      children:
-      - category: Brain
-        entity: OrganHumanBrain
-      - category: Eyes
-        entity: OrganHumanEyes
-      - category: Ears
-        entity: OrganHumanEars
-      - category: Tongue
-        entity: OrganHumanTongue
-
-    - category: Torso # torso
-      entity: OrganGingerbreadTorso
-      children:
-      - category: Appendix
-        entity: OrganHumanAppendix
-      - category: Lungs
-        entity: OrganHumanLungs
-      - category: Heart
-        entity: OrganHumanHeart
-      - category: Stomach
-        entity: OrganHumanStomach
-      - category: Liver
-        entity: OrganHumanLiver
-      - category: Kidneys
-        entity: OrganHumanKidneys
-
-    - category: ArmLeft # arm
-      entity: OrganGingerbreadArmLeft
-      children:
-      - category: HandLeft
-        entity: OrganGingerbreadHandLeft
-
-    - category: ArmRight # arm
-      entity: OrganGingerbreadArmRight
-      children:
-      - category: HandRight
-        entity: OrganGingerbreadHandRight
-
-    - category: LegLeft # leg
-      entity: OrganGingerbreadLegLeft
-      children:
-      - category: FootLeft
-        entity: OrganGingerbreadFootLeft
-
-    - category: LegRight # leg
-      entity: OrganGingerbreadLegRight
-      children:
-      - category: FootRight
-        entity: OrganGingerbreadFootRight
+      Torso: OrganGingerbreadTorso
+      Head: OrganGingerbreadHead
+      ArmLeft: OrganGingerbreadArmLeft
+      ArmRight: OrganGingerbreadArmRight
+      HandRight: OrganGingerbreadHandRight
+      HandLeft: OrganGingerbreadHandLeft
+      LegLeft: OrganGingerbreadLegLeft
+      LegRight: OrganGingerbreadLegRight
+      FootLeft: OrganGingerbreadFootLeft
+      FootRight: OrganGingerbreadFootRight
+      Brain: OrganHumanBrain
+      Eyes: OrganHumanEyes
+      Tongue: OrganHumanTongue
+      Appendix: OrganHumanAppendix
+      Ears: OrganHumanEars
+      Lungs: OrganHumanLungs
+      Heart: OrganHumanHeart
+      Stomach: OrganHumanStomach
+      Liver: OrganHumanLiver
+      Kidneys: OrganHumanKidneys
   - type: HumanoidProfile
     species: Gingerbread
 
@@ -110,7 +79,7 @@
     proto: gingerbread
 
 - type: entity
-  parent: OrganBase
+  parent: OrganBaseOrganic
   id: OrganGingerbread
   abstract: true
   suffix: gingerbread

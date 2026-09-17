@@ -1,0 +1,11 @@
+- mapPath: /Maps/_KS14/saltern_planet.yml
+  stations:
+    Saltern:
+      components:
+      - availableJobs:
+          SalvageSpecialist: !Remove [3, 3]
+        type: StationJobs
+  fallback: !Remove ''
+  type: !PartialOnly gameMap
+  id: Saltern
+...

@@ -32,26 +32,20 @@
     steps: 2
     zeroVisible: false
   - type: Appearance
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gun/ballistics/magazine/magazine_pickup1.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gun/ballistics/magazine/magazine_drop1.ogg
 
 # Magazines
 - type: entity
   parent: BaseMagazineLightRifle
   id: MagazineLightRifleBox
-  name: "L6 SAW magazine box (.30 rifle)" #KS14 modified 
-  description: Box containing a 50-round belt of linked .30 rifle rounds, used by light machine guns such as the L6. Intended to hold general-purpose kinetic ammunition. 
+  name: "L6 SAW magazine box (.30 rifle)"
+  description: Box containing a 100-round belt of linked .30 rifle rounds, used by light machine guns such as the L6. Intended to hold general-purpose kinetic ammunition.
   components:
   - type: Tag
     tags:
       - MagazineLightRifleBox
   - type: BallisticAmmoProvider
     proto: CartridgeLightRifle
-    capacity: 50
+    capacity: 100
   - type: Item
   - type: Sprite
     sprite: Objects/Weapons/Guns/Ammunition/Magazine/LightRifle/light_rifle_box.rsi

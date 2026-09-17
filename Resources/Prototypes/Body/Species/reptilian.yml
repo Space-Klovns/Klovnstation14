@@ -86,59 +86,28 @@
           32:
             sprite: Mobs/Species/Reptilian/displacement.rsi
             state: mask
-  - type: InitialBody # KS14: Re-arranged
+  - type: InitialBody
     organs:
-    - category: Head # head
-      entity: OrganReptilianHead
-      children:
-      - category: Brain
-        entity: OrganReptilianBrain
-      - category: Eyes
-        entity: OrganReptilianEyes
-      - category: Ears
-        entity: OrganReptilianEars
-      - category: Tongue
-        entity: OrganReptilianTongue
-
-    - category: Torso # torso
-      entity: OrganReptilianTorso
-      children:
-      - category: Appendix
-        entity: OrganReptilianAppendix
-      - category: Lungs
-        entity: OrganReptilianLungs
-      - category: Heart
-        entity: OrganReptilianHeart
-      - category: Stomach
-        entity: OrganReptilianStomach
-      - category: Liver
-        entity: OrganReptilianLiver
-      - category: Kidneys
-        entity: OrganReptilianKidneys
-
-    - category: ArmLeft # arm
-      entity: OrganReptilianArmLeft
-      children:
-      - category: HandLeft
-        entity: OrganReptilianHandLeft
-
-    - category: ArmRight # arm
-      entity: OrganReptilianArmRight
-      children:
-      - category: HandRight
-        entity: OrganReptilianHandRight
-
-    - category: LegLeft # leg
-      entity: OrganReptilianLegLeft
-      children:
-      - category: FootLeft
-        entity: OrganReptilianFootLeft
-
-    - category: LegRight # leg
-      entity: OrganReptilianLegRight
-      children:
-      - category: FootRight
-        entity: OrganReptilianFootRight
+      Torso: OrganReptilianTorso
+      Head: OrganReptilianHead
+      ArmLeft: OrganReptilianArmLeft
+      ArmRight: OrganReptilianArmRight
+      HandRight: OrganReptilianHandRight
+      HandLeft: OrganReptilianHandLeft
+      LegLeft: OrganReptilianLegLeft
+      LegRight: OrganReptilianLegRight
+      FootLeft: OrganReptilianFootLeft
+      FootRight: OrganReptilianFootRight
+      Brain: OrganReptilianBrain
+      Eyes: OrganReptilianEyes
+      Tongue: OrganReptilianTongue
+      Appendix: OrganReptilianAppendix
+      Ears: OrganReptilianEars
+      Lungs: OrganReptilianLungs
+      Heart: OrganReptilianHeart
+      Stomach: OrganReptilianStomach
+      Liver: OrganReptilianLiver
+      Kidneys: OrganReptilianKidneys
   - type: HumanoidProfile
     species: Reptilian
 
@@ -152,7 +121,6 @@
   - type: Puller
     needsHands: false
   - type: Butcherable
-    butcheringType: Spike
     spawned:
     - id: FoodMeatLizard
       amount: 5
@@ -168,10 +136,7 @@
       sprite: Effects/creampie.rsi
       state: creampie_lizard
   - type: Vocal
-    sounds:
-      Male: MaleReptilian
-      Female: FemaleReptilian
-      Unsexed: MaleReptilian
+    emoteSounds: MaleReptilian
   - type: BodyEmotes
     soundsId: ReptilianBodyEmotes
   - type: Damageable
@@ -204,7 +169,7 @@
   - type: Wagging
 
 - type: entity
-  parent: OrganBase
+  parent: OrganBaseOrganic
   id: OrganReptilian
   abstract: true
   suffix: Reptilian

@@ -1,0 +1,39 @@
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/beaker_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/beaker_place.ogg
+  type: !PartialOnly entity
+  id: BaseBeaker
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      collection: SyringePickup
+  - type: EmitSoundOnDrop
+    sound:
+      collection: SyringeDrop
+  type: !PartialOnly entity
+  id: Dropper
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      collection: SyringePickup
+  - type: EmitSoundOnDrop
+    sound:
+      collection: SyringeDrop
+  type: !PartialOnly entity
+  id: BaseSyringe
+- components:
+  - storageInsertSound: /Audio/_KS14/Handling/pill_bottle_place.ogg
+    type: Storage
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/pill_bottle_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/pill_bottle_place.ogg
+  type: !PartialOnly entity
+  id: PillCanister
+...

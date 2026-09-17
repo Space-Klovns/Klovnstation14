@@ -44,17 +44,9 @@
   table: !type:AllSelector
     children:
     - id: ClothingEyesHudMedical
-    - id: ClothingBeltMedical # Filled KS14 - in loadout
+    - id: ClothingBeltMedicalFilled
     - id: JetInjector
     - id: HandheldHealthAnalyzer
-    - id: ClothingMaskSterile
-    - !type:GroupSelector #KS14
-      children:
-      - id: UniformScrubsColorPurple
-      - id: UniformScrubsColorGreen
-      - id: UniformScrubsColorBlue
-      - id: ClothingUniformJumpsuitMedicalDoctor
-      - id: ClothingUniformJumpskirtMedicalDoctor #KS14 end
     - id: ChemistryBottleLaughter # Widely recognized as the best medicine :o)
       prob: 0.01
     - id: PlushieLizardJobMedicaldoctor
@@ -91,7 +83,6 @@
     children:
     - id: ClothingEyesGlassesChemical
     - id: ChemBag
-    - id: RPLD # Starlight
     - id: Dropper
     - id: HandLabeler
     - id: BarSpoon # Should be replaced by a stirring tool with medical theming, like a glass rod
@@ -128,12 +119,10 @@
     children:
     - id: ClothingEyesHudMedical
     - id: ClothingOuterHardsuitVoidParamed
-    - id: ClothingBeltMedicalEMT # Filled - KS14, you spawn with it
+    - id: ClothingBeltMedicalEMTFilled
     - id: JetInjector
     - id: HandheldHealthAnalyzer
     - id: BoxBodyBag
-    - id: HandheldCrewMonitor #klovn
-    - id: MedkitFilled #klovn
     - !type:GroupSelector
       children:
       - id: RollerBedSpawnFolded

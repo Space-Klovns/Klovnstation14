@@ -1,0 +1,9 @@
+- components:
+  - type: AnimatedEmotes
+  type: !PartialOnly entity
+  id: BaseMob
+- components:
+  - type: StunVisuals
+  type: !PartialOnly entity
+  id: MobDamageable
+...

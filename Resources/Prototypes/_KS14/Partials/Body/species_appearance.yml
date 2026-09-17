@@ -1,0 +1,73 @@
+- components:
+  - layers: !Remove
+    - map: ["enum.HumanoidVisualLayers.Chest"]
+    - map: ["enum.HumanoidVisualLayers.Head"]
+    - map: ["enum.HumanoidVisualLayers.Snout"]
+    - map: ["enum.HumanoidVisualLayers.Eyes"]
+    - map: ["enum.HumanoidVisualLayers.RArm"]
+    - map: ["enum.HumanoidVisualLayers.LArm"]
+    - map: ["enum.HumanoidVisualLayers.RLeg"]
+    - map: ["enum.HumanoidVisualLayers.LLeg"]
+    - map: ["enum.HumanoidVisualLayers.UndergarmentBottom"]
+    - map: ["enum.HumanoidVisualLayers.UndergarmentTop"]
+    - map: ["jumpsuit"]
+    - map: ["enum.HumanoidVisualLayers.LFoot"]
+    - map: ["enum.HumanoidVisualLayers.RFoot"]
+    - map: ["enum.HumanoidVisualLayers.LHand"]
+    - map: ["enum.HumanoidVisualLayers.RHand"]
+    - map: ["enum.HumanoidVisualLayers.Overlay"]
+    - map: ["gloves"]
+    - map: ["shoes"]
+    - map: ["ears"]
+    - map: ["eyes"]
+    - map: ["id"]
+    - map: ["outerClothing"]
+    - map: ["belt"]
+    - map: ["back"]
+    - map: ["neck"]
+    - map: ["suitstorage"]
+    - map: ["enum.HumanoidVisualLayers.SnoutCover"]
+    - map: ["enum.HumanoidVisualLayers.FacialHair"]
+    - map: ["enum.HumanoidVisualLayers.Hair"]
+    - map: ["enum.HumanoidVisualLayers.HeadSide"]
+    - map: ["enum.HumanoidVisualLayers.HeadTop"]
+    - map: ["enum.HumanoidVisualLayers.Tail"]
+    - map: ["enum.HumanoidVisualLayers.TailOverlay"]
+    - map: ["mask"]
+    - map: ["head"]
+    - map: ["pocket1"]
+    - map: ["pocket2"]
+    - map: ["enum.HumanoidVisualLayers.Handcuffs"]
+      color: "#ffffff"
+      sprite: Objects/Misc/handcuffs.rsi
+      state: body-overlay-2
+      visible: false
+    type: Sprite
+  type: !PartialOnly entity
+  id: BaseSpeciesLayers
+- parent: !Remove
+  - InventoryBase
+  - BaseSpeciesLayers
+  - ComplexBodyBase
+  components:
+  - type: KsShadow
+    visuals: enum.RotationVisuals.RotationState
+    states:
+      Vertical:
+        sprite: /Textures/_KS14/Mobs/mob_shadow.rsi
+        state: vert
+        color: '#ffffff82'
+        offset: 0,-0.5
+      Horizontal:
+        sprite: /Textures/_KS14/Mobs/mob_shadow.rsi
+        state: horz
+        color: '#ffffff82'
+        offset: 0,0
+    sprite:
+      sprite: /Textures/_KS14/Mobs/mob_shadow.rsi
+      state: vert
+    modulate: '#ffffff82'
+    offset: 0,-0.5
+  type: !PartialOnly entity
+  id: BaseSpeciesAppearance
+...

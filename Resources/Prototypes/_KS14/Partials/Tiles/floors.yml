@@ -1,0 +1,284 @@
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/floor.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorSteel
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/cafeteria.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorSteelCheckerLight
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/checker.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorSteelCheckerDark
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/small.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorSteelMini
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/floor_pavement.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorSteelPavement
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/diagonal.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorSteelDiagonal
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/floor_large.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorSteelMono
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/floor_pavement_vertical.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorSteelPavementVertical
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/herringbone.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorSteelHerringbone
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/diagonal_small.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorSteelDiagonalMini
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/floor_slats_continuous.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorSteelSlatsContinuous
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/floor_vertical_slats_bordered.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorSteelVerticalSlatsBordered
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/floor_horizontal_slats_bordered.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorSteelHorizontalSlatsBordered
+- sprite: /Textures/_KS14/Tiles/Tg/clockwork_floor.png
+  type: !PartialOnly tile
+  id: FloorBrassFilled
+- sprite: /Textures/_KS14/Tiles/Tg/reebe.png
+  type: !PartialOnly tile
+  id: FloorBrassReebe
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/plastic.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorPlastic
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/wood.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorWood
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/white.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorWhite
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/white_small.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorWhiteMini
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/white_slats_continuous.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorWhiteSlatsContinuous
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/white_vertical_slats_bordered.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorWhiteVerticalSlatsBordered
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/white_horizontal_slats_bordered.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorWhiteHorizontalSlatsBordered
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/white_pavement.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorWhitePavement
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/white_diagonal.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorWhiteDiagonal
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/white_large.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorWhiteMono
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/white_pavement_vertical.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorWhitePavementVertical
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/white_herringbone.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorWhiteHerringbone
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/white_diagonal_small.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorWhiteDiagonalMini
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/white.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorWhitePlastic
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/darkfull.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorDark
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/dark_small.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorDarkMini
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/dark_slats_continuous.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorDarkSlatsContinuous
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/dark_vertical_slats_bordered.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorDarkVerticalSlatsBordered
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/dark_horizontal_slats_bordered.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorDarkHorizontalSlatsBordered
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/dark_pavement.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorDarkPavement
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/dark_diagonal.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorDarkDiagonal
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/dark_large.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorDarkMono
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/dark_pavement_vertical.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorDarkPavementVertical
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/dark_herringbone.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorDarkHerringbone
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/dark_diagonal_small.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorDarkDiagonalMini
+- sprite: /Textures/_KS14/Tiles/Tg/engine.png
+  type: !PartialOnly tile
+  id: FloorReinforced
+- sprite: /Textures/_KS14/Tiles/Tg/podfloor.png
+  type: !PartialOnly tile
+  id: FloorMining
+- sprite: /Textures/_KS14/Tiles/Tg/podfloor_dark.png
+  type: !PartialOnly tile
+  id: FloorMiningDark
+- sprite: /Textures/_KS14/Tiles/Tg/podfloor_light.png
+  type: !PartialOnly tile
+  id: FloorMiningLight
+- sprite: /Textures/_KS14/Tiles/Tg/freezer.png
+  type: !PartialOnly tile
+  id: FloorFreezer
+- sprite: /Textures/_KS14/Tiles/Tg/smooth.png
+  type: !PartialOnly tile
+  id: FloorHydro
+- sprite: /Textures/_KS14/Tiles/Tg/kitchen.png
+  type: !PartialOnly tile
+  id: FloorKitchen
+- sprite: /Textures/_KS14/Tiles/Tg/floor_damaged.png
+  type: !PartialOnly tile
+  id: FloorSteelDamaged
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/titanium_white.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorShuttleWhite
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/titanium.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorShuttleGrey
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/plastitanium.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorShuttleBlack
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/titanium_blue.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorShuttleBlue
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/titanium_yellow.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorShuttleOrange
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/titanium_purple.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorShuttlePurple
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/plastitanium_red.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorShuttleRed
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/glass.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorGlass
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/reinf_glass.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorRGlass
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/asphalt.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorAsphalt
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/wood_parquet.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorWoodTile
+- sprite: /Textures/_KS14/Tiles/Tg/wood_broken.png
+  type: !PartialOnly tile
+  id: FloorBrokenWood
+- sprite: /Textures/_KS14/Tiles/_AUTOGEN/wood_large.png
+  variants: 8
+  placementVariants: !Remove [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  type: !PartialOnly tile
+  id: FloorWoodLarge
+...

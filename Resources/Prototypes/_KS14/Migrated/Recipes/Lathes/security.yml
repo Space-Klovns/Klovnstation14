@@ -1,0 +1,17 @@
+- type: latheRecipe
+  parent: BaseWeaponRecipePractice
+  id: WeaponLaserCarbineProjectilePractice
+  result: WeaponLaserCarbineProjectilePractice
+  materials:
+    Steel: 1800
+    Glass: 400
+    Plastic: 250
+- type: latheRecipe
+  parent: BaseWeaponRecipeLong
+  id: WeaponLaserCarbineProjectile
+  result: WeaponLaserCarbineProjectile
+  materials:
+    Steel: 2000
+    Glass: 800
+    Plastic: 500
+...

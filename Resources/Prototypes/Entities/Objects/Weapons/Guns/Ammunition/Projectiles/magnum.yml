@@ -7,7 +7,7 @@
   - type: Projectile
     damage:
       types:
-        Piercing: 40
+        Piercing: 35
 
 - type: entity
   parent: BaseBulletPractice
@@ -29,8 +29,8 @@
   - type: Projectile
     damage:
       types:
-        Piercing: 20
-        Heat: 20
+        Piercing: 26
+        Heat: 9
 
 - type: entity
   parent: BaseBulletAP
@@ -41,9 +41,8 @@
   - type: Projectile
     damage:
       types:
-        Piercing: 30
-      percentilePenetration: #KS14 - nuarmor
-        Piercing: 1 #100% AP
+        Piercing: 26 # 20% decrease
+    ignoreResistances: true
 
 - type: entity
   parent: BaseBulletUranium
@@ -53,6 +52,6 @@
   components:
   - type: Projectile
     damage:
-      types: #KS14 modified
-        Radiation: 20
+      types:
+        Radiation: 15
         Piercing: 20

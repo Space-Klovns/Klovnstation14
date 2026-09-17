@@ -1,0 +1,53 @@
+- parent: [SolutionHypospraySmall, BaseItem]
+  components:
+  - type: Injector
+    solutionName: hypospray
+    ignoreClosed: false
+    activeModeProtoId: HyposprayDynamicMode
+    allowedModes:
+    - HyposprayDynamicMode
+    - HyposprayInjectMode
+  - spillWhenThrown: !Remove ''
+    type: Spillable
+  - type: ExaminableSolution
+    solution: hypospray
+    exactVolume: true
+  - type: UseDelay
+    delay: 0.5
+  - type: Appearance
+  type: !PartialOnly entity
+  id: BaseHypospray
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/component_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/component_drop.ogg
+  type: !PartialOnly entity
+  id: Hypospray
+- parent: BaseHypospray
+  type: !PartialOnly entity
+  id: ChemicalMedipen
+- components:
+  - type: NpcHealingItem
+  type: !PartialOnly entity
+  id: EmergencyMedipen
+- components:
+  - type: NpcHealingItem
+  type: !PartialOnly entity
+  id: BruteAutoInjector
+- components:
+  - type: NpcHealingItem
+  type: !PartialOnly entity
+  id: PunctAutoInjector
+- components:
+  - type: NpcHealingItem
+  type: !PartialOnly entity
+  id: CombatMedipen
+- components:
+  - refillTime: !Remove ''
+    type: RefillableSolution
+  type: !PartialOnly entity
+  id: Hypopen
+...

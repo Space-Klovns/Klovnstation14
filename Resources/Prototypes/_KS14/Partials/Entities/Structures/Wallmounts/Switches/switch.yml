@@ -1,0 +1,40 @@
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 80
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 40
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalBreak
+          params:
+            volume: -8
+    type: Destructible
+  type: !PartialOnly entity
+  id: SignalSwitch
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 80
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 40
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalBreak
+          params:
+            volume: -8
+    type: Destructible
+  type: !PartialOnly entity
+  id: SignalButton
+- components:
+  - arc: 180
+    type: WallMount
+  type: !PartialOnly entity
+  id: ButtonFrame
+...

@@ -1,0 +1,23 @@
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 40
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 20
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - !type:DumpRestockInventory ''
+      - acts: ["Destruction"]
+    type: Destructible
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/materials/cardboard_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/materials/cardboard_drop.ogg
+  type: !PartialOnly entity
+  id: BaseVendingMachineRestock
+...

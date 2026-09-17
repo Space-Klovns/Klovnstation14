@@ -1,0 +1,42 @@
+- components:
+  - organs:
+    - category: Head
+      entity: OrganSkeletonPersonHead
+    - category: Torso
+      entity: OrganSkeletonPersonTorso
+    - category: ArmLeft
+      entity: OrganSkeletonPersonArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganSkeletonPersonHandLeft
+    - category: ArmRight
+      entity: OrganSkeletonPersonArmRight
+      children:
+      - category: HandRight
+        entity: OrganSkeletonPersonHandRight
+    - category: LegLeft
+      entity: OrganSkeletonPersonLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganSkeletonPersonFootLeft
+    - category: LegRight
+      entity: OrganSkeletonPersonLegRight
+      children:
+      - category: FootRight
+        entity: OrganSkeletonPersonFootRight
+    type: InitialBody
+  type: !PartialOnly entity
+  id: AppearanceSkeletonPerson
+- components:
+  - sounds:
+      Male: Skeleton
+      Female: Skeleton
+      Unsexed: Skeleton
+    emoteSounds: !Remove ''
+    type: Vocal
+  type: !PartialOnly entity
+  id: MobSkeletonPerson
+- parent: OrganBase
+  type: !PartialOnly entity
+  id: OrganSkeletonPerson
+...

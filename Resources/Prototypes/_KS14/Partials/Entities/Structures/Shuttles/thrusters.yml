@@ -1,0 +1,66 @@
+- components:
+  - type: EmissiveLayers
+    glowRadius: 0.1
+    intensity: 0.3
+    layers:
+    - enum.ThrusterVisualLayers.ThrustOn
+    - enum.ThrusterVisualLayers.ThrustingUnshaded
+  type: !PartialOnly entity
+  id: BaseThruster
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 300
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalBreak
+      - node: machineFrame
+    type: Destructible
+  type: !PartialOnly entity
+  id: Thruster
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 1800
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 900
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalBreak
+    type: Destructible
+  - thrust: 1600
+    type: Thruster
+  type: !PartialOnly entity
+  id: ThrusterLarge
+- components:
+  - thrust: 2000
+    type: Thruster
+  - thresholds: !Remove
+    - trigger:
+        damage: 300
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalBreak
+      - node: machineFrame
+    type: Destructible
+  type: !PartialOnly entity
+  id: Gyroscope
+- components:
+  - thrust: 100
+    type: Thruster
+  type: !PartialOnly entity
+  id: DebugGyroscope
+...

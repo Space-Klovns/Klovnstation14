@@ -65,7 +65,7 @@
     board: ArtifactAnalyzerMachineCircuitboard
   - type: PointLight
     radius: 1.5
-    energy: 0.3 # KS14: emissives: lower the energy of this light
+    energy: 3.0
     color: "#b53ca1"
   - type: GuideHelp
     guides:
@@ -78,11 +78,6 @@
         enum.PowerDeviceVisualLayers.Powered:
           True: { visible: true }
           False: { visible: false }
-  # KS14: emissive start
-  - type: EmissiveLayers
-    glowRadius: 0.75
-    intensity: 1
-  # KS14: emissive end
 
 - type: entity
   id: MachineArtifactCrusher

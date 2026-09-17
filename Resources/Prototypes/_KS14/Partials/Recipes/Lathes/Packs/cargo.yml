@@ -1,0 +1,9 @@
+- recipes: !Remove
+  - MiningDrill
+  - WeaponAdvancedPlasmaCutter
+  - MineralScannerEmpty
+  - AdvancedMineralScannerEmpty
+  - OreBagOfHolding
+  type: !PartialOnly latheRecipePack
+  id: Mining
+...

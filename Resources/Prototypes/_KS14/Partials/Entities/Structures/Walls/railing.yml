@@ -1,0 +1,162 @@
+- components:
+  - drawdepth: OverMobs
+    sprite: _KS14/Structures/railings.rsi
+    type: Sprite
+  - sprite: _KS14/Structures/railings.rsi
+    type: Icon
+  - type: DirectionalSpriteManipulation
+    data:
+      railing:
+        South:
+          offset: 0, 0.25
+        West:
+          offset: -0.25, 0
+        North:
+          offset: 0, -0.25
+        East:
+          offset: 0.25, 0
+  - type: Tag
+    tags:
+    - Directional
+  type: !PartialOnly entity
+  id: BaseRailing
+- components:
+  - layers:
+    - state: straight
+      map: ["railing"]
+    state: !Remove ''
+    type: Sprite
+  - state: straight
+    type: Icon
+  - fixtures:
+      fix1:
+        shape:
+          bounds: "-0.49,-0.49,0.49,-0.36"
+    type: Fixtures
+  - thresholds: !Remove
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 20
+      behaviors:
+      - sound:
+          collection: MetalBreak
+          params:
+            volume: -6
+      - spawn:
+          PartRodMetal1:
+            min: 0
+            max: 1
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: Railing
+- components:
+  - layers:
+    - state: turn
+      map: ["railing"]
+    state: !Remove ''
+    type: Sprite
+  - state: turn
+    type: Icon
+  - fixtures:
+      fix1:
+        shape:
+          bounds: "-0.49,-0.49,0.49,-0.36"
+      fix2:
+        shape:
+          bounds: "0.49,0.49,0.36,-0.49"
+    type: Fixtures
+  - thresholds: !Remove
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 20
+      behaviors:
+      - sound:
+          collection: MetalBreak
+          params:
+            volume: -6
+      - spawn:
+          PartRodMetal1:
+            min: 0
+            max: 2
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: RailingCorner
+- components:
+  - layers:
+    - state: corner
+      map: ["railing"]
+    state: !Remove ''
+    type: Sprite
+  - state: corner
+    type: Icon
+  - fixtures:
+      fix1:
+        shape:
+          bounds: "-0.49,0.49,-0.36,0.36"
+    type: Fixtures
+  - thresholds: !Remove
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 20
+      behaviors:
+      - sound:
+          collection: MetalBreak
+          params:
+            volume: -6
+      - spawn:
+          PartRodMetal1:
+            min: 0
+            max: 1
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: RailingCornerSmall
+- components:
+  - layers:
+    - state: round
+      map: ["railing"]
+    state: !Remove ''
+    type: Sprite
+  - fixtures:
+      fix1:
+        shape:
+          bounds: "-0.49,-0.49,0.49,-0.36"
+      fix2:
+        shape:
+          bounds: "-0.49,-0.49,-0.36,0.49"
+      fix3:
+        shape:
+          bounds: "0.36,-0.49,0.49,0.49"
+    type: Fixtures
+  - thresholds: !Remove
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 20
+      behaviors:
+      - sound:
+          collection: MetalBreak
+          params:
+            volume: -6
+      - spawn:
+          PartRodMetal1:
+            min: 0
+            max: 2
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: RailingRound
+...

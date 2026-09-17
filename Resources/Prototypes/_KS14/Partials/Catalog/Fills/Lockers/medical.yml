@@ -1,0 +1,66 @@
+- table:
+    children: !Remove
+    - id: ClothingEyesHudMedical
+    - id: ClothingBeltMedical
+    - id: JetInjector
+    - id: HandheldHealthAnalyzer
+    - id: ClothingMaskSterile
+    - children:
+      - id: UniformScrubsColorPurple
+      - id: UniformScrubsColorGreen
+      - id: UniformScrubsColorBlue
+      - id: ClothingUniformJumpsuitMedicalDoctor
+      - id: ClothingUniformJumpskirtMedicalDoctor
+    - id: ChemistryBottleLaughter
+      prob: 0.01
+    - id: PlushieLizardJobMedicaldoctor
+      prob: 0.02
+    - id: PlushieLizardJobMedicalintern
+      prob: 0.02
+    - id: PlushieLizardJobPsychologist
+      prob: 0.02
+  type: !PartialOnly entityTable
+  id: LockerFillMedicalDoctor
+- table:
+    children: !Remove
+    - id: ClothingEyesGlassesChemical
+    - id: ChemBag
+    - id: RPLD
+    - id: Dropper
+    - id: HandLabeler
+    - id: BarSpoon
+    - id: PlasmaChemistryVial
+    - children:
+      - id: BoxSyringe
+      - id: BoxBottle
+      - id: BoxVial
+      - id: BoxBeaker
+      - id: BoxPillCanister
+      - prob: 0.2
+        children:
+        - id: SprayBottle
+        - id: Bucket
+        - id: DrinkCartonMilk
+    - id: PlushieLizardJobChemist
+      prob: 0.02
+  type: !PartialOnly entityTable
+  id: LockerFillChemistry
+- table:
+    children: !Remove
+    - id: ClothingEyesHudMedical
+    - id: ClothingOuterHardsuitVoidParamed
+    - id: ClothingBeltMedicalEMT
+    - id: JetInjector
+    - id: HandheldHealthAnalyzer
+    - id: BoxBodyBag
+    - id: HandheldCrewMonitor
+    - id: MedkitFilled
+    - children:
+      - id: RollerBedSpawnFolded
+      - id: CheapRollerBedSpawnFolded
+      - id: EmergencyRollerBedSpawnFolded
+    - id: PlushieLizardJobParamedic
+      prob: 0.02
+  type: !PartialOnly entityTable
+  id: LockerFillParamedic
+...

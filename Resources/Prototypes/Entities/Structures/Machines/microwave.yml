@@ -32,12 +32,6 @@
         enum.MicrowaveVisualizerLayers.BaseUnlit:
           True: { visible: true }
           False: { visible: false }
-  # KS14: emissive start
-  - type: EmissiveLayers
-    glowRadius: 0.35
-    layers:
-    - enum.MicrowaveVisualizerLayers.BaseUnlit
-  # KS14: emissive end
   - type: ActivatableUI
     key: enum.MicrowaveUiKey.Key
   - type: DeviceLinkSink
@@ -154,7 +148,6 @@
     walkModifier: 0.7
     sprintModifier: 0.7
   - type: DamageExaminable
-  - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
 - type: entity
   id: SyndicateMicrowave

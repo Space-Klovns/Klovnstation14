@@ -14,16 +14,16 @@
     maxItemSize: Normal
     grid:
     - 0,0,6,3
-    storageOpenSound: /Audio/_KS14/Handling/toolbox/toolbox_open.ogg # KS14: Use ks14 handling sounds
+    storageOpenSound: /Audio/Items/toolbox_open.ogg
     storageCloseSound: /Audio/Items/toolbox_close.ogg
     storageInsertSound: /Audio/Items/toolbox_insert.ogg
-    storageRemoveSound: /Audio/_KS14/Handling/toolbox/toolbox_rustle.ogg # KS14: Use ks14 handling sounds
+    storageRemoveSound: /Audio/Items/toolbox_remove.ogg
   - type: Item
     size: Ginormous
   - type: MeleeWeapon
     damage:
       types:
-        Blunt: 14
+        Blunt: 12
     soundHit:
       path: "/Audio/Weapons/smash.ogg"
   - type: Tag
@@ -36,12 +36,6 @@
           True: { state: icon-open }
           False: { state: icon }
   - type: Appearance
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/toolbox/toolbox_pickup.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/toolbox/toolbox_drop.ogg
 
 - type: entity
   name: emergency toolbox
@@ -91,23 +85,17 @@
     damageContainer: Inorganic
   - type: Destructible
     thresholds:
-      - trigger:
-          !type:DamageTrigger
-          damage: 100
-        behaviors:
-          - !type:DoActsBehavior
-            acts: [ "Destruction" ]
-      - trigger:
-          !type:DamageTrigger
-          damage: 1
-        behaviors:
-          - !type:DoActsBehavior
-            acts: [ "Destruction" ]
-          - !type:SpawnEntitiesBehavior
-            spawn:
-              WeaponTurretSyndicateDisposable:
-                min: 1
-                max: 1
+    - trigger:
+        !type:DamageTrigger
+        damage: 1
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+      - !type:SpawnEntitiesBehavior # todo this is not a good way to be doing this. Should probably use a construction graph
+        spawn:
+          WeaponTurretSyndicateDisposable:
+            min: 1
+            max: 1
   - type: StaticPrice
     price: 1350
 
@@ -141,7 +129,7 @@
   - type: MeleeWeapon
     damage:
       types:
-        Blunt: 25
+        Blunt: 20
 
 - type: entity
   name: golden toolbox

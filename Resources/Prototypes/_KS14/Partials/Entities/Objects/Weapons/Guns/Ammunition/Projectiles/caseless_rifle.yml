@@ -1,0 +1,8 @@
+- components:
+  - damage:
+      percentilePenetration:
+        Piercing: 0.07
+    type: Projectile
+  type: !PartialOnly entity
+  id: BulletCaselessRifle
+...

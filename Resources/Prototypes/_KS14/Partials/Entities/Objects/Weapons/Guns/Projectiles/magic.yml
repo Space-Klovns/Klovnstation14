@@ -1,0 +1,8 @@
+- components:
+  - totalIntensity: 10
+    intensitySlope: 2
+    maxIntensity: 6
+    type: Explosive
+  type: !PartialOnly entity
+  id: ProjectileDragonsBreath
+...

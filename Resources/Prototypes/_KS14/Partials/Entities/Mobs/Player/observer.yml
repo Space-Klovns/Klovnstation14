@@ -1,0 +1,14 @@
+- components:
+  - type: PointLight
+    netsync: false
+    radius: 6
+    castShadows: false
+    enabled: false
+  - type: NightVision
+  type: !PartialOnly entity
+  id: MobObserverBase
+- components:
+  - type: RelocateOnEnteringSpeczone
+  type: !PartialOnly entity
+  id: MobObserver
+...

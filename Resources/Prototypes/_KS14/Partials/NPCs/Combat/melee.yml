@@ -1,0 +1,30 @@
+- branches: !Remove
+  - tasks:
+    - operator:
+        proto: NearbyMeleeTargets
+    - operator:
+        originKey: TargetCoordinates
+        targetKey: LastTargetCoordinates
+    - operator:
+        id: OpInCombat
+    - task: BeforeMeleeAttackTargetCompound
+  type: !PartialOnly htnCompound
+  id: MeleeCombatCompound
+- branches: !Remove
+  - tasks:
+    - operator:
+        proto: InventoryMeleeWeapons
+    - operator: !type:EquipOperator ''
+  - tasks:
+    - operator:
+        proto: NearbyMeleeWeapons
+    - operator: !type:MoveToOperator ''
+    - preconditions:
+      - !type:ActiveHandFreePrecondition ''
+      - targetKey: Target
+        rangeKey: InteractRange
+      operator:
+        targetKey: Target
+  type: !PartialOnly htnCompound
+  id: PickupMeleeCompound
+...

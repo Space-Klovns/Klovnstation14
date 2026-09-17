@@ -1,0 +1,23 @@
+- parent: ClothingHeadBase
+  components:
+  - type: Butcherable
+    butcheringType: Knife
+    spawned:
+    - id: MaterialCloth1
+      amount: 1
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: ClothingHeadBaseButcherable
+- components:
+  - type: EmoteAudioEffect
+    emoteCategory: Vocal
+    presetId: MuffledMask
+  type: !PartialOnly entity
+  id: ClothingHeadEVAHelmetBase
+- components:
+  - type: EmoteAudioEffect
+    emoteCategory: Vocal
+    presetId: MuffledMask
+  type: !PartialOnly entity
+  id: ClothingHeadHardsuitBase
+...

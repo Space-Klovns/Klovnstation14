@@ -1,0 +1,45 @@
+- components:
+  - type: StationAiWhitelist
+  - type: EmissiveLayers
+    glowRadius: 0.25
+    intensity: 2.3
+    layers:
+    - enum.GeneratorVisualLayers.Unlit
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 100
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - node: machineFrame
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: PortableGeneratorBase
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 100
+      behaviors:
+      - solution: tank
+      - sound:
+          collection: MetalBreak
+      - node: machineFrame
+      - acts: ["Destruction"]
+    - trigger:
+        damageType: Piercing
+        damage: 75
+      behaviors:
+      - solution: tank
+    type: Destructible
+  type: !PartialOnly entity
+  id: PortableGeneratorJrPacman
+...

@@ -1,0 +1,13 @@
+- components:
+  - type: Extractable
+    grindableSolutionName: saltore
+  - type: SolutionContainerManager
+    solutions:
+      saltore:
+        reagents:
+        - ReagentId: SpaceSalt
+          Quantity: 10
+  - type: Solution
+  type: !PartialOnly entity
+  id: SaltOre
+...

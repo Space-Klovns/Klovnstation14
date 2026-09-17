@@ -10,12 +10,6 @@
     size: Normal
   - type: Sprite
     sprite: Objects/Storage/boxes.rsi
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/ammobox_pickup.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/ammobox_drop.ogg
 
 - type: entity
   abstract: true
@@ -45,11 +39,15 @@
   components:
     - type: BallisticAmmoProvider
       proto: ShellShotgunBeanbag
+    - type: MagazineVisuals
+      magState: mag-beanbag
+      steps: 5
+      zeroVisible: false
     - type: Sprite
       layers:
       - state: base
         map: ["enum.GunVisualLayers.Base"]
-      - state: mag-1
+      - state: mag-beanbag-1
         map: ["enum.GunVisualLayers.Mag"]
       - state: beanbag
 
@@ -78,14 +76,14 @@
     - type: BallisticAmmoProvider
       proto: ShellShotgunSlug
     - type: MagazineVisuals
-      magState: mag-alt
+      magState: mag-slug
       steps: 5
       zeroVisible: false
     - type: Sprite
       layers:
       - state: base
         map: ["enum.GunVisualLayers.Base"]
-      - state: mag-alt-1
+      - state: mag-slug-1
         map: ["enum.GunVisualLayers.Mag"]
       - state: slug
 
@@ -97,11 +95,15 @@
   components:
     - type: BallisticAmmoProvider
       proto: ShellShotgunFlare
+    - type: MagazineVisuals
+      magState: mag-flare
+      steps: 5
+      zeroVisible: false
     - type: Sprite
       layers:
       - state: base
         map: ["enum.GunVisualLayers.Base"]
-      - state: mag-1
+      - state: mag-flare-1
         map: ["enum.GunVisualLayers.Mag"]
       - state: flare
 
@@ -113,11 +115,15 @@
   components:
     - type: BallisticAmmoProvider
       proto: ShellShotgunIncendiary
+    - type: MagazineVisuals
+      magState: mag-incend
+      steps: 5
+      zeroVisible: false
     - type: Sprite
       layers:
       - state: base
         map: ["enum.GunVisualLayers.Base"]
-      - state: mag-1
+      - state: mag-incend-1
         map: ["enum.GunVisualLayers.Mag"]
       - state: incendiary
 
@@ -130,14 +136,14 @@
     - type: BallisticAmmoProvider
       proto: ShellShotgunUranium
     - type: MagazineVisuals
-      magState: mag-alt
+      magState: mag-uranium
       steps: 5
       zeroVisible: false
     - type: Sprite
       layers:
       - state: base
         map: ["enum.GunVisualLayers.Base"]
-      - state: mag-alt-1
+      - state: mag-uranium-1
         map: ["enum.GunVisualLayers.Mag"]
       - state: uranium
 
@@ -149,11 +155,15 @@
   components:
     - type: BallisticAmmoProvider
       proto: ShellShotgunPractice
+    - type: MagazineVisuals
+      magState: mag-practice
+      steps: 5
+      zeroVisible: false
     - type: Sprite
       layers:
       - state: base
         map: ["enum.GunVisualLayers.Base"]
-      - state: mag-1
+      - state: mag-practice-1
         map: ["enum.GunVisualLayers.Mag"]
       - state: practice
 
@@ -165,10 +175,14 @@
   components:
     - type: BallisticAmmoProvider
       proto: ShellTranquilizer
+    - type: MagazineVisuals
+      magState: mag-tranq
+      steps: 5
+      zeroVisible: false
     - type: Sprite
       layers:
       - state: base
         map: ["enum.GunVisualLayers.Base"]
-      - state: mag-1
+      - state: mag-tranq-1
         map: ["enum.GunVisualLayers.Mag"]
       - state: tranquilizer

@@ -1,0 +1,55 @@
+- components:
+  - organs:
+    - category: Head
+      entity: OrganGingerbreadHead
+      children:
+      - category: Brain
+        entity: OrganHumanBrain
+      - category: Eyes
+        entity: OrganHumanEyes
+      - category: Ears
+        entity: OrganHumanEars
+      - category: Tongue
+        entity: OrganHumanTongue
+    - category: Torso
+      entity: OrganGingerbreadTorso
+      children:
+      - category: Appendix
+        entity: OrganHumanAppendix
+      - category: Lungs
+        entity: OrganHumanLungs
+      - category: Heart
+        entity: OrganHumanHeart
+      - category: Stomach
+        entity: OrganHumanStomach
+      - category: Liver
+        entity: OrganHumanLiver
+      - category: Kidneys
+        entity: OrganHumanKidneys
+    - category: ArmLeft
+      entity: OrganGingerbreadArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganGingerbreadHandLeft
+    - category: ArmRight
+      entity: OrganGingerbreadArmRight
+      children:
+      - category: HandRight
+        entity: OrganGingerbreadHandRight
+    - category: LegLeft
+      entity: OrganGingerbreadLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganGingerbreadFootLeft
+    - category: LegRight
+      entity: OrganGingerbreadLegRight
+      children:
+      - category: FootRight
+        entity: OrganGingerbreadFootRight
+    type: InitialBody
+  type: !PartialOnly entity
+  id: AppearanceGingerbread
+- parent: OrganBase
+  type: !PartialOnly entity
+  id: OrganGingerbread
+...

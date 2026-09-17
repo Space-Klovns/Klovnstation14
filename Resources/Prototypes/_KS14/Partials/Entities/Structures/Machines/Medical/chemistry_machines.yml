@@ -1,0 +1,19 @@
+- components:
+  - type: StationAiWhitelist
+  type: !PartialOnly entity
+  id: BaseTabletopChemicalMachine
+- components:
+  - powerLoad: 0
+    type: ApcPowerReceiver
+  - idlePowerDraw: 0
+    type: PowerState
+  type: !PartialOnly entity
+  id: MachineElectrolysisUnit
+- components:
+  - powerLoad: 0
+    type: ApcPowerReceiver
+  - idlePowerDraw: 0
+    type: PowerState
+  type: !PartialOnly entity
+  id: MachineCentrifuge
+...

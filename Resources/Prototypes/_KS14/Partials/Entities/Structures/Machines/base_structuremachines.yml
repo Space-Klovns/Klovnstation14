@@ -1,0 +1,40 @@
+- parent: [BaseStructure, BaseRelaxedAnchoring]
+  components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalBreak
+    type: Destructible
+  type: !PartialOnly entity
+  id: BaseMachine
+- components:
+  - type: EmissiveLayers
+    glowRadius: 0.3
+    layers:
+    - enum.PowerDeviceVisualLayers.Powered
+  type: !PartialOnly entity
+  id: BaseMachinePowered
+- parent: BaseRelaxedAnchoring
+  components:
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          bounds: "-0.45,-0.45,0.45,0.45"
+        density: 190
+        mask:
+        - MachineMask
+        layer:
+        - MachineLayer
+  type: !PartialOnly entity
+  id: ConstructibleMachine
+...

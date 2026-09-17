@@ -1,0 +1,46 @@
+- graph: !Remove
+  - node: start
+    edges:
+    - to: apcFrame
+      steps:
+      - material: Steel
+        amount: 3
+        doAfter: 2
+  - node: apcFrame
+    entity: APCFrame
+    edges:
+    - to: apc
+      steps:
+      - component: ApcElectronics
+        store: board
+        name: construction-graph-component-apc-electronics
+        icon:
+          sprite: "Objects/Misc/module.rsi"
+          state: "charger_APC"
+        doAfter: 2
+    - to: start
+      completed:
+      - prototype: SheetSteel1
+        amount: 3
+      - {}
+      steps:
+      - tool: Screwing
+        doAfter: 2
+  - node: apc
+    entity: APCConstructed
+    edges:
+    - to: apcFrame
+      completed:
+      - pickup: true
+        emptyAtUser: true
+      - event: !type:APCDeconstructedEvent ''
+        broadcast: false
+      conditions:
+      - !type:AllWiresCut ''
+      - open: true
+      steps:
+      - tool: Prying
+        doAfter: 4
+  type: !PartialOnly constructionGraph
+  id: APC
+...

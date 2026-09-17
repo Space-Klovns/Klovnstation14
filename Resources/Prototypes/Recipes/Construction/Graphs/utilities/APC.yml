@@ -16,7 +16,6 @@
         - to: apc
           steps:
             - component: ApcElectronics
-              store: board # KS14: retain the installed electronics board
               name: construction-graph-component-apc-electronics
               icon:
                 sprite: "Objects/Misc/module.rsi"
@@ -37,19 +36,12 @@
       edges:
         - to: apcFrame
           completed:
-            # KS14 start: return the installed electronics board during deconstruction
-            - !type:EmptyAllContainers
-              pickup: true
-              emptyAtUser: true
-            # KS14 end
-            - !type:RaiseEvent
-              event: !type:APCDeconstructedEvent
-              broadcast: false
+            - !type:GivePrototype
+              prototype: APCElectronics
+              amount: 1
           conditions:
-            - !type:AllWiresCut # KS14: require all wires cut before deconstruction
             - !type:WirePanel
               open: true
           steps:
             - tool: Prying
               doAfter: 4
-

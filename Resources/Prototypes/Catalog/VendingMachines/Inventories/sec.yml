@@ -1,7 +1,6 @@
 - type: vendingMachineInventory
   id: SecTechInventory
   startingInventory:
-    ClothingOuterArmorHazardous: 3 # KS14 - hazardous environment armor
     SecurityWhistle: 5
     Handcuffs: 8
     GrenadeFlashBang: 4
@@ -28,8 +27,3 @@
     FoodDonutHomer: 12
     FoodBoxDonut: 2
     #box evidence
-  emaggedInventory: #Klovn
-    ExGrenade: 1
-    EmpGrenade: 1
-    SmokeGrenade: 3 #more for sec
-    WeaponPistolViper: 1 #if you let a tot steal a secvend this is your fault

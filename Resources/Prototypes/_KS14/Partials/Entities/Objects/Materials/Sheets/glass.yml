@@ -1,0 +1,112 @@
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 50
+      behaviors:
+      - sound:
+          collection: GlassBreak
+          params:
+            volume: -4
+      - spawn:
+          ShardGlass:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+    type: Destructible
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/materials/glass_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/materials/glass_drop.ogg
+  type: !PartialOnly entity
+  id: SheetGlassBase
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 50
+      behaviors:
+      - sound:
+          collection: GlassBreak
+          params:
+            volume: -4
+      - spawn:
+          ShardGlassReinforced:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: SheetRGlass
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 50
+      behaviors:
+      - sound:
+          collection: GlassBreak
+          params:
+            volume: -4
+      - spawn:
+          ShardGlassPlasma:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: SheetPGlass
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 50
+      behaviors:
+      - sound:
+          collection: GlassBreak
+          params:
+            volume: -4
+      - spawn:
+          ShardGlassUranium:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: SheetUGlass
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 50
+      behaviors:
+      - sound:
+          collection: GlassBreak
+          params:
+            volume: -4
+      - spawn:
+          ShardGlassClockwork:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: SheetClockworkGlass
+...

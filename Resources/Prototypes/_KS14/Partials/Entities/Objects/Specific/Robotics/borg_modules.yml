@@ -1,0 +1,22 @@
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/component_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/component_drop.ogg
+  type: !PartialOnly entity
+  id: BaseBorgModule
+- components:
+  - hands: !Remove
+    - item: RCDRecharging
+    - item: RPDRecharging
+    - item: BorgFireExtinguisher
+    - item: BorgHandheldGPSBasic
+    - item: GasAnalyzer
+    - item: HolofanProjectorBorg
+    - item: GeigerCounter
+    type: ItemBorgModule
+  type: !PartialOnly entity
+  id: BorgModuleRCD
+...

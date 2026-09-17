@@ -1,27 +1,25 @@
 - type: entity
   id: MachineFlatpacker
   parent: [ BaseMachinePowered, ConstructibleMachine ]
-  name: flatpacker
+  name: Flatpacker 1001
   description: An industrial machine used for expediting machine construction across the station.
   components:
   - type: Sprite
-    sprite: _KS14/Structures/Machines/flatpacker.rsi # KS14: /tg/ sprite port
+    sprite: Structures/Machines/flatpacker.rsi
     snapCardinals: true
-    layers: # KS14: /tg/ sprite port
+    layers:
     - state: base
-    - map: ["enum.WiresVisualLayers.MaintenancePanel"]
-      state: open
-    - map: ["enum.PowerDeviceVisualLayers.Powered"]
-      state: unlit
+    - state: screen
+      map: ["enum.PowerDeviceVisualLayers.Powered"]
       shader: unshaded
-    - map: ["anim"]
-      state: working_unlit
-      shader: unshaded # KS14
+    - state: panel
+      map: ["enum.WiresVisualLayers.MaintenancePanel"]
+    - state: packing
+      map: ["anim"]
       visible: false
-    - map: ["enum.MaterialStorageVisualLayers.Inserting"]
-      sprite: Structures/Machines/autolathe.rsi # KS14: /tg/ sprite port # it works because............. IT JUST IS, OKAY?
-      state: inserting
+    - state: inserting
       visible: false
+      map: ["enum.MaterialStorageVisualLayers.Inserting"]
   - type: GenericVisualizer
     visuals:
       enum.PowerDeviceVisuals.Powered:

@@ -1,0 +1,41 @@
+- components:
+  - type: AmbientMusicMarkerEngineering
+  type: !PartialOnly entity
+  id: ComputerAlert
+- components:
+  - type: AmbientMusicMarkerEngineering
+  type: !PartialOnly entity
+  id: ComputerPowerMonitoring
+- components:
+  - type: AmbientMusicMarkerMedical
+  type: !PartialOnly entity
+  id: ComputerMedicalRecords
+- components:
+  - type: AmbientMusicMarkerMedical
+  type: !PartialOnly entity
+  id: ComputerCrewMonitoring
+- components:
+  - type: AmbientMusicMarkerMedical
+  type: !PartialOnly entity
+  id: computerBodyScanner
+- components:
+  - type: AmbientMusicMarkerEngineering
+  type: !PartialOnly entity
+  id: ComputerCargoOrdersEngineering
+- components:
+  - type: AmbientMusicMarkerMedical
+  type: !PartialOnly entity
+  id: ComputerCargoOrdersMedical
+- parent: BaseComputerAiAccess
+  type: !PartialOnly entity
+  id: ComputerSurveillanceCameraMonitor
+- parent: BaseComputerAiAccess
+  type: !PartialOnly entity
+  id: ComputerSurveillanceWirelessCameraMonitor
+- description: Used to remotely monitor, disable and destroy the station's cyborgs.
+  components:
+  - allowBorgControl: !Remove ''
+    type: RoboticsConsole
+  type: !PartialOnly entity
+  id: ComputerRoboticsControl
+...

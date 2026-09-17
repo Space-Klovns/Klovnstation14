@@ -19,7 +19,7 @@
   id: Mining
   recipes:
   - MiningDrill
-  - WeaponAdvancedPlasmaCutter # KS14, replaced diamond mining drill with adv. plasmacutter
+  - MiningDrillDiamond
   - MineralScannerEmpty
   - AdvancedMineralScannerEmpty
   - OreBagOfHolding

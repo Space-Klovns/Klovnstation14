@@ -1,0 +1,21 @@
+- special: !Remove
+  - components:
+    - type: KsLanguageGrant
+      speaks: [KsLangKlovnish]
+      understands: [KsLangKlovnish]
+    - type: Clumsy
+      gunShootFailDamage:
+        types:
+          Blunt: 5
+          Piercing: 4
+          Heat: 3
+      catchingFailDamage:
+        types:
+          Blunt: 1
+    - type: SleepEmitSound
+      snore: /Audio/Voice/Misc/silly_snore.ogg
+      interval: 10
+  - implants: [SadTromboneImplant]
+  type: !PartialOnly job
+  id: Clown
+...

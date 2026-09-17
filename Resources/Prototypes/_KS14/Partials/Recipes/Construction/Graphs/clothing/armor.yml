@@ -1,0 +1,16 @@
+- graph: !Remove
+  - node: start
+    edges:
+    - to: armor
+      steps:
+      - material: Bones
+        amount: 8
+        doAfter: 2
+      - material: Durathread
+        amount: 2
+        doAfter: 2
+  - node: armor
+    entity: ClothingOuterArmorBone
+  type: !PartialOnly constructionGraph
+  id: BoneArmor
+...

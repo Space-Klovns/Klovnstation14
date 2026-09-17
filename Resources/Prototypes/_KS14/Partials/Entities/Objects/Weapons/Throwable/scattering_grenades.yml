@@ -1,0 +1,9 @@
+- description: Can be used with any grenades. Explodes several times.
+  components:
+  - whitelist:
+      tags: !Remove
+      - HandGrenade
+    type: ScatteringGrenade
+  type: !PartialOnly entity
+  id: ClusterBang
+...

@@ -29,12 +29,6 @@
   - type: Destructible
     thresholds:
     - trigger:
-        !type:DamageTrigger
-        damage: 50
-      behaviors:
-        - !type:DoActsBehavior
-          acts: [ "Destruction" ]
-    - trigger:
         !type:DamageTypeTrigger
         damageType: Heat
         damage: 5
@@ -59,16 +53,6 @@
           collection: MetalBreak
       - !type:DoActsBehavior
         acts: ["Destruction"]
-  # KS14 Start
-  - type: PlumbingStorage
-    solutionName: tank
-  - type: UserInterface
-    interfaces:
-      enum.PlumbingStorageUiKey.Key:
-        type: PlumbingStorageBui
-  - type: ActivatableUI
-    key: enum.PlumbingStorageUiKey.Key
-  # KS14 End
   - type: DrainableSolution
     solution: tank
   - type: ReagentTank

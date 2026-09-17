@@ -1,0 +1,12 @@
+- components:
+  - grid: !Remove
+    - 0,0,2,2
+    type: Storage
+  type: !PartialOnly entity
+  id: StorageImplant
+- components:
+  - doGibVisFx: false
+    type: GibOnTrigger
+  type: !PartialOnly entity
+  id: DeathAcidifierImplant
+...

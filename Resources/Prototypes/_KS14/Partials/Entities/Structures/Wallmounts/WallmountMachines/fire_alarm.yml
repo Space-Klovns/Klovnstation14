@@ -1,0 +1,56 @@
+- components:
+  - syncWith: !Remove
+    - FireAlarm
+    - AirSensor
+    - FireSensor
+    - GasVent
+    - GasScrubber
+    type: AtmosAlarmable
+  - layers: !Remove
+    - state: fire0
+      map: ["fireAlarmBase"]
+    - state: fire_b2
+      map: ["enum.WiresVisualLayers.MaintenancePanel"]
+    - state: fire_off
+      shader: unshaded
+      map: ["fireAlarmState"]
+    type: Sprite
+  - type: EmissiveLayers
+    glowRadius: 0.75
+    offset: 0,-0.55
+    layers:
+    - fireAlarmState
+  - thresholds: !Remove
+    - trigger:
+        damage: 160
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 80
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalGlassBreak
+          params:
+            volume: -4
+    type: Destructible
+  type: !PartialOnly entity
+  id: FireAlarm
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 20
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 15
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalGlassBreak
+          params:
+            volume: -4
+    type: Destructible
+  type: !PartialOnly entity
+  id: FireAlarmAssembly
+...

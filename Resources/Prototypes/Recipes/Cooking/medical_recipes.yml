@@ -14,7 +14,7 @@
   time: 10
   group: Medicinal
   solids:
-    # FoodPoppy: 1 # KS14 change - easier to make
+    FoodPoppy: 1
     Brutepack: 1
     MaterialCloth1: 1
   reagents:
@@ -28,7 +28,7 @@
   time: 10
   group: Medicinal
   solids:
-    # FoodAloe: 1 # KS14 change - easier to make
+    FoodAloe: 1
     Ointment: 1
     MaterialCloth1: 1
   reagents:

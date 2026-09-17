@@ -29,15 +29,12 @@
     - Supply
   - type: IgnoreUIRange
   - type: StationAiHeld
-  - type: BotWrangler # KS14
   - type: StationAiOverlay
   - type: ShowElectrocutionHUD
   - type: ActionGrant
     actions:
     - ActionJumpToCore
     - ActionAIViewLaws
-    - ActionSelectControlledBot #KS14
-    - ActionMoveControlledBot #KS14
   - type: UserInterface
     interfaces:
       enum.RadarConsoleUiKey.Key:
@@ -108,9 +105,6 @@
   description: Handles AI interactions across holocards + AI cores
   components:
   - type: ItemSlots
-  - type: Tag
-    tags:
-    - GhostOnlyWarp
   - type: StationAiHolder
     slot:
       name: station-ai-mind-slot
@@ -185,9 +179,6 @@
     - Anchorable
   - type: Rotatable
   - type: WarpPoint
-    blacklist:
-      tags:
-      - GhostOnlyWarp
   - type: Fixtures
     fixtures:
       fix1:
@@ -428,8 +419,7 @@
     # Once it's in a core it's pretty much an abstract entity at that point.
     visible: false
   - type: SiliconLawProvider
-    laws: Asimov
-  - type: IonStormTarget # KS14 change - AI can be ion'd
+    laws: Crewsimov
   - type: SiliconLawBound
   - type: ActionGrant
     actions:
@@ -503,14 +493,8 @@
         layer:
         - GhostImpassable
   - type: NoFTL
-  - type: Tag
-    tags:
-    - GhostOnlyWarp
   - type: WarpPoint
     follow: true
-    blacklist:
-      tags:
-      - GhostOnlyWarp
   - type: Eye
     pvsScale: 1.5
   - type: Visibility
@@ -532,14 +516,8 @@
   components:
   - type: Transform
     anchored: true
-  - type: Tag
-    tags:
-    - GhostOnlyWarp
   - type: WarpPoint
     follow: true
-    blacklist:
-      tags:
-      - GhostOnlyWarp
   - type: Eye
   - type: ContentEye
   - type: Examiner

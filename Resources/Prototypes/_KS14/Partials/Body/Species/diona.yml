@@ -1,0 +1,54 @@
+- components:
+  - organs:
+    - category: Head
+      entity: OrganDionaHead
+      children:
+      - category: Brain
+        entity: OrganDionaBrain
+      - category: Eyes
+        entity: OrganDionaEyes
+    - category: Torso
+      entity: OrganDionaTorso
+      children:
+      - category: Lungs
+        entity: OrganDionaLungs
+      - category: Stomach
+        entity: OrganDionaStomach
+    - category: ArmLeft
+      entity: OrganDionaArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganDionaHandLeft
+    - category: ArmRight
+      entity: OrganDionaArmRight
+      children:
+      - category: HandRight
+        entity: OrganDionaHandRight
+    - category: LegLeft
+      entity: OrganDionaLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganDionaFootLeft
+    - category: LegRight
+      entity: OrganDionaLegRight
+      children:
+      - category: FootRight
+        entity: OrganDionaFootRight
+    type: InitialBody
+  type: !PartialOnly entity
+  id: AppearanceDiona
+- components:
+  - butcheringType: Spike
+    type: Butcherable
+  - sounds:
+      Male: UnisexDiona
+      Female: UnisexDiona
+      Unsexed: UnisexDiona
+    emoteSounds: !Remove ''
+    type: Vocal
+  type: !PartialOnly entity
+  id: MobDiona
+- parent: OrganBase
+  type: !PartialOnly entity
+  id: OrganDiona
+...

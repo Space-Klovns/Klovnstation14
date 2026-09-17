@@ -1,0 +1,10 @@
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/magazine/magazine_pickup1.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/magazine/magazine_drop1.ogg
+  type: !PartialOnly entity
+  id: BaseMagazineShotgun
+...

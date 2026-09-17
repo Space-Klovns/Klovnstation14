@@ -1,0 +1,55 @@
+- components:
+  - layers: !Remove
+    - state: server-nopower
+    - state: server-on
+      shader: unshaded
+      sprite: _KS14/Structures/Machines/server.rsi
+      map: ["enum.PowerDeviceVisualLayers.Powered"]
+    - state: variant-research
+    - state: server_o
+      map: ["enum.WiresVisualLayers.MaintenancePanel"]
+    type: Sprite
+  - type: EmissiveLayers
+    intensity: 3
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 300
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          SheetSteel1:
+            min: 1
+            max: 2
+    type: Destructible
+  - sound:
+      path: /Audio/Ambience/Objects/server_fans.ogg
+      collection: !Remove ''
+    type: AmbientSound
+  type: !PartialOnly entity
+  id: ResearchAndDevelopmentServer
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 400
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalBreak
+      - spawn:
+          SheetSteel1:
+            min: 1
+            max: 1
+    type: Destructible
+  type: !PartialOnly entity
+  id: BaseResearchAndDevelopmentPointSource
+...

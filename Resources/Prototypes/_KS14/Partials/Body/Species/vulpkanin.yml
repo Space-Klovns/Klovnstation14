@@ -1,0 +1,65 @@
+- components:
+  - organs:
+    - category: Head
+      entity: OrganVulpkaninHead
+      children:
+      - category: Brain
+        entity: OrganVulpkaninBrain
+      - category: Eyes
+        entity: OrganVulpkaninEyes
+      - category: Ears
+        entity: OrganVulpkaninEars
+      - category: Tongue
+        entity: OrganVulpkaninTongue
+    - category: Torso
+      entity: OrganVulpkaninTorso
+      children:
+      - category: Appendix
+        entity: OrganVulpkaninAppendix
+      - category: Lungs
+        entity: OrganVulpkaninLungs
+      - category: Heart
+        entity: OrganVulpkaninHeart
+      - category: Stomach
+        entity: OrganVulpkaninStomach
+      - category: Liver
+        entity: OrganVulpkaninLiver
+      - category: Kidneys
+        entity: OrganVulpkaninKidneys
+    - category: ArmLeft
+      entity: OrganVulpkaninArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganVulpkaninHandLeft
+    - category: ArmRight
+      entity: OrganVulpkaninArmRight
+      children:
+      - category: HandRight
+        entity: OrganVulpkaninHandRight
+    - category: LegLeft
+      entity: OrganVulpkaninLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganVulpkaninFootLeft
+    - category: LegRight
+      entity: OrganVulpkaninLegRight
+      children:
+      - category: FootRight
+        entity: OrganVulpkaninFootRight
+    type: InitialBody
+  type: !PartialOnly entity
+  id: AppearanceVulpkanin
+- components:
+  - sounds:
+      Male: MaleVulpkanin
+      Female: FemaleVulpkanin
+      Unsexed: MaleVulpkanin
+    emoteSounds: !Remove ''
+    type: Vocal
+  - type: JumpAbility
+  type: !PartialOnly entity
+  id: MobVulpkanin
+- parent: OrganBase
+  type: !PartialOnly entity
+  id: OrganVulpkanin
+...

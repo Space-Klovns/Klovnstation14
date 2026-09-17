@@ -6,7 +6,6 @@
   - type: Tag
     tags:
     - Knife
-  - type: Sharp
   - type: Execution
     doAfterDuration: 4.0
   - type: Utensil
@@ -24,8 +23,7 @@
     size: Small
   - type: Tool
     qualities:
-      - Slicing
-      - Incision  # KS14: so it works for surgery
+    - Slicing
     useSound:
       path: /Audio/Items/Culinary/chop.ogg
 
@@ -83,7 +81,7 @@
     attackRate: 1.5
     damage:
       types:
-        Slash: 16
+        Slash: 13
   - type: Item
     size: Normal
     sprite: Objects/Weapons/Melee/cleaver.rsi
@@ -124,7 +122,7 @@
     attackRate: 1.5
     damage:
       types:
-        Slash: 14.6
+        Slash: 12
   - type: EmbeddableProjectile
     sound: /Audio/Weapons/star_hit.ogg
     offset: -0.15,0.0
@@ -132,7 +130,7 @@
   - type: DamageOtherOnHit
     damage:
       types:
-        Slash: 15
+        Slash: 10
   - type: Item
     sprite: Objects/Weapons/Melee/combat_knife.rsi
     storedSprite:
@@ -185,14 +183,10 @@
     attackRate: 1.0
     damage:
       types:
-        Slash: 22
+        Slash: 15
   - type: Item
     sprite: Objects/Weapons/Melee/kukri_knife.rsi
     storedSprite: null
-  - type: DamageOtherOnHit
-    damage:
-      types:
-        Slash: 18
 
 - type: entity
   parent: [ClothingHeadHatGreyFlatcap, BaseMinorContraband]
@@ -254,7 +248,7 @@
     attackRate: 1.5
     damage:
       types:
-        Slash: 6.8
+        Slash: 5.5
   - type: Item
     sprite: Objects/Weapons/Melee/shiv.rsi
   - type: DisarmMalus
@@ -287,7 +281,7 @@
     attackRate: 1.5
     damage:
       types:
-        Slash: 8.7
+        Slash: 7 #each "tier" grants an additional 2 damage
   - type: Item
     sprite: Objects/Weapons/Melee/reinforced_shiv.rsi
   - type: Sprite
@@ -306,7 +300,7 @@
     attackRate: 1.5
     damage:
       types:
-        Slash: 11.3
+        Slash: 9
   - type: Item
     sprite: Objects/Weapons/Melee/plasma_shiv.rsi
   - type: Sprite
@@ -325,8 +319,8 @@
     attackRate: 1.5
     damage:
       types:
-        Slash: 8.7
-        Radiation: 5.1
+        Slash: 7
+        Radiation: 4
   - type: Item
     sprite: Objects/Weapons/Melee/uranium_shiv.rsi
   - type: Sprite
@@ -350,7 +344,7 @@
     attackRate: 2
     damage:
       types:
-        Slash: 8
+        Slash: 5
   - type: EmbeddableProjectile
     sound: /Audio/Weapons/star_hit.ogg
     offset: -0.15,0.0
@@ -360,8 +354,8 @@
     ignoreResistances: true
     damage:
       types:
-        Slash: 15
-        Piercing: 20
+        Slash: 10
+        Piercing: 15
   - type: Item
     sprite: Objects/Weapons/Melee/throwing_knife.rsi
   - type: ThrowingAngle
@@ -395,7 +389,6 @@
     components:
     - type: Execution
       doAfterDuration: 4.0
-    - type: Sharp
     - type: Utensil
       types:
       - Knife

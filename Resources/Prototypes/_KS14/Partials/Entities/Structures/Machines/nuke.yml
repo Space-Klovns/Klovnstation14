@@ -1,0 +1,16 @@
+- components:
+  - type: EmissiveLayers
+    glowRadius: 0.25
+    intensity: 7
+    layers:
+    - enum.NukeVisualLayers.Unlit
+  - type: Tag
+    tags:
+    - GhostOnlyWarp
+  - blacklist:
+      tags:
+      - GhostOnlyWarp
+    type: WarpPoint
+  type: !PartialOnly entity
+  id: NuclearBomb
+...

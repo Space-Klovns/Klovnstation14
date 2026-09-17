@@ -1,0 +1,66 @@
+- components:
+  - organs:
+    - category: Head
+      entity: OrganReptilianHead
+      children:
+      - category: Brain
+        entity: OrganReptilianBrain
+      - category: Eyes
+        entity: OrganReptilianEyes
+      - category: Ears
+        entity: OrganReptilianEars
+      - category: Tongue
+        entity: OrganReptilianTongue
+    - category: Torso
+      entity: OrganReptilianTorso
+      children:
+      - category: Appendix
+        entity: OrganReptilianAppendix
+      - category: Lungs
+        entity: OrganReptilianLungs
+      - category: Heart
+        entity: OrganReptilianHeart
+      - category: Stomach
+        entity: OrganReptilianStomach
+      - category: Liver
+        entity: OrganReptilianLiver
+      - category: Kidneys
+        entity: OrganReptilianKidneys
+    - category: ArmLeft
+      entity: OrganReptilianArmLeft
+      children:
+      - category: HandLeft
+        entity: OrganReptilianHandLeft
+    - category: ArmRight
+      entity: OrganReptilianArmRight
+      children:
+      - category: HandRight
+        entity: OrganReptilianHandRight
+    - category: LegLeft
+      entity: OrganReptilianLegLeft
+      children:
+      - category: FootLeft
+        entity: OrganReptilianFootLeft
+    - category: LegRight
+      entity: OrganReptilianLegRight
+      children:
+      - category: FootRight
+        entity: OrganReptilianFootRight
+    type: InitialBody
+  type: !PartialOnly entity
+  id: AppearanceReptilian
+- components:
+  - butcheringType: Spike
+    type: Butcherable
+  - sounds:
+      Male: MaleReptilian
+      Female: FemaleReptilian
+      Unsexed: MaleReptilian
+    emoteSounds: !Remove ''
+    type: Vocal
+  type: !PartialOnly entity
+  id: MobReptilian
+- parent: OrganBase
+  type: !PartialOnly entity
+  id: OrganReptilian
+...

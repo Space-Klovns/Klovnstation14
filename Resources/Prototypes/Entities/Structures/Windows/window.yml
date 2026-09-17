@@ -8,7 +8,6 @@
     snap:
     - Window
   components:
-  - type: Stainable # KS14: stains
   - type: Anchorable
     flags:
     - Anchorable
@@ -17,17 +16,12 @@
     soundGroups:
       Brute:
         collection: GlassSmack
-  # ES START
-  # - type: WallMount
-  #  arc: 360
-  - type: ESInteractionIgnoreAnchoredInTile
-  # ES END
+  - type: WallMount
+    arc: 360 # interact despite grilles
   - type: Tag
     tags:
       - ForceFixRotations
       - Window
-      - Directional
-      - HristovWindowVentable # KS14
   - type: Sprite
     drawdepth: WallTops
     sprite: Structures/Windows/window.rsi
@@ -58,15 +52,6 @@
     fx: EffectRCDDeconstruct4
   - type: Destructible
     thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 150 #excess damage (nuke?). avoid computational cost of spawning entities.
-      behaviors:
-      - !type:PlaySoundBehavior
-        sound:
-          collection: WindowShatter
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
     - trigger:
         !type:DamageTrigger
         damage: 50
@@ -141,16 +126,11 @@
     snap:
     - Window
   components:
-  - type: Stainable # KS14: stains
-  # ES START
-  # - type: WallMount
-  #  arc: 360
-  - type: ESInteractionIgnoreAnchoredInTile
-  # ES END
+  - type: WallMount
+    arc: 360 # interact despite grilles
   - type: Tag
     tags:
       - Window
-      - Directional
   - type: MeleeSound
     soundGroups:
       Brute:
@@ -192,15 +172,6 @@
     fx: EffectRCDDeconstruct2
   - type: Destructible
     thresholds:
-    - trigger:
-        !type:DamageTrigger
-        damage: 50 #excess damage (nuke?). avoid computational cost of spawning entities.
-      behaviors:
-      - !type:DoActsBehavior
-        acts: [ "Destruction" ]
-      - !type:PlaySoundBehavior
-        sound:
-          collection: WindowShatter
     - trigger:
         !type:DamageTrigger
         damage: 25

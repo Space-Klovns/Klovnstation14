@@ -1,0 +1,81 @@
+- position: 0,-1
+  technologyPrerequisites:
+  - SpaceScanning
+  type: !PartialOnly technology
+  id: SalvageEquipment
+- position: 0,-3
+  technologyPrerequisites:
+  - PowerGeneration
+  type: !PartialOnly technology
+  id: SpaceScanning
+- position: 0,-6
+  technologyPrerequisites:
+  - IndustrialEngineering
+  type: !PartialOnly technology
+  id: AdvancedPowercells
+- icon:
+    sprite: _KS14/Structures/Machines/flatpacker.rsi
+  recipeUnlocks: !Remove
+  - FlatpackerMachineCircuitboard
+  - MaterialSiloMachineCircuitboard
+  position: 0,-4
+  technologyPrerequisites:
+  - SpaceScanning
+  type: !PartialOnly technology
+  id: MechanicalCompression
+- position: 0,-5
+  technologyPrerequisites:
+  - MechanicalCompression
+  type: !PartialOnly technology
+  id: IndustrialEngineering
+- position: 0,-2
+  type: !PartialOnly technology
+  id: PowerGeneration
+- position: -2,-4
+  technologyPrerequisites:
+  - SpaceScanning
+  type: !PartialOnly technology
+  id: AtmosphericTech
+- position: 2,-1
+  technologyPrerequisites:
+  - SalvageEquipment
+  type: !PartialOnly technology
+  id: RipleyAPLU
+- position: 1,-4
+  technologyPrerequisites:
+  - MechanicalCompression
+  type: !PartialOnly technology
+  id: Shuttlecraft
+- position: -2,-5
+  type: !PartialOnly technology
+  id: AdvancedAtmospherics
+- position: 1,-5
+  technologyPrerequisites:
+  - Shuttlecraft
+  type: !PartialOnly technology
+  id: AdvancedToolsTechnology
+- icon:
+    sprite: _KS14/Objects/Weapons/Guns/Battery/advplasmacutter.rsi
+    state: icon
+  recipeUnlocks: !Remove
+  - OreBagOfHolding
+  - WeaponAdvancedPlasmaCutter
+  - AdvancedMineralScannerEmpty
+  - BorgModuleAdvancedMining
+  position: 3,-1
+  technologyPrerequisites:
+  - RipleyAPLU
+  type: !PartialOnly technology
+  id: MassExcavation
+- technologyPrerequisites: !Remove
+  - AdvancedPowercells
+  - AdvancedToolsTechnology
+  position: 1,-6
+  type: !PartialOnly technology
+  id: OptimizedMicrogalvanism
+- position: 1,-7
+  technologyPrerequisites:
+  - OptimizedMicrogalvanism
+  type: !PartialOnly technology
+  id: BluespaceStorage
+...

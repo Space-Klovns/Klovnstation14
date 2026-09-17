@@ -1,0 +1,180 @@
+- components:
+  - layers: !Remove
+    - state: closed
+      map: ["enum.DoorVisualLayers.Base"]
+    - state: closed_unlit
+      shader: unshaded
+      map: ["enum.DoorVisualLayers.BaseUnlit"]
+      visible: false
+    - state: welded
+      map: ["enum.WeldableLayers.BaseWelded"]
+    - state: bolted_unlit
+      shader: unshaded
+      map: ["enum.DoorVisualLayers.BaseBolted"]
+    - state: emergency_unlit
+      shader: unshaded
+      map: ["enum.DoorVisualLayers.BaseEmergencyAccess"]
+    - state: panel_open
+      map: ["enum.WiresVisualLayers.MaintenancePanel"]
+    - state: electrified_ai
+      sprite: Interface/Misc/ai_hud.rsi
+      shader: unshaded
+      visible: false
+      map: ["enum.ElectrifiedLayers.HUD"]
+    - state: electrified
+      sprite: Effects/electricity.rsi
+      shader: unshaded
+      visible: false
+      map: ["enum.ElectrifiedLayers.Sparks"]
+    - state: sparks
+      map: ["enum.DoorVisualLayers.BaseEmagging"]
+      shader: unshaded
+      visible: false
+    - type: EmissiveLayers
+      glowRadius: 0.4
+      intensity: 4
+      layers:
+      - enum.DoorVisualLayers.BaseUnlit
+      - enum.DoorVisualLayers.BaseBolted
+      - enum.DoorVisualLayers.BaseEmergencyAccess
+      - enum.DoorVisualLayers.BaseEmagging
+    type: Sprite
+  - thresholds: !Remove
+    - trigger:
+        damage: 400
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 200
+      behaviors:
+      - spawn:
+          ShardGlass:
+            min: 1
+            max: 2
+          SheetSteel1:
+            min: 2
+            max: 4
+      - acts: ["Destruction"]
+    type: Destructible
+  - tags: !Remove
+    - Directional
+    - DoorRemoteWhitelist
+    type: Tag
+  type: !PartialOnly entity
+  id: BaseWindoor
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 600
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 400
+      behaviors:
+      - spawn:
+          ShardGlass:
+            min: 1
+            max: 2
+          SheetPlasteel1:
+            min: 1
+            max: 2
+      - acts: ["Destruction"]
+    type: Destructible
+  - tags: !Remove
+    - Directional
+    - SecureWindoor
+    - DoorRemoteWhitelist
+    type: Tag
+  type: !PartialOnly entity
+  id: BaseSecureWindoor
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 480
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 240
+      behaviors:
+      - spawn:
+          ShardGlassPlasma:
+            min: 1
+            max: 2
+          SheetSteel1:
+            min: 1
+            max: 2
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: BasePlasmaWindoor
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 800
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 530
+      behaviors:
+      - spawn:
+          ShardGlassPlasma:
+            min: 1
+            max: 2
+          SheetPlasteel1:
+            min: 1
+            max: 2
+      - acts: ["Destruction"]
+    type: Destructible
+  - tags: !Remove
+    - Directional
+    - SecurePlasmaWindoor
+    - DoorRemoteWhitelist
+    type: Tag
+  type: !PartialOnly entity
+  id: BaseSecurePlasmaWindoor
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 400
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 240
+      behaviors:
+      - spawn:
+          ShardGlassUranium:
+            min: 1
+            max: 2
+          SheetSteel1:
+            min: 1
+            max: 2
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: BaseUraniumWindoor
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 1200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 400
+      behaviors:
+      - spawn:
+          ShardGlassUranium:
+            min: 1
+            max: 2
+          SheetPlasteel1:
+            min: 1
+            max: 2
+      - acts: ["Destruction"]
+    type: Destructible
+  - tags: !Remove
+    - Directional
+    - SecureUraniumWindoor
+    - DoorRemoteWhitelist
+    type: Tag
+  type: !PartialOnly entity
+  id: BaseSecureUraniumWindoor
+...

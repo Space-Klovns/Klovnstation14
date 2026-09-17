@@ -1,0 +1,16 @@
+- graph: !Remove
+  - node: start
+    edges:
+    - to: spear
+      completed:
+      - message: "Construction"
+        impact: High
+      steps:
+      - material: Bones
+        amount: 4
+        doAfter: 2
+  - node: spear
+    entity: SpearBone
+  type: !PartialOnly constructionGraph
+  id: SpearBone
+...

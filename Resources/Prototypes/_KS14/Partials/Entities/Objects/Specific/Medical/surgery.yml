@@ -1,0 +1,63 @@
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/tools/wirecutter_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/tools/screwdriver_drop.ogg
+  type: !PartialOnly entity
+  id: BaseToolSurgery
+- components:
+  - type: Tool
+    qualities:
+    - Cauterisation
+    useSound:
+      collection: KsSurgeryCautery
+  - soundHit:
+      collection: KsSurgeryCautery
+      path: !Remove ''
+    type: MeleeWeapon
+  type: !PartialOnly entity
+  id: Cautery
+- components:
+  - qualities: !Remove
+    - Incision
+    useSound:
+      path: /Audio/_KS14/Handling/surgery/scalpel2.ogg
+    speedModifier: !Remove ''
+    type: Tool
+  - soundHit:
+      collection: KsSurgeryScalpel
+      path: !Remove ''
+    type: MeleeWeapon
+  type: !PartialOnly entity
+  id: Scalpel
+- components:
+  - type: Tool
+    speedModifier: 0.45
+  type: !PartialOnly entity
+  id: ScalpelShiv
+- components:
+  - type: Tool
+    speedModifier: 1.5
+  type: !PartialOnly entity
+  id: ScalpelAdvanced
+- components:
+  - type: Tool
+    speedModifier: 2
+  type: !PartialOnly entity
+  id: ScalpelLaser
+- components:
+  - type: Sharp
+  - qualities: !Remove
+    - Sawing
+    type: Tool
+  type: !PartialOnly entity
+  id: Saw
+- components:
+  - useSound:
+      collection: KsSurgerySaw
+    type: Tool
+  type: !PartialOnly entity
+  id: SawElectric
+...

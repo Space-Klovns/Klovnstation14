@@ -1,0 +1,22 @@
+- components:
+  - powerLoad: 0
+    type: ApcPowerReceiver
+  - idlePowerDraw: 0
+    type: PowerState
+  - type: StationAiWhitelist
+  type: !PartialOnly entity
+  id: KitchenReagentGrinder
+- components:
+  - type: PlumbingOutlet
+    solutionName: output
+  - type: NodeContainer
+    nodes:
+      outlet:
+        nodeGroupID: Plumbing
+        pipeDirection: Fourway
+  - type: PlumbingConnectorAppearance
+    offset: 0.09375
+  - type: AtmosPipeColor
+  type: !PartialOnly entity
+  id: ReagentGrinderIndustrial
+...

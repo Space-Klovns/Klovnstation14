@@ -1,0 +1,6 @@
+- components:
+  - areaInsertRadius: 5
+    type: Storage
+  type: !PartialOnly entity
+  id: OreBagOfHolding
+...

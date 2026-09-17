@@ -18,9 +18,29 @@
   id: OrganBase
   name: organ
   abstract: true
-  parent: [ BaseItem, KsBaseBodyEntityHidesContents ] # KS14: Klovnmed: Now parents off KsBaseBodyEntity
+  parent: BaseItem
   components:
   - type: Organ
+
+- type: entity
+  id: OrganBaseOrganic
+  name: organ
+  abstract: true
+  parent: [ OrganBase, SolutionFood, SolutionTiny ]
+  components:
+  - type: FlavorProfile
+    flavors:
+    - chicken # INTRODUCING OUR NEW EVERY-MEAT BURRITO, IT'S GOT EVERY MEAT!
+  - type: Edible
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: UncookedAnimalProteins
+        Quantity: 20
+  - type: Tag # I am nearing my limit of tolerance for TagComponent.
+    tags:
+    - Raw
+    - Meat
 
 - type: entity
   parent: OrganBase
@@ -75,7 +95,7 @@
       - HeadTop
 
 - type: entity
-  parent: [KsBaseSublimb, OrganBase] # KS14: Klovnmed: inherits from KsBaseSublimb (superior)
+  parent: OrganBase
   id: OrganBaseArmLeft
   name: left arm
   abstract: true
@@ -83,9 +103,7 @@
   - type: Organ
     category: ArmLeft
   - type: Sprite
-    layers: # KS14: made singular state into layer, gave offset
-    - state: l_arm
-      offset: -0.2,0
+    state: l_arm
   - type: VisualOrgan
     layer: enum.HumanoidVisualLayers.LArm
     data:
@@ -94,14 +112,9 @@
     markingData:
       layers:
       - LArm
-  # KS14: Klovnmed start
-  - type: OrganAttachmentOperation
-    baseOrganCategories:
-    - HandLeft
-  # KS14: Klovnmed end
 
 - type: entity
-  parent: [KsBaseSublimb, OrganBase] # KS14: Klovnmed: inherits from KsBaseSublimb (superior)
+  parent: OrganBase
   id: OrganBaseArmRight
   name: right arm
   abstract: true
@@ -109,9 +122,7 @@
   - type: Organ
     category: ArmRight
   - type: Sprite
-    layers: # KS14: made singular state into layer, gave offset
-    - state: r_arm
-      offset: 0.2,0
+    state: r_arm
   - type: VisualOrgan
     layer: enum.HumanoidVisualLayers.RArm
     data:
@@ -120,11 +131,6 @@
     markingData:
       layers:
       - RArm
-  # KS14: Klovnmed start
-  - type: OrganAttachmentOperation
-    baseOrganCategories:
-    - HandRight
-  # KS14: Klovnmed end
 
 - type: entity
   parent: OrganBase
@@ -139,9 +145,7 @@
     data:
       location: Left
   - type: Sprite
-    layers: # KS14: made singular state into layer, gave offset
-    - state: l_hand
-      offset: 0.2,0
+    state: l_hand
   - type: VisualOrgan
     layer: enum.HumanoidVisualLayers.LHand
     data:
@@ -164,9 +168,7 @@
     data:
       location: Right
   - type: Sprite
-    layers: # KS14: made singular state into layer, gave offset
-    - state: r_hand
-      offset: 0.2,0
+    state: r_hand
   - type: VisualOrgan
     layer: enum.HumanoidVisualLayers.RHand
     data:
@@ -177,7 +179,7 @@
       - RHand
 
 - type: entity
-  parent: [KsBaseSublimb, OrganBase] # KS14: Klovnmed: inherits from KsBaseSublimb (superior)
+  parent: OrganBase
   id: OrganBaseLegLeft
   name: left leg
   abstract: true
@@ -194,14 +196,9 @@
     markingData:
       layers:
       - LLeg
-  # KS14: Klovnmed start
-  - type: OrganAttachmentOperation
-    baseOrganCategories:
-    - FootLeft
-  # KS14: Klovnmed end
 
 - type: entity
-  parent: [KsBaseSublimb, OrganBase] # KS14: Klovnmed: inherits from KsBaseSublimb (superior)
+  parent: OrganBase
   id: OrganBaseLegRight
   name: right leg
   abstract: true
@@ -218,11 +215,6 @@
     markingData:
       layers:
       - RLeg
-  # KS14: Klovnmed start
-  - type: OrganAttachmentOperation
-    baseOrganCategories:
-    - FootRight
-  # KS14: Klovnmed end
 
 - type: entity
   parent: OrganBase
@@ -263,7 +255,7 @@
       - RFoot
 
 - type: entity
-  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
+  parent: OrganBase
   id: OrganBaseBrain
   name: brain
   abstract: true
@@ -283,6 +275,13 @@
   - type: Examiner
   - type: BlockMovement
   - type: BadFood
+  - type: Solution
+    solution:
+      reagents:
+      - ReagentId: UncookedAnimalProteins
+        Quantity: 15
+      - ReagentId: GreyMatter
+        Quantity: 10
   - type: FoodSequenceElement
     entries:
       Burger: Brain
@@ -312,7 +311,7 @@
       - Eyes
 
 - type: entity
-  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
+  parent: OrganBase
   id: OrganBaseTongue
   name: tongue
   abstract: true
@@ -325,7 +324,7 @@
     - state: tongue
 
 - type: entity
-  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
+  parent: OrganBase
   id: OrganBaseAppendix
   name: appendix
   abstract: true
@@ -351,7 +350,7 @@
     - state: ears
 
 - type: entity
-  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
+  parent: OrganBase
   id: OrganBaseLungs
   name: lungs
   abstract: true
@@ -362,7 +361,6 @@
   - type: Lung
   - type: Metabolizer
     stages: [ Respiration ]
-    stopAutoUpdate: true # KS14: Klovnmed
   - type: SolutionManager
     solutions:
     - SolutionLungGas
@@ -401,7 +399,7 @@
     stages: [ Bloodstream ]
 
 - type: entity
-  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
+  parent: OrganBase
   id: OrganBaseStomach
   name: stomach
   abstract: true
@@ -433,7 +431,7 @@
       maxVol: 150 # 1.25 liters which is average for a human
 
 - type: entity
-  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
+  parent: OrganBase
   id: OrganBaseLiver
   name: liver
   abstract: true
@@ -451,7 +449,7 @@
     stages: [ Metabolites ]
 
 - type: entity
-  parent: [ KsBaseOrganSquishy, OrganBase ] # KS14: Added KsBaseOrganSquishy to parents
+  parent: OrganBase
   id: OrganBaseKidneys
   name: kidneys
   abstract: true
@@ -480,9 +478,7 @@
   abstract: true
   components:
   - type: Sprite
-    layers: # KS14: made singular state into layer, gave offset
-    - state: head_m
-      offset: 0,-0.3
+    state: head_m
   - type: VisualOrgan
     data:
       state: head_m

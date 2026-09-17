@@ -1,0 +1,102 @@
+- components:
+  - alarmSound:
+      path: /Audio/Ambience/Objects/alarm.ogg
+    syncWith: !Remove
+    - AirAlarm
+    - AirSensor
+    - FireSensor
+    - GasVent
+    - GasScrubber
+    type: AtmosAlarmable
+  - type: DeviceLinkVisuals
+  - type: GenericVisualizer
+    visuals:
+      enum.DeviceLinkVisuals.Connected:
+        airAlarmBase:
+          True: {state: alarmp_remote}
+          False: {state: alarmp}
+  - sprite: _KS14/Structures/Wallmounts/air_alarm.rsi
+    layers: !Remove
+    - state: alarmp
+      map: ["airAlarmBase"]
+    - state: alarm0
+      map: ["airAlarmState"]
+      shader: unshaded
+    - state: alarmx
+      map: ["enum.WiresVisualLayers.MaintenancePanel"]
+    type: Sprite
+  - type: EmissiveLayers
+    glowRadius: 0.7
+    intensity: 3
+    offset: 0.25,-1.2
+    layers:
+    - airAlarmState
+  - type: DirectionalSpriteManipulation
+    overrideRsiDirections: Dir4
+    data:
+      enum.WiresVisualLayers.MaintenancePanel: &individualManipData
+        South:
+          offset: 0, -0.19
+          rotation: 0
+        West:
+          offset: 0, -0.19
+          rotation: 90
+        North:
+          offset: 0, -0.19
+          rotation: 180
+        East:
+          offset: 0, -0.19
+          rotation: -90
+      airAlarmBase: *individualManipData
+      airAlarmState: *individualManipData
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalGlassBreak
+          params:
+            volume: -4
+    type: Destructible
+  - type: RCDDeconstructable
+    cost: 3
+    delay: 2
+    fx: EffectRCDDeconstruct2
+    rpd: true
+  type: !PartialOnly entity
+  id: AirAlarm
+- components:
+  - sprite: _KS14/Structures/Wallmounts/air_alarm.rsi
+    type: Sprite
+  - type: DirectionalSpriteManipulation
+    overrideRsiDirections: Dir4
+    data:
+      enum.ConstructionVisuals.Layer: *individualManipData
+  - visuals:
+      enum.ConstructionVisuals.Key:
+        enum.ConstructionVisuals.Layer:
+          electronics:
+            state: alarm_b2
+    type: GenericVisualizer
+  - thresholds: !Remove
+    - trigger:
+        damage: 20
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 15
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalGlassBreak
+          params:
+            volume: -4
+    type: Destructible
+  type: !PartialOnly entity
+  id: AirAlarmAssembly
+...

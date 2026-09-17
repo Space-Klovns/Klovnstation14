@@ -1,0 +1,13 @@
+- effects: !Remove
+  - requirement:
+      role: JobCargoTechnician
+      time: 21600
+  - requirement:
+      role: JobSalvageSpecialist
+      time: 21600
+  - requirement:
+      department: Cargo
+      time: 15h
+  type: !PartialOnly loadoutEffectGroup
+  id: SeniorCargo
+...

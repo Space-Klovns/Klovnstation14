@@ -1,0 +1,12 @@
+- requirements: !Remove ''
+  type: !PartialOnly job
+  id: MedicalDoctor
+- equipment:
+    belt: ClothingBeltMedicalFilled
+  type: !PartialOnly startingGear
+  id: DoctorGear
+- equipment:
+    belt: ClothingBeltMedical
+  type: !PartialOnly chameleonOutfit
+  id: MedicalDoctorChameleonOutfit
+...

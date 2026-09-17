@@ -1,0 +1,18 @@
+- table:
+    children: !Remove
+    - id: ClothingBeltUtilityFilled
+    - id: SurvivalKnife
+    - id: HandheldGPSBasic
+    - id: RadioHandheld
+    - id: AppraisalTool
+    - id: FireExtinguisher
+    - id: Flare
+      prob: 0.3
+      rolls:
+        value: 3
+    - id: WeaponPlasmaCutter
+    - id: MineralScanner
+    - id: ClothingOuterExplorerSuit
+  type: !PartialOnly entityTable
+  id: LockerFillSalvageSpecialist
+...

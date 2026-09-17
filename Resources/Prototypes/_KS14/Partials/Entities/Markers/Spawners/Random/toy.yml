@@ -1,0 +1,56 @@
+- table:
+    children: !Remove
+    - id: PlushieNuke
+    - id: ToyIan
+    - id: ToyAmongPequeno
+    - id: ToyMouse
+    - id: PlushieNar
+    - id: PlushieRatvar
+    - weight: 0.002
+      children:
+      - id: PlushieThrongler
+      - id: PlushieGhostRevenant
+  type: !PartialOnly entityTable
+  id: AllPlushiesTable
+- table:
+    children: !Remove
+    - tableId: AllCrayonsTable
+    - id: CrayonBox
+    - id: PlasticBanana
+    - id: NukeDiskFake
+    - id: DiceBag
+    - id: SpectralLocator
+    - id: Magic9Ball
+    - id: BarberScissors
+    - id: ClothingShoesSkates
+    - id: CrazyGlue
+    - id: CrazyLube
+    - tableId: AllBoardGamesTable
+    - children:
+      - id: MrChips
+      - id: MrDips
+    - children:
+      - id: BalloonNT
+        weight: 5
+      - id: BalloonCorgi
+      - id: BalloonSyn
+    - children:
+      - id: Basketball
+      - id: Football
+      - id: BeachBall
+      - id: TennisBall
+        amount: 2
+    - children:
+      - id: PersonalAI
+        weight: 8
+      - id: PotatoAI
+      - id: GoldenPersonalAI
+        weight: 0.1
+    - weight: 0.05
+      children:
+      - id: SingularityToy
+      - id: TeslaToy
+      - id: PonderingOrb
+  type: !PartialOnly entityTable
+  id: AllMiscToysTable
+...

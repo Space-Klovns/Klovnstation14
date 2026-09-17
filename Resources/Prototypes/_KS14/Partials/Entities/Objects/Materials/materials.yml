@@ -1,0 +1,46 @@
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/materials/cardboard_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/materials/cardboard_drop.ogg
+  type: !PartialOnly entity
+  id: MaterialCardboard
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/materials/wood_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/materials/wood_drop.ogg
+  type: !PartialOnly entity
+  id: MaterialWoodPlank
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      collection: ClothPickup
+  - type: EmitSoundOnDrop
+    sound:
+      collection: ClothDrop
+  type: !PartialOnly entity
+  id: MaterialHideCorgi
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/materials/metal_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/materials/metal_drop.ogg
+  type: !PartialOnly entity
+  id: MaterialDiamond
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/materials/wood_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/materials/wood_drop.ogg
+  type: !PartialOnly entity
+  id: MaterialBones
+...

@@ -1,0 +1,8 @@
+- components:
+  - crushDamage:
+      types:
+        Blunt: 15
+    type: Door
+  type: !PartialOnly entity
+  id: BaseShutter
+...

@@ -1,0 +1,16 @@
+- type: entity
+  parent: ClothingMaskClownBase
+  id: BaseClothingMaskClownUnfoldable
+  description: A clown mask featuring a foldable wig; a true prankster's attire.
+  abstract: true
+  components:
+  - type: Appearance
+  - type: Tag
+    tags:
+    - ClownMask
+    - HamsterWearable
+    - WhitelistChameleon
+  - type: HideLayerClothing
+    slots:
+    - Snout
+...

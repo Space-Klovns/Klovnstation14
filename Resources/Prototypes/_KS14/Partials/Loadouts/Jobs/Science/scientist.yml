@@ -1,0 +1,7 @@
+- effects: !Remove
+  - requirement:
+      department: Science
+      time: 15h
+  type: !PartialOnly loadoutEffectGroup
+  id: SeniorResearcher
+...

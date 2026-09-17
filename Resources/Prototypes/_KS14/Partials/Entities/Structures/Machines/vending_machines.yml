@@ -1,0 +1,45 @@
+- components:
+  - type: EmissiveLayers
+    glowRadius: 0.05
+    intensity: 0.1
+    layers:
+    - enum.VendingMachineVisualLayers.BaseUnshaded
+  - enabled: true
+    radius: 0
+    type: PointLight
+  - type: LitOnPowered
+  type: !PartialOnly entity
+  id: VendingMachine
+- components:
+  - type: AmbientMusicMarkerEngineering
+  type: !PartialOnly entity
+  id: VendingMachineEngivend
+- components:
+  - type: AmbientMusicMarkerMedical
+  type: !PartialOnly entity
+  id: VendingMachineMedicalBase
+- components:
+  - type: AmbientMusicMarkerMedical
+  type: !PartialOnly entity
+  id: VendingMachineChemDrobe
+- components:
+  - type: AmbientMusicMarkerEngineering
+  type: !PartialOnly entity
+  id: VendingMachineAtmosDrobe
+- components:
+  - type: AmbientMusicMarkerEngineering
+  type: !PartialOnly entity
+  id: VendingMachineEngiDrobe
+- components:
+  - type: AmbientMusicMarkerMedical
+  type: !PartialOnly entity
+  id: VendingMachineGeneDrobe
+- components:
+  - type: AmbientMusicMarkerMedical
+  type: !PartialOnly entity
+  id: VendingMachineViroDrobe
+- components:
+  - type: AmbientMusicMarkerMedical
+  type: !PartialOnly entity
+  id: VendingMachineChemicals
+...

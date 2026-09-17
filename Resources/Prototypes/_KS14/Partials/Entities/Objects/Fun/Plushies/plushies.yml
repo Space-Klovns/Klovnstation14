@@ -1,0 +1,25 @@
+- components:
+  - angularDamping: 0.02
+    linearDamping: 0.02
+    type: Physics
+  - type: MovementIgnoreGravity
+  type: !PartialOnly entity
+  id: PlushieGhost
+- components:
+  - sound: &SoundIan 
+    type: EmitSoundOnUse
+  - sound: *SoundIan
+    type: EmitSoundOnLand
+  - sound: *SoundIan
+    type: EmitSoundOnActivate
+  - sound: *SoundIan
+    type: EmitSoundOnTrigger
+  - sound: *SoundIan
+    type: EmitSoundOnCollide
+  - soundHit: *SoundIan
+    type: MeleeWeapon
+  - useSound: *SoundIan
+    type: Edible
+  type: !PartialOnly entity
+  id: ToyIan
+...

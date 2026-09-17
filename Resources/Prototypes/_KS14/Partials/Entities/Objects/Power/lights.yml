@@ -1,0 +1,159 @@
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 5
+      behaviors:
+      - sound:
+          collection: GlassBreak
+          params:
+            volume: -8
+      - acts: ["Breakage"]
+    - trigger:
+        damage: 10
+      behaviors:
+      - sound:
+          collection: GlassBreak
+          params:
+            volume: -8
+      - spawn:
+          ShardGlass:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+    type: Destructible
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/materials/glass_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/materials/glass_drop.ogg
+  type: !PartialOnly entity
+  id: BaseLightbulb
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 5
+      behaviors:
+      - sound:
+          collection: GlassBreak
+      - acts: ["Breakage"]
+    - trigger:
+        damage: 10
+      behaviors:
+      - sound:
+          collection: GlassBreak
+      - spawn:
+          ShardGlass:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: BaseLightTube
+- components:
+  - color: "#FFB475"
+    lightEnergy: 0.5
+    lightRadius: 5
+    type: LightBulb
+  - type: NightshiftExemptBulb
+  type: !PartialOnly entity
+  id: LightBulb
+- components:
+  - lightEnergy: 0.8
+    lightRadius: 7
+    type: LightBulb
+  type: !PartialOnly entity
+  id: LedLightBulb
+- components:
+  - lightEnergy: 0.4
+    lightRadius: 4
+    type: LightBulb
+  - type: NightshiftExemptBulb
+  type: !PartialOnly entity
+  id: DimLightBulb
+- components:
+  - lightEnergy: 0.8
+    lightRadius: 5
+    type: LightBulb
+  - type: NightshiftExemptBulb
+  type: !PartialOnly entity
+  id: WarmLightBulb
+- components:
+  - lightEnergy: 0.25
+    lightRadius: 5
+    type: LightBulb
+  type: !PartialOnly entity
+  id: LightBulbOld
+- components:
+  - lightEnergy: 0.35
+    lightRadius: 1.2
+    type: LightBulb
+  - type: NightshiftExemptBulb
+  type: !PartialOnly entity
+  id: ServiceLightBulb
+- components:
+  - color: "#FFC99D"
+    lightEnergy: 0.5
+    lightRadius: 7
+    PowerUse: !Remove ''
+    type: LightBulb
+  type: !PartialOnly entity
+  id: LightTube
+- components:
+  - lightEnergy: 0.4
+    lightRadius: 8
+    type: LightBulb
+  type: !PartialOnly entity
+  id: LightTubeOld
+- components:
+  - lightEnergy: 0.8
+    lightRadius: 12.5
+    type: LightBulb
+  type: !PartialOnly entity
+  id: LedLightTube
+- components:
+  - lightEnergy: 4
+    lightRadius: 10.5
+    type: LightBulb
+  - type: NightshiftExemptBulb
+  type: !PartialOnly entity
+  id: ExteriorLightTube
+- components:
+  - lightEnergy: 3.5
+    lightRadius: 8
+    type: LightBulb
+  type: !PartialOnly entity
+  id: SodiumLightTube
+- components:
+  - lightEnergy: 2.5
+    lightRadius: 6.5
+    type: LightBulb
+  type: !PartialOnly entity
+  id: BaseLightTubeCrystal
+- components:
+  - lightEnergy: 0.8
+    lightRadius: 6.5
+    type: LightBulb
+  type: !PartialOnly entity
+  id: LightTubeCrystalBlack
+- components:
+  - lightEnergy: 0.8
+    lightRadius: 4.5
+    type: LightBulb
+  type: !PartialOnly entity
+  id: BaseLightbulbCrystal
+- components:
+  - lightEnergy: 0.8
+    lightRadius: 6.5
+    type: LightBulb
+  type: !PartialOnly entity
+  id: LightBulbCrystalBlack
+...

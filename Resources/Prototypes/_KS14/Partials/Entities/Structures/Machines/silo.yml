@@ -1,0 +1,8 @@
+- components:
+  - type: DeviceLinkSink
+    ports:
+    - FillbotAnyItem
+  - type: StationAiWhitelist
+  type: !PartialOnly entity
+  id: MachineMaterialSilo
+...

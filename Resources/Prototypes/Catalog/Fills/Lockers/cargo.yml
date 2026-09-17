@@ -21,10 +21,8 @@
       prob: 0.3
       rolls: !type:ConstantNumberSelector
         value: 3
-    - id: WeaponPlasmaCutter # KS14
-    - id: MineralScanner # KS14
-    - id: ClothingOuterExplorerSuit # KS14
-    # KS14: Removed slop plushie
+    - id: PlushieLizardJobSalvagespecialist
+      prob: 0.02
 
 - type: entity
   id: LockerSalvageSpecialistFilledHardsuit

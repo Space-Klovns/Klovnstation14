@@ -1,0 +1,4 @@
+- isFuel: true
+  type: !PartialOnly gas
+  id: Ammonia
+...

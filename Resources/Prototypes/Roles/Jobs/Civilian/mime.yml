@@ -3,7 +3,9 @@
   name: job-name-mime
   description: job-description-mime
   playTimeTracker: JobMime
-  # KS14: Removed role requirements
+  requirements:
+    - !type:OverallPlaytimeRequirement
+      time: 4h
   startingGear: MimeGear
   icon: "JobIconMime"
   supervisors: job-supervisors-hop
@@ -14,9 +16,8 @@
   - !type:AddComponentSpecial
     components:
     - type: MimePowers
+      preventWriting: true
     - type: FrenchAccent
-    - type: KsLanguageGrant # KS14: mimes understand Klovnish perfectly. They will never speak it.
-      understands: [ KsLangKlovnish ] # KS14
 
 - type: startingGear
   id: MimeGear

@@ -1,0 +1,50 @@
+- loadouts: !Remove
+  - FlowerWreath
+  - Hairflower
+  - Headphones
+  - ThreeCandles
+  - Lighter
+  - CigPackGreen
+  - CigPackRed
+  - CigPackBlue
+  - CigPackBlack
+  - CigarCase
+  - CigarGold
+  - ClothingNeckRaiderPin
+  - OffsetCane
+  - OffsetCaneWood
+  - OffsetCaneClown
+  - OffsetCaneMime
+  - OffsetCaneNT
+  - Cane
+  - TowelColorWhite
+  type: !PartialOnly loadoutGroup
+  id: Trinkets
+- loadouts: !Remove
+  - GreyJumpsuit
+  - GreyJumpskirt
+  - AncientJumpsuit
+  - RainbowJumpsuit
+  - RainbowJumpskirt
+  - Juggaloshirt
+  type: !PartialOnly loadoutGroup
+  id: PassengerJumpsuit
+- loadouts: !Remove
+  - Bible
+  - BibleNanoTrasen
+  - BibleDruid
+  - BibleHonk
+  - BibleRatvar
+  - BibleNarsie
+  - BibleQuran
+  type: !PartialOnly loadoutGroup
+  id: ChaplainBible
+- loadouts: !Remove
+  - ClownSuit
+  - ClownSkirt
+  - JesterSuit
+  - JesterAltSuit
+  - Juggaloshirt
+  type: !PartialOnly loadoutGroup
+  id: ClownJumpsuit
+...

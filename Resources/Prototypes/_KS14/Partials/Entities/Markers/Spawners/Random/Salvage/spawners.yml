@@ -1,0 +1,9 @@
+- components:
+  - layers: !Remove
+    - state: pink
+    - sprite: _KS14/Structures/Storage/canister.rsi
+      state: mapme
+    type: Sprite
+  type: !PartialOnly entity
+  id: SalvageCanisterSpawner
+...

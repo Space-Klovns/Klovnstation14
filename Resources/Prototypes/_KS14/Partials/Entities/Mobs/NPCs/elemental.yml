@@ -1,0 +1,5 @@
+- components:
+  - type: StunVisuals
+  type: !PartialOnly entity
+  id: MobElementalBase
+...

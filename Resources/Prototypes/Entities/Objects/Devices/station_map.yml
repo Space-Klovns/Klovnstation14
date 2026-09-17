@@ -21,22 +21,16 @@
       damageContainer: Inorganic
     - type: Destructible
       thresholds:
-        - trigger:
-            !type:DamageTrigger
-            damage: 100
-          behaviors:
-            - !type:DoActsBehavior
-              acts: [ "Destruction" ]
+      - trigger:
+          !type:DamageTrigger
+          damage: 100
+        behaviors:
+        - !type:DoActsBehavior
+          acts: [ "Destruction" ]
     - type: UserInterface
       interfaces:
         enum.StationMapUiKey.Key:
           type: StationMapBoundUserInterface
-    - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-      sound:
-        path: /Audio/_KS14/Handling/component_pickup.ogg
-    - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-      sound:
-        path: /Audio/_KS14/Handling/component_drop.ogg
 
 - type: entity
   id: HandheldStationMap

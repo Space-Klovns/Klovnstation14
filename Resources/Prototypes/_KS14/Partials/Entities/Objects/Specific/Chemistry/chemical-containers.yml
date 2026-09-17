@@ -1,0 +1,10 @@
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/beaker_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/beaker_place.ogg
+  type: !PartialOnly entity
+  id: Jug
+...

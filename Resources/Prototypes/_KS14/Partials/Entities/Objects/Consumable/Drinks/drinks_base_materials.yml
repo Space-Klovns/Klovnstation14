@@ -1,0 +1,188 @@
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 5
+      behaviors:
+      - sound:
+          collection: GlassBreak
+      - {}
+      - spawn:
+          ShardGlass:
+            min: 1
+            max: 1
+        transferForensics: true
+      - acts: ["Destruction"]
+    type: Destructible
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/drinkglass_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/drinkglass_drop.ogg
+  type: !PartialOnly entity
+  id: DrinkBaseMaterialGlass
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 5
+      behaviors:
+      - sound:
+          collection: GlassCrack
+      - {}
+      - acts: ["Destruction"]
+    type: Destructible
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/drinkglass_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/drinkglass_drop.ogg
+  type: !PartialOnly entity
+  id: DrinkBaseMaterialPorcelain
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 5
+      behaviors:
+      - sound:
+          collection: MetalCrunch
+      - {}
+      - acts: ["Destruction"]
+    type: Destructible
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/materials/plastic_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/materials/plastic_drop.ogg
+  type: !PartialOnly entity
+  id: DrinkBaseMaterialPlastic
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 20
+      behaviors:
+      - sound:
+          collection: MetalCrunch
+          params:
+            volume: -4
+      - {}
+      - spawn:
+          SheetPlastic1:
+            min: 0
+            max: 1
+        transferForensics: true
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: DrinkBaseMaterialStrongPlastic
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 5
+      behaviors:
+      - sound:
+          path: /Audio/Effects/unwrap.ogg
+      - {}
+      - acts: ["Destruction"]
+    type: Destructible
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/materials/plastic_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/materials/plastic_drop.ogg
+  type: !PartialOnly entity
+  id: DrinkBaseMaterialCardboard
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 10
+      behaviors:
+      - sound:
+          collection: MetalCrunch
+      - {}
+      - acts: ["Destruction"]
+    type: Destructible
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/drinkglass_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/drinkglass_drop.ogg
+  type: !PartialOnly entity
+  id: DrinkBaseMaterialMetal
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 25
+      behaviors:
+      - sound:
+          collection: MetalCrunch
+      - {}
+      - acts: ["Destruction"]
+    type: Destructible
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/materials/plastic_pick_up.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/materials/plastic_drop.ogg
+  type: !PartialOnly entity
+  id: DrinkBaseMaterialStrongMetal
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 5
+      behaviors:
+      - sound:
+          collection: MetalBreak
+      - {}
+      - spawn:
+          IngotGold1:
+            min: 1
+            max: 1
+        transferForensics: true
+      - acts: ["Destruction"]
+    type: Destructible
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/drinkglass_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/drinkglass_drop.ogg
+  type: !PartialOnly entity
+  id: DrinkBaseMaterialGold
+...

@@ -1,0 +1,77 @@
+- name: area power receiver
+  components:
+  - radius: 0
+    energy: 0
+    type: PointLight
+  - type: ContainerFill
+    containers:
+      board: [KsAPCElectronicsEngineering]
+  - containerAccessProvider: board
+    access: !Remove ''
+    type: AccessReader
+  - noRot: true
+    type: Sprite
+  - onReceiveMessageSound:
+      path: /Audio/_KS14/Machines/Terminal/terminal_on.ogg
+      params:
+        volume: 1
+    offSound:
+      path: /Audio/_KS14/Machines/Terminal/terminal_off.ogg
+      params:
+        volume: 1
+    type: Apc
+  - type: EmissiveLayers
+    glowRadius: 0
+    intensity: 0.8
+    offset: 0, -0.7
+    useSpriteTransform: false
+    layers:
+    - enum.ApcVisualLayers.ChargeState
+  - type: ContainerContainer
+    containers:
+      board: !type:Container ''
+  - containers:
+    - board
+    type: Construction
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalGlassBreak
+    - trigger:
+        damage: 50
+      behaviors:
+      - spawn:
+          SheetSteel1:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+      - sound:
+          collection: MetalGlassBreak
+    type: Destructible
+  - type: ArcFlashDeconstructable
+  - type: PowerGridCheckNotify
+  type: !PartialOnly entity
+  id: BaseAPC
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 50
+      behaviors:
+      - spawn:
+          SheetSteel1:
+            min: 1
+            max: 1
+      - sound:
+          collection: MetalBreak
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: APCFrame
+...

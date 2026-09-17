@@ -1,0 +1,22 @@
+- name: flatpacker
+  components:
+  - sprite: _KS14/Structures/Machines/flatpacker.rsi
+    layers: !Remove
+    - state: base
+    - map: ["enum.WiresVisualLayers.MaintenancePanel"]
+      state: open
+    - map: ["enum.PowerDeviceVisualLayers.Powered"]
+      state: unlit
+      shader: unshaded
+    - map: ["anim"]
+      state: working_unlit
+      shader: unshaded
+      visible: false
+    - map: ["enum.MaterialStorageVisualLayers.Inserting"]
+      sprite: Structures/Machines/autolathe.rsi
+      state: inserting
+      visible: false
+    type: Sprite
+  type: !PartialOnly entity
+  id: MachineFlatpacker
+...

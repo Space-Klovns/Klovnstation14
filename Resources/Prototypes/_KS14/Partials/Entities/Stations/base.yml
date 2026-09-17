@@ -1,0 +1,40 @@
+- components:
+  - groups:
+      ruins:
+        minCount: 3
+        maxCount: 4
+        paths: !Remove
+        - /Maps/Ruins/abandoned_outpost.yml
+        - /Maps/Ruins/atmos_interchange.yml
+        - /Maps/Ruins/chunked_tcomms.yml
+        - /Maps/Ruins/biodome_satellite.yml
+        - /Maps/Ruins/derelict.yml
+        - /Maps/Ruins/djstation.yml
+        - /Maps/Ruins/empty_flagship.yml
+        - /Maps/Ruins/hydro_outpost.yml
+        - /Maps/Ruins/old_ai_sat.yml
+        - /Maps/Ruins/ruined_prison_ship.yml
+        - /Maps/Ruins/syndicate_dropship.yml
+        - /Maps/Ruins/whiteship_ancient.yml
+        - /Maps/Ruins/whiteship_bluespacejumper.yml
+        - /Maps/Ruins/wrecklaimer.yml
+      wrecks:
+        minCount: 20
+        maxCount: 35
+        protos: !Remove
+        - ChunkDebrisSmall
+        - ChunkDebrisSmall
+        - ChunkDebrisSmall
+        - ChunkDebrisSmall
+        - ChunkDebris
+        - SpindlyAsteroid
+        - SpindlyAsteroid
+        - SpindlyAsteroid
+        - BlobAsteroid
+        - SwissCheeseAsteroid
+        - SwissCheeseAsteroid
+        - ClusterAsteroid
+    type: GridSpawn
+  type: !PartialOnly entity
+  id: BaseStationShuttles
+...

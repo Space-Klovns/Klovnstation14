@@ -1,7 +1,4 @@
-﻿# Job-specific trinkets
-
-## KS14 README: As part of plushie removal, I didn't remove anything here. Instead, I just made everything inaccessible in char setup and everywhere else.
-## Otherwise there would be huge merge conflict bait.
+# Job-specific trinkets
 
 - type: loadout
   id: JanitorGoldenPlunger
@@ -12,7 +9,17 @@
     back:
     - GoldenPlunger
 
-# KS14: Removed flower water pin
+- type: loadout
+  id: FlowerWaterClown
+  effects:
+  - !type:JobRequirementLoadoutEffect
+    requirement:
+      !type:RoleTimeRequirement
+      role: JobClown
+      time: 4h
+  storage:
+    back:
+    - SprayFlowerPin
 
 - type: loadout
   id: SecStar

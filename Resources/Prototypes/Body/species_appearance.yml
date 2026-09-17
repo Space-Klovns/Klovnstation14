@@ -37,10 +37,9 @@
     - map: [ "shoes" ]
     - map: [ "ears" ]
     - map: [ "eyes" ]
-    # KS14: Belt clothing goes over outerClothing ("belt" was originally here)
+    - map: [ "belt" ]
     - map: [ "id" ]
     - map: [ "outerClothing" ]
-    - map: [ "belt" ] # KS14: Belt clothing goes over outerClothing
     - map: [ "back" ]
     - map: [ "neck" ]
     - map: [ "suitstorage" ]
@@ -66,12 +65,12 @@
       sprite: Objects/Misc/handcuffs.rsi
       state: body-overlay-2
       visible: false
+
 - type: entity
   id: BaseSpeciesAppearance
   parent:
   - InventoryBase
   - BaseSpeciesLayers
-  - ComplexBodyBase # KS14
   abstract: true
   save: false
   components:
@@ -88,25 +87,3 @@
         type: HumanoidMarkingModifierBoundUserInterface
       enum.StrippingUiKey.Key:
         type: StrippableBoundUserInterface
-  # KS14 Start
-  - type: KsShadow
-    visuals: enum.RotationVisuals.RotationState
-    states:
-      Vertical:
-        sprite: /Textures/_KS14/Mobs/mob_shadow.rsi
-        state: vert
-        color: '#ffffff82'
-        offset: 0,-0.5
-      Horizontal:
-        sprite: /Textures/_KS14/Mobs/mob_shadow.rsi
-        state: horz
-        color: '#ffffff82'
-        offset: 0,0
-
-    # todo get rid of everything below and make it actually work on mapinit
-    sprite:
-      sprite: /Textures/_KS14/Mobs/mob_shadow.rsi
-      state: vert
-    modulate: '#ffffff82'
-    offset: 0,-0.5
-  # KS14 End

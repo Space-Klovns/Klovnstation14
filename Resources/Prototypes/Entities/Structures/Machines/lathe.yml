@@ -54,7 +54,6 @@
   - type: PowerState
     idlePowerDraw: 150
     workingPowerDraw: 1000
-  - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
 # a lathe that can be sped up with space lube / slowed down with glue
 - type: entity
@@ -143,11 +142,9 @@
     - ServiceStatic
     - PowerCellsStatic
     - ElectronicsStatic
-    - KlovnSignalStatic #klovn
   - type: EmagLatheRecipes
     emagStaticPacks:
     - SecurityAmmoStatic
-    - KlovnEmagStatic #klovn
     - SyndicateAmmoStatic
   - type: BlueprintReceiver
     whitelist:
@@ -215,7 +212,6 @@
     - Mining
     - AtmosTools
     - EngineeringWeapons
-    - ReactorPartsBasic
     - Chemistry
     - Janitor
     - Instruments
@@ -267,12 +263,10 @@
     - CargoBoardsStatic
     - MedicalBoardsStatic
     - EngineeringBoardsStatic
-    - KlovnEngineeringBoardsStatic # KS14
     dynamicPacks:
     - EngineeringBoards
     - CargoBoards
     - MedicalBoards
-    - KlovnMedicalBoards # KS14
     - ServiceBoards
     - ScienceBoards
     - CameraBoards
@@ -403,7 +397,6 @@
     - SecurityPracticeStatic
     - SecurityAmmoStatic
     - SecurityWeaponsStatic
-    - KlovnSecurityStatic #klovn
     dynamicPacks:
     - SalvageSecurityBoards
     - SalvageSecurityWeapons
@@ -498,6 +491,7 @@
   - type: OreSiloClient
   - type: LatheAnnouncing
     channels: [Medical]
+  - type: AmbientMusicMarkerMedical
 
 - type: entity
   parent: BaseLathe
@@ -584,12 +578,10 @@
     staticPacks:
     - BioGenIngredientsStatic
     - BioGenMaterialsStatic
-    - KsBioGenBodypartsStatic # KS14: Klovnmed
   - type: EmagLatheRecipes
     emagStaticPacks:
     - BioGenEmagStatic
     - HostileCubesStatic
-  - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
 - type: entity
   parent: BaseLathe
@@ -623,7 +615,6 @@
       staticPacks:
       - OreSmelting
       - RGlassSmelting
-    - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
 - type: entity
   parent: OreProcessor

@@ -14,7 +14,9 @@
       path: /Audio/Weapons/ebladehum.ogg
   - type: ComponentToggler
     components:
-    - type: Sharp
+    - type: Tool
+      qualities:
+      - Slicing
     - type: DisarmMalus
       malus: 0.6
     - type: Execution
@@ -40,8 +42,8 @@
         variation: 0.125
     activatedDamage:
       types:
-        Slash: 18.5
-        Heat: 18.5
+        Slash: 15
+        Heat: 15
         Structural: 20
   - type: MeleeWeapon
     wideAnimationRotation: -135
@@ -116,8 +118,8 @@
         variation: 0.250
     activatedDamage:
         types:
-            Slash: 12.5
-            Heat: 12.5
+            Slash: 10
+            Heat: 10
     deactivatedSecret: true
   - type: ItemToggleActiveSound
     activeSound:
@@ -126,7 +128,9 @@
         volume: -3
   - type: ComponentToggler
     components:
-    - type: Sharp
+    - type: Tool
+      qualities:
+      - Slicing
     - type: DisarmMalus
       malus: 0.4
     - type: Execution
@@ -186,12 +190,14 @@
         variation: 0.250
     activatedDamage:
       types:
-        Slash: 12.5 # KS14: 10 -> 12.5
-        Heat: 12.5 # KS14: 10 -> 12.5
+        Slash: 10
+        Heat: 10
     deactivatedSecret: true
   - type: ComponentToggler
     components:
-    - type: Sharp
+    - type: Tool
+      qualities:
+      - Slicing
     - type: DisarmMalus
       malus: 0.4
     - type: Execution
@@ -264,8 +270,8 @@
   - type: ItemToggleMeleeWeapon
     activatedDamage:
         types:
-            Slash: 13
-            Heat: 15
+            Slash: 10
+            Heat: 12
     deactivatedSecret: true
   - type: Sprite
     sprite: Objects/Weapons/Melee/e_cutlass.rsi
@@ -304,8 +310,8 @@
         variation: 0.250
     activatedDamage:
         types:
-            Slash: 14.5
-            Heat: 14.5
+            Slash: 12
+            Heat: 12
             Structural: 15
   - type: ItemToggleActiveSound
     activeSound:
@@ -314,11 +320,13 @@
         volume: 3
   - type: ComponentToggler
     components:
-    - type: Sharp
     - type: DisarmMalus
       malus: 0.7
     - type: Execution
       doAfterDuration: 4.0
+    - type: Tool
+      qualities:
+      - Slicing
   - type: Wieldable
     wieldSound: null # esword light sound instead
   - type: MeleeWeapon
@@ -343,9 +351,6 @@
   - type: Reflect
     reflectProb: .75
     spread: 75
-  - type: EmoteOnHit # KS14/WD Edit
-    emote: Flip
-    requireStanding: true
 
 # Item will look weird in handslot. Will need to adjust handstorage visuals in a future PR
 - type: entity

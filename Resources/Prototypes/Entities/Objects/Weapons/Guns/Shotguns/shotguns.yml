@@ -27,13 +27,11 @@
     - SemiAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/shotgun.ogg
-    # KS14: Farsound start
-    farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/rifle.ogg
-      range: 15,130
-    # KS14: Farsound end
     soundEmpty:
       path: /Audio/Weapons/Guns/Empty/empty.ogg
+  - type: CustomSpriteAmmoCounter
+    loadedAmmoSprite: Interface/ItemStatus/Shotgun_Shells/not_spent.png
+    spentAmmoSprite: Interface/ItemStatus/Shotgun_Shells/spent.png
   - type: BallisticAmmoProvider
     whitelist:
       tags:
@@ -48,12 +46,6 @@
         ents: []
   - type: StaticPrice
     price: 500
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gun/ballistics/shotgun/shotgun_pickup1.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gun/ballistics/shotgun/shotgun_drop1.ogg
 
 - type: entity
   name: Bulldog
@@ -62,7 +54,6 @@
   id: WeaponShotgunBulldog
   description: An automatic magazine-fed shotgun for close-quarters combat. Kicks like a mule on steroids. Uses .50 shotgun shells.
   components:
-  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
   - type: Sprite
     sprite: Objects/Weapons/Guns/Shotguns/bulldog.rsi
     layers:
@@ -79,6 +70,9 @@
     - Back
     - suitStorage
   - type: AmmoCounter
+  - type: CustomSpriteAmmoCounter
+    loadedAmmoSprite: Interface/ItemStatus/Shotgun_Shells/not_spent.png
+    spentAmmoSprite: Interface/ItemStatus/Shotgun_Shells/spent.png
   - type: GunRequiresWield #remove when inaccuracy on spreads is fixed
   - type: Gun
     fireRate: 2
@@ -87,11 +81,6 @@
     - FullAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/shotgun.ogg
-    # KS14: Farsound start
-    farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/rifle.ogg
-      range: 15,145
-    # KS14: Farsound end
     soundEmpty:
       path: /Audio/Weapons/Guns/Empty/empty.ogg
   - type: ItemSlots
@@ -125,9 +114,6 @@
   id: WeaponShotgunDoubleBarreled
   description: An immortal classic. Uses .50 shotgun shells.
   components:
-  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
-  - type: GunExecutionOrganRemoval # KS14
-    removedCategory: Head
   - type: Sprite
     sprite: Objects/Weapons/Guns/Shotguns/db_shotgun.rsi
   - type: Item
@@ -160,9 +146,6 @@
   id: WeaponShotgunEnforcer
   description: A premium semi-automatic shotgun, and the pride of all security forces. Uses .50 shotgun shells.
   components: # intend for Enforcer to have wider choke for semi-auto function
-  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
-  - type: GunExecutionOrganRemoval # KS14
-    removedCategory: Head
   - type: Sprite
     sprite: Objects/Weapons/Guns/Shotguns/enforcer.rsi
   - type: Clothing
@@ -186,9 +169,6 @@
   id: WeaponShotgunKammerer
   description: An old yet faithful design, and a favorite among irregular forces of many worlds. Uses .50 shotgun shells.
   components: # intend for Kammerer to have tighter choke for slower fire rate and/or manual cycling
-  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
-  - type: GunExecutionOrganRemoval # KS14
-    removedCategory: Head
   - type: Item
     sprite: Objects/Weapons/Guns/Shotguns/pump_inhands_64x.rsi
   - type: Sprite
@@ -210,7 +190,6 @@
   id: WeaponShotgunSawn
   description: Groovy! Uses .50 shotgun shells.
   components: # needs to be super inaccurate because you don't need to wield it
-  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
   - type: Sprite
     sprite: Objects/Weapons/Guns/Shotguns/sawn.rsi
   - type: Clothing
@@ -345,9 +324,6 @@
       params:
         volume: -3
         rolloffFactor: 1.3
-    # KS14: Farsound start
-    farSoundGunshot: null
-    # KS14: Farsound end
     fireRate: 2
   - type: GunSpreadModifier
     spread: 1.2

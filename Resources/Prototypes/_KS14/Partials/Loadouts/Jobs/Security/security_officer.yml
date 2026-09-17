@@ -1,0 +1,10 @@
+- effects: !Remove
+  - requirement:
+      role: JobWarden
+      time: 6h
+  - requirement:
+      department: Security
+      time: 15h
+  type: !PartialOnly loadoutEffectGroup
+  id: SeniorOfficer
+...

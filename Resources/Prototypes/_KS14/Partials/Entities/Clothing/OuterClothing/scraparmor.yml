@@ -1,0 +1,8 @@
+- components:
+  - modifiers:
+      flatReductions:
+        Piercing: 8.9
+    type: Armor
+  type: !PartialOnly entity
+  id: ClothingOuterArmorScrap
+...

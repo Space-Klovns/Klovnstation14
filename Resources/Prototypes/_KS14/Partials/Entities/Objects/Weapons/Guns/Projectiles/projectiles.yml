@@ -1,0 +1,170 @@
+- components:
+  - lifetime: 0.2
+    type: TimedDespawn
+  type: !PartialOnly entity
+  id: MuzzleFlashEffect
+- components:
+  - drawdepth: OverMobs
+    type: Sprite
+  - fixtures:
+      fly-by:
+        shape:
+          radius: 3.5
+    type: Fixtures
+  type: !PartialOnly entity
+  id: BaseBullet
+- components:
+  - fixtures:
+      fly-by:
+        shape:
+          radius: 3.5
+    type: Fixtures
+  type: !PartialOnly entity
+  id: BaseBulletTrigger
+- components:
+  - damage:
+      percentilePenetration:
+        Piercing: 1
+    ignoreResistances: !Remove ''
+    type: Projectile
+  type: !PartialOnly entity
+  id: BaseBulletAP
+- components:
+  - fixtures:
+      fly-by:
+        shape:
+          radius: 3.5
+    type: Fixtures
+  - knockdownAmount: 0.0
+    walkSpeedModifier: 0.8
+    sprintSpeedModifier: 0.8
+    type: StunOnCollide
+  type: !PartialOnly entity
+  id: BulletTaser
+- components:
+  - fixtures:
+      fly-by:
+        shape:
+          radius: 3.5
+    type: Fixtures
+  - damage: 26
+    type: StaminaDamageOnCollide
+  type: !PartialOnly entity
+  id: BulletDisabler
+- components:
+  - fixtures:
+      fly-by:
+        shape:
+          radius: 3.5
+    type: Fixtures
+  type: !PartialOnly entity
+  id: BulletDisablerPractice
+- components:
+  - fixtures:
+      fly-by:
+        shape:
+          radius: 3.5
+    type: Fixtures
+  type: !PartialOnly entity
+  id: EmitterBolt
+- components:
+  - fixtures:
+      fly-by:
+        shape:
+          radius: 3.5
+    type: Fixtures
+  - damage:
+      types:
+        Cold: 7
+    type: Projectile
+  - type: ChangeTemperatureOnCollide
+  type: !PartialOnly entity
+  id: WatcherBolt
+- components:
+  - damage:
+      types:
+        Heat: 7
+    type: Projectile
+  - type: ChangeTemperatureOnCollide
+  type: !PartialOnly entity
+  id: WatcherBoltMagmawing
+- components:
+  - fixtures:
+      fly-by:
+        shape:
+          radius: 3.5
+    type: Fixtures
+  - damage:
+      types:
+        Cold: 10
+    type: Projectile
+  - type: ChangeTemperatureOnCollide
+  type: !PartialOnly entity
+  id: BasiliskRay
+- components:
+  - reflective: !Remove
+    - Kinetic
+    type: Reflective
+  - damage:
+      types:
+        Blunt: 25
+    type: Projectile
+  type: !PartialOnly entity
+  id: BulletKinetic
+- components:
+  - reflective: !Remove
+    - Kinetic
+    type: Reflective
+  - damage:
+      types:
+        Blunt: 20
+        Slash: 5
+    type: DamageMarkerOnCollide
+  type: !PartialOnly entity
+  id: BulletCharge
+- components:
+  - fixtures:
+      fly-by:
+        shape:
+          radius: 3.5
+    type: Fixtures
+  type: !PartialOnly entity
+  id: AnomalousParticleDelta
+- components:
+  - fixtures:
+      fly-by:
+        shape:
+          radius: 3.5
+    type: Fixtures
+  - damage: 11
+    type: StaminaDamageOnCollide
+  type: !PartialOnly entity
+  id: BulletDisablerSmg
+- components:
+  - fixtures:
+      fly-by:
+        shape:
+          radius: 3.5
+    type: Fixtures
+  type: !PartialOnly entity
+  id: BulletEnergyTurretBase
+- components:
+  - fixtures:
+      fly-by:
+        shape:
+          radius: 3.5
+    type: Fixtures
+  - damage:
+      types:
+        Heat: 9
+    type: Projectile
+  type: !PartialOnly entity
+  id: BulletLaser
+- components:
+  - damage:
+      types:
+        Heat: 30
+    type: Projectile
+  type: !PartialOnly entity
+  id: BulletLaserWindowPiercingMagnum
+...

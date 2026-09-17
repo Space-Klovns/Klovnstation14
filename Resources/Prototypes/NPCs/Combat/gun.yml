@@ -16,11 +16,11 @@
             targetKey: TargetCoordinates
             pathfindKey: TargetPathfind
             stopOnLineOfSight: true
-            rangeKey: RangedRange # KS14: MeleeRange -> RangedRange
+            rangeKey: MeleeRange
 
         - !type:HTNPrimitiveTask
           operator: !type:JukeOperator
-            jukeType: Away
+            jukeType: AdjacentTile
 
         - !type:HTNPrimitiveTask
           preconditions:
@@ -91,6 +91,7 @@
       tasks:
         - !type:HTNCompoundTask
           task: GunCombatCompound
+
 
 - type: htnCompound
   id: RangedCombatCompound

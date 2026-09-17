@@ -1,0 +1,34 @@
+- tileEffects:
+  - conditions:
+    - minimum: 400
+    effects:
+    - removed: 1.65
+  type: !PartialOnly reagent
+  id: BasePyrotechnic
+- tileEffects:
+  - id: ChemicalFireThermite
+    removed: 3.5
+  type: !PartialOnly reagent
+  id: Thermite
+- tileEffects:
+  - conditions:
+    - minimum: 300
+    effects:
+    - removed: 2
+      durationScale: 0.8
+  type: !PartialOnly reagent
+  id: Napalm
+- tileEffects:
+  - id: ChemicalFire
+    removed: 1
+  type: !PartialOnly reagent
+  id: Phlogiston
+- tileEffects:
+  - conditions:
+    - minimum: 300
+    effects:
+    - removed: 2
+      durationScale: 2
+  type: !PartialOnly reagent
+  id: WeldingFuel
+...

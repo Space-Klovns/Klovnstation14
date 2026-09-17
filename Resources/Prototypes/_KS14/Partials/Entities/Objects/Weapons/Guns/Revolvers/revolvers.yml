@@ -1,0 +1,42 @@
+- components:
+  - farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/revolver.ogg
+      range: 15,95
+    type: Gun
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/pistol/pistol_pickup1.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/gun/ballistics/pistol/pistol_drop1.ogg
+  type: !PartialOnly entity
+  id: BaseWeaponRevolver
+- components:
+  - type: GunExecutionWhitelist
+  type: !PartialOnly entity
+  id: WeaponRevolverDeckard
+- components:
+  - type: GunExecutionWhitelist
+  type: !PartialOnly entity
+  id: WeaponRevolverInspector
+- components:
+  - farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
+      range: 15,90
+    type: Gun
+  - type: GunExecutionWhitelist
+  type: !PartialOnly entity
+  id: WeaponRevolverMateba
+- components:
+  - farSoundGunshot:
+      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/revolver.ogg
+      range: 15,95
+    type: Gun
+  - type: GunExecutionWhitelist
+  type: !PartialOnly entity
+  id: WeaponRevolverPython
+- components:
+  - type: GunExecutionWhitelist
+  type: !PartialOnly entity
+  id: WeaponRevolverPirate
+...

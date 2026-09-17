@@ -30,11 +30,6 @@
     - FullAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/smg.ogg
-    # KS14: Farsound start
-    farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/smg.ogg
-      range: 15,100
-    # KS14: Farsound end
     defaultDirection: 1, 0
   - type: ChamberMagazineAmmoProvider
     soundRack:
@@ -63,12 +58,6 @@
       gun_chamber: !type:ContainerSlot
   - type: StaticPrice
     price: 500
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gun/ballistics/smg/smg_pickup1.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/gun/ballistics/smg/smg_drop1.ogg
 
 - type: entity
   name: Atreides
@@ -76,7 +65,6 @@
   id: WeaponSubMachineGunAtreides
   description: A rare machine pistol hailing from the Corporate Wars. Its extremely high fire rate and compact profile make it useful in close quarters combat. Despite its age, it is in remarkably good condition. Feeds from .35 SMG magazines.
   components:
-  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
   - type: Sprite
     sprite: Objects/Weapons/Guns/SMGs/atreides.rsi
     layers:
@@ -88,11 +76,6 @@
     fireRate: 10
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/atreides.ogg
-    # KS14: Farsound start
-    farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/atreides.ogg
-      range: 15,100
-    # KS14: Farsound end
   - type: MagazineVisuals
     magState: mag
     steps: 1
@@ -105,7 +88,6 @@
   id: WeaponSubMachineGunC20r
   description: A classic and widespread submachine gun, infamous for its use by the Gorlex Marauders. One of the first homegrown Waffle Corp. designs, it remains in service today. Feeds from .35 SMG magazines.
   components:
-  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
   - type: Sprite
     sprite: Objects/Weapons/Guns/SMGs/c20r.rsi
     layers:
@@ -113,18 +95,16 @@
       map: ["enum.GunVisualLayers.Base"]
     - state: mag-0
       map: ["enum.GunVisualLayers.Mag"]
-  #- type: Clothing
-  #  sprite: Objects/Weapons/Guns/SMGs/c20r.rsi
-  #- type: Wieldable
-  #  unwieldOnUse: false
-  #- type: GunWieldBonus
-  #  minAngle: -19
-  #  maxAngle: -16
-  - type: Gun #KS14 modified
-    minAngle: 2
-    maxAngle: 16
-    selectedMode: FullAuto
-    burstFireRate: 8
+  - type: Clothing
+    sprite: Objects/Weapons/Guns/SMGs/c20r.rsi
+  - type: Wieldable
+    unwieldOnUse: false
+  - type: GunWieldBonus
+    minAngle: -19
+    maxAngle: -16
+  - type: Gun
+    minAngle: 21
+    maxAngle: 32
     shotsPerBurst: 5
     availableModes:
     - Burst
@@ -132,11 +112,6 @@
     - SemiAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/c-20r.ogg
-    # KS14: Farsound start
-    farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
-      range: 15,100
-    # KS14: Farsound end
   - type: ChamberMagazineAmmoProvider
     autoEject: true
   - type: MagazineVisuals
@@ -147,11 +122,11 @@
   - type: StaticPrice
     price: 5000
 
-- type: entity #KS14 modified
+- type: entity
   name: C-20r ROW #I think ROW stands for Recharging Onboard Weapon so i'm following the L6C's example
   id: WeaponSubMachineGunC20rROW
   parent: BaseItem
-  description: A C-20r submachine gun for use by cyborgs. Creates .35 caliber ammo on the fly from an internal ammo fabricator, which slowly self-charges.
+  description: A burst-fire C-20r submachine gun for use by cyborgs. Creates .35 caliber ammo on the fly from an internal ammo fabricator, which slowly self-charges.
   components:
   - type: Gun
     minAngle: 2
@@ -159,18 +134,12 @@
     angleIncrease: 4
     angleDecay: 16
     fireRate: 8
-    #burstFireRate: 8
-    selectedMode: FullAuto # KS14 modified
+    burstFireRate: 8
+    selectedMode: Burst
     availableModes:
-    # - Burst
-    - FullAuto
+    - Burst
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/c-20r.ogg
-    # KS14: Farsound start
-    farSoundGunshot:
-      sound: /Audio/_KS14/Weapons/Guns/FarsoundGunshots/c-20r.ogg
-      range: 15,100
-    # KS14: Farsound end
   - type: Sprite
     sprite: Objects/Weapons/Guns/SMGs/c20r.rsi
     layers:
@@ -216,16 +185,16 @@
       minAngle: -19
       maxAngle: -16
     - type: Gun
-      minAngle: 19
-      maxAngle: 29
-      fireRate: 7 # KS14 change
+      minAngle: 21
+      maxAngle: 32
+      fireRate: 6
       burstFireRate: 18
       soundGunshot:
         path: /Audio/Weapons/Guns/Gunshots/atreides.ogg
       selectedMode: Burst
       availableModes:
       - Burst
-      #- FullAuto # KS14: removed fullauto once again
+      - FullAuto
       - SemiAuto
       shotsPerBurst: 3
       burstCooldown: 0.375
@@ -252,7 +221,6 @@
       steps: 5
       zeroVisible: true
     - type: Appearance
-    - type: GunExecutionWhitelist # Goob->KS14 port: gun execution # Goob->KS14 port: gun execution
 
 - type: entity
   name: WT550
@@ -260,7 +228,6 @@
   id: WeaponSubMachineGunWt550
   description: A truly unique firearm, the WT550 was designed by Nanotrasen's Small Arms Division as a compact submachine gun fully controllable with one hand. It contains an exotic internal recoil buffer and feeds from special top-mounted .35 magazines.
   components:
-  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
   - type: Sprite
     sprite: Objects/Weapons/Guns/SMGs/wt550.rsi
     layers:
@@ -274,13 +241,6 @@
       - state: mag-unshaded-0
         map: ["enum.GunVisualLayers.MagUnshaded"]
         shader: unshaded
-  # KS14: emissive start
-  - type: EmissiveLayers
-    glowRadius: 0.35
-    layers:
-    - enum.GunVisualLayers.BaseUnshaded
-    - enum.GunVisualLayers.MagUnshaded
-  # KS14: emissive end
   - type: Clothing
     sprite: Objects/Weapons/Guns/SMGs/wt550.rsi
   - type: ChamberMagazineAmmoProvider

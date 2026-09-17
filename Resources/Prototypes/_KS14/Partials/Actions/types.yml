@@ -1,0 +1,6 @@
+- components:
+  - event: !type:ScreamActionEvent ''
+    type: InstantAction
+  type: !PartialOnly entity
+  id: ActionScream
+...

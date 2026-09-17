@@ -11,12 +11,6 @@
   - type: Tag
     tags:
     - SurgeryTool
-  - type: EmitSoundOnPickup # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/wirecutter_pickup.ogg
-  - type: EmitSoundOnDrop # KS14: pickup/drop sounds
-    sound:
-      path: /Audio/_KS14/Handling/tools/screwdriver_drop.ogg
 
 # Cautery
 
@@ -32,17 +26,12 @@
   - type: Item
     sprite: Objects/Specific/Medical/Surgery/cautery.rsi
     storedRotation: 90
-  - type: Tool # KS14
-    qualities:
-    - Cauterisation
-    useSound:
-      collection: KsSurgeryCautery # KS14
   - type: MeleeWeapon
     damage:
        types:
         Heat: 5
     soundHit:
-      collection: KsSurgeryCautery # KS14
+      path: /Audio/Effects/lightburn.ogg
 
 # Drill
 
@@ -77,13 +66,10 @@
   parent: BaseToolSurgery
   description: A surgical tool used to make incisions into flesh.
   components:
-  # KS14: Removed sharp
   - type: Tool
     qualities:
-    - Incision # KS14: incision
-    # KS14: Removed speed modifier
-    useSound: # KS14
-      path: /Audio/_KS14/Handling/surgery/scalpel2.ogg
+    - Slicing
+    speedModifier: 0.66 # pretend the sixes go on forever :)
   - type: Utensil
     types:
       - Knife
@@ -101,7 +87,7 @@
       types:
         Slash: 8
     soundHit:
-      collection: KsSurgeryScalpel # KS14
+      path: /Audio/Weapons/bladeslice.ogg
 
 - type: entity
   name: shiv
@@ -111,8 +97,6 @@
   components:
   - type: Sprite
     state: shiv
-  - type: Tool # KS14
-    speedModifier: 0.45
   - type: Item
     heldPrefix: shiv
   - type: Fixtures
@@ -137,8 +121,6 @@
     state: advanced
   - type: Item
     heldPrefix: advanced
-  - type: Tool # KS14
-    speedModifier: 1.5
   - type: MeleeWeapon
     damage:
       types:
@@ -152,8 +134,6 @@
   components:
   - type: Sprite
     state: laser
-  - type: Tool # KS14
-    speedModifier: 2
   - type: Item
     heldPrefix: laser
 
@@ -198,7 +178,6 @@
   parent: BaseToolSurgery
   description: For cutting wood and other objects to pieces. Or sawing bones, in case of emergency.
   components:
-  - type: Sharp
   - type: Utensil
     types:
       - Knife
@@ -211,7 +190,8 @@
     storedRotation: 90
   - type: Tool
     qualities:
-      - Sawing
+    - Sawing
+    - Slicing
 # No melee for regular saw because have you ever seen someone use a band saw as a weapon? It's dumb.
 
 - type: entity
@@ -252,8 +232,6 @@
       path: /Audio/Items/drill_hit.ogg
   - type: Tool
     speedModifier: 1.5
-    useSound:
-      collection: KsSurgerySaw # KS14
 
 - type: entity
   name: advanced circular saw

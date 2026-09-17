@@ -1,0 +1,8 @@
+- components:
+  - tags: !Remove
+    - ForceNoFixRotations
+    - HristovWindowVentable
+    type: Tag
+  type: !PartialOnly entity
+  id: AirlockShuttle
+...

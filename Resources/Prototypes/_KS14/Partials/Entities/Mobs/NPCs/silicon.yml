@@ -1,0 +1,121 @@
+- components:
+  - tags: !Remove
+    - SiliconEmotes
+    - Unimplantable
+    - SiliconMob
+    type: Tag
+  - sounds:
+      Unsexed: UnisexSilicon
+    emoteSounds: !Remove ''
+    type: Vocal
+  type: !PartialOnly entity
+  id: MobRobotic
+- components:
+  - tags: !Remove
+    - SiliconEmotes
+    - Bot
+    - Unimplantable
+    type: Tag
+  type: !PartialOnly entity
+  id: MobSiliconBase
+- components:
+  - type: ControllableBot
+  - type: Prying
+    speedModifier: 1.5
+    useSound:
+      path: /Audio/Items/crowbar.ogg
+  type: !PartialOnly entity
+  id: MobFireBot
+- components:
+  - rootTask:
+      task: BasicBotCompound
+    blackboard:
+      NavInteract: !type:Bool true
+      NavPry: !type:Bool true
+    type: HTN
+  - type: Prying
+    speedModifier: 1.5
+    useSound:
+      path: /Audio/Items/crowbar.ogg
+  - type: ControllableBot
+  type: !PartialOnly entity
+  id: MobHonkBot
+- components:
+  - sounds:
+      Unsexed: Cluwne
+    emoteSounds: !Remove ''
+    type: Vocal
+  type: !PartialOnly entity
+  id: MobJonkBot
+- components:
+  - type: ControllableBot
+  - type: Prying
+    speedModifier: 1.5
+    useSound:
+      path: /Audio/Items/crowbar.ogg
+  type: !PartialOnly entity
+  id: MobCleanBot
+- parent: !Remove
+  - MobSiliconBase
+  - ShowMedicalIcons
+  - StripableInventoryBase
+  - BaseRelaxedAnchoring
+  components:
+  - blackboard:
+      NavInteract: !type:Bool true
+      NavPry: !type:Bool true
+    type: HTN
+  - type: Prying
+    speedModifier: 1.5
+    useSound:
+      path: /Audio/Items/crowbar.ogg
+  - type: ControllableBot
+  type: !PartialOnly entity
+  id: MobMedibot
+- components:
+  - type: HTN
+    rootTask:
+      task: BasicBotCompound
+    blackboard:
+      NavInteract: !type:Bool true
+      NavPry: !type:Bool true
+  - type: Prying
+    speedModifier: 1.5
+    useSound:
+      path: /Audio/Items/crowbar.ogg
+  - type: ControllableBot
+  type: !PartialOnly entity
+  id: MobMimeBot
+- components:
+  - tags: !Remove
+    - FootstepSound
+    - SiliconEmotes
+    - Bot
+    - Unimplantable
+    type: Tag
+  - type: HTN
+    rootTask:
+      task: BasicBotCompound
+    blackboard:
+      NavInteract: !type:Bool true
+      NavPry: !type:Bool true
+  - type: Prying
+    speedModifier: 1.5
+    useSound:
+      path: /Audio/Items/crowbar.ogg
+  - type: ControllableBot
+  type: !PartialOnly entity
+  id: MobSupplyBot
+- components:
+  - blackboard:
+      NavInteract: !type:Bool true
+      NavPry: !type:Bool true
+    type: HTN
+  - type: Prying
+    speedModifier: 1.5
+    useSound:
+      path: /Audio/Items/crowbar.ogg
+  - type: ControllableBot
+  type: !PartialOnly entity
+  id: MobHugBot
+...

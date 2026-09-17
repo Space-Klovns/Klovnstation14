@@ -1,0 +1,35 @@
+- components:
+  - thresholds: !Remove
+    - trigger:
+        damage: 50
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damageType: Heat
+        damage: 5
+      behaviors:
+      - solution: tank
+    - trigger:
+        damageType: Piercing
+        damage: 5
+      behaviors:
+      - solution: tank
+    - trigger:
+        damage: 10
+      behaviors:
+      - solution: tank
+      - sound:
+          collection: MetalBreak
+      - acts: ["Destruction"]
+    type: Destructible
+  - type: PlumbingStorage
+    solutionName: tank
+  - type: UserInterface
+    interfaces:
+      enum.PlumbingStorageUiKey.Key:
+        type: PlumbingStorageBui
+  - type: ActivatableUI
+    key: enum.PlumbingStorageUiKey.Key
+  type: !PartialOnly entity
+  id: StorageTank
+...

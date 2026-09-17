@@ -1,0 +1,125 @@
+- components:
+  - layers: !Remove
+    - map: ["enum.PoweredLightLayers.Base"]
+      state: base
+    - map: ["enum.PoweredLightLayers.Glow"]
+      state: tube
+      sprite: _KS14/Structures/Wallmounts/Lighting/light_glow_greyscale.rsi
+      shader: unshaded
+    type: Sprite
+  - type: EmissiveLayers
+    offset: 0,-0.3
+    glowRadius: 0.25
+    intensity: 1.3
+    layers:
+    - enum.PoweredLightLayers.Glow
+  - type: RequireProjectileTarget
+  - thresholds: !Remove
+    - trigger:
+        damage: 200
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: GlassBreak
+    - trigger:
+        damage: 50
+      behaviors:
+      - !type:EmptyAllContainersBehaviour ''
+      - spawn:
+          SheetSteel1:
+            min: 2
+            max: 2
+      - acts: ["Destruction"]
+      - sound:
+          collection: GlassBreak
+    type: Destructible
+  type: !PartialOnly entity
+  id: AlwaysPoweredWallLight
+- components:
+  - color: "#FFC99D"
+    energy: 0.5
+    radius: 7
+    softness: 1
+    type: PointLight
+  type: !PartialOnly entity
+  id: Poweredlight
+- components:
+  - layers:
+    - map: ["enum.PoweredLightLayers.Base"]
+      state: base
+    - map: ["enum.PoweredLightLayers.Glow"]
+      state: small
+      sprite: _KS14/Structures/Wallmounts/Lighting/light_glow_greyscale.rsi
+      shader: unshaded
+    type: Sprite
+  - thresholds: !Remove
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+    - trigger:
+        damage: 25
+      behaviors:
+      - !type:EmptyAllContainersBehaviour ''
+      - spawn:
+          SheetSteel1:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+    type: Destructible
+  type: !PartialOnly entity
+  id: SmallLight
+- components:
+  - color: "#FFB475"
+    energy: 0.5
+    radius: 5
+    softness: 1.1
+    type: PointLight
+  type: !PartialOnly entity
+  id: PoweredSmallLight
+- components:
+  - layers: !Remove
+    - state: base
+      map: ["enum.EmergencyLightVisualLayers.Base"]
+    - state: emergency_light_off
+      map: ["enum.EmergencyLightVisualLayers.LightOff"]
+      color: "#7CFC00"
+    - state: emergency_light_on
+      map: ["enum.EmergencyLightVisualLayers.LightOn"]
+      color: "#7CFC00"
+      shader: Emissive
+      visible: false
+    type: Sprite
+  - type: GenericVisualizer
+    visuals:
+      enum.EmergencyLightVisuals.On:
+        enum.EmergencyLightVisualLayers.LightOff:
+          True: {visible: false}
+          False: {visible: true}
+        enum.EmergencyLightVisualLayers.LightOn:
+          True: {visible: true}
+          False: {visible: false}
+  - thresholds: !Remove
+    - trigger:
+        damage: 100
+      behaviors:
+      - acts: ["Destruction"]
+      - sound:
+          collection: GlassBreak
+    - trigger:
+        damage: 25
+      behaviors:
+      - spawn:
+          SheetSteel1:
+            min: 1
+            max: 1
+          ShardGlass:
+            min: 1
+            max: 1
+      - acts: ["Destruction"]
+      - sound:
+          collection: GlassBreak
+    type: Destructible
+  type: !PartialOnly entity
+  id: EmergencyLight
+...

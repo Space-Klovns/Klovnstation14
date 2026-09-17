@@ -1,0 +1,9 @@
+- solids:
+    FoodPoppy: !Remove ''
+  type: !PartialOnly microwaveMealRecipe
+  id: RecipeMedicatedSuture
+- solids:
+    FoodAloe: !Remove ''
+  type: !PartialOnly microwaveMealRecipe
+  id: RecipeRegenerativeMesh
+...

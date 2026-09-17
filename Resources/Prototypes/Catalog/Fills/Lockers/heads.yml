@@ -61,7 +61,7 @@
     children:
     - !type:NestedSelector
       tableId: LockerFillCaptainNoLaser
-    - id: WeaponAntiqueLaserProjectile #KS14 change also dont look at who edited this code before me
+    - id: WeaponAntiqueLaser
 
 # Hardsuit table, used for suit storage as well
 - type: entityTable
@@ -163,9 +163,7 @@
     - id: DoorRemoteEngineering
     - id: BoxCECircuitboards
     - id: RCD
-    - id: RPD # Starlight: RPD
     - id: RCDAmmo
-    - id: MachinePowerTransmissionLaserFlatpack # KS14: PTL flatpack
     - id: RubberStampCE
     - id: MetalFoamGrenade
     - id: PlushieLizardJobChiefengineer
@@ -218,16 +216,14 @@
     - id: HandheldCrewMonitor
     - id: Hypospray
     - id: MedTekCartridge
-    - id: CloningConsoleComputerCircuitboard # ks14
-    - id: CloningPodMachineCircuitboard # ks14
-    - id: MedicalScannerMachineCircuitboard # ks14
     # Standard command gear
     - id: RubberStampCMO
     - id: ClothingHeadsetAltMedical
     - id: DoorRemoteMedical
     - id: BoxEncryptionKeyMedical
     - id: BoxCMOCircuitboards
-    # KS14: Removed slop plushie
+    - id: PlushieLizardJobChiefmedicalofficer
+      prob: 0.02
 
 # Hardsuit table, used for suit storage as well
 - type: entityTable
@@ -277,9 +273,8 @@
     - id: DoorRemoteResearch
     - id: HandTeleporter
     - id: RubberStampRd
-    - id: ClothingOuterSuitArc # KS14
-    - id: AnomalyLocator #KS14 - same shit as goob
-    # KS14: Removed slop plushie
+    - id: PlushieLizardJobResearchdirector
+      prob: 0.02
 
 # Hardsuit table, used for suit storage as well
 - type: entityTable
@@ -321,8 +316,8 @@
   id: LockerFillHeadOfSecurityNoHardsuit
   table: !type:AllSelector
     children:
-    # - id: WeaponEnergyShotgun #KS14: less of it in game so fights dont end in picosecond
     - id: WeaponEnergyMagnum
+    - id: BookSpaceLaw
     - id: BoxEncryptionKeySecurity
     - id: CigarGoldCase
       prob: 0.50

@@ -1,0 +1,402 @@
+- parent: !Remove [SimpleMobBase, FlyingMobBase, MobCombat]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeat
+      amount: 1
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobBat
+- parent: !Remove [SolutionFood, SolutionTiny, SimpleMobBase, FlyingMobBase]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: null
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobBee
+- parent: SimpleMobBase
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeatChicken
+      amount: 1
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobChicken
+- components:
+  - minimumEntitiesSpawned: 1
+    maximumEntitiesSpawned: 1
+    type: TimedSpawner
+  type: !PartialOnly entity
+  id: FoodEggChickenFertilized
+- parent: !Remove [SolutionFood, SolutionTiny, SimpleMobBase]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeatSlime
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobCockroach
+- parent: MobCockroach
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeatSlime
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobGlockroach
+- parent: !Remove [BaseMobMothroach, MobCockroach]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeatSlime
+      amount: 2
+  - sounds:
+      Male: UnisexMoth
+      Female: UnisexMoth
+      Unsexed: UnisexMoth
+    emoteSounds: !Remove ''
+    type: Vocal
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobMothroach
+- parent: SimpleMobBase
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeatDuck
+      amount: 1
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobDuckMallard
+- components:
+  - minimumEntitiesSpawned: 1
+    maximumEntitiesSpawned: 1
+    type: TimedSpawner
+  type: !PartialOnly entity
+  id: FoodEggDuckFertilized
+- parent: !Remove [SolutionFood, SolutionTiny, SimpleMobBase, FlyingMobBase]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: null
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobButterfly
+- parent: !Remove [BaseMobRuminant, SimpleMobBase]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeat
+      amount: 5
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobCow
+- parent: !Remove [SimpleMobBase, BaseMobHemocyanin]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeatCrab
+      amount: 2
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobCrab
+- parent: !Remove [BaseMobRuminant, SimpleMobBase]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeat
+      amount: 4
+  - sounds:
+      Female: Goat
+      Male: Goat
+      Unsexed: Goat
+    emoteSounds: !Remove ''
+    type: Vocal
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobGoat
+- parent: SimpleMobBase
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeatChicken
+      amount: 2
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobGoose
+- components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeat
+      amount: 4
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobGorilla
+- parent: !Remove
+  - SimpleMobBase
+  - MobCombat
+  - StripableInventoryBase
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeat
+  - sounds:
+      Unsexed: Kangaroo
+    emoteSounds: !Remove ''
+    type: Vocal
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobKangaroo
+- components:
+  - disarmFailChance: 0
+    type: CombatMode
+  - type: ComplexShove
+  - butcheringType: Spike
+    type: Butcherable
+  type: !PartialOnly entity
+  id: MobBaseAncestor
+- components:
+  - sounds:
+      Male: MaleReptilian
+      Female: FemaleReptilian
+      Unsexed: MaleReptilian
+    emoteSounds: !Remove ''
+    type: Vocal
+  - butcheringType: Spike
+    type: Butcherable
+  type: !PartialOnly entity
+  id: MobBaseKobold
+- parent: !Remove [SimpleMobBase, BaseMobAnimal, SolutionVermin]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeatRat
+      amount: 1
+  - sounds:
+      Male: Mouse
+      Female: Mouse
+      Unsexed: Mouse
+    emoteSounds: !Remove ''
+    type: Vocal
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobMouse
+- components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeatRat
+      amount: 1
+    - id: SheetUranium1
+      amount: 1
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobMouseCancer
+- parent: SimpleMobBase
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeatLizard
+      amount: 1
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobLizard
+- parent: SimpleMobBase
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeat
+      amount: 1
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobSlug
+- parent: SimpleMobBase
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeat
+      amount: 1
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobFrog
+- parent: !Remove [SimpleMobBase, FlyingMobBase]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeat
+      amount: 1
+  - sounds:
+      Unsexed: Parrot
+    emoteSounds: !Remove ''
+    type: Vocal
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobParrotBase
+- parent: SimpleMobBase
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeatPenguin
+      amount: 3
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobPenguin
+- parent: SimpleMobBase
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeatSnake
+      amount: 1
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobSnake
+- parent: !Remove [SimpleMobBase, BaseMobHemocyanin, MobCombat]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeatSpider
+      amount: 2
+  - type: SolutionRegeneration
+    generated:
+      reagents:
+      - ReagentId: Mechanotoxin
+        Quantity: 1
+  - sounds:
+      Male: UnisexArachnid
+      Female: UnisexArachnid
+      Unsexed: UnisexArachnid
+    emoteSounds: !Remove ''
+    type: Vocal
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobSpiderBase
+- components: !Remove ''
+  type: !PartialOnly entity
+  id: SolutionVenomSpider
+- parent: MobSpiderAngryBase
+  components:
+  - type: Butcherable
+    spawned:
+    - id: MaterialBananium1
+      amount: 1
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobClownSpider
+- parent: !Remove [SimpleMobBase, StripableInventoryBase]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeat
+      amount: 3
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobPossum
+- parent: !Remove [SimpleMobBase, StripableInventoryBase]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeat
+      amount: 3
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobRaccoon
+- parent: !Remove [SimpleMobBase, StripableInventoryBase]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeat
+      amount: 3
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobFox
+- parent: MobCorgiBase
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeat
+      amount: 2
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobCorgi
+- parent: !Remove [SimpleMobBase, StripableInventoryBase]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeat
+      amount: 3
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobCat
+- parent: MobCat
+  type: !PartialOnly entity
+  id: MobCatSpace
+- components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeat
+      amount: 1
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobCatKitten
+- parent: !Remove [SimpleMobBase, StripableInventoryBase]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeat
+      amount: 3
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobSloth
+- parent: !Remove [SimpleMobBase, StripableInventoryBase]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeat
+      amount: 3
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobFerret
+- parent: !Remove [SimpleMobBase, MobCombat, StripableInventoryBase]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeat
+      amount: 1
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobHamster
+- parent: !Remove [SimpleMobBase, StripableInventoryBase]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeatBacon
+      amount: 6
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobPig
+- parent: !Remove [BaseMobAnimal, SimpleMobBase, StripableInventoryBase]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: MaterialWoodPlank1
+      amount: 2
+  - sounds:
+      Male: UnisexDiona
+      Female: UnisexDiona
+      Unsexed: UnisexDiona
+    emoteSounds: !Remove ''
+    type: Vocal
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobDionaNymph
+- parent: !Remove [SimpleMobBase, MobCombat]
+  components:
+  - type: Butcherable
+    spawned:
+    - id: FoodMeat
+      amount: 4
+  - type: ToolRefinable
+  type: !PartialOnly entity
+  id: MobReindeerBuck
+...

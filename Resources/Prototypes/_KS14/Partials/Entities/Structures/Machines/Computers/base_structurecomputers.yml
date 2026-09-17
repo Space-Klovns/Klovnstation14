@@ -1,0 +1,9 @@
+- components:
+  - type: EmissiveLayers
+    glowRadius: 0.15
+    layers:
+    - computerLayerScreen
+    - computerLayerKeys
+  type: !PartialOnly entity
+  id: BaseComputer
+...

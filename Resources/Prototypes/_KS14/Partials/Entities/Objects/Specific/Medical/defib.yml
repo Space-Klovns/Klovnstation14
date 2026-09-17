@@ -1,0 +1,18 @@
+- components:
+  - type: EmitSoundOnPickup
+    sound:
+      path: /Audio/_KS14/Handling/component_pickup.ogg
+  - type: EmitSoundOnDrop
+    sound:
+      path: /Audio/_KS14/Handling/component_drop.ogg
+  type: !PartialOnly entity
+  id: BaseDefibrillator
+- components:
+  - damage:
+      types:
+        Blunt: 10
+        Shock: 8
+    type: MeleeWeapon
+  type: !PartialOnly entity
+  id: DefibrillatorSyndicate
+...

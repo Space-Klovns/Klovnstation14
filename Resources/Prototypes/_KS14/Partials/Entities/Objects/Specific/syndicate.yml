@@ -1,0 +1,38 @@
+- components:
+  - price:
+      Telecrystal: 3
+    type: Currency
+  type: !PartialOnly entity
+  id: Telecrystal
+- description: Suspicious looking old radio...
+  type: !PartialOnly entity
+  id: BaseUplinkRadio
+- suffix: 60 TC
+  components:
+  - balance:
+      Telecrystal: 60
+    type: Store
+  type: !PartialOnly entity
+  id: BaseUplinkRadio20TC
+- suffix: 75 TC
+  components:
+  - balance:
+      Telecrystal: 75
+    type: Store
+  type: !PartialOnly entity
+  id: BaseUplinkRadio25TC
+- suffix: 120 TC, NukeOps
+  components:
+  - balance:
+      Telecrystal: 120
+    type: Store
+  type: !PartialOnly entity
+  id: BaseUplinkRadio40TC
+- suffix: 180 TC, LoneOps
+  components:
+  - balance:
+      Telecrystal: 180
+    type: Store
+  type: !PartialOnly entity
+  id: BaseUplinkRadio60TC
+...

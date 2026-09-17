@@ -1,0 +1,45 @@
+- components:
+  - type: Transform
+    noRot: false
+  - type: Rotatable
+    rotateWhileAnchored: true
+  - snapCardinals: false
+    granularLayersRendering: true
+    layers: !Remove
+    - state: mixer_empty
+      renderingStrategy: SnapToCardinals
+    - state: mixer_screens
+      shader: unshaded
+      map: ["enum.PowerDeviceVisualLayers.Powered"]
+      renderingStrategy: SnapToCardinals
+    type: Sprite
+  - type: PlumbingConnectorAppearance
+    offset: 0.09375
+  - type: AtmosPipeColor
+  - solution:
+      maxVol: 10000
+      canReact: false
+    type: Solution
+  - unlimited: !Remove ''
+    type: DumpableSolution
+  - type: PlumbingDevice
+    updateInterval: 2
+  - type: PlumbingInlet
+    solutionName: buffer
+  - type: PlumbingOutlet
+    solutionName: beaker
+    containerSlotId: beakerSlot
+    enabled: false
+  - type: NodeContainer
+    nodes:
+      inlet:
+        nodeGroupID: Plumbing
+        pipeDirection: TNorth
+      outlet:
+        nodeGroupID: Plumbing
+        pipeDirection: South
+  - type: StationAiWhitelist
+  - type: AmbientMusicMarkerMedical
+  type: !PartialOnly entity
+  id: ChemMaster
+...

@@ -54,7 +54,6 @@
   recipes:
   - SynthesizerInstrument
   - PushHorn
-  - Boombox #KS14
 
 - type: latheRecipePack
   id: ServiceBoards
