@@ -27,6 +27,10 @@ public sealed partial class KsZLevelTransitSpriteLiftSystem : EntitySystem
         {
             _spriteSystem.SetOffset((uid, spriteComponent), spriteComponent.Offset + transitSpriteComponent.Lift);
             _spriteSystem.SetScale((uid, spriteComponent), spriteComponent.Scale * transitSpriteComponent.ScaleMultiplier);
+
+            // Scale the alpha the animation left rather than assigning a colour, so a fade never tints anything.
+            var color = spriteComponent.Color;
+            _spriteSystem.SetColor((uid, spriteComponent), color.WithAlpha(color.A * transitSpriteComponent.AlphaMultiplier));
         }
     }
 }

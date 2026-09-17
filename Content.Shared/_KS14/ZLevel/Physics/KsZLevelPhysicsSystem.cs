@@ -137,7 +137,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
 
     #endregion
 
-    #region Self-movement blocking
+    #region Blocking
 
     [SubscribeLocalEvent]
     private void OnTransitStartup(Entity<KsZLevelTransitComponent> entity, ref ComponentStartup args)
@@ -171,6 +171,21 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
             args.Cancel();
     }
 
+    /// <summary>
+    ///     Nothing in transit collides: it is in the air between two floor planes, not standing on the one it
+    ///         happens to be drawn over, so it passes through everything until it lands.
+    /// </summary>
+    /// <remarks>
+    ///     Vetoing the contact rather than clearing CanCollide leaves no physics state to save and put back,
+    ///         and so nothing that can be left switched off if a transit ends in an unusual way. The engine
+    ///         raises this on both bodies of a pair, so subscribing on the transiting one covers both.
+    /// </remarks>
+    [SubscribeLocalEvent]
+    private void OnTransitPreventCollide(Entity<KsZLevelTransitComponent> entity, ref PreventCollideEvent args)
+    {
+        args.Cancelled = true;
+    }
+
     #endregion
 
     #region API
@@ -193,9 +208,18 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     /// <returns>Whether the entity is now in transit.</returns>
     public bool TryStartTransit(Entity<TransformComponent?> entity, float initialVerticalVelocity = 0f)
     {
-        // Never restart or reset an ongoing transit; see OnPhysicsParentChanged.
-        if (_transitQuery.HasComponent(entity.Owner))
+        // Never restart an ongoing transit - that would throw away the speed it has built up - but a fresh
+        //      push still adds to it, so something can be launched or slammed mid-fall.
+        if (_transitQuery.TryGetComponent(entity.Owner, out var ongoingTransitComponent))
+        {
+            if (initialVerticalVelocity != 0f)
+            {
+                ongoingTransitComponent.VerticalVelocity += initialVerticalVelocity;
+                Dirty(entity.Owner, ongoingTransitComponent);
+            }
+
             return true;
+        }
 
         if (!EntityManager.TransformQuery.Resolve(entity.Owner, ref entity.Comp, logMissing: false))
             return false;

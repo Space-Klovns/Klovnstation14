@@ -41,6 +41,12 @@ public sealed partial class KsZLevelTransitSpriteSystem : EntitySystem
     [Dependency] private EntityQuery<KsZLevelTransitSpriteComponent> _transitSpriteQuery = default!;
     [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
 
+    /// <summary>
+    ///     How much of a descent the fade-in covers. Something dropping onto the viewer's own z-level is fully
+    ///         transparent as it comes through the ceiling and fully opaque once this far down.
+    /// </summary>
+    private const float FadeInHeight = 0.5f;
+
     public override void Initialize()
     {
         base.Initialize();
@@ -62,8 +68,10 @@ public sealed partial class KsZLevelTransitSpriteSystem : EntitySystem
         transitSpriteComponent.BaseOffset = spriteComponent.Offset;
         transitSpriteComponent.BaseScale = spriteComponent.Scale;
         transitSpriteComponent.BaseDrawDepth = spriteComponent.DrawDepth;
+        transitSpriteComponent.BaseColor = spriteComponent.Color;
         transitSpriteComponent.Lift = Vector2.Zero;
         transitSpriteComponent.ScaleMultiplier = 1f;
+        transitSpriteComponent.AlphaMultiplier = 1f;
     }
 
     [SubscribeLocalEvent]
@@ -77,6 +85,7 @@ public sealed partial class KsZLevelTransitSpriteSystem : EntitySystem
             _spriteSystem.SetOffset((entity.Owner, spriteComponent), transitSpriteComponent.BaseOffset);
             _spriteSystem.SetScale((entity.Owner, spriteComponent), transitSpriteComponent.BaseScale);
             _spriteSystem.SetDrawDepth((entity.Owner, spriteComponent), transitSpriteComponent.BaseDrawDepth);
+            _spriteSystem.SetColor((entity.Owner, spriteComponent), transitSpriteComponent.BaseColor);
         }
 
         RemComp(entity.Owner, transitSpriteComponent);
@@ -91,6 +100,7 @@ public sealed partial class KsZLevelTransitSpriteSystem : EntitySystem
         var eyePosition = eye.Position.Position + eye.Offset;
 
         // Depths are measured from the viewer, so their own height above their own floor plane is the origin.
+        var viewerUid = _playerManager.LocalEntity;
         var viewerZLevelEntity = GetViewerZLevel(out var viewerDepth);
 
         var enumerator = AllEntityQuery<KsZLevelTransitSpriteComponent, KsZLevelTransitComponent, SpriteComponent, TransformComponent>();
@@ -106,14 +116,24 @@ public sealed partial class KsZLevelTransitSpriteSystem : EntitySystem
                     : transitSpriteComponent.BaseDrawDepth
             );
 
+            _spriteSystem.SetColor((uid, spriteComponent), transitSpriteComponent.BaseColor);
+
             transitSpriteComponent.Lift = Vector2.Zero;
             transitSpriteComponent.ScaleMultiplier = 1f;
+            transitSpriteComponent.AlphaMultiplier = 1f;
 
             if (viewerZLevelEntity is not { } viewerZLevel ||
                 transformComponent.MapUid is not { } zLevelUid ||
                 !_zLevelQuery.TryGetComponent(zLevelUid, out var zLevelComponent) ||
                 !_zLevelSystem.TryGetDepthBelow(viewerZLevel!, zLevelUid, out var depthBelowViewer))
                 continue; // Not on a z-level the viewer can see below themselves, so no pass to compensate for.
+
+            // Something dropping onto the viewer's own z-level comes through a ceiling that is never rendered,
+            //      so it fades in instead of appearing out of nothing. Seen from a z-level above, it is just
+            //      falling away down a hole that is already in view, so it stays fully opaque.
+            // The viewer's own body is exempt: watching yourself dissolve as you fall is not the effect.
+            if (depthBelowViewer <= 0f && uid != viewerUid)
+                transitSpriteComponent.AlphaMultiplier = Math.Clamp((1f - transitComponent.Height) / FadeInHeight, 0f, 1f);
 
             var actualDepth = viewerDepth + depthBelowViewer;
             var apparentDepth = actualDepth - transitComponent.Height * zLevelComponent.Depth;

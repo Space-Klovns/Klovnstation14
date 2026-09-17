@@ -45,4 +45,21 @@ public sealed partial class KsZLevelTransitSpriteComponent : Component
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly)]
     public float ScaleMultiplier = 1f;
+
+    /// <summary>
+    ///     The sprite colour the entity had before it started transiting, captured once.
+    /// </summary>
+    /// <remarks>
+    ///     The fade scales this colour's alpha rather than lerping towards <see cref="Color.Transparent"/>,
+    ///         which is white - lerping to it would wash the sprite out as it faded.
+    /// </remarks>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public Color BaseColor = Color.White;
+
+    /// <summary>
+    ///     Alpha factor applied on top of whatever colour the animation player left, for fading an entity in as
+    ///         it drops onto the viewer's own z-level. 1 whenever no fade applies.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public float AlphaMultiplier = 1f;
 }
