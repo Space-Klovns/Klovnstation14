@@ -30,7 +30,7 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
   name: test faller
   components:
   - type: Physics
-    bodyType: Dynamic
+    bodyType: KinematicController
   - type: Fixtures
     fixtures:
       fix1:
@@ -58,7 +58,7 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
   name: test victim
   components:
   - type: Physics
-    bodyType: Dynamic
+    bodyType: KinematicController
   - type: Fixtures
     fixtures:
       fix1:
