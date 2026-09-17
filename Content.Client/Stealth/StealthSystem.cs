@@ -64,8 +64,16 @@ public sealed partial class StealthSystem : SharedStealthSystem
             return;
         }
 
-        if (HasComp<InteractionOutlineComponent>(uid))
+        // KS14 start: upstream stopped removing this when it moved to multi-post-shaders. The outline is
+        //      ordered after the stealth shader, so leaving it on means hovering a cloaked entity draws a ring
+        //      around an invisible sprite - and it left the HadOutline/EnsureComp restore above as dead code,
+        //      since the component was never gone to begin with.
+        if (TryComp<InteractionOutlineComponent>(uid, out var outlineComponent))
+        {
+            RemCompDeferred(uid, outlineComponent);
             component.HadOutline = true;
+        }
+        // KS14 end
     }
 
     private void OnStartup(EntityUid uid, StealthComponent component, ComponentStartup args)

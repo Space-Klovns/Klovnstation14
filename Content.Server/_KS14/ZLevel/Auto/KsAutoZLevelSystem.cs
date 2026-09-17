@@ -74,17 +74,21 @@ public sealed partial class KsAutoZLevelSystem : EntitySystem
         if (otherEntity.Comp?.Location == entity.Comp.Location)
             Log.Warning($"KsAutoZLevelType of auto z-levels {ToPrettyString(entity.Owner)} and {ToPrettyString(otherEntity.Owner)} is the same! The location of the z-levels relative to each other will be determined by update order.");
 
+        KsZLevelComponent? ourZLevelComponent;
         if (entity.Comp.Location == KsAutoZLevelType.Above)
             _zLevelSystem.AddZLevelDirectlyAbove(
                 (otherEntity.Owner, EnsureComp<KsZLevelComponent>(otherEntity.Owner)),
-                (entity.Owner, EnsureComp<KsZLevelComponent>(entity.Owner))
+                (entity.Owner, ourZLevelComponent = EnsureComp<KsZLevelComponent>(entity.Owner))
             );
         else
             _zLevelSystem.AddZLevelDirectlyUnder(
                 (otherEntity.Owner, EnsureComp<KsZLevelComponent>(otherEntity.Owner)),
-                (entity.Owner, EnsureComp<KsZLevelComponent>(entity.Owner))
+                (entity.Owner, ourZLevelComponent = EnsureComp<KsZLevelComponent>(entity.Owner))
             );
 
+        // Null means "leave it at the prototype default", so only override when the mapper actually set one.
+        if (entity.Comp.Depth is { } depth)
+            _zLevelSystem.SetDepth((entity.Owner, ourZLevelComponent), depth);
         RemComp(entity.Owner, entity.Comp);
 
         if (Resolve(otherEntity, ref otherEntity.Comp, logMissing: false))

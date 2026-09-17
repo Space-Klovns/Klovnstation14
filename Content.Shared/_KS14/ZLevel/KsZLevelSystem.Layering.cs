@@ -24,6 +24,43 @@ public sealed partial class KsZLevelSystem : EntitySystem
     public const float DepthScaleStep = 0.075f;
 
     /// <summary>
+    ///     The shallowest a z-level may be.
+    /// </summary>
+    /// <remarks>
+    ///     Transit integration divides by Depth, and the render passes both multiply and accumulate it without
+    ///         clamping, so zero would divide by zero and a negative would quietly invert the whole effect.
+    /// </remarks>
+    public const float MinimumDepth = 0.01f;
+
+    /// <summary>
+    ///     Sets how far a z-level sits below the one above it, at runtime.
+    /// </summary>
+    /// <remarks>
+    ///     Depth is networked as part of the z-level's own state, so only the one being changed needs dirtying -
+    ///         unlike stack membership, which every member replicates.
+    /// </remarks>
+    /// <returns>Whether the depth actually changed.</returns>
+    public bool SetDepth(Entity<KsZLevelComponent?> entity, float depth)
+    {
+        if (!_zLevelQuery.Resolve(ref entity))
+            return false;
+
+        depth = MathF.Max(depth, MinimumDepth);
+
+        var previousDepth = entity.Comp!.Depth;
+        if (MathHelper.CloseTo(previousDepth, depth))
+            return false;
+
+        entity.Comp.Depth = depth;
+        Dirty(entity!);
+
+        var depthChangedEvent = new KsZLevelDepthChangedEvent(previousDepth, depth);
+        RaiseLocalEvent(entity.Owner, ref depthChangedEvent);
+
+        return true;
+    }
+
+    /// <summary>
     ///     The eye scale a z-level sitting <paramref name="depth"/> z-levels below the viewer is rendered at.
     /// </summary>
     /// <remarks>

@@ -1087,6 +1087,89 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
         });
     }
 
+
+    /// <summary>
+    ///     Height is stored as a fraction of the z-level's Depth, so deepening a z-level under something that is
+    ///         falling through it has to rescale that fraction - otherwise the same 0.5 silently means twice the
+    ///         distance above the floor, and the entity teleports upward mid-fall.
+    /// </summary>
+    [Test]
+    public async Task TestChangingDepthMidFallKeepsTheEntityWhereItIs()
+    {
+        await OverrideTransitCVars();
+        var stack = await CreateStack(gravity: false);
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var transitSystem = entManager.System<KsZLevelPhysicsSystem>();
+        var zLevelSystem = entManager.System<KsZLevelSystem>();
+
+        var faller = EntityUid.Invalid;
+
+        // No gravity, so it drifts down at a constant speed and the height is easy to reason about.
+        await server.WaitPost(() =>
+        {
+            faller = entManager.SpawnEntity(FallerProto, stack.HoleCoords);
+            transitSystem.TryStartTransit(faller, -1f);
+        });
+
+        await Pair.RunTicksSync(5);
+
+        var heightBefore = 0f;
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entManager.TryGetComponent<KsZLevelTransitComponent>(faller, out var transitComponent), Is.True,
+                "the entity has to still be falling for a depth change to have anything to rescale");
+            heightBefore = transitComponent!.Height;
+        });
+
+        // Twice as deep: the same real height above the floor is now half the fraction.
+        await server.WaitPost(() =>
+            Assert.That(zLevelSystem.SetDepth(stack.LowerMapUid, 2f), Is.True,
+                "setting a different depth should report that it changed"));
+
+        await server.WaitAssertion(() =>
+        {
+            var transitComponent = entManager.GetComponent<KsZLevelTransitComponent>(faller);
+
+            Assert.That(transitComponent.Height, Is.EqualTo(heightBefore / 2f).Within(0.0001f),
+                $"height should have halved with the doubled depth, keeping the entity where it physically was (was {heightBefore})");
+        });
+
+        // And it still reaches the floor rather than being stranded by the rescale.
+        var (_, landed) = await RunUntilLanded(entManager, faller);
+
+        await server.WaitAssertion(() =>
+            Assert.That(landed, Is.True,
+                "a deepened z-level takes longer to fall through, but the entity should still land"));
+    }
+
+    /// <summary>
+    ///     Depth is divided by during transit and multiplied out again when rendering, neither of which clamps.
+    /// </summary>
+    [Test]
+    public async Task TestDepthCannotBeSetToZeroOrNegative()
+    {
+        await OverrideTransitCVars();
+        var stack = await CreateStack();
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var zLevelSystem = entManager.System<KsZLevelSystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            zLevelSystem.SetDepth(stack.LowerMapUid, -5f);
+
+            Assert.That(entManager.GetComponent<KsZLevelComponent>(stack.LowerMapUid).Depth,
+                Is.EqualTo(KsZLevelSystem.MinimumDepth).Within(0.0001f),
+                "a negative depth should have been clamped up to the minimum, not stored as given");
+
+            Assert.That(zLevelSystem.SetDepth(stack.LowerMapUid, 0f), Is.False,
+                "clamping zero lands on the minimum it is already at, so nothing changed");
+        });
+    }
+
     /// <summary>
     ///     Asks the same question the broadphase does when it is deciding whether to build a contact.
     /// </summary>

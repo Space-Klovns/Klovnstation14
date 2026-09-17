@@ -254,6 +254,35 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
 
     #endregion
 
+    /// <summary>
+    ///     Keeps anything mid-transit physically where it is when the z-level it is falling through changes how
+    ///         deep it is.
+    /// </summary>
+    /// <remarks>
+    ///     Height is a fraction of Depth, so leaving it alone would teleport everything mid-fall: the same 0.5
+    ///         means twice the distance above the floor once a z-level is twice as deep. Rescaling by the ratio
+    ///         preserves the real height, and the entity simply has more or less of the fall left.
+    /// </remarks>
+    [SubscribeLocalEvent]
+    private void OnZLevelDepthChanged(Entity<KsZLevelComponent> entity, ref KsZLevelDepthChangedEvent args)
+    {
+        var heightScale = args.PreviousDepth / args.Depth;
+
+        var enumerator = EntityQueryEnumerator<KsZLevelTransitComponent, TransformComponent>();
+        while (enumerator.MoveNext(out var uid, out var transitComponent, out var transformComponent))
+        {
+            if (transformComponent.MapUid != entity.Owner)
+                continue;
+
+            // Clamped because making a z-level shallower can put something that was near its ceiling above it.
+            SetTransit(
+                (uid, transitComponent),
+                Math.Clamp(transitComponent.Height * heightScale, 0f, 1f),
+                transitComponent.VerticalVelocity
+            );
+        }
+    }
+
     #region API
 
     /// <summary>
@@ -711,6 +740,6 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     /// </summary>
     private static float GetDepth(Entity<KsZLevelComponent> zLevelEntity)
     {
-        return MathF.Max(zLevelEntity.Comp.Depth, 0.01f);
+        return MathF.Max(zLevelEntity.Comp.Depth, KsZLevelSystem.MinimumDepth);
     }
 }

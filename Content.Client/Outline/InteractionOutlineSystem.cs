@@ -172,6 +172,17 @@ public sealed partial class InteractionOutlineSystem : EntitySystem
         {
             if (entityToClick != null && TryComp(entityToClick, out outline))
             {
+                // KS14 start: Active is upstream's own flag for precisely this, and nothing ever read it.
+                //      Anything that removed the outline while the same entity stayed hovered - SetEnabled
+                //      (false) for the duration of a drag, most often - left UpdateOutline bailing on the
+                //      now-missing post-shader, so the outline never returned until something else was hovered.
+                if (!outline.Active)
+                {
+                    AddOutline((entityToClick.Value, outline), inRange, renderScale);
+                    return;
+                }
+                // KS14 end
+
                 UpdateOutline((entityToClick.Value, outline), inRange, renderScale);
             }
 
