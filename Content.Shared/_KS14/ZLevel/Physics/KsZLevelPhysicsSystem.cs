@@ -15,7 +15,6 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
@@ -66,7 +65,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     {
         DamageDict = new()
         {
-            { "Blunt", FixedPoint2.New(5) },
+            { "Blunt", FixedPoint2.New(20) },
         },
     };
 
@@ -78,7 +77,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     {
         DamageDict = new()
         {
-            { "Blunt", FixedPoint2.New(8) },
+            { "Blunt", FixedPoint2.New(35) },
         },
     };
 

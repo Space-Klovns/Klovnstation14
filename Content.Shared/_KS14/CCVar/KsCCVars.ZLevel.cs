@@ -20,14 +20,14 @@ public sealed partial class KsCCVars
     /// </summary>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> ZLevelTransitTerminalVelocity =
-        CVarDef.Create("klovn.zlevel.transit_terminal_velocity", 20f, CVar.SERVER | CVar.REPLICATED);
+        CVarDef.Create("klovn.zlevel.transit_terminal_velocity", 10f, CVar.SERVER | CVar.REPLICATED);
 
     /// <summary>
     ///     Impact speed, in z-levels per second, at or above which landing is damaging by default.
     /// </summary>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> ZLevelTransitImpactVelocity =
-        CVarDef.Create("klovn.zlevel.transit_impact_velocity", 3.5f, CVar.SERVER | CVar.REPLICATED);
+        CVarDef.Create("klovn.zlevel.transit_impact_velocity", 0.9f, CVar.SERVER | CVar.REPLICATED);
 
     /// <summary>
     ///     How long, in seconds, something is stunned for after being landed on.
