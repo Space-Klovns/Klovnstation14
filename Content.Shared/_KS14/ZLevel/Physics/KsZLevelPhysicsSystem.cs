@@ -66,7 +66,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     {
         DamageDict = new()
         {
-            { "Blunt", FixedPoint2.New(20) },
+            { "Blunt", FixedPoint2.New(38) },
         },
     };
 
@@ -78,7 +78,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     {
         DamageDict = new()
         {
-            { "Blunt", FixedPoint2.New(35) },
+            { "Blunt", FixedPoint2.New(65) },
         },
     };
 
