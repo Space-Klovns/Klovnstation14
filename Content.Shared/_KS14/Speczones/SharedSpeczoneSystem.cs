@@ -58,19 +58,19 @@ public abstract partial class SharedSpeczoneSystem : EntitySystem
     }
 
     /// <returns>True if the use of an item was cancelled.</returns>
-    public bool TryInterfereUse(EntityUid uid, EntityUid? user = null, bool predictEffects = false)
+    public bool TryInterfereUse(EntityUid uid, EntityUid? userUid = null, bool predictEffects = false)
     {
         if (_alwaysAllowedQuery.HasComponent(uid))
             return false;
 
-        if (!CheckEntityIsInSpeczone(user ?? uid, out var transformComponent))
+        if (!CheckEntityIsInSpeczone(userUid ?? uid, out var transformComponent))
             return false;
 
         _sparksSystem.DoSpark(
             transformComponent.Coordinates,
             SharedSparksSystem.DefaultSparkPrototype,
             soundSpecifier: SharedSparksSystem.DefaultSoundSpecifier,
-            user: predictEffects ? user : null // ts sucks but whatever
+            user: predictEffects ? userUid : null // ts sucks but whatever
         );
 
         if (predictEffects)
@@ -78,10 +78,10 @@ public abstract partial class SharedSpeczoneSystem : EntitySystem
             if (!_gameTiming.IsFirstTimePredicted)
                 return true;
 
-            _popupSystem.PopupPredicted(
+            _popupSystem.PopupEntity(
                 Loc.GetString("speczone-invincibility-use-interrupted", ("entity", Identity.Name(uid, EntityManager))),
                 uid,
-                user,
+                userUid,
                 PopupType.SmallCaution
             );
         }
@@ -100,13 +100,13 @@ public abstract partial class SharedSpeczoneSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnAttemptInterfere(ref AttemptGeneralSpeczoneInterferableEvent args)
     {
-        args.Cancelled |= TryInterfereUse(args.Uid, user: args.User, predictEffects: args.Predicted);
+        args.Cancelled |= TryInterfereUse(args.Uid, userUid: args.User, predictEffects: args.Predicted);
     }
 
     [SubscribeLocalEvent]
     private void OnAttemptShoot(Entity<BlockShootingInSpeczoneComponent> entity, ref ShotAttemptedEvent args)
     {
-        if (TryInterfereUse(entity.Owner, user: args.User, predictEffects: true))
+        if (TryInterfereUse(entity.Owner, userUid: args.User, predictEffects: true))
             args.Cancel();
     }
 }
