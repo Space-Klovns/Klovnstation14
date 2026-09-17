@@ -431,14 +431,14 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
     }
 
     /// <summary>
-    ///     Rising is the same integration with the sign flipped, and a solid ceiling stops it without landing:
-    ///         the entity is at the top of its z-level, not on the floor of it, so it stays in transit.
+    ///     Rising is the same integration with the sign flipped, and a solid ceiling stops it without landing.
+    ///     Under gravity the entity then falls back down and lands normally.
     /// </summary>
     [Test]
-    public async Task TestRisingBumpsIntoTheCeiling()
+    public async Task TestRisingBumpsIntoTheCeilingAndFallsBack()
     {
         await OverrideTransitCVars();
-        var stack = await CreateStack(gravity: false);
+        var stack = await CreateStack();
 
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
@@ -448,30 +448,73 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
         listenerSystem.Reset();
         var riser = EntityUid.Invalid;
 
-        // Under the upper z-level's one solid tile, heading up into it.
+        // Under the upper z-level's one solid tile, launched hard enough to reach it.
+        await server.WaitPost(() =>
+        {
+            riser = entManager.SpawnEntity(FallerProto, stack.UnderFloorCoords);
+            transitSystem.TryStartTransit(riser, 8f);
+        });
+
+        var (_, landed) = await RunUntilLanded(entManager, riser);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(landed, Is.True,
+                    "what goes up under gravity has to come back down and land");
+                Assert.That(entManager.GetComponent<TransformComponent>(riser).MapID, Is.EqualTo(stack.LowerMapId),
+                    "a solid ceiling should never have let the entity through to the z-level above");
+                Assert.That(listenerSystem.LevelChanges, Is.Empty,
+                    "the entity never left its own z-level, so no crossing should have been reported");
+                Assert.That(listenerSystem.Landings, Has.Count.EqualTo(1),
+                    "the ceiling bump is not a landing, so only the eventual floor impact should raise one");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     A ceiling bump with no gravity to pull the entity back down has to end the transit rather than leave
+    ///         it hanging there, because a transiting entity is knocked down, cannot move itself and collides
+    ///         with nothing - all of which would stick permanently.
+    /// </summary>
+    [Test]
+    public async Task TestComingToRestWithoutGravityEndsTransit()
+    {
+        await OverrideTransitCVars();
+        var stack = await CreateStack(gravity: false);
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var transitSystem = entManager.System<KsZLevelPhysicsSystem>();
+        var actionBlockerSystem = entManager.System<ActionBlockerSystem>();
+        var listenerSystem = entManager.System<KsZLevelTestListenerSystem>();
+
+        listenerSystem.Reset();
+        var riser = EntityUid.Invalid;
+
         await server.WaitPost(() =>
         {
             riser = entManager.SpawnEntity(FallerProto, stack.UnderFloorCoords);
             transitSystem.TryStartTransit(riser, 4f);
         });
 
-        await Pair.RunTicksSync(30);
+        await Pair.RunTicksSync(40);
 
         await server.WaitAssertion(() =>
         {
-            Assert.That(entManager.TryGetComponent<KsZLevelTransitComponent>(riser, out var transitComponent), Is.True,
-                "bumping a ceiling is not landing, so the entity should still be in transit");
-
             Assert.Multiple(() =>
             {
-                Assert.That(transitComponent!.Height, Is.EqualTo(1f).Within(0.0001f),
-                    "an entity stopped by a ceiling should be resting against the top of its z-level");
-                Assert.That(transitComponent.VerticalVelocity, Is.EqualTo(0f).Within(0.0001f),
-                    "hitting a ceiling should kill the upward speed rather than letting it push on");
+                Assert.That(entManager.HasComponent<KsZLevelTransitComponent>(riser), Is.False,
+                    "an entity with no speed left and no gravity to give it any should not stay in transit forever");
                 Assert.That(entManager.GetComponent<TransformComponent>(riser).MapID, Is.EqualTo(stack.LowerMapId),
-                    "a solid ceiling should not have let it through");
+                    "a solid ceiling should not have let it through to the z-level above");
                 Assert.That(listenerSystem.Landings, Is.Empty,
-                    "a ceiling bump is not a landing, so it must not raise a land event or deal impact damage");
+                    "stopping against a ceiling is not a landing, so it must not raise a land event");
+                Assert.That(actionBlockerSystem.CanMove(riser), Is.True,
+                    "ending the transit has to give movement back, or the entity is frozen for good");
+                Assert.That(entManager.HasComponent<KsPendingZLevelTransitComponent>(riser), Is.True,
+                    "the pending marker is what starts it falling again if gravity ever returns");
             });
         });
     }

@@ -50,7 +50,10 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnViewerShutdown(Entity<KsZLevelViewerComponent> entity, ref ComponentShutdown args)
     {
-        if (entity.Comp.ViewSubscriberUid == EntityUid.Invalid)
+        // The subscriber may already be gone - its z-level deleted out from under it, say - and deleting a
+        //      dead uid logs an error.
+        if (entity.Comp.ViewSubscriberUid == EntityUid.Invalid ||
+            TerminatingOrDeleted(entity.Comp.ViewSubscriberUid))
             return;
 
         Del(entity.Comp.ViewSubscriberUid);
@@ -59,14 +62,19 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnSubscriberShutdown(Entity<KsZLevelViewSubscriberComponent> entity, ref ComponentShutdown args)
     {
-        if (Terminating(entity.Owner) ||
-            !TryComp<KsZLevelViewerComponent>(entity.Comp.ViewerUid, out var viewerComponent))
+        if (!TryComp<KsZLevelViewerComponent>(entity.Comp.ViewerUid, out var viewerComponent) ||
+            viewerComponent.ViewSubscriberUid != entity.Owner)
             return;
 
-        _viewSubscriberSystem.RemoveViewSubscriber(entity.Owner, viewerComponent.Session);
-        viewerComponent.ViewSubscriberUid = EntityUid.Invalid;
+        // Deleting the entity takes its subscriptions with it, so only unsubscribe while it is still alive.
+        if (!Terminating(entity.Owner))
+            _viewSubscriberSystem.RemoveViewSubscriber(entity.Owner, viewerComponent.Session);
 
-        RemComp(entity.Comp.ViewerUid, viewerComponent);
+        // Clear the now-dangling reference rather than removing the viewer component. Update spawns a fresh
+        //      subscriber next tick; removing the component instead would cost the player z-level visibility
+        //      for the rest of the round, and would recurse straight back into OnViewerShutdown.
+        viewerComponent.Active = false;
+        viewerComponent.ViewSubscriberUid = EntityUid.Invalid;
     }
 
     public override void Update(float frameTime)
@@ -115,6 +123,12 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
 
         var subscriberUid = Spawn(null);
         Transform(subscriberUid).GridTraversal = false; // You know exactly where this is from
+
+        // Without this the shutdown hook below never fires, and a subscriber deleted by anything other than us
+        //      - its z-level being deleted, most likely - leaves the viewer pointing at a dead entity forever.
+        var subscriberComponent = EnsureComp<KsZLevelViewSubscriberComponent>(subscriberUid);
+        subscriberComponent.ViewerUid = entity.Owner;
+
         _viewSubscriberSystem.AddViewSubscriber(subscriberUid, session);
 
         entity.Comp.Active = true;
@@ -127,7 +141,10 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
             return;
 
         entity.Comp.Active = false;
-        Del(entity.Comp.ViewSubscriberUid);
+
+        if (entity.Comp.ViewSubscriberUid != EntityUid.Invalid &&
+            !TerminatingOrDeleted(entity.Comp.ViewSubscriberUid))
+            Del(entity.Comp.ViewSubscriberUid);
 
         entity.Comp.ViewSubscriberUid = EntityUid.Invalid;
     }

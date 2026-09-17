@@ -35,7 +35,7 @@ namespace Content.Client.Viewport
         private MapSystem _mapSystem = default!;
         private KsZLevelSystem _zLevelSystem = null!;
         private List<Entity<KsZLevelComponent>> _mapsToIterate = [];
-        private IRenderTarget _zBlurBuffer = default!;
+        private IRenderTarget? _zBlurBuffer;
 
         /// <summary>
         ///     Draws every z-level at or below the viewer, deepest first.
@@ -49,8 +49,16 @@ namespace Content.Client.Viewport
             _mapsToIterate.Clear();
 
             if (!_mapSystem.TryGetMap(_eye?.Position.MapId, out var topMapUid) ||
-                !_zLevelSystem.TryGetZLevelsBelow(topMapUid.Value, _mapsToIterate) ||
-                _mapsToIterate.Count == 0)
+                !_zLevelSystem.TryGetZLevelsBelow(topMapUid.Value, _mapsToIterate))
+                return false;
+
+            var viewerTransitHeight = GetViewerTransitHeight();
+
+            // Nothing below to draw, and a viewer standing on their own floor, is exactly what the ordinary
+            //      single pass already does - and cheaper. Mid-transit there is still their own z-level to
+            //      scale down, and KsZLevelTransitSpriteSystem compensates sprites against that scale whether
+            //      this ran or not, so bailing while they are off the ground leaves the two disagreeing.
+            if (_mapsToIterate.Count == 0 && viewerTransitHeight <= 0f)
                 return false;
 
             // TryGetZLevelsBelow doesn't include the map we're on
@@ -64,7 +72,7 @@ namespace Content.Client.Viewport
             // That fractional part is what makes the world below grow continuously as you fall instead of
             //      popping one whole z-level at a time: when the viewer crosses over, their height resets to
             //      ~1 and the list loses an entry, so every remaining map keeps the depth it already had.
-            var depth = GetViewerTransitHeight() * topZLevelComponent.Depth;
+            var depth = viewerTransitHeight * topZLevelComponent.Depth;
             for (var mapIndex = 0; mapIndex < _mapsToIterate.Count - 1; mapIndex++)
                 depth += _mapsToIterate[mapIndex].Comp.Depth;
 
@@ -94,7 +102,7 @@ namespace Content.Client.Viewport
                 _viewport.RenderScreenOverlaysBelow(handle, this, drawBoxGlobal);
 
                 // Never blur the map the viewer is actually on
-                if (!isViewerMap)
+                if (!isViewerMap && _zBlurBuffer != null)
                     _clyde.BlurRenderTarget(_viewport, _viewport.RenderTarget, _zBlurBuffer, _zLevelEye, 2.5f * mapZLevelComponent.Depth);
 
                 handle.DrawingHandleScreen.DrawTextureRect(_viewport.RenderTarget.Texture, drawBox);
@@ -108,6 +116,20 @@ namespace Content.Client.Viewport
             _viewport!.ClearColor = Color.Black;
             _zLevelEye.DrawFov = _eye.DrawFov;
             return true;
+        }
+
+        /// <summary>
+        ///     Releases the render target the z-level passes blur through.
+        /// </summary>
+        /// <remarks>
+        ///     Tied to the viewport's lifetime because the buffer is sized to match it. Without this, every
+        ///         viewport regeneration - a resize, a stretch mode or render scale change - stranded a
+        ///         full-size GPU render target for the rest of the session.
+        /// </remarks>
+        private void InvalidateZLevelState()
+        {
+            _zBlurBuffer?.Dispose();
+            _zBlurBuffer = null;
         }
 
         /// <summary>
@@ -138,6 +160,9 @@ namespace Content.Client.Viewport
         {
             _mapSystem ??= _entityManager.System<MapSystem>();
             _zLevelSystem ??= _entityManager.System<KsZLevelSystem>();
+
+            // Never leave an old one behind, in case this is reached without an InvalidateZLevelState first.
+            InvalidateZLevelState();
 
             _zBlurBuffer = _clyde.CreateRenderTarget(
                 size,

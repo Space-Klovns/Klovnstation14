@@ -316,10 +316,11 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         }
 
         var velocity = transitComponent.VerticalVelocity;
+        var hasGravity = HasGravityAt(zLevelEntity.Value, transformComponent.MapID, _transformSystem.GetWorldPosition(transformComponent));
 
         // Without gravity where it is, the entity does not accelerate - but it keeps whatever momentum it
         //      already had, and can still cross z-levels on it.
-        if (HasGravityAt(zLevelEntity.Value, transformComponent.MapID, _transformSystem.GetWorldPosition(transformComponent)))
+        if (hasGravity)
         {
             velocity = Math.Clamp(
                 velocity - _transitGravity * frameTime,
@@ -328,9 +329,24 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
             );
         }
 
-        // Hovering weightless, or resting against a ceiling. Costs a query iteration and nothing else.
         if (velocity == 0f)
+        {
+            // Nothing is left to move it: no speed of its own, and no gravity here to lend it any. Ending the
+            //      transit matters because a transiting entity is knocked down, cannot move itself and collides
+            //      with nothing - a weightless entity resting against a ceiling would be stuck like that for
+            //      good. The pending marker is what starts it falling again if gravity ever comes back.
+            if (!hasGravity)
+            {
+                EnsureComp<KsPendingZLevelTransitComponent>(uid);
+                RemComp<KsZLevelTransitComponent>(uid);
+                return;
+            }
+
+            // Momentarily stationary at the top of an arc. Written back rather than dropped, so the next tick
+            //      integrates from this zero instead of from the speed gravity just cancelled out.
+            SetTransit((uid, transitComponent), transitComponent.Height, velocity);
             return;
+        }
 
         // One unit of Height spans this z-level's Depth, so a deeper z-level takes proportionally longer to
         //      cross, and an entity builds up proportionally more speed crossing it.
@@ -420,9 +436,13 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
 
         if (attemptEvent.Damaging)
         {
+            // Clamped because a subscriber is free to force Damaging on an impact under the threshold, and a
+            //      negative specifier applied with ignoreResistances would heal rather than hurt.
+            var overThreshold = MathF.Max(0f, impactSpeed - _transitImpactVelocity);
+
             _damageableSystem.TryChangeDamage(
                 entity.Owner,
-                ImpactDamage * (impactSpeed - _transitImpactVelocity),
+                ImpactDamage * overThreshold,
                 ignoreResistances: true
             );
 
@@ -431,13 +451,12 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
                 return;
         }
 
+        // Ended before the land event rather than after it, so that a subscriber can bounce or relaunch the
+        //      entity with TryStartTransit without the transit it just started being torn straight back down.
+        RemComp<KsZLevelTransitComponent>(entity.Owner);
+
         var landEvent = new KsZLevelLandEvent(impactSpeed, attemptEvent.Damaging);
         RaiseLocalEvent(entity.Owner, ref landEvent);
-
-        if (TerminatingOrDeleted(entity.Owner))
-            return;
-
-        RemComp<KsZLevelTransitComponent>(entity.Owner);
     }
 
     private void SetTransit(Entity<KsZLevelTransitComponent> entity, float height, float velocity)

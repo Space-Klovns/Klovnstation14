@@ -284,6 +284,8 @@ namespace Content.Client.Viewport
         {
             _viewport?.Dispose();
             _viewport = null;
+
+            InvalidateZLevelState(); // KS14
         }
 
         public MapCoordinates ScreenToMap(Vector2 coords)
