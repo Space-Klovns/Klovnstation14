@@ -22,7 +22,6 @@ namespace Content.Server._KS14.TTS;
 public sealed partial class TtsSystem : SharedTtsSystem
 {
     [Dependency] private IConfigurationManager _configurationManager = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private WordFilterSystem _wordFilterSystem = default!;
@@ -69,7 +68,7 @@ public sealed partial class TtsSystem : SharedTtsSystem
     {
         _voiceIds.Clear();
 
-        foreach (var prototype in _prototypeManager.EnumeratePrototypes<TtsVoicePrototype>())
+        foreach (var prototype in ProtoMan.EnumeratePrototypes<TtsVoicePrototype>())
             _voiceIds.Add(prototype.ID);
     }
 
@@ -142,7 +141,7 @@ public sealed partial class TtsSystem : SharedTtsSystem
     public async Task Speak(EntityUid speakerUid, ProtoId<TtsVoicePrototype> voiceProto, string text, TtsFilteredCategory category)
     {
         if (string.IsNullOrWhiteSpace(text) ||
-            !_prototypeManager.TryIndex(voiceProto, out var proto))
+            !ProtoMan.TryIndex(voiceProto, out var proto))
             return;
 
         var cacheId = BuildCacheId(proto, text);

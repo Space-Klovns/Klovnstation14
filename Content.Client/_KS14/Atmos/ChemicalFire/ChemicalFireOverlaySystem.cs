@@ -8,7 +8,6 @@ namespace Content.Client._KS14.Atmos.ChemicalFire;
 public sealed partial class ChemicalFireOverlaySystem : EntitySystem
 {
     [Dependency] private IOverlayManager _overlayManager = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;
 
     private static readonly ProtoId<ShaderPrototype> UnshadedShader = "unshaded";
@@ -22,7 +21,7 @@ public sealed partial class ChemicalFireOverlaySystem : EntitySystem
 
     private void OnDependenciesReady(IDependencyCollection dependencyCollection)
     {
-        var overlay = new ChemicalFireOverlay(_prototypeManager.Index(UnshadedShader).Instance());
+        var overlay = new ChemicalFireOverlay(ProtoMan.Index(UnshadedShader).Instance());
         dependencyCollection.InjectDependencies(overlay, oneOff: true);
 
         _overlayManager.AddOverlay(overlay);

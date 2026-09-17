@@ -20,7 +20,6 @@ public sealed partial class IdCardSystem : SharedIdCardSystem
 {
     [Dependency] private PopupSystem _popupSystem = default!;
     [Dependency] private IRobustRandom _random = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IAdminLogManager _adminLogger = default!;
     [Dependency] private ChatSystem _chat = default!;
     [Dependency] private MicrowaveSystem _microwave = default!;
@@ -82,7 +81,7 @@ public sealed partial class IdCardSystem : SharedIdCardSystem
             }
 
             // Give them a wonderful new access to compensate for everything
-            var ids = _prototypeManager.EnumeratePrototypes<AccessLevelPrototype>().Where(x => x.CanAddToIdCard).ToArray();
+            var ids = ProtoMan.EnumeratePrototypes<AccessLevelPrototype>().Where(x => x.CanAddToIdCard).ToArray();
 
             if (ids.Length == 0)
                 return;

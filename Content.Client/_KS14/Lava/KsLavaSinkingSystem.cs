@@ -1,3 +1,4 @@
+using Content.Client._KS14.Graphics;
 using Content.Shared._KS14.Lava;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
@@ -12,7 +13,7 @@ namespace Content.Client._KS14.Lava;
 public sealed partial class KsLavaSinkingSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private SpriteSystem _spriteSystem = default!;
 
     private static readonly ProtoId<ShaderPrototype> ShaderId = "HorizontalCut";
 
@@ -33,19 +34,32 @@ public sealed partial class KsLavaSinkingSystem : EntitySystem
         if (!TryComp<SpriteComponent>(entity.Owner, out var spriteComponent))
             return;
 
-        entity.Comp.Shader = enabled ? _prototypeManager.Index(ShaderId).InstanceUnique() : null;
-        spriteComponent.PostShader = (ShaderInstance?)entity.Comp.Shader;
-        spriteComponent.RaiseShaderEvent = enabled;
+        if (!enabled)
+        {
+            _spriteSystem.RemovePostShader((entity.Owner, spriteComponent), KsPostShaderIds.LavaSinking);
+            return;
+        }
+
+        var shaderInstance = ProtoMan.Index(ShaderId).InstanceUnique();
+
+        _spriteSystem.SetPostShader((entity.Owner, spriteComponent),
+            new SpriteComponent.PostShaderArgs(KsPostShaderIds.LavaSinking, shaderInstance)
+            {
+                RaiseShaderEvent = true,
+            });
     }
 
     [SubscribeLocalEvent]
     private void OnShaderRender(Entity<KsLavaSinkingComponent> entity, ref BeforePostShaderRenderEvent args)
     {
+        // The event now fires once per post-shader entry on the sprite, so only answer for ours.
+        if (args.Id != KsPostShaderIds.LavaSinking)
+            return;
+
         var time = (float)((entity.Comp.SinkTime - _gameTiming.CurTime) / (entity.Comp.SinkTime - entity.Comp.StartTime));
         time = MathF.Max(time, 0f);
 
-        var shaderInstance = (ShaderInstance)entity.Comp.Shader!;
-        shaderInstance.SetParameter("c", 1 - time);
-        shaderInstance.SetParameter("alphaModifier", MathF.Max(time - 0.25f, 0f));
+        args.Shader.SetParameter("c", 1 - time);
+        args.Shader.SetParameter("alphaModifier", MathF.Max(time - 0.25f, 0f));
     }
 }

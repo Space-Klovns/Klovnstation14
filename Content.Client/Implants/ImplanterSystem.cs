@@ -9,7 +9,6 @@ namespace Content.Client.Implants;
 public sealed partial class ImplanterSystem : SharedImplanterSystem
 {
     [Dependency] private SharedUserInterfaceSystem _uiSystem = default!;
-    [Dependency] private IPrototypeManager _proto = default!;
 
     public override void Initialize()
     {
@@ -28,7 +27,7 @@ public sealed partial class ImplanterSystem : SharedImplanterSystem
             Dictionary<string, string> implants = new();
             foreach (var implant in component.DeimplantWhitelist)
             {
-                if (_proto.Resolve(implant, out var proto))
+                if (ProtoMan.Resolve(implant, out var proto))
                     implants.Add(proto.ID, proto.Name);
             }
 

@@ -9,7 +9,6 @@ namespace Content.Shared._KS14.EntityProcessor.StackProcessor;
 public sealed partial class KsStackProcessorSystem : EntitySystem
 {
     [Dependency] private INetManager _netManager = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private SharedStackSystem _stackSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
     [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
@@ -91,7 +90,7 @@ public sealed partial class KsStackProcessorSystem : EntitySystem
         if (spawnedCount < 0)
             return;
 
-        var maxCount = _prototypeManager.Index(stackComponent.StackTypeId).MaxCount ?? int.MaxValue;
+        var maxCount = ProtoMan.Index(stackComponent.StackTypeId).MaxCount ?? int.MaxValue;
 
         var spawnCoordinates = _transformSystem.GetMoverCoordinates(entity.Owner);
         spawnCoordinates = spawnCoordinates.WithPosition(spawnCoordinates.Position + entity.Comp.OutputOffsets[args.ProcessedUid]);

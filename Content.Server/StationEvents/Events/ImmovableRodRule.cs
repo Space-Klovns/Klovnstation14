@@ -16,7 +16,6 @@ public sealed partial class ImmovableRodRule : StationEventSystem<ImmovableRodRu
 {
     [Dependency] private SharedTransformSystem _transform = default!;
     [Dependency] private GunSystem _gun = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     protected override void Started(EntityUid uid, ImmovableRodRuleComponent component, GameRuleComponent gameRule, GameRuleStartedEvent args)
     {
@@ -24,7 +23,7 @@ public sealed partial class ImmovableRodRule : StationEventSystem<ImmovableRodRu
 
         var protoName = EntitySpawnCollection.GetSpawns(component.RodPrototypes).First();
 
-        var proto = _prototypeManager.Index<EntityPrototype>(protoName);
+        var proto = ProtoMan.Index<EntityPrototype>(protoName);
 
         if (proto.TryGetComponent<ImmovableRodComponent>(out var rod, EntityManager.ComponentFactory) &&
             proto.TryGetComponent<TimedDespawnComponent>(out var despawn, EntityManager.ComponentFactory))

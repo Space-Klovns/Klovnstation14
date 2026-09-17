@@ -9,12 +9,11 @@ namespace Content.Client._KS14.Anchorless.Systems;
 public sealed partial class AnchorlessFactionIconSystem : EntitySystem
 {
     private static readonly ProtoId<FactionIconPrototype> AnchorlessFactionIcon = "AnchorlessFaction";
-    [Dependency] private IPrototypeManager _prototype = default!;
 
     [SubscribeLocalEvent]
     private void OnGetStatusIcons(Entity<AnchorlessFactionComponent> ent, ref GetStatusIconsEvent args)
     {
-        if (_prototype.TryIndex(AnchorlessFactionIcon, out var icon))
+        if (ProtoMan.TryIndex(AnchorlessFactionIcon, out var icon))
             args.StatusIcons.Add(icon);
     }
 }

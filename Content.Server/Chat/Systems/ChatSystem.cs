@@ -51,7 +51,6 @@ public sealed partial class ChatSystem : SharedChatSystem
     [Dependency] private IChatSanitizationManager _sanitizer = default!;
     [Dependency] private IAdminManager _adminManager = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private IAdminLogManager _adminLogger = default!;
     [Dependency] private ActionBlockerSystem _actionBlocker = default!;
@@ -417,7 +416,7 @@ public sealed partial class ChatSystem : SharedChatSystem
             RaiseLocalEvent(source, nameEv);
             name = nameEv.VoiceName;
             // Check for a speech verb override
-            if (nameEv.SpeechVerb != null && _prototypeManager.Resolve(nameEv.SpeechVerb, out var proto))
+            if (nameEv.SpeechVerb != null && ProtoMan.Resolve(nameEv.SpeechVerb, out var proto))
                 speech = proto;
         }
 

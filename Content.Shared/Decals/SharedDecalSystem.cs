@@ -94,6 +94,11 @@ namespace Content.Shared.Decals
             return true;
         }
 
+        /// <summary>
+        /// Adds a decal.
+        /// </summary>
+        public abstract bool TryAddDecal(Decal decal, EntityCoordinates coordinates, out DecalIndex decalId);
+
         private static void RebuildFreeDecalIds(DecalChunkComponent component)
         {
             component.FreeDecalIds.Clear();
@@ -118,30 +123,21 @@ namespace Content.Shared.Decals
             component.FreeDecalIds.Sort((x, y) => y.CompareTo(x));
         }
 
+        // KS14 start: convenience overload on shared, so predicted shared systems can place decals
         /// <summary>
-        ///     Does nothing on client. <paramref name="decalId"/> is always default on client.
+        ///     Predicted on the client, which allocates from the reserved predicted id range.
         ///         Decal positions are aligned to the bottom-left corner of the texture/tile (who knows),
         ///         not center.
         /// </summary>
-        public virtual bool TryAddDecal(string id, EntityCoordinates coordinates, out DecalIndex decalId, Color? color = null, Angle? rotation = null, int zIndex = 0, bool cleanable = false)
+        public bool TryAddDecal(string id, EntityCoordinates coordinates, out DecalIndex decalId, Color? color = null, Angle? rotation = null, int zIndex = 0, bool cleanable = false)
         {
-            // NOOP on client atm.
-            decalId = default;
-            return true;
-        }
+            rotation ??= Angle.Zero;
+            var decal = new Decal(coordinates.Position, id, color, rotation.Value, zIndex, cleanable);
 
-        // KS14: Added TryAddDecal on shared
-        /// <summary>
-        ///     Does nothing on client. <paramref name="decalId"/> is always default on client.
-        ///         Decal positions are aligned to the bottom-left corner of the texture/tile (who knows),
-        ///         not center.
-        /// </summary>
-        public virtual bool TryAddDecal(Decal decal, EntityCoordinates coordinates, out DecalIndex decalId)
-        {
-            // NOOP on client atm.
-            decalId = default;
-            return true;
+            return TryAddDecal(decal, coordinates, out decalId);
         }
+        // KS14 end
+
     }
 
     /// <summary>

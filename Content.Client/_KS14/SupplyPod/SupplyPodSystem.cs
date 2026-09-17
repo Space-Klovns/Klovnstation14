@@ -8,7 +8,6 @@ namespace Content.Client._KS14.SupplyPod;
 
 public sealed partial class SupplyPodSystem : SharedSupplyPodSystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IOverlayManager _overlayManager = default!;
     [Dependency] private SystemCollectionHookManager _hookManager = default!;
     [Dependency] private SupplyPodDescentSystem _supplyPodDescentSystem = default!;
@@ -46,8 +45,8 @@ public sealed partial class SupplyPodSystem : SharedSupplyPodSystem
     private void OnDependencyAvailable(IDependencyCollection dependencyCollection)
     {
         var overlay = new SupplyPodOverlay(
-            _prototypeManager.Index(StencilMaskShaderId).InstanceUnique(),
-            _prototypeManager.Index(StencilDrawShaderId).InstanceUnique()
+            ProtoMan.Index(StencilMaskShaderId).InstanceUnique(),
+            ProtoMan.Index(StencilDrawShaderId).InstanceUnique()
         );
 
         dependencyCollection.InjectDependencies(overlay, oneOff: true);

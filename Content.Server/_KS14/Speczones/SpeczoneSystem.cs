@@ -27,7 +27,6 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private IComponentFactory _componentFactory = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private MapSystem _mapSystem = default!;
     [Dependency] private MapLoaderSystem _mapLoaderSystem = default!;
     [Dependency] private TransformSystem _transformSystem = default!;
@@ -90,7 +89,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
         // Initialise speczones
 
         var loadedSpeczoneEntities = new ValueList<Entity<SpeczoneComponent>>();
-        foreach (var speczonePrototype in _prototypeManager.EnumeratePrototypes<SpeczonePrototype>())
+        foreach (var speczonePrototype in ProtoMan.EnumeratePrototypes<SpeczonePrototype>())
         {
             if (!TryLoadSpeczonePrototype(speczonePrototype, out var speczoneEntity, initializeMaps: false))
                 continue;
@@ -126,7 +125,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
                 continue;
 
             // load a new speczone
-            if (_prototypeManager.TryIndex<SpeczonePrototype>(modifiedZone, out var speczonePrototype))
+            if (ProtoMan.TryIndex<SpeczonePrototype>(modifiedZone, out var speczonePrototype))
             {
                 TryLoadSpeczonePrototype(speczonePrototype, out _);
                 anythingHappenedEver = true;

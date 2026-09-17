@@ -11,7 +11,6 @@ namespace Content.Shared._KS14.Execution;
 /// </summary>
 public sealed partial class CartridgeExecutionSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IComponentFactory _componentFactory = default!;
     [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
 
@@ -24,7 +23,7 @@ public sealed partial class CartridgeExecutionSystem : EntitySystem
             return;
         }
 
-        if (_prototypeManager.TryIndex(component.Prototype, out EntityPrototype? proto) &&
+        if (ProtoMan.TryIndex(component.Prototype, out EntityPrototype? proto) &&
             proto.TryGetComponent<ProjectileComponent>(out var projectile, _componentFactory))
         {
             args.Damage = projectile.Damage;

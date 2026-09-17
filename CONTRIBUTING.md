@@ -235,6 +235,16 @@ public sealed partial class MySystem : EntitySystem
 }
 ```
 
+**Don't declare `IPrototypeManager` in an `EntitySystem` (C#)** — `EntitySystem` already provides one as `ProtoMan`, so a system that declares its own is shadowing it. Use the inherited member:
+```csharp
+// old
+[Dependency] private IPrototypeManager _prototypeManager = default!;   // then _prototypeManager.Index(...)
+
+// current
+ProtoMan.Index(...);                                                   // no declaration at all
+```
+This only applies to `EntitySystem` (and its subclasses, `GameRuleSystem<T>` included). Everything else that injects dependencies — overlays, UI controls and windows, `BoundUserInterface`s, managers, `LocalizedEntityCommands`, HTN operators — has no `ProtoMan` and still declares its own.
+
 **Inject `EntityQuery<T>`, don't `GetEntityQuery<T>()` (C#)** — the collection that injects into `EntitySystem`s (`IEntitySystemManager.DependencyCollection`) resolves `EntityQuery<T>` and `EntitySystem` as well, unlike the default `IoCManager` one. So declare queries as dependencies:
 ```csharp
 [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;   // not GetEntityQuery<SpriteComponent>() in Initialize
@@ -289,4 +299,4 @@ The generator only runs in projects that import it. `Content.Client`, `Content.S
 
 **`IMapManager` is gone (C#)** — engine 280 removed it; everything it did lives on `SharedMapSystem`, which injects like any other system. Most methods kept their names (`CreateGridEntity`, `FindGridsIntersecting`, `TryFindGridAt`, `GetAllGrids`); `SetMapPaused` became `SetPaused`.
 
-**Engine version** — this fork tracks a pinned `RobustToolbox` submodule, currently v288.0.0. When bumping it, read [RELEASE-NOTES.md](https://github.com/space-wizards/RobustToolbox/blob/master/RELEASE-NOTES.md) for every intervening version and check whether upstream SS14 already shipped the content-side fix — porting their commit is cheaper and keeps future merges clean. Build `-c Release`, not `Debug`/`DebugOpt`: `MSBuild/Content.props` only sets `TreatWarningsAsErrors` for `Release`, so it is the only configuration that reproduces what CI fails on.
+**Engine version** — this fork tracks a pinned `RobustToolbox` submodule, currently v289.0.3. When bumping it, read [RELEASE-NOTES.md](https://github.com/space-wizards/RobustToolbox/blob/master/RELEASE-NOTES.md) for every intervening version and check whether upstream SS14 already shipped the content-side fix — porting their commit is cheaper and keeps future merges clean. Build `-c Release`, not `Debug`/`DebugOpt`: `MSBuild/Content.props` only sets `TreatWarningsAsErrors` for `Release`, so it is the only configuration that reproduces what CI fails on.

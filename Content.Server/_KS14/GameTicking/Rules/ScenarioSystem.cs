@@ -28,7 +28,6 @@ public sealed partial class ScenarioRuleComponent : Component
 
 public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponent>
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private RoundEndSystem _roundEndSystem = default!;
     [Dependency] private PvsOverrideSystem _pvsOverrideSystem = default!;
 
@@ -53,7 +52,7 @@ public sealed partial class ScenarioSystem : GameRuleSystem<ScenarioRuleComponen
         args.AddLine("A skirmish between NT and Syndicate forces has transpired.");
 
         if (component.WinningFactionId is { } winningFactionId &&
-            _prototypeManager.TryIndex(winningFactionId, out var winningFaction))
+            ProtoMan.TryIndex(winningFactionId, out var winningFaction))
         {
             args.AddLine(Loc.GetString(winningFaction.VictoryLocId));
 

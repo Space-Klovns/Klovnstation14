@@ -20,7 +20,6 @@ namespace Content.Shared._KS14.Atmos.EntitySystems;
 public abstract partial class SharedGasGrenadeCompressorSystem : EntitySystem
 {
     [Dependency] private IComponentFactory _componentFactory = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private ISerializationManager _serializationManager = default!;
     [Dependency] private SharedPowerReceiverSystem _powerReceiverSystem = default!;
     [Dependency] private ItemSlotsSystem _itemSlotsSystem = default!;
@@ -155,7 +154,7 @@ public abstract partial class SharedGasGrenadeCompressorSystem : EntitySystem
         _appearanceSystem.SetData(grenadeUid, TriggerVisuals.VisualState, TriggerVisualState.Unprimed);
 
         // Re-arm grenade using prototype specs to ensure correctness
-        if (_prototypeManager.TryIndex<EntityPrototype>(AirGrenadeId, out var proto))
+        if (ProtoMan.TryIndex<EntityPrototype>(AirGrenadeId, out var proto))
         {
             if (proto.TryGetComponent<ReleaseGasOnTriggerComponent>(out var protoRelease, _componentFactory))
             {

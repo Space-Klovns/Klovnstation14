@@ -38,7 +38,6 @@ public sealed partial class KsTranslationSystem : EntitySystem
     [Dependency] private IServerNetManager _net = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private IGameTiming _timing = default!;
-    [Dependency] private IPrototypeManager _proto = default!;
 
     /// <summary>
     ///     The translation backend. Deliberately NOT a [Dependency] so integration tests can swap in a fake;
@@ -131,7 +130,7 @@ public sealed partial class KsTranslationSystem : EntitySystem
     public void RebuildGlossary()
     {
         var dictionaries = new List<KsGlossaryDictionary>();
-        foreach (var proto in _proto.EnumeratePrototypes<KsTranslationGlossaryPrototype>())
+        foreach (var proto in ProtoMan.EnumeratePrototypes<KsTranslationGlossaryPrototype>())
         {
             if (proto.Entries.Count == 0)
                 continue;

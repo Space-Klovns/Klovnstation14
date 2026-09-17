@@ -10,7 +10,6 @@ namespace Content.Shared._KS14.TileEffects;
 
 public sealed partial class KsTileEffectSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
 
@@ -25,7 +24,7 @@ public sealed partial class KsTileEffectSystem : EntitySystem
 
     private void ReloadReagents(IDependencyCollection dependencyCollection)
     {
-        foreach (var reagentPrototype in _prototypeManager.EnumeratePrototypes<ReagentPrototype>())
+        foreach (var reagentPrototype in ProtoMan.EnumeratePrototypes<ReagentPrototype>())
         {
             foreach (var tileEffect in reagentPrototype.KsTileEffects)
                 tileEffect.Initialize(dependencyCollection);
@@ -57,7 +56,7 @@ public sealed partial class KsTileEffectSystem : EntitySystem
         for (var i = solution.Contents.Count - 1; i >= 0; i--)
         {
             var (reagent, quantity) = solution.Contents[i];
-            var reagentPrototype = _prototypeManager.Index<ReagentPrototype>(reagent.Prototype);
+            var reagentPrototype = ProtoMan.Index<ReagentPrototype>(reagent.Prototype);
 
             foreach (var tileEffect in reagentPrototype.KsTileEffects)
             {

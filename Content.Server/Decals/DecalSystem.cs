@@ -202,15 +202,7 @@ public sealed partial class DecalSystem : SharedDecalSystem
         }
     }
 
-    public override /* KS14: made override */ bool TryAddDecal(string id, EntityCoordinates coordinates, out DecalIndex decalId, Color? color = null, Angle? rotation = null, int zIndex = 0, bool cleanable = false)
-    {
-        rotation ??= Angle.Zero;
-        var decal = new Decal(coordinates.Position, id, color, rotation.Value, zIndex, cleanable);
-
-        return TryAddDecal(decal, coordinates, out decalId);
-    }
-
-    public override /* KS14: made override */ bool TryAddDecal(Decal decal, EntityCoordinates coordinates, out DecalIndex decalId)
+    public override bool TryAddDecal(Decal decal, EntityCoordinates coordinates, out DecalIndex decalId)
     {
         decalId = default;
 

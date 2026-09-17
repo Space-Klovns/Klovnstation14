@@ -25,7 +25,6 @@ public sealed partial class RCDConstructionGhostSystem : EntitySystem
 
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private IPlacementManager _placementManager = default!;
-    [Dependency] private IPrototypeManager _protoManager = default!;
     [Dependency] private HandsSystem _hands = default!;
 
     private Direction _placementDirection = default;
@@ -106,7 +105,7 @@ public sealed partial class RCDConstructionGhostSystem : EntitySystem
             return;
         }
         // Starlight edit Start: RPD - use the mirrored prototype if the flip state is toggled on
-        // var prototype = _protoManager.Index(rcd.ProtoId);
+        // var prototype = ProtoMan.Index(rcd.ProtoId);
 
         // Determine if mirrored
         var cachedProto = rcd.CachedPrototype;
@@ -114,7 +113,7 @@ public sealed partial class RCDConstructionGhostSystem : EntitySystem
         var prototype = wantMirror ? cachedProto.MirrorPrototype : cachedProto.Prototype;
 
         bool isLayered = rcd.IsRpd
-            && _protoManager.TryIndex<RCDPrototype>(cachedProto.ID, out var rcdProto)
+            && ProtoMan.TryIndex<RCDPrototype>(cachedProto.ID, out var rcdProto)
             && rcdProto.HasLayers;
 
         var desiredMode = isLayered ? RpdPlacementMode : PlacementMode;

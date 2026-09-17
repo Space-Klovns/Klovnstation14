@@ -10,7 +10,6 @@ namespace Content.Server._KS14.Construction;
 /// </summary>
 public sealed partial class ConstructionInjectionSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private SystemCollectionHookManager _collectionHook = default!;
 
     public override void Initialize()
@@ -22,7 +21,7 @@ public sealed partial class ConstructionInjectionSystem : EntitySystem
 
     private void OnLoad()
     {
-        foreach (var graphPrototype in _prototypeManager.EnumeratePrototypes<ConstructionGraphPrototype>())
+        foreach (var graphPrototype in ProtoMan.EnumeratePrototypes<ConstructionGraphPrototype>())
         {
             foreach (var (_, node) in graphPrototype.Nodes)
             {

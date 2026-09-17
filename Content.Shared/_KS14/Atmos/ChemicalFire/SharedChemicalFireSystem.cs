@@ -18,7 +18,6 @@ namespace Content.Shared._KS14.Atmos.ChemicalFire;
 public abstract partial class SharedChemicalFireSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IComponentFactory _componentFactory = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -318,7 +317,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
         if (_templateFires.TryGetValue(prototypeId, out templateUid) && Exists(templateUid))
             return true;
 
-        if (!_prototypeManager.TryIndex<EntityPrototype>(prototypeId, out var entityPrototype) ||
+        if (!ProtoMan.TryIndex<EntityPrototype>(prototypeId, out var entityPrototype) ||
             !entityPrototype.TryGetComponent(out ChemicalFireComponent? _, _componentFactory))
         {
             templateUid = default;
@@ -390,7 +389,7 @@ public abstract partial class SharedChemicalFireSystem : EntitySystem
     {
         prototypeComponent = default!;
 
-        if (!_prototypeManager.TryIndex(prototypeId, out var entityPrototype) ||
+        if (!ProtoMan.TryIndex(prototypeId, out var entityPrototype) ||
             !entityPrototype.TryGetComponent(out ChemicalFireComponent? foundComponent, _componentFactory))
             return false;
 

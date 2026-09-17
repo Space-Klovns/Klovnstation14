@@ -14,7 +14,6 @@ namespace Content.Server._KS14.OreWell;
 public sealed partial class OreWellReceiverSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private OreWellSystem _oreWellSystem = default!;
     [Dependency] private StackSystem _stackSystem = default!;
     [Dependency] private KsGenericSpriteFlickSystem _spriteFlickSystem = default!;
@@ -50,7 +49,7 @@ public sealed partial class OreWellReceiverSystem : EntitySystem
 
             foreach (var (resourceId, amount) in individualGenerated)
             {
-                var resource = _prototypeManager.Index(resourceId);
+                var resource = ProtoMan.Index(resourceId);
 
                 // Try to pay off debt as best we can
                 var paidAmount = amount + entity.Comp.Debt.GetValueOrDefault(resourceId);

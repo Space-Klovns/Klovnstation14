@@ -36,7 +36,6 @@ public sealed partial class PlumbingReactorSystem : EntitySystem
     [Dependency] private UserInterfaceSystem _ui = default!;
     [Dependency] private NodeContainerSystem _nodeContainer = default!;
     [Dependency] private PopupSystem _popup = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private PlumbingPullSystem _pullSystem = default!;
     [Dependency] private PowerReceiverSystem _power = default!;
     [Dependency] private SharedAppearanceSystem _appearance = default!;
@@ -195,7 +194,7 @@ public sealed partial class PlumbingReactorSystem : EntitySystem
         if (MathHelper.CloseTo(currentTemp, targetTemp, TemperatureTolerance))
             return;
 
-        var heatCap = solution.GetHeatCapacity(_prototypeManager);
+        var heatCap = solution.GetHeatCapacity(ProtoMan);
         if (heatCap <= 0f)
             return; // Don't heat empty solution
 
@@ -225,14 +224,14 @@ public sealed partial class PlumbingReactorSystem : EntitySystem
     {
         if (args.Quantity <= 0)
         {
-            if (_prototypeManager.HasIndex<ReagentPrototype>(args.ReagentId))
+            if (ProtoMan.HasIndex<ReagentPrototype>(args.ReagentId))
                 ent.Comp.ReagentTargets.Remove(new ProtoId<ReagentPrototype>(args.ReagentId));
             DirtyField(ent, ent.Comp, nameof(PlumbingReactorComponent.ReagentTargets));
             UpdateUI(ent);
             return;
         }
 
-        if (!_prototypeManager.HasIndex<ReagentPrototype>(args.ReagentId))
+        if (!ProtoMan.HasIndex<ReagentPrototype>(args.ReagentId))
         {
             _popup.PopupEntity(Loc.GetString("plumbing-reactor-invalid-reagent", ("reagent", args.ReagentId)), ent.Owner, args.Actor);
             return;
@@ -309,7 +308,7 @@ public sealed partial class PlumbingReactorSystem : EntitySystem
         }
         else
         {
-            if (!_prototypeManager.HasIndex<MixingCategoryPrototype>(args.MixingMode))
+            if (!ProtoMan.HasIndex<MixingCategoryPrototype>(args.MixingMode))
                 return;
 
             ent.Comp.SelectedMixingMode = new ProtoId<MixingCategoryPrototype>(args.MixingMode);

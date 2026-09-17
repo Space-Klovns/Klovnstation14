@@ -14,7 +14,6 @@ namespace Content.Shared._KS14.OreWell;
 /// </summary>
 public sealed partial class OreWellSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private INetManager _netManager = default!;
 
@@ -38,7 +37,7 @@ public sealed partial class OreWellSystem : EntitySystem
         args.PushMarkup(Loc.GetString("ks-specific-orewell-examined", ("rate", (entity.Comp.IndividualResourceRate * 60).ToString("F1"))));
         foreach (var typeId in entity.Comp.ResourceTypes)
         {
-            var type = _prototypeManager.Index(typeId);
+            var type = ProtoMan.Index(typeId);
             args.PushMarkup(Loc.GetString(type.Name));
         }
     }
@@ -46,7 +45,7 @@ public sealed partial class OreWellSystem : EntitySystem
     private void InitSettings(Entity<ActiveOreWellComponent> entity)
     {
         // Let it throw
-        var setting = _prototypeManager.Index(entity.Comp.SettingId);
+        var setting = ProtoMan.Index(entity.Comp.SettingId);
         var typeCount = _robustRandom.Next(setting.ResourceCountRange.X, setting.ResourceCountRange.Y);
 
         var possibleTypes = setting.PossibleResourceTypes.ToList();

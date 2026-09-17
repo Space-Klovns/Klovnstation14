@@ -22,7 +22,6 @@ namespace Content.Shared._KS14.Audio;
 /// </summary>
 public sealed partial class AudioEffectSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private SharedAudioSystem _audioSystem = default!;
 
     /// <summary>
@@ -224,7 +223,7 @@ public sealed partial class AudioEffectSystem : EntitySystem
         auxiliaryUid = null;
 
         if (_auxiliariesSafe == false ||
-            !_prototypeManager.TryIndex(preset, out var presetPrototype))
+            !ProtoMan.TryIndex(preset, out var presetPrototype))
             return false;
 
         // i cant `??=` it

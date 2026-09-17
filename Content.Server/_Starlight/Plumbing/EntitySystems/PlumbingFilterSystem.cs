@@ -26,7 +26,6 @@ public sealed partial class PlumbingFilterSystem : EntitySystem
     [Dependency] private UserInterfaceSystem _ui = default!;
     [Dependency] private PopupSystem _popup = default!;
     [Dependency] private SharedAudioSystem _audio = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     public override void Initialize()
     {
@@ -77,7 +76,7 @@ public sealed partial class PlumbingFilterSystem : EntitySystem
 
     private void OnAddReagent(Entity<PlumbingFilterComponent> ent, ref PlumbingFilterAddReagentMessage args)
     {
-        if (!_prototypeManager.HasIndex<ReagentPrototype>(args.ReagentId))
+        if (!ProtoMan.HasIndex<ReagentPrototype>(args.ReagentId))
         {
             _popup.PopupEntity(Loc.GetString("plumbing-filter-invalid-reagent", ("reagent", args.ReagentId)), ent.Owner, args.Actor);
             return;

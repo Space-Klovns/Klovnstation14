@@ -39,7 +39,7 @@ public sealed partial class AnomalySystem
     private void CacheGasEffects()
     {
         _gasEffects.Clear();
-        foreach (var proto in _prototype.EnumeratePrototypes<AnomalyGasEffectPrototype>())
+        foreach (var proto in ProtoMan.EnumeratePrototypes<AnomalyGasEffectPrototype>())
         {
             _gasEffects[proto.Gas] = proto;
         }

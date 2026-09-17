@@ -29,7 +29,6 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
     [Dependency] private SharedHandsSystem _hands = default!;
     [Dependency] private InventorySystem _inventory = default!;
     [Dependency] private SharedStorageSystem _storage = default!;
-    [Dependency] private IPrototypeManager _prototypes = default!;
     [Dependency] private SharedPopupSystem _popup = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
@@ -193,7 +192,7 @@ public abstract partial class SharedCMAutomatedVendorSystem : EntitySystem
         if (entry.Amount is <= 0)
             return;
 
-        if (!_prototypes.TryIndex(entry.Id, out var entity))
+        if (!ProtoMan.TryIndex(entry.Id, out var entity))
         {
             Log.Error($"Tried to vend non-existent entity: {entry.Id}");
             return;

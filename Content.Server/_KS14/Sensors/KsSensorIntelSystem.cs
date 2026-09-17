@@ -19,7 +19,6 @@ namespace Content.Server._KS14.Sensors;
 public sealed partial class KsSensorIntelSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
-    [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private SharedMapSystem _map = default!;
     [Dependency] private TurfSystem _turf = default!;
 
@@ -246,7 +245,7 @@ public sealed partial class KsSensorIntelSystem : EntitySystem
 
         foreach (var id in intel)
         {
-            if (!_proto.TryIndex(id, out var proto))
+            if (!ProtoMan.TryIndex(id, out var proto))
             {
                 if (_warnedUnknown.Add(id.Id))
                     _sawmill.Debug($"Unknown sensor intel id '{id.Id}', skipping.");
@@ -289,7 +288,7 @@ public sealed partial class KsSensorIntelSystem : EntitySystem
     {
         foreach (var id in declared)
         {
-            if (!_proto.TryIndex(id, out var proto) || proto.Metric != metric)
+            if (!ProtoMan.TryIndex(id, out var proto) || proto.Metric != metric)
                 continue;
 
             return (id, Format(proto, value));

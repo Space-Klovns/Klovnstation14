@@ -50,7 +50,6 @@ namespace Content.Server.Administration.Systems
         [Dependency] private IAdminManager _adminManager = default!;
         [Dependency] private IGameTiming _gameTiming = default!;
         [Dependency] private SharedMapSystem _map = default!;
-        [Dependency] private IPrototypeManager _prototypeManager = default!;
         [Dependency] private AdminSystem _adminSystem = default!;
         [Dependency] private DisposalTubeSystem _disposalTubes = default!;
         [Dependency] private EuiManager _euiManager = default!;

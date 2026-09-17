@@ -7,7 +7,6 @@ namespace Content.Shared._KS14.WordFilter;
 
 public sealed partial class WordFilterSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     /// <summary>
     ///     Characters that are totally removed.
@@ -107,11 +106,11 @@ public sealed partial class WordFilterSystem : EntitySystem
     {
         _cache.Clear();
 
-        var protoCount = _prototypeManager.Count<WordFilterPrototype>();
+        var protoCount = ProtoMan.Count<WordFilterPrototype>();
         _cache.TrimExcess(protoCount);
         _cache.EnsureCapacity(protoCount);
 
-        foreach (var filterPrototype in _prototypeManager.EnumeratePrototypes<WordFilterPrototype>())
+        foreach (var filterPrototype in ProtoMan.EnumeratePrototypes<WordFilterPrototype>())
         {
             string replacement;
             string capitalisedReplacement;

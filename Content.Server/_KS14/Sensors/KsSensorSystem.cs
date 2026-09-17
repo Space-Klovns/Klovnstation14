@@ -30,7 +30,6 @@ namespace Content.Server._KS14.Sensors;
 public sealed partial class KsSensorSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
-    [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private IConfigurationManager _cfg = default!;
     [Dependency] private SharedPowerReceiverSystem _power = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
@@ -587,7 +586,7 @@ public sealed partial class KsSensorSystem : EntitySystem
         {
             foreach (var (field, value) in intel)
             {
-                if (!_proto.TryIndex(field, out var proto) || !proto.Sticky)
+                if (!ProtoMan.TryIndex(field, out var proto) || !proto.Sticky)
                     continue;
 
                 if (record.KnownIntel.TryGetValue(field, out var existing) && seen <= existing.Seen)
@@ -1684,7 +1683,7 @@ public sealed partial class KsSensorSystem : EntitySystem
             {
                 // Sticky keys are served from KnownIntel above; never from a source.
                 if (record.KnownIntel.ContainsKey(intel)
-                    || _proto.TryIndex(intel, out var proto) && proto.Sticky)
+                    || ProtoMan.TryIndex(intel, out var proto) && proto.Sticky)
                     continue;
 
                 if (!merged.TryGetValue(intel, out var existing) || source.LastSeen > existing.Seen)
@@ -1699,8 +1698,8 @@ public sealed partial class KsSensorSystem : EntitySystem
 
         result.Sort((a, b) =>
         {
-            var orderA = _proto.TryIndex(a.Item1, out var protoA) ? protoA.Order : 0;
-            var orderB = _proto.TryIndex(b.Item1, out var protoB) ? protoB.Order : 0;
+            var orderA = ProtoMan.TryIndex(a.Item1, out var protoA) ? protoA.Order : 0;
+            var orderB = ProtoMan.TryIndex(b.Item1, out var protoB) ? protoB.Order : 0;
             return orderA != orderB ? orderA.CompareTo(orderB) : string.Compare(a.Item1.Id, b.Item1.Id, StringComparison.Ordinal);
         });
 
