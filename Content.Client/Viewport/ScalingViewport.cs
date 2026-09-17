@@ -226,7 +226,7 @@ namespace Content.Client.Viewport
                         _eye.Position.Position,
                         _entityManager.GetComponent<MapComponent>(mapUid).MapId
                     );
-                    _zLevelEye.Scale = _eye.Scale - new Vector2(0.075f * depth, 0.075f * depth);
+                    _zLevelEye.Scale = KsZLevelSystem.GetDepthScale(_eye.Scale, depth);
                     // The viewer's own map is drawn through their real eye while they're standing on it, and
                     //      through the scaled copy while they're above it mid-transit.
                     _viewport.Eye = isViewerMap && depth <= 0f ? _eye : _zLevelEye;

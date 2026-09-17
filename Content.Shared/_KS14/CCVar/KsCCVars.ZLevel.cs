@@ -8,7 +8,7 @@ public sealed partial class KsCCVars
 {
     /// <summary>
     ///     Downward acceleration applied to entities transiting between z-levels, in z-levels per second squared.
-    ///         Only applies on z-levels whose map has enabled gravity.
+    ///         Only applies where there is gravity: the grid under the entity if it has any, otherwise the map.
     /// </summary>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> ZLevelTransitGravity =
@@ -37,11 +37,4 @@ public sealed partial class KsCCVars
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> ZLevelPvsUpdateInterval =
         CVarDef.Create("klovn.zlevel.pvs_update_interval", 0.25f, CVar.SERVERONLY);
-
-    /// <summary>
-    ///     Tiles a transiting entity's sprite is lifted per unit of transit height.
-    /// </summary>
-    [CVarControl(AdminFlags.Debug)]
-    public static readonly CVarDef<float> ZLevelTransitHeightOffset =
-        CVarDef.Create("klovn.zlevel.transit_height_offset", 0.7f, CVar.CLIENTONLY | CVar.ARCHIVE);
 }

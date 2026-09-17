@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Utility;
 
@@ -15,6 +16,55 @@ public sealed partial class KsZLevelSystem : EntitySystem
         DirectlyAbove,
         UnderStack,
         AboveStack,
+    }
+
+    /// <summary>
+    ///     How much of the eye's scale one z-level of render depth takes away.
+    /// </summary>
+    public const float DepthScaleStep = 0.075f;
+
+    /// <summary>
+    ///     The eye scale a z-level sitting <paramref name="depth"/> z-levels below the viewer is rendered at.
+    /// </summary>
+    /// <remarks>
+    ///     Shared so that anything compensating for the per-z-level camera scale - a transiting entity's sprite,
+    ///         say - cannot drift out of step with what actually rendered it.
+    /// </remarks>
+    public static Vector2 GetDepthScale(Vector2 eyeScale, float depth)
+    {
+        var shrink = DepthScaleStep * depth;
+        return eyeScale - new Vector2(shrink, shrink);
+    }
+
+    /// <summary>
+    ///     How far below <paramref name="fromEntity"/>'s floor plane <paramref name="toUid"/>'s floor plane
+    ///         sits, in z-levels, summing the Depth of every z-level stepped down through.
+    /// </summary>
+    /// <returns>
+    ///     False if the two are not in the same stack, or if <paramref name="toUid"/> is above
+    ///         <paramref name="fromEntity"/>. Zero and true if they are the same z-level.
+    /// </returns>
+    public bool TryGetDepthBelow(Entity<KsZLevelComponent?> fromEntity, EntityUid toUid, out float depth)
+    {
+        depth = 0f;
+
+        if (!_zLevelQuery.Resolve(ref fromEntity, logMissing: false))
+            return false;
+
+        if (fromEntity.Owner == toUid)
+            return true;
+
+        // Stepping down from a z-level to the one below crosses the lower one's own Depth.
+        for (var node = fromEntity.Comp!.Node?.Previous; node != null; node = node.Previous)
+        {
+            depth += node.Value.Comp.Depth;
+
+            if (node.Value.Owner == toUid)
+                return true;
+        }
+
+        depth = 0f;
+        return false;
     }
 
     /// <summary>

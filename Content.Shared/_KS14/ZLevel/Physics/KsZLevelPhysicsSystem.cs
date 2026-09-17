@@ -264,10 +264,9 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
 
         var velocity = transitComponent.VerticalVelocity;
 
-        // Gravity is a property of the z-level's map, not of any grid on it. Without it the entity does not
-        //      accelerate, but it keeps whatever momentum it already had and can still cross z-levels on it.
-        if (_gravityQuery.TryGetComponent(zLevelEntity.Value.Owner, out var gravityComponent) &&
-            gravityComponent.Enabled)
+        // Without gravity where it is, the entity does not accelerate - but it keeps whatever momentum it
+        //      already had, and can still cross z-levels on it.
+        if (HasGravityAt(zLevelEntity.Value, transformComponent.MapID, _transformSystem.GetWorldPosition(transformComponent)))
         {
             velocity = Math.Clamp(
                 velocity - _transitGravity * frameTime,
@@ -399,6 +398,28 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     }
 
     #endregion
+
+    /// <summary>
+    ///     Whether gravity applies where the entity actually is, rather than merely on the z-level it is on:
+    ///         the grid under this world position if it has gravity, otherwise the z-level's own map.
+    /// </summary>
+    /// <remarks>
+    ///     Deliberately spatial, and deliberately not
+    ///         <see cref="SharedGravitySystem.EntityGridOrMapHaveGravity"/>, which reads the grid the entity is
+    ///         parented to. A falling entity is by definition over a hole, so it is usually parented to the map
+    ///         rather than to the grid it is falling through - and a shaft inside a station with gravity should
+    ///         still pull it down.
+    /// </remarks>
+    private bool HasGravityAt(Entity<KsZLevelComponent> zLevelEntity, MapId mapId, Vector2 worldPosition)
+    {
+        if (_mapSystem.TryFindGridAt(mapId, worldPosition, out var gridUid, out _) &&
+            _gravityQuery.TryGetComponent(gridUid, out var gridGravityComponent) &&
+            gridGravityComponent.Enabled)
+            return true;
+
+        return _gravityQuery.TryGetComponent(zLevelEntity.Owner, out var mapGravityComponent) &&
+               mapGravityComponent.Enabled;
+    }
 
     /// <summary>
     ///     Whether the z-level floor plane on this map is solid at this world position.

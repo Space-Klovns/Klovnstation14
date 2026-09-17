@@ -3,10 +3,10 @@ using Robust.Client.GameObjects;
 namespace Content.Client._KS14.ZLevel;
 
 /// <summary>
-///     The post-animation half of lifting a transiting entity's sprite up the screen.
-///     By the time this runs the sprite offset holds exactly the animation player's output — or the clean base
-///         <see cref="KsZLevelTransitSpriteSystem"/> reset it to, if no animation ran — so the lift is simply
-///         added on top and no animation code ever has to know z-levels exist.
+///     The post-animation half of making a transiting entity look like it is still up where it fell from.
+///     By the time this runs the sprite offset and scale hold exactly the animation player's output — or the
+///         clean base <see cref="KsZLevelTransitSpriteSystem"/> reset them to, if no animation ran — so the
+///         compensation composes on top and no animation code ever has to know z-levels exist.
 /// </summary>
 public sealed partial class KsZLevelTransitSpriteLiftSystem : EntitySystem
 {
@@ -24,6 +24,9 @@ public sealed partial class KsZLevelTransitSpriteLiftSystem : EntitySystem
     {
         var enumerator = AllEntityQuery<KsZLevelTransitSpriteComponent, SpriteComponent>();
         while (enumerator.MoveNext(out var uid, out var transitSpriteComponent, out var spriteComponent))
+        {
             _spriteSystem.SetOffset((uid, spriteComponent), spriteComponent.Offset + transitSpriteComponent.Lift);
+            _spriteSystem.SetScale((uid, spriteComponent), spriteComponent.Scale * transitSpriteComponent.ScaleMultiplier);
+        }
     }
 }
