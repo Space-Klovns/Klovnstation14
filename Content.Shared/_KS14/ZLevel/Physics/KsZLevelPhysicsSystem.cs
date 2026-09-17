@@ -47,6 +47,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     [Dependency] private EntityQuery<KsPendingZLevelTransitComponent> _pendingTransitQuery = default!;
     [Dependency] private EntityQuery<KsZLevelTransitComponent> _transitQuery = default!;
     [Dependency] private EntityQuery<MapComponent> _mapQuery = default!;
+    [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
     [Dependency] private EntityQuery<KnockedDownComponent> _knockedDownQuery = default!;
     [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
     [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default!;
@@ -83,6 +84,19 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
 
     private readonly HashSet<Entity<FixturesComponent>> _crushTargets = [];
 
+    /// <summary>
+    ///     Entities whose eligibility to start transiting is checked on the next update.
+    /// </summary>
+    /// <remarks>
+    ///     Every trigger that fills this fires from inside somebody else's transform or physics work, and
+    ///         starting a transit moves the entity to another map. Doing that synchronously is reentrant
+    ///         transform mutation, and at its worst it happens inside GridFixtureSystem's split - which creates
+    ///         grid entities and reparents everything off the old grid while its own iteration and the
+    ///         broadphase are still mid-flight. Editing a lot of tiles at once on a z-level grid is the ordinary
+    ///         way to reach that, and it took the server down outright rather than throwing something catchable.
+    /// </remarks>
+    private readonly HashSet<EntityUid> _pendingTransitChecks = [];
+
     private float _transitGravity;
     private TimeSpan _landingKnockdown;
     private TimeSpan _crushStun;
@@ -108,7 +122,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         if (args.Weightless)
             return;
 
-        TryStartTransit(entity.Owner);
+        _pendingTransitChecks.Add(entity.Owner);
     }
 
     [SubscribeLocalEvent]
@@ -117,7 +131,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         if (args.NewStatus == BodyStatus.InAir)
             return;
 
-        TryStartTransit(entity.Owner);
+        _pendingTransitChecks.Add(entity.Owner);
     }
 
     [SubscribeLocalEvent(after: [typeof(Shared.Movement.Systems.SharedJetpackSystem)])]
@@ -143,13 +157,13 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
             return;
         }
 
-        TryStartTransit((entity.Owner, transformComponent));
+        _pendingTransitChecks.Add(entity.Owner);
     }
 
     [SubscribeLocalEvent]
     private void OnPhysicsLand(Entity<PhysicsComponent> entity, ref LandEvent args)
     {
-        TryStartTransit(entity.Owner);
+        _pendingTransitChecks.Add(entity.Owner);
     }
 
     /// <summary>
@@ -259,6 +273,16 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     /// <returns>Whether the entity is now in transit.</returns>
     public bool TryStartTransit(Entity<TransformComponent?> entity, float initialVerticalVelocity = 0f)
     {
+        // The stack is built out of maps and floored with grids; neither is a thing that falls through it.
+        // This is not hypothetical. Placing a tile in open space spawns a grid, and the parent change that
+        //      comes with it lands straight in OnPhysicsParentChanged - grids carry a PhysicsComponent, are
+        //      never weightless and are never InAir, so nothing above stopped them. A brand new grid has no
+        //      tiles yet either, so it does not even read as standing on solid floor. It would start falling,
+        //      taking the knockdown, collision veto and landing crush with it, and crush whatever was below
+        //      using the grid's own world AABB.
+        if (_mapGridQuery.HasComponent(entity.Owner) || _mapQuery.HasComponent(entity.Owner))
+            return false;
+
         // Never restart an ongoing transit - that would throw away the speed it has built up - but a fresh
         //      push still adds to it, so something can be launched or slammed mid-fall.
         if (_transitQuery.TryGetComponent(entity.Owner, out var ongoingTransitComponent))
@@ -316,6 +340,17 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
+
+        // Drained here, clear of the transform and physics work that queued them.
+        foreach (var pendingUid in _pendingTransitChecks)
+        {
+            if (TerminatingOrDeleted(pendingUid))
+                continue;
+
+            TryStartTransit(pendingUid);
+        }
+
+        _pendingTransitChecks.Clear();
 
         var enumerator = EntityQueryEnumerator<KsZLevelTransitComponent, TransformComponent>();
         while (enumerator.MoveNext(out var uid, out var transitComponent, out var transformComponent))

@@ -295,10 +295,18 @@ namespace Content.Client.Viewport
 
             EnsureViewportCreated();
 
-            Matrix3x2.Invert(GetLocalToScreenMatrix(), out var matrix);
-            coords = Vector2.Transform(coords, matrix);
+            var passEye = SwapToViewerEyeIfOffMap(); // KS14
+            try // KS14
+            {
+                Matrix3x2.Invert(GetLocalToScreenMatrix(), out var matrix);
+                coords = Vector2.Transform(coords, matrix);
 
-            return _viewport!.LocalToWorld(coords);
+                return _viewport!.LocalToWorld(coords);
+            }
+            finally // KS14
+            {
+                RestorePassEye(passEye); // KS14
+            }
         }
 
         /// <inheritdoc/>
@@ -309,13 +317,21 @@ namespace Content.Client.Viewport
 
             EnsureViewportCreated();
 
-            Matrix3x2.Invert(GetLocalToScreenMatrix(), out var matrix);
-            coords = Vector2.Transform(coords, matrix);
+            var passEye = SwapToViewerEyeIfOffMap(); // KS14
+            try // KS14
+            {
+                Matrix3x2.Invert(GetLocalToScreenMatrix(), out var matrix);
+                coords = Vector2.Transform(coords, matrix);
 
-            var ev = new PixelToMapEvent(coords, this, _viewport!);
-            _entityManager.EventBus.RaiseEvent(EventSource.Local, ref ev);
+                var ev = new PixelToMapEvent(coords, this, _viewport!);
+                _entityManager.EventBus.RaiseEvent(EventSource.Local, ref ev);
 
-            return _viewport!.LocalToWorld(ev.VisiblePosition);
+                return _viewport!.LocalToWorld(ev.VisiblePosition);
+            }
+            finally // KS14
+            {
+                RestorePassEye(passEye); // KS14
+            }
         }
 
         public Vector2 WorldToScreen(Vector2 map)
@@ -325,17 +341,34 @@ namespace Content.Client.Viewport
 
             EnsureViewportCreated();
 
-            var vpLocal = _viewport!.WorldToLocal(map);
+            var passEye = SwapToViewerEyeIfOffMap(); // KS14
+            try // KS14
+            {
+                var vpLocal = _viewport!.WorldToLocal(map);
 
-            var matrix = GetLocalToScreenMatrix();
+                var matrix = GetLocalToScreenMatrix();
 
-            return Vector2.Transform(vpLocal, matrix);
+                return Vector2.Transform(vpLocal, matrix);
+            }
+            finally // KS14
+            {
+                RestorePassEye(passEye); // KS14
+            }
         }
 
         public Matrix3x2 GetWorldToScreenMatrix()
         {
             EnsureViewportCreated();
-            return _viewport!.GetWorldToLocalMatrix() * GetLocalToScreenMatrix();
+
+            var passEye = SwapToViewerEyeIfOffMap(); // KS14
+            try // KS14
+            {
+                return _viewport!.GetWorldToLocalMatrix() * GetLocalToScreenMatrix();
+            }
+            finally // KS14
+            {
+                RestorePassEye(passEye); // KS14
+            }
         }
 
         public Matrix3x2 GetLocalToScreenMatrix()

@@ -11,6 +11,8 @@ using Content.Shared.FixedPoint;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
+using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
 namespace Content.IntegrationTests.Tests._KS14.ZLevel;
@@ -978,6 +980,110 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
                 "the faller has to reach the floor for this to say anything about crushing");
             Assert.That(entManager.System<DamageableSystem>().GetTotalDamage(victim), Is.EqualTo(FixedPoint2.Zero),
                 "drifting gently onto something should not hurt it");
+        });
+    }
+
+
+    /// <summary>
+    ///     Placing a tile in open space spawns a grid, and the parent change that comes with it used to start
+    ///         the grid itself falling - dragging the knockdown, the collision veto and the landing crush along
+    ///         with it, the last of which would run against the grid's own world AABB.
+    /// </summary>
+    [Test]
+    public async Task TestGridsAndMapsNeverTransit()
+    {
+        await OverrideTransitCVars();
+        var stack = await CreateStack();
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var mapSystem = entManager.System<SharedMapSystem>();
+        var transformSystem = entManager.System<SharedTransformSystem>();
+        var transitSystem = entManager.System<KsZLevelPhysicsSystem>();
+
+        var placedGrid = EntityUid.Invalid;
+
+        await server.WaitPost(() =>
+        {
+            // Exactly what PlacementManager.PlaceNewTile does for a tile placed off-grid: a fresh, empty grid,
+            //      moved into open space. Empty, so it does not even read as standing on solid floor.
+            var grid = mapSystem.CreateGridEntity(stack.UpperMapId);
+            placedGrid = grid.Owner;
+            transformSystem.SetWorldPosition(placedGrid, new Vector2(2.5f, 0.5f));
+        });
+
+        await Pair.RunTicksSync(10);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(entManager.HasComponent<KsZLevelTransitComponent>(placedGrid), Is.False,
+                    "a grid is part of the z-level stack, not something that falls through it");
+                Assert.That(transitSystem.TryStartTransit(placedGrid), Is.False,
+                    "even asked outright, a grid should refuse to start transiting");
+                Assert.That(transitSystem.TryStartTransit(stack.UpperMapUid), Is.False,
+                    "a z-level itself is even less of a thing that falls");
+                Assert.That(entManager.GetComponent<TransformComponent>(placedGrid).MapID,
+                    Is.EqualTo(stack.UpperMapId),
+                    "the grid should still be on the z-level it was created on");
+            });
+        });
+    }
+
+
+    /// <summary>
+    ///     Editing a lot of tiles at once is the ordinary way to split a grid, and a split creates grid entities
+    ///         and reparents everything off the old grid - all of it raising EntParentChangedMessage from deep
+    ///         inside GridFixtureSystem, with its own iteration and the broadphase still mid-flight.
+    ///     Starting a transit synchronously from there moved entities to another map underneath it, and took the
+    ///         server down outright rather than throwing anything catchable.
+    /// </summary>
+    [Test]
+    public async Task TestSplittingAZLevelGridDoesNotReenter()
+    {
+        await OverrideTransitCVars();
+        var stack = await CreateStack();
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var tileDefinitionManager = server.ResolveDependency<ITileDefinitionManager>();
+        var mapSystem = entManager.System<SharedMapSystem>();
+
+        var tile = new Tile(tileDefinitionManager["Plating"].TileId);
+        var bridgeGrid = default(Entity<MapGridComponent>);
+        var rider = EntityUid.Invalid;
+
+        // A dumbbell: two blobs joined by a single tile, with something standing on one end.
+        await server.WaitPost(() =>
+        {
+            bridgeGrid = mapSystem.CreateGridEntity(stack.UpperMapId);
+
+            for (var x = 0; x <= 4; x++)
+                mapSystem.SetTile(bridgeGrid.Owner, bridgeGrid.Comp, new Vector2i(x, 0), tile);
+
+            rider = entManager.SpawnEntity(FallerProto, new EntityCoordinates(bridgeGrid.Owner, 0.5f, 0.5f));
+        });
+
+        await Pair.RunTicksSync(10);
+
+        // Knock out the middle, which disconnects the two ends and forces a split.
+        await server.WaitPost(() =>
+            mapSystem.SetTile(bridgeGrid.Owner, bridgeGrid.Comp!, new Vector2i(2, 0), Tile.Empty));
+
+        await Pair.RunTicksSync(15);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(entManager.EntityExists(rider), Is.True,
+                    "splitting the grid under it should not have destroyed the entity standing on it");
+                Assert.That(entManager.GetComponent<TransformComponent>(rider).MapID, Is.EqualTo(stack.UpperMapId),
+                    "an entity still standing on solid floor must not be moved to another z-level by a split");
+                Assert.That(entManager.HasComponent<KsZLevelTransitComponent>(rider), Is.False,
+                    "the entity never left the floor, so nothing should have started it falling");
+            });
         });
     }
 

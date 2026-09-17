@@ -62,7 +62,9 @@ namespace Content.Client.Viewport
                 return false;
 
             // TryGetZLevelsBelow doesn't include the map we're on
-            var topZLevelComponent = _entityManager.GetComponent<KsZLevelComponent>(topMapUid.Value);
+            if (!_entityManager.TryGetComponent<KsZLevelComponent>(topMapUid.Value, out var topZLevelComponent))
+                return false;
+
             _mapsToIterate.Add((topMapUid.Value, topZLevelComponent));
 
             // Depth is fractional and measured downwards from the viewer, not from their z-level: their own
@@ -82,6 +84,15 @@ namespace Content.Client.Viewport
 
             foreach (var (mapUid, mapZLevelComponent) in _mapsToIterate)
             {
+                // A stack is rebuilt wholesale from network state, so a member can briefly be an entity that is
+                //      not a map, or one that has since been deleted. Skipping the pass costs a frame of that
+                //      z-level; throwing out of here takes the entire UI down with it, every frame.
+                if (!_entityManager.TryGetComponent<MapComponent>(mapUid, out var mapComponent))
+                {
+                    depth -= mapZLevelComponent.Depth;
+                    continue;
+                }
+
                 var isViewerMap = mapUid == topMapUid.Value;
 
                 // clearcolor for all maps other than first is none
@@ -89,10 +100,7 @@ namespace Content.Client.Viewport
                 // for maps below the highest, never draw FOV. on the highest map, only draw fov if we would for a non-zlevel
                 _zLevelEye.DrawFov = isViewerMap && _eye.DrawFov;
 
-                _zLevelEye.Position = new MapCoordinates(
-                    _eye.Position.Position,
-                    _entityManager.GetComponent<MapComponent>(mapUid).MapId
-                );
+                _zLevelEye.Position = new MapCoordinates(_eye.Position.Position, mapComponent.MapId);
                 _zLevelEye.Scale = KsZLevelSystem.GetDepthScale(_eye.Scale, depth);
                 // The viewer's own map is drawn through their real eye while they're standing on it, and
                 //      through the scaled copy while they're above it mid-transit.
@@ -130,6 +138,37 @@ namespace Content.Client.Viewport
         {
             _zBlurBuffer?.Dispose();
             _zBlurBuffer = null;
+        }
+
+        /// <summary>
+        ///     Points the viewport back at the viewer's own eye if a z-level pass currently has it aimed at a
+        ///         different map, and hands back whatever it displaced so it can be put straight back.
+        /// </summary>
+        /// <remarks>
+        ///     Every pass aims the viewport's eye at its own z-level for the length of its render, and world
+        ///         overlays are drawn inside that render. Anything converting screen coordinates through this
+        ///         control mid-pass therefore gets an answer on the wrong map: the placement preview asks for
+        ///         the mouse position and compares it against the grid its drag started on, which is on the
+        ///         player's map, and the mismatch is an error log per overlay per pass per frame.
+        ///     Only a differing map is corrected. A pass on the viewer's own z-level may legitimately carry a
+        ///         different scale while they are mid-transit, and screen conversions should use that scale
+        ///         because it is what was actually drawn.
+        /// </remarks>
+        private IEye? SwapToViewerEyeIfOffMap()
+        {
+            if (_eye == null ||
+                _viewport?.Eye is not { } passEye ||
+                passEye.Position.MapId == _eye.Position.MapId)
+                return null;
+
+            _viewport.Eye = _eye;
+            return passEye;
+        }
+
+        private void RestorePassEye(IEye? passEye)
+        {
+            if (passEye != null && _viewport != null)
+                _viewport.Eye = passEye;
         }
 
         /// <summary>
