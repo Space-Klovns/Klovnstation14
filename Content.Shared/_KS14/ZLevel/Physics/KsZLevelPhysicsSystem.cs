@@ -4,6 +4,7 @@ using Content.Shared.Throwing;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Events;
 using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.ZLevel.Physics;
@@ -30,8 +31,16 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         if (args.Weightless)
             return;
 
-        var transformComponent = Transform(entity);
-        Fall((entity.Owner, transformComponent), zLevelEntity: _zLevelSystem.GetZLevel((entity.Owner, transformComponent)));
+        TryFall(entity);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnBodyStatusChanged(Entity<KsSuspendedZLevelFallComponent> entity, ref PhysicsBodyStatusChangedEvent args)
+    {
+        if (args.NewStatus == BodyStatus.InAir)
+            return;
+
+        TryFall(entity);
     }
 
     [SubscribeLocalEvent(after: [typeof(Shared.Movement.Systems.SharedJetpackSystem)])]
@@ -59,6 +68,14 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     private void OnPhysicsLand(Entity<PhysicsComponent> entity, ref LandEvent args)
     {
         Fall((entity.Owner, Transform(entity)));
+    }
+
+    public bool TryFall(EntityUid uid)
+    {
+        if (!EntityManager.TransformQuery.TryGetComponent(uid, out var transformComponent))
+            return false;
+
+        return Fall((uid, transformComponent), zLevelEntity: _zLevelSystem.GetZLevel((uid, transformComponent)));
     }
 
     public bool Fall(Entity<TransformComponent> entity, Entity<KsZLevelComponent>? zLevelEntity = null)
