@@ -2,10 +2,10 @@ using Content.Shared.Sticky;
 
 namespace Content.Shared._KS14.Sticky;
 
-public sealed partial class WallmountOnStickSystem : EntitySystem
+public sealed partial class ComponentsOnStuckSystem : EntitySystem
 {
     [SubscribeLocalEvent]
-    private void OnStuck(Entity<ComponentsOnStickComponent> entity, ref EntityStuckEvent args)
+    private void OnStuck(Entity<ComponentsOnStuckComponent> entity, ref EntityStuckEvent args)
     {
         if (entity.Comp.ComponentsGotAdded)
             return;
@@ -21,7 +21,7 @@ public sealed partial class WallmountOnStickSystem : EntitySystem
     }
 
     [SubscribeLocalEvent]
-    private void OnUnstuck(Entity<ComponentsOnStickComponent> entity, ref EntityUnstuckEvent args)
+    private void OnUnstuck(Entity<ComponentsOnStuckComponent> entity, ref EntityUnstuckEvent args)
     {
         if (!entity.Comp.ComponentsGotAdded)
             return;
