@@ -12,7 +12,7 @@ public sealed partial class KsCCVars
     /// </summary>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> ZLevelTransitGravity =
-        CVarDef.Create("klovn.zlevel.transit_gravity", 9.8f, CVar.SERVER | CVar.REPLICATED);
+        CVarDef.Create("klovn.zlevel.transit_gravity", 4f, CVar.SERVER | CVar.REPLICATED);
 
     /// <summary>
     ///     Maximum absolute vertical speed of a transiting entity, in z-levels per second.
@@ -28,6 +28,14 @@ public sealed partial class KsCCVars
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> ZLevelTransitImpactVelocity =
         CVarDef.Create("klovn.zlevel.transit_impact_velocity", 3.5f, CVar.SERVER | CVar.REPLICATED);
+
+    /// <summary>
+    ///     How long, in seconds, something stays knocked down after a transit ends.
+    ///     An entity is kept down for the whole transit regardless; this is only the sprawl on landing.
+    /// </summary>
+    [CVarControl(AdminFlags.Fun)]
+    public static readonly CVarDef<float> ZLevelTransitLandingKnockdown =
+        CVarDef.Create("klovn.zlevel.transit_landing_knockdown", 1f, CVar.SERVER | CVar.REPLICATED);
 
     /// <summary>
     ///     How often, in seconds, each player's z-level view subscriber is moved to track them.

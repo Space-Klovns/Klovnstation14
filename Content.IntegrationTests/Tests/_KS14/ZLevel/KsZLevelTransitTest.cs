@@ -4,6 +4,7 @@ using System.Numerics;
 using Content.IntegrationTests.Tests.Helpers;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Damage.Systems;
+using Content.Shared.Stunnable;
 using Content.Shared._KS14.ZLevel;
 using Content.Shared._KS14.ZLevel.Physics;
 using Content.Shared.FixedPoint;
@@ -44,6 +45,9 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
   - type: Injurable
   - type: InputMover
   - type: MovementSpeedModifier
+  - type: StandingState
+  - type: Crawler
+  - type: DoAfter
   - type: TestListener
 ";
 
@@ -83,7 +87,8 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
         {
             Assert.That(transitSystem.TryStartTransit(faller), Is.False,
                 "an entity standing on solid floor should have nothing to fall through");
-            Assert.That(entManager.HasComponent<KsZLevelTransitComponent>(faller), Is.False);
+            Assert.That(entManager.HasComponent<KsZLevelTransitComponent>(faller), Is.False,
+                "a refused TryStartTransit must not leave a transit component behind");
         });
     }
 
@@ -141,7 +146,8 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
         {
             var lateVelocity = entManager.GetComponent<KsZLevelTransitComponent>(faller).VerticalVelocity;
 
-            Assert.That(earlyVelocity, Is.LessThan(0f), "gravity should pull downwards, which is negative");
+            Assert.That(earlyVelocity, Is.LessThan(0f),
+                "gravity should have given the entity downward speed, which is negative");
             Assert.That(lateVelocity, Is.LessThan(earlyVelocity),
                 "gravity has to keep applying every tick, not just on the tick the fall started");
         });
@@ -177,7 +183,8 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
         //      slightly, so allow a couple of ticks either way.
         Assert.Multiple(() =>
         {
-            Assert.That(landed, Is.True, "the entity never landed");
+            Assert.That(landed, Is.True,
+                "a one z-level fall should finish well inside the tick budget; still transiting means it is stuck or far too slow");
             Assert.That(elapsed, Is.EqualTo(0.5f).Within(0.1f),
                 $"a one z-level fall under gravity {TestGravity} should take about half a second, took {elapsed:F2}s");
         });
@@ -211,15 +218,20 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
 
             Assert.Multiple(() =>
             {
-                Assert.That(landed, Is.True, "the entity never landed");
+                Assert.That(landed, Is.True,
+                    "the fall should have finished; still transiting means nothing ever stopped it");
                 Assert.That(transformComponent.MapID, Is.EqualTo(stack.LowerMapId),
                     "the entity should have ended up on the z-level below");
                 Assert.That(listenerSystem.LevelChanges, Has.Count.EqualTo(1),
                     "crossing exactly one floor plane should raise exactly one level changed event");
-                Assert.That(listenerSystem.LevelChanges[0].Rising, Is.False);
-                Assert.That(listenerSystem.Landings, Has.Count.EqualTo(1));
-                Assert.That(listenerSystem.TransitsStarted, Is.EqualTo(1));
-                Assert.That(listenerSystem.TransitsEnded, Is.EqualTo(1));
+                Assert.That(listenerSystem.LevelChanges[0].Rising, Is.False,
+                    "the crossing was downwards, so the event should not report it as rising");
+                Assert.That(listenerSystem.Landings, Has.Count.EqualTo(1),
+                    "coming to rest once should raise exactly one land event, not one per tick spent on the floor");
+                Assert.That(listenerSystem.TransitsStarted, Is.EqualTo(1),
+                    "one fall is one transit; crossing a z-level must not start a second one");
+                Assert.That(listenerSystem.TransitsEnded, Is.EqualTo(1),
+                    "the transit should have ended exactly once, when the entity landed");
             });
         });
     }
@@ -259,7 +271,7 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
                 }
 
                 Assert.That(transitComponent.Height, Is.InRange(0f, 1f),
-                    "transit height escaped 0..1, so the boundary wrap did not renormalise it");
+                    $"transit height escaped 0..1 (was {transitComponent.Height}), so a boundary crossing failed to renormalise it");
             });
 
             if (!stillFalling)
@@ -299,8 +311,10 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
 
         await server.WaitAssertion(() =>
         {
-            Assert.That(landed, Is.True, "coasting downwards should still eventually reach a floor");
-            Assert.That(entManager.GetComponent<TransformComponent>(faller).MapID, Is.EqualTo(stack.LowerMapId));
+            Assert.That(landed, Is.True,
+                "coasting downwards without gravity should still eventually reach a floor and stop");
+            Assert.That(entManager.GetComponent<TransformComponent>(faller).MapID, Is.EqualTo(stack.LowerMapId),
+                "coasting on momentum alone should still have carried it onto the z-level below");
         });
     }
 
@@ -330,8 +344,10 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
 
         await server.WaitAssertion(() =>
         {
-            Assert.That(landed, Is.True, "the entity never landed");
-            Assert.That(listenerSystem.Landings, Has.Count.EqualTo(1));
+            Assert.That(landed, Is.True,
+                "a fast fall should still come to rest on the floor below rather than falling forever");
+            Assert.That(listenerSystem.Landings, Has.Count.EqualTo(1),
+                "a hard landing should raise exactly one land event");
             Assert.That(listenerSystem.Landings[0].Damaged, Is.True,
                 $"an impact well past {TestImpactVelocity} levels/s should be a damaging one");
             Assert.That(entManager.System<DamageableSystem>().GetTotalDamage(faller),
@@ -364,12 +380,14 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
 
         await server.WaitAssertion(() =>
         {
-            Assert.That(landed, Is.True, "the entity never landed");
-            Assert.That(listenerSystem.Landings, Has.Count.EqualTo(1));
+            Assert.That(landed, Is.True,
+                "a slow drift should still reach the floor below, just later");
+            Assert.That(listenerSystem.Landings, Has.Count.EqualTo(1),
+                "a gentle landing is still a landing, so it should raise exactly one land event");
             Assert.That(listenerSystem.Landings[0].Damaged, Is.False,
                 $"an impact under {TestImpactVelocity} levels/s should not be a damaging one");
-            Assert.That(entManager.System<DamageableSystem>().GetTotalDamage(faller),
-                Is.EqualTo(FixedPoint2.Zero));
+            Assert.That(entManager.System<DamageableSystem>().GetTotalDamage(faller), Is.EqualTo(FixedPoint2.Zero),
+                "an impact under the threshold should leave the entity completely unharmed");
         });
     }
 
@@ -399,8 +417,10 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
 
         await server.WaitAssertion(() =>
         {
-            Assert.That(landed, Is.True, "the entity never landed");
-            Assert.That(listenerSystem.Landings, Has.Count.EqualTo(1));
+            Assert.That(landed, Is.True,
+                "a vetoed landing is still a landing, so the entity should have come to rest");
+            Assert.That(listenerSystem.Landings, Has.Count.EqualTo(1),
+                "vetoing the damage should not have suppressed the land event itself");
             Assert.That(listenerSystem.Landings[0].Damaged, Is.False,
                 "the land attempt event should have talked the landing out of being damaging");
             Assert.That(entManager.System<DamageableSystem>().GetTotalDamage(faller),
@@ -446,10 +466,12 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
             {
                 Assert.That(transitComponent!.Height, Is.EqualTo(1f).Within(0.0001f),
                     "an entity stopped by a ceiling should be resting against the top of its z-level");
-                Assert.That(transitComponent.VerticalVelocity, Is.EqualTo(0f).Within(0.0001f));
+                Assert.That(transitComponent.VerticalVelocity, Is.EqualTo(0f).Within(0.0001f),
+                    "hitting a ceiling should kill the upward speed rather than letting it push on");
                 Assert.That(entManager.GetComponent<TransformComponent>(riser).MapID, Is.EqualTo(stack.LowerMapId),
                     "a solid ceiling should not have let it through");
-                Assert.That(listenerSystem.Landings, Is.Empty, "a ceiling bump should not raise a landing");
+                Assert.That(listenerSystem.Landings, Is.Empty,
+                    "a ceiling bump is not a landing, so it must not raise a land event or deal impact damage");
             });
         });
     }
@@ -483,8 +505,10 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
             {
                 Assert.That(entManager.GetComponent<TransformComponent>(riser).MapID, Is.EqualTo(stack.UpperMapId),
                     "an open ceiling should have let the entity rise through to the z-level above");
-                Assert.That(listenerSystem.LevelChanges, Has.Count.EqualTo(1));
-                Assert.That(listenerSystem.LevelChanges[0].Rising, Is.True);
+                Assert.That(listenerSystem.LevelChanges, Has.Count.EqualTo(1),
+                    "rising through one open ceiling should report exactly one z-level change");
+                Assert.That(listenerSystem.LevelChanges[0].Rising, Is.True,
+                    "the crossing was upwards, so the event should report it as rising");
             });
         });
     }
@@ -508,7 +532,8 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
         await Pair.RunTicksSync(3);
 
         await server.WaitAssertion(() =>
-            Assert.That(actionBlockerSystem.CanMove(faller), Is.True, "should be able to move before falling"));
+            Assert.That(actionBlockerSystem.CanMove(faller), Is.True,
+                "the entity should move freely while it is still standing on solid floor"));
 
         await server.WaitPost(() =>
         {
@@ -518,14 +543,17 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
         await Pair.RunTicksSync(2);
 
         await server.WaitAssertion(() =>
-            Assert.That(actionBlockerSystem.CanMove(faller), Is.False, "an entity in transit should not move itself"));
+            Assert.That(actionBlockerSystem.CanMove(faller), Is.False,
+                "an entity in transit is in mid-air and should not be able to walk itself around"));
 
         var (_, landed) = await RunUntilLanded(entManager, faller);
 
         await server.WaitAssertion(() =>
         {
-            Assert.That(landed, Is.True, "the entity never landed");
-            Assert.That(actionBlockerSystem.CanMove(faller), Is.True, "movement should come back on landing");
+            Assert.That(landed, Is.True,
+                "the entity has to land for the movement block to be lifted again");
+            Assert.That(actionBlockerSystem.CanMove(faller), Is.True,
+                "the movement block has to be lifted on landing, or the entity is stuck for good");
         });
     }
 
@@ -555,7 +583,8 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
 
         await server.WaitAssertion(() =>
         {
-            Assert.That(entManager.HasComponent<KsZLevelTransitComponent>(faller), Is.True);
+            Assert.That(entManager.HasComponent<KsZLevelTransitComponent>(faller), Is.True,
+                "the entity has to actually be transiting for the override to be worth anything");
             Assert.That(actionBlockerSystem.CanMove(faller), Is.True,
                 "the move attempt event should have overridden the transit movement block");
         });
@@ -588,7 +617,8 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
 
         await server.WaitAssertion(() =>
         {
-            Assert.That(entManager.HasComponent<KsZLevelTransitComponent>(faller), Is.False);
+            Assert.That(entManager.HasComponent<KsZLevelTransitComponent>(faller), Is.False,
+                "both entities start on solid floor, so neither should have begun transiting yet");
             Assert.That(RaisePreventCollide(entManager, faller, other), Is.False,
                 "two entities that are not in transit should be free to collide");
         });
@@ -602,9 +632,82 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
 
         await server.WaitAssertion(() =>
         {
-            Assert.That(entManager.HasComponent<KsZLevelTransitComponent>(faller), Is.True);
+            Assert.That(entManager.HasComponent<KsZLevelTransitComponent>(faller), Is.True,
+                "the entity has to be transiting for the collision veto to mean anything");
             Assert.That(RaisePreventCollide(entManager, faller, other), Is.True,
                 "an entity in transit is between floors and should collide with nothing");
+        });
+    }
+
+    /// <summary>
+    ///     Falling puts an entity on the floor and keeps it there for the whole descent, however long that is,
+    ///         and lets it get back up once it has landed.
+    /// </summary>
+    [Test]
+    public async Task TestTransitKnocksDownAndBlocksStandingUp()
+    {
+        await OverrideTransitCVars();
+        var stack = await CreateStack(gravity: false);
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var transitSystem = entManager.System<KsZLevelPhysicsSystem>();
+        var stunSystem = entManager.System<SharedStunSystem>();
+
+        var faller = EntityUid.Invalid;
+
+        await server.WaitPost(() => faller = entManager.SpawnEntity(FallerProto, stack.SupportedCoords));
+        await Pair.RunTicksSync(3);
+
+        await server.WaitAssertion(() =>
+            Assert.That(entManager.HasComponent<KnockedDownComponent>(faller), Is.False,
+                "an entity standing on solid floor should be on its feet before anything pushes it off"));
+
+        // Barely moving, so the descent lasts far longer than the landing knockdown would on its own.
+        await server.WaitPost(() =>
+        {
+            entManager.System<SharedTransformSystem>().SetWorldPosition(faller, new Vector2(2.5f, 0.5f));
+            transitSystem.TryStartTransit(faller, -0.25f);
+        });
+        await Pair.RunTicksSync(2);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entManager.HasComponent<KsZLevelTransitComponent>(faller), Is.True,
+                "the entity has to be transiting for the rest of this test to mean anything");
+            Assert.That(entManager.HasComponent<KnockedDownComponent>(faller), Is.True,
+                "starting to fall should have taken the entity off its feet");
+        });
+
+        // Well past the landing knockdown duration, but still mid-fall.
+        await Pair.RunTicksSync(60);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entManager.HasComponent<KsZLevelTransitComponent>(faller), Is.True,
+                "the fall should still be going, or this proves nothing about staying down mid-air");
+            Assert.That(entManager.TryGetComponent<KnockedDownComponent>(faller, out var knockedDownComponent), Is.True,
+                "the entity should still be on the floor after the landing knockdown would have run out, because it has not landed");
+
+            Assert.That(stunSystem.TryStand((faller, knockedDownComponent!)), Is.False,
+                "nothing should be able to get to its feet while it is still falling");
+        });
+
+        var (_, landed) = await RunUntilLanded(entManager, faller);
+        await Pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(landed, Is.True,
+                "the entity has to land for the knockdown to be allowed to lapse");
+
+            // Whether it is already back up, or merely free to start getting up, is down to crawl timings and
+            //      do-afters that are none of this system's business. What matters is that it is no longer barred.
+            var freeToGetUp = !entManager.TryGetComponent<KnockedDownComponent>(faller, out var knockedDownComponent)
+                              || stunSystem.TryStand((faller, knockedDownComponent!));
+
+            Assert.That(freeToGetUp, Is.True,
+                "once landed, the entity should be free to get back up rather than being pinned to the floor");
         });
     }
 
@@ -653,7 +756,8 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
         await Pair.RunTicksSync(2);
 
         await server.WaitAssertion(() =>
-            Assert.That(entManager.HasComponent<KsZLevelTransitComponent>(faller), Is.True));
+            Assert.That(entManager.HasComponent<KsZLevelTransitComponent>(faller), Is.True,
+                "the entity should be mid-transit before anything picks it up"));
 
         await server.WaitPost(() =>
         {

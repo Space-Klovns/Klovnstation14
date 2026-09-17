@@ -7,9 +7,9 @@ using Content.Shared.Gravity;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.UnitTesting.Pool;
+using Serilog.Events;
 
 namespace Content.IntegrationTests.Tests._KS14.ZLevel;
 
@@ -59,28 +59,46 @@ public abstract class KsZLevelTestBase : GameTest
     }
 
     /// <summary>
-    ///     Stops the pool failing the test over server error logs, for tests that deliberately provoke a
-    ///         rejection. Dispose the result to stop tolerating them again.
+    ///     Tolerates one specific server error log, for a test that deliberately provokes a rejection, and
+    ///         counts how many times it was seen so the test can assert the rejection really was loud.
     /// </summary>
     /// <remarks>
-    ///     The handler's finer-grained JudgeLog hook would be preferable, but its signature is in terms of a
-    ///         Serilog type this project does not reference, so this raises the bar to Fatal for the scope
-    ///         instead. Keep these scopes tight.
+    ///     Matched on both sawmill and message text on purpose: every other error log still fails the test, the
+    ///         way it should. Dispose the scope to stop tolerating it.
     /// </remarks>
-    protected IDisposable ExpectServerErrors()
+    protected ExpectedErrorScope ExpectServerError(string sawmillName, string messageFragment)
     {
-        var handler = Pair.ServerLogHandler;
-        var previousFailureLevel = handler.FailureLevel;
-        handler.FailureLevel = LogLevel.Fatal;
-
-        return new ExpectedErrorScope(() => handler.FailureLevel = previousFailureLevel);
+        return new ExpectedErrorScope(Pair.ServerLogHandler, sawmillName, messageFragment);
     }
 
-    private sealed class ExpectedErrorScope(Action onDispose) : IDisposable
+    protected sealed class ExpectedErrorScope : IDisposable
     {
+        private readonly PoolTestLogHandler _handler;
+        private readonly Func<string, LogEvent, bool> _judge;
+
+        /// <summary>
+        ///     How many error logs this scope has recognised and let through.
+        /// </summary>
+        public int Matches { get; private set; }
+
+        public ExpectedErrorScope(PoolTestLogHandler handler, string sawmillName, string messageFragment)
+        {
+            _handler = handler;
+            _judge = (name, message) =>
+            {
+                if (name != sawmillName || !message.RenderMessage().Contains(messageFragment, StringComparison.Ordinal))
+                    return false;
+
+                Matches++;
+                return true;
+            };
+
+            _handler.JudgeLog += _judge;
+        }
+
         public void Dispose()
         {
-            onDispose();
+            _handler.JudgeLog -= _judge;
         }
     }
 
@@ -139,7 +157,8 @@ public abstract class KsZLevelTestBase : GameTest
             stack = new TestStack(upperMapUid, upperMapId, upperGrid, lowerMapUid, lowerMapId, lowerGrid);
         });
 
-        Assert.That(stack, Is.Not.Null, "failed to build the test z-level stack");
+        Assert.That(stack, Is.Not.Null,
+            "the two-z-level test stack was never built, so nothing below depends on it can be trusted");
         return stack!;
     }
 }

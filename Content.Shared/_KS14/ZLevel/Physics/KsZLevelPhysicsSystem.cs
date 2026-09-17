@@ -6,6 +6,7 @@ using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
 using Content.Shared.Gravity;
 using Content.Shared.Movement.Events;
+using Content.Shared.Stunnable;
 using Content.Shared.Throwing;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
@@ -35,12 +36,14 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     [Dependency] private SharedContainerSystem _containerSystem = default!;
     [Dependency] private SharedGravitySystem _gravitySystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
+    [Dependency] private SharedStunSystem _stunSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
     [Dependency] private EntityQuery<GravityComponent> _gravityQuery = default!;
     [Dependency] private EntityQuery<KsPendingZLevelTransitComponent> _pendingTransitQuery = default!;
     [Dependency] private EntityQuery<KsZLevelTransitComponent> _transitQuery = default!;
     [Dependency] private EntityQuery<MapComponent> _mapQuery = default!;
+    [Dependency] private EntityQuery<KnockedDownComponent> _knockedDownQuery = default!;
 
     /// <summary>
     ///     Safety net only. Terminal velocity keeps a transit to a single floor plane crossing per tick at any
@@ -61,6 +64,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     };
 
     private float _transitGravity;
+    private TimeSpan _landingKnockdown;
     private float _transitTerminalVelocity;
     private float _transitImpactVelocity;
 
@@ -71,6 +75,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         Subs.CVar(_configurationManager, KsCCVars.ZLevelTransitGravity, value => _transitGravity = value, true);
         Subs.CVar(_configurationManager, KsCCVars.ZLevelTransitTerminalVelocity, value => _transitTerminalVelocity = value, true);
         Subs.CVar(_configurationManager, KsCCVars.ZLevelTransitImpactVelocity, value => _transitImpactVelocity = value, true);
+        Subs.CVar(_configurationManager, KsCCVars.ZLevelTransitLandingKnockdown, value => _landingKnockdown = TimeSpan.FromSeconds(value), true);
     }
 
     #region Triggers
@@ -144,6 +149,12 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     {
         _actionBlockerSystem.UpdateCanMove(entity.Owner);
 
+        // Nobody stays on their feet through a fall. The duration only governs the sprawl after landing -
+        //      OnTransitStandUpAttempt is what keeps the entity down for however long the transit itself lasts.
+        // Anything already knocked down is left alone, so this cannot cut a stun short or quietly extend one.
+        if (!_knockedDownQuery.HasComponent(entity.Owner))
+            _stunSystem.TryKnockdown(entity.Owner, _landingKnockdown, refresh: false, autoStand: true, drop: false);
+
         var startedEvent = new KsZLevelTransitStartedEvent();
         RaiseLocalEvent(entity.Owner, ref startedEvent);
     }
@@ -169,6 +180,24 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
 
         if (attemptEvent.Blocked)
             args.Cancel();
+    }
+
+    /// <summary>
+    ///     Nothing gets to its feet mid-air, however long the fall lasts.
+    /// </summary>
+    /// <remarks>
+    ///     What does most of the work here is actually the transit movement block: <see cref="SharedStunSystem"/>
+    ///         gates standing on KnockdownOver, which consults ActionBlocker, so a transiting entity never even
+    ///         reaches an attempt. This covers the rest of it, because the crawler branch of TryStanding is the
+    ///         only one that raises this event - the branch for everything else drops the knockdown outright.
+    ///     So: cancelling here stops a crawler getting up mid-fall even if something has deliberately overridden
+    ///         the movement block via <see cref="KsZLevelTransitMoveAttemptEvent"/>.
+    /// </remarks>
+    [SubscribeLocalEvent]
+    private void OnTransitStandUpAttempt(Entity<KsZLevelTransitComponent> entity, ref StandUpAttemptEvent args)
+    {
+        // Autostand is deliberately left alone: the entity should get up by itself once it has landed.
+        args.Cancelled = true;
     }
 
     /// <summary>
