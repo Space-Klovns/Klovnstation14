@@ -1,5 +1,6 @@
 using Content.Shared._KS14.Sparks;
 using Content.Shared.IdentityManagement;
+using Content.Shared.Interaction.Components;
 using Content.Shared.Popups;
 using Content.Shared.Weapons.Ranged.Events;
 using Robust.Shared.Timing;
@@ -25,9 +26,13 @@ public abstract partial class SharedSpeczoneSystem : EntitySystem
     ///     Helper for raising AttemptGeneralSpeczoneInterferableEvent
     /// </summary>
     /// <returns>Whether the event was cancelled (interfered).</returns>
-    public bool AttemptInterfere(EntityUid uid, EntityUid? user = null, bool predicted = false)
+    public bool AttemptInterfere(EntityUid uid, EntityUid? userUid = null, bool predicted = false)
     {
-        var ev = new AttemptGeneralSpeczoneInterferableEvent(uid, User: user, Predicted: predicted);
+        if (userUid is { } &&
+            HasComp<BypassInteractionChecksComponent>(userUid))
+            return false;
+
+        var ev = new AttemptGeneralSpeczoneInterferableEvent(uid, User: userUid, Predicted: predicted);
         RaiseLocalEvent(ref ev);
 
         return ev.Cancelled;
