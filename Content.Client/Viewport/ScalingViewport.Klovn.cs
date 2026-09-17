@@ -153,6 +153,10 @@ namespace Content.Client.Viewport
         ///     Only a differing map is corrected. A pass on the viewer's own z-level may legitimately carry a
         ///         different scale while they are mid-transit, and screen conversions should use that scale
         ///         because it is what was actually drawn.
+        ///     Only the screen-to-map direction is corrected, too. A screen position is the player's, so it has
+        ///         to resolve on the player's map - but a world-to-screen conversion is placing something whose
+        ///         map is already known, and overlays that do it inside a pass (PopupOverlay, MapTextOverlay)
+        ///         filter on that pass's MapId first and want the scale that pass was drawn at.
         /// </remarks>
         private IEye? SwapToViewerEyeIfOffMap()
         {

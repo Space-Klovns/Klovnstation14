@@ -96,6 +96,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     ///         way to reach that, and it took the server down outright rather than throwing something catchable.
     /// </remarks>
     private readonly HashSet<EntityUid> _pendingTransitChecks = [];
+    private readonly List<EntityUid> _drainedTransitChecks = [];
 
     private float _transitGravity;
     private TimeSpan _landingKnockdown;
@@ -341,16 +342,22 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     {
         base.Update(frameTime);
 
-        // Drained here, clear of the transform and physics work that queued them.
-        foreach (var pendingUid in _pendingTransitChecks)
+        // Drained here, clear of the transform and physics work that queued them - but into a scratch list
+        //      first. Starting a transit knocks the entity down and refreshes its movement, any of which can
+        //      raise the very events that queue into the set, and adding to it mid-enumeration would throw
+        //      straight back out of Update. Clearing before the loop also keeps anything queued during the
+        //      drain for the next tick rather than dropping it.
+        _drainedTransitChecks.Clear();
+        _drainedTransitChecks.AddRange(_pendingTransitChecks);
+        _pendingTransitChecks.Clear();
+
+        foreach (var pendingUid in _drainedTransitChecks)
         {
             if (TerminatingOrDeleted(pendingUid))
                 continue;
 
             TryStartTransit(pendingUid);
         }
-
-        _pendingTransitChecks.Clear();
 
         var enumerator = EntityQueryEnumerator<KsZLevelTransitComponent, TransformComponent>();
         while (enumerator.MoveNext(out var uid, out var transitComponent, out var transformComponent))

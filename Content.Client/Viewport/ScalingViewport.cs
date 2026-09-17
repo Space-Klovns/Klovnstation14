@@ -341,34 +341,17 @@ namespace Content.Client.Viewport
 
             EnsureViewportCreated();
 
-            var passEye = SwapToViewerEyeIfOffMap(); // KS14
-            try // KS14
-            {
-                var vpLocal = _viewport!.WorldToLocal(map);
+            var vpLocal = _viewport!.WorldToLocal(map);
 
-                var matrix = GetLocalToScreenMatrix();
+            var matrix = GetLocalToScreenMatrix();
 
-                return Vector2.Transform(vpLocal, matrix);
-            }
-            finally // KS14
-            {
-                RestorePassEye(passEye); // KS14
-            }
+            return Vector2.Transform(vpLocal, matrix);
         }
 
         public Matrix3x2 GetWorldToScreenMatrix()
         {
             EnsureViewportCreated();
-
-            var passEye = SwapToViewerEyeIfOffMap(); // KS14
-            try // KS14
-            {
-                return _viewport!.GetWorldToLocalMatrix() * GetLocalToScreenMatrix();
-            }
-            finally // KS14
-            {
-                RestorePassEye(passEye); // KS14
-            }
+            return _viewport!.GetWorldToLocalMatrix() * GetLocalToScreenMatrix();
         }
 
         public Matrix3x2 GetLocalToScreenMatrix()
