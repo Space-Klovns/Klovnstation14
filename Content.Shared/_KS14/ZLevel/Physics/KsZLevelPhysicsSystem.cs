@@ -106,7 +106,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         ));
 
         RemComp<KsSuspendedZLevelFallComponent>(entity);
-        _popupSystem.PopupClient("You are fallen down", entity.Owner, entity.Owner);
+        _popupSystem.PopupEntity("You are fallen down" /* Intentional */, entity.Owner, entity.Owner);
         return true;
     }
 
