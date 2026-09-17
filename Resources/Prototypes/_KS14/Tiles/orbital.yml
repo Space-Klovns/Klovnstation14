@@ -177,3 +177,94 @@
   placementVariants: [ 1.0, 1.0, 1.0, 1.0 ]
   footstepSounds:
     collection: FootstepHull
+
+# The first four frames are clean, followed by slightly grimy, damaged, and very grimy.
+- type: tile
+  id: KsTileOrbitalLightSteelPristine
+  parent: BaseStationTile
+  name: ks-tile-orbital-light-steel-pristine
+  sprite: /Textures/_KS14/Tiles/Orbital/light_steel_conditioned.png
+  variants: 16
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 0.25, 0.25, 0.25, 0.25, 0.05, 0.05, 0.05, 0.05, 0.02, 0.02, 0.02, 0.02 ]
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  id: KsTileOrbitalLightSteelWorn
+  parent: BaseStationTile
+  name: ks-tile-orbital-light-steel-worn
+  sprite: /Textures/_KS14/Tiles/Orbital/light_steel_conditioned.png
+  variants: 16
+  placementVariants: [ 0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 0.25, 0.25, 0.25, 0.25, 0.15, 0.15, 0.15, 0.15 ]
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  id: KsTileOrbitalLightSteelDamagedConditioned
+  parent: BaseStationTile
+  name: ks-tile-orbital-light-steel-damaged-conditioned
+  sprite: /Textures/_KS14/Tiles/Orbital/light_steel_conditioned.png
+  variants: 16
+  placementVariants: [ 0.1, 0.1, 0.1, 0.1, 0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 0.75, 0.75, 0.75, 0.75 ]
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  id: KsTileOrbitalBaseSteelPristine
+  parent: BaseStationTile
+  name: ks-tile-orbital-base-steel-pristine
+  sprite: /Textures/_KS14/Tiles/Orbital/base_steel_conditioned.png
+  variants: 16
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 0.25, 0.25, 0.25, 0.25, 0.05, 0.05, 0.05, 0.05, 0.02, 0.02, 0.02, 0.02 ]
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  id: KsTileOrbitalBaseSteelWorn
+  parent: BaseStationTile
+  name: ks-tile-orbital-base-steel-worn
+  sprite: /Textures/_KS14/Tiles/Orbital/base_steel_conditioned.png
+  variants: 16
+  placementVariants: [ 0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 0.25, 0.25, 0.25, 0.25, 0.15, 0.15, 0.15, 0.15 ]
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  id: KsTileOrbitalBaseSteelDamagedConditioned
+  parent: BaseStationTile
+  name: ks-tile-orbital-base-steel-damaged-conditioned
+  sprite: /Textures/_KS14/Tiles/Orbital/base_steel_conditioned.png
+  variants: 16
+  placementVariants: [ 0.1, 0.1, 0.1, 0.1, 0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 0.75, 0.75, 0.75, 0.75 ]
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  id: KsTileOrbitalDarkSteelPristine
+  parent: BaseStationTile
+  name: ks-tile-orbital-dark-steel-pristine
+  sprite: /Textures/_KS14/Tiles/Orbital/dark_steel_conditioned.png
+  variants: 16
+  placementVariants: [ 1.0, 1.0, 1.0, 1.0, 0.25, 0.25, 0.25, 0.25, 0.05, 0.05, 0.05, 0.05, 0.02, 0.02, 0.02, 0.02 ]
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  id: KsTileOrbitalDarkSteelWorn
+  parent: BaseStationTile
+  name: ks-tile-orbital-dark-steel-worn
+  sprite: /Textures/_KS14/Tiles/Orbital/dark_steel_conditioned.png
+  variants: 16
+  placementVariants: [ 0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 0.25, 0.25, 0.25, 0.25, 0.15, 0.15, 0.15, 0.15 ]
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  id: KsTileOrbitalDarkSteelDamagedConditioned
+  parent: BaseStationTile
+  name: ks-tile-orbital-dark-steel-damaged-conditioned
+  sprite: /Textures/_KS14/Tiles/Orbital/dark_steel_conditioned.png
+  variants: 16
+  placementVariants: [ 0.1, 0.1, 0.1, 0.1, 0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 0.75, 0.75, 0.75, 0.75 ]
+  footstepSounds:
+    collection: FootstepTile
