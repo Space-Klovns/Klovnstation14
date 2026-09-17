@@ -4,29 +4,47 @@ namespace Content.Client._KS14.ZLevel;
 
 /// <summary>
 ///     Client-only bookkeeping for making a transiting entity look like it is still up where it fell from.
-///     Holds the sprite state to restore when the transit ends, so the compensation can never accumulate across
-///         frames, and carries the compensation itself from the pre-animation pass to the post-animation one.
+///     Carries the compensation from the pre-animation pass to the post-animation one, and remembers what the
+///         sprite looked like underneath it so that it can be put back.
 /// </summary>
 [RegisterComponent]
 [Access(typeof(KsZLevelTransitSpriteSystem), typeof(KsZLevelTransitSpriteLiftSystem))]
 public sealed partial class KsZLevelTransitSpriteComponent : Component
 {
-    /// <summary>
-    ///     The sprite offset the entity had before it started transiting, captured once.
-    /// </summary>
-    [ViewVariables(VVAccess.ReadOnly)]
-    public Vector2 BaseOffset;
+    /*
+        Offset, Scale and Color are all [Animatable], so none of them can be snapshotted once at the start of a
+            transit: whatever an in-progress animation happened to be showing at that instant would be treated
+            as the entity's real appearance for the rest of the fall, and restored as such at the end of it. A
+            stun's blue colour flash starting just before a fall is exactly that, and the entity stays blue.
+
+        So these are rewritten every frame instead, recorded by the post-animation pass immediately before it
+            layers the transit compensation on top. The pre-animation pass puts them back, which undoes our own
+            last write and nothing else - whether the animation player wrote in between or not.
+    */
 
     /// <summary>
-    ///     The sprite scale the entity had before it started transiting, captured once.
+    ///     The sprite offset as the animation player left it, before the lift was added.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public Vector2 PreLiftOffset;
+
+    /// <summary>
+    ///     The sprite scale as the animation player left it, before the depth compensation was applied.
     ///     Anything that wants the entity's real on-the-ground size - <see cref="ShadowOverlay.KsShadowOverlay"/>,
     ///         for one - must read this rather than the live sprite scale.
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly)]
-    public Vector2 BaseScale = Vector2.One;
+    public Vector2 PreLiftScale = Vector2.One;
 
     /// <summary>
-    ///     The draw depth the entity had before it started transiting, captured once.
+    ///     The sprite colour as the animation player left it, before the transit fade was applied.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public Color PreLiftColor = Color.White;
+
+    /// <summary>
+    ///     The draw depth the entity had before it started transiting.
+    ///     Unlike the three above this one is captured once, because draw depth is not animatable.
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly)]
     public int BaseDrawDepth;
@@ -45,16 +63,6 @@ public sealed partial class KsZLevelTransitSpriteComponent : Component
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly)]
     public float ScaleMultiplier = 1f;
-
-    /// <summary>
-    ///     The sprite colour the entity had before it started transiting, captured once.
-    /// </summary>
-    /// <remarks>
-    ///     The fade scales this colour's alpha rather than lerping towards <see cref="Color.Transparent"/>,
-    ///         which is white - lerping to it would wash the sprite out as it faded.
-    /// </remarks>
-    [ViewVariables(VVAccess.ReadOnly)]
-    public Color BaseColor = Color.White;
 
     /// <summary>
     ///     Alpha factor applied on top of whatever colour the animation player left, for fading an entity in as

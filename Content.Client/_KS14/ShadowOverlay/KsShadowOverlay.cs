@@ -99,7 +99,7 @@ public sealed partial class KsShadowOverlay : Overlay
                 {
                     var grounded = 1f - Math.Clamp(transitComponent.Height, 0f, 1f);
 
-                    shadowScale = transitSpriteComponent.BaseScale * (MinTransitShadowScale + (1f - MinTransitShadowScale) * grounded);
+                    shadowScale = transitSpriteComponent.PreLiftScale * (MinTransitShadowScale + (1f - MinTransitShadowScale) * grounded);
                     shadowModulate = shadowModulate.WithAlpha(shadowModulate.A * (MinTransitShadowAlpha + (1f - MinTransitShadowAlpha) * grounded));
                 }
 

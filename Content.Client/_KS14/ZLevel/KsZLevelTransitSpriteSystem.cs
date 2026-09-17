@@ -56,8 +56,13 @@ public sealed partial class KsZLevelTransitSpriteSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Captures the sprite state to put back when the transit ends, once, while the sprite is still clean.
+    ///     Seeds the bookkeeping for a starting transit.
     /// </summary>
+    /// <remarks>
+    ///     Only the draw depth is a lasting snapshot. The other three are merely the starting values of a
+    ///         per-frame round trip, because all of them are animatable and a snapshot of one mid-animation
+    ///         would be treated as the entity's real appearance for the rest of the fall.
+    /// </remarks>
     [SubscribeLocalEvent]
     private void OnTransitStarted(Entity<KsZLevelTransitComponent> entity, ref KsZLevelTransitStartedEvent args)
     {
@@ -65,10 +70,10 @@ public sealed partial class KsZLevelTransitSpriteSystem : EntitySystem
             return;
 
         var transitSpriteComponent = EnsureComp<KsZLevelTransitSpriteComponent>(entity.Owner);
-        transitSpriteComponent.BaseOffset = spriteComponent.Offset;
-        transitSpriteComponent.BaseScale = spriteComponent.Scale;
         transitSpriteComponent.BaseDrawDepth = spriteComponent.DrawDepth;
-        transitSpriteComponent.BaseColor = spriteComponent.Color;
+        transitSpriteComponent.PreLiftOffset = spriteComponent.Offset;
+        transitSpriteComponent.PreLiftScale = spriteComponent.Scale;
+        transitSpriteComponent.PreLiftColor = spriteComponent.Color;
         transitSpriteComponent.Lift = Vector2.Zero;
         transitSpriteComponent.ScaleMultiplier = 1f;
         transitSpriteComponent.AlphaMultiplier = 1f;
@@ -82,10 +87,11 @@ public sealed partial class KsZLevelTransitSpriteSystem : EntitySystem
 
         if (_spriteQuery.TryGetComponent(entity.Owner, out var spriteComponent))
         {
-            _spriteSystem.SetOffset((entity.Owner, spriteComponent), transitSpriteComponent.BaseOffset);
-            _spriteSystem.SetScale((entity.Owner, spriteComponent), transitSpriteComponent.BaseScale);
+            // Undoes our own contribution and nothing else, leaving whatever the animation player last left.
+            _spriteSystem.SetOffset((entity.Owner, spriteComponent), transitSpriteComponent.PreLiftOffset);
+            _spriteSystem.SetScale((entity.Owner, spriteComponent), transitSpriteComponent.PreLiftScale);
+            _spriteSystem.SetColor((entity.Owner, spriteComponent), transitSpriteComponent.PreLiftColor);
             _spriteSystem.SetDrawDepth((entity.Owner, spriteComponent), transitSpriteComponent.BaseDrawDepth);
-            _spriteSystem.SetColor((entity.Owner, spriteComponent), transitSpriteComponent.BaseColor);
         }
 
         RemComp(entity.Owner, transitSpriteComponent);
@@ -106,17 +112,19 @@ public sealed partial class KsZLevelTransitSpriteSystem : EntitySystem
         var enumerator = AllEntityQuery<KsZLevelTransitSpriteComponent, KsZLevelTransitComponent, SpriteComponent, TransformComponent>();
         while (enumerator.MoveNext(out var uid, out var transitSpriteComponent, out var transitComponent, out var spriteComponent, out var transformComponent))
         {
-            // Back to the clean base, so whatever the animation player writes next is the animation alone.
-            _spriteSystem.SetOffset((uid, spriteComponent), transitSpriteComponent.BaseOffset);
-            _spriteSystem.SetScale((uid, spriteComponent), transitSpriteComponent.BaseScale);
+            // Undo last frame's compensation, so whatever the animation player writes next composes with the
+            //      value it left rather than with ours. Restoring the recorded pre-lift values rather than a
+            //      snapshot taken at the start of the transit is what lets an animation finish mid-fall.
+            _spriteSystem.SetOffset((uid, spriteComponent), transitSpriteComponent.PreLiftOffset);
+            _spriteSystem.SetScale((uid, spriteComponent), transitSpriteComponent.PreLiftScale);
+            _spriteSystem.SetColor((uid, spriteComponent), transitSpriteComponent.PreLiftColor);
+
             _spriteSystem.SetDrawDepth(
                 (uid, spriteComponent),
                 transitComponent.Height > 0f
                     ? (int)Shared.DrawDepth.DrawDepth.OverMobs
                     : transitSpriteComponent.BaseDrawDepth
             );
-
-            _spriteSystem.SetColor((uid, spriteComponent), transitSpriteComponent.BaseColor);
 
             transitSpriteComponent.Lift = Vector2.Zero;
             transitSpriteComponent.ScaleMultiplier = 1f;
