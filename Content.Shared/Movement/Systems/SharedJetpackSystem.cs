@@ -173,7 +173,7 @@ public abstract partial class SharedJetpackSystem : EntitySystem
             _physics.SetBodyStatus(user, physics, BodyStatus.OnGround);
 
         // KS14 Start
-        _zLevelPhysicsSystem.TryFall(user);
+        _zLevelPhysicsSystem.TryStartTransit(user);
         // KS14 End
         _movementSpeedModifier.RefreshWeightlessModifiers(user);
     }

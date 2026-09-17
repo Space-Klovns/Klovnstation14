@@ -51,13 +51,12 @@ public sealed partial class KsZLevelSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnShutdown(Entity<KsZLevelComponent> entity, ref ComponentShutdown args)
     {
-        DebugTools.Assert(
-            entity.Comp.AssociatedStack.Contains(entity),
-            $"While trying to remove it from its own stack, realised that Z-Level {ToPrettyString(entity.Owner)}'s stack does not contain it!"
-        );
+        var departedStack = entity.Comp.AssociatedStack;
+        RemoveFromOwnStack(entity);
 
-        if (entity.Comp.AssociatedStack.Count != 1)
-            entity.Comp.AssociatedStack.Remove(entity);
+        // Every z-level replicates the whole stack, so the survivors all have a stale state now.
+        foreach (var survivingEntity in departedStack)
+            Dirty(survivingEntity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

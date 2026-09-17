@@ -1,6 +1,5 @@
 using System.Linq;
 using Robust.Shared.GameStates;
-using Robust.Shared.Utility;
 
 namespace Content.Shared._KS14.ZLevel;
 
@@ -15,43 +14,59 @@ public sealed partial class KsZLevelSystem : EntitySystem
     {
         args.State = new KsZLevelComponentState(
             [.. entity.Comp.AssociatedStack.Select(x => GetNetEntity(x.Owner))],
-            entity.Comp.DepthMultiplier
+            entity.Comp.Depth
         );
     }
 
-    // I really don't know why
+    /*
+        The whole stack is replicated on every z-level in it, so any one of these states is enough to rebuild
+            it. What the rebuild has to preserve is the system's core invariant: every z-level in a stack points
+            at the *same* LinkedList object. Two stacks that look identical but are different objects are not
+            the same stack, and everything downstream that walks Node.Previous/Node.Next quietly breaks.
+
+        So this does not patch the existing list, it builds the new one and then repoints every member at it -
+            including members that were in the old stack and have now dropped out of it, which get handed a
+            fresh single-member stack of their own rather than being left pointing at a list they are not in.
+    */
     [SubscribeLocalEvent]
     private void OnHandleState(Entity<KsZLevelComponent> entity, ref ComponentHandleState args)
     {
         if (args.Current is not KsZLevelComponentState state)
             return;
 
-        entity.Comp.DepthMultiplier = state.DepthMultiplier;
+        entity.Comp.Depth = state.Depth;
 
         var newStack = new LinkedList<Entity<KsZLevelComponent>>();
-        foreach (var netid in state.AssociatedStack)
+        foreach (var netEntity in state.AssociatedStack)
         {
-            var uid = GetEntity(netid);
+            var uid = GetEntity(netEntity);
+            if (!Exists(uid))
+            {
+                // Map entities are always replicated, so this means the state itself is malformed. Dropping the
+                //      entry would silently reorder the stack, which is worse than an incomplete one.
+                Log.Error($"Z-level stack replicated to {ToPrettyString(entity.Owner)} referenced unknown entity {netEntity}; the stack will be incomplete.");
+                continue;
+            }
 
-            // ERM
-            var component = _zLevelQuery.CompOrNull(uid) ?? EnsureComp<KsZLevelComponent>(uid);
-
-            newStack.AddLast((uid, component));
+            newStack.AddLast((uid, _zLevelQuery.CompOrNull(uid) ?? EnsureComp<KsZLevelComponent>(uid)));
         }
 
-        // So for this entities stack:
-        // As the stack is being totally cloned (replicating from server -> client),
-        //      and the z-level system relies on AssociatedStack of z-level entities
-        //      in the same stack pointing to the same LinkedList<Entity<KsZLevelComponent>>, we will just migrate every
-        //      entity's AssociatedStack to point to the new one
-
-        foreach (var migratingEntity in entity.Comp.AssociatedStack)
+        // Anything that left this stack gets its own, so it is never a member of a list it does not point at.
+        foreach (var departingEntity in entity.Comp.AssociatedStack)
         {
-            migratingEntity.Comp.AssociatedStack = newStack;
+            if (newStack.Contains(departingEntity))
+                continue;
 
-            // look, im lazy OK?
-            migratingEntity.Comp.Node = newStack.Find(migratingEntity)!;
-            DebugTools.AssertNotNull(migratingEntity.Comp.Node);
+            var departingStack = new LinkedList<Entity<KsZLevelComponent>>();
+            departingEntity.Comp.AssociatedStack = departingStack;
+            departingEntity.Comp.Node = departingStack.AddFirst(departingEntity);
+        }
+
+        for (var node = newStack.First; node != null; node = node.Next)
+        {
+            var memberEntity = node.Value;
+            memberEntity.Comp.AssociatedStack = newStack;
+            memberEntity.Comp.Node = node;
         }
     }
 }

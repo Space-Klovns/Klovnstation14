@@ -1,5 +1,7 @@
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.ZLevel;
 using Robust.Server.GameObjects;
+using Robust.Shared.Configuration;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Player;
@@ -9,13 +11,26 @@ namespace Content.Server._KS14.ZLevel;
 
 public sealed partial class KsZLevelPvsSystem : EntitySystem
 {
+    [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private KsZLevelSystem _zLevelSystem = default!;
     [Dependency] private TransformSystem _transformSystem = default!;
     [Dependency] private ViewSubscriberSystem _viewSubscriberSystem = default!;
 
-    private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(1d);
+    private TimeSpan _updateInterval = TimeSpan.FromSeconds(0.25d);
     private TimeSpan _nextUpdate = TimeSpan.MinValue;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        Subs.CVar(
+            _configurationManager,
+            KsCCVars.ZLevelPvsUpdateInterval,
+            value => _updateInterval = TimeSpan.FromSeconds(value),
+            true
+        );
+    }
 
     [SubscribeLocalEvent]
     private void OnPlayerAttached(PlayerAttachedEvent args)
@@ -61,7 +76,7 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
         if (_gameTiming.CurTime < _nextUpdate)
             return;
 
-        _nextUpdate = _gameTiming.CurTime + UpdateInterval;
+        _nextUpdate = _gameTiming.CurTime + _updateInterval;
 
         var eqe = AllEntityQuery<KsZLevelViewerComponent, TransformComponent>();
         while (eqe.MoveNext(out var viewerUid, out var viewerComponent, out var viewerTransformComponent))

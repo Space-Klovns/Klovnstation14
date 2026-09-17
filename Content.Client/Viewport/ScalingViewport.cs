@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Content.Shared._KS14.ZLevel; // KS14
+using Content.Shared._KS14.ZLevel.Physics; // KS14
+using Robust.Client.Player; // KS14
 using Robust.Client.GameObjects; // KS14
 using Robust.Client.Graphics;
 using Robust.Client.Input;
@@ -27,6 +29,7 @@ namespace Content.Client.Viewport
         [Dependency] private IClyde _clyde = default!;
         [Dependency] private IEntityManager _entityManager = default!;
         [Dependency] private IInputManager _inputManager = default!;
+        [Dependency] private IPlayerManager _playerManager = default!; // KS14
 
         // KS14 START: zlevels
         private Robust.Shared.Graphics.Eye _zLevelEye = new Robust.Shared.Graphics.Eye()
@@ -192,10 +195,19 @@ namespace Content.Client.Viewport
                 _mapsToIterate.Count != 0)
             {
                 // TryGetZLevelsBelow doesn't include the map we're on
-                _mapsToIterate.Add((topMapUid.Value, null!));
+                var topZLevelComponent = _entityManager.GetComponent<KsZLevelComponent>(topMapUid.Value);
+                _mapsToIterate.Add((topMapUid.Value, topZLevelComponent));
 
-                // as this is ascending, and depth is 0-indexed; top-most one (last) will be 0
-                var depth = _mapsToIterate.Count - 1;
+                // Depth is fractional and measured downwards from the viewer, not from their z-level: their own
+                //      floor plane sits transitHeight of their z-level's Depth below them, and every z-level
+                //      under that adds its own Depth on top. As this list is ascending, the first (bottom-most)
+                //      map is the deepest, and each pass subtracts the Depth it just drew at.
+                // That fractional part is what makes the world below grow continuously as you fall instead of
+                //      popping one whole z-level at a time: when the viewer crosses over, their height resets to
+                //      ~1 and the list loses an entry, so every remaining map keeps the depth it already had.
+                var depth = GetViewerTransitHeight() * topZLevelComponent.Depth;
+                for (var mapIndex = 0; mapIndex < _mapsToIterate.Count - 1; mapIndex++)
+                    depth += _mapsToIterate[mapIndex].Comp.Depth;
 
                 _zLevelEye.DrawLight = _eye.DrawLight;
                 _zLevelEye.Offset = _eye.Offset;
@@ -203,31 +215,33 @@ namespace Content.Client.Viewport
 
                 foreach (var (mapUid, mapZLevelComponent) in _mapsToIterate)
                 {
+                    var isViewerMap = mapUid == topMapUid.Value;
+
                     // clearcolor for all maps other than first is none
                     _viewport.ClearColor = null;
                     // for maps below the highest, never draw FOV. on the highest map, only draw fov if we would for a non-zlevel
-                    _zLevelEye.DrawFov = depth == 0 && _eye.DrawFov;
-
-                    var depthMultiplier = mapZLevelComponent == null ? 0f : mapZLevelComponent.DepthMultiplier;
+                    _zLevelEye.DrawFov = isViewerMap && _eye.DrawFov;
 
                     _zLevelEye.Position = new MapCoordinates(
                         _eye.Position.Position,
                         _entityManager.GetComponent<MapComponent>(mapUid).MapId
                     );
-                    _zLevelEye.Scale = _eye.Scale - new Vector2(0.075f * depth * depthMultiplier, 0.075f * depth * depthMultiplier);
-                    _viewport.Eye = depth == 0 ? _eye : _zLevelEye;
+                    _zLevelEye.Scale = _eye.Scale - new Vector2(0.075f * depth, 0.075f * depth);
+                    // The viewer's own map is drawn through their real eye while they're standing on it, and
+                    //      through the scaled copy while they're above it mid-transit.
+                    _viewport.Eye = isViewerMap && depth <= 0f ? _eye : _zLevelEye;
 
                     _viewport.Render();
                     _viewport.RenderScreenOverlaysBelow(handle, this, drawBoxGlobal);
 
-                    // This would otherwise draw if not for depthmultiplier being 0 on the top-most map
-                    if (depthMultiplier != 0f)
-                        _clyde.BlurRenderTarget(_viewport, _viewport.RenderTarget, _zBlurBuffer, _zLevelEye, 2.5f * depthMultiplier);
+                    // Never blur the map the viewer is actually on
+                    if (!isViewerMap)
+                        _clyde.BlurRenderTarget(_viewport, _viewport.RenderTarget, _zBlurBuffer, _zLevelEye, 2.5f * mapZLevelComponent.Depth);
 
                     handle.DrawingHandleScreen.DrawTextureRect(_viewport.RenderTarget.Texture, drawBox);
                     _viewport.RenderScreenOverlaysAbove(handle, this, drawBoxGlobal);
 
-                    depth--;
+                    depth -= mapZLevelComponent.Depth;
                 }
 
                 // default clearcolor is black
@@ -252,6 +266,25 @@ namespace Content.Client.Viewport
         {
             _queuedScreenshots.Add(callback);
         }
+
+        // KS14 Start
+        /// <summary>
+        ///     How far above their own z-level's floor plane the viewer currently is, 0 to 1.
+        /// </summary>
+        private float GetViewerTransitHeight()
+        {
+            // The MapID check stops a viewport that isn't the player's own - a surveillance camera, say - from
+            //      inheriting the player's transit height.
+            if (_eye == null ||
+                _playerManager.LocalEntity is not { } localUid ||
+                !_entityManager.TryGetComponent<KsZLevelTransitComponent>(localUid, out var transitComponent) ||
+                !_entityManager.TryGetComponent<TransformComponent>(localUid, out var transformComponent) ||
+                transformComponent.MapID != _eye.Position.MapId)
+                return 0f;
+
+            return Math.Clamp(transitComponent.Height, 0f, 1f);
+        }
+        // KS14 End
 
         // Draw box in pixel coords to draw the viewport at.
         private UIBox2i GetDrawBox()
