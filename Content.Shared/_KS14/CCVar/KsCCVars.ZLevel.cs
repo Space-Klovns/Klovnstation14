@@ -12,7 +12,7 @@ public sealed partial class KsCCVars
     /// </summary>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> ZLevelTransitGravity =
-        CVarDef.Create("klovn.zlevel.transit_gravity", 4f, CVar.SERVER | CVar.REPLICATED);
+        CVarDef.Create("klovn.zlevel.transit_gravity", 1.8f, CVar.SERVER | CVar.REPLICATED);
 
     /// <summary>
     ///     Maximum absolute vertical speed of a transiting entity, in z-levels per second.
