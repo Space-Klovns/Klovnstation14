@@ -14,7 +14,10 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.ZLevel.Physics;
@@ -35,7 +38,9 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     [Dependency] private KsZLevelSystem _zLevelSystem = default!;
     [Dependency] private SharedContainerSystem _containerSystem = default!;
     [Dependency] private SharedGravitySystem _gravitySystem = default!;
+    [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
+    [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
@@ -44,6 +49,8 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     [Dependency] private EntityQuery<KsZLevelTransitComponent> _transitQuery = default!;
     [Dependency] private EntityQuery<MapComponent> _mapQuery = default!;
     [Dependency] private EntityQuery<KnockedDownComponent> _knockedDownQuery = default!;
+    [Dependency] private EntityQuery<FixturesComponent> _fixturesQuery = default!;
+    [Dependency] private EntityQuery<PhysicsComponent> _physicsQuery = default!;
 
     /// <summary>
     ///     Safety net only. Terminal velocity keeps a transit to a single floor plane crossing per tick at any
@@ -63,8 +70,23 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         },
     };
 
+    /// <summary>
+    ///     Damage dealt to whatever a solid entity lands on top of, per z-level per second of impact speed over
+    ///         <see cref="KsCCVars.ZLevelTransitImpactVelocity"/>. Resistances apply.
+    /// </summary>
+    private static readonly DamageSpecifier CrushDamage = new()
+    {
+        DamageDict = new()
+        {
+            { "Blunt", FixedPoint2.New(8) },
+        },
+    };
+
+    private readonly HashSet<Entity<FixturesComponent>> _crushTargets = [];
+
     private float _transitGravity;
     private TimeSpan _landingKnockdown;
+    private TimeSpan _crushStun;
     private float _transitTerminalVelocity;
     private float _transitImpactVelocity;
 
@@ -76,6 +98,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         Subs.CVar(_configurationManager, KsCCVars.ZLevelTransitTerminalVelocity, value => _transitTerminalVelocity = value, true);
         Subs.CVar(_configurationManager, KsCCVars.ZLevelTransitImpactVelocity, value => _transitImpactVelocity = value, true);
         Subs.CVar(_configurationManager, KsCCVars.ZLevelTransitLandingKnockdown, value => _landingKnockdown = TimeSpan.FromSeconds(value), true);
+        Subs.CVar(_configurationManager, KsCCVars.ZLevelTransitCrushStun, value => _crushStun = TimeSpan.FromSeconds(value), true);
     }
 
     #region Triggers
@@ -431,15 +454,15 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
             return;
         }
 
+        // Clamped because a subscriber is free to force Damaging on an impact under the threshold, and a
+        //      negative specifier applied with ignoreResistances would heal rather than hurt.
+        var overThreshold = MathF.Max(0f, impactSpeed - _transitImpactVelocity);
+
         var attemptEvent = new KsZLevelLandAttemptEvent(impactSpeed, impactSpeed >= _transitImpactVelocity);
         RaiseLocalEvent(entity.Owner, ref attemptEvent);
 
         if (attemptEvent.Damaging)
         {
-            // Clamped because a subscriber is free to force Damaging on an impact under the threshold, and a
-            //      negative specifier applied with ignoreResistances would heal rather than hurt.
-            var overThreshold = MathF.Max(0f, impactSpeed - _transitImpactVelocity);
-
             _damageableSystem.TryChangeDamage(
                 entity.Owner,
                 ImpactDamage * overThreshold,
@@ -453,10 +476,136 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
 
         // Ended before the land event rather than after it, so that a subscriber can bounce or relaunch the
         //      entity with TryStartTransit without the transit it just started being torn straight back down.
+        // It also has to stop transiting before the crush below, because OnTransitPreventCollide vetoes every
+        //      contact while the component is attached - asking the collision question first would always say no.
         RemComp<KsZLevelTransitComponent>(entity.Owner);
+
+        // Deliberately not gated on the faller taking damage itself: talking its own impact damage out of
+        //      existence should not also spare whatever it came down on.
+        if (overThreshold > 0f)
+            CrushLandingTargets(entity.Owner, impactSpeed, overThreshold);
+
+        if (TerminatingOrDeleted(entity.Owner))
+            return;
 
         var landEvent = new KsZLevelLandEvent(impactSpeed, attemptEvent.Damaging);
         RaiseLocalEvent(entity.Owner, ref landEvent);
+    }
+
+    /// <summary>
+    ///     Damages and stuns whatever a solid entity has just landed on top of.
+    /// </summary>
+    /// <remarks>
+    ///     A transiting entity has its contacts vetoed, so a fall raises no collisions of its own and there is
+    ///         nothing to react to - whatever it came down on has to be looked up at the moment of impact, and
+    ///         then asked whether a collision would have been allowed at all.
+    /// </remarks>
+    private void CrushLandingTargets(EntityUid uid, float impactSpeed, float overThreshold)
+    {
+        // Something with no hard fixtures lands on nothing: it passes through whatever is underneath exactly
+        //      as it passed through everything on the way down.
+        if (!_fixturesQuery.TryGetComponent(uid, out var fixturesComponent) ||
+            !_physicsQuery.TryGetComponent(uid, out var physicsComponent) ||
+            !HasHardFixture(fixturesComponent))
+            return;
+
+        var transformComponent = Transform(uid);
+
+        _crushTargets.Clear();
+        _entityLookupSystem.GetEntitiesIntersecting(
+            transformComponent.MapID,
+            _physicsSystem.GetWorldAABB(uid, fixturesComponent),
+            _crushTargets,
+            LookupFlags.Dynamic | LookupFlags.Static | LookupFlags.Uncontained
+        );
+
+        foreach (var target in _crushTargets)
+        {
+            if (target.Owner == uid ||
+                TerminatingOrDeleted(target.Owner) ||
+                !_physicsQuery.TryGetComponent(target.Owner, out var targetPhysicsComponent) ||
+                !WouldHardFixturesCollide(
+                    (uid, fixturesComponent, physicsComponent),
+                    (target.Owner, target.Comp, targetPhysicsComponent)))
+                continue;
+
+            var crushAttemptEvent = new KsZLevelCrushAttemptEvent(uid, impactSpeed);
+            RaiseLocalEvent(target.Owner, ref crushAttemptEvent);
+
+            if (crushAttemptEvent.Cancelled)
+                continue;
+
+            // Resistances apply here, unlike the faller's own impact damage: armour ought to help against
+            //      having something dropped on you.
+            _damageableSystem.TryChangeDamage(target.Owner, CrushDamage * overThreshold, origin: uid);
+            _stunSystem.TryAddParalyzeDuration(target.Owner, _crushStun);
+
+            if (TerminatingOrDeleted(target.Owner))
+                continue;
+
+            var crushedEvent = new KsZLevelCrushedEvent(uid, impactSpeed);
+            RaiseLocalEvent(target.Owner, ref crushedEvent);
+        }
+    }
+
+    private static bool HasHardFixture(FixturesComponent fixturesComponent)
+    {
+        foreach (var fixture in fixturesComponent.Fixtures.Values)
+        {
+            if (fixture.Hard)
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Whether a pair of hard fixtures on these two entities would have been allowed to touch.
+    /// </summary>
+    /// <remarks>
+    ///     The hardness and layer/mask tests are the cheap prefilter the broadphase runs first. Raising
+    ///         <see cref="PreventCollideEvent"/> on both bodies afterwards, exactly as the engine does when it
+    ///         decides whether to build a contact, is what picks up everything else that gets a say - buckling,
+    ///         open doors, faction collision, projectile targeting - so a crush is refused wherever a real
+    ///         collision would have been refused, without this having to know any of those rules itself.
+    /// </remarks>
+    private bool WouldHardFixturesCollide(
+        Entity<FixturesComponent, PhysicsComponent> entity,
+        Entity<FixturesComponent, PhysicsComponent> otherEntity)
+    {
+        foreach (var fixture in entity.Comp1.Fixtures.Values)
+        {
+            if (!fixture.Hard)
+                continue;
+
+            foreach (var otherFixture in otherEntity.Comp1.Fixtures.Values)
+            {
+                if (!otherFixture.Hard)
+                    continue;
+
+                if ((fixture.CollisionMask & otherFixture.CollisionLayer) == 0x0 &&
+                    (otherFixture.CollisionMask & fixture.CollisionLayer) == 0x0)
+                    continue;
+
+                var preventCollideEvent = new PreventCollideEvent(
+                    entity.Owner, otherEntity.Owner, entity.Comp2, otherEntity.Comp2, fixture, otherFixture);
+                RaiseLocalEvent(entity.Owner, ref preventCollideEvent);
+
+                if (preventCollideEvent.Cancelled)
+                    continue;
+
+                preventCollideEvent = new PreventCollideEvent(
+                    otherEntity.Owner, entity.Owner, otherEntity.Comp2, entity.Comp2, otherFixture, fixture);
+                RaiseLocalEvent(otherEntity.Owner, ref preventCollideEvent);
+
+                if (preventCollideEvent.Cancelled)
+                    continue;
+
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void SetTransit(Entity<KsZLevelTransitComponent> entity, float height, float velocity)

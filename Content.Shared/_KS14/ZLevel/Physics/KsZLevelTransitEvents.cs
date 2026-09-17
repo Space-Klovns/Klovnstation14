@@ -63,3 +63,20 @@ public record struct KsZLevelLandAttemptEvent(float ImpactSpeed, bool Damaging)
 /// </summary>
 [ByRefEvent]
 public readonly record struct KsZLevelLandEvent(float ImpactSpeed, bool Damaged);
+
+/// <summary>
+///     Raised on an entity about to be crushed by something solid landing on top of it, to give it the chance
+///         not to be.
+///     Subscribers must be pure other than cancelling.
+/// </summary>
+[ByRefEvent]
+public record struct KsZLevelCrushAttemptEvent(EntityUid CrusherUid, float ImpactSpeed)
+{
+    public bool Cancelled = false;
+}
+
+/// <summary>
+///     Raised on an entity that has just been crushed by something landing on top of it.
+/// </summary>
+[ByRefEvent]
+public readonly record struct KsZLevelCrushedEvent(EntityUid CrusherUid, float ImpactSpeed);

@@ -30,6 +30,13 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.zlevel.transit_impact_velocity", 3.5f, CVar.SERVER | CVar.REPLICATED);
 
     /// <summary>
+    ///     How long, in seconds, something is stunned for after being landed on.
+    /// </summary>
+    [CVarControl(AdminFlags.Fun)]
+    public static readonly CVarDef<float> ZLevelTransitCrushStun =
+        CVarDef.Create("klovn.zlevel.transit_crush_stun", 2f, CVar.SERVER | CVar.REPLICATED);
+
+    /// <summary>
     ///     How long, in seconds, something stays knocked down after a transit ends.
     ///     An entity is kept down for the whole transit regardless; this is only the sprawl on landing.
     /// </summary>

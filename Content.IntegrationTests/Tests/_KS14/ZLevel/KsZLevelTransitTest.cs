@@ -49,9 +49,120 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
   - type: Crawler
   - type: DoAfter
   - type: TestListener
+
+# Solid, and on the same collision layer as the faller, so the two genuinely collide.
+- type: entity
+  id: KsZLevelTestVictim
+  name: test victim
+  components:
+  - type: Physics
+    bodyType: Dynamic
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.35
+        hard: true
+        mask:
+        - Impassable
+        layer:
+        - Impassable
+  - type: Damageable
+    damageContainer: Biological
+  - type: Injurable
+  - type: StandingState
+  - type: Crawler
+  - type: DoAfter
+  - type: InputMover
+  - type: MovementSpeedModifier
+  - type: StatusEffectContainer
+  # StatusEffectStunned whitelists MobState, so without these the crush would damage but never stun.
+  - type: MobState
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      1000: Critical
+      2000: Dead
+  - type: TestListener
+
+# Solid, but on a layer the faller neither masks nor shares: the broadphase would never pair these two.
+- type: entity
+  parent: KsZLevelTestVictim
+  id: KsZLevelTestUncollidableVictim
+  components:
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.35
+        hard: true
+        mask:
+        - GhostImpassable
+        layer:
+        - GhostImpassable
+
+# Nothing hard about it, so it lands on nobody.
+- type: entity
+  parent: KsZLevelTestFaller
+  id: KsZLevelTestSoftFaller
+  components:
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.35
+        hard: false
+        mask:
+        - Impassable
+        layer:
+        - Impassable
 ";
 
     private const string FallerProto = "KsZLevelTestFaller";
+    private const string SoftFallerProto = "KsZLevelTestSoftFaller";
+    private const string VictimProto = "KsZLevelTestVictim";
+    private const string UncollidableVictimProto = "KsZLevelTestUncollidableVictim";
+
+    /// <summary>
+    ///     Drops <paramref name="fallerProto"/> onto a <paramref name="victimProto"/> standing where it lands,
+    ///         and reports how much damage the victim took.
+    /// </summary>
+    private async Task<(EntityUid Victim, FixedPoint2 Damage)> DropOnto(string fallerProto, string victimProto)
+    {
+        var stack = await CreateStack();
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var transitSystem = entManager.System<KsZLevelPhysicsSystem>();
+
+        var faller = EntityUid.Invalid;
+        var victim = EntityUid.Invalid;
+
+        await server.WaitPost(() =>
+        {
+            // Directly under the hole, on the tile the faller comes to rest on.
+            victim = entManager.SpawnEntity(victimProto, stack.UnderHoleCoords);
+
+            faller = entManager.SpawnEntity(fallerProto, stack.HoleCoords);
+            transitSystem.TryStartTransit(faller, -10f);
+        });
+
+        var (_, landed) = await RunUntilLanded(entManager, faller);
+        await Pair.RunTicksSync(2);
+
+        var damage = FixedPoint2.Zero;
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(landed, Is.True,
+                "the faller has to reach the floor for anything to be crushed by it");
+            damage = entManager.System<DamageableSystem>().GetTotalDamage(victim);
+        });
+
+        return (victim, damage);
+    }
 
     /// <summary>
     ///     Runs single ticks until the entity has landed, and returns how long that took.
@@ -751,6 +862,122 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
 
             Assert.That(freeToGetUp, Is.True,
                 "once landed, the entity should be free to get back up rather than being pinned to the floor");
+        });
+    }
+
+
+    /// <summary>
+    ///     Something solid coming down hard enough damages and stuns whatever it lands on top of.
+    /// </summary>
+    [Test]
+    public async Task TestLandingOnSomethingCrushesIt()
+    {
+        await OverrideTransitCVars();
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var listenerSystem = entManager.System<KsZLevelTestListenerSystem>();
+
+        listenerSystem.Reset();
+
+        var (victim, damage) = await DropOnto(FallerProto, VictimProto);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(damage, Is.GreaterThan(FixedPoint2.Zero),
+                    "having something solid dropped on you should hurt");
+                Assert.That(entManager.HasComponent<StunnedComponent>(victim), Is.True,
+                    "being landed on should stun, not just damage");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     The crush is filtered by the same fixture rules the broadphase uses, so a faller does not damage
+    ///         things it could never have touched on the way down.
+    /// </summary>
+    [Test]
+    public async Task TestLandingDoesNotCrushWhatItCannotCollideWith()
+    {
+        await OverrideTransitCVars();
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+
+        var (victim, damage) = await DropOnto(FallerProto, UncollidableVictimProto);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(damage, Is.EqualTo(FixedPoint2.Zero),
+                    "the faller and this victim share no collision layer or mask, so landing on it should do nothing at all");
+                Assert.That(entManager.HasComponent<StunnedComponent>(victim), Is.False,
+                    "something the faller cannot collide with should not be stunned by it either");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     Only hard fixtures land on anything. A faller made entirely of sensors passes through.
+    /// </summary>
+    [Test]
+    public async Task TestSoftFallerCrushesNothing()
+    {
+        await OverrideTransitCVars();
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+
+        var (victim, damage) = await DropOnto(SoftFallerProto, VictimProto);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(damage, Is.EqualTo(FixedPoint2.Zero),
+                    "a faller with no hard fixtures has nothing to land on anyone with");
+                Assert.That(entManager.HasComponent<StunnedComponent>(victim), Is.False,
+                    "a faller with no hard fixtures should not stun what it passes through either");
+            });
+        });
+    }
+
+    /// <summary>
+    ///     A gentle landing is not a crush: under the impact threshold nothing underneath is touched.
+    /// </summary>
+    [Test]
+    public async Task TestGentleLandingCrushesNothing()
+    {
+        await OverrideTransitCVars();
+        var stack = await CreateStack(gravity: false);
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var transitSystem = entManager.System<KsZLevelPhysicsSystem>();
+
+        var faller = EntityUid.Invalid;
+        var victim = EntityUid.Invalid;
+
+        // No gravity, so it drifts down at a constant speed well under the impact threshold.
+        await server.WaitPost(() =>
+        {
+            victim = entManager.SpawnEntity(VictimProto, stack.UnderHoleCoords);
+            faller = entManager.SpawnEntity(FallerProto, stack.HoleCoords);
+            transitSystem.TryStartTransit(faller, -1f);
+        });
+
+        var (_, landed) = await RunUntilLanded(entManager, faller);
+        await Pair.RunTicksSync(2);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(landed, Is.True,
+                "the faller has to reach the floor for this to say anything about crushing");
+            Assert.That(entManager.System<DamageableSystem>().GetTotalDamage(victim), Is.EqualTo(FixedPoint2.Zero),
+                "drifting gently onto something should not hurt it");
         });
     }
 
