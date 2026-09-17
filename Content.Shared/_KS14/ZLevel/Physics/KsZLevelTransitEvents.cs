@@ -72,6 +72,20 @@ public readonly record struct KsZLevelLandEvent(float ImpactSpeed, bool Damaged)
 [ByRefEvent]
 public record struct KsZLevelCrushAttemptEvent(EntityUid CrusherUid, float ImpactSpeed)
 {
+    /// <summary>What is coming down on this entity.</summary>
+    public readonly EntityUid CrusherUid = CrusherUid;
+
+    /// <summary>How fast it landed, in z-levels per second.</summary>
+    public readonly float ImpactSpeed = ImpactSpeed;
+
+    /// <summary>
+    ///     Whether to spare this entity. The only writable member.
+    /// </summary>
+    /// <remarks>
+    ///     One instance is reused for every target of a single landing, so this is reset before each raise -
+    ///         see <see cref="KsZLevelPhysicsSystem"/>. Declaring the other two as readonly fields rather than
+    ///         leaving them as the positional properties is what makes that reuse safe to rely on.
+    /// </remarks>
     public bool Cancelled = false;
 }
 

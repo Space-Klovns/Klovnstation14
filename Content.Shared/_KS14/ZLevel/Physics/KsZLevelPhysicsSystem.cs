@@ -518,6 +518,11 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
             LookupFlags.Dynamic | LookupFlags.Static | LookupFlags.Uncontained
         );
 
+        // Both events say only what landed and how hard, neither of which varies from one target to the next,
+        //      so one instance of each serves the whole landing.
+        var crushAttemptEvent = new KsZLevelCrushAttemptEvent(uid, impactSpeed);
+        var crushedEvent = new KsZLevelCrushedEvent(uid, impactSpeed);
+
         foreach (var target in _crushTargets)
         {
             if (target.Owner == uid ||
@@ -528,7 +533,8 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
                     (target.Owner, target.Comp, targetPhysicsComponent)))
                 continue;
 
-            var crushAttemptEvent = new KsZLevelCrushAttemptEvent(uid, impactSpeed);
+            // Reused, so one target vetoing its own crush must not go on to spare everything after it.
+            crushAttemptEvent.Cancelled = false;
             RaiseLocalEvent(target.Owner, ref crushAttemptEvent);
 
             if (crushAttemptEvent.Cancelled)
@@ -542,7 +548,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
             if (TerminatingOrDeleted(target.Owner))
                 continue;
 
-            var crushedEvent = new KsZLevelCrushedEvent(uid, impactSpeed);
+            // Fully readonly, so no subscriber can leave anything behind for the next target.
             RaiseLocalEvent(target.Owner, ref crushedEvent);
         }
     }
