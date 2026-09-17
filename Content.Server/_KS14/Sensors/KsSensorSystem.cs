@@ -30,7 +30,6 @@ namespace Content.Server._KS14.Sensors;
 public sealed partial class KsSensorSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
-    [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private IConfigurationManager _cfg = default!;
     [Dependency] private SharedPowerReceiverSystem _power = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
@@ -159,27 +158,6 @@ public sealed partial class KsSensorSystem : EntitySystem
 
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
         _gridQuery = GetEntityQuery<MapGridComponent>();
-
-        SubscribeLocalEvent<KsCollectNavContactsEvent>(OnCollectNavContacts);
-
-        SubscribeLocalEvent<KsSensorComponent, ExaminedEvent>(OnSensorExamined);
-
-        // Push a full picture the moment a radar console UI opens, and scrub the
-        // stored (PVS-replicated) BUI state when the last viewer leaves. The shuttle
-        // console equivalents live as KS14-marked lines in ShuttleConsoleSystem's own
-        // handlers: the engine allows only one subscriber per (component, event) pair
-        // and it already holds them.
-        SubscribeLocalEvent<RadarConsoleComponent, BoundUIOpenedEvent>(OnRadarConsoleUiOpened);
-        SubscribeLocalEvent<RadarConsoleComponent, BoundUIClosedEvent>(OnRadarConsoleUiClosed);
-
-        // Everything below changes what a console draws while mutating no contact pool, so
-        // without a forced push the change-gated refresh never fires and the picture
-        // latches. On a ship with nothing in its pool (a raider alone in a sector) it
-        // latches forever. Rotation matters because the jam wedge follows the mount
-        // (ThrusterSystem subscribes MoveEvent for the same reason). Mounting, unmounting,
-        // powering and unpowering an emitter change the toggles' visibility and ON/OFF
-        // labels the same way.
-        SubscribeLocalEvent<KsJammerComponent, MoveEvent>(OnJammerMoved);
         SubscribeLocalEvent<KsJammerComponent, PowerChangedEvent>(OnEmitterPowerChanged);
         SubscribeLocalEvent<KsJammerComponent, AnchorStateChangedEvent>(OnEmitterAnchorChanged);
         SubscribeLocalEvent<KsJammerComponent, ComponentStartup>(OnEmitterAddedOrRemoved);
@@ -190,6 +168,14 @@ public sealed partial class KsSensorSystem : EntitySystem
         SubscribeLocalEvent<KsSensorComponent, ComponentShutdown>(OnEmitterAddedOrRemoved);
     }
 
+    // Everything below changes what a console draws while mutating no contact pool, so
+    // without a forced push the change-gated refresh never fires and the picture
+    // latches. On a ship with nothing in its pool (a raider alone in a sector) it
+    // latches forever. Rotation matters because the jam wedge follows the mount
+    // (ThrusterSystem subscribes MoveEvent for the same reason). Mounting, unmounting,
+    // powering and unpowering an emitter change the toggles' visibility and ON/OFF
+    // labels the same way.
+    [SubscribeLocalEvent]
     private void OnJammerMoved(Entity<KsJammerComponent> ent, ref MoveEvent args)
     {
         // Only rotation reshapes the wedge relative to the grid. Translation of the whole
@@ -214,16 +200,24 @@ public sealed partial class KsSensorSystem : EntitySystem
         _forceConsolePush = true;
     }
 
+    // Push a full picture the moment a radar console UI opens, and scrub the
+    // stored (PVS-replicated) BUI state when the last viewer leaves. The shuttle
+    // console equivalents live as KS14-marked lines in ShuttleConsoleSystem's own
+    // handlers: the engine allows only one subscriber per (component, event) pair
+    // and it already holds them.
+    [SubscribeLocalEvent]
     private void OnRadarConsoleUiOpened(EntityUid uid, RadarConsoleComponent component, BoundUIOpenedEvent args)
     {
         _radarConsole.KsRefreshConsole(uid, component);
     }
 
+    [SubscribeLocalEvent]
     private void OnRadarConsoleUiClosed(EntityUid uid, RadarConsoleComponent component, BoundUIClosedEvent args)
     {
         _radarConsole.KsRefreshConsole(uid, component);
     }
 
+    [SubscribeLocalEvent]
     private void OnSensorExamined(EntityUid uid, KsSensorComponent component, ExaminedEvent args)
     {
         string status;
@@ -592,7 +586,7 @@ public sealed partial class KsSensorSystem : EntitySystem
         {
             foreach (var (field, value) in intel)
             {
-                if (!_proto.TryIndex(field, out var proto) || !proto.Sticky)
+                if (!ProtoMan.TryIndex(field, out var proto) || !proto.Sticky)
                     continue;
 
                 if (record.KnownIntel.TryGetValue(field, out var existing) && seen <= existing.Seen)
@@ -1262,6 +1256,7 @@ public sealed partial class KsSensorSystem : EntitySystem
 
     #region Console snapshots
 
+    [SubscribeLocalEvent]
     private void OnCollectNavContacts(ref KsCollectNavContactsEvent ev)
     {
         if (ev.Grid is not { } gridUid)
@@ -1688,7 +1683,7 @@ public sealed partial class KsSensorSystem : EntitySystem
             {
                 // Sticky keys are served from KnownIntel above; never from a source.
                 if (record.KnownIntel.ContainsKey(intel)
-                    || _proto.TryIndex(intel, out var proto) && proto.Sticky)
+                    || ProtoMan.TryIndex(intel, out var proto) && proto.Sticky)
                     continue;
 
                 if (!merged.TryGetValue(intel, out var existing) || source.LastSeen > existing.Seen)
@@ -1703,8 +1698,8 @@ public sealed partial class KsSensorSystem : EntitySystem
 
         result.Sort((a, b) =>
         {
-            var orderA = _proto.TryIndex(a.Item1, out var protoA) ? protoA.Order : 0;
-            var orderB = _proto.TryIndex(b.Item1, out var protoB) ? protoB.Order : 0;
+            var orderA = ProtoMan.TryIndex(a.Item1, out var protoA) ? protoA.Order : 0;
+            var orderB = ProtoMan.TryIndex(b.Item1, out var protoB) ? protoB.Order : 0;
             return orderA != orderB ? orderA.CompareTo(orderB) : string.Compare(a.Item1.Id, b.Item1.Id, StringComparison.Ordinal);
         });
 

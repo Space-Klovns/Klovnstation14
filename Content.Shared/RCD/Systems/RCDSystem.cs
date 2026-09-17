@@ -56,7 +56,6 @@ public sealed partial class RCDSystem : EntitySystem
     [Dependency] private TurfSystem _turf = default!;
     [Dependency] private TileSystem _tile = default!;
     [Dependency] private EntityLookupSystem _lookup = default!;
-    [Dependency] private IPrototypeManager _protoManager = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
     [Dependency] private TagSystem _tags = default!;
@@ -140,7 +139,7 @@ public sealed partial class RCDSystem : EntitySystem
         if (!component.AvailablePrototypes.Contains(args.ProtoId))
             return;
 
-        if (!_protoManager.Resolve<RCDPrototype>(args.ProtoId, out var prototype))
+        if (!ProtoMan.Resolve<RCDPrototype>(args.ProtoId, out var prototype))
             return;
 
         // Set the current RCD prototype to the one supplied
@@ -169,7 +168,7 @@ public sealed partial class RCDSystem : EntitySystem
             var name = Loc.GetString(prototype.SetName);
 
             if (prototype.Prototype != null &&
-                _protoManager.TryIndex(prototype.Prototype, out var proto)) // don't use Resolve because this can be a tile
+                ProtoMan.TryIndex(prototype.Prototype, out var proto)) // don't use Resolve because this can be a tile
                 name = proto.Name;
 
             msg = Loc.GetString("rcd-component-examine-build-details", ("name", name));
@@ -254,7 +253,7 @@ public sealed partial class RCDSystem : EntitySystem
 
         var user = args.User;
         var location = args.ClickLocation;
-        var prototype = component.CachedPrototype; // Starlight Edit: _protoManager.Index(component.ProtoId) -> component.CachedPrototype
+        var prototype = component.CachedPrototype; // Starlight Edit: ProtoMan.Index(component.ProtoId) -> component.CachedPrototype
 
         // Initial validity checks
         if (!location.IsValid(EntityManager))
@@ -353,7 +352,7 @@ public sealed partial class RCDSystem : EntitySystem
                     var deconstructedTile = _mapSystem.GetTileRef(gridUid.Value, mapGrid, location);
                     var protoName = !_turf.IsSpace(deconstructedTile) ? _deconstructTileProto : _deconstructLatticeProto;
 
-                    if (_protoManager.Resolve(protoName, out var deconProto))
+                    if (ProtoMan.Resolve(protoName, out var deconProto))
                     {
                         cost = deconProto.Cost;
                         delay = deconProto.Delay;
@@ -470,7 +469,7 @@ public sealed partial class RCDSystem : EntitySystem
         // Play audio and consume charges
         _audio.PlayPredicted(component.SuccessSound, uid, args.User);
         // Goobstation - start
-        var prototype = _protoManager.Index(component.ProtoId);
+        var prototype = ProtoMan.Index(component.ProtoId);
         if (prototype.Mode == RcdMode.Deconstruct) // on decon, return half the cost
             _sharedCharges.AddCharges(uid, GetRefundedCost(args.Cost));
         else
@@ -556,7 +555,7 @@ public sealed partial class RCDSystem : EntitySystem
 
     public bool IsRCDOperationStillValid(EntityUid uid, RCDComponent component, EntityUid gridUid, MapGridComponent mapGrid, TileRef tile, Vector2i position, Direction direction, EntityUid? target, EntityUid user, bool popMsgs = true)
     {
-        var prototype = _protoManager.Index(component.ProtoId);
+        var prototype = ProtoMan.Index(component.ProtoId);
 
         // Check that the RCD has enough ammo to get the job done
         var charges = _sharedCharges.GetCurrentCharges(uid);
@@ -603,7 +602,7 @@ public sealed partial class RCDSystem : EntitySystem
     {
         UpdateCachedPrototype(uid, component); // Starlight
 
-        var prototype = component.CachedPrototype; // Starlight Edit: _protoManager.Index(component.ProtoId) -> component.CachedPrototype
+        var prototype = component.CachedPrototype; // Starlight Edit: ProtoMan.Index(component.ProtoId) -> component.CachedPrototype
 
         // Check rule: Must build on empty tile
         if (prototype.ConstructionRules.Contains(RcdConstructionRule.MustBuildOnEmptyTile) && !tile.Tile.IsEmpty)
@@ -681,7 +680,7 @@ public sealed partial class RCDSystem : EntitySystem
         // Starlight Start: RPLD
         var isPlumbingMachinePlacement = component.IsRPLD
             && prototype.Prototype != null
-            && _protoManager.TryIndex<EntityPrototype>(prototype.Prototype, out var constructionProto)
+            && ProtoMan.TryIndex<EntityPrototype>(prototype.Prototype, out var constructionProto)
             && constructionProto.HasComponent<PlumbingConnectorAppearanceComponent>(_entityManager.ComponentFactory);
         // Starlight End: RPLD
         _intersectingEntities.Clear();
@@ -836,7 +835,7 @@ public sealed partial class RCDSystem : EntitySystem
         if (!_net.IsServer)
             return;
 
-        var prototype = component.CachedPrototype; // Starlight Edit: _protoManager.Index(component.ProtoId) -> component.CachedPrototype
+        var prototype = component.CachedPrototype; // Starlight Edit: ProtoMan.Index(component.ProtoId) -> component.CachedPrototype
 
         if (prototype.Prototype == null)
             return;
@@ -859,7 +858,7 @@ public sealed partial class RCDSystem : EntitySystem
 
                 if (component.IsRpd && prototype.HasLayers)
                 {
-                    if (_protoManager.TryIndex<EntityPrototype>(proto, out var entityProto) &&
+                    if (ProtoMan.TryIndex<EntityPrototype>(proto, out var entityProto) &&
                         entityProto.TryGetComponent<AtmosPipeLayersComponent>(out var atmosPipeLayers, _entityManager.ComponentFactory) &&
                         _pipeLayersSystem.TryGetAlternativePrototype(atmosPipeLayers, _currentLayer, out var newProtoId))
                     {
@@ -880,7 +879,7 @@ public sealed partial class RCDSystem : EntitySystem
                 if (component.IsRpd)
                 {
                     // We need to know what the pipe *would* look like to check for overlaps
-                    if (_protoManager.TryIndex<EntityPrototype>(proto, out var pipeProto) &&
+                    if (ProtoMan.TryIndex<EntityPrototype>(proto, out var pipeProto) &&
                         pipeProto.TryGetComponent<NodeContainerComponent>(out var nodeContainer, _entityManager.ComponentFactory))
                     {
                         // Check every node in the prototype to see if it overlaps something on the grid
@@ -976,7 +975,7 @@ public sealed partial class RCDSystem : EntitySystem
             (component.CachedPrototype?.MirrorPrototype != null &&
              component.ProtoId.Id != component.CachedPrototype?.MirrorPrototype))
         {
-            component.CachedPrototype = _protoManager.Index(component.ProtoId);
+            component.CachedPrototype = ProtoMan.Index(component.ProtoId);
         }
     }
 

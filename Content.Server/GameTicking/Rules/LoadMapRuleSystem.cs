@@ -17,7 +17,6 @@ namespace Content.Server.GameTicking.Rules;
 
 public sealed partial class LoadMapRuleSystem : StationEventSystem<LoadMapRuleComponent>
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private MapSystem _map = default!;
     [Dependency] private MapLoaderSystem _mapLoader = default!;
     [Dependency] private TransformSystem _transform = default!;
@@ -45,7 +44,7 @@ public sealed partial class LoadMapRuleSystem : StationEventSystem<LoadMapRuleCo
             DebugTools.AssertNull(comp.GridPath);
             DebugTools.AssertNull(comp.PreloadedGrid);
 
-            var gameMap = _prototypeManager.Index(comp.GameMap.Value);
+            var gameMap = ProtoMan.Index(comp.GameMap.Value);
             grids = GameTicker.LoadGameMap(gameMap, out mapId, null);
             Log.Info($"Created map {mapId} for {ToPrettyString(uid):rule}");
         }

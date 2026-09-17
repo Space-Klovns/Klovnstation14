@@ -43,31 +43,13 @@ public abstract partial class SharedFpvDroneSystem : EntitySystem
     /// </summary>
     public const float ChargeThreshold = 0.5f;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<FpvDroneComponent, MapInitEvent>(OnFpvMapInit);
-        SubscribeLocalEvent<FpvDroneComponent, SignalReceivedEvent>(OnFpvSignalReceived);
-
-        SubscribeLocalEvent<FpvDroneComponent, RemoteDroneLinkedEvent>(OnFpvLinked);
-        SubscribeLocalEvent<FpvDroneComponent, RemoteDroneUnlinkedEvent>(OnFpvUnlinked);
-        SubscribeLocalEvent<FpvDroneComponent, PowerCellChangedEvent>(OnFpvCellChanged);
-        SubscribeLocalEvent<FpvDroneComponent, BatteryStateChangedEvent>(OnFpvBatteryStateChanged);
-
-        SubscribeLocalEvent<FpvDroneComponent, PowerCellSlotEmptyEvent>(OnFpvPowerCellEmpty);
-        SubscribeLocalEvent<FpvDroneComponent, GettingPickedUpAttemptEvent>(OnFpvAttemptPickup);
-
-        SubscribeLocalEvent<FpvDroneComponent, RemoteDroneAttemptControlEvent>(OnFpvAttemptControl);
-        SubscribeLocalEvent<FpvDroneComponent, RemoteDroneControlStartedEvent>(OnFpvControlStarted);
-        SubscribeLocalEvent<FpvDroneComponent, RemoteDroneControlEndedEvent>(OnFpvControlEnded);
-    }
-
+    [SubscribeLocalEvent]
     private void OnFpvMapInit(Entity<FpvDroneComponent> entity, ref MapInitEvent args)
     {
         _deviceLinkSystem.EnsureSinkPorts(entity.Owner, entity.Comp.DropStoragePort);
     }
 
+    [SubscribeLocalEvent]
     private void OnFpvSignalReceived(Entity<FpvDroneComponent> entity, ref SignalReceivedEvent args)
     {
         if (args.Port != entity.Comp.DropStoragePort.ToString())
@@ -81,6 +63,7 @@ public abstract partial class SharedFpvDroneSystem : EntitySystem
             _popupSystem.PopupEntity(Loc.GetString("fpv-drone-payload-dropped", ("name", Identity.Name(entity.Owner, EntityManager))), entity.Owner, PopupType.MediumCaution);
     }
 
+    [SubscribeLocalEvent]
     private void OnFpvLinked(Entity<FpvDroneComponent> entity, ref RemoteDroneLinkedEvent args)
     {
         var fpvControllerComponent = EntityManager.ComponentFactory.GetComponent<FpvDroneControllerComponent>();
@@ -88,11 +71,13 @@ public abstract partial class SharedFpvDroneSystem : EntitySystem
         AddComp(args.ControllerEntity, fpvControllerComponent);
     }
 
+    [SubscribeLocalEvent]
     private void OnFpvUnlinked(Entity<FpvDroneComponent> entity, ref RemoteDroneUnlinkedEvent args)
     {
         RemComp<FpvDroneControllerComponent>(args.ControllerEntity);
     }
 
+    [SubscribeLocalEvent]
     private void OnFpvCellChanged(Entity<FpvDroneComponent> entity, ref PowerCellChangedEvent args)
     {
         if (args.Ejected)
@@ -101,6 +86,7 @@ public abstract partial class SharedFpvDroneSystem : EntitySystem
             TryUpdateFpvChargeState(entity, _powerCellSystem.HasCharge(entity.Owner, ChargeThreshold));
     }
 
+    [SubscribeLocalEvent]
     private void OnFpvBatteryStateChanged(Entity<FpvDroneComponent> entity, ref BatteryStateChangedEvent args)
     {
         TryUpdateFpvChargeState(entity, args.NewState != BatteryState.Empty);
@@ -121,6 +107,7 @@ public abstract partial class SharedFpvDroneSystem : EntitySystem
         Dirty(controllerEntity.Value.Owner, fpvControllerComponent);
     }
 
+    [SubscribeLocalEvent]
     private void OnFpvPowerCellEmpty(Entity<FpvDroneComponent> entity, ref PowerCellSlotEmptyEvent args)
     {
         if (!_droneControllerSystem.ResolveDroneAndController(entity.Owner, out _, out var controllerEntity) ||
@@ -130,6 +117,7 @@ public abstract partial class SharedFpvDroneSystem : EntitySystem
         _droneControllerSystem.TryStopControlling(controllerEntity.Value);
     }
 
+    [SubscribeLocalEvent]
     private void OnFpvAttemptPickup(Entity<FpvDroneComponent> entity, ref GettingPickedUpAttemptEvent args)
     {
         if (!_droneControllerSystem.ResolveDroneAndController(entity.Owner, out _, out var controllerEntity) ||
@@ -140,6 +128,7 @@ public abstract partial class SharedFpvDroneSystem : EntitySystem
         args.Cancel();
     }
 
+    [SubscribeLocalEvent]
     private void OnFpvAttemptControl(Entity<FpvDroneComponent> entity, ref RemoteDroneAttemptControlEvent args)
     {
         if (!TryComp<FpvDroneControllerComponent>(args.ControllerEntity, out var fpvControllerComponent))
@@ -152,6 +141,7 @@ public abstract partial class SharedFpvDroneSystem : EntitySystem
         args.Cancelled |= !fpvControllerComponent.HasSufficientCharge;
     }
 
+    [SubscribeLocalEvent]
     private void OnFpvControlStarted(Entity<FpvDroneComponent> entity, ref RemoteDroneControlStartedEvent args)
     {
         if (!TryComp<PhysicsComponent>(entity, out var physicsComponent))
@@ -202,6 +192,7 @@ public abstract partial class SharedFpvDroneSystem : EntitySystem
     // Does nothing on client
     protected virtual void OnDroneDisabled(EntityUid uid) { }
 
+    [SubscribeLocalEvent]
     private void OnFpvControlEnded(Entity<FpvDroneComponent> entity, ref RemoteDroneControlEndedEvent args)
     {
         if (!TryComp<PhysicsComponent>(entity, out var physicsComponent))

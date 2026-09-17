@@ -8,7 +8,6 @@ namespace Content.Client._KS14.SupplyPod;
 
 public sealed partial class SupplyPodSystem : SharedSupplyPodSystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IOverlayManager _overlayManager = default!;
     [Dependency] private SystemCollectionHookManager _hookManager = default!;
     [Dependency] private SupplyPodDescentSystem _supplyPodDescentSystem = default!;
@@ -21,10 +20,6 @@ public sealed partial class SupplyPodSystem : SharedSupplyPodSystem
         base.Initialize();
 
         _hookManager.HookAction(OnDependencyAvailable);
-
-        // A launched pod turns around mid-air and starts a second leg without the component ever
-        // being removed, so component startup alone does not cover every flight.
-        SubscribeLocalEvent<ActiveSupplyPodComponent, AfterAutoHandleStateEvent>(OnActiveState);
     }
 
     protected override void OnActiveStartup(Entity<ActiveSupplyPodComponent> entity, ref ComponentStartup args)
@@ -39,6 +34,9 @@ public sealed partial class SupplyPodSystem : SharedSupplyPodSystem
         _supplyPodDescentSystem.DoShutdown(entity);
     }
 
+    // A launched pod turns around mid-air and starts a second leg without the component ever
+    // being removed, so component startup alone does not cover every flight.
+    [SubscribeLocalEvent]
     private void OnActiveState(Entity<ActiveSupplyPodComponent> entity, ref AfterAutoHandleStateEvent args)
     {
         _supplyPodDescentSystem.DoStartup(entity);
@@ -47,8 +45,8 @@ public sealed partial class SupplyPodSystem : SharedSupplyPodSystem
     private void OnDependencyAvailable(IDependencyCollection dependencyCollection)
     {
         var overlay = new SupplyPodOverlay(
-            _prototypeManager.Index(StencilMaskShaderId).InstanceUnique(),
-            _prototypeManager.Index(StencilDrawShaderId).InstanceUnique()
+            ProtoMan.Index(StencilMaskShaderId).InstanceUnique(),
+            ProtoMan.Index(StencilDrawShaderId).InstanceUnique()
         );
 
         dependencyCollection.InjectDependencies(overlay, oneOff: true);

@@ -17,14 +17,7 @@ public sealed partial class KsAutoZLevelSystem : EntitySystem
         PauseMaps = false
     };
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsAutoZLevelComponent, ComponentStartup>(OnStartup);
-        SubscribeLocalEvent<KsAutoZLevelComponent, EntityUnpausedEvent>(OnUnpaused);
-    }
-
+    [SubscribeLocalEvent]
     private void OnStartup(Entity<KsAutoZLevelComponent> entity, ref ComponentStartup args)
     {
         if (Paused(entity.Owner))
@@ -33,6 +26,7 @@ public sealed partial class KsAutoZLevelSystem : EntitySystem
         TryLink(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnUnpaused(Entity<KsAutoZLevelComponent> entity, ref EntityUnpausedEvent args)
     {
         TryLink(entity);

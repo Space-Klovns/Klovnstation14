@@ -43,14 +43,7 @@ public sealed partial class OreVentDroneSystem : SharedOreVentDroneSystem
     private const string PreEscapeAnimationKey = "preescape_flick";
     private const string EscapeAnimationKey = "escape_offset";
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<OreVentDroneComponent, AppearanceChangeEvent>(OnAppearanceChanged);
-        SubscribeLocalEvent<OreVentDroneComponent, AnimationCompletedEvent>(OnAnimationCompleted);
-    }
-
+    [SubscribeLocalEvent]
     private void OnAppearanceChanged(Entity<OreVentDroneComponent> entity, ref AppearanceChangeEvent args)
     {
         if (args.Sprite == null ||
@@ -108,6 +101,7 @@ public sealed partial class OreVentDroneSystem : SharedOreVentDroneSystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnAnimationCompleted(Entity<OreVentDroneComponent> entity, ref AnimationCompletedEvent args)
     {
         if (!args.Finished ||

@@ -30,7 +30,6 @@ namespace Content.Server.Fluids.EntitySystems;
 public sealed partial class PuddleSystem : SharedPuddleSystem
 {
     [Dependency] private SharedMapSystem _map = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private EntityLookupSystem _lookup = default!;
     [Dependency] private SharedColorFlashEffectSystem _color = default!;
@@ -439,7 +438,7 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
                 PopupType.SmallCaution);
         }
 
-        _color.RaiseEffect(spilled.GetColor(_prototypeManager), targets,
+        _color.RaiseEffect(spilled.GetColor(ProtoMan), targets,
             Filter.Pvs(entity, entityManager: EntityManager));
 
         return TrySpillAt(coordinates, spilled, out puddleUid, sound);

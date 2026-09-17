@@ -16,7 +16,6 @@ namespace Content.Server.Audio.Jukebox;
 
 public sealed partial class JukeboxSystem : SharedJukeboxSystem
 {
-    [Dependency] private IPrototypeManager _protoManager = default!;
     [Dependency] private AppearanceSystem _appearanceSystem = default!;
 
     // _sin start
@@ -86,7 +85,7 @@ public sealed partial class JukeboxSystem : SharedJukeboxSystem
             component.AudioStream = Audio.Stop(component.AudioStream);
 
             if (string.IsNullOrEmpty(component.SelectedSongId) ||
-                !_protoManager.TryIndex(component.SelectedSongId, out var jukeboxProto))
+                !ProtoMan.TryIndex(component.SelectedSongId, out var jukeboxProto))
             {
                 return;
             }
@@ -153,7 +152,7 @@ public sealed partial class JukeboxSystem : SharedJukeboxSystem
             var nextIdx = component.CurrentQueueIndex + 1;
             if (nextIdx >= component.Queue.Count)
                 nextIdx = 0;
-            if (_protoManager.TryIndex(component.Queue[nextIdx], out var nextProto))
+            if (ProtoMan.TryIndex(component.Queue[nextIdx], out var nextProto))
             {
                 _chat.TrySendInGameICMessage(uid, Loc.GetString("sin-jukebox-chat-autoplay-enabled"), InGameICChatType.Speak, false, ignoreActionBlocker: true);
                 _chat.TrySendInGameICMessage(uid, Loc.GetString("sin-jukebox-chat-nextup-idle", ("name", nextProto.Name)), InGameICChatType.Speak, false, ignoreActionBlocker: true);
@@ -188,7 +187,7 @@ public sealed partial class JukeboxSystem : SharedJukeboxSystem
         // Recalculate "Следующий" from the new queue — OnJukeboxSelected peeked at the old queue.
         var peekIdx = component.CurrentQueueIndex + 1;
         if (peekIdx >= component.Queue.Count) peekIdx = 0;
-        if (component.Queue.Count > 0 && _protoManager.TryIndex(component.Queue[peekIdx], out var peekProto))
+        if (component.Queue.Count > 0 && ProtoMan.TryIndex(component.Queue[peekIdx], out var peekProto))
             component.PendingNextTrackName = peekProto.Name;
         else
             component.PendingNextTrackName = null;
@@ -231,7 +230,7 @@ public sealed partial class JukeboxSystem : SharedJukeboxSystem
         if (!CanInteract(uid))
             return;
         // Validate the prototype exists before mutating any state.
-        if (!_protoManager.TryIndex(args.SongId, out var jukeboxProto))
+        if (!ProtoMan.TryIndex(args.SongId, out var jukeboxProto))
             return;
 
         var wasPlaying = Audio.IsPlaying(component.AudioStream);
@@ -261,7 +260,7 @@ public sealed partial class JukeboxSystem : SharedJukeboxSystem
                 component.NextAnnouncementDelay = 2f;
                 var peekIdx = component.CurrentQueueIndex + 1;
                 if (peekIdx >= component.Queue.Count) peekIdx = 0;
-                if (_protoManager.TryIndex(component.Queue[peekIdx], out var peekProto))
+                if (ProtoMan.TryIndex(component.Queue[peekIdx], out var peekProto))
                     component.PendingNextTrackName = peekProto.Name;
             }
             else
@@ -305,7 +304,7 @@ public sealed partial class JukeboxSystem : SharedJukeboxSystem
                         comp.CurrentQueueIndex = 0;
 
                     var nextId = comp.Queue[comp.CurrentQueueIndex];
-                    if (_protoManager.TryIndex(nextId, out var nextProto))
+                    if (ProtoMan.TryIndex(nextId, out var nextProto))
                     {
                         comp.SelectedSongId = nextId;
                         comp.AudioStream = Audio.PlayPvs(nextProto.Path, uid,
@@ -317,7 +316,7 @@ public sealed partial class JukeboxSystem : SharedJukeboxSystem
 
                         var peekIdx = comp.CurrentQueueIndex + 1;
                         if (peekIdx >= comp.Queue.Count) peekIdx = 0;
-                        if (_protoManager.TryIndex(comp.Queue[peekIdx], out var peekProto))
+                        if (ProtoMan.TryIndex(comp.Queue[peekIdx], out var peekProto))
                             comp.PendingNextTrackName = peekProto.Name;
                         else
                             comp.PendingNextTrackName = null;
@@ -350,7 +349,7 @@ public sealed partial class JukeboxSystem : SharedJukeboxSystem
                 {
                     // Имя текущего трека (если ещё не задано блоком AutoPlay)
                     if (string.IsNullOrEmpty(comp.CurrentTrackName)
-                        && _protoManager.TryIndex(comp.SelectedSongId, out var startedProto))
+                        && ProtoMan.TryIndex(comp.SelectedSongId, out var startedProto))
                     {
                         comp.CurrentTrackName = startedProto.Name;
                     }
@@ -364,7 +363,7 @@ public sealed partial class JukeboxSystem : SharedJukeboxSystem
                         // Peek следующего трека для "Следующий"
                         var peekIdx = comp.CurrentQueueIndex + 1;
                         if (peekIdx >= comp.Queue.Count) peekIdx = 0;
-                        if (_protoManager.TryIndex(comp.Queue[peekIdx], out var peekProto))
+                        if (ProtoMan.TryIndex(comp.Queue[peekIdx], out var peekProto))
                             comp.PendingNextTrackName = peekProto.Name;
                     }
                     else
@@ -385,7 +384,7 @@ public sealed partial class JukeboxSystem : SharedJukeboxSystem
                     {
                         comp.PlayingAnnouncementDelay = 0f;
                         var name = comp.CurrentTrackName
-                            ?? (_protoManager.TryIndex(comp.SelectedSongId, out var p) ? p.Name : "?");
+                            ?? (ProtoMan.TryIndex(comp.SelectedSongId, out var p) ? p.Name : "?");
                         _chat.TrySendInGameICMessage(uid, Loc.GetString("sin-jukebox-chat-playing", ("name", name)),
                             InGameICChatType.Speak, true, ignoreActionBlocker: true);
                     }

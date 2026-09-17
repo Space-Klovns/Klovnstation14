@@ -17,7 +17,6 @@ public sealed partial class StoreDiscountSystem : EntitySystem
     private static readonly ProtoId<StoreCategoryPrototype> DiscountedStoreCategoryPrototypeKey = "DiscountedItems";
 
     [Dependency] private IRobustRandom _random = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     // KS14: De-hardcoded value and added StoreDiscountSystem.DefaultTotalAvailableDiscounts
     public const int DefaultTotalAvailableDiscounts = 8;
@@ -83,7 +82,7 @@ public sealed partial class StoreDiscountSystem : EntitySystem
         // each category, and after that - roll exact items in categories
         // and their cost
 
-        var prototypes = _prototypeManager.EnumeratePrototypes<DiscountCategoryPrototype>();
+        var prototypes = ProtoMan.EnumeratePrototypes<DiscountCategoryPrototype>();
         var categoriesWithCumulativeWeight = new CategoriesWithCumulativeWeightMap(prototypes);
         var uniqueListingItemCountByCategory = PickCategoriesToRoll(totalAvailableDiscounts, categoriesWithCumulativeWeight);
 

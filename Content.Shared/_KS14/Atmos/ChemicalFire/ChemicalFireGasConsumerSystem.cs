@@ -14,14 +14,6 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
     [Dependency] private SharedChemicalFireSystem _chemicalFireSystem = default!;
     [Dependency] private EntityQuery<ChemicalFireComponent> _chemicalFireQuery = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<ChemicalFireGasConsumerComponent, ChemicalFireHeatTileEvent>(OnHeatTile);
-        SubscribeLocalEvent<ChemicalFireGasConsumerComponent, ChemicalFireCanSustainEvent>(OnCanSustain);
-    }
-
     /// <summary>
     ///     Vetoes survival unless at least one of <see cref="ChemicalFireGasConsumerComponent.Gases"/> clears
     ///         the same trace threshold upstream's own fuel/oxidiser hotspot check uses - mirrors the
@@ -34,6 +26,7 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
     ///         correct it if it turns out to be wrong. An immutable mixture (space) is real data, so that still
     ///         vetoes.
     /// </remarks>
+    [SubscribeLocalEvent]
     private void OnCanSustain(Entity<ChemicalFireGasConsumerComponent> entity, ref ChemicalFireCanSustainEvent args)
     {
         if (args.Mixture is not { } mixture)
@@ -54,6 +47,7 @@ public sealed partial class ChemicalFireGasConsumerSystem : EntitySystem
         args.Deny();
     }
 
+    [SubscribeLocalEvent]
     private void OnHeatTile(Entity<ChemicalFireGasConsumerComponent> entity, ref ChemicalFireHeatTileEvent args)
     {
         if (args.Mixture is not { } mixture || mixture.Immutable)

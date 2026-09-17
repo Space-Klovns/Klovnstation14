@@ -12,16 +12,7 @@ public abstract partial class SharedBotWranglerSystem : EntitySystem
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
 
-    public override void Initialize()
-    {
-        SubscribeLocalEvent<ActivelyWrangledBotComponent, ComponentShutdown>(OnActivelyWrangledBotShutdown);
-        SubscribeLocalEvent<BotWranglerComponent, ComponentShutdown>(OnBotWranglerShutdown);
-
-        //subscribe the 2 ai actions you need
-        SubscribeLocalEvent<BotWranglerComponent, SelectControlledBotEvent>(OnSelectControlledBot);
-        SubscribeLocalEvent<BotWranglerComponent, MoveControlledBotToPositionEvent>(OnMoveControlledBotToPosition);
-    }
-
+    [SubscribeLocalEvent]
     private void OnActivelyWrangledBotShutdown(Entity<ActivelyWrangledBotComponent> entity, ref ComponentShutdown args)
     {
         if (entity.Comp.UserUid is not { } userUid ||
@@ -32,6 +23,7 @@ public abstract partial class SharedBotWranglerSystem : EntitySystem
         AfterActivelyWrangledBotShutdown(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnBotWranglerShutdown(Entity<BotWranglerComponent> entity, ref ComponentShutdown args)
     {
         foreach (var botUid in entity.Comp.WrangledBotUids)
@@ -45,6 +37,7 @@ public abstract partial class SharedBotWranglerSystem : EntitySystem
     }
 
     //when you want to select a bot to wrangle
+    [SubscribeLocalEvent]
     private void OnSelectControlledBot(Entity<BotWranglerComponent> entity, ref SelectControlledBotEvent args)
     {
         if (!_gameTiming.IsFirstTimePredicted ||
@@ -85,6 +78,7 @@ public abstract partial class SharedBotWranglerSystem : EntitySystem
     }
 
     //when you want to move selected bot
+    [SubscribeLocalEvent]
     private void OnMoveControlledBotToPosition(Entity<BotWranglerComponent> entity, ref MoveControlledBotToPositionEvent args)
     {
         if (entity.Comp.WrangledBotUids.Count == 0)

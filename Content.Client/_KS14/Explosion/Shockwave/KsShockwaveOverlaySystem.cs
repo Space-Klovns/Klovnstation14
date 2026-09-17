@@ -7,7 +7,6 @@ namespace Content.Client._KS14.Explosion.Shockwave;
 public sealed partial class KsShockwaveOverlaySystem : EntitySystem
 {
     [Dependency] private IOverlayManager _overlayManager = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;
 
     private static readonly ProtoId<ShaderPrototype> ShaderPrototype = "KsShockwave";
@@ -20,7 +19,7 @@ public sealed partial class KsShockwaveOverlaySystem : EntitySystem
 
     private void OnDependenciesReady(IDependencyCollection dependencyCollection)
     {
-        var shockwaveOverlay = new KsShockwaveOverlay(_prototypeManager.Index(ShaderPrototype).InstanceUnique());
+        var shockwaveOverlay = new KsShockwaveOverlay(ProtoMan.Index(ShaderPrototype).InstanceUnique());
         dependencyCollection.InjectDependencies(shockwaveOverlay, oneOff: true);
 
         _overlayManager.AddOverlay(shockwaveOverlay);

@@ -53,13 +53,9 @@ public sealed partial class PtlSystem : EntitySystem
             subs.Event<PtlSetDelayMessage>(OnSetDelayMessage);
             subs.Event<PtlWithdrawMessage>(OnWithdrawMessage);
         });
-
-        SubscribeLocalEvent<PtlComponent, GotEmaggedEvent>(OnEmagged);
-        SubscribeLocalEvent<PtlComponent, MapInitEvent>(OnMapInit);
-        SubscribeLocalEvent<PtlComponent, ChargeChangedEvent>(OnChargeChanged);
-        SubscribeLocalEvent<HitscanBasicDamageComponent, HitscanTraceEvent>(OnHitscanTrace);
     }
 
+    [SubscribeLocalEvent]
     private void OnMapInit(Entity<PtlComponent> entity, ref MapInitEvent args)
     {
         UpdateUiState(entity);
@@ -124,6 +120,7 @@ public sealed partial class PtlSystem : EntitySystem
             maxCharge));
     }
 
+    [SubscribeLocalEvent]
     private void OnHitscanTrace(EntityUid uid, HitscanBasicDamageComponent component, ref HitscanTraceEvent args)
     {
         if (!TryComp<PtlComponent>(args.Gun, out var ptl))
@@ -238,6 +235,7 @@ public sealed partial class PtlSystem : EntitySystem
         Dirty(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnEmagged(Entity<PtlComponent> entity, ref GotEmaggedEvent args)
     {
         if (!_emagSystem.CompareFlag(args.Type, EmagType.Interaction) ||
@@ -251,6 +249,7 @@ public sealed partial class PtlSystem : EntitySystem
         args.Handled = true;
     }
 
+    [SubscribeLocalEvent]
     private void OnChargeChanged(Entity<PtlComponent> entity, ref ChargeChangedEvent args)
     {
         UpdateAppearance(entity, CompOrNull<BatteryComponent>(entity));

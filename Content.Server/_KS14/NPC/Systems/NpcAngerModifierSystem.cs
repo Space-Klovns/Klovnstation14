@@ -11,12 +11,7 @@ public sealed partial class NPCAngerModifierSystem : EntitySystem
 {
     [Dependency] private DamageableSystem _damageable = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-        SubscribeLocalEvent<NpcAngerModifierComponent, DamageChangedEvent>(OnDamageChanged);
-    }
-
+    [SubscribeLocalEvent]
     private void OnDamageChanged(EntityUid uid, NpcAngerModifierComponent component, DamageChangedEvent args)
     {
         if (!TryComp<DamageableComponent>(uid, out var damageable))

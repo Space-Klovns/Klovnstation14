@@ -68,17 +68,9 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
         // the *following* tick's broadphase/contact pass - a permanent one-tick lag behind where it should be,
         // which is significant against a fast-moving target and a direct contributor to missed hits.
         UpdatesBefore.Add(typeof(SharedPhysicsSystem));
-
-        SubscribeLocalEvent<PlayerShotProjectileEvent>(OnShotProjectile);
-
-        SubscribeLocalEvent<LagCompensationGhostComponent, PreventCollideEvent>(OnGhostPreventCollide);
-        SubscribeLocalEvent<LagCompensationGhostComponent, StartCollideEvent>(OnGhostStartCollide);
-
-        SubscribeLocalEvent<LagCompensatingProjectileComponent, PreventCollideEvent>(OnProjectilePreventCollide);
-        SubscribeLocalEvent<LagCompensatingProjectileComponent, ProjectileHitEvent>(OnProjectileHit);
-        SubscribeLocalEvent<LagCompensatingProjectileComponent, EntityTerminatingEvent>(OnProjectileTerminating);
     }
 
+    [SubscribeLocalEvent]
     private void OnShotProjectile(ref PlayerShotProjectileEvent args)
     {
         var projectileUid = args.Projectile;
@@ -333,6 +325,7 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     /// <summary>
     /// Ghosts only ever collide with the one projectile they were spawned for.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnGhostPreventCollide(Entity<LagCompensationGhostComponent> ghost, ref PreventCollideEvent args)
     {
         if (args.Cancelled)
@@ -346,6 +339,7 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     /// A projectile never collides with the real entity behind a ghost it's already carrying - the ghost
     /// is the one deciding whether that target gets hit.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnProjectilePreventCollide(Entity<LagCompensatingProjectileComponent> projectile, ref PreventCollideEvent args)
     {
         if (args.Cancelled)
@@ -359,6 +353,7 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     /// The ghost caught the projectile: resolve this candidate (win or lose) and, if it wins, redirect
     /// the hit onto the real target.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnGhostStartCollide(Entity<LagCompensationGhostComponent> ghost, ref StartCollideEvent args)
     {
         if (args.OtherEntity != ghost.Comp.Projectile || args.OtherFixtureId != SharedProjectileSystem.ProjectileFixture)
@@ -379,11 +374,13 @@ public sealed partial class LagCompProjectileSystem : EntitySystem
     /// The shot resolved - whether against a ghost or a real, un-ghosted target - so every remaining
     /// ghost from this shot is stale.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnProjectileHit(Entity<LagCompensatingProjectileComponent> projectile, ref ProjectileHitEvent args)
     {
         CleanupGhosts(projectile);
     }
 
+    [SubscribeLocalEvent]
     private void OnProjectileTerminating(Entity<LagCompensatingProjectileComponent> projectile, ref EntityTerminatingEvent args)
     {
         CleanupGhosts(projectile);

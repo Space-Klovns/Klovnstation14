@@ -14,7 +14,6 @@ public sealed partial class GibActionSystem : EntitySystem
 {
     [Dependency] private SharedActionsSystem _actionsSystem = default!;
     [Dependency] private GibbingSystem _gibbing = default!;
-    [Dependency] private IPrototypeManager _protoManager = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
 
     public override void Initialize()
@@ -31,7 +30,7 @@ public sealed partial class GibActionSystem : EntitySystem
         if (!TryComp<MobStateComponent>(uid, out var mobState))
             return;
 
-        if (!_protoManager.TryIndex<EntityPrototype>(comp.ActionPrototype, out var actionProto))
+        if (!ProtoMan.TryIndex<EntityPrototype>(comp.ActionPrototype, out var actionProto))
             return;
 
 

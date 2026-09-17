@@ -31,7 +31,6 @@ public sealed partial class ReagentProducerAnomalySystem : EntitySystem
     [Dependency] private SharedSolutionContainerSystem _solutionContainer = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private PointLightSystem _light = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private SharedAudioSystem _audio = default!;
 
     public const string FallbackReagent = "Water";
@@ -87,7 +86,7 @@ public sealed partial class ReagentProducerAnomalySystem : EntitySystem
             // and nothing worked out for me. So for now it will be like this.
             if (component.NeedRecolor)
             {
-                var color = producerSolution.GetColor(_prototypeManager);
+                var color = producerSolution.GetColor(ProtoMan);
                 _light.SetColor(uid, color);
                 if (TryComp<RandomSpriteComponent>(uid, out var randomSprite))
                 {

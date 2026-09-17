@@ -17,8 +17,6 @@ namespace Content.Shared._KS14.BloodSpray;
 
 public sealed partial class BloodSpraySystem : EntitySystem
 {
-
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
     [Dependency] private SharedDecalSystem _decalSystem = default!;
@@ -91,7 +89,7 @@ public sealed partial class BloodSpraySystem : EntitySystem
         var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed((int)_gameTiming.CurTick.Value, KsSharedRandomExtensions.GetNetId(entity.Owner, EntityManager));
         var parentInvWorldMatrix = _transformSystem.GetInvWorldMatrix(parentUid);
 
-        var bloodColor = bloodSolution.GetColor(_prototypeManager);
+        var bloodColor = bloodSolution.GetColor(ProtoMan);
         bloodColor = bloodColor.WithAlpha(bloodColor.A * predictedRandom.NextFloat(0.12f, 0.2f)); // random alpha
 
         const float maxPower = 1.75f;

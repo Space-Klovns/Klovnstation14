@@ -10,14 +10,7 @@ public sealed partial class WearablePhosphorNightVisionSystem : EntitySystem
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedPhosphorNightVisionSystem _phosphorNightVisionSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<WearablePhosphorNightVisionComponent, GotEquippedEvent>(OnGotEquipped);
-        SubscribeLocalEvent<WearablePhosphorNightVisionComponent, GotUnequippedEvent>(OnGotUnequipped);
-    }
-
+    [SubscribeLocalEvent]
     private void OnGotEquipped(Entity<WearablePhosphorNightVisionComponent> entity, ref GotEquippedEvent args)
     {
         if (!_gameTiming.IsFirstTimePredicted)
@@ -41,6 +34,7 @@ public sealed partial class WearablePhosphorNightVisionSystem : EntitySystem
         Dirty(args.EquipTarget, recipientComponent);
     }
 
+    [SubscribeLocalEvent]
     private void OnGotUnequipped(Entity<WearablePhosphorNightVisionComponent> entity, ref GotUnequippedEvent args)
     {
         if (!_gameTiming.IsFirstTimePredicted)

@@ -19,13 +19,7 @@ public sealed partial class GasGrenadeCompressorSystem : SharedGasGrenadeCompres
     [Dependency] private NodeContainerSystem _nodeContainerSystem = default!;
     [Dependency] private EmagSystem _emagSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<GasGrenadeCompressorComponent, AtmosDeviceUpdateEvent>(OnUpdate);
-    }
-
+    [SubscribeLocalEvent]
     private void OnUpdate(Entity<GasGrenadeCompressorComponent> entity, ref AtmosDeviceUpdateEvent args)
     {
         if (!entity.Comp.Active)

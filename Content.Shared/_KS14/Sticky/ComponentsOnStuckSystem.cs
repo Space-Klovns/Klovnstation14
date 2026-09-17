@@ -2,17 +2,10 @@ using Content.Shared.Sticky;
 
 namespace Content.Shared._KS14.Sticky;
 
-public sealed partial class WallmountOnStickSystem : EntitySystem
+public sealed partial class ComponentsOnStuckSystem : EntitySystem
 {
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<ComponentsOnStickComponent, EntityStuckEvent>(OnStuck);
-        SubscribeLocalEvent<ComponentsOnStickComponent, EntityUnstuckEvent>(OnUnstuck);
-    }
-
-    private void OnStuck(Entity<ComponentsOnStickComponent> entity, ref EntityStuckEvent args)
+    [SubscribeLocalEvent]
+    private void OnStuck(Entity<ComponentsOnStuckComponent> entity, ref EntityStuckEvent args)
     {
         if (entity.Comp.ComponentsGotAdded)
             return;
@@ -27,7 +20,8 @@ public sealed partial class WallmountOnStickSystem : EntitySystem
         Dirty(entity);
     }
 
-    private void OnUnstuck(Entity<ComponentsOnStickComponent> entity, ref EntityUnstuckEvent args)
+    [SubscribeLocalEvent]
+    private void OnUnstuck(Entity<ComponentsOnStuckComponent> entity, ref EntityUnstuckEvent args)
     {
         if (!entity.Comp.ComponentsGotAdded)
             return;

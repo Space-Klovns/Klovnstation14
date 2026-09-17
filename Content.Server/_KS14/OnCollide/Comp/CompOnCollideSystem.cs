@@ -14,19 +14,13 @@ namespace Content.Server._KS14.OnCollide.Comp
         [Dependency] private ISerializationManager _serializationManager = default!;
         [Dependency] private TagSystem _tagSystem = default!;
 
-        public override void Initialize()
-        {
-            SubscribeLocalEvent<AddCompOnCollideComponent, StartCollideEvent>(AddCompOnCollide);
-            SubscribeLocalEvent<AddCompOnCollideComponent, LandEvent>(OnAddCompLand);
-            SubscribeLocalEvent<RemoveCompOnCollideComponent, StartCollideEvent>(RemCompOnCollide);
-            SubscribeLocalEvent<RemoveCompOnCollideComponent, LandEvent>(OnRemCompLand);
-        }
-
+        [SubscribeLocalEvent]
         private void OnAddCompLand(EntityUid uid, AddCompOnCollideComponent component, ref LandEvent args)
         {
             RemCompDeferred<AddCompOnCollideComponent>(uid);
         }
 
+        [SubscribeLocalEvent]
         private void AddCompOnCollide(EntityUid uid, AddCompOnCollideComponent component, ref StartCollideEvent args)
         {
             if (!args.OtherFixture.Hard)
@@ -59,11 +53,13 @@ namespace Content.Server._KS14.OnCollide.Comp
             }
         }
 
+        [SubscribeLocalEvent]
         private void OnRemCompLand(EntityUid uid, RemoveCompOnCollideComponent component, ref LandEvent args)
         {
             RemCompDeferred<RemoveCompOnCollideComponent>(uid);
         }
 
+        [SubscribeLocalEvent]
         private void RemCompOnCollide(EntityUid uid, RemoveCompOnCollideComponent component, ref StartCollideEvent args)
         {
             if (!args.OtherFixture.Hard)

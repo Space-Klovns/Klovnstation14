@@ -26,7 +26,6 @@ public sealed partial class PricingSystem : EntitySystem
 {
     [Dependency] private IConsoleHost _consoleHost = default!;
     [Dependency] private IRobustRandom _random = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private MobStateSystem _mobStateSystem = default!;
     [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
 
@@ -139,7 +138,7 @@ public sealed partial class PricingSystem : EntitySystem
             var solution = soln.Comp.Solution;
             foreach (var (reagent, quantity) in solution.Contents)
             {
-                if (!_prototypeManager.TryIndex<ReagentPrototype>(reagent.Prototype, out var reagentProto))
+                if (!ProtoMan.TryIndex<ReagentPrototype>(reagent.Prototype, out var reagentProto))
                     continue;
 
                 // TODO check ReagentData for price information?
@@ -155,7 +154,7 @@ public sealed partial class PricingSystem : EntitySystem
         double price = 0;
         foreach (var (id, quantity) in component.MaterialComposition)
         {
-            price += _prototypeManager.Index<MaterialPrototype>(id).Price * quantity;
+            price += ProtoMan.Index<MaterialPrototype>(id).Price * quantity;
         }
         return price;
     }
@@ -166,14 +165,14 @@ public sealed partial class PricingSystem : EntitySystem
 
         if (recipe.Result is { } result)
         {
-            price += GetEstimatedPrice(_prototypeManager.Index(result));
+            price += GetEstimatedPrice(ProtoMan.Index(result));
         }
 
         if (recipe.ResultReagents is { } resultReagents)
         {
             foreach (var (reagent, amount) in resultReagents)
             {
-                price += (_prototypeManager.Index(reagent).PricePerUnit * amount).Double();
+                price += (ProtoMan.Index(reagent).PricePerUnit * amount).Double();
             }
         }
 
@@ -306,7 +305,7 @@ public sealed partial class PricingSystem : EntitySystem
             var solution = soln.Comp.Solution;
             foreach (var (reagent, quantity) in solution.Contents)
             {
-                if (!_prototypeManager.TryIndex<ReagentPrototype>(reagent.Prototype, out var reagentProto))
+                if (!ProtoMan.TryIndex<ReagentPrototype>(reagent.Prototype, out var reagentProto))
                     continue;
 
                 // TODO check ReagentData for price information?
@@ -328,7 +327,7 @@ public sealed partial class PricingSystem : EntitySystem
         {
             foreach (var (reagent, quantity) in solution.Contents)
             {
-                if (!_prototypeManager.TryIndex<ReagentPrototype>(reagent.Prototype, out var reagentProto))
+                if (!ProtoMan.TryIndex<ReagentPrototype>(reagent.Prototype, out var reagentProto))
                     continue;
 
                 // TODO check ReagentData for price information?

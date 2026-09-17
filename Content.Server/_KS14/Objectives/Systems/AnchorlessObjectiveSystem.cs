@@ -15,18 +15,13 @@ namespace Content.Server._KS14.Objectives.Systems;
 /// </summary>
 public sealed partial class AnchorlessObjectiveSystem : EntitySystem
 {
-    public override void Initialize()
-    {
-        SubscribeLocalEvent<AnchorlessConvertCrewConditionComponent, ObjectiveAssignedEvent>(OnAssigned);
-        SubscribeLocalEvent<AnchorlessConvertCrewConditionComponent, ObjectiveGetProgressEvent>(OnGetProgress);
-        SubscribeLocalEvent<AnchorlessConvertedEvent>(OnConverted);
-    }
-
+    [SubscribeLocalEvent]
     private void OnAssigned(Entity<AnchorlessConvertCrewConditionComponent> ent, ref ObjectiveAssignedEvent args)
     {
         ent.Comp.ConvertedMinds.Add(args.MindId);
     }
 
+    [SubscribeLocalEvent]
     private void OnConverted(ref AnchorlessConvertedEvent args)
     {
         if (!TryComp<MindContainerComponent>(args.Converted, out var mind) || mind.Mind == null)
@@ -37,6 +32,7 @@ public sealed partial class AnchorlessObjectiveSystem : EntitySystem
             objective.ConvertedMinds.Add(mind.Mind.Value);
     }
 
+    [SubscribeLocalEvent]
     private void OnGetProgress(Entity<AnchorlessConvertCrewConditionComponent> ent, ref ObjectiveGetProgressEvent args)
     {
         var (crewCount, anchorlessCount) = GetPopulationCounts();

@@ -63,13 +63,7 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
         _configurationManager.OnValueChanged(KsCCVars.GhostRespawnCooldownSeconds, OnCooldownChanged, invokeImmediately: true);
         _configurationManager.OnValueChanged(KsCCVars.GhostRespawnPenaltySeconds, x => _penaltyTime = TimeSpan.FromSeconds(x), invokeImmediately: true);
 
-        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestartCleanup);
-
-        SubscribeLocalEvent<PlayerDetachedEvent>(OnPlayerDetached);
-        SubscribeLocalEvent<MobStateChangedEvent>(OnMobStateChanged);
-
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
-        SubscribeNetworkEvent<GhostRespawnActMessage>(OnActMessage);
     }
 
     [Pure]
@@ -96,6 +90,7 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
         _respawnCooldown = newTime;
     }
 
+    [SubscribeLocalEvent]
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent args)
     {
         // Reset ghostrespawn time for everyphono
@@ -106,6 +101,7 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
         _trackedDeathEntities.Clear();
     }
 
+    [SubscribeLocalEvent]
     private void OnPlayerDetached(PlayerDetachedEvent args)
     {
         if (_respawnTimes.ContainsKey(args.Player) ||
@@ -126,6 +122,7 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
         RaiseNetworkEvent(new GhostRespawnTimeMessage(respawnTime), args.Player);
     }
 
+    [SubscribeLocalEvent]
     private void OnMobStateChanged(MobStateChangedEvent args)
     {
         // If the player has died in their original body, start the respawn tracker for it.
@@ -175,6 +172,7 @@ public sealed partial class GhostRespawnSystem : SharedGhostRespawnSystem
         RaiseNetworkEvent(new GhostRespawnTimeMessage(time), args.Session);
     }
 
+    [SubscribeNetworkEvent]
     private void OnActMessage(GhostRespawnActMessage message, EntitySessionEventArgs args)
     {
         if (!_enabled)

@@ -22,7 +22,6 @@ namespace Content.Shared._KS14.Audio;
 /// </summary>
 public sealed partial class AudioEffectSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private SharedAudioSystem _audioSystem = default!;
 
     /// <summary>
@@ -53,7 +52,6 @@ public sealed partial class AudioEffectSystem : EntitySystem
 
         // You can't keep references to this past round-end so it must be cleaned up.
         SubscribeNetworkEvent<RoundRestartCleanupEvent>(_ => Cleanup()); // its not raised on client
-        SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypeReload);
     }
 
     public override void Shutdown()
@@ -62,6 +60,7 @@ public sealed partial class AudioEffectSystem : EntitySystem
         Cleanup();
     }
 
+    [SubscribeLocalEvent]
     private void OnPrototypeReload(PrototypesReloadedEventArgs args)
     {
         if (!args.WasModified<AudioPresetPrototype>())
@@ -224,7 +223,7 @@ public sealed partial class AudioEffectSystem : EntitySystem
         auxiliaryUid = null;
 
         if (_auxiliariesSafe == false ||
-            !_prototypeManager.TryIndex(preset, out var presetPrototype))
+            !ProtoMan.TryIndex(preset, out var presetPrototype))
             return false;
 
         // i cant `??=` it

@@ -10,20 +10,13 @@ public sealed partial class KsScanDiscoverableSystem : EntitySystem
     [Dependency] private MetaDataSystem _metaDataSystem = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsScanDiscoverableComponent, ExaminedEvent>(OnExamined);
-        SubscribeLocalEvent<KsScanDiscoverableComponent, InteractUsingEvent>(OnInteractUsing);
-    }
-
     /// <summary>
     ///     Treats anything that isnt discoverable, as discovered.
     /// </summary>
     public bool IsDiscovered(EntityUid uid) => !HasComp<KsScanDiscoverableComponent>(uid);
     public bool IsScanner(EntityUid uid) => HasComp<KsDiscoveringScannerComponent>(uid);
 
+    [SubscribeLocalEvent]
     private void OnExamined(Entity<KsScanDiscoverableComponent> entity, ref ExaminedEvent args)
     {
         if (entity.Comp.ExamineLoc is not { } examineLoc)
@@ -32,6 +25,7 @@ public sealed partial class KsScanDiscoverableSystem : EntitySystem
         args.PushMarkup(Loc.GetString(examineLoc), priority: 3);
     }
 
+    [SubscribeLocalEvent]
     private void OnInteractUsing(Entity<KsScanDiscoverableComponent> entity, ref InteractUsingEvent args)
     {
         if (args.Handled ||

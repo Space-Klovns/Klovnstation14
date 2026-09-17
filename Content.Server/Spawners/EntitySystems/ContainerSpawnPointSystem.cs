@@ -13,7 +13,6 @@ public sealed partial class ContainerSpawnPointSystem : EntitySystem
 {
     [Dependency] private ContainerSystem _container = default!;
     [Dependency] private GameTicker _gameTicker = default!;
-    [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private StationSystem _station = default!;
     [Dependency] private StationSpawningSystem _stationSpawning = default!;
@@ -31,7 +30,7 @@ public sealed partial class ContainerSpawnPointSystem : EntitySystem
 
         // If it's just a spawn pref check if it's for cryo (silly).
         if (args.HumanoidCharacterProfile?.SpawnPriority != SpawnPriorityPreference.Cryosleep &&
-            (!_proto.Resolve(args.Job, out var jobProto) || jobProto.JobEntity == null))
+            (!ProtoMan.Resolve(args.Job, out var jobProto) || jobProto.JobEntity == null))
         {
             return;
         }

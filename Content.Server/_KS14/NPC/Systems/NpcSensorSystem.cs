@@ -13,13 +13,7 @@ public sealed partial class NpcSensorSystem : SharedNpcSensorSystem
 
     private const string DisturbanceCoordinatesSensorKey = "__Sensor__Disturbance.TargetCoordinates";
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<NpcDisturbOnTriggerComponent, TriggerEvent>(OnTrigger);
-    }
-
+    [SubscribeLocalEvent]
     private void OnTrigger(Entity<NpcDisturbOnTriggerComponent> entity, ref TriggerEvent args)
     {
         EntityCoordinates coordinates;

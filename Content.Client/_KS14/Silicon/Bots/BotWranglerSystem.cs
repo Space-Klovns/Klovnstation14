@@ -1,3 +1,4 @@
+using Content.Client._KS14.Graphics;
 using Content.Shared._KS14.Silicons.Bots;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
@@ -11,7 +12,7 @@ public sealed partial class BotWranglerSystem : SharedBotWranglerSystem
     private static readonly ProtoId<ShaderPrototype> ShaderId = "KsBotWranglingSelectionOutline";
 
     [Dependency] private IPlayerManager _playerManager = default!;
-    [Dependency] private IPrototypeManager _protoMan = default!;
+    [Dependency] private SpriteSystem _spriteSystem = default!;
 
     private ShaderInstance _shader = default!;
 
@@ -19,7 +20,7 @@ public sealed partial class BotWranglerSystem : SharedBotWranglerSystem
     {
         base.Initialize();
 
-        _shader = _protoMan.Index(ShaderId).InstanceUnique();
+        _shader = ProtoMan.Index(ShaderId).InstanceUnique();
     }
 
     protected override void AfterActivelyWrangledBotShutdown(Entity<ActivelyWrangledBotComponent> entity)
@@ -42,6 +43,18 @@ public sealed partial class BotWranglerSystem : SharedBotWranglerSystem
         if (!Resolve(entity, ref entity.Comp))
             return;
 
-        entity.Comp.PostShader = value ? _shader : null;
+        if (!value)
+        {
+            _spriteSystem.RemovePostShader((entity.Owner, entity.Comp), KsPostShaderIds.BotWranglerOutline);
+            return;
+        }
+
+        // This runs every tick, and SetPostShader unconditionally flags the sprite's shader order
+        // dirty, which would force a re-sort every frame. Only set it when it isn't already there.
+        if (_spriteSystem.HasPostShader((entity.Owner, entity.Comp), KsPostShaderIds.BotWranglerOutline))
+            return;
+
+        _spriteSystem.SetPostShader((entity.Owner, entity.Comp),
+            new SpriteComponent.PostShaderArgs(KsPostShaderIds.BotWranglerOutline, _shader));
     }
 }

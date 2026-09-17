@@ -11,17 +11,7 @@ public sealed partial class HeldGrantingSystem : EntitySystem
     [Dependency] private ISerializationManager _serializationManager = default!;
     [Dependency] private TagSystem _tagSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<HeldGrantComponentComponent, GotEquippedHandEvent>(OnCompPickup);
-        SubscribeLocalEvent<HeldGrantComponentComponent, GotUnequippedHandEvent>(OnCompDrop);
-
-        SubscribeLocalEvent<HeldGrantTagComponent, GotEquippedHandEvent>(OnTagPickup);
-        SubscribeLocalEvent<HeldGrantTagComponent, GotUnequippedHandEvent>(OnTagDrop);
-    }
-
+    [SubscribeLocalEvent]
     private void OnCompPickup(EntityUid uid, HeldGrantComponentComponent component, GotEquippedHandEvent args)
     {
         var holder = args.User;
@@ -41,6 +31,7 @@ public sealed partial class HeldGrantingSystem : EntitySystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnCompDrop(EntityUid uid, HeldGrantComponentComponent component, GotUnequippedHandEvent args)
     {
         var holder = args.User;
@@ -57,6 +48,7 @@ public sealed partial class HeldGrantingSystem : EntitySystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnTagPickup(EntityUid uid, HeldGrantTagComponent component, GotEquippedHandEvent args) //UNTESTED
     {
         var holder = args.User;
@@ -67,6 +59,7 @@ public sealed partial class HeldGrantingSystem : EntitySystem
         component.IsActive = true;
     }
 
+    [SubscribeLocalEvent]
     private void OnTagDrop(EntityUid uid, HeldGrantTagComponent component, GotUnequippedHandEvent args) //UNTESTED
     {
         if (!component.IsActive)
