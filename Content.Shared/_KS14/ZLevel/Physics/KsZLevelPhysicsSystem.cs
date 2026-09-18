@@ -472,14 +472,23 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
             var targetNode = rising ? node.Next : node.Previous;
             var worldPosition = _transformSystem.GetWorldPosition(transformComponent);
 
+            // A stack is rebuilt wholesale from network state, so a member can briefly be an entity that is not
+            //      a map at all. Treating that as "nothing that way" stops the transit against it for a frame,
+            //      which the next state fixes; asking for the component outright would throw out of Update.
+            MapComponent? targetMapComponent = null;
+            if (targetNode is { } candidateNode &&
+                !_mapQuery.TryGetComponent(candidateNode.Value.Owner, out targetMapComponent))
+                targetNode = null;
+
             // The floor plane being crossed always belongs to the lower of the two z-levels: our own floor on
             //      the way down, and the upper z-level's floor — our ceiling — on the way up.
             var crossedMapId = rising
-                ? targetNode is { } upperNode ? _mapQuery.GetComponent(upperNode.Value.Owner).MapId : MapId.Nullspace
+                ? targetMapComponent?.MapId ?? MapId.Nullspace
                 : transformComponent.MapID;
 
             // Nothing that way counts as solid, so the bottom of a stack is a floor and the top is a ceiling.
-            if (targetNode is not { } target || _zLevelSystem.IsFloorSolidAt(crossedMapId, worldPosition))
+            if (targetNode is not { } target || targetMapComponent is null ||
+                _zLevelSystem.IsFloorSolidAt(crossedMapId, worldPosition))
             {
                 Impact((uid, transitComponent), rising, velocity);
                 return;
@@ -491,7 +500,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
 
             _transformSystem.SetMapCoordinates(
                 uid,
-                new MapCoordinates(worldPosition, _mapQuery.GetComponent(target.Value.Owner).MapId)
+                new MapCoordinates(worldPosition, targetMapComponent.MapId)
             );
 
             // Renormalise into the new z-level's own Depth, keeping the sub-tick overshoot.
@@ -602,12 +611,21 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
             LookupFlags.Dynamic | LookupFlags.Static | LookupFlags.Uncontained
         );
 
+        if (_crushTargets.Count == 0)
+            return;
+
+        // Taken out of the shared set before a single event is raised, because the loop below raises four kinds
+        //      of them and a subscriber is free to land something else - which comes straight back through here
+        //      and clears the set this loop would be standing in. The lookup above is reentrancy-safe on its own
+        //      since nothing is raised while it fills; only the walk needs a copy of its own.
+        var crushTargets = new List<Entity<FixturesComponent>>(_crushTargets);
+
         // Both events say only what landed and how hard, neither of which varies from one target to the next,
         //      so one instance of each serves the whole landing.
         var crushAttemptEvent = new KsZLevelCrushAttemptEvent(uid, impactSpeed);
         var crushedEvent = new KsZLevelCrushedEvent(uid, impactSpeed);
 
-        foreach (var target in _crushTargets)
+        foreach (var target in crushTargets)
         {
             if (target.Owner == uid ||
                 TerminatingOrDeleted(target.Owner) ||

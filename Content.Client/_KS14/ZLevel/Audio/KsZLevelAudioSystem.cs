@@ -112,7 +112,13 @@ public sealed partial class KsZLevelAudioSystem : EntitySystem
         //      the same stack with a gap in the floor between the two.
         if (listener.MapId != transformComponent.MapID)
         {
-            if (!TryGetApparentPosition(transformComponent.MapID, worldPosition, listener, out var apparentPosition, out crossings))
+            if (!TryGetApparentPosition(
+                    transformComponent.MapID,
+                    worldPosition,
+                    listener,
+                    component.MaxDistance,
+                    out var apparentPosition,
+                    out crossings))
             {
                 component.Gain = 0f;
                 return;
@@ -159,11 +165,16 @@ public sealed partial class KsZLevelAudioSystem : EntitySystem
     /// <summary>
     ///     Where a sound on another z-level appears to come from, if it can be heard at all.
     /// </summary>
+    /// <param name="maxDistance">
+    ///     The stream's own cutoff, so a sound that is already too far to be heard never pays for the tile scan
+    ///         below.
+    /// </param>
     /// <param name="crossings">How many z-levels it carried through, for the muffling that costs it.</param>
     private bool TryGetApparentPosition(
         MapId sourceMapId,
         Vector2 sourcePosition,
         MapCoordinates listener,
+        float maxDistance,
         out Vector2 apparentPosition,
         out int crossings)
     {
@@ -171,6 +182,14 @@ public sealed partial class KsZLevelAudioSystem : EntitySystem
         crossings = 0;
 
         if (!_enabled || _maximumLevels <= 0)
+            return false;
+
+        // The path a leaked sound takes bends through a gap, so it is never shorter than the straight line
+        //      between the two - a sound whose straight line is already past the cutoff cannot come back under
+        //      it whichever gap it finds. Exactly the test the caller applies to the answer, applied to the
+        //      floor of that answer first, so the common case of a distant sound on another z-level costs a
+        //      subtraction rather than a hundred-odd tile lookups every frame.
+        if (_audioSystem.GetAudioDistance((sourcePosition - listener.Position).Length()) > maxDistance)
             return false;
 
         if (!_mapSystem.TryGetMap(sourceMapId, out var sourceMapUid) ||

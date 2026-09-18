@@ -51,8 +51,6 @@ public sealed partial class KsZLevelLightLeakSystem : EntitySystem
     /// </summary>
     private const float SearchMoveTolerance = 0.25f;
 
-    private bool _enabled;
-
     /// <summary>
     ///     Whether stand-ins were wanted last frame, so that a mode change tears them down once rather than
     ///         sweeping every entity every frame for the rest of the round.
@@ -83,7 +81,6 @@ public sealed partial class KsZLevelLightLeakSystem : EntitySystem
     {
         base.Initialize();
 
-        Subs.CVar(_configurationManager, KsCCVars.ZLevelLightLeakEnabled, OnEnabledChanged, true);
         Subs.CVar(_configurationManager, KsCCVars.ZLevelLightLeakHeight, value => _levelHeight = value, true);
         Subs.CVar(_configurationManager, KsCCVars.ZLevelLightLeakLevels, value => _maximumLevels = value, true);
         Subs.CVar(_configurationManager, KsCCVars.ZLevelLightLeakMaximumHoles, value => _maximumHoles = value, true);
@@ -95,17 +92,6 @@ public sealed partial class KsZLevelLightLeakSystem : EntitySystem
             true
         );
     }
-
-    private void OnEnabledChanged(bool enabled)
-    {
-        _enabled = enabled;
-    }
-
-    /// <summary>
-    ///     Whether stand-in lights are the way light is crossing z-levels right now.
-    /// </summary>
-    private bool WantsStandIns =>
-        _enabled && _lightBufferSystem.Mode is KsZLevelLightLeakMode.StandIns or KsZLevelLightLeakMode.Both;
 
     /// <summary>
     ///     Removes every stand-in, for when they stop being the way light crosses z-levels.
@@ -147,9 +133,9 @@ public sealed partial class KsZLevelLightLeakSystem : EntitySystem
     {
         base.FrameUpdate(frameTime);
 
-        // Checked here rather than on the cvar callbacks because the mode lives on another system, and one
-        //      flag covers both ways of switching these off.
-        var wanted = WantsStandIns;
+        // Checked here rather than on the cvar callbacks because both cvars behind it live on another system,
+        //      and one flag covers every way of switching these off.
+        var wanted = _lightBufferSystem.WantsStandIns;
 
         if (wanted != _wereWanted)
         {

@@ -76,6 +76,10 @@ public sealed partial class KsAutoZLevelSystem : EntitySystem
         if (otherEntity.Comp?.Location == entity.Comp.Location)
             Log.Warning($"KsAutoZLevelType of auto z-levels {ToPrettyString(entity.Owner)} and {ToPrettyString(otherEntity.Owner)} is the same! The location of the z-levels relative to each other will be determined by update order.");
 
+        // Z-level maps are saved with mapPaused set, so that nothing on them runs until they have been linked
+        //      into a stack. This one has already been unpaused - that is what ran OnUnpaused and got us here -
+        //      but the partner found by the query above may still be sitting paused, waiting for exactly this.
+        //      Left paused it would be a z-level that renders, is fallen onto, and never simulates.
         _mapSystem.SetPaused(otherEntity.Owner, false);
 
         KsZLevelComponent? ourZLevelComponent;

@@ -200,6 +200,22 @@ namespace Content.Client.Viewport
         }
 
         /// <summary>
+        ///     Releases the render targets the z-level passes blur through and capture into.
+        /// </summary>
+        /// <remarks>
+        ///     A control is not only regenerated, it is also thrown away - closing a surveillance camera window
+        ///         is the ordinary way - and nothing upstream releases anything when that happens. Regeneration
+        ///         alone would leave every closed viewport holding a full-size blur buffer plus two capture
+        ///         targets per z-level it had drawn, for the rest of the session.
+        /// </remarks>
+        protected override void Dispose(bool disposing)
+        {
+            InvalidateZLevelState();
+
+            base.Dispose(disposing);
+        }
+
+        /// <summary>
         ///     Releases the render target the z-level passes blur through.
         /// </summary>
         /// <remarks>

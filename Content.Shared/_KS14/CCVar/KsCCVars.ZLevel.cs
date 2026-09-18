@@ -58,6 +58,9 @@ public sealed partial class KsCCVars
     /// </summary>
     /// <remarks>
     ///     Purely a rendering matter, and the one thing here a player pays for, so it is theirs to turn off.
+    ///     The master switch over both approaches rather than either one of them: whichever
+    ///         <see cref="ZLevelLightLeakMode"/> is set, this off means no stand-ins are spawned and no capture
+    ///         passes are run, which is the only way turning it off actually buys the frame time it promises.
     ///     Everything below is the world's, not the viewer's, and is replicated so that a z-level looks the
     ///         same lit from above no matter who is looking at it.
     /// </remarks>
@@ -232,11 +235,12 @@ public sealed partial class KsCCVars
     ///     Whether players are also sent the z-level directly above them.
     /// </summary>
     /// <remarks>
-    ///     Off by default, and expensive: it is a whole extra z-level of entities per player, none of which is
-    ///         ever drawn, since the stack is only rendered downwards.
-    ///     The one thing it buys is light falling onto you from above. Nothing else renders or sends that
-    ///         z-level, so without this there is simply no light map up there to fall from - which is also why
-    ///         only the buffer mode has any use for it.
+    ///     Expensive: it is a whole extra z-level of entities per player, none of which is ever drawn, since
+    ///         the stack is only rendered downwards. On by default all the same, because the thing it buys is
+    ///         not a refinement - turn it off and light simply stops arriving from above at all - and this is
+    ///         the knob to reach for first on a server that is struggling for bandwidth.
+    ///     Nothing else renders or sends that z-level, so without this there is simply no light map up there to
+    ///         fall from - which is also why only the buffer mode has any use for it.
     ///     Replicated because the client has to make the same decision: the extra capture pass it would run to
     ///         build that light map is pure waste unless the server is filling the z-level in the first place,
     ///         and it cannot tell the difference by looking. A z-level that leaves PVS is detached rather than

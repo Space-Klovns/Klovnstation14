@@ -174,7 +174,10 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
             //      of a stack has nothing under them and can still have a lit one over their head.
             UpdateAboveViewer((viewerUid, viewerComponent), zLevelEntity.Value, position);
 
-            if (zLevelEntity.Value.Comp.Node.Previous is not { } previousZLevelNode)
+            // Node itself is null-checked rather than assumed, the same way every other walk of the stack does
+            //      it: a z-level removed from its stack keeps the field pointing at a node that no longer
+            //      belongs to a list, and one replicated before the rebuild has never been given one at all.
+            if (zLevelEntity.Value.Comp.Node?.Previous is not { } previousZLevelNode)
             {
                 if (viewerComponent.Active)
                     RemoveActiveViewer((viewerUid, viewerComponent));
