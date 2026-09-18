@@ -189,6 +189,17 @@ var myFloat = (float)GetMyInt();       // do this
 float myFloat = GetMyInt();            // not this
 ```
 
+**Name every optional argument (C#)** — an optional parameter is always passed with its name, so the call site says what the value *means* instead of making the reader go read the signature. Required parameters stay positional:
+```csharp
+// do this
+_entityLookupSystem.FindGridsIntersecting(mapId, bounds, ref _grids, approx: true);
+dependencyCollection.InjectDependencies(overlay, oneOff: true);
+
+// not this - what is 'true'?
+_entityLookupSystem.FindGridsIntersecting(mapId, bounds, ref _grids, true);
+dependencyCollection.InjectDependencies(overlay, true);
+```
+
 **Verbosity (C#)** — use verbose names, even where existing code is archaic (`xform` → `transform`):
 ```csharp
 [Dependency] TransformSystem _transformSystem;   // not '_xform'
