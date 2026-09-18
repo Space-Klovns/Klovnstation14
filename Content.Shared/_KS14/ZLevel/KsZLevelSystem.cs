@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Robust.Shared.Map;
 using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
@@ -23,6 +24,9 @@ namespace Content.Shared._KS14.ZLevel;
 
 public sealed partial class KsZLevelSystem : EntitySystem
 {
+    [Dependency] private ITileDefinitionManager _tileDefinitionManager = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
+
     [Dependency] private EntityQuery<KsZLevelComponent> _zLevelQuery = default!;
 
     public override void Initialize()

@@ -347,7 +347,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         // Standing on a solid floor with nothing pushing it upwards. A positive velocity skips this check, so
         //      anything can still be launched up off a floor.
         if (initialVerticalVelocity <= 0f &&
-            IsFloorSolidAt(entity.Comp.MapID, _transformSystem.GetWorldPosition(entity.Comp)))
+            _zLevelSystem.IsFloorSolidAt(entity.Comp.MapID, _transformSystem.GetWorldPosition(entity.Comp)))
             return false;
 
         var transitComponent = EnsureComp<KsZLevelTransitComponent>(entity.Owner);
@@ -479,7 +479,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
                 : transformComponent.MapID;
 
             // Nothing that way counts as solid, so the bottom of a stack is a floor and the top is a ceiling.
-            if (targetNode is not { } target || IsFloorSolidAt(crossedMapId, worldPosition))
+            if (targetNode is not { } target || _zLevelSystem.IsFloorSolidAt(crossedMapId, worldPosition))
             {
                 Impact((uid, transitComponent), rising, velocity);
                 return;
@@ -729,22 +729,6 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
 
         return _gravityQuery.TryGetComponent(zLevelEntity.Owner, out var mapGravityComponent) &&
                mapGravityComponent.Enabled;
-    }
-
-    /// <summary>
-    ///     Whether the z-level floor plane on this map is solid at this world position.
-    /// </summary>
-    /// <remarks>
-    ///     Deliberately spatial rather than reading <see cref="TransformComponent.GridUid"/>: a crossing
-    ///         re-parents the entity, so the cached grid is only correct once the crossing is already done.
-    /// </remarks>
-    private bool IsFloorSolidAt(MapId mapId, Vector2 worldPosition)
-    {
-        // Open space: nothing to stand on, and nothing to bump into.
-        if (!_mapSystem.TryFindGridAt(mapId, worldPosition, out var gridUid, out var mapGridComponent))
-            return false;
-
-        return !_mapSystem.GetTileRef((gridUid, mapGridComponent), new MapCoordinates(worldPosition, mapId)).Tile.IsEmpty;
     }
 
     /// <summary>

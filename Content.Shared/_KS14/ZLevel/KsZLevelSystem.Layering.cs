@@ -1,5 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using Content.Shared.Maps;
+using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Utility;
 
@@ -31,6 +33,69 @@ public sealed partial class KsZLevelSystem : EntitySystem
     ///         clamping, so zero would divide by zero and a negative would quietly invert the whole effect.
     /// </remarks>
     public const float MinimumDepth = 0.01f;
+
+    /// <summary>
+    ///     The z-level directly above this one, if it has one.
+    /// </summary>
+    public bool TryGetZLevelAbove(Entity<KsZLevelComponent?> entity, [NotNullWhen(true)] out Entity<KsZLevelComponent>? aboveEntity)
+    {
+        aboveEntity = null;
+
+        if (!_zLevelQuery.Resolve(ref entity, logMissing: false))
+            return false;
+
+        if (entity.Comp!.Node?.Next is not { } aboveNode)
+            return false;
+
+        aboveEntity = aboveNode.Value;
+        return true;
+    }
+
+    /// <summary>
+    ///     Whether the z-level floor plane on this map is solid at this world position.
+    /// </summary>
+    /// <remarks>
+    ///     Deliberately spatial rather than reading <see cref="TransformComponent.GridUid"/>: a crossing
+    ///         re-parents the entity, so the cached grid is only correct once the crossing is already done.
+    ///     This is the one definition of "is there floor here" - what an entity falls through, and what a
+    ///         sound has to find a gap in.
+    /// </remarks>
+    public bool IsFloorSolidAt(MapId mapId, Vector2 worldPosition)
+    {
+        // Open space: nothing to stand on, and nothing to bump into.
+        if (!_mapSystem.TryFindGridAt(mapId, worldPosition, out var gridUid, out var mapGridComponent))
+            return false;
+
+        return !_mapSystem.GetTileRef((gridUid, mapGridComponent), new MapCoordinates(worldPosition, mapId)).Tile.IsEmpty;
+    }
+
+    /// <summary>
+    ///     Whether light and sound from a neighbouring z-level carry through the floor plane on this map at
+    ///         this world position.
+    /// </summary>
+    /// <remarks>
+    ///     Not the inverse of <see cref="IsFloorSolidAt"/>: a grating is solid enough to stand on and still
+    ///         lets both through. Falling asks the other question.
+    /// </remarks>
+    public bool IsFloorTransparentAt(MapId mapId, Vector2 worldPosition)
+    {
+        if (!_mapSystem.TryFindGridAt(mapId, worldPosition, out var gridUid, out var mapGridComponent))
+            return true;
+
+        var tileRef = _mapSystem.GetTileRef((gridUid, mapGridComponent), new MapCoordinates(worldPosition, mapId));
+        return IsTileTransparent(tileRef.Tile);
+    }
+
+    /// <summary>
+    ///     Whether light and sound carry through this tile, for a caller that already has one in hand.
+    /// </summary>
+    public bool IsTileTransparent(Tile tile)
+    {
+        if (tile.IsEmpty)
+            return true;
+
+        return _tileDefinitionManager[tile.TypeId] is ContentTileDefinition { KsZLevelTransparent: true };
+    }
 
     /// <summary>
     ///     Sets how far a z-level sits below the one above it, at runtime.
@@ -83,7 +148,29 @@ public sealed partial class KsZLevelSystem : EntitySystem
     /// </returns>
     public bool TryGetDepthBelow(Entity<KsZLevelComponent?> fromEntity, EntityUid toUid, out float depth)
     {
+        return TryGetDepthBelow(fromEntity, toUid, out depth, out _);
+    }
+
+    /// <summary>
+    ///     How far below <paramref name="fromEntity"/>'s floor plane <paramref name="toUid"/>'s floor plane
+    ///         sits, in z-levels, and how many floor planes lie between the two.
+    /// </summary>
+    /// <param name="crossings">
+    ///     How many floor planes separate them - one for the z-level directly below, and one more for each
+    ///         step past that. Zero when they are the same z-level.
+    /// </param>
+    /// <returns>
+    ///     False if the two are not in the same stack, or if <paramref name="toUid"/> is above
+    ///         <paramref name="fromEntity"/>. Zero and true if they are the same z-level.
+    /// </returns>
+    /// <remarks>
+    ///     Allocates nothing and touches no shared state, so it is safe to call from the parallel jobs the
+    ///         audio system runs its streams on.
+    /// </remarks>
+    public bool TryGetDepthBelow(Entity<KsZLevelComponent?> fromEntity, EntityUid toUid, out float depth, out int crossings)
+    {
         depth = 0f;
+        crossings = 0;
 
         if (!_zLevelQuery.Resolve(ref fromEntity, logMissing: false))
             return false;
@@ -95,12 +182,14 @@ public sealed partial class KsZLevelSystem : EntitySystem
         for (var node = fromEntity.Comp!.Node?.Previous; node != null; node = node.Previous)
         {
             depth += node.Value.Comp.Depth;
+            crossings++;
 
             if (node.Value.Owner == toUid)
                 return true;
         }
 
         depth = 0f;
+        crossings = 0;
         return false;
     }
 
