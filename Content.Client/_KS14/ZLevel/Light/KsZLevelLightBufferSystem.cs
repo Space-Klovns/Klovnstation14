@@ -1,3 +1,5 @@
+using System.Numerics;
+using Content.Client.Light;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.ZLevel.Light;
 using Robust.Client.Graphics;
@@ -41,6 +43,22 @@ public sealed partial class KsZLevelLightBufferSystem : EntitySystem
     ///         detached from - a black light map and an empty floor mask - once per frame, forever.
     /// </remarks>
     public bool WantsLightFromAbove => WantsCaptures && _sendAbove;
+
+    /// <summary>
+    ///     How much wider than the light target the enlarged target composited into is, as a ratio, so that
+    ///         captures can be taken wide enough to fill it.
+    /// </summary>
+    /// <remarks>
+    ///     <see cref="LightBlurOverlay"/> blurs that target with a multiplier of 70, which works out at
+    ///         something like a tenth of the screen, and it samples the skirt around the edges to do it. The
+    ///         skirt is where every other contributor's light spills in from off-screen - but a capture is a
+    ///         picture with a hard edge, so if it stops at the visible bounds the blur drags its outermost
+    ///         tenth back down to black. That is a wide, smooth fade around the whole screen.
+    ///     Measured by the overlay, because it is the only thing holding both targets, and read back by the
+    ///         viewport for the frame after. A frame of lag costs nothing: it only changes when the window,
+    ///         the render scale or the light resolution does.
+    /// </remarks>
+    public Vector2 CaptureOversize { get; set; } = Vector2.One;
 
     /// <summary>
     ///     Draw the captured light as a flat colour, to prove the compositing before trusting the contents.

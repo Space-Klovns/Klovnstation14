@@ -51,6 +51,17 @@ namespace Content.Client.Viewport
         private readonly List<MapId> _staleCaptures = [];
 
         /// <summary>
+        ///     How much wider than the visible light target this viewport's captures have to be taken, as
+        ///         measured by the overlay that composites them.
+        /// </summary>
+        /// <remarks>
+        ///     Held per viewport rather than read straight off the system, because the system's copy is
+        ///         whatever the last control to draw put there - and a surveillance camera's light target is
+        ///         a different size to the main one, so its ratio is a different number.
+        /// </remarks>
+        private Vector2 _captureOversize = Vector2.One;
+
+        /// <summary>
         ///     Draws every z-level at or below the viewer, deepest first.
         /// </summary>
         /// <returns>
@@ -112,6 +123,11 @@ namespace Content.Client.Viewport
                     CaptureZLevelLight(handle, (topMapUid.Value, topZLevelComponent), viewerTransitHeight);
 
                 DrawZLevelPasses(handle, drawBox, drawBoxGlobal, topMapUid.Value, depth, clearFirstPass: captured);
+
+                // Taken back off the system while this viewport is still the one that drew, so that the next
+                //      frame's captures are sized against this viewport's light target and not some other
+                //      control's.
+                _captureOversize = _lightBufferSystem.CaptureOversize;
             }
             finally
             {
@@ -242,24 +258,29 @@ namespace Content.Client.Viewport
 
             // Nothing renders the z-level above the viewer - the stack is only ever drawn downwards - so if
             //      light is to fall onto them from it, this is the only pass that will ever exist for it.
-            //      Negative depth on purpose: it is nearer the eye than the plane they are standing on, so it
-            //      is drawn scaled up rather than down.
+            //      The z-level it lights is the viewer's own, hence their own depth rather than its.
             if (WantsLightFromAbove(topZLevel.Owner) &&
                 _zLevelSystem.TryGetZLevelAbove(topZLevel.Owner, out var aboveEntity))
-                CaptureZLevel(handle, aboveEntity.Value, viewerDepth - topZLevel.Comp.Depth);
+                CaptureZLevel(handle, aboveEntity.Value, viewerDepth);
 
             // Top-down, stopping before the deepest: nothing is drawn under it for its light to fall on.
             var depth = viewerDepth;
             for (var index = _mapsToIterate.Count - 1; index >= 1; index--)
             {
-                CaptureZLevel(handle, _mapsToIterate[index], depth);
-
-                // Stepping down into a z-level crosses that z-level's own Depth, matching the draw loop.
+                // Stepping down into a z-level crosses that z-level's own Depth, matching the draw loop -
+                //      and taking the step before the capture rather than after is what hands it the depth
+                //      of the z-level it is about to light rather than its own.
                 depth += _mapsToIterate[index - 1].Comp.Depth;
+
+                CaptureZLevel(handle, _mapsToIterate[index], depth);
             }
         }
 
-        private void CaptureZLevel(IRenderHandle handle, Entity<KsZLevelComponent> zLevel, float depth)
+        /// <param name="consumerDepth">
+        ///     How far below the viewer the z-level this capture is going to light sits - not how far down
+        ///         this one is.
+        /// </param>
+        private void CaptureZLevel(IRenderHandle handle, Entity<KsZLevelComponent> zLevel, float consumerDepth)
         {
             if (!_entityManager.TryGetComponent<MapComponent>(zLevel.Owner, out var mapComponent))
                 return;
@@ -268,7 +289,16 @@ namespace Content.Client.Viewport
             //      line of sight out of it would cut shadows into light that was never theirs to block.
             _zLevelEye.DrawFov = false;
             _zLevelEye.Position = new MapCoordinates(_eye!.Position.Position, mapComponent.MapId);
-            _zLevelEye.Scale = KsZLevelSystem.GetDepthScale(_eye.Scale, depth);
+
+            // Rendered through the eye of the z-level it is about to light rather than its own, widened by
+            //      the light target's skirt on top.
+            // Its own scale would buy nothing: light falls straight down, so a capture is projected onto the
+            //      z-level below at the same world coordinates whatever scale it was drawn at, and all its
+            //      own scale decides is how much of the world it covers. Drawn at its own scale it covers
+            //      less than the pass reading it can see, because that pass is further away and sees wider -
+            //      and the strip of screen past the edge of the capture is then lit by nothing at all.
+            _zLevelEye.Scale =
+                KsZLevelSystem.GetDepthScale(_eye.Scale, consumerDepth) / _captureOversize;
 
             _viewport!.Eye = _zLevelEye;
 

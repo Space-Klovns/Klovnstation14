@@ -111,12 +111,18 @@ public sealed partial class KsZLevelLightBufferOverlay : Overlay
         if (!_lightBufferSystem.WantsCaptures)
             return;
 
-        if (!TryGetLightFromAbove(mapUid, out var capture, out var dim))
-            return;
-
         var target = _overlayManager.GetOverlay<BeforeLightTargetOverlay>()
             .GetCachedForViewport(viewport)
             .EnlargedLightTarget;
+
+        // Reported rather than worked out in the viewport because this is the only place holding both
+        //      targets. Taken before the bail below, so that the first capture is already the right size
+        //      rather than a frame of fade on arrival.
+        _lightBufferSystem.CaptureOversize =
+            (Vector2)target.Size / (Vector2)viewport.LightRenderTarget.Size;
+
+        if (!TryGetLightFromAbove(mapUid, out var capture, out var dim))
+            return;
 
         // The light target is not the viewport's resolution, so world-space geometry drawn into it needs the
         //      eye scale corrected by the difference. Same correction every light overlay makes.
