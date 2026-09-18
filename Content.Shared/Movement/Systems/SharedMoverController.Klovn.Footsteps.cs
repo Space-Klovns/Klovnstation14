@@ -70,6 +70,7 @@ public abstract partial class SharedMoverController
     public bool TryPlayFootstep(
         Entity<TransformComponent?, MobMoverComponent?> entity,
         float volumeModifier = InputMoverComponent.WalkingSoundModifier,
+        float pitch = 1f,
         ContentTileDefinition? tileDefinition = null)
     {
         // A MobMoverComponent is what the movement path itself requires before it will ever play a step, so
@@ -80,6 +81,7 @@ public abstract partial class SharedMoverController
 
         var audioParams = sound.Params
             .WithVolume(sound.Params.Volume + volumeModifier)
+            .WithPitchScale(pitch)
             .WithVariation(sound.Params.Variation ?? entity.Comp2.FootstepVariation);
 
         // As with an ordinary step, a relay target's sound is predicted for whoever is driving it - the mech,

@@ -525,7 +525,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         //      that colours a footstep colours this too.
         // Played on both sides, before the server-only split below: predicted audio is what puts the thud on
         //      the landing tick for whoever is falling rather than half an RTT after it.
-        _moverController.TryPlayFootstep(entity.Owner, _landingFootstepVolume);
+        _moverController.TryPlayFootstep(entity.Owner, volumeModifier: _landingFootstepVolume, pitch: 0.6f);
 
         // Landing itself is predicted so the client stops the sprite in the right place, but its consequences
         //      are not: re-prediction would re-fire them on every rollback tick.
