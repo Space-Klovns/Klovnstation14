@@ -1,4 +1,5 @@
 using Content.Shared._KS14.ZLevel;
+using Robust.Server.GameObjects;
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.Map.Components;
@@ -10,6 +11,7 @@ public sealed partial class KsAutoZLevelSystem : EntitySystem
 {
     [Dependency] private KsZLevelSystem _zLevelSystem = default!;
     [Dependency] private MapLoaderSystem _mapLoaderSystem = default!;
+    [Dependency] private MapSystem _mapSystem = default!;
 
     private static readonly DeserializationOptions DeserializationOptions = DeserializationOptions.Default with
     {
@@ -56,7 +58,7 @@ public sealed partial class KsAutoZLevelSystem : EntitySystem
         }
         else
         {
-            var eqe = EntityQueryEnumerator<KsAutoZLevelComponent, MapComponent>();
+            var eqe = AllEntityQuery<KsAutoZLevelComponent, MapComponent>();
             while (eqe.MoveNext(out var uid, out var component, out _))
             {
                 if (component.Id != entity.Comp.Id ||
@@ -74,6 +76,8 @@ public sealed partial class KsAutoZLevelSystem : EntitySystem
         if (otherEntity.Comp?.Location == entity.Comp.Location)
             Log.Warning($"KsAutoZLevelType of auto z-levels {ToPrettyString(entity.Owner)} and {ToPrettyString(otherEntity.Owner)} is the same! The location of the z-levels relative to each other will be determined by update order.");
 
+        _mapSystem.SetPaused(otherEntity.Owner, false);
+
         KsZLevelComponent? ourZLevelComponent;
         if (entity.Comp.Location == KsAutoZLevelType.Above)
             _zLevelSystem.AddZLevelDirectlyAbove(
@@ -89,6 +93,7 @@ public sealed partial class KsAutoZLevelSystem : EntitySystem
         // Null means "leave it at the prototype default", so only override when the mapper actually set one.
         if (entity.Comp.Depth is { } depth)
             _zLevelSystem.SetDepth((entity.Owner, ourZLevelComponent), depth);
+
         RemComp(entity.Owner, entity.Comp);
 
         if (Resolve(otherEntity, ref otherEntity.Comp, logMissing: false))
