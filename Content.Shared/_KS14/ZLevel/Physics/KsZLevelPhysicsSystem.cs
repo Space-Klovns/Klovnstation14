@@ -6,6 +6,7 @@ using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
 using Content.Shared.Gravity;
 using Content.Shared.Movement.Events;
+using Content.Shared.Movement.Systems;
 using Content.Shared.Stunnable;
 using Content.Shared.Throwing;
 using Robust.Shared.Configuration;
@@ -39,6 +40,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     [Dependency] private SharedGravitySystem _gravitySystem = default!;
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
+    [Dependency] private SharedMoverController _moverController = default!;
     [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
     [Dependency] private SharedStunSystem _stunSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -103,6 +105,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     private TimeSpan _crushStun;
     private float _transitTerminalVelocity;
     private float _transitImpactVelocity;
+    private float _landingFootstepVolume;
 
     public override void Initialize()
     {
@@ -113,6 +116,7 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         Subs.CVar(_configurationManager, KsCCVars.ZLevelTransitImpactVelocity, value => _transitImpactVelocity = value, true);
         Subs.CVar(_configurationManager, KsCCVars.ZLevelTransitLandingKnockdown, value => _landingKnockdown = TimeSpan.FromSeconds(value), true);
         Subs.CVar(_configurationManager, KsCCVars.ZLevelTransitCrushStun, value => _crushStun = TimeSpan.FromSeconds(value), true);
+        Subs.CVar(_configurationManager, KsCCVars.ZLevelTransitLandingFootstepVolume, value => _landingFootstepVolume = value, true);
     }
 
     #region Triggers
@@ -515,6 +519,13 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         //      it is not on a floor, so it stays in transit.
         if (rising)
             return;
+
+        // One step, on the surface it came down on, louder than a walked one. Resolved through the ordinary
+        //      footstep chain rather than a sound of its own, so shoes, puddles, catwalks and everything else
+        //      that colours a footstep colours this too.
+        // Played on both sides, before the server-only split below: predicted audio is what puts the thud on
+        //      the landing tick for whoever is falling rather than half an RTT after it.
+        _moverController.TryPlayFootstep(entity.Owner, _landingFootstepVolume);
 
         // Landing itself is predicted so the client stops the sprite in the right place, but its consequences
         //      are not: re-prediction would re-fire them on every rollback tick.

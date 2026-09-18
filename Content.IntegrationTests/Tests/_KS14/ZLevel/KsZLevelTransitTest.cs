@@ -1,13 +1,20 @@
 #nullable enable
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Content.IntegrationTests.Fixtures.Attributes;
 using Content.IntegrationTests.Tests.Helpers;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Damage.Systems;
+using Content.Shared.Maps;
+using Content.Shared.Movement.Components;
+using Content.Shared.Movement.Systems;
 using Content.Shared.Stunnable;
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.ZLevel;
 using Content.Shared._KS14.ZLevel.Physics;
 using Content.Shared.FixedPoint;
+using Robust.Shared.Audio.Components;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -121,12 +128,45 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
         - Impassable
         layer:
         - Impassable
+
+# Makes footsteps by moving - a MobMoverComponent and the FootstepSound tag are what the movement path itself
+#       requires before it will play a step - so it has a landing step to make too.
+- type: entity
+  parent: KsZLevelTestFaller
+  id: KsZLevelTestStepper
+  components:
+  - type: MobMover
+  - type: Tag
+    tags:
+    - FootstepSound
+
+# Carries its own footstep sound, which outranks whatever it lands on.
+- type: entity
+  parent: KsZLevelTestStepper
+  id: KsZLevelTestModifiedStepper
+  components:
+  - type: FootstepModifier
+    footstepSoundCollection:
+      collection: FootstepHull
 ";
 
     private const string FallerProto = "KsZLevelTestFaller";
     private const string SoftFallerProto = "KsZLevelTestSoftFaller";
     private const string VictimProto = "KsZLevelTestVictim";
     private const string UncollidableVictimProto = "KsZLevelTestUncollidableVictim";
+    private const string StepperProto = "KsZLevelTestStepper";
+    private const string ModifiedStepperProto = "KsZLevelTestModifiedStepper";
+
+    /// <summary>
+    ///     Plating, which the test stack is floored with, has no barestep sounds, so a shoeless mob landing on
+    ///         it is silent by the same content decision that makes it silent to walk on. Wood has both.
+    /// </summary>
+    private const string AudibleTile = "FloorWood";
+
+    /// <summary>
+    ///     Pinned for the volume test, well above the 3.5 an ordinary sprinting step gets.
+    /// </summary>
+    private const float LandingFootstepVolume = 7f;
 
     /// <summary>
     ///     Drops <paramref name="fallerProto"/> onto a <paramref name="victimProto"/> standing where it lands,
@@ -1168,6 +1208,195 @@ public sealed class KsZLevelTransitTest : KsZLevelTestBase
             Assert.That(zLevelSystem.SetDepth(stack.LowerMapUid, 0f), Is.False,
                 "clamping zero lands on the minimum it is already at, so nothing changed");
         });
+    }
+
+
+    /// <summary>
+    ///     Every audio entity currently parented to <paramref name="uid"/>, which is where playing a sound on
+    ///         an entity puts it.
+    /// </summary>
+    private static List<Entity<AudioComponent>> GetSoundsOn(IEntityManager entManager, EntityUid uid)
+    {
+        var sounds = new List<Entity<AudioComponent>>();
+        var query = entManager.EntityQueryEnumerator<AudioComponent, TransformComponent>();
+
+        while (query.MoveNext(out var soundUid, out var audioComponent, out var transformComponent))
+        {
+            if (transformComponent.ParentUid == uid)
+                sounds.Add((soundUid, audioComponent));
+        }
+
+        return sounds;
+    }
+
+    /// <summary>
+    ///     Drops <paramref name="fallerProto"/> down the hole onto <paramref name="landingTile"/> and reports
+    ///         the sounds that landing added, ignoring anything already playing on the way down.
+    /// </summary>
+    private async Task<(EntityUid Faller, List<Entity<AudioComponent>> Sounds)> DropAndListen(
+        string fallerProto,
+        string? landingTile = null)
+    {
+        var stack = await CreateStack();
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var tileDefinitionManager = server.ResolveDependency<ITileDefinitionManager>();
+        var mapSystem = entManager.System<SharedMapSystem>();
+        var transitSystem = entManager.System<KsZLevelPhysicsSystem>();
+
+        var faller = EntityUid.Invalid;
+
+        await server.WaitPost(() =>
+        {
+            if (landingTile is not null)
+            {
+                var tile = new Tile(tileDefinitionManager[landingTile].TileId);
+                mapSystem.SetTile(stack.LowerGrid.Owner, stack.LowerGrid.Comp, HoleTile, tile);
+            }
+
+            faller = entManager.SpawnEntity(fallerProto, stack.HoleCoords);
+            transitSystem.TryStartTransit(faller, -10f);
+        });
+
+        // Starting a transit knocks the entity down, and being knocked down is itself audible, so what the
+        //      landing is worth has to be measured as a difference rather than as a total.
+        await Pair.RunTicksSync(1);
+        var soundsBeforeLanding = new HashSet<EntityUid>();
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entManager.HasComponent<KsZLevelTransitComponent>(faller), Is.True,
+                "the entity has to still be falling for anything measured from here to be about the landing");
+            soundsBeforeLanding = GetSoundsOn(entManager, faller).Select(sound => sound.Owner).ToHashSet();
+        });
+
+        var (_, landed) = await RunUntilLanded(entManager, faller);
+
+        var sounds = new List<Entity<AudioComponent>>();
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(landed, Is.True,
+                "the faller has to reach the floor before there is a landing to listen to");
+
+            sounds = GetSoundsOn(entManager, faller)
+                .Where(sound => !soundsBeforeLanding.Contains(sound.Owner))
+                .ToList();
+        });
+
+        return (faller, sounds);
+    }
+
+    /// <summary>
+    ///     A landing is a step taken on whatever stopped it, so it goes out through the ordinary footstep
+    ///         chain rather than through a sound of its own.
+    /// </summary>
+    [Test]
+    public async Task TestLandingPlaysAFootstep()
+    {
+        await OverrideTransitCVars();
+
+        var (_, sounds) = await DropAndListen(ModifiedStepperProto);
+
+        Assert.That(sounds, Has.Count.EqualTo(1),
+            "landing should have played exactly one footstep on the entity that landed");
+    }
+
+    /// <summary>
+    ///     The landing step is deliberately louder than a walked one - that is the difference between arriving
+    ///         on your feet and arriving from a storey up.
+    /// </summary>
+    [Test]
+    public async Task TestLandingFootstepIsLouderThanAWalkedOne()
+    {
+        await OverrideTransitCVars();
+        await OverrideCVar(Side.Server, KsCCVars.ZLevelTransitLandingFootstepVolume, LandingFootstepVolume);
+
+        var (_, sounds) = await DropAndListen(ModifiedStepperProto);
+
+        Assert.That(sounds, Has.Count.EqualTo(1),
+            "there has to be a landing step before its volume means anything");
+        Assert.That(sounds[0].Comp.Params.Volume, Is.GreaterThan(InputMoverComponent.SprintingSoundModifier),
+            $"a landing step given {LandingFootstepVolume} should be louder than even a sprinting one");
+    }
+
+    /// <summary>
+    ///     "The sound it would make on the surface" means the surface it actually came down on, so the chain
+    ///         has to be walked at the landing position rather than where the fall started.
+    /// </summary>
+    [Test]
+    public async Task TestLandingFootstepComesFromTheSurfaceLandedOn()
+    {
+        await OverrideTransitCVars();
+
+        var (faller, sounds) = await DropAndListen(StepperProto, AudibleTile);
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var tileDefinitionManager = server.ResolveDependency<ITileDefinitionManager>();
+
+        await server.WaitAssertion(() =>
+        {
+            var tileDefinition = (ContentTileDefinition)tileDefinitionManager[AudibleTile];
+
+            Assert.That(entManager.System<SharedMoverController>()
+                    .TryGetCurrentFootstepSound(faller, out var sound), Is.True,
+                "a mob that makes footsteps, standing on a tile that has them, should resolve one");
+
+            // Barefoot: the test mob has no inventory, so there is nothing in its shoes slot.
+            Assert.That(sound, Is.SameAs(tileDefinition.BarestepSounds),
+                $"the step should have come from the {AudibleTile} it landed on, not from anything above it");
+            Assert.That(sounds, Has.Count.EqualTo(1),
+                "and that sound should actually have been played on landing");
+        });
+    }
+
+    /// <summary>
+    ///     Anything the ordinary chain lets override a footstep has to override the landing one too, a
+    ///         FootstepModifier on the entity itself being the first of them.
+    /// </summary>
+    [Test]
+    public async Task TestEntityFootstepModifierOutranksTheSurface()
+    {
+        await OverrideTransitCVars();
+
+        var (faller, sounds) = await DropAndListen(ModifiedStepperProto, AudibleTile);
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var tileDefinitionManager = server.ResolveDependency<ITileDefinitionManager>();
+
+        await server.WaitAssertion(() =>
+        {
+            var tileDefinition = (ContentTileDefinition)tileDefinitionManager[AudibleTile];
+            var modifierComponent = entManager.GetComponent<FootstepModifierComponent>(faller);
+
+            Assert.That(entManager.System<SharedMoverController>()
+                    .TryGetCurrentFootstepSound(faller, out var sound), Is.True,
+                "an entity carrying its own footstep sound should always resolve one");
+
+            Assert.That(sound, Is.SameAs(modifierComponent.FootstepSoundCollection),
+                "the entity's own FootstepModifier should have won over the tile it landed on");
+            Assert.That(sound, Is.Not.SameAs(tileDefinition.BarestepSounds),
+                $"and it should not have fallen through to the {AudibleTile} underneath it");
+            Assert.That(sounds, Has.Count.EqualTo(1),
+                "the overridden sound should still have been played on landing");
+        });
+    }
+
+    /// <summary>
+    ///     Something that makes no footsteps walking has none to make landing either.
+    /// </summary>
+    [Test]
+    public async Task TestSomethingWithoutFootstepsLandsSilently()
+    {
+        await OverrideTransitCVars();
+
+        // FallerProto has neither a MobMover nor the FootstepSound tag, which is exactly what the movement
+        //      path checks before it will play a step.
+        var (_, sounds) = await DropAndListen(FallerProto, AudibleTile);
+
+        Assert.That(sounds, Is.Empty,
+            "an entity that cannot make footsteps by walking should not make one by landing either");
     }
 
     /// <summary>

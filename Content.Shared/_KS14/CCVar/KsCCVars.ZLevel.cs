@@ -45,6 +45,15 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.zlevel.transit_landing_knockdown", 2f, CVar.SERVER | CVar.REPLICATED);
 
     /// <summary>
+    ///     Volume, in dB, added to the single footstep something plays as it lands on a z-level, over what that
+    ///         same step is worth walked. For scale, an ordinary step is already given 1.5 walking and 3.5
+    ///         sprinting.
+    /// </summary>
+    [CVarControl(AdminFlags.Fun)]
+    public static readonly CVarDef<float> ZLevelTransitLandingFootstepVolume =
+        CVarDef.Create("klovn.zlevel.transit_landing_footstep_volume", 7f, CVar.SERVER | CVar.REPLICATED);
+
+    /// <summary>
     ///     How often, in seconds, each player's z-level view subscriber is moved to track them.
     ///     This is what loads the z-level below into a client's PVS, and transit crossings are predicted
     ///         against it, so a slow interval shows up as the level below being briefly unpopulated.
