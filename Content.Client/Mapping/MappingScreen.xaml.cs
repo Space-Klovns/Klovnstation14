@@ -116,10 +116,7 @@ public sealed partial class MappingScreen : InGameScreen
         HideLeftSide.OnPressed += OnToggleLeftContainer;
         HideRightSide.OnPressed += OnToggleRightContainer;
 
-        var eraseGroup = new ButtonGroup();
-        EraseDecalButton.Group = eraseGroup;
-        EraseTileButton.Group = eraseGroup;
-        EraseEntityButton.Group = eraseGroup;
+        // KS14: mutual exclusion is handled by UnPressActionsExcept so each eraser can be toggled off directly.
     }
     private void FlipSides()
     {
@@ -295,6 +292,8 @@ public sealed partial class MappingScreen : InGameScreen
 
     private void RefreshDecalButton(MappingSpawnButton button)
     {
+        if (button.Texture.Visible) // KS14: update the currently visible decal button itself
+            button.Texture.Modulate = _decalEnableColor ? DecalColor : Color.White;
         var children =
             button.ChildrenPrototypes.Children.ToList().Union(button.ChildrenPrototypesGallery.Children);
 
@@ -329,5 +328,6 @@ public sealed partial class MappingScreen : InGameScreen
         RemoveGrid.Pressed = RemoveGrid == except;
         MoveGrid.Pressed = MoveGrid == except;
         GridVV.Pressed = GridVV == except;
+        GridScreenshot.Pressed = GridScreenshot == except; // KS14: include PNG export in action mutual exclusion
     }
 }

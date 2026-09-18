@@ -13,7 +13,8 @@ mapping-erase-tile = Erase Tile
 mapping-erase-decal = Erase Decal
 
 mapping-erase-entity-tooltip = Hold {$key}
-mapping-pick-tooltip = Hold {$key}
+mapping-pick-tooltip = Select to pick a prototype
+# KS14: picker is a toggleable tool
 
 mapping-flip-tooltip = Flip sides
 

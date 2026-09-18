@@ -10,9 +10,9 @@
                                     Stretch="Tile" Visible="False" Margin="1 1 0 0" RectClipContent="True" />
                 <Control SetSize="48 48" Access="Public" Name="CollapseButtonWrapper">
                     <Button Name="CollapseButton" Access="Public"
-                            ToggleMode="True" SetSize="48 48" StyleClasses="OpenRight">
+                            ToggleMode="True" SetSize="48 48" StyleClasses="ButtonSquare"> <!-- KS14: align closed and opened dropdown arrows -->
                         <TextureRect Name="CollapseTexture" Access="Public" Stretch="KeepAspectCentered" SetSize="24 24"
-                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                     HorizontalAlignment="Center" VerticalAlignment="Center" /> <!-- KS14: centered padded chevron avoids button-content clipping -->
                     </Button>
                 </Control>
                 <Label Name="Label" Access="Public"

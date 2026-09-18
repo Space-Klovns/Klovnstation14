@@ -85,6 +85,13 @@ public sealed partial class MappingOverlay : Overlay
                 // KS14 end
                 break;
             }
+            case CursorState.Grid: // KS14: grid removal/export target preview
+            {
+                if (_state.GetHoveredGridBox2() is { } box)
+                    args.WorldHandle.DrawRect(box, _state.Meta.Color);
+
+                break;
+            }
         }
 
         handle.UseShader(null);

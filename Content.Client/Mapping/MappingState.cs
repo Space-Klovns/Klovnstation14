@@ -71,6 +71,7 @@ public sealed partial class MappingState : GameplayStateBase
     private static readonly Color PickColor = new(1, 255, 0);
     private static readonly Color DeleteColor = new(255, 1, 0);
     private static readonly Color EraseDecalColor = Color.Red.WithAlpha(0.2f);
+    private static readonly Color GridActionColor = Color.Red.WithAlpha(0.2f); // KS14: highlight selected grid actions
 
     private readonly ISawmill _sawmill;
     private readonly GameplayStateLoadController _loadController;
@@ -799,7 +800,15 @@ public sealed partial class MappingState : GameplayStateBase
     private void OnRemoveGridPressed(ButtonEventArgs args)
     {
         if (args.Button.Pressed)
+        {
             Screen.UnPressActionsExcept(Screen.RemoveGrid);
+            Meta.State = CursorState.Grid; // KS14: preview the grid that will be removed
+            Meta.Color = GridActionColor; // KS14: preview the grid that will be removed
+        }
+        else
+        {
+            Meta.State = CursorState.None; // KS14: clear removed-grid preview
+        }
     }
 
     private void OnMoveGridPressed(ButtonEventArgs args)
@@ -821,7 +830,15 @@ public sealed partial class MappingState : GameplayStateBase
     private void OnGridScreenshotPressed(ButtonEventArgs args)
     {
         if (args.Button.Pressed)
+        {
             Screen.UnPressActionsExcept(Screen.GridScreenshot);
+            Meta.State = CursorState.Grid; // KS14: preview the grid that will be exported
+            Meta.Color = GridActionColor; // KS14: preview the grid that will be exported
+        }
+        else
+        {
+            Meta.State = CursorState.None; // KS14: clear grid-export preview
+        }
     }
     #endregion
 
@@ -916,57 +933,32 @@ public sealed partial class MappingState : GameplayStateBase
 
     private bool HandlePick(ICommonSession? session, EntityCoordinates coords, EntityUid uid)
     {
-        MappingPrototype? button = null;
-
-        if (Screen.Pick.Pressed)
-        {
-            var mapPos = _transform.ToMapCoordinates(coords);
-
-            if (_maps.TryFindGridAt(mapPos, out var gridUid, out var grid) &&
-                _entityManager.System<SharedMapSystem>().TryGetTileRef(gridUid, grid, coords, out var tileRef) &&
-                _allPrototypesDict.TryGetValue(_entityManager.System<TurfSystem>().GetContentTileDefinition(tileRef), out button))
-            {
-                switch (button.Prototype)
-                {
-                    case EntityPrototype:
-                        {
-                            OnSelected(Screen.Entities, button);
-                            break;
-                        }
-                    case ContentTileDefinition:
-                        {
-                            OnSelected(Screen.Tiles, button);
-                            break;
-                        }
-                }
-
-                return true;
-            }
-        }
-        else
-        {
+        if (!Screen.Pick.Pressed)
             return false;
-        }
-        if (button != null)
-            return false;
-        if (uid == EntityUid.Invalid ||
-            _entityManager.GetComponentOrNull<MetaDataComponent>(uid) is not
-            { EntityPrototype: { } prototype } ||
-            !_allPrototypesDict.TryGetValue(prototype, out button))
+
+        // KS14: prefer the highlighted entity; every grid position also has a tile.
+        if (uid != EntityUid.Invalid &&
+            _entityManager.GetComponentOrNull<MetaDataComponent>(uid) is
+            { EntityPrototype: { } entityPrototype } &&
+            _allPrototypesDict.TryGetValue(entityPrototype, out var entityButton))
         {
-            // we always block other input handlers if pick mode is enabled
-            // this makes you not accidentally place something in space because you
-            // miss-clicked while holding down the pick hotkey
+            OnSelected(Screen.Entities, entityButton);
+            _placement.Direction = _entityManager.GetComponent<TransformComponent>(uid).LocalRotation.GetDir();
             return true;
         }
-        // Selected an entity
-        OnSelected(Screen.Entities, button);
 
-        // Match rotation
-        _placement.Direction = _entityManager.GetComponent<TransformComponent>(uid).LocalRotation.GetDir();
+        var mapPos = _transform.ToMapCoordinates(coords);
+        if (_maps.TryFindGridAt(mapPos, out var gridUid, out var grid) &&
+            _entityManager.System<SharedMapSystem>().TryGetTileRef(gridUid, grid, coords, out var tileRef) &&
+            _allPrototypesDict.TryGetValue(_entityManager.System<TurfSystem>().GetContentTileDefinition(tileRef), out var tileButton))
+        {
+            OnSelected(Screen.Tiles, tileButton);
+            return true;
+        }
+
+        // KS14: block placement while the picker is active, including on an empty click.
         return true;
     }
-
     private bool HandleEditorCancelPlace(ICommonSession? session, EntityCoordinates coords, EntityUid uid)
     {
         if (!Screen.EraseDecalButton.Pressed)
@@ -998,6 +990,7 @@ public sealed partial class MappingState : GameplayStateBase
         if (Screen.RemoveGrid.Pressed)
         {
             Screen.RemoveGrid.Pressed = false;
+            Meta.State = CursorState.None; // KS14: clear grid preview before removing it
             if (GetHoveredGrid() is { } gridEntity)
                 _consoleHost.ExecuteCommand($"rmgrid {_entityManager.GetNetEntity(gridEntity.Owner).Id}");
 
@@ -1007,6 +1000,7 @@ public sealed partial class MappingState : GameplayStateBase
         if (Screen.GridScreenshot.Pressed)
         {
             Screen.GridScreenshot.Pressed = false;
+            Meta.State = CursorState.None; // KS14: clear grid preview before exporting it
             if (GetHoveredGrid() is { } gridEntity)
                 ExportGridScreenshot(gridEntity);
 
@@ -1107,6 +1101,14 @@ public sealed partial class MappingState : GameplayStateBase
         return new Box2Rotated(box, xform.LocalRotation, box.BottomLeft);
     }
 
+    public Box2? GetHoveredGridBox2()
+    {
+        if (GetHoveredGrid() is not { } grid)
+            return null;
+
+        return _transform.GetWorldMatrix(grid.Owner).TransformBox(grid.Comp.LocalAABB);
+    }
+
     public override void FrameUpdate(FrameEventArgs e)
     {
         if (!Screen.EraseTileButton.Pressed && _tileErase)
@@ -1135,6 +1137,7 @@ public sealed partial class MappingState : GameplayStateBase
         Tile,
         Entity,
         EntityOrTile,
+        Grid, // KS14: full hovered-grid action preview
     }
 
     public sealed partial class CursorMeta
