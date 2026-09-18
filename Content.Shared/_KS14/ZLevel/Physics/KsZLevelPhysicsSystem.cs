@@ -520,6 +520,8 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         if (rising)
             return;
 
+        _physicsSystem.WakeBody(entity.Owner);
+
         // One step, on the surface it came down on, louder than a walked one. Resolved through the ordinary
         //      footstep chain rather than a sound of its own, so shoes, puddles, catwalks and everything else
         //      that colours a footstep colours this too.
