@@ -31,6 +31,7 @@ public sealed partial class KsZLevelLightLeakSystem : EntitySystem
 {
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private KsZLevelLightBufferSystem _lightBufferSystem = default!;
     [Dependency] private KsZLevelSystem _zLevelSystem = default!;
     [Dependency] private PointLightSystem _pointLightSystem = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
@@ -51,6 +52,12 @@ public sealed partial class KsZLevelLightLeakSystem : EntitySystem
     private const float SearchMoveTolerance = 0.25f;
 
     private bool _enabled;
+
+    /// <summary>
+    ///     Whether stand-ins were wanted last frame, so that a mode change tears them down once rather than
+    ///         sweeping every entity every frame for the rest of the round.
+    /// </summary>
+    private bool _wereWanted;
     private float _levelHeight;
     private int _maximumLevels;
     private int _maximumHoles;
@@ -92,11 +99,20 @@ public sealed partial class KsZLevelLightLeakSystem : EntitySystem
     private void OnEnabledChanged(bool enabled)
     {
         _enabled = enabled;
+    }
 
-        if (enabled)
-            return;
+    /// <summary>
+    ///     Whether stand-in lights are the way light is crossing z-levels right now.
+    /// </summary>
+    private bool WantsStandIns =>
+        _enabled && _lightBufferSystem.Mode is KsZLevelLightLeakMode.StandIns or KsZLevelLightLeakMode.Both;
 
-        // FrameUpdate stops running before it could take these down itself, so switching it off has to.
+    /// <summary>
+    ///     Removes every stand-in, for when they stop being the way light crosses z-levels.
+    /// </summary>
+    private void ReleaseAllStandIns()
+    {
+        // FrameUpdate stops running before it could take these down itself, so switching away has to.
         var query = AllEntityQuery<KsZLevelLightLeakComponent>();
         while (query.MoveNext(out var uid, out _))
             RemCompDeferred<KsZLevelLightLeakComponent>(uid);
@@ -131,7 +147,19 @@ public sealed partial class KsZLevelLightLeakSystem : EntitySystem
     {
         base.FrameUpdate(frameTime);
 
-        if (!_enabled)
+        // Checked here rather than on the cvar callbacks because the mode lives on another system, and one
+        //      flag covers both ways of switching these off.
+        var wanted = WantsStandIns;
+
+        if (wanted != _wereWanted)
+        {
+            _wereWanted = wanted;
+
+            if (!wanted)
+                ReleaseAllStandIns();
+        }
+
+        if (!wanted)
             return;
 
         _lightsToCheck.Clear();

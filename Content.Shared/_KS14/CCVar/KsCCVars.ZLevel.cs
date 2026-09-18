@@ -66,6 +66,45 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.zlevel.light_leak_enabled", true, CVar.CLIENTONLY | CVar.ARCHIVE);
 
     /// <summary>
+    ///     Which way light is carried between z-levels: one of
+    ///         <see cref="ZLevel.Light.KsZLevelLightLeakMode"/>, case-insensitively.
+    /// </summary>
+    /// <remarks>
+    ///     A string rather than a number so that flipping between the two approaches in a console is readable.
+    ///     Anything unrecognised falls back to stand-ins with a warning, since that is the one that has been
+    ///         in the game longest.
+    /// </remarks>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<string> ZLevelLightLeakMode =
+        CVarDef.Create("klovn.zlevel.light_leak_mode", "StandIns", CVar.CLIENTONLY | CVar.ARCHIVE);
+
+    /// <summary>
+    ///     Draws the z-level above's light map as a flat colour instead of its real contents.
+    /// </summary>
+    /// <remarks>
+    ///     The whole buffer approach rests on one assumption - that drawing into the enlarged light target
+    ///         actually brightens the scene and survives being cropped back into the real one. This proves
+    ///         that on its own, before any of the masking or attenuation can confuse the picture.
+    /// </remarks>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<bool> ZLevelLightBufferDebugFlat =
+        CVarDef.Create("klovn.zlevel.light_buffer_debug_flat", false, CVar.CLIENTONLY);
+
+    /// <summary>
+    ///     The light radius, in tiles, that a drop between z-levels is measured against when dimming a whole
+    ///         light map.
+    /// </summary>
+    /// <remarks>
+    ///     A finished light map has no single radius - it is every light on the z-level already added up - so
+    ///         dimming it by the real attenuation needs one light to stand for all of them. Station lamps run
+    ///         4 to 7, so this is what a typical one loses over the drop.
+    ///     Only the buffer path uses this. Stand-ins solve each light's own radius and need no such stand-in.
+    /// </remarks>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<float> ZLevelLightBufferReferenceRadius =
+        CVarDef.Create("klovn.zlevel.light_buffer_reference_radius", 7f, CVar.SERVER | CVar.REPLICATED);
+
+    /// <summary>
     ///     How tall one z-level of <see cref="ZLevel.KsZLevelComponent.Depth"/> is, in tiles, for the purpose
     ///         of dimming light that falls through it.
     /// </summary>
@@ -188,6 +227,20 @@ public sealed partial class KsCCVars
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<float> ZLevelAudioLeakSendRange =
         CVarDef.Create("klovn.zlevel.audio_leak_send_range", 20f, CVar.SERVERONLY);
+
+    /// <summary>
+    ///     Whether players are also sent the z-level directly above them.
+    /// </summary>
+    /// <remarks>
+    ///     Off by default, and expensive: it is a whole extra z-level of entities per player, none of which is
+    ///         ever drawn, since the stack is only rendered downwards.
+    ///     The one thing it buys is light falling onto you from above. Nothing else renders or sends that
+    ///         z-level, so without this there is simply no light map up there to fall from - which is also why
+    ///         only the buffer mode has any use for it.
+    /// </remarks>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<bool> ZLevelPvsSendAbove =
+        CVarDef.Create("klovn.zlevel.pvs_send_above", false, CVar.SERVER | CVar.REPLICATED);
 
     /// <summary>
     ///     How often, in seconds, each player's z-level view subscriber is moved to track them.
