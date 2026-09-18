@@ -1,16 +1,12 @@
 using System.Numerics;
 using Content.Client.Light;
 using Content.Shared._KS14.CCVar;
-using Content.Shared._KS14.Light;
 using Content.Shared._KS14.ZLevel;
 using Content.Shared._KS14.ZLevel.Light;
 using Robust.Client.Graphics;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
-using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map.Components;
-using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 
 namespace Content.Client._KS14.ZLevel.Light;

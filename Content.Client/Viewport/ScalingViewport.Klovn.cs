@@ -71,7 +71,11 @@ namespace Content.Client.Viewport
             //      single pass already does - and cheaper. Mid-transit there is still their own z-level to
             //      scale down, and KsZLevelTransitSpriteSystem compensates sprites against that scale whether
             //      this ran or not, so bailing while they are off the ground leaves the two disagreeing.
-            if (_mapsToIterate.Count == 0 && viewerTransitHeight <= 0f)
+            // The third case is standing on the bottom of a stack with a lit z-level overhead: nothing below,
+            //      feet on the floor, and the single pass would do. Except that this loop is the only thing
+            //      that ever renders the z-level above, so bailing here is what made light from above arrive
+            //      during a fall and then stop the moment it ended.
+            if (_mapsToIterate.Count == 0 && viewerTransitHeight <= 0f && !WantsLightFromAbove(topMapUid.Value))
                 return false;
 
             // TryGetZLevelsBelow doesn't include the map we're on
@@ -199,6 +203,25 @@ namespace Content.Client.Viewport
         }
 
         /// <summary>
+        ///     Whether this draw has to run the pass loop purely to capture the z-level above the viewer.
+        /// </summary>
+        /// <remarks>
+        ///     The MapComponent check catches a stack member that has since been deleted outright - a full
+        ///         state reset on reconnect, most likely - because the stack is replicated as net entities and
+        ///         rebuilt wholesale, and a node left pointing at a dead uid still answers yes.
+        ///     It does not catch the z-level above merely having left PVS, and cannot: leaving PVS detaches
+        ///         rather than deletes, and a map entity has no parent to be detached from, so its
+        ///         MapComponent outlives its contents. That case is what
+        ///         <see cref="KsZLevelLightBufferSystem.WantsLightFromAbove"/> is for.
+        /// </remarks>
+        private bool WantsLightFromAbove(EntityUid topMapUid)
+        {
+            return _lightBufferSystem.WantsLightFromAbove &&
+                   _zLevelSystem.TryGetZLevelAbove(topMapUid, out var aboveEntity) &&
+                   _entityManager.HasComponent<MapComponent>(aboveEntity.Value.Owner);
+        }
+
+        /// <summary>
         ///     Renders every z-level that lights another, purely to take its light map and its floor away
         ///         before the drawing starts.
         /// </summary>
@@ -219,7 +242,10 @@ namespace Content.Client.Viewport
 
             // Nothing renders the z-level above the viewer - the stack is only ever drawn downwards - so if
             //      light is to fall onto them from it, this is the only pass that will ever exist for it.
-            if (_zLevelSystem.TryGetZLevelAbove(topZLevel.Owner, out var aboveEntity))
+            //      Negative depth on purpose: it is nearer the eye than the plane they are standing on, so it
+            //      is drawn scaled up rather than down.
+            if (WantsLightFromAbove(topZLevel.Owner) &&
+                _zLevelSystem.TryGetZLevelAbove(topZLevel.Owner, out var aboveEntity))
                 CaptureZLevel(handle, aboveEntity.Value, viewerDepth - topZLevel.Comp.Depth);
 
             // Top-down, stopping before the deepest: nothing is drawn under it for its light to fall on.

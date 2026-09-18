@@ -32,9 +32,22 @@ public sealed partial class KsZLevelLightBufferSystem : EntitySystem
     public bool WantsCaptures => Mode is KsZLevelLightLeakMode.Buffer or KsZLevelLightLeakMode.Both;
 
     /// <summary>
+    ///     Whether the z-level directly above the viewer is worth rendering for its light map.
+    /// </summary>
+    /// <remarks>
+    ///     Gated on the server cvar, replicated for exactly this, because the two are inseparable: the stack
+    ///         is only ever drawn downwards, so the only lights and occluders the level above can be built
+    ///         from are the ones PVS sent. With that off, capturing it renders a map the client has been
+    ///         detached from - a black light map and an empty floor mask - once per frame, forever.
+    /// </remarks>
+    public bool WantsLightFromAbove => WantsCaptures && _sendAbove;
+
+    /// <summary>
     ///     Draw the captured light as a flat colour, to prove the compositing before trusting the contents.
     /// </summary>
     public bool DebugFlat { get; private set; }
+
+    private bool _sendAbove;
 
     private IReadOnlyDictionary<MapId, KsZLevelLightCapture>? _activeCaptures;
 
@@ -44,6 +57,7 @@ public sealed partial class KsZLevelLightBufferSystem : EntitySystem
 
         Subs.CVar(_configurationManager, KsCCVars.ZLevelLightLeakMode, OnModeChanged, true);
         Subs.CVar(_configurationManager, KsCCVars.ZLevelLightBufferDebugFlat, value => DebugFlat = value, true);
+        Subs.CVar(_configurationManager, KsCCVars.ZLevelPvsSendAbove, value => _sendAbove = value, true);
     }
 
     public override void Shutdown()

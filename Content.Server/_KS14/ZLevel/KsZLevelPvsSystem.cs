@@ -33,7 +33,52 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
             true
         );
 
-        Subs.CVar(_configurationManager, KsCCVars.ZLevelPvsSendAbove, value => _sendAbove = value, true);
+        Subs.CVar(_configurationManager, KsCCVars.ZLevelPvsSendAbove, OnSendAboveChanged, true);
+    }
+
+    /// <summary>
+    ///     Says out loud what flipping this will actually do, per player, at the moment it is flipped.
+    /// </summary>
+    /// <remarks>
+    ///     There are three ways for "nothing is being sent" to be the right answer - the cvar is off, the
+    ///         player has no z-level above them, or one is already being sent - and from outside the server
+    ///         they look identical. Asking afterwards is too late, because a no-op logs nothing at all.
+    /// </remarks>
+    private void OnSendAboveChanged(bool value)
+    {
+        if (value == _sendAbove)
+            return;
+
+        _sendAbove = value;
+
+        var query = AllEntityQuery<KsZLevelViewerComponent>();
+        var viewers = 0;
+
+        while (query.MoveNext(out var viewerUid, out var viewerComponent))
+        {
+            viewers++;
+
+            if (!_zLevelSystem.TryGetZLevel(viewerUid, out var zLevelEntity))
+            {
+                Log.Info($"z-level pvs: {viewerComponent.Session.Name} is not on a z-level at all.");
+                continue;
+            }
+
+            if (!_zLevelSystem.TryGetZLevelAbove(zLevelEntity.Value.Owner, out var aboveEntity))
+            {
+                Log.Info(
+                    $"z-level pvs: {viewerComponent.Session.Name} is on {ToPrettyString(zLevelEntity.Value.Owner)}, " +
+                    "which has nothing above it - there is no z-level for light to fall from.");
+
+                continue;
+            }
+
+            Log.Info(
+                $"z-level pvs: {viewerComponent.Session.Name} is on {ToPrettyString(zLevelEntity.Value.Owner)}, " +
+                $"with {ToPrettyString(aboveEntity.Value.Owner)} above it.");
+        }
+
+        Log.Info($"z-level pvs: pvs_send_above is now {value}, across {viewers} viewer(s).");
     }
 
     [SubscribeLocalEvent]

@@ -1,6 +1,7 @@
 #nullable enable
 using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Shared._KS14.CCVar;
+using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.UnitTesting.Pool;
 
@@ -10,6 +11,11 @@ namespace Content.IntegrationTests.Tests._KS14.ZLevel;
 ///     The z-level above a player is never rendered and never sent, so light can only fall onto them from it
 ///         if something goes out of its way to send it. This is that something.
 /// </summary>
+/// <remarks>
+///     Every pooled pair runs with net.pvs off (PoolManager), which sends every entity to every client - so
+///         without turning it back on these tests would pass no matter what the code did. Turning it on is
+///         the whole point of the fixture.
+/// </remarks>
 public sealed class KsZLevelPvsSendAboveTest : KsZLevelTestBase
 {
     public override PoolSettings PoolSettings => new() { Connected = true };
@@ -47,6 +53,7 @@ public sealed class KsZLevelPvsSendAboveTest : KsZLevelTestBase
     [Test]
     public async Task TestAboveIsSentWhenAskedFor()
     {
+        await OverrideCVar(Side.Server, CVars.NetPVS, true);
         await OverrideCVar(Side.Server, KsCCVars.ZLevelPvsSendAbove, true);
 
         var stack = await CreateStack();
@@ -67,6 +74,7 @@ public sealed class KsZLevelPvsSendAboveTest : KsZLevelTestBase
     [Test]
     public async Task TestAboveIsNotSentOtherwise()
     {
+        await OverrideCVar(Side.Server, CVars.NetPVS, true);
         await OverrideCVar(Side.Server, KsCCVars.ZLevelPvsSendAbove, false);
 
         var stack = await CreateStack();

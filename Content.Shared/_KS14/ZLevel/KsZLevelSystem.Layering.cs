@@ -40,7 +40,6 @@ public sealed partial class KsZLevelSystem : EntitySystem
     public bool TryGetZLevelAbove(Entity<KsZLevelComponent?> entity, [NotNullWhen(true)] out Entity<KsZLevelComponent>? aboveEntity)
     {
         aboveEntity = null;
-
         if (!_zLevelQuery.Resolve(ref entity, logMissing: false))
             return false;
 

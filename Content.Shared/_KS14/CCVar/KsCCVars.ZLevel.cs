@@ -76,7 +76,7 @@ public sealed partial class KsCCVars
     /// </remarks>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<string> ZLevelLightLeakMode =
-        CVarDef.Create("klovn.zlevel.light_leak_mode", "StandIns", CVar.CLIENTONLY | CVar.ARCHIVE);
+        CVarDef.Create("klovn.zlevel.light_leak_mode", "Buffer", CVar.CLIENTONLY | CVar.ARCHIVE);
 
     /// <summary>
     ///     Draws the z-level above's light map as a flat colour instead of its real contents.
@@ -237,10 +237,15 @@ public sealed partial class KsCCVars
     ///     The one thing it buys is light falling onto you from above. Nothing else renders or sends that
     ///         z-level, so without this there is simply no light map up there to fall from - which is also why
     ///         only the buffer mode has any use for it.
+    ///     Replicated because the client has to make the same decision: the extra capture pass it would run to
+    ///         build that light map is pure waste unless the server is filling the z-level in the first place,
+    ///         and it cannot tell the difference by looking. A z-level that leaves PVS is detached rather than
+    ///         deleted, and a map entity has no parent to be detached from, so it goes on existing client-side
+    ///         with nothing in it.
     /// </remarks>
     [CVarControl(AdminFlags.Debug)]
     public static readonly CVarDef<bool> ZLevelPvsSendAbove =
-        CVarDef.Create("klovn.zlevel.pvs_send_above", false, CVar.SERVER | CVar.REPLICATED);
+        CVarDef.Create("klovn.zlevel.pvs_send_above", true, CVar.SERVER | CVar.REPLICATED);
 
     /// <summary>
     ///     How often, in seconds, each player's z-level view subscriber is moved to track them.
