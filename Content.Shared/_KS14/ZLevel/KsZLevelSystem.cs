@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Robust.Shared.Map;
 using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
@@ -23,6 +24,9 @@ namespace Content.Shared._KS14.ZLevel;
 
 public sealed partial class KsZLevelSystem : EntitySystem
 {
+    [Dependency] private ITileDefinitionManager _tileDefinitionManager = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
+
     [Dependency] private EntityQuery<KsZLevelComponent> _zLevelQuery = default!;
 
     public override void Initialize()
@@ -35,6 +39,11 @@ public sealed partial class KsZLevelSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnInit(Entity<KsZLevelComponent> entity, ref ComponentInit args)
     {
+        // SetDepth clamps, but a Depth written straight into the DataField never passes through it - and the
+        //      render passes multiply and accumulate it without clamping, so a zero flattens the stack and a
+        //      negative inverts it. Done here so there is nowhere a bad one can enter from.
+        entity.Comp.Depth = MathF.Max(entity.Comp.Depth, MinimumDepth);
+
         // No data
         if (entity.Comp.AssociatedStack.Count == 0)
         {
@@ -51,13 +60,12 @@ public sealed partial class KsZLevelSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnShutdown(Entity<KsZLevelComponent> entity, ref ComponentShutdown args)
     {
-        DebugTools.Assert(
-            entity.Comp.AssociatedStack.Contains(entity),
-            $"While trying to remove it from its own stack, realised that Z-Level {ToPrettyString(entity.Owner)}'s stack does not contain it!"
-        );
+        var departedStack = entity.Comp.AssociatedStack;
+        RemoveFromOwnStack(entity);
 
-        if (entity.Comp.AssociatedStack.Count != 1)
-            entity.Comp.AssociatedStack.Remove(entity);
+        // Every z-level replicates the whole stack, so the survivors all have a stale state now.
+        foreach (var survivingEntity in departedStack)
+            Dirty(survivingEntity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -79,7 +87,11 @@ public sealed partial class KsZLevelSystem : EntitySystem
     ///         the bottom-most valid z-level will be added to the list first, and top-most one will be added last.
     /// </summary>
     /// <param name="entitiesBelow">List to operate on.</param>
-    /// <returns>True if anything was added to <paramref name="entitiesBelow"/>.</returns>
+    /// <returns>
+    ///     True if <paramref name="entity"/> is a z-level at all, which is not the same as there being anything
+    ///         under it - the bottom of a stack answers true and adds nothing. Check the list, not this, for
+    ///         whether there is anything below.
+    /// </returns>
     public bool TryGetZLevelsBelow(Entity<KsZLevelComponent?> entity, List<Entity<KsZLevelComponent>> entitiesBelow)
     {
         if (!_zLevelQuery.Resolve(ref entity, logMissing: false))

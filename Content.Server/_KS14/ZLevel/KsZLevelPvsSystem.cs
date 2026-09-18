@@ -1,5 +1,8 @@
+using System.Numerics;
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.ZLevel;
 using Robust.Server.GameObjects;
+using Robust.Shared.Configuration;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Player;
@@ -9,13 +12,74 @@ namespace Content.Server._KS14.ZLevel;
 
 public sealed partial class KsZLevelPvsSystem : EntitySystem
 {
+    [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private KsZLevelSystem _zLevelSystem = default!;
     [Dependency] private TransformSystem _transformSystem = default!;
     [Dependency] private ViewSubscriberSystem _viewSubscriberSystem = default!;
 
-    private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(1d);
+    private TimeSpan _updateInterval = TimeSpan.FromSeconds(0.25d);
     private TimeSpan _nextUpdate = TimeSpan.MinValue;
+    private bool _sendAbove;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+
+        Subs.CVar(
+            _configurationManager,
+            KsCCVars.ZLevelPvsUpdateInterval,
+            value => _updateInterval = TimeSpan.FromSeconds(value),
+            true
+        );
+
+        Subs.CVar(_configurationManager, KsCCVars.ZLevelPvsSendAbove, OnSendAboveChanged, true);
+    }
+
+    /// <summary>
+    ///     Says out loud what flipping this will actually do, per player, at the moment it is flipped.
+    /// </summary>
+    /// <remarks>
+    ///     There are three ways for "nothing is being sent" to be the right answer - the cvar is off, the
+    ///         player has no z-level above them, or one is already being sent - and from outside the server
+    ///         they look identical. Asking afterwards is too late, because a no-op logs nothing at all.
+    /// </remarks>
+    private void OnSendAboveChanged(bool value)
+    {
+        if (value == _sendAbove)
+            return;
+
+        _sendAbove = value;
+
+        var query = AllEntityQuery<KsZLevelViewerComponent>();
+        var viewers = 0;
+
+        while (query.MoveNext(out var viewerUid, out var viewerComponent))
+        {
+            viewers++;
+
+            if (!_zLevelSystem.TryGetZLevel(viewerUid, out var zLevelEntity))
+            {
+                Log.Info($"z-level pvs: {viewerComponent.Session.Name} is not on a z-level at all.");
+                continue;
+            }
+
+            if (!_zLevelSystem.TryGetZLevelAbove(zLevelEntity.Value.Owner, out var aboveEntity))
+            {
+                Log.Info(
+                    $"z-level pvs: {viewerComponent.Session.Name} is on {ToPrettyString(zLevelEntity.Value.Owner)}, " +
+                    "which has nothing above it - there is no z-level for light to fall from.");
+
+                continue;
+            }
+
+            Log.Info(
+                $"z-level pvs: {viewerComponent.Session.Name} is on {ToPrettyString(zLevelEntity.Value.Owner)}, " +
+                $"with {ToPrettyString(aboveEntity.Value.Owner)} above it.");
+        }
+
+        Log.Info($"z-level pvs: pvs_send_above is now {value}, across {viewers} viewer(s).");
+    }
 
     [SubscribeLocalEvent]
     private void OnPlayerAttached(PlayerAttachedEvent args)
@@ -35,23 +99,49 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnViewerShutdown(Entity<KsZLevelViewerComponent> entity, ref ComponentShutdown args)
     {
-        if (entity.Comp.ViewSubscriberUid == EntityUid.Invalid)
+        // The subscriber may already be gone - its z-level deleted out from under it, say - and deleting a
+        //      dead uid logs an error.
+        DeleteSubscriber(entity.Comp.ViewSubscriberUid);
+        DeleteSubscriber(entity.Comp.AboveViewSubscriberUid);
+    }
+
+    private void DeleteSubscriber(EntityUid subscriberUid)
+    {
+        if (subscriberUid == EntityUid.Invalid || TerminatingOrDeleted(subscriberUid))
             return;
 
-        Del(entity.Comp.ViewSubscriberUid);
+        Del(subscriberUid);
     }
 
     [SubscribeLocalEvent]
     private void OnSubscriberShutdown(Entity<KsZLevelViewSubscriberComponent> entity, ref ComponentShutdown args)
     {
-        if (Terminating(entity.Owner) ||
-            !TryComp<KsZLevelViewerComponent>(entity.Comp.ViewerUid, out var viewerComponent))
+        if (!TryComp<KsZLevelViewerComponent>(entity.Comp.ViewerUid, out var viewerComponent))
             return;
 
-        _viewSubscriberSystem.RemoveViewSubscriber(entity.Owner, viewerComponent.Session);
-        viewerComponent.ViewSubscriberUid = EntityUid.Invalid;
+        var slotUid = entity.Comp.Above
+            ? viewerComponent.AboveViewSubscriberUid
+            : viewerComponent.ViewSubscriberUid;
 
-        RemComp(entity.Comp.ViewerUid, viewerComponent);
+        if (slotUid != entity.Owner)
+            return;
+
+        // Deleting the entity takes its subscriptions with it, so only unsubscribe while it is still alive.
+        if (!Terminating(entity.Owner))
+            _viewSubscriberSystem.RemoveViewSubscriber(entity.Owner, viewerComponent.Session);
+
+        // Clear the now-dangling reference rather than removing the viewer component. Update spawns a fresh
+        //      subscriber next tick; removing the component instead would cost the player z-level visibility
+        //      for the rest of the round, and would recurse straight back into OnViewerShutdown.
+        if (entity.Comp.Above)
+        {
+            viewerComponent.AboveActive = false;
+            viewerComponent.AboveViewSubscriberUid = EntityUid.Invalid;
+            return;
+        }
+
+        viewerComponent.Active = false;
+        viewerComponent.ViewSubscriberUid = EntityUid.Invalid;
     }
 
     public override void Update(float frameTime)
@@ -61,13 +151,33 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
         if (_gameTiming.CurTime < _nextUpdate)
             return;
 
-        _nextUpdate = _gameTiming.CurTime + UpdateInterval;
+        _nextUpdate = _gameTiming.CurTime + _updateInterval;
 
         var eqe = AllEntityQuery<KsZLevelViewerComponent, TransformComponent>();
         while (eqe.MoveNext(out var viewerUid, out var viewerComponent, out var viewerTransformComponent))
         {
-            if (!_zLevelSystem.TryGetZLevel(viewerUid, out var zLevelEntity) ||
-                zLevelEntity.Value.Comp.Node.Previous is not { } previousZLevelNode)
+            // Off the stack entirely, so neither of them has anything to point at.
+            if (!_zLevelSystem.TryGetZLevel(viewerUid, out var zLevelEntity))
+            {
+                if (viewerComponent.Active)
+                    RemoveActiveViewer((viewerUid, viewerComponent));
+
+                if (viewerComponent.AboveActive)
+                    RemoveAboveViewer((viewerUid, viewerComponent));
+
+                continue;
+            }
+
+            var position = _transformSystem.GetWorldPosition(viewerTransformComponent);
+
+            // Handled before the one below and independently of it: somebody standing on the bottom z-level
+            //      of a stack has nothing under them and can still have a lit one over their head.
+            UpdateAboveViewer((viewerUid, viewerComponent), zLevelEntity.Value, position);
+
+            // Node itself is null-checked rather than assumed, the same way every other walk of the stack does
+            //      it: a z-level removed from its stack keeps the field pointing at a node that no longer
+            //      belongs to a list, and one replicated before the rebuild has never been given one at all.
+            if (zLevelEntity.Value.Comp.Node?.Previous is not { } previousZLevelNode)
             {
                 if (viewerComponent.Active)
                     RemoveActiveViewer((viewerUid, viewerComponent));
@@ -81,8 +191,6 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
             if (viewerComponent.ViewSubscriberUid == EntityUid.Invalid)
                 continue;
 
-            var position = _transformSystem.GetWorldPosition(viewerTransformComponent);
-
             // lol
             _transformSystem.SetMapCoordinates(
                 viewerComponent.ViewSubscriberUid,
@@ -94,12 +202,53 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
         }
     }
 
+    /// <summary>
+    ///     Keeps the second subscriber, the one loading the z-level above, in step with the viewer.
+    /// </summary>
+    /// <remarks>
+    ///     Nothing up there is ever drawn - the stack renders downwards only - so this exists purely so that
+    ///         the z-level above has lights and occluders for its light map to be built from, which is what
+    ///         lets light fall onto the viewer from it. Off unless asked for, because it is a whole extra
+    ///         z-level of entities per player.
+    /// </remarks>
+    private void UpdateAboveViewer(
+        Entity<KsZLevelViewerComponent> entity,
+        Entity<KsZLevelComponent> zLevelEntity,
+        Vector2 position)
+    {
+        if (!_sendAbove || !_zLevelSystem.TryGetZLevelAbove(zLevelEntity.Owner, out var aboveEntity))
+        {
+            if (entity.Comp.AboveActive)
+                RemoveAboveViewer(entity);
+
+            return;
+        }
+
+        if (!entity.Comp.AboveActive)
+            AddAboveViewer(entity);
+
+        if (entity.Comp.AboveViewSubscriberUid == EntityUid.Invalid ||
+            !TryComp<MapComponent>(aboveEntity.Value.Owner, out var aboveMapComponent))
+            return;
+
+        _transformSystem.SetMapCoordinates(
+            entity.Comp.AboveViewSubscriberUid,
+            new MapCoordinates(position, aboveMapComponent.MapId)
+        );
+    }
+
     private void AddActiveViewer(Entity<KsZLevelViewerComponent?> entity, ICommonSession session)
     {
         entity.Comp ??= EnsureComp<KsZLevelViewerComponent>(entity.Owner);
 
         var subscriberUid = Spawn(null);
         Transform(subscriberUid).GridTraversal = false; // You know exactly where this is from
+
+        // Without this the shutdown hook below never fires, and a subscriber deleted by anything other than us
+        //      - its z-level being deleted, most likely - leaves the viewer pointing at a dead entity forever.
+        var subscriberComponent = EnsureComp<KsZLevelViewSubscriberComponent>(subscriberUid);
+        subscriberComponent.ViewerUid = entity.Owner;
+
         _viewSubscriberSystem.AddViewSubscriber(subscriberUid, session);
 
         entity.Comp.Active = true;
@@ -112,8 +261,41 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
             return;
 
         entity.Comp.Active = false;
-        Del(entity.Comp.ViewSubscriberUid);
+
+        if (entity.Comp.ViewSubscriberUid != EntityUid.Invalid &&
+            !TerminatingOrDeleted(entity.Comp.ViewSubscriberUid))
+            Del(entity.Comp.ViewSubscriberUid);
 
         entity.Comp.ViewSubscriberUid = EntityUid.Invalid;
+    }
+
+    private void AddAboveViewer(Entity<KsZLevelViewerComponent> entity)
+    {
+        var subscriberUid = Spawn(null);
+        Transform(subscriberUid).GridTraversal = false;
+
+        var subscriberComponent = EnsureComp<KsZLevelViewSubscriberComponent>(subscriberUid);
+        subscriberComponent.ViewerUid = entity.Owner;
+        subscriberComponent.Above = true;
+
+        _viewSubscriberSystem.AddViewSubscriber(subscriberUid, entity.Comp.Session);
+
+        // Loud on purpose, and only on the transition. This is the one thing about the feature that is
+        //      invisible from the client - there is no way to tell "the z-level above was never sent" apart
+        //      from "it was sent and is unlit" by looking at it.
+        Log.Info($"Now sending the z-level above {ToPrettyString(entity.Owner)} to {entity.Comp.Session.Name}.");
+
+        entity.Comp.AboveActive = true;
+        entity.Comp.AboveViewSubscriberUid = subscriberUid;
+    }
+
+    private void RemoveAboveViewer(Entity<KsZLevelViewerComponent> entity)
+    {
+        Log.Info($"No longer sending the z-level above {ToPrettyString(entity.Owner)} to {entity.Comp.Session.Name}.");
+
+        entity.Comp.AboveActive = false;
+
+        DeleteSubscriber(entity.Comp.AboveViewSubscriberUid);
+        entity.Comp.AboveViewSubscriberUid = EntityUid.Invalid;
     }
 }
