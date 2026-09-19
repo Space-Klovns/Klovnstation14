@@ -17,6 +17,15 @@ Klovnstation 14 is a fork of SS14:
 
 We merge from upstream regularly. PRs mix upstream ports with Klovnstation 14-specific work; the conventions below keep the two easy to tell apart during those merges.
 
+### Submodule access
+
+The main repo is public. Every `_KsModule*` submodule (`_KsModule`, `_KsModule_ReplacedPrototypes`, and any future one matching that prefix) is private by default, but all of them share the exact same access list — there is no tier between them. Treat access as binary:
+
+1. Either you have access to all `_KsModule*` submodules, or
+2. You have access to none of them.
+
+Don't assume partial access (e.g. "the audio submodule but not the prototypes one") is a real state to design around — it isn't a thing that exists, and code or docs shouldn't imply otherwise.
+
 ## 2. The `_KS14/` rule
 
 **New Klovnstation 14 code lives under a `_KS14/` folder**, in every project tree that has one:
