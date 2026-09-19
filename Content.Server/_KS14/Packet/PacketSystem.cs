@@ -40,9 +40,9 @@ public sealed partial class PacketSystem : EntitySystem
 
         SubscribeLocalEvent<PacketExecutorComponent, SignalReceivedEvent>(OnExecutorSignal);
 
-        SubscribeLocalEvent<PacketNetworkComponent, ComponentInit>(OnPacketInit);
+        SubscribeLocalEvent<PacketNetworkComponent, ComponentStartup>(OnPacketInit);
 
-        SubscribeLocalEvent<FrequenciesPaperComponent, ComponentInit>(OnFrequencyPaperInit);
+        SubscribeLocalEvent<FrequenciesPaperComponent, ComponentStartup>(OnFrequencyPaperInit);
 
         SubscribeLocalEvent<RoundStartingEvent>(OnRoundStart);
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnCleanup);
@@ -154,13 +154,13 @@ public sealed partial class PacketSystem : EntitySystem
         RandomizeFrequencies();
     }
 
-    private void OnPacketInit(Entity<PacketNetworkComponent> ent, ref ComponentInit ev)
+    private void OnPacketInit(Entity<PacketNetworkComponent> ent, ref ComponentStartup ev)
     {
         SetupAddress(ent);
         ReloadFrequencies(ent);
     }
 
-    private void OnFrequencyPaperInit(Entity<FrequenciesPaperComponent> ent, ref ComponentInit ev)
+    private void OnFrequencyPaperInit(Entity<FrequenciesPaperComponent> ent, ref ComponentStartup ev)
     {
         GenerateFrequenciesPaper(ent);
     }
