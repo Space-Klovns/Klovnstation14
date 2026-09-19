@@ -58,6 +58,7 @@ public sealed partial class KsWaveDistortionSystem : EntitySystem
             {
                 GetScreenTexture = true,
                 RaiseShaderEvent = true,
+                Before = KsPostShaderIds.BeforeOutlines,
             });
     }
 

@@ -55,6 +55,9 @@ public sealed partial class BotWranglerSystem : SharedBotWranglerSystem
             return;
 
         _spriteSystem.SetPostShader((entity.Owner, entity.Comp),
-            new SpriteComponent.PostShaderArgs(KsPostShaderIds.BotWranglerOutline, _shader));
+            new SpriteComponent.PostShaderArgs(KsPostShaderIds.BotWranglerOutline, _shader)
+            {
+                After = KsPostShaderIds.AfterBaseEffects,
+            });
     }
 }

@@ -85,7 +85,7 @@ public sealed partial class HandTeleporterSystem : EntitySystem
             return;
 
         // KS14 Start
-        if (_speczoneSystem.AttemptInterfere(uid, user: user, predicted: false))
+        if (_speczoneSystem.AttemptInterfere(uid, userUid: user, predicted: false))
             return;
         // KS14 End
 

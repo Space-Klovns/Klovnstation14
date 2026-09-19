@@ -1,0 +1,18 @@
+# Client-side stand-in for a light one or more z-levels above this one, spawned and driven entirely by
+# KsZLevelLightLeakSystem. Everything that varies is written by that system every tick; what is set here is
+# only what it cannot write itself.
+- type: entity
+  id: KsZLevelLeakedLight
+  categories: [ HideSpawnMenu ]
+  name: leaked light
+  description: A light from somewhere above. You should not be able to see this.
+  components:
+  - type: Transform
+  - type: PointLight
+    # Off until the system has actually placed and sized it, so a stand-in never flashes at full radius on the
+    # tick it spawns.
+    enabled: false
+    # PointLightComponent.Rotation and MaskAutoRotate are locked to the engine's own light system, so the mask
+    # orientation is reproduced through this entity's world rotation instead, which the system can set.
+    autoRot: true
+  - type: KsZLevelLeakedLight

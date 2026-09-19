@@ -2018,3 +2018,13 @@ Entries:
       message: Blood spray is now predicted
   id: 209
   time: '2026-09-17T13:11:13.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Falling down Z-levels is no longer instant. You can also drop *large*
+        things down Z-levels to hit things.
+    - type: Tweak
+      message: Falling down Z-levels now does damage.
+  id: 210
+  time: '2026-09-18T14:14:04.0000000+00:00'

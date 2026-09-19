@@ -189,6 +189,17 @@ var myFloat = (float)GetMyInt();       // do this
 float myFloat = GetMyInt();            // not this
 ```
 
+**Name every optional argument (C#)** — an optional parameter is always passed with its name, so the call site says what the value *means* instead of making the reader go read the signature. Required parameters stay positional:
+```csharp
+// do this
+_entityLookupSystem.FindGridsIntersecting(mapId, bounds, ref _grids, approx: true);
+dependencyCollection.InjectDependencies(overlay, oneOff: true);
+
+// not this - what is 'true'?
+_entityLookupSystem.FindGridsIntersecting(mapId, bounds, ref _grids, true);
+dependencyCollection.InjectDependencies(overlay, true);
+```
+
 **Verbosity (C#)** — use verbose names, even where existing code is archaic (`xform` → `transform`):
 ```csharp
 [Dependency] TransformSystem _transformSystem;   // not '_xform'
@@ -297,6 +308,40 @@ dotnet format analyzers Content.Shared/Content.Shared.csproj --diagnostics RA005
 
 The generator only runs in projects that import it. `Content.Client`, `Content.Server` and `Content.Shared` each carry `<Import Project="..\RobustToolbox\MSBuild\Robust.EntitySystemSubscriptionsGenerator.targets" />` for exactly this reason — without it the attribute still compiles, nothing is generated, and **every converted subscription silently stops firing** with no build error to point at it. Any other project that wants attribute subscriptions needs the same import.
 
-**`IMapManager` is gone (C#)** — engine 280 removed it; everything it did lives on `SharedMapSystem`, which injects like any other system. Most methods kept their names (`CreateGridEntity`, `FindGridsIntersecting`, `TryFindGridAt`, `GetAllGrids`); `SetMapPaused` became `SetPaused`.
+**Engine version** — this fork tracks a pinned `RobustToolbox` submodule, currently v289.0.3. When bumping it, read [RELEASE-NOTES.md](https://github.com/space-wizards/RobustToolbox/blob/master/RELEASE-NOTES.md) for every intervening version and check whether upstream SS14 already shipped the content-side fix — porting their commit is cheaper and keeps future merges clean. A bump is also one of the main ways new debug assertions arrive, so run the tests in `Debug` afterwards as well as building `Release` (§5).
 
-**Engine version** — this fork tracks a pinned `RobustToolbox` submodule, currently v289.0.3. When bumping it, read [RELEASE-NOTES.md](https://github.com/space-wizards/RobustToolbox/blob/master/RELEASE-NOTES.md) for every intervening version and check whether upstream SS14 already shipped the content-side fix — porting their commit is cheaper and keeps future merges clean. Build `-c Release`, not `Debug`/`DebugOpt`: `MSBuild/Content.props` only sets `TreatWarningsAsErrors` for `Release`, so it is the only configuration that reproduces what CI fails on.
+## 5. Build configurations, and what each one catches
+
+`Release` and `Debug` fail on **disjoint** sets of problems. Neither is a superset of the other, so a change is only green when both are.
+
+| | `Release` | `Debug` / `DebugOpt` |
+| --- | --- | --- |
+| `TreatWarningsAsErrors` | **on** (`MSBuild/Content.props`) | off |
+| `DebugTools.Assert`, `DebugTools.AssertNotNull` | **compiled out** | live |
+
+- **Build `-c Release`.** It is the only configuration that reproduces the warnings-as-errors failures CI reports; `Debug` will happily build code that fails CI.
+- **Run tests `-c Debug` as well.** Every `DebugTools.Assert` in the engine and in content is a no-op under `Release`, so a Release-only test run silently skips the lot — and CI runs the tests in `Debug`. A suite that is green in `Release` tells you nothing about assertions.
+
+```sh
+# warnings-as-errors
+dotnet build Content.Shared/Content.Shared.csproj -c Release
+
+# debug assertions
+dotnet test Content.IntegrationTests/Content.IntegrationTests.csproj -c Debug --filter "FullyQualifiedName~_KS14"
+```
+
+This bites hardest in integration-test prototypes, where a wrong component combination is legal C#, legal YAML, and only a debug assert objects:
+
+```yaml
+# SharedMoverController.HandleMobMovement asserts that anything with an InputMover is a
+# KinematicController. Dynamic is for thrown objects and debris, not mobs.
+# Passes every Release test run. Fails every Debug one.
+- type: entity
+  id: KsSomeTestMob
+  components:
+  - type: Physics
+    bodyType: Dynamic
+  - type: InputMover
+```
+
+The same asymmetry applies to anything a debug assert guards: stack invariants, `Resolve` calls with `logMissing`, and the engine's own transform and physics checks. If a test only ever runs in `Release`, treat its coverage of those as zero.
