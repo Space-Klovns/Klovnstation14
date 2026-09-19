@@ -5,17 +5,18 @@ using Content.Shared.UserInterface;
 namespace Content.Shared._KS14.Medical.IvDrip;
 
 /// <summary>
-///     Provides the IV drip configuration interface.
+///     The IV drip configuration window: pushing state to it, and acting on what it sends back.
 /// </summary>
-public sealed partial class IvDripUiSystem : EntitySystem
+public sealed partial class SharedIvDripSystem
 {
-    [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
     [Dependency] private SharedUserInterfaceSystem _userInterfaceSystem = default!;
 
+    /// <inheritdoc/>
     public override void Initialize()
     {
-        SubscribeLocalEvent<IvDripComponent, SolutionChangedEvent>(OnSolutionChanged);
+        base.Initialize();
 
+        // Lambda subscriptions, so these cannot be expressed as [SubscribeLocalEvent] attributes.
         Subs.BuiEvents<IvDripComponent>(IvDripUiKey.Key, subs =>
         {
             subs.Event<BoundUIOpenedEvent>(OnBoundUiOpened);
@@ -25,6 +26,10 @@ public sealed partial class IvDripUiSystem : EntitySystem
         });
     }
 
+    /// <summary>
+    ///     Keeps the volume readout honest as the drip fills and empties.
+    /// </summary>
+    [SubscribeLocalEvent]
     private void OnSolutionChanged(Entity<IvDripComponent> entity, ref SolutionChangedEvent args)
     {
         UpdateUserInterface(entity);
@@ -37,9 +42,7 @@ public sealed partial class IvDripUiSystem : EntitySystem
 
     private void OnSetEnabled(Entity<IvDripComponent> entity, ref IvDripSetEnabledMessage args)
     {
-        entity.Comp.InjectionEnabled = args.Enabled;
-        Dirty(entity);
-        UpdateUserInterface(entity);
+        SetInjectionEnabled(entity, args.Enabled);
     }
 
     private void OnSetAmount(Entity<IvDripComponent> entity, ref IvDripSetAmountMessage args)
@@ -57,12 +60,16 @@ public sealed partial class IvDripUiSystem : EntitySystem
         if (!entity.Comp.CanSetInjectionInterval)
             return;
 
-        entity.Comp.InjectionInterval = Math.Clamp((float) Math.Round(args.Interval, 2, MidpointRounding.AwayFromZero),
-            entity.Comp.MinimumInjectionInterval, entity.Comp.MaximumInjectionInterval);
+        entity.Comp.InjectionInterval = Math.Clamp((float)Math.Round(args.Interval, 2, MidpointRounding.AwayFromZero),
+            entity.Comp.MinimumInjectionInterval,
+            entity.Comp.MaximumInjectionInterval);
         Dirty(entity);
         UpdateUserInterface(entity);
     }
 
+    /// <summary>
+    ///     Pushes the drip's current settings and contents to whoever has its window open.
+    /// </summary>
     public void UpdateUserInterface(Entity<IvDripComponent> entity)
     {
         var solutionVolume = FixedPoint2.Zero;

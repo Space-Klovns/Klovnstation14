@@ -3,10 +3,14 @@ using Robust.Client.UserInterface;
 
 namespace Content.Client._KS14.Medical.IvDrip;
 
-public sealed partial class IvDripBoundUserInterface(EntityUid owner, Enum uiKey) : BoundUserInterface(owner, uiKey)
+/// <summary>
+///     Opens and feeds the IV drip configuration window.
+/// </summary>
+public sealed class IvDripBoundUserInterface(EntityUid owner, Enum uiKey) : BoundUserInterface(owner, uiKey)
 {
     private IvDripWindow? _window;
 
+    /// <inheritdoc/>
     protected override void Open()
     {
         base.Open();
@@ -16,6 +20,7 @@ public sealed partial class IvDripBoundUserInterface(EntityUid owner, Enum uiKey
         _window.OnIntervalChanged += interval => SendMessage(new IvDripSetIntervalMessage(interval));
     }
 
+    /// <inheritdoc/>
     protected override void UpdateState(BoundUserInterfaceState state)
     {
         base.UpdateState(state);

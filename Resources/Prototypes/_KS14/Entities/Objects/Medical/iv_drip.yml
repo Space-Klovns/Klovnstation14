@@ -25,7 +25,6 @@
         visible: false
   - type: Appearance
   - type: IvDrip
-    solutionName: ivDrip
     injectionEnabled: false
     injectionAmount: 1
     injectionInterval: 1
