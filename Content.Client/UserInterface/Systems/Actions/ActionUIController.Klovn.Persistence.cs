@@ -1,5 +1,7 @@
 // KS14: added in this fork
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using Content.Client._KS14.Actions;
 using Content.Shared.Actions.Components;
@@ -31,6 +33,31 @@ public sealed partial class ActionUIController
     /// </summary>
     private static readonly ResPath ActionConfigurationPath = new("/ks14_action_layout.json");
 
+    /// <summary>
+    ///     Largest layout file that is read back, and the point past which one is no longer written.
+    /// </summary>
+    /// <remarks>
+    ///     A bar holding every action a player can realistically have serialises to a few tens of
+    ///         kilobytes, so this is orders of magnitude of headroom.
+    ///     It exists because <see cref="IWritableDirProvider"/> reads a file by appending it to a
+    ///         <see cref="System.Text.StringBuilder"/> in one go: a file that is somehow enormous -
+    ///         a runaway write, a hand-edited file, a corrupt one - takes the client down with an
+    ///         <see cref="OutOfMemoryException"/> before a single byte of it has been parsed, and it does
+    ///         so on every connect, because nothing ever removes the file that caused it.
+    /// </remarks>
+    private const long MaximumActionConfigurationSize = 4L * 1024L * 1024L;
+
+    /// <summary>
+    ///     Saved identity count past which a layout is reported as a likely runaway.
+    /// </summary>
+    /// <remarks>
+    ///     A bar is bounded by the actions the player actually holds, so a count in the hundreds already
+    ///         means something is producing identities that no action on the bar accounts for. Reported
+    ///         well below <see cref="MaximumActionConfigurationSize"/> so the growth is visible while it is
+    ///         still growing, rather than only once it is too big to write.
+    /// </remarks>
+    private const int SuspiciousActionConfigurationCount = 512;
+
     [Dependency] private IBaseClient _baseClient = default!;
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IResourceManager _resourceManager = default!;
@@ -48,6 +75,17 @@ public sealed partial class ActionUIController
     ///         of the frame instead of once per action, synchronously, on the UI thread.
     /// </remarks>
     private bool _actionConfigurationDirty;
+
+    /// <summary>
+    ///     The layout as it was last written out, so an unchanged layout is not written again.
+    /// </summary>
+    private string? _writtenActionConfigurationJson;
+
+    /// <summary>
+    ///     Saved identity count the last runaway report was made at, so the report is made once per
+    ///         doubling rather than once per write.
+    /// </summary>
+    private int _reportedActionConfigurationCount;
 
     private KsActionBarConfiguration? _pendingActionConfiguration;
     private HashSet<ActionPersistenceKey>? _lastAppliedActionIdentities;
@@ -195,13 +233,94 @@ public sealed partial class ActionUIController
                     configuration.Entries.Add(new KsActionBarConfigurationEntry { Action = identity });
             }
 
-            using var writer = _resourceManager.UserData.OpenWriteText(ActionConfigurationPath);
-            writer.Write(KsActionBarConfigurationJson.Serialize(configuration));
+            ReportRunawayActionConfiguration(configuration, rootActions.Count);
+
+            // Serialized before the file is opened: OpenWriteText truncates, so anything thrown between
+            // opening and writing would leave an empty layout behind - which is then discarded on the next
+            // connect, silently costing the player their bar.
+            var json = KsActionBarConfigurationJson.Serialize(configuration);
+            if (json == _writtenActionConfigurationJson)
+                return;
+
+            // The other half of the size limit, so a runaway layout is caught where it is produced rather
+            // than on the next connect, and says how big it got and which side of it grew.
+            if (json.Length > MaximumActionConfigurationSize)
+            {
+                Log.Error(
+                    $"The action bar layout serialised to {json.Length} characters, past the " +
+                    $"{MaximumActionConfigurationSize} byte limit, so it has not been written. It holds " +
+                    $"{configuration.Entries.Count} entries and {configuration.KnownActions.Count} known " +
+                    $"actions, against {rootActions.Count} bar slots. Please report this error with a screenshot of the message.");
+                return;
+            }
+
+            using (var writer = _resourceManager.UserData.OpenWriteText(ActionConfigurationPath))
+            {
+                writer.Write(json);
+            }
+
+            _writtenActionConfigurationJson = json;
         }
         catch (Exception exception)
         {
-            Log.Warning($"Could not save the action bar configuration: {exception.Message}");
+            // The whole exception, not just its message: this runs on the UI thread and swallows whatever
+            // it catches, so without a stack trace a failure here names no frame at all.
+            Log.Warning($"Could not save the action bar configuration: {exception}");
         }
+    }
+
+    /// <summary>
+    ///     Reports a layout holding far more identities than the player has actions, once per doubling.
+    /// </summary>
+    /// <remarks>
+    ///     Both counts are reported because they are bounded by different things: <c>KnownActions</c> is
+    ///         one identity per live action, while <c>Entries</c> is one per occupied bar slot, so which of
+    ///         them ran away says which side of the feature produced it.
+    /// </remarks>
+    private void ReportRunawayActionConfiguration(KsActionBarConfiguration configuration, int slotCount)
+    {
+        var savedCount = configuration.Entries.Count + configuration.KnownActions.Count;
+        if (savedCount < SuspiciousActionConfigurationCount || savedCount < _reportedActionConfigurationCount * 2)
+            return;
+
+        _reportedActionConfigurationCount = savedCount;
+        Log.Warning(
+            $"The action bar layout holds {configuration.Entries.Count} entries and " +
+            $"{configuration.KnownActions.Count} known actions across {slotCount} bar slots, far more than a " +
+            "bar can account for. Please report it.");
+    }
+
+    /// <summary>
+    ///     Reads the saved layout back, refusing one larger than <see cref="MaximumActionConfigurationSize"/>.
+    /// </summary>
+    /// <remarks>
+    ///     A file that fails this check is deleted rather than left alone: it cannot be parsed, so keeping
+    ///         it costs the player their layout on every connect for as long as it sits there.
+    /// </remarks>
+    private bool TryReadActionConfigurationJson([NotNullWhen(true)] out string? json)
+    {
+        json = null;
+        if (!_resourceManager.UserData.Exists(ActionConfigurationPath))
+            return false;
+
+        long size;
+        using (var stream = _resourceManager.UserData.OpenRead(ActionConfigurationPath))
+        {
+            size = stream.Length;
+            if (size <= MaximumActionConfigurationSize)
+            {
+                using var reader = new StreamReader(stream, EncodingHelpers.UTF8);
+                json = reader.ReadToEnd();
+                return true;
+            }
+        }
+
+        Log.Error(
+            $"The saved action bar layout is {size} bytes, past the {MaximumActionConfigurationSize} byte " +
+            "limit, so it has been discarded rather than read. This should not be possible - please report it.");
+        _resourceManager.UserData.Delete(ActionConfigurationPath);
+        _writtenActionConfigurationJson = null;
+        return false;
     }
 
     private void TryRestoreActionConfiguration()
@@ -211,7 +330,7 @@ public sealed partial class ActionUIController
 
         try
         {
-            if (!_resourceManager.UserData.TryReadAllText(ActionConfigurationPath, out var json))
+            if (!TryReadActionConfigurationJson(out var json))
                 return;
 
             if (!KsActionBarConfigurationJson.TryDeserialize(json, out var configuration))
@@ -235,7 +354,7 @@ public sealed partial class ActionUIController
         }
         catch (Exception exception)
         {
-            Log.Warning($"Could not restore the action bar configuration: {exception.Message}");
+            Log.Warning($"Could not restore the action bar configuration: {exception}");
         }
     }
 
