@@ -2,111 +2,44 @@
   # Anchorless
 
   <Box>
-    [color=#999999][italic]"WHISKEY. ECHO. WHISKEY. LIMA. ALPHA. DELTA. AGENT, YOU HAVE BEEN ACTIVATED."[/italic][/color]
+    [color=#999999][italic]"THAT'S NOT BENNINGS!"[/italic][/color]
   </Box>
-  <Box>
-    <GuideEntityEmbed Entity="PosterContrabandSyndicateRecruitment" Caption=""/>
-  </Box>
-  Traitors are antagonists employed by the [color=#ff0000]Syndicate.[/color] You are a sleeper agent who has access to various tools and weapons through your [bold]uplink[/bold].
-  You also receive [bold]codewords[/bold] to identify other agents, and a coordinated team of traitors can have [italic]brutal results.[/italic]
+  The Anchorless are a formless horror from the clouds of [bold]Jupiter[/bold].
+  Originally taking the form of single-celled organisms, they can merge together and develop a demented, predatory intelligence. With the arrival of humans, exactly this has happened.
+  The goal of the Anchorless is to assimilate the crew of the station.
 
-  Anyone besides [textlink="department heads" link="Command"] or members of [textlink="Security" link="Security"] can be a traitor.
+  Anyone besides [textlink="department heads" link="Command"] or members of [textlink="Security" link="Security"] can be an original Anchorless at the start of the shift.
 
-  ## Uplink & Activation
-  The [color=cyan]uplink[/color] is your most important tool as a traitor. You can exchange the 20 [color=red]telecrystals[/color] (TC) you start with for items that will help you with your objectives.
+  ## Conversion
 
-  By pressing [color=yellow][bold][keybind="OpenCharacterMenu"][/bold][/color], you'll see your personal uplink code. [bold]Setting your PDA's ringtone as this code will open the uplink.[/bold]
-  Pressing [color=yellow][bold][keybind="OpenCharacterMenu"][/bold][/color] also lets you view your objectives and the codewords.
+  A single Anchorless is not much. To convert another into your kin, you can click a crit or dead person with the convert action. This is loud and takes a lot of time, so you should ideally find a private place to do it.
+  How you bring this person into the dead or crit state is [italic]up to you[/italic].
 
-  If you do not have a PDA when you are activated, an [color=cyan]uplink implant[/color] is provided [bold]for the full [color=red]TC[/color] price of the implant.[/bold]
-  It can be accessed from your hotbar.
-  <Box>
-    <GuideEntityEmbed Entity="PassengerPDA" Caption="PDA"/>
-    <GuideEntityEmbed Entity="Telecrystal" Caption="Telecrystals"/>
-    <GuideEntityEmbed Entity="BaseUplinkRadio" Caption="Uplink Implant"/>
-  </Box>
+  ## Cooperation
 
-  [bold]Make sure to close your PDA uplink to prevent anyone else from seeing it.[/bold] You don't want [color=#cb0000]Security[/color] to notice you have it and confiscate it from you!
+  Now that there are more of you, cooperation is on the table. You have two primary tools for this: [color=#b04eb5]a private radio channel[/color] you can access using [bold].a or :a[/bold] and the disguise ability.
+  You can automatically disguise as yourself or anyone you have converted. Additionally, you can [bold]commune[/bold] with your kind to share all of your learned identities.
 
-  Implanted uplinks are not normally accessible to other people, so they do not have any security measures. They can, however, be removed from you with an empty implanter.
+  ## Combat
+
+  An Anchorless has access to a powerful horror form. This form speeds you up and grants you access to a lethal arm blade, at the cost of giving away the fact that there are anchorless on the station.
+  Unless used strategically, you will suffer more from the jig being up than you will gain with the extra conversion. When you are few, try using [italic]other methods of incapacitation![/italic]
 
   <Box>
-    <GuideEntityEmbed Entity="WeaponPistolCobra" Caption="Weaponry"/>
-    <GuideEntityEmbed Entity="MagazineBoxLightRifle" State="icon" Caption="Ammo"/>
-    <GuideEntityEmbed Entity="C4" Caption="Explosives"/>
-    <GuideEntityEmbed Entity="ClothingOuterHardsuitSyndie" Caption="Wearables"/>
-    <GuideEntityEmbed Entity="Stimpack" Caption="Chemicals"/>
-  </Box>
-  <Box>
-    <GuideEntityEmbed Entity="ChameleonProjector" Caption="Deception"/>
-    <GuideEntityEmbed Entity="Emag" Caption="Disruption"/>
-    <GuideEntityEmbed Entity="StorageImplanter" Caption="Implants"/>
-    <GuideEntityEmbed Entity="MobMonkeySyndicateAgentNukeops" Caption="Allies"/>
-    <GuideEntityEmbed Entity="ClothingEyesGlassesOutlawGlasses" Caption="Pointless"/>
+    <GuideEntityEmbed Entity="Stunprod" Caption="Stun prod"/>
+    <GuideEntityEmbed Entity="Cablecuffs" Caption="Improvised handcuffs"/>
+    <GuideEntityEmbed Entity="Spear" Caption="Spear"/>
   </Box>
 
-  The purchases that you make should be to help you with your objectives. Some gear may not be of use to you, and you'll have to choose between being sneaky or going loud.
+  ## Weaknesses
 
-  ## Coordination
-  Codewords are words or phrases that every traitor will know. They provide a discreet way to identify or establish contact with a fellow traitor, which can be useful if your objectives include [italic][color=cyan]helping them with their objectives.[/color][/italic]
+  The Anchorless are quite vulnerable to [bold]Heat[/bold] damage. Additionally, due to the distributed nature of their bodies, firing weapons overwhelms their senses - flashing them and slowing them down.
+  Anchorless blood is also chemically unstable and [bold]will break down into diethylamine and toxin at 450 kelvin or above.[/bold]
 
-  When you find some friends, [bold]you can withdraw [color=red]telecrystals[/color] from your uplink to give to them.[/bold] They can put these in their own uplink to spend for themselves.
-
-  Some offers available on your uplink require more than 20 TC to purchase, so if you want them you'll have to share.
-
-  ## Assassination
-  One of your objectives may be to [italic][color=cyan]kill or maroon a crewmember.[/color][/italic]
-
-  You can [color=cyan]maroon[/color] your target by [bold]preventing them from reaching CentComm[/bold] via the evacuation shuttle or an escape pod.
-
-  If you can't maroon your target or they're too important to leave alive, you'll have to get your hands dirty and [color=cyan]murder[/color] them. Make sure your target is not alive when the [bold]evacuation shuttle gets to CentComm,[/bold] and don't let them be resuscitated.
-
-  Remember, the Syndicate want only your targets dead. [color=red]Try to avoid mass murder or major damage to the station,[/color] as the more innocent lives you take, the more of a liability you become.
-
-  ## Evasion & Self-Termination
-  Your objectives may require you to [italic][color=cyan]make it to CentComm without being killed or captured.[/color][/italic] Don't let [color=#cb0000]Security[/color] stop you, complete your other objectives and [bold]come back alive.[/bold]
-
-  Alternatively, your objectives may require you to [italic][color=cyan]die a glorious death.[/color][/italic] [bold]Make sure you don't come back from the dead,[/bold] or else you may wake up in cuffs.
-
-  ## Appropriation
-  More often than not, you'll have to [italic][color=cyan]steal a possession of a department head.[/color][/italic]
-
-  The target may be in their office, or on their person. It may become necessary to kill whoever is carrying it, if you cannot pickpocket them.
-
-  Some of the things you may be tasked with include:
-  - Stealing the [color=yellow]Captain[/color]'s [bold]ID Card[/bold], [bold]antique laser pistol[/bold], [bold]jetpack[/bold], or [bold]nuclear authentication disk[/bold].
   <Box>
-    <GuideEntityEmbed Entity="CaptainIDCard" Caption=""/>
-    <GuideEntityEmbed Entity="WeaponAntiqueLaser" Caption=""/>
-    <GuideEntityEmbed Entity="JetpackCaptainFilled" Caption=""/>
-    <GuideEntityEmbed Entity="NukeDisk" Caption=""/>
-  </Box>
-  - Stealing the [color=#5b97bc]Chief Medical Officer[/color]'s [bold]hypospray[/bold] or [bold]handheld crew monitor[/bold].
-  <Box>
-    <GuideEntityEmbed Entity="Hypospray" Caption=""/>
-    <GuideEntityEmbed Entity="HandheldCrewMonitorEmpty" Caption=""/>
-  </Box>
-  - Stealing the [color=#c96dbf]Research Director[/color]'s [bold]experimental hardsuit[/bold] or [bold]hand teleporter[/bold].
-  <Box>
-    <GuideEntityEmbed Entity="ClothingOuterHardsuitRd" Caption=""/>
-    <GuideEntityEmbed Entity="HandTeleporter" Caption=""/>
-  </Box>
-  - Stealing the [color=#cb0000]Head of Security[/color]'s [bold]energy magnum[/bold].
-  <Box>
-    <GuideEntityEmbed Entity="WeaponEnergyMagnum" Caption=""/>
-  </Box>
-  - Stealing the [color=#f39f27]Chief Engineer[/color]'s [bold]advanced magboots[/bold].
-  <Box>
-    <GuideEntityEmbed Entity="ClothingShoesBootsMagAdv" Caption=""/>
-  </Box>
-  - Stealing the [color=#b18644]Quartermaster[/color]'s [bold]requisition digi-board[/bold].
-  <Box>
-    <GuideEntityEmbed Entity="BoxFolderQmClipboard" Caption=""/>
-  </Box>
-  - Butchering Ian, the [color=#9fed58]Head of Personnel[/color]'s dog, and obtaining the [bold]corgi meat[/bold].
-  <Box>
-    <GuideEntityEmbed Entity="MobCorgiIan" Caption=""/>
-    <GuideEntityEmbed Entity="FoodMeatCorgi" Caption=""/>
+    <GuideEntityEmbed Entity="Beaker"/>
+    <GuideEntityEmbed Entity="Syringe"/>
+    <GuideEntityEmbed Entity="ChemistryHotplate"/>
   </Box>
 
 </Document>
