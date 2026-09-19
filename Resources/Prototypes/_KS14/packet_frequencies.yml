@@ -2,3 +2,13 @@
   id: LatheFrequency
   minFrequency: 350
   maxFrequency: 650
+
+- type: packetFrequency
+  id: FaxFrequency
+  minFrequency: 650
+  maxFrequency: 700
+
+- type: packetFrequency
+  id: ExecutorFrequency
+  minFrequency: 0
+  maxFrequency: 0

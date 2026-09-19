@@ -103,7 +103,10 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
 
         if (!TryComp<PacketNetworkComponent>(target, out var packetNetwork)
             || _packetSystem.GetFrequency(packetNetwork.Frequency) != ent.Comp.Frequency)
-            return;
+            {
+                _sharedPopupSystem.PopupEntity(Loc.GetString("packet-configurator-no-signal"), ent, ev.User);
+                return;
+            }
 
         if (ent.Comp.Mode == ConfiguratorMode.Probe)
             OnProbeInteract(ent, (target, packetNetwork));

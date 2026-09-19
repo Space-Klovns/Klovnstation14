@@ -9,17 +9,17 @@
             <PanelContainer.PanelOverride>
                 <gfx:StyleBoxFlat BackgroundColor="#1a1a1a" />
             </PanelContainer.PanelOverride>
-            <Button Name="ExecuteButton" SetSize="60, 30" Margin="5 0 0 0" HorizontalAlignment="Left" Text="EXEC"></Button>
-            <Button Name="SaveButton" SetSize="60, 30" Text="SAVE"></Button>
-            <Button Name="LoadButton" SetSize="60, 30" Margin="-5 0 0 0" HorizontalAlignment="Right" Text="UPDT"></Button>
-            <Button Name="TerminateButton" SetSize="60, 30" Text="KILL" VerticalAlignment="Bottom" HorizontalAlignment="Left"></Button>
-            <Button Name="SendInputButton" SetSize="60, 30" Text="SEND" VerticalAlignment="Bottom" HorizontalAlignment="Right"></Button>
+            <Button Name="ExecuteButton" SetSize="60, 30" Margin="5 0 0 0" HorizontalAlignment="Left" VerticalAlignment="Top" Text="EXEC"></Button>
+            <Button Name="SaveButton" SetSize="60, 30" Text="SAVE" VerticalAlignment="Top"></Button>
+            <Button Name="LoadButton" SetSize="60, 30" Margin="0 0 5 0" HorizontalAlignment="Right" VerticalAlignment="Top" Text="UPDT"></Button>
+            <Button Name="TerminateButton" SetSize="60, 30" Text="KILL" Margin="5 0 0 0" VerticalAlignment="Bottom" HorizontalAlignment="Left"></Button>
+            <Button Name="SendInputButton" SetSize="60, 30" Text="SEND" Margin="0 0 5 0" VerticalAlignment="Bottom" HorizontalAlignment="Right"></Button>
         </PanelContainer>
         <PanelContainer Name="Data" SetSize="200, 350" VerticalAlignment="Top" Margin="-15 0 0 0">
             <PanelContainer.PanelOverride>
                 <gfx:StyleBoxFlat BackgroundColor="#1a1a1a" />
             </PanelContainer.PanelOverride>
-            <Label Text="{Loc 'executor-menu-data'}" VerticalAlignment="Top"></Label>
+            <Label Name="DataLabel" VerticalAlignment="Top"></Label>
         </PanelContainer>
     </PanelContainer>
     <PanelContainer Name="CodeInput" SetSize="700, 550" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="-150 10 0 0">

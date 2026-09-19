@@ -19,12 +19,20 @@ public sealed partial class PacketSystem
     private Dictionary<string, Entity<PacketNetworkComponent>> _packetEntities = new();
     private Dictionary<ProtoId<PacketFrequencyPrototype>, int> _frequencies = new();
 
+    /// <summary>
+    /// Generates random address for entity.
+    /// </summary>
+    /// <param name="entity"></param>
     private void SetupAddress(Entity<PacketNetworkComponent> entity)
     {
         entity.Comp.Address =  GenerateAddress();
         _packetEntities.Add(entity.Comp.Address, entity);
     }
 
+    /// <summary>
+    /// Generates paper with all frequencies written on it.
+    /// </summary>
+    /// <param name="paper"></param>
     private void GenerateFrequenciesPaper(Entity<FrequenciesPaperComponent> paper)
     {
         if (!TryComp<PaperComponent>(paper, out var paperComponent))
@@ -32,7 +40,7 @@ public sealed partial class PacketSystem
 
         StringBuilder builder = new();
 
-        builder.Append(Loc.GetString("packet-frequencies-paper-label"));
+        builder.Append(Loc.GetString("packet-frequencies-paper-label") + "\n\n");
 
         foreach (var freq in _frequencies)
         {
@@ -42,6 +50,10 @@ public sealed partial class PacketSystem
         paperComponent.Content = builder.ToString();
     }
 
+    /// <summary>
+    /// Reloads frequencies this entity can listen to the standart.
+    /// </summary>
+    /// <param name="entity"></param>
     private void ReloadFrequencies(Entity<PacketNetworkComponent> entity)
     {
         entity.Comp.ListeningFrequencies.Clear();
@@ -53,6 +65,10 @@ public sealed partial class PacketSystem
         }
     }
 
+    /// <summary>
+    /// Generates random address while also accounting for existing ones
+    /// </summary>
+    /// <returns></returns>
     private string GenerateAddress()
     {
         var value = _random.Next((int) Math.Pow(16, 6));
@@ -65,6 +81,10 @@ public sealed partial class PacketSystem
         return address;
     }
 
+    /// <summary>
+    /// Randomizes frequencies based on frequency prototype.
+    /// Frequencies are randomized each round.
+    /// </summary>
     private void RandomizeFrequencies()
     {
         var protoEnum = _prototypeManager.EnumeratePrototypes<PacketFrequencyPrototype>();
@@ -95,6 +115,14 @@ public sealed partial class PacketSystem
         return ValidateReceiver(receiver, sender);
     }
 
+    /// <summary>
+    /// Tries to get random receiver in range. Used for pinging.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="freq"></param>
+    /// <param name="range"></param>
+    /// <param name="receiver"></param>
+    /// <returns></returns>
     public bool TryRandomReceiver(Entity<ExecutorComponent> sender,
         int freq,
         int range,
@@ -123,6 +151,12 @@ public sealed partial class PacketSystem
         return true;
     }
 
+    /// <summary>
+    /// Checks if receiver is listening for sender and if receiver has same grid as sender (Assuming receiver is in local state)
+    /// </summary>
+    /// <param name="receiver"></param>
+    /// <param name="sender"></param>
+    /// <returns></returns>
     public bool ValidateReceiver(Entity<PacketNetworkComponent> receiver, Entity<PacketNetworkComponent?> sender)
     {
         if (sender.Comp == null

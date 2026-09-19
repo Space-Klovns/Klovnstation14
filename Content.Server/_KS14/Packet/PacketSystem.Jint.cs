@@ -21,7 +21,7 @@ public sealed partial class PacketSystem
     private Dictionary<Engine, CancellationTokenSource> _engineCts = new();
 
     /// <summary>
-    /// Tries to execute current code. ACcounts for cooldownw and max command length.
+    /// Tries to execute current code. Accounts for cooldown and max command length.
     /// </summary>
     /// <param name="command"></param>
     /// <param name="executor"></param>
@@ -69,6 +69,12 @@ public sealed partial class PacketSystem
         cts.Cancel();
     }
 
+    /// <summary>
+    /// If engine exists - Finds it and returns it.
+    /// If engine doesn't exist - Creates new one, initializes modules, ports, constants, and return it.
+    /// </summary>
+    /// <param name="executor"></param>
+    /// <returns></returns>
     private Engine EnsureEngine(Entity<ExecutorComponent> executor)
     {
         if (_executorEntities.TryGetValue(executor, out var exEngine))
@@ -115,9 +121,13 @@ public sealed partial class PacketSystem
         }
     }
 
+    /// <summary>
+    /// Re-creates engine, loading basic module + all modules from item slots.
+    /// </summary>
+    /// <param name="ent"></param>
+    /// <param name="slotsComponent"></param>
     private void ReloadEngine(Entity<ExecutorComponent> ent, ItemSlotsComponent slotsComponent)
     {
-        Logger.Info("Reaload");
         DisposeEngine(ent);
         ent.Comp.Modules.Add("BasePacketModule"); // Basic firmware.
 
@@ -146,6 +156,10 @@ public sealed partial class PacketSystem
         engine.Dispose();
     }
 
+    /// <summary>
+    /// Declares methods in engine for them to be executable.
+    /// </summary>
+    /// <param name="ent"></param>
     public void LoadMethods(Entity<ExecutorComponent> ent)
     {
         var engine = EnsureEngine(ent);

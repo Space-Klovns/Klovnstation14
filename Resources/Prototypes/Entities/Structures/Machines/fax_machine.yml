@@ -71,6 +71,8 @@
     receiveFrequencyId: Fax
     transmitFrequencyId: Fax
   - type: RequireProjectileTarget
+  - type: PacketNetwork # KS14
+    frequency: FaxFrequency
 
 # Special
 - type: entity

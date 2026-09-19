@@ -16,6 +16,13 @@ public sealed partial class PacketSystem
     /// </summary>
     private Dictionary<string, PacketNetwork> _networks = new();
 
+    /// <summary>
+    /// Tries to create network.
+    /// Returns "NULL" if there's no addresses.
+    /// </summary>
+    /// <param name="addresses"></param>
+    /// <param name="frequency"></param>
+    /// <returns></returns>
     public string CreateNetwork(string[] addresses, int frequency)
     {
         var networkAddress = GenerateAddress();
@@ -48,11 +55,26 @@ public sealed partial class PacketSystem
 
     #region Data
 
+    /// <summary>
+    /// Tries to send data to ReceiveDataMethod
+    /// </summary>
+    /// <param name="data"></param>
+    /// <param name="receiver"></param>
+    /// <param name="executorComponent"></param>
     public void SendData(object data, EntityUid receiver, ExecutorComponent? executorComponent = null)
     {
         SendData(data, receiver, typeof(ReceiveDataMethod), "NetworkPacketModule", executorComponent);
     }
 
+    /// <summary>
+    /// Tries to send data to the method.
+    /// Sending data is loading object into method channel for it to be readen.
+    /// </summary>
+    /// <param name="data"></param>
+    /// <param name="receiver"></param>
+    /// <param name="methodType"></param>
+    /// <param name="moduleName"></param>
+    /// <param name="executorComponent"></param>
     public void SendData(object data, EntityUid receiver, Type methodType, string moduleName, ExecutorComponent? executorComponent = null)
     {
         if (!Resolve(receiver, ref executorComponent)

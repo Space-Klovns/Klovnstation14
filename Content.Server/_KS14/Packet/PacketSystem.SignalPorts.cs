@@ -4,8 +4,15 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.Packet;
 
+/// <summary>
+/// This system is used for handling executor's ports to execute methods
+/// </summary>
 public sealed partial class PacketSystem
 {
+    /// <summary>
+    /// Initializes ports for executor based on port naming and count.
+    /// </summary>
+    /// <param name="ent"></param>
     private void InitializePorts(Entity<ExecutorComponent> ent)
     {
         List<ProtoId<SinkPortPrototype>> ports = [];
@@ -21,6 +28,12 @@ public sealed partial class PacketSystem
         _deviceLinkSystem.EnsureSinkPorts(ent, ports.ToArray());
     }
 
+    /// <summary>
+    /// Links function to sink port.
+    /// </summary>
+    /// <param name="port"></param>
+    /// <param name="funName"></param>
+    /// <param name="ent"></param>
     public void RegisterSignalMethod(ProtoId<SinkPortPrototype> port, string funName, Entity<ExecutorComponent> ent)
     {
         var engine = EnsureEngine(ent);
@@ -29,6 +42,11 @@ public sealed partial class PacketSystem
         ent.Comp.ListeningPorts.TryAdd(port, value);
     }
 
+    /// <summary>
+    /// Activates function on signal (if any)
+    /// </summary>
+    /// <param name="port"></param>
+    /// <param name="ent"></param>
     private void OnSignal(ProtoId<SinkPortPrototype> port, Entity<ExecutorComponent> ent)
     {
         if (!ent.Comp.ListeningPorts.TryGetValue(port, out var func))
