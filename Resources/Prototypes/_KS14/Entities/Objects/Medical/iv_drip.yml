@@ -24,6 +24,11 @@
       map: ["enum.SolutionContainerLayers.Fill"]
       visible: false
   - type: Appearance
+  - type: DeviceLinkSink
+    ports:
+    - Toggle
+    - On
+    - Off
   - type: IvDrip
     injectionEnabled: false
     injectionAmount: 1
