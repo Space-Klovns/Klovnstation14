@@ -2028,3 +2028,9 @@ Entries:
       message: Falling down Z-levels now does damage.
   id: 210
   time: '2026-09-18T14:14:04.0000000+00:00'
+- author: NazrinNya
+  changes:
+    - type: Add
+      message: Added Packet networks. Check your CE locker.
+  id: 211
+  time: '2026-09-19T14:25:19.0000000+00:00'
