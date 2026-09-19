@@ -16,7 +16,7 @@ public sealed partial class AtmosphereSystem
 
     private void KsUpdateGasReactionPrototypes(IDependencyCollection dependencyCollection)
     {
-        foreach (var gasReactionPrototype in _protoMan.EnumeratePrototypes<GasReactionPrototype>())
+        foreach (var gasReactionPrototype in ProtoMan.EnumeratePrototypes<GasReactionPrototype>())
         {
             foreach (var effect in gasReactionPrototype.GetEffects())
                 dependencyCollection.InjectDependencies(effect, oneOff: true);

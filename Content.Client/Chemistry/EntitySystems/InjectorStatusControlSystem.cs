@@ -9,12 +9,11 @@ namespace Content.Client.Chemistry.EntitySystems;
 public sealed partial class InjectorStatusControlSystem : EntitySystem
 {
     [Dependency] private SharedSolutionContainerSystem _solutionContainers = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
 
     public override void Initialize()
     {
         base.Initialize();
-        Subs.ItemStatus<InjectorComponent>(injector => new InjectorStatusControl(injector, _solutionContainers, _prototypeManager));
+        Subs.ItemStatus<InjectorComponent>(injector => new InjectorStatusControl(injector, _solutionContainers, ProtoMan));
     }
 }

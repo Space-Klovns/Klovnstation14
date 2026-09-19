@@ -11,12 +11,7 @@ public sealed partial class PhosphorNightVisionRecipientSystem : EntitySystem
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedPopupSystem _popupSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-        SubscribeLocalEvent<PhosphorNightVisionRecipientComponent, AfterFlashedEvent>(OnAfterFlashed);
-    }
-
+    [SubscribeLocalEvent]
     private void OnAfterFlashed(Entity<PhosphorNightVisionRecipientComponent> entity, ref AfterFlashedEvent args)
     {
         if (entity.Owner != args.Target)

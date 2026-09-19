@@ -23,13 +23,10 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
 
         _fieldQuery = GetEntityQuery<KsGeneratedFieldComponent>();
 
-        SubscribeLocalEvent<KsFieldGeneratorComponent, ExaminedEvent>(OnExamined);
-        SubscribeLocalEvent<KsFieldGeneratorComponent, ActivateInWorldEvent>(OnActivateInWorld);
-        SubscribeLocalEvent<KsFieldGeneratorComponent, PowerChangedEvent>(OnPowerChanged);
-
         InitialiseLinking();
     }
 
+    [SubscribeLocalEvent]
     private void OnExamined(Entity<KsFieldGeneratorComponent> entity, ref ExaminedEvent args)
     {
         if (!args.IsInDetailsRange)
@@ -38,6 +35,7 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
         args.PushMarkup(Loc.GetString("ks-field-generator-examined", ("state", entity.Comp.Enabled)), priority: 4);
     }
 
+    [SubscribeLocalEvent]
     private void OnActivateInWorld(Entity<KsFieldGeneratorComponent> entity, ref ActivateInWorldEvent args)
     {
         if (args.Handled ||
@@ -78,6 +76,7 @@ public sealed partial class KsFieldGeneratorSystem : EntitySystem
         _appearanceSystem.SetData(entity.Owner, KsFieldGeneratorVisuals.State, GetState(entity!));
     }
 
+    [SubscribeLocalEvent]
     private void OnPowerChanged(Entity<KsFieldGeneratorComponent> entity, ref PowerChangedEvent args)
     {
         var wasPowered = entity.Comp.Powered;

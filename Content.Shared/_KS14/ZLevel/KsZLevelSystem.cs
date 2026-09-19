@@ -29,12 +29,10 @@ public sealed partial class KsZLevelSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<KsZLevelComponent, ComponentInit>(OnInit);
-        SubscribeLocalEvent<KsZLevelComponent, ComponentShutdown>(OnShutdown);
-
         InitialiseNetworking();
     }
 
+    [SubscribeLocalEvent]
     private void OnInit(Entity<KsZLevelComponent> entity, ref ComponentInit args)
     {
         // No data
@@ -50,6 +48,7 @@ public sealed partial class KsZLevelSystem : EntitySystem
         entity.Comp.Node = entity.Comp.AssociatedStack.Find(entity)!;
     }
 
+    [SubscribeLocalEvent]
     private void OnShutdown(Entity<KsZLevelComponent> entity, ref ComponentShutdown args)
     {
         DebugTools.Assert(

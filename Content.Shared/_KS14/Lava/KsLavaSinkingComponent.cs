@@ -22,6 +22,4 @@ public sealed partial class KsLavaSinkingComponent : Component
     [DataField, AutoNetworkedField]
     [AutoPausedField]
     public TimeSpan SinkTime = TimeSpan.MinValue;
-
-    public object? Shader = null;
 }

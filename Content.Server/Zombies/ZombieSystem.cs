@@ -33,7 +33,6 @@ namespace Content.Server.Zombies
     public sealed partial class ZombieSystem : SharedZombieSystem
     {
         [Dependency] private IGameTiming _timing = default!;
-        [Dependency] private IPrototypeManager _protoManager = default!;
         [Dependency] private IRobustRandom _random = default!;
         [Dependency] private BloodstreamSystem _bloodstream = default!;
         [Dependency] private DamageableSystem _damageable = default!;
@@ -185,7 +184,7 @@ namespace Content.Server.Zombies
             if (args.Handled)
                 return;
 
-            _protoManager.Resolve(component.EmoteSoundsId, out var sounds);
+            ProtoMan.Resolve(component.EmoteSoundsId, out var sounds);
 
             args.Handled = _chat.TryPlayEmoteSound(uid, sounds, args.Emote);
         }

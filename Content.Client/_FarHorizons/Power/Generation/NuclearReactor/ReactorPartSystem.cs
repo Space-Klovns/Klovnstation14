@@ -7,7 +7,6 @@ namespace Content.Client._FarHorizons.Power.Generation.FissionGenerator;
 public sealed partial class ReactorPartSystem : SharedReactorPartSystem
 {
     [Dependency] private SpriteSystem _sprite = default!;
-    [Dependency] private IPrototypeManager _proto = default!;
 
     public override void Initialize()
     {
@@ -25,7 +24,7 @@ public sealed partial class ReactorPartSystem : SharedReactorPartSystem
         //if (!_sprite.LayerMapTryGet((uid, args.Sprite), ReactorCapVisualLayers.Sprite, out var layer, false))
         //    return;
 
-        _sprite.LayerSetColor((uid, args.Sprite), 0, _proto.Index(component.Material).Color);
+        _sprite.LayerSetColor((uid, args.Sprite), 0, ProtoMan.Index(component.Material).Color);
     }
 
     protected override void AccUpdate()
@@ -33,7 +32,7 @@ public sealed partial class ReactorPartSystem : SharedReactorPartSystem
         var query = EntityQueryEnumerator<ReactorPartComponent, SpriteComponent>();
         while (query.MoveNext(out var uid, out var component, out var sprite))
         {
-            _sprite.LayerSetColor((uid, sprite), 0, _proto.Index(component.Material).Color);
+            _sprite.LayerSetColor((uid, sprite), 0, ProtoMan.Index(component.Material).Color);
         }
     }
 }

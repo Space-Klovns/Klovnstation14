@@ -1,52 +1,50 @@
-using System.Numerics;
 using Content.Shared.Decals;
-using ChunkIndicesEnumerator = Robust.Shared.Map.Enumerators.ChunkIndicesEnumerator;
+using Robust.Shared.Collections;
+using Robust.Shared.GameStates;
 
 namespace Content.Server.Decals;
 
 public sealed partial class DecalSystem : SharedDecalSystem
 {
-    private static readonly Vector2 KsDecalChunkSize = new Vector2(ChunkSize, ChunkSize) / 2f;
-
     /// <summary>
     ///     This is preferred over GetDecalsIntersecting and then
     ///         spamming RemoveDecals, as this gets straight to the point.
     /// </summary>
-
-    // OnDecalRemoved isnt called anywhere here lol
-    public void KsRemoveDecalsIntersecting(Entity<DecalGridComponent?> entity, Box2 bounds)
+    public void KsRemoveDecalsIntersecting(EntityUid gridUid, Box2 bounds)
     {
-        if (!Resolve(entity.Owner, ref entity.Comp))
-            return;
+        // DirtyChunk deletes the chunk entity once its last decal goes, which would invalidate the
+        // enumerator, so take a snapshot of the intersecting chunks before touching any of them.
+        var chunks = new ValueList<Entity<ChunkEntityComponent, DecalChunkComponent>>();
 
-        var chunkCollection = entity.Comp.ChunkCollection.ChunkCollection;
-        var chunks = new ChunkIndicesEnumerator(bounds, ChunkSize);
-
-        while (chunks.MoveNext(out var chunkOrigin))
+        foreach (var chunk in ChunkEntities.GetChunksIntersecting(gridUid, bounds, DecalChunkQuery))
         {
-            if (chunkOrigin is not { } ||
-                !chunkCollection.TryGetValue(chunkOrigin.Value, out var chunk))
-                continue;
+            chunks.Add(chunk);
+        }
 
-            // If the chunk is fully contained in the area we want to remove, just nuke it
-            var chunkBox = Box2.CenteredAround((Vector2)chunkOrigin.Value, KsDecalChunkSize);
-            if (bounds.Contains(chunkBox))
-            {
-                chunkCollection.Remove(chunkOrigin.Value);
-                DirtyChunk(entity.Owner, chunkOrigin.Value, chunk);
+        var toRemove = new ValueList<ushort>();
 
-                continue;
-            }
+        foreach (var chunk in chunks)
+        {
+            toRemove.Clear();
 
-            foreach (var (id, decal) in chunk.Decals)
+            foreach (var (decalId, decal) in chunk.Comp2.Decals)
             {
                 if (!bounds.Contains(decal.Coordinates))
                     continue;
 
-                chunk.Decals.Remove(id);
+                toRemove.Add(decalId);
             }
 
-            DirtyChunk(entity.Owner, chunkOrigin.Value, chunk);
+            if (toRemove.Count == 0)
+                continue;
+
+            foreach (var decalId in toRemove)
+            {
+                chunk.Comp2.Decals.Remove(decalId);
+                FreeDecalId(chunk.Comp2, decalId);
+            }
+
+            DirtyChunk(chunk);
         }
     }
 }

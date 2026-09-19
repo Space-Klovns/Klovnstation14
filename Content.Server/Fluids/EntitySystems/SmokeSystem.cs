@@ -34,7 +34,6 @@ public sealed partial class SmokeSystem : EntitySystem
     [Dependency] private IAdminLogManager _logger = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private SharedMapSystem _map = default!;
-    [Dependency] private IPrototypeManager _prototype = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private AppearanceSystem _appearance = default!;
     [Dependency] private BloodstreamSystem _blood = default!;
@@ -311,7 +310,7 @@ public sealed partial class SmokeSystem : EntitySystem
             if (reagentQuantity.Quantity == FixedPoint2.Zero)
                 continue;
 
-            var reagent = _prototype.Index<ReagentPrototype>(reagentQuantity.Reagent.Prototype);
+            var reagent = ProtoMan.Index<ReagentPrototype>(reagentQuantity.Reagent.Prototype);
             reagent.ReactionTile(tile, reagentQuantity.Quantity, EntityManager, reagentQuantity.Reagent.Data);
         }
     }
@@ -342,7 +341,7 @@ public sealed partial class SmokeSystem : EntitySystem
             !_solutionContainerSystem.ResolveSolution(smoke.Owner, SmokeComponent.SolutionName, ref smoke.Comp1.Solution, out var solution))
             return;
 
-        var color = solution.GetColor(_prototype);
+        var color = solution.GetColor(ProtoMan);
         _appearance.SetData(smoke.Owner, SmokeVisuals.Color, color, smoke.Comp2);
     }
 }

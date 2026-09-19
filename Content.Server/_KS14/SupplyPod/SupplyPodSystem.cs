@@ -28,18 +28,11 @@ public sealed partial class SupplyPodSystem : SharedSupplyPodSystem
     [Dependency] private LockSystem _lockSystem = default!;
     [Dependency] private SharedEntityStorageSystem _entityStorageSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<SupplyPodComponent, MapInitEvent>(OnMapInit);
-        SubscribeLocalEvent<SupplyPodComponent, ComponentShutdown>(OnShutdown);
-    }
-
     /// <summary>
     ///     A pod that dies before it lands (admin deletion, gibbed grid, whatever) would otherwise
     ///         leave its trail hanging in the air forever, since nothing else knows about it.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnShutdown(Entity<SupplyPodComponent> entity, ref ComponentShutdown args)
     {
         ReleaseTrail(entity.Comp);
@@ -114,6 +107,7 @@ public sealed partial class SupplyPodSystem : SharedSupplyPodSystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnMapInit(Entity<SupplyPodComponent> entity, ref MapInitEvent args)
     {
         // Pods spawned onto the ground start sitting there instead of falling in. Everything a

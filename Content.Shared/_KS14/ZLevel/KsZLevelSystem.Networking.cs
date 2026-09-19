@@ -8,10 +8,9 @@ public sealed partial class KsZLevelSystem : EntitySystem
 {
     private void InitialiseNetworking()
     {
-        SubscribeLocalEvent<KsZLevelComponent, ComponentGetState>(OnGetState);
-        SubscribeLocalEvent<KsZLevelComponent, ComponentHandleState>(OnHandleState);
     }
 
+    [SubscribeLocalEvent]
     private void OnGetState(Entity<KsZLevelComponent> entity, ref ComponentGetState args)
     {
         args.State = new KsZLevelComponentState(
@@ -21,6 +20,7 @@ public sealed partial class KsZLevelSystem : EntitySystem
     }
 
     // I really don't know why
+    [SubscribeLocalEvent]
     private void OnHandleState(Entity<KsZLevelComponent> entity, ref ComponentHandleState args)
     {
         if (args.Current is not KsZLevelComponentState state)

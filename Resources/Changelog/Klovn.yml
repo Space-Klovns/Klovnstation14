@@ -2006,3 +2006,15 @@ Entries:
       message: Laser projectiles now go thru windows
   id: 207
   time: '2026-09-07T17:45:21.0000000+00:00'
+- author: FloraMillhouse
+  changes:
+    - type: Add
+      message: Added new items to the theatre vending machine.
+  id: 208
+  time: '2026-09-16T19:27:04.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Blood spray is now predicted
+  id: 209
+  time: '2026-09-17T13:11:13.0000000+00:00'

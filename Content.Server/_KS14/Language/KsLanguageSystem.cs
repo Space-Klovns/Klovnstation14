@@ -28,7 +28,6 @@ namespace Content.Server._KS14.Language;
 public sealed partial class KsLanguageSystem : EntitySystem
 {
     [Dependency] private IConfigurationManager _cfg = default!;
-    [Dependency] private IPrototypeManager _prototypes = default!;
     [Dependency] private GameTicker _ticker = default!;
     [Dependency] private KsTranslationSystem _translation = default!;
     [Dependency] private SharedContainerSystem _containers = default!;
@@ -47,25 +46,15 @@ public sealed partial class KsLanguageSystem : EntitySystem
         Subs.CVar(_cfg, KsCCVars.LanguageEnabled, v => _enabled = v, true);
         Subs.CVar(_cfg, KsCCVars.LanguageFallback, v => FallbackLanguage = v, true);
 
-        SubscribeLocalEvent<KsLanguageKnowledgeComponent, MapInitEvent>(OnKnowledgeMapInit);
-        SubscribeLocalEvent<KsLanguageGrantComponent, MapInitEvent>(OnGrantMapInit);
-        SubscribeLocalEvent<KsLanguageGrantComponent, EntGotInsertedIntoContainerMessage>(OnGrantInserted);
-        SubscribeLocalEvent<KsLanguageGrantComponent, EntGotRemovedFromContainerMessage>(OnGrantRemoved);
-        SubscribeLocalEvent<KsLanguageGrantComponent, ItemToggledEvent>(OnGrantToggled);
-
         // Direct for intrinsic grants, relayed for held/worn ones; implants have no combined helper.
         Subs.SubscribeWithRelay<KsLanguageGrantComponent, KsRefreshLanguagesEvent>(ApplyGrant);
-        SubscribeLocalEvent<KsLanguageGrantComponent, ImplantRelayEvent<KsRefreshLanguagesEvent>>(OnGrantRefreshImplanted);
-
-        SubscribeNetworkEvent<KsSetLanguageMessage>(OnSetLanguageRequest);
-
-        SubscribeLocalEvent<TriggerOnVoiceComponent, KsVoiceTriggerExaminedEvent>(OnVoiceTriggerExamined);
     }
 
     /// <summary>
     ///     Pushes the recorded phrase's language and, for understanders, the clear reading.
     ///     Server-side so the clear text never reaches a client that cannot read it.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnVoiceTriggerExamined(Entity<TriggerOnVoiceComponent> ent, ref KsVoiceTriggerExaminedEvent args)
     {
         if (ent.Comp.KsKeyPhraseLanguage is not { } languageId || ent.Comp.KsKeyPhraseClear is not { } clear)
@@ -75,7 +64,7 @@ public sealed partial class KsLanguageSystem : EntitySystem
         if (!examine.IsInDetailsRange || !ent.Comp.ShowExamine)
             return;
 
-        if (!_prototypes.TryIndex(languageId, out var proto))
+        if (!ProtoMan.TryIndex(languageId, out var proto))
             return;
 
         examine.PushMarkup(Loc.GetString("ks-language-voice-trigger-language", ("language", proto.LocalizedName)));
@@ -106,7 +95,7 @@ public sealed partial class KsLanguageSystem : EntitySystem
         if (langId is not { } id || id == FallbackLanguage)
             return false;
 
-        if (!_prototypes.TryIndex(id, out var proto))
+        if (!ProtoMan.TryIndex(id, out var proto))
             return false;
 
         ctx = new KsUtteranceContext(proto, message, _ticker.RoundId);
@@ -267,6 +256,7 @@ public sealed partial class KsLanguageSystem : EntitySystem
         Dirty(uid, speaker);
     }
 
+    [SubscribeLocalEvent]
     private void OnGrantRefreshImplanted(EntityUid uid, KsLanguageGrantComponent grant, ImplantRelayEvent<KsRefreshLanguagesEvent> args)
     {
         var ev = args.Args;
@@ -325,8 +315,8 @@ public sealed partial class KsLanguageSystem : EntitySystem
         var list = new List<ProtoId<KsLanguagePrototype>>(set);
         list.Sort((a, b) =>
         {
-            var orderA = _prototypes.TryIndex(a, out var protoA) ? protoA.SortOrder : int.MaxValue;
-            var orderB = _prototypes.TryIndex(b, out var protoB) ? protoB.SortOrder : int.MaxValue;
+            var orderA = ProtoMan.TryIndex(a, out var protoA) ? protoA.SortOrder : int.MaxValue;
+            var orderB = ProtoMan.TryIndex(b, out var protoB) ? protoB.SortOrder : int.MaxValue;
             var cmp = orderA.CompareTo(orderB);
             return cmp != 0 ? cmp : string.CompareOrdinal(a.Id, b.Id);
         });
@@ -337,11 +327,13 @@ public sealed partial class KsLanguageSystem : EntitySystem
 
     #region Event handlers
 
+    [SubscribeLocalEvent]
     private void OnKnowledgeMapInit(EntityUid uid, KsLanguageKnowledgeComponent component, MapInitEvent args)
     {
         InvalidateLanguages(uid);
     }
 
+    [SubscribeLocalEvent]
     private void OnGrantMapInit(EntityUid uid, KsLanguageGrantComponent component, MapInitEvent args)
     {
         // A grant directly on a beneficiary must apply even when it map-inits inside a container;
@@ -354,16 +346,19 @@ public sealed partial class KsLanguageSystem : EntitySystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnGrantInserted(EntityUid uid, KsLanguageGrantComponent component, EntGotInsertedIntoContainerMessage args)
     {
         InvalidateHolder(args.Container.Owner);
     }
 
+    [SubscribeLocalEvent]
     private void OnGrantRemoved(EntityUid uid, KsLanguageGrantComponent component, EntGotRemovedFromContainerMessage args)
     {
         InvalidateHolder(args.Container.Owner);
     }
 
+    [SubscribeLocalEvent]
     private void OnGrantToggled(EntityUid uid, KsLanguageGrantComponent component, ref ItemToggledEvent args)
     {
         if (_containers.TryGetContainingContainer((uid, null, null), out var container))
@@ -381,6 +376,7 @@ public sealed partial class KsLanguageSystem : EntitySystem
         }
     }
 
+    [SubscribeNetworkEvent]
     private void OnSetLanguageRequest(KsSetLanguageMessage msg, EntitySessionEventArgs args)
     {
         if (args.SenderSession.AttachedEntity is not { } uid)

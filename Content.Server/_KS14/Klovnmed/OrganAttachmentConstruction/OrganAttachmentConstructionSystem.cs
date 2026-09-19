@@ -5,13 +5,7 @@ namespace Content.Server._KS14.Klovnmed.OrganAttachmentConstruction;
 
 public sealed partial class OrganAttachmentConstructionSystem : SharedOrganAttachmentConstructionSystem
 {
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<OrganAttachmentConstructionComponent, ConstructionNodeChangedEvent>(OnNodeChanged);
-    }
-
+    [SubscribeLocalEvent]
     private void OnNodeChanged(Entity<OrganAttachmentConstructionComponent> entity, ref ConstructionNodeChangedEvent args)
     {
         entity.Comp.NetNode = args.NewNode?.Name;

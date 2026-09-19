@@ -14,7 +14,7 @@ public abstract partial class SharedPuddleSystem
         _ksReagentsWithTileEffects.Clear();
         _ksReagentsWithTileEffects.TrimExcess();
 
-        foreach (var reagentPrototype in _prototypeManager.EnumeratePrototypes<ReagentPrototype>())
+        foreach (var reagentPrototype in ProtoMan.EnumeratePrototypes<ReagentPrototype>())
         {
             if (reagentPrototype.KsTileEffects.Length == 0)
                 continue;

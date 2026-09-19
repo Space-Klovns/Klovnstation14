@@ -8,7 +8,7 @@ namespace Content.Shared._KS14.Sticky;
 /// </summary>
 [RegisterComponent, NetworkedComponent]
 [AutoGenerateComponentState]
-public sealed partial class ComponentsOnStickComponent : Component
+public sealed partial class ComponentsOnStuckComponent : Component
 {
     /// <summary>
     ///     If the thing being stuck to must be an occluder

@@ -159,7 +159,7 @@ namespace Content.Tests.Shared
       reinforcedWindowDamage.DamageDict["Structural"] = FixedPoint2.New(120);
       var reinforcedWindowModifierSet = new DamageModifierSet
       {
-        FlatReduction = { ["Structural"] = 10f },
+        FlatReductions = { ["Structural"] = 10f },
       };
       var reinforcedWindowMultiplier = system.CalculateMultiplier(reinforcedWindowDamage, reinforcedWindowModifierSet, 37.5f);
       var roundedDown = FixedPoint2.New(reinforcedWindowMultiplier);

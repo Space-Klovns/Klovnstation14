@@ -70,7 +70,7 @@
     softness: 12 # KS14: 5 -> 12
     curveFactor: 2 # KS14
     autoRot: true
-    mask: /Textures/Effects/LightMasks/cone.png # KS14: Mask
+    lightMask: ConeSingle # KS14: added
   - type: Ringer
   - type: RingerUplink
   - type: DeviceNetwork

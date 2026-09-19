@@ -22,7 +22,6 @@ namespace Content.Server._KS14.TTS;
 public sealed partial class TtsSystem : SharedTtsSystem
 {
     [Dependency] private IConfigurationManager _configurationManager = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private WordFilterSystem _wordFilterSystem = default!;
@@ -50,16 +49,13 @@ public sealed partial class TtsSystem : SharedTtsSystem
 
     public override void Initialize()
     {
-        SubscribeLocalEvent<EntitySpokeEvent>(OnSpoke);
-        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnCleanup);
-        SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
-
         ReloadVoices();
 
         _configurationManager.OnValueChanged(KsCCVars.TtsEndpoint, (x) => _ttsEndpoint = x, invokeImmediately: true);
         _configurationManager.OnValueChanged(KsCCVars.TtsEnabled, (x) => _enabled = x, invokeImmediately: true);
     }
 
+    [SubscribeLocalEvent]
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
     {
         if (!args.Modified.Contains(typeof(TtsVoicePrototype)))
@@ -72,7 +68,7 @@ public sealed partial class TtsSystem : SharedTtsSystem
     {
         _voiceIds.Clear();
 
-        foreach (var prototype in _prototypeManager.EnumeratePrototypes<TtsVoicePrototype>())
+        foreach (var prototype in ProtoMan.EnumeratePrototypes<TtsVoicePrototype>())
             _voiceIds.Add(prototype.ID);
     }
 
@@ -93,6 +89,7 @@ public sealed partial class TtsSystem : SharedTtsSystem
             _timeUntilCooldownFinished.Remove(uid);
     }
 
+    [SubscribeLocalEvent]
     private void OnSpoke(EntitySpokeEvent args)
     {
         // No TTS for exotic speech: the audio goes to all of PVS and would voice the clear text.
@@ -105,6 +102,7 @@ public sealed partial class TtsSystem : SharedTtsSystem
         TrySpeak(args.Source, component.Id.Value, args.Message);
     }
 
+    [SubscribeLocalEvent]
     private void OnCleanup(RoundRestartCleanupEvent args)
     {
         _timeUntilCooldownFinished.Clear();
@@ -143,7 +141,7 @@ public sealed partial class TtsSystem : SharedTtsSystem
     public async Task Speak(EntityUid speakerUid, ProtoId<TtsVoicePrototype> voiceProto, string text, TtsFilteredCategory category)
     {
         if (string.IsNullOrWhiteSpace(text) ||
-            !_prototypeManager.TryIndex(voiceProto, out var proto))
+            !ProtoMan.TryIndex(voiceProto, out var proto))
             return;
 
         var cacheId = BuildCacheId(proto, text);

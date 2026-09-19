@@ -38,14 +38,6 @@ public sealed partial class KsRadarSystem : KsLosSensorSystem
     /// </summary>
     private readonly HashSet<EntityUid> _transparentGrids = new();
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsRadarComponent, KsSensorSweepEvent>(OnSweep);
-        SubscribeLocalEvent<KsRadarComponent, KsSensorCoverageEvent>(OnCoverage);
-    }
-
     /// <summary>
     ///     The RCS a target actually needs for this set to perceive it at all: the
     ///         declared floor, or the RCS at which the range taper bottoms out if that
@@ -80,6 +72,7 @@ public sealed partial class KsRadarSystem : KsLosSensorSystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnSweep(Entity<KsRadarComponent> ent, ref KsSensorSweepEvent args)
     {
         // A jammed radar's returns are suppressed: it produces no normal contacts.
@@ -176,6 +169,7 @@ public sealed partial class KsRadarSystem : KsLosSensorSystem
     ///         while the sweep sees past it). The band past MaxRange is
     ///         illuminated-but-not-resolved, where enemy ELINT hears it first.
     /// </summary>
+    [SubscribeLocalEvent]
     private void OnCoverage(Entity<KsRadarComponent> ent, ref KsSensorCoverageEvent args)
     {
         var sensorXform = Transform(args.Sensor);

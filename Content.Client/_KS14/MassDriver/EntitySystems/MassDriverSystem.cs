@@ -10,19 +10,13 @@ public sealed partial class MassDriverSystem : SharedMassDriverSystem
 {
     [Dependency] private SharedUserInterfaceSystem _ui = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<MassDriverComponent, ComponentHandleState>(OnHandleState);
-    }
-
     /// <summary>
     /// Handles the component state being received from the server.
     /// </summary>
     /// <param name="uid">Mass Driver</param>
     /// <param name="component">Mass Driver Component</param>
     /// <param name="args">Event args</param>
+    [SubscribeLocalEvent]
     private void OnHandleState(EntityUid uid, MassDriverComponent component, ref ComponentHandleState args)
     {
         if (args.Current is not MassDriverComponentState state)

@@ -10,13 +10,8 @@ namespace Content.Client._KS14.Anchorless.Systems;
 public sealed partial class AnchorlessIdentitySystem : SharedAnchorlessIdentitySystem
 {
     [Dependency] private MovementSpeedModifierSystem _movement = default!;
-    
-    public override void Initialize()
-    {
-        base.Initialize();
-        SubscribeLocalEvent<KsAnchorlessAntagComponent, ComponentHandleState>(OnHandleState);
-    }
 
+    [SubscribeLocalEvent]
     private void OnHandleState(Entity<KsAnchorlessAntagComponent> ent, ref ComponentHandleState args)
     {
         if (args.Current is not AnchorlessIdentityComponentState state)

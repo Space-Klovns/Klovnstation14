@@ -34,16 +34,7 @@ public sealed partial class GunDodgerSystem : EntitySystem
     private const CollisionGroup DefaultCollisionGroup = CollisionGroup.Impassable | CollisionGroup.BulletImpassable;
     private static readonly QueryFilter DefaultQueryFilter = new() { LayerBits = 0L, Flags = QueryFlags.Dynamic, MaskBits = (long)DefaultCollisionGroup };
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<GunDodgerComponent, PreventCollideEvent>(OnPreventCollide);
-
-        SubscribeLocalEvent<GunShotEvent>(OnGunShot);
-        SubscribeLocalEvent<AttemptHitscanRaycastFiredEvent>(OnAttemptHitscan);
-    }
-
+    [SubscribeLocalEvent]
     private void OnPreventCollide(Entity<GunDodgerComponent> entity, ref PreventCollideEvent args)
     {
         if (args.Cancelled ||
@@ -55,6 +46,7 @@ public sealed partial class GunDodgerSystem : EntitySystem
     }
 
     // This needs to be improved in the future but idgaf
+    [SubscribeLocalEvent]
     private void OnGunShot(ref GunShotEvent args)
     {
         // gundodgers can not dodge bullets shot by other gundodgers, or if they arent alive
@@ -76,6 +68,7 @@ public sealed partial class GunDodgerSystem : EntitySystem
         TryDodge(rayResult.Entity, rayResult.LocalNormal, args.User);
     }
 
+    [SubscribeLocalEvent]
     private void OnAttemptHitscan(ref AttemptHitscanRaycastFiredEvent args)
     {
         if (args.Cancelled ||

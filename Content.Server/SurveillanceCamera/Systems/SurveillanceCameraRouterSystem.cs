@@ -15,7 +15,6 @@ public sealed partial class SurveillanceCameraRouterSystem : EntitySystem
 {
     [Dependency] private DeviceNetworkSystem _deviceNetworkSystem = default!;
     [Dependency] private ActionBlockerSystem _actionBlocker = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private UserInterfaceSystem _userInterface = default!;
     public override void Initialize()
     {
@@ -29,7 +28,7 @@ public sealed partial class SurveillanceCameraRouterSystem : EntitySystem
     private void OnInitialize(EntityUid uid, SurveillanceCameraRouterComponent router, ComponentInit args)
     {
         if (router.SubnetFrequencyId == null ||
-            !_prototypeManager.TryIndex(router.SubnetFrequencyId, out DeviceFrequencyPrototype? subnetFrequency))
+            !ProtoMan.TryIndex(router.SubnetFrequencyId, out DeviceFrequencyPrototype? subnetFrequency))
         {
             return;
         }
@@ -121,7 +120,7 @@ public sealed partial class SurveillanceCameraRouterSystem : EntitySystem
             return;
         }
 
-        if (!_prototypeManager.Resolve<DeviceFrequencyPrototype>(component.AvailableNetworks[args.Network],
+        if (!ProtoMan.Resolve<DeviceFrequencyPrototype>(component.AvailableNetworks[args.Network],
                 out var frequency))
         {
             return;

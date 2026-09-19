@@ -22,7 +22,6 @@ namespace Content.Server.Chemistry.EntitySystems
     [UsedImplicitly]
     internal sealed partial class VaporSystem : EntitySystem
     {
-        [Dependency] private IPrototypeManager _protoManager = default!;
         [Dependency] private ReactiveSystem _reactive = default!;
         [Dependency] private ThrowingSystem _throwing = default!;
         [Dependency] private SharedAppearanceSystem _appearance = default!;
@@ -89,7 +88,7 @@ namespace Content.Server.Chemistry.EntitySystems
 
             if (TryComp<AppearanceComponent>(vapor, out var appearance))
             {
-                _appearance.SetData(vapor, VaporVisuals.Color, newSolution.GetColor(_protoManager).WithAlpha(1f), appearance);
+                _appearance.SetData(vapor, VaporVisuals.Color, newSolution.GetColor(ProtoMan).WithAlpha(1f), appearance);
                 _appearance.SetData(vapor, VaporVisuals.State, true, appearance);
             }
 
@@ -130,7 +129,7 @@ namespace Content.Server.Chemistry.EntitySystems
                         if (reagentQuantity.Quantity == FixedPoint2.Zero)
                             continue;
 
-                        var reagent = _protoManager.Index<ReagentPrototype>(reagentQuantity.Reagent.Prototype);
+                        var reagent = ProtoMan.Index<ReagentPrototype>(reagentQuantity.Reagent.Prototype);
 
                         // Limit the reaction amount to a minimum value to ensure no floating point funnies.
                         // Ex: A solution with a low percentage transfer amount will slowly approach 0.01... and never get deleted

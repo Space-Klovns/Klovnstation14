@@ -10,14 +10,7 @@ public sealed partial class KsAlwaysDisplacedSystem : EntitySystem
     [Dependency] private SpriteSystem _spriteSystem = default!;
     [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsAlwaysDisplacedComponent, ComponentStartup>(OnStartup);
-        SubscribeLocalEvent<KsAlwaysDisplacedComponent, ComponentShutdown>(OnShutdown);
-    }
-
+    [SubscribeLocalEvent]
     private void OnStartup(Entity<KsAlwaysDisplacedComponent> entity, ref ComponentStartup args)
     {
         if (!_spriteQuery.TryComp(entity.Owner, out var spriteComponent))
@@ -44,6 +37,7 @@ public sealed partial class KsAlwaysDisplacedSystem : EntitySystem
         }
     }
 
+    [SubscribeLocalEvent]
     private void OnShutdown(Entity<KsAlwaysDisplacedComponent> entity, ref ComponentShutdown args)
     {
         if (!_spriteQuery.TryComp(entity.Owner, out var spriteComponent))
