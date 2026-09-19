@@ -17,7 +17,7 @@ namespace Content.Shared._KS14.EnergyShield;
 ///         <see cref="ItemToggledEvent"/> - which fires every unrelated subscriber (visuals, sounds,
 ///         melee stats) for a state change that never happened.
 /// </remarks>
-public sealed partial class SharedRechargeableEnergyShieldSystem : EntitySystem
+public sealed partial class RechargeableEnergyShieldSystem : EntitySystem
 {
     [Dependency] private SharedBatterySystem _batterySystem = default!;
     [Dependency] private ItemToggleSystem _itemToggleSystem = default!;

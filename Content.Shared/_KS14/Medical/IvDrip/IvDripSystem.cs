@@ -18,10 +18,10 @@ namespace Content.Shared._KS14.Medical.IvDrip;
 ///     Injection is deliberately server-authoritative. Predicting it would mean predicting
 ///         <see cref="ReactiveSystem.DoEntityReaction"/>, whose reagent effects (popups, sounds, damage)
 ///         are not rollback-safe, and the resulting solution state is replicated anyway.
-///     The window lives in <c>SharedIvDripSystem.Ui.cs</c>; spilling on damage lives in the server-only
+///     The window lives in <c>IvDripSystem.Ui.cs</c>; spilling on damage lives in the server-only
 ///         <c>IvDripSpillageSystem</c>, because puddles can only be made server-side.
 /// </remarks>
-public sealed partial class SharedIvDripSystem : EntitySystem
+public sealed partial class IvDripSystem : EntitySystem
 {
     [Dependency] private SharedActionsSystem _actionsSystem = default!;
     [Dependency] private SharedDeviceLinkSystem _deviceLinkSystem = default!;

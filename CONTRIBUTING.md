@@ -231,6 +231,34 @@ private bool TryGetTemplateFire(EntProtoId prototypeId, out EntityUid templateUi
 private bool ResolveTemplateFire(EntProtoId prototypeId, out EntityUid templateUid)
 ```
 
+**`[Access]`, not a doc comment (C#)** — when a member may only be written through a particular system, enforce it with `[Access]` instead of asking in prose. A comment saying "set this through `SetFoo`" is advice the compiler cannot hold anyone to; `[Access]` is the same statement as an analyzer error (`RA0002`):
+
+```csharp
+// do this - the analyzer rejects any other type writing to these
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+[Access(typeof(IvDripSystem))]
+public sealed partial class IvDripComponent : Component
+{
+    /// <summary>
+    ///     Whether the pump is currently running.
+    /// </summary>
+    /// <seealso cref="IvDripSystem.SetInjectionEnabled"/>
+    [DataField, AutoNetworkedField]
+    public bool InjectionEnabled;
+}
+
+// not this - nothing stops the next caller, and nothing tells them they broke an invariant
+/// <summary>
+///     Whether the pump is running. Set this through <see cref="IvDripSystem.SetInjectionEnabled"/>
+///         rather than directly, so the action and the window stay in step with it.
+/// </summary>
+public bool InjectionEnabled;
+```
+
+The defaults are `Self`/`Friend` = `ReadWriteExecute` and `Other` = `Read`, so the attribute alone leaves the member readable everywhere and writable only by the named types — which is what a component whose invariants live in one system wants. Tighten it with `Other = AccessPermissions.None` when even reading a member should go through the system, and put `[Access]` on the individual member instead of the class when only part of a component is restricted.
+
+Reach for this whenever a system method exists precisely to keep two things in step — a networked field and an action's toggled state, a list and the index into it, a cached value and the thing it caches. Note that it guards the *member*, not what the member points at: `Other = Read` on a `List<T>` field still lets anyone call `Add` on the list they read.
+
 **Source-gen `[Dependency]` fields (C#)** — on current engine versions, injected `[Dependency]` fields on `EntitySystem` (and the few other injectable types) must be writable, and their owning class must be `partial`:
 ```csharp
 // old

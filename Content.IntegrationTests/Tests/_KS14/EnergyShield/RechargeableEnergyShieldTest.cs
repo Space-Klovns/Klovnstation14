@@ -23,7 +23,7 @@ namespace Content.IntegrationTests.Tests._KS14.EnergyShield;
 ///         <c>ItemToggledEvent</c> - a toggle that never happened, delivered to every subscriber.
 /// </remarks>
 [TestFixture]
-[TestOf(typeof(SharedRechargeableEnergyShieldSystem))]
+[TestOf(typeof(RechargeableEnergyShieldSystem))]
 public sealed class RechargeableEnergyShieldTest : GameTest
 {
     public override PoolSettings PoolSettings => PsDisconnected;

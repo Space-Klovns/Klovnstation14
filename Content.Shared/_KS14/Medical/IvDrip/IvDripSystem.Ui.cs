@@ -7,7 +7,7 @@ namespace Content.Shared._KS14.Medical.IvDrip;
 /// <summary>
 ///     The IV drip configuration window: pushing state to it, and acting on what it sends back.
 /// </summary>
-public sealed partial class SharedIvDripSystem
+public sealed partial class IvDripSystem
 {
     [Dependency] private SharedUserInterfaceSystem _userInterfaceSystem = default!;
 
