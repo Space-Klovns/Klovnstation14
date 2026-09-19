@@ -7,9 +7,9 @@
   id: BrickTileDark
   parent: BrickTile
   abstract: true
+# KS14 end
 
 - type: decal
-# KS14 end
   id: BrickTileDarkBox
   parent: BrickTileDark # KS14: added parent
   tags: ["station", "markings"]
