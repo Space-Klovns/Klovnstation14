@@ -1,0 +1,15 @@
+- type: entity
+  parent: ClothingOuterStorageBase
+  id: ClothingOuterCoatBotany
+  name: botany lab coat
+  description: A thick lab coat designed to protect you from dangerous flora.
+  components:
+  - type: Sprite
+    sprite: _KS14/Clothing/OuterClothing/Coats/labcoat_botany.rsi
+  - type: Clothing
+    sprite: _KS14/Clothing/OuterClothing/Coats/labcoat_botany.rsi
+  - type: Armor
+    modifiers:
+      coefficients:
+        Caustic: 0.85
+        Slash: 0.95

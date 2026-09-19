@@ -12,6 +12,7 @@
     ClothingHeadBandBotany: 3
     ClothingHeadsetService: 2
     ClothingOuterWinterHydro: 2
+    ClothingOuterCoatBotany: 3 #KS14: Botany Lab Coat
   contrabandInventory:
     ToyFigurineBotanist: 1
 

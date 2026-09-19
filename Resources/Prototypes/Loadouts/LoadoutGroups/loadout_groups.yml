@@ -480,6 +480,7 @@
   loadouts:
   - BotanistApron
   - BotanistWintercoat
+  - KSBotanistLabcoat
 
 #- type: loadoutGroup
 #  id: BotanistJobTrinkets
