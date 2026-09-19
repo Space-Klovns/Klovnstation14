@@ -1,13 +1,5 @@
-# KS14 start: mapping editor overhaul port
-- type: decal
-  id: Markup
-  parent: Overlays
-  abstract: true
-
-- type: decal
-# KS14 end
+﻿- type: decal
   id: MarkupSquare
-  parent: Markup # KS14: added parent
   tags: ["overlay"]
   defaultCustomColor: true
   sprite:
@@ -16,7 +8,6 @@
 
 - type: decal
   id: MarkupRectangle1x2
-  parent: Markup # KS14: added parent
   tags: ["overlay"]
   defaultCustomColor: true
   sprite:
@@ -25,7 +16,6 @@
 
 - type: decal
   id: MarkupRectangle1x2Center
-  parent: Markup # KS14: added parent
   tags: ["overlay"]
   defaultCustomColor: true
   sprite:
@@ -34,7 +24,6 @@
 
 - type: decal
   id: MarkupSquareQuater
-  parent: Markup # KS14: added parent
   tags: ["overlay"]
   defaultCustomColor: true
   sprite:
@@ -43,7 +32,6 @@
 
 - type: decal
   id: MarkupSquareQuaterCenter
-  parent: Markup # KS14: added parent
   tags: ["overlay"]
   defaultCustomColor: true
   sprite:

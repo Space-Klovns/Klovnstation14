@@ -1,7 +1,6 @@
 using System.Numerics;
 using Content.Client.Administration.Managers;
 using Content.Client.Gameplay;
-using Content.Client.Mapping; // KS14
 using Content.Client.Sandbox;
 using Content.Client.UserInterface.Controls;
 using Content.Client.UserInterface.Systems.DecalPlacer;
@@ -24,7 +23,7 @@ namespace Content.Client.UserInterface.Systems.Sandbox;
 
 // TODO hud refactor should part of this be in engine?
 [UsedImplicitly]
-public sealed partial class SandboxUIController : UIController, IOnStateChanged<GameplayState>, IOnStateEntered<MappingState>, IOnStateExited<MappingState>, IOnSystemChanged<SandboxSystem> // KS14: make sandbox controls available while mapping
+public sealed partial class SandboxUIController : UIController, IOnStateChanged<GameplayState>, IOnSystemChanged<SandboxSystem>
 {
     [Dependency] private IConsoleHost _console = default!;
     [Dependency] private IInputManager _input = default!;
@@ -43,17 +42,6 @@ public sealed partial class SandboxUIController : UIController, IOnStateChanged<
     private MenuButton? SandboxButton => UIManager.GetActiveUIWidgetOrNull<MenuBar.Widgets.GameTopMenuBar>()?.SandboxButton;
 
     public void OnStateEntered(GameplayState state)
-    {
-        EnterState();
-    }
-
-    // KS14 start: expose the same sandbox controls in the mapping editor.
-    public void OnStateEntered(MappingState state)
-    {
-        EnterState();
-    }
-
-    private void EnterState()
     {
         DebugTools.Assert(_window == null);
         EnsureWindow();
@@ -162,16 +150,6 @@ public sealed partial class SandboxUIController : UIController, IOnStateChanged<
 
     public void OnStateExited(GameplayState state)
     {
-        ExitState();
-    }
-
-    public void OnStateExited(MappingState state)
-    {
-        ExitState();
-    }
-
-    private void ExitState()
-    {
         if (_window != null)
         {
             _window.Close();
@@ -180,7 +158,6 @@ public sealed partial class SandboxUIController : UIController, IOnStateChanged<
 
         CommandBinds.Unregister<SandboxSystem>();
     }
-    // KS14 end
 
     public void OnSystemLoaded(SandboxSystem system)
     {

@@ -1,15 +1,8 @@
 #This has to be split up like this because tiles remove the decal under them, and the derelict sign is bigger then 32x32 when combined.
 
-# KS14 start: mapping editor overhaul port
-- type: decal
-  id: DerelictSign
-  abstract: true
-
-# KS14 end
 #Bottom
 - type: decal
   id: DerelictSignBottom1
-  parent: DerelictSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/derelictsign.rsi
@@ -17,7 +10,6 @@
 
 - type: decal
   id: DerelictSignBottom2
-  parent: DerelictSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/derelictsign.rsi
@@ -25,7 +17,6 @@
 
 - type: decal
   id: DerelictSignBottom3
-  parent: DerelictSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/derelictsign.rsi
@@ -33,7 +24,6 @@
 
 - type: decal
   id: DerelictSignBottom4
-  parent: DerelictSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/derelictsign.rsi
@@ -41,7 +31,6 @@
 
 - type: decal
   id: DerelictSignBottom5
-  parent: DerelictSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/derelictsign.rsi
@@ -49,7 +38,6 @@
 
 - type: decal
   id: DerelictSignBottom6
-  parent: DerelictSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/derelictsign.rsi
@@ -57,7 +45,6 @@
 
 - type: decal
   id: DerelictSignBottom7
-  parent: DerelictSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/derelictsign.rsi
@@ -65,7 +52,6 @@
 
 - type: decal
   id: DerelictSignBottom8
-  parent: DerelictSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/derelictsign.rsi
@@ -74,7 +60,6 @@
 #Top
 - type: decal
   id: DerelictSignTop1
-  parent: DerelictSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/derelictsign.rsi
@@ -82,7 +67,6 @@
 
 - type: decal
   id: DerelictSignTop2
-  parent: DerelictSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/derelictsign.rsi
@@ -90,7 +74,6 @@
 
 - type: decal
   id: DerelictSignTop3
-  parent: DerelictSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/derelictsign.rsi
@@ -98,7 +81,6 @@
 
 - type: decal
   id: DerelictSignTop4
-  parent: DerelictSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/derelictsign.rsi
@@ -106,7 +88,6 @@
 
 - type: decal
   id: DerelictSignTop5
-  parent: DerelictSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/derelictsign.rsi
@@ -114,7 +95,6 @@
 
 - type: decal
   id: DerelictSignTop6
-  parent: DerelictSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/derelictsign.rsi
@@ -122,7 +102,6 @@
 
 - type: decal
   id: DerelictSignTop7
-  parent: DerelictSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/derelictsign.rsi
@@ -130,7 +109,6 @@
 
 - type: decal
   id: DerelictSignTop8
-  parent: DerelictSign # KS14: added parent
   tags: ["station"]
   sprite:
     sprite: Decals/derelictsign.rsi

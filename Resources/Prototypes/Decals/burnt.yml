@@ -1,12 +1,5 @@
-# KS14 start: mapping editor overhaul port
-- type: decal
-  id: burnt
-  abstract: true
-
-# KS14 end
 - type: decal
   id: burnt1
-  parent: burnt # KS14: added parent
   tags: ["burnt"]
   defaultCleanable: true
   sprite:
@@ -15,7 +8,6 @@
 
 - type: decal
   id: burnt2
-  parent: burnt # KS14: added parent
   tags: ["burnt"]
   defaultCleanable: true
   sprite:
@@ -24,7 +16,6 @@
 
 - type: decal
   id: burnt3
-  parent: burnt # KS14: added parent
   tags: ["burnt"]
   defaultCleanable: true
   sprite:
@@ -33,7 +24,6 @@
 
 - type: decal
   id: burnt4
-  parent: burnt # KS14: added parent
   tags: ["burnt"]
   defaultCleanable: true
   sprite:

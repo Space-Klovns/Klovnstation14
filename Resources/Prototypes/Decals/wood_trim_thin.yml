@@ -1,12 +1,5 @@
-# KS14 start: mapping editor overhaul port
-- type: decal
-  id: WoodTrimThin
-  abstract: true
-
-- type: decal
-# KS14 end
+﻿- type: decal
   id: WoodTrimThinBox
-  parent: WoodTrimThin # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/wood_trim.rsi
@@ -14,7 +7,6 @@
 
 - type: decal
   id: WoodTrimThinCornerNe
-  parent: WoodTrimThin # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/wood_trim.rsi
@@ -22,7 +14,6 @@
 
 - type: decal
   id: WoodTrimThinCornerSe
-  parent: WoodTrimThin # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/wood_trim.rsi
@@ -30,7 +21,6 @@
 
 - type: decal
   id: WoodTrimThinCornerNw
-  parent: WoodTrimThin # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/wood_trim.rsi
@@ -38,7 +28,6 @@
 
 - type: decal
   id: WoodTrimThinCornerSw
-  parent: WoodTrimThin # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/wood_trim.rsi
@@ -46,7 +35,6 @@
 
 - type: decal
   id: WoodTrimThinInnerNe
-  parent: WoodTrimThin # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/wood_trim.rsi
@@ -54,7 +42,6 @@
 
 - type: decal
   id: WoodTrimThinInnerSe
-  parent: WoodTrimThin # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/wood_trim.rsi
@@ -62,7 +49,6 @@
 
 - type: decal
   id: WoodTrimThinInnerNw
-  parent: WoodTrimThin # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/wood_trim.rsi
@@ -70,7 +56,6 @@
 
 - type: decal
   id: WoodTrimThinInnerSw
-  parent: WoodTrimThin # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/wood_trim.rsi
@@ -78,7 +63,6 @@
 
 - type: decal
   id: WoodTrimThinEndN
-  parent: WoodTrimThin # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/wood_trim.rsi
@@ -86,7 +70,6 @@
 
 - type: decal
   id: WoodTrimThinEndE
-  parent: WoodTrimThin # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/wood_trim.rsi
@@ -94,7 +77,6 @@
 
 - type: decal
   id: WoodTrimThinEndS
-  parent: WoodTrimThin # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/wood_trim.rsi
@@ -102,7 +84,6 @@
 
 - type: decal
   id: WoodTrimThinEndW
-  parent: WoodTrimThin # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/wood_trim.rsi
@@ -110,7 +91,6 @@
 
 - type: decal
   id: WoodTrimThinLineN
-  parent: WoodTrimThin # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/wood_trim.rsi
@@ -118,7 +98,6 @@
 
 - type: decal
   id: WoodTrimThinLineE
-  parent: WoodTrimThin # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/wood_trim.rsi
@@ -126,7 +105,6 @@
 
 - type: decal
   id: WoodTrimThinLineS
-  parent: WoodTrimThin # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/wood_trim.rsi
@@ -134,7 +112,6 @@
 
 - type: decal
   id: WoodTrimThinLineW
-  parent: WoodTrimThin # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/wood_trim.rsi

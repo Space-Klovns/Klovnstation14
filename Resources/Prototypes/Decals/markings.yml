@@ -1,12 +1,5 @@
-# KS14 start: mapping editor overhaul port
-- type: decal
-  id: Markings
-  abstract: true
-
-- type: decal
-# KS14 end
+﻿- type: decal
   id: Arrows
-  parent: Markings # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -14,23 +7,14 @@
 
 - type: decal
   id: ArrowsGreyscale
-  parent: Markings # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
     sprite: Decals/markings.rsi
     state: arrows_greyscale
 
-# KS14 start: mapping editor overhaul port
-- type: decal
-  id: Bots
-  parent: Markings
-  abstract: true
-
-# KS14 end
 - type: decal
   id: Bot
-  parent: Bots # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -38,7 +22,6 @@
 
 - type: decal
   id: BotGreyscale
-  parent: Bots # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -47,7 +30,6 @@
 
 - type: decal
   id: BotLeft
-  parent: Bots # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -55,7 +37,6 @@
 
 - type: decal
   id: BotLeftGreyscale
-  parent: Bots # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -64,7 +45,6 @@
 
 - type: decal
   id: BotRight
-  parent: Bots # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -72,7 +52,6 @@
 
 - type: decal
   id: BotRightGreyscale
-  parent: Bots # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -81,7 +60,6 @@
 
 - type: decal
   id: Box
-  parent: Markings # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -89,7 +67,6 @@
 
 - type: decal
   id: BoxGreyscale
-  parent: Markings # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -98,7 +75,6 @@
 
 - type: decal
   id: Caution
-  parent: Markings # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -106,7 +82,6 @@
 
 - type: decal
   id: CautionGreyscale
-  parent: Markings # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -115,7 +90,6 @@
 
 - type: decal
   id: Delivery
-  parent: Markings # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -123,7 +97,6 @@
 
 - type: decal
   id: DeliveryGreyscale
-  parent: Markings # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -132,7 +105,6 @@
 
 - type: decal
   id: LoadingArea
-  parent: Markings # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -140,7 +112,6 @@
 
 - type: decal
   id: LoadingAreaGreyscale
-  parent: Markings # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -149,7 +120,6 @@
 
 - type: decal
   id: StandClear
-  parent: Markings # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -157,23 +127,14 @@
 
 - type: decal
   id: StandClearGreyscale
-  parent: Markings # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
     sprite: Decals/markings.rsi
     state: standclear_greyscale
 
-# KS14 start: mapping editor overhaul port
-- type: decal
-  id: Warn
-  parent: Markings
-  abstract: true
-
-# KS14 end
 - type: decal
   id: WarnBox
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -181,7 +142,6 @@
 
 - type: decal
   id: WarnBoxGreyscale
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -210,7 +170,6 @@
 
 - type: decal
   id: WarnFull
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -218,7 +177,6 @@
 
 - type: decal
   id: WarnFullGreyscale
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -311,7 +269,6 @@
 
 - type: decal
   id: WarnCornerGreyscaleNE
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -320,7 +277,6 @@
 
 - type: decal
   id: WarnCornerGreyscaleNW
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -329,7 +285,6 @@
 
 - type: decal
   id: WarnCornerGreyscaleSE
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -338,7 +293,6 @@
 
 - type: decal
   id: WarnCornerGreyscaleSW
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -347,7 +301,6 @@
 
 - type: decal
   id: WarnCornerNE
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -355,7 +308,6 @@
 
 - type: decal
   id: WarnCornerNW
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -363,7 +315,6 @@
 
 - type: decal
   id: WarnCornerSE
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -371,7 +322,6 @@
 
 - type: decal
   id: WarnCornerSW
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -379,7 +329,6 @@
 
 - type: decal
   id: WarnCornerSmallGreyscaleNE
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -388,7 +337,6 @@
 
 - type: decal
   id: WarnCornerSmallGreyscaleNW
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -397,7 +345,6 @@
 
 - type: decal
   id: WarnCornerSmallGreyscaleSE
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -406,7 +353,6 @@
 
 - type: decal
   id: WarnCornerSmallGreyscaleSW
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -415,7 +361,6 @@
 
 - type: decal
   id: WarnCornerSmallNE
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -423,7 +368,6 @@
 
 - type: decal
   id: WarnCornerSmallNW
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -431,7 +375,6 @@
 
 - type: decal
   id: WarnCornerSmallSE
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -439,7 +382,6 @@
 
 - type: decal
   id: WarnCornerSmallSW
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -447,7 +389,6 @@
 
 - type: decal
   id: WarnEndE
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -455,7 +396,6 @@
 
 - type: decal
   id: WarnEndN
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -463,7 +403,6 @@
 
 - type: decal
   id: WarnEndS
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -471,7 +410,6 @@
 
 - type: decal
   id: WarnEndW
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -479,7 +417,6 @@
 
 - type: decal
   id: WarnEndGreyscaleE
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -488,7 +425,6 @@
 
 - type: decal
   id: WarnEndGreyscaleN
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -497,7 +433,6 @@
 
 - type: decal
   id: WarnEndGreyscaleS
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -506,7 +441,6 @@
 
 - type: decal
   id: WarnEndGreyscaleW
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -515,7 +449,6 @@
 
 - type: decal
   id: WarnLineE
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -523,7 +456,6 @@
 
 - type: decal
   id: WarnLineW
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -531,7 +463,6 @@
 
 - type: decal
   id: WarnLineN
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -539,7 +470,6 @@
 
 - type: decal
   id: WarnLineS
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -547,7 +477,6 @@
 
 - type: decal
   id: WarnLineGreyscaleE
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -556,7 +485,6 @@
 
 - type: decal
   id: WarnLineGreyscaleN
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -565,7 +493,6 @@
 
 - type: decal
   id: WarnLineGreyscaleS
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -574,7 +501,6 @@
 
 - type: decal
   id: WarnLineGreyscaleW
-  parent: Warn # KS14: added parent
   tags: ["station", "markings"]
   defaultCustomColor: true
   sprite:
@@ -583,7 +509,6 @@
 
 - type: decal
   id: HatchSmall
-  parent: Markings # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi
@@ -591,7 +516,6 @@
 
 - type: decal
   id: VentSmall
-  parent: Markings # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/markings.rsi

@@ -1,14 +1,7 @@
-# KS14 start: mapping editor overhaul port
-# If you spawn any of these, they should probably be made cleanable as well.
-
-- type: decal
-  id: Dirty
-  abstract: true
-# KS14 end
+﻿# If you spawn any of these, they should probably be made cleanable as well.
 
 - type: decal
   id: Dirt
-  parent: Dirty # KS14: added parent
   tags: ["station", "dirty"]
   defaultCleanable: true
   sprite:
@@ -17,7 +10,6 @@
 
 - type: decal
   id: DirtLight
-  parent: Dirty # KS14: added parent
   tags: ["station", "dirty"]
   defaultCleanable: true
   sprite:
@@ -26,7 +18,6 @@
 
 - type: decal
   id: DirtMedium
-  parent: Dirty # KS14: added parent
   tags: ["station", "dirty"]
   defaultCleanable: true
   sprite:
@@ -35,7 +26,6 @@
 
 - type: decal
   id: DirtHeavy
-  parent: Dirty # KS14: added parent
   tags: ["station", "dirty"]
   defaultCleanable: true
   sprite:
@@ -44,7 +34,6 @@
 
 - type: decal
   id: DirtHeavyMonotile
-  parent: Dirty # KS14: added parent
   tags: ["station", "dirty"]
   defaultCleanable: true
   sprite:
@@ -85,7 +74,6 @@
 
 - type: decal
   id: Damaged
-  parent: Dirty # KS14: added parent
   tags: ["station", "dirty"]
   defaultCleanable: true
   sprite:
@@ -94,7 +82,6 @@
 
 - type: decal
   id: Remains
-  parent: Dirty # KS14: added parent
   tags: ["station", "dirty"]
   defaultCleanable: true
   sprite:
@@ -103,11 +90,10 @@
 
 - type: decal
   id: Rust
-  parent: Dirty # KS14: added parent
   tags: ["station", "dirty"]
   defaultCleanable: true
   sprite:
     sprite: Decals/dirty.rsi
-# KS14 start: mapping editor overhaul port
-# KS14 end
     state: rust
+
+
