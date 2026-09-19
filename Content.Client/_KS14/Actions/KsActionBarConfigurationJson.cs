@@ -15,8 +15,8 @@ namespace Content.Client._KS14.Actions;
 /// <remarks>
 ///     Reading goes through YamlDotNet because JSON is close enough to a YAML subset for files this codec
 ///         wrote itself, and unlike <c>System.Text.Json</c> those APIs are permitted in sandboxed content
-///         assemblies. It is not a general JSON parser: a hand-edited file using tabs to indent, or
-///         repeating a key, will not read back the way a JSON parser would.
+///         assemblies. It is not a general JSON parser, though - a hand-edited file that repeats a key,
+///         for instance, is rejected outright where a JSON parser would take the last one.
 /// </remarks>
 public static class KsActionBarConfigurationJson
 {
@@ -85,8 +85,8 @@ public static class KsActionBarConfigurationJson
         using var reader = new StringReader(json);
         var stream = new YamlStream();
 
-        // The parser throws on malformed input, a tab indent or a duplicate key. This is a Try method,
-        // and the file it reads sits in user data where anything could have happened to it.
+        // The parser throws on malformed input and on a duplicate key. This is a Try method, and the
+        // file it reads sits in user data where anything could have happened to it.
         try
         {
             stream.Load(reader);
