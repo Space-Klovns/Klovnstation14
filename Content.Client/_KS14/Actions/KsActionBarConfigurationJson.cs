@@ -10,11 +10,19 @@ using YamlDotNet.RepresentationModel;
 namespace Content.Client._KS14.Actions;
 
 /// <summary>
-/// Small JSON codec for the action layout schema. JSON is parsed through YamlDotNet because JSON is a YAML subset;
-/// unlike System.Text.Json, these APIs are permitted in sandboxed content assemblies.
+///     Small JSON codec for the action layout schema.
 /// </summary>
+/// <remarks>
+///     Reading goes through YamlDotNet because JSON is close enough to a YAML subset for files this codec
+///         wrote itself, and unlike <c>System.Text.Json</c> those APIs are permitted in sandboxed content
+///         assemblies. It is not a general JSON parser: a hand-edited file using tabs to indent, or
+///         repeating a key, will not read back the way a JSON parser would.
+/// </remarks>
 public static class KsActionBarConfigurationJson
 {
+    /// <summary>
+    ///     Writes a layout out as JSON.
+    /// </summary>
     public static string Serialize(KsActionBarConfiguration configuration)
     {
         var builder = new StringBuilder();
@@ -64,12 +72,29 @@ public static class KsActionBarConfigurationJson
         return builder.ToString();
     }
 
+    /// <summary>
+    ///     Reads a layout back, returning false rather than throwing on anything malformed.
+    /// </summary>
+    /// <remarks>
+    ///     The version is reported, not enforced - it is up to the caller to decide what to do with a
+    ///         layout written by a different version.
+    /// </remarks>
     public static bool TryDeserialize(string json, out KsActionBarConfiguration configuration)
     {
         configuration = new KsActionBarConfiguration();
         using var reader = new StringReader(json);
         var stream = new YamlStream();
-        stream.Load(reader);
+
+        // The parser throws on malformed input, a tab indent or a duplicate key. This is a Try method,
+        // and the file it reads sits in user data where anything could have happened to it.
+        try
+        {
+            stream.Load(reader);
+        }
+        catch (Exception)
+        {
+            return false;
+        }
 
         if (stream.Documents.Count != 1 ||
             stream.Documents[0].RootNode.ToDataNode() is not MappingDataNode root ||

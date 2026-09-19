@@ -11,8 +11,26 @@ using Robust.Shared.Utility;
 
 namespace Content.Client.UserInterface.Systems.Actions;
 
+/// <summary>
+///     Remembers where the player put each action, and puts them back there next time.
+/// </summary>
+/// <remarks>
+///     Actions are matched across sessions by (action prototype, providing item prototype, occurrence)
+///         rather than by uid, because uids do not survive a reconnect.
+///     An action recorded in <see cref="KsActionBarConfiguration.KnownActions"/> but absent from
+///         <see cref="KsActionBarConfiguration.Entries"/> was taken off the bar on purpose, so it stays
+///         off. Anything the saved layout has never seen auto-populates as usual.
+///     Known limitation: the layout is one file per client install, scoped to neither server nor
+///         character. The engine offers no stable server identity to key it on - <c>ServerInfo</c> only
+///         carries a mutable display name - and keying it on a character name would break on a rename.
+/// </remarks>
 public sealed partial class ActionUIController
 {
+    /// <summary>
+    ///     Where the layout is kept, under the player's own data directory.
+    /// </summary>
+    private static readonly ResPath ActionConfigurationPath = new("/ks14_action_layout.json");
+
     [Dependency] private IBaseClient _baseClient = default!;
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IResourceManager _resourceManager = default!;
@@ -21,10 +39,28 @@ public sealed partial class ActionUIController
     private bool _isLeavingServer;
     private bool _actionFoldersEnabled = true;
     private bool _actionLayoutPersistenceEnabled = true;
+
+    /// <summary>
+    ///     Set when something changed the layout, cleared once it has been written out.
+    /// </summary>
+    /// <remarks>
+    ///     Exists so that equipping an item which grants several actions writes the file once at the end
+    ///         of the frame instead of once per action, synchronously, on the UI thread.
+    /// </remarks>
+    private bool _actionConfigurationDirty;
+
     private KsActionBarConfiguration? _pendingActionConfiguration;
     private HashSet<ActionPersistenceKey>? _lastAppliedActionIdentities;
     private HashSet<EntityUid>? _lastAppliedActionUids;
 
+    /// <summary>
+    ///     Identity of one action across sessions.
+    /// </summary>
+    /// <param name="ActionPrototype">Prototype of the action entity itself.</param>
+    /// <param name="ProviderPrototype">Prototype of the item granting it, or null if innate.</param>
+    /// <param name="Occurrence">
+    ///     Which of several otherwise identical actions this is, counted in a stable sort order.
+    /// </param>
     private readonly record struct ActionPersistenceKey(
         string ActionPrototype,
         string? ProviderPrototype,
@@ -36,11 +72,11 @@ public sealed partial class ActionUIController
         _configurationManager.OnValueChanged(
             KsCCVars.ActionFoldersEnabled,
             OnActionFoldersEnabledChanged,
-            true);
+            invokeImmediately: true);
         _configurationManager.OnValueChanged(
             KsCCVars.ActionLayoutPersistenceEnabled,
             OnActionLayoutPersistenceEnabledChanged,
-            true);
+            invokeImmediately: true);
     }
 
     private void OnPlayerLeaveServer(object? sender, PlayerEventArgs args)
@@ -52,16 +88,23 @@ public sealed partial class ActionUIController
     {
         _hasLinkedActionSet = true;
         _isLeavingServer = false;
+        _actionConfigurationDirty = false;
         _pendingActionConfiguration = null;
         _lastAppliedActionIdentities = null;
         _lastAppliedActionUids = null;
         TryRestoreActionConfiguration();
     }
 
+    /// <summary>
+    ///     Flushes anything still unsaved, then forgets the action set that was linked.
+    /// </summary>
     private void EndLinkedActionConfiguration()
     {
+        FlushPendingActionConfigurationSave();
+
         _hasLinkedActionSet = false;
         _isLeavingServer = false;
+        _actionConfigurationDirty = false;
         _pendingActionConfiguration = null;
         _lastAppliedActionIdentities = null;
         _lastAppliedActionUids = null;
@@ -87,6 +130,9 @@ public sealed partial class ActionUIController
             SaveActionConfigurationAfterChange();
     }
 
+    /// <summary>
+    ///     Marks the layout as needing a write. The write itself happens at the end of the frame.
+    /// </summary>
     private void SaveActionConfigurationAfterChange()
     {
         if (_isLeavingServer || !_actionLayoutPersistenceEnabled)
@@ -95,13 +141,25 @@ public sealed partial class ActionUIController
         _pendingActionConfiguration = null;
         _lastAppliedActionIdentities = null;
         _lastAppliedActionUids = null;
+        _actionConfigurationDirty = true;
+    }
+
+    /// <summary>
+    ///     Writes the layout out if anything has changed since the last write.
+    /// </summary>
+    private void FlushPendingActionConfigurationSave()
+    {
+        if (!_actionConfigurationDirty)
+            return;
+
+        _actionConfigurationDirty = false;
         SaveActionConfiguration();
     }
 
-    private bool SaveActionConfiguration()
+    private void SaveActionConfiguration()
     {
         if (!_actionLayoutPersistenceEnabled || !_hasLinkedActionSet || _actionsSystem == null)
-            return false;
+            return;
 
         try
         {
@@ -137,14 +195,12 @@ public sealed partial class ActionUIController
                     configuration.Entries.Add(new KsActionBarConfigurationEntry { Action = identity });
             }
 
-            using var writer = _resourceManager.UserData.OpenWriteText(GetActionConfigurationPath());
+            using var writer = _resourceManager.UserData.OpenWriteText(ActionConfigurationPath);
             writer.Write(KsActionBarConfigurationJson.Serialize(configuration));
-            return true;
         }
         catch (Exception exception)
         {
             Log.Warning($"Could not save the action bar configuration: {exception.Message}");
-            return false;
         }
     }
 
@@ -155,12 +211,20 @@ public sealed partial class ActionUIController
 
         try
         {
-            if (!_resourceManager.UserData.TryReadAllText(GetActionConfigurationPath(), out var json))
+            if (!_resourceManager.UserData.TryReadAllText(ActionConfigurationPath, out var json))
                 return;
 
-            if (!KsActionBarConfigurationJson.TryDeserialize(json, out var configuration) ||
-                configuration.Version != KsActionBarConfiguration.CurrentVersion)
+            if (!KsActionBarConfigurationJson.TryDeserialize(json, out var configuration))
             {
+                Log.Warning("The saved action bar layout could not be read, and has been ignored.");
+                return;
+            }
+
+            if (configuration.Version != KsActionBarConfiguration.CurrentVersion)
+            {
+                Log.Info(
+                    $"Ignoring a saved action bar layout written by version {configuration.Version}; " +
+                    $"this build writes version {KsActionBarConfiguration.CurrentVersion} and has no migration for it.");
                 return;
             }
 
@@ -175,19 +239,25 @@ public sealed partial class ActionUIController
         }
     }
 
+    /// <summary>
+    ///     Re-applies the saved layout, if one is still pending and the live action set has moved on
+    ///         since it was last applied.
+    /// </summary>
     private bool TryApplyPendingActionConfiguration()
     {
         if (_pendingActionConfiguration == null)
             return false;
 
         var currentActions = _actionsSystem?.GetClientActions().Select(action => action.Owner).ToHashSet() ?? [];
-        var currentIdentities = BuildActionIdentityMap().Values.Select(ToKey).ToHashSet();
+        var identities = BuildActionIdentityMap();
+        var currentIdentities = identities.Values.Select(ToKey).ToHashSet();
+
         if (_lastAppliedActionUids == null ||
             !_lastAppliedActionUids.SetEquals(currentActions) ||
             _lastAppliedActionIdentities == null ||
             !_lastAppliedActionIdentities.SetEquals(currentIdentities))
         {
-            ApplyActionConfiguration(_pendingActionConfiguration);
+            ApplyActionConfiguration(_pendingActionConfiguration, identities);
             _lastAppliedActionUids = currentActions;
             _lastAppliedActionIdentities = currentIdentities;
         }
@@ -195,13 +265,20 @@ public sealed partial class ActionUIController
         return true;
     }
 
-    private void ApplyActionConfiguration(KsActionBarConfiguration configuration)
+    /// <summary>
+    ///     Rebuilds the whole bar from a saved layout.
+    /// </summary>
+    /// <param name="identities">
+    ///     Identity map for the live action set, built by the caller so it is not built twice per apply.
+    /// </param>
+    private void ApplyActionConfiguration(
+        KsActionBarConfiguration configuration,
+        Dictionary<EntityUid, KsSavedActionIdentity> identities)
     {
         if (_actionsSystem == null)
             return;
 
         ResetActionFolders();
-        var identities = BuildActionIdentityMap();
         var assigned = new HashSet<EntityUid>();
 
         _actions.Clear();
@@ -235,7 +312,7 @@ public sealed partial class ActionUIController
                 continue;
             }
 
-            var folderUid = CreateFolderAction(false, members[0]);
+            var folderUid = CreateFolderAction(isExit: false, members[0]);
             EntityManager.GetComponent<KsActionFolderComponent>(folderUid).Actions.AddRange(members);
             _actions.Add(folderUid);
         }
@@ -259,6 +336,10 @@ public sealed partial class ActionUIController
         }
     }
 
+    /// <summary>
+    ///     Finds the live action matching a saved identity, skipping ones already claimed by an earlier
+    ///         entry.
+    /// </summary>
     private static bool TryResolveSavedAction(
         KsSavedActionIdentity saved,
         Dictionary<EntityUid, KsSavedActionIdentity> current,
@@ -280,14 +361,25 @@ public sealed partial class ActionUIController
         return false;
     }
 
+    /// <summary>
+    ///     Builds the cross-session identity of every action the local player currently has.
+    /// </summary>
+    /// <remarks>
+    ///     Iterated in <see cref="Content.Client.Actions.ActionsSystem.ActionComparer"/> order rather
+    ///         than in enumeration order: <c>Occurrence</c> disambiguates otherwise identical actions by
+    ///         position, so an unstable order would swap two identical items' slots between sessions.
+    /// </remarks>
     private Dictionary<EntityUid, KsSavedActionIdentity> BuildActionIdentityMap()
     {
         var result = new Dictionary<EntityUid, KsSavedActionIdentity>();
         if (_actionsSystem == null)
             return result;
 
+        var sortedActions = _actionsSystem.GetClientActions().ToList();
+        sortedActions.Sort(Content.Client.Actions.ActionsSystem.ActionComparer);
+
         var occurrences = new Dictionary<(string ActionPrototype, string? ProviderPrototype), int>();
-        foreach (var action in _actionsSystem.GetClientActions())
+        foreach (var action in sortedActions)
         {
             if (!EntityManager.TryGetComponent<MetaDataComponent>(action.Owner, out var actionMetadata) ||
                 actionMetadata.EntityPrototype?.ID is not { } actionPrototype)
@@ -318,11 +410,6 @@ public sealed partial class ActionUIController
         }
 
         return result;
-    }
-
-    private static ResPath GetActionConfigurationPath()
-    {
-        return new ResPath("/ks14_action_layout.json");
     }
 
     private static ActionPersistenceKey ToKey(KsSavedActionIdentity identity)

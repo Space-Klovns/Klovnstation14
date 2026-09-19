@@ -9,11 +9,14 @@ using Direction = Robust.Shared.Maths.Direction;
 namespace Content.Client._KS14.Actions.UI;
 
 /// <summary>
-/// Draws a distinct folder frame containing layered previews of up to four actions.
+///     Draws a distinct folder frame containing layered previews of up to four actions.
 /// </summary>
 public sealed class KsActionFolderIcon : Control
 {
-    private const int MaximumPreviews = 4;
+    /// <summary>
+    ///     How many of a folder's members are previewed on its icon, one per cell of the 2x2 grid.
+    /// </summary>
+    public const int MaximumPreviews = 4;
     private const float NativeEntityIconSize = 32f;
 
     private static readonly Color PreviewBackground = Color.FromHex("#151927E6");
@@ -26,11 +29,14 @@ public sealed class KsActionFolderIcon : Control
     ];
 
     private readonly IEntityManager _entityManager;
+    private readonly SpriteSystem _spriteSystem;
     private readonly ActionPreview[] _previews = new ActionPreview[MaximumPreviews];
 
+    /// <param name="entityManager">Used to read the sprites of the actions being previewed.</param>
     public KsActionFolderIcon(IEntityManager entityManager)
     {
         _entityManager = entityManager;
+        _spriteSystem = entityManager.System<SpriteSystem>();
         MouseFilter = MouseFilterMode.Ignore;
         RectClipContent = true;
 
@@ -38,6 +44,9 @@ public sealed class KsActionFolderIcon : Control
             _previews[index] = new ActionPreview();
     }
 
+    /// <summary>
+    ///     Replaces the previewed members with the first <see cref="MaximumPreviews"/> of the given actions.
+    /// </summary>
     public void SetFolder(IEnumerable<Entity<ActionComponent>> actions, SpriteSystem spriteSystem)
     {
         var index = 0;
@@ -107,8 +116,7 @@ public sealed class KsActionFolderIcon : Control
         if (!_entityManager.TryGetComponent(entityUid, out SpriteComponent? spriteComponent))
             return;
 
-        var spriteSystem = _entityManager.System<SpriteSystem>();
-        spriteSystem.ForceUpdate(entityUid.Value);
+        _spriteSystem.ForceUpdate(entityUid.Value);
         var scale = MathF.Min(bounds.Width, bounds.Height) / NativeEntityIconSize;
         screenHandle.DrawEntity(
             entityUid.Value,
@@ -136,6 +144,8 @@ public sealed class KsActionFolderIcon : Control
             inset + column * (cellLength + gap),
             inset + row * (cellLength + gap));
 
+        // The left column is nudged back by the frame inset, so the 2x2 grid reads as centred inside
+        // the folder border rather than hugging its right edge.
         if (column == 0)
             position -= new Vector2(2f * UIScale);
 

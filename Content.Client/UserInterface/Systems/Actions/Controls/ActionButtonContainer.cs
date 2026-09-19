@@ -31,8 +31,10 @@ public partial class ActionButtonContainer : GridContainer
 
     public void SetActionData(ActionsSystem system, params EntityUid?[] actionTypes)
     {
-        var virtualActionCount = actionTypes.Count(actionUid => actionUid is { } uid && _entity.HasComponent<KsActionFolderComponent>(uid)); // KS14: include folders and Back in capacity
-        var uniqueCount = Math.Min(system.GetClientActions().Count() + virtualActionCount, actionTypes.Length + 1); // KS14: virtual entries do not exist in the server action set
+        // KS14: folders and the back entry are client-only, so they are not in the server's action set
+        // and have to be counted separately or the bar comes up short.
+        var virtualActionCount = actionTypes.Count(actionUid => actionUid is { } uid && _entity.HasComponent<KsActionFolderComponent>(uid));
+        var uniqueCount = Math.Min(system.GetClientActions().Count() + virtualActionCount/* KS14: added */, actionTypes.Length + 1);
         var keys = ContentKeyFunctions.GetHotbarBoundKeys();
 
         for (var i = 0; i < uniqueCount; i++)
