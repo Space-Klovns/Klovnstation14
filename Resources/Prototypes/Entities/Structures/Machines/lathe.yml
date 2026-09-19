@@ -42,6 +42,8 @@
         type: LatheBoundUserInterface
       enum.ResearchClientUiKey.Key:
         type: ResearchClientBoundUserInterface
+      enum.ExecutorUiKey.Key: # KS14
+          type: ExecutorBoundUserInterface
   - type: Transform
     anchored: true
   - type: Pullable
@@ -56,6 +58,11 @@
     workingPowerDraw: 1000
   - type: PacketNetwork # KS14
     frequency: LatheFrequency
+  - type: PacketExecutor # KS14
+    modules:
+    - BasePacketModule
+    - LathePacketModule
+    - NetworkPacketModule
 
 # a lathe that can be sped up with space lube / slowed down with glue
 - type: entity

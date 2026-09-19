@@ -17,7 +17,7 @@ public sealed partial class PacketSystem
     /// Entity will receive and cache jint engine only after first execution.
     /// Packets use their own engine.
     /// </summary>
-    private Dictionary<Entity<ExecutorComponent>, Engine> _executorEntities = new();
+    private Dictionary<Entity<PacketExecutorComponent>, Engine> _executorEntities = new();
     private Dictionary<Engine, CancellationTokenSource> _engineCts = new();
 
     /// <summary>
@@ -26,7 +26,7 @@ public sealed partial class PacketSystem
     /// <param name="command"></param>
     /// <param name="executor"></param>
     /// <param name="actor"></param>
-    public bool TryExecute(string command, Entity<ExecutorComponent> executor, EntityUid actor)
+    public bool TryExecute(string command, Entity<PacketExecutorComponent> executor, EntityUid actor)
     {
         if (executor.Comp.CurrentCooldown > TimeSpan.Zero)
         {
@@ -43,7 +43,7 @@ public sealed partial class PacketSystem
         return true;
     }
 
-    private void ExecuteCommand(string command, Entity<ExecutorComponent> executor)
+    private void ExecuteCommand(string command, Entity<PacketExecutorComponent> executor)
     {
         executor.Comp.ListeningPorts.Clear(); // Dispose ports to init them again.
         if (TryComp<PacketNetworkComponent>(executor, out var receiver))
@@ -61,7 +61,7 @@ public sealed partial class PacketSystem
         }
     }
 
-    private void Cancel(Entity<ExecutorComponent> executor)
+    private void Cancel(Entity<PacketExecutorComponent> executor)
     {
         var engine = EnsureEngine(executor);
         var cts = EnsureToken(engine);
@@ -75,7 +75,7 @@ public sealed partial class PacketSystem
     /// </summary>
     /// <param name="executor"></param>
     /// <returns></returns>
-    private Engine EnsureEngine(Entity<ExecutorComponent> executor)
+    private Engine EnsureEngine(Entity<PacketExecutorComponent> executor)
     {
         if (_executorEntities.TryGetValue(executor, out var exEngine))
             return exEngine;
@@ -110,7 +110,7 @@ public sealed partial class PacketSystem
         return cts;
     }
 
-    private void SetConstants(Entity<ExecutorComponent> executor)
+    private void SetConstants(Entity<PacketExecutorComponent> executor)
     {
         var engine = EnsureEngine(executor);
 
@@ -126,7 +126,7 @@ public sealed partial class PacketSystem
     /// </summary>
     /// <param name="ent"></param>
     /// <param name="slotsComponent"></param>
-    private void ReloadEngine(Entity<ExecutorComponent> ent, ItemSlotsComponent slotsComponent)
+    private void ReloadEngine(Entity<PacketExecutorComponent> ent, ItemSlotsComponent slotsComponent)
     {
         DisposeEngine(ent);
         ent.Comp.Modules.Add("BasePacketModule"); // Basic firmware.
@@ -142,7 +142,7 @@ public sealed partial class PacketSystem
         EnsureEngine(ent);
     }
 
-    private void DisposeEngine(Entity<ExecutorComponent> ent)
+    private void DisposeEngine(Entity<PacketExecutorComponent> ent)
     {
         ent.Comp.Modules.Clear();
         RemComp<DeviceLinkSinkComponent>(ent);
@@ -160,7 +160,7 @@ public sealed partial class PacketSystem
     /// Declares methods in engine for them to be executable.
     /// </summary>
     /// <param name="ent"></param>
-    public void LoadMethods(Entity<ExecutorComponent> ent)
+    public void LoadMethods(Entity<PacketExecutorComponent> ent)
     {
         var engine = EnsureEngine(ent);
 

@@ -2,11 +2,22 @@
   id: LatheFrequency
   minFrequency: 350
   maxFrequency: 650
+  listeningFrequencies:
+  - ExecutorFrequency
 
 - type: packetFrequency
   id: FaxFrequency
   minFrequency: 650
   maxFrequency: 700
+  listeningFrequencies:
+  - ExecutorFrequency
+
+- type: packetFrequency
+  id: ConveyorFrequency
+  minFrequency: 700
+  maxFrequency: 750
+  listeningFrequencies:
+  - ExecutorFrequency
 
 - type: packetFrequency
   id: ExecutorFrequency

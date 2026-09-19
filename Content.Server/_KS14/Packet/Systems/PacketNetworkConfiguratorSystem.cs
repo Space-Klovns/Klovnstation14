@@ -28,7 +28,7 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
         SubscribeLocalEvent<PacketNetworkConfiguratorComponent, UseInHandEvent>(OnUse);
         SubscribeLocalEvent<PacketNetworkConfiguratorComponent, AfterInteractEvent>(OnInteract);
         SubscribeLocalEvent<PacketNetworkConfiguratorComponent, GetVerbsEvent<AlternativeVerb>>(OnAltInteract);
-        SubscribeLocalEvent<ExecutorComponent, GetVerbsEvent<AlternativeVerb>>(OnExecutorInteract);
+        SubscribeLocalEvent<PacketExecutorComponent, GetVerbsEvent<AlternativeVerb>>(OnExecutorInteract);
     }
 
     private void SwitchMode(Entity<PacketNetworkConfiguratorComponent> ent, EntityUid user)
@@ -119,9 +119,9 @@ public sealed partial class PacketNetworkConfiguratorSystem : EntitySystem
     /// </summary>
     /// <param name="ent"></param>
     /// <param name="ev"></param>
-    private void OnExecutorInteract(Entity<ExecutorComponent> ent, ref GetVerbsEvent<AlternativeVerb> ev)
+    private void OnExecutorInteract(Entity<PacketExecutorComponent> ent, ref GetVerbsEvent<AlternativeVerb> ev)
     {
-        if (!ev.CanAccess || !ev.CanInteract)
+        if (!ev.CanAccess || !ev.CanInteract || !HasComp<PacketNetworkConfiguratorComponent>(ev.Using))
             return;
 
         var user = ev.User;

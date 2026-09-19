@@ -1,3 +1,5 @@
+using Content.Shared.DeviceLinking.Events;
+
 namespace Content.Server._KS14.Packet.Modules.Network;
 
 [ModuleMethod("NetworkPacketModule")]
@@ -20,12 +22,16 @@ public sealed class SendSignalMethod : ModuleMethod
             return;
         }
 
-        packetSys.TryWrapSystemCall(() => module.DeviceLinkSystem.InvokePort(receiver, portId));
+        packetSys.TryWrapSystemCall(() =>
+        {
+            var eventArgs = new SignalReceivedEvent(portId); // This should have used method, but due to DeviceLinkSystem requiring source, it is not possible.
+            module.EntityManager.EventBus.RaiseLocalEvent(receiver, ref eventArgs);
+        });
     }
 
     public SendSignalMethod(PacketModule? module) : base(module)
     {
-        Id = "listen";
+        Id = "send_signal";
         Module = module;
         ModuleExec = Func;
     }

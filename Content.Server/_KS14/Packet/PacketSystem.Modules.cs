@@ -17,12 +17,12 @@ public sealed partial class PacketSystem
     /// Even though creating PacketModule instances for each executor might be expensive, this is required for
     /// module to be able to directly access the executor.
     /// </summary>
-    private Dictionary<Entity<ExecutorComponent>, Dictionary<string, PacketModule>> _modules = new();
+    private Dictionary<Entity<PacketExecutorComponent>, Dictionary<string, PacketModule>> _modules = new();
 
     /// <summary>
     ///Stores dictionary, consisting of module ID and list of <see cref="ModuleMethod"/> for each executor.
     /// </summary>
-    private Dictionary<Entity<ExecutorComponent>, Dictionary<string, List<ModuleMethod>>> _methods = new();
+    private Dictionary<Entity<PacketExecutorComponent>, Dictionary<string, List<ModuleMethod>>> _methods = new();
 
     /// <summary>
     /// Stores types for further initialization.
@@ -51,11 +51,11 @@ public sealed partial class PacketSystem
     }
 
     /// <summary>
-    /// Loads available modules into dictionary. Checks if executor has this module in <see cref="ExecutorComponent"/>
+    /// Loads available modules into dictionary. Checks if executor has this module in <see cref="PacketExecutorComponent"/>
     /// Additionally loads <see cref="PacketNetworkComponent"/> into module if entity has one
     /// </summary>
     /// <param name="ent"></param>
-    private void InitializeModules(Entity<ExecutorComponent> ent)
+    private void InitializeModules(Entity<PacketExecutorComponent> ent)
     {
         Dictionary<string, PacketModule> modDict = [];
 
@@ -83,7 +83,7 @@ public sealed partial class PacketSystem
     /// Loads available module methods into dictionary.
     /// </summary>
     /// <param name="ent"></param>
-    private void InitializeMethods(Entity<ExecutorComponent> ent)
+    private void InitializeMethods(Entity<PacketExecutorComponent> ent)
     {
         Dictionary<string, List<ModuleMethod>> methodDict = [];
 
@@ -113,7 +113,7 @@ public sealed partial class PacketSystem
     /// <param name="moduleName"></param>
     /// <param name="module"></param>
     /// <returns></returns>
-    public bool TryGetModule(Entity<ExecutorComponent> ent, string moduleName, [NotNullWhen(returnValue: true)] out PacketModule? module)
+    public bool TryGetModule(Entity<PacketExecutorComponent> ent, string moduleName, [NotNullWhen(returnValue: true)] out PacketModule? module)
     {
         module = null;
 
@@ -130,7 +130,7 @@ public sealed partial class PacketSystem
     /// <param name="moduleName"></param>
     /// <param name="methods"></param>
     /// <returns></returns>
-    public bool TryGetMethods(Entity<ExecutorComponent> ent, string moduleName, [NotNullWhen(returnValue: true)] out List<ModuleMethod>? methods)
+    public bool TryGetMethods(Entity<PacketExecutorComponent> ent, string moduleName, [NotNullWhen(returnValue: true)] out List<ModuleMethod>? methods)
     {
         methods = [];
 

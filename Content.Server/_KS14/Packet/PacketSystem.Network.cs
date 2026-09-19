@@ -61,7 +61,7 @@ public sealed partial class PacketSystem
     /// <param name="data"></param>
     /// <param name="receiver"></param>
     /// <param name="executorComponent"></param>
-    public void SendData(object data, EntityUid receiver, ExecutorComponent? executorComponent = null)
+    public void SendData(object data, EntityUid receiver, PacketExecutorComponent? executorComponent = null)
     {
         SendData(data, receiver, typeof(ReceiveDataMethod), "NetworkPacketModule", executorComponent);
     }
@@ -75,7 +75,7 @@ public sealed partial class PacketSystem
     /// <param name="methodType"></param>
     /// <param name="moduleName"></param>
     /// <param name="executorComponent"></param>
-    public void SendData(object data, EntityUid receiver, Type methodType, string moduleName, ExecutorComponent? executorComponent = null)
+    public void SendData(object data, EntityUid receiver, Type methodType, string moduleName, PacketExecutorComponent? executorComponent = null)
     {
         if (!Resolve(receiver, ref executorComponent)
             || !TryGetMethods((receiver, executorComponent), moduleName, out var methods)

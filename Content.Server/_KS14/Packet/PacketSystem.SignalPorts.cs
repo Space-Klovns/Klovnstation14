@@ -13,7 +13,7 @@ public sealed partial class PacketSystem
     /// Initializes ports for executor based on port naming and count.
     /// </summary>
     /// <param name="ent"></param>
-    private void InitializePorts(Entity<ExecutorComponent> ent)
+    private void InitializePorts(Entity<PacketExecutorComponent> ent)
     {
         List<ProtoId<SinkPortPrototype>> ports = [];
 
@@ -34,7 +34,7 @@ public sealed partial class PacketSystem
     /// <param name="port"></param>
     /// <param name="funName"></param>
     /// <param name="ent"></param>
-    public void RegisterSignalMethod(ProtoId<SinkPortPrototype> port, string funName, Entity<ExecutorComponent> ent)
+    public void RegisterSignalMethod(ProtoId<SinkPortPrototype> port, string funName, Entity<PacketExecutorComponent> ent)
     {
         var engine = EnsureEngine(ent);
         var value = engine.GetValue(funName);
@@ -47,7 +47,7 @@ public sealed partial class PacketSystem
     /// </summary>
     /// <param name="port"></param>
     /// <param name="ent"></param>
-    private void OnSignal(ProtoId<SinkPortPrototype> port, Entity<ExecutorComponent> ent)
+    private void OnSignal(ProtoId<SinkPortPrototype> port, Entity<PacketExecutorComponent> ent)
     {
         if (!ent.Comp.ListeningPorts.TryGetValue(port, out var func))
             return;

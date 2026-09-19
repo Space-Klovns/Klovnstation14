@@ -12,7 +12,7 @@ public abstract class PacketModule
     /// <summary>
     /// Executor assigned to this module.
     /// </summary>
-    public Entity<ExecutorComponent, PacketNetworkComponent?> Executor;
+    public Entity<PacketExecutorComponent, PacketNetworkComponent?> Executor;
 
     /// <summary>
     /// Crucial dependencies that are used globally

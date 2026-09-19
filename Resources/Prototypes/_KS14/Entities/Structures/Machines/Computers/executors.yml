@@ -12,7 +12,7 @@
           type: ExecutorBoundUserInterface
         enum.WiresUiKey.Key:
           type: WiresBoundUserInterface
-  - type: Executor
+  - type: PacketExecutor
     modules:
     - BasePacketModule
     - LathePacketModule

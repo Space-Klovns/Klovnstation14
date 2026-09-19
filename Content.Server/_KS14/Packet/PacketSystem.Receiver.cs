@@ -51,7 +51,7 @@ public sealed partial class PacketSystem
     }
 
     /// <summary>
-    /// Reloads frequencies this entity can listen to the standart.
+    /// Reloads frequencies this entity can listen to the standard.
     /// </summary>
     /// <param name="entity"></param>
     private void ReloadFrequencies(Entity<PacketNetworkComponent> entity)
@@ -123,7 +123,7 @@ public sealed partial class PacketSystem
     /// <param name="range"></param>
     /// <param name="receiver"></param>
     /// <returns></returns>
-    public bool TryRandomReceiver(Entity<ExecutorComponent> sender,
+    public bool TryRandomReceiver(Entity<PacketExecutorComponent> sender,
         int freq,
         int range,
         out Entity<PacketNetworkComponent> receiver)
@@ -160,7 +160,7 @@ public sealed partial class PacketSystem
     public bool ValidateReceiver(Entity<PacketNetworkComponent> receiver, Entity<PacketNetworkComponent?> sender)
     {
         if (sender.Comp == null
-            || receiver.Comp.ListeningFrequencies.Contains(sender.Comp.Frequency))
+            || !receiver.Comp.ListeningFrequencies.Contains(sender.Comp.Frequency))
             return false;
 
         if (receiver.Comp.IsGlobal)

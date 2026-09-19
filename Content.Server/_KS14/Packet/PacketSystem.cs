@@ -31,14 +31,14 @@ public sealed partial class PacketSystem : EntitySystem
         _mainThreadId = Environment.CurrentManagedThreadId;
         PreInitJint();
 
-        SubscribeLocalEvent<ExecutorComponent, BoundUIOpenedEvent>(SubscribeUpdateUiState);
-        SubscribeLocalEvent<ExecutorComponent, SaveExecutorCommandMessage>(OnSave);
-        SubscribeLocalEvent<ExecutorComponent, StartExecutionMessage>(OnExecute);
-        SubscribeLocalEvent<ExecutorComponent, ReloadModulesMessage>(OnModuleReload);
-        SubscribeLocalEvent<ExecutorComponent, TerminateExecutorMessage>(OnTerminate);
-        SubscribeLocalEvent<ExecutorComponent, InputExecutorMessage>(OnInput);
+        SubscribeLocalEvent<PacketExecutorComponent, BoundUIOpenedEvent>(SubscribeUpdateUiState);
+        SubscribeLocalEvent<PacketExecutorComponent, SaveExecutorCommandMessage>(OnSave);
+        SubscribeLocalEvent<PacketExecutorComponent, StartExecutionMessage>(OnExecute);
+        SubscribeLocalEvent<PacketExecutorComponent, ReloadModulesMessage>(OnModuleReload);
+        SubscribeLocalEvent<PacketExecutorComponent, TerminateExecutorMessage>(OnTerminate);
+        SubscribeLocalEvent<PacketExecutorComponent, InputExecutorMessage>(OnInput);
 
-        SubscribeLocalEvent<ExecutorComponent, SignalReceivedEvent>(OnExecutorSignal);
+        SubscribeLocalEvent<PacketExecutorComponent, SignalReceivedEvent>(OnExecutorSignal);
 
         SubscribeLocalEvent<PacketNetworkComponent, ComponentInit>(OnPacketInit);
 
@@ -69,7 +69,7 @@ public sealed partial class PacketSystem : EntitySystem
         }
     }
 
-    private void SubscribeUpdateUiState<T>(Entity<ExecutorComponent> ent, ref T ev)
+    private void SubscribeUpdateUiState<T>(Entity<PacketExecutorComponent> ent, ref T ev)
     {
         UpdateUiState(ent);
     }
@@ -79,7 +79,7 @@ public sealed partial class PacketSystem : EntitySystem
     /// </summary>
     /// <param name="ent"></param>
     /// <param name="ev"></param>
-    private void OnSave(Entity<ExecutorComponent> ent, ref SaveExecutorCommandMessage ev)
+    private void OnSave(Entity<PacketExecutorComponent> ent, ref SaveExecutorCommandMessage ev)
     {
         ent.Comp.Command = ev.Command;
     }
@@ -89,7 +89,7 @@ public sealed partial class PacketSystem : EntitySystem
     /// </summary>
     /// <param name="ent"></param>
     /// <param name="ev"></param>
-    private void OnExecute(Entity<ExecutorComponent> ent, ref StartExecutionMessage ev)
+    private void OnExecute(Entity<PacketExecutorComponent> ent, ref StartExecutionMessage ev)
     {
         TryExecute(ent.Comp.Command, ent, ev.Actor);
     }
@@ -99,7 +99,7 @@ public sealed partial class PacketSystem : EntitySystem
     /// </summary>
     /// <param name="ent"></param>
     /// <param name="ev"></param>
-    private void OnModuleReload(Entity<ExecutorComponent> ent, ref ReloadModulesMessage ev)
+    private void OnModuleReload(Entity<PacketExecutorComponent> ent, ref ReloadModulesMessage ev)
     {
         if (!TryComp<ItemSlotsComponent>(ent, out var slotComponent))
             return;
@@ -112,7 +112,7 @@ public sealed partial class PacketSystem : EntitySystem
     /// </summary>
     /// <param name="ent"></param>
     /// <param name="ev"></param>
-    private void OnTerminate(Entity<ExecutorComponent> ent, ref TerminateExecutorMessage ev)
+    private void OnTerminate(Entity<PacketExecutorComponent> ent, ref TerminateExecutorMessage ev)
     {
         Cancel(ent);
     }
@@ -122,7 +122,7 @@ public sealed partial class PacketSystem : EntitySystem
     /// </summary>
     /// <param name="ent"></param>
     /// <param name="ev"></param>
-    private void OnInput(Entity<ExecutorComponent> ent, ref InputExecutorMessage ev)
+    private void OnInput(Entity<PacketExecutorComponent> ent, ref InputExecutorMessage ev)
     {
         SendData(ev.Input, ent, typeof(InputMethod), "BasePacketModule", ent.Comp);
     }
@@ -132,7 +132,7 @@ public sealed partial class PacketSystem : EntitySystem
     /// </summary>
     /// <param name="ent"></param>
     /// <param name="ev"></param>
-    private void OnExecutorSignal(Entity<ExecutorComponent> ent, ref SignalReceivedEvent ev)
+    private void OnExecutorSignal(Entity<PacketExecutorComponent> ent, ref SignalReceivedEvent ev)
     {
         if (!ent.Comp.ListeningPorts.ContainsKey(ev.Port))
             return;
@@ -140,7 +140,7 @@ public sealed partial class PacketSystem : EntitySystem
         OnSignal(ev.Port, ent);
     }
 
-    private void UpdateUiState(Entity<ExecutorComponent> ent)
+    private void UpdateUiState(Entity<PacketExecutorComponent> ent)
     {
         var maxStatements = ent.Comp.MaximumExecutionStatements;
         var maxMemory = ent.Comp.MemoryAllocation;

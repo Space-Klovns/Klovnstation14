@@ -10,7 +10,7 @@ namespace Content.Server._KS14.Packet.Components;
 /// Can't work without <see cref="PacketNetworkComponent"/>, Frequencies 0-10 are reserved for executors.
 /// </summary>
 [RegisterComponent]
-public sealed partial class ExecutorComponent : Component
+public sealed partial class PacketExecutorComponent : Component
 {
     /// <summary>
     /// Modules that will be loaded when engine initializes.
@@ -57,13 +57,13 @@ public sealed partial class ExecutorComponent : Component
     /// Maximum amount of memory that can be used each execution.
     /// </summary>
     [DataField]
-    public int MemoryAllocation = 1024 * 1024; // 1MB
+    public int MemoryAllocation = 1024 * 128; // 128KB
 
     /// <summary>
     /// Maximum amount of statements per execution
     /// </summary>
     [DataField]
-    public int MaximumExecutionStatements = 250000;
+    public int MaximumExecutionStatements = 350;
 
     /// <summary>
     /// Name for sink ports. You should create prototypes for those based on PortCount (SignalPortNaming+PortNumber)
