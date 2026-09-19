@@ -120,7 +120,6 @@
     backgroundPatchMargin: 16.0, 16.0, 16.0, 16.0
     contentMargin: 16.0, 16.0, 16.0, 16.0
 
-
 - type: entity
   name: artifact analyzer printout
   parent: Paper

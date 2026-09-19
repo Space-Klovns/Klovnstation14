@@ -172,8 +172,6 @@
       prob: 0.02
     - id: ClothingBackpackDuffelEngineeringFilledPackets # KS14: Packets
 
-
-
 # Hardsuit table, used for suit storage as well
 - type: entityTable
   id: FillChiefEngineerHardsuit
