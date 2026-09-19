@@ -144,7 +144,9 @@ public sealed partial class IvDripComponent : Component
     ///         damage in UIs.
     /// </remarks>
     [DataField]
-    public List<ProtoId<DamageTypePrototype>> SpillDamageTypes = ["Blunt", "Slash", "Piercing"];
+    // ReSharper disable once UseCollectionExpression - a non-empty collection expression on a List<T>
+    // lowers to CollectionsMarshal.SetCount, which the content sandbox rejects.
+    public List<ProtoId<DamageTypePrototype>> SpillDamageTypes = new() { "Blunt", "Slash", "Piercing" };
 
     /// <summary>
     ///     Units of solution dumped on the floor per spill.
