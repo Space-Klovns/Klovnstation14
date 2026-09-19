@@ -1,4 +1,4 @@
-using Content.Client.Graphics;
+﻿using Content.Client.Graphics;
 using Content.Shared.Movement.Components;
 using Content.Shared.Movement.Systems;
 using Robust.Client.GameObjects;
@@ -47,6 +47,14 @@ public sealed partial class FloorOcclusionSystem : SharedFloorOcclusionSystem
     {
         if (!_spriteQuery.Resolve(sprite.Owner, ref sprite.Comp, false))
             return;
+
+        // KS14 start: component states are applied before the entity is initialized, so an entity entering PVS
+        //      with occlusion already enabled would add the post-shader before SpriteComponent's ComponentInit -
+        //      which warns about the entry already holding a shader instance. ComponentStartup runs after sprite
+        //      init and applies the same state, so there is nothing to do here yet.
+        if (!sprite.Comp.Initialized)
+            return;
+        // KS14 end
 
         var shader = ProtoMan.Index(HorizontalCut).Instance();
 
