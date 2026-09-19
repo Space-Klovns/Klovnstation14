@@ -1,0 +1,21 @@
+- type: constructionGraph
+  id: KsGrenadeChemical
+  start: start
+  graph:
+  - node: start
+    edges:
+    - to: finished
+      steps:
+      - tag: ChemicalPayload
+        icon:
+          sprite: Objects/Devices/payload.rsi
+          state: payload-chemical-armed
+        doAfter: 1
+        name: construction-graph-tag-chemical-payload
+      - material: Brass
+        amount: 1
+        doAfter: 1
+
+  - node: finished
+    preserveContainers: true # carry over beakers in previous payload
+    entity: KsGrenadeChemical

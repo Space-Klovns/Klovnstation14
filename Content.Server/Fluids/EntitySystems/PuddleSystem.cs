@@ -30,7 +30,6 @@ namespace Content.Server.Fluids.EntitySystems;
 public sealed partial class PuddleSystem : SharedPuddleSystem
 {
     [Dependency] private SharedMapSystem _map = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private EntityLookupSystem _lookup = default!;
     [Dependency] private SharedColorFlashEffectSystem _color = default!;
@@ -53,6 +52,8 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
 
         SubscribeLocalEvent<PuddleComponent, SpreadNeighborsEvent>(OnPuddleSpread);
         SubscribeLocalEvent<PuddleComponent, SlipEvent>(OnPuddleSlip);
+
+        InitialiseKlovn(); // KS14
     }
 
     // TODO: This can be predicted once https://github.com/space-wizards/RobustToolbox/pull/5849 is merged
@@ -437,7 +438,7 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
                 PopupType.SmallCaution);
         }
 
-        _color.RaiseEffect(spilled.GetColor(_prototypeManager), targets,
+        _color.RaiseEffect(spilled.GetColor(ProtoMan), targets,
             Filter.Pvs(entity, entityManager: EntityManager));
 
         return TrySpillAt(coordinates, spilled, out puddleUid, sound);
@@ -541,10 +542,14 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
 
         var coords = _map.GridTileToLocal(gridId, mapGrid, tileRef.GridIndices);
         puddleUid = Spawn("Puddle", coords);
-        EnsureComp<PuddleComponent>(puddleUid);
+        var puddleComponent = /* KS14: store puddle component */EnsureComp<PuddleComponent>(puddleUid);
         if (TryAddSolution(puddleUid, solution, sound))
         {
             EnsureComp<ActiveEdgeSpreaderComponent>(puddleUid);
+
+            // KS14 start
+            TryUpdateTileEffects((puddleUid, puddleComponent), _gameTiming.CurTime, careAboutTime: false);
+            // KS14 end
         }
 
         return true;
@@ -557,6 +562,10 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
     /// </summary>
     public bool TryGetPuddle(TileRef tile, out EntityUid puddleUid)
     {
+        return TryGetCachedPuddle(tile, out puddleUid); // KS14: the puddle tile cache already knows this
+
+        // KS14: replaced by the puddle tile cache, enumerating every anchored entity on the tile is wasteful
+        /*
         puddleUid = EntityUid.Invalid;
 
         if (!TryComp<MapGridComponent>(tile.GridUid, out var grid))
@@ -573,5 +582,6 @@ public sealed partial class PuddleSystem : SharedPuddleSystem
         }
 
         return false;
+        */
     }
 }

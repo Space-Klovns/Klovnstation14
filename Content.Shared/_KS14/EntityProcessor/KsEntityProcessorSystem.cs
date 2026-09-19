@@ -14,18 +14,6 @@ public sealed partial class KsEntityProcessorSystem : EntitySystem
 
     private const string ContainerId = "object-processor-container";
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsActiveEntityProcessorComponent, EntRemovedFromContainerMessage>(OnEntRemovedFromActiveContainer);
-
-        SubscribeLocalEvent<KsEntityProcessorComponent, PowerChangedEvent>(OnPowerChanged);
-
-        SubscribeLocalEvent<KsEntityProcessorComponent, ComponentStartup>(OnStartup);
-        SubscribeLocalEvent<KsEntityProcessorComponent, StartCollideEvent>(OnStartCollide);
-    }
-
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
@@ -126,6 +114,7 @@ public sealed partial class KsEntityProcessorSystem : EntitySystem
         return true;
     }
 
+    [SubscribeLocalEvent]
     private void OnEntRemovedFromActiveContainer(Entity<KsActiveEntityProcessorComponent> entity, ref EntRemovedFromContainerMessage args)
     {
         if (_gameTiming.ApplyingState)
@@ -141,6 +130,7 @@ public sealed partial class KsEntityProcessorSystem : EntitySystem
         RaiseLocalEvent(entity.Owner, ref ev);
     }
 
+    [SubscribeLocalEvent]
     private void OnPowerChanged(Entity<KsEntityProcessorComponent> entity, ref PowerChangedEvent args)
     {
         if (entity.Comp.Powered == args.Powered)
@@ -150,9 +140,11 @@ public sealed partial class KsEntityProcessorSystem : EntitySystem
         Dirty(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnStartup(Entity<KsEntityProcessorComponent> entity, ref ComponentStartup args)
         => entity.Comp.Container = _containerSystem.EnsureContainer<Container>(entity.Owner, ContainerId);
 
+    [SubscribeLocalEvent]
     private void OnStartCollide(Entity<KsEntityProcessorComponent> entity, ref StartCollideEvent args)
     {
         if (args.OurFixtureId != entity.Comp.FixtureId)

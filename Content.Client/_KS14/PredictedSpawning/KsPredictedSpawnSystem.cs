@@ -7,19 +7,13 @@ namespace Content.Client._KS14.PredictedSpawning;
 /// <inheritdoc/>
 public sealed partial class KsPredictedSpawnSystem : KsSharedPredictedSpawnSystem
 {
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsPredictedSpawnComponent, UpdateIsPredictedEvent>(OnPredictedSpawnCheckPhysicsPrediction);
-        SubscribeNetworkEvent<KsPredictedEntitySpawnedEvent>(OnEntityNetworked);
-    }
-
+    [SubscribeLocalEvent]
     private void OnPredictedSpawnCheckPhysicsPrediction(Entity<KsPredictedSpawnComponent> entity, ref UpdateIsPredictedEvent args)
     {
         args.IsPredicted = true;
     }
 
+    [SubscribeNetworkEvent]
     private void OnEntityNetworked(KsPredictedEntitySpawnedEvent args)
     {
         var uid = GetEntity(args.Entity);

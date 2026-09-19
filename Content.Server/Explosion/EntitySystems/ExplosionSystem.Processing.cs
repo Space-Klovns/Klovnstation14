@@ -482,6 +482,10 @@ public sealed partial class ExplosionSystem
                 flammable.FireStacks += fireStacksOnIgnite.Value;
                 _flammableSystem.Ignite(uid, uid, flammable);
             }
+
+            // KS14 start
+            ExposeToHeat(uid, fireStacksOnIgnite.Value);
+            // KS14 end
         }
 
         // throw

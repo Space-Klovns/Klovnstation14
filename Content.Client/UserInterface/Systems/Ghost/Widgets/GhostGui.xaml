@@ -8,10 +8,12 @@
                 Text="{Loc ghost-gui-ghost-warp-button}"/>
         <Button Name="GhostRolesButton"/>
 
-        <!-- KS14: respawn button -->
+        <!-- KS14: fixed width prevents the proportional-font respawn countdown from changing the HUD layout. -->
+        <!-- KS14 upstream markup retained for mergeability: <Button Visible="False" Disabled="True" Name="GhostRespawnButton" Text="{Loc ghost-gui-ghost-respawn-button}"/> -->
         <Button Visible="False"
                 Disabled="True"
                 Name="GhostRespawnButton"
+                SetWidth="160"
                 Text="{Loc ghost-gui-ghost-respawn-button}"/>
     </BoxContainer>
 </widgets:GhostGui>

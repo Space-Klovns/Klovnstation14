@@ -8,13 +8,7 @@ public sealed partial class AnnouncementOnTriggerSystem : EntitySystem
 {
     [Dependency] private SharedChatSystem _chatSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<AnnouncementOnTriggerComponent, TriggerEvent>(OnTrigger);
-    }
-
+    [SubscribeLocalEvent]
     private void OnTrigger(Entity<AnnouncementOnTriggerComponent> entity, ref TriggerEvent args)
     {
         if (args.Key is not { } key ||

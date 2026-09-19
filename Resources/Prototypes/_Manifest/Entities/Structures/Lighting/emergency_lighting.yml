@@ -13,7 +13,7 @@
     energy: 0.6
     offset: "0, 0.4"
     color: "#ff0000"
-    mask: /Textures/Effects/LightMasks/double_cone.png
+    lightMask: ConeDouble # KS14: mask: /Textures/Effects/LightMasks/double_cone.png -> lightMask, engine 288 removed the mask datafield
   - type: RotatingLight
     speed: 40
   - type: Sprite

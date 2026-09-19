@@ -93,3 +93,8 @@ RipleyChassis: null
 SpawnPointZookeeper: null
 ClothingMaskAuralis: ClothingMaskBreath
 ClothingUniformJumpsuitWorkaday: ClothingUniformJumpsuitColorGrey
+
+#2026-08-23 Replacing some energy hitscans with projectile ones
+WeaponAntiqueLaser: WeaponAntiqueLaserProjectile
+WeaponLaserCarbine: WeaponLaserCarbineProjectile
+WeaponLaserCarbinePractice: WeaponLaserCarbineProjectilePractice

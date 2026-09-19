@@ -334,7 +334,6 @@ namespace Content.IntegrationTests.Tests
             var pair = Pair;
             var server = pair.Server;
 
-            var mapManager = server.ResolveDependency<IMapManager>();
             var entityManager = server.ResolveDependency<IEntityManager>(); // KS14
             var mapLoaderSystem = entityManager.System<MapLoaderSystem>(); // KS14
             var sharedMapSystem = entityManager.System<SharedMapSystem>();  // KS14
@@ -362,7 +361,7 @@ namespace Content.IntegrationTests.Tests
 
                     try
                     {
-                        var grids = mapManager.GetAllGrids(mapId).ToList();
+                        var grids = sharedMapSystem.GetAllGrids(mapId).ToList();
 
                         // KS14 - Start
                         // Collect all unique stations that physically exist on our newly loaded map

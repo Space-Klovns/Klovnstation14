@@ -23,16 +23,7 @@ public sealed partial class ReadyManifestSystem : SharedReadyManifestSystem
     private readonly Dictionary<ICommonSession, ReadyManifestEui> _openEuis = new();
     private Dictionary<ProtoId<JobPrototype>, ReadyManifestJobData> _jobCounts = new();
 
-    public override void Initialize()
-    {
-        base.Initialize();
-        SubscribeLocalEvent<RoundStartingEvent>(OnRoundStarting);
-        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestart);
-        SubscribeLocalEvent<GameTicker.PlayerToggledReadyEvent>(OnPlayerToggledReady);
-        SubscribeLocalEvent<GameTicker.PlayerDisconnectedEvent>(OnPlayerDisconnected);
-        SubscribeNetworkEvent<RequestReadyManifestMessage>(OnRequestReadyManifest);
-    }
-
+    [SubscribeLocalEvent]
     private void OnRoundStarting(RoundStartingEvent args)
     {
         foreach (var (_, eui) in _openEuis)
@@ -43,11 +34,13 @@ public sealed partial class ReadyManifestSystem : SharedReadyManifestSystem
         _openEuis.Clear();
     }
 
+    [SubscribeLocalEvent]
     private void OnRoundRestart(RoundRestartCleanupEvent args)
     {
         _jobCounts.Clear();
     }
 
+    [SubscribeLocalEvent]
     private void OnPlayerToggledReady(ref GameTicker.PlayerToggledReadyEvent args)
     {
         // Rebuild the entire ready manifest because I can't directly update the values since it would be too likely to
@@ -57,12 +50,14 @@ public sealed partial class ReadyManifestSystem : SharedReadyManifestSystem
         UpdateAllEuis();
     }
 
+    [SubscribeLocalEvent]
     private void OnPlayerDisconnected(ref GameTicker.PlayerDisconnectedEvent args)
     {
         RebuildReadyManifest();
         UpdateAllEuis();
     }
 
+    [SubscribeNetworkEvent]
     private void OnRequestReadyManifest(RequestReadyManifestMessage message, EntitySessionEventArgs args)
     {
         if (!_cfg.GetCVar(CCVars.CrewManifestWithoutEntity))

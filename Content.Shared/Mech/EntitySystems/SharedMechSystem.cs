@@ -58,6 +58,7 @@ public abstract partial class SharedMechSystem : EntitySystem
         SubscribeLocalEvent<MechPilotComponent, CanAttackFromContainerEvent>(OnCanAttackFromContainer);
         SubscribeLocalEvent<MechPilotComponent, AttackAttemptEvent>(OnAttackAttempt);
 
+        InitializeTrauma(); // Trauma
         InitializeRelay();
     }
 
@@ -386,6 +387,9 @@ public abstract partial class SharedMechSystem : EntitySystem
         SetupUser(uid, toInsert.Value);
         _container.Insert(toInsert.Value, component.PilotSlot);
         UpdateAppearance(uid, component);
+        // <Trauma>
+        BlockHands(toInsert.Value, uid);
+        // </Trauma>
         return true;
     }
 
@@ -395,19 +399,28 @@ public abstract partial class SharedMechSystem : EntitySystem
     /// <param name="uid"></param>
     /// <param name="component"></param>
     /// <returns>Whether or not the pilot was ejected.</returns>
-    public bool TryEject(EntityUid uid, MechComponent? component = null)
+    public bool TryEject(EntityUid uid, MechComponent? component = null,
+        EntityUid pilot = default) // Trauma
     {
         if (!Resolve(uid, ref component))
             return false;
 
-        if (component.PilotSlot.ContainedEntity == null)
-            return false;
+        // <Trauma> - take pilot from the arg and only use the current pilot as a fallback
+        if (!pilot.IsValid())
+        {
+            if (component.PilotSlot.ContainedEntity is not {} currentPilot)
+                return false;
 
-        var pilot = component.PilotSlot.ContainedEntity.Value;
+            pilot = currentPilot;
+        }
+        // </Trauma>
 
         RemoveUser(uid, pilot);
         _container.RemoveEntity(uid, pilot);
         UpdateAppearance(uid, component);
+        // <Trauma>
+        FreeHands(pilot, uid);
+        // </Trauma>
         return true;
     }
 
@@ -466,7 +479,6 @@ public abstract partial class SharedMechSystem : EntitySystem
 
         args.CanDrop |= !component.Broken && CanInsert(uid, args.Dragged, component);
     }
-
 }
 
 /// <summary>

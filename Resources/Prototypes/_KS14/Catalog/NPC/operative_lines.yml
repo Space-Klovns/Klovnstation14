@@ -39,7 +39,6 @@
     count: 3
 
 
-
 - type: localizedDataset
   id: KsOperativeHoldingPosition
   values:
@@ -64,4 +63,11 @@
   id: KsOperativeGetAway
   values:
     prefix: ks-operative-line-getaway-
+    count: 3
+
+
+- type: localizedDataset
+  id: KsOperativeAlertGrenade
+  values:
+    prefix: ks-operative-line-alert-grenade-
     count: 3

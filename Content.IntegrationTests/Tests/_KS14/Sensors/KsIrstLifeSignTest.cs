@@ -108,7 +108,6 @@ public sealed class KsIrstLifeSignTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -126,8 +125,8 @@ public sealed class KsIrstLifeSignTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridB = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridA = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridB = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // Off the shared origin BEFORE anything mounts, or the crew parents to the
             // wrong grid. 30 is well inside the IRST's 100 reach at signature 100.
@@ -183,7 +182,6 @@ public sealed class KsIrstLifeSignTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -198,8 +196,8 @@ public sealed class KsIrstLifeSignTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridCold = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridA = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridCold = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // In range, but it carries no thermal source at all (signature 0, under the
             // sensor's floor of 10), so the sweep can never resolve the hull.
@@ -239,7 +237,6 @@ public sealed class KsIrstLifeSignTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -254,8 +251,8 @@ public sealed class KsIrstLifeSignTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridB = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridA = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridB = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             xformSystem.SetLocalPosition(gridB.Owner, new Vector2(30f, 0f));
 
@@ -301,7 +298,6 @@ public sealed class KsIrstLifeSignTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -318,7 +314,7 @@ public sealed class KsIrstLifeSignTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridA = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             entManager.SpawnEntity("KsLifeSignTestSensor", new EntityCoordinates(gridA.Owner, new Vector2(0.5f, 0.5f)));
             console = SpawnConsole(entManager, xformSystem, uiSystem, gridA.Owner);
@@ -359,7 +355,6 @@ public sealed class KsIrstLifeSignTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -375,8 +370,8 @@ public sealed class KsIrstLifeSignTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridB = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridA = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridB = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             xformSystem.SetLocalPosition(gridB.Owner, new Vector2(30f, 0f));
 
@@ -434,7 +429,6 @@ public sealed class KsIrstLifeSignTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -450,9 +444,9 @@ public sealed class KsIrstLifeSignTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridTx = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridTarget = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridRx = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridTx = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridTarget = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridRx = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // The target sits inside the transmitter's IRST reach; the receiver sits far
             // outside it (so it can only ever know the target second-hand) but well
@@ -506,7 +500,6 @@ public sealed class KsIrstLifeSignTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -522,8 +515,8 @@ public sealed class KsIrstLifeSignTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridB = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridA = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridB = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             xformSystem.SetLocalPosition(gridB.Owner, new Vector2(30f, 0f));
 
@@ -584,11 +577,10 @@ public sealed class KsIrstLifeSignTest : GameTest
     /// <summary>8x8, big enough to clear the &lt;10 mass junk filter.</summary>
     private static Entity<MapGridComponent> MakeShipGrid(
         IEntityManager entManager,
-        IMapManager mapManager,
         SharedMapSystem mapSystem,
         MapId mapId)
     {
-        var grid = mapManager.CreateGridEntity(mapId);
+        var grid = mapSystem.CreateGridEntity(mapId);
 
         var tiles = new List<(Vector2i, Tile)>();
         for (var x = 0; x < 8; x++)

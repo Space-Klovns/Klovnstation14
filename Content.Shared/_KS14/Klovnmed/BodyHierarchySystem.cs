@@ -18,8 +18,6 @@ public sealed partial class BodyHierarchySystem : BaseHierarchySystem<BodyCompon
     {
         base.Initialize();
         ContainerId = ConstContainerId;
-
-        SubscribeLocalEvent<OrganComponent, ContainerIsRemovingAttemptEvent>(OnOrganElementRemovingAttempt);
     }
 
     /// <returns>True if the entity was found.</returns>
@@ -50,6 +48,7 @@ public sealed partial class BodyHierarchySystem : BaseHierarchySystem<BodyCompon
         return true;
     }
 
+    [SubscribeLocalEvent]
     private void OnOrganElementRemovingAttempt(Entity<OrganComponent> entity, ref ContainerIsRemovingAttemptEvent args)
     {
         if (args.Container.ID != ConstContainerId)

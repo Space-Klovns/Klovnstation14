@@ -6,24 +6,18 @@ public sealed partial class DismemberOnTriggerSystem : EntitySystem
 {
     [Dependency] private DismembermentSystem _dismembermentSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<DismemberOnTriggerComponent, TriggerEvent>(OnTrigger);
-    }
-
+    [SubscribeLocalEvent]
     private void OnTrigger(Entity<DismemberOnTriggerComponent> entity, ref TriggerEvent args)
     {
         if ((entity.Comp.TargetUser ? args.User : entity.Owner) is not { } targetUid)
             return;
 
-        // TODO LCDC: on upstream merge handle TriggerEvent.Predicted
         args.Handled |= _dismembermentSystem.TryDismemberRandomBodyPartOfType(
             targetUid,
             entity.Comp.PartType,
             out _,
-            throwSpeed: entity.Comp.ThrowSpeed
+            throwSpeed: entity.Comp.ThrowSpeed,
+            cause: args.Predicted ? args.User : null
         );
     }
 }

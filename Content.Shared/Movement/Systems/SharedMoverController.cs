@@ -553,20 +553,12 @@ public abstract partial class SharedMoverController : VirtualController
 
         mobMover.StepSoundDistance -= distanceNeeded;
 
-        if (FootstepModifierQuery.TryComp(uid, out var moverModifier))
-        {
-            sound = moverModifier.FootstepSoundCollection;
-            return sound != null;
-        }
-
-        if (_inventory.TryGetSlotEntity(uid, "shoes", out var shoes) &&
-            FootstepModifierQuery.TryComp(shoes, out var modifier))
-        {
-            sound = modifier.FootstepSoundCollection;
-            return sound != null;
-        }
-
-        return TryGetFootstepSound(uid, xform, shoes != null, out sound, tileDef: tileDef);
+        // KS14 start: the modifier/shoes/tile chain that stood here moved verbatim into
+        //      TryGetCurrentFootstepSound (SharedMoverController.Klovn.Footsteps.cs), so that a one-off step -
+        //      a z-level landing - resolves through exactly the same cases as a walked one. Nothing about the
+        //      chain itself changed; only the step-distance bookkeeping above stayed behind.
+        return TryGetCurrentFootstepSound((uid, xform), out sound, tileDef);
+        // KS14 end
     }
 
     private bool TryGetFootstepSound(

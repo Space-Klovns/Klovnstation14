@@ -64,3 +64,4 @@
   - type: DeviceLinkSink
     ports:
       - FillbotAnyItem
+  - type: StationAiWhitelist #KS14: New items whitelisted for AI

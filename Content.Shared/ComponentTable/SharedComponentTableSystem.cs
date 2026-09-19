@@ -9,7 +9,6 @@ namespace Content.Shared.ComponentTable;
 public sealed partial class SharedComponentTableSystem : EntitySystem
 {
     [Dependency] private EntityTableSystem _entTable = default!;
-    [Dependency] private IPrototypeManager _proto = default!;
 
     public override void Initialize()
     {
@@ -24,7 +23,7 @@ public sealed partial class SharedComponentTableSystem : EntitySystem
 
         foreach (var entity in spawns)
         {
-            if (_proto.Resolve(entity, out var entProto))
+            if (ProtoMan.Resolve(entity, out var entProto))
             {
                 EntityManager.AddComponents(ent, entProto.Components);
             }

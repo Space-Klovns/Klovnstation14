@@ -9,17 +9,9 @@ public sealed partial class KsFactionCollisionSystem : EntitySystem
     [Dependency] private EntityQuery<NpcFactionMemberComponent> _factionMemberQuery = default!;
     [Dependency] private EntityQuery<KsFactionCollisionShooterComponent> _factionCollisionShooterQuery = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsFactionCollisionComponent, PreventCollideEvent>(OnPreventCollide,
-            after: [typeof(Projectiles.SharedProjectileSystem)] /* PreventCollideEvent for projectiles is really cheap, rather do that first */);
-        SubscribeLocalEvent<PlayerShotProjectileEvent>(OnPlayerShotProjectile);
-    }
-
     // its almost like linq except not actually under System.Linq
 
+    [SubscribeLocalEvent(after: [typeof(Projectiles.SharedProjectileSystem)])]
     private void OnPreventCollide(Entity<KsFactionCollisionComponent> entity, ref PreventCollideEvent args)
     {
         if (args.Cancelled ||
@@ -30,6 +22,7 @@ public sealed partial class KsFactionCollisionSystem : EntitySystem
         args.Cancelled = true;
     }
 
+    [SubscribeLocalEvent]
     private void OnPlayerShotProjectile(ref PlayerShotProjectileEvent args)
     {
         if (!_factionCollisionShooterQuery.HasComponent(args.User) ||

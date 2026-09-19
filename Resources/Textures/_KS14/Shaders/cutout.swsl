@@ -1,10 +1,17 @@
 uniform sampler2D maskTexture;
+uniform highp vec4 maskUV;
+
+varying highp vec2 maskUVOut;
+
+void vertex() {
+    maskUVOut = mix(maskUV.xy, maskUV.zw, tCoord2);
+}
 
 void fragment()
 {
-    vec4 targetc = zTexture(UV);
-    vec4 maskc = texture(maskTexture, UV);
+    highp vec4 targetc = zTexture(UV);
+    highp vec4 maskc = texture(maskTexture, maskUVOut); //texture2D(maskTexture, maskUVOut);
 
-    targetc.a *= (1.0 - maskc.a);
+    targetc.a *= maskc.a;
     COLOR = targetc;
 }

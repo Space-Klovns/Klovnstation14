@@ -15,16 +15,7 @@ public sealed partial class KsGenericSpriteFlickVisualizerSystem : EntitySystem
     [Dependency] private AnimationPlayerSystem _animationPlayerSystem = default!;
     [Dependency] private SpriteSystem _spriteSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsGenericSpriteFlickFinishStateComponent, ComponentHandleState>(OnFinishStateHandleState);
-        SubscribeLocalEvent<KsGenericSpriteFlickComponent, AnimationCompletedEvent>(OnAnimationComplete);
-
-        SubscribeAllEvent<KsSpriteFlickEvent>(OnEvent);
-    }
-
+    [SubscribeLocalEvent]
     private void OnFinishStateHandleState(Entity<KsGenericSpriteFlickFinishStateComponent> entity, ref ComponentHandleState args)
     {
         if (args.Current is not KsGenericSpriteFlickFinishStateComponentState state)
@@ -50,6 +41,7 @@ public sealed partial class KsGenericSpriteFlickVisualizerSystem : EntitySystem
     }
 
     // Try to reset to next state
+    [SubscribeLocalEvent]
     private void OnAnimationComplete(Entity<KsGenericSpriteFlickComponent> entity, ref AnimationCompletedEvent args)
     {
         if (!entity.Comp.AnimKeyLayerKeyMap.TryGetValue(args.Key, out var layerObjectKey) ||
@@ -67,6 +59,7 @@ public sealed partial class KsGenericSpriteFlickVisualizerSystem : EntitySystem
             throw new ArgumentException($"Param was assignable to neither {typeof(Enum)} nor {typeof(string)}.", nameof(layerObjectKey));
     }
 
+    [EventSubscription]
     private void OnEvent(KsSpriteFlickEvent args)
     {
         if (!TryGetEntity(args.Entity, out var uid) ||

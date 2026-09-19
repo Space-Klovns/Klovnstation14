@@ -43,6 +43,7 @@
     damageModifierSet: Metallic
   - type: Injurable
     damageContainer: StructuralInorganic
+  - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
 # =============================================================================
 # Plumbing Tank - stores reagents in the network
@@ -697,6 +698,7 @@
     - Sulfur
     - Zinc
     - WeldingFuel
+    - Ethanol # KS14
   - type: Plungeable
   - type: PlumbingOutlet
     solutionName: buffer

@@ -26,14 +26,14 @@ public sealed partial class EmissiveOverlay : Overlay
     [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IReflectionManager _reflectionManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
-    [Dependency] private IMapManager _mapManager = default!;
     [Dependency] private IOverlayManager _overlay = default!;
 
-    private readonly SharedTransformSystem _transformSystem = default!;
-    private readonly EntityLookupSystem _lookupSystem = default!;
-    private readonly SpriteSystem _spriteSystem = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private EntityLookupSystem _lookupSystem = default!;
+    [Dependency] private SpriteSystem _spriteSystem = default!;
 
-    private readonly EntityQuery<SpriteComponent> _spriteQuery = default!;
+    [Dependency] private EntityQuery<SpriteComponent> _spriteQuery = default!;
 
     private readonly List<EntityUid> _entitiesToRemoveFromShaders = [];
     private readonly HashSet<Entity<EmissiveLayersComponent>> _entities = [];
@@ -48,14 +48,6 @@ public sealed partial class EmissiveOverlay : Overlay
 
     public EmissiveOverlay()
     {
-        IoCManager.InjectDependencies(this);
-
-        _transformSystem = _entityManager.System<SharedTransformSystem>();
-        _lookupSystem = _entityManager.System<EntityLookupSystem>();
-        _spriteSystem = _entityManager.System<SpriteSystem>();
-
-        _spriteQuery = _entityManager.GetEntityQuery<SpriteComponent>();
-
         ZIndex = ContentZIndex;
     }
 
@@ -78,7 +70,7 @@ public sealed partial class EmissiveOverlay : Overlay
 
         var viewport = args.Viewport;
         _grids.Clear();
-        _mapManager.FindGridsIntersecting(mapId, bounds, ref _grids, approx: true);
+        _mapSystem.FindGridsIntersecting(mapId, bounds, ref _grids, approx: true);
 
         if (_grids.Count == 0)
             return;

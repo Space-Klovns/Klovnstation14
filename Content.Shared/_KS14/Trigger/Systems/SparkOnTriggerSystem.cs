@@ -8,13 +8,7 @@ public sealed partial class SparkOnTriggerSystem : EntitySystem
 {
     [Dependency] private SharedSparksSystem _sparksSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<SparkOnTriggerComponent, TriggerEvent>(OnTrigger);
-    }
-
+    [SubscribeLocalEvent]
     private void OnTrigger(Entity<SparkOnTriggerComponent> entity, ref TriggerEvent args)
     {
         if (args.Key is { } key &&

@@ -28,7 +28,6 @@ namespace Content.Client.Damage;
 /// </summary>
 public sealed partial class DamageVisualsSystem : VisualizerSystem<DamageVisualsComponent>
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private DamageableSystem _damageable = default!;
 
     public override void Initialize()
@@ -153,7 +152,7 @@ public sealed partial class DamageVisualsSystem : VisualizerSystem<DamageVisuals
         // If the damage container on our entity's DamageableComponent
         // is not null, we can try to check through its groups.
         if (injurableComponent.DamageContainer != null
-            && _prototypeManager.Resolve<DamageContainerPrototype>(injurableComponent.DamageContainer, out var damageContainer))
+            && ProtoMan.Resolve<DamageContainerPrototype>(injurableComponent.DamageContainer, out var damageContainer))
         {
             // Are we using damage overlay sprites by group?
             // Check if the container matches the supported groups,
@@ -189,7 +188,7 @@ public sealed partial class DamageVisualsSystem : VisualizerSystem<DamageVisuals
         // Ditto above, but instead we go through every group.
         else // oh boy! time to enumerate through every single group!
         {
-            var damagePrototypeIdList = _prototypeManager.EnumeratePrototypes<DamageGroupPrototype>()
+            var damagePrototypeIdList = ProtoMan.EnumeratePrototypes<DamageGroupPrototype>()
                 .Select((p, _) => p.ID)
                 .ToList();
             if (damageVisComp.DamageOverlayGroups != null)
@@ -364,7 +363,7 @@ public sealed partial class DamageVisualsSystem : VisualizerSystem<DamageVisuals
             || !TryComp(uid, out DamageableComponent? damageComponent))
             return;
 
-        if (damageVisComp.TargetLayers != null && damageVisComp.DamageOverlayGroups != null)
+        if (damageVisComp.TargetLayers != null && (damageVisComp.DamageOverlayGroups != null || damageVisComp.DamageOverlay != null /* KS14: trackAllDamage overlays reserve layers too, they were never refreshed */))
             UpdateDisabledLayers(uid, spriteComponent, component, damageVisComp);
 
         if (damageVisComp.Overlay && damageVisComp.DamageOverlayGroups != null && damageVisComp.TargetLayers == null)
@@ -400,19 +399,33 @@ public sealed partial class DamageVisualsSystem : VisualizerSystem<DamageVisuals
     /// </summary>
     private void UpdateDisabledLayers(EntityUid uid, SpriteComponent spriteComponent, AppearanceComponent component, DamageVisualsComponent damageVisComp)
     {
+        var forcefullyHiddenLayerMapKeys = KsGetForcefullyHiddenLayerMapKeys(uid, damageVisComp); // KS14: layers whose limb is gone
+
         foreach (var layer in damageVisComp.TargetLayerMapKeys)
         {
             // I assume this gets set by something like body system if limbs are missing???
             // TODO is this actually used by anything anywhere?
             AppearanceSystem.TryGetData(uid, layer, out bool disabled, component);
 
-            if (damageVisComp.DisabledLayers[layer] == disabled)
+            disabled |= forcefullyHiddenLayerMapKeys?.Contains(layer) ?? false; // KS14
+
+            // KS14: was DisabledLayers[layer], which throws on setups that never reserved layers
+            if (!damageVisComp.DisabledLayers.TryGetValue(layer, out var wasDisabled) || wasDisabled == disabled)
                 continue;
 
             damageVisComp.DisabledLayers[layer] = disabled;
             if (damageVisComp.TrackAllDamage)
             {
-                SpriteSystem.LayerSetVisible((uid, spriteComponent), $"{layer}trackDamage", !disabled);
+                // KS14: was LayerSetVisible, which un-hid layers holding a stale state, or no damage at all
+                KsSetDamageLayerDisabled(
+                    (uid, spriteComponent),
+                    damageVisComp,
+                    layer,
+                    $"{layer}trackDamage",
+                    damageGroup: null,
+                    damageVisComp.LastDamageThreshold,
+                    disabled);
+
                 continue;
             }
 
@@ -421,7 +434,15 @@ public sealed partial class DamageVisualsSystem : VisualizerSystem<DamageVisuals
 
             foreach (var damageGroup in damageVisComp.DamageOverlayGroups.Keys)
             {
-                SpriteSystem.LayerSetVisible((uid, spriteComponent), $"{layer}{damageGroup}", !disabled);
+                // KS14: was LayerSetVisible, see above
+                KsSetDamageLayerDisabled(
+                    (uid, spriteComponent),
+                    damageVisComp,
+                    layer,
+                    $"{layer}{damageGroup}",
+                    damageGroup,
+                    damageVisComp.LastThresholdPerGroup.GetValueOrDefault(damageGroup),
+                    disabled);
             }
         }
     }
@@ -525,7 +546,7 @@ public sealed partial class DamageVisualsSystem : VisualizerSystem<DamageVisuals
             if (!damageVisComp.Overlay && damageGroup != damageVisComp.DamageGroup)
                 continue;
 
-            if (!_prototypeManager.TryIndex<DamageGroupPrototype>(damageGroup, out var damageGroupPrototype)
+            if (!ProtoMan.TryIndex<DamageGroupPrototype>(damageGroup, out var damageGroupPrototype)
                 || !damage.TryGetDamageInGroup(damageGroupPrototype, out var damageTotal))
                 continue;
 

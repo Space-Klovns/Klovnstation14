@@ -44,7 +44,6 @@ public sealed partial class NuclearReactorSystem : SharedNuclearReactorSystem
     [Dependency] private UserInterfaceSystem _uiSystem = null!;
     [Dependency] private ExplosionSystem _explosionSystem = default!;
     [Dependency] private RadioSystem _radioSystem = default!;
-    [Dependency] private IPrototypeManager _prototypes = default!;
     [Dependency] private ChatSystem _chatSystem = default!;
     [Dependency] private StationSystem _station = default!;
     [Dependency] private TriggerSystem _triggerSystem = default!;
@@ -400,7 +399,7 @@ public sealed partial class NuclearReactorSystem : SharedNuclearReactorSystem
 
     protected override void SendEngiRadio(Entity<NuclearReactorComponent> ent, string message)
     {
-        _engi ??= _prototypes.Index<RadioChannelPrototype>(ent.Comp.AlertChannel);
+        _engi ??= ProtoMan.Index<RadioChannelPrototype>(ent.Comp.AlertChannel);
 
         _radioSystem.SendRadioMessage(ent.Owner, message, _engi, ent);
     }
@@ -591,7 +590,7 @@ public sealed partial class NuclearReactorSystem : SharedNuclearReactorSystem
                 var reactorPart = reactor.ComponentGrid[x, y];
                 var pos = (x * _gridWidth) + y;
                 icon[pos] = reactorPart != null ? reactorPart.IconStateInserted : "base";
-                partName[pos] = reactorPart != null ? _prototypes.Index(reactorPart.ProtoId).Name : "empty";
+                partName[pos] = reactorPart != null ? ProtoMan.Index(reactorPart.ProtoId).Name : "empty";
             }
         }
 

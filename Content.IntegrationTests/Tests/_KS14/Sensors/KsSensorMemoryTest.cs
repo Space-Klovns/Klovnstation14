@@ -69,7 +69,6 @@ public sealed class KsSensorMemoryTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -85,8 +84,8 @@ public sealed class KsSensorMemoryTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = mapManager.CreateGridEntity(map.MapId);
-            gridB = mapManager.CreateGridEntity(map.MapId);
+            gridA = mapSystem.CreateGridEntity(map.MapId);
+            gridB = mapSystem.CreateGridEntity(map.MapId);
 
             // Both grids big enough to clear the <10 mass junk filter.
             var tiles = new List<(Vector2i, Tile)>();
@@ -168,7 +167,6 @@ public sealed class KsSensorMemoryTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -183,8 +181,8 @@ public sealed class KsSensorMemoryTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = mapManager.CreateGridEntity(map.MapId);
-            gridB = mapManager.CreateGridEntity(map.MapId);
+            gridA = mapSystem.CreateGridEntity(map.MapId);
+            gridB = mapSystem.CreateGridEntity(map.MapId);
 
             var tiles = new List<(Vector2i, Tile)>();
             for (var x = 0; x < 8; x++)
@@ -253,7 +251,6 @@ public sealed class KsSensorMemoryTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -268,8 +265,8 @@ public sealed class KsSensorMemoryTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = mapManager.CreateGridEntity(map.MapId);
-            gridB = mapManager.CreateGridEntity(map.MapId);
+            gridA = mapSystem.CreateGridEntity(map.MapId);
+            gridB = mapSystem.CreateGridEntity(map.MapId);
 
             var tiles = new List<(Vector2i, Tile)>();
             for (var x = 0; x < 8; x++)

@@ -1,0 +1,25 @@
+light_mode unshaded;
+
+// Additive, because this is light arriving on top of whatever the z-level already has, not light replacing
+//      it. The engine maps `add` to BlendFunc(SrcAlpha, DstAlpha) (Clyde.Rendering.cs), so COLOR.a is written
+//      as 1 below and the target is left at the ambient alpha it was cleared to - which together come out as
+//      a plain src + dst.
+blend_mode add;
+
+// The colour image of the z-level this light came from. Its alpha is already exactly where that z-level's
+//      floor, walls and entities are - so one minus it is the gaps, with no tile scanning at all, and an
+//      entity standing over a gap correctly blocks what falls through it.
+uniform sampler2D MASK_TEXTURE;
+
+// How much of the light survives the drop, from the same attenuation curve the engine lights use.
+uniform highp float dim;
+
+void fragment()
+{
+    highp vec4 light = zTexture(UV);
+
+    // Only alpha is read, which carries no colour space with it, so the raw sample is the right one here.
+    highp float blocked = texture2D(MASK_TEXTURE, UV).a;
+
+    COLOR = vec4(light.rgb * dim * (1.0 - blocked), 1.0);
+}

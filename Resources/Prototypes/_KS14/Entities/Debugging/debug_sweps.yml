@@ -25,3 +25,24 @@
     - Hand
     - Leg
     - Foot
+
+- type: entity
+  parent: BaseItem
+  id: KsDebugZLevelTransit
+  name: z-level jump thing
+  suffix: DEBUG
+  components:
+  - type: Sprite
+    sprite: Objects/Weapons/Melee/debug.rsi
+    state: icon
+  - type: Item
+    size: Tiny
+    sprite: Objects/Weapons/Melee/debug.rsi
+  - type: TriggerOnUse
+  - type: AddComponentsOnTrigger
+    targetUser: true
+    components:
+    - type: KsZLevelTransit
+      verticalVelocity: 5
+  - type: UseDelay
+    delay: 0.25

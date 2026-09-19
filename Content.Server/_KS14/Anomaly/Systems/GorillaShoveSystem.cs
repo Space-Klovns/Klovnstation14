@@ -23,13 +23,7 @@ public sealed partial class GorillaShoveSystem : EntitySystem
     [Dependency] private SharedPhysicsSystem _physics = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-        // Subscribe to MeleeHitEvent
-        SubscribeLocalEvent<GorillaGauntletComponent, MeleeHitEvent>(OnMeleeHit);
-    }
-
+    [SubscribeLocalEvent]
     private void OnMeleeHit(Entity<GorillaGauntletComponent> ent, ref MeleeHitEvent args)
     {
         // Basic Validation

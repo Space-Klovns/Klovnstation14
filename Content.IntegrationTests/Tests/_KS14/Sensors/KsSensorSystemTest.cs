@@ -63,7 +63,6 @@ public sealed class KsSensorSystemTest : GameTest
 
         var map = await pair.CreateTestMap();
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -76,10 +75,10 @@ public sealed class KsSensorSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = mapManager.CreateGridEntity(map.MapId);
-            gridB = mapManager.CreateGridEntity(map.MapId);
-            gridC = mapManager.CreateGridEntity(map.MapId);
-            gridD = mapManager.CreateGridEntity(map.MapId);
+            gridA = mapSystem.CreateGridEntity(map.MapId);
+            gridB = mapSystem.CreateGridEntity(map.MapId);
+            gridC = mapSystem.CreateGridEntity(map.MapId);
+            gridD = mapSystem.CreateGridEntity(map.MapId);
 
             // Big enough that grid B clears the <10 mass junk filter.
             var tiles = new List<(Vector2i Index, Tile Tile)>();

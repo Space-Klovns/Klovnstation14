@@ -69,12 +69,11 @@ public sealed partial class KsEntryPoint : GameShared
             return;
         }
 
+        // Accumulated across every file, since it all gets reloaded in one go at the end.
         var modifiedDict = new Dictionary<Type, HashSet<string>>();
 
         foreach (var (sequence, reader) in sequences)
         {
-            modifiedDict.Clear();
-
             foreach (var node in sequence.Sequence)
             {
                 var prototypeNode = (MappingDataNode)node;
@@ -96,8 +95,18 @@ public sealed partial class KsEntryPoint : GameShared
             reader.Dispose();
         }
 
-        _prototypeManager.ResolveResults();
         _sawmill.Debug($"Replaced {sequences.Count} file(s) worth of prototypes");
+
+        if (modifiedDict.Count == 0)
+            return;
+
+        // NOT ResolveResults(). That re-instantiates every prototype of every kind from their raw mappings
+        // (not just the replaced ones) and raises no PrototypesReloadedEventArgs, so anything that cached a
+        // prototype reference during system init - e.g. AtmosphereSystem's GasReactionPrototype array, whose
+        // effects we inject dependencies into - silently keeps pointing at orphaned objects that never get
+        // re-injected, and the sim then runs those instead. ReloadPrototypes() only touches what we actually
+        // replaced (plus its inheritance children) and raises the event so those caches can refresh.
+        _prototypeManager.ReloadPrototypes(modifiedDict);
     }
 
     // its not copypasta its assetflip

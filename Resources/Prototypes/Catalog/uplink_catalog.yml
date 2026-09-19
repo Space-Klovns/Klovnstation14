@@ -100,10 +100,10 @@
   description: uplink-energycrossbow-desc
   discountCategory: rareDiscounts
   discountDownTo:
-    Telecrystal: 3 # KS14 Change: x3
+    Telecrystal: 6 # KS14 Change: x3
   productEntity: WeaponEnergyCrossbow
   cost:
-    Telecrystal: 5 # KS14 Change: x3
+    Telecrystal: 15 # KS14 Change: x3
   categories:
   - UplinkWeaponry
   conditions:
@@ -638,6 +638,26 @@
     Telecrystal: 9 # KS14 Change: x3
   categories:
   - UplinkAmmo
+
+# KS14: For L6
+- type: listing
+  id: UplinkL6BoxMags
+  name: uplink-boxmags-name
+  description: uplink-boxmags-desc
+  productEntity: MagazineLightRifleBox
+  cost:
+    Telecrystal: 8
+  categories:
+  - UplinkAmmo
+  conditions:
+    - !type:StoreWhitelistCondition
+      whitelist:
+        tags:
+          - NukeOpsUplink
+    - !type:BuyerWhitelistCondition
+      blacklist:
+        components:
+          - SurplusBundle
 
 # For the mosin
 - type: listing

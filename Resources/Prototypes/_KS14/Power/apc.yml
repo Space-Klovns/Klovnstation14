@@ -1,0 +1,8 @@
+- type: entity
+  parent: APCBasic
+  id: KsAPCBasicAccessless
+  suffix: No access, Basic, 50kJ
+  components:
+  - type: ContainerFill
+    containers:
+      board: [ APCElectronics ]

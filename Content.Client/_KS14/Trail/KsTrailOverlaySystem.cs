@@ -1,17 +1,12 @@
 using Content.Shared._KS14.IoC;
 using Robust.Client.Graphics;
-using Robust.Shared.Prototypes;
 
 namespace Content.Client._KS14.Trail;
 
 public sealed partial class KsTrailOverlaySystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IOverlayManager _overlayManager = default!;
     [Dependency] private SystemCollectionHookManager _hookManager = default!;
-
-    private static readonly ProtoId<ShaderPrototype> StencilMaskShaderId = "StencilMask";
-    private static readonly ProtoId<ShaderPrototype> StencilDrawShaderId = "StencilDraw";
 
     public override void Initialize()
     {
@@ -22,10 +17,7 @@ public sealed partial class KsTrailOverlaySystem : EntitySystem
 
     private void OnDependencyAvailable(IDependencyCollection dependencyCollection)
     {
-        var overlay = new KsTrailOverlay(
-            _prototypeManager.Index(StencilMaskShaderId).InstanceUnique(),
-            _prototypeManager.Index(StencilDrawShaderId).InstanceUnique()
-        );
+        var overlay = new KsTrailOverlay();
 
         dependencyCollection.InjectDependencies(overlay, oneOff: true);
         _overlayManager.AddOverlay(overlay);

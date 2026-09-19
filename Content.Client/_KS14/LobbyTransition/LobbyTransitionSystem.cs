@@ -17,7 +17,6 @@ public sealed partial class LobbyTransitionSystem : EntitySystem
     [Dependency] private IOverlayManager _overlayManager = default!;
     [Dependency] private IStateManager _stateManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private ClientGameTicker _gameTicker = default!;
     [Dependency] private IResourceCache _resourceCache = default!;
     [Dependency] private IConfigurationManager _configurationManager = default!;
@@ -51,7 +50,7 @@ public sealed partial class LobbyTransitionSystem : EntitySystem
         if (_overlay is not { } ||
             args.OldState is not LobbyState ||
             args.NewState is not GameplayStateBase ||
-            !_prototypeManager.TryIndex(_gameTicker.LobbyBackground, out var backgroundProto))
+            !ProtoMan.TryIndex(_gameTicker.LobbyBackground, out var backgroundProto))
             return;
 
         var startTime = _gameTiming.CurTime;

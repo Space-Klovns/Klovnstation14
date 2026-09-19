@@ -18,11 +18,6 @@ public sealed partial class AutomaticNightshiftSystem : EntitySystem
     private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(15d);
     private TimeSpan _nextUpdate = TimeSpan.MinValue;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-    }
-
     public override void Update(float frameTime)
     {
         base.Update(frameTime);

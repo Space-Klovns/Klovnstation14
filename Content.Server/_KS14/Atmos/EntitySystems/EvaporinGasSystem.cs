@@ -1,14 +1,9 @@
-using Content.Server.Atmos.Portable;
 using Content.Shared._KS14.Atmos.Components;
 using Content.Server.Body.Systems;
 using Content.Shared.Atmos;
-using Content.Shared.Body;
-using Content.Shared.Body.Components;
-using Content.Shared.Body.Events;
 using Content.Shared.Damage.Systems;
 using Content.Shared.Nutrition.Components;
 using Content.Shared.Nutrition.EntitySystems;
-using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.Atmos.EntitySystems;
 
@@ -17,12 +12,7 @@ public sealed partial class EvaporinGasSystem : EntitySystem
     [Dependency] private ThirstSystem _thirstSystem = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-        SubscribeLocalEvent<EvaporinMetabolizerComponent, InhaledGasEvent>(OnGasInhaled);
-    }
-
+    [SubscribeLocalEvent]
     private void OnGasInhaled(Entity<EvaporinMetabolizerComponent> ent, ref InhaledGasEvent args)
     {
         var moles = args.Gas.GetMoles(Gas.Evaporin);

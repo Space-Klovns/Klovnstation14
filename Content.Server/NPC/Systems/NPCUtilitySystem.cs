@@ -45,7 +45,6 @@ namespace Content.Server.NPC.Systems;
 /// </summary>
 public sealed partial class NPCUtilitySystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private ContainerSystem _container = default!;
     [Dependency] private EntityLookupSystem _lookup = default!;
     [Dependency] private HandsSystem _hands = default!;
@@ -78,7 +77,7 @@ public sealed partial class NPCUtilitySystem : EntitySystem
     // KS14: ANK
     private void InitializeConsiderations(IDependencyCollection dependencyCollection)
     {
-        foreach (var compound in _proto.EnumeratePrototypes<UtilityQueryPrototype>())
+        foreach (var compound in ProtoMan.EnumeratePrototypes<UtilityQueryPrototype>())
         {
             foreach (var consideration in compound.Considerations)
                 consideration.Initialise(dependencyCollection);
@@ -107,7 +106,7 @@ public sealed partial class NPCUtilitySystem : EntitySystem
     {
         // TODO: PickHostilesop or whatever needs to juse be UtilityQueryOperator
 
-        var weh = _proto.Index<UtilityQueryPrototype>(proto);
+        var weh = ProtoMan.Index<UtilityQueryPrototype>(proto);
         var ents = _entPool.Get();
 
         foreach (var query in weh.Query)
@@ -169,7 +168,7 @@ public sealed partial class NPCUtilitySystem : EntitySystem
         return result;
     }
 
-    private float GetScore(IUtilityCurve curve, float conScore)
+    internal /* KS14: private -> internal, reused by TacticalPositionOperator */ float GetScore(IUtilityCurve curve, float conScore)
     {
         // KS14: ANK: the entire point of HighScore and LowScore instead of concrete 1f and 0f is so that some bool curves can be lenient instead of being binary fails (a false would be able to heavily discourage some utility target, but not outright eliminate it)
 
@@ -180,7 +179,7 @@ public sealed partial class NPCUtilitySystem : EntitySystem
             case InverseBoolCurve inverseBoolCurve /* KS14: ANK: Defined */:
                 return conScore.Equals(0f) ? inverseBoolCurve.HighScore : inverseBoolCurve.LowScore; // KS14: ANK: Use LowScore and HighScore instead of 1f and 0f
             case PresetCurve presetCurve:
-                return GetScore(_proto.Index<UtilityCurvePresetPrototype>(presetCurve.Preset).Curve, conScore);
+                return GetScore(ProtoMan.Index<UtilityCurvePresetPrototype>(presetCurve.Preset).Curve, conScore);
             case QuadraticCurve quadraticCurve:
                 return Math.Clamp(quadraticCurve.Slope * MathF.Pow(conScore - quadraticCurve.XOffset, quadraticCurve.Exponent) + quadraticCurve.YOffset, 0f, 1f);
             default:
@@ -420,7 +419,7 @@ public sealed partial class NPCUtilitySystem : EntitySystem
         }
     }
 
-    private float GetAdjustedScore(float score, int considerations)
+    internal /* KS14: private -> internal, reused by TacticalPositionOperator */ float GetAdjustedScore(float score, int considerations)
     {
         /*
         * Now using the geometric mean

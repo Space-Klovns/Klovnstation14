@@ -1,0 +1,9 @@
+- type: reaction
+  id: AnchorlessBloodBreakdown
+  reactants:
+    AnchorlessBlood:
+      amount: 20
+  minTemp: 450
+  products:
+    Diethylamine: 10
+    Toxin: 10

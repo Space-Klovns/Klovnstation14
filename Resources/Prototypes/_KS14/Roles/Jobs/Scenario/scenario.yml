@@ -12,7 +12,6 @@
   - !type:SpeciesRequirement
     species:
     - Human
-    - Dwarf
   access:
   - Maintenance
   special:
@@ -25,7 +24,7 @@
       - NanoTrasen
 
 - type: job
-  id: ScenarioSyndie #TODO soot: species whitelist to be human only
+  id: ScenarioSyndie
   name: job-name-scenario-syndie
   description: job-description-scenario-syndie
   playTimeTracker: JobScenarioSyndie

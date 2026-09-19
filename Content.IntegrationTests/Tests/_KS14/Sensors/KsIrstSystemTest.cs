@@ -173,7 +173,6 @@ public sealed class KsIrstSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var intel = entManager.System<KsSensorIntelSystem>();
@@ -185,7 +184,7 @@ public sealed class KsIrstSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            grid = mapManager.CreateGridEntity(map.MapId);
+            grid = mapSystem.CreateGridEntity(map.MapId);
             AddShipTiles(mapSystem, grid);
 
             // (0,0) is a corner tile: 5 of its 8 surrounding tiles are open space.
@@ -215,7 +214,6 @@ public sealed class KsIrstSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -231,11 +229,11 @@ public sealed class KsIrstSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridHot = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridMidNear = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridMidFar = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridCold = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridA = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridHot = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridMidNear = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridMidFar = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridCold = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // Move every target off the shared origin BEFORE mounting anything, or
             // fresh grids overlapping at (0,0) parent entities to the wrong grid.
@@ -294,7 +292,6 @@ public sealed class KsIrstSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -309,9 +306,9 @@ public sealed class KsIrstSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = mapManager.CreateGridEntity(map.MapId);
+            gridA = mapSystem.CreateGridEntity(map.MapId);
             AddShipTiles(mapSystem, gridA);
-            gridB = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridB = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // Close enough for both the IRST (effRange 100 at signature 100) and the
             // visual sensor (range 50) to see it.
@@ -371,7 +368,6 @@ public sealed class KsIrstSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -386,9 +382,9 @@ public sealed class KsIrstSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = mapManager.CreateGridEntity(map.MapId);
+            gridA = mapSystem.CreateGridEntity(map.MapId);
             AddShipTiles(mapSystem, gridA);
-            gridB = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridB = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // In reach of both the visual sensor (50) and the IRST (100 at signature 100).
             xformSystem.SetLocalPosition(gridB.Owner, new Vector2(30f, 0f));
@@ -444,7 +440,6 @@ public sealed class KsIrstSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var timing = server.ResolveDependency<IGameTiming>();
         var cfg = server.ResolveDependency<IConfigurationManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
@@ -461,9 +456,9 @@ public sealed class KsIrstSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = mapManager.CreateGridEntity(map.MapId);
+            gridA = mapSystem.CreateGridEntity(map.MapId);
             AddShipTiles(mapSystem, gridA);
-            gridB = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridB = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // In reach of both the visual sensor (50) and the IRST (100 at signature 100).
             xformSystem.SetLocalPosition(gridB.Owner, new Vector2(30f, 0f));
@@ -533,7 +528,6 @@ public sealed class KsIrstSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -546,9 +540,9 @@ public sealed class KsIrstSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = mapManager.CreateGridEntity(map.MapId);
+            gridA = mapSystem.CreateGridEntity(map.MapId);
             AddShipTiles(mapSystem, gridA);
-            gridB = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridB = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // Well within the IRST's reach at signature 100 (effRange 100).
             xformSystem.SetLocalPosition(gridB.Owner, new Vector2(30f, 0f));
@@ -599,7 +593,6 @@ public sealed class KsIrstSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -616,15 +609,15 @@ public sealed class KsIrstSystemTest : GameTest
             entManager.DeleteEntity(map.Grid);
 
             // Small sensor grid so the close-in blockers don't overlap it.
-            gridA = mapManager.CreateGridEntity(map.MapId);
+            gridA = mapSystem.CreateGridEntity(map.MapId);
             AddTiles(mapSystem, gridA, 3, 3);
 
-            coldBlocker = mapManager.CreateGridEntity(map.MapId);
+            coldBlocker = mapSystem.CreateGridEntity(map.MapId);
             AddTiles(mapSystem, coldBlocker, 2, 8);
-            warmBlocker = mapManager.CreateGridEntity(map.MapId);
+            warmBlocker = mapSystem.CreateGridEntity(map.MapId);
             AddTiles(mapSystem, warmBlocker, 2, 8);
-            hotThroughCold = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            hotBehindWarm = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            hotThroughCold = MakeShipGrid(entManager, mapSystem, map.MapId);
+            hotBehindWarm = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // Blockers hug the sensor (wide shadow); targets sit far behind them.
             xformSystem.SetLocalPosition(coldBlocker.Owner, new Vector2(4f, -4f));
@@ -673,7 +666,6 @@ public sealed class KsIrstSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -687,12 +679,12 @@ public sealed class KsIrstSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = mapManager.CreateGridEntity(map.MapId);
+            gridA = mapSystem.CreateGridEntity(map.MapId);
             AddTiles(mapSystem, gridA, 3, 3);
 
-            dimBlocker = mapManager.CreateGridEntity(map.MapId);
+            dimBlocker = mapSystem.CreateGridEntity(map.MapId);
             AddTiles(mapSystem, dimBlocker, 2, 8);
-            hotTarget = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            hotTarget = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             xformSystem.SetLocalPosition(dimBlocker.Owner, new Vector2(4f, -4f));
             xformSystem.SetLocalPosition(hotTarget.Owner, new Vector2(40f, 0f));
@@ -733,7 +725,6 @@ public sealed class KsIrstSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -747,10 +738,10 @@ public sealed class KsIrstSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = mapManager.CreateGridEntity(map.MapId);
+            gridA = mapSystem.CreateGridEntity(map.MapId);
             AddShipTiles(mapSystem, gridA);
-            hotBehindOwn = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            hotOpen = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            hotBehindOwn = MakeShipGrid(entManager, mapSystem, map.MapId);
+            hotOpen = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             xformSystem.SetLocalPosition(hotBehindOwn.Owner, new Vector2(40f, 0f)); // behind the own wall (+X)
             xformSystem.SetLocalPosition(hotOpen.Owner, new Vector2(0f, 40f));      // open direction (+Y)
@@ -795,7 +786,6 @@ public sealed class KsIrstSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -809,9 +799,9 @@ public sealed class KsIrstSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridAtFloor = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridBelowFloor = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridA = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridAtFloor = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridBelowFloor = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // Off the shared origin before anything mounts, or walls parent to the wrong grid.
             // Both sit far inside the shallow taper's effective range (>= 104 for any
@@ -846,11 +836,10 @@ public sealed class KsIrstSystemTest : GameTest
     /// <summary>8x8, big enough to clear the &lt;10 mass junk filter.</summary>
     private static Entity<MapGridComponent> MakeShipGrid(
         IEntityManager entManager,
-        IMapManager mapManager,
         SharedMapSystem mapSystem,
         MapId mapId)
     {
-        var grid = mapManager.CreateGridEntity(mapId);
+        var grid = mapSystem.CreateGridEntity(mapId);
         AddShipTiles(mapSystem, grid);
         return grid;
     }

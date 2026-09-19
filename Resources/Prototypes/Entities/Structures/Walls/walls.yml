@@ -9,6 +9,7 @@
     snap:
     - Wall
   components:
+  - type: Stainable # KS14: stains
   - type: Anchorable
     flags:
     - Anchorable
@@ -85,6 +86,11 @@
     airBlockedDirection:
     - South
     - East
+  - type: Occluder
+    polygon:
+    - "-0.5,-0.5"
+    - "0.5,0.5"
+    - "0.5,-0.5"
   - type: Fixtures
     fixtures:
       fix1:

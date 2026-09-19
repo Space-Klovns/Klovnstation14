@@ -8,10 +8,10 @@ public sealed partial class TriggerSystem
 {
     private void InitializeCollide()
     {
-        SubscribeLocalEvent<TriggerOnCollideComponent, StartCollideEvent>(OnCollide);
+        SubscribeLocalEvent<TriggerOnCollideComponent, StartCollideEvent>(OnCollide, before: [typeof(Projectiles.SharedProjectileSystem), typeof(_Trauma.Projectiles.PredictedProjectileSystem)] /* KS14: added before */);
         SubscribeLocalEvent<TriggerOnStepTriggerComponent, StepTriggeredOffEvent>(OnStepTriggered);
 
-        SubscribeLocalEvent<TriggerOnTimedCollideComponent, StartCollideEvent>(OnTimedCollide);
+        SubscribeLocalEvent<TriggerOnTimedCollideComponent, StartCollideEvent>(OnTimedCollide, before: [typeof(Projectiles.SharedProjectileSystem), typeof(_Trauma.Projectiles.PredictedProjectileSystem)] /* KS14: added before */);
         SubscribeLocalEvent<TriggerOnTimedCollideComponent, EndCollideEvent>(OnTimedEndCollide);
         SubscribeLocalEvent<TriggerOnTimedCollideComponent, ComponentShutdown>(OnTimedShutdown);
     }

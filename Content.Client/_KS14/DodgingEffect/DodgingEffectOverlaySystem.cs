@@ -3,7 +3,7 @@ using Robust.Client.Graphics;
 
 namespace Content.Client._KS14.DodgingEffect;
 
-public sealed partial class DodgingEffectOverlaySystem : EntitySystem
+public sealed partial class CloneLocalVisualsOverlaySystem : EntitySystem
 {
     [Dependency] private IOverlayManager _overlayManager = default!;
     [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;

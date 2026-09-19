@@ -16,10 +16,9 @@ public sealed partial class KsRayCollisionSystem : EntitySystem
     {
         base.Initialize();
         UpdatesBefore.Add(typeof(SharedPhysicsSystem));
-
-        SubscribeLocalEvent<KsRayCollisionComponent, PhysicsSleepEvent>(OnPhysicsSleep);
     }
 
+    [SubscribeLocalEvent]
     private void OnPhysicsSleep(Entity<KsRayCollisionComponent> entity, ref PhysicsSleepEvent args)
     {
         StopChecking(entity);

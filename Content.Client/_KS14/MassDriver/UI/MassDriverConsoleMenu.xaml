@@ -2,8 +2,8 @@
             xmlns:gfx="clr-namespace:Robust.Client.Graphics;assembly=Robust.Client"
             xmlns:cc="clr-namespace:Content.Client.Administration.UI.CustomControls"
             Title="{Loc 'mass-driver-ui-title'}"
-            MinSize="325 300"
-            SetSize="325 300">
+            MinSize="325 380"
+            SetSize="325 380"> <!-- KS14, changes minsize and setsize -->
     <BoxContainer Orientation="Vertical" HorizontalExpand="True" VerticalExpand="True">
         <ScrollContainer VScrollEnabled="True" HorizontalExpand="True" VerticalExpand="True">
             <BoxContainer Orientation="Vertical">

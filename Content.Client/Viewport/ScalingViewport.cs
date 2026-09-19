@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Content.Shared._KS14.ZLevel; // KS14
-using Robust.Client.GameObjects; // KS14
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
@@ -10,7 +8,6 @@ using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Map.Components; // KS14
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -22,23 +19,12 @@ namespace Content.Client.Viewport
     /// <summary>
     ///     Viewport control that has a fixed viewport size and scales it appropriately.
     /// </summary>
+    // KS14: made partial, z-level rendering lives in ScalingViewport.Klovn.cs
     public sealed partial class ScalingViewport : Control, IViewportControl
     {
         [Dependency] private IClyde _clyde = default!;
         [Dependency] private IEntityManager _entityManager = default!;
         [Dependency] private IInputManager _inputManager = default!;
-
-        // KS14 START: zlevels
-        private Robust.Shared.Graphics.Eye _zLevelEye = new Robust.Shared.Graphics.Eye()
-        {
-            DrawFov = false,
-            DrawLight = false
-        };
-        private MapSystem _mapSystem = default!;
-        private KsZLevelSystem _zLevelSystem = null!;
-        private List<Entity<KsZLevelComponent>> _mapsToIterate = [];
-        private IRenderTarget _zBlurBuffer = default!;
-        // KS14 END: zlevels
 
         // Internal viewport creation is deferred.
         private IClydeViewport? _viewport;
@@ -185,63 +171,14 @@ namespace Content.Client.Viewport
             var drawBox = GetDrawBox();
             var drawBoxGlobal = drawBox.Translated(GlobalPixelPosition);
 
-            // KS14 Start
-            _mapsToIterate.Clear();
-            if (_mapSystem.TryGetMap(_eye?.Position.MapId, out var topMapUid) &&
-                _zLevelSystem.TryGetZLevelsBelow(topMapUid.Value, _mapsToIterate) &&
-                _mapsToIterate.Count != 0)
-            {
-                // TryGetZLevelsBelow doesn't include the map we're on
-                _mapsToIterate.Add((topMapUid.Value, null!));
-
-                // as this is ascending, and depth is 0-indexed; top-most one (last) will be 0
-                var depth = _mapsToIterate.Count - 1;
-
-                _zLevelEye.DrawLight = _eye.DrawLight;
-                _zLevelEye.Offset = _eye.Offset;
-                _zLevelEye.Rotation = _eye.Rotation;
-
-                foreach (var (mapUid, mapZLevelComponent) in _mapsToIterate)
-                {
-                    // clearcolor for all maps other than first is none
-                    _viewport.ClearColor = null;
-                    // for maps below the highest, never draw FOV. on the highest map, only draw fov if we would for a non-zlevel
-                    _zLevelEye.DrawFov = depth == 0 && _eye.DrawFov;
-
-                    var depthMultiplier = mapZLevelComponent == null ? 0f : mapZLevelComponent.DepthMultiplier;
-
-                    _zLevelEye.Position = new MapCoordinates(
-                        _eye.Position.Position,
-                        _entityManager.GetComponent<MapComponent>(mapUid).MapId
-                    );
-                    _zLevelEye.Scale = _eye.Scale - new Vector2(0.075f * depth * depthMultiplier, 0.075f * depth * depthMultiplier);
-                    _viewport.Eye = depth == 0 ? _eye : _zLevelEye;
-
-                    _viewport.Render();
-                    _viewport.RenderScreenOverlaysBelow(handle, this, drawBoxGlobal);
-
-                    // This would otherwise draw if not for depthmultiplier being 0 on the top-most map
-                    if (depthMultiplier != 0f)
-                        _clyde.BlurRenderTarget(_viewport, _viewport.RenderTarget, _zBlurBuffer, _zLevelEye, 2.5f * depthMultiplier);
-
-                    handle.DrawingHandleScreen.DrawTextureRect(_viewport.RenderTarget.Texture, drawBox);
-                    _viewport.RenderScreenOverlaysAbove(handle, this, drawBoxGlobal);
-
-                    depth--;
-                }
-
-                // default clearcolor is black
-                // yes if the very first frame ever is on a zlevel that isnt the deepest one, then yes one frame will unintentionally not clear
-                _viewport.ClearColor = Color.Black;
-                _zLevelEye.DrawFov = _eye.DrawFov;
+            // KS14 start: on a z-level stack, every level is drawn as its own pass instead of the single
+            //      render below, and that pass loop does its own overlays and blit
+            if (TryDrawZLevels(handle, drawBox, drawBoxGlobal))
                 return;
-            }
-            else
-            {
-                _viewport.Eye = _eye;
-                _viewport.Render();
-            }
-            // KS14 End
+
+            _viewport.Eye = _eye;
+            _viewport.Render();
+            // KS14 end
 
             _viewport.RenderScreenOverlaysBelow(handle, this, drawBoxGlobal);
             handle.DrawingHandleScreen.DrawTextureRect(_viewport.RenderTarget.Texture, drawBox);
@@ -333,12 +270,7 @@ namespace Content.Client.Viewport
 
             _viewport.Eye = _eye;
 
-            // KS14 Start
-            _mapSystem ??= _entityManager.System<MapSystem>();
-            _zLevelSystem ??= _entityManager.System<KsZLevelSystem>();
-            _zBlurBuffer = _clyde
-                .CreateRenderTarget(ViewportSize * renderScale, new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb), sampleParameters: sampleParameters);
-            // KS14 End
+            RegenerateZLevelState(ViewportSize * renderScale, sampleParameters); // KS14
         }
 
         protected override void Resized()
@@ -352,6 +284,8 @@ namespace Content.Client.Viewport
         {
             _viewport?.Dispose();
             _viewport = null;
+
+            InvalidateZLevelState(); // KS14
         }
 
         public MapCoordinates ScreenToMap(Vector2 coords)
@@ -361,10 +295,18 @@ namespace Content.Client.Viewport
 
             EnsureViewportCreated();
 
-            Matrix3x2.Invert(GetLocalToScreenMatrix(), out var matrix);
-            coords = Vector2.Transform(coords, matrix);
+            var passEye = SwapToViewerEyeIfOffMap(); // KS14
+            try // KS14
+            {
+                Matrix3x2.Invert(GetLocalToScreenMatrix(), out var matrix);
+                coords = Vector2.Transform(coords, matrix);
 
-            return _viewport!.LocalToWorld(coords);
+                return _viewport!.LocalToWorld(coords);
+            }
+            finally // KS14
+            {
+                RestorePassEye(passEye); // KS14
+            }
         }
 
         /// <inheritdoc/>
@@ -375,13 +317,21 @@ namespace Content.Client.Viewport
 
             EnsureViewportCreated();
 
-            Matrix3x2.Invert(GetLocalToScreenMatrix(), out var matrix);
-            coords = Vector2.Transform(coords, matrix);
+            var passEye = SwapToViewerEyeIfOffMap(); // KS14
+            try // KS14
+            {
+                Matrix3x2.Invert(GetLocalToScreenMatrix(), out var matrix);
+                coords = Vector2.Transform(coords, matrix);
 
-            var ev = new PixelToMapEvent(coords, this, _viewport!);
-            _entityManager.EventBus.RaiseEvent(EventSource.Local, ref ev);
+                var ev = new PixelToMapEvent(coords, this, _viewport!);
+                _entityManager.EventBus.RaiseEvent(EventSource.Local, ref ev);
 
-            return _viewport!.LocalToWorld(ev.VisiblePosition);
+                return _viewport!.LocalToWorld(ev.VisiblePosition);
+            }
+            finally // KS14
+            {
+                RestorePassEye(passEye); // KS14
+            }
         }
 
         public Vector2 WorldToScreen(Vector2 map)

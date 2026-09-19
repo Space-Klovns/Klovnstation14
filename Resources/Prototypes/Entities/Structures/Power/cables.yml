@@ -112,6 +112,12 @@
     range: 2
     sound:
       path: /Audio/Ambience/Objects/emf_buzz.ogg
+  # KS14 start
+  - type: ArcFlashCable
+    lightningRange: 4
+    lightningAmount: 1
+    lightningPrototype: ArcFlashLightningStrong
+  # KS14 end
 
 - type: entity
   id: CableHVUncuttable
@@ -170,6 +176,12 @@
   - type: CableVisualizer
     statePrefix: mvcable_
     extraLayerPrefix: mvstripes_
+  # KS14 start
+  - type: ArcFlashCable
+    lightningRange: 4
+    lightningAmount: 1
+    lightningPrototype: ArcFlashLightningMedium
+  # KS14 end
 
 - type: entity
   id: CableMVUncuttable

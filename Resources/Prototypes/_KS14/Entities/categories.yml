@@ -1,0 +1,19 @@
+# Applied automatically to anything carrying KsTrailComponent, via EntityCategoryAttribute.
+# Trails are detached effects: they are spawned by something else and deliberately outlive it,
+# so entity-accounting tests have to be told to leave them out of their totals.
+- type: entityCategory
+  id: KsTrail
+  name: entity-category-name-ks-trail
+  description: entity-category-desc-ks-trail
+
+# Chemfires are only ever created through ChemicalFireSystem.SpawnChemicalFire, so they have no business
+#     showing up in the spawn menu. ChemicalFireComponent implies this category.
+- type: entityCategory
+  id: ChemicalFire
+  name: entity-category-name-chemical-fire
+  hideSpawnMenu: true
+
+- type: entityCategory
+  id: NpcAttackPattern
+  name: entity-category-name-chemical-fire
+  hideSpawnMenu: true

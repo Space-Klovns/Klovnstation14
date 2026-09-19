@@ -22,12 +22,12 @@
   - type: ExplodeOnTrigger
     keysIn:
     - timer
-  - type: Explosive # Weak explosion in a very small radius. Doesn't break underplating.
+  - type: Explosive # KS14: buffing crew explosions
     explosionType: Default
-    totalIntensity: 50
+    totalIntensity: 67
     intensitySlope: 5
-    maxIntensity: 6
-    canCreateVacuum: false
+    maxIntensity: 8
+    canCreateVacuum: true
   - type: Appearance
   - type: TimerTriggerVisuals
   - type: Construction

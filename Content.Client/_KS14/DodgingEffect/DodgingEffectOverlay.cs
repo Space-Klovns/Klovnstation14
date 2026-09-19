@@ -15,7 +15,7 @@ public sealed partial class DodgingEffectOverlay : Overlay
     public override OverlaySpace Space => OverlaySpace.WorldSpaceEntities;
 
     [Dependency] private EntityManager _entityManager = default!;
-    [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private IOverlayManager _overlay = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
@@ -46,7 +46,7 @@ public sealed partial class DodgingEffectOverlay : Overlay
 
         _grids.Clear();
         // doesnt work offgrids o algo so plz fix somephono
-        _mapManager.FindGridsIntersecting(args.MapId, bounds, ref _grids, approx: true);
+        _mapSystem.FindGridsIntersecting(args.MapId, bounds, ref _grids, approx: true);
         if (_grids.Count == 0)
             return;
 

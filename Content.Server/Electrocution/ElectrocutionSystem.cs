@@ -38,7 +38,6 @@ namespace Content.Server.Electrocution;
 public sealed partial class ElectrocutionSystem : SharedElectrocutionSystem
 {
     [Dependency] private IAdminLogManager _adminLogger = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private DamageableSystem _damageable = default!;
     [Dependency] private EntityLookupSystem _entityLookup = default!;
@@ -128,7 +127,7 @@ public sealed partial class ElectrocutionSystem : SharedElectrocutionSystem
         }
     }
 
-    public bool IsPowered(EntityUid uid, ElectrifiedComponent electrified, TransformComponent transform) //KS14 - changed to public so it could be used
+    public /* KS14: made public */ bool IsPowered(EntityUid uid, ElectrifiedComponent electrified, TransformComponent transform)
     {
         if (!electrified.Enabled)
             return false;
@@ -427,7 +426,7 @@ public sealed partial class ElectrocutionSystem : SharedElectrocutionSystem
 
         if (shockDamage is { } dmg)
         {
-            if (_damageable.TryChangeDamage(uid, new DamageSpecifier(_prototypeManager.Index(DamageType), dmg), out var damage, origin: sourceUid))
+            if (_damageable.TryChangeDamage(uid, new DamageSpecifier(ProtoMan.Index(DamageType), dmg), out var damage, origin: sourceUid))
             {
                 _adminLogger.Add(LogType.Electrocution,
                     $"{ToPrettyString(uid):entity} received {damage:damage} powered electrocution damage{(sourceUid != null ? " from " + ToPrettyString(sourceUid.Value) : ""):source}");

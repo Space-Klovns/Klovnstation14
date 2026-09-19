@@ -21795,7 +21795,7 @@ entities:
     - type: Transform
       pos: 96.5,12.5
       parent: 1
-- proto: WeaponAntiqueLaser
+- proto: WeaponAntiqueLaserProjectile
   entities:
   - uid: 2168
     components:
@@ -21823,14 +21823,14 @@ entities:
     - type: Transform
       pos: 67.5,39.5
       parent: 1
-- proto: WeaponLaserCarbine
+- proto: WeaponLaserCarbineProjectile
   entities:
   - uid: 2117
     components:
     - type: Transform
       pos: 73.5,39.5
       parent: 1
-- proto: WeaponLaserCarbinePractice
+- proto: WeaponLaserCarbineProjectilePractice
   entities:
   - uid: 804
     components:

@@ -1,0 +1,81 @@
+- type: entity
+  id: BaseNPCRanged
+  abstract: true
+  noSpawn: true
+  components:
+  - type: NpcRangedAttackPattern
+    projectile: BaseBossProjectile
+    shots: 1
+    degreesPerShot: 15 # Added degree per shot for next shot
+    rotationOffset: 0
+    spread: 45 # Spread for attacks with more than 1 shot
+    speed: 5 # Projectile speed
+    telegraphTime: 0 # Time in seconds to telegraph the attack before firing
+    cooldown: 20.0 # Cooldown time in seconds
+    # Sound can be specified in inheriting entities
+
+# Individual attack entities
+- type: entity
+  id: RangedSpiral
+  parent: BaseNPCRanged
+  name: spiral attack
+  components:
+  - type: NpcRangedAttackPattern
+    attackType: Spiral
+    shots: 24
+    degreesPerShot: 15
+
+- type: entity
+  id: RangedDoubleSpiral
+  parent: BaseNPCRanged
+  name: double spiral attack
+  components:
+  - type: NpcRangedAttackPattern
+    attackType: DoubleSpiral
+    shots: 24
+    degreesPerShot: 15
+    rotationOffset: 180
+
+- type: entity
+  id: RangedShotgun
+  parent: BaseNPCRanged
+  name: shotgun blast
+  components:
+  - type: NpcRangedAttackPattern
+    attackType: Shotgun
+    shots: 8
+    spread: 45
+    cooldown: 5.0
+
+- type: entity
+  id: RangedCardinalDirections
+  parent: BaseNPCRanged
+  name: cardinal direction attack
+  components:
+  - type: NpcRangedAttackPattern
+    attackType: CardinalDirections
+
+- type: entity
+  id: RangedDiagonalDirections
+  parent: BaseNPCRanged
+  name: diagonal direction attack
+  components:
+  - type: NpcRangedAttackPattern
+    attackType: DiagonalDirections
+
+- type: entity
+  id: RangedAllDirections
+  parent: BaseNPCRanged
+  name: all directions attack
+  components:
+  - type: NpcRangedAttackPattern
+    attackType: AllDirections
+
+- type: entity
+  id: RangedRandomAoe
+  parent: BaseNPCRanged
+  name: random AOE attack
+  components:
+  - type: NpcRangedAttackPattern
+    attackType: RandomAoe
+    shots: 16

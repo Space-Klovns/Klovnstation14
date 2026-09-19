@@ -38,7 +38,6 @@ public sealed partial class KsTranslationSystem : EntitySystem
     [Dependency] private IServerNetManager _net = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private IGameTiming _timing = default!;
-    [Dependency] private IPrototypeManager _proto = default!;
 
     /// <summary>
     ///     The translation backend. Deliberately NOT a [Dependency] so integration tests can swap in a fake;
@@ -89,9 +88,6 @@ public sealed partial class KsTranslationSystem : EntitySystem
         _net.RegisterNetMessage<MsgReplaceChatMessage>();
 
         Translator = new DeepLTranslator(_cfg);
-
-        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnCleanup);
-        SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
         RebuildGlossary();
 
         _cfg.OnValueChanged(KsCCVars.TranslateEnabled, v => _enabled = v, invokeImmediately: true);
@@ -111,6 +107,7 @@ public sealed partial class KsTranslationSystem : EntitySystem
         (Translator as IDisposable)?.Dispose();
     }
 
+    [SubscribeLocalEvent]
     private void OnCleanup(RoundRestartCleanupEvent ev)
     {
         _cooldownUntil.Clear();
@@ -118,6 +115,7 @@ public sealed partial class KsTranslationSystem : EntitySystem
         // Cache/budget intentionally persist across rounds (budget is a billing-period concept).
     }
 
+    [SubscribeLocalEvent]
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs ev)
     {
         if (ev.WasModified<KsTranslationGlossaryPrototype>())
@@ -132,7 +130,7 @@ public sealed partial class KsTranslationSystem : EntitySystem
     public void RebuildGlossary()
     {
         var dictionaries = new List<KsGlossaryDictionary>();
-        foreach (var proto in _proto.EnumeratePrototypes<KsTranslationGlossaryPrototype>())
+        foreach (var proto in ProtoMan.EnumeratePrototypes<KsTranslationGlossaryPrototype>())
         {
             if (proto.Entries.Count == 0)
                 continue;

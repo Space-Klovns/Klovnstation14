@@ -152,3 +152,4 @@
           False: { visible: false }
   - type: Transform
     anchored: true
+  - type: StationAiWhitelist #KS14: New items whitelisted for AI

@@ -170,7 +170,7 @@
         - !type:ReagentCondition
           reagent: Bicaridine
           min: 15
-      - !type:Drunk
+#      - !type:Drunk KS14, removed bicaridine drunkness
 
 - type: reagent
   id: Cryoxadone

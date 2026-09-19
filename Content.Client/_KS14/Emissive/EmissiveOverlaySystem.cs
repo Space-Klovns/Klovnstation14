@@ -1,16 +1,29 @@
+using Content.Shared._KS14.IoC;
 using Robust.Client.Graphics;
+using Robust.Shared.IoC;
 
 namespace Content.Client._KS14.Emissive;
 
 public sealed partial class EmissiveOverlaySystem : EntitySystem
 {
     [Dependency] private IOverlayManager _overlayManager = default!;
+    [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;
 
     public override void Initialize()
     {
         base.Initialize();
-        _overlayManager.AddOverlay(new EmissiveOverlay());
+
+        _systemCollectionHookManager.HookAction(OnDependenciesReady);
     }
+
+    private void OnDependenciesReady(IDependencyCollection dependencyCollection)
+    {
+        var overlay = new EmissiveOverlay();
+        dependencyCollection.InjectDependencies(overlay, oneOff: true);
+
+        _overlayManager.AddOverlay(overlay);
+    }
+
     public override void Shutdown()
     {
         base.Shutdown();

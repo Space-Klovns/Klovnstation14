@@ -1,0 +1,7 @@
+# Horizontal cut with an animatable cut height and fade, for something sinking into a surface.
+# Deliberately not upstream's HorizontalCut: that one is shared with floor occlusion, which sets no
+# parameters of its own and would inherit whatever this animates them to.
+- type: shader
+  id: KsSinkingCut
+  kind: source
+  path: "/Textures/_KS14/Shaders/sinking_cut.swsl"

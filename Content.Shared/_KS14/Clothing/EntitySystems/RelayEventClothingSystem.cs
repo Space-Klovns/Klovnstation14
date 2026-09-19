@@ -12,15 +12,11 @@ namespace Content.Shared._KS14.Clothing.EntitySystems;
 /// </summary>
 public sealed partial class RelayEventClothingSystem : EntitySystem
 {
-    public override void Initialize()
-    {
-        // Only subscribe to events on entities that have the relay requirement marker
-        SubscribeLocalEvent<ClothingRelayEventRequiredComponent, MobStateChangedEvent>(OnMobStateChanged);
-    }
-
     /// <summary>
     /// Relays MobStateChanged events from the wearer to their worn clothing items.
     /// </summary>
+    // Only subscribe to events on entities that have the relay requirement marker
+    [SubscribeLocalEvent]
     private void OnMobStateChanged(EntityUid uid, ClothingRelayEventRequiredComponent component, MobStateChangedEvent args)
     {
         RelayEventToWornClothing(uid, args);

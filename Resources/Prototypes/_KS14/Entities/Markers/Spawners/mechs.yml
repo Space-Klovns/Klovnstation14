@@ -1,0 +1,13 @@
+- type: entity
+  name: U-43 spawner
+  id: SpawnMechU43
+  parent: MarkerBase
+  components:
+  - type: Sprite
+    layers:
+      - state: green
+      - sprite: _KS14/Objects/Specific/Mech/mecha.rsi
+        state: u43
+  - type: ConditionalSpawner
+    prototypes:
+      - MechU43Battery

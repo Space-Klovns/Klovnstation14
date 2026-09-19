@@ -203358,7 +203358,7 @@ entities:
     - type: Physics
       canCollide: False
     - type: InsideEntityStorage
-- proto: WeaponLaserCarbine
+- proto: WeaponLaserCarbineProjectile
   entities:
   - uid: 30477
     components:
@@ -203384,7 +203384,7 @@ entities:
       rot: 1.5707963267948966 rad
       pos: 50.293934,-13.21228
       parent: 2
-- proto: WeaponLaserCarbinePractice
+- proto: WeaponLaserCarbineProjectilePractice
   entities:
   - uid: 4155
     components:
