@@ -1,89 +1,69 @@
-using Content.Shared.Damage;
-using Content.Shared.Damage.Systems; // KS14
+using Content.Shared.Damage.Systems;
 using Content.Shared.Item.ItemToggle;
 using Content.Shared.Item.ItemToggle.Components;
-using Content.Shared.Power; // KS14
+using Content.Shared.Power;
 using Content.Shared.Power.Components;
 using Content.Shared.Power.EntitySystems;
-using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.EnergyShield;
 
+/// <summary>
+///     Drains a <see cref="RechargeableEnergyShieldComponent"/>'s battery as it soaks damage, and keeps
+///         the shield switched off while that battery is flat.
+/// </summary>
+/// <remarks>
+///     Deactivation hangs off <see cref="ChargeChangedEvent"/> alone. An earlier version also re-checked
+///         the same condition every tick and, when the shield was already off, hand-raised a synthetic
+///         <see cref="ItemToggledEvent"/> - which fires every unrelated subscriber (visuals, sounds,
+///         melee stats) for a state change that never happened.
+/// </remarks>
 public sealed partial class SharedRechargeableEnergyShieldSystem : EntitySystem
 {
-    [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private SharedBatterySystem _batterySystem = default!;
     [Dependency] private ItemToggleSystem _itemToggleSystem = default!;
+    [Dependency] private EntityQuery<BatteryComponent> _batteryQuery = default!;
 
-    public override void Initialize()
+    /// <summary>
+    ///     Spends charge for the damage the shield just took.
+    /// </summary>
+    /// <remarks>
+    ///     Healing is ignored rather than credited back as charge - putting the shield back together is
+    ///         what the self-recharger is for.
+    /// </remarks>
+    [SubscribeLocalEvent]
+    private void OnDamageDealt(Entity<RechargeableEnergyShieldComponent> entity, ref DamageDealtEvent args)
     {
-        SubscribeLocalEvent<RechargeableEnergyShieldComponent, DamageChangedEvent>(OnDamageChanged);
-        SubscribeLocalEvent<RechargeableEnergyShieldComponent, ChargeChangedEvent>(OnChargeChanged);
-        SubscribeLocalEvent<RechargeableEnergyShieldComponent, ItemToggleActivateAttemptEvent>(OnToggleAttempt);
-    }
-
-    public override void Update(float frameTime)
-    {
-        if (!_gameTiming.IsFirstTimePredicted)
+        if (!_batteryQuery.TryComp(entity, out var batteryComponent))
             return;
 
-        var query = EntityQueryEnumerator<RechargeableEnergyShieldComponent, BatteryComponent>();
-        while (query.MoveNext(out var uid, out var rechargeableComponent, out var batteryComponent))
-        {
-            var chargeDepleted = _batterySystem.GetCharge((uid, batteryComponent)) <= 0f;
-            if (rechargeableComponent.ChargeDepleted != chargeDepleted)
-            {
-                rechargeableComponent.ChargeDepleted = chargeDepleted;
-                Dirty(uid, rechargeableComponent);
-            }
-
-            if (!chargeDepleted)
-            {
-                rechargeableComponent.ShutdownHandled = false;
-                continue;
-            }
-
-            if (_itemToggleSystem.IsActivated(uid))
-            {
-                _itemToggleSystem.TryDeactivate(uid);
-            }
-            else if (!rechargeableComponent.ShutdownHandled)
-            {
-                var toggleEvent = new ItemToggledEvent(Predicted: true, Activated: false, User: null);
-                RaiseLocalEvent(uid, ref toggleEvent);
-            }
-
-            rechargeableComponent.ShutdownHandled = true;
-        }
-    }
-
-    private void OnDamageChanged(Entity<RechargeableEnergyShieldComponent> entity, ref DamageChangedEvent args)
-    {
-        if (args.DamageDelta == null ||
-            !TryComp<BatteryComponent>(entity, out var batteryComponent))
-            return;
-
-        var chargeDamage = args.DamageDelta.GetTotal().Float();
+        var chargeDamage = args.Damage.GetTotal().Float() * entity.Comp.DamageToChargeRatio;
         if (chargeDamage > 0f)
             _batterySystem.UseCharge((entity, batteryComponent), chargeDamage);
     }
 
+    /// <summary>
+    ///     Switches the shield off the moment its battery runs dry.
+    /// </summary>
+    [SubscribeLocalEvent]
     private void OnChargeChanged(Entity<RechargeableEnergyShieldComponent> entity, ref ChargeChangedEvent args)
     {
         if (args.CurrentCharge > 0f)
             return;
 
-        entity.Comp.ChargeDepleted = true;
-        Dirty(entity);
         _itemToggleSystem.TryDeactivate(entity.Owner);
     }
+
+    /// <summary>
+    ///     Refuses to switch the shield on while its battery is flat.
+    /// </summary>
+    [SubscribeLocalEvent]
     private void OnToggleAttempt(Entity<RechargeableEnergyShieldComponent> entity, ref ItemToggleActivateAttemptEvent args)
     {
-        if (!TryComp<BatteryComponent>(entity, out var batteryComponent) ||
-            _batterySystem.GetCharge((entity, batteryComponent)) <= 0f)
-        {
-            args.Cancelled = true;
-            args.Popup = Loc.GetString("stunbaton-component-low-charge");
-        }
+        if (_batteryQuery.TryComp(entity, out var batteryComponent) &&
+            _batterySystem.GetCharge((entity, batteryComponent)) > 0f)
+            return;
+
+        args.Cancelled = true;
+        args.Popup = Loc.GetString("rechargeable-energy-shield-insufficient-charge");
     }
 }

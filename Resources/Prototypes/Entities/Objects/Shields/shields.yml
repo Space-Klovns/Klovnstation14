@@ -530,6 +530,9 @@
     - type: StaticPrice
       price: 350
 
+# KS14: nothing spawns this any more - the energy shield is battery-backed now, so the
+# Destructible thresholds that used to drop it and the repair graph that consumed it are both gone.
+# Kept because serpentcrest still maps one in, and deleting the prototype would break that map load.
 - type: entity
   name: broken energy shield
   parent: BaseItem
