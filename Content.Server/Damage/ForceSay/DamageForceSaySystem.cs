@@ -19,7 +19,6 @@ namespace Content.Server.Damage.ForceSay;
 public sealed partial class DamageForceSaySystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
-    [Dependency] private IPrototypeManager _prototype = default!;
     [Dependency] private IRobustRandom _random = default!;
 
     public override void Initialize()
@@ -63,7 +62,7 @@ public sealed partial class DamageForceSaySystem : EntitySystem
         var ev = new BeforeForceSayEvent(component.ForceSayStringDataset);
         RaiseLocalEvent(uid, ev);
 
-        if (!_prototype.Resolve(ev.Prefix, out var prefixList))
+        if (!ProtoMan.Resolve(ev.Prefix, out var prefixList))
             return;
 
         var suffix = Loc.GetString(_random.Pick(prefixList.Values));
@@ -109,7 +108,7 @@ public sealed partial class DamageForceSaySystem : EntitySystem
         if (component.ValidDamageGroups != null)
         {
             var totalApplicableDamage = FixedPoint2.Zero;
-            foreach (var (group, value) in args.DamageDelta.GetDamagePerGroup(_prototype))
+            foreach (var (group, value) in args.DamageDelta.GetDamagePerGroup(ProtoMan))
             {
                 if (!component.ValidDamageGroups.Contains(group))
                     continue;

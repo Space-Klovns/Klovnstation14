@@ -19,7 +19,6 @@ namespace Content.Server._KS14.Sensors;
 public sealed partial class KsSensorIntelSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
-    [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private SharedMapSystem _map = default!;
     [Dependency] private TurfSystem _turf = default!;
 
@@ -65,45 +64,44 @@ public sealed partial class KsSensorIntelSystem : EntitySystem
         _gridQuery = GetEntityQuery<MapGridComponent>();
         _thermalSourceQuery = GetEntityQuery<KsThermalSourceComponent>();
         _radarSourceQuery = GetEntityQuery<KsRadarSourceComponent>();
-
-        // The full geometry-change surface: walls entering/leaving the hull, and tile
-        // changes (exposure counts space TILES, so wall placement alone never changes
-        // a neighbour's). Signature values never mutate at runtime.
-        SubscribeLocalEvent<KsThermalSourceComponent, ComponentStartup>(OnThermalSourceLifecycle);
-        SubscribeLocalEvent<KsThermalSourceComponent, ComponentShutdown>(OnThermalSourceLifecycle);
-        SubscribeLocalEvent<KsThermalSourceComponent, AnchorStateChangedEvent>(OnThermalSourceAnchor);
-        SubscribeLocalEvent<KsThermalSourceComponent, ReAnchorEvent>(OnThermalSourceReAnchor);
-        SubscribeLocalEvent<KsRadarSourceComponent, ComponentStartup>(OnRadarSourceLifecycle);
-        SubscribeLocalEvent<KsRadarSourceComponent, ComponentShutdown>(OnRadarSourceLifecycle);
-        SubscribeLocalEvent<KsRadarSourceComponent, AnchorStateChangedEvent>(OnRadarSourceAnchor);
-        SubscribeLocalEvent<KsRadarSourceComponent, ReAnchorEvent>(OnRadarSourceReAnchor);
-        SubscribeLocalEvent<MapGridComponent, TileChangedEvent>(OnGridTileChanged);
-        // Not <MapGridComponent, ComponentShutdown>: lifecycle events allow one
-        // handler per component type game-wide, and the map system owns that one.
-        SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoval);
     }
 
+    // The full geometry-change surface: walls entering/leaving the hull, and tile
+    // changes (exposure counts space TILES, so wall placement alone never changes
+    // a neighbour's). Signature values never mutate at runtime.
+    [SubscribeLocalEvent]
     private void OnThermalSourceLifecycle(EntityUid uid, KsThermalSourceComponent comp, ComponentStartup args) => DirtySignatureGrid(uid);
+    [SubscribeLocalEvent]
     private void OnThermalSourceLifecycle(EntityUid uid, KsThermalSourceComponent comp, ComponentShutdown args) => DirtySignatureGrid(uid);
+    [SubscribeLocalEvent]
     private void OnThermalSourceAnchor(EntityUid uid, KsThermalSourceComponent comp, ref AnchorStateChangedEvent args) => DirtySignatureGrid(uid);
+    [SubscribeLocalEvent]
     private void OnRadarSourceLifecycle(EntityUid uid, KsRadarSourceComponent comp, ComponentStartup args) => DirtySignatureGrid(uid);
+    [SubscribeLocalEvent]
     private void OnRadarSourceLifecycle(EntityUid uid, KsRadarSourceComponent comp, ComponentShutdown args) => DirtySignatureGrid(uid);
+    [SubscribeLocalEvent]
     private void OnRadarSourceAnchor(EntityUid uid, KsRadarSourceComponent comp, ref AnchorStateChangedEvent args) => DirtySignatureGrid(uid);
 
+    [SubscribeLocalEvent]
     private void OnThermalSourceReAnchor(EntityUid uid, KsThermalSourceComponent comp, ref ReAnchorEvent args)
     {
         _dirtySignatureGrids.Add(args.OldGrid);
         _dirtySignatureGrids.Add(args.Grid);
     }
 
+    [SubscribeLocalEvent]
     private void OnRadarSourceReAnchor(EntityUid uid, KsRadarSourceComponent comp, ref ReAnchorEvent args)
     {
         _dirtySignatureGrids.Add(args.OldGrid);
         _dirtySignatureGrids.Add(args.Grid);
     }
 
+    [SubscribeLocalEvent]
     private void OnGridTileChanged(EntityUid uid, MapGridComponent comp, ref TileChangedEvent args) => _dirtySignatureGrids.Add(uid);
 
+    // Not <MapGridComponent, ComponentShutdown>: lifecycle events allow one
+    // handler per component type game-wide, and the map system owns that one.
+    [SubscribeLocalEvent]
     private void OnGridRemoval(GridRemovalEvent args)
     {
         _thermalCache.Remove(args.EntityUid);
@@ -247,7 +245,7 @@ public sealed partial class KsSensorIntelSystem : EntitySystem
 
         foreach (var id in intel)
         {
-            if (!_proto.TryIndex(id, out var proto))
+            if (!ProtoMan.TryIndex(id, out var proto))
             {
                 if (_warnedUnknown.Add(id.Id))
                     _sawmill.Debug($"Unknown sensor intel id '{id.Id}', skipping.");
@@ -290,7 +288,7 @@ public sealed partial class KsSensorIntelSystem : EntitySystem
     {
         foreach (var id in declared)
         {
-            if (!_proto.TryIndex(id, out var proto) || proto.Metric != metric)
+            if (!ProtoMan.TryIndex(id, out var proto) || proto.Metric != metric)
                 continue;
 
             return (id, Format(proto, value));

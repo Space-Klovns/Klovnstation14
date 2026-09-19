@@ -1,3 +1,5 @@
+# PLEASE DEDUP SAVE US HOLY SHIT
+
 - type: entity
   id: ComplexBodyBase
   abstract: true
@@ -75,3 +77,11 @@
   - type: OrganAttachmentConstruction
     netNode: start # same as construction start node
     baseOrgansAlwaysAttachable: true
+  - type: LimbDamageVisuals
+    requiredOrgans:
+      enum.HumanoidVisualLayers.Head: Head
+      enum.HumanoidVisualLayers.Chest: Torso
+      enum.HumanoidVisualLayers.LArm: ArmLeft
+      enum.HumanoidVisualLayers.RArm: ArmRight
+      enum.HumanoidVisualLayers.LLeg: LegLeft
+      enum.HumanoidVisualLayers.RLeg: LegRight

@@ -1,0 +1,112 @@
+- type: entity
+  name: colossus
+  id: MobColossus
+  parent:
+  - BaseSimpleMob
+  - MobCombat
+  description: A monstrous creature protected by heavy shielding.
+  components:
+  - type: AnimationPlayer
+  - type: RotationVisuals
+    defaultRotation: 90
+    horizontalRotation: 90
+  - type: NpcAngerModifier
+    maxAnger: 20
+    damagePerAnger: 40
+  - type: NpcRangedAttackPatternHolder
+    attacks:
+      spiral: ColossusSpiralAttack
+      enragedSpiral: ColossusEnragedSpiralAttack
+      shotgun: ColossusShotgunAttack
+      directional: ColossusDirectionalAttack
+      randomAoe: ColossusRandomAoeAttack
+  - type: Speech
+  - type: NpcAggro
+  - type: HTN
+    constantlyReplan: true
+    rootTask:
+      task: ColossusCompound
+    blackboard:
+      VisionRadius: !type:Single
+        14
+      AggroVisionRadius: !type:Single
+        3
+      NavSmash: !type:Bool
+        true
+      RangedRange: !type:Single
+        6
+  - type: NpcFactionMember
+    factions:
+    - SimpleHostile
+  - type: Damageable
+    damageModifierSet: null
+  - type: MovementSpeedModifier
+    baseWalkSpeed: 3
+    baseSprintSpeed: 3
+  - type: Sprite
+    sprite: _KS14/Mobs/Boss/colossus.rsi
+    layers:
+    - map: ["base"]
+      state: base
+  - type: DamageStateVisuals
+    states:
+      Alive:
+        Base: base
+  - type: NameIdentifier
+    group: GenericNumber
+  - type: SlowOnDamage
+    speedModifierThresholds:
+      1250: 0.7
+      2000: 0.5
+  - type: MobPrice
+    price: 67
+  - type: Perishable
+  - type: Reflect
+    reflectProb: 0.3
+    reflects:
+    - Energy
+    - NonEnergy
+  - type: Stamina
+    baseCritThreshold: 200
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.9
+        density: 300
+        mask:
+        - MobMask
+        layer:
+        - MobLayer
+  - type: MobState
+  - type: Tag
+    tags:
+    - CannotSuicide
+    - FootstepSound
+  - type: MobThresholds
+    thresholds:
+      0: Alive
+      2500: Dead
+  - type: FootstepModifier
+    footstepSoundCollection:
+      collection: FootstepThud
+  - type: NPCSteering
+  - type: MobMover
+  - type: PointLight
+    radius: 2
+    energy: 4.5
+    color: "#ff4242"
+    castShadows: false
+  - type: CombatMode
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 2500
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          collection: WoodDestroyHeavy
+      - !type:DoActsBehavior
+        acts: ["Destruction"]

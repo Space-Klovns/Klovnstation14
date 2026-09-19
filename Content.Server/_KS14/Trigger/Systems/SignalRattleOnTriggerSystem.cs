@@ -3,28 +3,21 @@ using Content.Shared.Trigger;
 using Content.Shared._KS14.Trigger.Components;
 using Content.Shared.Mobs;
 using Content.Server.DeviceLinking.Systems;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Utility;
-using Robust.Shared.Log;
 
-namespace Content.Server.Trigger.Systems;
+namespace Content.Server._KS14.Trigger.Systems;
 
 public sealed partial class SignalRattleOnTriggerSystem : EntitySystem
 {
     [Dependency] private DeviceLinkSystem _deviceLink = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<SignalRattleOnTriggerComponent, ComponentInit>(SignalRattleOnTriggerInit);
-        SubscribeLocalEvent<SignalRattleOnTriggerComponent, TriggerEvent>(HandleSignalRattleOnTrigger);
-    }
+    [SubscribeLocalEvent]
     private void SignalRattleOnTriggerInit(Entity<SignalRattleOnTriggerComponent> ent, ref ComponentInit args)
     {
         _deviceLink.EnsureSourcePorts(ent.Owner, ent.Comp.CritPort);
         _deviceLink.EnsureSourcePorts(ent.Owner, ent.Comp.DeathPort);
     }
+
+    [SubscribeLocalEvent]
     private void HandleSignalRattleOnTrigger(Entity<SignalRattleOnTriggerComponent> ent, ref TriggerEvent args)
     {
         var target = ent.Comp.TargetUser ? args.User : ent.Owner;

@@ -17,10 +17,33 @@ public sealed partial class AudioTab : Control
     [Dependency] private IClientAdminManager _admin = default!;
     [Dependency] private IConfigurationManager _cfg = default!;
 
+    // KS14 start
+    // These are fractions from 0-1
+    private float _minAmbMusicVolume = 0f;
+    private float _minAmbFxVolume = 0f;
+
+    private void MinAmbMusicChanged(float x)
+    {
+        _minAmbMusicVolume = x;
+        SliderVolumeAmbientMusic.Slider.MinValue = SliderVolumeAmbientMusic.Slider.MaxValue * x;
+    }
+
+    private void MinAmbFxChanged(float x)
+    {
+        _minAmbFxVolume = x;
+        SliderVolumeAmbience.Slider.MinValue = SliderVolumeAmbience.Slider.MaxValue * x;
+    }
+    // KS14 end
+
     public AudioTab()
     {
         RobustXamlLoader.Load(this);
         IoCManager.InjectDependencies(this);
+
+        // KS14 start
+        _cfg.OnValueChanged(Shared._KS14.CCVar.KsCCVars.MinAmbientMusicVolume, MinAmbMusicChanged, invokeImmediately: true);
+        _cfg.OnValueChanged(Shared._KS14.CCVar.KsCCVars.MinAmbientEffectsVolume, MinAmbFxChanged, invokeImmediately: true);
+        // KS14 end
 
         var masterVolume = Control.AddOptionPercentSlider(
             CVars.AudioMasterVolume,
@@ -36,12 +59,14 @@ public sealed partial class AudioTab : Control
         Control.AddOptionPercentSlider(
             CCVars.AmbientMusicVolume,
             SliderVolumeAmbientMusic,
-            scale: ContentAudioSystem.AmbientMusicMultiplier);
+            scale: ContentAudioSystem.AmbientMusicMultiplier,
+            min: _minAmbMusicVolume /* KS14 */);
 
         Control.AddOptionPercentSlider(
             CCVars.AmbienceVolume,
             SliderVolumeAmbience,
-            scale: ContentAudioSystem.AmbienceMultiplier);
+            scale: ContentAudioSystem.AmbienceMultiplier,
+            min: _minAmbFxVolume /* KS14 */);
 
         Control.AddOptionPercentSlider(
             CCVars.LobbyMusicVolume,
@@ -79,6 +104,11 @@ public sealed partial class AudioTab : Control
     {
         base.ExitedTree();
         _admin.AdminStatusUpdated -= UpdateAdminButtonsVisibility;
+
+        // KS14 start
+        _cfg.UnsubValueChanged(Shared._KS14.CCVar.KsCCVars.MinAmbientMusicVolume, MinAmbMusicChanged);
+        _cfg.UnsubValueChanged(Shared._KS14.CCVar.KsCCVars.MinAmbientEffectsVolume, MinAmbFxChanged);
+        // KS14 end
     }
 
 

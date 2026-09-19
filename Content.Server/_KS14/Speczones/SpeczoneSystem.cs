@@ -27,7 +27,6 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private IComponentFactory _componentFactory = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private MapSystem _mapSystem = default!;
     [Dependency] private MapLoaderSystem _mapLoaderSystem = default!;
     [Dependency] private TransformSystem _transformSystem = default!;
@@ -58,24 +57,19 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
 
         _configurationManager.OnValueChanged(KsCCVars.SpeczonesEnabled, x => _loadSpeczones = x, invokeImmediately: true);
 
-        SubscribeLocalEvent<SpeczoneComponent, ComponentShutdown>(OnSpeczoneShutdown);
-        SubscribeLocalEvent<SpeczoneEntryComponent, ComponentShutdown>(OnSpeczoneEntryShutdown);
-
-        SubscribeLocalEvent<RoundStartingEvent>(OnRoundStarting, after: [typeof(SystemCollectionHookManager)]);
-        SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundCleanup);
-        SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
-
         SetupRelocation();
     }
 
     protected override bool HasSpeczoneComponent(EntityUid uid) => HasComp<SpeczoneComponent>(uid);
 
+    [SubscribeLocalEvent]
     private void OnSpeczoneShutdown(Entity<SpeczoneComponent> entity, ref ComponentShutdown args)
     {
         _speczones.Remove(entity.Comp.PrototypeId);
         _speczoneUids.Remove(entity.Owner);
     }
 
+    [SubscribeLocalEvent]
     private void OnSpeczoneEntryShutdown(Entity<SpeczoneEntryComponent> entity, ref ComponentShutdown args)
     {
         var entityTransform = Transform(entity.Owner);
@@ -86,6 +80,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
         mapSpeczoneComponent.EntryMarkers.Remove((entity.Owner, entityTransform));
     }
 
+    [SubscribeLocalEvent(after: [typeof(SystemCollectionHookManager)])]
     private void OnRoundStarting(RoundStartingEvent args)
     {
         if (!_loadSpeczones)
@@ -94,7 +89,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
         // Initialise speczones
 
         var loadedSpeczoneEntities = new ValueList<Entity<SpeczoneComponent>>();
-        foreach (var speczonePrototype in _prototypeManager.EnumeratePrototypes<SpeczonePrototype>())
+        foreach (var speczonePrototype in ProtoMan.EnumeratePrototypes<SpeczonePrototype>())
         {
             if (!TryLoadSpeczonePrototype(speczonePrototype, out var speczoneEntity, initializeMaps: false))
                 continue;
@@ -109,12 +104,14 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
             _mapSystem.InitializeMap(speczoneEntity.Owner, unpause: false);
     }
 
+    [SubscribeLocalEvent]
     private void OnRoundCleanup(RoundRestartCleanupEvent args)
     {
         _speczones.Clear();
         _speczoneUids.Clear();
     }
 
+    [SubscribeLocalEvent]
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
     {
         if (!args.TryGetModified<SpeczonePrototype>(out var modifiedZones))
@@ -128,7 +125,7 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
                 continue;
 
             // load a new speczone
-            if (_prototypeManager.TryIndex<SpeczonePrototype>(modifiedZone, out var speczonePrototype))
+            if (ProtoMan.TryIndex<SpeczonePrototype>(modifiedZone, out var speczonePrototype))
             {
                 TryLoadSpeczonePrototype(speczonePrototype, out _);
                 anythingHappenedEver = true;
@@ -264,10 +261,14 @@ public sealed partial class SpeczoneSystem : SharedSpeczoneSystem
     /// <param name="id">Prototype ID of the speczone being queried for.</param>
     /// <param name="speczoneEntity">Null when this method returns false.</param>
     /// <returns>True if the specified speczone was found, false otherwise.</returns>
-    public bool TryGetSpeczoneEntity(string id, [MaybeNullWhen(false)] out Entity<SpeczoneComponent> speczoneEntity)
+    public bool TryGetSpeczoneEntity(ProtoId<SpeczonePrototype> id, [MaybeNullWhen(false)] out Entity<SpeczoneComponent> speczoneEntity)
         => _speczones.TryGetValue(id, out speczoneEntity);
 
-    /// <returns>An enumerator of the <see cref="EntityUid"/>s of every existing speczone.</returns>
-    public IEnumerator<EntityUid> GetSpeczoneUidEnumerator()
-        => _speczoneUids.GetEnumerator();
+    /// <summary>
+    ///     Not the wisest idea to modify speczones while iterating this if you don't copy this
+    ///         into something else (you risk modifying the collection the return value relies on)
+    /// </summary>
+    /// <returns>An immutable collection of speczone entities.</returns>
+    public Dictionary<string, Entity<SpeczoneComponent>>.KeyCollection GetSpeczoneEntities()
+        => _speczones.Keys;
 }

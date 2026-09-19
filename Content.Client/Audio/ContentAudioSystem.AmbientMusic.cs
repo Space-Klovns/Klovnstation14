@@ -24,7 +24,6 @@ public sealed partial class ContentAudioSystem
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private ILogManager _logManager = default!;
     [Dependency] private IPlayerManager _player = default!;
-    [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private IStateManager _state = default!;
     [Dependency] private RulesSystem _rules = default!;
@@ -33,6 +32,7 @@ public sealed partial class ContentAudioSystem
     private readonly TimeSpan _minAmbienceTime = TimeSpan.FromSeconds(15); // KS14: 30 -> 15
     private readonly TimeSpan _maxAmbienceTime = TimeSpan.FromSeconds(45); // KS14: 60 -> 45
 
+    private float _minAmbMusicVolume = 0f; // KS14
     private const float AmbientMusicFadeTime = 16f; // KS14: 10 -> 16
     private static float _volumeSlider;
 
@@ -61,6 +61,8 @@ public sealed partial class ContentAudioSystem
         Subs.CVar(_configManager, CCVars.AmbientMusicVolume, AmbienceCVarChanged, true);
         _sawmill = _logManager.GetSawmill("audio.ambience");
 
+        _configManager.OnValueChanged(Shared._KS14.CCVar.KsCCVars.MinAmbientMusicVolume, x => _minAmbMusicVolume = x * AmbientMusicMultiplier, invokeImmediately: true); // KS14
+
         // Reset audio
         _nextAudio = TimeSpan.MaxValue;
 
@@ -73,6 +75,7 @@ public sealed partial class ContentAudioSystem
 
     private void AmbienceCVarChanged(float obj)
     {
+        obj = MathF.Max(_minAmbMusicVolume, obj); // KS14
         _volumeSlider = SharedAudioSystem.GainToVolume(obj);
 
         if (_ambientMusicStream != null && _musicProto != null)
@@ -105,7 +108,7 @@ public sealed partial class ContentAudioSystem
     private void SetupAmbientSounds()
     {
         _ambientSounds.Clear();
-        foreach (var ambience in _proto.EnumeratePrototypes<AmbientMusicPrototype>())
+        foreach (var ambience in ProtoMan.EnumeratePrototypes<AmbientMusicPrototype>())
         {
             var tracks = _ambientSounds.GetOrNew(ambience.ID);
             RefreshTracks(ambience.Sound, tracks, null);
@@ -130,7 +133,7 @@ public sealed partial class ContentAudioSystem
                 if (collection.Collection == null)
                     break;
 
-                var slothCud = _proto.Index<SoundCollectionPrototype>(collection.Collection);
+                var slothCud = ProtoMan.Index<SoundCollectionPrototype>(collection.Collection);
                 tracks.AddRange(slothCud.PickFiles);
                 break;
             case SoundPathSpecifier path:
@@ -166,7 +169,7 @@ public sealed partial class ContentAudioSystem
         {
             var player = _player.LocalSession?.AttachedEntity;
 
-            if (player == null || _musicProto == null || !_rules.IsTrue(player.Value, _proto.Index<RulesPrototype>(_musicProto.Rules)))
+            if (player == null || _musicProto == null || !_rules.IsTrue(player.Value, ProtoMan.Index<RulesPrototype>(_musicProto.Rules)))
             {
                 FadeOut(_ambientMusicStream, duration: AmbientMusicFadeTime);
                 _musicProto = null;
@@ -238,12 +241,12 @@ public sealed partial class ContentAudioSystem
         if (ev.Cancelled)
             return null;
 
-        var ambiences = _proto.EnumeratePrototypes<AmbientMusicPrototype>().ToList();
+        var ambiences = ProtoMan.EnumeratePrototypes<AmbientMusicPrototype>().ToList();
         ambiences.Sort((x, y) => y.Priority.CompareTo(x.Priority));
 
         foreach (var amb in ambiences)
         {
-            if (!_rules.IsTrue(player.Value, _proto.Index<RulesPrototype>(amb.Rules)))
+            if (!_rules.IsTrue(player.Value, ProtoMan.Index<RulesPrototype>(amb.Rules)))
                 continue;
 
             return amb;

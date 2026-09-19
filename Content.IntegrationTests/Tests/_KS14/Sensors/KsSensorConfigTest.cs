@@ -152,7 +152,6 @@ public sealed class KsSensorConfigTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var locMan = server.ResolveDependency<ILocalizationManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
@@ -175,10 +174,10 @@ public sealed class KsSensorConfigTest : GameTest
             // (medium), 40x40 -> 1600 (large), 71x71 -> 5041 (the massive catch-all,
             // >= 5000). All four prove the threshold list classifies rather than
             // merely formats.
-            gridSmall = MakeGrid(mapManager, mapSystem, map.MapId, 8, 8);
-            gridMedium = MakeGrid(mapManager, mapSystem, map.MapId, 20, 20);
-            gridLarge = MakeGrid(mapManager, mapSystem, map.MapId, 40, 40);
-            gridMassive = MakeGrid(mapManager, mapSystem, map.MapId, 71, 71);
+            gridSmall = MakeGrid(mapSystem, map.MapId, 8, 8);
+            gridMedium = MakeGrid(mapSystem, map.MapId, 20, 20);
+            gridLarge = MakeGrid(mapSystem, map.MapId, 40, 40);
+            gridMassive = MakeGrid(mapSystem, map.MapId, 71, 71);
 
             // Spread the grids off the shared origin so they never overlap.
             xformSystem.SetLocalPosition(gridMedium.Owner, new Vector2(300f, 0f));
@@ -270,7 +269,6 @@ public sealed class KsSensorConfigTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -284,9 +282,9 @@ public sealed class KsSensorConfigTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridHide = MakeShipGrid(mapManager, mapSystem, map.MapId);
-            gridShow = MakeShipGrid(mapManager, mapSystem, map.MapId);
-            gridTarget = MakeShipGrid(mapManager, mapSystem, map.MapId);
+            gridHide = MakeShipGrid(mapSystem, map.MapId);
+            gridShow = MakeShipGrid(mapSystem, map.MapId);
+            gridTarget = MakeShipGrid(mapSystem, map.MapId);
 
             // Move the control sensor and the target off the origin BEFORE
             // mounting, so gridHide sits alone at the origin and each sensor
@@ -335,7 +333,6 @@ public sealed class KsSensorConfigTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var physicsSystem = entManager.System<SharedPhysicsSystem>();
@@ -350,9 +347,9 @@ public sealed class KsSensorConfigTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridHide = MakeShipGrid(mapManager, mapSystem, map.MapId);
-            gridShow = MakeShipGrid(mapManager, mapSystem, map.MapId);
-            gridTarget = MakeShipGrid(mapManager, mapSystem, map.MapId);
+            gridHide = MakeShipGrid(mapSystem, map.MapId);
+            gridShow = MakeShipGrid(mapSystem, map.MapId);
+            gridTarget = MakeShipGrid(mapSystem, map.MapId);
 
             xformSystem.SetLocalPosition(gridShow.Owner, new Vector2(0f, 300f));
             xformSystem.SetLocalPosition(gridTarget.Owner, new Vector2(100f, 0f));
@@ -402,7 +399,6 @@ public sealed class KsSensorConfigTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -416,9 +412,9 @@ public sealed class KsSensorConfigTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridAnon = MakeShipGrid(mapManager, mapSystem, map.MapId);
-            gridNamed = MakeShipGrid(mapManager, mapSystem, map.MapId);
-            gridRx = MakeShipGrid(mapManager, mapSystem, map.MapId);
+            gridAnon = MakeShipGrid(mapSystem, map.MapId);
+            gridNamed = MakeShipGrid(mapSystem, map.MapId);
+            gridRx = MakeShipGrid(mapSystem, map.MapId);
 
             // Spread the grids off the origin so each machine parents to its own
             // grid; both transmitters sit well within their 1000 range of the
@@ -464,7 +460,6 @@ public sealed class KsSensorConfigTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -478,9 +473,9 @@ public sealed class KsSensorConfigTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridBlip = MakeShipGrid(mapManager, mapSystem, map.MapId);
-            gridOutline = MakeShipGrid(mapManager, mapSystem, map.MapId);
-            gridRx = MakeShipGrid(mapManager, mapSystem, map.MapId);
+            gridBlip = MakeShipGrid(mapSystem, map.MapId);
+            gridOutline = MakeShipGrid(mapSystem, map.MapId);
+            gridRx = MakeShipGrid(mapSystem, map.MapId);
 
             xformSystem.SetLocalPosition(gridOutline.Owner, new Vector2(0f, 80f));
             xformSystem.SetLocalPosition(gridRx.Owner, new Vector2(300f, 0f));
@@ -525,7 +520,6 @@ public sealed class KsSensorConfigTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -539,9 +533,9 @@ public sealed class KsSensorConfigTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridTx = MakeShipGrid(mapManager, mapSystem, map.MapId);
-            gridDetected = MakeShipGrid(mapManager, mapSystem, map.MapId);
-            gridRx = MakeShipGrid(mapManager, mapSystem, map.MapId);
+            gridTx = MakeShipGrid(mapSystem, map.MapId);
+            gridDetected = MakeShipGrid(mapSystem, map.MapId);
+            gridRx = MakeShipGrid(mapSystem, map.MapId);
 
             // The detected target sits within the transmitter's sensor range (200);
             // the receiver sits beyond it but within transmitter range (1000), so
@@ -584,7 +578,6 @@ public sealed class KsSensorConfigTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -598,9 +591,9 @@ public sealed class KsSensorConfigTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridTx = MakeShipGrid(mapManager, mapSystem, map.MapId);
-            gridDetected = MakeShipGrid(mapManager, mapSystem, map.MapId);
-            gridRx = MakeShipGrid(mapManager, mapSystem, map.MapId);
+            gridTx = MakeShipGrid(mapSystem, map.MapId);
+            gridDetected = MakeShipGrid(mapSystem, map.MapId);
+            gridRx = MakeShipGrid(mapSystem, map.MapId);
 
             xformSystem.SetLocalPosition(gridDetected.Owner, new Vector2(50f, 0f));
             xformSystem.SetLocalPosition(gridRx.Owner, new Vector2(500f, 0f));
@@ -632,21 +625,19 @@ public sealed class KsSensorConfigTest : GameTest
 
     /// <summary>8x8, big enough to clear the &lt;10 mass junk filter.</summary>
     private static Entity<MapGridComponent> MakeShipGrid(
-        IMapManager mapManager,
         SharedMapSystem mapSystem,
         MapId mapId)
     {
-        return MakeGrid(mapManager, mapSystem, mapId, 8, 8);
+        return MakeGrid(mapSystem, mapId, 8, 8);
     }
 
     private static Entity<MapGridComponent> MakeGrid(
-        IMapManager mapManager,
         SharedMapSystem mapSystem,
         MapId mapId,
         int width,
         int height)
     {
-        var grid = mapManager.CreateGridEntity(mapId);
+        var grid = mapSystem.CreateGridEntity(mapId);
 
         var tiles = new List<(Vector2i, Tile)>();
         for (var x = 0; x < width; x++)

@@ -1,0 +1,9 @@
+cmd-ensurechemfire-desc = Puts a chemical fire of the given prototype on the tile you are standing on, restarting the one already there if it is of the same prototype.
+cmd-ensurechemfire-help = Usage: ensurechemfire <chemical fire prototype id> [duration seconds]
+cmd-ensurechemfire-invalid-args = Expected the chemical fire prototype id, optionally followed by a duration in seconds.
+cmd-ensurechemfire-no-entity = You need to be attached to an entity to run this.
+cmd-ensurechemfire-invalid-prototype = No entity prototype with id "{ $prototype }" exists.
+cmd-ensurechemfire-invalid-duration = "{ $duration }" is not a positive number of seconds.
+cmd-ensurechemfire-failed = Failed to place the chemical fire. Are you standing on a grid, and does that prototype have a ChemicalFire component?
+cmd-ensurechemfire-prototype-completion = <chemical fire prototype id>
+cmd-ensurechemfire-duration-completion = [duration seconds]

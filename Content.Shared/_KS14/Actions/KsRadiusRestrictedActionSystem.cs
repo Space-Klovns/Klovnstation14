@@ -13,13 +13,7 @@ public sealed partial class KsRadiusRestrictedActionSystem : EntitySystem
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<KsRadiusRestrictedActionComponent, ActionAttemptEvent>(OnActionAttempt);
-    }
-
+    [SubscribeLocalEvent]
     private void OnActionAttempt(Entity<KsRadiusRestrictedActionComponent> entity, ref ActionAttemptEvent args)
     {
         if (args.Cancelled)

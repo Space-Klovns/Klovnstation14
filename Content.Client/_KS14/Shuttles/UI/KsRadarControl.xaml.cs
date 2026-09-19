@@ -39,7 +39,7 @@ namespace Content.Client._KS14.Shuttles.UI;
 public sealed partial class KsRadarControl : BaseShuttleControl
 {
     [Dependency] private IConfigurationManager _cfg = default!;
-    [Dependency] private IMapManager _mapManager = default!;
+    private readonly SharedMapSystem _mapSystem;
     private readonly SharedShuttleSystem _shuttles;
     private readonly SharedTransformSystem _transform;
     private readonly KsRadarInterestSystem _radarInterestSystem;
@@ -143,6 +143,7 @@ public sealed partial class KsRadarControl : BaseShuttleControl
     public KsRadarControl() : base(64f, 512f, 256f)
     {
         RobustXamlLoader.Load(this);
+        _mapSystem = EntManager.System<SharedMapSystem>();
         _shuttles = EntManager.System<SharedShuttleSystem>();
         _transform = EntManager.System<SharedTransformSystem>();
         _radarInterestSystem = EntManager.System<KsRadarInterestSystem>();
@@ -326,7 +327,7 @@ public sealed partial class KsRadarControl : BaseShuttleControl
         var viewAABB = viewBounds.CalcBoundingBox();
 
         _grids.Clear();
-        _mapManager.FindGridsIntersecting(xform.MapID, new Box2(mapPos.Position - MaxRadarRangeVector, mapPos.Position + MaxRadarRangeVector), ref _grids, approx: true, includeMap: false);
+        _mapSystem.FindGridsIntersecting(xform.MapID, new Box2(mapPos.Position - MaxRadarRangeVector, mapPos.Position + MaxRadarRangeVector), ref _grids, approx: true, includeMap: false);
 
         _ksRealDrawn.Clear();
 

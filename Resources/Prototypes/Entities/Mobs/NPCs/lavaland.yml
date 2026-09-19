@@ -45,7 +45,7 @@
       50: Dead
   - type: Butcherable
     spawned:
-    - id: MaterialDiamond # KS14 change
+    - id: MaterialDiamond1 # KS14 change
       amount: 2
   - type: MovementSpeedModifier
     baseWalkSpeed: 1 # KS14 change

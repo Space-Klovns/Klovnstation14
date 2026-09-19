@@ -46,13 +46,13 @@
   id: WeaponizedLaserManipulation
   name: research-technology-weaponized-laser-manipulation
   icon:
-    sprite: Objects/Weapons/Guns/Battery/laser_gun.rsi
+    sprite: _KS14/Objects/Weapons/Guns/Battery/lasercarbine.rsi #KS14: changed to projectile
     state: icon
   discipline: Arsenal
   tier: 1
   cost: 7500
   recipeUnlocks:
-  - WeaponLaserCarbine
+  - WeaponLaserCarbineProjectile #KS14: changed to projectile
   # Goobstation R&D Console rework start
   position: 4,0
   technologyPrerequisites:

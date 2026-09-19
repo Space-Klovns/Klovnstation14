@@ -26,4 +26,19 @@ public sealed partial class KsZLevelViewerComponent : Component
 
     [ViewVariables(VVAccess.ReadOnly)]
     public bool Active;
+
+    /// <summary>
+    ///     The same again for the z-level directly above, which is only ever sent so that light can fall from
+    ///         it - nothing up there is drawn.
+    /// </summary>
+    /// <remarks>
+    ///     Kept separate rather than folded into a list because the two have different lifetimes: the one
+    ///         below follows the player around the whole round, and this one appears and disappears with a
+    ///         cvar.
+    /// </remarks>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public EntityUid AboveViewSubscriberUid;
+
+    [ViewVariables(VVAccess.ReadOnly)]
+    public bool AboveActive;
 }

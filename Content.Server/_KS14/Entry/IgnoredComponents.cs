@@ -6,6 +6,9 @@ public static class KsIgnoredComponents
         "DirectionalSpriteManipulation",
         "KsWaveDistortion",
         "KsShadow",
-        "KsRcdPlacementNoHint"
+        "KsRcdPlacementNoHint",
+        "KsAlwaysDisplaced",
+        "SupplyPodDrawDepth",
+        "LimbDamageVisuals"
     ];
 }

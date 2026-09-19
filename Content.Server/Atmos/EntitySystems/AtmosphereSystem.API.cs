@@ -858,7 +858,7 @@ public partial class AtmosphereSystem
         bool Handled = false);
 
     [ByRefEvent]
-    private record struct IsHotspotActiveMethodEvent(
+    public /* KS14: private -> public, so chemfires can report their tile as burning */ record struct IsHotspotActiveMethodEvent(
         EntityUid Grid,
         Vector2i Tile,
         bool Result = false,

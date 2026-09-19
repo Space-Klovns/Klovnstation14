@@ -6,17 +6,7 @@ public sealed partial class McqDialogueSystem : EntitySystem
 {
     [Dependency] private SharedUserInterfaceSystem _userInterfaceSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<McqDialogueSourceComponent, ComponentShutdown>(OnDialogueSourceShutdown);
-
-        SubscribeLocalEvent<ActiveMcqDialogueComponent, BoundUIClosedEvent>(OnDialogueClosed);
-        SubscribeLocalEvent<ActiveMcqDialogueComponent, McqDialogueDataSelectedMessage>(OnDataSelected);
-    }
-
-
+    [SubscribeLocalEvent]
     private void OnDialogueSourceShutdown(Entity<McqDialogueSourceComponent> entity, ref ComponentShutdown args)
     {
         foreach (var dialogueEntity in entity.Comp.Dialogues)
@@ -44,6 +34,7 @@ public sealed partial class McqDialogueSystem : EntitySystem
         PredictedQueueDel(dialogueEntity.Owner);
     }
 
+    [SubscribeLocalEvent]
     private void OnDialogueClosed(Entity<ActiveMcqDialogueComponent> entity, ref BoundUIClosedEvent args)
     {
         CloseDialogue(entity!);
@@ -52,6 +43,7 @@ public sealed partial class McqDialogueSystem : EntitySystem
         RaiseLocalEvent(entity.Comp.Source, ref ev);
     }
 
+    [SubscribeLocalEvent]
     private void OnDataSelected(Entity<ActiveMcqDialogueComponent> entity, ref McqDialogueDataSelectedMessage args)
     {
         if (!Exists(entity.Comp.Source))

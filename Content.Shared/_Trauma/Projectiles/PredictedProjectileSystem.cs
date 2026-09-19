@@ -304,7 +304,7 @@ public sealed partial class PredictedProjectileSystem : EntitySystem
 
             if (modifierSet != null)
             {
-                modifierSet.FlatReduction.TryGetValue(type, out flatReduction);
+                modifierSet.FlatReductions.TryGetValue(type, out flatReduction);
                 modifierSet.Coefficients.TryGetValue(type, out percentileResistCoeff);
             }
 

@@ -1,0 +1,84 @@
+# Lament - 8 bursts, 4 projectiles per burst (cardinal directions)
+- type: entity
+  id: ColossusDirectionalAttack
+  parent: RangedCardinalDirections
+  components:
+  - type: NpcRangedAttackPattern
+    projectile: ColossusDeathBolt
+    telegraphSpriteFlickData:
+      layerKey: base
+      flickState: attack
+    sound:
+      path: /Audio/_KS14/Effects/Magic/ratvar_attack.ogg
+    burstCount: 45
+    shots: 4
+    shotDelay: 0.3
+    cooldown: 3.0
+
+# Retribution - 1 burst, 8 projectiles (shotgun spread)
+- type: entity
+  id: ColossusShotgunAttack
+  parent: RangedShotgun
+  components:
+  - type: NpcRangedAttackPattern
+    projectile: ColossusDeathBolt
+    sound:
+      path: /Audio/_KS14/Effects/Magic/invoke_general.ogg
+    burstCount: 1
+    shots: 8
+    shotDelay: 0
+    cooldown: 4.0
+    spread: 30
+
+# Judgement - 72 bursts, 1 projectile per burst (spiral)
+- type: entity
+  id: ColossusSpiralAttack
+  parent: RangedSpiral
+  components:
+  - type: NpcRangedAttackPattern
+    projectile: ColossusDeathBolt
+    telegraphSpriteFlickData:
+      layerKey: base
+      flickState: attack
+    sound:
+      path: /Audio/_KS14/Effects/Magic/narsie_attack.ogg
+    burstCount: 512
+    shots: 1
+    shotDelay: 0.04
+    cooldown: 3.0
+    degreesPerShot: 12
+
+# Wrath - 32 bursts, 1 projectile per burst (random directions)
+- type: entity
+  id: ColossusRandomAoeAttack
+  parent: RangedRandomAoe
+  components:
+  - type: NpcRangedAttackPattern
+    projectile: ColossusDeathBolt
+    telegraphSpriteFlickData:
+      layerKey: base
+      flickState: attack
+    sound:
+      path: /Audio/_KS14/Effects/Magic/narsie_attack.ogg
+    burstCount: 256
+    shots: 1
+    shotDelay: 0.05
+    cooldown: 2.0
+
+# Die
+- type: entity
+  id: ColossusEnragedSpiralAttack
+  parent: RangedDoubleSpiral
+  components:
+  - type: NpcRangedAttackPattern
+    projectile: ColossusDeathBolt
+    telegraphSpriteFlickData:
+      layerKey: base
+      flickState: attack
+    sound:
+      path: /Audio/_KS14/Effects/Magic/narsie_attack.ogg
+    burstCount: 2056
+    shots: 1
+    shotDelay: 0.04
+    cooldown: 3.0
+    degreesPerShot: 10

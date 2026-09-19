@@ -13,7 +13,6 @@ using Robust.Shared.Utility;
 public sealed partial class EmoteOnDamageSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private ChatSystem _chatSystem = default!;
 
@@ -60,7 +59,7 @@ public sealed partial class EmoteOnDamageSystem : EntitySystem
             return false;
 
         DebugTools.Assert(emoteOnDamage.LifeStage <= ComponentLifeStage.Running);
-        DebugTools.Assert(_prototypeManager.HasIndex<EmotePrototype>(emotePrototypeId), "Prototype not found. Did you make a typo?");
+        DebugTools.Assert(ProtoMan.HasIndex<EmotePrototype>(emotePrototypeId), "Prototype not found. Did you make a typo?");
 
         return emoteOnDamage.Emotes.Add(emotePrototypeId);
     }
@@ -73,7 +72,7 @@ public sealed partial class EmoteOnDamageSystem : EntitySystem
         if (!Resolve(uid, ref emoteOnDamage, logMissing: false))
             return false;
 
-        DebugTools.Assert(_prototypeManager.HasIndex<EmotePrototype>(emotePrototypeId), "Prototype not found. Did you make a typo?");
+        DebugTools.Assert(ProtoMan.HasIndex<EmotePrototype>(emotePrototypeId), "Prototype not found. Did you make a typo?");
 
         if (!emoteOnDamage.Emotes.Remove(emotePrototypeId))
             return false;

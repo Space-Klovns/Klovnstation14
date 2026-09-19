@@ -6,7 +6,7 @@ void fragment()
     uv.x = 1.0 - uv.x;
 
     highp vec4 col = zTexture(uv);
-    lowp vec4 fade = vec4(1.0, 1.0, 1.0, 1.0 - uv.y);
+    lowp vec4 fade = vec4(1.0, 1.0, 1.0, 1.0 - (uv.y * 1.2));
 
-    COLOR = col;
+    COLOR = col * fade;
 }

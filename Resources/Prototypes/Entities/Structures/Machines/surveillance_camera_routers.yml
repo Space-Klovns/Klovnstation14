@@ -48,6 +48,7 @@
         path: /Audio/Ambience/Objects/server_fans.ogg
     - type: WiresVisuals
     - type: WiresPanel
+    - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
 - type: entity
   parent: SurveillanceCameraRouterBase

@@ -97,6 +97,7 @@
     guides:
     - Botany
     - Chemicals
+  - type: StationAiWhitelist #KS14: New items whitelisted for AI
 
 - type: entity
   parent: hydroponicsTray

@@ -30,15 +30,6 @@ public sealed partial class ChainSystem : EntitySystem
     [Dependency] private EntityQuery<ChainEdgeComponent> _edgeQuery = default!;
     [Dependency] private EntityQuery<JointComponent> _jointQuery = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<ChainEdgeComponent, ComponentShutdown>(OnEdgeShutdown);
-        SubscribeLocalEvent<ChainLinkComponent, ComponentShutdown>(OnLinkShutdown);
-        SubscribeLocalEvent<ChainLinkComponent, JointRemovedEvent>(OnJointRemoved);
-    }
-
     /// <returns><see cref="ChainEdgeComponent.LinkUids"/>, but without any edges.</returns>
     public ValueList<EntityUid> GetLinksWithoutEdges(Entity<ChainEdgeComponent?> firstEdgeEntity)
     {
@@ -96,6 +87,7 @@ public sealed partial class ChainSystem : EntitySystem
         return false;
     }
 
+    [SubscribeLocalEvent]
     private void OnEdgeShutdown(Entity<ChainEdgeComponent> entity, ref ComponentShutdown args)
     {
         foreach (var linkUid in entity.Comp.LinkUids)
@@ -137,11 +129,13 @@ public sealed partial class ChainSystem : EntitySystem
         Dirty(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnLinkShutdown(Entity<ChainLinkComponent> entity, ref ComponentShutdown args)
     {
         BreakChainFrom(entity, removeJoints: true);
     }
 
+    [SubscribeLocalEvent]
     private void OnJointRemoved(Entity<ChainLinkComponent> ourEntity, ref JointRemovedEvent args)
     {
         // This actually handles edges being broken

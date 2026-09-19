@@ -3,6 +3,7 @@ using Content.Shared.Random.Helpers;
 using Content.Shared.Whitelist;
 using Content.Shared.Xenoarchaeology.Artifact.Components;
 using Content.Shared.Xenoarchaeology.Artifact.Prototypes;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 
 namespace Content.Server.Xenoarchaeology.Artifact;
@@ -38,8 +39,8 @@ public sealed partial class XenoArtifactSystem
     private List<XenoArchTriggerPrototype> CreateTriggerPool(Entity<XenoArtifactComponent> ent, int size)
     {
         var triggerPool = new List<XenoArchTriggerPrototype>(size);
-        var weightsProto = PrototypeManager.Index(ent.Comp.TriggerWeights);
-        var weightsByTriggersLeft = new Dictionary<string, float>(weightsProto.Weights);
+        var weightsProto = ProtoMan.Index(ent.Comp.TriggerWeights);
+        var weightsByTriggersLeft = new Dictionary<ProtoId<XenoArchTriggerPrototype>, float>(weightsProto.Weights);
 
         while (triggerPool.Count < size)
         {
@@ -52,7 +53,7 @@ public sealed partial class XenoArtifactSystem
 
             var triggerId = RobustRandom.Pick(weightsByTriggersLeft);
             weightsByTriggersLeft.Remove(triggerId);
-            var trigger = PrototypeManager.Index<XenoArchTriggerPrototype>(triggerId);
+            var trigger = ProtoMan.Index(triggerId);
             if (_entityWhitelist.IsWhitelistFail(trigger.Whitelist, ent))
                 continue;
 

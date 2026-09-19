@@ -10,14 +10,6 @@ public sealed partial class WormWithoutOrgansSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<WormWithoutOrgansComponent, OrganInsertedIntoEvent>(OnOrganInserted);
-        SubscribeLocalEvent<WormWithoutOrgansComponent, OrganRemovedFromEvent>(OnOrganRemoved);
-    }
-
     private static bool HasAllRequiredOrgans(Entity<WormWithoutOrgansComponent> entity, BodyComponent bodyComponent)
     {
         foreach (var requiredCategory in entity.Comp.Categories)
@@ -31,6 +23,7 @@ public sealed partial class WormWithoutOrgansSystem : EntitySystem
         return true;
     }
 
+    [SubscribeLocalEvent]
     private void OnOrganInserted(Entity<WormWithoutOrgansComponent> entity, ref OrganInsertedIntoEvent args)
     {
         if (_gameTiming.ApplyingState)
@@ -42,6 +35,7 @@ public sealed partial class WormWithoutOrgansSystem : EntitySystem
         RemComp<WormComponent>(entity);
     }
 
+    [SubscribeLocalEvent]
     private void OnOrganRemoved(Entity<WormWithoutOrgansComponent> entity, ref OrganRemovedFromEvent args)
     {
         if (_gameTiming.ApplyingState)

@@ -1,0 +1,5 @@
+# Composites the light map of the z-level above into this one, through the gaps in its floor.
+- type: shader
+  id: KsZLevelLightBleed
+  kind: source
+  path: "/Textures/_KS14/Shaders/zlight_bleed.swsl"

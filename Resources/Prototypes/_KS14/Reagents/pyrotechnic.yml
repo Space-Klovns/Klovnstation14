@@ -37,3 +37,19 @@
         visualType: LargeCaution
         messages:
         - sorium-effect-gib
+
+- type: reagent
+  parent: BasePyrotechnic
+  id: SuspendedKlovnideTrioxide
+  name: reagent-name-suspended-klovnide-trioxide
+  desc: reagent-desc-suspended-klovnide-trioxide
+  physicalDesc: reagent-physical-desc-oily
+  color: "#7e204f"
+  friction: 0.4
+  tileEffects:
+  - !type:ChemicalFireTileEffect
+    removed: 0
+    durationScale: 2
+    id: ChemicalFireSuspendedKlovnideTrioxide
+  tileReactions:
+  - !type:FlammableTileReaction {}

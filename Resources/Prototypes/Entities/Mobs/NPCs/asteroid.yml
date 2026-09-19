@@ -73,9 +73,9 @@
       task: GoliathCompound
     blackboard:
       VisionRadius: !type:Single
-        6
+        4
       AggroVisionRadius: !type:Single
-        10
+        6
       NavSmash: !type:Bool
         true
   - type: NPCUseActionOnTarget

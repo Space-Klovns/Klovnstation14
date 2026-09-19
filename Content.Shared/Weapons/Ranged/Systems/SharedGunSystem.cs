@@ -2,6 +2,8 @@
 using Content.Shared.Weapons.Hitscan.Events;
 using Content.Shared._Trauma.Projectiles;
 // </Trauma>
+using Content.Shared.Mech.Components; // Goobstation
+using Content.Shared.Item; // Goobstation
 using System.Numerics;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Actions;
@@ -56,14 +58,13 @@ public abstract partial class SharedGunSystem : EntitySystem
     [Dependency] protected DamageableSystem Damageable = default!;
     [Dependency] protected ExamineSystemShared Examine = default!;
     [Dependency] protected IGameTiming Timing = default!;
-    [Dependency] protected IMapManager MapManager = default!;
-    [Dependency] protected IPrototypeManager ProtoManager = default!;
     [Dependency] protected IRobustRandom Random = default!;
     [Dependency] protected ISharedAdminLogManager Logs = default!;
     [Dependency] protected SharedActionsSystem Actions = default!;
     [Dependency] protected SharedAppearanceSystem Appearance = default!;
     [Dependency] protected SharedAudioSystem Audio = default!;
     [Dependency] protected SharedContainerSystem Containers = default!;
+    [Dependency] protected SharedMapSystem Maps = default!;
     [Dependency] protected SharedPhysicsSystem Physics = default!;
     [Dependency] protected SharedPointLightSystem Lights = default!;
     [Dependency] protected SharedPopupSystem PopupSystem = default!;
@@ -156,36 +157,49 @@ public abstract partial class SharedGunSystem : EntitySystem
     {
         var user = args.SenderSession.AttachedEntity;
 
+        // KS14 ghetto mech port start
         if (user == null ||
-            !_combatMode.IsInCombatMode(user) ||
-            !TryGetGun(user.Value, out var gun))
-        {
-            return;
-        }
-
-        if (gun.Owner != GetEntity(msg.Gun))
+            !_combatMode.IsInCombatMode(user))
             return;
 
-        gun.Comp.ShootCoordinates = GetCoordinates(msg.Coordinates);
-        gun.Comp.Target = GetEntity(msg.Target);
-        AttemptShoot(user.Value, gun);
+        if (TryComp<MechPilotComponent>(user.Value, out var mechPilot))
+            user = mechPilot.Mech;
+
+        if (!TryGetGun(user.Value, out var userGun) ||
+            HasComp<ItemComponent>(user))
+            return;
+
+        if (userGun.Owner != GetEntity(msg.Gun))
+            return;
+        // KS14 ghetto mech port end
+        // TODO: once mlgguns come out nuke this entire file and start from scratch
+
+        userGun.Comp.ShootCoordinates = GetCoordinates(msg.Coordinates);
+        userGun.Comp.Target = GetEntity(msg.Target);
+        AttemptShoot(user.Value, userGun);
         if (msg.Continuous)
-            gun.Comp.ShotCounter = 0;
+            userGun.Comp.ShotCounter = 0;
     }
 
     private void OnStopShootRequest(RequestStopShootEvent ev, EntitySessionEventArgs args)
     {
         var gunUid = GetEntity(ev.Gun);
 
-        if (args.SenderSession.AttachedEntity == null ||
-            !TryComp<GunComponent>(gunUid, out var gun) ||
-            !TryGetGun(args.SenderSession.AttachedEntity.Value, out var userGun))
-        {
-            return;
-        }
+        // KS14 ghettomechs
+        var user = args.SenderSession.AttachedEntity;
 
-        if (userGun != (gunUid, gun))
+        if (user == null)
             return;
+
+        if (TryComp<MechPilotComponent>(user.Value, out var mechPilot))
+            user = mechPilot.Mech;
+
+        if (!TryGetGun(user.Value, out var userGun))
+            return;
+
+        if (userGun.Owner != gunUid)
+            return;
+        // KS14 ghettomechs
 
         StopShooting(userGun);
     }
@@ -207,6 +221,14 @@ public abstract partial class SharedGunSystem : EntitySystem
     public bool TryGetGun(EntityUid entity, out Entity<GunComponent> gun)
     {
         gun = default;
+
+        if (TryComp<MechComponent>(entity, out var mech) &&
+            mech.CurrentSelectedEquipment.HasValue &&
+            TryComp<GunComponent>(mech.CurrentSelectedEquipment.Value, out var mechGun))
+        {
+            gun = (mech.CurrentSelectedEquipment.Value, mechGun);
+            return true;
+        }
 
         if (_hands.GetActiveItem(entity) is { } held &&
             TryComp(held, out GunComponent? gunComp))
@@ -410,7 +432,7 @@ public abstract partial class SharedGunSystem : EntitySystem
             // If they're firing an existing clip then don't play anything.
             if (shots > 0)
             {
-                PopupSystem.PopupCursor(ev.Reason ?? Loc.GetString("gun-magazine-fired-empty"));
+                PopupSystem.PopupCursor(ev.Reason ?? Loc.GetString("gun-magazine-fired-empty"), user);
 
                 // MNET14: ent-popup
                 if (gun.Comp.EmptyFireLoc is { } emptyFireLoc)
@@ -530,9 +552,9 @@ public abstract partial class SharedGunSystem : EntitySystem
         userImpulse = true;
 
         // If applicable, this ensures the projectile is parented to grid on spawn, instead of the map.
-        var fromEnt = MapManager.TryFindGridAt(fromMap, out var gridUid, out _)
+        var fromEnt = Maps.TryFindGridAt(fromMap, out var gridUid, out _)
             ? TransformSystem.WithEntityId(fromCoordinates, gridUid)
-            : new EntityCoordinates(_map.GetMapOrInvalid(fromMap.MapId), fromMap.Position);
+            : new EntityCoordinates(Maps.GetMapOrInvalid(fromMap.MapId), fromMap.Position);
 
         var toMapBeforeRecoil = toMap; // Goobstation
 
@@ -566,15 +588,15 @@ public abstract partial class SharedGunSystem : EntitySystem
                         CreateAndFireProjectiles(uid, cartridge);
                         _npcSensorSystem.DoDisturbance(fromCoordinates, gun.Comp.SoundGunshotModified?.Params.MaxDistance ?? 0f, source: user); // KS14: ANK: AI sensors
 
-                        RaiseLocalEvent(ent!.Value, new AmmoShotEvent()
+                        RaiseLocalEvent(gun /* KS14: use gun UID instead of the actual ammo UID*/, new AmmoShotEvent()
                         {
                             FiredProjectiles = shotProjectiles,
                         });
 
-                        SetCartridgeSpent(ent.Value, cartridge, true);
+                        SetCartridgeSpent(ent! /* KS14: null suppressed due to above */.Value, cartridge, true);
 
                         if (cartridge.DeleteOnSpawn)
-                            PredictedDel(ent.Value);
+                            PredictedQueueDel/* KS14: made queued */(ent.Value);
                     }
                     else
                     {
@@ -609,7 +631,7 @@ public abstract partial class SharedGunSystem : EntitySystem
                         Target = gun.Comp.Target,
                     };
                     RaiseLocalEvent(ent.Value, ref hitscanEv);
-                    PredictedDel(ent);
+                    PredictedQueueDel/* KS14: made queued */(ent);
 
                     Audio.PlayPredicted(gun.Comp.SoundGunshotModified, gun, user);
                     _farsoundSystem.TryPlayFarSound(gun, gun.Comp.FarSoundGunshot, userUid: user); // KS14
@@ -629,6 +651,20 @@ public abstract partial class SharedGunSystem : EntitySystem
         {
             FiredProjectiles = shotProjectiles,
         });
+
+        // KS14 start: KsAmmoUsedEvent
+        if (shotProjectiles.Count > 0)
+        {
+            var ammoUsedEv = new _KS14.Weapons.Ranged.KsAmmoUsedEvent(shotProjectiles, user);
+            foreach (var (firedAmmoUid, _) in ammo)
+            {
+                if (firedAmmoUid is not { })
+                    continue;
+
+                RaiseLocalEvent(firedAmmoUid.Value, ref ammoUsedEv);
+            }
+        }
+        // KS14 end
 
         void CreateAndFireProjectiles(EntityUid ammoEnt, AmmoComponent ammoComp)
         {
@@ -897,7 +933,7 @@ public abstract partial class SharedGunSystem : EntitySystem
         // 3. Nothing
         if (!forceWeaponSound && modifiedDamage != null && modifiedDamage.GetTotal() > 0 && TryComp<RangedDamageSoundComponent>(otherEntity, out var rangedSound))
         {
-            var type = SharedMeleeWeaponSystem.GetHighestDamageSound(modifiedDamage, ProtoManager);
+            var type = SharedMeleeWeaponSystem.GetHighestDamageSound(modifiedDamage, ProtoMan);
 
             if (type != null && rangedSound.SoundTypes?.TryGetValue(type, out var damageSoundType) == true)
             {

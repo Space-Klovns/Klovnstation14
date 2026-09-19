@@ -263,8 +263,16 @@ namespace Content.Server.Atmos.EntitySystems
 
         public void UpdateAppearance(EntityUid uid, FlammableComponent? flammable = null, AppearanceComponent? appearance = null)
         {
+            // KS14 start: not everything flammable has an Appearance - Envelope deliberately drops it while
+            //     keeping Flammable - and setting fire visuals on one that does not is not an error worth
+            //     logging, let alone one worth failing an integration test over.
+            if (!Resolve(uid, ref flammable) || !Resolve(uid, ref appearance, false))
+                return;
+            // KS14 end
+            /* KS14: replaced by the above
             if (!Resolve(uid, ref flammable, ref appearance))
                 return;
+            */
 
             _appearance.SetData(uid, FireVisuals.OnFire, flammable.OnFire, appearance);
             _appearance.SetData(uid, FireVisuals.FireStacks, flammable.FireStacks, appearance);

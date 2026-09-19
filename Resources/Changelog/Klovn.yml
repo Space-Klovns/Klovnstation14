@@ -1795,3 +1795,236 @@ Entries:
       message: Knockback from guns is a bit weaker now.
   id: 187
   time: '2026-08-17T13:04:56.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed wall stains not working.
+  id: 188
+  time: '2026-08-20T09:46:52.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Tweak
+      message: Baron UI port from project Carmine
+  id: 189
+  time: '2026-08-20T11:35:06.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: Added the Anchorless, a shapeshifting horror from the clouds of Saturn.
+  id: 190
+  time: '2026-08-21T13:16:41.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Fix
+      message: Fixed many things about the Anchorless.
+    - type: Add
+      message: Added a way to test if someone is the Anchorless.
+  id: 191
+  time: '2026-08-21T16:24:54.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: Combat mech (scenario only)
+  id: 192
+  time: '2026-08-21T21:55:53.0000000+00:00'
+- author: ResomiDumbass
+  changes:
+    - type: Add
+      message: Added ethanol to the chem plumbing synthesiser machine
+  id: 193
+  time: '2026-08-21T22:26:39.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Fix
+      message: Fixed many UI issues.
+  id: 194
+  time: '2026-08-22T23:19:15.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: The Operative AI has been improved.
+  id: 195
+  time: '2026-08-23T10:40:55.0000000+00:00'
+- author: some obsessed discord user
+  changes:
+    - type: Tweak
+      message: >-
+        Ammonia + oxygen reactions now release heat and can ignite hotspots,
+        instead of just quietly converting into nitrous oxide and water vapor.
+        Ammonia is also now treated as a fuel.
+  id: 196
+  time: '2026-08-26T12:00:19.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added chemical grenade rounds, craftable with a chemical payload and one
+        brass sheet. They can be fired from any grenade launcher, and will
+        trigger the chemical payload contained within upon impact. Sprites by
+        chinese kuz or something
+    - type: Fix
+      message: Potentially fixed some bugs with revolvers.
+  id: 197
+  time: '2026-08-26T13:35:56.0000000+00:00'
+- author: FrauzJ
+  changes:
+    - type: Tweak
+      message: >-
+        Welders can now be used as cauterisers and any knife can be used for
+        incision in surgery.
+    - type: Tweak
+      message: Removed wide shot on eshotty.
+    - type: Tweak
+      message: Nerfed eshotty damage for all pallets on connect from 52->44.
+    - type: Tweak
+      message: Payload stacking is back.
+    - type: Tweak
+      message: Signal timer is instant again.
+    - type: Tweak
+      message: Mjolnir slight damage buff and now should not have cooldowns.
+    - type: Tweak
+      message: Drozd is now back to burst/semi auto.
+    - type: Tweak
+      message: >-
+        Nerfed smg mags to be 40->30 capacity again (will likely make nukie ones
+        bigger later).
+    - type: Tweak
+      message: Nerfed disabler 33->20 stamina damage (from 4 to 5 shots to stun)
+    - type: Tweak
+      message: >-
+        L6 mag capacity 100->50. Made L6 much more accurate. Can be now fired
+        one-handed with its old recoil. You can now buy mags for it in nukie
+        uplink. Borg's L6 stays the same.
+    - type: Tweak
+      message: >-
+        Reworked laser carbine. It is now a fast firing one handed weapon with
+        full auto and burst fire modes.
+    - type: Tweak
+      message: >-
+        Reworked antique and retro lasers. They are now projectile based
+        weapons.
+    - type: Fix
+      message: Fixed recoil accumulating after it fully decayed.
+    - type: Fix
+      message: Fixed atmos on Box and Packed.
+  id: 198
+  time: '2026-08-27T16:40:17.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Added chemical fires: fires on tiles caused by some things burning.
+        Namely, all pyrotechnics can cause tiles to burn when spilled above a
+        certain temperature. Namely, thermite burns the strongest. These can be
+        detected with fire sensors, or through the heat they emit.
+    - type: Add
+      message: Explosions now heat up solutions.
+  id: 199
+  time: '2026-09-05T15:40:28.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Stains on walls now act like wallmounts - you can't see them on the
+        other side of the wall.
+    - type: Fix
+      message: >-
+        Wallmounts are now visible when mounted on something that doesn't
+        occlude vision.
+  id: 200
+  time: '2026-09-06T12:01:23.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Tweak
+      message: The anchorless are now slowed down when they shoot.
+    - type: Tweak
+      message: Nerfed armblade damage.
+    - type: Tweak
+      message: Scenario jobs are now human only.
+    - type: Tweak
+      message: Nanoplant ERT now wear blue jumpsuits.
+    - type: Fix
+      message: Anchorless objective system.
+    - type: Fix
+      message: Anchorless horror form shows on all machines now.
+  id: 201
+  time: '2026-09-06T15:20:34.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed chem bluespace recipients/beacons not working.
+    - type: Tweak
+      message: MV wires now arcflash.
+  id: 202
+  time: '2026-09-06T15:53:12.0000000+00:00'
+- author: deusmaldierpr
+  changes:
+    - type: Add
+      message: >-
+        You can now change apc electronic accesses, which means you can make
+        specific access apcs or accessless apcs (without having to cut the
+        access wire)
+    - type: Tweak
+      message: >-
+        You now need to cut all apc wires before deconstructing them (this
+        practically changes nothing
+  id: 203
+  time: '2026-09-06T16:28:52.0000000+00:00'
+- author: Dececece
+  changes:
+    - type: Add
+      message: Colossus (for now lootless and shitmin spawn only).
+  id: 204
+  time: '2026-09-06T16:35:07.0000000+00:00'
+- author: ResomiDumbass
+  changes:
+    - type: Add
+      message: Fentanyl for the fent God
+    - type: Tweak
+      message: Bicaridine no longer makes you high as fuhhhhh
+  id: 205
+  time: '2026-09-07T12:15:16.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Air being spaced by grids now actually moves the grid. This can lead to
+        alot of interesting things..
+  id: 206
+  time: '2026-09-07T17:21:44.0000000+00:00'
+- author: FrauZj
+  changes:
+    - type: Tweak
+      message: Disabler 4 shots to stun noe
+    - type: Tweak
+      message: Disabler smg is 10 shots to stun noe (im too lazy to make it less dyi)
+    - type: Tweak
+      message: >-
+        Recoil decay on all guns (projectile laser guns in specific) have been
+        adjusted to be little faster.
+    - type: Fix
+      message: Laser projectiles now go thru windows
+  id: 207
+  time: '2026-09-07T17:45:21.0000000+00:00'
+- author: FloraMillhouse
+  changes:
+    - type: Add
+      message: Added new items to the theatre vending machine.
+  id: 208
+  time: '2026-09-16T19:27:04.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Blood spray is now predicted
+  id: 209
+  time: '2026-09-17T13:11:13.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        Falling down Z-levels is no longer instant. You can also drop *large*
+        things down Z-levels to hit things.
+    - type: Tweak
+      message: Falling down Z-levels now does damage.
+  id: 210
+  time: '2026-09-18T14:14:04.0000000+00:00'

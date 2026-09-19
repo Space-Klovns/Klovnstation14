@@ -303,7 +303,7 @@
       fly-by: *flybyfixture
   - type: Ammo
   - type: StaminaDamageOnCollide
-    damage: 33
+    damage: 26 # KS14: 33 -> 26
   - type: Projectile
     impactEffect: BulletImpactEffectDisabler
     damage:
@@ -542,7 +542,7 @@
   components:
   - type: Reflective
     reflective:
-      - NonEnergy
+      - Kinetic #KS14 change, added kinetic projectile type for reflective
   - type: Sprite
     noRot: false
     sprite: Objects/Weapons/Guns/Projectiles/magic.rsi
@@ -596,7 +596,7 @@
   components:
   - type: Reflective
     reflective:
-    - NonEnergy
+      - Kinetic #KS14 change, added kinetic projectile type for reflective
   - type: Sprite
     noRot: false
     sprite: Objects/Weapons/Guns/Projectiles/magic.rsi
@@ -1151,7 +1151,7 @@
       fly-by: *flybyfixture
   - type: Ammo
   - type: StaminaDamageOnCollide
-    damage: 15
+    damage: 11 # KS14: 15 -> 11
   - type: Projectile
     impactEffect: BulletImpactEffectDisabler
     damage:
@@ -1306,18 +1306,21 @@
     impactEffect: BulletImpactEffectOrangeDisabler
     damage:
       types:
-        Heat: 13
+        Heat: 9 # KS14: 13 -> 9
 
-- type: entity
-  name: wide laser barrage
-  id: BulletLaserSpread
-  categories: [ HideSpawnMenu ]
-  parent: BulletLaser
-  components:
-  - type: ProjectileSpread
-    proto: BulletLaser
-    count: 5 #65 heat damage if you hit all your shots, but wide spread
-    spread: 30
+# KS start
+# - type: entity
+#   name: wide laser barrage
+#   id: BulletLaserSpread
+#   categories: [ HideSpawnMenu ]
+#   parent: BulletLaser
+#   components:
+#   - type: ProjectileSpread
+#     proto: BulletLaser
+#     count: 5 #65 heat damage if you hit all your shots, but wide spread
+#     spread: 30
+# removed due to being useless
+# KS end
 
 - type: entity
   name: lethal laser barrage
@@ -1327,7 +1330,7 @@
   components:
   - type: ProjectileSpread
     proto: BulletLaser
-    count: 4 #52 heat damage if you hit all your shots, but narrower spread
+    count: 4 #36 heat damage if you hit all your shots, but narrower spread
     spread: 10
 
 - type: entity

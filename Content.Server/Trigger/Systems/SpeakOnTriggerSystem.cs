@@ -10,7 +10,6 @@ namespace Content.Server.Trigger.Systems;
 public sealed partial class SpeakOnTriggerSystem : EntitySystem
 {
     [Dependency] private IRobustRandom _random = default!;
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private ChatSystem _chat = default!;
 
     public override void Initialize()
@@ -39,7 +38,7 @@ public sealed partial class SpeakOnTriggerSystem : EntitySystem
         //KS14 end
         else
         {
-            if (!_prototypeManager.Resolve(ent.Comp.Pack, out var messagePack))
+            if (!ProtoMan.Resolve(ent.Comp.Pack, out var messagePack))
                 return;
             message = Loc.GetString(_random.Pick(messagePack.Values));
         }

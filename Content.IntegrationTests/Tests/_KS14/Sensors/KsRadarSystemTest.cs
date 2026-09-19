@@ -260,7 +260,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var intel = entManager.System<KsSensorIntelSystem>();
@@ -277,11 +276,11 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridHot = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridMidNear = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridMidFar = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridCold = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridA = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridHot = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridMidNear = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridMidFar = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridCold = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // effRange(S) = clamp(100 - 2*(80 - S), 0, 100): hot(100)->100, mid(40)->20.
             xformSystem.SetLocalPosition(gridHot.Owner, new Vector2(90f, 0f));
@@ -343,7 +342,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -359,15 +357,15 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = mapManager.CreateGridEntity(map.MapId);
+            gridA = mapSystem.CreateGridEntity(map.MapId);
             AddTiles(mapSystem, gridA, 3, 3);
 
-            stealthBlocker = mapManager.CreateGridEntity(map.MapId);
+            stealthBlocker = mapSystem.CreateGridEntity(map.MapId);
             AddTiles(mapSystem, stealthBlocker, 2, 8);
-            brightBlocker = mapManager.CreateGridEntity(map.MapId);
+            brightBlocker = mapSystem.CreateGridEntity(map.MapId);
             AddTiles(mapSystem, brightBlocker, 2, 8);
-            brightThroughStealth = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            brightBehindBright = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            brightThroughStealth = MakeShipGrid(entManager, mapSystem, map.MapId);
+            brightBehindBright = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // Blockers hug the sensor (wide shadow); targets sit far behind them.
             xformSystem.SetLocalPosition(stealthBlocker.Owner, new Vector2(4f, -4f));
@@ -418,7 +416,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -432,12 +429,12 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = mapManager.CreateGridEntity(map.MapId);
+            gridA = mapSystem.CreateGridEntity(map.MapId);
             AddTiles(mapSystem, gridA, 3, 3);
 
-            dimBlocker = mapManager.CreateGridEntity(map.MapId);
+            dimBlocker = mapSystem.CreateGridEntity(map.MapId);
             AddTiles(mapSystem, dimBlocker, 2, 8);
-            brightTarget = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            brightTarget = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             xformSystem.SetLocalPosition(dimBlocker.Owner, new Vector2(4f, -4f));
             xformSystem.SetLocalPosition(brightTarget.Owner, new Vector2(40f, 0f));
@@ -481,7 +478,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -495,9 +491,9 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridAtFloor = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridBelowFloor = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridA = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridAtFloor = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridBelowFloor = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // Both sit far inside the shallow taper's effective range (>= 104 for any RCS), so
             // distance cannot be what separates them.
@@ -540,7 +536,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -553,8 +548,8 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridE = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridR = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridE = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridR = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // gridR emits (radar, cone reach 2*100 = 200); gridE is well inside that.
             xformSystem.SetLocalPosition(gridR.Owner, new Vector2(120f, 0f));
@@ -597,7 +592,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -610,8 +604,8 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridE = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridR = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridE = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridR = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             xformSystem.SetLocalPosition(gridR.Owner, new Vector2(120f, 0f));
 
@@ -643,7 +637,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var timing = server.ResolveDependency<IGameTiming>();
         var cfg = server.ResolveDependency<IConfigurationManager>();
         var updateIntervalSeconds = cfg.GetCVar(KsCCVars.SensorsUpdateInterval);
@@ -662,9 +655,9 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridR = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId); // CoM ~ (4,4)
-            gridT = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridJ = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridR = MakeShipGrid(entManager, mapSystem, map.MapId); // CoM ~ (4,4)
+            gridT = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridJ = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // Move every grid off the shared origin BEFORE mounting anything, or a fresh
             // grid overlapping at (0,0) parents the spawned machine to the wrong grid.
@@ -728,7 +721,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var sensors = entManager.System<KsSensorSystem>();
@@ -743,9 +735,9 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridR = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId); // CoM ~ (4,4)
-            gridT = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridJ = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridR = MakeShipGrid(entManager, mapSystem, map.MapId); // CoM ~ (4,4)
+            gridT = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridJ = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             xformSystem.SetLocalPosition(gridT.Owner, new Vector2(50f, 0f));
             SpawnRadarWall(entManager, xformSystem, "KsRadarTestWallHot", gridT.Owner, 0, 0);
@@ -780,7 +772,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -797,9 +788,9 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridR = mapManager.CreateGridEntity(map.MapId);
+            gridR = mapSystem.CreateGridEntity(map.MapId);
             AddTiles(mapSystem, gridR, 8, 8);
-            gridJ = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridJ = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             xformSystem.SetLocalPosition(gridJ.Owner, new Vector2(90f, 0f));
 
@@ -853,7 +844,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var sensors = entManager.System<KsSensorSystem>();
@@ -867,8 +857,8 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridR = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId); // CoM ~ (4,4)
-            gridJ = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridR = MakeShipGrid(entManager, mapSystem, map.MapId); // CoM ~ (4,4)
+            gridJ = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // Jammer at ~86 m from gridR's CoM: inside its omni slice (power 120), beyond
             // burn-through (60), so an enabled jammer jams the radar ship.
@@ -919,7 +909,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var sensors = entManager.System<KsSensorSystem>();
@@ -935,8 +924,8 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridG = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridE = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridG = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridE = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // Enemy radar ship ~90 m off: inside our omni jam slice (power 120), beyond
             // burn-through (60), so it is jammed exactly when our jammer is the emitter.
@@ -991,7 +980,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var sensors = entManager.System<KsSensorSystem>();
@@ -1007,8 +995,8 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridG = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridE = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridG = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridE = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             xformSystem.SetLocalPosition(gridE.Owner, new Vector2(90f, 0f));
 
@@ -1046,7 +1034,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var sensors = entManager.System<KsSensorSystem>();
@@ -1065,9 +1052,9 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridJ = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridEast = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridWest = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridJ = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridEast = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridWest = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // One radar ship due east of the jammer mount (93.6 m to its centre of mass) and
             // one due west (86.6 m). Both are well inside the 120 m reach and well outside
@@ -1146,7 +1133,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -1163,8 +1149,8 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridRx = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridTx = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridRx = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridTx = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             xformSystem.SetLocalPosition(gridTx.Owner, new Vector2(60f, 0f));
 
@@ -1204,7 +1190,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -1218,9 +1203,9 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridE = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridJ = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridBlock = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridE = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridJ = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridBlock = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             xformSystem.SetLocalPosition(gridJ.Owner, new Vector2(60f, 0f));
 
@@ -1256,7 +1241,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -1270,9 +1254,9 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridE = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridR = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridBlock = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridE = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridR = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridBlock = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // Well inside the radar's cone reach (100 * 2 = 200), so only occlusion can
             // explain a miss.
@@ -1307,7 +1291,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -1321,9 +1304,9 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridFine = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridCrude = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridR = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridFine = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridCrude = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridR = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             // Cone reach is 100 * 2 = 200. Sensitive reach 200, crude reach 200 * 0.4 = 80.
             // Both listeners sit ~120 m from the emitter: inside one, outside the other.
@@ -1360,7 +1343,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
 
@@ -1374,8 +1356,8 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridE = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridR = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridE = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridR = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             xformSystem.SetLocalPosition(gridR.Owner, new Vector2(60f, 0f));
 
@@ -1420,7 +1402,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var sensors = entManager.System<KsSensorSystem>();
@@ -1435,8 +1416,8 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridR = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridJ = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridR = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridJ = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             xformSystem.SetLocalPosition(gridJ.Owner, new Vector2(90f, 0f));
 
@@ -1483,7 +1464,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -1499,7 +1479,7 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridG = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridG = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             entManager.SpawnEntity("KsRadarTestJammer", new EntityCoordinates(gridG.Owner, new Vector2(1.5f, 0.5f)));
 
@@ -1557,7 +1537,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -1574,8 +1553,8 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridA = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridT = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridA = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridT = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             xformSystem.SetLocalPosition(gridT.Owner, new Vector2(60f, 0f));
 
@@ -1628,7 +1607,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -1644,7 +1622,7 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridR = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridR = MakeShipGrid(entManager, mapSystem, map.MapId);
 
             entManager.SpawnEntity("KsRadarTestSensor", new EntityCoordinates(gridR.Owner, new Vector2(0.5f, 0.5f)));
 
@@ -1726,7 +1704,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -1742,8 +1719,8 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridFit = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridBare = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridFit = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridBare = MakeShipGrid(entManager, mapSystem, map.MapId);
             xformSystem.SetLocalPosition(gridBare.Owner, new Vector2(120f, 0f));
 
             entManager.SpawnEntity("KsRadarTestElint", new EntityCoordinates(gridFit.Owner, new Vector2(0.5f, 0.5f)));
@@ -1788,7 +1765,6 @@ public sealed class KsRadarSystemTest : GameTest
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var uiSystem = entManager.System<SharedUserInterfaceSystem>();
@@ -1803,8 +1779,8 @@ public sealed class KsRadarSystemTest : GameTest
         {
             entManager.DeleteEntity(map.Grid);
 
-            gridC = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
-            gridA = MakeShipGrid(entManager, mapManager, mapSystem, map.MapId);
+            gridC = MakeShipGrid(entManager, mapSystem, map.MapId);
+            gridA = MakeShipGrid(entManager, mapSystem, map.MapId);
             xformSystem.SetLocalPosition(gridA.Owner, new Vector2(120f, 0f));
 
             // The ally runs an emitting radar (its coverage cone) and relays over
@@ -1858,11 +1834,10 @@ public sealed class KsRadarSystemTest : GameTest
 
     private static Entity<MapGridComponent> MakeShipGrid(
         IEntityManager entManager,
-        IMapManager mapManager,
         SharedMapSystem mapSystem,
         MapId mapId)
     {
-        var grid = mapManager.CreateGridEntity(mapId);
+        var grid = mapSystem.CreateGridEntity(mapId);
         AddTiles(mapSystem, grid, 8, 8);
         return grid;
     }

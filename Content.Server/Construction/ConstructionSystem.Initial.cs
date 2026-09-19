@@ -19,6 +19,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Content.Server.Construction
 {
@@ -114,6 +115,11 @@ namespace Content.Server.Construction
             var containers = new Dictionary<string, Container>();
 
             var doAfterTime = 0f;
+
+            // KS14 start
+            var endNode = graph.Nodes[edge.Target];
+            var preservedContainers = new Dictionary<EntityUid, List<BaseContainer>>();
+            // KS14 end
 
             // HOLY SHIT THIS IS SOME HACKY CODE.
             // But I'd rather do this shit than risk having collisions with other containers.
@@ -229,6 +235,14 @@ namespace Content.Server.Construction
                             else if (!_container.Insert(entity, GetContainer(arbitraryStep.Store)))
                                 continue;
 
+                            // KS14 start
+                            if (endNode.PreserveContainers)
+                            {
+                                foreach (var innerContainer in _container.GetAllContainers(entity))
+                                    preservedContainers.GetOrNew(entity).Add(innerContainer);
+                            }
+                            // KS14 end
+
                             handled = true;
                             used.Add(entity);
                             break;
@@ -294,6 +308,25 @@ namespace Content.Server.Construction
                 }
             }
 
+            // KS14 start
+            // NESTING INSANITY FINAL BOSS
+            if (endNode.PreserveContainers &&
+                TryComp<ContainerManagerComponent>(newEntity, out var newContainerComponent))
+            {
+                foreach (var (oldUid, oldContainers) in preservedContainers)
+                {
+                    foreach (var oldContainer in oldContainers)
+                    {
+                        if (!_container.TryGetContainer(newEntity, oldContainer.ID, out var newContainer, containerManager: newContainerComponent))
+                            continue;
+
+                        foreach (var oldContainedUid in oldContainer.ContainedEntities)
+                            _container.Insert(oldContainedUid, newContainer, force: true);
+                    }
+                }
+            }
+            // KS14 end
+
             // We now get rid of all them.
             ShutdownContainers();
 
@@ -324,13 +357,13 @@ namespace Content.Server.Construction
         // LEGACY CODE. See warning at the top of the file!
         public async Task<bool> TryStartItemConstruction(string prototype, EntityUid user)
         {
-            if (!PrototypeManager.TryIndex(prototype, out ConstructionPrototype? constructionPrototype))
+            if (!ProtoMan.TryIndex(prototype, out ConstructionPrototype? constructionPrototype))
             {
                 Log.Error($"Tried to start construction of invalid recipe '{prototype}'!");
                 return false;
             }
 
-            if (!PrototypeManager.TryIndex(constructionPrototype.Graph,
+            if (!ProtoMan.TryIndex(constructionPrototype.Graph,
                     out ConstructionGraphPrototype? constructionGraph))
             {
                 Log.Error(
@@ -403,14 +436,14 @@ namespace Content.Server.Construction
         // LEGACY CODE. See warning at the top of the file!
         private async void HandleStartStructureConstruction(TryStartStructureConstructionMessage ev, EntitySessionEventArgs args)
         {
-            if (!PrototypeManager.TryIndex(ev.PrototypeName, out ConstructionPrototype? constructionPrototype))
+            if (!ProtoMan.TryIndex(ev.PrototypeName, out ConstructionPrototype? constructionPrototype))
             {
                 Log.Error($"Tried to start construction of invalid recipe '{ev.PrototypeName}'!");
                 RaiseNetworkEvent(new AckStructureConstructionMessage(ev.Ack));
                 return;
             }
 
-            if (!PrototypeManager.TryIndex(constructionPrototype.Graph, out ConstructionGraphPrototype? constructionGraph))
+            if (!ProtoMan.TryIndex(constructionPrototype.Graph, out ConstructionGraphPrototype? constructionGraph))
             {
                 Log.Error($"Invalid construction graph '{constructionPrototype.Graph}' in recipe '{ev.PrototypeName}'!");
                 RaiseNetworkEvent(new AckStructureConstructionMessage(ev.Ack));

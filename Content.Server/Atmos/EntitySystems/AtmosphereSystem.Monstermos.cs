@@ -492,6 +492,14 @@ namespace Content.Server.Atmos.EntitySystems
                 var otherTile2 = otherTile.AdjacentTiles[otherTile.MonstermosInfo.CurrentTransferDirection.ToIndex()];
                 if (otherTile2?.Air == null)
                 {
+                    // KS14 start: this tile's entire contents are about to go overboard, so bill the grid for them
+                    // before they stop existing.
+                    KsConsiderMonstermosSpacingThrust(owner,
+                        otherTile,
+                        otherTile.MonstermosInfo.CurrentTransferDirection,
+                        otherTile.Air!.TotalMoles);
+                    // KS14 end
+
                     // The tile connecting us to space is spaced already. So just space this tile now.
                     otherTile.Air!.Clear();
                     otherTile.Air.Temperature = Atmospherics.TCMB;
@@ -513,6 +521,12 @@ namespace Content.Server.Atmos.EntitySystems
                     }
                 }
                 totalMolesRemoved += sum;
+                // KS14 start: only gas that actually leaves the grid gets to push it. Gas handed down the chain
+                // towards the breach is still aboard, and totalMolesRemoved counts it once per link of that chain.
+                // See AtmosphereSystem.Klovn.SpacingThrust.cs.
+                if (otherTile2.MapAtmosphere)
+                    KsConsiderMonstermosSpacingThrust(owner, otherTile, otherTile.MonstermosInfo.CurrentTransferDirection, sum);
+                // KS14 end
                 otherTile.MonstermosInfo.CurrentTransferAmount += sum;
                 otherTile2.MonstermosInfo.CurrentTransferAmount += otherTile.MonstermosInfo.CurrentTransferAmount;
                 otherTile.PressureDifference = otherTile.MonstermosInfo.CurrentTransferAmount;

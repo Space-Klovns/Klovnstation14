@@ -37,6 +37,7 @@
           collection: MetalBreak
   - type: StaticPrice
     price: 75
+  - type: StationAiWhitelist #KS14: New items whitelisted for AI
   # KS14: emissive start
   - type: EmissiveLayers
     glowRadius: 0.85

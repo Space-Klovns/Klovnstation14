@@ -14,13 +14,7 @@ public abstract partial class SharedOreVentDroneSystem : EntitySystem
     [Dependency] private SharedChatSystem _chatSystem = default!;
     [Dependency] private SharedAudioSystem _audioSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        SubscribeLocalEvent<OreVentDroneComponent, ComponentShutdown>(OnShutdown);
-    }
-
+    [SubscribeLocalEvent]
     private void OnShutdown(Entity<OreVentDroneComponent> entity, ref ComponentShutdown args)
     {
         if (entity.Comp.VentUid is not { } ventUid)

@@ -28,7 +28,8 @@ public sealed partial class PipeRestrictOverlapSystem : EntitySystem
         PipeDirection Direction,
 
         AtmosPipeLayer Layer,
-        Type NodeType /* KS14: plumbing node separation */,
+
+        PipeNodeKind Kind,
 
         Angle Rotation = default
         );
@@ -106,13 +107,17 @@ public sealed partial class PipeRestrictOverlapSystem : EntitySystem
 
     public bool PipeNodesOverlap(Entity<NodeContainerComponent, TransformComponent> ent, Entity<NodeContainerComponent, TransformComponent> other)
     {
-        var entDirsAndLayers = GetAllDirectionsAndLayers(ent).ToList();
-        var otherDirsAndLayers = GetAllDirectionsAndLayers(other).ToList();
+        var entNodeData = GetAllNodeData(ent).ToList();
+        var otherNodeData = GetAllNodeData(other).ToList();
 
-        foreach (var (dir, layer) in entDirsAndLayers)
+        foreach (var (dir, layer, kind) in entNodeData)
         {
-            foreach (var (otherDir, otherLayer) in otherDirsAndLayers)
+            foreach (var (otherDir, otherLayer, otherKind) in otherNodeData)
             {
+                // Plumbing ducts and atmospherics pipes are separate networks, so they are free to share a tile.
+                if (kind != otherKind)
+                    continue;
+
                 if ((dir & otherDir) != 0 && layer == otherLayer)
                     return true;
             }
@@ -120,12 +125,12 @@ public sealed partial class PipeRestrictOverlapSystem : EntitySystem
 
         return false;
 
-        IEnumerable<(PipeDirection, AtmosPipeLayer)> GetAllDirectionsAndLayers(Entity<NodeContainerComponent, TransformComponent> pipe)
+        IEnumerable<(PipeDirection, AtmosPipeLayer, PipeNodeKind)> GetAllNodeData(Entity<NodeContainerComponent, TransformComponent> pipe)
         {
             foreach (var node in pipe.Comp1.Nodes.Values)
             {
                 if (node is IPipeNode pipeNode)
-                    yield return (pipeNode.Direction.RotatePipeDirection(pipe.Comp2.LocalRotation), pipeNode.Layer);
+                    yield return (pipeNode.Direction.RotatePipeDirection(pipe.Comp2.LocalRotation), pipeNode.Layer, pipeNode.Kind);
             }
         }
     }
@@ -160,8 +165,12 @@ public sealed partial class PipeRestrictOverlapSystem : EntitySystem
             var otherXform = Transform(otherEnt);
 
             // Compare against the existing pipe's actual rotated nodes
-            foreach (var (existingDir, existingLayer) in GetPipeNodeData((otherEnt, otherNodeComp, otherXform)))
+            foreach (var (existingDir, existingLayer, existingKind) in GetPipeNodeData((otherEnt, otherNodeComp, otherXform)))
             {
+                // Plumbing ducts and atmospherics pipes are separate networks, so they are free to share a tile.
+                if (proposed.Kind != existingKind)
+                    continue;
+
                 // Conflict occurs if they share a layer AND any directional bit
                 if (proposed.Layer == existingLayer && (proposedDirAbs & existingDir) != 0)
                     return otherEnt;
@@ -171,7 +180,7 @@ public sealed partial class PipeRestrictOverlapSystem : EntitySystem
         return null;
     }
 
-    private static IEnumerable<(PipeDirection RotatedDirection, AtmosPipeLayer)> GetPipeNodeData(
+    private static IEnumerable<(PipeDirection RotatedDirection, AtmosPipeLayer, PipeNodeKind)> GetPipeNodeData(
         Entity<NodeContainerComponent, TransformComponent> pipe)
     {
         var rotation = pipe.Comp2.LocalRotation;
@@ -179,7 +188,7 @@ public sealed partial class PipeRestrictOverlapSystem : EntitySystem
         foreach (var node in pipe.Comp1.Nodes.Values)
         {
             if (node is IPipeNode pipeNode)
-                yield return (pipeNode.Direction.RotatePipeDirection(rotation), pipeNode.Layer);
+                yield return (pipeNode.Direction.RotatePipeDirection(rotation), pipeNode.Layer, pipeNode.Kind);
         }
     }
 }

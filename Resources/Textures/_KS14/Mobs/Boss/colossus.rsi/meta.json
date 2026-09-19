@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "license": "CC-BY-SA-3.0",
+    "copyright": "Taken from https://github.com/tgstation/tgstation/ at commit 4bfd079071fab3b94d6b0f9c00221729e4737378",
+    "size": {
+        "x": 96,
+        "y": 96
+    },
+    "states": [
+        {
+            "name": "base",
+            "directions": 4,
+            "delays": [
+                [
+                    1,
+                    0.5,
+                    0.5
+                ],
+                [
+                    1,
+                    0.5,
+                    0.5
+                ],
+                [
+                    1,
+                    0.5,
+                    0.5
+                ],
+                [
+                    1,
+                    0.5,
+                    0.5
+                ]
+            ]
+        },
+        {
+            "name": "attack",
+            "delays": [
+                [
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1
+                ]
+            ]
+        }
+    ]
+}

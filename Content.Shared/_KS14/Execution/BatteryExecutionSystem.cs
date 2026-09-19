@@ -12,24 +12,18 @@ namespace Content.Server._KS14.Execution;
 /// </summary>
 public sealed partial class BatteryExecutionSystem : EntitySystem
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private SharedBatterySystem _batterySystem = default!;
     [Dependency] private IComponentFactory _componentFactory = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-        // We subscribe on the weapon, not the battery, because the damage info is on the weapon's provider.
-        SubscribeLocalEvent<BatteryAmmoProviderComponent, GunExecutedEvent>(OnBatteryAmmoProviderExecuted);
-    }
-
+    // We subscribe on the weapon, not the battery, because the damage info is on the weapon's provider.
+    [SubscribeLocalEvent]
     private void OnBatteryAmmoProviderExecuted(Entity<BatteryAmmoProviderComponent> entity, ref GunExecutedEvent args)
     {
         // Default to cancelled
         if (!_batterySystem.TryUseCharge(entity.Owner, entity.Comp.FireCost))
             goto onCancelled;
 
-        if (!_prototypeManager.TryIndex(entity.Comp.Prototype, out var prototype))
+        if (!ProtoMan.TryIndex(entity.Comp.Prototype, out var prototype))
             goto onCancelled;
 
         if (prototype.TryGetComponent<ProjectileComponent>(out var projectileComponent, _componentFactory))

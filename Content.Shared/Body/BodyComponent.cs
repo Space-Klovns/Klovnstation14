@@ -13,25 +13,8 @@ namespace Content.Shared.Body;
 /// <seealso cref="SharedVisualBodySystem" />
 [RegisterComponent, NetworkedComponent]
 [Access(typeof(BodySystem), typeof(BodyHierarchySystem) /* KS14: Klovnmed access */)]
-public sealed partial class BodyComponent : Component, IHierarchyComponent // KS14: IHierarchyComponent
+public sealed partial class BodyComponent : Component
 {
-    // KS14
-    /// <summary>
-    ///     Organ categories present and their entities.
-    ///         Only one is allowed.
-    /// </summary>
-    [ViewVariables(VVAccess.ReadOnly)]
-    [Access(typeof(BodyHierarchySystem), Other = AccessPermissions.ReadExecute)]
-    public Dictionary<Robust.Shared.Prototypes.ProtoId<OrganCategoryPrototype>, Entity<OrganComponent>> PresentOrganCategories = [];
-
-    // KS14
-    [ViewVariables(VVAccess.ReadOnly)]
-    public List<EntityUid> RecursiveChildUids { get; set; }
-
-    // KS14
-    [ViewVariables(VVAccess.ReadOnly)]
-    public Container Container { get; set; }
-
     // KS14: No just no
     //public const string ContainerID = "body_organs";
 
@@ -41,14 +24,6 @@ public sealed partial class BodyComponent : Component, IHierarchyComponent // KS
     // /// </summary>
     // [ViewVariables]
     // public Container? Organs;
-
-    // KS14 Addition
-    /// <summary>
-    ///     Amount of damage taken in one hit (currently explosions only)
-    ///         to dismember SOMETHING.
-    /// </summary>
-    [DataField]
-    public FixedPoint2 DismembermentThreshold = FixedPoint2.New(80f);
 }
 
 /// <summary>

@@ -7,7 +7,6 @@ namespace Content.Client.Storage.Visualizers;
 
 public sealed partial class EntityStorageVisualizerSystem : VisualizerSystem<EntityStorageVisualsComponent>
 {
-    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IComponentFactory _componentFactory = default!;
 
     public override void Initialize()
@@ -42,7 +41,7 @@ public sealed partial class EntityStorageVisualizerSystem : VisualizerSystem<Ent
         var forceRedrawBase = false;
         if (AppearanceSystem.TryGetData<string>(uid, PaintableVisuals.Prototype, out var prototype, args.Component))
         {
-            if (_prototypeManager.Resolve(prototype, out var proto))
+            if (ProtoMan.Resolve(prototype, out var proto))
             {
                 if (proto.TryGetComponent(out SpriteComponent? sprite, _componentFactory))
                 {
