@@ -155,10 +155,13 @@ public sealed partial class StorageUIController : UIController, IOnSystemChanged
         else
         {
             // Open at parent position if it's open.
-            if (replacementPosition is { } position /* KS14: use replaced window position */)
+            // KS14 start: a window replacing an evicted one opens exactly where that one was, rather
+            // than falling through to the parent-container placement below.
+            if (replacementPosition is { } position)
             {
                 window.Open(position);
             }
+            // KS14 end
             else if (_ui.TryGetOpenUi<StorageBoundUserInterface>(EntityManager.GetComponent<TransformComponent>(sBui.Owner).ParentUid,
                     StorageComponent.StorageUiKey.Key, out var bui) && bui.Position != null)
             {

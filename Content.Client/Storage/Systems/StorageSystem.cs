@@ -21,12 +21,29 @@ public sealed partial class StorageSystem : SharedStorageSystem
 
     private List<(StorageBoundUserInterface Bui, bool Value)> _queuedBuis = new();
 
-    // KS14 start
+    // KS14 start: screen positions handed from an evicted storage window to the one replacing it
     private readonly Dictionary<EntityUid, Vector2> _replacementPositions = [];
 
+    /// <summary>
+    ///     Takes the screen position an evicted window left for this storage, if there is one.
+    /// </summary>
+    /// <remarks>
+    ///     Consuming: the position is handed out once and then forgotten, so a window reopened later by
+    ///         ordinary means is placed by the ordinary rules.
+    /// </remarks>
     public Vector2? TakeReplacementPosition(EntityUid storage)
     {
         return _replacementPositions.Remove(storage, out var position) ? position : null;
+    }
+
+    /// <summary>
+    ///     Drops a position nobody came to collect, for instance because the open was refused after the
+    ///         client had already predicted the eviction.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnStorageTerminating(Entity<StorageComponent> entity, ref EntityTerminatingEvent args)
+    {
+        _replacementPositions.Remove(entity.Owner);
     }
     // KS14 end
 
@@ -111,6 +128,9 @@ public sealed partial class StorageSystem : SharedStorageSystem
         }
     }
 
+    // KS14 start: client half of the storage window eviction - hide the outgoing window and leave its
+    // position behind for the incoming one. The authoritative close comes from the server.
+    /// <inheritdoc/>
     protected override void PrepareStorageWindowReplacement(EntityUid oldStorage, EntityUid newStorage, EntityUid actor)
     {
         if (!UI.TryGetOpenUi<StorageBoundUserInterface>(oldStorage, StorageComponent.StorageUiKey.Key, out var storageBui))
@@ -121,6 +141,7 @@ public sealed partial class StorageSystem : SharedStorageSystem
 
         storageBui.Hide();
     }
+    // KS14 end
 
     protected override void ShowStorageWindow(EntityUid uid, EntityUid actor)
     {

@@ -75,7 +75,7 @@ public abstract partial class SharedStorageSystem : EntitySystem
     [Dependency] private EntityQuery<ItemComponent> _itemQuery = default!;
     [Dependency] private EntityQuery<StackComponent> _stackQuery = default!;
     [Dependency] private EntityQuery<TransformComponent> _xformQuery = default!;
-    [Dependency] private EntityQuery<UserInterfaceUserComponent> _userQuery = default!;
+    /* [Dependency] private EntityQuery<UserInterfaceUserComponent> _userQuery = default!; */ // KS14: removed, its only user was the open-storage counting replaced in OnBoundUIAttempt
 
     /// <summary>
     /// Whether we're allowed to go up-down storage via UI.
@@ -424,8 +424,12 @@ public abstract partial class SharedStorageSystem : EntitySystem
         {
             // If you need something more sophisticated for multi-UI you'll need to code some smarter
             // interactions.
+            // KS14 start: was "if (_openStorageLimit == 1) UI.CloseUserUis<StorageUiKey>(actor);".
+            // That closed every storage UI before the eviction path could see it, which emptied the
+            // tracking list and meant the replacement window never inherited the old one's position.
             if (_openStorageLimit == 1)
-                UI.CloseUserUis<StorageComponent.StorageUiKey>(actor);
+                MakeRoomForStorageWindow(uid, actor);
+            // KS14 end
 
             OpenStorageUIInternal(uid, actor, storageComp, silent: silent);
         }
@@ -530,6 +534,15 @@ public abstract partial class SharedStorageSystem : EntitySystem
     {
     }
 
+    /// <summary>
+    ///     Called on the client just before <paramref name="oldStorage"/>'s window is evicted to make
+    ///         room for <paramref name="newStorage"/>'s, so the replacement can open where it was.
+    /// </summary>
+    /// <remarks>
+    ///     Implementations hide the outgoing window and remember its position; they must not close its
+    ///         UI, because the authoritative close is the server's to send.
+    ///     No-op on the server, which evicts by closing the UI outright.
+    /// </remarks>
     protected virtual void PrepareStorageWindowReplacement(EntityUid oldStorage, EntityUid newStorage, EntityUid actor)
     {
     }
@@ -870,16 +883,11 @@ public abstract partial class SharedStorageSystem : EntitySystem
             _nestedCheck ||
             args.Message is not OpenBoundInterfaceMessage)
             return;
-        // KS14 start - eviction behavior
-        if (_netManager.IsClient)
-        {
-            if (!MakeRoomForStorageWindow(args.Target, args.Actor))
-                args.Cancel(); // KS14: reject only when the client cannot predict a replacement
-
-            return;
-        }
-
-        if (!MakeRoomForStorageWindow(args.Target, args.Actor)) /* KS14: evict oldest storage window at limit */
+        // KS14 start: replaces upstream's "count the actor's open storage UIs and cancel at the
+        // limit". At the limit the oldest window is evicted instead, so opening a new container
+        // always works. Cancelling is now only for a limit of zero. The client/server split lives
+        // inside MakeRoomForStorageWindow.
+        if (!MakeRoomForStorageWindow(args.Target, args.Actor))
             args.Cancel();
         // KS14 end
     }
