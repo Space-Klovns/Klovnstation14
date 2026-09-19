@@ -1,6 +1,6 @@
 - type: entity
   name: frequencies paper
-  parent: Paper
+  parent: PaperOffice
   id: FrequenciesPaper
   description: 'Contains all packet frequencies and related devices.'
   components:
