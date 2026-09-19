@@ -47,20 +47,44 @@ public sealed partial class SharedIvDripSystem
 
     private void OnSetAmount(Entity<IvDripComponent> entity, ref IvDripSetAmountMessage args)
     {
-        if (!entity.Comp.CanSetInjectionAmount)
-            return;
-
-        entity.Comp.InjectionAmount = FixedPoint2.Clamp(args.Amount, entity.Comp.MinimumInjectionAmount, entity.Comp.MaximumInjectionAmount);
-        Dirty(entity);
-        UpdateUserInterface(entity);
+        SetInjectionAmount(entity, args.Amount);
     }
 
     private void OnSetInterval(Entity<IvDripComponent> entity, ref IvDripSetIntervalMessage args)
     {
+        SetInjectionInterval(entity, args.Interval);
+    }
+
+    /// <summary>
+    ///     The one place <see cref="IvDripComponent.InjectionAmount"/> is written.
+    /// </summary>
+    /// <remarks>
+    ///     Refuses the change outright on a drip that cannot be reconfigured, and otherwise clamps to the
+    ///         drip's own bounds - the window is free to ask for anything.
+    /// </remarks>
+    public void SetInjectionAmount(Entity<IvDripComponent> entity, FixedPoint2 amount)
+    {
+        if (!entity.Comp.CanSetInjectionAmount)
+            return;
+
+        entity.Comp.InjectionAmount = FixedPoint2.Clamp(amount, entity.Comp.MinimumInjectionAmount, entity.Comp.MaximumInjectionAmount);
+        Dirty(entity);
+        UpdateUserInterface(entity);
+    }
+
+    /// <summary>
+    ///     The one place <see cref="IvDripComponent.InjectionInterval"/> is written.
+    /// </summary>
+    /// <remarks>
+    ///     Rounded to the two decimal places the window shows, so the value sent up matches the one that
+    ///         comes back, then clamped to the drip's own bounds.
+    /// </remarks>
+    public void SetInjectionInterval(Entity<IvDripComponent> entity, float interval)
+    {
         if (!entity.Comp.CanSetInjectionInterval)
             return;
 
-        entity.Comp.InjectionInterval = Math.Clamp((float)Math.Round(args.Interval, 2, MidpointRounding.AwayFromZero),
+        entity.Comp.InjectionInterval = Math.Clamp((float)Math.Round(interval, 2, MidpointRounding.AwayFromZero),
             entity.Comp.MinimumInjectionInterval,
             entity.Comp.MaximumInjectionInterval);
         Dirty(entity);

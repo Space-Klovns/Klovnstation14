@@ -75,7 +75,15 @@ public sealed partial class SharedIvDripSystem : EntitySystem
                 RemComp(args.EquipTarget, wearerComponent);
         }
 
-        _actionsSystem.RemoveAction(args.EquipTarget, entity.Comp.ToggleActionEntity);
+        // SharedActionsSystem reclaims actions provided by unequipped gear itself, and by the time this
+        // runs it usually has. Removing an action that is no longer attached is an error, so only do it
+        // when the wearer really does still hold it.
+        if (_actionsSystem.GetAction(entity.Comp.ToggleActionEntity) is { } toggleActionEntity &&
+            toggleActionEntity.Comp.AttachedEntity == args.EquipTarget)
+        {
+            _actionsSystem.RemoveAction(args.EquipTarget, (toggleActionEntity.Owner, toggleActionEntity.Comp));
+        }
+
         entity.Comp.ToggleActionEntity = null;
         Dirty(entity);
     }
