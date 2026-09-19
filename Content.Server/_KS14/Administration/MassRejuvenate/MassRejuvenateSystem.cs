@@ -10,10 +10,10 @@ public sealed partial class MassRejuvenateSystem : EntitySystem
 
     public override void Initialize()
     {
-        SubscribeLocalEvent<MassRejuvenateMarkerComponent, MapInitEvent>(OnMapInit);
+        SubscribeLocalEvent<MassRejuvenateMarkerComponent, ComponentInit>(OnCompInit);
     }
 
-    private void OnMapInit(Entity<MassRejuvenateMarkerComponent> entity, ref MapInitEvent args)
+    private void OnCompInit(Entity<MassRejuvenateMarkerComponent> entity, ref ComponentInit args)
     {
         RejuvenateNearbyEntities(entity);
     }
