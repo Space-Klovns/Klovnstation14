@@ -2034,3 +2034,21 @@ Entries:
       message: Added Packet networks. Check your CE locker.
   id: 211
   time: '2026-09-19T14:25:19.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: IV drips
+    - type: Add
+      message: Mass rejuv marker for admins
+    - type: Add
+      message: Action folders
+    - type: Add
+      message: Action layout persistence
+    - type: Add
+      message: Guidebook entry for the Anchorless antagonist
+    - type: Tweak
+      message: Eshield now self recharges
+    - type: Tweak
+      message: Massive improvements to the mapping system
+  id: 212
+  time: '2026-09-19T17:45:28.0000000+00:00'
