@@ -3,3 +3,10 @@
   recipes:
   - HealthMonitor
   - SignalSpeaker
+  - KsClothingOuterIvDrip
+
+- type: latheRecipePack
+  id: KlovnMedicalDevicesStatic
+  recipes:
+  - HealthMonitor
+  - KsClothingOuterIvDrip

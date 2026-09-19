@@ -15,3 +15,12 @@
     Steel: 100
     Plastic: 200
     Glass: 100
+
+- type: latheRecipe
+  parent: BasePartRecipe
+  id: KsClothingOuterIvDrip
+  result: KsClothingOuterIvDrip
+  materials:
+    Steel: 50
+    Plastic: 200
+    Glass: 200

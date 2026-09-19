@@ -1,0 +1,45 @@
+<Document>
+  # Anchorless
+
+  <Box>
+    [color=#999999][italic]"THAT'S NOT BENNINGS!"[/italic][/color]
+  </Box>
+  The Anchorless are a formless horror from the clouds of [bold]Jupiter[/bold].
+  Originally taking the form of single-celled organisms, they can merge together and develop a demented, predatory intelligence. With the arrival of humans, exactly this has happened.
+  The goal of the Anchorless is to assimilate the crew of the station.
+
+  Anyone besides [textlink="department heads" link="Command"] or members of [textlink="Security" link="Security"] can be an original Anchorless at the start of the shift.
+
+  ## Conversion
+
+  A single Anchorless is not much. To convert another into your kin, you can click a crit or dead person with the convert action. This is loud and takes a lot of time, so you should ideally find a private place to do it.
+  How you bring this person into the dead or crit state is [italic]up to you[/italic].
+
+  ## Cooperation
+
+  Now that there are more of you, cooperation is on the table. You have two primary tools for this: [color=#b04eb5]a private radio channel[/color] you can access using [bold].a or :a[/bold] and the disguise ability.
+  You can automatically disguise as yourself or anyone you have converted. Additionally, you can [bold]commune[/bold] with your kind to share all of your learned identities.
+
+  ## Combat
+
+  An Anchorless has access to a powerful horror form. This form speeds you up and grants you access to a lethal arm blade, at the cost of giving away the fact that there are anchorless on the station.
+  Unless used strategically, you will suffer more from the jig being up than you will gain with the extra conversion. When you are few, try using [italic]other methods of incapacitation![/italic]
+
+  <Box>
+    <GuideEntityEmbed Entity="Stunprod" Caption="Stun prod"/>
+    <GuideEntityEmbed Entity="Cablecuffs" Caption="Improvised handcuffs"/>
+    <GuideEntityEmbed Entity="Spear" Caption="Spear"/>
+  </Box>
+
+  ## Weaknesses
+
+  The Anchorless are quite vulnerable to [bold]Heat[/bold] damage. Additionally, due to the distributed nature of their bodies, firing weapons overwhelms their senses - flashing them and slowing them down.
+  Anchorless blood is also chemically unstable and [bold]will break down into diethylamine and toxin at 450 kelvin or above.[/bold]
+
+  <Box>
+    <GuideEntityEmbed Entity="Beaker"/>
+    <GuideEntityEmbed Entity="Syringe"/>
+    <GuideEntityEmbed Entity="ChemistryHotplate"/>
+  </Box>
+
+</Document>

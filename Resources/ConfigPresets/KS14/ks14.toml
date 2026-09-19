@@ -9,7 +9,7 @@ hostname = "KLOVNSTATION 14"
 desc = "Klovnstation 14 is a minimal rule server designed around said ruleset."
 maxplayers = 120
 soft_max_players = 90
-lobbyduration    = 300 # 5 minutes lobby timer
+lobbyduration    = 150 # 2.5 minutes lobby timer
 
 [infolinks]
 bug_report = "https://github.com/Space-Klovns/Klovnstation14/issues/new/choose"
