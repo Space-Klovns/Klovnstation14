@@ -2052,3 +2052,9 @@ Entries:
       message: Massive improvements to the mapping system
   id: 212
   time: '2026-09-19T17:45:28.0000000+00:00'
+- author: ResomiDumbass
+  changes:
+    - type: Tweak
+      message: Buffed inaprovaline, it heals double the amount it did before.
+  id: 213
+  time: '2026-09-20T18:37:55.0000000+00:00'
