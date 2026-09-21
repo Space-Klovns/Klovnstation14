@@ -2058,3 +2058,11 @@ Entries:
       message: Buffed inaprovaline, it heals double the amount it did before.
   id: 213
   time: '2026-09-20T18:37:55.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Fixed some rendering (items in bags being offset, wire panels), puddle
+        mispredicts, and stealth shader.
+  id: 214
+  time: '2026-09-21T05:21:19.0000000+00:00'
