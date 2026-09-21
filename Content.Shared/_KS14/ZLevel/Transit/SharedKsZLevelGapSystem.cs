@@ -29,17 +29,12 @@ public abstract partial class SharedKsZLevelGapSystem : EntitySystem
     ///         crossing - there is no shared space for them to collide in. This is the wiring that fixes
     ///         that, and it is a broadcast query rather than anything the fall knows about gaps: the fall
     ///         asks what is in the way, and a gap is one of the things that can answer.
+    ///     Only fallers already in the anchor's own airspace reach here. One that arrives by dropping
+    ///         through the floor plane above is put into the gap's slice by the crossing loop instead, so
+    ///         the two paths land something on a platform for quite different reasons - see
+    ///         <see cref="KsZLevelSystem.TryGetAdjacentFallSlice"/>.
     /// </remarks>
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        // Stays an explicit call: KsZLevelTransitObstructionEvent is a broadcast by-ref event, and the
-        //      subscription generator reads a lone by-ref parameter as the non-ref EntityEventHandler. It
-        //      does not fail the build - it simply generates nothing, and the handler is never called.
-        SubscribeLocalEvent<KsZLevelTransitObstructionEvent>(OnTransitObstruction);
-    }
-
+    [SubscribeLocalEvent]
     private void OnTransitObstruction(ref KsZLevelTransitObstructionEvent args)
     {
         if (!_zLevelQuery.TryGetComponent(args.ZLevelUid, out var zLevelComponent))
@@ -168,6 +163,14 @@ public abstract partial class SharedKsZLevelGapSystem : EntitySystem
     ///     Fills the list with every gap anchored to a z-level, ascending by how far up the gap they sit.
     /// </summary>
     /// <remarks>
+    ///     Sorted on the real altitude rather than on <see cref="KsZLevelGapComponent.Progress"/>, which is
+    ///         only the same order while every gap over this z-level captured the same
+    ///         <see cref="KsZLevelGapComponent.TotalDepth"/>. Retune a level's depth between two departures
+    ///         and they no longer did - and <see cref="RebuildSliceDepths"/> reads this list as ascending to
+    ///         work out where each slice's ceiling is, so out-of-order entries hand it a ceiling below the
+    ///         floor it belongs to.
+    /// </remarks>
+    /// <remarks>
     ///     There is no by-anchor index because there is no population to index: a gap exists only while
     ///         something is actually crossing, so the query holds a handful of entries at most.
     /// </remarks>
@@ -185,6 +188,6 @@ public abstract partial class SharedKsZLevelGapSystem : EntitySystem
             gapEntities.Add((uid, gapComponent));
         }
 
-        gapEntities.Sort(static (first, second) => first.Comp.Progress.CompareTo(second.Comp.Progress));
+        gapEntities.Sort(static (first, second) => GetPlaneAltitude(first).CompareTo(GetPlaneAltitude(second)));
     }
 }

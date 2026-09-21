@@ -57,7 +57,12 @@ namespace Content.Client.Viewport
         /// </remarks>
         private bool _drawGapLevels = true;
 
-        private bool _subscribedToGapLevelsCVar;
+        /// <summary>
+        ///     Held so the subscription can be taken back off again. A cvar's subscriber list is rooted for
+        ///         the life of the process, so a handler closing over a viewport keeps that viewport - and
+        ///         the render targets hanging off it - alive forever once the control is thrown away.
+        /// </summary>
+        private Action<bool>? _gapLevelsCVarHandler;
 
         /// <summary>
         ///     The light map and floor of each z-level that lights another, taken before the drawing starts.
@@ -318,6 +323,14 @@ namespace Content.Client.Viewport
         protected override void Dispose(bool disposing)
         {
             InvalidateZLevelState();
+
+            if (_gapLevelsCVarHandler != null)
+            {
+                IoCManager.Resolve<IConfigurationManager>()
+                    .UnsubValueChanged(KsCCVars.ZLevelDrawGapLevels, _gapLevelsCVarHandler);
+
+                _gapLevelsCVarHandler = null;
+            }
 
             base.Dispose(disposing);
         }
@@ -602,11 +615,11 @@ namespace Content.Client.Viewport
             _lightBufferSystem ??= _entityManager.System<KsZLevelLightBufferSystem>();
 
             // Subscribed here rather than read per frame, and only once however often this is regenerated.
-            if (!_subscribedToGapLevelsCVar)
+            if (_gapLevelsCVarHandler == null)
             {
-                _subscribedToGapLevelsCVar = true;
+                _gapLevelsCVarHandler = value => _drawGapLevels = value;
                 IoCManager.Resolve<IConfigurationManager>()
-                    .OnValueChanged(KsCCVars.ZLevelDrawGapLevels, value => _drawGapLevels = value, invokeImmediately: true);
+                    .OnValueChanged(KsCCVars.ZLevelDrawGapLevels, _gapLevelsCVarHandler, invokeImmediately: true);
             }
 
             // Never leave an old one behind, in case this is reached without an InvalidateZLevelState first.

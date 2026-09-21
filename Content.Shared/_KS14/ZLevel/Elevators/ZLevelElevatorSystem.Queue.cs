@@ -248,18 +248,19 @@ public abstract partial class SharedZLevelElevatorSystem : EntitySystem
 
         var departedUid = currentZLevelEntity.Value.Owner;
 
-        var departingEvent = new ZLevelElevatorDepartingEvent(departedUid, rising);
-        RaiseLocalEvent(entity.Owner, ref departingEvent);
-
-        if (TerminatingOrDeleted(entity.Owner))
-            return false;
-
         // A gap is named by the z-level below it, whichever way something is crossing it.
         var lowerZLevelEntity = rising ? currentZLevelEntity.Value : targetZLevelEntity.Value;
         var upperZLevelEntity = rising ? targetZLevelEntity.Value : currentZLevelEntity.Value;
 
         if (!TryEnterGap(entity, lowerZLevelEntity, upperZLevelEntity, rising))
             return false;
+
+        // Raised only once the leg is committed, never before. Departing is the half of a pair - the stop
+        //      that eventually answers it is what switches the running-lights off, stops the hum and lets
+        //      the doors open again - and a leg that announced itself and then failed to start would leave
+        //      every one of those latched on with nothing left to ever raise the other half.
+        var departingEvent = new ZLevelElevatorDepartingEvent(departedUid, rising);
+        RaiseLocalEvent(entity.Owner, ref departingEvent);
 
         if (TerminatingOrDeleted(entity.Owner))
             return false;

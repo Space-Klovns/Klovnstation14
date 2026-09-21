@@ -142,12 +142,21 @@ public sealed partial class ZLevelElevatorSystem
             ));
         }
 
+        // The floor a crossing reports is the one it set out from, not the gap it is riding - a gap is on no
+        //      stack, so sending it here would match none of the floors above and the panel would show the
+        //      lift as being nowhere at all for the length of every ride. TryGetZLevelBelow resolves a gap to
+        //      the z-level it is anchored to, which is that floor; on a real z-level it is left alone.
+        var reportedZLevelUid = currentZLevelEntity.Value.Owner;
+        if (_zLevelSystem.IsGap(reportedZLevelUid) &&
+            _zLevelSystem.TryGetZLevelBelow(reportedZLevelUid, out var anchorZLevelEntity))
+            reportedZLevelUid = anchorZLevelEntity.Value.Owner;
+
         _userInterfaceSystem.SetUiState(
             entity.Owner,
             ZLevelElevatorControllerUiKey.Key,
             new ZLevelElevatorControllerState(
                 [.. _floors],
-                GetNetEntity(currentZLevelEntity.Value.Owner),
+                GetNetEntity(reportedZLevelUid),
                 elevatorEntity.Value.Comp.Direction,
                 HasComp<ActiveZLevelElevatorComponent>(elevatorEntity.Value.Owner)
             )

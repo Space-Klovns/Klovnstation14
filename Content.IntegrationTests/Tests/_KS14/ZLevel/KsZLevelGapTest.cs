@@ -450,6 +450,12 @@ public sealed class KsZLevelGapTest : GameTest
     [Test]
     public async Task TestFallingLandsOnACrossingElevator()
     {
+        // Covers the crossing path specifically: a faller dropping through the floor plane above is put
+        //      into the topmost slice of the airspace below, which is the gap, and then lands on the
+        //      platform because the gap's own plane is solid there. It passes with the obstruction event
+        //      unsubscribed entirely, because that event is for the other way in -
+        //      TestAPlatformRisingPastAFallerCatchesThem is the one that pins it.
+
         // Three floors so there is a gap above the middle one for the lift to be in while something falls
         //      through that same gap from the top floor.
         var shaft = await CreateShaft(3);
@@ -688,5 +694,251 @@ public sealed class KsZLevelGapTest : GameTest
         await server.WaitAssertion(() =>
             Assert.That(MapOf(entManager, droppedUid), Is.EqualTo(shaft.ZLevels[0]),
                 "and it falls onto the z-level the gap is anchored to"));
+    }
+
+    /// <summary>
+    ///     That a leg which announces itself and then fails to start does not announce itself at all.
+    /// </summary>
+    /// <remarks>
+    ///     Departing and stopping are a pair: the first starts the travelling hum, fires the moving port and
+    ///         tells whatever is wired to it that the lift has gone, and the second is the only thing that
+    ///         ever undoes any of it. A leg that raised the first and then could not enter the gap would
+    ///         leave all of that latched on with nothing left alive to raise the other half, so the lift
+    ///         sits at its floor humming for the rest of the round.
+    ///     The failure is reached the way the code itself expects it to be: a stack member that is not a
+    ///         map. A stack is replicated as net entities and rebuilt wholesale, so a member briefly being
+    ///         something other than a map is a state the navigation code is already written to survive.
+    /// </remarks>
+    [Test]
+    public async Task TestAFailedDepartureIsNotAnnounced()
+    {
+        var shaft = await CreateShaft(1);
+        var elevatorUid = await CreateElevator(shaft, floor: 0);
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var zLevelSystem = entManager.System<KsZLevelSystem>();
+        var elevatorSystem = entManager.System<ZLevelElevatorSystem>();
+
+        await server.WaitPost(() =>
+        {
+            // A z-level with no map under it. TryGetAdjacentZLevel will happily offer it as the floor above,
+            //      and entering a gap against it is what cannot be done.
+            var impostorUid = entManager.SpawnEntity(
+                null,
+                new MapCoordinates(Vector2.Zero, entManager.GetComponent<MapComponent>(shaft.ZLevels[0]).MapId));
+
+            entManager.EnsureComponent<KsZLevelComponent>(impostorUid);
+            zLevelSystem.AddZLevelDirectlyAbove(shaft.ZLevels[0], impostorUid);
+        });
+
+        await Pair.RunTicksSync(1);
+
+        var started = true;
+        await server.WaitPost(() =>
+            started = elevatorSystem.TryStartAscent((elevatorUid, entManager.GetComponent<ZLevelElevatorComponent>(elevatorUid))));
+
+        await Pair.RunTicksSync(3);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(started, Is.False,
+                "there is no map above to cross to, so the leg cannot have started");
+
+            var elevatorComponent = entManager.GetComponent<ZLevelElevatorComponent>(elevatorUid);
+
+            Assert.That(elevatorComponent.MovementAudioUid, Is.Null,
+                "and a leg that never started must not have left the travelling hum running - nothing will ever stop it");
+
+            Assert.That(entManager.HasComponent<ActiveZLevelElevatorComponent>(elevatorUid), Is.False,
+                "nor may it be left looking like it is travelling");
+
+            Assert.That(MapOf(entManager, elevatorUid), Is.EqualTo(shaft.ZLevels[0]),
+                "and it stays on the floor it was standing on");
+        });
+    }
+
+    /// <summary>
+    ///     That a platform rising through the airspace a faller is already in catches them.
+    /// </summary>
+    /// <remarks>
+    ///     There are two quite different ways to end up standing on a moving platform, and only one of them
+    ///         is the crossing loop. A faller who dropped in through the floor plane above was put into the
+    ///         gap's slice on the way in, so the platform is simply the floor of the slice they are already
+    ///         falling down - no gap-specific code runs at all.
+    ///     This is the other one: a faller who never crossed a plane, because they were launched off this
+    ///         very floor and are coming back down to it. They are on the anchor's own map for the whole
+    ///         arc, the platform is on a map of its own, and the two share no space to collide in. Only
+    ///         <see cref="Content.Shared._KS14.ZLevel.Physics.KsZLevelTransitObstructionEvent"/> connects
+    ///         them, and with it unwired the faller drops straight through a solid platform and keeps
+    ///         going.
+    ///     Driven through the gap system rather than through an elevator, so the platform sits at a known
+    ///         altitude instead of wherever a leg's clock has got to.
+    /// </remarks>
+    [Test]
+    public async Task TestAPlatformRisingPastAFallerCatchesThem()
+    {
+        var shaft = await CreateShaft(2, depth: 1f);
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var tileDefinitionManager = server.ResolveDependency<ITileDefinitionManager>();
+        var mapSystem = entManager.System<SharedMapSystem>();
+        var transformSystem = entManager.System<SharedTransformSystem>();
+        var gapSystem = entManager.System<KsZLevelGapSystem>();
+        var physicsSystem = entManager.System<KsZLevelPhysicsSystem>();
+
+        // Without gravity the faller never comes back down, and the arc is the whole point.
+        await server.WaitPost(() =>
+            entManager.EnsureComponent<GravityComponent>(shaft.ZLevels[0]).Enabled = true);
+
+        Entity<KsZLevelGapComponent>? gapEntity = null;
+
+        await server.WaitPost(() =>
+        {
+            var lowerMapId = entManager.GetComponent<MapComponent>(shaft.ZLevels[0]).MapId;
+
+            var platform = mapSystem.CreateGridEntity(lowerMapId);
+            mapSystem.SetTile(
+                platform.Owner,
+                platform.Comp,
+                Vector2i.Zero,
+                new Tile(tileDefinitionManager["Plating"].TileId));
+
+            transformSystem.SetWorldPosition(platform.Owner, ShaftPosition);
+
+            // Low enough that the faller's arc clears it, high enough to be unmistakably off the floor.
+            gapSystem.TryEnterGap(
+                platform.Owner,
+                (shaft.ZLevels[0], entManager.GetComponent<KsZLevelComponent>(shaft.ZLevels[0])),
+                (shaft.ZLevels[1], entManager.GetComponent<KsZLevelComponent>(shaft.ZLevels[1])),
+                progress: 0.15f,
+                out gapEntity);
+        });
+
+        Assert.That(gapEntity, Is.Not.Null, "the platform has to be on a gap for there to be anything to catch on");
+
+        var fallerUid = EntityUid.Invalid;
+        await server.WaitPost(() =>
+        {
+            // On the anchor's own map, over the platform's tile, and thrown upward rather than dropped in
+            //      from above - so it never crosses a floor plane and never enters the gap's slice.
+            var lowerMapId = entManager.GetComponent<MapComponent>(shaft.ZLevels[0]).MapId;
+            fallerUid = entManager.SpawnEntity(
+                "KsGapTestFaller",
+                new MapCoordinates(ShaftPosition + new Vector2(0.5f, 0.5f), lowerMapId));
+
+            // Apex is well above the platform at this gravity, and well below the floor plane overhead.
+            physicsSystem.TryStartTransit(fallerUid, initialVerticalVelocity: 1.5f);
+        });
+
+        await server.WaitAssertion(() =>
+            Assert.That(MapOf(entManager, fallerUid), Is.EqualTo(shaft.ZLevels[0]),
+                "the faller starts in the anchor's airspace - if it is already on the gap then the crossing loop put it there and this tests nothing"));
+
+        for (var tick = 0; tick < 240; tick++)
+        {
+            await Pair.RunTicksSync(1);
+
+            var landed = false;
+            await server.WaitPost(() =>
+                landed = !entManager.HasComponent<KsZLevelTransitComponent>(fallerUid));
+
+            if (landed)
+                break;
+        }
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entManager.EntityExists(fallerUid), Is.True);
+
+            Assert.That(entManager.HasComponent<KsZLevelTransitComponent>(fallerUid), Is.False,
+                "the faller has to have come to rest on something within the time allowed");
+
+            Assert.That(MapOf(entManager, fallerUid), Is.EqualTo(gapEntity!.Value.Owner),
+                "a platform rising past a faller has to catch them - unwired, they fall through it and come to rest on the floor below instead");
+        });
+    }
+
+    /// <summary>
+    ///     That two crossings over one z-level divide its airspace correctly even when they measured that
+    ///         airspace differently.
+    /// </summary>
+    /// <remarks>
+    ///     Each gap captures the anchor's Depth at the moment it is created, so two departures either side
+    ///         of an admin retuning that depth hold different TotalDepths - and from then on their progress
+    ///         numbers and their real altitudes are two different orderings. The slice arithmetic reads them
+    ///         ascending by altitude to find each slice's ceiling, so taking the order from progress instead
+    ///         hands the lower slice a ceiling beneath its own floor.
+    ///     A slice of negative height is not a cosmetic problem: Depth is what the fall integration divides
+    ///         by and what the render passes accumulate, and the whole reason MinimumDepth exists is that
+    ///         both inverted when it went the wrong way.
+    /// </remarks>
+    [Test]
+    public async Task TestSlicesAreOrderedByAltitudeNotProgress()
+    {
+        var shaft = await CreateShaft(2, depth: 1f);
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var tileDefinitionManager = server.ResolveDependency<ITileDefinitionManager>();
+        var mapSystem = entManager.System<SharedMapSystem>();
+        var transformSystem = entManager.System<SharedTransformSystem>();
+        var zLevelSystem = entManager.System<KsZLevelSystem>();
+        var gapSystem = entManager.System<KsZLevelGapSystem>();
+
+        var tile = new Tile(tileDefinitionManager["Plating"].TileId);
+
+        Entity<KsZLevelGapComponent>? lowerGapEntity = null;
+        Entity<KsZLevelGapComponent>? upperGapEntity = null;
+
+        await server.WaitPost(() =>
+        {
+            var lowerMapId = entManager.GetComponent<MapComponent>(shaft.ZLevels[0]).MapId;
+            var upperEntity = (shaft.ZLevels[1], entManager.GetComponent<KsZLevelComponent>(shaft.ZLevels[1]));
+
+            Entity<KsZLevelComponent> anchorEntity =
+                (shaft.ZLevels[0], entManager.GetComponent<KsZLevelComponent>(shaft.ZLevels[0]));
+
+            // Captured against a Depth of 1 and sent most of the way up it, so altitude 0.8.
+            var firstGrid = mapSystem.CreateGridEntity(lowerMapId);
+            mapSystem.SetTile(firstGrid.Owner, firstGrid.Comp, Vector2i.Zero, tile);
+            transformSystem.SetWorldPosition(firstGrid.Owner, new Vector2(2f, 0f));
+            gapSystem.TryEnterGap(firstGrid.Owner, anchorEntity, upperEntity, progress: 0.8f, out lowerGapEntity);
+
+            // Retuned between the two departures, so the second captures four times the airspace.
+            zLevelSystem.SetDepth(shaft.ZLevels[0], 4f);
+
+            // Barely off the ground by its own reckoning, and yet at altitude 1.2 - above the other one.
+            var secondGrid = mapSystem.CreateGridEntity(lowerMapId);
+            mapSystem.SetTile(secondGrid.Owner, secondGrid.Comp, Vector2i.Zero, tile);
+            transformSystem.SetWorldPosition(secondGrid.Owner, new Vector2(6f, 0f));
+            gapSystem.TryEnterGap(secondGrid.Owner, anchorEntity, upperEntity, progress: 0.3f, out upperGapEntity);
+        });
+
+        await Pair.RunTicksSync(1);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(lowerGapEntity, Is.Not.Null);
+            Assert.That(upperGapEntity, Is.Not.Null);
+
+            var lowerAltitude = SharedKsZLevelGapSystem.GetPlaneAltitude(lowerGapEntity!.Value);
+            var upperAltitude = SharedKsZLevelGapSystem.GetPlaneAltitude(upperGapEntity!.Value);
+
+            Assert.That(lowerAltitude, Is.LessThan(upperAltitude),
+                "the setup only means anything while the two orderings disagree - progress says the opposite of altitude here");
+
+            var lowerSliceDepth = entManager.GetComponent<KsZLevelComponent>(lowerGapEntity.Value.Owner).Depth;
+            var upperSliceDepth = entManager.GetComponent<KsZLevelComponent>(upperGapEntity.Value.Owner).Depth;
+
+            // Ordered by altitude, the lower slice runs up to the crossing above it and the upper one up to
+            //      the ceiling. Ordered by progress the two are swapped and the arithmetic goes negative.
+            Assert.That(lowerSliceDepth, Is.EqualTo(upperAltitude - lowerAltitude).Within(0.01f),
+                "the lower slice owns the air between itself and the crossing above it");
+
+            Assert.That(upperSliceDepth, Is.GreaterThan(KsZLevelSystem.MinimumDepth),
+                "and the upper one owns what is left up to the ceiling - never a slice clamped off the bottom, which is what a negative one becomes");
+        });
     }
 }

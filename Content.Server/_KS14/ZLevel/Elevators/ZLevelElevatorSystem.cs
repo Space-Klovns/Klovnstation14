@@ -45,15 +45,6 @@ public sealed partial class ZLevelElevatorSystem : SharedZLevelElevatorSystem
     /// </summary>
     private const float BorderTolerance = 0.1f;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-
-        // Stays an explicit call: GridSplitEvent is a broadcast by-ref event, and the subscription generator
-        //      reads a lone by-ref parameter as the non-ref EntityEventHandler, which does not compile.
-        SubscribeLocalEvent<GridSplitEvent>(OnGridSplit);
-    }
-
     /// <inheritdoc/>
     protected override bool TryEnterGap(
         Entity<ZLevelElevatorComponent> entity,
@@ -290,6 +281,7 @@ public sealed partial class ZLevelElevatorSystem : SharedZLevelElevatorSystem
     ///         the floor it was cut on, so the whole thing is brought to a halt instead and an admin or a
     ///         mapper can set it going again.
     /// </remarks>
+    [SubscribeLocalEvent]
     private void OnGridSplit(ref GridSplitEvent args)
     {
         if (!TryComp<ZLevelElevatorComponent>(args.Grid, out var elevatorComponent))

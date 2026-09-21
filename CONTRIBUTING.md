@@ -7,6 +7,7 @@ Coding conventions for this repo. Written for coding agents first, humans second
 - Editing or adding a file *outside* `_KS14/` → mark it with `// KS14:` / `# KS14:` (see §3).
 - **Marking a change on a single line → `/* KS14: ... */` sitting at the change itself**, not a trailing `//` at the end of the line (see §3).
 - Otherwise follow upstream SS14 conventions, plus the local rules in §4.
+- Before you ship: the traps in §6 that fail *silently* — no build error, no log, no failing test.
 
 ## 1. Project lineage
 
@@ -382,3 +383,186 @@ This bites hardest in integration-test prototypes, where a wrong component combi
 ```
 
 The same asymmetry applies to anything a debug assert guards: stack invariants, `Resolve` calls with `logMissing`, and the engine's own transform and physics checks. If a test only ever runs in `Release`, treat its coverage of those as zero.
+
+## 6. Cross-codebase pitfalls
+
+Every entry here is something that produced working, compiling, apparently-tested code that was wrong
+anyway. They share one shape: **nothing tells you**. No build error, no exception, no log line, and
+more than once a test that passed whether the bug was present or not. They are collected here because
+none of them belong to a single feature — each one is waiting in whatever you touch next.
+
+### CVars: unsubscribe from anything that does not live as long as the process
+
+`IConfigurationManager`'s subscriber list is rooted for the life of the process. A handler that closes
+over `this` therefore keeps `this` alive forever, along with everything it references — for a UI control
+that means its render targets, its buffers, and every object hanging off them, for every instance ever
+created.
+
+An `EntitySystem` may ignore this, but only because it is handed a mechanism that does it for you.
+`Subs.CVar` calls `RegisterUnsubscription`, and `ShutdownSubscriptions` runs it when the system shuts
+down:
+
+```csharp
+// EntitySystem - fine, and the only place that is. Subs.CVar unsubscribes itself at shutdown.
+public override void Initialize()
+{
+    base.Initialize();
+
+    Subs.CVar(_configurationManager, KsCCVars.ZLevelTransitGravity, value => _transitGravity = value, true);
+}
+```
+
+Everything else — `Control`s and viewports, `Overlay`s, `BoundUserInterface`s, windows, anything
+constructed and thrown away during a round — has no `Subs` and no shutdown hook, so the unsubscribe is
+yours to write. Keep the handler in a field, because a fresh lambda is a different delegate and
+`UnsubValueChanged` will not match it:
+
+```csharp
+// do this - the handler is held, so it can be taken back off again
+private Action<bool>? _drawGapLevelsHandler;
+
+private void Initialise()
+{
+    _drawGapLevelsHandler = value => _drawGapLevels = value;
+    _configurationManager.OnValueChanged(KsCCVars.ZLevelDrawGapLevels, _drawGapLevelsHandler, invokeImmediately: true);
+}
+
+protected override void Dispose(bool disposing)
+{
+    if (_drawGapLevelsHandler != null)
+    {
+        _configurationManager.UnsubValueChanged(KsCCVars.ZLevelDrawGapLevels, _drawGapLevelsHandler);
+        _drawGapLevelsHandler = null;
+    }
+
+    base.Dispose(disposing);
+}
+
+// not this - the lambda is unreachable, so this control can never be collected
+_configurationManager.OnValueChanged(KsCCVars.ZLevelDrawGapLevels, value => _drawGapLevels = value, invokeImmediately: true);
+```
+
+The same reasoning covers every other process-lifetime registry a short-lived object can put itself
+into: `IPlayerManager` and `INetManager` events, `IOverlayManager`, `IUserInterfaceManager` handlers,
+and any static or manager-held list. Ask "what owns the thing I just handed my `this` to, and does it
+outlive me?" If yes, the teardown is yours.
+
+### Only one system may subscribe to a given component and event pair
+
+The event bus throws
+`InvalidOperationException: Duplicate Subscriptions for comp=<Component>, event=<Event>` when a second
+subscription for the same pair is registered. It throws at **startup**, so it does not break the one
+feature that collided — it breaks every integration test in the suite at SetUp, which reads as
+"everything is broken" rather than "two handlers want the same event".
+
+So a partial system split across several files cannot have two files subscribing to the same pair. When
+a second file needs to react, call into it from the existing handler rather than adding a subscription:
+
+```csharp
+// Interaction.cs - the one subscription for this pair
+[SubscribeLocalEvent]
+private void OnElevatorStopped(Entity<ZLevelElevatorComponent> entity, ref ZLevelElevatorStoppedEvent args)
+{
+    // Called rather than subscribed separately: only one system may take a given component and event
+    //      pair, so everything that reacts to a stop goes through here.
+    StopMovementAudio(entity);
+
+    InvokeSignals(entity.Owner, stopped: true);
+}
+```
+
+Where several *unrelated* systems genuinely need the same moment, the component's owner re-broadcasts it
+as an event of its own — see `KsZLevelTransitEvents.cs`, which exists because `KsZLevelPhysicsSystem`
+had already taken `KsZLevelTransitComponent`'s `ComponentStartup` and `ComponentShutdown`.
+
+### A test that never fails is worse than no test
+
+Two separate bugs in one feature were each "covered" by a test that passed with the bug present. The
+test is then actively harmful: it is the reason nobody looks again.
+
+**So prove the test fails.** Break the thing it covers — comment the fix out, unsubscribe the handler,
+revert the line — rebuild, and watch it go red. A test you have only ever seen pass is a test you have
+not checked. This is cheap and it is the only thing that actually catches the cases below.
+
+Two ways to end up here that have nothing to do with carelessness:
+
+- **The assertion is satisfied by something other than the code under test.** A test named for landing
+  on a crossing platform passed with the obstruction event unsubscribed entirely, because the ordinary
+  slice-crossing path put the faller on that map anyway. It asserted a true fact about the wrong
+  mechanism. When a subsystem has two routes to the same observable outcome, name which one the test
+  pins and write a second test for the other.
+- **The environment is more permissive than production.** See the PVS entry below — pooled pairs run
+  with filtering off, so the visibility assertion cannot fail.
+
+When you find a test like this, fix the test in the same change as the bug. Deleting it is better than
+leaving it.
+
+### Verifying an attribute subscription actually generated
+
+Related, and the honest way to answer "is this handler wired up?" rather than guessing from the
+signature: ask the generator. `EmitCompilerGeneratedFiles` writes the `AutoSubscriptions()` override it
+produced to disk, and it either contains your handler or it does not.
+
+```sh
+# --no-incremental matters: an up-to-date build emits nothing, which reads exactly like "the generator
+# refused my handler" and is the reason to check twice before concluding anything.
+dotnet build Content.Shared/Content.Shared.csproj -c Release --no-incremental \
+  -p:EmitCompilerGeneratedFiles=true -p:CompilerGeneratedFilesOutputPath=/tmp/gen
+
+cat /tmp/gen/Robust.Shared.EntitySystemSubscriptionsGenerator/*/Content.Shared.<Namespace>.<System>.g.cs
+```
+
+Worth knowing what the generator *does* accept, because the signature rules are easy to guess wrong:
+a broadcast `ref` handler (`void OnFoo(ref SomeByRefEvent args)`) is fine, on an `abstract partial`
+system as much as a sealed one — the emitted `SubscribeLocalEvent<T>(OnFoo, null, null)` binds to the
+`EntityEventRefHandler<T>` overload. The genuine exclusions are the ones listed in §4, and a project
+missing the generator import.
+
+### "Invisible" is usually PVS, and PVS tests are vacuous by default
+
+When something is on the server, in the right place, with the right components, and the client cannot
+see it, the cause is far more often that it was never *sent* than that it was drawn wrong. Two traps
+follow from that, and both make a PVS test pass while the bug is live:
+
+1. **Pooled test pairs run with `net.pvs` off**, which sends every entity to every client. A test that
+   does not turn it back on proves nothing whatsoever about visibility:
+   ```csharp
+   await OverrideCVar(Side.Server, CVars.NetPVS, true);
+   ```
+2. **Leaving PVS detaches an entity on the client, it does not delete it** (`MetaDataFlags.Detached`).
+   So `TryGetEntity` keeps answering `true` forever for anything the client was *ever* told about.
+   Assert on an entity spawned **after** the state under test began — one that can only have arrived if
+   it is genuinely being sent — or check the detached flag explicitly.
+
+Include a control entity that must *not* arrive, too. Without one, "everything reached the client" and
+"PVS is not filtering at all" are the same green test.
+
+### Reparenting and map work inside engine callbacks
+
+Some engine events are raised mid-operation, with the engine's own iteration, broadphase or chunk
+structures still in flight. Reparenting an entity, moving a grid or deleting a map from inside one is
+reentrant mutation of the thing that called you, and it does not throw something catchable — it takes
+the server down.
+
+`GridFixtureSystem`'s split is the known one: it creates grid entities and reparents everything off the
+old grid, and editing a lot of tiles at once is the ordinary way to reach it. `KsZLevelPhysicsSystem`
+carries a deferred-check set for exactly this reason, and the pattern generalises — queue the work into
+a set, drain it in `Update` clear of the callback:
+
+```csharp
+// Queue from the callback...
+[SubscribeLocalEvent]
+private void OnPhysicsLand(Entity<PhysicsComponent> entity, ref LandEvent args)
+{
+    _pendingTransitChecks.Add(entity.Owner);
+}
+
+// ...and act on it in Update, draining into a scratch list first, because acting on one entry can
+//      raise the very events that queue into the set.
+_drainedTransitChecks.Clear();
+_drainedTransitChecks.AddRange(_pendingTransitChecks);
+_pendingTransitChecks.Clear();
+```
+
+Draining into a second list is not optional: a `foreach` over a set that the loop body can add to
+throws straight out of `Update`.

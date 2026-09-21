@@ -174,10 +174,16 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
             //      of a stack has nothing under them and can still have a lit one over their head.
             UpdateAboveViewer((viewerUid, viewerComponent), zLevelEntity.Value, position);
 
-            // Node itself is null-checked rather than assumed, the same way every other walk of the stack does
-            //      it: a z-level removed from its stack keeps the field pointing at a node that no longer
-            //      belongs to a list, and one replicated before the rebuild has never been given one at all.
-            if (zLevelEntity.Value.Comp.Node?.Previous is not { } previousZLevelNode)
+            // Asked through the navigation API rather than by walking Node.Previous here, because a viewer
+            //      riding a grid across a gap is standing on a map that is on no stack at all - so the walk
+            //      finds nothing below them and takes their subscriber away, and the floor they can plainly
+            //      see under their feet stops being transmitted for the whole of the ride. The API resolves
+            //      a gap to the z-level it is anchored to, which is exactly that floor.
+            // It null-checks Node internally too, the same way every other walk of the stack does: a z-level
+            //      removed from its stack keeps the field pointing at a node that no longer belongs to a
+            //      list, and one replicated before the rebuild has never been given one at all.
+            if (!_zLevelSystem.TryGetZLevelBelow(zLevelEntity.Value.Owner, out var belowZLevelEntity) ||
+                !TryComp<MapComponent>(belowZLevelEntity.Value.Owner, out var belowMapComponent))
             {
                 if (viewerComponent.Active)
                     RemoveActiveViewer((viewerUid, viewerComponent));
@@ -194,10 +200,7 @@ public sealed partial class KsZLevelPvsSystem : EntitySystem
             // lol
             _transformSystem.SetMapCoordinates(
                 viewerComponent.ViewSubscriberUid,
-                new MapCoordinates(
-                    position,
-                    Comp<MapComponent>(previousZLevelNode.Value).MapId
-                )
+                new MapCoordinates(position, belowMapComponent.MapId)
             );
         }
     }
