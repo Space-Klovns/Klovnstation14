@@ -655,11 +655,19 @@ public sealed class KsZLevelGapTest : GameTest
     {
         var shaft = await CreateShaft(2);
 
-        // Slow, so the crossing is still going on while the dropped item falls off it.
-        var elevatorUid = await CreateElevator(shaft, floor: 0, secondsPerDepth: 20f);
-
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
+
+        // Nothing falls anywhere without gravity, and a bare test z-level has none. Set before the crossing
+        //      starts, because that is when the gap copies its environment.
+        await server.WaitPost(() =>
+        {
+            foreach (var zLevelUid in shaft.ZLevels)
+                entManager.EnsureComponent<GravityComponent>(zLevelUid).Enabled = true;
+        });
+
+        // Slow, so the crossing is still going on while the dropped item falls off it.
+        var elevatorUid = await CreateElevator(shaft, floor: 0, secondsPerDepth: 20f);
 
         var gapEntity = await StartAscentIntoGap(elevatorUid);
 

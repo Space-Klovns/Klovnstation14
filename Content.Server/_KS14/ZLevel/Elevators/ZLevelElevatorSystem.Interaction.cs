@@ -214,6 +214,10 @@ public sealed partial class ZLevelElevatorSystem
     [SubscribeLocalEvent]
     private void OnElevatorStopped(Entity<ZLevelElevatorComponent> entity, ref ZLevelElevatorStoppedEvent args)
     {
+        // Called rather than subscribed separately: only one system may take a given component and event
+        //      pair, so everything that reacts to a stop goes through here.
+        StopMovementAudio(entity);
+
         InvokeSignals(entity.Owner, stopped: true);
         RefreshControllers(entity.Owner);
     }
@@ -221,6 +225,8 @@ public sealed partial class ZLevelElevatorSystem
     [SubscribeLocalEvent]
     private void OnElevatorDeparting(Entity<ZLevelElevatorComponent> entity, ref ZLevelElevatorDepartingEvent args)
     {
+        StartMovementAudio(entity);
+
         InvokeSignals(entity.Owner, stopped: false);
         RefreshControllers(entity.Owner);
     }

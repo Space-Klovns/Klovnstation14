@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Content.Client._KS14.ZLevel;
 using Content.Client._KS14.ZLevel.Light;
 using Content.Client._KS14.ZLevel.Transit;
 using Content.Shared._KS14.CCVar;
@@ -275,6 +276,17 @@ namespace Content.Client.Viewport
                 // A gap sits above the z-level it is anchored to, so it is that much nearer the viewer.
                 var gapDepth = anchorDepth - gapComponent.Progress * gapComponent.TotalDepth;
 
+                // Coming down onto the viewer's own floor, a platform descends through a ceiling that is
+                //      never rendered, so it fades in rather than appearing out of nothing - exactly as
+                //      anything else falling onto that floor does, and over the same distance. Seen from a
+                //      z-level above, it is descending into a shaft already in view, so it stays opaque.
+                var modulate = Color.White;
+                if (anchorDepth <= 0f)
+                {
+                    modulate = Color.White.WithAlpha(
+                        Math.Clamp((1f - gapComponent.Progress) / KsZLevelTransitSpriteSystem.FadeInHeight, 0f, 1f));
+                }
+
                 _viewport!.ClearColor = null;
                 _zLevelEye.DrawFov = false;
                 _zLevelEye.Position = new MapCoordinates(eye.Position.Position, mapComponent.MapId);
@@ -289,7 +301,7 @@ namespace Content.Client.Viewport
                 if (_zBlurBuffer != null && gapDepth > 0f)
                     _clyde.BlurRenderTarget(_viewport, _viewport.RenderTarget, _zBlurBuffer, _zLevelEye, 2.5f * gapDepth);
 
-                handle.DrawingHandleScreen.DrawTextureRect(_viewport.RenderTarget.Texture, drawBox);
+                handle.DrawingHandleScreen.DrawTextureRect(_viewport.RenderTarget.Texture, drawBox, modulate);
                 _viewport.RenderScreenOverlaysAbove(handle, this, drawBoxGlobal);
             }
         }

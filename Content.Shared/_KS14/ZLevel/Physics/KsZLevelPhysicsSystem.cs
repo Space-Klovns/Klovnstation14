@@ -425,13 +425,8 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
             return;
         }
 
-        // Stepped off whatever was crossing the gap. A gap is a slice of air with no stack of its own, so
-        //      falling through it has to carry on from the z-level it is anchored to.
-        if (!TryLeaveGapMidFall((uid, transitComponent, transformComponent), ref zLevelEntity))
-            return;
-
         var velocity = transitComponent.VerticalVelocity;
-        var hasGravity = HasGravityAt(zLevelEntity!.Value, transformComponent.MapID, _transformSystem.GetWorldPosition(transformComponent));
+        var hasGravity = HasGravityAt(zLevelEntity.Value, transformComponent.MapID, _transformSystem.GetWorldPosition(transformComponent));
 
         // Without gravity where it is, the entity does not accelerate - but it keeps whatever momentum it
         //      already had, and can still cross z-levels on it.
@@ -480,38 +475,33 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         }
 
         // Crossing is predicted, so a fall never stalls at a z-level boundary waiting on the server. That only
-        //      works because the whole stack is replicated to the client and rebuilt as one object, so
-        //      Node.Previous/Node.Next mean the same thing on both sides.
+        //      works because the whole stack is replicated to the client and rebuilt as one object, so a
+        //      slice's neighbours mean the same thing on both sides.
         for (var crossing = 0; crossing < MaxCrossingsPerTick && (height <= 0f || height >= 1f); crossing++)
         {
-            var node = zLevelEntity.Value.Comp.Node;
-            if (node is null)
-            {
-                // Replicated before the stack was rebuilt; the next state will sort it out.
-                SetTransit((uid, transitComponent), Math.Clamp(height, 0f, 1f), velocity);
-                return;
-            }
-
             var rising = height >= 1f;
-            var targetNode = rising ? node.Next : node.Previous;
             var worldPosition = _transformSystem.GetWorldPosition(transformComponent);
+
+            // Slices rather than z-levels, because the airspace above a z-level is divided between whatever
+            //      is crossing it - so the thing below a faller may be the roof of a moving platform rather
+            //      than the floor.
+            var hasTarget = _zLevelSystem.TryGetAdjacentFallSlice(zLevelEntity!.Value, rising, out var target);
 
             // A stack is rebuilt wholesale from network state, so a member can briefly be an entity that is not
             //      a map at all. Treating that as "nothing that way" stops the transit against it for a frame,
             //      which the next state fixes; asking for the component outright would throw out of Update.
             MapComponent? targetMapComponent = null;
-            if (targetNode is { } candidateNode &&
-                !_mapQuery.TryGetComponent(candidateNode.Value.Owner, out targetMapComponent))
-                targetNode = null;
+            if (hasTarget && !_mapQuery.TryGetComponent(target!.Value.Owner, out targetMapComponent))
+                hasTarget = false;
 
-            // The floor plane being crossed always belongs to the lower of the two z-levels: our own floor on
-            //      the way down, and the upper z-level's floor — our ceiling — on the way up.
+            // The floor plane being crossed always belongs to the lower of the two slices: our own floor on
+            //      the way down, and the one above's floor — our ceiling — on the way up.
             var crossedMapId = rising
                 ? targetMapComponent?.MapId ?? MapId.Nullspace
                 : transformComponent.MapID;
 
             // Nothing that way counts as solid, so the bottom of a stack is a floor and the top is a ceiling.
-            if (targetNode is not { } target || targetMapComponent is null ||
+            if (!hasTarget || targetMapComponent is null ||
                 _zLevelSystem.IsFloorSolidAt(crossedMapId, worldPosition))
             {
                 Impact((uid, transitComponent), rising, velocity);
@@ -520,15 +510,27 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
 
             var oldZLevelEntity = zLevelEntity.Value;
             var overshoot = (rising ? height - 1f : height) * GetDepth(oldZLevelEntity);
-            zLevelEntity = target.Value;
+
+            // Where the boundary just crossed sits in the slice being entered. Ordinarily its very top or
+            //      bottom, but dropping off a platform onto the z-level it is anchored to leaves the faller
+            //      part way up that z-level's airspace rather than at the top of it.
+            var entryHeight = rising ? 0f : 1f;
+            if (!rising && _zLevelSystem.GetSlicePlaneAltitude(target!.Value.Owner) <= 0f)
+            {
+                var departedAltitude = _zLevelSystem.GetSlicePlaneAltitude(oldZLevelEntity.Owner);
+                if (departedAltitude > 0f)
+                    entryHeight = Math.Clamp(departedAltitude / GetDepth(target.Value), 0f, 1f);
+            }
+
+            zLevelEntity = target!.Value;
 
             _transformSystem.SetMapCoordinates(
                 uid,
                 new MapCoordinates(worldPosition, targetMapComponent.MapId)
             );
 
-            // Renormalise into the new z-level's own Depth, keeping the sub-tick overshoot.
-            height = (rising ? 0f : 1f) + overshoot / GetDepth(target.Value);
+            // Renormalise into the new slice's own Depth, keeping the sub-tick overshoot.
+            height = entryHeight + overshoot / GetDepth(target.Value);
 
             var changedEvent = new KsZLevelChangedEvent(oldZLevelEntity.Owner, target.Value.Owner, rising);
             RaiseLocalEvent(uid, ref changedEvent);
@@ -538,61 +540,6 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         }
 
         SetTransit((uid, transitComponent), Math.Clamp(height, 0f, 1f), velocity);
-    }
-
-    /// <summary>
-    ///     Moves something falling on a gap map down onto the z-level that gap is anchored to.
-    /// </summary>
-    /// <remarks>
-    ///     A gap has no stack of its own, so the crossing loop below would read "nothing underneath" and
-    ///         treat it as the bottom of the world - leaving anything that walked off the side of a moving
-    ///         platform hanging in the air until the crossing ended and the map was deleted out from under
-    ///         it.
-    ///     Anything still standing <em>on</em> the platform is left alone: it is riding a grid, not falling
-    ///         past one.
-    /// </remarks>
-    /// <returns>Whether the caller should carry on updating this transit.</returns>
-    private bool TryLeaveGapMidFall(
-        Entity<KsZLevelTransitComponent, TransformComponent> entity,
-        ref Entity<KsZLevelComponent>? zLevelEntity)
-    {
-        if (!_zLevelSystem.IsGap(zLevelEntity!.Value.Owner) ||
-            entity.Comp2.GridUid != null)
-            return true;
-
-        // Both of these resolve the gap to its anchor, so neither needs to know what a gap is: the one
-        //      below it is the floor it would land on, and the depth to it is how far up the gap it was.
-        if (!_zLevelSystem.TryGetZLevelBelow(zLevelEntity.Value.Owner, out var anchorEntity) ||
-            !_zLevelSystem.TryGetDepthBelow(zLevelEntity.Value.Owner, anchorEntity.Value.Owner, out var depthToAnchor) ||
-            !_mapQuery.TryGetComponent(anchorEntity.Value.Owner, out var anchorMapComponent))
-            return true;
-
-        var departedUid = zLevelEntity.Value.Owner;
-        var worldPosition = _transformSystem.GetWorldPosition(entity.Comp2);
-
-        _transformSystem.SetMapCoordinates(
-            entity.Owner,
-            new MapCoordinates(worldPosition, anchorMapComponent.MapId)
-        );
-
-        if (TerminatingOrDeleted(entity.Owner))
-            return false;
-
-        // Same place in the world, expressed in the anchor's own units - the height the platform had got to.
-        SetTransit(
-            (entity.Owner, entity.Comp1),
-            Math.Clamp(depthToAnchor / GetDepth(anchorEntity.Value), 0f, 1f),
-            entity.Comp1.VerticalVelocity
-        );
-
-        var changedEvent = new KsZLevelChangedEvent(departedUid, anchorEntity.Value.Owner, false);
-        RaiseLocalEvent(entity.Owner, ref changedEvent);
-
-        if (TerminatingOrDeleted(entity.Owner))
-            return false;
-
-        zLevelEntity = anchorEntity.Value;
-        return true;
     }
 
     /// <summary>

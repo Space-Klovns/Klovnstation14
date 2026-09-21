@@ -45,7 +45,12 @@ public sealed partial class KsZLevelTransitSpriteSystem : EntitySystem
     ///     How much of a descent the fade-in covers. Something dropping onto the viewer's own z-level is fully
     ///         transparent as it comes through the ceiling and fully opaque once this far down.
     /// </summary>
-    private const float FadeInHeight = 0.5f;
+    /// <remarks>
+    ///     Public so that the gap passes in <see cref="Content.Client.Viewport.ScalingViewport"/> fade over
+    ///         the same distance: a platform coming down a shaft and a crate falling down the same shaft
+    ///         appearing at different heights would read as a bug in one of them.
+    /// </remarks>
+    public const float FadeInHeight = 0.5f;
 
     public override void Initialize()
     {

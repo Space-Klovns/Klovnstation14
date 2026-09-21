@@ -19,6 +19,8 @@ public abstract partial class SharedKsZLevelGapSystem : EntitySystem
     [Dependency] private EntityQuery<MapComponent> _mapQuery = default!;
     [Dependency] protected EntityQuery<KsZLevelGapComponent> GapQuery = default!;
 
+    private readonly List<Entity<KsZLevelGapComponent>> _sliceGaps = [];
+
     /// <summary>
     ///     Catches anything falling through a z-level onto a grid that is part way up the gap.
     /// </summary>
@@ -88,6 +90,8 @@ public abstract partial class SharedKsZLevelGapSystem : EntitySystem
 
         entity.Comp.Progress = progress;
 
+        RebuildSliceDepths(entity.Comp.LowerZLevel);
+
         // Dirtied on the client as well, though nothing here can mispredict: progress is recomputed from the
         //      clock every tick rather than integrated, so restoring the last server state and recomputing
         //      lands on the same number either way. It is kept because it costs nothing and it is what the
@@ -97,13 +101,48 @@ public abstract partial class SharedKsZLevelGapSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Fills the list with every gap anchored to a z-level, ascending by how far up the gap they sit.
+    ///     Recomputes how tall a slice of air each gap above a z-level owns.
     /// </summary>
     /// <remarks>
-    ///     Only the renderer wants this - everything else asks stack questions and is answered about the
-    ///         anchor. There is no by-anchor index because there is no population to index: a gap exists only
-    ///         while something is actually crossing, so the query holds a handful of entries at most.
+    ///     The airspace above a z-level is divided between the things crossing it. A gap owns everything
+    ///         from its own plane up to whatever is next above it - the next gap, or the underside of the
+    ///         z-level above. Writing that into the gap map's own <see cref="KsZLevelComponent.Depth"/> is
+    ///         what lets a fall through that airspace be an ordinary fall: the integration, the sprite
+    ///         compensation and the render depth all read Depth and none of them need to know a gap is
+    ///         involved.
+    ///     Recomputed for the whole anchor whenever any one of them moves, because a platform rising past
+    ///         another changes how much air is left above it.
     /// </remarks>
+    public void RebuildSliceDepths(EntityUid anchorUid)
+    {
+        if (!_zLevelQuery.TryGetComponent(anchorUid, out var anchorComponent))
+            return;
+
+        var totalDepth = MathF.Max(anchorComponent.Depth, KsZLevelSystem.MinimumDepth);
+
+        GetGapsAnchoredTo(anchorUid, _sliceGaps);
+
+        for (var index = 0; index < _sliceGaps.Count; index++)
+        {
+            var gapEntity = _sliceGaps[index];
+
+            // Ascending by progress, so the ceiling of this slice is the next one up, or the z-level above.
+            var ceiling = index + 1 < _sliceGaps.Count
+                ? GetPlaneAltitude(_sliceGaps[index + 1])
+                : totalDepth;
+
+            _zLevelSystem.SetDepth(gapEntity.Owner, ceiling - GetPlaneAltitude(gapEntity));
+        }
+    }
+
+    /// <summary>
+    ///     How far above its anchor's floor plane a gap sits, in z-levels.
+    /// </summary>
+    public static float GetPlaneAltitude(Entity<KsZLevelGapComponent> entity)
+    {
+        return entity.Comp.Progress * entity.Comp.TotalDepth;
+    }
+
     /// <summary>
     ///     Whether anything is currently crossing the gap above a z-level.
     /// </summary>
@@ -125,6 +164,13 @@ public abstract partial class SharedKsZLevelGapSystem : EntitySystem
         return false;
     }
 
+    /// <summary>
+    ///     Fills the list with every gap anchored to a z-level, ascending by how far up the gap they sit.
+    /// </summary>
+    /// <remarks>
+    ///     There is no by-anchor index because there is no population to index: a gap exists only while
+    ///         something is actually crossing, so the query holds a handful of entries at most.
+    /// </remarks>
     /// <param name="gapEntities">List to operate on. Cleared first.</param>
     public void GetGapsAnchoredTo(EntityUid anchorUid, List<Entity<KsZLevelGapComponent>> gapEntities)
     {

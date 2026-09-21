@@ -86,13 +86,20 @@ public sealed partial class KsZLevelGapSystem : SharedKsZLevelGapSystem
         }
 
         // A gap is on no z-level, so KsZLevelPvsSystem's "mirror the level below the player" never reaches
-        //      it and the grid would simply vanish for everyone not standing on it. A global override
-        //      covers an entity's children as well as the entity itself, so the platform arrives complete -
-        //      walls, lights and passengers - rather than as a bare hull.
+        //      it and nothing here would be sent to anyone not standing on it.
+        // The override goes on the map rather than on the grid. PvsSystem walks an override's children
+        //      recursively, so overriding the map covers the platform, everything riding it, and anything
+        //      falling past it - all of which are children of the map, directly or otherwise. Overriding
+        //      the grid instead covers only the grid's own subtree, which leaves a falling entity a sibling
+        //      of the platform and so never transmitted at all.
         // Global rather than per-session, at the cost of sending a crossing to every client rather than to
-        //      the ones who could see it. A platform is small and a gap lasts one leg, and the alternative
-        //      is re-deciding who can see it every tick for the length of the ride.
-        _pvsOverrideSystem.AddGlobalOverride(gridUid);
+        //      the ones who could see it. A gap holds a platform and lasts one leg, and the alternative is
+        //      re-deciding who can see it every tick for the length of the ride.
+        _pvsOverrideSystem.AddGlobalOverride(gapUid);
+
+        // Sizes the slice of airspace this gap owns, which is what lets a fall through it be an ordinary
+        //      fall rather than a special case.
+        RebuildSliceDepths(lowerZLevelEntity.Owner);
 
         gapEntity = (gapUid, gapComponent);
         return true;
@@ -112,8 +119,6 @@ public sealed partial class KsZLevelGapSystem : SharedKsZLevelGapSystem
             return false;
         }
 
-        _pvsOverrideSystem.RemoveGlobalOverride(gridUid);
-
         var moved = TryMoveGridToMap(gridUid, destinationEntity.Owner);
         DestroyGap(entity);
 
@@ -125,14 +130,18 @@ public sealed partial class KsZLevelGapSystem : SharedKsZLevelGapSystem
     /// </summary>
     public void DestroyGap(Entity<KsZLevelGapComponent> entity)
     {
-        if (entity.Comp.PrimaryGrid is { } gridUid && !TerminatingOrDeleted(gridUid))
-            _pvsOverrideSystem.RemoveGlobalOverride(gridUid);
-
         if (TerminatingOrDeleted(entity.Owner))
             return;
 
+        _pvsOverrideSystem.RemoveGlobalOverride(entity.Owner);
+
         EvacuateGap(entity);
+
+        var anchorUid = entity.Comp.LowerZLevel;
         Del(entity.Owner);
+
+        // Whatever is left crossing this airspace now owns the air this one was using.
+        RebuildSliceDepths(anchorUid);
     }
 
     /// <summary>

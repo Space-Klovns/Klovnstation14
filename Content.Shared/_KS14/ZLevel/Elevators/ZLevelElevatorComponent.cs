@@ -1,3 +1,4 @@
+using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 
 namespace Content.Shared._KS14.ZLevel.Elevators;
@@ -66,6 +67,48 @@ public sealed partial class ZLevelElevatorComponent : Component
     /// </remarks>
     [DataField]
     public TimeSpan DwellTime = TimeSpan.FromSeconds(4);
+
+    /// <summary>
+    ///     Played once as the elevator sets off from a standstill.
+    /// </summary>
+    /// <remarks>
+    ///     Once per journey rather than once per leg: a lift climbing three floors sets off once and passes
+    ///         two of them without stopping.
+    ///     These three have defaults, unlike most sounds, because an elevator is made out of an existing grid
+    ///         by the zlevel_elevator command rather than spawned from a prototype - so there is no yaml for
+    ///         anyone to set them in, and a null default would mean every elevator ever made is silent. They
+    ///         are stand-ins from the existing machine sounds; replace them once a shaft has its own.
+    /// </remarks>
+    [DataField]
+    public SoundSpecifier? StartSound = new SoundPathSpecifier("/Audio/Machines/blastdoor.ogg");
+
+    /// <summary>
+    ///     Played once as the elevator comes to rest, whether at a floor it was called to or because it ran
+    ///         out of places to go.
+    /// </summary>
+    [DataField]
+    public SoundSpecifier? StopSound = new SoundPathSpecifier("/Audio/Machines/blastdoor.ogg");
+
+    /// <summary>
+    ///     Looped for as long as the elevator is moving, from the middle of its grid.
+    /// </summary>
+    /// <remarks>
+    ///     Parented to the grid rather than played at a position, so it rides along - including across the
+    ///         map change onto a gap and off it again, which happens twice a leg.
+    /// </remarks>
+    [DataField]
+    public SoundSpecifier? MovementSound = new SoundPathSpecifier("/Audio/Ambience/Objects/engine_hum.ogg");
+
+    /// <summary>
+    ///     The looping <see cref="MovementSound"/> currently playing, if any.
+    /// </summary>
+    /// <remarks>
+    ///     Not a DataField and not networked: an audio stream is this round's, and the server is what decides
+    ///         who hears it.
+    /// </remarks>
+    [ViewVariables]
+    [Access(typeof(SharedZLevelElevatorSystem))]
+    public EntityUid? MovementAudioUid;
 
     /// <summary>
     ///     The z-levels the elevator has been called to and has not served yet.
