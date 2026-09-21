@@ -51,6 +51,93 @@ public sealed partial class KsZLevelSystem : EntitySystem
     }
 
     /// <summary>
+    ///     The z-level directly below this one, if it has one.
+    /// </summary>
+    public bool TryGetZLevelBelow(Entity<KsZLevelComponent?> entity, [NotNullWhen(true)] out Entity<KsZLevelComponent>? belowEntity)
+    {
+        belowEntity = null;
+        if (!_zLevelQuery.Resolve(ref entity, logMissing: false))
+            return false;
+
+        if (entity.Comp!.Node?.Previous is not { } belowNode)
+            return false;
+
+        belowEntity = belowNode.Value;
+        return true;
+    }
+
+    /// <summary>
+    ///     The z-level one step from this one in the given direction, if it has one.
+    /// </summary>
+    /// <param name="rising">Up the stack when true, down it when false.</param>
+    public bool TryGetAdjacentZLevel(
+        Entity<KsZLevelComponent?> entity,
+        bool rising,
+        [NotNullWhen(true)] out Entity<KsZLevelComponent>? adjacentEntity)
+    {
+        return rising
+            ? TryGetZLevelAbove(entity, out adjacentEntity)
+            : TryGetZLevelBelow(entity, out adjacentEntity);
+    }
+
+    /// <summary>
+    ///     Fills the provided list with every z-level in this one's stack, ascending, including this one.
+    /// </summary>
+    /// <remarks>
+    ///     The stack itself is behind this system's <see cref="AccessAttribute"/>, so this is how anything
+    ///         else - an elevator enumerating the floors it can reach, say - asks what the whole stack is
+    ///         without being handed the live <see cref="LinkedList{T}"/> it could then mutate.
+    /// </remarks>
+    /// <param name="stackEntities">List to operate on. Cleared first.</param>
+    /// <returns>Whether <paramref name="entity"/> is a z-level at all.</returns>
+    public bool TryGetStack(Entity<KsZLevelComponent?> entity, List<Entity<KsZLevelComponent>> stackEntities)
+    {
+        stackEntities.Clear();
+
+        if (!_zLevelQuery.Resolve(ref entity, logMissing: false))
+            return false;
+
+        for (var node = entity.Comp!.AssociatedStack.First; node != null; node = node.Next)
+            stackEntities.Add(node.Value);
+
+        return true;
+    }
+
+    /// <summary>
+    ///     How far up its own stack this z-level sits, counting the bottom-most as zero.
+    /// </summary>
+    /// <remarks>
+    ///     This is what a floor "number" is: there is no stored index anywhere, only position in the list,
+    ///         so anything showing floors to a player has to count.
+    /// </remarks>
+    /// <returns>-1 if the entity is not a z-level.</returns>
+    public int GetStackIndex(Entity<KsZLevelComponent?> entity)
+    {
+        if (!_zLevelQuery.Resolve(ref entity, logMissing: false))
+            return -1;
+
+        var index = 0;
+        for (var node = entity.Comp!.Node?.Previous; node != null; node = node.Previous)
+            index++;
+
+        return index;
+    }
+
+    /// <summary>
+    ///     Whether the two z-levels are members of the same stack.
+    /// </summary>
+    public bool AreInSameStack(Entity<KsZLevelComponent?> entity, Entity<KsZLevelComponent?> otherEntity)
+    {
+        if (!_zLevelQuery.Resolve(ref entity, logMissing: false) ||
+            !_zLevelQuery.Resolve(ref otherEntity, logMissing: false))
+            return false;
+
+        // Two stacks that hold the same members but are different objects are not the same stack, so this is
+        //      deliberately a reference comparison rather than a Contains.
+        return ReferenceEquals(entity.Comp!.AssociatedStack, otherEntity.Comp!.AssociatedStack);
+    }
+
+    /// <summary>
     ///     Whether the z-level floor plane on this map is solid at this world position.
     /// </summary>
     /// <remarks>

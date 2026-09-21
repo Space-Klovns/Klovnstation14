@@ -1,0 +1,32 @@
+- type: entity
+  parent: BaseComputerAiAccess
+  id: KsComputerElevator
+  name: elevator controller
+  description: Calls a z-level elevator to a floor, and shows where it currently is.
+  components:
+  - type: Computer
+    board: KsElevatorControllerCircuitboard
+  # No shaftId: an unlabelled controller drives whichever unlabelled elevator in its own z-level stack is
+  #   nearest, which is what a single shaft wants and costs a mapper nothing. Set one in a map only where a
+  #   stack holds more than one lift.
+  - type: ZLevelElevatorController
+  - type: ActivatableUI
+    key: enum.ZLevelElevatorControllerUiKey.Key
+  - type: UserInterface
+    interfaces:
+      enum.ZLevelElevatorControllerUiKey.Key:
+        type: ZLevelElevatorControllerBoundUserInterface
+      enum.WiresUiKey.Key:
+        type: WiresBoundUserInterface
+  - type: Sprite
+    layers:
+    - map: ["computerLayerBody"]
+      state: computer
+    - map: ["computerLayerKeyboard"]
+      state: generic_keyboard
+    - map: ["computerLayerScreen"]
+      state: shuttle
+    - map: ["computerLayerKeys"]
+      state: generic_keys
+    - map: [ "enum.WiresVisualLayers.MaintenancePanel" ]
+      state: generic_panel_open

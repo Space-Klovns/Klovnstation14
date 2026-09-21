@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Content.Client._KS14.ZLevel.Light;
 using Content.Shared._KS14.ZLevel;
+using Content.Shared._KS14.ZLevel.Elevators;
 using Content.Shared._KS14.ZLevel.Physics;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
@@ -467,12 +468,22 @@ namespace Content.Client.Viewport
             //      inheriting the player's transit height.
             if (_eye == null ||
                 _playerManager.LocalEntity is not { } localUid ||
-                !_entityManager.TryGetComponent<KsZLevelTransitComponent>(localUid, out var transitComponent) ||
                 !_entityManager.TryGetComponent<TransformComponent>(localUid, out var transformComponent) ||
                 transformComponent.MapID != _eye.Position.MapId)
                 return 0f;
 
-            return Math.Clamp(transitComponent.Height, 0f, 1f);
+            if (_entityManager.TryGetComponent<KsZLevelTransitComponent>(localUid, out var transitComponent))
+                return Math.Clamp(transitComponent.Height, 0f, 1f);
+
+            // Riding an elevator is being carried by the grid rather than falling, so the viewer has no
+            //      transit component of their own - the altitude is the grid's. Read through the same
+            //      accessor so that the world below recedes exactly as continuously on a lift as it does in
+            //      a fall, instead of the ride popping a whole z-level at every floor.
+            if (transformComponent.GridUid is { } gridUid &&
+                _entityManager.TryGetComponent<ActiveZLevelElevatorComponent>(gridUid, out var elevatorComponent))
+                return Math.Clamp(elevatorComponent.Height, 0f, 1f);
+
+            return 0f;
         }
 
         /// <summary>

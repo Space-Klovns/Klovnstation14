@@ -1,5 +1,6 @@
 using System.Numerics;
 using Content.Shared._KS14.ZLevel;
+using Content.Shared._KS14.ZLevel.Elevators;
 using Content.Shared._KS14.ZLevel.Physics;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
@@ -36,6 +37,7 @@ public sealed partial class KsZLevelTransitSpriteSystem : EntitySystem
     [Dependency] private SpriteSystem _spriteSystem = default!;
     [Dependency] private TransformSystem _transformSystem = default!;
 
+    [Dependency] private EntityQuery<ActiveZLevelElevatorComponent> _elevatorQuery = default!;
     [Dependency] private EntityQuery<KsZLevelComponent> _zLevelQuery = default!;
     [Dependency] private EntityQuery<KsZLevelTransitComponent> _transitQuery = default!;
     [Dependency] private EntityQuery<KsZLevelTransitSpriteComponent> _transitSpriteQuery = default!;
@@ -180,7 +182,18 @@ public sealed partial class KsZLevelTransitSpriteSystem : EntitySystem
             return null;
 
         if (_transitQuery.TryGetComponent(viewerUid, out var viewerTransitComponent))
+        {
             viewerDepth = viewerTransitComponent.Height * viewerZLevelEntity.Value.Comp.Depth;
+            return viewerZLevelEntity;
+        }
+
+        // A viewer riding an elevator is being carried rather than falling, so the altitude is the grid's
+        //      and not their own. Read here as well as in ScalingViewport.GetViewerTransitHeight, because
+        //      the two have to agree: that one decides what depth the passes below are drawn at, and this
+        //      one decides what depth the sprites in them are compensated against.
+        if (Transform(viewerUid).GridUid is { } gridUid &&
+            _elevatorQuery.TryGetComponent(gridUid, out var elevatorComponent))
+            viewerDepth = elevatorComponent.Height * viewerZLevelEntity.Value.Comp.Depth;
 
         return viewerZLevelEntity;
     }
