@@ -58,8 +58,12 @@ public sealed partial class ZLevelElevatorSystem
 
         // Already here and not going anywhere, so there is nothing to call. Said out loud rather than
         //      silently ignored, because a button that does nothing reads as a broken one.
+        // Travelling rather than merely active, so that a lift sitting out its dwell at this very floor
+        //      counts as here. Treating a dwell as "still on its way" made the button queue a call the
+        //      elevator would serve by dwelling at the same floor all over again, which to the person
+        //      pressing it looks like the lift refusing to open.
         if (!entity.Comp.CallWhenPresent &&
-            !HasComp<ActiveZLevelElevatorComponent>(elevatorEntity.Value.Owner) &&
+            !IsTravelling(elevatorEntity.Value.Owner) &&
             TryGetElevatorZLevel(elevatorEntity.Value.Owner, out var elevatorZLevelEntity) &&
             elevatorZLevelEntity.Value.Owner == zLevelEntity.Value.Owner)
         {
@@ -158,7 +162,7 @@ public sealed partial class ZLevelElevatorSystem
                 [.. _floors],
                 GetNetEntity(reportedZLevelUid),
                 elevatorEntity.Value.Comp.Direction,
-                HasComp<ActiveZLevelElevatorComponent>(elevatorEntity.Value.Owner)
+                IsTravelling(elevatorEntity.Value.Owner)
             )
         );
     }

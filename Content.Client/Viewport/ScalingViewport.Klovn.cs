@@ -58,6 +58,22 @@ namespace Content.Client.Viewport
         private bool _drawGapLevels = true;
 
         /// <summary>
+        ///     How much of a crossing is left when the grid making it starts to fade in for the z-level it
+        ///         is arriving at, as a fraction of the whole gap.
+        /// </summary>
+        /// <remarks>
+        ///     Deliberately far later than the fade on a falling entity, and not the same number. A faller
+        ///         is one small sprite that wants picking out of the floor early; a gap pass is a
+        ///         full-screen composite over the z-level below it, so a platform visible for the whole of
+        ///         its descent means everyone under the shaft spends the ride looking at the underside of a
+        ///         lift rather than at the room they are in.
+        ///     Reaching exactly 1 at the end of the crossing is what makes the hand-off seamless: the
+        ///         instant the grid lands it stops being drawn by this pass and starts being drawn by the
+        ///         ordinary one for its new z-level, at full opacity either way.
+        /// </remarks>
+        private const float GapFadeInProgress = 0.1f;
+
+        /// <summary>
         ///     Held so the subscription can be taken back off again. A cvar's subscriber list is rooted for
         ///         the life of the process, so a handler closing over a viewport keeps that viewport - and
         ///         the render targets hanging off it - alive forever once the control is thrown away.
@@ -111,14 +127,13 @@ namespace Content.Client.Viewport
             //      feet on the floor, and the single pass would do. Except that this loop is the only thing
             //      that ever renders the z-level above, so bailing here is what made light from above arrive
             //      during a fall and then stop the moment it ended.
-            // The fourth is the same shape: a grid crossing the gap overhead is drawn by this loop and by
-            //      nothing else, so bailing leaves an elevator - and anything that has landed on top of one -
-            //      invisible for the whole of its descent to the bottom floor, and popping into existence
-            //      when it arrives.
+            // The fourth is the same shape: a grid arriving through the gap overhead is drawn by this loop
+            //      and by nothing else, so bailing leaves an elevator - and anything riding it - popping
+            //      into existence at the moment it lands instead of easing in over the end of its descent.
             if (_mapsToIterate.Count == 0 &&
                 viewerTransitHeight <= 0f &&
                 !WantsLightFromAbove(topMapUid.Value) &&
-                !(_drawGapLevels && _gapSystem.HasGapAnchoredTo(topMapUid.Value)))
+                !WantsGapPass(topMapUid.Value))
                 return false;
 
             // TryGetZLevelsBelow doesn't include the map we're on
@@ -282,14 +297,25 @@ namespace Content.Client.Viewport
                 var gapDepth = anchorDepth - gapComponent.Progress * gapComponent.TotalDepth;
 
                 // Coming down onto the viewer's own floor, a platform descends through a ceiling that is
-                //      never rendered, so it fades in rather than appearing out of nothing - exactly as
-                //      anything else falling onto that floor does, and over the same distance. Seen from a
-                //      z-level above, it is descending into a shaft already in view, so it stays opaque.
+                //      never rendered, so it fades in over the last stretch rather than appearing out of
+                //      nothing. Seen from a z-level above, it is descending into a shaft already in view,
+                //      so it stays opaque.
+                // Measured on how near the platform is to this floor plane rather than on which way it is
+                //      travelling, so the two directions are the same rule: one arriving fades in over the
+                //      end of its descent, and one setting off upwards fades out over the start of its
+                //      climb.
                 var modulate = Color.White;
                 if (anchorDepth <= 0f)
                 {
-                    modulate = Color.White.WithAlpha(
-                        Math.Clamp((1f - gapComponent.Progress) / KsZLevelTransitSpriteSystem.FadeInHeight, 0f, 1f));
+                    var nearness = (GapFadeInProgress - gapComponent.Progress) / GapFadeInProgress;
+                    var alpha = Math.Clamp(nearness, 0f, 1f);
+
+                    // Nothing to composite, and a full pass is the most expensive thing in this loop - so
+                    //      for the nine tenths of every crossing that are invisible, skip it outright.
+                    if (alpha <= 0f)
+                        continue;
+
+                    modulate = Color.White.WithAlpha(alpha);
                 }
 
                 _viewport!.ClearColor = null;
@@ -371,6 +397,33 @@ namespace Content.Client.Viewport
             return _lightBufferSystem.WantsLightFromAbove &&
                    _zLevelSystem.TryGetZLevelAbove(topMapUid, out var aboveEntity) &&
                    _entityManager.HasComponent<MapComponent>(aboveEntity.Value.Owner);
+        }
+
+        /// <summary>
+        ///     Whether anything crossing the gap over this z-level is near enough to it to be worth a pass.
+        /// </summary>
+        /// <remarks>
+        ///     Only asked about the viewer's own z-level, and only to decide whether the layered draw has to
+        ///         run at all when nothing else needs it - somebody on the bottom floor of a stack with an
+        ///         unlit ceiling has nothing else to layer. Since a crossing is invisible for all but the
+        ///         last <see cref="GapFadeInProgress"/> of itself, asking merely whether one exists would
+        ///         put that viewer on the expensive path for the whole of every ride and draw nothing extra
+        ///         for nine tenths of it.
+        /// </remarks>
+        private bool WantsGapPass(EntityUid anchorUid)
+        {
+            if (!_drawGapLevels)
+                return false;
+
+            _gapSystem.GetGapsAnchoredTo(anchorUid, _gapsToIterate);
+
+            foreach (var (_, gapComponent) in _gapsToIterate)
+            {
+                if (gapComponent.Progress < GapFadeInProgress)
+                    return true;
+            }
+
+            return false;
         }
 
         /// <summary>

@@ -139,27 +139,6 @@ public abstract partial class SharedKsZLevelGapSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Whether anything is currently crossing the gap above a z-level.
-    /// </summary>
-    /// <remarks>
-    ///     For the renderer, which has to decide whether the layered draw is worth running at all before it
-    ///         knows what is in it. A viewer at the bottom of a stack has nothing below them to layer, so the
-    ///         cheap single pass would otherwise be used - and a lift crossing overhead would be drawn
-    ///         nowhere.
-    /// </remarks>
-    public bool HasGapAnchoredTo(EntityUid anchorUid)
-    {
-        var enumerator = EntityQueryEnumerator<KsZLevelGapComponent>();
-        while (enumerator.MoveNext(out _, out var gapComponent))
-        {
-            if (gapComponent.LowerZLevel == anchorUid)
-                return true;
-        }
-
-        return false;
-    }
-
-    /// <summary>
     ///     Fills the list with every gap anchored to a z-level, ascending by how far up the gap they sit.
     /// </summary>
     /// <remarks>

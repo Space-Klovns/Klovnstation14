@@ -46,11 +46,13 @@ public sealed partial class KsZLevelTransitSpriteSystem : EntitySystem
     ///         transparent as it comes through the ceiling and fully opaque once this far down.
     /// </summary>
     /// <remarks>
-    ///     Public so that the gap passes in <see cref="Content.Client.Viewport.ScalingViewport"/> fade over
-    ///         the same distance: a platform coming down a shaft and a crate falling down the same shaft
-    ///         appearing at different heights would read as a bug in one of them.
+    ///     A whole grid crossing the same shaft deliberately does not use this - see
+    ///     <c>ScalingViewport.GapFadeInProgress</c>. A falling crate is a small sprite that wants to be
+    ///         picked out early; a platform is a full-screen pass over the floor below it, and showing one
+    ///         for the whole of its descent means looking at the underside of a lift instead of at the room
+    ///         you are standing in.
     /// </remarks>
-    public const float FadeInHeight = 0.5f;
+    private const float FadeInHeight = 0.5f;
 
     public override void Initialize()
     {

@@ -613,6 +613,101 @@ public sealed class KsZLevelElevatorTest : GameTest
                 "a call button has to bring the lift to the floor the button itself is on"));
     }
 
+    /// <summary>
+    ///     That an elevator sitting out its dwell at a floor does not still report itself as travelling.
+    /// </summary>
+    /// <remarks>
+    ///     A dwell keeps <see cref="ActiveZLevelElevatorComponent"/> attached, so "is the component there"
+    ///         answers yes for several seconds after the lift has physically arrived, opened its doors and
+    ///         crushed whatever was standing where it landed. Everything a player can see or press used to
+    ///         ask exactly that question, so for the length of every dwell the panel read "Descending"
+    ///         about a lift that was demonstrably parked, and a call button on that floor queued a call
+    ///         instead of saying it was already here.
+    ///     Pinned against the stop signal rather than against the state on its own, because the bug was
+    ///         never that the lift was in the wrong state - it was that two things disagreed. Once the
+    ///         doors have been told to open, nothing else may still be claiming the lift is on its way.
+    /// </remarks>
+    [Test]
+    public async Task TestDwellingAtAFloorDoesNotReportAsTravelling()
+    {
+        var shaft = await CreateShaft(2);
+        var elevatorUid = await CreateElevator(shaft, floor: 0);
+
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var elevatorSystem = entManager.System<ZLevelElevatorSystem>();
+        var deviceLinkSystem = entManager.System<DeviceLinkSystem>();
+        var listenerSystem = entManager.System<KsZLevelTestListenerSystem>();
+
+        listenerSystem.Reset();
+
+        await server.WaitPost(() =>
+        {
+            // Long enough that the dwell spans many ticks, so the sampling below lands inside it. The
+            //      reported symptom is precisely that this window is not instantaneous.
+            entManager.GetComponent<ZLevelElevatorComponent>(elevatorUid).DwellTime = TimeSpan.FromSeconds(2);
+
+            // Riding the lift, so the emitter resolves to the one it is standing on. Its stop port is what
+            //      an installation would hang its doors off.
+            var sourceUid = entManager.SpawnEntity("KsElevatorTestSignalSource", new EntityCoordinates(elevatorUid, 0.5f, 0.5f));
+            var sinkUid = entManager.SpawnEntity("KsElevatorTestSignalSink", new EntityCoordinates(elevatorUid, 0.5f, 0.5f));
+
+            deviceLinkSystem.SaveLinks(
+                null,
+                sourceUid,
+                sinkUid,
+                [("KsElevatorStopped", "Open"), ("KsElevatorMoving", "Close")]
+            );
+        });
+
+        await Pair.RunTicksSync(3);
+
+        // Called to the floor above rather than simply sent there: only a floor it was actually called to
+        //      earns a dwell, and the dwell is the whole of what is under test.
+        await server.WaitPost(() =>
+            elevatorSystem.TryCallToZLevel(
+                (elevatorUid, entManager.GetComponent<ZLevelElevatorComponent>(elevatorUid)),
+                shaft.ZLevels[1]));
+
+        var observedDwell = false;
+
+        for (var tick = 0; tick < 300; tick++)
+        {
+            await Pair.RunTicksSync(1);
+
+            var finished = false;
+
+            await server.WaitAssertion(() =>
+            {
+                if (!entManager.TryGetComponent<ActiveZLevelElevatorComponent>(elevatorUid, out var activeComponent))
+                {
+                    finished = true;
+                    return;
+                }
+
+                if (activeComponent.State != ZLevelElevatorState.Dwelling)
+                    return;
+
+                observedDwell = true;
+
+                Assert.That(MapOf(entManager, elevatorUid), Is.EqualTo(shaft.ZLevels[1]),
+                    "a dwelling lift is standing on a floor, not on a gap");
+
+                Assert.That(listenerSystem.SignalsReceived, Does.Contain("Open"),
+                    "the stop signal has already gone out by the time a dwell starts - the doors are opening");
+
+                Assert.That(elevatorSystem.IsTravelling(elevatorUid), Is.False,
+                    "so nothing may still report the lift as travelling: the panel says Descending over an open door, and a call button on this floor queues a call instead of saying it is already here");
+            });
+
+            if (finished)
+                break;
+        }
+
+        Assert.That(observedDwell, Is.True,
+            "the lift never dwelled, so this asserted nothing - it has to be called to a floor, not merely sent past one");
+    }
+
     [Test]
     public async Task TestSignalsOnDepartureAndOnStopping()
     {

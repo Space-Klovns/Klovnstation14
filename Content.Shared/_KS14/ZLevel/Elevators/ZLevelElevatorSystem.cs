@@ -24,6 +24,7 @@ public abstract partial class SharedZLevelElevatorSystem : EntitySystem
     [Dependency] private KsZLevelSystem _zLevelSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
+    [Dependency] private EntityQuery<ActiveZLevelElevatorComponent> _activeElevatorQuery = default!;
     [Dependency] private EntityQuery<KsZLevelComponent> _zLevelQuery = default!;
     [Dependency] private EntityQuery<MapGridComponent> _mapGridQuery = default!;
 
@@ -281,6 +282,23 @@ public abstract partial class SharedZLevelElevatorSystem : EntitySystem
 
         entity.Comp.ShaftId = shaftId;
         Dirty(entity);
+    }
+
+    /// <summary>
+    ///     Whether the elevator is actually crossing a gap right now.
+    /// </summary>
+    /// <remarks>
+    ///     Not the same question as whether it has an <see cref="ActiveZLevelElevatorComponent"/>, which is
+    ///         also attached for the dwell it spends sitting at a floor. Anything a player can see or press
+    ///         wants this one: a lift that has arrived, opened up and crushed whatever was underneath it has
+    ///         plainly stopped, and a panel still reading "descending" for the length of the dwell is the
+    ///         panel being wrong. "Busy, do not send it anywhere" is the other question, and that one is
+    ///         still the component.
+    /// </remarks>
+    public bool IsTravelling(EntityUid uid)
+    {
+        return _activeElevatorQuery.TryGetComponent(uid, out var activeComponent) &&
+               activeComponent.State == ZLevelElevatorState.Travelling;
     }
 
     /// <summary>

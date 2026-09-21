@@ -30,3 +30,25 @@
       state: generic_keys
     - map: [ "enum.WiresVisualLayers.MaintenancePanel" ]
       state: generic_panel_open
+
+# Mapping-only, and deliberately boardless: there is nothing to print, nothing to build and nothing to
+#   deconstruct into. It exists so a mapper has somewhere to hang the elevator's device links when the
+#   obvious hosts will not do - the doors are on the landings rather than on the lift, say, or a whole
+#   bank of shutters should answer to one shaft.
+# DeviceLinkSource is declared rather than left to ZLevelElevatorSignalComponent's own EnsureSourcePorts,
+#   which adds the component and both ports at ComponentInit. Left implicit, a freshly spawned one
+#   serialises with a component its prototype never mentioned, which is what PrototypeSaveTest objects to.
+- type: entity
+  parent: BaseComputer
+  id: KsComputerElevatorSignaller
+  name: elevator signaller
+  description: Reports when the elevator sets off and when it arrives, for anything wired to listen.
+  components:
+  # No shaftId, the same as the controller and the call button: an unlabelled signaller follows whichever
+  #   unlabelled elevator in its own z-level stack is nearest. Set one in a map only where a stack holds
+  #   more than one lift.
+  - type: ZLevelElevatorSignal
+  - type: DeviceLinkSource
+    ports:
+    - KsElevatorStopped
+    - KsElevatorMoving
