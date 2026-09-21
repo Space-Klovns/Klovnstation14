@@ -6,6 +6,7 @@ using Content.Server._KS14.ZLevel.Elevators;
 using Content.Server.DeviceLinking.Systems;
 using Content.Shared._KS14.ZLevel;
 using Content.Shared._KS14.ZLevel.Elevators;
+using Content.Shared._KS14.ZLevel.Transit;
 using Content.Shared.Interaction;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -478,6 +479,13 @@ public sealed class KsZLevelElevatorTest : GameTest
             await server.WaitPost(() =>
             {
                 var mapUid = MapOf(entManager, elevatorUid);
+
+                // The floor under the lift, which mid-crossing is the gap's anchor rather than the gap
+                //      itself. What is under test is the order of the floors, and a lift on its way
+                //      between two of them has not reached the next one yet.
+                if (entManager.TryGetComponent<KsZLevelGapComponent>(mapUid, out var gapComponent))
+                    mapUid = gapComponent.LowerZLevel;
+
                 if (visited.Count == 0 || visited[^1] != mapUid)
                     visited.Add(mapUid);
 

@@ -69,6 +69,20 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.zlevel.light_leak_enabled", true, CVar.CLIENTONLY | CVar.ARCHIVE);
 
     /// <summary>
+    ///     Draws grids crossing the gap between two z-levels - an elevator between floors, say - for viewers
+    ///         standing on other z-levels.
+    /// </summary>
+    /// <remarks>
+    ///     One extra full render pass per grid in flight, for every viewer above it, which is why this can be
+    ///         turned off. Off, such a grid is simply not drawn until it lands, the way it was before gap maps
+    ///         existed. A viewer riding one is unaffected either way: they are standing on the gap map, so it
+    ///         is drawn as their own z-level.
+    /// </remarks>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<bool> ZLevelDrawGapLevels =
+        CVarDef.Create("klovn.zlevel.draw_gap_levels", true, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+    /// <summary>
     ///     Which way light is carried between z-levels: one of
     ///         <see cref="ZLevel.Light.KsZLevelLightLeakMode"/>, case-insensitively.
     /// </summary>

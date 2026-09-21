@@ -8,8 +8,6 @@
   name: elevator call button
   description: Calls an elevator to this floor.
   components:
-  - type: WallMount
-    arc: 360
   - type: StationAiWhitelist
   - type: Sprite
     drawdepth: SmallObjects

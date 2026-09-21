@@ -68,8 +68,8 @@ public abstract partial class SharedZLevelElevatorSystem : EntitySystem
     ///     Brings the elevator to a halt where it stands and forgets everything it was called to.
     /// </summary>
     /// <remarks>
-    ///     Does not undo a leg in progress - there is no partial z-level for a grid to be left on - so an
-    ///         elevator stopped mid-flight finishes crossing and then stays put.
+    ///     An elevator halted mid-gap cannot be left there - a gap map exists only for the length of a leg,
+    ///         and nobody would ever reach it - so it lands on whichever floor it was nearer to.
     /// </remarks>
     public void StopElevator(Entity<ZLevelElevatorComponent> entity)
     {
@@ -81,8 +81,15 @@ public abstract partial class SharedZLevelElevatorSystem : EntitySystem
             return;
 
         RemComp<ActiveZLevelElevatorComponent>(entity.Owner);
+        AbortLeg(entity);
 
-        if (TryGetElevatorZLevel(entity.Owner, out var zLevelEntity))
+        if (TerminatingOrDeleted(entity.Owner))
+            return;
+
+        FlattenArrival(entity);
+
+        if (!TerminatingOrDeleted(entity.Owner) &&
+            TryGetElevatorZLevel(entity.Owner, out var zLevelEntity))
             RaiseStopped(entity, zLevelEntity.Value);
     }
 
@@ -209,9 +216,8 @@ public abstract partial class SharedZLevelElevatorSystem : EntitySystem
     ///     Sends the elevator across one gap, up or down.
     /// </summary>
     /// <remarks>
-    ///     A descending leg crosses onto the z-level below immediately and then travels down through it,
-    ///         because a grid in a gap is always parented to the lower of the two z-levels. A rising one
-    ///         stays where it is and crosses at the far end.
+    ///     Both directions are the same: the grid is lifted onto a gap map between the two z-levels, travels
+    ///         through it, and lands on the far side when the leg's time is up.
     /// </remarks>
     /// <returns>Whether the elevator is now travelling.</returns>
     private bool TryStartLeg(Entity<ZLevelElevatorComponent> entity, bool rising)
@@ -248,16 +254,18 @@ public abstract partial class SharedZLevelElevatorSystem : EntitySystem
         if (TerminatingOrDeleted(entity.Owner))
             return false;
 
-        // The gap belongs to the lower of the two z-levels, so descending crosses first and then travels.
-        var gapZLevelEntity = rising ? currentZLevelEntity.Value : targetZLevelEntity.Value;
-        if (!rising && !TryCrossToZLevel(entity, targetZLevelEntity.Value))
+        // A gap is named by the z-level below it, whichever way something is crossing it.
+        var lowerZLevelEntity = rising ? currentZLevelEntity.Value : targetZLevelEntity.Value;
+        var upperZLevelEntity = rising ? targetZLevelEntity.Value : currentZLevelEntity.Value;
+
+        if (!TryEnterGap(entity, lowerZLevelEntity, upperZLevelEntity, rising))
             return false;
 
         if (TerminatingOrDeleted(entity.Owner))
             return false;
 
         var duration = TimeSpan.FromSeconds(
-            Math.Max(gapZLevelEntity.Comp.Depth, KsZLevelSystem.MinimumDepth) * entity.Comp.SecondsPerDepth);
+            Math.Max(lowerZLevelEntity.Comp.Depth, KsZLevelSystem.MinimumDepth) * entity.Comp.SecondsPerDepth);
 
         var curTime = _gameTiming.CurTime;
         var activeComponent = EnsureComp<ActiveZLevelElevatorComponent>(entity.Owner);
@@ -266,6 +274,8 @@ public abstract partial class SharedZLevelElevatorSystem : EntitySystem
         activeComponent.StartTime = curTime;
         activeComponent.EndTime = curTime + duration;
         activeComponent.Height = rising ? 0f : 1f;
+        activeComponent.DepartedZLevel = departedUid;
+        activeComponent.TargetZLevel = targetZLevelEntity.Value.Owner;
         Dirty(entity.Owner, activeComponent);
 
         return true;

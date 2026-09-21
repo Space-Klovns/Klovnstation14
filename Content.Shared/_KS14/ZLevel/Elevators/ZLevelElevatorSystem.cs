@@ -10,16 +10,12 @@ namespace Content.Shared._KS14.ZLevel.Elevators;
 ///     Grids that carry themselves up and down a z-level stack, stopping at the floors they are called to.
 /// </summary>
 /// <remarks>
-///     An elevator crossing a gap between two z-levels is always parented to the <em>lower</em> of the two,
-///         with <see cref="ActiveZLevelElevatorComponent.Height"/> as its position within that gap. So going
-///         up means staying put until the far side is reached, and going down means crossing onto the level
-///         below first and then descending through it. That asymmetry is not a quirk of this system - it is
-///         the only arrangement the renderer can draw, because a viewport only draws the levels at or below
-///         the viewer, so "below my own floor" is not a position anything can be rendered at.
-///     Everything that actually moves a grid lives behind <see cref="TryCrossToZLevel"/>, so that the
-///         transit-map approach - a throwaway map per gap, which would let a grid be seen mid-flight from
-///         another level - can replace it later without touching the queue, the UI, the buttons or the
-///         signals.
+///     An elevator crossing a gap between two z-levels rides a map of its own for the length of the leg - see
+///         <see cref="Transit.KsZLevelGapComponent"/>. Both directions are therefore the same three steps:
+///         enter the gap, travel through it, land on the far side. The elevator is never parented to a
+///         z-level it is not actually standing on, so there is no asymmetry between going up and going down.
+///     Everything that moves a grid lives behind the seam in the Movement region below, which is why this
+///         file did not have to change when the movement approach did.
 /// </remarks>
 public abstract partial class SharedZLevelElevatorSystem : EntitySystem
 {
@@ -88,6 +84,10 @@ public abstract partial class SharedZLevelElevatorSystem : EntitySystem
         var progress = GetLegProgress(activeComponent, curTime);
         activeComponent.Height = activeComponent.Rising ? progress : 1f - progress;
 
+        // Run on both sides. The client is driving the same clock off the same replicated timestamps, so
+        //      this is what makes the ride move every frame instead of stepping once per server state.
+        SetLegProgress((entity.Owner, entity.Comp1), activeComponent.Height);
+
         if (progress < 1f)
             return;
 
@@ -124,43 +124,34 @@ public abstract partial class SharedZLevelElevatorSystem : EntitySystem
     private void FinishLeg(Entity<ZLevelElevatorComponent, ActiveZLevelElevatorComponent> entity)
     {
         var rising = entity.Comp2.Rising;
+        var departedUid = entity.Comp2.DepartedZLevel;
 
-        if (!TryGetElevatorZLevel(entity.Owner, out var zLevelEntity))
+        // The target was recorded at departure, so a stack relinked mid-flight cannot land this somewhere
+        //      nobody sent it. If it has stopped being a z-level, there is nothing left to arrive at.
+        if (!_zLevelQuery.TryGetComponent(entity.Comp2.TargetZLevel, out var targetZLevelComponent))
         {
             StopElevator((entity.Owner, entity.Comp1));
             return;
         }
 
-        var departedZLevelEntity = zLevelEntity.Value;
-        var arrivedZLevelEntity = zLevelEntity.Value;
+        Entity<KsZLevelComponent> arrivedZLevelEntity = (entity.Comp2.TargetZLevel, targetZLevelComponent);
 
-        // A descending leg crossed onto its destination when it began, and has been travelling down through
-        //      it ever since, so only a rising one still has a boundary left to cross.
-        if (rising)
+        if (!TryLeaveGap((entity.Owner, entity.Comp1), arrivedZLevelEntity))
         {
-            if (!_zLevelSystem.TryGetZLevelAbove(departedZLevelEntity!, out var aboveEntity) ||
-                !TryCrossToZLevel((entity.Owner, entity.Comp1), aboveEntity.Value))
-            {
-                // The stack changed under us mid-leg, or the move was refused outright. Stopping where we
-                //      stand beats carrying on towards a floor that is no longer there.
-                StopElevator((entity.Owner, entity.Comp1));
-                return;
-            }
-
-            arrivedZLevelEntity = aboveEntity.Value;
+            StopElevator((entity.Owner, entity.Comp1));
+            return;
         }
 
         RemComp<ActiveZLevelElevatorComponent>(entity.Owner);
 
-        // Run again on arrival, and not only on the map change: a descending elevator enters its destination
-        //      z-level at the *start* of its leg, so anything that stepped into the shaft while it was on
-        //      its way down has not been swept yet.
+        // Only on landing: the gap the elevator has spent the leg on is a map of its own with nothing else
+        //      on it, so there has never been anything to sweep until now.
         FlattenArrival((entity.Owner, entity.Comp1));
 
         if (TerminatingOrDeleted(entity.Owner))
             return;
 
-        var arrivedEvent = new ZLevelElevatorArrivedEvent(departedZLevelEntity.Owner, arrivedZLevelEntity.Owner, rising);
+        var arrivedEvent = new ZLevelElevatorArrivedEvent(departedUid, arrivedZLevelEntity.Owner, rising);
         RaiseLocalEvent(entity.Owner, ref arrivedEvent);
 
         if (TerminatingOrDeleted(entity.Owner))
@@ -180,18 +171,56 @@ public abstract partial class SharedZLevelElevatorSystem : EntitySystem
     #region Movement
 
     /// <summary>
-    ///     Moves the elevator's grid onto an adjacent z-level, and everything that entails.
+    ///     Lifts the elevator's grid off a z-level and onto a gap map between two of them.
     /// </summary>
     /// <remarks>
-    ///     Server-only work - it gibs, and it deletes tiles - so the shared implementation refuses and the
-    ///         client simply waits for the transform and component state saying it happened. This and
-    ///         <see cref="FlattenArrival"/> are the only two places an elevator's grid is touched, which is
-    ///         what makes the movement approach swappable.
+    ///     Server-only work - it makes a map and reparents a grid - so the shared implementation refuses and
+    ///         the client simply waits for the transform and component state saying it happened. These four
+    ///         methods are the only places an elevator's grid is touched, which is what let the movement
+    ///         approach be replaced without the queue, the UI, the buttons or the signals noticing.
     /// </remarks>
-    /// <returns>Whether the grid is now on <paramref name="targetZLevel"/>.</returns>
-    protected virtual bool TryCrossToZLevel(Entity<ZLevelElevatorComponent> entity, Entity<KsZLevelComponent> targetZLevel)
+    /// <param name="rising">Which end of the gap the elevator starts at.</param>
+    /// <returns>Whether the grid is now crossing the gap.</returns>
+    protected virtual bool TryEnterGap(
+        Entity<ZLevelElevatorComponent> entity,
+        Entity<KsZLevelComponent> lowerZLevel,
+        Entity<KsZLevelComponent> upperZLevel,
+        bool rising)
     {
         return false;
+    }
+
+    /// <summary>
+    ///     Sets the elevator's grid down on a z-level, and tears down the gap it was crossing.
+    /// </summary>
+    /// <returns>Whether the grid is now on <paramref name="targetZLevel"/>.</returns>
+    protected virtual bool TryLeaveGap(Entity<ZLevelElevatorComponent> entity, Entity<KsZLevelComponent> targetZLevel)
+    {
+        return false;
+    }
+
+    /// <summary>
+    ///     Abandons a leg partway through, landing the elevator on whichever floor it was nearer to.
+    /// </summary>
+    /// <remarks>
+    ///     A no-op for an elevator that is not on a gap, so the paths that stop an elevator do not each have
+    ///         to work out whether it happened to be mid-flight.
+    /// </remarks>
+    protected virtual void AbortLeg(Entity<ZLevelElevatorComponent> entity)
+    {
+    }
+
+    /// <summary>
+    ///     Moves the elevator to a new position within the gap it is crossing.
+    /// </summary>
+    /// <remarks>
+    ///     Runs on both sides, unlike the rest of the seam: the gap map and its progress are replicated, and
+    ///         a client that only moved the elevator when a server state arrived would show the ride
+    ///         stepping rather than travelling.
+    /// </remarks>
+    /// <param name="progress">0 at the lower z-level's floor plane, 1 at the upper one's.</param>
+    protected virtual void SetLegProgress(Entity<ZLevelElevatorComponent> entity, float progress)
+    {
     }
 
     /// <summary>

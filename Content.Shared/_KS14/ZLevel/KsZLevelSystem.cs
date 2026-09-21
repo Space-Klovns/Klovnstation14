@@ -94,6 +94,17 @@ public sealed partial class KsZLevelSystem : EntitySystem
     /// </returns>
     public bool TryGetZLevelsBelow(Entity<KsZLevelComponent?> entity, List<Entity<KsZLevelComponent>> entitiesBelow)
     {
+        // Everything under a gap is everything under its anchor, plus the anchor itself - a gap sits above
+        //      that floor plane, so the floor plane is one of the things below it.
+        if (TryResolveGapAnchor(entity.Owner, out var anchorEntity, out _))
+        {
+            if (!TryGetZLevelsBelow(anchorEntity.Value!, entitiesBelow))
+                return false;
+
+            entitiesBelow.Add(anchorEntity.Value);
+            return true;
+        }
+
         if (!_zLevelQuery.Resolve(ref entity, logMissing: false))
             return false;
 

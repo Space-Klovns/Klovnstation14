@@ -37,9 +37,16 @@ public sealed partial class KsZLevelSystem : EntitySystem
     /// <summary>
     ///     The z-level directly above this one, if it has one.
     /// </summary>
+    /// <remarks>
+    ///     Asked of a gap map, this is the z-level above the gap's anchor - which is the z-level the gap is
+    ///         reaching towards, since a gap always sits between its anchor and the next one up.
+    /// </remarks>
     public bool TryGetZLevelAbove(Entity<KsZLevelComponent?> entity, [NotNullWhen(true)] out Entity<KsZLevelComponent>? aboveEntity)
     {
         aboveEntity = null;
+
+        TrySubstituteGapAnchor(ref entity);
+
         if (!_zLevelQuery.Resolve(ref entity, logMissing: false))
             return false;
 
@@ -53,8 +60,15 @@ public sealed partial class KsZLevelSystem : EntitySystem
     /// <summary>
     ///     The z-level directly below this one, if it has one.
     /// </summary>
+    /// <remarks>
+    ///     Asked of a gap map this is the gap's own anchor, not the level below that one: the anchor is the
+    ///         floor plane something stepping off a grid mid-crossing would fall onto.
+    /// </remarks>
     public bool TryGetZLevelBelow(Entity<KsZLevelComponent?> entity, [NotNullWhen(true)] out Entity<KsZLevelComponent>? belowEntity)
     {
+        if (TryResolveGapAnchor(entity.Owner, out belowEntity, out _))
+            return true;
+
         belowEntity = null;
         if (!_zLevelQuery.Resolve(ref entity, logMissing: false))
             return false;
@@ -94,6 +108,10 @@ public sealed partial class KsZLevelSystem : EntitySystem
     {
         stackEntities.Clear();
 
+        // A gap is not a floor, so it is never one of the floors an elevator lists. Answering about the anchor
+        //      is what keeps the controller's floor list and its numbering identical mid-crossing.
+        TrySubstituteGapAnchor(ref entity);
+
         if (!_zLevelQuery.Resolve(ref entity, logMissing: false))
             return false;
 
@@ -113,6 +131,9 @@ public sealed partial class KsZLevelSystem : EntitySystem
     /// <returns>-1 if the entity is not a z-level.</returns>
     public int GetStackIndex(Entity<KsZLevelComponent?> entity)
     {
+        // A crossing reports the floor it set out from until it lands, rather than a floor number of its own.
+        TrySubstituteGapAnchor(ref entity);
+
         if (!_zLevelQuery.Resolve(ref entity, logMissing: false))
             return -1;
 
@@ -128,6 +149,11 @@ public sealed partial class KsZLevelSystem : EntitySystem
     /// </summary>
     public bool AreInSameStack(Entity<KsZLevelComponent?> entity, Entity<KsZLevelComponent?> otherEntity)
     {
+        // A gap belongs to whatever stack it is crossing, so that an elevator mid-flight is still reachable
+        //      by the calls and controllers of the shaft it is in.
+        TrySubstituteGapAnchor(ref entity);
+        TrySubstituteGapAnchor(ref otherEntity);
+
         if (!_zLevelQuery.Resolve(ref entity, logMissing: false) ||
             !_zLevelQuery.Resolve(ref otherEntity, logMissing: false))
             return false;
@@ -252,17 +278,41 @@ public sealed partial class KsZLevelSystem : EntitySystem
     /// <remarks>
     ///     Allocates nothing and touches no shared state, so it is safe to call from the parallel jobs the
     ///         audio system runs its streams on.
+    ///     Either end may be a gap map, in which case it counts as its anchor shifted by however far up the
+    ///         gap it sits. This one substitution is the whole of what makes audio leak and light leak
+    ///         correct for something mid-crossing: both attenuate on the distance this returns, so neither
+    ///         needs to know a gap was involved.
     /// </remarks>
     public bool TryGetDepthBelow(Entity<KsZLevelComponent?> fromEntity, EntityUid toUid, out float depth, out int crossings)
     {
         depth = 0f;
         crossings = 0;
 
+        // A gap sits above its anchor, so starting from one means starting that much higher up.
+        if (TryResolveGapAnchor(fromEntity.Owner, out var fromAnchorEntity, out var fromOffset))
+            fromEntity = (fromAnchorEntity.Value.Owner, fromAnchorEntity.Value.Comp);
+
+        // ...and ending at one means stopping that much short of its anchor.
+        if (TryResolveGapAnchor(toUid, out var toAnchorEntity, out var toOffset))
+            toUid = toAnchorEntity.Value.Owner;
+
         if (!_zLevelQuery.Resolve(ref fromEntity, logMissing: false))
             return false;
 
+        depth = fromOffset - toOffset;
+
         if (fromEntity.Owner == toUid)
+        {
+            // Both ends resolved onto the same anchor - two elevators in one shaft, say. Only the one that is
+            //      genuinely higher up may answer, because the contract is that this reports a drop.
+            if (depth < 0f)
+            {
+                depth = 0f;
+                return false;
+            }
+
             return true;
+        }
 
         // Stepping down from a z-level to the one below crosses the lower one's own Depth.
         for (var node = fromEntity.Comp!.Node?.Previous; node != null; node = node.Previous)

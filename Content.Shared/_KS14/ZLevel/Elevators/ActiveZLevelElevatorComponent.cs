@@ -34,20 +34,18 @@ public sealed partial class ActiveZLevelElevatorComponent : Component
     public ZLevelElevatorState State = ZLevelElevatorState.Travelling;
 
     /// <summary>
-    ///     How far through the gap above its current z-level the elevator is, from 0 at that z-level's own
-    ///         floor plane to 1 at the floor plane of the one above it.
+    ///     How far through the gap it is crossing the elevator is, from 0 at the lower z-level's floor plane
+    ///         to 1 at the upper one's.
     /// </summary>
     /// <remarks>
-    ///     An elevator crossing a gap always sits on the lower of the two z-levels, so this is always a
-    ///         position within its own z-level's gap - the same 0..1 convention
-    ///         <see cref="Physics.KsZLevelTransitComponent.Height"/> uses for falling entities, so anything
-    ///         reading altitude reads both the same way.
-    ///     It is not that component because that one also knocks its owner down, blocks its movement and
-    ///         vetoes every contact it has - which on a grid would drop every passenger through the
-    ///         elevator's own floor.
+    ///     The same 0..1 convention <see cref="Physics.KsZLevelTransitComponent.Height"/> uses for falling
+    ///         entities, so anything reading altitude reads both the same way. It is not that component
+    ///         because that one also knocks its owner down, blocks its movement and vetoes every contact it
+    ///         has - which on a grid would drop every passenger through the elevator's own floor.
     ///     Deliberately neither a DataField nor networked: it is recomputed from the clock every tick on
     ///         both sides, so replicating it would spend bandwidth every tick to say something the client
-    ///         can already work out exactly.
+    ///         can already work out exactly. It is pushed onto the gap map the elevator is riding, which is
+    ///         what everything else reads.
     /// </remarks>
     [ViewVariables]
     public float Height;
@@ -57,4 +55,21 @@ public sealed partial class ActiveZLevelElevatorComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField]
     public bool Rising;
+
+    /// <summary>
+    ///     The z-level this leg set out from.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public EntityUid DepartedZLevel;
+
+    /// <summary>
+    ///     The z-level this leg is heading for.
+    /// </summary>
+    /// <remarks>
+    ///     Recorded at departure rather than walked for again on arrival, so that a stack relinked mid-flight
+    ///         cannot land the elevator somewhere nobody asked it to go. If the recorded target has stopped
+    ///         being a z-level by the time it gets there, it stops instead of guessing.
+    /// </remarks>
+    [DataField, AutoNetworkedField]
+    public EntityUid TargetZLevel;
 }
