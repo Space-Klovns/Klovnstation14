@@ -1,0 +1,251 @@
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudCivilianLightSteelClean
+  name: ks-tile-cloud-civilian-light-steel-clean
+  sprite: /Textures/_KS14/Tiles/CloudCivilian/light_steel_clean.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudCivilianLightSteelSlightlyGrimy
+  name: ks-tile-cloud-civilian-light-steel-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/CloudCivilian/light_steel_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudCivilianLightSteelVeryGrimy
+  name: ks-tile-cloud-civilian-light-steel-very-grimy
+  sprite: /Textures/_KS14/Tiles/CloudCivilian/light_steel_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudCivilianLightSteelDamaged
+  name: ks-tile-cloud-civilian-light-steel-damaged
+  sprite: /Textures/_KS14/Tiles/CloudCivilian/light_steel_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudCivilianBaseSteelClean
+  name: ks-tile-cloud-civilian-base-steel-clean
+  sprite: /Textures/_KS14/Tiles/CloudCivilian/base_steel_clean.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudCivilianBaseSteelSlightlyGrimy
+  name: ks-tile-cloud-civilian-base-steel-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/CloudCivilian/base_steel_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudCivilianBaseSteelVeryGrimy
+  name: ks-tile-cloud-civilian-base-steel-very-grimy
+  sprite: /Textures/_KS14/Tiles/CloudCivilian/base_steel_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudCivilianBaseSteelDamaged
+  name: ks-tile-cloud-civilian-base-steel-damaged
+  sprite: /Textures/_KS14/Tiles/CloudCivilian/base_steel_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudCivilianDarkSteelClean
+  name: ks-tile-cloud-civilian-dark-steel-clean
+  sprite: /Textures/_KS14/Tiles/CloudCivilian/dark_steel_clean.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudCivilianDarkSteelSlightlyGrimy
+  name: ks-tile-cloud-civilian-dark-steel-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/CloudCivilian/dark_steel_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudCivilianDarkSteelVeryGrimy
+  name: ks-tile-cloud-civilian-dark-steel-very-grimy
+  sprite: /Textures/_KS14/Tiles/CloudCivilian/dark_steel_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudCivilianDarkSteelDamaged
+  name: ks-tile-cloud-civilian-dark-steel-damaged
+  sprite: /Textures/_KS14/Tiles/CloudCivilian/dark_steel_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudCivilianTechmaintSlightlyGrimy
+  name: ks-tile-cloud-civilian-techmaint-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/CloudCivilian/techmaint_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudCivilianTechmaintVeryGrimy
+  name: ks-tile-cloud-civilian-techmaint-very-grimy
+  sprite: /Textures/_KS14/Tiles/CloudCivilian/techmaint_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudCivilianTechmaintDamaged
+  name: ks-tile-cloud-civilian-techmaint-damaged
+  sprite: /Textures/_KS14/Tiles/CloudCivilian/techmaint_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudCivilianTechmaintTwoSlightlyGrimy
+  name: ks-tile-cloud-civilian-techmaint-two-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/CloudCivilian/techmaint_2_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudCivilianTechmaintTwoVeryGrimy
+  name: ks-tile-cloud-civilian-techmaint-two-very-grimy
+  sprite: /Textures/_KS14/Tiles/CloudCivilian/techmaint_2_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudCivilianTechmaintTwoDamaged
+  name: ks-tile-cloud-civilian-techmaint-two-damaged
+  sprite: /Textures/_KS14/Tiles/CloudCivilian/techmaint_2_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull

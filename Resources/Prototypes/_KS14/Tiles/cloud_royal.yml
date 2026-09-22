@@ -1,0 +1,335 @@
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalLightSteelClean
+  name: ks-tile-cloud-royal-light-steel-clean
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/light_steel_clean.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalLightSteelSlightlyGrimy
+  name: ks-tile-cloud-royal-light-steel-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/light_steel_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalLightSteelVeryGrimy
+  name: ks-tile-cloud-royal-light-steel-very-grimy
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/light_steel_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalLightSteelDamaged
+  name: ks-tile-cloud-royal-light-steel-damaged
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/light_steel_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalBaseSteelClean
+  name: ks-tile-cloud-royal-base-steel-clean
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/base_steel_clean.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalBaseSteelSlightlyGrimy
+  name: ks-tile-cloud-royal-base-steel-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/base_steel_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalBaseSteelVeryGrimy
+  name: ks-tile-cloud-royal-base-steel-very-grimy
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/base_steel_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalBaseSteelDamaged
+  name: ks-tile-cloud-royal-base-steel-damaged
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/base_steel_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalDarkSteelClean
+  name: ks-tile-cloud-royal-dark-steel-clean
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/dark_steel_clean.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalDarkSteelSlightlyGrimy
+  name: ks-tile-cloud-royal-dark-steel-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/dark_steel_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalDarkSteelVeryGrimy
+  name: ks-tile-cloud-royal-dark-steel-very-grimy
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/dark_steel_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalDarkSteelDamaged
+  name: ks-tile-cloud-royal-dark-steel-damaged
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/dark_steel_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalTechmaintClean
+  name: ks-tile-cloud-royal-techmaint-clean
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/techmaint_clean.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalTechmaintSlightlyGrimy
+  name: ks-tile-cloud-royal-techmaint-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/techmaint_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalTechmaintVeryGrimy
+  name: ks-tile-cloud-royal-techmaint-very-grimy
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/techmaint_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalTechmaintDamaged
+  name: ks-tile-cloud-royal-techmaint-damaged
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/techmaint_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalTechmaintTwoClean
+  name: ks-tile-cloud-royal-techmaint-two-clean
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/techmaint_2_clean.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalTechmaintTwoSlightlyGrimy
+  name: ks-tile-cloud-royal-techmaint-two-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/techmaint_2_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalTechmaintTwoVeryGrimy
+  name: ks-tile-cloud-royal-techmaint-two-very-grimy
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/techmaint_2_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalTechmaintTwoDamaged
+  name: ks-tile-cloud-royal-techmaint-two-damaged
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/techmaint_2_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalDecorativeClean
+  name: ks-tile-cloud-royal-decorative-clean
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/decorative_clean.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalDecorativeSlightlyGrimy
+  name: ks-tile-cloud-royal-decorative-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/decorative_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalDecorativeVeryGrimy
+  name: ks-tile-cloud-royal-decorative-very-grimy
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/decorative_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudRoyalDecorativeDamaged
+  name: ks-tile-cloud-royal-decorative-damaged
+  sprite: /Textures/_KS14/Tiles/CloudRoyal/decorative_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
