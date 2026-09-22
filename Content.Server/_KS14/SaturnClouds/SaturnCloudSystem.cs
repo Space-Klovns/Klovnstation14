@@ -1,6 +1,5 @@
 using System.Linq;
 using System.Numerics;
-using Content.Server.Atmos.EntitySystems;
 using Content.Server.Chat.Systems;
 using Content.Server.GameTicking;
 using Content.Server.GameTicking.Events;
@@ -14,7 +13,6 @@ using Content.Server.Station.Systems;
 using Content.Shared._KS14.CCVar;
 using Content.Shared.GameTicking;
 using Content.Shared.Maps;
-using Content.Shared.Parallax;
 using Content.Shared.Power.Components;
 using Content.Shared.Power.EntitySystems;
 using Content.Shared.Radio;
@@ -36,7 +34,6 @@ public sealed partial class SaturnCloudSystem : EntitySystem
 
     private static readonly ProtoId<RadioChannelPrototype> EngineeringChannel = "Engineering";
 
-    [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
     [Dependency] private ChatSystem _chatSystem = default!;
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private GameTicker _gameTicker = default!;
@@ -57,6 +54,7 @@ public sealed partial class SaturnCloudSystem : EntitySystem
 
     private readonly HashSet<EntityUid> _protectedGrids = new();
     private readonly List<EntityUid> _exposedGrids = new();
+    private readonly HashSet<MapId> _orbitalMapsAwaitingInitialization = new();
 
     [SubscribeLocalEvent]
     private void OnLoadingMaps(LoadingMapsEvent args)
@@ -84,10 +82,6 @@ public sealed partial class SaturnCloudSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnPostGameMapLoad(PostGameMapLoad args)
     {
-        var mapUid = _mapSystem.GetMapOrInvalid(args.Map);
-        if (_saturnMapQuery.TryGetComponent(mapUid, out var cloudMapComponent))
-            ConfigureCloudMap(mapUid, cloudMapComponent);
-
         if (!args.GameMap.KsIsSaturnCloudVariant && !args.GameMap.KsIsSaturnOrbitalVariant)
             return;
 
@@ -99,17 +93,28 @@ public sealed partial class SaturnCloudSystem : EntitySystem
             out _);
 
         if (args.GameMap.KsIsSaturnOrbitalVariant)
+        {
+            _orbitalMapsAwaitingInitialization.Add(args.Map);
             GenerateOrbitalAsteroidBelt(args);
+        }
     }
 
     [SubscribeLocalEvent]
     private void OnRoundStarting(RoundStartingEvent args)
     {
+        // GameTicker only initializes its DefaultMap. The paired orbital map must be initialized too,
+        // otherwise its grid remains paused and clients resolve its spawn coordinates as MapId.Nullspace.
+        foreach (var mapId in _orbitalMapsAwaitingInitialization)
+        {
+            if (_mapSystem.MapExists(mapId))
+                _mapSystem.InitializeMap(mapId);
+        }
+
+        _orbitalMapsAwaitingInitialization.Clear();
+
         var mapQuery = EntityQueryEnumerator<SaturnCloudMapComponent>();
         while (mapQuery.MoveNext(out var mapUid, out var cloudMapComponent))
         {
-            ConfigureCloudMap(mapUid, cloudMapComponent);
-
             foreach (var station in _stationSystem.GetStationEntities())
             {
                 var mainGridUid = _stationSystem.GetLargestGrid(station.Owner);
@@ -118,18 +123,8 @@ public sealed partial class SaturnCloudSystem : EntitySystem
 
                 EnsureComp<SaturnMainStationGridComponent>(mainGridUid.Value);
                 EnsureGridExposure(mainGridUid.Value, cloudMapComponent);
-                LinkMappedMooringDevices(mainGridUid.Value);
             }
         }
-    }
-
-    private void ConfigureCloudMap(EntityUid mapUid, SaturnCloudMapComponent cloudMapComponent)
-    {
-        _atmosphereSystem.SetMapAtmosphere(mapUid, false, cloudMapComponent.Atmosphere);
-
-        var parallaxComponent = EnsureComp<ParallaxComponent>(mapUid);
-        parallaxComponent.Parallax = cloudMapComponent.Parallax;
-        Dirty(mapUid, parallaxComponent);
     }
 
     [SubscribeLocalEvent]
@@ -149,6 +144,7 @@ public sealed partial class SaturnCloudSystem : EntitySystem
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent args)
     {
         _protectedGrids.Clear();
+        _orbitalMapsAwaitingInitialization.Clear();
     }
 
     [SubscribeLocalEvent]
@@ -225,17 +221,6 @@ public sealed partial class SaturnCloudSystem : EntitySystem
         }
     }
 
-    private void LinkMappedMooringDevices(EntityUid mainGridUid)
-    {
-        var query = EntityQueryEnumerator<MooringDeviceComponent, TransformComponent>();
-        while (query.MoveNext(out _, out var deviceComponent, out var transformComponent))
-        {
-            if (transformComponent.GridUid != mainGridUid)
-                continue;
-
-            deviceComponent.ProtectedGrid = mainGridUid;
-        }
-    }
 
     private void UpdateGridExposure(EntityUid gridUid, TransformComponent transformComponent)
     {
@@ -273,6 +258,9 @@ public sealed partial class SaturnCloudSystem : EntitySystem
         {
             if (transformComponent.MapUid != mapUid)
                 continue;
+
+            if (deviceComponent.ProtectedGrid == null)
+                deviceComponent.ProtectedGrid = transformComponent.GridUid;
 
             var charge = _batterySystem.GetCharge((uid, batteryComponent));
             var receiverComponent = _apcPowerQuery.CompOrNull(uid);

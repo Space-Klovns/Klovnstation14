@@ -47,8 +47,11 @@ entities:
     - type: GridTree
     - type: Broadphase
     - type: OccluderTree
-    - type: SaturnCloudMap
-      atmosphere:
+    - type: Parallax
+      parallax: Sky
+    - type: MapAtmosphere
+      space: False
+      mixture:
         volume: 2500
         temperature: 293.15
         moles:
@@ -57,7 +60,7 @@ entities:
           Plasma: 0.25
           WaterVapor: 1
           CarbonDioxide: 0.5
-      parallax: Sky
+    - type: SaturnCloudMap
       updateInterval: 1
       damageDelay: 45
       damageInterval: 20

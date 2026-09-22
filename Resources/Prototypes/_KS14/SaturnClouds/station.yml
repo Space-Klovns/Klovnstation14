@@ -1,5 +1,5 @@
 - type: entity
-  parent: StandardNanotrasenStation
+  parent: KsSaturnNanotrasenStationBase
   id: KsSaturnCloudStation
   categories: [ HideSpawnMenu ]
   components:
@@ -36,6 +36,24 @@
         - /Maps/Ruins/whiteship_bluespacejumper.yml
         - /Maps/Ruins/wrecklaimer.yml
       wrecks: !type:DungeonSpawnGroup
-        minCount: 0
-        maxCount: 0
-
+        minimumDistance: 120
+        maximumDistance: 300
+        stationGrid: false
+        minCount: 8
+        maxCount: 12
+        addComponents:
+        - type: Gravity
+          enabled: true
+          inherent: true
+        - type: IFF
+          flags: HideLabel
+          color: '#88b0d1'
+        - type: InnateMooring
+        protos:
+        - ChunkDebrisSmall
+        - ChunkDebrisSmall
+        - ChunkDebrisSmall
+        - ChunkDebrisSmall
+        - ChunkDebrisSmall
+        - ChunkDebris
+        - ChunkDebris

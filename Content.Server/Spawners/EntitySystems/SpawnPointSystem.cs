@@ -11,7 +11,7 @@ public sealed partial class SpawnPointSystem : EntitySystem
 {
     [Dependency] private GameTicker _gameTicker = default!;
     [Dependency] private IRobustRandom _random = default!;
-    //[Dependency] private StationSystem _stationSystem = default!; KS14
+    [Dependency] private StationSystem _stationSystem = default!; // KS14: restored station-specific spawn-point filtering
     [Dependency] private StationSpawningSystem _stationSpawning = default!;
 
     public override void Initialize()
@@ -32,9 +32,8 @@ public sealed partial class SpawnPointSystem : EntitySystem
 
         while (points.MoveNext(out var uid, out var spawnPoint, out var xform))
         {
-            //if (args.Station != null && _stationSystem.GetOwningStation(uid, xform) != args.Station) KS14 - disabled this check for scenarios
-            //TODO SOOT or LCDC - check if this is important
-            //    continue;
+            if (args.Station != null && _stationSystem.GetOwningStation(uid, xform) != args.Station)
+                continue;
 
             //KS14 start
             if (_gameTicker.RunLevel == GameRunLevel.InRound && spawnPoint.SpawnType == SpawnPointType.LateJoin && spawnPoint.PickyLatejoin == true &&
@@ -65,16 +64,20 @@ public sealed partial class SpawnPointSystem : EntitySystem
         {
             // Ok we've still not returned, but we need to put them /somewhere/.
             // TODO: Refactor gameticker spawning code so we don't have to do this!
-            var points2 = EntityQueryEnumerator<SpawnPointComponent, TransformComponent>();
+            var fallbackPoints = EntityQueryEnumerator<SpawnPointComponent, TransformComponent>();
+            while (fallbackPoints.MoveNext(out var uid, out _, out var xform))
+            {
+                if (args.Station != null && _stationSystem.GetOwningStation(uid, xform) != args.Station)
+                    continue; // KS14: never fall back to another station's grid
 
-            if (points2.MoveNext(out _, out var xform))
-            {
-                Log.Error($"Unable to pick a valid spawn point, picking random spawner as a backup.\nRunLevel: {_gameTicker.RunLevel} Station: {ToPrettyString(args.Station)} Job: {args.Job}");
+                Log.Error($"Unable to pick a valid spawn point, picking a station-local spawner as a backup.\nRunLevel: {_gameTicker.RunLevel} Station: {ToPrettyString(args.Station)} Job: {args.Job}");
                 possiblePositions.Add(xform.Coordinates);
+                break;
             }
-            else
+
+            if (possiblePositions.Count == 0)
             {
-                Log.Error($"No spawn points were available!\nRunLevel: {_gameTicker.RunLevel} Station: {ToPrettyString(args.Station)} Job: {args.Job}");
+                Log.Error($"No spawn points were available on the target station!\nRunLevel: {_gameTicker.RunLevel} Station: {ToPrettyString(args.Station)} Job: {args.Job}");
                 return;
             }
         }

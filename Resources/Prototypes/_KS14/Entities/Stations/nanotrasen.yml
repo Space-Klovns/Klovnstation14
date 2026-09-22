@@ -22,3 +22,35 @@
   categories: [ HideSpawnMenu ]
   components:
     - type: Transform
+
+- type: entity
+  id: KsSaturnNanotrasenStationBase
+  abstract: true
+  parent:
+    - BaseStation
+    - BaseStationNews
+    - BaseStationCargo
+    - BaseStationJobsSpawning
+    - BaseStationRecords
+    - BaseStationArrivals
+    - BaseStationGateway
+    - BaseStationCentcomm
+    - BaseStationEvacuation
+    - BaseStationAlertLevels
+    - BaseStationMagnet
+    - BaseStationExpeditions
+    - BaseStationSalvageJobs
+    - BaseStationSiliconLawAsimov
+    - BaseStationAllEventsEligible
+    - BaseStationNanotrasen
+    - BaseStationDeliveries
+  categories: [ HideSpawnMenu ]
+  components:
+    - type: StationCargoShuttle
+      path: /Maps/Shuttles/cargo.yml
+    - type: Transform
+
+- type: entity
+  id: KsSaturnOrbitalStation
+  parent: KsSaturnNanotrasenStationBase
+  categories: [ HideSpawnMenu ]

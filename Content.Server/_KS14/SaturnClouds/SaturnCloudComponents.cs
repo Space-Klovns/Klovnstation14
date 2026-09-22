@@ -1,5 +1,3 @@
-using Content.Shared.Atmos;
-
 namespace Content.Server._KS14.SaturnClouds;
 
 /// <summary>
@@ -8,11 +6,6 @@ namespace Content.Server._KS14.SaturnClouds;
 [RegisterComponent, Access(typeof(SaturnCloudSystem))]
 public sealed partial class SaturnCloudMapComponent : Component
 {
-    [DataField(required: true)]
-    public GasMixture Atmosphere = GasMixture.SpaceGas;
-
-    [DataField(required: true)]
-    public string Parallax = string.Empty;
 
     [DataField(required: true)]
     public TimeSpan UpdateInterval;

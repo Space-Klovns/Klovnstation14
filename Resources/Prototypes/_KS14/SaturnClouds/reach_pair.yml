@@ -31,7 +31,6 @@
           Scientist: [ 1, 1 ]
           SecurityOfficer: [ 1, 3 ]
           CargoTechnician: [ 1, 1 ]
-          SalvageSpecialist: [ 1, 1 ]
           Passenger: [ -1, -1 ]
           Clown: [ 1, 1 ]
           Mime: [ 1, 1 ]
@@ -52,7 +51,7 @@
   maxPlayers: 7
   stations:
     SaturnOrbital:
-      stationProto: StandardNanotrasenStation
+      stationProto: KsSaturnOrbitalStation
       components:
       - type: StationNameSetup
         mapNameTemplate: '{0} Saturn Orbital Mining Station {1}'
