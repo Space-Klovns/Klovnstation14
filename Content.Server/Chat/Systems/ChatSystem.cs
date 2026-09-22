@@ -162,6 +162,15 @@ public sealed partial class ChatSystem : SharedChatSystem
             TrySendInGameOOCMessage(source, message, InGameOOCChatType.Dead, range == ChatTransmitRange.HideChat, shell, player);
             return;
         }
+        //KS14 start
+        if (IsSoftCrit(source) && desiredType == InGameICChatType.Speak)
+        {
+            // Downgrade speech to whisper instead of hard-blocking
+            TrySendInGameICMessage(source, message, InGameICChatType.Whisper, hideChat,
+                hideLog, shell, player, nameOverride, checkRadioPrefix, ignoreActionBlocker,
+                ksLanguageOverride);
+            return;
+        }
 
         if (player != null && _chatManager.HandleRateLimit(player) != RateLimitStatus.Allowed)
             return;

@@ -160,6 +160,8 @@
     - FootstepSound
     - DoorBumpOpener
     - AnomalyHost
+  - type: SoftCritical #KS14: softcrit addition
+    criticalThreshold: 150
 
 - type: entity
   abstract: true
