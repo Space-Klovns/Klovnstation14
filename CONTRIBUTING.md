@@ -533,6 +533,52 @@ so `OverrideCVar(Side.Server, ...)` on one is silently ignored and the assertion
 being broken. And a *disconnected* pooled client has never started its entity systems, so resolving one
 to read the value throws `UnregisteredTypeException` — such a test needs `Connected = true`.
 
+### The sandbox rejects APIs no build will warn you about
+
+Content assemblies are type-checked against a whitelist when they load, not when they compile. Reach for
+something outside it and both configurations build clean, the IDE is happy, and the failure arrives at
+assembly load:
+
+```
+Robust.Shared.ContentPack.TypeCheckFailedException
+Sandbox violation: Access to method not allowed:
+    System.Runtime.InteropServices.CollectionsMarshal.GetValueRefOrAddDefault(
+        System.Collections.Generic.Dictionary`2<!!0, !!1>, !!0, bool&)
+```
+
+**The cascade is what makes this expensive to diagnose.** One violation takes the assembly down, which
+takes the integration pool down with it, and every unrelated test then fails with:
+
+```
+SetUp : System.InvalidOperationException : Pool manager has not been initialized
+```
+
+A run that reports a hundred-odd failures across unrelated features, all of them `Pool manager has not
+been initialized`, has **one** cause, and it is not in any of the tests named. Find the single result
+that failed with something else - `TypeCheckFailedException` - and fix that. Running with
+`--logger "trx;LogFileName=..."` and grouping the results by message is the quick way to see that shape;
+`-v q` prints only the total and hides it entirely.
+
+The offenders are mostly the low-level performance conveniences: `CollectionsMarshal`, `Unsafe`,
+`MemoryMarshal`, most of `System.Runtime.InteropServices`, reflection that writes, and anything
+touching the filesystem or process directly. Plain `Dictionary`, `Span`, `System.Numerics` and
+`MathF` are all fine. If you are reaching for something to avoid a dictionary lookup or a struct copy
+in rendering code, the copy was almost certainly cheaper than finding this out:
+
+```csharp
+// not this - compiles everywhere, refused at load
+ref var entry = ref CollectionsMarshal.GetValueRefOrAddDefault(_map, key, out _);
+entry.Value += 1;
+
+// this - a struct copy, and one the sandbox allows
+_map.TryGetValue(key, out var entry);
+entry.Value += 1;
+_map[key] = entry;
+```
+
+Content.IntegrationTests is the cheapest way to find out, because loading the assemblies is the first
+thing it does - a single test from any fixture is enough to prove the sandbox accepted the build.
+
 ### Only one system may subscribe to a given component and event pair
 
 The event bus throws

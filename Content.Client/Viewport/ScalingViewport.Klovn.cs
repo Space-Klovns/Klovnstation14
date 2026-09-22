@@ -90,6 +90,7 @@ namespace Content.Client.Viewport
         /// </remarks>
         private readonly Dictionary<MapId, KsZLevelLightCapture> _zLightCaptures = [];
         private readonly List<MapId> _staleCaptures = [];
+        private readonly HashSet<MapId> _capturesTakenThisFrame = [];
 
         /// <summary>
         ///     How much wider than the visible light target this viewport's captures have to be taken, as
@@ -133,7 +134,7 @@ namespace Content.Client.Viewport
             if (_mapsToIterate.Count == 0 &&
                 viewerTransitHeight <= 0f &&
                 !WantsLightFromAbove(topMapUid.Value) &&
-                !WantsGapPass(topMapUid.Value))
+                !WantsGapPass(topMapUid.Value, anchorDepth: 0f))
                 return false;
 
             // TryGetZLevelsBelow doesn't include the map we're on
@@ -409,26 +410,38 @@ namespace Content.Client.Viewport
         }
 
         /// <summary>
-        ///     Whether anything crossing the gap over this z-level is near enough to it to be worth a pass.
+        ///     Whether <see cref="DrawGapPasses"/> is going to draw anything over this z-level.
         /// </summary>
         /// <remarks>
-        ///     Only asked about the viewer's own z-level, and only to decide whether the layered draw has to
-        ///         run at all when nothing else needs it - somebody on the bottom floor of a stack with an
-        ///         unlit ceiling has nothing else to layer. Since a crossing is invisible for all but the
-        ///         last <see cref="GapFadeInProgress"/> of itself, asking merely whether one exists would
-        ///         put that viewer on the expensive path for the whole of every ride and draw nothing extra
-        ///         for nine tenths of it.
+        ///     Asked twice, for two different reasons, and it has to give the same answer to both: once to
+        ///         decide whether the layered draw has to run at all when nothing else needs it - somebody on
+        ///         the bottom floor of a stack with an unlit ceiling has nothing else to layer - and once to
+        ///         decide whether this z-level's light map is worth capturing for the gap above it.
+        ///     Since a crossing over the viewer's own floor is invisible for all but the last
+        ///         <see cref="GapFadeInProgress"/> of itself, asking merely whether one exists would put that
+        ///         viewer on the expensive path for the whole of every ride - two extra full passes, the gap
+        ///         and the capture that lights it - and draw nothing extra for most of it.
+        ///     So the tests below are <see cref="DrawGapPasses"/>'s own, in its own order. A yes here that
+        ///         it then skips is a wasted capture every frame; a no is a platform lit by nothing.
         /// </remarks>
-        private bool WantsGapPass(EntityUid anchorUid)
+        /// <param name="anchorDepth">
+        ///     How far below the viewer this z-level's floor plane sits, which is what decides whether a gap
+        ///         over it is overhead - and so subject to the fade - or down a shaft in front of them.
+        /// </param>
+        private bool WantsGapPass(EntityUid anchorUid, float anchorDepth)
         {
             if (!_drawGapLevels)
                 return false;
 
             _gapSystem.GetGapsAnchoredTo(anchorUid, _gapsToIterate);
 
-            foreach (var (_, gapComponent) in _gapsToIterate)
+            foreach (var (gapUid, gapComponent) in _gapsToIterate)
             {
-                if (gapComponent.Progress < GapFadeInProgress)
+                if (!_entityManager.TryGetComponent<MapComponent>(gapUid, out var mapComponent) ||
+                    mapComponent.MapId == _eye!.Position.MapId)
+                    continue;
+
+                if (anchorDepth > 0f || gapComponent.Progress < GapFadeInProgress)
                     return true;
             }
 
@@ -448,7 +461,7 @@ namespace Content.Client.Viewport
         /// </remarks>
         private void CaptureZLevelLight(IRenderHandle handle, Entity<KsZLevelComponent> topZLevel, float viewerTransitHeight)
         {
-            ReleaseUnusedCaptures();
+            _capturesTakenThisFrame.Clear();
 
             // The viewer's own z-level sits this far below where they are looking from, and every capture is
             //      measured from there.
@@ -461,17 +474,35 @@ namespace Content.Client.Viewport
                 _zLevelSystem.TryGetZLevelAbove(topZLevel.Owner, out var aboveEntity))
                 CaptureZLevel(handle, aboveEntity.Value, viewerDepth);
 
-            // Top-down, stopping before the deepest: nothing is drawn under it for its light to fall on.
+            // Top-down. Every z-level but the deepest lights the one under it; the deepest is captured
+            //      only when something is crossing the gap above it, because a gap is the one pass that is
+            //      lit from below rather than from above.
             var depth = viewerDepth;
-            for (var index = _mapsToIterate.Count - 1; index >= 1; index--)
+            for (var index = _mapsToIterate.Count - 1; index >= 0; index--)
             {
-                // Stepping down into a z-level crosses that z-level's own Depth, matching the draw loop -
-                //      and taking the step before the capture rather than after is what hands it the depth
-                //      of the z-level it is about to light rather than its own.
-                depth += _mapsToIterate[index - 1].Comp.Depth;
+                // This z-level's own depth, which is also as wide as a capture for the gap above it ever
+                //      needs to be: a gap sits nearer the viewer than the z-level it is anchored to, so the
+                //      pass reading it sees less of the world than this one does, not more.
+                var consumerDepth = depth;
 
-                CaptureZLevel(handle, _mapsToIterate[index], depth);
+                if (index >= 1)
+                {
+                    // Stepping down into a z-level crosses that z-level's own Depth, matching the draw loop
+                    //      - and taking the step before the capture rather than after is what hands it the
+                    //      depth of the z-level it is about to light rather than its own.
+                    consumerDepth += _mapsToIterate[index - 1].Comp.Depth;
+                }
+                else if (!WantsGapPass(_mapsToIterate[index].Owner, depth))
+                {
+                    break;
+                }
+
+                CaptureZLevel(handle, _mapsToIterate[index], consumerDepth);
+
+                depth = consumerDepth;
             }
+
+            ReleaseUnusedCaptures();
         }
 
         /// <param name="consumerDepth">
@@ -482,6 +513,8 @@ namespace Content.Client.Viewport
         {
             if (!_entityManager.TryGetComponent<MapComponent>(zLevel.Owner, out var mapComponent))
                 return;
+
+            _capturesTakenThisFrame.Add(mapComponent.MapId);
 
             // Never the viewer's FOV: this z-level is not the one they are standing on, and carving their
             //      line of sight out of it would cut shadows into light that was never theirs to block.
@@ -583,8 +616,17 @@ namespace Content.Client.Viewport
         }
 
         /// <summary>
-        ///     Drops captures for z-levels that are no longer part of the stack being drawn.
+        ///     Drops every capture this draw did not take, which is the only thing that keeps the set down to
+        ///         the z-levels actually lighting something right now.
         /// </summary>
+        /// <remarks>
+        ///     Keyed on what was taken rather than on the stack, because a z-level can stop being captured
+        ///         while remaining perfectly valid: the deepest one is captured only while something is
+        ///         crossing the gap above it, so a stack test would hold two full-size render targets for the
+        ///         rest of the round after a single lift ride. A deleted map falls out of this for free,
+        ///         since nothing can capture one.
+        ///     Run after the captures rather than before them so that "this frame" means this frame.
+        /// </remarks>
         private void ReleaseUnusedCaptures()
         {
             if (_zLightCaptures.Count == 0)
@@ -594,7 +636,7 @@ namespace Content.Client.Viewport
 
             foreach (var (mapId, _) in _zLightCaptures)
             {
-                if (!_mapSystem.TryGetMap(mapId, out var mapUid) || !_entityManager.HasComponent<KsZLevelComponent>(mapUid))
+                if (!_capturesTakenThisFrame.Contains(mapId))
                     _staleCaptures.Add(mapId);
             }
 
