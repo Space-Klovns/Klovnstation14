@@ -189,7 +189,7 @@ Summarised from the upstream conventions doc — that page stays the authority; 
 - **Text** — no quotes on `name`/`description` unless punctuation demands it, then single quotes. Every player-facing string is localized.
 - **Abstract prototypes** — no textures in them. Use `suffix` to separate spawn-menu variants instead of baking the distinction into `name`.
 
-**One exception to upstream**: `codebase-organization` says game-code folders live directly under `Content.Client/Shared/Server`. We override this for **new fork code only** — new code goes under `_KS14/` per §2. Upstream files edited in place keep their upstream layout and carry `// KS14:` markers per §3. Don't touch existing code just to bring it into convention unless you're already changing it for another reason.
+**One exception to upstream**: `codebase-organization` says game-code folders live directly under `Content.Client/Shared/Server`. We override this for **new fork code only** — new code goes under `_KS14/` per §2. Upstream files edited in place keep their upstream layout and carry `// KS14:` markers per §3. Don't relocate or reformat **upstream** code just to bring it into convention unless you're already changing it for another reason — every such move is a merge conflict waiting for the next upstream pull, paid for nothing. This is about upstream files specifically, not a general licence to leave things alone: fork code under `_KS14/` is ours, merges cleanly, and is fair game to tidy whenever it has drifted from the rules below.
 
 ### Local rules on top of upstream
 
@@ -284,7 +284,8 @@ public sealed partial class MySystem : EntitySystem
 }
 ```
 
-**Don't declare `IPrototypeManager` in an `EntitySystem` (C#)** — `EntitySystem` already provides one as `ProtoMan`, so a system that declares its own is shadowing it. Use the inherited member:
+**Don't re-declare a dependency your base class already injects (C#)** — several engine base types arrive with dependencies already resolved. Declaring your own is a second injected field pointing at the same object: it compiles, it works, nothing warns, and it reads as though the two might differ. Use the inherited member.
+
 ```csharp
 // old
 [Dependency] private IPrototypeManager _prototypeManager = default!;   // then _prototypeManager.Index(...)
@@ -292,7 +293,59 @@ public sealed partial class MySystem : EntitySystem
 // current
 ProtoMan.Index(...);                                                   // no declaration at all
 ```
-This only applies to `EntitySystem` (and its subclasses, `GameRuleSystem<T>` included). Everything else that injects dependencies — overlays, UI controls and windows, `BoundUserInterface`s, managers, `LocalizedEntityCommands`, HTN operators — has no `ProtoMan` and still declares its own.
+
+What each base already gives you, and the name to use:
+
+| Base type | Inherited member | Type |
+| --- | --- | --- |
+| `EntitySystem` (incl. `GameRuleSystem<T>`) | `EntityManager` | `EntityManager` |
+| | `ProtoMan` | `IPrototypeManager` |
+| | `Factory` | `IComponentFactory` (forwards to `EntityManager.ComponentFactory`) |
+| | `LogManager` / `Log` | `ILogManager` / `ISawmill` |
+| | `Loc` | `ILocalizationManager` |
+| `BoundUserInterface` | `EntMan` | `IEntityManager` |
+| | `PlayerManager` | `ISharedPlayerManager` |
+| | `UiSystem` | `SharedUserInterfaceSystem` |
+| `Overlay` | `OverlayManager` | `IOverlayManager` (resolved in its constructor) |
+| `LocalizedCommands` | `LocalizationManager`, or `Loc` | `ILocalizationManager` |
+| `LocalizedEntityCommands` | the above, plus `EntityManager` | `EntityManager` |
+| `ToolshedCommand` | `Toolshed`, `Loc` | `ToolshedManager`, `ILocalizationManager` |
+
+```csharp
+// not this - LocalizedEntityCommands already injects EntityManager
+public sealed partial class KsSomeCommand : LocalizedEntityCommands
+{
+    [Dependency] private IEntityManager _entityManager = default!;
+    // ...then _entityManager.HasComponent<MapGridComponent>(uid)
+}
+
+// not this either - BoundUserInterface already injects EntMan
+public sealed class KsSomeBoundUserInterface : BoundUserInterface
+{
+    [Dependency] private IEntityManager _entityManager = default!;
+}
+
+// nor this - Overlay's constructor resolves OverlayManager itself
+public sealed class KsSomeOverlay : Overlay
+{
+    [Dependency] private IOverlayManager _overlayManager = default!;
+}
+```
+
+**The inherited names break the verbosity rule above, and that is fine.** `EntMan`, `ProtoMan` and `Factory` are the engine's names, not ours; wanting `_entityManager` instead is not a reason to declare a second field. Rename nothing, declare nothing, just use them.
+
+**Not everything on a base is inherited.** `EntitySystem` injects `ISharedPlayerManager` and `IReplayRecordingManager` as **private** fields, so a subclass genuinely cannot see them and does declare its own:
+
+```csharp
+// correct - EntitySystem's own player manager is private, so this is not shadowing
+[Dependency] private ISharedPlayerManager _playerManager = default!;
+```
+
+And the table is per base, not universal: only `EntitySystem` has a `ProtoMan`. An overlay, a
+`BoundUserInterface`, a window, a manager or an HTN operator that needs prototypes declares its own
+`IPrototypeManager`, exactly as before.
+
+The rule is "check the base before you declare", not "assume it is there". Nothing in the toolchain catches either mistake — C# allows a derived field to hide a base one of a different name without a whisper, so this is a review-time thing.
 
 **Inject `EntityQuery<T>`, don't `GetEntityQuery<T>()` (C#)** — the collection that injects into `EntitySystem`s (`IEntitySystemManager.DependencyCollection`) resolves `EntityQuery<T>` and `EntitySystem` as well, unlike the default `IoCManager` one. So declare queries as dependencies:
 ```csharp
@@ -446,6 +499,39 @@ The same reasoning covers every other process-lifetime registry a short-lived ob
 into: `IPlayerManager` and `INetManager` events, `IOverlayManager`, `IUserInterfaceManager` handlers,
 and any static or manager-held list. Ask "what owns the thing I just handed my `this` to, and does it
 outlive me?" If yes, the teardown is yours.
+
+### CVars: `CLIENTONLY` is not "a client-side setting"
+
+`CLIENTONLY` and `SERVERONLY` mean *"skip registering this cvar on the other side entirely"*, not "only
+this side cares about it". So the moment shared code touches one, the side it was skipped on throws:
+
+```
+System.Collections.Generic.KeyNotFoundException : The given key 'klovn.zlevel.parallax_strength'
+    was not present in the dictionary.
+  at Robust.Shared.Configuration.ConfigurationManager.OnValueChanged[T](...)
+  at Content.Shared._KS14.ZLevel.KsZLevelSystem.Initialize()
+```
+
+From `Initialize` that is fatal — the server does not start, and every integration test fails at SetUp,
+which looks nothing like "a cvar has the wrong flag".
+
+Pick by **who reads it**, not by who it is for:
+
+| Read from | Changed by | Flags |
+| --- | --- | --- |
+| Client code only | the player | `CLIENTONLY \| ARCHIVE` |
+| Server code only | the server | `SERVERONLY` |
+| **Shared code** | the player | `CLIENT \| ARCHIVE` — registered both sides, only the client may set it |
+| Shared code, must agree | the server | `SERVER \| REPLICATED` |
+
+The third row is the one that catches people. A rendering knob read through a shared helper is still
+read on the server, where it sits at its default and is never used — that costs nothing, and it is the
+only way the shared call compiles and runs on both sides.
+
+Two consequences worth knowing when testing one: a `CVar.CLIENT` var cannot be set server-side at all,
+so `OverrideCVar(Side.Server, ...)` on one is silently ignored and the assertion reads as the feature
+being broken. And a *disconnected* pooled client has never started its entity systems, so resolving one
+to read the value throws `UnregisteredTypeException` — such a test needs `Connected = true`.
 
 ### Only one system may subscribe to a given component and event pair
 

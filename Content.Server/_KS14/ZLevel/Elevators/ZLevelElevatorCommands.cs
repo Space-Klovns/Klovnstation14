@@ -21,7 +21,6 @@ namespace Content.Server._KS14.ZLevel.Elevators;
 [AdminCommand(AdminFlags.Mapping)]
 public sealed partial class ZLevelElevatorCommand : LocalizedEntityCommands
 {
-    [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private KsZLevelSystem _zLevelSystem = default!;
     [Dependency] private ZLevelElevatorSystem _elevatorSystem = default!;
 
@@ -37,14 +36,14 @@ public sealed partial class ZLevelElevatorCommand : LocalizedEntityCommands
 
         if (!EntityUid.TryParse(args[0], out var gridUid) ||
             !gridUid.IsValid() ||
-            !_entityManager.EntityExists(gridUid) ||
-            !_entityManager.HasComponent<MapGridComponent>(gridUid))
+            !EntityManager.EntityExists(gridUid) ||
+            !EntityManager.HasComponent<MapGridComponent>(gridUid))
         {
             shell.WriteError(Loc.GetString("cmd-zlevel_elevator-not-a-grid", ("uid", args[0])));
             return;
         }
 
-        var elevatorComponent = _entityManager.EnsureComponent<ZLevelElevatorComponent>(gridUid);
+        var elevatorComponent = EntityManager.EnsureComponent<ZLevelElevatorComponent>(gridUid);
         if (args.Length == 2)
             _elevatorSystem.SetShaftId((gridUid, elevatorComponent), args[1]);
 
@@ -72,7 +71,7 @@ public sealed partial class ZLevelElevatorCommand : LocalizedEntityCommands
         return args.Length switch
         {
             1 => CompletionResult.FromHintOptions(
-                CompletionHelper.Components<MapGridComponent>(args[0], _entityManager),
+                CompletionHelper.Components<MapGridComponent>(args[0], EntityManager),
                 Loc.GetString("cmd-zlevel_elevator-completion-grid")),
             2 => CompletionResult.FromHint(Loc.GetString("cmd-zlevel_elevator-completion-shaft")),
             _ => CompletionResult.Empty,
@@ -91,7 +90,6 @@ public sealed partial class ZLevelElevatorCommand : LocalizedEntityCommands
 [AdminCommand(AdminFlags.Mapping)]
 public sealed partial class ZLevelElevatorControllerCommand : LocalizedEntityCommands
 {
-    [Dependency] private IEntityManager _entityManager = default!;
     [Dependency] private TransformSystem _transformSystem = default!;
     [Dependency] private ZLevelElevatorSystem _elevatorSystem = default!;
 
@@ -117,13 +115,13 @@ public sealed partial class ZLevelElevatorControllerCommand : LocalizedEntityCom
             return;
         }
 
-        var controllerUid = _entityManager.SpawnEntity(
+        var controllerUid = EntityManager.SpawnEntity(
             ControllerPrototype,
             _transformSystem.GetMapCoordinates(playerUid)
         );
 
         if (args.Length == 1 &&
-            _entityManager.TryGetComponent<ZLevelElevatorControllerComponent>(controllerUid, out var controllerComponent))
+            EntityManager.TryGetComponent<ZLevelElevatorControllerComponent>(controllerUid, out var controllerComponent))
             _elevatorSystem.SetShaftId((controllerUid, controllerComponent), args[0]);
 
         var shaftId = args.Length == 1 ? args[0] : null;

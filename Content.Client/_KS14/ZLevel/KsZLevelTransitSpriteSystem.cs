@@ -154,8 +154,12 @@ public sealed partial class KsZLevelTransitSpriteSystem : EntitySystem
             var apparentDepth = actualDepth - transitComponent.Height * zLevelComponent.Depth;
 
             // Uniform on purpose: a single ratio commutes with the eye's rotation, a per-axis one would not.
-            var actualScale = KsZLevelSystem.GetDepthScale(eyeScale, actualDepth).X;
-            var apparentScale = KsZLevelSystem.GetDepthScale(eyeScale, apparentDepth).X;
+            var actualScale = _zLevelSystem.GetDepthScale(eyeScale, actualDepth).X;
+            var apparentScale = _zLevelSystem.GetDepthScale(eyeScale, apparentDepth).X;
+
+            // GetDepthScale clamps to a positive minimum, so this cannot fire today. Kept because the
+            //      division below is the thing that would break if that ever stopped being true, and a
+            //      silently infinite scale multiplier is a worse way to find out.
             if (actualScale <= 0f)
                 continue;
 

@@ -1,4 +1,6 @@
 using System.Runtime.CompilerServices;
+using Content.Shared._KS14.CCVar;
+using Robust.Shared.Configuration;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
@@ -24,14 +26,28 @@ namespace Content.Shared._KS14.ZLevel;
 
 public sealed partial class KsZLevelSystem : EntitySystem
 {
+    [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private ITileDefinitionManager _tileDefinitionManager = default!;
     [Dependency] private SharedMapSystem _mapSystem = default!;
 
     [Dependency] private EntityQuery<KsZLevelComponent> _zLevelQuery = default!;
 
+    /// <summary>
+    ///     <see cref="KsCCVars.ZLevelParallaxStrength"/>, clamped to what <see cref="GetDepthScale"/> can
+    ///         actually use.
+    /// </summary>
+    private float _parallaxStrength = 1f;
+
     public override void Initialize()
     {
         base.Initialize();
+
+        Subs.CVar(
+            _configurationManager,
+            KsCCVars.ZLevelParallaxStrength,
+            value => _parallaxStrength = MathF.Max(value, 0f),
+            true
+        );
 
         InitialiseNetworking();
     }

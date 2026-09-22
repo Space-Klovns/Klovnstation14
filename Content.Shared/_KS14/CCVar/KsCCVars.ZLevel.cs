@@ -83,6 +83,32 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.zlevel.draw_gap_levels", true, CVar.CLIENTONLY | CVar.ARCHIVE);
 
     /// <summary>
+    ///     How strongly z-levels below the viewer shrink with distance, as a multiple of the built-in
+    ///         per-level step.
+    /// </summary>
+    /// <remarks>
+    ///     This is the parallax of the stack: a z-level further down is drawn through a smaller eye, so it
+    ///         slides under the viewer as they walk rather than tracking them one for one. That sells the
+    ///         depth, and at a tall enough stack or a fast enough walk it is also what makes the floors
+    ///         below swim about distractingly, hence a knob.
+    ///     1 is the built-in look. 0 draws every z-level at the viewer's own scale, which is no parallax at
+    ///         all - the stack stays legible, it simply reads flat. Above 1 exaggerates it.
+    ///     Clamped at zero: a negative would draw the levels below <em>larger</em> than the one being stood
+    ///         on, which is not a stronger effect but an inverted one.
+    ///     Purely how the stack is drawn, so it is the viewer's to set. Everything that compensates for the
+    ///         scale - a falling entity's sprite, most of all - goes through the same call, so nothing can
+    ///         drift out of step with it.
+    ///     CLIENT rather than CLIENTONLY, unlike its neighbours here, because the call that reads it lives
+    ///         in a shared system. CLIENTONLY means "skip registering this on the server", so subscribing
+    ///         to one from shared code throws KeyNotFoundException out of Initialize and takes the server
+    ///         down at startup. CLIENT registers on both sides and still lets only the client change it;
+    ///         the server's copy sits at the default, unread, because the server never draws anything.
+    /// </remarks>
+    [CVarControl(AdminFlags.Debug)]
+    public static readonly CVarDef<float> ZLevelParallaxStrength =
+        CVarDef.Create("klovn.zlevel.parallax_strength", 1f, CVar.CLIENT | CVar.ARCHIVE);
+
+    /// <summary>
     ///     Which way light is carried between z-levels: one of
     ///         <see cref="ZLevel.Light.KsZLevelLightLeakMode"/>, case-insensitively.
     /// </summary>

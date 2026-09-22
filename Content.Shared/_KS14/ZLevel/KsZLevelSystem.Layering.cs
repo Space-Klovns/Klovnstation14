@@ -21,9 +21,21 @@ public sealed partial class KsZLevelSystem : EntitySystem
     }
 
     /// <summary>
-    ///     How much of the eye's scale one z-level of render depth takes away.
+    ///     How much of the eye's scale one z-level of render depth takes away, before
+    ///     <see cref="KsCCVars.ZLevelParallaxStrength"/> scales it.
     /// </summary>
     public const float DepthScaleStep = 0.075f;
+
+    /// <summary>
+    ///     The smallest eye scale a z-level pass may be drawn through.
+    /// </summary>
+    /// <remarks>
+    ///     The shrink is linear in depth, so a deep enough stack - or a raised parallax strength over an
+    ///         ordinary one - walks the scale down through zero and out the far side, where the pass is
+    ///         drawn mirrored and growing again. Neither the depth nor the strength is bounded, so the
+    ///         result has to be.
+    /// </remarks>
+    private const float MinimumDepthScale = 0.05f;
 
     /// <summary>
     ///     The shallowest a z-level may be.
@@ -242,12 +254,17 @@ public sealed partial class KsZLevelSystem : EntitySystem
     /// </summary>
     /// <remarks>
     ///     Shared so that anything compensating for the per-z-level camera scale - a transiting entity's sprite,
-    ///         say - cannot drift out of step with what actually rendered it.
+    ///         say - cannot drift out of step with what actually rendered it. That is also why this reads
+    ///         <see cref="KsCCVars.ZLevelParallaxStrength"/> here rather than leaving each caller to apply it:
+    ///         one of them forgetting would put a falling sprite at a different size to the floor it is
+    ///         falling towards.
+    ///     <paramref name="depth"/> is signed. A gap map crossing overhead is nearer the camera than the
+    ///         viewer's own floor, so it passes a negative and is drawn larger.
     /// </remarks>
-    public static Vector2 GetDepthScale(Vector2 eyeScale, float depth)
+    public Vector2 GetDepthScale(Vector2 eyeScale, float depth)
     {
-        var shrink = DepthScaleStep * depth;
-        return eyeScale - new Vector2(shrink, shrink);
+        var shrink = DepthScaleStep * _parallaxStrength * depth;
+        return Vector2.Max(eyeScale - new Vector2(shrink, shrink), new Vector2(MinimumDepthScale));
     }
 
     /// <summary>

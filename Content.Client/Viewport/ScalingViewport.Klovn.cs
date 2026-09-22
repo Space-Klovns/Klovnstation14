@@ -71,7 +71,7 @@ namespace Content.Client.Viewport
         ///         instant the grid lands it stops being drawn by this pass and starts being drawn by the
         ///         ordinary one for its new z-level, at full opacity either way.
         /// </remarks>
-        private const float GapFadeInProgress = 0.1f;
+        private const float GapFadeInProgress = 0.3f;
 
         /// <summary>
         ///     Held so the subscription can be taken back off again. A cvar's subscriber list is rooted for
@@ -231,7 +231,7 @@ namespace Content.Client.Viewport
                 _zLevelEye.DrawFov = isViewerMap && eye.DrawFov;
 
                 _zLevelEye.Position = new MapCoordinates(eye.Position.Position, mapComponent.MapId);
-                _zLevelEye.Scale = KsZLevelSystem.GetDepthScale(eye.Scale, depth);
+                _zLevelEye.Scale = _zLevelSystem.GetDepthScale(eye.Scale, depth);
                 // The viewer's own map is drawn through their real eye while they're standing on it, and
                 //      through the scaled copy while they're above it mid-transit.
                 _viewport.Eye = isViewerMap && depth <= 0f ? eye : _zLevelEye;
@@ -319,9 +319,18 @@ namespace Content.Client.Viewport
                 }
 
                 _viewport!.ClearColor = null;
-                _zLevelEye.DrawFov = false;
+
+                // A crossing at or above the viewer is on their eye level, so it is sight-blocked like
+                //      anything else at their eye level - otherwise a lift arriving overhead hands everyone
+                //      underneath it a free look at whoever is riding it, through walls they could not see
+                //      through a moment earlier or a moment later.
+                // One below them is not: they are looking down an open shaft at it, and the walls carving
+                //      up their own floor are no business of a pass two floors down. That matches the rule
+                //      the ordinary stack passes already use, where only the viewer's own z-level draws it.
+                _zLevelEye.DrawFov = eye.DrawFov && gapDepth <= 0f;
+
                 _zLevelEye.Position = new MapCoordinates(eye.Position.Position, mapComponent.MapId);
-                _zLevelEye.Scale = KsZLevelSystem.GetDepthScale(eye.Scale, gapDepth);
+                _zLevelEye.Scale = _zLevelSystem.GetDepthScale(eye.Scale, gapDepth);
                 _viewport.Eye = _zLevelEye;
 
                 _viewport.Render();
@@ -487,7 +496,7 @@ namespace Content.Client.Viewport
             //      less than the pass reading it can see, because that pass is further away and sees wider -
             //      and the strip of screen past the edge of the capture is then lit by nothing at all.
             _zLevelEye.Scale =
-                KsZLevelSystem.GetDepthScale(_eye.Scale, consumerDepth) / _captureOversize;
+                _zLevelSystem.GetDepthScale(_eye.Scale, consumerDepth) / _captureOversize;
 
             _viewport!.Eye = _zLevelEye;
 

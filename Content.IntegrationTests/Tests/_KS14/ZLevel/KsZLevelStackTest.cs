@@ -188,19 +188,24 @@ public sealed class KsZLevelStackTest : KsZLevelTestBase
     ///     Render depth has to fall as a z-level gets closer, and reach the eye's own scale at depth zero.
     /// </summary>
     [Test]
-    public void TestDepthScaleShrinksWithDistance()
+    public async Task TestDepthScaleShrinksWithDistance()
     {
+        var zLevelSystem = Pair.Server.ResolveDependency<IEntityManager>().System<KsZLevelSystem>();
         var eyeScale = System.Numerics.Vector2.One;
 
-        Assert.Multiple(() =>
+        await Pair.Server.WaitAssertion(() => Assert.Multiple(() =>
         {
-            Assert.That(KsZLevelSystem.GetDepthScale(eyeScale, 0f), Is.EqualTo(eyeScale),
+            Assert.That(zLevelSystem.GetDepthScale(eyeScale, 0f), Is.EqualTo(eyeScale),
                 "a z-level at the viewer's own depth renders at the eye's own scale");
-            Assert.That(KsZLevelSystem.GetDepthScale(eyeScale, 1f).X, Is.LessThan(eyeScale.X),
+            Assert.That(zLevelSystem.GetDepthScale(eyeScale, 1f).X, Is.LessThan(eyeScale.X),
                 "one z-level down has to render smaller than the viewer's own, or there is no sense of depth");
-            Assert.That(KsZLevelSystem.GetDepthScale(eyeScale, 2f).X,
-                Is.LessThan(KsZLevelSystem.GetDepthScale(eyeScale, 1f).X),
+            Assert.That(zLevelSystem.GetDepthScale(eyeScale, 2f).X,
+                Is.LessThan(zLevelSystem.GetDepthScale(eyeScale, 1f).X),
                 "the further down a z-level is, the smaller it should render");
-        });
+
+            // A gap crossing overhead passes a negative depth, and is drawn larger for it.
+            Assert.That(zLevelSystem.GetDepthScale(eyeScale, -1f).X, Is.GreaterThan(eyeScale.X),
+                "something above the viewer is nearer the camera, so it has to render larger");
+        }));
     }
 }
