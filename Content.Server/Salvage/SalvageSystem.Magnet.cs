@@ -196,6 +196,11 @@ public sealed partial class SalvageSystem
     {
         data.Comp.Offered.Clear();
 
+        // KS14 start: Saturn's atmosphere only permits innately moored wreck offers.
+        if (KsTryCreateSaturnCloudOffers(data))
+            return;
+        // KS14 end
+
         for (var i = 0; i < data.Comp.OfferCount; i++)
         {
             var seed = _random.Next();

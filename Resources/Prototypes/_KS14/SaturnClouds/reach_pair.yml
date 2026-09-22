@@ -1,0 +1,64 @@
+- type: gameMap
+  id: ReachSaturnCloud
+  mapName: Reach in Saturn's Clouds
+  mapPath: /Maps/_KS14/Stations/reach_clouds.yml
+  ksSaturnOrbitalMap: ReachSaturnOrbital
+  minPlayers: 0
+  maxPlayers: 7
+  stations:
+    Reach:
+      stationProto: KsSaturnCloudStation
+      components:
+      - type: StationNameSetup
+        mapNameTemplate: '{0} Saturn Atmospheric Platform {1}'
+        nameGenerator:
+          !type:NanotrasenNameGenerator
+          prefixCreator: 'SAP'
+      - type: StationEmergencyShuttle
+        emergencyShuttlePath: /Maps/Shuttles/emergency.yml
+      - type: StationJobs
+        availableJobs:
+          Captain: [ 1, 1 ]
+          HeadOfSecurity: [ 1, 1 ]
+          Bartender: [ 1, 1 ]
+          Botanist: [ 1, 1 ]
+          Chef: [ 1, 1 ]
+          Janitor: [ 1, 1 ]
+          AtmosphericTechnician: [ 1, 1 ]
+          StationEngineer: [ 1, 2 ]
+          Chemist: [ 1, 1 ]
+          MedicalDoctor: [ 1, 2 ]
+          Scientist: [ 1, 1 ]
+          SecurityOfficer: [ 1, 3 ]
+          CargoTechnician: [ 1, 1 ]
+          SalvageSpecialist: [ 1, 1 ]
+          Passenger: [ -1, -1 ]
+          Clown: [ 1, 1 ]
+          Mime: [ 1, 1 ]
+          Musician: [ 1, 1 ]
+
+- type: gameMap
+  id: ReachSaturnOrbital
+  mapName: Reach Orbital Mining Station
+  mapPath: /Maps/_KS14/Stations/reach_orbital.yml
+  isGrid: true
+  maxRandomOffset: 0
+  randomRotation: false
+  ksSaturnAsteroidDungeon: KsSaturnOrbitalAsteroid
+  ksSaturnAsteroidCount: 8
+  ksSaturnAsteroidMinimumDistance: 120
+  ksSaturnAsteroidMaximumDistance: 240
+  minPlayers: 0
+  maxPlayers: 7
+  stations:
+    SaturnOrbital:
+      stationProto: StandardNanotrasenStation
+      components:
+      - type: StationNameSetup
+        mapNameTemplate: '{0} Saturn Orbital Mining Station {1}'
+        nameGenerator:
+          !type:NanotrasenNameGenerator
+          prefixCreator: 'SOMS'
+      - type: StationJobs
+        availableJobs:
+          SalvageSpecialist: [ 3, 3 ]

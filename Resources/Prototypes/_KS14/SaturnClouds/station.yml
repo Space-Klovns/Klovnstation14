@@ -1,0 +1,41 @@
+- type: entity
+  parent: StandardNanotrasenStation
+  id: KsSaturnCloudStation
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: GridSpawn
+    groups:
+      trade: !type:GridSpawnGroup
+        addComponents:
+        - type: ProtectedGrid
+        - type: TradeStation
+        - type: InnateMooring
+        paths:
+        - /Maps/Shuttles/trading_outpost.yml
+      ruins: !type:GridSpawnGroup
+        hide: true
+        nameGrid: true
+        minCount: 3
+        maxCount: 4
+        stationGrid: false
+        addComponents:
+        - type: InnateMooring
+        paths:
+        - /Maps/Ruins/abandoned_outpost.yml
+        - /Maps/Ruins/atmos_interchange.yml
+        - /Maps/Ruins/chunked_tcomms.yml
+        - /Maps/Ruins/biodome_satellite.yml
+        - /Maps/Ruins/derelict.yml
+        - /Maps/Ruins/djstation.yml
+        - /Maps/Ruins/empty_flagship.yml
+        - /Maps/Ruins/hydro_outpost.yml
+        - /Maps/Ruins/old_ai_sat.yml
+        - /Maps/Ruins/ruined_prison_ship.yml
+        - /Maps/Ruins/syndicate_dropship.yml
+        - /Maps/Ruins/whiteship_ancient.yml
+        - /Maps/Ruins/whiteship_bluespacejumper.yml
+        - /Maps/Ruins/wrecklaimer.yml
+      wrecks: !type:DungeonSpawnGroup
+        minCount: 0
+        maxCount: 0
+

@@ -1,0 +1,24 @@
+- type: dungeonConfig
+  id: KsSaturnOrbitalAsteroid
+  layers:
+  - !type:NoiseDunGen
+    tileCap: 4000
+    capStd: 64
+    iterations: 4
+    layers:
+    - tile: FloorAsteroidSand
+      threshold: 0.3
+      noise:
+        frequency: 0.012
+        noiseType: OpenSimplex2
+        fractalType: FBm
+        octaves: 3
+        lacunarity: 2
+  - !type:BiomeDunGen
+    biomeTemplate: Asteroid
+  - !type:OreDunGen
+    replacement: AsteroidRock
+    entity: AsteroidRockGibtonite
+    count: 24
+    minGroupSize: 0
+    maxGroupSize: 2

@@ -2,6 +2,7 @@
   id: Reach
   mapName: 'Reach'
   mapPath: /Maps/reach.yml
+  ksSaturnCloudMap: ReachSaturnCloud # KS14: opt into the paired cloud and orbital map specifications
   minPlayers: 0
   maxPlayers: 7
   stations:
