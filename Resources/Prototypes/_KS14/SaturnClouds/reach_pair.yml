@@ -60,4 +60,4 @@
           prefixCreator: 'SOMS'
       - type: StationJobs
         availableJobs:
-          SalvageSpecialist: [ 3, 3 ]
+          BeltMiner: [ 3, 3 ]

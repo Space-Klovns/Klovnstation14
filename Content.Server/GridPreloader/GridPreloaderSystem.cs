@@ -53,7 +53,7 @@ public sealed partial class GridPreloaderSystem : SharedGridPreloaderSystem
         EnsurePreloadedGridMap();
     }
 
-    private void EnsurePreloadedGridMap()
+    public void EnsurePreloadedGridMap()
     {
         // Already have a preloader?
         if (GetPreloaderEntity() != null)
@@ -97,6 +97,9 @@ public sealed partial class GridPreloaderSystem : SharedGridPreloaderSystem
                 preloader.PreloadedGrids[proto.ID].Add(gridUid);
             }
         }
+
+        // KS14: Do not retain an empty preloader map when nothing was successfully loaded.
+        QueueDeletePreloaderIfEmpty((mapUid, preloader));
     }
 
     /// <summary>
@@ -139,6 +142,21 @@ public sealed partial class GridPreloaderSystem : SharedGridPreloaderSystem
         if (list.Count == 0)
             preloader.PreloadedGrids.Remove(proto);
 
+        // KS14: defer cleanup so the caller can move the final grid off the preloader map first.
+        if (preloader.PreloadedGrids.Count == 0 &&
+            GetPreloaderEntity() is { } preloaderEntity &&
+            ReferenceEquals(preloaderEntity.Comp, preloader))
+        {
+            QueueDeletePreloaderIfEmpty(preloaderEntity);
+        }
+
         return true;
+    }
+
+    // KS14: the preloader map has no purpose after its final grid is handed off.
+    private void QueueDeletePreloaderIfEmpty(Entity<GridPreloaderComponent> preloader)
+    {
+        if (preloader.Comp.PreloadedGrids.Count == 0 && !TerminatingOrDeleted(preloader.Owner))
+            QueueDel(preloader.Owner);
     }
 }

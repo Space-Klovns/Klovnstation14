@@ -1,0 +1,45 @@
+- type: job
+  parent: SalvageSpecialist
+  id: BeltMiner
+  name: job-name-belt-miner
+  description: job-description-belt-miner
+  playTimeTracker: JobBeltMiner
+  startingGear: BeltMinerGear
+  special:
+  - !type:AddComponentSpecial
+    components:
+    - type: NpcFactionMember
+      factions:
+      - NanoTrasen
+
+- type: startingGear
+  parent: SalvageSpecialistGear
+  id: BeltMinerGear
+
+- type: playTimeTracker
+  id: JobBeltMiner
+
+- type: roleLoadout
+  id: JobBeltMiner
+  groups:
+  - GroupTankHarness
+  - SalvageSpecialistBackpack
+  - SalvageSpecialistOuterClothing
+  - SalvageSpecialistShoes
+  - Glasses
+  - Survival
+  - Trinkets
+  - GroupSpeciesBreathTool
+
+- type: entity
+  parent: SpawnPointSalvageSpecialist
+  id: SpawnPointBeltMiner
+  name: belt miner
+  components:
+  - type: SpawnPoint
+    job_id: BeltMiner
+
+- type: chameleonOutfit
+  parent: SalvageSpecialistChameleonOutfit
+  id: BeltMinerChameleonOutfit
+  job: BeltMiner

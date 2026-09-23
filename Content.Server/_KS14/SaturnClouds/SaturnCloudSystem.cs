@@ -1,16 +1,20 @@
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
+using Content.Server.Administration.Logs;
+using Content.Server._KS14.Procedural;
 using Content.Server.Chat.Systems;
+using Content.Server.Decals;
 using Content.Server.GameTicking;
 using Content.Server.GameTicking.Events;
 using Content.Server.Power.Components;
-using Content.Server.Procedural;
 using Content.Server.Radio.EntitySystems;
 using Content.Server.Salvage;
 using Content.Server.Salvage.Magnet;
 using Content.Server.Shuttles.Systems;
 using Content.Server.Station.Systems;
 using Content.Shared._KS14.CCVar;
+using Content.Shared.Database;
 using Content.Shared.GameTicking;
 using Content.Shared.Maps;
 using Content.Shared.Power.Components;
@@ -31,15 +35,20 @@ namespace Content.Server._KS14.SaturnClouds;
 public sealed partial class SaturnCloudSystem : EntitySystem
 {
     private const float PercentageScale = 100f;
+    private const float AsteroidSeparationPadding = 8f;
+    private const float AsteroidMinimumPlacementStep = 32f;
 
     private static readonly ProtoId<RadioChannelPrototype> EngineeringChannel = "Engineering";
 
+    [Dependency] private IAdminLogManager _adminLogManager = default!;
     [Dependency] private ChatSystem _chatSystem = default!;
     [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private DecalSystem _decalSystem = default!;
     [Dependency] private GameTicker _gameTicker = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private MapSystem _mapSystem = default!;
-    [Dependency] private DungeonSystem _dungeonSystem = default!;
+    [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
+    [Dependency] private KsCollisionFreeDungeonGridSystem _collisionFreeDungeonGridSystem = default!;
     [Dependency] private RadioSystem _radioSystem = default!;
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private SharedBatterySystem _batterySystem = default!;
@@ -55,6 +64,7 @@ public sealed partial class SaturnCloudSystem : EntitySystem
     private readonly HashSet<EntityUid> _protectedGrids = new();
     private readonly List<EntityUid> _exposedGrids = new();
     private readonly HashSet<MapId> _orbitalMapsAwaitingInitialization = new();
+    private bool _stationDestructionHandled;
 
     [SubscribeLocalEvent]
     private void OnLoadingMaps(LoadingMapsEvent args)
@@ -95,13 +105,15 @@ public sealed partial class SaturnCloudSystem : EntitySystem
         if (args.GameMap.KsIsSaturnOrbitalVariant)
         {
             _orbitalMapsAwaitingInitialization.Add(args.Map);
-            GenerateOrbitalAsteroidBelt(args);
+            _ = GenerateOrbitalAsteroidBeltAsync(args);
         }
     }
 
     [SubscribeLocalEvent]
     private void OnRoundStarting(RoundStartingEvent args)
     {
+        _stationDestructionHandled = false;
+
         // GameTicker only initializes its DefaultMap. The paired orbital map must be initialized too,
         // otherwise its grid remains paused and clients resolve its spawn coordinates as MapId.Nullspace.
         foreach (var mapId in _orbitalMapsAwaitingInitialization)
@@ -122,6 +134,7 @@ public sealed partial class SaturnCloudSystem : EntitySystem
                     continue;
 
                 EnsureComp<SaturnMainStationGridComponent>(mainGridUid.Value);
+                RemComp<InnateMooringComponent>(mainGridUid.Value);
                 EnsureGridExposure(mainGridUid.Value, cloudMapComponent);
             }
         }
@@ -130,14 +143,14 @@ public sealed partial class SaturnCloudSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnMainStationGridShutdown(Entity<SaturnMainStationGridComponent> entity, ref ComponentShutdown args)
     {
-        EndCloudRoundForLostMainGrid();
+        EndCloudRoundForLostMainGrid(entity.Owner);
     }
 
     [SubscribeLocalEvent]
     private void OnMainStationGridRemoved(Entity<StationDataComponent> entity, ref StationGridRemovedEvent args)
     {
         if (HasComp<SaturnMainStationGridComponent>(args.GridId))
-            EndCloudRoundForLostMainGrid();
+            EndCloudRoundForLostMainGrid(args.GridId);
     }
 
     [SubscribeLocalEvent]
@@ -145,6 +158,7 @@ public sealed partial class SaturnCloudSystem : EntitySystem
     {
         _protectedGrids.Clear();
         _orbitalMapsAwaitingInitialization.Clear();
+        _stationDestructionHandled = false;
     }
 
     [SubscribeLocalEvent]
@@ -173,6 +187,7 @@ public sealed partial class SaturnCloudSystem : EntitySystem
                 var newExposedComponent = EnsureGridExposure(newGridUid, cloudMapComponent);
                 newExposedComponent.UnprotectedTime = exposedComponent.UnprotectedTime;
                 newExposedComponent.NextDamageTime = exposedComponent.NextDamageTime;
+                newExposedComponent.DestructionWarningAnnounced = exposedComponent.DestructionWarningAnnounced;
             }
 
             if (innateMooring)
@@ -228,6 +243,8 @@ public sealed partial class SaturnCloudSystem : EntitySystem
             _saturnMapQuery.TryGetComponent(mapUid, out var cloudMapComponent))
         {
             EnsureGridExposure(gridUid, cloudMapComponent);
+            if (!HasComp<SaturnMainStationGridComponent>(gridUid))
+                EnsureComp<InnateMooringComponent>(gridUid);
             return;
         }
 
@@ -315,7 +332,7 @@ public sealed partial class SaturnCloudSystem : EntitySystem
         entity.Comp1.WasOperational = operational;
     }
 
-    private void GenerateOrbitalAsteroidBelt(PostGameMapLoad args)
+    private async Task GenerateOrbitalAsteroidBeltAsync(PostGameMapLoad args)
     {
         if (args.GameMap.KsSaturnAsteroidDungeon is not { } dungeonPrototypeId ||
             args.GameMap.KsSaturnAsteroidCount <= 0 ||
@@ -327,33 +344,58 @@ public sealed partial class SaturnCloudSystem : EntitySystem
             return;
         }
 
-        var angularStep = MathF.Tau / args.GameMap.KsSaturnAsteroidCount;
-        var angularOffset = _robustRandom.NextFloat(0f, MathF.Tau);
-
-        for (var asteroidIndex = 0; asteroidIndex < args.GameMap.KsSaturnAsteroidCount; asteroidIndex++)
+        try
         {
-            var angle = angularOffset + angularStep * asteroidIndex;
-            var distance = _robustRandom.NextFloat(
-                args.GameMap.KsSaturnAsteroidMinimumDistance,
-                args.GameMap.KsSaturnAsteroidMaximumDistance);
-            var position = new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * distance;
-            var asteroidGrid = _mapSystem.CreateGridEntity(args.Map);
+            var angularStep = MathF.Tau / args.GameMap.KsSaturnAsteroidCount;
+            var angularOffset = _robustRandom.NextFloat(0f, MathF.Tau);
 
-            _transformSystem.SetMapCoordinates(asteroidGrid, new MapCoordinates(position, args.Map));
-            _dungeonSystem.GenerateDungeon(
-                dungeonPrototype,
-                asteroidGrid.Owner,
-                asteroidGrid.Comp,
-                Vector2i.Zero,
-                _robustRandom.Next());
+            for (var asteroidIndex = 0; asteroidIndex < args.GameMap.KsSaturnAsteroidCount; asteroidIndex++)
+            {
+                if (!_mapSystem.MapExists(args.Map))
+                    return;
+
+                var angle = angularOffset + angularStep * asteroidIndex;
+                var direction = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
+                var preferredDistance = _robustRandom.NextFloat(
+                    args.GameMap.KsSaturnAsteroidMinimumDistance,
+                    args.GameMap.KsSaturnAsteroidMaximumDistance);
+                var asteroidGrid = await _collisionFreeDungeonGridSystem.GenerateAsync(
+                    dungeonPrototype,
+                    args.Map,
+                    direction * preferredDistance,
+                    direction,
+                    AsteroidSeparationPadding,
+                    AsteroidMinimumPlacementStep,
+                    _robustRandom.Next());
+
+                if (asteroidGrid == null)
+                    Log.Error($"Could not place Saturn orbital asteroid {asteroidIndex + 1} without clipping another grid.");
+
+                // Keep large grid transfers from all landing in one server frame.
+                await Task.Yield();
+            }
+        }
+        catch (Exception exception)
+        {
+            Log.Error($"Failed to generate the Saturn orbital asteroid belt: {exception}");
         }
     }
 
-    private void EndCloudRoundForLostMainGrid()
+    private void EndCloudRoundForLostMainGrid(EntityUid gridUid)
     {
-        if (_gameTicker.RunLevel != GameRunLevel.InRound)
+        if (_gameTicker.RunLevel != GameRunLevel.InRound || _stationDestructionHandled)
             return;
 
+        _stationDestructionHandled = true;
+        _chatSystem.DispatchStationAnnouncement(
+            gridUid,
+            Loc.GetString("ks-mooring-grid-announcement-destroyed"),
+            Loc.GetString("ks-mooring-device-announcement-sender"),
+            colorOverride: Color.Red);
+        _adminLogManager.Add(
+            LogType.EventRan,
+            LogImpact.High,
+            $"Saturn's winds destroyed the main station grid {ToPrettyString(gridUid):grid} and ended the round.");
         _gameTicker.EndRound(Loc.GetString("ks-saturn-clouds-round-end-station-lost"));
     }
 
@@ -383,19 +425,31 @@ public sealed partial class SaturnCloudSystem : EntitySystem
             {
                 exposedComponent.UnprotectedTime = TimeSpan.Zero;
                 exposedComponent.NextDamageTime = cloudMapComponent.DamageDelay;
+                exposedComponent.DestructionWarningAnnounced = false;
                 continue;
             }
 
             exposedComponent.UnprotectedTime += elapsed;
             if (exposedComponent.UnprotectedTime >= cloudMapComponent.DestructionDelay)
             {
-                _chatSystem.DispatchStationAnnouncement(
-                    gridUid,
-                    Loc.GetString("ks-mooring-grid-announcement-destroyed"),
-                    Loc.GetString("ks-mooring-device-announcement-sender"),
-                    colorOverride: Color.Red);
+                if (HasComp<SaturnMainStationGridComponent>(gridUid))
+                    EndCloudRoundForLostMainGrid(gridUid);
+
                 QueueDel(gridUid);
                 continue;
+            }
+
+            if (!exposedComponent.DestructionWarningAnnounced &&
+                HasComp<SaturnMainStationGridComponent>(gridUid) &&
+                exposedComponent.UnprotectedTime >= cloudMapComponent.DestructionDelay - cloudMapComponent.DestructionWarningLeadTime)
+            {
+                var seconds = (int)Math.Ceiling(cloudMapComponent.DestructionWarningLeadTime.TotalSeconds);
+                _chatSystem.DispatchStationAnnouncement(
+                    gridUid,
+                    Loc.GetString("ks-mooring-grid-announcement-destruction-warning", ("seconds", seconds)),
+                    Loc.GetString("ks-mooring-device-announcement-sender"),
+                    colorOverride: Color.Red);
+                exposedComponent.DestructionWarningAnnounced = true;
             }
 
             if (exposedComponent.UnprotectedTime < exposedComponent.NextDamageTime)
@@ -442,8 +496,10 @@ public sealed partial class SaturnCloudSystem : EntitySystem
         }
 
         var centerTile = _robustRandom.Pick(edgeTiles.Count > 0 ? edgeTiles : allTiles);
-        var radiusIncreases = cloudMapComponent.DamageRadiusIncreaseInterval > TimeSpan.Zero
-            ? (int)(unprotectedTime / cloudMapComponent.DamageRadiusIncreaseInterval)
+        var timeSinceFirstTear = unprotectedTime - cloudMapComponent.DamageDelay;
+        var radiusIncreases = cloudMapComponent.DamageRadiusIncreaseInterval > TimeSpan.Zero &&
+                              timeSinceFirstTear > TimeSpan.Zero
+            ? (int)(timeSinceFirstTear / cloudMapComponent.DamageRadiusIncreaseInterval)
             : 0;
         var radius = Math.Clamp(
             cloudMapComponent.InitialDamageRadius + radiusIncreases,
@@ -463,6 +519,39 @@ public sealed partial class SaturnCloudSystem : EntitySystem
                     removedTiles.Add((indices, Tile.Empty));
             }
         }
+
+        if (removedTiles.Count == 0)
+            return;
+
+        var removedIndices = removedTiles.Select(tile => tile.Item1).ToList();
+        var removedEntities = _entityLookupSystem.GetLocalEntitiesIntersecting(
+            grid.Owner,
+            removedIndices,
+            LookupFlags.Uncontained);
+
+        foreach (var entityUid in removedEntities)
+        {
+            if (!TerminatingOrDeleted(entityUid))
+                QueueDel(entityUid);
+        }
+
+        foreach (var indices in removedIndices)
+        {
+            var bottomLeft = (Vector2)indices * grid.Comp.TileSize;
+            var tileBounds = new Box2(bottomLeft, bottomLeft + new Vector2(grid.Comp.TileSize));
+            _decalSystem.KsRemoveDecalsIntersecting(grid.Owner, tileBounds);
+        }
+
+        _chatSystem.DispatchStationAnnouncement(
+            grid.Owner,
+            Loc.GetString("ks-mooring-grid-announcement-torn"),
+            Loc.GetString("ks-mooring-device-announcement-sender"),
+            colorOverride: Color.OrangeRed);
+        _adminLogManager.Add(
+            LogType.EventRan,
+            LogImpact.Medium,
+            $"Saturn's winds tore {removedTiles.Count} tiles from {ToPrettyString(grid.Owner):grid} " +
+            $"with radius {radius}, recursively deleting {removedEntities.Count} intersecting entities.");
 
         _mapSystem.SetTiles(grid.Owner, grid.Comp, removedTiles);
     }

@@ -14,7 +14,7 @@
     - BaseStationCargo
     - BaseStationJobsSpawning
     - BaseStationRecords
-    - BaseStationArrivals
+    # KS14: Arrivals shuttles are replaced by mapped latejoin spawnpoints.
     - BaseStationGateway
     - BaseStationShuttles
     - BaseStationCentcomm

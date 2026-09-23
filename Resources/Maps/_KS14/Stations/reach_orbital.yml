@@ -1378,7 +1378,7 @@ entities:
       rot: -1.5707963267948966 rad
       pos: -1.5,7.5
       parent: 181
-- proto: SpawnPointSalvageSpecialist
+- proto: SpawnPointBeltMiner
   entities:
   - uid: 182
     components:

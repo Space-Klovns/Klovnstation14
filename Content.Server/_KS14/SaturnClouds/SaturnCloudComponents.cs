@@ -20,6 +20,9 @@ public sealed partial class SaturnCloudMapComponent : Component
     public TimeSpan DestructionDelay;
 
     [DataField(required: true)]
+    public TimeSpan DestructionWarningLeadTime;
+
+    [DataField(required: true)]
     public int InitialDamageRadius;
 
     [DataField(required: true)]
@@ -52,10 +55,13 @@ public sealed partial class SaturnWindExposedComponent : Component
 
     [ViewVariables]
     public TimeSpan NextDamageTime;
+
+    [ViewVariables]
+    public bool DestructionWarningAnnounced;
 }
 
 /// <summary>
-///     Marks a grid as naturally resistant to the winds. Salvage wrecks receive this when they arrive.
+///     Marks a non-station grid as naturally resistant to the winds on a Saturn cloud map.
 /// </summary>
 [RegisterComponent, Access(typeof(SaturnCloudSystem))]
 public sealed partial class InnateMooringComponent : Component;

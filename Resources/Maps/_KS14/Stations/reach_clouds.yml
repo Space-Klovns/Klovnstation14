@@ -65,9 +65,10 @@ entities:
       damageDelay: 45
       damageInterval: 20
       destructionDelay: 240
-      initialDamageRadius: 1
-      damageRadiusIncreaseInterval: 90
-      maximumDamageRadius: 3
+      destructionWarningLeadTime: 30
+      initialDamageRadius: 2
+      damageRadiusIncreaseInterval: 20
+      maximumDamageRadius: 8
   - uid: 2
     components:
     - type: MetaData

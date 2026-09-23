@@ -4,6 +4,8 @@
   description: department-Cargo-description
   color: "#A46106"
   roles:
+  # KS14: Saturn orbital mining role.
+  - BeltMiner
   - CargoTechnician
   - Quartermaster
   - SalvageSpecialist

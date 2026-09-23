@@ -532,6 +532,12 @@ public sealed partial class ArrivalsSystem : EntitySystem
 
     private void SetupArrivalsStation()
     {
+        // KS14: Arrivals are opt-in. Without a StationArrivals component, use mapped latejoin points and do not
+        // create the otherwise-unused arrivals terminal or its planet.
+        var stationQuery = AllEntityQuery<StationArrivalsComponent>();
+        if (!stationQuery.MoveNext(out _, out _))
+            return;
+
         var path = new ResPath(_cfgManager.GetCVar(CCVars.ArrivalsMap));
         _mapSystem.CreateMap(out var mapId, runMapInit: false);
         var mapUid = _mapSystem.GetMap(mapId);
