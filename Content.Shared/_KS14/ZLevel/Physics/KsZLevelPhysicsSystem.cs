@@ -61,6 +61,19 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
     private const int MaxCrossingsPerTick = 8;
 
     /// <summary>
+    ///     How wide a box <see cref="HasGravityAt"/> looks in when nothing is directly underfoot.
+    /// </summary>
+    /// <remarks>
+    ///     A shaft is a hole, so what is wanted is the station the hole is cut through rather than anything at
+    ///         the position itself. One tile is enough to find it and small enough that a station's gravity
+    ///         does not reach a shaft floating well clear of it.
+    /// </remarks>
+    private const float GravitySearchSize = 1f;
+
+    // Not readonly: FindGridsIntersecting takes it by ref so that it can grow or replace the list itself.
+    private List<Entity<MapGridComponent>> _gravityGrids = [];
+
+    /// <summary>
     ///     Damage dealt per z-level per second of impact speed over
     ///         <see cref="KsCCVars.ZLevelTransitImpactVelocity"/>. Ignores resistances.
     /// </summary>
@@ -449,6 +462,12 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         //      cross, and an entity builds up proportionally more speed crossing it.
         var height = transitComponent.Height + velocity * frameTime / GetDepth(zLevelEntity.Value);
 
+        // Something may be occupying part of this z-level's gap - an elevator crossing it sits on a map of
+        //      its own - and a floor plane is the only surface the fall itself knows about.
+        if (height < transitComponent.Height &&
+            TryLandOnObstruction((uid, transitComponent, transformComponent), zLevelEntity.Value, height, velocity))
+            return;
+
         if (height > 0f && height < 1f)
         {
             SetTransit((uid, transitComponent), height, velocity);
@@ -456,38 +475,33 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         }
 
         // Crossing is predicted, so a fall never stalls at a z-level boundary waiting on the server. That only
-        //      works because the whole stack is replicated to the client and rebuilt as one object, so
-        //      Node.Previous/Node.Next mean the same thing on both sides.
+        //      works because the whole stack is replicated to the client and rebuilt as one object, so a
+        //      slice's neighbours mean the same thing on both sides.
         for (var crossing = 0; crossing < MaxCrossingsPerTick && (height <= 0f || height >= 1f); crossing++)
         {
-            var node = zLevelEntity.Value.Comp.Node;
-            if (node is null)
-            {
-                // Replicated before the stack was rebuilt; the next state will sort it out.
-                SetTransit((uid, transitComponent), Math.Clamp(height, 0f, 1f), velocity);
-                return;
-            }
-
             var rising = height >= 1f;
-            var targetNode = rising ? node.Next : node.Previous;
             var worldPosition = _transformSystem.GetWorldPosition(transformComponent);
+
+            // Slices rather than z-levels, because the airspace above a z-level is divided between whatever
+            //      is crossing it - so the thing below a faller may be the roof of a moving platform rather
+            //      than the floor.
+            var hasTarget = _zLevelSystem.TryGetAdjacentFallSlice(zLevelEntity!.Value, rising, out var target);
 
             // A stack is rebuilt wholesale from network state, so a member can briefly be an entity that is not
             //      a map at all. Treating that as "nothing that way" stops the transit against it for a frame,
             //      which the next state fixes; asking for the component outright would throw out of Update.
             MapComponent? targetMapComponent = null;
-            if (targetNode is { } candidateNode &&
-                !_mapQuery.TryGetComponent(candidateNode.Value.Owner, out targetMapComponent))
-                targetNode = null;
+            if (hasTarget && !_mapQuery.TryGetComponent(target!.Value.Owner, out targetMapComponent))
+                hasTarget = false;
 
-            // The floor plane being crossed always belongs to the lower of the two z-levels: our own floor on
-            //      the way down, and the upper z-level's floor — our ceiling — on the way up.
+            // The floor plane being crossed always belongs to the lower of the two slices: our own floor on
+            //      the way down, and the one above's floor — our ceiling — on the way up.
             var crossedMapId = rising
                 ? targetMapComponent?.MapId ?? MapId.Nullspace
                 : transformComponent.MapID;
 
             // Nothing that way counts as solid, so the bottom of a stack is a floor and the top is a ceiling.
-            if (targetNode is not { } target || targetMapComponent is null ||
+            if (!hasTarget || targetMapComponent is null ||
                 _zLevelSystem.IsFloorSolidAt(crossedMapId, worldPosition))
             {
                 Impact((uid, transitComponent), rising, velocity);
@@ -496,15 +510,27 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
 
             var oldZLevelEntity = zLevelEntity.Value;
             var overshoot = (rising ? height - 1f : height) * GetDepth(oldZLevelEntity);
-            zLevelEntity = target.Value;
+
+            // Where the boundary just crossed sits in the slice being entered. Ordinarily its very top or
+            //      bottom, but dropping off a platform onto the z-level it is anchored to leaves the faller
+            //      part way up that z-level's airspace rather than at the top of it.
+            var entryHeight = rising ? 0f : 1f;
+            if (!rising && _zLevelSystem.GetSlicePlaneAltitude(target!.Value.Owner) <= 0f)
+            {
+                var departedAltitude = _zLevelSystem.GetSlicePlaneAltitude(oldZLevelEntity.Owner);
+                if (departedAltitude > 0f)
+                    entryHeight = Math.Clamp(departedAltitude / GetDepth(target.Value), 0f, 1f);
+            }
+
+            zLevelEntity = target!.Value;
 
             _transformSystem.SetMapCoordinates(
                 uid,
                 new MapCoordinates(worldPosition, targetMapComponent.MapId)
             );
 
-            // Renormalise into the new z-level's own Depth, keeping the sub-tick overshoot.
-            height = (rising ? 0f : 1f) + overshoot / GetDepth(target.Value);
+            // Renormalise into the new slice's own Depth, keeping the sub-tick overshoot.
+            height = entryHeight + overshoot / GetDepth(target.Value);
 
             var changedEvent = new KsZLevelChangedEvent(oldZLevelEntity.Owner, target.Value.Owner, rising);
             RaiseLocalEvent(uid, ref changedEvent);
@@ -514,6 +540,61 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         }
 
         SetTransit((uid, transitComponent), Math.Clamp(height, 0f, 1f), velocity);
+    }
+
+    /// <summary>
+    ///     Lands a descending entity on anything occupying the part of the gap it is passing through.
+    /// </summary>
+    /// <remarks>
+    ///     The entity is moved onto the answering map and landed at its floor plane, which is what puts
+    ///         someone who dropped down a shaft onto the roof of the elevator that happened to be passing
+    ///         rather than through it. Grid traversal then parents them to whatever they came down on, so
+    ///         they ride it from there.
+    ///     Only a descent asks. A lift rising into something falling is not a landing and is left to the
+    ///         ordinary crush on arrival.
+    /// </remarks>
+    /// <returns>Whether the entity landed on something.</returns>
+    private bool TryLandOnObstruction(
+        Entity<KsZLevelTransitComponent, TransformComponent> entity,
+        Entity<KsZLevelComponent> zLevelEntity,
+        float height,
+        float velocity)
+    {
+        var worldPosition = _transformSystem.GetWorldPosition(entity.Comp2);
+
+        var obstructionEvent = new KsZLevelTransitObstructionEvent(
+            zLevelEntity.Owner,
+            entity.Comp2.MapID,
+            worldPosition,
+            entity.Comp1.Height,
+            height
+        );
+
+        RaiseLocalEvent(ref obstructionEvent);
+
+        if (obstructionEvent.LandingMapUid is not { } landingMapUid ||
+            !_mapQuery.TryGetComponent(landingMapUid, out var landingMapComponent))
+            return false;
+
+        _transformSystem.SetMapCoordinates(
+            entity.Owner,
+            new MapCoordinates(worldPosition, landingMapComponent.MapId)
+        );
+
+        if (TerminatingOrDeleted(entity.Owner))
+            return true;
+
+        // The landing map's own floor plane is the surface that was hit, so from its point of view this is
+        //      an ordinary landing and everything that follows one - the thud, the damage, the crush - is
+        //      the ordinary path.
+        var changedEvent = new KsZLevelChangedEvent(zLevelEntity.Owner, landingMapUid, false);
+        RaiseLocalEvent(entity.Owner, ref changedEvent);
+
+        if (TerminatingOrDeleted(entity.Owner))
+            return true;
+
+        Impact((entity.Owner, entity.Comp1), rising: false, velocity);
+        return true;
     }
 
     private void Impact(Entity<KsZLevelTransitComponent> entity, bool rising, float velocity)
@@ -529,7 +610,9 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
         if (rising)
             return;
 
-        _physicsSystem.WakeBody(entity.Owner);
+        // Guarded: nothing about transiting requires a body, and Resolve logs an error rather than shrugging.
+        if (_physicsQuery.TryGetComponent(entity.Owner, out var physicsComponent))
+            _physicsSystem.WakeBody(entity.Owner, body: physicsComponent);
 
         // One step, on the surface it came down on, louder than a walked one. Resolved through the ordinary
         //      footstep chain rather than a sound of its own, so shoes, puddles, catwalks and everything else
@@ -745,8 +828,34 @@ public sealed partial class KsZLevelPhysicsSystem : EntitySystem
             gridGravityComponent.Enabled)
             return true;
 
-        return _gravityQuery.TryGetComponent(zLevelEntity.Owner, out var mapGravityComponent) &&
-               mapGravityComponent.Enabled;
+        if (_gravityQuery.TryGetComponent(zLevelEntity.Owner, out var mapGravityComponent) &&
+            mapGravityComponent.Enabled)
+            return true;
+
+        // TryFindGridAt wants a tile, and a shaft is a hole - so the station the shaft is cut through is
+        //      never the grid "at" a falling entity, and neither is anything else. Without this, a station
+        //      whose gravity comes from a generator on its grid rather than from its map has no gravity
+        //      anywhere in any of its shafts, and everything dropped down one drifts at whatever speed it
+        //      happened to set off with instead of falling.
+        // Checked by bounds rather than by tile for exactly that reason, and only once the two cheap
+        //      answers above have failed.
+        _gravityGrids.Clear();
+        _mapSystem.FindGridsIntersecting(
+            mapId,
+            Box2.CenteredAround(worldPosition, new Vector2(GravitySearchSize, GravitySearchSize)),
+            ref _gravityGrids,
+            approx: true,
+            includeMap: false
+        );
+
+        foreach (var gridEntity in _gravityGrids)
+        {
+            if (_gravityQuery.TryGetComponent(gridEntity.Owner, out var nearbyGravityComponent) &&
+                nearbyGravityComponent.Enabled)
+                return true;
+        }
+
+        return false;
     }
 
     /// <summary>

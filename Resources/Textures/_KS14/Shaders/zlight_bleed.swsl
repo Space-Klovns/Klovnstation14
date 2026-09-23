@@ -14,12 +14,19 @@ uniform sampler2D MASK_TEXTURE;
 // How much of the light survives the drop, from the same attenuation curve the engine lights use.
 uniform highp float dim;
 
+// Whether the source z-level's own solidity blocks this light: 1 for light falling through it, 0 for light
+//      rising off it.
+// Light going down has to find a hole, so the floor it came from is exactly what stops it. Light going up
+//      leaves from the lit surface itself, so masking by that surface would subtract the light precisely
+//      where it is brightest and leave a shaft lit only through the holes in the floor under it.
+uniform highp float maskWeight;
+
 void fragment()
 {
     highp vec4 light = zTexture(UV);
 
     // Only alpha is read, which carries no colour space with it, so the raw sample is the right one here.
-    highp float blocked = texture2D(MASK_TEXTURE, UV).a;
+    highp float blocked = texture2D(MASK_TEXTURE, UV).a * maskWeight;
 
     COLOR = vec4(light.rgb * dim * (1.0 - blocked), 1.0);
 }

@@ -7,3 +7,13 @@
   id: Dead
   name: signal-port-name-dead
   description: signal-port-description-dead
+
+- type: sourcePort
+  id: KsElevatorStopped
+  name: signal-port-name-ks-elevator-stopped
+  description: signal-port-description-ks-elevator-stopped
+
+- type: sourcePort
+  id: KsElevatorMoving
+  name: signal-port-name-ks-elevator-moving
+  description: signal-port-description-ks-elevator-moving

@@ -45,6 +45,13 @@ public sealed partial class KsZLevelTransitSpriteSystem : EntitySystem
     ///     How much of a descent the fade-in covers. Something dropping onto the viewer's own z-level is fully
     ///         transparent as it comes through the ceiling and fully opaque once this far down.
     /// </summary>
+    /// <remarks>
+    ///     A whole grid crossing the same shaft deliberately does not use this - see
+    ///     <c>ScalingViewport.GapFadeInProgress</c>. A falling crate is a small sprite that wants to be
+    ///         picked out early; a platform is a full-screen pass over the floor below it, and showing one
+    ///         for the whole of its descent means looking at the underside of a lift instead of at the room
+    ///         you are standing in.
+    /// </remarks>
     private const float FadeInHeight = 0.5f;
 
     public override void Initialize()
@@ -147,8 +154,12 @@ public sealed partial class KsZLevelTransitSpriteSystem : EntitySystem
             var apparentDepth = actualDepth - transitComponent.Height * zLevelComponent.Depth;
 
             // Uniform on purpose: a single ratio commutes with the eye's rotation, a per-axis one would not.
-            var actualScale = KsZLevelSystem.GetDepthScale(eyeScale, actualDepth).X;
-            var apparentScale = KsZLevelSystem.GetDepthScale(eyeScale, apparentDepth).X;
+            var actualScale = _zLevelSystem.GetDepthScale(eyeScale, actualDepth).X;
+            var apparentScale = _zLevelSystem.GetDepthScale(eyeScale, apparentDepth).X;
+
+            // GetDepthScale clamps to a positive minimum, so this cannot fire today. Kept because the
+            //      division below is the thing that would break if that ever stopped being true, and a
+            //      silently infinite scale multiplier is a worse way to find out.
             if (actualScale <= 0f)
                 continue;
 
@@ -179,6 +190,11 @@ public sealed partial class KsZLevelTransitSpriteSystem : EntitySystem
             !_zLevelSystem.TryGetZLevel(viewerUid, out var viewerZLevelEntity))
             return null;
 
+        // Only a fall lifts a viewer off their own floor plane. Someone riding a grid across a gap is
+        //      standing on the gap map, so their z-level is that map and their depth above it is zero -
+        //      which has to stay true here as well as in ScalingViewport.GetViewerTransitHeight, because
+        //      that one decides what depth the passes below are drawn at and this one decides what depth
+        //      the sprites in them are compensated against.
         if (_transitQuery.TryGetComponent(viewerUid, out var viewerTransitComponent))
             viewerDepth = viewerTransitComponent.Height * viewerZLevelEntity.Value.Comp.Depth;
 

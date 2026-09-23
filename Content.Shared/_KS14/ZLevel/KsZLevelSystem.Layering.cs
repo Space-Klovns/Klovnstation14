@@ -21,9 +21,21 @@ public sealed partial class KsZLevelSystem : EntitySystem
     }
 
     /// <summary>
-    ///     How much of the eye's scale one z-level of render depth takes away.
+    ///     How much of the eye's scale one z-level of render depth takes away, before
+    ///     <see cref="KsCCVars.ZLevelParallaxStrength"/> scales it.
     /// </summary>
     public const float DepthScaleStep = 0.075f;
+
+    /// <summary>
+    ///     The smallest eye scale a z-level pass may be drawn through.
+    /// </summary>
+    /// <remarks>
+    ///     The shrink is linear in depth, so a deep enough stack - or a raised parallax strength over an
+    ///         ordinary one - walks the scale down through zero and out the far side, where the pass is
+    ///         drawn mirrored and growing again. Neither the depth nor the strength is bounded, so the
+    ///         result has to be.
+    /// </remarks>
+    private const float MinimumDepthScale = 0.05f;
 
     /// <summary>
     ///     The shallowest a z-level may be.
@@ -37,9 +49,16 @@ public sealed partial class KsZLevelSystem : EntitySystem
     /// <summary>
     ///     The z-level directly above this one, if it has one.
     /// </summary>
+    /// <remarks>
+    ///     Asked of a gap map, this is the z-level above the gap's anchor - which is the z-level the gap is
+    ///         reaching towards, since a gap always sits between its anchor and the next one up.
+    /// </remarks>
     public bool TryGetZLevelAbove(Entity<KsZLevelComponent?> entity, [NotNullWhen(true)] out Entity<KsZLevelComponent>? aboveEntity)
     {
         aboveEntity = null;
+
+        TrySubstituteGapAnchor(ref entity);
+
         if (!_zLevelQuery.Resolve(ref entity, logMissing: false))
             return false;
 
@@ -48,6 +67,112 @@ public sealed partial class KsZLevelSystem : EntitySystem
 
         aboveEntity = aboveNode.Value;
         return true;
+    }
+
+    /// <summary>
+    ///     The z-level directly below this one, if it has one.
+    /// </summary>
+    /// <remarks>
+    ///     Asked of a gap map this is the gap's own anchor, not the level below that one: the anchor is the
+    ///         floor plane something stepping off a grid mid-crossing would fall onto.
+    /// </remarks>
+    public bool TryGetZLevelBelow(Entity<KsZLevelComponent?> entity, [NotNullWhen(true)] out Entity<KsZLevelComponent>? belowEntity)
+    {
+        if (TryResolveGapAnchor(entity.Owner, out belowEntity, out _))
+            return true;
+
+        belowEntity = null;
+        if (!_zLevelQuery.Resolve(ref entity, logMissing: false))
+            return false;
+
+        if (entity.Comp!.Node?.Previous is not { } belowNode)
+            return false;
+
+        belowEntity = belowNode.Value;
+        return true;
+    }
+
+    /// <summary>
+    ///     The z-level one step from this one in the given direction, if it has one.
+    /// </summary>
+    /// <param name="rising">Up the stack when true, down it when false.</param>
+    public bool TryGetAdjacentZLevel(
+        Entity<KsZLevelComponent?> entity,
+        bool rising,
+        [NotNullWhen(true)] out Entity<KsZLevelComponent>? adjacentEntity)
+    {
+        return rising
+            ? TryGetZLevelAbove(entity, out adjacentEntity)
+            : TryGetZLevelBelow(entity, out adjacentEntity);
+    }
+
+    /// <summary>
+    ///     Fills the provided list with every z-level in this one's stack, ascending, including this one.
+    /// </summary>
+    /// <remarks>
+    ///     The stack itself is behind this system's <see cref="AccessAttribute"/>, so this is how anything
+    ///         else - an elevator enumerating the floors it can reach, say - asks what the whole stack is
+    ///         without being handed the live <see cref="LinkedList{T}"/> it could then mutate.
+    /// </remarks>
+    /// <param name="stackEntities">List to operate on. Cleared first.</param>
+    /// <returns>Whether <paramref name="entity"/> is a z-level at all.</returns>
+    public bool TryGetStack(Entity<KsZLevelComponent?> entity, List<Entity<KsZLevelComponent>> stackEntities)
+    {
+        stackEntities.Clear();
+
+        // A gap is not a floor, so it is never one of the floors an elevator lists. Answering about the anchor
+        //      is what keeps the controller's floor list and its numbering identical mid-crossing.
+        TrySubstituteGapAnchor(ref entity);
+
+        if (!_zLevelQuery.Resolve(ref entity, logMissing: false))
+            return false;
+
+        for (var node = entity.Comp!.AssociatedStack.First; node != null; node = node.Next)
+            stackEntities.Add(node.Value);
+
+        return true;
+    }
+
+    /// <summary>
+    ///     How far up its own stack this z-level sits, counting the bottom-most as zero.
+    /// </summary>
+    /// <remarks>
+    ///     This is what a floor "number" is: there is no stored index anywhere, only position in the list,
+    ///         so anything showing floors to a player has to count.
+    /// </remarks>
+    /// <returns>-1 if the entity is not a z-level.</returns>
+    public int GetStackIndex(Entity<KsZLevelComponent?> entity)
+    {
+        // A crossing reports the floor it set out from until it lands, rather than a floor number of its own.
+        TrySubstituteGapAnchor(ref entity);
+
+        if (!_zLevelQuery.Resolve(ref entity, logMissing: false))
+            return -1;
+
+        var index = 0;
+        for (var node = entity.Comp!.Node?.Previous; node != null; node = node.Previous)
+            index++;
+
+        return index;
+    }
+
+    /// <summary>
+    ///     Whether the two z-levels are members of the same stack.
+    /// </summary>
+    public bool AreInSameStack(Entity<KsZLevelComponent?> entity, Entity<KsZLevelComponent?> otherEntity)
+    {
+        // A gap belongs to whatever stack it is crossing, so that an elevator mid-flight is still reachable
+        //      by the calls and controllers of the shaft it is in.
+        TrySubstituteGapAnchor(ref entity);
+        TrySubstituteGapAnchor(ref otherEntity);
+
+        if (!_zLevelQuery.Resolve(ref entity, logMissing: false) ||
+            !_zLevelQuery.Resolve(ref otherEntity, logMissing: false))
+            return false;
+
+        // Two stacks that hold the same members but are different objects are not the same stack, so this is
+        //      deliberately a reference comparison rather than a Contains.
+        return ReferenceEquals(entity.Comp!.AssociatedStack, otherEntity.Comp!.AssociatedStack);
     }
 
     /// <summary>
@@ -129,12 +254,17 @@ public sealed partial class KsZLevelSystem : EntitySystem
     /// </summary>
     /// <remarks>
     ///     Shared so that anything compensating for the per-z-level camera scale - a transiting entity's sprite,
-    ///         say - cannot drift out of step with what actually rendered it.
+    ///         say - cannot drift out of step with what actually rendered it. That is also why this reads
+    ///         <see cref="KsCCVars.ZLevelParallaxStrength"/> here rather than leaving each caller to apply it:
+    ///         one of them forgetting would put a falling sprite at a different size to the floor it is
+    ///         falling towards.
+    ///     <paramref name="depth"/> is signed. A gap map crossing overhead is nearer the camera than the
+    ///         viewer's own floor, so it passes a negative and is drawn larger.
     /// </remarks>
-    public static Vector2 GetDepthScale(Vector2 eyeScale, float depth)
+    public Vector2 GetDepthScale(Vector2 eyeScale, float depth)
     {
-        var shrink = DepthScaleStep * depth;
-        return eyeScale - new Vector2(shrink, shrink);
+        var shrink = DepthScaleStep * _parallaxStrength * depth;
+        return Vector2.Max(eyeScale - new Vector2(shrink, shrink), new Vector2(MinimumDepthScale));
     }
 
     /// <summary>
@@ -165,17 +295,41 @@ public sealed partial class KsZLevelSystem : EntitySystem
     /// <remarks>
     ///     Allocates nothing and touches no shared state, so it is safe to call from the parallel jobs the
     ///         audio system runs its streams on.
+    ///     Either end may be a gap map, in which case it counts as its anchor shifted by however far up the
+    ///         gap it sits. This one substitution is the whole of what makes audio leak and light leak
+    ///         correct for something mid-crossing: both attenuate on the distance this returns, so neither
+    ///         needs to know a gap was involved.
     /// </remarks>
     public bool TryGetDepthBelow(Entity<KsZLevelComponent?> fromEntity, EntityUid toUid, out float depth, out int crossings)
     {
         depth = 0f;
         crossings = 0;
 
+        // A gap sits above its anchor, so starting from one means starting that much higher up.
+        if (TryResolveGapAnchor(fromEntity.Owner, out var fromAnchorEntity, out var fromOffset))
+            fromEntity = (fromAnchorEntity.Value.Owner, fromAnchorEntity.Value.Comp);
+
+        // ...and ending at one means stopping that much short of its anchor.
+        if (TryResolveGapAnchor(toUid, out var toAnchorEntity, out var toOffset))
+            toUid = toAnchorEntity.Value.Owner;
+
         if (!_zLevelQuery.Resolve(ref fromEntity, logMissing: false))
             return false;
 
+        depth = fromOffset - toOffset;
+
         if (fromEntity.Owner == toUid)
+        {
+            // Both ends resolved onto the same anchor - two elevators in one shaft, say. Only the one that is
+            //      genuinely higher up may answer, because the contract is that this reports a drop.
+            if (depth < 0f)
+            {
+                depth = 0f;
+                return false;
+            }
+
             return true;
+        }
 
         // Stepping down from a z-level to the one below crosses the lower one's own Depth.
         for (var node = fromEntity.Comp!.Node?.Previous; node != null; node = node.Previous)
