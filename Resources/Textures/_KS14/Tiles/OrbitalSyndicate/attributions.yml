@@ -1,0 +1,24 @@
+- files:
+  - light_steel_clean.png
+  - light_steel_slightly_grimy.png
+  - light_steel_very_grimy.png
+  - light_steel_damaged.png
+  - base_steel_clean.png
+  - base_steel_slightly_grimy.png
+  - base_steel_very_grimy.png
+  - base_steel_damaged.png
+  - dark_steel_clean.png
+  - dark_steel_slightly_grimy.png
+  - dark_steel_very_grimy.png
+  - dark_steel_damaged.png
+  - techmaint_clean.png
+  - techmaint_slightly_grimy.png
+  - techmaint_very_grimy.png
+  - techmaint_damaged.png
+  - techmaint_2_clean.png
+  - techmaint_2_slightly_grimy.png
+  - techmaint_2_very_grimy.png
+  - techmaint_2_damaged.png
+  license: "CC-BY-SA-3.0"
+  copyright: "Orbital Syndicate steel plates regenerated with OpenAI image generation for Klovnstation14: new angular, removable raised-plate layout with exposed supports and recessed bolts, generated as a 4x12 monolithic atlas, nearest-neighbor downscaled and sliced to 128x32 tile sheets. The tech-maintenance tiles retain their prior attribution."
+  source: "https://github.com/space-wizards/space-station-14/"

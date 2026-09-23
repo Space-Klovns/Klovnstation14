@@ -1,0 +1,28 @@
+- files:
+  - light_steel_clean.png
+  - light_steel_slightly_grimy.png
+  - light_steel_very_grimy.png
+  - light_steel_damaged.png
+  - base_steel_clean.png
+  - base_steel_slightly_grimy.png
+  - base_steel_very_grimy.png
+  - base_steel_damaged.png
+  - dark_steel_clean.png
+  - dark_steel_slightly_grimy.png
+  - dark_steel_very_grimy.png
+  - dark_steel_damaged.png
+  - techmaint_clean.png
+  - techmaint_slightly_grimy.png
+  - techmaint_very_grimy.png
+  - techmaint_damaged.png
+  - techmaint_2_clean.png
+  - techmaint_2_slightly_grimy.png
+  - techmaint_2_very_grimy.png
+  - techmaint_2_damaged.png
+  - decorative_clean.png
+  - decorative_slightly_grimy.png
+  - decorative_very_grimy.png
+  - decorative_damaged.png
+  license: "CC-BY-SA-3.0"
+  copyright: "Generated with OpenAI image generation for Klovnstation14 using the Artbook faction directions. Visual research included existing KS14 orbital tiles and SS14 steel, pavement, herringbone, mini, and maintenance textures. Reference steel artwork by github user @Flareguy, with original base tiles from /tg/station at commit 6665eec76c98a4f3f89bebcd10b34b47dcc0b8ae and github user @moonheart08; maintenance reference from CEV-Eris commit 28e589f0ff72a009adf17db767e90be39054f0f2. New faction-specific layouts, then cropped and nearest-neighbor resized to opaque 32x32 frames."
+  source: "https://github.com/space-wizards/space-station-14/"

@@ -1,0 +1,279 @@
+- type: tile
+  parent: BaseStationTile
+  id: KsTileOrbitalSyndicateLightSteelClean
+  name: ks-tile-orbital-syndicate-light-steel-clean
+  sprite: /Textures/_KS14/Tiles/OrbitalSyndicate/light_steel_clean.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileOrbitalSyndicateLightSteelSlightlyGrimy
+  name: ks-tile-orbital-syndicate-light-steel-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/OrbitalSyndicate/light_steel_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileOrbitalSyndicateLightSteelVeryGrimy
+  name: ks-tile-orbital-syndicate-light-steel-very-grimy
+  sprite: /Textures/_KS14/Tiles/OrbitalSyndicate/light_steel_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileOrbitalSyndicateLightSteelDamaged
+  name: ks-tile-orbital-syndicate-light-steel-damaged
+  sprite: /Textures/_KS14/Tiles/OrbitalSyndicate/light_steel_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileOrbitalSyndicateBaseSteelClean
+  name: ks-tile-orbital-syndicate-base-steel-clean
+  sprite: /Textures/_KS14/Tiles/OrbitalSyndicate/base_steel_clean.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileOrbitalSyndicateBaseSteelSlightlyGrimy
+  name: ks-tile-orbital-syndicate-base-steel-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/OrbitalSyndicate/base_steel_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileOrbitalSyndicateBaseSteelVeryGrimy
+  name: ks-tile-orbital-syndicate-base-steel-very-grimy
+  sprite: /Textures/_KS14/Tiles/OrbitalSyndicate/base_steel_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileOrbitalSyndicateBaseSteelDamaged
+  name: ks-tile-orbital-syndicate-base-steel-damaged
+  sprite: /Textures/_KS14/Tiles/OrbitalSyndicate/base_steel_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileOrbitalSyndicateDarkSteelClean
+  name: ks-tile-orbital-syndicate-dark-steel-clean
+  sprite: /Textures/_KS14/Tiles/OrbitalSyndicate/dark_steel_clean.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileOrbitalSyndicateDarkSteelSlightlyGrimy
+  name: ks-tile-orbital-syndicate-dark-steel-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/OrbitalSyndicate/dark_steel_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileOrbitalSyndicateDarkSteelVeryGrimy
+  name: ks-tile-orbital-syndicate-dark-steel-very-grimy
+  sprite: /Textures/_KS14/Tiles/OrbitalSyndicate/dark_steel_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileOrbitalSyndicateDarkSteelDamaged
+  name: ks-tile-orbital-syndicate-dark-steel-damaged
+  sprite: /Textures/_KS14/Tiles/OrbitalSyndicate/dark_steel_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileOrbitalSyndicateTechmaintClean
+  name: ks-tile-orbital-syndicate-techmaint-clean
+  sprite: /Textures/_KS14/Tiles/OrbitalSyndicate/techmaint_clean.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileOrbitalSyndicateTechmaintSlightlyGrimy
+  name: ks-tile-orbital-syndicate-techmaint-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/OrbitalSyndicate/techmaint_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileOrbitalSyndicateTechmaintVeryGrimy
+  name: ks-tile-orbital-syndicate-techmaint-very-grimy
+  sprite: /Textures/_KS14/Tiles/OrbitalSyndicate/techmaint_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileOrbitalSyndicateTechmaintDamaged
+  name: ks-tile-orbital-syndicate-techmaint-damaged
+  sprite: /Textures/_KS14/Tiles/OrbitalSyndicate/techmaint_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileOrbitalSyndicateTechmaintTwoClean
+  name: ks-tile-orbital-syndicate-techmaint-two-clean
+  sprite: /Textures/_KS14/Tiles/OrbitalSyndicate/techmaint_2_clean.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileOrbitalSyndicateTechmaintTwoSlightlyGrimy
+  name: ks-tile-orbital-syndicate-techmaint-two-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/OrbitalSyndicate/techmaint_2_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileOrbitalSyndicateTechmaintTwoVeryGrimy
+  name: ks-tile-orbital-syndicate-techmaint-two-very-grimy
+  sprite: /Textures/_KS14/Tiles/OrbitalSyndicate/techmaint_2_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileOrbitalSyndicateTechmaintTwoDamaged
+  name: ks-tile-orbital-syndicate-techmaint-two-damaged
+  sprite: /Textures/_KS14/Tiles/OrbitalSyndicate/techmaint_2_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull

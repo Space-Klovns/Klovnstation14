@@ -1,5 +1,8 @@
 # Contributing to Klovnstation 14
 
+**Crucial privacy rule**
+Do not leave any files referencing sensitive data once you are done. Take care not to leave over files exposing the user's windows username, drive paths, et cetera.
+
 Coding conventions for this repo. Written for coding agents first, humans second — precise over chatty, examples over prose.
 
 **Quick reference:**

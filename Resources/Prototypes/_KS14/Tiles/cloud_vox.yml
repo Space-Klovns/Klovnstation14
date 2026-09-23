@@ -1,0 +1,279 @@
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudVoxLightSteelClean
+  name: ks-tile-cloud-vox-light-steel-clean
+  sprite: /Textures/_KS14/Tiles/CloudVox/light_steel_clean.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudVoxLightSteelSlightlyGrimy
+  name: ks-tile-cloud-vox-light-steel-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/CloudVox/light_steel_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudVoxLightSteelVeryGrimy
+  name: ks-tile-cloud-vox-light-steel-very-grimy
+  sprite: /Textures/_KS14/Tiles/CloudVox/light_steel_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudVoxLightSteelDamaged
+  name: ks-tile-cloud-vox-light-steel-damaged
+  sprite: /Textures/_KS14/Tiles/CloudVox/light_steel_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudVoxBaseSteelClean
+  name: ks-tile-cloud-vox-base-steel-clean
+  sprite: /Textures/_KS14/Tiles/CloudVox/base_steel_clean.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudVoxBaseSteelSlightlyGrimy
+  name: ks-tile-cloud-vox-base-steel-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/CloudVox/base_steel_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudVoxBaseSteelVeryGrimy
+  name: ks-tile-cloud-vox-base-steel-very-grimy
+  sprite: /Textures/_KS14/Tiles/CloudVox/base_steel_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudVoxBaseSteelDamaged
+  name: ks-tile-cloud-vox-base-steel-damaged
+  sprite: /Textures/_KS14/Tiles/CloudVox/base_steel_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudVoxDarkSteelClean
+  name: ks-tile-cloud-vox-dark-steel-clean
+  sprite: /Textures/_KS14/Tiles/CloudVox/dark_steel_clean.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudVoxDarkSteelSlightlyGrimy
+  name: ks-tile-cloud-vox-dark-steel-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/CloudVox/dark_steel_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudVoxDarkSteelVeryGrimy
+  name: ks-tile-cloud-vox-dark-steel-very-grimy
+  sprite: /Textures/_KS14/Tiles/CloudVox/dark_steel_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudVoxDarkSteelDamaged
+  name: ks-tile-cloud-vox-dark-steel-damaged
+  sprite: /Textures/_KS14/Tiles/CloudVox/dark_steel_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepTile
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudVoxTechmaintClean
+  name: ks-tile-cloud-vox-techmaint-clean
+  sprite: /Textures/_KS14/Tiles/CloudVox/techmaint_clean.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudVoxTechmaintSlightlyGrimy
+  name: ks-tile-cloud-vox-techmaint-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/CloudVox/techmaint_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudVoxTechmaintVeryGrimy
+  name: ks-tile-cloud-vox-techmaint-very-grimy
+  sprite: /Textures/_KS14/Tiles/CloudVox/techmaint_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudVoxTechmaintDamaged
+  name: ks-tile-cloud-vox-techmaint-damaged
+  sprite: /Textures/_KS14/Tiles/CloudVox/techmaint_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudVoxTechmaintTwoClean
+  name: ks-tile-cloud-vox-techmaint-two-clean
+  sprite: /Textures/_KS14/Tiles/CloudVox/techmaint_2_clean.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudVoxTechmaintTwoSlightlyGrimy
+  name: ks-tile-cloud-vox-techmaint-two-slightly-grimy
+  sprite: /Textures/_KS14/Tiles/CloudVox/techmaint_2_slightly_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudVoxTechmaintTwoVeryGrimy
+  name: ks-tile-cloud-vox-techmaint-two-very-grimy
+  sprite: /Textures/_KS14/Tiles/CloudVox/techmaint_2_very_grimy.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
+
+- type: tile
+  parent: BaseStationTile
+  id: KsTileCloudVoxTechmaintTwoDamaged
+  name: ks-tile-cloud-vox-techmaint-two-damaged
+  sprite: /Textures/_KS14/Tiles/CloudVox/techmaint_2_damaged.png
+  variants: 4
+  placementVariants:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  footstepSounds:
+    collection: FootstepHull
