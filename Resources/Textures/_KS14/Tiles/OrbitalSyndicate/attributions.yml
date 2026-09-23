@@ -20,5 +20,5 @@
   - techmaint_2_very_grimy.png
   - techmaint_2_damaged.png
   license: "CC-BY-SA-3.0"
-  copyright: "Generated with OpenAI image generation for Klovnstation14 using the Artbook faction directions. Visual research included existing KS14 orbital tiles and SS14 steel, pavement, herringbone, mini, and maintenance textures. Reference steel artwork by github user @Flareguy, with original base tiles from /tg/station at commit 6665eec76c98a4f3f89bebcd10b34b47dcc0b8ae and github user @moonheart08; maintenance reference from CEV-Eris commit 28e589f0ff72a009adf17db767e90be39054f0f2. New faction-specific layouts, then cropped and nearest-neighbor resized to opaque 32x32 frames."
+  copyright: "Orbital Syndicate steel plates regenerated with OpenAI image generation for Klovnstation14: new angular, removable raised-plate layout with exposed supports and recessed bolts, generated as a 4x12 monolithic atlas, nearest-neighbor downscaled and sliced to 128x32 tile sheets. The tech-maintenance tiles retain their prior attribution."
   source: "https://github.com/space-wizards/space-station-14/"
