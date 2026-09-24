@@ -94,3 +94,52 @@ public record struct KsZLevelCrushAttemptEvent(EntityUid CrusherUid, float Impac
 /// </summary>
 [ByRefEvent]
 public readonly record struct KsZLevelCrushedEvent(EntityUid CrusherUid, float ImpactSpeed);
+
+/// <summary>
+///     Raised to ask whether anything solid sits part way up a z-level's gap, in the path of something
+///         falling through it.
+/// </summary>
+/// <remarks>
+///     A z-level's floor plane is the only surface <see cref="KsZLevelPhysicsSystem"/> knows about by itself,
+///         which is why a grid crossing the gap on a map of its own - an elevator between two floors - would
+///         otherwise be fallen straight through. Rather than teaching the fall about gaps, it asks: anything
+///         occupying part of a gap answers this, and a fall lands on whatever answers highest.
+///     Raised broadcast, and only for a descent. Subscribers must be pure other than writing the landing.
+/// </remarks>
+[ByRefEvent]
+public record struct KsZLevelTransitObstructionEvent(
+    EntityUid ZLevelUid,
+    Robust.Shared.Map.MapId MapId,
+    System.Numerics.Vector2 WorldPosition,
+    float FromHeight,
+    float ToHeight)
+{
+    /// <summary>The z-level being fallen through.</summary>
+    public readonly EntityUid ZLevelUid = ZLevelUid;
+
+    /// <summary>That z-level's map, for a subscriber that wants to ask spatial questions of it.</summary>
+    public readonly Robust.Shared.Map.MapId MapId = MapId;
+
+    /// <summary>Where the faller is, so a subscriber can check it is actually over the obstruction.</summary>
+    public readonly System.Numerics.Vector2 WorldPosition = WorldPosition;
+
+    /// <summary>
+    ///     The height the faller started this tick at, as a fraction of the z-level's Depth. Always greater
+    ///         than <see cref="ToHeight"/>.
+    /// </summary>
+    public readonly float FromHeight = FromHeight;
+
+    /// <summary>The height it would reach this tick, in the same units.</summary>
+    public readonly float ToHeight = ToHeight;
+
+    /// <summary>
+    ///     The map to land on, if anything answered. Left null by anything that does not want the fall.
+    /// </summary>
+    public EntityUid? LandingMapUid;
+
+    /// <summary>
+    ///     How far up the z-level's gap the surface being landed on sits, in the same units as
+    ///     <see cref="FromHeight"/>. Highest answer wins, so a fall lands on the topmost of several.
+    /// </summary>
+    public float LandingHeight;
+}

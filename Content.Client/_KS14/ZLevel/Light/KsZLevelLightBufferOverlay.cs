@@ -3,6 +3,7 @@ using Content.Client.Light;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.ZLevel;
 using Content.Shared._KS14.ZLevel.Light;
+using Content.Shared._KS14.ZLevel.Transit;
 using Robust.Client.Graphics;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
@@ -121,7 +122,10 @@ public sealed partial class KsZLevelLightBufferOverlay : Overlay
         _lightBufferSystem.CaptureOversize =
             (Vector2)target.Size / (Vector2)viewport.LightRenderTarget.Size;
 
-        if (!TryGetLightFromAbove(mapUid, out var capture, out var dim))
+        var hasLightFromAbove = TryGetLightFromAbove(mapUid, out var aboveCapture, out var aboveDim);
+        var hasLightFromBelow = TryGetLightFromBelow(mapUid, out var belowCapture, out var belowDim);
+
+        if (!hasLightFromAbove && !hasLightFromBelow)
             return;
 
         // The light target is not the viewport's resolution, so world-space geometry drawn into it needs the
@@ -130,36 +134,94 @@ public sealed partial class KsZLevelLightBufferOverlay : Overlay
         var scale = viewport.RenderScale / (Vector2.One / lightScale);
         var localMatrix = target.GetWorldToLocalMatrix(eye, scale);
 
-        // Drawn over the world area it covered when it was taken, which is what lines it up against a pass
-        //      rendered at a different depth scale - the matrix above does the rest.
-        var bounds = capture.WorldBounds;
         var debugFlat = _lightBufferSystem.DebugFlat;
-        var lightTexture = capture.Light.Texture;
         var shader = _shader;
 
-        shader.SetParameter("MASK_TEXTURE", capture.Colour.Texture);
-        shader.SetParameter("dim", dim);
+        // Both can land on one pass - a platform partway up a shaft is lit by the floor it left and by the
+        //      one it is heading for - and the shader is additive, so the two simply sum.
+        if (hasLightFromAbove)
+            Composite(aboveCapture, aboveDim, maskWeight: 1f);
 
-        worldHandle.RenderInRenderTarget(
-            target,
-            () =>
-            {
-                worldHandle.SetTransform(localMatrix);
+        if (hasLightFromBelow)
+            Composite(belowCapture, belowDim, maskWeight: 0f);
 
-                // Proves the compositing on its own: if a flat wash does not brighten the z-level, nothing
-                //      about the masking or the attenuation is worth debugging yet.
-                if (debugFlat)
+        // One shader instance serves both, because RenderInRenderTarget flushes the render queue around the
+        //      action it is handed (Clyde.HLR.cs): each composite's uniforms are consumed before the next
+        //      one sets its own.
+        void Composite(KsZLevelLightCapture capture, float dim, float maskWeight)
+        {
+            // Drawn over the world area it covered when it was taken, which is what lines it up against a
+            //      pass rendered at a different depth scale - the matrix above does the rest.
+            var bounds = capture.WorldBounds;
+            var lightTexture = capture.Light.Texture;
+
+            shader.SetParameter("MASK_TEXTURE", capture.Colour.Texture);
+            shader.SetParameter("dim", dim);
+            shader.SetParameter("maskWeight", maskWeight);
+
+            worldHandle.RenderInRenderTarget(
+                target,
+                () =>
                 {
-                    worldHandle.DrawRect(bounds, Color.Magenta.WithAlpha(0.35f));
-                    return;
-                }
+                    worldHandle.SetTransform(localMatrix);
 
-                worldHandle.UseShader(shader);
-                worldHandle.DrawTextureRect(lightTexture, bounds);
-                worldHandle.UseShader(null);
-            },
-            null
-        );
+                    // Proves the compositing on its own: if a flat wash does not brighten the z-level,
+                    //      nothing about the masking or the attenuation is worth debugging yet.
+                    if (debugFlat)
+                    {
+                        worldHandle.DrawRect(bounds, Color.Magenta.WithAlpha(0.35f));
+                        return;
+                    }
+
+                    worldHandle.UseShader(shader);
+                    worldHandle.DrawTextureRect(lightTexture, bounds);
+                    worldHandle.UseShader(null);
+                },
+                null
+            );
+        }
+    }
+
+    /// <summary>
+    ///     The captured light map of the z-level a gap map is crossing away from, and how much of it survives
+    ///         the climb.
+    /// </summary>
+    /// <remarks>
+    ///     Only a gap map is ever lit from below, and it is the one pass that has to be. A z-level is a floor
+    ///         with lights standing on it; a gap is empty air with one grid floating in it, so the only thing
+    ///         that can light that grid's underside is the room underneath it.
+    ///     Without this the grid is not merely dim, it is invisible for as long as the viewer's FOV is on.
+    ///         The engine strips light from an occluder's own tiles - fov-lighting.swsl samples the near face
+    ///         of the depth map, unlike the hard FOV pass, which samples the far one - and hands it back by
+    ///         bleeding light from the lit pixels beside it (Clyde.LightRendering.cs, BlurOntoWalls and
+    ///         MergeWallLayer). A hull with nothing lit around it therefore bleeds black and disappears,
+    ///         outer walls and all, while everything on an ordinary z-level has a lit floor next to it.
+    /// </remarks>
+    private bool TryGetLightFromBelow(EntityUid mapUid, out KsZLevelLightCapture capture, out float dim)
+    {
+        capture = default!;
+        dim = 0f;
+
+        if (!_entityManager.TryGetComponent<KsZLevelGapComponent>(mapUid, out var gapComponent))
+            return false;
+
+        if (!_entityManager.TryGetComponent<MapComponent>(gapComponent.LowerZLevel, out var anchorMapComponent))
+            return false;
+
+        if (!_lightBufferSystem!.TryGetCapture(anchorMapComponent.MapId, out capture))
+            return false;
+
+        // How far the grid has actually climbed, rather than its progress: the same real distance the
+        //      downward leak attenuates over, so a platform just off the floor is bright and one near the
+        //      ceiling is not.
+        dim = KsZLevelLightLeak.GetHoleFactor(
+            SharedKsZLevelGapSystem.GetPlaneAltitude((mapUid, gapComponent)) * _levelHeight,
+            _referenceRadius,
+            DefaultFalloff,
+            DefaultCurveFactor
+        ) * _energyMultiplier;
+
+        return dim > 0f;
     }
 
     /// <summary>

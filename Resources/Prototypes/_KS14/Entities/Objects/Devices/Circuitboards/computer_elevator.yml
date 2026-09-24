@@ -1,0 +1,10 @@
+- type: entity
+  parent: BaseComputerCircuitboard
+  id: KsElevatorControllerCircuitboard
+  name: elevator controller board
+  description: A computer printed circuit board for an elevator controller.
+  components:
+  - type: Sprite
+    state: cpu_supply
+  - type: ComputerBoard
+    prototype: KsComputerElevator
