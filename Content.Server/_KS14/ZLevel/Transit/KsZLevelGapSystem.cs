@@ -8,6 +8,7 @@ using Content.Shared.Gravity;
 using Content.Shared.Parallax;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
+using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Components;
@@ -26,6 +27,7 @@ namespace Content.Server._KS14.ZLevel.Transit;
 public sealed partial class KsZLevelGapSystem : SharedKsZLevelGapSystem
 {
     [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private ServerChunkEntitySystem _chunkEntitySystem = default!;
     [Dependency] private KsZLevelSystem _zLevelSystem = default!;
     [Dependency] private MetaDataSystem _metaDataSystem = default!;
     [Dependency] private PvsOverrideSystem _pvsOverrideSystem = default!;
@@ -97,12 +99,56 @@ public sealed partial class KsZLevelGapSystem : SharedKsZLevelGapSystem
         //      re-deciding who can see it every tick for the length of the ride.
         _pvsOverrideSystem.AddGlobalOverride(gapUid);
 
+        // And the grid's chunk entities by hand, because the recursion above cannot reach them. A chunk
+        //      entity is a nullspace entity tied to its grid by ChunkEntityComponent.Root rather than by the
+        //      transform tree (Robust.Shared/GameStates/ChunkEntitySystem.cs), so a walk over children steps
+        //      straight past it, and PvsSystem otherwise sends one only to viewers whose own PVS reaches the
+        //      chunk - which is nobody looking in from another z-level.
+        // Decals are what this is for in practice: they live on chunk entities, so without it a platform
+        //      arrives with bare tiles for everyone not riding it, while its walls, emissives and stains -
+        //      all ordinary children - come through fine.
+        SetGridChunkOverrides(gridUid, overridden: true);
+
         // Sizes the slice of airspace this gap owns, which is what lets a fall through it be an ordinary
         //      fall rather than a special case.
         RebuildSliceDepths(lowerZLevelEntity.Owner);
 
         gapEntity = (gapUid, gapComponent);
         return true;
+    }
+
+    /// <summary>
+    ///     Adds or removes the global PVS override on every chunk entity belonging to a grid.
+    /// </summary>
+    /// <seealso cref="TryEnterGap"/>
+    private void SetGridChunkOverrides(EntityUid gridUid, bool overridden)
+    {
+        foreach (var chunkEntity in _chunkEntitySystem.GetChunks(gridUid))
+        {
+            if (overridden)
+                _pvsOverrideSystem.AddGlobalOverride(chunkEntity.Owner);
+            else
+                _pvsOverrideSystem.RemoveGlobalOverride(chunkEntity.Owner);
+        }
+    }
+
+    /// <summary>
+    ///     Catches a chunk entity that comes into being while its root is already crossing a gap.
+    /// </summary>
+    /// <remarks>
+    ///     A grid's chunks are made on demand, so a decal painted onto a platform mid-ride creates one that
+    ///         missed the sweep in <see cref="TryEnterGap"/>. Without this it stays invisible from every
+    ///         other z-level until the platform lands.
+    ///     Nothing is needed for the reverse: a chunk entity is only ever removed by being deleted, and
+    ///         PvsOverrideSystem drops overrides on deletion itself.
+    /// </remarks>
+    [SubscribeLocalEvent]
+    private void OnChunkEntityAdded(ref ChunkEntityAddedEvent args)
+    {
+        if (Transform(args.Root).MapUid is not { } mapUid || !HasComp<KsZLevelGapComponent>(mapUid))
+            return;
+
+        _pvsOverrideSystem.AddGlobalOverride(args.Entity);
     }
 
     /// <summary>
@@ -134,6 +180,12 @@ public sealed partial class KsZLevelGapSystem : SharedKsZLevelGapSystem
             return;
 
         _pvsOverrideSystem.RemoveGlobalOverride(entity.Owner);
+
+        // Taken off explicitly rather than left to the deletion hook, because the grid outlives the gap: it
+        //      has landed by now and its chunks are back under ordinary PVS, so a leftover override would
+        //      send every decal on it to every client for the rest of the round.
+        if (entity.Comp.PrimaryGrid is { } gridUid && !TerminatingOrDeleted(gridUid))
+            SetGridChunkOverrides(gridUid, overridden: false);
 
         EvacuateGap(entity);
 
