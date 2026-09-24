@@ -1,0 +1,21 @@
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformOrbitalBeltminer
+  name: orbital beltminer uniform
+  description: The dust gets everywhere.
+  components:
+  - type: Sprite
+    sprite: _KS14/Clothing/Uniforms/Orbitals/beltminer.rsi
+  - type: Clothing
+    sprite: _KS14/Clothing/Uniforms/Orbitals/beltminer.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformOrbitalNarednik
+  name: orbital narednik uniform
+  description: Some ornamentation, fitting your station.
+  components:
+  - type: Sprite
+    sprite: _KS14/Clothing/Uniforms/Orbitals/narednik.rsi
+  - type: Clothing
+    sprite: _KS14/Clothing/Uniforms/Orbitals/narednik.rsi

@@ -1,0 +1,42 @@
+- type: entity
+  parent: [ ClothingHeadHardsuitBase, ClothingHeadSuitWithLightBase ]
+  id: ClothingHeadHelmetOrbitalBeltminer
+  name: orbital beltminer hardsuit helmet
+  description: A lightweight hardsuit helmet with an integrated light.
+  components:
+  - type: Sprite
+    sprite: _KS14/Clothing/Head/Orbitals/narednik.rsi
+    layers:
+    - state: icon
+    - state: icon-flash
+      visible: false
+      map: [ "light" ]
+  - type: HandheldLight
+    addPrefix: false
+  - type: ToggleableVisuals
+    clothingVisuals:
+      head:
+      - state: on-equipped-HELMET
+        shader: unshaded
+  - type: Clothing
+    sprite: _KS14/Clothing/Head/Orbitals/narednik.rsi
+    clothingVisuals:
+      head:
+      - state: off-equipped-HELMET
+  - type: PressureProtection
+    highPressureMultiplier: 0.8
+    lowPressureMultiplier: 1000
+
+- type: entity
+  parent: ClothingHeadHardsuitBase
+  id: ClothingHeadHelmetOrbitalNarednik
+  name: orbital narednik hardsuit helmet
+  description: A reinforced mining helmet without a built-in light.
+  components:
+  - type: Sprite
+    sprite: _KS14/Clothing/Head/Orbitals/beltminer.rsi
+  - type: Clothing
+    sprite: _KS14/Clothing/Head/Orbitals/beltminer.rsi
+  - type: PressureProtection
+    highPressureMultiplier: 0.525
+    lowPressureMultiplier: 1000

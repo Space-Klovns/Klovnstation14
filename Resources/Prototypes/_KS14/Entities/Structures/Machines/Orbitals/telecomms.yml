@@ -1,0 +1,8 @@
+- type: entity
+  parent: TelecomServerFilledCargo
+  id: KsTelecomServerOrbital
+  name: orbital telecomms server
+  components:
+  - type: TelecomServer
+    channels:
+    - Orbital

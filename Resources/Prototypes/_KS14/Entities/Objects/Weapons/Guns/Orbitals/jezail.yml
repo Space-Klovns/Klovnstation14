@@ -1,0 +1,49 @@
+- type: entity
+  name: beltman jezail
+  parent: BaseItem
+  id: WeaponRifleBeltmanJezail
+  description: It is no futuristic assault rifle, but it still tears flesh, bone and metal apart. This one belonged to your grandfather.
+  components:
+  - type: GunExecutionWhitelist # Goob->KS14 port: gun execution
+  - type: UnrestrictedExecution
+  - type: Sprite
+    sprite: _KS14/Objects/Weapons/Guns/Orbitals/jezail.rsi
+    layers:
+    - state: base
+      map: [ "enum.GunVisualLayers.Base" ]
+  - type: Item
+    size: Huge
+    storedRotation: -90
+    shape:
+    - 0,0,0,5
+    sprite: _KS14/Objects/Weapons/Guns/Orbitals/jezail.rsi
+  - type: Clothing
+    sprite: _KS14/Objects/Weapons/Guns/Orbitals/jezail.rsi
+    quickEquip: false
+    slots:
+    - Back
+    - suitStorage
+  - type: Wieldable
+    unwieldOnUse: false
+  - type: Gun
+    fireRate: 2 # if you can do it, reap the rewards.
+    selectedMode: SemiAuto
+    availableModes: [ SemiAuto ]
+    soundGunshot:
+      path: /Audio/_KS14/Weapons/Guns/Orbitals/Jezail/madrugad_shot.ogg
+  - type: ItemSlots
+    slots:
+      gun_chamber:
+        name: Cartridge
+        priority: 1
+        whitelist:
+          tags: [ CartridgeAntiMateriel ]
+  - type: ContainerContainer
+    containers:
+      gun_chamber: !type:ContainerSlot
+  - type: ChamberMagazineAmmoProvider
+    autoCycle: false
+    canRack: false
+    boltClosed: false
+    soundBoltOpened: /Audio/Weapons/Guns/Bolt/rifle_bolt_open.ogg
+    soundBoltClosed: /Audio/Weapons/Guns/Bolt/rifle_bolt_closed.ogg

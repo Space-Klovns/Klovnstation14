@@ -1,0 +1,15 @@
+- type: entity
+  parent: SpawnPointJobBase
+  id: SpawnPointOrbitalBeltminer
+  name: orbital beltminer
+  components:
+  - type: SpawnPoint
+    job_id: OrbitalBeltminer
+
+- type: entity
+  parent: SpawnPointJobBase
+  id: SpawnPointOrbitalNarednik
+  name: orbital narednik
+  components:
+  - type: SpawnPoint
+    job_id: OrbitalNarednik

@@ -1,0 +1,13 @@
+- type: entity
+  parent: ClothingBeltSalvageWebbing
+  id: ClothingBeltSalvageWebbingToolsFilled
+  suffix: Filled
+  components:
+  - type: StorageFill
+    contents:
+    - id: Crowbar
+    - id: Screwdriver
+    - id: Wirecutter
+    - id: Wrench
+    - id: Welder
+    - id: Multitool

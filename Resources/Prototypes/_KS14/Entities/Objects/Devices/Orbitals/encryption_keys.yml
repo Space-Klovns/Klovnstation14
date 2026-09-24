@@ -1,0 +1,12 @@
+- type: entity
+  parent: EncryptionKey
+  id: KsEncryptionKeyOrbital
+  name: orbital encryption key
+  components:
+  - type: EncryptionKey
+    channels:
+    - Orbital
+    defaultChannel: Orbital
+  - type: Sprite
+    sprite: Objects/Devices/encryption_keys.rsi
+    state: cargo_label

@@ -1,0 +1,7 @@
+- type: accessLevel
+  id: Orbital
+  name: Orbital
+
+- type: accessLevel
+  id: OrbitalCommand
+  name: Orbital command

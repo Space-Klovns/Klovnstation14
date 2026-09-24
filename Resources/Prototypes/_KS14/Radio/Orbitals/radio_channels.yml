@@ -1,0 +1,6 @@
+- type: radioChannel
+  id: Orbital
+  name: Orbital
+  keycode: 'o'
+  frequency: 1467
+  color: '#b7b7b7'

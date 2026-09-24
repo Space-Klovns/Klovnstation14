@@ -1,0 +1,71 @@
+- type: job
+  id: OrbitalBeltminer
+  name: orbital beltminer
+  description: Labor away at the asteroids.
+  playTimeTracker: JobOrbitalBeltminer
+  startingGear: OrbitalBeltminerGear
+  icon: JobIconShaftMiner
+  supervisors: orbital command
+  special:
+  - !type:AddComponentSpecial
+    components:
+    - type: NpcFactionMember
+      factions:
+      - NanoTrasen
+  access: [ Orbital, Maintenance, External ]
+
+- type: startingGear
+  id: OrbitalBeltminerGear
+  equipment:
+    jumpsuit: ClothingUniformOrbitalBeltminer
+    ears: ClothingHeadsetOrbital
+    back: ClothingBackpackGrey
+    outerClothing: ClothingOuterOrbitalBeltminerSuit
+    belt: ClothingBeltMilitaryWebbing
+    id: PassengerPDA
+
+- type: playTimeTracker
+  id: JobOrbitalBeltminer
+
+- type: job
+  id: OrbitalNarednik
+  name: orbital narednik
+  description: Barter in ore with the cloudmen. Look after your brothers.
+  playTimeTracker: JobOrbitalNarednik
+  startingGear: OrbitalNarednikGear
+  icon: JobIconWarden
+  supervisors: command
+  requirements:
+  - !type:RoleTimeRequirement
+    role: JobOrbitalBeltminer
+    time: 20h
+  special:
+  - !type:AddComponentSpecial
+    components:
+    - type: NpcFactionMember
+      factions:
+      - NanoTrasen
+  access: [ Orbital, OrbitalCommand, Maintenance, External ]
+
+- type: startingGear
+  id: OrbitalNarednikGear
+  equipment:
+    jumpsuit: ClothingUniformOrbitalNarednik
+    ears: ClothingHeadsetOrbital
+    back: ClothingBackpackGrey
+    outerClothing: ClothingOuterHardsuitOrbitalNarednik
+    belt: ClothingBeltSalvageWebbingToolsFilled
+    id: PassengerPDA
+
+- type: playTimeTracker
+  id: JobOrbitalNarednik
+
+- type: roleLoadout
+  id: JobOrbitalBeltminer
+  groups:
+  - OrbitalWeapons
+
+- type: roleLoadout
+  id: JobOrbitalNarednik
+  groups:
+  - OrbitalWeapons

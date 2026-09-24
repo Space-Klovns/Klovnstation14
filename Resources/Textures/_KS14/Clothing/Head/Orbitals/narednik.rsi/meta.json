@@ -1,0 +1,25 @@
+{
+    "version":  1,
+    "license":  "CC-BY-SA-3.0",
+    "copyright":  "Created for the Hullrot Project by the Sector Crescent team; relicensed under CC-BY-SA-3.0 with the approval of Aisha, Hullrot project lead.",
+    "size":  {
+                 "x":  32,
+                 "y":  32
+             },
+    "states":  [
+                   {
+                       "name":  "icon"
+                   },
+                   {
+                       "name":  "icon-flash"
+                   },
+                   {
+                       "name":  "off-equipped-HELMET",
+                       "directions":  4
+                   },
+                   {
+                       "name":  "on-equipped-HELMET",
+                       "directions":  4
+                   }
+               ]
+}

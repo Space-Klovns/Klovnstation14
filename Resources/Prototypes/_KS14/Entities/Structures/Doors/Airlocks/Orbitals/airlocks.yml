@@ -1,0 +1,32 @@
+- type: entity
+  parent: Airlock
+  id: AirlockOrbitalMaintenance
+  suffix: Orbital Maintenance
+  components:
+  - type: Sprite
+    sprite: Structures/Doors/Airlocks/Standard/hatch_maint.rsi
+  - type: AccessReader
+    containerAccessProvider: null
+    access: [[ Orbital ]]
+
+- type: entity
+  parent: Airlock
+  id: AirlockOrbital
+  suffix: Orbital
+  components:
+  - type: Sprite
+    sprite: Structures/Doors/Airlocks/Standard/hatch.rsi
+  - type: AccessReader
+    containerAccessProvider: null
+    access: [[ Orbital ]]
+
+- type: entity
+  parent: Airlock
+  id: AirlockOrbitalCommand
+  suffix: Orbital Command
+  components:
+  - type: Sprite
+    sprite: Structures/Doors/Airlocks/Standard/hatch.rsi
+  - type: AccessReader
+    containerAccessProvider: null
+    access: [[ OrbitalCommand ]]

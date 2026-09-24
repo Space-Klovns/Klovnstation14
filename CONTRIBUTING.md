@@ -44,6 +44,14 @@ Don't assume partial access (e.g. "the audio submodule but not the prototypes on
 
 Inside `_KS14/`, mirror upstream's feature-driven layout (`_KS14/Atmos/Components/...`, `_KS14/Cargo/Systems/...`) — group by feature, not by type.
 
+**Factional prototypes and assets** — mirror vanilla's resource category path, then add a faction folder immediately above the prototype file or asset:
+
+- Vanilla `Resources/Prototypes/Entities/Clothing/OuterClothing/hardsuits.yml` becomes `Resources/Prototypes/_KS14/Entities/Clothing/OuterClothing/Orbitals/hardsuits.yml`.
+- Vanilla `Resources/Textures/Clothing/OuterClothing/example.rsi/` becomes `Resources/Textures/_KS14/Clothing/OuterClothing/Orbitals/example.rsi/`.
+- Apply this consistently to each faction's prototypes and assets (`Orbitals`, `Syndicate`, or a future faction name), including weapons, uniforms, headwear, and structures. Keep the vanilla subcategory hierarchy intact and use the same faction folder name across related resource trees.
+
+This faction subfolder rule applies to faction-owned content; the feature-driven layout above remains the default for other KS14 work.
+
 ### File structure examples
 
 Treat `*` as a placeholder.

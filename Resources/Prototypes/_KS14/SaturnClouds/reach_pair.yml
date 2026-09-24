@@ -60,4 +60,5 @@
           prefixCreator: 'SOMS'
       - type: StationJobs
         availableJobs:
-          BeltMiner: [ 3, 3 ]
+          OrbitalBeltminer: [ 2, 2 ]
+          OrbitalNarednik: [ 1, 1 ]

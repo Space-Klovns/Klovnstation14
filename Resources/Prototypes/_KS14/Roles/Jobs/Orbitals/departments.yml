@@ -1,0 +1,8 @@
+- type: department
+  id: Orbitals
+  name: Orbitals
+  description: Operate and maintain independent orbital mining outposts.
+  color: "#8D8D8D"
+  roles:
+  - OrbitalBeltminer
+  - OrbitalNarednik

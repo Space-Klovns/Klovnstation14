@@ -1,0 +1,28 @@
+- type: loadoutGroup
+  id: OrbitalWeapons
+  name: orbital weapon
+  minLimit: 0
+  maxLimit: 1
+  loadouts:
+  - OrbitalJezailLoadout
+  - OrbitalSpaceMace
+
+- type: loadout
+  id: OrbitalSpaceMace
+  equipment:
+    pocket1: KsSpaceMace
+
+- type: loadout
+  id: OrbitalJezailLoadout
+  equipment:
+    back: OrbitalJezailKit
+
+- type: entity
+  parent: ClothingBackpackDuffel
+  id: OrbitalJezailKit
+  name: beltman jezail kit
+  components:
+  - type: StorageFill
+    contents:
+    - id: WeaponRifleBeltmanJezail
+    - id: MagazineBoxAntiMateriel
