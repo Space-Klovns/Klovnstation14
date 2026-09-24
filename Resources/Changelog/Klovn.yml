@@ -2066,3 +2066,9 @@ Entries:
         mispredicts, and stealth shader.
   id: 214
   time: '2026-09-21T05:21:19.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed decals not showing up on elevators sometimes.
+  id: 215
+  time: '2026-09-24T11:35:58.0000000+00:00'
