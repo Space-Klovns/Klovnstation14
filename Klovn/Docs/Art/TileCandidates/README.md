@@ -1,4 +1,6 @@
-# Artbook tile candidate sets
+# Artbook tile candidate sets — initial draft (superseded)
+
+The sets in this directory are the earlier draft and have been superseded. Review the corrected, expanded candidates in [Revision-02](Revision-02/README.md), which contains seven Artbook sets and fourteen Orange Beaks sets.
 
 Seven complete, selectable tile-art collections generated from monolithic atlases according to [`spritegen.md`](../../spritegen.md). Each set is isolated and contains the original atlases plus the extracted game-ready sheets under `Tiles/`.
 
