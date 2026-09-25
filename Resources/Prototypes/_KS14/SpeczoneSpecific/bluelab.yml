@@ -101,6 +101,45 @@
     emagType: Interaction
 
 - type: entity
+  parent: RecyclerLabsMobile
+  id: RecyclerLabsMobileLongSpinning
+  name: long mobile recycler
+  description: Holy shit!!!
+  components:
+  - type: Sprite
+    layers:
+    - state: grinder-o1bld
+      offset: -2,0
+    - state: grinder-o1bld
+      offset: -1,0
+    - state: grinder-o1bld
+    - state: grinder-o1bld
+      offset: 1,0
+    - state: grinder-o1bld
+      offset: 2,0
+  - type: Fixtures
+    fixtures:
+      brrt:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-2.15,-0.15,2.15,0.15"
+        hard: false
+        layer:
+        - FullTileLayer
+      collision:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-2.25,-0.25,2.25,0.25"
+        hard: false # not hard otherwise it will push itself on shit
+        mask:
+        - Impassable
+        layer:
+        - Opaque
+        - BulletImpassable
+  - type: KsConstantVelocity
+    angularVelocity: -1.5
+
+- type: entity
   parent: ReinforcedPlasmaWindow
   id: ReinforcedPlasmaWindowBluelabsAtmosSetpiece
   suffix: Labs, Setpiece, Dont Map

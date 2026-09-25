@@ -15,6 +15,7 @@ using Content.Shared.FixedPoint;
 using Content.Shared.Damage.Components;
 using Content.Shared.Body;
 using Content.Shared._KS14.BloodSpray;
+using Content.Shared.Popups;
 
 namespace Content.Shared._KS14.Execution;
 
@@ -23,15 +24,16 @@ namespace Content.Shared._KS14.Execution;
 /// </summary>
 public sealed partial class SharedGunExecutionSystem : EntitySystem
 {
+    [Dependency] private INetManager _net = default!;
+    [Dependency] private IGameTiming _timing = default!;
     [Dependency] private SharedAudioSystem _audio = default!;
     [Dependency] private SharedDoAfterSystem _doAfter = default!;
     [Dependency] private SharedSuicideSystem _suicide = default!;
     [Dependency] private SharedExecutionSystem _execution = default!;
     [Dependency] private SharedGunSystem _gunSystem = default!;
-    [Dependency] private IGameTiming _timing = default!;
     [Dependency] private SharedCameraRecoilSystem _recoil = default!;
-    [Dependency] private INetManager _net = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
     [Dependency] private BloodSpraySystem _bloodSpraySystem = default!;
 
     /// <summary>
@@ -40,12 +42,24 @@ public sealed partial class SharedGunExecutionSystem : EntitySystem
     /// </summary>
     public static readonly FixedPoint2 MinimumValidDamage = FixedPoint2.New(6);
 
-    public override void Initialize()
+    private static readonly TimeSpan ShotAttemptedPopupDelay = TimeSpan.FromSeconds(0.8d);
+
+    [SubscribeLocalEvent]
+    private void OnShotAttempted(Entity<ActiveGunExecutionComponent> entity, ref ShotAttemptedEvent args)
     {
-        base.Initialize();
+        if (entity.Comp.VictimUid != args.User)
+            return;
 
-        SubscribeLocalEvent<GunComponent, ExecutionDoAfterEvent>(OnDoafterGun);
+        // you cant shoot while trying to kill yourself
+        args.Cancel();
 
+        if (_timing.CurTime >= entity.Comp.NextPopupTime)
+        {
+            _popupSystem.PopupEntity(Loc.GetString("suicide-popup-gun-cantshoot"), args.User, args.User, type: PopupType.MediumCaution);
+
+            entity.Comp.NextPopupTime = _timing.CurTime + ShotAttemptedPopupDelay;
+            Dirty(entity);
+        }
     }
 
     [SubscribeLocalEvent]
@@ -76,6 +90,10 @@ public sealed partial class SharedGunExecutionSystem : EntitySystem
 
     private bool CanExecuteWithGun(EntityUid weapon, EntityUid victim, EntityUid user)
     {
+        // you cant execute multiple things at once
+        if (HasComp<ActiveGunExecutionComponent>(user))
+            return false;
+
         // Rifles can execute anyone.
         if (!HasComp<UnrestrictedExecutionComponent>(weapon))
         {
@@ -89,7 +107,7 @@ public sealed partial class SharedGunExecutionSystem : EntitySystem
         return true;
     }
 
-    private void TryStartGunExecutionDoafter(EntityUid weapon, EntityUid victim, EntityUid attacker, float gunexecutiontime)
+    public void TryStartGunExecutionDoafter(EntityUid weapon, EntityUid victim, EntityUid attacker, float gunexecutiontime)
     {
         if (!CanExecuteWithGun(weapon, victim, attacker))
             return;
@@ -113,14 +131,22 @@ public sealed partial class SharedGunExecutionSystem : EntitySystem
                 NeedHand = true,
             };
 
+        var executionComponent = EnsureComp<ActiveGunExecutionComponent>(attacker);
+        executionComponent.VictimUid = victim;
+        Dirty(attacker, executionComponent);
+
         _doAfter.TryStartDoAfter(doAfter);
     }
 
-    private void OnDoafterGun(EntityUid uid, GunComponent component, DoAfterEvent args)
+    [SubscribeLocalEvent]
+    private void OnDoafterGun(EntityUid uid, GunComponent component, ExecutionDoAfterEvent args)
     {
         if (_net.IsClient &&
             !_timing.IsFirstTimePredicted)
             return;
+
+        // not predicted XD
+        RemComp<ActiveGunExecutionComponent>(args.User);
 
         if (args.Handled
             || args.Cancelled
