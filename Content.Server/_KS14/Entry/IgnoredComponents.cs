@@ -9,6 +9,8 @@ public static class KsIgnoredComponents
         "KsRcdPlacementNoHint",
         "KsAlwaysDisplaced",
         "SupplyPodDrawDepth",
-        "LimbDamageVisuals"
+        "LimbDamageVisuals",
+        "KsShaderStatusEffect",
+        "KsAudioStatusEffect"
     ];
 }

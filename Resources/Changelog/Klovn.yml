@@ -2072,3 +2072,9 @@ Entries:
       message: Fixed decals not showing up on elevators sometimes.
   id: 215
   time: '2026-09-24T11:35:58.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: You can no longer shoot/attack while committing suicide.
+  id: 216
+  time: '2026-09-25T23:47:33.0000000+00:00'
