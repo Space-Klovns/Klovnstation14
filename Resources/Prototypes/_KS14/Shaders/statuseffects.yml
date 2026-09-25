@@ -1,0 +1,12 @@
+# Full-screen static, each grain a random blend of colorA and colorB, fading out as timeLeft goes from 1 to 0.
+# For KsShaderStatusEffect - override the colours per effect with !type:KsShaderColor.
+- type: shader
+  id: KsColorStatic
+  kind: source
+  path: "/Textures/_KS14/Shaders/color_static.swsl"
+  params:
+    intensity: 0.6
+    grainSize: 4.0
+    timeLeft: 1.0
+    colorA: '#000000'
+    colorB: '#FFFFFF'

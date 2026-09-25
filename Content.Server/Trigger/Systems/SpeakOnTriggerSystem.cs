@@ -46,7 +46,7 @@ public sealed partial class SpeakOnTriggerSystem : EntitySystem
         // Prepending ">" forces the message to be spoken instead.
         // TODO chat refactor: remove this
         message = '>' + message;
-        _chat.TrySendInGameICMessage(target.Value, message, InGameICChatType.Speak, true);
+        _chat.TrySendInGameICMessage(target.Value, message, InGameICChatType.Speak, ent.Comp.HideChat /* KS14: use datafield instead of hardcoding it */);
         args.Handled = true;
     }
 }

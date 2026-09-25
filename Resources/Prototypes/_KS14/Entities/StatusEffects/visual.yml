@@ -1,0 +1,9 @@
+# Covers the screen in coloured static that fades out over the effect's duration.
+- type: entity
+  parent: MobStatusEffectDebuff
+  id: StatusEffectColorStatic
+  name: color static
+  components:
+  - type: KsShaderStatusEffect
+    shader: KsColorStatic
+    timeLeftParameter: timeLeft
