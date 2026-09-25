@@ -4,20 +4,22 @@ using Robust.Shared.GameStates;
 namespace Content.Shared._KS14.Trigger.Components;
 
 /// <summary>
-///     Defaults the used gun to first thing in active hand.
+///     Defaults the used weapon to the first thing in active hand. Checks
+///         all hands.
 /// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
-public sealed partial class StartGunExecutionOnTriggerComponent : BaseXOnTriggerComponent
+public sealed partial class KsStartExecutionOnTriggerComponent : BaseXOnTriggerComponent
 {
     /// <summary>
-    ///     How long the execution takes.
+    ///     If applicable, this is how long the execution takes.
+    ///         Only works for gun executions at the moment.
     /// </summary>
     [DataField(required: true)]
     [AutoNetworkedField]
     public TimeSpan Duration = TimeSpan.Zero;
 
     /// <summary>
-    ///     If true, the target will automatically bolt or whatever the weapon.
+    ///     If true, the target will automatically bolt or whatever to the weapon.
     /// </summary>
     [DataField]
     [AutoNetworkedField]

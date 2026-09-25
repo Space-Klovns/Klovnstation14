@@ -7,13 +7,11 @@ namespace Content.Shared._KS14.Execution;
 /// </summary>
 [RegisterComponent, NetworkedComponent]
 [AutoGenerateComponentState]
-[AutoGenerateComponentPause]
-public sealed partial class ActiveGunExecutionComponent : Component
+public sealed partial class KsActiveExecutionComponent : Component
 {
     [DataField, AutoNetworkedField]
     public EntityUid? VictimUid = null;
 
     [DataField, AutoNetworkedField]
-    [AutoPausedField]
     public TimeSpan NextPopupTime = TimeSpan.MinValue;
 }

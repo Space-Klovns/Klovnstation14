@@ -1,4 +1,5 @@
 using System.Numerics;
+using Content.Client._KS14.StatusEffect;
 using Content.Client.Graphics;
 using Content.Shared.StatusEffectNew;
 using Robust.Client.Graphics;
@@ -75,19 +76,7 @@ public sealed partial class KsShaderStatusEffectOverlay : Overlay
             }
 
             if (shaderEffectComponent.TimeLeftParameter is { } timeLeftParameter)
-            {
-                // Ratio of the effect's total duration still left: 1 when it starts, 0 when it ends.
-                var timeLeftRatio = 1f;
-                if (statusEffectComponent.EndEffectTime is { } endTime)
-                {
-                    var totalSeconds = (float)(endTime - statusEffectComponent.StartEffectTime).TotalSeconds;
-                    timeLeftRatio = totalSeconds > 0f
-                        ? Math.Clamp((float)(endTime - curTime).TotalSeconds / totalSeconds, 0f, 1f)
-                        : 0f;
-                }
-
-                shaderInstance.SetParameter(timeLeftParameter, timeLeftRatio);
-            }
+                shaderInstance.SetParameter(timeLeftParameter, KsStatusEffectTimeLeft.GetRatio(statusEffectComponent, curTime));
 
             _seenEffectUids.Add(effect.Owner);
             _activeShaders.Add(shaderInstance);
@@ -125,7 +114,7 @@ public sealed partial class KsShaderStatusEffectOverlay : Overlay
                         // Untested with 2+ effects in-game: if the chained result comes out upside down, the
                         //      intermediate pass is flipped relative to the screen texture - fix it by inverting Y
                         //      here, e.g. SetTransform(Matrix3x2.CreateScale(1f, -1f) * Matrix3x2.CreateTranslation(0f, targetBounds.Height)).
-                        worldHandle.SetTransform(Matrix3x2.Identity);
+                        worldHandle.SetTransform(Matrix3x2.CreateScale(1f, -1f) * Matrix3x2.CreateTranslation(0f, targetBounds.Height));
                         worldHandle.UseShader(shaderInstance);
                         worldHandle.DrawRect(targetBounds, Color.White);
                         worldHandle.UseShader(null);

@@ -10,6 +10,7 @@ public static class KsIgnoredComponents
         "KsAlwaysDisplaced",
         "SupplyPodDrawDepth",
         "LimbDamageVisuals",
-        "KsShaderStatusEffect"
+        "KsShaderStatusEffect",
+        "KsAudioStatusEffect"
     ];
 }

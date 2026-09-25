@@ -42,26 +42,6 @@ public sealed partial class SharedGunExecutionSystem : EntitySystem
     /// </summary>
     public static readonly FixedPoint2 MinimumValidDamage = FixedPoint2.New(6);
 
-    private static readonly TimeSpan ShotAttemptedPopupDelay = TimeSpan.FromSeconds(0.8d);
-
-    [SubscribeLocalEvent]
-    private void OnShotAttempted(Entity<ActiveGunExecutionComponent> entity, ref ShotAttemptedEvent args)
-    {
-        if (entity.Comp.VictimUid != args.User)
-            return;
-
-        // you cant shoot while trying to kill yourself
-        args.Cancel();
-
-        if (_timing.CurTime >= entity.Comp.NextPopupTime)
-        {
-            _popupSystem.PopupEntity(Loc.GetString("suicide-popup-gun-cantshoot"), args.User, args.User, type: PopupType.MediumCaution);
-
-            entity.Comp.NextPopupTime = _timing.CurTime + ShotAttemptedPopupDelay;
-            Dirty(entity);
-        }
-    }
-
     [SubscribeLocalEvent]
     private void OnGetInteractionVerbsGun(EntityUid uid, GunComponent component, GetVerbsEvent<UtilityVerb> args)
     {
@@ -91,7 +71,7 @@ public sealed partial class SharedGunExecutionSystem : EntitySystem
     private bool CanExecuteWithGun(EntityUid weapon, EntityUid victim, EntityUid user)
     {
         // you cant execute multiple things at once
-        if (HasComp<ActiveGunExecutionComponent>(user))
+        if (HasComp<KsActiveExecutionComponent>(user))
             return false;
 
         // Rifles can execute anyone.
@@ -131,7 +111,7 @@ public sealed partial class SharedGunExecutionSystem : EntitySystem
                 NeedHand = true,
             };
 
-        var executionComponent = EnsureComp<ActiveGunExecutionComponent>(attacker);
+        var executionComponent = EnsureComp<KsActiveExecutionComponent>(attacker);
         executionComponent.VictimUid = victim;
         Dirty(attacker, executionComponent);
 
@@ -141,12 +121,11 @@ public sealed partial class SharedGunExecutionSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnDoafterGun(EntityUid uid, GunComponent component, ExecutionDoAfterEvent args)
     {
+        RemComp<KsActiveExecutionComponent>(args.User);
+
         if (_net.IsClient &&
             !_timing.IsFirstTimePredicted)
             return;
-
-        // not predicted XD
-        RemComp<ActiveGunExecutionComponent>(args.User);
 
         if (args.Handled
             || args.Cancelled
