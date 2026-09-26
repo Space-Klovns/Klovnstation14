@@ -31,6 +31,10 @@ uniform highp float hangChance;
 uniform highp float hangJitter;
 // How many times a second a hanging bar twitches.
 uniform highp float jitterRate;
+// The furthest a bar may be pushed either way, as a fraction of the quad's width; the jerk and twitch together are
+//      clamped to it. A sprite post-shader's quad pads the sprite by 0.1 on each side, so anything past that pushes
+//      the sprite off the quad and cuts it off.
+uniform highp float maxOffset;
 // 1 to 0 as an effect runs out. Bars come to rest more and more often as it drops, so the glitching dies down.
 uniform highp float timeLeft;
 // Anything, as long as it differs between instances, so two glitching sprites don't jerk in lockstep.
@@ -74,6 +78,8 @@ void fragment() {
         highp float effectiveRestChance = 1.0 - (1.0 - restChance) * timeLeft;
         if (random01(pickPosition + vec2(71.0, 3.0)) < effectiveRestChance)
             offset = 0.0;
+
+        offset = clamp(offset, -maxOffset, maxOffset);
     }
 
     // How much texture UV one unit of quad UV spans horizontally. UV and UV2 are both linear across the quad, so

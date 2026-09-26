@@ -184,7 +184,8 @@ _spriteSystem.RemovePostShader(spriteEntity, KsPostShaderIds.WaveDistortion);
 - **What that means for the shader:**
   - **Write it `light_mode unshaded`.** The sprite is already lit, and lighting it again darkens it.
   - **The quad is padded.** In `UV2` the sprite fills roughly 0.1 to 0.9 on each axis, not 0 to 1. Anything laid
-    out "over the sprite" needs that range as a parameter; see `barRegion` in `KsBarGlitch`.
+    out "over the sprite" needs that range as a parameter; see `barRegion` in `KsBarGlitch`. Likewise, anything
+    shifted sideways by more than 0.1 leaves the quad and is cut off; see `maxOffset`.
   - **Its resolution follows zoom.** It is the sprite's size on screen, so measure distances in `UV2`, not in
     texture pixels.
   - **The input is premultiplied alpha.** The final composite uses premultiplied blending, so if you scale alpha,
@@ -230,6 +231,8 @@ a status effect prototype (`parent: MobStatusEffectDebuff`):
     parameters:                   # set once, when the instance is created
       barRegion: !type:KsShaderVector2
         value: 0.1,0.9
+      maxOffset: !type:KsShaderFloat
+        value: 0.1
 ```
 
 Parameter types are in `Content.Client/_KS14/ShaderStatusEffect/KsShaderParameter.cs`: `KsShaderFloat`,

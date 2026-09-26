@@ -1,7 +1,7 @@
 # Cuts a sprite into horizontal bars that are almost never in place: some jerk between a few fixed offsets, others
 #     hang at one and twitch around it. A sprite post-shader - see KsPostShaderStatusEffect. Offsets are fractions
-#     of the quad's width, so it looks the same at any zoom. Keep maxSteps * offsetStep + hangJitter under 0.1, or
-#     bars get pushed past the edge of a post-shader's padding and clipped.
+#     of the quad's width, so it looks the same at any zoom. Offsets are clamped to maxOffset; as a post-shader, set it
+#     to 0.1, the padding around the sprite, or bars get pushed off the quad and cut off.
 - type: shader
   id: KsBarGlitch
   kind: source
@@ -14,8 +14,9 @@
     jerkRate: 7.0
     restChance: 0.05
     hangRate: 0.8
-    hangChance: 0.4 # was 0.4
-    hangJitter: 0.092 # was 0.012
-    jitterRate: 50.0 # was 14.0
+    hangChance: 0.4
+    hangJitter: 0.092
+    jitterRate: 50.0
+    maxOffset: 1.0
     timeLeft: 1.0
     seed: 0.0

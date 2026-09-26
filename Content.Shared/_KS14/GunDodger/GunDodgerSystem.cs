@@ -42,9 +42,11 @@ public sealed partial class GunDodgerSystem : EntitySystem
             !_mobStateSystem.IsAlive(entity.Owner))
             return;
 
-        // Seeded by the projectile rather than the tick, because this is asked again on every physics step the
-        //      projectile overlaps us - it has to give the same answer each time.
-        if (!RollDodge(entity, KsSharedRandomExtensions.GetNetId(args.OtherEntity, EntityManager)).Dodged)
+        // No roll of its own: a projectile passes through only while a dodge that TryDodge rolled for its shot is
+        //      under way. Anything a projectile carries can't be rolled on, since a predicted projectile's id differs
+        //      between client and server, and rolling separately here would let the dodger be thrown clear of a shot
+        //      and hit by it anyway. At a chance of 1 every roll succeeds, so there is nothing to wait for.
+        if (entity.Comp.DodgeChance < 1f && _gameTiming.CurTime >= entity.Comp.DodgeEndTime)
             return;
 
         args.Cancelled = true;
@@ -107,12 +109,15 @@ public sealed partial class GunDodgerSystem : EntitySystem
         if (!dodged)
             return;
 
-        // only dodge perpendicularly to the shooting direction
-        _popupSystem.PopupEntity(Loc.GetString(PopupLocId, ("name", Identity.Name(dodgerEntity.Owner, EntityManager))), dodgerEntity, userUid, type: PopupType.Small);
+        dodgerEntity.Comp.DodgeEndTime = _gameTiming.CurTime + dodgerEntity.Comp.DodgeWindow;
+        Dirty(dodgerEntity.Owner, dodgerEntity.Comp);
+
+        // Everyone who can see the dodger, predicted for whoever fired.
+        _popupSystem.PopupEntity(Loc.GetString(PopupLocId, ("name", Identity.Name(dodgerEntity.Owner, EntityManager))), dodgerEntity.Owner, type: PopupType.Small);
         _dodgingEffectSystem.AddEffect(dodgerEntity.Owner, TimeSpan.FromSeconds(0.01d), TimeSpan.FromSeconds(0.7d));
 
-
-        // Has to be transformed because LocalNormal IS NOT ACTUALLY LOCAL
+        // only dodge perpendicularly to the shooting direction. The normal has to be transformed because LocalNormal
+        //      IS NOT ACTUALLY LOCAL
         var invMatrix = _transformSystem.GetWorldMatrix(Transform(dodgerEntity.Owner).ParentUid);
         localNormal = Vector2.TransformNormal(localNormal, invMatrix);
 

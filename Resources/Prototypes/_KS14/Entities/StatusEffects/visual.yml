@@ -23,3 +23,6 @@
       # A post-shader's quad is 1.25 times the sprite's size, centred on it, so the sprite fills 0.1 to 0.9.
       barRegion: !type:KsShaderVector2
         value: 0.1,0.9
+      # ...and so a bar pushed more than 0.1 either way leaves the quad and is cut off.
+      maxOffset: !type:KsShaderFloat
+        value: 0.1
