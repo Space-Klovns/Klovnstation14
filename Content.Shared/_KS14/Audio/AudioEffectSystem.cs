@@ -11,6 +11,7 @@ using Content.Shared.GameTicking;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Components;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
@@ -23,6 +24,7 @@ namespace Content.Shared._KS14.Audio;
 public sealed partial class AudioEffectSystem : EntitySystem
 {
     [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private INetManager _netManager = default!;
 
     /// <summary>
     ///     Whether creating new auxiliaries is safe.
@@ -38,7 +40,9 @@ public sealed partial class AudioEffectSystem : EntitySystem
     // actually this problem applies for effects too
     private bool? _auxiliariesSafe = null;
 
-    private static readonly Dictionary<ProtoId<AudioPresetPrototype>, (EntityUid AuxiliaryUid, EntityUid EffectUid)> CachedEffects = new();
+    // Per-instance, not static: client and server systems share a process in integration tests and on a
+    //      listen server, and must never hand each other their entities.
+    private readonly Dictionary<ProtoId<AudioPresetPrototype>, (EntityUid AuxiliaryUid, EntityUid EffectUid)> CachedEffects = new();
 
     /// <summary>
     ///     An auxiliary with no effect; for removing effects.
@@ -51,7 +55,12 @@ public sealed partial class AudioEffectSystem : EntitySystem
         base.Initialize();
 
         // You can't keep references to this past round-end so it must be cleaned up.
-        SubscribeNetworkEvent<RoundRestartCleanupEvent>(_ => Cleanup()); // its not raised on client
+        // The server raises this locally and only sends it to clients over the network, so each side
+        //      needs a different subscription. The server must not take the network one, or any client could clear its cache.
+        if (_netManager.IsClient)
+            SubscribeNetworkEvent<RoundRestartCleanupEvent>(_ => Cleanup());
+        else
+            SubscribeLocalEvent<RoundRestartCleanupEvent>(_ => Cleanup());
     }
 
     public override void Shutdown()
@@ -162,6 +171,9 @@ public sealed partial class AudioEffectSystem : EntitySystem
             return false;
 
         _audioSystem.SetAuxiliary(entity, entity.Comp, auxiliaryUid);
+
+        // The client won't apply the auxiliary to a new audio entity by itself; see the component.
+        EnsureComp<AudioEffectAppliedComponent>(entity);
         return true;
     }
 
