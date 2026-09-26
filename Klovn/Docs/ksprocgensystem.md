@@ -381,6 +381,61 @@ the generator must place a valid workstation or fail/perform an authorized relax
 meet that minimum with a loose desk item or silently discard the pack. Optional packs may be
 reduced/omitted on tiny masks, with requested/achieved counts in the report.
 
+#### Machine facing and clean access to seats
+
+Interactible machines, including computers, MUST present their interaction face toward a reachable
+usable approach and away from an adjacent backing wall. Default unrotated facing is down/south.
+Use this explicit authoring convention for quarter-turn facing angles:
+
+| Facing rotation | Interaction face | Suitable backing wall |
+| --- | --- | --- |
+| 0 degrees | Down/south | Above/north |
+| 90 degrees | Left/west | Right/east |
+| 180 degrees | Up/north | Below/south |
+| 270 degrees | Right/east | Left/west |
+
+Thus a computer placed next to a right wall rotates by 90 degrees to face left into the room.
+These are clockwise authoring turns from the down-facing baseline. The placement adapter MUST
+translate them to engine rotation and any prototype-specific sprite/interaction offset; do not
+assume a raw engine angle has the same sign or that every sprite uses the same baseline. Transform
+the machine's footprint, interaction face, approach cells, and assembly relations together.
+
+At a corner, consider both inward-facing orientations. For example, at an upper-right corner,
+down and left are candidates. Filter out any orientation whose front approach is blocked or has
+no clean route to the room's passage network. Among the remaining candidates, prefer a face
+opening onto empty traversible floor or a usable chair tile. An explicitly associated workstation
+chair facing the machine takes priority for a seated assembly; otherwise prefer clear empty floor,
+then compatible traversible seat tiles, with available approach clearance and stable seeded
+tie-breaking. Never prefer an apparently empty tile that is an inaccessible pocket.
+
+An entity entry may declare `interactionFacing`, `interactionApproachCells`, and
+`requiresSeatedUse`; defaults use the down-facing baseline and at least one clear tile immediately
+in front of the footprint. Approaches for larger machines must be derived from their actual front
+edge rather than just their anchor tile. A supported multi-sided interaction model may declare
+additional approaches, but cannot excuse placing the nominated primary face into a wall.
+
+Every generated usable chair MUST have a clean cardinal passage from the room's accessible network
+to a valid position for reaching, sitting in, and leaving that chair. Reserve that approach before
+adding surrounding furniture. A chair can satisfy a machine's front approach only if the actor can
+actually reach and use it; a chair trapped behind a desk does not make the desk/computer accessible.
+Its tile counts as a through-route only when the collision/seat adapter confirms ordinary traversal;
+an accessible seating endpoint is not automatically a corridor. For a seated workstation, validate
+both the chair-to-machine facing relation and the route to the chair.
+
+**Anything that normally blocks movement and that you need to vault over is disruptive to clean
+passage, including tables and desks.** Treat its occupied collision footprint as blocked in all
+required clean-passage searches, even when the reference actor can vault it or interact with
+something across it. Classify obstacles by their movement behavior, not by a table-specific
+prototype list. The same applies to obstacles requiring climbing, crawling, or pushing aside.
+Surface support for an item does not make the supporting object a walkable route. Clean access may
+go around the obstacle; it cannot rely on crossing it.
+
+If no legal facing/access arrangement fits, try another allowed rotation, position, or assembly
+variant; omit an optional machine/chair or reject a required assembly. Do not retain an unusable
+machine or trapped chair and claim its functional content goal was met. Preserved prefabs are
+validated under the same declared functional requirements, but rotating/moving authored entities
+still requires their explicit repair permission.
+
 ### 4.7 Minimal authoring example
 
 The desired end-user workflow is a mask plus a reusable room theme. This conceptual syntax names
@@ -622,6 +677,13 @@ edges are valid cardinal steps with sufficient physical clearance. A tile labele
 automatically traversable: fixtures, furniture, door frames, and neighboring overhangs count.
 Door transitions require that the actor can actually open/pass the door in the requested operational
 state. Merely ignoring all closed doors is not an acceptable access test.
+
+Required walkways and furniture/seat approaches use a **clean-passage graph**: ordinary cardinal
+walking and permitted door operation only, with no vaulting, climbing, crawling, or moving obstacles.
+Anything that normally blocks movement and requires vaulting, including tables/desks, explicitly
+blocks this graph. An actor profile's ability to vault cannot relax that rule. Reachable machine
+approaches and chair access positions are
+mandatory terminals for every accepted functional furnishing assembly, just like room entrances.
 
 Maintain a separate room/port graph for author intent and diagnostics. Validate both graphs:
 
@@ -1120,6 +1182,9 @@ Every fixture asserts the semantic invariants and checks actual output when engi
 | A31 | Theme inheritance/list replacement/goal overrides, invalid pack references, incompatible materials, and fallback cycles have deterministic validation; theme preferences cannot weaken a required hull. |
 | A32 | Plain entity-list pack produces grouped singleton content without custom assemblies; support surfaces, facing, container capacity, and interaction approaches are validated when applicable. |
 | A33 | Adding optional pack decoration leaves structural selection unchanged; repeated seeds reproduce palette/cluster choices. Budgets cap pack expansion, assembly placement, and light sampling. |
+| A34 | Down-facing default computer next to a right wall uses the 90-degree authoring rotation and faces left. All four backing walls and rotated assemblies produce matching actual interaction faces/approaches. |
+| A35 | Corner machine chooses between the two inward directions using reachable empty floor or a usable associated chair; blocked fronts and isolated empty pockets are rejected. A required machine with no legal orientation fails. |
+| A36 | Chair with a cardinal walking route is usable; a chair reachable only by vaulting anything that normally blocks movement fails. Test tables/desks and a non-table obstacle with the same movement behavior: neither can satisfy room/door/machine clean-passage routes even for a vault-capable actor. Adding furniture cannot cut off a previously reserved chair approach. |
 
 Add property-based or deterministic seed-sweep tests over small arbitrary masks, asserting bounds,
 exclusive ownership, atomic package selection, cardinal connectivity, finite work, and honest result
@@ -1176,7 +1241,9 @@ done because an earlier placeholder returns plausible-looking rooms.
 
 - [ ] **T07 - Implement traversal graph and invariant validator.** Depends on T02/T04. Reference
   actor, cardinal clearance, doors/access states, room-local versus global graphs, roots, and port
-  destinations. Exit: A07-A10/A19 distinguish valid geometry from disconnected or unusable doors.
+  destinations, plus behavior-based clean-passage classification excluding anything that normally
+  blocks movement and requires vaulting (including tables/desks), and any climb route.
+  Exit: A07-A10/A19/A36 distinguish valid access from disconnected doors or vault-only paths.
 - [ ] **T08 - Implement required routing and residual connectors.** Depends on T06-T07. Route
   reservation, feasible component connections, explicit link obligations, proximity preferences,
   width handling, and permitted stubs. Feed failure back to package search. Exit: A05-A10 pass on
@@ -1219,7 +1286,8 @@ done because an earlier placeholder returns plausible-looking rooms.
   working, and a basic theme works without requiring a generated station power network.
 - [ ] **T15 - Implement coherent entity-pack furnishing.** Depends on T04a/T09a/T13/T14/T15a. Dominant
   activity selection, grouped singleton defaults, atomic relational assemblies, interaction
-  approaches, optional supports, density goals, and small-room fallbacks. Exit: A18/A27-A29/A32-A33
+  approaches, wall-aware machine facing, reserved clean chair access, optional supports, density
+  goals, and small-room fallbacks. Exit: A18/A27-A29/A32-A36
   pass with adversarial clutter and narrow paths; removal of optional objects can rescue a layout
   without editing protected rooms. Final lighting coverage is rechecked after furnishing.
 - [ ] **T16 - Add preview, validation, replay, and overlays.** Depends on T14/T15a/T15. Expose section 15's
@@ -1277,6 +1345,8 @@ to invent fundamental behavior:
 | Low-effort pure interiors | Mask + room theme; reusable tile/wall/lighting/entity packs supply content. |
 | Entity-pack distribution | One dominant compatible activity per room, coherent nearby clusters, optional support packs. |
 | Assemblies | Required core members placed atomically; optional garnish may be omitted. Plain entity lists remain supported. |
+| Machine facing | Default down; right-wall placement rotates 90 degrees to face left. At corners, prefer a reachable clear or usable chair approach. |
+| Chair access and obstacles | Chairs require a clean cardinal approach. Anything that normally blocks movement and requires vaulting, including tables/desks, blocks clean passages. |
 | Lighting | Place supported working fixtures; explicit supply profile and reported coverage/operating state. |
 | Impossible tiny interiors | Sparse fill when constraints permit; otherwise explained failure. Solid/unsealed output requires named permission. |
 | Determinism | Seed + normalized input/context + content/version + work budgets; independent stage streams. |
