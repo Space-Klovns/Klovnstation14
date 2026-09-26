@@ -20,12 +20,19 @@ Support three content modes independently of how the shape is supplied:
 | Mode | Content |
 | --- | --- |
 | `Procedural` | Generate partitions, passages, structure, and optional furnishing without room prefabs. |
-| `Prefabs` | Select authored rooms/layouts; generate structural seams and required connectors, but no procedural room interiors. Uncovered cells must have an explicit disposition or fail. |
-| `Hybrid` | Place authored rooms/layouts and procedurally fill all designated remaining areas. |
+| `Prefabs` | Automatically select and fit rooms/layouts from a library to the supplied shape; generate structural seams and required connectors, but no procedural room interiors. Uncovered cells must have an explicit disposition or fail. |
+| `Hybrid` | Automatically select and fit rooms/layouts to the shape, then procedurally fill remaining areas. |
 
 Shapes may be supplied directly as a mask, authored using markers, or produced by a shape provider
 inside an explicit bounding mask. Once normalized, every mode uses the same cell representation.
 Shape providers are optional adapters; a caller never needs to use a rectangle, noise, or a room pack.
+
+**Automatic room selection and shape fitting are the default.** The author supplies a target shape,
+theme/library, and optional goals; the generator decides room types, counts, positions, rotations,
+and subdivision. It MUST NOT require an authored slot grid, fixed room positions, alignment markers
+throughout the target, or a preselected list of rooms. Optional constant regions can force selected
+parts of the map to remain exactly authored while generation fits around them. Explicit choice
+regions and anchors are advanced overrides, not prerequisites for generation.
 
 Required capabilities:
 
@@ -44,9 +51,14 @@ Required capabilities:
 9. Low-effort procedural interiors use room themes that select tile, wall, lighting, and entity
    packs. Related entities aggregate into coherent room contents instead of independent uniform
    scatter. Theme goals are specifiable preferences with explicit outcomes and fallbacks.
+10. Automatically fit rooms to the available shape, preferring exterior placements whose contours
+    closely match the target exterior. Infer interior placements and fill residuals without requiring
+    fixed slots. Explicit constant regions remain unchanged across seeds.
 
 Version 1 covers generation before players enter the output. It includes preserved authored rooms
-inside a new generated host. Arbitrary regeneration of an occupied live station, multi-grid routes,
+inside explicit constant regions of a new generated host. Content mode governs the remaining
+generated area; `Procedural` may therefore surround a constant authored landmark without using any
+prefabs for its generated rooms. Arbitrary regeneration of an occupied live station, multi-grid routes,
 vertical connections, functional power/plumbing, and balanced combat simulation are later extensions.
 Air retention is in scope; supplying breathable gas, working power, and job access must be requested
 through explicit content/integration profiles rather than inferred from the word "room."
@@ -171,8 +183,11 @@ IDs use PascalCase. Implementation may split types for clarity but MUST preserve
 | `theme` | Floors, walls, airtight windows, doors, allowed furnishings, and classification adapters. Required for materialization. |
 | `roomThemes` | Weighted room-theme pool or one fixed theme; request theme supplies the default room theme when omitted. |
 | `themeGoals` | Typed appearance, lighting, and content goals; override theme defaults within request-hard constraints. |
-| `fixedPlacements` | Required authored room/layout instances with explicit transforms; default empty. |
-| `choiceRegions` | Region instances offering interchangeable layout alternatives; default empty. |
+| `roomLibrary` | Eligible room prototypes, atomic layout families, and tag/weight filters. Required for automatic prefab selection; theme may supply it. Not used for pure procedural rooms. |
+| `placementPolicy` | `AutomaticFit` by default; controls exterior matching, preferred prefab coverage, size mix, and residual fragmentation. |
+| `exteriorMatchBand`, `matchVoidBoundaries` | Near-match distance cap (default 3 tiles) and whether exterior matching includes space holes/courtyards (default true). |
+| `constantRegions` | Explicit immutable map areas or pinned authored layouts with exact masks/transforms/content. Default empty; these are deliberate overrides. |
+| `choiceRegions` | Optional authored constraints offering interchangeable layouts at specified locations. Empty by default; automatic generation discovers its own placement opportunities. |
 | `anchors`, `externalPorts` | Stable local alignment and connection metadata; default empty. |
 | `rootCells` | Traversable access roots; supplied roots are hard requirements. If absent, choose the lexicographically first usable cell per permitted network and report that external station access was not established. |
 | `connectivityPolicy` | `SingleNetwork` by default. |
@@ -180,6 +195,10 @@ IDs use PascalCase. Implementation may split types for clarity but MUST preserve
 | `constraints` | Named hard conditions and soft targets, with scope and tolerances. |
 | `fallbackPolicy` | Ordered, explicitly permitted degradations. Default permits soft-target misses and one-tile sparse fill; it never disables a hard condition. |
 | `budgets` | Tile/candidate/search/path/repair/decoration/tactical limits from section 14. |
+
+`constantRegions` controls deliberate immutable overrides only. Do not implement fixed room
+positions as the base generation model. Constant regions may contain any authored area, including
+several rooms, corridors, or landmarks; their contract is specified in section 7.3.
 
 Profiles may define desired room sizes, room count, corridor width, loops, furniture density, and
 window/cover targets. Size classes are theme-defined area bands, not fixed placement modules.
@@ -203,6 +222,10 @@ Each room definition contains:
   must transform masks, ports, normals, entity offsets, fixture geometry, and decals together.
 * Theme/tags, weight, unique-instance limits, exclusions/requires rules, and repair permissions.
 * Spaceproof/traversal requirements and optional interior subdivision metadata.
+* `exteriorCompatibleEdges`: cardinal boundary spans that can face the target exterior, including
+  their actual hull/window support and any required facade orientation. Inspection may infer these
+  from supported geometry; unsupported or ambiguous spans require metadata. Ordinary room ports
+  cannot face vacuum simply to improve the shape score.
 
 An authored room with mutually disconnected entrances is invalid as one logical room. It must be
 repaired by its author or described as multiple logical rooms inside one atomic layout. A metadata
@@ -213,6 +236,12 @@ entities. Authors may mark specific cells/entities as replaceable and specific w
 generator-owned seams. The generator may edit only those locations and must report the edits.
 
 ### 4.3 Layout and choice region
+
+A library may offer individual rooms, atomic layouts, and layout families without assigning any of
+them a map position. Automatic fitting chooses their transforms and creates placement instances.
+A layout family groups alternatives such as one large room, two medium rooms, or either small-room
+pattern under a shared reservation/external interface. Its origin is discovered by fitting, unless
+an optional authored override pins it. Singleton rooms are one-member atomic layout candidates.
 
 `ksProcgenLayout` describes an indivisible package containing:
 
@@ -535,8 +564,9 @@ their external contract and section 8 invariants remain satisfiable.
 
 ### 6.1 Choose complete packages
 
-The primary solver variable is the selected layout for a region, not an independent room for each
-marker. Selecting an alternative atomically claims its reservation, member IDs, connections,
+The primary solver variable is a complete room/layout candidate at a discovered position and
+rotation. For a family instance, select one complete alternative, not independent members of its
+competing patterns. Selecting an alternative atomically claims its reservation, member IDs, connections,
 exclusions, and residual masks. Failure of any mandatory member or link rejects the entire choice.
 Backtracking restores all of its reservations and generated consequences before another choice.
 
@@ -554,6 +584,10 @@ No cell has two physical owners, except an explicitly unified seam.
 These equations define behavior; version 1 can implement bounded constraint propagation and
 backtracking without an external SAT/ILP library. A geometric overlap check alone does not prevent
 mixing disjoint members of competing layouts; region identity is mandatory.
+For automatic placement, accepting a family candidate creates that region identity and reservation;
+rejecting the candidate creates no region. `ExactlyOne` applies to an accepted family instance or
+an explicitly required authored choice region, not to every potential placement in the library.
+Overlapping alternatives at different origins still conflict through their whole reservations.
 
 ### 6.2 Blacklist/exclusion semantics
 
@@ -574,7 +608,8 @@ layout in region West does not prevent selecting a four-room layout in region Ea
 
 ### 6.3 Required authoring example
 
-This is a logical sketch of one region divided into four possible subareas. Letters represent
+This is a logical sketch of one reusable layout family with four possible subareas. Its position
+is normally discovered by automatic fitting. Letters represent
 room footprints; actual walls, approaches, seams, and corridor cells must be included in the
 authored masks. It is not a one-character-per-tile playable map.
 
@@ -597,7 +632,8 @@ the four-room pattern creates B1 through B4 together. A failed G connection roll
 trying B1-B4. A larger parent layout can allocate three separate such regions and select different
 size classes in each; physical overlap of a large room and small rooms is never allowed.
 
-Conceptual authoring syntax (new schema to implement; not loadable by the current engine):
+Optional pinned-choice authoring syntax (new schema to implement; not loadable by the current
+engine). The normal workflow instead references this family from `roomLibrary` with no map anchor:
 
 ```yaml
 choiceRegions:
@@ -640,11 +676,13 @@ pass followed by an attempt to repair an arbitrarily blocked map.
    port/door states. Hash the relevant content for replay and cache invalidation.
 2. Inspect room maps into immutable template records. Resolve actual footprints and preserve map
    data. Reject illegal rotations and rooms whose mandatory paths are already blocked.
-3. Build transformed candidate placements. Filter by bounds, reservations, anchors, required port
-   reachability potential, seam ownership, and exclusions. Reserve closure/approach space early.
-4. Place fixed required instances. Select the unassigned region with the fewest feasible choices;
-   break ties by stable region ID. Order alternatives by a seeded weighted permutation without
-   replacement. Zero-weight alternatives are disabled; a required region with none enabled fails.
+3. Apply constant-region reservations, then discover transformed room/layout placements from the
+   library against the actual shape using section 7.1. Filter by bounds, explicit anchor overrides,
+   required port reachability potential, seams, and exclusions. Reserve closure/approach space early.
+4. Search jointly over room choice, placement, rotation, and residual fill. Prioritize viable
+   exterior matches and constrained gaps; authored required choice regions also participate.
+   Rank candidates by section 7.2, using seeded weighted order only within equal fit-score tiers.
+   Zero-weight candidates are disabled; an unsatisfiable required choice region fails.
 5. Tentatively claim an entire alternative. Propagate occupancy, count, port, and exclusion
    constraints. Use optimistic reachability through carveable cells to prune impossible branches.
    Optimistic reachability is a pruning aid, never proof that the final layout works.
@@ -653,7 +691,7 @@ pass followed by an attempt to repair an arbitrarily blocked map.
 7. Resolve room themes and structural pack compatibility during step 6, including required assembly
    and lighting feasibility. Validate and retain candidate plans satisfying these hard obligations.
    Select the best structural plan under the search budget, preferring fewer required relaxations,
-   then structural soft targets (size mix, connections, requested geometry), then a stable tie-break.
+   then the exterior/structural score from section 7.2, then a stable tie-break.
    Freeze that selection before optional furnishing; aesthetic random draws do not rank layouts.
 8. Complete the selected plan with optional loops, windows, lighting, cover, and coherent entity
    clusters under separate stage budgets. Required window counts and other hard content obligations
@@ -667,6 +705,148 @@ pass followed by an attempt to repair an arbitrarily blocked map.
 Each branch uses an undo journal or persistent plan data. Track the dependency from generated
 routes, wall seams, and fill to the selected package, so rollback cannot leave A's corridor inside
 B's layout. Cache keys include transforms, template revisions, and relevant policy/geometry state.
+
+### 7.1 Automatic candidate discovery and room fitting
+
+Treat placement as bounded packing of complete, irregular cell masks with connectivity constraints.
+The solver discovers room boundaries; it does not first impose a fixed lattice and ask for a room
+of each lattice size. In `Procedural`, section 9 generates shape-fitting room partitions directly
+from room themes. In `Prefabs`/`Hybrid`, the following baseline selects library content automatically:
+
+1. Subtract constant ownership and reserve required roots, approaches, and hull support. Extract
+   target boundary edges, cardinal runs, convex/concave corners, and connected available areas.
+   Keep outer-map exterior, explicit void boundaries, and internal constant-region boundaries
+   separately labeled. All boundary processing uses the exact cell mask.
+2. Index inspected room/layout masks by area, bounds, allowed rotations, ports, and compatible
+   exterior spans/corners. These indexes prune candidates; rectangular bounds never establish fit.
+3. Propose placements by aligning compatible room facade edges/corners to target edges/corners.
+   Derive the integer transform from paired cells/directions. Alignment is computational: target
+   anchor markers are unnecessary. Deduplicate by prototype/family ID, transform, and content version.
+4. Also enumerate interior placements at integer origins in compatible available bounds, including
+   boundary placements missed by the fast proposals. Check every actual footprint/reservation cell,
+   approach, and closure support. Enumeration is lazy and charged to budgets; incomplete enumeration
+   must be reported. Do not sample only module-sized offsets and thereby miss a valid one-tile shift.
+5. Select an unresolved boundary/gap cell with the fewest feasible candidates, prioritizing required
+   obligations and exterior runs, with stable coordinate tie-breaks. Branch over candidates covering
+   that cell and, where the mode/policy allows it, assignment of the cell to procedural/passage fill.
+   A residual assignment prevents subsequent candidates from claiming that cell within the branch;
+   backtracking may revise it. If no prefab fits, the cell is still an obligation to fill/classify.
+6. Accept a room/layout only as a complete candidate, including the reserved gap of an L-pattern.
+   Propagate conflicts and optimistic route/hull feasibility after each placement. Recompute local
+   opportunities as available space changes. Do not freeze exterior placements before checking
+   that the interior and all required ports remain solvable.
+7. Validate residuals with the actual connector/procedural planner. Penalize avoidable slivers and
+   pockets, but allow tiny spaces when that is what the requested mask provides. Backtrack complete
+   candidates on hard failures; keep the best valid plan within the shared operation budget.
+
+No scaling, cropping, wall removal, or stretching of a prefab is allowed unless the template exposes
+a specific supported repair/seam operation. If a curve/stair-step/concavity has no suitable prefab,
+hybrid generation fits a procedural boundary strip or whole residual room to it. The requested
+outline remains authoritative. `Prefabs` mode reports uncovered incompatible areas rather than
+silently changing their shape or introducing procedural room interiors.
+
+Automatic candidate instance IDs derive from the source ID and transform, with stable child paths
+for family members. Search order must not determine region IDs or random streams. A required room
+type/count can constrain the library selection without specifying where those rooms go. A room's
+own internal authored furniture is preserved when placed; that does not pin its map position.
+
+### 7.2 Exterior matching preference
+
+Prefer exterior rooms whose facade follows the requested outline, including bends and concave
+features, over rooms that leave avoidable strips of filler or protrude toward forbidden space.
+Containment, constants, hull integrity, and accessible entrances always take precedence. Exterior
+matching is a soft objective by default and cannot override any of those constraints.
+
+Construct a fixed reference boundary before evaluating candidates. In `Footprint`, compare the
+room/layout's compatible exterior-facing occupied boundary against the target's occupied boundary.
+In `InteriorFill`, compare its usable interior boundary against the target interior boundary and
+separately verify that its hull fits the existing structure or authorized envelope. Do not enlarge
+or redefine the reference boundary to improve a candidate's score. Preserved exterior segments
+remain visible in the report but are excluded from the variable score.
+
+Compare directed cardinal edges `(cell, outwardNormal)`, not just bounding boxes or distance between
+centers. An exact match shares the reference location and normal under the chosen geometry mode.
+Concave corners require the corresponding pair of directed spans. For near matches, measure
+Manhattan distance to a reference edge with the same normal, capped at `exteriorMatchBand` (default
+3 tiles); edges beyond that band receive the maximum mismatch penalty. Count only spans explicitly
+eligible to face that exterior. Ordinary doors aimed into space never count as matched facade.
+
+Outer perimeter gets the exterior preference by default. Request field `matchVoidBoundaries`
+(default true) extends it to explicit space holes/courtyards; constant-room interior interfaces
+instead use port/seam compatibility. A hole is never mistaken for spare fill space.
+
+After hard feasibility and the number/severity of permitted relaxations, compare complete plans
+lexicographically using this initial structural objective:
+
+1. Maximize the number of distinct eligible target exterior edges matched by selected prefab
+   facades (or by generated room shell boundaries in pure procedural mode).
+2. Minimize capped facade mismatch distance for boundary placements.
+3. Minimize avoidable residual fragments too narrow to meet the requested corridor/room goals.
+   Determine width by the clearance model; do not count intended passages as defects.
+4. Minimize deviation from requested prefab coverage, room size mix/counts, and preferred connections.
+   Default hybrid prefab coverage target is 70% of nonconstant usable room area, soft; caller/theme
+   can override it. Required type/count minima always remain hard. Prefab mode's required coverage
+   is dictated by its ban on unassigned/procedural interiors, not by this percentage.
+5. Apply seeded prototype weights and a stable final tie-break among equally scored plans.
+
+Deduplicate matched target edges so many small rooms cannot gain credit repeatedly for the same
+segment. Report score terms separately, along with unmatched exterior spans and their reasons.
+The score ranks feasible plans; it does not promise globally optimal packing under finite budgets.
+For pure procgen, boundary adherence will commonly tie because exact closure is already required;
+the remaining structural goals then guide subdivision. No prefab library is needed in that mode.
+
+### 7.3 Constant regions: explicit author overrides
+
+A `constantRegion` declares a stable ID, exact mask and transform, and either an authored map/layout
+resource or an immutable snapshot of already authored host content. It is instantiated into staging
+at that exact transform and contributes its full occupied/support footprints to `P`. Existing host
+snapshots retain their actual positions. Do not randomize, rotate, refurnish, retile, or replace any
+content in the constant mask across seeds. Resolve any random spawners/markers within constant
+content to pinned outcomes or reject them as nonconstant; ordinary post-publication gameplay is
+outside this generation-time guarantee.
+
+Constants may cover a landmark, hull section, entrance hall, room cluster, or other subarea. They
+need not be rectangular. An author may explicitly declare `Generate` holes inside a surrounding
+constant area; those holes are outside its immutable mask. Reserve the entire actual footprint of
+constant entities so neighboring placements cannot overlap a fixture whose anchor is inside it.
+
+Ports and clean traversal through constant content are inspected exactly as for other authored
+rooms. External connection/interface markers are useful here, but automatic candidate fitting does
+not require target-wide markers. If generators may fill a doorway seam, define that seam outside
+the immutable mask and identify its allowed operations explicitly. Constants never implicitly grant
+permission to remove a wall or door. Conflicting constants, blocked mandatory constant entrances,
+or constants incompatible with the target/closure requirements produce a diagnostic and failure;
+fallbacks may change surrounding generation but cannot alter the constants.
+
+The default workflow has zero constants. A request with only constants and no remaining target
+still validates their requested accessibility/closure and reports zero generated area. Constant
+content is excluded from variable room-coverage/size targets unless the goal explicitly includes
+it. Its fingerprint must remain identical across seeds and permitted fallback paths.
+
+Conceptual minimal requests, with each symbolic mask/library/theme supplied by a resource or caller:
+
+```yaml
+mode: Hybrid
+shape: KsIrregularStationMask
+roomLibrary: KsStationRoomLibrary
+theme: KsStationInterior
+seed: 12345
+```
+
+Optionally add a constant landmark without specifying any generated room positions:
+
+```yaml
+constantRegions:
+- id: ArrivalHall
+  source: KsAuthoredArrivalHall
+  mask: KsArrivalHallMask
+  origin: 12, 8
+  rotation: 0
+```
+
+`origin` and `rotation` express the constant's exact transform; the mask is local to that transform.
+The resulting world-local footprint must fit the declared target/context ownership. Referenced
+constant assets include validated ports/structure. All remaining room transforms are solver outputs.
 
 ## 8. Traversal, entrance destinations, and residual connections
 
@@ -994,9 +1174,13 @@ The default progression, skipping steps without permission, is:
 3. Use valid stubs for ports whose destination policy permits them. Seal only explicitly sealable
    optional ports under their authoring/policy contract.
 4. Backtrack the complete offending layout and try other alternatives. All branch-local fallback
-   effects disappear with that layout. Required fixed placements remain required.
-5. Replace an optional region's layout with sparse procedural fill only if that region declares a
-   procedural fallback and the request mode allows it. Required prefabs cannot disappear silently.
+   effects disappear with that layout. Try different origins/rotations, room sizes, or family
+   alternatives as needed; do not keep a bad exterior placement permanently pinned. Constant
+   regions remain immutable, and required room-type/count constraints remain required.
+5. Replace an automatically proposed optional placement with procedural fill when the mode/policy
+   allows it. An explicitly authored choice region additionally needs a declared procedural fallback.
+   Required prefabs cannot disappear silently; exterior fit and prefab-coverage target misses are
+   reported when no suitable room matches a boundary.
 6. Merge procedural subdivisions into one sparse connected interior, keeping required routes and
    closure. Hard room-count/minimum-area requirements still apply.
 7. Apply individually enabled terminal relaxations: for example `AllowSolidFill`,
@@ -1030,6 +1214,9 @@ never described as a spawned map. Include:
 
 * Seed, generator version, normalized request hash, content/template hashes, and plan hash.
 * Selected alternatives/members/transforms; exclusions that eliminated candidates.
+* Automatic placement provenance, matched/unmatched exterior edges, component fit scores, residual
+  fragmentation/coverage, and constant-region fingerprints. State whether enumeration/search was
+  incomplete; an empty candidate sample is not proof that the library cannot fit.
 * Per-cell ownership, remaining void, usable area, requested/achieved size distribution.
 * Per-port destination, routes, stubs/seals, actor profile, and network roots/components.
 * Constraint results (`Satisfied`, `Missed`, `Relaxed`, `NotApplicable`, `Unverified`) with original
@@ -1067,7 +1254,7 @@ the snapshot; revalidate or cancel instead of committing stale data.
 Patching an existing live grid requires a future explicit integration contract for world-change
 checks, player isolation, rollback of entity side effects, and gas/physics initialization. Until that
 exists, reject live patch requests rather than offering unsupported atomicity. Authored host layouts
-and fixed rooms assembled in staging are fully supported by version 1.
+and explicit constant regions assembled in staging are fully supported by version 1.
 
 ## 14. Determinism and performance
 
@@ -1087,6 +1274,7 @@ Initial configurable defaults, to be profiled before production tuning:
 | --- | --- | --- |
 | Total target + envelope + inspected context cells | 65,536 distinct cells | Reject oversized request before allocation/search. |
 | Candidate placements | 20,000 | Stop enumeration with a budget diagnostic; do not silently omit alternatives and claim exhaustive search. |
+| Candidate transform probes | 2,000,000 | Counts rejected origins/rotations and failed mask tests as well as accepted placements; stop with a diagnostic. |
 | Search node expansions | 50,000 across all branches/fallbacks | Return best feasible plan or `BudgetExceeded`. |
 | Path node expansions | 2,000,000 total | Same; never drop a required port to meet the cap. |
 | Repair proposals | 256 total | Escalate to next permitted fallback within remaining budgets. |
@@ -1122,12 +1310,16 @@ after a valid preview or an explicitly configured automatic generation call.
 
 An author should be able to:
 
-1. Draw a target/void mask or select an authored region; choose `Footprint` or `InteriorFill`.
-2. Mark fixed rooms, alignment anchors, every entrance, and replaceable seam cells.
-3. Define a choice region and add whole-layout alternatives; declare residual areas as `Generate`.
-4. Select constraints, allowed fallbacks, room theme(s), pack overrides, and seed. A basic pure-fill
-   request needs only a mask and an existing theme; advanced cluster rules remain optional.
-5. Preview selected layouts, paths, hull, windows, and diagnostics before spawning the map.
+1. Draw a target/void mask; choose `Footprint` or `InteriorFill`.
+2. Choose a theme and, for prefab/hybrid output, a room/layout library. The generator discovers
+   room choices, sizes, positions, rotations, and exterior matches without manual slots/anchors.
+3. Optionally mark constant areas that must remain exactly authored. Advanced users may also add
+   choice-region/anchor overrides or mandatory room-type/count constraints. Library assets carry
+   their own validated ports, anchors, seams, and atomic family definitions.
+4. Select constraints, fallbacks, room theme(s), pack overrides, and seed. A basic pure-fill request
+   needs only a mask and theme; a hybrid request adds a library, often supplied by that theme.
+5. Preview automatically selected layouts, exterior fit, constant areas, paths, hull, windows, and
+   diagnostics before spawning the map.
 6. Reproduce a reported failure using its request/content hashes and seed.
 
 Overlay layers: target/envelope/preserved/void masks; region claims and selected alternative IDs;
@@ -1136,6 +1328,8 @@ eligible window cells and chosen windows; cover/sightline/choke samples. Distinc
 or patterns so diagnostics remain understandable without relying on color alone.
 Include theme/pack/cluster IDs, assembly relations, reserved interaction approaches, lighting
 coverage, fixture power assumptions, and unmet furnishing goals in the content preview.
+Show discovered placement candidates, selected facade-to-boundary correspondences, residual fill,
+and why a visually close-fitting candidate lost to connectivity or another hard constraint.
 
 Show the route or obstruction cells for a failed port and the competing claims for a placement
 conflict. Log one concise summary plus structured detailed diagnostics; avoid one warning per cell.
@@ -1169,7 +1363,7 @@ Every fixture asserts the semantic invariants and checks actual output when engi
 | A18 | Optional generated clutter cannot block a route or leak the hull; immutable authored clutter causes candidate rejection unless a specific repair is authorized. |
 | A19 | Doors with valid and invalid access/power states distinguish geometric reachability from actual reference-actor traversal. |
 | A20 | Direct shared seam and two-door vestibule fixtures contain one owner per physical cell/entity slot, correct approach clearance, and valid pressure closure. |
-| A21 | Contradictory tags/requires, nested cycles, missing prototypes, malformed masks, and fixed-placement conflicts fail before spawning. |
+| A21 | Contradictory tags/requires, nested cycles, missing prototypes, malformed masks, and constant-region conflicts fail before spawning. |
 | A22 | Identical seed/input/version yields identical semantic plan/report across repeated runs and different yield timing; decoration random draws do not alter layout selection. |
 | A23 | Deliberately tiny budgets and pathological masks terminate; a valid saved plan survives search exhaustion, while an unvalidated/partial plan is never published. |
 | A24 | Cancellation, target deletion, content reload, and materialization failure leave no published partial output and clean up staging resources. |
@@ -1185,6 +1379,12 @@ Every fixture asserts the semantic invariants and checks actual output when engi
 | A34 | Down-facing default computer next to a right wall uses the 90-degree authoring rotation and faces left. All four backing walls and rotated assemblies produce matching actual interaction faces/approaches. |
 | A35 | Corner machine chooses between the two inward directions using reachable empty floor or a usable associated chair; blocked fronts and isolated empty pockets are rejected. A required machine with no legal orientation fails. |
 | A36 | Chair with a cardinal walking route is usable; a chair reachable only by vaulting anything that normally blocks movement fails. Test tables/desks and a non-table obstacle with the same movement behavior: neither can satisfy room/door/machine clean-passage routes even for a vault-capable actor. Adding furniture cannot cut off a previously reserved chair approach. |
+| A37 | Hybrid request supplies only an irregular mask, theme/library, and seed: no target anchors, slots, choice regions, or preset rooms. Solver discovers mixed room sizes/positions/rotations and fills remaining cells without changing the outline. |
+| A38 | Two otherwise feasible exterior candidates differ in actual contour fit: with adequate search budget, prefer the closer directed-edge/corner match. Test concavity, rotation, space holes, and near matches; matching bounding boxes alone is insufficient. |
+| A39 | No prefab fits a stair-step boundary: hybrid uses a procedural boundary strip/residual room; prefab-only mode reports unmet coverage. Neither crops a room, crosses the target boundary, or points an ordinary door into vacuum to improve the score. |
+| A40 | Constant landmark, nonrectangular preserved area, and entrance hall keep identical content/transforms across seeds while surrounding rooms vary. Routes connect to declared constant ports without modifying protected seams; impossible constant obligations fail explicitly. |
+| A41 | Automatically placed L/four family retains atomic exclusivity and owns its residual gap at every discovered origin. A better-looking exterior candidate blocking mandatory interior access is backtracked completely. |
+| A42 | Valid prefab placement exists only at a one-tile-shifted origin away from fast alignment proposals. Full bounded enumeration finds it with sufficient budget; tight probe limits report incomplete search and terminate even when most candidates are rejected. |
 
 Add property-based or deterministic seed-sweep tests over small arbitrary masks, asserting bounds,
 exclusive ownership, atomic package selection, cardinal connectivity, finite work, and honest result
@@ -1232,10 +1432,18 @@ done because an earlier placeholder returns plausible-looking rooms.
 - [ ] **T05 - Implement atomic layout definitions.** Depends on T04. Members, nested choices, exposed
   port mappings, claim/residual/void masks, common external contracts, scoped exclusions/requires.
   Exit: A02/A03/A04/A21 definition validation and full package rollback tests pass.
-- [ ] **T06 - Implement bounded placement search.** Depends on T03-T05. Candidate enumeration,
-  constraint propagation, stable weighted alternatives, most-constrained-region ordering, counts,
-  required placements, and replayable conflict reports. Exit: a forced L alternative cannot contain
-  any four-room member, including in its unused quadrant; budget exhaustion is explicit.
+- [ ] **T05a - Implement automatic fit proposals and exterior scoring.** Depends on T02-T05.
+  Library filtering, inspected facade signatures, directed-edge/corner alignment, lazy integer-origin
+  enumeration, footprint checks, fit/fragmentation scores, and probe budgets. Exit: A38/A42 candidate
+  cases pass; candidates are found without authored target slots or anchors.
+- [ ] **T05b - Implement constant-region contracts.** Depends on T02-T05. Exact masks/transforms,
+  immutable content fingerprints, footprint reservations, ports, and explicit outside seams. Exit:
+  A21/A40 planning cases reject conflicts and retain constants through every rollback/fallback.
+- [ ] **T06 - Implement bounded automatic placement search.** Depends on T03-T05b. Joint selection
+  of room type, origin, rotation, family alternative, and residual assignment; constrained-cell
+  branching, fit-ranked alternatives, counts, and conflict reports. Exit: A37-A42 planning cases
+  pass with route/fill integration in T08-T09; a selected L alternative cannot contain four-room
+  members in its gap. No fixed slot plan is required, and budget exhaustion is explicit.
 
 ### Phase C: traversal and pure fill
 
@@ -1251,7 +1459,7 @@ done because an earlier placeholder returns plausible-looking rooms.
 - [ ] **T09 - Implement tile-resolution pure fill.** Depends on T07-T08. Connected growth partitions,
   tile-thick seams, merging, sparse fallback, and exact residual coverage. Exit: A01/A11/A12/A18 pass
   at the planning level in `Procedural` and `Hybrid`, including one-cell fragments. No artificial
-  room size lattice is present.
+  room size lattice is present; A37/A39 hybrid boundary strips match the requested exterior.
 - [ ] **T09a - Implement theme assignment and coherent material palettes.** Depends on T04a/T09.
   Per-room weighted themes, compatible tile/wall families, shared seam ownership, and theme
   feasibility feedback. Exit: A27 material checks/A29/A31 pass at plan level; tiny fragments use
@@ -1268,7 +1476,8 @@ done because an earlier placeholder returns plausible-looking rooms.
   placement preserves traversal and closure.
 - [ ] **T12 - Implement safe prefab materialization and staging lifecycle.** Depends on T03-T05/T10.
   Prove supported map copying preserves authored data and entity references; isolate startup side
-  effects; support cleanup/cancellation and private validation. Exit: A16-A17/A20/A24 engine fixtures
+  effects; support cleanup/cancellation and private validation. Include T05b constant-region copying.
+  Exit: A16-A17/A20/A24/A40 engine fixtures
   pass. Reject unsupported cloning or live patch cases explicitly.
 - [ ] **T13 - Implement final engine validation and publication.** Depends on T07/T10-T12. Reconcile
   actual collision, operational doors, anchoring, and atmosphere with the plan, then publish once.
@@ -1303,6 +1512,8 @@ done because an earlier placeholder returns plausible-looking rooms.
   fixed seed corpus, and pathological budget/cancellation cases; profile representative small,
   medium, and maximum supported requests. Ship the four-alternative example, mixed-size parent,
   arbitrary concave pure fill, hybrid gap fill, and tiny-area examples with documented seeds/results.
+  Include a slot-free irregular hybrid map with automatically fitted exterior rooms, and a second
+  version preserving one constant landmark across several seeds.
   Include a low-effort office theme demonstrating tile/wall/lighting packs, grouped workstations,
   supporting storage, and gracefully reduced content in a tiny room.
   Exit: required builds/tests pass, replay is stable, and measured budgets are recorded. Any existing
@@ -1334,6 +1545,10 @@ to invent fundamental behavior:
 | Smallest generation unit | One tile; no minimum room dimensions. |
 | Unspecified boundary interpretation | `Footprint`; extra closure requires explicit envelope cells. |
 | Unassigned target cells in Hybrid | Procedural fill; keep-empty holes require `KeepVoid`. |
+| Room selection and placement | Automatic fitting from a library; choose room types, counts, origins, rotations, and subdivisions without predefined slots. |
+| Exterior preference | Prefer compatible room contours matching directed target boundary edges/corners; fill unmatched hybrid strips procedurally. |
+| Constant map areas | Optional explicit immutable masks/content/transforms; fit generated rooms around them across seeds. |
+| Choice regions and alignment markers | Optional advanced overrides/library metadata; no target-wide manual placement requirement. |
 | Multi-room alternatives | Exactly one atomic layout per choice region. |
 | Layout gaps | Owned by the selected layout's fill; never available to a sibling alternative. |
 | Movement | Cardinal edges, at least one tile clear, validated against a nominated actor. |
