@@ -60,7 +60,7 @@ public sealed class KsLlmFaxTests : GameTest
     private EntityUid _senderFaxUid;
     private string _senderAddress = string.Empty;
 
-    private async Task SetUpFaxes(bool enable = true)
+    private async Task SetUpFaxes(bool enable = true, string senderPrototype = "FaxMachineBase")
     {
         _fakeHandler = new FakeKsLlmHandler();
         _llmManager = Server.ResolveDependency<KsLlmManager>();
@@ -78,7 +78,7 @@ public sealed class KsLlmFaxTests : GameTest
         await Server.WaitPost(() =>
         {
             _centcommFaxUid = SEntMan.SpawnEntity("FaxMachineCentcom", _testMap.GridCoords);
-            _senderFaxUid = SEntMan.SpawnEntity("FaxMachineBase", _testMap.GridCoords);
+            _senderFaxUid = SEntMan.SpawnEntity(senderPrototype, _testMap.GridCoords);
         });
 
         await Pair.RunTicksSync(5);
@@ -516,6 +516,52 @@ public sealed class KsLlmFaxTests : GameTest
 
         await SendFax("Now?");
         await WaitUntil(() => GetReplies().Count == 1, "no reply after reconnecting");
+    }
+
+    [Test]
+    public async Task ClosingTheLineDestroysTheSenderAfterTheReply()
+    {
+        await SetUpFaxes();
+        _fakeHandler.EnqueueToolCall("close_fax_line", "{}");
+        _fakeHandler.EnqueueText("This line is now closed.");
+
+        await SendFax("HONK HONK HONK");
+        await WaitUntil(() => GetReplies().Count == 1, "the reply must still be delivered before the line goes");
+
+        // Anything else from a closed line is ignored, even while the machine still stands.
+        var requestsBefore = _fakeHandler.Requests.Count;
+        await SendFax("HONK?");
+        await Pair.RunTicksSync(10);
+        Assert.That(_fakeHandler.Requests, Has.Count.EqualTo(requestsBefore), "a closed line must not reach the model again");
+
+        await WaitUntil(() => !SEntMan.EntityExists(_senderFaxUid) || SEntMan.IsQueuedForDeletion(_senderFaxUid),
+            "the sender's fax machine was never destroyed");
+    }
+
+    [Test]
+    public async Task NukeCodeFaxLineCannotBeClosed()
+    {
+        // The Captain's fax receives the nuke codes; losing it would lose them for the round.
+        await SetUpFaxes(senderPrototype: "FaxMachineCaptain");
+        _fakeHandler.EnqueueToolCall("close_fax_line", "{}");
+        _fakeHandler.EnqueueText("Noted.");
+
+        await SendFax("You are all incompetent.");
+        await WaitUntil(() => GetReplies().Count == 1, "no reply was faxed back");
+
+        var toolResult = FakeKsLlmHandler.GetMessages(_fakeHandler.Requests.Last())
+            .Last(message => message.GetProperty("role").GetString() == "tool")
+            .GetProperty("content").GetString();
+
+        // Long enough for a closed line to have gone off.
+        await Pair.RunTicksSync(300);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(toolResult, Does.Contain("protected command channel"));
+            Assert.That(SEntMan.EntityExists(_senderFaxUid) && !SEntMan.IsQueuedForDeletion(_senderFaxUid), Is.True,
+                "the fax that receives the nuke codes must survive");
+        });
     }
 
     [Test]
