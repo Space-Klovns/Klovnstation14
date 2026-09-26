@@ -1,6 +1,5 @@
 using Content.Shared.Interaction.Events;
 using Content.Shared.Popups;
-using Content.Shared.Weapons.Ranged.Events;
 using Robust.Shared.Timing;
 
 namespace Content.Shared._KS14.Execution;
@@ -14,37 +13,26 @@ public sealed partial class KsActiveExecutionSystem : EntitySystem
 
     private static readonly TimeSpan PopupDelay = TimeSpan.FromSeconds(0.8d);
 
+    private static readonly LocId MeleePopupLocId = "suicide-popup-melee-cant";
+    private static readonly LocId GunPopupLocId = "suicide-popup-gun-cant";
+
+    // Covers guns as well as melee: SharedGunSystem.AttemptShoot asks CanAttack before every shot.
     [SubscribeLocalEvent]
-    private void OnAttemptMelee(Entity<KsActiveExecutionComponent> entity, ref AttackAttemptEvent args)
+    private void OnAttemptAttack(Entity<KsActiveExecutionComponent> entity, ref AttackAttemptEvent args)
     {
         if (args.Cancelled ||
             entity.Comp.VictimUid != args.Uid)
             return;
 
-        // you cant hit something while trying to kill yourself
+        // you cant hit or shoot something while trying to kill yourself
         args.Cancel();
 
-        // The client's MeleeWeaponSystem.Update calls CanAttack with no target every tick, purely to query
-        //      whether attacking is possible. The server never makes that call, so it never advances
-        //      NextPopupTime, and every incoming game state resets the client's prediction of it back to the
-        //      server's value - popping up again on the next tick. Real targetless swings re-raise this with
-        //      each target they hit, so only popping up for targeted attempts loses nothing that matters.
-        if (args.Target == null)
+        // Only asking, not attacking, so there is nothing to tell them about.
+        if (args.Pure)
             return;
 
-        DoPopup(entity, "suicide-popup-melee-cant", args.Uid);
-    }
-
-    [SubscribeLocalEvent]
-    private void OnShotAttempted(Entity<KsActiveExecutionComponent> entity, ref ShotAttemptedEvent args)
-    {
-        if (args.Cancelled ||
-            entity.Comp.VictimUid != args.User)
-            return;
-
-        // you cant shoot while trying to kill yourself
-        args.Cancel();
-        DoPopup(entity, "suicide-popup-gun-cant", args.User);
+        // A melee attempt names its weapon. The only real attempt that doesn't is a gun asking before it fires.
+        DoPopup(entity, args.Weapon == null ? GunPopupLocId : MeleePopupLocId, args.Uid);
     }
 
     private void DoPopup(Entity<KsActiveExecutionComponent> entity, LocId popupId, EntityUid userUid)

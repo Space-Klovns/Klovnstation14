@@ -7,3 +7,22 @@
   - type: KsShaderStatusEffect
     shader: KsColorStatic
     timeLeftParameter: timeLeft
+
+# Cuts the affected entity's sprite into bars that jerk sideways, settling down as the effect runs out. Seen by
+#     everyone, not just the affected player.
+- type: entity
+  parent: MobStatusEffectDebuff
+  id: StatusEffectBarGlitch
+  name: glitching
+  components:
+  - type: KsPostShaderStatusEffect
+    shader: KsBarGlitch
+    timeLeftParameter: timeLeft
+    seedParameter: seed
+    parameters:
+      # A post-shader's quad is 1.25 times the sprite's size, centred on it, so the sprite fills 0.1 to 0.9.
+      barRegion: !type:KsShaderVector2
+        value: 0.1,0.9
+      # ...and so a bar pushed more than 0.1 either way leaves the quad and is cut off.
+      maxOffset: !type:KsShaderFloat
+        value: 0.1

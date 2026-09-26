@@ -121,7 +121,7 @@ public sealed partial class SharedExecutionSystem : EntitySystem
         //     return false;
 
         // You must be able to attack people to execute
-        if (!_actionBlocker.CanAttack(attacker, victim))
+        if (!_actionBlocker.CanAttack(attacker, victim, pure: true /* KS14: added arg, a check - also runs for every verb query */))
             return false;
 
         // The victim must be incapacitated to be executed

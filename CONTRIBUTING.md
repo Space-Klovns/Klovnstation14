@@ -399,6 +399,20 @@ dotnet format analyzers Content.Shared/Content.Shared.csproj --diagnostics RA005
 
 The generator only runs in projects that import it. `Content.Client`, `Content.Server` and `Content.Shared` each carry `<Import Project="..\RobustToolbox\MSBuild\Robust.EntitySystemSubscriptionsGenerator.targets" />` for exactly this reason — without it the attribute still compiles, nothing is generated, and **every converted subscription silently stops firing** with no build error to point at it. Any other project that wants attribute subscriptions needs the same import.
 
+**Popups predict themselves (C#)** — in shared code, call `PopupEntity`, `PopupCoordinates` or `PopupCursor` directly. The predicting client shows the popup the moment it runs, and the server's copy is matched against it rather than shown a second time; everyone else gets the server's. There is no separate "predicted" call to reach for — `PopupPredicted`, `PopupPredictedCursor`, `PopupPredictedCoordinates` and `PopupClient` are `[Obsolete]` wrappers kept for old callers.
+
+The trap is the `recipient` argument, which is **a filter, not a prediction hint**: whoever it names is the only player who sees the popup.
+
+```csharp
+// everyone who can see the dodger sees it, predicted for whoever caused it
+_popupSystem.PopupEntity(message, dodgerUid, type: PopupType.Small);
+
+// only the shooter sees it - the dodger and every bystander see nothing
+_popupSystem.PopupEntity(message, dodgerUid, shooterUid, type: PopupType.Small);
+```
+
+So when replacing an obsolete call, keep the audience it had: `PopupPredicted(message, uid, recipient)` showed the popup to everyone and becomes `PopupEntity(message, uid)`, while `PopupClient(message, uid, recipient)` showed it to the recipient alone and becomes `PopupEntity(message, uid, recipient)`.
+
 **Engine version** — this fork tracks a pinned `RobustToolbox` submodule, currently v289.0.3. When bumping it, read [RELEASE-NOTES.md](https://github.com/space-wizards/RobustToolbox/blob/master/RELEASE-NOTES.md) for every intervening version and check whether upstream SS14 already shipped the content-side fix — porting their commit is cheaper and keeps future merges clean. A bump is also one of the main ways new debug assertions arrive, so run the tests in `Debug` afterwards as well as building `Release` (§5).
 
 ## 5. Build configurations, and what each one catches
@@ -668,6 +682,48 @@ follow from that, and both make a PVS test pass while the bug is live:
 
 Include a control entity that must *not* arrive, too. Without one, "everything reached the client" and
 "PVS is not filtering at all" are the same green test.
+
+### Removing or deleting while enumerating: use the deferred forms
+
+Removing a component from inside an enumeration of that component, or deleting an entity the enumeration
+can still reach, mutates the storage being walked. The engine ships deferred forms for exactly this. Use
+them rather than gathering uids into a scratch list first:
+
+| Immediate | Deferred | What is deferred |
+| --- | --- | --- |
+| `RemComp` | `RemCompDeferred` | Only the removal from storage. `ComponentShutdown` runs **now**. |
+| `Del` | `QueueDel` | **Everything.** Nothing happens until the queue is processed. |
+| `PredictedDel` | `PredictedQueueDel` | As `QueueDel`, for predicted shared code. |
+
+Both queues drain at the end of the tick (`EntityManager.TickUpdate` → `ProcessQueueudDeletions`, then
+`CullRemovedComponents`), outside any system's loop. Calling either twice on the same target is harmless.
+
+```csharp
+// do this - safe mid-enumeration, and no scratch list
+var warpedEnumerator = AllEntityQuery<KsPitchWarpedAudioComponent>();
+while (warpedEnumerator.MoveNext(out var audioUid, out var warpedAudioComponent))
+    RemCompDeferred(audioUid, warpedAudioComponent);
+
+// not this - mutates the component storage the enumerator is walking
+while (warpedEnumerator.MoveNext(out var audioUid, out _))
+    RemComp<KsPitchWarpedAudioComponent>(audioUid);
+```
+
+The two deferred forms leave different things behind until the end of the tick, and each is a silent trap:
+
+- **A `RemCompDeferred`'d component is shut down, but still stored.** Enumerations and `HasComp` keep
+  finding it. Anything that acts on it has to skip it, or it undoes what its shutdown handler just
+  cleaned up:
+  ```csharp
+  if (warpedAudioComponent.LifeStage > ComponentLifeStage.Running)
+      continue;
+  ```
+- **A `QueueDel`'d entity is entirely alive.** It isn't terminating, so `TerminatingOrDeleted` says
+  `false` and every query still returns it. To ask whether it is on its way out, use
+  `EntityManager.IsQueuedForDeletion(uid)`.
+
+Reach for the immediate forms only when nothing up the call stack is iterating what you are removing,
+*and* the caller needs the thing gone before it continues.
 
 ### Reparenting and map work inside engine callbacks
 
