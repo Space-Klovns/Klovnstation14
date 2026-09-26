@@ -60,7 +60,6 @@ public sealed partial class GasGrenadeCompressorComponent : Component
         Gas.WaterVapor,
         Gas.Ammonia,
         Gas.Zipion,
-        Gas.Argon,
         Gas.Evaporin
     };
 }
