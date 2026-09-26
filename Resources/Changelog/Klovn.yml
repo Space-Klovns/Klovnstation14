@@ -2084,3 +2084,9 @@ Entries:
       message: Argon has been renamed to Encalite.
   id: 217
   time: '2026-09-26T08:50:25.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed popups not showing for suicide-blocked attacks.
+  id: 218
+  time: '2026-09-26T09:10:02.0000000+00:00'
