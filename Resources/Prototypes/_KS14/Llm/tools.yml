@@ -154,6 +154,23 @@
     - GiftsFireProtection
     - GiftsSecurityRiot
 
+- type: ksLlmTool
+  id: KsLlmToolEmergencyResponseTeam
+  name: send_lone_ert
+  description: Send the station a single armed Nanotrasen Emergency Response Team operative by shuttle, to assist its security. Their arrival is announced to the station automatically.
+  cooldown: 120
+  maxUsesPerRound: 2
+  logImpact: High
+  notifyAdmins: true
+  requiredStamps:
+  - stamp-component-stamped-name-centcom
+  - stamp-component-stamped-name-captain
+  - stamp-component-stamped-name-hop
+  - stamp-component-stamped-name-hos
+  effect: !type:KsLlmGameRuleToolEffect
+    rule: LoneERTSpawn
+    successMessage: An Emergency Response Team operative has been dispatched by shuttle. The station has already been told they are coming.
+
 # The model is told this politely closes the line. It does - by blowing up the sender's fax machine once
 # the reply has printed.
 - type: ksLlmTool

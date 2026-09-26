@@ -71,12 +71,14 @@ public sealed class KsLlmFaxTests : GameTest
         _fakeHandler = new FakeKsLlmHandler();
         _llmManager = Server.ResolveDependency<KsLlmManager>();
 
-        // The pooled server outlives a test even when dirty, and the conversation lives on a manager, not an
-        // entity - so a previous test's history would otherwise still be in the next one's requests.
+        // Start every test as a fresh round would. Pooled servers are recycled on a dummy ticker, whose
+        // RestartRound does nothing, so RoundRestartCleanupEvent is never raised between tests - and without it
+        // the conversation, tool cooldowns and per-round use counts all carry over into whichever test gets this
+        // server next. Flushing entities does not reach any of that: it lives in the manager and the systems.
         await Server.WaitPost(() =>
         {
             _llmManager.HandlerOverride = _fakeHandler;
-            _llmManager.ResetConversation();
+            SEntMan.EventBus.RaiseEvent(EventSource.Local, new RoundRestartCleanupEvent());
         });
         await OverrideCVar(Side.Server, KsCCVars.LlmEndpoint, "http://llm.test");
 
@@ -569,6 +571,37 @@ public sealed class KsLlmFaxTests : GameTest
             Assert.That(depositResult, Does.Contain("told of this transfer by announcement"), "transfers are announced to the station");
             Assert.That(securityAfter, Is.EqualTo(securityBefore), "an unstamped transfer must not move money");
             Assert.That(unstampedResult, Does.Contain("requires the fax to bear one of these stamps"));
+        });
+    }
+
+    [Test]
+    public async Task LoneErtStartsItsFixedRuleWithoutParameters()
+    {
+        await SetUpFaxes();
+        await SetUpStation();
+
+        _fakeHandler.EnqueueToolCall("send_lone_ert", "{}");
+        _fakeHandler.EnqueueText("Help is on the way.");
+        await SendFax("Nukies in the armory, we are losing.", Stamp("stamp-component-stamped-name-hos"));
+        await WaitUntil(() => GetReplies().Count == 1, "no reply was faxed back");
+
+        using var request = JsonDocument.Parse(_fakeHandler.Requests.First());
+        var ertParameters = request.RootElement.GetProperty("tools").EnumerateArray()
+            .Single(tool => tool.GetProperty("function").GetProperty("name").GetString() == "send_lone_ert")
+            .GetProperty("function").GetProperty("parameters");
+
+        var toolResult = GetLastToolResult();
+        await Server.WaitAssertion(() =>
+        {
+            var addedRules = Server.System<GameTicker>().GetAddedGameRules()
+                .Select(ruleUid => SEntMan.GetComponent<MetaDataComponent>(ruleUid).EntityPrototype?.ID);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(ertParameters.GetProperty("properties").EnumerateObject(), Is.Empty, "a fixed-rule tool takes no parameters");
+                Assert.That(toolResult, Does.Contain("already been told"));
+                Assert.That(addedRules, Does.Contain("LoneERTSpawn"));
+            });
         });
     }
 

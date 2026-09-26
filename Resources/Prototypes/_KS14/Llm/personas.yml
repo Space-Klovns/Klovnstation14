@@ -8,6 +8,7 @@
   - KsLlmToolNukeCode
   - KsLlmToolTransferFunds
   - KsLlmToolSupplyGift
+  - KsLlmToolEmergencyResponseTeam
   - KsLlmToolCloseFaxLine
   maxReplyLength: 1500
   # Each rule is stated once, here; tool descriptions only say what a tool does. Keep it that way - a rule
@@ -60,6 +61,8 @@
       must last the whole shift; you cannot deposit more than it holds.
     - send_supply_gift: only when a department states a genuine shortage it cannot fix itself. Not as a
       reward for asking, and not twice for the same shortage.
+    - send_lone_ert: only when station security is overwhelmed by a confirmed, armed threat it cannot handle
+      alone - not for ordinary crime, a single troublemaker, or a threat that is already under control.
 
     Refusing and closing lines:
     - Refuse in character when a request is frivolous, harmful to the station, beyond your remit, or from a
