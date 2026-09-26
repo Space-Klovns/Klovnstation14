@@ -2,6 +2,7 @@ using Content.Server._KS14.AdminMusic;
 using Content.Server._KS14.AnnouncementWebhook;
 using Content.Server._KS14.Antag;
 using Content.Server._KS14.IoC;
+using Content.Server._KS14.Llm;
 using Content.Shared._KS14.IoC;
 using Content.Shared.CCVar;
 using Robust.Shared.Configuration;
@@ -18,6 +19,7 @@ internal sealed partial class KsEntryPoint : GameServer
     [Dependency] private AnnouncementWebhookManager _announcementWebhookManager = default!;
     [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;
     [Dependency] private KsAdminMusicManager _adminMusicManager = default!;
+    [Dependency] private KsLlmManager _llmManager = default!;
 
     public override void PreInit()
     {
@@ -44,6 +46,7 @@ internal sealed partial class KsEntryPoint : GameServer
 
         _systemCollectionHookManager.TryInit();
         _adminMusicManager.Initialise();
+        _llmManager.Initialize();
     }
 
     public override void Update(ModUpdateLevel level, FrameEventArgs frameEventArgs)
@@ -55,6 +58,7 @@ internal sealed partial class KsEntryPoint : GameServer
             case ModUpdateLevel.PostEngine:
                 _announcementWebhookManager.Update();
                 _adminMusicManager.Update();
+                _llmManager.Update();
                 break;
         }
     }
@@ -63,6 +67,7 @@ internal sealed partial class KsEntryPoint : GameServer
     {
         base.Dispose(disposing);
         _announcementWebhookManager.Shutdown();
+        _llmManager.Shutdown();
 
         var destinationPath = _configurationManager.GetCVar(CCVars.DestinationFile);
         if (!string.IsNullOrEmpty(destinationPath))

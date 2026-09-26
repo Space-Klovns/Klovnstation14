@@ -6,6 +6,7 @@ using Content.Shared.CCVar;
 using Robust.Client;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Prototypes;
 
 namespace Content.Client._KS14.Entry;
 
@@ -16,6 +17,7 @@ internal sealed partial class KsEntryPoint : GameClient
 
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IResourceManager _resourceManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
     [Dependency] private IBaseClient _baseClient = default!;
     [Dependency] private ILogManager _logManager = default!;
     [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;
@@ -34,8 +36,20 @@ internal sealed partial class KsEntryPoint : GameClient
         Dependencies.InjectDependencies(this);
 
         LoadConfigPresets();
+        RegisterIgnoredPrototypes();
 
         _adminMusicManager.Initialise();
+    }
+
+    /// <summary>
+    ///     Server-only fork prototype kinds, which the client would otherwise fail to load.
+    /// </summary>
+    private void RegisterIgnoredPrototypes()
+    {
+        _prototypeManager.RegisterIgnore("speczone");
+        _prototypeManager.RegisterIgnore("packetFrequency");
+        _prototypeManager.RegisterIgnore("ksLlmPersona");
+        _prototypeManager.RegisterIgnore("ksLlmTool");
     }
 
     // LCDC FUTURE: Remove this if configpresets gets to client on upstream

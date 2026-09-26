@@ -131,9 +131,6 @@ namespace Content.Client.Entry
             _prototypeManager.RegisterIgnore("codewordGenerator");
             _prototypeManager.RegisterIgnore("codewordFaction");
 
-            _prototypeManager.RegisterIgnore("speczone"); // KS14
-            _prototypeManager.RegisterIgnore("packetFrequency"); // KS14
-
             _componentFactory.GenerateNetIds();
             _adminManager.Initialize();
             _screenshotHook.Initialize();

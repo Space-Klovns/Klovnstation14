@@ -1,3 +1,4 @@
+using Content.Server._KS14.Fax; // KS14
 using Content.Server.Administration;
 using Content.Server.Administration.Managers;
 using Content.Server.Chat.Managers;
@@ -606,6 +607,11 @@ public sealed partial class FaxSystem : EntitySystem
             NotifyAdmins(faxName);
 
         component.PrintingQueue.Enqueue(printout);
+
+        // KS14 start: let fork systems react to a fax arriving (e.g. an LLM answering Central Command's)
+        var receivedEvent = new KsFaxReceivedEvent(printout, fromAddress);
+        RaiseLocalEvent(uid, ref receivedEvent);
+        // KS14 end
     }
 
     private void SpawnPaperFromQueue(EntityUid uid, FaxMachineComponent? component = null)
