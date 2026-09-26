@@ -2,9 +2,15 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Content.Client._KS14.ZLevel;
 using Content.Client._KS14.ZLevel.Light;
+using Content.Client._KS14.ZLevel.Transit;
+using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.ZLevel;
 using Content.Shared._KS14.ZLevel.Physics;
+using Content.Shared._KS14.ZLevel.Transit;
+using Robust.Shared.Configuration;
+using Robust.Shared.IoC;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Player;
@@ -35,9 +41,44 @@ namespace Content.Client.Viewport
 
         private MapSystem _mapSystem = default!;
         private KsZLevelSystem _zLevelSystem = null!;
+        private KsZLevelGapSystem _gapSystem = null!;
         private KsZLevelLightBufferSystem _lightBufferSystem = null!;
         private List<Entity<KsZLevelComponent>> _mapsToIterate = [];
+        private List<Entity<KsZLevelGapComponent>> _gapsToIterate = [];
         private IRenderTarget? _zBlurBuffer;
+
+        /// <summary>
+        ///     Whether a grid crossing a gap is drawn for viewers on other z-levels.
+        /// </summary>
+        /// <remarks>
+        ///     One extra full pass per grid in flight, for everyone above it, so it is worth being able to
+        ///         turn off. A viewer standing on a gap map is unaffected either way - their own map is
+        ///         always drawn.
+        /// </remarks>
+        private bool _drawGapLevels = true;
+
+        /// <summary>
+        ///     How much of a crossing is left when the grid making it starts to fade in for the z-level it
+        ///         is arriving at, as a fraction of the whole gap.
+        /// </summary>
+        /// <remarks>
+        ///     Deliberately far later than the fade on a falling entity, and not the same number. A faller
+        ///         is one small sprite that wants picking out of the floor early; a gap pass is a
+        ///         full-screen composite over the z-level below it, so a platform visible for the whole of
+        ///         its descent means everyone under the shaft spends the ride looking at the underside of a
+        ///         lift rather than at the room they are in.
+        ///     Reaching exactly 1 at the end of the crossing is what makes the hand-off seamless: the
+        ///         instant the grid lands it stops being drawn by this pass and starts being drawn by the
+        ///         ordinary one for its new z-level, at full opacity either way.
+        /// </remarks>
+        private const float GapFadeInProgress = 0.3f;
+
+        /// <summary>
+        ///     Held so the subscription can be taken back off again. A cvar's subscriber list is rooted for
+        ///         the life of the process, so a handler closing over a viewport keeps that viewport - and
+        ///         the render targets hanging off it - alive forever once the control is thrown away.
+        /// </summary>
+        private Action<bool>? _gapLevelsCVarHandler;
 
         /// <summary>
         ///     The light map and floor of each z-level that lights another, taken before the drawing starts.
@@ -49,6 +90,7 @@ namespace Content.Client.Viewport
         /// </remarks>
         private readonly Dictionary<MapId, KsZLevelLightCapture> _zLightCaptures = [];
         private readonly List<MapId> _staleCaptures = [];
+        private readonly HashSet<MapId> _capturesTakenThisFrame = [];
 
         /// <summary>
         ///     How much wider than the visible light target this viewport's captures have to be taken, as
@@ -86,7 +128,13 @@ namespace Content.Client.Viewport
             //      feet on the floor, and the single pass would do. Except that this loop is the only thing
             //      that ever renders the z-level above, so bailing here is what made light from above arrive
             //      during a fall and then stop the moment it ended.
-            if (_mapsToIterate.Count == 0 && viewerTransitHeight <= 0f && !WantsLightFromAbove(topMapUid.Value))
+            // The fourth is the same shape: a grid arriving through the gap overhead is drawn by this loop
+            //      and by nothing else, so bailing leaves an elevator - and anything riding it - popping
+            //      into existence at the moment it lands instead of easing in over the end of its descent.
+            if (_mapsToIterate.Count == 0 &&
+                viewerTransitHeight <= 0f &&
+                !WantsLightFromAbove(topMapUid.Value) &&
+                !WantsGapPass(topMapUid.Value, anchorDepth: 0f))
                 return false;
 
             // TryGetZLevelsBelow doesn't include the map we're on
@@ -96,15 +144,19 @@ namespace Content.Client.Viewport
             _mapsToIterate.Add((topMapUid.Value, topZLevelComponent));
 
             // Depth is fractional and measured downwards from the viewer, not from their z-level: their own
-            //      floor plane sits transitHeight of their z-level's Depth below them, and every z-level
-            //      under that adds its own Depth on top. As this list is ascending, the first (bottom-most)
+            //      floor plane sits transitHeight of their z-level's Depth below them, and the deepest map
+            //      in the list is however far under that. As this list is ascending, the first (bottom-most)
             //      map is the deepest, and each pass subtracts the Depth it just drew at.
             // That fractional part is what makes the world below grow continuously as you fall instead of
             //      popping one whole z-level at a time: when the viewer crosses over, their height resets to
             //      ~1 and the list loses an entry, so every remaining map keeps the depth it already had.
+            // Summed through TryGetDepthBelow rather than by adding up the list, because that is the one
+            //      definition of the distance between two z-levels - and it is what resolves a viewer who is
+            //      standing on a gap map to however far up that gap they have got.
             var depth = viewerTransitHeight * topZLevelComponent.Depth;
-            for (var mapIndex = 0; mapIndex < _mapsToIterate.Count - 1; mapIndex++)
-                depth += _mapsToIterate[mapIndex].Comp.Depth;
+            if (_mapsToIterate.Count > 1 &&
+                _zLevelSystem.TryGetDepthBelow(topMapUid.Value, _mapsToIterate[0].Owner, out var stackDepth))
+                depth += stackDepth;
 
             _zLevelEye.DrawLight = _eye!.DrawLight;
             _zLevelEye.Offset = _eye.Offset;
@@ -180,7 +232,7 @@ namespace Content.Client.Viewport
                 _zLevelEye.DrawFov = isViewerMap && eye.DrawFov;
 
                 _zLevelEye.Position = new MapCoordinates(eye.Position.Position, mapComponent.MapId);
-                _zLevelEye.Scale = KsZLevelSystem.GetDepthScale(eye.Scale, depth);
+                _zLevelEye.Scale = _zLevelSystem.GetDepthScale(eye.Scale, depth);
                 // The viewer's own map is drawn through their real eye while they're standing on it, and
                 //      through the scaled copy while they're above it mid-transit.
                 _viewport.Eye = isViewerMap && depth <= 0f ? eye : _zLevelEye;
@@ -195,7 +247,103 @@ namespace Content.Client.Viewport
                 handle.DrawingHandleScreen.DrawTextureRect(_viewport.RenderTarget.Texture, drawBox);
                 _viewport.RenderScreenOverlaysAbove(handle, this, drawBoxGlobal);
 
+                // Anything crossing the gap above this z-level is drawn after it and before the next one up,
+                //      so an elevator between two floors is seen where it actually is rather than vanishing
+                //      for the length of its ride.
+                // Run for the viewer's own map too, where it is the gap directly overhead: a lift coming
+                //      down to the floor you are standing on lives there for the whole of its descent, and
+                //      skipping it is what made one appear out of nothing the instant it arrived.
+                DrawGapPasses(handle, drawBox, drawBoxGlobal, mapUid, depth);
+
                 depth -= mapZLevelComponent.Depth;
+            }
+        }
+
+        /// <summary>
+        ///     Draws whatever is partway up the gap above a z-level, nearest the floor first.
+        /// </summary>
+        /// <remarks>
+        ///     A gap map is on no stack, so nothing else in this file would ever reach one. This draws it for
+        ///         viewers looking at it from elsewhere; a viewer standing on one is drawn by the ordinary
+        ///         pass for their own map, which is the whole point of putting them on a map.
+        ///     The depth here can be negative, which no ordinary pass ever is. A gap above the viewer really
+        ///         is nearer the camera than their own floor, and drawing it scaled up accordingly is what
+        ///         makes a lift descending towards you grow smoothly until it lands at exactly the scale
+        ///         everything else on your floor is drawn at. Only a gap is drawn this way - a whole z-level
+        ///         overhead would be a ceiling, and would hide everything.
+        /// </remarks>
+        private void DrawGapPasses(
+            IRenderHandle handle,
+            UIBox2i drawBox,
+            UIBox2i drawBoxGlobal,
+            EntityUid anchorUid,
+            float anchorDepth)
+        {
+            if (!_drawGapLevels)
+                return;
+
+            var eye = _eye!;
+
+            _gapSystem.GetGapsAnchoredTo(anchorUid, _gapsToIterate);
+
+            foreach (var (gapUid, gapComponent) in _gapsToIterate)
+            {
+                // The viewer's own gap is drawn by the ordinary pass, through their real eye. Drawing it
+                //      again here would put a second copy of the lift over the one they are standing on.
+                if (!_entityManager.TryGetComponent<MapComponent>(gapUid, out var mapComponent) ||
+                    mapComponent.MapId == eye.Position.MapId)
+                    continue;
+
+                // A gap sits above the z-level it is anchored to, so it is that much nearer the viewer.
+                var gapDepth = anchorDepth - gapComponent.Progress * gapComponent.TotalDepth;
+
+                // Coming down onto the viewer's own floor, a platform descends through a ceiling that is
+                //      never rendered, so it fades in over the last stretch rather than appearing out of
+                //      nothing. Seen from a z-level above, it is descending into a shaft already in view,
+                //      so it stays opaque.
+                // Measured on how near the platform is to this floor plane rather than on which way it is
+                //      travelling, so the two directions are the same rule: one arriving fades in over the
+                //      end of its descent, and one setting off upwards fades out over the start of its
+                //      climb.
+                var modulate = Color.White;
+                if (anchorDepth <= 0f)
+                {
+                    var nearness = (GapFadeInProgress - gapComponent.Progress) / GapFadeInProgress;
+                    var alpha = Math.Clamp(nearness, 0f, 1f);
+
+                    // Nothing to composite, and a full pass is the most expensive thing in this loop - so
+                    //      for the nine tenths of every crossing that are invisible, skip it outright.
+                    if (alpha <= 0f)
+                        continue;
+
+                    modulate = Color.White.WithAlpha(alpha);
+                }
+
+                _viewport!.ClearColor = null;
+
+                // A crossing at or above the viewer is on their eye level, so it is sight-blocked like
+                //      anything else at their eye level - otherwise a lift arriving overhead hands everyone
+                //      underneath it a free look at whoever is riding it, through walls they could not see
+                //      through a moment earlier or a moment later.
+                // One below them is not: they are looking down an open shaft at it, and the walls carving
+                //      up their own floor are no business of a pass two floors down. That matches the rule
+                //      the ordinary stack passes already use, where only the viewer's own z-level draws it.
+                _zLevelEye.DrawFov = eye.DrawFov && gapDepth <= 0f;
+
+                _zLevelEye.Position = new MapCoordinates(eye.Position.Position, mapComponent.MapId);
+                _zLevelEye.Scale = _zLevelSystem.GetDepthScale(eye.Scale, gapDepth);
+                _viewport.Eye = _zLevelEye;
+
+                _viewport.Render();
+                _viewport.RenderScreenOverlaysBelow(handle, this, drawBoxGlobal);
+
+                // Distance blur only, and only for a gap below. One overhead is nearer than the viewer's own
+                //      floor, so there is nothing to blur it by - and a negative radius is not a thing.
+                if (_zBlurBuffer != null && gapDepth > 0f)
+                    _clyde.BlurRenderTarget(_viewport, _viewport.RenderTarget, _zBlurBuffer, _zLevelEye, 2.5f * gapDepth);
+
+                handle.DrawingHandleScreen.DrawTextureRect(_viewport.RenderTarget.Texture, drawBox, modulate);
+                _viewport.RenderScreenOverlaysAbove(handle, this, drawBoxGlobal);
             }
         }
 
@@ -211,6 +359,14 @@ namespace Content.Client.Viewport
         protected override void Dispose(bool disposing)
         {
             InvalidateZLevelState();
+
+            if (_gapLevelsCVarHandler != null)
+            {
+                IoCManager.Resolve<IConfigurationManager>()
+                    .UnsubValueChanged(KsCCVars.ZLevelDrawGapLevels, _gapLevelsCVarHandler);
+
+                _gapLevelsCVarHandler = null;
+            }
 
             base.Dispose(disposing);
         }
@@ -254,6 +410,45 @@ namespace Content.Client.Viewport
         }
 
         /// <summary>
+        ///     Whether <see cref="DrawGapPasses"/> is going to draw anything over this z-level.
+        /// </summary>
+        /// <remarks>
+        ///     Asked twice, for two different reasons, and it has to give the same answer to both: once to
+        ///         decide whether the layered draw has to run at all when nothing else needs it - somebody on
+        ///         the bottom floor of a stack with an unlit ceiling has nothing else to layer - and once to
+        ///         decide whether this z-level's light map is worth capturing for the gap above it.
+        ///     Since a crossing over the viewer's own floor is invisible for all but the last
+        ///         <see cref="GapFadeInProgress"/> of itself, asking merely whether one exists would put that
+        ///         viewer on the expensive path for the whole of every ride - two extra full passes, the gap
+        ///         and the capture that lights it - and draw nothing extra for most of it.
+        ///     So the tests below are <see cref="DrawGapPasses"/>'s own, in its own order. A yes here that
+        ///         it then skips is a wasted capture every frame; a no is a platform lit by nothing.
+        /// </remarks>
+        /// <param name="anchorDepth">
+        ///     How far below the viewer this z-level's floor plane sits, which is what decides whether a gap
+        ///         over it is overhead - and so subject to the fade - or down a shaft in front of them.
+        /// </param>
+        private bool WantsGapPass(EntityUid anchorUid, float anchorDepth)
+        {
+            if (!_drawGapLevels)
+                return false;
+
+            _gapSystem.GetGapsAnchoredTo(anchorUid, _gapsToIterate);
+
+            foreach (var (gapUid, gapComponent) in _gapsToIterate)
+            {
+                if (!_entityManager.TryGetComponent<MapComponent>(gapUid, out var mapComponent) ||
+                    mapComponent.MapId == _eye!.Position.MapId)
+                    continue;
+
+                if (anchorDepth > 0f || gapComponent.Progress < GapFadeInProgress)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         ///     Renders every z-level that lights another, purely to take its light map and its floor away
         ///         before the drawing starts.
         /// </summary>
@@ -266,7 +461,7 @@ namespace Content.Client.Viewport
         /// </remarks>
         private void CaptureZLevelLight(IRenderHandle handle, Entity<KsZLevelComponent> topZLevel, float viewerTransitHeight)
         {
-            ReleaseUnusedCaptures();
+            _capturesTakenThisFrame.Clear();
 
             // The viewer's own z-level sits this far below where they are looking from, and every capture is
             //      measured from there.
@@ -279,17 +474,35 @@ namespace Content.Client.Viewport
                 _zLevelSystem.TryGetZLevelAbove(topZLevel.Owner, out var aboveEntity))
                 CaptureZLevel(handle, aboveEntity.Value, viewerDepth);
 
-            // Top-down, stopping before the deepest: nothing is drawn under it for its light to fall on.
+            // Top-down. Every z-level but the deepest lights the one under it; the deepest is captured
+            //      only when something is crossing the gap above it, because a gap is the one pass that is
+            //      lit from below rather than from above.
             var depth = viewerDepth;
-            for (var index = _mapsToIterate.Count - 1; index >= 1; index--)
+            for (var index = _mapsToIterate.Count - 1; index >= 0; index--)
             {
-                // Stepping down into a z-level crosses that z-level's own Depth, matching the draw loop -
-                //      and taking the step before the capture rather than after is what hands it the depth
-                //      of the z-level it is about to light rather than its own.
-                depth += _mapsToIterate[index - 1].Comp.Depth;
+                // This z-level's own depth, which is also as wide as a capture for the gap above it ever
+                //      needs to be: a gap sits nearer the viewer than the z-level it is anchored to, so the
+                //      pass reading it sees less of the world than this one does, not more.
+                var consumerDepth = depth;
 
-                CaptureZLevel(handle, _mapsToIterate[index], depth);
+                if (index >= 1)
+                {
+                    // Stepping down into a z-level crosses that z-level's own Depth, matching the draw loop
+                    //      - and taking the step before the capture rather than after is what hands it the
+                    //      depth of the z-level it is about to light rather than its own.
+                    consumerDepth += _mapsToIterate[index - 1].Comp.Depth;
+                }
+                else if (!WantsGapPass(_mapsToIterate[index].Owner, depth))
+                {
+                    break;
+                }
+
+                CaptureZLevel(handle, _mapsToIterate[index], consumerDepth);
+
+                depth = consumerDepth;
             }
+
+            ReleaseUnusedCaptures();
         }
 
         /// <param name="consumerDepth">
@@ -300,6 +513,8 @@ namespace Content.Client.Viewport
         {
             if (!_entityManager.TryGetComponent<MapComponent>(zLevel.Owner, out var mapComponent))
                 return;
+
+            _capturesTakenThisFrame.Add(mapComponent.MapId);
 
             // Never the viewer's FOV: this z-level is not the one they are standing on, and carving their
             //      line of sight out of it would cut shadows into light that was never theirs to block.
@@ -314,7 +529,7 @@ namespace Content.Client.Viewport
             //      less than the pass reading it can see, because that pass is further away and sees wider -
             //      and the strip of screen past the edge of the capture is then lit by nothing at all.
             _zLevelEye.Scale =
-                KsZLevelSystem.GetDepthScale(_eye.Scale, consumerDepth) / _captureOversize;
+                _zLevelSystem.GetDepthScale(_eye.Scale, consumerDepth) / _captureOversize;
 
             _viewport!.Eye = _zLevelEye;
 
@@ -401,8 +616,17 @@ namespace Content.Client.Viewport
         }
 
         /// <summary>
-        ///     Drops captures for z-levels that are no longer part of the stack being drawn.
+        ///     Drops every capture this draw did not take, which is the only thing that keeps the set down to
+        ///         the z-levels actually lighting something right now.
         /// </summary>
+        /// <remarks>
+        ///     Keyed on what was taken rather than on the stack, because a z-level can stop being captured
+        ///         while remaining perfectly valid: the deepest one is captured only while something is
+        ///         crossing the gap above it, so a stack test would hold two full-size render targets for the
+        ///         rest of the round after a single lift ride. A deleted map falls out of this for free,
+        ///         since nothing can capture one.
+        ///     Run after the captures rather than before them so that "this frame" means this frame.
+        /// </remarks>
         private void ReleaseUnusedCaptures()
         {
             if (_zLightCaptures.Count == 0)
@@ -412,7 +636,7 @@ namespace Content.Client.Viewport
 
             foreach (var (mapId, _) in _zLightCaptures)
             {
-                if (!_mapSystem.TryGetMap(mapId, out var mapUid) || !_entityManager.HasComponent<KsZLevelComponent>(mapUid))
+                if (!_capturesTakenThisFrame.Contains(mapId))
                     _staleCaptures.Add(mapId);
             }
 
@@ -467,12 +691,17 @@ namespace Content.Client.Viewport
             //      inheriting the player's transit height.
             if (_eye == null ||
                 _playerManager.LocalEntity is not { } localUid ||
-                !_entityManager.TryGetComponent<KsZLevelTransitComponent>(localUid, out var transitComponent) ||
                 !_entityManager.TryGetComponent<TransformComponent>(localUid, out var transformComponent) ||
                 transformComponent.MapID != _eye.Position.MapId)
                 return 0f;
 
-            return Math.Clamp(transitComponent.Height, 0f, 1f);
+            // Only a fall. Someone riding a grid across a gap is standing on a gap map, which is a place in
+            //      its own right rather than a height above one, so their altitude comes out of the depth to
+            //      the z-levels below them like everybody else's.
+            if (_entityManager.TryGetComponent<KsZLevelTransitComponent>(localUid, out var transitComponent))
+                return Math.Clamp(transitComponent.Height, 0f, 1f);
+
+            return 0f;
         }
 
         /// <summary>
@@ -486,7 +715,16 @@ namespace Content.Client.Viewport
         {
             _mapSystem ??= _entityManager.System<MapSystem>();
             _zLevelSystem ??= _entityManager.System<KsZLevelSystem>();
+            _gapSystem ??= _entityManager.System<KsZLevelGapSystem>();
             _lightBufferSystem ??= _entityManager.System<KsZLevelLightBufferSystem>();
+
+            // Subscribed here rather than read per frame, and only once however often this is regenerated.
+            if (_gapLevelsCVarHandler == null)
+            {
+                _gapLevelsCVarHandler = value => _drawGapLevels = value;
+                IoCManager.Resolve<IConfigurationManager>()
+                    .OnValueChanged(KsCCVars.ZLevelDrawGapLevels, _gapLevelsCVarHandler, invokeImmediately: true);
+            }
 
             // Never leave an old one behind, in case this is reached without an InvalidateZLevelState first.
             InvalidateZLevelState();

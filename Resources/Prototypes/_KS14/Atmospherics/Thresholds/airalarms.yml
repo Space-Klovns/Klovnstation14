@@ -1,5 +1,5 @@
 - type: alarmThreshold
-  id: GasArgon
+  id: GasEncalite
   upperBound: !type:AlarmThresholdSetting
     threshold: 0.05
   upperWarnAround: !type:AlarmThresholdSetting

@@ -22,7 +22,7 @@ namespace Content.IntegrationTests.Tests._KS14.Medical.IvDrip;
 ///         metabolises the injected reagent mid-test.
 /// </remarks>
 [TestFixture]
-[TestOf(typeof(SharedIvDripSystem))]
+[TestOf(typeof(IvDripSystem))]
 public sealed class IvDripTest : GameTest
 {
     // Server-only. The test wearer carries a human inventory template without a sprite, which the
@@ -152,7 +152,7 @@ public sealed class IvDripTest : GameTest
 
         await server.WaitAssertion(() =>
         {
-            var ivDripSystem = entityManager.System<SharedIvDripSystem>();
+            var ivDripSystem = entityManager.System<IvDripSystem>();
             ivDripSystem.SetInjectionEnabled((dripUid, entityManager.GetComponent<IvDripComponent>(dripUid)), true);
         });
 
@@ -182,7 +182,7 @@ public sealed class IvDripTest : GameTest
         await server.WaitAssertion(() =>
         {
             var actionsSystem = entityManager.System<SharedActionsSystem>();
-            var ivDripSystem = entityManager.System<SharedIvDripSystem>();
+            var ivDripSystem = entityManager.System<IvDripSystem>();
             var ivDripComponent = entityManager.GetComponent<IvDripComponent>(dripUid);
 
             Assert.That(ivDripComponent.ToggleActionEntity, Is.Not.Null,
@@ -221,7 +221,7 @@ public sealed class IvDripTest : GameTest
         await server.WaitAssertion(() =>
         {
             var inventorySystem = entityManager.System<InventorySystem>();
-            var ivDripSystem = entityManager.System<SharedIvDripSystem>();
+            var ivDripSystem = entityManager.System<IvDripSystem>();
             var ivDripComponent = entityManager.GetComponent<IvDripComponent>(dripUid);
 
             ivDripSystem.SetInjectionEnabled((dripUid, ivDripComponent), true);
@@ -257,7 +257,7 @@ public sealed class IvDripTest : GameTest
 
         await server.WaitAssertion(() =>
         {
-            var ivDripSystem = entityManager.System<SharedIvDripSystem>();
+            var ivDripSystem = entityManager.System<IvDripSystem>();
             var solutionContainerSystem = entityManager.System<SharedSolutionContainerSystem>();
             var ivDripComponent = entityManager.GetComponent<IvDripComponent>(dripUid);
 
@@ -286,7 +286,7 @@ public sealed class IvDripTest : GameTest
 
         await server.WaitAssertion(() =>
         {
-            var ivDripSystem = entityManager.System<SharedIvDripSystem>();
+            var ivDripSystem = entityManager.System<IvDripSystem>();
             var ivDripComponent = entityManager.GetComponent<IvDripComponent>(dripUid);
 
             ivDripSystem.SetInjectionAmount((dripUid, ivDripComponent), FixedPoint2.New(9999));
@@ -311,7 +311,7 @@ public sealed class IvDripTest : GameTest
 
         await server.WaitAssertion(() =>
         {
-            var ivDripSystem = entityManager.System<SharedIvDripSystem>();
+            var ivDripSystem = entityManager.System<IvDripSystem>();
             var ivDripComponent = entityManager.GetComponent<IvDripComponent>(dripUid);
             var originalAmount = ivDripComponent.InjectionAmount;
             var originalInterval = ivDripComponent.InjectionInterval;

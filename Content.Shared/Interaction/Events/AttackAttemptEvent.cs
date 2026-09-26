@@ -21,12 +21,23 @@ namespace Content.Shared.Interaction.Events
         /// </summary>
         public bool Disarm { get; }
 
-        public AttackAttemptEvent(EntityUid uid, EntityUid? target = null, Entity<MeleeWeaponComponent>? weapon = null, bool disarm = false)
+        // KS14 start: this is raised both to ask whether an attack could happen - every frame, for some callers - and
+        //      when an attack is actually being made
+        /// <summary>
+        ///     If true, nothing is being attacked: this only asks whether it could be, as the client's melee does every
+        ///         frame. Cancel exactly as you would otherwise, but have no side effects - no popups, sounds, or state
+        ///         changes - since there is no attack for them to be about.
+        /// </summary>
+        public bool Pure { get; }
+        // KS14 end
+
+        public AttackAttemptEvent(EntityUid uid, EntityUid? target = null, Entity<MeleeWeaponComponent>? weapon = null, bool disarm = false, bool pure = false /* KS14: added param */)
         {
             Uid = uid;
             Target = target;
             Weapon = weapon;
             Disarm = disarm;
+            Pure = pure; // KS14
         }
     }
 

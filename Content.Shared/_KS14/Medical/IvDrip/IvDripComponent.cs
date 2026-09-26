@@ -13,10 +13,11 @@ namespace Content.Shared._KS14.Medical.IvDrip;
 ///     A wearable reservoir that periodically injects its contents into its wearer.
 /// </summary>
 /// <remarks>
-///     Injection itself is server-authoritative - see <see cref="SharedIvDripSystem.Update"/> for why.
+///     Injection itself is server-authoritative - see <see cref="IvDripSystem.Update"/> for why.
 ///         Everything the client needs to draw the window and the hotbar action is networked here.
 /// </remarks>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true)]
+[Access(typeof(IvDripSystem))]
 public sealed partial class IvDripComponent : Component
 {
     /// <summary>
@@ -26,10 +27,9 @@ public sealed partial class IvDripComponent : Component
     public string SolutionName = "ivDrip";
 
     /// <summary>
-    ///     Whether the pump is currently running. Set this through
-    ///         <see cref="SharedIvDripSystem.SetInjectionEnabled"/> rather than directly, so that the
-    ///         hotbar action and the window stay in step with it.
+    ///     Whether the pump is currently running.
     /// </summary>
+    /// <seealso cref="IvDripSystem.SetInjectionEnabled"/>
     [DataField, AutoNetworkedField]
     public bool InjectionEnabled;
 
@@ -144,7 +144,9 @@ public sealed partial class IvDripComponent : Component
     ///         damage in UIs.
     /// </remarks>
     [DataField]
-    public List<ProtoId<DamageTypePrototype>> SpillDamageTypes = ["Blunt", "Slash", "Piercing"];
+    // ReSharper disable once UseCollectionExpression - a non-empty collection expression on a List<T>
+    // lowers to CollectionsMarshal.SetCount, which the content sandbox rejects.
+    public List<ProtoId<DamageTypePrototype>> SpillDamageTypes = new() { "Blunt", "Slash", "Piercing" };
 
     /// <summary>
     ///     Units of solution dumped on the floor per spill.

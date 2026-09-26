@@ -472,7 +472,7 @@
           mobstate: Critical
         damage:
           types:
-            Asphyxiation: -2
+            Asphyxiation: -4 #KS14, was -2.
       - !type:ModifyBleed
         amount: -0.25
 

@@ -7,11 +7,11 @@ using JetBrains.Annotations;
 namespace Content.Server._KS14.Atmos.Reactions;
 
 /// <summary>
-///     Creates argon from frezon and plasma.
-///     1 Frezon + 2 Plasma -> 3 Argon at T <= 589 K.
+///     Creates encalite from frezon and plasma.
+///     1 Frezon + 2 Plasma -> 3 Encalite at T <= 589 K.
 /// </summary>
 [UsedImplicitly]
-public sealed partial class ArgonFormationReaction : IGasReactionEffect
+public sealed partial class EncaliteFormationReaction : IGasReactionEffect
 {
     public ReactionResult React(GasMixture mixture, IGasMixtureHolder? holder, AtmosphereSystem atmosphereSystem, float heatScale)
     {
@@ -23,11 +23,11 @@ public sealed partial class ArgonFormationReaction : IGasReactionEffect
 
         var consumedFrezon = Math.Min(initialFrezon, initialPlasma / 2f);
         var consumedPlasma = consumedFrezon * 2;
-        var producedArgon = consumedFrezon * 3;
+        var producedEncalite = consumedFrezon * 3;
 
         mixture.AdjustMoles(Gas.Frezon, -consumedFrezon);
         mixture.AdjustMoles(Gas.Plasma, -consumedPlasma);
-        mixture.AdjustMoles(Gas.Argon, producedArgon);
+        mixture.AdjustMoles(Gas.Encalite, producedEncalite);
 
         return ReactionResult.Reacting;
     }

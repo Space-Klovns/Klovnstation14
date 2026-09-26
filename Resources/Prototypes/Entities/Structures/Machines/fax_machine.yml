@@ -34,6 +34,8 @@
     interfaces:
       enum.FaxUiKey.Key:
         type: FaxBoundUi
+      enum.ExecutorUiKey.Key: # KS14
+          type: ExecutorBoundUserInterface
   - type: StationAiWhitelist
   - type: ApcPowerReceiver
     powerLoad: 250
@@ -71,6 +73,13 @@
     receiveFrequencyId: Fax
     transmitFrequencyId: Fax
   - type: RequireProjectileTarget
+  - type: PacketNetwork # KS14
+    frequency: FaxFrequency
+  - type: PacketExecutor # KS14
+    modules:
+    - BasePacketModule
+    - FaxPacketModule
+    - NetworkPacketModule
 
 # Special
 - type: entity
@@ -87,6 +96,7 @@
   - type: FaxMachine
     name: "Central Command"
     notifyAdmins: true
+  - type: KsLlmFaxRecipient # KS14: faxes here are answered by the LLM persona when klovn.llm.enabled
 
 - type: entity
   parent: FaxMachineBase

@@ -7,6 +7,7 @@ Coding conventions for this repo. Written for coding agents first, humans second
 - Editing or adding a file *outside* `_KS14/` → mark it with `// KS14:` / `# KS14:` (see §3).
 - **Marking a change on a single line → `/* KS14: ... */` sitting at the change itself**, not a trailing `//` at the end of the line (see §3).
 - Otherwise follow upstream SS14 conventions, plus the local rules in §4.
+- Before you ship: the traps in §6 that fail *silently* — no build error, no log, no failing test.
 
 ## 1. Project lineage
 
@@ -16,6 +17,15 @@ Klovnstation 14 is a fork of SS14:
 - **Klovnstation 14** — this repo, a modded downstream.
 
 We merge from upstream regularly. PRs mix upstream ports with Klovnstation 14-specific work; the conventions below keep the two easy to tell apart during those merges.
+
+### Submodule access
+
+The main repo is public. Every `_KsModule*` submodule (`_KsModule`, `_KsModule_ReplacedPrototypes`, and any future one matching that prefix) is private by default, but all of them share the exact same access list — there is no tier between them. Treat access as binary:
+
+1. Either you have access to all `_KsModule*` submodules, or
+2. You have access to none of them.
+
+Don't assume partial access (e.g. "the audio submodule but not the prototypes one") is a real state to design around — it isn't a thing that exists, and code or docs shouldn't imply otherwise.
 
 ## 2. The `_KS14/` rule
 
@@ -179,7 +189,7 @@ Summarised from the upstream conventions doc — that page stays the authority; 
 - **Text** — no quotes on `name`/`description` unless punctuation demands it, then single quotes. Every player-facing string is localized.
 - **Abstract prototypes** — no textures in them. Use `suffix` to separate spawn-menu variants instead of baking the distinction into `name`.
 
-**One exception to upstream**: `codebase-organization` says game-code folders live directly under `Content.Client/Shared/Server`. We override this for **new fork code only** — new code goes under `_KS14/` per §2. Upstream files edited in place keep their upstream layout and carry `// KS14:` markers per §3. Don't touch existing code just to bring it into convention unless you're already changing it for another reason.
+**One exception to upstream**: `codebase-organization` says game-code folders live directly under `Content.Client/Shared/Server`. We override this for **new fork code only** — new code goes under `_KS14/` per §2. Upstream files edited in place keep their upstream layout and carry `// KS14:` markers per §3. Don't relocate or reformat **upstream** code just to bring it into convention unless you're already changing it for another reason — every such move is a merge conflict waiting for the next upstream pull, paid for nothing. This is about upstream files specifically, not a general licence to leave things alone: fork code under `_KS14/` is ours, merges cleanly, and is fair game to tidy whenever it has drifted from the rules below.
 
 ### Local rules on top of upstream
 
@@ -231,6 +241,34 @@ private bool TryGetTemplateFire(EntProtoId prototypeId, out EntityUid templateUi
 private bool ResolveTemplateFire(EntProtoId prototypeId, out EntityUid templateUid)
 ```
 
+**`[Access]`, not a doc comment (C#)** — when a member may only be written through a particular system, enforce it with `[Access]` instead of asking in prose. A comment saying "set this through `SetFoo`" is advice the compiler cannot hold anyone to; `[Access]` is the same statement as an analyzer error (`RA0002`):
+
+```csharp
+// do this - the analyzer rejects any other type writing to these
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+[Access(typeof(IvDripSystem))]
+public sealed partial class IvDripComponent : Component
+{
+    /// <summary>
+    ///     Whether the pump is currently running.
+    /// </summary>
+    /// <seealso cref="IvDripSystem.SetInjectionEnabled"/>
+    [DataField, AutoNetworkedField]
+    public bool InjectionEnabled;
+}
+
+// not this - nothing stops the next caller, and nothing tells them they broke an invariant
+/// <summary>
+///     Whether the pump is running. Set this through <see cref="IvDripSystem.SetInjectionEnabled"/>
+///         rather than directly, so the action and the window stay in step with it.
+/// </summary>
+public bool InjectionEnabled;
+```
+
+The defaults are `Self`/`Friend` = `ReadWriteExecute` and `Other` = `Read`, so the attribute alone leaves the member readable everywhere and writable only by the named types — which is what a component whose invariants live in one system wants. Tighten it with `Other = AccessPermissions.None` when even reading a member should go through the system, and put `[Access]` on the individual member instead of the class when only part of a component is restricted.
+
+Reach for this whenever a system method exists precisely to keep two things in step — a networked field and an action's toggled state, a list and the index into it, a cached value and the thing it caches. Note that it guards the *member*, not what the member points at: `Other = Read` on a `List<T>` field still lets anyone call `Add` on the list they read.
+
 **Source-gen `[Dependency]` fields (C#)** — on current engine versions, injected `[Dependency]` fields on `EntitySystem` (and the few other injectable types) must be writable, and their owning class must be `partial`:
 ```csharp
 // old
@@ -246,7 +284,8 @@ public sealed partial class MySystem : EntitySystem
 }
 ```
 
-**Don't declare `IPrototypeManager` in an `EntitySystem` (C#)** — `EntitySystem` already provides one as `ProtoMan`, so a system that declares its own is shadowing it. Use the inherited member:
+**Don't re-declare a dependency your base class already injects (C#)** — several engine base types arrive with dependencies already resolved. Declaring your own is a second injected field pointing at the same object: it compiles, it works, nothing warns, and it reads as though the two might differ. Use the inherited member.
+
 ```csharp
 // old
 [Dependency] private IPrototypeManager _prototypeManager = default!;   // then _prototypeManager.Index(...)
@@ -254,7 +293,59 @@ public sealed partial class MySystem : EntitySystem
 // current
 ProtoMan.Index(...);                                                   // no declaration at all
 ```
-This only applies to `EntitySystem` (and its subclasses, `GameRuleSystem<T>` included). Everything else that injects dependencies — overlays, UI controls and windows, `BoundUserInterface`s, managers, `LocalizedEntityCommands`, HTN operators — has no `ProtoMan` and still declares its own.
+
+What each base already gives you, and the name to use:
+
+| Base type | Inherited member | Type |
+| --- | --- | --- |
+| `EntitySystem` (incl. `GameRuleSystem<T>`) | `EntityManager` | `EntityManager` |
+| | `ProtoMan` | `IPrototypeManager` |
+| | `Factory` | `IComponentFactory` (forwards to `EntityManager.ComponentFactory`) |
+| | `LogManager` / `Log` | `ILogManager` / `ISawmill` |
+| | `Loc` | `ILocalizationManager` |
+| `BoundUserInterface` | `EntMan` | `IEntityManager` |
+| | `PlayerManager` | `ISharedPlayerManager` |
+| | `UiSystem` | `SharedUserInterfaceSystem` |
+| `Overlay` | `OverlayManager` | `IOverlayManager` (resolved in its constructor) |
+| `LocalizedCommands` | `LocalizationManager`, or `Loc` | `ILocalizationManager` |
+| `LocalizedEntityCommands` | the above, plus `EntityManager` | `EntityManager` |
+| `ToolshedCommand` | `Toolshed`, `Loc` | `ToolshedManager`, `ILocalizationManager` |
+
+```csharp
+// not this - LocalizedEntityCommands already injects EntityManager
+public sealed partial class KsSomeCommand : LocalizedEntityCommands
+{
+    [Dependency] private IEntityManager _entityManager = default!;
+    // ...then _entityManager.HasComponent<MapGridComponent>(uid)
+}
+
+// not this either - BoundUserInterface already injects EntMan
+public sealed class KsSomeBoundUserInterface : BoundUserInterface
+{
+    [Dependency] private IEntityManager _entityManager = default!;
+}
+
+// nor this - Overlay's constructor resolves OverlayManager itself
+public sealed class KsSomeOverlay : Overlay
+{
+    [Dependency] private IOverlayManager _overlayManager = default!;
+}
+```
+
+**The inherited names break the verbosity rule above, and that is fine.** `EntMan`, `ProtoMan` and `Factory` are the engine's names, not ours; wanting `_entityManager` instead is not a reason to declare a second field. Rename nothing, declare nothing, just use them.
+
+**Not everything on a base is inherited.** `EntitySystem` injects `ISharedPlayerManager` and `IReplayRecordingManager` as **private** fields, so a subclass genuinely cannot see them and does declare its own:
+
+```csharp
+// correct - EntitySystem's own player manager is private, so this is not shadowing
+[Dependency] private ISharedPlayerManager _playerManager = default!;
+```
+
+And the table is per base, not universal: only `EntitySystem` has a `ProtoMan`. An overlay, a
+`BoundUserInterface`, a window, a manager or an HTN operator that needs prototypes declares its own
+`IPrototypeManager`, exactly as before.
+
+The rule is "check the base before you declare", not "assume it is there". Nothing in the toolchain catches either mistake — C# allows a derived field to hide a base one of a different name without a whisper, so this is a review-time thing.
 
 **Inject `EntityQuery<T>`, don't `GetEntityQuery<T>()` (C#)** — the collection that injects into `EntitySystem`s (`IEntitySystemManager.DependencyCollection`) resolves `EntityQuery<T>` and `EntitySystem` as well, unlike the default `IoCManager` one. So declare queries as dependencies:
 ```csharp
@@ -308,6 +399,20 @@ dotnet format analyzers Content.Shared/Content.Shared.csproj --diagnostics RA005
 
 The generator only runs in projects that import it. `Content.Client`, `Content.Server` and `Content.Shared` each carry `<Import Project="..\RobustToolbox\MSBuild\Robust.EntitySystemSubscriptionsGenerator.targets" />` for exactly this reason — without it the attribute still compiles, nothing is generated, and **every converted subscription silently stops firing** with no build error to point at it. Any other project that wants attribute subscriptions needs the same import.
 
+**Popups predict themselves (C#)** — in shared code, call `PopupEntity`, `PopupCoordinates` or `PopupCursor` directly. The predicting client shows the popup the moment it runs, and the server's copy is matched against it rather than shown a second time; everyone else gets the server's. There is no separate "predicted" call to reach for — `PopupPredicted`, `PopupPredictedCursor`, `PopupPredictedCoordinates` and `PopupClient` are `[Obsolete]` wrappers kept for old callers.
+
+The trap is the `recipient` argument, which is **a filter, not a prediction hint**: whoever it names is the only player who sees the popup.
+
+```csharp
+// everyone who can see the dodger sees it, predicted for whoever caused it
+_popupSystem.PopupEntity(message, dodgerUid, type: PopupType.Small);
+
+// only the shooter sees it - the dodger and every bystander see nothing
+_popupSystem.PopupEntity(message, dodgerUid, shooterUid, type: PopupType.Small);
+```
+
+So when replacing an obsolete call, keep the audience it had: `PopupPredicted(message, uid, recipient)` showed the popup to everyone and becomes `PopupEntity(message, uid)`, while `PopupClient(message, uid, recipient)` showed it to the recipient alone and becomes `PopupEntity(message, uid, recipient)`.
+
 **Engine version** — this fork tracks a pinned `RobustToolbox` submodule, currently v289.0.3. When bumping it, read [RELEASE-NOTES.md](https://github.com/space-wizards/RobustToolbox/blob/master/RELEASE-NOTES.md) for every intervening version and check whether upstream SS14 already shipped the content-side fix — porting their commit is cheaper and keeps future merges clean. A bump is also one of the main ways new debug assertions arrive, so run the tests in `Debug` afterwards as well as building `Release` (§5).
 
 ## 5. Build configurations, and what each one catches
@@ -345,3 +450,307 @@ This bites hardest in integration-test prototypes, where a wrong component combi
 ```
 
 The same asymmetry applies to anything a debug assert guards: stack invariants, `Resolve` calls with `logMissing`, and the engine's own transform and physics checks. If a test only ever runs in `Release`, treat its coverage of those as zero.
+
+## 6. Cross-codebase pitfalls
+
+Every entry here is something that produced working, compiling, apparently-tested code that was wrong
+anyway. They share one shape: **nothing tells you**. No build error, no exception, no log line, and
+more than once a test that passed whether the bug was present or not. They are collected here because
+none of them belong to a single feature — each one is waiting in whatever you touch next.
+
+### CVars: unsubscribe from anything that does not live as long as the process
+
+`IConfigurationManager`'s subscriber list is rooted for the life of the process. A handler that closes
+over `this` therefore keeps `this` alive forever, along with everything it references — for a UI control
+that means its render targets, its buffers, and every object hanging off them, for every instance ever
+created.
+
+An `EntitySystem` may ignore this, but only because it is handed a mechanism that does it for you.
+`Subs.CVar` calls `RegisterUnsubscription`, and `ShutdownSubscriptions` runs it when the system shuts
+down:
+
+```csharp
+// EntitySystem - fine, and the only place that is. Subs.CVar unsubscribes itself at shutdown.
+public override void Initialize()
+{
+    base.Initialize();
+
+    Subs.CVar(_configurationManager, KsCCVars.ZLevelTransitGravity, value => _transitGravity = value, true);
+}
+```
+
+Everything else — `Control`s and viewports, `Overlay`s, `BoundUserInterface`s, windows, anything
+constructed and thrown away during a round — has no `Subs` and no shutdown hook, so the unsubscribe is
+yours to write. Keep the handler in a field, because a fresh lambda is a different delegate and
+`UnsubValueChanged` will not match it:
+
+```csharp
+// do this - the handler is held, so it can be taken back off again
+private Action<bool>? _drawGapLevelsHandler;
+
+private void Initialise()
+{
+    _drawGapLevelsHandler = value => _drawGapLevels = value;
+    _configurationManager.OnValueChanged(KsCCVars.ZLevelDrawGapLevels, _drawGapLevelsHandler, invokeImmediately: true);
+}
+
+protected override void Dispose(bool disposing)
+{
+    if (_drawGapLevelsHandler != null)
+    {
+        _configurationManager.UnsubValueChanged(KsCCVars.ZLevelDrawGapLevels, _drawGapLevelsHandler);
+        _drawGapLevelsHandler = null;
+    }
+
+    base.Dispose(disposing);
+}
+
+// not this - the lambda is unreachable, so this control can never be collected
+_configurationManager.OnValueChanged(KsCCVars.ZLevelDrawGapLevels, value => _drawGapLevels = value, invokeImmediately: true);
+```
+
+The same reasoning covers every other process-lifetime registry a short-lived object can put itself
+into: `IPlayerManager` and `INetManager` events, `IOverlayManager`, `IUserInterfaceManager` handlers,
+and any static or manager-held list. Ask "what owns the thing I just handed my `this` to, and does it
+outlive me?" If yes, the teardown is yours.
+
+### CVars: `CLIENTONLY` is not "a client-side setting"
+
+`CLIENTONLY` and `SERVERONLY` mean *"skip registering this cvar on the other side entirely"*, not "only
+this side cares about it". So the moment shared code touches one, the side it was skipped on throws:
+
+```
+System.Collections.Generic.KeyNotFoundException : The given key 'klovn.zlevel.parallax_strength'
+    was not present in the dictionary.
+  at Robust.Shared.Configuration.ConfigurationManager.OnValueChanged[T](...)
+  at Content.Shared._KS14.ZLevel.KsZLevelSystem.Initialize()
+```
+
+From `Initialize` that is fatal — the server does not start, and every integration test fails at SetUp,
+which looks nothing like "a cvar has the wrong flag".
+
+Pick by **who reads it**, not by who it is for:
+
+| Read from | Changed by | Flags |
+| --- | --- | --- |
+| Client code only | the player | `CLIENTONLY \| ARCHIVE` |
+| Server code only | the server | `SERVERONLY` |
+| **Shared code** | the player | `CLIENT \| ARCHIVE` — registered both sides, only the client may set it |
+| Shared code, must agree | the server | `SERVER \| REPLICATED` |
+
+The third row is the one that catches people. A rendering knob read through a shared helper is still
+read on the server, where it sits at its default and is never used — that costs nothing, and it is the
+only way the shared call compiles and runs on both sides.
+
+Two consequences worth knowing when testing one: a `CVar.CLIENT` var cannot be set server-side at all,
+so `OverrideCVar(Side.Server, ...)` on one is silently ignored and the assertion reads as the feature
+being broken. And a *disconnected* pooled client has never started its entity systems, so resolving one
+to read the value throws `UnregisteredTypeException` — such a test needs `Connected = true`.
+
+### The sandbox rejects APIs no build will warn you about
+
+Content assemblies are type-checked against a whitelist when they load, not when they compile. Reach for
+something outside it and both configurations build clean, the IDE is happy, and the failure arrives at
+assembly load:
+
+```
+Robust.Shared.ContentPack.TypeCheckFailedException
+Sandbox violation: Access to method not allowed:
+    System.Runtime.InteropServices.CollectionsMarshal.GetValueRefOrAddDefault(
+        System.Collections.Generic.Dictionary`2<!!0, !!1>, !!0, bool&)
+```
+
+**The cascade is what makes this expensive to diagnose.** One violation takes the assembly down, which
+takes the integration pool down with it, and every unrelated test then fails with:
+
+```
+SetUp : System.InvalidOperationException : Pool manager has not been initialized
+```
+
+A run that reports a hundred-odd failures across unrelated features, all of them `Pool manager has not
+been initialized`, has **one** cause, and it is not in any of the tests named. Find the single result
+that failed with something else - `TypeCheckFailedException` - and fix that. Running with
+`--logger "trx;LogFileName=..."` and grouping the results by message is the quick way to see that shape;
+`-v q` prints only the total and hides it entirely.
+
+The offenders are mostly the low-level performance conveniences: `CollectionsMarshal`, `Unsafe`,
+`MemoryMarshal`, most of `System.Runtime.InteropServices`, reflection that writes, and anything
+touching the filesystem or process directly. Plain `Dictionary`, `Span`, `System.Numerics` and
+`MathF` are all fine. If you are reaching for something to avoid a dictionary lookup or a struct copy
+in rendering code, the copy was almost certainly cheaper than finding this out:
+
+```csharp
+// not this - compiles everywhere, refused at load
+ref var entry = ref CollectionsMarshal.GetValueRefOrAddDefault(_map, key, out _);
+entry.Value += 1;
+
+// this - a struct copy, and one the sandbox allows
+_map.TryGetValue(key, out var entry);
+entry.Value += 1;
+_map[key] = entry;
+```
+
+Content.IntegrationTests is the cheapest way to find out, because loading the assemblies is the first
+thing it does - a single test from any fixture is enough to prove the sandbox accepted the build.
+
+### Only one system may subscribe to a given component and event pair
+
+The event bus throws
+`InvalidOperationException: Duplicate Subscriptions for comp=<Component>, event=<Event>` when a second
+subscription for the same pair is registered. It throws at **startup**, so it does not break the one
+feature that collided — it breaks every integration test in the suite at SetUp, which reads as
+"everything is broken" rather than "two handlers want the same event".
+
+So a partial system split across several files cannot have two files subscribing to the same pair. When
+a second file needs to react, call into it from the existing handler rather than adding a subscription:
+
+```csharp
+// Interaction.cs - the one subscription for this pair
+[SubscribeLocalEvent]
+private void OnElevatorStopped(Entity<ZLevelElevatorComponent> entity, ref ZLevelElevatorStoppedEvent args)
+{
+    // Called rather than subscribed separately: only one system may take a given component and event
+    //      pair, so everything that reacts to a stop goes through here.
+    StopMovementAudio(entity);
+
+    InvokeSignals(entity.Owner, stopped: true);
+}
+```
+
+Where several *unrelated* systems genuinely need the same moment, the component's owner re-broadcasts it
+as an event of its own — see `KsZLevelTransitEvents.cs`, which exists because `KsZLevelPhysicsSystem`
+had already taken `KsZLevelTransitComponent`'s `ComponentStartup` and `ComponentShutdown`.
+
+### A test that never fails is worse than no test
+
+Two separate bugs in one feature were each "covered" by a test that passed with the bug present. The
+test is then actively harmful: it is the reason nobody looks again.
+
+**So prove the test fails.** Break the thing it covers — comment the fix out, unsubscribe the handler,
+revert the line — rebuild, and watch it go red. A test you have only ever seen pass is a test you have
+not checked. This is cheap and it is the only thing that actually catches the cases below.
+
+Two ways to end up here that have nothing to do with carelessness:
+
+- **The assertion is satisfied by something other than the code under test.** A test named for landing
+  on a crossing platform passed with the obstruction event unsubscribed entirely, because the ordinary
+  slice-crossing path put the faller on that map anyway. It asserted a true fact about the wrong
+  mechanism. When a subsystem has two routes to the same observable outcome, name which one the test
+  pins and write a second test for the other.
+- **The environment is more permissive than production.** See the PVS entry below — pooled pairs run
+  with filtering off, so the visibility assertion cannot fail.
+
+When you find a test like this, fix the test in the same change as the bug. Deleting it is better than
+leaving it.
+
+### Verifying an attribute subscription actually generated
+
+Related, and the honest way to answer "is this handler wired up?" rather than guessing from the
+signature: ask the generator. `EmitCompilerGeneratedFiles` writes the `AutoSubscriptions()` override it
+produced to disk, and it either contains your handler or it does not.
+
+```sh
+# --no-incremental matters: an up-to-date build emits nothing, which reads exactly like "the generator
+# refused my handler" and is the reason to check twice before concluding anything.
+dotnet build Content.Shared/Content.Shared.csproj -c Release --no-incremental \
+  -p:EmitCompilerGeneratedFiles=true -p:CompilerGeneratedFilesOutputPath=/tmp/gen
+
+cat /tmp/gen/Robust.Shared.EntitySystemSubscriptionsGenerator/*/Content.Shared.<Namespace>.<System>.g.cs
+```
+
+Worth knowing what the generator *does* accept, because the signature rules are easy to guess wrong:
+a broadcast `ref` handler (`void OnFoo(ref SomeByRefEvent args)`) is fine, on an `abstract partial`
+system as much as a sealed one — the emitted `SubscribeLocalEvent<T>(OnFoo, null, null)` binds to the
+`EntityEventRefHandler<T>` overload. The genuine exclusions are the ones listed in §4, and a project
+missing the generator import.
+
+### "Invisible" is usually PVS, and PVS tests are vacuous by default
+
+When something is on the server, in the right place, with the right components, and the client cannot
+see it, the cause is far more often that it was never *sent* than that it was drawn wrong. Two traps
+follow from that, and both make a PVS test pass while the bug is live:
+
+1. **Pooled test pairs run with `net.pvs` off**, which sends every entity to every client. A test that
+   does not turn it back on proves nothing whatsoever about visibility:
+   ```csharp
+   await OverrideCVar(Side.Server, CVars.NetPVS, true);
+   ```
+2. **Leaving PVS detaches an entity on the client, it does not delete it** (`MetaDataFlags.Detached`).
+   So `TryGetEntity` keeps answering `true` forever for anything the client was *ever* told about.
+   Assert on an entity spawned **after** the state under test began — one that can only have arrived if
+   it is genuinely being sent — or check the detached flag explicitly.
+
+Include a control entity that must *not* arrive, too. Without one, "everything reached the client" and
+"PVS is not filtering at all" are the same green test.
+
+### Removing or deleting while enumerating: use the deferred forms
+
+Removing a component from inside an enumeration of that component, or deleting an entity the enumeration
+can still reach, mutates the storage being walked. The engine ships deferred forms for exactly this. Use
+them rather than gathering uids into a scratch list first:
+
+| Immediate | Deferred | What is deferred |
+| --- | --- | --- |
+| `RemComp` | `RemCompDeferred` | Only the removal from storage. `ComponentShutdown` runs **now**. |
+| `Del` | `QueueDel` | **Everything.** Nothing happens until the queue is processed. |
+| `PredictedDel` | `PredictedQueueDel` | As `QueueDel`, for predicted shared code. |
+
+Both queues drain at the end of the tick (`EntityManager.TickUpdate` → `ProcessQueueudDeletions`, then
+`CullRemovedComponents`), outside any system's loop. Calling either twice on the same target is harmless.
+
+```csharp
+// do this - safe mid-enumeration, and no scratch list
+var warpedEnumerator = AllEntityQuery<KsPitchWarpedAudioComponent>();
+while (warpedEnumerator.MoveNext(out var audioUid, out var warpedAudioComponent))
+    RemCompDeferred(audioUid, warpedAudioComponent);
+
+// not this - mutates the component storage the enumerator is walking
+while (warpedEnumerator.MoveNext(out var audioUid, out _))
+    RemComp<KsPitchWarpedAudioComponent>(audioUid);
+```
+
+The two deferred forms leave different things behind until the end of the tick, and each is a silent trap:
+
+- **A `RemCompDeferred`'d component is shut down, but still stored.** Enumerations and `HasComp` keep
+  finding it. Anything that acts on it has to skip it, or it undoes what its shutdown handler just
+  cleaned up:
+  ```csharp
+  if (warpedAudioComponent.LifeStage > ComponentLifeStage.Running)
+      continue;
+  ```
+- **A `QueueDel`'d entity is entirely alive.** It isn't terminating, so `TerminatingOrDeleted` says
+  `false` and every query still returns it. To ask whether it is on its way out, use
+  `EntityManager.IsQueuedForDeletion(uid)`.
+
+Reach for the immediate forms only when nothing up the call stack is iterating what you are removing,
+*and* the caller needs the thing gone before it continues.
+
+### Reparenting and map work inside engine callbacks
+
+Some engine events are raised mid-operation, with the engine's own iteration, broadphase or chunk
+structures still in flight. Reparenting an entity, moving a grid or deleting a map from inside one is
+reentrant mutation of the thing that called you, and it does not throw something catchable — it takes
+the server down.
+
+`GridFixtureSystem`'s split is the known one: it creates grid entities and reparents everything off the
+old grid, and editing a lot of tiles at once is the ordinary way to reach it. `KsZLevelPhysicsSystem`
+carries a deferred-check set for exactly this reason, and the pattern generalises — queue the work into
+a set, drain it in `Update` clear of the callback:
+
+```csharp
+// Queue from the callback...
+[SubscribeLocalEvent]
+private void OnPhysicsLand(Entity<PhysicsComponent> entity, ref LandEvent args)
+{
+    _pendingTransitChecks.Add(entity.Owner);
+}
+
+// ...and act on it in Update, draining into a scratch list first, because acting on one entry can
+//      raise the very events that queue into the set.
+_drainedTransitChecks.Clear();
+_drainedTransitChecks.AddRange(_pendingTransitChecks);
+_pendingTransitChecks.Clear();
+```
+
+Draining into a second list is not optional: a `foreach` over a set that the loop body can add to
+throws straight out of `Update`.

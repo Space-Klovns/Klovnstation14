@@ -42,6 +42,13 @@ public sealed partial class GunDodgerSystem : EntitySystem
             !_mobStateSystem.IsAlive(entity.Owner))
             return;
 
+        // No roll of its own: a projectile passes through only while a dodge that TryDodge rolled for its shot is
+        //      under way. Anything a projectile carries can't be rolled on, since a predicted projectile's id differs
+        //      between client and server, and rolling separately here would let the dodger be thrown clear of a shot
+        //      and hit by it anyway. At a chance of 1 every roll succeeds, so there is nothing to wait for.
+        if (entity.Comp.DodgeChance < 1f && _gameTiming.CurTime >= entity.Comp.DodgeEndTime)
+            return;
+
         args.Cancelled = true;
     }
 
@@ -73,13 +80,18 @@ public sealed partial class GunDodgerSystem : EntitySystem
     {
         if (args.Cancelled ||
             args.Data.HitEntity is not { } hitUid ||
-            !_dodgerQuery.HasComponent(hitUid) ||
+            !_dodgerQuery.TryGetComponent(hitUid, out var dodgerComponent) ||
             !_mobStateSystem.IsAlive(hitUid))
             return;
 
         // again: gundodgers can not dodge bullets shot by other gundodgers
         if (args.Data.Shooter is { } shooterUid &&
             _dodgerQuery.HasComponent(shooterUid))
+            return;
+
+        // Same seed as the roll in TryDodge, which runs this same tick, so a hitscan shot is only let through when
+        //      the dodger wasn't also thrown out of its way.
+        if (!RollDodge((hitUid, dodgerComponent), (int)_gameTiming.CurTick.Value).Dodged)
             return;
 
         // This is alredy dodged in GunShotEvent
@@ -93,19 +105,41 @@ public sealed partial class GunDodgerSystem : EntitySystem
             !_mobStateSystem.IsAlive(dodgerEntity.Owner))
             return;
 
-        // only dodge perpendicularly to the shooting direction
-        _popupSystem.PopupPredicted(Loc.GetString(PopupLocId, ("name", Identity.Name(dodgerEntity.Owner, EntityManager))), dodgerEntity, userUid, type: PopupType.Small);
+        var (dodged, predictedRandom) = RollDodge((dodgerEntity.Owner, dodgerEntity.Comp), (int)_gameTiming.CurTick.Value);
+        if (!dodged)
+            return;
+
+        dodgerEntity.Comp.DodgeEndTime = _gameTiming.CurTime + dodgerEntity.Comp.DodgeWindow;
+        Dirty(dodgerEntity.Owner, dodgerEntity.Comp);
+
+        // Everyone who can see the dodger, predicted for whoever fired.
+        _popupSystem.PopupEntity(Loc.GetString(PopupLocId, ("name", Identity.Name(dodgerEntity.Owner, EntityManager))), dodgerEntity.Owner, type: PopupType.Small);
         _dodgingEffectSystem.AddEffect(dodgerEntity.Owner, TimeSpan.FromSeconds(0.01d), TimeSpan.FromSeconds(0.7d));
 
-
-        // Has to be transformed because LocalNormal IS NOT ACTUALLY LOCAL
+        // only dodge perpendicularly to the shooting direction. The normal has to be transformed because LocalNormal
+        //      IS NOT ACTUALLY LOCAL
         var invMatrix = _transformSystem.GetWorldMatrix(Transform(dodgerEntity.Owner).ParentUid);
         localNormal = Vector2.TransformNormal(localNormal, invMatrix);
 
         // equal random direction perpendicular to normal
-        var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(KsSharedRandomExtensions.GetNetId(dodgerEntity.Owner, EntityManager), (int)_gameTiming.CurTick.Value);
         var throwDirection = (predictedRandom.NextDouble() < 0.5d) ? new Vector2(-localNormal.Y, localNormal.X) : new Vector2(localNormal.Y, -localNormal.X);
 
         _throwingSystem.TryThrow(dodgerEntity.Owner, throwDirection, baseThrowSpeed: dodgerEntity.Comp.ThrowSpeed, user: userUid, pushbackRatio: 0f, predicted: true);
+    }
+
+    /// <summary>
+    ///     Rolls <see cref="GunDodgerComponent.DodgeChance"/> from a seed of the dodger and <paramref name="salt"/>,
+    ///         so the client and server agree on it. The same dodger and salt always give the same result.
+    /// </summary>
+    /// <returns>
+    ///     Whether the dodge succeeded, and the seeded random with the chance already drawn from it, for any further
+    ///         predicted rolls.
+    /// </returns>
+    private (bool Dodged, System.Random PredictedRandom) RollDodge(Entity<GunDodgerComponent> dodgerEntity, int salt)
+    {
+        var predictedRandom = KsSharedRandomExtensions.RandomWithHashCodeCombinedSeed(KsSharedRandomExtensions.GetNetId(dodgerEntity.Owner, EntityManager), salt);
+        var dodged = predictedRandom.NextDouble() < (double)dodgerEntity.Comp.DodgeChance;
+
+        return (dodged, predictedRandom);
     }
 }

@@ -66,7 +66,7 @@ public sealed partial class SharedExecutionSystem : EntitySystem
         args.Verbs.Add(verb);
     }
 
-    private void TryStartExecutionDoAfter(EntityUid weapon, EntityUid victim, EntityUid attacker, ExecutionComponent comp)
+    public /* KS14: private -> public */ void TryStartExecutionDoAfter(EntityUid weapon, EntityUid victim, EntityUid attacker, ExecutionComponent comp)
     {
         if (!CanBeExecuted(victim, attacker))
             return;
@@ -90,12 +90,23 @@ public sealed partial class SharedExecutionSystem : EntitySystem
                 NeedHand = true
             };
 
+        // KS14 start
+        var executionComponent = EnsureComp<_KS14.Execution.KsActiveExecutionComponent>(attacker);
+        executionComponent.VictimUid = victim;
+        Dirty(attacker, executionComponent);
+        // KS14 end
+
         _doAfter.TryStartDoAfter(doAfter);
 
     }
 
     public bool CanBeExecuted(EntityUid victim, EntityUid attacker)
     {
+        // KS14 start
+        if (HasComp<_KS14.Execution.KsActiveExecutionComponent>(attacker))
+            return false;
+        // KS14 end
+
         // No point executing someone if they can't take damage
         if (!HasComp<DamageableComponent>(victim))
             return false;
@@ -110,7 +121,7 @@ public sealed partial class SharedExecutionSystem : EntitySystem
         //     return false;
 
         // You must be able to attack people to execute
-        if (!_actionBlocker.CanAttack(attacker, victim))
+        if (!_actionBlocker.CanAttack(attacker, victim, pure: true /* KS14: added arg, a check - also runs for every verb query */))
             return false;
 
         // The victim must be incapacitated to be executed
@@ -186,6 +197,8 @@ public sealed partial class SharedExecutionSystem : EntitySystem
 
     private void OnExecutionDoAfter(Entity<ExecutionComponent> entity, ref ExecutionDoAfterEvent args)
     {
+        RemComp<_KS14.Execution.KsActiveExecutionComponent>(args.User); // KS14
+
         if (args.Handled || args.Cancelled || args.Used == null || args.Target == null)
             return;
 

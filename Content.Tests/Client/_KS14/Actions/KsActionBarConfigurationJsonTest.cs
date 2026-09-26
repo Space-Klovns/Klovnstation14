@@ -1,3 +1,4 @@
+#nullable enable
 using Content.Client._KS14.Actions;
 using NUnit.Framework;
 

@@ -60,7 +60,9 @@ public sealed partial class ActionUIController
         if (_actionsSystem == null)
             return;
 
-        _rootFolderActions = [.. _actions];
+        // Not a collection expression: a spread into a List<T> lowers to CollectionsMarshal.SetCount,
+        // which the content sandbox rejects.
+        _rootFolderActions = new List<EntityUid?>(_actions);
         _openActionFolder = folderUid;
         _exitFolderAction = CreateFolderAction(isExit: true, folderUid);
 

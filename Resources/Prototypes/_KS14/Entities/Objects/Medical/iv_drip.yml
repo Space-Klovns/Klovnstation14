@@ -19,11 +19,16 @@
   - type: Sprite
     sprite: _KS14/Objects/Specific/Chemistry/iv_drip_civ.rsi
     layers:
-      - state: base
-      - state: base1
-        map: ["enum.SolutionContainerLayers.Fill"]
-        visible: false
+    - state: base
+    - state: base1
+      map: ["enum.SolutionContainerLayers.Fill"]
+      visible: false
   - type: Appearance
+  - type: DeviceLinkSink
+    ports:
+    - Toggle
+    - On
+    - Off
   - type: IvDrip
     injectionEnabled: false
     injectionAmount: 1
@@ -31,7 +36,7 @@
     canSetInjectionAmount: true
     canSetInjectionInterval: true
     spillOnWearerAttacked: true
-    spillAmount: 5
+    spillAmount: 1.5
   - type: SolutionContainerVisuals
     maxFillLevels: 6
     fillBaseName: base

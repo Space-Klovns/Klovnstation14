@@ -1,3 +1,3 @@
-reagents-argon = argon
-reagent-desc-argon = A bright violet noble gas with high thermal capacity.
-reagent-physical-desc-argon = A bright violet noble gas with high thermal capacity.
+reagents-encalite = encalite
+reagent-desc-encalite = A bright violet noble gas with high thermal capacity.
+reagent-physical-desc-encalite = A bright violet noble gas with high thermal capacity.

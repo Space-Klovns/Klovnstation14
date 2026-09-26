@@ -10,7 +10,7 @@ namespace Content.Shared._KS14.EnergyShield;
 ///         does need is already replicated on the battery itself.
 /// </remarks>
 [RegisterComponent]
-[Access(typeof(SharedRechargeableEnergyShieldSystem))]
+[Access(typeof(RechargeableEnergyShieldSystem))]
 public sealed partial class RechargeableEnergyShieldComponent : Component
 {
     /// <summary>

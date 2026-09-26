@@ -1,0 +1,25 @@
+<DefaultWindow xmlns="https://spacestation14.io"
+               xmlns:cc="clr-namespace:Content.Client.Administration.UI.CustomControls"
+               Title="{Loc 'zlevel-elevator-ui-title'}"
+               MinSize="280 340"
+               SetSize="280 340">
+    <BoxContainer Orientation="Vertical" HorizontalExpand="True" VerticalExpand="True">
+        <BoxContainer Orientation="Horizontal">
+            <Label Text="{Loc 'zlevel-elevator-ui-status-label'}" StyleClasses="StatusFieldTitle" />
+            <Label Name="StatusLabel" Margin="5 0 0 0" />
+        </BoxContainer>
+        <cc:HSeparator Margin="0 8 0 8" />
+
+        <!-- Filled at runtime, one button per z-level in the elevator's stack, topmost floor first so it
+             reads like a real lift panel. -->
+        <ScrollContainer VScrollEnabled="True" HorizontalExpand="True" VerticalExpand="True">
+            <BoxContainer Name="FloorContainer" Orientation="Vertical" HorizontalExpand="True" />
+        </ScrollContainer>
+
+        <Label Name="NoShaftLabel"
+               Text="{Loc 'zlevel-elevator-ui-no-shaft'}"
+               Visible="False"
+               HorizontalAlignment="Center"
+               Margin="0 8 0 0" />
+    </BoxContainer>
+</DefaultWindow>

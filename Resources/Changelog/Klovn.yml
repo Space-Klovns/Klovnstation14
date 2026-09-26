@@ -2028,3 +2028,87 @@ Entries:
       message: Falling down Z-levels now does damage.
   id: 210
   time: '2026-09-18T14:14:04.0000000+00:00'
+- author: NazrinNya
+  changes:
+    - type: Add
+      message: Added Packet networks. Check your CE locker.
+  id: 211
+  time: '2026-09-19T14:25:19.0000000+00:00'
+- author: nabegator220
+  changes:
+    - type: Add
+      message: IV drips
+    - type: Add
+      message: Mass rejuv marker for admins
+    - type: Add
+      message: Action folders
+    - type: Add
+      message: Action layout persistence
+    - type: Add
+      message: Guidebook entry for the Anchorless antagonist
+    - type: Tweak
+      message: Eshield now self recharges
+    - type: Tweak
+      message: Massive improvements to the mapping system
+  id: 212
+  time: '2026-09-19T17:45:28.0000000+00:00'
+- author: ResomiDumbass
+  changes:
+    - type: Tweak
+      message: Buffed inaprovaline, it heals double the amount it did before.
+  id: 213
+  time: '2026-09-20T18:37:55.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: >-
+        Fixed some rendering (items in bags being offset, wire panels), puddle
+        mispredicts, and stealth shader.
+  id: 214
+  time: '2026-09-21T05:21:19.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed decals not showing up on elevators sometimes.
+  id: 215
+  time: '2026-09-24T11:35:58.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: You can no longer shoot/attack while committing suicide.
+  id: 216
+  time: '2026-09-25T23:47:33.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Tweak
+      message: Argon has been renamed to Encalite.
+  id: 217
+  time: '2026-09-26T08:50:25.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed popups not showing for suicide-blocked attacks.
+  id: 218
+  time: '2026-09-26T09:10:02.0000000+00:00'
+- author: Anthropic
+  changes:
+    - type: Add
+      message: >-
+        Faxing Central Command may occasionally give you an automated response.
+        Sometimes.
+  id: 219
+  time: '2026-09-26T10:45:54.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Fix
+      message: Fixed RPG rockets sometimes just not exploding on things
+  id: 220
+  time: '2026-09-26T13:00:12.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: >-
+        The centcom AI can now send the station nuke codes, transfer funds, and
+        send cargo.
+  id: 221
+  time: '2026-09-26T14:10:19.0000000+00:00'
