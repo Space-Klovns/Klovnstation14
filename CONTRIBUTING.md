@@ -669,6 +669,48 @@ follow from that, and both make a PVS test pass while the bug is live:
 Include a control entity that must *not* arrive, too. Without one, "everything reached the client" and
 "PVS is not filtering at all" are the same green test.
 
+### Removing or deleting while enumerating: use the deferred forms
+
+Removing a component from inside an enumeration of that component, or deleting an entity the enumeration
+can still reach, mutates the storage being walked. The engine ships deferred forms for exactly this. Use
+them rather than gathering uids into a scratch list first:
+
+| Immediate | Deferred | What is deferred |
+| --- | --- | --- |
+| `RemComp` | `RemCompDeferred` | Only the removal from storage. `ComponentShutdown` runs **now**. |
+| `Del` | `QueueDel` | **Everything.** Nothing happens until the queue is processed. |
+| `PredictedDel` | `PredictedQueueDel` | As `QueueDel`, for predicted shared code. |
+
+Both queues drain at the end of the tick (`EntityManager.TickUpdate` → `ProcessQueueudDeletions`, then
+`CullRemovedComponents`), outside any system's loop. Calling either twice on the same target is harmless.
+
+```csharp
+// do this - safe mid-enumeration, and no scratch list
+var warpedEnumerator = AllEntityQuery<KsPitchWarpedAudioComponent>();
+while (warpedEnumerator.MoveNext(out var audioUid, out var warpedAudioComponent))
+    RemCompDeferred(audioUid, warpedAudioComponent);
+
+// not this - mutates the component storage the enumerator is walking
+while (warpedEnumerator.MoveNext(out var audioUid, out _))
+    RemComp<KsPitchWarpedAudioComponent>(audioUid);
+```
+
+The two deferred forms leave different things behind until the end of the tick, and each is a silent trap:
+
+- **A `RemCompDeferred`'d component is shut down, but still stored.** Enumerations and `HasComp` keep
+  finding it. Anything that acts on it has to skip it, or it undoes what its shutdown handler just
+  cleaned up:
+  ```csharp
+  if (warpedAudioComponent.LifeStage > ComponentLifeStage.Running)
+      continue;
+  ```
+- **A `QueueDel`'d entity is entirely alive.** It isn't terminating, so `TerminatingOrDeleted` says
+  `false` and every query still returns it. To ask whether it is on its way out, use
+  `EntityManager.IsQueuedForDeletion(uid)`.
+
+Reach for the immediate forms only when nothing up the call stack is iterating what you are removing,
+*and* the caller needs the thing gone before it continues.
+
 ### Reparenting and map work inside engine callbacks
 
 Some engine events are raised mid-operation, with the engine's own iteration, broadphase or chunk

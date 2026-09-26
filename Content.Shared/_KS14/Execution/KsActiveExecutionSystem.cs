@@ -24,27 +24,11 @@ public sealed partial class KsActiveExecutionSystem : EntitySystem
         // you cant hit something while trying to kill yourself
         args.Cancel();
 
-        // The client's MeleeWeaponSystem.Update calls CanAttack with no target every tick, purely to query
-        //      whether attacking is possible. The server never makes that call, so it never advances
-        //      NextPopupTime, and every incoming game state resets the client's prediction of it back to the
-        //      server's value - popping up again on the next tick. Real targetless swings re-raise this with
-        //      each target they hit, so only popping up for targeted attempts loses nothing that matters.
-        if (args.Target == null)
+        // Only asking, not attacking, so there is nothing to tell them about.
+        if (args.Pure)
             return;
 
         DoPopup(entity, "suicide-popup-melee-cant", args.Uid);
-    }
-
-    [SubscribeLocalEvent]
-    private void OnShotAttempted(Entity<KsActiveExecutionComponent> entity, ref ShotAttemptedEvent args)
-    {
-        if (args.Cancelled ||
-            entity.Comp.VictimUid != args.User)
-            return;
-
-        // you cant shoot while trying to kill yourself
-        args.Cancel();
-        DoPopup(entity, "suicide-popup-gun-cant", args.User);
     }
 
     private void DoPopup(Entity<KsActiveExecutionComponent> entity, LocId popupId, EntityUid userUid)

@@ -7,7 +7,7 @@ namespace Content.Shared._KS14.GunDodger;
 ///
 ///     For dodging bullets shot by non-gundodgers.
 /// </summary>
-[RegisterComponent, NetworkedComponent]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 [Access(typeof(GunDodgerSystem))]
 public sealed partial class GunDodgerComponent : Component
 {
@@ -16,4 +16,11 @@ public sealed partial class GunDodgerComponent : Component
     /// </summary>
     [DataField, ViewVariables(VVAccess.ReadWrite)]
     public float ThrowSpeed = 10f;
+
+    /// <summary>
+    ///     Chance, from 0 to 1, of dodging a given shot. Rolled from a seed the client and server share, so dodges
+    ///         are predicted.
+    /// </summary>
+    [DataField, AutoNetworkedField, ViewVariables(VVAccess.ReadWrite)]
+    public float DodgeChance = 1f;
 }

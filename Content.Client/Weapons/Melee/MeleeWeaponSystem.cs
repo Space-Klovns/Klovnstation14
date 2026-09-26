@@ -68,7 +68,7 @@ public sealed partial class MeleeWeaponSystem : SharedMeleeWeaponSystem
         if (!TryGetWeapon(entity, out var weaponUid, out var weapon))
             return;
 
-        if (!CombatMode.IsInCombatMode(entity) || !Blocker.CanAttack(entity, weapon: (weaponUid, weapon)))
+        if (!CombatMode.IsInCombatMode(entity) || !Blocker.CanAttack(entity, weapon: (weaponUid, weapon), pure: true /* KS14: added arg, runs every frame */))
         {
             weapon.Attacking = false;
             return;

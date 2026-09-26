@@ -13,6 +13,12 @@ public static class KsPostShaderIds
     public const string WaveDistortion = "ks-wave-distortion";
 
     /// <summary>
+    ///     Prefix for KsPostShaderStatusEffect's ids, which get the effect entity's id appended so that several of
+    ///         them can sit on one sprite. They order themselves before the outlines, so they need no entry below.
+    /// </summary>
+    public const string StatusEffectPrefix = "ks-status-effect-";
+
+    /// <summary>
     ///     Every outline there is, upstream's and this fork's, for a base effect to order itself before.
     /// </summary>
     /// <remarks>

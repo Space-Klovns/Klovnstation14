@@ -1,0 +1,96 @@
+light_mode unshaded;
+
+// Cuts whatever it draws into horizontal bars that are almost never where they should be, like a signal that
+//      can't hold still. Each bar is in one of two moods at a time, re-rolled every so often: jerking between a few
+//      fixed offsets, or hanging - stuck at one of them, twitching slightly around it. Meant as a sprite post-shader, and unshaded because of it: a post-shader
+//      draws a sprite that has already been lit once.
+//
+// Everything is measured in the quad being drawn (UV2) rather than in texture pixels, so the effect looks the
+//      same however big the texture under it is - a post-shader's render target is the sprite's size on screen,
+//      so it changes with zoom.
+
+// How many bars the glitched region is cut into.
+uniform highp float barCount;
+// The part of the quad that is cut into bars, in quad UV: bottom, top. A sprite post-shader's quad is padded out
+//      past the sprite on every side, so this is what lines the bars up with the sprite itself.
+uniform highp vec2 barRegion;
+// The size of one offset step, as a fraction of the quad's width. A displaced bar sits 1 to maxSteps of these
+//      off centre.
+uniform highp float offsetStep;
+uniform highp float maxSteps;
+// How many times a second a jerking bar snaps to a new offset.
+uniform highp float jerkRate;
+// Chance that a bar sits dead centre on a given snap. Keep it low: the effect should almost never look clean.
+uniform highp float restChance;
+// How many times a second, on average, each bar reconsiders its mood: jerking, or hanging.
+uniform highp float hangRate;
+// Chance that a bar spends its next mood hanging - stuck at one offset, twitching slightly around it - instead of
+//      jerking between offsets.
+uniform highp float hangChance;
+// How far a hanging bar twitches around the offset it is stuck at, as a fraction of the quad's width.
+uniform highp float hangJitter;
+// How many times a second a hanging bar twitches.
+uniform highp float jitterRate;
+// 1 to 0 as an effect runs out. Bars come to rest more and more often as it drops, so the glitching dies down.
+uniform highp float timeLeft;
+// Anything, as long as it differs between instances, so two glitching sprites don't jerk in lockstep.
+uniform highp float seed;
+
+// A random number from 0 to 1.
+highp float random01(highp vec2 position) {
+    return zRandom(position).x * 0.5 + 0.5;
+}
+
+void fragment() {
+    highp float regionPosition = (UV2.y - barRegion.x) / (barRegion.y - barRegion.x);
+
+    highp float offset = 0.0;
+    if (regionPosition >= 0.0 && regionPosition < 1.0) {
+        highp float barIndex = floor(regionPosition * barCount);
+        highp float barSeed = barIndex + seed * 17.0;
+
+        // Every bar keeps its own clock, so they don't all change on the same frame.
+        highp float barPhase = fract(barIndex * 0.618034);
+
+        // The bar's current mood, held for a while - a slightly different while for each bar and each mood.
+        highp float moodIndex = floor(TIME * hangRate * (0.7 + 0.6 * random01(vec2(barSeed, 4.1))) + barPhase);
+        highp vec2 moodPosition = vec2(barSeed, moodIndex + 100.0);
+        bool hanging = random01(moodPosition) < hangChance;
+
+        // Where a bar hangs, or where a jerking bar snaps to. Always one of the fixed offsets, never zero.
+        highp float pickIndex = hanging ? moodIndex : floor(TIME * jerkRate + barPhase);
+        highp vec2 pickPosition = vec2(barSeed, pickIndex) + (hanging ? vec2(31.0, 7.0) : vec2(0.0));
+        highp float stepCount = 1.0 + min(floor(random01(pickPosition + vec2(3.7, 1.3)) * maxSteps), maxSteps - 1.0);
+        highp float direction = random01(pickPosition + vec2(9.1, 5.9)) < 0.5 ? -1.0 : 1.0;
+        offset = direction * stepCount * offsetStep;
+
+        if (hanging) {
+            // Stuck, but not still: small twitches around the offset it is stuck at.
+            highp float jitterIndex = floor(TIME * jitterRate + barPhase);
+            offset += zRandom(vec2(barSeed, jitterIndex) + vec2(53.0, 11.0)).x * hangJitter;
+        }
+
+        // Comes to rest more often as the effect runs out: restChance at the start, always at the very end.
+        highp float effectiveRestChance = 1.0 - (1.0 - restChance) * timeLeft;
+        if (random01(pickPosition + vec2(71.0, 3.0)) < effectiveRestChance)
+            offset = 0.0;
+    }
+
+    // How much texture UV one unit of quad UV spans horizontally. UV and UV2 are both linear across the quad, so
+    //      this is the same everywhere on it; the gradients' lengths rather than a plain ratio, so a rotated quad
+    //      measures right too.
+#ifdef HAS_DFDX
+    highp float uvPerQuad = length(vec2(dFdx(UV.x), dFdy(UV.x))) / max(length(vec2(dFdx(UV2.x), dFdy(UV2.x))), 0.000001);
+#else
+    // Nothing to measure the quad with, so guess it is 32 texture pixels wide - a one-tile sprite.
+    highp float uvPerQuad = TEXTURE_PIXEL_SIZE.x * 32.0;
+#endif
+
+    COLOR = zTexture(UV - vec2(offset * uvPerQuad, 0.0));
+
+    // Shifted in from past the edge of the quad: there is nothing there to draw. Not an early return - the engine
+    //      writes COLOR out after this function's body, and returning would skip that.
+    highp float sourceQuadX = UV2.x - offset;
+    if (sourceQuadX < 0.0 || sourceQuadX > 1.0)
+        COLOR = vec4(0.0);
+}
