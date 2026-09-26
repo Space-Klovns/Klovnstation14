@@ -1,4 +1,4 @@
-﻿using Content.Client.Administration.Managers;
+using Content.Client.Administration.Managers; // KS14
 using Content.Client.Administration.Systems;
 using Content.Client.Administration.UI;
 using Content.Client.Administration.UI.Tabs.ObjectsTab;
@@ -6,6 +6,7 @@ using Content.Client.Administration.UI.Tabs.PanicBunkerTab;
 using Content.Client.Administration.UI.Tabs.PlayerTab;
 using Content.Client.Gameplay;
 using Content.Client.Lobby;
+using Content.Client.Mapping; // KS14
 using Content.Client.UserInterface.Controls;
 using Content.Client.Verbs.UI;
 using Content.Shared.Administration.Events;
@@ -26,6 +27,7 @@ namespace Content.Client.UserInterface.Systems.Admin;
 public sealed partial class AdminUIController : UIController,
     IOnStateEntered<GameplayState>,
     IOnStateEntered<LobbyState>,
+    IOnStateEntered<MappingState>, // KS14: mapping editor overhaul port
     IOnSystemChanged<AdminSystem>
 {
     [Dependency] private IClientAdminManager _admin = default!;
@@ -68,6 +70,14 @@ public sealed partial class AdminUIController : UIController,
         AdminStatusUpdated();
     }
 
+// KS14 start: mapping editor overhaul port
+    public void OnStateEntered(MappingState state)
+    {
+        EnsureWindow();
+        AdminStatusUpdated();
+    }
+
+// KS14 end
     public void OnSystemLoaded(AdminSystem system)
     {
         EnsureWindow();

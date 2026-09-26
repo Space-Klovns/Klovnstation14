@@ -1,5 +1,13 @@
-﻿- type: decal
+# KS14 start: mapping editor overhaul port
+- type: decal
+  id: BrickTileWhite
+  parent: BrickTile
+  abstract: true
+
+- type: decal
+# KS14 end
   id: BrickTileWhiteBox
+  parent: BrickTileWhite # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/bricktile.rsi
@@ -7,6 +15,7 @@
 
 - type: decal
   id: BrickTileWhiteCornerNe
+  parent: BrickTileWhite # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/bricktile.rsi
@@ -14,6 +23,7 @@
 
 - type: decal
   id: BrickTileWhiteCornerSe
+  parent: BrickTileWhite # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/bricktile.rsi
@@ -21,6 +31,7 @@
 
 - type: decal
   id: BrickTileWhiteCornerNw
+  parent: BrickTileWhite # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/bricktile.rsi
@@ -28,6 +39,7 @@
 
 - type: decal
   id: BrickTileWhiteCornerSw
+  parent: BrickTileWhite # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/bricktile.rsi
@@ -35,6 +47,7 @@
 
 - type: decal
   id: BrickTileWhiteInnerNe
+  parent: BrickTileWhite # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/bricktile.rsi
@@ -42,6 +55,7 @@
 
 - type: decal
   id: BrickTileWhiteInnerSe
+  parent: BrickTileWhite # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/bricktile.rsi
@@ -49,6 +63,7 @@
 
 - type: decal
   id: BrickTileWhiteInnerNw
+  parent: BrickTileWhite # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/bricktile.rsi
@@ -56,6 +71,7 @@
 
 - type: decal
   id: BrickTileWhiteInnerSw
+  parent: BrickTileWhite # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/bricktile.rsi
@@ -63,6 +79,7 @@
 
 - type: decal
   id: BrickTileWhiteEndN
+  parent: BrickTileWhite # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/bricktile.rsi
@@ -70,6 +87,7 @@
 
 - type: decal
   id: BrickTileWhiteEndE
+  parent: BrickTileWhite # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/bricktile.rsi
@@ -77,6 +95,7 @@
 
 - type: decal
   id: BrickTileWhiteEndS
+  parent: BrickTileWhite # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/bricktile.rsi
@@ -84,6 +103,7 @@
 
 - type: decal
   id: BrickTileWhiteEndW
+  parent: BrickTileWhite # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/bricktile.rsi
@@ -91,6 +111,7 @@
 
 - type: decal
   id: BrickTileWhiteLineN
+  parent: BrickTileWhite # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/bricktile.rsi
@@ -98,6 +119,7 @@
 
 - type: decal
   id: BrickTileWhiteLineE
+  parent: BrickTileWhite # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/bricktile.rsi
@@ -105,6 +127,7 @@
 
 - type: decal
   id: BrickTileWhiteLineS
+  parent: BrickTileWhite # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/bricktile.rsi
@@ -112,6 +135,7 @@
 
 - type: decal
   id: BrickTileWhiteLineW
+  parent: BrickTileWhite # KS14: added parent
   tags: ["station", "markings"]
   sprite:
     sprite: Decals/bricktile.rsi

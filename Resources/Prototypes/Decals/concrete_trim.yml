@@ -1,5 +1,22 @@
-﻿- type: decal
+# KS14 start: mapping editor overhaul port
+- type: decal
+  id: ConcreteTrim
+  abstract: true
+
+- type: decal
+  id: GrayConcreteTrim
+  parent: ConcreteTrim
+  abstract: true
+
+- type: decal
+  id: OldConcreteTrim
+  parent: ConcreteTrim
+  abstract: true
+
+- type: decal
+# KS14 end
   id: ConcreteTrimBox
+  parent: ConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -7,6 +24,7 @@
 
 - type: decal
   id: ConcreteTrimCornerNe
+  parent: ConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -14,6 +32,7 @@
 
 - type: decal
   id: ConcreteTrimCornerSe
+  parent: ConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -21,6 +40,7 @@
 
 - type: decal
   id: ConcreteTrimCornerNw
+  parent: ConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -28,6 +48,7 @@
 
 - type: decal
   id: ConcreteTrimCornerSw
+  parent: ConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -35,6 +56,7 @@
 
 - type: decal
   id: ConcreteTrimInnerNe
+  parent: ConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -42,6 +64,7 @@
 
 - type: decal
   id: ConcreteTrimInnerSe
+  parent: ConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -49,6 +72,7 @@
 
 - type: decal
   id: ConcreteTrimInnerNw
+  parent: ConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -56,6 +80,7 @@
 
 - type: decal
   id: ConcreteTrimInnerSw
+  parent: ConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -63,6 +88,7 @@
 
 - type: decal
   id: ConcreteTrimEndN
+  parent: ConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -70,6 +96,7 @@
 
 - type: decal
   id: ConcreteTrimEndE
+  parent: ConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -77,6 +104,7 @@
 
 - type: decal
   id: ConcreteTrimEndS
+  parent: ConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -84,6 +112,7 @@
 
 - type: decal
   id: ConcreteTrimEndW
+  parent: ConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -91,6 +120,7 @@
 
 - type: decal
   id: ConcreteTrimLineN
+  parent: ConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -98,6 +128,7 @@
 
 - type: decal
   id: ConcreteTrimLineE
+  parent: ConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -105,6 +136,7 @@
 
 - type: decal
   id: ConcreteTrimLineS
+  parent: ConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -112,6 +144,7 @@
 
 - type: decal
   id: ConcreteTrimLineW
+  parent: ConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -119,6 +152,7 @@
 
 - type: decal
   id: GrayConcreteTrimBox
+  parent: GrayConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -126,6 +160,7 @@
 
 - type: decal
   id: GrayConcreteTrimCornerNe
+  parent: GrayConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -133,6 +168,7 @@
 
 - type: decal
   id: GrayConcreteTrimCornerSe
+  parent: GrayConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -140,6 +176,7 @@
 
 - type: decal
   id: GrayConcreteTrimCornerNw
+  parent: GrayConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -147,6 +184,7 @@
 
 - type: decal
   id: GrayConcreteTrimCornerSw
+  parent: GrayConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -154,6 +192,7 @@
 
 - type: decal
   id: GrayConcreteTrimInnerNe
+  parent: GrayConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -161,6 +200,7 @@
 
 - type: decal
   id: GrayConcreteTrimInnerSe
+  parent: GrayConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -168,6 +208,7 @@
 
 - type: decal
   id: GrayConcreteTrimInnerNw
+  parent: GrayConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -175,6 +216,7 @@
 
 - type: decal
   id: GrayConcreteTrimInnerSw
+  parent: GrayConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -182,6 +224,7 @@
 
 - type: decal
   id: GrayConcreteTrimEndN
+  parent: GrayConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -189,6 +232,7 @@
 
 - type: decal
   id: GrayConcreteTrimEndE
+  parent: GrayConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -196,6 +240,7 @@
 
 - type: decal
   id: GrayConcreteTrimEndS
+  parent: GrayConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -203,6 +248,7 @@
 
 - type: decal
   id: GrayConcreteTrimEndW
+  parent: GrayConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -210,6 +256,7 @@
 
 - type: decal
   id: GrayConcreteTrimLineN
+  parent: GrayConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -217,6 +264,7 @@
 
 - type: decal
   id: GrayConcreteTrimLineE
+  parent: GrayConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -224,6 +272,7 @@
 
 - type: decal
   id: GrayConcreteTrimLineS
+  parent: GrayConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -231,6 +280,7 @@
 
 - type: decal
   id: GrayConcreteTrimLineW
+  parent: GrayConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -238,6 +288,7 @@
 
 - type: decal
   id: OldConcreteTrimBox
+  parent: OldConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -245,6 +296,7 @@
 
 - type: decal
   id: OldConcreteTrimCornerNe
+  parent: OldConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -252,6 +304,7 @@
 
 - type: decal
   id: OldConcreteTrimCornerSe
+  parent: OldConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -259,6 +312,7 @@
 
 - type: decal
   id: OldConcreteTrimCornerNw
+  parent: OldConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -266,6 +320,7 @@
 
 - type: decal
   id: OldConcreteTrimCornerSw
+  parent: OldConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -273,6 +328,7 @@
 
 - type: decal
   id: OldConcreteTrimInnerNe
+  parent: OldConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -280,6 +336,7 @@
 
 - type: decal
   id: OldConcreteTrimInnerSe
+  parent: OldConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -287,6 +344,7 @@
 
 - type: decal
   id: OldConcreteTrimInnerNw
+  parent: OldConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -294,6 +352,7 @@
 
 - type: decal
   id: OldConcreteTrimInnerSw
+  parent: OldConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -301,6 +360,7 @@
 
 - type: decal
   id: OldConcreteTrimEndN
+  parent: OldConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -308,6 +368,7 @@
 
 - type: decal
   id: OldConcreteTrimEndE
+  parent: OldConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -315,6 +376,7 @@
 
 - type: decal
   id: OldConcreteTrimEndS
+  parent: OldConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -322,6 +384,7 @@
 
 - type: decal
   id: OldConcreteTrimEndW
+  parent: OldConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -329,6 +392,7 @@
 
 - type: decal
   id: OldConcreteTrimLineN
+  parent: OldConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -336,6 +400,7 @@
 
 - type: decal
   id: OldConcreteTrimLineE
+  parent: OldConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -343,6 +408,7 @@
 
 - type: decal
   id: OldConcreteTrimLineS
+  parent: OldConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
@@ -350,6 +416,7 @@
 
 - type: decal
   id: OldConcreteTrimLineW
+  parent: OldConcreteTrim # KS14: added parent
   tags: ["planet", "markings"]
   sprite:
     sprite: Decals/concretetrim.rsi
