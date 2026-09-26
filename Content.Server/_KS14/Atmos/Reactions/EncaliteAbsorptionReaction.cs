@@ -7,25 +7,25 @@ using JetBrains.Annotations;
 namespace Content.Server._KS14.Atmos.Reactions;
 
 /// <summary>
-///     When argon reaches 80 moles, it slowly absorbs other gases and stops all reactions.
+///     When encalite reaches 80 moles, it slowly absorbs other gases and stops all reactions.
 /// </summary>
 [UsedImplicitly]
-public sealed partial class ArgonAbsorptionReaction : IGasReactionEffect
+public sealed partial class EncaliteAbsorptionReaction : IGasReactionEffect
 {
     private const float AbsorptionRate = 2f;
 
     public ReactionResult React(GasMixture mixture, IGasMixtureHolder? holder, AtmosphereSystem atmosphereSystem, float heatScale)
     {
-        var argonMoles = mixture.GetMoles(Gas.Argon);
+        var encaliteMoles = mixture.GetMoles(Gas.Encalite);
 
-        if (argonMoles < 80f)
+        if (encaliteMoles < 80f)
             return ReactionResult.NoReaction;
 
         float totalAbsorbed = 0f;
 
         for (var i = 0; i < Atmospherics.TotalNumberOfGases; i++)
         {
-            if (i == (int)Gas.Argon)
+            if (i == (int)Gas.Encalite)
                 continue;
 
             var moles = mixture.GetMoles(i);
@@ -39,8 +39,8 @@ public sealed partial class ArgonAbsorptionReaction : IGasReactionEffect
 
         if (totalAbsorbed > 0f)
         {
-            // Infinite argon
-            mixture.AdjustMoles(Gas.Argon, totalAbsorbed);
+            // Infinite encalite
+            mixture.AdjustMoles(Gas.Encalite, totalAbsorbed);
 
             return ReactionResult.Reacting | ReactionResult.StopReactions;
         }

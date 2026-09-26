@@ -27,8 +27,8 @@
   pulsePowerMultiplier: 0.8
 
 - type: anomalyGasEffect
-  id: ArgonEffect
-  gas: Argon
+  id: EncaliteEffect
+  gas: Encalite
   stabilityModifier: -0.01
   decayBuffer: 0.2
   pointMultiplier: 0.5
