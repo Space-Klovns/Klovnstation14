@@ -178,6 +178,15 @@ public sealed partial class KsLlmManager
         _conversations.Clear();
     }
 
+    /// <summary>
+    ///     Ends the turn in flight and every queued one, each with a failed <see cref="KsLlmTurnRequest.OnComplete"/>.
+    ///         A late answer to a cancelled request is ignored, so none of its tool calls run.
+    /// </summary>
+    public void CancelAllTurns()
+    {
+        FailAllTurns();
+    }
+
     public KsLlmConversation? GetConversation(ProtoId<KsLlmPersonaPrototype> persona)
     {
         return _conversations.GetValueOrDefault(persona.Id);
@@ -483,7 +492,16 @@ public sealed partial class KsLlmManager
 
         if (!TryParseConstrained(content, out var reply, out var toolName, out var argumentsText))
         {
-            // The grammar makes this near-impossible; a truncated generation (max_tokens) is the usual cause.
+            // The grammar makes this near-impossible; a truncated generation (max_tokens) is the usual cause - and
+            // that recurs, since the model tends to write the same long reply again. Once the final answer was
+            // already demanded there is no later round to bound this, so the turn ends here.
+            if (turn.ForcedText)
+            {
+                _sawmill.Warning("Final constrained response was not valid JSON; abandoning the turn.");
+                FailTurn(turn);
+                return;
+            }
+
             messages.Add(new KsLlmMessage(KsLlmWireRoles.User, "[tool result] Error: your last response was not a single valid JSON object of the required shape."));
             AfterToolRound(turn);
             return;

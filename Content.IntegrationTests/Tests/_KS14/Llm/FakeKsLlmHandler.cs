@@ -69,7 +69,26 @@ public sealed class FakeKsLlmHandler : HttpMessageHandler
 
     public void EnqueueToolCall(string name, string argumentsJson, int promptTokens = 50)
     {
-        var toolCalls = new JsonArray
+        var body = BuildResponse(content: null, BuildToolCalls(name, argumentsJson), promptTokens, completionTokens: 10);
+        _responses.Enqueue(() => Task.FromResult(body));
+    }
+
+    /// <summary>
+    ///     The next response is a tool call, withheld until <paramref name="gate"/> completes.
+    /// </summary>
+    public void EnqueueGatedToolCall(Task gate, string name, string argumentsJson)
+    {
+        var body = BuildResponse(content: null, BuildToolCalls(name, argumentsJson), promptTokens: 50, completionTokens: 10);
+        _responses.Enqueue(async () =>
+        {
+            await gate;
+            return body;
+        });
+    }
+
+    private static JsonArray BuildToolCalls(string name, string argumentsJson)
+    {
+        return new JsonArray
         {
             new JsonObject
             {
@@ -78,9 +97,6 @@ public sealed class FakeKsLlmHandler : HttpMessageHandler
                 ["function"] = new JsonObject { ["name"] = name, ["arguments"] = argumentsJson },
             },
         };
-
-        var body = BuildResponse(content: null, toolCalls, promptTokens, completionTokens: 10);
-        _responses.Enqueue(() => Task.FromResult(body));
     }
 
     /// <summary>

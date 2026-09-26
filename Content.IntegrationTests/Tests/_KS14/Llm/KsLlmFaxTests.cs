@@ -519,6 +519,54 @@ public sealed class KsLlmFaxTests : GameTest
     }
 
     [Test]
+    public async Task ConstrainedGarbageIsBounded()
+    {
+        await SetUpFaxes();
+        await OverrideCVar(Side.Server, KsCCVars.LlmConstrainedTools, true);
+        await OverrideCVar(Side.Server, KsCCVars.LlmMaxToolTurns, 1);
+        // Every response is the fake's default plain-text reply, which is never the JSON constrained mode wants.
+
+        await SendFax("Say something long.");
+        await WaitUntil(() => _fakeHandler.Requests.Count >= 2 && !_llmManager.TurnInFlight,
+            "a model that never produces valid JSON must not hold the slot forever");
+
+        await Pair.RunTicksSync(30);
+        Assert.Multiple(() =>
+        {
+            Assert.That(_fakeHandler.Requests, Has.Count.EqualTo(2), "one retry, then the forced final answer, then give up");
+            Assert.That(GetReplies(), Is.Empty);
+        });
+    }
+
+    [Test]
+    public async Task RoundRestartCancelsTurnsInFlight()
+    {
+        await SetUpFaxes();
+        var gate = new TaskCompletionSource();
+        _fakeHandler.EnqueueGatedToolCall(gate.Task, "get_station_status", "{}");
+
+        await SendFax("Asked just before the round ends.");
+        await WaitUntil(() => _fakeHandler.Requests.Count == 1, "the request was never sent");
+
+        await Server.WaitPost(() => SEntMan.EventBus.RaiseEvent(EventSource.Local, new RoundRestartCleanupEvent()));
+        await Server.WaitAssertion(() => Assert.That(_llmManager.TurnInFlight, Is.False, "the old round's turn must be cancelled"));
+
+        // The old round's answer turns up late, asking for a tool.
+        gate.SetResult();
+        for (var i = 0; i < 30; i++)
+        {
+            await Pair.RunTicksSync(1);
+            await Task.Delay(2);
+        }
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(_fakeHandler.Requests, Has.Count.EqualTo(1), "the late tool call must not run, so no follow-up is sent");
+            Assert.That(GetReplies(), Is.Empty);
+        });
+    }
+
+    [Test]
     public async Task RoundRestartForgetsTheConversation()
     {
         await SetUpFaxes();

@@ -45,6 +45,12 @@ public sealed partial class KsLlmFaxSystem : EntitySystem
 
     private int _maxInputChars;
 
+    /// <summary>
+    ///     Bumped on every round restart. A turn remembers the round it was started in, and nothing it does -
+    ///         tool calls, the reply - lands in any other.
+    /// </summary>
+    private int _round;
+
     public override void Initialize()
     {
         base.Initialize();
@@ -55,6 +61,10 @@ public sealed partial class KsLlmFaxSystem : EntitySystem
     [SubscribeLocalEvent]
     private void OnRoundRestartCleanup(RoundRestartCleanupEvent args)
     {
+        _round++;
+
+        // Before the history goes, so nothing from the old round is still running against it.
+        _llmManager.CancelAllTurns();
         _llmManager.ResetConversation();
         _toolUsages.Clear();
     }
@@ -75,13 +85,20 @@ public sealed partial class KsLlmFaxSystem : EntitySystem
         var persona = entity.Comp.Persona;
         var stationUid = _stationSystem.GetOwningStation(senderFaxUid);
         var stamps = args.Printout.StampedBy.ToList();
+        var round = _round;
 
         var request = new KsLlmTurnRequest
         {
             Persona = persona,
             UserMessage = BuildUserMessage(args.Printout, senderFaxUid, stationUid),
-            ExecuteTool = toolCall => ExecuteTool(toolCall, recipientFaxUid, senderFaxUid, stationUid, stamps),
-            OnComplete = result => OnTurnComplete(result, recipientFaxUid, senderFaxUid, persona),
+            ExecuteTool = toolCall => round == _round
+                ? ExecuteTool(toolCall, recipientFaxUid, senderFaxUid, stationUid, stamps)
+                : KsLlmToolOutcome.Error("this request belongs to a previous shift and can no longer be acted on."),
+            OnComplete = result =>
+            {
+                if (round == _round)
+                    OnTurnComplete(result, recipientFaxUid, senderFaxUid, persona);
+            },
         };
 
         if (_llmManager.TryRequestTurn(request))
