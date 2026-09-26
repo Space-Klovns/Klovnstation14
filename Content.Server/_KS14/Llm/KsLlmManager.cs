@@ -43,6 +43,7 @@ public sealed partial class KsLlmManager
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IResourceManager _resourceManager = default!;
     [Dependency] private ILogManager _logManager = default!;
+    [Dependency] private ILocalizationManager _localizationManager = default!;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {

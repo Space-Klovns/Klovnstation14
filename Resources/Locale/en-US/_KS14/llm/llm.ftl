@@ -9,3 +9,6 @@ cmd-ks_llm-restarting = Restarting the LLM backend.
 cmd-ks_llm-reset = Cleared every LLM conversation.
 cmd-ks_llm-status = State: {$state}, backend: {$url}, context: {$context} tokens, queued turns: {$queued}, turn in flight: {$inFlight}
 cmd-ks_llm-status-conversation = Conversation {$persona}: {$messages} messages, {$tokens} tokens at last request, compacted {$compactions} times
+
+ks-llm-funds-announcement-deposit = Central Command has deposited {$amount} credits into the {$account}.
+ks-llm-funds-announcement-withdraw = Central Command has withdrawn {$amount} credits from the {$account}.

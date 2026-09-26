@@ -180,10 +180,11 @@ public sealed partial class KsLlmFaxSystem : EntitySystem
         IReadOnlyList<StampDisplayInfo> stamps)
     {
         var tool = toolCall.Tool;
-        var outcome = CheckUsage(tool) ?? tool.Effect.Execute(new KsLlmToolContext
+        var outcome = CheckStamps(tool, stamps) ?? CheckUsage(tool) ?? tool.Effect.Execute(new KsLlmToolContext
         {
             EntityManager = EntityManager,
             Localization = Loc,
+            PrototypeManager = ProtoMan,
             Arguments = toolCall.Arguments,
             RecipientFaxUid = recipientFaxUid,
             SenderFaxUid = Exists(senderFaxUid) ? senderFaxUid : null,
@@ -205,6 +206,20 @@ public sealed partial class KsLlmFaxSystem : EntitySystem
             $"LLM tool {tool.Name} for a fax from {ToPrettyString(senderFaxUid):subject} {(outcome.Success ? "succeeded" : "was refused")}: {outcome.Message}");
 
         return outcome;
+    }
+
+    /// <summary>
+    ///     The refusal, if the tool needs a stamp this fax does not bear. Read off the paper itself, so nothing
+    ///         the model says can get past it.
+    /// </summary>
+    private KsLlmToolOutcome? CheckStamps(KsLlmToolPrototype tool, IReadOnlyList<StampDisplayInfo> stamps)
+    {
+        if (tool.RequiredStamps.Count == 0 || stamps.Any(stamp => tool.RequiredStamps.Contains(stamp.StampedName)))
+            return null;
+
+        // Named from the list itself, so the refusal can never disagree with what is actually accepted.
+        var acceptedStamps = string.Join(", ", tool.RequiredStamps.Select(stamp => Loc.TryGetString(stamp, out var name) ? name : stamp));
+        return KsLlmToolOutcome.Error($"refused: '{tool.Name}' requires the fax to bear one of these stamps: {acceptedStamps}. This one does not.");
     }
 
     /// <summary>

@@ -6,6 +6,9 @@ using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Server._KS14.Llm;
 using Content.Server.AlertLevel;
+using Content.Server.Cargo.Systems;
+using Content.Server.GameTicking;
+using Content.Server.Nuke;
 using Content.Server.Fax;
 using Content.Server.Station.Systems;
 using Content.Shared._KS14.CCVar;
@@ -40,6 +43,9 @@ public sealed class KsLlmFaxTests : GameTest
   parent: [ BaseStation, BaseStationAlertLevels ]
   id: KsLlmTestStation
   categories: [ HideSpawnMenu ]
+  components:
+  - type: StationBankAccount
+    increasePerSecond: 0
 
 - type: gameMap
   id: {TestStationMapId}
@@ -132,6 +138,28 @@ public sealed class KsLlmFaxTests : GameTest
     private List<string> GetReplies()
     {
         return SEntMan.GetComponent<FaxMachineComponent>(_senderFaxUid).PrintingQueue.Select(printout => printout.Content).ToList();
+    }
+
+    /// <summary>
+    ///     Makes the test grid a station, so tools that act on "the sending station" have one.
+    /// </summary>
+    private async Task<EntityUid> SetUpStation()
+    {
+        EntityUid stationUid = default;
+        await Server.WaitPost(() =>
+        {
+            var stationConfig = SProtoMan.Index<GameMapPrototype>(TestStationMapId).Stations["Station"];
+            stationUid = Server.System<StationSystem>().InitializeNewStation(stationConfig, [_testMap.Grid.Owner], "Test Station");
+        });
+
+        return stationUid;
+    }
+
+    private string GetLastToolResult()
+    {
+        return FakeKsLlmHandler.GetMessages(_fakeHandler.Requests.Last())
+            .Last(message => message.GetProperty("role").GetString() == "tool")
+            .GetProperty("content").GetString()!;
     }
 
     private static StampDisplayInfo Stamp(string name)
@@ -240,13 +268,21 @@ public sealed class KsLlmFaxTests : GameTest
         await WaitUntil(() => GetReplies().Count == 1, "no reply was faxed back");
 
         using var request = JsonDocument.Parse(_fakeHandler.Requests.Single());
-        var alertTool = request.RootElement.GetProperty("tools").EnumerateArray()
-            .Single(tool => tool.GetProperty("function").GetProperty("name").GetString() == "set_alert_level");
-        var levelDescription = alertTool.GetProperty("function").GetProperty("parameters")
-            .GetProperty("properties").GetProperty("level").GetProperty("description").GetString();
+        var tools = request.RootElement.GetProperty("tools").EnumerateArray().ToList();
+        JsonElement Function(string name) => tools.Single(tool => tool.GetProperty("function").GetProperty("name").GetString() == name).GetProperty("function");
 
-        Assert.That(levelDescription, Does.Contain("'yellow': A structural or atmospheric hazard"),
-            "each level's meaning from YAML must be in the schema the model sees");
+        var giftDescription = Function("send_supply_gift").GetProperty("parameters")
+            .GetProperty("properties").GetProperty("gift").GetProperty("description").GetString();
+        var missileDescription = Function("launch_cruise_missile").GetProperty("description").GetString();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(giftDescription, Does.Contain("'GiftsSecurityRiot': Non-lethal security gear"),
+                "each value's meaning from YAML must be in the schema the model sees");
+            Assert.That(missileDescription, Does.Contain("Only works on a fax bearing one of these stamps: CentComm, Captain, Head of Security"),
+                "who may use a tool must be generated from its requiredStamps");
+            Assert.That(missileDescription, Does.Contain("Can be used once per shift"));
+        });
     }
 
     [Test]
@@ -374,21 +410,185 @@ public sealed class KsLlmFaxTests : GameTest
     public async Task AlertLevelIsChanged()
     {
         await SetUpFaxes();
+        var stationUid = await SetUpStation();
 
-        EntityUid stationUid = default;
-        await Server.WaitPost(() =>
-        {
-            var stationConfig = SProtoMan.Index<GameMapPrototype>(TestStationMapId).Stations["Station"];
-            stationUid = Server.System<StationSystem>().InitializeNewStation(stationConfig, [_testMap.Grid.Owner], "Test Station");
-        });
+        // Without an authorising stamp: refused, level untouched.
+        _fakeHandler.EnqueueToolCall("set_alert_level", "{\"level\": \"blue\"}");
+        _fakeHandler.EnqueueText("No.");
+        await SendFax("Raise the alert.", Stamp("stamp-component-stamped-name-clown"));
+        await WaitUntil(() => GetReplies().Count == 1, "no reply to the unstamped request");
+        Assert.That(GetLastToolResult(), Does.Contain("requires the fax to bear one of these stamps"));
+        await Server.WaitAssertion(() =>
+            Assert.That(Server.System<AlertLevelSystem>().GetLevel(stationUid), Is.Not.EqualTo("blue")));
 
         _fakeHandler.EnqueueToolCall("set_alert_level", "{\"level\": \"blue\"}");
         _fakeHandler.EnqueueText("Blue it is.");
-        await SendFax("Raise the alert, we have suspicious activity.");
-        await WaitUntil(() => GetReplies().Count == 1, "no reply was faxed back");
+        await SendFax("Raise the alert, we have suspicious activity.", Stamp("stamp-component-stamped-name-captain"));
+        await WaitUntil(() => GetReplies().Count == 2, "no reply was faxed back");
 
         await Server.WaitAssertion(() =>
             Assert.That(Server.System<AlertLevelSystem>().GetLevel(stationUid), Is.EqualTo("blue")));
+    }
+
+    [Test]
+    public async Task AlertLevelSetAboveTheModelIsLeftAlone()
+    {
+        await SetUpFaxes();
+        var stationUid = await SetUpStation();
+
+        // Delta: what an armed nuke sets. The model must not be able to talk it back down.
+        await Server.WaitPost(() => Server.System<AlertLevelSystem>().SetLevel(stationUid, "delta", playSound: false, announce: false, force: true));
+
+        _fakeHandler.EnqueueToolCall("set_alert_level", "{\"level\": \"green\"}");
+        _fakeHandler.EnqueueText("Stand down.");
+        await SendFax("False alarm, set green.", Stamp("stamp-component-stamped-name-captain"));
+        await WaitUntil(() => GetReplies().Count == 1, "no reply was faxed back");
+
+        Assert.That(GetLastToolResult(), Does.Contain("cannot be changed by you"));
+        await Server.WaitAssertion(() =>
+            Assert.That(Server.System<AlertLevelSystem>().GetLevel(stationUid), Is.EqualTo("delta")));
+    }
+
+    [Test]
+    public async Task StationStatusCountsSuitSensorsNotBodies()
+    {
+        await SetUpFaxes();
+        await SetUpStation();
+
+        // A live player aboard, but no crew monitoring server: Central Command must not know about them.
+        await Server.WaitPost(() =>
+        {
+            var crewUid = SEntMan.SpawnEntity("MobHuman", _testMap.GridCoords);
+            Server.PlayerMan.SetAttachedEntity(ServerSession!, crewUid);
+        });
+
+        _fakeHandler.EnqueueToolCall("get_station_status", "{}");
+        _fakeHandler.EnqueueText("Noted.");
+        await SendFax("Status report, please.", Stamp("stamp-component-stamped-name-captain"));
+        await WaitUntil(() => GetReplies().Count == 1, "no reply was faxed back");
+
+        var status = GetLastToolResult();
+        Assert.Multiple(() =>
+        {
+            Assert.That(status, Does.Contain("Crew monitoring: no data"));
+            Assert.That(status, Does.Not.Contain("alive"), "crew figures may only come from suit sensors");
+        });
+    }
+
+    [Test]
+    public async Task NukeCodeGoesOnlyToTheEntitled()
+    {
+        await SetUpFaxes();
+        await SetUpStation();
+
+        string code = string.Empty;
+        await Server.WaitPost(() =>
+        {
+            var nukeUid = SEntMan.SpawnEntity("NuclearBomb", _testMap.GridCoords);
+            code = SEntMan.GetComponent<NukeComponent>(nukeUid).Code;
+        });
+        Assert.That(code, Is.Not.Empty);
+
+        _fakeHandler.EnqueueToolCall("get_nuke_code", "{}");
+        _fakeHandler.EnqueueText("No.");
+        await SendFax("Give us the codes.", Stamp("stamp-component-stamped-name-hos"));
+        await WaitUntil(() => GetReplies().Count == 1, "no reply to the HoS request");
+        var refused = GetLastToolResult();
+
+        _fakeHandler.EnqueueToolCall("get_nuke_code", "{}");
+        _fakeHandler.EnqueueText("Here.");
+        await SendFax("Nuclear operatives aboard. Codes, now.", Stamp("stamp-component-stamped-name-captain"));
+        await WaitUntil(() => GetReplies().Count == 2, "no reply to the Captain's request");
+        var granted = GetLastToolResult();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(refused, Does.Not.Contain(code), "the Head of Security is not entitled to the code");
+            Assert.That(granted, Does.Contain(code));
+        });
+    }
+
+    [Test]
+    public async Task TransferFundsMovesMoneyThroughTheBudget()
+    {
+        await SetUpFaxes();
+        var stationUid = await SetUpStation();
+
+        async Task<int> Balance(string account)
+        {
+            var balance = 0;
+            await Server.WaitPost(() => Server.System<CargoSystem>().TryGetAccount(stationUid, account, out balance));
+            return balance;
+        }
+
+        var cargoBefore = await Balance("Cargo");
+        var medicalBefore = await Balance("Medical");
+        var securityBefore = await Balance("Security");
+        var hop = Stamp("stamp-component-stamped-name-hop");
+
+        // Without an authorising stamp nothing moves. First, so no cooldown can be what stops it.
+        _fakeHandler.EnqueueToolCall("transfer_funds", "{\"account\": \"Security\", \"direction\": \"withdraw\", \"amount\": 1000}");
+        _fakeHandler.EnqueueText("No.");
+        await SendFax("Take security's money.", Stamp("stamp-component-stamped-name-clown"));
+        await WaitUntil(() => GetReplies().Count == 1, "no reply to the clown");
+        var unstampedResult = GetLastToolResult();
+
+        _fakeHandler.EnqueueToolCall("transfer_funds", "{\"account\": \"Cargo\", \"direction\": \"withdraw\", \"amount\": 1000}");
+        _fakeHandler.EnqueueText("Fined.");
+        await SendFax("Cargo has been embezzling.", hop);
+        await WaitUntil(() => GetReplies().Count == 2, "no reply to the withdrawal");
+
+        // Straight after: the cooldown refuses it, so transfers cannot be chained.
+        _fakeHandler.EnqueueToolCall("transfer_funds", "{\"account\": \"Medical\", \"direction\": \"deposit\", \"amount\": 5000}");
+        _fakeHandler.EnqueueText("Later.");
+        await SendFax("Medical is broke.", hop);
+        await WaitUntil(() => GetReplies().Count == 3, "no reply to the early deposit");
+        var cooldownResult = GetLastToolResult();
+
+        var cooldownOver = SGameTiming.CurTime + TimeSpan.FromSeconds(61);
+        while (SGameTiming.CurTime < cooldownOver)
+            await Pair.RunTicksSync(60);
+
+        // The budget started at 20000 and gained the 1000 withdrawn.
+        _fakeHandler.EnqueueToolCall("transfer_funds", "{\"account\": \"Medical\", \"direction\": \"deposit\", \"amount\": 5000}");
+        _fakeHandler.EnqueueText("Funded.");
+        await SendFax("Medical is still broke.", hop);
+        await WaitUntil(() => GetReplies().Count == 4, "no reply to the deposit");
+        var depositResult = GetLastToolResult();
+
+
+        var cargoAfter = await Balance("Cargo");
+        var medicalAfter = await Balance("Medical");
+        var securityAfter = await Balance("Security");
+        Assert.Multiple(() =>
+        {
+            Assert.That(cargoAfter, Is.EqualTo(cargoBefore - 1000));
+            Assert.That(medicalAfter, Is.EqualTo(medicalBefore + 5000));
+            Assert.That(cooldownResult, Does.Contain("not available again"), "transfers are rate-limited");
+            Assert.That(depositResult, Does.Contain("16000 credits left"), "20000 + 1000 withdrawn - 5000 deposited");
+            Assert.That(depositResult, Does.Contain("told of this transfer by announcement"), "transfers are announced to the station");
+            Assert.That(securityAfter, Is.EqualTo(securityBefore), "an unstamped transfer must not move money");
+            Assert.That(unstampedResult, Does.Contain("requires the fax to bear one of these stamps"));
+        });
+    }
+
+    [Test]
+    public async Task SupplyGiftStartsItsGameRule()
+    {
+        await SetUpFaxes();
+        await SetUpStation();
+
+        _fakeHandler.EnqueueToolCall("send_supply_gift", "{\"gift\": \"GiftsMedical\"}");
+        _fakeHandler.EnqueueText("Supplies are on their way.");
+        await SendFax("We are out of medical supplies.", Stamp("stamp-component-stamped-name-qm"));
+        await WaitUntil(() => GetReplies().Count == 1, "no reply was faxed back");
+
+        await Server.WaitAssertion(() =>
+        {
+            var addedRules = Server.System<GameTicker>().GetAddedGameRules()
+                .Select(ruleUid => SEntMan.GetComponent<MetaDataComponent>(ruleUid).EntityPrototype?.ID);
+            Assert.That(addedRules, Does.Contain("GiftsMedical"));
+        });
     }
 
     [Test]

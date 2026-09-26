@@ -1,8 +1,9 @@
 # Descriptions say what a tool does, and nothing about when to use it: that lives in the persona's prompt, once.
+# Who may use a tool is requiredStamps alone - enforced in code, and written into the description the model sees.
 - type: ksLlmTool
   id: KsLlmToolStationStatus
   name: get_station_status
-  description: Get the sending station's name, shift time, alert level, crew count and evacuation status.
+  description: Get the sending station's name, shift time, alert level, crew vitals from the station's crew monitoring suit sensors, and evacuation status.
   logImpact: Low
   effect: !type:KsLlmStationStatusToolEffect
 
@@ -11,6 +12,15 @@
   name: make_announcement
   description: Make a station-wide announcement from Central Command on the sending station.
   cooldown: 120
+  requiredStamps:
+  - stamp-component-stamped-name-centcom
+  - stamp-component-stamped-name-captain
+  - stamp-component-stamped-name-hop
+  - stamp-component-stamped-name-hos
+  - stamp-component-stamped-name-ce
+  - stamp-component-stamped-name-cmo
+  - stamp-component-stamped-name-rd
+  - stamp-component-stamped-name-qm
   parameters:
   - name: message
     type: String
@@ -21,29 +31,33 @@
 - type: ksLlmTool
   id: KsLlmToolAlertLevel
   name: set_alert_level
-  description: Change the sending station's alert level.
+  description: Change the sending station's alert level. Cannot change it away from a level only a higher authority can set.
   cooldown: 60
   logImpact: High
+  requiredStamps:
+  - stamp-component-stamped-name-centcom
+  - stamp-component-stamped-name-captain
+  - stamp-component-stamped-name-hop
+  - stamp-component-stamped-name-hos
   parameters:
   - name: level
     type: String
-    description: The new alert level. Pick the one whose description matches the situation.
+    description: The new alert level. Their meanings are in your instructions.
     enum: [ green, blue, yellow, red ]
-    enumDescriptions:
-      green: No known threat. Normal operations; use once a threat is over.
-      blue: A confirmed threat to the station, such as hostile agents aboard. Security may perform random checks; crew should stay vigilant.
-      yellow: A structural or atmospheric hazard, such as a hull breach, fire or gas leak. Engineering responds; crew keep away from it.
-      red: An immediate threat to the station. Security may use lethal force; crew should shelter and follow present authorities.
   effect: !type:KsLlmAlertLevelToolEffect
     allowedLevels: [ green, blue, yellow, red ]
 
 - type: ksLlmTool
   id: KsLlmToolCruiseMissile
   name: launch_cruise_missile
-  description: Launch the single orbital cruise missile available this shift at a named crew member aboard the station.
+  description: Launch an orbital cruise missile at a named crew member aboard the station.
   maxUsesPerRound: 1
   logImpact: Extreme
   notifyAdmins: true
+  requiredStamps:
+  - stamp-component-stamped-name-centcom
+  - stamp-component-stamped-name-captain
+  - stamp-component-stamped-name-hos
   parameters:
   - name: target_name
     type: String
@@ -55,10 +69,90 @@
   effect: !type:KsLlmCruiseMissileToolEffect
     inertPrototype: SupplyPodMissileNtInert
     armedPrototype: SupplyPodMissileNtExplosive
-    requiredStamps:
-    - stamp-component-stamped-name-centcom
-    - stamp-component-stamped-name-captain
-    - stamp-component-stamped-name-hos
+
+- type: ksLlmTool
+  id: KsLlmToolNukeCode
+  name: get_nuke_code
+  description: Look up the authentication code of the sending station's own nuclear fission explosive. The code arms it only together with the nuclear authentication disk. The code is told to you, not to the sender; pass it on in your reply if you decide to.
+  logImpact: Extreme
+  notifyAdmins: true
+  requiredStamps:
+  - stamp-component-stamped-name-centcom
+  - stamp-component-stamped-name-captain
+  effect: !type:KsLlmNukeCodeToolEffect
+
+- type: ksLlmTool
+  id: KsLlmToolTransferFunds
+  name: transfer_funds
+  description: Move credits between one of the sending station's department accounts and Central Command's own budget. Money is never created - a deposit is paid from the budget, and a withdrawal goes into it. Every transfer is announced to the station automatically. The result states both balances.
+  cooldown: 60
+  logImpact: High
+  notifyAdmins: true
+  requiredStamps:
+  - stamp-component-stamped-name-centcom
+  - stamp-component-stamped-name-captain
+  - stamp-component-stamped-name-hop
+  - stamp-component-stamped-name-qm
+  parameters:
+  - name: account
+    type: String
+    description: The department account.
+    enum: [ Cargo, Engineering, Medical, Science, Security, Service ]
+  - name: direction
+    type: String
+    description: Which way the credits move.
+    enum: [ deposit, withdraw ]
+    enumDescriptions:
+      deposit: From the Central Command budget into the department account.
+      withdraw: From the department account into the Central Command budget.
+  - name: amount
+    type: Integer
+    description: Credits to move.
+    min: 1
+    max: 5000
+  effect: !type:KsLlmTransferFundsToolEffect
+    startingBudget: 20000
+
+- type: ksLlmTool
+  id: KsLlmToolSupplyGift
+  name: send_supply_gift
+  description: Send the station a free shipment, delivered through its cargo department.
+  cooldown: 600
+  maxUsesPerRound: 3
+  logImpact: High
+  notifyAdmins: true
+  requiredStamps:
+  - stamp-component-stamped-name-centcom
+  - stamp-component-stamped-name-captain
+  - stamp-component-stamped-name-hop
+  - stamp-component-stamped-name-qm
+  parameters:
+  - name: gift
+    type: String
+    description: Which shipment to send.
+    enum: [ GiftsPizzaPartySmall, GiftsPizzaPartyLarge, GiftsEngineering, GiftsVendingRestock, GiftsJanitor, GiftsMedical, GiftsSpacingSupplies, GiftsFireProtection, GiftsSecurityRiot ]
+    enumDescriptions:
+      GiftsPizzaPartySmall: A small pizza party for the bar - pizzas, bar supplies and soft drinks.
+      GiftsPizzaPartyLarge: A large pizza party for the bar.
+      GiftsEngineering: Repair materials for engineering - cable, airlock kits, steel, plasteel and glass.
+      GiftsVendingRestock: Restocks for the station's vending machines.
+      GiftsJanitor: Cleaning equipment and light replacements for the janitor.
+      GiftsMedical: Medical and chemistry supplies, emergency kits and a biosuit.
+      GiftsSpacingSupplies: Space hazard protection - internals, inflatable walls and emergency kits.
+      GiftsFireProtection: Fire suits, extinguishers and burn kits.
+      GiftsSecurityRiot: Non-lethal security gear - riot armour, restraints and non-lethal weapons.
+  effect: !type:KsLlmGameRuleToolEffect
+    ruleArgument: gift
+    allowedRules:
+    - GiftsPizzaPartySmall
+    - GiftsPizzaPartyLarge
+    - GiftsEngineering
+    - GiftsVendingRestock
+    - GiftsJanitor
+    - GiftsMedical
+    - GiftsSpacingSupplies
+    - GiftsFireProtection
+    - GiftsSecurityRiot
 
 # The model is told this politely closes the line. It does - by blowing up the sender's fax machine once
 # the reply has printed.
