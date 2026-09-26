@@ -1,0 +1,60 @@
+- type: ksLlmTool
+  id: KsLlmToolStationStatus
+  name: get_station_status
+  description: Get the sending station's name, shift time, alert level, crew count and evacuation status.
+  logImpact: Low
+  effect: !type:KsLlmStationStatusToolEffect
+
+- type: ksLlmTool
+  id: KsLlmToolAnnouncement
+  name: make_announcement
+  description: Make a station-wide announcement from Central Command on the sending station.
+  cooldown: 120
+  parameters:
+  - name: message
+    type: String
+    description: The announcement text.
+    maxLength: 500
+  effect: !type:KsLlmAnnouncementToolEffect
+
+- type: ksLlmTool
+  id: KsLlmToolAlertLevel
+  name: set_alert_level
+  description: Change the sending station's alert level.
+  cooldown: 60
+  logImpact: High
+  parameters:
+  - name: level
+    type: String
+    description: The new alert level.
+    enum: [ green, blue, yellow, red ]
+    enumDescriptions:
+      green: No known threat. Normal operations; use once a threat is over.
+      blue: A confirmed threat to the station, such as hostile agents aboard. Security may perform random checks; crew should stay vigilant.
+      yellow: A structural or atmospheric hazard, such as a hull breach, fire or gas leak. Engineering responds; crew keep away from it.
+      red: An immediate threat to the station. Security may use lethal force; crew should shelter and follow present authorities.
+  effect: !type:KsLlmAlertLevelToolEffect
+    allowedLevels: [ green, blue, yellow, red ]
+
+- type: ksLlmTool
+  id: KsLlmToolCruiseMissile
+  name: launch_cruise_missile
+  description: Launch the single orbital cruise missile available this shift at a named crew member aboard the station. Only permitted on requests bearing the Central Command, Captain, or HoS stamp.
+  maxUsesPerRound: 1
+  logImpact: Extreme
+  notifyAdmins: true
+  parameters:
+  - name: target_name
+    type: String
+    description: The target's exact full name.
+    maxLength: 64
+  - name: armed
+    type: Boolean
+    description: True for a live warhead, false for an inert training round.
+  effect: !type:KsLlmCruiseMissileToolEffect
+    inertPrototype: SupplyPodMissileNtInert
+    armedPrototype: SupplyPodMissileNtExplosive
+    requiredStamps:
+    - stamp-component-stamped-name-centcom
+    - stamp-component-stamped-name-captain
+    - stamp-component-stamped-name-hos

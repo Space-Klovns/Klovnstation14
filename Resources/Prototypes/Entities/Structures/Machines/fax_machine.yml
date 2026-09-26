@@ -96,6 +96,7 @@
   - type: FaxMachine
     name: "Central Command"
     notifyAdmins: true
+  - type: KsLlmFaxRecipient # KS14: faxes here are answered by the LLM persona when klovn.llm.enabled
 
 - type: entity
   parent: FaxMachineBase
