@@ -42,7 +42,7 @@ public sealed partial class KsLlmManager
         }
 
         var wireTools = toolsByName.Values
-            .Select(tool => new KsLlmWireTool(new KsLlmWireFunction(tool.Name, tool.Description, ToElement(BuildParametersSchema(tool)))))
+            .Select(tool => new KsLlmWireTool(new KsLlmWireFunction(tool.Name, DescribeTool(tool), ToElement(BuildParametersSchema(tool)))))
             .ToList();
 
         var personaTools = new PersonaTools
@@ -57,6 +57,26 @@ public sealed partial class KsLlmManager
 
         _personaToolsCache[persona.ID] = personaTools;
         return personaTools;
+    }
+
+    /// <summary>
+    ///     The tool's description as the model sees it: its own text, then the limits the code enforces on it,
+    ///         generated from the prototype so that they cannot disagree with what is actually enforced.
+    /// </summary>
+    private string DescribeTool(KsLlmToolPrototype tool)
+    {
+        var builder = new StringBuilder(tool.Description);
+
+        if (tool.RequiredStamps.Count > 0)
+        {
+            var stampNames = tool.RequiredStamps.Select(stamp => _localizationManager.TryGetString(stamp, out var name) ? name : stamp);
+            builder.Append($" Only works on a fax bearing one of these stamps: {string.Join(", ", stampNames)}.");
+        }
+
+        if (tool.MaxUsesPerRound is { } maxUses)
+            builder.Append(maxUses == 1 ? " Can be used once per shift." : $" Can be used {maxUses} times per shift.");
+
+        return builder.ToString();
     }
 
     private static JsonElement ToElement(JsonNode node)
@@ -162,7 +182,7 @@ public sealed partial class KsLlmManager
         };
     }
 
-    private static string BuildConstrainedInstructions(IReadOnlyCollection<KsLlmToolPrototype> tools, bool allowTools)
+    private string BuildConstrainedInstructions(IReadOnlyCollection<KsLlmToolPrototype> tools, bool allowTools)
     {
         var builder = new StringBuilder();
         builder.Append("Respond with exactly one JSON object and nothing else. To reply: {\"reply\": \"<your reply>\"}.");
@@ -179,7 +199,7 @@ public sealed partial class KsLlmManager
         builder.Append(" Tool results arrive in messages starting with [tool result]. Available tools:");
         foreach (var tool in tools)
         {
-            builder.Append($"\n- {tool.Name}: {tool.Description}");
+            builder.Append($"\n- {tool.Name}: {DescribeTool(tool)}");
             foreach (var parameter in tool.Parameters)
             {
                 var requirement = parameter.Required ? "required" : "optional";

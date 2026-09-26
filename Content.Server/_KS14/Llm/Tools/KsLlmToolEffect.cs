@@ -1,4 +1,5 @@
 using Content.Shared.Paper;
+using Robust.Shared.Prototypes;
 
 namespace Content.Server._KS14.Llm.Tools;
 
@@ -25,6 +26,8 @@ public readonly struct KsLlmToolContext
     public required IEntityManager EntityManager { get; init; }
 
     public required ILocalizationManager Localization { get; init; }
+
+    public required IPrototypeManager PrototypeManager { get; init; }
 
     public required KsLlmToolArguments Arguments { get; init; }
 
