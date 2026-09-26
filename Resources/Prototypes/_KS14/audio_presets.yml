@@ -1,25 +1,29 @@
+# An aux send only ADDS a wet layer on top of the untouched dry signal - it can't filter the dry
+#   path, which the engine reserves for occlusion. So "muffled" here means a loud, very short,
+#   very dark layer that masks the dry highs: a tight box of early reflections with everything
+#   above hfReference cut. Ranges are the EAX reverb limits; values at an end are noted.
 - type: audioPreset
   id: MuffledMask
-  density: 0.8000
-  diffusion: 0.6000
-  gain: 0.2000
-  gainHf: 0.3000
-  gainLf: 1.0000          # clamped to valid max
-  decayTime: 0.2000
-  decayHfRatio: 0.2000
+  density: 1.0000
+  diffusion: 1.0000
+  gain: 1.0000               # max
+  gainHf: 0.0500             # the muffling: wet highs down ~26 dB
+  gainLf: 1.0000             # max
+  decayTime: 0.1000          # min, a mask is not a room
+  decayHfRatio: 0.1000       # min
   decayLfRatio: 1.0000
-  reflectionsGain: 0.0200
-  reflectionsDelay: 0.0020
+  reflectionsGain: 3.1600    # max, the wet layer has to sit over the dry one
+  reflectionsDelay: 0.0000   # min, the "walls" are touching your face
   reflectionsPan: 0,0,0
-  lateReverbGain: 0.1000
-  lateReverbDelay: 0.0030
+  lateReverbGain: 1.0000
+  lateReverbDelay: 0.0000    # min
   lateReverbPan: 0,0,0
-  echoTime: 0.1200
-  echoDepth: 0.0500
-  modulationTime: 0.2000
+  echoTime: 0.2500
+  echoDepth: 0.0000
+  modulationTime: 0.2500
   modulationDepth: 0.0000
-  airAbsorptionGainHf: 0.8920  # minimum valid value
-  hfReference: 1800.0000
+  airAbsorptionGainHf: 0.8920  # min
+  hfReference: 1000.0000     # min, cut starts as low as it can
   lfReference: 300.0000
   roomRolloffFactor: 0.0000
   decayHfLimit: 1

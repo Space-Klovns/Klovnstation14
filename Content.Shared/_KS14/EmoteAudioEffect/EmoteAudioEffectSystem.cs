@@ -1,7 +1,6 @@
 using Content.Shared._KS14.Audio;
 using Content.Shared._KS14.Chat;
 using Content.Shared.Inventory;
-using Robust.Shared.Prototypes;
 
 namespace Content.Shared._KS14.EmoteAudioEffect;
 
