@@ -69,7 +69,11 @@ public sealed partial class NpcSquadDebugSystem : EntitySystem
             if (squadComponent.Members.Count == 0)
                 continue;
 
-            var squad = new SquadDebugSquad { Squad = GetNetEntity(squadUid) };
+            var squad = new SquadDebugSquad
+            {
+                Squad = GetNetEntity(squadUid),
+                Threat = squadComponent.ThreatCoordinates is { } threatCoordinates ? GetNetCoordinates(threatCoordinates) : null,
+            };
 
             foreach (var memberUid in squadComponent.Members)
             {

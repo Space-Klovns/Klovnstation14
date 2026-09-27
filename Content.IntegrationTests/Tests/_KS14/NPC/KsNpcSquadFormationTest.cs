@@ -1,9 +1,11 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._KS14.NPC.Squad;
+using Content.Server.NPC.HTN;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.Damage.Systems;
@@ -54,7 +56,7 @@ public sealed class KsNpcSquadFormationTest : GameTest
 
         await Pair.Server.WaitAssertion(() =>
         {
-            var squads = GetSquads(entManager);
+            var squads = GetSquads(entManager, gridUid);
 
             Assert.That(squads, Has.Count.EqualTo(2));
             Assert.That(squads.Select(squad => squad.Comp.Members.Count).OrderBy(count => count),
@@ -102,7 +104,7 @@ public sealed class KsNpcSquadFormationTest : GameTest
 
         await Pair.Server.WaitPost(() =>
         {
-            var squad = GetSquads(entManager).Single();
+            var squad = GetSquads(entManager, gridUid).Single();
             leaderUid = squad.Comp.Leader!.Value;
 
             var others = squad.Comp.Members.Where(uid => uid != leaderUid).ToList();
@@ -123,7 +125,7 @@ public sealed class KsNpcSquadFormationTest : GameTest
 
         await Pair.Server.WaitAssertion(() =>
         {
-            var squad = GetSquads(entManager).Single();
+            var squad = GetSquads(entManager, gridUid).Single();
 
             Assert.That(squad.Comp.Members, Does.Not.Contain(leaderUid), "a dead NPC leaves its squad");
             Assert.That(squad.Comp.Leader, Is.EqualTo(healthierUid), "the healthiest member should lead");
@@ -152,6 +154,181 @@ public sealed class KsNpcSquadFormationTest : GameTest
     }
 
     /// <summary>
+    ///     Reporting the same threat again does not make it any fresher - members re-report theirs on every
+    ///         replan, which would otherwise keep an unreachable threat alive forever - while a threat somewhere
+    ///         new does.
+    /// </summary>
+    [Test]
+    public async Task TestRepeatedThreatReportDoesNotRefresh()
+    {
+        var (entManager, gridUid) = await SetUpGrid(new Vector2i(-5, -5), new Vector2i(10, 5));
+        var squadSystem = entManager.System<NpcSquadSystem>();
+        EntityUid mobUid = default;
+
+        await Pair.Server.WaitPost(() => mobUid = SpawnAt(entManager, SyndicateMob, gridUid, 0, 0));
+        await Pair.RunTicksSync(SquadUpdateTicks);
+
+        var firstReportedAt = TimeSpan.Zero;
+        await Pair.Server.WaitPost(() =>
+        {
+            squadSystem.ReportThreat(mobUid, new EntityCoordinates(gridUid, new Vector2(5.5f, 0.5f)));
+            firstReportedAt = GetSquads(entManager, gridUid).Single().Comp.ThreatReportedAt;
+        });
+
+        await Pair.RunTicksSync(30);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var squad = GetSquads(entManager, gridUid).Single();
+
+            squadSystem.ReportThreat(mobUid, new EntityCoordinates(gridUid, new Vector2(5.5f, 0.5f)));
+            Assert.That(squad.Comp.ThreatReportedAt, Is.EqualTo(firstReportedAt), "the same threat must not be refreshed");
+
+            squadSystem.ReportThreat(mobUid, new EntityCoordinates(gridUid, new Vector2(9.5f, 0.5f)));
+            Assert.That(squad.Comp.ThreatReportedAt, Is.GreaterThan(firstReportedAt), "a threat somewhere new should be");
+        });
+    }
+
+    /// <summary>
+    ///     NPCs that cannot lead never found a squad: on their own, they stay disorganised.
+    /// </summary>
+    [Test]
+    public async Task TestFollowersAloneStayDisorganised()
+    {
+        var (entManager, gridUid) = await SetUpGrid(new Vector2i(-5, -5), new Vector2i(10, 5));
+        var followerUids = new List<EntityUid>();
+
+        await Pair.Server.WaitPost(() =>
+        {
+            for (var x = 0; x < 3; x++)
+            {
+                followerUids.Add(SpawnAt(entManager, FollowerMob, gridUid, x, 0));
+            }
+        });
+
+        await Pair.RunTicksSync(SquadUpdateTicks);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(GetSquads(entManager, gridUid), Is.Empty, "followers with nobody to lead them should not form a squad");
+            Assert.That(followerUids.All(uid => entManager.GetComponent<NpcSquadMemberComponent>(uid).Squad == null));
+        });
+    }
+
+    /// <summary>
+    ///     A leader gathers followers into its squad; when it dies with no one left able to lead, the squad
+    ///         breaks up rather than a follower taking over.
+    /// </summary>
+    [Test]
+    public async Task TestLeaderlessSquadDisbands()
+    {
+        var (entManager, gridUid) = await SetUpGrid(new Vector2i(-5, -5), new Vector2i(10, 5));
+        var mobStateSystem = entManager.System<MobStateSystem>();
+        EntityUid leaderUid = default;
+        var followerUids = new List<EntityUid>();
+
+        await Pair.Server.WaitPost(() =>
+        {
+            leaderUid = SpawnAt(entManager, SyndicateMob, gridUid, 0, 0);
+            followerUids.Add(SpawnAt(entManager, FollowerMob, gridUid, 1, 0));
+            followerUids.Add(SpawnAt(entManager, FollowerMob, gridUid, 2, 0));
+        });
+
+        await Pair.RunTicksSync(SquadUpdateTicks);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var squad = GetSquads(entManager, gridUid).Single();
+            Assert.That(squad.Comp.Leader, Is.EqualTo(leaderUid), "only the NPC that can lead should lead");
+            Assert.That(squad.Comp.Members, Has.Count.EqualTo(3), "the followers should have joined it");
+
+            mobStateSystem.ChangeMobState(leaderUid, MobState.Dead);
+
+            Assert.That(followerUids.All(uid => entManager.GetComponent<NpcSquadMemberComponent>(uid).Squad == null),
+                "with nobody left who can lead, the squad should break up");
+        });
+    }
+
+    /// <summary>
+    ///     Succession only considers members that can lead, however healthy the others are.
+    /// </summary>
+    [Test]
+    public async Task TestSuccessionSkipsFollowers()
+    {
+        var (entManager, gridUid) = await SetUpGrid(new Vector2i(-5, -5), new Vector2i(10, 5));
+        var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
+        var damageableSystem = entManager.System<DamageableSystem>();
+        var mobStateSystem = entManager.System<MobStateSystem>();
+
+        var leaderUids = new List<EntityUid>();
+        EntityUid followerUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            leaderUids.Add(SpawnAt(entManager, SyndicateMob, gridUid, 0, 0));
+            leaderUids.Add(SpawnAt(entManager, SyndicateMob, gridUid, 1, 0));
+            followerUid = SpawnAt(entManager, FollowerMob, gridUid, 2, 0);
+        });
+
+        await Pair.RunTicksSync(SquadUpdateTicks);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var squad = GetSquads(entManager, gridUid).Single();
+            var leaderUid = squad.Comp.Leader!.Value;
+            var otherLeaderUid = leaderUids.Single(uid => uid != leaderUid);
+
+            // The remaining would-be leader is badly hurt; the follower is untouched.
+            damageableSystem.SetDamage(otherLeaderUid, new DamageSpecifier(protoManager.Index(BluntDamage), 80));
+            mobStateSystem.ChangeMobState(leaderUid, MobState.Dead);
+
+            Assert.That(squad.Comp.Leader, Is.EqualTo(otherLeaderUid), "a follower must never take over, however healthy");
+            Assert.That(squad.Comp.Members, Does.Contain(followerUid));
+        });
+    }
+
+    /// <summary>
+    ///     A leader's shared keys reach members with nothing at that key, and never overwrite what a member has.
+    /// </summary>
+    [Test]
+    public async Task TestLeaderSharesBlackboardKeys()
+    {
+        var (entManager, gridUid) = await SetUpGrid(new Vector2i(-5, -5), new Vector2i(10, 5));
+        EntityUid leaderUid = default;
+        EntityUid emptyFollowerUid = default;
+        EntityUid informedFollowerUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            leaderUid = SpawnAt(entManager, SharingLeaderMob, gridUid, 0, 0);
+            emptyFollowerUid = SpawnAt(entManager, FollowerMob, gridUid, 1, 0);
+            informedFollowerUid = SpawnAt(entManager, FollowerMob, gridUid, 2, 0);
+        });
+
+        await Pair.RunTicksSync(SquadUpdateTicks);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            entManager.GetComponent<HTNComponent>(leaderUid).Blackboard.SetValue(SharedKey, "from the leader");
+            entManager.GetComponent<HTNComponent>(informedFollowerUid).Blackboard.SetValue(SharedKey, "its own");
+        });
+
+        await Pair.RunTicksSync(SquadUpdateTicks);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(GetSquads(entManager, gridUid).Single().Comp.Leader, Is.EqualTo(leaderUid));
+            Assert.Multiple(() =>
+            {
+                Assert.That(entManager.GetComponent<HTNComponent>(emptyFollowerUid).Blackboard.GetValue<string>(SharedKey),
+                    Is.EqualTo("from the leader"), "a member with nothing at the key should get the leader value");
+                Assert.That(entManager.GetComponent<HTNComponent>(informedFollowerUid).Blackboard.GetValue<string>(SharedKey),
+                    Is.EqualTo("its own"), "a member value must not be overwritten");
+            });
+        });
+    }
+
+    /// <summary>
     ///     Hostile factions standing together never share a squad.
     /// </summary>
     [Test]
@@ -171,7 +348,7 @@ public sealed class KsNpcSquadFormationTest : GameTest
 
         await Pair.Server.WaitAssertion(() =>
         {
-            var squads = GetSquads(entManager);
+            var squads = GetSquads(entManager, gridUid);
             Assert.That(squads, Has.Count.EqualTo(2));
 
             foreach (var squad in squads)
@@ -218,7 +395,7 @@ public sealed class KsNpcSquadFormationTest : GameTest
 
         await Pair.Server.WaitPost(() =>
         {
-            Assert.That(GetSquads(entManager), Has.Count.EqualTo(2), "the lone NPC starts out of range, in its own squad");
+            Assert.That(GetSquads(entManager, gridUid), Has.Count.EqualTo(2), "the lone NPC starts out of range, in its own squad");
             transformSystem.SetCoordinates(loneUid, new EntityCoordinates(gridUid, new Vector2(6.5f, 0.5f)));
         });
 
@@ -227,7 +404,7 @@ public sealed class KsNpcSquadFormationTest : GameTest
         var sizes = System.Array.Empty<int>();
         await Pair.Server.WaitPost(() =>
         {
-            sizes = GetSquads(entManager).Select(squad => squad.Comp.Members.Count).OrderBy(count => count).ToArray();
+            sizes = GetSquads(entManager, gridUid).Select(squad => squad.Comp.Members.Count).OrderBy(count => count).ToArray();
         });
 
         return sizes;
@@ -250,16 +427,20 @@ public sealed class KsNpcSquadFormationTest : GameTest
     }
 
     /// <summary>
-    ///     Every live squad. An emptied squad is only queued for deletion, so it is skipped here.
+    ///     Every live squad led from this test's grid. Pooled pairs are reused between tests, so squads from
+    ///         earlier tests may still exist on other maps. An emptied squad is only queued for deletion, so it
+    ///         is skipped here.
     /// </summary>
-    private static List<Entity<NpcSquadComponent>> GetSquads(IEntityManager entManager)
+    private static List<Entity<NpcSquadComponent>> GetSquads(IEntityManager entManager, EntityUid gridUid)
     {
         var squads = new List<Entity<NpcSquadComponent>>();
         var squadEnumerator = entManager.EntityQueryEnumerator<NpcSquadComponent>();
 
         while (squadEnumerator.MoveNext(out var squadUid, out var squadComponent))
         {
-            if (squadComponent.Members.Count > 0)
+            if (squadComponent.Members.Count > 0 &&
+                squadComponent.Leader is { } leaderUid &&
+                entManager.GetComponent<TransformComponent>(leaderUid).GridUid == gridUid)
                 squads.Add((squadUid, squadComponent));
         }
 

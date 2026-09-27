@@ -41,6 +41,11 @@ public sealed class SquadDebugSquad
     public List<NetCoordinates> Thresholds = new();
 
     /// <summary>
+    ///     The last reported threat, which the squad goes to while it is recent.
+    /// </summary>
+    public NetCoordinates? Threat;
+
+    /// <summary>
     ///     Each member's current position paired with its assigned cover position.
     /// </summary>
     public List<SquadDebugAssignment> Assignments = new();

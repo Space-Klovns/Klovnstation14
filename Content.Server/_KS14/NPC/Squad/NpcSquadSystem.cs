@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Content.Server.NPC.Components;
 using Content.Server.NPC.HTN;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
@@ -17,14 +18,17 @@ namespace Content.Server._KS14.NPC.Squad;
 /// <summary>
 ///     Groups NPCs with <see cref="NpcSquadMemberComponent"/> into squads with exactly one leader each.
 ///
-///     Unassigned NPCs join the nearest friendly squad in range and line of sight that has room, or found their
-///         own. Squads that drop below their assimilation threshold merge into a nearby one. When a leader dies,
-///         the healthiest remaining member takes over; a squad with no members left is deleted.
+///     Unassigned NPCs join the nearest friendly squad in range and line of sight that has room, or, if they can
+///         lead, found their own. Squads that drop below their assimilation threshold merge into a nearby one. When
+///         a leader dies, the healthiest remaining member that can lead takes over; a squad with nobody left who can
+///         lead breaks up, and one with no members at all is deleted. Leaders hand their
+///         <see cref="NpcSquadMemberComponent.SharedBlackboardKeys"/> down to members that have nothing there.
 /// </summary>
 public sealed partial class NpcSquadSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private DamageableSystem _damageableSystem = default!;
+    [Dependency] private HTNSystem _htnSystem = default!;
     [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
     [Dependency] private ExamineSystemShared _examineSystem = default!;
     [Dependency] private MetaDataSystem _metaDataSystem = default!;
@@ -38,8 +42,15 @@ public sealed partial class NpcSquadSystem : EntitySystem
     [Dependency] private EntityQuery<HTNComponent> _htnQuery = default!;
     [Dependency] private EntityQuery<DamageableComponent> _damageableQuery = default!;
     [Dependency] private EntityQuery<NpcFactionMemberComponent> _factionMemberQuery = default!;
+    [Dependency] private EntityQuery<NPCRangedCombatComponent> _rangedCombatQuery = default!;
+    [Dependency] private EntityQuery<NPCMeleeCombatComponent> _meleeCombatQuery = default!;
 
     private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    ///     How far, in tiles, a reported threat must be from the current one to count as new.
+    /// </summary>
+    private const float ThreatRefreshDistance = 1f;
 
     private TimeSpan _nextUpdate;
 
@@ -60,6 +71,7 @@ public sealed partial class NpcSquadSystem : EntitySystem
         PruneMembers();
         AssignUnsquadded();
         AssimilateSmallSquads();
+        ShareLeaderBlackboards();
     }
 
     #region Public API
@@ -91,7 +103,65 @@ public sealed partial class NpcSquadSystem : EntitySystem
         if (!TryGetSquad(memberUid, out var squadEntity))
             return;
 
-        squadEntity.Value.Comp.ThreatCoordinates = threatCoordinates;
+        var squadComponent = squadEntity.Value.Comp;
+
+        // The same position reported again is not new information. Members re-report their last known threat on
+        //      every replan, so refreshing the time here would keep an unreachable threat fresh forever.
+        if (squadComponent.ThreatCoordinates is { } existingCoordinates &&
+            existingCoordinates.TryDistance(EntityManager, _transformSystem, threatCoordinates, out var distance) &&
+            distance < ThreatRefreshDistance)
+            return;
+
+        squadComponent.ThreatCoordinates = threatCoordinates;
+        squadComponent.ThreatReportedAt = _gameTiming.CurTime;
+    }
+
+    /// <summary>
+    ///     Forgets <paramref name="memberUid"/>'s squad's threat and contact, for when the fight is over.
+    /// </summary>
+    public void ClearThreat(EntityUid memberUid)
+    {
+        if (!TryGetSquad(memberUid, out var squadEntity))
+            return;
+
+        squadEntity.Value.Comp.ThreatCoordinates = null;
+        squadEntity.Value.Comp.LastContactAt = null;
+    }
+
+    /// <summary>
+    ///     Records that <paramref name="memberUid"/> has a hostile in its sights at
+    ///         <paramref name="threatCoordinates"/>: the squad is in contact, and that is its threat.
+    /// </summary>
+    public void ReportContact(EntityUid memberUid, EntityCoordinates threatCoordinates)
+    {
+        if (!TryGetSquad(memberUid, out var squadEntity))
+            return;
+
+        squadEntity.Value.Comp.LastContactAt = _gameTiming.CurTime;
+        ReportThreat(memberUid, threatCoordinates);
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="memberUid"/>'s squad is fighting: a member is attacking something right now, or
+    ///         one had contact within <paramref name="window"/>. False with no squad.
+    /// </summary>
+    public bool IsEngaged(EntityUid memberUid, TimeSpan window)
+    {
+        if (!TryGetSquad(memberUid, out var squadEntity))
+            return false;
+
+        var squadComponent = squadEntity.Value.Comp;
+
+        if (squadComponent.LastContactAt is { } lastContactAt && _gameTiming.CurTime - lastContactAt <= window)
+            return true;
+
+        foreach (var squadMemberUid in squadComponent.Members)
+        {
+            if (_rangedCombatQuery.HasComp(squadMemberUid) || _meleeCombatQuery.HasComp(squadMemberUid))
+                return true;
+        }
+
+        return false;
     }
 
     #endregion
@@ -175,8 +245,9 @@ public sealed partial class NpcSquadSystem : EntitySystem
 
             if (TryFindJoinableSquad(memberEntity, extraMembers: 1, excludedSquadUid: null, out var squadUid))
                 AddToSquad(memberEntity, squadUid.Value);
-            else
+            else if (squadMemberComponent.CanLead)
                 FoundSquad(memberEntity);
+            // Otherwise it stays on its own until a squad it can join comes along.
         }
     }
 
@@ -358,21 +429,85 @@ public sealed partial class NpcSquadSystem : EntitySystem
             return;
         }
 
-        if (squadComponent.Leader == memberEntity.Owner)
-            squadComponent.Leader = GetHealthiest(squadComponent.Members);
+        if (squadComponent.Leader != memberEntity.Owner)
+            return;
+
+        if (GetHealthiestLeader(squadComponent.Members) is { } successorUid)
+            squadComponent.Leader = successorUid;
+        else
+            Disband((squadUid, squadComponent));
     }
 
     /// <summary>
-    ///     The member with the most health left as a fraction of its critical threshold, so NPCs with
-    ///         different thresholds compare fairly.
+    ///     Breaks up a squad nobody is left to lead. Its members go back to being on their own, and join another
+    ///         squad if one comes along.
     /// </summary>
-    private EntityUid GetHealthiest(List<EntityUid> memberUids)
+    private void Disband(Entity<NpcSquadComponent> squadEntity)
     {
-        var bestUid = memberUids[0];
+        foreach (var memberUid in squadEntity.Comp.Members)
+        {
+            if (_squadMemberQuery.TryComp(memberUid, out var squadMemberComponent) && squadMemberComponent.Squad == squadEntity.Owner)
+                squadMemberComponent.Squad = null;
+        }
+
+        squadEntity.Comp.Members.Clear();
+        squadEntity.Comp.Leader = null;
+        squadEntity.Comp.Revision++;
+        QueueDel(squadEntity);
+    }
+
+    /// <summary>
+    ///     Copies each leader's <see cref="NpcSquadMemberComponent.SharedBlackboardKeys"/> into the blackboard of
+    ///         every member that has nothing at that key, and has those members replan so they act on it.
+    /// </summary>
+    private void ShareLeaderBlackboards()
+    {
+        var squadEnumerator = EntityQueryEnumerator<NpcSquadComponent>();
+        while (squadEnumerator.MoveNext(out _, out var squadComponent))
+        {
+            if (squadComponent.Leader is not { } leaderUid ||
+                !_squadMemberQuery.TryComp(leaderUid, out var leaderSquadMemberComponent) ||
+                leaderSquadMemberComponent.SharedBlackboardKeys.Count == 0 ||
+                !_htnQuery.TryComp(leaderUid, out var leaderHtnComponent))
+                continue;
+
+            foreach (var memberUid in squadComponent.Members)
+            {
+                if (memberUid == leaderUid || !_htnQuery.TryComp(memberUid, out var memberHtnComponent))
+                    continue;
+
+                var shared = false;
+
+                foreach (var key in leaderSquadMemberComponent.SharedBlackboardKeys)
+                {
+                    if (memberHtnComponent.Blackboard.ContainsKey(key) ||
+                        !leaderHtnComponent.Blackboard.TryGetValue<object>(key, out var value, EntityManager))
+                        continue;
+
+                    memberHtnComponent.Blackboard.SetValue(key, value);
+                    shared = true;
+                }
+
+                if (shared)
+                    _htnSystem.Replan(memberHtnComponent);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     The member able to lead with the most health left as a fraction of its critical threshold, so NPCs with
+    ///         different thresholds compare fairly. Null if none can lead.
+    /// </summary>
+    private EntityUid? GetHealthiestLeader(List<EntityUid> memberUids)
+    {
+        EntityUid? bestUid = null;
         var bestHealth = float.MinValue;
 
         foreach (var memberUid in memberUids)
         {
+            if (!_squadMemberQuery.TryComp(memberUid, out var squadMemberComponent) || !squadMemberComponent.CanLead)
+                continue;
+
             var health = GetHealthFraction(memberUid);
             if (health <= bestHealth)
                 continue;

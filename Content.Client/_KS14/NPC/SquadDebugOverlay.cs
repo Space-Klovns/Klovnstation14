@@ -9,7 +9,7 @@ namespace Content.Client._KS14.NPC;
 /// <summary>
 ///     Draws every NPC squad in its own colour: a double ring on the leader, single rings on members, lines
 ///         from the leader to each member, squares on the room thresholds the squad is covering, and a line
-///         from each member to its assigned cover position.
+///         from each member to its assigned cover position. The squad's threat is a cross.
 /// </summary>
 public sealed partial class SquadDebugOverlay : Overlay
 {
@@ -23,6 +23,7 @@ public sealed partial class SquadDebugOverlay : Overlay
     private const float MemberRadius = 0.4f;
     private const float ThresholdHalfSize = 0.3f;
     private const float CoverRadius = 0.15f;
+    private const float ThreatHalfSize = 0.35f;
 
     protected override void Draw(in OverlayDrawArgs args)
     {
@@ -61,6 +62,12 @@ public sealed partial class SquadDebugOverlay : Overlay
 
                 var halfSize = new Vector2(ThresholdHalfSize, ThresholdHalfSize);
                 worldHandle.DrawRect(new Box2(thresholdPosition - halfSize, thresholdPosition + halfSize), color, false);
+            }
+
+            if (squad.Threat is { } threat && TryGetPosition(threat, args.MapId, out var threatPosition))
+            {
+                worldHandle.DrawLine(threatPosition - new Vector2(ThreatHalfSize, ThreatHalfSize), threatPosition + new Vector2(ThreatHalfSize, ThreatHalfSize), color);
+                worldHandle.DrawLine(threatPosition - new Vector2(ThreatHalfSize, -ThreatHalfSize), threatPosition + new Vector2(ThreatHalfSize, -ThreatHalfSize), color);
             }
 
             foreach (var assignment in squad.Assignments)

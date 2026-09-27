@@ -63,6 +63,21 @@ public sealed class KsNpcSquadCoverTest : GameTest
                     "each member should cover a different threshold");
             });
 
+            // With fire lanes on (the default), no member's line to its threshold runs through another member,
+            //      and no member stands in another's line.
+            foreach (var assignment in assignments)
+            {
+                foreach (var other in assignments)
+                {
+                    if (other.Equals(assignment))
+                        continue;
+
+                    var lane = new NpcFireLane(assignment.Coordinates.Position, plan.Thresholds[assignment.ThresholdIndex].AimPoint);
+                    Assert.That(NpcSquadFireLaneSystem.IsInLane(lane, other.Coordinates.Position), Is.False,
+                        $"{other.Coordinates.Position} stands in the line of fire from {assignment.Coordinates.Position}");
+                }
+            }
+
             foreach (var assignment in assignments)
             {
                 var threshold = plan.Thresholds[assignment.ThresholdIndex];
@@ -166,10 +181,53 @@ public sealed class KsNpcSquadCoverTest : GameTest
     }
 
     /// <summary>
+    ///     <c>wallPreference: 1</c> puts the NPC against a wall, and <c>-1</c> out in the open, in the same room.
+    ///         Each is checked against the other, so a knob that did nothing fails one of the two.
+    /// </summary>
+    [Test]
+    public async Task TestWallPreferenceIsHonoured()
+    {
+        var wallHugger = await GetSoloAssignment(windowTile: null, pillar: false, WallHuggerMob);
+        var openFloor = await GetSoloAssignment(windowTile: null, pillar: false, OpenFloorMob);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(CountRoomWalls(wallHugger), Is.GreaterThanOrEqualTo(3),
+                $"a wall-preferring NPC picked {wallHugger.Coordinates.Position}, out in the open");
+            Assert.That(CountRoomWalls(openFloor), Is.EqualTo(0),
+                $"an open-preferring NPC picked {openFloor.Coordinates.Position}, against a wall");
+        });
+    }
+
+    /// <summary>
+    ///     How many of the eight tiles around a cover position are outside the 7x6 test room.
+    /// </summary>
+    private static int CountRoomWalls(NpcSquadCoverAssignment assignment)
+    {
+        var tile = new Vector2i((int)MathF.Floor(assignment.Coordinates.Position.X), (int)MathF.Floor(assignment.Coordinates.Position.Y));
+        var count = 0;
+
+        for (var x = -1; x <= 1; x++)
+        {
+            for (var y = -1; y <= 1; y++)
+            {
+                if (x == 0 && y == 0)
+                    continue;
+
+                var neighbour = tile + new Vector2i(x, y);
+                if (neighbour.X is < 0 or > 6 || neighbour.Y is < 0 or > 5)
+                    count++;
+            }
+        }
+
+        return count;
+    }
+
+    /// <summary>
     ///     A lone NPC in the 7x6 room with only the west airlock, an optional window in the wall, and an optional
     ///         pillar at x 3, y 1..3.
     /// </summary>
-    private async Task<NpcSquadCoverAssignment> GetSoloAssignment(Vector2i? windowTile, bool pillar)
+    private async Task<NpcSquadCoverAssignment> GetSoloAssignment(Vector2i? windowTile, bool pillar, string mobPrototype = SyndicateMob)
     {
         var server = Pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
@@ -201,7 +259,7 @@ public sealed class KsNpcSquadCoverTest : GameTest
                 }
             }
 
-            memberUid = SpawnAt(entManager, SyndicateMob, gridUid, 5, 4);
+            memberUid = SpawnAt(entManager, mobPrototype, gridUid, 5, 4);
         });
 
         await Pair.RunTicksSync(SettleTicks);
@@ -213,6 +271,88 @@ public sealed class KsNpcSquadCoverTest : GameTest
         });
 
         return assignment;
+    }
+
+    /// <summary>
+    ///     A threat in the next room over moves the squad: the plan covers the room the threat is in, and every
+    ///         cover position is in it, not in the room the squad is standing in.
+    /// </summary>
+    [Test]
+    public async Task TestSquadGoesToThreatRoom()
+    {
+        var plan = await PlanWithThreatInTwoRooms(new Vector2(11.5f, 2.5f));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.SeededFromThreat, "the plan should be for the threat's room");
+            Assert.That(plan.RoomTiles, Does.Contain(new Vector2i(11, 2)), "the threat's room should be covered");
+            Assert.That(plan.RoomTiles, Does.Not.Contain(new Vector2i(3, 2)), "the squad's own room should not be");
+            Assert.That(plan.Assignments.Values.All(assignment => assignment.Coordinates.Position.X > 8f),
+                "every cover position should be in the threat's room");
+        });
+    }
+
+    /// <summary>
+    ///     A threat last seen in the doorway between the rooms means the room beyond it, not the squad's own.
+    /// </summary>
+    [Test]
+    public async Task TestThreatInDoorwayMeansRoomBeyond()
+    {
+        var plan = await PlanWithThreatInTwoRooms(new Vector2(7.5f, 2.5f));
+
+        Assert.That(plan.RoomTiles, Does.Contain(new Vector2i(11, 2)), "a threat in the doorway should send the squad through it");
+    }
+
+    /// <summary>
+    ///     Two 7x6 rooms side by side, joined by an airlock at (7, 2), with a second airlock out of the west room.
+    ///         The squad of two stands in the west room; the threat is reported at <paramref name="threatPosition"/>.
+    /// </summary>
+    private async Task<NpcSquadCoverPlan> PlanWithThreatInTwoRooms(Vector2 threatPosition)
+    {
+        var server = Pair.Server;
+        var entManager = server.ResolveDependency<IEntityManager>();
+        var tileDefinitionManager = server.ResolveDependency<ITileDefinitionManager>();
+        var coverSystem = entManager.System<NpcSquadCoverSystem>();
+        var squadSystem = entManager.System<NpcSquadSystem>();
+        var map = await Pair.CreateTestMap();
+
+        EntityUid gridUid = default;
+        var squadMembers = new List<EntityUid>();
+
+        await server.WaitPost(() =>
+        {
+            gridUid = MakeGrid(entManager, tileDefinitionManager, map.MapId, map.Grid, new Vector2i(-10, -10), new Vector2i(20, 10)).Owner;
+
+            for (var x = -1; x <= 15; x++)
+            {
+                for (var y = -1; y <= 6; y++)
+                {
+                    var isWall = x is -1 or 7 or 15 || y is -1 or 6;
+                    if (!isWall)
+                        continue;
+
+                    var tile = new Vector2i(x, y);
+                    SpawnAt(entManager, tile == WestOpening || tile == new Vector2i(7, 2) ? "Airlock" : "WallSolid", gridUid, x, y);
+                }
+            }
+
+            squadMembers.Add(SpawnAt(entManager, SyndicateMob, gridUid, 3, 2));
+            squadMembers.Add(SpawnAt(entManager, SyndicateMob, gridUid, 4, 3));
+        });
+
+        await Pair.RunTicksSync(SettleTicks);
+
+        NpcSquadCoverPlan plan = default!;
+        await server.WaitAssertion(() =>
+        {
+            squadSystem.ReportThreat(squadMembers[0], new EntityCoordinates(gridUid, threatPosition));
+
+            Assert.That(coverSystem.TryGetAssignment(squadMembers[0], out _), "the squad should find a room to cover");
+            Assert.That(squadSystem.TryGetSquad(squadMembers[0], out var squad));
+            plan = squad!.Value.Comp.CoverPlan!;
+        });
+
+        return plan;
     }
 
     private enum RoomKind

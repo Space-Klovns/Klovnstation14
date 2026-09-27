@@ -19,6 +19,12 @@ public sealed class NpcSquadCoverPlan
 
     public bool IsHallway;
 
+    /// <summary>
+    ///     True when the room is the one the squad's threat is in, rather than the one its leader is in, so the
+    ///         squad is heading there rather than already holding it.
+    /// </summary>
+    public bool SeededFromThreat;
+
     public readonly HashSet<Vector2i> RoomTiles = new();
 
     public readonly List<NpcSquadThreshold> Thresholds = new();

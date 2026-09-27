@@ -8,6 +8,7 @@ using Content.Server._KS14.NPC.Pathfinding; // KS14
 using Content.Shared.Destructible; // Trauma - destructible moved to shared
 using Content.Server.NPC.Systems;
 using Content.Shared.Access.Components;
+using Content.Shared.Access.Systems; // KS14
 using Content.Shared.Administration;
 using Content.Shared.Climbing.Components;
 using Content.Shared.Doors.Components;
@@ -53,6 +54,7 @@ namespace Content.Server.NPC.Pathfinding
         [Dependency] private SharedMapSystem _maps = default!;
         [Dependency] private SharedPhysicsSystem _physics = default!;
         [Dependency] private SharedTransformSystem _transform = default!;
+        [Dependency] private AccessReaderSystem _accessReaderSystem = default!; // KS14
 
         [Dependency] private EntityQuery<AccessReaderComponent> _accessReaderQuery = default!;
         [Dependency] private EntityQuery<DestructibleComponent> _destructibleQuery = default!;

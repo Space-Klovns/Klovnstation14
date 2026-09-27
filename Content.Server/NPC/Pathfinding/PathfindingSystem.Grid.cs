@@ -513,10 +513,13 @@ public sealed partial class PathfindingSystem
                             if (!colliding)
                                 continue;
 
-                            // KS14: ANK: check contents of the AccessReaderComponent instead of solely relying on its existence
-                            if (_accessReaderQuery.TryGetComponent(ent, out var accessReaderComponent) &&
-                                accessReaderComponent.AccessKeys.Count == 0 &&
-                                accessReaderComponent.AccessLists.Count == 0)
+                            // KS14 start: flag only readers that actually restrict, reading the one that decides -
+                            //      an airlock's own reader is empty and defers to its door electronics board
+                            if (_accessReaderQuery.HasComponent(ent) &&
+                                _accessReaderSystem.GetMainAccessReader(ent, out var mainAccessReader) &&
+                                mainAccessReader.Value.Comp.Enabled &&
+                                (mainAccessReader.Value.Comp.AccessKeys.Count > 0 || mainAccessReader.Value.Comp.AccessLists.Count > 0))
+                            // KS14 end
                             {
                                 flags |= PathfindingBreadcrumbFlag.Access;
                             }

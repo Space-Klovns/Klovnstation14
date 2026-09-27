@@ -28,6 +28,19 @@ public sealed partial class NpcSquadComponent : Component
     public EntityCoordinates? ThreatCoordinates;
 
     /// <summary>
+    ///     When <see cref="ThreatCoordinates"/> was last reported. An old threat stops being worth going to.
+    /// </summary>
+    [ViewVariables]
+    public TimeSpan ThreatReportedAt;
+
+    /// <summary>
+    ///     When a member last had a hostile in its sights. Unlike <see cref="ThreatReportedAt"/>, this is only
+    ///         ever set by an actual sighting, never by a member repeating a threat it already knew about.
+    /// </summary>
+    [ViewVariables]
+    public TimeSpan? LastContactAt;
+
+    /// <summary>
     ///     Bumped on every membership or leader change, so cached work keyed on the squad's makeup can tell
     ///         when it has gone stale.
     /// </summary>

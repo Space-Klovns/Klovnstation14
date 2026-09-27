@@ -56,9 +56,14 @@ public sealed partial class NpcSquadCoverSystem
     ///     Finds the room containing <paramref name="seedTile"/>, filling <paramref name="plan"/>'s room tiles
     ///         and thresholds. Returns false if the seed is not in anything recognisable as a room.
     /// </summary>
+    /// <param name="awayFromTile">
+    ///     If the seed is not itself floor - a threat last seen in a doorway, say - the neighbouring floor tile
+    ///         farthest from this is used instead, which is the far side of that doorway from the squad.
+    /// </param>
     private bool TryAnalyseRoom(
         Entity<MapGridComponent> grid,
         Vector2i seedTile,
+        Vector2i awayFromTile,
         int collisionLayer,
         int collisionMask,
         NpcSquadCoverSettings settings,
@@ -72,7 +77,7 @@ public sealed partial class NpcSquadCoverSystem
             CollisionMask = collisionMask,
         };
 
-        if (GetTileKind(analysis, seedTile) != TileKind.Walkable)
+        if (!TryResolveSeed(analysis, seedTile, awayFromTile, out seedTile))
             return false;
 
         // Doors alone bound most rooms. Only when that leaks out into something too big to be one does it
@@ -97,6 +102,34 @@ public sealed partial class NpcSquadCoverSystem
         }
 
         return plan.Thresholds.Count > 0;
+    }
+
+    private bool TryResolveSeed(RoomAnalysis analysis, Vector2i seedTile, Vector2i awayFromTile, out Vector2i resolvedTile)
+    {
+        resolvedTile = seedTile;
+
+        if (GetTileKind(analysis, seedTile) == TileKind.Walkable)
+            return true;
+
+        var found = false;
+        var bestDistance = float.MinValue;
+
+        foreach (var offset in NeighbourOffsets)
+        {
+            var neighbourTile = seedTile + offset;
+            if (GetTileKind(analysis, neighbourTile) != TileKind.Walkable)
+                continue;
+
+            var distance = (neighbourTile - awayFromTile).LengthSquared;
+            if (distance <= bestDistance)
+                continue;
+
+            resolvedTile = neighbourTile;
+            bestDistance = distance;
+            found = true;
+        }
+
+        return found;
     }
 
     /// <summary>

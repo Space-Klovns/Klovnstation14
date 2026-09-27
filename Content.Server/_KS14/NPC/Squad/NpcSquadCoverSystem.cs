@@ -22,6 +22,7 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private ExamineSystemShared _examineSystem = default!;
+    [Dependency] private NpcSquadFireLaneSystem _npcSquadFireLaneSystem = default!;
     [Dependency] private NpcSquadSystem _npcSquadSystem = default!;
     [Dependency] private NpcTacticalPositionClaimSystem _npcTacticalPositionClaimSystem = default!;
     [Dependency] private PathfindingSystem _pathfindingSystem = default!;
@@ -55,6 +56,49 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
         return plan.Assignments.TryGetValue(memberUid, out assignment);
     }
 
+    /// <summary>
+    ///     Where <paramref name="memberUid"/>'s squad should hold when it has no room to cover: the threat it is
+    ///         going to, if there is one, otherwise its leader. The member's own position if it has no squad.
+    /// </summary>
+    public EntityCoordinates GetHoldAnchor(EntityUid memberUid)
+    {
+        if (!_npcSquadSystem.TryGetSquad(memberUid, out var squadEntity) ||
+            squadEntity.Value.Comp.Leader is not { } leaderUid)
+            return Transform(memberUid).Coordinates;
+
+        if (_squadMemberQuery.TryComp(leaderUid, out var leaderSquadMemberComponent) &&
+            TryGetThreatObjective(squadEntity.Value, leaderSquadMemberComponent.Cover, out var threatCoordinates))
+            return threatCoordinates;
+
+        return Transform(leaderUid).Coordinates;
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="memberUid"/>'s squad still has a threat recent enough to go to.
+    /// </summary>
+    public bool HasThreatObjective(EntityUid memberUid)
+    {
+        return _npcSquadSystem.TryGetSquad(memberUid, out var squadEntity) &&
+            squadEntity.Value.Comp.Leader is { } leaderUid &&
+            _squadMemberQuery.TryComp(leaderUid, out var leaderSquadMemberComponent) &&
+            TryGetThreatObjective(squadEntity.Value, leaderSquadMemberComponent.Cover, out _);
+    }
+
+    /// <summary>
+    ///     The squad's threat, if it was reported recently enough to still be worth going to.
+    /// </summary>
+    private bool TryGetThreatObjective(Entity<NpcSquadComponent> squadEntity, NpcSquadCoverSettings settings, out EntityCoordinates threatCoordinates)
+    {
+        threatCoordinates = default;
+
+        if (squadEntity.Comp.ThreatCoordinates is not { } coordinates ||
+            _gameTiming.CurTime > squadEntity.Comp.ThreatReportedAt + TimeSpan.FromSeconds(settings.ThreatObjectiveLifetime))
+            return false;
+
+        threatCoordinates = coordinates;
+        return true;
+    }
+
     private NpcSquadCoverPlan? EnsurePlan(Entity<NpcSquadComponent> squadEntity)
     {
         if (squadEntity.Comp.Leader is not { } leaderUid ||
@@ -86,6 +130,11 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
 
         if (!plan.HasRoom)
             return false;
+
+        // A room chosen because the threat is in it stays chosen while the squad makes its way there; the
+        //      threat moving is what retargets it, checked above.
+        if (plan.SeededFromThreat)
+            return !TryGetThreatObjective(squadEntity, settings, out _);
 
         var leaderTransform = Transform(leaderUid);
         if (leaderTransform.GridUid != plan.GridUid || !_mapGridQuery.TryComp(plan.GridUid, out var mapGridComponent))
@@ -121,10 +170,20 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
         if (collisionLayer == 0 && collisionMask == 0)
             (collisionLayer, collisionMask) = ((int)CollisionGroup.MobLayer, (int)CollisionGroup.MobMask);
 
-        var seedTile = _mapSystem.TileIndicesFor(gridEntity, leaderTransform.Coordinates);
+        // Go to the threat, if the squad knows of one on this grid; otherwise hold where the leader is.
+        var leaderTile = _mapSystem.TileIndicesFor(gridEntity, leaderTransform.Coordinates);
+        var seedTile = leaderTile;
+
+        if (TryGetThreatObjective(squadEntity, settings, out var threatCoordinates) &&
+            _transformSystem.GetGrid(threatCoordinates) == gridUid)
+        {
+            seedTile = _mapSystem.TileIndicesFor(gridEntity, threatCoordinates);
+            plan.SeededFromThreat = true;
+        }
+
         var exposureTiles = new List<Vector2i>();
 
-        if (!TryAnalyseRoom(gridEntity, seedTile, collisionLayer, collisionMask, settings, plan, exposureTiles))
+        if (!TryAnalyseRoom(gridEntity, seedTile, leaderTile, collisionLayer, collisionMask, settings, plan, exposureTiles))
         {
             plan.RoomTiles.Clear();
             plan.Thresholds.Clear();
@@ -166,6 +225,11 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
         var unassignedUids = new List<EntityUid>(squadEntity.Comp.Members);
         var claimTtl = TimeSpan.FromSeconds(settings.PlanLifetime + 5f);
 
+        // Grid-local, like everything else here. Filled as members are placed, so each later pick keeps out of
+        //      the lines of fire of those before it, and keeps them out of its own.
+        var assignedPositions = new List<Vector2>();
+        var assignedLanes = new List<NpcFireLane>();
+
         // Round-robin over the thresholds in priority order, so each gets one member before any gets two, and
         //      surplus members double up on the most important ones. Each claim spreads the next pick apart.
         while (unassignedUids.Count > 0)
@@ -177,11 +241,14 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
                 if (unassignedUids.Count == 0)
                     break;
 
-                if (!TryPickCandidate(gridEntity, candidatesPerThreshold[thresholdIndex], settings, out var coverCoordinates))
+                var threshold = plan.Thresholds[thresholdIndex];
+
+                if (!TryPickCandidate(gridEntity, candidatesPerThreshold[thresholdIndex], threshold, settings, assignedPositions, assignedLanes, out var coverCoordinates))
                     continue;
 
                 var memberUid = TakeNearest(unassignedUids, coverCoordinates);
-                var threshold = plan.Thresholds[thresholdIndex];
+                assignedPositions.Add(coverCoordinates.Position);
+                assignedLanes.Add(new NpcFireLane(coverCoordinates.Position, threshold.AimPoint));
 
                 var facingLocal = threshold.Center - coverCoordinates.Position;
                 var facingWorld = _transformSystem.GetWorldRotation(gridEntity).RotateVec(facingLocal);
@@ -224,9 +291,14 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
     private bool TryPickCandidate(
         Entity<MapGridComponent> gridEntity,
         List<(Vector2i Tile, float Score)> candidates,
+        NpcSquadThreshold threshold,
         NpcSquadCoverSettings settings,
+        List<Vector2> assignedPositions,
+        List<NpcFireLane> assignedLanes,
         out EntityCoordinates coverCoordinates)
     {
+        var avoidFireLanes = _npcSquadFireLaneSystem.Enabled;
+
         coverCoordinates = default;
         var bestScore = 0f;
 
@@ -237,6 +309,9 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
 
             var coordinates = new EntityCoordinates(gridEntity, _mapSystem.TileCenterToVector(gridEntity, tile));
             var score = baseScore * _npcTacticalPositionClaimSystem.GetClaimPenalty(coordinates, settings.ClaimClearanceRadius);
+
+            if (avoidFireLanes)
+                score *= NpcSquadFireLaneSystem.GetPenalty(coordinates.Position, threshold.AimPoint, assignedPositions, assignedLanes);
 
             if (score <= bestScore)
                 continue;
@@ -303,7 +378,7 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
             var score = ScoreDistance(distance, settings) *
                 (plan.IsHallway ? 1f : ScoreAngle(offset / distance, threshold.InwardNormal, settings)) *
                 ScoreExposure(position, gridEntity, exposureTiles, settings) *
-                ScoreWalls(plan, tile);
+                ScoreWalls(plan, tile, settings);
 
             if (score <= 0f)
                 continue;
@@ -360,9 +435,20 @@ public sealed partial class NpcSquadCoverSystem : EntitySystem
         return float.Lerp(0.15f, 1f, Math.Clamp((nearest - 1f) / MathF.Max(settings.ExposureAvoidRange - 1f, 0.01f), 0f, 1f));
     }
 
-    private static float ScoreWalls(NpcSquadCoverPlan plan, Vector2i tile)
+    /// <summary>
+    ///     See <see cref="NpcSquadCoverSettings.WallPreference"/>. Three or more solid neighbours out of eight
+    ///         counts as fully walled.
+    /// </summary>
+    private static float ScoreWalls(NpcSquadCoverPlan plan, Vector2i tile, NpcSquadCoverSettings settings)
     {
-        return CountSolidNeighbours(plan, tile) >= 3 ? 1f : 0.75f;
+        const float fullyWalledNeighbours = 3f;
+
+        var walled = MathF.Min(CountSolidNeighbours(plan, tile), fullyWalledNeighbours) / fullyWalledNeighbours;
+        var preference = Math.Clamp(settings.WallPreference, -1f, 1f);
+
+        return preference >= 0f
+            ? 1f - preference * (1f - walled)
+            : 1f + preference * walled;
     }
 
     #endregion

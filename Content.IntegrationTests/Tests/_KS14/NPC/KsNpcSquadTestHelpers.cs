@@ -16,6 +16,11 @@ public static class KsNpcSquadTestHelpers
 {
     public const string SyndicateMob = "KsSquadTestMobSyndicate";
     public const string NanoTrasenMob = "KsSquadTestMobNanoTrasen";
+    public const string WallHuggerMob = "KsSquadTestMobWallHugger";
+    public const string FollowerMob = "KsSquadTestMobFollower";
+    public const string SharingLeaderMob = "KsSquadTestMobSharingLeader";
+    public const string SharedKey = "KsSquadTestSharedKey";
+    public const string OpenFloorMob = "KsSquadTestMobOpenFloor";
 
     /// <summary>
     ///     HTN is present but disabled: squads require an NPC, but these must stay exactly where they are put.
@@ -54,6 +59,8 @@ public static class KsNpcSquadTestHelpers
     factions:
     - Syndicate
   - type: NpcSquadMember
+  - type: NpcSensors
+  - type: NpcReactionTime
 
 - type: entity
   parent: KsSquadTestMobSyndicate
@@ -62,6 +69,37 @@ public static class KsNpcSquadTestHelpers
   - type: NpcFactionMember
     factions:
     - NanoTrasen
+
+- type: entity
+  parent: KsSquadTestMobSyndicate
+  id: KsSquadTestMobFollower
+  components:
+  - type: NpcSquadMember
+    canLead: false
+
+- type: entity
+  parent: KsSquadTestMobSyndicate
+  id: KsSquadTestMobSharingLeader
+  components:
+  - type: NpcSquadMember
+    sharedBlackboardKeys:
+    - KsSquadTestSharedKey
+
+- type: entity
+  parent: KsSquadTestMobSyndicate
+  id: KsSquadTestMobWallHugger
+  components:
+  - type: NpcSquadMember
+    cover:
+      wallPreference: 1
+
+- type: entity
+  parent: KsSquadTestMobSyndicate
+  id: KsSquadTestMobOpenFloor
+  components:
+  - type: NpcSquadMember
+    cover:
+      wallPreference: -1
 ";
 
     /// <summary>

@@ -51,6 +51,15 @@ public sealed partial class NpcSquadCoverSettings
     public float ExposureAvoidRange = 2.5f;
 
     /// <summary>
+    ///     How much cover positions backed onto walls are preferred over ones in open floor, from -1 to 1.
+    ///         0 is indifferent; 1 scores open floor at nothing, so only walled spots are used if any exist;
+    ///         negative values prefer open floor instead. Scaled by how walled-in a spot is, so a corner counts
+    ///         fully and a spot beside a single wall tile partly.
+    /// </summary>
+    [DataField]
+    public float WallPreference = 0.25f;
+
+    /// <summary>
     ///     How long a cover plan lasts before being worked out again, in seconds.
     /// </summary>
     [DataField]
@@ -64,4 +73,11 @@ public sealed partial class NpcSquadCoverSettings
 
     [DataField]
     public float ClaimClearanceRadius = 1.5f;
+
+    /// <summary>
+    ///     How long after a threat was last reported, in seconds, the squad still goes to it rather than holding
+    ///         where its leader is. Stops a squad chasing forever after something it cannot reach.
+    /// </summary>
+    [DataField]
+    public float ThreatObjectiveLifetime = 60f;
 }
