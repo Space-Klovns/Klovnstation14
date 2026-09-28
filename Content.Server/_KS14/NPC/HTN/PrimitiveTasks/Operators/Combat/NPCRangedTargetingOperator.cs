@@ -7,7 +7,7 @@ using Content.Shared.Mobs.Components;
 using Robust.Shared.Player;
 using Content.Server._KS14.NPC.Systems;
 
-namespace Content.Server._KS14.NPC.Operators;
+namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Combat;
 
 /// <summary>
 /// Finds a valid target (any actor) within vision radius and writes it to the

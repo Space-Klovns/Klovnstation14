@@ -5,7 +5,7 @@ using Robust.Client.Graphics;
 using Robust.Client.Player;
 using Robust.Shared.Prototypes;
 
-namespace Content.Client._KS14.Silicon.Bots;
+namespace Content.Client._KS14.Silicons.Bots;
 
 public sealed partial class BotWranglerSystem : SharedBotWranglerSystem
 {

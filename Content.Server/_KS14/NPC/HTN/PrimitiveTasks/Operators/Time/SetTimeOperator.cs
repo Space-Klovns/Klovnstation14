@@ -5,7 +5,7 @@ using Content.Server.NPC.HTN;
 using Content.Server.NPC.HTN.PrimitiveTasks;
 using Robust.Shared.Timing;
 
-namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
+namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Time;
 
 /// <summary>
 ///     Sets the value of the specified key to the current simulation time.

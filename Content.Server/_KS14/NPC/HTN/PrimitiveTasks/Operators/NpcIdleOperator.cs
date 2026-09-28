@@ -3,7 +3,7 @@ using Content.Server.NPC.HTN;
 using Content.Server.NPC.HTN.PrimitiveTasks;
 using Content.Server.NPC.Systems;
 
-namespace Content.Server._KS14.NPC.Operators;
+namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators;
 
 public sealed partial class NPCIdleOperator : HTNOperator
 {

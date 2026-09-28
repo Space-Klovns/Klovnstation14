@@ -2,7 +2,7 @@ using Content.Server.NPC;
 using Content.Server.NPC.HTN.Preconditions;
 using Robust.Shared.Timing;
 
-namespace Content.Server._KS14.NPC.HTN.Preconditions.Math;
+namespace Content.Server._KS14.NPC.HTN.Preconditions.Time;
 
 /// <summary>
 ///     If a TimeSpan exists in the blackboard at the specified key, this will be met if the current

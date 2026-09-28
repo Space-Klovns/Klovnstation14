@@ -3,7 +3,7 @@ using Content.Server.Administration;
 using Content.Shared.Administration;
 using Robust.Shared.Console;
 
-namespace Content.Server._KS14.NPC.Commands;
+namespace Content.Server._KS14.NPC.Squad;
 
 /// <summary>
 ///     Toggles the NPC squad debug overlay for the invoking player. See <see cref="NpcSquadDebugSystem"/>.

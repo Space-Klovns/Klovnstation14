@@ -7,7 +7,7 @@ using Content.Shared.Chat;
 using Content.Server._KS14.NPC.Systems;
 using Robust.Shared.Timing;
 
-namespace Content.Server._KS14.NPC.Operators;
+namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Combat;
 
 /// <summary>
 /// Executes an NPC ranged pattern attack by ID. All state lives in the

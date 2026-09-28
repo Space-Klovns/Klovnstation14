@@ -6,7 +6,7 @@ using Content.Shared.Chat;
 using Content.Server._KS14.NPC.Systems;
 using Robust.Shared.Random;
 
-namespace Content.Server._KS14.NPC.Operators;
+namespace Content.Server._KS14.NPC.HTN.PrimitiveTasks.Operators.Combat;
 
 /// <summary>
 /// Selects a weighted random attack from a weight table (optionally modified

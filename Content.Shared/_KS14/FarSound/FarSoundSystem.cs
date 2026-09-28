@@ -7,7 +7,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Serialization;
 
-namespace Content.Shared._KS14.Farsound;
+namespace Content.Shared._KS14.FarSound;
 
 // did you know pvs entities in range of you are pvs overriden and so is their parents or whatever
 

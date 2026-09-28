@@ -3,7 +3,7 @@ using Robust.Shared.Random;
 using Content.Server.NPC.HTN.Preconditions;
 using Content.Server._KS14.NPC.Components;
 
-namespace Content.Server._KS14.NPC.Preconditions;
+namespace Content.Server._KS14.NPC.HTN.Preconditions;
 
 public sealed partial class ProbabilityPrecondition : HTNPrecondition
 {
