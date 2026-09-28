@@ -50,6 +50,16 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.voice.public_url", "", CVar.ARCHIVE | CVar.SERVERONLY);
 
     /// <summary>
+    ///     Path of the microphone page in the links players are given, after <see cref="VoicePublicUrl"/>. The status host
+    ///         always serves the page at <c>/klovn/voice/</c>; a different path here needs a reverse proxy that maps it
+    ///         there (the page loads everything relative to itself, so any path works). <c>/</c> puts the page at the
+    ///         root of the public URL. Invalid values fall back to the default with a warning.
+    /// </summary>
+    [CVarControl(AdminFlags.Host)]
+    public static readonly CVarDef<string> VoicePublicPath =
+        CVarDef.Create("klovn.voice.public_path", "/klovn/voice/", CVar.ARCHIVE | CVar.SERVERONLY);
+
+    /// <summary>
     ///     Whether websocket connections must come from a page whose <c>Origin</c> matches the public URL.
     /// </summary>
     [CVarControl(AdminFlags.Host)]

@@ -243,4 +243,39 @@ public sealed class KsVoiceCodecTests
             Assert.That(KsVoiceLinkManager.ResolvePublicBaseUrl("not a url", "garbage", "ftp://x"), Is.Null);
         });
     }
+
+    [Test]
+    [TestOf(typeof(KsVoiceLinkManager))]
+    public void PublicPagePathResolution()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(KsVoiceLinkManager.ResolvePublicPagePath("/klovn/voice/"), Is.EqualTo("/klovn/voice/"), "the default");
+            Assert.That(KsVoiceLinkManager.ResolvePublicPagePath(""), Is.EqualTo(KsVoiceLinkManager.PagePath), "empty means the default");
+            Assert.That(KsVoiceLinkManager.ResolvePublicPagePath("/"), Is.EqualTo("/"), "the root of the public URL");
+            Assert.That(KsVoiceLinkManager.ResolvePublicPagePath("talk"), Is.EqualTo("/talk/"), "slashes added");
+            Assert.That(KsVoiceLinkManager.ResolvePublicPagePath(" //a//b.c-d_e~f/ "), Is.EqualTo("/a/b.c-d_e~f/"), "tidied");
+
+            // Anything that isn't a plain path is refused, and the default used instead.
+            Assert.That(KsVoiceLinkManager.ResolvePublicPagePath("https://voice.example.com/talk"), Is.Null, "a full URL");
+            Assert.That(KsVoiceLinkManager.ResolvePublicPagePath("/a/../b"), Is.Null, "a parent segment");
+            Assert.That(KsVoiceLinkManager.ResolvePublicPagePath("/talk?x=1"), Is.Null, "a query");
+            Assert.That(KsVoiceLinkManager.ResolvePublicPagePath("/talk#x"), Is.Null, "a fragment, which would swallow the token");
+            Assert.That(KsVoiceLinkManager.ResolvePublicPagePath("/my talk"), Is.Null, "whitespace");
+        });
+    }
+
+    [Test]
+    [TestOf(typeof(KsVoiceUplinkManager))]
+    public void SlashlessRequestsRedirectToThePublicPath()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(KsVoiceUplinkManager.GetSlashRedirect("/klovn/voice/"), Is.EqualTo("voice/"));
+            Assert.That(KsVoiceUplinkManager.GetSlashRedirect("/talk"), Is.EqualTo("talk/"), "proxied /talk must land on /talk/");
+            Assert.That(KsVoiceUplinkManager.GetSlashRedirect("/a/b"), Is.EqualTo("b/"));
+            Assert.That(KsVoiceUplinkManager.GetSlashRedirect("/"), Is.EqualTo("voice/"), "a root page is only reached slashless directly");
+            Assert.That(KsVoiceUplinkManager.GetSlashRedirect("https://nope"), Is.EqualTo("voice/"), "an invalid path means the default");
+        });
+    }
 }

@@ -235,7 +235,8 @@ Voice is **off by default**. Every entry point checks `klovn.voice.enabled`. Wit
 | `klovn.voice.enabled` | `false` | server, replicated | Master switch. |
 | `klovn.voice.uplink_enabled` | `true` | server, replicated | Serve the page and accept microphone pages. Off disconnects every page, so no one can talk; players reopen their link once it's back on. |
 | `klovn.voice.range` | `10` | server, replicated | Hearing range in world units (the same as local speech). |
-| `klovn.voice.public_url` | `""` | server | Public HTTPS base URL of the status host. If empty, derived from `hub.server_url` (`ss14s://h` → `https://h`), then `transfer.http_endpoint`. |
+| `klovn.voice.public_url` | `""` | server | Public HTTPS base URL of the status host, without the page path. If empty, derived from `hub.server_url` (`ss14s://h` → `https://h`), then `transfer.http_endpoint`. |
+| `klovn.voice.public_path` | `/klovn/voice/` | server | Path of the page in links, after `public_url`. Anything but the default needs a proxy that maps it to `/klovn/voice/` (see *Running it*). `/` puts the page at the root. Invalid values fall back to the default with a warning. |
 | `klovn.voice.check_origin` | `true` | server | Require websocket `Origin` to match. |
 | `klovn.voice.limiter_ceiling_db` | `-6` | server | Output peak ceiling, in dBFS. |
 | `klovn.voice.abuse_rms_db` | `-9` | server | Frame RMS that counts as abusive, in dBFS. |
@@ -286,6 +287,30 @@ Voice is **off by default**. Every entry point checks `klovn.voice.enabled`. Wit
    public_url = "https://ks14.example.com"
    ```
 
+`public_url` is the base only: links are `{public_url}{public_path}#{token}`, so `https://ks14.example.com` gives
+`https://ks14.example.com/klovn/voice/#…`. A path prefix in `public_url` is kept (`https://example.com/ss14` gives
+`https://example.com/ss14/klovn/voice/#…`); including `/klovn/voice` in it doubles the path.
+
+**Serving the page at another path.** The status host only ever serves the page at `/klovn/voice/`, but the page loads
+everything relative to itself (its scripts, stylesheet, worklet and websocket), so a proxy can publish it under any
+path. Set `public_path` to match, so the links point there. For example, the page at `https://voice.example.com/talk/`:
+
+```nginx
+location /talk/ {
+    proxy_pass http://127.0.0.1:1212/klovn/voice/;
+    # ...plus the same websocket headers and timeout as above
+}
+```
+
+```toml
+[klovn.voice]
+public_url = "https://voice.example.com"
+public_path = "/talk/"
+```
+
+A request for the page without its trailing slash is redirected to the last segment of `public_path` (`talk/` here),
+relative to the request, so it lands back on the proxied path.
+
 For local testing, `http://localhost:1212` is already a secure context, so no proxy is needed. Leave `public_url`
 empty and the transfer endpoint default (`http://localhost:1212/`) is used.
 
@@ -321,7 +346,8 @@ All under `Content.IntegrationTests/Tests/_KS14/Voice/`.
   - rejection of malformed packets
   - limiter ceiling; abuse triggering exactly once at the threshold, and never for loud normal speech; a threshold
     longer than the window still triggering
-  - public URL resolution
+  - public URL resolution; public path normalisation and refusal of anything but a plain path; the slashless redirect
+    following the public path
   - the engine field used to release finished websockets still existing
 - `KsVoiceUplinkTests`, using real websocket framing over loopback TCP:
   - the token appears only in the fragment
@@ -332,6 +358,7 @@ All under `Content.IntegrationTests/Tests/_KS14/Voice/`.
   - disabled voice refuses even valid links
 - `KsVoiceRelayTests`, where a dummy session talks and the pooled client listens over the real net channel:
   - relay only while push-to-talk is held
+  - links following `klovn.voice.public_path`
   - range
   - the master switch
   - admin mute and unmute

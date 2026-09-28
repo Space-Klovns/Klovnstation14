@@ -94,6 +94,7 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
     private volatile int _authFailuresPerMinute;
     private float _uplinkRateFactor;
     private KsVoiceProcessorSettings _processorSettings;
+    private volatile string _slashRedirect = "voice/";
 
     private Action<bool>? _enabledHandler;
     private Action<bool>? _uplinkEnabledHandler;
@@ -101,6 +102,7 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
     private Action<int>? _authFailuresHandler;
     private Action<float>? _rateFactorHandler;
     private Action<float>? _processorHandler;
+    private Action<string>? _publicPathHandler;
 
     public void Initialize()
     {
@@ -113,6 +115,7 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
         _authFailuresHandler = value => _authFailuresPerMinute = value;
         _rateFactorHandler = value => Volatile.Write(ref _uplinkRateFactor, value);
         _processorHandler = _ => ReloadProcessorSettings();
+        _publicPathHandler = value => _slashRedirect = GetSlashRedirect(value);
 
         _configurationManager.OnValueChanged(KsCCVars.VoiceEnabled, _enabledHandler, invokeImmediately: true);
         _configurationManager.OnValueChanged(KsCCVars.VoiceUplinkEnabled, _uplinkEnabledHandler, invokeImmediately: true);
@@ -123,6 +126,7 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
         _configurationManager.OnValueChanged(KsCCVars.VoiceAbuseRmsDb, _processorHandler);
         _configurationManager.OnValueChanged(KsCCVars.VoiceAbuseClipRatio, _processorHandler);
         _configurationManager.OnValueChanged(KsCCVars.VoiceAbuseSeconds, _processorHandler);
+        _configurationManager.OnValueChanged(KsCCVars.VoicePublicPath, _publicPathHandler, invokeImmediately: true);
         ReloadProcessorSettings();
 
         _linkManager.LinkRevoked += OnLinkRevoked;
@@ -144,6 +148,7 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
             _configurationManager.UnsubValueChanged(KsCCVars.VoiceAbuseRmsDb, _processorHandler!);
             _configurationManager.UnsubValueChanged(KsCCVars.VoiceAbuseClipRatio, _processorHandler!);
             _configurationManager.UnsubValueChanged(KsCCVars.VoiceAbuseSeconds, _processorHandler!);
+            _configurationManager.UnsubValueChanged(KsCCVars.VoicePublicPath, _publicPathHandler!);
             _enabledHandler = null;
         }
 
@@ -305,8 +310,9 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
 
         if (path == PagePathNoSlash)
         {
-            // Relative, so it survives reverse proxies that mount us under a prefix. Browsers keep the fragment.
-            context.ResponseHeaders["Location"] = "voice/";
+            // Relative, so it survives reverse proxies that mount us under a prefix or another path. Browsers keep the
+            //      fragment.
+            context.ResponseHeaders["Location"] = _slashRedirect;
             await context.RespondAsync("Moved", code: HttpStatusCode.MovedPermanently);
             return true;
         }
@@ -405,6 +411,20 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
         }
 
         return null;
+    }
+
+    /// <summary>
+    ///     Where to send a request for the page without its trailing slash: the last segment of the public path, plus
+    ///         the slash, relative to the request. A proxy that serves the page at <c>/talk/</c> forwards <c>/talk</c>
+    ///         here as <c>/klovn/voice</c>, and the browser must end up at <c>/talk/</c>, not <c>/voice/</c>. A page at
+    ///         the root has no slashless form through the proxy, so only direct requests get here; they get the default.
+    /// </summary>
+    public static string GetSlashRedirect(string configuredPublicPath)
+    {
+        var publicPath = KsVoiceLinkManager.ResolvePublicPagePath(configuredPublicPath) ?? KsVoiceLinkManager.PagePath;
+        var trimmed = publicPath.TrimEnd('/');
+        var lastSegment = trimmed[(trimmed.LastIndexOf('/') + 1)..];
+        return lastSegment.Length == 0 ? "voice/" : $"{lastSegment}/";
     }
 
     private bool IsOriginAllowed(IStatusHandlerContext context)

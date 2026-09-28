@@ -220,6 +220,27 @@ public sealed class KsVoiceRelayTests : GameTest
     }
 
     [Test]
+    public async Task LinkUsesTheConfiguredPublicPath()
+    {
+        await Setup();
+        await OverrideCVar(Side.Server, KsCCVars.VoicePublicUrl, "https://voice.example.com");
+        await OverrideCVar(Side.Server, KsCCVars.VoicePublicPath, "talk");
+
+        KsVoiceLinkEvent received = null;
+        var clientSystem = Client.System<KsVoiceClientSystem>();
+        void OnLink(KsVoiceLinkEvent args) => received = args;
+        clientSystem.LinkReceived += OnLink;
+
+        await Client.WaitPost(() => clientSystem.RequestLink(reset: false));
+        await Pair.RunTicksSync(10);
+
+        clientSystem.LinkReceived -= OnLink;
+
+        Assert.That(received?.Url, Does.StartWith("https://voice.example.com/talk/#"),
+            "the link follows klovn.voice.public_path, for a proxy that maps it to the page");
+    }
+
+    [Test]
     public async Task ResetRefusedByTheCooldownSaysSo()
     {
         await Setup();
