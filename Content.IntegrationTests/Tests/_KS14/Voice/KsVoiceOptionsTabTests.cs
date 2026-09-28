@@ -49,6 +49,14 @@ public sealed class KsVoiceOptionsTabTests : GameTest
             volumeLive = tab.FindControl<OptionSlider>("SliderVoiceVolume").Slider.Value;
         });
 
+        // The server forbids voice activation: its checkbox goes, since ticking it would do nothing.
+        var activationShown = false;
+        await Client.WaitPost(() => activationShown = tab.FindControl<Control>("VoiceActivation").Visible);
+        await OverrideCVar(Side.Server, KsCCVars.VoiceActivationAllowed, false);
+        await Pair.RunTicksSync(5);
+        var activationHidden = false;
+        await Client.WaitPost(() => activationHidden = !tab.FindControl<Control>("VoiceActivation").Visible);
+
         // Once closed, it lets go of the configuration manager.
         await Client.WaitPost(() => userInterface.RootControl.RemoveChild(tab));
         await OverrideCVar(Side.Server, KsCCVars.VoiceEnabled, false);
@@ -66,6 +74,8 @@ public sealed class KsVoiceOptionsTabTests : GameTest
             Assert.That(hiddenOnOpen, Is.True, "voice settings are hidden while the server has voice off");
             Assert.That(shownLive, Is.True, "turning voice on shows them without reopening the menu");
             Assert.That(volumeLive, Is.EqualTo(0.5f).Within(0.001f), "a volume change made elsewhere shows on the slider");
+            Assert.That(activationShown, Is.True, "voice activation is offered while the server allows it");
+            Assert.That(activationHidden, Is.True, "and hidden as soon as it doesn't");
             Assert.That(frozenAfterClose, Is.True, "a closed tab no longer reacts: it has unsubscribed");
         });
     }

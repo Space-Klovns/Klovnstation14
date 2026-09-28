@@ -35,6 +35,14 @@ public sealed partial class KsCCVars
     public static readonly CVarDef<float> VoiceRange =
         CVarDef.Create("klovn.voice.range", 10f, CVar.ARCHIVE | CVar.SERVER | CVar.REPLICATED);
 
+    /// <summary>
+    ///     Whether players may use voice activation (<see cref="VoiceActivation"/>) instead of holding push-to-talk.
+    ///         While off, everyone needs the key, whatever their own setting says, and clients hide the option.
+    /// </summary>
+    [CVarControl(AdminFlags.Server)]
+    public static readonly CVarDef<bool> VoiceActivationAllowed =
+        CVarDef.Create("klovn.voice.voice_activation_allowed", true, CVar.ARCHIVE | CVar.SERVER | CVar.REPLICATED);
+
     #endregion
 
     #region Server settings
@@ -139,6 +147,14 @@ public sealed partial class KsCCVars
     public static readonly CVarDef<bool> VoiceAdminLogBursts =
         CVarDef.Create("klovn.voice.admin_log_bursts", true, CVar.ARCHIVE | CVar.SERVERONLY);
 
+    /// <summary>
+    ///     Whether relayed voice goes into server-side round replays, so it can be heard when they're watched. The
+    ///         microphone page tells players when it does.
+    /// </summary>
+    [CVarControl(AdminFlags.Server)]
+    public static readonly CVarDef<bool> VoiceRecordInReplays =
+        CVarDef.Create("klovn.voice.record_in_replays", true, CVar.ARCHIVE | CVar.SERVERONLY);
+
     #endregion
 
     #region Client settings
@@ -161,6 +177,13 @@ public sealed partial class KsCCVars
     /// </summary>
     public static readonly CVarDef<int> VoiceJitterBufferMs =
         CVarDef.Create("klovn.voice.jitter_buffer_ms", 120, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+    /// <summary>
+    ///     Talk whenever the microphone page's noise gate is open, without holding push-to-talk. Replicated to the
+    ///         server, which reads it for every chunk; only honoured while <see cref="VoiceActivationAllowed"/>.
+    /// </summary>
+    public static readonly CVarDef<bool> VoiceActivation =
+        CVarDef.Create("klovn.voice.voice_activation", false, CVar.ARCHIVE | CVar.CLIENT | CVar.REPLICATED);
 
     #endregion
 }

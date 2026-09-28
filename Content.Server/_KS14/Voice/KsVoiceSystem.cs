@@ -15,6 +15,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
+using Robust.Shared.Replays;
 using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.Voice;
@@ -23,11 +24,13 @@ namespace Content.Server._KS14.Voice;
 ///     Relays moderated microphone audio from voice pages (<see cref="KsVoiceUplinkManager"/>) to nearby players, and
 ///         shows who is talking.
 ///
-///     A chunk is relayed only while voice is enabled, the talker holds their in-game push-to-talk key, is not muted
-///         or on cooldown, and their attached entity is not a ghost and passes <see cref="ActionBlockerSystem.CanSpeak"/>
-///         (so crit, death, sleep, mime vows and admin freeze-mutes all silence voice exactly as they silence speech).
+///     A chunk is relayed only while voice is enabled, the talker holds their in-game push-to-talk key (or uses voice
+///         activation, <see cref="KsCCVars.VoiceActivation"/>), is not muted or on cooldown, and their attached entity
+///         is not a ghost and passes <see cref="ActionBlockerSystem.CanSpeak"/> (so crit, death, sleep, mime vows and
+///         admin freeze-mutes all silence voice exactly as they silence speech).
 ///         Listeners are the other in-game players within <see cref="KsCCVars.VoiceRange"/> on the same map, excluding
-///         incapacitated or sleeping ones; ghosts hear too.
+///         incapacitated or sleeping ones; ghosts hear too. Relayed chunks also go into server-side replays
+///         (<see cref="KsVoiceReplayFrameEvent"/>) unless <see cref="KsCCVars.VoiceRecordInReplays"/> is off.
 /// </summary>
 public sealed partial class KsVoiceSystem : EntitySystem
 {
@@ -51,7 +54,8 @@ public sealed partial class KsVoiceSystem : EntitySystem
     [Dependency] private IServerNetManager _netManager = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
-    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private INetConfigurationManager _configurationManager = default!;
+    [Dependency] private IReplayRecordingManager _replayRecordingManager = default!;
     [Dependency] private IAdminLogManager _adminLogManager = default!;
     [Dependency] private IChatManager _chatManager = default!;
     [Dependency] private ActionBlockerSystem _actionBlockerSystem = default!;
@@ -74,11 +78,18 @@ public sealed partial class KsVoiceSystem : EntitySystem
     private float _maxContinuousSeconds;
     private float _cooldownSeconds;
     private bool _logBursts;
+    private bool _voiceActivationAllowed;
+    private bool _recordInReplays;
 
     /// <summary>
     ///     Relayed chunks since startup, for tests and diagnostics.
     /// </summary>
     public int RelayedChunkCount { get; private set; }
+
+    /// <summary>
+    ///     Chunks written into replay recordings since startup, for tests and diagnostics.
+    /// </summary>
+    public int RecordedChunkCount { get; private set; }
 
     public override void Initialize()
     {
@@ -90,6 +101,16 @@ public sealed partial class KsVoiceSystem : EntitySystem
         Subs.CVar(_configurationManager, KsCCVars.VoiceMaxContinuousSeconds, value => _maxContinuousSeconds = value, invokeImmediately: true);
         Subs.CVar(_configurationManager, KsCCVars.VoiceCooldownSeconds, value => _cooldownSeconds = value, invokeImmediately: true);
         Subs.CVar(_configurationManager, KsCCVars.VoiceAdminLogBursts, value => _logBursts = value, invokeImmediately: true);
+        Subs.CVar(_configurationManager, KsCCVars.VoiceActivationAllowed, value =>
+        {
+            _voiceActivationAllowed = value;
+            RefreshAllPageStates();
+        }, invokeImmediately: true);
+        Subs.CVar(_configurationManager, KsCCVars.VoiceRecordInReplays, value =>
+        {
+            _recordInReplays = value;
+            RefreshAllPageStates();
+        }, invokeImmediately: true);
 
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
     }
@@ -130,7 +151,17 @@ public sealed partial class KsVoiceSystem : EntitySystem
         if (!_playerManager.TryGetSessionById(chunk.UserId, out var session))
             return;
 
-        var block = GetBlockReason(session, state, now, out var speakerUid);
+        var voiceActivation = IsVoiceActivated(session);
+
+        // With voice activation, pages only send while their noise gate is open, so a gap in the audio is where an
+        //      utterance ends. It stands in for releasing the key: the next one gets a fresh CanSpeak check (and at
+        //      most one popup).
+        if (voiceActivation && now - state.LastChunkReceived > BurstGap)
+            state.CannotSpeakBodyUid = null;
+
+        state.LastChunkReceived = now;
+
+        var block = GetBlockReason(session, state, now, voiceActivation, out var speakerUid);
 
         // Only audio that would actually go out can earn a mute. The page counts only frames sent while we told it
         //      it was transmitting, but that flag trails by a chunk, so check again here.
@@ -148,7 +179,7 @@ public sealed partial class KsVoiceSystem : EntitySystem
             }
         }
 
-        UpdatePageState(chunk.UserId, state, block, now);
+        UpdatePageState(chunk.UserId, state, block, voiceActivation, now);
 
         if (block != null)
             return;
@@ -200,12 +231,21 @@ public sealed partial class KsVoiceSystem : EntitySystem
         KsVoiceAdpcm.Encode(ref state.Encoder, chunk.Samples, payload);
         state.Sequence++;
 
+        var speakerNetEntity = GetNetEntity(speakerUid);
+
+        // Everything relayed, whoever was in range: a replay is watched from anywhere.
+        if (_recordInReplays && _replayRecordingManager.IsRecording)
+        {
+            _replayRecordingManager.RecordServerMessage(new KsVoiceReplayFrameEvent(speakerNetEntity, state.Sequence, payload));
+            RecordedChunkCount++;
+        }
+
         if (_recipientChannels.Count == 0)
             return;
 
         var message = new KsVoiceFrameMessage
         {
-            Source = GetNetEntity(speakerUid),
+            Source = speakerNetEntity,
             Sequence = state.Sequence,
             Payload = payload,
         };
@@ -235,7 +275,15 @@ public sealed partial class KsVoiceSystem : EntitySystem
         return !_mobStateSystem.IsIncapacitated(listenerUid) && !_sleepingQuery.HasComp(listenerUid);
     }
 
-    private KsVoiceBlockReason? GetBlockReason(ICommonSession session, TalkerState state, TimeSpan now, out EntityUid speakerUid)
+    /// <summary>
+    ///     Whether this player talks without holding push-to-talk: their own setting, if the server allows it.
+    /// </summary>
+    public bool IsVoiceActivated(ICommonSession session)
+    {
+        return _voiceActivationAllowed && _configurationManager.GetClientCVar(session.Channel, KsCCVars.VoiceActivation);
+    }
+
+    private KsVoiceBlockReason? GetBlockReason(ICommonSession session, TalkerState state, TimeSpan now, bool voiceActivation, out EntityUid speakerUid)
     {
         speakerUid = default;
 
@@ -259,13 +307,14 @@ public sealed partial class KsVoiceSystem : EntitySystem
 
         speakerUid = attachedUid;
 
-        if (!state.PushToTalkHeld)
+        if (!state.PushToTalkHeld && !voiceActivation)
             return KsVoiceBlockReason.NotHoldingKey;
 
         // CanSpeak runs every chunk, so something that starts blocking mid-sentence stops the voice at once. But the
         //      handlers that refuse speech also show a popup (MutingSystem's "you can't speak", for one), which would
         //      then fire several times a second. So once this body is refused, the refusal stands for the rest of the
-        //      key press: one popup per attempt to talk, and a fresh check on the next press.
+        //      key press (or, with voice activation, the utterance): one popup per attempt to talk, and a fresh check
+        //      on the next.
         if (state.CannotSpeakBodyUid == attachedUid)
             return KsVoiceBlockReason.CannotSpeak;
 
@@ -282,6 +331,7 @@ public sealed partial class KsVoiceSystem : EntitySystem
     {
         var now = _gameTiming.CurTime;
 
+        _scratchUsers.Clear();
         foreach (var (userId, state) in _talkers)
         {
             if (state.IndicatorUid != null && state.TalkingUntil <= now)
@@ -289,7 +339,19 @@ public sealed partial class KsVoiceSystem : EntitySystem
 
             if (state.BurstStart != null && now - state.LastRelay > BurstGap)
                 EndBurst(userId, state);
+
+            // Nothing tells us when a client changes a replicated cvar, so look: the page shows which mode is on,
+            //      and a silent page would otherwise not hear about the switch until its player next spoke.
+            if (state.PageStateSent &&
+                _playerManager.TryGetSessionById(userId, out var session) &&
+                IsVoiceActivated(session) != state.LastPageVoiceActivation)
+            {
+                _scratchUsers.Add(userId);
+            }
         }
+
+        foreach (var userId in _scratchUsers)
+            RefreshPageState(userId);
     }
 
     private void SetIndicator(TalkerState state, EntityUid speakerUid)
@@ -328,15 +390,16 @@ public sealed partial class KsVoiceSystem : EntitySystem
             _adminLogManager.Add(LogType.KsVoice, LogImpact.Low, $"{ToPrettyString(attachedUid):player} talked on voice chat for {seconds:0.#}s");
     }
 
-    private void UpdatePageState(NetUserId userId, TalkerState state, KsVoiceBlockReason? block, TimeSpan now)
+    private void UpdatePageState(NetUserId userId, TalkerState state, KsVoiceBlockReason? block, bool voiceActivation, TimeSpan now)
     {
         _uplinkManager.SetTransmitting(userId, block == null);
 
-        if (state.PageStateSent && state.LastPageBlock == block)
+        if (state.PageStateSent && state.LastPageBlock == block && state.LastPageVoiceActivation == voiceActivation)
             return;
 
         state.PageStateSent = true;
         state.LastPageBlock = block;
+        state.LastPageVoiceActivation = voiceActivation;
 
         double? seconds = block switch
         {
@@ -353,6 +416,8 @@ public sealed partial class KsVoiceSystem : EntitySystem
             transmitting = block == null,
             reason = block == null ? null : ReasonId(block.Value),
             seconds = seconds == null ? (int?)null : (int)Math.Ceiling(Math.Max(0d, seconds.Value)),
+            voiceActivation,
+            recordedInReplays = _recordInReplays,
         });
     }
 
@@ -366,7 +431,24 @@ public sealed partial class KsVoiceSystem : EntitySystem
 
         var state = GetTalker(userId);
         var now = _gameTiming.CurTime;
-        UpdatePageState(userId, state, GetBlockReason(session, state, now, out _), now);
+        var voiceActivation = IsVoiceActivated(session);
+        UpdatePageState(userId, state, GetBlockReason(session, state, now, voiceActivation, out _), voiceActivation, now);
+    }
+
+    /// <summary>
+    ///     Resends every connected page's state, for server settings the page shows.
+    /// </summary>
+    private void RefreshAllPageStates()
+    {
+        _scratchUsers.Clear();
+        foreach (var (userId, state) in _talkers)
+        {
+            state.PageStateSent = false;
+            _scratchUsers.Add(userId);
+        }
+
+        foreach (var userId in _scratchUsers)
+            RefreshPageState(userId);
     }
 
     private static string ReasonId(KsVoiceBlockReason reason)
@@ -550,6 +632,12 @@ public sealed partial class KsVoiceSystem : EntitySystem
         public bool PageStateSent;
         public TimeSpan NextLinkResetAllowed;
         public KsVoiceBlockReason? LastPageBlock;
+        public bool LastPageVoiceActivation;
+
+        /// <summary>
+        ///     When the last chunk arrived from the page, relayed or not.
+        /// </summary>
+        public TimeSpan LastChunkReceived;
 
         /// <summary>
         ///     The body that failed <see cref="ActionBlockerSystem.CanSpeak"/> during the current key press, if any.

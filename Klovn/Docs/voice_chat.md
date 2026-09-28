@@ -113,15 +113,27 @@ The requirement is that nobody can talk as another player unless that player han
 `KsVoiceSystem` drains the inbound queue on the main thread. It relays a chunk only if all of these hold:
 
 - `klovn.voice.enabled` is on;
-- the talker holds push-to-talk (`KsVoicePushToTalkEvent`). The client only reports changes, so the server forgets a
-  held key when the player disconnects: one that crashed mid-press never sends the release, and would otherwise
-  transmit without the key after coming back with a fresh link;
+- the talker holds push-to-talk (`KsVoicePushToTalkEvent`), or uses voice activation (below). The client only reports
+  key changes, so the server forgets a held key when the player disconnects: one that crashed mid-press never sends
+  the release, and would otherwise transmit without the key after coming back with a fresh link;
 - they aren't admin-muted, auto-muted, or on a continuous-talk cooldown;
 - their attached entity isn't a ghost and passes `ActionBlockerSystem.CanSpeak`. So crit, death, sleep, mime vows and
   admin freeze-mutes silence voice exactly as they silence speech, through `SpeakAttemptEvent`, with nothing extra to
   maintain. `CanSpeak` runs on every chunk, so a block that starts mid-sentence cuts the voice at once. Some of the
   handlers that refuse speech also show a popup (`MutingSystem`'s "You can't speak right now!"), so a refusal is
   remembered for that body until push-to-talk is next pressed: one popup per attempt to talk, not one per chunk.
+
+**Voice activation.** A player who ticks *Voice activation* in Options → Klovnstation 14 talks without the key: the
+page's noise gate alone decides what is sent, and the server relays it as if the key were held. The setting is the
+client cvar `klovn.voice.voice_activation`, flagged `CLIENT | REPLICATED`, so the engine sends it to the server with
+the rest of the client's replicated cvars and `KsVoiceSystem` reads it per chunk through
+`INetConfigurationManager.GetClientCVar`. There is no separate message to keep in step, and nothing to forget on
+disconnect: the value goes with the channel. It only counts while the server allows it
+(`klovn.voice.voice_activation_allowed`, replicated so the options tab can hide the checkbox). Everything else applies
+unchanged: mutes, `CanSpeak`, the continuous-talk cooldown and abuse detection. With no key press to reset the
+`CanSpeak` refusal on, a gap of more than a second in the page's audio ends the attempt instead, so it's one popup per
+utterance. The engine doesn't report replicated cvar changes, so the system checks each connected page's player every
+tick and resends the page's state when the mode changes. That's how the page shows which mode is on.
 
 A relayed chunk is IMA ADPCM-encoded once and sent as a `KsVoiceFrameMessage` to every other in-game player whose
 entity:
@@ -139,6 +151,16 @@ reorder, and each packet carries its own ADPCM predictor state, so one lost pack
 reachable, and the engine's Vorbis loader is internal. IMA ADPCM is about 150 lines of sandbox-safe C#
 (`KsVoiceAdpcm`) and gives 64 kbps for 16 kHz speech. That's only while someone is actually talking, and 60 ms packets
 stay well under the default 700-byte MTU.
+
+**Replays.** A relayed chunk also goes into server-side replays, as a `KsVoiceReplayFrameEvent` carrying the same
+ADPCM packet, speaker and sequence number. It's recorded whether or not anyone was in range, since a replay can be
+watched from anywhere. When a replay plays, the engine raises recorded events as if they had arrived over the network.
+`KsVoicePlaybackSystem` handles this one exactly like a live `KsVoiceFrameMessage`, positioned on the talker's
+recorded entity relative to the replay camera. `ContentReplayPlaybackManager` drops it while skipping through a replay,
+like other sounds, so seeking doesn't play a burst of old speech. Client-side recordings keep the frames that client
+received, as they keep its popups. `klovn.voice.record_in_replays` turns server-side recording off. While it's on, the
+page tells players their voice goes into replays. Voice makes replays bigger: 8 KB per second per talker, while
+talking. Only relayed audio is recorded, so muted, blocked or out-of-body audio never gets into a replay.
 
 The talking indicator is appearance data (`KsVoiceVisuals.Talking`) on `KsVoiceIndicatorComponent`. It is added the
 first time an entity talks and cleared 300 ms after the last relayed chunk. `KsVoiceIndicatorVisualizerSystem` draws
@@ -242,6 +264,7 @@ Voice is **off by default**. Every entry point checks `klovn.voice.enabled`. Wit
 | `klovn.voice.enabled` | `false` | server, replicated | Master switch. |
 | `klovn.voice.uplink_enabled` | `true` | server, replicated | Serve the page and accept microphone pages. Off disconnects every page, so no one can talk; players reopen their link once it's back on. |
 | `klovn.voice.range` | `10` | server, replicated | Hearing range in world units (the same as local speech). |
+| `klovn.voice.voice_activation_allowed` | `true` | server, replicated | Let players use voice activation instead of push-to-talk. |
 | `klovn.voice.public_url` | `""` | server | Public HTTPS base URL of the status host, without the page path. If empty, derived from `hub.server_url` (`ss14s://h` → `https://h`), then `transfer.http_endpoint`. |
 | `klovn.voice.public_path` | `/klovn/voice/` | server | Path of the page in links, after `public_url`. Anything but the default needs a proxy that maps it to `/klovn/voice/` (see *Running it*). `/` puts the page at the root. Invalid values fall back to the default with a warning. |
 | `klovn.voice.check_origin` | `true` | server | Require websocket `Origin` to match. |
@@ -255,9 +278,11 @@ Voice is **off by default**. Every entry point checks `klovn.voice.enabled`. Wit
 | `klovn.voice.uplink_rate_factor` | `1.25` | server | Allowed uplink speed relative to real time. |
 | `klovn.voice.auth_failures_per_minute` | `10` | server | Failed authentications per address before `429`. |
 | `klovn.voice.admin_log_bursts` | `true` | server | Log every talk burst. |
+| `klovn.voice.record_in_replays` | `true` | server | Record relayed voice into server-side replays. The page tells players when it's on. |
 | `klovn.voice.hear_enabled` | `true` | client | Play other players' voices. |
 | `klovn.voice.volume` | `1` | client | Voice volume. |
 | `klovn.voice.jitter_buffer_ms` | `120` | client | Buffering before playback starts. |
+| `klovn.voice.voice_activation` | `false` | client, replicated to the server | Talk without push-to-talk, whenever the page's noise gate is open. |
 
 ## Running it
 
@@ -353,8 +378,8 @@ All under `Content.IntegrationTests/Tests/_KS14/Voice/`.
   - rejection of malformed packets
   - limiter ceiling; abuse triggering exactly once at the threshold, and never for loud normal speech; a threshold
     longer than the window still triggering
-  - public URL resolution; public path normalisation and refusal of anything but a plain path; the slashless redirect
-    following the public path
+  - public URL resolution; public path normalisation and refusal of anything but a plain path; the cvar's default
+    being where the page is served
   - the engine field used to release finished websockets still existing
 - `KsVoiceUplinkTests`, using real websocket framing over loopback TCP:
   - the token appears only in the fragment
@@ -365,7 +390,8 @@ All under `Content.IntegrationTests/Tests/_KS14/Voice/`.
   - disabled voice refuses even valid links
 - `KsVoiceRelayTests`, where a dummy session talks and the pooled client listens over the real net channel:
   - relay only while push-to-talk is held
-  - links following `klovn.voice.public_path`
+  - voice activation relaying without the key, and a server that forbids it still needing the key
+  - links following `klovn.voice.public_path`, and an invalid one falling back to the default
   - range
   - the master switch
   - admin mute and unmute
@@ -375,7 +401,11 @@ All under `Content.IntegrationTests/Tests/_KS14/Voice/`.
   - audio for a talker whose entity the client doesn't know yet being kept, not dropped, and moving onto the entity
     once it arrives
   - a local mute living on the talker's entity and outlasting their audio; unmuting a silent talker removing it
-  - a muted talker getting one "can't speak" popup per push-to-talk press, not one per chunk
+  - a muted talker getting one "can't speak" popup per push-to-talk press, not one per chunk; with voice activation,
+    one per utterance
+  - relayed voice going into a replay recording (even with nobody in range) and written out with it, and
+    `klovn.voice.record_in_replays` turning that off; a recorded chunk, raised the way a replay raises it, reaching
+    playback
 - `KsVoiceOptionsTabTests`: the options tab showing the voice section when the server turns voice on and following a
   volume change made elsewhere while open, and letting go of the configuration manager once closed
 - `KsVoiceLinkWindowTests`: resizing the link window never cuts anything off. Its minimum size follows its contents

@@ -61,6 +61,8 @@
         volumeValue: $("volume-value"),
         test: $("test"),
         testHint: $("test-hint"),
+        talkHint: $("talk-hint"),
+        replayNote: $("replay-note"),
     };
 
     const storage = {
@@ -137,6 +139,10 @@
         elements.test.textContent = testing ? "Stop test" : "Test microphone";
         elements.test.setAttribute("aria-pressed", String(testing));
         elements.testHint.hidden = !testing;
+        elements.replayNote.hidden = !serverState?.recordedInReplays;
+        elements.talkHint.textContent = serverState?.voiceActivation
+            ? "Voice activation is on: you're heard whenever your level is above the noise gate, so set the gate just above your background noise."
+            : "Hold your in-game push-to-talk key to talk.";
 
         if (linkState === "failed") {
             setStatus("error", linkError);
@@ -156,7 +162,7 @@
         if (micState === "off") {
             if (micError)
                 setStatus("error", micError);
-            else if (serverState?.transmitting)
+            else if (serverState?.transmitting && !serverState.voiceActivation)
                 setStatus("blocked", "Your microphone is off, so nothing is being sent, even while you hold push-to-talk. Click “Start microphone”.");
             else
                 setStatus("idle", "Your microphone is off. Click “Start microphone” to be able to talk.");
@@ -180,7 +186,12 @@
         }
 
         if (serverState.transmitting) {
-            setStatus("transmitting", "Transmitting in-game.");
+            // With voice activation the server lets everything through, so what's actually going out is up to the gate.
+            if (serverState.voiceActivation && gateOpenFrames === 0)
+                setStatus("ready", "Voice activation is on. Speak to talk in-game.");
+            else
+                setStatus("transmitting", "Transmitting in-game.");
+
             return;
         }
 
@@ -372,10 +383,15 @@
         const db = rms > 0 ? 20 * Math.log10(rms / 32767) : -120;
         elements.meterFill.style.width = `${dbToMeter(db) * 100}%`;
 
+        const wasOpen = gateOpenFrames > 0;
         if (db >= gateDb)
             gateOpenFrames = HANGOVER_FRAMES;
         else if (gateOpenFrames > 0)
             gateOpenFrames--;
+
+        // With voice activation the status follows the gate.
+        if (wasOpen !== gateOpenFrames > 0)
+            render();
 
         if (gateOpenFrames === 0) {
             if (pending.length > 0) {

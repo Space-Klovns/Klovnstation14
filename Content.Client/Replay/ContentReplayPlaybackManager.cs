@@ -1,4 +1,5 @@
 using Content.Client.Administration.Managers;
+using Content.Shared._KS14.Voice; // KS14
 using Content.Client.Launcher;
 using Content.Client.MainMenu;
 using Content.Client.Replay.Spectator;
@@ -194,6 +195,7 @@ public sealed partial class ContentReplayPlaybackManager
             case InstrumentStartMidiEvent:
             case InstrumentMidiEventEvent:
             case InstrumentStopMidiEvent:
+            case KsVoiceReplayFrameEvent: // KS14: voice chat, which would otherwise play in a burst while skipping
                 // Block visual effects, pop-ups, and sounds
                 return true;
         }

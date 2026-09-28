@@ -198,8 +198,10 @@ public sealed partial class KsVoiceUIController : UIController, IOnStateChanged<
             return;
 
         _window.SetLinkAvailable(_url != null);
-        _window.SetKeybind(Loc.GetString("ks-voice-window-keybind",
-            ("key", _inputManager.GetKeyFunctionButtonString(ContentKeyFunctions.KsVoicePushToTalk))));
+        _window.SetKeybind(_voiceClientSystem.VoiceActivation
+            ? Loc.GetString("ks-voice-window-voice-activation")
+            : Loc.GetString("ks-voice-window-keybind",
+                ("key", _inputManager.GetKeyFunctionButtonString(ContentKeyFunctions.KsVoicePushToTalk))));
 
         if (_errorLocId != null)
             _window.SetStatus(Loc.GetString(_errorLocId));

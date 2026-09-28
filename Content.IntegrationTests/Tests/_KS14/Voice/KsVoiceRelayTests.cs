@@ -11,11 +11,15 @@ using Content.Shared._KS14.Voice;
 using Content.Shared.Administration;
 using Content.Shared.Eye;
 using Content.Shared.Speech.Muting;
+using Robust.Client.GameObjects;
+using Robust.Shared;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
+using Robust.Shared.Replays;
 
 namespace Content.IntegrationTests.Tests._KS14.Voice;
 
@@ -377,55 +381,15 @@ public sealed class KsVoiceRelayTests : GameTest
         });
         await Pair.RunTicksSync(5);
 
-        // Popups shown to this client. A label lasts about a second and folds repeats of itself into a counter, so
-        //      watch the labels after every tick and add up what appears.
-        var mutedText = Client.ResolveDependency<ILocalizationManager>().GetString("speech-muted");
-        var popups = 0;
-        var lastSeen = 0;
-        async Task ObservePopups()
-        {
-            await Client.WaitPost(() =>
-            {
-                var seen = 0;
-                foreach (var label in Client.System<Content.Client.Popups.PopupSystem>().WorldLabels)
-                {
-                    // A repeated popup's text gains a count suffix, so match on the message rather than equality.
-                    if (label.Text.Contains(mutedText))
-                        seen += label.Repeats;
-                }
-
-                if (seen > lastSeen)
-                    popups += seen - lastSeen;
-
-                lastSeen = seen;
-            });
-        }
-
-        async Task TalkAsListener(int chunks)
-        {
-            for (var i = 0; i < chunks; i++)
-            {
-                await Server.WaitPost(() =>
-                    Server.System<KsVoiceSystem>().HandleChunk(new KsVoiceInboundChunk(ServerSession!.UserId, Speech(), AbuseTriggered: false)));
-                await Pair.RunTicksSync(1);
-                await ObservePopups();
-            }
-
-            for (var i = 0; i < 5; i++)
-            {
-                await Pair.RunTicksSync(1);
-                await ObservePopups();
-            }
-        }
-
+        var popups = new MutedPopupCounter(this);
         var relayedBefore = Server.System<KsVoiceSystem>().RelayedChunkCount;
-        await TalkAsListener(10);
-        var firstPress = popups;
+        await TalkAsListener(popups, chunks: 10);
+        var firstPress = popups.Count;
 
         await HoldListenerKey(false);
         await HoldListenerKey(true);
-        await TalkAsListener(10);
-        var secondPress = popups;
+        await TalkAsListener(popups, chunks: 10);
+        var secondPress = popups.Count;
 
         Assert.Multiple(() =>
         {
@@ -433,6 +397,196 @@ public sealed class KsVoiceRelayTests : GameTest
             Assert.That(firstPress, Is.EqualTo(1), "a key press held through many chunks gets one popup, not one per chunk");
             Assert.That(secondPress, Is.EqualTo(2), "pressing again is a new attempt, and gets a new popup");
         });
+    }
+
+    [Test]
+    public async Task CannotSpeakPopupShowsOncePerUtteranceWithVoiceActivation()
+    {
+        await Setup();
+        await SetListenerVoiceActivation(true);
+        await Server.WaitPost(() => SEntMan.AddComponent<MutedComponent>(_listenerUid));
+        await Pair.RunTicksSync(5);
+
+        var popups = new MutedPopupCounter(this);
+        await TalkAsListener(popups, chunks: 10);
+        var firstUtterance = popups.Count;
+
+        // No key to release: a pause in the audio longer than a burst gap ends the utterance.
+        await Pair.RunTicksSync((int)MathF.Ceiling(1.5f * (float)Server.Timing.TickRate));
+        await TalkAsListener(popups, chunks: 10);
+        var secondUtterance = popups.Count;
+
+        await SetListenerVoiceActivation(false);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(firstUtterance, Is.EqualTo(1), "an utterance of many chunks gets one popup, not one per chunk");
+            Assert.That(secondUtterance, Is.EqualTo(2), "speaking again after a pause is a new attempt, and gets a new popup");
+        });
+    }
+
+    [Test]
+    public async Task VoiceActivationTalksWithoutTheKey()
+    {
+        await Setup();
+        var voiceSystem = Server.System<KsVoiceSystem>();
+
+        async Task<bool> Relayed()
+        {
+            var before = voiceSystem.RelayedChunkCount;
+            await Server.WaitPost(() =>
+                voiceSystem.HandleChunk(new KsVoiceInboundChunk(ServerSession!.UserId, Speech(), AbuseTriggered: false)));
+            await Pair.RunTicksSync(2);
+            return voiceSystem.RelayedChunkCount > before;
+        }
+
+        var withoutKey = await Relayed();
+
+        // The client's own setting, replicated to the server like any client cvar.
+        await SetListenerVoiceActivation(true);
+        var voiceActivated = await Relayed();
+
+        await OverrideCVar(Side.Server, KsCCVars.VoiceActivationAllowed, false);
+        await Pair.RunTicksSync(5);
+        var forbidden = await Relayed();
+
+        await SetListenerVoiceActivation(false);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(withoutKey, Is.False, "push-to-talk is still the default");
+            Assert.That(voiceActivated, Is.True, "with voice activation on, audio is relayed without holding the key");
+            Assert.That(forbidden, Is.False, "a server that doesn't allow voice activation still needs the key");
+        });
+    }
+
+    [Test]
+    public async Task RelayedVoiceIsRecordedInReplays()
+    {
+        // Nobody in range: a replay is watched from anywhere, so what nobody heard live is recorded all the same.
+        await Setup(listenerDistance: 40f);
+        await OverrideCVar(Side.Server, CVars.ReplayServerRecordingEnabled, true);
+        await HoldPushToTalk(true);
+
+        var voiceSystem = Server.System<KsVoiceSystem>();
+        var recordingManager = Server.ResolveDependency<IReplayRecordingManager>();
+
+        async Task<int> RecordedByTalking()
+        {
+            var before = voiceSystem.RecordedChunkCount;
+            await Talk();
+            return voiceSystem.RecordedChunkCount - before;
+        }
+
+        var notRecording = await RecordedByTalking();
+
+        var started = false;
+        await Server.WaitPost(() =>
+            started = recordingManager.TryStartRecording(Server.ResolveDependency<IResourceManager>().UserData, name: "ks-voice-replay-test", overwrite: true));
+        var recording = await RecordedByTalking();
+
+        await OverrideCVar(Side.Server, KsCCVars.VoiceRecordInReplays, false);
+        var switchedOff = await RecordedByTalking();
+
+        // Writing the replay serializes what was recorded, which is where an event that can't be sent would fail.
+        await Server.WaitPost(() => recordingManager.StopRecording());
+        await recordingManager.WaitWriteTasks();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(started, Is.True, "the test could start a recording");
+            Assert.That(notRecording, Is.Zero, "nothing is recorded while no replay is");
+            Assert.That(recording, Is.EqualTo(1), "a relayed chunk goes into the replay, even with nobody in range");
+            Assert.That(switchedOff, Is.Zero, "klovn.voice.record_in_replays turns it off");
+        });
+    }
+
+    [Test]
+    public async Task ReplayedVoicePlays()
+    {
+        await Setup();
+
+        NetEntity speakerNetEntity = default;
+        await Server.WaitPost(() => speakerNetEntity = SEntMan.GetNetEntity(_speakerUid));
+        var samples = Speech();
+        var encoder = new KsVoiceAdpcm.EncoderState();
+        var payload = new byte[KsVoiceAdpcm.EncodedSize(samples.Length)];
+        KsVoiceAdpcm.Encode(ref encoder, samples, payload);
+
+        var playbackSystem = Client.System<KsVoicePlaybackSystem>();
+        var receivedBefore = playbackSystem.ReceivedFrameCount;
+
+        // What a replay does with a recorded event: raise it as if it had come over the network.
+        await Client.WaitPost(() => Client.ResolveDependency<IClientEntityManager>()
+            .DispatchReceivedNetworkMsg(new KsVoiceReplayFrameEvent(speakerNetEntity, 1, payload)));
+        await Pair.RunTicksSync(2);
+
+        var received = playbackSystem.ReceivedFrameCount - receivedBefore;
+        var buffered = -1;
+        await Client.WaitPost(() => buffered = playbackSystem.GetBufferedSamples(speakerNetEntity));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(received, Is.EqualTo(1), "the replayed chunk reaches playback");
+            Assert.That(buffered, Is.Not.EqualTo(-1), "and is playing for its talker");
+        });
+    }
+
+    private async Task SetListenerVoiceActivation(bool enabled)
+    {
+        await Client.WaitPost(() => Client.CfgMan.SetCVar(KsCCVars.VoiceActivation, enabled));
+        await Pair.RunTicksSync(5);
+    }
+
+    /// <summary>
+    ///     Counts "you can't speak" popups shown to the pooled client. A label lasts about a second and folds repeats of
+    ///         itself into a counter, so it has to be looked at after every tick, adding up what appears.
+    /// </summary>
+    private sealed class MutedPopupCounter(KsVoiceRelayTests test)
+    {
+        private readonly string _mutedText = test.Client.ResolveDependency<ILocalizationManager>().GetString("speech-muted");
+        private int _lastSeen;
+
+        public int Count { get; private set; }
+
+        public async Task Observe()
+        {
+            await test.Client.WaitPost(() =>
+            {
+                var seen = 0;
+                foreach (var label in test.Client.System<Content.Client.Popups.PopupSystem>().WorldLabels)
+                {
+                    // A repeated popup's text gains a count suffix, so match on the message rather than equality.
+                    if (label.Text.Contains(_mutedText))
+                        seen += label.Repeats;
+                }
+
+                if (seen > _lastSeen)
+                    Count += seen - _lastSeen;
+
+                _lastSeen = seen;
+            });
+        }
+    }
+
+    /// <summary>
+    ///     The pooled client's page sends a run of chunks, one a tick, then goes quiet for a few ticks.
+    /// </summary>
+    private async Task TalkAsListener(MutedPopupCounter popups, int chunks)
+    {
+        for (var i = 0; i < chunks; i++)
+        {
+            await Server.WaitPost(() =>
+                Server.System<KsVoiceSystem>().HandleChunk(new KsVoiceInboundChunk(ServerSession!.UserId, Speech(), AbuseTriggered: false)));
+            await Pair.RunTicksSync(1);
+            await popups.Observe();
+        }
+
+        for (var i = 0; i < 5; i++)
+        {
+            await Pair.RunTicksSync(1);
+            await popups.Observe();
+        }
     }
 
     private async Task HoldListenerKey(bool held)

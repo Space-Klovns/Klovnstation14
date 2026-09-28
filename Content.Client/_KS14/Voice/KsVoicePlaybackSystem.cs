@@ -8,6 +8,7 @@ using Robust.Client.Player;
 using Robust.Shared.Audio.Sources;
 using Robust.Shared.Configuration;
 using Robust.Shared.Map;
+using Robust.Shared.Replays;
 using Robust.Shared.Timing;
 
 namespace Content.Client._KS14.Voice;
@@ -76,6 +77,7 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IReplayRecordingManager _replayRecordingManager = default!;
     [Dependency] private AudioSystem _audioSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
@@ -186,7 +188,27 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         => _pendingSpeakers.ContainsKey(speakerNetEntity);
 
     private void OnFrameReceived(KsVoiceFrameMessage message)
-        => HandleFrame(message);
+    {
+        // A client-side recording keeps what this player heard, like it keeps their popups.
+        if (_replayRecordingManager.IsRecording)
+            _replayRecordingManager.RecordClientMessage(new KsVoiceReplayFrameEvent(message.Source, message.Sequence, message.Payload));
+
+        HandleFrame(message);
+    }
+
+    /// <summary>
+    ///     Voice in a replay being watched. Only replays raise this: the server records it and never sends it.
+    /// </summary>
+    [SubscribeNetworkEvent]
+    private void OnReplayFrame(KsVoiceReplayFrameEvent args)
+    {
+        HandleFrame(new KsVoiceFrameMessage
+        {
+            Source = args.Source,
+            Sequence = args.Sequence,
+            Payload = args.Payload,
+        });
+    }
 
     /// <summary>
     ///     Accepts one relayed voice frame, as if it had just arrived from the server. Public so tests can drive playback

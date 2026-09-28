@@ -85,3 +85,16 @@ public sealed class KsVoiceUplinkStatusEvent(bool connected) : EntityEventArgs
 {
     public readonly bool Connected = connected;
 }
+
+/// <summary>
+///     One relayed voice chunk, as recorded into replays: the same data as <see cref="KsVoiceFrameMessage"/>, as an
+///         event, because replays only carry events. Never sent over the network; a replay plays it back as if it
+///         had been.
+/// </summary>
+[Serializable, NetSerializable]
+public sealed class KsVoiceReplayFrameEvent(NetEntity source, ushort sequence, byte[] payload) : EntityEventArgs
+{
+    public readonly NetEntity Source = source;
+    public readonly ushort Sequence = sequence;
+    public readonly byte[] Payload = payload;
+}
