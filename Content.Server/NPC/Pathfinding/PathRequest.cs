@@ -25,7 +25,7 @@ public abstract class PathRequest
 
     public readonly Stopwatch Stopwatch = new();
     public PriorityQueue<ValueTuple<float, PathPoly>> Frontier = default!;
-    public readonly Dictionary<PathPoly, float> CostSoFar = new();
+    public /* KS14: readonly removed, tactical requests swap in a pooled one */ Dictionary<PathPoly, float> CostSoFar = new();
     public readonly Dictionary<PathPoly, PathPoly> CameFrom = new();
 
     #endregion

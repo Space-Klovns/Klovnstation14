@@ -43,6 +43,13 @@
       radius: 1.0
       energy: 5.0
       netsync: false
+    # KS14 start: the server's view of the light above, which the client animates on its own - see KsExpendableLightMirrorComponent
+    - type: KsExpendableLightMirror
+      litRadius: 5 # client: 1 -> 6 while lighting
+      litEnergy: 8 # client: 6 -> 9 while lighting
+      fadingRadius: 3.5 # client: 6 -> 1 while fading
+      fadingEnergy: 6 # client: flickers 4 - 8
+    # KS14 end
     - type: IgnitionSource
       temperature: 400
       ignited: false

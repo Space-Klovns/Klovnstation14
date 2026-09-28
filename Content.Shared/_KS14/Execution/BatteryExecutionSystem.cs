@@ -5,7 +5,7 @@ using Robust.Shared.Prototypes;
 using Content.Shared.Power.EntitySystems;
 using Content.Shared.Weapons.Hitscan.Components;
 
-namespace Content.Server._KS14.Execution;
+namespace Content.Shared._KS14.Execution;
 
 /// <summary>
 /// Server-side handler for GunExecutedEvent on battery-powered weapons.

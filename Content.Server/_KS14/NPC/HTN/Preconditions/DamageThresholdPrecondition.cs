@@ -4,7 +4,7 @@ using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
 
-namespace Content.Server._KS14.NPC.Preconditions;
+namespace Content.Server._KS14.NPC.HTN.Preconditions;
 
 [DataDefinition]
 public sealed partial class DamageThresholdPrecondition : HTNPrecondition

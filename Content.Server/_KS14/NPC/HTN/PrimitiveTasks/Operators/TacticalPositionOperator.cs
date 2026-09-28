@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using Content.Server.Examine;
+using Content.Server._KS14.NPC.Squad;
 using Content.Server._KS14.NPC.Systems;
 using Content.Shared._KS14.NPC;
 using Content.Server.NPC;
@@ -33,6 +34,7 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     [Dependency] private IRobustRandom _robustRandom = default!;
     [Dependency] private PathfindingSystem _pathfindingSystem = default!;
     [Dependency] private NPCUtilitySystem _npcUtilitySystem = default!;
+    [Dependency] private NpcSquadFireLaneSystem _npcSquadFireLaneSystem = default!;
     [Dependency] private NpcTacticalPositionClaimSystem _npcTacticalPositionClaimSystem = default!;
     [Dependency] private NpcTacticalPositionDebugSystem _npcTacticalPositionDebugSystem = default!;
     [Dependency] private ExamineSystem _examineSystem = default!;
@@ -88,6 +90,13 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
     [DataField] public float RandomProbability;
 
     [DataField] public float ClaimClearanceRadius = 2.5f;
+
+    /// <summary>
+    ///     Whether to keep out of squadmates' lines of fire, and them out of ours - the line from a candidate to
+    ///         <see cref="LosReferenceCoordinatesKey"/>. Only applies while <see cref="NpcSquadFireLaneSystem"/>
+    ///         is enabled by cvar.
+    /// </summary>
+    [DataField] public bool AvoidFireLanes = true;
 
     /// <summary>
     /// Blackboard float key read at claim time to size the claim's TTL (e.g. CampingTime/AdvanceTime).
@@ -193,7 +202,10 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
 
     private float ScoreCandidate(NPCBlackboard blackboard, EntityUid owner, PathPoly candidate, EntityCoordinates reference)
     {
+        var avoidFireLanes = AvoidFireLanes && _npcSquadFireLaneSystem.Enabled;
+
         var considerationCount = 1 // distance, always applied
+            + (avoidFireLanes ? 1 : 0)
             + (LosReferenceCoordinatesKey is not null ? 1 : 0)
             + (FovReferenceCoordinatesKey is not null ? 1 : 0)
             + (RandomProbability > 0f ? 1 : 0)
@@ -240,6 +252,20 @@ public sealed partial class TacticalPositionOperator : HTNOperator, IHtnConditio
         {
             var jitterRaw = _robustRandom.Prob(RandomProbability) ? 1f : 0f;
             score *= _npcUtilitySystem.GetAdjustedScore(_npcUtilitySystem.GetScore(new BoolCurve(), jitterRaw), considerationCount);
+
+            if (score <= 0f)
+                return 0f;
+        }
+
+        if (avoidFireLanes)
+        {
+            MapCoordinates? aim = LosReferenceCoordinatesKey is not null &&
+                blackboard.TryGetValue<EntityCoordinates>(LosReferenceCoordinatesKey, out var aimCoordinates, _entityManager)
+                    ? _transformSystem.ToMapCoordinates(aimCoordinates)
+                    : null;
+
+            var fireLanePenalty = _npcSquadFireLaneSystem.GetFireLanePenalty(owner, _transformSystem.ToMapCoordinates(candidate.Coordinates), aim);
+            score *= _npcUtilitySystem.GetAdjustedScore(fireLanePenalty, considerationCount);
 
             if (score <= 0f)
                 return 0f;

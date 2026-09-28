@@ -54,3 +54,12 @@ ks-operative-line-getaway-3 = Move back now or face immediate termination!
 ks-operative-line-alert-grenade-1 = Explosive!
 ks-operative-line-alert-grenade-2 = Bomb!
 ks-operative-line-alert-grenade-3 = Take cover!
+
+ks-operative-line-standdown-1 = Area's clear. Stand down.
+ks-operative-line-standdown-2 = Nothing more here. Ease off.
+ks-operative-line-standdown-3 = All quiet. Stand down.
+ks-operative-line-standdown-4 = We're clear. Relax.
+ks-operative-line-standdownack-1 = Copy.
+ks-operative-line-standdownack-2 = Copy that, standing down.
+ks-operative-line-standdownack-3 = Understood.
+ks-operative-line-standdownack-4 = Roger.

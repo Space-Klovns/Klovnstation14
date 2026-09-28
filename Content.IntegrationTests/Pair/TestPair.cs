@@ -115,6 +115,12 @@ public sealed partial class TestPair : RobustIntegrationTest.TestPair
             LoadConfigAndUserData = false,
         };
 
+        // KS14 start: only read at startup, so it has to go in here rather than be overridden per test. Always set,
+        //      either way, so a config preset that turns it on cannot hand every test a light tree.
+        opts.CVarOverrides[Robust.Shared.CVars.LookupEnableServerLightTree.Name] =
+            Settings is PoolSettings { ServerLightTree: true } ? "true" : "false";
+        // KS14 end
+
         opts.BeforeStart += () =>
         {
             // Server-only systems (i.e., systems that subscribe to events with server-only components)

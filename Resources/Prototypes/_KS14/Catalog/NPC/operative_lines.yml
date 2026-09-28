@@ -71,3 +71,15 @@
   values:
     prefix: ks-operative-line-alert-grenade-
     count: 3
+
+- type: localizedDataset
+  id: KsOperativeStandDown
+  values:
+    prefix: ks-operative-line-standdown-
+    count: 4
+
+- type: localizedDataset
+  id: KsOperativeStandDownAcknowledge
+  values:
+    prefix: ks-operative-line-standdownack-
+    count: 4

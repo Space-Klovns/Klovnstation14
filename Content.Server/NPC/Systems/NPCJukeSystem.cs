@@ -215,7 +215,12 @@ public sealed partial class NPCJukeSystem : EntitySystem
                     Vector2.Dot(targetPhysics.LinearVelocity, targetOffset) > 0f)
                     return;
 
-                var idealDistance = GetDesiredFiringDistance(rangedCombatComponent.Target, gunEntity.Comp.MaxAngle, 1.8f) * 4.5f;
+                // The 4.5x stand-off margin is for single projectiles, where it keeps precise guns back. For pellets,
+                //      the coverage factor already reads as the share of pellets that hit, so it is used as-is -
+                //      with the margin, a shotgunner never came within shotgun range.
+                var (shotSpread, shotProjectiles) = GetShotSpread(gunEntity);
+                var idealDistance = GetDesiredFiringDistance(rangedCombatComponent.Target, shotSpread, 1.8f) *
+                    (shotProjectiles > 1 ? 1f : 4.5f);
                 if (idealDistance == 0f)
                     return;
 
