@@ -148,3 +148,8 @@ select {
 code {
     font-size: 13px;
 }
+
+output {
+    min-width: 4.5em;
+    text-align: right;
+}

@@ -4,6 +4,7 @@
 
 (() => {
     const PROTOCOL_VERSION = 1;
+    const SAMPLE_RATE = 16000;
     const FRAME_SAMPLES = 320;          // 20 ms at 16 kHz
     const FRAMES_PER_MESSAGE = 3;       // 60 ms per websocket message
     const PREROLL_FRAMES = 2;           // sent when the gate opens, so word onsets aren't clipped
@@ -13,6 +14,9 @@
     const TOKEN_KEY = "ksVoiceToken";
     const GATE_KEY = "ksVoiceGateDb";
     const DEVICE_KEY = "ksVoiceDevice";
+    const VOLUME_KEY = "ksVoiceMicVolume";
+    const MONITOR_LEAD_SECONDS = 0.05;  // mic test: how far ahead of now to schedule, to ride out message jitter
+    const MONITOR_MAX_AHEAD_SECONDS = 0.3; // ...and how far it may drift ahead before it's pulled back in
 
     // Close reasons after which reconnecting cannot help.
     const TERMINAL_REASONS = new Set(["auth-failed", "auth-timeout", "link-reset", "replaced", "disabled"]);
@@ -53,6 +57,10 @@
         meterGate: $("meter-gate"),
         gate: $("gate"),
         gateValue: $("gate-value"),
+        volume: $("volume"),
+        volumeValue: $("volume-value"),
+        test: $("test"),
+        testHint: $("test-hint"),
     };
 
     const storage = {
@@ -97,6 +105,7 @@
     let audioContext = null;
     let mediaStream = null;
     let captureNode = null;
+    let inputGain = null;
 
     // What the status line shows is derived from these, in render(), rather than set piecemeal: the server's view
     //      (push-to-talk held and allowed) says nothing about whether this page is actually capturing anything.
@@ -112,6 +121,11 @@
     let pending = [];
     let preroll = [];
     let gateDb = Number(storage.get("localStorage", GATE_KEY) ?? -50);
+    let volumePercent = Number(storage.get("localStorage", VOLUME_KEY) ?? 100);
+
+    // Mic test: plays back what passes the noise gate, which is exactly what gets sent.
+    let testing = false;
+    let monitorTime = 0;                // audio-clock time the next played-back frame starts at
 
     function setStatus(state, text) {
         elements.status.dataset.state = state;
@@ -119,6 +133,11 @@
     }
 
     function render() {
+        elements.test.disabled = micState !== "on";
+        elements.test.textContent = testing ? "Stop test" : "Test microphone";
+        elements.test.setAttribute("aria-pressed", String(testing));
+        elements.testHint.hidden = !testing;
+
         if (linkState === "failed") {
             setStatus("error", linkError);
             return;
@@ -173,6 +192,43 @@
         elements.gateValue.textContent = `${value} dB`;
         elements.meterGate.style.left = `${dbToMeter(value) * 100}%`;
         storage.set("localStorage", GATE_KEY, String(value));
+    }
+
+    function setVolume(value) {
+        volumePercent = value;
+        elements.volume.value = String(value);
+        elements.volumeValue.textContent = `${value}%`;
+        inputGain?.gain.setTargetAtTime(value / 100, inputGain.context.currentTime, 0.02);
+        storage.set("localStorage", VOLUME_KEY, String(value));
+    }
+
+    function setTesting(value) {
+        testing = value && micState === "on";
+        monitorTime = 0;
+        render();
+    }
+
+    // Plays one frame back through this page's own output, scheduled back to back with the previous one.
+    function monitorFrame(frame) {
+        if (!testing || !audioContext)
+            return;
+
+        // At the wire's sample rate, so what's heard also has the bandwidth the game gets.
+        const buffer = audioContext.createBuffer(1, frame.length, SAMPLE_RATE);
+        const samples = buffer.getChannelData(0);
+        for (let i = 0; i < frame.length; i++)
+            samples[i] = frame[i] / 32768;
+
+        // Restart the schedule after a gap (the gate closed) or when it has run too far ahead of the clock.
+        const now = audioContext.currentTime;
+        if (monitorTime < now || monitorTime > now + MONITOR_MAX_AHEAD_SECONDS)
+            monitorTime = now + MONITOR_LEAD_SECONDS;
+
+        const player = audioContext.createBufferSource();
+        player.buffer = buffer;
+        player.connect(audioContext.destination);
+        player.start(monitorTime);
+        monitorTime += buffer.duration;
     }
 
     function dbToMeter(db) {
@@ -314,10 +370,12 @@
         }
 
         if (preroll.length > 0) {
+            preroll.forEach(monitorFrame);
             pending.push(...preroll);
             preroll = [];
         }
 
+        monitorFrame(frame);
         pending.push(frame);
         while (pending.length >= FRAMES_PER_MESSAGE) {
             sendFrames(pending.slice(0, FRAMES_PER_MESSAGE));
@@ -391,13 +449,15 @@
         audioContext = context;
 
         const source = audioContext.createMediaStreamSource(mediaStream);
+        inputGain = audioContext.createGain();
+        inputGain.gain.value = volumePercent / 100;
         captureNode = new AudioWorkletNode(audioContext, "ks-voice-capture", { numberOfOutputs: 1 });
         captureNode.port.onmessage = (event) => onFrame(new Int16Array(event.data.frame), event.data.rms);
 
         // Keep the node pulled by the graph without making any sound.
         const silence = audioContext.createGain();
         silence.gain.value = 0;
-        source.connect(captureNode).connect(silence).connect(audioContext.destination);
+        source.connect(inputGain).connect(captureNode).connect(silence).connect(audioContext.destination);
 
         elements.start.hidden = true;
         elements.stop.hidden = false;
@@ -445,6 +505,7 @@
         micGeneration++;
         captureNode?.disconnect();
         captureNode = null;
+        inputGain = null;
         mediaStream?.getTracks().forEach((track) => track.stop());
         mediaStream = null;
         audioContext?.close();
@@ -453,6 +514,7 @@
         pending = [];
         preroll = [];
         gateOpenFrames = 0;
+        testing = false;
         micState = "off";
         elements.meterFill.style.width = "0";
         elements.start.hidden = false;
@@ -488,8 +550,11 @@
 
         elements.main.hidden = false;
         setGate(Number.isFinite(gateDb) ? gateDb : -50);
+        setVolume(Number.isFinite(volumePercent) ? Math.min(200, Math.max(0, volumePercent)) : 100);
 
         elements.gate.addEventListener("input", () => setGate(Number(elements.gate.value)));
+        elements.volume.addEventListener("input", () => setVolume(Number(elements.volume.value)));
+        elements.test.addEventListener("click", () => setTesting(!testing));
         elements.start.addEventListener("click", startMicrophone);
         elements.stop.addEventListener("click", stopMicrophone);
         elements.device.addEventListener("change", async () => {

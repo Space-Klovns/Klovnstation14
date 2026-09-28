@@ -70,6 +70,13 @@ under `/klovn/voice/`, and accepts websockets at `/klovn/voice/ws`.
   microphone state: with the microphone off it never claims to be transmitting, and says so if push-to-talk is held.
   Firefox also holds any audio graph started without a click on the page (allowing the microphone in its prompt
   doesn't count), so there the page asks for one click and carries on; Chromium browsers start without one.
+- **Mic volume and mic test.** A *Mic volume* slider (0–200 %, kept in `localStorage`) is a gain node in front of the
+  worklet, so the level meter and the noise gate both see the adjusted level, the same level that gets sent. Turning
+  it up past what the microphone delivers clips, and clipped or very loud audio counts towards the auto-mute.
+  *Test microphone* plays back every frame that passes the noise gate, the same frames that get sent, as 16 kHz
+  buffers scheduled back to back about 50 ms ahead. So what you hear has the game's bandwidth and gating. It doesn't
+  have the server's limiter, or the in-game distance falloff. It runs while the microphone is on, whether or not
+  push-to-talk is held, and it sends nothing extra to the server.
 - **Resampling in the worklet.** The page captures at the device's own rate and resamples to 16 kHz inside the
   AudioWorklet, using a box filter that also acts as a crude low-pass. Creating the AudioContext at 16 kHz would be
   simpler, but Firefox refuses to connect a microphone stream to a context whose rate differs from the device's.

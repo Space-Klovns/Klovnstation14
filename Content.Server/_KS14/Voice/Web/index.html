@@ -45,6 +45,12 @@
             </select>
         </label>
 
+        <label class="row" for="volume">
+            <span>Mic volume</span>
+            <input id="volume" type="range" min="0" max="200" step="5" value="100">
+            <output id="volume-value">100%</output>
+        </label>
+
         <div class="row">
             <span>Level</span>
             <div class="meter" aria-hidden="true">
@@ -58,6 +64,12 @@
             <input id="gate" type="range" min="-70" max="-20" step="1" value="-50">
             <output id="gate-value">-50 dB</output>
         </label>
+
+        <div class="row">
+            <button id="test" type="button" aria-pressed="false" disabled>Test microphone</button>
+        </div>
+        <p class="hint" id="test-hint" hidden>You're hearing yourself close to the way others will: only what gets past
+            the noise gate is played back. Wear headphones, or your speakers will feed back into the microphone.</p>
 
         <p class="hint">Hold your in-game push-to-talk key to talk. Use headphones: the game's audio isn't cancelled from
             your microphone. Keep this tab open while you play.</p>
