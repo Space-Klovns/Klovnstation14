@@ -31,7 +31,9 @@ public sealed class KsOperativeHtnRootTest : GameTest
 {
     public override PoolSettings PoolSettings => PsDisconnected;
 
-    private static readonly ProtoId<HTNCompoundPrototype> OperativeRoot = "KsOperativeCombatCompound";
+    // Not static: the YAML linter validates every static ProtoId field against the client's prototypes too, and
+    //      the client has no HTN prototypes at all, so a static one fails the lint.
+    private readonly ProtoId<HTNCompoundPrototype> _operativeRoot = "KsOperativeCombatCompound";
 
     private const string CombatMarker = "OpInCombat";
     private const string CombatTimeKey = "TimeOfLastCombat";
@@ -160,7 +162,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
         bool squadThreat = false)
     {
         var protoManager = Pair.Server.ResolveDependency<IPrototypeManager>();
-        if (!protoManager.HasIndex(OperativeRoot))
+        if (!protoManager.HasIndex(_operativeRoot))
             Assert.Ignore("the operative HTN is in the private _KsModule submodule, which is not present");
 
         var (entManager, mobUid) = await SetUpOperativeInRoom();
@@ -195,7 +197,7 @@ public sealed class KsOperativeHtnRootTest : GameTest
             job = new HTNPlanJob(
                 maxTime: 10,
                 protoManager,
-                new HTNCompoundTask { Task = OperativeRoot },
+                new HTNCompoundTask { Task = _operativeRoot },
                 blackboard,
                 branchTraversal: null);
         });
