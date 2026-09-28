@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <title>Voice chat</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+    <h1>Voice chat</h1>
+    <p class="identity" id="identity">Not connected.</p>
+
+    <section class="panel" id="insecure" hidden>
+        <h2>Microphone blocked</h2>
+        <p>Browsers only allow microphone access on secure (HTTPS) pages. This server is serving the voice page
+            without HTTPS, so it cannot use your microphone. Ask the server host to set
+            <code>klovn.voice.public_url</code> to an HTTPS address.</p>
+    </section>
+
+    <section class="panel" id="no-token" hidden>
+        <h2>No voice link</h2>
+        <p>Open this page from the link the game gives you (Options → KS14 → Voice chat, or the <code>voicechat</code>
+            console command). The link is personal: anyone who has it can talk as you, so don't share it.</p>
+    </section>
+
+    <section class="panel" id="main" hidden>
+        <div class="status" id="status" data-state="idle">
+            <span class="dot"></span>
+            <span id="status-text">Click “Start microphone” to begin.</span>
+        </div>
+
+        <div class="row">
+            <button id="start" type="button">Start microphone</button>
+            <button id="stop" type="button" hidden>Stop microphone</button>
+        </div>
+
+        <label class="row" for="device">
+            <span>Microphone</span>
+            <select id="device" disabled>
+                <option value="">Default</option>
+            </select>
+        </label>
+
+        <div class="row">
+            <span>Level</span>
+            <div class="meter" aria-hidden="true">
+                <div class="meter-fill" id="meter-fill"></div>
+                <div class="meter-gate" id="meter-gate"></div>
+            </div>
+        </div>
+
+        <label class="row" for="gate">
+            <span>Noise gate</span>
+            <input id="gate" type="range" min="-70" max="-20" step="1" value="-50">
+            <output id="gate-value">-50 dB</output>
+        </label>
+
+        <p class="hint">Hold your in-game push-to-talk key to talk. Use headphones: the game's audio isn't cancelled from
+            your microphone. Keep this tab open while you play.</p>
+    </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

@@ -40,3 +40,9 @@ storage_limit = 2
 [klovn.gun]
 # originally 0.125
 impulse_multiplier = 0.09375
+
+# KS14: in-game voice chat. Off by default; see Klovn/Docs/voice_chat.md before enabling.
+# Microphone pages need HTTPS, so public_url should point at a TLS reverse proxy in front of the status host.
+#[klovn.voice]
+#enabled = true
+#public_url = "https://ks14.example.com"
