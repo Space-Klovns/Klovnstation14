@@ -62,7 +62,6 @@
         test: $("test"),
         testHint: $("test-hint"),
         talkHint: $("talk-hint"),
-        replayNote: $("replay-note"),
     };
 
     const storage = {
@@ -139,7 +138,6 @@
         elements.test.textContent = testing ? "Stop test" : "Test microphone";
         elements.test.setAttribute("aria-pressed", String(testing));
         elements.testHint.hidden = !testing;
-        elements.replayNote.hidden = !serverState?.recordedInReplays;
         elements.talkHint.textContent = serverState?.voiceActivation
             ? "Voice activation is on: you're heard whenever your level is above the noise gate, so set the gate just above your background noise."
             : "Hold your in-game push-to-talk key to talk.";

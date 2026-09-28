@@ -49,6 +49,11 @@ public sealed partial class KsVoiceSystem : EntitySystem
     /// </summary>
     private static readonly TimeSpan LinkResetCooldown = TimeSpan.FromSeconds(5);
 
+    /// <summary>
+    ///     How often connected pages' players are checked for a change of voice activation setting.
+    /// </summary>
+    private static readonly TimeSpan VoiceActivationPollInterval = TimeSpan.FromSeconds(0.5);
+
     [Dependency] private KsVoiceUplinkManager _uplinkManager = default!;
     [Dependency] private KsVoiceLinkManager _linkManager = default!;
     [Dependency] private IServerNetManager _netManager = default!;
@@ -80,6 +85,7 @@ public sealed partial class KsVoiceSystem : EntitySystem
     private bool _logBursts;
     private bool _voiceActivationAllowed;
     private bool _recordInReplays;
+    private TimeSpan _nextVoiceActivationPoll;
 
     /// <summary>
     ///     Relayed chunks since startup, for tests and diagnostics.
@@ -106,11 +112,7 @@ public sealed partial class KsVoiceSystem : EntitySystem
             _voiceActivationAllowed = value;
             RefreshAllPageStates();
         }, invokeImmediately: true);
-        Subs.CVar(_configurationManager, KsCCVars.VoiceRecordInReplays, value =>
-        {
-            _recordInReplays = value;
-            RefreshAllPageStates();
-        }, invokeImmediately: true);
+        Subs.CVar(_configurationManager, KsCCVars.VoiceRecordInReplays, value => _recordInReplays = value, invokeImmediately: true);
 
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
     }
@@ -161,7 +163,7 @@ public sealed partial class KsVoiceSystem : EntitySystem
 
         state.LastChunkReceived = now;
 
-        var block = GetBlockReason(session, state, now, voiceActivation, out var speakerUid);
+        var block = GetBlockReason(session, state, now, voiceActivation, attempt: true, out var speakerUid);
 
         // Only audio that would actually go out can earn a mute. The page counts only frames sent while we told it
         //      it was transmitting, but that flag trails by a chunk, so check again here.
@@ -283,7 +285,12 @@ public sealed partial class KsVoiceSystem : EntitySystem
         return _voiceActivationAllowed && _configurationManager.GetClientCVar(session.Channel, KsCCVars.VoiceActivation);
     }
 
-    private KsVoiceBlockReason? GetBlockReason(ICommonSession session, TalkerState state, TimeSpan now, bool voiceActivation, out EntityUid speakerUid)
+    /// <param name="attempt">
+    ///     Whether the player is trying to talk right now (audio arrived, or the key is down), rather than their page's
+    ///         state just being brought up to date. Only an attempt runs <see cref="ActionBlockerSystem.CanSpeak"/>,
+    ///         whose refusal can show a popup.
+    /// </param>
+    private KsVoiceBlockReason? GetBlockReason(ICommonSession session, TalkerState state, TimeSpan now, bool voiceActivation, bool attempt, out EntityUid speakerUid)
     {
         speakerUid = default;
 
@@ -318,6 +325,9 @@ public sealed partial class KsVoiceSystem : EntitySystem
         if (state.CannotSpeakBodyUid == attachedUid)
             return KsVoiceBlockReason.CannotSpeak;
 
+        if (!attempt)
+            return null;
+
         if (!_actionBlockerSystem.CanSpeak(attachedUid))
         {
             state.CannotSpeakBodyUid = attachedUid;
@@ -331,6 +341,12 @@ public sealed partial class KsVoiceSystem : EntitySystem
     {
         var now = _gameTiming.CurTime;
 
+        // Nothing tells us when a client changes a replicated cvar, so look now and then: the page shows which mode
+        //      is on, and a silent page would otherwise not hear about the switch until its player next spoke.
+        var pollVoiceActivation = now >= _nextVoiceActivationPoll;
+        if (pollVoiceActivation)
+            _nextVoiceActivationPoll = now + VoiceActivationPollInterval;
+
         _scratchUsers.Clear();
         foreach (var (userId, state) in _talkers)
         {
@@ -340,9 +356,8 @@ public sealed partial class KsVoiceSystem : EntitySystem
             if (state.BurstStart != null && now - state.LastRelay > BurstGap)
                 EndBurst(userId, state);
 
-            // Nothing tells us when a client changes a replicated cvar, so look: the page shows which mode is on,
-            //      and a silent page would otherwise not hear about the switch until its player next spoke.
-            if (state.PageStateSent &&
+            if (pollVoiceActivation &&
+                state.PageStateSent &&
                 _playerManager.TryGetSessionById(userId, out var session) &&
                 IsVoiceActivated(session) != state.LastPageVoiceActivation)
             {
@@ -417,7 +432,6 @@ public sealed partial class KsVoiceSystem : EntitySystem
             reason = block == null ? null : ReasonId(block.Value),
             seconds = seconds == null ? (int?)null : (int)Math.Ceiling(Math.Max(0d, seconds.Value)),
             voiceActivation,
-            recordedInReplays = _recordInReplays,
         });
     }
 
@@ -432,11 +446,14 @@ public sealed partial class KsVoiceSystem : EntitySystem
         var state = GetTalker(userId);
         var now = _gameTiming.CurTime;
         var voiceActivation = IsVoiceActivated(session);
-        UpdatePageState(userId, state, GetBlockReason(session, state, now, voiceActivation, out _), voiceActivation, now);
+
+        // Pressing the key is trying to talk; a page just being told the current state isn't.
+        var block = GetBlockReason(session, state, now, voiceActivation, attempt: state.PushToTalkHeld, out _);
+        UpdatePageState(userId, state, block, voiceActivation, now);
     }
 
     /// <summary>
-    ///     Resends every connected page's state, for server settings the page shows.
+    ///     Resends every connected page's state, for a server setting the page shows.
     /// </summary>
     private void RefreshAllPageStates()
     {

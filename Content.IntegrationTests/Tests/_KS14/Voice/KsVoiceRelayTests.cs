@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Numerics;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Content.Client._KS14.Voice;
 using Content.IntegrationTests.Fixtures;
@@ -20,6 +23,8 @@ using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
 using Robust.Shared.Replays;
+
+using static Content.IntegrationTests.Tests._KS14.Voice.KsVoiceTestSockets;
 
 namespace Content.IntegrationTests.Tests._KS14.Voice;
 
@@ -422,6 +427,54 @@ public sealed class KsVoiceRelayTests : GameTest
         {
             Assert.That(firstUtterance, Is.EqualTo(1), "an utterance of many chunks gets one popup, not one per chunk");
             Assert.That(secondUtterance, Is.EqualTo(2), "speaking again after a pause is a new attempt, and gets a new popup");
+        });
+    }
+
+    [Test]
+    public async Task AnIdlePageNeverShowsTheCannotSpeakPopup()
+    {
+        await Setup();
+        await SetListenerVoiceActivation(true);
+        await Server.WaitPost(() => SEntMan.AddComponent<MutedComponent>(_listenerUid));
+
+        // A real page for the pooled client, since the page's state is only worked out while one is connected.
+        string token = null;
+        await Server.WaitPost(() => token = Server.ResolveDependency<KsVoiceLinkManager>().ResolveToken(ServerSession!, reset: false));
+        await using var page = await CreateSocketPair();
+        var run = new KsVoiceUplinkConnection(page.Server, IPAddress.Loopback, Server.ResolveDependency<KsVoiceUplinkManager>())
+            .RunAsync(CancellationToken.None);
+        await SendText(page.Client, JsonSerializer.Serialize(new { type = "auth", token }));
+        await ReadText(page.Client);
+
+        var popups = new MutedPopupCounter(this);
+        async Task Idle()
+        {
+            for (var i = 0; i < 10; i++)
+            {
+                await Pair.RunTicksSync(1);
+                await popups.Observe();
+            }
+        }
+
+        // Connecting, and the server's switch changing, each bring the page's state up to date without anyone
+        //      trying to talk.
+        await Idle();
+        await OverrideCVar(Side.Server, KsCCVars.VoiceActivationAllowed, false);
+        await OverrideCVar(Side.Server, KsCCVars.VoiceActivationAllowed, true);
+        await Idle();
+        var idle = popups.Count;
+
+        await TalkAsListener(popups, chunks: 3);
+        var talking = popups.Count;
+
+        await page.Client.CloseAsync(System.Net.WebSockets.WebSocketCloseStatus.NormalClosure, "done", CancellationToken.None);
+        await run.WaitAsync(SocketTimeout);
+        await SetListenerVoiceActivation(false);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(idle, Is.Zero, "a muted player who isn't talking is never told they can't speak");
+            Assert.That(talking, Is.EqualTo(1), "trying to talk still is");
         });
     }
 

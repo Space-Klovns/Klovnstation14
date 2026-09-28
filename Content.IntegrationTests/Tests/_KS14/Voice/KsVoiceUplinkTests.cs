@@ -15,6 +15,7 @@ using Content.Server._KS14.Voice;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Voice;
 using Robust.Shared.Network;
+using static Content.IntegrationTests.Tests._KS14.Voice.KsVoiceTestSockets;
 
 namespace Content.IntegrationTests.Tests._KS14.Voice;
 
@@ -27,8 +28,6 @@ namespace Content.IntegrationTests.Tests._KS14.Voice;
 public sealed class KsVoiceUplinkTests : GameTest
 {
     public override PoolSettings PoolSettings => new() { Connected = true, Dirty = true };
-
-    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
 
     /// <summary>
     ///     Host that resolves tokens through the real <see cref="KsVoiceLinkManager"/> and records what it's handed.
@@ -62,91 +61,6 @@ public sealed class KsVoiceUplinkTests : GameTest
         public void OnClosed(KsVoiceUplinkConnection connection)
         {
         }
-    }
-
-    private sealed class SocketPair : IAsyncDisposable
-    {
-        public required WebSocket Server;
-        public required WebSocket Client;
-        public required TcpClient ServerTcp;
-        public required TcpClient ClientTcp;
-
-        public async ValueTask DisposeAsync()
-        {
-            Client.Dispose();
-            Server.Dispose();
-            ClientTcp.Dispose();
-            ServerTcp.Dispose();
-            await Task.CompletedTask;
-        }
-    }
-
-    private static async Task<SocketPair> CreateSocketPair()
-    {
-        var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        try
-        {
-            var clientTcp = new TcpClient();
-            var connect = clientTcp.ConnectAsync(IPAddress.Loopback, ((IPEndPoint)listener.LocalEndpoint).Port);
-            var serverTcp = await listener.AcceptTcpClientAsync();
-            await connect;
-
-            return new SocketPair
-            {
-                ServerTcp = serverTcp,
-                ClientTcp = clientTcp,
-                Server = WebSocket.CreateFromStream(serverTcp.GetStream(), isServer: true, subProtocol: null, keepAliveInterval: TimeSpan.Zero),
-                Client = WebSocket.CreateFromStream(clientTcp.GetStream(), isServer: false, subProtocol: null, keepAliveInterval: TimeSpan.Zero),
-            };
-        }
-        finally
-        {
-            listener.Stop();
-        }
-    }
-
-    private static Task SendText(WebSocket socket, string text)
-        => socket.SendAsync(Encoding.UTF8.GetBytes(text), WebSocketMessageType.Text, endOfMessage: true, CancellationToken.None);
-
-    private static Task SendAudio(WebSocket socket, int frames, ushort sequence = 0)
-    {
-        var sampleCount = frames * KsVoiceConstants.FrameSamples;
-        var buffer = new byte[KsVoiceConstants.UplinkHeaderBytes + sampleCount * 2];
-        buffer[0] = KsVoiceConstants.UplinkProtocolVersion;
-        BinaryPrimitives.WriteUInt16LittleEndian(buffer.AsSpan(2), sequence);
-        for (var i = 0; i < sampleCount; i++)
-            BinaryPrimitives.WriteInt16LittleEndian(buffer.AsSpan(KsVoiceConstants.UplinkHeaderBytes + i * 2), (short)(i % 200 * 50));
-
-        return socket.SendAsync(buffer, WebSocketMessageType.Binary, endOfMessage: true, CancellationToken.None);
-    }
-
-    /// <summary>
-    ///     Reads text messages until the socket closes, returning them and the close description.
-    /// </summary>
-    private static async Task<(List<string> Messages, string CloseDescription)> ReadUntilClosed(WebSocket socket)
-    {
-        var messages = new List<string>();
-        var buffer = new byte[4096];
-        using var timeout = new CancellationTokenSource(Timeout);
-
-        while (true)
-        {
-            var result = await socket.ReceiveAsync(buffer, timeout.Token);
-            if (result.MessageType == WebSocketMessageType.Close)
-                return (messages, result.CloseStatusDescription);
-
-            messages.Add(Encoding.UTF8.GetString(buffer, 0, result.Count));
-        }
-    }
-
-    private static async Task<string> ReadText(WebSocket socket)
-    {
-        var buffer = new byte[4096];
-        using var timeout = new CancellationTokenSource(Timeout);
-        var result = await socket.ReceiveAsync(buffer, timeout.Token);
-        Assert.That(result.MessageType, Is.EqualTo(WebSocketMessageType.Text));
-        return Encoding.UTF8.GetString(buffer, 0, result.Count);
     }
 
     private async Task<string> IssueToken(bool reset = false)
@@ -195,7 +109,7 @@ public sealed class KsVoiceUplinkTests : GameTest
 
         await SendText(pair.Client, JsonSerializer.Serialize(new { type = "auth", token = "not-the-token" }));
         var (_, close) = await ReadUntilClosed(pair.Client);
-        await run.WaitAsync(Timeout);
+        await run.WaitAsync(SocketTimeout);
 
         Assert.Multiple(() =>
         {
@@ -217,7 +131,7 @@ public sealed class KsVoiceUplinkTests : GameTest
 
         await SendAudio(pair.Client, frames: 1);
         var (_, close) = await ReadUntilClosed(pair.Client);
-        await run.WaitAsync(Timeout);
+        await run.WaitAsync(SocketTimeout);
 
         Assert.Multiple(() =>
         {
@@ -243,12 +157,12 @@ public sealed class KsVoiceUplinkTests : GameTest
         await SendText(pair.Client, JsonSerializer.Serialize(new { type = "ping" }));
         await SendAudio(pair.Client, frames: 1, sequence: 1);
 
-        using var timeout = new CancellationTokenSource(Timeout);
+        using var timeout = new CancellationTokenSource(SocketTimeout);
         while (host.Chunks.Count < 2)
             await Task.Delay(10, timeout.Token);
 
         await pair.Client.CloseAsync(WebSocketCloseStatus.NormalClosure, "done", CancellationToken.None);
-        await run.WaitAsync(Timeout);
+        await run.WaitAsync(SocketTimeout);
 
         var chunks = host.Chunks.ToArray();
         Assert.Multiple(() =>
@@ -299,7 +213,7 @@ public sealed class KsVoiceUplinkTests : GameTest
         await pair.Client.SendAsync(bad, WebSocketMessageType.Binary, endOfMessage: true, CancellationToken.None);
 
         var (_, close) = await ReadUntilClosed(pair.Client);
-        await run.WaitAsync(Timeout);
+        await run.WaitAsync(SocketTimeout);
 
         Assert.Multiple(() =>
         {
@@ -323,7 +237,7 @@ public sealed class KsVoiceUplinkTests : GameTest
 
         await SendAudio(pair.Client, frames: KsVoiceConstants.MaxFramesPerUplinkMessage + 1);
         var (_, close) = await ReadUntilClosed(pair.Client);
-        await run.WaitAsync(Timeout);
+        await run.WaitAsync(SocketTimeout);
 
         Assert.Multiple(() =>
         {
@@ -358,7 +272,7 @@ public sealed class KsVoiceUplinkTests : GameTest
         }
 
         var (_, close) = await closed;
-        await run.WaitAsync(Timeout);
+        await run.WaitAsync(SocketTimeout);
 
         Assert.That(close, Is.EqualTo("rate"));
     }
@@ -383,7 +297,7 @@ public sealed class KsVoiceUplinkTests : GameTest
         await ReadText(second.Client);
 
         var (messages, close) = await ReadUntilClosed(first.Client);
-        await firstRun.WaitAsync(Timeout);
+        await firstRun.WaitAsync(SocketTimeout);
 
         Assert.Multiple(() =>
         {
@@ -393,7 +307,7 @@ public sealed class KsVoiceUplinkTests : GameTest
         });
 
         await second.Client.CloseAsync(WebSocketCloseStatus.NormalClosure, "done", CancellationToken.None);
-        await secondRun.WaitAsync(Timeout);
+        await secondRun.WaitAsync(SocketTimeout);
     }
 
     [Test]
@@ -409,7 +323,7 @@ public sealed class KsVoiceUplinkTests : GameTest
         await SendText(pair.Client, JsonSerializer.Serialize(new { type = "auth", token }));
 
         var (_, close) = await ReadUntilClosed(pair.Client);
-        await run.WaitAsync(Timeout);
+        await run.WaitAsync(SocketTimeout);
 
         Assert.That(close, Is.EqualTo("auth-failed"), "with voice disabled even a valid link must not authenticate");
     }

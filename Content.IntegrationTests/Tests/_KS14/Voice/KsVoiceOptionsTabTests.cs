@@ -22,6 +22,7 @@ public sealed class KsVoiceOptionsTabTests : GameTest
     public async Task TabFollowsVoiceCVarsWhileOpen()
     {
         await OverrideCVar(Side.Server, KsCCVars.VoiceEnabled, false);
+        await OverrideCVar(Side.Server, KsCCVars.VoiceActivationAllowed, false);
         await Pair.RunTicksSync(5);
 
         var configuration = Client.ResolveDependency<IConfigurationManager>();
@@ -29,11 +30,13 @@ public sealed class KsVoiceOptionsTabTests : GameTest
         Ks14Tab tab = null;
 
         var hiddenOnOpen = false;
+        var activationHiddenOnOpen = false;
         await Client.WaitPost(() =>
         {
             tab = new Ks14Tab();
             userInterface.RootControl.AddChild(tab);
             hiddenOnOpen = !tab.FindControl<Control>("VoiceSection").Visible;
+            activationHiddenOnOpen = !tab.FindControl<Control>("VoiceActivation").Visible;
         });
 
         // The server switches voice on while the tab is open.
@@ -49,7 +52,9 @@ public sealed class KsVoiceOptionsTabTests : GameTest
             volumeLive = tab.FindControl<OptionSlider>("SliderVoiceVolume").Slider.Value;
         });
 
-        // The server forbids voice activation: its checkbox goes, since ticking it would do nothing.
+        // Voice activation's checkbox is only there while the server allows it, since ticking it would do nothing.
+        await OverrideCVar(Side.Server, KsCCVars.VoiceActivationAllowed, true);
+        await Pair.RunTicksSync(5);
         var activationShown = false;
         await Client.WaitPost(() => activationShown = tab.FindControl<Control>("VoiceActivation").Visible);
         await OverrideCVar(Side.Server, KsCCVars.VoiceActivationAllowed, false);
@@ -74,8 +79,9 @@ public sealed class KsVoiceOptionsTabTests : GameTest
             Assert.That(hiddenOnOpen, Is.True, "voice settings are hidden while the server has voice off");
             Assert.That(shownLive, Is.True, "turning voice on shows them without reopening the menu");
             Assert.That(volumeLive, Is.EqualTo(0.5f).Within(0.001f), "a volume change made elsewhere shows on the slider");
-            Assert.That(activationShown, Is.True, "voice activation is offered while the server allows it");
-            Assert.That(activationHidden, Is.True, "and hidden as soon as it doesn't");
+            Assert.That(activationHiddenOnOpen, Is.True, "voice activation isn't offered when the server forbids it");
+            Assert.That(activationShown, Is.True, "it appears as soon as the server allows it");
+            Assert.That(activationHidden, Is.True, "and goes again when it doesn't");
             Assert.That(frozenAfterClose, Is.True, "a closed tab no longer reacts: it has unsubscribed");
         });
     }

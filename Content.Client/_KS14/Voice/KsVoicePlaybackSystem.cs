@@ -5,6 +5,7 @@ using Content.Shared._KS14.Voice;
 using Content.Shared.Verbs;
 using Robust.Client.Audio;
 using Robust.Client.Player;
+using Robust.Client.Replays.Playback;
 using Robust.Shared.Audio.Sources;
 using Robust.Shared.Configuration;
 using Robust.Shared.Map;
@@ -78,6 +79,7 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private IReplayRecordingManager _replayRecordingManager = default!;
+    [Dependency] private IReplayPlaybackManager _replayPlaybackManager = default!;
     [Dependency] private AudioSystem _audioSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
@@ -126,6 +128,7 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
             _jitterSamples = Math.Clamp(value, 20, 1000) * KsVoiceConstants.SampleRate / 1000, invokeImmediately: true);
 
         _voiceNetManager.FrameReceived += OnFrameReceived;
+        _replayPlaybackManager.BeforeSetTick += StopAll;
     }
 
     public override void Shutdown()
@@ -133,6 +136,7 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         base.Shutdown();
 
         _voiceNetManager.FrameReceived -= OnFrameReceived;
+        _replayPlaybackManager.BeforeSetTick -= StopAll;
         StopAll();
     }
 
@@ -193,41 +197,39 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         if (_replayRecordingManager.IsRecording)
             _replayRecordingManager.RecordClientMessage(new KsVoiceReplayFrameEvent(message.Source, message.Sequence, message.Payload));
 
-        HandleFrame(message);
+        HandleFrame(message.Source, message.Sequence, message.Payload);
     }
 
     /// <summary>
-    ///     Voice in a replay being watched. Only replays raise this: the server records it and never sends it.
+    ///     Voice in a replay being watched. Only replays raise this: the server records it and never sends it. Jumping
+    ///         through the replay stops what's playing (see <see cref="Initialize"/>), since a talker's sequence numbers
+    ///         go backwards when it rewinds, and it drops what it skips over (<c>ContentReplayPlaybackManager</c>).
     /// </summary>
     [SubscribeNetworkEvent]
     private void OnReplayFrame(KsVoiceReplayFrameEvent args)
-    {
-        HandleFrame(new KsVoiceFrameMessage
-        {
-            Source = args.Source,
-            Sequence = args.Sequence,
-            Payload = args.Payload,
-        });
-    }
+        => HandleFrame(args.Source, args.Sequence, args.Payload);
 
     /// <summary>
     ///     Accepts one relayed voice frame, as if it had just arrived from the server. Public so tests can drive playback
     ///         without a network.
     /// </summary>
     public void HandleFrame(KsVoiceFrameMessage message)
+        => HandleFrame(message.Source, message.Sequence, message.Payload);
+
+    private void HandleFrame(NetEntity speakerNetEntity, ushort sequence, byte[] payload)
     {
         ReceivedFrameCount++;
 
         if (!_enabled || !_hearEnabled)
             return;
 
-        var sampleCount = KsVoiceAdpcm.Decode(message.Payload, _decodeScratch);
+        var sampleCount = KsVoiceAdpcm.Decode(payload, _decodeScratch);
         if (sampleCount <= 0)
             return;
 
-        var speaker = ResolveSpeaker(message.Source);
+        var speaker = ResolveSpeaker(speakerNetEntity);
         speaker.LastReceived = _gameTiming.RealTime;
-        speaker.Receive(message.Sequence, _decodeScratch.AsSpan(0, sampleCount).ToArray(), _jitterSamples);
+        speaker.Receive(sequence, _decodeScratch.AsSpan(0, sampleCount).ToArray(), _jitterSamples);
     }
 
     /// <summary>

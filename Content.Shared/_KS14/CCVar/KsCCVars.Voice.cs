@@ -148,8 +148,7 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.voice.admin_log_bursts", true, CVar.ARCHIVE | CVar.SERVERONLY);
 
     /// <summary>
-    ///     Whether relayed voice goes into server-side round replays, so it can be heard when they're watched. The
-    ///         microphone page tells players when it does.
+    ///     Whether relayed voice goes into server-side round replays, so it can be heard when they're watched.
     /// </summary>
     [CVarControl(AdminFlags.Server)]
     public static readonly CVarDef<bool> VoiceRecordInReplays =

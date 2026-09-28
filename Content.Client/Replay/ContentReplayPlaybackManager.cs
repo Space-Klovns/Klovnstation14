@@ -1,4 +1,5 @@
 using Content.Client.Administration.Managers;
+using Content.Shared._KS14.TTS; // KS14
 using Content.Shared._KS14.Voice; // KS14
 using Content.Client.Launcher;
 using Content.Client.MainMenu;
@@ -196,6 +197,7 @@ public sealed partial class ContentReplayPlaybackManager
             case InstrumentMidiEventEvent:
             case InstrumentStopMidiEvent:
             case KsVoiceReplayFrameEvent: // KS14: voice chat, which would otherwise play in a burst while skipping
+            case PlayTtsEvent: // KS14: likewise TTS
                 // Block visual effects, pop-ups, and sounds
                 return true;
         }

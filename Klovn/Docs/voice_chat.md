@@ -132,8 +132,10 @@ disconnect: the value goes with the channel. It only counts while the server all
 (`klovn.voice.voice_activation_allowed`, replicated so the options tab can hide the checkbox). Everything else applies
 unchanged: mutes, `CanSpeak`, the continuous-talk cooldown and abuse detection. With no key press to reset the
 `CanSpeak` refusal on, a gap of more than a second in the page's audio ends the attempt instead, so it's one popup per
-utterance. The engine doesn't report replicated cvar changes, so the system checks each connected page's player every
-tick and resends the page's state when the mode changes. That's how the page shows which mode is on.
+utterance. `CanSpeak` only runs on an attempt to talk (audio arriving, or the key going down), never when a page's
+state is just being brought up to date, so a muted player with voice activation on isn't told they can't speak
+unless they try. The engine doesn't report replicated cvar changes, so the system checks each connected page's player
+twice a second and resends the page's state when the mode changes. That's how the page shows which mode is on.
 
 A relayed chunk is IMA ADPCM-encoded once and sent as a `KsVoiceFrameMessage` to every other in-game player whose
 entity:
@@ -157,10 +159,12 @@ ADPCM packet, speaker and sequence number. It's recorded whether or not anyone w
 watched from anywhere. When a replay plays, the engine raises recorded events as if they had arrived over the network.
 `KsVoicePlaybackSystem` handles this one exactly like a live `KsVoiceFrameMessage`, positioned on the talker's
 recorded entity relative to the replay camera. `ContentReplayPlaybackManager` drops it while skipping through a replay,
-like other sounds, so seeking doesn't play a burst of old speech. Client-side recordings keep the frames that client
-received, as they keep its popups. `klovn.voice.record_in_replays` turns server-side recording off. While it's on, the
-page tells players their voice goes into replays. Voice makes replays bigger: 8 KB per second per talker, while
-talking. Only relayed audio is recorded, so muted, blocked or out-of-body audio never gets into a replay.
+like other sounds, so seeking doesn't play a burst of old speech (TTS's `PlayTtsEvent` is dropped the same way; it was
+already recorded, but played in a burst while skipping). A jump in either direction also stops whatever voice is
+playing, since after a rewind a talker's sequence numbers go backwards and would otherwise be taken as stale. Client-side recordings keep the frames that client
+received, as they keep its popups. `klovn.voice.record_in_replays` turns server-side recording off. Voice makes
+replays bigger: 8 KB per second per talker, while talking. Only relayed audio is recorded, so muted, blocked or
+out-of-body audio never gets into a replay.
 
 The talking indicator is appearance data (`KsVoiceVisuals.Talking`) on `KsVoiceIndicatorComponent`. It is added the
 first time an entity talks and cleared 300 ms after the last relayed chunk. `KsVoiceIndicatorVisualizerSystem` draws
@@ -278,7 +282,7 @@ Voice is **off by default**. Every entry point checks `klovn.voice.enabled`. Wit
 | `klovn.voice.uplink_rate_factor` | `1.25` | server | Allowed uplink speed relative to real time. |
 | `klovn.voice.auth_failures_per_minute` | `10` | server | Failed authentications per address before `429`. |
 | `klovn.voice.admin_log_bursts` | `true` | server | Log every talk burst. |
-| `klovn.voice.record_in_replays` | `true` | server | Record relayed voice into server-side replays. The page tells players when it's on. |
+| `klovn.voice.record_in_replays` | `true` | server | Record relayed voice into server-side replays. |
 | `klovn.voice.hear_enabled` | `true` | client | Play other players' voices. |
 | `klovn.voice.volume` | `1` | client | Voice volume. |
 | `klovn.voice.jitter_buffer_ms` | `120` | client | Buffering before playback starts. |
@@ -402,7 +406,7 @@ All under `Content.IntegrationTests/Tests/_KS14/Voice/`.
     once it arrives
   - a local mute living on the talker's entity and outlasting their audio; unmuting a silent talker removing it
   - a muted talker getting one "can't speak" popup per push-to-talk press, not one per chunk; with voice activation,
-    one per utterance
+    one per utterance, and none while a connected page merely has its state updated
   - relayed voice going into a replay recording (even with nobody in range) and written out with it, and
     `klovn.voice.record_in_replays` turning that off; a recorded chunk, raised the way a replay raises it, reaching
     playback
