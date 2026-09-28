@@ -52,3 +52,14 @@ pg_port = 5432
 pg_database = "ss14"
 pg_username = "postgres"
 pg_password = "postgres"
+
+# Mapping tunnel config (remove comments to use the tunnel):
+#[auth]
+#mode = 1 # Require authentication
+#[console]
+#loginlocal = false # Disable local automatic admin login
+#[net]
+#bindto = "0.0.0.0" # Listen on all IPv4 interfaces
+#port = 1212
+#[whitelist]
+#enabled = true # Require a whitelist for mapping tunnel access

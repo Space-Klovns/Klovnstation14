@@ -70,7 +70,7 @@ auto_call_time = 90
 [console]
 # If this is true, people connecting from this computer will automatically be elevated to full admin privileges.
 # Make sure to disable this if you are running a public server, especially if you are using a tunneling service.
-loginlocal = true
+loginlocal = true # KS14: Mapping tunnel config requires this line to be commented out
 # A player username that will be automatically elevated to full admin privileges on join.
 # Please only use this to give yourself admin privileges temporarily.
 # For a more permanent solution, use the permissions pannel in the game. (F7 -> Permissions Pannel, or `permissions` in the client console)
