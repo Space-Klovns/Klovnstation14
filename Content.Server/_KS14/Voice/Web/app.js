@@ -16,7 +16,7 @@
     const DEVICE_KEY = "ksVoiceDevice";
     const VOLUME_KEY = "ksVoiceMicVolume";
     const MONITOR_LEAD_SECONDS = 0.05;  // mic test: how far ahead of now to schedule, to ride out message jitter
-    const MONITOR_MAX_AHEAD_SECONDS = 0.3; // ...and how far it may drift ahead before it's pulled back in
+    const MONITOR_MAX_AHEAD_SECONDS = 0.3; // ...and how far ahead it may run before frames are dropped instead
 
     // Close reasons after which reconnecting cannot help.
     const TERMINAL_REASONS = new Set(["auth-failed", "auth-timeout", "link-reset", "replaced", "disabled"]);
@@ -169,6 +169,11 @@
             return;
         }
 
+        if (volumePercent === 0) {
+            setStatus("blocked", "Your mic volume is at 0%, so nothing is being sent. Turn it up to talk.");
+            return;
+        }
+
         if (!serverState || serverState.reason === "not-holding-key") {
             setStatus("waiting", REASON_TEXT["not-holding-key"]);
             return;
@@ -200,6 +205,7 @@
         elements.volumeValue.textContent = `${value}%`;
         inputGain?.gain.setTargetAtTime(value / 100, inputGain.context.currentTime, 0.02);
         storage.set("localStorage", VOLUME_KEY, String(value));
+        render();
     }
 
     function setTesting(value) {
@@ -208,27 +214,42 @@
         render();
     }
 
-    // Plays one frame back through this page's own output, scheduled back to back with the previous one.
-    function monitorFrame(frame) {
+    // Plays frames back through this page's own output, each scheduled right after the previous one. Called only
+    //      once the frames are queued for sending, and never throws: a failing test must not stop the talking.
+    function monitorFrames(frames) {
         if (!testing || !audioContext)
             return;
 
-        // At the wire's sample rate, so what's heard also has the bandwidth the game gets.
-        const buffer = audioContext.createBuffer(1, frame.length, SAMPLE_RATE);
-        const samples = buffer.getChannelData(0);
-        for (let i = 0; i < frame.length; i++)
-            samples[i] = frame[i] / 32768;
+        try {
+            for (const frame of frames) {
+                const now = audioContext.currentTime;
 
-        // Restart the schedule after a gap (the gate closed) or when it has run too far ahead of the clock.
-        const now = audioContext.currentTime;
-        if (monitorTime < now || monitorTime > now + MONITOR_MAX_AHEAD_SECONDS)
-            monitorTime = now + MONITOR_LEAD_SECONDS;
+                // A burst of late frames: drop what doesn't fit rather than let the delay grow, or overlap what's
+                //      already scheduled by pulling the schedule back.
+                if (monitorTime > now + MONITOR_MAX_AHEAD_SECONDS)
+                    continue;
 
-        const player = audioContext.createBufferSource();
-        player.buffer = buffer;
-        player.connect(audioContext.destination);
-        player.start(monitorTime);
-        monitorTime += buffer.duration;
+                // The previous frame has finished (the gate was closed): start a new run a little ahead of now.
+                if (monitorTime < now)
+                    monitorTime = now + MONITOR_LEAD_SECONDS;
+
+                // At the wire's sample rate, so what's heard also has the bandwidth the game gets.
+                const buffer = audioContext.createBuffer(1, frame.length, SAMPLE_RATE);
+                const samples = buffer.getChannelData(0);
+                for (let i = 0; i < frame.length; i++)
+                    samples[i] = frame[i] / 32768;
+
+                const player = audioContext.createBufferSource();
+                player.buffer = buffer;
+                player.connect(audioContext.destination);
+                player.start(monitorTime);
+                monitorTime += buffer.duration;
+            }
+        } catch (error) {
+            console.error("Mic test playback failed:", error);
+            testing = false;
+            render();
+        }
     }
 
     function dbToMeter(db) {
@@ -369,18 +390,19 @@
             return;
         }
 
+        const opened = preroll;
         if (preroll.length > 0) {
-            preroll.forEach(monitorFrame);
             pending.push(...preroll);
             preroll = [];
         }
 
-        monitorFrame(frame);
         pending.push(frame);
         while (pending.length >= FRAMES_PER_MESSAGE) {
             sendFrames(pending.slice(0, FRAMES_PER_MESSAGE));
             pending = pending.slice(FRAMES_PER_MESSAGE);
         }
+
+        monitorFrames([...opened, frame]);
     }
 
     function microphoneErrorText(error) {
@@ -559,8 +581,11 @@
         elements.stop.addEventListener("click", stopMicrophone);
         elements.device.addEventListener("change", async () => {
             storage.set("localStorage", DEVICE_KEY, elements.device.value);
+            const wasTesting = testing; // so a test can compare microphones
             stopMicrophone();
             await startMicrophone();
+            if (wasTesting)
+                setTesting(true);
         });
 
         window.addEventListener("beforeunload", () => {

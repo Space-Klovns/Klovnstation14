@@ -45,9 +45,11 @@ public sealed partial class KsVoiceLinkManager
     private ISawmill _sawmill = default!;
 
     /// <summary>
-    ///     The last invalid public path warned about, so a bad setting is reported once rather than on every link.
+    ///     <see cref="KsCCVars.VoicePublicPath"/>, normalised, or <see cref="PagePath"/> if it isn't valid.
     /// </summary>
-    private string? _warnedPublicPath;
+    private string _publicPagePath = PagePath;
+
+    private Action<string>? _publicPathHandler;
 
     private readonly Lock _lock = new();
     private readonly Dictionary<string, Entry> _entriesByTokenHash = [];
@@ -62,11 +64,36 @@ public sealed partial class KsVoiceLinkManager
     {
         _sawmill = _logManager.GetSawmill("voice.link");
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
+
+        _publicPathHandler = OnPublicPathChanged;
+        _configurationManager.OnValueChanged(KsCCVars.VoicePublicPath, _publicPathHandler, invokeImmediately: true);
     }
 
     public void Shutdown()
     {
         _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
+
+        if (_publicPathHandler != null)
+        {
+            _configurationManager.UnsubValueChanged(KsCCVars.VoicePublicPath, _publicPathHandler);
+            _publicPathHandler = null;
+        }
+    }
+
+    /// <summary>
+    ///     Checks the setting when it's set, so a bad value is reported at startup or by the command that set it,
+    ///         not the first time someone asks for a link.
+    /// </summary>
+    private void OnPublicPathChanged(string configured)
+    {
+        if (ResolvePublicPagePath(configured) is { } publicPath)
+        {
+            _publicPagePath = publicPath;
+            return;
+        }
+
+        _publicPagePath = PagePath;
+        _sawmill.Warning($"klovn.voice.public_path '{configured}' isn't a plain path; using {PagePath} instead.");
     }
 
     /// <summary>
@@ -155,17 +182,7 @@ public sealed partial class KsVoiceLinkManager
     /// </summary>
     public string GetPublicPagePath()
     {
-        var configured = _configurationManager.GetCVar(KsCCVars.VoicePublicPath);
-        if (ResolvePublicPagePath(configured) is { } publicPath)
-            return publicPath;
-
-        if (_warnedPublicPath != configured)
-        {
-            _warnedPublicPath = configured;
-            _sawmill.Warning($"klovn.voice.public_path '{configured}' isn't a plain path; using {PagePath} instead.");
-        }
-
-        return PagePath;
+        return _publicPagePath;
     }
 
     /// <summary>
@@ -179,7 +196,7 @@ public sealed partial class KsVoiceLinkManager
         if (trimmed.Length == 0)
             return PagePath;
 
-        var segments = trimmed.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var segments = trimmed.Split('/', options: StringSplitOptions.RemoveEmptyEntries);
         foreach (var segment in segments)
         {
             if (segment is "." or "..")

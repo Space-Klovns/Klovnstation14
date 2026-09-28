@@ -315,8 +315,8 @@ public_url = "https://voice.example.com"
 public_path = "/talk/"
 ```
 
-A request for the page without its trailing slash is redirected to the last segment of `public_path` (`talk/` here),
-relative to the request, so it lands back on the proxied path.
+Keep the trailing slash on `location`: nginx then answers `/talk` with a redirect to `/talk/` itself. The status host's
+own redirect for a slashless request always goes to `voice/`, which is only right for requests made to it directly.
 
 For local testing, `http://localhost:1212` is already a secure context, so no proxy is needed. Leave `public_url`
 empty and the transfer endpoint default (`http://localhost:1212/`) is used.

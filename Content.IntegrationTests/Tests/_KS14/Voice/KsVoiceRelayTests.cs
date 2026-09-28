@@ -233,11 +233,23 @@ public sealed class KsVoiceRelayTests : GameTest
 
         await Client.WaitPost(() => clientSystem.RequestLink(reset: false));
         await Pair.RunTicksSync(10);
+        var configuredUrl = received?.Url;
+
+        // Changed to something that isn't a path: back to the default, not stuck on the last good value.
+        await OverrideCVar(Side.Server, KsCCVars.VoicePublicPath, "/talk#x");
+        await Client.WaitPost(() => clientSystem.RequestLink(reset: false));
+        await Pair.RunTicksSync(10);
+        var invalidUrl = received?.Url;
 
         clientSystem.LinkReceived -= OnLink;
 
-        Assert.That(received?.Url, Does.StartWith("https://voice.example.com/talk/#"),
-            "the link follows klovn.voice.public_path, for a proxy that maps it to the page");
+        Assert.Multiple(() =>
+        {
+            Assert.That(configuredUrl, Does.StartWith("https://voice.example.com/talk/#"),
+                "the link follows klovn.voice.public_path, for a proxy that maps it to the page");
+            Assert.That(invalidUrl, Does.StartWith("https://voice.example.com/klovn/voice/#"),
+                "an invalid public_path falls back to where the page is served");
+        });
     }
 
     [Test]
