@@ -63,6 +63,10 @@ under `/klovn/voice/`, and accepts websockets at `/klovn/voice/ws`.
 - **Protocol, server to page.** Text JSON: `hello` (with the player's username), `state` (whether audio is being
   transmitted and, if not, why, plus seconds remaining for timed blocks), and `closing` (reason) before the server
   hangs up.
+- **What the page shows.** The page asks for the microphone as soon as it opens, so the browser's permission prompt
+  appears without a click; declining leaves a "Start microphone" button and says how to allow it. `state` only says
+  whether the server *would* relay audio (push-to-talk held, nothing blocking), so the page combines it with its own
+  microphone state: with the microphone off it never claims to be transmitting, and says so if push-to-talk is held.
 - **Resampling in the worklet.** The page captures at the device's own rate and resamples to 16 kHz inside the
   AudioWorklet, using a box filter that also acts as a crude low-pass. Creating the AudioContext at 16 kHz would be
   simpler, but Firefox refuses to connect a microphone stream to a context whose rate differs from the device's.

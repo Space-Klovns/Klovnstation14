@@ -98,6 +98,15 @@
     let mediaStream = null;
     let captureNode = null;
 
+    // What the status line shows is derived from these, in render(), rather than set piecemeal: the server's view
+    //      (push-to-talk held and allowed) says nothing about whether this page is actually capturing anything.
+    let micState = "off";               // "off" | "starting" | "on" | "needs-gesture"
+    let micGeneration = 0;              // bumped by every start and stop, so a superseded start can tell
+    let micError = null;                // why the last start failed, shown until the next attempt
+    let linkState = "connecting";       // "connecting" | "reconnecting" | "connected" | "failed"
+    let linkError = null;               // why the link failed for good
+    let serverState = null;             // last "state" message from the server
+
     let sequence = 0;
     let gateOpenFrames = 0;
     let pending = [];
@@ -107,6 +116,55 @@
     function setStatus(state, text) {
         elements.status.dataset.state = state;
         elements.statusText.textContent = text;
+    }
+
+    function render() {
+        if (linkState === "failed") {
+            setStatus("error", linkError);
+            return;
+        }
+
+        if (micState === "starting") {
+            setStatus("waiting", "Starting the microphone… If your browser asks, allow microphone access.");
+            return;
+        }
+
+        if (micState === "needs-gesture") {
+            setStatus("waiting", "Click anywhere on this page to finish starting the microphone.");
+            return;
+        }
+
+        if (micState === "off") {
+            if (micError)
+                setStatus("error", micError);
+            else if (serverState?.transmitting)
+                setStatus("blocked", "Your microphone is off, so nothing is being sent, even while you hold push-to-talk. Click “Start microphone”.");
+            else
+                setStatus("idle", "Your microphone is off. Click “Start microphone” to be able to talk.");
+
+            return;
+        }
+
+        if (linkState !== "connected") {
+            setStatus("waiting", linkState === "reconnecting" ? "Reconnecting…" : "Connecting…");
+            return;
+        }
+
+        if (!serverState || serverState.reason === "not-holding-key") {
+            setStatus("waiting", REASON_TEXT["not-holding-key"]);
+            return;
+        }
+
+        if (serverState.transmitting) {
+            setStatus("transmitting", "Transmitting in-game.");
+            return;
+        }
+
+        let text = REASON_TEXT[serverState.reason] ?? "Not transmitting.";
+        if (typeof serverState.seconds === "number" && serverState.seconds > 0)
+            text += ` (${serverState.seconds}s left)`;
+
+        setStatus("blocked", text);
     }
 
     function setGate(value) {
@@ -166,44 +224,45 @@
                 return;
 
             const reason = event.reason || "";
-            if (TERMINAL_REASONS.has(reason) || CLOSE_TEXT[reason]) {
-                terminal = TERMINAL_REASONS.has(reason);
-                setStatus("error", CLOSE_TEXT[reason] ?? `Disconnected (${reason}).`);
-                elements.identity.textContent = "Not connected.";
-                if (terminal) {
-                    stopMicrophone();
-                    return;
-                }
+            serverState = null;
+            elements.identity.textContent = "Not connected.";
+
+            if (TERMINAL_REASONS.has(reason)) {
+                terminal = true;
+                failLink(CLOSE_TEXT[reason] ?? `Disconnected (${reason}).`);
+                stopMicrophone();
+                return;
             }
 
             if (reconnects >= MAX_RECONNECTS) {
-                setStatus("error", "Lost connection to the server. Reload the page to try again.");
+                failLink(CLOSE_TEXT[reason] ?? "Lost connection to the server. Reload the page to try again.");
                 return;
             }
 
             reconnects++;
-            setStatus("waiting", "Reconnecting…");
+            linkState = "reconnecting";
+            render();
             setTimeout(connect, 1000 * reconnects);
         });
+    }
+
+    function failLink(text) {
+        linkState = "failed";
+        linkError = text;
+        render();
     }
 
     function handleServerMessage(message) {
         switch (message.type) {
             case "hello":
                 reconnects = 0;
+                linkState = "connected";
                 elements.identity.textContent = `Connected as ${message.name}.`;
-                setStatus("waiting", REASON_TEXT["not-holding-key"]);
+                render();
                 break;
             case "state":
-                if (message.transmitting) {
-                    setStatus("transmitting", "Transmitting in-game.");
-                } else {
-                    let text = REASON_TEXT[message.reason] ?? "Not transmitting.";
-                    if (typeof message.seconds === "number" && message.seconds > 0)
-                        text += ` (${message.seconds}s left)`;
-
-                    setStatus(message.reason === "not-holding-key" ? "waiting" : "blocked", text);
-                }
+                serverState = message;
+                render();
                 break;
             case "closing":
                 if (TERMINAL_REASONS.has(message.reason))
@@ -266,12 +325,38 @@
         }
     }
 
-    async function startMicrophone() {
-        elements.start.disabled = true;
+    function microphoneErrorText(error) {
+        switch (error?.name) {
+            case "NotAllowedError":
+            case "SecurityError":
+                return "Microphone access was blocked. Allow it for this site (the icon at the left of the address bar), then click “Start microphone”.";
+            case "NotFoundError":
+            case "OverconstrainedError":
+                return "No microphone was found. Plug one in, then click “Start microphone”.";
+            case "NotReadableError":
+                return "Your microphone is in use by another program, or couldn't be opened. Close it there, then click “Start microphone”.";
+            default:
+                return `Couldn't open the microphone: ${error?.message || error?.name || error}`;
+        }
+    }
 
+    async function startMicrophone() {
+        if (micState !== "off" || terminal)
+            return;
+
+        const generation = ++micGeneration;
+        micState = "starting";
+        micError = null;
+        elements.start.disabled = true;
+        render();
+
+        // Built up in locals and only published once this start is known to still be wanted: a stop, or a newer
+        //      start, can happen while the browser's permission prompt is open.
+        let stream = null;
+        let context = null;
         try {
             const deviceId = elements.device.value || storage.get("localStorage", DEVICE_KEY) || undefined;
-            mediaStream = await navigator.mediaDevices.getUserMedia({
+            stream = await navigator.mediaDevices.getUserMedia({
                 audio: {
                     deviceId: deviceId ? { ideal: deviceId } : undefined,
                     channelCount: 1,
@@ -280,14 +365,30 @@
                     autoGainControl: true,
                 },
             });
+
+            context = new AudioContext();
+            await context.audioWorklet.addModule("worklet.js");
         } catch (error) {
-            elements.start.disabled = false;
-            setStatus("error", `Couldn't open the microphone: ${error.message || error.name}`);
+            stream?.getTracks().forEach((track) => track.stop());
+            context?.close();
+
+            if (generation === micGeneration) {
+                stopMicrophone();
+                micError = microphoneErrorText(error);
+                render();
+            }
+
             return;
         }
 
-        audioContext = new AudioContext();
-        await audioContext.audioWorklet.addModule("worklet.js");
+        if (generation !== micGeneration) {
+            stream.getTracks().forEach((track) => track.stop());
+            context.close();
+            return;
+        }
+
+        mediaStream = stream;
+        audioContext = context;
 
         const source = audioContext.createMediaStreamSource(mediaStream);
         captureNode = new AudioWorkletNode(audioContext, "ks-voice-capture", { numberOfOutputs: 1 });
@@ -298,18 +399,50 @@
         silence.gain.value = 0;
         source.connect(captureNode).connect(silence).connect(audioContext.destination);
 
-        await populateDevices();
         elements.start.hidden = true;
         elements.stop.hidden = false;
         elements.device.disabled = false;
 
-        if (!socket && !terminal)
-            connect();
-        else
-            setStatus("waiting", REASON_TEXT["not-holding-key"]);
+        // Started on page load, the audio graph may be held until the user interacts with the page.
+        micState = audioContext.state === "running" ? "on" : "needs-gesture";
+        if (micState === "needs-gesture")
+            resumeOnGesture();
+
+        render();
+        populateDevices().catch(() => {
+            // Only the device list is affected; the microphone itself is already running.
+        });
+    }
+
+    function resumeOnGesture() {
+        const resume = async () => {
+            window.removeEventListener("pointerdown", resume, true);
+            window.removeEventListener("keydown", resume, true);
+
+            if (!audioContext || micState !== "needs-gesture")
+                return;
+
+            await audioContext.resume();
+            if (micState === "needs-gesture" && audioContext?.state === "running") {
+                micState = "on";
+                render();
+            }
+        };
+
+        window.addEventListener("pointerdown", resume, true);
+        window.addEventListener("keydown", resume, true);
+
+        // Some browsers release it on their own once capture is live.
+        audioContext.addEventListener("statechange", () => {
+            if (micState === "needs-gesture" && audioContext?.state === "running") {
+                micState = "on";
+                render();
+            }
+        });
     }
 
     function stopMicrophone() {
+        micGeneration++;
         captureNode?.disconnect();
         captureNode = null;
         mediaStream?.getTracks().forEach((track) => track.stop());
@@ -320,10 +453,12 @@
         pending = [];
         preroll = [];
         gateOpenFrames = 0;
+        micState = "off";
         elements.meterFill.style.width = "0";
         elements.start.hidden = false;
         elements.start.disabled = terminal;
         elements.stop.hidden = true;
+        render();
     }
 
     async function populateDevices() {
@@ -356,10 +491,7 @@
 
         elements.gate.addEventListener("input", () => setGate(Number(elements.gate.value)));
         elements.start.addEventListener("click", startMicrophone);
-        elements.stop.addEventListener("click", () => {
-            stopMicrophone();
-            setStatus("idle", "Microphone stopped.");
-        });
+        elements.stop.addEventListener("click", stopMicrophone);
         elements.device.addEventListener("change", async () => {
             storage.set("localStorage", DEVICE_KEY, elements.device.value);
             stopMicrophone();
@@ -371,7 +503,12 @@
             socket?.close(1000, "page-closed");
         });
 
+        render();
         connect();
+
+        // Ask for the microphone straight away: the browser shows its permission prompt (or, once allowed, just
+        //      starts), so opening the link is all it takes. Declining leaves the button to try again.
+        startMicrophone();
     }
 
     init();
