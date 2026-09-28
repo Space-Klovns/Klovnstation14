@@ -3,7 +3,8 @@
                       Title="{Loc 'ks-voice-window-title'}"
                       SetSize="440 300"
                       MinSize="360 260">
-    <BoxContainer Orientation="Vertical"
+    <BoxContainer Name="RootBox"
+                  Orientation="Vertical"
                   Margin="10 10 10 10"
                   SeparationOverride="8">
         <RichTextLabel Name="Explanation"/>
@@ -11,7 +12,8 @@
         <Label Name="KeybindLabel"
                StyleClasses="LabelSubText"/>
         <Label Name="StatusLabel"/>
-        <BoxContainer Orientation="Horizontal"
+        <BoxContainer Name="ButtonRow"
+                      Orientation="Horizontal"
                       SeparationOverride="6">
             <Button Name="OpenButton"
                     Text="{Loc 'ks-voice-window-open'}"

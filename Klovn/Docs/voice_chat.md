@@ -337,6 +337,8 @@ All under `Content.IntegrationTests/Tests/_KS14/Voice/`.
   - a muted talker getting one "can't speak" popup per push-to-talk press, not one per chunk
 - `KsVoiceOptionsTabTests`: the options tab showing the voice section when the server turns voice on and following a
   volume change made elsewhere while open, and letting go of the configuration manager once closed
+- `KsVoiceLinkWindowTests`: resizing the link window never cuts anything off. Its minimum size follows its contents
+  (the wrapping text gets taller as the window narrows), so a fixed minimum couldn't guarantee that
 - `KsVoiceChunkTimingTests`: early starts padded and late starts skipped to the exact sample, skips never
   exceeding what was already heard, and the start decision at different frame rates
 
