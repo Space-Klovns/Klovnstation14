@@ -1,3 +1,4 @@
+using System.Buffers.Text;
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
@@ -72,7 +73,7 @@ public sealed partial class KsVoiceLinkManager
 
             RemoveNoLock(session.UserId);
 
-            token = Base64UrlEncode(RandomNumberGenerator.GetBytes(TokenBytes));
+            token = Base64Url.EncodeToString(RandomNumberGenerator.GetBytes(TokenBytes));
             var hash = HashToken(token);
             _entriesByTokenHash[hash] = new Entry(session.UserId, session.Name, token);
             _tokenHashesByUser[session.UserId] = hash;
@@ -205,12 +206,6 @@ public sealed partial class KsVoiceLinkManager
 
     private static string HashToken(string token)
         => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
-
-    /// <remarks>
-    ///     The engine's <c>Base64Helpers.ConvertToBase64Url</c> is internal, hence this copy.
-    /// </remarks>
-    private static string Base64UrlEncode(byte[] bytes)
-        => Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 
     private sealed record Entry(NetUserId UserId, string UserName, string Token);
 }

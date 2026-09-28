@@ -93,7 +93,11 @@ public sealed class KsVoiceProcessor
     {
         var ceiling = 32767f * MathF.Pow(10f, Math.Min(_settings.CeilingDb, 0f) / 20f);
         var abuseRms = 32767f * MathF.Pow(10f, _settings.AbuseRmsDb / 20f);
-        var abuseFramesNeeded = (int)MathF.Ceiling(_settings.AbuseSeconds * (float)KsVoiceConstants.SampleRate / (float)KsVoiceConstants.FrameSamples);
+        // The window only remembers so much, so more abuse than fits in it could never be counted and the auto-mute
+        //      would silently never fire. Asking for longer than the window means "abusive the whole time".
+        var abuseFramesNeeded = Math.Min(
+            (int)MathF.Ceiling(_settings.AbuseSeconds * (float)KsVoiceConstants.SampleRate / (float)KsVoiceConstants.FrameSamples),
+            _abusiveFrames.Length);
 
         var triggered = false;
         var totalSquares = 0d;

@@ -53,7 +53,8 @@ under `/klovn/voice/`, and accepts websockets at `/klovn/voice/ws`.
   server, and leave the browser waiting for a close that never comes. Once the socket loop ends, the manager aborts
   the listener response, which it reaches through the engine's private `StatusHost.ContextImpl._context` by reflection
   (server content isn't sandboxed). If a future engine renames that field, voice still works: a warning is logged once
-  and connections are released only when clients drop them.
+  and connections are released only when clients drop them. `KsVoiceCodecTests.FinishedWebsocketsCanStillBeReleased`
+  fails in that case, so an engine bump can't break this silently.
 - **Why the page needs HTTPS.** Browsers only grant `getUserMedia` in a secure context: HTTPS, or `http://localhost`.
   The status host speaks plain HTTP, so a public server needs a TLS reverse proxy (see *Running it*). The page
   detects an insecure context and says so rather than failing silently.
@@ -81,8 +82,9 @@ The requirement is that nobody can talk as another player unless that player han
   over that session's own game connection, and is held in memory keyed by `NetUserId`. Lookups go through its SHA-256,
   with a constant-time comparison on a hit. Asking again returns the same token. *Reset link* issues a new one, which
   invalidates the old token and disconnects any page using it. Resets are rate limited to one every 5 s per player,
-  since each disconnects the page and writes an admin log entry. Disconnecting from the server, or restarting it, also
-  invalidates the token.
+  since each disconnects the page and writes an admin log entry. A reset refused by that limit says so in the window
+  ("Link NOT reset") rather than handing back the old link as if it were new, because the usual reason to reset twice
+  is that the new link leaked too. Disconnecting from the server, or restarting it, also invalidates the token.
 - **The token lives in the URL fragment** (`https://host/klovn/voice/#<token>`). Browsers never send the fragment in
   any request. So the token can't appear in the status host's request log (which logs `PathAndQuery` at Info), in
   reverse-proxy access logs, or in a `Referer` header. The page moves it into `sessionStorage`, strips it from the
@@ -104,7 +106,9 @@ The requirement is that nobody can talk as another player unless that player han
 `KsVoiceSystem` drains the inbound queue on the main thread. It relays a chunk only if all of these hold:
 
 - `klovn.voice.enabled` is on;
-- the talker holds push-to-talk (`KsVoicePushToTalkEvent`, released automatically when they leave a body);
+- the talker holds push-to-talk (`KsVoicePushToTalkEvent`). The client only reports changes, so the server forgets a
+  held key when the player disconnects: one that crashed mid-press never sends the release, and would otherwise
+  transmit without the key after coming back with a fresh link;
 - they aren't admin-muted, auto-muted, or on a continuous-talk cooldown;
 - their attached entity isn't a ghost and passes `ActionBlockerSystem.CanSpeak`. So crit, death, sleep, mime vows and
   admin freeze-mutes silence voice exactly as they silence speech, through `SpeakAttemptEvent`, with nothing extra to
@@ -186,7 +190,8 @@ being dropped, which used to cut off the start of what they said.
   `klovn.voice.abuse_clip_ratio` of its samples are clipped. `klovn.voice.abuse_seconds` of abusive frames within the
   last 10 s of *transmitted* audio mutes the talker for `klovn.voice.auto_mute_seconds`. That also posts an admin
   alert, writes a high-impact admin log entry, and tells the player with a popup and on the page. Silence neither
-  accumulates nor forgives anything.
+  accumulates nor forgives anything. A threshold longer than the 10 s window is treated as the whole window, since the
+  window can't count more than it remembers.
 
   "Transmitted" is literal. The server tells each page connection whether its audio is being relayed, and only then
   do frames count, so a page left open in a loud room with push-to-talk up can never earn a mute. The server also
@@ -314,8 +319,10 @@ All under `Content.IntegrationTests/Tests/_KS14/Voice/`.
 - `KsVoiceCodecTests`:
   - ADPCM round trip, and a packet decoding on its own after its predecessor is lost
   - rejection of malformed packets
-  - limiter ceiling; abuse triggering exactly once at the threshold, and never for loud normal speech
+  - limiter ceiling; abuse triggering exactly once at the threshold, and never for loud normal speech; a threshold
+    longer than the window still triggering
   - public URL resolution
+  - the engine field used to release finished websockets still existing
 - `KsVoiceUplinkTests`, using real websocket framing over loopback TCP:
   - the token appears only in the fragment
   - wrong tokens and audio before auth are rejected; a valid token attributes audio to its owner

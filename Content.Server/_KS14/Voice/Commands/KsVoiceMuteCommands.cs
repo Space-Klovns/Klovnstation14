@@ -32,7 +32,7 @@ public sealed partial class KsVoiceMuteCommand : LocalizedEntityCommands
             return;
         }
 
-        if (!_playerManager.TryGetSessionByUsername(args[0], out var target))
+        if (!_playerManager.TryGetSessionByUsername(args[0], out var targetSession))
         {
             shell.WriteError(Loc.GetString("cmd-vcmute-no-player", ("player", args[0])));
             return;
@@ -58,8 +58,8 @@ public sealed partial class KsVoiceMuteCommand : LocalizedEntityCommands
             ? string.Join(' ', args.Skip(2))
             : Loc.GetString("ks-voice-mute-reason-none");
 
-        _voiceSystem.Mute(target.UserId, duration, reason, shell.Player);
-        shell.WriteLine(Loc.GetString("cmd-vcmute-success", ("player", target.Name)));
+        _voiceSystem.Mute(targetSession.UserId, duration, reason, shell.Player);
+        shell.WriteLine(Loc.GetString("cmd-vcmute-success", ("player", targetSession.Name)));
     }
 
     public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
@@ -92,15 +92,15 @@ public sealed partial class KsVoiceUnmuteCommand : LocalizedEntityCommands
             return;
         }
 
-        if (!_playerManager.TryGetSessionByUsername(args[0], out var target))
+        if (!_playerManager.TryGetSessionByUsername(args[0], out var targetSession))
         {
             shell.WriteError(Loc.GetString("cmd-vcmute-no-player", ("player", args[0])));
             return;
         }
 
-        shell.WriteLine(_voiceSystem.Unmute(target.UserId, shell.Player)
-            ? Loc.GetString("cmd-vcunmute-success", ("player", target.Name))
-            : Loc.GetString("cmd-vcunmute-not-muted", ("player", target.Name)));
+        shell.WriteLine(_voiceSystem.Unmute(targetSession.UserId, shell.Player)
+            ? Loc.GetString("cmd-vcunmute-success", ("player", targetSession.Name))
+            : Loc.GetString("cmd-vcunmute-not-muted", ("player", targetSession.Name)));
     }
 
     public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
@@ -133,14 +133,14 @@ public sealed partial class KsVoiceMuteListCommand : LocalizedEntityCommands
 
         foreach (var (userId, mute) in _voiceSystem.Mutes)
         {
-            var name = _playerManager.TryGetSessionById(userId, out var session) ? session.Name : userId.ToString();
+            var playerName = _playerManager.TryGetSessionById(userId, out var session) ? session.Name : userId.ToString();
             var length = mute.Until == null
                 ? Loc.GetString("ks-voice-mute-length-round")
                 : Loc.GetString("ks-voice-mute-length-minutes",
                     ("minutes", (int)Math.Ceiling(Math.Max(0d, (mute.Until.Value - _gameTiming.RealTime).TotalMinutes))));
 
             shell.WriteLine(Loc.GetString("cmd-vcmutes-entry",
-                ("player", name),
+                ("player", playerName),
                 ("length", length),
                 ("admin", mute.AdminName),
                 ("reason", mute.Reason)));

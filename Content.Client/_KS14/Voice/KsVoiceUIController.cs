@@ -48,6 +48,7 @@ public sealed partial class KsVoiceUIController : UIController, IOnStateChanged<
     {
         CommandBinds.Unregister<KsVoiceUIController>();
         _voiceClientSystem?.SetPushToTalk(false);
+        _openInBrowserWhenReceived = false;
         _window?.Close();
     }
 
@@ -62,6 +63,9 @@ public sealed partial class KsVoiceUIController : UIController, IOnStateChanged<
         system.LinkReceived -= OnLinkReceived;
         system.StateChanged -= OnStateChanged;
         _url = null;
+
+        // A `voicelink` still waiting for its reply must not open the browser on some later, unrelated request.
+        _openInBrowserWhenReceived = false;
     }
 
     public override void FrameUpdate(FrameEventArgs args)
@@ -164,6 +168,7 @@ public sealed partial class KsVoiceUIController : UIController, IOnStateChanged<
         if (_voiceClientSystem is { Enabled: false })
         {
             _url = null;
+            _openInBrowserWhenReceived = false;
             _window?.Close();
             return;
         }

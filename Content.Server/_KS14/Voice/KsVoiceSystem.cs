@@ -90,6 +90,15 @@ public sealed partial class KsVoiceSystem : EntitySystem
         Subs.CVar(_configurationManager, KsCCVars.VoiceMaxContinuousSeconds, value => _maxContinuousSeconds = value, invokeImmediately: true);
         Subs.CVar(_configurationManager, KsCCVars.VoiceCooldownSeconds, value => _cooldownSeconds = value, invokeImmediately: true);
         Subs.CVar(_configurationManager, KsCCVars.VoiceAdminLogBursts, value => _logBursts = value, invokeImmediately: true);
+
+        _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
+    }
+
+    public override void Shutdown()
+    {
+        base.Shutdown();
+
+        _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
     }
 
     public override void Update(float frameTime)
@@ -147,7 +156,7 @@ public sealed partial class KsVoiceSystem : EntitySystem
         Relay(chunk, session, speakerUid, state, now);
     }
 
-    private void Relay(KsVoiceInboundChunk chunk, ICommonSession speaker, EntityUid speakerUid, TalkerState state, TimeSpan now)
+    private void Relay(KsVoiceInboundChunk chunk, ICommonSession speakerSession, EntityUid speakerUid, TalkerState state, TimeSpan now)
     {
         if (state.BurstStart == null || now - state.LastRelay > BurstGap)
         {
@@ -163,11 +172,11 @@ public sealed partial class KsVoiceSystem : EntitySystem
         var speakerVisibilityMask = _metaQuery.Comp(speakerUid).VisibilityMask;
 
         _recipientChannels.Clear();
-        foreach (var listener in _playerManager.Sessions)
+        foreach (var listenerSession in _playerManager.Sessions)
         {
-            if (listener == speaker ||
-                listener.Status != SessionStatus.InGame ||
-                listener.AttachedEntity is not { Valid: true } listenerUid ||
+            if (listenerSession == speakerSession ||
+                listenerSession.Status != SessionStatus.InGame ||
+                listenerSession.AttachedEntity is not { Valid: true } listenerUid ||
                 !CanHear(listenerUid) ||
                 !CanSee(listenerUid, speakerVisibilityMask))
             {
@@ -181,7 +190,7 @@ public sealed partial class KsVoiceSystem : EntitySystem
                 continue;
             }
 
-            _recipientChannels.Add(listener.Channel);
+            _recipientChannels.Add(listenerSession.Channel);
         }
 
         RelayedChunkCount++;
@@ -242,13 +251,13 @@ public sealed partial class KsVoiceSystem : EntitySystem
         if (state.CooldownUntil > now)
             return KsVoiceBlockReason.Cooldown;
 
-        if (session.AttachedEntity is not { Valid: true } attached ||
-            _ghostQuery.HasComp(attached))
+        if (session.AttachedEntity is not { Valid: true } attachedUid ||
+            _ghostQuery.HasComp(attachedUid))
         {
             return KsVoiceBlockReason.NoBody;
         }
 
-        speakerUid = attached;
+        speakerUid = attachedUid;
 
         if (!state.PushToTalkHeld)
             return KsVoiceBlockReason.NotHoldingKey;
@@ -257,12 +266,12 @@ public sealed partial class KsVoiceSystem : EntitySystem
         //      handlers that refuse speech also show a popup (MutingSystem's "you can't speak", for one), which would
         //      then fire several times a second. So once this body is refused, the refusal stands for the rest of the
         //      key press: one popup per attempt to talk, and a fresh check on the next press.
-        if (state.CannotSpeakBody == attached)
+        if (state.CannotSpeakBodyUid == attachedUid)
             return KsVoiceBlockReason.CannotSpeak;
 
-        if (!_actionBlockerSystem.CanSpeak(attached))
+        if (!_actionBlockerSystem.CanSpeak(attachedUid))
         {
-            state.CannotSpeakBody = attached;
+            state.CannotSpeakBodyUid = attachedUid;
             return KsVoiceBlockReason.CannotSpeak;
         }
 
@@ -297,12 +306,12 @@ public sealed partial class KsVoiceSystem : EntitySystem
 
     private void ClearIndicator(TalkerState state)
     {
-        if (state.IndicatorUid is not { } uid)
+        if (state.IndicatorUid is not { } indicatorUid)
             return;
 
         state.IndicatorUid = null;
-        if (!TerminatingOrDeleted(uid))
-            _appearanceSystem.SetData(uid, KsVoiceVisuals.Talking, false);
+        if (!TerminatingOrDeleted(indicatorUid))
+            _appearanceSystem.SetData(indicatorUid, KsVoiceVisuals.Talking, false);
     }
 
     private void EndBurst(NetUserId userId, TalkerState state)
@@ -315,8 +324,8 @@ public sealed partial class KsVoiceSystem : EntitySystem
             return;
 
         var seconds = (state.LastRelay - burstStart).TotalSeconds;
-        if (_playerManager.TryGetSessionById(userId, out var session) && session.AttachedEntity is { } uid)
-            _adminLogManager.Add(LogType.KsVoice, LogImpact.Low, $"{ToPrettyString(uid):player} talked on voice chat for {seconds:0.#}s");
+        if (_playerManager.TryGetSessionById(userId, out var session) && session.AttachedEntity is { } attachedUid)
+            _adminLogManager.Add(LogType.KsVoice, LogImpact.Low, $"{ToPrettyString(attachedUid):player} talked on voice chat for {seconds:0.#}s");
     }
 
     private void UpdatePageState(NetUserId userId, TalkerState state, KsVoiceBlockReason? block, TimeSpan now)
@@ -422,7 +431,7 @@ public sealed partial class KsVoiceSystem : EntitySystem
     {
         var state = GetTalker(userId);
         state.PushToTalkHeld = _enabled && held;
-        state.CannotSpeakBody = null;
+        state.CannotSpeakBodyUid = null;
         RefreshPageState(userId);
     }
 
@@ -456,11 +465,29 @@ public sealed partial class KsVoiceSystem : EntitySystem
         if (reset)
             state.NextLinkResetAllowed = now + LinkResetCooldown;
 
+        // A reset refused by the cooldown must say so. Handing back the old link as if it were new would leave the
+        //      player believing a leaked link was revoked when it still works.
+        var errorLocId = args.Reset && !reset ? "ks-voice-link-error-reset-cooldown" : null;
+
         var token = _linkManager.ResolveToken(session, reset);
-        RaiseNetworkEvent(new KsVoiceLinkEvent(_linkManager.BuildUrl(token), null), session);
+        RaiseNetworkEvent(new KsVoiceLinkEvent(_linkManager.BuildUrl(token), errorLocId), session);
 
         if (reset)
             _adminLogManager.Add(LogType.KsVoice, LogImpact.Low, $"{session:player} reset their voice chat link");
+    }
+
+    private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs args)
+    {
+        if (args.NewStatus != SessionStatus.Disconnected || !_talkers.TryGetValue(args.Session.UserId, out var state))
+            return;
+
+        // The client only reports push-to-talk changes, and one that crashed or lost its connection mid-press never
+        //      sends the release. Left latched, a player back in the same round with a fresh link would transmit
+        //      without holding the key.
+        state.PushToTalkHeld = false;
+        state.CannotSpeakBodyUid = null;
+        ClearIndicator(state);
+        EndBurst(args.Session.UserId, state);
     }
 
     [SubscribeLocalEvent]
@@ -485,7 +512,12 @@ public sealed partial class KsVoiceSystem : EntitySystem
         }
 
         foreach (var userId in _scratchUsers)
+        {
             _mutes.Remove(userId);
+
+            // Otherwise their page keeps saying they're muted until they next try to talk.
+            RefreshPageState(userId);
+        }
 
         // Entities are about to be deleted; drop indicators without touching them. Players who have left take
         //      their state with them (an active auto-mute doesn't outlive the round anyway).
@@ -522,7 +554,7 @@ public sealed partial class KsVoiceSystem : EntitySystem
         /// <summary>
         ///     The body that failed <see cref="ActionBlockerSystem.CanSpeak"/> during the current key press, if any.
         /// </summary>
-        public EntityUid? CannotSpeakBody;
+        public EntityUid? CannotSpeakBodyUid;
     }
 }
 

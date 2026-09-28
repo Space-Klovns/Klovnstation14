@@ -41,6 +41,12 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
         ?.GetField("_context", BindingFlags.Instance | BindingFlags.NonPublic);
 
     /// <summary>
+    ///     Whether finished websockets can be released (see <see cref="GetConnectionRelease"/>). Only an engine change
+    ///         can make this false, and nothing else would notice, so a test pins it.
+    /// </summary>
+    public static bool CanReleaseListenerConnections => ListenerContextField?.FieldType == typeof(ListenerContext);
+
+    /// <summary>
     ///     Published path → (embedded resource name, content type).
     /// </summary>
     private static readonly Dictionary<string, (string Resource, string ContentType)> StaticFiles = new()
@@ -243,10 +249,20 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
 
     public void OnAuthenticated(KsVoiceUplinkConnection connection)
     {
-        if (_connections.TryGetValue(connection.UserId, out var previous) && previous != connection)
-            _ = previous.KickAsync("replaced");
+        // One atomic swap, so that of two pages authenticating at once, whichever is displaced is always told. Checking
+        //      and then writing would let both see an empty slot, and leave the loser open but unable to send audio.
+        KsVoiceUplinkConnection? displacedConnection = null;
+        _connections.AddOrUpdate(connection.UserId,
+            connection,
+            (_, existingConnection) =>
+            {
+                displacedConnection = existingConnection;
+                return connection;
+            });
 
-        _connections[connection.UserId] = connection;
+        if (displacedConnection != null && displacedConnection != connection)
+            _ = displacedConnection.KickAsync("replaced");
+
         _connectionChanges.Enqueue((connection.UserId, true));
     }
 

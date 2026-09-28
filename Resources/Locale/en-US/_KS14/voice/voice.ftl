@@ -18,6 +18,7 @@ ks-voice-window-keybind = Push-to-talk key: {$key}
 
 ks-voice-link-error-disabled = Voice chat is disabled on this server.
 ks-voice-link-error-no-url = This server hasn't configured a public address for voice chat.
+ks-voice-link-error-reset-cooldown = Link NOT reset: wait a few seconds and try again.
 
 # Options
 ks-ui-options-voice-header = Voice chat

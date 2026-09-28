@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
 using Content.Client._KS14.Voice;
@@ -10,6 +11,7 @@ using Content.Shared._KS14.Voice;
 using Content.Shared.Administration;
 using Content.Shared.Eye;
 using Content.Shared.Speech.Muting;
+using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
@@ -130,10 +132,10 @@ public sealed class KsVoiceRelayTests : GameTest
         await Setup();
         await HoldPushToTalk(true);
 
-        await Server.WaitPost(() => Server.System<KsVoiceSystem>().Mute(_speaker.UserId, duration: null, "test", admin: null));
+        await Server.WaitPost(() => Server.System<KsVoiceSystem>().Mute(_speaker.UserId, duration: null, "test", adminSession: null));
         var muted = await Talk();
 
-        await Server.WaitPost(() => Server.System<KsVoiceSystem>().Unmute(_speaker.UserId, admin: null));
+        await Server.WaitPost(() => Server.System<KsVoiceSystem>().Unmute(_speaker.UserId, adminSession: null));
         var unmuted = await Talk();
 
         Assert.Multiple(() =>
@@ -199,6 +201,48 @@ public sealed class KsVoiceRelayTests : GameTest
             Assert.That(released, Is.True, "and so must its release");
             Assert.That(received?.Url, Does.StartWith("https://voice.example.com/klovn/voice/#"), "the link must come back to the client");
             Assert.That(received?.ErrorLocId, Is.Null);
+        });
+    }
+
+    [Test]
+    public async Task DisconnectingForgetsAHeldKey()
+    {
+        await Setup();
+        await HoldPushToTalk(true);
+
+        // A client that crashes mid-press never sends the release. Its disconnect must stand in for it.
+        await Server.WaitPost(() => Server.PlayerMan.SetStatus(_speaker, SessionStatus.Disconnected));
+
+        var stillHeld = true;
+        await Server.WaitPost(() => stillHeld = Server.System<KsVoiceSystem>().IsHoldingPushToTalk(_speaker.UserId));
+
+        Assert.That(stillHeld, Is.False, "a player back in the same round must not transmit without holding the key");
+    }
+
+    [Test]
+    public async Task ResetRefusedByTheCooldownSaysSo()
+    {
+        await Setup();
+        await OverrideCVar(Side.Server, KsCCVars.VoicePublicUrl, "https://voice.example.com");
+
+        var received = new List<KsVoiceLinkEvent>();
+        var clientSystem = Client.System<KsVoiceClientSystem>();
+        clientSystem.LinkReceived += received.Add;
+
+        await Client.WaitPost(() => clientSystem.RequestLink(reset: true));
+        await Pair.RunTicksSync(10);
+        await Client.WaitPost(() => clientSystem.RequestLink(reset: true));
+        await Pair.RunTicksSync(10);
+
+        clientSystem.LinkReceived -= received.Add;
+
+        Assert.That(received, Has.Count.EqualTo(2));
+        Assert.Multiple(() =>
+        {
+            Assert.That(received[0].ErrorLocId, Is.Null, "the first reset goes through");
+            Assert.That(received[1].Url, Is.EqualTo(received[0].Url), "the second, too soon, leaves the link as it was");
+            Assert.That(received[1].ErrorLocId, Is.EqualTo("ks-voice-link-error-reset-cooldown"),
+                "and says so, rather than passing the old link off as a new one");
         });
     }
 

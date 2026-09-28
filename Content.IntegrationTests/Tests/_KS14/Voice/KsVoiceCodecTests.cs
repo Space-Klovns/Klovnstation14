@@ -141,6 +141,44 @@ public sealed class KsVoiceCodecTests
     }
 
     [Test]
+    [TestOf(typeof(KsVoiceUplinkManager))]
+    public void FinishedWebsocketsCanStillBeReleased()
+    {
+        // Releasing a finished websocket's TCP connection reaches a private engine field by reflection. If an engine
+        //      update renames it, voice keeps working but every closed page's socket lingers in CLOSE_WAIT for the life
+        //      of the server, with one log line to show for it. This is the only thing that would notice.
+        Assert.That(KsVoiceUplinkManager.CanReleaseListenerConnections, Is.True,
+            "StatusHost+ContextImpl._context has changed; update KsVoiceUplinkManager.GetConnectionRelease");
+    }
+
+    [Test]
+    [TestOf(typeof(KsVoiceProcessor))]
+    public void AbuseThresholdLongerThanTheWindowStillTriggers()
+    {
+        // 15 s asked for, 10 s remembered: without clamping, the count can never reach the threshold.
+        var settings = new KsVoiceProcessorSettings(CeilingDb: -6f, AbuseRmsDb: -9f, AbuseClipRatio: 0.05f, AbuseSeconds: 15f, AbuseWindowSeconds: 10f);
+        var processor = new KsVoiceProcessor(settings);
+
+        var chunksPerSecond = KsVoiceConstants.SampleRate / KsVoiceConstants.MaxChunkSamples;
+        var triggeredAt = -1;
+
+        for (var chunk = 0; chunk < chunksPerSecond * 12 && triggeredAt < 0; chunk++)
+        {
+            var samples = new short[KsVoiceConstants.MaxChunkSamples];
+            for (var i = 0; i < samples.Length; i++)
+                samples[i] = (i / 20) % 2 == 0 ? short.MaxValue : short.MinValue;
+
+            if (processor.Process(samples).AbuseTriggered)
+                triggeredAt = chunk;
+        }
+
+        // A whole 10 s window, in chunks (index of the chunk that completes it).
+        var windowChunk = (int)MathF.Ceiling(10f * (float)KsVoiceConstants.SampleRate / (float)KsVoiceConstants.MaxChunkSamples) - 1;
+        Assert.That(triggeredAt, Is.InRange(windowChunk - 1, windowChunk + 1),
+            "a threshold longer than the window means a whole window of abuse, not never");
+    }
+
+    [Test]
     [TestOf(typeof(KsVoiceProcessor))]
     public void UntrackedAudioNeverTriggersButIsStillLimited()
     {

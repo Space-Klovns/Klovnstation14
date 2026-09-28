@@ -237,7 +237,7 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         if (_pendingSpeakers.Count > 0)
             UpdatePendingSpeakers(now);
 
-        var listener = _audioSystem.GetListenerCoordinates();
+        var listenerCoordinates = _audioSystem.GetListenerCoordinates();
         var playbackEnumerator = EntityQueryEnumerator<KsVoicePlaybackComponent>();
         while (playbackEnumerator.MoveNext(out var speakerUid, out var playbackComponent))
         {
@@ -246,7 +246,7 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
 
             speaker.DisposeFinished();
             Schedule(speaker, now);
-            UpdateSources(speaker, speakerUid, playbackComponent.LocallyMuted, listener, now);
+            UpdateSources(speaker, speakerUid, playbackComponent.LocallyMuted, listenerCoordinates, now);
 
             if (now - speaker.LastReceived <= SpeakerTimeout || speaker.HasSources)
                 continue;
@@ -382,15 +382,15 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         speaker.PendingStart = chunk;
     }
 
-    private void UpdateSources(KsVoiceSpeaker speaker, EntityUid speakerUid, bool locallyMuted, MapCoordinates listener, TimeSpan now)
+    private void UpdateSources(KsVoiceSpeaker speaker, EntityUid speakerUid, bool locallyMuted, MapCoordinates listenerCoordinates, TimeSpan now)
     {
         var gain = locallyMuted ? 0f : _volume;
         var speakerCoordinates = _transformSystem.GetMapCoordinates(speakerUid);
-        var delta = speakerCoordinates.Position - listener.Position;
+        var delta = speakerCoordinates.Position - listenerCoordinates.Position;
         var distance = delta.Length();
 
         var audible = speakerCoordinates.MapId != MapId.Nullspace &&
-                      speakerCoordinates.MapId == listener.MapId &&
+                      speakerCoordinates.MapId == listenerCoordinates.MapId &&
                       distance <= _range;
 
         if (!audible)
@@ -399,7 +399,7 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         }
         else if (now >= speaker.OcclusionRefreshAt || speaker.PendingStart != null)
         {
-            speaker.Occlusion = _audioSystem.GetOcclusion(listener, delta, distance, ignoredEnt: speakerUid);
+            speaker.Occlusion = _audioSystem.GetOcclusion(listenerCoordinates, delta, distance, ignoredEnt: speakerUid);
             speaker.OcclusionRefreshAt = now + OcclusionInterval;
         }
 
@@ -409,19 +409,19 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         {
             chunk.Source.Gain = audible ? gain : 0f;
             chunk.Source.MaxDistance = _range;
-            chunk.Source.Position = distance < 0.01f ? listener.Position : speakerCoordinates.Position;
+            chunk.Source.Position = distance < 0.01f ? listenerCoordinates.Position : speakerCoordinates.Position;
             chunk.Source.Occlusion = occlusion;
         }
 
-        if (speaker.PendingStart is { } pending)
+        if (speaker.PendingStart is { } pendingChunk)
         {
             speaker.PendingStart = null;
-            if (pending.SeekSeconds > 0f)
-                pending.Source.PlaybackPosition = pending.SeekSeconds;
+            if (pendingChunk.SeekSeconds > 0f)
+                pendingChunk.Source.PlaybackPosition = pendingChunk.SeekSeconds;
 
-            pending.Source.StartPlaying();
-            pending.Started = true;
-            speaker.LastChunkEndsAt = now + TimeSpan.FromSeconds((double)(pending.LengthSeconds - pending.SeekSeconds));
+            pendingChunk.Source.StartPlaying();
+            pendingChunk.Started = true;
+            speaker.LastChunkEndsAt = now + TimeSpan.FromSeconds((double)(pendingChunk.LengthSeconds - pendingChunk.SeekSeconds));
         }
     }
 
@@ -473,14 +473,14 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
             return;
         }
 
-        var target = args.Target;
-        var muted = IsLocallyMuted(target);
+        var targetUid = args.Target;
+        var muted = IsLocallyMuted(targetUid);
 
         args.Verbs.Add(new Verb
         {
             Text = Loc.GetString(muted ? "ks-voice-verb-unmute-local" : "ks-voice-verb-mute-local"),
             ClientExclusive = true,
-            Act = () => SetLocallyMuted(target, !muted),
+            Act = () => SetLocallyMuted(targetUid, !muted),
         });
     }
 

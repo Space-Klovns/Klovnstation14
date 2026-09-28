@@ -79,7 +79,8 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.voice.abuse_clip_ratio", 0.05f, CVar.ARCHIVE | CVar.SERVERONLY);
 
     /// <summary>
-    ///     Seconds of abusive audio within the detection window that trigger an automatic mute.
+    ///     Seconds of abusive audio within the detection window that trigger an automatic mute. The window is ten
+    ///         seconds of transmitted audio; anything longer is treated as the whole window.
     /// </summary>
     [CVarControl(AdminFlags.Server)]
     public static readonly CVarDef<float> VoiceAbuseSeconds =

@@ -27,21 +27,21 @@ public sealed partial class KsVoiceSystem
     /// <summary>
     ///     Voice-mutes a player. A null <paramref name="duration"/> mutes them for the rest of the round.
     /// </summary>
-    public void Mute(NetUserId userId, TimeSpan? duration, string reason, ICommonSession? admin)
+    public void Mute(NetUserId userId, TimeSpan? duration, string reason, ICommonSession? adminSession)
     {
         var until = duration == null ? (TimeSpan?)null : _gameTiming.RealTime + duration.Value;
-        _mutes[userId] = new KsVoiceMute(until, reason, admin?.Name ?? Loc.GetString("ks-voice-mute-by-server"));
+        _mutes[userId] = new KsVoiceMute(until, reason, adminSession?.Name ?? Loc.GetString("ks-voice-mute-by-server"));
 
-        var target = _playerManager.TryGetSessionById(userId, out var session) ? session.Name : userId.ToString();
+        var targetName = _playerManager.TryGetSessionById(userId, out var targetSession) ? targetSession.Name : userId.ToString();
         var length = duration == null
             ? Loc.GetString("ks-voice-mute-length-round")
             : Loc.GetString("ks-voice-mute-length-minutes", ("minutes", (int)Math.Ceiling(duration.Value.TotalMinutes)));
 
         _adminLogManager.Add(LogType.KsVoice, LogImpact.Medium,
-            $"{admin?.Name ?? "Server"} voice-muted {target} ({length}): {reason}");
+            $"{adminSession?.Name ?? "Server"} voice-muted {targetName} ({length}): {reason}");
 
-        if (session?.AttachedEntity is { } uid)
-            _popupSystem.PopupEntity(Loc.GetString("ks-voice-popup-muted"), uid, session, type: PopupType.MediumCaution);
+        if (targetSession?.AttachedEntity is { } attachedUid)
+            _popupSystem.PopupEntity(Loc.GetString("ks-voice-popup-muted"), attachedUid, targetSession, type: PopupType.MediumCaution);
 
         RefreshPageState(userId);
     }
@@ -49,13 +49,13 @@ public sealed partial class KsVoiceSystem
     /// <summary>
     ///     Lifts an admin voice mute. Returns false if the player wasn't muted.
     /// </summary>
-    public bool Unmute(NetUserId userId, ICommonSession? admin)
+    public bool Unmute(NetUserId userId, ICommonSession? adminSession)
     {
         if (!_mutes.Remove(userId))
             return false;
 
-        var target = _playerManager.TryGetSessionById(userId, out var session) ? session.Name : userId.ToString();
-        _adminLogManager.Add(LogType.KsVoice, LogImpact.Medium, $"{admin?.Name ?? "Server"} voice-unmuted {target}");
+        var targetName = _playerManager.TryGetSessionById(userId, out var targetSession) ? targetSession.Name : userId.ToString();
+        _adminLogManager.Add(LogType.KsVoice, LogImpact.Medium, $"{adminSession?.Name ?? "Server"} voice-unmuted {targetName}");
 
         RefreshPageState(userId);
         return true;
@@ -83,8 +83,8 @@ public sealed partial class KsVoiceSystem
             ("player", session.Name),
             ("seconds", (int)_autoMuteSeconds)));
 
-        if (session.AttachedEntity is { } uid)
-            _popupSystem.PopupEntity(Loc.GetString("ks-voice-popup-auto-muted"), uid, session, type: PopupType.MediumCaution);
+        if (session.AttachedEntity is { } attachedUid)
+            _popupSystem.PopupEntity(Loc.GetString("ks-voice-popup-auto-muted"), attachedUid, session, type: PopupType.MediumCaution);
 
         return true;
     }
@@ -114,15 +114,15 @@ public sealed partial class KsVoiceSystem
     private void OnGetVerbs(GetVerbsEvent<Verb> args)
     {
         if (!_enabled ||
-            !TryComp(args.User, out ActorComponent? userActor) ||
-            !TryComp(args.Target, out ActorComponent? targetActor) ||
-            !_adminManager.HasAdminFlag(userActor.PlayerSession, AdminFlags.Moderator))
+            !TryComp(args.User, out ActorComponent? userActorComponent) ||
+            !TryComp(args.Target, out ActorComponent? targetActorComponent) ||
+            !_adminManager.HasAdminFlag(userActorComponent.PlayerSession, AdminFlags.Moderator))
         {
             return;
         }
 
-        var admin = userActor.PlayerSession;
-        var targetUserId = targetActor.PlayerSession.UserId;
+        var adminSession = userActorComponent.PlayerSession;
+        var targetUserId = targetActorComponent.PlayerSession.UserId;
 
         if (_mutes.ContainsKey(targetUserId))
         {
@@ -131,7 +131,7 @@ public sealed partial class KsVoiceSystem
                 Text = Loc.GetString("ks-voice-verb-unmute"),
                 Category = VerbCategory.Admin,
                 Impact = LogImpact.Medium,
-                Act = () => Unmute(targetUserId, admin),
+                Act = () => Unmute(targetUserId, adminSession),
             });
 
             return;
@@ -142,7 +142,7 @@ public sealed partial class KsVoiceSystem
             Text = Loc.GetString("ks-voice-verb-mute-round"),
             Category = VerbCategory.Admin,
             Impact = LogImpact.Medium,
-            Act = () => Mute(targetUserId, duration: null, Loc.GetString("ks-voice-mute-reason-verb"), admin),
+            Act = () => Mute(targetUserId, duration: null, Loc.GetString("ks-voice-mute-reason-verb"), adminSession),
         });
     }
 }

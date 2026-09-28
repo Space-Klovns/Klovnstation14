@@ -391,11 +391,23 @@ public sealed class KsVoiceUplinkConnection
         {
             if (_socket.State is WebSocketState.Open or WebSocketState.CloseReceived)
             {
+                // A websocket allows one send at a time, and a close frame is a send: without the lock, a status
+                //      message going out on another thread makes this throw, and the page never learns why it was
+                //      closed. Bounded, so a stuck send can't hold the close up for long.
                 using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-                await _socket.CloseOutputAsync(status, reason, timeout.Token);
+                await _sendLock.WaitAsync(timeout.Token);
+                try
+                {
+                    if (_socket.State is WebSocketState.Open or WebSocketState.CloseReceived)
+                        await _socket.CloseOutputAsync(status, reason, timeout.Token);
+                }
+                finally
+                {
+                    _sendLock.Release();
+                }
             }
         }
-        catch (Exception e) when (e is OperationCanceledException or WebSocketException or ObjectDisposedException)
+        catch (Exception e) when (e is OperationCanceledException or WebSocketException or ObjectDisposedException or InvalidOperationException)
         {
         }
         finally
