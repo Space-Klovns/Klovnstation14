@@ -1,0 +1,113 @@
+- type: ksProcgenTilePack
+  id: KsProcgenOfficeTiles
+  tags:
+  - station
+  - office
+  palettes:
+  - id: SteelOffice
+    primaryTile: FloorSteel
+    accentTile: FloorSteelCheckerLight
+    accentFraction: 0.12
+  - id: MiniSteelOffice
+    primaryTile: FloorSteelMini
+    accentTile: FloorSteel
+    accentFraction: 0.08
+
+- type: ksProcgenWallPack
+  id: KsProcgenOfficeWalls
+  tags:
+  - station
+  - office
+  families:
+  - id: SteelOffice
+    interiorWall: WallSolid
+    hullWall: WallReinforced
+    door: Airlock
+    window: Window
+
+- type: ksProcgenWallPack
+  id: KsProcgenNoDoorWallsFixture
+  families:
+  - id: NoDoor
+    interiorWall: WallSolid
+
+- type: ksProcgenLightingPack
+  id: KsProcgenOfficeLights
+  tags:
+  - station
+  - office
+  fixtures:
+  - id: PostLight
+    entity: LightPostSmall
+    preferredSpacing: 6
+    supply: SelfContained
+
+- type: ksProcgenEntityPack
+  id: KsProcgenOfficeWorkstations
+  tags:
+  - station
+  - office
+  activityTags:
+  - officeWork
+  compatibleSupportTags:
+  - officeStorage
+  entries:
+  - id: Desk
+    entity: Table
+    role: PrimaryFurniture
+    movement: VaultRequired
+  - id: Chair
+    entity: ChairOfficeLight
+    role: Seat
+    movement: Clear
+  - id: Console
+    entity: ComputerAlert
+    role: Equipment
+    requiresInteractionApproach: true
+
+- type: ksProcgenEntityPack
+  id: KsProcgenOfficeStorage
+  tags:
+  - station
+  - officeStorage
+  entries:
+  - id: WallLocker
+    entity: ClosetWallGrey
+    role: Storage
+
+- type: ksProcgenRoomTheme
+  id: KsProcgenSimpleOffice
+  tags:
+  - station
+  - office
+  tilePacks:
+  - pack: KsProcgenOfficeTiles
+  wallPacks:
+  - pack: KsProcgenOfficeWalls
+  lightingPacks:
+  - pack: KsProcgenOfficeLights
+  entityPacks:
+  - pack: KsProcgenOfficeWorkstations
+  - pack: KsProcgenOfficeStorage
+  goals:
+    coherentContents: true
+    keepCenterOpen: true
+    furnishingDensity: 0.2
+    lightingCoverage: 0.85
+
+- type: ksProcgenRoomTheme
+  id: KsProcgenMandatoryOfficeFixture
+  tilePacks:
+  - pack: KsProcgenOfficeTiles
+  wallPacks:
+  - pack: KsProcgenOfficeWalls
+  entityPacks:
+  - pack: KsProcgenOfficeWorkstations
+    minimumCount: 1
+
+- type: ksProcgenRoomTheme
+  id: KsProcgenNoDoorThemeFixture
+  tilePacks:
+  - pack: KsProcgenOfficeTiles
+  wallPacks:
+  - pack: KsProcgenNoDoorWallsFixture

@@ -1,8 +1,9 @@
 <!-- KS14: added in this fork -->
 # KS14 procedural generation system specification
 
-Status: proposed design for manual review. This document specifies future behavior; the types,
-prototype formats, commands, and guarantees below are not implemented merely by documenting them.
+Status: implementation in progress. This document remains the behavior contract; the detailed
+implementation ledger in section 17 records what exists, what has been verified, and what remains.
+An unchecked task is not implemented merely because its API or a partial algorithm exists.
 
 Audience: an AI implementation agent and its human reviewer. `MUST` denotes a required invariant;
 `SHOULD` denotes a preferred outcome with a documented reason for deviation. Complete the tasks in
@@ -467,25 +468,26 @@ still requires their explicit repair permission.
 
 ### 4.7 Minimal authoring example
 
-The desired end-user workflow is a mask plus a reusable room theme. This conceptual syntax names
-new prototype types and example pack IDs to implement; these resources do not yet exist:
+The desired end-user workflow is a mask plus a reusable room theme. The initial office content in
+`Resources/Prototypes/_KS14/Procedural/office.yml` now defines the IDs below. It is a validated
+selection example; spawning, working-light checks, and final furnishing placement are still pending:
 
 ```yaml
 - type: ksProcgenRoomTheme
-  id: KsSimpleOffice
+  id: KsProcgenSimpleOffice
   tilePacks:
-  - pack: KsOfficeFloorTiles
+  - pack: KsProcgenOfficeTiles
     weight: 1
   wallPacks:
-  - pack: KsStationOfficeWalls
+  - pack: KsProcgenOfficeWalls
     weight: 1
   lightingPacks:
-  - pack: KsOfficeWorkingLights
+  - pack: KsProcgenOfficeLights
     weight: 1
   entityPacks:
-  - pack: KsOfficeWorkstations
+  - pack: KsProcgenOfficeWorkstations
     weight: 4
-  - pack: KsOfficeStorage
+  - pack: KsProcgenOfficeStorage
     weight: 1
   goals:
     coherentContents: true
@@ -1399,6 +1401,39 @@ committed implementation.
 
 ## 17. Piecemeal implementation tasks
 
+### Implementation ledger
+
+Update this ledger in the same change as each implementation step. Keep task checkboxes below
+unchecked until their full exit criteria pass. Each row records concrete work and validation, not
+an estimate. A partial implementation is labeled `In progress`; an untouched task is `Pending`.
+
+| Task | State | Implemented or remaining work | Verification |
+| --- | --- | --- | --- |
+| T01 | In progress | `Content.Shared/_KS14/Procedural/KsProcgenRequest.cs` defines initial serialized request, shape, limit, policy, and status types. `KsProcgenGeometry.TryNormalize` reports invalid requests with stable codes. Remaining: full result/constraint/fallback schema, prototype-reference validation, and fixture resources. | Shared Release build, 29 focused Debug unit tests, and one Debug content-load integration test passed. |
+| T02 | In progress | `KsProcgenGeometry` normalizes exact cell/rectangle/text masks with subtraction, void/envelope/preserved ownership, coordinate/cell limits, clockwise quarter turns, and cardinal island detection. Remaining: all requested geometry adapters/fixtures and full A01/A16 exit coverage. | 29 focused Debug unit tests passed, including five geometry cases. A temporary diagonal-edge mutation made the diagonal-island test fail; the restored rule passes. |
+| T03 | In progress | `KsProcgenPlan` records exclusive per-cell dispositions and supports checkpoint/rollback; stable FNV-1a hashing and named SplitMix64 streams are in place. `KsProcgenGeometryPipeline` hashes accepted claims, placements, routes, partition seams/doors, theme choices, required pack obligations, exact materials, furnishing proposals, and omissions for semantic replay. Failed plans have hash zero. Remaining: complete placement/package journal state, content/context hashes, work counters, serialized replay/report, and full T03 exit tests. | Focused rollback/hash and pinned RNG tests passed; loaded-server pure replay produced the same semantic hash, while a hybrid plan differed. |
+| T04 | In progress | `KsProcgenRoomPort` declares a one-cell room boundary opening with a cardinal normal. Layout validation requires a unique port ID, a threshold on the room boundary, and an in-room landing. Candidate discovery transforms its threshold, normal, and approach cells and rejects ordinary entrances aimed outside the target. The residual connector consumes selected port IDs and checks room claim ownership. Remaining: actual map/marker inspection, wide spans, explicitly approved exterior interfaces, door/collision classification, support footprints, connection classes, and engine entity adapters. | Shared Release build, 29 focused unit tests, and a loaded-server port fixture passed. Temporarily bypassing target-side landing validation made its negative case fail, then the guard was restored. |
+| T04a | In progress | `KsProcgenThemePrototypes.cs` defines serialized room themes, typed goals, weighted tile/wall/light/entity packs, entity movement roles and footprints, and declarative lighting supply. `KsProcgenThemeValidator` resolves single-parent inheritance and checks fallback cycles, pack references, candidate IDs/weights, tile and entity prototype IDs, ranges, and rotations. `Resources/Prototypes/_KS14/Procedural/office.yml` supplies a steel-office example with a dominant workstation pack and compatible storage support. Remaining: goal-ID merge semantics, full filters and assembly relations, actual prototype capability inspection, compatible fallback substitution, and complete A31 schema cases. | Shared Release build and loaded-server integration test passed; the latter resolves the office theme and rejects a missing theme with a stable code. Fixture operation and placement remain unverified. |
+| T05 | In progress | `KsProcgenLayoutGeometry.cs` validates equal family reservations, complete room/generated ownership, nonoverlap, facade edges and ports, and all-or-nothing candidate cell claims. Remaining: nested choices, exclusion scopes, prototype serialization, and complete rollback beyond cell claims. | 29 focused Debug unit tests passed, including L-versus-four exclusivity and malformed-layout cases. |
+| T05a | In progress | Candidate discovery aligns every local reservation cell to a target pivot at every allowed quarter turn, checks exact transformed masks, transforms declared ports, and scores matching exterior edges. Remaining: broad area search, corners/near-match penalties, fragmentation and coverage scores, library indexing, and full A38/A42 fixtures. | 29 focused Debug unit tests passed, including shifted placement, facade preference, port rotation, and explicit incomplete-enumeration result. |
+| T05b | Pending | Immutable constant-region contracts. | Pending. |
+| T06 | In progress | `KsProcgenPackingPlanner` searches complete layout claims across types, origins, rotations, and residual floor, preferring matched exterior edges and a requested prefab coverage percentage. At each complete cover it checks residual routing, rejects blocked-port candidates, and continues backtracking. It distinguishes no geometric cover, no preliminary route, and budget exhaustion; root/passage context is validated and total route expansions are bounded and reported. Pure `SingleNetwork` now rejects disconnected procedural floor even without explicit roots; `PerIsland` permits it. Remaining: early route/hull pruning, required room counts, exclusions, near-match scoring, stronger search strategy, full diagnostics, and publication gating. `GeometryReady` still does not certify a playable map. | Shared Release build and 29 focused Debug unit tests passed, including reachable-option choice, disconnected-root and disconnected-floor rejection, L-versus-four selection, mixed sizes, and 1x3/budget behavior. Temporarily bypassing completed-plan routing made the pure-network test fail; the restored rule passes. |
+| T07 | In progress | `KsProcgenTraversal` validates a cardinal clean-passage snapshot: operational one-cell approaches, room-local port and chair/machine approach connectivity, global root reachability, and vault-only blockers. It reports stable issue codes and exposes clean path search. Remaining: engine actor/collision/door adapter, wide ports, width profiles, port destination classification, and final materialized-state checks. | Shared Release build and three focused traversal tests passed; the content-load integration test validates a 1x3 clean network. |
+| T08 | In progress | `KsProcgenRoutePlanner` builds a bounded least-cost cardinal tree across explicitly writable cells and reusable clean passages for required terminals. `KsProcgenResidualConnector` derives writable residuals from packing claims, validates port ownership, matches opposite adjacent ports, and routes exposed entrances to roots through procedural or inspected passage cells. Packing backtracks when this check fails. Pure `SingleNetwork` requires all procedural floor to form one cardinal component. It reserves no partial route on failure. Remaining: port classes and width, fixed links, optional loops, approved stubs, engine clearance, and final access validation. `PreliminaryReady` is not a playable-map success status. | Shared Release build, 29 focused Debug unit tests, and one loaded-server integration test passed. Earlier temporary bypass of the authorized-cell guard made the protected-cell test fail; restoring it returned the suite to green. |
+| T09 | In progress | `KsProcgenPureFillPlanner` covers each procedural cell with connected zones, protects reserved routes, and treats narrow/tiny components such as 1x3 as passage. `KsProcgenPartitionPlanner` proposes tile-thick walls and unique door openings with room landings, protected passages, and local/island clean-floor connectivity. Failed interfaces merge their adjacent zones and retry within an explicit merge budget; a budget failure returns open floor without partial walls. `KsProcgenGeometryPipeline` composes packing, material choices, bounded furnishing proposals, and bounded provisional light positions for pure/hybrid requests. The semantic hash includes both kinds of proposal. `GeometryPlanned` remains a read-only status. A required entity pack that cannot fit returns `ContentUnmet` with no semantic plan hash. Remaining: final port/root access, real wall/door placement and actor/pressure checks, room size goals, and tile/entity spawning. | Six focused Debug seam tests pass, including local merge retention, merge budget, and replay; loaded-server integration passes for pure and hybrid planning, optional office furnishing/lighting, and a 2x2 required-workstation failure. Earlier pure-fill tests cover exact concave coverage, route protection, connected zones/replay, 1x3 fallback, invalid route, and budget rejection. 46 focused unit tests and Shared Release build passed. |
+| T09a | In progress | `KsProcgenThemeSelector` chooses deterministic room-scoped palette, wall family, light fixture, and coherent dominant/support packs. `KsProcgenThemeAssignmentPlanner` maps final open/merged zones to one choice per room, strips optional entity packs from passages, rejects mandatory packs there, records unplaced mandatory pack minima in rooms, and owns every partition wall by one region. `KsProcgenMaterialPlanner` resolves exact floor, interior-wall, and required door prototype IDs, assigns a stable rounded accent fraction only inside rooms, protects door thresholds and tiny passages with primary tiles, and rejects a selected wall family without a required door. Remaining: request overrides, hull/shared-seam material compatibility, actual placement, mandatory fixture fulfillment, and operational validation. | Loaded-server integration verifies office workstation/storage grouping, tiny passage without furnishing, exact tile/wall/door choices, a primary door threshold, accent replay, mandatory-pack diagnostics, and missing-door rejection. Selected lights are content choices, not verified working coverage. |
+| T10 | Pending | Hull construction and actual gas validation. | Pending. |
+| T11 | Pending | Exterior window fraction and airtight selection. | Pending. |
+| T12 | Pending | Private staging and safe prefab copying. | Pending. |
+| T13 | Pending | Final engine validation and publication. | Pending. |
+| T14 | Pending | Fallback policy and full diagnostic reporting. | Pending. |
+| T15a | In progress | `KsProcgenLightingPlanner` resolves the selected theme fixture and proposes bounded, deterministic positions on free room floor, avoiding protected passages, furniture, and reserved interaction approaches. It greedily estimates cardinal floor-graph coverage from the fixture's preferred spacing; tiny passages or oversized rooms can report sparse fill, and fixture-budget exhaustion has an explicit status. The pipeline tracks a request-wide fixture count and hashes the proposal. `WorkingCoverageVerified` is always false: the estimate does not account for actual light falloff, occlusion, fixture power/startup, or supply validity. Remaining: prototype placement capability, wall/ceiling mounting, live supply checks, actual light sampling after furnishing, hard coverage gate, and A29-A30. | Loaded-server office test verifies deterministic positions, passage/furniture avoidance, estimated target, sparse oversized fallback, capped-budget status, and unverified working state. A 1x3 passage reports sparse light placement. 46 focused unit tests and Shared Release build passed. |
+| T15 | In progress | `KsProcgenInteractionFacingPlanner` supplies one-cell machine facing and chair-approach geometry using the documented 0/90/180/270 convention and multi-source clean paths. `KsProcgenFurnishingPlanner` proposes one atomic, room-local cluster per selected plain-list entity pack. It protects door thresholds and room-side routes, keeps vault-required desks off clean passages, reserves chair/machine approaches, turns a seated chair toward its machine when allowed, groups support storage near its dominant activity, and reports optional omissions or unmet mandatory packs without partial placement. The request-wide candidate budget is consumed through the pipeline; oversized optional rooms become sparse while mandatory ones fail the budget. Remaining: multi-cell footprints, authored assembly relations/variants, actual prototype collision/seat/rotation checks, density/multiple clusters, engine placement, and full A27-A29/A32-A36 checks. | Five focused Debug interaction tests and loaded-server office proposal/replay tests passed. Loaded tests cover desk/chair/computer/storage grouping, doorway protection, sparse tiny optional fill, required-pack failure, candidate budget, and oversized-room fallback. Shared Release build passed. |
+| T16 | Pending | Preview, validation, replay, and overlays. | Pending. |
+| T17 | In progress | `KsProcgenTacticalAnalyzer` computes exact cardinal movement articulation cells and bridge edges on the clean walk graph, with bounded choke-side cell/required-terminal counts. It excludes vault-only cells and reports detail truncation separately from complete graph detection. Remaining: engine vision/projectile masks, sampled exposure and cover, alternate-route checks, and A25 engine fixtures. | Three focused Debug tests passed for corridor choke/bridge/terminal sides, open room versus vault-constrained choke, and explicit detail/cell budgets. Shared Release build passed. |
+| T18 | Pending | Bounded tactical furnishing preferences. | Pending. |
+| T19 | Pending | End-to-end examples and release validation. | Pending. |
+
 Unchecked tasks are future work. Each task requires its own reviewable change, updated schema/docs,
 and relevant tests. A task is done only when its listed exit criteria hold. Do not mark later phases
 done because an earlier placeholder returns plausible-looking rooms.
@@ -1460,10 +1495,22 @@ done because an earlier placeholder returns plausible-looking rooms.
   tile-thick seams, merging, sparse fallback, and exact residual coverage. Exit: A01/A11/A12/A18 pass
   at the planning level in `Procedural` and `Hybrid`, including one-cell fragments. No artificial
   room size lattice is present; A37/A39 hybrid boundary strips match the requested exterior.
+  - Implemented: complete procedural-claim coverage, reserved-passage protection, seeded connected
+    zone proposals, cardinal interface discovery, narrow/tiny passage fallback, and bounded rejection.
+    A conservative seam planner reserves tile-thick partition cells with one opening per interface;
+    it checks clean room and island connectivity, merges only the two zones around a bad split,
+    retries, and reports a bounded open-floor fallback if its merge budget expires.
+  - Next: derive final port/root obligations, materialize real walls/doors, and validate actor
+    access and closure. Current material choices are exact plans, not spawned map content.
 - [ ] **T09a - Implement theme assignment and coherent material palettes.** Depends on T04a/T09.
   Per-room weighted themes, compatible tile/wall families, shared seam ownership, and theme
   feasibility feedback. Exit: A27 material checks/A29/A31 pass at plan level; tiny fragments use
   the primary palette, and incompatible wall families cannot bypass structural constraints.
+  - Implemented: assign the selected theme to final room/passages after seam merges, keep optional
+    furniture off passages, record unplaced required packs, and choose exact primary/accent floor,
+    interior-wall, and door prototypes. Reject a wall family that cannot supply a required door.
+  - Next: reconcile interior/hull seams with actual entity footprints and place the planned tiles,
+    doors, and walls. Prototype choice alone does not verify a door's access or pressure behavior.
 
 ### Phase D: structure and output
 
@@ -1493,18 +1540,33 @@ done because an earlier placeholder returns plausible-looking rooms.
   Fixture selection, spacing/support, working-state checks, bounded coverage estimates, and explicit
   validation of any hard lighting metric. Exit: A29-A30 pass; no unpowered light is counted as
   working, and a basic theme works without requiring a generated station power network.
+  - Implemented: deterministic, bounded fixture proposals using the selected lighting pack;
+    geometric floor-graph coverage estimates; exclusion of protected passages, furniture, and
+    reserved interaction approaches; conservative clean-floor connectivity preservation for
+    solid floor fixtures; request-wide fixture count, sparse/budget statuses, and
+    semantic replay hashing. The planner never reports verified working coverage.
+  - Remaining: inspect mounting/collision and actual supply at placement, measure engine light
+    coverage after all entities spawn, validate hard targets, and exercise A29-A30 in live maps.
 - [ ] **T15 - Implement coherent entity-pack furnishing.** Depends on T04a/T09a/T13/T14/T15a. Dominant
   activity selection, grouped singleton defaults, atomic relational assemblies, interaction
   approaches, wall-aware machine facing, reserved clean chair access, optional supports, density
   goals, and small-room fallbacks. Exit: A18/A27-A29/A32-A36
   pass with adversarial clutter and narrow paths; removal of optional objects can rescue a layout
   without editing protected rooms. Final lighting coverage is rechecked after furnishing.
+  - Implemented: one-cell machine-facing and chair-approach geometry with clean cardinal routes,
+    documented facing rotations, backing-wall preference, and vault-required blockers. Initial
+    one-cell, plain-list pack clusters are proposed atomically with nearby compatible supports,
+    protected door routes, mandatory-failure handling, and sparse optional fallbacks.
+  - Next: inspect actual prototype collision, facing, seats, support surfaces, and container
+    relations; add declared multi-cell/variant assemblies and multiple clusters per room.
 - [ ] **T16 - Add preview, validation, replay, and overlays.** Depends on T14/T15a/T15. Expose section 15's
   workflow, diagnostic layers, and exportable report. Exit: an author can reproduce and explain an
   L-versus-four conflict and a 1x3 hull failure without reading server source.
 - [ ] **T17 - Add tactical measurements.** Depends on T07/T11/T15. Exposure, nominated-direction
   cover, articulation/bridge chokes, bounded alternate-route checks, and approximation labels.
   Exit: A25's known cases pass; metrics remain optional and budgeted.
+  - Implemented: exact movement articulation/bridge graph and bounded choke-side terminal counts.
+  - Next: inspect actual occlusion/projectile properties and sample vision/cover with the declared ray model.
 - [ ] **T18 - Add bounded tactical furnishing preferences.** Depends on T17. Propose and score cover
   with hard-constraint revalidation. Exit: A25 and A18 still pass with optimization enabled; users
   can compare the measured change using the same seed.
