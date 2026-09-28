@@ -10,6 +10,7 @@ namespace Content.Server._KS14.NPC.Systems;
 public sealed partial class NpcReactionTimeSystem : EntitySystem
 {
     [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private NpcLightDetectionSystem _npcLightDetectionSystem = default!;
 
     [Dependency] private EntityQuery<NpcReactionTimeComponent> _reactionTimeQuery = default!;
 
@@ -18,7 +19,8 @@ public sealed partial class NpcReactionTimeSystem : EntitySystem
     /// <summary>
     ///     Records that <paramref name="npcUid"/> can see <paramref name="targetUid"/> now, and returns whether
     ///         it may react to it: always if <paramref name="alert"/> or the NPC has no reaction time, otherwise
-    ///         once the target has been in sight for the NPC's reaction time.
+    ///         once the target has been in sight for the NPC's reaction time - longer the dimmer the target is,
+    ///         with light detection on. Once it has reacted to a target it keeps reacting, until it forgets it.
     /// </summary>
     public bool TrySeeAndReact(EntityUid npcUid, EntityUid targetUid, bool alert)
     {
@@ -28,13 +30,24 @@ public sealed partial class NpcReactionTimeSystem : EntitySystem
         var now = _gameTiming.CurTime;
         Forget(reactionTimeComponent, now);
 
-        var firstSeen = reactionTimeComponent.Sightings.TryGetValue(targetUid, out var sighting)
-            ? sighting.FirstSeen
-            : now;
+        if (!reactionTimeComponent.Sightings.TryGetValue(targetUid, out var sighting))
+            sighting = new NpcSighting(FirstSeen: now, LastSeen: now, Reacted: false);
 
-        reactionTimeComponent.Sightings[targetUid] = (firstSeen, now);
+        sighting.LastSeen = now;
 
-        return alert || now - firstSeen >= reactionTimeComponent.ReactionTime;
+        if (!sighting.Reacted)
+            sighting.Reacted = alert || now - sighting.FirstSeen >= GetReactionTime((npcUid, reactionTimeComponent), targetUid);
+
+        reactionTimeComponent.Sightings[targetUid] = sighting;
+        return sighting.Reacted;
+    }
+
+    private TimeSpan GetReactionTime(Entity<NpcReactionTimeComponent> npcEntity, EntityUid targetUid)
+    {
+        var lightLevel = _npcLightDetectionSystem.GetPerceivedLightLevel(npcEntity.Owner, targetUid, npcEntity.Comp.DarknessProximityRange);
+        var darkness = 1f - lightLevel;
+
+        return npcEntity.Comp.ReactionTime * (1f + npcEntity.Comp.DarknessReactionScale * darkness);
     }
 
     private void Forget(NpcReactionTimeComponent reactionTimeComponent, TimeSpan now)

@@ -172,6 +172,10 @@ namespace Content.Server.NPC.Pathfinding
                         offset--;
                         path.Tcs.SetResult(result);
                         SendRoute(path);
+                        // KS14 start: last thing to touch a finished tactical request's search state
+                        if (path is TacticalPathRequest tacticalRequest)
+                            ReturnTacticalSearchState(tacticalRequest);
+                        // KS14 end
                         break;
                     default:
                         throw new NotImplementedException();

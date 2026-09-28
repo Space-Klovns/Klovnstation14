@@ -1,3 +1,4 @@
+using Content.Server._KS14.Light; // KS14
 using Content.Server.Light.Components;
 using Content.Server.Stack;
 using Content.Shared.Clothing.Components;
@@ -29,6 +30,7 @@ namespace Content.Server.Light.EntitySystems
         [Dependency] private SharedAppearanceSystem _appearance = default!;
         [Dependency] private StackSystem _stackSystem = default!;
         [Dependency] private NameModifierSystem _nameModifier = default!;
+        [Dependency] private KsExpendableLightMirrorSystem _ksExpendableLightMirrorSystem = default!; // KS14
 
         private static readonly ProtoId<TagPrototype> TrashTag = "Trash";
 
@@ -154,6 +156,8 @@ namespace Content.Server.Light.EntitySystems
 
         private void UpdateVisualizer(Entity<ExpendableLightComponent> ent, AppearanceComponent? appearance = null)
         {
+            _ksExpendableLightMirrorSystem.MirrorState(ent); // KS14: every change of state comes through here
+
             var component = ent.Comp;
             if (!Resolve(ent, ref appearance, false))
                 return;

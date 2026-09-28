@@ -23,8 +23,30 @@ public sealed partial class NpcReactionTimeComponent : Component
     public TimeSpan ForgetTime = TimeSpan.FromSeconds(2);
 
     /// <summary>
-    ///     When each target currently being tracked was first and most recently seen.
+    ///     How much longer a dimly lit target takes to react to, with light detection on
+    ///         (see <see cref="NpcLightDetectionSystem"/>): the reaction time is scaled by
+    ///         <c>1 + DarknessReactionScale * (1 - light level)</c>, so at 1 a target in near-darkness takes about
+    ///         twice as long. 0 ignores light.
+    /// </summary>
+    [DataField]
+    public float DarknessReactionScale = 1f;
+
+    /// <summary>
+    ///     Within this many tiles, how dark a target is makes no difference to the reaction time.
+    /// </summary>
+    [DataField]
+    public float DarknessProximityRange = 2.5f;
+
+    /// <summary>
+    ///     Each target currently being tracked.
     /// </summary>
     [ViewVariables]
-    public Dictionary<EntityUid, (TimeSpan FirstSeen, TimeSpan LastSeen)> Sightings = new();
+    public Dictionary<EntityUid, NpcSighting> Sightings = new();
 }
+
+/// <summary>
+///     When a target was first and most recently seen, and whether the NPC has reacted to it yet. Once it has, it
+///         stays reacted until it forgets the target: a target it is already fighting does not become a surprise
+///         again by stepping into shadow.
+/// </summary>
+public record struct NpcSighting(TimeSpan FirstSeen, TimeSpan LastSeen, bool Reacted);

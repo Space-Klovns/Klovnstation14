@@ -211,6 +211,44 @@ public sealed class KsNpcCombatReactionTest : GameTest
         });
     }
 
+    /// <summary>
+    ///     Light detection switched on without a server light tree - the ordinary test server has none - does not
+    ///         hide anyone: every target counts as lit.
+    /// </summary>
+    [Test]
+    public async Task TestLightDetectionWithoutLightTreeTreatsTargetsAsLit()
+    {
+        await OverrideCVar(Content.IntegrationTests.Fixtures.Attributes.Side.Server, Content.Shared._KS14.CCVar.KsCCVars.NpcLightDetection, true);
+        await AssertTargetsCountAsLitWithoutLightTree();
+    }
+
+    /// <summary>
+    ///     Turning the server light tree cvar on mid-round builds no tree - it is only read at startup - so it must
+    ///         not make light detection believe there is one, and leave every target reading as pitch dark.
+    /// </summary>
+    [Test]
+    public async Task TestLightTreeCvarTurnedOnMidRoundTreatsTargetsAsLit()
+    {
+        await OverrideCVar(Content.IntegrationTests.Fixtures.Attributes.Side.Server, Content.Shared._KS14.CCVar.KsCCVars.NpcLightDetection, true);
+        await OverrideCVar(Content.IntegrationTests.Fixtures.Attributes.Side.Server, Robust.Shared.CVars.LookupEnableServerLightTree, true);
+        await AssertTargetsCountAsLitWithoutLightTree();
+    }
+
+    private async Task AssertTargetsCountAsLitWithoutLightTree()
+    {
+        var (entManager, _, targetUid) = await SetUpPair();
+        var lightDetectionSystem = entManager.System<NpcLightDetectionSystem>();
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var mapUid = entManager.GetComponent<TransformComponent>(targetUid).MapUid!.Value;
+            Assert.That(entManager.HasComponent<Robust.Shared.ComponentTrees.LightTreeComponent>(mapUid), Is.False,
+                "this test server should have no light tree");
+            Assert.That(lightDetectionSystem.GetLightLevel(targetUid), Is.EqualTo(1f),
+                "with no light tree to compute from, a target should count as lit");
+        });
+    }
+
     private static void ApplyEffects(NPCBlackboard blackboard, Dictionary<string, object>? effects)
     {
         if (effects == null)

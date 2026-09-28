@@ -22,15 +22,27 @@ public sealed class TacticalPathRequest : PathRequest
     /// </summary>
     public int MaxCandidates;
 
-    public readonly List<PathPoly> Candidates = new();
+    public readonly List<PathPoly> Candidates;
+
+    /// <summary>
+    /// The flood's open set, used in place of <see cref="PathRequest.Frontier"/> so it can be pooled. Rented with the
+    /// rest of the search state, see <see cref="PathfindingSystem.RentTacticalSearchState"/>.
+    /// </summary>
+    public TacticalFrontier TacticalFrontier = default!;
+
+    /// <summary>
+    /// How many polys the flood has expanded so far, over every tick it has run for.
+    /// </summary>
+    public int ExpandedCount;
 
     /// <summary>
     /// Raw octile distance accumulated from <see cref="PathRequest.Start"/>, separate from
     /// <see cref="PathRequest.CostSoFar"/>'s door/smash/climb-weighted traversal cost - used to cap flood
     /// expansion by actual spatial range instead of cutting candidates off early just because a door or other
-    /// costly tile sits between them and the start.
+    /// costly tile sits between them and the start. Rented from a pool with the rest of the search state, see
+    /// <see cref="PathfindingSystem.RentTacticalSearchState"/>.
     /// </summary>
-    public readonly Dictionary<PathPoly, float> DistanceSoFar = new();
+    public Dictionary<PathPoly, float> DistanceSoFar = default!;
 
     public TacticalPathRequest(
         EntityCoordinates start,
@@ -43,5 +55,11 @@ public sealed class TacticalPathRequest : PathRequest
     {
         ExpansionRange = expansionRange;
         MaxCandidates = maxCandidates;
+        Candidates = new List<PathPoly>(Math.Clamp(maxCandidates, 0, MaxPresizedCandidates));
     }
+
+    /// <summary>
+    /// The most candidates <see cref="Candidates"/> is sized for up front, so a silly cap does not allocate a silly list.
+    /// </summary>
+    private const int MaxPresizedCandidates = 256;
 }

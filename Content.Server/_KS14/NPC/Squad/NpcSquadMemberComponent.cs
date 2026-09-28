@@ -48,6 +48,21 @@ public sealed partial class NpcSquadMemberComponent : Component
     public NpcSquadCoverSettings Cover = new();
 
     /// <summary>
+    ///     The value each shared blackboard key was last given by this NPC's leader. A key the NPC no longer has,
+    ///         whose leader value still matches this, was dropped by the NPC on purpose - it dealt with it - and is
+    ///         not handed back.
+    /// </summary>
+    [ViewVariables]
+    public Dictionary<string, object> ReceivedSharedValues = new();
+
+    /// <summary>
+    ///     The leader <see cref="ReceivedSharedValues"/> came from. Under any other leader - a new squad, or the
+    ///         old leader succeeded - they say nothing about what this NPC dropped, and are forgotten.
+    /// </summary>
+    [ViewVariables]
+    public EntityUid? ReceivedSharedFrom;
+
+    /// <summary>
     ///     The squad entity this NPC is in, if any.
     /// </summary>
     [ViewVariables]

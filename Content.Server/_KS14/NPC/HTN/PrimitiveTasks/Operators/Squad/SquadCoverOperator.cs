@@ -26,8 +26,9 @@ public sealed partial class SquadCoverOperator : HTNOperator
     [DataField] public string FacingKey = "CoverFacing";
 
     /// <summary>
-    ///     If this coordinates key is set, it is reported to the squad as the latest threat position first, so
-    ///         the thresholds facing it are covered before the others.
+    ///     If this coordinates key is set, it is passed on to the squad as the latest threat position first, so
+    ///         the thresholds facing it are covered before the others. Passed on as a repeat
+    ///         (<see cref="NpcSquadSystem.RepeatThreat"/>): whatever set it reported it fresh when it did.
     /// </summary>
     [DataField] public string? ThreatKey;
 
@@ -37,7 +38,7 @@ public sealed partial class SquadCoverOperator : HTNOperator
 
         if (ThreatKey is not null &&
             blackboard.TryGetValue<EntityCoordinates>(ThreatKey, out var threatCoordinates, _entityManager))
-            _npcSquadSystem.ReportThreat(ownerUid, threatCoordinates);
+            _npcSquadSystem.RepeatThreat(ownerUid, threatCoordinates);
 
         if (!_npcSquadCoverSystem.TryGetAssignment(ownerUid, out var assignment))
             return (false, null);

@@ -40,3 +40,13 @@ storage_limit = 2
 [klovn.gun]
 # originally 0.125
 impulse_multiplier = 0.09375
+
+# NPCs noticing targets by how well lit they are (targets in the dark go unseen unless close). Off by default.
+#   It needs both of these: the server only keeps the light tree that light levels are computed from if told to,
+#   and reads that setting at startup only. klovn.npc.light_detection can be toggled live afterwards.
+#   Cost is small - see KsCCVars.NpcLightDetection for measured figures.
+[lookup]
+enable_server_light_tree = true
+
+[klovn.npc]
+light_detection = true

@@ -96,24 +96,37 @@ public sealed partial class NpcSquadSystem : EntitySystem
 
     /// <summary>
     ///     Records <paramref name="threatCoordinates"/> as the latest known hostile position for
-    ///         <paramref name="memberUid"/>'s whole squad.
+    ///         <paramref name="memberUid"/>'s whole squad, from something the member has only just learned - a
+    ///         hostile sighted, a disturbance heard. Always counts as fresh, even at the same spot as before: a
+    ///         hostile holding one position is still there.
     /// </summary>
+    /// <seealso cref="RepeatThreat"/>
     public void ReportThreat(EntityUid memberUid, EntityCoordinates threatCoordinates)
     {
         if (!TryGetSquad(memberUid, out var squadEntity))
             return;
 
-        var squadComponent = squadEntity.Value.Comp;
+        squadEntity.Value.Comp.ThreatCoordinates = threatCoordinates;
+        squadEntity.Value.Comp.ThreatReportedAt = _gameTiming.CurTime;
+    }
 
-        // The same position reported again is not new information. Members re-report their last known threat on
-        //      every replan, so refreshing the time here would keep an unreachable threat fresh forever.
-        if (squadComponent.ThreatCoordinates is { } existingCoordinates &&
+    /// <summary>
+    ///     Like <see cref="ReportThreat"/>, for a member restating a threat it already knew of rather than one it
+    ///         has just learned of. Only a position that has moved counts as new: members restate their last known
+    ///         threat on every replan, and refreshing its age each time would keep a threat the squad cannot reach
+    ///         fresh forever.
+    /// </summary>
+    public void RepeatThreat(EntityUid memberUid, EntityCoordinates threatCoordinates)
+    {
+        if (!TryGetSquad(memberUid, out var squadEntity))
+            return;
+
+        if (squadEntity.Value.Comp.ThreatCoordinates is { } existingCoordinates &&
             existingCoordinates.TryDistance(EntityManager, _transformSystem, threatCoordinates, out var distance) &&
             distance < ThreatRefreshDistance)
             return;
 
-        squadComponent.ThreatCoordinates = threatCoordinates;
-        squadComponent.ThreatReportedAt = _gameTiming.CurTime;
+        ReportThreat(memberUid, threatCoordinates);
     }
 
     /// <summary>
@@ -458,7 +471,10 @@ public sealed partial class NpcSquadSystem : EntitySystem
 
     /// <summary>
     ///     Copies each leader's <see cref="NpcSquadMemberComponent.SharedBlackboardKeys"/> into the blackboard of
-    ///         every member that has nothing at that key, and has those members replan so they act on it.
+    ///         every member that has nothing at that key, and has those members replan so they act on it. A value a
+    ///         member was already given, and has since dropped, is not given again: it dropped it for a reason -
+    ///         a hold that ends clears its threat - and only a new value from the leader is news. That memory is
+    ///         per leader: under a new one, everything it shares is news.
     /// </summary>
     private void ShareLeaderBlackboards()
     {
@@ -473,18 +489,35 @@ public sealed partial class NpcSquadSystem : EntitySystem
 
             foreach (var memberUid in squadComponent.Members)
             {
-                if (memberUid == leaderUid || !_htnQuery.TryComp(memberUid, out var memberHtnComponent))
+                if (memberUid == leaderUid ||
+                    !_htnQuery.TryComp(memberUid, out var memberHtnComponent) ||
+                    !_squadMemberQuery.TryComp(memberUid, out var memberSquadMemberComponent))
                     continue;
+
+                if (memberSquadMemberComponent.ReceivedSharedFrom != leaderUid)
+                {
+                    memberSquadMemberComponent.ReceivedSharedValues.Clear();
+                    memberSquadMemberComponent.ReceivedSharedFrom = leaderUid;
+                }
 
                 var shared = false;
 
                 foreach (var key in leaderSquadMemberComponent.SharedBlackboardKeys)
                 {
+                    // The leader dropping a key ends it; the same value coming back later is news again.
+                    if (!leaderHtnComponent.Blackboard.TryGetValue<object>(key, out var value, EntityManager))
+                    {
+                        memberSquadMemberComponent.ReceivedSharedValues.Remove(key);
+                        continue;
+                    }
+
                     if (memberHtnComponent.Blackboard.ContainsKey(key) ||
-                        !leaderHtnComponent.Blackboard.TryGetValue<object>(key, out var value, EntityManager))
+                        memberSquadMemberComponent.ReceivedSharedValues.TryGetValue(key, out var receivedValue) &&
+                        Equals(receivedValue, value))
                         continue;
 
                     memberHtnComponent.Blackboard.SetValue(key, value);
+                    memberSquadMemberComponent.ReceivedSharedValues[key] = value;
                     shared = true;
                 }
 

@@ -154,9 +154,9 @@ public sealed class KsNpcSquadFormationTest : GameTest
     }
 
     /// <summary>
-    ///     Reporting the same threat again does not make it any fresher - members re-report theirs on every
-    ///         replan, which would otherwise keep an unreachable threat alive forever - while a threat somewhere
-    ///         new does.
+    ///     A member restating a threat it already knew of does not make it any fresher - members restate theirs on
+    ///         every replan, which would otherwise keep an unreachable threat alive forever - while a restated
+    ///         threat somewhere new, or a fresh report even at the same spot, does.
     /// </summary>
     [Test]
     public async Task TestRepeatedThreatReportDoesNotRefresh()
@@ -181,11 +181,23 @@ public sealed class KsNpcSquadFormationTest : GameTest
         {
             var squad = GetSquads(entManager, gridUid).Single();
 
-            squadSystem.ReportThreat(mobUid, new EntityCoordinates(gridUid, new Vector2(5.5f, 0.5f)));
-            Assert.That(squad.Comp.ThreatReportedAt, Is.EqualTo(firstReportedAt), "the same threat must not be refreshed");
+            squadSystem.RepeatThreat(mobUid, new EntityCoordinates(gridUid, new Vector2(5.5f, 0.5f)));
+            Assert.That(squad.Comp.ThreatReportedAt, Is.EqualTo(firstReportedAt), "a restated threat must not be refreshed");
 
-            squadSystem.ReportThreat(mobUid, new EntityCoordinates(gridUid, new Vector2(9.5f, 0.5f)));
-            Assert.That(squad.Comp.ThreatReportedAt, Is.GreaterThan(firstReportedAt), "a threat somewhere new should be");
+            squadSystem.ReportThreat(mobUid, new EntityCoordinates(gridUid, new Vector2(5.5f, 0.5f)));
+            Assert.That(squad.Comp.ThreatReportedAt, Is.GreaterThan(firstReportedAt),
+                "a fresh report - a hostile still holding its position - should refresh it, even at the same spot");
+        });
+
+        await Pair.RunTicksSync(30);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var squad = GetSquads(entManager, gridUid).Single();
+            var reportedAt = squad.Comp.ThreatReportedAt;
+
+            squadSystem.RepeatThreat(mobUid, new EntityCoordinates(gridUid, new Vector2(9.5f, 0.5f)));
+            Assert.That(squad.Comp.ThreatReportedAt, Is.GreaterThan(reportedAt), "a restated threat somewhere new should count");
         });
     }
 
@@ -325,6 +337,93 @@ public sealed class KsNpcSquadFormationTest : GameTest
                 Assert.That(entManager.GetComponent<HTNComponent>(informedFollowerUid).Blackboard.GetValue<string>(SharedKey),
                     Is.EqualTo("its own"), "a member value must not be overwritten");
             });
+
+            // The member deals with it and drops it.
+            entManager.GetComponent<HTNComponent>(emptyFollowerUid).Blackboard.Remove<string>(SharedKey);
+        });
+
+        await Pair.RunTicksSync(SquadUpdateTicks);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            var followerBlackboard = entManager.GetComponent<HTNComponent>(emptyFollowerUid).Blackboard;
+            Assert.That(followerBlackboard.ContainsKey(SharedKey), Is.False,
+                "a value the member was already given, and dropped, must not be handed back");
+
+            entManager.GetComponent<HTNComponent>(leaderUid).Blackboard.SetValue(SharedKey, "news");
+        });
+
+        await Pair.RunTicksSync(SquadUpdateTicks);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(entManager.GetComponent<HTNComponent>(emptyFollowerUid).Blackboard.GetValue<string>(SharedKey),
+                Is.EqualTo("news"), "a new value from the leader should be handed down");
+
+            // The leader drops it too, then later learns the very same thing again.
+            entManager.GetComponent<HTNComponent>(emptyFollowerUid).Blackboard.Remove<string>(SharedKey);
+            entManager.GetComponent<HTNComponent>(leaderUid).Blackboard.Remove<string>(SharedKey);
+        });
+
+        await Pair.RunTicksSync(SquadUpdateTicks);
+        await Pair.Server.WaitPost(() => entManager.GetComponent<HTNComponent>(leaderUid).Blackboard.SetValue(SharedKey, "news"));
+        await Pair.RunTicksSync(SquadUpdateTicks);
+
+        await Pair.Server.WaitAssertion(() =>
+            Assert.That(entManager.GetComponent<HTNComponent>(emptyFollowerUid).Blackboard.GetValue<string>(SharedKey),
+                Is.EqualTo("news"), "once the leader has dropped a value, the same value coming back is news again"));
+    }
+
+    /// <summary>
+    ///     What a member dropped is remembered per leader: a new leader sharing the same value hands it down again,
+    ///         since the member has no way of knowing the new leader's value is the one it already dealt with.
+    /// </summary>
+    [Test]
+    public async Task TestNewLeaderSharesWhatOldOneDid()
+    {
+        var (entManager, gridUid) = await SetUpGrid(new Vector2i(-5, -5), new Vector2i(10, 5));
+        EntityUid firstLeaderUid = default;
+        EntityUid secondLeaderUid = default;
+        EntityUid followerUid = default;
+
+        await Pair.Server.WaitPost(() =>
+        {
+            firstLeaderUid = SpawnAt(entManager, SharingLeaderMob, gridUid, 0, 0);
+            secondLeaderUid = SpawnAt(entManager, SharingLeaderMob, gridUid, 1, 0);
+            followerUid = SpawnAt(entManager, FollowerMob, gridUid, 2, 0);
+        });
+
+        await Pair.RunTicksSync(SquadUpdateTicks);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            // Whichever of the two founded the squad leads it.
+            if (GetSquads(entManager, gridUid).Single().Comp.Leader == secondLeaderUid)
+                (firstLeaderUid, secondLeaderUid) = (secondLeaderUid, firstLeaderUid);
+
+            entManager.GetComponent<HTNComponent>(firstLeaderUid).Blackboard.SetValue(SharedKey, "the same news");
+        });
+
+        await Pair.RunTicksSync(SquadUpdateTicks);
+
+        await Pair.Server.WaitPost(() =>
+        {
+            Assert.That(entManager.GetComponent<HTNComponent>(followerUid).Blackboard.GetValue<string>(SharedKey),
+                Is.EqualTo("the same news"), "the first leader should hand its value down");
+
+            // The follower deals with it and drops it; the second leader has heard the same thing.
+            entManager.GetComponent<HTNComponent>(followerUid).Blackboard.Remove<string>(SharedKey);
+            entManager.GetComponent<HTNComponent>(secondLeaderUid).Blackboard.SetValue(SharedKey, "the same news");
+            entManager.DeleteEntity(firstLeaderUid);
+        });
+
+        await Pair.RunTicksSync(SquadUpdateTicks);
+
+        await Pair.Server.WaitAssertion(() =>
+        {
+            Assert.That(GetSquads(entManager, gridUid).Single().Comp.Leader, Is.EqualTo(secondLeaderUid));
+            Assert.That(entManager.GetComponent<HTNComponent>(followerUid).Blackboard.GetValue<string>(SharedKey),
+                Is.EqualTo("the same news"), "a new leader's value should be handed down, even one the old leader shared");
         });
     }
 
