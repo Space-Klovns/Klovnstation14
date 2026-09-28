@@ -16,8 +16,12 @@ public sealed partial class KsVoiceIndicatorComponent : Component
     [DataField]
     public SpriteSpecifier.Rsi Sprite = new(new ResPath("/Textures/_KS14/Effects/voice_indicator.rsi"), "talking");
 
+    /// <summary>
+    ///     Shader for the icon. None by default, so the icon is lit like the mob it sits on: an unshaded icon would
+    ///         glow in the dark and give away anyone talking in an unlit room.
+    /// </summary>
     [DataField]
-    public string Shader = "unshaded";
+    public string? Shader;
 
     [DataField]
     public Vector2 Offset = new(0f, 0f);

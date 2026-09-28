@@ -67,6 +67,8 @@ under `/klovn/voice/`, and accepts websockets at `/klovn/voice/ws`.
   appears without a click; declining leaves a "Start microphone" button and says how to allow it. `state` only says
   whether the server *would* relay audio (push-to-talk held, nothing blocking), so the page combines it with its own
   microphone state: with the microphone off it never claims to be transmitting, and says so if push-to-talk is held.
+  Firefox also holds any audio graph started without a click on the page (allowing the microphone in its prompt
+  doesn't count), so there the page asks for one click and carries on; Chromium browsers start without one.
 - **Resampling in the worklet.** The page captures at the device's own rate and resamples to 16 kHz inside the
   AudioWorklet, using a box filter that also acts as a crude low-pass. Creating the AudioContext at 16 kHz would be
   simpler, but Firefox refuses to connect a microphone stream to a context whose rate differs from the device's.
@@ -106,7 +108,9 @@ The requirement is that nobody can talk as another player unless that player han
 - they aren't admin-muted, auto-muted, or on a continuous-talk cooldown;
 - their attached entity isn't a ghost and passes `ActionBlockerSystem.CanSpeak`. So crit, death, sleep, mime vows and
   admin freeze-mutes silence voice exactly as they silence speech, through `SpeakAttemptEvent`, with nothing extra to
-  maintain.
+  maintain. `CanSpeak` runs on every chunk, so a block that starts mid-sentence cuts the voice at once. Some of the
+  handlers that refuse speech also show a popup (`MutingSystem`'s "You can't speak right now!"), so a refusal is
+  remembered for that body until push-to-talk is next pressed: one popup per attempt to talk, not one per chunk.
 
 A relayed chunk is IMA ADPCM-encoded once and sent as a `KsVoiceFrameMessage` to every other in-game player whose
 entity:
@@ -128,7 +132,8 @@ stay well under the default 700-byte MTU.
 The talking indicator is appearance data (`KsVoiceVisuals.Talking`) on `KsVoiceIndicatorComponent`. It is added the
 first time an entity talks and cleared 300 ms after the last relayed chunk. `KsVoiceIndicatorVisualizerSystem` draws
 it, following the typing indicator's approach. The sprite sits on the opposite side of the head from the typing bubble,
-so the two don't overlap.
+so the two don't overlap. Unlike the typing bubble it is lit normally (no `unshaded` shader), so it doesn't glow in the
+dark and give away someone talking in an unlit room.
 
 ### Playback
 
@@ -210,7 +215,8 @@ Voice is **off by default**. Every entry point checks `klovn.voice.enabled`. Wit
 - no links are issued
 - open pages are disconnected
 - nothing is relayed
-- clients hide the options section and window, and ignore the push-to-talk key
+- clients hide the options section and window, and ignore the push-to-talk key. The options tab follows this switch,
+  and the voice cvars, live while it's open, rather than only when the options menu is opened
 
 | CVar | Default | Side | Purpose |
 | --- | --- | --- | --- |
@@ -318,7 +324,15 @@ All under `Content.IntegrationTests/Tests/_KS14/Voice/`.
   - auto-mute
   - the indicator showing and clearing on the client
   - audio for a talker whose entity the client doesn't know yet being kept, not dropped
+  - a muted talker getting one "can't speak" popup per push-to-talk press, not one per chunk
+- `KsVoiceOptionsTabTests`: the options tab showing the voice section when the server turns voice on and following a
+  volume change made elsewhere while open, and letting go of the configuration manager once closed
 - `KsVoiceChunkTimingTests`: early starts padded and late starts skipped to the exact sample, skips never
   exceeding what was already heard, and the start decision at different frame rates
 
 Crossfade quality and the sprite's look need a real client with speakers to check.
+
+The page itself has no automated tests in the suite; it was driven by hand in headless Chromium and in Firefox 156
+(over WebDriver BiDi, with PulseAudio providing a null sink), against a mock of the voice endpoints. In both, the
+microphone streams at real time (Firefox from a 44.1 kHz device, so through the non-integer resampling path), and the
+status line reads correctly with the microphone on, off, refused, or waiting on the browser.

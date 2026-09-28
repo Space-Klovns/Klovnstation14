@@ -18,7 +18,9 @@ public sealed partial class KsVoiceIndicatorVisualizerSystem : VisualizerSystem<
         {
             layer = SpriteSystem.LayerMapReserve(spriteEntity, KsVoiceIndicatorLayers.Base);
             SpriteSystem.LayerSetRsi(spriteEntity, layer, component.Sprite.RsiPath, component.Sprite.RsiState);
-            args.Sprite.LayerSetShader(layer, component.Shader);
+            if (component.Shader != null)
+                args.Sprite.LayerSetShader(layer, component.Shader);
+
             SpriteSystem.LayerSetOffset(spriteEntity, layer, component.Offset);
         }
 

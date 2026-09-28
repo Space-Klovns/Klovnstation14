@@ -14,6 +14,11 @@ public sealed partial class Ks14Tab : Control
     [Dependency] private IConfigurationManager _configurationManager = default!; // KS14
     [Dependency] private IUserInterfaceManager _userInterfaceManager = default!; // KS14
 
+    // KS14 start: voice chat options, kept so they can follow cvar changes made while the tab is open
+    private readonly List<BaseOption> _voiceOptions = [];
+    private readonly List<Action> _voiceUnsubscribers = [];
+    // KS14 end
+
     public Ks14Tab()
     {
         RobustXamlLoader.Load(this);
@@ -48,21 +53,51 @@ public sealed partial class Ks14Tab : Control
         Control.AddOptionDropDown(KsCCVars.TranslateLanguage, DropDownTranslateLanguage, languageEntries);
 
         // KS14 start: voice chat
-        Control.AddOptionCheckBox(KsCCVars.VoiceHearEnabled, VoiceHearEnabled);
-        Control.AddOptionPercentSlider(KsCCVars.VoiceVolume, SliderVoiceVolume, min: 0f, max: 2f);
-        Control.AddOptionSlider(KsCCVars.VoiceJitterBufferMs, SliderVoiceJitter, min: 60, max: 400);
+        _voiceOptions.Add(Control.AddOptionCheckBox(KsCCVars.VoiceHearEnabled, VoiceHearEnabled));
+        _voiceOptions.Add(Control.AddOptionPercentSlider(KsCCVars.VoiceVolume, SliderVoiceVolume, min: 0f, max: 2f));
+        _voiceOptions.Add(Control.AddOptionSlider(KsCCVars.VoiceJitterBufferMs, SliderVoiceJitter, min: 60, max: 400));
         VoiceOpenButton.OnPressed += _ => _userInterfaceManager.GetUIController<KsVoiceUIController>().OpenWindow();
         // KS14 end
 
         Control.Initialize();
     }
 
-    // KS14 start: voice settings only make sense while the server has voice chat enabled. Read on entry rather than
-    //      subscribed, so this short-lived control never registers itself with the configuration manager.
+    // KS14 start: voice settings only make sense while the server has voice chat enabled, and the options menu only
+    //      reads cvars when it opens. So while this tab is on screen, follow the server's switch and any change to
+    //      the voice cvars made elsewhere (the console, say). Subscribed only while in the tree: the
+    //      configuration manager outlives every options window, and would otherwise keep each one alive.
     protected override void EnteredTree()
     {
         base.EnteredTree();
+
         VoiceSection.Visible = _configurationManager.GetCVar(KsCCVars.VoiceEnabled);
+        WatchCVar(KsCCVars.VoiceEnabled, enabled => VoiceSection.Visible = enabled);
+        WatchCVar<bool>(KsCCVars.VoiceHearEnabled, _ => ReloadVoiceOptions());
+        WatchCVar<float>(KsCCVars.VoiceVolume, _ => ReloadVoiceOptions());
+        WatchCVar<int>(KsCCVars.VoiceJitterBufferMs, _ => ReloadVoiceOptions());
+    }
+
+    protected override void ExitedTree()
+    {
+        foreach (var unsubscribe in _voiceUnsubscribers)
+            unsubscribe();
+
+        _voiceUnsubscribers.Clear();
+        base.ExitedTree();
+    }
+
+    private void WatchCVar<T>(CVarDef<T> cVar, Action<T> onChanged) where T : notnull
+    {
+        _configurationManager.OnValueChanged(cVar, onChanged);
+        _voiceUnsubscribers.Add(() => _configurationManager.UnsubValueChanged(cVar, onChanged));
+    }
+
+    private void ReloadVoiceOptions()
+    {
+        foreach (var option in _voiceOptions)
+            option.LoadValue();
+
+        Control.ValueChanged();
     }
     // KS14 end
 }

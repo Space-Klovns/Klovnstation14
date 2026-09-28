@@ -8,7 +8,9 @@ using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Voice;
 using Content.Shared.Administration;
 using Content.Shared.Eye;
+using Content.Shared.Speech.Muting;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
 
@@ -282,6 +284,83 @@ public sealed class KsVoiceRelayTests : GameTest
             Assert.That(livingHeard, Is.Zero, "a living listener must not hear a speaker it can't see");
             Assert.That(ghostHeard, Is.EqualTo(1), "a ghost listener sees the ghost layer, so hears it");
         });
+    }
+
+    [Test]
+    public async Task CannotSpeakPopupShowsOncePerKeyPress()
+    {
+        await Setup();
+
+        // The pooled client talks this time, so it receives the popups. A muted body refuses speech with a popup.
+        await Server.WaitPost(() =>
+        {
+            SEntMan.AddComponent<MutedComponent>(_listenerUid);
+            Server.System<KsVoiceSystem>().SetPushToTalk(ServerSession!.UserId, true);
+        });
+        await Pair.RunTicksSync(5);
+
+        // Popups shown to this client. A label lasts about a second and folds repeats of itself into a counter, so
+        //      watch the labels after every tick and add up what appears.
+        var mutedText = Client.ResolveDependency<ILocalizationManager>().GetString("speech-muted");
+        var popups = 0;
+        var lastSeen = 0;
+        async Task ObservePopups()
+        {
+            await Client.WaitPost(() =>
+            {
+                var seen = 0;
+                foreach (var label in Client.System<Content.Client.Popups.PopupSystem>().WorldLabels)
+                {
+                    // A repeated popup's text gains a count suffix, so match on the message rather than equality.
+                    if (label.Text.Contains(mutedText))
+                        seen += label.Repeats;
+                }
+
+                if (seen > lastSeen)
+                    popups += seen - lastSeen;
+
+                lastSeen = seen;
+            });
+        }
+
+        async Task TalkAsListener(int chunks)
+        {
+            for (var i = 0; i < chunks; i++)
+            {
+                await Server.WaitPost(() =>
+                    Server.System<KsVoiceSystem>().HandleChunk(new KsVoiceInboundChunk(ServerSession!.UserId, Speech(), AbuseTriggered: false)));
+                await Pair.RunTicksSync(1);
+                await ObservePopups();
+            }
+
+            for (var i = 0; i < 5; i++)
+            {
+                await Pair.RunTicksSync(1);
+                await ObservePopups();
+            }
+        }
+
+        var relayedBefore = Server.System<KsVoiceSystem>().RelayedChunkCount;
+        await TalkAsListener(10);
+        var firstPress = popups;
+
+        await HoldListenerKey(false);
+        await HoldListenerKey(true);
+        await TalkAsListener(10);
+        var secondPress = popups;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(Server.System<KsVoiceSystem>().RelayedChunkCount, Is.EqualTo(relayedBefore), "a muted body is never relayed");
+            Assert.That(firstPress, Is.EqualTo(1), "a key press held through many chunks gets one popup, not one per chunk");
+            Assert.That(secondPress, Is.EqualTo(2), "pressing again is a new attempt, and gets a new popup");
+        });
+    }
+
+    private async Task HoldListenerKey(bool held)
+    {
+        await Server.WaitPost(() => Server.System<KsVoiceSystem>().SetPushToTalk(ServerSession!.UserId, held));
+        await Pair.RunTicksSync(2);
     }
 
     [Test]

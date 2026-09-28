@@ -253,8 +253,18 @@ public sealed partial class KsVoiceSystem : EntitySystem
         if (!state.PushToTalkHeld)
             return KsVoiceBlockReason.NotHoldingKey;
 
-        if (!_actionBlockerSystem.CanSpeak(attached))
+        // CanSpeak runs every chunk, so something that starts blocking mid-sentence stops the voice at once. But the
+        //      handlers that refuse speech also show a popup (MutingSystem's "you can't speak", for one), which would
+        //      then fire several times a second. So once this body is refused, the refusal stands for the rest of the
+        //      key press: one popup per attempt to talk, and a fresh check on the next press.
+        if (state.CannotSpeakBody == attached)
             return KsVoiceBlockReason.CannotSpeak;
+
+        if (!_actionBlockerSystem.CanSpeak(attached))
+        {
+            state.CannotSpeakBody = attached;
+            return KsVoiceBlockReason.CannotSpeak;
+        }
 
         return null;
     }
@@ -412,6 +422,7 @@ public sealed partial class KsVoiceSystem : EntitySystem
     {
         var state = GetTalker(userId);
         state.PushToTalkHeld = _enabled && held;
+        state.CannotSpeakBody = null;
         RefreshPageState(userId);
     }
 
@@ -507,6 +518,11 @@ public sealed partial class KsVoiceSystem : EntitySystem
         public bool PageStateSent;
         public TimeSpan NextLinkResetAllowed;
         public KsVoiceBlockReason? LastPageBlock;
+
+        /// <summary>
+        ///     The body that failed <see cref="ActionBlockerSystem.CanSpeak"/> during the current key press, if any.
+        /// </summary>
+        public EntityUid? CannotSpeakBody;
     }
 }
 
