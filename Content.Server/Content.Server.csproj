@@ -37,6 +37,11 @@
     <PackageReference Include="DeepL.net" />
   </ItemGroup>
 
+  <!-- KS14: voice chat microphone page, served from the status host -->
+  <ItemGroup>
+    <EmbeddedResource Include="_KS14\Voice\Web\*" LogicalName="KsVoice.%(Filename)%(Extension)" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Content.Packaging\Content.Packaging.csproj" />
     <ProjectReference Include="..\Content.Server.Database\Content.Server.Database.csproj" />

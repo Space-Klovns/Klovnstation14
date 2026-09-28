@@ -1,6 +1,7 @@
 using System.Linq;
 using Content.Client._KS14.AdminMusic;
 using Content.Client._KS14.IoC;
+using Content.Client._KS14.Voice;
 using Content.Shared._KS14.IoC;
 using Content.Shared.CCVar;
 using Robust.Client;
@@ -22,6 +23,7 @@ internal sealed partial class KsEntryPoint : GameClient
     [Dependency] private ILogManager _logManager = default!;
     [Dependency] private SystemCollectionHookManager _systemCollectionHookManager = default!;
     [Dependency] private KsAdminMusicManager _adminMusicManager = default!;
+    [Dependency] private KsVoiceNetManager _voiceNetManager = default!;
 
     public override void PreInit()
     {
@@ -39,6 +41,7 @@ internal sealed partial class KsEntryPoint : GameClient
         RegisterIgnoredPrototypes();
 
         _adminMusicManager.Initialise();
+        _voiceNetManager.Initialize();
     }
 
     /// <summary>

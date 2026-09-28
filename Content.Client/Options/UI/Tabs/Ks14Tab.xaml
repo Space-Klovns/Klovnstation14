@@ -16,6 +16,25 @@
                           Text="{Loc 'ks-ui-options-action-layout-persistence'}"/>
                 <ui:OptionDropDown Name="DropDownTranslateLanguage"
                                    Title="{Loc 'ks-ui-options-translate-language'}"/>
+                <!-- KS14 start: voice chat, shown only while the server has it enabled -->
+                <BoxContainer Name="VoiceSection"
+                              Orientation="Vertical"
+                              Margin="0 8 0 0"
+                              Visible="False">
+                    <Label Text="{Loc 'ks-ui-options-voice-header'}"
+                           StyleClasses="LabelKeyText"/>
+                    <CheckBox Name="VoiceHearEnabled"
+                              Text="{Loc 'ks-ui-options-voice-hear'}"/>
+                    <ui:OptionSlider Name="SliderVoiceVolume"
+                                     Title="{Loc 'ks-ui-options-voice-volume'}"/>
+                    <ui:OptionSlider Name="SliderVoiceJitter"
+                                     Title="{Loc 'ks-ui-options-voice-jitter'}"/>
+                    <Button Name="VoiceOpenButton"
+                            Text="{Loc 'ks-ui-options-voice-open'}"
+                            HorizontalAlignment="Left"
+                            Margin="0 4 0 0"/>
+                </BoxContainer>
+                <!-- KS14 end -->
             </BoxContainer>
         </ScrollContainer>
         <ui:OptionsTabControlRow Name="Control"

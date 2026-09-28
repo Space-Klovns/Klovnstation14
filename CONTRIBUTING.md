@@ -807,3 +807,54 @@ To find allocations like this, measure by type rather than guessing: `GC.GetTota
 around the work says *how much*, and an `EventListener` on `Microsoft-Windows-DotNETRuntime` (GC keyword `0x1`,
 `Verbose`) receives `GCAllocationTick` events naming the type being allocated, which says *what*. Both work in
 an integration test, which is not sandboxed.
+
+### A window's `MinSize` does not protect contents that wrap
+
+`BaseWindow` clamps a drag to `MinSize` and nothing else. It never asks the contents what they need. A fixed
+`MinSize` is fine for contents whose size doesn't depend on the window's, but wrapping text (`RichTextLabel`, or
+anything word-wrapped) gets *taller* as the window gets narrower. So a window can meet its minimum and still push
+whatever sits below the text out of the bottom. It isn't clipped visibly: those controls are laid out at zero height and
+simply vanish. The voice link window lost its buttons this way, at a size that looked like a sensible minimum when it
+was picked.
+
+Make the minimum follow the contents. The rows that can't wrap set the minimum width, and the minimum height is what
+the contents need *at the current width*. Recompute it on every resize and whenever a row's text changes:
+
+```csharp
+protected override void Resized()
+{
+    base.Resized();
+    UpdateMinimumSize();
+}
+
+private void UpdateMinimumSize()
+{
+    if (RootBox.Size.X <= 0f)
+        return; // not laid out yet
+
+    var marginSize = new Vector2(RootBox.Margin.SumHorizontal, RootBox.Margin.SumVertical);
+    var frameSize = Size - RootBox.Size - marginSize; // title bar and borders
+
+    var widestRow = 0f;
+    foreach (var row in _unwrappableRows) // buttons, single-line labels
+    {
+        row.Measure(Vector2Helpers.Infinity);
+        widestRow = MathF.Max(widestRow, row.DesiredSize.X);
+    }
+
+    // DesiredSize includes the margin.
+    RootBox.Measure(new Vector2(RootBox.Size.X + marginSize.X, float.PositiveInfinity));
+
+    MinSize = new Vector2(frameSize.X + marginSize.X + widestRow, frameSize.Y + RootBox.DesiredSize.Y);
+}
+```
+
+A `MinSize` bigger than the current `SetSize` wins at measure time, so the window grows back to fit by itself. Also set
+`SetSize` to match, so the next drag starts from the size actually shown. See `KsVoiceLinkWindow`.
+
+**Testing it has its own trap.** A squeezed control is laid out *and measured* at the squeezed size, so its `Size` and
+its `DesiredSize` agree with each other at zero. "Is it inside the window?" passes too, because a zero-height box sits
+inside anything. A test built on those passes with the bug present. Instead, compare each control against what it needs
+with room to spare: `Measure` it with unlimited height (and unlimited width, for anything that can't wrap), then check
+its shown size against that. `KsVoiceLinkWindowTests` does this. Layout runs in the headless client with real font
+metrics, so this works in an ordinary integration test.
