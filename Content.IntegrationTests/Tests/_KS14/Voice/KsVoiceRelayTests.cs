@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using System.Threading.Tasks;
 using Content.Client._KS14.Voice;
@@ -392,6 +393,101 @@ public sealed class KsVoiceRelayTests : GameTest
         {
             Assert.That(known, Is.False, "the test needs a speaker the client doesn't know");
             Assert.That(buffered, Is.EqualTo(samples.Length), "its audio waits for it rather than being dropped");
+        });
+    }
+
+    private static byte[] EncodedSpeech()
+    {
+        var samples = Speech();
+        var state = new KsVoiceAdpcm.EncoderState();
+        var payload = new byte[KsVoiceAdpcm.EncodedSize(samples.Length)];
+        KsVoiceAdpcm.Encode(ref state, samples, payload);
+        return payload;
+    }
+
+    [Test]
+    public async Task AudioMovesOntoItsTalkerWhenTheEntityArrives()
+    {
+        await Setup();
+
+        // A talker the server has just spawned: the client won't know the entity until the next state arrives.
+        var lateNetEntity = NetEntity.Invalid;
+        await Server.WaitPost(() =>
+        {
+            var lateUid = SEntMan.SpawnEntity("MobHuman", _map.MapCoords);
+            lateNetEntity = SEntMan.GetNetEntity(lateUid);
+        });
+
+        var playback = Client.System<KsVoicePlaybackSystem>();
+        var knownBefore = true;
+        var waitingBefore = false;
+        await Client.WaitPost(() =>
+        {
+            knownBefore = Client.EntMan.TryGetEntity(lateNetEntity, out _);
+            playback.HandleFrame(new KsVoiceFrameMessage { Source = lateNetEntity, Sequence = 0, Payload = EncodedSpeech() });
+            waitingBefore = playback.IsWaitingForEntity(lateNetEntity);
+        });
+
+        await Pair.RunTicksSync(5);
+
+        var waitingAfter = true;
+        var onEntity = false;
+        await Client.WaitPost(() =>
+        {
+            waitingAfter = playback.IsWaitingForEntity(lateNetEntity);
+            onEntity = Client.EntMan.TryGetEntity(lateNetEntity, out var lateClientUid) &&
+                       Client.EntMan.HasComponent<KsVoicePlaybackComponent>(lateClientUid.Value) &&
+                       playback.GetBufferedSamples(lateNetEntity) >= 0;
+        });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(knownBefore, Is.False, "the test needs audio to arrive before the entity");
+            Assert.That(waitingBefore, Is.True, "until then it waits, with nowhere else to go");
+            Assert.That(waitingAfter, Is.False, "once the entity arrives it stops waiting");
+            Assert.That(onEntity, Is.True, "and its audio is on the entity");
+        });
+    }
+
+    [Test]
+    public async Task LocalMuteLivesOnTheTalkerAndOutlastsTheirAudio()
+    {
+        await Setup();
+        await HoldPushToTalk(true);
+
+        var playback = Client.System<KsVoicePlaybackSystem>();
+        var clientSpeakerUid = ToClientUid(_speakerUid);
+        await Client.WaitPost(() => playback.SetLocallyMuted(clientSpeakerUid, true));
+        await Talk();
+
+        var heardWhileMuted = false;
+        await Client.WaitPost(() => heardWhileMuted = playback.GetBufferedSamples(Client.EntMan.GetNetEntity(clientSpeakerUid)) >= 0);
+
+        // Let the talker's audio time out. The timeout is in real time, so wait it out rather than run ticks.
+        await Task.Delay(TimeSpan.FromSeconds(2.5));
+        await Pair.RunTicksSync(3);
+
+        var audioGone = false;
+        var stillMuted = false;
+        await Client.WaitPost(() =>
+        {
+            audioGone = playback.GetBufferedSamples(Client.EntMan.GetNetEntity(clientSpeakerUid)) < 0;
+            stillMuted = playback.IsLocallyMuted(clientSpeakerUid);
+        });
+
+        var removedOnUnmute = false;
+        await Client.WaitPost(() =>
+        {
+            playback.SetLocallyMuted(clientSpeakerUid, false);
+            removedOnUnmute = !Client.EntMan.HasComponent<KsVoicePlaybackComponent>(clientSpeakerUid);
+        });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(heardWhileMuted, Is.True, "a muted talker's audio still arrives (it just plays silently)");
+            Assert.That(audioGone, Is.True, "their audio is dropped once they stop talking");
+            Assert.That(stillMuted, Is.True, "but the mute stays on them");
+            Assert.That(removedOnUnmute, Is.True, "unmuting a silent talker leaves nothing behind");
         });
     }
 

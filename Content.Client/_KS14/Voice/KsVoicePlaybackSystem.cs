@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Voice;
@@ -21,8 +22,13 @@ namespace Content.Client._KS14.Voice;
 ///         faded in, timed by <see cref="KsVoiceChunkTiming"/> so the two line up to the sample whatever the frame rate.
 ///
 ///     Sources are positioned by hand every frame, as the engine's MIDI renderer does for its own streaming sources.
-///         Nothing here is an entity: sources are plain OpenAL sources that are never networked, so the only networked
-///         things playback depends on are the voice packets themselves and the speaker's entity, for its position.
+///         The sources are plain OpenAL sources that are never networked, so the only networked things playback depends
+///         on are the voice packets themselves and the speaker's entity, for its position.
+///
+///     A talker's playback state lives on their entity, in <see cref="KsVoicePlaybackComponent"/>, along with whether
+///         the local player muted them. The one exception is a talker whose entity this client doesn't know yet (voice
+///         packets and entity state travel separately): their audio waits in <see cref="_pendingSpeakers"/>, since
+///         there is no entity to hold it, and moves onto the entity as soon as it arrives.
 /// </summary>
 public sealed partial class KsVoicePlaybackSystem : EntitySystem
 {
@@ -73,9 +79,15 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
     [Dependency] private AudioSystem _audioSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
 
-    private readonly Dictionary<NetEntity, KsVoiceSpeaker> _speakers = [];
-    private readonly HashSet<NetEntity> _localMutes = [];
-    private readonly List<NetEntity> _scratchRemovals = [];
+    [Dependency] private EntityQuery<KsVoicePlaybackComponent> _playbackQuery = default!;
+
+    /// <summary>
+    ///     Audio from talkers whose entity this client doesn't know yet, keyed by the entity it's for. Only a holding
+    ///         area: each entry moves onto its entity's <see cref="KsVoicePlaybackComponent"/> when the entity arrives,
+    ///         or is dropped after <see cref="SpeakerTimeout"/>.
+    /// </summary>
+    private readonly Dictionary<NetEntity, KsVoiceSpeaker> _pendingSpeakers = [];
+    private readonly List<NetEntity> _scratchPendingDone = [];
     private readonly short[] _decodeScratch = new short[KsVoiceConstants.MaxChunkSamples + 2];
 
     private bool _enabled;
@@ -122,22 +134,56 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         StopAll();
     }
 
-    public bool IsLocallyMuted(NetEntity speaker)
-        => _localMutes.Contains(speaker);
+    public bool IsLocallyMuted(EntityUid speakerUid)
+        => TryGetPlayback(speakerUid, out var playbackComponent) && playbackComponent.LocallyMuted;
 
-    public void SetLocallyMuted(NetEntity speaker, bool muted)
+    public void SetLocallyMuted(EntityUid speakerUid, bool muted)
     {
         if (muted)
-            _localMutes.Add(speaker);
-        else
-            _localMutes.Remove(speaker);
+        {
+            EnsureComp<KsVoicePlaybackComponent>(speakerUid).LocallyMuted = true;
+            return;
+        }
+
+        if (!TryGetPlayback(speakerUid, out var playbackComponent))
+            return;
+
+        playbackComponent.LocallyMuted = false;
+        if (playbackComponent.Speaker == null)
+            RemComp(speakerUid, playbackComponent);
     }
 
     /// <summary>
     ///     Buffered samples waiting to play for a talker, or -1 if we aren't tracking them. For tests and diagnostics.
     /// </summary>
-    public int GetBufferedSamples(NetEntity speaker)
-        => _speakers.TryGetValue(speaker, out var state) ? state.BufferedSamples : -1;
+    public int GetBufferedSamples(NetEntity speakerNetEntity)
+    {
+        if (_pendingSpeakers.TryGetValue(speakerNetEntity, out var pendingSpeaker))
+            return pendingSpeaker.BufferedSamples;
+
+        return TryGetEntity(speakerNetEntity, out var speakerUid) &&
+               TryGetPlayback(speakerUid.Value, out var playbackComponent) &&
+               playbackComponent.Speaker is { } speaker
+            ? speaker.BufferedSamples
+            : -1;
+    }
+
+    /// <summary>
+    ///     A talker's playback component, if it's live. One removed with <see cref="EntitySystem.RemCompDeferred"/> (as a
+    ///         finished utterance's is, from inside the enumeration in <see cref="FrameUpdate"/>) is shut down but stays
+    ///         stored until the end of the tick, and must not count.
+    /// </summary>
+    private bool TryGetPlayback(EntityUid speakerUid, [NotNullWhen(true)] out KsVoicePlaybackComponent? playbackComponent)
+    {
+        return _playbackQuery.TryComp(speakerUid, out playbackComponent) &&
+               playbackComponent.LifeStage <= ComponentLifeStage.Running;
+    }
+
+    /// <summary>
+    ///     Whether audio for this talker is waiting for their entity to reach this client. For tests and diagnostics.
+    /// </summary>
+    public bool IsWaitingForEntity(NetEntity speakerNetEntity)
+        => _pendingSpeakers.ContainsKey(speakerNetEntity);
 
     private void OnFrameReceived(KsVoiceFrameMessage message)
         => HandleFrame(message);
@@ -157,63 +203,100 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         if (sampleCount <= 0)
             return;
 
-        if (!_speakers.TryGetValue(message.Source, out var speaker))
-            _speakers[message.Source] = speaker = new KsVoiceSpeaker();
-
+        var speaker = ResolveSpeaker(message.Source);
         speaker.LastReceived = _gameTiming.RealTime;
         speaker.Receive(message.Sequence, _decodeScratch.AsSpan(0, sampleCount).ToArray(), _jitterSamples);
+    }
+
+    /// <summary>
+    ///     The playback state for a talker, created if they have none: on their entity when this client knows it, in
+    ///         <see cref="_pendingSpeakers"/> until it does.
+    /// </summary>
+    private KsVoiceSpeaker ResolveSpeaker(NetEntity speakerNetEntity)
+    {
+        if (TryGetEntity(speakerNetEntity, out var speakerUid) && !TerminatingOrDeleted(speakerUid.Value))
+        {
+            var playbackComponent = EnsureComp<KsVoicePlaybackComponent>(speakerUid.Value);
+            return playbackComponent.Speaker ??= new KsVoiceSpeaker();
+        }
+
+        if (!_pendingSpeakers.TryGetValue(speakerNetEntity, out var pendingSpeaker))
+            _pendingSpeakers[speakerNetEntity] = pendingSpeaker = new KsVoiceSpeaker();
+
+        return pendingSpeaker;
     }
 
     public override void FrameUpdate(float frameTime)
     {
         base.FrameUpdate(frameTime);
 
-        if (_speakers.Count == 0)
-            return;
-
         var now = _gameTiming.RealTime;
-        var listener = _audioSystem.GetListenerCoordinates();
         _frameEstimate = MathF.Max(frameTime, _frameEstimate * FrameEstimateDecay);
 
-        _scratchRemovals.Clear();
-        foreach (var (netEntity, speaker) in _speakers)
+        // Before the enumeration below, since a talker whose entity has arrived gains a component here.
+        if (_pendingSpeakers.Count > 0)
+            UpdatePendingSpeakers(now);
+
+        var listener = _audioSystem.GetListenerCoordinates();
+        var playbackEnumerator = EntityQueryEnumerator<KsVoicePlaybackComponent>();
+        while (playbackEnumerator.MoveNext(out var speakerUid, out var playbackComponent))
         {
+            if (playbackComponent.LifeStage > ComponentLifeStage.Running || playbackComponent.Speaker is not { } speaker)
+                continue;
+
             speaker.DisposeFinished();
-
-            if (!TryGetEntity(netEntity, out var speakerUid))
-            {
-                // Voice packets and entity state travel separately, so a talker's first packets can arrive before we
-                //      know their entity (they just came into view, say). Keep their audio rather than throw it away,
-                //      holding only the newest jitter buffer's worth so playback doesn't start late once it resolves.
-                speaker.HoldUnresolved(_jitterSamples, OverlapSamples);
-                if (now - speaker.LastReceived > SpeakerTimeout)
-                {
-                    speaker.Dispose();
-                    _scratchRemovals.Add(netEntity);
-                }
-
-                continue;
-            }
-
-            if (TerminatingOrDeleted(speakerUid.Value))
-            {
-                speaker.Dispose();
-                _scratchRemovals.Add(netEntity);
-                continue;
-            }
-
             Schedule(speaker, now);
-            UpdateSources(speaker, speakerUid.Value, netEntity, listener, now);
+            UpdateSources(speaker, speakerUid, playbackComponent.LocallyMuted, listener, now);
 
-            if (now - speaker.LastReceived > SpeakerTimeout && !speaker.HasSources)
+            if (now - speaker.LastReceived <= SpeakerTimeout || speaker.HasSources)
+                continue;
+
+            // Finished talking. A local mute outlives the utterance; nothing else here does.
+            speaker.Dispose();
+            playbackComponent.Speaker = null;
+            if (!playbackComponent.LocallyMuted)
+                RemCompDeferred(speakerUid, playbackComponent);
+        }
+    }
+
+    private void UpdatePendingSpeakers(TimeSpan now)
+    {
+        _scratchPendingDone.Clear();
+        foreach (var (speakerNetEntity, pendingSpeaker) in _pendingSpeakers)
+        {
+            if (TryGetEntity(speakerNetEntity, out var speakerUid) && !TerminatingOrDeleted(speakerUid.Value))
             {
-                speaker.Dispose();
-                _scratchRemovals.Add(netEntity);
+                // The entity has arrived: its audio moves onto it. If audio sent after the entity arrived already
+                //      started a speaker there, that one is newer and wins.
+                var playbackComponent = EnsureComp<KsVoicePlaybackComponent>(speakerUid.Value);
+                if (playbackComponent.Speaker == null)
+                    playbackComponent.Speaker = pendingSpeaker;
+                else
+                    pendingSpeaker.Dispose();
+
+                _scratchPendingDone.Add(speakerNetEntity);
+                continue;
+            }
+
+            // Hold only the newest jitter buffer's worth, so playback doesn't start late once the entity arrives.
+            pendingSpeaker.KeepNewest(_jitterSamples);
+            if (now - pendingSpeaker.LastReceived > SpeakerTimeout)
+            {
+                pendingSpeaker.Dispose();
+                _scratchPendingDone.Add(speakerNetEntity);
             }
         }
 
-        foreach (var netEntity in _scratchRemovals)
-            _speakers.Remove(netEntity);
+        foreach (var speakerNetEntity in _scratchPendingDone)
+            _pendingSpeakers.Remove(speakerNetEntity);
+    }
+
+    [SubscribeLocalEvent]
+    private void OnPlaybackShutdown(Entity<KsVoicePlaybackComponent> entity, ref ComponentShutdown args)
+    {
+        // The talker's entity is going away (deleted, or the round ended): stop anything of theirs still playing.
+        entity.Comp.Speaker?.Dispose();
+        entity.Comp.Speaker = null;
     }
 
     private void Schedule(KsVoiceSpeaker speaker, TimeSpan now)
@@ -299,9 +382,9 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         speaker.PendingStart = chunk;
     }
 
-    private void UpdateSources(KsVoiceSpeaker speaker, EntityUid speakerUid, NetEntity speakerNetEntity, MapCoordinates listener, TimeSpan now)
+    private void UpdateSources(KsVoiceSpeaker speaker, EntityUid speakerUid, bool locallyMuted, MapCoordinates listener, TimeSpan now)
     {
-        var gain = _localMutes.Contains(speakerNetEntity) ? 0f : _volume;
+        var gain = locallyMuted ? 0f : _volume;
         var speakerCoordinates = _transformSystem.GetMapCoordinates(speakerUid);
         var delta = speakerCoordinates.Position - listener.Position;
         var distance = delta.Length();
@@ -362,10 +445,22 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
 
     private void StopAll()
     {
-        foreach (var speaker in _speakers.Values)
-            speaker.Dispose();
+        foreach (var pendingSpeaker in _pendingSpeakers.Values)
+            pendingSpeaker.Dispose();
 
-        _speakers.Clear();
+        _pendingSpeakers.Clear();
+
+        var playbackEnumerator = EntityQueryEnumerator<KsVoicePlaybackComponent>();
+        while (playbackEnumerator.MoveNext(out var speakerUid, out var playbackComponent))
+        {
+            if (playbackComponent.Speaker is not { } speaker)
+                continue;
+
+            speaker.Dispose();
+            playbackComponent.Speaker = null;
+            if (!playbackComponent.LocallyMuted)
+                RemCompDeferred(speakerUid, playbackComponent);
+        }
     }
 
     [SubscribeLocalEvent]
@@ -378,8 +473,8 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
             return;
         }
 
-        var target = GetNetEntity(args.Target);
-        var muted = _localMutes.Contains(target);
+        var target = args.Target;
+        var muted = IsLocallyMuted(target);
 
         args.Verbs.Add(new Verb
         {
@@ -392,7 +487,7 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
     /// <summary>
     ///     One talker's jitter buffer and the chunks currently playing for them.
     /// </summary>
-    private sealed class KsVoiceSpeaker : IDisposable
+    internal sealed class KsVoiceSpeaker : IDisposable
     {
         private readonly Dictionary<ushort, short[]> _pending = [];
         private readonly List<short> _buffer = [];
@@ -435,22 +530,10 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         }
 
         /// <summary>
-        ///     While the talker's entity is unknown, keeps only the newest <paramref name="keepSamples"/> of audio and
-        ///         silences anything still playing from before it went unknown.
+        ///     While the talker's entity is unknown, keeps only the newest <paramref name="keepSamples"/> of audio.
         /// </summary>
-        public void HoldUnresolved(int keepSamples, int overlap)
+        public void KeepNewest(int keepSamples)
         {
-            foreach (var chunk in Chunks)
-                chunk.Source.Gain = 0f;
-
-            if (Started && Chunks.Count == 0)
-            {
-                // The chain ran out while unresolved, as a stall does: rebuffer when it resolves, without replaying
-                //      the lookahead the last chunk already faded out.
-                Started = false;
-                DropPlayedLookahead(overlap);
-            }
-
             if (_buffer.Count <= keepSamples)
                 return;
 
@@ -558,7 +641,7 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         }
     }
 
-    private sealed class KsVoiceChunk(IAudioSource source, AudioStream stream, float lengthSeconds, float seekSeconds) : IDisposable
+    internal sealed class KsVoiceChunk(IAudioSource source, AudioStream stream, float lengthSeconds, float seekSeconds) : IDisposable
     {
         public readonly IAudioSource Source = source;
         public readonly float LengthSeconds = lengthSeconds;

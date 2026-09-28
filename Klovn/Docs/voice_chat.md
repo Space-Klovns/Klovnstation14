@@ -166,9 +166,16 @@ The remaining time comes from the playing source's own `PlaybackPosition`, which
 chunk's first real sample lands on the intended mixer sample. Low or uneven frame rates therefore don't shift the
 crossfade: no gaps, no doubled audio, no comb filtering.
 
+**Where the state lives.** Each talker's jitter buffer and playing chunks, and whether the local player muted them,
+live on the talker's entity in the client-only `KsVoicePlaybackComponent`. A finished utterance's state is dropped
+after two seconds of silence; the component goes with it unless the talker is muted, since the mute should outlast
+the utterance. It dies with the entity, which covers going out of view (the entity is only detached) but not a round
+restart.
+
 **Talkers the client can't place yet.** Voice packets and entity state travel separately, so a talker's first packets
-can arrive before their entity does, for example as they walk into view. Their audio is held (the newest jitter
-buffer's worth) until the entity resolves, instead of being dropped, which used to cut off the start of what they said.
+can arrive before their entity does, for example as they walk into view. With no entity to hold it, their audio waits
+in a small holding list (the newest jitter buffer's worth) and moves onto the entity as soon as it arrives, instead of
+being dropped, which used to cut off the start of what they said.
 
 ## Moderation
 
@@ -294,6 +301,7 @@ empty and the transfer endpoint default (`http://localhost:1212/`) is used.
 | `Content.Server/_KS14/Voice/Commands/KsVoiceMuteCommands.cs` | `vcmute`, `vcunmute`, `vcmutes`. |
 | `Content.Server/_KS14/Voice/Web/` | The microphone page. |
 | `Content.Client/_KS14/Voice/KsVoicePlaybackSystem.cs` | Jitter buffer, crossfaded chunk playback, positioning, local mutes. |
+| `Content.Client/_KS14/Voice/KsVoicePlaybackComponent.cs` | Per-talker playback state and local mute, on the talker's entity. |
 | `Content.Client/_KS14/Voice/KsVoiceChunkTiming.cs` | When the next chunk starts, and how it is padded or skipped to line up. |
 | `Content.Client/_KS14/Voice/KsVoiceUIController.cs` | Push-to-talk key and link window. |
 | `Content.Client/_KS14/Voice/KsVoiceIndicatorVisualizerSystem.cs` | Talking sprite. |
@@ -323,7 +331,9 @@ All under `Content.IntegrationTests/Tests/_KS14/Voice/`.
   - freeze-mute through `CanSpeak`
   - auto-mute
   - the indicator showing and clearing on the client
-  - audio for a talker whose entity the client doesn't know yet being kept, not dropped
+  - audio for a talker whose entity the client doesn't know yet being kept, not dropped, and moving onto the entity
+    once it arrives
+  - a local mute living on the talker's entity and outlasting their audio; unmuting a silent talker removing it
   - a muted talker getting one "can't speak" popup per push-to-talk press, not one per chunk
 - `KsVoiceOptionsTabTests`: the options tab showing the voice section when the server turns voice on and following a
   volume change made elsewhere while open, and letting go of the configuration manager once closed
