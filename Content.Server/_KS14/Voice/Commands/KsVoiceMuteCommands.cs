@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Linq;
 using Content.Server.Administration;
 using Content.Shared.Administration;
@@ -13,6 +14,11 @@ namespace Content.Server._KS14.Voice.Commands;
 [AdminCommand(AdminFlags.Moderator)]
 public sealed partial class KsVoiceMuteCommand : LocalizedEntityCommands
 {
+    /// <summary>
+    ///     Longest timed mute, in minutes (a year). Anything longer is what round mutes and bans are for.
+    /// </summary>
+    private const float MaxMinutes = 525600f;
+
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private KsVoiceSystem _voiceSystem = default!;
 
@@ -35,14 +41,17 @@ public sealed partial class KsVoiceMuteCommand : LocalizedEntityCommands
         TimeSpan? duration = null;
         if (args.Length >= 2)
         {
-            if (!float.TryParse(args[1], out var minutes) || minutes < 0f)
+            if (!float.TryParse(args[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var minutes) ||
+                !float.IsFinite(minutes) ||
+                minutes < 0f ||
+                minutes > MaxMinutes)
             {
                 shell.WriteError(Loc.GetString("cmd-vcmute-invalid-minutes"));
                 return;
             }
 
             if (minutes > 0f)
-                duration = TimeSpan.FromMinutes(minutes);
+                duration = TimeSpan.FromMinutes((double)minutes);
         }
 
         var reason = args.Length >= 3

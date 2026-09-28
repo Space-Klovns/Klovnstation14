@@ -73,7 +73,8 @@ The requirement is that nobody can talk as another player unless that player han
 - **The token.** 256 bits from `RandomNumberGenerator`, base64url-encoded. It is issued only to the session that asks,
   over that session's own game connection, and is held in memory keyed by `NetUserId`. Lookups go through its SHA-256,
   with a constant-time comparison on a hit. Asking again returns the same token. *Reset link* issues a new one, which
-  invalidates the old token and disconnects any page using it. Disconnecting from the server, or restarting it, also
+  invalidates the old token and disconnects any page using it. Resets are rate limited to one every 5 s per player,
+  since each disconnects the page and writes an admin log entry. Disconnecting from the server, or restarting it, also
   invalidates the token.
 - **The token lives in the URL fragment** (`https://host/klovn/voice/#<token>`). Browsers never send the fragment in
   any request. So the token can't appear in the status host's request log (which logs `PathAndQuery` at Info), in
@@ -141,6 +142,11 @@ therefore:
   last 10 s of *transmitted* audio mutes the talker for `klovn.voice.auto_mute_seconds`. That also posts an admin
   alert, writes a high-impact admin log entry, and tells the player with a popup and on the page. Silence neither
   accumulates nor forgives anything.
+
+  "Transmitted" is literal. The server tells each page connection whether its audio is being relayed, and only then
+  do frames count, so a page left open in a loud room with push-to-talk up can never earn a mute. The server also
+  re-checks when the mute would apply, because that flag trails by a chunk. A talker who is already auto-muted can't
+  be auto-muted again, so a noisy open mic produces one alert, not one every few seconds.
 - **Duration and rate.**
   - Talking continuously for `klovn.voice.max_continuous_seconds` triggers a `klovn.voice.cooldown_seconds` cooldown.
   - A page sending audio faster than `klovn.voice.uplink_rate_factor` × real time, beyond a half-second burst, is
@@ -172,7 +178,7 @@ Voice is **off by default**. Every entry point checks `klovn.voice.enabled`. Wit
 | CVar | Default | Side | Purpose |
 | --- | --- | --- | --- |
 | `klovn.voice.enabled` | `false` | server, replicated | Master switch. |
-| `klovn.voice.uplink_enabled` | `true` | server, replicated | Serve the page and accept microphone pages. Off disconnects talkers; no one can talk. |
+| `klovn.voice.uplink_enabled` | `true` | server, replicated | Serve the page and accept microphone pages. Off disconnects every page, so no one can talk; players reopen their link once it's back on. |
 | `klovn.voice.range` | `10` | server, replicated | Hearing range in world units (the same as local speech). |
 | `klovn.voice.public_url` | `""` | server | Public HTTPS base URL of the status host. If empty, derived from `hub.server_url` (`ss14s://h` → `https://h`), then `transfer.http_endpoint`. |
 | `klovn.voice.check_origin` | `true` | server | Require websocket `Origin` to match. |

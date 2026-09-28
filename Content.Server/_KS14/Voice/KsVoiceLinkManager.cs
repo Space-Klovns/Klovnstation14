@@ -206,6 +206,9 @@ public sealed partial class KsVoiceLinkManager
     private static string HashToken(string token)
         => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 
+    /// <remarks>
+    ///     The engine's <c>Base64Helpers.ConvertToBase64Url</c> is internal, hence this copy.
+    /// </remarks>
     private static string Base64UrlEncode(byte[] bytes)
         => Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 

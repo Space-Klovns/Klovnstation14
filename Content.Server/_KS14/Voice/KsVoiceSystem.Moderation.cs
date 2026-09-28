@@ -61,16 +61,21 @@ public sealed partial class KsVoiceSystem
         return true;
     }
 
-    private void ApplyAutoMute(NetUserId userId, TalkerState state)
+    /// <summary>
+    ///     Auto-mutes the talker, unless auto-muting is disabled or they already are. Returns whether a new mute
+    ///         was applied.
+    /// </summary>
+    private bool ApplyAutoMute(NetUserId userId, TalkerState state)
     {
-        if (_autoMuteSeconds <= 0f)
-            return;
+        var now = _gameTiming.CurTime;
+        if (_autoMuteSeconds <= 0f || state.AutoMuteUntil > now)
+            return false;
 
-        state.AutoMuteUntil = _gameTiming.CurTime + TimeSpan.FromSeconds((double)_autoMuteSeconds);
+        state.AutoMuteUntil = now + TimeSpan.FromSeconds((double)_autoMuteSeconds);
         EndBurst(userId, state);
 
         if (!_playerManager.TryGetSessionById(userId, out var session))
-            return;
+            return true;
 
         _adminLogManager.Add(LogType.KsVoice, LogImpact.High,
             $"{session:player} was automatically voice-muted for {_autoMuteSeconds:0}s for abusive audio levels");
@@ -80,6 +85,8 @@ public sealed partial class KsVoiceSystem
 
         if (session.AttachedEntity is { } uid)
             _popupSystem.PopupEntity(Loc.GetString("ks-voice-popup-auto-muted"), uid, session, type: PopupType.MediumCaution);
+
+        return true;
     }
 
     private void UpdateMutes()

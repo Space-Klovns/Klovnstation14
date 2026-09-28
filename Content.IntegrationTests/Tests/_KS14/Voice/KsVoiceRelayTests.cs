@@ -199,6 +199,35 @@ public sealed class KsVoiceRelayTests : GameTest
     }
 
     [Test]
+    public async Task UntransmittedAbuseDoesNotMute()
+    {
+        await Setup();
+
+        // A page left open in a loud room, push-to-talk up: whatever the detector says, nothing was transmitted.
+        await Server.WaitPost(() =>
+            Server.System<KsVoiceSystem>().HandleChunk(new KsVoiceInboundChunk(_speaker.UserId, Speech(), AbuseTriggered: true)));
+
+        await HoldPushToTalk(true);
+        Assert.That(await Talk(), Is.EqualTo(1), "audio that was never relayed must not earn a mute");
+    }
+
+    [Test]
+    public async Task PushToTalkSurvivesChangingBodies()
+    {
+        await Setup();
+        await HoldPushToTalk(true);
+
+        await Server.WaitPost(() =>
+        {
+            var newBodyUid = SEntMan.SpawnEntity("MobHuman", _map.MapCoords);
+            Server.PlayerMan.SetAttachedEntity(_speaker, newBodyUid);
+        });
+        await Pair.RunTicksSync(5);
+
+        Assert.That(await Talk(), Is.EqualTo(1), "the key is still held; the client won't re-send it");
+    }
+
+    [Test]
     public async Task TalkingIndicatorShowsAndClears()
     {
         await Setup();

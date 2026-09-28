@@ -67,6 +67,8 @@ public sealed class KsVoiceUplinkConnection
     private readonly CancellationTokenSource _closeSource = new();
 
     private KsVoiceProcessor? _processor;
+    private volatile bool _transmitting;
+    private readonly TaskCompletionSource _greeted = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private double _sampleAllowance;
     private long _lastAllowanceTicks;
 
@@ -85,6 +87,16 @@ public sealed class KsVoiceUplinkConnection
     public NetUserId UserId { get; private set; }
 
     public bool Authenticated { get; private set; }
+
+    /// <summary>
+    ///     Whether the main thread is currently relaying this page's audio. Only transmitted audio counts towards
+    ///         automatic muting. Written by the main thread, read by this connection's thread.
+    /// </summary>
+    public bool Transmitting
+    {
+        get => _transmitting;
+        set => _transmitting = value;
+    }
 
     /// <summary>
     ///     Why the socket was closed by us, for logging and tests.
@@ -158,8 +170,23 @@ public sealed class KsVoiceUplinkConnection
 
     /// <summary>
     ///     Sends a JSON status object to the page. Safe to call from any thread; failures are ignored.
+    ///         Anything sent before the page has been greeted waits for the greeting, so "hello" is always first.
     /// </summary>
     public async Task SendStatusAsync(object status)
+    {
+        try
+        {
+            await _greeted.Task.WaitAsync(_closeSource.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        await SendNowAsync(status);
+    }
+
+    private async Task SendNowAsync(object status)
     {
         var bytes = JsonSerializer.SerializeToUtf8Bytes(status);
 
@@ -230,8 +257,12 @@ public sealed class KsVoiceUplinkConnection
         _lastAllowanceTicks = Environment.TickCount64;
         _sampleAllowance = BurstAllowance();
 
+        // Register first, so that of two pages authenticating together the later one always wins. Registering lets
+        //      the main thread start sending "state", which SendStatusAsync holds back until "hello" has gone out;
+        //      the page would otherwise overwrite that state with its greeting's default status.
         _host.OnAuthenticated(this);
-        await SendStatusAsync(new { type = "hello", name = userName });
+        await SendNowAsync(new { type = "hello", name = userName });
+        _greeted.TrySetResult();
         return true;
     }
 
@@ -261,7 +292,7 @@ public sealed class KsVoiceUplinkConnection
             samples[i] = BinaryPrimitives.ReadInt16LittleEndian(sampleSpan.Slice(i * sizeof(short), sizeof(short)));
 
         _processor!.Settings = _host.ProcessorSettings;
-        var result = _processor.Process(samples);
+        var result = _processor.Process(samples, trackAbuse: Transmitting);
 
         _host.OnChunk(this, new KsVoiceInboundChunk(UserId, samples, result.AbuseTriggered));
         return null;

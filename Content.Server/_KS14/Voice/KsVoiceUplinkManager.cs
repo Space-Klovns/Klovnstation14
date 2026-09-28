@@ -29,6 +29,11 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
     private static readonly TimeSpan AuthFailureWindow = TimeSpan.FromMinutes(1);
 
     /// <summary>
+    ///     Above this many tracked addresses, stale ones are swept out whenever a new failure is recorded.
+    /// </summary>
+    private const int MaxTrackedAuthFailureAddresses = 256;
+
+    /// <summary>
     ///     The engine's private <c>StatusHost.ContextImpl._context</c>. See <see cref="GetConnectionRelease"/>.
     /// </summary>
     private static readonly FieldInfo? ListenerContextField = typeof(IStatusHost).Assembly
@@ -165,6 +170,16 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
             _ = connection.SendStatusAsync(status);
     }
 
+    /// <summary>
+    ///     Tells the user's page connection whether its audio is being relayed, which decides whether it counts
+    ///         towards automatic muting.
+    /// </summary>
+    public void SetTransmitting(NetUserId userId, bool transmitting)
+    {
+        if (_connections.TryGetValue(userId, out var connection))
+            connection.Transmitting = transmitting;
+    }
+
     public void Kick(NetUserId userId, string reason)
     {
         if (_connections.TryGetValue(userId, out var connection))
@@ -217,6 +232,10 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
                 _authFailures[remoteAddress] = failures = new Queue<DateTime>();
 
             failures.Enqueue(DateTime.UtcNow);
+
+            // Addresses that never come back are otherwise only pruned when they reconnect.
+            if (_authFailures.Count > MaxTrackedAuthFailureAddresses)
+                PruneAuthFailuresNoLock();
         }
 
         _sawmill.Info($"Voice page authentication failed from {remoteAddress}.");
@@ -272,7 +291,7 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
         {
             // Relative, so it survives reverse proxies that mount us under a prefix. Browsers keep the fragment.
             context.ResponseHeaders["Location"] = "voice/";
-            await context.RespondAsync("Moved", HttpStatusCode.MovedPermanently);
+            await context.RespondAsync("Moved", code: HttpStatusCode.MovedPermanently);
             return true;
         }
 
@@ -285,7 +304,7 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
         foreach (var (header, value) in SecurityHeaders)
             context.ResponseHeaders[header] = value;
 
-        await context.RespondAsync(data, HttpStatusCode.OK, file.ContentType);
+        await context.RespondAsync(data, code: HttpStatusCode.OK, contentType: file.ContentType);
         return true;
     }
 
@@ -410,6 +429,19 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
 
         var last = forwarded[forwarded.Count - 1]?.Split(',').LastOrDefault()?.Trim();
         return last != null && IPAddress.TryParse(last, out var parsed) ? parsed : remote;
+    }
+
+    private void PruneAuthFailuresNoLock()
+    {
+        var cutoff = DateTime.UtcNow - AuthFailureWindow;
+        foreach (var (address, failures) in _authFailures)
+        {
+            while (failures.TryPeek(out var time) && time < cutoff)
+                failures.Dequeue();
+
+            if (failures.Count == 0)
+                _authFailures.Remove(address);
+        }
     }
 
     private bool IsAuthThrottled(IPAddress remoteAddress)

@@ -142,6 +142,34 @@ public sealed class KsVoiceCodecTests
 
     [Test]
     [TestOf(typeof(KsVoiceProcessor))]
+    public void UntrackedAudioNeverTriggersButIsStillLimited()
+    {
+        var settings = new KsVoiceProcessorSettings(CeilingDb: -6f, AbuseRmsDb: -9f, AbuseClipRatio: 0.05f, AbuseSeconds: 3f);
+        var processor = new KsVoiceProcessor(settings);
+        var ceiling = (int)MathF.Ceiling(32767f * MathF.Pow(10f, -6f / 20f));
+
+        var triggered = false;
+        var peak = 0;
+        for (var chunk = 0; chunk < 200; chunk++)
+        {
+            var samples = new short[KsVoiceConstants.MaxChunkSamples];
+            for (var i = 0; i < samples.Length; i++)
+                samples[i] = (i / 20) % 2 == 0 ? short.MaxValue : short.MinValue;
+
+            triggered |= processor.Process(samples, trackAbuse: false).AbuseTriggered;
+            foreach (var sample in samples)
+                peak = Math.Max(peak, Math.Abs((int)sample));
+        }
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(triggered, Is.False, "audio that isn't transmitted must not count towards a mute");
+            Assert.That(peak, Is.LessThanOrEqualTo(ceiling));
+        });
+    }
+
+    [Test]
+    [TestOf(typeof(KsVoiceProcessor))]
     public void NormalSpeechLevelsNeverTrigger()
     {
         var settings = new KsVoiceProcessorSettings(CeilingDb: -6f, AbuseRmsDb: -9f, AbuseClipRatio: 0.05f, AbuseSeconds: 3f);

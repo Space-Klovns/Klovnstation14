@@ -60,7 +60,7 @@ cmd-vcmute-desc = Mutes a player's voice chat.
 cmd-vcmute-help = vcmute <player> [minutes, 0 = rest of round] [reason...]
 cmd-vcmute-invalid-args = Expected at least a player name.
 cmd-vcmute-no-player = No online player named {$player}.
-cmd-vcmute-invalid-minutes = Minutes must be a number, 0 or more.
+cmd-vcmute-invalid-minutes = Minutes must be a number from 0 (rest of round) to 525600.
 cmd-vcmute-success = Voice-muted {$player}.
 cmd-vcmute-player-completion = <player>
 cmd-vcmute-minutes-completion = [minutes, 0 = rest of round]

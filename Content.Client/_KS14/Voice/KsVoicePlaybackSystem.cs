@@ -30,6 +30,18 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
     private const float OverlapSeconds = (float)OverlapSamples / (float)KsVoiceConstants.SampleRate;
 
     /// <summary>
+    ///     Fade applied at a chunk edge that isn't crossfaded (the start or end of an utterance), just long enough to
+    ///         avoid a click without eating into the speech.
+    /// </summary>
+    private const int DeclickSamples = KsVoiceConstants.SampleRate * 2 / 1000;
+
+    /// <summary>
+    ///     A talker silent for this long has finished their utterance, so whatever is still buffered is played out
+    ///         rather than held back waiting for more.
+    /// </summary>
+    private static readonly TimeSpan FlushAfter = TimeSpan.FromMilliseconds(100);
+
+    /// <summary>
     ///     Start the next chunk this far ahead of the ideal moment, since we only get to act once per frame.
     /// </summary>
     private const float StartMarginSeconds = 0.008f;
@@ -153,7 +165,7 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
                 continue;
             }
 
-            Schedule(speaker);
+            Schedule(speaker, now);
             UpdateSources(speaker, speakerUid.Value, netEntity, listener);
 
             if (now - speaker.LastReceived > SpeakerTimeout && !speaker.HasSources)
@@ -167,12 +179,17 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
             _speakers.Remove(netEntity);
     }
 
-    private void Schedule(KsVoiceSpeaker speaker)
+    private void Schedule(KsVoiceSpeaker speaker, TimeSpan now)
     {
         if (!speaker.Started)
         {
-            if (speaker.BufferedSamples < _jitterSamples)
+            // Wait for a full jitter buffer, unless the talker has already stopped: an utterance shorter than
+            //      the buffer would otherwise never play.
+            if (speaker.BufferedSamples < _jitterSamples &&
+                !(speaker.BufferedSamples > 0 && now - speaker.LastReceived > FlushAfter))
+            {
                 return;
+            }
 
             speaker.Started = true;
             StartChunk(speaker);
@@ -188,15 +205,21 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         if (remaining > startAt + StartMarginSeconds)
             return;
 
-        if (speaker.BufferedSamples >= OverlapSamples * 2)
+        // Enough for a chunk that can carry its own lookahead, or the talker has stopped and this is the tail.
+        if (speaker.BufferedSamples >= OverlapSamples * 2 ||
+            speaker.BufferedSamples > 0 && now - speaker.LastReceived > FlushAfter)
         {
             StartChunk(speaker);
             return;
         }
 
-        // Starved: let the current chunk (which faded itself out) finish, then wait to rebuffer.
-        if (remaining <= 0f)
-            speaker.Started = false;
+        if (remaining > 0f)
+            return;
+
+        // Starved mid-utterance: the current chunk has faded itself out, so wait to rebuffer. Its lookahead was
+        //      played (faded out) but never crossfaded into anything; drop it rather than play it twice.
+        speaker.Started = false;
+        speaker.DropPlayedLookahead(OverlapSamples);
     }
 
     private void StartChunk(KsVoiceSpeaker speaker)
@@ -205,7 +228,11 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         if (samples.Length == 0)
             return;
 
-        ApplyFades(samples, OverlapSamples);
+        // Crossfade only across edges that actually overlap another chunk; anything else just gets de-clicked.
+        ApplyFades(samples,
+            fadeInSamples: speaker.PreviousHadLookahead ? OverlapSamples : DeclickSamples,
+            fadeOutSamples: hasLookahead ? OverlapSamples : DeclickSamples);
+        speaker.PreviousHadLookahead = hasLookahead;
 
         var stream = _audioManager.LoadAudioRaw(samples, 1, KsVoiceConstants.SampleRate);
         var source = _audioManager.CreateAudioSource(stream);
@@ -257,17 +284,20 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Linear fade-in over the first and fade-out over the last <paramref name="fadeSamples"/>, which sum to unity
-    ///         across two overlapping chunks.
+    ///     Linear fades over the first <paramref name="fadeInSamples"/> and the last <paramref name="fadeOutSamples"/>.
+    ///         Equal-length linear fades sum to unity across two overlapping chunks.
     /// </summary>
-    private static void ApplyFades(Span<short> samples, int fadeSamples)
+    private static void ApplyFades(Span<short> samples, int fadeInSamples, int fadeOutSamples)
     {
-        var fade = Math.Min(fadeSamples, samples.Length / 2);
-        for (var i = 0; i < fade; i++)
+        var fadeIn = Math.Min(fadeInSamples, samples.Length / 2);
+        for (var i = 0; i < fadeIn; i++)
+            samples[i] = (short)((float)samples[i] * ((float)i / (float)fadeIn));
+
+        var fadeOut = Math.Min(fadeOutSamples, samples.Length / 2);
+        for (var i = 0; i < fadeOut; i++)
         {
-            var gain = (float)i / (float)fade;
-            samples[i] = (short)((float)samples[i] * gain);
-            samples[samples.Length - 1 - i] = (short)((float)samples[samples.Length - 1 - i] * gain);
+            var index = samples.Length - 1 - i;
+            samples[index] = (short)((float)samples[index] * ((float)i / (float)fadeOut));
         }
     }
 
@@ -313,6 +343,7 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         public KsVoiceChunk? PendingStart;
         public TimeSpan LastReceived;
         public bool Started;
+        public bool PreviousHadLookahead;
 
         public int BufferedSamples => _buffer.Count;
 
@@ -331,7 +362,11 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
             Drain();
 
             if (_buffer.Count > MaxBufferedSamples)
+            {
+                // Dropping the head also drops any lookahead the playing chunk was going to crossfade into.
                 _buffer.RemoveRange(0, _buffer.Count - jitterSamples);
+                PreviousHadLookahead = false;
+            }
         }
 
         private void Drain()
@@ -358,7 +393,11 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         /// </summary>
         public short[] TakeChunk(int count, int overlap, out bool hasLookahead)
         {
-            var take = Math.Min(count, _buffer.Count);
+            // Keep back enough to carry a lookahead whenever the buffer allows it, even if that shortens the chunk:
+            //      a chunk without one can't crossfade into the next.
+            var take = _buffer.Count >= count + overlap
+                ? count
+                : _buffer.Count >= overlap * 2 ? _buffer.Count - overlap : _buffer.Count;
             hasLookahead = _buffer.Count - take >= overlap;
 
             var length = take + (hasLookahead ? overlap : 0);
@@ -371,6 +410,19 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
 
         public void AddChunk(KsVoiceChunk chunk)
             => Chunks.Add(chunk);
+
+        /// <summary>
+        ///     After a stall, discards the lookahead the last chunk already played (faded out), which no chunk will
+        ///         now crossfade from.
+        /// </summary>
+        public void DropPlayedLookahead(int overlap)
+        {
+            if (!PreviousHadLookahead)
+                return;
+
+            PreviousHadLookahead = false;
+            _buffer.RemoveRange(0, Math.Min(overlap, _buffer.Count));
+        }
 
         public void DisposeFinished()
         {
@@ -395,6 +447,7 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
             _pending.Clear();
             _buffer.Clear();
             Started = false;
+            PreviousHadLookahead = false;
         }
     }
 

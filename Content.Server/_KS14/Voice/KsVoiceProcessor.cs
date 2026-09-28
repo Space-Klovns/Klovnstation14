@@ -84,7 +84,12 @@ public sealed class KsVoiceProcessor
     /// <summary>
     ///     Processes <paramref name="samples"/> in place.
     /// </summary>
-    public KsVoiceProcessResult Process(Span<short> samples)
+    /// <param name="samples">The audio, limited in place.</param>
+    /// <param name="trackAbuse">
+    ///     Whether this audio counts towards the abuse window. Only audio that is actually being transmitted
+    ///         should: a page left open in a loud room, with push-to-talk up, must never earn its player a mute.
+    /// </param>
+    public KsVoiceProcessResult Process(Span<short> samples, bool trackAbuse = true)
     {
         var ceiling = 32767f * MathF.Pow(10f, Math.Min(_settings.CeilingDb, 0f) / 20f);
         var abuseRms = 32767f * MathF.Pow(10f, _settings.AbuseRmsDb / 20f);
@@ -123,7 +128,7 @@ public sealed class KsVoiceProcessor
 
             var frameRms = (float)Math.Sqrt(frameSquares / (double)frame.Length);
             var abusive = frameRms > abuseRms || (float)clipped / (float)frame.Length > _settings.AbuseClipRatio;
-            if (RecordFrame(abusive, abuseFramesNeeded))
+            if (trackAbuse && RecordFrame(abusive, abuseFramesNeeded))
                 triggered = true;
         }
 

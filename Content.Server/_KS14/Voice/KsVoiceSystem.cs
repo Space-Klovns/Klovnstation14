@@ -41,6 +41,11 @@ public sealed partial class KsVoiceSystem : EntitySystem
     /// </summary>
     private static readonly TimeSpan BurstGap = TimeSpan.FromSeconds(1);
 
+    /// <summary>
+    ///     Minimum time between voice link resets for one player.
+    /// </summary>
+    private static readonly TimeSpan LinkResetCooldown = TimeSpan.FromSeconds(5);
+
     [Dependency] private KsVoiceUplinkManager _uplinkManager = default!;
     [Dependency] private KsVoiceLinkManager _linkManager = default!;
     [Dependency] private IServerNetManager _netManager = default!;
@@ -111,13 +116,16 @@ public sealed partial class KsVoiceSystem : EntitySystem
         var state = GetTalker(chunk.UserId);
         var now = _gameTiming.CurTime;
 
-        if (chunk.AbuseTriggered)
-            ApplyAutoMute(chunk.UserId, state);
-
         if (!_playerManager.TryGetSessionById(chunk.UserId, out var session))
             return;
 
         var block = GetBlockReason(session, state, now, out var speakerUid);
+
+        // Only audio that would actually go out can earn a mute. The page counts only frames sent while we told it
+        //      it was transmitting, but that flag trails by a chunk, so check again here.
+        if (block == null && chunk.AbuseTriggered && ApplyAutoMute(chunk.UserId, state))
+            block = KsVoiceBlockReason.AutoMuted;
+
         if (block == null && _maxContinuousSeconds > 0f)
         {
             if (state.BurstStart is { } burstStart && now - burstStart > TimeSpan.FromSeconds((double)_maxContinuousSeconds))
@@ -285,6 +293,8 @@ public sealed partial class KsVoiceSystem : EntitySystem
 
     private void UpdatePageState(NetUserId userId, TalkerState state, KsVoiceBlockReason? block, TimeSpan now)
     {
+        _uplinkManager.SetTransmitting(userId, block == null);
+
         if (state.PageStateSent && state.LastPageBlock == block)
             return;
 
@@ -410,10 +420,17 @@ public sealed partial class KsVoiceSystem : EntitySystem
             return;
         }
 
-        var token = _linkManager.ResolveToken(session, args.Reset);
+        // Resets are rate limited: each one disconnects the page and writes an admin log entry.
+        var state = GetTalker(session.UserId);
+        var now = _gameTiming.CurTime;
+        var reset = args.Reset && now >= state.NextLinkResetAllowed;
+        if (reset)
+            state.NextLinkResetAllowed = now + LinkResetCooldown;
+
+        var token = _linkManager.ResolveToken(session, reset);
         RaiseNetworkEvent(new KsVoiceLinkEvent(_linkManager.BuildUrl(token), null), session);
 
-        if (args.Reset)
+        if (reset)
             _adminLogManager.Add(LogType.KsVoice, LogImpact.Low, $"{session:player} reset their voice chat link");
     }
 
@@ -423,7 +440,8 @@ public sealed partial class KsVoiceSystem : EntitySystem
         if (!_talkers.TryGetValue(args.Player.UserId, out var state))
             return;
 
-        state.PushToTalkHeld = false;
+        // Push-to-talk is left alone: it mirrors a key the player may still be holding, and the client only
+        //      reports changes. With no body, GetBlockReason already stops the audio.
         ClearIndicator(state);
     }
 
@@ -440,13 +458,21 @@ public sealed partial class KsVoiceSystem : EntitySystem
         foreach (var userId in _scratchUsers)
             _mutes.Remove(userId);
 
-        // Entities are about to be deleted; drop indicators without touching them.
-        foreach (var state in _talkers.Values)
+        // Entities are about to be deleted; drop indicators without touching them. Players who have left take
+        //      their state with them (an active auto-mute doesn't outlive the round anyway).
+        _scratchUsers.Clear();
+        foreach (var (userId, state) in _talkers)
         {
             state.IndicatorUid = null;
             state.BurstStart = null;
             state.PageStateSent = false;
+
+            if (!_playerManager.TryGetSessionById(userId, out _))
+                _scratchUsers.Add(userId);
         }
+
+        foreach (var userId in _scratchUsers)
+            _talkers.Remove(userId);
     }
 
     private sealed class TalkerState
@@ -461,6 +487,7 @@ public sealed partial class KsVoiceSystem : EntitySystem
         public TimeSpan CooldownUntil;
         public TimeSpan AutoMuteUntil;
         public bool PageStateSent;
+        public TimeSpan NextLinkResetAllowed;
         public KsVoiceBlockReason? LastPageBlock;
     }
 }

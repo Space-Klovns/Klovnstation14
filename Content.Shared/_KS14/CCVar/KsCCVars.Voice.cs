@@ -18,9 +18,10 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.voice.enabled", false, CVar.ARCHIVE | CVar.SERVER | CVar.REPLICATED);
 
     /// <summary>
-    ///     Whether new microphone pages may connect. Turning this off stops new talkers without affecting
-    ///         playback of anyone already connected; combine with <see cref="VoiceEnabled"/> to turn the
-    ///         feature off entirely.
+    ///     Whether microphone pages are served and may stay connected. Turning this off disconnects every page, so
+    ///         nobody can talk (they reopen their link once it's back on), while players keep hearing any audio
+    ///         still in flight and all voice UI stays available. <see cref="VoiceEnabled"/> turns the whole
+    ///         feature off.
     /// </summary>
     [CVarControl(AdminFlags.Server)]
     public static readonly CVarDef<bool> VoiceUplinkEnabled =
