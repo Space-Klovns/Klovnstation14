@@ -7,6 +7,7 @@ using Content.Server._KS14.Voice;
 using Content.Shared._KS14.CCVar;
 using Content.Shared._KS14.Voice;
 using Content.Shared.Administration;
+using Content.Shared.Eye;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
@@ -225,6 +226,62 @@ public sealed class KsVoiceRelayTests : GameTest
         await Pair.RunTicksSync(5);
 
         Assert.That(await Talk(), Is.EqualTo(1), "the key is still held; the client won't re-send it");
+    }
+
+    [Test]
+    public async Task GhostsCannotTalk()
+    {
+        await Setup();
+        await HoldPushToTalk(true);
+
+        await Server.WaitPost(() =>
+        {
+            var ghostUid = SEntMan.SpawnEntity("MobObserver", _map.MapCoords);
+            Server.PlayerMan.SetAttachedEntity(_speaker, ghostUid);
+        });
+        await Pair.RunTicksSync(5);
+
+        // Ghosts are kept silent three ways: GetBlockReason refuses ghost bodies, observers fail CanSpeak (they have
+        //      no SpeechComponent), and the ghost layer is invisible to living eyes. The last only filters listeners
+        //      and has its own test (VoiceFollowsVisibilityLayers); this pins the transmit side, where either of the
+        //      first two stops the voice before it is relayed to anyone.
+        var relayedBefore = Server.System<KsVoiceSystem>().RelayedChunkCount;
+        var heard = await Talk();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(heard, Is.Zero, "ghosts are never heard by the living");
+            Assert.That(Server.System<KsVoiceSystem>().RelayedChunkCount, Is.EqualTo(relayedBefore),
+                "a ghost's voice must not be relayed at all");
+        });
+    }
+
+    [Test]
+    public async Task VoiceFollowsVisibilityLayers()
+    {
+        await Setup();
+        await HoldPushToTalk(true);
+
+        // Put the (living) speaker on the ghost layer: living eyes can't see it, so living ears mustn't hear it.
+        await Server.WaitPost(() =>
+            Server.System<SharedVisibilitySystem>().SetLayer(_speakerUid, (ushort)VisibilityFlags.Ghost));
+        await Pair.RunTicksSync(5);
+        var livingHeard = await Talk();
+
+        // A ghost listener's eye does see that layer.
+        await Server.WaitPost(() =>
+        {
+            var ghostUid = SEntMan.SpawnEntity("MobObserver", _map.MapCoords);
+            Server.PlayerMan.SetAttachedEntity(ServerSession!, ghostUid);
+        });
+        await Pair.RunTicksSync(10);
+        var ghostHeard = await Talk();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(livingHeard, Is.Zero, "a living listener must not hear a speaker it can't see");
+            Assert.That(ghostHeard, Is.EqualTo(1), "a ghost listener sees the ghost layer, so hears it");
+        });
     }
 
     [Test]

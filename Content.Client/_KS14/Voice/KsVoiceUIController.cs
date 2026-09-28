@@ -31,6 +31,7 @@ public sealed partial class KsVoiceUIController : UIController, IOnStateChanged<
     private string? _url;
     private string? _errorLocId;
     private TimeSpan? _copiedUntil;
+    private bool _openInBrowserWhenReceived;
 
     public void OnStateEntered(GameplayState state)
     {
@@ -75,12 +76,13 @@ public sealed partial class KsVoiceUIController : UIController, IOnStateChanged<
     }
 
     /// <summary>
-    ///     Opens the voice link window, requesting the link from the server if we don't have it yet.
+    ///     Opens the voice link window, requesting the link from the server if we don't have it yet. Returns false if
+    ///         voice chat is disabled on this server.
     /// </summary>
-    public void OpenWindow()
+    public bool OpenWindow()
     {
         if (_voiceClientSystem is not { Enabled: true })
-            return;
+            return false;
 
         if (_window == null)
         {
@@ -96,6 +98,7 @@ public sealed partial class KsVoiceUIController : UIController, IOnStateChanged<
 
         UpdateWindow();
         _window.OpenCentered();
+        return true;
     }
 
     private void OnPushToTalk(bool held)
@@ -107,6 +110,26 @@ public sealed partial class KsVoiceUIController : UIController, IOnStateChanged<
 
         if (held && !system.UplinkConnected && system.UplinkEnabled && _window == null)
             OpenWindow();
+    }
+
+    /// <summary>
+    ///     Opens the voice page in the browser straight away, fetching the link first if we don't have it yet.
+    ///         Returns false if voice chat is disabled on this server.
+    /// </summary>
+    public bool OpenLinkInBrowser()
+    {
+        if (_voiceClientSystem is not { Enabled: true })
+            return false;
+
+        if (_url != null)
+        {
+            _uriOpener.OpenUri(_url);
+            return true;
+        }
+
+        _openInBrowserWhenReceived = true;
+        RequestLink(reset: false);
+        return true;
     }
 
     private void RequestLink(bool reset)
@@ -121,6 +144,18 @@ public sealed partial class KsVoiceUIController : UIController, IOnStateChanged<
     {
         _url = args.Url;
         _errorLocId = args.ErrorLocId;
+
+        if (_openInBrowserWhenReceived)
+        {
+            _openInBrowserWhenReceived = false;
+
+            // No link means the server said why; the window is where that's shown.
+            if (_url != null)
+                _uriOpener.OpenUri(_url);
+            else
+                OpenWindow();
+        }
+
         UpdateWindow();
     }
 

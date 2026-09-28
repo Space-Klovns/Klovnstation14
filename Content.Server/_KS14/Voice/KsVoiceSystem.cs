@@ -61,6 +61,8 @@ public sealed partial class KsVoiceSystem : EntitySystem
     [Dependency] private PopupSystem _popupSystem = default!;
     [Dependency] private EntityQuery<GhostComponent> _ghostQuery = default!;
     [Dependency] private EntityQuery<SleepingComponent> _sleepingQuery = default!;
+    [Dependency] private EntityQuery<EyeComponent> _eyeQuery = default!;
+    [Dependency] private EntityQuery<MetaDataComponent> _metaQuery = default!;
 
     private readonly Dictionary<NetUserId, TalkerState> _talkers = [];
     private readonly List<INetChannel> _recipientChannels = [];
@@ -158,6 +160,7 @@ public sealed partial class KsVoiceSystem : EntitySystem
         SetIndicator(state, speakerUid);
 
         var speakerCoordinates = _transformSystem.GetMapCoordinates(speakerUid);
+        var speakerVisibilityMask = _metaQuery.Comp(speakerUid).VisibilityMask;
 
         _recipientChannels.Clear();
         foreach (var listener in _playerManager.Sessions)
@@ -165,7 +168,8 @@ public sealed partial class KsVoiceSystem : EntitySystem
             if (listener == speaker ||
                 listener.Status != SessionStatus.InGame ||
                 listener.AttachedEntity is not { Valid: true } listenerUid ||
-                !CanHear(listenerUid))
+                !CanHear(listenerUid) ||
+                !CanSee(listenerUid, speakerVisibilityMask))
             {
                 continue;
             }
@@ -198,6 +202,20 @@ public sealed partial class KsVoiceSystem : EntitySystem
         };
 
         _netManager.ServerSendToMany(message, _recipientChannels);
+    }
+
+    /// <summary>
+    ///     Whether the listener could see the speaker at all: the same visibility-layer rule PVS applies, so voice
+    ///         never reaches anyone the speaker's entity is never sent to. That keeps ghosts, and anything else on a
+    ///         layer living eyes lack, out of living players' voice exactly as they are out of their view.
+    /// </summary>
+    private bool CanSee(EntityUid listenerUid, int speakerVisibilityMask)
+    {
+        var listenerMask = EyeComponent.DefaultVisibilityMask;
+        if (_eyeQuery.TryComp(listenerUid, out var eyeComponent))
+            listenerMask |= eyeComponent.VisibilityMask;
+
+        return (listenerMask & speakerVisibilityMask) == speakerVisibilityMask;
     }
 
     private bool CanHear(EntityUid listenerUid)

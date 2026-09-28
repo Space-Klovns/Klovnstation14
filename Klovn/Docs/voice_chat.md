@@ -10,8 +10,9 @@ The content sandbox gives client code no way to capture audio. The engine never 
 webview explicitly denies media permission requests. The one route out is `IUriOpener`, which opens a URL in the
 player's own browser. So a player who wants to talk:
 
-1. gets a personal link from the game (Options → Klovnstation 14 → *Set up microphone...*, the `voicechat` command, or
-   by pressing push-to-talk with no microphone page connected);
+1. gets a personal link from the game: Options → Klovnstation 14 → *Set up microphone...*, the `voicechat` command
+   (link window), the `voicelink` command (opens the page in the browser straight away), or by pressing push-to-talk
+   with no microphone page connected;
 2. opens it in their browser and allows microphone access;
 3. holds the in-game push-to-talk key (default `N`, rebindable) to talk.
 
@@ -104,7 +105,14 @@ The requirement is that nobody can talk as another player unless that player han
   maintain.
 
 A relayed chunk is IMA ADPCM-encoded once and sent as a `KsVoiceFrameMessage` to every other in-game player whose
-entity is on the same map, within `klovn.voice.range`, and either a ghost or neither incapacitated nor asleep. The
+entity:
+- is on the same map and within `klovn.voice.range`;
+- is either a ghost, or neither incapacitated nor asleep;
+- can see the speaker. This is the same visibility-layer rule PVS uses: the listener's eye mask must cover every layer
+  of the speaker's `VisibilityMask`. Voice therefore never reaches anyone the speaker's entity is never sent to.
+
+Ghosts listen but never talk, and living players never hear them. Ghosts fail both the ghost check and `CanSpeak`
+(observers have no `SpeechComponent`), and the ghost visibility layer is outside living eyes anyway. The
 message is `Unreliable`, because audio that arrives late is useless. A per-talker sequence number lets clients
 reorder, and each packet carries its own ADPCM predictor state, so one lost packet never corrupts the next.
 
@@ -162,6 +170,10 @@ therefore:
   | *Voice mute (round)* / *Voice unmute* | Admin-menu verbs on a player. |
 
 - **Players.** A client-side *Mute voice* verb on anyone who has talked silences them locally.
+- **Who can run what.** The moderation commands require `Moderator`, and a test checks that a player without admin
+  rights is refused. The player commands `voicechat` (opens the link window) and `voicelink` (opens the voice page in
+  the browser directly) are `[AnyCommand]`. Client commands without it are admin-only, so the test checks them as a
+  de-adminned player.
 - **Admin log.** Everything is logged under `LogType.KsVoice`: microphone pages connecting, link resets, talk bursts
   (optional, `klovn.voice.admin_log_bursts`), and mutes and auto-mutes.
 

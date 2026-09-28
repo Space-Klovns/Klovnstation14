@@ -55,6 +55,9 @@ ks-voice-mute-length-minutes = {$minutes} {$minutes ->
 cmd-voicechat-desc = Opens the voice chat window, with your personal microphone link.
 cmd-voicechat-help = voicechat
 
+cmd-voicelink-desc = Opens your personal voice chat page in the browser.
+cmd-voicelink-help = voicelink
+
 # Admin commands
 cmd-vcmute-desc = Mutes a player's voice chat.
 cmd-vcmute-help = vcmute <player> [minutes, 0 = rest of round] [reason...]
