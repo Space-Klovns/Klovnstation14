@@ -18,10 +18,11 @@ namespace Content.Client._KS14.Voice;
 ///         plus <see cref="IAudioManager.CreateAudioSource"/>). So each talker's audio is reassembled into a jitter buffer
 ///         and played as a chain of short chunks. To hide the seams, every chunk also carries the first
 ///         <see cref="OverlapSamples"/> of the following audio, faded out, and the next chunk starts with those same samples
-///         faded in, begun when the current chunk has that much left. Frame-rate timing error then only shifts a short
-///         linear crossfade rather than opening a gap.
+///         faded in, timed by <see cref="KsVoiceChunkTiming"/> so the two line up to the sample whatever the frame rate.
 ///
 ///     Sources are positioned by hand every frame, as the engine's MIDI renderer does for its own streaming sources.
+///         Nothing here is an entity: sources are plain OpenAL sources that are never networked, so the only networked
+///         things playback depends on are the voice packets themselves and the speaker's entity, for its position.
 /// </summary>
 public sealed partial class KsVoicePlaybackSystem : EntitySystem
 {
@@ -42,9 +43,15 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
     private static readonly TimeSpan FlushAfter = TimeSpan.FromMilliseconds(100);
 
     /// <summary>
-    ///     Start the next chunk this far ahead of the ideal moment, since we only get to act once per frame.
+    ///     Per-frame decay of the peak-held frame-time estimate: it jumps up on a slow frame and relaxes over a few dozen
+    ///         frames, so a single hitch makes scheduling more careful for a moment rather than causing a dropout.
     /// </summary>
-    private const float StartMarginSeconds = 0.008f;
+    private const float FrameEstimateDecay = 0.95f;
+
+    /// <summary>
+    ///     Occlusion is a physics raycast; per talker, refresh it at this interval rather than every frame.
+    /// </summary>
+    private static readonly TimeSpan OcclusionInterval = TimeSpan.FromMilliseconds(100);
 
     /// <summary>
     ///     Buffered audio beyond this is dropped, to stop latency growing after a network stall.
@@ -76,6 +83,7 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
     private float _volume;
     private float _range;
     private int _jitterSamples;
+    private float _frameEstimate = 1f / 60f;
 
     /// <summary>
     ///     Voice frames received since startup, for tests and diagnostics.
@@ -125,7 +133,20 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
             _localMutes.Remove(speaker);
     }
 
+    /// <summary>
+    ///     Buffered samples waiting to play for a talker, or -1 if we aren't tracking them. For tests and diagnostics.
+    /// </summary>
+    public int GetBufferedSamples(NetEntity speaker)
+        => _speakers.TryGetValue(speaker, out var state) ? state.BufferedSamples : -1;
+
     private void OnFrameReceived(KsVoiceFrameMessage message)
+        => HandleFrame(message);
+
+    /// <summary>
+    ///     Accepts one relayed voice frame, as if it had just arrived from the server. Public so tests can drive playback
+    ///         without a network.
+    /// </summary>
+    public void HandleFrame(KsVoiceFrameMessage message)
     {
         ReceivedFrameCount++;
 
@@ -152,13 +173,29 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
 
         var now = _gameTiming.RealTime;
         var listener = _audioSystem.GetListenerCoordinates();
+        _frameEstimate = MathF.Max(frameTime, _frameEstimate * FrameEstimateDecay);
 
         _scratchRemovals.Clear();
         foreach (var (netEntity, speaker) in _speakers)
         {
             speaker.DisposeFinished();
 
-            if (!TryGetEntity(netEntity, out var speakerUid) || TerminatingOrDeleted(speakerUid.Value))
+            if (!TryGetEntity(netEntity, out var speakerUid))
+            {
+                // Voice packets and entity state travel separately, so a talker's first packets can arrive before we
+                //      know their entity (they just came into view, say). Keep their audio rather than throw it away,
+                //      holding only the newest jitter buffer's worth so playback doesn't start late once it resolves.
+                speaker.HoldUnresolved(_jitterSamples, OverlapSamples);
+                if (now - speaker.LastReceived > SpeakerTimeout)
+                {
+                    speaker.Dispose();
+                    _scratchRemovals.Add(netEntity);
+                }
+
+                continue;
+            }
+
+            if (TerminatingOrDeleted(speakerUid.Value))
             {
                 speaker.Dispose();
                 _scratchRemovals.Add(netEntity);
@@ -166,7 +203,7 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
             }
 
             Schedule(speaker, now);
-            UpdateSources(speaker, speakerUid.Value, netEntity, listener);
+            UpdateSources(speaker, speakerUid.Value, netEntity, listener, now);
 
             if (now - speaker.LastReceived > SpeakerTimeout && !speaker.HasSources)
             {
@@ -192,24 +229,21 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
             }
 
             speaker.Started = true;
-            StartChunk(speaker);
+            StartChunk(speaker, padSamples: 0, seekSeconds: 0f);
             return;
         }
 
-        var current = speaker.Current;
-        var remaining = current is { Source.Playing: true }
-            ? current.LengthSeconds - current.Source.PlaybackPosition
-            : 0f;
-
-        var startAt = (current?.HasLookahead ?? false) ? OverlapSeconds : 0f;
-        if (remaining > startAt + StartMarginSeconds)
+        var remaining = speaker.RemainingSeconds(now);
+        var startAt = speaker.PreviousHadLookahead ? OverlapSeconds : 0f;
+        if (!KsVoiceChunkTiming.ShouldStartNext(remaining, startAt, _frameEstimate))
             return;
 
         // Enough for a chunk that can carry its own lookahead, or the talker has stopped and this is the tail.
         if (speaker.BufferedSamples >= OverlapSamples * 2 ||
             speaker.BufferedSamples > 0 && now - speaker.LastReceived > FlushAfter)
         {
-            StartChunk(speaker);
+            var (padSamples, seekSeconds) = KsVoiceChunkTiming.Align(remaining, startAt);
+            StartChunk(speaker, padSamples, seekSeconds);
             return;
         }
 
@@ -222,17 +256,27 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         speaker.DropPlayedLookahead(OverlapSamples);
     }
 
-    private void StartChunk(KsVoiceSpeaker speaker)
+    /// <param name="speaker">The talker.</param>
+    /// <param name="padSamples">Leading silence, so a chunk started early still begins on time.</param>
+    /// <param name="seekSeconds">How far to skip in, so a chunk started late still lines up.</param>
+    private void StartChunk(KsVoiceSpeaker speaker, int padSamples, float seekSeconds)
     {
-        var samples = speaker.TakeChunk(ChunkSamples, OverlapSamples, out var hasLookahead);
-        if (samples.Length == 0)
+        var audio = speaker.TakeChunk(ChunkSamples, OverlapSamples, out var hasLookahead);
+        if (audio.Length == 0)
             return;
 
         // Crossfade only across edges that actually overlap another chunk; anything else just gets de-clicked.
-        ApplyFades(samples,
+        ApplyFades(audio,
             fadeInSamples: speaker.PreviousHadLookahead ? OverlapSamples : DeclickSamples,
             fadeOutSamples: hasLookahead ? OverlapSamples : DeclickSamples);
         speaker.PreviousHadLookahead = hasLookahead;
+
+        var samples = audio;
+        if (padSamples > 0)
+        {
+            samples = new short[padSamples + audio.Length];
+            audio.CopyTo(samples, padSamples);
+        }
 
         var stream = _audioManager.LoadAudioRaw(samples, 1, KsVoiceConstants.SampleRate);
         var source = _audioManager.CreateAudioSource(stream);
@@ -248,14 +292,14 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         source.RolloffFactor = 1f;
         source.Gain = 0f;
 
-        var chunk = new KsVoiceChunk(source, stream, (float)samples.Length / (float)KsVoiceConstants.SampleRate, hasLookahead);
+        var chunk = new KsVoiceChunk(source, stream, (float)samples.Length / (float)KsVoiceConstants.SampleRate, seekSeconds);
         speaker.AddChunk(chunk);
 
         // Position it before it makes any sound.
         speaker.PendingStart = chunk;
     }
 
-    private void UpdateSources(KsVoiceSpeaker speaker, EntityUid speakerUid, NetEntity speakerNetEntity, MapCoordinates listener)
+    private void UpdateSources(KsVoiceSpeaker speaker, EntityUid speakerUid, NetEntity speakerNetEntity, MapCoordinates listener, TimeSpan now)
     {
         var gain = _localMutes.Contains(speakerNetEntity) ? 0f : _volume;
         var speakerCoordinates = _transformSystem.GetMapCoordinates(speakerUid);
@@ -266,7 +310,17 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
                       speakerCoordinates.MapId == listener.MapId &&
                       distance <= _range;
 
-        var occlusion = audible ? _audioSystem.GetOcclusion(listener, delta, distance, ignoredEnt: speakerUid) : 0f;
+        if (!audible)
+        {
+            speaker.Occlusion = 0f;
+        }
+        else if (now >= speaker.OcclusionRefreshAt || speaker.PendingStart != null)
+        {
+            speaker.Occlusion = _audioSystem.GetOcclusion(listener, delta, distance, ignoredEnt: speakerUid);
+            speaker.OcclusionRefreshAt = now + OcclusionInterval;
+        }
+
+        var occlusion = speaker.Occlusion;
 
         foreach (var chunk in speaker.Chunks)
         {
@@ -279,7 +333,12 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         if (speaker.PendingStart is { } pending)
         {
             speaker.PendingStart = null;
+            if (pending.SeekSeconds > 0f)
+                pending.Source.PlaybackPosition = pending.SeekSeconds;
+
             pending.Source.StartPlaying();
+            pending.Started = true;
+            speaker.LastChunkEndsAt = now + TimeSpan.FromSeconds((double)(pending.LengthSeconds - pending.SeekSeconds));
         }
     }
 
@@ -345,11 +404,59 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         public bool Started;
         public bool PreviousHadLookahead;
 
+        /// <summary>
+        ///     When the newest chunk will finish, kept here rather than on the chunk so it survives the chunk being
+        ///         disposed. Refined from the source's own playback position while it plays.
+        /// </summary>
+        public TimeSpan LastChunkEndsAt;
+
+        public float Occlusion;
+        public TimeSpan OcclusionRefreshAt;
+
         public int BufferedSamples => _buffer.Count;
 
         public bool HasSources => Chunks.Count > 0;
 
         public KsVoiceChunk? Current => Chunks.Count > 0 ? Chunks[^1] : null;
+
+        /// <summary>
+        ///     Seconds until the newest chunk finishes; negative once it has.
+        /// </summary>
+        public float RemainingSeconds(TimeSpan now)
+        {
+            if (Current is { Started: true } current && current.Source.Playing)
+            {
+                var remaining = current.LengthSeconds - current.Source.PlaybackPosition;
+                LastChunkEndsAt = now + TimeSpan.FromSeconds((double)remaining);
+                return remaining;
+            }
+
+            return (float)(LastChunkEndsAt - now).TotalSeconds;
+        }
+
+        /// <summary>
+        ///     While the talker's entity is unknown, keeps only the newest <paramref name="keepSamples"/> of audio and
+        ///         silences anything still playing from before it went unknown.
+        /// </summary>
+        public void HoldUnresolved(int keepSamples, int overlap)
+        {
+            foreach (var chunk in Chunks)
+                chunk.Source.Gain = 0f;
+
+            if (Started && Chunks.Count == 0)
+            {
+                // The chain ran out while unresolved, as a stall does: rebuffer when it resolves, without replaying
+                //      the lookahead the last chunk already faded out.
+                Started = false;
+                DropPlayedLookahead(overlap);
+            }
+
+            if (_buffer.Count <= keepSamples)
+                return;
+
+            _buffer.RemoveRange(0, _buffer.Count - keepSamples);
+            PreviousHadLookahead = false;
+        }
 
         public void Receive(ushort sequence, short[] samples, int jitterSamples)
         {
@@ -451,11 +558,12 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         }
     }
 
-    private sealed class KsVoiceChunk(IAudioSource source, AudioStream stream, float lengthSeconds, bool hasLookahead) : IDisposable
+    private sealed class KsVoiceChunk(IAudioSource source, AudioStream stream, float lengthSeconds, float seekSeconds) : IDisposable
     {
         public readonly IAudioSource Source = source;
         public readonly float LengthSeconds = lengthSeconds;
-        public readonly bool HasLookahead = hasLookahead;
+        public readonly float SeekSeconds = seekSeconds;
+        public bool Started;
 
         public void Dispose()
         {

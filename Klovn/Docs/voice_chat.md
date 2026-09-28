@@ -135,10 +135,31 @@ therefore:
 1. reorders each talker's packets into a jitter buffer. Playback starts once `klovn.voice.jitter_buffer_ms` of audio is
    buffered, and a packet is given up as lost once three later ones have arrived;
 2. plays the audio as a chain of 120 ms chunks. Each chunk also carries the next 20 ms of audio, faded out, and the
-   following chunk starts with those same samples, faded in, when the current chunk has 20 ms left. Acting only once
-   per frame then makes a short crossfade slightly late or early, rather than opening a gap;
+   following chunk starts with those same samples, faded in, 20 ms before the current one ends (see below);
 3. positions every source by hand each frame, as the engine's MIDI renderer does for its own streaming sources: map
-   position, occlusion from `AudioSystem.GetOcclusion`, and silence when the talker is on another map or out of range.
+   position, occlusion from `AudioSystem.GetOcclusion` (refreshed every 100 ms per talker, not every frame, since it is
+   a physics raycast), and silence when the talker is on another map or out of range.
+
+**No audio entities.** Chunks are raw OpenAL sources, not entities: nothing about playback is spawned, networked or
+subject to PVS. The only networked inputs are the voice packets themselves and the talker's entity, which supplies
+the position. The talking indicator is the one piece of entity state voice touches: two appearance changes per
+utterance.
+
+**Frame-rate independence.** Playback only runs once per frame, so it can never start a chunk at exactly the right
+moment. `KsVoiceChunkTiming` handles that in two steps:
+
+- it starts the next chunk on the last frame *before* the start point, judged against a peak-held estimate of the
+  frame time;
+- it then corrects the error exactly. A chunk started early gets that much leading silence, and one started late
+  (after a hitch longer than the estimate) is skipped ahead by the lateness.
+
+The remaining time comes from the playing source's own `PlaybackPosition`, which is in the mixer's time, so the new
+chunk's first real sample lands on the intended mixer sample. Low or uneven frame rates therefore don't shift the
+crossfade: no gaps, no doubled audio, no comb filtering.
+
+**Talkers the client can't place yet.** Voice packets and entity state travel separately, so a talker's first packets
+can arrive before their entity does, for example as they walk into view. Their audio is held (the newest jitter
+buffer's worth) until the entity resolves, instead of being dropped, which used to cut off the start of what they said.
 
 ## Moderation
 
@@ -263,6 +284,7 @@ empty and the transfer endpoint default (`http://localhost:1212/`) is used.
 | `Content.Server/_KS14/Voice/Commands/KsVoiceMuteCommands.cs` | `vcmute`, `vcunmute`, `vcmutes`. |
 | `Content.Server/_KS14/Voice/Web/` | The microphone page. |
 | `Content.Client/_KS14/Voice/KsVoicePlaybackSystem.cs` | Jitter buffer, crossfaded chunk playback, positioning, local mutes. |
+| `Content.Client/_KS14/Voice/KsVoiceChunkTiming.cs` | When the next chunk starts, and how it is padded or skipped to line up. |
 | `Content.Client/_KS14/Voice/KsVoiceUIController.cs` | Push-to-talk key and link window. |
 | `Content.Client/_KS14/Voice/KsVoiceIndicatorVisualizerSystem.cs` | Talking sprite. |
 | `Resources/Textures/_KS14/Effects/voice_indicator.rsi` | Talking sprite art. |
@@ -291,5 +313,8 @@ All under `Content.IntegrationTests/Tests/_KS14/Voice/`.
   - freeze-mute through `CanSpeak`
   - auto-mute
   - the indicator showing and clearing on the client
+  - audio for a talker whose entity the client doesn't know yet being kept, not dropped
+- `KsVoiceChunkTimingTests`: early starts padded and late starts skipped to the exact sample, skips never
+  exceeding what was already heard, and the start decision at different frame rates
 
 Crossfade quality and the sprite's look need a real client with speakers to check.

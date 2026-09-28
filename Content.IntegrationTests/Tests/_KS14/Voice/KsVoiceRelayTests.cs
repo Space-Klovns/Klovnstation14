@@ -285,6 +285,38 @@ public sealed class KsVoiceRelayTests : GameTest
     }
 
     [Test]
+    public async Task AudioForAnUnknownSpeakerIsKept()
+    {
+        await Setup();
+
+        // Voice packets and entity state travel separately, so a talker's first audio can arrive before their entity
+        //      does. That audio must wait for the entity, not be thrown away (which cut off the start of what people
+        //      said as they came into view).
+        var unknownSpeaker = new NetEntity(int.MaxValue - 1);
+        var samples = Speech();
+        var state = new KsVoiceAdpcm.EncoderState();
+        var payload = new byte[KsVoiceAdpcm.EncodedSize(samples.Length)];
+        KsVoiceAdpcm.Encode(ref state, samples, payload);
+
+        var playback = Client.System<KsVoicePlaybackSystem>();
+        var known = true;
+        await Client.WaitPost(() =>
+        {
+            known = Client.EntMan.TryGetEntity(unknownSpeaker, out _);
+            playback.HandleFrame(new KsVoiceFrameMessage { Source = unknownSpeaker, Sequence = 0, Payload = payload });
+        });
+        await Pair.RunTicksSync(5);
+
+        var buffered = playback.GetBufferedSamples(unknownSpeaker);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(known, Is.False, "the test needs a speaker the client doesn't know");
+            Assert.That(buffered, Is.EqualTo(samples.Length), "its audio waits for it rather than being dropped");
+        });
+    }
+
+    [Test]
     public async Task TalkingIndicatorShowsAndClears()
     {
         await Setup();
