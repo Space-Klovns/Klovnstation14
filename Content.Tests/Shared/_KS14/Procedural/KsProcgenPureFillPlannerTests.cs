@@ -91,6 +91,67 @@ public sealed class KsProcgenPureFillPlannerTests
         });
     }
 
+    [Test]
+    public void SoftSizeMixCanProposeLargeMediumAndSmallRoomsTogether()
+    {
+        var cells = Enumerable.Range(0, 12).SelectMany(x => Enumerable.Range(0, 10)
+            .Select(y => new Vector2i(x, y))).ToList();
+        var request = Request(cells);
+        request.SizeMix =
+        [
+            new KsProcgenRoomSizeGoal { Id = "large", MinCells = 18, MaxCells = 22, TargetCount = 1 },
+            new KsProcgenRoomSizeGoal { Id = "medium", MinCells = 8, MaxCells = 10, TargetCount = 2 },
+            new KsProcgenRoomSizeGoal { Id = "small", MinCells = 4, MaxCells = 5, TargetCount = 4 },
+        ];
+        var (shape, packing) = Pack(request);
+        var first = KsProcgenPureFillPlanner.Plan(shape, packing, request.Seed,
+            sizeMix: request.SizeMix);
+        var replay = KsProcgenPureFillPlanner.Plan(shape, packing, request.Seed,
+            sizeMix: request.SizeMix);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(first.Status, Is.EqualTo(KsProcgenPureFillStatus.Proposed));
+            Assert.That(first.Zones.SelectMany(zone => zone.Cells), Is.EquivalentTo(cells));
+            Assert.That(first.Zones.Sum(zone => zone.Cells.Count), Is.EqualTo(cells.Count));
+            Assert.That(first.SizeMixOutcomes.Select(item => item.AchievedCount),
+                Is.EqualTo(new[] { 1, 2, 4 }));
+            Assert.That(first.Zones.Where(zone => zone.SizeGoalId == "large")
+                .All(zone => zone.Cells.Count is >= 18 and <= 22), Is.True);
+            Assert.That(first.Zones.Where(zone => zone.SizeGoalId == "medium")
+                .All(zone => zone.Cells.Count is >= 8 and <= 10), Is.True);
+            Assert.That(first.Zones.Where(zone => zone.SizeGoalId == "small")
+                .All(zone => zone.Cells.Count is >= 4 and <= 5), Is.True);
+            Assert.That(first.SizeMixOutcomes, Is.EqualTo(replay.SizeMixOutcomes));
+            Assert.That(first.Zones.Select(zone => (zone.Id, zone.Kind, zone.SizeGoalId,
+                Cells: string.Join(";", zone.Cells))),
+                Is.EqualTo(replay.Zones.Select(zone => (zone.Id, zone.Kind, zone.SizeGoalId,
+                    Cells: string.Join(";", zone.Cells)))));
+        });
+    }
+
+    [Test]
+    public void TinyShapeReportsSizeShortfallWithoutLosingCells()
+    {
+        var request = Request([new Vector2i(0, 0), new Vector2i(0, 1), new Vector2i(0, 2)]);
+        request.SizeMix =
+        [
+            new KsProcgenRoomSizeGoal { Id = "small", MinCells = 4, MaxCells = 6, TargetCount = 1 },
+        ];
+        var (shape, packing) = Pack(request);
+        var fill = KsProcgenPureFillPlanner.Plan(shape, packing, request.Seed,
+            sizeMix: request.SizeMix);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(fill.Status, Is.EqualTo(KsProcgenPureFillStatus.Proposed));
+            Assert.That(fill.Zones.Single().Kind, Is.EqualTo(KsProcgenZoneKind.Passage));
+            Assert.That(fill.SizeMixOutcomes.Single().AchievedCount, Is.Zero);
+            Assert.That(fill.SizeMixOutcomes.Single().RequestedCount, Is.EqualTo(1));
+            Assert.That(fill.Zones.Single().Cells.Count, Is.EqualTo(3));
+        });
+    }
+
     private static KsProcgenRequest Request(List<Vector2i> cells) => new()
     {
         RequestId = "PureFill",

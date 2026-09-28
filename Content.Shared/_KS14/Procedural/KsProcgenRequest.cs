@@ -67,6 +67,52 @@ public sealed partial class KsProcgenLimits
 }
 
 /// <summary>
+/// An explicit fixed-content reservation. Source/fingerprint identity is declared here;
+/// inspection and copying of the actual authored content are later staging obligations.
+/// </summary>
+[DataDefinition]
+public sealed partial class KsProcgenConstantPortSpec
+{
+    [DataField(required: true)] public string Id = string.Empty;
+    [DataField(required: true)] public Vector2i Threshold;
+    [DataField(required: true)] public Vector2i OutwardNormal;
+}
+
+[DataDefinition]
+public sealed partial class KsProcgenConstantRegionSpec
+{
+    [DataField(required: true)] public string Id = string.Empty;
+    [DataField(required: true)] public string SourceId = string.Empty;
+    [DataField(required: true)] public string ContentFingerprint = string.Empty;
+    [DataField(required: true)] public List<Vector2i> LocalCells = new();
+    [DataField] public Vector2i Origin;
+    [DataField] public int QuarterTurns;
+    [DataField] public List<KsProcgenConstantPortSpec> Ports = new();
+}
+
+/// <summary>
+/// A soft count target for preliminary procedural room zones, not a fixed-size placement lattice.
+/// </summary>
+[DataDefinition]
+public sealed partial class KsProcgenRoomSizeGoal
+{
+    [DataField(required: true)] public string Id = string.Empty;
+    [DataField] public int MinCells = 4;
+    [DataField] public int MaxCells = 12;
+    [DataField] public int TargetCount = 1;
+}
+
+[DataDefinition]
+public sealed partial class KsProcgenWindowGoal
+{
+    [DataField] public float ExteriorWindowFraction = 0.25f;
+    [DataField] public bool HardFraction;
+    [DataField] public int ToleranceCells = 1;
+    [DataField] public int MinimumCount;
+    [DataField] public int? MaximumCount;
+}
+
+/// <summary>
 /// Phase A request contract. Later phases add library, theme, port, and constant-region fields.
 /// </summary>
 [DataDefinition]
@@ -80,6 +126,9 @@ public sealed partial class KsProcgenRequest
     [DataField] public KsProcgenShapeSpec Shape = new();
     [DataField] public KsProcgenLimits Limits = new();
     [DataField] public List<Vector2i> RootCells = new();
+    [DataField] public List<KsProcgenConstantRegionSpec> ConstantRegions = new();
+    [DataField] public List<KsProcgenRoomSizeGoal> SizeMix = new();
+    [DataField] public KsProcgenWindowGoal WindowGoal = new();
 }
 
 public sealed record KsProcgenIssue(string Code, string Message);

@@ -88,4 +88,45 @@ public sealed class KsProcgenPlanTests
         Assert.That(selection.NextUInt64(), Is.EqualTo(repeated.NextUInt64()));
         Assert.That(selection.NextUInt64(), Is.Not.EqualTo(decoration.NextUInt64()));
     }
+
+    [Test]
+    public void ConstantOwnerAndDeclaredFingerprintSurviveRollbackAndChangeHash()
+    {
+        var constant = new KsProcgenConstantRegionSpec
+        {
+            Id = "Bridge",
+            SourceId = "BridgeMap",
+            ContentFingerprint = "version-a",
+            LocalCells = [new Vector2i(0, 0)],
+        };
+        var request = new KsProcgenRequest
+        {
+            RequestId = "ConstantHash",
+            Shape = new KsProcgenShapeSpec
+            {
+                Cells = [new Vector2i(0, 0), new Vector2i(1, 0)],
+            },
+            ConstantRegions = [constant],
+        };
+        Assert.That(KsProcgenGeometry.TryNormalize(request, out var shape, out _), Is.True);
+        var plan = new KsProcgenPlan(shape!);
+        var firstHash = plan.SemanticHash(request.RequestId, 1, 1);
+        var checkpoint = plan.Checkpoint();
+        Assert.That(plan.TryClaim(new Vector2i(0, 0),
+            new KsProcgenCellClaim("Overwrite", KsProcgenCellDisposition.Prefab)), Is.False);
+        Assert.That(plan.TryClaim(new Vector2i(1, 0),
+            new KsProcgenCellClaim("Temporary", KsProcgenCellDisposition.Prefab)), Is.True);
+        plan.Rollback(checkpoint);
+        Assert.That(plan.TryGetClaim(new Vector2i(0, 0), out var fixedClaim), Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(fixedClaim.OwnerId, Is.EqualTo("constant:Bridge"));
+            Assert.That(firstHash, Is.EqualTo(plan.SemanticHash(request.RequestId, 1, 1)));
+        });
+
+        constant.ContentFingerprint = "version-b";
+        Assert.That(KsProcgenGeometry.TryNormalize(request, out var changedShape, out _), Is.True);
+        var changed = new KsProcgenPlan(changedShape!);
+        Assert.That(changed.SemanticHash(request.RequestId, 1, 1), Is.Not.EqualTo(firstHash));
+    }
 }

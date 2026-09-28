@@ -28,7 +28,8 @@ public sealed class KsProcgenPlan
     {
         _shape = shape;
         foreach (var cell in shape.PreservedCells)
-            _claims.Add(cell, new KsProcgenCellClaim("<preserved>", KsProcgenCellDisposition.Preserved));
+            _claims.Add(cell, new KsProcgenCellClaim(shape.TryGetConstantOwner(cell, out var ownerId)
+                ? $"constant:{ownerId}" : "<preserved>", KsProcgenCellDisposition.Preserved));
     }
 
     public int Checkpoint() => _journal.Count;
@@ -86,6 +87,27 @@ public sealed class KsProcgenPlan
         hash.AddString(requestId);
         hash.AddInt(seed);
         hash.AddInt(generatorVersion);
+
+        hash.AddInt(_shape.ConstantRegions.Count);
+        foreach (var region in _shape.ConstantRegions)
+        {
+            hash.AddString(region.Id);
+            hash.AddString(region.SourceId);
+            hash.AddString(region.ContentFingerprint);
+            hash.AddInt(region.Origin.X);
+            hash.AddInt(region.Origin.Y);
+            hash.AddInt(region.QuarterTurns);
+            hash.AddInt(region.Cells.Count);
+            hash.AddInt(region.Ports.Count);
+            foreach (var port in region.Ports)
+            {
+                hash.AddString(port.Id);
+                hash.AddInt(port.Threshold.X);
+                hash.AddInt(port.Threshold.Y);
+                hash.AddInt(port.OutwardNormal.X);
+                hash.AddInt(port.OutwardNormal.Y);
+            }
+        }
 
         foreach (var (cell, claim) in _claims.OrderBy(entry => entry.Key.Y).ThenBy(entry => entry.Key.X))
         {

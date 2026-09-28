@@ -13,6 +13,7 @@ public enum KsProcgenGeometryPipelineStatus : byte
     BudgetExceeded,
     ThemeRejected,
     ContentUnmet,
+    WindowTargetUnmet,
 }
 
 public sealed record KsProcgenFurnishedRegion(string RegionId, KsProcgenFurnishingResult Proposal);
@@ -26,13 +27,25 @@ public sealed class KsProcgenGeometryPipelineResult
     public KsProcgenGeometryPipelineStatus Status { get; init; }
     public KsProcgenIssue? Issue { get; init; }
     public KsProcgenPackingResult? Packing { get; init; }
+    public KsProcgenPortNetworkResult? PortNetwork { get; init; }
+    public bool HasRoomsWithoutDeclaredPorts => PortNetwork?.RoomsWithoutDeclaredPorts.Count > 0;
     public KsProcgenPureFillResult? PureFill { get; init; }
     public KsProcgenPartitionResult? Partition { get; init; }
     public KsProcgenThemeAssignmentResult? Themes { get; init; }
     public KsProcgenMaterialResult? Materials { get; init; }
+    public KsProcgenHullBoundaryResult? HullBoundary { get; init; }
+    public KsProcgenWindowPlanResult? Windows { get; init; }
     public IReadOnlyList<KsProcgenFurnishedRegion> Furnishings { get; init; } = [];
     public IReadOnlyList<KsProcgenLitRegion> Lighting { get; init; } = [];
+    public IReadOnlyList<KsProcgenSizeMixOutcome> FinalSizeMixOutcomes { get; init; } = [];
+    public bool HasSoftSizeMixShortfall => FinalSizeMixOutcomes.Any(item =>
+        item.AchievedCount < item.RequestedCount);
+    public bool HasSoftSizeMixDeviation => FinalSizeMixOutcomes.Any(item =>
+        item.AchievedCount != item.RequestedCount);
     public ulong SemanticHash { get; init; }
+    public ulong? ConstantContractHash { get; init; }
+    public bool HasUnverifiedConstantRegions { get; init; }
+    public bool HasUnverifiedHardWindowGoal { get; init; }
     public bool HasUnplacedRequiredEntityPacks { get; init; }
 }
 
@@ -52,7 +65,8 @@ public static class KsProcgenGeometryPipeline
         int maxPureFillCells = 65_536,
         int maxPartitionMerges = 256,
         int maxFurnishingProbes = 4_096,
-        int maxLightingFixtures = 4_096)
+        int maxLightingFixtures = 4_096,
+        IReadOnlyList<KsProcgenWindowBoundaryCell>? inspectedWindowBoundary = null)
     {
         if (prototypeManager == null || request == null || families == null || string.IsNullOrWhiteSpace(themeId) ||
             maxFurnishingProbes <= 0 || maxFurnishingProbes > 4_096 ||
@@ -87,7 +101,7 @@ public static class KsProcgenGeometryPipeline
             };
 
         var fill = KsProcgenPureFillPlanner.Plan(shape!, packing, request.Seed,
-            maxProceduralCells: maxPureFillCells);
+            maxProceduralCells: maxPureFillCells, sizeMix: request.SizeMix);
         if (fill.Status != KsProcgenPureFillStatus.Proposed)
             return new KsProcgenGeometryPipelineResult
             {
@@ -138,7 +152,65 @@ public static class KsProcgenGeometryPipeline
                 Materials = materials,
             };
 
+        var portNetwork = shape!.TargetCells.Count == 0 ? null : KsProcgenPortNetworkAnalyzer.AnalyzePartitioned(
+            shape, packing, partition, inspectedExistingPassages ?? new HashSet<Vector2i>(), request.RootCells);
+        if (portNetwork?.Status is KsProcgenPortNetworkStatus.InvalidInput or
+            KsProcgenPortNetworkStatus.BudgetExceeded ||
+            portNetwork?.Status == KsProcgenPortNetworkStatus.Disconnected &&
+            request.ConnectivityPolicy == KsProcgenConnectivityPolicy.SingleNetwork)
+            return new KsProcgenGeometryPipelineResult
+            {
+                Status = portNetwork.Status switch
+                {
+                    KsProcgenPortNetworkStatus.BudgetExceeded => KsProcgenGeometryPipelineStatus.BudgetExceeded,
+                    KsProcgenPortNetworkStatus.Disconnected => KsProcgenGeometryPipelineStatus.NoPreliminaryRoute,
+                    _ => KsProcgenGeometryPipelineStatus.InvalidInput,
+                },
+                Issue = portNetwork.Issue,
+                Packing = packing,
+                PortNetwork = portNetwork,
+            };
+
+        // Prefab floors need engine inspection before a complete boundary inventory is possible.
+        var hullBoundary = packing.Placements.Count == 0
+            ? KsProcgenHullBoundaryPlanner.Classify(shape!, request.GeometryMode,
+                partition.FloorCells, partition.WallCells)
+            : null;
+        if (hullBoundary?.Status == KsProcgenHullBoundaryStatus.InvalidInput)
+            return new KsProcgenGeometryPipelineResult
+            {
+                Status = KsProcgenGeometryPipelineStatus.InvalidInput,
+                Issue = hullBoundary.Issue,
+                Packing = packing,
+                PureFill = fill,
+                Partition = partition,
+                Themes = themes,
+                Materials = materials,
+                HullBoundary = hullBoundary,
+            };
+
+        var windows = inspectedWindowBoundary == null ? null : KsProcgenWindowPlanner.PlanForShape(
+            shape!, inspectedWindowBoundary, request.Seed, request.WindowGoal);
+        if (windows?.Status is KsProcgenWindowPlanStatus.InvalidInput or
+            KsProcgenWindowPlanStatus.HardTargetUnmet)
+            return new KsProcgenGeometryPipelineResult
+            {
+                Status = windows.Status == KsProcgenWindowPlanStatus.HardTargetUnmet
+                    ? KsProcgenGeometryPipelineStatus.WindowTargetUnmet
+                    : KsProcgenGeometryPipelineStatus.InvalidInput,
+                Issue = windows.Issue,
+                Packing = packing,
+                PortNetwork = portNetwork,
+                PureFill = fill,
+                Partition = partition,
+                Themes = themes,
+                Materials = materials,
+                HullBoundary = hullBoundary,
+                Windows = windows,
+            };
+
         var furnishings = new List<KsProcgenFurnishedRegion>();
+        var finalSizeMix = KsProcgenSizeMixAnalyzer.Analyze(request.SizeMix, themes.Regions);
         var usedFurnishingProbes = 0;
         foreach (var region in themes.Regions)
         {
@@ -154,6 +226,8 @@ public static class KsProcgenGeometryPipeline
                     Partition = partition,
                     Themes = themes,
                     Materials = materials,
+                    HullBoundary = hullBoundary,
+                    Windows = windows,
                     Furnishings = furnishings,
                     HasUnplacedRequiredEntityPacks = themes.Regions.Any(item =>
                         item.UnplacedRequiredPacks.Count > 0),
@@ -180,6 +254,8 @@ public static class KsProcgenGeometryPipeline
                 Partition = partition,
                 Themes = themes,
                 Materials = materials,
+                HullBoundary = hullBoundary,
+                Windows = windows,
                 Furnishings = furnishings,
                 HasUnplacedRequiredEntityPacks = themes.Regions.Any(item =>
                     item.UnplacedRequiredPacks.Count > 0),
@@ -201,6 +277,8 @@ public static class KsProcgenGeometryPipeline
                     Partition = partition,
                     Themes = themes,
                     Materials = materials,
+                    HullBoundary = hullBoundary,
+                    Windows = windows,
                     Furnishings = furnishings,
                     Lighting = lighting,
                     HasUnplacedRequiredEntityPacks = themes.Regions.Any(item =>
@@ -227,6 +305,8 @@ public static class KsProcgenGeometryPipeline
                 Partition = partition,
                 Themes = themes,
                 Materials = materials,
+                HullBoundary = hullBoundary,
+                Windows = windows,
                 Furnishings = furnishings,
                 Lighting = lighting,
                 HasUnplacedRequiredEntityPacks = themes.Regions.Any(item =>
@@ -239,35 +319,123 @@ public static class KsProcgenGeometryPipeline
             Status = KsProcgenGeometryPipelineStatus.GeometryPlanned,
             Issue = partition.Issue,
             Packing = packing,
+            PortNetwork = portNetwork,
             PureFill = fill,
             Partition = partition,
             Themes = themes,
             Materials = materials,
+            HullBoundary = hullBoundary,
+            Windows = windows,
             Furnishings = furnishings,
             Lighting = lighting,
+            FinalSizeMixOutcomes = finalSizeMix,
+            ConstantContractHash = shape!.ConstantContractHash,
+            HasUnverifiedConstantRegions = shape.ConstantRegions.Count > 0,
+            HasUnverifiedHardWindowGoal = request.WindowGoal.HardFraction ||
+                request.WindowGoal.MinimumCount > 0 || request.WindowGoal.MaximumCount.HasValue,
             HasUnplacedRequiredEntityPacks = themes.Regions.Any(region => region.UnplacedRequiredPacks.Count > 0),
-            SemanticHash = HashPlan(request, themeId, packing, partition, themes, materials, furnishings, lighting),
+            SemanticHash = HashPlan(request, shape!, themeId, packing, fill, partition, themes, materials,
+                hullBoundary, portNetwork, inspectedExistingPassages, inspectedWindowBoundary, windows,
+                furnishings, lighting, finalSizeMix),
         };
     }
 
     private static ulong HashPlan(
         KsProcgenRequest request,
+        KsProcgenNormalizedShape shape,
         string themeId,
         KsProcgenPackingResult packing,
+        KsProcgenPureFillResult fill,
         KsProcgenPartitionResult partition,
         KsProcgenThemeAssignmentResult themes,
         KsProcgenMaterialResult materials,
+        KsProcgenHullBoundaryResult? hullBoundary,
+        KsProcgenPortNetworkResult? portNetwork,
+        IReadOnlySet<Vector2i>? inspectedExistingPassages,
+        IReadOnlyList<KsProcgenWindowBoundaryCell>? inspectedWindowBoundary,
+        KsProcgenWindowPlanResult? windows,
         IReadOnlyList<KsProcgenFurnishedRegion> furnishings,
-        IReadOnlyList<KsProcgenLitRegion> lighting)
+        IReadOnlyList<KsProcgenLitRegion> lighting,
+        IReadOnlyList<KsProcgenSizeMixOutcome> finalSizeMix)
     {
         var hash = KsProcgenStableHash.Create();
-        hash.AddString("ks-procgen-geometry-plan-v3");
+        hash.AddString("ks-procgen-geometry-plan-v12");
         hash.AddString(request.RequestId);
         hash.AddInt(request.Seed);
         hash.AddInt((int) request.Mode);
         hash.AddInt((int) request.GeometryMode);
         hash.AddInt((int) request.ConnectivityPolicy);
+        hash.AddInt(request.RootCells.Count);
+        foreach (var root in request.RootCells.OrderBy(cell => cell.Y).ThenBy(cell => cell.X))
+        {
+            hash.AddInt(root.X);
+            hash.AddInt(root.Y);
+        }
+        hash.AddInt(inspectedExistingPassages?.Count ?? 0);
+        if (inspectedExistingPassages != null)
+        foreach (var cell in inspectedExistingPassages.OrderBy(cell => cell.Y).ThenBy(cell => cell.X))
+        {
+            hash.AddInt(cell.X);
+            hash.AddInt(cell.Y);
+        }
+        hash.AddInt(portNetwork == null ? 0 : 1);
+        if (portNetwork != null)
+        {
+            hash.AddInt((int) portNetwork.Status);
+            hash.AddInt(portNetwork.Groups.Count);
+            foreach (var group in portNetwork.Groups)
+            {
+                hash.AddInt(group.RoomIds.Count);
+                foreach (var roomId in group.RoomIds)
+                    hash.AddString(roomId);
+                hash.AddInt(group.PassageCells);
+                hash.AddInt(group.RootCells);
+            }
+            hash.AddInt(portNetwork.RoomsWithoutDeclaredPorts.Count);
+            foreach (var roomId in portNetwork.RoomsWithoutDeclaredPorts)
+                hash.AddString(roomId);
+        }
         hash.AddString(themeId);
+        hash.AddInt(BitConverter.SingleToInt32Bits(request.WindowGoal.ExteriorWindowFraction));
+        hash.AddInt(request.WindowGoal.HardFraction ? 1 : 0);
+        hash.AddInt(request.WindowGoal.ToleranceCells);
+        hash.AddInt(request.WindowGoal.MinimumCount);
+        hash.AddInt(request.WindowGoal.MaximumCount.HasValue ? 1 : 0);
+        if (request.WindowGoal.MaximumCount.HasValue)
+            hash.AddInt(request.WindowGoal.MaximumCount.Value);
+        hash.AddInt(request.SizeMix.Count);
+        foreach (var goal in request.SizeMix)
+        {
+            hash.AddString(goal.Id);
+            hash.AddInt(goal.MinCells);
+            hash.AddInt(goal.MaxCells);
+            hash.AddInt(goal.TargetCount);
+        }
+        hash.AddInt(shape.ConstantRegions.Count);
+        foreach (var constant in shape.ConstantRegions)
+        {
+            hash.AddString(constant.Id);
+            hash.AddString(constant.SourceId);
+            hash.AddString(constant.ContentFingerprint);
+            hash.AddInt(constant.Origin.X);
+            hash.AddInt(constant.Origin.Y);
+            hash.AddInt(constant.QuarterTurns);
+            hash.AddInt(constant.Cells.Count);
+            foreach (var cell in constant.Cells)
+            {
+                hash.AddInt(cell.X);
+                hash.AddInt(cell.Y);
+            }
+            hash.AddInt(constant.Ports.Count);
+            foreach (var port in constant.Ports)
+            {
+                hash.AddString(port.Id);
+                hash.AddInt(port.Threshold.X);
+                hash.AddInt(port.Threshold.Y);
+                hash.AddInt(port.OutwardNormal.X);
+                hash.AddInt(port.OutwardNormal.Y);
+            }
+        }
         hash.AddInt(packing.Placements.Count);
         foreach (var placement in packing.Placements.OrderBy(placement => placement.FamilyId, StringComparer.Ordinal)
                      .ThenBy(placement => placement.OptionId, StringComparer.Ordinal)
@@ -307,6 +475,27 @@ public static class KsProcgenGeometryPipeline
                 hash.AddString(pair.First);
                 hash.AddString(pair.Second);
             }
+        }
+
+        hash.AddInt(fill.Zones.Count);
+        foreach (var zone in fill.Zones.OrderBy(item => item.Id, StringComparer.Ordinal))
+        {
+            hash.AddString(zone.Id);
+            hash.AddInt((int) zone.Kind);
+            hash.AddString(zone.SizeGoalId ?? "");
+            hash.AddInt(zone.Cells.Count);
+            foreach (var cell in zone.Cells)
+            {
+                hash.AddInt(cell.X);
+                hash.AddInt(cell.Y);
+            }
+        }
+        hash.AddInt(fill.SizeMixOutcomes.Count);
+        foreach (var outcome in fill.SizeMixOutcomes.OrderBy(item => item.GoalId, StringComparer.Ordinal))
+        {
+            hash.AddString(outcome.GoalId);
+            hash.AddInt(outcome.RequestedCount);
+            hash.AddInt(outcome.AchievedCount);
         }
 
         hash.AddInt(partition.WallCells.Count);
@@ -352,6 +541,14 @@ public static class KsProcgenGeometryPipeline
             }
         }
 
+        hash.AddInt(finalSizeMix.Count);
+        foreach (var outcome in finalSizeMix.OrderBy(item => item.GoalId, StringComparer.Ordinal))
+        {
+            hash.AddString(outcome.GoalId);
+            hash.AddInt(outcome.RequestedCount);
+            hash.AddInt(outcome.AchievedCount);
+        }
+
         hash.AddInt(materials.Tiles.Count);
         foreach (var tile in materials.Tiles.OrderBy(tile => tile.Cell.Y).ThenBy(tile => tile.Cell.X))
         {
@@ -376,6 +573,56 @@ public static class KsProcgenGeometryPipeline
             hash.AddInt(door.Cell.Y);
             hash.AddString(door.EntityId);
             hash.AddString(door.RegionId);
+        }
+
+        hash.AddInt(hullBoundary == null ? 0 : 1);
+        if (hullBoundary != null)
+        {
+            hash.AddInt((int) hullBoundary.Status);
+            hash.AddInt(hullBoundary.Edges.Count);
+            foreach (var edge in hullBoundary.Edges)
+            {
+                hash.AddInt(edge.InteriorCell.X);
+                hash.AddInt(edge.InteriorCell.Y);
+                hash.AddInt(edge.BoundaryCell.X);
+                hash.AddInt(edge.BoundaryCell.Y);
+                hash.AddInt((int) edge.Kind);
+            }
+        }
+
+        hash.AddInt(inspectedWindowBoundary == null ? 0 : 1);
+        if (inspectedWindowBoundary != null)
+        {
+            hash.AddInt(inspectedWindowBoundary.Count);
+            foreach (var cell in inspectedWindowBoundary.OrderBy(item => item.Cell.Y)
+                         .ThenBy(item => item.Cell.X))
+            {
+                hash.AddInt(cell.Cell.X);
+                hash.AddInt(cell.Cell.Y);
+                hash.AddInt(cell.FacesInterior ? 1 : 0);
+                hash.AddInt(cell.FacesExterior ? 1 : 0);
+                hash.AddInt(cell.SupportsAirtightWindow ? 1 : 0);
+                hash.AddInt(cell.Fixed ? 1 : 0);
+                hash.AddInt(cell.IsWindow ? 1 : 0);
+                hash.AddInt(cell.IsCorner ? 1 : 0);
+                hash.AddInt(cell.IsDoorway ? 1 : 0);
+                hash.AddInt(cell.RequiredStructure ? 1 : 0);
+                hash.AddInt(cell.WindowsDisabled ? 1 : 0);
+            }
+        }
+        hash.AddInt(windows == null ? 0 : 1);
+        if (windows != null)
+        {
+            hash.AddInt((int) windows.Status);
+            hash.AddInt(windows.EligibleCells);
+            hash.AddInt(windows.RequestedWindowCells);
+            hash.AddInt(windows.AchievedWindowCells);
+            hash.AddInt(windows.ChosenWindowCells.Count);
+            foreach (var cell in windows.ChosenWindowCells)
+            {
+                hash.AddInt(cell.X);
+                hash.AddInt(cell.Y);
+            }
         }
 
         hash.AddInt(furnishings.Count);

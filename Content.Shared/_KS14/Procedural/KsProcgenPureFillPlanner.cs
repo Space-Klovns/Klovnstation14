@@ -19,7 +19,10 @@ public enum KsProcgenZoneKind : byte
 /// <summary>
 /// A connected logical zone. Room proposals have no physical partition, door, or hull yet.
 /// </summary>
-public sealed record KsProcgenZone(string Id, KsProcgenZoneKind Kind, IReadOnlyList<Vector2i> Cells);
+public sealed record KsProcgenZone(string Id, KsProcgenZoneKind Kind, IReadOnlyList<Vector2i> Cells,
+    string? SizeGoalId = null);
+
+public sealed record KsProcgenSizeMixOutcome(string GoalId, int RequestedCount, int AchievedCount);
 
 public sealed class KsProcgenPureFillResult
 {
@@ -29,6 +32,7 @@ public sealed class KsProcgenPureFillResult
     public IReadOnlyList<(string First, string Second)> CardinalInterfaces { get; init; } = [];
     public int ProceduralCells { get; init; }
     public int TinyPassageComponents { get; init; }
+    public IReadOnlyList<KsProcgenSizeMixOutcome> SizeMixOutcomes { get; init; } = [];
 }
 
 /// <summary>
@@ -45,7 +49,8 @@ public static class KsProcgenPureFillPlanner
         int seed,
         int preferredMaxRoomCells = 24,
         int minimumRoomCells = 4,
-        int maxProceduralCells = 65_536)
+        int maxProceduralCells = 65_536,
+        IReadOnlyList<KsProcgenRoomSizeGoal>? sizeMix = null)
     {
         if (shape == null || packing == null || packing.Status != KsProcgenPackingStatus.GeometryReady ||
             packing.CellClaims.Count != shape.TargetCells.Count ||
@@ -53,6 +58,19 @@ public static class KsProcgenPureFillPlanner
             preferredMaxRoomCells > 65_536 || maxProceduralCells <= 0 || maxProceduralCells > 65_536 ||
             packing.ResidualRouting is { Status: not KsProcgenResidualStatus.PreliminaryReady })
             return Failure(KsProcgenPureFillStatus.InvalidInput, "InvalidPureFillInput");
+
+        sizeMix ??= [];
+        var sizeIds = new HashSet<string>(StringComparer.Ordinal);
+        if (sizeMix.Any(goal => goal == null || string.IsNullOrWhiteSpace(goal.Id) ||
+                !sizeIds.Add(goal.Id) || goal.MinCells <= 0 || goal.MaxCells < goal.MinCells ||
+                goal.MaxCells > 65_536 || goal.TargetCount <= 0) ||
+            sizeMix.Sum(goal => (long) goal.TargetCount) > 4_096)
+            return Failure(KsProcgenPureFillStatus.InvalidInput, "InvalidPureFillSizeMix");
+        var orderedSizes = sizeMix.OrderBy(goal => goal.MinCells).ToArray();
+        if (orderedSizes.Skip(1).Where((goal, index) => orderedSizes[index].MaxCells >= goal.MinCells)
+            .Any())
+            return Failure(KsProcgenPureFillStatus.InvalidInput, "OverlappingPureFillSizeMix");
+        var achieved = sizeMix.ToDictionary(goal => goal.Id, _ => 0, StringComparer.Ordinal);
 
         var claims = new HashSet<Vector2i>();
         var procedural = new HashSet<Vector2i>();
@@ -101,8 +119,14 @@ public static class KsProcgenPureFillPlanner
                 while (!unassigned.Contains(component[nextStart]))
                     nextStart++;
                 var start = component[nextStart];
-                var maxSize = Math.Min(preferredMaxRoomCells,
-                    Math.Max(minimumRoomCells, preferredMaxRoomCells / 2 + random.NextInt(preferredMaxRoomCells / 2 + 1)));
+                // Authored order is soft proposal priority; every accepted zone still uses exact cells.
+                var goal = sizeMix.FirstOrDefault(item => achieved[item.Id] < item.TargetCount &&
+                    unassigned.Count >= item.MinCells);
+                var maxSize = goal == null
+                    ? Math.Min(preferredMaxRoomCells,
+                        Math.Max(minimumRoomCells, preferredMaxRoomCells / 2 +
+                            random.NextInt(preferredMaxRoomCells / 2 + 1)))
+                    : goal.MinCells + random.NextInt(goal.MaxCells - goal.MinCells + 1);
                 var queue = new Queue<Vector2i>();
                 var cells = new List<Vector2i>();
                 unassigned.Remove(start);
@@ -123,8 +147,12 @@ public static class KsProcgenPureFillPlanner
                 // Frontier cells already removed from the global set still need their own zone.
                 while (queue.TryDequeue(out var deferred))
                     unassigned.Add(deferred);
+                var sizeGoalId = goal != null && cells.Count >= goal.MinCells &&
+                                 cells.Count <= goal.MaxCells ? goal.Id : null;
+                if (sizeGoalId != null)
+                    achieved[sizeGoalId]++;
                 zones.Add(new KsProcgenZone($"zone-{nextZone++}", KsProcgenZoneKind.RoomProposal,
-                    KsProcgenGeometry.SortCells(cells)));
+                    KsProcgenGeometry.SortCells(cells), sizeGoalId));
             }
         }
 
@@ -151,6 +179,8 @@ public static class KsProcgenPureFillPlanner
                 .ThenBy(pair => pair.Second, StringComparer.Ordinal).ToArray(),
             ProceduralCells = procedural.Count,
             TinyPassageComponents = tinyComponents,
+            SizeMixOutcomes = sizeMix.Select(goal => new KsProcgenSizeMixOutcome(goal.Id,
+                goal.TargetCount, achieved[goal.Id])).ToArray(),
         };
     }
 

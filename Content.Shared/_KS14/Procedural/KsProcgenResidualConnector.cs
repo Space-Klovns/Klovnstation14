@@ -58,6 +58,7 @@ public static class KsProcgenResidualConnector
         }
 
         var ports = packing.Placements.SelectMany(placement => placement.Ports)
+            .Concat(shape.ConstantRegions.SelectMany(region => region.Ports))
             .OrderBy(port => port.Id, StringComparer.Ordinal).ToArray();
         var portIds = new HashSet<string>(StringComparer.Ordinal);
         foreach (var port in ports)

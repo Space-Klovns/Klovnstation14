@@ -260,6 +260,10 @@ public sealed class KsProcgenContentLoadTests : GameTest
             Assert.That(purePipeline.Materials?.InteriorWalls, Is.Empty);
             Assert.That(purePipeline.Furnishings.Count, Is.EqualTo(1));
             Assert.That(purePipeline.Furnishings[0].Proposal.Entities, Is.Empty);
+            Assert.That(purePipeline.HullBoundary?.Status,
+                Is.EqualTo(KsProcgenHullBoundaryStatus.UnresolvedBoundary));
+            Assert.That(purePipeline.HullBoundary?.Edges.Count, Is.EqualTo(8));
+            Assert.That(purePipeline.HullBoundary?.GasClosureVerified, Is.False);
             Assert.That(purePipeline.Lighting.Count, Is.EqualTo(1));
             Assert.That(purePipeline.Lighting[0].Proposal.Status,
                 Is.EqualTo(KsProcgenLightingPlanStatus.Sparse));
@@ -268,6 +272,35 @@ public sealed class KsProcgenContentLoadTests : GameTest
                 request, [], "KsProcgenSimpleOffice");
             Assert.That(purePipeline.SemanticHash, Is.Not.EqualTo(0UL));
             Assert.That(pureReplay.SemanticHash, Is.EqualTo(purePipeline.SemanticHash));
+            var windowRequest = new KsProcgenRequest
+            {
+                RequestId = "LoadedTinyWindows",
+                Shape = request.Shape,
+                WindowGoal = new KsProcgenWindowGoal
+                {
+                    ExteriorWindowFraction = 1f,
+                    MinimumCount = 1,
+                },
+            };
+            var inspectedWindowBoundary = new[]
+            {
+                new KsProcgenWindowBoundaryCell(new Vector2i(3, 4), true, true, true),
+            };
+            var windowedPipeline = KsProcgenGeometryPipeline.Plan(prototypeManager,
+                windowRequest, [], "KsProcgenSimpleOffice",
+                inspectedWindowBoundary: inspectedWindowBoundary);
+            Assert.That(windowedPipeline.Status, Is.EqualTo(KsProcgenGeometryPipelineStatus.GeometryPlanned),
+                windowedPipeline.Issue?.Message);
+            Assert.That(windowedPipeline.Windows?.ChosenWindowCells,
+                Is.EqualTo(new[] { new Vector2i(3, 4) }));
+            Assert.That(windowedPipeline.Windows?.AirtightnessVerified, Is.False);
+            windowRequest.WindowGoal.MinimumCount = 2;
+            var hardWindowMiss = KsProcgenGeometryPipeline.Plan(prototypeManager,
+                windowRequest, [], "KsProcgenSimpleOffice",
+                inspectedWindowBoundary: inspectedWindowBoundary);
+            Assert.That(hardWindowMiss.Status,
+                Is.EqualTo(KsProcgenGeometryPipelineStatus.WindowTargetUnmet));
+            Assert.That(hardWindowMiss.Issue?.Code, Is.EqualTo("WindowCountInfeasible"));
             var hybridRequest = new KsProcgenRequest
             {
                 RequestId = "LoadedHybridTiny",
@@ -281,8 +314,47 @@ public sealed class KsProcgenContentLoadTests : GameTest
             Assert.That(hybridPipeline.Status, Is.EqualTo(KsProcgenGeometryPipelineStatus.GeometryPlanned),
                 hybridPipeline.Issue?.Message);
             Assert.That(hybridPipeline.Packing?.Placements.Count, Is.EqualTo(1));
+            Assert.That(hybridPipeline.HullBoundary, Is.Null);
             Assert.That(hybridPipeline.Materials?.Tiles.Count, Is.EqualTo(1));
             Assert.That(hybridPipeline.SemanticHash, Is.Not.EqualTo(purePipeline.SemanticHash));
+            var constantRequest = new KsProcgenRequest
+            {
+                RequestId = "LoadedConstantTiny",
+                Mode = KsProcgenMode.Hybrid,
+                Shape = request.Shape,
+                RootCells = [new Vector2i(3, 6)],
+                ConstantRegions =
+                [
+                    new KsProcgenConstantRegionSpec
+                    {
+                        Id = "Arrival",
+                        SourceId = "DeclaredArrivalSource",
+                        ContentFingerprint = "loaded-fixture",
+                        Origin = new Vector2i(3, 4),
+                        LocalCells = [new Vector2i(0, 0), new Vector2i(0, 1)],
+                        Ports =
+                        [
+                            new KsProcgenConstantPortSpec
+                            {
+                                Id = "SouthDoor",
+                                Threshold = new Vector2i(0, 1),
+                                OutwardNormal = new Vector2i(0, 1),
+                            },
+                        ],
+                    },
+                ],
+            };
+            var constantPipeline = KsProcgenGeometryPipeline.Plan(prototypeManager,
+                constantRequest, [], "KsProcgenSimpleOffice");
+            Assert.That(constantPipeline.Status, Is.EqualTo(KsProcgenGeometryPipelineStatus.GeometryPlanned),
+                constantPipeline.Issue?.Message);
+            Assert.That(constantPipeline.PortNetwork?.Status,
+                Is.EqualTo(KsProcgenPortNetworkStatus.Connected));
+            Assert.That(constantPipeline.PortNetwork?.Groups.Single().RoomIds,
+                Is.EqualTo(new[] { "constant:Arrival" }));
+            Assert.That(constantPipeline.PortNetwork?.Groups.Single().RootCells, Is.EqualTo(1));
+            Assert.That(constantPipeline.HasUnverifiedConstantRegions, Is.True);
+            Assert.That(constantPipeline.ConstantContractHash, Is.Not.Null);
             var unknownThemePipeline = KsProcgenGeometryPipeline.Plan(prototypeManager,
                 request, [], "KsProcgenMissingTheme");
             Assert.That(unknownThemePipeline.Status, Is.EqualTo(KsProcgenGeometryPipelineStatus.ThemeRejected));

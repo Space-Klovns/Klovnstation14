@@ -3,6 +3,15 @@ using Robust.Shared.Maths;
 
 namespace Content.Shared._KS14.Procedural;
 
+public sealed record KsProcgenConstantRegion(
+    string Id,
+    string SourceId,
+    string ContentFingerprint,
+    Vector2i Origin,
+    int QuarterTurns,
+    IReadOnlyList<Vector2i> Cells,
+    IReadOnlyList<KsProcgenPortGeometry> Ports);
+
 /// <summary>
 /// Exact normalized ownership masks. Public cell lists are sorted and detached from the request.
 /// </summary>
@@ -12,17 +21,21 @@ public sealed class KsProcgenNormalizedShape
     private readonly HashSet<Vector2i> _envelopeSet;
     private readonly HashSet<Vector2i> _preservedSet;
     private readonly HashSet<Vector2i> _voidSet;
+    private readonly Dictionary<Vector2i, string> _constantOwnerByCell;
 
     public IReadOnlyList<Vector2i> TargetCells { get; }
     public IReadOnlyList<Vector2i> EnvelopeCells { get; }
     public IReadOnlyList<Vector2i> PreservedCells { get; }
     public IReadOnlyList<Vector2i> VoidCells { get; }
+    public IReadOnlyList<KsProcgenConstantRegion> ConstantRegions { get; }
+    public ulong ConstantContractHash { get; }
 
     internal KsProcgenNormalizedShape(
         HashSet<Vector2i> targetSet,
         HashSet<Vector2i> envelopeSet,
         HashSet<Vector2i> preservedSet,
-        HashSet<Vector2i> voidSet)
+        HashSet<Vector2i> voidSet,
+        IReadOnlyList<KsProcgenConstantRegion> constantRegions)
     {
         _targetSet = new HashSet<Vector2i>(targetSet);
         _envelopeSet = new HashSet<Vector2i>(envelopeSet);
@@ -32,12 +45,49 @@ public sealed class KsProcgenNormalizedShape
         EnvelopeCells = KsProcgenGeometry.SortCells(_envelopeSet);
         PreservedCells = KsProcgenGeometry.SortCells(_preservedSet);
         VoidCells = KsProcgenGeometry.SortCells(_voidSet);
+        ConstantRegions = Array.AsReadOnly(constantRegions.OrderBy(region => region.Id,
+            StringComparer.Ordinal).ToArray());
+        _constantOwnerByCell = new Dictionary<Vector2i, string>();
+        foreach (var region in ConstantRegions)
+        foreach (var cell in region.Cells)
+            _constantOwnerByCell.Add(cell, region.Id);
+
+        var hash = KsProcgenStableHash.Create();
+        hash.AddString("ks-procgen-constant-contract-v1");
+        hash.AddInt(ConstantRegions.Count);
+        foreach (var region in ConstantRegions)
+        {
+            hash.AddString(region.Id);
+            hash.AddString(region.SourceId);
+            hash.AddString(region.ContentFingerprint);
+            hash.AddInt(region.Origin.X);
+            hash.AddInt(region.Origin.Y);
+            hash.AddInt(region.QuarterTurns);
+            hash.AddInt(region.Cells.Count);
+            foreach (var cell in region.Cells)
+            {
+                hash.AddInt(cell.X);
+                hash.AddInt(cell.Y);
+            }
+            hash.AddInt(region.Ports.Count);
+            foreach (var port in region.Ports)
+            {
+                hash.AddString(port.Id);
+                hash.AddInt(port.Threshold.X);
+                hash.AddInt(port.Threshold.Y);
+                hash.AddInt(port.OutwardNormal.X);
+                hash.AddInt(port.OutwardNormal.Y);
+            }
+        }
+        ConstantContractHash = hash.Value;
     }
 
     public bool ContainsTarget(Vector2i cell) => _targetSet.Contains(cell);
     public bool ContainsEnvelope(Vector2i cell) => _envelopeSet.Contains(cell);
     public bool ContainsPreserved(Vector2i cell) => _preservedSet.Contains(cell);
     public bool ContainsVoid(Vector2i cell) => _voidSet.Contains(cell);
+    public bool TryGetConstantOwner(Vector2i cell, out string ownerId) =>
+        _constantOwnerByCell.TryGetValue(cell, out ownerId!);
     public bool CanWrite(Vector2i cell) =>
         (_targetSet.Contains(cell) || _envelopeSet.Contains(cell)) && !_preservedSet.Contains(cell);
 
@@ -92,7 +142,7 @@ public static class KsProcgenGeometry
         var spec = request.Shape;
         if (spec.Cells == null || spec.AddRectangles == null || spec.SubtractRectangles == null ||
             spec.EnvelopeCells == null || spec.PreservedCells == null || spec.VoidCells == null ||
-            request.RootCells == null)
+            request.RootCells == null || request.ConstantRegions == null)
         {
             issue = new KsProcgenIssue("InvalidShape", "Shape and root cell lists cannot be null.");
             return false;
@@ -153,6 +203,162 @@ public static class KsProcgenGeometry
                 return false;
         }
 
+        if (request.ConstantRegions.Count > 512)
+        {
+            issue = new KsProcgenIssue("ConstantRegionBudget", "At most 512 constant regions are supported.");
+            return false;
+        }
+
+        if (request.SizeMix == null)
+        {
+            issue = new KsProcgenIssue("InvalidSizeMix", "Size goals cannot be null.");
+            return false;
+        }
+        if (request.WindowGoal == null ||
+            !float.IsFinite(request.WindowGoal.ExteriorWindowFraction) ||
+            request.WindowGoal.ExteriorWindowFraction is < 0f or > 1f ||
+            request.WindowGoal.ToleranceCells is < 0 or > 65_536 ||
+            request.WindowGoal.MinimumCount is < 0 or > 65_536 ||
+            request.WindowGoal.MaximumCount is < 0 or > 65_536 ||
+            request.WindowGoal.MaximumCount.HasValue &&
+            request.WindowGoal.MaximumCount.Value < request.WindowGoal.MinimumCount)
+        {
+            issue = new KsProcgenIssue("InvalidWindowGoal",
+                "Window fraction, tolerance, and count bounds must be finite and supported.");
+            return false;
+        }
+        var sizeIds = new HashSet<string>(StringComparer.Ordinal);
+        var requestedRoomCount = 0L;
+        foreach (var goal in request.SizeMix)
+        {
+            if (goal == null || string.IsNullOrWhiteSpace(goal.Id) || !sizeIds.Add(goal.Id) ||
+                goal.MinCells <= 0 || goal.MaxCells < goal.MinCells ||
+                goal.MaxCells > 65_536 || goal.TargetCount <= 0)
+            {
+                issue = new KsProcgenIssue("InvalidSizeMix",
+                    "Size goals need unique IDs, positive ordered area bounds, and positive counts.");
+                return false;
+            }
+            requestedRoomCount += goal.TargetCount;
+            if (requestedRoomCount > 4_096)
+            {
+                issue = new KsProcgenIssue("SizeMixBudget",
+                    "At most 4096 preliminary room zones may be requested.");
+                return false;
+            }
+        }
+        var orderedSizes = request.SizeMix.OrderBy(goal => goal.MinCells).ToArray();
+        for (var index = 1; index < orderedSizes.Length; index++)
+        {
+            if (orderedSizes[index - 1].MaxCells < orderedSizes[index].MinCells)
+                continue;
+            issue = new KsProcgenIssue("OverlappingSizeMix",
+                "Size bands must not overlap so each final room has one size class.");
+            return false;
+        }
+
+        var constantIds = new HashSet<string>(StringComparer.Ordinal);
+        var constantRegions = new List<KsProcgenConstantRegion>();
+        foreach (var constant in request.ConstantRegions)
+        {
+            if (constant == null || string.IsNullOrWhiteSpace(constant.Id) ||
+                string.IsNullOrWhiteSpace(constant.SourceId) ||
+                string.IsNullOrWhiteSpace(constant.ContentFingerprint) ||
+                constant.LocalCells == null || constant.LocalCells.Count == 0 ||
+                constant.Ports == null || constant.Ports.Count > 256 ||
+                constant.LocalCells.Count > limits.MaxCells ||
+                constant.QuarterTurns is < 0 or > 3 ||
+                !WithinLimit(constant.Origin, limits.MaxAbsoluteCoordinate) ||
+                !constantIds.Add(constant.Id))
+            {
+                issue = new KsProcgenIssue("InvalidConstantRegion",
+                    "Each constant needs a unique ID, source, fingerprint, local mask, and supported transform.");
+                return false;
+            }
+
+            var localCells = new HashSet<Vector2i>();
+            var transformed = new HashSet<Vector2i>();
+            foreach (var local in constant.LocalCells)
+            {
+                if (!localCells.Add(local))
+                {
+                    issue = new KsProcgenIssue("DuplicateConstantCell",
+                        "A constant mask may not repeat a local cell.");
+                    return false;
+                }
+
+                Vector2i world;
+                try
+                {
+                    world = TransformCell(local, Vector2i.Zero, constant.Origin, constant.QuarterTurns);
+                }
+                catch (OverflowException)
+                {
+                    issue = new KsProcgenIssue("ConstantTransformOutOfRange",
+                        "A constant transform exceeds the supported coordinate range.");
+                    return false;
+                }
+
+                if (!WithinLimit(world, limits.MaxAbsoluteCoordinate))
+                {
+                    issue = new KsProcgenIssue("ConstantTransformOutOfRange",
+                        "A transformed constant cell exceeds the coordinate limit.");
+                    return false;
+                }
+                if (!targetSet.Contains(world))
+                {
+                    issue = new KsProcgenIssue("ConstantOutsideTarget",
+                        "Every constant cell must belong to the requested target mask.");
+                    return false;
+                }
+                if (preservedSet.Contains(world))
+                {
+                    issue = new KsProcgenIssue("ConstantOverlap",
+                        "Constants cannot overlap one another or anonymous preserved cells.");
+                    return false;
+                }
+
+                transformed.Add(world);
+            }
+
+            var ports = new List<KsProcgenPortGeometry>();
+            var portIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var port in constant.Ports)
+            {
+                if (port == null || string.IsNullOrWhiteSpace(port.Id) || !portIds.Add(port.Id) ||
+                    Math.Abs(port.OutwardNormal.X) + Math.Abs(port.OutwardNormal.Y) != 1 ||
+                    !localCells.Contains(port.Threshold) ||
+                    !localCells.Contains(port.Threshold - port.OutwardNormal) ||
+                    localCells.Contains(port.Threshold + port.OutwardNormal))
+                {
+                    issue = new KsProcgenIssue("InvalidConstantPort",
+                        "A constant port needs a unique ID, boundary threshold, cardinal normal, and interior landing.");
+                    return false;
+                }
+
+                var threshold = TransformCell(port.Threshold, Vector2i.Zero, constant.Origin,
+                    constant.QuarterTurns);
+                var normal = TransformCell(port.OutwardNormal, Vector2i.Zero, Vector2i.Zero,
+                    constant.QuarterTurns);
+                var outside = threshold + normal;
+                if (!targetSet.Contains(outside))
+                {
+                    issue = new KsProcgenIssue("ConstantPortOutsideTarget",
+                        "A constant port must face another target cell until exterior access is supported.");
+                    return false;
+                }
+                var owner = $"constant:{constant.Id}";
+                ports.Add(new KsProcgenPortGeometry($"{owner}/{port.Id}", owner,
+                    threshold, normal, threshold - normal, outside));
+            }
+
+            preservedSet.UnionWith(transformed);
+            constantRegions.Add(new KsProcgenConstantRegion(constant.Id, constant.SourceId,
+                constant.ContentFingerprint, constant.Origin, constant.QuarterTurns,
+                SortCells(transformed), Array.AsReadOnly(ports.OrderBy(port => port.Id,
+                    StringComparer.Ordinal).ToArray())));
+        }
+
         foreach (var rootCell in request.RootCells)
         {
             if (!WithinLimit(rootCell, limits.MaxAbsoluteCoordinate))
@@ -189,7 +395,8 @@ public static class KsProcgenGeometry
             return false;
         }
 
-        shape = new KsProcgenNormalizedShape(targetSet, envelopeSet, preservedSet, voidSet);
+        shape = new KsProcgenNormalizedShape(targetSet, envelopeSet, preservedSet, voidSet,
+            constantRegions);
         return true;
     }
 
