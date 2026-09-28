@@ -19,7 +19,7 @@ public sealed partial class EnsureVirtualMarkerOperator : HTNOperator
     {
         HashSet<string> set;
         if (blackboard.TryGetValue<HashSet<string>>(MarkerSet, out var bbSet, _entityManager))
-            set = [.. bbSet]; // intentionally clone it
+            set = [.. bbSet, Id]; // intentionally clone it; the id used to be left out here, so an existing set never gained it
         else
             set = [Id];
 

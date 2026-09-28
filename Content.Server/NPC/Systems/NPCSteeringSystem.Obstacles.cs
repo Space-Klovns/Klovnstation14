@@ -5,6 +5,7 @@ using Content.Shared.CombatMode;
 using Content.Shared.Destructible;
 using Content.Shared.DoAfter;
 using Content.Shared.Doors.Components;
+using Content.Shared.Doors.Systems; // KS14
 using Content.Shared.NPC;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
@@ -35,6 +36,7 @@ public sealed partial class NPCSteeringSystem
      * Also need to make sure it picks nearest obstacle path so it starts smashing in front of it.
      */
 
+    [Dependency] private SharedDoorSystem _doorSystem = default!; // KS14
     [Dependency] private EntityQuery<DoorComponent> _doorQuery = default!;
     [Dependency] private EntityQuery<ClimbableComponent> _climbableQuery = default!;
     [Dependency] private EntityQuery<DestructibleComponent /* Trauma/KS14: moved DestructibleComponent to shared */> _destructibleQuery = default!;
@@ -82,52 +84,56 @@ public sealed partial class NPCSteeringSystem
             var isAccessRequired = (poly.Data.Flags & PathfindingBreadcrumbFlag.Access) != 0x0;
             var isClimbable = (poly.Data.Flags & PathfindingBreadcrumbFlag.Climb) != 0x0;
 
-            // KS14: ANK: improved door logic to check for access
+            // KS14 start: open any door we are allowed through, whether it opens by bumping or by clicking.
+            //      Leaving bump-open doors to the NPC physically walking into them left NPCs standing in front of
+            //      public airlocks, and it fell through to Failed below. TryOpen checks access, power and bolts.
+            //      Upstream (and the old KS14 ANK version) split this on the Access flag instead:
+            /*
             // Just walk into it stupid
-            if (isDoor)
+            if (isDoor && !isAccessRequired)
             {
-                if (!isAccessRequired)
+                // ... At least if it's not a bump open.
+                foreach (var ent in obstacleEnts)
                 {
-                    // ... At least if it's not a bump open.
-                    foreach (var ent in obstacleEnts)
-                    {
-                        if (!_doorQuery.TryGetComponent(ent, out var door))
-                            continue;
+                    if (!_doorQuery.TryGetComponent(ent, out var door))
+                        continue;
 
-                        if (!door.BumpOpen && (component.Flags & PathFlags.Interact) != 0x0)
-                        {
-                            if (door.State != DoorState.Opening)
-                            {
-                                _interaction.InteractionActivate(uid, ent);
-                                return SteeringObstacleStatus.Continuing;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    foreach (var obstacleUid in obstacleEnts)
+                    if (!door.BumpOpen && (component.Flags & PathFlags.Interact) != 0x0)
                     {
-                        if (!_doorQuery.TryGetComponent(obstacleUid, out var doorComponent))
-                            continue;
-
-                        if (doorComponent.State == DoorState.Opening ||
-                            doorComponent.State == DoorState.Open)
+                        if (door.State != DoorState.Opening)
                         {
+                            _interaction.InteractionActivate(uid, ent);
                             return SteeringObstacleStatus.Continuing;
                         }
-
-                        if (!(doorComponent.ClickOpen || doorComponent.BumpOpen) || !component.Flags.HasFlag(PathFlags.Interact) ||
-                            !_accessReaderSystem.IsAllowed(uid, obstacleUid))
-                            continue;
-
-                        _interaction.InteractionActivate(uid, obstacleUid);
-                        return SteeringObstacleStatus.Continuing;
                     }
                 }
 
                 // If we get to here then didn't succeed for reasons.
             }
+            */
+            if (isDoor && (component.Flags & PathFlags.Interact) != 0x0)
+            {
+                foreach (var obstacleUid in obstacleEnts)
+                {
+                    // Only doors a person could open by hand. Shutters and blast doors open from their buttons.
+                    if (!_doorQuery.TryGetComponent(obstacleUid, out var doorComponent) ||
+                        !(doorComponent.ClickOpen || doorComponent.BumpOpen))
+                        continue;
+
+                    // Opening or open: the navmesh still shows it shut until its chunk is rebuilt. Closing or
+                    //      denying: it will be closed, and openable again, in a moment. Either way, wait rather
+                    //      than fall through to prying or smashing it.
+                    if (doorComponent.State is DoorState.Opening or DoorState.Open or DoorState.Closing or DoorState.Denying)
+                        return SteeringObstacleStatus.Continuing;
+
+                    if (doorComponent.State == DoorState.Closed &&
+                        _doorSystem.TryOpen(obstacleUid, doorComponent, uid, quiet: true))
+                        return SteeringObstacleStatus.Continuing;
+                }
+
+                // Locked to us, bolted, unpowered or welded: fall through to prying or smashing.
+            }
+            // KS14 end
 
             if ((component.Flags & PathFlags.Prying) != 0x0 && isDoor)
             {

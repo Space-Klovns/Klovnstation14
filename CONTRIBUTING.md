@@ -362,6 +362,31 @@ _systemCollectionHookManager.HookAction(dependencyCollection =>
     dependencyCollection.InjectDependencies(overlay, oneOff: true));
 ```
 
+**Per-entity state is a component, not a system dictionary (C#)** — anything a system remembers *about* an entity belongs on that entity, in a component read through an injected `EntityQuery<T>`. A `Dictionary<EntityUid, T>` held by the system is a parallel entity store: nothing removes an entry when its entity is deleted, so it leaks or needs its own cleanup; VV cannot see it; and it has to be cleared, epoch-stamped or pruned by hand. As a component, the data dies with its entity and shows up in VV. `[Access]` the component to the system that owns it (see above).
+
+```csharp
+// not this - a cache of light levels keyed by target, cleared every tick
+private readonly Dictionary<EntityUid, float> _lightLevels = new();
+
+// this - the cache lives on the target; the tick it was computed on says whether it is still good
+[RegisterComponent, Access(typeof(NpcLightDetectionSystem))]
+public sealed partial class NpcLightLevelCacheComponent : Component
+{
+    [ViewVariables] public float Level;
+    [ViewVariables] public GameTick ComputedTick;
+}
+
+[Dependency] private EntityQuery<NpcLightLevelCacheComponent> _lightLevelCacheQuery = default!;
+
+if (_lightLevelCacheQuery.TryComp(targetUid, out var cacheComponent) && cacheComponent.ComputedTick == currentTick)
+    return cacheComponent.Level;
+// ...compute, then EnsureComp<NpcLightLevelCacheComponent>(targetUid) and store it.
+```
+
+This is about state *about* an entity. Two things that look similar are fine as they are:
+- **Transient work lists** — a set of uids queued this tick and drained in `Update`, like the deferred-check set in §6's reparenting entry. It is a to-do list, not state.
+- **Collections on a component** — a `Dictionary<EntityUid, T>` *inside* a component (an NPC's sightings keyed by target) is data belonging to the entity that owns the component, which is what components are for.
+
 **Subscribe with `[SubscribeLocalEvent]`, not a call in `Initialize` (C#)** — the engine generates the subscription from an attribute on the handler, inferring the event (and component) from the handler's signature. The class must be `partial`, because the generator emits an `AutoSubscriptions()` override into it:
 ```csharp
 // old
@@ -754,3 +779,31 @@ _pendingTransitChecks.Clear();
 
 Draining into a second list is not optional: a `foreach` over a set that the loop body can add to
 throws straight out of `Update`.
+
+### `Equals` on an enum boxes it
+
+An enum's `Equals` is inherited from `System.Enum`, a class, and takes an `object`. Calling it boxes both
+sides: two heap allocations, for what `==` does as a single integer compare. It reads identically, compiles
+clean, and returns the right answer, so nothing points at it; it only shows up as garbage.
+
+```csharp
+// not this - two boxes per call
+return Flags.Equals(other.Flags);
+
+// this - an integer compare, no allocation
+return Flags == other.Flags;
+```
+
+It matters wherever the comparison runs in bulk. `PathfindingData.Equals` did this, and it sits under every
+`PathPoly` dictionary lookup, so a single NPC tactical position search allocated about 230 KB of boxed
+`PathfindingBreadcrumbFlag`s - roughly 60% of everything it allocated, on a path every holding NPC runs each
+replan. The same goes for any `IEquatable<T>.Equals` or `GetHashCode` on a struct used as a dictionary key: it
+runs on every lookup, so an allocation in it multiplies by the size of the search.
+
+`==`, `!=` and bitwise tests (`(flags & Flag) != 0`) never box. Nor does `HasFlag` on current .NET, which the
+JIT turns into a bitwise test, but `&` says the same thing without relying on that.
+
+To find allocations like this, measure by type rather than guessing: `GC.GetTotalAllocatedBytes(precise: true)`
+around the work says *how much*, and an `EventListener` on `Microsoft-Windows-DotNETRuntime` (GC keyword `0x1`,
+`Verbose`) receives `GCAllocationTick` events naming the type being allocated, which says *what*. Both work in
+an integration test, which is not sandboxed.

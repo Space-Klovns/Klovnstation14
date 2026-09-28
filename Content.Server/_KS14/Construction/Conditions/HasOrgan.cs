@@ -3,7 +3,7 @@ using Robust.Shared.Prototypes;
 using Content.Shared.Body;
 using Content.Shared.Examine;
 
-namespace Content.Server._KS14.Construction.Completions;
+namespace Content.Server._KS14.Construction.Conditions;
 
 [DataDefinition]
 public sealed partial class HasOrgan : IGraphCondition

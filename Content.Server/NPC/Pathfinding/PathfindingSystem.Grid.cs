@@ -513,10 +513,17 @@ public sealed partial class PathfindingSystem
                             if (!colliding)
                                 continue;
 
-                            // KS14: ANK: check contents of the AccessReaderComponent instead of solely relying on its existence
-                            if (_accessReaderQuery.TryGetComponent(ent, out var accessReaderComponent) &&
-                                accessReaderComponent.AccessKeys.Count == 0 &&
-                                accessReaderComponent.AccessLists.Count == 0)
+                            // KS14 start: flag only readers that actually restrict. An airlock's own reader is empty
+                            //      and defers to its door electronics board, which decides - unless the door's own
+                            //      reader is switched off (access wire cut), which lets anyone through whatever the
+                            //      board says. An emag clears the board's lists instead. Both rebuild the chunk: see
+                            //      PathfindingSystem.Klovn.Access.cs
+                            if (_accessReaderQuery.TryGetComponent(ent, out var ownAccessReaderComponent) &&
+                                ownAccessReaderComponent.Enabled &&
+                                _accessReaderSystem.GetMainAccessReader(ent, out var mainAccessReader) &&
+                                mainAccessReader.Value.Comp.Enabled &&
+                                (mainAccessReader.Value.Comp.AccessKeys.Count > 0 || mainAccessReader.Value.Comp.AccessLists.Count > 0))
+                            // KS14 end
                             {
                                 flags |= PathfindingBreadcrumbFlag.Access;
                             }
