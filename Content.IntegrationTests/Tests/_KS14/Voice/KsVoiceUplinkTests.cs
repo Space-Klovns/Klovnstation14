@@ -124,7 +124,7 @@ public sealed class KsVoiceUplinkTests : GameTest
     /// <summary>
     ///     Reads text messages until the socket closes, returning them and the close description.
     /// </summary>
-    private static async Task<(List<string> Messages, string? CloseDescription)> ReadUntilClosed(WebSocket socket)
+    private static async Task<(List<string> Messages, string CloseDescription)> ReadUntilClosed(WebSocket socket)
     {
         var messages = new List<string>();
         var buffer = new byte[4096];

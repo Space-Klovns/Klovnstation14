@@ -169,7 +169,7 @@ public sealed class KsVoiceRelayTests : GameTest
         await Setup();
         await OverrideCVar(Side.Server, KsCCVars.VoicePublicUrl, "https://voice.example.com");
 
-        KsVoiceLinkEvent? received = null;
+        KsVoiceLinkEvent received = null;
         var clientSystem = Client.System<KsVoiceClientSystem>();
         clientSystem.LinkReceived += args => received = args;
 
