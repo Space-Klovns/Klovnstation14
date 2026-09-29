@@ -53,6 +53,7 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
     {
         [KsVoiceLinkManager.PagePath] = ("index.html", "text/html; charset=utf-8"),
         [KsVoiceLinkManager.PagePath + "app.js"] = ("app.js", "text/javascript; charset=utf-8"),
+        [KsVoiceLinkManager.PagePath + "i18n.js"] = ("i18n.js", "text/javascript; charset=utf-8"),
         [KsVoiceLinkManager.PagePath + "worklet.js"] = ("worklet.js", "text/javascript; charset=utf-8"),
         [KsVoiceLinkManager.PagePath + "style.css"] = ("style.css", "text/css; charset=utf-8"),
     };

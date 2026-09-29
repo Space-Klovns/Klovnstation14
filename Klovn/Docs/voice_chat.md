@@ -70,6 +70,13 @@ under `/klovn/voice/`, and accepts websockets at `/klovn/voice/ws`.
   microphone state: with the microphone off it never claims to be transmitting, and says so if push-to-talk is held.
   Firefox also holds any audio graph started without a click on the page (allowing the microphone in its prompt
   doesn't count), so there the page asks for one click and carries on; Chromium browsers start without one.
+- **Languages.** The page is translated into English, Russian, Ukrainian, German, French, Spanish, Polish, Dutch
+  and Brazilian Portuguese (`Web/i18n.js`). Every string goes through it, and English is the fallback for a missing
+  key. A picker next to the title chooses the language; the choice is kept in `localStorage`, so it survives closing
+  the browser, and until one is chosen the browser's own language decides. In-game names (menus, commands,
+  push-to-talk) stay in English, as the game shows them. The status line, identity and errors are rebuilt from keys in
+  `render()`, so switching language re-renders instead of reloading. The in-game voice window uses the game's own
+  Fluent strings (`Resources/Locale/.../voice.ftl`), like the rest of the UI.
 - **Mic volume and mic test.** A *Mic volume* slider (0–200 %, kept in `localStorage`) is a gain node in front of the
   worklet, so the level meter and the noise gate both see the adjusted level, the same level that gets sent. Turning
   it up past what the microphone delivers clips, and clipped or very loud audio counts towards the auto-mute.
