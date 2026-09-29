@@ -154,7 +154,7 @@ public sealed partial class KsCCVars
     /// </summary>
     [CVarControl(AdminFlags.Server)]
     public static readonly CVarDef<string> VoiceCodec =
-        CVarDef.Create("klovn.voice.codec", "adpcm", CVar.ARCHIVE | CVar.SERVERONLY);
+        CVarDef.Create("klovn.voice.codec", "opus", CVar.ARCHIVE | CVar.SERVERONLY);
 
     /// <summary>
     ///     Opus bitrate, in bits per second, when <see cref="VoiceCodec"/> is <c>opus</c>. Clamped to 6000–64000.
