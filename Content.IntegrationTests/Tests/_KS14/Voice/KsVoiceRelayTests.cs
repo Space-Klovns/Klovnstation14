@@ -195,6 +195,57 @@ public sealed class KsVoiceRelayTests : GameTest
         });
     }
 
+    /// <summary>
+    ///     A talker's mask muffles their voice the way it muffles their emotes: every chunk played for them asks for the
+    ///         mask's effect, and only while it's worn.
+    /// </summary>
+    [Test]
+    public async Task MasksMuffleVoice()
+    {
+        await Setup();
+        await HoldPushToTalk(true);
+
+        var inventorySystem = Server.System<Content.Shared.Inventory.InventorySystem>();
+        var emoteAudioEffectSystem = Server.System<Content.Shared._KS14.EmoteAudioEffect.EmoteAudioEffectSystem>();
+        var playbackSystem = Client.System<KsVoicePlaybackSystem>();
+
+        async Task<int> EffectedChunks()
+        {
+            var before = playbackSystem.EffectedChunkCount;
+            for (var i = 0; i < 4; i++)
+                await Talk();
+
+            // Long enough for the jitter buffer to fill and the chunks to start playing.
+            await Pair.RunTicksSync(Server.Timing.TickRate);
+            return playbackSystem.EffectedChunkCount - before;
+        }
+
+        var bareFaced = await EffectedChunks();
+
+        EntityUid maskUid = default;
+        string maskedEffect = null;
+        await Server.WaitPost(() =>
+        {
+            maskUid = SEntMan.SpawnEntity("ClothingMaskGas", SEntMan.GetComponent<TransformComponent>(_speakerUid).Coordinates);
+            inventorySystem.TryEquip(_speakerUid, maskUid, "mask", silent: true, force: true);
+            maskedEffect = emoteAudioEffectSystem.GetEffect(_speakerUid, Content.Shared.Chat.Prototypes.EmoteCategory.Vocal)?.Id;
+        });
+        await Pair.RunTicksSync(5);
+        var masked = await EffectedChunks();
+
+        await Server.WaitPost(() => inventorySystem.TryUnequip(_speakerUid, "mask", silent: true, force: true));
+        await Pair.RunTicksSync(5);
+        var unmasked = await EffectedChunks();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(maskedEffect, Is.EqualTo("MuffledMask"), "a worn gas mask answers for its wearer");
+            Assert.That(bareFaced, Is.Zero, "nothing on the face, no effect");
+            Assert.That(masked, Is.GreaterThan(0), "a masked talker's voice is played with the mask's effect");
+            Assert.That(unmasked, Is.Zero, "and not once it comes off");
+        });
+    }
+
     [Test]
     public async Task FarListenerHearsNothing()
     {

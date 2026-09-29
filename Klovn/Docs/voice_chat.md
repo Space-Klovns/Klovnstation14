@@ -253,6 +253,12 @@ The remaining time comes from the playing source's own `PlaybackPosition`, which
 chunk's first real sample lands on the intended mixer sample. Low or uneven frame rates therefore don't shift the
 crossfade: no gaps, no doubled audio, no comb filtering.
 
+**What the talker wears.** A mask muffles a voice as it muffles emotes and TTS. For each chunk, playback asks
+`EmoteAudioEffectSystem.GetEffect(talker, Vocal)`, which relays `EmoteAudioEffectQueryEvent` to worn gear, and puts
+any preset on the chunk's source through `AudioEffectSystem.TryAddEffect(IAudioSource, ...)`. Asking every chunk means
+putting a mask on or taking it off applies within 120 ms. The effect is local to each listener, like the rest of voice
+mixing.
+
 **Where the state lives.** Each talker's jitter buffer and playing chunks, and whether the local player muted them,
 live on the talker's entity in the client-only `KsVoicePlaybackComponent`. A finished utterance's state is dropped
 after two seconds of silence; the component goes with it unless the talker is muted, since the mute should outlast
@@ -454,6 +460,7 @@ All under `Content.IntegrationTests/Tests/_KS14/Voice/`.
   - disabled voice refuses even valid links
 - `KsVoiceRelayTests`, where a dummy session talks and the pooled client listens over the real net channel:
   - relay only while push-to-talk is held
+  - a masked talker's chunks played with the mask's effect, and not once it comes off
   - an Opus chunk relayed and decoded as Opus; a lost Opus packet concealed on the client, where ADPCM skips it
   - the page updating when the player gets a body, with nothing else happening
   - voice activation relaying without the key, and a server that forbids it still needing the key

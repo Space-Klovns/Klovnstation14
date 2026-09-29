@@ -1,7 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Content.Shared._KS14.Audio;
 using Content.Shared._KS14.CCVar;
+using Content.Shared._KS14.EmoteAudioEffect;
 using Content.Shared._KS14.Voice;
+using Content.Shared.Chat.Prototypes;
 using Content.Shared.Verbs;
 using Robust.Client.Audio;
 using Robust.Client.Player;
@@ -82,6 +85,8 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
     [Dependency] private IReplayPlaybackManager _replayPlaybackManager = default!;
     [Dependency] private AudioSystem _audioSystem = default!;
     [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private AudioEffectSystem _audioEffectSystem = default!;
+    [Dependency] private EmoteAudioEffectSystem _emoteAudioEffectSystem = default!;
 
     [Dependency] private EntityQuery<KsVoicePlaybackComponent> _playbackQuery = default!;
 
@@ -114,6 +119,12 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
     ///     Voice frames received since startup, for tests and diagnostics.
     /// </summary>
     public int ReceivedFrameCount { get; private set; }
+
+    /// <summary>
+    ///     Chunks started with an effect from the talker's gear (a mask's muffling), for tests and diagnostics. Counted
+    ///         when the effect is asked for, since headless clients can't create the effect itself.
+    /// </summary>
+    public int EffectedChunkCount { get; private set; }
 
     public override void Initialize()
     {
@@ -294,7 +305,7 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
                 continue;
 
             speaker.DisposeFinished();
-            Schedule(speaker, now);
+            Schedule(speakerUid, speaker, now);
             UpdateSources(speaker, speakerUid, playbackComponent.LocallyMuted, listenerCoordinates, now);
 
             if (now - speaker.LastReceived <= SpeakerTimeout || speaker.HasSources)
@@ -348,7 +359,7 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         entity.Comp.Speaker = null;
     }
 
-    private void Schedule(KsVoiceSpeaker speaker, TimeSpan now)
+    private void Schedule(EntityUid speakerUid, KsVoiceSpeaker speaker, TimeSpan now)
     {
         if (!speaker.Started)
         {
@@ -361,7 +372,7 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
             }
 
             speaker.Started = true;
-            StartChunk(speaker, padSamples: 0, seekSeconds: 0f);
+            StartChunk(speakerUid, speaker, padSamples: 0, seekSeconds: 0f);
             return;
         }
 
@@ -375,7 +386,7 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
             speaker.BufferedSamples > 0 && now - speaker.LastReceived > FlushAfter)
         {
             var (padSamples, seekSeconds) = KsVoiceChunkTiming.Align(remaining, startAt);
-            StartChunk(speaker, padSamples, seekSeconds);
+            StartChunk(speakerUid, speaker, padSamples, seekSeconds);
             return;
         }
 
@@ -388,10 +399,11 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         speaker.DropPlayedLookahead(OverlapSamples);
     }
 
-    /// <param name="speaker">The talker.</param>
+    /// <param name="speakerUid">The talker's entity.</param>
+    /// <param name="speaker">The talker's playback state.</param>
     /// <param name="padSamples">Leading silence, so a chunk started early still begins on time.</param>
     /// <param name="seekSeconds">How far to skip in, so a chunk started late still lines up.</param>
-    private void StartChunk(KsVoiceSpeaker speaker, int padSamples, float seekSeconds)
+    private void StartChunk(EntityUid speakerUid, KsVoiceSpeaker speaker, int padSamples, float seekSeconds)
     {
         var audio = speaker.TakeChunk(ChunkSamples, OverlapSamples, out var hasLookahead);
         if (audio.Length == 0)
@@ -423,6 +435,14 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         source.ReferenceDistance = 1f;
         source.RolloffFactor = 1f;
         source.Gain = 0f;
+
+        // What the talker wears does to their voice what it does to their emotes (a mask muffles both). Asked every
+        //      chunk, so putting a mask on or off mid-sentence takes effect within 120 ms.
+        if (_emoteAudioEffectSystem.GetEffect(speakerUid, EmoteCategory.Vocal) is { } preset)
+        {
+            EffectedChunkCount++;
+            _audioEffectSystem.TryAddEffect(source, preset);
+        }
 
         var chunk = new KsVoiceChunk(source, stream, (float)samples.Length / (float)KsVoiceConstants.SampleRate, seekSeconds);
         speaker.AddChunk(chunk);
