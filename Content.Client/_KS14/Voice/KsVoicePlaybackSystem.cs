@@ -126,6 +126,11 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
     /// </summary>
     public int EffectedChunkCount { get; private set; }
 
+    /// <summary>
+    ///     Chunks started, effect or not, for tests and diagnostics: the count <see cref="EffectedChunkCount"/> is out of.
+    /// </summary>
+    public int StartedChunkCount { get; private set; }
+
     public override void Initialize()
     {
         base.Initialize();
@@ -435,6 +440,7 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         source.ReferenceDistance = 1f;
         source.RolloffFactor = 1f;
         source.Gain = 0f;
+        StartedChunkCount++;
 
         // What the talker wears does to their voice what it does to their emotes (a mask muffles both). Asked every
         //      chunk, so putting a mask on or off mid-sentence takes effect within 120 ms.

@@ -209,15 +209,23 @@ public sealed class KsVoiceRelayTests : GameTest
         var emoteAudioEffectSystem = Server.System<Content.Shared._KS14.EmoteAudioEffect.EmoteAudioEffectSystem>();
         var playbackSystem = Client.System<KsVoicePlaybackSystem>();
 
-        async Task<int> EffectedChunks()
+        // Chunks started while talking, and how many of those carried an effect. Playback is paced by the wall clock
+        //      (RealTime), and ticks run faster than it, so this waits in real time until chunks have actually started:
+        //      counting ticks alone let a fast machine finish a phase before anything played, which read as no effect.
+        async Task<(int Started, int Effected)> EffectedChunks()
         {
-            var before = playbackSystem.EffectedChunkCount;
+            var startedBefore = playbackSystem.StartedChunkCount;
+            var effectedBefore = playbackSystem.EffectedChunkCount;
             for (var i = 0; i < 4; i++)
                 await Talk();
 
-            // Long enough for the jitter buffer to fill and the chunks to start playing.
-            await Pair.RunTicksSync(Server.Timing.TickRate);
-            return playbackSystem.EffectedChunkCount - before;
+            for (var round = 0; round < 300 && playbackSystem.StartedChunkCount - startedBefore < 2; round++)
+            {
+                await Pair.RunTicksSync(1);
+                await Task.Delay(10);
+            }
+
+            return (playbackSystem.StartedChunkCount - startedBefore, playbackSystem.EffectedChunkCount - effectedBefore);
         }
 
         var bareFaced = await EffectedChunks();
@@ -240,9 +248,14 @@ public sealed class KsVoiceRelayTests : GameTest
         Assert.Multiple(() =>
         {
             Assert.That(maskedEffect, Is.EqualTo("MuffledMask"), "a worn gas mask answers for its wearer");
-            Assert.That(bareFaced, Is.Zero, "nothing on the face, no effect");
-            Assert.That(masked, Is.GreaterThan(0), "a masked talker's voice is played with the mask's effect");
-            Assert.That(unmasked, Is.Zero, "and not once it comes off");
+            // Each phase must actually have played something, or its effect count proves nothing either way.
+            Assert.That(bareFaced.Started, Is.GreaterThan(0), "chunks played bare-faced");
+            Assert.That(masked.Started, Is.GreaterThan(0), "chunks played masked");
+            Assert.That(unmasked.Started, Is.GreaterThan(0), "chunks played after unmasking");
+
+            Assert.That(bareFaced.Effected, Is.Zero, "nothing on the face, no effect");
+            Assert.That(masked.Effected, Is.GreaterThan(0), "a masked talker's voice is played with the mask's effect");
+            Assert.That(unmasked.Effected, Is.Zero, "and not once it comes off");
         });
     }
 
