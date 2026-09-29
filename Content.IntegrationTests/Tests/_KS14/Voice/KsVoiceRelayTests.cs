@@ -21,6 +21,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Replays;
 
@@ -63,6 +64,16 @@ public sealed class KsVoiceRelayTests : GameTest
         await Pair.RunTicksSync(10);
     }
 
+    /// <summary>
+    ///     A chunk of <see cref="Speech"/> from the user's page, encoded the way their page connection would.
+    /// </summary>
+    private static KsVoiceInboundChunk Chunk(NetUserId userId, bool abuseTriggered = false, KsVoiceCodec codec = KsVoiceCodec.Adpcm)
+    {
+        var samples = Speech();
+        var payload = KsVoiceEncoder.Create(codec, opusBitrate: 32000, opusComplexity: 2).Encode(samples);
+        return new KsVoiceInboundChunk(userId, codec, payload, samples.Length, abuseTriggered);
+    }
+
     private static short[] Speech()
     {
         var samples = new short[KsVoiceConstants.MaxChunkSamples];
@@ -80,7 +91,7 @@ public sealed class KsVoiceRelayTests : GameTest
         var before = Client.System<KsVoicePlaybackSystem>().ReceivedFrameCount;
 
         await Server.WaitPost(() =>
-            Server.System<KsVoiceSystem>().HandleChunk(new KsVoiceInboundChunk(_speaker.UserId, Speech(), AbuseTriggered: false)));
+            Server.System<KsVoiceSystem>().HandleChunk(Chunk(_speaker.UserId, abuseTriggered: false)));
 
         await Pair.RunTicksSync(5);
         return Client.System<KsVoicePlaybackSystem>().ReceivedFrameCount - before;
@@ -107,6 +118,80 @@ public sealed class KsVoiceRelayTests : GameTest
             Assert.That(withoutKey, Is.Zero, "nothing is relayed without push-to-talk");
             Assert.That(withKey, Is.EqualTo(1), "a nearby listener receives the chunk");
             Assert.That(afterRelease, Is.Zero, "releasing the key stops relay");
+        });
+    }
+
+    [Test]
+    public async Task OpusVoiceReachesListeners()
+    {
+        await Setup();
+        await HoldPushToTalk(true);
+
+        var playbackSystem = Client.System<KsVoicePlaybackSystem>();
+        var before = playbackSystem.ReceivedFrameCount;
+        await Server.WaitPost(() =>
+            Server.System<KsVoiceSystem>().HandleChunk(Chunk(_speaker.UserId, codec: KsVoiceCodec.Opus)));
+        await Pair.RunTicksSync(5);
+
+        NetEntity speakerNetEntity = default;
+        await Server.WaitPost(() => speakerNetEntity = SEntMan.GetNetEntity(_speakerUid));
+        var buffered = 0;
+        await Client.WaitPost(() => buffered = playbackSystem.GetBufferedSamples(speakerNetEntity));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(playbackSystem.ReceivedFrameCount - before, Is.EqualTo(1), "the Opus chunk is relayed");
+            // Exactly one chunk: decoded as Opus. Taken for ADPCM, its bytes would still decode, to the wrong length.
+            //      One chunk is less than the jitter buffer, so none of it has started playing yet.
+            Assert.That(buffered, Is.EqualTo(KsVoiceConstants.MaxChunkSamples), "and decoded as Opus");
+        });
+    }
+
+    /// <summary>
+    ///     A lost packet in the middle of a stream: Opus fills the gap from what came before, ADPCM skips it.
+    /// </summary>
+    [Test]
+    public async Task OpusConcealsLossOnTheClient()
+    {
+        await Setup();
+
+        var playbackSystem = Client.System<KsVoicePlaybackSystem>();
+        int Buffered(KsVoiceCodec codec, NetEntity talker)
+        {
+            var encoder = KsVoiceEncoder.Create(codec, opusBitrate: 32000, opusComplexity: 2);
+            var packets = new byte[7][];
+            for (var i = 0; i < packets.Length; i++)
+                packets[i] = encoder.Encode(Speech());
+
+            // Sequence 3 never arrives. Three later packets are enough for the jitter buffer to give up on it.
+            foreach (var sequence in new ushort[] { 1, 2, 4, 5, 6 })
+            {
+                playbackSystem.HandleFrame(new KsVoiceFrameMessage
+                {
+                    Source = talker,
+                    Sequence = sequence,
+                    Codec = codec,
+                    Payload = packets[sequence],
+                });
+            }
+
+            return playbackSystem.GetBufferedSamples(talker);
+        }
+
+        // Talkers this client doesn't know, so their audio waits in the holding list, where nothing plays it; and all
+        //      in one post, so no frame update runs between packets either.
+        var opus = 0;
+        var adpcm = 0;
+        await Client.WaitPost(() =>
+        {
+            opus = Buffered(KsVoiceCodec.Opus, new NetEntity(900001));
+            adpcm = Buffered(KsVoiceCodec.Adpcm, new NetEntity(900002));
+        });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(opus, Is.EqualTo(6 * KsVoiceConstants.MaxChunkSamples), "five packets decoded, one concealed");
+            Assert.That(adpcm, Is.EqualTo(5 * KsVoiceConstants.MaxChunkSamples), "five packets decoded, the gap skipped");
         });
     }
 
@@ -173,7 +258,7 @@ public sealed class KsVoiceRelayTests : GameTest
         await HoldPushToTalk(true);
 
         await Server.WaitPost(() =>
-            Server.System<KsVoiceSystem>().HandleChunk(new KsVoiceInboundChunk(_speaker.UserId, Speech(), AbuseTriggered: true)));
+            Server.System<KsVoiceSystem>().HandleChunk(Chunk(_speaker.UserId, abuseTriggered: true)));
 
         Assert.That(await Talk(), Is.Zero, "a triggered abuse detector mutes the talker");
     }
@@ -295,7 +380,7 @@ public sealed class KsVoiceRelayTests : GameTest
 
         // A page left open in a loud room, push-to-talk up: whatever the detector says, nothing was transmitted.
         await Server.WaitPost(() =>
-            Server.System<KsVoiceSystem>().HandleChunk(new KsVoiceInboundChunk(_speaker.UserId, Speech(), AbuseTriggered: true)));
+            Server.System<KsVoiceSystem>().HandleChunk(Chunk(_speaker.UserId, abuseTriggered: true)));
 
         await HoldPushToTalk(true);
         Assert.That(await Talk(), Is.EqualTo(1), "audio that was never relayed must not earn a mute");
@@ -536,7 +621,7 @@ public sealed class KsVoiceRelayTests : GameTest
         {
             var before = voiceSystem.RelayedChunkCount;
             await Server.WaitPost(() =>
-                voiceSystem.HandleChunk(new KsVoiceInboundChunk(ServerSession!.UserId, Speech(), AbuseTriggered: false)));
+                voiceSystem.HandleChunk(Chunk(ServerSession!.UserId, abuseTriggered: false)));
             await Pair.RunTicksSync(2);
             return voiceSystem.RelayedChunkCount > before;
         }
@@ -619,7 +704,7 @@ public sealed class KsVoiceRelayTests : GameTest
 
         // What a replay does with a recorded event: raise it as if it had come over the network.
         await Client.WaitPost(() => Client.ResolveDependency<IClientEntityManager>()
-            .DispatchReceivedNetworkMsg(new KsVoiceReplayFrameEvent(speakerNetEntity, 1, payload)));
+            .DispatchReceivedNetworkMsg(new KsVoiceReplayFrameEvent(speakerNetEntity, 1, KsVoiceCodec.Adpcm, payload)));
         await Pair.RunTicksSync(2);
 
         var received = playbackSystem.ReceivedFrameCount - receivedBefore;
@@ -678,7 +763,7 @@ public sealed class KsVoiceRelayTests : GameTest
         for (var i = 0; i < chunks; i++)
         {
             await Server.WaitPost(() =>
-                Server.System<KsVoiceSystem>().HandleChunk(new KsVoiceInboundChunk(ServerSession!.UserId, Speech(), AbuseTriggered: false)));
+                Server.System<KsVoiceSystem>().HandleChunk(Chunk(ServerSession!.UserId, abuseTriggered: false)));
             await Pair.RunTicksSync(1);
             await popups.Observe();
         }

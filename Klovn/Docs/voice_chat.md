@@ -137,8 +137,8 @@ state is just being brought up to date, so a muted player with voice activation 
 unless they try. The engine doesn't report replicated cvar changes, so the system checks each connected page's player
 twice a second and resends the page's state when the mode changes. That's how the page shows which mode is on.
 
-A relayed chunk is IMA ADPCM-encoded once and sent as a `KsVoiceFrameMessage` to every other in-game player whose
-entity:
+A relayed chunk arrives already encoded (see *Codecs*) and is sent as a `KsVoiceFrameMessage` to every other in-game
+player whose entity:
 - is on the same map and within `klovn.voice.range`;
 - is either a ghost, or neither incapacitated nor asleep;
 - can see the speaker. This is the same visibility-layer rule PVS uses: the listener's eye mask must cover every layer
@@ -149,10 +149,39 @@ Ghosts listen but never talk, and living players never hear them. Ghosts fail bo
 message is `Unreliable`, because audio that arrives late is useless. A per-talker sequence number lets clients
 reorder, and each packet carries its own ADPCM predictor state, so one lost packet never corrupts the next.
 
-**Why ADPCM.** Client content can load only `Content.*` assemblies, and their IL is verified. No Opus decoder is
-reachable, and the engine's Vorbis loader is internal. IMA ADPCM is about 150 lines of sandbox-safe C#
-(`KsVoiceAdpcm`) and gives 64 kbps for 16 kHz speech. That's only while someone is actually talking, and 60 ms packets
-stay well under the default 700-byte MTU.
+**Codecs.** `klovn.voice.codec` picks how relayed audio is compressed. Every frame carries its codec, so a change
+takes effect from each talker's next chunk and nothing goes out of step.
+
+- **`adpcm`** (default): IMA ADPCM, about 150 lines of sandbox-safe C# (`KsVoiceAdpcm`). 64 kbps for 16 kHz speech,
+  with an audible hiss. Every packet carries its own predictor state, so it decodes on its own.
+- **`opus`**: Opus through **Concentus**, a pure C# port of libopus. It is vendored as source in
+  `Content.Shared/_KS14/Voice/Opus/Concentus/`, because client content can load only `Content.*` assemblies, so no
+  NuGet package or native libopus is reachable. Seven small edits make it pass the sandbox; its `README.md` lists them,
+  and `vendor.py` re-applies them on update.
+  - It uses the VOIP application at 16 kHz mono, one packet per chunk (20, 40 and 60 ms are all legal Opus frames),
+    and `klovn.voice.opus_bitrate` (default 32 kbps).
+  - It is variable bitrate, so speech with pauses comes out well under the target: about 10 kbps on the test signal.
+  - It is stateful, so clients decode each talker's packets in sequence order.
+  - A lost packet is filled in with Opus's packet-loss concealment instead of being skipped.
+
+Both codecs encode on the talker's page connection (`KsVoiceUplinkConnection`), on the thread pool. A connection is one
+talker's continuous stream, which is the scope a stateful encoder needs, and it keeps encoding off the game loop.
+
+**Opus costs CPU.** Concentus runs at roughly half the speed of native libopus. Measured in Release in the dev
+container (`KsVoiceCodecTests.OpusCost`, which is noisy):
+
+| | Cost per 60 ms chunk | Share of one core, per talker |
+| --- | --- | --- |
+| Encode, complexity 0 | ~2.4 ms | ~4 % |
+| Encode, complexity 2 (default) | ~2.7 ms | ~4.6 % |
+| Encode, complexity 5 | ~4.8 ms | ~8 % |
+| Decode | 0.3–0.5 ms | about 1 % |
+
+- The server pays the encode cost for everyone talking at once, spread across pool threads.
+- Each client pays the decode cost for every talker it hears, on its main thread.
+- `klovn.voice.opus_complexity` (default 2) trades encoder CPU for a marginal quality gain on speech.
+
+The page's mic test plays the uncoded 16 kHz audio, so it doesn't include codec artifacts.
 
 **Replays.** A relayed chunk also goes into server-side replays, as a `KsVoiceReplayFrameEvent` carrying the same
 ADPCM packet, speaker and sequence number. It's recorded whether or not anyone was in range, since a replay can be
@@ -178,8 +207,9 @@ The engine exposes no streaming audio source to content, because `IBufferedAudio
 use is `IAudioManager.LoadAudioRaw` and `CreateAudioSource`, which play one fixed buffer each. `KsVoicePlaybackSystem`
 therefore:
 
-1. reorders each talker's packets into a jitter buffer. Playback starts once `klovn.voice.jitter_buffer_ms` of audio is
-   buffered, and a packet is given up as lost once three later ones have arrived;
+1. reorders each talker's packets into a jitter buffer. Packets stay encoded until their turn and are decoded in order
+   through the talker's own decoder (Opus needs that). Playback starts once `klovn.voice.jitter_buffer_ms` of audio is
+   buffered. A packet is given up as lost once three later ones have arrived: Opus conceals the gap, ADPCM skips it;
 2. plays the audio as a chain of 120 ms chunks. Each chunk also carries the next 20 ms of audio, faded out, and the
    following chunk starts with those same samples, faded in, 20 ms before the current one ends (see below);
 3. positions every source by hand each frame, as the engine's MIDI renderer does for its own streaming sources: map
@@ -283,6 +313,9 @@ Voice is **off by default**. Every entry point checks `klovn.voice.enabled`. Wit
 | `klovn.voice.auth_failures_per_minute` | `10` | server | Failed authentications per address before `429`. |
 | `klovn.voice.admin_log_bursts` | `true` | server | Log every talk burst. |
 | `klovn.voice.record_in_replays` | `true` | server | Record relayed voice into server-side replays. |
+| `klovn.voice.codec` | `adpcm` | server | Codec for relayed voice: `adpcm` or `opus` (see *Codecs*). |
+| `klovn.voice.opus_bitrate` | `32000` | server | Opus target bitrate, 6000–64000. |
+| `klovn.voice.opus_complexity` | `2` | server | Opus encoder complexity, 0–10: more CPU per talker, marginally better speech. |
 | `klovn.voice.hear_enabled` | `true` | client | Play other players' voices. |
 | `klovn.voice.volume` | `1` | client | Voice volume. |
 | `klovn.voice.jitter_buffer_ms` | `120` | client | Buffering before playback starts. |
@@ -356,6 +389,8 @@ empty and the transfer endpoint default (`http://localhost:1212/`) is used.
 | --- | --- |
 | `Content.Shared/_KS14/CCVar/KsCCVars.Voice.cs` | All voice cvars. |
 | `Content.Shared/_KS14/Voice/KsVoiceAdpcm.cs` | IMA ADPCM codec. |
+| `Content.Shared/_KS14/Voice/KsVoiceCodecs.cs` | Codec ids and the per-stream encoders and decoders for ADPCM and Opus. |
+| `Content.Shared/_KS14/Voice/Opus/Concentus/` | Vendored Concentus (Opus), with `README.md` and `vendor.py`. |
 | `Content.Shared/_KS14/Voice/KsVoiceMessages.cs` | Relay net message; PTT, link and status network events. |
 | `Content.Shared/_KS14/Voice/KsVoiceIndicatorComponent.cs` | Talking indicator component and appearance keys. |
 | `Content.Server/_KS14/Voice/KsVoiceLinkManager.cs` | Token issue, lookup, revocation; public URL. |
@@ -379,6 +414,8 @@ All under `Content.IntegrationTests/Tests/_KS14/Voice/`.
 
 - `KsVoiceCodecTests`:
   - ADPCM round trip, and a packet decoding on its own after its predecessor is lost
+  - Opus round trip of speech-like audio (correlation at the codec's delay, and its bitrate against ADPCM's); every
+    chunk length; concealment of a lost packet; malformed packets; codec names; and the encode/decode cost, logged
   - rejection of malformed packets
   - limiter ceiling; abuse triggering exactly once at the threshold, and never for loud normal speech; a threshold
     longer than the window still triggering
@@ -388,12 +425,15 @@ All under `Content.IntegrationTests/Tests/_KS14/Voice/`.
 - `KsVoiceUplinkTests`, using real websocket framing over loopback TCP:
   - the token appears only in the fragment
   - wrong tokens and audio before auth are rejected; a valid token attributes audio to its owner
+  - audio encoded with the configured codec, switching codec mid-stream
   - reset and revoked tokens stop working
   - malformed, oversized and faster-than-real-time audio each close the socket
   - a second page replaces the first
   - disabled voice refuses even valid links
 - `KsVoiceRelayTests`, where a dummy session talks and the pooled client listens over the real net channel:
   - relay only while push-to-talk is held
+  - an Opus chunk relayed and decoded as Opus; a lost Opus packet concealed on the client, where ADPCM skips it
+  - the page updating when the player gets a body, with nothing else happening
   - voice activation relaying without the key, and a server that forbids it still needing the key
   - links following `klovn.voice.public_path`, and an invalid one falling back to the default
   - range

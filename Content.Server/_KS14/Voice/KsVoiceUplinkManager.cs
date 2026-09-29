@@ -94,6 +94,8 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
     private volatile int _authFailuresPerMinute;
     private float _uplinkRateFactor;
     private KsVoiceProcessorSettings _processorSettings;
+    private KsVoiceEncoderSettings _encoderSettings;
+    private string? _warnedCodec;
 
     private Action<bool>? _enabledHandler;
     private Action<bool>? _uplinkEnabledHandler;
@@ -101,6 +103,9 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
     private Action<int>? _authFailuresHandler;
     private Action<float>? _rateFactorHandler;
     private Action<float>? _processorHandler;
+    private Action<string>? _codecHandler;
+    private Action<int>? _opusBitrateHandler;
+    private Action<int>? _opusComplexityHandler;
 
     public void Initialize()
     {
@@ -113,6 +118,9 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
         _authFailuresHandler = value => _authFailuresPerMinute = value;
         _rateFactorHandler = value => Volatile.Write(ref _uplinkRateFactor, value);
         _processorHandler = _ => ReloadProcessorSettings();
+        _codecHandler = _ => ReloadEncoderSettings();
+        _opusBitrateHandler = _ => ReloadEncoderSettings();
+        _opusComplexityHandler = _ => ReloadEncoderSettings();
 
         _configurationManager.OnValueChanged(KsCCVars.VoiceEnabled, _enabledHandler, invokeImmediately: true);
         _configurationManager.OnValueChanged(KsCCVars.VoiceUplinkEnabled, _uplinkEnabledHandler, invokeImmediately: true);
@@ -123,7 +131,11 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
         _configurationManager.OnValueChanged(KsCCVars.VoiceAbuseRmsDb, _processorHandler);
         _configurationManager.OnValueChanged(KsCCVars.VoiceAbuseClipRatio, _processorHandler);
         _configurationManager.OnValueChanged(KsCCVars.VoiceAbuseSeconds, _processorHandler);
+        _configurationManager.OnValueChanged(KsCCVars.VoiceCodec, _codecHandler);
+        _configurationManager.OnValueChanged(KsCCVars.VoiceOpusBitrate, _opusBitrateHandler);
+        _configurationManager.OnValueChanged(KsCCVars.VoiceOpusComplexity, _opusComplexityHandler);
         ReloadProcessorSettings();
+        ReloadEncoderSettings();
 
         _linkManager.LinkRevoked += OnLinkRevoked;
         _statusHost.AddHandler(HandleRequestAsync);
@@ -144,6 +156,9 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
             _configurationManager.UnsubValueChanged(KsCCVars.VoiceAbuseRmsDb, _processorHandler!);
             _configurationManager.UnsubValueChanged(KsCCVars.VoiceAbuseClipRatio, _processorHandler!);
             _configurationManager.UnsubValueChanged(KsCCVars.VoiceAbuseSeconds, _processorHandler!);
+            _configurationManager.UnsubValueChanged(KsCCVars.VoiceCodec, _codecHandler!);
+            _configurationManager.UnsubValueChanged(KsCCVars.VoiceOpusBitrate, _opusBitrateHandler!);
+            _configurationManager.UnsubValueChanged(KsCCVars.VoiceOpusComplexity, _opusComplexityHandler!);
             _enabledHandler = null;
         }
 
@@ -209,6 +224,17 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
             lock (_lock)
             {
                 return _processorSettings;
+            }
+        }
+    }
+
+    public KsVoiceEncoderSettings EncoderSettings
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _encoderSettings;
             }
         }
     }
@@ -525,6 +551,39 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
         {
             _processorSettings = settings;
         }
+    }
+
+    private void ReloadEncoderSettings()
+    {
+        var codecName = _configurationManager.GetCVar(KsCCVars.VoiceCodec);
+        var codec = ParseCodec(codecName);
+        if (codec == null && _warnedCodec != codecName)
+        {
+            _warnedCodec = codecName;
+            _sawmill.Warning($"klovn.voice.codec '{codecName}' isn't adpcm or opus; using adpcm.");
+        }
+
+        var settings = new KsVoiceEncoderSettings(
+            codec ?? KsVoiceCodec.Adpcm,
+            _configurationManager.GetCVar(KsCCVars.VoiceOpusBitrate),
+            _configurationManager.GetCVar(KsCCVars.VoiceOpusComplexity));
+        lock (_lock)
+        {
+            _encoderSettings = settings;
+        }
+    }
+
+    /// <summary>
+    ///     The codec a <c>klovn.voice.codec</c> value names, or null if it names none.
+    /// </summary>
+    public static KsVoiceCodec? ParseCodec(string name)
+    {
+        return name.Trim().ToLowerInvariant() switch
+        {
+            "adpcm" => KsVoiceCodec.Adpcm,
+            "opus" => KsVoiceCodec.Opus,
+            _ => null,
+        };
     }
 
     private void OnLinkRevoked(NetUserId userId)

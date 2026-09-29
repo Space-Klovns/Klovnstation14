@@ -90,6 +90,247 @@ public sealed class KsVoiceCodecTests
         });
     }
 
+    /// <summary>
+    ///     Voiced, speech-shaped audio: a harmonic series on a gliding pitch, weighted by three formants, in syllable-like
+    ///         bursts. Opus's speech coder models exactly this, so a pure tone would flatter or confuse it.
+    /// </summary>
+    private static readonly int OpusComplexity = KsCCVars.VoiceOpusComplexity.DefaultValue;
+
+    private static short[] SpeechLike(int count)
+    {
+        var raw = new double[count];
+        var phase = 0d;
+        var peak = 0d;
+        for (var i = 0; i < count; i++)
+        {
+            var t = (double)i / (double)KsVoiceConstants.SampleRate;
+            var pitch = 140d + 30d * Math.Sin(2d * Math.PI * 1.3d * t);
+            phase += 2d * Math.PI * pitch / (double)KsVoiceConstants.SampleRate;
+
+            var value = 0d;
+            for (var harmonic = 1; harmonic <= 25; harmonic++)
+            {
+                var frequency = (double)harmonic * pitch;
+                var formants = Math.Exp(-Math.Pow((frequency - 500d) / 200d, 2d)) +
+                               0.7d * Math.Exp(-Math.Pow((frequency - 1500d) / 300d, 2d)) +
+                               0.4d * Math.Exp(-Math.Pow((frequency - 2500d) / 400d, 2d));
+                value += formants * Math.Sin((double)harmonic * phase) / (double)harmonic;
+            }
+
+            raw[i] = value * Math.Max(0d, Math.Sin(2d * Math.PI * 3d * t));
+            peak = Math.Max(peak, Math.Abs(raw[i]));
+        }
+
+        var samples = new short[count];
+        for (var i = 0; i < count; i++)
+            samples[i] = (short)(0.5d * 32767d * raw[i] / peak);
+
+        return samples;
+    }
+
+    /// <summary>
+    ///     Runs <paramref name="input"/> through a codec in 60 ms chunks, the way the relay does.
+    /// </summary>
+    private static (short[] Decoded, int PayloadBytes) RoundTrip(KsVoiceCodec codec, short[] input, int opusBitrate = 32000)
+    {
+        var encoder = KsVoiceEncoder.Create(codec, opusBitrate, OpusComplexity);
+        var decoder = KsVoiceDecoder.Create(codec);
+        var output = new List<short>();
+        var scratch = new short[KsVoiceOpus.MaxConcealSamples];
+        var payloadBytes = 0;
+
+        for (var offset = 0; offset + KsVoiceConstants.MaxChunkSamples <= input.Length; offset += KsVoiceConstants.MaxChunkSamples)
+        {
+            var payload = encoder.Encode(input.AsSpan(offset, KsVoiceConstants.MaxChunkSamples));
+            payloadBytes += payload.Length;
+
+            var decoded = decoder.Decode(payload, scratch);
+            Assert.That(decoded, Is.EqualTo(KsVoiceConstants.MaxChunkSamples), $"{codec} chunk at {offset}");
+            output.AddRange(scratch.AsSpan(0, decoded).ToArray());
+        }
+
+        return (output.ToArray(), payloadBytes);
+    }
+
+    /// <summary>
+    ///     How closely the decoded audio follows the input, at the codec's own delay: the Pearson correlation at the
+    ///         best lag within 40 ms, and the SNR there.
+    /// </summary>
+    private static (double Correlation, double SnrDb, int Lag) Compare(short[] reference, short[] decoded)
+    {
+        var best = (Correlation: double.MinValue, SnrDb: 0d, Lag: 0);
+        for (var lag = 0; lag <= KsVoiceConstants.SampleRate / 25; lag++)
+        {
+            double sumXy = 0, sumXx = 0, sumYy = 0, noise = 0;
+            var length = Math.Min(reference.Length, decoded.Length - lag);
+            for (var i = KsVoiceConstants.FrameSamples; i < length; i++)
+            {
+                var x = (double)reference[i];
+                var y = (double)decoded[i + lag];
+                sumXy += x * y;
+                sumXx += x * x;
+                sumYy += y * y;
+                noise += (x - y) * (x - y);
+            }
+
+            var correlation = sumXy / Math.Sqrt(Math.Max(sumXx * sumYy, 1d));
+            if (correlation > best.Correlation)
+                best = (correlation, 10d * Math.Log10(sumXx / Math.Max(noise, 1d)), lag);
+        }
+
+        return best;
+    }
+
+    [Test]
+    [TestOf(typeof(KsVoiceOpusEncoder))]
+    public void OpusRoundTripKeepsSpeech()
+    {
+        var input = SpeechLike(KsVoiceConstants.SampleRate * 2);
+        var (opus, opusBytes) = RoundTrip(KsVoiceCodec.Opus, input);
+        var (adpcm, adpcmBytes) = RoundTrip(KsVoiceCodec.Adpcm, input);
+        var opusMatch = Compare(input, opus);
+        var adpcmMatch = Compare(input, adpcm);
+
+        var seconds = (double)opus.Length / (double)KsVoiceConstants.SampleRate;
+        var opusKbps = (double)opusBytes * 8d / seconds / 1000d;
+        var adpcmKbps = (double)adpcmBytes * 8d / seconds / 1000d;
+        TestContext.Out.WriteLine($"opus: {opusKbps:0.0} kbps, correlation {opusMatch.Correlation:0.000}, SNR {opusMatch.SnrDb:0.0} dB at lag {opusMatch.Lag}");
+        TestContext.Out.WriteLine($"adpcm: {adpcmKbps:0.0} kbps, correlation {adpcmMatch.Correlation:0.000}, SNR {adpcmMatch.SnrDb:0.0} dB at lag {adpcmMatch.Lag}");
+
+        Assert.Multiple(() =>
+        {
+            // Opus reshapes the waveform rather than copying it (it codes what's audible), so its SNR is lower than
+            //      ADPCM's even though it sounds cleaner; correlation at its own delay is the fair measure. Measured
+            //      at about 0.98.
+            Assert.That(opusMatch.Correlation, Is.GreaterThan(0.9d), "the decoded audio follows the input");
+            Assert.That(opusKbps, Is.LessThan(40d), "at about the configured 32 kbps");
+            Assert.That(opusKbps, Is.LessThan(adpcmKbps * 0.7d), "well under ADPCM's bandwidth");
+        });
+    }
+
+    [Test]
+    [TestOf(typeof(KsVoiceOpusEncoder))]
+    public void OpusEncodesEveryChunkLength()
+    {
+        var encoder = new KsVoiceOpusEncoder(32000, OpusComplexity);
+        var decoder = new KsVoiceOpusDecoder();
+        var scratch = new short[KsVoiceOpus.MaxConcealSamples];
+
+        Assert.Multiple(() =>
+        {
+            // The page sends one to three 20 ms frames per message: 20, 40 and 60 ms are all legal Opus frames.
+            for (var frames = 1; frames <= KsVoiceConstants.MaxFramesPerUplinkMessage; frames++)
+            {
+                var samples = SpeechLike(frames * KsVoiceConstants.FrameSamples);
+                var payload = encoder.Encode(samples);
+                Assert.That(payload, Has.Length.InRange(1, KsVoiceFrameMessage.MaxPayloadBytes), $"{frames} frames");
+                Assert.That(decoder.Decode(payload, scratch), Is.EqualTo(samples.Length), $"{frames} frames decode to the same length");
+            }
+        });
+    }
+
+    [Test]
+    [TestOf(typeof(KsVoiceOpusDecoder))]
+    public void OpusConcealsALostPacket()
+    {
+        var input = SpeechLike(KsVoiceConstants.MaxChunkSamples * 6);
+        var encoder = new KsVoiceOpusEncoder(32000, OpusComplexity);
+        var decoder = new KsVoiceOpusDecoder();
+        var scratch = new short[KsVoiceOpus.MaxConcealSamples];
+
+        var packets = new List<byte[]>();
+        for (var offset = 0; offset < input.Length; offset += KsVoiceConstants.MaxChunkSamples)
+            packets.Add(encoder.Encode(input.AsSpan(offset, KsVoiceConstants.MaxChunkSamples)));
+
+        for (var i = 0; i < 3; i++)
+            decoder.Decode(packets[i], scratch);
+
+        // Packet 3 is lost.
+        var concealed = decoder.Conceal(KsVoiceConstants.MaxChunkSamples, scratch);
+        var energy = 0d;
+        for (var i = 0; i < concealed; i++)
+            energy += (double)scratch[i] * (double)scratch[i];
+
+        var afterLoss = decoder.Decode(packets[4], scratch);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(concealed, Is.EqualTo(KsVoiceConstants.MaxChunkSamples), "the gap is filled for its whole length");
+            Assert.That(energy, Is.GreaterThan(0d), "with something, not silence: the voice carries on through the gap");
+            Assert.That(afterLoss, Is.EqualTo(KsVoiceConstants.MaxChunkSamples), "and the stream carries on after it");
+            Assert.That(new KsVoiceAdpcmDecoder().Conceal(KsVoiceConstants.MaxChunkSamples, scratch), Is.Zero,
+                "ADPCM has nothing to conceal with, so its gaps are skipped as before");
+        });
+    }
+
+    [Test]
+    [TestOf(typeof(KsVoiceOpusDecoder))]
+    public void OpusRejectsMalformedPackets()
+    {
+        var decoder = new KsVoiceOpusDecoder();
+        var scratch = new short[KsVoiceOpus.MaxConcealSamples];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(decoder.Decode(ReadOnlySpan<byte>.Empty, scratch), Is.EqualTo(-1), "empty");
+            // Code 3 (an arbitrary number of frames) with a frame count of zero is invalid.
+            Assert.That(decoder.Decode(new byte[] { 0x03, 0x00 }, scratch), Is.EqualTo(-1), "zero frames");
+        });
+    }
+
+    [Test]
+    [TestOf(typeof(KsVoiceUplinkManager))]
+    public void CodecNames()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(KsVoiceUplinkManager.ParseCodec(KsCCVars.VoiceCodec.DefaultValue), Is.EqualTo(KsVoiceCodec.Adpcm), "the default");
+            Assert.That(KsVoiceUplinkManager.ParseCodec(" Opus "), Is.EqualTo(KsVoiceCodec.Opus));
+            Assert.That(KsVoiceUplinkManager.ParseCodec("mp3"), Is.Null);
+        });
+    }
+
+    /// <summary>
+    ///     Not a pass/fail check: how long Opus takes per chunk, for the design doc. Encoding runs on each talker's page
+    ///         connection thread on the server; decoding runs on every listening client's main thread.
+    /// </summary>
+    [Test]
+    [TestOf(typeof(KsVoiceOpusEncoder))]
+    public void OpusCost()
+    {
+        var input = SpeechLike(KsVoiceConstants.SampleRate * 10);
+        var encoder = new KsVoiceOpusEncoder(32000, OpusComplexity);
+        var decoder = new KsVoiceOpusDecoder();
+        var scratch = new short[KsVoiceOpus.MaxConcealSamples];
+        var chunks = input.Length / KsVoiceConstants.MaxChunkSamples;
+
+        // Once through to warm up the JIT, then timed.
+        var packets = new byte[chunks][];
+        for (var pass = 0; pass < 2; pass++)
+        {
+            var encodeWatch = System.Diagnostics.Stopwatch.StartNew();
+            for (var i = 0; i < chunks; i++)
+                packets[i] = encoder.Encode(input.AsSpan(i * KsVoiceConstants.MaxChunkSamples, KsVoiceConstants.MaxChunkSamples));
+            encodeWatch.Stop();
+
+            var decodeWatch = System.Diagnostics.Stopwatch.StartNew();
+            for (var i = 0; i < chunks; i++)
+                decoder.Decode(packets[i], scratch);
+            decodeWatch.Stop();
+
+            if (pass == 0)
+                continue;
+
+            var encodeUs = encodeWatch.Elapsed.TotalMilliseconds * 1000d / (double)chunks;
+            var decodeUs = decodeWatch.Elapsed.TotalMilliseconds * 1000d / (double)chunks;
+            TestContext.Out.WriteLine($"per 60 ms chunk: encode {encodeUs:0} us, decode {decodeUs:0} us " +
+                                      $"({encodeUs / 600d:0.0}% and {decodeUs / 600d:0.0}% of a core per talker)");
+
+            Assert.That(encodeWatch.Elapsed + decodeWatch.Elapsed, Is.LessThan(TimeSpan.FromSeconds(10)),
+                "faster than real time, at the very least");
+        }
+    }
+
     [Test]
     [TestOf(typeof(KsVoiceProcessor))]
     public void LimiterCapsOutputAtTheCeiling()

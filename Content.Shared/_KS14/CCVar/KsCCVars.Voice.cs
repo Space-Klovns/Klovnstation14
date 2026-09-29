@@ -148,6 +148,31 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.voice.admin_log_bursts", true, CVar.ARCHIVE | CVar.SERVERONLY);
 
     /// <summary>
+    ///     How relayed voice is compressed: <c>adpcm</c> (64 kbps, a little hissy, cheap) or <c>opus</c> (much cleaner at
+    ///         half the bandwidth, but costs more CPU on the server, which encodes, and on every client, which decodes).
+    ///         Anything else means <c>adpcm</c>. Takes effect from each talker's next chunk.
+    /// </summary>
+    [CVarControl(AdminFlags.Server)]
+    public static readonly CVarDef<string> VoiceCodec =
+        CVarDef.Create("klovn.voice.codec", "adpcm", CVar.ARCHIVE | CVar.SERVERONLY);
+
+    /// <summary>
+    ///     Opus bitrate, in bits per second, when <see cref="VoiceCodec"/> is <c>opus</c>. Clamped to 6000–64000.
+    /// </summary>
+    [CVarControl(AdminFlags.Server)]
+    public static readonly CVarDef<int> VoiceOpusBitrate =
+        CVarDef.Create("klovn.voice.opus_bitrate", 32000, CVar.ARCHIVE | CVar.SERVERONLY);
+
+    /// <summary>
+    ///     Opus encoder complexity, 0 to 10. Higher sounds marginally better for speech and costs the server more CPU per
+    ///         talker (encoding runs on each page connection's thread, not the game loop). See the design doc for
+    ///         measured costs.
+    /// </summary>
+    [CVarControl(AdminFlags.Server)]
+    public static readonly CVarDef<int> VoiceOpusComplexity =
+        CVarDef.Create("klovn.voice.opus_complexity", 2, CVar.ARCHIVE | CVar.SERVERONLY);
+
+    /// <summary>
     ///     Whether relayed voice goes into server-side round replays, so it can be heard when they're watched.
     /// </summary>
     [CVarControl(AdminFlags.Server)]

@@ -92,7 +92,11 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
     /// </summary>
     private readonly Dictionary<NetEntity, KsVoiceSpeaker> _pendingSpeakers = [];
     private readonly List<NetEntity> _scratchPendingDone = [];
-    private readonly short[] _decodeScratch = new short[KsVoiceConstants.MaxChunkSamples + 2];
+    /// <summary>
+    ///     Decoding space shared by every talker (all decoding happens on the main thread): the longest packet or
+    ///         concealed gap, whichever is larger.
+    /// </summary>
+    private readonly short[] _decodeScratch = new short[Math.Max(KsVoiceConstants.MaxChunkSamples, KsVoiceOpus.MaxConcealSamples)];
 
     private bool _enabled;
     private bool _hearEnabled;
@@ -195,9 +199,9 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
     {
         // A client-side recording keeps what this player heard, like it keeps their popups.
         if (_replayRecordingManager.IsRecording)
-            _replayRecordingManager.RecordClientMessage(new KsVoiceReplayFrameEvent(message.Source, message.Sequence, message.Payload));
+            _replayRecordingManager.RecordClientMessage(new KsVoiceReplayFrameEvent(message.Source, message.Sequence, message.Codec, message.Payload));
 
-        HandleFrame(message.Source, message.Sequence, message.Payload);
+        HandleFrame(message.Source, message.Sequence, message.Codec, message.Payload);
     }
 
     /// <summary>
@@ -207,29 +211,27 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
     /// </summary>
     [SubscribeNetworkEvent]
     private void OnReplayFrame(KsVoiceReplayFrameEvent args)
-        => HandleFrame(args.Source, args.Sequence, args.Payload);
+        => HandleFrame(args.Source, args.Sequence, args.Codec, args.Payload);
 
     /// <summary>
     ///     Accepts one relayed voice frame, as if it had just arrived from the server. Public so tests can drive playback
     ///         without a network.
     /// </summary>
     public void HandleFrame(KsVoiceFrameMessage message)
-        => HandleFrame(message.Source, message.Sequence, message.Payload);
+        => HandleFrame(message.Source, message.Sequence, message.Codec, message.Payload);
 
-    private void HandleFrame(NetEntity speakerNetEntity, ushort sequence, byte[] payload)
+    private void HandleFrame(NetEntity speakerNetEntity, ushort sequence, KsVoiceCodec codec, byte[] payload)
     {
         ReceivedFrameCount++;
 
-        if (!_enabled || !_hearEnabled)
+        if (!_enabled || !_hearEnabled || payload.Length == 0)
             return;
 
-        var sampleCount = KsVoiceAdpcm.Decode(payload, _decodeScratch);
-        if (sampleCount <= 0)
-            return;
-
+        // Kept encoded until its turn: Opus is stateful, so packets have to be decoded in sequence order, which is
+        //      only known once the jitter buffer has put them in it.
         var speaker = ResolveSpeaker(speakerNetEntity);
         speaker.LastReceived = _gameTiming.RealTime;
-        speaker.Receive(sequence, _decodeScratch.AsSpan(0, sampleCount).ToArray(), _jitterSamples);
+        speaker.Receive(sequence, new KsVoicePacket(codec, payload), _jitterSamples, _decodeScratch);
     }
 
     /// <summary>
@@ -511,11 +513,23 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
     /// <summary>
     ///     One talker's jitter buffer and the chunks currently playing for them.
     /// </summary>
+    internal readonly record struct KsVoicePacket(KsVoiceCodec Codec, byte[] Payload);
+
     internal sealed class KsVoiceSpeaker : IDisposable
     {
-        private readonly Dictionary<ushort, short[]> _pending = [];
+        private readonly Dictionary<ushort, KsVoicePacket> _pending = [];
         private readonly List<short> _buffer = [];
         private ushort? _nextSequence;
+
+        /// <summary>
+        ///     This talker's decoder, replaced when their packets change codec. Stateful for Opus, so one per talker.
+        /// </summary>
+        private KsVoiceDecoder? _decoder;
+
+        /// <summary>
+        ///     Length of the last packet decoded, taken as the length of any that go missing.
+        /// </summary>
+        private int _lastPacketSamples = KsVoiceConstants.MaxChunkSamples;
 
         public readonly List<KsVoiceChunk> Chunks = [];
         public KsVoiceChunk? PendingStart;
@@ -565,15 +579,15 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
             PreviousHadLookahead = false;
         }
 
-        public void Receive(ushort sequence, short[] samples, int jitterSamples)
+        public void Receive(ushort sequence, KsVoicePacket packet, int jitterSamples, short[] scratch)
         {
             if (_nextSequence is { } next && (short)(sequence - next) < 0)
                 return; // Arrived after we gave up on it.
 
             _nextSequence ??= sequence;
-            _pending[sequence] = samples;
+            _pending[sequence] = packet;
 
-            Drain();
+            Drain(scratch);
 
             if (_buffer.Count > MaxBufferedSamples)
             {
@@ -583,22 +597,60 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
             }
         }
 
-        private void Drain()
+        private void Drain(short[] scratch)
         {
             while (true)
             {
-                while (_nextSequence is { } next && _pending.Remove(next, out var samples))
+                while (_nextSequence is { } next && _pending.Remove(next, out var packet))
                 {
-                    _buffer.AddRange(samples);
+                    Decode(packet, scratch);
                     _nextSequence = (ushort)(next + 1);
                 }
 
                 if (_pending.Count < MaxPendingBeforeSkip || _nextSequence is not { } missing)
                     return;
 
-                // Give up on the missing packet and resume from the oldest one we have.
-                _nextSequence = _pending.Keys.MinBy(sequence => (short)(sequence - missing));
+                // Give up on the missing packets and resume from the oldest one we have, letting the decoder fill in
+                //      for what was lost if it can.
+                var resume = _pending.Keys.MinBy(sequence => (short)(sequence - missing));
+                Conceal((ushort)(resume - missing), scratch);
+                _nextSequence = resume;
             }
+        }
+
+        private void Decode(KsVoicePacket packet, short[] scratch)
+        {
+            if (_decoder == null || _decoder.Codec != packet.Codec)
+                _decoder = KsVoiceDecoder.Create(packet.Codec);
+
+            var sampleCount = _decoder.Decode(packet.Payload, scratch);
+            if (sampleCount <= 0)
+            {
+                // Malformed: as good as lost.
+                Conceal(1, scratch);
+                return;
+            }
+
+            _lastPacketSamples = sampleCount;
+            Append(scratch, sampleCount);
+        }
+
+        private void Conceal(int lostPackets, short[] scratch)
+        {
+            if (_decoder == null)
+                return;
+
+            var sampleCount = _decoder.Conceal(lostPackets * _lastPacketSamples, scratch);
+            if (sampleCount > 0)
+                Append(scratch, sampleCount);
+        }
+
+        private void Append(short[] samples, int count)
+        {
+            // Not AddRange(ReadOnlySpan<T>), an extension the sandbox may not allow.
+            _buffer.EnsureCapacity(_buffer.Count + count);
+            for (var i = 0; i < count; i++)
+                _buffer.Add(samples[i]);
         }
 
         /// <summary>
@@ -660,6 +712,8 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
             PendingStart = null;
             _pending.Clear();
             _buffer.Clear();
+            _decoder = null;
+            _nextSequence = null;
             Started = false;
             PreviousHadLookahead = false;
         }

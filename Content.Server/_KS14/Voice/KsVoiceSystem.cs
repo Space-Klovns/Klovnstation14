@@ -228,9 +228,7 @@ public sealed partial class KsVoiceSystem : EntitySystem
 
         RelayedChunkCount++;
 
-        // Encode even with nobody listening, so the talker's encoder state stays continuous.
-        var payload = new byte[KsVoiceAdpcm.EncodedSize(chunk.Samples.Length)];
-        KsVoiceAdpcm.Encode(ref state.Encoder, chunk.Samples, payload);
+        // Already encoded by the talker's page connection, off the main thread (KsVoiceUplinkConnection).
         state.Sequence++;
 
         var speakerNetEntity = GetNetEntity(speakerUid);
@@ -238,7 +236,7 @@ public sealed partial class KsVoiceSystem : EntitySystem
         // Everything relayed, whoever was in range: a replay is watched from anywhere.
         if (_recordInReplays && _replayRecordingManager.IsRecording)
         {
-            _replayRecordingManager.RecordServerMessage(new KsVoiceReplayFrameEvent(speakerNetEntity, state.Sequence, payload));
+            _replayRecordingManager.RecordServerMessage(new KsVoiceReplayFrameEvent(speakerNetEntity, state.Sequence, chunk.Codec, chunk.Payload));
             RecordedChunkCount++;
         }
 
@@ -249,7 +247,8 @@ public sealed partial class KsVoiceSystem : EntitySystem
         {
             Source = speakerNetEntity,
             Sequence = state.Sequence,
-            Payload = payload,
+            Codec = chunk.Codec,
+            Payload = chunk.Payload,
         };
 
         _netManager.ServerSendToMany(message, _recipientChannels);
@@ -649,7 +648,6 @@ public sealed partial class KsVoiceSystem : EntitySystem
     private sealed class TalkerState
     {
         public bool PushToTalkHeld;
-        public KsVoiceAdpcm.EncoderState Encoder;
         public ushort Sequence;
         public EntityUid? IndicatorUid;
         public TimeSpan TalkingUntil;

@@ -39,6 +39,10 @@ public sealed class KsVoiceUplinkTests : GameTest
 
         public KsVoiceProcessorSettings ProcessorSettings => new(-6f, -9f, 0.05f, 3f);
 
+        public volatile KsVoiceCodec Codec = KsVoiceCodec.Adpcm;
+
+        public KsVoiceEncoderSettings EncoderSettings => new(Codec, OpusBitrate: 32000, OpusComplexity: 2);
+
         public float UplinkRateFactor => 1.25f;
 
         public bool TryAuthenticate(string token, out NetUserId userId, out string userName)
@@ -171,7 +175,50 @@ public sealed class KsVoiceUplinkTests : GameTest
             Assert.That(hello.GetProperty("name").GetString(), Is.EqualTo(ServerSession!.Name));
             Assert.That(chunks, Has.Length.EqualTo(2));
             Assert.That(chunks.Select(c => c.UserId), Is.All.EqualTo(ServerSession!.UserId));
-            Assert.That(chunks[0].Samples, Has.Length.EqualTo(KsVoiceConstants.MaxChunkSamples));
+            Assert.That(chunks[0].SampleCount, Is.EqualTo(KsVoiceConstants.MaxChunkSamples));
+        });
+    }
+
+    [Test]
+    [TestOf(typeof(KsVoiceEncoderSettings))]
+    public async Task AudioIsEncodedWithTheConfiguredCodec()
+    {
+        var token = await IssueToken();
+        var host = new RecordingHost(Server.ResolveDependency<KsVoiceLinkManager>()) { Codec = KsVoiceCodec.Opus };
+        await using var pair = await CreateSocketPair();
+
+        var connection = new KsVoiceUplinkConnection(pair.Server, IPAddress.Loopback, host);
+        var run = connection.RunAsync(CancellationToken.None);
+
+        await SendText(pair.Client, JsonSerializer.Serialize(new { type = "auth", token }));
+        await ReadText(pair.Client);
+
+        async Task<KsVoiceInboundChunk> Next(ushort sequence)
+        {
+            var before = host.Chunks.Count;
+            await SendAudio(pair.Client, frames: KsVoiceConstants.MaxFramesPerUplinkMessage, sequence: sequence);
+            using var timeout = new CancellationTokenSource(SocketTimeout);
+            while (host.Chunks.Count <= before)
+                await Task.Delay(10, timeout.Token);
+
+            return host.Chunks.ToArray()[before];
+        }
+
+        var opus = await Next(0);
+        host.Codec = KsVoiceCodec.Adpcm; // the server's klovn.voice.codec changes mid-stream
+        var adpcm = await Next(1);
+
+        await pair.Client.CloseAsync(WebSocketCloseStatus.NormalClosure, "done", CancellationToken.None);
+        await run.WaitAsync(SocketTimeout);
+
+        var scratch = new short[KsVoiceOpus.MaxConcealSamples];
+        Assert.Multiple(() =>
+        {
+            Assert.That(opus.Codec, Is.EqualTo(KsVoiceCodec.Opus));
+            Assert.That(new KsVoiceOpusDecoder().Decode(opus.Payload, scratch), Is.EqualTo(KsVoiceConstants.MaxChunkSamples),
+                "a real Opus packet for the whole chunk");
+            Assert.That(adpcm.Codec, Is.EqualTo(KsVoiceCodec.Adpcm), "a codec change takes effect from the next chunk");
+            Assert.That(KsVoiceAdpcm.Decode(adpcm.Payload, scratch), Is.EqualTo(KsVoiceConstants.MaxChunkSamples));
         });
     }
 

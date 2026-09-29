@@ -16,6 +16,8 @@ public interface IKsVoiceUplinkHost
 {
     KsVoiceProcessorSettings ProcessorSettings { get; }
 
+    KsVoiceEncoderSettings EncoderSettings { get; }
+
     float UplinkRateFactor { get; }
 
     bool TryAuthenticate(string token, out NetUserId userId, out string userName);
@@ -30,9 +32,34 @@ public interface IKsVoiceUplinkHost
 }
 
 /// <summary>
-///     One decoded, moderated chunk of microphone audio waiting to be relayed on the main thread.
+///     One moderated chunk of microphone audio, already encoded for relay, waiting on the main thread.
 /// </summary>
-public readonly record struct KsVoiceInboundChunk(NetUserId UserId, short[] Samples, bool AbuseTriggered);
+public readonly record struct KsVoiceInboundChunk(
+    NetUserId UserId,
+    KsVoiceCodec Codec,
+    byte[] Payload,
+    int SampleCount,
+    bool AbuseTriggered);
+
+/// <summary>
+///     Which codec relayed audio is encoded with, from <c>klovn.voice.codec</c> and the <c>klovn.voice.opus_*</c> cvars.
+/// </summary>
+public readonly record struct KsVoiceEncoderSettings(KsVoiceCodec Codec, int OpusBitrate, int OpusComplexity)
+{
+    /// <summary>
+    ///     Whether an existing encoder already produces what these settings ask for.
+    /// </summary>
+    public bool Fits(KsVoiceEncoder encoder)
+    {
+        return encoder.Codec == Codec &&
+               (encoder is not KsVoiceOpusEncoder opusEncoder ||
+                opusEncoder.Bitrate == KsVoiceOpus.ClampBitrate(OpusBitrate) &&
+                opusEncoder.Complexity == KsVoiceOpus.ClampComplexity(OpusComplexity));
+    }
+
+    public KsVoiceEncoder CreateEncoder()
+        => KsVoiceEncoder.Create(Codec, OpusBitrate, OpusComplexity);
+}
 
 /// <summary>
 ///     Server side of one microphone page's websocket.
@@ -67,6 +94,12 @@ public sealed class KsVoiceUplinkConnection
     private readonly CancellationTokenSource _closeSource = new();
 
     private KsVoiceProcessor? _processor;
+
+    /// <summary>
+    ///     This page's encoder. Encoding happens here, on the connection's thread rather than the game's, and a
+    ///         connection is one talker's continuous stream, which is exactly the scope a stateful encoder needs.
+    /// </summary>
+    private KsVoiceEncoder? _encoder;
     private volatile bool _transmitting;
     private readonly TaskCompletionSource _greeted = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private double _sampleAllowance;
@@ -294,7 +327,12 @@ public sealed class KsVoiceUplinkConnection
         _processor!.Settings = _host.ProcessorSettings;
         var result = _processor.Process(samples, trackAbuse: Transmitting);
 
-        _host.OnChunk(this, new KsVoiceInboundChunk(UserId, samples, result.AbuseTriggered));
+        var encoderSettings = _host.EncoderSettings;
+        if (_encoder == null || !encoderSettings.Fits(_encoder))
+            _encoder = encoderSettings.CreateEncoder();
+
+        var payload = _encoder.Encode(samples);
+        _host.OnChunk(this, new KsVoiceInboundChunk(UserId, _encoder.Codec, payload, sampleCount, result.AbuseTriggered));
         return null;
     }
 
