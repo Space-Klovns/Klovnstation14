@@ -4,6 +4,7 @@ using Content.Server.Administration;
 using Content.Shared.Administration;
 using Robust.Server.Player;
 using Robust.Shared.Console;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
 
 namespace Content.Server._KS14.Voice.Commands;
@@ -121,11 +122,14 @@ public sealed partial class KsVoiceMuteListCommand : LocalizedEntityCommands
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private KsVoiceSystem _voiceSystem = default!;
 
+    private readonly List<(NetUserId UserId, TimeSpan Remaining)> _autoMutes = [];
+
     public override string Command => "vcmutes";
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
-        if (_voiceSystem.Mutes.Count == 0)
+        _voiceSystem.GetAutoMutes(_autoMutes);
+        if (_voiceSystem.Mutes.Count == 0 && _autoMutes.Count == 0)
         {
             shell.WriteLine(Loc.GetString("cmd-vcmutes-none"));
             return;
@@ -144,6 +148,14 @@ public sealed partial class KsVoiceMuteListCommand : LocalizedEntityCommands
                 ("length", length),
                 ("admin", mute.AdminName),
                 ("reason", mute.Reason)));
+        }
+
+        foreach (var (userId, remaining) in _autoMutes)
+        {
+            var playerName = _playerManager.TryGetSessionById(userId, out var session) ? session.Name : userId.ToString();
+            shell.WriteLine(Loc.GetString("cmd-vcmutes-entry-auto",
+                ("player", playerName),
+                ("seconds", (int)Math.Ceiling(remaining.TotalSeconds))));
         }
     }
 }

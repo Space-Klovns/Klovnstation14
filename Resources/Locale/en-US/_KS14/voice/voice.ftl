@@ -83,3 +83,4 @@ cmd-vcmutes-desc = Lists active voice chat mutes.
 cmd-vcmutes-help = vcmutes
 cmd-vcmutes-none = Nobody is voice-muted.
 cmd-vcmutes-entry = {$player}: {$length}, by {$admin}: {$reason}
+cmd-vcmutes-entry-auto = {$player}: automatically muted for abusive audio, {$seconds}s left (vcunmute lifts it)

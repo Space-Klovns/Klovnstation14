@@ -264,6 +264,37 @@ public sealed class KsVoiceRelayTests : GameTest
     }
 
     [Test]
+    public async Task AutoMutesAreListedAndCanBeLifted()
+    {
+        await Setup();
+        await HoldPushToTalk(true);
+
+        var voiceSystem = Server.System<KsVoiceSystem>();
+        await Server.WaitPost(() => voiceSystem.HandleChunk(Chunk(_speaker.UserId, abuseTriggered: true)));
+
+        var autoMutes = new List<(Robust.Shared.Network.NetUserId UserId, TimeSpan Remaining)>();
+        var listed = false;
+        var muted = false;
+        var lifted = false;
+        await Server.WaitPost(() =>
+        {
+            voiceSystem.GetAutoMutes(autoMutes);
+            listed = autoMutes.Exists(entry => entry.UserId == _speaker.UserId);
+            muted = voiceSystem.IsMuted(_speaker.UserId);
+            lifted = voiceSystem.Unmute(_speaker.UserId, adminSession: null);
+        });
+        var afterUnmute = await Talk();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(listed, Is.True, "an auto-mute shows up alongside admin mutes (vcmutes)");
+            Assert.That(muted, Is.True, "and counts as muted, so admins get the unmute verb");
+            Assert.That(lifted, Is.True, "an admin can lift it (vcunmute, or the verb)");
+            Assert.That(afterUnmute, Is.EqualTo(1), "after which the talker is heard again");
+        });
+    }
+
+    [Test]
     public async Task ClientControlEventsReachTheServerAndBack()
     {
         await Setup();

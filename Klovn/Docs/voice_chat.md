@@ -259,7 +259,9 @@ being dropped, which used to cut off the start of what they said.
   "Transmitted" is literal. The server tells each page connection whether its audio is being relayed, and only then
   do frames count, so a page left open in a loud room with push-to-talk up can never earn a mute. The server also
   re-checks when the mute would apply, because that flag trails by a chunk. A talker who is already auto-muted can't
-  be auto-muted again, so a noisy open mic produces one alert, not one every few seconds.
+  be auto-muted again, so a noisy open mic produces one alert, not one every few seconds. Auto-mutes are tracked per
+  talker on game time, separately from admin mutes, but `vcmutes` lists them and `vcunmute` or the admin verb lifts
+  them like any other mute.
 - **Duration and rate.**
   - Talking continuously for `klovn.voice.max_continuous_seconds` triggers a `klovn.voice.cooldown_seconds` cooldown.
   - A page sending audio faster than `klovn.voice.uplink_rate_factor` × real time, beyond a half-second burst, is
@@ -270,8 +272,8 @@ being dropped, which used to cut off the start of what they said.
   | Command or verb | Effect |
   | --- | --- |
   | `vcmute <player> [minutes, 0 = rest of round] [reason...]` | Mutes the player. Timed mutes run on real time and survive round restarts; round mutes lift at round end. |
-  | `vcunmute <player>` | Lifts a mute. |
-  | `vcmutes` | Lists active mutes. |
+  | `vcunmute <player>` | Lifts a mute, admin or automatic. |
+  | `vcmutes` | Lists active mutes, auto-mutes included (with the time they have left). |
   | *Voice mute (round)* / *Voice unmute* | Admin-menu verbs on a player. |
 
 - **Players.** A client-side *Mute voice* verb on anyone who has talked silences them locally.
@@ -440,7 +442,7 @@ All under `Content.IntegrationTests/Tests/_KS14/Voice/`.
   - the master switch
   - admin mute and unmute
   - freeze-mute through `CanSpeak`
-  - auto-mute
+  - auto-mute, which is listed with the other mutes and can be lifted by an admin
   - the indicator showing and clearing on the client
   - audio for a talker whose entity the client doesn't know yet being kept, not dropped, and moving onto the entity
     once it arrives
