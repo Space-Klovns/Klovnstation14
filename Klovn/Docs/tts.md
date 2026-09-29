@@ -39,16 +39,16 @@ The server POSTs JSON and expects audio back:
 { "text": "Hello, crew.", "voice": "en_GB-alan-medium" }
 ```
 
-With `klovn.tts.codec opus`, the body also carries `"format": "opus"`. That's the only change to the request, so
-the default mode sends exactly what it always has. The server works out what came back from the bytes themselves
+With `klovn.tts.codec opus`, the body also carries `"format": "opus"`. That's the only change to the request; the other
+two modes, including the default, send exactly what was always sent. The server works out what came back from the bytes themselves
 (`KsTtsOpus.Identify`), not from the setting. An endpoint that ignores `format` still works, and anything that is
 neither Ogg Vorbis nor Ogg Opus is dropped with a warning, not sent to clients.
 
 | `klovn.tts.codec` | Asks for | Sends clients |
 | --- | --- | --- |
-| `vorbis` (default) | the endpoint's default | what came back, untouched |
+| `vorbis` | the endpoint's default | what came back, untouched: the behaviour before this work |
 | `opus` | `"format": "opus"` | what came back, untouched |
-| `transcode` | the endpoint's default | Ogg Opus, re-encoded by the server from Ogg Vorbis or 16-bit WAV |
+| `transcode` (default) | the endpoint's default | Ogg Opus, re-encoded by the server from Ogg Vorbis or 16-bit WAV |
 
 Other cvars:
 

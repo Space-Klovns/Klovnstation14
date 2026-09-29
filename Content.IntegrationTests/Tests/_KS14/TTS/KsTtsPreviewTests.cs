@@ -83,6 +83,13 @@ public sealed class KsTtsPreviewTests : GameTest
     private Task RunUntilServerStatus(KsTtsPreviewStatus status)
         => RunUntil(() => ServerPreviews.Status == status && ClientPreviews.Status == status, $"previews are {status}");
 
+    /// <summary>
+    ///     Ready says every preview has been sent, not that each can play yet: Opus previews (the default,
+    ///         <c>klovn.tts.codec transcode</c>) are still being decoded on the thread pool when they arrive.
+    /// </summary>
+    private Task RunUntilPlayable(ProtoId<TtsVoicePrototype> voice)
+        => RunUntil(() => ClientPreviews.GetAvailability(voice) == KsTtsPreviewAvailability.Available, $"{voice}'s preview can play");
+
     private async Task<KsTtsPreviewAvailability> ClientAvailability(ProtoId<TtsVoicePrototype>? voice)
     {
         var availability = KsTtsPreviewAvailability.Broken;
@@ -111,6 +118,9 @@ public sealed class KsTtsPreviewTests : GameTest
     [Test]
     public async Task BakesEverySelectableVoiceOnceAndSendsThemToClients()
     {
+        // Vorbis, pinned: these clips are available the moment they arrive and only loaded when first played, which
+        //      is the path this covers (the Opus tests cover decoding). The default is transcode.
+        await OverrideCVar(Side.Server, KsCCVars.TtsCodec, "vorbis");
         await OverrideCVar(Side.Server, KsCCVars.TtsEnabled, true);
         await RunUntilServerStatus(KsTtsPreviewStatus.Ready);
 
@@ -122,7 +132,7 @@ public sealed class KsTtsPreviewTests : GameTest
             Assert.That(requests.Select(request => request.Voice), Is.EquivalentTo(selectable.Select(voice => voice.Voice)),
                 "one request per selectable voice, and none for the others");
             Assert.That(requests.Select(request => request.Voice), Does.Not.Contain(EliteVoice));
-            Assert.That(requests.Select(request => request.Format), Is.All.Null, "the default mode sends the request it always has");
+            Assert.That(requests.Select(request => request.Format), Is.All.Null, "vorbis sends the request it always has");
 
             foreach (var voice in selectable)
             {
@@ -221,7 +231,7 @@ public sealed class KsTtsPreviewTests : GameTest
 
         _endpoint.Failing = false;
         await RunUntilServerStatus(KsTtsPreviewStatus.Ready);
-        Assert.That(await ClientAvailability(voice), Is.EqualTo(KsTtsPreviewAvailability.Available));
+        await RunUntilPlayable(voice);
     }
 
     [Test]
@@ -317,6 +327,7 @@ public sealed class KsTtsPreviewTests : GameTest
         // Turning TTS on while the editor is open updates the button without reopening it.
         await OverrideCVar(Side.Server, KsCCVars.TtsEnabled, true);
         await RunUntilServerStatus(KsTtsPreviewStatus.Ready);
+        await RunUntilPlayable(voice);
 
         var onDisabled = true;
         await Client.WaitPost(() => onDisabled = previewButton.Disabled);

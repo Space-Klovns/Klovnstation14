@@ -27,8 +27,8 @@ public sealed partial class KsCCVars
     ///             on as it is.</item>
     ///         <item><c>opus</c>: the request adds <c>"format": "opus"</c>, and the Ogg Opus that comes back is sent
     ///             on as it is. Clients decode it in content, off the game thread, since the engine can't play Opus.</item>
-    ///         <item><c>transcode</c>: the request is unchanged, and the server re-encodes the Ogg Vorbis or WAV that
-    ///             comes back into Ogg Opus before sending it, per <see cref="TtsOpusBitrate"/>.</item>
+    ///         <item><c>transcode</c>, the default: the request is unchanged, and the server re-encodes the Ogg Vorbis
+    ///             or WAV that comes back into Ogg Opus before sending it, per <see cref="TtsOpusBitrate"/>.</item>
     ///     </list>
     ///     Clips are labelled by what they actually contain, not by this setting, so an endpoint that ignores the
     ///         format still plays.
