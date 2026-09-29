@@ -35,7 +35,7 @@ public sealed partial class KsCCVars
     /// </summary>
     [CVarControl(AdminFlags.Server)]
     public static readonly CVarDef<string> TtsCodec =
-        CVarDef.Create("klovn.tts.codec", "vorbis", CVar.ARCHIVE | CVar.SERVERONLY);
+        CVarDef.Create("klovn.tts.codec", "transcode", CVar.ARCHIVE | CVar.SERVERONLY);
 
     /// <summary>
     ///     Bits per second for <c>klovn.tts.codec transcode</c>. Clamped to 6000-128000.
