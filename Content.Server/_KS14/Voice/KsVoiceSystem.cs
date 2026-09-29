@@ -589,6 +589,16 @@ public sealed partial class KsVoiceSystem : EntitySystem
         EndBurst(args.Session.UserId, state);
     }
 
+    /// <summary>
+    ///     A new body (spawning, ghosting, being put in something) changes what the page should say, so tell it now
+    ///         rather than whenever the player next talks: otherwise a page opened in the lobby says "no body" all round.
+    /// </summary>
+    [SubscribeLocalEvent]
+    private void OnPlayerAttached(PlayerAttachedEvent args)
+    {
+        RefreshPageState(args.Player.UserId);
+    }
+
     [SubscribeLocalEvent]
     private void OnPlayerDetached(PlayerDetachedEvent args)
     {
@@ -598,6 +608,7 @@ public sealed partial class KsVoiceSystem : EntitySystem
         // Push-to-talk is left alone: it mirrors a key the player may still be holding, and the client only
         //      reports changes. With no body, GetBlockReason already stops the audio.
         ClearIndicator(state);
+        RefreshPageState(args.Player.UserId);
     }
 
     [SubscribeLocalEvent]

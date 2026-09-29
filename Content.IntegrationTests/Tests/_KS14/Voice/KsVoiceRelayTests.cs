@@ -431,6 +431,54 @@ public sealed class KsVoiceRelayTests : GameTest
     }
 
     [Test]
+    public async Task PageFollowsThePlayerIntoABody()
+    {
+        await Setup();
+        await Server.WaitPost(() => Server.PlayerMan.SetAttachedEntity(ServerSession!, null));
+        await Pair.RunTicksSync(5);
+
+        string token = null;
+        await Server.WaitPost(() => token = Server.ResolveDependency<KsVoiceLinkManager>().ResolveToken(ServerSession!, reset: false));
+        await using var page = await CreateSocketPair();
+        var run = new KsVoiceUplinkConnection(page.Server, IPAddress.Loopback, Server.ResolveDependency<KsVoiceUplinkManager>())
+            .RunAsync(CancellationToken.None);
+        await SendText(page.Client, JsonSerializer.Serialize(new { type = "auth", token }));
+
+        // Waiting in the lobby, as it were.
+        await Pair.RunTicksSync(5);
+        var inLobby = await ReadStateReason(page);
+
+        // Spawning: nobody talks and nobody presses anything, so only the attachment itself can update the page.
+        await Server.WaitPost(() => Server.PlayerMan.SetAttachedEntity(ServerSession!, _listenerUid));
+        await Pair.RunTicksSync(5);
+        var inBody = await ReadStateReason(page);
+
+        await page.Client.CloseAsync(System.Net.WebSockets.WebSocketCloseStatus.NormalClosure, "done", CancellationToken.None);
+        await run.WaitAsync(SocketTimeout);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(inLobby, Is.EqualTo("no-body"));
+            Assert.That(inBody, Is.EqualTo("not-holding-key"), "getting a body updates the page straight away");
+        });
+    }
+
+    /// <summary>
+    ///     The reason in the next "state" message the page receives, skipping anything else.
+    /// </summary>
+    private static async Task<string> ReadStateReason(SocketPair page)
+    {
+        while (true)
+        {
+            using var message = JsonDocument.Parse(await ReadText(page.Client));
+            if (message.RootElement.GetProperty("type").GetString() != "state")
+                continue;
+
+            return message.RootElement.GetProperty("reason").GetString();
+        }
+    }
+
+    [Test]
     public async Task AnIdlePageNeverShowsTheCannotSpeakPopup()
     {
         await Setup();
