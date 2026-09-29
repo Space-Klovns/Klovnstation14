@@ -41,7 +41,18 @@ h1 {
 }
 
 .language {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+}
+
+.language select {
     padding: 4px 8px;
+}
+
+.globe {
+    flex: none;
 }
 
 h2 {
