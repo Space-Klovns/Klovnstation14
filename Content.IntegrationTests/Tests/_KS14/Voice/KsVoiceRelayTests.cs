@@ -71,7 +71,7 @@ public sealed class KsVoiceRelayTests : GameTest
     {
         var samples = Speech();
         var payload = KsVoiceEncoder.Create(codec, opusBitrate: 32000, opusComplexity: 2).Encode(samples);
-        return new KsVoiceInboundChunk(userId, codec, payload, samples.Length, abuseTriggered);
+        return new KsVoiceInboundChunk(userId, codec, payload, StreamStart: false, abuseTriggered);
     }
 
     private static short[] Speech()
@@ -623,6 +623,7 @@ public sealed class KsVoiceRelayTests : GameTest
         // Connecting, and the server's switch changing, each bring the page's state up to date without anyone
         //      trying to talk.
         await Idle();
+        var idleReason = await ReadStateReason(page);
         await OverrideCVar(Side.Server, KsCCVars.VoiceActivationAllowed, false);
         await OverrideCVar(Side.Server, KsCCVars.VoiceActivationAllowed, true);
         await Idle();
@@ -637,8 +638,9 @@ public sealed class KsVoiceRelayTests : GameTest
 
         Assert.Multiple(() =>
         {
-            Assert.That(idle, Is.Zero, "a muted player who isn't talking is never told they can't speak");
-            Assert.That(talking, Is.EqualTo(1), "trying to talk still is");
+            Assert.That(idle, Is.Zero, "a muted player who isn't talking is never told they can't speak by popup");
+            Assert.That(idleReason, Is.EqualTo("cannot-speak"), "but the page says so, rather than that they're live");
+            Assert.That(talking, Is.EqualTo(1), "trying to talk still gets the popup");
         });
     }
 
@@ -735,7 +737,7 @@ public sealed class KsVoiceRelayTests : GameTest
 
         // What a replay does with a recorded event: raise it as if it had come over the network.
         await Client.WaitPost(() => Client.ResolveDependency<IClientEntityManager>()
-            .DispatchReceivedNetworkMsg(new KsVoiceReplayFrameEvent(speakerNetEntity, 1, KsVoiceCodec.Adpcm, payload)));
+            .DispatchReceivedNetworkMsg(new KsVoiceReplayFrameEvent(speakerNetEntity, 1, KsVoiceCodec.Adpcm, true, payload)));
         await Pair.RunTicksSync(2);
 
         var received = playbackSystem.ReceivedFrameCount - receivedBefore;
@@ -745,7 +747,7 @@ public sealed class KsVoiceRelayTests : GameTest
         Assert.Multiple(() =>
         {
             Assert.That(received, Is.EqualTo(1), "the replayed chunk reaches playback");
-            Assert.That(buffered, Is.Not.EqualTo(-1), "and is playing for its talker");
+            Assert.That(buffered, Is.EqualTo(KsVoiceConstants.MaxChunkSamples), "decoded, whole, for its talker");
         });
     }
 

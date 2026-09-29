@@ -55,6 +55,44 @@ def replace_once(text, old, new, relative):
     return text.replace(old, new)
 
 
+# Buffer.BlockCopy calls that copy byte or sbyte arrays, so count bytes and elements alike, as upstream has them.
+UNSCALED_BYTE_COPIES = {
+    ("Common/CPlusPlus/Arrays.cs", "array, src_idx, array, dst_idx, length"),  # MemMoveByte(byte[] ...)
+    ("Common/CPlusPlus/Arrays.cs", "src, src_idx, dst, dst_idx, length"),  # MemCopy(sbyte[] ...)
+}
+
+
+def block_copy(relative, arguments):
+    """
+    Buffer.BlockCopy -> Array.Copy. System.Buffer isn't whitelisted. BlockCopy counts bytes, Array.Copy counts
+    elements, so this only converts the two shapes that can be converted without knowing the element types: every
+    offset and the length scaled by the same sizeof(T) (arrays of T), or a known unscaled byte or sbyte copy. Anything
+    else stops the script rather than guessing.
+    """
+    parts = [part.strip() for part in arguments.split(",")]
+    if len(parts) != 5:
+        sys.exit(f"{relative}: can't read Buffer.BlockCopy({arguments})")
+
+    source, source_offset, destination, destination_offset, length = parts
+    # A literal 0 offset is the same in bytes and elements, so it needs no scaling.
+    counts = (source_offset, destination_offset, length)
+    scaled = [re.fullmatch(r"(.+?)\s*\*\s*sizeof\((\w+)\)", part) for part in counts]
+    needs_scaling = [match for match, part in zip(scaled, counts) if part != "0"]
+
+    if needs_scaling and all(needs_scaling):
+        types = {match.group(2) for match in needs_scaling}
+        if len(types) != 1:
+            sys.exit(f"{relative}: Buffer.BlockCopy({arguments}) scales by different types")
+        source_offset, destination_offset, length = (
+            match.group(1).strip() if match else part for match, part in zip(scaled, counts))
+    elif any(needs_scaling):
+        sys.exit(f"{relative}: Buffer.BlockCopy({arguments}) scales some arguments but not others")
+    elif (relative, arguments.strip()) not in UNSCALED_BYTE_COPIES:
+        sys.exit(f"{relative}: unscaled Buffer.BlockCopy({arguments}) isn't a known byte copy; check its types by hand")
+
+    return f"Array.Copy({source}, {source_offset}, {destination}, {destination_offset}, {length}); // KS14: was Buffer.BlockCopy"
+
+
 def patch(relative, text):
     # stackalloc is banned on the client (unverifiable localloc). A heap array converts to Span<T> the same way.
     text = re.sub(r"stackalloc\s+(\w+)\s*\[", r"new \1[", text)
@@ -77,12 +115,7 @@ def patch(relative, text):
         text = re.sub(r"Debug\.WriteLine\(([^;]*)\);", r"_ = \1; // KS14: was Debug.WriteLine", text)
 
     if "Buffer.BlockCopy" in text:
-        # System.Buffer isn't whitelisted. BlockCopy counts bytes, Array.Copy counts elements: every upstream call
-        #      copies between arrays of one element type with sizeof() scaling, which this undoes.
-        text = re.sub(
-            r"Buffer\.BlockCopy\(([^,]+),\s*([^,]+?)(?:\s*\*\s*sizeof\(\w+\))?,\s*([^,]+),\s*([^,]+?)(?:\s*\*\s*sizeof\(\w+\))?,\s*([^;]+?)(?:\s*\*\s*sizeof\(\w+\))?\);",
-            r"Array.Copy(\1, \2, \3, \4, \5); // KS14: was Buffer.BlockCopy",
-            text)
+        text = re.sub(r"Buffer\.BlockCopy\(([^;]*)\);", lambda match: block_copy(relative, match.group(1)), text)
 
     # System.ArgumentNullException isn't whitelisted; its base, ArgumentException, is.
     text = text.replace("new ArgumentNullException(", "new ArgumentException/* KS14: was ArgumentNullException */(")
@@ -145,22 +178,27 @@ def main():
     commit = subprocess.run(["git", "-C", str(checkout), "rev-parse", "HEAD"], capture_output=True, text=True,
                             check=True).stdout.strip()
 
+    # Patch everything first, so a patch that fails leaves the vendored tree as it was.
+    patched = {}
+    for path in sorted(source.rglob("*.cs")):
+        relative = path.relative_to(source).as_posix()
+        if relative in SKIP or relative.split("/")[0] in SKIP_DIRS:
+            continue
+
+        patched[relative] = patch(relative, path.read_text(encoding="utf-8-sig"))
+
     for existing in HERE.iterdir():
         if existing.is_dir():
             shutil.rmtree(existing)
         elif existing.suffix == ".cs":
             existing.unlink()
 
-    count = 0
-    for path in sorted(source.rglob("*.cs")):
-        relative = path.relative_to(source).as_posix()
-        if relative in SKIP or relative.split("/")[0] in SKIP_DIRS:
-            continue
-
+    for relative, text in patched.items():
         destination = HERE / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
-        destination.write_text(patch(relative, path.read_text(encoding="utf-8-sig")), encoding="utf-8", newline="\n")
-        count += 1
+        destination.write_text(text, encoding="utf-8", newline="\n")
+
+    count = len(patched)
 
     shutil.copyfile(checkout / "LICENSE", HERE / "LICENSE")
     (HERE / "UPSTREAM_COMMIT").write_text(commit + "\n")

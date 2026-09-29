@@ -98,6 +98,11 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
     /// </summary>
     private readonly short[] _decodeScratch = new short[Math.Max(KsVoiceConstants.MaxChunkSamples, KsVoiceOpus.MaxConcealSamples)];
 
+    /// <summary>
+    ///     The replay tick before the current jump, to tell a rewind from a step forward.
+    /// </summary>
+    private GameTick _replayTickBeforeJump;
+
     private bool _enabled;
     private bool _hearEnabled;
     private float _volume;
@@ -132,7 +137,8 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
             _jitterSamples = Math.Clamp(value, 20, 1000) * KsVoiceConstants.SampleRate / 1000, invokeImmediately: true);
 
         _voiceNetManager.FrameReceived += OnFrameReceived;
-        _replayPlaybackManager.BeforeSetTick += StopAll;
+        _replayPlaybackManager.BeforeSetTick += OnBeforeReplayJump;
+        _replayPlaybackManager.AfterSetTick += OnAfterReplayJump;
     }
 
     public override void Shutdown()
@@ -140,7 +146,8 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
         base.Shutdown();
 
         _voiceNetManager.FrameReceived -= OnFrameReceived;
-        _replayPlaybackManager.BeforeSetTick -= StopAll;
+        _replayPlaybackManager.BeforeSetTick -= OnBeforeReplayJump;
+        _replayPlaybackManager.AfterSetTick -= OnAfterReplayJump;
         StopAll();
     }
 
@@ -199,39 +206,40 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
     {
         // A client-side recording keeps what this player heard, like it keeps their popups.
         if (_replayRecordingManager.IsRecording)
-            _replayRecordingManager.RecordClientMessage(new KsVoiceReplayFrameEvent(message.Source, message.Sequence, message.Codec, message.Payload));
+            _replayRecordingManager.RecordClientMessage(
+                new KsVoiceReplayFrameEvent(message.Source, message.Sequence, message.Codec, message.StreamStart, message.Payload));
 
-        HandleFrame(message.Source, message.Sequence, message.Codec, message.Payload);
+        HandleFrame(message.Source, message.Sequence, new KsVoicePacket(message.Codec, message.Payload, message.StreamStart));
     }
 
     /// <summary>
-    ///     Voice in a replay being watched. Only replays raise this: the server records it and never sends it. Jumping
-    ///         through the replay stops what's playing (see <see cref="Initialize"/>), since a talker's sequence numbers
-    ///         go backwards when it rewinds, and it drops what it skips over (<c>ContentReplayPlaybackManager</c>).
+    ///     Voice in a replay being watched. Only replays raise this: the server records it and never sends it. Rewinding
+    ///         stops what's playing (<see cref="OnAfterReplayJump"/>), and <c>ContentReplayPlaybackManager</c> drops what
+    ///         a skip passes over.
     /// </summary>
     [SubscribeNetworkEvent]
     private void OnReplayFrame(KsVoiceReplayFrameEvent args)
-        => HandleFrame(args.Source, args.Sequence, args.Codec, args.Payload);
+        => HandleFrame(args.Source, args.Sequence, new KsVoicePacket(args.Codec, args.Payload, args.StreamStart));
 
     /// <summary>
     ///     Accepts one relayed voice frame, as if it had just arrived from the server. Public so tests can drive playback
     ///         without a network.
     /// </summary>
     public void HandleFrame(KsVoiceFrameMessage message)
-        => HandleFrame(message.Source, message.Sequence, message.Codec, message.Payload);
+        => HandleFrame(message.Source, message.Sequence, new KsVoicePacket(message.Codec, message.Payload, message.StreamStart));
 
-    private void HandleFrame(NetEntity speakerNetEntity, ushort sequence, KsVoiceCodec codec, byte[] payload)
+    private void HandleFrame(NetEntity speakerNetEntity, ushort sequence, KsVoicePacket packet)
     {
         ReceivedFrameCount++;
 
-        if (!_enabled || !_hearEnabled || payload.Length == 0)
+        if (!_enabled || !_hearEnabled || packet.Payload.Length == 0)
             return;
 
         // Kept encoded until its turn: Opus is stateful, so packets have to be decoded in sequence order, which is
         //      only known once the jitter buffer has put them in it.
         var speaker = ResolveSpeaker(speakerNetEntity);
         speaker.LastReceived = _gameTiming.RealTime;
-        speaker.Receive(sequence, new KsVoicePacket(codec, payload), _jitterSamples, _decodeScratch);
+        speaker.Receive(sequence, packet, _jitterSamples, _decodeScratch);
     }
 
     /// <summary>
@@ -250,6 +258,21 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
             _pendingSpeakers[speakerNetEntity] = pendingSpeaker = new KsVoiceSpeaker();
 
         return pendingSpeaker;
+    }
+
+    private void OnBeforeReplayJump()
+    {
+        _replayTickBeforeJump = _gameTiming.CurTick;
+    }
+
+    /// <summary>
+    ///     After a rewind, stops every talker: their sequence numbers go backwards, which the jitter buffer would take as
+    ///         stale audio and drop. Stepping forward, which scrubbing does every tick, leaves playback alone.
+    /// </summary>
+    private void OnAfterReplayJump()
+    {
+        if (_gameTiming.CurTick < _replayTickBeforeJump)
+            StopAll();
     }
 
     public override void FrameUpdate(float frameTime)
@@ -511,10 +534,13 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
     }
 
     /// <summary>
+    ///     One relayed chunk, still encoded. <see cref="StreamStart"/> marks where the server started a fresh encoder.
+    /// </summary>
+    internal readonly record struct KsVoicePacket(KsVoiceCodec Codec, byte[] Payload, bool StreamStart);
+
+    /// <summary>
     ///     One talker's jitter buffer and the chunks currently playing for them.
     /// </summary>
-    internal readonly record struct KsVoicePacket(KsVoiceCodec Codec, byte[] Payload);
-
     internal sealed class KsVoiceSpeaker : IDisposable
     {
         private readonly Dictionary<ushort, KsVoicePacket> _pending = [];
@@ -620,7 +646,8 @@ public sealed partial class KsVoicePlaybackSystem : EntitySystem
 
         private void Decode(KsVoicePacket packet, short[] scratch)
         {
-            if (_decoder == null || _decoder.Codec != packet.Codec)
+            // A stream start is a fresh encoder on the server, so its packets need a decoder with no history either.
+            if (_decoder == null || _decoder.Codec != packet.Codec || packet.StreamStart)
                 _decoder = KsVoiceDecoder.Create(packet.Codec);
 
             var sampleCount = _decoder.Decode(packet.Payload, scratch);

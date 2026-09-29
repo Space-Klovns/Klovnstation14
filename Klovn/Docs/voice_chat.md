@@ -171,8 +171,15 @@ takes effect from each talker's next chunk and nothing goes out of step.
   - It is stateful, so clients decode each talker's packets in sequence order.
   - A lost packet is filled in with Opus's packet-loss concealment instead of being skipped.
 
-Both codecs encode on the talker's page connection (`KsVoiceUplinkConnection`), on the thread pool. A connection is one
-talker's continuous stream, which is the scope a stateful encoder needs, and it keeps encoding off the game loop.
+Both codecs encode on the talker's page connection (`KsVoiceUplinkConnection`), on the thread pool, which keeps
+encoding off the game loop.
+
+- A page only encodes while the main thread says it's transmitting. Audio that won't be relayed (push-to-talk up,
+  muted, on cooldown) costs nothing, and it never moves a stateful encoder past audio its listeners didn't get.
+- Each stretch of transmitting starts a fresh encoder, and its first packet is flagged `StreamStart`. Clients start a
+  fresh decoder at that packet, in sequence order, so the two sides always share a stream.
+- `Transmitting` trails the main thread's decision by up to a chunk, so at most 60 ms at the edge of a stretch goes
+  unencoded.
 
 **Opus costs CPU.** Concentus runs at roughly half the speed of native libopus. Measured in Release in the dev
 container (`KsVoiceCodecTests.OpusCost`, which is noisy):
@@ -190,17 +197,23 @@ container (`KsVoiceCodecTests.OpusCost`, which is noisy):
 
 The page's mic test plays the uncoded 16 kHz audio, so it doesn't include codec artifacts.
 
-**Replays.** A relayed chunk also goes into server-side replays, as a `KsVoiceReplayFrameEvent` carrying the same
-ADPCM packet, speaker and sequence number. It's recorded whether or not anyone was in range, since a replay can be
-watched from anywhere. When a replay plays, the engine raises recorded events as if they had arrived over the network.
-`KsVoicePlaybackSystem` handles this one exactly like a live `KsVoiceFrameMessage`, positioned on the talker's
-recorded entity relative to the replay camera. `ContentReplayPlaybackManager` drops it while skipping through a replay,
-like other sounds, so seeking doesn't play a burst of old speech (TTS's `PlayTtsEvent` is dropped the same way; it was
-already recorded, but played in a burst while skipping). A jump in either direction also stops whatever voice is
-playing, since after a rewind a talker's sequence numbers go backwards and would otherwise be taken as stale. Client-side recordings keep the frames that client
-received, as they keep its popups. `klovn.voice.record_in_replays` turns server-side recording off. Voice makes
-replays bigger: 8 KB per second per talker, while talking. Only relayed audio is recorded, so muted, blocked or
-out-of-body audio never gets into a replay.
+**Replays.** A relayed chunk also goes into server-side replays as a `KsVoiceReplayFrameEvent`. It carries the same
+packet the live frame does: codec, stream-start flag, speaker and sequence number. It's recorded whether or not anyone
+was in range, since a replay can be watched from anywhere.
+
+- When a replay plays, the engine raises recorded events as if they had arrived over the network.
+  `KsVoicePlaybackSystem` handles this one exactly like a live `KsVoiceFrameMessage`, positioned on the talker's
+  recorded entity relative to the replay camera.
+- `ContentReplayPlaybackManager` drops it while skipping through a replay, like other sounds, so seeking doesn't play
+  a burst of old speech. TTS's `PlayTtsEvent` is dropped the same way: it was already recorded, but played in a burst
+  while skipping.
+- Rewinding stops whatever voice is playing, since a talker's sequence numbers then go backwards and would be taken as
+  stale. Stepping forward, which scrubbing does every tick, leaves it alone.
+- Client-side recordings keep the frames that client received, as they keep its popups.
+- `klovn.voice.record_in_replays` turns server-side recording off.
+- Voice makes replays bigger, while someone is talking: 8 KB per second per talker with ADPCM, and a few KB per second
+  with Opus.
+- Only relayed audio is recorded, so muted, blocked or out-of-body audio never gets into a replay.
 
 The talking indicator is appearance data (`KsVoiceVisuals.Talking`) on `KsVoiceIndicatorComponent`. It is added the
 first time an entity talks and cleared 300 ms after the last relayed chunk. `KsVoiceIndicatorVisualizerSystem` draws

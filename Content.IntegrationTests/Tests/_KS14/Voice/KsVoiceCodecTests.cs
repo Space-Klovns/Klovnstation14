@@ -90,12 +90,12 @@ public sealed class KsVoiceCodecTests
         });
     }
 
+    private static readonly int OpusComplexity = KsCCVars.VoiceOpusComplexity.DefaultValue;
+
     /// <summary>
     ///     Voiced, speech-shaped audio: a harmonic series on a gliding pitch, weighted by three formants, in syllable-like
     ///         bursts. Opus's speech coder models exactly this, so a pure tone would flatter or confuse it.
     /// </summary>
-    private static readonly int OpusComplexity = KsCCVars.VoiceOpusComplexity.DefaultValue;
-
     private static short[] SpeechLike(int count)
     {
         var raw = new double[count];

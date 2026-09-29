@@ -151,7 +151,8 @@ public sealed class KsVoiceUplinkTests : GameTest
         var host = new RecordingHost(Server.ResolveDependency<KsVoiceLinkManager>());
         await using var pair = await CreateSocketPair();
 
-        var connection = new KsVoiceUplinkConnection(pair.Server, IPAddress.Loopback, host);
+        // As if the main thread were relaying this page, so its audio is encoded.
+        var connection = new KsVoiceUplinkConnection(pair.Server, IPAddress.Loopback, host) { Transmitting = true };
         var run = connection.RunAsync(CancellationToken.None);
 
         await SendText(pair.Client, JsonSerializer.Serialize(new { type = "auth", token }));
@@ -175,7 +176,8 @@ public sealed class KsVoiceUplinkTests : GameTest
             Assert.That(hello.GetProperty("name").GetString(), Is.EqualTo(ServerSession!.Name));
             Assert.That(chunks, Has.Length.EqualTo(2));
             Assert.That(chunks.Select(c => c.UserId), Is.All.EqualTo(ServerSession!.UserId));
-            Assert.That(chunks[0].SampleCount, Is.EqualTo(KsVoiceConstants.MaxChunkSamples));
+            Assert.That(KsVoiceAdpcm.Decode(chunks[0].Payload, new short[KsVoiceConstants.MaxChunkSamples]),
+                Is.EqualTo(KsVoiceConstants.MaxChunkSamples), "the whole message, encoded");
         });
     }
 
@@ -187,16 +189,17 @@ public sealed class KsVoiceUplinkTests : GameTest
         var host = new RecordingHost(Server.ResolveDependency<KsVoiceLinkManager>()) { Codec = KsVoiceCodec.Opus };
         await using var pair = await CreateSocketPair();
 
-        var connection = new KsVoiceUplinkConnection(pair.Server, IPAddress.Loopback, host);
+        var connection = new KsVoiceUplinkConnection(pair.Server, IPAddress.Loopback, host) { Transmitting = true };
         var run = connection.RunAsync(CancellationToken.None);
 
         await SendText(pair.Client, JsonSerializer.Serialize(new { type = "auth", token }));
         await ReadText(pair.Client);
 
-        async Task<KsVoiceInboundChunk> Next(ushort sequence)
+        var sequence = (ushort)0;
+        async Task<KsVoiceInboundChunk> Next()
         {
             var before = host.Chunks.Count;
-            await SendAudio(pair.Client, frames: KsVoiceConstants.MaxFramesPerUplinkMessage, sequence: sequence);
+            await SendAudio(pair.Client, frames: KsVoiceConstants.MaxFramesPerUplinkMessage, sequence: sequence++);
             using var timeout = new CancellationTokenSource(SocketTimeout);
             while (host.Chunks.Count <= before)
                 await Task.Delay(10, timeout.Token);
@@ -204,9 +207,16 @@ public sealed class KsVoiceUplinkTests : GameTest
             return host.Chunks.ToArray()[before];
         }
 
-        var opus = await Next(0);
+        var opusFirst = await Next();
+        var opusSecond = await Next();
+
         host.Codec = KsVoiceCodec.Adpcm; // the server's klovn.voice.codec changes mid-stream
-        var adpcm = await Next(1);
+        var adpcm = await Next();
+
+        connection.Transmitting = false; // push-to-talk released, say
+        var idle = await Next();
+        connection.Transmitting = true;
+        var resumed = await Next();
 
         await pair.Client.CloseAsync(WebSocketCloseStatus.NormalClosure, "done", CancellationToken.None);
         await run.WaitAsync(SocketTimeout);
@@ -214,11 +224,18 @@ public sealed class KsVoiceUplinkTests : GameTest
         var scratch = new short[KsVoiceOpus.MaxConcealSamples];
         Assert.Multiple(() =>
         {
-            Assert.That(opus.Codec, Is.EqualTo(KsVoiceCodec.Opus));
-            Assert.That(new KsVoiceOpusDecoder().Decode(opus.Payload, scratch), Is.EqualTo(KsVoiceConstants.MaxChunkSamples),
+            Assert.That(opusFirst.Codec, Is.EqualTo(KsVoiceCodec.Opus));
+            Assert.That(new KsVoiceOpusDecoder().Decode(opusFirst.Payload, scratch), Is.EqualTo(KsVoiceConstants.MaxChunkSamples),
                 "a real Opus packet for the whole chunk");
+            Assert.That(opusFirst.StreamStart, Is.True, "a new encoder starts a stream");
+            Assert.That(opusSecond.StreamStart, Is.False, "and carries on with it");
+
             Assert.That(adpcm.Codec, Is.EqualTo(KsVoiceCodec.Adpcm), "a codec change takes effect from the next chunk");
+            Assert.That(adpcm.StreamStart, Is.True, "with a new stream");
             Assert.That(KsVoiceAdpcm.Decode(adpcm.Payload, scratch), Is.EqualTo(KsVoiceConstants.MaxChunkSamples));
+
+            Assert.That(idle.Payload, Is.Empty, "audio that won't be relayed isn't encoded");
+            Assert.That(resumed.StreamStart, Is.True, "and transmitting again starts a new stream, so decoders restart with it");
         });
     }
 

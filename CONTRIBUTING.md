@@ -585,18 +585,15 @@ Sandbox violation: Access to method not allowed:
         System.Collections.Generic.Dictionary`2<!!0, !!1>, !!0, bool&)
 ```
 
-**The cascade is what makes this expensive to diagnose.** One violation takes the assembly down, which
-takes the integration pool down with it, and every unrelated test then fails with:
+**Only one test will tell you** (see `SandboxTest` below): everything else loads content without the check
+and passes. So a violation doesn't break a test run in any way you'd notice. It breaks a real client, at
+connect, with the error above.
 
-```
-SetUp : System.InvalidOperationException : Pool manager has not been initialized
-```
-
-A run that reports a hundred-odd failures across unrelated features, all of them `Pool manager has not
-been initialized`, has **one** cause, and it is not in any of the tests named. Find the single result
-that failed with something else - `TypeCheckFailedException` - and fix that. Running with
-`--logger "trx;LogFileName=..."` and grouping the results by message is the quick way to see that shape;
-`-v q` prints only the total and hides it entirely.
+A related shape: when a run reports a hundred-odd failures across unrelated features, all of them
+`SetUp : System.InvalidOperationException : Pool manager has not been initialized`, something failed while the
+integration pool was being set up, and it has **one** cause that isn't in any of the tests named. Find the single
+result that failed with something else. Running with `--logger "trx;LogFileName=..."` and grouping the results by
+message is the quick way to see that shape; `-v q` prints only the total and hides it entirely.
 
 The offenders are mostly the low-level performance conveniences: `CollectionsMarshal`, `Unsafe`,
 `MemoryMarshal`, most of `System.Runtime.InteropServices`, reflection that writes, and anything

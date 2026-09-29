@@ -156,6 +156,8 @@ public sealed partial class KsVoiceSystem
         var adminSession = userActorComponent.PlayerSession;
         var targetUserId = targetActorComponent.PlayerSession.UserId;
 
+        // Unmute lifts any mute; muting stays on offer until there's an admin mute, so a player the abuse detector
+        //      caught can still be muted for the round.
         if (IsMuted(targetUserId))
         {
             args.Verbs.Add(new Verb
@@ -165,9 +167,10 @@ public sealed partial class KsVoiceSystem
                 Impact = LogImpact.Medium,
                 Act = () => Unmute(targetUserId, adminSession),
             });
-
-            return;
         }
+
+        if (_mutes.ContainsKey(targetUserId))
+            return;
 
         args.Verbs.Add(new Verb
         {

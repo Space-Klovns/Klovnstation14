@@ -10,6 +10,7 @@ using Content.Shared.GameTicking;
 using Content.Shared.Ghost;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Popups;
+using Content.Shared.Speech.Muting;
 using Robust.Server.Player;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
@@ -70,6 +71,7 @@ public sealed partial class KsVoiceSystem : EntitySystem
     [Dependency] private PopupSystem _popupSystem = default!;
     [Dependency] private EntityQuery<GhostComponent> _ghostQuery = default!;
     [Dependency] private EntityQuery<SleepingComponent> _sleepingQuery = default!;
+    [Dependency] private EntityQuery<MutedComponent> _mutedQuery = default!;
     [Dependency] private EntityQuery<EyeComponent> _eyeQuery = default!;
     [Dependency] private EntityQuery<MetaDataComponent> _metaQuery = default!;
 
@@ -183,7 +185,8 @@ public sealed partial class KsVoiceSystem : EntitySystem
 
         UpdatePageState(chunk.UserId, state, block, voiceActivation, now);
 
-        if (block != null)
+        // No payload: the page wasn't transmitting when it sent this, so it wasn't encoded (KsVoiceUplinkConnection).
+        if (block != null || chunk.Payload.Length == 0)
             return;
 
         Relay(chunk, session, speakerUid, state, now);
@@ -236,7 +239,8 @@ public sealed partial class KsVoiceSystem : EntitySystem
         // Everything relayed, whoever was in range: a replay is watched from anywhere.
         if (_recordInReplays && _replayRecordingManager.IsRecording)
         {
-            _replayRecordingManager.RecordServerMessage(new KsVoiceReplayFrameEvent(speakerNetEntity, state.Sequence, chunk.Codec, chunk.Payload));
+            _replayRecordingManager.RecordServerMessage(
+                new KsVoiceReplayFrameEvent(speakerNetEntity, state.Sequence, chunk.Codec, chunk.StreamStart, chunk.Payload));
             RecordedChunkCount++;
         }
 
@@ -248,6 +252,7 @@ public sealed partial class KsVoiceSystem : EntitySystem
             Source = speakerNetEntity,
             Sequence = state.Sequence,
             Codec = chunk.Codec,
+            StreamStart = chunk.StreamStart,
             Payload = chunk.Payload,
         };
 
@@ -324,8 +329,16 @@ public sealed partial class KsVoiceSystem : EntitySystem
         if (state.CannotSpeakBodyUid == attachedUid)
             return KsVoiceBlockReason.CannotSpeak;
 
+        // Not trying to talk, so no CanSpeak: its refusals show popups. Report what can be seen without it instead, so a
+        //      page isn't told it's live for a body that plainly can't speak. The real check runs on the next attempt.
         if (!attempt)
-            return null;
+        {
+            return _mobStateSystem.IsIncapacitated(attachedUid) ||
+                   _sleepingQuery.HasComp(attachedUid) ||
+                   _mutedQuery.HasComp(attachedUid)
+                ? KsVoiceBlockReason.CannotSpeak
+                : null;
+        }
 
         if (!_actionBlockerSystem.CanSpeak(attachedUid))
         {

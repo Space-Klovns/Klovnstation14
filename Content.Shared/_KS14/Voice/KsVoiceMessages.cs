@@ -23,6 +23,12 @@ public sealed class KsVoiceFrameMessage : NetMessage
     public NetEntity Source;
     public ushort Sequence;
     public KsVoiceCodec Codec;
+
+    /// <summary>
+    ///     The first packet of a fresh encoder: listeners decode it, and what follows, with a fresh decoder.
+    /// </summary>
+    public bool StreamStart;
+
     public byte[] Payload = [];
 
     public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
@@ -30,6 +36,7 @@ public sealed class KsVoiceFrameMessage : NetMessage
         Source = buffer.ReadNetEntity();
         Sequence = buffer.ReadUInt16();
         Codec = (KsVoiceCodec)buffer.ReadByte();
+        StreamStart = buffer.ReadBoolean();
 
         var length = (int)buffer.ReadUInt16();
         if (length > MaxPayloadBytes)
@@ -44,12 +51,13 @@ public sealed class KsVoiceFrameMessage : NetMessage
         buffer.Write(Source);
         buffer.Write(Sequence);
         buffer.Write((byte)Codec);
+        buffer.Write(StreamStart);
         buffer.Write((ushort)Payload.Length);
         buffer.Write(Payload);
     }
 
     public override int EstimateBufferSize()
-        => 9 + Payload.Length;
+        => 10 + Payload.Length;
 }
 
 /// <summary>
@@ -95,10 +103,12 @@ public sealed class KsVoiceUplinkStatusEvent(bool connected) : EntityEventArgs
 ///         had been.
 /// </summary>
 [Serializable, NetSerializable]
-public sealed class KsVoiceReplayFrameEvent(NetEntity source, ushort sequence, KsVoiceCodec codec, byte[] payload) : EntityEventArgs
+public sealed class KsVoiceReplayFrameEvent(NetEntity source, ushort sequence, KsVoiceCodec codec, bool streamStart, byte[] payload)
+    : EntityEventArgs
 {
     public readonly NetEntity Source = source;
     public readonly ushort Sequence = sequence;
     public readonly KsVoiceCodec Codec = codec;
+    public readonly bool StreamStart = streamStart;
     public readonly byte[] Payload = payload;
 }
