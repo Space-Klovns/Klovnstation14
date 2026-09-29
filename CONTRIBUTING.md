@@ -641,6 +641,16 @@ The rules come from two places, so nothing about a type's namespace predicts the
   - A *field* of type `MethodImplOptions`. `[MethodImpl(MethodImplOptions.AggressiveInlining)]` itself is fine,
     since it compiles to method flags rather than a type reference.
 
+Two more are made by the compiler, so the source never names what it refuses. Both came up in the TTS Opus code
+(`KsTtsOpus.cs`):
+
+- **`"..."u8` literals** fail ILVerify. They compile to a pointer into the assembly's static data (`Found address of
+  '<PrivateImplementationDetails>...', Expected Native Int`). Build the bytes once instead, e.g.
+  `static readonly byte[] Magic = Encoding.ASCII.GetBytes("OggS")`.
+- **A non-empty collection expression that targets `List<T>`** (`Method([item])`, where the parameter is a
+  `List<T>`) compiles to `CollectionsMarshal.SetCount`, which is not whitelisted. Use `new List<T> { item }`.
+  Empty ones (`= []`) and ones that target arrays are fine.
+
 ### Only one system may subscribe to a given component and event pair
 
 The event bus throws

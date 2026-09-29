@@ -218,6 +218,7 @@ namespace Content.Server.Database
             profile.EyeColor = appearance.EyeColor.ToHex();
             profile.SkinColor = appearance.SkinColor.ToHex();
             profile.SpawnPriority = (int)humanoid.SpawnPriority;
+            profile.TtsVoice = humanoid.TtsVoice?.Id; // KS14
             profile.OrganMarkings = JsonSerializer.SerializeToDocument(dataNode.ToJsonNode());
 
             // support for downgrades - at some point this should be removed
