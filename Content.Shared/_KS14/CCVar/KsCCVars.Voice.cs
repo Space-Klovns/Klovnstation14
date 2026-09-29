@@ -148,9 +148,9 @@ public sealed partial class KsCCVars
         CVarDef.Create("klovn.voice.admin_log_bursts", true, CVar.ARCHIVE | CVar.SERVERONLY);
 
     /// <summary>
-    ///     How relayed voice is compressed: <c>adpcm</c> (64 kbps, a little hissy, cheap) or <c>opus</c> (much cleaner at
-    ///         half the bandwidth, but costs more CPU on the server, which encodes, and on every client, which decodes).
-    ///         Anything else means <c>adpcm</c>. Takes effect from each talker's next chunk.
+    ///     How relayed voice is compressed: <c>opus</c>, the default (much cleaner at half the bandwidth, but costs more
+    ///         CPU on the server, which encodes, and on every client, which decodes), or <c>adpcm</c> (64 kbps, a little
+    ///         hissy, cheap). Anything else means <c>adpcm</c>. Takes effect from each talker's next chunk.
     /// </summary>
     [CVarControl(AdminFlags.Server)]
     public static readonly CVarDef<string> VoiceCodec =

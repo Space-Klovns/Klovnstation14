@@ -164,9 +164,9 @@ reorder, and each packet carries its own ADPCM predictor state, so one lost pack
 **Codecs.** `klovn.voice.codec` picks how relayed audio is compressed. Every frame carries its codec, so a change
 takes effect from each talker's next chunk and nothing goes out of step.
 
-- **`adpcm`** (default): IMA ADPCM, about 150 lines of sandbox-safe C# (`KsVoiceAdpcm`). 64 kbps for 16 kHz speech,
+- **`adpcm`**: IMA ADPCM, about 150 lines of sandbox-safe C# (`KsVoiceAdpcm`). 64 kbps for 16 kHz speech,
   with an audible hiss. Every packet carries its own predictor state, so it decodes on its own.
-- **`opus`**: Opus through **Concentus**, a pure C# port of libopus. It is vendored as source, as its own
+- **`opus`** (default): Opus through **Concentus**, a pure C# port of libopus. It is vendored as source, as its own
   content assembly `Content.Klovn.Concentus` (referenced by `Content.Shared`), because client content can load only
   `Content.*` assemblies, so no NuGet package or native libopus is reachable. The client loads it as a module like
   any other, so it is sandbox-checked like any other; `SandboxTest` checks it by name. Seven small edits make it pass the sandbox; its `README.md` lists them,
@@ -347,7 +347,7 @@ Voice is **off by default**. Every entry point checks `klovn.voice.enabled`. Wit
 | `klovn.voice.auth_failures_per_minute` | `10` | server | Failed authentications per address before `429`. |
 | `klovn.voice.admin_log_bursts` | `true` | server | Log every talk burst. |
 | `klovn.voice.record_in_replays` | `true` | server | Record relayed voice into server-side replays. |
-| `klovn.voice.codec` | `adpcm` | server | Codec for relayed voice: `adpcm` or `opus` (see *Codecs*). |
+| `klovn.voice.codec` | `opus` | server | Codec for relayed voice: `opus` or `adpcm` (see *Codecs*). An unknown value means `adpcm`. |
 | `klovn.voice.opus_bitrate` | `32000` | server | Opus target bitrate, 6000–64000. |
 | `klovn.voice.opus_complexity` | `2` | server | Opus encoder complexity, 0–10: more CPU per talker, marginally better speech. |
 | `klovn.voice.hear_enabled` | `true` | client | Play other players' voices. |

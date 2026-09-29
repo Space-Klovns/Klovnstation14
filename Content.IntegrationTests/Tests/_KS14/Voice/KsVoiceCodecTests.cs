@@ -284,8 +284,9 @@ public sealed class KsVoiceCodecTests
     {
         Assert.Multiple(() =>
         {
-            Assert.That(KsVoiceUplinkManager.ParseCodec(KsCCVars.VoiceCodec.DefaultValue), Is.EqualTo(KsVoiceCodec.Adpcm), "the default");
+            Assert.That(KsVoiceUplinkManager.ParseCodec(KsCCVars.VoiceCodec.DefaultValue), Is.EqualTo(KsVoiceCodec.Opus), "the default");
             Assert.That(KsVoiceUplinkManager.ParseCodec(" Opus "), Is.EqualTo(KsVoiceCodec.Opus));
+            Assert.That(KsVoiceUplinkManager.ParseCodec("adpcm"), Is.EqualTo(KsVoiceCodec.Adpcm));
             Assert.That(KsVoiceUplinkManager.ParseCodec("mp3"), Is.Null);
         });
     }
