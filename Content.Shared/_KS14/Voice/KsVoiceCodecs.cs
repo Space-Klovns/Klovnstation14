@@ -1,6 +1,6 @@
-using Concentus;
-using Concentus.Enums;
-using Concentus.Structs;
+using Content.Klovn.Concentus;
+using Content.Klovn.Concentus.Enums;
+using Content.Klovn.Concentus.Structs;
 
 namespace Content.Shared._KS14.Voice;
 
@@ -16,7 +16,7 @@ public enum KsVoiceCodec : byte
     Adpcm = 0,
 
     /// <summary>
-    ///     Opus through the vendored Concentus port (<c>_KS14/Voice/Opus/Concentus</c>): far cleaner at half the
+    ///     Opus through the vendored Concentus port (<c>Content.Klovn.Concentus</c>): far cleaner at half the
     ///         bandwidth, but stateful, so it has to be decoded in order and costs more CPU.
     /// </summary>
     Opus = 1,

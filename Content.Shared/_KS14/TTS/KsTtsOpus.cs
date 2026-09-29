@@ -1,8 +1,8 @@
 using System.Buffers.Binary;
 using System.Text;
-using Concentus;
-using Concentus.Enums;
-using Concentus.Structs;
+using Content.Klovn.Concentus;
+using Content.Klovn.Concentus.Enums;
+using Content.Klovn.Concentus.Structs;
 using Robust.Shared.Serialization;
 
 namespace Content.Shared._KS14.TTS;
@@ -28,7 +28,7 @@ public enum TtsCodec : byte
 }
 
 /// <summary>
-///     Reads and writes Ogg Opus files (RFC 7845) with the vendored Concentus port (<c>_KS14/Voice/Opus/Concentus</c>):
+///     Reads and writes Ogg Opus files (RFC 7845) with the vendored Concentus port (<c>Content.Klovn.Concentus</c>):
 ///         clients decode what the endpoint or the server's transcoder produced, and the transcoder encodes. Everything
 ///         here is pure content code and holds no state, so it is safe on any thread, which is the point: clients
 ///         decode on the thread pool.

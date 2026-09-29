@@ -1,8 +1,10 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Content.Shared._KS14.CCVar;
@@ -49,9 +51,16 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
     /// <summary>
     ///     Published path → (embedded resource name, content type).
     /// </summary>
+    private const string PageResource = "index.html";
+
+    /// <summary>
+    ///     What <see cref="WithGameLanguage"/> replaces in <see cref="PageResource"/>.
+    /// </summary>
+    private const string PageLanguageMarkup = "<html lang=\"en\">";
+
     private static readonly Dictionary<string, (string Resource, string ContentType)> StaticFiles = new()
     {
-        [KsVoiceLinkManager.PagePath] = ("index.html", "text/html; charset=utf-8"),
+        [KsVoiceLinkManager.PagePath] = (PageResource, "text/html; charset=utf-8"),
         [KsVoiceLinkManager.PagePath + "app.js"] = ("app.js", "text/javascript; charset=utf-8"),
         [KsVoiceLinkManager.PagePath + "i18n.js"] = ("i18n.js", "text/javascript; charset=utf-8"),
         [KsVoiceLinkManager.PagePath + "worklet.js"] = ("worklet.js", "text/javascript; charset=utf-8"),
@@ -73,6 +82,7 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
     [Dependency] private IStatusHost _statusHost = default!;
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private ILogManager _logManager = default!;
+    [Dependency] private ILocalizationManager _localizationManager = default!;
     [Dependency] private IServerNetManager _netManager = default!;
     [Dependency] private KsVoiceLinkManager _linkManager = default!;
 
@@ -341,16 +351,33 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
             return true;
         }
 
-        if (!StaticFiles.TryGetValue(path, out var file) ||
-            LoadStaticFile(file.Resource) is not { } data)
-        {
+        if (!TryGetStaticFile(path, out var data, out var contentType))
             return false;
-        }
 
         foreach (var (header, value) in SecurityHeaders)
             context.ResponseHeaders[header] = value;
 
-        await context.RespondAsync(data, code: HttpStatusCode.OK, contentType: file.ContentType);
+        await context.RespondAsync(data, code: HttpStatusCode.OK, contentType: contentType);
+        return true;
+    }
+
+    /// <summary>
+    ///     A file of the page, exactly as served: <paramref name="path"/> is the request path, e.g.
+    ///         <see cref="KsVoiceLinkManager.PagePath"/>.
+    /// </summary>
+    public bool TryGetStaticFile(string path, [NotNullWhen(true)] out byte[]? data, out string contentType)
+    {
+        data = null;
+        contentType = "";
+
+        if (!StaticFiles.TryGetValue(path, out var file) ||
+            LoadStaticFile(file.Resource) is not { } loaded)
+        {
+            return false;
+        }
+
+        data = file.Resource == PageResource ? WithGameLanguage(loaded) : loaded;
+        contentType = file.ContentType;
         return true;
     }
 
@@ -509,6 +536,38 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
 
             return failures.Count >= _authFailuresPerMinute;
         }
+    }
+
+    /// <summary>
+    ///     The page, with its <c>&lt;html lang&gt;</c> set to the language the game itself runs in, which the page then
+    ///         shows itself in unless the player has picked another. Done per request rather than cached: the culture
+    ///         is only loaded once content has initialised, and the status host may already be answering by then.
+    /// </summary>
+    private byte[] WithGameLanguage(byte[] page)
+    {
+        var culture = GameCultureName();
+        var html = Encoding.UTF8.GetString(page);
+        if (!html.Contains(PageLanguageMarkup, StringComparison.Ordinal))
+        {
+            _sawmill.Error($"The voice page has no '{PageLanguageMarkup}' to put the game's language in.");
+            return page;
+        }
+
+        return Encoding.UTF8.GetBytes(html.Replace(PageLanguageMarkup, $"<html lang=\"{culture}\">", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    ///     The culture the game's localization runs in (<c>ContentLocalizationManager</c> loads it), e.g. "en-US". Not
+    ///         <c>loc.culture_name</c>: content loads a fixed culture and never reads that cvar.
+    /// </summary>
+    public string GameCultureName()
+    {
+        var name = _localizationManager.DefaultCulture?.Name;
+
+        // Only a language tag's characters, since it goes into markup.
+        return !string.IsNullOrEmpty(name) && name.All(character => char.IsAsciiLetterOrDigit(character) || character == '-')
+            ? name
+            : "en";
     }
 
     private byte[]? LoadStaticFile(string resource)

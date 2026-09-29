@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Content.Shared.Database\Content.Shared.Database.csproj" />
+    <ProjectReference Include="..\Content.Klovn.Concentus\Content.Klovn.Concentus.csproj" /> <!-- KS14: Opus codec -->
   </ItemGroup>
 
   <Import Project="..\RobustToolbox\MSBuild\Robust.Properties.targets" />

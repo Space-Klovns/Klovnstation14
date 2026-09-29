@@ -73,7 +73,12 @@ under `/klovn/voice/`, and accepts websockets at `/klovn/voice/ws`.
 - **Languages.** The page is translated into English, Russian, Ukrainian, German, French, Spanish, Polish, Dutch
   and Brazilian Portuguese (`Web/i18n.js`). Every string goes through it, and English is the fallback for a missing
   key. A picker next to the title chooses the language; the choice is kept in `localStorage`, so it survives closing
-  the browser, and until one is chosen the browser's own language decides. In-game names (menus, commands,
+  the browser. Until one is chosen, the page is in the game's own language: the server writes the culture the game's
+  localization runs in (`ILocalizationManager.DefaultCulture`, "en-US" unless a fork changes
+  `ContentLocalizationManager`) into `<html lang>` as it serves the page, and `i18n.js` starts from that, falling back
+  to English for a language it has no translation for. That's the culture actually loaded, not `loc.culture_name`:
+  content loads a fixed culture and never reads that cvar. The browser's language isn't consulted, so the page
+  matches the game it belongs to. In-game names (menus, commands,
   push-to-talk) stay in English, as the game shows them. The status line, identity and errors are rebuilt from keys in
   `render()`, so switching language re-renders instead of reloading. The in-game voice window uses the game's own
   Fluent strings (`Resources/Locale/.../voice.ftl`), like the rest of the UI.
@@ -161,9 +166,10 @@ takes effect from each talker's next chunk and nothing goes out of step.
 
 - **`adpcm`** (default): IMA ADPCM, about 150 lines of sandbox-safe C# (`KsVoiceAdpcm`). 64 kbps for 16 kHz speech,
   with an audible hiss. Every packet carries its own predictor state, so it decodes on its own.
-- **`opus`**: Opus through **Concentus**, a pure C# port of libopus. It is vendored as source in
-  `Content.Shared/_KS14/Voice/Opus/Concentus/`, because client content can load only `Content.*` assemblies, so no
-  NuGet package or native libopus is reachable. Seven small edits make it pass the sandbox; its `README.md` lists them,
+- **`opus`**: Opus through **Concentus**, a pure C# port of libopus. It is vendored as source, as its own
+  content assembly `Content.Klovn.Concentus` (referenced by `Content.Shared`), because client content can load only
+  `Content.*` assemblies, so no NuGet package or native libopus is reachable. The client loads it as a module like
+  any other, so it is sandbox-checked like any other; `SandboxTest` checks it by name. Seven small edits make it pass the sandbox; its `README.md` lists them,
   and `vendor.py` re-applies them on update.
   - It uses the VOIP application at 16 kHz mono, one packet per chunk (20, 40 and 60 ms are all legal Opus frames),
     and `klovn.voice.opus_bitrate` (default 32 kbps).
@@ -418,7 +424,7 @@ empty and the transfer endpoint default (`http://localhost:1212/`) is used.
 | `Content.Shared/_KS14/CCVar/KsCCVars.Voice.cs` | All voice cvars. |
 | `Content.Shared/_KS14/Voice/KsVoiceAdpcm.cs` | IMA ADPCM codec. |
 | `Content.Shared/_KS14/Voice/KsVoiceCodecs.cs` | Codec ids and the per-stream encoders and decoders for ADPCM and Opus. |
-| `Content.Shared/_KS14/Voice/Opus/Concentus/` | Vendored Concentus (Opus), with `README.md` and `vendor.py`. |
+| `Content.Klovn.Concentus/` | Vendored Concentus (Opus) as its own content assembly, referenced by `Content.Shared`, with `README.md` and `vendor.py`. |
 | `Content.Shared/_KS14/Voice/KsVoiceMessages.cs` | Relay net message; PTT, link and status network events. |
 | `Content.Shared/_KS14/Voice/KsVoiceIndicatorComponent.cs` | Talking indicator component and appearance keys. |
 | `Content.Server/_KS14/Voice/KsVoiceLinkManager.cs` | Token issue, lookup, revocation; public URL. |

@@ -4,8 +4,9 @@
 // it. In-game names (menus, commands, the push-to-talk key) are left as the game shows them, which is in English.
 // "*-after" strings follow an inline <code> element directly, so they carry their own leading space where one belongs.
 //
-// The chosen language is kept in localStorage, so it survives closing the browser; until one is chosen, the browser's
-// own preference decides.
+// The chosen language is kept in localStorage, so it survives closing the browser. Until one is chosen, the page is in
+// the language the game runs in: the server writes the game's culture into <html lang> as it serves the page. The
+// browser's own language isn't consulted, so the page matches the game it belongs to.
 
 window.KsVoiceI18n = (() => {
     const LANGUAGE_KEY = "ksVoiceLanguage";
@@ -584,13 +585,7 @@ window.KsVoiceI18n = (() => {
         if (saved && LANGUAGES[saved])
             return saved;
 
-        for (const tag of navigator.languages ?? [navigator.language]) {
-            const code = match(tag);
-            if (code)
-                return code;
-        }
-
-        return "en";
+        return match(document.documentElement.lang) ?? "en";
     }
 
     let current = detect();

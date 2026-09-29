@@ -59,7 +59,7 @@ Other cvars:
 
 The engine can only play Ogg Vorbis (`IAudioManager.LoadAudioOggVorbis`), and loading one has to happen on the
 game thread. Opus is the better codec for speech at these bitrates, and the voice chat work already vendored a
-pure-C# Opus decoder, Concentus (`Content.Shared/_KS14/Voice/Opus/Concentus`). So Opus clips take a different
+pure-C# Opus decoder, Concentus (`Content.Klovn.Concentus`, a project of its own). So Opus clips take a different
 path:
 
 1. **Demultiplex and decode.** `KsTtsOpus` splits the Ogg pages (RFC 7845) and decodes the packets. This runs on

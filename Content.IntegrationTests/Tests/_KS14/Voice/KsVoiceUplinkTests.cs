@@ -76,6 +76,24 @@ public sealed class KsVoiceUplinkTests : GameTest
     }
 
     [Test]
+    public async Task PageIsServedInTheGamesLanguage()
+    {
+        var uplinkManager = Server.ResolveDependency<KsVoiceUplinkManager>();
+        var gameCulture = Server.ResolveDependency<Robust.Shared.Localization.ILocalizationManager>().DefaultCulture?.Name;
+
+        Assert.That(uplinkManager.TryGetStaticFile(KsVoiceLinkManager.PagePath, out var page, out var contentType), Is.True);
+        var html = Encoding.UTF8.GetString(page!);
+
+        Assert.Multiple(() =>
+        {
+            // en-US, not the markup's own "en": only the server putting the game's culture in can make this pass.
+            Assert.That(gameCulture, Is.EqualTo("en-US"), "the culture ContentLocalizationManager loads");
+            Assert.That(html, Does.Contain($"<html lang=\"{gameCulture}\">"), "the page carries the game's language");
+            Assert.That(contentType, Does.StartWith("text/html"));
+        });
+    }
+
+    [Test]
     public async Task IssuedLinkCarriesTokenOnlyInTheFragment()
     {
         await OverrideCVar(Side.Server, KsCCVars.VoicePublicUrl, "https://voice.example.com");

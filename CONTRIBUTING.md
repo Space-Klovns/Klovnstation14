@@ -632,7 +632,7 @@ The rules come from two places, so nothing about a type's namespace predicts the
 - **ILVerify** rejects `stackalloc` (even into a `Span<T>`), `unsafe` code and pointers. Content already notes
   this (`AtmosphereSystem.Gases.cs`). Use `new T[n]` instead.
 - **The whitelist** is per type and often per member. Besides the ones above, these came up vendoring Concentus
-  (`Content.Shared/_KS14/Voice/Opus/Concentus/README.md`), and none of them warns at build time:
+  (`Content.Klovn.Concentus/README.md`), and none of them warns at build time:
   - `System.Buffer` (`BlockCopy`): use `Array.Copy`, which counts elements, not bytes.
   - `System.Diagnostics.Debug` and `ConditionalAttribute`: use `DebugTools.Assert`, as `Solution.cs` notes.
   - `System.Numerics.Vector<T>`.

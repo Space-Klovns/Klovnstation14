@@ -85,7 +85,8 @@ public static class ClientPackaging
             "Content.Client",
             new[] { "Content.Client",
                 "Content.Shared",
-                "Content.Shared.Database" },
+                "Content.Shared.Database",
+                "Content.Klovn.Concentus" /* KS14: added */ },
             cancel: cancel);
 
         // KS14 Start: proper packaging while not ignoring configpresets
