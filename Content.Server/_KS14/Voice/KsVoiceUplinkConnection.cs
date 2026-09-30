@@ -16,6 +16,8 @@ public interface IKsVoiceUplinkHost
 {
     KsVoiceProcessorSettings ProcessorSettings { get; }
 
+    KsVoiceEncoderSettings EncoderSettings { get; }
+
     float UplinkRateFactor { get; }
 
     bool TryAuthenticate(string token, out NetUserId userId, out string userName);
@@ -30,9 +32,36 @@ public interface IKsVoiceUplinkHost
 }
 
 /// <summary>
-///     One decoded, moderated chunk of microphone audio waiting to be relayed on the main thread.
+///     One moderated chunk of microphone audio waiting on the main thread. <see cref="Payload"/> is empty when the page
+///         wasn't transmitting, so the chunk wasn't encoded: it still counts for everything but relay.
+///         <see cref="StreamStart"/> marks the first packet of a fresh encoder, where listeners start a fresh decoder.
 /// </summary>
-public readonly record struct KsVoiceInboundChunk(NetUserId UserId, short[] Samples, bool AbuseTriggered);
+public readonly record struct KsVoiceInboundChunk(
+    NetUserId UserId,
+    KsVoiceCodec Codec,
+    byte[] Payload,
+    bool StreamStart,
+    bool AbuseTriggered);
+
+/// <summary>
+///     Which codec relayed audio is encoded with, from <c>klovn.voice.codec</c> and the <c>klovn.voice.opus_*</c> cvars.
+/// </summary>
+public readonly record struct KsVoiceEncoderSettings(KsVoiceCodec Codec, int OpusBitrate, int OpusComplexity)
+{
+    /// <summary>
+    ///     Whether an existing encoder already produces what these settings ask for.
+    /// </summary>
+    public bool Fits(KsVoiceEncoder encoder)
+    {
+        return encoder.Codec == Codec &&
+               (encoder is not KsVoiceOpusEncoder opusEncoder ||
+                opusEncoder.Bitrate == KsVoiceOpus.ClampBitrate(OpusBitrate) &&
+                opusEncoder.Complexity == KsVoiceOpus.ClampComplexity(OpusComplexity));
+    }
+
+    public KsVoiceEncoder CreateEncoder()
+        => KsVoiceEncoder.Create(Codec, OpusBitrate, OpusComplexity);
+}
 
 /// <summary>
 ///     Server side of one microphone page's websocket.
@@ -67,6 +96,18 @@ public sealed class KsVoiceUplinkConnection
     private readonly CancellationTokenSource _closeSource = new();
 
     private KsVoiceProcessor? _processor;
+
+    /// <summary>
+    ///     This page's encoder. Encoding happens here, on the connection's thread rather than the game's. Only audio
+    ///         the main thread relays is encoded (see <see cref="HandleAudio"/>), so a stateful encoder sees exactly the
+    ///         stream listeners decode.
+    /// </summary>
+    private KsVoiceEncoder? _encoder;
+
+    /// <summary>
+    ///     Whether the last chunk was encoded, i.e. the encoder's stream is still the one listeners are following.
+    /// </summary>
+    private bool _encoderStreaming;
     private volatile bool _transmitting;
     private readonly TaskCompletionSource _greeted = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private double _sampleAllowance;
@@ -294,7 +335,25 @@ public sealed class KsVoiceUplinkConnection
         _processor!.Settings = _host.ProcessorSettings;
         var result = _processor.Process(samples, trackAbuse: Transmitting);
 
-        _host.OnChunk(this, new KsVoiceInboundChunk(UserId, samples, result.AbuseTriggered));
+        // Encode only what the main thread will relay. Encoding the rest (push-to-talk up, muted, on cooldown) would cost
+        //      the server for nothing, and would move a stateful encoder on past audio its listeners never got. Each
+        //      stretch of transmitting starts a fresh encoder, flagged so listeners start a fresh decoder with it.
+        //      Transmitting trails the main thread's decision by up to a chunk, which costs at most that chunk.
+        if (!Transmitting)
+        {
+            _encoderStreaming = false;
+            _host.OnChunk(this, new KsVoiceInboundChunk(UserId, KsVoiceCodec.Adpcm, [], StreamStart: false, result.AbuseTriggered));
+            return null;
+        }
+
+        var encoderSettings = _host.EncoderSettings;
+        var streamStart = _encoder == null || !_encoderStreaming || !encoderSettings.Fits(_encoder);
+        if (streamStart)
+            _encoder = encoderSettings.CreateEncoder();
+
+        _encoderStreaming = true;
+        var payload = _encoder!.Encode(samples);
+        _host.OnChunk(this, new KsVoiceInboundChunk(UserId, _encoder.Codec, payload, streamStart, result.AbuseTriggered));
         return null;
     }
 

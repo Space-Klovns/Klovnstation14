@@ -13,6 +13,8 @@ public sealed partial class KsVoiceClientSystem : EntitySystem
     [Dependency] private IConfigurationManager _configurationManager = default!;
 
     private bool _pushToTalkHeld;
+    private bool _voiceActivationAllowed;
+    private bool _voiceActivationSetting;
 
     /// <summary>
     ///     Whether the server has voice chat enabled.
@@ -29,6 +31,11 @@ public sealed partial class KsVoiceClientSystem : EntitySystem
     /// </summary>
     public bool UplinkConnected { get; private set; }
 
+    /// <summary>
+    ///     Whether this player talks without holding push-to-talk: their setting, if the server allows it.
+    /// </summary>
+    public bool VoiceActivation => _voiceActivationAllowed && _voiceActivationSetting;
+
     public event Action<KsVoiceLinkEvent>? LinkReceived;
     public event Action? StateChanged;
 
@@ -40,6 +47,16 @@ public sealed partial class KsVoiceClientSystem : EntitySystem
         Subs.CVar(_configurationManager, KsCCVars.VoiceUplinkEnabled, value =>
         {
             UplinkEnabled = value;
+            StateChanged?.Invoke();
+        }, invokeImmediately: true);
+        Subs.CVar(_configurationManager, KsCCVars.VoiceActivationAllowed, value =>
+        {
+            _voiceActivationAllowed = value;
+            StateChanged?.Invoke();
+        }, invokeImmediately: true);
+        Subs.CVar(_configurationManager, KsCCVars.VoiceActivation, value =>
+        {
+            _voiceActivationSetting = value;
             StateChanged?.Invoke();
         }, invokeImmediately: true);
     }

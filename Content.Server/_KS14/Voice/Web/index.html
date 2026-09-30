@@ -10,21 +10,28 @@
 </head>
 <body>
 <main>
-    <h1>Voice chat</h1>
+    <header class="header">
+        <h1 data-i18n="title">Voice chat</h1>
+        <label class="language">
+            <svg class="globe" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none"
+                 stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"/>
+                <path d="M3 12h18"/>
+                <path d="M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9s1.3-6.4 3.8-9z"/>
+            </svg>
+            <select id="language" aria-label="Language" data-i18n-label="language"></select>
+        </label>
+    </header>
     <p class="identity" id="identity">Not connected.</p>
 
     <section class="panel" id="insecure" hidden>
-        <h2>Microphone blocked</h2>
-        <p>Browsers only allow microphone access on secure (HTTPS) pages. This server is serving the voice page
-            without HTTPS, so it cannot use your microphone. Ask the server host to set
-            <code>klovn.voice.public_url</code> to an HTTPS address.</p>
+        <h2 data-i18n="insecure-title">Microphone blocked</h2>
+        <p><span data-i18n="insecure-before"></span> <code>klovn.voice.public_url</code><span data-i18n="insecure-after"></span></p>
     </section>
 
     <section class="panel" id="no-token" hidden>
-        <h2>No voice link</h2>
-        <p>Open this page from the link the game gives you: Options → Klovnstation 14 → Set up microphone, or the
-            <code>voicelink</code> console command. The link is personal: anyone who has it can talk as you, so don't
-            share it.</p>
+        <h2 data-i18n="no-token-title">No voice link</h2>
+        <p><span data-i18n="no-token-before"></span> <code>voicelink</code><span data-i18n="no-token-after"></span></p>
     </section>
 
     <section class="panel" id="main" hidden>
@@ -34,19 +41,25 @@
         </div>
 
         <div class="row">
-            <button id="start" type="button">Start microphone</button>
-            <button id="stop" type="button" hidden>Stop microphone</button>
+            <button id="start" type="button" data-i18n="start">Start microphone</button>
+            <button id="stop" type="button" data-i18n="stop" hidden>Stop microphone</button>
         </div>
 
         <label class="row" for="device">
-            <span>Microphone</span>
+            <span data-i18n="microphone">Microphone</span>
             <select id="device" disabled>
-                <option value="">Default</option>
+                <option value="" data-i18n="default-device">Default</option>
             </select>
         </label>
 
+        <label class="row" for="volume">
+            <span data-i18n="mic-volume">Mic volume</span>
+            <input id="volume" type="range" min="0" max="200" step="5" value="100">
+            <output id="volume-value">100%</output>
+        </label>
+
         <div class="row">
-            <span>Level</span>
+            <span data-i18n="level">Level</span>
             <div class="meter" aria-hidden="true">
                 <div class="meter-fill" id="meter-fill"></div>
                 <div class="meter-gate" id="meter-gate"></div>
@@ -54,15 +67,20 @@
         </div>
 
         <label class="row" for="gate">
-            <span>Noise gate</span>
+            <span data-i18n="noise-gate">Noise gate</span>
             <input id="gate" type="range" min="-70" max="-20" step="1" value="-50">
             <output id="gate-value">-50 dB</output>
         </label>
 
-        <p class="hint">Hold your in-game push-to-talk key to talk. Use headphones: the game's audio isn't cancelled from
-            your microphone. Keep this tab open while you play.</p>
+        <div class="row">
+            <button id="test" type="button" aria-pressed="false" disabled>Test microphone</button>
+        </div>
+        <p class="hint" id="test-hint" data-i18n="test-hint" hidden></p>
+
+        <p class="hint"><span id="talk-hint"></span> <span data-i18n="headphones-hint"></span></p>
     </section>
 </main>
+<script src="i18n.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

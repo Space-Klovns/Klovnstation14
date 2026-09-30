@@ -70,6 +70,25 @@ under `/klovn/voice/`, and accepts websockets at `/klovn/voice/ws`.
   microphone state: with the microphone off it never claims to be transmitting, and says so if push-to-talk is held.
   Firefox also holds any audio graph started without a click on the page (allowing the microphone in its prompt
   doesn't count), so there the page asks for one click and carries on; Chromium browsers start without one.
+- **Languages.** The page is translated into English, Russian, Ukrainian, German, French, Spanish, Polish, Dutch
+  and Brazilian Portuguese (`Web/i18n.js`). Every string goes through it, and English is the fallback for a missing
+  key. A picker next to the title chooses the language; the choice is kept in `localStorage`, so it survives closing
+  the browser. Until one is chosen, the page is in the game's own language: the server writes the culture the game's
+  localization runs in (`ILocalizationManager.DefaultCulture`, "en-US" unless a fork changes
+  `ContentLocalizationManager`) into `<html lang>` as it serves the page, and `i18n.js` starts from that, falling back
+  to English for a language it has no translation for. That's the culture actually loaded, not `loc.culture_name`:
+  content loads a fixed culture and never reads that cvar. The browser's language isn't consulted, so the page
+  matches the game it belongs to. In-game names (menus, commands,
+  push-to-talk) stay in English, as the game shows them. The status line, identity and errors are rebuilt from keys in
+  `render()`, so switching language re-renders instead of reloading. The in-game voice window uses the game's own
+  Fluent strings (`Resources/Locale/.../voice.ftl`), like the rest of the UI.
+- **Mic volume and mic test.** A *Mic volume* slider (0–200 %, kept in `localStorage`) is a gain node in front of the
+  worklet, so the level meter and the noise gate both see the adjusted level, the same level that gets sent. Turning
+  it up past what the microphone delivers clips, and clipped or very loud audio counts towards the auto-mute.
+  *Test microphone* plays back every frame that passes the noise gate, the same frames that get sent, as 16 kHz
+  buffers scheduled back to back about 50 ms ahead. So what you hear has the game's bandwidth and gating. It doesn't
+  have the server's limiter, or the in-game distance falloff. It runs while the microphone is on, whether or not
+  push-to-talk is held, and it sends nothing extra to the server.
 - **Resampling in the worklet.** The page captures at the device's own rate and resamples to 16 kHz inside the
   AudioWorklet, using a box filter that also acts as a crude low-pass. Creating the AudioContext at 16 kHz would be
   simpler, but Firefox refuses to connect a microphone stream to a context whose rate differs from the device's.
@@ -106,9 +125,9 @@ The requirement is that nobody can talk as another player unless that player han
 `KsVoiceSystem` drains the inbound queue on the main thread. It relays a chunk only if all of these hold:
 
 - `klovn.voice.enabled` is on;
-- the talker holds push-to-talk (`KsVoicePushToTalkEvent`). The client only reports changes, so the server forgets a
-  held key when the player disconnects: one that crashed mid-press never sends the release, and would otherwise
-  transmit without the key after coming back with a fresh link;
+- the talker holds push-to-talk (`KsVoicePushToTalkEvent`), or uses voice activation (below). The client only reports
+  key changes, so the server forgets a held key when the player disconnects: one that crashed mid-press never sends
+  the release, and would otherwise transmit without the key after coming back with a fresh link;
 - they aren't admin-muted, auto-muted, or on a continuous-talk cooldown;
 - their attached entity isn't a ghost and passes `ActionBlockerSystem.CanSpeak`. So crit, death, sleep, mime vows and
   admin freeze-mutes silence voice exactly as they silence speech, through `SpeakAttemptEvent`, with nothing extra to
@@ -116,8 +135,22 @@ The requirement is that nobody can talk as another player unless that player han
   handlers that refuse speech also show a popup (`MutingSystem`'s "You can't speak right now!"), so a refusal is
   remembered for that body until push-to-talk is next pressed: one popup per attempt to talk, not one per chunk.
 
-A relayed chunk is IMA ADPCM-encoded once and sent as a `KsVoiceFrameMessage` to every other in-game player whose
-entity:
+**Voice activation.** A player who ticks *Voice activation* in Options → Klovnstation 14 talks without the key: the
+page's noise gate alone decides what is sent, and the server relays it as if the key were held. The setting is the
+client cvar `klovn.voice.voice_activation`, flagged `CLIENT | REPLICATED`, so the engine sends it to the server with
+the rest of the client's replicated cvars and `KsVoiceSystem` reads it per chunk through
+`INetConfigurationManager.GetClientCVar`. There is no separate message to keep in step, and nothing to forget on
+disconnect: the value goes with the channel. It only counts while the server allows it
+(`klovn.voice.voice_activation_allowed`, replicated so the options tab can hide the checkbox). Everything else applies
+unchanged: mutes, `CanSpeak`, the continuous-talk cooldown and abuse detection. With no key press to reset the
+`CanSpeak` refusal on, a gap of more than a second in the page's audio ends the attempt instead, so it's one popup per
+utterance. `CanSpeak` only runs on an attempt to talk (audio arriving, or the key going down), never when a page's
+state is just being brought up to date, so a muted player with voice activation on isn't told they can't speak
+unless they try. The engine doesn't report replicated cvar changes, so the system checks each connected page's player
+twice a second and resends the page's state when the mode changes. That's how the page shows which mode is on.
+
+A relayed chunk arrives already encoded (see *Codecs*) and is sent as a `KsVoiceFrameMessage` to every other in-game
+player whose entity:
 - is on the same map and within `klovn.voice.range`;
 - is either a ghost, or neither incapacitated nor asleep;
 - can see the speaker. This is the same visibility-layer rule PVS uses: the listener's eye mask must cover every layer
@@ -128,10 +161,65 @@ Ghosts listen but never talk, and living players never hear them. Ghosts fail bo
 message is `Unreliable`, because audio that arrives late is useless. A per-talker sequence number lets clients
 reorder, and each packet carries its own ADPCM predictor state, so one lost packet never corrupts the next.
 
-**Why ADPCM.** Client content can load only `Content.*` assemblies, and their IL is verified. No Opus decoder is
-reachable, and the engine's Vorbis loader is internal. IMA ADPCM is about 150 lines of sandbox-safe C#
-(`KsVoiceAdpcm`) and gives 64 kbps for 16 kHz speech. That's only while someone is actually talking, and 60 ms packets
-stay well under the default 700-byte MTU.
+**Codecs.** `klovn.voice.codec` picks how relayed audio is compressed. Every frame carries its codec, so a change
+takes effect from each talker's next chunk and nothing goes out of step.
+
+- **`adpcm`**: IMA ADPCM, about 150 lines of sandbox-safe C# (`KsVoiceAdpcm`). 64 kbps for 16 kHz speech,
+  with an audible hiss. Every packet carries its own predictor state, so it decodes on its own.
+- **`opus`** (default): Opus through **Concentus**, a pure C# port of libopus. It is vendored as source, as its own
+  content assembly `Content.Klovn.Concentus` (referenced by `Content.Shared`), because client content can load only
+  `Content.*` assemblies, so no NuGet package or native libopus is reachable. The client loads it as a module like
+  any other, so it is sandbox-checked like any other; `SandboxTest` checks it by name. Seven small edits make it pass the sandbox; its `README.md` lists them,
+  and `vendor.py` re-applies them on update.
+  - It uses the VOIP application at 16 kHz mono, one packet per chunk (20, 40 and 60 ms are all legal Opus frames),
+    and `klovn.voice.opus_bitrate` (default 32 kbps).
+  - It is variable bitrate, so speech with pauses comes out well under the target: about 10 kbps on the test signal.
+  - It is stateful, so clients decode each talker's packets in sequence order.
+  - A lost packet is filled in with Opus's packet-loss concealment instead of being skipped.
+
+Both codecs encode on the talker's page connection (`KsVoiceUplinkConnection`), on the thread pool, which keeps
+encoding off the game loop.
+
+- A page only encodes while the main thread says it's transmitting. Audio that won't be relayed (push-to-talk up,
+  muted, on cooldown) costs nothing, and it never moves a stateful encoder past audio its listeners didn't get.
+- Each stretch of transmitting starts a fresh encoder, and its first packet is flagged `StreamStart`. Clients start a
+  fresh decoder at that packet, in sequence order, so the two sides always share a stream.
+- `Transmitting` trails the main thread's decision by up to a chunk, so at most 60 ms at the edge of a stretch goes
+  unencoded.
+
+**Opus costs CPU.** Concentus runs at roughly half the speed of native libopus. Measured in Release in the dev
+container (`KsVoiceCodecTests.OpusCost`, which is noisy):
+
+| | Cost per 60 ms chunk | Share of one core, per talker |
+| --- | --- | --- |
+| Encode, complexity 0 | ~2.4 ms | ~4 % |
+| Encode, complexity 2 (default) | ~2.7 ms | ~4.6 % |
+| Encode, complexity 5 | ~4.8 ms | ~8 % |
+| Decode | 0.3–0.5 ms | about 1 % |
+
+- The server pays the encode cost for everyone talking at once, spread across pool threads.
+- Each client pays the decode cost for every talker it hears, on its main thread.
+- `klovn.voice.opus_complexity` (default 2) trades encoder CPU for a marginal quality gain on speech.
+
+The page's mic test plays the uncoded 16 kHz audio, so it doesn't include codec artifacts.
+
+**Replays.** A relayed chunk also goes into server-side replays as a `KsVoiceReplayFrameEvent`. It carries the same
+packet the live frame does: codec, stream-start flag, speaker and sequence number. It's recorded whether or not anyone
+was in range, since a replay can be watched from anywhere.
+
+- When a replay plays, the engine raises recorded events as if they had arrived over the network.
+  `KsVoicePlaybackSystem` handles this one exactly like a live `KsVoiceFrameMessage`, positioned on the talker's
+  recorded entity relative to the replay camera.
+- `ContentReplayPlaybackManager` drops it while skipping through a replay, like other sounds, so seeking doesn't play
+  a burst of old speech. TTS's `PlayTtsEvent` is dropped the same way: it was already recorded, but played in a burst
+  while skipping.
+- Rewinding stops whatever voice is playing, since a talker's sequence numbers then go backwards and would be taken as
+  stale. Stepping forward, which scrubbing does every tick, leaves it alone.
+- Client-side recordings keep the frames that client received, as they keep its popups.
+- `klovn.voice.record_in_replays` turns server-side recording off.
+- Voice makes replays bigger, while someone is talking: 8 KB per second per talker with ADPCM, and a few KB per second
+  with Opus.
+- Only relayed audio is recorded, so muted, blocked or out-of-body audio never gets into a replay.
 
 The talking indicator is appearance data (`KsVoiceVisuals.Talking`) on `KsVoiceIndicatorComponent`. It is added the
 first time an entity talks and cleared 300 ms after the last relayed chunk. `KsVoiceIndicatorVisualizerSystem` draws
@@ -145,8 +233,9 @@ The engine exposes no streaming audio source to content, because `IBufferedAudio
 use is `IAudioManager.LoadAudioRaw` and `CreateAudioSource`, which play one fixed buffer each. `KsVoicePlaybackSystem`
 therefore:
 
-1. reorders each talker's packets into a jitter buffer. Playback starts once `klovn.voice.jitter_buffer_ms` of audio is
-   buffered, and a packet is given up as lost once three later ones have arrived;
+1. reorders each talker's packets into a jitter buffer. Packets stay encoded until their turn and are decoded in order
+   through the talker's own decoder (Opus needs that). Playback starts once `klovn.voice.jitter_buffer_ms` of audio is
+   buffered. A packet is given up as lost once three later ones have arrived: Opus conceals the gap, ADPCM skips it;
 2. plays the audio as a chain of 120 ms chunks. Each chunk also carries the next 20 ms of audio, faded out, and the
    following chunk starts with those same samples, faded in, 20 ms before the current one ends (see below);
 3. positions every source by hand each frame, as the engine's MIDI renderer does for its own streaming sources: map
@@ -169,6 +258,12 @@ moment. `KsVoiceChunkTiming` handles that in two steps:
 The remaining time comes from the playing source's own `PlaybackPosition`, which is in the mixer's time, so the new
 chunk's first real sample lands on the intended mixer sample. Low or uneven frame rates therefore don't shift the
 crossfade: no gaps, no doubled audio, no comb filtering.
+
+**What the talker wears.** A mask muffles a voice as it muffles emotes and TTS. For each chunk, playback asks
+`EmoteAudioEffectSystem.GetEffect(talker, Vocal)`, which relays `EmoteAudioEffectQueryEvent` to worn gear, and puts
+any preset on the chunk's source through `AudioEffectSystem.TryAddEffect(IAudioSource, ...)`. Asking every chunk means
+putting a mask on or taking it off applies within 120 ms. The effect is local to each listener, like the rest of voice
+mixing.
 
 **Where the state lives.** Each talker's jitter buffer and playing chunks, and whether the local player muted them,
 live on the talker's entity in the client-only `KsVoicePlaybackComponent`. A finished utterance's state is dropped
@@ -196,7 +291,9 @@ being dropped, which used to cut off the start of what they said.
   "Transmitted" is literal. The server tells each page connection whether its audio is being relayed, and only then
   do frames count, so a page left open in a loud room with push-to-talk up can never earn a mute. The server also
   re-checks when the mute would apply, because that flag trails by a chunk. A talker who is already auto-muted can't
-  be auto-muted again, so a noisy open mic produces one alert, not one every few seconds.
+  be auto-muted again, so a noisy open mic produces one alert, not one every few seconds. Auto-mutes are tracked per
+  talker on game time, separately from admin mutes, but `vcmutes` lists them and `vcunmute` or the admin verb lifts
+  them like any other mute.
 - **Duration and rate.**
   - Talking continuously for `klovn.voice.max_continuous_seconds` triggers a `klovn.voice.cooldown_seconds` cooldown.
   - A page sending audio faster than `klovn.voice.uplink_rate_factor` × real time, beyond a half-second burst, is
@@ -207,8 +304,8 @@ being dropped, which used to cut off the start of what they said.
   | Command or verb | Effect |
   | --- | --- |
   | `vcmute <player> [minutes, 0 = rest of round] [reason...]` | Mutes the player. Timed mutes run on real time and survive round restarts; round mutes lift at round end. |
-  | `vcunmute <player>` | Lifts a mute. |
-  | `vcmutes` | Lists active mutes. |
+  | `vcunmute <player>` | Lifts a mute, admin or automatic. |
+  | `vcmutes` | Lists active mutes, auto-mutes included (with the time they have left). |
   | *Voice mute (round)* / *Voice unmute* | Admin-menu verbs on a player. |
 
 - **Players.** A client-side *Mute voice* verb on anyone who has talked silences them locally.
@@ -235,7 +332,9 @@ Voice is **off by default**. Every entry point checks `klovn.voice.enabled`. Wit
 | `klovn.voice.enabled` | `false` | server, replicated | Master switch. |
 | `klovn.voice.uplink_enabled` | `true` | server, replicated | Serve the page and accept microphone pages. Off disconnects every page, so no one can talk; players reopen their link once it's back on. |
 | `klovn.voice.range` | `10` | server, replicated | Hearing range in world units (the same as local speech). |
-| `klovn.voice.public_url` | `""` | server | Public HTTPS base URL of the status host. If empty, derived from `hub.server_url` (`ss14s://h` → `https://h`), then `transfer.http_endpoint`. |
+| `klovn.voice.voice_activation_allowed` | `true` | server, replicated | Let players use voice activation instead of push-to-talk. |
+| `klovn.voice.public_url` | `""` | server | Public HTTPS base URL of the status host, without the page path. If empty, derived from `hub.server_url` (`ss14s://h` → `https://h`), then `transfer.http_endpoint`. |
+| `klovn.voice.public_path` | `/klovn/voice/` | server | Path of the page in links, after `public_url`. Anything but the default needs a proxy that maps it to `/klovn/voice/` (see *Running it*). `/` puts the page at the root. Invalid values fall back to the default with a warning. |
 | `klovn.voice.check_origin` | `true` | server | Require websocket `Origin` to match. |
 | `klovn.voice.limiter_ceiling_db` | `-6` | server | Output peak ceiling, in dBFS. |
 | `klovn.voice.abuse_rms_db` | `-9` | server | Frame RMS that counts as abusive, in dBFS. |
@@ -247,9 +346,14 @@ Voice is **off by default**. Every entry point checks `klovn.voice.enabled`. Wit
 | `klovn.voice.uplink_rate_factor` | `1.25` | server | Allowed uplink speed relative to real time. |
 | `klovn.voice.auth_failures_per_minute` | `10` | server | Failed authentications per address before `429`. |
 | `klovn.voice.admin_log_bursts` | `true` | server | Log every talk burst. |
+| `klovn.voice.record_in_replays` | `true` | server | Record relayed voice into server-side replays. |
+| `klovn.voice.codec` | `opus` | server | Codec for relayed voice: `opus` or `adpcm` (see *Codecs*). An unknown value means `adpcm`. |
+| `klovn.voice.opus_bitrate` | `32000` | server | Opus target bitrate, 6000–64000. |
+| `klovn.voice.opus_complexity` | `2` | server | Opus encoder complexity, 0–10: more CPU per talker, marginally better speech. |
 | `klovn.voice.hear_enabled` | `true` | client | Play other players' voices. |
 | `klovn.voice.volume` | `1` | client | Voice volume. |
 | `klovn.voice.jitter_buffer_ms` | `120` | client | Buffering before playback starts. |
+| `klovn.voice.voice_activation` | `false` | client, replicated to the server | Talk without push-to-talk, whenever the page's noise gate is open. |
 
 ## Running it
 
@@ -286,6 +390,30 @@ Voice is **off by default**. Every entry point checks `klovn.voice.enabled`. Wit
    public_url = "https://ks14.example.com"
    ```
 
+`public_url` is the base only: links are `{public_url}{public_path}#{token}`, so `https://ks14.example.com` gives
+`https://ks14.example.com/klovn/voice/#…`. A path prefix in `public_url` is kept (`https://example.com/ss14` gives
+`https://example.com/ss14/klovn/voice/#…`); including `/klovn/voice` in it doubles the path.
+
+**Serving the page at another path.** The status host only ever serves the page at `/klovn/voice/`, but the page loads
+everything relative to itself (its scripts, stylesheet, worklet and websocket), so a proxy can publish it under any
+path. Set `public_path` to match, so the links point there. For example, the page at `https://voice.example.com/talk/`:
+
+```nginx
+location /talk/ {
+    proxy_pass http://127.0.0.1:1212/klovn/voice/;
+    # ...plus the same websocket headers and timeout as above
+}
+```
+
+```toml
+[klovn.voice]
+public_url = "https://voice.example.com"
+public_path = "/talk/"
+```
+
+Keep the trailing slash on `location`: nginx then answers `/talk` with a redirect to `/talk/` itself. The status host's
+own redirect for a slashless request always goes to `voice/`, which is only right for requests made to it directly.
+
 For local testing, `http://localhost:1212` is already a secure context, so no proxy is needed. Leave `public_url`
 empty and the transfer endpoint default (`http://localhost:1212/`) is used.
 
@@ -295,6 +423,8 @@ empty and the transfer endpoint default (`http://localhost:1212/`) is used.
 | --- | --- |
 | `Content.Shared/_KS14/CCVar/KsCCVars.Voice.cs` | All voice cvars. |
 | `Content.Shared/_KS14/Voice/KsVoiceAdpcm.cs` | IMA ADPCM codec. |
+| `Content.Shared/_KS14/Voice/KsVoiceCodecs.cs` | Codec ids and the per-stream encoders and decoders for ADPCM and Opus. |
+| `Content.Klovn.Concentus/` | Vendored Concentus (Opus) as its own content assembly, referenced by `Content.Shared`, with `README.md` and `vendor.py`. |
 | `Content.Shared/_KS14/Voice/KsVoiceMessages.cs` | Relay net message; PTT, link and status network events. |
 | `Content.Shared/_KS14/Voice/KsVoiceIndicatorComponent.cs` | Talking indicator component and appearance keys. |
 | `Content.Server/_KS14/Voice/KsVoiceLinkManager.cs` | Token issue, lookup, revocation; public URL. |
@@ -318,30 +448,43 @@ All under `Content.IntegrationTests/Tests/_KS14/Voice/`.
 
 - `KsVoiceCodecTests`:
   - ADPCM round trip, and a packet decoding on its own after its predecessor is lost
+  - Opus round trip of speech-like audio (correlation at the codec's delay, and its bitrate against ADPCM's); every
+    chunk length; concealment of a lost packet; malformed packets; codec names; and the encode/decode cost, logged
   - rejection of malformed packets
   - limiter ceiling; abuse triggering exactly once at the threshold, and never for loud normal speech; a threshold
     longer than the window still triggering
-  - public URL resolution
+  - public URL resolution; public path normalisation and refusal of anything but a plain path; the cvar's default
+    being where the page is served
   - the engine field used to release finished websockets still existing
 - `KsVoiceUplinkTests`, using real websocket framing over loopback TCP:
   - the token appears only in the fragment
   - wrong tokens and audio before auth are rejected; a valid token attributes audio to its owner
+  - audio encoded with the configured codec, switching codec mid-stream
   - reset and revoked tokens stop working
   - malformed, oversized and faster-than-real-time audio each close the socket
   - a second page replaces the first
   - disabled voice refuses even valid links
 - `KsVoiceRelayTests`, where a dummy session talks and the pooled client listens over the real net channel:
   - relay only while push-to-talk is held
+  - a masked talker's chunks played with the mask's effect, and not once it comes off
+  - an Opus chunk relayed and decoded as Opus; a lost Opus packet concealed on the client, where ADPCM skips it
+  - the page updating when the player gets a body, with nothing else happening
+  - voice activation relaying without the key, and a server that forbids it still needing the key
+  - links following `klovn.voice.public_path`, and an invalid one falling back to the default
   - range
   - the master switch
   - admin mute and unmute
   - freeze-mute through `CanSpeak`
-  - auto-mute
+  - auto-mute, which is listed with the other mutes and can be lifted by an admin
   - the indicator showing and clearing on the client
   - audio for a talker whose entity the client doesn't know yet being kept, not dropped, and moving onto the entity
     once it arrives
   - a local mute living on the talker's entity and outlasting their audio; unmuting a silent talker removing it
-  - a muted talker getting one "can't speak" popup per push-to-talk press, not one per chunk
+  - a muted talker getting one "can't speak" popup per push-to-talk press, not one per chunk; with voice activation,
+    one per utterance, and none while a connected page merely has its state updated
+  - relayed voice going into a replay recording (even with nobody in range) and written out with it, and
+    `klovn.voice.record_in_replays` turning that off; a recorded chunk, raised the way a replay raises it, reaching
+    playback
 - `KsVoiceOptionsTabTests`: the options tab showing the voice section when the server turns voice on and following a
   volume change made elsewhere while open, and letting go of the configuration manager once closed
 - `KsVoiceLinkWindowTests`: resizing the link window never cuts anything off. Its minimum size follows its contents

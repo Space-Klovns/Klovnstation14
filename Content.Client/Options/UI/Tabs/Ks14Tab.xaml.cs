@@ -54,6 +54,7 @@ public sealed partial class Ks14Tab : Control
 
         // KS14 start: voice chat
         _voiceOptions.Add(Control.AddOptionCheckBox(KsCCVars.VoiceHearEnabled, VoiceHearEnabled));
+        _voiceOptions.Add(Control.AddOptionCheckBox(KsCCVars.VoiceActivation, VoiceActivation));
         _voiceOptions.Add(Control.AddOptionPercentSlider(KsCCVars.VoiceVolume, SliderVoiceVolume, min: 0f, max: 2f));
         _voiceOptions.Add(Control.AddOptionSlider(KsCCVars.VoiceJitterBufferMs, SliderVoiceJitter, min: 60, max: 400));
         VoiceOpenButton.OnPressed += _ => _userInterfaceManager.GetUIController<KsVoiceUIController>().OpenWindow();
@@ -72,7 +73,10 @@ public sealed partial class Ks14Tab : Control
 
         VoiceSection.Visible = _configurationManager.GetCVar(KsCCVars.VoiceEnabled);
         WatchCVar(KsCCVars.VoiceEnabled, enabled => VoiceSection.Visible = enabled);
+        VoiceActivation.Visible = _configurationManager.GetCVar(KsCCVars.VoiceActivationAllowed);
+        WatchCVar(KsCCVars.VoiceActivationAllowed, allowed => VoiceActivation.Visible = allowed);
         WatchCVar<bool>(KsCCVars.VoiceHearEnabled, _ => ReloadVoiceOptions());
+        WatchCVar<bool>(KsCCVars.VoiceActivation, _ => ReloadVoiceOptions());
         WatchCVar<float>(KsCCVars.VoiceVolume, _ => ReloadVoiceOptions());
         WatchCVar<int>(KsCCVars.VoiceJitterBufferMs, _ => ReloadVoiceOptions());
     }

@@ -25,6 +25,30 @@ public sealed partial class KsVoiceSystem
     public IReadOnlyDictionary<NetUserId, KsVoiceMute> Mutes => _mutes;
 
     /// <summary>
+    ///     Whether the player is muted at all, by an admin or automatically.
+    /// </summary>
+    public bool IsMuted(NetUserId userId)
+    {
+        return _mutes.ContainsKey(userId) ||
+               _talkers.TryGetValue(userId, out var state) && state.AutoMuteUntil > _gameTiming.CurTime;
+    }
+
+    /// <summary>
+    ///     Fills <paramref name="autoMutes"/> with every active automatic mute and the time it has left. Kept apart from
+    ///         <see cref="Mutes"/>, which are admin mutes, because they run on game time and are tracked per talker.
+    /// </summary>
+    public void GetAutoMutes(List<(NetUserId UserId, TimeSpan Remaining)> autoMutes)
+    {
+        autoMutes.Clear();
+        var now = _gameTiming.CurTime;
+        foreach (var (userId, state) in _talkers)
+        {
+            if (state.AutoMuteUntil > now)
+                autoMutes.Add((userId, state.AutoMuteUntil - now));
+        }
+    }
+
+    /// <summary>
     ///     Voice-mutes a player. A null <paramref name="duration"/> mutes them for the rest of the round.
     /// </summary>
     public void Mute(NetUserId userId, TimeSpan? duration, string reason, ICommonSession? adminSession)
@@ -47,11 +71,19 @@ public sealed partial class KsVoiceSystem
     }
 
     /// <summary>
-    ///     Lifts an admin voice mute. Returns false if the player wasn't muted.
+    ///     Lifts a voice mute, whether an admin's or an automatic one. Returns false if the player wasn't muted.
     /// </summary>
     public bool Unmute(NetUserId userId, ICommonSession? adminSession)
     {
-        if (!_mutes.Remove(userId))
+        var removed = _mutes.Remove(userId);
+
+        if (_talkers.TryGetValue(userId, out var state) && state.AutoMuteUntil > _gameTiming.CurTime)
+        {
+            state.AutoMuteUntil = TimeSpan.Zero;
+            removed = true;
+        }
+
+        if (!removed)
             return false;
 
         var targetName = _playerManager.TryGetSessionById(userId, out var targetSession) ? targetSession.Name : userId.ToString();
@@ -124,7 +156,9 @@ public sealed partial class KsVoiceSystem
         var adminSession = userActorComponent.PlayerSession;
         var targetUserId = targetActorComponent.PlayerSession.UserId;
 
-        if (_mutes.ContainsKey(targetUserId))
+        // Unmute lifts any mute; muting stays on offer until there's an admin mute, so a player the abuse detector
+        //      caught can still be muted for the round.
+        if (IsMuted(targetUserId))
         {
             args.Verbs.Add(new Verb
             {
@@ -133,9 +167,10 @@ public sealed partial class KsVoiceSystem
                 Impact = LogImpact.Medium,
                 Act = () => Unmute(targetUserId, adminSession),
             });
-
-            return;
         }
+
+        if (_mutes.ContainsKey(targetUserId))
+            return;
 
         args.Verbs.Add(new Verb
         {

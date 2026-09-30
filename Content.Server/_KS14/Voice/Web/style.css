@@ -27,9 +27,32 @@ main {
     padding: 0 16px;
 }
 
-h1 {
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     margin: 0 0 4px;
+}
+
+h1 {
+    margin: 0;
     font-size: 24px;
+}
+
+.language {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+}
+
+.language select {
+    padding: 4px 8px;
+}
+
+.globe {
+    flex: none;
 }
 
 h2 {
@@ -51,7 +74,7 @@ h2 {
 
 .row {
     display: grid;
-    grid-template-columns: 110px 1fr auto;
+    grid-template-columns: 150px 1fr auto; /* wide enough for the longer translated labels */
     align-items: center;
     gap: 12px;
     margin: 14px 0;
@@ -106,6 +129,10 @@ select {
     box-shadow: 0 0 8px var(--accent);
 }
 
+.status[data-state="ready"] .dot {
+    background: var(--accent);
+}
+
 .status[data-state="waiting"] .dot {
     background: var(--warn);
 }
@@ -147,4 +174,9 @@ select {
 
 code {
     font-size: 13px;
+}
+
+output {
+    min-width: 4.5em;
+    text-align: right;
 }

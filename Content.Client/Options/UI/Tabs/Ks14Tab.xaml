@@ -25,6 +25,9 @@
                            StyleClasses="LabelKeyText"/>
                     <CheckBox Name="VoiceHearEnabled"
                               Text="{Loc 'ks-ui-options-voice-hear'}"/>
+                    <CheckBox Name="VoiceActivation"
+                              Text="{Loc 'ks-ui-options-voice-activation'}"
+                              ToolTip="{Loc 'ks-ui-options-voice-activation-tooltip'}"/>
                     <ui:OptionSlider Name="SliderVoiceVolume"
                                      Title="{Loc 'ks-ui-options-voice-volume'}"/>
                     <ui:OptionSlider Name="SliderVoiceJitter"

@@ -4,6 +4,7 @@
 
 (() => {
     const PROTOCOL_VERSION = 1;
+    const SAMPLE_RATE = 16000;
     const FRAME_SAMPLES = 320;          // 20 ms at 16 kHz
     const FRAMES_PER_MESSAGE = 3;       // 60 ms per websocket message
     const PREROLL_FRAMES = 2;           // sent when the gate opens, so word onsets aren't clipped
@@ -13,29 +14,20 @@
     const TOKEN_KEY = "ksVoiceToken";
     const GATE_KEY = "ksVoiceGateDb";
     const DEVICE_KEY = "ksVoiceDevice";
+    const VOLUME_KEY = "ksVoiceMicVolume";
+    const MONITOR_LEAD_SECONDS = 0.05;  // mic test: how far ahead of now to schedule, to ride out message jitter
+    const MONITOR_MAX_AHEAD_SECONDS = 0.3; // ...and how far ahead it may run before frames are dropped instead
 
     // Close reasons after which reconnecting cannot help.
     const TERMINAL_REASONS = new Set(["auth-failed", "auth-timeout", "link-reset", "replaced", "disabled"]);
 
-    const REASON_TEXT = {
-        "not-holding-key": "Connected. Hold your push-to-talk key in-game to talk.",
-        "admin-muted": "An admin has muted your voice chat.",
-        "auto-muted": "Your voice chat is muted automatically because your audio was far too loud.",
-        "cooldown": "You've been talking for too long without a break. Wait a moment.",
-        "cannot-speak": "Your character can't speak right now.",
-        "no-body": "You need to be in the round, in a body, to talk.",
-        "disabled": "Voice chat is disabled on this server.",
-    };
+    // Translations: i18n.js. Text shown on the page is always built in render() or applyStatic() from keys, never
+    //      stored as text, so switching language is just rendering again.
+    const i18n = window.KsVoiceI18n;
+    const t = i18n.t;
 
-    const CLOSE_TEXT = {
-        "auth-failed": "This voice link is invalid or expired. Get a fresh link in-game.",
-        "auth-timeout": "The server didn't receive the voice link in time. Reload the page.",
-        "link-reset": "Your voice link was reset. Open the new link from the game.",
-        "replaced": "Your voice chat was opened in another tab or browser.",
-        "disabled": "Voice chat was disabled by the server.",
-        "rate": "Too much audio was sent too quickly; reload the page.",
-        "bad-audio": "The server rejected the audio format; reload the page.",
-    };
+    // A message to show, kept untranslated until it's shown.
+    const message = (key, params) => ({ key, params });
 
     const $ = (id) => document.getElementById(id);
 
@@ -53,6 +45,12 @@
         meterGate: $("meter-gate"),
         gate: $("gate"),
         gateValue: $("gate-value"),
+        volume: $("volume"),
+        volumeValue: $("volume-value"),
+        test: $("test"),
+        testHint: $("test-hint"),
+        talkHint: $("talk-hint"),
+        language: $("language"),
     };
 
     const storage = {
@@ -97,74 +95,111 @@
     let audioContext = null;
     let mediaStream = null;
     let captureNode = null;
+    let inputGain = null;
 
     // What the status line shows is derived from these, in render(), rather than set piecemeal: the server's view
     //      (push-to-talk held and allowed) says nothing about whether this page is actually capturing anything.
     let micState = "off";               // "off" | "starting" | "on" | "needs-gesture"
     let micGeneration = 0;              // bumped by every start and stop, so a superseded start can tell
-    let micError = null;                // why the last start failed, shown until the next attempt
+    let micError = null;                // why the last start failed (a message()), shown until the next attempt
     let linkState = "connecting";       // "connecting" | "reconnecting" | "connected" | "failed"
-    let linkError = null;               // why the link failed for good
+    let linkError = null;               // why the link failed for good (a message())
     let serverState = null;             // last "state" message from the server
+    let playerName = null;              // who the server says we are, once connected
 
     let sequence = 0;
     let gateOpenFrames = 0;
     let pending = [];
     let preroll = [];
     let gateDb = Number(storage.get("localStorage", GATE_KEY) ?? -50);
+    let volumePercent = Number(storage.get("localStorage", VOLUME_KEY) ?? 100);
+
+    // Mic test: plays back what passes the noise gate, which is exactly what gets sent.
+    let testing = false;
+    let monitorTime = 0;                // audio-clock time the next played-back frame starts at
 
     function setStatus(state, text) {
         elements.status.dataset.state = state;
         elements.statusText.textContent = text;
     }
 
+    function showMessage(state, shown) {
+        // Button names quoted in a message are the translated ones on the page.
+        setStatus(state, t(shown.key, { start: t("start"), ...shown.params }));
+    }
+
     function render() {
+        elements.identity.textContent = playerName !== null ? t("connected-as", { name: playerName }) : t("not-connected");
+        elements.test.disabled = micState !== "on";
+        elements.test.textContent = testing ? t("test-stop") : t("test");
+        elements.test.setAttribute("aria-pressed", String(testing));
+        elements.testHint.hidden = !testing;
+        elements.talkHint.textContent = serverState?.voiceActivation ? t("talk-hint-va") : t("talk-hint-ptt");
+
         if (linkState === "failed") {
-            setStatus("error", linkError);
+            showMessage("error", linkError);
             return;
         }
 
         if (micState === "starting") {
-            setStatus("waiting", "Starting the microphone… If your browser asks, allow microphone access.");
+            showMessage("waiting", message("status-starting-mic"));
             return;
         }
 
         if (micState === "needs-gesture") {
-            setStatus("waiting", "Click anywhere on this page to finish starting the microphone.");
+            showMessage("waiting", message("status-needs-gesture"));
             return;
         }
 
         if (micState === "off") {
             if (micError)
-                setStatus("error", micError);
-            else if (serverState?.transmitting)
-                setStatus("blocked", "Your microphone is off, so nothing is being sent, even while you hold push-to-talk. Click “Start microphone”.");
+                showMessage("error", micError);
+            else if (serverState?.transmitting && !serverState.voiceActivation)
+                showMessage("blocked", message("status-mic-off-holding"));
             else
-                setStatus("idle", "Your microphone is off. Click “Start microphone” to be able to talk.");
+                showMessage("idle", message("status-mic-off"));
 
             return;
         }
 
         if (linkState !== "connected") {
-            setStatus("waiting", linkState === "reconnecting" ? "Reconnecting…" : "Connecting…");
+            showMessage("waiting", message(linkState === "reconnecting" ? "status-reconnecting" : "status-connecting"));
+            return;
+        }
+
+        if (volumePercent === 0) {
+            showMessage("blocked", message("status-volume-zero"));
             return;
         }
 
         if (!serverState || serverState.reason === "not-holding-key") {
-            setStatus("waiting", REASON_TEXT["not-holding-key"]);
+            showMessage("waiting", message("reason-not-holding-key"));
             return;
         }
 
         if (serverState.transmitting) {
-            setStatus("transmitting", "Transmitting in-game.");
+            // With voice activation the server lets everything through, so what's actually going out is up to the gate.
+            if (serverState.voiceActivation && gateOpenFrames === 0)
+                showMessage("ready", message("status-va-ready"));
+            else
+                showMessage("transmitting", message("status-transmitting"));
+
             return;
         }
 
-        let text = REASON_TEXT[serverState.reason] ?? "Not transmitting.";
+        const reasonKey = `reason-${serverState.reason}`;
+        let text = i18n.has(reasonKey) ? t(reasonKey) : t("status-not-transmitting");
         if (typeof serverState.seconds === "number" && serverState.seconds > 0)
-            text += ` (${serverState.seconds}s left)`;
+            text += ` ${t("seconds-left", { seconds: serverState.seconds })}`;
 
         setStatus("blocked", text);
+    }
+
+    function setLanguage(code) {
+        i18n.setLanguage(code);
+        elements.language.value = i18n.language;
+        i18n.applyStatic(document);
+        render();
     }
 
     function setGate(value) {
@@ -173,6 +208,59 @@
         elements.gateValue.textContent = `${value} dB`;
         elements.meterGate.style.left = `${dbToMeter(value) * 100}%`;
         storage.set("localStorage", GATE_KEY, String(value));
+    }
+
+    function setVolume(value) {
+        volumePercent = value;
+        elements.volume.value = String(value);
+        elements.volumeValue.textContent = `${value}%`;
+        inputGain?.gain.setTargetAtTime(value / 100, inputGain.context.currentTime, 0.02);
+        storage.set("localStorage", VOLUME_KEY, String(value));
+        render();
+    }
+
+    function setTesting(value) {
+        testing = value && micState === "on";
+        monitorTime = 0;
+        render();
+    }
+
+    // Plays frames back through this page's own output, each scheduled right after the previous one. Called only
+    //      once the frames are queued for sending, and never throws: a failing test must not stop the talking.
+    function monitorFrames(frames) {
+        if (!testing || !audioContext)
+            return;
+
+        try {
+            for (const frame of frames) {
+                const now = audioContext.currentTime;
+
+                // A burst of late frames: drop what doesn't fit rather than let the delay grow, or overlap what's
+                //      already scheduled by pulling the schedule back.
+                if (monitorTime > now + MONITOR_MAX_AHEAD_SECONDS)
+                    continue;
+
+                // The previous frame has finished (the gate was closed): start a new run a little ahead of now.
+                if (monitorTime < now)
+                    monitorTime = now + MONITOR_LEAD_SECONDS;
+
+                // At the wire's sample rate, so what's heard also has the bandwidth the game gets.
+                const buffer = audioContext.createBuffer(1, frame.length, SAMPLE_RATE);
+                const samples = buffer.getChannelData(0);
+                for (let i = 0; i < frame.length; i++)
+                    samples[i] = frame[i] / 32768;
+
+                const player = audioContext.createBufferSource();
+                player.buffer = buffer;
+                player.connect(audioContext.destination);
+                player.start(monitorTime);
+                monitorTime += buffer.duration;
+            }
+        } catch (error) {
+            console.error("Mic test playback failed:", error);
+            testing = false;
+            render();
+        }
     }
 
     function dbToMeter(db) {
@@ -205,14 +293,14 @@
             if (typeof event.data !== "string")
                 return;
 
-            let message;
+            let serverMessage;
             try {
-                message = JSON.parse(event.data);
+                serverMessage = JSON.parse(event.data);
             } catch {
                 return;
             }
 
-            handleServerMessage(message);
+            handleServerMessage(serverMessage);
         });
 
         socket.addEventListener("close", (event) => {
@@ -225,17 +313,18 @@
 
             const reason = event.reason || "";
             serverState = null;
-            elements.identity.textContent = "Not connected.";
+            playerName = null;
 
+            const closeKey = `close-${reason}`;
             if (TERMINAL_REASONS.has(reason)) {
                 terminal = true;
-                failLink(CLOSE_TEXT[reason] ?? `Disconnected (${reason}).`);
+                failLink(i18n.has(closeKey) ? message(closeKey) : message("close-unknown", { reason }));
                 stopMicrophone();
                 return;
             }
 
             if (reconnects >= MAX_RECONNECTS) {
-                failLink(CLOSE_TEXT[reason] ?? "Lost connection to the server. Reload the page to try again.");
+                failLink(i18n.has(closeKey) ? message(closeKey) : message("close-lost"));
                 return;
             }
 
@@ -246,26 +335,26 @@
         });
     }
 
-    function failLink(text) {
+    function failLink(shown) {
         linkState = "failed";
-        linkError = text;
+        linkError = shown;
         render();
     }
 
-    function handleServerMessage(message) {
-        switch (message.type) {
+    function handleServerMessage(serverMessage) {
+        switch (serverMessage.type) {
             case "hello":
                 reconnects = 0;
                 linkState = "connected";
-                elements.identity.textContent = `Connected as ${message.name}.`;
+                playerName = String(serverMessage.name);
                 render();
                 break;
             case "state":
-                serverState = message;
+                serverState = serverMessage;
                 render();
                 break;
             case "closing":
-                if (TERMINAL_REASONS.has(message.reason))
+                if (TERMINAL_REASONS.has(serverMessage.reason))
                     terminal = true;
                 break;
         }
@@ -295,10 +384,15 @@
         const db = rms > 0 ? 20 * Math.log10(rms / 32767) : -120;
         elements.meterFill.style.width = `${dbToMeter(db) * 100}%`;
 
+        const wasOpen = gateOpenFrames > 0;
         if (db >= gateDb)
             gateOpenFrames = HANGOVER_FRAMES;
         else if (gateOpenFrames > 0)
             gateOpenFrames--;
+
+        // With voice activation the status follows the gate.
+        if (wasOpen !== gateOpenFrames > 0)
+            render();
 
         if (gateOpenFrames === 0) {
             if (pending.length > 0) {
@@ -313,6 +407,7 @@
             return;
         }
 
+        const opened = preroll;
         if (preroll.length > 0) {
             pending.push(...preroll);
             preroll = [];
@@ -323,20 +418,22 @@
             sendFrames(pending.slice(0, FRAMES_PER_MESSAGE));
             pending = pending.slice(FRAMES_PER_MESSAGE);
         }
+
+        monitorFrames([...opened, frame]);
     }
 
     function microphoneErrorText(error) {
         switch (error?.name) {
             case "NotAllowedError":
             case "SecurityError":
-                return "Microphone access was blocked. Allow it for this site (the icon at the left of the address bar), then click “Start microphone”.";
+                return message("mic-error-blocked");
             case "NotFoundError":
             case "OverconstrainedError":
-                return "No microphone was found. Plug one in, then click “Start microphone”.";
+                return message("mic-error-not-found");
             case "NotReadableError":
-                return "Your microphone is in use by another program, or couldn't be opened. Close it there, then click “Start microphone”.";
+                return message("mic-error-in-use");
             default:
-                return `Couldn't open the microphone: ${error?.message || error?.name || error}`;
+                return message("mic-error-other", { error: error?.message || error?.name || error });
         }
     }
 
@@ -391,13 +488,15 @@
         audioContext = context;
 
         const source = audioContext.createMediaStreamSource(mediaStream);
+        inputGain = audioContext.createGain();
+        inputGain.gain.value = volumePercent / 100;
         captureNode = new AudioWorkletNode(audioContext, "ks-voice-capture", { numberOfOutputs: 1 });
         captureNode.port.onmessage = (event) => onFrame(new Int16Array(event.data.frame), event.data.rms);
 
         // Keep the node pulled by the graph without making any sound.
         const silence = audioContext.createGain();
         silence.gain.value = 0;
-        source.connect(captureNode).connect(silence).connect(audioContext.destination);
+        source.connect(inputGain).connect(captureNode).connect(silence).connect(audioContext.destination);
 
         elements.start.hidden = true;
         elements.stop.hidden = false;
@@ -445,6 +544,7 @@
         micGeneration++;
         captureNode?.disconnect();
         captureNode = null;
+        inputGain = null;
         mediaStream?.getTracks().forEach((track) => track.stop());
         mediaStream = null;
         audioContext?.close();
@@ -453,6 +553,7 @@
         pending = [];
         preroll = [];
         gateOpenFrames = 0;
+        testing = false;
         micState = "off";
         elements.meterFill.style.width = "0";
         elements.start.hidden = false;
@@ -469,13 +570,26 @@
         for (const device of devices.filter((d) => d.kind === "audioinput")) {
             const option = document.createElement("option");
             option.value = device.deviceId;
-            option.textContent = device.label || "Microphone";
+            option.textContent = device.label || t("microphone");
             option.selected = device.deviceId === selected;
             elements.device.append(option);
         }
     }
 
     function init() {
+        // First, so the error panels below are translated too.
+        for (const language of i18n.languages) {
+            const option = document.createElement("option");
+            option.value = language.code;
+            option.textContent = language.name;
+            elements.language.append(option);
+        }
+
+        elements.language.value = i18n.language;
+        elements.language.addEventListener("change", () => setLanguage(elements.language.value));
+        i18n.applyStatic(document);
+        render();
+
         if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
             elements.insecure.hidden = false;
             return;
@@ -488,14 +602,20 @@
 
         elements.main.hidden = false;
         setGate(Number.isFinite(gateDb) ? gateDb : -50);
+        setVolume(Number.isFinite(volumePercent) ? Math.min(200, Math.max(0, volumePercent)) : 100);
 
         elements.gate.addEventListener("input", () => setGate(Number(elements.gate.value)));
+        elements.volume.addEventListener("input", () => setVolume(Number(elements.volume.value)));
+        elements.test.addEventListener("click", () => setTesting(!testing));
         elements.start.addEventListener("click", startMicrophone);
         elements.stop.addEventListener("click", stopMicrophone);
         elements.device.addEventListener("change", async () => {
             storage.set("localStorage", DEVICE_KEY, elements.device.value);
+            const wasTesting = testing; // so a test can compare microphones
             stopMicrophone();
             await startMicrophone();
+            if (wasTesting)
+                setTesting(true);
         });
 
         window.addEventListener("beforeunload", () => {

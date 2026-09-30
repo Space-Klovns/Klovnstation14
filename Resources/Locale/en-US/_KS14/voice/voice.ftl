@@ -15,6 +15,7 @@ ks-voice-window-reset-tooltip = Makes a new link and disconnects any page opened
 ks-voice-window-connected = Microphone page connected.
 ks-voice-window-disconnected = No microphone page connected.
 ks-voice-window-keybind = Push-to-talk key: {$key}
+ks-voice-window-voice-activation = Voice activation is on: no key needed.
 
 ks-voice-link-error-disabled = Voice chat is disabled on this server.
 ks-voice-link-error-no-url = This server hasn't configured a public address for voice chat.
@@ -23,6 +24,8 @@ ks-voice-link-error-reset-cooldown = Link NOT reset: wait a few seconds and try 
 # Options
 ks-ui-options-voice-header = Voice chat
 ks-ui-options-voice-hear = Hear other players' voices
+ks-ui-options-voice-activation = Voice activation (talk without holding push-to-talk)
+ks-ui-options-voice-activation-tooltip = You're heard whenever your microphone page picks up sound above its noise gate. Set the gate on that page so it doesn't pick up background noise.
 ks-ui-options-voice-volume = Voice volume
 ks-ui-options-voice-jitter = Voice buffer (ms)
 ks-ui-options-voice-open = Set up microphone...
@@ -80,3 +83,4 @@ cmd-vcmutes-desc = Lists active voice chat mutes.
 cmd-vcmutes-help = vcmutes
 cmd-vcmutes-none = Nobody is voice-muted.
 cmd-vcmutes-entry = {$player}: {$length}, by {$admin}: {$reason}
+cmd-vcmutes-entry-auto = {$player}: automatically muted for abusive audio, {$seconds}s left (vcunmute lifts it)

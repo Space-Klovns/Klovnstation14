@@ -1,8 +1,10 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Content.Shared._KS14.CCVar;
@@ -49,10 +51,18 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
     /// <summary>
     ///     Published path → (embedded resource name, content type).
     /// </summary>
+    private const string PageResource = "index.html";
+
+    /// <summary>
+    ///     What <see cref="WithGameLanguage"/> replaces in <see cref="PageResource"/>.
+    /// </summary>
+    private const string PageLanguageMarkup = "<html lang=\"en\">";
+
     private static readonly Dictionary<string, (string Resource, string ContentType)> StaticFiles = new()
     {
-        [KsVoiceLinkManager.PagePath] = ("index.html", "text/html; charset=utf-8"),
+        [KsVoiceLinkManager.PagePath] = (PageResource, "text/html; charset=utf-8"),
         [KsVoiceLinkManager.PagePath + "app.js"] = ("app.js", "text/javascript; charset=utf-8"),
+        [KsVoiceLinkManager.PagePath + "i18n.js"] = ("i18n.js", "text/javascript; charset=utf-8"),
         [KsVoiceLinkManager.PagePath + "worklet.js"] = ("worklet.js", "text/javascript; charset=utf-8"),
         [KsVoiceLinkManager.PagePath + "style.css"] = ("style.css", "text/css; charset=utf-8"),
     };
@@ -72,6 +82,7 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
     [Dependency] private IStatusHost _statusHost = default!;
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private ILogManager _logManager = default!;
+    [Dependency] private ILocalizationManager _localizationManager = default!;
     [Dependency] private IServerNetManager _netManager = default!;
     [Dependency] private KsVoiceLinkManager _linkManager = default!;
 
@@ -94,6 +105,8 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
     private volatile int _authFailuresPerMinute;
     private float _uplinkRateFactor;
     private KsVoiceProcessorSettings _processorSettings;
+    private KsVoiceEncoderSettings _encoderSettings;
+    private string? _warnedCodec;
 
     private Action<bool>? _enabledHandler;
     private Action<bool>? _uplinkEnabledHandler;
@@ -101,6 +114,9 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
     private Action<int>? _authFailuresHandler;
     private Action<float>? _rateFactorHandler;
     private Action<float>? _processorHandler;
+    private Action<string>? _codecHandler;
+    private Action<int>? _opusBitrateHandler;
+    private Action<int>? _opusComplexityHandler;
 
     public void Initialize()
     {
@@ -113,6 +129,9 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
         _authFailuresHandler = value => _authFailuresPerMinute = value;
         _rateFactorHandler = value => Volatile.Write(ref _uplinkRateFactor, value);
         _processorHandler = _ => ReloadProcessorSettings();
+        _codecHandler = _ => ReloadEncoderSettings();
+        _opusBitrateHandler = _ => ReloadEncoderSettings();
+        _opusComplexityHandler = _ => ReloadEncoderSettings();
 
         _configurationManager.OnValueChanged(KsCCVars.VoiceEnabled, _enabledHandler, invokeImmediately: true);
         _configurationManager.OnValueChanged(KsCCVars.VoiceUplinkEnabled, _uplinkEnabledHandler, invokeImmediately: true);
@@ -123,7 +142,11 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
         _configurationManager.OnValueChanged(KsCCVars.VoiceAbuseRmsDb, _processorHandler);
         _configurationManager.OnValueChanged(KsCCVars.VoiceAbuseClipRatio, _processorHandler);
         _configurationManager.OnValueChanged(KsCCVars.VoiceAbuseSeconds, _processorHandler);
+        _configurationManager.OnValueChanged(KsCCVars.VoiceCodec, _codecHandler);
+        _configurationManager.OnValueChanged(KsCCVars.VoiceOpusBitrate, _opusBitrateHandler);
+        _configurationManager.OnValueChanged(KsCCVars.VoiceOpusComplexity, _opusComplexityHandler);
         ReloadProcessorSettings();
+        ReloadEncoderSettings();
 
         _linkManager.LinkRevoked += OnLinkRevoked;
         _statusHost.AddHandler(HandleRequestAsync);
@@ -144,6 +167,9 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
             _configurationManager.UnsubValueChanged(KsCCVars.VoiceAbuseRmsDb, _processorHandler!);
             _configurationManager.UnsubValueChanged(KsCCVars.VoiceAbuseClipRatio, _processorHandler!);
             _configurationManager.UnsubValueChanged(KsCCVars.VoiceAbuseSeconds, _processorHandler!);
+            _configurationManager.UnsubValueChanged(KsCCVars.VoiceCodec, _codecHandler!);
+            _configurationManager.UnsubValueChanged(KsCCVars.VoiceOpusBitrate, _opusBitrateHandler!);
+            _configurationManager.UnsubValueChanged(KsCCVars.VoiceOpusComplexity, _opusComplexityHandler!);
             _enabledHandler = null;
         }
 
@@ -209,6 +235,17 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
             lock (_lock)
             {
                 return _processorSettings;
+            }
+        }
+    }
+
+    public KsVoiceEncoderSettings EncoderSettings
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _encoderSettings;
             }
         }
     }
@@ -305,22 +342,42 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
 
         if (path == PagePathNoSlash)
         {
-            // Relative, so it survives reverse proxies that mount us under a prefix. Browsers keep the fragment.
+            // Relative, so it survives reverse proxies that mount us under a prefix. Browsers keep the fragment. Always
+            //      "voice/", whatever klovn.voice.public_path says: a proxy publishing the page at another path answers
+            //      its own slashless form itself (nginx does for "location /talk/"), so only requests made straight to
+            //      the status host get here, and for those "voice/" is right.
             context.ResponseHeaders["Location"] = "voice/";
             await context.RespondAsync("Moved", code: HttpStatusCode.MovedPermanently);
             return true;
         }
 
-        if (!StaticFiles.TryGetValue(path, out var file) ||
-            LoadStaticFile(file.Resource) is not { } data)
-        {
+        if (!TryGetStaticFile(path, out var data, out var contentType))
             return false;
-        }
 
         foreach (var (header, value) in SecurityHeaders)
             context.ResponseHeaders[header] = value;
 
-        await context.RespondAsync(data, code: HttpStatusCode.OK, contentType: file.ContentType);
+        await context.RespondAsync(data, code: HttpStatusCode.OK, contentType: contentType);
+        return true;
+    }
+
+    /// <summary>
+    ///     A file of the page, exactly as served: <paramref name="path"/> is the request path, e.g.
+    ///         <see cref="KsVoiceLinkManager.PagePath"/>.
+    /// </summary>
+    public bool TryGetStaticFile(string path, [NotNullWhen(true)] out byte[]? data, out string contentType)
+    {
+        data = null;
+        contentType = "";
+
+        if (!StaticFiles.TryGetValue(path, out var file) ||
+            LoadStaticFile(file.Resource) is not { } loaded)
+        {
+            return false;
+        }
+
+        data = file.Resource == PageResource ? WithGameLanguage(loaded) : loaded;
+        contentType = file.ContentType;
         return true;
     }
 
@@ -481,6 +538,38 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
         }
     }
 
+    /// <summary>
+    ///     The page, with its <c>&lt;html lang&gt;</c> set to the language the game itself runs in, which the page then
+    ///         shows itself in unless the player has picked another. Done per request rather than cached: the culture
+    ///         is only loaded once content has initialised, and the status host may already be answering by then.
+    /// </summary>
+    private byte[] WithGameLanguage(byte[] page)
+    {
+        var culture = GameCultureName();
+        var html = Encoding.UTF8.GetString(page);
+        if (!html.Contains(PageLanguageMarkup, StringComparison.Ordinal))
+        {
+            _sawmill.Error($"The voice page has no '{PageLanguageMarkup}' to put the game's language in.");
+            return page;
+        }
+
+        return Encoding.UTF8.GetBytes(html.Replace(PageLanguageMarkup, $"<html lang=\"{culture}\">", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    ///     The culture the game's localization runs in (<c>ContentLocalizationManager</c> loads it), e.g. "en-US". Not
+    ///         <c>loc.culture_name</c>: content loads a fixed culture and never reads that cvar.
+    /// </summary>
+    public string GameCultureName()
+    {
+        var name = _localizationManager.DefaultCulture?.Name;
+
+        // Only a language tag's characters, since it goes into markup.
+        return !string.IsNullOrEmpty(name) && name.All(character => char.IsAsciiLetterOrDigit(character) || character == '-')
+            ? name
+            : "en";
+    }
+
     private byte[]? LoadStaticFile(string resource)
     {
         lock (_lock)
@@ -522,6 +611,39 @@ public sealed partial class KsVoiceUplinkManager : IKsVoiceUplinkHost
         {
             _processorSettings = settings;
         }
+    }
+
+    private void ReloadEncoderSettings()
+    {
+        var codecName = _configurationManager.GetCVar(KsCCVars.VoiceCodec);
+        var codec = ParseCodec(codecName);
+        if (codec == null && _warnedCodec != codecName)
+        {
+            _warnedCodec = codecName;
+            _sawmill.Warning($"klovn.voice.codec '{codecName}' isn't adpcm or opus; using adpcm.");
+        }
+
+        var settings = new KsVoiceEncoderSettings(
+            codec ?? KsVoiceCodec.Adpcm,
+            _configurationManager.GetCVar(KsCCVars.VoiceOpusBitrate),
+            _configurationManager.GetCVar(KsCCVars.VoiceOpusComplexity));
+        lock (_lock)
+        {
+            _encoderSettings = settings;
+        }
+    }
+
+    /// <summary>
+    ///     The codec a <c>klovn.voice.codec</c> value names, or null if it names none.
+    /// </summary>
+    public static KsVoiceCodec? ParseCodec(string name)
+    {
+        return name.Trim().ToLowerInvariant() switch
+        {
+            "adpcm" => KsVoiceCodec.Adpcm,
+            "opus" => KsVoiceCodec.Opus,
+            _ => null,
+        };
     }
 
     private void OnLinkRevoked(NetUserId userId)

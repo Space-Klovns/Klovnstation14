@@ -5,14 +5,14 @@ using Robust.Shared.Serialization;
 namespace Content.Shared._KS14.Voice;
 
 /// <summary>
-///     Server to client: one chunk of a talker's voice, ADPCM-encoded (see <see cref="KsVoiceAdpcm"/>).
-///         Sent unreliably, since audio that arrives late is useless; <see cref="Sequence"/> lets the client
-///         reorder and detect gaps.
+///     Server to client: one chunk of a talker's voice, encoded with <see cref="Codec"/>. Sent unreliably, since
+///         audio that arrives late is useless; <see cref="Sequence"/> lets the client reorder and detect gaps.
 /// </summary>
 public sealed class KsVoiceFrameMessage : NetMessage
 {
     /// <summary>
-    ///     Largest ADPCM payload accepted, matching <see cref="KsVoiceConstants.MaxChunkSamples"/>.
+    ///     Largest payload accepted: an ADPCM chunk of <see cref="KsVoiceConstants.MaxChunkSamples"/>, which is also
+    ///         the cap the Opus encoder is given.
     /// </summary>
     public static readonly int MaxPayloadBytes = KsVoiceAdpcm.EncodedSize(KsVoiceConstants.MaxChunkSamples);
 
@@ -22,12 +22,21 @@ public sealed class KsVoiceFrameMessage : NetMessage
 
     public NetEntity Source;
     public ushort Sequence;
+    public KsVoiceCodec Codec;
+
+    /// <summary>
+    ///     The first packet of a fresh encoder: listeners decode it, and what follows, with a fresh decoder.
+    /// </summary>
+    public bool StreamStart;
+
     public byte[] Payload = [];
 
     public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
     {
         Source = buffer.ReadNetEntity();
         Sequence = buffer.ReadUInt16();
+        Codec = (KsVoiceCodec)buffer.ReadByte();
+        StreamStart = buffer.ReadBoolean();
 
         var length = (int)buffer.ReadUInt16();
         if (length > MaxPayloadBytes)
@@ -41,12 +50,14 @@ public sealed class KsVoiceFrameMessage : NetMessage
     {
         buffer.Write(Source);
         buffer.Write(Sequence);
+        buffer.Write((byte)Codec);
+        buffer.Write(StreamStart);
         buffer.Write((ushort)Payload.Length);
         buffer.Write(Payload);
     }
 
     public override int EstimateBufferSize()
-        => 8 + Payload.Length;
+        => 10 + Payload.Length;
 }
 
 /// <summary>
@@ -84,4 +95,20 @@ public sealed class KsVoiceLinkEvent(string? url, string? errorLocId) : EntityEv
 public sealed class KsVoiceUplinkStatusEvent(bool connected) : EntityEventArgs
 {
     public readonly bool Connected = connected;
+}
+
+/// <summary>
+///     One relayed voice chunk, as recorded into replays: the same data as <see cref="KsVoiceFrameMessage"/>, as an
+///         event, because replays only carry events. Never sent over the network; a replay plays it back as if it
+///         had been.
+/// </summary>
+[Serializable, NetSerializable]
+public sealed class KsVoiceReplayFrameEvent(NetEntity source, ushort sequence, KsVoiceCodec codec, bool streamStart, byte[] payload)
+    : EntityEventArgs
+{
+    public readonly NetEntity Source = source;
+    public readonly ushort Sequence = sequence;
+    public readonly KsVoiceCodec Codec = codec;
+    public readonly bool StreamStart = streamStart;
+    public readonly byte[] Payload = payload;
 }

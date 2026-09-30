@@ -35,6 +35,14 @@ public sealed partial class KsCCVars
     public static readonly CVarDef<float> VoiceRange =
         CVarDef.Create("klovn.voice.range", 10f, CVar.ARCHIVE | CVar.SERVER | CVar.REPLICATED);
 
+    /// <summary>
+    ///     Whether players may use voice activation (<see cref="VoiceActivation"/>) instead of holding push-to-talk.
+    ///         While off, everyone needs the key, whatever their own setting says, and clients hide the option.
+    /// </summary>
+    [CVarControl(AdminFlags.Server)]
+    public static readonly CVarDef<bool> VoiceActivationAllowed =
+        CVarDef.Create("klovn.voice.voice_activation_allowed", true, CVar.ARCHIVE | CVar.SERVER | CVar.REPLICATED);
+
     #endregion
 
     #region Server settings
@@ -48,6 +56,16 @@ public sealed partial class KsCCVars
     [CVarControl(AdminFlags.Host)]
     public static readonly CVarDef<string> VoicePublicUrl =
         CVarDef.Create("klovn.voice.public_url", "", CVar.ARCHIVE | CVar.SERVERONLY);
+
+    /// <summary>
+    ///     Path of the microphone page in the links players are given, after <see cref="VoicePublicUrl"/>. The status host
+    ///         always serves the page at <c>/klovn/voice/</c>; a different path here needs a reverse proxy that maps it
+    ///         there (the page loads everything relative to itself, so any path works). <c>/</c> puts the page at the
+    ///         root of the public URL. Invalid values fall back to the default with a warning.
+    /// </summary>
+    [CVarControl(AdminFlags.Host)]
+    public static readonly CVarDef<string> VoicePublicPath =
+        CVarDef.Create("klovn.voice.public_path", "/klovn/voice/", CVar.ARCHIVE | CVar.SERVERONLY);
 
     /// <summary>
     ///     Whether websocket connections must come from a page whose <c>Origin</c> matches the public URL.
@@ -129,6 +147,38 @@ public sealed partial class KsCCVars
     public static readonly CVarDef<bool> VoiceAdminLogBursts =
         CVarDef.Create("klovn.voice.admin_log_bursts", true, CVar.ARCHIVE | CVar.SERVERONLY);
 
+    /// <summary>
+    ///     How relayed voice is compressed: <c>opus</c>, the default (much cleaner at half the bandwidth, but costs more
+    ///         CPU on the server, which encodes, and on every client, which decodes), or <c>adpcm</c> (64 kbps, a little
+    ///         hissy, cheap). Anything else means <c>adpcm</c>. Takes effect from each talker's next chunk.
+    /// </summary>
+    [CVarControl(AdminFlags.Server)]
+    public static readonly CVarDef<string> VoiceCodec =
+        CVarDef.Create("klovn.voice.codec", "opus", CVar.ARCHIVE | CVar.SERVERONLY);
+
+    /// <summary>
+    ///     Opus bitrate, in bits per second, when <see cref="VoiceCodec"/> is <c>opus</c>. Clamped to 6000–64000.
+    /// </summary>
+    [CVarControl(AdminFlags.Server)]
+    public static readonly CVarDef<int> VoiceOpusBitrate =
+        CVarDef.Create("klovn.voice.opus_bitrate", 32000, CVar.ARCHIVE | CVar.SERVERONLY);
+
+    /// <summary>
+    ///     Opus encoder complexity, 0 to 10. Higher sounds marginally better for speech and costs the server more CPU per
+    ///         talker (encoding runs on each page connection's thread, not the game loop). See the design doc for
+    ///         measured costs.
+    /// </summary>
+    [CVarControl(AdminFlags.Server)]
+    public static readonly CVarDef<int> VoiceOpusComplexity =
+        CVarDef.Create("klovn.voice.opus_complexity", 2, CVar.ARCHIVE | CVar.SERVERONLY);
+
+    /// <summary>
+    ///     Whether relayed voice goes into server-side round replays, so it can be heard when they're watched.
+    /// </summary>
+    [CVarControl(AdminFlags.Server)]
+    public static readonly CVarDef<bool> VoiceRecordInReplays =
+        CVarDef.Create("klovn.voice.record_in_replays", true, CVar.ARCHIVE | CVar.SERVERONLY);
+
     #endregion
 
     #region Client settings
@@ -151,6 +201,13 @@ public sealed partial class KsCCVars
     /// </summary>
     public static readonly CVarDef<int> VoiceJitterBufferMs =
         CVarDef.Create("klovn.voice.jitter_buffer_ms", 120, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+    /// <summary>
+    ///     Talk whenever the microphone page's noise gate is open, without holding push-to-talk. Replicated to the
+    ///         server, which reads it for every chunk; only honoured while <see cref="VoiceActivationAllowed"/>.
+    /// </summary>
+    public static readonly CVarDef<bool> VoiceActivation =
+        CVarDef.Create("klovn.voice.voice_activation", false, CVar.ARCHIVE | CVar.CLIENT | CVar.REPLICATED);
 
     #endregion
 }

@@ -1,0 +1,14 @@
+<!-- KS14: added in this fork. Concentus (a pure C# libopus port), vendored as its own content assembly; see README.md. -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <RootNamespace>Content.Klovn.Concentus</RootNamespace>
+  </PropertyGroup>
+
+  <Import Project="../MSBuild/Content.props" />
+
+  <!-- Robust.Shared, for DebugTools.Assert in place of System.Diagnostics.Debug (see vendor.py). -->
+  <Import Project="..\RobustToolbox\Imports\Shared.props" />
+
+  <Import Project="..\RobustToolbox\MSBuild\Robust.Properties.targets" />
+</Project>

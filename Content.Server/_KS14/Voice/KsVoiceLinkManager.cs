@@ -8,6 +8,7 @@ using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
+using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 
@@ -16,7 +17,8 @@ namespace Content.Server._KS14.Voice;
 /// <summary>
 ///     Issues and resolves the personal links players open to talk.
 ///
-///     A link is <c>{public base}/klovn/voice/#{token}</c>, where the token is 256 bits from a CSPRNG. It lives in the
+///     A link is <c>{public base}{public path}#{token}</c> (by default <c>{public base}/klovn/voice/#{token}</c>), where
+///         the token is 256 bits from a CSPRNG. It lives in the
 ///         URL fragment, which browsers never send over the network, so it stays out of the status host's request
 ///         log, reverse-proxy logs and <c>Referer</c> headers; the page hands it to the server as the first
 ///         websocket message instead. A token resolves to exactly one <see cref="NetUserId"/>, which is the only
@@ -27,6 +29,10 @@ namespace Content.Server._KS14.Voice;
 /// </summary>
 public sealed partial class KsVoiceLinkManager
 {
+    /// <summary>
+    ///     Where the status host serves the page. Links can use another path (<see cref="KsCCVars.VoicePublicPath"/>)
+    ///         when a reverse proxy maps it here.
+    /// </summary>
     public const string PagePath = "/klovn/voice/";
 
     private const int TokenBytes = 32;
@@ -34,6 +40,16 @@ public sealed partial class KsVoiceLinkManager
 
     [Dependency] private IConfigurationManager _configurationManager = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private ILogManager _logManager = default!;
+
+    private ISawmill _sawmill = default!;
+
+    /// <summary>
+    ///     <see cref="KsCCVars.VoicePublicPath"/>, normalised, or <see cref="PagePath"/> if it isn't valid.
+    /// </summary>
+    private string _publicPagePath = PagePath;
+
+    private Action<string>? _publicPathHandler;
 
     private readonly Lock _lock = new();
     private readonly Dictionary<string, Entry> _entriesByTokenHash = [];
@@ -46,12 +62,38 @@ public sealed partial class KsVoiceLinkManager
 
     public void Initialize()
     {
+        _sawmill = _logManager.GetSawmill("voice.link");
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
+
+        _publicPathHandler = OnPublicPathChanged;
+        _configurationManager.OnValueChanged(KsCCVars.VoicePublicPath, _publicPathHandler, invokeImmediately: true);
     }
 
     public void Shutdown()
     {
         _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
+
+        if (_publicPathHandler != null)
+        {
+            _configurationManager.UnsubValueChanged(KsCCVars.VoicePublicPath, _publicPathHandler);
+            _publicPathHandler = null;
+        }
+    }
+
+    /// <summary>
+    ///     Checks the setting when it's set, so a bad value is reported at startup or by the command that set it,
+    ///         not the first time someone asks for a link.
+    /// </summary>
+    private void OnPublicPathChanged(string configured)
+    {
+        if (ResolvePublicPagePath(configured) is { } publicPath)
+        {
+            _publicPagePath = publicPath;
+            return;
+        }
+
+        _publicPagePath = PagePath;
+        _sawmill.Warning($"klovn.voice.public_path '{configured}' isn't a plain path; using {PagePath} instead.");
     }
 
     /// <summary>
@@ -132,7 +174,42 @@ public sealed partial class KsVoiceLinkManager
     public string? BuildUrl(string token)
     {
         var baseUrl = GetPublicBaseUrl();
-        return baseUrl == null ? null : $"{baseUrl}{PagePath}#{token}";
+        return baseUrl == null ? null : $"{baseUrl}{GetPublicPagePath()}#{token}";
+    }
+
+    /// <summary>
+    ///     The page's path in links, from <see cref="KsCCVars.VoicePublicPath"/>: starting and ending with a slash.
+    /// </summary>
+    public string GetPublicPagePath()
+    {
+        return _publicPagePath;
+    }
+
+    /// <summary>
+    ///     Normalises a configured page path to <c>/a/b/</c> form, or returns null if it isn't a plain path: only
+    ///         unreserved URL characters in each segment, no <c>.</c> or <c>..</c> segments, and nothing that would
+    ///         start a query or fragment. Empty means the default; <c>/</c> means the root of the public URL.
+    /// </summary>
+    public static string? ResolvePublicPagePath(string configured)
+    {
+        var trimmed = configured.Trim();
+        if (trimmed.Length == 0)
+            return PagePath;
+
+        var segments = trimmed.Split('/', options: StringSplitOptions.RemoveEmptyEntries);
+        foreach (var segment in segments)
+        {
+            if (segment is "." or "..")
+                return null;
+
+            foreach (var character in segment)
+            {
+                if (!char.IsAsciiLetterOrDigit(character) && character is not ('-' or '.' or '_' or '~'))
+                    return null;
+            }
+        }
+
+        return segments.Length == 0 ? "/" : $"/{string.Join('/', segments)}/";
     }
 
     /// <summary>

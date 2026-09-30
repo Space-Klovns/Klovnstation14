@@ -585,24 +585,21 @@ Sandbox violation: Access to method not allowed:
         System.Collections.Generic.Dictionary`2<!!0, !!1>, !!0, bool&)
 ```
 
-**The cascade is what makes this expensive to diagnose.** One violation takes the assembly down, which
-takes the integration pool down with it, and every unrelated test then fails with:
+**Only one test will tell you** (see `SandboxTest` below): everything else loads content without the check
+and passes. So a violation doesn't break a test run in any way you'd notice. It breaks a real client, at
+connect, with the error above.
 
-```
-SetUp : System.InvalidOperationException : Pool manager has not been initialized
-```
-
-A run that reports a hundred-odd failures across unrelated features, all of them `Pool manager has not
-been initialized`, has **one** cause, and it is not in any of the tests named. Find the single result
-that failed with something else - `TypeCheckFailedException` - and fix that. Running with
-`--logger "trx;LogFileName=..."` and grouping the results by message is the quick way to see that shape;
-`-v q` prints only the total and hides it entirely.
+A related shape: when a run reports a hundred-odd failures across unrelated features, all of them
+`SetUp : System.InvalidOperationException : Pool manager has not been initialized`, something failed while the
+integration pool was being set up, and it has **one** cause that isn't in any of the tests named. Find the single
+result that failed with something else. Running with `--logger "trx;LogFileName=..."` and grouping the results by
+message is the quick way to see that shape; `-v q` prints only the total and hides it entirely.
 
 The offenders are mostly the low-level performance conveniences: `CollectionsMarshal`, `Unsafe`,
 `MemoryMarshal`, most of `System.Runtime.InteropServices`, reflection that writes, and anything
-touching the filesystem or process directly. Plain `Dictionary`, `Span`, `System.Numerics` and
-`MathF` are all fine. If you are reaching for something to avoid a dictionary lookup or a struct copy
-in rendering code, the copy was almost certainly cheaper than finding this out:
+touching the filesystem or process directly. Plain `Dictionary`, `Span`, `MathF` and `System.Numerics`'
+`Vector2`/`Vector3`/`Vector4` are all fine. If you are reaching for something to avoid a dictionary lookup or a
+struct copy in rendering code, the copy was almost certainly cheaper than finding this out:
 
 ```csharp
 // not this - compiles everywhere, refused at load
@@ -615,8 +612,44 @@ entry.Value += 1;
 _map[key] = entry;
 ```
 
-Content.IntegrationTests is the cheapest way to find out, because loading the assemblies is the first
-thing it does - a single test from any fixture is enough to prove the sandbox accepted the build.
+**`SandboxTest` is the check; an ordinary integration test is not.** Pooled test pairs load content through
+`TestingModLoader`, whose `SetEnableSandboxing` does nothing, so every other test passes with a violation in the
+build. A `stackalloc` planted in `Content.Shared` leaves a normal pooled test green. Only
+`Content.IntegrationTests/Tests/Utility/SandboxTest.cs` runs the real checker: it starts its own client and calls
+`CheckSandboxed` on `Content.Client` and `Content.Shared`, which applies the whitelist (`Sandbox.yml`) *and*
+ILVerify. It takes about 20 seconds, so run it whenever you add an API you haven't seen content use before:
+
+```sh
+dotnet test Content.IntegrationTests/Content.IntegrationTests.csproj -c Debug --filter "FullyQualifiedName~SandboxTest"
+```
+
+A failure names each problem directly: `Sandbox violation: Access to type not allowed: ...` for the whitelist, and
+`ILVerify: Instruction cannot be verified., method: ..., Offset IL_...` for IL. The whitelist is
+`RobustToolbox/Robust.Shared/ContentPack/Sandbox.yml`, and it's worth a search before you rely on a BCL type.
+
+The rules come from two places, so nothing about a type's namespace predicts them:
+
+- **ILVerify** rejects `stackalloc` (even into a `Span<T>`), `unsafe` code and pointers. Content already notes
+  this (`AtmosphereSystem.Gases.cs`). Use `new T[n]` instead.
+- **The whitelist** is per type and often per member. Besides the ones above, these came up vendoring Concentus
+  (`Content.Klovn.Concentus/README.md`), and none of them warns at build time:
+  - `System.Buffer` (`BlockCopy`): use `Array.Copy`, which counts elements, not bytes.
+  - `System.Diagnostics.Debug` and `ConditionalAttribute`: use `DebugTools.Assert`, as `Solution.cs` notes.
+  - `System.Numerics.Vector<T>`.
+  - `System.Tuple`: value tuples are fine.
+  - `ArgumentNullException`: `ArgumentException` is fine.
+  - A *field* of type `MethodImplOptions`. `[MethodImpl(MethodImplOptions.AggressiveInlining)]` itself is fine,
+    since it compiles to method flags rather than a type reference.
+
+Two more are made by the compiler, so the source never names what it refuses. Both came up in the TTS Opus code
+(`KsTtsOpus.cs`):
+
+- **`"..."u8` literals** fail ILVerify. They compile to a pointer into the assembly's static data (`Found address of
+  '<PrivateImplementationDetails>...', Expected Native Int`). Build the bytes once instead, e.g.
+  `static readonly byte[] Magic = Encoding.ASCII.GetBytes("OggS")`.
+- **A non-empty collection expression that targets `List<T>`** (`Method([item])`, where the parameter is a
+  `List<T>`) compiles to `CollectionsMarshal.SetCount`, which is not whitelisted. Use `new List<T> { item }`.
+  Empty ones (`= []`) and ones that target arrays are fine.
 
 ### Only one system may subscribe to a given component and event pair
 

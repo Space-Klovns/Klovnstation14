@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using Content.Shared.GameTicking;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Components;
+using Robust.Shared.Audio.Sources;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
@@ -25,6 +26,7 @@ public sealed partial class AudioEffectSystem : EntitySystem
 {
     [Dependency] private SharedAudioSystem _audioSystem = default!;
     [Dependency] private INetManager _netManager = default!;
+    [Dependency] private EntityQuery<AudioAuxiliaryComponent> _auxiliaryQuery = default!;
 
     /// <summary>
     ///     Whether creating new auxiliaries is safe.
@@ -166,14 +168,43 @@ public sealed partial class AudioEffectSystem : EntitySystem
     /// </summary>
     public bool TryAddEffect(in Entity<AudioComponent> entity, in ProtoId<AudioPresetPrototype> preset)
     {
-        if (!AuxiliariesAreDefinitelySafe() ||
-            !ResolveCachedEffect(preset, out var auxiliaryUid, out _))
+        if (!TryResolveAuxiliary(preset, out var auxiliary))
             return false;
 
-        _audioSystem.SetAuxiliary(entity, entity.Comp, auxiliaryUid);
+        _audioSystem.SetAuxiliary(entity, entity.Comp, auxiliary);
 
         // The client won't apply the auxiliary to a new audio entity by itself; see the component.
         EnsureComp<AudioEffectAppliedComponent>(entity);
+        return true;
+    }
+
+    /// <summary>
+    ///     Applies an effect to a bare audio source, one that isn't an audio entity: voice chat's streamed chunks, say.
+    ///         Local only, since nothing about such a source is networked.
+    /// </summary>
+    public bool TryAddEffect(IAudioSource source, in ProtoId<AudioPresetPrototype> preset)
+    {
+        if (!TryResolveAuxiliary(preset, out var auxiliary))
+            return false;
+
+        source.SetAuxiliary(auxiliary.Comp.Auxiliary);
+        return true;
+    }
+
+    /// <summary>
+    ///     The cached auxiliary for a preset, created on first use. Null while auxiliaries are unsafe (integration tests).
+    /// </summary>
+    private bool TryResolveAuxiliary(in ProtoId<AudioPresetPrototype> preset, out Entity<AudioAuxiliaryComponent> auxiliary)
+    {
+        auxiliary = default;
+        if (!AuxiliariesAreDefinitelySafe() ||
+            !ResolveCachedEffect(preset, out var auxiliaryUid, out _) ||
+            !_auxiliaryQuery.TryComp(auxiliaryUid, out var auxiliaryComponent))
+        {
+            return false;
+        }
+
+        auxiliary = (auxiliaryUid.Value, auxiliaryComponent);
         return true;
     }
 
