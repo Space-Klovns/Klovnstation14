@@ -60,7 +60,7 @@ public sealed partial class OrganRegenerationSystem : EntitySystem
     {
         if (!bodyEntity.Comp.PresentOrganCategories.ContainsKey(datum.Category))
         {
-            var spawnedUid = EntityManager.PredictedSpawn(datum.Entity);
+            var spawnedUid = PredictedSpawn(datum.Entity);
             spawnedUidList.Add(spawnedUid);
             _containerSystem.Insert(spawnedUid, parentOrganContainer);
 
