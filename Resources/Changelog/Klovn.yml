@@ -2126,3 +2126,51 @@ Entries:
         then hold the push-to-talk key (default N) to talk to people nearby.
   id: 223
   time: '2026-09-28T15:39:13.0000000+00:00'
+- author: LaCumbiaDelCoronavirus
+  changes:
+    - type: Add
+      message: Voice chat now uses the Opus codec, for much clearer audio.
+    - type: Add
+      message: >-
+        Voice chat has a voice activation option (Options → Klovnstation 14) for
+        talking without push-to-talk, if the server allows it.
+    - type: Add
+      message: Voice chat can be heard in round replays.
+    - type: Add
+      message: >-
+        Masks and helmets muffle your voice in voice chat, like they do your
+        emotes.
+    - type: Add
+      message: >-
+        The voice chat page is translated into several languages, follows the
+        game's language, and has a mic volume slider and a mic test.
+    - type: Add
+      message: >-
+        Pick your character's text-to-speech voice in the character editor, and
+        preview it before choosing.
+    - type: Add
+      message: >-
+        Text-to-speech audio now reaches you as Opus: smaller, and decoded
+        without stalling the game.
+    - type: Fix
+      message: >-
+        Long lines are no longer cut down to their last few characters by
+        text-to-speech.
+    - type: Fix
+      message: Text-to-speech no longer voices every message in a rapid burst.
+    - type: Fix
+      message: The voice chat page no longer says you have no body after you spawn.
+    - type: Fix
+      message: >-
+        Voice chat auto-mutes show up in the admin mute list and can be lifted
+        by admins.
+    - type: Fix
+      message: >-
+        Skipping through a replay no longer plays every skipped TTS line at
+        once.
+    - type: Tweak
+      message: >-
+        Server hosts can serve the voice chat page at a custom path with
+        `klovn.voice.public_path`.
+  id: 224
+  time: '2026-09-30T10:32:46.0000000+00:00'
